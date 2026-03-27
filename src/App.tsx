@@ -4176,63 +4176,68 @@ export default function App({ forceAuthOnMount }: AppProps) {
   );
 
   if (isMobileExperience && showMobileHome) {
+    const mobileHomeAppClassName = `app app--workspace app--mobile-frame${
+      isAnyModalVisible ? ' app--auth-overlay' : ''
+    }`;
     return (
-      <>
-        <MobileHabitHome
-          session={activeSession}
-          showPointsBadges={shouldShowPointsBadges}
-          onVisionRewardOpenChange={setIsVisionRewardOpen}
-          profileStrengthSnapshot={profileStrengthSnapshot}
-          profileStrengthSignals={profileStrengthSignals}
-          personalitySummary={personalitySummary}
-          onOpenSpinWheel={() => setShowDailySpinWheel(true)}
-          onOpenLuckyRoll={() => setShowLuckyRoll(true)}
-          onOpenDailyTreat={() => setShowCalendarPlaceholder(true)}
-          onOpenIslandRunStop={(stopId) => {
-            setIslandRunOpenStopParam(stopId);
-            setReopenGameBoardOverlayOnLevelWorldsClose(false);
-            setLevelWorldsEntryPanel('default');
-            setShowLevelWorldsFromEntry(true);
-          }}
-          forceCompactView={!isGameModeActive}
-          preferredCompactView={!isGameModeActive}
-          hideTimeBoundOffers={!isGameModeActive}
-        />
+      <div className={mobileHomeAppClassName}>
+        <div className="workspace-shell">
+          <MobileHabitHome
+            session={activeSession}
+            showPointsBadges={shouldShowPointsBadges}
+            onVisionRewardOpenChange={setIsVisionRewardOpen}
+            profileStrengthSnapshot={profileStrengthSnapshot}
+            profileStrengthSignals={profileStrengthSignals}
+            personalitySummary={personalitySummary}
+            onOpenSpinWheel={() => setShowDailySpinWheel(true)}
+            onOpenLuckyRoll={() => setShowLuckyRoll(true)}
+            onOpenDailyTreat={() => setShowCalendarPlaceholder(true)}
+            onOpenIslandRunStop={(stopId) => {
+              setIslandRunOpenStopParam(stopId);
+              setReopenGameBoardOverlayOnLevelWorldsClose(false);
+              setLevelWorldsEntryPanel('default');
+              setShowLevelWorldsFromEntry(true);
+            }}
+            forceCompactView={!isGameModeActive}
+            preferredCompactView={!isGameModeActive}
+            hideTimeBoundOffers={!isGameModeActive}
+          />
+        </div>
         {!showZenGardenFullScreen && (
           <MobileFooterNav
             items={mobileFooterNavItems}
-          status={mobileFooterStatus}
-          activeId={null}
-          onSelect={handleMobileNavSelect}
-          onStatusClick={handleMobileGameStatusClick}
-          onStatusHoldToggle={handleMobileGameStatusHoldToggle}
-          onOpenMenu={() => {
-            setIsMobileMenuOpen(true);
-            setIsEnergyMenuOpen(false);
-          }}
-          isEnergyMenuOpen={isEnergyMenuOpen}
-          onEnergyToggle={() => {
-            setIsEnergyMenuOpen((prev) => !prev);
-            handleMobileFooterExpand(true);
-          }}
-          onEnergySelect={handleEnergySelect}
-          isDiodeActive={isMobileMenuImageActive}
-          pointsBadges={mobileFooterPointsBadges}
-          showPointsBadges={shouldShowPointsBadges}
-          isFlashActive={isMobileMenuFlashActive}
-          isCollapsed={(isMobileFooterCollapsed || shouldHideFooterInJournal) && !showGameBoardOverlay}
-          isSnapActive={isMobileFooterSnapActive}
-          onExpand={() => {
-            if (shouldHideFooterInJournal) return;
-            handleMobileFooterExpand(false);
-          }}
-          onSnapExpand={() => {
-            if (shouldHideFooterInJournal) return;
-            handleMobileFooterExpand(true);
-          }}
-          onCollapse={handleMobileFooterCollapse}
-          pointsBalance={goldBalance}
-        />
+            status={mobileFooterStatus}
+            activeId={null}
+            onSelect={handleMobileNavSelect}
+            onStatusClick={handleMobileGameStatusClick}
+            onStatusHoldToggle={handleMobileGameStatusHoldToggle}
+            onOpenMenu={() => {
+              setIsMobileMenuOpen(true);
+              setIsEnergyMenuOpen(false);
+            }}
+            isEnergyMenuOpen={isEnergyMenuOpen}
+            onEnergyToggle={() => {
+              setIsEnergyMenuOpen((prev) => !prev);
+              handleMobileFooterExpand(true);
+            }}
+            onEnergySelect={handleEnergySelect}
+            isDiodeActive={isMobileMenuImageActive}
+            pointsBadges={mobileFooterPointsBadges}
+            showPointsBadges={shouldShowPointsBadges}
+            isFlashActive={isMobileMenuFlashActive}
+            isCollapsed={(isMobileFooterCollapsed || shouldHideFooterInJournal) && !showGameBoardOverlay}
+            isSnapActive={isMobileFooterSnapActive}
+            onExpand={() => {
+              if (shouldHideFooterInJournal) return;
+              handleMobileFooterExpand(false);
+            }}
+            onSnapExpand={() => {
+              if (shouldHideFooterInJournal) return;
+              handleMobileFooterExpand(true);
+            }}
+            onCollapse={handleMobileFooterCollapse}
+            pointsBalance={goldBalance}
+          />
         )}
         {mobileMenuOverlay}
         {mobileGamificationOverlay}
@@ -4307,7 +4312,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         {dailyTreatsModal}
         {luckyRollModal}
         {countdownCalendarModal}
-      </>
+      </div>
     );
   }
 

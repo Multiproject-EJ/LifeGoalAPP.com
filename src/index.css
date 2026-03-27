@@ -953,14 +953,15 @@ html.platform-ipad .workspace-shell__menu-edge {
   --mobile-frame-aspect-ratio: 9 / 19.5;
   --mobile-frame-height: calc(100vh - (var(--workspace-shell-padding) * 2));
   --mobile-frame-height: calc(100dvh - (var(--workspace-shell-padding) * 2));
-}
-
-.app--mobile-frame .workspace-shell {
-  width: min(
+  --mobile-frame-width: min(
     460px,
     calc(var(--mobile-frame-height) * var(--mobile-frame-aspect-ratio)),
     calc(100vw - 1rem)
   );
+}
+
+.app--mobile-frame .workspace-shell {
+  width: var(--mobile-frame-width);
   min-height: var(--mobile-frame-height);
   padding-left: 0;
   padding-right: 0;
@@ -969,6 +970,11 @@ html.platform-ipad .workspace-shell__menu-edge {
 .app--desktop-preview .workspace-shell--menu-collapsed {
   --workspace-shell-offset: 0px;
   padding-left: clamp(1rem, 3vw, 1.75rem);
+}
+
+.app--mobile-frame .mobile-footer-nav {
+  left: max(calc((100vw - var(--mobile-frame-width)) / 2), 0px);
+  right: max(calc((100vw - var(--mobile-frame-width)) / 2), 0px);
 }
 
 .workspace-shell__menu-edge {
