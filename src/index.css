@@ -996,7 +996,27 @@ html.platform-ipad .workspace-shell__menu-edge {
   right: max(calc((100vw - var(--mobile-frame-width)) / 2), 0px);
 }
 
-@media (max-width: 720px), (max-height: 720px) and (pointer: coarse) {
+@media (max-width: 720px) {
+  .app--mobile-frame {
+    padding: 0;
+    --mobile-frame-width: 100vw;
+    --mobile-frame-height: 100dvh;
+  }
+
+  .app--mobile-frame .workspace-shell {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .app--mobile-frame .mobile-footer-nav {
+    left: 0;
+    right: 0;
+  }
+
   .app--mobile-home-frame {
     padding: 0;
   }
