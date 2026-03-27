@@ -4118,13 +4118,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const levelWorldsEntryModal = showLevelWorldsFromEntry && activeSession ? (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9999,
-        overflow: 'hidden',
-        background: '#0a0f1e',
-      }}
+      className="level-worlds-entry-modal"
     >
       <RecoverableErrorBoundary
         fallback={null}
