@@ -21,7 +21,7 @@
 | PR2 | Entry/Grounding/Private Capture (Stage 0–2) | IN_PROGRESS | Codex | TBD |
 | PR3 | Collect & Pile + Parallel Read (Stage 3–4) | IN_PROGRESS | Codex | TBD |
 | PR4 | Resolution + Apology Alignment + Agreements (Stage 5+) | IN_PROGRESS | Codex | TBD |
-| PR5 | Invitee onboarding + cross-domain scaffold (`breathingspace.com`) | TODO | TBD | TBD |
+| PR5 | Invitee onboarding + cross-domain scaffold (`breathingspace.com`) | IN_PROGRESS | Codex | TBD |
 | PR6 | Hardening pass (safety, fairness, resiliency, analytics) | TODO | TBD | TBD |
 
 Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
@@ -125,8 +125,8 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 ## 6) PR5 — Cross-domain scaffold (`breathingspace.com`) + invites
 
 ### Deliverables
-- [ ] Finalize invitation token model and lifecycle (issue, redeem, expire, revoke).
-- [ ] Implement one-click magic link for invitee participation.
+- [x] Finalize invitation token model and lifecycle (issue, redeem, expire, revoke).
+- [x] Implement one-click magic link for invitee participation.
 - [ ] Add lightweight participant flow (email-only, no full profile required).
 - [ ] Add post-session funnel path into full LifeGoal onboarding.
 
