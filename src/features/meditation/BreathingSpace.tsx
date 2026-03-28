@@ -18,6 +18,7 @@ import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import { awardZenTokens } from '../../services/zenGarden';
 import { TrainingTab } from '../training';
+import { ConflictResolverExperience } from '../conflict-resolver';
 import './BreathingSpace.css';
 import type { TimerLaunchContext } from '../timer/timerSession';
 
@@ -689,15 +690,7 @@ export function BreathingSpace({
         </div>
 
         <div className="breathing-space__library breathing-space__section breathing-space__section--conflict">
-          <div className="breathing-space__library-header">
-            <h3 className="breathing-space__library-title">Conflict Resolver</h3>
-          </div>
-          <p className="breathing-space__card-description">
-            Start the Breathing Space conflict mediation flow to clear tension with guided, calm communication.
-          </p>
-          <button type="button" className="btn btn--primary breathing-space__guided-start-button" disabled>
-            Coming soon
-          </button>
+          <ConflictResolverExperience />
         </div>
 
         {/* Breathing Exercises Library */}

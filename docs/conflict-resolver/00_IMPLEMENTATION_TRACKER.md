@@ -58,9 +58,9 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 ## 3) PR2 — Stage 0–2 UX (Mode chooser, Grounding, Private capture)
 
 ### Deliverables
-- [ ] Build Stage 0 mode chooser (`Inner Tension` vs `Shared Conflict`) with one-mode-at-a-time routing.
-- [ ] Build Stage 1 grounding sequence with hold-to-continue interaction contract.
-- [ ] Build Stage 2 prompt flow with optional respectful rewrite assist and user approval.
+- [x] Build Stage 0 mode chooser (`Inner Tension` vs `Shared Conflict`) with one-mode-at-a-time routing.
+- [x] Build Stage 1 grounding sequence with hold-to-continue interaction contract.
+- [x] Build Stage 2 prompt flow with optional respectful rewrite assist and user approval.
 - [ ] Persist draft responses and recovery points.
 
 ### Files (planned)
