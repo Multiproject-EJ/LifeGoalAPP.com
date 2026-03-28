@@ -25,12 +25,12 @@ type BreathingSpaceProps = {
   session: Session;
   initialMobileTab?: MobileTab | null;
   initialMobileCategory?: MobileCategory;
-  onMobileTabChange?: (tab: MobileTab) => void;
+  onMobileTabChange?: (tab: MobileTab | null) => void;
   onMobileCategoryChange?: (category: MobileCategory) => void;
   onNavigateToTimer?: (context?: TimerLaunchContext) => void;
 };
 
-type MobileTab = 'breathing' | 'meditation' | 'yoga' | 'food' | 'exercise';
+type MobileTab = 'breathing' | 'meditation' | 'conflict' | 'yoga' | 'food' | 'exercise';
 type MobileCategory = 'mind' | 'body';
 
 type MeditationStats = {
@@ -40,7 +40,7 @@ type MeditationStats = {
 };
 
 const MOBILE_CATEGORY_TABS: Record<MobileCategory, MobileTab[]> = {
-  mind: ['breathing', 'meditation'],
+  mind: ['breathing', 'meditation', 'conflict'],
   body: ['yoga', 'food', 'exercise'],
 };
 
@@ -121,6 +121,13 @@ export function BreathingSpace({
       onMobileCategoryChange?.(nextCategory);
     }
     onMobileTabChange?.(tab);
+  };
+
+  const handleExitConflictResolver = () => {
+    setActiveMobileCategory('mind');
+    onMobileCategoryChange?.('mind');
+    setActiveMobileTab(null);
+    onMobileTabChange?.(null);
   };
 
   const handleMobileCategoryChange = (category: MobileCategory) => {
@@ -361,82 +368,100 @@ export function BreathingSpace({
   const mobileTabOptions: Record<MobileTab, { icon: string; label: string; uppercaseLabel: string }> = {
     breathing: { icon: '🌬️', label: 'Focus Breathing', uppercaseLabel: 'FOCUS BREATHING' },
     meditation: { icon: '🧘', label: 'Meditation', uppercaseLabel: 'MEDITATION' },
+    conflict: { icon: '🤝', label: 'Conflict Resolver', uppercaseLabel: 'CONFLICT' },
     yoga: { icon: '🧘‍♀️', label: 'Yoga', uppercaseLabel: 'YOGA' },
     food: { icon: '🥗', label: 'Food', uppercaseLabel: 'FOOD' },
     exercise: { icon: '🏋️', label: 'Exercise', uppercaseLabel: 'EXERCISE' },
   };
 
   const activeCategoryTabs = MOBILE_CATEGORY_TABS[activeMobileCategory];
+  const isConflictFullscreen = activeMobileTab === 'conflict';
 
   return (
     <div
-      className={`breathing-space ${justCompletedSession ? `breathing-item--just-completed ${sessionFeedbackClassName}` : ""}`.trim()}
+      className={`breathing-space${isConflictFullscreen ? ' breathing-space--conflict-fullscreen' : ''} ${justCompletedSession ? `breathing-item--just-completed ${sessionFeedbackClassName}` : ""}`.trim()}
       data-mobile-tab={activeMobileTab ?? 'none'}
       data-mobile-category={activeMobileCategory}
     >
-      <div className="breathing-space__mobile-category-tabs" role="tablist" aria-label="Energy focus">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeMobileCategory === 'mind'}
-          className={`breathing-space__mobile-category-tab ${
-            activeMobileCategory === 'mind' ? 'breathing-space__mobile-category-tab--active' : ''
-          }`}
-          onClick={() => handleMobileCategoryChange('mind')}
-        >
-          Mind
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeMobileCategory === 'body'}
-          className={`breathing-space__mobile-category-tab ${
-            activeMobileCategory === 'body' ? 'breathing-space__mobile-category-tab--active' : ''
-          }`}
-          onClick={() => handleMobileCategoryChange('body')}
-        >
-          Body
-        </button>
-      </div>
-      {activeMobileTab ? (
-        <div className="breathing-space__mobile-tabs" role="tablist" aria-label="Energy options">
-          {activeCategoryTabs.map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              role="tab"
-              aria-selected={activeMobileTab === tab}
-              className={`breathing-space__mobile-tab ${
-                activeMobileTab === tab ? 'breathing-space__mobile-tab--active' : ''
-              }`}
-              onClick={() => handleMobileTabChange(tab)}
-            >
-              <span className="breathing-space__mobile-tab-icon" aria-hidden="true">
-                {mobileTabOptions[tab].icon}
-              </span>
-              <span className="breathing-space__mobile-tab-title">{mobileTabOptions[tab].uppercaseLabel}</span>
-            </button>
-          ))}
+      {isConflictFullscreen ? (
+        <div className="breathing-space__conflict-header">
+          <button
+            type="button"
+            className="breathing-space__conflict-back"
+            onClick={handleExitConflictResolver}
+            aria-label="Back to Mind tab"
+          >
+            ← Back to Mind
+          </button>
+          <span className="breathing-space__conflict-eyebrow">Conflict Resolver</span>
         </div>
       ) : (
-        <div className="breathing-space__mobile-launch" role="group" aria-label="Choose an energy focus">
-          {activeCategoryTabs.map((tab) => (
+        <>
+          <div className="breathing-space__mobile-category-tabs" role="tablist" aria-label="Energy focus">
             <button
-              key={tab}
               type="button"
-              className="breathing-space__mobile-launch-card"
-              onClick={() => handleMobileTabChange(tab)}
+              role="tab"
+              aria-selected={activeMobileCategory === 'mind'}
+              className={`breathing-space__mobile-category-tab ${
+                activeMobileCategory === 'mind' ? 'breathing-space__mobile-category-tab--active' : ''
+              }`}
+              onClick={() => handleMobileCategoryChange('mind')}
             >
-              <span className="breathing-space__mobile-launch-icon" aria-hidden="true">
-                {mobileTabOptions[tab].icon}
-              </span>
-              <span className="breathing-space__mobile-launch-title">{mobileTabOptions[tab].label}</span>
+              Mind
             </button>
-          ))}
-        </div>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeMobileCategory === 'body'}
+              className={`breathing-space__mobile-category-tab ${
+                activeMobileCategory === 'body' ? 'breathing-space__mobile-category-tab--active' : ''
+              }`}
+              onClick={() => handleMobileCategoryChange('body')}
+            >
+              Body
+            </button>
+          </div>
+          {activeMobileTab ? (
+            <div className="breathing-space__mobile-tabs" role="tablist" aria-label="Energy options">
+              {activeCategoryTabs.map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeMobileTab === tab}
+                  className={`breathing-space__mobile-tab ${
+                    activeMobileTab === tab ? 'breathing-space__mobile-tab--active' : ''
+                  }`}
+                  onClick={() => handleMobileTabChange(tab)}
+                >
+                  <span className="breathing-space__mobile-tab-icon" aria-hidden="true">
+                    {mobileTabOptions[tab].icon}
+                  </span>
+                  <span className="breathing-space__mobile-tab-title">{mobileTabOptions[tab].uppercaseLabel}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="breathing-space__mobile-launch" role="group" aria-label="Choose an energy focus">
+              {activeCategoryTabs.map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  className="breathing-space__mobile-launch-card"
+                  onClick={() => handleMobileTabChange(tab)}
+                >
+                  <span className="breathing-space__mobile-launch-icon" aria-hidden="true">
+                    {mobileTabOptions[tab].icon}
+                  </span>
+                  <span className="breathing-space__mobile-launch-title">{mobileTabOptions[tab].label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
-      {onNavigateToTimer ? (
+      {onNavigateToTimer && !isConflictFullscreen ? (
         <div className="breathing-space__timer-launch">
           <button
             type="button"
@@ -661,6 +686,18 @@ export function BreathingSpace({
               </div>
             )}
           </div>
+        </div>
+
+        <div className="breathing-space__library breathing-space__section breathing-space__section--conflict">
+          <div className="breathing-space__library-header">
+            <h3 className="breathing-space__library-title">Conflict Resolver</h3>
+          </div>
+          <p className="breathing-space__card-description">
+            Start the Breathing Space conflict mediation flow to clear tension with guided, calm communication.
+          </p>
+          <button type="button" className="btn btn--primary breathing-space__guided-start-button" disabled>
+            Coming soon
+          </button>
         </div>
 
         {/* Breathing Exercises Library */}
