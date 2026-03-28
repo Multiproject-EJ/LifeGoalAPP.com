@@ -10,16 +10,42 @@ Translate product direction into implementation-ready UX behavior for the Confli
 2. **One screen, one emotional objective.**
 3. **Main action card + calming background layer.**
 4. **Guided friction over speed** (intentional pacing prevents escalation).
+5. **One flow, one mode at a time** (no mixed internal/external branches on same screen).
 
 ---
 
 ## B) Visual and interaction language
+
+### Visual references (from stakeholder-provided mockups)
+- Entry screen should resemble a soft aurora/glass atmosphere with two large selection cards and a bottom-centered CTA.
+- Parallel Read should use a “calm focus chamber” style: timer halo at top, stacked summary cards, low-contrast safety note, and delayed CTA reveal.
 
 ### Visual style
 - Mood: calm, safe, trustworthy, non-clinical.
 - Palette: soft blue/purple with warm neutrals for reassurance.
 - Shape language: large radii, no sharp corners, no aggressive outlines.
 - Motion: slow inhale/exhale transitions for grounding, tighter confirms later.
+
+### Starter design tokens
+```ts
+export const conflictResolverTokens = {
+  colors: {
+    primary: '#6C7BFF',
+    calmBlue: '#A8B5FF',
+    calmPurple: '#B39DFF',
+    cardGlass: 'rgba(255,255,255,0.08)',
+    textPrimary: 'rgba(255,255,255,0.94)',
+    textMuted: 'rgba(255,255,255,0.72)',
+  },
+  radius: {
+    card: 20,
+    pill: 999,
+  },
+  blur: {
+    glass: 'blur(20px)',
+  },
+};
+```
 
 ### Interaction rules
 - Bottom-anchored primary CTAs (thumb-first).
@@ -125,6 +151,8 @@ Ensure both parties first read before reacting.
 - Circular timer at top (extendable).
 - Summary cards center.
 - Reactions locked until timer ends.
+- Safety copy pinned near footer:
+  - “You’re not required to agree. Just understand first.”
 
 ### Post-timer actions
 - `I understand this`
@@ -134,6 +162,24 @@ Ensure both parties first read before reacting.
 - Tap sentence and tag:
   - `Accurate`
   - `Missing context`
+
+### Critical interaction constraints
+- No avatars.
+- No chat bubbles.
+- No fast skip before timer.
+- No aggressive red/green success/fail signaling.
+
+### Micro-interactions
+1. Entry transition: blur → focus in ~320–420ms.
+2. Timer: gentle halo pulse, no ticking audio.
+3. Unlock actions: fade-in + subtle haptic when timer completes.
+4. Highlight action: soft glow chip anchored to selected sentence.
+
+### “Sync moment”
+- If all participants choose `I understand this`, trigger:
+  - subtle shared glow animation,
+  - “Alignment reached” micro-copy,
+  - single soft haptic pulse.
 
 ---
 
@@ -218,6 +264,45 @@ Lock in the agreement and increase durability.
 - `WhiteFlagFab`
 - `ApologyAlignmentPanel`
 - `AgreementCloseCard`
+
+### Component skeleton (Codex-ready)
+```tsx
+<FullScreenCard>
+  <TopBar>
+    <ProgressDots />
+    <TimerCircle seconds={45} />
+  </TopBar>
+
+  <Content>
+    <SummaryCard type="what_happened" />
+    <SummaryCard type="what_it_meant" />
+    <SummaryCard type="what_is_needed" />
+  </Content>
+
+  {timerDone ? (
+    <Footer>
+      <Button variant="primary">This feels accurate</Button>
+      <Button variant="secondary">Something feels off</Button>
+    </Footer>
+  ) : null}
+</FullScreenCard>
+```
+
+### Hold button behavior contract
+```ts
+// onPointerDown -> start countdown
+// onPointerUp or onPointerLeave -> cancel if threshold not met
+// threshold complete -> fire onComplete once + haptic
+```
+
+---
+
+## E.1) Priority implementation order
+1. `FullScreenCard` + stage routing shell
+2. `ParallelReadChamber` (signature mechanic)
+3. `HoldButton`
+4. `WhiteFlagFab`
+5. `PileStackAnimator` + AI merge transition
 
 ---
 

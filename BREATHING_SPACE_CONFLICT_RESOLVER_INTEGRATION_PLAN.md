@@ -266,3 +266,6 @@ To de-risk delivery, add:
 4. `docs/conflict-resolver/04_AI_MEDIATOR_PROMPT_SPEC.md`
 5. `docs/conflict-resolver/05_BREATHINGSPACE_COM_INTEGRATION.md`
 6. `docs/conflict-resolver/06_SAFETY_AND_FAIRNESS_TEST_PLAN.md`
+
+Implementation note:
+- `01_UX_COPY_AND_WIREFRAMES.md` now includes the visual direction from stakeholder mockups (entry mode chooser + parallel read chamber), Codex-ready component skeletons, and design token starter set.
