@@ -8,6 +8,7 @@ type ModeSelectionScreenProps = {
   sharedSessionCodeInput: string;
   onSharedSessionCodeInputChange: (value: string) => void;
   sharedParticipantCount: number;
+  sharedSessionLastSyncedAt: string | null;
   onCreateSharedSession: () => void | Promise<void>;
   onJoinSharedSession: () => void | Promise<void>;
   onRefreshSharedSession: () => void | Promise<void>;
@@ -23,6 +24,7 @@ export function ModeSelectionScreen({
   sharedSessionCodeInput,
   onSharedSessionCodeInputChange,
   sharedParticipantCount,
+  sharedSessionLastSyncedAt,
   onCreateSharedSession,
   onJoinSharedSession,
   onRefreshSharedSession,
@@ -75,6 +77,10 @@ export function ModeSelectionScreen({
             <div className="conflict-resolver__shared-session-status">
               <p><strong>Session code:</strong> {sharedSessionId}</p>
               <p><strong>Participants joined:</strong> {sharedParticipantCount}</p>
+              <p>
+                <strong>Last sync:</strong>{' '}
+                {sharedSessionLastSyncedAt ? new Date(sharedSessionLastSyncedAt).toLocaleTimeString() : 'Pending'}
+              </p>
               <button type="button" className="btn" onClick={onRefreshSharedSession} disabled={sharedSessionBusy}>
                 Refresh participants
               </button>

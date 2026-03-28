@@ -91,6 +91,20 @@ export async function getConflictSessionStatus(sessionId: string) {
   return data.status as SessionStatus;
 }
 
+export async function getConflictSessionSnapshot(sessionId: string) {
+  const { data, error } = await getUntypedSupabase()
+    .from('conflict_sessions')
+    .select('status, updated_at')
+    .eq('id', sessionId)
+    .single();
+
+  if (error) throw error;
+  return {
+    status: data.status as SessionStatus,
+    updatedAt: data.updated_at as string,
+  };
+}
+
 export async function updateConflictSessionStatus(params: { sessionId: string; status: SessionStatus }) {
   const { error } = await getUntypedSupabase()
     .from('conflict_sessions')

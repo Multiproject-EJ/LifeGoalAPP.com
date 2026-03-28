@@ -7,6 +7,7 @@ import {
   addConflictParticipant,
   createConflictSession,
   getConflictParticipantCount,
+  getConflictSessionSnapshot,
   getConflictSessionStatus,
   getCurrentUserId,
   subscribeConflictSessionStatus,
@@ -121,6 +122,7 @@ export function useConflictSession() {
   const [sharedSessionError, setSharedSessionError] = useState<string | null>(null);
   const [sharedSessionBusy, setSharedSessionBusy] = useState(false);
   const [sharedSessionStatus, setSharedSessionStatus] = useState<ConflictStage | null>(null);
+  const [sharedSessionLastSyncedAt, setSharedSessionLastSyncedAt] = useState<string | null>(null);
 
   const currentPrompt = PRIVATE_CAPTURE_PROMPTS[promptIndex];
   const currentAnswer = answers[currentPrompt.id] ?? '';
@@ -165,6 +167,14 @@ export function useConflictSession() {
     setSharedParticipantCount(count);
   };
 
+  const resyncSharedSession = async (sessionId: string) => {
+    const snapshot = await getConflictSessionSnapshot(sessionId);
+    if (!isConflictStage(snapshot.status)) return;
+    setSharedSessionStatus(snapshot.status);
+    setSharedSessionLastSyncedAt(snapshot.updatedAt);
+    setStage(CONFLICT_STAGE_TO_UI[snapshot.status]);
+  };
+
   const createSharedSession = async () => {
     try {
       setSharedSessionBusy(true);
@@ -201,6 +211,8 @@ export function useConflictSession() {
       if (isConflictStage(status)) {
         setSharedSessionStatus(status);
       }
+      const snapshot = await getConflictSessionSnapshot(sessionId);
+      setSharedSessionLastSyncedAt(snapshot.updatedAt);
     } catch (error) {
       console.error('Failed to join shared conflict session', error);
       setSharedSessionError('Could not join this session code.');
@@ -390,27 +402,35 @@ export function useConflictSession() {
     let active = true;
     const syncCurrent = async () => {
       try {
-        const status = await getConflictSessionStatus(sharedSessionId);
-        if (!active || !isConflictStage(status)) return;
-        setSharedSessionStatus(status);
-        setStage(CONFLICT_STAGE_TO_UI[status]);
+        await resyncSharedSession(sharedSessionId);
       } catch (error) {
         console.error('Failed to load shared session status', error);
       }
     };
 
     void syncCurrent();
+    const interval = window.setInterval(() => {
+      void syncCurrent();
+    }, 10000);
+    const onOnline = () => {
+      void syncCurrent();
+    };
+    window.addEventListener('online', onOnline);
+
     const unsubscribe = subscribeConflictSessionStatus({
       sessionId: sharedSessionId,
       onStatusChange: (nextStatus) => {
         if (!isConflictStage(nextStatus)) return;
         setSharedSessionStatus(nextStatus);
         setStage(CONFLICT_STAGE_TO_UI[nextStatus]);
+        setSharedSessionLastSyncedAt(new Date().toISOString());
       },
     });
 
     return () => {
       active = false;
+      window.clearInterval(interval);
+      window.removeEventListener('online', onOnline);
       unsubscribe();
     };
   }, [selectedType, sharedSessionId]);
@@ -458,6 +478,7 @@ export function useConflictSession() {
     setSharedSessionId(parsed.sharedSessionId ?? null);
     setSharedParticipantCount(parsed.sharedParticipantCount ?? 0);
     setSharedSessionStatus((parsed.sharedSessionId ? UI_TO_CONFLICT_STAGE[parsed.stage ?? 'mode_selection'] : null));
+    setSharedSessionLastSyncedAt(null);
     setDraftHydrated(true);
   }, []);
 
@@ -531,6 +552,7 @@ export function useConflictSession() {
     setSharedSessionError(null);
     setSharedSessionBusy(false);
     setSharedSessionStatus(null);
+    setSharedSessionLastSyncedAt(null);
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(CONFLICT_SESSION_DRAFT_STORAGE_KEY);
     }
@@ -549,9 +571,11 @@ export function useConflictSession() {
       setSharedSessionCodeInput,
       sharedParticipantCount,
       refreshSharedParticipantCount,
+      resyncSharedSession,
       sharedSessionError,
       sharedSessionBusy,
       sharedSessionStatus,
+      sharedSessionLastSyncedAt,
       groundingIndex,
       groundingStatements: GROUNDING_STATEMENTS,
       nextGroundingStatement,
@@ -612,6 +636,7 @@ export function useConflictSession() {
       sharedSessionError,
       sharedSessionBusy,
       sharedSessionStatus,
+      sharedSessionLastSyncedAt,
       currentAnswer,
       answers,
       parallelDecision,

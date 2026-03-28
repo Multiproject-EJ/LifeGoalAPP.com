@@ -47,7 +47,7 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 ### Acceptance criteria
 - [x] Two clients can join same session and observe stage changes in realtime.
 - [x] Invalid stage transition is rejected and logged.
-- [ ] Reconnect resumes latest persisted stage without corruption.
+- [x] Reconnect resumes latest persisted stage without corruption.
 
 ### Risks / notes
 - Race conditions on simultaneous stage-complete events.

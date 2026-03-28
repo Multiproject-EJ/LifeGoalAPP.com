@@ -22,10 +22,14 @@ export function ConflictResolverExperience() {
         sharedSessionCodeInput={session.sharedSessionCodeInput}
         onSharedSessionCodeInputChange={session.setSharedSessionCodeInput}
         sharedParticipantCount={session.sharedParticipantCount}
+        sharedSessionLastSyncedAt={session.sharedSessionLastSyncedAt}
         onCreateSharedSession={session.createSharedSession}
         onJoinSharedSession={session.joinSharedSession}
         onRefreshSharedSession={() => session.sharedSessionId
-          ? session.refreshSharedParticipantCount(session.sharedSessionId)
+          ? Promise.all([
+            session.refreshSharedParticipantCount(session.sharedSessionId),
+            session.resyncSharedSession(session.sharedSessionId),
+          ]).then(() => undefined)
           : undefined}
         sharedSessionError={session.sharedSessionError}
         sharedSessionBusy={session.sharedSessionBusy}
