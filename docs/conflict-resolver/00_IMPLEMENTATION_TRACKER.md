@@ -72,8 +72,8 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 
 ### Acceptance criteria
 - [ ] User can exit/re-enter without losing stage progress.
-- [ ] Hold interaction only completes after threshold (pointer cancel below threshold).
-- [ ] Rewrite transparency shows what changed before user accepts.
+- [x] Hold interaction only completes after threshold (pointer cancel below threshold).
+- [x] Rewrite transparency shows what changed before user accepts.
 
 ---
 
@@ -95,7 +95,7 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 - `src/features/conflict-resolver/components/SummaryHighlightMenu.tsx`
 
 ### Acceptance criteria
-- [ ] No reaction buttons before timer unlock.
+- [x] No reaction buttons before timer unlock.
 - [x] Highlight metadata persists and is visible in subsequent stage.
 - [ ] UI remains fully usable on small mobile viewport with one-hand CTA reach.
 

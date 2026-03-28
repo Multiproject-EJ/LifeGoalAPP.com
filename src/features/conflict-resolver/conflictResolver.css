@@ -163,6 +163,25 @@
   min-height: 140px;
 }
 
+.conflict-resolver__rewrite-actions {
+  margin-top: var(--space-2);
+}
+
+.conflict-resolver__rewrite-preview {
+  margin-top: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.conflict-resolver__rewrite-preview p {
+  margin: 0;
+}
+
 .conflict-resolver__response-list {
   list-style: none;
   margin: 0;

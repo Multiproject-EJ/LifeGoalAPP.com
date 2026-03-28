@@ -50,6 +50,7 @@ export function ParallelReadScreen({
   }, [timerDone, allCardsAccurate, onAlignmentReached, alignmentCallbackSent]);
 
   const applyAnnotation = (action: HighlightAction) => {
+    if (!timerDone) return;
     if (!selectedCardId) return;
     setAnnotations((prev) => ({ ...prev, [selectedCardId]: action }));
     setSelectedCardId(null);
@@ -71,7 +72,10 @@ export function ParallelReadScreen({
             className={`conflict-resolver__parallel-card ${
               selectedCardId === card.id ? 'conflict-resolver__parallel-card--selected' : ''
             }`}
-            onClick={() => setSelectedCardId(card.id)}
+            onClick={() => {
+              if (!timerDone) return;
+              setSelectedCardId(card.id);
+            }}
           >
             <h4>{card.title}</h4>
             <p>{card.text}</p>
@@ -91,6 +95,11 @@ export function ParallelReadScreen({
       ) : null}
 
       <div className="conflict-resolver__footer-actions">
+        {!timerDone ? (
+          <p className="conflict-resolver__input-error" role="status">
+            Reactions unlock in {remainingSeconds}s.
+          </p>
+        ) : null}
         {alignmentReached ? (
           <p className="conflict-resolver__alignment-banner" role="status">
             Alignment reached: all summary cards marked accurate.

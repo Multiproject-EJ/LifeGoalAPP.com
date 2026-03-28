@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 type HoldButtonProps = {
   label: string;
@@ -45,6 +45,10 @@ export function HoldButton({ label, durationMs = 1800, onComplete, disabled = fa
 
   const handlePointerDown = () => {
     if (disabled) return;
+    if (frameRef.current !== null) {
+      window.cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
+    }
     startRef.current = performance.now();
     frameRef.current = window.requestAnimationFrame(tick);
   };
@@ -54,6 +58,17 @@ export function HoldButton({ label, durationMs = 1800, onComplete, disabled = fa
       cancel();
     }
   };
+
+  useEffect(() => {
+    const handleWindowBlur = () => {
+      cancel();
+    };
+    window.addEventListener('blur', handleWindowBlur);
+    return () => {
+      window.removeEventListener('blur', handleWindowBlur);
+      cancel();
+    };
+  }, []);
 
   return (
     <button

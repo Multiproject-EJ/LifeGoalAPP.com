@@ -27,6 +27,12 @@ export function PrivateCaptureScreen({
 }: PrivateCaptureScreenProps) {
   const prompt = prompts[promptIndex];
   const isLast = promptIndex >= prompts.length - 1;
+  const suggestedRewrite = value
+    .replace(/\balways\b/gi, 'often')
+    .replace(/\bnever\b/gi, 'rarely')
+    .replace(/\byou made me\b/gi, 'I felt')
+    .replace(/\byou are\b/gi, 'I experienced this as');
+  const hasRewriteSuggestion = suggestedRewrite.trim() !== value.trim() && value.trim().length > 0;
 
   return (
     <section className="conflict-resolver__screen" aria-labelledby="private-capture-title">
@@ -49,6 +55,22 @@ export function PrivateCaptureScreen({
           onChange={(event) => onChangeValue(event.target.value)}
           rows={6}
         />
+        <div className="conflict-resolver__rewrite-actions">
+          <button
+            type="button"
+            className="btn"
+            disabled={!hasRewriteSuggestion}
+            onClick={() => onChangeValue(suggestedRewrite)}
+          >
+            Use calmer rewrite
+          </button>
+        </div>
+        {hasRewriteSuggestion ? (
+          <div className="conflict-resolver__rewrite-preview">
+            <p><strong>Original:</strong> {value}</p>
+            <p><strong>Suggested:</strong> {suggestedRewrite}</p>
+          </div>
+        ) : null}
       </article>
 
       <div className="conflict-resolver__footer-actions">
