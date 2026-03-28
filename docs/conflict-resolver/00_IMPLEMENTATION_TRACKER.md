@@ -96,7 +96,7 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 
 ### Acceptance criteria
 - [ ] No reaction buttons before timer unlock.
-- [ ] Highlight metadata persists and is visible in subsequent stage.
+- [x] Highlight metadata persists and is visible in subsequent stage.
 - [ ] UI remains fully usable on small mobile viewport with one-hand CTA reach.
 
 ---

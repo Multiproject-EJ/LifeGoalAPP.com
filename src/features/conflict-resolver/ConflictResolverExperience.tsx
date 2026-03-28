@@ -76,6 +76,7 @@ export function ConflictResolverExperience() {
         onQueueWhiteFlagOffer={session.queueWhiteFlagOffer}
         onPromoteProposal={session.promoteProposal}
         onRemoveProposal={session.removeProposal}
+        parallelAnnotationItems={session.parallelAnnotationItems}
         onContinue={session.moveToApologyAlignment}
       />
     );

@@ -240,10 +240,17 @@ export function useConflictSession() {
       ? `Active queued proposal: ${proposalQueue.find((proposal) => proposal.id === activeProposalId)?.text ?? 'Missing proposal.'}`
       : 'No queued proposal promoted yet.',
     proposalQueue.length > 0 ? `Queued proposals: ${proposalQueue.length}` : 'No queued proposals.',
+    ...Object.entries(parallelAnnotations).map(([key, tag]) => `${key.replace(/_/g, ' ')} marked: ${tag}`),
     selectedApologyType
       ? `Apology type: ${selectedApologyType.replace(/_/g, ' ')} (${apologyTiming})`
       : `Apology type pending (${apologyTiming})`,
   ];
+
+  const parallelAnnotationItems = Object.entries(parallelAnnotations).map(([key, tag]) => ({
+    id: key,
+    label: key.replace(/_/g, ' '),
+    tag,
+  }));
 
   const summaryCards = [
     {
@@ -395,6 +402,7 @@ export function useConflictSession() {
       completeParallelRead,
       parallelDecision,
       parallelAnnotations,
+      parallelAnnotationItems,
       alignmentReached,
       markAlignmentReached,
       resolutionOptions,
@@ -434,6 +442,7 @@ export function useConflictSession() {
       answers,
       parallelDecision,
       parallelAnnotations,
+      parallelAnnotationItems,
       alignmentReached,
       selectedResolution,
       whiteFlagOffer,

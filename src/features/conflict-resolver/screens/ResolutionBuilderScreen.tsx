@@ -15,6 +15,7 @@ type ResolutionBuilderScreenProps = {
   onQueueWhiteFlagOffer: () => void;
   onPromoteProposal: (id: string) => void;
   onRemoveProposal: (id: string) => void;
+  parallelAnnotationItems: { id: string; label: string; tag: 'accurate' | 'missing' | 'note' }[];
   onContinue: () => void;
 };
 
@@ -29,6 +30,7 @@ export function ResolutionBuilderScreen({
   onQueueWhiteFlagOffer,
   onPromoteProposal,
   onRemoveProposal,
+  parallelAnnotationItems,
   onContinue,
 }: ResolutionBuilderScreenProps) {
   const canContinue = Boolean(selectedOptionId) || Boolean(activeProposalId);
@@ -97,6 +99,20 @@ export function ResolutionBuilderScreen({
                     Remove
                   </button>
                 </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {parallelAnnotationItems.length > 0 ? (
+        <section className="conflict-resolver__annotation-summary" aria-label="Parallel read highlights">
+          <h4>Parallel read highlights</h4>
+          <ul>
+            {parallelAnnotationItems.map((item) => (
+              <li key={item.id}>
+                <span>{item.label}</span>
+                <strong>{item.tag}</strong>
               </li>
             ))}
           </ul>
