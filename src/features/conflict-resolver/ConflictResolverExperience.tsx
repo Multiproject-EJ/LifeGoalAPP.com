@@ -1,6 +1,8 @@
 import { ModeSelectionScreen } from './screens/ModeSelectionScreen';
 import { GroundingScreen } from './screens/GroundingScreen';
 import { PrivateCaptureScreen } from './screens/PrivateCaptureScreen';
+import { CollectPileScreen } from './screens/CollectPileScreen';
+import { ParallelReadScreen } from './screens/ParallelReadScreen';
 import { useConflictSession } from './hooks/useConflictSession';
 import './conflictResolver.css';
 
@@ -43,12 +45,20 @@ export function ConflictResolverExperience() {
     );
   }
 
+  if (session.stage === 'collect_pile') {
+    return <CollectPileScreen summaryCards={session.summaryCards} onContinue={session.enterParallelRead} />;
+  }
+
+  if (session.stage === 'parallel_read') {
+    return <ParallelReadScreen summaryCards={session.summaryCards} onComplete={session.completeParallelRead} />;
+  }
+
   return (
     <section className="conflict-resolver__screen" aria-labelledby="conflict-ready-title">
       <header className="conflict-resolver__header">
-        <h3 id="conflict-ready-title" className="conflict-resolver__title">Ready for Shared Step</h3>
+        <h3 id="conflict-ready-title" className="conflict-resolver__title">Ready for Negotiation</h3>
         <p className="conflict-resolver__subtitle">
-          Stage 3 (Collect &amp; Pile) is next. Your private responses are saved in-session for this prototype flow.
+          Stage 5 is next. Parallel read decision: {session.parallelDecision ?? 'pending'}.
         </p>
       </header>
 
@@ -62,11 +72,14 @@ export function ConflictResolverExperience() {
       </ul>
 
       <div className="conflict-resolver__footer-actions">
+        <button type="button" className="btn" onClick={session.enterParallelRead}>
+          Re-open Parallel Read
+        </button>
         <button type="button" className="btn" onClick={session.resetFlow}>
           Start over
         </button>
         <button type="button" className="btn btn--primary" disabled>
-          Continue (Stage 3 coming next PR)
+          Continue (Stage 5 coming next PR)
         </button>
       </div>
     </section>

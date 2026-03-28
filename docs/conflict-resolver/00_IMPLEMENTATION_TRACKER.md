@@ -19,7 +19,7 @@
 |---|---|---|---|---|
 | PR1 | Foundation: schema + state machine + realtime contracts | DONE | Codex | 2026-03-28 |
 | PR2 | Entry/Grounding/Private Capture (Stage 0–2) | IN_PROGRESS | Codex | TBD |
-| PR3 | Collect & Pile + Parallel Read (Stage 3–4) | TODO | TBD | TBD |
+| PR3 | Collect & Pile + Parallel Read (Stage 3–4) | IN_PROGRESS | Codex | TBD |
 | PR4 | Resolution + Apology Alignment + Agreements (Stage 5+) | TODO | TBD | TBD |
 | PR5 | Invitee onboarding + cross-domain scaffold (`breathingspace.com`) | TODO | TBD | TBD |
 | PR6 | Hardening pass (safety, fairness, resiliency, analytics) | TODO | TBD | TBD |
@@ -80,9 +80,9 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 ## 4) PR3 — Stage 3–4 UX (Collect & Pile, Parallel Read)
 
 ### Deliverables
-- [ ] Build stack-to-summary interaction for Collect & Pile.
-- [ ] Build Parallel Read “silent chamber” with timer-gated controls.
-- [ ] Add highlight actions:
+- [x] Build stack-to-summary interaction for Collect & Pile.
+- [x] Build Parallel Read “silent chamber” with timer-gated controls.
+- [x] Add highlight actions:
   - `Accurate`
   - `Missing something`
   - `Add note`

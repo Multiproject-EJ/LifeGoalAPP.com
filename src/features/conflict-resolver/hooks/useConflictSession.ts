@@ -2,7 +2,13 @@ import { useMemo, useState } from 'react';
 import type { ConflictType } from '../types/conflictSession';
 import type { PrivatePrompt } from '../screens/PrivateCaptureScreen';
 
-type ConflictResolverUiStage = 'mode_selection' | 'grounding' | 'private_capture' | 'ready_for_shared_step';
+type ConflictResolverUiStage =
+  | 'mode_selection'
+  | 'grounding'
+  | 'private_capture'
+  | 'collect_pile'
+  | 'parallel_read'
+  | 'ready_for_negotiation';
 
 const GROUNDING_STATEMENTS = [
   'People are not evil at heart.',
@@ -34,6 +40,8 @@ export function useConflictSession() {
   const [groundingIndex, setGroundingIndex] = useState(0);
   const [promptIndex, setPromptIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [parallelDecision, setParallelDecision] = useState<'accurate' | 'missing' | null>(null);
+  const [parallelAnnotations, setParallelAnnotations] = useState<Record<string, 'accurate' | 'missing' | 'note'>>({});
 
   const currentPrompt = PRIVATE_CAPTURE_PROMPTS[promptIndex];
   const currentAnswer = answers[currentPrompt.id] ?? '';
@@ -67,15 +75,46 @@ export function useConflictSession() {
 
   const skipPrompt = () => {
     if (promptIndex >= PRIVATE_CAPTURE_PROMPTS.length - 1) {
-      setStage('ready_for_shared_step');
+      setStage('collect_pile');
       return;
     }
     nextPrompt();
   };
 
   const finishPrivateCapture = () => {
-    setStage('ready_for_shared_step');
+    setStage('collect_pile');
   };
+
+  const enterParallelRead = () => {
+    setStage('parallel_read');
+  };
+
+  const completeParallelRead = (
+    decision: 'accurate' | 'missing',
+    annotations: Record<string, 'accurate' | 'missing' | 'note'>,
+  ) => {
+    setParallelDecision(decision);
+    setParallelAnnotations(annotations);
+    setStage('ready_for_negotiation');
+  };
+
+  const summaryCards = [
+    {
+      id: 'what_happened',
+      title: 'What happened',
+      text: answers.what_happened || 'No entry yet.',
+    },
+    {
+      id: 'what_it_meant',
+      title: 'What it meant',
+      text: answers.what_it_meant || 'No entry yet.',
+    },
+    {
+      id: 'what_is_needed',
+      title: 'What is needed',
+      text: answers.what_is_needed || 'No entry yet.',
+    },
+  ] as const;
 
   const resetFlow = () => {
     setStage('mode_selection');
@@ -83,6 +122,8 @@ export function useConflictSession() {
     setGroundingIndex(0);
     setPromptIndex(0);
     setAnswers({});
+    setParallelDecision(null);
+    setParallelAnnotations({});
   };
 
   return useMemo(
@@ -104,8 +145,13 @@ export function useConflictSession() {
       skipPrompt,
       finishPrivateCapture,
       answers,
+      summaryCards,
+      enterParallelRead,
+      completeParallelRead,
+      parallelDecision,
+      parallelAnnotations,
       resetFlow,
     }),
-    [stage, selectedType, groundingIndex, promptIndex, currentAnswer, answers],
+    [stage, selectedType, groundingIndex, promptIndex, currentAnswer, answers, parallelDecision, parallelAnnotations],
   );
 }
