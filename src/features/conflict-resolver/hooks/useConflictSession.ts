@@ -8,7 +8,9 @@ type ConflictResolverUiStage =
   | 'private_capture'
   | 'collect_pile'
   | 'parallel_read'
-  | 'ready_for_negotiation';
+  | 'resolution_builder'
+  | 'apology_alignment'
+  | 'agreement_preview';
 
 const GROUNDING_STATEMENTS = [
   'People are not evil at heart.',
@@ -42,6 +44,12 @@ export function useConflictSession() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [parallelDecision, setParallelDecision] = useState<'accurate' | 'missing' | null>(null);
   const [parallelAnnotations, setParallelAnnotations] = useState<Record<string, 'accurate' | 'missing' | 'note'>>({});
+  const [selectedResolution, setSelectedResolution] = useState<string | null>(null);
+  const [whiteFlagOffer, setWhiteFlagOffer] = useState('');
+  const [selectedApologyType, setSelectedApologyType] = useState<
+    'acknowledge_impact' | 'take_responsibility' | 'repair_action' | 'reassurance' | null
+  >(null);
+  const [apologyTiming, setApologyTiming] = useState<'simultaneous' | 'sequenced'>('simultaneous');
 
   const currentPrompt = PRIVATE_CAPTURE_PROMPTS[promptIndex];
   const currentAnswer = answers[currentPrompt.id] ?? '';
@@ -95,7 +103,33 @@ export function useConflictSession() {
   ) => {
     setParallelDecision(decision);
     setParallelAnnotations(annotations);
-    setStage('ready_for_negotiation');
+    setStage('resolution_builder');
+  };
+
+  const resolutionOptions = [
+    {
+      id: 'communicate_earlier',
+      title: 'Communicate earlier when plans change',
+      description: 'Set expectation to notify as soon as timing changes.',
+    },
+    {
+      id: 'weekly_check_in',
+      title: 'Run a weekly 10-minute check-in',
+      description: 'Create a predictable moment for concerns before they stack.',
+    },
+    {
+      id: 'repair_protocol',
+      title: 'Use a 24-hour repair protocol',
+      description: 'Agree to acknowledge and respond within 24 hours after friction.',
+    },
+  ] as const;
+
+  const moveToApologyAlignment = () => {
+    setStage('apology_alignment');
+  };
+
+  const completeApologyAlignment = () => {
+    setStage('agreement_preview');
   };
 
   const summaryCards = [
@@ -124,6 +158,10 @@ export function useConflictSession() {
     setAnswers({});
     setParallelDecision(null);
     setParallelAnnotations({});
+    setSelectedResolution(null);
+    setWhiteFlagOffer('');
+    setSelectedApologyType(null);
+    setApologyTiming('simultaneous');
   };
 
   return useMemo(
@@ -150,8 +188,32 @@ export function useConflictSession() {
       completeParallelRead,
       parallelDecision,
       parallelAnnotations,
+      resolutionOptions,
+      selectedResolution,
+      setSelectedResolution,
+      whiteFlagOffer,
+      setWhiteFlagOffer,
+      moveToApologyAlignment,
+      selectedApologyType,
+      setSelectedApologyType,
+      apologyTiming,
+      setApologyTiming,
+      completeApologyAlignment,
       resetFlow,
     }),
-    [stage, selectedType, groundingIndex, promptIndex, currentAnswer, answers, parallelDecision, parallelAnnotations],
+    [
+      stage,
+      selectedType,
+      groundingIndex,
+      promptIndex,
+      currentAnswer,
+      answers,
+      parallelDecision,
+      parallelAnnotations,
+      selectedResolution,
+      whiteFlagOffer,
+      selectedApologyType,
+      apologyTiming,
+    ],
   );
 }

@@ -20,7 +20,7 @@
 | PR1 | Foundation: schema + state machine + realtime contracts | DONE | Codex | 2026-03-28 |
 | PR2 | Entry/Grounding/Private Capture (Stage 0–2) | IN_PROGRESS | Codex | TBD |
 | PR3 | Collect & Pile + Parallel Read (Stage 3–4) | IN_PROGRESS | Codex | TBD |
-| PR4 | Resolution + Apology Alignment + Agreements (Stage 5+) | TODO | TBD | TBD |
+| PR4 | Resolution + Apology Alignment + Agreements (Stage 5+) | IN_PROGRESS | Codex | TBD |
 | PR5 | Invitee onboarding + cross-domain scaffold (`breathingspace.com`) | TODO | TBD | TBD |
 | PR6 | Hardening pass (safety, fairness, resiliency, analytics) | TODO | TBD | TBD |
 
@@ -104,9 +104,9 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 ## 5) PR4 — Resolution, Apology Alignment, Agreements
 
 ### Deliverables
-- [ ] Build option-card negotiation board (`Accept`, `Counter`, `Discuss`).
-- [ ] Build persistent White Flag CTA for constructive offers.
-- [ ] Build apology alignment module (type + timing + acknowledgment).
+- [x] Build option-card negotiation board (`Accept`, `Counter`, `Discuss`).
+- [x] Build persistent White Flag CTA for constructive offers.
+- [x] Build apology alignment module (type + timing + acknowledgment).
 - [ ] Build agreement close card with follow-up reminder scheduling.
 
 ### Files (planned)

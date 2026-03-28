@@ -3,6 +3,8 @@ import { GroundingScreen } from './screens/GroundingScreen';
 import { PrivateCaptureScreen } from './screens/PrivateCaptureScreen';
 import { CollectPileScreen } from './screens/CollectPileScreen';
 import { ParallelReadScreen } from './screens/ParallelReadScreen';
+import { ResolutionBuilderScreen } from './screens/ResolutionBuilderScreen';
+import { ApologyAlignmentScreen } from './screens/ApologyAlignmentScreen';
 import { useConflictSession } from './hooks/useConflictSession';
 import './conflictResolver.css';
 
@@ -53,12 +55,37 @@ export function ConflictResolverExperience() {
     return <ParallelReadScreen summaryCards={session.summaryCards} onComplete={session.completeParallelRead} />;
   }
 
+  if (session.stage === 'resolution_builder') {
+    return (
+      <ResolutionBuilderScreen
+        options={session.resolutionOptions}
+        selectedOptionId={session.selectedResolution}
+        onSelectOption={session.setSelectedResolution}
+        whiteFlagOffer={session.whiteFlagOffer}
+        onWhiteFlagOfferChange={session.setWhiteFlagOffer}
+        onContinue={session.moveToApologyAlignment}
+      />
+    );
+  }
+
+  if (session.stage === 'apology_alignment') {
+    return (
+      <ApologyAlignmentScreen
+        selectedType={session.selectedApologyType}
+        onSelectType={session.setSelectedApologyType}
+        timingMode={session.apologyTiming}
+        onTimingModeChange={session.setApologyTiming}
+        onContinue={session.completeApologyAlignment}
+      />
+    );
+  }
+
   return (
     <section className="conflict-resolver__screen" aria-labelledby="conflict-ready-title">
       <header className="conflict-resolver__header">
-        <h3 id="conflict-ready-title" className="conflict-resolver__title">Ready for Negotiation</h3>
+        <h3 id="conflict-ready-title" className="conflict-resolver__title">Agreement Preview</h3>
         <p className="conflict-resolver__subtitle">
-          Stage 5 is next. Parallel read decision: {session.parallelDecision ?? 'pending'}.
+          Parallel read decision: {session.parallelDecision ?? 'pending'} • Timing: {session.apologyTiming}.
         </p>
       </header>
 
@@ -75,11 +102,14 @@ export function ConflictResolverExperience() {
         <button type="button" className="btn" onClick={session.enterParallelRead}>
           Re-open Parallel Read
         </button>
+        <button type="button" className="btn" onClick={session.moveToApologyAlignment}>
+          Re-open Apology Alignment
+        </button>
         <button type="button" className="btn" onClick={session.resetFlow}>
           Start over
         </button>
         <button type="button" className="btn btn--primary" disabled>
-          Continue (Stage 5 coming next PR)
+          Continue (Agreement finalization next PR)
         </button>
       </div>
     </section>
