@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 
 type HoldButtonProps = {
   label: string;
@@ -43,8 +44,10 @@ export function HoldButton({ label, durationMs = 1800, onComplete, disabled = fa
     frameRef.current = window.requestAnimationFrame(tick);
   };
 
-  const handlePointerDown = () => {
+  const handlePointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (disabled) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
     if (frameRef.current !== null) {
       window.cancelAnimationFrame(frameRef.current);
       frameRef.current = null;
@@ -79,6 +82,8 @@ export function HoldButton({ label, durationMs = 1800, onComplete, disabled = fa
       onPointerUp={handlePointerUp}
       onPointerCancel={cancel}
       onPointerLeave={handlePointerUp}
+      onContextMenu={(event) => event.preventDefault()}
+      onDragStart={(event) => event.preventDefault()}
       disabled={disabled}
     >
       <span className="conflict-resolver__hold-button-progress" style={{ width: `${progressPercent}%` }} />
