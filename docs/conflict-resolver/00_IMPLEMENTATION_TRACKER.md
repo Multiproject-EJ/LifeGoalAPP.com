@@ -107,7 +107,7 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 - [x] Build option-card negotiation board (`Accept`, `Counter`, `Discuss`).
 - [x] Build persistent White Flag CTA for constructive offers.
 - [x] Build apology alignment module (type + timing + acknowledgment).
-- [ ] Build agreement close card with follow-up reminder scheduling.
+- [x] Build agreement close card with follow-up reminder scheduling.
 
 ### Files (planned)
 - `src/features/conflict-resolver/screens/ResolutionBuilderScreen.tsx`

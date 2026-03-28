@@ -10,7 +10,8 @@ type ConflictResolverUiStage =
   | 'parallel_read'
   | 'resolution_builder'
   | 'apology_alignment'
-  | 'agreement_preview';
+  | 'agreement_preview'
+  | 'agreement_finalized';
 
 const GROUNDING_STATEMENTS = [
   'People are not evil at heart.',
@@ -50,6 +51,7 @@ export function useConflictSession() {
     'acknowledge_impact' | 'take_responsibility' | 'repair_action' | 'reassurance' | null
   >(null);
   const [apologyTiming, setApologyTiming] = useState<'simultaneous' | 'sequenced'>('simultaneous');
+  const [followUpDate, setFollowUpDate] = useState('');
 
   const currentPrompt = PRIVATE_CAPTURE_PROMPTS[promptIndex];
   const currentAnswer = answers[currentPrompt.id] ?? '';
@@ -132,6 +134,20 @@ export function useConflictSession() {
     setStage('agreement_preview');
   };
 
+  const finalizeAgreement = () => {
+    setStage('agreement_finalized');
+  };
+
+  const agreementSummaryItems = [
+    selectedResolution
+      ? resolutionOptions.find((option) => option.id === selectedResolution)?.title ?? 'Selected resolution option'
+      : 'No predefined option selected.',
+    whiteFlagOffer.trim().length > 0 ? `White Flag offer: ${whiteFlagOffer.trim()}` : 'No white-flag offer submitted.',
+    selectedApologyType
+      ? `Apology type: ${selectedApologyType.replace(/_/g, ' ')} (${apologyTiming})`
+      : `Apology type pending (${apologyTiming})`,
+  ];
+
   const summaryCards = [
     {
       id: 'what_happened',
@@ -162,6 +178,7 @@ export function useConflictSession() {
     setWhiteFlagOffer('');
     setSelectedApologyType(null);
     setApologyTiming('simultaneous');
+    setFollowUpDate('');
   };
 
   return useMemo(
@@ -199,6 +216,10 @@ export function useConflictSession() {
       apologyTiming,
       setApologyTiming,
       completeApologyAlignment,
+      followUpDate,
+      setFollowUpDate,
+      agreementSummaryItems,
+      finalizeAgreement,
       resetFlow,
     }),
     [
@@ -214,6 +235,7 @@ export function useConflictSession() {
       whiteFlagOffer,
       selectedApologyType,
       apologyTiming,
+      followUpDate,
     ],
   );
 }

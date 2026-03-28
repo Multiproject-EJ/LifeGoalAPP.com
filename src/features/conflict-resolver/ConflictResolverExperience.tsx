@@ -5,6 +5,7 @@ import { CollectPileScreen } from './screens/CollectPileScreen';
 import { ParallelReadScreen } from './screens/ParallelReadScreen';
 import { ResolutionBuilderScreen } from './screens/ResolutionBuilderScreen';
 import { ApologyAlignmentScreen } from './screens/ApologyAlignmentScreen';
+import { AgreementCloseCard } from './components/AgreementCloseCard';
 import { useConflictSession } from './hooks/useConflictSession';
 import './conflictResolver.css';
 
@@ -77,6 +78,31 @@ export function ConflictResolverExperience() {
         onTimingModeChange={session.setApologyTiming}
         onContinue={session.completeApologyAlignment}
       />
+    );
+  }
+
+  if (session.stage === 'agreement_preview') {
+    return (
+      <AgreementCloseCard
+        summaryItems={session.agreementSummaryItems}
+        followUpDate={session.followUpDate}
+        onFollowUpDateChange={session.setFollowUpDate}
+        onFinalize={session.finalizeAgreement}
+      />
+    );
+  }
+
+  if (session.stage === 'agreement_finalized') {
+    return (
+      <section className="conflict-resolver__screen" aria-labelledby="conflict-finalized-title">
+        <header className="conflict-resolver__header">
+          <h3 id="conflict-finalized-title" className="conflict-resolver__title">Agreement finalized</h3>
+          <p className="conflict-resolver__subtitle">Great progress. You can now schedule follow-through and close calmly.</p>
+        </header>
+        <button type="button" className="btn btn--primary conflict-resolver__primary-cta" onClick={session.resetFlow}>
+          Start new session
+        </button>
+      </section>
     );
   }
 
