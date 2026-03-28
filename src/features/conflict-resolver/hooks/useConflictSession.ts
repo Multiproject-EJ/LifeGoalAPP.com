@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ConflictType } from '../types/conflictSession';
 import type { PrivatePrompt } from '../screens/PrivateCaptureScreen';
 
@@ -38,6 +38,24 @@ const PRIVATE_CAPTURE_PROMPTS: readonly PrivatePrompt[] = [
 ];
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const CONFLICT_SESSION_DRAFT_STORAGE_KEY = 'conflict-resolver:draft:v1';
+
+type ConflictSessionDraftSnapshot = {
+  stage: ConflictResolverUiStage;
+  selectedType: ConflictType | null;
+  groundingIndex: number;
+  promptIndex: number;
+  answers: Record<string, string>;
+  parallelDecision: 'accurate' | 'missing' | null;
+  parallelAnnotations: Record<string, 'accurate' | 'missing' | 'note'>;
+  selectedResolution: string | null;
+  whiteFlagOffer: string;
+  selectedApologyType: 'acknowledge_impact' | 'take_responsibility' | 'repair_action' | 'reassurance' | null;
+  apologyTiming: 'simultaneous' | 'sequenced';
+  followUpDate: string;
+  lightweightParticipants: string[];
+  alignmentReached: boolean;
+};
 
 export function useConflictSession() {
   const [stage, setStage] = useState<ConflictResolverUiStage>('mode_selection');
@@ -57,6 +75,8 @@ export function useConflictSession() {
   const [inviteeEmailDraft, setInviteeEmailDraft] = useState('');
   const [inviteeEmailError, setInviteeEmailError] = useState<string | null>(null);
   const [lightweightParticipants, setLightweightParticipants] = useState<string[]>([]);
+  const [alignmentReached, setAlignmentReached] = useState(false);
+  const [draftHydrated, setDraftHydrated] = useState(false);
 
   const currentPrompt = PRIVATE_CAPTURE_PROMPTS[promptIndex];
   const currentAnswer = answers[currentPrompt.id] ?? '';
@@ -131,6 +151,7 @@ export function useConflictSession() {
   };
 
   const enterParallelRead = () => {
+    setAlignmentReached(false);
     setStage('parallel_read');
   };
 
@@ -140,7 +161,13 @@ export function useConflictSession() {
   ) => {
     setParallelDecision(decision);
     setParallelAnnotations(annotations);
+    const allCardsAccurate = PRIVATE_CAPTURE_PROMPTS.every((prompt) => annotations[prompt.id] === 'accurate');
+    setAlignmentReached(decision === 'accurate' && allCardsAccurate);
     setStage('resolution_builder');
+  };
+
+  const markAlignmentReached = () => {
+    setAlignmentReached(true);
   };
 
   const resolutionOptions = [
@@ -201,6 +228,84 @@ export function useConflictSession() {
     },
   ] as const;
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      setDraftHydrated(true);
+      return;
+    }
+    const serialized = window.localStorage.getItem(CONFLICT_SESSION_DRAFT_STORAGE_KEY);
+    if (!serialized) {
+      setDraftHydrated(true);
+      return;
+    }
+
+    let parsed: ConflictSessionDraftSnapshot | null = null;
+    try {
+      parsed = JSON.parse(serialized) as ConflictSessionDraftSnapshot;
+    } catch {
+      window.localStorage.removeItem(CONFLICT_SESSION_DRAFT_STORAGE_KEY);
+      setDraftHydrated(true);
+      return;
+    }
+    if (!parsed || typeof parsed !== 'object') {
+      setDraftHydrated(true);
+      return;
+    }
+
+    setStage(parsed.stage ?? 'mode_selection');
+    setSelectedType(parsed.selectedType ?? null);
+    setGroundingIndex(parsed.groundingIndex ?? 0);
+    setPromptIndex(parsed.promptIndex ?? 0);
+    setAnswers(parsed.answers ?? {});
+    setParallelDecision(parsed.parallelDecision ?? null);
+    setParallelAnnotations(parsed.parallelAnnotations ?? {});
+    setSelectedResolution(parsed.selectedResolution ?? null);
+    setWhiteFlagOffer(parsed.whiteFlagOffer ?? '');
+    setSelectedApologyType(parsed.selectedApologyType ?? null);
+    setApologyTiming(parsed.apologyTiming ?? 'simultaneous');
+    setFollowUpDate(parsed.followUpDate ?? '');
+    setLightweightParticipants(parsed.lightweightParticipants ?? []);
+    setAlignmentReached(Boolean(parsed.alignmentReached));
+    setDraftHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!draftHydrated || typeof window === 'undefined') return;
+    const snapshot: ConflictSessionDraftSnapshot = {
+      stage,
+      selectedType,
+      groundingIndex,
+      promptIndex,
+      answers,
+      parallelDecision,
+      parallelAnnotations,
+      selectedResolution,
+      whiteFlagOffer,
+      selectedApologyType,
+      apologyTiming,
+      followUpDate,
+      lightweightParticipants,
+      alignmentReached,
+    };
+    window.localStorage.setItem(CONFLICT_SESSION_DRAFT_STORAGE_KEY, JSON.stringify(snapshot));
+  }, [
+    stage,
+    selectedType,
+    groundingIndex,
+    promptIndex,
+    answers,
+    parallelDecision,
+    parallelAnnotations,
+    selectedResolution,
+    whiteFlagOffer,
+    selectedApologyType,
+    apologyTiming,
+    followUpDate,
+    lightweightParticipants,
+    alignmentReached,
+    draftHydrated,
+  ]);
+
   const resetFlow = () => {
     setStage('mode_selection');
     setSelectedType(null);
@@ -217,6 +322,10 @@ export function useConflictSession() {
     setInviteeEmailDraft('');
     setInviteeEmailError(null);
     setLightweightParticipants([]);
+    setAlignmentReached(false);
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(CONFLICT_SESSION_DRAFT_STORAGE_KEY);
+    }
   };
 
   return useMemo(
@@ -243,6 +352,8 @@ export function useConflictSession() {
       completeParallelRead,
       parallelDecision,
       parallelAnnotations,
+      alignmentReached,
+      markAlignmentReached,
       resolutionOptions,
       selectedResolution,
       setSelectedResolution,
@@ -275,6 +386,7 @@ export function useConflictSession() {
       answers,
       parallelDecision,
       parallelAnnotations,
+      alignmentReached,
       selectedResolution,
       whiteFlagOffer,
       selectedApologyType,

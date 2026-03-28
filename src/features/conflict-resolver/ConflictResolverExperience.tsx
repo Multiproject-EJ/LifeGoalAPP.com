@@ -53,7 +53,14 @@ export function ConflictResolverExperience() {
   }
 
   if (session.stage === 'parallel_read') {
-    return <ParallelReadScreen summaryCards={session.summaryCards} onComplete={session.completeParallelRead} />;
+    return (
+      <ParallelReadScreen
+        summaryCards={session.summaryCards}
+        alignmentReached={session.alignmentReached}
+        onAlignmentReached={session.markAlignmentReached}
+        onComplete={session.completeParallelRead}
+      />
+    );
   }
 
   if (session.stage === 'resolution_builder') {

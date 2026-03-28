@@ -343,6 +343,17 @@
   flex-wrap: wrap;
 }
 
+.conflict-resolver__alignment-banner {
+  width: 100%;
+  margin: 0;
+  border: 1px solid rgba(103, 232, 180, 0.45);
+  border-radius: var(--radius-md);
+  background: rgba(16, 185, 129, 0.14);
+  color: #9ff3ce;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-sm);
+}
+
 @media (max-width: 640px) {
   .conflict-resolver__mode-grid {
     grid-template-columns: 1fr;

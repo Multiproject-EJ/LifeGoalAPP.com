@@ -11,14 +11,23 @@ type HighlightAction = 'accurate' | 'missing' | 'note';
 
 type ParallelReadScreenProps = {
   summaryCards: readonly SummaryCard[];
+  alignmentReached?: boolean;
   durationSeconds?: number;
+  onAlignmentReached?: () => void;
   onComplete: (decision: 'accurate' | 'missing', annotations: Record<string, HighlightAction>) => void;
 };
 
-export function ParallelReadScreen({ summaryCards, durationSeconds = 45, onComplete }: ParallelReadScreenProps) {
+export function ParallelReadScreen({
+  summaryCards,
+  alignmentReached = false,
+  durationSeconds = 45,
+  onAlignmentReached,
+  onComplete,
+}: ParallelReadScreenProps) {
   const [remainingSeconds, setRemainingSeconds] = useState(durationSeconds);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [annotations, setAnnotations] = useState<Record<string, HighlightAction>>({});
+  const [alignmentCallbackSent, setAlignmentCallbackSent] = useState(false);
 
   useEffect(() => {
     if (remainingSeconds <= 0) {
@@ -31,6 +40,14 @@ export function ParallelReadScreen({ summaryCards, durationSeconds = 45, onCompl
   }, [remainingSeconds]);
 
   const timerDone = remainingSeconds === 0;
+  const allCardsAccurate =
+    summaryCards.length > 0 && summaryCards.every((card) => annotations[card.id] === 'accurate');
+
+  useEffect(() => {
+    if (!timerDone || !allCardsAccurate || !onAlignmentReached || alignmentCallbackSent) return;
+    onAlignmentReached();
+    setAlignmentCallbackSent(true);
+  }, [timerDone, allCardsAccurate, onAlignmentReached, alignmentCallbackSent]);
 
   const applyAnnotation = (action: HighlightAction) => {
     if (!selectedCardId) return;
@@ -74,6 +91,11 @@ export function ParallelReadScreen({ summaryCards, durationSeconds = 45, onCompl
       ) : null}
 
       <div className="conflict-resolver__footer-actions">
+        {alignmentReached ? (
+          <p className="conflict-resolver__alignment-banner" role="status">
+            Alignment reached: all summary cards marked accurate.
+          </p>
+        ) : null}
         <button
           type="button"
           className="btn btn--primary"

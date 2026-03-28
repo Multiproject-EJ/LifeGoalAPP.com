@@ -10,6 +10,7 @@ export const CONFLICT_REALTIME_EVENT_TYPES = [
   'participant.joined',
   'participant.left',
   'summary.updated',
+  'parallel_read.alignment_reached',
   'proposal.created',
   'proposal.updated',
   'apology.updated',
@@ -26,6 +27,7 @@ export type ConflictRealtimeEventPayloadMap = {
   'participant.joined': { sessionId: string; participantId: string };
   'participant.left': { sessionId: string; participantId: string };
   'summary.updated': { sessionId: string; summaryId: string; stage: ConflictStage };
+  'parallel_read.alignment_reached': { sessionId: string; participantId: string; annotationCount: number };
   'proposal.created': { sessionId: string; proposalId: string };
   'proposal.updated': { sessionId: string; proposalId: string };
   'apology.updated': { sessionId: string; apologyId: string };
