@@ -320,6 +320,12 @@
   gap: var(--space-2);
 }
 
+.conflict-resolver__input-error {
+  margin: 0;
+  color: #ffb4b4;
+  font-size: var(--fs-sm);
+}
+
 .conflict-resolver__invite-item {
   display: flex;
   justify-content: space-between;

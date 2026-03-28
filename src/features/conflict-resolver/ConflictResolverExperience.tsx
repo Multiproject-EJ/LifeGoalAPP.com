@@ -89,6 +89,7 @@ export function ConflictResolverExperience() {
         onFollowUpDateChange={session.setFollowUpDate}
         inviteeEmailDraft={session.inviteeEmailDraft}
         onInviteeEmailDraftChange={session.setInviteeEmailDraft}
+        inviteeEmailError={session.inviteeEmailError}
         lightweightParticipants={session.lightweightParticipants}
         onAddLightweightParticipant={session.addLightweightParticipant}
         onRemoveLightweightParticipant={session.removeLightweightParticipant}

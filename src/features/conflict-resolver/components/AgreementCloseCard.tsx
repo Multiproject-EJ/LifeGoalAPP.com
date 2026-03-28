@@ -4,6 +4,7 @@ type AgreementCloseCardProps = {
   onFollowUpDateChange: (value: string) => void;
   inviteeEmailDraft: string;
   onInviteeEmailDraftChange: (value: string) => void;
+  inviteeEmailError: string | null;
   lightweightParticipants: string[];
   onAddLightweightParticipant: () => void;
   onRemoveLightweightParticipant: (email: string) => void;
@@ -16,6 +17,7 @@ export function AgreementCloseCard({
   onFollowUpDateChange,
   inviteeEmailDraft,
   onInviteeEmailDraftChange,
+  inviteeEmailError,
   lightweightParticipants,
   onAddLightweightParticipant,
   onRemoveLightweightParticipant,
@@ -68,6 +70,11 @@ export function AgreementCloseCard({
             Add
           </button>
         </div>
+        {inviteeEmailError && (
+          <p className="conflict-resolver__input-error" role="alert">
+            {inviteeEmailError}
+          </p>
+        )}
 
         {lightweightParticipants.length > 0 && (
           <ul className="conflict-resolver__invite-list">

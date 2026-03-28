@@ -37,6 +37,8 @@ const PRIVATE_CAPTURE_PROMPTS: readonly PrivatePrompt[] = [
   },
 ];
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function useConflictSession() {
   const [stage, setStage] = useState<ConflictResolverUiStage>('mode_selection');
   const [selectedType, setSelectedType] = useState<ConflictType | null>(null);
@@ -53,6 +55,7 @@ export function useConflictSession() {
   const [apologyTiming, setApologyTiming] = useState<'simultaneous' | 'sequenced'>('simultaneous');
   const [followUpDate, setFollowUpDate] = useState('');
   const [inviteeEmailDraft, setInviteeEmailDraft] = useState('');
+  const [inviteeEmailError, setInviteeEmailError] = useState<string | null>(null);
   const [lightweightParticipants, setLightweightParticipants] = useState<string[]>([]);
 
   const currentPrompt = PRIVATE_CAPTURE_PROMPTS[promptIndex];
@@ -70,13 +73,32 @@ export function useConflictSession() {
 
   const addLightweightParticipant = () => {
     const normalized = inviteeEmailDraft.trim().toLowerCase();
-    if (!normalized || lightweightParticipants.includes(normalized)) return;
+    if (!normalized) {
+      setInviteeEmailError('Enter an email before adding.');
+      return;
+    }
+    if (!EMAIL_PATTERN.test(normalized)) {
+      setInviteeEmailError('Enter a valid email format.');
+      return;
+    }
+    if (lightweightParticipants.includes(normalized)) {
+      setInviteeEmailError('This participant has already been added.');
+      return;
+    }
     setLightweightParticipants((prev) => [...prev, normalized]);
     setInviteeEmailDraft('');
+    setInviteeEmailError(null);
   };
 
   const removeLightweightParticipant = (email: string) => {
     setLightweightParticipants((prev) => prev.filter((item) => item !== email));
+  };
+
+  const updateInviteeEmailDraft = (value: string) => {
+    setInviteeEmailDraft(value);
+    if (inviteeEmailError) {
+      setInviteeEmailError(null);
+    }
   };
 
   const nextGroundingStatement = () => {
@@ -193,6 +215,7 @@ export function useConflictSession() {
     setApologyTiming('simultaneous');
     setFollowUpDate('');
     setInviteeEmailDraft('');
+    setInviteeEmailError(null);
     setLightweightParticipants([]);
   };
 
@@ -236,7 +259,8 @@ export function useConflictSession() {
       agreementSummaryItems,
       finalizeAgreement,
       inviteeEmailDraft,
-      setInviteeEmailDraft,
+      setInviteeEmailDraft: updateInviteeEmailDraft,
+      inviteeEmailError,
       lightweightParticipants,
       addLightweightParticipant,
       removeLightweightParticipant,
@@ -257,6 +281,7 @@ export function useConflictSession() {
       apologyTiming,
       followUpDate,
       inviteeEmailDraft,
+      inviteeEmailError,
       lightweightParticipants,
     ],
   );
