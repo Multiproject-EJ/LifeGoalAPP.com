@@ -116,8 +116,8 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 - `src/features/conflict-resolver/components/AgreementCloseCard.tsx`
 
 ### Acceptance criteria
-- [ ] Agreement can be finalized without free-text-only dependency.
-- [ ] Apology timing modes (simultaneous/sequenced) both function.
+- [x] Agreement can be finalized without free-text-only dependency.
+- [x] Apology timing modes (simultaneous/sequenced) both function.
 - [x] Proposal queue prevents early-hijack behavior.
 
 ---

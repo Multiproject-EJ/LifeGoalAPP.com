@@ -6,6 +6,8 @@ type ApologyAlignmentScreenProps = {
   onSelectType: (type: ApologyType) => void;
   timingMode: ApologyTiming;
   onTimingModeChange: (mode: ApologyTiming) => void;
+  sequencedLead: 'me' | 'them' | null;
+  onSequencedLeadChange: (lead: 'me' | 'them') => void;
   onContinue: () => void;
 };
 
@@ -21,6 +23,8 @@ export function ApologyAlignmentScreen({
   onSelectType,
   timingMode,
   onTimingModeChange,
+  sequencedLead,
+  onSequencedLeadChange,
   onContinue,
 }: ApologyAlignmentScreenProps) {
   return (
@@ -61,10 +65,31 @@ export function ApologyAlignmentScreen({
         </button>
       </div>
 
+      {timingMode === 'sequenced' ? (
+        <div className="conflict-resolver__chips" role="group" aria-label="Who goes first">
+          <button
+            type="button"
+            className={`conflict-resolver__chip ${sequencedLead === 'me' ? 'conflict-resolver__chip--selected' : ''}`}
+            onClick={() => onSequencedLeadChange('me')}
+          >
+            <strong>You go first</strong>
+            <span>Start with your apology so tension drops quickly.</span>
+          </button>
+          <button
+            type="button"
+            className={`conflict-resolver__chip ${sequencedLead === 'them' ? 'conflict-resolver__chip--selected' : ''}`}
+            onClick={() => onSequencedLeadChange('them')}
+          >
+            <strong>Other participant goes first</strong>
+            <span>You prefer to listen before replying.</span>
+          </button>
+        </div>
+      ) : null}
+
       <button
         type="button"
         className="btn btn--primary conflict-resolver__primary-cta"
-        disabled={!selectedType}
+        disabled={!selectedType || (timingMode === 'sequenced' && !sequencedLead)}
         onClick={onContinue}
       >
         Continue to agreement preview

@@ -8,6 +8,8 @@ type AgreementCloseCardProps = {
   lightweightParticipants: string[];
   onAddLightweightParticipant: () => void;
   onRemoveLightweightParticipant: (email: string) => void;
+  canFinalize: boolean;
+  finalizeHint?: string;
   onFinalize: () => void;
 };
 
@@ -21,6 +23,8 @@ export function AgreementCloseCard({
   lightweightParticipants,
   onAddLightweightParticipant,
   onRemoveLightweightParticipant,
+  canFinalize,
+  finalizeHint,
   onFinalize,
 }: AgreementCloseCardProps) {
   const handleInviteSubmit = () => {
@@ -90,7 +94,13 @@ export function AgreementCloseCard({
         )}
       </div>
 
-      <button type="button" className="btn btn--primary conflict-resolver__primary-cta" onClick={onFinalize}>
+      {finalizeHint ? <p className="conflict-resolver__input-error">{finalizeHint}</p> : null}
+      <button
+        type="button"
+        className="btn btn--primary conflict-resolver__primary-cta"
+        onClick={onFinalize}
+        disabled={!canFinalize}
+      >
         Finalize agreement
       </button>
     </section>

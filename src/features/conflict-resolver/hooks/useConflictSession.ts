@@ -85,6 +85,7 @@ type ConflictSessionDraftSnapshot = {
   whiteFlagOffer: string;
   selectedApologyType: 'acknowledge_impact' | 'take_responsibility' | 'repair_action' | 'reassurance' | null;
   apologyTiming: 'simultaneous' | 'sequenced';
+  sequencedLead: 'me' | 'them' | null;
   followUpDate: string;
   lightweightParticipants: string[];
   alignmentReached: boolean;
@@ -110,6 +111,7 @@ export function useConflictSession() {
     'acknowledge_impact' | 'take_responsibility' | 'repair_action' | 'reassurance' | null
   >(null);
   const [apologyTiming, setApologyTiming] = useState<'simultaneous' | 'sequenced'>('simultaneous');
+  const [sequencedLead, setSequencedLead] = useState<'me' | 'them' | null>(null);
   const [followUpDate, setFollowUpDate] = useState('');
   const [inviteeEmailDraft, setInviteeEmailDraft] = useState('');
   const [inviteeEmailError, setInviteeEmailError] = useState<string | null>(null);
@@ -350,6 +352,7 @@ export function useConflictSession() {
   };
 
   const completeApologyAlignment = () => {
+    if (apologyTiming === 'sequenced' && !sequencedLead) return;
     void setStageWithSync('agreement_preview');
   };
 
@@ -370,7 +373,15 @@ export function useConflictSession() {
     selectedApologyType
       ? `Apology type: ${selectedApologyType.replace(/_/g, ' ')} (${apologyTiming})`
       : `Apology type pending (${apologyTiming})`,
+    apologyTiming === 'sequenced'
+      ? `Sequenced apology lead: ${sequencedLead === 'me' ? 'You first' : sequencedLead === 'them' ? 'Other participant first' : 'Not set'}`
+      : 'Apology timing: simultaneous',
   ];
+
+  const canFinalizeAgreement =
+    Boolean(selectedResolution || activeProposalId) &&
+    Boolean(selectedApologyType) &&
+    (apologyTiming === 'simultaneous' || Boolean(sequencedLead));
 
   const parallelAnnotationItems = Object.entries(parallelAnnotations).map(([key, tag]) => ({
     id: key,
@@ -472,6 +483,7 @@ export function useConflictSession() {
     setActiveProposalId(parsed.activeProposalId ?? null);
     setSelectedApologyType(parsed.selectedApologyType ?? null);
     setApologyTiming(parsed.apologyTiming ?? 'simultaneous');
+    setSequencedLead(parsed.sequencedLead ?? null);
     setFollowUpDate(parsed.followUpDate ?? '');
     setLightweightParticipants(parsed.lightweightParticipants ?? []);
     setAlignmentReached(Boolean(parsed.alignmentReached));
@@ -498,6 +510,7 @@ export function useConflictSession() {
       activeProposalId,
       selectedApologyType,
       apologyTiming,
+      sequencedLead,
       followUpDate,
       lightweightParticipants,
       alignmentReached,
@@ -519,6 +532,7 @@ export function useConflictSession() {
     activeProposalId,
     selectedApologyType,
     apologyTiming,
+    sequencedLead,
     followUpDate,
     lightweightParticipants,
     alignmentReached,
@@ -541,6 +555,7 @@ export function useConflictSession() {
     setActiveProposalId(null);
     setSelectedApologyType(null);
     setApologyTiming('simultaneous');
+    setSequencedLead(null);
     setFollowUpDate('');
     setInviteeEmailDraft('');
     setInviteeEmailError(null);
@@ -612,10 +627,13 @@ export function useConflictSession() {
       setSelectedApologyType,
       apologyTiming,
       setApologyTiming,
+      sequencedLead,
+      setSequencedLead,
       completeApologyAlignment,
       followUpDate,
       setFollowUpDate,
       agreementSummaryItems,
+      canFinalizeAgreement,
       finalizeAgreement,
       inviteeEmailDraft,
       setInviteeEmailDraft: updateInviteeEmailDraft,
@@ -649,6 +667,7 @@ export function useConflictSession() {
       activeProposalId,
       selectedApologyType,
       apologyTiming,
+      sequencedLead,
       followUpDate,
       inviteeEmailDraft,
       inviteeEmailError,

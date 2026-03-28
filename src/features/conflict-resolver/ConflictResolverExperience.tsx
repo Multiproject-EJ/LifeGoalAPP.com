@@ -104,6 +104,8 @@ export function ConflictResolverExperience() {
         onSelectType={session.setSelectedApologyType}
         timingMode={session.apologyTiming}
         onTimingModeChange={session.setApologyTiming}
+        sequencedLead={session.sequencedLead}
+        onSequencedLeadChange={session.setSequencedLead}
         onContinue={session.completeApologyAlignment}
       />
     );
@@ -121,6 +123,8 @@ export function ConflictResolverExperience() {
         lightweightParticipants={session.lightweightParticipants}
         onAddLightweightParticipant={session.addLightweightParticipant}
         onRemoveLightweightParticipant={session.removeLightweightParticipant}
+        canFinalize={session.canFinalizeAgreement}
+        finalizeHint={session.canFinalizeAgreement ? undefined : 'Select apology sequencing and a structured resolution before finalizing.'}
         onFinalize={session.finalizeAgreement}
       />
     );
