@@ -5,14 +5,16 @@ import { canTransitionConflictStage, isConflictStage } from '../stateMachine/con
 import type { ConflictStage } from '../types/conflictSession';
 import {
   addConflictParticipant,
+  getCurrentUserId,
   createConflictSession,
   getConflictParticipantCount,
   getConflictSessionSnapshot,
   getConflictSessionStatus,
-  getCurrentUserId,
   subscribeConflictSessionStatus,
   updateConflictSessionStatus,
 } from '../services/conflictSessions';
+import { buildConflictInviteUrl, createConflictInvite } from '../services/conflictInvites';
+import { trackConflictEvent } from '../services/conflictAnalytics';
 
 type ConflictResolverUiStage =
   | 'mode_selection'
@@ -126,6 +128,8 @@ export function useConflictSession() {
   const [sharedSessionStatus, setSharedSessionStatus] = useState<ConflictStage | null>(null);
   const [sharedSessionLastSyncedAt, setSharedSessionLastSyncedAt] = useState<string | null>(null);
   const [recoverableDraft, setRecoverableDraft] = useState<ConflictSessionDraftSnapshot | null>(null);
+  const [generatedInviteLinks, setGeneratedInviteLinks] = useState<string[]>([]);
+  const [inviteGenerationError, setInviteGenerationError] = useState<string | null>(null);
 
   const applyDraftSnapshot = (parsed: ConflictSessionDraftSnapshot) => {
     setStage(parsed.stage ?? 'mode_selection');
@@ -183,12 +187,14 @@ export function useConflictSession() {
     const guard = canTransitionConflictStage(fromStatus, toStatus);
     if (!guard.allowed) {
       setSharedSessionError('Stage transition blocked until previous step is completed.');
+      trackConflictEvent('conflict.transition_blocked', { fromStatus, toStatus, reason: guard.reason });
       return false;
     }
 
     await updateConflictSessionStatus({ sessionId: sharedSessionId!, status: toStatus });
     setSharedSessionStatus(toStatus);
     setStage(nextStage);
+    trackConflictEvent('conflict.stage_transition', { fromStatus, toStatus, shared: true });
     return true;
   };
 
@@ -225,6 +231,7 @@ export function useConflictSession() {
       setSharedSessionId(sessionId);
       await refreshSharedParticipantCount(sessionId);
       setSharedSessionStatus('draft');
+      trackConflictEvent('conflict.shared_session_created', { sessionId });
     } catch (error) {
       console.error('Failed to create shared conflict session', error);
       setSharedSessionError('Could not create session. Please try again.');
@@ -253,6 +260,7 @@ export function useConflictSession() {
       }
       const snapshot = await getConflictSessionSnapshot(sessionId);
       setSharedSessionLastSyncedAt(snapshot.updatedAt);
+      trackConflictEvent('conflict.shared_session_joined', { sessionId });
     } catch (error) {
       console.error('Failed to join shared conflict session', error);
       setSharedSessionError('Could not join this session code.');
@@ -394,7 +402,24 @@ export function useConflictSession() {
     void setStageWithSync('agreement_preview');
   };
 
-  const finalizeAgreement = () => {
+  const finalizeAgreement = async () => {
+    setInviteGenerationError(null);
+    if (sharedSessionId && lightweightParticipants.length > 0) {
+      try {
+        const currentUserId = await getCurrentUserId();
+        const invites = await Promise.all(
+          lightweightParticipants.map((email) =>
+            createConflictInvite({ sessionId: sharedSessionId, email, createdByUserId: currentUserId }),
+          ),
+        );
+        const links = invites.map((invite) => buildConflictInviteUrl(invite.invite_token));
+        setGeneratedInviteLinks(links);
+        trackConflictEvent('conflict.invites_generated', { sessionId: sharedSessionId, count: links.length });
+      } catch (error) {
+        console.error('Failed to generate lightweight invite links', error);
+        setInviteGenerationError('Could not generate invite links right now.');
+      }
+    }
     void setStageWithSync('agreement_finalized');
   };
 
@@ -592,6 +617,8 @@ export function useConflictSession() {
     setSharedSessionStatus(null);
     setSharedSessionLastSyncedAt(null);
     setRecoverableDraft(null);
+    setGeneratedInviteLinks([]);
+    setInviteGenerationError(null);
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(CONFLICT_SESSION_DRAFT_STORAGE_KEY);
     }
@@ -666,6 +693,8 @@ export function useConflictSession() {
       setInviteeEmailDraft: updateInviteeEmailDraft,
       inviteeEmailError,
       lightweightParticipants,
+      generatedInviteLinks,
+      inviteGenerationError,
       addLightweightParticipant,
       removeLightweightParticipant,
       resetFlow,
@@ -700,6 +729,8 @@ export function useConflictSession() {
       inviteeEmailDraft,
       inviteeEmailError,
       lightweightParticipants,
+      generatedInviteLinks,
+      inviteGenerationError,
     ],
   );
 }
