@@ -569,6 +569,7 @@
 
   .breathing-space__section--breathing,
   .breathing-space__section--meditation,
+  .breathing-space__section--conflict,
   .breathing-space__section--yoga,
   .breathing-space__section--food,
   .breathing-space__section--exercise {
@@ -577,6 +578,7 @@
 
   .breathing-space[data-mobile-tab='breathing'] .breathing-space__section--breathing,
   .breathing-space[data-mobile-tab='meditation'] .breathing-space__section--meditation,
+  .breathing-space[data-mobile-tab='conflict'] .breathing-space__section--conflict,
   .breathing-space[data-mobile-tab='yoga'] .breathing-space__section--yoga,
   .breathing-space[data-mobile-tab='food'] .breathing-space__section--food,
   .breathing-space[data-mobile-tab='exercise'] .breathing-space__section--exercise {
