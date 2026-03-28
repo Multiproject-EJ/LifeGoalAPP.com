@@ -1,6 +1,15 @@
 import { getSupabaseClient } from '../../../lib/supabaseClient';
 
 type SessionConflictType = 'inner_tension' | 'shared_conflict';
+type SessionStatus =
+  | 'draft'
+  | 'grounding'
+  | 'private_capture'
+  | 'shared_read'
+  | 'negotiation'
+  | 'apology_alignment'
+  | 'agreement'
+  | 'closed';
 type ParticipantRole = 'initiator' | 'participant' | 'observer';
 
 function getUntypedSupabase() {
@@ -69,4 +78,52 @@ export async function getConflictParticipantCount(sessionId: string) {
 
   if (error) throw error;
   return count ?? 0;
+}
+
+export async function getConflictSessionStatus(sessionId: string) {
+  const { data, error } = await getUntypedSupabase()
+    .from('conflict_sessions')
+    .select('status')
+    .eq('id', sessionId)
+    .single();
+
+  if (error) throw error;
+  return data.status as SessionStatus;
+}
+
+export async function updateConflictSessionStatus(params: { sessionId: string; status: SessionStatus }) {
+  const { error } = await getUntypedSupabase()
+    .from('conflict_sessions')
+    .update({ status: params.status, updated_at: new Date().toISOString() })
+    .eq('id', params.sessionId);
+
+  if (error) throw error;
+}
+
+export function subscribeConflictSessionStatus(params: {
+  sessionId: string;
+  onStatusChange: (status: SessionStatus) => void;
+}) {
+  const supabase = getUntypedSupabase();
+  const channel = supabase
+    .channel(`conflict-session-status:${params.sessionId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'conflict_sessions',
+        filter: `id=eq.${params.sessionId}`,
+      },
+      (payload: { new?: { status?: string } }) => {
+        const nextStatus = payload.new?.status;
+        if (!nextStatus) return;
+        params.onStatusChange(nextStatus as SessionStatus);
+      },
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }

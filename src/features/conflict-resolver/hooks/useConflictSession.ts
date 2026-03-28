@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ConflictType } from '../types/conflictSession';
 import type { PrivatePrompt } from '../screens/PrivateCaptureScreen';
+import { canTransitionConflictStage, isConflictStage } from '../stateMachine/conflictStateMachine';
+import type { ConflictStage } from '../types/conflictSession';
 import {
   addConflictParticipant,
   createConflictSession,
   getConflictParticipantCount,
+  getConflictSessionStatus,
   getCurrentUserId,
+  subscribeConflictSessionStatus,
+  updateConflictSessionStatus,
 } from '../services/conflictSessions';
 
 type ConflictResolverUiStage =
@@ -45,6 +50,27 @@ const PRIVATE_CAPTURE_PROMPTS: readonly PrivatePrompt[] = [
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const CONFLICT_SESSION_DRAFT_STORAGE_KEY = 'conflict-resolver:draft:v1';
+const UI_TO_CONFLICT_STAGE: Record<ConflictResolverUiStage, ConflictStage> = {
+  mode_selection: 'draft',
+  grounding: 'grounding',
+  private_capture: 'private_capture',
+  collect_pile: 'shared_read',
+  parallel_read: 'shared_read',
+  resolution_builder: 'negotiation',
+  apology_alignment: 'apology_alignment',
+  agreement_preview: 'agreement',
+  agreement_finalized: 'closed',
+};
+const CONFLICT_STAGE_TO_UI: Record<ConflictStage, ConflictResolverUiStage> = {
+  draft: 'mode_selection',
+  grounding: 'grounding',
+  private_capture: 'private_capture',
+  shared_read: 'parallel_read',
+  negotiation: 'resolution_builder',
+  apology_alignment: 'apology_alignment',
+  agreement: 'agreement_preview',
+  closed: 'agreement_finalized',
+};
 
 type ConflictSessionDraftSnapshot = {
   stage: ConflictResolverUiStage;
@@ -94,12 +120,34 @@ export function useConflictSession() {
   const [sharedParticipantCount, setSharedParticipantCount] = useState(0);
   const [sharedSessionError, setSharedSessionError] = useState<string | null>(null);
   const [sharedSessionBusy, setSharedSessionBusy] = useState(false);
+  const [sharedSessionStatus, setSharedSessionStatus] = useState<ConflictStage | null>(null);
 
   const currentPrompt = PRIVATE_CAPTURE_PROMPTS[promptIndex];
   const currentAnswer = answers[currentPrompt.id] ?? '';
 
   const setCurrentAnswer = (value: string) => {
     setAnswers((prev) => ({ ...prev, [currentPrompt.id]: value }));
+  };
+
+  const setStageWithSync = async (nextStage: ConflictResolverUiStage) => {
+    const shouldSync = selectedType === 'shared_conflict' && Boolean(sharedSessionId);
+    if (!shouldSync) {
+      setStage(nextStage);
+      return true;
+    }
+
+    const fromStatus = sharedSessionStatus ?? UI_TO_CONFLICT_STAGE[stage];
+    const toStatus = UI_TO_CONFLICT_STAGE[nextStage];
+    const guard = canTransitionConflictStage(fromStatus, toStatus);
+    if (!guard.allowed) {
+      setSharedSessionError('Stage transition blocked until previous step is completed.');
+      return false;
+    }
+
+    await updateConflictSessionStatus({ sessionId: sharedSessionId!, status: toStatus });
+    setSharedSessionStatus(toStatus);
+    setStage(nextStage);
+    return true;
   };
 
   const goToGrounding = async () => {
@@ -109,7 +157,7 @@ export function useConflictSession() {
       return;
     }
     setGroundingIndex(0);
-    setStage('grounding');
+    await setStageWithSync('grounding');
   };
 
   const refreshSharedParticipantCount = async (sessionId: string) => {
@@ -126,6 +174,7 @@ export function useConflictSession() {
       await addConflictParticipant({ sessionId, userId, role: 'initiator' });
       setSharedSessionId(sessionId);
       await refreshSharedParticipantCount(sessionId);
+      setSharedSessionStatus('draft');
     } catch (error) {
       console.error('Failed to create shared conflict session', error);
       setSharedSessionError('Could not create session. Please try again.');
@@ -148,6 +197,10 @@ export function useConflictSession() {
       await addConflictParticipant({ sessionId, userId, role: 'participant' });
       setSharedSessionId(sessionId);
       await refreshSharedParticipantCount(sessionId);
+      const status = await getConflictSessionStatus(sessionId);
+      if (isConflictStage(status)) {
+        setSharedSessionStatus(status);
+      }
     } catch (error) {
       console.error('Failed to join shared conflict session', error);
       setSharedSessionError('Could not join this session code.');
@@ -192,7 +245,7 @@ export function useConflictSession() {
 
   const startPrivateCapture = () => {
     setPromptIndex(0);
-    setStage('private_capture');
+    void setStageWithSync('private_capture');
   };
 
   const nextPrompt = () => {
@@ -205,19 +258,19 @@ export function useConflictSession() {
 
   const skipPrompt = () => {
     if (promptIndex >= PRIVATE_CAPTURE_PROMPTS.length - 1) {
-      setStage('collect_pile');
+      void setStageWithSync('collect_pile');
       return;
     }
     nextPrompt();
   };
 
   const finishPrivateCapture = () => {
-    setStage('collect_pile');
+    void setStageWithSync('collect_pile');
   };
 
   const enterParallelRead = () => {
     setAlignmentReached(false);
-    setStage('parallel_read');
+    void setStageWithSync('parallel_read');
   };
 
   const completeParallelRead = (
@@ -228,7 +281,7 @@ export function useConflictSession() {
     setParallelAnnotations(annotations);
     const allCardsAccurate = PRIVATE_CAPTURE_PROMPTS.every((prompt) => annotations[prompt.id] === 'accurate');
     setAlignmentReached(decision === 'accurate' && allCardsAccurate);
-    setStage('resolution_builder');
+    void setStageWithSync('resolution_builder');
   };
 
   const markAlignmentReached = () => {
@@ -256,7 +309,7 @@ export function useConflictSession() {
   const moveToApologyAlignment = () => {
     const hasNegotiationPath = Boolean(selectedResolution) || Boolean(activeProposalId);
     if (!hasNegotiationPath) return;
-    setStage('apology_alignment');
+    void setStageWithSync('apology_alignment');
   };
 
   const queueWhiteFlagOffer = () => {
@@ -285,11 +338,11 @@ export function useConflictSession() {
   };
 
   const completeApologyAlignment = () => {
-    setStage('agreement_preview');
+    void setStageWithSync('agreement_preview');
   };
 
   const finalizeAgreement = () => {
-    setStage('agreement_finalized');
+    void setStageWithSync('agreement_finalized');
   };
 
   const agreementSummaryItems = [
@@ -330,6 +383,37 @@ export function useConflictSession() {
       text: answers.what_is_needed || 'No entry yet.',
     },
   ] as const;
+
+  useEffect(() => {
+    if (selectedType !== 'shared_conflict' || !sharedSessionId) return;
+
+    let active = true;
+    const syncCurrent = async () => {
+      try {
+        const status = await getConflictSessionStatus(sharedSessionId);
+        if (!active || !isConflictStage(status)) return;
+        setSharedSessionStatus(status);
+        setStage(CONFLICT_STAGE_TO_UI[status]);
+      } catch (error) {
+        console.error('Failed to load shared session status', error);
+      }
+    };
+
+    void syncCurrent();
+    const unsubscribe = subscribeConflictSessionStatus({
+      sessionId: sharedSessionId,
+      onStatusChange: (nextStatus) => {
+        if (!isConflictStage(nextStatus)) return;
+        setSharedSessionStatus(nextStatus);
+        setStage(CONFLICT_STAGE_TO_UI[nextStatus]);
+      },
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [selectedType, sharedSessionId]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -373,6 +457,7 @@ export function useConflictSession() {
     setAlignmentReached(Boolean(parsed.alignmentReached));
     setSharedSessionId(parsed.sharedSessionId ?? null);
     setSharedParticipantCount(parsed.sharedParticipantCount ?? 0);
+    setSharedSessionStatus((parsed.sharedSessionId ? UI_TO_CONFLICT_STAGE[parsed.stage ?? 'mode_selection'] : null));
     setDraftHydrated(true);
   }, []);
 
@@ -445,6 +530,7 @@ export function useConflictSession() {
     setSharedParticipantCount(0);
     setSharedSessionError(null);
     setSharedSessionBusy(false);
+    setSharedSessionStatus(null);
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(CONFLICT_SESSION_DRAFT_STORAGE_KEY);
     }
@@ -465,6 +551,7 @@ export function useConflictSession() {
       refreshSharedParticipantCount,
       sharedSessionError,
       sharedSessionBusy,
+      sharedSessionStatus,
       groundingIndex,
       groundingStatements: GROUNDING_STATEMENTS,
       nextGroundingStatement,
@@ -524,6 +611,7 @@ export function useConflictSession() {
       sharedParticipantCount,
       sharedSessionError,
       sharedSessionBusy,
+      sharedSessionStatus,
       currentAnswer,
       answers,
       parallelDecision,

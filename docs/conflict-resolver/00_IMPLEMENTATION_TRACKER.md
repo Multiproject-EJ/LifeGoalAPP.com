@@ -45,8 +45,8 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 - `src/features/conflict-resolver/realtime/*`
 
 ### Acceptance criteria
-- [ ] Two clients can join same session and observe stage changes in realtime.
-- [ ] Invalid stage transition is rejected and logged.
+- [x] Two clients can join same session and observe stage changes in realtime.
+- [x] Invalid stage transition is rejected and logged.
 - [ ] Reconnect resumes latest persisted stage without corruption.
 
 ### Risks / notes
