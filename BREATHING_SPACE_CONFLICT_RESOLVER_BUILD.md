@@ -16,6 +16,14 @@ Ship a **mobile-first Conflict Resolver** inside the Breathing Space experience 
 
 ## Flow Overview (MVP)
 
+### Step 0 — Choose conflict type (required)
+**Goal:** Start with the right mode and lower entry friction.
+- Option A: **Inner Tension** (you vs yourself).
+- Option B: **Shared Conflict** (you + 1 or more other people).
+- Reassuring helper copy:
+  - “No blame. No public shaming. Just structured clarity.”
+  - “You stay in control of your words; AI helps with tone and understanding.”
+
 ### Step 1 — Quick Grounding (required)
 **Goal:** De-escalate and align on shared humanity.
 - Visual reminder animation: “We all have the same value.”
@@ -46,6 +54,17 @@ Ship a **mobile-first Conflict Resolver** inside the Breathing Space experience 
   - Option to run a second pass with edits.
 - Remind users of “wins” captured in first pass throughout the session.
 
+### Step 5 — Repair & Resolution (required)
+**Goal:** Convert understanding into a fair, accepted, concrete outcome.
+- Co-create options and negotiation terms with AI-assisted objective brainstorming.
+- Add **Apology Alignment**:
+  - Select apology style per party (acknowledgment, responsibility, repair commitment, reassurance).
+  - Queue and deliver apologies at coordinated timing if both parties opt in.
+- Finalize:
+  - Shared “What we agree on now”
+  - Personal “What I’ll do next”
+  - Optional follow-up checkpoint date.
+
 ## Interaction patterns
 - **Clickable natural buttons:** “I’m ready”, “Not yet”, “Let’s try again”, “Offer compromise”.
 - **Haptics:** short taps for confirmations, longer for milestone transitions.
@@ -59,21 +78,43 @@ Ship a **mobile-first Conflict Resolver** inside the Breathing Space experience 
   - Highlight shared goals.
   - Offer specific micro-steps for compromise or repair.
   - Reflect each party’s vocabulary without mirroring harmful language.
+  - Behave as an **expert mediator** (de-escalation + negotiation + restorative communication).
+  - Make both parties feel heard without “taking sides.”
+  - Intervene when someone pushes solutions too early by pacing the flow and explaining why.
+
+## Safety, trust, and non-threatening communication
+- “Psychological safety by design”:
+  - No insults, contempt, threats, coercion, or humiliation in surfaced text.
+  - Rewrite suggestions preserve intent while removing disrespect.
+  - Explain edits transparently: “Tone softened to improve understanding.”
+- “Dual-validation” UX:
+  - Each person sees “Your perspective is captured.”
+  - Each person sees “Their perspective is also validly represented.”
+- “No hijack” pacing:
+  - Stage gates prevent skipping critical understanding steps.
+  - Early solution offers are parked in a visible “Proposal queue” until both are ready.
+  - Timers are calm guidance, not pressure; users can request extra reading time.
 
 ## Data capture (MVP)
 - Session record: `conflict_session`
   - participants (user IDs or anonymous IDs)
+  - conflict_type (`inner_tension` | `shared_conflict`)
   - trait_cards_snapshot (per participant)
   - prompts + responses
   - AI summary + final agreement notes
+  - apology_plan + delivery_status
+  - proposal_queue + acceptance_state
   - timestamps and duration
 
 ## UI components (mobile-first)
+- **Conflict type chooser** (Inner Tension vs Shared Conflict).
 - **Grounding card** with animation and 3 core statements.
 - **Prompt cards** (guided + free text).
 - **White Flag CTA** (persistent floating button or footer CTA).
 - **Parallel read screens** (timer + summary + notes).
-- **Progress rail** (Step 1 → Step 4, simple dots).
+- **Apology Alignment card** (type + timing + consent to deliver).
+- **Proposal queue panel** (holds early offers until proper stage).
+- **Progress rail** (Step 0 → Step 5, simple dots).
 
 ## Open questions
 - Should the optional Step 2 be shown by default or tucked behind “Need a solo moment?”
@@ -88,7 +129,7 @@ Ship a **mobile-first Conflict Resolver** inside the Breathing Space experience 
 5. **Haptics + animation polish**.
 
 ## Acceptance criteria
-- Users can complete Step 1 → Step 4 on mobile without confusion.
+- Users can complete Step 0 → Step 5 on mobile without confusion.
 - AI summaries are neutral, structured, and synced between parties.
 - “White Flag” compromise is available at all times and reflected in output.
 - Trait Cards visibly shape guidance tone and suggestions.
