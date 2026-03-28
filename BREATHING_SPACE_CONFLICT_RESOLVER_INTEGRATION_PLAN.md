@@ -81,6 +81,7 @@ This should be a low-friction chooser with reassurance copy:
 - Include shared-text highlighting actions:
   - “This is accurate”
   - “This is missing something”
+  - “Add note”
 
 ### Stage 5 — Apology Alignment + agreement
 - Apology module:

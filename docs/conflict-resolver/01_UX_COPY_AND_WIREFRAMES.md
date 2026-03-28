@@ -146,6 +146,18 @@ Create a shared neutral understanding artifact.
 ### Goal
 Ensure both parties first read before reacting.
 
+### Visual reference mapping (latest stakeholder mockup)
+- Top-left back affordance is present but should trigger a guarded exit confirm (“Leave and save draft?”).
+- Progress indicator uses compact dots + explicit label (`Step 4 / 5`).
+- Timer halo sits above card stack and remains visually soft (no urgent styling).
+- Three summary cards are visible concurrently:
+  - `What happened`
+  - `What it meant`
+  - `What is needed`
+- Footer keeps dual pill CTAs:
+  - `This feels accurate`
+  - `Something feels off`
+
 ### Layout
 - Dimmed focus mode.
 - Circular timer at top (extendable).
@@ -162,6 +174,8 @@ Ensure both parties first read before reacting.
 - Tap sentence and tag:
   - `Accurate`
   - `Missing context`
+  - `Add note`
+- Selection opens a compact anchored action sheet (not full modal) to preserve focus context.
 
 ### Critical interaction constraints
 - No avatars.
@@ -174,6 +188,13 @@ Ensure both parties first read before reacting.
 2. Timer: gentle halo pulse, no ticking audio.
 3. Unlock actions: fade-in + subtle haptic when timer completes.
 4. Highlight action: soft glow chip anchored to selected sentence.
+5. Action sheet: quick fade/scale (~140–180ms), dismiss on outside tap.
+
+### Accessibility + readability guardrails
+- Maintain minimum 4.5:1 contrast for body text over glass cards.
+- Respect dynamic type scaling up to iOS Large Accessibility sizes without clipping.
+- Keep primary CTA tap targets >= 44px height.
+- Ensure highlighted sentence is announced with context in screen readers.
 
 ### “Sync moment”
 - If all participants choose `I understand this`, trigger:
