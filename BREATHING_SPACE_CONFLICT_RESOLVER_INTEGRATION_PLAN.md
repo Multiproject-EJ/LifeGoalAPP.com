@@ -22,6 +22,20 @@ This should be a low-friction chooser with reassurance copy:
 
 ---
 
+## 2.1) Experience shape (non-negotiable UX rules)
+- This is a **guided emotional state machine**, not a form and not chat.
+- Use **card-by-card progression**:
+  - one full-screen card per stage
+  - no long scrolling surfaces during active mediation
+- Use **two-layer UI**:
+  - foreground action card
+  - soft calming background layer for emotional regulation
+- Prefer “calm tech” visuals:
+  - soft gradients, rounded surfaces, light glass blur, subtle shadows
+  - avoid sharp edges, chat bubbles, and noisy gamification visuals
+
+---
+
 ## 3) End-to-end UX flow
 
 ### Stage 0 — Conflict type
@@ -37,6 +51,7 @@ This should be a low-friction chooser with reassurance copy:
   - Equal voice
   - Repair-oriented framing
 - All parties explicitly tap **I agree** to proceed.
+- Add **hold-to-continue** for “I’m ready” to create intentional slowdown.
 
 ### Stage 2 — Perspective capture (private first)
 - Each party responds privately to structured prompts:
@@ -46,11 +61,15 @@ This should be a low-friction chooser with reassurance copy:
   - What are you willing to offer?
 - AI rewrites to “clear + respectful” while preserving intent.
 - User approves rewritten version before sharing.
+- Optional “Skip for now” remains secondary and low-emphasis.
 
 ### Stage 3 — Shared understanding pass
 - AI builds a neutral shared summary.
 - Timed read window (gentle, extendable).
 - Reactions captured without immediate interruption from others.
+- Interaction pattern:
+  - stacked “pile” cards during input
+  - merge animation into summarized cards after AI synthesis
 
 ### Stage 4 — Option generation and negotiation
 - Objective brainstorming board:
@@ -59,6 +78,9 @@ This should be a low-friction chooser with reassurance copy:
 - Anti-hijack pacing:
   - Early proposals go to queue until all finish understanding pass
   - Turn-based review/response
+- Include shared-text highlighting actions:
+  - “This is accurate”
+  - “This is missing something”
 
 ### Stage 5 — Apology Alignment + agreement
 - Apology module:
@@ -92,6 +114,14 @@ This should be a low-friction chooser with reassurance copy:
 - Stateful gates (cannot skip mandatory stages without group consent).
 - Turn tokens in shared stages.
 - Proposal queue with release criteria (everyone completes read step).
+- No-pressure pacing:
+  - timers are guidance defaults
+  - request-extra-time should be frictionless
+
+### AI output formatting rules
+- Never show large raw AI paragraphs in core flow.
+- Default to cards, bullets, and step chunks.
+- “Tone softened” and rewrite rationale available as tap-to-expand metadata.
 
 ---
 
@@ -203,6 +233,7 @@ Hard rules:
 ### Phase B — Shared conflict core
 - Private capture, neutral summary, shared read, proposal queue.
 - Turn-based pacing and anti-hijack controls.
+- Build silent-read “focus chamber” mode and highlight feedback mechanic.
 
 ### Phase C — Apology + agreement
 - Apology alignment module.
