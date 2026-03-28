@@ -30,7 +30,7 @@ type BreathingSpaceProps = {
   onNavigateToTimer?: (context?: TimerLaunchContext) => void;
 };
 
-type MobileTab = 'breathing' | 'meditation' | 'yoga' | 'food' | 'exercise';
+type MobileTab = 'breathing' | 'meditation' | 'conflict' | 'yoga' | 'food' | 'exercise';
 type MobileCategory = 'mind' | 'body';
 
 type MeditationStats = {
@@ -40,7 +40,7 @@ type MeditationStats = {
 };
 
 const MOBILE_CATEGORY_TABS: Record<MobileCategory, MobileTab[]> = {
-  mind: ['breathing', 'meditation'],
+  mind: ['breathing', 'meditation', 'conflict'],
   body: ['yoga', 'food', 'exercise'],
 };
 
@@ -361,6 +361,7 @@ export function BreathingSpace({
   const mobileTabOptions: Record<MobileTab, { icon: string; label: string; uppercaseLabel: string }> = {
     breathing: { icon: '🌬️', label: 'Focus Breathing', uppercaseLabel: 'FOCUS BREATHING' },
     meditation: { icon: '🧘', label: 'Meditation', uppercaseLabel: 'MEDITATION' },
+    conflict: { icon: '🤝', label: 'Conflict Resolver', uppercaseLabel: 'CONFLICT' },
     yoga: { icon: '🧘‍♀️', label: 'Yoga', uppercaseLabel: 'YOGA' },
     food: { icon: '🥗', label: 'Food', uppercaseLabel: 'FOOD' },
     exercise: { icon: '🏋️', label: 'Exercise', uppercaseLabel: 'EXERCISE' },
@@ -661,6 +662,18 @@ export function BreathingSpace({
               </div>
             )}
           </div>
+        </div>
+
+        <div className="breathing-space__library breathing-space__section breathing-space__section--conflict">
+          <div className="breathing-space__library-header">
+            <h3 className="breathing-space__library-title">Conflict Resolver</h3>
+          </div>
+          <p className="breathing-space__card-description">
+            Start the Breathing Space conflict mediation flow to clear tension with guided, calm communication.
+          </p>
+          <button type="button" className="btn btn--primary breathing-space__guided-start-button" disabled>
+            Coming soon
+          </button>
         </div>
 
         {/* Breathing Exercises Library */}
