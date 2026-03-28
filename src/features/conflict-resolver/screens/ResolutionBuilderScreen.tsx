@@ -10,6 +10,11 @@ type ResolutionBuilderScreenProps = {
   onSelectOption: (id: string) => void;
   whiteFlagOffer: string;
   onWhiteFlagOfferChange: (value: string) => void;
+  proposalQueue: { id: string; text: string }[];
+  activeProposalId: string | null;
+  onQueueWhiteFlagOffer: () => void;
+  onPromoteProposal: (id: string) => void;
+  onRemoveProposal: (id: string) => void;
   onContinue: () => void;
 };
 
@@ -19,8 +24,15 @@ export function ResolutionBuilderScreen({
   onSelectOption,
   whiteFlagOffer,
   onWhiteFlagOfferChange,
+  proposalQueue,
+  activeProposalId,
+  onQueueWhiteFlagOffer,
+  onPromoteProposal,
+  onRemoveProposal,
   onContinue,
 }: ResolutionBuilderScreenProps) {
+  const canContinue = Boolean(selectedOptionId) || Boolean(activeProposalId);
+
   return (
     <section className="conflict-resolver__screen" aria-labelledby="resolution-builder-title">
       <header className="conflict-resolver__header">
@@ -55,12 +67,46 @@ export function ResolutionBuilderScreen({
           onChange={(event) => onWhiteFlagOfferChange(event.target.value)}
           rows={4}
         />
+        <button
+          type="button"
+          className="btn"
+          disabled={whiteFlagOffer.trim().length === 0}
+          onClick={onQueueWhiteFlagOffer}
+        >
+          Park in proposal queue
+        </button>
       </div>
+
+      {proposalQueue.length > 0 ? (
+        <section className="conflict-resolver__proposal-queue" aria-label="Proposal queue">
+          <h4>Proposal queue</h4>
+          <p>Queue ideas first, then promote one when both sides are ready.</p>
+          <ul>
+            {proposalQueue.map((proposal) => (
+              <li key={proposal.id}>
+                <span>{proposal.text}</span>
+                <div className="conflict-resolver__proposal-actions">
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => onPromoteProposal(proposal.id)}
+                  >
+                    {proposal.id === activeProposalId ? 'Active proposal' : 'Promote'}
+                  </button>
+                  <button type="button" className="btn" onClick={() => onRemoveProposal(proposal.id)}>
+                    Remove
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <button
         type="button"
         className="btn btn--primary conflict-resolver__primary-cta"
-        disabled={!selectedOptionId && whiteFlagOffer.trim().length === 0}
+        disabled={!canContinue}
         onClick={onContinue}
       >
         Continue to apology alignment

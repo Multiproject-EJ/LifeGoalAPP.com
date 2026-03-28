@@ -71,6 +71,11 @@ export function ConflictResolverExperience() {
         onSelectOption={session.setSelectedResolution}
         whiteFlagOffer={session.whiteFlagOffer}
         onWhiteFlagOfferChange={session.setWhiteFlagOffer}
+        proposalQueue={session.proposalQueue}
+        activeProposalId={session.activeProposalId}
+        onQueueWhiteFlagOffer={session.queueWhiteFlagOffer}
+        onPromoteProposal={session.promoteProposal}
+        onRemoveProposal={session.removeProposal}
         onContinue={session.moveToApologyAlignment}
       />
     );

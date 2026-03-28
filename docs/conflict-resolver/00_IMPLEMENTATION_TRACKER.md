@@ -20,7 +20,7 @@
 | PR1 | Foundation: schema + state machine + realtime contracts | DONE | Codex | 2026-03-28 |
 | PR2 | Entry/Grounding/Private Capture (Stage 0–2) | IN_PROGRESS | Codex | 2026-03-28 (draft persistence shipped; acceptance checks pending) |
 | PR3 | Collect & Pile + Parallel Read (Stage 3–4) | IN_PROGRESS | Codex | 2026-03-28 (alignment signal shipped; acceptance checks pending) |
-| PR4 | Resolution + Apology Alignment + Agreements (Stage 5+) | IN_PROGRESS | Codex | TBD |
+| PR4 | Resolution + Apology Alignment + Agreements (Stage 5+) | IN_PROGRESS | Codex | 2026-03-28 (proposal queue gate shipped; validation pending) |
 | PR5 | Invitee onboarding + cross-domain scaffold (`breathingspace.com`) | IN_PROGRESS | Codex | TBD |
 | PR6 | Hardening pass (safety, fairness, resiliency, analytics) | TODO | TBD | TBD |
 
@@ -118,7 +118,7 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 ### Acceptance criteria
 - [ ] Agreement can be finalized without free-text-only dependency.
 - [ ] Apology timing modes (simultaneous/sequenced) both function.
-- [ ] Proposal queue prevents early-hijack behavior.
+- [x] Proposal queue prevents early-hijack behavior.
 
 ---
 

@@ -55,6 +55,8 @@ type ConflictSessionDraftSnapshot = {
   followUpDate: string;
   lightweightParticipants: string[];
   alignmentReached: boolean;
+  proposalQueue: { id: string; text: string }[];
+  activeProposalId: string | null;
 };
 
 export function useConflictSession() {
@@ -67,6 +69,8 @@ export function useConflictSession() {
   const [parallelAnnotations, setParallelAnnotations] = useState<Record<string, 'accurate' | 'missing' | 'note'>>({});
   const [selectedResolution, setSelectedResolution] = useState<string | null>(null);
   const [whiteFlagOffer, setWhiteFlagOffer] = useState('');
+  const [proposalQueue, setProposalQueue] = useState<{ id: string; text: string }[]>([]);
+  const [activeProposalId, setActiveProposalId] = useState<string | null>(null);
   const [selectedApologyType, setSelectedApologyType] = useState<
     'acknowledge_impact' | 'take_responsibility' | 'repair_action' | 'reassurance' | null
   >(null);
@@ -189,7 +193,34 @@ export function useConflictSession() {
   ] as const;
 
   const moveToApologyAlignment = () => {
+    const hasNegotiationPath = Boolean(selectedResolution) || Boolean(activeProposalId);
+    if (!hasNegotiationPath) return;
     setStage('apology_alignment');
+  };
+
+  const queueWhiteFlagOffer = () => {
+    const normalized = whiteFlagOffer.trim();
+    if (!normalized) return;
+
+    const nextId = `proposal_${Date.now()}_${proposalQueue.length + 1}`;
+    const nextQueue = [...proposalQueue, { id: nextId, text: normalized }];
+    setProposalQueue(nextQueue);
+    setWhiteFlagOffer('');
+    if (!activeProposalId) {
+      setActiveProposalId(nextId);
+    }
+  };
+
+  const promoteProposal = (proposalId: string) => {
+    if (!proposalQueue.some((proposal) => proposal.id === proposalId)) return;
+    setActiveProposalId(proposalId);
+  };
+
+  const removeProposal = (proposalId: string) => {
+    setProposalQueue((prev) => prev.filter((proposal) => proposal.id !== proposalId));
+    if (activeProposalId === proposalId) {
+      setActiveProposalId(null);
+    }
   };
 
   const completeApologyAlignment = () => {
@@ -205,6 +236,10 @@ export function useConflictSession() {
       ? resolutionOptions.find((option) => option.id === selectedResolution)?.title ?? 'Selected resolution option'
       : 'No predefined option selected.',
     whiteFlagOffer.trim().length > 0 ? `White Flag offer: ${whiteFlagOffer.trim()}` : 'No white-flag offer submitted.',
+    activeProposalId
+      ? `Active queued proposal: ${proposalQueue.find((proposal) => proposal.id === activeProposalId)?.text ?? 'Missing proposal.'}`
+      : 'No queued proposal promoted yet.',
+    proposalQueue.length > 0 ? `Queued proposals: ${proposalQueue.length}` : 'No queued proposals.',
     selectedApologyType
       ? `Apology type: ${selectedApologyType.replace(/_/g, ' ')} (${apologyTiming})`
       : `Apology type pending (${apologyTiming})`,
@@ -261,6 +296,8 @@ export function useConflictSession() {
     setParallelAnnotations(parsed.parallelAnnotations ?? {});
     setSelectedResolution(parsed.selectedResolution ?? null);
     setWhiteFlagOffer(parsed.whiteFlagOffer ?? '');
+    setProposalQueue(parsed.proposalQueue ?? []);
+    setActiveProposalId(parsed.activeProposalId ?? null);
     setSelectedApologyType(parsed.selectedApologyType ?? null);
     setApologyTiming(parsed.apologyTiming ?? 'simultaneous');
     setFollowUpDate(parsed.followUpDate ?? '');
@@ -281,6 +318,8 @@ export function useConflictSession() {
       parallelAnnotations,
       selectedResolution,
       whiteFlagOffer,
+      proposalQueue,
+      activeProposalId,
       selectedApologyType,
       apologyTiming,
       followUpDate,
@@ -298,6 +337,8 @@ export function useConflictSession() {
     parallelAnnotations,
     selectedResolution,
     whiteFlagOffer,
+    proposalQueue,
+    activeProposalId,
     selectedApologyType,
     apologyTiming,
     followUpDate,
@@ -316,6 +357,8 @@ export function useConflictSession() {
     setParallelAnnotations({});
     setSelectedResolution(null);
     setWhiteFlagOffer('');
+    setProposalQueue([]);
+    setActiveProposalId(null);
     setSelectedApologyType(null);
     setApologyTiming('simultaneous');
     setFollowUpDate('');
@@ -359,6 +402,11 @@ export function useConflictSession() {
       setSelectedResolution,
       whiteFlagOffer,
       setWhiteFlagOffer,
+      proposalQueue,
+      activeProposalId,
+      queueWhiteFlagOffer,
+      promoteProposal,
+      removeProposal,
       moveToApologyAlignment,
       selectedApologyType,
       setSelectedApologyType,
@@ -389,6 +437,8 @@ export function useConflictSession() {
       alignmentReached,
       selectedResolution,
       whiteFlagOffer,
+      proposalQueue,
+      activeProposalId,
       selectedApologyType,
       apologyTiming,
       followUpDate,
