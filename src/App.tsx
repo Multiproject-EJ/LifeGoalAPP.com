@@ -418,9 +418,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [isMobileProfileDialogOpen, setIsMobileProfileDialogOpen] = useState(false);
   const [isBreatheSubmenuOpen, setIsBreatheSubmenuOpen] = useState(false);
   const [breathingSpaceMobileTab, setBreathingSpaceMobileTab] = useState<
-    'breathing' | 'meditation' | 'yoga' | 'food' | 'exercise' | null
+    'breathing' | 'meditation' | 'conflict' | 'yoga' | 'food' | 'exercise' | null
   >(null);
   const [breathingSpaceMobileCategory, setBreathingSpaceMobileCategory] = useState<'mind' | 'body'>('mind');
+  const isConflictResolverFullscreen =
+    isMobileExperience && activeWorkspaceNav === 'breathing-space' && breathingSpaceMobileTab === 'conflict';
   const [timerLaunchContext, setTimerLaunchContext] = useState<TimerLaunchContext | null>(null);
   const [footerTimerSession, setFooterTimerSession] = useState<TimerSessionState>(() =>
     normalizeTimerSession(readTimerSession()),
@@ -3403,6 +3405,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
                               type="button"
                               className="mobile-menu-overlay__submenu-button"
                               onClick={() => {
+                                setBreathingSpaceMobileTab('conflict');
+                                handleMobileNavSelect('breathing-space', { preserveBreatheTab: true });
+                              }}
+                            >
+                              <span aria-hidden="true" className="mobile-menu-overlay__submenu-icon">🤝</span>
+                              Conflict Resolver
+                            </button>
+                            <button
+                              type="button"
+                              className="mobile-menu-overlay__submenu-button"
+                              onClick={() => {
                                 setBreathingSpaceMobileTab('yoga');
                                 handleMobileNavSelect('breathing-space', { preserveBreatheTab: true });
                               }}
@@ -4197,7 +4210,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             hideTimeBoundOffers={!isGameModeActive}
           />
         </div>
-        {!showZenGardenFullScreen && (
+        {!showZenGardenFullScreen && !isConflictResolverFullscreen && (
           <MobileFooterNav
             items={mobileFooterNavItems}
             status={mobileFooterStatus}
@@ -4479,7 +4492,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           </section>
         </main>
       </div>
-      {isMobileExperience && !showZenGardenFullScreen ? (
+      {isMobileExperience && !showZenGardenFullScreen && !isConflictResolverFullscreen ? (
         <MobileFooterNav
           items={mobileFooterNavItems}
           status={mobileFooterStatus}
