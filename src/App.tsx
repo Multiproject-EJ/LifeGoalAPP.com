@@ -418,7 +418,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [isMobileProfileDialogOpen, setIsMobileProfileDialogOpen] = useState(false);
   const [isBreatheSubmenuOpen, setIsBreatheSubmenuOpen] = useState(false);
   const [breathingSpaceMobileTab, setBreathingSpaceMobileTab] = useState<
-    'breathing' | 'meditation' | 'yoga' | 'food' | 'exercise' | null
+    'breathing' | 'meditation' | 'conflict' | 'yoga' | 'food' | 'exercise' | null
   >(null);
   const [breathingSpaceMobileCategory, setBreathingSpaceMobileCategory] = useState<'mind' | 'body'>('mind');
   const [timerLaunchContext, setTimerLaunchContext] = useState<TimerLaunchContext | null>(null);
@@ -3398,6 +3398,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
                             >
                               <span aria-hidden="true" className="mobile-menu-overlay__submenu-icon">🧘</span>
                               Meditation
+                            </button>
+                            <button
+                              type="button"
+                              className="mobile-menu-overlay__submenu-button"
+                              onClick={() => {
+                                setBreathingSpaceMobileTab('conflict');
+                                handleMobileNavSelect('breathing-space', { preserveBreatheTab: true });
+                              }}
+                            >
+                              <span aria-hidden="true" className="mobile-menu-overlay__submenu-icon">🤝</span>
+                              Conflict Resolver
                             </button>
                             <button
                               type="button"
