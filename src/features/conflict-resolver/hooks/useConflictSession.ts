@@ -125,6 +125,44 @@ export function useConflictSession() {
   const [sharedSessionBusy, setSharedSessionBusy] = useState(false);
   const [sharedSessionStatus, setSharedSessionStatus] = useState<ConflictStage | null>(null);
   const [sharedSessionLastSyncedAt, setSharedSessionLastSyncedAt] = useState<string | null>(null);
+  const [recoverableDraft, setRecoverableDraft] = useState<ConflictSessionDraftSnapshot | null>(null);
+
+  const applyDraftSnapshot = (parsed: ConflictSessionDraftSnapshot) => {
+    setStage(parsed.stage ?? 'mode_selection');
+    setSelectedType(parsed.selectedType ?? null);
+    setGroundingIndex(parsed.groundingIndex ?? 0);
+    setPromptIndex(parsed.promptIndex ?? 0);
+    setAnswers(parsed.answers ?? {});
+    setParallelDecision(parsed.parallelDecision ?? null);
+    setParallelAnnotations(parsed.parallelAnnotations ?? {});
+    setSelectedResolution(parsed.selectedResolution ?? null);
+    setWhiteFlagOffer(parsed.whiteFlagOffer ?? '');
+    setProposalQueue(parsed.proposalQueue ?? []);
+    setActiveProposalId(parsed.activeProposalId ?? null);
+    setSelectedApologyType(parsed.selectedApologyType ?? null);
+    setApologyTiming(parsed.apologyTiming ?? 'simultaneous');
+    setSequencedLead(parsed.sequencedLead ?? null);
+    setFollowUpDate(parsed.followUpDate ?? '');
+    setLightweightParticipants(parsed.lightweightParticipants ?? []);
+    setAlignmentReached(Boolean(parsed.alignmentReached));
+    setSharedSessionId(parsed.sharedSessionId ?? null);
+    setSharedParticipantCount(parsed.sharedParticipantCount ?? 0);
+    setSharedSessionStatus((parsed.sharedSessionId ? UI_TO_CONFLICT_STAGE[parsed.stage ?? 'mode_selection'] : null));
+    setSharedSessionLastSyncedAt(null);
+  };
+
+  const resumeRecoveredDraft = () => {
+    if (!recoverableDraft) return;
+    applyDraftSnapshot(recoverableDraft);
+    setRecoverableDraft(null);
+  };
+
+  const discardRecoveredDraft = () => {
+    setRecoverableDraft(null);
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(CONFLICT_SESSION_DRAFT_STORAGE_KEY);
+    }
+  };
 
   const currentPrompt = PRIVATE_CAPTURE_PROMPTS[promptIndex];
   const currentAnswer = answers[currentPrompt.id] ?? '';
@@ -470,32 +508,16 @@ export function useConflictSession() {
       return;
     }
 
-    setStage(parsed.stage ?? 'mode_selection');
-    setSelectedType(parsed.selectedType ?? null);
-    setGroundingIndex(parsed.groundingIndex ?? 0);
-    setPromptIndex(parsed.promptIndex ?? 0);
-    setAnswers(parsed.answers ?? {});
-    setParallelDecision(parsed.parallelDecision ?? null);
-    setParallelAnnotations(parsed.parallelAnnotations ?? {});
-    setSelectedResolution(parsed.selectedResolution ?? null);
-    setWhiteFlagOffer(parsed.whiteFlagOffer ?? '');
-    setProposalQueue(parsed.proposalQueue ?? []);
-    setActiveProposalId(parsed.activeProposalId ?? null);
-    setSelectedApologyType(parsed.selectedApologyType ?? null);
-    setApologyTiming(parsed.apologyTiming ?? 'simultaneous');
-    setSequencedLead(parsed.sequencedLead ?? null);
-    setFollowUpDate(parsed.followUpDate ?? '');
-    setLightweightParticipants(parsed.lightweightParticipants ?? []);
-    setAlignmentReached(Boolean(parsed.alignmentReached));
-    setSharedSessionId(parsed.sharedSessionId ?? null);
-    setSharedParticipantCount(parsed.sharedParticipantCount ?? 0);
-    setSharedSessionStatus((parsed.sharedSessionId ? UI_TO_CONFLICT_STAGE[parsed.stage ?? 'mode_selection'] : null));
-    setSharedSessionLastSyncedAt(null);
+    if (parsed.stage && parsed.stage !== 'mode_selection') {
+      setRecoverableDraft(parsed);
+    } else {
+      applyDraftSnapshot(parsed);
+    }
     setDraftHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (!draftHydrated || typeof window === 'undefined') return;
+    if (!draftHydrated || typeof window === 'undefined' || recoverableDraft) return;
     const snapshot: ConflictSessionDraftSnapshot = {
       stage,
       selectedType,
@@ -539,6 +561,7 @@ export function useConflictSession() {
     sharedSessionId,
     sharedParticipantCount,
     draftHydrated,
+    recoverableDraft,
   ]);
 
   const resetFlow = () => {
@@ -568,6 +591,7 @@ export function useConflictSession() {
     setSharedSessionBusy(false);
     setSharedSessionStatus(null);
     setSharedSessionLastSyncedAt(null);
+    setRecoverableDraft(null);
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(CONFLICT_SESSION_DRAFT_STORAGE_KEY);
     }
@@ -591,6 +615,9 @@ export function useConflictSession() {
       sharedSessionBusy,
       sharedSessionStatus,
       sharedSessionLastSyncedAt,
+      recoverableDraft: Boolean(recoverableDraft),
+      resumeRecoveredDraft,
+      discardRecoveredDraft,
       groundingIndex,
       groundingStatements: GROUNDING_STATEMENTS,
       nextGroundingStatement,
@@ -655,6 +682,7 @@ export function useConflictSession() {
       sharedSessionBusy,
       sharedSessionStatus,
       sharedSessionLastSyncedAt,
+      recoverableDraft,
       currentAnswer,
       answers,
       parallelDecision,

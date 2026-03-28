@@ -33,6 +33,9 @@ export function ConflictResolverExperience() {
           : undefined}
         sharedSessionError={session.sharedSessionError}
         sharedSessionBusy={session.sharedSessionBusy}
+        recoverableDraft={session.recoverableDraft}
+        onResumeDraft={session.resumeRecoveredDraft}
+        onStartFresh={session.discardRecoveredDraft}
       />
     );
   }

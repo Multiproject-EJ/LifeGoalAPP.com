@@ -14,6 +14,9 @@ type ModeSelectionScreenProps = {
   onRefreshSharedSession: () => void | Promise<void>;
   sharedSessionError: string | null;
   sharedSessionBusy: boolean;
+  recoverableDraft: boolean;
+  onResumeDraft: () => void;
+  onStartFresh: () => void;
 };
 
 export function ModeSelectionScreen({
@@ -30,6 +33,9 @@ export function ModeSelectionScreen({
   onRefreshSharedSession,
   sharedSessionError,
   sharedSessionBusy,
+  recoverableDraft,
+  onResumeDraft,
+  onStartFresh,
 }: ModeSelectionScreenProps) {
   return (
     <section className="conflict-resolver__screen" aria-labelledby="conflict-mode-title">
@@ -37,6 +43,21 @@ export function ModeSelectionScreen({
         <h3 id="conflict-mode-title" className="conflict-resolver__title">Let’s clear something up</h3>
         <p className="conflict-resolver__subtitle">No blame. Just clarity.</p>
       </header>
+
+      {recoverableDraft ? (
+        <section className="conflict-resolver__shared-session-card" aria-label="Resume previous session">
+          <h4>Resume last session?</h4>
+          <p>We found a saved conflict draft from your last visit.</p>
+          <div className="conflict-resolver__shared-session-actions">
+            <button type="button" className="btn btn--primary" onClick={onResumeDraft}>
+              Resume saved flow
+            </button>
+            <button type="button" className="btn" onClick={onStartFresh}>
+              Start fresh
+            </button>
+          </div>
+        </section>
+      ) : null}
 
       <div className="conflict-resolver__mode-grid" role="radiogroup" aria-label="Conflict type">
         <button

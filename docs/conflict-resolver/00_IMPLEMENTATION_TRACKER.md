@@ -71,7 +71,7 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 - `src/features/conflict-resolver/hooks/useConflictSession.ts`
 
 ### Acceptance criteria
-- [ ] User can exit/re-enter without losing stage progress.
+- [x] User can exit/re-enter without losing stage progress.
 - [x] Hold interaction only completes after threshold (pointer cancel below threshold).
 - [x] Rewrite transparency shows what changed before user accepts.
 
@@ -97,7 +97,7 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 ### Acceptance criteria
 - [x] No reaction buttons before timer unlock.
 - [x] Highlight metadata persists and is visible in subsequent stage.
-- [ ] UI remains fully usable on small mobile viewport with one-hand CTA reach.
+- [x] UI remains fully usable on small mobile viewport with one-hand CTA reach.
 
 ---
 
