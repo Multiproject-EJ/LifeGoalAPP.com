@@ -87,6 +87,11 @@ export function ConflictResolverExperience() {
         summaryItems={session.agreementSummaryItems}
         followUpDate={session.followUpDate}
         onFollowUpDateChange={session.setFollowUpDate}
+        inviteeEmailDraft={session.inviteeEmailDraft}
+        onInviteeEmailDraftChange={session.setInviteeEmailDraft}
+        lightweightParticipants={session.lightweightParticipants}
+        onAddLightweightParticipant={session.addLightweightParticipant}
+        onRemoveLightweightParticipant={session.removeLightweightParticipant}
         onFinalize={session.finalizeAgreement}
       />
     );
