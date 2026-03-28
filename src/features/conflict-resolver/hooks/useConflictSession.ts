@@ -52,6 +52,8 @@ export function useConflictSession() {
   >(null);
   const [apologyTiming, setApologyTiming] = useState<'simultaneous' | 'sequenced'>('simultaneous');
   const [followUpDate, setFollowUpDate] = useState('');
+  const [inviteeEmailDraft, setInviteeEmailDraft] = useState('');
+  const [lightweightParticipants, setLightweightParticipants] = useState<string[]>([]);
 
   const currentPrompt = PRIVATE_CAPTURE_PROMPTS[promptIndex];
   const currentAnswer = answers[currentPrompt.id] ?? '';
@@ -64,6 +66,17 @@ export function useConflictSession() {
     if (!selectedType) return;
     setGroundingIndex(0);
     setStage('grounding');
+  };
+
+  const addLightweightParticipant = () => {
+    const normalized = inviteeEmailDraft.trim().toLowerCase();
+    if (!normalized || lightweightParticipants.includes(normalized)) return;
+    setLightweightParticipants((prev) => [...prev, normalized]);
+    setInviteeEmailDraft('');
+  };
+
+  const removeLightweightParticipant = (email: string) => {
+    setLightweightParticipants((prev) => prev.filter((item) => item !== email));
   };
 
   const nextGroundingStatement = () => {
@@ -179,6 +192,8 @@ export function useConflictSession() {
     setSelectedApologyType(null);
     setApologyTiming('simultaneous');
     setFollowUpDate('');
+    setInviteeEmailDraft('');
+    setLightweightParticipants([]);
   };
 
   return useMemo(
@@ -220,6 +235,11 @@ export function useConflictSession() {
       setFollowUpDate,
       agreementSummaryItems,
       finalizeAgreement,
+      inviteeEmailDraft,
+      setInviteeEmailDraft,
+      lightweightParticipants,
+      addLightweightParticipant,
+      removeLightweightParticipant,
       resetFlow,
     }),
     [
@@ -236,6 +256,8 @@ export function useConflictSession() {
       selectedApologyType,
       apologyTiming,
       followUpDate,
+      inviteeEmailDraft,
+      lightweightParticipants,
     ],
   );
 }
