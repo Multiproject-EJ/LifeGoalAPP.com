@@ -17,8 +17,8 @@
 
 | PR | Name | Status | Owner | Target |
 |---|---|---|---|---|
-| PR1 | Foundation: schema + state machine + realtime contracts | TODO | TBD | TBD |
-| PR2 | Entry/Grounding/Private Capture (Stage 0–2) | TODO | TBD | TBD |
+| PR1 | Foundation: schema + state machine + realtime contracts | DONE | Codex | 2026-03-28 |
+| PR2 | Entry/Grounding/Private Capture (Stage 0–2) | IN_PROGRESS | Codex | TBD |
 | PR3 | Collect & Pile + Parallel Read (Stage 3–4) | TODO | TBD | TBD |
 | PR4 | Resolution + Apology Alignment + Agreements (Stage 5+) | TODO | TBD | TBD |
 | PR5 | Invitee onboarding + cross-domain scaffold (`breathingspace.com`) | TODO | TBD | TBD |
@@ -31,12 +31,12 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 ## 2) PR1 — Foundation: schema + state machine + realtime
 
 ### Deliverables
-- [ ] Add conflict resolver DB migrations (sessions, participants, stage state, summaries, proposals, apologies, agreements).
-- [ ] Add typed state machine transitions:
+- [x] Add conflict resolver DB migrations (sessions, participants, stage state, summaries, proposals, apologies, agreements).
+- [x] Add typed state machine transitions:
   - `draft -> grounding -> private_capture -> shared_read -> negotiation -> apology_alignment -> agreement -> closed`
-- [ ] Add stage guard utilities (no skip unless required participants complete prior stage).
-- [ ] Add session realtime channel contract (`conflict:{sessionId}`) and event enums.
-- [ ] Add server/client type definitions for conflict entities.
+- [x] Add stage guard utilities (no skip unless required participants complete prior stage).
+- [x] Add session realtime channel contract (`conflict:{sessionId}`) and event enums.
+- [x] Add server/client type definitions for conflict entities.
 
 ### Files (planned)
 - `supabase/migrations/*_conflict_resolver_*.sql`
