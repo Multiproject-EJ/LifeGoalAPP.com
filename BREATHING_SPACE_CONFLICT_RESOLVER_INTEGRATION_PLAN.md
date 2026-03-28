@@ -128,6 +128,11 @@ This should be a low-friction chooser with reassurance copy:
 
 ## 5) AI system design (expert mediator behavior)
 
+Implementation constraint:
+- Reuse the app’s existing AI API foundation/client and auth plumbing.
+- Do **not** create a separate provider stack or parallel AI backend for Conflict Resolver.
+- Scope new work to Conflict Resolver prompts, orchestration, UI handling, and session-state logic.
+
 ## 5.1 Prompt stack
 Use a layered prompt strategy:
 1. **System prompt:** expert mediator persona, neutrality, de-escalation, fairness, non-judgment.

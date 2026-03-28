@@ -421,6 +421,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     'breathing' | 'meditation' | 'conflict' | 'yoga' | 'food' | 'exercise' | null
   >(null);
   const [breathingSpaceMobileCategory, setBreathingSpaceMobileCategory] = useState<'mind' | 'body'>('mind');
+  const isConflictResolverFullscreen =
+    isMobileExperience && activeWorkspaceNav === 'breathing-space' && breathingSpaceMobileTab === 'conflict';
   const [timerLaunchContext, setTimerLaunchContext] = useState<TimerLaunchContext | null>(null);
   const [footerTimerSession, setFooterTimerSession] = useState<TimerSessionState>(() =>
     normalizeTimerSession(readTimerSession()),
@@ -4208,7 +4210,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             hideTimeBoundOffers={!isGameModeActive}
           />
         </div>
-        {!showZenGardenFullScreen && (
+        {!showZenGardenFullScreen && !isConflictResolverFullscreen && (
           <MobileFooterNav
             items={mobileFooterNavItems}
             status={mobileFooterStatus}
@@ -4490,7 +4492,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           </section>
         </main>
       </div>
-      {isMobileExperience && !showZenGardenFullScreen ? (
+      {isMobileExperience && !showZenGardenFullScreen && !isConflictResolverFullscreen ? (
         <MobileFooterNav
           items={mobileFooterNavItems}
           status={mobileFooterStatus}

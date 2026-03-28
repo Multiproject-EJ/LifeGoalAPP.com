@@ -143,6 +143,31 @@
   overflow: hidden;
 }
 
+.breathing-space__conflict-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.breathing-space__conflict-back {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.breathing-space__conflict-eyebrow {
+  font-size: var(--fs-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
 .breathing-space__left-column {
   display: flex;
   flex-direction: column;
@@ -557,6 +582,31 @@
 
   .breathing-space__mobile-category-tabs {
     display: grid;
+  }
+
+  .breathing-space--conflict-fullscreen {
+    min-height: calc(100vh - 90px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .breathing-space--conflict-fullscreen .breathing-space__left-column,
+  .breathing-space--conflict-fullscreen .breathing-space__section--breathing,
+  .breathing-space--conflict-fullscreen .breathing-space__section--meditation,
+  .breathing-space--conflict-fullscreen .breathing-space__section--yoga,
+  .breathing-space--conflict-fullscreen .breathing-space__section--food,
+  .breathing-space--conflict-fullscreen .breathing-space__section--exercise,
+  .breathing-space--conflict-fullscreen .breathing-space__timer-launch {
+    display: none;
+  }
+
+  .breathing-space--conflict-fullscreen .breathing-space__right-column {
+    gap: var(--space-3);
+  }
+
+  .breathing-space--conflict-fullscreen .breathing-space__conflict-header {
+    display: flex;
   }
 
   .breathing-space[data-mobile-tab='none'] .breathing-space__mobile-tabs {
