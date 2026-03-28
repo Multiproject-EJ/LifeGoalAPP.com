@@ -18,6 +18,17 @@ export function ConflictResolverExperience() {
         selectedType={session.selectedType}
         onSelectType={session.setSelectedType}
         onContinue={session.goToGrounding}
+        sharedSessionId={session.sharedSessionId}
+        sharedSessionCodeInput={session.sharedSessionCodeInput}
+        onSharedSessionCodeInputChange={session.setSharedSessionCodeInput}
+        sharedParticipantCount={session.sharedParticipantCount}
+        onCreateSharedSession={session.createSharedSession}
+        onJoinSharedSession={session.joinSharedSession}
+        onRefreshSharedSession={() => session.sharedSessionId
+          ? session.refreshSharedParticipantCount(session.sharedSessionId)
+          : undefined}
+        sharedSessionError={session.sharedSessionError}
+        sharedSessionBusy={session.sharedSessionBusy}
       />
     );
   }

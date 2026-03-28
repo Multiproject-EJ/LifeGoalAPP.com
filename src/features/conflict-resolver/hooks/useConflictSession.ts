@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ConflictType } from '../types/conflictSession';
 import type { PrivatePrompt } from '../screens/PrivateCaptureScreen';
+import {
+  addConflictParticipant,
+  createConflictSession,
+  getConflictParticipantCount,
+  getCurrentUserId,
+} from '../services/conflictSessions';
 
 type ConflictResolverUiStage =
   | 'mode_selection'
@@ -57,6 +63,8 @@ type ConflictSessionDraftSnapshot = {
   alignmentReached: boolean;
   proposalQueue: { id: string; text: string }[];
   activeProposalId: string | null;
+  sharedSessionId: string | null;
+  sharedParticipantCount: number;
 };
 
 export function useConflictSession() {
@@ -81,6 +89,11 @@ export function useConflictSession() {
   const [lightweightParticipants, setLightweightParticipants] = useState<string[]>([]);
   const [alignmentReached, setAlignmentReached] = useState(false);
   const [draftHydrated, setDraftHydrated] = useState(false);
+  const [sharedSessionId, setSharedSessionId] = useState<string | null>(null);
+  const [sharedSessionCodeInput, setSharedSessionCodeInput] = useState('');
+  const [sharedParticipantCount, setSharedParticipantCount] = useState(0);
+  const [sharedSessionError, setSharedSessionError] = useState<string | null>(null);
+  const [sharedSessionBusy, setSharedSessionBusy] = useState(false);
 
   const currentPrompt = PRIVATE_CAPTURE_PROMPTS[promptIndex];
   const currentAnswer = answers[currentPrompt.id] ?? '';
@@ -89,10 +102,58 @@ export function useConflictSession() {
     setAnswers((prev) => ({ ...prev, [currentPrompt.id]: value }));
   };
 
-  const goToGrounding = () => {
+  const goToGrounding = async () => {
     if (!selectedType) return;
+    if (selectedType === 'shared_conflict' && !sharedSessionId) {
+      setSharedSessionError('Create or join a shared session first.');
+      return;
+    }
     setGroundingIndex(0);
     setStage('grounding');
+  };
+
+  const refreshSharedParticipantCount = async (sessionId: string) => {
+    const count = await getConflictParticipantCount(sessionId);
+    setSharedParticipantCount(count);
+  };
+
+  const createSharedSession = async () => {
+    try {
+      setSharedSessionBusy(true);
+      setSharedSessionError(null);
+      const userId = await getCurrentUserId();
+      const sessionId = await createConflictSession({ ownerUserId: userId, conflictType: 'shared_conflict' });
+      await addConflictParticipant({ sessionId, userId, role: 'initiator' });
+      setSharedSessionId(sessionId);
+      await refreshSharedParticipantCount(sessionId);
+    } catch (error) {
+      console.error('Failed to create shared conflict session', error);
+      setSharedSessionError('Could not create session. Please try again.');
+    } finally {
+      setSharedSessionBusy(false);
+    }
+  };
+
+  const joinSharedSession = async () => {
+    const sessionId = sharedSessionCodeInput.trim();
+    if (!sessionId) {
+      setSharedSessionError('Enter a session code to join.');
+      return;
+    }
+
+    try {
+      setSharedSessionBusy(true);
+      setSharedSessionError(null);
+      const userId = await getCurrentUserId();
+      await addConflictParticipant({ sessionId, userId, role: 'participant' });
+      setSharedSessionId(sessionId);
+      await refreshSharedParticipantCount(sessionId);
+    } catch (error) {
+      console.error('Failed to join shared conflict session', error);
+      setSharedSessionError('Could not join this session code.');
+    } finally {
+      setSharedSessionBusy(false);
+    }
   };
 
   const addLightweightParticipant = () => {
@@ -310,6 +371,8 @@ export function useConflictSession() {
     setFollowUpDate(parsed.followUpDate ?? '');
     setLightweightParticipants(parsed.lightweightParticipants ?? []);
     setAlignmentReached(Boolean(parsed.alignmentReached));
+    setSharedSessionId(parsed.sharedSessionId ?? null);
+    setSharedParticipantCount(parsed.sharedParticipantCount ?? 0);
     setDraftHydrated(true);
   }, []);
 
@@ -332,6 +395,8 @@ export function useConflictSession() {
       followUpDate,
       lightweightParticipants,
       alignmentReached,
+      sharedSessionId,
+      sharedParticipantCount,
     };
     window.localStorage.setItem(CONFLICT_SESSION_DRAFT_STORAGE_KEY, JSON.stringify(snapshot));
   }, [
@@ -351,6 +416,8 @@ export function useConflictSession() {
     followUpDate,
     lightweightParticipants,
     alignmentReached,
+    sharedSessionId,
+    sharedParticipantCount,
     draftHydrated,
   ]);
 
@@ -373,6 +440,11 @@ export function useConflictSession() {
     setInviteeEmailError(null);
     setLightweightParticipants([]);
     setAlignmentReached(false);
+    setSharedSessionId(null);
+    setSharedSessionCodeInput('');
+    setSharedParticipantCount(0);
+    setSharedSessionError(null);
+    setSharedSessionBusy(false);
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(CONFLICT_SESSION_DRAFT_STORAGE_KEY);
     }
@@ -384,6 +456,15 @@ export function useConflictSession() {
       selectedType,
       setSelectedType,
       goToGrounding,
+      createSharedSession,
+      joinSharedSession,
+      sharedSessionId,
+      sharedSessionCodeInput,
+      setSharedSessionCodeInput,
+      sharedParticipantCount,
+      refreshSharedParticipantCount,
+      sharedSessionError,
+      sharedSessionBusy,
       groundingIndex,
       groundingStatements: GROUNDING_STATEMENTS,
       nextGroundingStatement,
@@ -438,6 +519,11 @@ export function useConflictSession() {
       selectedType,
       groundingIndex,
       promptIndex,
+      sharedSessionId,
+      sharedSessionCodeInput,
+      sharedParticipantCount,
+      sharedSessionError,
+      sharedSessionBusy,
       currentAnswer,
       answers,
       parallelDecision,

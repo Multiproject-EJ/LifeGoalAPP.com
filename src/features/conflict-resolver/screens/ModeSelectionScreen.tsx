@@ -3,10 +3,32 @@ import type { ConflictType } from '../types/conflictSession';
 type ModeSelectionScreenProps = {
   selectedType: ConflictType | null;
   onSelectType: (type: ConflictType) => void;
-  onContinue: () => void;
+  onContinue: () => void | Promise<void>;
+  sharedSessionId: string | null;
+  sharedSessionCodeInput: string;
+  onSharedSessionCodeInputChange: (value: string) => void;
+  sharedParticipantCount: number;
+  onCreateSharedSession: () => void | Promise<void>;
+  onJoinSharedSession: () => void | Promise<void>;
+  onRefreshSharedSession: () => void | Promise<void>;
+  sharedSessionError: string | null;
+  sharedSessionBusy: boolean;
 };
 
-export function ModeSelectionScreen({ selectedType, onSelectType, onContinue }: ModeSelectionScreenProps) {
+export function ModeSelectionScreen({
+  selectedType,
+  onSelectType,
+  onContinue,
+  sharedSessionId,
+  sharedSessionCodeInput,
+  onSharedSessionCodeInputChange,
+  sharedParticipantCount,
+  onCreateSharedSession,
+  onJoinSharedSession,
+  onRefreshSharedSession,
+  sharedSessionError,
+  sharedSessionBusy,
+}: ModeSelectionScreenProps) {
   return (
     <section className="conflict-resolver__screen" aria-labelledby="conflict-mode-title">
       <header className="conflict-resolver__header">
@@ -44,10 +66,51 @@ export function ModeSelectionScreen({ selectedType, onSelectType, onContinue }: 
         </button>
       </div>
 
+      {selectedType === 'shared_conflict' ? (
+        <section className="conflict-resolver__shared-session-card" aria-label="Shared conflict session setup">
+          <h4>Shared session setup</h4>
+          <p>Create a session code and share it with another app user, or join theirs.</p>
+
+          {sharedSessionId ? (
+            <div className="conflict-resolver__shared-session-status">
+              <p><strong>Session code:</strong> {sharedSessionId}</p>
+              <p><strong>Participants joined:</strong> {sharedParticipantCount}</p>
+              <button type="button" className="btn" onClick={onRefreshSharedSession} disabled={sharedSessionBusy}>
+                Refresh participants
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="conflict-resolver__shared-session-actions">
+                <button type="button" className="btn" onClick={onCreateSharedSession} disabled={sharedSessionBusy}>
+                  Create shared session
+                </button>
+              </div>
+
+              <label htmlFor="shared-session-code" className="conflict-resolver__prompt-label">Join by session code</label>
+              <div className="conflict-resolver__shared-session-actions">
+                <input
+                  id="shared-session-code"
+                  className="conflict-resolver__text-input"
+                  placeholder="Paste session code"
+                  value={sharedSessionCodeInput}
+                  onChange={(event) => onSharedSessionCodeInputChange(event.target.value)}
+                />
+                <button type="button" className="btn" onClick={onJoinSharedSession} disabled={sharedSessionBusy}>
+                  Join
+                </button>
+              </div>
+            </>
+          )}
+
+          {sharedSessionError ? <p className="conflict-resolver__input-error">{sharedSessionError}</p> : null}
+        </section>
+      ) : null}
+
       <button
         type="button"
         className="btn btn--primary conflict-resolver__primary-cta"
-        disabled={!selectedType}
+        disabled={!selectedType || (selectedType === 'shared_conflict' && !sharedSessionId)}
         onClick={onContinue}
       >
         Continue
