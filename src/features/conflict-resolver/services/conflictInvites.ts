@@ -25,7 +25,15 @@ function createInviteToken() {
   return crypto.randomUUID().replace(/-/g, '');
 }
 
-export function buildConflictInviteUrl(token: string, baseUrl = 'https://peacebetween.com') {
+function getDefaultInviteBaseUrl() {
+  const configured = import.meta.env.VITE_CONFLICT_INVITE_BASE_URL;
+  if (typeof configured === 'string' && configured.trim().length > 0) {
+    return configured.trim();
+  }
+  return 'https://www.peacebetween.com';
+}
+
+export function buildConflictInviteUrl(token: string, baseUrl = getDefaultInviteBaseUrl()) {
   return `${baseUrl.replace(/\/+$/, '')}/conflict/join?token=${encodeURIComponent(token)}`;
 }
 

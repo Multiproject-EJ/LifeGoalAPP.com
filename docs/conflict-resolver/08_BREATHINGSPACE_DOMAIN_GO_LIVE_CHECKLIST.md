@@ -3,6 +3,7 @@
 ## Pre-flight
 - [ ] Deploy target for breathing-space web app is up and reachable on provider preview domain.
 - [ ] Supabase env vars are set in deploy target.
+- [ ] `VITE_CONFLICT_INVITE_BASE_URL` is set to `https://www.peacebetween.com`.
 - [ ] Invite join route exists: `/conflict/join`.
 - [ ] Invite token redemption flow tested in preview.
 
@@ -27,4 +28,3 @@
 - [ ] Apex `peacebetween.com` redirects to `www` (or intentionally serves landing page).
 - [ ] Analytics events visible for join, stage progress, and agreement completion.
 - [ ] Rollback plan documented (switch CNAME back to previous target if needed).
-

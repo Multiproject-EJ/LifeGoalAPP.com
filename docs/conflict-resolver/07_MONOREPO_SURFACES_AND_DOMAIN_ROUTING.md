@@ -67,6 +67,7 @@ Common provider CNAME targets:
 - Set publish directory to that app’s build output.
 - Add `www.peacebetween.com` as custom domain.
 - Use Netlify-provided CNAME target in Spaceship DNS.
+- Set env var `VITE_CONFLICT_INVITE_BASE_URL=https://www.peacebetween.com` so generated invite links always use production domain.
 
 ---
 
