@@ -2,7 +2,7 @@
 
 Date: 2026-03-29
 Goal: move from current guided UX + partial AI utilities to full product-grade AI mediation and inner guidance.
-Current progress note: initial Phase 1 implementation has started with task-aware entitlement/quota routing on existing Level 1 AI call sites.
+Current progress note: Phase 1 is closed out (task-aware routing, daily+session quotas, and core entitlement telemetry shipped) and Phase 2 prompt-stack/orchestrator work can begin.
 
 ## Phase 1 (PR #1): AI Foundations + Entitlements + Quotas
 
