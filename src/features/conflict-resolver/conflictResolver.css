@@ -257,6 +257,15 @@
   color: #b7d4ff;
 }
 
+.conflict-resolver__softened-note p {
+  margin: 0;
+}
+
+.conflict-resolver__softened-note ul {
+  margin: 4px 0 0 1rem;
+  padding: 0;
+}
+
 .conflict-resolver__timer-circle {
   width: 108px;
   height: 108px;

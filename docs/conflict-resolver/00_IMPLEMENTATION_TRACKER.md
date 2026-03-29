@@ -22,7 +22,7 @@
 | PR3 | Collect & Pile + Parallel Read (Stage 3–4) | IN_PROGRESS | Codex | 2026-03-28 (alignment signal shipped; acceptance checks pending) |
 | PR4 | Resolution + Apology Alignment + Agreements (Stage 5+) | IN_PROGRESS | Codex | 2026-03-28 (proposal queue gate shipped; validation pending) |
 | PR5 | Invitee onboarding + cross-domain scaffold (`breathingspace.com`) | IN_PROGRESS | Codex | 2026-03-29 (email-only invite link surfacing shipped in agreement finalization UI) |
-| PR6 | Hardening pass (safety, fairness, resiliency, analytics) | IN_PROGRESS | Codex | 2026-03-29 (abuse-language guard + analytics events expansion shipped; full validation pending) |
+| PR6 | Hardening pass (safety, fairness, resiliency, analytics) | IN_PROGRESS | Codex | 2026-03-29 (language moderation transparency + blame reframing shipped; full validation pending) |
 
 Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 
@@ -145,7 +145,7 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 ## 7) PR6 — Hardening pass
 
 ### Deliverables
-- [ ] Safety filters + abuse phrase handling + fairness checks. (abuse-language guard now blocks progression in private capture; fairness checks still pending)
+- [ ] Safety filters + abuse phrase handling + fairness checks. (shared-summary moderation now includes escalatory softening + direct-blame reframing with transparent notes; fairness validation still pending)
 - [ ] Reconnect/timeout/partial-participant resilience tests.
 - [ ] Accessibility pass (contrast, dynamic type, 44px targets, screen reader).
 - [ ] Analytics events/KPIs dashboard wiring. (client analytics events expanded; dashboard sink wiring pending)

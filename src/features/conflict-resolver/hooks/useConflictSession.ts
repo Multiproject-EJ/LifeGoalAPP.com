@@ -62,13 +62,46 @@ const SHARED_SUMMARY_REPLACEMENTS: Array<{ pattern: RegExp; replacement: string 
   { pattern: /\bkill yourself\b/gi, replacement: 'severe harmful phrase removed' },
   { pattern: /\bwhat'?s wrong with you\b/gi, replacement: 'I felt confused by your response' },
 ];
-const sanitizeForSharedSummary = (value: string) => {
+const BLAME_PATTERNS: Array<{ pattern: RegExp; replacement: string }> = [
+  { pattern: /\byou always\b/gi, replacement: 'I experienced repeated moments where' },
+  { pattern: /\byou never\b/gi, replacement: 'I experienced missing support when' },
+  { pattern: /\byou made me\b/gi, replacement: 'I felt' },
+  { pattern: /\byou are\b/gi, replacement: 'I experienced this as' },
+];
+
+const sanitizeForSharedSummary = (value: string): { text: string; moderationNotes: string[] } => {
   const trimmed = value.trim();
-  if (!trimmed) return '';
-  return SHARED_SUMMARY_REPLACEMENTS.reduce(
-    (nextValue, { pattern, replacement }) => nextValue.replace(pattern, replacement),
-    trimmed,
-  );
+  if (!trimmed) return { text: '', moderationNotes: [] };
+
+  let nextValue = trimmed;
+  let escalatoryLanguageSoftened = false;
+  let blameLanguageReframed = false;
+
+  for (const { pattern, replacement } of SHARED_SUMMARY_REPLACEMENTS) {
+    if (pattern.test(nextValue)) {
+      escalatoryLanguageSoftened = true;
+      pattern.lastIndex = 0;
+      nextValue = nextValue.replace(pattern, replacement);
+    }
+  }
+
+  for (const { pattern, replacement } of BLAME_PATTERNS) {
+    if (pattern.test(nextValue)) {
+      blameLanguageReframed = true;
+      pattern.lastIndex = 0;
+      nextValue = nextValue.replace(pattern, replacement);
+    }
+  }
+
+  const moderationNotes: string[] = [];
+  if (escalatoryLanguageSoftened) {
+    moderationNotes.push('Escalatory wording softened');
+  }
+  if (blameLanguageReframed) {
+    moderationNotes.push('Direct-blame wording reframed');
+  }
+
+  return { text: nextValue, moderationNotes };
 };
 const UI_TO_CONFLICT_STAGE: Record<ConflictResolverUiStage, ConflictStage> = {
   mode_selection: 'draft',
@@ -496,8 +529,9 @@ export function useConflictSession() {
       return {
         id: 'what_happened',
         title: 'What happened',
-        text: useSanitized ? sanitized || 'No entry yet.' : raw || 'No entry yet.',
-        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized !== raw.trim(),
+        text: useSanitized ? sanitized.text || 'No entry yet.' : raw || 'No entry yet.',
+        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized.text !== raw.trim(),
+        moderationNotes: useSanitized ? sanitized.moderationNotes : [],
       };
     })(),
     (() => {
@@ -507,8 +541,9 @@ export function useConflictSession() {
       return {
         id: 'what_it_meant',
         title: 'What it meant',
-        text: useSanitized ? sanitized || 'No entry yet.' : raw || 'No entry yet.',
-        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized !== raw.trim(),
+        text: useSanitized ? sanitized.text || 'No entry yet.' : raw || 'No entry yet.',
+        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized.text !== raw.trim(),
+        moderationNotes: useSanitized ? sanitized.moderationNotes : [],
       };
     })(),
     (() => {
@@ -518,8 +553,9 @@ export function useConflictSession() {
       return {
         id: 'what_is_needed',
         title: 'What is needed',
-        text: useSanitized ? sanitized || 'No entry yet.' : raw || 'No entry yet.',
-        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized !== raw.trim(),
+        text: useSanitized ? sanitized.text || 'No entry yet.' : raw || 'No entry yet.',
+        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized.text !== raw.trim(),
+        moderationNotes: useSanitized ? sanitized.moderationNotes : [],
       };
     })(),
   ] as const;

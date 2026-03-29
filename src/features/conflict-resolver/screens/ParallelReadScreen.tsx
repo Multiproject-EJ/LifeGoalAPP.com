@@ -6,6 +6,7 @@ type SummaryCard = {
   title: string;
   text: string;
   toneSoftened?: boolean;
+  moderationNotes?: string[];
 };
 
 type HighlightAction = 'accurate' | 'missing' | 'note';
@@ -81,7 +82,16 @@ export function ParallelReadScreen({
             <h4>{card.title}</h4>
             <p>{card.text}</p>
             {card.toneSoftened ? (
-              <p className="conflict-resolver__softened-note">Tone softened for shared clarity.</p>
+              <div className="conflict-resolver__softened-note">
+                <p>Tone softened for shared clarity.</p>
+                {card.moderationNotes?.length ? (
+                  <ul>
+                    {card.moderationNotes.map((note) => (
+                      <li key={note}>{note}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
             ) : null}
             {annotations[card.id] ? (
               <span className="conflict-resolver__annotation-chip">{annotations[card.id]}</span>
