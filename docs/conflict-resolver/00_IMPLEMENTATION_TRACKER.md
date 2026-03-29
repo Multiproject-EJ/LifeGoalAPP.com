@@ -134,6 +134,7 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 - [ ] New dedicated frontend repo for `breathingspace.com` (recommended).
 - [ ] Shared Supabase project + schemas + realtime channels.
 - [ ] Shared API contracts/types package or synced schema typing strategy.
+- [x] Document monorepo/two-surface routing strategy and domain cutover checklist.
 
 ### Acceptance criteria
 - [ ] Invited external user can join session and complete assigned stage.
