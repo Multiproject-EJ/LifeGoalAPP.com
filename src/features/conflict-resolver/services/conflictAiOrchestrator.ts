@@ -19,6 +19,7 @@ import {
   computeInnerTensionPriorityScore,
   shouldUseDeepIntervention,
 } from './conflictInnerIntelligence';
+import { assembleInnerContext, type InnerContextDomain } from './conflictInnerContextAssembler';
 
 type InnerContextInput = {
   sessionId?: string | null;
@@ -53,7 +54,21 @@ type PrivateRewriteResult = {
   mode: 'premium' | 'free_quota' | 'fallback';
 };
 
-const MAX_RECOMMENDATIONS = 3;
+function getRecommendationLimitForMode(mode: InnerNextStepResult['mode']): number {
+  return mode === 'premium' ? 3 : 2;
+}
+
+function shapeGuidancePlanByMode(
+  mode: InnerNextStepResult['mode'],
+  guidancePlan: ReturnType<typeof buildInnerGuidancePlan>,
+): ReturnType<typeof buildInnerGuidancePlan> {
+  if (mode === 'premium') return guidancePlan;
+  return {
+    ...guidancePlan,
+    weekPlan: guidancePlan.weekPlan.slice(0, 1),
+    monthPlan: guidancePlan.monthPlan.slice(0, 1),
+  };
+}
 
 const DEFAULT_RECOMMENDATIONS: InnerRecommendation[] = [
   {
@@ -111,7 +126,7 @@ Return strict JSON with this shape only:
 }
 
 Allowed href values: #breathing-space, #habits, #goals, #journal, #contracts.
-Generate exactly 3 recommendations max, no markdown.
+Generate up to 3 recommendations, no markdown.
 Priority score: ${input.priorityScore}
 Deep intervention mode: ${input.deepMode ? 'enabled' : 'disabled'}
 Context slice: ${input.contextSlice}
@@ -272,9 +287,14 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
     answers: input.answers,
     allowedDomains: (input.usedContextDomains ?? ['reflections']) as Array<'reflections' | 'habits' | 'goals' | 'journals' | 'vision_board' | 'traits'>,
   });
+  const assembledContext = await assembleInnerContext({
+    answers: input.answers,
+    requestedDomains: context.usedContextDomains as InnerContextDomain[],
+  });
+  const recommendationLimit = getRecommendationLimitForMode(decision.mode);
   const promptPayload = {
     ...input,
-    contextSlice: context.contextSlice,
+    contextSlice: assembledContext.contextSlice,
     priorityScore,
     deepMode,
   };
@@ -284,21 +304,21 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       answers: input.answers,
       priorityScore,
       deepMode,
-      usedContextDomains: context.usedContextDomains,
+      usedContextDomains: assembledContext.usedContextDomains,
     });
     await persistAiMessage({
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
       role: 'assistant',
       message: 'Used deterministic fallback due to entitlement/API availability.',
-      metadata: { reason: decision.reason, mode: decision.mode, priorityScore, deepMode, usedDomains: context.usedContextDomains },
+      metadata: { reason: decision.reason, mode: decision.mode, priorityScore, deepMode, usedDomains: assembledContext.usedContextDomains },
     });
     await persistAiRun({
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
       mode: decision.mode,
       model: decision.model,
-      usedContextDomains: context.usedContextDomains,
+      usedContextDomains: assembledContext.usedContextDomains,
       fallbackUsed: true,
       errorMessage: decision.reason,
     });
@@ -306,20 +326,21 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
       artifact: {
-        recommendations: DEFAULT_RECOMMENDATIONS,
-        guidancePlan,
+        recommendations: DEFAULT_RECOMMENDATIONS.slice(0, recommendationLimit),
+        guidancePlan: shapeGuidancePlanByMode(decision.mode, guidancePlan),
         source: 'fallback',
         priorityScore,
         deepMode,
-        usedContextDomains: context.usedContextDomains,
+        usedContextDomains: assembledContext.usedContextDomains,
+        contextSignals: assembledContext.contextSignals,
       },
     });
     return {
-      recommendations: DEFAULT_RECOMMENDATIONS,
-      guidancePlan,
+      recommendations: DEFAULT_RECOMMENDATIONS.slice(0, recommendationLimit),
+      guidancePlan: shapeGuidancePlanByMode(decision.mode, guidancePlan),
       priorityScore,
       deepMode,
-      usedContextDomains: context.usedContextDomains,
+      usedContextDomains: assembledContext.usedContextDomains,
       mode: decision.mode,
     };
   }
@@ -333,7 +354,7 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       metadata: { model: decision.model, mode: decision.mode },
     });
     const result = await requestOpenAiRawContent(buildPrompt(promptPayload), decision.model, apiKey);
-    const recommendations = parseInnerRecommendationsFromContent(result.content, MAX_RECOMMENDATIONS);
+    const recommendations = parseInnerRecommendationsFromContent(result.content, recommendationLimit);
     if (recommendations.length === 0) {
       throw new Error('OpenAI response schema invalid');
     }
@@ -341,13 +362,13 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       answers: input.answers,
       priorityScore,
       deepMode,
-      usedContextDomains: context.usedContextDomains,
+      usedContextDomains: assembledContext.usedContextDomains,
     });
     await persistAiMessage({
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
       role: 'assistant',
-      message: JSON.stringify({ recommendations }),
+      message: JSON.stringify({ recommendations: recommendations.slice(0, recommendationLimit) }),
       metadata: { source: 'ai' },
     });
 
@@ -356,7 +377,7 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       stage: 'inner_tension_next_steps',
       mode: decision.mode,
       model: decision.model,
-      usedContextDomains: context.usedContextDomains,
+      usedContextDomains: assembledContext.usedContextDomains,
       fallbackUsed: false,
       tokenInput: result.tokenInput,
       tokenOutput: result.tokenOutput,
@@ -366,21 +387,22 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
       artifact: {
-        recommendations,
-        guidancePlan,
+        recommendations: recommendations.slice(0, recommendationLimit),
+        guidancePlan: shapeGuidancePlanByMode(decision.mode, guidancePlan),
         source: 'ai',
         priorityScore,
         deepMode,
-        usedContextDomains: context.usedContextDomains,
+        usedContextDomains: assembledContext.usedContextDomains,
+        contextSignals: assembledContext.contextSignals,
       },
     });
 
     return {
-      recommendations,
-      guidancePlan,
+      recommendations: recommendations.slice(0, recommendationLimit),
+      guidancePlan: shapeGuidancePlanByMode(decision.mode, guidancePlan),
       priorityScore,
       deepMode,
-      usedContextDomains: context.usedContextDomains,
+      usedContextDomains: assembledContext.usedContextDomains,
       mode: decision.mode,
     };
   } catch (error) {
@@ -389,7 +411,7 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       answers: input.answers,
       priorityScore,
       deepMode,
-      usedContextDomains: context.usedContextDomains,
+      usedContextDomains: assembledContext.usedContextDomains,
     });
     await persistAiMessage({
       sessionId: input.sessionId,
@@ -403,7 +425,7 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       stage: 'inner_tension_next_steps',
       mode: decision.mode,
       model: decision.model,
-      usedContextDomains: context.usedContextDomains,
+      usedContextDomains: assembledContext.usedContextDomains,
       fallbackUsed: true,
       errorMessage: message,
     });
@@ -411,21 +433,22 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
       artifact: {
-        recommendations: DEFAULT_RECOMMENDATIONS,
-        guidancePlan,
+        recommendations: DEFAULT_RECOMMENDATIONS.slice(0, recommendationLimit),
+        guidancePlan: shapeGuidancePlanByMode(decision.mode, guidancePlan),
         source: 'fallback',
         error: message,
         priorityScore,
         deepMode,
-        usedContextDomains: context.usedContextDomains,
+        usedContextDomains: assembledContext.usedContextDomains,
+        contextSignals: assembledContext.contextSignals,
       },
     });
     return {
-      recommendations: DEFAULT_RECOMMENDATIONS,
-      guidancePlan,
+      recommendations: DEFAULT_RECOMMENDATIONS.slice(0, recommendationLimit),
+      guidancePlan: shapeGuidancePlanByMode(decision.mode, guidancePlan),
       priorityScore,
       deepMode,
-      usedContextDomains: context.usedContextDomains,
+      usedContextDomains: assembledContext.usedContextDomains,
       mode: 'fallback',
     };
   }
