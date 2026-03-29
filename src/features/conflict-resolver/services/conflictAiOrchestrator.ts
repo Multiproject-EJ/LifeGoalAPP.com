@@ -29,6 +29,10 @@ type InnerContextInput = {
 
 type InnerNextStepResult = {
   recommendations: InnerRecommendation[];
+  guidancePlan: ReturnType<typeof buildInnerGuidancePlan>;
+  priorityScore: number;
+  deepMode: boolean;
+  usedContextDomains: string[];
   mode: 'premium' | 'free_quota' | 'fallback';
 };
 
@@ -310,7 +314,14 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
         usedContextDomains: context.usedContextDomains,
       },
     });
-    return { recommendations: DEFAULT_RECOMMENDATIONS, mode: decision.mode };
+    return {
+      recommendations: DEFAULT_RECOMMENDATIONS,
+      guidancePlan,
+      priorityScore,
+      deepMode,
+      usedContextDomains: context.usedContextDomains,
+      mode: decision.mode,
+    };
   }
 
   try {
@@ -366,6 +377,10 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
 
     return {
       recommendations,
+      guidancePlan,
+      priorityScore,
+      deepMode,
+      usedContextDomains: context.usedContextDomains,
       mode: decision.mode,
     };
   } catch (error) {
@@ -405,7 +420,14 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
         usedContextDomains: context.usedContextDomains,
       },
     });
-    return { recommendations: DEFAULT_RECOMMENDATIONS, mode: 'fallback' };
+    return {
+      recommendations: DEFAULT_RECOMMENDATIONS,
+      guidancePlan,
+      priorityScore,
+      deepMode,
+      usedContextDomains: context.usedContextDomains,
+      mode: 'fallback',
+    };
   }
 }
 

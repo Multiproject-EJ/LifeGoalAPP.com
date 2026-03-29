@@ -163,6 +163,20 @@ type InnerRecommendation = {
   href: string;
 };
 
+type InnerGuidanceMeta = {
+  guidancePlan: {
+    insightSummary: string;
+    patternLinks: string[];
+    riskFlags: string[];
+    nowPlan: string[];
+    weekPlan: string[];
+    monthPlan: string[];
+  };
+  priorityScore: number;
+  deepMode: boolean;
+  usedContextDomains: string[];
+};
+
 export function useConflictSession() {
   const [stage, setStage] = useState<ConflictResolverUiStage>('mode_selection');
   const [selectedType, setSelectedType] = useState<ConflictType | null>(null);
@@ -199,6 +213,7 @@ export function useConflictSession() {
   const [inviteJoinMessage, setInviteJoinMessage] = useState<string | null>(null);
   const [inviteJoinBootstrapped, setInviteJoinBootstrapped] = useState(false);
   const [innerRecommendations, setInnerRecommendations] = useState<InnerRecommendation[]>([]);
+  const [innerGuidanceMeta, setInnerGuidanceMeta] = useState<InnerGuidanceMeta | null>(null);
   const [aiSummaryCards, setAiSummaryCards] = useState<Array<{ id: string; title: string; text: string }> | null>(null);
   const [aiResolutionOptions, setAiResolutionOptions] = useState<Array<{ id: string; title: string; description: string }> | null>(null);
 
@@ -510,6 +525,12 @@ export function useConflictSession() {
         usedContextDomains: ['reflections'],
       });
       setInnerRecommendations(aiResult.recommendations);
+      setInnerGuidanceMeta({
+        guidancePlan: aiResult.guidancePlan,
+        priorityScore: aiResult.priorityScore,
+        deepMode: aiResult.deepMode,
+        usedContextDomains: aiResult.usedContextDomains,
+      });
       void setStageWithSync('inner_next_step');
       return;
     }
@@ -902,6 +923,7 @@ export function useConflictSession() {
     setInviteJoinMessage(null);
     setInviteJoinBootstrapped(false);
     setInnerRecommendations([]);
+    setInnerGuidanceMeta(null);
     setAiSummaryCards(null);
     setAiResolutionOptions(null);
     if (typeof window !== 'undefined') {
@@ -970,6 +992,7 @@ export function useConflictSession() {
       setSequencedLead,
       completeApologyAlignment,
       innerRecommendations: computedInnerRecommendations,
+      innerGuidanceMeta,
       completeInnerNextStep,
       followUpDate,
       setFollowUpDate,
@@ -1016,6 +1039,7 @@ export function useConflictSession() {
       sequencedLead,
       followUpDate,
       computedInnerRecommendations,
+      innerGuidanceMeta,
       summaryCards,
       resolutionOptions,
       inviteeEmailDraft,
