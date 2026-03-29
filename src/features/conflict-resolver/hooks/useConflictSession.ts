@@ -13,7 +13,7 @@ import {
   subscribeConflictSessionStatus,
   updateConflictSessionStatus,
 } from '../services/conflictSessions';
-import { buildConflictInviteUrl, createConflictInvite } from '../services/conflictInvites';
+import { buildConflictInviteUrl, createConflictInvite, redeemConflictInvite } from '../services/conflictInvites';
 import { trackConflictEvent } from '../services/conflictAnalytics';
 
 type ConflictResolverUiStage =
@@ -53,6 +53,56 @@ const PRIVATE_CAPTURE_PROMPTS: readonly PrivatePrompt[] = [
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const CONFLICT_SESSION_DRAFT_STORAGE_KEY = 'conflict-resolver:draft:v1';
+const SHARED_SUMMARY_REPLACEMENTS: Array<{ pattern: RegExp; replacement: string }> = [
+  { pattern: /\bidiot\b/gi, replacement: 'hurtful remark' },
+  { pattern: /\bstupid\b/gi, replacement: 'frustrating' },
+  { pattern: /\bshut up\b/gi, replacement: 'stop talking' },
+  { pattern: /\bhate you\b/gi, replacement: 'felt intense anger' },
+  { pattern: /\bworthless\b/gi, replacement: 'unappreciated' },
+  { pattern: /\bkill yourself\b/gi, replacement: 'severe harmful phrase removed' },
+  { pattern: /\bwhat'?s wrong with you\b/gi, replacement: 'I felt confused by your response' },
+];
+const BLAME_PATTERNS: Array<{ pattern: RegExp; replacement: string }> = [
+  { pattern: /\byou always\b/gi, replacement: 'I experienced repeated moments where' },
+  { pattern: /\byou never\b/gi, replacement: 'I experienced missing support when' },
+  { pattern: /\byou made me\b/gi, replacement: 'I felt' },
+  { pattern: /\byou are\b/gi, replacement: 'I experienced this as' },
+];
+
+const sanitizeForSharedSummary = (value: string): { text: string; moderationNotes: string[] } => {
+  const trimmed = value.trim();
+  if (!trimmed) return { text: '', moderationNotes: [] };
+
+  let nextValue = trimmed;
+  let escalatoryLanguageSoftened = false;
+  let blameLanguageReframed = false;
+
+  for (const { pattern, replacement } of SHARED_SUMMARY_REPLACEMENTS) {
+    if (pattern.test(nextValue)) {
+      escalatoryLanguageSoftened = true;
+      pattern.lastIndex = 0;
+      nextValue = nextValue.replace(pattern, replacement);
+    }
+  }
+
+  for (const { pattern, replacement } of BLAME_PATTERNS) {
+    if (pattern.test(nextValue)) {
+      blameLanguageReframed = true;
+      pattern.lastIndex = 0;
+      nextValue = nextValue.replace(pattern, replacement);
+    }
+  }
+
+  const moderationNotes: string[] = [];
+  if (escalatoryLanguageSoftened) {
+    moderationNotes.push('Escalatory wording softened');
+  }
+  if (blameLanguageReframed) {
+    moderationNotes.push('Direct-blame wording reframed');
+  }
+
+  return { text: nextValue, moderationNotes };
+};
 const UI_TO_CONFLICT_STAGE: Record<ConflictResolverUiStage, ConflictStage> = {
   mode_selection: 'draft',
   grounding: 'grounding',
@@ -130,6 +180,8 @@ export function useConflictSession() {
   const [recoverableDraft, setRecoverableDraft] = useState<ConflictSessionDraftSnapshot | null>(null);
   const [generatedInviteLinks, setGeneratedInviteLinks] = useState<string[]>([]);
   const [inviteGenerationError, setInviteGenerationError] = useState<string | null>(null);
+  const [inviteJoinMessage, setInviteJoinMessage] = useState<string | null>(null);
+  const [inviteJoinBootstrapped, setInviteJoinBootstrapped] = useState(false);
 
   const applyDraftSnapshot = (parsed: ConflictSessionDraftSnapshot) => {
     setStage(parsed.stage ?? 'mode_selection');
@@ -269,6 +321,44 @@ export function useConflictSession() {
     }
   };
 
+  const joinSharedSessionFromInviteToken = async (inviteToken: string) => {
+    const normalized = inviteToken.trim();
+    if (!normalized) {
+      setSharedSessionError('Invite token is missing from the link.');
+      return;
+    }
+
+    try {
+      setSharedSessionBusy(true);
+      setSharedSessionError(null);
+      setInviteJoinMessage('Joining session from invite…');
+      const userId = await getCurrentUserId();
+      const redeemedInvite = await redeemConflictInvite({ inviteToken: normalized, userId });
+      await addConflictParticipant({ sessionId: redeemedInvite.session_id, userId, role: 'participant' });
+      setSelectedType('shared_conflict');
+      setSharedSessionId(redeemedInvite.session_id);
+      setSharedSessionCodeInput(redeemedInvite.session_id);
+      await refreshSharedParticipantCount(redeemedInvite.session_id);
+      const snapshot = await getConflictSessionSnapshot(redeemedInvite.session_id);
+      if (isConflictStage(snapshot.status)) {
+        setSharedSessionStatus(snapshot.status);
+        setStage(CONFLICT_STAGE_TO_UI[snapshot.status]);
+      }
+      setSharedSessionLastSyncedAt(snapshot.updatedAt);
+      setInviteJoinMessage('Invite accepted. Session synced.');
+      trackConflictEvent('conflict.shared_session_joined', {
+        sessionId: redeemedInvite.session_id,
+        source: 'invite_token',
+      });
+    } catch (error) {
+      console.error('Failed to join session from invite token', error);
+      setSharedSessionError('Could not redeem this invite link. It may be expired or already used.');
+      setInviteJoinMessage(null);
+    } finally {
+      setSharedSessionBusy(false);
+    }
+  };
+
   const addLightweightParticipant = () => {
     const normalized = inviteeEmailDraft.trim().toLowerCase();
     if (!normalized) {
@@ -317,6 +407,10 @@ export function useConflictSession() {
   };
 
   const skipPrompt = () => {
+    trackConflictEvent('conflict.private_capture_skipped', {
+      promptId: PRIVATE_CAPTURE_PROMPTS[promptIndex]?.id ?? 'unknown',
+      stage,
+    });
     if (promptIndex >= PRIVATE_CAPTURE_PROMPTS.length - 1) {
       void setStageWithSync('collect_pile');
       return;
@@ -325,6 +419,10 @@ export function useConflictSession() {
   };
 
   const finishPrivateCapture = () => {
+    trackConflictEvent('conflict.private_capture_advanced', {
+      answeredCount: Object.values(answers).filter((value) => value.trim().length > 0).length,
+      totalPrompts: PRIVATE_CAPTURE_PROMPTS.length,
+    });
     void setStageWithSync('collect_pile');
   };
 
@@ -341,6 +439,11 @@ export function useConflictSession() {
     setParallelAnnotations(annotations);
     const allCardsAccurate = PRIVATE_CAPTURE_PROMPTS.every((prompt) => annotations[prompt.id] === 'accurate');
     setAlignmentReached(decision === 'accurate' && allCardsAccurate);
+    trackConflictEvent('conflict.parallel_read_completed', {
+      decision,
+      alignmentReached: decision === 'accurate' && allCardsAccurate,
+      annotationCount: Object.keys(annotations).length,
+    });
     void setStageWithSync('resolution_builder');
   };
 
@@ -420,6 +523,12 @@ export function useConflictSession() {
         setInviteGenerationError('Could not generate invite links right now.');
       }
     }
+    trackConflictEvent('conflict.agreement_finalized', {
+      sharedSessionId,
+      lightweightParticipantCount: lightweightParticipants.length,
+      hasFollowUpDate: Boolean(followUpDate),
+      resolutionChosen: Boolean(selectedResolution || activeProposalId),
+    });
     void setStageWithSync('agreement_finalized');
   };
 
@@ -453,21 +562,42 @@ export function useConflictSession() {
   }));
 
   const summaryCards = [
-    {
-      id: 'what_happened',
-      title: 'What happened',
-      text: answers.what_happened || 'No entry yet.',
-    },
-    {
-      id: 'what_it_meant',
-      title: 'What it meant',
-      text: answers.what_it_meant || 'No entry yet.',
-    },
-    {
-      id: 'what_is_needed',
-      title: 'What is needed',
-      text: answers.what_is_needed || 'No entry yet.',
-    },
+    (() => {
+      const raw = answers.what_happened ?? '';
+      const sanitized = sanitizeForSharedSummary(raw);
+      const useSanitized = selectedType === 'shared_conflict';
+      return {
+        id: 'what_happened',
+        title: 'What happened',
+        text: useSanitized ? sanitized.text || 'No entry yet.' : raw || 'No entry yet.',
+        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized.text !== raw.trim(),
+        moderationNotes: useSanitized ? sanitized.moderationNotes : [],
+      };
+    })(),
+    (() => {
+      const raw = answers.what_it_meant ?? '';
+      const sanitized = sanitizeForSharedSummary(raw);
+      const useSanitized = selectedType === 'shared_conflict';
+      return {
+        id: 'what_it_meant',
+        title: 'What it meant',
+        text: useSanitized ? sanitized.text || 'No entry yet.' : raw || 'No entry yet.',
+        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized.text !== raw.trim(),
+        moderationNotes: useSanitized ? sanitized.moderationNotes : [],
+      };
+    })(),
+    (() => {
+      const raw = answers.what_is_needed ?? '';
+      const sanitized = sanitizeForSharedSummary(raw);
+      const useSanitized = selectedType === 'shared_conflict';
+      return {
+        id: 'what_is_needed',
+        title: 'What is needed',
+        text: useSanitized ? sanitized.text || 'No entry yet.' : raw || 'No entry yet.',
+        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized.text !== raw.trim(),
+        moderationNotes: useSanitized ? sanitized.moderationNotes : [],
+      };
+    })(),
   ] as const;
 
   useEffect(() => {
@@ -508,6 +638,19 @@ export function useConflictSession() {
       unsubscribe();
     };
   }, [selectedType, sharedSessionId]);
+
+  useEffect(() => {
+    if (inviteJoinBootstrapped || typeof window === 'undefined') return;
+    setInviteJoinBootstrapped(true);
+    if (!window.location.pathname.startsWith('/conflict/join')) return;
+
+    const token = new URLSearchParams(window.location.search).get('token');
+    if (!token) {
+      setSharedSessionError('Invite link is missing a token.');
+      return;
+    }
+    void joinSharedSessionFromInviteToken(token);
+  }, [inviteJoinBootstrapped]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -619,6 +762,8 @@ export function useConflictSession() {
     setRecoverableDraft(null);
     setGeneratedInviteLinks([]);
     setInviteGenerationError(null);
+    setInviteJoinMessage(null);
+    setInviteJoinBootstrapped(false);
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(CONFLICT_SESSION_DRAFT_STORAGE_KEY);
     }
@@ -695,8 +840,10 @@ export function useConflictSession() {
       lightweightParticipants,
       generatedInviteLinks,
       inviteGenerationError,
+      inviteJoinMessage,
       addLightweightParticipant,
       removeLightweightParticipant,
+      joinSharedSessionFromInviteToken,
       resetFlow,
     }),
     [
@@ -731,6 +878,7 @@ export function useConflictSession() {
       lightweightParticipants,
       generatedInviteLinks,
       inviteGenerationError,
+      inviteJoinMessage,
     ],
   );
 }

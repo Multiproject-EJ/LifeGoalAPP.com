@@ -397,7 +397,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [activeAuthTab, setActiveAuthTab] = useState<AuthTab>('login');
   const [manualProfileSaving, setManualProfileSaving] = useState(false);
   const [displayName, setDisplayName] = useState('');
-  const [activeWorkspaceNav, setActiveWorkspaceNav] = useState<string>('goals');
+  const [activeWorkspaceNav, setActiveWorkspaceNav] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'goals';
+    const host = window.location.hostname.toLowerCase();
+    if (host === 'peacebetween.com' || host === 'www.peacebetween.com') {
+      return 'breathing-space';
+    }
+    return 'goals';
+  });
   const [initialSearch] = useState(() =>
     typeof window !== 'undefined' ? window.location.search : '',
   );
@@ -1541,15 +1548,21 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const host = window.location.hostname.toLowerCase();
+    const isPeacebetweenHost = host === 'peacebetween.com' || host === 'www.peacebetween.com';
     if (window.location.pathname === '/journal') {
       setActiveWorkspaceNav('journal');
     } else if (window.location.pathname === '/breathing-space') {
       setActiveWorkspaceNav('breathing-space');
+    } else if (window.location.pathname.startsWith('/conflict/join') || isPeacebetweenHost) {
+      setActiveWorkspaceNav('breathing-space');
+      setBreathingSpaceMobileTab('conflict');
     }
   }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (window.location.pathname.startsWith('/conflict/join')) return;
     const searchSuffix = initialSearch ?? '';
     let nextPath = '/';
     if (activeWorkspaceNav === 'journal') {
