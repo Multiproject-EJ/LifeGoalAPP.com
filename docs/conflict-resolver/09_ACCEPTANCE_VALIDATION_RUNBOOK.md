@@ -2,6 +2,9 @@
 
 Use this runbook to close the remaining acceptance criteria with explicit evidence.
 
+Quick preflight command:
+- `npm run check:conflict-resolver-validation`
+
 ---
 
 ## 1) PR5 acceptance (cross-surface invitee flow)
@@ -92,4 +95,3 @@ Close PR5/PR6 only when:
 - All PR5 acceptance criteria are marked complete with evidence.
 - PR6 acceptance criteria are marked complete with evidence.
 - Test matrix rows are filled and signed off.
-

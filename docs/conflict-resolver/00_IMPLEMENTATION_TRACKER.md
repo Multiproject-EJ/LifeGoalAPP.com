@@ -180,6 +180,7 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 
 ## 8.1) Validation runbook
 - [x] Add PR5/PR6 acceptance validation runbook with evidence template (`09_ACCEPTANCE_VALIDATION_RUNBOOK.md`).
+- [x] Add lightweight smoke validation command (`npm run check:conflict-resolver-validation`).
 
 ---
 
