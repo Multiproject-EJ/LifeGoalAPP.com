@@ -15,11 +15,13 @@ import {
 } from '../services/conflictSessions';
 import { buildConflictInviteUrl, createConflictInvite, redeemConflictInvite } from '../services/conflictInvites';
 import { trackConflictEvent } from '../services/conflictAnalytics';
+import { triggerCompletionHaptic } from '../../../utils/completionHaptics';
 
 type ConflictResolverUiStage =
   | 'mode_selection'
   | 'grounding'
   | 'private_capture'
+  | 'inner_next_step'
   | 'collect_pile'
   | 'parallel_read'
   | 'resolution_builder'
@@ -107,6 +109,7 @@ const UI_TO_CONFLICT_STAGE: Record<ConflictResolverUiStage, ConflictStage> = {
   mode_selection: 'draft',
   grounding: 'grounding',
   private_capture: 'private_capture',
+  inner_next_step: 'agreement',
   collect_pile: 'shared_read',
   parallel_read: 'shared_read',
   resolution_builder: 'negotiation',
@@ -147,6 +150,14 @@ type ConflictSessionDraftSnapshot = {
   sharedParticipantCount: number;
 };
 
+type InnerRecommendation = {
+  id: string;
+  title: string;
+  reason: string;
+  ctaLabel: string;
+  href: string;
+};
+
 export function useConflictSession() {
   const [stage, setStage] = useState<ConflictResolverUiStage>('mode_selection');
   const [selectedType, setSelectedType] = useState<ConflictType | null>(null);
@@ -182,6 +193,60 @@ export function useConflictSession() {
   const [inviteGenerationError, setInviteGenerationError] = useState<string | null>(null);
   const [inviteJoinMessage, setInviteJoinMessage] = useState<string | null>(null);
   const [inviteJoinBootstrapped, setInviteJoinBootstrapped] = useState(false);
+
+  const buildInnerRecommendations = (draftAnswers: Record<string, string>): InnerRecommendation[] => {
+    const combined = Object.values(draftAnswers).join(' ').toLowerCase();
+    const picks: InnerRecommendation[] = [];
+
+    if (/(anxious|stress|overwhelm|panic|pressure|tired|burnout)/.test(combined)) {
+      picks.push({
+        id: 'breathing_reset',
+        title: 'Reset your nervous system first',
+        reason: 'Your reflection shows high pressure. A short regulation reset should come before strategy.',
+        ctaLabel: 'Start Breathing Space',
+        href: '#breathing-space',
+      });
+    }
+    if (/(consistency|routine|discipline|procrastinat|avoid|stuck|follow through)/.test(combined)) {
+      picks.push({
+        id: 'habit_alignment',
+        title: 'Create one tiny habit that removes friction',
+        reason: 'You described repeat-pattern tension. A single daily habit is the best leverage move.',
+        ctaLabel: 'Open Habits',
+        href: '#habits',
+      });
+    }
+    if (/(direction|purpose|goal|career|future|focus|clarity)/.test(combined)) {
+      picks.push({
+        id: 'goal_alignment',
+        title: 'Re-align with one concrete goal',
+        reason: 'Your notes point to uncertainty and direction conflict. Clarifying one active goal can reduce noise.',
+        ctaLabel: 'Open Goals',
+        href: '#goals',
+      });
+    }
+
+    if (picks.length === 0) {
+      picks.push(
+        {
+          id: 'journal_first',
+          title: 'Capture one clear insight',
+          reason: 'You did the hard honesty work. Lock in one sentence you want to remember this week.',
+          ctaLabel: 'Open Journal',
+          href: '#journal',
+        },
+        {
+          id: 'contract_step',
+          title: 'Turn insight into a commitment contract',
+          reason: 'Convert reflection into behavior by defining one concrete promise with a deadline.',
+          ctaLabel: 'Open Contracts',
+          href: '#contracts',
+        },
+      );
+    }
+
+    return picks.slice(0, 3);
+  };
 
   const applyDraftSnapshot = (parsed: ConflictSessionDraftSnapshot) => {
     setStage(parsed.stage ?? 'mode_selection');
@@ -286,7 +351,12 @@ export function useConflictSession() {
       trackConflictEvent('conflict.shared_session_created', { sessionId });
     } catch (error) {
       console.error('Failed to create shared conflict session', error);
-      setSharedSessionError('Could not create session. Please try again.');
+      const message = error instanceof Error ? error.message : 'Could not create session.';
+      if (/signed in/i.test(message)) {
+        setSharedSessionError('Please sign in first, then create a shared session code.');
+      } else {
+        setSharedSessionError(`Could not create session. ${message}`);
+      }
     } finally {
       setSharedSessionBusy(false);
     }
@@ -395,6 +465,7 @@ export function useConflictSession() {
 
   const startPrivateCapture = () => {
     setPromptIndex(0);
+    triggerCompletionHaptic('light', { channel: 'conflict', minIntervalMs: 1200 });
     void setStageWithSync('private_capture');
   };
 
@@ -423,6 +494,11 @@ export function useConflictSession() {
       answeredCount: Object.values(answers).filter((value) => value.trim().length > 0).length,
       totalPrompts: PRIVATE_CAPTURE_PROMPTS.length,
     });
+    if (selectedType === 'inner_tension') {
+      triggerCompletionHaptic('medium', { channel: 'conflict', minIntervalMs: 1500 });
+      void setStageWithSync('inner_next_step');
+      return;
+    }
     void setStageWithSync('collect_pile');
   };
 
@@ -449,6 +525,7 @@ export function useConflictSession() {
 
   const markAlignmentReached = () => {
     setAlignmentReached(true);
+    triggerCompletionHaptic('medium', { channel: 'conflict', minIntervalMs: 1600 });
   };
 
   const resolutionOptions = [
@@ -502,6 +579,7 @@ export function useConflictSession() {
 
   const completeApologyAlignment = () => {
     if (apologyTiming === 'sequenced' && !sequencedLead) return;
+    triggerCompletionHaptic('light', { channel: 'conflict', minIntervalMs: 1200 });
     void setStageWithSync('agreement_preview');
   };
 
@@ -529,6 +607,7 @@ export function useConflictSession() {
       hasFollowUpDate: Boolean(followUpDate),
       resolutionChosen: Boolean(selectedResolution || activeProposalId),
     });
+    triggerCompletionHaptic('strong', { channel: 'conflict', minIntervalMs: 1800 });
     void setStageWithSync('agreement_finalized');
   };
 
@@ -599,6 +678,13 @@ export function useConflictSession() {
       };
     })(),
   ] as const;
+
+  const innerRecommendations = buildInnerRecommendations(answers);
+
+  const completeInnerNextStep = () => {
+    triggerCompletionHaptic('light', { channel: 'conflict', minIntervalMs: 1200 });
+    setStage('agreement_finalized');
+  };
 
   useEffect(() => {
     if (selectedType !== 'shared_conflict' || !sharedSessionId) return;
@@ -829,6 +915,8 @@ export function useConflictSession() {
       sequencedLead,
       setSequencedLead,
       completeApologyAlignment,
+      innerRecommendations,
+      completeInnerNextStep,
       followUpDate,
       setFollowUpDate,
       agreementSummaryItems,
@@ -873,6 +961,7 @@ export function useConflictSession() {
       apologyTiming,
       sequencedLead,
       followUpDate,
+      innerRecommendations,
       inviteeEmailDraft,
       inviteeEmailError,
       lightweightParticipants,
