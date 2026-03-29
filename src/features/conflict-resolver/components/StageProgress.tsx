@@ -2,6 +2,7 @@ type ConflictResolverUiStage =
   | 'mode_selection'
   | 'grounding'
   | 'private_capture'
+  | 'inner_next_step'
   | 'collect_pile'
   | 'parallel_read'
   | 'resolution_builder'
@@ -17,6 +18,7 @@ const STAGE_ORDER: Array<{ id: ConflictResolverUiStage; label: string; shortLabe
   { id: 'mode_selection', label: 'Mode', shortLabel: 'Mode' },
   { id: 'grounding', label: 'Grounding', shortLabel: 'Ground' },
   { id: 'private_capture', label: 'Private capture', shortLabel: 'Private' },
+  { id: 'inner_next_step', label: 'Inner guidance', shortLabel: 'Guidance' },
   { id: 'collect_pile', label: 'Collect pile', shortLabel: 'Collect' },
   { id: 'parallel_read', label: 'Parallel read', shortLabel: 'Read' },
   { id: 'resolution_builder', label: 'Resolution builder', shortLabel: 'Resolve' },

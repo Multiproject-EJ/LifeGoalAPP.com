@@ -6,6 +6,7 @@ import { CollectPileScreen } from './screens/CollectPileScreen';
 import { ParallelReadScreen } from './screens/ParallelReadScreen';
 import { ResolutionBuilderScreen } from './screens/ResolutionBuilderScreen';
 import { ApologyAlignmentScreen } from './screens/ApologyAlignmentScreen';
+import { InnerNextStepScreen } from './screens/InnerNextStepScreen';
 import { AgreementCloseCard } from './components/AgreementCloseCard';
 import { StageProgress } from './components/StageProgress';
 import { useConflictSession } from './hooks/useConflictSession';
@@ -78,6 +79,15 @@ export function ConflictResolverExperience() {
 
   if (session.stage === 'collect_pile') {
     return withProgress(<CollectPileScreen summaryCards={session.summaryCards} onContinue={session.enterParallelRead} />);
+  }
+
+  if (session.stage === 'inner_next_step') {
+    return withProgress(
+      <InnerNextStepScreen
+        recommendations={session.innerRecommendations}
+        onContinue={session.completeInnerNextStep}
+      />,
+    );
   }
 
   if (session.stage === 'parallel_read') {
@@ -170,11 +180,15 @@ export function ConflictResolverExperience() {
           <p className="conflict-resolver__input-error" role="alert">{session.inviteGenerationError}</p>
         ) : null}
         <article className="conflict-resolver__finalized-card" aria-label="Post-session onboarding">
-          <h4>Continue in LifeGoal</h4>
-          <p>Ready to keep momentum? Continue into full onboarding for long-term conflict growth tracking.</p>
-          <a href="#auth-signup" className="btn">
-            Continue to onboarding
-          </a>
+          <h4>Suggested next moves</h4>
+          <p>Based on this session, jump straight into the most useful next step.</p>
+          <div className="conflict-resolver__proposal-actions">
+            {session.innerRecommendations.map((item) => (
+              <a key={item.id} href={item.href} className="btn">
+                {item.ctaLabel}
+              </a>
+            ))}
+          </div>
         </article>
         <button type="button" className="btn btn--primary conflict-resolver__primary-cta" onClick={session.resetFlow}>
           Start new session
