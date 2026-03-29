@@ -30,6 +30,7 @@ export function ParallelReadScreen({
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [annotations, setAnnotations] = useState<Record<string, HighlightAction>>({});
   const [alignmentCallbackSent, setAlignmentCallbackSent] = useState(false);
+  const [extensionsUsed, setExtensionsUsed] = useState(0);
 
   useEffect(() => {
     if (remainingSeconds <= 0) {
@@ -56,6 +57,16 @@ export function ParallelReadScreen({
     if (!selectedCardId) return;
     setAnnotations((prev) => ({ ...prev, [selectedCardId]: action }));
     setSelectedCardId(null);
+  };
+
+  const requestMoreTime = () => {
+    if (timerDone || extensionsUsed >= 2) return;
+    setRemainingSeconds((prev) => prev + 15);
+    setExtensionsUsed((prev) => prev + 1);
+  };
+
+  const unlockEarly = () => {
+    setRemainingSeconds(0);
   };
 
   return (
@@ -120,9 +131,19 @@ export function ParallelReadScreen({
 
       <div className="conflict-resolver__footer-actions">
         {!timerDone ? (
-          <p className="conflict-resolver__input-error" role="status" aria-live="polite">
-            Reactions unlock in {remainingSeconds}s.
-          </p>
+          <div className="conflict-resolver__pace-controls">
+            <p className="conflict-resolver__input-error" role="status" aria-live="polite">
+              Reactions unlock in {remainingSeconds}s.
+            </p>
+            <div className="conflict-resolver__pace-actions">
+              <button type="button" className="btn" onClick={requestMoreTime} disabled={extensionsUsed >= 2}>
+                Need more time (+15s)
+              </button>
+              <button type="button" className="btn" onClick={unlockEarly}>
+                Unlock now
+              </button>
+            </div>
+          </div>
         ) : null}
         {alignmentReached ? (
           <p className="conflict-resolver__alignment-banner" role="status">
