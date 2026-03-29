@@ -174,7 +174,7 @@ Goal: allow invited external parties to participate without full app onboarding.
 
 ### Surfaces
 1. **LifeGoal app (authenticated users)** — starts/owns sessions.
-2. **breathingspace.com (lightweight web app)** — invitees join via one-click email sign-in.
+2. **peacebetween.com (lightweight web app)** — invitees join via one-click email sign-in.
 
 ### Identity and auth
 - Use shared auth provider/project (Supabase Auth).
@@ -246,7 +246,7 @@ Hard rules:
 - Final agreement composer + follow-up reminders.
 
 ### Phase D — Cross-domain onboarding
-- breathing-space.com lightweight join flow.
+- peacebetween.com lightweight join flow.
 - Invite tokens + magic links + post-session funnel.
 
 ### Phase E — Quality + trust
