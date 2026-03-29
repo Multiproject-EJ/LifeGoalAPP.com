@@ -161,7 +161,7 @@ async function persistAiRun(params: {
 }) {
   if (!params.sessionId) return;
   const supabase = getSupabaseClient() as any;
-  await supabase.from('conflict_ai_runs').insert({
+  const { error } = await supabase.from('conflict_ai_runs').insert({
     session_id: params.sessionId,
     stage: params.stage,
     mode: params.mode,
@@ -170,6 +170,9 @@ async function persistAiRun(params: {
     fallback_used: params.fallbackUsed,
     error_message: params.errorMessage ?? null,
   });
+  if (error) {
+    console.warn('[conflict-ai] persistAiRun failed', { stage: params.stage, error });
+  }
 }
 
 async function persistArtifact(params: {
@@ -179,11 +182,14 @@ async function persistArtifact(params: {
 }) {
   if (!params.sessionId) return;
   const supabase = getSupabaseClient() as any;
-  await supabase.from('conflict_ai_artifacts').insert({
+  const { error } = await supabase.from('conflict_ai_artifacts').insert({
     session_id: params.sessionId,
     stage: params.stage,
     artifact: params.artifact,
   });
+  if (error) {
+    console.warn('[conflict-ai] persistArtifact failed', { stage: params.stage, error });
+  }
 }
 
 async function persistAiMessage(params: {
@@ -195,13 +201,16 @@ async function persistAiMessage(params: {
 }) {
   if (!params.sessionId) return;
   const supabase = getSupabaseClient() as any;
-  await supabase.from('conflict_ai_messages').insert({
+  const { error } = await supabase.from('conflict_ai_messages').insert({
     session_id: params.sessionId,
     stage: params.stage,
     role: params.role,
     message: params.message,
     metadata: params.metadata ?? {},
   });
+  if (error) {
+    console.warn('[conflict-ai] persistAiMessage failed', { stage: params.stage, role: params.role, error });
+  }
 }
 
 async function requestOpenAiRecommendations(input: InnerContextInput, model: string, apiKey: string): Promise<InnerRecommendation[]> {
