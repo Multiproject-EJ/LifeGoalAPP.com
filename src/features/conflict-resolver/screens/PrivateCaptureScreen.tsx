@@ -44,6 +44,7 @@ export function PrivateCaptureScreen({
     .replace(/\byou are\b/gi, 'I experienced this as');
   const hasRewriteSuggestion = suggestedRewrite.trim() !== value.trim() && value.trim().length > 0;
   const hasEscalatoryLanguage = DISALLOWED_PATTERNS.some((pattern) => pattern.test(value));
+  const canAdvance = true;
 
   return (
     <section className="conflict-resolver__screen" aria-labelledby="private-capture-title">
