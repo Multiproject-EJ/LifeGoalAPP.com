@@ -85,6 +85,7 @@ export function ConflictResolverExperience() {
     return withProgress(
       <InnerNextStepScreen
         recommendations={session.innerRecommendations}
+        guidanceMeta={session.innerGuidanceMeta}
         onContinue={session.completeInnerNextStep}
       />,
     );
