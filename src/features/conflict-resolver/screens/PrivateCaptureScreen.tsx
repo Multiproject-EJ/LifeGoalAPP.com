@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from 'react';
+
 export type PrivatePrompt = {
   id: string;
   label: string;
@@ -35,6 +37,25 @@ export function PrivateCaptureScreen({
   onSkip,
   onFinish,
 }: PrivateCaptureScreenProps) {
+  const [isMobileComposerOpen, setIsMobileComposerOpen] = useState(false);
+  const [isCompactViewport, setIsCompactViewport] = useState(false);
+  const mobileComposerRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const updateViewport = () => {
+      setIsCompactViewport(window.matchMedia('(max-width: 768px)').matches);
+    };
+    updateViewport();
+    window.addEventListener('resize', updateViewport);
+    return () => window.removeEventListener('resize', updateViewport);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobileComposerOpen) return;
+    mobileComposerRef.current?.focus();
+  }, [isMobileComposerOpen]);
+
   const prompt = prompts[promptIndex];
   const isLast = promptIndex >= prompts.length - 1;
   const suggestedRewrite = value
@@ -65,6 +86,11 @@ export function PrivateCaptureScreen({
           placeholder={prompt.placeholder}
           value={value}
           onChange={(event) => onChangeValue(event.target.value)}
+          onFocus={() => {
+            if (isCompactViewport) {
+              setIsMobileComposerOpen(true);
+            }
+          }}
           rows={6}
         />
         <div className="conflict-resolver__rewrite-actions">
@@ -107,6 +133,29 @@ export function PrivateCaptureScreen({
           </button>
         )}
       </div>
+
+      {isMobileComposerOpen ? (
+        <div className="conflict-resolver__mobile-composer" role="dialog" aria-modal="true" aria-label="Write your reflection">
+          <header className="conflict-resolver__mobile-composer-header">
+            <strong>{prompt.label}</strong>
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={() => setIsMobileComposerOpen(false)}
+            >
+              Done writing
+            </button>
+          </header>
+          <textarea
+            ref={mobileComposerRef}
+            className="conflict-resolver__mobile-composer-input"
+            value={value}
+            onChange={(event) => onChangeValue(event.target.value)}
+            placeholder={prompt.placeholder}
+            rows={10}
+          />
+        </div>
+      ) : null}
     </section>
   );
 }
