@@ -97,11 +97,11 @@ export function PrivateCaptureScreen({
           Skip for now
         </button>
         {isLast ? (
-          <button type="button" className="btn btn--primary" onClick={onFinish}>
+          <button type="button" className="btn btn--primary" onClick={onFinish} disabled={!canAdvance}>
             Continue to shared step
           </button>
         ) : (
-          <button type="button" className="btn btn--primary" onClick={onNext}>
+          <button type="button" className="btn btn--primary" onClick={onNext} disabled={!canAdvance}>
             Next question
           </button>
         )}
