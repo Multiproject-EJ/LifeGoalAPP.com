@@ -13,6 +13,11 @@ export type ConflictInvite = {
   redeemed_at: string | null;
   redeemed_by_user_id: string | null;
   created_by_user_id: string;
+  issued_domain: string | null;
+  redeemed_domain: string | null;
+  issued_surface: string | null;
+  redeemed_surface: string | null;
+  metadata: Record<string, unknown>;
   created_at: string;
 };
 
@@ -23,6 +28,18 @@ function getUntypedSupabase() {
 
 function createInviteToken() {
   return crypto.randomUUID().replace(/-/g, '');
+}
+
+function getCurrentHostname() {
+  if (typeof window === 'undefined') return null;
+  return window.location.hostname || null;
+}
+
+function getCurrentSurfaceTag() {
+  const hostname = getCurrentHostname();
+  if (!hostname) return 'server';
+  if (hostname === 'peacebetween.com' || hostname === 'www.peacebetween.com') return 'peacebetween_web';
+  return 'lifegoal_app';
 }
 
 function getDefaultInviteBaseUrl() {
@@ -54,6 +71,8 @@ export async function createConflictInvite(params: {
       invite_token: inviteToken,
       created_by_user_id: params.createdByUserId,
       expires_at: params.expiresAt ?? undefined,
+      issued_domain: getCurrentHostname(),
+      issued_surface: getCurrentSurfaceTag(),
     })
     .select('*')
     .single();
@@ -89,6 +108,8 @@ export async function redeemConflictInvite(params: { inviteToken: string; userId
       status: 'redeemed',
       redeemed_at: nowIso,
       redeemed_by_user_id: params.userId,
+      redeemed_domain: getCurrentHostname(),
+      redeemed_surface: getCurrentSurfaceTag(),
     })
     .eq('invite_token', params.inviteToken)
     .eq('status', 'pending')

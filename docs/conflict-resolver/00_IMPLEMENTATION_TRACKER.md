@@ -127,6 +127,7 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 ### Deliverables
 - [x] Finalize invitation token model and lifecycle (issue, redeem, expire, revoke).
 - [x] Implement one-click magic link for invitee participation.
+- [x] Add invite domain/surface telemetry columns (`issued_domain`, `redeemed_domain`, `issued_surface`, `redeemed_surface`).
 - [x] Add lightweight participant flow (email-only, no full profile required).
 - [x] Add post-session funnel path into full LifeGoal onboarding.
 
