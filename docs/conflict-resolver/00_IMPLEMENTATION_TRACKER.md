@@ -178,6 +178,11 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 
 ---
 
+## 8.1) Validation runbook
+- [x] Add PR5/PR6 acceptance validation runbook with evidence template (`09_ACCEPTANCE_VALIDATION_RUNBOOK.md`).
+
+---
+
 ## 9) Rollback and recovery
 - Feature flag all Conflict Resolver routes/components.
 - Preserve schema backward compatibility between PRs.

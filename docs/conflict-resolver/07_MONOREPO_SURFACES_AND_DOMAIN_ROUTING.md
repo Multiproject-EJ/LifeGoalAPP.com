@@ -34,7 +34,7 @@ Both surfaces share the same Supabase backend, auth project, and realtime channe
 
 Works on:
 - Vercel (now, build validation)
-- Netlify (later, monetized production if desired)
+- Netlify (recommended production host for `www.breathingspace.com`)
 - Cloudflare Pages
 
 ### Option B: one deploy project, host-based routing
@@ -59,8 +59,14 @@ Use this flow regardless of host:
 
 Common provider CNAME targets:
 - Vercel: `cname.vercel-dns.com`
-- Netlify: `your-site.netlify.app` (exact target shown in Netlify UI)
+- Netlify: `<your-site>.netlify.app` (exact target shown in Netlify UI)
 - Cloudflare Pages: `<project>.pages.dev` (or host-provided target)
+
+### Netlify-specific note (chosen path)
+- In Netlify, create a dedicated site for `breathingspace-web`.
+- Set publish directory to that app’s build output.
+- Add `www.breathingspace.com` as custom domain.
+- Use Netlify-provided CNAME target in Spaceship DNS.
 
 ---
 
@@ -93,3 +99,19 @@ Avoid embedding provider domains in generated URLs once custom domain is live.
 4. Verify invite link join flow end-to-end.
 5. Optionally migrate main app into `/apps/lifegoal-web` later.
 
+---
+
+## Minimal Netlify config (example)
+
+```toml
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+```
+
+If `breathingspace-web` is moved into a subfolder, set `base` and `publish` to that app's paths.
