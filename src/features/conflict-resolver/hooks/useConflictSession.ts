@@ -317,6 +317,10 @@ export function useConflictSession() {
   };
 
   const skipPrompt = () => {
+    trackConflictEvent('conflict.private_capture_skipped', {
+      promptId: PRIVATE_CAPTURE_PROMPTS[promptIndex]?.id ?? 'unknown',
+      stage,
+    });
     if (promptIndex >= PRIVATE_CAPTURE_PROMPTS.length - 1) {
       void setStageWithSync('collect_pile');
       return;
@@ -325,6 +329,10 @@ export function useConflictSession() {
   };
 
   const finishPrivateCapture = () => {
+    trackConflictEvent('conflict.private_capture_advanced', {
+      answeredCount: Object.values(answers).filter((value) => value.trim().length > 0).length,
+      totalPrompts: PRIVATE_CAPTURE_PROMPTS.length,
+    });
     void setStageWithSync('collect_pile');
   };
 
@@ -341,6 +349,11 @@ export function useConflictSession() {
     setParallelAnnotations(annotations);
     const allCardsAccurate = PRIVATE_CAPTURE_PROMPTS.every((prompt) => annotations[prompt.id] === 'accurate');
     setAlignmentReached(decision === 'accurate' && allCardsAccurate);
+    trackConflictEvent('conflict.parallel_read_completed', {
+      decision,
+      alignmentReached: decision === 'accurate' && allCardsAccurate,
+      annotationCount: Object.keys(annotations).length,
+    });
     void setStageWithSync('resolution_builder');
   };
 
@@ -420,6 +433,12 @@ export function useConflictSession() {
         setInviteGenerationError('Could not generate invite links right now.');
       }
     }
+    trackConflictEvent('conflict.agreement_finalized', {
+      sharedSessionId,
+      lightweightParticipantCount: lightweightParticipants.length,
+      hasFollowUpDate: Boolean(followUpDate),
+      resolutionChosen: Boolean(selectedResolution || activeProposalId),
+    });
     void setStageWithSync('agreement_finalized');
   };
 

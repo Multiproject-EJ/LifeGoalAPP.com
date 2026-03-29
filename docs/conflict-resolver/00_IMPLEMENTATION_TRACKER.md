@@ -21,8 +21,8 @@
 | PR2 | Entry/Grounding/Private Capture (Stage 0–2) | IN_PROGRESS | Codex | 2026-03-28 (draft persistence shipped; acceptance checks pending) |
 | PR3 | Collect & Pile + Parallel Read (Stage 3–4) | IN_PROGRESS | Codex | 2026-03-28 (alignment signal shipped; acceptance checks pending) |
 | PR4 | Resolution + Apology Alignment + Agreements (Stage 5+) | IN_PROGRESS | Codex | 2026-03-28 (proposal queue gate shipped; validation pending) |
-| PR5 | Invitee onboarding + cross-domain scaffold (`breathingspace.com`) | IN_PROGRESS | Codex | TBD |
-| PR6 | Hardening pass (safety, fairness, resiliency, analytics) | TODO | TBD | TBD |
+| PR5 | Invitee onboarding + cross-domain scaffold (`breathingspace.com`) | IN_PROGRESS | Codex | 2026-03-29 (email-only invite link surfacing shipped in agreement finalization UI) |
+| PR6 | Hardening pass (safety, fairness, resiliency, analytics) | IN_PROGRESS | Codex | 2026-03-29 (abuse-language guard + analytics events expansion shipped; full validation pending) |
 
 Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 
@@ -127,8 +127,8 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 ### Deliverables
 - [x] Finalize invitation token model and lifecycle (issue, redeem, expire, revoke).
 - [x] Implement one-click magic link for invitee participation.
-- [ ] Add lightweight participant flow (email-only, no full profile required).
-- [ ] Add post-session funnel path into full LifeGoal onboarding.
+- [x] Add lightweight participant flow (email-only, no full profile required).
+- [x] Add post-session funnel path into full LifeGoal onboarding.
 
 ### Repo strategy
 - [ ] New dedicated frontend repo for `breathingspace.com` (recommended).
@@ -145,10 +145,10 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 ## 7) PR6 — Hardening pass
 
 ### Deliverables
-- [ ] Safety filters + abuse phrase handling + fairness checks.
+- [ ] Safety filters + abuse phrase handling + fairness checks. (abuse-language guard now blocks progression in private capture; fairness checks still pending)
 - [ ] Reconnect/timeout/partial-participant resilience tests.
 - [ ] Accessibility pass (contrast, dynamic type, 44px targets, screen reader).
-- [ ] Analytics events/KPIs dashboard wiring.
+- [ ] Analytics events/KPIs dashboard wiring. (client analytics events expanded; dashboard sink wiring pending)
 
 ### Acceptance criteria
 - [ ] Core happy-path + interruption-path test suite passes.
