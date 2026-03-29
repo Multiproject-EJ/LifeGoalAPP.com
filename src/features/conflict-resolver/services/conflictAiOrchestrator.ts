@@ -186,6 +186,24 @@ async function persistArtifact(params: {
   });
 }
 
+async function persistAiMessage(params: {
+  sessionId?: string | null;
+  stage: 'private_capture_rewrite' | 'shared_read_summary' | 'resolution_options' | 'inner_tension_next_steps';
+  role: 'system' | 'user' | 'assistant';
+  message: string;
+  metadata?: Record<string, unknown>;
+}) {
+  if (!params.sessionId) return;
+  const supabase = getSupabaseClient() as any;
+  await supabase.from('conflict_ai_messages').insert({
+    session_id: params.sessionId,
+    stage: params.stage,
+    role: params.role,
+    message: params.message,
+    metadata: params.metadata ?? {},
+  });
+}
+
 async function requestOpenAiRecommendations(input: InnerContextInput, model: string, apiKey: string): Promise<InnerRecommendation[]> {
   const maxAttempts = 2;
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
@@ -248,6 +266,13 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
   const decision = resolveAiEntitlement('conflict_inner_reflection', hasApiKey());
 
   if (!decision.allowed || !decision.model || !apiKey) {
+    await persistAiMessage({
+      sessionId: input.sessionId,
+      stage: 'inner_tension_next_steps',
+      role: 'assistant',
+      message: 'Used deterministic fallback due to entitlement/API availability.',
+      metadata: { reason: decision.reason, mode: decision.mode },
+    });
     await persistAiRun({
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
@@ -266,7 +291,21 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
   }
 
   try {
+    await persistAiMessage({
+      sessionId: input.sessionId,
+      stage: 'inner_tension_next_steps',
+      role: 'user',
+      message: buildPrompt(input),
+      metadata: { model: decision.model, mode: decision.mode },
+    });
     const recommendations = await requestOpenAiRecommendations(input, decision.model, apiKey);
+    await persistAiMessage({
+      sessionId: input.sessionId,
+      stage: 'inner_tension_next_steps',
+      role: 'assistant',
+      message: JSON.stringify({ recommendations }),
+      metadata: { source: 'ai' },
+    });
 
     await persistAiRun({
       sessionId: input.sessionId,
@@ -288,6 +327,13 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown orchestration error';
+    await persistAiMessage({
+      sessionId: input.sessionId,
+      stage: 'inner_tension_next_steps',
+      role: 'assistant',
+      message: 'Used deterministic fallback after orchestration error.',
+      metadata: { error: message, source: 'fallback' },
+    });
     await persistAiRun({
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
@@ -319,6 +365,13 @@ export async function rewritePrivateCaptureAnswers(input: {
   };
 
   if (!decision.allowed || !decision.model || !apiKey) {
+    await persistAiMessage({
+      sessionId: input.sessionId,
+      stage: 'private_capture_rewrite',
+      role: 'assistant',
+      message: 'Used deterministic rewrite fallback due to entitlement/API availability.',
+      metadata: { reason: decision.reason, mode: decision.mode },
+    });
     await persistAiRun({
       sessionId: input.sessionId,
       stage: 'private_capture_rewrite',
@@ -332,6 +385,13 @@ export async function rewritePrivateCaptureAnswers(input: {
   }
 
   try {
+    await persistAiMessage({
+      sessionId: input.sessionId,
+      stage: 'private_capture_rewrite',
+      role: 'user',
+      message: buildPrivateRewritePrompt(input),
+      metadata: { model: decision.model, mode: decision.mode },
+    });
     const content = await requestOpenAiRawContent(buildPrivateRewritePrompt(input), decision.model, apiKey);
     const parsed = typeof content === 'string' ? JSON.parse(content) as { rewrittenAnswers?: Record<string, string> } : null;
     const rewritten = parsed?.rewrittenAnswers ?? fallbackRewritten;
@@ -351,6 +411,13 @@ export async function rewritePrivateCaptureAnswers(input: {
     return { rewrittenAnswers: rewritten, mode: decision.mode };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown rewrite error';
+    await persistAiMessage({
+      sessionId: input.sessionId,
+      stage: 'private_capture_rewrite',
+      role: 'assistant',
+      message: 'Used deterministic rewrite fallback after orchestration error.',
+      metadata: { error: message, source: 'fallback' },
+    });
     await persistAiRun({
       sessionId: input.sessionId,
       stage: 'private_capture_rewrite',
@@ -372,10 +439,25 @@ export async function generateSharedSummaryCards(input: {
   const decision = resolveAiEntitlement('conflict_shared_mediation', hasApiKey());
   if (!decision.allowed || !decision.model || !apiKey) {
     const fairnessWarnings = lintSharedSummaryFairness(DEFAULT_SHARED_SUMMARY_CARDS);
+    await persistAiMessage({
+      sessionId: input.sessionId,
+      stage: 'shared_read_summary',
+      role: 'assistant',
+      message: JSON.stringify({ summaryCards: DEFAULT_SHARED_SUMMARY_CARDS }),
+      metadata: { source: 'fallback', reason: decision.reason, fairnessWarnings },
+    });
     return { summaryCards: DEFAULT_SHARED_SUMMARY_CARDS, fairnessWarnings, mode: decision.mode };
   }
   try {
-    const content = await requestOpenAiRawContent(buildSharedSummaryPrompt(input), decision.model, apiKey);
+    const prompt = buildSharedSummaryPrompt(input);
+    await persistAiMessage({
+      sessionId: input.sessionId,
+      stage: 'shared_read_summary',
+      role: 'user',
+      message: prompt,
+      metadata: { model: decision.model, mode: decision.mode },
+    });
+    const content = await requestOpenAiRawContent(prompt, decision.model, apiKey);
     const cards = parseSharedSummaryCardsFromContent(content);
     const summaryCards = cards.length > 0 ? cards : DEFAULT_SHARED_SUMMARY_CARDS;
     const fairnessWarnings = lintSharedSummaryFairness(summaryCards);
@@ -397,9 +479,23 @@ export async function generateSharedSummaryCards(input: {
       stage: 'shared_read_summary',
       artifact: { summaryCards, fairnessWarnings, source: cards.length > 0 ? 'ai' : 'fallback' },
     });
+    await persistAiMessage({
+      sessionId: input.sessionId,
+      stage: 'shared_read_summary',
+      role: 'assistant',
+      message: JSON.stringify({ summaryCards }),
+      metadata: { source: cards.length > 0 ? 'ai' : 'fallback', fairnessWarnings },
+    });
     return { summaryCards, fairnessWarnings, mode: cards.length > 0 ? decision.mode : 'fallback' };
   } catch {
     const fairnessWarnings = lintSharedSummaryFairness(DEFAULT_SHARED_SUMMARY_CARDS);
+    await persistAiMessage({
+      sessionId: input.sessionId,
+      stage: 'shared_read_summary',
+      role: 'assistant',
+      message: JSON.stringify({ summaryCards: DEFAULT_SHARED_SUMMARY_CARDS }),
+      metadata: { source: 'fallback', fairnessWarnings },
+    });
     return { summaryCards: DEFAULT_SHARED_SUMMARY_CARDS, fairnessWarnings, mode: 'fallback' };
   }
 }
@@ -412,10 +508,25 @@ export async function generateResolutionOptions(input: {
   const decision = resolveAiEntitlement('conflict_shared_mediation', hasApiKey());
   if (!decision.allowed || !decision.model || !apiKey) {
     const fairnessWarnings = lintResolutionOptionFairness(DEFAULT_RESOLUTION_OPTIONS);
+    await persistAiMessage({
+      sessionId: input.sessionId,
+      stage: 'resolution_options',
+      role: 'assistant',
+      message: JSON.stringify({ options: DEFAULT_RESOLUTION_OPTIONS }),
+      metadata: { source: 'fallback', reason: decision.reason, fairnessWarnings },
+    });
     return { options: DEFAULT_RESOLUTION_OPTIONS, fairnessWarnings, mode: decision.mode };
   }
   try {
-    const content = await requestOpenAiRawContent(buildResolutionOptionsPrompt(input), decision.model, apiKey);
+    const prompt = buildResolutionOptionsPrompt(input);
+    await persistAiMessage({
+      sessionId: input.sessionId,
+      stage: 'resolution_options',
+      role: 'user',
+      message: prompt,
+      metadata: { model: decision.model, mode: decision.mode },
+    });
+    const content = await requestOpenAiRawContent(prompt, decision.model, apiKey);
     const parsed = parseResolutionOptionsFromContent(content, 3);
     const options = parsed.length > 0 ? parsed : DEFAULT_RESOLUTION_OPTIONS;
     const fairnessWarnings = lintResolutionOptionFairness(options);
@@ -437,9 +548,23 @@ export async function generateResolutionOptions(input: {
       stage: 'resolution_options',
       artifact: { options, fairnessWarnings, source: parsed.length > 0 ? 'ai' : 'fallback' },
     });
+    await persistAiMessage({
+      sessionId: input.sessionId,
+      stage: 'resolution_options',
+      role: 'assistant',
+      message: JSON.stringify({ options }),
+      metadata: { source: parsed.length > 0 ? 'ai' : 'fallback', fairnessWarnings },
+    });
     return { options, fairnessWarnings, mode: parsed.length > 0 ? decision.mode : 'fallback' };
   } catch {
     const fairnessWarnings = lintResolutionOptionFairness(DEFAULT_RESOLUTION_OPTIONS);
+    await persistAiMessage({
+      sessionId: input.sessionId,
+      stage: 'resolution_options',
+      role: 'assistant',
+      message: JSON.stringify({ options: DEFAULT_RESOLUTION_OPTIONS }),
+      metadata: { source: 'fallback', fairnessWarnings },
+    });
     return { options: DEFAULT_RESOLUTION_OPTIONS, fairnessWarnings, mode: 'fallback' };
   }
 }
