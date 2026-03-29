@@ -8,6 +8,11 @@ import {
   type ResolutionOption,
   type SharedSummaryCard,
 } from './conflictAiSchemas';
+import {
+  lintResolutionOptionFairness,
+  lintSharedSummaryFairness,
+  type FairnessWarning,
+} from './conflictFairnessLint';
 
 type InnerContextInput = {
   sessionId?: string | null;
@@ -23,11 +28,13 @@ type InnerNextStepResult = {
 
 type SharedSummaryResult = {
   summaryCards: SharedSummaryCard[];
+  fairnessWarnings: FairnessWarning[];
   mode: 'premium' | 'free_quota' | 'fallback';
 };
 
 type ResolutionOptionsResult = {
   options: ResolutionOption[];
+  fairnessWarnings: FairnessWarning[];
   mode: 'premium' | 'free_quota' | 'fallback';
 };
 
@@ -364,29 +371,36 @@ export async function generateSharedSummaryCards(input: {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   const decision = resolveAiEntitlement('conflict_shared_mediation', hasApiKey());
   if (!decision.allowed || !decision.model || !apiKey) {
-    return { summaryCards: DEFAULT_SHARED_SUMMARY_CARDS, mode: decision.mode };
+    const fairnessWarnings = lintSharedSummaryFairness(DEFAULT_SHARED_SUMMARY_CARDS);
+    return { summaryCards: DEFAULT_SHARED_SUMMARY_CARDS, fairnessWarnings, mode: decision.mode };
   }
   try {
     const content = await requestOpenAiRawContent(buildSharedSummaryPrompt(input), decision.model, apiKey);
     const cards = parseSharedSummaryCardsFromContent(content);
     const summaryCards = cards.length > 0 ? cards : DEFAULT_SHARED_SUMMARY_CARDS;
+    const fairnessWarnings = lintSharedSummaryFairness(summaryCards);
     await persistAiRun({
       sessionId: input.sessionId,
       stage: 'shared_read_summary',
       mode: decision.mode,
       model: decision.model,
       usedContextDomains: ['reflections'],
-      fallbackUsed: cards.length === 0,
-      errorMessage: cards.length === 0 ? 'Shared summary schema invalid' : null,
+      fallbackUsed: cards.length === 0 || fairnessWarnings.length > 0,
+      errorMessage: cards.length === 0
+        ? 'Shared summary schema invalid'
+        : fairnessWarnings.length > 0
+          ? `Fairness warnings: ${fairnessWarnings.map((warning) => warning.code).join(',')}`
+          : null,
     });
     await persistArtifact({
       sessionId: input.sessionId,
       stage: 'shared_read_summary',
-      artifact: { summaryCards, source: cards.length > 0 ? 'ai' : 'fallback' },
+      artifact: { summaryCards, fairnessWarnings, source: cards.length > 0 ? 'ai' : 'fallback' },
     });
-    return { summaryCards, mode: cards.length > 0 ? decision.mode : 'fallback' };
+    return { summaryCards, fairnessWarnings, mode: cards.length > 0 ? decision.mode : 'fallback' };
   } catch {
-    return { summaryCards: DEFAULT_SHARED_SUMMARY_CARDS, mode: 'fallback' };
+    const fairnessWarnings = lintSharedSummaryFairness(DEFAULT_SHARED_SUMMARY_CARDS);
+    return { summaryCards: DEFAULT_SHARED_SUMMARY_CARDS, fairnessWarnings, mode: 'fallback' };
   }
 }
 
@@ -397,28 +411,35 @@ export async function generateResolutionOptions(input: {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   const decision = resolveAiEntitlement('conflict_shared_mediation', hasApiKey());
   if (!decision.allowed || !decision.model || !apiKey) {
-    return { options: DEFAULT_RESOLUTION_OPTIONS, mode: decision.mode };
+    const fairnessWarnings = lintResolutionOptionFairness(DEFAULT_RESOLUTION_OPTIONS);
+    return { options: DEFAULT_RESOLUTION_OPTIONS, fairnessWarnings, mode: decision.mode };
   }
   try {
     const content = await requestOpenAiRawContent(buildResolutionOptionsPrompt(input), decision.model, apiKey);
     const parsed = parseResolutionOptionsFromContent(content, 3);
     const options = parsed.length > 0 ? parsed : DEFAULT_RESOLUTION_OPTIONS;
+    const fairnessWarnings = lintResolutionOptionFairness(options);
     await persistAiRun({
       sessionId: input.sessionId,
       stage: 'resolution_options',
       mode: decision.mode,
       model: decision.model,
       usedContextDomains: ['reflections'],
-      fallbackUsed: parsed.length === 0,
-      errorMessage: parsed.length === 0 ? 'Resolution options schema invalid' : null,
+      fallbackUsed: parsed.length === 0 || fairnessWarnings.length > 0,
+      errorMessage: parsed.length === 0
+        ? 'Resolution options schema invalid'
+        : fairnessWarnings.length > 0
+          ? `Fairness warnings: ${fairnessWarnings.map((warning) => warning.code).join(',')}`
+          : null,
     });
     await persistArtifact({
       sessionId: input.sessionId,
       stage: 'resolution_options',
-      artifact: { options, source: parsed.length > 0 ? 'ai' : 'fallback' },
+      artifact: { options, fairnessWarnings, source: parsed.length > 0 ? 'ai' : 'fallback' },
     });
-    return { options, mode: parsed.length > 0 ? decision.mode : 'fallback' };
+    return { options, fairnessWarnings, mode: parsed.length > 0 ? decision.mode : 'fallback' };
   } catch {
-    return { options: DEFAULT_RESOLUTION_OPTIONS, mode: 'fallback' };
+    const fairnessWarnings = lintResolutionOptionFairness(DEFAULT_RESOLUTION_OPTIONS);
+    return { options: DEFAULT_RESOLUTION_OPTIONS, fairnessWarnings, mode: 'fallback' };
   }
 }
