@@ -13,7 +13,7 @@ import {
   subscribeConflictSessionStatus,
   updateConflictSessionStatus,
 } from '../services/conflictSessions';
-import { buildConflictInviteUrl, createConflictInvite } from '../services/conflictInvites';
+import { buildConflictInviteUrl, createConflictInvite, redeemConflictInvite } from '../services/conflictInvites';
 import { trackConflictEvent } from '../services/conflictAnalytics';
 
 type ConflictResolverUiStage =
@@ -180,6 +180,8 @@ export function useConflictSession() {
   const [recoverableDraft, setRecoverableDraft] = useState<ConflictSessionDraftSnapshot | null>(null);
   const [generatedInviteLinks, setGeneratedInviteLinks] = useState<string[]>([]);
   const [inviteGenerationError, setInviteGenerationError] = useState<string | null>(null);
+  const [inviteJoinMessage, setInviteJoinMessage] = useState<string | null>(null);
+  const [inviteJoinBootstrapped, setInviteJoinBootstrapped] = useState(false);
 
   const applyDraftSnapshot = (parsed: ConflictSessionDraftSnapshot) => {
     setStage(parsed.stage ?? 'mode_selection');
@@ -314,6 +316,44 @@ export function useConflictSession() {
     } catch (error) {
       console.error('Failed to join shared conflict session', error);
       setSharedSessionError('Could not join this session code.');
+    } finally {
+      setSharedSessionBusy(false);
+    }
+  };
+
+  const joinSharedSessionFromInviteToken = async (inviteToken: string) => {
+    const normalized = inviteToken.trim();
+    if (!normalized) {
+      setSharedSessionError('Invite token is missing from the link.');
+      return;
+    }
+
+    try {
+      setSharedSessionBusy(true);
+      setSharedSessionError(null);
+      setInviteJoinMessage('Joining session from invite…');
+      const userId = await getCurrentUserId();
+      const redeemedInvite = await redeemConflictInvite({ inviteToken: normalized, userId });
+      await addConflictParticipant({ sessionId: redeemedInvite.session_id, userId, role: 'participant' });
+      setSelectedType('shared_conflict');
+      setSharedSessionId(redeemedInvite.session_id);
+      setSharedSessionCodeInput(redeemedInvite.session_id);
+      await refreshSharedParticipantCount(redeemedInvite.session_id);
+      const snapshot = await getConflictSessionSnapshot(redeemedInvite.session_id);
+      if (isConflictStage(snapshot.status)) {
+        setSharedSessionStatus(snapshot.status);
+        setStage(CONFLICT_STAGE_TO_UI[snapshot.status]);
+      }
+      setSharedSessionLastSyncedAt(snapshot.updatedAt);
+      setInviteJoinMessage('Invite accepted. Session synced.');
+      trackConflictEvent('conflict.shared_session_joined', {
+        sessionId: redeemedInvite.session_id,
+        source: 'invite_token',
+      });
+    } catch (error) {
+      console.error('Failed to join session from invite token', error);
+      setSharedSessionError('Could not redeem this invite link. It may be expired or already used.');
+      setInviteJoinMessage(null);
     } finally {
       setSharedSessionBusy(false);
     }
@@ -600,6 +640,19 @@ export function useConflictSession() {
   }, [selectedType, sharedSessionId]);
 
   useEffect(() => {
+    if (inviteJoinBootstrapped || typeof window === 'undefined') return;
+    setInviteJoinBootstrapped(true);
+    if (!window.location.pathname.startsWith('/conflict/join')) return;
+
+    const token = new URLSearchParams(window.location.search).get('token');
+    if (!token) {
+      setSharedSessionError('Invite link is missing a token.');
+      return;
+    }
+    void joinSharedSessionFromInviteToken(token);
+  }, [inviteJoinBootstrapped]);
+
+  useEffect(() => {
     if (typeof window === 'undefined') {
       setDraftHydrated(true);
       return;
@@ -709,6 +762,8 @@ export function useConflictSession() {
     setRecoverableDraft(null);
     setGeneratedInviteLinks([]);
     setInviteGenerationError(null);
+    setInviteJoinMessage(null);
+    setInviteJoinBootstrapped(false);
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(CONFLICT_SESSION_DRAFT_STORAGE_KEY);
     }
@@ -785,8 +840,10 @@ export function useConflictSession() {
       lightweightParticipants,
       generatedInviteLinks,
       inviteGenerationError,
+      inviteJoinMessage,
       addLightweightParticipant,
       removeLightweightParticipant,
+      joinSharedSessionFromInviteToken,
       resetFlow,
     }),
     [
@@ -821,6 +878,7 @@ export function useConflictSession() {
       lightweightParticipants,
       generatedInviteLinks,
       inviteGenerationError,
+      inviteJoinMessage,
     ],
   );
 }

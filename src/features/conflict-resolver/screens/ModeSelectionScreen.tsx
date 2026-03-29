@@ -12,6 +12,7 @@ type ModeSelectionScreenProps = {
   onCreateSharedSession: () => void | Promise<void>;
   onJoinSharedSession: () => void | Promise<void>;
   onRefreshSharedSession: () => void | Promise<void>;
+  sharedSessionNotice?: string | null;
   sharedSessionError: string | null;
   sharedSessionBusy: boolean;
   recoverableDraft: boolean;
@@ -31,6 +32,7 @@ export function ModeSelectionScreen({
   onCreateSharedSession,
   onJoinSharedSession,
   onRefreshSharedSession,
+  sharedSessionNotice,
   sharedSessionError,
   sharedSessionBusy,
   recoverableDraft,
@@ -130,6 +132,7 @@ export function ModeSelectionScreen({
             </>
           )}
 
+          {sharedSessionNotice ? <p className="conflict-resolver__alignment-banner">{sharedSessionNotice}</p> : null}
           {sharedSessionError ? <p className="conflict-resolver__input-error">{sharedSessionError}</p> : null}
         </section>
       ) : null}

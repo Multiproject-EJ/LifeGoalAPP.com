@@ -31,6 +31,7 @@ export function ConflictResolverExperience() {
             session.resyncSharedSession(session.sharedSessionId),
           ]).then(() => undefined)
           : undefined}
+        sharedSessionNotice={session.inviteJoinMessage}
         sharedSessionError={session.sharedSessionError}
         sharedSessionBusy={session.sharedSessionBusy}
         recoverableDraft={session.recoverableDraft}
