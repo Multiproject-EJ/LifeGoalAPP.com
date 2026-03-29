@@ -13,6 +13,11 @@ import {
   lintSharedSummaryFairness,
   type FairnessWarning,
 } from './conflictFairnessLint';
+import {
+  buildInnerContextSlice,
+  computeInnerTensionPriorityScore,
+  shouldUseDeepIntervention,
+} from './conflictInnerIntelligence';
 
 type InnerContextInput = {
   sessionId?: string | null;
@@ -91,7 +96,7 @@ function hasApiKey(): boolean {
   return typeof apiKey === 'string' && apiKey.length > 0;
 }
 
-function buildPrompt(input: InnerContextInput): string {
+function buildPrompt(input: InnerContextInput & { contextSlice: string; priorityScore: number; deepMode: boolean }): string {
   return `You are an expert inner-conflict coach. Be non-judgmental, specific, and actionable.
 Return strict JSON with this shape only:
 {
@@ -102,8 +107,9 @@ Return strict JSON with this shape only:
 
 Allowed href values: #breathing-space, #habits, #goals, #journal, #contracts.
 Generate exactly 3 recommendations max, no markdown.
-User reflection answers: ${JSON.stringify(input.answers)}
-Context domains used: ${JSON.stringify(input.usedContextDomains ?? [])}
+Priority score: ${input.priorityScore}
+Deep intervention mode: ${input.deepMode ? 'enabled' : 'disabled'}
+Context slice: ${input.contextSlice}
 `;
 }
 
@@ -255,6 +261,18 @@ async function requestOpenAiRawContent(prompt: string, model: string, apiKey: st
 export async function generateInnerNextStepRecommendations(input: InnerContextInput): Promise<InnerNextStepResult> {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   const decision = resolveAiEntitlement('conflict_inner_reflection', hasApiKey());
+  const priorityScore = computeInnerTensionPriorityScore(input.answers);
+  const deepMode = shouldUseDeepIntervention(priorityScore);
+  const context = buildInnerContextSlice({
+    answers: input.answers,
+    allowedDomains: (input.usedContextDomains ?? ['reflections']) as Array<'reflections' | 'habits' | 'goals' | 'journals' | 'vision_board' | 'traits'>,
+  });
+  const promptPayload = {
+    ...input,
+    contextSlice: context.contextSlice,
+    priorityScore,
+    deepMode,
+  };
 
   if (!decision.allowed || !decision.model || !apiKey) {
     await persistAiMessage({
@@ -262,14 +280,14 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       stage: 'inner_tension_next_steps',
       role: 'assistant',
       message: 'Used deterministic fallback due to entitlement/API availability.',
-      metadata: { reason: decision.reason, mode: decision.mode },
+      metadata: { reason: decision.reason, mode: decision.mode, priorityScore, deepMode, usedDomains: context.usedContextDomains },
     });
     await persistAiRun({
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
       mode: decision.mode,
       model: decision.model,
-      usedContextDomains: input.usedContextDomains ?? [],
+      usedContextDomains: context.usedContextDomains,
       fallbackUsed: true,
       errorMessage: decision.reason,
     });
@@ -286,10 +304,10 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
       role: 'user',
-      message: buildPrompt(input),
+      message: buildPrompt(promptPayload),
       metadata: { model: decision.model, mode: decision.mode },
     });
-    const result = await requestOpenAiRawContent(buildPrompt(input), decision.model, apiKey);
+    const result = await requestOpenAiRawContent(buildPrompt(promptPayload), decision.model, apiKey);
     const recommendations = parseInnerRecommendationsFromContent(result.content, MAX_RECOMMENDATIONS);
     if (recommendations.length === 0) {
       throw new Error('OpenAI response schema invalid');
@@ -307,7 +325,7 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       stage: 'inner_tension_next_steps',
       mode: decision.mode,
       model: decision.model,
-      usedContextDomains: input.usedContextDomains ?? [],
+      usedContextDomains: context.usedContextDomains,
       fallbackUsed: false,
       tokenInput: result.tokenInput,
       tokenOutput: result.tokenOutput,
@@ -316,7 +334,7 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
     await persistArtifact({
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
-      artifact: { recommendations, source: 'ai' },
+      artifact: { recommendations, source: 'ai', priorityScore, deepMode, usedContextDomains: context.usedContextDomains },
     });
 
     return {
@@ -337,7 +355,7 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       stage: 'inner_tension_next_steps',
       mode: decision.mode,
       model: decision.model,
-      usedContextDomains: input.usedContextDomains ?? [],
+      usedContextDomains: context.usedContextDomains,
       fallbackUsed: true,
       errorMessage: message,
     });
