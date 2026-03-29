@@ -120,6 +120,41 @@
   flex: 1;
 }
 
+.conflict-resolver__mobile-composer {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: rgba(8, 12, 24, 0.98);
+}
+
+.conflict-resolver__mobile-composer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.conflict-resolver__mobile-composer-input {
+  flex: 1;
+  width: 100%;
+  border: 1px solid rgba(176, 198, 255, 0.55);
+  border-radius: var(--radius-lg);
+  background: rgba(17, 24, 38, 0.86);
+  color: rgba(247, 251, 255, 0.96);
+  padding: var(--space-3);
+  font-size: 16px;
+  line-height: 1.5;
+  resize: none;
+}
+
+.conflict-resolver__mobile-composer-input::placeholder {
+  color: rgba(209, 224, 255, 0.76);
+}
+
 .conflict-resolver__shared-session-status {
   display: flex;
   flex-direction: column;
@@ -237,8 +272,20 @@
   border-radius: var(--radius-md);
   padding: var(--space-3);
   background: rgba(17, 24, 38, 0.22);
-  color: var(--text);
+  color: rgba(247, 251, 255, 0.96);
+  font-size: 16px;
+  line-height: 1.45;
   min-height: 140px;
+}
+
+.conflict-resolver__prompt-input::placeholder {
+  color: rgba(209, 224, 255, 0.76);
+}
+
+.conflict-resolver__prompt-input:focus {
+  outline: 2px solid rgba(176, 198, 255, 0.95);
+  outline-offset: 2px;
+  border-color: rgba(176, 198, 255, 0.95);
 }
 
 .conflict-resolver__rewrite-actions {
