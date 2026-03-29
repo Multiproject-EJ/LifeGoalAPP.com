@@ -12,6 +12,7 @@
  */
 
 import type { HabitSchedule } from './scheduleInterpreter';
+import { resolveModelForAiTask } from '../../services/aiTaskRouting';
 
 /**
  * Input parameters for building enhanced rationale
@@ -127,7 +128,7 @@ async function callOpenAI(prompt: string, timeoutMs: number = 3000): Promise<str
           'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: resolveModelForAiTask('habit_rationale_rewrite'),
           messages: [
             { role: 'user', content: prompt },
           ],
