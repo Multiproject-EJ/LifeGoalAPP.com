@@ -2,7 +2,7 @@
 
 Date: 2026-03-29
 Goal: move from current guided UX + partial AI utilities to full product-grade AI mediation and inner guidance.
-Current progress note: Phase 1 is closed out (task-aware routing, daily+session quotas, and core entitlement telemetry shipped) and Phase 2 has started with strict response-shape validation and retry paths in the inner-tension orchestrator.
+Current progress note: Phase 1 is closed out (task-aware routing, daily+session quotas, and core entitlement telemetry shipped) and Phase 2 has started with strict response-shape validation, reusable AI schema parsing helpers, and retry paths in the inner-tension orchestrator.
 
 ## Phase 1 (PR #1): AI Foundations + Entitlements + Quotas
 

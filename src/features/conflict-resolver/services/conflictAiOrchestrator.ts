@@ -1,13 +1,6 @@
 import { getSupabaseClient } from '../../../lib/supabaseClient';
 import { resolveAiEntitlement } from '../../../services/aiEntitlementService';
-
-type InnerRecommendation = {
-  id: string;
-  title: string;
-  reason: string;
-  ctaLabel: string;
-  href: string;
-};
+import { parseInnerRecommendationsFromContent, type InnerRecommendation } from './conflictAiSchemas';
 
 type InnerContextInput = {
   sessionId?: string | null;
@@ -21,7 +14,6 @@ type InnerNextStepResult = {
   mode: 'premium' | 'free_quota' | 'fallback';
 };
 
-const ALLOWED_HREFS = new Set(['#breathing-space', '#habits', '#goals', '#journal', '#contracts']);
 const MAX_RECOMMENDATIONS = 3;
 
 const DEFAULT_RECOMMENDATIONS: InnerRecommendation[] = [
@@ -60,40 +52,6 @@ Generate exactly 3 recommendations max, no markdown.
 User reflection answers: ${JSON.stringify(input.answers)}
 Context domains used: ${JSON.stringify(input.usedContextDomains ?? [])}
 `;
-}
-
-function normalizeRecommendation(raw: unknown, index: number): InnerRecommendation | null {
-  if (!raw || typeof raw !== 'object') return null;
-  const candidate = raw as Partial<InnerRecommendation>;
-  const title = typeof candidate.title === 'string' ? candidate.title.trim() : '';
-  const reason = typeof candidate.reason === 'string' ? candidate.reason.trim() : '';
-  const ctaLabel = typeof candidate.ctaLabel === 'string' ? candidate.ctaLabel.trim() : '';
-  const href = typeof candidate.href === 'string' ? candidate.href.trim() : '';
-
-  if (!title || !reason || !ctaLabel || !ALLOWED_HREFS.has(href)) return null;
-  return {
-    id: typeof candidate.id === 'string' && candidate.id.trim().length > 0
-      ? candidate.id.trim()
-      : `inner_reco_${index + 1}`,
-    title,
-    reason,
-    ctaLabel,
-    href,
-  };
-}
-
-function parseAiRecommendations(content: unknown): InnerRecommendation[] {
-  if (typeof content !== 'string' || content.trim().length === 0) return [];
-  try {
-    const parsed = JSON.parse(content) as { recommendations?: unknown[] };
-    if (!Array.isArray(parsed.recommendations)) return [];
-    return parsed.recommendations
-      .map((item, index) => normalizeRecommendation(item, index))
-      .filter((item): item is InnerRecommendation => Boolean(item))
-      .slice(0, MAX_RECOMMENDATIONS);
-  } catch {
-    return [];
-  }
 }
 
 async function persistAiRun(params: {
@@ -158,7 +116,7 @@ async function requestOpenAiRecommendations(input: InnerContextInput, model: str
 
     const data = await response.json();
     const content = data?.choices?.[0]?.message?.content;
-    const parsed = parseAiRecommendations(content);
+    const parsed = parseInnerRecommendationsFromContent(content, MAX_RECOMMENDATIONS);
     if (parsed.length > 0) {
       return parsed;
     }
