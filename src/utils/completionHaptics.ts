@@ -1,6 +1,14 @@
 export type CompletionHapticProfile = 'light' | 'medium' | 'strong';
 
-type HapticChannel = 'habit' | 'action' | 'journal' | 'breathing' | 'timer' | 'navigation' | 'gamification';
+type HapticChannel =
+  | 'habit'
+  | 'action'
+  | 'journal'
+  | 'breathing'
+  | 'timer'
+  | 'navigation'
+  | 'gamification'
+  | 'conflict';
 
 type CompletionHapticOptions = {
   channel?: HapticChannel;
