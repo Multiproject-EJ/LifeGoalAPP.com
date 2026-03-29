@@ -6,6 +6,8 @@ export type ConflictAnalyticsEventName =
   | 'conflict.invites_generated'
   | 'conflict.private_capture_advanced'
   | 'conflict.private_capture_skipped'
+  | 'conflict.inner_guidance_shown'
+  | 'conflict.inner_upgrade_prompt_clicked'
   | 'conflict.parallel_read_completed'
   | 'conflict.agreement_finalized';
 

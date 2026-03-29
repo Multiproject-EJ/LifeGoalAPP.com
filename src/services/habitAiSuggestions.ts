@@ -1,3 +1,5 @@
+import { resolveAiEntitlement } from './aiEntitlementService';
+
 export interface HabitAiSuggestionInput {
   prompt: string;
 }
@@ -108,6 +110,10 @@ async function callOpenAI(prompt: string, timeoutMs: number = 3000): Promise<Hab
   if (!apiKey) {
     return null;
   }
+  const decision = resolveAiEntitlement('habit_suggestion_structured', Boolean(apiKey));
+  if (!decision.allowed || !decision.model) {
+    return null;
+  }
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -120,7 +126,7 @@ async function callOpenAI(prompt: string, timeoutMs: number = 3000): Promise<Hab
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: decision.model,
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 200,
         temperature: 0.4,
