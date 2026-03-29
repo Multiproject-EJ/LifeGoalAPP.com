@@ -53,6 +53,56 @@ const PRIVATE_CAPTURE_PROMPTS: readonly PrivatePrompt[] = [
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const CONFLICT_SESSION_DRAFT_STORAGE_KEY = 'conflict-resolver:draft:v1';
+const SHARED_SUMMARY_REPLACEMENTS: Array<{ pattern: RegExp; replacement: string }> = [
+  { pattern: /\bidiot\b/gi, replacement: 'hurtful remark' },
+  { pattern: /\bstupid\b/gi, replacement: 'frustrating' },
+  { pattern: /\bshut up\b/gi, replacement: 'stop talking' },
+  { pattern: /\bhate you\b/gi, replacement: 'felt intense anger' },
+  { pattern: /\bworthless\b/gi, replacement: 'unappreciated' },
+  { pattern: /\bkill yourself\b/gi, replacement: 'severe harmful phrase removed' },
+  { pattern: /\bwhat'?s wrong with you\b/gi, replacement: 'I felt confused by your response' },
+];
+const BLAME_PATTERNS: Array<{ pattern: RegExp; replacement: string }> = [
+  { pattern: /\byou always\b/gi, replacement: 'I experienced repeated moments where' },
+  { pattern: /\byou never\b/gi, replacement: 'I experienced missing support when' },
+  { pattern: /\byou made me\b/gi, replacement: 'I felt' },
+  { pattern: /\byou are\b/gi, replacement: 'I experienced this as' },
+];
+
+const sanitizeForSharedSummary = (value: string): { text: string; moderationNotes: string[] } => {
+  const trimmed = value.trim();
+  if (!trimmed) return { text: '', moderationNotes: [] };
+
+  let nextValue = trimmed;
+  let escalatoryLanguageSoftened = false;
+  let blameLanguageReframed = false;
+
+  for (const { pattern, replacement } of SHARED_SUMMARY_REPLACEMENTS) {
+    if (pattern.test(nextValue)) {
+      escalatoryLanguageSoftened = true;
+      pattern.lastIndex = 0;
+      nextValue = nextValue.replace(pattern, replacement);
+    }
+  }
+
+  for (const { pattern, replacement } of BLAME_PATTERNS) {
+    if (pattern.test(nextValue)) {
+      blameLanguageReframed = true;
+      pattern.lastIndex = 0;
+      nextValue = nextValue.replace(pattern, replacement);
+    }
+  }
+
+  const moderationNotes: string[] = [];
+  if (escalatoryLanguageSoftened) {
+    moderationNotes.push('Escalatory wording softened');
+  }
+  if (blameLanguageReframed) {
+    moderationNotes.push('Direct-blame wording reframed');
+  }
+
+  return { text: nextValue, moderationNotes };
+};
 const UI_TO_CONFLICT_STAGE: Record<ConflictResolverUiStage, ConflictStage> = {
   mode_selection: 'draft',
   grounding: 'grounding',
@@ -317,6 +367,10 @@ export function useConflictSession() {
   };
 
   const skipPrompt = () => {
+    trackConflictEvent('conflict.private_capture_skipped', {
+      promptId: PRIVATE_CAPTURE_PROMPTS[promptIndex]?.id ?? 'unknown',
+      stage,
+    });
     if (promptIndex >= PRIVATE_CAPTURE_PROMPTS.length - 1) {
       void setStageWithSync('collect_pile');
       return;
@@ -325,6 +379,10 @@ export function useConflictSession() {
   };
 
   const finishPrivateCapture = () => {
+    trackConflictEvent('conflict.private_capture_advanced', {
+      answeredCount: Object.values(answers).filter((value) => value.trim().length > 0).length,
+      totalPrompts: PRIVATE_CAPTURE_PROMPTS.length,
+    });
     void setStageWithSync('collect_pile');
   };
 
@@ -341,6 +399,11 @@ export function useConflictSession() {
     setParallelAnnotations(annotations);
     const allCardsAccurate = PRIVATE_CAPTURE_PROMPTS.every((prompt) => annotations[prompt.id] === 'accurate');
     setAlignmentReached(decision === 'accurate' && allCardsAccurate);
+    trackConflictEvent('conflict.parallel_read_completed', {
+      decision,
+      alignmentReached: decision === 'accurate' && allCardsAccurate,
+      annotationCount: Object.keys(annotations).length,
+    });
     void setStageWithSync('resolution_builder');
   };
 
@@ -420,6 +483,12 @@ export function useConflictSession() {
         setInviteGenerationError('Could not generate invite links right now.');
       }
     }
+    trackConflictEvent('conflict.agreement_finalized', {
+      sharedSessionId,
+      lightweightParticipantCount: lightweightParticipants.length,
+      hasFollowUpDate: Boolean(followUpDate),
+      resolutionChosen: Boolean(selectedResolution || activeProposalId),
+    });
     void setStageWithSync('agreement_finalized');
   };
 
@@ -453,21 +522,42 @@ export function useConflictSession() {
   }));
 
   const summaryCards = [
-    {
-      id: 'what_happened',
-      title: 'What happened',
-      text: answers.what_happened || 'No entry yet.',
-    },
-    {
-      id: 'what_it_meant',
-      title: 'What it meant',
-      text: answers.what_it_meant || 'No entry yet.',
-    },
-    {
-      id: 'what_is_needed',
-      title: 'What is needed',
-      text: answers.what_is_needed || 'No entry yet.',
-    },
+    (() => {
+      const raw = answers.what_happened ?? '';
+      const sanitized = sanitizeForSharedSummary(raw);
+      const useSanitized = selectedType === 'shared_conflict';
+      return {
+        id: 'what_happened',
+        title: 'What happened',
+        text: useSanitized ? sanitized.text || 'No entry yet.' : raw || 'No entry yet.',
+        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized.text !== raw.trim(),
+        moderationNotes: useSanitized ? sanitized.moderationNotes : [],
+      };
+    })(),
+    (() => {
+      const raw = answers.what_it_meant ?? '';
+      const sanitized = sanitizeForSharedSummary(raw);
+      const useSanitized = selectedType === 'shared_conflict';
+      return {
+        id: 'what_it_meant',
+        title: 'What it meant',
+        text: useSanitized ? sanitized.text || 'No entry yet.' : raw || 'No entry yet.',
+        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized.text !== raw.trim(),
+        moderationNotes: useSanitized ? sanitized.moderationNotes : [],
+      };
+    })(),
+    (() => {
+      const raw = answers.what_is_needed ?? '';
+      const sanitized = sanitizeForSharedSummary(raw);
+      const useSanitized = selectedType === 'shared_conflict';
+      return {
+        id: 'what_is_needed',
+        title: 'What is needed',
+        text: useSanitized ? sanitized.text || 'No entry yet.' : raw || 'No entry yet.',
+        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized.text !== raw.trim(),
+        moderationNotes: useSanitized ? sanitized.moderationNotes : [],
+      };
+    })(),
   ] as const;
 
   useEffect(() => {
