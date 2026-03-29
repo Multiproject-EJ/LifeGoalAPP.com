@@ -235,6 +235,11 @@
   box-shadow: 0 0 0 2px rgba(160, 121, 255, 0.24);
 }
 
+.conflict-resolver__parallel-card:focus-visible {
+  outline: 2px solid rgba(176, 198, 255, 0.95);
+  outline-offset: 2px;
+}
+
 .conflict-resolver__annotation-menu {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

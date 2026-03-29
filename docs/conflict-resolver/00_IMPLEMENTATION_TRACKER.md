@@ -147,7 +147,7 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 ### Deliverables
 - [ ] Safety filters + abuse phrase handling + fairness checks. (shared-summary moderation now includes escalatory softening + direct-blame reframing with transparent notes; fairness validation still pending)
 - [ ] Reconnect/timeout/partial-participant resilience tests.
-- [ ] Accessibility pass (contrast, dynamic type, 44px targets, screen reader).
+- [ ] Accessibility pass (contrast, dynamic type, 44px targets, screen reader). (parallel-read cards now keyboard-focusable/selectable with focus-visible styling)
 - [ ] Analytics events/KPIs dashboard wiring. (client analytics events expanded; dashboard sink wiring pending)
 
 ### Acceptance criteria

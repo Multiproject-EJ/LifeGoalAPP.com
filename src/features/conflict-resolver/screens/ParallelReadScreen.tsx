@@ -74,9 +74,19 @@ export function ParallelReadScreen({
             className={`conflict-resolver__parallel-card ${
               selectedCardId === card.id ? 'conflict-resolver__parallel-card--selected' : ''
             }`}
+            role="button"
+            tabIndex={timerDone ? 0 : -1}
+            aria-pressed={selectedCardId === card.id}
             onClick={() => {
               if (!timerDone) return;
               setSelectedCardId(card.id);
+            }}
+            onKeyDown={(event) => {
+              if (!timerDone) return;
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                setSelectedCardId(card.id);
+              }
             }}
           >
             <h4>{card.title}</h4>
@@ -110,7 +120,7 @@ export function ParallelReadScreen({
 
       <div className="conflict-resolver__footer-actions">
         {!timerDone ? (
-          <p className="conflict-resolver__input-error" role="status">
+          <p className="conflict-resolver__input-error" role="status" aria-live="polite">
             Reactions unlock in {remainingSeconds}s.
           </p>
         ) : null}
