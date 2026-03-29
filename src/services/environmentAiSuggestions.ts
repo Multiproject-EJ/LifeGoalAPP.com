@@ -4,6 +4,7 @@ import {
   normalizeEnvironmentContext,
   type EnvironmentContextV1,
 } from '../features/environment/environmentSchema';
+import { resolveModelForAiTask } from './aiTaskRouting';
 
 export type EnvironmentAiIdea = {
   title: string;
@@ -97,7 +98,7 @@ async function callOpenAI(input: EnvironmentAiSuggestionInput, timeoutMs = 3500)
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: resolveModelForAiTask('environment_idea_generation'),
         messages: [{ role: 'user', content: buildPrompt(input) }],
         max_tokens: 350,
         temperature: 0.6,
