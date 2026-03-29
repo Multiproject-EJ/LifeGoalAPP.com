@@ -2,7 +2,7 @@
 
 Date: 2026-03-29
 Goal: move from current guided UX + partial AI utilities to full product-grade AI mediation and inner guidance.
-Current progress note: Phase 1 is closed out, Phase 2 is functionally complete in the client orchestrator, and Phase 3 is near-complete with fairness lint integration, message-memory migration, orchestrator-level AI message persistence (`conflict_ai_messages`), best-effort persistence hardening, and run-level usage/latency metadata capture.
+Current progress note: Phase 1 is closed out, Phase 2 is functionally complete in the client orchestrator, and Phase 3 is now closed with fairness lint integration, message-memory migration, orchestrator-level AI message persistence (`conflict_ai_messages`), best-effort persistence hardening, run-level usage/latency metadata capture, and shared-flow wiring in `useConflictSession`.
 
 ## Phase 1 (PR #1): AI Foundations + Entitlements + Quotas
 
