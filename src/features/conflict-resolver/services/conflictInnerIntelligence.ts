@@ -49,3 +49,53 @@ export function shouldUseDeepIntervention(priorityScore: number): boolean {
   return priorityScore >= 0.7;
 }
 
+export type InnerGuidancePlan = {
+  insightSummary: string;
+  patternLinks: string[];
+  riskFlags: string[];
+  nowPlan: string[];
+  weekPlan: string[];
+  monthPlan: string[];
+};
+
+export function buildInnerGuidancePlan(input: {
+  answers: Record<string, string>;
+  priorityScore: number;
+  deepMode: boolean;
+  usedContextDomains: string[];
+}): InnerGuidancePlan {
+  const combined = Object.values(input.answers).join(' ').toLowerCase();
+  const riskFlags: string[] = [];
+  if (containsAny(combined, [/\bburnout\b/, /\boverwhelm\b/, /\bpanic\b/])) riskFlags.push('elevated_stress_load');
+  if (containsAny(combined, [/\bstuck\b/, /\bloop\b/, /\brepeat/i])) riskFlags.push('repeat_pattern_lock');
+  if (containsAny(combined, [/\bsleep\b/, /\bexhaust/i])) riskFlags.push('energy_regulation_risk');
+
+  const patternLinks: string[] = [];
+  if (input.usedContextDomains.includes('habits')) patternLinks.push('habit consistency likely influences this tension');
+  if (input.usedContextDomains.includes('goals')) patternLinks.push('goal-direction ambiguity appears connected');
+  if (input.usedContextDomains.includes('traits')) patternLinks.push('self-identity framing may be amplifying reactions');
+
+  const nowPlan = [
+    'Name the tension in one sentence without blame.',
+    'Pick one regulating action you can do in 5 minutes.',
+  ];
+  const weekPlan = [
+    'Track one repeated trigger and your first response each day.',
+    'Convert one insight into a small commitment with a deadline.',
+  ];
+  const monthPlan = [
+    'Review weekly notes and identify one stable pattern shift.',
+    'Refine routines and goals to reduce future friction.',
+  ];
+
+  return {
+    insightSummary: input.deepMode
+      ? 'This tension appears to be a high-priority pattern, not a one-off moment.'
+      : 'This tension appears actionable with a focused short-cycle adjustment.',
+    patternLinks,
+    riskFlags,
+    nowPlan,
+    weekPlan,
+    monthPlan,
+  };
+}

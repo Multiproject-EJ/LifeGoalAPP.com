@@ -14,6 +14,7 @@ import {
   type FairnessWarning,
 } from './conflictFairnessLint';
 import {
+  buildInnerGuidancePlan,
   buildInnerContextSlice,
   computeInnerTensionPriorityScore,
   shouldUseDeepIntervention,
@@ -275,6 +276,12 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
   };
 
   if (!decision.allowed || !decision.model || !apiKey) {
+    const guidancePlan = buildInnerGuidancePlan({
+      answers: input.answers,
+      priorityScore,
+      deepMode,
+      usedContextDomains: context.usedContextDomains,
+    });
     await persistAiMessage({
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
@@ -294,7 +301,14 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
     await persistArtifact({
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
-      artifact: { recommendations: DEFAULT_RECOMMENDATIONS, source: 'fallback' },
+      artifact: {
+        recommendations: DEFAULT_RECOMMENDATIONS,
+        guidancePlan,
+        source: 'fallback',
+        priorityScore,
+        deepMode,
+        usedContextDomains: context.usedContextDomains,
+      },
     });
     return { recommendations: DEFAULT_RECOMMENDATIONS, mode: decision.mode };
   }
@@ -312,6 +326,12 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
     if (recommendations.length === 0) {
       throw new Error('OpenAI response schema invalid');
     }
+    const guidancePlan = buildInnerGuidancePlan({
+      answers: input.answers,
+      priorityScore,
+      deepMode,
+      usedContextDomains: context.usedContextDomains,
+    });
     await persistAiMessage({
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
@@ -334,7 +354,14 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
     await persistArtifact({
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
-      artifact: { recommendations, source: 'ai', priorityScore, deepMode, usedContextDomains: context.usedContextDomains },
+      artifact: {
+        recommendations,
+        guidancePlan,
+        source: 'ai',
+        priorityScore,
+        deepMode,
+        usedContextDomains: context.usedContextDomains,
+      },
     });
 
     return {
@@ -343,6 +370,12 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown orchestration error';
+    const guidancePlan = buildInnerGuidancePlan({
+      answers: input.answers,
+      priorityScore,
+      deepMode,
+      usedContextDomains: context.usedContextDomains,
+    });
     await persistAiMessage({
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
@@ -362,7 +395,15 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
     await persistArtifact({
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
-      artifact: { recommendations: DEFAULT_RECOMMENDATIONS, source: 'fallback', error: message },
+      artifact: {
+        recommendations: DEFAULT_RECOMMENDATIONS,
+        guidancePlan,
+        source: 'fallback',
+        error: message,
+        priorityScore,
+        deepMode,
+        usedContextDomains: context.usedContextDomains,
+      },
     });
     return { recommendations: DEFAULT_RECOMMENDATIONS, mode: 'fallback' };
   }
