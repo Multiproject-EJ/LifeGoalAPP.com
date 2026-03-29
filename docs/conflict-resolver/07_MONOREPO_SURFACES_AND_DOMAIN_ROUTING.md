@@ -100,6 +100,10 @@ Avoid embedding provider domains in generated URLs once custom domain is live.
 4. Verify invite link join flow end-to-end.
 5. Optionally migrate main app into `/apps/lifegoal-web` later.
 
+Current in-app fallback behavior (while standalone site is being built):
+- Requests on `peacebetween.com`/`www.peacebetween.com` default into Breathing Space.
+- `/conflict/join?token=...` is preserved in URL to allow invite token handling in the web surface.
+
 ---
 
 ## Minimal Netlify config (example)
