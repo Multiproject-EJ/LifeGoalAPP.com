@@ -158,6 +158,9 @@ async function persistAiRun(params: {
   usedContextDomains: string[];
   fallbackUsed: boolean;
   errorMessage?: string | null;
+  tokenInput?: number | null;
+  tokenOutput?: number | null;
+  latencyMs?: number | null;
 }) {
   if (!params.sessionId) return;
   const supabase = getSupabaseClient() as any;
@@ -169,6 +172,9 @@ async function persistAiRun(params: {
     used_context_domains: params.usedContextDomains,
     fallback_used: params.fallbackUsed,
     error_message: params.errorMessage ?? null,
+    token_input: params.tokenInput ?? null,
+    token_output: params.tokenOutput ?? null,
+    latency_ms: params.latencyMs ?? null,
   });
   if (error) {
     console.warn('[conflict-ai] persistAiRun failed', { stage: params.stage, error });
@@ -213,45 +219,15 @@ async function persistAiMessage(params: {
   }
 }
 
-async function requestOpenAiRecommendations(input: InnerContextInput, model: string, apiKey: string): Promise<InnerRecommendation[]> {
-  const maxAttempts = 2;
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: 'user', content: buildPrompt(input) }],
-        temperature: 0.5,
-        max_tokens: 500,
-      }),
-    });
+type OpenAiCallResult = {
+  content: unknown;
+  tokenInput: number | null;
+  tokenOutput: number | null;
+  latencyMs: number;
+};
 
-    if (!response.ok) {
-      if (attempt >= maxAttempts) {
-        throw new Error(`OpenAI returned ${response.status}`);
-      }
-      continue;
-    }
-
-    const data = await response.json();
-    const content = data?.choices?.[0]?.message?.content;
-    const parsed = parseInnerRecommendationsFromContent(content, MAX_RECOMMENDATIONS);
-    if (parsed.length > 0) {
-      return parsed;
-    }
-
-    if (attempt >= maxAttempts) {
-      throw new Error('OpenAI response schema invalid');
-    }
-  }
-  return [];
-}
-
-async function requestOpenAiRawContent(prompt: string, model: string, apiKey: string): Promise<unknown> {
+async function requestOpenAiRawContent(prompt: string, model: string, apiKey: string): Promise<OpenAiCallResult> {
+  const startedAt = performance.now();
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -267,7 +243,13 @@ async function requestOpenAiRawContent(prompt: string, model: string, apiKey: st
   });
   if (!response.ok) throw new Error(`OpenAI returned ${response.status}`);
   const data = await response.json();
-  return data?.choices?.[0]?.message?.content;
+  const usage = data?.usage ?? {};
+  return {
+    content: data?.choices?.[0]?.message?.content,
+    tokenInput: typeof usage.prompt_tokens === 'number' ? usage.prompt_tokens : null,
+    tokenOutput: typeof usage.completion_tokens === 'number' ? usage.completion_tokens : null,
+    latencyMs: Math.max(0, Math.round(performance.now() - startedAt)),
+  };
 }
 
 export async function generateInnerNextStepRecommendations(input: InnerContextInput): Promise<InnerNextStepResult> {
@@ -307,7 +289,11 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       message: buildPrompt(input),
       metadata: { model: decision.model, mode: decision.mode },
     });
-    const recommendations = await requestOpenAiRecommendations(input, decision.model, apiKey);
+    const result = await requestOpenAiRawContent(buildPrompt(input), decision.model, apiKey);
+    const recommendations = parseInnerRecommendationsFromContent(result.content, MAX_RECOMMENDATIONS);
+    if (recommendations.length === 0) {
+      throw new Error('OpenAI response schema invalid');
+    }
     await persistAiMessage({
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
@@ -323,6 +309,9 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       model: decision.model,
       usedContextDomains: input.usedContextDomains ?? [],
       fallbackUsed: false,
+      tokenInput: result.tokenInput,
+      tokenOutput: result.tokenOutput,
+      latencyMs: result.latencyMs,
     });
     await persistArtifact({
       sessionId: input.sessionId,
@@ -401,8 +390,10 @@ export async function rewritePrivateCaptureAnswers(input: {
       message: buildPrivateRewritePrompt(input),
       metadata: { model: decision.model, mode: decision.mode },
     });
-    const content = await requestOpenAiRawContent(buildPrivateRewritePrompt(input), decision.model, apiKey);
-    const parsed = typeof content === 'string' ? JSON.parse(content) as { rewrittenAnswers?: Record<string, string> } : null;
+    const result = await requestOpenAiRawContent(buildPrivateRewritePrompt(input), decision.model, apiKey);
+    const parsed = typeof result.content === 'string'
+      ? JSON.parse(result.content) as { rewrittenAnswers?: Record<string, string> }
+      : null;
     const rewritten = parsed?.rewrittenAnswers ?? fallbackRewritten;
     await persistAiRun({
       sessionId: input.sessionId,
@@ -411,6 +402,9 @@ export async function rewritePrivateCaptureAnswers(input: {
       model: decision.model,
       usedContextDomains: ['reflections'],
       fallbackUsed: false,
+      tokenInput: result.tokenInput,
+      tokenOutput: result.tokenOutput,
+      latencyMs: result.latencyMs,
     });
     await persistArtifact({
       sessionId: input.sessionId,
@@ -466,8 +460,8 @@ export async function generateSharedSummaryCards(input: {
       message: prompt,
       metadata: { model: decision.model, mode: decision.mode },
     });
-    const content = await requestOpenAiRawContent(prompt, decision.model, apiKey);
-    const cards = parseSharedSummaryCardsFromContent(content);
+    const result = await requestOpenAiRawContent(prompt, decision.model, apiKey);
+    const cards = parseSharedSummaryCardsFromContent(result.content);
     const summaryCards = cards.length > 0 ? cards : DEFAULT_SHARED_SUMMARY_CARDS;
     const fairnessWarnings = lintSharedSummaryFairness(summaryCards);
     await persistAiRun({
@@ -482,6 +476,9 @@ export async function generateSharedSummaryCards(input: {
         : fairnessWarnings.length > 0
           ? `Fairness warnings: ${fairnessWarnings.map((warning) => warning.code).join(',')}`
           : null,
+      tokenInput: result.tokenInput,
+      tokenOutput: result.tokenOutput,
+      latencyMs: result.latencyMs,
     });
     await persistArtifact({
       sessionId: input.sessionId,
@@ -535,8 +532,8 @@ export async function generateResolutionOptions(input: {
       message: prompt,
       metadata: { model: decision.model, mode: decision.mode },
     });
-    const content = await requestOpenAiRawContent(prompt, decision.model, apiKey);
-    const parsed = parseResolutionOptionsFromContent(content, 3);
+    const result = await requestOpenAiRawContent(prompt, decision.model, apiKey);
+    const parsed = parseResolutionOptionsFromContent(result.content, 3);
     const options = parsed.length > 0 ? parsed : DEFAULT_RESOLUTION_OPTIONS;
     const fairnessWarnings = lintResolutionOptionFairness(options);
     await persistAiRun({
@@ -551,6 +548,9 @@ export async function generateResolutionOptions(input: {
         : fairnessWarnings.length > 0
           ? `Fairness warnings: ${fairnessWarnings.map((warning) => warning.code).join(',')}`
           : null,
+      tokenInput: result.tokenInput,
+      tokenOutput: result.tokenOutput,
+      latencyMs: result.latencyMs,
     });
     await persistArtifact({
       sessionId: input.sessionId,
