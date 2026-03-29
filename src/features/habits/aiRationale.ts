@@ -12,7 +12,7 @@
  */
 
 import type { HabitSchedule } from './scheduleInterpreter';
-import { resolveModelForAiTask } from '../../services/aiTaskRouting';
+import { resolveAiEntitlement } from '../../services/aiEntitlementService';
 
 /**
  * Input parameters for building enhanced rationale
@@ -115,6 +115,10 @@ async function callOpenAI(prompt: string, timeoutMs: number = 3000): Promise<str
     if (!apiKey) {
       return null;
     }
+    const decision = resolveAiEntitlement('habit_rationale_rewrite', Boolean(apiKey));
+    if (!decision.allowed || !decision.model) {
+      return null;
+    }
 
     // Create an AbortController for timeout
     const controller = new AbortController();
@@ -128,7 +132,7 @@ async function callOpenAI(prompt: string, timeoutMs: number = 3000): Promise<str
           'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: resolveModelForAiTask('habit_rationale_rewrite'),
+          model: decision.model,
           messages: [
             { role: 'user', content: prompt },
           ],

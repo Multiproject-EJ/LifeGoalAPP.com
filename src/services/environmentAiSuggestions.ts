@@ -4,7 +4,7 @@ import {
   normalizeEnvironmentContext,
   type EnvironmentContextV1,
 } from '../features/environment/environmentSchema';
-import { resolveModelForAiTask } from './aiTaskRouting';
+import { resolveAiEntitlement } from './aiEntitlementService';
 
 export type EnvironmentAiIdea = {
   title: string;
@@ -86,6 +86,8 @@ Constraints: practical, non-judgmental, specific, short, and mobile-friendly.`;
 async function callOpenAI(input: EnvironmentAiSuggestionInput, timeoutMs = 3500): Promise<EnvironmentAiIdea[] | null> {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   if (!apiKey) return null;
+  const decision = resolveAiEntitlement('environment_idea_generation', Boolean(apiKey));
+  if (!decision.allowed || !decision.model) return null;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -98,7 +100,7 @@ async function callOpenAI(input: EnvironmentAiSuggestionInput, timeoutMs = 3500)
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: resolveModelForAiTask('environment_idea_generation'),
+        model: decision.model,
         messages: [{ role: 'user', content: buildPrompt(input) }],
         max_tokens: 350,
         temperature: 0.6,
