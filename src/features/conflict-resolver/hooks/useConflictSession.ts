@@ -250,6 +250,60 @@ export function useConflictSession() {
     return picks.slice(0, 3);
   };
 
+  const buildInnerRecommendations = (draftAnswers: Record<string, string>): InnerRecommendation[] => {
+    const combined = Object.values(draftAnswers).join(' ').toLowerCase();
+    const picks: InnerRecommendation[] = [];
+
+    if (/(anxious|stress|overwhelm|panic|pressure|tired|burnout)/.test(combined)) {
+      picks.push({
+        id: 'breathing_reset',
+        title: 'Reset your nervous system first',
+        reason: 'Your reflection shows high pressure. A short regulation reset should come before strategy.',
+        ctaLabel: 'Start Breathing Space',
+        href: '#breathing-space',
+      });
+    }
+    if (/(consistency|routine|discipline|procrastinat|avoid|stuck|follow through)/.test(combined)) {
+      picks.push({
+        id: 'habit_alignment',
+        title: 'Create one tiny habit that removes friction',
+        reason: 'You described repeat-pattern tension. A single daily habit is the best leverage move.',
+        ctaLabel: 'Open Habits',
+        href: '#habits',
+      });
+    }
+    if (/(direction|purpose|goal|career|future|focus|clarity)/.test(combined)) {
+      picks.push({
+        id: 'goal_alignment',
+        title: 'Re-align with one concrete goal',
+        reason: 'Your notes point to uncertainty and direction conflict. Clarifying one active goal can reduce noise.',
+        ctaLabel: 'Open Goals',
+        href: '#goals',
+      });
+    }
+
+    if (picks.length === 0) {
+      picks.push(
+        {
+          id: 'journal_first',
+          title: 'Capture one clear insight',
+          reason: 'You did the hard honesty work. Lock in one sentence you want to remember this week.',
+          ctaLabel: 'Open Journal',
+          href: '#journal',
+        },
+        {
+          id: 'contract_step',
+          title: 'Turn insight into a commitment contract',
+          reason: 'Convert reflection into behavior by defining one concrete promise with a deadline.',
+          ctaLabel: 'Open Contracts',
+          href: '#contracts',
+        },
+      );
+    }
+
+    return picks.slice(0, 3);
+  };
+
   const applyDraftSnapshot = (parsed: ConflictSessionDraftSnapshot) => {
     setStage(parsed.stage ?? 'mode_selection');
     setSelectedType(parsed.selectedType ?? null);
