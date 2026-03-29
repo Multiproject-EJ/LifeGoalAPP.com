@@ -15,6 +15,7 @@ import {
 } from '../services/conflictSessions';
 import { buildConflictInviteUrl, createConflictInvite, redeemConflictInvite } from '../services/conflictInvites';
 import { trackConflictEvent } from '../services/conflictAnalytics';
+import { triggerCompletionHaptic } from '../../../utils/completionHaptics';
 
 type ConflictResolverUiStage =
   | 'mode_selection'
@@ -395,6 +396,7 @@ export function useConflictSession() {
 
   const startPrivateCapture = () => {
     setPromptIndex(0);
+    triggerCompletionHaptic('light', { channel: 'conflict', minIntervalMs: 1200 });
     void setStageWithSync('private_capture');
   };
 
@@ -449,6 +451,7 @@ export function useConflictSession() {
 
   const markAlignmentReached = () => {
     setAlignmentReached(true);
+    triggerCompletionHaptic('medium', { channel: 'conflict', minIntervalMs: 1600 });
   };
 
   const resolutionOptions = [
@@ -502,6 +505,7 @@ export function useConflictSession() {
 
   const completeApologyAlignment = () => {
     if (apologyTiming === 'sequenced' && !sequencedLead) return;
+    triggerCompletionHaptic('light', { channel: 'conflict', minIntervalMs: 1200 });
     void setStageWithSync('agreement_preview');
   };
 
@@ -529,6 +533,7 @@ export function useConflictSession() {
       hasFollowUpDate: Boolean(followUpDate),
       resolutionChosen: Boolean(selectedResolution || activeProposalId),
     });
+    triggerCompletionHaptic('strong', { channel: 'conflict', minIntervalMs: 1800 });
     void setStageWithSync('agreement_finalized');
   };
 
