@@ -43,8 +43,7 @@ export function PrivateCaptureScreen({
     .replace(/\byou made me\b/gi, 'I felt')
     .replace(/\byou are\b/gi, 'I experienced this as');
   const hasRewriteSuggestion = suggestedRewrite.trim() !== value.trim() && value.trim().length > 0;
-  const hasUnsafeLanguage = DISALLOWED_PATTERNS.some((pattern) => pattern.test(value));
-  const canAdvance = !hasUnsafeLanguage;
+  const hasEscalatoryLanguage = DISALLOWED_PATTERNS.some((pattern) => pattern.test(value));
 
   return (
     <section className="conflict-resolver__screen" aria-labelledby="private-capture-title">
@@ -83,9 +82,9 @@ export function PrivateCaptureScreen({
             <p><strong>Suggested:</strong> {suggestedRewrite}</p>
           </div>
         ) : null}
-        {hasUnsafeLanguage ? (
+        {hasEscalatoryLanguage ? (
           <p className="conflict-resolver__safety-warning" role="alert">
-            This entry includes language that can escalate conflict. Please soften wording before continuing.
+            Your full wording is preserved in private capture. If this becomes a shared session, AI summary language will be softened before sharing.
           </p>
         ) : null}
       </article>

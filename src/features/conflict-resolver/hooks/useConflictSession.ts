@@ -53,6 +53,23 @@ const PRIVATE_CAPTURE_PROMPTS: readonly PrivatePrompt[] = [
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const CONFLICT_SESSION_DRAFT_STORAGE_KEY = 'conflict-resolver:draft:v1';
+const SHARED_SUMMARY_REPLACEMENTS: Array<{ pattern: RegExp; replacement: string }> = [
+  { pattern: /\bidiot\b/gi, replacement: 'hurtful remark' },
+  { pattern: /\bstupid\b/gi, replacement: 'frustrating' },
+  { pattern: /\bshut up\b/gi, replacement: 'stop talking' },
+  { pattern: /\bhate you\b/gi, replacement: 'felt intense anger' },
+  { pattern: /\bworthless\b/gi, replacement: 'unappreciated' },
+  { pattern: /\bkill yourself\b/gi, replacement: 'severe harmful phrase removed' },
+  { pattern: /\bwhat'?s wrong with you\b/gi, replacement: 'I felt confused by your response' },
+];
+const sanitizeForSharedSummary = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  return SHARED_SUMMARY_REPLACEMENTS.reduce(
+    (nextValue, { pattern, replacement }) => nextValue.replace(pattern, replacement),
+    trimmed,
+  );
+};
 const UI_TO_CONFLICT_STAGE: Record<ConflictResolverUiStage, ConflictStage> = {
   mode_selection: 'draft',
   grounding: 'grounding',
@@ -475,17 +492,23 @@ export function useConflictSession() {
     {
       id: 'what_happened',
       title: 'What happened',
-      text: answers.what_happened || 'No entry yet.',
+      text: selectedType === 'shared_conflict'
+        ? sanitizeForSharedSummary(answers.what_happened ?? '') || 'No entry yet.'
+        : answers.what_happened || 'No entry yet.',
     },
     {
       id: 'what_it_meant',
       title: 'What it meant',
-      text: answers.what_it_meant || 'No entry yet.',
+      text: selectedType === 'shared_conflict'
+        ? sanitizeForSharedSummary(answers.what_it_meant ?? '') || 'No entry yet.'
+        : answers.what_it_meant || 'No entry yet.',
     },
     {
       id: 'what_is_needed',
       title: 'What is needed',
-      text: answers.what_is_needed || 'No entry yet.',
+      text: selectedType === 'shared_conflict'
+        ? sanitizeForSharedSummary(answers.what_is_needed ?? '') || 'No entry yet.'
+        : answers.what_is_needed || 'No entry yet.',
     },
   ] as const;
 
