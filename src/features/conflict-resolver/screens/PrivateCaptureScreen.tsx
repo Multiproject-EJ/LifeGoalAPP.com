@@ -4,6 +4,16 @@ export type PrivatePrompt = {
   placeholder: string;
 };
 
+const DISALLOWED_PATTERNS = [
+  /\bidiot\b/i,
+  /\bstupid\b/i,
+  /\bshut up\b/i,
+  /\bhate you\b/i,
+  /\bworthless\b/i,
+  /\bkill yourself\b/i,
+  /\bwhat'?s wrong with you\b/i,
+] as const;
+
 type PrivateCaptureScreenProps = {
   prompts: readonly PrivatePrompt[];
   promptIndex: number;
@@ -33,6 +43,8 @@ export function PrivateCaptureScreen({
     .replace(/\byou made me\b/gi, 'I felt')
     .replace(/\byou are\b/gi, 'I experienced this as');
   const hasRewriteSuggestion = suggestedRewrite.trim() !== value.trim() && value.trim().length > 0;
+  const hasEscalatoryLanguage = DISALLOWED_PATTERNS.some((pattern) => pattern.test(value));
+  const canAdvance = true;
 
   return (
     <section className="conflict-resolver__screen" aria-labelledby="private-capture-title">
@@ -71,6 +83,11 @@ export function PrivateCaptureScreen({
             <p><strong>Suggested:</strong> {suggestedRewrite}</p>
           </div>
         ) : null}
+        {hasEscalatoryLanguage ? (
+          <p className="conflict-resolver__safety-warning" role="alert">
+            Your full wording is preserved in private capture. If this becomes a shared session, AI summary language will be softened before sharing.
+          </p>
+        ) : null}
       </article>
 
       <div className="conflict-resolver__footer-actions">
@@ -81,11 +98,11 @@ export function PrivateCaptureScreen({
           Skip for now
         </button>
         {isLast ? (
-          <button type="button" className="btn btn--primary" onClick={onFinish}>
+          <button type="button" className="btn btn--primary" onClick={onFinish} disabled={!canAdvance}>
             Continue to shared step
           </button>
         ) : (
-          <button type="button" className="btn btn--primary" onClick={onNext}>
+          <button type="button" className="btn btn--primary" onClick={onNext} disabled={!canAdvance}>
             Next question
           </button>
         )}

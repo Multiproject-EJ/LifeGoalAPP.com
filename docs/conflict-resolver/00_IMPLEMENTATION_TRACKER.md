@@ -1,7 +1,7 @@
 # Conflict Resolver — Implementation Tracker (Source of Truth)
 
 > Purpose: execution continuity across chat/session interruptions.
-> Scope: Breathing Space Conflict Resolver (mobile-first) in LifeGoal app, with optional `breathingspace.com` invitee surface.
+> Scope: Breathing Space Conflict Resolver (mobile-first) in LifeGoal app, with optional `peacebetween.com` invitee surface.
 
 ---
 
@@ -21,8 +21,8 @@
 | PR2 | Entry/Grounding/Private Capture (Stage 0–2) | IN_PROGRESS | Codex | 2026-03-28 (draft persistence shipped; acceptance checks pending) |
 | PR3 | Collect & Pile + Parallel Read (Stage 3–4) | IN_PROGRESS | Codex | 2026-03-28 (alignment signal shipped; acceptance checks pending) |
 | PR4 | Resolution + Apology Alignment + Agreements (Stage 5+) | IN_PROGRESS | Codex | 2026-03-28 (proposal queue gate shipped; validation pending) |
-| PR5 | Invitee onboarding + cross-domain scaffold (`breathingspace.com`) | IN_PROGRESS | Codex | TBD |
-| PR6 | Hardening pass (safety, fairness, resiliency, analytics) | TODO | TBD | TBD |
+| PR5 | Invitee onboarding + cross-domain scaffold (`peacebetween.com`) | IN_PROGRESS | Codex | 2026-03-29 (email-only invite link surfacing shipped in agreement finalization UI) |
+| PR6 | Hardening pass (safety, fairness, resiliency, analytics) | IN_PROGRESS | Codex | 2026-03-29 (language moderation transparency + blame reframing shipped; full validation pending) |
 
 Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 
@@ -122,18 +122,19 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 
 ---
 
-## 6) PR5 — Cross-domain scaffold (`breathingspace.com`) + invites
+## 6) PR5 — Cross-domain scaffold (`peacebetween.com`) + invites
 
 ### Deliverables
 - [x] Finalize invitation token model and lifecycle (issue, redeem, expire, revoke).
 - [x] Implement one-click magic link for invitee participation.
-- [ ] Add lightweight participant flow (email-only, no full profile required).
-- [ ] Add post-session funnel path into full LifeGoal onboarding.
+- [x] Add lightweight participant flow (email-only, no full profile required).
+- [x] Add post-session funnel path into full LifeGoal onboarding.
 
 ### Repo strategy
-- [ ] New dedicated frontend repo for `breathingspace.com` (recommended).
+- [ ] New dedicated frontend repo for `peacebetween.com` (recommended).
 - [ ] Shared Supabase project + schemas + realtime channels.
 - [ ] Shared API contracts/types package or synced schema typing strategy.
+- [x] Document monorepo/two-surface routing strategy and domain cutover checklist.
 
 ### Acceptance criteria
 - [ ] Invited external user can join session and complete assigned stage.
@@ -145,10 +146,10 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 ## 7) PR6 — Hardening pass
 
 ### Deliverables
-- [ ] Safety filters + abuse phrase handling + fairness checks.
+- [ ] Safety filters + abuse phrase handling + fairness checks. (shared-summary moderation now includes escalatory softening + direct-blame reframing with transparent notes; fairness validation still pending)
 - [ ] Reconnect/timeout/partial-participant resilience tests.
-- [ ] Accessibility pass (contrast, dynamic type, 44px targets, screen reader).
-- [ ] Analytics events/KPIs dashboard wiring.
+- [ ] Accessibility pass (contrast, dynamic type, 44px targets, screen reader). (parallel-read cards now keyboard-focusable/selectable with focus-visible styling)
+- [ ] Analytics events/KPIs dashboard wiring. (client analytics events expanded; dashboard sink wiring pending)
 
 ### Acceptance criteria
 - [ ] Core happy-path + interruption-path test suite passes.
@@ -174,6 +175,11 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 - [ ] Hold button threshold/cancel
 - [ ] Timer-gated interaction
 - [ ] Highlight action sheet behavior
+
+---
+
+## 8.1) Validation runbook
+- [x] Add PR5/PR6 acceptance validation runbook with evidence template (`09_ACCEPTANCE_VALIDATION_RUNBOOK.md`).
 
 ---
 
