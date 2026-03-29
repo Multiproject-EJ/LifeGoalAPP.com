@@ -1,4 +1,4 @@
-# `www.breathingspace.com` Go-Live Checklist
+# `www.peacebetween.com` Go-Live Checklist
 
 ## Pre-flight
 - [ ] Deploy target for breathing-space web app is up and reachable on provider preview domain.
@@ -14,7 +14,7 @@
 
 ## SSL + domain verification
 - [ ] Domain marked verified in hosting provider dashboard.
-- [ ] Certificate provisioned for `www.breathingspace.com`.
+- [ ] Certificate provisioned for `www.peacebetween.com`.
 - [ ] HTTPS reachable without warnings.
 
 ## Flow validation
@@ -24,7 +24,7 @@
 - [ ] Expired/revoked token behavior verified.
 
 ## Post-cutover
-- [ ] Apex `breathingspace.com` redirects to `www` (or intentionally serves landing page).
+- [ ] Apex `peacebetween.com` redirects to `www` (or intentionally serves landing page).
 - [ ] Analytics events visible for join, stage progress, and agreement completion.
 - [ ] Rollback plan documented (switch CNAME back to previous target if needed).
 

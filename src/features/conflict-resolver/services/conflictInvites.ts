@@ -25,7 +25,7 @@ function createInviteToken() {
   return crypto.randomUUID().replace(/-/g, '');
 }
 
-export function buildConflictInviteUrl(token: string, baseUrl = 'https://breathingspace.com') {
+export function buildConflictInviteUrl(token: string, baseUrl = 'https://peacebetween.com') {
   return `${baseUrl.replace(/\/+$/, '')}/conflict/join?token=${encodeURIComponent(token)}`;
 }
 

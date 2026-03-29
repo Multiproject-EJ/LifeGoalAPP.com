@@ -9,7 +9,7 @@ Use this runbook to close the remaining acceptance criteria with explicit eviden
 ### A. Invite join + stage completion
 - Create a shared conflict session from LifeGoal app.
 - Add lightweight participant email and generate invite link.
-- Open invite link on `www.breathingspace.com`.
+- Open invite link on `www.peacebetween.com`.
 - Confirm invitee can:
   - join session,
   - complete assigned stage action,

@@ -4,7 +4,7 @@
 Keep a **single repo** while deploying two public surfaces:
 
 1. `lifegoalapp.com` (main app)
-2. `www.breathingspace.com` (lightweight invitee web surface)
+2. `www.peacebetween.com` (lightweight invitee web surface)
 
 Both surfaces share the same Supabase backend, auth project, and realtime channels.
 
@@ -15,7 +15,7 @@ Both surfaces share the same Supabase backend, auth project, and realtime channe
 ```text
 /apps
   /lifegoal-web            # existing main frontend (current root app can be migrated later)
-  /breathingspace-web      # lightweight invitee surface
+  /peacebetween-web      # lightweight invitee surface
 /packages
   /shared-contracts        # shared TS types and API payload contracts
 ```
@@ -29,12 +29,12 @@ Both surfaces share the same Supabase backend, auth project, and realtime channe
 
 ### Option A (recommended): one repo, two deploy projects
 - Project 1 deploys `apps/lifegoal-web`
-- Project 2 deploys `apps/breathingspace-web`
+- Project 2 deploys `apps/peacebetween-web`
 - Both projects read shared env var values for Supabase URL/anon key/project refs
 
 Works on:
 - Vercel (now, build validation)
-- Netlify (recommended production host for `www.breathingspace.com`)
+- Netlify (recommended production host for `www.peacebetween.com`)
 - Cloudflare Pages
 
 ### Option B: one deploy project, host-based routing
@@ -43,14 +43,14 @@ Works on:
 
 ---
 
-## `www.breathingspace.com` DNS setup (Spaceship.com registrar)
+## `www.peacebetween.com` DNS setup (Spaceship.com registrar)
 
 Use this flow regardless of host:
 
-1. Pick your hosting target for `breathingspace-web` (Vercel/Netlify/etc.).
-2. In that host, add custom domain: `www.breathingspace.com`.
+1. Pick your hosting target for `peacebetween-web` (Vercel/Netlify/etc.).
+2. In that host, add custom domain: `www.peacebetween.com`.
 3. Copy the host-provided DNS target.
-4. In Spaceship DNS zone for `breathingspace.com`, create/update:
+4. In Spaceship DNS zone for `peacebetween.com`, create/update:
    - **Type:** `CNAME`
    - **Name/Host:** `www`
    - **Value/Target:** provider target (examples below)
@@ -63,17 +63,17 @@ Common provider CNAME targets:
 - Cloudflare Pages: `<project>.pages.dev` (or host-provided target)
 
 ### Netlify-specific note (chosen path)
-- In Netlify, create a dedicated site for `breathingspace-web`.
+- In Netlify, create a dedicated site for `peacebetween-web`.
 - Set publish directory to that app’s build output.
-- Add `www.breathingspace.com` as custom domain.
+- Add `www.peacebetween.com` as custom domain.
 - Use Netlify-provided CNAME target in Spaceship DNS.
 
 ---
 
-## What to do with apex (`breathingspace.com`)
+## What to do with apex (`peacebetween.com`)
 
 Choose one:
-- Redirect apex to `https://www.breathingspace.com` (recommended for simplicity), or
+- Redirect apex to `https://www.peacebetween.com` (recommended for simplicity), or
 - Serve a small marketing page on apex and keep app on `www`.
 
 If using redirect, configure either:
@@ -85,7 +85,7 @@ If using redirect, configure either:
 ## Invite-link path contract
 
 Keep invite links stable across hosts:
-- `https://www.breathingspace.com/conflict/join?token=...`
+- `https://www.peacebetween.com/conflict/join?token=...`
 
 Avoid embedding provider domains in generated URLs once custom domain is live.
 
@@ -94,8 +94,8 @@ Avoid embedding provider domains in generated URLs once custom domain is live.
 ## Migration sequence (safe)
 
 1. Keep current app as-is.
-2. Stand up `apps/breathingspace-web` deploy target.
-3. Point `www.breathingspace.com` CNAME to that target.
+2. Stand up `apps/peacebetween-web` deploy target.
+3. Point `www.peacebetween.com` CNAME to that target.
 4. Verify invite link join flow end-to-end.
 5. Optionally migrate main app into `/apps/lifegoal-web` later.
 
@@ -114,4 +114,4 @@ Avoid embedding provider domains in generated URLs once custom domain is live.
   status = 200
 ```
 
-If `breathingspace-web` is moved into a subfolder, set `base` and `publish` to that app's paths.
+If `peacebetween-web` is moved into a subfolder, set `base` and `publish` to that app's paths.
