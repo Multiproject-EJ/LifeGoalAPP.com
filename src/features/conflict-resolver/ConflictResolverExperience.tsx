@@ -31,6 +31,7 @@ export function ConflictResolverExperience() {
             session.resyncSharedSession(session.sharedSessionId),
           ]).then(() => undefined)
           : undefined}
+        sharedSessionNotice={session.inviteJoinMessage}
         sharedSessionError={session.sharedSessionError}
         sharedSessionBusy={session.sharedSessionBusy}
         recoverableDraft={session.recoverableDraft}
@@ -140,6 +141,29 @@ export function ConflictResolverExperience() {
           <h3 id="conflict-finalized-title" className="conflict-resolver__title">Agreement finalized</h3>
           <p className="conflict-resolver__subtitle">Great progress. You can now schedule follow-through and close calmly.</p>
         </header>
+        {session.generatedInviteLinks.length > 0 ? (
+          <article className="conflict-resolver__finalized-card" aria-label="Lightweight participant invite links">
+            <h4>Invite links ready</h4>
+            <p>Share these one-click links with email-only participants so they can join without a full profile.</p>
+            <ul className="conflict-resolver__finalized-list">
+              {session.generatedInviteLinks.map((link) => (
+                <li key={link}>
+                  <a href={link} target="_blank" rel="noreferrer">{link}</a>
+                </li>
+              ))}
+            </ul>
+          </article>
+        ) : null}
+        {session.inviteGenerationError ? (
+          <p className="conflict-resolver__input-error" role="alert">{session.inviteGenerationError}</p>
+        ) : null}
+        <article className="conflict-resolver__finalized-card" aria-label="Post-session onboarding">
+          <h4>Continue in LifeGoal</h4>
+          <p>Ready to keep momentum? Continue into full onboarding for long-term conflict growth tracking.</p>
+          <a href="#auth-signup" className="btn">
+            Continue to onboarding
+          </a>
+        </article>
         <button type="button" className="btn btn--primary conflict-resolver__primary-cta" onClick={session.resetFlow}>
           Start new session
         </button>
