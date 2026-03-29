@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { ModeSelectionScreen } from './screens/ModeSelectionScreen';
 import { GroundingScreen } from './screens/GroundingScreen';
 import { PrivateCaptureScreen } from './screens/PrivateCaptureScreen';
@@ -5,15 +6,24 @@ import { CollectPileScreen } from './screens/CollectPileScreen';
 import { ParallelReadScreen } from './screens/ParallelReadScreen';
 import { ResolutionBuilderScreen } from './screens/ResolutionBuilderScreen';
 import { ApologyAlignmentScreen } from './screens/ApologyAlignmentScreen';
+import { InnerNextStepScreen } from './screens/InnerNextStepScreen';
 import { AgreementCloseCard } from './components/AgreementCloseCard';
+import { StageProgress } from './components/StageProgress';
 import { useConflictSession } from './hooks/useConflictSession';
 import './conflictResolver.css';
 
 export function ConflictResolverExperience() {
   const session = useConflictSession();
 
+  const withProgress = (content: ReactNode) => (
+    <>
+      <StageProgress stage={session.stage} />
+      {content}
+    </>
+  );
+
   if (session.stage === 'mode_selection') {
-    return (
+    return withProgress(
       <ModeSelectionScreen
         selectedType={session.selectedType}
         onSelectType={session.setSelectedType}
@@ -42,7 +52,7 @@ export function ConflictResolverExperience() {
   }
 
   if (session.stage === 'grounding') {
-    return (
+    return withProgress(
       <GroundingScreen
         statementIndex={session.groundingIndex}
         statements={session.groundingStatements}
@@ -53,7 +63,7 @@ export function ConflictResolverExperience() {
   }
 
   if (session.stage === 'private_capture') {
-    return (
+    return withProgress(
       <PrivateCaptureScreen
         prompts={session.prompts}
         promptIndex={session.promptIndex}
@@ -68,11 +78,21 @@ export function ConflictResolverExperience() {
   }
 
   if (session.stage === 'collect_pile') {
-    return <CollectPileScreen summaryCards={session.summaryCards} onContinue={session.enterParallelRead} />;
+    return withProgress(<CollectPileScreen summaryCards={session.summaryCards} onContinue={session.enterParallelRead} />);
+  }
+
+  if (session.stage === 'inner_next_step') {
+    return withProgress(
+      <InnerNextStepScreen
+        recommendations={session.innerRecommendations}
+        guidanceMeta={session.innerGuidanceMeta}
+        onContinue={session.completeInnerNextStep}
+      />,
+    );
   }
 
   if (session.stage === 'parallel_read') {
-    return (
+    return withProgress(
       <ParallelReadScreen
         summaryCards={session.summaryCards}
         alignmentReached={session.alignmentReached}
@@ -83,7 +103,7 @@ export function ConflictResolverExperience() {
   }
 
   if (session.stage === 'resolution_builder') {
-    return (
+    return withProgress(
       <ResolutionBuilderScreen
         options={session.resolutionOptions}
         selectedOptionId={session.selectedResolution}
@@ -102,7 +122,7 @@ export function ConflictResolverExperience() {
   }
 
   if (session.stage === 'apology_alignment') {
-    return (
+    return withProgress(
       <ApologyAlignmentScreen
         selectedType={session.selectedApologyType}
         onSelectType={session.setSelectedApologyType}
@@ -116,7 +136,7 @@ export function ConflictResolverExperience() {
   }
 
   if (session.stage === 'agreement_preview') {
-    return (
+    return withProgress(
       <AgreementCloseCard
         summaryItems={session.agreementSummaryItems}
         followUpDate={session.followUpDate}
@@ -135,12 +155,15 @@ export function ConflictResolverExperience() {
   }
 
   if (session.stage === 'agreement_finalized') {
-    return (
-      <section className="conflict-resolver__screen" aria-labelledby="conflict-finalized-title">
+    return withProgress(
+      <section className="conflict-resolver__screen conflict-resolver__screen--finalized" aria-labelledby="conflict-finalized-title">
         <header className="conflict-resolver__header">
           <h3 id="conflict-finalized-title" className="conflict-resolver__title">Agreement finalized</h3>
           <p className="conflict-resolver__subtitle">Great progress. You can now schedule follow-through and close calmly.</p>
         </header>
+        <div className="conflict-resolver__completion-burst" role="status" aria-live="polite">
+          ✨ Repair milestone reached
+        </div>
         {session.generatedInviteLinks.length > 0 ? (
           <article className="conflict-resolver__finalized-card" aria-label="Lightweight participant invite links">
             <h4>Invite links ready</h4>
@@ -158,11 +181,15 @@ export function ConflictResolverExperience() {
           <p className="conflict-resolver__input-error" role="alert">{session.inviteGenerationError}</p>
         ) : null}
         <article className="conflict-resolver__finalized-card" aria-label="Post-session onboarding">
-          <h4>Continue in LifeGoal</h4>
-          <p>Ready to keep momentum? Continue into full onboarding for long-term conflict growth tracking.</p>
-          <a href="#auth-signup" className="btn">
-            Continue to onboarding
-          </a>
+          <h4>Suggested next moves</h4>
+          <p>Based on this session, jump straight into the most useful next step.</p>
+          <div className="conflict-resolver__proposal-actions">
+            {session.innerRecommendations.map((item) => (
+              <a key={item.id} href={item.href} className="btn">
+                {item.ctaLabel}
+              </a>
+            ))}
+          </div>
         </article>
         <button type="button" className="btn btn--primary conflict-resolver__primary-cta" onClick={session.resetFlow}>
           Start new session
@@ -171,7 +198,7 @@ export function ConflictResolverExperience() {
     );
   }
 
-  return (
+  return withProgress(
     <section className="conflict-resolver__screen" aria-labelledby="conflict-ready-title">
       <header className="conflict-resolver__header">
         <h3 id="conflict-ready-title" className="conflict-resolver__title">Agreement Preview</h3>
