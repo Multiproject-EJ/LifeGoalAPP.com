@@ -21,6 +21,9 @@ type InnerNextStepResult = {
   mode: 'premium' | 'free_quota' | 'fallback';
 };
 
+const ALLOWED_HREFS = new Set(['#breathing-space', '#habits', '#goals', '#journal', '#contracts']);
+const MAX_RECOMMENDATIONS = 3;
+
 const DEFAULT_RECOMMENDATIONS: InnerRecommendation[] = [
   {
     id: 'journal_first',
@@ -59,6 +62,40 @@ Context domains used: ${JSON.stringify(input.usedContextDomains ?? [])}
 `;
 }
 
+function normalizeRecommendation(raw: unknown, index: number): InnerRecommendation | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const candidate = raw as Partial<InnerRecommendation>;
+  const title = typeof candidate.title === 'string' ? candidate.title.trim() : '';
+  const reason = typeof candidate.reason === 'string' ? candidate.reason.trim() : '';
+  const ctaLabel = typeof candidate.ctaLabel === 'string' ? candidate.ctaLabel.trim() : '';
+  const href = typeof candidate.href === 'string' ? candidate.href.trim() : '';
+
+  if (!title || !reason || !ctaLabel || !ALLOWED_HREFS.has(href)) return null;
+  return {
+    id: typeof candidate.id === 'string' && candidate.id.trim().length > 0
+      ? candidate.id.trim()
+      : `inner_reco_${index + 1}`,
+    title,
+    reason,
+    ctaLabel,
+    href,
+  };
+}
+
+function parseAiRecommendations(content: unknown): InnerRecommendation[] {
+  if (typeof content !== 'string' || content.trim().length === 0) return [];
+  try {
+    const parsed = JSON.parse(content) as { recommendations?: unknown[] };
+    if (!Array.isArray(parsed.recommendations)) return [];
+    return parsed.recommendations
+      .map((item, index) => normalizeRecommendation(item, index))
+      .filter((item): item is InnerRecommendation => Boolean(item))
+      .slice(0, MAX_RECOMMENDATIONS);
+  } catch {
+    return [];
+  }
+}
+
 async function persistAiRun(params: {
   sessionId?: string | null;
   stage: 'inner_tension_next_steps';
@@ -95,6 +132,44 @@ async function persistArtifact(params: {
   });
 }
 
+async function requestOpenAiRecommendations(input: InnerContextInput, model: string, apiKey: string): Promise<InnerRecommendation[]> {
+  const maxAttempts = 2;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: 'user', content: buildPrompt(input) }],
+        temperature: 0.5,
+        max_tokens: 500,
+      }),
+    });
+
+    if (!response.ok) {
+      if (attempt >= maxAttempts) {
+        throw new Error(`OpenAI returned ${response.status}`);
+      }
+      continue;
+    }
+
+    const data = await response.json();
+    const content = data?.choices?.[0]?.message?.content;
+    const parsed = parseAiRecommendations(content);
+    if (parsed.length > 0) {
+      return parsed;
+    }
+
+    if (attempt >= maxAttempts) {
+      throw new Error('OpenAI response schema invalid');
+    }
+  }
+  return [];
+}
+
 export async function generateInnerNextStepRecommendations(input: InnerContextInput): Promise<InnerNextStepResult> {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   const decision = resolveAiEntitlement('conflict_inner_reflection', hasApiKey());
@@ -118,30 +193,7 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
   }
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: decision.model,
-        messages: [{ role: 'user', content: buildPrompt(input) }],
-        temperature: 0.5,
-        max_tokens: 500,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`OpenAI returned ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data?.choices?.[0]?.message?.content;
-    const parsed = typeof content === 'string' ? JSON.parse(content) as { recommendations?: InnerRecommendation[] } : null;
-    const recommendations = Array.isArray(parsed?.recommendations) && parsed?.recommendations.length > 0
-      ? parsed.recommendations.slice(0, 3)
-      : DEFAULT_RECOMMENDATIONS;
+    const recommendations = await requestOpenAiRecommendations(input, decision.model, apiKey);
 
     await persistAiRun({
       sessionId: input.sessionId,
