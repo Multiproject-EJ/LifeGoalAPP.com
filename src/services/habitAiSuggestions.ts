@@ -1,3 +1,5 @@
+import { resolveModelForAiTask } from './aiTaskRouting';
+
 export interface HabitAiSuggestionInput {
   prompt: string;
 }
@@ -120,7 +122,7 @@ async function callOpenAI(prompt: string, timeoutMs: number = 3000): Promise<Hab
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: resolveModelForAiTask('habit_suggestion_structured'),
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 200,
         temperature: 0.4,

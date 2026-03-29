@@ -54,6 +54,12 @@ Return structured payload:
 
 ## 3) Tier model (free vs premium)
 
+Internal implementation rule:
+- Every AI-powered feature must declare an internal task label and cost level:
+  - `level_1` = low-cost rewrite/clarification/small text jobs
+  - `level_2` = deeper reasoning, mediation, contextual advising
+- Model routing is then derived from `(task level, user tier)` instead of hardcoded per screen.
+
 ## 3.1 Free tier
 - Uses lower-cost model.
 - Tight call cap (example: N calls/day or N/session).
@@ -141,6 +147,8 @@ Goal: users still get value even without paid AI.
    - Ensure high-quality non-LLM path.
 7. **Upgrade UX hooks**
    - Add tier-aware value nudges at meaningful moments.
+8. **Task-level router enforcement**
+   - Ensure each AI call declares a task key mapped to `level_1` or `level_2`.
 
 ---
 
