@@ -4,6 +4,7 @@ type SummaryCard = {
   id: string;
   title: string;
   text: string;
+  toneSoftened?: boolean;
 };
 
 type CollectPileScreenProps = {
@@ -41,6 +42,9 @@ export function CollectPileScreen({ summaryCards, onContinue }: CollectPileScree
           >
             <h4>{card.title}</h4>
             <p>{card.text}</p>
+            {card.toneSoftened ? (
+              <p className="conflict-resolver__softened-note">Tone softened for shared clarity.</p>
+            ) : null}
           </article>
         ))}
       </div>

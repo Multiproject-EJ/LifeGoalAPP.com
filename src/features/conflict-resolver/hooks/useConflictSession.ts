@@ -489,27 +489,39 @@ export function useConflictSession() {
   }));
 
   const summaryCards = [
-    {
-      id: 'what_happened',
-      title: 'What happened',
-      text: selectedType === 'shared_conflict'
-        ? sanitizeForSharedSummary(answers.what_happened ?? '') || 'No entry yet.'
-        : answers.what_happened || 'No entry yet.',
-    },
-    {
-      id: 'what_it_meant',
-      title: 'What it meant',
-      text: selectedType === 'shared_conflict'
-        ? sanitizeForSharedSummary(answers.what_it_meant ?? '') || 'No entry yet.'
-        : answers.what_it_meant || 'No entry yet.',
-    },
-    {
-      id: 'what_is_needed',
-      title: 'What is needed',
-      text: selectedType === 'shared_conflict'
-        ? sanitizeForSharedSummary(answers.what_is_needed ?? '') || 'No entry yet.'
-        : answers.what_is_needed || 'No entry yet.',
-    },
+    (() => {
+      const raw = answers.what_happened ?? '';
+      const sanitized = sanitizeForSharedSummary(raw);
+      const useSanitized = selectedType === 'shared_conflict';
+      return {
+        id: 'what_happened',
+        title: 'What happened',
+        text: useSanitized ? sanitized || 'No entry yet.' : raw || 'No entry yet.',
+        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized !== raw.trim(),
+      };
+    })(),
+    (() => {
+      const raw = answers.what_it_meant ?? '';
+      const sanitized = sanitizeForSharedSummary(raw);
+      const useSanitized = selectedType === 'shared_conflict';
+      return {
+        id: 'what_it_meant',
+        title: 'What it meant',
+        text: useSanitized ? sanitized || 'No entry yet.' : raw || 'No entry yet.',
+        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized !== raw.trim(),
+      };
+    })(),
+    (() => {
+      const raw = answers.what_is_needed ?? '';
+      const sanitized = sanitizeForSharedSummary(raw);
+      const useSanitized = selectedType === 'shared_conflict';
+      return {
+        id: 'what_is_needed',
+        title: 'What is needed',
+        text: useSanitized ? sanitized || 'No entry yet.' : raw || 'No entry yet.',
+        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized !== raw.trim(),
+      };
+    })(),
   ] as const;
 
   useEffect(() => {
