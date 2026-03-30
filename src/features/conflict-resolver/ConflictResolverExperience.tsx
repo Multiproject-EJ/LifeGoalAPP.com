@@ -49,14 +49,17 @@ export function ConflictResolverExperience({ surface = 'habitgame' }: ConflictRe
     return (
       <section className="conflict-resolver__screen" aria-labelledby="peacebetween-invalid-invite-title">
         <header className="conflict-resolver__header">
-          <h3 id="peacebetween-invalid-invite-title" className="conflict-resolver__title">Invite link unavailable</h3>
+          <h3 id="peacebetween-invalid-invite-title" className="conflict-resolver__title">That invite link can’t be used</h3>
           <p className="conflict-resolver__subtitle">
-            This Peace Between invite link is invalid, expired, or has already been used.
+            It may have expired, already been accepted, or been copied incorrectly.
           </p>
         </header>
         <p className="conflict-resolver__input-error" role="alert">
-          {session.sharedSessionError ?? 'Please ask the sender for a new invite link.'}
+          {session.sharedSessionError ?? 'Please ask the sender for a fresh invite link.'}
         </p>
+        <a className="btn btn--primary conflict-resolver__primary-cta" href="/conflict/new">
+          Start a new conversation
+        </a>
       </section>
     );
   }
@@ -64,6 +67,7 @@ export function ConflictResolverExperience({ surface = 'habitgame' }: ConflictRe
   if (session.stage === 'mode_selection') {
     return withProgress(
       <ModeSelectionScreen
+        surface={surface}
         selectedType={session.selectedType}
         onSelectType={session.setSelectedType}
         onContinue={session.goToGrounding}
