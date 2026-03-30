@@ -177,7 +177,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     if (!supabase) {
       throw supabaseError ?? new Error('Supabase credentials are not configured.');
     }
-    const redirectTo = getSupabaseRedirectUrl() ?? 'https://www.lifegoalapp.com/auth/callback';
+    const redirectTo = getSupabaseRedirectUrl() ?? 'https://habitgame.app/auth/callback';
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo },

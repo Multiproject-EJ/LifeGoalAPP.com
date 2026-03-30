@@ -18,7 +18,7 @@ import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import { awardZenTokens } from '../../services/zenGarden';
 import { TrainingTab } from '../training';
-import { ConflictResolverExperience } from '../conflict-resolver';
+import { ConflictResolverEntry } from '../conflict-resolver/ConflictResolverEntry';
 import './BreathingSpace.css';
 import type { TimerLaunchContext } from '../timer/timerSession';
 
@@ -690,7 +690,7 @@ export function BreathingSpace({
         </div>
 
         <div className="breathing-space__library breathing-space__section breathing-space__section--conflict">
-          <ConflictResolverExperience />
+          <ConflictResolverEntry surface="habitgame" />
         </div>
 
         {/* Breathing Exercises Library */}
