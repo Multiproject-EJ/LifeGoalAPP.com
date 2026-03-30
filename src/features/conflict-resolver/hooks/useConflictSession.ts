@@ -175,6 +175,7 @@ type InnerGuidanceMeta = {
   priorityScore: number;
   deepMode: boolean;
   usedContextDomains: string[];
+  aiMode: 'premium' | 'free_quota' | 'fallback';
 };
 
 export function useConflictSession() {
@@ -530,6 +531,13 @@ export function useConflictSession() {
         priorityScore: aiResult.priorityScore,
         deepMode: aiResult.deepMode,
         usedContextDomains: aiResult.usedContextDomains,
+        aiMode: aiResult.mode,
+      });
+      trackConflictEvent('conflict.inner_guidance_shown', {
+        mode: aiResult.mode,
+        deepMode: aiResult.deepMode,
+        usedContextDomains: aiResult.usedContextDomains,
+        priorityScore: aiResult.priorityScore,
       });
       void setStageWithSync('inner_next_step');
       return;
@@ -756,6 +764,14 @@ export function useConflictSession() {
   const completeInnerNextStep = () => {
     triggerCompletionHaptic('light', { channel: 'conflict', minIntervalMs: 1200 });
     setStage('agreement_finalized');
+  };
+
+  const trackInnerUpgradePromptClick = () => {
+    trackConflictEvent('conflict.inner_upgrade_prompt_clicked', {
+      stage,
+      mode: innerGuidanceMeta?.aiMode ?? 'unknown',
+      priorityScore: innerGuidanceMeta?.priorityScore ?? null,
+    });
   };
 
   useEffect(() => {
@@ -994,6 +1010,7 @@ export function useConflictSession() {
       innerRecommendations: computedInnerRecommendations,
       innerGuidanceMeta,
       completeInnerNextStep,
+      trackInnerUpgradePromptClick,
       followUpDate,
       setFollowUpDate,
       agreementSummaryItems,
@@ -1040,6 +1057,7 @@ export function useConflictSession() {
       followUpDate,
       computedInnerRecommendations,
       innerGuidanceMeta,
+      trackInnerUpgradePromptClick,
       summaryCards,
       resolutionOptions,
       inviteeEmailDraft,

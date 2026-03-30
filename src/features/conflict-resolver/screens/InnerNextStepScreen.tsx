@@ -20,11 +20,19 @@ type InnerNextStepScreenProps = {
     priorityScore: number;
     deepMode: boolean;
     usedContextDomains: string[];
+    aiMode: 'premium' | 'free_quota' | 'fallback';
   } | null;
   onContinue: () => void;
+  onUpgrade?: () => void;
 };
 
-export function InnerNextStepScreen({ recommendations, guidanceMeta, onContinue }: InnerNextStepScreenProps) {
+function formatModeLabel(mode: 'premium' | 'free_quota' | 'fallback'): string {
+  if (mode === 'premium') return 'Premium';
+  if (mode === 'free_quota') return 'Free';
+  return 'Fallback';
+}
+
+export function InnerNextStepScreen({ recommendations, guidanceMeta, onContinue, onUpgrade }: InnerNextStepScreenProps) {
   return (
     <section className="conflict-resolver__screen" aria-labelledby="inner-next-step-title">
       <header className="conflict-resolver__header">
@@ -50,8 +58,14 @@ export function InnerNextStepScreen({ recommendations, guidanceMeta, onContinue 
         <article className="conflict-resolver__guidance-card" aria-label="Inner guidance snapshot">
           <p className="conflict-resolver__guidance-insight">{guidanceMeta.guidancePlan.insightSummary}</p>
           <p className="conflict-resolver__guidance-meta">
-            Priority {Math.round(guidanceMeta.priorityScore * 100)}% · Mode {guidanceMeta.deepMode ? 'Deep' : 'Focused'} · Domains {guidanceMeta.usedContextDomains.join(', ')}
+            Priority {Math.round(guidanceMeta.priorityScore * 100)}% · Intensity {guidanceMeta.deepMode ? 'Deep' : 'Focused'} · AI {formatModeLabel(guidanceMeta.aiMode)} · Domains {guidanceMeta.usedContextDomains.join(', ')}
           </p>
+          {guidanceMeta.guidancePlan.patternLinks.length > 0 ? (
+            <div className="conflict-resolver__guidance-why">
+              <h4>Why these suggestions</h4>
+              <ul>{guidanceMeta.guidancePlan.patternLinks.map((item) => <li key={item}>{item}</li>)}</ul>
+            </div>
+          ) : null}
           {guidanceMeta.guidancePlan.riskFlags.length > 0 ? (
             <ul className="conflict-resolver__guidance-tags">
               {guidanceMeta.guidancePlan.riskFlags.map((flag) => (
@@ -73,6 +87,14 @@ export function InnerNextStepScreen({ recommendations, guidanceMeta, onContinue 
               <ul>{guidanceMeta.guidancePlan.monthPlan.map((item) => <li key={item}>{item}</li>)}</ul>
             </div>
           </div>
+          {guidanceMeta.aiMode !== 'premium' ? (
+            <aside className="conflict-resolver__upgrade-prompt" aria-label="Upgrade prompt">
+              <p>Unlock deeper week/month planning and richer personalization with Premium AI guidance.</p>
+              <a className="btn btn--secondary" href="#account" onClick={onUpgrade}>
+                Explore Premium
+              </a>
+            </aside>
+          ) : null}
         </article>
       ) : null}
 

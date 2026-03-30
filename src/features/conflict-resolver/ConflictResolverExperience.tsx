@@ -87,6 +87,7 @@ export function ConflictResolverExperience() {
         recommendations={session.innerRecommendations}
         guidanceMeta={session.innerGuidanceMeta}
         onContinue={session.completeInnerNextStep}
+        onUpgrade={session.trackInnerUpgradePromptClick}
       />,
     );
   }
