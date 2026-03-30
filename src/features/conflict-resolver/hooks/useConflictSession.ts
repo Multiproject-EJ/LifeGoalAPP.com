@@ -187,6 +187,7 @@ type ResolutionMeta = {
   aiMode: 'premium' | 'free_quota' | 'fallback';
   fairnessWarnings: Array<{ code: string; message: string }>;
 };
+type InviteJoinState = 'idle' | 'validating' | 'accepted' | 'invalid';
 
 export function useConflictSession() {
   const [stage, setStage] = useState<ConflictResolverUiStage>('mode_selection');
@@ -223,6 +224,7 @@ export function useConflictSession() {
   const [inviteGenerationError, setInviteGenerationError] = useState<string | null>(null);
   const [inviteJoinMessage, setInviteJoinMessage] = useState<string | null>(null);
   const [inviteJoinBootstrapped, setInviteJoinBootstrapped] = useState(false);
+  const [inviteJoinState, setInviteJoinState] = useState<InviteJoinState>('idle');
   const [innerRecommendations, setInnerRecommendations] = useState<InnerRecommendation[]>([]);
   const [innerGuidanceMeta, setInnerGuidanceMeta] = useState<InnerGuidanceMeta | null>(null);
   const [sharedSummaryMeta, setSharedSummaryMeta] = useState<SharedSummaryMeta | null>(null);
@@ -378,8 +380,10 @@ export function useConflictSession() {
 
   const joinSharedSessionFromInviteToken = async (inviteToken: string) => {
     const normalized = inviteToken.trim();
+    setInviteJoinState('validating');
     if (!normalized) {
       setSharedSessionError('Invite token is missing from the link.');
+      setInviteJoinState('invalid');
       return;
     }
 
@@ -401,6 +405,7 @@ export function useConflictSession() {
       }
       setSharedSessionLastSyncedAt(snapshot.updatedAt);
       setInviteJoinMessage('Invite accepted. Session synced.');
+      setInviteJoinState('accepted');
       trackConflictEvent('conflict.shared_session_joined', {
         sessionId: redeemedInvite.session_id,
         source: 'invite_token',
@@ -409,6 +414,7 @@ export function useConflictSession() {
       console.error('Failed to join session from invite token', error);
       setSharedSessionError('Could not redeem this invite link. It may be expired or already used.');
       setInviteJoinMessage(null);
+      setInviteJoinState('invalid');
     } finally {
       setSharedSessionBusy(false);
     }
@@ -806,9 +812,11 @@ export function useConflictSession() {
     setInviteJoinBootstrapped(true);
     if (!window.location.pathname.startsWith('/conflict/join')) return;
 
+    setInviteJoinState('validating');
     const token = new URLSearchParams(window.location.search).get('token');
     if (!token) {
       setSharedSessionError('Invite link is missing a token.');
+      setInviteJoinState('invalid');
       return;
     }
     void joinSharedSessionFromInviteToken(token);
@@ -926,6 +934,7 @@ export function useConflictSession() {
     setInviteGenerationError(null);
     setInviteJoinMessage(null);
     setInviteJoinBootstrapped(false);
+    setInviteJoinState('idle');
     setInnerRecommendations([]);
     setInnerGuidanceMeta(null);
     setAiSummaryCards(null);
@@ -1013,6 +1022,7 @@ export function useConflictSession() {
       generatedInviteLinks,
       inviteGenerationError,
       inviteJoinMessage,
+      inviteJoinState,
       addLightweightParticipant,
       removeLightweightParticipant,
       joinSharedSessionFromInviteToken,
@@ -1061,6 +1071,7 @@ export function useConflictSession() {
       generatedInviteLinks,
       inviteGenerationError,
       inviteJoinMessage,
+      inviteJoinState,
     ],
   );
 }
