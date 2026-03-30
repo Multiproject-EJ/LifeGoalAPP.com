@@ -78,7 +78,13 @@ export function ConflictResolverExperience() {
   }
 
   if (session.stage === 'collect_pile') {
-    return withProgress(<CollectPileScreen summaryCards={session.summaryCards} onContinue={session.enterParallelRead} />);
+    return withProgress(
+      <CollectPileScreen
+        summaryCards={session.summaryCards}
+        aiMode={session.sharedSummaryMeta?.aiMode ?? null}
+        onContinue={session.enterParallelRead}
+      />,
+    );
   }
 
   if (session.stage === 'inner_next_step') {
@@ -117,6 +123,8 @@ export function ConflictResolverExperience() {
         onPromoteProposal={session.promoteProposal}
         onRemoveProposal={session.removeProposal}
         parallelAnnotationItems={session.parallelAnnotationItems}
+        aiMode={session.resolutionMeta?.aiMode ?? null}
+        fairnessWarnings={session.resolutionMeta?.fairnessWarnings ?? []}
         onContinue={session.moveToApologyAlignment}
       />
     );

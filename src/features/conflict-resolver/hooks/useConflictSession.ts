@@ -177,6 +177,13 @@ type InnerGuidanceMeta = {
   usedContextDomains: string[];
   aiMode: 'premium' | 'free_quota' | 'fallback';
 };
+type SharedSummaryMeta = {
+  aiMode: 'premium' | 'free_quota' | 'fallback';
+};
+type ResolutionMeta = {
+  aiMode: 'premium' | 'free_quota' | 'fallback';
+  fairnessWarnings: Array<{ code: string; message: string }>;
+};
 
 export function useConflictSession() {
   const [stage, setStage] = useState<ConflictResolverUiStage>('mode_selection');
@@ -215,6 +222,8 @@ export function useConflictSession() {
   const [inviteJoinBootstrapped, setInviteJoinBootstrapped] = useState(false);
   const [innerRecommendations, setInnerRecommendations] = useState<InnerRecommendation[]>([]);
   const [innerGuidanceMeta, setInnerGuidanceMeta] = useState<InnerGuidanceMeta | null>(null);
+  const [sharedSummaryMeta, setSharedSummaryMeta] = useState<SharedSummaryMeta | null>(null);
+  const [resolutionMeta, setResolutionMeta] = useState<ResolutionMeta | null>(null);
   const [aiSummaryCards, setAiSummaryCards] = useState<Array<{ id: string; title: string; text: string }> | null>(null);
   const [aiResolutionOptions, setAiResolutionOptions] = useState<Array<{ id: string; title: string; description: string }> | null>(null);
 
@@ -548,7 +557,9 @@ export function useConflictSession() {
         answers,
       });
       setAiSummaryCards(summaryResult.summaryCards);
+      setSharedSummaryMeta({ aiMode: summaryResult.mode });
       setAiResolutionOptions(null);
+      setResolutionMeta(null);
     }
     void setStageWithSync('collect_pile');
   };
@@ -587,6 +598,10 @@ export function useConflictSession() {
       })),
     });
     setAiResolutionOptions(aiOptions.options);
+    setResolutionMeta({
+      aiMode: aiOptions.mode,
+      fairnessWarnings: aiOptions.fairnessWarnings,
+    });
     void setStageWithSync('resolution_builder');
   };
 
@@ -982,6 +997,7 @@ export function useConflictSession() {
       finishPrivateCapture,
       answers,
       summaryCards,
+      sharedSummaryMeta,
       enterParallelRead,
       completeParallelRead,
       parallelDecision,
@@ -990,6 +1006,7 @@ export function useConflictSession() {
       alignmentReached,
       markAlignmentReached,
       resolutionOptions,
+      resolutionMeta,
       selectedResolution,
       setSelectedResolution,
       whiteFlagOffer,
@@ -1059,7 +1076,9 @@ export function useConflictSession() {
       innerGuidanceMeta,
       trackInnerUpgradePromptClick,
       summaryCards,
+      sharedSummaryMeta,
       resolutionOptions,
+      resolutionMeta,
       inviteeEmailDraft,
       inviteeEmailError,
       lightweightParticipants,
