@@ -1,0 +1,37 @@
+.peacebetween-shell {
+  min-height: 100dvh;
+  background: linear-gradient(180deg, #f5f8ff 0%, #edf2ff 100%);
+  color: #1a2138;
+  padding: 16px;
+}
+
+.peacebetween-shell__header {
+  max-width: 880px;
+  margin: 0 auto 16px;
+}
+
+.peacebetween-shell__eyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #52608e;
+}
+
+.peacebetween-shell__title {
+  margin: 4px 0 0;
+  font-size: clamp(1.25rem, 2.6vw, 1.8rem);
+}
+
+.peacebetween-shell__main {
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.peacebetween-shell__panel {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(82, 96, 142, 0.2);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 8px 22px rgba(30, 47, 102, 0.08);
+}

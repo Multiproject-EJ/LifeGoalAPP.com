@@ -13,6 +13,12 @@ import {
   lintSharedSummaryFairness,
   type FairnessWarning,
 } from './conflictFairnessLint';
+import { resolveSurface, type AppSurface } from '../../../surfaces/surfaceContext';
+import {
+  getConflictSurfaceConfig,
+  mapRecommendationForSurface,
+  sanitizeRecommendationHrefForSurface,
+} from '../conflictSurfaceConfig';
 import {
   buildInnerGuidancePlan,
   buildInnerContextSlice,
@@ -70,22 +76,35 @@ function shapeGuidancePlanByMode(
   };
 }
 
-const DEFAULT_RECOMMENDATIONS: InnerRecommendation[] = [
-  {
-    id: 'journal_first',
-    title: 'Capture one clear insight',
-    reason: 'Lock in one sentence that summarizes what you learned from this tension.',
-    ctaLabel: 'Open Journal',
-    href: '#journal',
-  },
-  {
-    id: 'contract_step',
-    title: 'Convert insight into one commitment',
-    reason: 'Turn reflection into action with one clear promise and a deadline.',
-    ctaLabel: 'Open Contracts',
-    href: '#contracts',
-  },
-];
+function getCurrentSurface(): AppSurface {
+  if (typeof window === 'undefined') return 'habitgame';
+  return resolveSurface(window.location.hostname);
+}
+
+function getDefaultRecommendations(surface: AppSurface): InnerRecommendation[] {
+  return [
+    mapRecommendationForSurface(
+      {
+        id: 'journal_first',
+        title: 'Capture one clear insight',
+        reason: 'Lock in one sentence that summarizes what you learned from this tension.',
+        ctaLabel: 'Open Journal',
+        href: '#journal',
+      },
+      surface,
+    ),
+    mapRecommendationForSurface(
+      {
+        id: 'contract_step',
+        title: 'Convert insight into one commitment',
+        reason: 'Turn reflection into action with one clear promise and a deadline.',
+        ctaLabel: 'Open Contracts',
+        href: '#contracts',
+      },
+      surface,
+    ),
+  ];
+}
 
 const DEFAULT_SHARED_SUMMARY_CARDS: SharedSummaryCard[] = [
   { id: 'what_happened', title: 'What happened', text: 'No summary available yet.' },
@@ -116,7 +135,9 @@ function hasApiKey(): boolean {
   return typeof apiKey === 'string' && apiKey.length > 0;
 }
 
-function buildPrompt(input: InnerContextInput & { contextSlice: string; priorityScore: number; deepMode: boolean }): string {
+function buildPrompt(
+  input: InnerContextInput & { contextSlice: string; priorityScore: number; deepMode: boolean; allowedHrefs: string[] },
+): string {
   return `You are an expert inner-conflict coach. Be non-judgmental, specific, and actionable.
 Return strict JSON with this shape only:
 {
@@ -125,7 +146,7 @@ Return strict JSON with this shape only:
   ]
 }
 
-Allowed href values: #breathing-space, #habits, #goals, #journal, #contracts.
+Allowed href values: ${input.allowedHrefs.join(', ')}.
 Generate up to 3 recommendations, no markdown.
 Priority score: ${input.priorityScore}
 Deep intervention mode: ${input.deepMode ? 'enabled' : 'disabled'}
@@ -280,6 +301,9 @@ async function requestOpenAiRawContent(prompt: string, model: string, apiKey: st
 
 export async function generateInnerNextStepRecommendations(input: InnerContextInput): Promise<InnerNextStepResult> {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  const surface = getCurrentSurface();
+  const surfaceConfig = getConflictSurfaceConfig(surface);
+  const defaultRecommendations = getDefaultRecommendations(surface);
   const decision = resolveAiEntitlement('conflict_inner_reflection', hasApiKey());
   const priorityScore = computeInnerTensionPriorityScore(input.answers);
   const deepMode = shouldUseDeepIntervention(priorityScore);
@@ -297,6 +321,7 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
     contextSlice: assembledContext.contextSlice,
     priorityScore,
     deepMode,
+    allowedHrefs: surfaceConfig.allowedRecommendationHrefs,
   };
 
   if (!decision.allowed || !decision.model || !apiKey) {
@@ -326,7 +351,7 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
       artifact: {
-        recommendations: DEFAULT_RECOMMENDATIONS.slice(0, recommendationLimit),
+        recommendations: defaultRecommendations.slice(0, recommendationLimit),
         guidancePlan: shapeGuidancePlanByMode(decision.mode, guidancePlan),
         source: 'fallback',
         priorityScore,
@@ -336,7 +361,7 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       },
     });
     return {
-      recommendations: DEFAULT_RECOMMENDATIONS.slice(0, recommendationLimit),
+      recommendations: defaultRecommendations.slice(0, recommendationLimit),
       guidancePlan: shapeGuidancePlanByMode(decision.mode, guidancePlan),
       priorityScore,
       deepMode,
@@ -354,7 +379,10 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       metadata: { model: decision.model, mode: decision.mode },
     });
     const result = await requestOpenAiRawContent(buildPrompt(promptPayload), decision.model, apiKey);
-    const recommendations = parseInnerRecommendationsFromContent(result.content, recommendationLimit);
+    const recommendations = parseInnerRecommendationsFromContent(result.content, recommendationLimit).map((item) => {
+      const safeHref = sanitizeRecommendationHrefForSurface(item.href, surface);
+      return mapRecommendationForSurface({ ...item, href: safeHref }, surface);
+    });
     if (recommendations.length === 0) {
       throw new Error('OpenAI response schema invalid');
     }
@@ -433,7 +461,7 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       sessionId: input.sessionId,
       stage: 'inner_tension_next_steps',
       artifact: {
-        recommendations: DEFAULT_RECOMMENDATIONS.slice(0, recommendationLimit),
+        recommendations: defaultRecommendations.slice(0, recommendationLimit),
         guidancePlan: shapeGuidancePlanByMode(decision.mode, guidancePlan),
         source: 'fallback',
         error: message,
@@ -444,7 +472,7 @@ export async function generateInnerNextStepRecommendations(input: InnerContextIn
       },
     });
     return {
-      recommendations: DEFAULT_RECOMMENDATIONS.slice(0, recommendationLimit),
+      recommendations: defaultRecommendations.slice(0, recommendationLimit),
       guidancePlan: shapeGuidancePlanByMode(decision.mode, guidancePlan),
       priorityScore,
       deepMode,
