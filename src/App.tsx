@@ -4353,20 +4353,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     );
   }
 
-  const activeSurface = resolveSurface(typeof window !== 'undefined' ? window.location.hostname : null);
-  const shouldRenderPeaceBetweenConflictShell =
-    activeSurface === 'peacebetween' &&
-    typeof window !== 'undefined' &&
-    isConflictRoute(window.location.pathname);
-
-  if (shouldRenderPeaceBetweenConflictShell) {
-    return (
-      <PeaceBetweenShell>
-        <ConflictResolverEntry surface="peacebetween" />
-      </PeaceBetweenShell>
-    );
-  }
-
   const isMobileFrameLocked = !isDesktopExperience;
   const appClassName = `app app--workspace${activeWorkspaceNav === 'insights' ? ' app--vision-board' : ''}${
     isAnyModalVisible ? ' app--auth-overlay' : ''
