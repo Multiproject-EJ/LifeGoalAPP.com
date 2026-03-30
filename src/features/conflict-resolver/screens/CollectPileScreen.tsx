@@ -10,12 +10,19 @@ type SummaryCard = {
 
 type CollectPileScreenProps = {
   summaryCards: readonly SummaryCard[];
+  aiMode?: 'premium' | 'free_quota' | 'fallback' | null;
   onContinue: () => void;
 };
 
 const STATUS_STEPS = ['Collecting perspectives…', 'Balancing language…', 'Preparing shared summary…'] as const;
 
-export function CollectPileScreen({ summaryCards, onContinue }: CollectPileScreenProps) {
+function renderModeLabel(mode: 'premium' | 'free_quota' | 'fallback'): string {
+  if (mode === 'premium') return 'Premium AI';
+  if (mode === 'free_quota') return 'Free AI';
+  return 'Fallback';
+}
+
+export function CollectPileScreen({ summaryCards, aiMode, onContinue }: CollectPileScreenProps) {
   const [statusIndex, setStatusIndex] = useState(0);
 
   useEffect(() => {
@@ -32,6 +39,11 @@ export function CollectPileScreen({ summaryCards, onContinue }: CollectPileScree
       <header className="conflict-resolver__header">
         <h3 id="collect-pile-title" className="conflict-resolver__title">Let’s gather what matters</h3>
         <p className="conflict-resolver__subtitle">{STATUS_STEPS[statusIndex]}</p>
+        {aiMode ? (
+          <p className="conflict-resolver__ai-mode-pill">
+            Shared summary source: {renderModeLabel(aiMode)}
+          </p>
+        ) : null}
       </header>
 
       <div className="conflict-resolver__pile-stack" aria-live="polite">
