@@ -1,6 +1,8 @@
 import type { ConflictType } from '../types/conflictSession';
+import type { AppSurface } from '../../../surfaces/surfaceContext';
 
 type ModeSelectionScreenProps = {
+  surface?: AppSurface;
   selectedType: ConflictType | null;
   onSelectType: (type: ConflictType) => void;
   onContinue: () => void | Promise<void>;
@@ -21,6 +23,7 @@ type ModeSelectionScreenProps = {
 };
 
 export function ModeSelectionScreen({
+  surface = 'habitgame',
   selectedType,
   onSelectType,
   onContinue,
@@ -39,11 +42,19 @@ export function ModeSelectionScreen({
   onResumeDraft,
   onStartFresh,
 }: ModeSelectionScreenProps) {
+  const isPeaceBetween = surface === 'peacebetween';
+
   return (
     <section className="conflict-resolver__screen" aria-labelledby="conflict-mode-title">
       <header className="conflict-resolver__header">
-        <h3 id="conflict-mode-title" className="conflict-resolver__title">Let’s clear something up</h3>
-        <p className="conflict-resolver__subtitle">No blame. Just clarity.</p>
+        <h3 id="conflict-mode-title" className="conflict-resolver__title">
+          {isPeaceBetween ? 'Where would you like to begin?' : 'Let’s clear something up'}
+        </h3>
+        <p className="conflict-resolver__subtitle">
+          {isPeaceBetween
+            ? 'Choose a path to bring more clarity, care, and understanding to this conversation.'
+            : 'No blame. Just clarity.'}
+        </p>
       </header>
 
       {recoverableDraft ? (
@@ -72,8 +83,10 @@ export function ModeSelectionScreen({
           onClick={() => onSelectType('inner_tension')}
         >
           <span className="conflict-resolver__mode-icon" aria-hidden="true">🧠</span>
-          <span className="conflict-resolver__mode-title">Inner Tension</span>
-          <span className="conflict-resolver__mode-subtitle">You vs yourself</span>
+          <span className="conflict-resolver__mode-title">{isPeaceBetween ? 'Personal reflection' : 'Inner Tension'}</span>
+          <span className="conflict-resolver__mode-subtitle">
+            {isPeaceBetween ? 'Clarify your own feelings before speaking with someone else.' : 'You vs yourself'}
+          </span>
         </button>
 
         <button
@@ -86,15 +99,21 @@ export function ModeSelectionScreen({
           onClick={() => onSelectType('shared_conflict')}
         >
           <span className="conflict-resolver__mode-icon" aria-hidden="true">🤝</span>
-          <span className="conflict-resolver__mode-title">Shared Conflict</span>
-          <span className="conflict-resolver__mode-subtitle">You + others</span>
+          <span className="conflict-resolver__mode-title">{isPeaceBetween ? 'Shared conversation' : 'Shared Conflict'}</span>
+          <span className="conflict-resolver__mode-subtitle">
+            {isPeaceBetween ? 'Work through this with another person in a guided shared session.' : 'You + others'}
+          </span>
         </button>
       </div>
 
       {selectedType === 'shared_conflict' ? (
         <section className="conflict-resolver__shared-session-card" aria-label="Shared conflict session setup">
-          <h4>Shared session setup</h4>
-          <p>Create a session code and share it with another app user, or join theirs.</p>
+          <h4>{isPeaceBetween ? 'Shared conversation setup' : 'Shared session setup'}</h4>
+          <p>
+            {isPeaceBetween
+              ? 'Create a secure session code and share it with the other person, or join an existing code.'
+              : 'Create a session code and share it with another app user, or join theirs.'}
+          </p>
 
           {sharedSessionId ? (
             <div className="conflict-resolver__shared-session-status">
@@ -143,7 +162,7 @@ export function ModeSelectionScreen({
         disabled={!selectedType || (selectedType === 'shared_conflict' && !sharedSessionId)}
         onClick={onContinue}
       >
-        Continue
+        {isPeaceBetween ? 'Begin' : 'Continue'}
       </button>
     </section>
   );
