@@ -1,13 +1,13 @@
 .peacebetween-shell {
   min-height: 100dvh;
-  background: linear-gradient(180deg, #f5f8ff 0%, #edf2ff 100%);
+  background: linear-gradient(180deg, #f7f9ff 0%, #eef3ff 100%);
   color: #1a2138;
-  padding: 16px;
+  padding: 20px 16px 28px;
 }
 
 .peacebetween-shell__header {
-  max-width: 880px;
-  margin: 0 auto 16px;
+  max-width: 920px;
+  margin: 0 auto 20px;
 }
 
 .peacebetween-shell__eyebrow {
@@ -19,31 +19,45 @@
 }
 
 .peacebetween-shell__title {
-  margin: 4px 0 0;
-  font-size: clamp(1.25rem, 2.6vw, 1.8rem);
+  margin: 8px 0 0;
+  font-size: clamp(1.35rem, 2.8vw, 2rem);
+  line-height: 1.2;
 }
 
 .peacebetween-shell__subtitle {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   color: #4f5f91;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  max-width: 56ch;
+}
+
+.peacebetween-shell__new-conversation-link {
+  display: inline-flex;
+  margin-top: 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(81, 106, 182, 0.34);
+  background: rgba(255, 255, 255, 0.92);
+  color: #1f2f5e;
+  padding: 8px 14px;
+  text-decoration: none;
+  font-weight: 600;
 }
 
 .peacebetween-shell__main {
-  max-width: 880px;
+  max-width: 920px;
   margin: 0 auto;
 }
 
 .peacebetween-shell__panel {
   background: rgba(255, 255, 255, 0.86);
   border: 1px solid rgba(82, 96, 142, 0.2);
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 8px 22px rgba(30, 47, 102, 0.08);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 12px 28px rgba(30, 47, 102, 0.08);
 }
 
 .peacebetween-shell [data-conflict-surface='peacebetween'] .conflict-resolver__screen {
-  gap: 20px;
+  gap: 24px;
 }
 
 .peacebetween-shell [data-conflict-surface='peacebetween'] .conflict-resolver__stage-progress {
@@ -69,12 +83,21 @@
   box-shadow: 0 6px 18px rgba(36, 57, 111, 0.07);
 }
 
+.peacebetween-shell [data-conflict-surface='peacebetween'] .conflict-resolver__mode-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(247, 250, 255, 0.95));
+  align-items: flex-start;
+  text-align: left;
+  gap: 10px;
+}
+
 .peacebetween-shell [data-conflict-surface='peacebetween'] .conflict-resolver__title {
   color: #20305e;
+  letter-spacing: -0.01em;
 }
 
 .peacebetween-shell [data-conflict-surface='peacebetween'] .conflict-resolver__subtitle {
   color: #485b93;
+  max-width: 54ch;
 }
 
 .peacebetween-shell [data-conflict-surface='peacebetween'] .btn {
@@ -89,9 +112,209 @@
   background: linear-gradient(180deg, #4f66bd 0%, #4358a8 100%);
   color: #f3f6ff;
   border-color: rgba(59, 78, 150, 0.9);
+  min-height: 48px;
+  font-weight: 600;
 }
 
 .peacebetween-shell [data-conflict-surface='peacebetween'] .conflict-resolver__completion-burst {
   background: rgba(60, 135, 102, 0.1);
   color: #21593f;
+}
+
+.peacebetween-landing {
+  min-height: 100dvh;
+  background: linear-gradient(180deg, #fcfcfb 0%, #f6f4f2 100%);
+  color: #2f2c29;
+  padding: clamp(28px, 6vw, 56px) 16px;
+}
+
+.peacebetween-landing__main {
+  max-width: 740px;
+  margin: 0 auto;
+  display: grid;
+  gap: 14px;
+}
+
+.peacebetween-landing__panel {
+  background: #ffffff;
+  border: 1px solid #e5dfd8;
+  border-radius: 22px;
+  padding: clamp(24px, 5vw, 44px);
+  box-shadow: 0 10px 24px rgba(36, 30, 24, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  text-align: center;
+  align-items: center;
+}
+
+.peacebetween-landing__eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #8b8177;
+}
+
+.peacebetween-landing__title {
+  margin: 0;
+  font-size: clamp(1.85rem, 4.2vw, 2.85rem);
+  line-height: 1.16;
+  letter-spacing: -0.015em;
+  color: #2e2a25;
+  max-width: 18ch;
+}
+
+.peacebetween-landing__subtitle {
+  margin: 0;
+  max-width: 56ch;
+  color: #6d655d;
+  font-size: 1.02rem;
+  line-height: 1.62;
+}
+
+.peacebetween-landing__actions {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+
+.peacebetween-landing__cta-primary {
+  min-height: 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 0 24px;
+  background: #2f2c29;
+  border: 1px solid #2f2c29;
+  color: #f8f6f4;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  box-shadow: none;
+}
+
+.peacebetween-landing__cta-primary:hover {
+  background: #25221f;
+  border-color: #25221f;
+}
+
+.peacebetween-landing__invite {
+  width: 100%;
+  margin-top: 0;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #e8e2db;
+  background: #fcfbfa;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  text-align: left;
+}
+
+.peacebetween-landing__invite-title,
+.peacebetween-landing__invite-copy {
+  margin: 0;
+}
+
+.peacebetween-landing__invite-title {
+  color: #3a352f;
+  font-size: 0.98rem;
+}
+
+.peacebetween-landing__invite-copy {
+  color: #6f675e;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.peacebetween-landing__invite-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.peacebetween-landing__invite-input {
+  flex: 1 1 280px;
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1px solid #ddd5cc;
+  padding: 0 12px;
+  background: #ffffff;
+  color: #2f2c29;
+}
+
+.peacebetween-landing__invite-submit {
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1px solid #d4ccc3;
+  background: #fff;
+  color: #3d3833;
+  padding: 0 16px;
+  box-shadow: none;
+}
+
+.peacebetween-landing__steps {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid #ece5de;
+  border-radius: 18px;
+  padding: clamp(16px, 3vw, 22px);
+}
+
+.peacebetween-landing__steps-title {
+  margin: 0 0 10px;
+  font-size: 0.93rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #8b8075;
+}
+
+.peacebetween-landing__steps-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.peacebetween-landing__step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border-radius: 12px;
+  padding: 10px 10px 11px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.peacebetween-landing__step-number {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #73695f;
+  border: 1px solid #dbd2c9;
+  background: #f7f3ef;
+}
+
+.peacebetween-landing__step-title,
+.peacebetween-landing__step-copy {
+  margin: 0;
+}
+
+.peacebetween-landing__step-title {
+  color: #3e3934;
+  font-weight: 600;
+  font-size: 0.96rem;
+}
+
+.peacebetween-landing__step-copy {
+  margin-top: 3px;
+  color: #71695f;
+  font-size: 0.93rem;
+  line-height: 1.45;
 }
