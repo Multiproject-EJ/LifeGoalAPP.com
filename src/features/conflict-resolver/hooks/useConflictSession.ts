@@ -16,6 +16,7 @@ import {
 import { buildConflictInviteUrl, createConflictInvite, redeemConflictInvite } from '../services/conflictInvites';
 import { trackConflictEvent } from '../services/conflictAnalytics';
 import { triggerCompletionHaptic } from '../../../utils/completionHaptics';
+import { trackAiUpgradePromptClicked, trackAiUpgradePromptShown } from '../../../services/aiEntitlementService';
 import {
   generateInnerNextStepRecommendations,
   generateResolutionOptions,
@@ -598,10 +599,17 @@ export function useConflictSession() {
       })),
     });
     setAiResolutionOptions(aiOptions.options);
-    setResolutionMeta({
-      aiMode: aiOptions.mode,
-      fairnessWarnings: aiOptions.fairnessWarnings,
-    });
+      setResolutionMeta({
+        aiMode: aiOptions.mode,
+        fairnessWarnings: aiOptions.fairnessWarnings,
+      });
+      if (aiOptions.fairnessWarnings.length > 0) {
+        trackConflictEvent('conflict.fairness_warning_hit', {
+          warningCount: aiOptions.fairnessWarnings.length,
+          warningCodes: aiOptions.fairnessWarnings.map((warning) => warning.code),
+          mode: aiOptions.mode,
+        });
+      }
     void setStageWithSync('resolution_builder');
   };
 
@@ -782,12 +790,26 @@ export function useConflictSession() {
   };
 
   const trackInnerUpgradePromptClick = () => {
+    trackAiUpgradePromptClicked('conflict_inner_reflection', {
+      stage,
+      source: 'inner_next_step',
+      mode: innerGuidanceMeta?.aiMode ?? 'unknown',
+    });
     trackConflictEvent('conflict.inner_upgrade_prompt_clicked', {
       stage,
       mode: innerGuidanceMeta?.aiMode ?? 'unknown',
       priorityScore: innerGuidanceMeta?.priorityScore ?? null,
     });
   };
+
+  useEffect(() => {
+    if (!innerGuidanceMeta || innerGuidanceMeta.aiMode === 'premium') return;
+    trackAiUpgradePromptShown('conflict_inner_reflection', {
+      stage: 'inner_next_step',
+      mode: innerGuidanceMeta.aiMode,
+      priorityScore: innerGuidanceMeta.priorityScore,
+    });
+  }, [innerGuidanceMeta]);
 
   useEffect(() => {
     if (selectedType !== 'shared_conflict' || !sharedSessionId) return;

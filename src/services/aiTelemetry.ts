@@ -1,5 +1,6 @@
 import type { AiCostLevel } from './aiTaskRouting';
 import type { AiMode } from './aiEntitlementService';
+import { recordKpiEvent } from './aiConflictKpiSink';
 
 export type AiTelemetryEventName =
   | 'ai.quota_consumed'
@@ -21,6 +22,6 @@ export function trackAiTelemetry(event: AiTelemetryEventName, payload: AiTelemet
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('ai-analytics', { detail: { event, payload } }));
   }
+  recordKpiEvent('ai', event, payload);
   console.debug('[ai-analytics]', event, payload);
 }
-
