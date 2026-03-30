@@ -33,7 +33,19 @@ const NON_APP_ROUTES = new Set(['world', 'lobby', 'privacy', 'terms', 'support']
 
 function Root() {
   const initialRoute = useMemo(() => resolveRoute(), []);
-  const [showApp, setShowApp] = useState(() => !NON_APP_ROUTES.has(initialRoute));
+  const [showApp, setShowApp] = useState(() => {
+    const shouldRenderAppByDefault = !NON_APP_ROUTES.has(initialRoute);
+    if (shouldRenderAppByDefault) return true;
+
+    if (typeof window === 'undefined') return false;
+    const host = window.location.hostname.toLowerCase();
+    const isPeacebetweenHost = host === 'peacebetween.com' || host === 'www.peacebetween.com';
+    const isRootPath = window.location.pathname === '/';
+    if (isPeacebetweenHost && isRootPath && initialRoute === 'world') {
+      return true;
+    }
+    return false;
+  });
   const [showLobby, setShowLobby] = useState(() => initialRoute === 'lobby');
   const [loginOnEntry, setLoginOnEntry] = useState(() => initialRoute === 'login');
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);

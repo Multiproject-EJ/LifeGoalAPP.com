@@ -130,6 +130,7 @@ import {
 } from './services/experimentalFeatures';
 import { ConflictResolverEntry } from './features/conflict-resolver/ConflictResolverEntry';
 import { PeaceBetweenShell } from './surfaces/peacebetween/PeaceBetweenShell';
+import { PeaceBetweenLanding } from './surfaces/peacebetween/PeaceBetweenLanding';
 import { isConflictRoute, resolveSurface } from './surfaces/surfaceContext';
 import './styles/workspace.css';
 import './styles/settings-folders.css';
@@ -1565,7 +1566,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (window.location.pathname.startsWith('/conflict/join')) return;
+    const activeSurface = resolveSurface(window.location.hostname);
+    const isPeaceBetweenRootRoute = activeSurface === 'peacebetween' && window.location.pathname === '/';
+    if (isConflictRoute(window.location.pathname) || isPeaceBetweenRootRoute) return;
     const searchSuffix = initialSearch ?? '';
     let nextPath = '/';
     if (activeWorkspaceNav === 'journal') {
@@ -2679,6 +2682,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
     activeSurface === 'peacebetween' &&
     typeof window !== 'undefined' &&
     isConflictRoute(window.location.pathname);
+  const shouldRenderPeaceBetweenLanding =
+    activeSurface === 'peacebetween' &&
+    typeof window !== 'undefined' &&
+    window.location.pathname === '/';
 
   if (shouldRenderPeaceBetweenConflictShell) {
     return (
@@ -2686,6 +2693,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
         <ConflictResolverEntry surface="peacebetween" />
       </PeaceBetweenShell>
     );
+  }
+
+  if (shouldRenderPeaceBetweenLanding) {
+    return <PeaceBetweenLanding />;
   }
 
   if (shouldRequireAuthentication && isMobileExperience) {
@@ -4350,20 +4361,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
         {luckyRollModal}
         {countdownCalendarModal}
       </div>
-    );
-  }
-
-  const activeSurface = resolveSurface(typeof window !== 'undefined' ? window.location.hostname : null);
-  const shouldRenderPeaceBetweenConflictShell =
-    activeSurface === 'peacebetween' &&
-    typeof window !== 'undefined' &&
-    isConflictRoute(window.location.pathname);
-
-  if (shouldRenderPeaceBetweenConflictShell) {
-    return (
-      <PeaceBetweenShell>
-        <ConflictResolverEntry surface="peacebetween" />
-      </PeaceBetweenShell>
     );
   }
 

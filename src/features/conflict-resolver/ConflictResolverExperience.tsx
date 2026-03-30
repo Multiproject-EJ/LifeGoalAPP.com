@@ -22,6 +22,8 @@ type ConflictResolverExperienceProps = {
 export function ConflictResolverExperience({ surface = 'habitgame' }: ConflictResolverExperienceProps) {
   const session = useConflictSession();
   const surfaceConfig = getConflictSurfaceConfig(surface);
+  const isJoinRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/conflict/join');
+  const shouldGatePeaceBetweenInvite = surface === 'peacebetween' && isJoinRoute;
 
   const withProgress = (content: ReactNode) => (
     <>
@@ -30,9 +32,42 @@ export function ConflictResolverExperience({ surface = 'habitgame' }: ConflictRe
     </>
   );
 
+  if (shouldGatePeaceBetweenInvite && session.inviteJoinState === 'validating') {
+    return (
+      <section className="conflict-resolver__screen" aria-labelledby="peacebetween-invite-validating-title">
+        <header className="conflict-resolver__header">
+          <h3 id="peacebetween-invite-validating-title" className="conflict-resolver__title">Verifying invite link…</h3>
+          <p className="conflict-resolver__subtitle">
+            Please wait while we securely validate your Peace Between invite.
+          </p>
+        </header>
+      </section>
+    );
+  }
+
+  if (shouldGatePeaceBetweenInvite && session.inviteJoinState === 'invalid') {
+    return (
+      <section className="conflict-resolver__screen" aria-labelledby="peacebetween-invalid-invite-title">
+        <header className="conflict-resolver__header">
+          <h3 id="peacebetween-invalid-invite-title" className="conflict-resolver__title">That invite link can’t be used</h3>
+          <p className="conflict-resolver__subtitle">
+            It may have expired, already been accepted, or been copied incorrectly.
+          </p>
+        </header>
+        <p className="conflict-resolver__input-error" role="alert">
+          {session.sharedSessionError ?? 'Please ask the sender for a fresh invite link.'}
+        </p>
+        <a className="btn btn--primary conflict-resolver__primary-cta" href="/conflict/new">
+          Start a new conversation
+        </a>
+      </section>
+    );
+  }
+
   if (session.stage === 'mode_selection') {
     return withProgress(
       <ModeSelectionScreen
+        surface={surface}
         selectedType={session.selectedType}
         onSelectType={session.setSelectedType}
         onContinue={session.goToGrounding}
