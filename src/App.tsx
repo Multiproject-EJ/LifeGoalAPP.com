@@ -1565,7 +1565,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (window.location.pathname.startsWith('/conflict/join')) return;
+    if (isConflictRoute(window.location.pathname)) return;
     const searchSuffix = initialSearch ?? '';
     let nextPath = '/';
     if (activeWorkspaceNav === 'journal') {
