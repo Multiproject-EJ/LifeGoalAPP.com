@@ -2,7 +2,7 @@
 
 Date: 2026-03-29
 Goal: move from current guided UX + partial AI utilities to full product-grade AI mediation and inner guidance.
-Current progress note: Phase 1 is closed out, Phase 2 is functionally complete, Phase 3 is closed, and Phase 4 is now closed with inner-tension priority scoring, real multi-domain context assembly (journals/goals/habits + safe fallbacks), structured guidance plans, and tier-depth shaping wired into orchestration artifacts/UI metadata.
+Current progress note: Phase 1 is closed out, Phase 2 is functionally complete, Phase 3 is closed, Phase 4 is closed, and Phase 5 is now closed for in-app scope (transparent AI signals, contextual upgrade prompts, KPI sink + local snapshot, and production readiness/rollback playbook). External warehouse/dashboard plumbing remains as post-phase operational follow-up.
 
 ## Phase 1 (PR #1): AI Foundations + Entitlements + Quotas
 
@@ -124,6 +124,13 @@ Current progress note: Phase 1 is closed out, Phase 2 is functionally complete, 
 
 ### Success criteria
 - Stable, explainable, monetizable AI flow with high trust and low friction.
+
+### Closeout note (2026-03-30)
+- ✅ In-app explainability shipped (mode, domains, why-this-suggestion, fairness visibility, fallback indicators).
+- ✅ Upgrade touchpoints and conversion telemetry shipped.
+- ✅ KPI local sink and in-flow snapshot shipped for stage completion/fallback/fairness/upgrade metrics.
+- ✅ Production readiness + rollback playbook documented.
+- ➡️ Deferred follow-up: server-side analytics warehouse/dashboard wiring.
 
 ---
 

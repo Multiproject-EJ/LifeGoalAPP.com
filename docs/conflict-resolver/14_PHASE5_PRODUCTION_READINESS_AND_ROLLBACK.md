@@ -1,7 +1,7 @@
 # Conflict Resolver Phase 5 — Production Readiness + Rollback Plan
 
 Date: 2026-03-30
-Status: Draft implementation guide for go-live.
+Status: Phase 5 closeout baseline complete for in-app scope; external warehouse wiring deferred.
 
 ## 1) Readiness checklist
 
@@ -15,7 +15,7 @@ Status: Draft implementation guide for go-live.
   - fallback rate,
   - fairness lint hit rate,
   - upgrade conversion rate.
-- [ ] Wire KPI sink to server-side analytics warehouse/dashboard.
+- [ ] Wire KPI sink to server-side analytics warehouse/dashboard. (deferred post-Phase-5 follow-up)
 
 ### UX explainability and trust
 - [x] Surface active AI mode in inner guidance and shared flow screens.
