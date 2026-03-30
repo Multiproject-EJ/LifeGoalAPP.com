@@ -1566,7 +1566,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (isConflictRoute(window.location.pathname)) return;
+    const activeSurface = resolveSurface(window.location.hostname);
+    const isPeaceBetweenRootRoute = activeSurface === 'peacebetween' && window.location.pathname === '/';
+    if (isConflictRoute(window.location.pathname) || isPeaceBetweenRootRoute) return;
     const searchSuffix = initialSearch ?? '';
     let nextPath = '/';
     if (activeWorkspaceNav === 'journal') {
