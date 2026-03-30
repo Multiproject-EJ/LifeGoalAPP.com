@@ -2674,6 +2674,20 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setWorkspaceSetupDismissed(true);
   };
 
+  const activeSurface = resolveSurface(typeof window !== 'undefined' ? window.location.hostname : null);
+  const shouldRenderPeaceBetweenConflictShell =
+    activeSurface === 'peacebetween' &&
+    typeof window !== 'undefined' &&
+    isConflictRoute(window.location.pathname);
+
+  if (shouldRenderPeaceBetweenConflictShell) {
+    return (
+      <PeaceBetweenShell>
+        <ConflictResolverEntry surface="peacebetween" />
+      </PeaceBetweenShell>
+    );
+  }
+
   if (shouldRequireAuthentication && isMobileExperience) {
     return (
       <div className="app app--auth-gate">
