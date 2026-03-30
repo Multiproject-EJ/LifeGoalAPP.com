@@ -11,7 +11,7 @@ export function ConflictResolverEntry({ surface }: ConflictResolverEntryProps) {
 
   return (
     <section data-conflict-surface={config.surface} data-conflict-product={config.productLabel}>
-      <ConflictResolverExperience />
+      <ConflictResolverExperience surface={config.surface} />
     </section>
   );
 }

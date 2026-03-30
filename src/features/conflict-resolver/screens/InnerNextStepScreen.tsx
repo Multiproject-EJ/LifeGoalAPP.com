@@ -1,3 +1,6 @@
+import type { AppSurface } from '../../../surfaces/surfaceContext';
+import { getConflictSurfaceConfig, mapRecommendationForSurface } from '../conflictSurfaceConfig';
+
 type InnerRecommendation = {
   id: string;
   title: string;
@@ -7,6 +10,7 @@ type InnerRecommendation = {
 };
 
 type InnerNextStepScreenProps = {
+  surface?: AppSurface;
   recommendations: InnerRecommendation[];
   guidanceMeta?: {
     guidancePlan: {
@@ -32,18 +36,29 @@ function formatModeLabel(mode: 'premium' | 'free_quota' | 'fallback'): string {
   return 'Fallback';
 }
 
-export function InnerNextStepScreen({ recommendations, guidanceMeta, onContinue, onUpgrade }: InnerNextStepScreenProps) {
+export function InnerNextStepScreen({
+  surface = 'habitgame',
+  recommendations,
+  guidanceMeta,
+  onContinue,
+  onUpgrade,
+}: InnerNextStepScreenProps) {
+  const surfaceConfig = getConflictSurfaceConfig(surface);
+  const mappedRecommendations = recommendations.map((item) => mapRecommendationForSurface(item, surface));
+
   return (
     <section className="conflict-resolver__screen" aria-labelledby="inner-next-step-title">
       <header className="conflict-resolver__header">
         <h3 id="inner-next-step-title" className="conflict-resolver__title">Inner tension, translated into action</h3>
         <p className="conflict-resolver__subtitle">
-          Based on your brain-dump, here are focused next steps. Pick one now so this becomes momentum.
+          {surface === 'peacebetween'
+            ? 'Choose one repair-focused next move to continue within Peace Between.'
+            : 'Based on your brain-dump, here are focused next steps. Pick one now so this becomes momentum.'}
         </p>
       </header>
 
       <div className="conflict-resolver__options-grid">
-        {recommendations.map((item) => (
+        {mappedRecommendations.map((item) => (
           <article key={item.id} className="conflict-resolver__option-card">
             <h4>{item.title}</h4>
             <p>{item.reason}</p>
@@ -89,9 +104,13 @@ export function InnerNextStepScreen({ recommendations, guidanceMeta, onContinue,
           </div>
           {guidanceMeta.aiMode !== 'premium' ? (
             <aside className="conflict-resolver__upgrade-prompt" aria-label="Upgrade prompt">
-              <p>Unlock deeper week/month planning and richer personalization with Premium AI guidance.</p>
-              <a className="btn btn--secondary" href="#account" onClick={onUpgrade}>
-                Explore Premium
+              <p>
+                {surface === 'peacebetween'
+                  ? 'Unlock deeper planning and richer coaching tuned for difficult conversations.'
+                  : 'Unlock deeper week/month planning and richer personalization with Premium AI guidance.'}
+              </p>
+              <a className="btn btn--secondary" href={surfaceConfig.upgradeHref} onClick={onUpgrade}>
+                {surfaceConfig.upgradeLabel}
               </a>
             </aside>
           ) : null}
