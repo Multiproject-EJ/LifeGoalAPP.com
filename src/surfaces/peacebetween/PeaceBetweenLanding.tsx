@@ -7,10 +7,10 @@ export function PeaceBetweenLanding() {
         <section className="peacebetween-landing__panel" aria-labelledby="peacebetween-landing-title">
           <p className="peacebetween-landing__eyebrow">Peace Between</p>
           <h1 id="peacebetween-landing-title" className="peacebetween-landing__title">
-            Better conversations start with a calmer first step.
+            A calmer way to begin a hard conversation.
           </h1>
           <p className="peacebetween-landing__subtitle">
-            A private, guided space to slow down conflict, understand each perspective, and agree on what comes next.
+            Guided prompts help both people feel heard, reduce escalation, and choose one clear next step together.
           </p>
 
           <div className="peacebetween-landing__actions">
@@ -40,27 +40,27 @@ export function PeaceBetweenLanding() {
         </section>
 
         <section className="peacebetween-landing__steps" aria-label="How Peace Between works">
-          <h2 className="peacebetween-landing__steps-title">How it works</h2>
+          <h2 className="peacebetween-landing__steps-title">What to expect</h2>
           <ol className="peacebetween-landing__steps-list">
             <li className="peacebetween-landing__step">
               <span className="peacebetween-landing__step-number">1</span>
               <div>
-                <p className="peacebetween-landing__step-title">Name what matters</p>
-                <p className="peacebetween-landing__step-copy">Share your perspective clearly, without escalation.</p>
+                <p className="peacebetween-landing__step-title">Share your perspective</p>
+                <p className="peacebetween-landing__step-copy">Start with what feels important to you, in plain language.</p>
               </div>
             </li>
             <li className="peacebetween-landing__step">
               <span className="peacebetween-landing__step-number">2</span>
               <div>
                 <p className="peacebetween-landing__step-title">Understand each other</p>
-                <p className="peacebetween-landing__step-copy">Follow guided prompts designed to surface common ground.</p>
+                <p className="peacebetween-landing__step-copy">Follow a neutral structure that keeps the conversation steady.</p>
               </div>
             </li>
             <li className="peacebetween-landing__step">
               <span className="peacebetween-landing__step-number">3</span>
               <div>
-                <p className="peacebetween-landing__step-title">Agree on next steps</p>
-                <p className="peacebetween-landing__step-copy">Leave with one practical action you can both commit to.</p>
+                <p className="peacebetween-landing__step-title">Leave with one next step</p>
+                <p className="peacebetween-landing__step-copy">End with a practical action both people can commit to.</p>
               </div>
             </li>
           </ol>
