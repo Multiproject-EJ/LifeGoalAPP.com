@@ -128,6 +128,9 @@ import {
   EXPERIMENTAL_FEATURES_UPDATED_EVENT,
   getExperimentalFeatures,
 } from './services/experimentalFeatures';
+import { ConflictResolverEntry } from './features/conflict-resolver/ConflictResolverEntry';
+import { PeaceBetweenShell } from './surfaces/peacebetween/PeaceBetweenShell';
+import { isConflictRoute, resolveSurface } from './surfaces/surfaceContext';
 import './styles/workspace.css';
 import './styles/settings-folders.css';
 import './styles/gamification.css';
@@ -2670,6 +2673,20 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setShowWorkspaceSetup(false);
     setWorkspaceSetupDismissed(true);
   };
+
+  const activeSurface = resolveSurface(typeof window !== 'undefined' ? window.location.hostname : null);
+  const shouldRenderPeaceBetweenConflictShell =
+    activeSurface === 'peacebetween' &&
+    typeof window !== 'undefined' &&
+    isConflictRoute(window.location.pathname);
+
+  if (shouldRenderPeaceBetweenConflictShell) {
+    return (
+      <PeaceBetweenShell>
+        <ConflictResolverEntry surface="peacebetween" />
+      </PeaceBetweenShell>
+    );
+  }
 
   if (shouldRequireAuthentication && isMobileExperience) {
     return (

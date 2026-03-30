@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { AppSurface } from '../../surfaces/surfaceContext';
 import { ModeSelectionScreen } from './screens/ModeSelectionScreen';
 import { GroundingScreen } from './screens/GroundingScreen';
 import { PrivateCaptureScreen } from './screens/PrivateCaptureScreen';
@@ -11,10 +12,16 @@ import { AgreementCloseCard } from './components/AgreementCloseCard';
 import { StageProgress } from './components/StageProgress';
 import { ConflictKpiSnapshot } from './components/ConflictKpiSnapshot';
 import { useConflictSession } from './hooks/useConflictSession';
+import { getConflictSurfaceConfig, mapRecommendationForSurface } from './conflictSurfaceConfig';
 import './conflictResolver.css';
 
-export function ConflictResolverExperience() {
+type ConflictResolverExperienceProps = {
+  surface?: AppSurface;
+};
+
+export function ConflictResolverExperience({ surface = 'habitgame' }: ConflictResolverExperienceProps) {
   const session = useConflictSession();
+  const surfaceConfig = getConflictSurfaceConfig(surface);
 
   const withProgress = (content: ReactNode) => (
     <>
@@ -91,6 +98,7 @@ export function ConflictResolverExperience() {
   if (session.stage === 'inner_next_step') {
     return withProgress(
       <InnerNextStepScreen
+        surface={surface}
         recommendations={session.innerRecommendations}
         guidanceMeta={session.innerGuidanceMeta}
         onContinue={session.completeInnerNextStep}
@@ -165,14 +173,23 @@ export function ConflictResolverExperience() {
   }
 
   if (session.stage === 'agreement_finalized') {
+    const completionTitle = surface === 'peacebetween' ? 'Conversation complete' : 'Agreement finalized';
+    const completionSubtitle = surface === 'peacebetween'
+      ? 'You have a shared repair plan. Take one calm follow-through action today.'
+      : 'Great progress. You can now schedule follow-through and close calmly.';
+    const completionBadge = surface === 'peacebetween'
+      ? '✓ Repair plan confirmed'
+      : '✨ Repair milestone reached';
+    const resetLabel = surface === 'peacebetween' ? 'Start another conversation' : 'Start new session';
+
     return withProgress(
       <section className="conflict-resolver__screen conflict-resolver__screen--finalized" aria-labelledby="conflict-finalized-title">
         <header className="conflict-resolver__header">
-          <h3 id="conflict-finalized-title" className="conflict-resolver__title">Agreement finalized</h3>
-          <p className="conflict-resolver__subtitle">Great progress. You can now schedule follow-through and close calmly.</p>
+          <h3 id="conflict-finalized-title" className="conflict-resolver__title">{completionTitle}</h3>
+          <p className="conflict-resolver__subtitle">{completionSubtitle}</p>
         </header>
         <div className="conflict-resolver__completion-burst" role="status" aria-live="polite">
-          ✨ Repair milestone reached
+          {completionBadge}
         </div>
         {session.generatedInviteLinks.length > 0 ? (
           <article className="conflict-resolver__finalized-card" aria-label="Lightweight participant invite links">
@@ -192,18 +209,21 @@ export function ConflictResolverExperience() {
         ) : null}
         <article className="conflict-resolver__finalized-card" aria-label="Post-session onboarding">
           <h4>Suggested next moves</h4>
-          <p>Based on this session, jump straight into the most useful next step.</p>
+          <p>{surfaceConfig.nextStepLead}</p>
           <div className="conflict-resolver__proposal-actions">
-            {session.innerRecommendations.map((item) => (
-              <a key={item.id} href={item.href} className="btn">
-                {item.ctaLabel}
-              </a>
-            ))}
+            {session.innerRecommendations.map((item) => {
+              const mapped = mapRecommendationForSurface(item, surface);
+              return (
+                <a key={item.id} href={mapped.href} className="btn">
+                  {mapped.ctaLabel}
+                </a>
+              );
+            })}
           </div>
         </article>
         <ConflictKpiSnapshot />
         <button type="button" className="btn btn--primary conflict-resolver__primary-cta" onClick={session.resetFlow}>
-          Start new session
+          {resetLabel}
         </button>
       </section>
     );

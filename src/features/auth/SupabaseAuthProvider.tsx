@@ -177,7 +177,19 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     if (!supabase) {
       throw supabaseError ?? new Error('Supabase credentials are not configured.');
     }
-    const redirectTo = getSupabaseRedirectUrl() ?? 'https://www.lifegoalapp.com/auth/callback';
+    const baseRedirectTo = getSupabaseRedirectUrl() ?? 'https://habitgame.app/auth/callback';
+    let redirectTo = baseRedirectTo;
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/conflict/join')) {
+      try {
+        const next = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        const redirectUrl = new URL(baseRedirectTo, window.location.origin);
+        redirectUrl.searchParams.set('next', encodeURIComponent(next));
+        redirectTo = redirectUrl.toString();
+      } catch {
+        // Fallback keeps default redirect URL if URL parsing fails.
+        redirectTo = baseRedirectTo;
+      }
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo },
