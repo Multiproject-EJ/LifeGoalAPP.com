@@ -11,6 +11,7 @@ export function PeaceBetweenShell({ children }: PeaceBetweenShellProps) {
       <header className="peacebetween-shell__header" role="banner">
         <p className="peacebetween-shell__eyebrow">Peace Between</p>
         <h1 className="peacebetween-shell__title">Conflict Resolution</h1>
+        <p className="peacebetween-shell__subtitle">A calm space to reset, reflect, and agree on next steps.</p>
       </header>
       <main className="peacebetween-shell__main" role="main">
         <section className="peacebetween-shell__panel">{children}</section>

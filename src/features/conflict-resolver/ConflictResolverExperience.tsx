@@ -173,14 +173,23 @@ export function ConflictResolverExperience({ surface = 'habitgame' }: ConflictRe
   }
 
   if (session.stage === 'agreement_finalized') {
+    const completionTitle = surface === 'peacebetween' ? 'Conversation complete' : 'Agreement finalized';
+    const completionSubtitle = surface === 'peacebetween'
+      ? 'You have a shared repair plan. Take one calm follow-through action today.'
+      : 'Great progress. You can now schedule follow-through and close calmly.';
+    const completionBadge = surface === 'peacebetween'
+      ? '✓ Repair plan confirmed'
+      : '✨ Repair milestone reached';
+    const resetLabel = surface === 'peacebetween' ? 'Start another conversation' : 'Start new session';
+
     return withProgress(
       <section className="conflict-resolver__screen conflict-resolver__screen--finalized" aria-labelledby="conflict-finalized-title">
         <header className="conflict-resolver__header">
-          <h3 id="conflict-finalized-title" className="conflict-resolver__title">Agreement finalized</h3>
-          <p className="conflict-resolver__subtitle">Great progress. You can now schedule follow-through and close calmly.</p>
+          <h3 id="conflict-finalized-title" className="conflict-resolver__title">{completionTitle}</h3>
+          <p className="conflict-resolver__subtitle">{completionSubtitle}</p>
         </header>
         <div className="conflict-resolver__completion-burst" role="status" aria-live="polite">
-          ✨ Repair milestone reached
+          {completionBadge}
         </div>
         {session.generatedInviteLinks.length > 0 ? (
           <article className="conflict-resolver__finalized-card" aria-label="Lightweight participant invite links">
@@ -214,7 +223,7 @@ export function ConflictResolverExperience({ surface = 'habitgame' }: ConflictRe
         </article>
         <ConflictKpiSnapshot />
         <button type="button" className="btn btn--primary conflict-resolver__primary-cta" onClick={session.resetFlow}>
-          Start new session
+          {resetLabel}
         </button>
       </section>
     );
