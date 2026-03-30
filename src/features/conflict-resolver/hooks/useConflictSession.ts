@@ -15,11 +15,18 @@ import {
 } from '../services/conflictSessions';
 import { buildConflictInviteUrl, createConflictInvite, redeemConflictInvite } from '../services/conflictInvites';
 import { trackConflictEvent } from '../services/conflictAnalytics';
+import { triggerCompletionHaptic } from '../../../utils/completionHaptics';
+import {
+  generateInnerNextStepRecommendations,
+  generateResolutionOptions,
+  generateSharedSummaryCards,
+} from '../services/conflictAiOrchestrator';
 
 type ConflictResolverUiStage =
   | 'mode_selection'
   | 'grounding'
   | 'private_capture'
+  | 'inner_next_step'
   | 'collect_pile'
   | 'parallel_read'
   | 'resolution_builder'
@@ -107,6 +114,7 @@ const UI_TO_CONFLICT_STAGE: Record<ConflictResolverUiStage, ConflictStage> = {
   mode_selection: 'draft',
   grounding: 'grounding',
   private_capture: 'private_capture',
+  inner_next_step: 'agreement',
   collect_pile: 'shared_read',
   parallel_read: 'shared_read',
   resolution_builder: 'negotiation',
@@ -147,6 +155,36 @@ type ConflictSessionDraftSnapshot = {
   sharedParticipantCount: number;
 };
 
+type InnerRecommendation = {
+  id: string;
+  title: string;
+  reason: string;
+  ctaLabel: string;
+  href: string;
+};
+
+type InnerGuidanceMeta = {
+  guidancePlan: {
+    insightSummary: string;
+    patternLinks: string[];
+    riskFlags: string[];
+    nowPlan: string[];
+    weekPlan: string[];
+    monthPlan: string[];
+  };
+  priorityScore: number;
+  deepMode: boolean;
+  usedContextDomains: string[];
+  aiMode: 'premium' | 'free_quota' | 'fallback';
+};
+type SharedSummaryMeta = {
+  aiMode: 'premium' | 'free_quota' | 'fallback';
+};
+type ResolutionMeta = {
+  aiMode: 'premium' | 'free_quota' | 'fallback';
+  fairnessWarnings: Array<{ code: string; message: string }>;
+};
+
 export function useConflictSession() {
   const [stage, setStage] = useState<ConflictResolverUiStage>('mode_selection');
   const [selectedType, setSelectedType] = useState<ConflictType | null>(null);
@@ -182,6 +220,66 @@ export function useConflictSession() {
   const [inviteGenerationError, setInviteGenerationError] = useState<string | null>(null);
   const [inviteJoinMessage, setInviteJoinMessage] = useState<string | null>(null);
   const [inviteJoinBootstrapped, setInviteJoinBootstrapped] = useState(false);
+  const [innerRecommendations, setInnerRecommendations] = useState<InnerRecommendation[]>([]);
+  const [innerGuidanceMeta, setInnerGuidanceMeta] = useState<InnerGuidanceMeta | null>(null);
+  const [sharedSummaryMeta, setSharedSummaryMeta] = useState<SharedSummaryMeta | null>(null);
+  const [resolutionMeta, setResolutionMeta] = useState<ResolutionMeta | null>(null);
+  const [aiSummaryCards, setAiSummaryCards] = useState<Array<{ id: string; title: string; text: string }> | null>(null);
+  const [aiResolutionOptions, setAiResolutionOptions] = useState<Array<{ id: string; title: string; description: string }> | null>(null);
+
+  const buildInnerRecommendations = (draftAnswers: Record<string, string>): InnerRecommendation[] => {
+    const combined = Object.values(draftAnswers).join(' ').toLowerCase();
+    const picks: InnerRecommendation[] = [];
+
+    if (/(anxious|stress|overwhelm|panic|pressure|tired|burnout)/.test(combined)) {
+      picks.push({
+        id: 'breathing_reset',
+        title: 'Reset your nervous system first',
+        reason: 'Your reflection shows high pressure. A short regulation reset should come before strategy.',
+        ctaLabel: 'Start Breathing Space',
+        href: '#breathing-space',
+      });
+    }
+    if (/(consistency|routine|discipline|procrastinat|avoid|stuck|follow through)/.test(combined)) {
+      picks.push({
+        id: 'habit_alignment',
+        title: 'Create one tiny habit that removes friction',
+        reason: 'You described repeat-pattern tension. A single daily habit is the best leverage move.',
+        ctaLabel: 'Open Habits',
+        href: '#habits',
+      });
+    }
+    if (/(direction|purpose|goal|career|future|focus|clarity)/.test(combined)) {
+      picks.push({
+        id: 'goal_alignment',
+        title: 'Re-align with one concrete goal',
+        reason: 'Your notes point to uncertainty and direction conflict. Clarifying one active goal can reduce noise.',
+        ctaLabel: 'Open Goals',
+        href: '#goals',
+      });
+    }
+
+    if (picks.length === 0) {
+      picks.push(
+        {
+          id: 'journal_first',
+          title: 'Capture one clear insight',
+          reason: 'You did the hard honesty work. Lock in one sentence you want to remember this week.',
+          ctaLabel: 'Open Journal',
+          href: '#journal',
+        },
+        {
+          id: 'contract_step',
+          title: 'Turn insight into a commitment contract',
+          reason: 'Convert reflection into behavior by defining one concrete promise with a deadline.',
+          ctaLabel: 'Open Contracts',
+          href: '#contracts',
+        },
+      );
+    }
+
+    return picks.slice(0, 3);
+  };
 
   const applyDraftSnapshot = (parsed: ConflictSessionDraftSnapshot) => {
     setStage(parsed.stage ?? 'mode_selection');
@@ -286,7 +384,12 @@ export function useConflictSession() {
       trackConflictEvent('conflict.shared_session_created', { sessionId });
     } catch (error) {
       console.error('Failed to create shared conflict session', error);
-      setSharedSessionError('Could not create session. Please try again.');
+      const message = error instanceof Error ? error.message : 'Could not create session.';
+      if (/signed in/i.test(message)) {
+        setSharedSessionError('Please sign in first, then create a shared session code.');
+      } else {
+        setSharedSessionError(`Could not create session. ${message}`);
+      }
     } finally {
       setSharedSessionBusy(false);
     }
@@ -395,6 +498,7 @@ export function useConflictSession() {
 
   const startPrivateCapture = () => {
     setPromptIndex(0);
+    triggerCompletionHaptic('light', { channel: 'conflict', minIntervalMs: 1200 });
     void setStageWithSync('private_capture');
   };
 
@@ -418,11 +522,45 @@ export function useConflictSession() {
     nextPrompt();
   };
 
-  const finishPrivateCapture = () => {
+  const finishPrivateCapture = async () => {
     trackConflictEvent('conflict.private_capture_advanced', {
       answeredCount: Object.values(answers).filter((value) => value.trim().length > 0).length,
       totalPrompts: PRIVATE_CAPTURE_PROMPTS.length,
     });
+    if (selectedType === 'inner_tension') {
+      triggerCompletionHaptic('medium', { channel: 'conflict', minIntervalMs: 1500 });
+      const aiResult = await generateInnerNextStepRecommendations({
+        sessionId: sharedSessionId,
+        answers,
+        usedContextDomains: ['reflections'],
+      });
+      setInnerRecommendations(aiResult.recommendations);
+      setInnerGuidanceMeta({
+        guidancePlan: aiResult.guidancePlan,
+        priorityScore: aiResult.priorityScore,
+        deepMode: aiResult.deepMode,
+        usedContextDomains: aiResult.usedContextDomains,
+        aiMode: aiResult.mode,
+      });
+      trackConflictEvent('conflict.inner_guidance_shown', {
+        mode: aiResult.mode,
+        deepMode: aiResult.deepMode,
+        usedContextDomains: aiResult.usedContextDomains,
+        priorityScore: aiResult.priorityScore,
+      });
+      void setStageWithSync('inner_next_step');
+      return;
+    }
+    if (selectedType === 'shared_conflict') {
+      const summaryResult = await generateSharedSummaryCards({
+        sessionId: sharedSessionId,
+        answers,
+      });
+      setAiSummaryCards(summaryResult.summaryCards);
+      setSharedSummaryMeta({ aiMode: summaryResult.mode });
+      setAiResolutionOptions(null);
+      setResolutionMeta(null);
+    }
     void setStageWithSync('collect_pile');
   };
 
@@ -431,7 +569,7 @@ export function useConflictSession() {
     void setStageWithSync('parallel_read');
   };
 
-  const completeParallelRead = (
+  const completeParallelRead = async (
     decision: 'accurate' | 'missing',
     annotations: Record<string, 'accurate' | 'missing' | 'note'>,
   ) => {
@@ -444,14 +582,35 @@ export function useConflictSession() {
       alignmentReached: decision === 'accurate' && allCardsAccurate,
       annotationCount: Object.keys(annotations).length,
     });
+    const summarySource = aiSummaryCards && aiSummaryCards.length > 0
+      ? aiSummaryCards
+      : [
+          { id: 'what_happened', title: 'What happened', text: answers.what_happened ?? '' },
+          { id: 'what_it_meant', title: 'What it meant', text: answers.what_it_meant ?? '' },
+          { id: 'what_is_needed', title: 'What is needed', text: answers.what_is_needed ?? '' },
+        ];
+    const aiOptions = await generateResolutionOptions({
+      sessionId: sharedSessionId,
+      summaryCards: summarySource.map((card) => ({
+        id: card.id as 'what_happened' | 'what_it_meant' | 'what_is_needed',
+        title: card.title,
+        text: card.text,
+      })),
+    });
+    setAiResolutionOptions(aiOptions.options);
+    setResolutionMeta({
+      aiMode: aiOptions.mode,
+      fairnessWarnings: aiOptions.fairnessWarnings,
+    });
     void setStageWithSync('resolution_builder');
   };
 
   const markAlignmentReached = () => {
     setAlignmentReached(true);
+    triggerCompletionHaptic('medium', { channel: 'conflict', minIntervalMs: 1600 });
   };
 
-  const resolutionOptions = [
+  const defaultResolutionOptions = [
     {
       id: 'communicate_earlier',
       title: 'Communicate earlier when plans change',
@@ -468,6 +627,9 @@ export function useConflictSession() {
       description: 'Agree to acknowledge and respond within 24 hours after friction.',
     },
   ] as const;
+  const resolutionOptions = aiResolutionOptions && aiResolutionOptions.length > 0
+    ? aiResolutionOptions
+    : defaultResolutionOptions;
 
   const moveToApologyAlignment = () => {
     const hasNegotiationPath = Boolean(selectedResolution) || Boolean(activeProposalId);
@@ -502,6 +664,7 @@ export function useConflictSession() {
 
   const completeApologyAlignment = () => {
     if (apologyTiming === 'sequenced' && !sequencedLead) return;
+    triggerCompletionHaptic('light', { channel: 'conflict', minIntervalMs: 1200 });
     void setStageWithSync('agreement_preview');
   };
 
@@ -529,6 +692,7 @@ export function useConflictSession() {
       hasFollowUpDate: Boolean(followUpDate),
       resolutionChosen: Boolean(selectedResolution || activeProposalId),
     });
+    triggerCompletionHaptic('strong', { channel: 'conflict', minIntervalMs: 1800 });
     void setStageWithSync('agreement_finalized');
   };
 
@@ -561,7 +725,15 @@ export function useConflictSession() {
     tag,
   }));
 
-  const summaryCards = [
+  const summaryCards = aiSummaryCards && aiSummaryCards.length > 0
+    ? aiSummaryCards.map((card) => ({
+        id: card.id,
+        title: card.title,
+        text: card.text,
+        toneSoftened: false,
+        moderationNotes: [],
+      }))
+    : [
     (() => {
       const raw = answers.what_happened ?? '';
       const sanitized = sanitizeForSharedSummary(raw);
@@ -599,6 +771,23 @@ export function useConflictSession() {
       };
     })(),
   ] as const;
+
+  const computedInnerRecommendations = innerRecommendations.length > 0
+    ? innerRecommendations
+    : buildInnerRecommendations(answers);
+
+  const completeInnerNextStep = () => {
+    triggerCompletionHaptic('light', { channel: 'conflict', minIntervalMs: 1200 });
+    setStage('agreement_finalized');
+  };
+
+  const trackInnerUpgradePromptClick = () => {
+    trackConflictEvent('conflict.inner_upgrade_prompt_clicked', {
+      stage,
+      mode: innerGuidanceMeta?.aiMode ?? 'unknown',
+      priorityScore: innerGuidanceMeta?.priorityScore ?? null,
+    });
+  };
 
   useEffect(() => {
     if (selectedType !== 'shared_conflict' || !sharedSessionId) return;
@@ -764,6 +953,10 @@ export function useConflictSession() {
     setInviteGenerationError(null);
     setInviteJoinMessage(null);
     setInviteJoinBootstrapped(false);
+    setInnerRecommendations([]);
+    setInnerGuidanceMeta(null);
+    setAiSummaryCards(null);
+    setAiResolutionOptions(null);
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(CONFLICT_SESSION_DRAFT_STORAGE_KEY);
     }
@@ -804,6 +997,7 @@ export function useConflictSession() {
       finishPrivateCapture,
       answers,
       summaryCards,
+      sharedSummaryMeta,
       enterParallelRead,
       completeParallelRead,
       parallelDecision,
@@ -812,6 +1006,7 @@ export function useConflictSession() {
       alignmentReached,
       markAlignmentReached,
       resolutionOptions,
+      resolutionMeta,
       selectedResolution,
       setSelectedResolution,
       whiteFlagOffer,
@@ -829,6 +1024,10 @@ export function useConflictSession() {
       sequencedLead,
       setSequencedLead,
       completeApologyAlignment,
+      innerRecommendations: computedInnerRecommendations,
+      innerGuidanceMeta,
+      completeInnerNextStep,
+      trackInnerUpgradePromptClick,
       followUpDate,
       setFollowUpDate,
       agreementSummaryItems,
@@ -873,9 +1072,19 @@ export function useConflictSession() {
       apologyTiming,
       sequencedLead,
       followUpDate,
+      computedInnerRecommendations,
+      innerGuidanceMeta,
+      trackInnerUpgradePromptClick,
+      summaryCards,
+      sharedSummaryMeta,
+      resolutionOptions,
+      resolutionMeta,
       inviteeEmailDraft,
       inviteeEmailError,
       lightweightParticipants,
+      innerRecommendations,
+      aiSummaryCards,
+      aiResolutionOptions,
       generatedInviteLinks,
       inviteGenerationError,
       inviteJoinMessage,

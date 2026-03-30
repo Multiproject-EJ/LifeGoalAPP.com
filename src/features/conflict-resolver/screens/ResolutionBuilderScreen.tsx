@@ -16,6 +16,8 @@ type ResolutionBuilderScreenProps = {
   onPromoteProposal: (id: string) => void;
   onRemoveProposal: (id: string) => void;
   parallelAnnotationItems: { id: string; label: string; tag: 'accurate' | 'missing' | 'note' }[];
+  aiMode?: 'premium' | 'free_quota' | 'fallback' | null;
+  fairnessWarnings?: Array<{ code: string; message: string }>;
   onContinue: () => void;
 };
 
@@ -31,6 +33,8 @@ export function ResolutionBuilderScreen({
   onPromoteProposal,
   onRemoveProposal,
   parallelAnnotationItems,
+  aiMode,
+  fairnessWarnings = [],
   onContinue,
 }: ResolutionBuilderScreenProps) {
   const canContinue = Boolean(selectedOptionId) || Boolean(activeProposalId);
@@ -40,7 +44,20 @@ export function ResolutionBuilderScreen({
       <header className="conflict-resolver__header">
         <h3 id="resolution-builder-title" className="conflict-resolver__title">Let’s move forward</h3>
         <p className="conflict-resolver__subtitle">Pick a constructive option or draft a white-flag offer.</p>
+        {aiMode ? (
+          <p className="conflict-resolver__ai-mode-pill">Option source: {aiMode === 'premium' ? 'Premium AI' : aiMode === 'free_quota' ? 'Free AI' : 'Fallback'}</p>
+        ) : null}
       </header>
+      {fairnessWarnings.length > 0 ? (
+        <section className="conflict-resolver__fairness-note" aria-label="Fairness checks">
+          <h4>Fairness checks flagged</h4>
+          <ul>
+            {fairnessWarnings.map((warning) => (
+              <li key={warning.code}>{warning.message}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <div className="conflict-resolver__options-grid">
         {options.map((option) => (
