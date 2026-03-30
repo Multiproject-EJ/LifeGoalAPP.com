@@ -120,3 +120,107 @@
   background: rgba(60, 135, 102, 0.1);
   color: #21593f;
 }
+
+.peacebetween-landing {
+  min-height: 100dvh;
+  background: linear-gradient(180deg, #f7f9ff 0%, #eef3ff 100%);
+  color: #1a2138;
+  padding: 28px 16px;
+}
+
+.peacebetween-landing__main {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.peacebetween-landing__panel {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(82, 96, 142, 0.22);
+  border-radius: 24px;
+  padding: clamp(20px, 4vw, 36px);
+  box-shadow: 0 12px 28px rgba(30, 47, 102, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.peacebetween-landing__eyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #52608e;
+}
+
+.peacebetween-landing__title {
+  margin: 0;
+  font-size: clamp(1.55rem, 3.2vw, 2.3rem);
+  line-height: 1.2;
+  color: #20305e;
+}
+
+.peacebetween-landing__subtitle {
+  margin: 0;
+  max-width: 58ch;
+  color: #485b93;
+  font-size: 1.02rem;
+}
+
+.peacebetween-landing__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.peacebetween-landing__cta {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.peacebetween-landing__invite {
+  margin-top: 6px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(96, 114, 171, 0.24);
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.peacebetween-landing__invite-title,
+.peacebetween-landing__invite-copy {
+  margin: 0;
+}
+
+.peacebetween-landing__invite-title {
+  color: #263a73;
+  font-size: 1rem;
+}
+
+.peacebetween-landing__invite-copy {
+  color: #516294;
+}
+
+.peacebetween-landing__invite-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.peacebetween-landing__invite-input {
+  flex: 1 1 280px;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(90, 108, 166, 0.34);
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #1f2f5e;
+}
+
+.peacebetween-landing__invite-submit {
+  min-height: 44px;
+}
