@@ -150,7 +150,7 @@ Status legend: `TODO` | `IN_PROGRESS` | `BLOCKED` | `DONE`
 - [ ] Safety filters + abuse phrase handling + fairness checks. (shared-summary moderation now includes escalatory softening + direct-blame reframing with transparent notes; fairness validation still pending)
 - [ ] Reconnect/timeout/partial-participant resilience tests.
 - [ ] Accessibility pass (contrast, dynamic type, 44px targets, screen reader). (parallel-read cards now keyboard-focusable/selectable with focus-visible styling)
-- [ ] Analytics events/KPIs dashboard wiring. (client analytics events expanded; dashboard sink wiring pending)
+- [~] Analytics events/KPIs dashboard wiring. (client analytics events expanded; local KPI sink + snapshot UI shipped, remote warehouse/dashboard wiring pending)
 
 ### Acceptance criteria
 - [ ] Core happy-path + interruption-path test suite passes.

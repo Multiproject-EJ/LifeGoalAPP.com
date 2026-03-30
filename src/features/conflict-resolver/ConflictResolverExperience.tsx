@@ -9,6 +9,7 @@ import { ApologyAlignmentScreen } from './screens/ApologyAlignmentScreen';
 import { InnerNextStepScreen } from './screens/InnerNextStepScreen';
 import { AgreementCloseCard } from './components/AgreementCloseCard';
 import { StageProgress } from './components/StageProgress';
+import { ConflictKpiSnapshot } from './components/ConflictKpiSnapshot';
 import { useConflictSession } from './hooks/useConflictSession';
 import './conflictResolver.css';
 
@@ -200,6 +201,7 @@ export function ConflictResolverExperience() {
             ))}
           </div>
         </article>
+        <ConflictKpiSnapshot />
         <button type="button" className="btn btn--primary conflict-resolver__primary-cta" onClick={session.resetFlow}>
           Start new session
         </button>
