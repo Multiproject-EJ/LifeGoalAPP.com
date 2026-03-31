@@ -4,6 +4,12 @@ import { listRoutineLogsForRange, listRoutines, listRoutineSteps, upsertRoutineL
 import { listHabitsV2, listTodayHabitLogsV2, logHabitCompletionV2, type HabitLogV2Row, type HabitV2Row } from '../../services/habitsV2';
 import type { Routine, RoutineStep } from '../../types/routines';
 import { parseSchedule } from '../habits/scheduleInterpreter';
+import { triggerCompletionHaptic } from '../../utils/completionHaptics';
+import {
+  EXPERIMENTAL_FEATURES_UPDATED_EVENT,
+  getExperimentalFeatures,
+} from '../../services/experimentalFeatures';
+import { trackRoutinesTelemetry } from '../../services/routinesTelemetry';
 import './RoutinesTodayLane.css';
 
 type RoutinesTodayLaneProps = {
@@ -76,6 +82,8 @@ export function RoutinesTodayLane({ session, onHideStandaloneHabitsChange }: Rou
   const [expandedRoutineIds, setExpandedRoutineIds] = useState<Record<string, boolean>>({});
   const [activeRunRoutineId, setActiveRunRoutineId] = useState<string | null>(null);
   const [activeRunStepIndex, setActiveRunStepIndex] = useState(0);
+  const [isCinematicPolishEnabled, setIsCinematicPolishEnabled] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -146,6 +154,48 @@ export function RoutinesTodayLane({ session, onHideStandaloneHabitsChange }: Rou
     void loadData();
   }, [loadData]);
 
+  useEffect(() => {
+    const syncFeatureFlag = (): void => {
+      const features = getExperimentalFeatures(session.user.id);
+      setIsCinematicPolishEnabled(features.routinesCinematicPolish === true);
+    };
+
+    syncFeatureFlag();
+
+    const handleFeaturesUpdated = (event: Event): void => {
+      const customEvent = event as CustomEvent<{ userId?: string }>;
+      if (customEvent.detail?.userId !== session.user.id) {
+        return;
+      }
+      syncFeatureFlag();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener(EXPERIMENTAL_FEATURES_UPDATED_EVENT, handleFeaturesUpdated as EventListener);
+      return () => {
+        window.removeEventListener(EXPERIMENTAL_FEATURES_UPDATED_EVENT, handleFeaturesUpdated as EventListener);
+      };
+    }
+
+    return undefined;
+  }, [session.user.id]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return undefined;
+    }
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const sync = (): void => setPrefersReducedMotion(mediaQuery.matches);
+    sync();
+
+    const listener = (event: MediaQueryListEvent): void => setPrefersReducedMotion(event.matches);
+    mediaQuery.addEventListener('change', listener);
+    return () => {
+      mediaQuery.removeEventListener('change', listener);
+    };
+  }, []);
+
   const dueRoutines = useMemo(() => {
     const today = new Date();
     return routines.filter((routine) => {
@@ -207,12 +257,31 @@ export function RoutinesTodayLane({ session, onHideStandaloneHabitsChange }: Rou
             completed: isComplete,
             mode: 'normal',
           });
+          trackRoutinesTelemetry('routines.cinematic_step_completed', {
+            routineId,
+            stepId: step.id,
+            habitId: step.habit_id,
+            completedCount,
+            totalSteps: steps.length,
+            routineCompleted: isComplete,
+          });
+
+          if (isComplete) {
+            trackRoutinesTelemetry('routines.cinematic_run_completed', {
+              routineId,
+              totalSteps: steps.length,
+            });
+          }
+
+          if (isCinematicPolishEnabled && !prefersReducedMotion) {
+            triggerCompletionHaptic(isComplete ? 'strong' : 'medium', { channel: 'gamification' });
+          }
         }
       }
       setSavingStepId(null);
       return true;
     },
-    [session.user.id, stepsByRoutine],
+    [isCinematicPolishEnabled, prefersReducedMotion, session.user.id, stepsByRoutine],
   );
 
   const activeRun = useMemo(() => {
@@ -233,12 +302,19 @@ export function RoutinesTodayLane({ session, onHideStandaloneHabitsChange }: Rou
   const handleRunStart = useCallback((routineId: string) => {
     setActiveRunRoutineId(routineId);
     setActiveRunStepIndex(0);
-  }, []);
+    trackRoutinesTelemetry('routines.cinematic_run_started', { routineId });
+    if (isCinematicPolishEnabled && !prefersReducedMotion) {
+      triggerCompletionHaptic('light', { channel: 'navigation', minIntervalMs: 300 });
+    }
+  }, [isCinematicPolishEnabled, prefersReducedMotion]);
 
   const handleRunClose = useCallback(() => {
+    if (activeRunRoutineId) {
+      trackRoutinesTelemetry('routines.cinematic_run_closed', { routineId: activeRunRoutineId });
+    }
     setActiveRunRoutineId(null);
     setActiveRunStepIndex(0);
-  }, []);
+  }, [activeRunRoutineId]);
 
   const handleRunAdvance = useCallback(() => {
     if (!activeRun) return;
@@ -339,13 +415,30 @@ export function RoutinesTodayLane({ session, onHideStandaloneHabitsChange }: Rou
       {activeRun ? (
         <div className="routines-run-modal" role="dialog" aria-modal="true" aria-label="Routine run mode">
           <div className="routines-run-modal__backdrop" onClick={handleRunClose} role="presentation" />
-          <div className="routines-run-modal__panel">
+          <div
+            className={`routines-run-modal__panel${isCinematicPolishEnabled ? ' is-polish-enabled' : ''}${
+              prefersReducedMotion ? ' is-reduced-motion' : ''
+            }`}
+          >
             <header className="routines-run-modal__header">
               <p className="routines-run-modal__eyebrow">Cinematic run</p>
               <h4>{activeRun.routine.title}</h4>
               <p>
                 Step {activeRun.index + 1} of {activeRun.steps.length}
               </p>
+              <div
+                className="routines-run-modal__progress"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={activeRun.steps.length}
+                aria-valuenow={activeRun.index + 1}
+                aria-label="Routine run progress"
+              >
+                <span
+                  className="routines-run-modal__progress-fill"
+                  style={{ width: `${Math.round(((activeRun.index + 1) / activeRun.steps.length) * 100)}%` }}
+                />
+              </div>
             </header>
             <div className="routines-run-modal__body">
               <h5>{habitsById[activeRun.currentStep.habit_id]?.title ?? 'Unknown habit'}</h5>

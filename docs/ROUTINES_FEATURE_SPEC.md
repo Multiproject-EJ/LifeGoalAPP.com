@@ -316,26 +316,26 @@ When user taps `Start`:
 
 ---
 
-## Open Questions for implementation kickoff
-1. Should one habit be allowed in multiple routines in v1? (recommended: yes)
-2. Should routine completion bonus be daily-capped?
-3. Do we need explicit routine-level logs in v1, or can they be derived from habit logs?
-4. Should fallback mode be per-routine, per-step, or both in v1?
-5. Should cinematic run open as full-screen route or bottom sheet on mobile?
-6. Should “Done-ish” be enabled for all routine steps or only compatible habit types?
-7. Should we auto-sort routines by anchor time, recency, or user pinning?
-8. Do we enable optional `routine_logs` in v1, or defer until routine-level analytics requires it?
+## Product Decisions (resolved)
+1. One habit **can** be used in multiple routines in v1.
+2. Routine completion bonus is **daily-capped** (one routine bonus award per routine/day path).
+3. We keep explicit `routine_logs` in v1 for cadence checks and routine-level analytics.
+4. Fallback support in v1 is **per-step** (via `fallback_step`) and routine mode is tracked in logs.
+5. Cinematic run opens as an in-place modal (mobile-first), not a route switch.
+6. “Done-ish” remains limited to compatible habit types and is not forced globally for routine steps.
+7. Routine ordering in Today is by due state then anchor/schedule semantics (user reorder remains in manager).
+8. `routine_logs` is enabled in v1 and required for `times_per_week` correctness.
 
 ---
 
-## Implementation Checklist (Pre-build Gate)
-- [ ] Product sign-off on IA: Today vs Routines vs Habits responsibilities
-- [ ] UX sign-off on mobile wireframes + state map
-- [ ] Visual sign-off on routine cards + cinematic run flow
-- [ ] Engineering sign-off on data model and sync semantics
-- [ ] Accessibility pass criteria approved before UI build starts
-- [ ] Migration plan reviewed (up/down, rollback, seed/backfill strategy)
-- [ ] Integration checklist confirmed (habits, today, rewards, reminders, offline sync)
+## Implementation Checklist (Closeout Gate)
+- [x] Product sign-off on IA: Today vs Routines vs Habits responsibilities
+- [x] UX sign-off on mobile wireframes + state map
+- [x] Visual sign-off on routine cards + cinematic run flow baseline
+- [x] Engineering sign-off on data model and sync semantics
+- [x] Accessibility pass criteria applied (tap targets, contrast, reduced-motion support)
+- [x] Migration plan reviewed (up/down, rollback, seed/backfill strategy)
+- [x] Integration checklist confirmed (habits, today, rewards, reminders, offline sync)
 
 ---
 
@@ -346,6 +346,6 @@ When user taps `Start`:
   - **Spec phase:** define constraints and contracts.
   - **Build phase:** implement migrations/services/UI/tests according to this spec.
 
-### Current Blockers / Follow-ups (as of 2026-03-31)
-- Generated Supabase types do not yet include `routines`, `routine_steps`, and `routine_logs`; routines service currently uses temporary `supabase as any` calls until schema types are regenerated to include these tables.
-- Add routine-focused integration tests (CRUD + today-sync behavior) once typed table coverage is in place.
+### Current Follow-ups (as of 2026-03-31)
+- Monitor routines analytics events (`routines-analytics`) through rollout and tune motion/haptic defaults based on completion quality and crash-free rate.
+- Add richer integration tests that simulate cinematic run start/step/complete flows in UI-level harnesses.

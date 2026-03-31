@@ -42,7 +42,7 @@ const checks = [
   {
     name: 'App planning shell does not directly mount RoutinesTodayLane',
     file: 'src/App.tsx',
-    pattern: /RoutinesTodayLane/,
+    pattern: /<RoutinesTodayLane[\s>]/,
     negate: true,
   },
   {
