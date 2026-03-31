@@ -11,7 +11,7 @@ import {
   updateRoutineStep,
 } from '../../services/routines';
 import type { Routine, RoutineStep } from '../../types/routines';
-import { listHabitsV2, type HabitV2Row } from '../../services/habitsV2';
+import { createHabitV2, listHabitsV2, type HabitV2Row } from '../../services/habitsV2';
 import './RoutinesTab.css';
 
 type RoutinesTabProps = {
@@ -21,6 +21,7 @@ type RoutinesTabProps = {
 type RoutineStepCounts = Record<string, number>;
 type RoutineStepsByRoutine = Record<string, RoutineStep[]>;
 type RoutineStepDraftByRoutine = Record<string, string>;
+type NewHabitDraftByRoutine = Record<string, string>;
 
 export function RoutinesTab({ session }: RoutinesTabProps) {
   const [loading, setLoading] = useState(false);
@@ -32,6 +33,7 @@ export function RoutinesTab({ session }: RoutinesTabProps) {
   const [stepsByRoutine, setStepsByRoutine] = useState<RoutineStepsByRoutine>({});
   const [stepCounts, setStepCounts] = useState<RoutineStepCounts>({});
   const [stepDraftByRoutine, setStepDraftByRoutine] = useState<RoutineStepDraftByRoutine>({});
+  const [newHabitDraftByRoutine, setNewHabitDraftByRoutine] = useState<NewHabitDraftByRoutine>({});
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
 
@@ -116,7 +118,7 @@ export function RoutinesTab({ session }: RoutinesTabProps) {
 
       setNewTitle('');
       setNewDescription('');
-      setSuccess('Routine created. Add steps from the Habits tab next.');
+      setSuccess('Routine created. Add existing or brand-new steps below.');
       setSaving(false);
       await loadRoutines();
     },
@@ -184,6 +186,50 @@ export function RoutinesTab({ session }: RoutinesTabProps) {
       await loadRoutines();
     },
     [stepDraftByRoutine, stepsByRoutine, loadRoutines],
+  );
+
+  const handleCreateHabitAndAttachStep = useCallback(
+    async (routineId: string) => {
+      const draftedTitle = (newHabitDraftByRoutine[routineId] ?? '').trim();
+      if (!draftedTitle) return;
+
+      setSaving(true);
+      setError(null);
+      const habitResult = await createHabitV2(
+        {
+          title: draftedTitle,
+          emoji: '✨',
+          type: 'boolean',
+          schedule: { mode: 'daily' },
+          archived: false,
+        },
+        session.user.id,
+      );
+
+      if (habitResult.error || !habitResult.data) {
+        setError(habitResult.error?.message ?? 'Failed to create the step habit.');
+        setSaving(false);
+        return;
+      }
+
+      const existingSteps = stepsByRoutine[routineId] ?? [];
+      const stepResult = await createRoutineStep({
+        routine_id: routineId,
+        habit_id: habitResult.data.id,
+        step_order: existingSteps.length,
+      });
+
+      if (stepResult.error) {
+        setError(stepResult.error.message);
+      } else {
+        setSuccess(`Created "${draftedTitle}" and added it as a routine step.`);
+        setNewHabitDraftByRoutine((prev) => ({ ...prev, [routineId]: '' }));
+      }
+
+      setSaving(false);
+      await loadRoutines();
+    },
+    [loadRoutines, newHabitDraftByRoutine, session.user.id, stepsByRoutine],
   );
 
   const handleDeleteStep = useCallback(
@@ -336,6 +382,29 @@ export function RoutinesTab({ session }: RoutinesTabProps) {
                     disabled={saving || !stepDraftByRoutine[routine.id]}
                   >
                     Add step
+                  </button>
+                </div>
+                <div className="routines-tab__step-composer routines-tab__step-composer--new">
+                  <input
+                    type="text"
+                    value={newHabitDraftByRoutine[routine.id] ?? ''}
+                    onChange={(event) =>
+                      setNewHabitDraftByRoutine((prev) => ({
+                        ...prev,
+                        [routine.id]: event.target.value,
+                      }))
+                    }
+                    placeholder="Or create a new step habit (e.g., Drink water)"
+                    maxLength={120}
+                    disabled={saving}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={() => void handleCreateHabitAndAttachStep(routine.id)}
+                    disabled={saving || !(newHabitDraftByRoutine[routine.id] ?? '').trim()}
+                  >
+                    Create + add
                   </button>
                 </div>
                 {(stepsByRoutine[routine.id] ?? []).length > 0 ? (

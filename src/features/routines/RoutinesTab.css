@@ -41,8 +41,14 @@
 }
 
 .routines-tab__composer input,
-.routines-tab__composer textarea {
+.routines-tab__composer textarea,
+.routines-tab__step-composer input,
+.routines-tab__step-composer select {
   width: 100%;
+  font-size: 16px;
+  min-height: 44px;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
 }
 
 .routines-tab__status {
@@ -106,6 +112,10 @@
 
 .routines-tab__step-composer select {
   min-width: 0;
+}
+
+.routines-tab__step-composer--new {
+  margin-top: 0.4rem;
 }
 
 .routines-tab__steps {

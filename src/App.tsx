@@ -4270,6 +4270,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
             forceCompactView={!isGameModeActive}
             preferredCompactView={!isGameModeActive}
             hideTimeBoundOffers={!isGameModeActive}
+            hiddenHabitIds={routineHiddenHabitIds}
+            onHideStandaloneHabitsChange={(habitIds) => setRoutineHiddenHabitIds(habitIds)}
           />
         </div>
         {!showZenGardenFullScreen && !isConflictResolverFullscreen && (
