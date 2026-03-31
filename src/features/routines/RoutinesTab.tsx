@@ -23,6 +23,17 @@ type RoutineStepCounts = Record<string, number>;
 type RoutineStepsByRoutine = Record<string, RoutineStep[]>;
 type RoutineStepDraftByRoutine = Record<string, string>;
 type NewHabitDraftByRoutine = Record<string, string>;
+type RoutineScheduleMode = 'daily' | 'times_per_week' | 'specific_days';
+
+const WEEKDAY_OPTIONS: Array<{ value: number; label: string }> = [
+  { value: 0, label: 'Sun' },
+  { value: 1, label: 'Mon' },
+  { value: 2, label: 'Tue' },
+  { value: 3, label: 'Wed' },
+  { value: 4, label: 'Thu' },
+  { value: 5, label: 'Fri' },
+  { value: 6, label: 'Sat' },
+];
 
 export function RoutinesTab({ session, onOpenToday }: RoutinesTabProps) {
   const [loading, setLoading] = useState(false);
@@ -37,12 +48,25 @@ export function RoutinesTab({ session, onOpenToday }: RoutinesTabProps) {
   const [newHabitDraftByRoutine, setNewHabitDraftByRoutine] = useState<NewHabitDraftByRoutine>({});
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
+  const [newScheduleMode, setNewScheduleMode] = useState<RoutineScheduleMode>('daily');
+  const [newTimesPerWeek, setNewTimesPerWeek] = useState(3);
+  const [newSpecificDays, setNewSpecificDays] = useState<number[]>([1, 2, 3, 4, 5]);
 
   const activeCount = useMemo(() => routines.filter((routine) => routine.is_active).length, [routines]);
   const habitTitleById = useMemo(
     () => new Map(habits.map((habit) => [habit.id, habit.title] as const)),
     [habits],
   );
+
+  const createSchedulePayload = useCallback((): Record<string, unknown> => {
+    if (newScheduleMode === 'times_per_week') {
+      return { mode: 'times_per_week', timesPerWeek: Math.max(1, Math.min(7, newTimesPerWeek)) };
+    }
+    if (newScheduleMode === 'specific_days') {
+      return { mode: 'specific_days', days: newSpecificDays.length > 0 ? newSpecificDays : [1, 2, 3, 4, 5] };
+    }
+    return { mode: 'daily' };
+  }, [newScheduleMode, newSpecificDays, newTimesPerWeek]);
 
   const loadRoutines = useCallback(async () => {
     setLoading(true);
@@ -109,6 +133,7 @@ export function RoutinesTab({ session, onOpenToday }: RoutinesTabProps) {
       const result = await createRoutine({
         title: trimmedTitle,
         description: newDescription.trim() || undefined,
+        schedule: createSchedulePayload(),
       });
 
       if (result.error) {
@@ -119,11 +144,14 @@ export function RoutinesTab({ session, onOpenToday }: RoutinesTabProps) {
 
       setNewTitle('');
       setNewDescription('');
+      setNewScheduleMode('daily');
+      setNewTimesPerWeek(3);
+      setNewSpecificDays([1, 2, 3, 4, 5]);
       setSuccess('Routine created. Add existing or brand-new steps below.');
       setSaving(false);
       await loadRoutines();
     },
-    [newDescription, newTitle, loadRoutines],
+    [createSchedulePayload, newDescription, newTitle, loadRoutines],
   );
 
   const handleToggleActive = useCallback(
@@ -336,6 +364,50 @@ export function RoutinesTab({ session, onOpenToday }: RoutinesTabProps) {
             rows={3}
           />
         </label>
+        <label>
+          Schedule
+          <select
+            value={newScheduleMode}
+            onChange={(event) => setNewScheduleMode(event.target.value as RoutineScheduleMode)}
+          >
+            <option value="daily">Daily</option>
+            <option value="times_per_week">Times per week</option>
+            <option value="specific_days">Specific days</option>
+          </select>
+        </label>
+        {newScheduleMode === 'times_per_week' ? (
+          <label>
+            Target completions per week
+            <input
+              type="number"
+              min={1}
+              max={7}
+              value={newTimesPerWeek}
+              onChange={(event) => setNewTimesPerWeek(Number(event.target.value) || 1)}
+            />
+          </label>
+        ) : null}
+        {newScheduleMode === 'specific_days' ? (
+          <fieldset className="routines-tab__days-picker">
+            <legend>Days</legend>
+            <div className="routines-tab__days-grid">
+              {WEEKDAY_OPTIONS.map((day) => (
+                <label key={day.value} className="routines-tab__day-chip">
+                  <input
+                    type="checkbox"
+                    checked={newSpecificDays.includes(day.value)}
+                    onChange={(event) =>
+                      setNewSpecificDays((prev) =>
+                        event.target.checked ? [...prev, day.value].sort((a, b) => a - b) : prev.filter((d) => d !== day.value),
+                      )
+                    }
+                  />
+                  <span>{day.label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        ) : null}
         <button type="submit" className="btn btn--primary" disabled={saving || !session}>
           {saving ? 'Saving…' : 'Create routine'}
         </button>

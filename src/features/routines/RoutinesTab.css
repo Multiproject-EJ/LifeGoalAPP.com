@@ -47,7 +47,7 @@
   font-size: 0.9rem;
 }
 
-.routines-tab__composer input,
+.routines-tab__composer input:not([type='checkbox']),
 .routines-tab__composer textarea,
 .routines-tab__step-composer input,
 .routines-tab__step-composer select {
@@ -56,6 +56,33 @@
   min-height: 44px;
   padding: 0.55rem 0.7rem;
   border-radius: 10px;
+}
+
+.routines-tab__days-picker {
+  border: 1px solid var(--border-muted, rgba(96, 108, 122, 0.2));
+  border-radius: 10px;
+  padding: 0.6rem;
+}
+
+.routines-tab__days-picker legend {
+  padding: 0 0.35rem;
+  font-size: 0.82rem;
+}
+
+.routines-tab__days-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.routines-tab__day-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--border-muted, rgba(96, 108, 122, 0.2));
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.8rem;
 }
 
 .routines-tab__status {
