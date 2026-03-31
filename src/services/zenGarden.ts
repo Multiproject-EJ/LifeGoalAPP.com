@@ -27,6 +27,17 @@ function writeInventory(userId: string, inventory: string[]): void {
   localStorage.setItem(buildInventoryStorageKey(userId), JSON.stringify(inventory));
 }
 
+async function fetchSupabaseInventory(userId: string): Promise<string[]> {
+  const supabase = getSupabaseClient();
+  const { data, error } = await (supabase as any)
+    .from('zen_garden_inventory')
+    .select('item_id')
+    .eq('user_id', userId);
+
+  if (error) throw error;
+  return (data ?? []).map((row: { item_id: string }) => row.item_id);
+}
+
 function buildTransactionStorageKey(userId: string): string {
   return `${DEMO_ZEN_TOKEN_TRANSACTIONS_KEY}:${userId}`;
 }
@@ -132,6 +143,11 @@ export async function fetchZenGardenInventory(userId: string): Promise<{
   error: Error | null;
 }> {
   try {
+    if (canUseSupabaseData()) {
+      const inventory = await fetchSupabaseInventory(userId);
+      return { data: inventory, error: null };
+    }
+
     return { data: readInventory(userId), error: null };
   } catch (error) {
     return {
@@ -162,6 +178,38 @@ export async function grantEarnedZenItem(
   itemName: string
 ): Promise<{ data: { inventory: string[] } | null; error: Error | null }> {
   try {
+    if (canUseSupabaseData()) {
+      const supabase = getSupabaseClient();
+      const { error } = await (supabase as any)
+        .from('zen_garden_inventory')
+        .upsert(
+          {
+            user_id: userId,
+            item_id: itemId,
+            source: 'earned',
+            earned_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,item_id' },
+        );
+
+      if (error) throw error;
+
+      const nextInventory = await fetchSupabaseInventory(userId);
+      void recordTelemetryEvent({
+        userId,
+        eventType: 'economy_earn',
+        metadata: {
+          currency: 'zen_garden_item',
+          amount: 1,
+          sourceType: 'contract_milestone',
+          sourceId: itemId,
+          description: `Earned ${itemName}`,
+        },
+      });
+
+      return { data: { inventory: nextInventory }, error: null };
+    }
+
     const inventory = readInventory(userId);
     if (inventory.includes(itemId)) {
       return { data: { inventory }, error: null };
@@ -222,9 +270,27 @@ export async function purchaseZenGardenItem(
       if (updateError) throw updateError;
     }
 
-    const inventory = readInventory(userId);
-    const nextInventory = inventory.includes(itemId) ? inventory : [...inventory, itemId];
-    writeInventory(userId, nextInventory);
+    let nextInventory: string[];
+    if (canUseSupabaseData()) {
+      const supabase = getSupabaseClient();
+      const { error: inventoryError } = await (supabase as any)
+        .from('zen_garden_inventory')
+        .upsert(
+          {
+            user_id: userId,
+            item_id: itemId,
+            source: 'purchased',
+            purchased_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,item_id' },
+        );
+      if (inventoryError) throw inventoryError;
+      nextInventory = await fetchSupabaseInventory(userId);
+    } else {
+      const inventory = readInventory(userId);
+      nextInventory = inventory.includes(itemId) ? inventory : [...inventory, itemId];
+      writeInventory(userId, nextInventory);
+    }
 
     logZenTokenTransaction(userId, {
       user_id: userId,

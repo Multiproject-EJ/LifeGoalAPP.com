@@ -22,6 +22,11 @@ import {
   getContractRewardMultiplier,
   getSuccessStreakFromEvaluations,
 } from '../lib/contractRewardMultipliers';
+import {
+  checkSameContractCooldown,
+  checkSacredContractLimit,
+} from '../lib/contractIntegrity';
+import { checkContractZenGardenRewards } from './contractZenGardenRewards';
 
 // Maximum number of simultaneously active contracts
 export const MAX_ACTIVE_CONTRACTS = 3;
@@ -434,9 +439,9 @@ async function getVerifiedProgressCount(userId: string, contract: CommitmentCont
 
   if (contract.targetType === 'FocusSession') {
     // TODO: Wire FocusSession progress once a focus session service is available.
-    // Note: FocusSession targets are not yet selectable from ContractWizard (only Habits and Goals
-    // appear in the target list). This branch handles future-proofing for when FocusSession
-    // contracts are created programmatically or via a future wizard update.
+    // Note: ContractWizard now exposes a manual "Focus sessions" target option. Until a dedicated
+    // focus-session service is available, this branch intentionally returns null so the contract
+    // remains user-driven (manual progress check-ins / outcome-only finalization).
     // For now, return null to fall back to manually tracked progress.
     return null;
   }
@@ -655,18 +660,27 @@ export async function createContract(
       };
     }
 
-    // Sacred contract yearly limit: max 2 per calendar year
     const contractType = input.contractType ?? 'classic';
+    const cooldownCheck = checkSameContractCooldown(existingContracts ?? [], contractType, input.targetId);
+    if (!cooldownCheck.allowed) {
+      return {
+        data: null,
+        error: new Error(cooldownCheck.reason ?? 'You recently cancelled a matching contract. Please wait before creating it again.'),
+      };
+    }
+
+    // Sacred contract yearly limit: max 2 per calendar year
     const isSacred = input.isSacred ?? contractType === 'sacred';
     if (isSacred) {
       const { data: reputation } = await fetchReputationScore(userId);
       const thisYear = new Date().getFullYear();
       const sacredYear = reputation?.sacredYear ?? thisYear;
       const sacredUsed = sacredYear === thisYear ? (reputation?.sacredContractsUsedThisYear ?? 0) : 0;
-      if (sacredUsed >= 2) {
+      const sacredLimitCheck = checkSacredContractLimit(sacredUsed);
+      if (!sacredLimitCheck.allowed) {
         return {
           data: null,
-          error: new Error('You can only start 2 sacred contracts per calendar year.'),
+          error: new Error(sacredLimitCheck.reason ?? 'You can only start 2 sacred contracts per calendar year.'),
         };
       }
     }
@@ -1017,6 +1031,8 @@ export async function activateContract(
     const updatedContracts = [...contracts];
     updatedContracts[contractIndex] = updatedContract;
     await saveContracts(userId, updatedContracts);
+
+    void incrementContractsStarted(userId);
 
     void recordTelemetryEvent({
       userId,
@@ -1441,13 +1457,19 @@ export async function evaluateContract(
         actualCount = contract.targetCount;
       }
     } else {
-      const targetWithGrace = contract.targetCount - contract.graceDays;
-      result = actualCount >= targetWithGrace ? 'success' : 'miss';
+      const targetWithGrace = contract.contractType === 'reverse'
+        ? contract.targetCount + contract.graceDays
+        : Math.max(0, contract.targetCount - contract.graceDays);
+      result = contract.contractType === 'reverse'
+        ? (actualCount <= targetWithGrace ? 'success' : 'miss')
+        : (actualCount >= targetWithGrace ? 'success' : 'miss');
     }
-    const graceDaysUsed = Math.min(
-      contract.graceDays,
-      Math.max(0, contract.targetCount - actualCount)
-    );
+    const graceDaysUsed = contract.contractType === 'reverse'
+      ? Math.min(contract.graceDays, Math.max(0, actualCount - contract.targetCount))
+      : Math.min(
+        contract.graceDays,
+        Math.max(0, contract.targetCount - actualCount)
+      );
     const { data: priorEvaluations } = await fetchContractEvaluations(userId, contract.id);
     const successStreakBeforeEvaluation = result === 'success'
       ? getSuccessStreakFromEvaluations(priorEvaluations ?? [])
@@ -1586,6 +1608,10 @@ export async function evaluateContract(
       void unlockCascadingContract(userId, contract.unlocksContractId, contracts);
     }
 
+    if (result === 'success') {
+      void checkContractZenGardenRewards(userId, updatedContract, result);
+    }
+
     void recordTelemetryEvent({
       userId,
       eventType: result === 'success' ? 'contract_completed' : 'contract_missed',
@@ -1651,9 +1677,6 @@ export async function evaluateDueContracts(
 ): Promise<ServiceResponse<ContractEvaluation[]>> {
   try {
     if (canUseSupabaseData()) {
-      const { data: existingContracts } = await fetchContracts(userId);
-      const hasOutcomeOnlyContract = (existingContracts ?? []).some((contract) => contract.trackingMode === 'outcome_only');
-      if (!hasOutcomeOnlyContract) {
       const supabase = getSupabaseClient();
       const { data, error } = await (supabase as any).rpc('evaluate_due_commitment_contracts', {
         p_user_id: userId,
@@ -1666,7 +1689,6 @@ export async function evaluateDueContracts(
 
       const evaluations = (data ?? []).map((row: unknown) => evaluationFromRow(row as EvaluationRow));
       return { data: evaluations, error: null };
-      }
     }
 
     const { data: contracts, error } = await fetchContracts(userId);
@@ -2006,7 +2028,6 @@ async function incrementSacredContractUsed(userId: string): Promise<void> {
     const sacredUsed = sacredYear === thisYear ? current.sacredContractsUsedThisYear : 0;
     const updated: ReputationScore = {
       ...current,
-      contractsStarted: current.contractsStarted + 1,
       sacredContractsUsedThisYear: sacredUsed + 1,
       sacredYear: thisYear,
       updatedAt: new Date().toISOString(),
@@ -2014,6 +2035,39 @@ async function incrementSacredContractUsed(userId: string): Promise<void> {
     await saveReputationScore(userId, updated);
   } catch {
     // Silently fail — don't block contract creation
+  }
+}
+
+async function incrementContractsStarted(userId: string): Promise<void> {
+  try {
+    const { data: existing } = await fetchReputationScore(userId);
+    const now = new Date().toISOString();
+    const thisYear = new Date().getFullYear();
+    const current: ReputationScore = existing ?? {
+      userId,
+      contractsStarted: 0,
+      contractsCompleted: 0,
+      contractsFailed: 0,
+      contractsCancelled: 0,
+      reliabilityRating: 0,
+      reliabilityTier: 'untested' as ReputationTier,
+      sacredContractsKept: 0,
+      sacredContractsBroken: 0,
+      sacredContractsUsedThisYear: 0,
+      sacredYear: thisYear,
+      longestContractStreak: 0,
+      totalStakeEarned: 0,
+      totalStakeForfeited: 0,
+      updatedAt: now,
+    };
+
+    await saveReputationScore(userId, {
+      ...current,
+      contractsStarted: current.contractsStarted + 1,
+      updatedAt: now,
+    });
+  } catch {
+    // Silently fail — don't block activation
   }
 }
 

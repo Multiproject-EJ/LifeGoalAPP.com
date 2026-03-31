@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { ContractCadence, ContractStakeType, ContractTargetType, ContractType, ContractStage } from '../../types/gamification';
 import { listHabitsV2, quickAddDailyHabit, type HabitV2Row } from '../../services/habitsV2';
 import { fetchGoals, insertGoal } from '../../services/goals';
 import type { Database } from '../../lib/database.types';
-import { createContract, activateContract, type ContractInput } from '../../services/commitmentContracts';
+import { createContract, activateContract, fetchContracts, type ContractInput } from '../../services/commitmentContracts';
 import { IdentityStatementInput } from './IdentityStatementInput';
 import { MultiStageEditor } from './MultiStageEditor';
 import { NarrativeThemePicker } from './NarrativeThemePicker';
@@ -33,20 +33,42 @@ interface ContractTypeOption {
   icon: string;
   label: string;
   description: string;
+  group: 'foundations' | 'behavior_control' | 'narrative_meaning' | 'complex_progression';
+  bestFor: string;
+  example: string;
+  setupEffort: 'Quick' | 'Medium' | 'Advanced';
 }
 
 const CONTRACT_TYPES: ContractTypeOption[] = [
-  { type: 'classic', icon: '📜', label: 'Classic', description: 'Stake on completing a habit or goal' },
-  { type: 'identity', icon: '🪞', label: 'Identity', description: 'Commit to who you want to become' },
-  { type: 'escalation', icon: '📈', label: 'Escalation', description: 'Stakes grow on consecutive misses' },
-  { type: 'redemption', icon: '⚡', label: 'Redemption', description: 'Miss triggers a redemption quest instead' },
-  { type: 'reverse', icon: '🚫', label: 'Reverse', description: 'Commit to NOT doing something' },
-  { type: 'multi_stage', icon: '🏔️', label: 'Multi-Stage', description: 'Large goal broken into milestones' },
-  { type: 'future_self', icon: '💌', label: 'Future Self', description: 'Write a sealed message to your future self' },
-  { type: 'narrative', icon: '⚔️', label: 'Narrative', description: 'Story-themed contract with character growth' },
-  { type: 'sacred', icon: '🔱', label: 'Sacred', description: 'Rare, high-stakes ceremony (max 2/year)' },
-  { type: 'cascading', icon: '🔗', label: 'Cascading', description: 'Completion unlocks the next contract' },
+  { type: 'classic', icon: '📜', label: 'Classic', description: 'Stake on completing a habit or goal', group: 'foundations', bestFor: 'Simple, dependable accountability', example: 'Complete Workout 4x this week', setupEffort: 'Quick' },
+  { type: 'reputation', icon: '⭐', label: 'Reputation', description: 'Build a visible reliability track record', group: 'foundations', bestFor: 'Making consistency visible over time', example: 'Build a reliability score with weekly check-ins', setupEffort: 'Quick' },
+  { type: 'identity', icon: '🪞', label: 'Identity', description: 'Commit to who you want to become', group: 'foundations', bestFor: 'Behavior change tied to self-image', example: '"I am someone who journals daily"', setupEffort: 'Medium' },
+  { type: 'reverse', icon: '🚫', label: 'Reverse', description: 'Commit to NOT doing something', group: 'behavior_control', bestFor: 'Reducing or eliminating a behavior', example: 'Max 1 doom-scroll slip per day', setupEffort: 'Quick' },
+  { type: 'escalation', icon: '📈', label: 'Escalation', description: 'Stakes grow on consecutive misses', group: 'behavior_control', bestFor: 'Breaking repeated relapse loops', example: 'Each miss raises the stake next window', setupEffort: 'Medium' },
+  { type: 'redemption', icon: '⚡', label: 'Redemption', description: 'Miss triggers a redemption quest instead', group: 'behavior_control', bestFor: 'Recovery without instant hard reset', example: 'Missed target → complete redemption task', setupEffort: 'Medium' },
+  { type: 'future_self', icon: '💌', label: 'Future Self', description: 'Write a sealed message to your future self', group: 'narrative_meaning', bestFor: 'Emotionally meaningful accountability', example: 'Open your letter only if you keep the contract', setupEffort: 'Medium' },
+  { type: 'narrative', icon: '⚔️', label: 'Narrative', description: 'Story-themed contract with character growth', group: 'narrative_meaning', bestFor: 'Gamified motivation and progression', example: 'Pick an archetype and rank up with wins', setupEffort: 'Medium' },
+  { type: 'sacred', icon: '🔱', label: 'Sacred', description: 'Rare, high-stakes ceremony (max 2/year)', group: 'narrative_meaning', bestFor: 'Major, non-negotiable commitments', example: 'High-stakes annual oath with 3x impact', setupEffort: 'Advanced' },
+  { type: 'multi_stage', icon: '🏔️', label: 'Multi-Stage', description: 'Large goal broken into milestones', group: 'complex_progression', bestFor: 'Big goals with sequential phases', example: 'Break launch goal into 4 milestone stages', setupEffort: 'Advanced' },
+  { type: 'cascading', icon: '🔗', label: 'Cascading', description: 'Completion unlocks the next contract', group: 'complex_progression', bestFor: 'Roadmap-style chained objectives', example: 'Finish Contract A to unlock Contract B', setupEffort: 'Advanced' },
 ];
+
+const CONTRACT_GROUPS: Array<{
+  key: ContractTypeOption['group'];
+  title: string;
+  description: string;
+}> = [
+  { key: 'foundations', title: 'Foundations', description: 'Best starting point for most people.' },
+  { key: 'behavior_control', title: 'Behavior Control', description: 'For reducing slips and controlling triggers.' },
+  { key: 'narrative_meaning', title: 'Narrative & Meaning', description: 'For emotional stakes and identity momentum.' },
+  { key: 'complex_progression', title: 'Complex Progression', description: 'For multi-step, roadmap-driven goals.' },
+];
+
+type ContractPickerMode = 'guided' | 'browse';
+type GuidedIntent = 'build_consistency' | 'reduce_behavior' | 'major_goal' | 'identity_shift';
+type GuidedStrictness = 'gentle' | 'balanced' | 'high';
+type GuidedComplexity = 'simple' | 'structured' | 'advanced';
+type GuidedMeaning = 'practical' | 'meaningful';
 
 export function ContractWizard({
   userId,
@@ -62,6 +84,13 @@ export function ContractWizard({
   const [quickCreateTitle, setQuickCreateTitle] = useState('');
   const [quickCreateTargetDate, setQuickCreateTargetDate] = useState('');
   const [quickCreateSubmitting, setQuickCreateSubmitting] = useState(false);
+  const [pickerMode, setPickerMode] = useState<ContractPickerMode>('guided');
+  const [existingContractCount, setExistingContractCount] = useState(0);
+  const [recentMissCount, setRecentMissCount] = useState(0);
+  const [guidedIntent, setGuidedIntent] = useState<GuidedIntent>('build_consistency');
+  const [guidedStrictness, setGuidedStrictness] = useState<GuidedStrictness>('balanced');
+  const [guidedComplexity, setGuidedComplexity] = useState<GuidedComplexity>('simple');
+  const [guidedMeaning, setGuidedMeaning] = useState<GuidedMeaning>('practical');
 
   // Step 0: Contract type
   const [selectedContractType, setSelectedContractType] = useState<ContractType>('classic');
@@ -89,8 +118,8 @@ export function ContractWizard({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Total steps depends on contract type
-  const totalSteps = selectedContractType === 'sacred' ? 5 : 4;
+  // Current wizard has 5 rendered steps (0..4) for every contract type.
+  const totalSteps: WizardStep = 4;
 
   // Load habits and goals for target selection
   useEffect(() => {
@@ -132,6 +161,12 @@ export function ContractWizard({
           });
         }
 
+        targets.unshift({
+          id: 'focus-session-manual',
+          title: 'Focus sessions',
+          type: 'FocusSession',
+        });
+
         setTargetOptions(targets);
       } catch (err) {
         console.error('Failed to load targets:', err);
@@ -142,6 +177,21 @@ export function ContractWizard({
 
     loadTargets();
   }, []);
+
+  useEffect(() => {
+    const loadContractSignals = async () => {
+      const { data } = await fetchContracts(userId);
+      const contracts = data ?? [];
+      setExistingContractCount(contracts.length);
+      setRecentMissCount(
+        contracts
+          .filter((contract) => contract.status === 'active')
+          .reduce((sum, contract) => sum + contract.missCount, 0),
+      );
+    };
+
+    void loadContractSignals();
+  }, [userId]);
 
   // Update default target count when cadence changes
   useEffect(() => {
@@ -159,6 +209,54 @@ export function ContractWizard({
   const balance = stakeType === 'gold' ? currentGoldBalance : currentTokenBalance;
   const hasStakeCapacity = maxStake >= 1;
   const stakeValid = hasStakeCapacity && stakeAmount > 0 && stakeAmount <= maxStake;
+
+  const groupedContractTypes = useMemo(() => {
+    const byGroup = new Map<ContractTypeOption['group'], ContractTypeOption[]>();
+    for (const group of CONTRACT_GROUPS) {
+      byGroup.set(group.key, CONTRACT_TYPES.filter((option) => option.group === group.key));
+    }
+    return byGroup;
+  }, []);
+
+  const guidedRecommendations = useMemo(() => {
+    const recommendations: ContractType[] = [];
+
+    if (existingContractCount === 0) {
+      recommendations.push('classic');
+    }
+
+    if (recentMissCount >= 2 && guidedStrictness === 'gentle') {
+      recommendations.push('redemption');
+    }
+
+    if (guidedIntent === 'reduce_behavior') {
+      recommendations.push(guidedStrictness === 'high' ? 'escalation' : 'reverse');
+    } else if (guidedIntent === 'major_goal') {
+      recommendations.push(guidedComplexity === 'advanced' ? 'multi_stage' : 'classic');
+    } else if (guidedIntent === 'identity_shift') {
+      recommendations.push(guidedMeaning === 'meaningful' ? 'future_self' : 'identity');
+    } else {
+      recommendations.push(guidedStrictness === 'high' ? 'escalation' : 'reputation');
+    }
+
+    if (guidedMeaning === 'meaningful' && guidedComplexity !== 'simple') {
+      recommendations.push(guidedStrictness === 'high' ? 'sacred' : 'narrative');
+    } else if (guidedComplexity === 'advanced') {
+      recommendations.push('cascading');
+    }
+
+    return Array.from(new Set(recommendations))
+      .slice(0, 2)
+      .map((type) => CONTRACT_TYPES.find((option) => option.type === type))
+      .filter((option): option is ContractTypeOption => Boolean(option));
+  }, [
+    existingContractCount,
+    guidedIntent,
+    guidedStrictness,
+    guidedComplexity,
+    guidedMeaning,
+    recentMissCount,
+  ]);
 
   const handleNext = () => {
     if (currentStep === 0) {
@@ -279,23 +377,113 @@ export function ContractWizard({
       {/* Step 0: Choose Contract Type */}
       {currentStep === 0 && (
         <div className="contract-wizard__step">
-          <h3 className="contract-wizard__prompt">Choose your contract type</h3>
-          <div className="contract-wizard__type-grid">
-            {CONTRACT_TYPES.map((ct) => (
-              <button
-                key={ct.type}
-                type="button"
-                className={`contract-wizard__type-card${
-                  selectedContractType === ct.type ? ' contract-wizard__type-card--selected' : ''
-                }`}
-                onClick={() => setSelectedContractType(ct.type)}
-              >
-                <span className="contract-wizard__type-icon">{ct.icon}</span>
-                <span className="contract-wizard__type-name">{ct.label}</span>
-                <span className="contract-wizard__type-desc">{ct.description}</span>
-              </button>
-            ))}
+          <h3 className="contract-wizard__prompt">Help me choose the right contract</h3>
+          <div className="contract-wizard__picker-mode" role="tablist" aria-label="Contract picker mode">
+            <button
+              type="button"
+              className={`contract-wizard__picker-mode-button${pickerMode === 'guided' ? ' contract-wizard__picker-mode-button--active' : ''}`}
+              onClick={() => setPickerMode('guided')}
+            >
+              Guided (recommended)
+            </button>
+            <button
+              type="button"
+              className={`contract-wizard__picker-mode-button${pickerMode === 'browse' ? ' contract-wizard__picker-mode-button--active' : ''}`}
+              onClick={() => setPickerMode('browse')}
+            >
+              Browse all
+            </button>
           </div>
+
+          {pickerMode === 'guided' ? (
+            <div className="contract-wizard__guided">
+              <div className="contract-wizard__field-group">
+                <label className="contract-wizard__label">What are you trying to do most?</label>
+                <div className="contract-wizard__chip-group">
+                  <button type="button" className={`contract-wizard__chip${guidedIntent === 'build_consistency' ? ' contract-wizard__chip--selected' : ''}`} onClick={() => setGuidedIntent('build_consistency')}>Build consistency</button>
+                  <button type="button" className={`contract-wizard__chip${guidedIntent === 'reduce_behavior' ? ' contract-wizard__chip--selected' : ''}`} onClick={() => setGuidedIntent('reduce_behavior')}>Reduce behavior</button>
+                  <button type="button" className={`contract-wizard__chip${guidedIntent === 'major_goal' ? ' contract-wizard__chip--selected' : ''}`} onClick={() => setGuidedIntent('major_goal')}>Complete major goal</button>
+                  <button type="button" className={`contract-wizard__chip${guidedIntent === 'identity_shift' ? ' contract-wizard__chip--selected' : ''}`} onClick={() => setGuidedIntent('identity_shift')}>Identity shift</button>
+                </div>
+              </div>
+              <div className="contract-wizard__field-group">
+                <label className="contract-wizard__label">How strict should the contract feel?</label>
+                <div className="contract-wizard__chip-group">
+                  <button type="button" className={`contract-wizard__chip${guidedStrictness === 'gentle' ? ' contract-wizard__chip--selected' : ''}`} onClick={() => setGuidedStrictness('gentle')}>Gentle</button>
+                  <button type="button" className={`contract-wizard__chip${guidedStrictness === 'balanced' ? ' contract-wizard__chip--selected' : ''}`} onClick={() => setGuidedStrictness('balanced')}>Balanced</button>
+                  <button type="button" className={`contract-wizard__chip${guidedStrictness === 'high' ? ' contract-wizard__chip--selected' : ''}`} onClick={() => setGuidedStrictness('high')}>High stakes</button>
+                </div>
+              </div>
+              <div className="contract-wizard__field-group">
+                <label className="contract-wizard__label">How much setup complexity do you want?</label>
+                <div className="contract-wizard__chip-group">
+                  <button type="button" className={`contract-wizard__chip${guidedComplexity === 'simple' ? ' contract-wizard__chip--selected' : ''}`} onClick={() => setGuidedComplexity('simple')}>Simple</button>
+                  <button type="button" className={`contract-wizard__chip${guidedComplexity === 'structured' ? ' contract-wizard__chip--selected' : ''}`} onClick={() => setGuidedComplexity('structured')}>Structured</button>
+                  <button type="button" className={`contract-wizard__chip${guidedComplexity === 'advanced' ? ' contract-wizard__chip--selected' : ''}`} onClick={() => setGuidedComplexity('advanced')}>Advanced</button>
+                </div>
+              </div>
+              <div className="contract-wizard__field-group">
+                <label className="contract-wizard__label">Do you want emotional meaning built in?</label>
+                <div className="contract-wizard__chip-group">
+                  <button type="button" className={`contract-wizard__chip${guidedMeaning === 'practical' ? ' contract-wizard__chip--selected' : ''}`} onClick={() => setGuidedMeaning('practical')}>Practical</button>
+                  <button type="button" className={`contract-wizard__chip${guidedMeaning === 'meaningful' ? ' contract-wizard__chip--selected' : ''}`} onClick={() => setGuidedMeaning('meaningful')}>Meaningful</button>
+                </div>
+              </div>
+
+              <div className="contract-wizard__guided-results">
+                <p className="contract-wizard__guided-title">Recommended for you</p>
+                <div className="contract-wizard__type-grid">
+                  {guidedRecommendations.map((ct) => (
+                    <button
+                      key={ct.type}
+                      type="button"
+                      className={`contract-wizard__type-card${
+                        selectedContractType === ct.type ? ' contract-wizard__type-card--selected' : ''
+                      }`}
+                      onClick={() => setSelectedContractType(ct.type)}
+                    >
+                      <span className="contract-wizard__type-icon">{ct.icon}</span>
+                      <span className="contract-wizard__type-name">{ct.label}</span>
+                      <span className="contract-wizard__type-desc">{ct.description}</span>
+                      <span className="contract-wizard__type-meta">Best for: {ct.bestFor}</span>
+                      <span className="contract-wizard__type-meta">Example: {ct.example}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="contract-wizard__grouped-sections">
+              {CONTRACT_GROUPS.map((group) => (
+                <section key={group.key} className="contract-wizard__group-section">
+                  <header className="contract-wizard__group-header">
+                    <h4 className="contract-wizard__group-title">{group.title}</h4>
+                    <p className="contract-wizard__group-description">{group.description}</p>
+                  </header>
+                  <div className="contract-wizard__type-grid">
+                    {(groupedContractTypes.get(group.key) ?? []).map((ct) => (
+                      <button
+                        key={ct.type}
+                        type="button"
+                        className={`contract-wizard__type-card${
+                          selectedContractType === ct.type ? ' contract-wizard__type-card--selected' : ''
+                        }`}
+                        onClick={() => setSelectedContractType(ct.type)}
+                      >
+                        <span className="contract-wizard__type-icon">{ct.icon}</span>
+                        <span className="contract-wizard__type-name">{ct.label}</span>
+                        <span className="contract-wizard__type-desc">{ct.description}</span>
+                        <span className="contract-wizard__type-meta">Best for: {ct.bestFor}</span>
+                        <span className="contract-wizard__type-meta">Example: {ct.example}</span>
+                        <span className="contract-wizard__type-meta">Setup: {ct.setupEffort}</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
+
           <div className="contract-wizard__actions">
             <button
               type="button"
@@ -353,7 +541,7 @@ export function ContractWizard({
                     onClick={() => setSelectedTarget(target)}
                   >
                     <span className="contract-wizard__target-type">
-                      {target.type === 'Habit' ? '✓' : '🎯'}
+                      {target.type === 'Habit' ? '✓' : target.type === 'Goal' ? '🎯' : '⏱️'}
                     </span>
                     <span className="contract-wizard__target-title">{target.title}</span>
                   </button>
@@ -575,14 +763,14 @@ export function ContractWizard({
             <input
               id="target-count"
               type="number"
-              min={selectedContractType === 'reverse' ? '0' : '1'}
+              min="1"
               className="contract-wizard__input"
               value={targetCount}
-              onChange={(e) => setTargetCount(parseInt(e.target.value, 10) || (selectedContractType === 'reverse' ? 0 : 1))}
+              onChange={(e) => setTargetCount(parseInt(e.target.value, 10) || 1)}
             />
             <p className="contract-wizard__helper-text">
               {selectedContractType === 'reverse'
-                ? 'Max violations you allow before losing the contract (0 = zero tolerance)'
+                ? 'Max violations you allow before losing the contract (minimum 1)'
                 : 'This is the minimum to keep your contract'}
             </p>
           </div>
@@ -707,25 +895,27 @@ export function ContractWizard({
           </div>
 
           <div className="contract-wizard__field-group">
-            <label className="contract-wizard__label">Tracking style</label>
+            <label className="contract-wizard__label">How do you want to track this contract?</label>
             <div className="contract-wizard__chip-group">
               <button
                 type="button"
                 className={`contract-wizard__chip${trackingMode === 'progress' ? ' contract-wizard__chip--selected' : ''}`}
                 onClick={() => setTrackingMode('progress')}
               >
-                Progress check-ins
+                Check-ins (mark progress)
               </button>
               <button
                 type="button"
                 className={`contract-wizard__chip${trackingMode === 'outcome_only' ? ' contract-wizard__chip--selected' : ''}`}
                 onClick={() => setTrackingMode('outcome_only')}
               >
-                Outcome only
+                Outcome only (no check-ins)
               </button>
             </div>
             <p className="contract-wizard__helper-text">
-              Outcome only fits "don’t do X" commitments: log a failure if needed, or finalize success at the end date.
+              {trackingMode === 'progress'
+                ? 'Use this when you want to actively mark progress as you go.'
+                : 'Great for “don’t do X” or pass/fail commitments: log a failure if needed, or finalize success on/after the end date.'}
             </p>
           </div>
 
