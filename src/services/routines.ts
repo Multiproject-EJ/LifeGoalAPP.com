@@ -17,6 +17,7 @@ type ServiceResponse<T> = {
 
 const DEMO_ROUTINES_KEY = 'lifegoal-demo-routines-v1';
 const DEMO_ROUTINE_STEPS_KEY = 'lifegoal-demo-routine-steps-v1';
+const DEMO_ROUTINE_LOGS_KEY = 'lifegoal-demo-routine-logs-v1';
 
 function buildMockPostgrestError(message: string): PostgrestError {
   return {
@@ -297,9 +298,31 @@ export async function upsertRoutineLog(input: {
   }
 
   if (!canUseSupabaseData()) {
-    // We intentionally skip local routine log persistence for now.
-    // Routine completion can be derived from step completion in demo mode.
-    return { data: null, error: null };
+    const existing = readLocal<RoutineLog>(DEMO_ROUTINE_LOGS_KEY);
+    const idx = existing.findIndex(
+      (row) =>
+        row.routine_id === input.routineId &&
+        row.user_id === sessionUserId &&
+        row.date === input.date,
+    );
+    const nextRow: RoutineLog = {
+      id: idx >= 0 ? existing[idx].id : localId('routine-log'),
+      routine_id: input.routineId,
+      user_id: sessionUserId,
+      date: input.date,
+      completed: input.completed,
+      completed_at: input.completed ? new Date().toISOString() : null,
+      mode: input.mode ?? 'normal',
+      created_at: idx >= 0 ? existing[idx].created_at : new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    if (idx >= 0) {
+      existing[idx] = nextRow;
+    } else {
+      existing.push(nextRow);
+    }
+    writeLocal(DEMO_ROUTINE_LOGS_KEY, existing);
+    return { data: nextRow, error: null };
   }
 
   const supabase = getSupabaseClient();
@@ -331,8 +354,11 @@ export async function listRoutineLogsForRange(input: {
   }
 
   if (!canUseSupabaseData()) {
-    // Demo-mode routine logs are not persisted yet.
-    return { data: [], error: null };
+    const rows = readLocal<RoutineLog>(DEMO_ROUTINE_LOGS_KEY)
+      .filter((row) => row.user_id === sessionUserId)
+      .filter((row) => row.date >= input.dateFrom && row.date <= input.dateTo)
+      .sort((a, b) => a.date.localeCompare(b.date));
+    return { data: rows, error: null };
   }
 
   const supabase = getSupabaseClient();
