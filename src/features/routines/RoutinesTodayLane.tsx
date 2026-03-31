@@ -50,6 +50,8 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
   const [stepsByRoutine, setStepsByRoutine] = useState<StepsByRoutine>({});
   const [habitsById, setHabitsById] = useState<Record<string, HabitV2Row>>({});
   const [todayLogs, setTodayLogs] = useState<HabitLogV2Row[]>([]);
+  const [activeRunRoutineId, setActiveRunRoutineId] = useState<string | null>(null);
+  const [activeRunStepIndex, setActiveRunStepIndex] = useState(0);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -128,7 +130,7 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
       if (result.error) {
         setError(result.error.message);
         setSavingStepId(null);
-        return;
+        return false;
       }
       const logsResult = await listTodayHabitLogsV2(session.user.id);
       if (logsResult.error) {
@@ -137,9 +139,44 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
         setTodayLogs(logsResult.data ?? []);
       }
       setSavingStepId(null);
+      return true;
     },
     [session.user.id],
   );
+
+  const activeRun = useMemo(() => {
+    if (!activeRunRoutineId) return null;
+    const routine = dueRoutines.find((item) => item.id === activeRunRoutineId);
+    if (!routine) return null;
+    const steps = (stepsByRoutine[routine.id] ?? []).slice().sort((a, b) => a.step_order - b.step_order);
+    if (steps.length === 0) return null;
+    const clampedIndex = Math.max(0, Math.min(activeRunStepIndex, steps.length - 1));
+    return {
+      routine,
+      steps,
+      index: clampedIndex,
+      currentStep: steps[clampedIndex],
+    };
+  }, [activeRunRoutineId, activeRunStepIndex, dueRoutines, stepsByRoutine]);
+
+  const handleRunStart = useCallback((routineId: string) => {
+    setActiveRunRoutineId(routineId);
+    setActiveRunStepIndex(0);
+  }, []);
+
+  const handleRunClose = useCallback(() => {
+    setActiveRunRoutineId(null);
+    setActiveRunStepIndex(0);
+  }, []);
+
+  const handleRunAdvance = useCallback(() => {
+    if (!activeRun) return;
+    if (activeRun.index >= activeRun.steps.length - 1) {
+      handleRunClose();
+      return;
+    }
+    setActiveRunStepIndex((value) => value + 1);
+  }, [activeRun, handleRunClose]);
 
   if (loading) {
     return <section className="routines-today-lane"><p>Loading routines…</p></section>;
@@ -177,6 +214,7 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
                 </p>
               </header>
               {steps.length > 0 ? (
+                <>
                 <ul>
                   {steps.map((step) => {
                     const done = completedHabitIds.has(step.habit_id);
@@ -195,6 +233,14 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
                     );
                   })}
                 </ul>
+                <button
+                  type="button"
+                  className="btn btn--ghost routines-today-lane__run-button"
+                  onClick={() => handleRunStart(routine.id)}
+                >
+                  Start run
+                </button>
+                </>
               ) : (
                 <p className="routines-today-lane__empty">No steps attached yet.</p>
               )}
@@ -202,6 +248,44 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
           );
         })}
       </div>
+      {activeRun ? (
+        <div className="routines-run-modal" role="dialog" aria-modal="true" aria-label="Routine run mode">
+          <div className="routines-run-modal__backdrop" onClick={handleRunClose} role="presentation" />
+          <div className="routines-run-modal__panel">
+            <header className="routines-run-modal__header">
+              <p className="routines-run-modal__eyebrow">Cinematic run</p>
+              <h4>{activeRun.routine.title}</h4>
+              <p>
+                Step {activeRun.index + 1} of {activeRun.steps.length}
+              </p>
+            </header>
+            <div className="routines-run-modal__body">
+              <h5>{habitsById[activeRun.currentStep.habit_id]?.title ?? 'Unknown habit'}</h5>
+              <div className="routines-run-modal__actions">
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  onClick={async () => {
+                    const ok = await handleStepDone(activeRun.currentStep);
+                    if (ok) {
+                      handleRunAdvance();
+                    }
+                  }}
+                  disabled={savingStepId === activeRun.currentStep.id}
+                >
+                  {savingStepId === activeRun.currentStep.id ? 'Saving…' : 'Mark done'}
+                </button>
+                <button type="button" className="btn btn--ghost" onClick={handleRunAdvance}>
+                  Skip
+                </button>
+                <button type="button" className="btn btn--ghost" onClick={handleRunClose}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
