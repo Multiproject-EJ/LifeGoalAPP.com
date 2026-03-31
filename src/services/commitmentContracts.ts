@@ -1441,13 +1441,19 @@ export async function evaluateContract(
         actualCount = contract.targetCount;
       }
     } else {
-      const targetWithGrace = contract.targetCount - contract.graceDays;
-      result = actualCount >= targetWithGrace ? 'success' : 'miss';
+      const targetWithGrace = contract.contractType === 'reverse'
+        ? contract.targetCount + contract.graceDays
+        : Math.max(0, contract.targetCount - contract.graceDays);
+      result = contract.contractType === 'reverse'
+        ? (actualCount <= targetWithGrace ? 'success' : 'miss')
+        : (actualCount >= targetWithGrace ? 'success' : 'miss');
     }
-    const graceDaysUsed = Math.min(
-      contract.graceDays,
-      Math.max(0, contract.targetCount - actualCount)
-    );
+    const graceDaysUsed = contract.contractType === 'reverse'
+      ? Math.min(contract.graceDays, Math.max(0, actualCount - contract.targetCount))
+      : Math.min(
+        contract.graceDays,
+        Math.max(0, contract.targetCount - actualCount)
+      );
     const { data: priorEvaluations } = await fetchContractEvaluations(userId, contract.id);
     const successStreakBeforeEvaluation = result === 'success'
       ? getSuccessStreakFromEvaluations(priorEvaluations ?? [])
@@ -1653,7 +1659,10 @@ export async function evaluateDueContracts(
     if (canUseSupabaseData()) {
       const { data: existingContracts } = await fetchContracts(userId);
       const hasOutcomeOnlyContract = (existingContracts ?? []).some((contract) => contract.trackingMode === 'outcome_only');
-      if (!hasOutcomeOnlyContract) {
+      // Reverse contracts use inverted success logic (fewer events is better).
+      // Keep them on app-side evaluation until the sweep RPC path is parity-safe.
+      const hasReverseContract = (existingContracts ?? []).some((contract) => contract.contractType === 'reverse');
+      if (!hasOutcomeOnlyContract && !hasReverseContract) {
       const supabase = getSupabaseClient();
       const { data, error } = await (supabase as any).rpc('evaluate_due_commitment_contracts', {
         p_user_id: userId,
