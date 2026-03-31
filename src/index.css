@@ -8199,6 +8199,13 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-size: 0.9rem;
 }
 
+.habit-contracts-card__stake {
+  margin: 0;
+  color: #0f172a;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 .habit-contracts-card__meter {
   height: 0.5rem;
   border-radius: 999px;
@@ -8210,6 +8217,30 @@ html.platform-ipad .workspace-shell__menu-edge {
   display: block;
   height: 100%;
   background: linear-gradient(135deg, #06b6d4, #4f46e5);
+}
+
+.habit-contracts-card__meter-fill--timeline {
+  background: linear-gradient(135deg, #22c55e, #0ea5e9);
+}
+
+.habit-contracts-card__timeline {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.habit-contracts-card__timeline-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #1e293b;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.habit-contracts-card__timeline-copy {
+  margin: 0;
+  color: #475569;
+  font-size: 0.8rem;
 }
 
 .habit-contracts-card__actions {

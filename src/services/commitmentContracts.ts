@@ -1018,6 +1018,8 @@ export async function activateContract(
     updatedContracts[contractIndex] = updatedContract;
     await saveContracts(userId, updatedContracts);
 
+    void incrementContractsStarted(userId);
+
     void recordTelemetryEvent({
       userId,
       eventType: 'contract_activated',
@@ -1441,13 +1443,19 @@ export async function evaluateContract(
         actualCount = contract.targetCount;
       }
     } else {
-      const targetWithGrace = contract.targetCount - contract.graceDays;
-      result = actualCount >= targetWithGrace ? 'success' : 'miss';
+      const targetWithGrace = contract.contractType === 'reverse'
+        ? contract.targetCount + contract.graceDays
+        : Math.max(0, contract.targetCount - contract.graceDays);
+      result = contract.contractType === 'reverse'
+        ? (actualCount <= targetWithGrace ? 'success' : 'miss')
+        : (actualCount >= targetWithGrace ? 'success' : 'miss');
     }
-    const graceDaysUsed = Math.min(
-      contract.graceDays,
-      Math.max(0, contract.targetCount - actualCount)
-    );
+    const graceDaysUsed = contract.contractType === 'reverse'
+      ? Math.min(contract.graceDays, Math.max(0, actualCount - contract.targetCount))
+      : Math.min(
+        contract.graceDays,
+        Math.max(0, contract.targetCount - actualCount)
+      );
     const { data: priorEvaluations } = await fetchContractEvaluations(userId, contract.id);
     const successStreakBeforeEvaluation = result === 'success'
       ? getSuccessStreakFromEvaluations(priorEvaluations ?? [])
@@ -1653,7 +1661,10 @@ export async function evaluateDueContracts(
     if (canUseSupabaseData()) {
       const { data: existingContracts } = await fetchContracts(userId);
       const hasOutcomeOnlyContract = (existingContracts ?? []).some((contract) => contract.trackingMode === 'outcome_only');
-      if (!hasOutcomeOnlyContract) {
+      // Reverse contracts use inverted success logic (fewer events is better).
+      // Keep them on app-side evaluation until the sweep RPC path is parity-safe.
+      const hasReverseContract = (existingContracts ?? []).some((contract) => contract.contractType === 'reverse');
+      if (!hasOutcomeOnlyContract && !hasReverseContract) {
       const supabase = getSupabaseClient();
       const { data, error } = await (supabase as any).rpc('evaluate_due_commitment_contracts', {
         p_user_id: userId,
@@ -2006,7 +2017,6 @@ async function incrementSacredContractUsed(userId: string): Promise<void> {
     const sacredUsed = sacredYear === thisYear ? current.sacredContractsUsedThisYear : 0;
     const updated: ReputationScore = {
       ...current,
-      contractsStarted: current.contractsStarted + 1,
       sacredContractsUsedThisYear: sacredUsed + 1,
       sacredYear: thisYear,
       updatedAt: new Date().toISOString(),
@@ -2014,6 +2024,39 @@ async function incrementSacredContractUsed(userId: string): Promise<void> {
     await saveReputationScore(userId, updated);
   } catch {
     // Silently fail — don't block contract creation
+  }
+}
+
+async function incrementContractsStarted(userId: string): Promise<void> {
+  try {
+    const { data: existing } = await fetchReputationScore(userId);
+    const now = new Date().toISOString();
+    const thisYear = new Date().getFullYear();
+    const current: ReputationScore = existing ?? {
+      userId,
+      contractsStarted: 0,
+      contractsCompleted: 0,
+      contractsFailed: 0,
+      contractsCancelled: 0,
+      reliabilityRating: 0,
+      reliabilityTier: 'untested' as ReputationTier,
+      sacredContractsKept: 0,
+      sacredContractsBroken: 0,
+      sacredContractsUsedThisYear: 0,
+      sacredYear: thisYear,
+      longestContractStreak: 0,
+      totalStakeEarned: 0,
+      totalStakeForfeited: 0,
+      updatedAt: now,
+    };
+
+    await saveReputationScore(userId, {
+      ...current,
+      contractsStarted: current.contractsStarted + 1,
+      updatedAt: now,
+    });
+  } catch {
+    // Silently fail — don't block activation
   }
 }
 
