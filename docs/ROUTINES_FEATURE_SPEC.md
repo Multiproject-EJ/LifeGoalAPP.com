@@ -13,6 +13,7 @@ Create a first-class **Routines** feature that:
 2. Keeps Today focused and uncluttered.
 3. Uses a single source of truth for completion state across all UI surfaces.
 4. Enables immersive execution via **Cinematic Routine Runs**.
+5. Delivers a **mobile-first, world-class visual experience** that feels fun, elegant, and fast.
 
 ---
 
@@ -69,6 +70,11 @@ Routine execution mode should provide:
 - Reward/celebration on completion
 
 This should layer on top of existing habit logging and reward systems.
+
+### 8) Mobile-first product quality bar (non-negotiable)
+- The routine UX must be designed for mobile first, then enhanced for larger screens.
+- The interface should feel premium: smooth transitions, clear hierarchy, and playful-but-calm delight moments.
+- Routine interactions must be one-thumb friendly and fast enough for in-motion use (morning, commute, quick resets).
 
 ---
 
@@ -129,10 +135,100 @@ This should layer on top of existing habit logging and reward systems.
 
 ---
 
+## Mobile UI / UX Spec (Second-Pass Additions)
+
+## Design Principles
+1. **One-thumb first**: primary actions in easy thumb reach.
+2. **Zero clutter by default**: collapsed secondary content, progressive disclosure.
+3. **Momentum over management**: emphasize completion flow over settings.
+4. **Beautiful + legible**: strong contrast, clean spacing, premium motion.
+5. **Fast feedback**: immediate visual state updates and micro-celebrations.
+
+## Information Architecture (Mobile)
+
+### Today Screen hierarchy
+1. Greeting + day context
+2. **Routines Due Today** (primary lane)
+3. Standalone Habits (secondary lane, collapsed by default)
+4. Optional “Show all” / “Manage routines” links
+
+### Popup / menu structure
+- Add **Routines** entry near Goals and Habits.
+- Keep Today as execution entry point.
+- Keep Habits as atomic setup/editing workspace.
+
+## Routine Card (Mobile) — Default
+Each routine card should show:
+- Icon/emoji + title
+- Completion status (`2/5`)
+- Time context (`Morning`, `Tonight`, or anchored time range)
+- Primary CTA:
+  - `Start` (not started)
+  - `Continue` (in progress)
+  - `Done` (completed; tappable for recap)
+- Expand chevron for steps preview
+
+### Card states
+- **Idle**: not started, neutral accent
+- **In progress**: gradient/progress accent, subtle pulse
+- **Complete**: satisfied visual state, sparkle/confetti micro-feedback
+- **Skipped / Snoozed** (optional v1.1): muted state with undo affordance
+
+## Cinematic Routine Runs — Interaction Blueprint
+When user taps `Start`:
+1. Enter focused “run” surface (full-screen sheet or dedicated route).
+2. Show current step with a single dominant action.
+3. Provide next-step preview + routine progress bar.
+4. Offer quick fallback actions:
+   - `Mark done`
+   - `Done-ish`
+   - `Skip`
+5. End-of-run celebration with reward summary and optional reflection prompt.
+
+### Motion language
+- Transition-in: 220–320ms, ease-out
+- Step advance: 160–220ms
+- Completion celebration: short, non-blocking (<1.2s)
+- Respect reduced motion preference (disable decorative transitions).
+
+## Visual System Notes (Premium Feel)
+- Glassmorphic cards with clear depth layering, but keep readability first.
+- Clean typography scale:
+  - Routine title: high emphasis
+  - Progress and metadata: medium
+  - Secondary info: low emphasis
+- Color usage:
+  - Distinct state colors (idle / active / complete)
+  - Avoid over-saturated noise in dense screens
+- Maintain a calm aesthetic aligned with wellness/productivity tone.
+
+## Accessibility & Inclusivity Requirements
+- Tap targets: minimum 44x44px.
+- Color contrast: WCAG AA minimum.
+- Screen reader labels for progress and state changes.
+- Haptics/sound optional and user-controllable.
+- All motion effects must degrade gracefully in reduced-motion mode.
+
+## Performance Requirements (Mobile)
+- Routine card render target: smooth at 60fps on modern mobile.
+- First interactive routine action under ~100ms perceived response.
+- Optimistic UI updates for check-offs; network sync can finalize in background.
+- Keep Today initial render lightweight (lazy-load expanded details when needed).
+
+## Anti-Clutter Rules (Explicit)
+1. Routine steps default to `inside_routine_only`.
+2. Standalone lane starts collapsed when routine count > 0.
+3. Off-schedule routines are hidden by default.
+4. Avoid duplicate display unless `also_show_standalone` is explicitly enabled.
+5. Keep “Manage” controls out of the primary completion path.
+
+---
+
 ## Non-Goals (for v1)
 - Complex branching/conditional routines.
 - Shared/team routines.
 - AI-generated routine scripts beyond template generation.
+- Fully custom visual theme editor for routines.
 
 ---
 
@@ -146,15 +242,18 @@ This should layer on top of existing habit logging and reward systems.
 ### Phase 2 — Routine management UI
 - Add Routines tab in popup/menu.
 - Build create/edit/reorder flow.
+- Validate mobile IA and one-thumb interaction map.
 
 ### Phase 3 — Today integration
 - Add routine cards.
 - Add standalone habit declutter rules.
 - Ensure cross-surface sync.
+- Ship polished mobile card states (idle/in-progress/completed).
 
 ### Phase 4 — Cinematic Routine Runs
 - Guided sequence mode.
 - Progress + reward moments.
+- Add premium animation/haptics pass with reduced-motion fallback.
 
 ---
 
@@ -165,6 +264,9 @@ This should layer on top of existing habit logging and reward systems.
 4. Occasional routines only appear when due.
 5. Routines are manageable from dedicated navigation entry.
 6. Today supports a cinematic run mode for routine execution.
+7. Mobile UX is one-thumb friendly with strong visual hierarchy and minimal clutter.
+8. Routine interactions feel premium (smooth motion, clear feedback, fast response).
+9. Accessibility requirements are met (tap targets, contrast, reduced motion compatibility).
 
 ---
 
@@ -173,4 +275,15 @@ This should layer on top of existing habit logging and reward systems.
 2. Should routine completion bonus be daily-capped?
 3. Do we need explicit routine-level logs in v1, or can they be derived from habit logs?
 4. Should fallback mode be per-routine, per-step, or both in v1?
+5. Should cinematic run open as full-screen route or bottom sheet on mobile?
+6. Should “Done-ish” be enabled for all routine steps or only compatible habit types?
+7. Should we auto-sort routines by anchor time, recency, or user pinning?
 
+---
+
+## Implementation Checklist (Pre-build Gate)
+- [ ] Product sign-off on IA: Today vs Routines vs Habits responsibilities
+- [ ] UX sign-off on mobile wireframes + state map
+- [ ] Visual sign-off on routine cards + cinematic run flow
+- [ ] Engineering sign-off on data model and sync semantics
+- [ ] Accessibility pass criteria approved before UI build starts
