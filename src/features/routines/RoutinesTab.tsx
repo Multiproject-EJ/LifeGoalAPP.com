@@ -233,6 +233,25 @@ export function RoutinesTab({ session }: RoutinesTabProps) {
     [loadRoutines, stepsByRoutine],
   );
 
+  const handleStepOptionChange = useCallback(
+    async (
+      step: RoutineStep,
+      patch: Partial<Pick<RoutineStep, 'required' | 'display_mode' | 'fallback_step'>>,
+    ) => {
+      setSaving(true);
+      setError(null);
+      const result = await updateRoutineStep(step.id, patch);
+      if (result.error) {
+        setError(result.error.message);
+      } else {
+        setSuccess('Step options updated.');
+      }
+      setSaving(false);
+      await loadRoutines();
+    },
+    [loadRoutines],
+  );
+
   return (
     <section className="routines-tab" aria-label="Routines manager">
       <header className="routines-tab__header">
@@ -356,6 +375,46 @@ export function RoutinesTab({ session }: RoutinesTabProps) {
                             >
                               Remove
                             </button>
+                          </div>
+                          <div className="routines-tab__step-config">
+                            <label className="routines-tab__step-config-inline">
+                              <input
+                                type="checkbox"
+                                checked={step.required}
+                                onChange={(event) =>
+                                  void handleStepOptionChange(step, { required: event.target.checked })
+                                }
+                                disabled={saving}
+                              />
+                              Required
+                            </label>
+                            <label className="routines-tab__step-config-inline">
+                              Display
+                              <select
+                                value={step.display_mode}
+                                onChange={(event) =>
+                                  void handleStepOptionChange(step, {
+                                    display_mode: event.target.value as RoutineStep['display_mode'],
+                                  })
+                                }
+                                disabled={saving}
+                              >
+                                <option value="inside_routine_only">Inside routine only</option>
+                                <option value="also_show_standalone">Also show standalone</option>
+                                <option value="standalone_only">Standalone only</option>
+                              </select>
+                            </label>
+                            <label className="routines-tab__step-config-inline">
+                              <input
+                                type="checkbox"
+                                checked={step.fallback_step}
+                                onChange={(event) =>
+                                  void handleStepOptionChange(step, { fallback_step: event.target.checked })
+                                }
+                                disabled={saving}
+                              />
+                              Fallback step
+                            </label>
                           </div>
                         </li>
                       ))}

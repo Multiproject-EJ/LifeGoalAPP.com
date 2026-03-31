@@ -131,6 +131,25 @@
   gap: 0.35rem;
 }
 
+.routines-tab__step-config {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.8rem;
+  align-items: center;
+}
+
+.routines-tab__step-config-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary, #5b6170);
+}
+
+.routines-tab__step-config-inline select {
+  max-width: 180px;
+}
+
 @media (max-width: 640px) {
   .routines-tab__item {
     flex-direction: column;
@@ -142,6 +161,11 @@
   }
 
   .routines-tab__step {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .routines-tab__step-config {
     flex-direction: column;
     align-items: flex-start;
   }
