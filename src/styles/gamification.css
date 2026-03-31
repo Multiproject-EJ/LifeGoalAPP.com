@@ -1892,6 +1892,28 @@
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
+.score-tab__chain-viz {
+  margin: 0.75rem 0 1.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px dashed rgba(99, 102, 241, 0.35);
+  border-radius: 10px;
+  background: rgba(238, 242, 255, 0.45);
+}
+
+.score-tab__chain-viz-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #4338ca;
+}
+
+.score-tab__chain-viz-item {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+  color: #1f2937;
+}
+
 /* Contract Status Card */
 .contract-status-card {
   background: var(--card-background, #ffffff);
