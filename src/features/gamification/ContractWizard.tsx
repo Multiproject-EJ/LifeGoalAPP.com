@@ -118,8 +118,8 @@ export function ContractWizard({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Total steps depends on contract type
-  const totalSteps = selectedContractType === 'sacred' ? 5 : 4;
+  // Current wizard has 5 rendered steps (0..4) for every contract type.
+  const totalSteps: WizardStep = 4;
 
   // Load habits and goals for target selection
   useEffect(() => {
