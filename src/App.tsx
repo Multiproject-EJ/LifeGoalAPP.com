@@ -45,7 +45,7 @@ import {
   type TimerSessionState,
 } from './features/timer/timerSession';
 import { ProjectsManager } from './features/projects';
-import { RoutinesTab } from './features/routines';
+import { RoutinesTab, RoutinesTodayLane } from './features/routines';
 import { ScoreTab } from './features/gamification/ScoreTab';
 import { ContractsTab } from './features/gamification/ContractsTab';
 import { ZenGarden } from './features/zen-garden/ZenGarden';
