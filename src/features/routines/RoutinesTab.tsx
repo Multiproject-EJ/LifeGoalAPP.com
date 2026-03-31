@@ -24,6 +24,14 @@ type RoutineStepsByRoutine = Record<string, RoutineStep[]>;
 type RoutineStepDraftByRoutine = Record<string, string>;
 type NewHabitDraftByRoutine = Record<string, string>;
 type RoutineScheduleMode = 'daily' | 'times_per_week' | 'specific_days';
+type RoutineDraft = {
+  title: string;
+  description: string;
+  scheduleMode: RoutineScheduleMode;
+  timesPerWeek: number;
+  specificDays: number[];
+};
+type RoutineDraftById = Record<string, RoutineDraft>;
 
 const WEEKDAY_OPTIONS: Array<{ value: number; label: string }> = [
   { value: 0, label: 'Sun' },
@@ -34,6 +42,38 @@ const WEEKDAY_OPTIONS: Array<{ value: number; label: string }> = [
   { value: 5, label: 'Fri' },
   { value: 6, label: 'Sat' },
 ];
+
+function parseRoutineDraft(routine: Routine): RoutineDraft {
+  const schedule = (routine.schedule ?? {}) as Record<string, unknown>;
+  const mode = schedule.mode;
+  const timesPerWeekRaw = typeof schedule.timesPerWeek === 'number' ? schedule.timesPerWeek : 3;
+  const daysRaw = Array.isArray(schedule.days) ? schedule.days.filter((day): day is number => typeof day === 'number') : [];
+  if (mode === 'times_per_week') {
+    return {
+      title: routine.title,
+      description: routine.description ?? '',
+      scheduleMode: 'times_per_week',
+      timesPerWeek: Math.max(1, Math.min(7, timesPerWeekRaw)),
+      specificDays: [1, 2, 3, 4, 5],
+    };
+  }
+  if (mode === 'specific_days') {
+    return {
+      title: routine.title,
+      description: routine.description ?? '',
+      scheduleMode: 'specific_days',
+      timesPerWeek: 3,
+      specificDays: daysRaw.length > 0 ? daysRaw : [1, 2, 3, 4, 5],
+    };
+  }
+  return {
+    title: routine.title,
+    description: routine.description ?? '',
+    scheduleMode: 'daily',
+    timesPerWeek: 3,
+    specificDays: [1, 2, 3, 4, 5],
+  };
+}
 
 export function RoutinesTab({ session, onOpenToday }: RoutinesTabProps) {
   const [loading, setLoading] = useState(false);
@@ -46,6 +86,7 @@ export function RoutinesTab({ session, onOpenToday }: RoutinesTabProps) {
   const [stepCounts, setStepCounts] = useState<RoutineStepCounts>({});
   const [stepDraftByRoutine, setStepDraftByRoutine] = useState<RoutineStepDraftByRoutine>({});
   const [newHabitDraftByRoutine, setNewHabitDraftByRoutine] = useState<NewHabitDraftByRoutine>({});
+  const [routineDraftById, setRoutineDraftById] = useState<RoutineDraftById>({});
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [newScheduleMode, setNewScheduleMode] = useState<RoutineScheduleMode>('daily');
@@ -83,6 +124,15 @@ export function RoutinesTab({ session, onOpenToday }: RoutinesTabProps) {
 
     const rows = result.data ?? [];
     setRoutines(rows);
+    setRoutineDraftById((prev) => {
+      const next: RoutineDraftById = { ...prev };
+      for (const row of rows) {
+        if (!next[row.id]) {
+          next[row.id] = parseRoutineDraft(row);
+        }
+      }
+      return next;
+    });
 
     const counts: RoutineStepCounts = {};
     const nextStepsByRoutine: RoutineStepsByRoutine = {};
@@ -168,6 +218,43 @@ export function RoutinesTab({ session, onOpenToday }: RoutinesTabProps) {
       await loadRoutines();
     },
     [loadRoutines],
+  );
+
+  const buildScheduleFromDraft = useCallback((draft: RoutineDraft): Record<string, unknown> => {
+    if (draft.scheduleMode === 'times_per_week') {
+      return { mode: 'times_per_week', timesPerWeek: Math.max(1, Math.min(7, draft.timesPerWeek)) };
+    }
+    if (draft.scheduleMode === 'specific_days') {
+      return { mode: 'specific_days', days: draft.specificDays.length > 0 ? draft.specificDays : [1, 2, 3, 4, 5] };
+    }
+    return { mode: 'daily' };
+  }, []);
+
+  const handleSaveRoutineDetails = useCallback(
+    async (routineId: string) => {
+      const draft = routineDraftById[routineId];
+      if (!draft) return;
+      const title = draft.title.trim();
+      if (!title) {
+        setError('Routine title cannot be empty.');
+        return;
+      }
+      setSaving(true);
+      setError(null);
+      const result = await updateRoutine(routineId, {
+        title,
+        description: draft.description.trim() || null,
+        schedule: buildScheduleFromDraft(draft),
+      });
+      if (result.error) {
+        setError(result.error.message);
+      } else {
+        setSuccess('Routine details updated.');
+      }
+      setSaving(false);
+      await loadRoutines();
+    },
+    [buildScheduleFromDraft, loadRoutines, routineDraftById],
   );
 
   const handleDelete = useCallback(
@@ -435,6 +522,123 @@ export function RoutinesTab({ session, onOpenToday }: RoutinesTabProps) {
                 <p className="routines-tab__meta">
                   {routine.is_active ? 'Active' : 'Paused'} • Steps linked: {stepCounts[routine.id] ?? 0}
                 </p>
+                <div className="routines-tab__routine-editor">
+                  <label>
+                    Title
+                    <input
+                      type="text"
+                      value={routineDraftById[routine.id]?.title ?? routine.title}
+                      onChange={(event) =>
+                        setRoutineDraftById((prev) => ({
+                          ...prev,
+                          [routine.id]: {
+                            ...(prev[routine.id] ?? parseRoutineDraft(routine)),
+                            title: event.target.value,
+                          },
+                        }))
+                      }
+                      maxLength={120}
+                      disabled={saving}
+                    />
+                  </label>
+                  <label>
+                    Description
+                    <textarea
+                      value={routineDraftById[routine.id]?.description ?? routine.description ?? ''}
+                      onChange={(event) =>
+                        setRoutineDraftById((prev) => ({
+                          ...prev,
+                          [routine.id]: {
+                            ...(prev[routine.id] ?? parseRoutineDraft(routine)),
+                            description: event.target.value,
+                          },
+                        }))
+                      }
+                      maxLength={280}
+                      rows={2}
+                      disabled={saving}
+                    />
+                  </label>
+                  <label>
+                    Schedule
+                    <select
+                      value={routineDraftById[routine.id]?.scheduleMode ?? 'daily'}
+                      onChange={(event) =>
+                        setRoutineDraftById((prev) => ({
+                          ...prev,
+                          [routine.id]: {
+                            ...(prev[routine.id] ?? parseRoutineDraft(routine)),
+                            scheduleMode: event.target.value as RoutineScheduleMode,
+                          },
+                        }))
+                      }
+                      disabled={saving}
+                    >
+                      <option value="daily">Daily</option>
+                      <option value="times_per_week">Times per week</option>
+                      <option value="specific_days">Specific days</option>
+                    </select>
+                  </label>
+                  {routineDraftById[routine.id]?.scheduleMode === 'times_per_week' ? (
+                    <label>
+                      Per week
+                      <input
+                        type="number"
+                        min={1}
+                        max={7}
+                        value={routineDraftById[routine.id]?.timesPerWeek ?? 3}
+                        onChange={(event) =>
+                          setRoutineDraftById((prev) => ({
+                            ...prev,
+                            [routine.id]: {
+                              ...(prev[routine.id] ?? parseRoutineDraft(routine)),
+                              timesPerWeek: Number(event.target.value) || 1,
+                            },
+                          }))
+                        }
+                        disabled={saving}
+                      />
+                    </label>
+                  ) : null}
+                  {routineDraftById[routine.id]?.scheduleMode === 'specific_days' ? (
+                    <div className="routines-tab__days-grid">
+                      {WEEKDAY_OPTIONS.map((day) => {
+                        const selectedDays = routineDraftById[routine.id]?.specificDays ?? [1, 2, 3, 4, 5];
+                        const checked = selectedDays.includes(day.value);
+                        return (
+                          <label key={`${routine.id}-${day.value}`} className="routines-tab__day-chip">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(event) =>
+                                setRoutineDraftById((prev) => {
+                                  const current = prev[routine.id] ?? parseRoutineDraft(routine);
+                                  const nextDays = event.target.checked
+                                    ? [...current.specificDays, day.value].sort((a, b) => a - b)
+                                    : current.specificDays.filter((value) => value !== day.value);
+                                  return {
+                                    ...prev,
+                                    [routine.id]: { ...current, specificDays: nextDays },
+                                  };
+                                })
+                              }
+                              disabled={saving}
+                            />
+                            <span>{day.label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={() => void handleSaveRoutineDetails(routine.id)}
+                    disabled={saving}
+                  >
+                    Save details
+                  </button>
+                </div>
                 <div className="routines-tab__step-composer">
                   <select
                     value={stepDraftByRoutine[routine.id] ?? ''}

@@ -137,6 +137,18 @@
   gap: 0.4rem;
 }
 
+.routines-tab__routine-editor {
+  margin-top: 0.55rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.routines-tab__routine-editor label {
+  display: grid;
+  gap: 0.28rem;
+  font-size: 0.85rem;
+}
+
 .routines-tab__step-composer {
   margin-top: 0.55rem;
   display: grid;
