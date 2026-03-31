@@ -8,6 +8,7 @@ import './RoutinesTodayLane.css';
 
 type RoutinesTodayLaneProps = {
   session: Session;
+  onHideStandaloneHabitsChange?: (habitIds: string[]) => void;
 };
 
 type StepsByRoutine = Record<string, RoutineStep[]>;
@@ -63,7 +64,7 @@ function isRoutineDueToday(
   return true;
 }
 
-export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
+export function RoutinesTodayLane({ session, onHideStandaloneHabitsChange }: RoutinesTodayLaneProps) {
   const [loading, setLoading] = useState(false);
   const [savingStepId, setSavingStepId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -152,6 +153,20 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
       return isRoutineDueToday(routine, today, weeklyDone);
     });
   }, [routineLogs, routines]);
+
+  useEffect(() => {
+    if (!onHideStandaloneHabitsChange) return;
+    const hidden = new Set<string>();
+    for (const routine of dueRoutines) {
+      const steps = stepsByRoutine[routine.id] ?? [];
+      for (const step of steps) {
+        if (step.display_mode === 'inside_routine_only') {
+          hidden.add(step.habit_id);
+        }
+      }
+    }
+    onHideStandaloneHabitsChange(Array.from(hidden));
+  }, [dueRoutines, onHideStandaloneHabitsChange, stepsByRoutine]);
 
   const completedHabitIds = useMemo(() => {
     const doneIds = new Set<string>();

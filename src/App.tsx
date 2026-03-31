@@ -541,6 +541,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   });
   const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
   const [pendingTodayOfferOpen, setPendingTodayOfferOpen] = useState<TimeBoundOfferId | null>(null);
+  const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
   const [activeHolidaySeason, setActiveHolidaySeason] = useState<ActiveAdventMetaResult | null>(null);
   const [showHolidaySeasonDialog, setShowHolidaySeasonDialog] = useState(false);
   const [holidayPreviewKey, setHolidayPreviewKey] = useState<HolidayKey | null>(null);
@@ -2891,7 +2892,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 </button>
               </div>
             ) : null}
-            <RoutinesTodayLane session={activeSession} />
+            <RoutinesTodayLane
+              session={activeSession}
+              onHideStandaloneHabitsChange={(habitIds) => setRoutineHiddenHabitIds(habitIds)}
+            />
             <DailyHabitTracker
               session={activeSession}
               showPointsBadges={shouldShowPointsBadges}
@@ -2910,6 +2914,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               }}
               pendingOfferToOpen={pendingTodayOfferOpen}
               onPendingOfferHandled={() => setPendingTodayOfferOpen(null)}
+              hiddenHabitIds={routineHiddenHabitIds}
             />
             <HabitsModule
               session={activeSession}
