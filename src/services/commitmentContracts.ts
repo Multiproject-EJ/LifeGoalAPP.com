@@ -439,9 +439,9 @@ async function getVerifiedProgressCount(userId: string, contract: CommitmentCont
 
   if (contract.targetType === 'FocusSession') {
     // TODO: Wire FocusSession progress once a focus session service is available.
-    // Note: FocusSession targets are not yet selectable from ContractWizard (only Habits and Goals
-    // appear in the target list). This branch handles future-proofing for when FocusSession
-    // contracts are created programmatically or via a future wizard update.
+    // Note: ContractWizard now exposes a manual "Focus sessions" target option. Until a dedicated
+    // focus-session service is available, this branch intentionally returns null so the contract
+    // remains user-driven (manual progress check-ins / outcome-only finalization).
     // For now, return null to fall back to manually tracked progress.
     return null;
   }
@@ -1677,12 +1677,6 @@ export async function evaluateDueContracts(
 ): Promise<ServiceResponse<ContractEvaluation[]>> {
   try {
     if (canUseSupabaseData()) {
-      const { data: existingContracts } = await fetchContracts(userId);
-      const hasOutcomeOnlyContract = (existingContracts ?? []).some((contract) => contract.trackingMode === 'outcome_only');
-      // Reverse contracts use inverted success logic (fewer events is better).
-      // Keep them on app-side evaluation until the sweep RPC path is parity-safe.
-      const hasReverseContract = (existingContracts ?? []).some((contract) => contract.contractType === 'reverse');
-      if (!hasOutcomeOnlyContract && !hasReverseContract) {
       const supabase = getSupabaseClient();
       const { data, error } = await (supabase as any).rpc('evaluate_due_commitment_contracts', {
         p_user_id: userId,
@@ -1695,7 +1689,6 @@ export async function evaluateDueContracts(
 
       const evaluations = (data ?? []).map((row: unknown) => evaluationFromRow(row as EvaluationRow));
       return { data: evaluations, error: null };
-      }
     }
 
     const { data: contracts, error } = await fetchContracts(userId);

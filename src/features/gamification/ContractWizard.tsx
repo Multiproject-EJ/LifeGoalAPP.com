@@ -161,6 +161,12 @@ export function ContractWizard({
           });
         }
 
+        targets.unshift({
+          id: 'focus-session-manual',
+          title: 'Focus sessions',
+          type: 'FocusSession',
+        });
+
         setTargetOptions(targets);
       } catch (err) {
         console.error('Failed to load targets:', err);
@@ -535,7 +541,7 @@ export function ContractWizard({
                     onClick={() => setSelectedTarget(target)}
                   >
                     <span className="contract-wizard__target-type">
-                      {target.type === 'Habit' ? '✓' : '🎯'}
+                      {target.type === 'Habit' ? '✓' : target.type === 'Goal' ? '🎯' : '⏱️'}
                     </span>
                     <span className="contract-wizard__target-title">{target.title}</span>
                   </button>
