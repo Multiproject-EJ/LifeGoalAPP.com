@@ -2,7 +2,8 @@ export type ExperimentalFeatureKey =
   | 'aiCoachCompanion'
   | 'goalReflectionExperiments'
   | 'focusModeExtensions'
-  | 'desktopUiResearchPreview';
+  | 'desktopUiResearchPreview'
+  | 'routinesCinematicPolish';
 
 export type ExperimentalFeatureState = Record<ExperimentalFeatureKey, boolean>;
 
@@ -34,6 +35,11 @@ export const EXPERIMENTAL_FEATURES: ExperimentalFeatureDefinition[] = [
     key: 'desktopUiResearchPreview',
     title: 'Research Preview: Enable Desktop UI',
     description: 'Turn this on to use the desktop/iPad layout. Keep off to lock mobile-first UI scaling.',
+  },
+  {
+    key: 'routinesCinematicPolish',
+    title: 'Routines: Cinematic Polish',
+    description: 'Enable richer run transitions, haptics, and motion tuned for routines execution.',
   },
 ];
 

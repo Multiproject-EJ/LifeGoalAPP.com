@@ -124,6 +124,7 @@ import {
 import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
 import { HabitPauseDialog } from './HabitPauseDialog';
+import { RoutinesTodayLane } from '../routines';
 
 // Constants
 const DONE_ISH_DEFAULT_PERCENTAGE = 85;
@@ -159,6 +160,7 @@ type DailyHabitTrackerProps = {
   hideTimeBoundOffers?: boolean;
   pendingOfferToOpen?: TimeBoundOfferId | null;
   onPendingOfferHandled?: () => void;
+  hiddenHabitIds?: string[];
 };
 
 type HabitCompletionState = {
@@ -432,6 +434,7 @@ export function DailyHabitTracker({
   hideTimeBoundOffers = false,
   pendingOfferToOpen,
   onPendingOfferHandled,
+  hiddenHabitIds = [],
 }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
@@ -444,6 +447,7 @@ export function DailyHabitTracker({
   } = useLuckyRollStatus(session.user.id);
   const isCompact = variant === 'compact';
   const [activeOfferTeaser, setActiveOfferTeaser] = useState<TimeBoundOfferId | null>(null);
+  const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
   const [seenOfferTeasers, setSeenOfferTeasers] = useState<Record<string, boolean>>({});
   const progressGradientId = useId();
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
@@ -752,11 +756,16 @@ export function DailyHabitTracker({
   }, []);
 
   const sortedHabits = useMemo(() => {
-    if (!habits.length) {
-      return habits;
+    const combinedHiddenHabitIds = new Set<string>([...hiddenHabitIds, ...routineHiddenHabitIds]);
+    const visibleHabits = combinedHiddenHabitIds.size
+      ? habits.filter((habit) => !combinedHiddenHabitIds.has(habit.id))
+      : habits;
+
+    if (!visibleHabits.length) {
+      return visibleHabits;
     }
 
-    return [...habits].sort((a, b) => {
+    return [...visibleHabits].sort((a, b) => {
       const aCompleted = Boolean(completions[a.id]?.completed);
       const bCompleted = Boolean(completions[b.id]?.completed);
       if (aCompleted !== bCompleted) {
@@ -777,7 +786,7 @@ export function DailyHabitTracker({
       }
       return a.name.localeCompare(b.name);
     });
-  }, [habits, habitInsights, completions]);
+  }, [habits, hiddenHabitIds, routineHiddenHabitIds, habitInsights, completions]);
 
   const riskRankedOfferHabits = useMemo(() => {
     return rankHabitsForTimeLimitedOffer({
@@ -6252,6 +6261,11 @@ export function DailyHabitTracker({
                 </div>
               </div>
             ) : null}
+
+            <RoutinesTodayLane
+              session={session}
+              onHideStandaloneHabitsChange={(habitIds) => setRoutineHiddenHabitIds(habitIds)}
+            />
 
             <div className="habit-contracts-card" aria-live="polite">
               <div className="habit-contracts-card__header">
