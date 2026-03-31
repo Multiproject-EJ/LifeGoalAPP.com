@@ -45,7 +45,7 @@ import {
   type TimerSessionState,
 } from './features/timer/timerSession';
 import { ProjectsManager } from './features/projects';
-import { RoutinesTab, RoutinesTodayLane } from './features/routines';
+import { RoutinesTab } from './features/routines';
 import { ScoreTab } from './features/gamification/ScoreTab';
 import { ContractsTab } from './features/gamification/ContractsTab';
 import { ZenGarden } from './features/zen-garden/ZenGarden';
@@ -2914,11 +2914,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               }}
               pendingOfferToOpen={pendingTodayOfferOpen}
               onPendingOfferHandled={() => setPendingTodayOfferOpen(null)}
-              hiddenHabitIds={routineHiddenHabitIds}
-            />
-            <RoutinesTodayLane
-              session={activeSession}
-              onHideStandaloneHabitsChange={(habitIds) => setRoutineHiddenHabitIds(habitIds)}
+              hiddenHabitIds={[]}
             />
             <HabitsModule
               session={activeSession}
@@ -4283,7 +4279,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             forceCompactView={!isGameModeActive}
             preferredCompactView={!isGameModeActive}
             hideTimeBoundOffers={!isGameModeActive}
-            hiddenHabitIds={routineHiddenHabitIds}
+            hiddenHabitIds={[]}
           />
         </div>
         {!showZenGardenFullScreen && !isConflictResolverFullscreen && (

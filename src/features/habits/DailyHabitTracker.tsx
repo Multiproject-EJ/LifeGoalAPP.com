@@ -124,6 +124,7 @@ import {
 import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
 import { HabitPauseDialog } from './HabitPauseDialog';
+import { RoutinesTodayLane } from '../routines';
 
 // Constants
 const DONE_ISH_DEFAULT_PERCENTAGE = 85;
@@ -446,6 +447,7 @@ export function DailyHabitTracker({
   } = useLuckyRollStatus(session.user.id);
   const isCompact = variant === 'compact';
   const [activeOfferTeaser, setActiveOfferTeaser] = useState<TimeBoundOfferId | null>(null);
+  const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
   const [seenOfferTeasers, setSeenOfferTeasers] = useState<Record<string, boolean>>({});
   const progressGradientId = useId();
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
@@ -754,8 +756,9 @@ export function DailyHabitTracker({
   }, []);
 
   const sortedHabits = useMemo(() => {
-    const visibleHabits = hiddenHabitIds.length
-      ? habits.filter((habit) => !hiddenHabitIds.includes(habit.id))
+    const combinedHiddenHabitIds = new Set<string>([...hiddenHabitIds, ...routineHiddenHabitIds]);
+    const visibleHabits = combinedHiddenHabitIds.size
+      ? habits.filter((habit) => !combinedHiddenHabitIds.has(habit.id))
       : habits;
 
     if (!visibleHabits.length) {
@@ -783,7 +786,7 @@ export function DailyHabitTracker({
       }
       return a.name.localeCompare(b.name);
     });
-  }, [habits, hiddenHabitIds, habitInsights, completions]);
+  }, [habits, hiddenHabitIds, routineHiddenHabitIds, habitInsights, completions]);
 
   const riskRankedOfferHabits = useMemo(() => {
     return rankHabitsForTimeLimitedOffer({
@@ -6258,6 +6261,11 @@ export function DailyHabitTracker({
                 </div>
               </div>
             ) : null}
+
+            <RoutinesTodayLane
+              session={session}
+              onHideStandaloneHabitsChange={(habitIds) => setRoutineHiddenHabitIds(habitIds)}
+            />
 
             <div className="habit-contracts-card" aria-live="polite">
               <div className="habit-contracts-card__header">

@@ -1,5 +1,6 @@
-import type { PostgrestError } from '@supabase/supabase-js';
+import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
 import { canUseSupabaseData, getActiveSupabaseSession, getSupabaseClient } from '../lib/supabaseClient';
+import type { Database } from '../lib/database.types';
 import type {
   CreateRoutineInput,
   CreateRoutineStepInput,
@@ -14,6 +15,43 @@ type ServiceResponse<T> = {
   data: T | null;
   error: PostgrestError | null;
 };
+
+type RoutinesDatabaseExtension = Omit<Database, 'public'> & {
+  public: Database['public'] & {
+    Tables: Database['public']['Tables'] & {
+      routines: {
+        Row: Routine;
+        Insert: Omit<Routine, 'id' | 'created_at' | 'updated_at'> & Partial<Pick<Routine, 'id' | 'created_at' | 'updated_at'>>;
+        Update: Partial<Omit<Routine, 'id' | 'user_id' | 'created_at' | 'updated_at'>> & {
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      routine_steps: {
+        Row: RoutineStep;
+        Insert: Omit<RoutineStep, 'id' | 'created_at' | 'updated_at'> & Partial<Pick<RoutineStep, 'id' | 'created_at' | 'updated_at'>>;
+        Update: Partial<Omit<RoutineStep, 'id' | 'routine_id' | 'habit_id' | 'created_at' | 'updated_at'>> & {
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      routine_logs: {
+        Row: RoutineLog;
+        Insert: Omit<RoutineLog, 'id' | 'created_at' | 'updated_at'> & Partial<Pick<RoutineLog, 'id' | 'created_at' | 'updated_at'>>;
+        Update: Partial<Omit<RoutineLog, 'id' | 'routine_id' | 'user_id' | 'date' | 'created_at' | 'updated_at'>> & {
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+    };
+  };
+};
+
+type RoutinesSupabaseClient = SupabaseClient<Database & RoutinesDatabaseExtension>;
+
+function getRoutinesSupabaseClient(): RoutinesSupabaseClient {
+  return getSupabaseClient() as unknown as RoutinesSupabaseClient;
+}
 
 const DEMO_ROUTINES_KEY = 'lifegoal-demo-routines-v1';
 const DEMO_ROUTINE_STEPS_KEY = 'lifegoal-demo-routine-steps-v1';
@@ -68,8 +106,8 @@ export async function listRoutines(includeInactive = true): Promise<ServiceRespo
     return { data: rows, error: null };
   }
 
-  const supabase = getSupabaseClient();
-  let query = (supabase as any)
+  const supabase = getRoutinesSupabaseClient();
+  let query = supabase
     .from('routines')
     .select('*')
     .order('created_at', { ascending: true });
@@ -107,8 +145,8 @@ export async function createRoutine(input: CreateRoutineInput): Promise<ServiceR
     return { data: row, error: null };
   }
 
-  const supabase = getSupabaseClient();
-  const { data, error } = await (supabase as any)
+  const supabase = getRoutinesSupabaseClient();
+  const { data, error } = await supabase
     .from('routines')
     .insert({
       user_id: sessionUserId,
@@ -118,7 +156,7 @@ export async function createRoutine(input: CreateRoutineInput): Promise<ServiceR
       anchor_time: input.anchor_time ?? null,
       domain_key: input.domain_key ?? null,
       is_active: input.is_active ?? true,
-    })
+    } as unknown as never)
     .select('*')
     .single();
 
@@ -142,10 +180,10 @@ export async function updateRoutine(id: string, input: UpdateRoutineInput): Prom
     return { data: updated, error: null };
   }
 
-  const supabase = getSupabaseClient();
-  const { data, error } = await (supabase as any)
+  const supabase = getRoutinesSupabaseClient();
+  const { data, error } = await supabase
     .from('routines')
-    .update(input)
+    .update(input as unknown as never)
     .eq('id', id)
     .select('*')
     .single();
@@ -168,8 +206,8 @@ export async function deleteRoutine(id: string): Promise<ServiceResponse<Routine
     return { data: removed, error: null };
   }
 
-  const supabase = getSupabaseClient();
-  const { data, error } = await (supabase as any)
+  const supabase = getRoutinesSupabaseClient();
+  const { data, error } = await supabase
     .from('routines')
     .delete()
     .eq('id', id)
@@ -187,8 +225,8 @@ export async function listRoutineSteps(routineId: string): Promise<ServiceRespon
     return { data: rows, error: null };
   }
 
-  const supabase = getSupabaseClient();
-  const { data, error } = await (supabase as any)
+  const supabase = getRoutinesSupabaseClient();
+  const { data, error } = await supabase
     .from('routine_steps')
     .select('*')
     .eq('routine_id', routineId)
@@ -217,8 +255,8 @@ export async function createRoutineStep(input: CreateRoutineStepInput): Promise<
     return { data: row, error: null };
   }
 
-  const supabase = getSupabaseClient();
-  const { data, error } = await (supabase as any)
+  const supabase = getRoutinesSupabaseClient();
+  const { data, error } = await supabase
     .from('routine_steps')
     .insert({
       routine_id: input.routine_id,
@@ -227,7 +265,7 @@ export async function createRoutineStep(input: CreateRoutineStepInput): Promise<
       required: input.required ?? true,
       display_mode: input.display_mode ?? 'inside_routine_only',
       fallback_step: input.fallback_step ?? false,
-    })
+    } as unknown as never)
     .select('*')
     .single();
 
@@ -252,10 +290,10 @@ export async function updateRoutineStep(id: string, input: UpdateRoutineStepInpu
     return { data: updated, error: null };
   }
 
-  const supabase = getSupabaseClient();
-  const { data, error } = await (supabase as any)
+  const supabase = getRoutinesSupabaseClient();
+  const { data, error } = await supabase
     .from('routine_steps')
-    .update(input)
+    .update(input as unknown as never)
     .eq('id', id)
     .select('*')
     .single();
@@ -275,8 +313,8 @@ export async function deleteRoutineStep(id: string): Promise<ServiceResponse<Rou
     return { data: removed, error: null };
   }
 
-  const supabase = getSupabaseClient();
-  const { data, error } = await (supabase as any)
+  const supabase = getRoutinesSupabaseClient();
+  const { data, error } = await supabase
     .from('routine_steps')
     .delete()
     .eq('id', id)
@@ -325,7 +363,7 @@ export async function upsertRoutineLog(input: {
     return { data: nextRow, error: null };
   }
 
-  const supabase = getSupabaseClient();
+  const supabase = getRoutinesSupabaseClient();
   const payload = {
     routine_id: input.routineId,
     user_id: sessionUserId,
@@ -335,9 +373,9 @@ export async function upsertRoutineLog(input: {
     mode: input.mode ?? 'normal',
   };
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('routine_logs')
-    .upsert(payload, { onConflict: 'routine_id,user_id,date' })
+    .upsert(payload as unknown as never, { onConflict: 'routine_id,user_id,date' })
     .select('*')
     .single();
 
@@ -361,8 +399,8 @@ export async function listRoutineLogsForRange(input: {
     return { data: rows, error: null };
   }
 
-  const supabase = getSupabaseClient();
-  const { data, error } = await (supabase as any)
+  const supabase = getRoutinesSupabaseClient();
+  const { data, error } = await supabase
     .from('routine_logs')
     .select('*')
     .eq('user_id', sessionUserId)
