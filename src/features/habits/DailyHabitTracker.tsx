@@ -6280,6 +6280,18 @@ export function DailyHabitTracker({
                   {activeContracts.map((contract) => {
                     const progressPercent = Math.min(100, (contract.currentProgress / contract.targetCount) * 100);
                     const isBusy = contractActionId === contract.id;
+                    const stakeLabel = `${contract.stakeAmount} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'} staked`;
+                    const contractEndDate = contract.endAt ? new Date(contract.endAt) : null;
+                    const contractStartMs = new Date(contract.startAt).getTime();
+                    const contractEndMs = contractEndDate?.getTime() ?? null;
+                    const hasTimeline =
+                      contractEndMs !== null
+                      && !Number.isNaN(contractStartMs)
+                      && !Number.isNaN(contractEndMs)
+                      && contractEndMs > contractStartMs;
+                    const timelinePercent = hasTimeline
+                      ? Math.max(0, Math.min(100, ((Date.now() - contractStartMs) / (contractEndMs - contractStartMs)) * 100))
+                      : null;
 
                     return (
                       <article key={contract.id} className="habit-contracts-card__item">
@@ -6292,9 +6304,24 @@ export function DailyHabitTracker({
                         <p className="habit-contracts-card__item-copy">
                           {contract.currentProgress} / {contract.targetCount} this {contract.cadence}
                         </p>
+                        <p className="habit-contracts-card__stake">{stakeLabel}</p>
                         <div className="habit-contracts-card__meter" role="presentation">
                           <span className="habit-contracts-card__meter-fill" style={{ width: `${progressPercent}%` }} />
                         </div>
+                        {hasTimeline && timelinePercent !== null && contractEndDate ? (
+                          <div className="habit-contracts-card__timeline" role="status" aria-live="polite">
+                            <div className="habit-contracts-card__timeline-head">
+                              <span>Timeline</span>
+                              <span>{Math.round(timelinePercent)}%</span>
+                            </div>
+                            <div className="habit-contracts-card__meter" role="presentation">
+                              <span className="habit-contracts-card__meter-fill habit-contracts-card__meter-fill--timeline" style={{ width: `${timelinePercent}%` }} />
+                            </div>
+                            <p className="habit-contracts-card__timeline-copy">
+                              Ends {contractEndDate.toLocaleDateString()}
+                            </p>
+                          </div>
+                        ) : null}
                         <div className="habit-contracts-card__actions">
                           <button
                             type="button"
