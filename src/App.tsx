@@ -45,6 +45,7 @@ import {
   type TimerSessionState,
 } from './features/timer/timerSession';
 import { ProjectsManager } from './features/projects';
+import { RoutinesTab, RoutinesTodayLane } from './features/routines';
 import { ScoreTab } from './features/gamification/ScoreTab';
 import { ContractsTab } from './features/gamification/ContractsTab';
 import { ZenGarden } from './features/zen-garden/ZenGarden';
@@ -269,6 +270,13 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     shortLabel: 'HABITS',
   },
   {
+    id: 'routines',
+    label: 'Routines',
+    summary: 'Design routine flows and keep your sequence polished.',
+    icon: '🎬',
+    shortLabel: 'ROUTINES',
+  },
+  {
     id: 'rituals',
     label: 'Wellbeing Wheel Check-in',
     summary: '',
@@ -326,6 +334,7 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
   'goals',
   'body',
   'habits',
+  'routines',
   'support',
   'game',
   'journal',
@@ -532,6 +541,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   });
   const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
   const [pendingTodayOfferOpen, setPendingTodayOfferOpen] = useState<TimeBoundOfferId | null>(null);
+  const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
   const [activeHolidaySeason, setActiveHolidaySeason] = useState<ActiveAdventMetaResult | null>(null);
   const [showHolidaySeasonDialog, setShowHolidaySeasonDialog] = useState(false);
   const [holidayPreviewKey, setHolidayPreviewKey] = useState<HolidayKey | null>(null);
@@ -2900,6 +2910,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
               }}
               pendingOfferToOpen={pendingTodayOfferOpen}
               onPendingOfferHandled={() => setPendingTodayOfferOpen(null)}
+              hiddenHabitIds={routineHiddenHabitIds}
+              routinesSection={renderRoutinesTodaySection()}
             />
             <HabitsModule
               session={activeSession}
@@ -3018,6 +3030,21 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   setTimerLaunchContext(context);
                 }
                 setActiveWorkspaceNav('timer');
+              }}
+            />
+          </div>
+        );
+      case 'routines':
+        return (
+          <div className="workspace-content">
+            <RoutinesTab
+              session={activeSession}
+              onOpenToday={() => {
+                if (isMobileExperience) {
+                  setShowMobileHome(true);
+                  return;
+                }
+                setActiveWorkspaceNav('planning');
               }}
             />
           </div>
@@ -4223,6 +4250,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
     />
   );
 
+  const renderRoutinesTodaySection = () => (
+    <RoutinesTodayLane
+      session={activeSession}
+      onHideStandaloneHabitsChange={(habitIds) => setRoutineHiddenHabitIds(habitIds)}
+    />
+  );
+
   if (isMobileExperience && showMobileHome) {
     const mobileHomeAppClassName = `app app--workspace app--mobile-frame app--mobile-home-frame${
       isAnyModalVisible ? ' app--auth-overlay' : ''
@@ -4249,6 +4283,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
             forceCompactView={!isGameModeActive}
             preferredCompactView={!isGameModeActive}
             hideTimeBoundOffers={!isGameModeActive}
+            hiddenHabitIds={routineHiddenHabitIds}
+            routinesSection={renderRoutinesTodaySection()}
           />
         </div>
         {!showZenGardenFullScreen && !isConflictResolverFullscreen && (

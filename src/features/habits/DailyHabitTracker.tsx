@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useId } from 'react';
+import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
@@ -159,6 +160,8 @@ type DailyHabitTrackerProps = {
   hideTimeBoundOffers?: boolean;
   pendingOfferToOpen?: TimeBoundOfferId | null;
   onPendingOfferHandled?: () => void;
+  hiddenHabitIds?: string[];
+  routinesSection?: ReactNode;
 };
 
 type HabitCompletionState = {
@@ -432,6 +435,8 @@ export function DailyHabitTracker({
   hideTimeBoundOffers = false,
   pendingOfferToOpen,
   onPendingOfferHandled,
+  hiddenHabitIds = [],
+  routinesSection,
 }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
@@ -752,11 +757,15 @@ export function DailyHabitTracker({
   }, []);
 
   const sortedHabits = useMemo(() => {
-    if (!habits.length) {
-      return habits;
+    const visibleHabits = hiddenHabitIds.length
+      ? habits.filter((habit) => !hiddenHabitIds.includes(habit.id))
+      : habits;
+
+    if (!visibleHabits.length) {
+      return visibleHabits;
     }
 
-    return [...habits].sort((a, b) => {
+    return [...visibleHabits].sort((a, b) => {
       const aCompleted = Boolean(completions[a.id]?.completed);
       const bCompleted = Boolean(completions[b.id]?.completed);
       if (aCompleted !== bCompleted) {
@@ -777,7 +786,7 @@ export function DailyHabitTracker({
       }
       return a.name.localeCompare(b.name);
     });
-  }, [habits, habitInsights, completions]);
+  }, [habits, hiddenHabitIds, habitInsights, completions]);
 
   const riskRankedOfferHabits = useMemo(() => {
     return rankHabitsForTimeLimitedOffer({
@@ -6252,6 +6261,8 @@ export function DailyHabitTracker({
                 </div>
               </div>
             ) : null}
+
+            {routinesSection}
 
             <div className="habit-contracts-card" aria-live="polite">
               <div className="habit-contracts-card__header">
