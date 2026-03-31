@@ -3040,7 +3040,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
       case 'routines':
         return (
           <div className="workspace-content">
-            <RoutinesTab session={activeSession} />
+            <RoutinesTab
+              session={activeSession}
+              onOpenToday={() => {
+                if (isMobileExperience) {
+                  setShowMobileHome(true);
+                  return;
+                }
+                setActiveWorkspaceNav('planning');
+              }}
+            />
           </div>
         );
       case 'journal':

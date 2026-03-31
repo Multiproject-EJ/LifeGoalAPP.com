@@ -16,6 +16,7 @@ import './RoutinesTab.css';
 
 type RoutinesTabProps = {
   session: Session;
+  onOpenToday?: () => void;
 };
 
 type RoutineStepCounts = Record<string, number>;
@@ -23,7 +24,7 @@ type RoutineStepsByRoutine = Record<string, RoutineStep[]>;
 type RoutineStepDraftByRoutine = Record<string, string>;
 type NewHabitDraftByRoutine = Record<string, string>;
 
-export function RoutinesTab({ session }: RoutinesTabProps) {
+export function RoutinesTab({ session, onOpenToday }: RoutinesTabProps) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -180,7 +181,7 @@ export function RoutinesTab({ session }: RoutinesTabProps) {
       if (result.error) {
         setError(result.error.message);
       } else {
-        setSuccess('Step added to routine.');
+        setSuccess('Step added to routine. You can now run it from Today.');
       }
       setSaving(false);
       await loadRoutines();
@@ -222,7 +223,7 @@ export function RoutinesTab({ session }: RoutinesTabProps) {
       if (stepResult.error) {
         setError(stepResult.error.message);
       } else {
-        setSuccess(`Created "${draftedTitle}" and added it as a routine step.`);
+        setSuccess(`Created "${draftedTitle}" and added it as a routine step. Check Today to run it.`);
         setNewHabitDraftByRoutine((prev) => ({ ...prev, [routineId]: '' }));
       }
 
@@ -306,6 +307,11 @@ export function RoutinesTab({ session }: RoutinesTabProps) {
           <h2>Build your repeatable flow</h2>
           <p>Design and tune your routine flow. Active routines: <strong>{activeCount}</strong></p>
         </div>
+        {onOpenToday ? (
+          <button type="button" className="btn btn--ghost" onClick={onOpenToday}>
+            Open Today
+          </button>
+        ) : null}
       </header>
 
       <form className="routines-tab__composer" onSubmit={handleCreate}>

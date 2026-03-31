@@ -3,6 +3,13 @@
   gap: 1rem;
 }
 
+.routines-tab__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
 .routines-tab__header h2 {
   margin: 0 0 0.25rem;
 }
@@ -162,6 +169,10 @@
 
 @media (max-width: 640px) {
   .routines-tab__item {
+    flex-direction: column;
+  }
+
+  .routines-tab__header {
     flex-direction: column;
   }
 
