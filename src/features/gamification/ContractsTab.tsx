@@ -74,6 +74,31 @@ function pickPrimaryContract(contracts: CommitmentContract[]): CommitmentContrac
   return paused[0] ?? null;
 }
 
+function buildCascadingChains(contracts: CommitmentContract[]): CommitmentContract[][] {
+  const byId = new Map(contracts.map((contract) => [contract.id, contract]));
+  const chainedIds = new Set<string>();
+  contracts.forEach((contract) => {
+    if (contract.unlocksContractId) chainedIds.add(contract.unlocksContractId);
+  });
+
+  const roots = contracts.filter((contract) => contract.contractType === 'cascading' && !chainedIds.has(contract.id));
+  const chains: CommitmentContract[][] = [];
+
+  roots.forEach((root) => {
+    const chain: CommitmentContract[] = [];
+    const seen = new Set<string>();
+    let cursor: CommitmentContract | undefined = root;
+    while (cursor && !seen.has(cursor.id)) {
+      chain.push(cursor);
+      seen.add(cursor.id);
+      cursor = cursor.unlocksContractId ? byId.get(cursor.unlocksContractId) : undefined;
+    }
+    if (chain.length > 0) chains.push(chain);
+  });
+
+  return chains;
+}
+
 export function ContractsTab({
   session,
   profile,
@@ -101,6 +126,7 @@ export function ContractsTab({
   const activeContract = activeContracts[0] ?? null;
   const activeContractCount = activeContracts.filter((c) => c.status === 'active').length;
   const canCreateMore = activeContractCount < MAX_ACTIVE_CONTRACTS;
+  const cascadingChains = buildCascadingChains(activeContracts);
 
   useEffect(() => {
     if (profile?.total_points !== undefined) {
@@ -603,6 +629,17 @@ export function ContractsTab({
                   onWitnessPing={handleWitnessPing}
                 />
               ))}
+
+              {cascadingChains.length > 0 && (
+                <section className="score-tab__chain-viz" aria-live="polite">
+                  <h3 className="score-tab__chain-viz-title">Cascading contract chain</h3>
+                  {cascadingChains.map((chain) => (
+                    <p key={chain.map((contract) => contract.id).join('>')} className="score-tab__chain-viz-item">
+                      {chain.map((contract) => contract.title).join(' → ')}
+                    </p>
+                  ))}
+                </section>
+              )}
 
               {activeContracts[0] && (
                 <ContractHistoryCard
