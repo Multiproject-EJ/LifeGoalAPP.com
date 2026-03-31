@@ -2892,6 +2892,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 </button>
               </div>
             ) : null}
+            <RoutinesTodayLane
+              session={activeSession}
+              onHideStandaloneHabitsChange={(habitIds) => setRoutineHiddenHabitIds(habitIds)}
+            />
             <DailyHabitTracker
               session={activeSession}
               showPointsBadges={shouldShowPointsBadges}

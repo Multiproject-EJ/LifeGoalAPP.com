@@ -41,6 +41,10 @@ export function MobileHabitHome({
 }: MobileHabitHomeProps) {
   return (
     <div className="mobile-habit-home">
+      <RoutinesTodayLane
+        session={session}
+        onHideStandaloneHabitsChange={onHideStandaloneHabitsChange}
+      />
       <DailyHabitTracker
         session={session}
         variant="compact"
