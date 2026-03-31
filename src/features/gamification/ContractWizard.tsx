@@ -40,6 +40,7 @@ const CONTRACT_TYPES: ContractTypeOption[] = [
   { type: 'identity', icon: '🪞', label: 'Identity', description: 'Commit to who you want to become' },
   { type: 'escalation', icon: '📈', label: 'Escalation', description: 'Stakes grow on consecutive misses' },
   { type: 'redemption', icon: '⚡', label: 'Redemption', description: 'Miss triggers a redemption quest instead' },
+  { type: 'reputation', icon: '⭐', label: 'Reputation', description: 'Build a visible reliability track record' },
   { type: 'reverse', icon: '🚫', label: 'Reverse', description: 'Commit to NOT doing something' },
   { type: 'multi_stage', icon: '🏔️', label: 'Multi-Stage', description: 'Large goal broken into milestones' },
   { type: 'future_self', icon: '💌', label: 'Future Self', description: 'Write a sealed message to your future self' },
@@ -575,14 +576,14 @@ export function ContractWizard({
             <input
               id="target-count"
               type="number"
-              min={selectedContractType === 'reverse' ? '0' : '1'}
+              min="1"
               className="contract-wizard__input"
               value={targetCount}
-              onChange={(e) => setTargetCount(parseInt(e.target.value, 10) || (selectedContractType === 'reverse' ? 0 : 1))}
+              onChange={(e) => setTargetCount(parseInt(e.target.value, 10) || 1)}
             />
             <p className="contract-wizard__helper-text">
               {selectedContractType === 'reverse'
-                ? 'Max violations you allow before losing the contract (0 = zero tolerance)'
+                ? 'Max violations you allow before losing the contract (minimum 1)'
                 : 'This is the minimum to keep your contract'}
             </p>
           </div>

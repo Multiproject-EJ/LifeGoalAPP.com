@@ -22,6 +22,11 @@ import {
   getContractRewardMultiplier,
   getSuccessStreakFromEvaluations,
 } from '../lib/contractRewardMultipliers';
+import {
+  checkSameContractCooldown,
+  checkSacredContractLimit,
+} from '../lib/contractIntegrity';
+import { checkContractZenGardenRewards } from './contractZenGardenRewards';
 
 // Maximum number of simultaneously active contracts
 export const MAX_ACTIVE_CONTRACTS = 3;
@@ -655,18 +660,27 @@ export async function createContract(
       };
     }
 
-    // Sacred contract yearly limit: max 2 per calendar year
     const contractType = input.contractType ?? 'classic';
+    const cooldownCheck = checkSameContractCooldown(existingContracts ?? [], contractType, input.targetId);
+    if (!cooldownCheck.allowed) {
+      return {
+        data: null,
+        error: new Error(cooldownCheck.reason ?? 'You recently cancelled a matching contract. Please wait before creating it again.'),
+      };
+    }
+
+    // Sacred contract yearly limit: max 2 per calendar year
     const isSacred = input.isSacred ?? contractType === 'sacred';
     if (isSacred) {
       const { data: reputation } = await fetchReputationScore(userId);
       const thisYear = new Date().getFullYear();
       const sacredYear = reputation?.sacredYear ?? thisYear;
       const sacredUsed = sacredYear === thisYear ? (reputation?.sacredContractsUsedThisYear ?? 0) : 0;
-      if (sacredUsed >= 2) {
+      const sacredLimitCheck = checkSacredContractLimit(sacredUsed);
+      if (!sacredLimitCheck.allowed) {
         return {
           data: null,
-          error: new Error('You can only start 2 sacred contracts per calendar year.'),
+          error: new Error(sacredLimitCheck.reason ?? 'You can only start 2 sacred contracts per calendar year.'),
         };
       }
     }
@@ -1592,6 +1606,10 @@ export async function evaluateContract(
     // Unlock cascading contract if this one just completed successfully
     if (hasEndDatePassed && result === 'success' && contract.unlocksContractId) {
       void unlockCascadingContract(userId, contract.unlocksContractId, contracts);
+    }
+
+    if (result === 'success') {
+      void checkContractZenGardenRewards(userId, updatedContract, result);
     }
 
     void recordTelemetryEvent({
