@@ -112,6 +112,17 @@ This should layer on top of existing habit logging and reward systems.
 - `completed_at`
 - `mode` (`normal` | `fallback`)
 
+### Supporting migration artifacts (implementation requirement)
+- `00xx_create_routines.sql`:
+  - Create `routines` and `routine_steps`
+  - Add RLS policies for user isolation
+  - Add indexes for `user_id`, `routine_id`, `habit_id`, and schedule lookups
+- `00xy_create_routine_logs.sql` (optional):
+  - Create `routine_logs` table if routine-level completion milestones are stored explicitly
+- `00xz_backfill_routine_membership.sql` (optional):
+  - Helper migration for importing curated starter routine templates or migrating legacy presets
+- All migrations must be idempotent/safe for replay in non-prod environments.
+
 ---
 
 ## UX Flows
@@ -132,6 +143,37 @@ This should layer on top of existing habit logging and reward systems.
 ### C) Occasional routine behavior
 - Routines with non-daily cadence appear only when due.
 - Off-day routines remain out of the default Today feed.
+
+---
+
+## Integration Plan With Existing Systems (must-do, not optional)
+
+This feature is intended to **compose** existing systems, not replace them.
+
+### Existing habits/logging
+- Reuse current habit entities as routine steps.
+- Reuse existing habit logging path as source of truth for completion.
+- Do not create duplicate completion storage for standalone vs routine surfaces.
+
+### Today experience
+- Extend existing Today rendering with routine cards, then standalone lane.
+- Preserve current fast check-off interactions and optimistic updates.
+
+### Notifications/reminders
+- Reuse habit reminder infrastructure for step-level reminders.
+- Add optional routine-level reminder only after step-level parity is stable.
+
+### Gamification/rewards
+- Keep existing per-habit rewards.
+- Add routine-level bonuses as additive events (without double-awarding habit completions).
+
+### Offline/sync
+- Reuse existing offline queue strategy for routine CRUD and step reordering mutations.
+- Ensure routine/habit completion consistency in offline-first scenarios.
+
+### Accessibility/theming
+- Reuse global theme tokens/components wherever possible.
+- Enforce accessibility requirements on new routine surfaces from day one.
 
 ---
 
@@ -238,22 +280,26 @@ When user taps `Start`:
 - Add routine entities and joins.
 - Add service layer for CRUD.
 - Reuse habit logging for completion sync.
+- Ship foundational migrations (`create_routines`, optional `create_routine_logs`).
 
 ### Phase 2 — Routine management UI
 - Add Routines tab in popup/menu.
 - Build create/edit/reorder flow.
 - Validate mobile IA and one-thumb interaction map.
+- Add routine CRUD integration tests and migration smoke checks.
 
 ### Phase 3 — Today integration
 - Add routine cards.
 - Add standalone habit declutter rules.
 - Ensure cross-surface sync.
 - Ship polished mobile card states (idle/in-progress/completed).
+- Validate no duplicate rewards and no completion desync between surfaces.
 
 ### Phase 4 — Cinematic Routine Runs
 - Guided sequence mode.
 - Progress + reward moments.
 - Add premium animation/haptics pass with reduced-motion fallback.
+- Gate rollout behind feature flag and monitor stability metrics.
 
 ---
 
@@ -278,6 +324,7 @@ When user taps `Start`:
 5. Should cinematic run open as full-screen route or bottom sheet on mobile?
 6. Should “Done-ish” be enabled for all routine steps or only compatible habit types?
 7. Should we auto-sort routines by anchor time, recency, or user pinning?
+8. Do we enable optional `routine_logs` in v1, or defer until routine-level analytics requires it?
 
 ---
 
@@ -287,3 +334,14 @@ When user taps `Start`:
 - [ ] Visual sign-off on routine cards + cinematic run flow
 - [ ] Engineering sign-off on data model and sync semantics
 - [ ] Accessibility pass criteria approved before UI build starts
+- [ ] Migration plan reviewed (up/down, rollback, seed/backfill strategy)
+- [ ] Integration checklist confirmed (habits, today, rewards, reminders, offline sync)
+
+---
+
+## Migration + Integration Delivery Notes
+- We have now documented migration and integration expectations in this spec.
+- Detailed SQL and implementation code will still be produced during build phases.
+- Rule of thumb:
+  - **Spec phase:** define constraints and contracts.
+  - **Build phase:** implement migrations/services/UI/tests according to this spec.
