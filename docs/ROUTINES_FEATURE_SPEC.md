@@ -345,3 +345,7 @@ When user taps `Start`:
 - Rule of thumb:
   - **Spec phase:** define constraints and contracts.
   - **Build phase:** implement migrations/services/UI/tests according to this spec.
+
+### Current Blockers / Follow-ups (as of 2026-03-31)
+- Generated Supabase types do not yet include `routines`, `routine_steps`, and `routine_logs`; routines service currently uses temporary `supabase as any` calls until schema types are regenerated to include these tables.
+- Add routine-focused integration tests (CRUD + today-sync behavior) once typed table coverage is in place.
