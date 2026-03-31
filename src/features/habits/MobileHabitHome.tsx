@@ -17,6 +17,7 @@ type MobileHabitHomeProps = {
   forceCompactView?: boolean;
   preferredCompactView?: boolean;
   hideTimeBoundOffers?: boolean;
+  hiddenHabitIds?: string[];
 };
 
 export function MobileHabitHome({
@@ -33,6 +34,7 @@ export function MobileHabitHome({
   forceCompactView = false,
   preferredCompactView,
   hideTimeBoundOffers = false,
+  hiddenHabitIds = [],
 }: MobileHabitHomeProps) {
   return (
     <div className="mobile-habit-home">
@@ -51,6 +53,7 @@ export function MobileHabitHome({
         forceCompactView={forceCompactView}
         preferredCompactView={preferredCompactView}
         hideTimeBoundOffers={hideTimeBoundOffers}
+        hiddenHabitIds={hiddenHabitIds}
       />
     </div>
   );
