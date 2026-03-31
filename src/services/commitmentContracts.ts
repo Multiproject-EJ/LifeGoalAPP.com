@@ -1018,6 +1018,8 @@ export async function activateContract(
     updatedContracts[contractIndex] = updatedContract;
     await saveContracts(userId, updatedContracts);
 
+    void incrementContractsStarted(userId);
+
     void recordTelemetryEvent({
       userId,
       eventType: 'contract_activated',
@@ -2015,7 +2017,6 @@ async function incrementSacredContractUsed(userId: string): Promise<void> {
     const sacredUsed = sacredYear === thisYear ? current.sacredContractsUsedThisYear : 0;
     const updated: ReputationScore = {
       ...current,
-      contractsStarted: current.contractsStarted + 1,
       sacredContractsUsedThisYear: sacredUsed + 1,
       sacredYear: thisYear,
       updatedAt: new Date().toISOString(),
@@ -2023,6 +2024,39 @@ async function incrementSacredContractUsed(userId: string): Promise<void> {
     await saveReputationScore(userId, updated);
   } catch {
     // Silently fail — don't block contract creation
+  }
+}
+
+async function incrementContractsStarted(userId: string): Promise<void> {
+  try {
+    const { data: existing } = await fetchReputationScore(userId);
+    const now = new Date().toISOString();
+    const thisYear = new Date().getFullYear();
+    const current: ReputationScore = existing ?? {
+      userId,
+      contractsStarted: 0,
+      contractsCompleted: 0,
+      contractsFailed: 0,
+      contractsCancelled: 0,
+      reliabilityRating: 0,
+      reliabilityTier: 'untested' as ReputationTier,
+      sacredContractsKept: 0,
+      sacredContractsBroken: 0,
+      sacredContractsUsedThisYear: 0,
+      sacredYear: thisYear,
+      longestContractStreak: 0,
+      totalStakeEarned: 0,
+      totalStakeForfeited: 0,
+      updatedAt: now,
+    };
+
+    await saveReputationScore(userId, {
+      ...current,
+      contractsStarted: current.contractsStarted + 1,
+      updatedAt: now,
+    });
+  } catch {
+    // Silently fail — don't block activation
   }
 }
 
