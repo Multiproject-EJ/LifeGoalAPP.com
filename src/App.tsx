@@ -45,7 +45,7 @@ import {
   type TimerSessionState,
 } from './features/timer/timerSession';
 import { ProjectsManager } from './features/projects';
-import { RoutinesTab, RoutinesTodayLane } from './features/routines';
+import { RoutinesTab } from './features/routines';
 import { ScoreTab } from './features/gamification/ScoreTab';
 import { ContractsTab } from './features/gamification/ContractsTab';
 import { ZenGarden } from './features/zen-garden/ZenGarden';
@@ -137,6 +137,12 @@ import './styles/workspace.css';
 import './styles/settings-folders.css';
 import './styles/gamification.css';
 import './features/ai-coach/AiCoach.css';
+
+/**
+ * Guard rail: App-level rendering of routines lane caused duplicate Today cards.
+ * The real lane must live inside DailyHabitTracker (between habits and contracts).
+ */
+const RoutinesTodayLane = (): null => null;
 
 type AuthMode = 'password' | 'signup';
 
