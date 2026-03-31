@@ -45,6 +45,7 @@ import {
   type TimerSessionState,
 } from './features/timer/timerSession';
 import { ProjectsManager } from './features/projects';
+import { RoutinesTab } from './features/routines';
 import { ScoreTab } from './features/gamification/ScoreTab';
 import { ContractsTab } from './features/gamification/ContractsTab';
 import { ZenGarden } from './features/zen-garden/ZenGarden';
@@ -136,6 +137,15 @@ import './styles/workspace.css';
 import './styles/settings-folders.css';
 import './styles/gamification.css';
 import './features/ai-coach/AiCoach.css';
+
+/**
+ * Guard rail: App-level rendering of routines lane caused duplicate Today cards.
+ * The real lane must live inside DailyHabitTracker (between habits and contracts).
+ */
+const RoutinesTodayLane = (_props: {
+  session: Session;
+  onHideStandaloneHabitsChange?: (habitIds: string[]) => void;
+}): null => null;
 
 type AuthMode = 'password' | 'signup';
 
@@ -269,6 +279,13 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     shortLabel: 'HABITS',
   },
   {
+    id: 'routines',
+    label: 'Routines',
+    summary: 'Design routine flows and keep your sequence polished.',
+    icon: '🎬',
+    shortLabel: 'ROUTINES',
+  },
+  {
     id: 'rituals',
     label: 'Wellbeing Wheel Check-in',
     summary: '',
@@ -326,6 +343,7 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
   'goals',
   'body',
   'habits',
+  'routines',
   'support',
   'game',
   'journal',
@@ -2900,6 +2918,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               }}
               pendingOfferToOpen={pendingTodayOfferOpen}
               onPendingOfferHandled={() => setPendingTodayOfferOpen(null)}
+              hiddenHabitIds={[]}
             />
             <HabitsModule
               session={activeSession}
@@ -3018,6 +3037,21 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   setTimerLaunchContext(context);
                 }
                 setActiveWorkspaceNav('timer');
+              }}
+            />
+          </div>
+        );
+      case 'routines':
+        return (
+          <div className="workspace-content">
+            <RoutinesTab
+              session={activeSession}
+              onOpenToday={() => {
+                if (isMobileExperience) {
+                  setShowMobileHome(true);
+                  return;
+                }
+                setActiveWorkspaceNav('planning');
               }}
             />
           </div>
@@ -4249,6 +4283,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             forceCompactView={!isGameModeActive}
             preferredCompactView={!isGameModeActive}
             hideTimeBoundOffers={!isGameModeActive}
+            hiddenHabitIds={[]}
           />
         </div>
         {!showZenGardenFullScreen && !isConflictResolverFullscreen && (
