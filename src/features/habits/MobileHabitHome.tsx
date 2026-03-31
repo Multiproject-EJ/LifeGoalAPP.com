@@ -17,6 +17,8 @@ type MobileHabitHomeProps = {
   forceCompactView?: boolean;
   preferredCompactView?: boolean;
   hideTimeBoundOffers?: boolean;
+  hiddenHabitIds?: string[];
+  onHideStandaloneHabitsChange?: (habitIds: string[]) => void;
 };
 
 export function MobileHabitHome({
@@ -33,7 +35,10 @@ export function MobileHabitHome({
   forceCompactView = false,
   preferredCompactView,
   hideTimeBoundOffers = false,
+  hiddenHabitIds = [],
+  onHideStandaloneHabitsChange,
 }: MobileHabitHomeProps) {
+  void onHideStandaloneHabitsChange;
   return (
     <div className="mobile-habit-home">
       <DailyHabitTracker
@@ -51,6 +56,7 @@ export function MobileHabitHome({
         forceCompactView={forceCompactView}
         preferredCompactView={preferredCompactView}
         hideTimeBoundOffers={hideTimeBoundOffers}
+        hiddenHabitIds={hiddenHabitIds}
       />
     </div>
   );
