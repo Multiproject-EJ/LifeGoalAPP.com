@@ -19,7 +19,6 @@ type MobileHabitHomeProps = {
   preferredCompactView?: boolean;
   hideTimeBoundOffers?: boolean;
   hiddenHabitIds?: string[];
-  onHideStandaloneHabitsChange?: (habitIds: string[]) => void;
 };
 
 export function MobileHabitHome({
@@ -37,7 +36,6 @@ export function MobileHabitHome({
   preferredCompactView,
   hideTimeBoundOffers = false,
   hiddenHabitIds = [],
-  onHideStandaloneHabitsChange,
 }: MobileHabitHomeProps) {
   return (
     <div className="mobile-habit-home">
@@ -61,10 +59,6 @@ export function MobileHabitHome({
         preferredCompactView={preferredCompactView}
         hideTimeBoundOffers={hideTimeBoundOffers}
         hiddenHabitIds={hiddenHabitIds}
-      />
-      <RoutinesTodayLane
-        session={session}
-        onHideStandaloneHabitsChange={onHideStandaloneHabitsChange}
       />
     </div>
   );

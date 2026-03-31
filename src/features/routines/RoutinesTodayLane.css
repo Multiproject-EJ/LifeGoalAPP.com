@@ -63,6 +63,16 @@
   margin-top: 0.55rem;
 }
 
+.routines-today-lane__mark-button {
+  min-width: 124px;
+  border-color: rgba(148, 163, 184, 0.35);
+  background: transparent;
+}
+
+.routines-today-lane__mark-button.is-complete {
+  opacity: 0.78;
+}
+
 .routines-today-lane__empty {
   color: var(--text-muted, #5b6170);
 }

@@ -297,7 +297,7 @@ export function RoutinesTodayLane({ session, onHideStandaloneHabitsChange }: Rou
                         <span>{habitsById[step.habit_id]?.title ?? 'Unknown habit'}</span>
                         <button
                           type="button"
-                          className={`btn ${done ? 'btn--ghost' : 'btn--primary'}`}
+                          className={`btn btn--ghost routines-today-lane__mark-button${done ? ' is-complete' : ''}`}
                           disabled={done || savingStepId === step.id}
                           onClick={() => void handleStepDone(routine.id, step)}
                         >
