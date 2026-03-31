@@ -707,25 +707,27 @@ export function ContractWizard({
           </div>
 
           <div className="contract-wizard__field-group">
-            <label className="contract-wizard__label">Tracking style</label>
+            <label className="contract-wizard__label">How do you want to track this contract?</label>
             <div className="contract-wizard__chip-group">
               <button
                 type="button"
                 className={`contract-wizard__chip${trackingMode === 'progress' ? ' contract-wizard__chip--selected' : ''}`}
                 onClick={() => setTrackingMode('progress')}
               >
-                Progress check-ins
+                Check-ins (mark progress)
               </button>
               <button
                 type="button"
                 className={`contract-wizard__chip${trackingMode === 'outcome_only' ? ' contract-wizard__chip--selected' : ''}`}
                 onClick={() => setTrackingMode('outcome_only')}
               >
-                Outcome only
+                Outcome only (no check-ins)
               </button>
             </div>
             <p className="contract-wizard__helper-text">
-              Outcome only fits "don’t do X" commitments: log a failure if needed, or finalize success at the end date.
+              {trackingMode === 'progress'
+                ? 'Use this when you want to actively mark progress as you go.'
+                : 'Great for “don’t do X” or pass/fail commitments: log a failure if needed, or finalize success on/after the end date.'}
             </p>
           </div>
 
