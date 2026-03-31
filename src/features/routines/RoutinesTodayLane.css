@@ -1,0 +1,72 @@
+.routines-today-lane {
+  margin-bottom: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.routines-today-lane__header h3 {
+  margin: 0;
+}
+
+.routines-today-lane__eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary, #7a8191);
+}
+
+.routines-today-lane__list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.routines-today-lane__card {
+  border: 1px solid var(--border-muted, rgba(96, 108, 122, 0.2));
+  border-radius: 14px;
+  background: var(--surface-elevated, rgba(255, 255, 255, 0.75));
+  padding: 0.8rem;
+}
+
+.routines-today-lane__card header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.routines-today-lane__card h4,
+.routines-today-lane__card p {
+  margin: 0;
+}
+
+.routines-today-lane__card ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.routines-today-lane__card li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.routines-today-lane__empty {
+  color: var(--text-secondary, #5b6170);
+}
+
+.routines-today-lane--error {
+  color: #b91c1c;
+}
+
+@media (max-width: 640px) {
+  .routines-today-lane__card li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
