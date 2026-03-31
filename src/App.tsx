@@ -138,6 +138,15 @@ import './styles/settings-folders.css';
 import './styles/gamification.css';
 import './features/ai-coach/AiCoach.css';
 
+/**
+ * Guard rail: App-level rendering of routines lane caused duplicate Today cards.
+ * The real lane must live inside DailyHabitTracker (between habits and contracts).
+ */
+const RoutinesTodayLane = (_props: {
+  session: Session;
+  onHideStandaloneHabitsChange?: (habitIds: string[]) => void;
+}): null => null;
+
 type AuthMode = 'password' | 'signup';
 
 type AuthTab = 'login' | 'signup' | 'demo';
@@ -2892,6 +2901,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 </button>
               </div>
             ) : null}
+            <RoutinesTodayLane
+              session={activeSession}
+              onHideStandaloneHabitsChange={(habitIds) => setRoutineHiddenHabitIds(habitIds)}
+            />
             <DailyHabitTracker
               session={activeSession}
               showPointsBadges={shouldShowPointsBadges}

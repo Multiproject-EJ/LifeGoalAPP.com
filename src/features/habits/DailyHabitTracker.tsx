@@ -125,6 +125,7 @@ import {
 import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
 import { HabitPauseDialog } from './HabitPauseDialog';
+import { RoutinesTodayLane } from '../routines';
 
 // Constants
 const DONE_ISH_DEFAULT_PERCENTAGE = 85;
@@ -449,6 +450,7 @@ export function DailyHabitTracker({
   } = useLuckyRollStatus(session.user.id);
   const isCompact = variant === 'compact';
   const [activeOfferTeaser, setActiveOfferTeaser] = useState<TimeBoundOfferId | null>(null);
+  const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
   const [seenOfferTeasers, setSeenOfferTeasers] = useState<Record<string, boolean>>({});
   const progressGradientId = useId();
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
