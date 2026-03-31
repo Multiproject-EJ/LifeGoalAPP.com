@@ -39,12 +39,24 @@ const checks = [
     file: 'src/features/routines/RoutinesTodayLane.tsx',
     pattern: /if \(step\.display_mode === 'inside_routine_only'\)[\s\S]*hidden\.add\(step\.habit_id\)/m,
   },
+  {
+    name: 'App planning shell does not directly mount RoutinesTodayLane',
+    file: 'src/App.tsx',
+    pattern: /RoutinesTodayLane/,
+    negate: true,
+  },
+  {
+    name: 'Routines lane is mounted from DailyHabitTracker near contracts flow',
+    file: 'src/features/habits/DailyHabitTracker.tsx',
+    pattern: /<RoutinesTodayLane[\s\S]*onHideStandaloneHabitsChange=\{\(habitIds\)\s*=>\s*setRoutineHiddenHabitIds\(habitIds\)\}/m,
+  },
 ];
 
 let failed = 0;
 for (const check of checks) {
   const content = await readFile(check.file, 'utf8');
-  const ok = check.pattern.test(content);
+  const matches = check.pattern.test(content);
+  const ok = check.negate ? !matches : matches;
   const prefix = ok ? 'PASS' : 'FAIL';
   console.log(`${prefix}: ${check.name}`);
   if (!ok) {
