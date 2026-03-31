@@ -2,12 +2,16 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   createRoutine,
+  createRoutineStep,
   deleteRoutine,
+  deleteRoutineStep,
   listRoutines,
   listRoutineSteps,
   updateRoutine,
+  updateRoutineStep,
 } from '../../services/routines';
-import type { Routine } from '../../types/routines';
+import type { Routine, RoutineStep } from '../../types/routines';
+import { listHabitsV2, type HabitV2Row } from '../../services/habitsV2';
 import './RoutinesTab.css';
 
 type RoutinesTabProps = {
@@ -15,6 +19,8 @@ type RoutinesTabProps = {
 };
 
 type RoutineStepCounts = Record<string, number>;
+type RoutineStepsByRoutine = Record<string, RoutineStep[]>;
+type RoutineStepDraftByRoutine = Record<string, string>;
 
 export function RoutinesTab({ session }: RoutinesTabProps) {
   const [loading, setLoading] = useState(false);
@@ -22,11 +28,18 @@ export function RoutinesTab({ session }: RoutinesTabProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [routines, setRoutines] = useState<Routine[]>([]);
+  const [habits, setHabits] = useState<HabitV2Row[]>([]);
+  const [stepsByRoutine, setStepsByRoutine] = useState<RoutineStepsByRoutine>({});
   const [stepCounts, setStepCounts] = useState<RoutineStepCounts>({});
+  const [stepDraftByRoutine, setStepDraftByRoutine] = useState<RoutineStepDraftByRoutine>({});
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
 
   const activeCount = useMemo(() => routines.filter((routine) => routine.is_active).length, [routines]);
+  const habitTitleById = useMemo(
+    () => new Map(habits.map((habit) => [habit.id, habit.title] as const)),
+    [habits],
+  );
 
   const loadRoutines = useCallback(async () => {
     setLoading(true);
@@ -45,19 +58,40 @@ export function RoutinesTab({ session }: RoutinesTabProps) {
     setRoutines(rows);
 
     const counts: RoutineStepCounts = {};
+    const nextStepsByRoutine: RoutineStepsByRoutine = {};
     await Promise.all(
       rows.map(async (routine) => {
         const stepsResult = await listRoutineSteps(routine.id);
-        counts[routine.id] = stepsResult.data?.length ?? 0;
+        const steps = stepsResult.data ?? [];
+        counts[routine.id] = steps.length;
+        nextStepsByRoutine[routine.id] = steps;
       }),
     );
     setStepCounts(counts);
+    setStepsByRoutine(nextStepsByRoutine);
     setLoading(false);
   }, []);
 
   useEffect(() => {
     void loadRoutines();
   }, [loadRoutines]);
+
+  useEffect(() => {
+    let ignore = false;
+    const loadHabits = async () => {
+      const result = await listHabitsV2({ includeInactive: false });
+      if (ignore) return;
+      if (result.error) {
+        setError(result.error.message);
+        return;
+      }
+      setHabits(result.data ?? []);
+    };
+    void loadHabits();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const handleCreate = useCallback(
     async (event: FormEvent) => {
@@ -123,15 +157,89 @@ export function RoutinesTab({ session }: RoutinesTabProps) {
     [loadRoutines],
   );
 
+  const handleAttachHabitStep = useCallback(
+    async (routineId: string) => {
+      const selectedHabitId = stepDraftByRoutine[routineId];
+      if (!selectedHabitId) return;
+
+      const existingSteps = stepsByRoutine[routineId] ?? [];
+      if (existingSteps.some((step) => step.habit_id === selectedHabitId)) {
+        setError('That habit is already linked to this routine.');
+        return;
+      }
+
+      setSaving(true);
+      setError(null);
+      const result = await createRoutineStep({
+        routine_id: routineId,
+        habit_id: selectedHabitId,
+        step_order: existingSteps.length,
+      });
+      if (result.error) {
+        setError(result.error.message);
+      } else {
+        setSuccess('Step added to routine.');
+      }
+      setSaving(false);
+      await loadRoutines();
+    },
+    [stepDraftByRoutine, stepsByRoutine, loadRoutines],
+  );
+
+  const handleDeleteStep = useCallback(
+    async (routineId: string, stepId: string) => {
+      setSaving(true);
+      setError(null);
+      const result = await deleteRoutineStep(stepId);
+      if (result.error) {
+        setError(result.error.message);
+      } else {
+        const remaining = (stepsByRoutine[routineId] ?? []).filter((step) => step.id !== stepId);
+        await Promise.all(
+          remaining.map((step, index) =>
+            step.step_order === index ? Promise.resolve() : updateRoutineStep(step.id, { step_order: index }),
+          ),
+        );
+        setSuccess('Step removed.');
+      }
+      setSaving(false);
+      await loadRoutines();
+    },
+    [loadRoutines, stepsByRoutine],
+  );
+
+  const handleMoveStep = useCallback(
+    async (routineId: string, stepId: string, direction: -1 | 1) => {
+      const steps = [...(stepsByRoutine[routineId] ?? [])].sort((a, b) => a.step_order - b.step_order);
+      const index = steps.findIndex((step) => step.id === stepId);
+      if (index < 0) return;
+
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= steps.length) return;
+
+      const [step] = steps.splice(index, 1);
+      steps.splice(targetIndex, 0, step);
+
+      setSaving(true);
+      setError(null);
+      await Promise.all(
+        steps.map((item, orderIndex) =>
+          item.step_order === orderIndex ? Promise.resolve() : updateRoutineStep(item.id, { step_order: orderIndex }),
+        ),
+      );
+      setSaving(false);
+      await loadRoutines();
+    },
+    [loadRoutines, stepsByRoutine],
+  );
+
   return (
     <section className="routines-tab" aria-label="Routines manager">
       <header className="routines-tab__header">
         <div>
           <p className="routines-tab__eyebrow">Routines</p>
           <h2>Build your repeatable flow</h2>
-          <p>
-            Create routine shells here, then attach habit steps. Active routines: <strong>{activeCount}</strong>
-          </p>
+          <p>Design and tune your routine flow. Active routines: <strong>{activeCount}</strong></p>
         </div>
       </header>
 
@@ -170,7 +278,7 @@ export function RoutinesTab({ session }: RoutinesTabProps) {
       {!loading && routines.length === 0 ? (
         <div className="routines-tab__empty">
           <h3>No routines yet</h3>
-          <p>Create your first routine above. You can map habits as steps in the next UI pass.</p>
+          <p>Create your first routine above, then attach habits as ordered steps.</p>
         </div>
       ) : null}
 
@@ -184,6 +292,75 @@ export function RoutinesTab({ session }: RoutinesTabProps) {
                 <p className="routines-tab__meta">
                   {routine.is_active ? 'Active' : 'Paused'} • Steps linked: {stepCounts[routine.id] ?? 0}
                 </p>
+                <div className="routines-tab__step-composer">
+                  <select
+                    value={stepDraftByRoutine[routine.id] ?? ''}
+                    onChange={(event) =>
+                      setStepDraftByRoutine((prev) => ({
+                        ...prev,
+                        [routine.id]: event.target.value,
+                      }))
+                    }
+                    disabled={saving || habits.length === 0}
+                  >
+                    <option value="">{habits.length > 0 ? 'Select habit to add…' : 'No habits available'}</option>
+                    {habits.map((habit) => (
+                      <option key={habit.id} value={habit.id}>
+                        {habit.title}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={() => void handleAttachHabitStep(routine.id)}
+                    disabled={saving || !stepDraftByRoutine[routine.id]}
+                  >
+                    Add step
+                  </button>
+                </div>
+                {(stepsByRoutine[routine.id] ?? []).length > 0 ? (
+                  <ol className="routines-tab__steps">
+                    {(stepsByRoutine[routine.id] ?? [])
+                      .slice()
+                      .sort((a, b) => a.step_order - b.step_order)
+                      .map((step, index, all) => (
+                        <li key={step.id} className="routines-tab__step">
+                          <span className="routines-tab__step-title">
+                            {habitTitleById.get(step.habit_id) ?? 'Unknown habit'}
+                          </span>
+                          <div className="routines-tab__step-actions">
+                            <button
+                              type="button"
+                              className="btn btn--ghost"
+                              onClick={() => void handleMoveStep(routine.id, step.id, -1)}
+                              disabled={saving || index === 0}
+                              aria-label="Move step up"
+                            >
+                              ↑
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn--ghost"
+                              onClick={() => void handleMoveStep(routine.id, step.id, 1)}
+                              disabled={saving || index === all.length - 1}
+                              aria-label="Move step down"
+                            >
+                              ↓
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn--ghost"
+                              onClick={() => void handleDeleteStep(routine.id, step.id)}
+                              disabled={saving}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                  </ol>
+                ) : null}
               </div>
               <div className="routines-tab__actions">
                 <button

@@ -97,6 +97,40 @@
   gap: 0.4rem;
 }
 
+.routines-tab__step-composer {
+  margin-top: 0.55rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.4rem;
+}
+
+.routines-tab__step-composer select {
+  min-width: 0;
+}
+
+.routines-tab__steps {
+  margin: 0.6rem 0 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.routines-tab__step {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.routines-tab__step-title {
+  font-size: 0.9rem;
+}
+
+.routines-tab__step-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
 @media (max-width: 640px) {
   .routines-tab__item {
     flex-direction: column;
@@ -105,5 +139,10 @@
   .routines-tab__actions {
     width: 100%;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .routines-tab__step {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
