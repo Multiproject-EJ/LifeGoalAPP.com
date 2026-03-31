@@ -320,3 +320,29 @@ export async function upsertRoutineLog(input: {
 
   return { data, error };
 }
+
+export async function listRoutineLogsForRange(input: {
+  dateFrom: string;
+  dateTo: string;
+}): Promise<ServiceResponse<RoutineLog[]>> {
+  const sessionUserId = getSessionUserId();
+  if (!sessionUserId) {
+    return { data: [], error: null };
+  }
+
+  if (!canUseSupabaseData()) {
+    // Demo-mode routine logs are not persisted yet.
+    return { data: [], error: null };
+  }
+
+  const supabase = getSupabaseClient();
+  const { data, error } = await (supabase as any)
+    .from('routine_logs')
+    .select('*')
+    .eq('user_id', sessionUserId)
+    .gte('date', input.dateFrom)
+    .lte('date', input.dateTo)
+    .order('date', { ascending: true });
+
+  return { data, error };
+}

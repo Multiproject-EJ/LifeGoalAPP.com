@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { listRoutines, listRoutineSteps } from '../../services/routines';
+import { listRoutineLogsForRange, listRoutines, listRoutineSteps, upsertRoutineLog } from '../../services/routines';
 import { listHabitsV2, listTodayHabitLogsV2, logHabitCompletionV2, type HabitLogV2Row, type HabitV2Row } from '../../services/habitsV2';
 import type { Routine, RoutineStep } from '../../types/routines';
 import { parseSchedule } from '../habits/scheduleInterpreter';
@@ -12,7 +12,27 @@ type RoutinesTodayLaneProps = {
 
 type StepsByRoutine = Record<string, RoutineStep[]>;
 
-function isRoutineDueToday(routine: Routine, today: Date): boolean {
+function getIsoWeekBounds(date: Date): { monday: string; sunday: string } {
+  const current = new Date(date);
+  const day = current.getDay();
+  const isoDay = day === 0 ? 7 : day;
+  const monday = new Date(current);
+  monday.setDate(current.getDate() - isoDay + 1);
+  monday.setHours(0, 0, 0, 0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  return {
+    monday: monday.toISOString().slice(0, 10),
+    sunday: sunday.toISOString().slice(0, 10),
+  };
+}
+
+function isRoutineDueToday(
+  routine: Routine,
+  today: Date,
+  completionsThisWeek: number,
+): boolean {
   const schedule = parseSchedule(routine.schedule);
   if (!schedule?.mode) return true;
 
@@ -36,7 +56,8 @@ function isRoutineDueToday(routine: Routine, today: Date): boolean {
   }
 
   if (schedule.mode === 'times_per_week') {
-    return true;
+    const target = typeof schedule.timesPerWeek === 'number' ? schedule.timesPerWeek : 1;
+    return completionsThisWeek < target;
   }
 
   return true;
@@ -50,6 +71,8 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
   const [stepsByRoutine, setStepsByRoutine] = useState<StepsByRoutine>({});
   const [habitsById, setHabitsById] = useState<Record<string, HabitV2Row>>({});
   const [todayLogs, setTodayLogs] = useState<HabitLogV2Row[]>([]);
+  const [routineLogs, setRoutineLogs] = useState<Record<string, { date: string; completed: boolean }[]>>({});
+  const [expandedRoutineIds, setExpandedRoutineIds] = useState<Record<string, boolean>>({});
   const [activeRunRoutineId, setActiveRunRoutineId] = useState<string | null>(null);
   const [activeRunStepIndex, setActiveRunStepIndex] = useState(0);
 
@@ -57,10 +80,12 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
     setLoading(true);
     setError(null);
 
-    const [routinesResult, habitsResult, logsResult] = await Promise.all([
+    const { monday, sunday } = getIsoWeekBounds(new Date());
+    const [routinesResult, habitsResult, logsResult, routineLogsResult] = await Promise.all([
       listRoutines(false),
       listHabitsV2({ includeInactive: false }),
       listTodayHabitLogsV2(session.user.id),
+      listRoutineLogsForRange({ dateFrom: monday, dateTo: sunday }),
     ]);
 
     if (routinesResult.error) {
@@ -80,6 +105,11 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
       setLoading(false);
       return;
     }
+    if (routineLogsResult.error) {
+      setError(routineLogsResult.error.message);
+      setLoading(false);
+      return;
+    }
 
     const routineRows = routinesResult.data ?? [];
     const stepsMap: StepsByRoutine = {};
@@ -94,6 +124,14 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
     setRoutines(routineRows);
     setStepsByRoutine(stepsMap);
     setTodayLogs(logsResult.data ?? []);
+    const groupedRoutineLogs: Record<string, { date: string; completed: boolean }[]> = {};
+    for (const log of routineLogsResult.data ?? []) {
+      if (!groupedRoutineLogs[log.routine_id]) {
+        groupedRoutineLogs[log.routine_id] = [];
+      }
+      groupedRoutineLogs[log.routine_id].push({ date: log.date, completed: log.completed });
+    }
+    setRoutineLogs(groupedRoutineLogs);
 
     const nextHabitsById: Record<string, HabitV2Row> = {};
     for (const habit of habitsResult.data ?? []) {
@@ -109,8 +147,11 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
 
   const dueRoutines = useMemo(() => {
     const today = new Date();
-    return routines.filter((routine) => isRoutineDueToday(routine, today));
-  }, [routines]);
+    return routines.filter((routine) => {
+      const weeklyDone = (routineLogs[routine.id] ?? []).filter((entry) => entry.completed).length;
+      return isRoutineDueToday(routine, today, weeklyDone);
+    });
+  }, [routineLogs, routines]);
 
   const completedHabitIds = useMemo(() => {
     const doneIds = new Set<string>();
@@ -123,7 +164,7 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
   }, [todayLogs]);
 
   const handleStepDone = useCallback(
-    async (step: RoutineStep) => {
+    async (routineId: string, step: RoutineStep) => {
       setSavingStepId(step.id);
       setError(null);
       const result = await logHabitCompletionV2({ habit_id: step.habit_id, done: true, value: null }, session.user.id);
@@ -136,12 +177,27 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
       if (logsResult.error) {
         setError(logsResult.error.message);
       } else {
-        setTodayLogs(logsResult.data ?? []);
+        const nextTodayLogs = logsResult.data ?? [];
+        setTodayLogs(nextTodayLogs);
+        const steps = stepsByRoutine[routineId] ?? [];
+        if (steps.length > 0) {
+          const completedCount = steps.filter((item) =>
+            nextTodayLogs.some((log) => log.habit_id === item.habit_id && log.done),
+          ).length;
+          const isComplete = completedCount >= steps.length;
+          const todayDate = new Date().toISOString().slice(0, 10);
+          await upsertRoutineLog({
+            routineId,
+            date: todayDate,
+            completed: isComplete,
+            mode: 'normal',
+          });
+        }
       }
       setSavingStepId(null);
       return true;
     },
-    [session.user.id],
+    [session.user.id, stepsByRoutine],
   );
 
   const activeRun = useMemo(() => {
@@ -216,7 +272,10 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
               {steps.length > 0 ? (
                 <>
                 <ul>
-                  {steps.map((step) => {
+                  {(expandedRoutineIds[routine.id]
+                    ? steps
+                    : steps.filter((step) => step.display_mode !== 'standalone_only')
+                  ).map((step) => {
                     const done = completedHabitIds.has(step.habit_id);
                     return (
                       <li key={step.id}>
@@ -225,7 +284,7 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
                           type="button"
                           className={`btn ${done ? 'btn--ghost' : 'btn--primary'}`}
                           disabled={done || savingStepId === step.id}
-                          onClick={() => void handleStepDone(step)}
+                          onClick={() => void handleStepDone(routine.id, step)}
                         >
                           {done ? 'Done' : savingStepId === step.id ? 'Saving…' : 'Mark done'}
                         </button>
@@ -240,6 +299,20 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
                 >
                   Start run
                 </button>
+                {steps.some((step) => step.display_mode === 'standalone_only') ? (
+                  <button
+                    type="button"
+                    className="btn btn--ghost routines-today-lane__run-button"
+                    onClick={() =>
+                      setExpandedRoutineIds((prev) => ({
+                        ...prev,
+                        [routine.id]: !prev[routine.id],
+                      }))
+                    }
+                  >
+                    {expandedRoutineIds[routine.id] ? 'Hide standalone-only steps' : 'Show all steps'}
+                  </button>
+                ) : null}
                 </>
               ) : (
                 <p className="routines-today-lane__empty">No steps attached yet.</p>
@@ -266,7 +339,7 @@ export function RoutinesTodayLane({ session }: RoutinesTodayLaneProps) {
                   type="button"
                   className="btn btn--primary"
                   onClick={async () => {
-                    const ok = await handleStepDone(activeRun.currentStep);
+                    const ok = await handleStepDone(activeRun.routine.id, activeRun.currentStep);
                     if (ok) {
                       handleRunAdvance();
                     }
