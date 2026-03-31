@@ -15,6 +15,8 @@
     "predev": "npm run generate:supabase-client && node scripts/copy-app-icon.mjs",
     "prebuild": "npm run generate:supabase-client && node scripts/copy-app-icon.mjs",
     "check:timer-regression": "node scripts/timer-regression-smoke.mjs",
+    "check:routines-regression": "node scripts/routines-regression-smoke.mjs",
+    "check:routines-migration": "node scripts/routines-migration-smoke.mjs",
     "test:island-run": "node scripts/run-island-run-service-tests.mjs"
   },
   "dependencies": {
