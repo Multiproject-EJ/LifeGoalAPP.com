@@ -1,0 +1,182 @@
+.routines-tab {
+  display: grid;
+  gap: 1rem;
+}
+
+.routines-tab__header h2 {
+  margin: 0 0 0.25rem;
+}
+
+.routines-tab__header p {
+  margin: 0;
+  color: var(--text-secondary, #5b6170);
+}
+
+.routines-tab__eyebrow {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary, #7a8191);
+}
+
+.routines-tab__composer,
+.routines-tab__item,
+.routines-tab__empty {
+  background: var(--surface-elevated, rgba(255, 255, 255, 0.75));
+  border: 1px solid var(--border-muted, rgba(96, 108, 122, 0.2));
+  border-radius: 14px;
+  padding: 0.9rem;
+}
+
+.routines-tab__composer {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.routines-tab__composer label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.routines-tab__composer input,
+.routines-tab__composer textarea,
+.routines-tab__step-composer input,
+.routines-tab__step-composer select {
+  width: 100%;
+  font-size: 16px;
+  min-height: 44px;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+}
+
+.routines-tab__status {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.routines-tab__status--error {
+  color: #b91c1c;
+}
+
+.routines-tab__status--success {
+  color: #047857;
+}
+
+.routines-tab__loading {
+  margin: 0;
+  color: var(--text-secondary, #5b6170);
+}
+
+.routines-tab__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.routines-tab__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.routines-tab__item-main h3 {
+  margin: 0 0 0.2rem;
+}
+
+.routines-tab__item-main p {
+  margin: 0;
+}
+
+.routines-tab__meta {
+  font-size: 0.85rem;
+  margin-top: 0.3rem;
+  color: var(--text-secondary, #5b6170);
+}
+
+.routines-tab__actions {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.routines-tab__step-composer {
+  margin-top: 0.55rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.4rem;
+}
+
+.routines-tab__step-composer select {
+  min-width: 0;
+}
+
+.routines-tab__step-composer--new {
+  margin-top: 0.4rem;
+}
+
+.routines-tab__steps {
+  margin: 0.6rem 0 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.routines-tab__step {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.routines-tab__step-title {
+  font-size: 0.9rem;
+}
+
+.routines-tab__step-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.routines-tab__step-config {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.8rem;
+  align-items: center;
+}
+
+.routines-tab__step-config-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary, #5b6170);
+}
+
+.routines-tab__step-config-inline select {
+  max-width: 180px;
+}
+
+@media (max-width: 640px) {
+  .routines-tab__item {
+    flex-direction: column;
+  }
+
+  .routines-tab__actions {
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .routines-tab__step {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .routines-tab__step-config {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
