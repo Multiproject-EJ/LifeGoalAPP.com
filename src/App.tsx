@@ -2916,6 +2916,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
               onPendingOfferHandled={() => setPendingTodayOfferOpen(null)}
               hiddenHabitIds={routineHiddenHabitIds}
             />
+            <RoutinesTodayLane
+              session={activeSession}
+              onHideStandaloneHabitsChange={(habitIds) => setRoutineHiddenHabitIds(habitIds)}
+            />
             <HabitsModule
               session={activeSession}
               onNavigateToTimer={(context) => {

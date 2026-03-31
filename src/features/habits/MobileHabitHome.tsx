@@ -62,6 +62,10 @@ export function MobileHabitHome({
         hideTimeBoundOffers={hideTimeBoundOffers}
         hiddenHabitIds={hiddenHabitIds}
       />
+      <RoutinesTodayLane
+        session={session}
+        onHideStandaloneHabitsChange={onHideStandaloneHabitsChange}
+      />
     </div>
   );
 }
