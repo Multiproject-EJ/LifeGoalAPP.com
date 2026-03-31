@@ -45,6 +45,7 @@ import {
   type TimerSessionState,
 } from './features/timer/timerSession';
 import { ProjectsManager } from './features/projects';
+import { RoutinesTab } from './features/routines';
 import { ScoreTab } from './features/gamification/ScoreTab';
 import { ContractsTab } from './features/gamification/ContractsTab';
 import { ZenGarden } from './features/zen-garden/ZenGarden';
@@ -269,6 +270,13 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     shortLabel: 'HABITS',
   },
   {
+    id: 'routines',
+    label: 'Routines',
+    summary: 'Design routine flows and keep your sequence polished.',
+    icon: '🎬',
+    shortLabel: 'ROUTINES',
+  },
+  {
     id: 'rituals',
     label: 'Wellbeing Wheel Check-in',
     summary: '',
@@ -326,6 +334,7 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
   'goals',
   'body',
   'habits',
+  'routines',
   'support',
   'game',
   'journal',
@@ -3020,6 +3029,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 setActiveWorkspaceNav('timer');
               }}
             />
+          </div>
+        );
+      case 'routines':
+        return (
+          <div className="workspace-content">
+            <RoutinesTab session={activeSession} />
           </div>
         );
       case 'journal':
