@@ -1972,17 +1972,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
     event.preventDefault();
     event.stopPropagation();
     setIsMobileProfileDialogOpen(false);
-    setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
     closeGameBoardOverlayIfOpen();
 
-    window.setTimeout(() => {
-      if (mode === 'feedback') {
-        setShowMobileFeedbackModal(true);
-      } else {
-        setShowMobileSupportModal(true);
-      }
-    }, 120);
+    if (mode === 'feedback') {
+      setShowMobileFeedbackModal(true);
+    } else {
+      setShowMobileSupportModal(true);
+    }
   };
 
   const handleEnergySelect = (category: 'mind' | 'body') => {
@@ -3533,10 +3530,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <button
                     type="button"
                     aria-label="Send product feedback"
-                    onPointerDown={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                    }}
                     onClick={(event) => openFeedbackSupportFromMobileMenu(event, 'feedback')}
                   >
                     <span aria-hidden="true" className="mobile-menu-overlay__icon">💬</span>
@@ -3550,10 +3543,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <button
                     type="button"
                     aria-label="Request support"
-                    onPointerDown={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                    }}
                     onClick={(event) => openFeedbackSupportFromMobileMenu(event, 'support')}
                   >
                     <span aria-hidden="true" className="mobile-menu-overlay__icon">🛟</span>
@@ -3566,42 +3555,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
               </ul>
             </div>
             <div className="mobile-menu-overlay__settings">
-              <button
-                type="button"
-                className="mobile-menu-overlay__profile-summary"
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setShowMobileFeedbackModal(true);
-                }}
-              >
-                <div>
-                  <span className="mobile-menu-overlay__profile-eyebrow">Support</span>
-                  <p className="mobile-menu-overlay__profile-title">Feedback &amp; Support</p>
-                  <p className="mobile-menu-overlay__profile-subtitle">Send product feedback or request support.</p>
-                </div>
-                <div className="mobile-menu-overlay__profile-ring" aria-hidden="true">
-                  <span className="mobile-menu-overlay__profile-ring-value">💬</span>
-                  <span className="mobile-menu-overlay__profile-ring-label">Help</span>
-                </div>
-              </button>
-              <button
-                type="button"
-                className="mobile-menu-overlay__profile-summary"
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setShowMobileSupportModal(true);
-                }}
-              >
-                <div>
-                  <span className="mobile-menu-overlay__profile-eyebrow">Support</span>
-                  <p className="mobile-menu-overlay__profile-title">Request support</p>
-                  <p className="mobile-menu-overlay__profile-subtitle">Ask for billing, account, or cancellation help.</p>
-                </div>
-                <div className="mobile-menu-overlay__profile-ring" aria-hidden="true">
-                  <span className="mobile-menu-overlay__profile-ring-value">🛟</span>
-                  <span className="mobile-menu-overlay__profile-ring-label">Care</span>
-                </div>
-              </button>
               <button
                 type="button"
                 className="mobile-menu-overlay__profile-summary"
