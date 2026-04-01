@@ -3533,10 +3533,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <button
                     type="button"
                     aria-label="Send product feedback"
-                    onPointerDown={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                    }}
                     onClick={(event) => openFeedbackSupportFromMobileMenu(event, 'feedback')}
                   >
                     <span aria-hidden="true" className="mobile-menu-overlay__icon">💬</span>
@@ -3550,10 +3546,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <button
                     type="button"
                     aria-label="Request support"
-                    onPointerDown={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                    }}
                     onClick={(event) => openFeedbackSupportFromMobileMenu(event, 'support')}
                   >
                     <span aria-hidden="true" className="mobile-menu-overlay__icon">🛟</span>
