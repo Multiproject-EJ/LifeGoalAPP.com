@@ -1,4 +1,6 @@
-import { supabase, REDIRECT_TO } from './supaClient.js';
+import { supabase, getSupabaseRedirectUrl } from './supaClient.js';
+
+const REDIRECT_TO = getSupabaseRedirectUrl();
 
 const modal = document.getElementById('authModal');
 const btnOpen = document.getElementById('btnSignIn') || document.querySelector('[data-auth-open]');

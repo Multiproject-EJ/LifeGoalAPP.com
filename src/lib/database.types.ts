@@ -2010,6 +2010,111 @@ export interface Database {
         };
         Relationships: [];
       };
+      admin_users: {
+        Row: {
+          user_id: string;
+          role: string;
+          active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          role?: string;
+          active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          role?: string;
+          active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      case_threads: {
+        Row: {
+          id: string;
+          user_id: string;
+          case_type: string;
+          category: string;
+          subject: string;
+          desired_outcome: string | null;
+          status: string;
+          source_surface: string | null;
+          source_route: string | null;
+          is_demo: boolean;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+          closed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          case_type: string;
+          category: string;
+          subject: string;
+          desired_outcome?: string | null;
+          status?: string;
+          source_surface?: string | null;
+          source_route?: string | null;
+          is_demo?: boolean;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+          closed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          case_type?: string;
+          category?: string;
+          subject?: string;
+          desired_outcome?: string | null;
+          status?: string;
+          source_surface?: string | null;
+          source_route?: string | null;
+          is_demo?: boolean;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+          closed_at?: string | null;
+        };
+        Relationships: [];
+      };
+      case_messages: {
+        Row: {
+          id: string;
+          thread_id: string;
+          author_user_id: string | null;
+          author_role: string;
+          message_type: string;
+          body: string;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          thread_id: string;
+          author_user_id?: string | null;
+          author_role: string;
+          message_type: string;
+          body: string;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          thread_id?: string;
+          author_user_id?: string | null;
+          author_role?: string;
+          message_type?: string;
+          body?: string;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       holiday_preferences: {
         Row: {
           user_id: string;

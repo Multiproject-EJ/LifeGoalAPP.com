@@ -11,7 +11,7 @@
    ```bash
    VITE_SUPABASE_URL="https://muanayogiboxooftkyny.supabase.co"
    VITE_SUPABASE_ANON_KEY="<your anon key>"
-   VITE_SUPABASE_REDIRECT_URL="https://www.lifegoalapp.com/auth/callback"
+   VITE_SUPABASE_REDIRECT_URL="https://habitgame.app/auth/callback.html"
    VITE_VAPID_PUBLIC_KEY="<your existing push key>"
    ```
    > ⚠️ Never commit `.env.local` to Git. It is ignored via `.gitignore`.

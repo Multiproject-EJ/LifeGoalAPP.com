@@ -178,7 +178,7 @@ Set these in `.env.local` (local dev) or in your deployment platform's environme
 |---|---|
 | `VITE_SUPABASE_URL` | Supabase project URL (e.g., `https://xyz.supabase.co`) |
 | `VITE_SUPABASE_ANON_KEY` | Supabase anonymous/public API key |
-| `VITE_SUPABASE_REDIRECT_URL` | OAuth redirect URL (e.g., `https://www.lifegoalapp.com/auth/callback`) |
+| `VITE_SUPABASE_REDIRECT_URL` | OAuth redirect URL (e.g., `https://habitgame.app/auth/callback.html`) |
 | `VITE_VAPID_PUBLIC_KEY` | Web Push VAPID public key (required for push notifications) |
 
 ### Supabase edge function environment (set in Supabase Dashboard → Edge Functions → Secrets)
