@@ -1,5 +1,6 @@
 import {
   FormEvent,
+  MouseEvent,
   PointerEvent,
   ReactNode,
   useCallback,
@@ -57,6 +58,7 @@ import { GameBoardOverlay } from './components/GameBoardOverlay';
 import { HolidaySeasonDialog } from './components/HolidaySeasonDialog';
 import { QuickActionsFAB } from './components/QuickActionsFAB';
 import { XPToast } from './components/XPToast';
+import { CaseSubmissionModal } from './features/cases/CaseSubmissionModal';
 import { RecoverableErrorBoundary } from './components/RecoverableErrorBoundary';
 import { PointsBadge } from './components/PointsBadge';
 import { OfflineSyncDevPanel } from './components/OfflineSyncDevPanel';
@@ -565,6 +567,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const mobileFooterSnapTimeoutRef = useRef<number | null>(null);
   const lastMobileScrollYRef = useRef(0);
   const [isProfileStrengthOpen, setIsProfileStrengthOpen] = useState(false);
+  const [showMobileFeedbackModal, setShowMobileFeedbackModal] = useState(false);
+  const [showMobileSupportModal, setShowMobileSupportModal] = useState(false);
   const [activeProfileStrengthHold, setActiveProfileStrengthHold] = useState<{
     area: AreaKey;
     task: NextTask | null;
@@ -1962,6 +1966,23 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
     setActiveWorkspaceNav(navId);
     setShowMobileHome(false);
+  };
+
+  const openFeedbackSupportFromMobileMenu = (event: MouseEvent<HTMLButtonElement>, mode: 'feedback' | 'support') => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsMobileProfileDialogOpen(false);
+    setIsMobileMenuOpen(false);
+    setIsEnergyMenuOpen(false);
+    closeGameBoardOverlayIfOpen();
+
+    window.setTimeout(() => {
+      if (mode === 'feedback') {
+        setShowMobileFeedbackModal(true);
+      } else {
+        setShowMobileSupportModal(true);
+      }
+    }, 120);
   };
 
   const handleEnergySelect = (category: 'mind' | 'body') => {
@@ -3508,6 +3529,40 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       </li>
                     );
                   })}
+                <li className="mobile-menu-overlay__item">
+                  <button
+                    type="button"
+                    aria-label="Send product feedback"
+                    onPointerDown={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                    }}
+                    onClick={(event) => openFeedbackSupportFromMobileMenu(event, 'feedback')}
+                  >
+                    <span aria-hidden="true" className="mobile-menu-overlay__icon">💬</span>
+                    <span className="mobile-menu-overlay__texts">
+                      <span className="mobile-menu-overlay__label">Feedback</span>
+                      <span className="mobile-menu-overlay__summary">Share bugs, ideas, and product feedback.</span>
+                    </span>
+                  </button>
+                </li>
+                <li className="mobile-menu-overlay__item">
+                  <button
+                    type="button"
+                    aria-label="Request support"
+                    onPointerDown={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                    }}
+                    onClick={(event) => openFeedbackSupportFromMobileMenu(event, 'support')}
+                  >
+                    <span aria-hidden="true" className="mobile-menu-overlay__icon">🛟</span>
+                    <span className="mobile-menu-overlay__texts">
+                      <span className="mobile-menu-overlay__label">Support</span>
+                      <span className="mobile-menu-overlay__summary">Ask for account, billing, or cancellation help.</span>
+                    </span>
+                  </button>
+                </li>
               </ul>
             </div>
             <div className="mobile-menu-overlay__settings">
@@ -4743,6 +4798,24 @@ export default function App({ forceAuthOnMount }: AppProps) {
           onOpenLifeCoach={handleOpenLifeCoach}
         />
       )}
+
+      {showMobileFeedbackModal ? (
+        <CaseSubmissionModal
+          session={activeSession}
+          caseType="feedback"
+          sourceSurface="account_panel"
+          onClose={() => setShowMobileFeedbackModal(false)}
+        />
+      ) : null}
+
+      {showMobileSupportModal ? (
+        <CaseSubmissionModal
+          session={activeSession}
+          caseType="support"
+          sourceSurface="account_panel"
+          onClose={() => setShowMobileSupportModal(false)}
+        />
+      ) : null}
 
       {/* XP Toast Notifications */}
       {xpToasts.map(toast => (

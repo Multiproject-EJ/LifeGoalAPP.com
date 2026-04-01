@@ -41,7 +41,7 @@ if (data?.session) {
 }
 ```
 
-Any Supabase OAuth flow (including "Continue with Google") completed at `/auth/callback`, saw a session, and immediately navigated to `/dashboard`. That path is not generated during `vite build`, so GitHub Pages served an empty 404 shell and the app never booted.
+Any Supabase OAuth flow (including "Continue with Google") completed at `/auth/callback.html`, saw a session, and immediately navigated to `/dashboard`. That path is not generated during `vite build`, so GitHub Pages served an empty 404 shell and the app never booted.
 
 ### November 13, 2025 – Browser Refused to Execute TypeScript Modules
 GitHub Pages briefly served the raw repository contents while the GitHub Actions deployment artifact was still uploading. Because `index.html` referenced `/src/bootstrap.ts`, browsers attempted to execute the TypeScript entry directly and logged:
@@ -126,7 +126,7 @@ After deploying the fixes:
 
 4. **Test Supabase OAuth Redirect**:
    - Trigger a Supabase OAuth sign-in (e.g., Continue with Google)
-   - Confirm that after `/auth/callback` finishes, you land on `https://lifegoalapp.com/`
+   - Confirm that after `/auth/callback.html` finishes, you land on `https://habitgame.app/`
    - Confirm the SPA hydrates normally (no blank screen)
 
 ## Prevention

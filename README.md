@@ -126,7 +126,7 @@ Phase 4, add your public VAPID key as `VITE_VAPID_PUBLIC_KEY` so the client can 
   ```bash
   VITE_SUPABASE_URL="https://<your-project>.supabase.co"
   VITE_SUPABASE_ANON_KEY="<your anon key>"
-  VITE_SUPABASE_REDIRECT_URL="https://www.lifegoalapp.com/auth/callback"
+  VITE_SUPABASE_REDIRECT_URL="https://habitgame.app/auth/callback.html"
   VITE_VAPID_PUBLIC_KEY="<your push key>"
   ```
 - **Deploying on Vercel?** You can also set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `NEXT_PUBLIC_SUPABASE_REDIRECT_URL` instead of the `VITE_` variants—the Vite build and the public `supaClient.js` generator now look for both naming conventions.
