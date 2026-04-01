@@ -107,7 +107,7 @@ The `canUseSupabaseData()` function in `src/lib/supabaseClient.ts` combines the 
    ```
    VITE_SUPABASE_URL="https://your-project.supabase.co"
    VITE_SUPABASE_ANON_KEY="your-anon-key"
-   VITE_SUPABASE_REDIRECT_URL="https://localhost:5173/auth/callback"
+   VITE_SUPABASE_REDIRECT_URL="https://localhost:5173/auth/callback.html"
    VITE_VAPID_PUBLIC_KEY="your-vapid-public-key"
    VITE_OPENAI_API_KEY="your-openai-api-key"   # optional
    ```

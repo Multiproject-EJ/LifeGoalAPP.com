@@ -5,7 +5,7 @@ import type { Database } from './database.types';
 
 let cachedClient: SupabaseClient<Database> | null = null;
 let activeSession: Session | null = null;
-const DEFAULT_AUTH_CALLBACK_PATH = '/auth/callback';
+const DEFAULT_AUTH_CALLBACK_PATH = '/auth/callback.html';
 
 type EnvRecord = Record<string, string | undefined>;
 

@@ -92,7 +92,7 @@ function createSupaClientSource({ url, anonKey, redirectUrl }) {
 
 const SUPABASE_URL = ${serializedUrl};
 const SUPABASE_ANON_KEY = ${serializedAnonKey};
-const DEFAULT_AUTH_CALLBACK_PATH = '/auth/callback';
+const DEFAULT_AUTH_CALLBACK_PATH = '/auth/callback.html';
 
 export function getSupabaseRedirectUrl() {
   const configuredRedirect = ${serializedRedirect};
