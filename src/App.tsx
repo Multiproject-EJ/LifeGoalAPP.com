@@ -1967,6 +1967,21 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setShowMobileHome(false);
   };
 
+  const openFeedbackSupportFromMobileMenu = (mode: 'feedback' | 'support') => {
+    setIsMobileProfileDialogOpen(false);
+    setIsMobileMenuOpen(false);
+    setIsEnergyMenuOpen(false);
+    closeGameBoardOverlayIfOpen();
+
+    window.setTimeout(() => {
+      if (mode === 'feedback') {
+        setShowMobileFeedbackModal(true);
+      } else {
+        setShowMobileSupportModal(true);
+      }
+    }, 0);
+  };
+
   const handleEnergySelect = (category: 'mind' | 'body') => {
     closeGameBoardOverlayIfOpen();
     
@@ -3511,6 +3526,32 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       </li>
                     );
                   })}
+                <li className="mobile-menu-overlay__item">
+                  <button
+                    type="button"
+                    aria-label="Send product feedback"
+                    onClick={() => openFeedbackSupportFromMobileMenu('feedback')}
+                  >
+                    <span aria-hidden="true" className="mobile-menu-overlay__icon">💬</span>
+                    <span className="mobile-menu-overlay__texts">
+                      <span className="mobile-menu-overlay__label">Feedback</span>
+                      <span className="mobile-menu-overlay__summary">Share bugs, ideas, and product feedback.</span>
+                    </span>
+                  </button>
+                </li>
+                <li className="mobile-menu-overlay__item">
+                  <button
+                    type="button"
+                    aria-label="Request support"
+                    onClick={() => openFeedbackSupportFromMobileMenu('support')}
+                  >
+                    <span aria-hidden="true" className="mobile-menu-overlay__icon">🛟</span>
+                    <span className="mobile-menu-overlay__texts">
+                      <span className="mobile-menu-overlay__label">Support</span>
+                      <span className="mobile-menu-overlay__summary">Ask for account, billing, or cancellation help.</span>
+                    </span>
+                  </button>
+                </li>
               </ul>
             </div>
             <div className="mobile-menu-overlay__settings">
