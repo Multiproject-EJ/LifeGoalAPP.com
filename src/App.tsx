@@ -3569,6 +3569,42 @@ export default function App({ forceAuthOnMount }: AppProps) {
               <button
                 type="button"
                 className="mobile-menu-overlay__profile-summary"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setShowMobileFeedbackModal(true);
+                }}
+              >
+                <div>
+                  <span className="mobile-menu-overlay__profile-eyebrow">Support</span>
+                  <p className="mobile-menu-overlay__profile-title">Feedback &amp; Support</p>
+                  <p className="mobile-menu-overlay__profile-subtitle">Send product feedback or request support.</p>
+                </div>
+                <div className="mobile-menu-overlay__profile-ring" aria-hidden="true">
+                  <span className="mobile-menu-overlay__profile-ring-value">💬</span>
+                  <span className="mobile-menu-overlay__profile-ring-label">Help</span>
+                </div>
+              </button>
+              <button
+                type="button"
+                className="mobile-menu-overlay__profile-summary"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setShowMobileSupportModal(true);
+                }}
+              >
+                <div>
+                  <span className="mobile-menu-overlay__profile-eyebrow">Support</span>
+                  <p className="mobile-menu-overlay__profile-title">Request support</p>
+                  <p className="mobile-menu-overlay__profile-subtitle">Ask for billing, account, or cancellation help.</p>
+                </div>
+                <div className="mobile-menu-overlay__profile-ring" aria-hidden="true">
+                  <span className="mobile-menu-overlay__profile-ring-value">🛟</span>
+                  <span className="mobile-menu-overlay__profile-ring-label">Care</span>
+                </div>
+              </button>
+              <button
+                type="button"
+                className="mobile-menu-overlay__profile-summary"
                 onClick={() => setIsProfileStrengthOpen(true)}
               >
                 <div>
