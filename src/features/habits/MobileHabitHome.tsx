@@ -1,7 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
 import type { ProfileStrengthSignalSnapshot } from '../profile-strength/profileStrengthData';
 import type { ProfileStrengthResult } from '../profile-strength/profileStrengthTypes';
-import { RoutinesTodayLane } from '../routines';
 import { DailyHabitTracker } from './DailyHabitTracker';
 
 type MobileHabitHomeProps = {
@@ -42,10 +41,6 @@ export function MobileHabitHome({
   void onHideStandaloneHabitsChange;
   return (
     <div className="mobile-habit-home">
-      <RoutinesTodayLane
-        session={session}
-        onHideStandaloneHabitsChange={onHideStandaloneHabitsChange}
-      />
       <DailyHabitTracker
         session={session}
         variant="compact"
