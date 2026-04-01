@@ -177,7 +177,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     if (!supabase) {
       throw supabaseError ?? new Error('Supabase credentials are not configured.');
     }
-    const baseRedirectTo = getSupabaseRedirectUrl() ?? 'https://habitgame.app/auth/callback';
+    const baseRedirectTo = getSupabaseRedirectUrl() ?? 'https://habitgame.app/auth/callback.html';
     let redirectTo = baseRedirectTo;
     if (typeof window !== 'undefined' && window.location.pathname.startsWith('/conflict/join')) {
       try {

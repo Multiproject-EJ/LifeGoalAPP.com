@@ -16,6 +16,7 @@ import { NewDailySpinWheel } from '../features/spin-wheel/NewDailySpinWheel';
 import { AI_FEATURE_ICON } from '../constants/ai';
 import { splitGoldBalance } from '../constants/economy';
 import { PROGRESS_STATE_EFFECTS, type ProgressState } from '../features/habits/progressGrading';
+import { CaseSubmissionModal } from '../features/cases/CaseSubmissionModal';
 
 type JournalType =
   | 'standard'
@@ -79,6 +80,7 @@ export function QuickActionsFAB({
   const [showHabitsSubmenu, setShowHabitsSubmenu] = useState(false);
   const [showGamificationCard, setShowGamificationCard] = useState(false);
   const [showDailySpinWheel, setShowDailySpinWheel] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
   const [habitCompletions, setHabitCompletions] = useState<Record<string, { logId: string | null; completed: boolean }>>({});
   const [loadingHabits, setLoadingHabits] = useState(false);
@@ -421,6 +423,14 @@ export function QuickActionsFAB({
     refreshProfile?.();
   };
 
+  const handleFeedbackClick = () => {
+    setShowFeedbackModal(true);
+    setShowJournalTypes(false);
+    setShowHabitsSubmenu(false);
+    setShowGamificationCard(false);
+    setIsOpen(false);
+  };
+
   const closeLifeCoach = () => {
     setShowLifeCoach(false);
   };
@@ -526,6 +536,13 @@ export function QuickActionsFAB({
       label: 'Scorecard',
       color: '#f97316',
       onClick: handleGamificationClick,
+    },
+    {
+      id: 'feedback',
+      icon: '💬',
+      label: 'Send feedback',
+      color: '#14b8a6',
+      onClick: handleFeedbackClick,
     },
   ];
 
@@ -834,6 +851,15 @@ export function QuickActionsFAB({
           </div>
         </div>
       )}
+
+      {showFeedbackModal ? (
+        <CaseSubmissionModal
+          session={session}
+          caseType="feedback"
+          sourceSurface="quick_actions_fab"
+          onClose={() => setShowFeedbackModal(false)}
+        />
+      ) : null}
 
       {/* Daily Spin Wheel Modal */}
       {showDailySpinWheel && (

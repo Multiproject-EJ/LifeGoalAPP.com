@@ -12,6 +12,8 @@ import { TelemetrySettingsSection } from './TelemetrySettingsSection';
 import { SettingsFolderButton } from '../../components/SettingsFolderButton';
 import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
 import { HolidayPreferencesSection, HOLIDAY_OPTIONS } from './HolidayPreferencesSection';
+import { CaseSubmissionModal } from '../cases/CaseSubmissionModal';
+import { AdminInboxPanel } from '../admin/AdminInboxPanel';
 import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
 import type { WorkspaceStats } from '../../services/workspaceStats';
 import { upsertWorkspaceProfile } from '../../services/workspaceProfile';
@@ -69,6 +71,8 @@ export function MyAccountPanel({
   const [onboardingSnapshot, setOnboardingSnapshot] = useState<string | null>(null);
   const [dayZeroStored, setDayZeroStored] = useState(false);
   const [legacyAliasReadiness, setLegacyAliasReadiness] = useState<LegacyAliasSunsetReadiness | null>(null);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
   
   const user = session.user;
   const userInitials = profile?.initials || generateInitials(profile?.full_name || '');
@@ -460,6 +464,22 @@ export function MyAccountPanel({
         onLaunchDailyCatchUpPrompt={onLaunchDailyCatchUpPrompt}
       />
 
+      <section className="account-panel__card" aria-labelledby="feedback-support-tools">
+        <p className="account-panel__eyebrow">Support</p>
+        <h3 id="feedback-support-tools">Feedback &amp; Support</h3>
+        <p className="account-panel__hint">
+          Send product feedback or request support. Support requests are reviewed manually.
+        </p>
+        <div className="account-panel__actions-row">
+          <button type="button" className="btn" onClick={() => setShowFeedbackModal(true)}>
+            Send feedback
+          </button>
+          <button type="button" className="btn btn--secondary" onClick={() => setShowSupportModal(true)}>
+            Request support
+          </button>
+        </div>
+      </section>
+
       <section className="account-panel__card" aria-labelledby="weekly-habit-review-launcher">
         <p className="account-panel__eyebrow">Habits</p>
         <h3 id="weekly-habit-review-launcher">Weekly habit review</h3>
@@ -505,11 +525,11 @@ export function MyAccountPanel({
         />
       </section>
 
-      {/* Collapsible Folder 1: Developer & Analytics Tools */}
+      {/* Collapsible Folder 1: Advanced & Admin Tools */}
       <section className="account-panel__card">
         <SettingsFolderButton
-          title="Developer & Analytics Tools"
-          description="Advanced settings for workspace data, analytics, debugging, and testing"
+          title="Advanced & Admin Tools"
+          description="Advanced workspace, analytics, debugging, and admin inbox tools"
           icon="🔧"
           itemCount={7}
           onClick={() => setFolder1Open(true)}
@@ -531,7 +551,7 @@ export function MyAccountPanel({
       <SettingsFolderPopup
         isOpen={folder1Open}
         onClose={() => setFolder1Open(false)}
-        title="Developer & Analytics Tools"
+        title="Advanced & Admin Tools"
       >
         <section className="account-panel__card" aria-labelledby="account-data">
           <p className="account-panel__eyebrow">Data &amp; security</p>
@@ -631,6 +651,8 @@ export function MyAccountPanel({
 
         <ReminderActionDebugPanel session={session} />
 
+        <AdminInboxPanel session={session} />
+
         <SupabaseConnectionTest 
           session={session} 
           isDemoExperience={isDemoExperience} 
@@ -674,6 +696,24 @@ export function MyAccountPanel({
           </button>
         ) : null}
       </div>
+
+      {showFeedbackModal ? (
+        <CaseSubmissionModal
+          session={session}
+          caseType="feedback"
+          sourceSurface="account_panel"
+          onClose={() => setShowFeedbackModal(false)}
+        />
+      ) : null}
+
+      {showSupportModal ? (
+        <CaseSubmissionModal
+          session={session}
+          caseType="support"
+          sourceSurface="account_panel"
+          onClose={() => setShowSupportModal(false)}
+        />
+      ) : null}
     </div>
   );
 }
