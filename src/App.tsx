@@ -1972,17 +1972,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
     event.preventDefault();
     event.stopPropagation();
     setIsMobileProfileDialogOpen(false);
-    setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
     closeGameBoardOverlayIfOpen();
 
-    window.setTimeout(() => {
-      if (mode === 'feedback') {
-        setShowMobileFeedbackModal(true);
-      } else {
-        setShowMobileSupportModal(true);
-      }
-    }, 120);
+    if (mode === 'feedback') {
+      setShowMobileFeedbackModal(true);
+    } else {
+      setShowMobileSupportModal(true);
+    }
   };
 
   const handleEnergySelect = (category: 'mind' | 'body') => {
