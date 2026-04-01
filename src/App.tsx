@@ -1,5 +1,6 @@
 import {
   FormEvent,
+  MouseEvent,
   PointerEvent,
   ReactNode,
   useCallback,
@@ -1967,7 +1968,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setShowMobileHome(false);
   };
 
-  const openFeedbackSupportFromMobileMenu = (mode: 'feedback' | 'support') => {
+  const openFeedbackSupportFromMobileMenu = (event: MouseEvent<HTMLButtonElement>, mode: 'feedback' | 'support') => {
+    event.preventDefault();
+    event.stopPropagation();
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
@@ -1979,7 +1982,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       } else {
         setShowMobileSupportModal(true);
       }
-    }, 0);
+    }, 120);
   };
 
   const handleEnergySelect = (category: 'mind' | 'body') => {
@@ -3530,7 +3533,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <button
                     type="button"
                     aria-label="Send product feedback"
-                    onClick={() => openFeedbackSupportFromMobileMenu('feedback')}
+                    onPointerDown={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                    }}
+                    onClick={(event) => openFeedbackSupportFromMobileMenu(event, 'feedback')}
                   >
                     <span aria-hidden="true" className="mobile-menu-overlay__icon">💬</span>
                     <span className="mobile-menu-overlay__texts">
@@ -3543,7 +3550,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <button
                     type="button"
                     aria-label="Request support"
-                    onClick={() => openFeedbackSupportFromMobileMenu('support')}
+                    onPointerDown={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                    }}
+                    onClick={(event) => openFeedbackSupportFromMobileMenu(event, 'support')}
                   >
                     <span aria-hidden="true" className="mobile-menu-overlay__icon">🛟</span>
                     <span className="mobile-menu-overlay__texts">
