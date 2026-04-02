@@ -14,6 +14,7 @@ import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
 import { HolidayPreferencesSection, HOLIDAY_OPTIONS } from './HolidayPreferencesSection';
 import { CaseSubmissionModal } from '../cases/CaseSubmissionModal';
 import { AdminInboxPanel } from '../admin/AdminInboxPanel';
+import { isAdminUser } from '../../services/adminRoles';
 import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
 import type { WorkspaceStats } from '../../services/workspaceStats';
 import { upsertWorkspaceProfile } from '../../services/workspaceProfile';
@@ -64,6 +65,7 @@ export function MyAccountPanel({
   const [folder1Open, setFolder1Open] = useState(false);
   const [folder2Open, setFolder2Open] = useState(false);
   const [holidayFolderOpen, setHolidayFolderOpen] = useState(false);
+  const [adminInboxOpen, setAdminInboxOpen] = useState(false);
   const [savingPreference, setSavingPreference] = useState(false);
   const [cacheClearing, setCacheClearing] = useState(false);
   const [cacheStatus, setCacheStatus] = useState<string | null>(null);
@@ -73,6 +75,7 @@ export function MyAccountPanel({
   const [legacyAliasReadiness, setLegacyAliasReadiness] = useState<LegacyAliasSunsetReadiness | null>(null);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   
   const user = session.user;
   const userInitials = profile?.initials || generateInitials(profile?.full_name || '');
@@ -139,6 +142,17 @@ export function MyAccountPanel({
   useEffect(() => {
     setHapticModeState(getHapticMode());
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    isAdminUser(session.user.id).then((value) => {
+      if (!active) return;
+      setIsAdmin(value);
+    });
+    return () => {
+      active = false;
+    };
+  }, [session.user.id]);
 
   const handleToggleInitialsInMenu = async (enabled: boolean) => {
     if (!profile || isDemoExperience) return;
@@ -480,6 +494,35 @@ export function MyAccountPanel({
         </div>
       </section>
 
+      {isAdmin === null ? (
+        <section className="account-panel__card" aria-labelledby="admin-tools-access">
+          <p className="account-panel__eyebrow">Admin</p>
+          <h3 id="admin-tools-access">Admin inbox tools</h3>
+          <p className="account-panel__hint">Checking admin access for this account…</p>
+        </section>
+      ) : isAdmin ? (
+        <section className="account-panel__card" aria-labelledby="admin-tools-access">
+          <p className="account-panel__eyebrow">Admin</p>
+          <h3 id="admin-tools-access">Admin inbox tools</h3>
+          <p className="account-panel__hint">
+            Open the dedicated admin inbox view for feedback and support triage.
+          </p>
+          <div className="account-panel__actions-row">
+            <button type="button" className="btn btn--primary" onClick={() => setAdminInboxOpen(true)}>
+              Open admin inbox
+            </button>
+          </div>
+        </section>
+      ) : (
+        <section className="account-panel__card" aria-labelledby="admin-tools-access">
+          <p className="account-panel__eyebrow">Admin</p>
+          <h3 id="admin-tools-access">Admin inbox tools</h3>
+          <p className="account-panel__hint">
+            Admin inbox is hidden for this account. Ensure your user is listed in <code>admin_users</code> with <code>active = true</code>.
+          </p>
+        </section>
+      )}
+
       <section className="account-panel__card" aria-labelledby="weekly-habit-review-launcher">
         <p className="account-panel__eyebrow">Habits</p>
         <h3 id="weekly-habit-review-launcher">Weekly habit review</h3>
@@ -525,13 +568,13 @@ export function MyAccountPanel({
         />
       </section>
 
-      {/* Collapsible Folder 1: Advanced & Admin Tools */}
+      {/* Collapsible Folder 1: Advanced Tools */}
       <section className="account-panel__card">
         <SettingsFolderButton
-          title="Advanced & Admin Tools"
-          description="Advanced workspace, analytics, debugging, and admin inbox tools"
+          title="Advanced Tools"
+          description="Advanced workspace, analytics, and debugging tools"
           icon="🔧"
-          itemCount={7}
+          itemCount={6}
           onClick={() => setFolder1Open(true)}
         />
       </section>
@@ -551,7 +594,7 @@ export function MyAccountPanel({
       <SettingsFolderPopup
         isOpen={folder1Open}
         onClose={() => setFolder1Open(false)}
-        title="Advanced & Admin Tools"
+        title="Advanced Tools"
       >
         <section className="account-panel__card" aria-labelledby="account-data">
           <p className="account-panel__eyebrow">Data &amp; security</p>
@@ -651,12 +694,18 @@ export function MyAccountPanel({
 
         <ReminderActionDebugPanel session={session} />
 
-        <AdminInboxPanel session={session} />
-
         <SupabaseConnectionTest 
           session={session} 
           isDemoExperience={isDemoExperience} 
         />
+      </SettingsFolderPopup>
+
+      <SettingsFolderPopup
+        isOpen={adminInboxOpen}
+        onClose={() => setAdminInboxOpen(false)}
+        title="Admin Inbox"
+      >
+        <AdminInboxPanel session={session} />
       </SettingsFolderPopup>
 
       {/* Folder 2 Popup */}
