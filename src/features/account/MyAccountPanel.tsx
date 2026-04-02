@@ -14,6 +14,7 @@ import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
 import { HolidayPreferencesSection, HOLIDAY_OPTIONS } from './HolidayPreferencesSection';
 import { CaseSubmissionModal } from '../cases/CaseSubmissionModal';
 import { AdminInboxPanel } from '../admin/AdminInboxPanel';
+import { isAdminUser } from '../../services/adminRoles';
 import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
 import type { WorkspaceStats } from '../../services/workspaceStats';
 import { upsertWorkspaceProfile } from '../../services/workspaceProfile';
@@ -73,6 +74,7 @@ export function MyAccountPanel({
   const [legacyAliasReadiness, setLegacyAliasReadiness] = useState<LegacyAliasSunsetReadiness | null>(null);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   
   const user = session.user;
   const userInitials = profile?.initials || generateInitials(profile?.full_name || '');
@@ -139,6 +141,17 @@ export function MyAccountPanel({
   useEffect(() => {
     setHapticModeState(getHapticMode());
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    isAdminUser(session.user.id).then((value) => {
+      if (!active) return;
+      setIsAdmin(value);
+    });
+    return () => {
+      active = false;
+    };
+  }, [session.user.id]);
 
   const handleToggleInitialsInMenu = async (enabled: boolean) => {
     if (!profile || isDemoExperience) return;
@@ -479,6 +492,35 @@ export function MyAccountPanel({
           </button>
         </div>
       </section>
+
+      {isAdmin === null ? (
+        <section className="account-panel__card" aria-labelledby="admin-tools-access">
+          <p className="account-panel__eyebrow">Admin</p>
+          <h3 id="admin-tools-access">Admin inbox tools</h3>
+          <p className="account-panel__hint">Checking admin access for this account…</p>
+        </section>
+      ) : isAdmin ? (
+        <section className="account-panel__card" aria-labelledby="admin-tools-access">
+          <p className="account-panel__eyebrow">Admin</p>
+          <h3 id="admin-tools-access">Admin inbox tools</h3>
+          <p className="account-panel__hint">
+            Your admin queue is inside <strong>Advanced &amp; Admin Tools</strong>. Open it here.
+          </p>
+          <div className="account-panel__actions-row">
+            <button type="button" className="btn btn--primary" onClick={() => setFolder1Open(true)}>
+              Open admin inbox
+            </button>
+          </div>
+        </section>
+      ) : (
+        <section className="account-panel__card" aria-labelledby="admin-tools-access">
+          <p className="account-panel__eyebrow">Admin</p>
+          <h3 id="admin-tools-access">Admin inbox tools</h3>
+          <p className="account-panel__hint">
+            Admin inbox is hidden for this account. Ensure your user is listed in <code>admin_users</code> with <code>active = true</code>.
+          </p>
+        </section>
+      )}
 
       <section className="account-panel__card" aria-labelledby="weekly-habit-review-launcher">
         <p className="account-panel__eyebrow">Habits</p>
