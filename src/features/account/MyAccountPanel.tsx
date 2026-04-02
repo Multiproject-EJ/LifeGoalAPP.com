@@ -493,7 +493,13 @@ export function MyAccountPanel({
         </div>
       </section>
 
-      {isAdmin ? (
+      {isAdmin === null ? (
+        <section className="account-panel__card" aria-labelledby="admin-tools-access">
+          <p className="account-panel__eyebrow">Admin</p>
+          <h3 id="admin-tools-access">Admin inbox tools</h3>
+          <p className="account-panel__hint">Checking admin access for this account…</p>
+        </section>
+      ) : isAdmin ? (
         <section className="account-panel__card" aria-labelledby="admin-tools-access">
           <p className="account-panel__eyebrow">Admin</p>
           <h3 id="admin-tools-access">Admin inbox tools</h3>
@@ -506,7 +512,15 @@ export function MyAccountPanel({
             </button>
           </div>
         </section>
-      ) : null}
+      ) : (
+        <section className="account-panel__card" aria-labelledby="admin-tools-access">
+          <p className="account-panel__eyebrow">Admin</p>
+          <h3 id="admin-tools-access">Admin inbox tools</h3>
+          <p className="account-panel__hint">
+            Admin inbox is hidden for this account. Ensure your user is listed in <code>admin_users</code> with <code>active = true</code>.
+          </p>
+        </section>
+      )}
 
       <section className="account-panel__card" aria-labelledby="weekly-habit-review-launcher">
         <p className="account-panel__eyebrow">Habits</p>

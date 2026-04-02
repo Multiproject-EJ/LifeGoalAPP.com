@@ -1970,6 +1970,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const openFeedbackSupportFromMobileMenu = (mode: 'feedback' | 'support') => {
     setIsMobileProfileDialogOpen(false);
+    setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
     closeGameBoardOverlayIfOpen();
 
