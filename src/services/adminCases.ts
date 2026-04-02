@@ -169,18 +169,18 @@ export async function sendAdminReply(input: {
 
     if (error) throw error;
 
-    if (!currentThread?.first_response_at || currentThread.status === 'new' || currentThread.status === 'triaged') {
-      const nextStatus = currentThread.status === 'new' || currentThread.status === 'triaged' ? 'waiting_on_user' : currentThread.status;
-      const { error: updateThreadError } = await supabase
-        .from('case_threads')
-        .update({
-          first_response_at: currentThread.first_response_at ?? new Date().toISOString(),
-          status: nextStatus,
-        })
-        .eq('id', input.threadId);
+    const nextStatus = currentThread.status === 'new' || currentThread.status === 'triaged'
+      ? 'waiting_on_user'
+      : currentThread.status;
+    const { error: updateThreadError } = await supabase
+      .from('case_threads')
+      .update({
+        first_response_at: currentThread.first_response_at ?? new Date().toISOString(),
+        status: nextStatus,
+      })
+      .eq('id', input.threadId);
 
-      if (updateThreadError) throw updateThreadError;
-    }
+    if (updateThreadError) throw updateThreadError;
 
     return { data: data as CaseMessageRow, error: null };
   } catch (error) {

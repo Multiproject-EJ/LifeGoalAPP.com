@@ -40,6 +40,10 @@ This document tracks the transition from MVP case intake to a full support workf
    - First admin reply now auto-stamps `first_response_at` and can move `new/triaged` to `waiting_on_user`.
    - Resolving/closing a case now stamps `resolved_at`.
 
+9. **Unread indicators (in-app)**
+   - Added per-thread read state storage for users/admins.
+   - User and admin inbox lists now show a lightweight **New** indicator when thread activity is newer than last read time.
+
 ## Schema / policy updates
 
 Migration: `0206_feedback_support_message_visibility_and_replies.sql`
@@ -63,13 +67,19 @@ Migration: `0208_feedback_support_sla_timestamps.sql`
 - Adds `case_threads.resolved_at`
 - Adds SLA index over `first_response_at`, `resolved_at`, `status`, `created_at`
 
+Migration: `0209_feedback_support_thread_reads.sql`
+
+- Adds `case_thread_reads` table with per-user/per-role `last_read_at`
+- Adds RLS for user/admin scoped read-state access
+- Enables unread indicators in both inbox experiences
+
 ## Next recommended milestones
 
 1. **SLA breach indicators**
    - Add thresholds + warning states for slow first response / resolution.
 2. **Bulk triage actions**
    - Batch assignment/status/priority updates from the inbox list.
-3. **Notifications**
+3. **Push/email notifications**
    - Notify user on admin reply, notify admin on new case.
 4. **Attachments**
    - Add screenshot uploads to case messages.

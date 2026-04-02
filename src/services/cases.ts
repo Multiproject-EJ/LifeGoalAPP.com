@@ -134,7 +134,8 @@ export async function addUserCaseReply(input: {
   body: string;
 }): Promise<{ data: CaseMessageRow | null; error: Error | null }> {
   try {
-    const { data, error } = await getUntypedSupabase()
+    const supabase = getUntypedSupabase();
+    const { data, error } = await supabase
       .from('case_messages')
       .insert({
         thread_id: input.threadId,
@@ -148,6 +149,14 @@ export async function addUserCaseReply(input: {
       .single();
 
     if (error) throw error;
+    const { error: threadUpdateError } = await supabase
+      .from('case_threads')
+      .update({
+        status: 'triaged',
+      })
+      .eq('id', input.threadId);
+
+    if (threadUpdateError) throw threadUpdateError;
     return { data: data as CaseMessageRow, error: null };
   } catch (error) {
     return {

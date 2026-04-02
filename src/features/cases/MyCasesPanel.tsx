@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { addUserCaseReply, listCaseMessages, listMyCaseThreads, type CaseMessageRow, type CaseThreadRow } from '../../services/cases';
+import { listMyCaseThreadReads, markCaseThreadRead } from '../../services/caseThreadReads';
 
 type Props = {
   session: Session;
@@ -27,6 +28,7 @@ export function MyCasesPanel({ session }: Props) {
   const [messages, setMessages] = useState<CaseMessageRow[]>([]);
   const [replyBody, setReplyBody] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
+  const [readByThreadId, setReadByThreadId] = useState<Record<string, string>>({});
 
   const selectedThread = useMemo(
     () => threads.find((thread) => thread.id === selectedThreadId) ?? null,
@@ -61,8 +63,30 @@ export function MyCasesPanel({ session }: Props) {
   }, []);
 
   useEffect(() => {
+    listMyCaseThreadReads({ userId: session.user.id, role: 'user' }).then(({ data, error }) => {
+      if (error) {
+        setStatus(error.message);
+        return;
+      }
+      const next: Record<string, string> = {};
+      data.forEach((readRow) => {
+        next[readRow.thread_id] = readRow.last_read_at;
+      });
+      setReadByThreadId(next);
+    });
+  }, [session.user.id]);
+
+  useEffect(() => {
     if (!selectedThreadId) return;
     void loadMessages(selectedThreadId);
+    markCaseThreadRead({
+      threadId: selectedThreadId,
+      userId: session.user.id,
+      role: 'user',
+    }).then(({ data }) => {
+      if (!data) return;
+      setReadByThreadId((current) => ({ ...current, [selectedThreadId]: data.last_read_at }));
+    });
   }, [selectedThreadId]);
 
   const handleSendReply = async () => {
@@ -107,14 +131,17 @@ export function MyCasesPanel({ session }: Props) {
               <button
                 key={thread.id}
                 type="button"
-                className={`btn ${selectedThreadId === thread.id ? 'btn--primary' : ''}`}
-                onClick={() => setSelectedThreadId(thread.id)}
-                style={{ justifyContent: 'space-between' }}
-              >
-                <span>{thread.case_type} · {thread.category}</span>
-                <span>{thread.status}</span>
-              </button>
-            ))}
+                    className={`btn ${selectedThreadId === thread.id ? 'btn--primary' : ''}`}
+                    onClick={() => setSelectedThreadId(thread.id)}
+                    style={{ justifyContent: 'space-between' }}
+                  >
+                    <span>{thread.case_type} · {thread.category}</span>
+                    <span>{thread.status}</span>
+                    {new Date(thread.updated_at).getTime() > new Date(readByThreadId[thread.id] ?? 0).getTime() ? (
+                      <span className="account-panel__saving-indicator">New</span>
+                    ) : null}
+                  </button>
+                ))}
           </div>
 
           {selectedThread ? (

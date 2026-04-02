@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { listAllCaseThreads, updateCaseStatus, addInternalNote, saveReplyDraft, sendAdminReply, updateCaseRouting } from '../../services/adminCases';
 import { isAdminUser, listActiveAdminUsers, type AdminUserRow } from '../../services/adminRoles';
 import { listCaseMessages, type CaseStatus, type CaseThreadRow, type CaseMessageRow } from '../../services/cases';
+import { listMyCaseThreadReads, markCaseThreadRead } from '../../services/caseThreadReads';
 
 type Props = {
   session: Session;
@@ -33,6 +34,7 @@ export function AdminInboxPanel({ session }: Props) {
   const [adminUsers, setAdminUsers] = useState<AdminUserRow[]>([]);
   const [routingPriority, setRoutingPriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal');
   const [routingAssignee, setRoutingAssignee] = useState<string>('');
+  const [readByThreadId, setReadByThreadId] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let active = true;
@@ -120,9 +122,32 @@ export function AdminInboxPanel({ session }: Props) {
   }, [isAdmin]);
 
   useEffect(() => {
+    if (!isAdmin) return;
+    listMyCaseThreadReads({ userId: session.user.id, role: 'admin' }).then(({ data, error }) => {
+      if (error) {
+        setStatus(error.message);
+        return;
+      }
+      const next: Record<string, string> = {};
+      data.forEach((readRow) => {
+        next[readRow.thread_id] = readRow.last_read_at;
+      });
+      setReadByThreadId(next);
+    });
+  }, [isAdmin, session.user.id]);
+
+  useEffect(() => {
     if (!selectedThread) return;
     setRoutingPriority(selectedThread.priority ?? 'normal');
     setRoutingAssignee(selectedThread.assignee_admin_user_id ?? '');
+    markCaseThreadRead({
+      threadId: selectedThread.id,
+      userId: session.user.id,
+      role: 'admin',
+    }).then(({ data }) => {
+      if (!data) return;
+      setReadByThreadId((current) => ({ ...current, [selectedThread.id]: data.last_read_at }));
+    });
   }, [selectedThread]);
 
   if (isAdmin === null) {
@@ -297,7 +322,10 @@ export function AdminInboxPanel({ session }: Props) {
               style={{ justifyContent: 'space-between' }}
             >
               <span>{thread.case_type} · {thread.category} · {getFeatureArea(thread)}</span>
-              <span>{thread.status}</span>
+              <span>
+                {thread.status}
+                {new Date(thread.updated_at).getTime() > new Date(readByThreadId[thread.id] ?? 0).getTime() ? ' · New' : ''}
+              </span>
             </button>
           ))}
           {threads.length === 0 ? <p className="account-panel__hint">No cases yet.</p> : null}
@@ -311,32 +339,6 @@ export function AdminInboxPanel({ session }: Props) {
             <p className="account-panel__hint">Desired outcome: {selectedThread.desired_outcome || 'Not provided'}</p>
             <p className="account-panel__hint">First response at: {formatDateTime(selectedThread.first_response_at)}</p>
             <p className="account-panel__hint">Resolved at: {formatDateTime(selectedThread.resolved_at)}</p>
-            <div className="account-panel__actions-row" style={{ flexWrap: 'wrap' }}>
-              <label className="supabase-auth__field" style={{ minWidth: 180, marginBottom: 0 }}>
-                <span>Priority</span>
-                <select
-                  value={routingPriority}
-                  onChange={(event) => setRoutingPriority(event.target.value as 'low' | 'normal' | 'high' | 'urgent')}
-                >
-                  <option value="low">low</option>
-                  <option value="normal">normal</option>
-                  <option value="high">high</option>
-                  <option value="urgent">urgent</option>
-                </select>
-              </label>
-              <label className="supabase-auth__field" style={{ minWidth: 220, marginBottom: 0 }}>
-                <span>Assignee</span>
-                <select value={routingAssignee} onChange={(event) => setRoutingAssignee(event.target.value)}>
-                  <option value="">Unassigned</option>
-                  {adminUsers.map((adminUser) => (
-                    <option key={adminUser.user_id} value={adminUser.user_id}>
-                      {adminUser.role} · {adminUser.user_id.slice(0, 8)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button type="button" className="btn" onClick={handleSaveRouting}>Save routing</button>
-            </div>
             <div className="account-panel__actions-row" style={{ flexWrap: 'wrap' }}>
               <label className="supabase-auth__field" style={{ minWidth: 180, marginBottom: 0 }}>
                 <span>Priority</span>
