@@ -21,7 +21,12 @@ This document tracks the transition from MVP case intake to a full support workf
    - Admin inbox now supports **Send reply** (visible to end user in timeline).
    - Private drafts remain available for internal drafting.
 
-5. **Message visibility hardening**
+5. **Admin inbox filtering/search (triage speed-up)**
+   - Added filters for status, case type, and feature area.
+   - Added free-text search over subject/category/feature area/reference.
+   - Added match counts and one-click clear filters.
+
+6. **Message visibility hardening**
    - Added explicit `user_reply` and `admin_reply` message types.
    - Updated owner select policy so users cannot view `internal_note` or `reply_draft` messages.
 
