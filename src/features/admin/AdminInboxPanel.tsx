@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { listAllCaseThreads, updateCaseStatus, addInternalNote, saveReplyDraft } from '../../services/adminCases';
+import { listAllCaseThreads, updateCaseStatus, addInternalNote, saveReplyDraft, sendAdminReply } from '../../services/adminCases';
 import { isAdminUser } from '../../services/adminRoles';
 import { listCaseMessages, type CaseStatus, type CaseThreadRow, type CaseMessageRow } from '../../services/cases';
 
@@ -125,6 +125,22 @@ export function AdminInboxPanel({ session }: Props) {
     await loadMessages(selectedThread.id);
   };
 
+  const handleSendReply = async () => {
+    if (!selectedThread || !replyDraft.trim()) return;
+    const { error } = await sendAdminReply({
+      threadId: selectedThread.id,
+      adminUserId: session.user.id,
+      body: replyDraft,
+    });
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
+    setReplyDraft('');
+    setStatus('Reply sent to user (in-app timeline).');
+    await loadMessages(selectedThread.id);
+  };
+
   return (
     <section className="account-panel__card" aria-labelledby="admin-inbox">
       <p className="account-panel__eyebrow">Admin</p>
@@ -187,14 +203,12 @@ export function AdminInboxPanel({ session }: Props) {
 
             <div style={{ marginTop: 10 }}>
               <label className="supabase-auth__field">
-                <span>Manual reply draft</span>
+                <span>Reply to user (visible to user)</span>
                 <textarea rows={4} value={replyDraft} onChange={(e) => setReplyDraft(e.target.value)} />
               </label>
               <div className="account-panel__actions-row">
-                <button type="button" className="btn" onClick={handleSaveReplyDraft}>Save draft</button>
-                <button type="button" className="btn" onClick={() => navigator.clipboard?.writeText(replyDraft)}>
-                  Copy draft
-                </button>
+                <button type="button" className="btn btn--primary" onClick={handleSendReply}>Send reply</button>
+                <button type="button" className="btn" onClick={handleSaveReplyDraft}>Save private draft</button>
               </div>
             </div>
           </div>

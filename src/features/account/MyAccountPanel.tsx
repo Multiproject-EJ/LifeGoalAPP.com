@@ -13,6 +13,7 @@ import { SettingsFolderButton } from '../../components/SettingsFolderButton';
 import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
 import { HolidayPreferencesSection, HOLIDAY_OPTIONS } from './HolidayPreferencesSection';
 import { CaseSubmissionModal } from '../cases/CaseSubmissionModal';
+import { MyCasesPanel } from '../cases/MyCasesPanel';
 import { AdminInboxPanel } from '../admin/AdminInboxPanel';
 import { isAdminUser } from '../../services/adminRoles';
 import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
@@ -493,6 +494,8 @@ export function MyAccountPanel({
           </button>
         </div>
       </section>
+
+      <MyCasesPanel session={session} />
 
       {isAdmin === null ? (
         <section className="account-panel__card" aria-labelledby="admin-tools-access">
