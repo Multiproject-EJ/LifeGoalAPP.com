@@ -25,7 +25,7 @@ export type CaseMessageRow = {
   thread_id: string;
   author_user_id: string | null;
   author_role: 'user' | 'admin' | 'system';
-  message_type: 'submission' | 'internal_note' | 'status_change' | 'reply_draft';
+  message_type: 'submission' | 'user_reply' | 'admin_reply' | 'internal_note' | 'status_change' | 'reply_draft';
   body: string;
   metadata: Record<string, unknown>;
   created_at: string;
@@ -120,6 +120,35 @@ export async function listCaseMessages(threadId: string): Promise<{ data: CaseMe
     return {
       data: [],
       error: error instanceof Error ? error : new Error('Failed to load case messages.'),
+    };
+  }
+}
+
+export async function addUserCaseReply(input: {
+  threadId: string;
+  userId: string;
+  body: string;
+}): Promise<{ data: CaseMessageRow | null; error: Error | null }> {
+  try {
+    const { data, error } = await getUntypedSupabase()
+      .from('case_messages')
+      .insert({
+        thread_id: input.threadId,
+        author_user_id: input.userId,
+        author_role: 'user',
+        message_type: 'user_reply',
+        body: input.body.trim(),
+        metadata: {},
+      })
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    return { data: data as CaseMessageRow, error: null };
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to send reply.'),
     };
   }
 }

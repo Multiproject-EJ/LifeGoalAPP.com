@@ -589,7 +589,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const menuHelperHoldTimeoutRef = useRef<number | null>(null);
   const menuHelperHoldTriggeredRef = useRef(false);
   const menuHelperHoldStartRef = useRef<{ x: number; y: number } | null>(null);
-  const feedbackSupportPointerHandledRef = useRef(false);
   const profileStrengthSnapshotRef = useRef<ProfileStrengthResult | null>(null);
   const profileStrengthSignalsRef = useRef<ProfileStrengthSignalSnapshot | null>(null);
   const [showZenGardenFullScreen, setShowZenGardenFullScreen] = useState(false);
@@ -1971,6 +1970,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const openFeedbackSupportFromMobileMenu = (mode: 'feedback' | 'support') => {
     setIsMobileProfileDialogOpen(false);
+    setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
     closeGameBoardOverlayIfOpen();
 
@@ -1981,23 +1981,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   };
 
-  const handleFeedbackSupportPointerUp = (
-    event: PointerEvent<HTMLButtonElement>,
-    mode: 'feedback' | 'support',
-  ) => {
-    event.preventDefault();
-    event.stopPropagation();
-    feedbackSupportPointerHandledRef.current = true;
-    openFeedbackSupportFromMobileMenu(mode);
-  };
-
   const handleFeedbackSupportClick = (event: MouseEvent<HTMLButtonElement>, mode: 'feedback' | 'support') => {
     event.preventDefault();
     event.stopPropagation();
-    if (feedbackSupportPointerHandledRef.current) {
-      feedbackSupportPointerHandledRef.current = false;
-      return;
-    }
     openFeedbackSupportFromMobileMenu(mode);
   };
 
@@ -3549,13 +3535,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <button
                     type="button"
                     aria-label="Send product feedback"
-                    onPointerUp={(event) => handleFeedbackSupportPointerUp(event, 'feedback')}
-                    onPointerCancel={() => {
-                      feedbackSupportPointerHandledRef.current = false;
-                    }}
-                    onPointerLeave={() => {
-                      feedbackSupportPointerHandledRef.current = false;
-                    }}
                     onClick={(event) => handleFeedbackSupportClick(event, 'feedback')}
                   >
                     <span aria-hidden="true" className="mobile-menu-overlay__icon">💬</span>
@@ -3569,13 +3548,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <button
                     type="button"
                     aria-label="Request support"
-                    onPointerUp={(event) => handleFeedbackSupportPointerUp(event, 'support')}
-                    onPointerCancel={() => {
-                      feedbackSupportPointerHandledRef.current = false;
-                    }}
-                    onPointerLeave={() => {
-                      feedbackSupportPointerHandledRef.current = false;
-                    }}
                     onClick={(event) => handleFeedbackSupportClick(event, 'support')}
                   >
                     <span aria-hidden="true" className="mobile-menu-overlay__icon">🛟</span>
@@ -4825,7 +4797,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         <CaseSubmissionModal
           session={activeSession}
           caseType="feedback"
-          sourceSurface="account_panel"
+          sourceSurface="mobile_menu_overlay"
           onClose={() => setShowMobileFeedbackModal(false)}
         />
       ) : null}
@@ -4834,7 +4806,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         <CaseSubmissionModal
           session={activeSession}
           caseType="support"
-          sourceSurface="account_panel"
+          sourceSurface="mobile_menu_overlay"
           onClose={() => setShowMobileSupportModal(false)}
         />
       ) : null}

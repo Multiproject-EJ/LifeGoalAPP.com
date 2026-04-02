@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { listAllCaseThreads, updateCaseStatus, addInternalNote, saveReplyDraft } from '../../services/adminCases';
+import { listAllCaseThreads, updateCaseStatus, addInternalNote, saveReplyDraft, sendAdminReply } from '../../services/adminCases';
 import { isAdminUser } from '../../services/adminRoles';
 import { listCaseMessages, type CaseStatus, type CaseThreadRow, type CaseMessageRow } from '../../services/cases';
 
@@ -35,6 +35,11 @@ export function AdminInboxPanel({ session }: Props) {
     () => threads.find((thread) => thread.id === selectedThreadId) ?? null,
     [threads, selectedThreadId],
   );
+
+  const getFeatureArea = (thread: CaseThreadRow): string => {
+    const value = thread.metadata?.feature_area;
+    return typeof value === 'string' && value.trim().length > 0 ? value : 'general';
+  };
 
   const loadThreads = async () => {
     setLoading(true);
@@ -120,6 +125,22 @@ export function AdminInboxPanel({ session }: Props) {
     await loadMessages(selectedThread.id);
   };
 
+  const handleSendReply = async () => {
+    if (!selectedThread || !replyDraft.trim()) return;
+    const { error } = await sendAdminReply({
+      threadId: selectedThread.id,
+      adminUserId: session.user.id,
+      body: replyDraft,
+    });
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
+    setReplyDraft('');
+    setStatus('Reply sent to user (in-app timeline).');
+    await loadMessages(selectedThread.id);
+  };
+
   return (
     <section className="account-panel__card" aria-labelledby="admin-inbox">
       <p className="account-panel__eyebrow">Admin</p>
@@ -143,7 +164,7 @@ export function AdminInboxPanel({ session }: Props) {
               onClick={() => setSelectedThreadId(thread.id)}
               style={{ justifyContent: 'space-between' }}
             >
-              <span>{thread.case_type} · {thread.category}</span>
+              <span>{thread.case_type} · {thread.category} · {getFeatureArea(thread)}</span>
               <span>{thread.status}</span>
             </button>
           ))}
@@ -153,6 +174,7 @@ export function AdminInboxPanel({ session }: Props) {
         {selectedThread ? (
           <div style={{ borderTop: '1px solid var(--border-default)', paddingTop: 12 }}>
             <h4>{selectedThread.subject}</h4>
+            <p className="account-panel__hint">Feature area: {getFeatureArea(selectedThread)}</p>
             <p className="account-panel__hint">Desired outcome: {selectedThread.desired_outcome || 'Not provided'}</p>
             <div className="account-panel__actions-row" style={{ flexWrap: 'wrap' }}>
               {STATUS_OPTIONS.map((option) => (
@@ -181,14 +203,12 @@ export function AdminInboxPanel({ session }: Props) {
 
             <div style={{ marginTop: 10 }}>
               <label className="supabase-auth__field">
-                <span>Manual reply draft</span>
+                <span>Reply to user (visible to user)</span>
                 <textarea rows={4} value={replyDraft} onChange={(e) => setReplyDraft(e.target.value)} />
               </label>
               <div className="account-panel__actions-row">
-                <button type="button" className="btn" onClick={handleSaveReplyDraft}>Save draft</button>
-                <button type="button" className="btn" onClick={() => navigator.clipboard?.writeText(replyDraft)}>
-                  Copy draft
-                </button>
+                <button type="button" className="btn btn--primary" onClick={handleSendReply}>Send reply</button>
+                <button type="button" className="btn" onClick={handleSaveReplyDraft}>Save private draft</button>
               </div>
             </div>
           </div>
