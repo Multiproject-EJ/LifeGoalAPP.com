@@ -36,6 +36,11 @@ export function AdminInboxPanel({ session }: Props) {
     [threads, selectedThreadId],
   );
 
+  const getFeatureArea = (thread: CaseThreadRow): string => {
+    const value = thread.metadata?.feature_area;
+    return typeof value === 'string' && value.trim().length > 0 ? value : 'general';
+  };
+
   const loadThreads = async () => {
     setLoading(true);
     const { data, error } = await listAllCaseThreads();
@@ -143,7 +148,7 @@ export function AdminInboxPanel({ session }: Props) {
               onClick={() => setSelectedThreadId(thread.id)}
               style={{ justifyContent: 'space-between' }}
             >
-              <span>{thread.case_type} · {thread.category}</span>
+              <span>{thread.case_type} · {thread.category} · {getFeatureArea(thread)}</span>
               <span>{thread.status}</span>
             </button>
           ))}
@@ -153,6 +158,7 @@ export function AdminInboxPanel({ session }: Props) {
         {selectedThread ? (
           <div style={{ borderTop: '1px solid var(--border-default)', paddingTop: 12 }}>
             <h4>{selectedThread.subject}</h4>
+            <p className="account-panel__hint">Feature area: {getFeatureArea(selectedThread)}</p>
             <p className="account-panel__hint">Desired outcome: {selectedThread.desired_outcome || 'Not provided'}</p>
             <div className="account-panel__actions-row" style={{ flexWrap: 'wrap' }}>
               {STATUS_OPTIONS.map((option) => (
