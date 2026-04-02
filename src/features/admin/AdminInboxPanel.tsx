@@ -1,14 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { listAllCaseThreads, updateCaseStatus, addInternalNote, saveReplyDraft } from '../../services/adminCases';
-import { isAdminUser } from '../../services/adminRoles';
+import { listAllCaseThreads, updateCaseStatus, addInternalNote, saveReplyDraft, sendAdminReply, updateCaseRouting } from '../../services/adminCases';
+import { isAdminUser, listActiveAdminUsers, type AdminUserRow } from '../../services/adminRoles';
 import { listCaseMessages, type CaseStatus, type CaseThreadRow, type CaseMessageRow } from '../../services/cases';
+import { listMyCaseThreadReads, markCaseThreadRead } from '../../services/caseThreadReads';
 
 type Props = {
   session: Session;
 };
 
 const STATUS_OPTIONS: CaseStatus[] = ['new', 'triaged', 'waiting_on_user', 'resolved', 'closed'];
+
+function formatDateTime(value: string | null) {
+  if (!value) return 'Not yet';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+}
 
 export function AdminInboxPanel({ session }: Props) {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
@@ -19,6 +27,14 @@ export function AdminInboxPanel({ session }: Props) {
   const [noteDraft, setNoteDraft] = useState('');
   const [replyDraft, setReplyDraft] = useState('');
   const [status, setStatus] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | CaseStatus>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'feedback' | 'support'>('all');
+  const [featureFilter, setFeatureFilter] = useState<'all' | string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [adminUsers, setAdminUsers] = useState<AdminUserRow[]>([]);
+  const [routingPriority, setRoutingPriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal');
+  const [routingAssignee, setRoutingAssignee] = useState<string>('');
+  const [readByThreadId, setReadByThreadId] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let active = true;
@@ -36,6 +52,31 @@ export function AdminInboxPanel({ session }: Props) {
     [threads, selectedThreadId],
   );
 
+  const getFeatureArea = (thread: CaseThreadRow): string => {
+    const value = thread.metadata?.feature_area;
+    return typeof value === 'string' && value.trim().length > 0 ? value : 'general';
+  };
+
+  const availableFeatureAreas = useMemo(() => {
+    return Array.from(new Set(threads.map((thread) => getFeatureArea(thread)))).sort((a, b) => a.localeCompare(b));
+  }, [threads]);
+
+  const filteredThreads = useMemo(() => {
+    const search = searchQuery.trim().toLowerCase();
+    return threads.filter((thread) => {
+      if (statusFilter !== 'all' && thread.status !== statusFilter) return false;
+      if (typeFilter !== 'all' && thread.case_type !== typeFilter) return false;
+      if (featureFilter !== 'all' && getFeatureArea(thread) !== featureFilter) return false;
+      if (!search) return true;
+      return (
+        thread.subject.toLowerCase().includes(search) ||
+        thread.category.toLowerCase().includes(search) ||
+        getFeatureArea(thread).toLowerCase().includes(search) ||
+        thread.id.slice(0, 8).toLowerCase().includes(search)
+      );
+    });
+  }, [threads, statusFilter, typeFilter, featureFilter, searchQuery]);
+
   const loadThreads = async () => {
     setLoading(true);
     const { data, error } = await listAllCaseThreads();
@@ -51,7 +92,11 @@ export function AdminInboxPanel({ session }: Props) {
   };
 
   const loadMessages = async (threadId: string) => {
-    const { data } = await listCaseMessages(threadId);
+    const { data, error } = await listCaseMessages(threadId);
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
     setMessages(data);
   };
 
@@ -64,6 +109,46 @@ export function AdminInboxPanel({ session }: Props) {
     if (!selectedThreadId || !isAdmin) return;
     void loadMessages(selectedThreadId);
   }, [selectedThreadId, isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    listActiveAdminUsers().then(({ data, error }) => {
+      if (error) {
+        setStatus(error.message);
+        return;
+      }
+      setAdminUsers(data);
+    });
+  }, [isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    listMyCaseThreadReads({ userId: session.user.id, role: 'admin' }).then(({ data, error }) => {
+      if (error) {
+        setStatus(error.message);
+        return;
+      }
+      const next: Record<string, string> = {};
+      data.forEach((readRow) => {
+        next[readRow.thread_id] = readRow.last_read_at;
+      });
+      setReadByThreadId(next);
+    });
+  }, [isAdmin, session.user.id]);
+
+  useEffect(() => {
+    if (!selectedThread) return;
+    setRoutingPriority(selectedThread.priority ?? 'normal');
+    setRoutingAssignee(selectedThread.assignee_admin_user_id ?? '');
+    markCaseThreadRead({
+      threadId: selectedThread.id,
+      userId: session.user.id,
+      role: 'admin',
+    }).then(({ data }) => {
+      if (!data) return;
+      setReadByThreadId((current) => ({ ...current, [selectedThread.id]: data.last_read_at }));
+    });
+  }, [selectedThread]);
 
   if (isAdmin === null) {
     return <p className="account-panel__hint">Checking admin access…</p>;
@@ -120,6 +205,40 @@ export function AdminInboxPanel({ session }: Props) {
     await loadMessages(selectedThread.id);
   };
 
+  const handleSendReply = async () => {
+    if (!selectedThread || !replyDraft.trim()) return;
+    const { error } = await sendAdminReply({
+      threadId: selectedThread.id,
+      adminUserId: session.user.id,
+      body: replyDraft,
+    });
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
+    setReplyDraft('');
+    setStatus('Reply sent to user (in-app timeline).');
+    await loadThreads();
+    await loadMessages(selectedThread.id);
+  };
+
+  const handleSaveRouting = async () => {
+    if (!selectedThread) return;
+    const { error } = await updateCaseRouting({
+      threadId: selectedThread.id,
+      adminUserId: session.user.id,
+      priority: routingPriority,
+      assigneeAdminUserId: routingAssignee || null,
+    });
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
+    setStatus('Routing updated.');
+    await loadThreads();
+    await loadMessages(selectedThread.id);
+  };
+
   return (
     <section className="account-panel__card" aria-labelledby="admin-inbox">
       <p className="account-panel__eyebrow">Admin</p>
@@ -134,8 +253,67 @@ export function AdminInboxPanel({ session }: Props) {
           </button>
         </div>
 
+        <div style={{ display: 'grid', gap: 8 }}>
+          <div className="account-panel__actions-row" style={{ flexWrap: 'wrap' }}>
+            <label className="supabase-auth__field" style={{ minWidth: 180, marginBottom: 0 }}>
+              <span>Status</span>
+              <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as 'all' | CaseStatus)}>
+                <option value="all">All statuses</option>
+                {STATUS_OPTIONS.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="supabase-auth__field" style={{ minWidth: 180, marginBottom: 0 }}>
+              <span>Case type</span>
+              <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value as 'all' | 'feedback' | 'support')}>
+                <option value="all">All case types</option>
+                <option value="feedback">feedback</option>
+                <option value="support">support</option>
+              </select>
+            </label>
+
+            <label className="supabase-auth__field" style={{ minWidth: 200, marginBottom: 0 }}>
+              <span>Feature area</span>
+              <select value={featureFilter} onChange={(event) => setFeatureFilter(event.target.value)}>
+                <option value="all">All feature areas</option>
+                {availableFeatureAreas.map((area) => (
+                  <option key={area} value={area}>{area}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="account-panel__actions-row" style={{ flexWrap: 'wrap' }}>
+            <label className="supabase-auth__field" style={{ minWidth: 260, marginBottom: 0, flex: '1 1 260px' }}>
+              <span>Search</span>
+              <input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Subject, category, feature area, or ref…"
+              />
+            </label>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                setStatusFilter('all');
+                setTypeFilter('all');
+                setFeatureFilter('all');
+                setSearchQuery('');
+              }}
+            >
+              Clear filters
+            </button>
+          </div>
+          <p className="account-panel__hint" style={{ margin: 0 }}>
+            Showing {filteredThreads.length} of {threads.length} cases.
+          </p>
+        </div>
+
         <div style={{ display: 'grid', gap: 8, maxHeight: 220, overflowY: 'auto' }}>
-          {threads.map((thread) => (
+          {filteredThreads.map((thread) => (
             <button
               key={thread.id}
               type="button"
@@ -143,17 +321,50 @@ export function AdminInboxPanel({ session }: Props) {
               onClick={() => setSelectedThreadId(thread.id)}
               style={{ justifyContent: 'space-between' }}
             >
-              <span>{thread.case_type} · {thread.category}</span>
-              <span>{thread.status}</span>
+              <span>{thread.case_type} · {thread.category} · {getFeatureArea(thread)}</span>
+              <span>
+                {thread.status}
+                {new Date(thread.updated_at).getTime() > new Date(readByThreadId[thread.id] ?? 0).getTime() ? ' · New' : ''}
+              </span>
             </button>
           ))}
           {threads.length === 0 ? <p className="account-panel__hint">No cases yet.</p> : null}
+          {threads.length > 0 && filteredThreads.length === 0 ? <p className="account-panel__hint">No cases match current filters.</p> : null}
         </div>
 
         {selectedThread ? (
           <div style={{ borderTop: '1px solid var(--border-default)', paddingTop: 12 }}>
             <h4>{selectedThread.subject}</h4>
+            <p className="account-panel__hint">Feature area: {getFeatureArea(selectedThread)}</p>
             <p className="account-panel__hint">Desired outcome: {selectedThread.desired_outcome || 'Not provided'}</p>
+            <p className="account-panel__hint">First response at: {formatDateTime(selectedThread.first_response_at)}</p>
+            <p className="account-panel__hint">Resolved at: {formatDateTime(selectedThread.resolved_at)}</p>
+            <div className="account-panel__actions-row" style={{ flexWrap: 'wrap' }}>
+              <label className="supabase-auth__field" style={{ minWidth: 180, marginBottom: 0 }}>
+                <span>Priority</span>
+                <select
+                  value={routingPriority}
+                  onChange={(event) => setRoutingPriority(event.target.value as 'low' | 'normal' | 'high' | 'urgent')}
+                >
+                  <option value="low">low</option>
+                  <option value="normal">normal</option>
+                  <option value="high">high</option>
+                  <option value="urgent">urgent</option>
+                </select>
+              </label>
+              <label className="supabase-auth__field" style={{ minWidth: 220, marginBottom: 0 }}>
+                <span>Assignee</span>
+                <select value={routingAssignee} onChange={(event) => setRoutingAssignee(event.target.value)}>
+                  <option value="">Unassigned</option>
+                  {adminUsers.map((adminUser) => (
+                    <option key={adminUser.user_id} value={adminUser.user_id}>
+                      {adminUser.role} · {adminUser.user_id.slice(0, 8)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="button" className="btn" onClick={handleSaveRouting}>Save routing</button>
+            </div>
             <div className="account-panel__actions-row" style={{ flexWrap: 'wrap' }}>
               {STATUS_OPTIONS.map((option) => (
                 <button key={option} type="button" className="btn" onClick={() => handleStatusUpdate(option)}>
@@ -181,14 +392,12 @@ export function AdminInboxPanel({ session }: Props) {
 
             <div style={{ marginTop: 10 }}>
               <label className="supabase-auth__field">
-                <span>Manual reply draft</span>
+                <span>Reply to user (visible to user)</span>
                 <textarea rows={4} value={replyDraft} onChange={(e) => setReplyDraft(e.target.value)} />
               </label>
               <div className="account-panel__actions-row">
-                <button type="button" className="btn" onClick={handleSaveReplyDraft}>Save draft</button>
-                <button type="button" className="btn" onClick={() => navigator.clipboard?.writeText(replyDraft)}>
-                  Copy draft
-                </button>
+                <button type="button" className="btn btn--primary" onClick={handleSendReply}>Send reply</button>
+                <button type="button" className="btn" onClick={handleSaveReplyDraft}>Save private draft</button>
               </div>
             </div>
           </div>

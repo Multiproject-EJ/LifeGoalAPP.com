@@ -11,6 +11,10 @@ export type CaseThreadRow = {
   subject: string;
   desired_outcome: string | null;
   status: CaseStatus;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  assignee_admin_user_id: string | null;
+  first_response_at: string | null;
+  resolved_at: string | null;
   source_surface: string | null;
   source_route: string | null;
   is_demo: boolean;
@@ -25,7 +29,7 @@ export type CaseMessageRow = {
   thread_id: string;
   author_user_id: string | null;
   author_role: 'user' | 'admin' | 'system';
-  message_type: 'submission' | 'internal_note' | 'status_change' | 'reply_draft';
+  message_type: 'submission' | 'user_reply' | 'admin_reply' | 'internal_note' | 'status_change' | 'reply_draft';
   body: string;
   metadata: Record<string, unknown>;
   created_at: string;
@@ -120,6 +124,44 @@ export async function listCaseMessages(threadId: string): Promise<{ data: CaseMe
     return {
       data: [],
       error: error instanceof Error ? error : new Error('Failed to load case messages.'),
+    };
+  }
+}
+
+export async function addUserCaseReply(input: {
+  threadId: string;
+  userId: string;
+  body: string;
+}): Promise<{ data: CaseMessageRow | null; error: Error | null }> {
+  try {
+    const supabase = getUntypedSupabase();
+    const { data, error } = await supabase
+      .from('case_messages')
+      .insert({
+        thread_id: input.threadId,
+        author_user_id: input.userId,
+        author_role: 'user',
+        message_type: 'user_reply',
+        body: input.body.trim(),
+        metadata: {},
+      })
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    const { error: threadUpdateError } = await supabase
+      .from('case_threads')
+      .update({
+        status: 'triaged',
+      })
+      .eq('id', input.threadId);
+
+    if (threadUpdateError) throw threadUpdateError;
+    return { data: data as CaseMessageRow, error: null };
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to send reply.'),
     };
   }
 }
