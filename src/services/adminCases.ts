@@ -137,3 +137,32 @@ export async function saveReplyDraft(input: {
     };
   }
 }
+
+export async function sendAdminReply(input: {
+  threadId: string;
+  adminUserId: string;
+  body: string;
+}): Promise<{ data: CaseMessageRow | null; error: Error | null }> {
+  try {
+    const { data, error } = await getUntypedSupabase()
+      .from('case_messages')
+      .insert({
+        thread_id: input.threadId,
+        author_user_id: input.adminUserId,
+        author_role: 'admin',
+        message_type: 'admin_reply',
+        body: input.body.trim(),
+        metadata: { channel: 'in_app' },
+      })
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    return { data: data as CaseMessageRow, error: null };
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to send admin reply.'),
+    };
+  }
+}
