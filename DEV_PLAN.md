@@ -124,6 +124,7 @@ Use this section to ensure standalone feature plans are tracked and eventually s
 - [docs/game-of-life-2.0/DEMO_MODE_SETUP.md](./docs/game-of-life-2.0/DEMO_MODE_SETUP.md) — ✅ M12-C — Demo mode setup guide: what is mocked, what is real, known limitations, how to toggle between demo and live mode, reference to `demoData.ts` and `demoSession.ts`.
 - [docs/game-of-life-2.0/AI_COACH_PERSONALITY.md](./docs/game-of-life-2.0/AI_COACH_PERSONALITY.md) — AI coach personality spec: voice, tone, coaching model, intervention templates, safety guardrails.
 - [docs/game-of-life-2.0/INTEGRATION_MAP.md](./docs/game-of-life-2.0/INTEGRATION_MAP.md) — Architecture map: feature entry points, service layer, demo-mode parity notes, cross-feature dependencies.
+- [docs/FEEDBACK_SUPPORT_V2.md](./docs/FEEDBACK_SUPPORT_V2.md) — Feedback/support V2 rollout: user timeline, in-app admin replies, and message visibility policy hardening.
 
 ---
 

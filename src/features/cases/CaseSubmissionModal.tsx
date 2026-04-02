@@ -5,7 +5,7 @@ import { createCaseThread, type CaseType } from '../../services/cases';
 type CaseSubmissionModalProps = {
   session: Session;
   caseType: CaseType;
-  sourceSurface: 'account_panel' | 'quick_actions_fab';
+  sourceSurface: 'account_panel' | 'quick_actions_fab' | 'mobile_menu_overlay';
   onClose: () => void;
 };
 
@@ -23,11 +23,25 @@ const SUPPORT_CATEGORIES = [
   { value: 'account_help', label: 'Account help' },
 ];
 
+const FEATURE_AREAS = [
+  { value: 'general', label: 'General / Not sure' },
+  { value: 'goals', label: 'Goals' },
+  { value: 'habits', label: 'Habits' },
+  { value: 'dashboard', label: 'Dashboard / Home' },
+  { value: 'ai_coach', label: 'AI Coach' },
+  { value: 'gamification', label: 'Gamification / Scorecard' },
+  { value: 'journal', label: 'Journal' },
+  { value: 'notifications', label: 'Notifications / Reminders' },
+  { value: 'billing_account', label: 'Billing / Account' },
+  { value: 'technical', label: 'Performance / Technical issue' },
+];
+
 export function CaseSubmissionModal({ session, caseType, sourceSurface, onClose }: CaseSubmissionModalProps) {
   const [category, setCategory] = useState(caseType === 'feedback' ? FEEDBACK_CATEGORIES[0].value : SUPPORT_CATEGORIES[0].value);
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [desiredOutcome, setDesiredOutcome] = useState('');
+  const [featureArea, setFeatureArea] = useState(FEATURE_AREAS[0].value);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -65,6 +79,7 @@ export function CaseSubmissionModal({ session, caseType, sourceSurface, onClose 
       isDemo: session.user.app_metadata?.provider === 'demo',
       metadata: {
         user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+        feature_area: featureArea,
       },
     });
 
@@ -79,6 +94,7 @@ export function CaseSubmissionModal({ session, caseType, sourceSurface, onClose 
     setSubject('');
     setBody('');
     setDesiredOutcome('');
+    setFeatureArea(FEATURE_AREAS[0].value);
   };
 
   return (
@@ -95,6 +111,14 @@ export function CaseSubmissionModal({ session, caseType, sourceSurface, onClose 
               <span>Category</span>
               <select value={category} onChange={(e) => setCategory(e.target.value)}>
                 {categoryOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </label>
+            <label className="supabase-auth__field">
+              <span>Feature area</span>
+              <select value={featureArea} onChange={(e) => setFeatureArea(e.target.value)}>
+                {FEATURE_AREAS.map((option) => (
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
               </select>
