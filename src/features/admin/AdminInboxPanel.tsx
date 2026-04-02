@@ -10,6 +10,13 @@ type Props = {
 
 const STATUS_OPTIONS: CaseStatus[] = ['new', 'triaged', 'waiting_on_user', 'resolved', 'closed'];
 
+function formatDateTime(value: string | null) {
+  if (!value) return 'Not yet';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+}
+
 export function AdminInboxPanel({ session }: Props) {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
@@ -186,6 +193,7 @@ export function AdminInboxPanel({ session }: Props) {
     }
     setReplyDraft('');
     setStatus('Reply sent to user (in-app timeline).');
+    await loadThreads();
     await loadMessages(selectedThread.id);
   };
 
@@ -301,6 +309,34 @@ export function AdminInboxPanel({ session }: Props) {
             <h4>{selectedThread.subject}</h4>
             <p className="account-panel__hint">Feature area: {getFeatureArea(selectedThread)}</p>
             <p className="account-panel__hint">Desired outcome: {selectedThread.desired_outcome || 'Not provided'}</p>
+            <p className="account-panel__hint">First response at: {formatDateTime(selectedThread.first_response_at)}</p>
+            <p className="account-panel__hint">Resolved at: {formatDateTime(selectedThread.resolved_at)}</p>
+            <div className="account-panel__actions-row" style={{ flexWrap: 'wrap' }}>
+              <label className="supabase-auth__field" style={{ minWidth: 180, marginBottom: 0 }}>
+                <span>Priority</span>
+                <select
+                  value={routingPriority}
+                  onChange={(event) => setRoutingPriority(event.target.value as 'low' | 'normal' | 'high' | 'urgent')}
+                >
+                  <option value="low">low</option>
+                  <option value="normal">normal</option>
+                  <option value="high">high</option>
+                  <option value="urgent">urgent</option>
+                </select>
+              </label>
+              <label className="supabase-auth__field" style={{ minWidth: 220, marginBottom: 0 }}>
+                <span>Assignee</span>
+                <select value={routingAssignee} onChange={(event) => setRoutingAssignee(event.target.value)}>
+                  <option value="">Unassigned</option>
+                  {adminUsers.map((adminUser) => (
+                    <option key={adminUser.user_id} value={adminUser.user_id}>
+                      {adminUser.role} · {adminUser.user_id.slice(0, 8)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="button" className="btn" onClick={handleSaveRouting}>Save routing</button>
+            </div>
             <div className="account-panel__actions-row" style={{ flexWrap: 'wrap' }}>
               <label className="supabase-auth__field" style={{ minWidth: 180, marginBottom: 0 }}>
                 <span>Priority</span>

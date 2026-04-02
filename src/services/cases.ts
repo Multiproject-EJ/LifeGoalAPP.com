@@ -14,6 +14,7 @@ export type CaseThreadRow = {
   priority: 'low' | 'normal' | 'high' | 'urgent';
   assignee_admin_user_id: string | null;
   first_response_at: string | null;
+  resolved_at: string | null;
   source_surface: string | null;
   source_route: string | null;
   is_demo: boolean;

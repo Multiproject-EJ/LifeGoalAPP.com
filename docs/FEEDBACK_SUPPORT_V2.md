@@ -35,6 +35,11 @@ This document tracks the transition from MVP case intake to a full support workf
    - Admin can save routing directly from selected thread detail.
    - Routing changes are recorded as system timeline events.
 
+8. **SLA timestamps automation**
+   - Added `resolved_at` column and SLA index support.
+   - First admin reply now auto-stamps `first_response_at` and can move `new/triaged` to `waiting_on_user`.
+   - Resolving/closing a case now stamps `resolved_at`.
+
 ## Schema / policy updates
 
 Migration: `0206_feedback_support_message_visibility_and_replies.sql`
@@ -53,11 +58,15 @@ Migration: `0207_feedback_support_case_routing_fields.sql`
 - Adds `case_threads.first_response_at`
 - Adds routing indexes for `(priority, status, created_at)` and `(assignee_admin_user_id, status, created_at)`
 
+Migration: `0208_feedback_support_sla_timestamps.sql`
+
+- Adds `case_threads.resolved_at`
+- Adds SLA index over `first_response_at`, `resolved_at`, `status`, `created_at`
+
 ## Next recommended milestones
 
-1. **SLA automation**
-   - Populate `first_response_at` automatically on first admin reply.
-   - Add `resolved_at` and SLA breach indicators.
+1. **SLA breach indicators**
+   - Add thresholds + warning states for slow first response / resolution.
 2. **Bulk triage actions**
    - Batch assignment/status/priority updates from the inbox list.
 3. **Notifications**

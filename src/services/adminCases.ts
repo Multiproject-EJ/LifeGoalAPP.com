@@ -45,6 +45,7 @@ export async function updateCaseStatus(input: {
       .update({
         status: input.nextStatus,
         closed_at: isClosing ? new Date().toISOString() : null,
+        resolved_at: isClosing ? new Date().toISOString() : null,
       })
       .eq('id', input.threadId)
       .select('*')
@@ -144,7 +145,16 @@ export async function sendAdminReply(input: {
   body: string;
 }): Promise<{ data: CaseMessageRow | null; error: Error | null }> {
   try {
-    const { data, error } = await getUntypedSupabase()
+    const supabase = getUntypedSupabase();
+    const { data: currentThread, error: currentThreadError } = await supabase
+      .from('case_threads')
+      .select('first_response_at, status')
+      .eq('id', input.threadId)
+      .single();
+
+    if (currentThreadError) throw currentThreadError;
+
+    const { data, error } = await supabase
       .from('case_messages')
       .insert({
         thread_id: input.threadId,
@@ -158,6 +168,20 @@ export async function sendAdminReply(input: {
       .single();
 
     if (error) throw error;
+
+    if (!currentThread?.first_response_at || currentThread.status === 'new' || currentThread.status === 'triaged') {
+      const nextStatus = currentThread.status === 'new' || currentThread.status === 'triaged' ? 'waiting_on_user' : currentThread.status;
+      const { error: updateThreadError } = await supabase
+        .from('case_threads')
+        .update({
+          first_response_at: currentThread.first_response_at ?? new Date().toISOString(),
+          status: nextStatus,
+        })
+        .eq('id', input.threadId);
+
+      if (updateThreadError) throw updateThreadError;
+    }
+
     return { data: data as CaseMessageRow, error: null };
   } catch (error) {
     return {
