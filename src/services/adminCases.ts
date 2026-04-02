@@ -137,3 +137,73 @@ export async function saveReplyDraft(input: {
     };
   }
 }
+
+export async function sendAdminReply(input: {
+  threadId: string;
+  adminUserId: string;
+  body: string;
+}): Promise<{ data: CaseMessageRow | null; error: Error | null }> {
+  try {
+    const { data, error } = await getUntypedSupabase()
+      .from('case_messages')
+      .insert({
+        thread_id: input.threadId,
+        author_user_id: input.adminUserId,
+        author_role: 'admin',
+        message_type: 'admin_reply',
+        body: input.body.trim(),
+        metadata: { channel: 'in_app' },
+      })
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    return { data: data as CaseMessageRow, error: null };
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to send admin reply.'),
+    };
+  }
+}
+
+export async function updateCaseRouting(input: {
+  threadId: string;
+  adminUserId: string;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  assigneeAdminUserId: string | null;
+}): Promise<{ data: CaseThreadRow | null; error: Error | null }> {
+  try {
+    const { data, error } = await getUntypedSupabase()
+      .from('case_threads')
+      .update({
+        priority: input.priority,
+        assignee_admin_user_id: input.assigneeAdminUserId,
+      })
+      .eq('id', input.threadId)
+      .select('*')
+      .single();
+
+    if (error) throw error;
+
+    const { error: messageError } = await getUntypedSupabase().from('case_messages').insert({
+      thread_id: input.threadId,
+      author_user_id: input.adminUserId,
+      author_role: 'system',
+      message_type: 'status_change',
+      body: `Routing updated: priority=${input.priority}, assignee=${input.assigneeAdminUserId ?? 'unassigned'}.`,
+      metadata: {
+        priority: input.priority,
+        assignee_admin_user_id: input.assigneeAdminUserId,
+      },
+    });
+
+    if (messageError) throw messageError;
+    return { data: data as CaseThreadRow, error: null };
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to update routing.'),
+    };
+  }
+}

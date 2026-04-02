@@ -34,3 +34,21 @@ export async function isAdminUser(userId: string): Promise<boolean> {
   const { data } = await fetchAdminUser(userId);
   return Boolean(data?.active);
 }
+
+export async function listActiveAdminUsers(): Promise<{ data: AdminUserRow[]; error: Error | null }> {
+  try {
+    const { data, error } = await getUntypedSupabase()
+      .from('admin_users')
+      .select('*')
+      .eq('active', true)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return { data: (data as AdminUserRow[]) ?? [], error: null };
+  } catch (error) {
+    return {
+      data: [],
+      error: error instanceof Error ? error : new Error('Failed to list active admin users.'),
+    };
+  }
+}
