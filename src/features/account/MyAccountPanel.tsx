@@ -65,6 +65,7 @@ export function MyAccountPanel({
   const [folder1Open, setFolder1Open] = useState(false);
   const [folder2Open, setFolder2Open] = useState(false);
   const [holidayFolderOpen, setHolidayFolderOpen] = useState(false);
+  const [adminInboxOpen, setAdminInboxOpen] = useState(false);
   const [savingPreference, setSavingPreference] = useState(false);
   const [cacheClearing, setCacheClearing] = useState(false);
   const [cacheStatus, setCacheStatus] = useState<string | null>(null);
@@ -504,10 +505,10 @@ export function MyAccountPanel({
           <p className="account-panel__eyebrow">Admin</p>
           <h3 id="admin-tools-access">Admin inbox tools</h3>
           <p className="account-panel__hint">
-            Your admin queue is inside <strong>Advanced &amp; Admin Tools</strong>. Open it here.
+            Open the dedicated admin inbox view for feedback and support triage.
           </p>
           <div className="account-panel__actions-row">
-            <button type="button" className="btn btn--primary" onClick={() => setFolder1Open(true)}>
+            <button type="button" className="btn btn--primary" onClick={() => setAdminInboxOpen(true)}>
               Open admin inbox
             </button>
           </div>
@@ -567,13 +568,13 @@ export function MyAccountPanel({
         />
       </section>
 
-      {/* Collapsible Folder 1: Advanced & Admin Tools */}
+      {/* Collapsible Folder 1: Advanced Tools */}
       <section className="account-panel__card">
         <SettingsFolderButton
-          title="Advanced & Admin Tools"
-          description="Advanced workspace, analytics, debugging, and admin inbox tools"
+          title="Advanced Tools"
+          description="Advanced workspace, analytics, and debugging tools"
           icon="🔧"
-          itemCount={7}
+          itemCount={6}
           onClick={() => setFolder1Open(true)}
         />
       </section>
@@ -593,7 +594,7 @@ export function MyAccountPanel({
       <SettingsFolderPopup
         isOpen={folder1Open}
         onClose={() => setFolder1Open(false)}
-        title="Advanced & Admin Tools"
+        title="Advanced Tools"
       >
         <section className="account-panel__card" aria-labelledby="account-data">
           <p className="account-panel__eyebrow">Data &amp; security</p>
@@ -693,12 +694,18 @@ export function MyAccountPanel({
 
         <ReminderActionDebugPanel session={session} />
 
-        <AdminInboxPanel session={session} />
-
         <SupabaseConnectionTest 
           session={session} 
           isDemoExperience={isDemoExperience} 
         />
+      </SettingsFolderPopup>
+
+      <SettingsFolderPopup
+        isOpen={adminInboxOpen}
+        onClose={() => setAdminInboxOpen(false)}
+        title="Admin Inbox"
+      >
+        <AdminInboxPanel session={session} />
       </SettingsFolderPopup>
 
       {/* Folder 2 Popup */}
