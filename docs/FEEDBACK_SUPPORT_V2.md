@@ -30,6 +30,11 @@ This document tracks the transition from MVP case intake to a full support workf
    - Added explicit `user_reply` and `admin_reply` message types.
    - Updated owner select policy so users cannot view `internal_note` or `reply_draft` messages.
 
+7. **Routing controls (priority + assignee)**
+   - Added priority and assignee controls in Admin Inbox.
+   - Admin can save routing directly from selected thread detail.
+   - Routing changes are recorded as system timeline events.
+
 ## Schema / policy updates
 
 Migration: `0206_feedback_support_message_visibility_and_replies.sql`
@@ -41,12 +46,20 @@ Migration: `0206_feedback_support_message_visibility_and_replies.sql`
 - Owner INSERT policy now allows only:
   - `submission`, `user_reply`
 
+Migration: `0207_feedback_support_case_routing_fields.sql`
+
+- Adds `case_threads.priority` (`low|normal|high|urgent`)
+- Adds `case_threads.assignee_admin_user_id` (FK to `admin_users`)
+- Adds `case_threads.first_response_at`
+- Adds routing indexes for `(priority, status, created_at)` and `(assignee_admin_user_id, status, created_at)`
+
 ## Next recommended milestones
 
-1. **Assignment + SLA fields**
-   - Add `priority`, `assignee_admin_user_id`, `first_response_at`, `resolved_at`.
-2. **Inbox filters and bulk actions**
-   - Filter by status, category, feature area, age.
+1. **SLA automation**
+   - Populate `first_response_at` automatically on first admin reply.
+   - Add `resolved_at` and SLA breach indicators.
+2. **Bulk triage actions**
+   - Batch assignment/status/priority updates from the inbox list.
 3. **Notifications**
    - Notify user on admin reply, notify admin on new case.
 4. **Attachments**

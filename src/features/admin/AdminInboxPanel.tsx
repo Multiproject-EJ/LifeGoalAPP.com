@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { listAllCaseThreads, updateCaseStatus, addInternalNote, saveReplyDraft, sendAdminReply } from '../../services/adminCases';
-import { isAdminUser } from '../../services/adminRoles';
+import { listAllCaseThreads, updateCaseStatus, addInternalNote, saveReplyDraft, sendAdminReply, updateCaseRouting } from '../../services/adminCases';
+import { isAdminUser, listActiveAdminUsers, type AdminUserRow } from '../../services/adminRoles';
 import { listCaseMessages, type CaseStatus, type CaseThreadRow, type CaseMessageRow } from '../../services/cases';
 
 type Props = {
@@ -23,6 +23,9 @@ export function AdminInboxPanel({ session }: Props) {
   const [typeFilter, setTypeFilter] = useState<'all' | 'feedback' | 'support'>('all');
   const [featureFilter, setFeatureFilter] = useState<'all' | string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [adminUsers, setAdminUsers] = useState<AdminUserRow[]>([]);
+  const [routingPriority, setRoutingPriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal');
+  const [routingAssignee, setRoutingAssignee] = useState<string>('');
 
   useEffect(() => {
     let active = true;
@@ -98,6 +101,23 @@ export function AdminInboxPanel({ session }: Props) {
     void loadMessages(selectedThreadId);
   }, [selectedThreadId, isAdmin]);
 
+  useEffect(() => {
+    if (!isAdmin) return;
+    listActiveAdminUsers().then(({ data, error }) => {
+      if (error) {
+        setStatus(error.message);
+        return;
+      }
+      setAdminUsers(data);
+    });
+  }, [isAdmin]);
+
+  useEffect(() => {
+    if (!selectedThread) return;
+    setRoutingPriority(selectedThread.priority ?? 'normal');
+    setRoutingAssignee(selectedThread.assignee_admin_user_id ?? '');
+  }, [selectedThread]);
+
   if (isAdmin === null) {
     return <p className="account-panel__hint">Checking admin access…</p>;
   }
@@ -166,6 +186,23 @@ export function AdminInboxPanel({ session }: Props) {
     }
     setReplyDraft('');
     setStatus('Reply sent to user (in-app timeline).');
+    await loadMessages(selectedThread.id);
+  };
+
+  const handleSaveRouting = async () => {
+    if (!selectedThread) return;
+    const { error } = await updateCaseRouting({
+      threadId: selectedThread.id,
+      adminUserId: session.user.id,
+      priority: routingPriority,
+      assigneeAdminUserId: routingAssignee || null,
+    });
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
+    setStatus('Routing updated.');
+    await loadThreads();
     await loadMessages(selectedThread.id);
   };
 
@@ -264,6 +301,32 @@ export function AdminInboxPanel({ session }: Props) {
             <h4>{selectedThread.subject}</h4>
             <p className="account-panel__hint">Feature area: {getFeatureArea(selectedThread)}</p>
             <p className="account-panel__hint">Desired outcome: {selectedThread.desired_outcome || 'Not provided'}</p>
+            <div className="account-panel__actions-row" style={{ flexWrap: 'wrap' }}>
+              <label className="supabase-auth__field" style={{ minWidth: 180, marginBottom: 0 }}>
+                <span>Priority</span>
+                <select
+                  value={routingPriority}
+                  onChange={(event) => setRoutingPriority(event.target.value as 'low' | 'normal' | 'high' | 'urgent')}
+                >
+                  <option value="low">low</option>
+                  <option value="normal">normal</option>
+                  <option value="high">high</option>
+                  <option value="urgent">urgent</option>
+                </select>
+              </label>
+              <label className="supabase-auth__field" style={{ minWidth: 220, marginBottom: 0 }}>
+                <span>Assignee</span>
+                <select value={routingAssignee} onChange={(event) => setRoutingAssignee(event.target.value)}>
+                  <option value="">Unassigned</option>
+                  {adminUsers.map((adminUser) => (
+                    <option key={adminUser.user_id} value={adminUser.user_id}>
+                      {adminUser.role} · {adminUser.user_id.slice(0, 8)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="button" className="btn" onClick={handleSaveRouting}>Save routing</button>
+            </div>
             <div className="account-panel__actions-row" style={{ flexWrap: 'wrap' }}>
               {STATUS_OPTIONS.map((option) => (
                 <button key={option} type="button" className="btn" onClick={() => handleStatusUpdate(option)}>
