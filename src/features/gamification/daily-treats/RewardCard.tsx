@@ -331,14 +331,21 @@ export const RewardCard = ({
     }
 
     // Holiday-specific flavour
-    const key = holidayKey ?? 'christmas';
-    const bank = FLAVOUR_TEXT_BANK[key];
-    if (bank?.[tierKey]) {
-      return pickFlavour(bank[tierKey]);
+    if (holidayKey) {
+      const bank = FLAVOUR_TEXT_BANK[holidayKey];
+      if (bank?.[tierKey]) {
+        return pickFlavour(bank[tierKey]);
+      }
     }
 
-    // Fallback (should never reach here, but be safe)
-    return 'A reward for your dedication! ✨';
+    // Generic fallback for unknown or missing holiday context
+    const genericFallback: Record<FlavourTierKey, string[]> = {
+      2: ['A small treat to brighten your day. ✨', 'Every little bit counts! 🌟', 'A modest reward — more to come. ⭐'],
+      3: ['A worthy reward for your effort. 🌟', 'Well deserved! Keep going. ✨', 'Nice progress — the streak builds! ⭐'],
+      4: ['An impressive reward for dedication! 🔥', 'Rare fortune favours the consistent. ✨', 'Your persistence pays off big! ⭐'],
+      5: ['A legendary reward for your dedication! 💎', 'The ultimate treasure — you earned it! ✨', 'Diamond-grade excellence! 🌟'],
+    };
+    return pickFlavour(genericFallback[tierKey]);
   };
 
   return (
