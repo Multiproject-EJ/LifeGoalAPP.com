@@ -229,6 +229,20 @@ function computePersonalQuestTodayIndex(
   return Math.min(maxOpened + 1, totalDays);
 }
 
+/**
+ * Compute the total number of free doors from a list of hatches.
+ * Returns the highest day_index among free doors, or fallback (default 7).
+ */
+function computeTotalFreeDoors(
+  hatches: Array<{ door_type: string; day_index: number }>,
+  fallback: number = 7,
+): number {
+  const freeDayIndices = hatches
+    .filter(h => h.door_type === 'free')
+    .map(h => h.day_index);
+  return freeDayIndices.length > 0 ? Math.max(...freeDayIndices) : fallback;
+}
+
 // ---------------------------------------------------------------------------
 // Advent calendar meta — date ranges and theming per holiday
 // ---------------------------------------------------------------------------
@@ -1004,9 +1018,8 @@ export async function getPersonalQuestSeason(
         ]);
 
         if (!hatchError) {
-          const totalDays = Math.max(
-            ...(hatches ?? []).filter((h: Record<string, unknown>) => h.door_type === 'free').map((h: Record<string, unknown>) => h.day_index as number),
-            7,
+          const totalDays = computeTotalFreeDoors(
+            (hatches ?? []) as Array<{ door_type: string; day_index: number }>,
           );
           return {
             data: {
@@ -1181,7 +1194,7 @@ export async function openTodayHatch(
     // Validate the day is openable based on season type
     if (season.season_type === 'personal_quest') {
       // Sequential: only the next available day can be opened
-      const totalDays = Math.max(...(cached?.hatches ?? []).filter(h => h.door_type === 'free').map(h => h.day_index), 7);
+      const totalDays = computeTotalFreeDoors(cached?.hatches ?? []);
       const nextDay = computePersonalQuestTodayIndex(progress, totalDays);
       if (dayIndex !== nextDay) {
         return { data: null, error: new Error(`You can only open day ${nextDay} next`) };

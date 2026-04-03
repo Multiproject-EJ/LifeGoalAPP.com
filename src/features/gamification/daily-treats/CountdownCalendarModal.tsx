@@ -457,7 +457,7 @@ export const CountdownCalendarModal = ({
               const canOpenBonus = day === todayIndex && !bonusOpened && habitCompleted;
 
               const doorEmoji = themeEmojis[(day - 1) % themeEmojis.length];
-              const statusLabel = status === 'catchup' ? 'available - catch up!' : status;
+              const statusLabel = status === 'catchup' ? 'missed day, available to open' : status;
               const label = `Day ${day} ${status === 'today' ? "(today's door)" : `(${statusLabel})`}`;
 
               const doorBody = (
