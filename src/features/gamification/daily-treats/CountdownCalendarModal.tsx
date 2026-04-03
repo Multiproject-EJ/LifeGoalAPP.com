@@ -189,7 +189,7 @@ export const CountdownCalendarModal = ({
       
       if (error) {
         console.error('Failed to open hatch:', error);
-        setDoorError(`Could not open door: ${error.message ?? 'unknown error'}`);
+        setDoorError(`Could not open door: ${error.message ?? 'Unknown error'}`);
         setRevealState(null);
         return;
       }

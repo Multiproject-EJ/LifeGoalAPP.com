@@ -3895,7 +3895,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 🍬
               </div>
               <div className="mobile-gamification-overlay__stat-content">
-                <p className="mobile-gamification-overlay__stat-label">{activeHolidaySeason ? activeHolidaySeason.meta.theme_name : 'Treat Calendar'}</p>
+                <p className="mobile-gamification-overlay__stat-label">{activeHolidaySeason ? `${activeHolidaySeason.meta.displayName} Calendar` : 'Treat Calendar'}</p>
                 <p className="mobile-gamification-overlay__stat-hint">
                   Open your treats menu for spins, leagues, and countdown secrets.
                 </p>
@@ -3977,7 +3977,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             src={lifespinIcon}
             alt="Life Spin icon"
           />
-          <p className="daily-treats-congrats__eyebrow">{activeHolidaySeason ? activeHolidaySeason.meta.theme_name : 'Treat Calendar'}</p>
+          <p className="daily-treats-congrats__eyebrow">{activeHolidaySeason ? `${activeHolidaySeason.meta.displayName} Calendar` : 'Treat Calendar'}</p>
           <h3 className="daily-treats-congrats__title">Congrats on your first visit today!</h3>
           <p className="daily-treats-congrats__subtitle">
             Your controller is powered up with fresh rewards.

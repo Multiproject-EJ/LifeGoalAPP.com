@@ -1946,7 +1946,7 @@ export function DailyHabitTracker({
   const timeBoundOffers = useMemo<TimeBoundOfferItem[]>(() => {
     const nextUtcMidnight = getNextUtcMidnightMs();
     const adventMeta = getActiveAdventMeta();
-    const calendarLabel = adventMeta ? `${adventMeta.meta.theme_name}` : 'Treat Calendar';
+    const calendarLabel = adventMeta ? `${adventMeta.meta.displayName} Calendar` : 'Treat Calendar';
 
     return [
       {
@@ -2153,8 +2153,8 @@ export function DailyHabitTracker({
   const activeOfferTeaserConfig = useMemo(() => {
     if (!activeOfferTeaser) return null;
     const teaserAdventMeta = getActiveAdventMeta();
-    const teaserCalendarTitle = teaserAdventMeta ? teaserAdventMeta.meta.theme_name : 'Treat Calendar';
-    const teaserCalendarCta = teaserAdventMeta ? `Open ${teaserAdventMeta.meta.theme_name} →` : 'Open Treat Calendar →';
+    const teaserCalendarTitle = teaserAdventMeta ? `${teaserAdventMeta.meta.displayName} Calendar` : 'Treat Calendar';
+    const teaserCalendarCta = teaserAdventMeta ? `Open ${teaserAdventMeta.meta.displayName} Calendar →` : 'Open Treat Calendar →';
     const map: Record<TimeBoundOfferId, { title: string; description: string; cta: string; icon: string }> = {
       island_run: { title: 'Island Run', description: 'Your next island is ready to open.', cta: 'Open Island Run →', icon: '🏝️' },
       vision_star: {
