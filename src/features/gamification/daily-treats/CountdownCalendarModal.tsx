@@ -17,6 +17,7 @@ import {
   fetchCurrentSeason,
   getActiveAdventMeta,
   getAdventDoorCount,
+  getPersonalQuestSeason,
   isHabitCompletedToday,
   openTodayHatch,
   computeDoorStatus,
@@ -81,6 +82,7 @@ export const CountdownCalendarModal = ({
   const [seasonData, setSeasonData] = useState<CalendarSeasonData | null>(null);
   const [habitCompleted, setHabitCompleted] = useState(false);
   const [revealState, setRevealState] = useState<RevealState | null>(null);
+  const [symbolBonusNotification, setSymbolBonusNotification] = useState<string | null>(null);
 
   // Load holiday preferences then derive the active advent window and season data
   useEffect(() => {
@@ -112,11 +114,22 @@ export const CountdownCalendarModal = ({
 
       // Load season data from service (uses demo mode when not authenticated)
       if (userId) {
-        const { data: season, error: seasonError } = await fetchCurrentSeason(userId, advent?.meta.holiday_key);
-        if (seasonError) {
-          console.warn('Failed to load season data:', seasonError);
-        } else if (season) {
-          setSeasonData(season);
+        if (advent) {
+          // Holiday is active — fetch the holiday season
+          const { data: season, error: seasonError } = await fetchCurrentSeason(userId, advent.meta.holiday_key);
+          if (seasonError) {
+            console.warn('Failed to load season data:', seasonError);
+          } else if (season) {
+            setSeasonData(season);
+          }
+        } else {
+          // No active holiday — load Personal Quest Calendar as always-on fallback
+          const { data: questSeason, error: questError } = await getPersonalQuestSeason(userId);
+          if (questError) {
+            console.warn('Failed to load personal quest season:', questError);
+          } else if (questSeason) {
+            setSeasonData(questSeason);
+          }
         }
         // Check habit completion for bonus door gating
         const completed = await isHabitCompletedToday(userId);
@@ -127,15 +140,32 @@ export const CountdownCalendarModal = ({
     void loadData();
   }, [isOpen, previewHolidayKey, userId]);
 
-  // Handle gold rewards from legacy scratch card system
+  // Handle gold rewards from legacy scratch card system.
+  // Symbol triples (symbolReward !== null) get a separate 'symbol_collection' dispatch
+  // plus a brief toast notification; the remaining door gold is dispatched with the standard label.
   useEffect(() => {
     if (!revealResult || !userId) return;
-    if (revealResult.goldReward <= 0) return;
-    void awardDailyTreatGold(
-      userId,
-      revealResult.goldReward,
-      `Cycle ${revealResult.cycle} Day ${revealResult.day}`,
-    );
+
+    const SYMBOL_BONUS_GOLD = 150;
+
+    if (revealResult.symbolReward) {
+      // Symbol triple completed — dispatch bonus gold with 'symbol_collection' label
+      void awardDailyTreatGold(userId, SYMBOL_BONUS_GOLD, 'symbol_collection');
+      setSymbolBonusNotification(`🎉 Symbol bonus! +${SYMBOL_BONUS_GOLD} 🪙 gold for collecting 3 ${revealResult.symbolReward}s`);
+      setTimeout(() => setSymbolBonusNotification(null), 4000);
+
+      // Dispatch only the non-symbol portion of the gold reward
+      const doorGold = revealResult.goldReward - SYMBOL_BONUS_GOLD;
+      if (doorGold > 0) {
+        void awardDailyTreatGold(userId, doorGold, `Cycle ${revealResult.cycle} Day ${revealResult.day}`);
+      }
+    } else if (revealResult.goldReward > 0) {
+      void awardDailyTreatGold(
+        userId,
+        revealResult.goldReward,
+        `Cycle ${revealResult.cycle} Day ${revealResult.day}`,
+      );
+    }
   }, [revealResult, userId]);
 
   const handleOpenDoor = useCallback(async (dayIndex: number, doorType: DoorType, hatch: CalendarHatch) => {
@@ -164,9 +194,12 @@ export const CountdownCalendarModal = ({
     }
 
     // Refresh season data to update progress
-    const { data: updated } = await fetchCurrentSeason(userId, seasonData.season.holiday_key ?? undefined);
-    if (updated) {
-      setSeasonData(updated);
+    if (seasonData.season.season_type === 'personal_quest') {
+      const { data: updated } = await getPersonalQuestSeason(userId);
+      if (updated) setSeasonData(updated);
+    } else {
+      const { data: updated } = await fetchCurrentSeason(userId, seasonData.season.holiday_key ?? undefined);
+      if (updated) setSeasonData(updated);
     }
   }, [userId, seasonData]);
 
@@ -182,7 +215,8 @@ export const CountdownCalendarModal = ({
   const resolvedState = scratchState ?? fallbackState;
   const alreadyOpenedToday = hasOpenedToday(resolvedState);
 
-  // No active holiday countdown AND no season data — show Personal Quest or empty state
+  // No season data available — show minimal fallback if Personal Quest also failed to load
+  // (only reached if userId is missing or all season fetches failed)
   if (activeAdvent === null && !seasonData) {
     return (
       <div
@@ -205,7 +239,7 @@ export const CountdownCalendarModal = ({
             <p className="daily-treats-modal__eyebrow">Personal Quest</p>
             <h3 className="daily-treats-calendar__title">🧭 Weekly Sprint</h3>
             <p className="daily-treats-calendar__subtitle">
-              No holiday countdown active right now. Your Personal Quest Calendar keeps you engaged between holidays!
+              Sign in to access your Personal Quest Calendar and earn rewards every day!
             </p>
             <button type="button" className="daily-treats-calendar__button" onClick={onClose}>
               Got it
@@ -343,6 +377,11 @@ export const CountdownCalendarModal = ({
           ×
         </button>
         <div className="daily-treats-calendar__content">
+          {symbolBonusNotification && (
+            <div className="daily-treats-calendar__symbol-bonus-toast" role="status" aria-live="polite">
+              {symbolBonusNotification}
+            </div>
+          )}
           <p className="daily-treats-modal__eyebrow">
             {isPersonalQuest ? 'Personal Quest' : 'Holiday Calendar'}
           </p>

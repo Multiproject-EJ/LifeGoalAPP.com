@@ -61,13 +61,28 @@ const REWARD_AMOUNT_RANGES: Record<RewardTier, { min: number; max: number }> = {
 };
 
 /**
- * Generate a random reward amount for a given tier.
+ * Generate a reward amount for a given tier using a provided rng function.
  * Uses consistent logic across all reward generation.
  */
-function getRewardAmountForTier(tier: RewardTier): number {
+function getRewardAmountForTier(tier: RewardTier, rng: () => number = Math.random): number {
   const range = REWARD_AMOUNT_RANGES[tier];
   if (tier === 1) return 0;
-  return range.min + Math.floor(Math.random() * (range.max - range.min + 1));
+  return range.min + Math.floor(rng() * (range.max - range.min + 1));
+}
+
+/**
+ * Simple deterministic pseudo-random number generator (LCG) seeded by a string.
+ * Used for Personal Quest seasons so the same ISO week always produces the same doors.
+ */
+function makeSeededRng(seed: string): () => number {
+  let state = 0;
+  for (let i = 0; i < seed.length; i++) {
+    state = (Math.imul(31, state) + seed.charCodeAt(i)) | 0;
+  }
+  return () => {
+    state = (Math.imul(1664525, state) + 1013904223) | 0;
+    return (state >>> 0) / 0x100000000;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -238,23 +253,24 @@ const ADVENT_META: AdventMeta[] = [
   },
   {
     // Easter: 8 doors, Palm Sunday → Easter Sunday (Holy Week)
-    // Movable feast — this demo window is approximate; production seasons
-    // should seed the exact date per year.
+    // Movable feast — production seasons should seed the exact date per year.
+    // Demo approximation: Mar 30 → Apr 6
     theme_name: 'Easter Countdown',
     displayName: 'Easter',
     holiday_key: 'easter',
-    countdownStart: { month: 3, day: 13 },
-    holidayDate: { month: 3, day: 20 },
+    countdownStart: { month: 2, day: 30 },
+    holidayDate: { month: 3, day: 6 },
     emojis: ['🐣', '🌸', '🥚', '🐰', '🌷', '🦋', '🌼', '🍀', '✨', '🌈'],
   },
   {
     // Eid: 3 doors — 3 days of Eid al-Fitr
     // Lunar calendar — production seasons should seed the exact date per year.
+    // Demo approximation: Apr 29 → May 1
     theme_name: 'Eid Mubarak Countdown',
     displayName: 'Eid Mubarak',
     holiday_key: 'eid_mubarak',
-    countdownStart: { month: 3, day: 8 },
-    holidayDate: { month: 3, day: 10 },
+    countdownStart: { month: 3, day: 29 },
+    holidayDate: { month: 4, day: 1 },
     emojis: ['🌙', '🕌', '✨', '🤲', '⭐', '🕯️', '🌟', '💛', '🎉', '🪔'],
   },
   {
@@ -279,11 +295,12 @@ const ADVENT_META: AdventMeta[] = [
     // Thanksgiving: 4 doors, Mon → Thu of Thanksgiving week (reduced from 28)
     // US Thanksgiving is 4th Thursday of November — production seasons
     // should seed the exact date per year.
+    // Demo approximation: Nov 24 → Nov 27
     theme_name: 'Thanksgiving Countdown',
     displayName: 'Thanksgiving',
     holiday_key: 'thanksgiving',
-    countdownStart: { month: 10, day: 25 },
-    holidayDate: { month: 10, day: 28 },
+    countdownStart: { month: 10, day: 24 },
+    holidayDate: { month: 10, day: 27 },
     emojis: ['🦃', '🍂', '🌽', '🥧', '🍁', '🌾', '🥕', '🙏', '🍎', '🍠'],
   },
   {
@@ -510,106 +527,125 @@ const EMPTY_DOOR_FLAVOUR: Record<HolidayKey, string[]> = {
   ],
 };
 
-/** Generate a reward tier distribution for a calendar of given length */
-function generateRewardSchedule(totalDays: number): Array<{
+/** Generate a reward tier distribution for a calendar of given length.
+ * Follows the spec schedule exactly:
+ *   Short  (3–5 doors): fixed Day 1=Small, Day 2=Medium, Day N-1=Large, Day N=Diamond
+ *   Medium (7–9 doors): fixed 7-day template, extended proportionally for 8–9 doors
+ *   Long  (25 doors):   alternating empty/small early, medium build, large D24, 2 diamonds D25
+ *
+ * @param totalDays - Total number of free doors in the season
+ * @param rng       - Optional seeded RNG for deterministic generation (Personal Quest)
+ */
+function generateRewardSchedule(
+  totalDays: number,
+  rng: () => number = Math.random,
+): Array<{
   tier: RewardTier;
   currency: RewardCurrency;
   amount: number | null;
 }> {
   const schedule: Array<{ tier: RewardTier; currency: RewardCurrency; amount: number | null }> = [];
 
-  // Short calendars (3-5 doors): no empty, small→medium→large→diamond
+  // Short calendars (3–5 doors): fixed schedule per spec
+  // Day 1=Small(100), Day 2=Medium(300), Day N-1=Large(700)[if ≥4], Day N=Diamond
   if (totalDays <= 5) {
     for (let day = 1; day <= totalDays; day++) {
       if (day === totalDays) {
-        // Final day: Diamond
         schedule.push({ tier: 5, currency: 'diamond', amount: 1 });
       } else if (day === totalDays - 1 && totalDays >= 4) {
-        // Penultimate day: Large gold
-        schedule.push({ tier: 4, currency: 'gold', amount: getRewardAmountForTier(4) });
-      } else if (day === totalDays - 2 || day === 2) {
-        // Medium gold
-        schedule.push({ tier: 3, currency: 'gold', amount: getRewardAmountForTier(3) });
+        schedule.push({ tier: 4, currency: 'gold', amount: 700 });
+      } else if (day === 2) {
+        schedule.push({ tier: 3, currency: 'gold', amount: 300 });
       } else {
-        // Small gold
-        schedule.push({ tier: 2, currency: 'gold', amount: getRewardAmountForTier(2) });
+        schedule.push({ tier: 2, currency: 'gold', amount: 100 });
       }
     }
     return schedule;
   }
 
-  // Medium calendars (6-9 doors): ~30% empty, mix of rewards
+  // Medium calendars (7–9 doors): fixed 7-door template, extended proportionally
+  // Template: Small(100), Small(150), Medium(250), Small(100), Medium(350), Large(700), Diamond
   if (totalDays <= 9) {
-    const emptyCount = Math.floor(totalDays * 0.3);
-    const emptyDays = new Set<number>();
-
-    // Distribute empty days but never in last 3 or consecutive
-    while (emptyDays.size < emptyCount) {
-      const candidate = 1 + Math.floor(Math.random() * (totalDays - 3));
-      if (!emptyDays.has(candidate - 1) && !emptyDays.has(candidate + 1)) {
-        emptyDays.add(candidate);
-      }
-    }
+    const mediumTemplate: Array<{ tier: RewardTier; currency: RewardCurrency; amount: number | null }> = [
+      { tier: 2, currency: 'gold', amount: 100 },
+      { tier: 2, currency: 'gold', amount: 150 },
+      { tier: 3, currency: 'gold', amount: 250 },
+      { tier: 2, currency: 'gold', amount: 100 },
+      { tier: 3, currency: 'gold', amount: 350 },
+      { tier: 4, currency: 'gold', amount: 700 },
+      { tier: 5, currency: 'diamond', amount: 1 },
+    ];
 
     for (let day = 1; day <= totalDays; day++) {
       if (day === totalDays) {
         schedule.push({ tier: 5, currency: 'diamond', amount: 1 });
       } else if (day === totalDays - 1) {
-        schedule.push({ tier: 4, currency: 'gold', amount: getRewardAmountForTier(4) });
-      } else if (emptyDays.has(day)) {
-        schedule.push({ tier: 1, currency: null, amount: null });
-      } else if (day > totalDays - 4) {
-        schedule.push({ tier: 3, currency: 'gold', amount: getRewardAmountForTier(3) });
-      } else if (Math.random() < 0.4) {
-        schedule.push({ tier: 3, currency: 'gold', amount: getRewardAmountForTier(3) });
+        schedule.push({ tier: 4, currency: 'gold', amount: 700 });
       } else {
-        schedule.push({ tier: 2, currency: 'gold', amount: getRewardAmountForTier(2) });
+        // Map intermediate days proportionally to the 5-slot middle of the template
+        const midSlots = 5;
+        const midDays = totalDays - 2; // days between day1 and penultimate
+        const slotIndex = Math.min(
+          midSlots - 1,
+          Math.floor(((day - 1) / midDays) * midSlots),
+        );
+        schedule.push(mediumTemplate[slotIndex]);
       }
     }
     return schedule;
   }
 
-  // Long calendars (10-25 doors, mainly Christmas): heavier empty early, rewards build
-  const emptyCount = Math.floor(totalDays * 0.4);
-  const emptyDays = new Set<number>();
+  // Long calendars (10–25 doors, mainly Christmas): spec schedule
+  // Days 1–10:  alternating Small(100–150) and Empty, no 2 empties in a row, ~50% empty
+  // Days 11–20: Small/Medium(150–350), ~30% empty
+  // Days 21–23: Medium(400–500)
+  // Day 24:     Large(800)
+  // Day 25:     2 Diamonds
+  const lastDay = totalDays;
+  const penultimate = totalDays - 1;
 
-  // First third: 50% empty
-  const firstThird = Math.floor(totalDays / 3);
-  let earlyEmpty = Math.floor(firstThird * 0.5);
-  while (emptyDays.size < earlyEmpty) {
-    const candidate = 1 + Math.floor(Math.random() * firstThird);
-    if (!emptyDays.has(candidate - 1) && !emptyDays.has(candidate + 1)) {
-      emptyDays.add(candidate);
+  // Pre-determine empty days respecting constraints (no 2 in a row, not last 3 days)
+  const emptyDays = new Set<number>();
+  const firstBlock = Math.min(10, Math.floor(totalDays * 0.4));
+  const firstBlockEnd = firstBlock;
+  const midBlockEnd = Math.min(20, Math.floor(totalDays * 0.8));
+
+  // First block: ~50% empty
+  for (let day = 1; day <= firstBlockEnd; day++) {
+    if (day >= lastDay - 2) break;
+    if (!emptyDays.has(day - 1) && rng() < 0.5) {
+      emptyDays.add(day);
     }
   }
 
-  // Middle third: 30% empty
-  const midStart = firstThird + 1;
-  const midEnd = firstThird * 2;
-  let midEmpty = Math.floor((midEnd - midStart + 1) * 0.3);
-  const targetMidEmpty = emptyDays.size + midEmpty;
-  while (emptyDays.size < targetMidEmpty && emptyDays.size < emptyCount) {
-    const candidate = midStart + Math.floor(Math.random() * (midEnd - midStart + 1));
-    if (!emptyDays.has(candidate - 1) && !emptyDays.has(candidate + 1)) {
-      emptyDays.add(candidate);
+  // Middle block: ~30% empty
+  for (let day = firstBlockEnd + 1; day <= midBlockEnd; day++) {
+    if (day >= lastDay - 2) break;
+    if (!emptyDays.has(day - 1) && rng() < 0.3) {
+      emptyDays.add(day);
     }
   }
 
   for (let day = 1; day <= totalDays; day++) {
-    if (day === totalDays) {
-      // Final day: 2-3 diamonds for long calendars (Christmas-style), 1 for others
-      const diamondCount = totalDays >= LONG_CALENDAR_THRESHOLD ? 2 + Math.floor(Math.random() * 2) : 1;
+    if (day === lastDay) {
+      const diamondCount = totalDays >= LONG_CALENDAR_THRESHOLD ? 2 : 1;
       schedule.push({ tier: 5, currency: 'diamond', amount: diamondCount });
-    } else if (day === totalDays - 1) {
-      schedule.push({ tier: 4, currency: 'gold', amount: getRewardAmountForTier(4) });
-    } else if (day >= totalDays - 3) {
-      schedule.push({ tier: 3, currency: 'gold', amount: getRewardAmountForTier(3) });
+    } else if (day === penultimate) {
+      schedule.push({ tier: 4, currency: 'gold', amount: 800 });
+    } else if (day >= lastDay - 3) {
+      // Days 21–23 equivalent: Medium gold (400–500)
+      const amount = 400 + Math.floor(rng() * 101);
+      schedule.push({ tier: 3, currency: 'gold', amount });
     } else if (emptyDays.has(day)) {
       schedule.push({ tier: 1, currency: null, amount: null });
-    } else if (day > totalDays * 0.7 || Math.random() < 0.25) {
-      schedule.push({ tier: 3, currency: 'gold', amount: getRewardAmountForTier(3) });
+    } else if (day <= firstBlockEnd) {
+      // First block non-empty: Small gold (100–150)
+      schedule.push({ tier: 2, currency: 'gold', amount: 100 + Math.floor(rng() * 51) });
     } else {
-      schedule.push({ tier: 2, currency: 'gold', amount: getRewardAmountForTier(2) });
+      // Middle block non-empty: Small or Medium gold (150–350)
+      const amount = 150 + Math.floor(rng() * 201);
+      const tier: RewardTier = amount >= 200 ? 3 : 2;
+      schedule.push({ tier, currency: 'gold', amount });
     }
   }
 
@@ -652,13 +688,23 @@ const PERSONAL_QUEST_THEMES = [
   { theme_name: 'Habit Hero', displayName: 'Habit Hero', emoji: '⭐' },
 ];
 
-function buildPersonalQuestSeasonData(userId: string): CalendarSeasonData {
-  const now = new Date();
+/** Compute the ISO week string (YYYY-Www) for a given Date. */
+function getIsoWeekString(date: Date): string {
+  // ISO week: week containing the first Thursday of the year; week starts Monday
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7; // ISO: Mon=1, Sun=7
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum); // nearest Thursday
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNum = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+}
+
+function buildPersonalQuestSeasonData(userId: string, refDate: Date = new Date()): CalendarSeasonData {
   // Personal Quest runs weekly, starting Monday
-  const dayOfWeek = now.getDay(); // 0 = Sunday
+  const dayOfWeek = refDate.getDay(); // 0 = Sunday
   const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  const mondayStart = new Date(now);
-  mondayStart.setDate(now.getDate() - daysToMonday);
+  const mondayStart = new Date(refDate);
+  mondayStart.setDate(refDate.getDate() - daysToMonday);
   mondayStart.setHours(0, 0, 0, 0);
 
   const sundayEnd = new Date(mondayStart);
@@ -667,8 +713,12 @@ function buildPersonalQuestSeasonData(userId: string): CalendarSeasonData {
   const startsOn = mondayStart.toISOString().split('T')[0];
   const endsOn = sundayEnd.toISOString().split('T')[0];
 
-  // Pick a random theme
-  const theme = PERSONAL_QUEST_THEMES[Math.floor(Math.random() * PERSONAL_QUEST_THEMES.length)];
+  // Deterministic seed: ISO week string so same user sees same doors within a week
+  const weekSeed = `${userId}:${getIsoWeekString(mondayStart)}`;
+  const rng = makeSeededRng(weekSeed);
+
+  // Pick theme deterministically based on the seed
+  const theme = PERSONAL_QUEST_THEMES[Math.floor(rng() * PERSONAL_QUEST_THEMES.length)];
 
   const season: CalendarSeason = {
     id: `demo-personal-quest-${startsOn}`,
@@ -684,12 +734,12 @@ function buildPersonalQuestSeasonData(userId: string): CalendarSeasonData {
   };
 
   const totalDays = 7;
-  const rewardSchedule = generateRewardSchedule(totalDays);
+  const rewardSchedule = generateRewardSchedule(totalDays, rng);
 
-  // Personal Quest emojis
-  const questEmojis = ['🧭', '⭐', '🎯', '🏆', '💪', '🧠', '✨', '🔥', '💎', '🌟'];
+  // Personal Quest emojis per the spec
+  const questEmojis = ['🧭', '⭐', '🏆', '🎯', '💪', '🌟', '✨', '🔥', '💎', '🚀'];
 
-  // Generate hatches with two-door system
+  // Generate hatches with two-door system (deterministic via rng)
   const hatches: CalendarHatch[] = [];
   for (let i = 0; i < totalDays; i++) {
     const dayIndex = i + 1;
@@ -717,10 +767,10 @@ function buildPersonalQuestSeasonData(userId: string): CalendarSeasonData {
       created_at: season.created_at,
     });
 
-    // Bonus door (habit-gated) — better rewards (one tier up from free)
-    const bonusTier: RewardTier = freeReward.tier === 1 ? 2 : Math.min(5, freeReward.tier + 1) as RewardTier;
+    // Bonus door (habit-gated) — at least one tier above free, min Medium Gold
+    const bonusTier: RewardTier = Math.max(3, Math.min(5, freeReward.tier + 1)) as RewardTier;
     const bonusCurrency: RewardCurrency = bonusTier === 5 ? 'diamond' : 'gold';
-    const bonusAmount = getRewardAmountForTier(bonusTier);
+    const bonusAmount = getRewardAmountForTier(bonusTier, rng);
 
     hatches.push({
       id: `demo-quest-hatch-${dayIndex}-bonus`,
@@ -736,7 +786,7 @@ function buildPersonalQuestSeasonData(userId: string): CalendarSeasonData {
       reward_currency: bonusCurrency,
       reward_amount: bonusAmount,
       reward_tier: bonusTier,
-      reveal_mechanic: 'unwrap',
+      reveal_mechanic: dayIndex === totalDays ? 'scratch' : 'unwrap',
       created_at: season.created_at,
     });
   }
@@ -880,6 +930,80 @@ function buildDemoSeasonData(userId: string): CalendarSeasonData {
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
+
+/**
+ * Return a 7-door Personal Quest "Weekly Sprint" season for the current week.
+ * This is the always-on fallback — it runs whenever no holiday calendar is active.
+ *
+ * For authenticated users, attempts to fetch an existing `personal_quest` season
+ * from `daily_calendar_seasons` for this week; falls back to a locally-generated
+ * deterministic demo season if none exists or if in demo mode.
+ *
+ * The generated season is deterministic — same ISO week string seed means the
+ * same user sees the same doors within a week.
+ */
+export async function getPersonalQuestSeason(
+  userId: string,
+): Promise<ServiceResponse<CalendarSeasonData>> {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const mondayStart = new Date(now);
+  mondayStart.setDate(now.getDate() - daysToMonday);
+  mondayStart.setHours(0, 0, 0, 0);
+  const weekStartsOn = mondayStart.toISOString().split('T')[0];
+
+  if (await canUseSupabaseDataAsync()) {
+    try {
+      const supabase = getSupabaseClient();
+
+      const { data: seasons, error: seasonError } = await supabase
+        .from('daily_calendar_seasons')
+        .select('*')
+        .eq('status', 'active')
+        .eq('season_type', 'personal_quest')
+        .eq('user_id_owner', userId)
+        .eq('starts_on', weekStartsOn)
+        .limit(1);
+
+      if (!seasonError && seasons && seasons.length > 0) {
+        const season = seasons[0] as unknown as CalendarSeason;
+
+        const [{ data: hatches, error: hatchError }, { data: progress }] = await Promise.all([
+          supabase
+            .from('daily_calendar_hatches')
+            .select('*')
+            .eq('season_id', season.id)
+            .order('day_index', { ascending: true }),
+          supabase
+            .from('daily_calendar_progress')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('season_id', season.id)
+            .maybeSingle(),
+        ]);
+
+        if (!hatchError) {
+          return {
+            data: {
+              season,
+              hatches: (hatches ?? []) as unknown as CalendarHatch[],
+              progress: progress as unknown as CalendarProgress | null,
+              today_day_index: computeTodayDayIndex(season.starts_on),
+            },
+            error: null,
+          };
+        }
+      }
+    } catch {
+      // Fall through to local generation
+    }
+  }
+
+  // Demo / unauthenticated / no existing season: generate locally with deterministic seed
+  const demo = buildPersonalQuestSeasonData(userId, now);
+  return { data: demo, error: null };
+}
 
 /**
  * Fetch the active advent/holiday season together with all hatch definitions
