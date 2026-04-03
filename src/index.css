@@ -19656,6 +19656,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   cursor: pointer;
   color: #0f172a;
   z-index: 2;
+  touch-action: manipulation;
+  pointer-events: auto;
 }
 
 .daily-treats-modal__header {
@@ -19924,6 +19926,126 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-weight: 700;
   cursor: pointer;
   width: fit-content;
+}
+
+/* ── Dark-theme hardening for Holiday/Treat Calendar ─────────────────────── */
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__dialog {
+  background: rgba(10, 15, 28, 0.97) !important;
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-modal__close,
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-placeholder__close {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-modal__eyebrow,
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-placeholder__eyebrow {
+  color: rgba(148, 163, 184, 0.75);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__title {
+  color: #f1f5f9;
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__subtitle {
+  color: #94a3b8;
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__hint {
+  color: #94a3b8;
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__hatch {
+  border-color: rgba(100, 116, 139, 0.35);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__hatch--opened {
+  background: rgba(30, 41, 59, 0.85);
+  color: #e2e8f0;
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__hatch--today {
+  background: linear-gradient(150deg, rgba(59, 130, 246, 0.3), rgba(14, 165, 233, 0.25));
+  color: #f1f5f9;
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__hatch--locked {
+  background: rgba(30, 41, 59, 0.45);
+  color: rgba(148, 163, 184, 0.7);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__hatch--available {
+  background: rgba(30, 41, 59, 0.35);
+  color: rgba(148, 163, 184, 0.8);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__rest {
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__rollover {
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.18), rgba(14, 165, 233, 0.12));
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__rollover-title {
+  color: #f1f5f9;
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__rollover-copy {
+  color: #94a3b8;
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__tracker {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(148, 163, 184, 0.15);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__tracker-title {
+  color: rgba(148, 163, 184, 0.7);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__tracker-item {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(100, 116, 139, 0.25);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__tracker-item--active {
+  background: rgba(30, 41, 59, 0.75);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__tracker-label {
+  color: #cbd5e1;
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__bonus-hint {
+  background: rgba(100, 80, 15, 0.3);
+  color: #fcd34d;
+  border-color: rgba(234, 179, 8, 0.3);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__bonus-reminder {
+  background: rgba(15, 80, 30, 0.3);
+  color: #86efac;
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__bonus-door--locked {
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(40, 50, 70, 0.7));
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__symbol-bonus-toast {
+  background: rgba(100, 80, 15, 0.92);
+  color: #fcd34d;
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__error-toast {
+  background: rgba(80, 15, 15, 0.92);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.4);
 }
 
 .mobile-gamification-overlay__stat--mini-grid {
