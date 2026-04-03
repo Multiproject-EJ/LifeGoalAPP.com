@@ -564,6 +564,12 @@ These items are correctly planned above but have zero implementation. Listed her
 | **4** | Symbol tracker never triggers rewards | `symbolReward` computed but `awardDailyTreatGold()` never called | Wire `symbolReward` → `awardDailyTreatGold()` in `CountdownCalendarModal` on symbol completion | ✅ **Fixed — separate `'symbol_collection'` dispatch + toast notification** |
 | **5** | Scratch layer has no holiday theming | `drawScratchLayer()` uses static blue gradient | `getHolidayGradient()` in `CalendarDoorScratch.tsx` uses holiday accent colour | ✅ Fixed in PR #1555 |
 | **6** | `dayInCycle` calendar-month-based, not advent-window-based | `syncScratchCardState` set `dayInCycle = today.getDate()` | Server `today_day_index` now used as the only source of truth | ✅ Fixed in PR #1555 |
+| **7** | Hardcoded "Holiday Calendar" label under daily treat icon | Label string "Holiday Calendar" used everywhere regardless of active season | Import `getActiveAdventMeta()` and use `${meta.theme_name}` or "Treat Calendar" fallback | ✅ **Fixed** |
+| **8** | HolidaySeasonDialog intermediate popup blocks direct calendar access | Clicking daily treat opens intro dialog first, requiring extra tap | Bypass dialog — directly open CountdownCalendarModal on daily treat tap | ✅ **Fixed** |
+| **9** | Calendar modal not fullscreen + X button hidden behind iOS status bar | Modal used centred partial overlay with close button at `top: 0.85rem` | `position: fixed; inset: 0; width/height: 100%`; safe-area padding; close button moved below safe area | ✅ **Fixed** |
+| **10** | Door tiles too small to tap on mobile | `min-height: 58px` (52px mobile) — below 44px touch target guideline | Set `min-width: 72px; min-height: 72px`; grid wrapper `overflow-y: auto` | ✅ **Fixed** |
+| **11** | Door tap does nothing (silent failure) | `handleOpenDoor` had no try/catch; `reveal_mechanic` could be null from DB | Wrap in try/catch with error toast; fallback `reveal_mechanic` to `'flip'` | ✅ **Fixed** |
+| **12** | "Back to Holiday Calendar" button — wrong label & no proper handler | Button text hardcoded; confusing UX alongside existing close button | Replaced with "Close" button calling `onClose()` | ✅ **Fixed** |
 
 ---
 
@@ -646,6 +652,7 @@ These items are correctly planned above but have zero implementation. Listed her
 
 ## Decision Log
 
+- **2026-04-03 (Bugs #7–#12 PR)**: Fixed 6 calendar UI bugs in a single PR. Dynamic label replaces hardcoded "Holiday Calendar". HolidaySeasonDialog bypassed (component file retained). Modal made fullscreen with iOS safe-area support. Door tiles enlarged to 72px minimum. Door tap wrapped in try/catch with error toast and `reveal_mechanic` fallback to `'flip'`. "Back to Holiday Calendar" button replaced with "Close".
 - **2026-04-03 (Phase B+D PR)**: Implemented Phase B (corrected ADVENT_META windows, `getPersonalQuestSeason` with deterministic ISO week seed, Personal Quest fallback wired in modal) and partial Phase D (deterministic reward schedule per spec, symbol bonus payout wired with `'symbol_collection'` label + toast). Blocker 1 confirmed resolved by PR #1556. Remaining blockers: migration 0178 and edge function `door_type` handling.
 - **2026-04-03**: Documented implementation status post-PR #1555. Identified 3 remaining blockers: async `canUseSupabaseData()`, missing migration 0178, edge function not handling `door_type`. Full handoff notes added to plan for agent continuity.
 - **2026-04-02**: Full redesign (v2). Corrected countdown windows (Halloween 7d, Easter 8d, etc.). Replaced generic monthly scratch card with three reveal mechanics (flip/scratch/unwrap) assigned by holiday and door position. Added Personal Quest Calendar as always-on fallback. Two-door system (free + habit-gated bonus) formalised.
@@ -659,6 +666,7 @@ These items are correctly planned above but have zero implementation. Listed her
 
 ## Changelog
 
+- **2026-04-03 (Bugs #7–#12 PR)**: Bug 7 — dynamic label from `getActiveAdventMeta()` in DailyHabitTracker, App.tsx, CountdownCalendarModal. Bug 8 — HolidaySeasonDialog bypassed; auto-show and preview both open calendar directly. Bug 9 — modal fullscreen (`position: fixed; inset: 0`), safe-area padding, close button repositioned below safe area. Bug 10 — door tiles `min-width/height: 72px`, grid `overflow-y: auto`. Bug 11 — try/catch in `handleOpenDoor` with error toast, `reveal_mechanic` fallback to `'flip'`. Bug 12 — "Back to Holiday Calendar" → "Close" with `onClose()`.
 - **2026-04-03 (Phase B+D PR)**: B1 — corrected ADVENT_META windows (Easter Mar 30→Apr 6, Eid Apr 29→May 1, Thanksgiving Nov 24→Nov 27). B2 — added `getPersonalQuestSeason(userId)` exported async function with deterministic ISO week seed and Supabase-first logic. B3 — wired Personal Quest fallback in modal; calls `getPersonalQuestSeason()` when no holiday active. D2 — rewrote `generateRewardSchedule()` with fixed spec amounts (Short/Medium/Long). D3 — wired symbol triple bonus: `awardDailyTreatGold(..., 'symbol_collection')` + toast notification.
 - **2026-04-03**: Added implementation status section (post-PR #1555 audit). Documented 3 blockers with exact code fixes. Updated phase checklists with current ✅/❌ states. Updated bug fix table with statuses.
 - **2026-04-02**: v2 redesign. See Decision Log above.
