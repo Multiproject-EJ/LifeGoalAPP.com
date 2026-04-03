@@ -12,6 +12,7 @@ import { CalendarDoorFlip } from './CalendarDoorFlip';
 import { CalendarDoorUnwrap } from './CalendarDoorUnwrap';
 import { CalendarDoorScratch } from './CalendarDoorScratch';
 import { awardDailyTreatGold } from '../../../services/dailyTreats';
+import { GOLD_PER_DIAMOND } from '../../../constants/economy';
 import {
   buildPreviewAdventMeta,
   fetchCurrentSeason,
@@ -191,6 +192,12 @@ export const CountdownCalendarModal = ({
     // Award gold if applicable
     if (reward?.reward_currency === 'gold' && reward.reward_amount) {
       void awardDailyTreatGold(userId, reward.reward_amount, `Day ${dayIndex} ${doorType} door`);
+    }
+
+    // Award diamond rewards: convert to gold equivalent via GOLD_PER_DIAMOND
+    if (reward?.reward_currency === 'diamond' && reward.reward_amount) {
+      const goldEquivalent = reward.reward_amount * GOLD_PER_DIAMOND;
+      void awardDailyTreatGold(userId, goldEquivalent, `Day ${dayIndex} ${doorType} door (${reward.reward_amount} 💎)`);
     }
 
     // Refresh season data to update progress

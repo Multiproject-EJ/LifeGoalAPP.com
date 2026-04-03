@@ -369,9 +369,23 @@ reveal_mechanic  text NOT NULL DEFAULT 'flip'
 
 ---
 
-### ❌ What is still missing — MUST be done before the feature is production-ready
+### ✅ What was resolved — Blockers 2 & 3 + Phase D completion
 
-#### 🔴 BLOCKER 2 — Supabase migration missing for v2 columns
+#### ✅ BLOCKER 2 — Supabase migration for v2 columns (RESOLVED)
+
+**Fix:** Created `supabase/migrations/0178_calendar_v2_columns.sql` with all required columns. `database.types.ts` already had the new column types.
+
+#### ✅ BLOCKER 3 — Edge function door_type + habit gate (RESOLVED)
+
+**Fix:** Edge function POST `/open` already handled `door_type`, habit verification, and constraint enforcement. Updated response to include `reward_currency`, `reward_amount`, `reward_tier`, `reveal_mechanic` from the hatch definition.
+
+#### ✅ Phase D — Diamond awards + Flavour text (RESOLVED)
+
+**Fix:** Diamond rewards wired through `GOLD_PER_DIAMOND` in `CountdownCalendarModal.tsx`. Comprehensive flavour text bank (3–5 lines × 9 holidays × 4 tiers + personal quest) added to `RewardCard.tsx`.
+
+---
+
+#### 🔴 BLOCKER 2 — Supabase migration missing for v2 columns (ORIGINAL DESCRIPTION)
 
 **Root cause:** PR #1555 built the full UI and service layer for the two-door system and reward tiers, but did **not** add a Supabase migration. The new columns (`door_type`, `reward_currency`, `reward_amount`, `reward_tier`, `reveal_mechanic` on `daily_calendar_hatches`; `season_type`, `user_id_owner` on `daily_calendar_seasons`) do not exist in the database. All production queries for these columns will silently return `null`.
 
@@ -531,8 +545,8 @@ These items are correctly planned above but have zero implementation. Listed her
 | **D** | Rewrite `buildDemoSeasonData()` to use Type 1–5 reward tiers per schedule | ✅ Done |
 | **D** | Remove XP as a calendar reward type; only `gold` and `diamond` | ✅ Done (types were already correct; confirmed no XP references) |
 | **D** | Wire symbol bonus reward payout via `awardDailyTreatGold('symbol_collection')` + toast | ✅ Done |
-| **D** | Wire diamond awards through `splitGoldBalance()` / `GOLD_PER_DIAMOND` from `src/constants/economy.ts` | ❌ Not done |
-| **D** | Flavour text bank: 3–5 lines per holiday per reward tier | ❌ Not done |
+| **D** | Wire diamond awards through `splitGoldBalance()` / `GOLD_PER_DIAMOND` from `src/constants/economy.ts` | ✅ Done — diamond rewards converted to gold equivalent via GOLD_PER_DIAMOND in CountdownCalendarModal |
+| **D** | Flavour text bank: 3–5 lines per holiday per reward tier | ✅ Done — comprehensive bank in RewardCard.tsx (9 holidays × 4 tiers + personal quest) |
 | **F** | CSS ambient animations (Christmas snow, Halloween bats, Valentine's hearts, New Year sparkle, Easter petals) | ❌ Not done |
 | **F** | Door grid: raised card style (box-shadow, gradient face), full opened/missed visual states | ❌ Not done |
 | **F** | Birthday Calendar variant (birthday week, final door guaranteed 1 💎) | ❌ Not done |
@@ -566,7 +580,7 @@ These items are correctly planned above but have zero implementation. Listed her
 *Makes the feature always-on and fixes the too-long countdowns.*
 
 - [x] Update `ADVENT_META` in `treatCalendarService.ts` with corrected windows per spec above (Easter: Mar 30→Apr 6, Eid: Apr 29→May 1, Thanksgiving: Nov 24→Nov 27)
-- [ ] Add migration 0178: `season_type`, `user_id_owner` on `daily_calendar_seasons` ← see Blocker 2
+- [x] Add migration 0178: `season_type`, `user_id_owner` on `daily_calendar_seasons` ← Blocker 2 resolved
 - [x] Build `getPersonalQuestSeason(userId)` service — exported async function; deterministic ISO week seed; Supabase-first with local fallback
 - [x] Wire fallback in `CountdownCalendarModal`: when `getActiveAdventMeta()` returns `null`, call `getPersonalQuestSeason(userId)` and render the Personal Quest calendar
 - [x] Personal Quest Calendar: 7-door weekly sprint, `🧭 Weekly Sprint` theme, deterministic rewards per ISO week
@@ -577,9 +591,9 @@ These items are correctly planned above but have zero implementation. Listed her
 - [x] `isHabitCompletedToday(userId)` built in `treatCalendarService.ts`
 - [x] Two-door layout in `CountdownCalendarModal` (free + bonus door UI)
 - [x] Bonus door pulsing gold glow when unlocked; 🎁 lock icon when not yet unlocked
-- [ ] Add migration 0178: `door_type`, `reward_currency`, `reward_amount`, `reward_tier`, `reveal_mechanic` on `daily_calendar_hatches` ← see Blocker 2
+- [x] Add migration 0178: `door_type`, `reward_currency`, `reward_amount`, `reward_tier`, `reveal_mechanic` on `daily_calendar_hatches` ← Blocker 2 resolved
 - [ ] Update `buildDemoSeasonData()` to generate two doors per day with correct reward tiers
-- [ ] Update edge function `/treat-calendar/open` to accept `door_type` and validate habit completion server-side ← see Blocker 3
+- [x] Update edge function `/treat-calendar/open` to accept `door_type` and validate habit completion server-side ← Blocker 3 resolved; response now includes reward_currency, reward_amount, reward_tier, reveal_mechanic from hatch
 
 ### 🟢 Phase D — Reward Structure + Economy Wiring
 *Ties the calendar to the real app economy.*
@@ -589,8 +603,8 @@ These items are correctly planned above but have zero implementation. Listed her
 - [x] Rewrite `generateRewardSchedule()` reward generation using Type 1–5 tiers per the spec schedule (Short/Medium/Long)
 - [x] Remove XP as a calendar reward type entirely — only `gold` and `diamond` (confirmed; types were already correct)
 - [x] Wire symbol triple bonus via `awardDailyTreatGold('symbol_collection')` + toast notification in `CountdownCalendarModal`
-- [ ] Wire diamond awards through `splitGoldBalance()` / `GOLD_PER_DIAMOND` from `src/constants/economy.ts`
-- [ ] Flavour text bank: 3–5 lines per holiday, selected by reward tier
+- [x] Wire diamond awards through `splitGoldBalance()` / `GOLD_PER_DIAMOND` from `src/constants/economy.ts` — diamond rewards converted to gold equivalent via GOLD_PER_DIAMOND in CountdownCalendarModal
+- [x] Flavour text bank: 3–5 lines per holiday per reward tier (Types 2–5) in RewardCard; Type 1 uses existing `getEmptyDoorFlavour()` bank
 
 ### 🔵 Phase E — Three Reveal Mechanics
 *The signature interaction layer.*
