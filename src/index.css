@@ -18753,11 +18753,30 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .daily-treats-calendar__grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem;
   margin-top: 0.35rem;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Final day spans full width for emphasis (like the big Day 7 in Monopoly GO) */
+.daily-treats-calendar__day-pair--final {
+  grid-column: 1 / -1;
+}
+
+.daily-treats-calendar__day-pair--final .daily-treats-calendar__hatch {
+  min-height: 90px;
+  font-size: 0.75rem;
+}
+
+.daily-treats-calendar__day-pair--final .daily-treats-calendar__hatch-number {
+  font-size: 1.15rem;
+}
+
+.daily-treats-calendar__day-pair--final .daily-treats-calendar__hatch-status,
+.daily-treats-calendar__day-pair--final .daily-treats-calendar__hatch-symbol {
+  font-size: 1.2rem;
 }
 
 .daily-treats-calendar__hatch {
@@ -19512,6 +19531,23 @@ html.platform-ipad .workspace-shell__menu-edge {
   border-radius: inherit;
 }
 
+/* Holiday catch-up door — missed day that can still be opened */
+.daily-treats-calendar__hatch--catchup {
+  background: linear-gradient(150deg, rgba(234, 179, 8, 0.15), rgba(251, 191, 36, 0.1));
+  border-color: rgba(234, 179, 8, 0.5);
+  border-style: dashed;
+  color: #92400e;
+}
+
+.daily-treats-calendar__hatch--catchup.daily-treats-calendar__hatch-button {
+  cursor: pointer;
+}
+
+.daily-treats-calendar__hatch--catchup.daily-treats-calendar__hatch-button:hover {
+  background: linear-gradient(150deg, rgba(234, 179, 8, 0.25), rgba(251, 191, 36, 0.18));
+  border-style: solid;
+}
+
 /* Bonus door locked state */
 .daily-treats-calendar__bonus-door--locked {
   position: relative;
@@ -19978,6 +20014,12 @@ html.platform-ipad .workspace-shell__menu-edge {
 :is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__hatch--available {
   background: rgba(30, 41, 59, 0.35);
   color: rgba(148, 163, 184, 0.8);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__hatch--catchup {
+  background: linear-gradient(150deg, rgba(234, 179, 8, 0.2), rgba(251, 191, 36, 0.12));
+  border-color: rgba(234, 179, 8, 0.45);
+  color: #fbbf24;
 }
 
 :is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__rest {

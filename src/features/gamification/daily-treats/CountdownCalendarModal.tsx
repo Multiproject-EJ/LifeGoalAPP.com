@@ -31,6 +31,7 @@ import {
   type RewardTier,
   type RewardCurrency,
   type RevealMechanic,
+  type SeasonType,
 } from '../../../services/treatCalendarService';
 import { fetchHolidayPreferences } from '../../../services/holidayPreferences';
 import { getHolidayThemeAssets } from '../../../services/holidayThemeAssets';
@@ -414,8 +415,12 @@ export const CountdownCalendarModal = ({
           <p className="daily-treats-calendar__subtitle">
             Day {todayIndex} of {totalDoors}
             {todayFreeOpened
-              ? " • today's treat already revealed!"
-              : " • open today's door to reveal your treat."}
+              ? isPersonalQuest
+                ? ' • come back anytime to open the next door!'
+                : " • today's treat already revealed!"
+              : isPersonalQuest
+                ? ' • open this door to reveal your treat.'
+                : " • open today's door to reveal your treat."}
           </p>
 
           {/* Bonus door status */}
@@ -430,6 +435,7 @@ export const CountdownCalendarModal = ({
           <div className="daily-treats-calendar__grid" role="list">
             {Array.from({ length: totalDoors }, (_, index) => {
               const day = index + 1;
+              const isFinalDay = day === totalDoors;
               const { free: freeHatch, bonus: bonusHatch } = seasonData
                 ? getHatchesForDay(seasonData.hatches, day)
                 : { free: null, bonus: null };
@@ -441,12 +447,18 @@ export const CountdownCalendarModal = ({
               const revealedSymbol = resolvedState.revealedSymbols?.[day];
               const isOpenedLegacy = Boolean(revealedSymbol);
 
-              const status: DoorStatus = computeDoorStatus(day, todayIndex, freeOpened || isOpenedLegacy, 'free');
-              const canOpenFree = day === todayIndex && !freeOpened && !isOpenedLegacy;
+              const seasonType = seasonData?.season.season_type as SeasonType | undefined;
+              const status: DoorStatus = computeDoorStatus(day, todayIndex, freeOpened || isOpenedLegacy, 'free', seasonType);
+
+              // Determine if free door can be opened:
+              // - 'today' status: always openable
+              // - 'catchup' status (holiday missed days): openable
+              const canOpenFree = (status === 'today' || status === 'catchup') && !freeOpened && !isOpenedLegacy;
               const canOpenBonus = day === todayIndex && !bonusOpened && habitCompleted;
 
               const doorEmoji = themeEmojis[(day - 1) % themeEmojis.length];
-              const label = `Day ${day} ${status === 'today' ? "(today's door)" : `(${status})`}`;
+              const statusLabel = status === 'catchup' ? 'missed day, available to open' : status;
+              const label = `Day ${day} ${status === 'today' ? "(today's door)" : `(${statusLabel})`}`;
 
               const doorBody = (
                 <>
@@ -457,14 +469,17 @@ export const CountdownCalendarModal = ({
                     </span>
                   ) : (
                     <span className="daily-treats-calendar__hatch-status" aria-hidden="true">
-                      {status === 'locked' ? '🔒' : status === 'missed' ? '✗' : doorEmoji}
+                      {status === 'locked' ? '🔒' : status === 'missed' ? '✗' : status === 'catchup' ? '🔓' : doorEmoji}
                     </span>
                   )}
                 </>
               );
 
               return (
-                <div key={`calendar-day-${day}`} className="daily-treats-calendar__day-pair">
+                <div
+                  key={`calendar-day-${day}`}
+                  className={`daily-treats-calendar__day-pair${isFinalDay ? ' daily-treats-calendar__day-pair--final' : ''}`}
+                >
                   {/* Free door */}
                   {canOpenFree && freeHatch ? (
                     <button
