@@ -25,7 +25,7 @@ export type RewardCurrency = 'gold' | 'diamond' | null;
 export type DoorType = 'free' | 'bonus';
 export type RevealMechanic = 'flip' | 'scratch' | 'unwrap';
 export type SeasonType = 'holiday' | 'personal_quest' | 'birthday' | 'special_event';
-export type DoorStatus = 'locked' | 'available' | 'today' | 'opened' | 'missed';
+export type DoorStatus = 'locked' | 'available' | 'today' | 'opened' | 'missed' | 'catchup';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -208,6 +208,25 @@ function computeTodayDayIndex(startsOn: string): number {
   const todayUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
   const diffDays = Math.floor((todayUTC - startUTC) / (1000 * 60 * 60 * 24));
   return Math.max(1, diffDays + 1);
+}
+
+/**
+ * Compute the "today" index for a Personal Quest (treat) calendar.
+ *
+ * Unlike holiday calendars which are tied to real dates, treat calendars
+ * advance sequentially: Day 1 is the first day the user opens it,
+ * Day 2 is the next time they open it (regardless of how many real days pass).
+ *
+ * The next available day = highest opened day + 1, capped at totalDays.
+ * If nothing has been opened yet, returns 1.
+ */
+function computePersonalQuestTodayIndex(
+  progress: CalendarProgress | null,
+  totalDays: number = 7,
+): number {
+  if (!progress || progress.opened_days.length === 0) return 1;
+  const maxOpened = Math.max(...progress.opened_days);
+  return Math.min(maxOpened + 1, totalDays);
 }
 
 // ---------------------------------------------------------------------------
@@ -791,8 +810,6 @@ function buildPersonalQuestSeasonData(userId: string, refDate: Date = new Date()
     });
   }
 
-  const todayIndex = computeTodayDayIndex(startsOn);
-
   const storedProgress = getDemoProgress(season.id);
   const progress: CalendarProgress = storedProgress ?? {
     user_id: userId,
@@ -805,6 +822,9 @@ function buildPersonalQuestSeasonData(userId: string, refDate: Date = new Date()
     created_at: season.created_at,
     updated_at: new Date().toISOString(),
   };
+
+  // Personal Quest uses sequential day tracking: next day = last opened + 1
+  const todayIndex = computePersonalQuestTodayIndex(progress, totalDays);
 
   return { season, hatches, progress, today_day_index: todayIndex };
 }
@@ -984,12 +1004,19 @@ export async function getPersonalQuestSeason(
         ]);
 
         if (!hatchError) {
+          const totalDays = Math.max(
+            ...(hatches ?? []).filter((h: Record<string, unknown>) => h.door_type === 'free').map((h: Record<string, unknown>) => h.day_index as number),
+            7,
+          );
           return {
             data: {
               season,
               hatches: (hatches ?? []) as unknown as CalendarHatch[],
               progress: progress as unknown as CalendarProgress | null,
-              today_day_index: computeTodayDayIndex(season.starts_on),
+              today_day_index: computePersonalQuestTodayIndex(
+                progress as unknown as CalendarProgress | null,
+                totalDays,
+              ),
             },
             error: null,
           };
@@ -1133,11 +1160,6 @@ export async function openTodayHatch(
     const season = cached?.season;
     if (!season) return { data: null, error: new Error('No active demo season') };
 
-    const todayIndex = computeTodayDayIndex(season.starts_on);
-    if (dayIndex !== todayIndex) {
-      return { data: null, error: new Error(`You can only open today's hatch (day ${todayIndex})`) };
-    }
-
     const progress = getDemoProgress(seasonId) ?? {
       user_id: userId,
       season_id: seasonId,
@@ -1150,10 +1172,26 @@ export async function openTodayHatch(
       updated_at: new Date().toISOString(),
     };
 
-    // Check if this specific door type has been opened today
+    // Check if this specific door type has been opened already
     const openedDays = doorType === 'free' ? progress.opened_days : (progress.opened_bonus_days ?? []);
     if (openedDays.includes(dayIndex)) {
-      return { data: null, error: new Error(`You already opened today's ${doorType} hatch`) };
+      return { data: null, error: new Error(`You already opened this ${doorType} hatch`) };
+    }
+
+    // Validate the day is openable based on season type
+    if (season.season_type === 'personal_quest') {
+      // Sequential: only the next available day can be opened
+      const totalDays = Math.max(...(cached?.hatches ?? []).filter(h => h.door_type === 'free').map(h => h.day_index), 7);
+      const nextDay = computePersonalQuestTodayIndex(progress, totalDays);
+      if (dayIndex !== nextDay) {
+        return { data: null, error: new Error(`You can only open day ${nextDay} next`) };
+      }
+    } else {
+      // Holiday: can open today's door or any missed (past) door
+      const todayIndex = computeTodayDayIndex(season.starts_on);
+      if (dayIndex > todayIndex) {
+        return { data: null, error: new Error(`Day ${dayIndex} is not available yet`) };
+      }
     }
 
     // For bonus doors, check if habit is completed (demo mode: always unlocked for testing)
@@ -1286,6 +1324,7 @@ export async function isHabitCompletedToday(userId: string): Promise<boolean> {
  * @param todayIndex - Today's day index in the season (1-based)
  * @param isOpened - Whether the door has been opened
  * @param doorType - The type of door (free/bonus)
+ * @param seasonType - The season type; holiday calendars allow catch-up on missed days
  * @returns The door status
  */
 export function computeDoorStatus(
@@ -1293,10 +1332,15 @@ export function computeDoorStatus(
   todayIndex: number,
   isOpened: boolean,
   doorType: DoorType = 'free',
+  seasonType?: SeasonType,
 ): DoorStatus {
   if (isOpened) return 'opened';
   if (dayIndex === todayIndex) return 'today';
-  if (dayIndex < todayIndex) return 'missed';
+  if (dayIndex < todayIndex) {
+    // Holiday calendars allow catch-up on missed days
+    if (seasonType === 'holiday') return 'catchup';
+    return 'missed';
+  }
   if (dayIndex > todayIndex) return 'locked';
   return 'available';
 }
