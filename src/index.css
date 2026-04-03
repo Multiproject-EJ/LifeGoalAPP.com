@@ -26888,32 +26888,37 @@ html.platform-ipad .workspace-shell__menu-edge {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(1rem, 4vw, 2rem);
+  padding: clamp(0.75rem, 3vw, 1.5rem);
 }
 
 .holiday-season-dialog__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(2, 6, 23, 0.7);
-  backdrop-filter: blur(6px);
+  background: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(8px);
 }
 
 .holiday-season-dialog__panel {
   position: relative;
   z-index: 1;
-  width: min(100%, 960px);
-  min-height: min(86dvh, 760px);
-  border-radius: 32px;
+  width: min(100%, 480px);
+  max-height: min(94dvh, 900px);
+  border-radius: 28px;
   overflow: hidden;
   display: flex;
-  align-items: flex-end;
-  background:
-    linear-gradient(180deg, rgba(15, 23, 42, 0.2), rgba(15, 23, 42, 0.9)),
-    linear-gradient(135deg, #1d4ed8, #0f172a 70%);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  box-shadow: 0 30px 80px rgba(2, 6, 23, 0.45);
+  flex-direction: column;
+  background: linear-gradient(135deg, #1d4ed8, #0f172a 70%);
+  box-shadow: 0 32px 90px rgba(2, 6, 23, 0.55);
+}
+
+.holiday-season-dialog__hero {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 60dvh;
+  object-fit: cover;
+  object-position: center top;
+  flex-shrink: 0;
 }
 
 .holiday-season-dialog__close {
@@ -26924,78 +26929,88 @@ html.platform-ipad .workspace-shell__menu-edge {
   height: 44px;
   border: 0;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.45);
   color: #fff;
   font-size: 1.8rem;
   line-height: 1;
   cursor: pointer;
+  z-index: 10;
 }
 
 .holiday-season-dialog__content {
   width: 100%;
-  padding: clamp(1.5rem, 5vw, 3rem);
+  padding: clamp(1.25rem, 4vw, 2rem);
   color: #fff;
-}
-
-.holiday-season-dialog__eyebrow {
-  margin: 0 0 0.6rem;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-size: 0.78rem;
-  font-weight: 700;
-  opacity: 0.84;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: linear-gradient(to bottom, rgba(2, 6, 23, 0) 0%, rgba(2, 6, 23, 0.92) 30%);
+  margin-top: -4rem;
 }
 
 .holiday-season-dialog__title {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  line-height: 1.05;
+  font-size: clamp(1.6rem, 5vw, 2.4rem);
+  line-height: 1.1;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
 }
 
 .holiday-season-dialog__copy {
-  max-width: 34rem;
-  margin: 1rem 0 0;
-  font-size: clamp(1rem, 2.3vw, 1.2rem);
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.9);
+  margin: 0.6rem 0 0;
+  font-size: clamp(0.92rem, 2.2vw, 1.05rem);
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .holiday-season-dialog__actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.85rem;
-  margin-top: 1.5rem;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  width: 100%;
 }
 
 .holiday-season-dialog__button {
-  min-width: 200px;
+  width: 100%;
   border-radius: 999px;
   border: 0;
-  padding: 0.95rem 1.35rem;
-  font-size: 0.98rem;
+  padding: 1.1rem 1.75rem;
+  font-size: 1.05rem;
   font-weight: 700;
   cursor: pointer;
+  letter-spacing: 0.01em;
 }
 
 .holiday-season-dialog__button--primary {
   background: linear-gradient(135deg, #f8fafc, #dbeafe);
   color: #0f172a;
+  font-size: 1.15rem;
+  padding: 1.2rem 1.75rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
 .holiday-season-dialog__button--secondary {
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  font-size: 0.95rem;
+  padding: 0.85rem 1.75rem;
 }
 
 @media (max-width: 640px) {
   .holiday-season-dialog {
     padding: 0;
+    align-items: flex-end;
   }
 
   .holiday-season-dialog__panel {
     width: 100%;
-    min-height: 100dvh;
-    border-radius: 0;
+    max-height: 100dvh;
+    border-radius: 24px 24px 0 0;
+  }
+
+  .holiday-season-dialog__hero {
+    max-height: 55dvh;
   }
 }

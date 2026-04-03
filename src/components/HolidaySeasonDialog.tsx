@@ -20,9 +20,6 @@ export function HolidaySeasonDialog({
 
   const { meta, daysRemaining } = activeHoliday;
   const { introBackgroundUrl } = getHolidayThemeAssets(meta.holiday_key);
-  const backgroundStyle = introBackgroundUrl
-    ? { backgroundImage: `linear-gradient(180deg, rgba(2, 6, 23, 0.15), rgba(2, 6, 23, 0.78)), url(${introBackgroundUrl})` }
-    : undefined;
 
   const countdownLabel =
     isPreview
@@ -34,7 +31,7 @@ export function HolidaySeasonDialog({
   return (
     <div className="holiday-season-dialog" role="dialog" aria-modal="true" aria-label={`${meta.displayName} holiday season`}>
       <div className="holiday-season-dialog__backdrop" onClick={onClose} role="presentation" />
-      <div className="holiday-season-dialog__panel" style={backgroundStyle}>
+      <div className="holiday-season-dialog__panel">
         <button
           type="button"
           className="holiday-season-dialog__close"
@@ -43,17 +40,21 @@ export function HolidaySeasonDialog({
         >
           ×
         </button>
+        {introBackgroundUrl && (
+          <img
+            className="holiday-season-dialog__hero"
+            src={introBackgroundUrl}
+            alt={`${meta.displayName} holiday season`}
+          />
+        )}
         <div className="holiday-season-dialog__content">
-          <p className="holiday-season-dialog__eyebrow">{isPreview ? 'Developer preview' : 'Holiday season is here'}</p>
           <h2 className="holiday-season-dialog__title">
             {meta.emojis[0]} {meta.theme_name}
           </h2>
-          <p className="holiday-season-dialog__copy">
-            {countdownLabel} Your seasonal countdown is now live, and today&apos;s holiday rewards are ready when you are.
-          </p>
+          <p className="holiday-season-dialog__copy">{countdownLabel}</p>
           <div className="holiday-season-dialog__actions">
             <button type="button" className="holiday-season-dialog__button holiday-season-dialog__button--primary" onClick={onOpenCalendar}>
-              Open Countdown Calendar
+              Open {meta.displayName} Calendar →
             </button>
             <button type="button" className="holiday-season-dialog__button holiday-season-dialog__button--secondary" onClick={onClose}>
               Maybe Later
