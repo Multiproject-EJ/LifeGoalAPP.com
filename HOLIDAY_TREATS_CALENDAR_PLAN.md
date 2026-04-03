@@ -2,7 +2,7 @@
 
 > **Purpose:** Living design & engineering plan for the Holiday Treats Calendar feature.
 > **Replaces:** v1 plan (initial concept through Phase 4 backend completion).
-> **Last updated:** 2026-04-03
+> **Last updated:** 2026-04-03 (Phase B + partial D complete)
 > **Owner:** Product + Engineering
 
 ---
@@ -331,7 +331,7 @@ reveal_mechanic  text NOT NULL DEFAULT 'flip'
 
 ## ⚡ Current Implementation Status (as of 2026-04-03)
 
-> This section records exactly what was shipped in PR #1555 and what remains outstanding. Use this as the handoff brief for any agent session picking up this work.
+> This section records exactly what was shipped in PRs #1555, #1556, and the Phase B+D PR, and what remains outstanding. Use this as the handoff brief for any agent session picking up this work.
 
 ### ✅ What was shipped in PR #1555 (merged 2026-04-03)
 
@@ -352,52 +352,24 @@ reveal_mechanic  text NOT NULL DEFAULT 'flip'
 - ✅ Bug 3 — `missed` door state: `computeDoorStatus()` returns `'missed'`, rendered as non-clickable `<div>` with `✗` icon
 - ✅ Bug 5 — Scratch layer is now holiday-coloured via `getHolidayGradient()` in `CalendarDoorScratch.tsx`
 
+### ✅ What was shipped in PR #1556 (merged 2026-04-03)
+
+- `canUseSupabaseDataAsync()` added to `src/lib/supabaseClient.ts` — resolves Bug #1
+- `src/lib/database.types.ts` updated with v2 columns
+
+### ✅ What was shipped in Phase B+D PR (2026-04-03)
+
+**Modified files:**
+- `src/services/treatCalendarService.ts` — corrected `ADVENT_META` windows (Easter Mar 30→Apr 6, Eid Apr 29→May 1, Thanksgiving Nov 24→Nov 27); rewrote `generateRewardSchedule()` to use deterministic spec-correct amounts; added `makeSeededRng()` and `getIsoWeekString()` helpers; added exported `getPersonalQuestSeason(userId)` with ISO week seed and Supabase-first logic; updated `buildPersonalQuestSeasonData()` to be deterministic
+- `src/features/gamification/daily-treats/CountdownCalendarModal.tsx` — B3: when no holiday active, calls `getPersonalQuestSeason()` instead of showing empty state; D3: symbol triple bonus dispatched with `'symbol_collection'` source label + toast notification; Personal Quest refresh uses `getPersonalQuestSeason()`
+
+**Bug fixes landed:**
+- ✅ Bug 1 — `canUseSupabaseDataAsync()` implemented in PR #1556
+- ✅ Bug 4 — Symbol triple bonus: `awardDailyTreatGold(..., 'symbol_collection')` dispatched separately; toast notification shown to user
+
 ---
 
 ### ❌ What is still missing — MUST be done before the feature is production-ready
-
-#### 🔴 BLOCKER 1 — `canUseSupabaseData()` is synchronous; real authenticated users fall to demo mode
-
-**File:** `src/lib/supabaseClient.ts`
-
-**Root cause:** `canUseSupabaseData()` checks `activeSession` which is set by `setSupabaseSession()`. If the Supabase auth state restore is async (which it is — `supabase.auth.getSession()` is a Promise), `activeSession` can still be `null` at the moment `treatCalendarService.ts` checks it, silently routing real users to the demo/localStorage path.
-
-**Required fix:**
-
-Add `canUseSupabaseDataAsync()` to `src/lib/supabaseClient.ts`:
-```typescript
-export async function canUseSupabaseDataAsync(): Promise<boolean> {
-  if (!hasSupabaseCredentials()) return false;
-  // If we already have a confirmed active session, fast-path
-  if (activeSession) return true;
-  // Otherwise await the client's own session check
-  try {
-    const supabase = getSupabaseClient();
-    const { data } = await supabase.auth.getSession();
-    if (data.session) {
-      activeSession = data.session; // cache it
-      return true;
-    }
-    return false;
-  } catch {
-    return false;
-  }
-}
-```
-Then in `src/services/treatCalendarService.ts`, replace every call to `canUseSupabaseData()` with `await canUseSupabaseDataAsync()`. The affected functions are:
-- `fetchCurrentSeason()`
-- `fetchUserProgress()`
-- `openTodayHatch()`
-- `isHabitCompletedToday()` (already async, just needs the import swap)
-
-Also update imports in `treatCalendarService.ts`:
-```typescript
-import { canUseSupabaseDataAsync, getSupabaseClient } from '../lib/supabaseClient';
-```
-
-**Impact:** Without this fix, every authenticated user who opens the calendar before the session is confirmed in `activeSession` will see demo data and any reward claims will not persist to Supabase. This is the single highest-priority unresolved bug.
-
----
 
 #### 🔴 BLOCKER 2 — Supabase migration missing for v2 columns
 
@@ -553,11 +525,12 @@ These items are correctly planned above but have zero implementation. Listed her
 
 | Phase | Item | Status |
 |---|---|---|
-| **B** | Update `ADVENT_META` windows in `treatCalendarService.ts` to corrected lengths (Halloween 7d, Easter 8d, Thanksgiving 4d, Valentine's 5d, St. Patrick's 3d, Eid 3d) | ❌ Not done |
-| **B** | `getPersonalQuestSeason(userId)` — generates/returns a 7-day weekly sprint season | ❌ Not done |
-| **B** | Wire Personal Quest fallback in `CountdownCalendarModal` (empty state currently shown when no holiday active) | ❌ Not done |
-| **D** | Rewrite `buildDemoSeasonData()` to use Type 1–5 reward tiers per schedule | ❌ Not done |
-| **D** | Remove XP as a calendar reward type; only `gold` and `diamond` | ❌ Not done |
+| **B** | Update `ADVENT_META` windows in `treatCalendarService.ts` to corrected lengths (Halloween 7d, Easter 8d, Thanksgiving 4d, Valentine's 5d, St. Patrick's 3d, Eid 3d) | ✅ Done |
+| **B** | `getPersonalQuestSeason(userId)` — generates/returns a 7-day weekly sprint season | ✅ Done |
+| **B** | Wire Personal Quest fallback in `CountdownCalendarModal` (empty state currently shown when no holiday active) | ✅ Done |
+| **D** | Rewrite `buildDemoSeasonData()` to use Type 1–5 reward tiers per schedule | ✅ Done |
+| **D** | Remove XP as a calendar reward type; only `gold` and `diamond` | ✅ Done (types were already correct; confirmed no XP references) |
+| **D** | Wire symbol bonus reward payout via `awardDailyTreatGold('symbol_collection')` + toast | ✅ Done |
 | **D** | Wire diamond awards through `splitGoldBalance()` / `GOLD_PER_DIAMOND` from `src/constants/economy.ts` | ❌ Not done |
 | **D** | Flavour text bank: 3–5 lines per holiday per reward tier | ❌ Not done |
 | **F** | CSS ambient animations (Christmas snow, Halloween bats, Valentine's hearts, New Year sparkle, Easter petals) | ❌ Not done |
@@ -571,10 +544,10 @@ These items are correctly planned above but have zero implementation. Listed her
 
 | # | Bug | Root Cause | Fix | Status |
 |---|---|---|---|---|
-| **1** | State lives in localStorage for real users | `canUseSupabaseData()` is sync; returns false before async session resolves | Add `canUseSupabaseDataAsync()` to `supabaseClient.ts`; use it in all `treatCalendarService` functions | ❌ **Not fixed — see Blocker 1 above** |
+| **1** | State lives in localStorage for real users | `canUseSupabaseData()` is sync; returns false before async session resolves | Add `canUseSupabaseDataAsync()` to `supabaseClient.ts`; use it in all `treatCalendarService` functions | ✅ **Fixed in PR #1556** |
 | **2** | Timezone / midnight mismatch | `getLocalDateKey()` uses client time; server computes `today_day_index` independently | Use server's `today_day_index` from `fetchCurrentSeason` as the only gate | ✅ Fixed in PR #1555 |
 | **3** | Past doors clickable but silently fail | UI rendered them as buttons even when `revealScratchCardForDay` returned null | `computeDoorStatus()` returns `'missed'`; missed doors are non-clickable `<div>` | ✅ Fixed in PR #1555 |
-| **4** | Symbol tracker never triggers rewards | `symbolReward` computed but `awardDailyTreatGold()` never called | Wire `symbolReward` → `awardDailyTreatGold()` in `CountdownCalendarModal` on symbol completion | ❌ **Not fixed** |
+| **4** | Symbol tracker never triggers rewards | `symbolReward` computed but `awardDailyTreatGold()` never called | Wire `symbolReward` → `awardDailyTreatGold()` in `CountdownCalendarModal` on symbol completion | ✅ **Fixed — separate `'symbol_collection'` dispatch + toast notification** |
 | **5** | Scratch layer has no holiday theming | `drawScratchLayer()` uses static blue gradient | `getHolidayGradient()` in `CalendarDoorScratch.tsx` uses holiday accent colour | ✅ Fixed in PR #1555 |
 | **6** | `dayInCycle` calendar-month-based, not advent-window-based | `syncScratchCardState` set `dayInCycle = today.getDate()` | Server `today_day_index` now used as the only source of truth | ✅ Fixed in PR #1555 |
 
@@ -586,17 +559,17 @@ These items are correctly planned above but have zero implementation. Listed her
 - [x] Use server `today_day_index` as the only gating source; remove `computeTodayDayIndex()` from client gating logic
 - [x] Add `missed` door state to the grid UI for past unopened doors (greyed out, not clickable)
 - [x] Scratch layer colour accepts holiday accent prop; passes holiday key down from modal
-- [ ] **Fix `canUseSupabaseDataAsync()` — see Blocker 1 above** ← must ship next
-- [ ] Wire `symbolReward` → `awardDailyTreatGold()` so symbol collection bonuses actually pay out ← must ship next
+- [x] **Fix `canUseSupabaseDataAsync()` — shipped in PR #1556**
+- [x] Wire `symbolReward` → `awardDailyTreatGold()` so symbol collection bonuses actually pay out
 
 ### 🟡 Phase B — Corrected Windows + Personal Quest Calendar
 *Makes the feature always-on and fixes the too-long countdowns.*
 
-- [ ] Update `ADVENT_META` in `treatCalendarService.ts` with corrected windows per spec above
+- [x] Update `ADVENT_META` in `treatCalendarService.ts` with corrected windows per spec above (Easter: Mar 30→Apr 6, Eid: Apr 29→May 1, Thanksgiving: Nov 24→Nov 27)
 - [ ] Add migration 0178: `season_type`, `user_id_owner` on `daily_calendar_seasons` ← see Blocker 2
-- [ ] Build `getPersonalQuestSeason(userId)` service — generates/returns a 7-day personal quest season
-- [ ] Wire fallback in `CountdownCalendarModal`: when `getActiveAdventMeta()` returns `null`, load personal quest season instead of showing empty state
-- [ ] Personal Quest Calendar: 7-door weekly sprint, auto-themed to user's most-active life area
+- [x] Build `getPersonalQuestSeason(userId)` service — exported async function; deterministic ISO week seed; Supabase-first with local fallback
+- [x] Wire fallback in `CountdownCalendarModal`: when `getActiveAdventMeta()` returns `null`, call `getPersonalQuestSeason(userId)` and render the Personal Quest calendar
+- [x] Personal Quest Calendar: 7-door weekly sprint, `🧭 Weekly Sprint` theme, deterministic rewards per ISO week
 
 ### 🟠 Phase C — Two-Door System + Habit Gate
 *The core engagement mechanic.*
@@ -613,8 +586,9 @@ These items are correctly planned above but have zero implementation. Listed her
 
 - [x] `RewardCard` component built with rarity badge, holiday flavour text, Claim button
 - [x] Three reveal mechanics (`CalendarDoorFlip`, `CalendarDoorScratch`, `CalendarDoorUnwrap`) built and routing in modal
-- [ ] Rewrite `buildDemoSeasonData()` reward generation using Type 1–5 tiers per the schedule above
-- [ ] Remove XP as a calendar reward type entirely — only `gold` and `diamond`
+- [x] Rewrite `generateRewardSchedule()` reward generation using Type 1–5 tiers per the spec schedule (Short/Medium/Long)
+- [x] Remove XP as a calendar reward type entirely — only `gold` and `diamond` (confirmed; types were already correct)
+- [x] Wire symbol triple bonus via `awardDailyTreatGold('symbol_collection')` + toast notification in `CountdownCalendarModal`
 - [ ] Wire diamond awards through `splitGoldBalance()` / `GOLD_PER_DIAMOND` from `src/constants/economy.ts`
 - [ ] Flavour text bank: 3–5 lines per holiday, selected by reward tier
 
@@ -658,6 +632,7 @@ These items are correctly planned above but have zero implementation. Listed her
 
 ## Decision Log
 
+- **2026-04-03 (Phase B+D PR)**: Implemented Phase B (corrected ADVENT_META windows, `getPersonalQuestSeason` with deterministic ISO week seed, Personal Quest fallback wired in modal) and partial Phase D (deterministic reward schedule per spec, symbol bonus payout wired with `'symbol_collection'` label + toast). Blocker 1 confirmed resolved by PR #1556. Remaining blockers: migration 0178 and edge function `door_type` handling.
 - **2026-04-03**: Documented implementation status post-PR #1555. Identified 3 remaining blockers: async `canUseSupabaseData()`, missing migration 0178, edge function not handling `door_type`. Full handoff notes added to plan for agent continuity.
 - **2026-04-02**: Full redesign (v2). Corrected countdown windows (Halloween 7d, Easter 8d, etc.). Replaced generic monthly scratch card with three reveal mechanics (flip/scratch/unwrap) assigned by holiday and door position. Added Personal Quest Calendar as always-on fallback. Two-door system (free + habit-gated bonus) formalised.
 - **2026-03-08**: Pivoted from generic monthly rolling calendar to holiday-specific advent countdown. Each season tied to `holiday_key` from Holiday Preferences settings.
@@ -670,6 +645,7 @@ These items are correctly planned above but have zero implementation. Listed her
 
 ## Changelog
 
+- **2026-04-03 (Phase B+D PR)**: B1 — corrected ADVENT_META windows (Easter Mar 30→Apr 6, Eid Apr 29→May 1, Thanksgiving Nov 24→Nov 27). B2 — added `getPersonalQuestSeason(userId)` exported async function with deterministic ISO week seed and Supabase-first logic. B3 — wired Personal Quest fallback in modal; calls `getPersonalQuestSeason()` when no holiday active. D2 — rewrote `generateRewardSchedule()` with fixed spec amounts (Short/Medium/Long). D3 — wired symbol triple bonus: `awardDailyTreatGold(..., 'symbol_collection')` + toast notification.
 - **2026-04-03**: Added implementation status section (post-PR #1555 audit). Documented 3 blockers with exact code fixes. Updated phase checklists with current ✅/❌ states. Updated bug fix table with statuses.
 - **2026-04-02**: v2 redesign. See Decision Log above.
 - **2026-03-08**: Fully wired UI to holiday data. Redesigned as holiday-specific advent calendar. Added `holiday_key` column (migration 0177). Consolidated old plan docs into this file.
