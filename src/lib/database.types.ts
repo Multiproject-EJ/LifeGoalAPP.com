@@ -2740,6 +2740,8 @@ export interface Database {
           ends_on: string;
           status: string;
           holiday_key: string | null;
+          season_type: 'holiday' | 'personal_quest' | 'birthday' | 'special_event';
+          user_id_owner: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -2750,6 +2752,8 @@ export interface Database {
           ends_on: string;
           status?: string;
           holiday_key?: string | null;
+          season_type?: 'holiday' | 'personal_quest' | 'birthday' | 'special_event';
+          user_id_owner?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -2760,6 +2764,8 @@ export interface Database {
           ends_on?: string;
           status?: string;
           holiday_key?: string | null;
+          season_type?: 'holiday' | 'personal_quest' | 'birthday' | 'special_event';
+          user_id_owner?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -2770,6 +2776,11 @@ export interface Database {
           id: string;
           season_id: string;
           day_index: number;
+          door_type: 'free' | 'bonus';
+          reward_currency: 'gold' | 'diamond' | null;
+          reward_amount: number | null;
+          reward_tier: number | null;
+          reveal_mechanic: 'flip' | 'scratch' | 'unwrap';
           symbol_name: string | null;
           symbol_emoji: string | null;
           numbers: number[] | null;
@@ -2782,6 +2793,11 @@ export interface Database {
           id?: string;
           season_id: string;
           day_index: number;
+          door_type?: 'free' | 'bonus';
+          reward_currency?: 'gold' | 'diamond' | null;
+          reward_amount?: number | null;
+          reward_tier?: number | null;
+          reveal_mechanic?: 'flip' | 'scratch' | 'unwrap';
           symbol_name?: string | null;
           symbol_emoji?: string | null;
           numbers?: number[] | null;
@@ -2794,6 +2810,11 @@ export interface Database {
           id?: string;
           season_id?: string;
           day_index?: number;
+          door_type?: 'free' | 'bonus';
+          reward_currency?: 'gold' | 'diamond' | null;
+          reward_amount?: number | null;
+          reward_tier?: number | null;
+          reveal_mechanic?: 'flip' | 'scratch' | 'unwrap';
           symbol_name?: string | null;
           symbol_emoji?: string | null;
           numbers?: number[] | null;
@@ -2819,6 +2840,7 @@ export interface Database {
           last_opened_date: string | null;
           last_opened_day: number;
           opened_days: number[];
+          opened_bonus_days: number[];
           symbol_counts: Json;
           created_at: string;
           updated_at: string;
@@ -2829,6 +2851,7 @@ export interface Database {
           last_opened_date?: string | null;
           last_opened_day?: number;
           opened_days?: number[];
+          opened_bonus_days?: number[];
           symbol_counts?: Json;
           created_at?: string;
           updated_at?: string;
@@ -2839,6 +2862,7 @@ export interface Database {
           last_opened_date?: string | null;
           last_opened_day?: number;
           opened_days?: number[];
+          opened_bonus_days?: number[];
           symbol_counts?: Json;
           created_at?: string;
           updated_at?: string;

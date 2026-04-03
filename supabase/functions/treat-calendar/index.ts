@@ -109,20 +109,26 @@ Deno.serve(async (req) => {
   // --------------------------------------------------------
   // POST /treat-calendar/open
   // Opens today's hatch for the authenticated user.
-  // Body: { season_id: string, day_index: number }
+  // Body: { season_id: string, day_index: number, door_type: 'free' | 'bonus' }
   // --------------------------------------------------------
   if (req.method === 'POST' && pathname.endsWith('/open')) {
-    let body: { season_id?: string; day_index?: number };
+    let body: { season_id?: string; day_index?: number; door_type?: string };
     try {
       body = await req.json();
     } catch {
       return err('Invalid JSON body');
     }
 
-    const { season_id, day_index } = body;
+    const { season_id, day_index, door_type } = body;
     if (!season_id || day_index === undefined) {
       return err('season_id and day_index are required');
     }
+
+    // 1. Validate door_type
+    if (!door_type || !['free', 'bonus'].includes(door_type)) {
+      return err('door_type must be "free" or "bonus"');
+    }
+    const validatedDoorType = door_type as 'free' | 'bonus';
 
     // Fetch the season
     const { data: season, error: seasonError } = await supabase
@@ -140,7 +146,22 @@ Deno.serve(async (req) => {
       return err(`You can only open today's hatch (day ${todayIndex}), not day ${day_index}`, 400);
     }
 
-    // Check existing progress — did the user already open today?
+    // 2. For bonus doors: verify habit completion server-side
+    if (validatedDoorType === 'bonus') {
+      const today = new Date().toISOString().split('T')[0];
+      const { data: habitLogs, error: habitError } = await supabase
+        .from('habit_logs_v2')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('date', today)
+        .limit(1);
+
+      if (habitError || !habitLogs?.length) {
+        return err('Bonus door requires a completed habit today', 403);
+      }
+    }
+
+    // 3. Check existing progress — did the user already open this door today?
     const { data: progress } = await supabase
       .from('daily_calendar_progress')
       .select('*')
@@ -149,16 +170,22 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     const openedDays: number[] = progress?.opened_days ?? [];
-    if (openedDays.includes(day_index)) {
-      return err('You already opened today\'s hatch', 409);
+    const openedBonusDays: number[] = progress?.opened_bonus_days ?? [];
+
+    if (validatedDoorType === 'free' && openedDays.includes(day_index)) {
+      return err('You already opened today\'s free door', 409);
+    }
+    if (validatedDoorType === 'bonus' && openedBonusDays.includes(day_index)) {
+      return err('You already opened today\'s bonus door', 409);
     }
 
-    // Fetch the hatch definition for this day
+    // 4. Fetch the hatch definition for this day + door_type
     const { data: hatch, error: hatchError } = await supabase
       .from('daily_calendar_hatches')
       .select('*')
       .eq('season_id', season_id)
       .eq('day_index', day_index)
+      .eq('door_type', validatedDoorType)
       .maybeSingle();
     if (hatchError) return err(hatchError.message, 500);
 
@@ -178,8 +205,14 @@ Deno.serve(async (req) => {
     });
     if (rewardError) return err(rewardError.message, 500);
 
-    // Upsert progress
-    const updatedOpenedDays = [...openedDays, day_index];
+    // 5. Upsert progress, tracking free and bonus doors separately
+    const updatedOpenedDays = validatedDoorType === 'free'
+      ? [...openedDays, day_index]
+      : openedDays;
+    const updatedOpenedBonusDays = validatedDoorType === 'bonus'
+      ? [...openedBonusDays, day_index]
+      : openedBonusDays;
+
     const { error: progressError } = await supabase.from('daily_calendar_progress').upsert(
       {
         user_id: user.id,
@@ -187,6 +220,7 @@ Deno.serve(async (req) => {
         last_opened_date: new Date().toISOString().split('T')[0],
         last_opened_day: day_index,
         opened_days: updatedOpenedDays,
+        opened_bonus_days: updatedOpenedBonusDays,
         symbol_counts: progress?.symbol_counts ?? {},
         updated_at: new Date().toISOString(),
       },
@@ -194,7 +228,13 @@ Deno.serve(async (req) => {
     );
     if (progressError) return err(progressError.message, 500);
 
-    return json({ reward_payload: rewardPayload, day_index, opened_days: updatedOpenedDays });
+    return json({
+      reward_payload: rewardPayload,
+      day_index,
+      door_type: validatedDoorType,
+      opened_days: updatedOpenedDays,
+      opened_bonus_days: updatedOpenedBonusDays,
+    });
   }
 
   return err('Not found', 404);

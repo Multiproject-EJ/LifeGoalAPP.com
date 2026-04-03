@@ -52,6 +52,22 @@ export function canUseSupabaseData(): boolean {
   return hasSupabaseCredentials() && hasActiveSupabaseSession();
 }
 
+export async function canUseSupabaseDataAsync(): Promise<boolean> {
+  if (!hasSupabaseCredentials()) return false;
+  if (activeSession) return true;
+  try {
+    const supabase = getSupabaseClient();
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      activeSession = data.session;
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 export function getActiveSupabaseSession(): Session | null {
   return activeSession;
 }

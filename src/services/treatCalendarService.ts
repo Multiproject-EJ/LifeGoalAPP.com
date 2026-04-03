@@ -1,4 +1,4 @@
-import { canUseSupabaseData, getSupabaseClient, getSupabaseUrl } from '../lib/supabaseClient';
+import { canUseSupabaseDataAsync, getSupabaseClient, getSupabaseUrl } from '../lib/supabaseClient';
 
 // ---------------------------------------------------------------------------
 // Holiday keys — must match the ids in HolidayPreferencesSection.HOLIDAY_OPTIONS
@@ -893,7 +893,7 @@ export async function fetchCurrentSeason(
   userId: string,
   holidayKey?: HolidayKey,
 ): Promise<ServiceResponse<CalendarSeasonData>> {
-  if (!canUseSupabaseData()) {
+  if (!await canUseSupabaseDataAsync()) {
     const cached = getDemoSeason();
     // Invalidate the cache if it's for a different holiday
     if (cached && (!holidayKey || cached.season.holiday_key === holidayKey)) {
@@ -961,7 +961,7 @@ export async function fetchUserProgress(
   userId: string,
   seasonId: string,
 ): Promise<ServiceResponse<CalendarProgress | null>> {
-  if (!canUseSupabaseData()) {
+  if (!await canUseSupabaseDataAsync()) {
     return { data: getDemoProgress(seasonId), error: null };
   }
 
@@ -1003,7 +1003,7 @@ export async function openTodayHatch(
   reveal_mechanic: RevealMechanic;
   reward_payload: Record<string, unknown>;
 }>> {
-  if (!canUseSupabaseData()) {
+  if (!await canUseSupabaseDataAsync()) {
     // Demo mode: update localStorage progress
     const cached = getDemoSeason();
     const season = cached?.season;
@@ -1121,7 +1121,7 @@ export async function openTodayHatch(
  * @returns true if at least one habit was completed today
  */
 export async function isHabitCompletedToday(userId: string): Promise<boolean> {
-  if (!canUseSupabaseData()) {
+  if (!await canUseSupabaseDataAsync()) {
     // Demo mode: randomly return true/false with 50% probability.
     // This allows QA and demos to test both locked and unlocked bonus door
     // states without needing to complete actual habits.
