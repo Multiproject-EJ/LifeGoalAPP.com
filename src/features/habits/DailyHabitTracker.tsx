@@ -18,6 +18,7 @@ import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
 import { recordTelemetryEvent } from '../../services/telemetry';
+import { getActiveAdventMeta } from '../../services/treatCalendarService';
 import { XP_TO_GOLD_RATIO, convertXpToGold } from '../../constants/economy';
 import { PointsBadge } from '../../components/PointsBadge';
 import {
@@ -1944,6 +1945,8 @@ export function DailyHabitTracker({
 
   const timeBoundOffers = useMemo<TimeBoundOfferItem[]>(() => {
     const nextUtcMidnight = getNextUtcMidnightMs();
+    const adventMeta = getActiveAdventMeta();
+    const calendarLabel = adventMeta ? `${adventMeta.meta.theme_name}` : 'Treat Calendar';
 
     return [
       {
@@ -1968,7 +1971,7 @@ export function DailyHabitTracker({
       },
       {
         id: 'daily_treat',
-        label: 'Holiday Calendar',
+        label: calendarLabel,
         icon: '🎁',
         expiresAtMs: nextUtcMidnight,
         isCollected: hasCollectedDailyHeartsToday(session.user.id),
@@ -2075,7 +2078,7 @@ export function DailyHabitTracker({
       if (onOpenDailyTreat) {
         onOpenDailyTreat();
       } else {
-        setVisionRewardError('Holiday Calendar launcher is unavailable in this view.');
+        setVisionRewardError('Treat Calendar launcher is unavailable in this view.');
       }
       return;
     }
@@ -2149,6 +2152,9 @@ export function DailyHabitTracker({
 
   const activeOfferTeaserConfig = useMemo(() => {
     if (!activeOfferTeaser) return null;
+    const teaserAdventMeta = getActiveAdventMeta();
+    const teaserCalendarTitle = teaserAdventMeta ? teaserAdventMeta.meta.theme_name : 'Treat Calendar';
+    const teaserCalendarCta = teaserAdventMeta ? `Open ${teaserAdventMeta.meta.theme_name} →` : 'Open Treat Calendar →';
     const map: Record<TimeBoundOfferId, { title: string; description: string; cta: string; icon: string }> = {
       island_run: { title: 'Island Run', description: 'Your next island is ready to open.', cta: 'Open Island Run →', icon: '🏝️' },
       vision_star: {
@@ -2158,9 +2164,9 @@ export function DailyHabitTracker({
         icon: '🌟',
       },
       daily_treat: {
-        title: 'Holiday Calendar',
-        description: "Your holiday calendar is ready with today's treat.",
-        cta: 'Open Holiday Calendar →',
+        title: teaserCalendarTitle,
+        description: "Your calendar is ready with today's treat.",
+        cta: teaserCalendarCta,
         icon: '🎁',
       },
       lucky_roll: {

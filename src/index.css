@@ -18368,11 +18368,13 @@ html.platform-ipad .workspace-shell__menu-edge {
 .daily-treats-calendar {
   position: fixed;
   inset: 0;
+  width: 100%;
+  height: 100%;
   z-index: 70;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
+  padding: 0;
 }
 
 /* ── Holiday-specific advent calendar themes ──────────────────────────────── */
@@ -18697,16 +18699,22 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .daily-treats-calendar__dialog {
-  width: min(94vw, 540px);
-  max-height: min(84vh, 720px);
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  max-height: 100%;
   overflow: hidden;
+  border-radius: 0;
 }
 
 .daily-treats-calendar__content {
   display: grid;
   gap: 0.65rem;
+  padding-top: env(safe-area-inset-top, 16px);
   padding-right: 0.25rem;
-  max-height: calc(84vh - 3rem);
+  padding-left: 0.25rem;
+  padding-bottom: 0.5rem;
+  max-height: calc(100vh - env(safe-area-inset-top, 16px));
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -18748,6 +18756,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 0.5rem;
   margin-top: 0.35rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .daily-treats-calendar__hatch {
@@ -18757,7 +18767,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   border-radius: 14px;
   border: 1px solid rgba(148, 163, 184, 0.4);
   text-align: center;
-  min-height: 58px;
+  min-width: 72px;
+  min-height: 72px;
   align-content: center;
   font-size: 0.65rem;
   text-transform: uppercase;
@@ -18928,18 +18939,19 @@ html.platform-ipad .workspace-shell__menu-edge {
   }
 
   .daily-treats-calendar {
-    padding: 1rem;
-    align-items: flex-start;
+    padding: 0;
+    align-items: stretch;
   }
 
   .daily-treats-calendar__dialog {
     width: 100%;
-    max-height: 92vh;
-    border-radius: 18px;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
   }
 
   .daily-treats-calendar__content {
-    max-height: calc(92vh - 2.5rem);
+    max-height: calc(100vh - env(safe-area-inset-top, 16px));
     padding-right: 0;
     gap: 0.5rem;
   }
@@ -18957,7 +18969,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   }
 
   .daily-treats-calendar__hatch {
-    min-height: 52px;
+    min-height: 72px;
+    min-width: 72px;
     padding: 0.45rem 0.3rem;
   }
 
@@ -19609,10 +19622,30 @@ html.platform-ipad .workspace-shell__menu-edge {
   border: 1px solid rgba(74, 222, 128, 0.4);
 }
 
+.daily-treats-calendar__symbol-bonus-toast {
+  padding: 0.5rem 0.75rem;
+  background: rgba(254, 243, 199, 0.9);
+  border: 1px solid rgba(234, 179, 8, 0.5);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #92400e;
+  text-align: center;
+}
+
+.daily-treats-calendar__error-toast {
+  padding: 0.5rem 0.75rem;
+  background: rgba(254, 226, 226, 0.9);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #991b1b;
+  text-align: center;
+}
+
 .daily-treats-modal__close,
 .daily-treats-placeholder__close {
   position: absolute;
-  top: 0.85rem;
+  top: calc(env(safe-area-inset-top, 16px) + 48px);
   right: 0.85rem;
   border: none;
   background: rgba(148, 163, 184, 0.2);
@@ -19622,6 +19655,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-size: 1.25rem;
   cursor: pointer;
   color: #0f172a;
+  z-index: 2;
 }
 
 .daily-treats-modal__header {

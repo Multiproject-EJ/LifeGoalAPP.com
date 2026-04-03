@@ -169,8 +169,11 @@ export const CountdownCalendarModal = ({
     }
   }, [revealResult, userId]);
 
+  const [doorError, setDoorError] = useState<string | null>(null);
+
   const handleOpenDoor = useCallback(async (dayIndex: number, doorType: DoorType, hatch: CalendarHatch) => {
     if (!userId || !seasonData) return;
+    setDoorError(null);
 
     // Start reveal animation
     setRevealState({
@@ -180,33 +183,40 @@ export const CountdownCalendarModal = ({
       hatch,
     });
 
-    // Call backend to record the open
-    const { data: reward, error } = await openTodayHatch(userId, seasonData.season.id, dayIndex, doorType);
-    
-    if (error) {
-      console.warn('Failed to open hatch:', error);
+    try {
+      // Call backend to record the open
+      const { data: reward, error } = await openTodayHatch(userId, seasonData.season.id, dayIndex, doorType);
+      
+      if (error) {
+        console.error('Failed to open hatch:', error);
+        setDoorError(`Could not open door: ${error.message ?? 'unknown error'}`);
+        setRevealState(null);
+        return;
+      }
+
+      // Award gold if applicable
+      if (reward?.reward_currency === 'gold' && reward.reward_amount) {
+        void awardDailyTreatGold(userId, reward.reward_amount, `Day ${dayIndex} ${doorType} door`);
+      }
+
+      // Award diamond rewards: convert to gold equivalent via GOLD_PER_DIAMOND
+      if (reward?.reward_currency === 'diamond' && reward.reward_amount) {
+        const goldEquivalent = reward.reward_amount * GOLD_PER_DIAMOND;
+        void awardDailyTreatGold(userId, goldEquivalent, `Day ${dayIndex} ${doorType} door (${reward.reward_amount} 💎)`);
+      }
+
+      // Refresh season data to update progress
+      if (seasonData.season.season_type === 'personal_quest') {
+        const { data: updated } = await getPersonalQuestSeason(userId);
+        if (updated) setSeasonData(updated);
+      } else {
+        const { data: updated } = await fetchCurrentSeason(userId, seasonData.season.holiday_key ?? undefined);
+        if (updated) setSeasonData(updated);
+      }
+    } catch (err) {
+      console.error('Door open failed unexpectedly:', err);
+      setDoorError(`Something went wrong opening this door. Please try again.`);
       setRevealState(null);
-      return;
-    }
-
-    // Award gold if applicable
-    if (reward?.reward_currency === 'gold' && reward.reward_amount) {
-      void awardDailyTreatGold(userId, reward.reward_amount, `Day ${dayIndex} ${doorType} door`);
-    }
-
-    // Award diamond rewards: convert to gold equivalent via GOLD_PER_DIAMOND
-    if (reward?.reward_currency === 'diamond' && reward.reward_amount) {
-      const goldEquivalent = reward.reward_amount * GOLD_PER_DIAMOND;
-      void awardDailyTreatGold(userId, goldEquivalent, `Day ${dayIndex} ${doorType} door (${reward.reward_amount} 💎)`);
-    }
-
-    // Refresh season data to update progress
-    if (seasonData.season.season_type === 'personal_quest') {
-      const { data: updated } = await getPersonalQuestSeason(userId);
-      if (updated) setSeasonData(updated);
-    } else {
-      const { data: updated } = await fetchCurrentSeason(userId, seasonData.season.holiday_key ?? undefined);
-      if (updated) setSeasonData(updated);
     }
   }, [userId, seasonData]);
 
@@ -295,7 +305,7 @@ export const CountdownCalendarModal = ({
     const tier = hatch.reward_tier ?? 2;
     const currency = hatch.reward_currency;
     const amount = hatch.reward_amount;
-    const mechanic = hatch.reveal_mechanic;
+    const mechanic = hatch.reveal_mechanic ?? 'flip';
 
     return (
       <div
@@ -389,8 +399,13 @@ export const CountdownCalendarModal = ({
               {symbolBonusNotification}
             </div>
           )}
+          {doorError && (
+            <div className="daily-treats-calendar__error-toast" role="alert" aria-live="assertive">
+              {doorError}
+            </div>
+          )}
           <p className="daily-treats-modal__eyebrow">
-            {isPersonalQuest ? 'Personal Quest' : 'Holiday Calendar'}
+            {isPersonalQuest ? 'Personal Quest' : (activeAdvent ? `${activeAdvent.meta.displayName} Calendar` : 'Treat Calendar')}
           </p>
           <h3 className="daily-treats-calendar__title">
             {themeEmojis[0]} {themeName}
@@ -591,7 +606,7 @@ export const CountdownCalendarModal = ({
           </div>
 
           <button type="button" className="daily-treats-calendar__button" onClick={onClose}>
-            {isPersonalQuest ? 'Back to Today' : 'Back to Holiday Calendar'}
+            Close
           </button>
         </div>
       </div>
