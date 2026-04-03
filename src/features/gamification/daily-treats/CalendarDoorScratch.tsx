@@ -14,8 +14,10 @@ type CalendarDoorScratchProps = {
   isPersonalQuest?: boolean;
 };
 
-const SCRATCH_THRESHOLD = 18;
-const SCRATCH_RADIUS = 18;
+/** Number of scratch actions needed before auto-revealing the card */
+const SCRATCH_ACTIONS_TO_REVEAL = 18;
+/** Radius in pixels of the scratch brush */
+const SCRATCH_BRUSH_RADIUS_PX = 18;
 
 /** Get holiday-themed gradient colors for scratch layer */
 function getHolidayGradient(holidayKey: HolidayKey | null): [string, string, string] {
@@ -114,7 +116,7 @@ export const CalendarDoorScratch = ({
   }, [dayNumber, holidayKey]);
 
   useEffect(() => {
-    if (scratchCount >= SCRATCH_THRESHOLD && !isRevealed) {
+    if (scratchCount >= SCRATCH_ACTIONS_TO_REVEAL && !isRevealed) {
       setIsRevealed(true);
       // Show confetti for tier 2+ rewards
       if (tier >= 2) {
@@ -137,7 +139,7 @@ export const CalendarDoorScratch = ({
 
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
-    ctx.arc(x, y, SCRATCH_RADIUS, 0, Math.PI * 2, true);
+    ctx.arc(x, y, SCRATCH_BRUSH_RADIUS_PX, 0, Math.PI * 2, true);
     ctx.fill();
 
     setScratchCount((count) => count + 1);

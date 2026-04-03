@@ -112,8 +112,10 @@ export const CountdownCalendarModal = ({
 
       // Load season data from service (uses demo mode when not authenticated)
       if (userId) {
-        const { data: season } = await fetchCurrentSeason(userId, advent?.meta.holiday_key);
-        if (season) {
+        const { data: season, error: seasonError } = await fetchCurrentSeason(userId, advent?.meta.holiday_key);
+        if (seasonError) {
+          console.warn('Failed to load season data:', seasonError);
+        } else if (season) {
           setSeasonData(season);
         }
         // Check habit completion for bonus door gating

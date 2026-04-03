@@ -1,5 +1,4 @@
 import { canUseSupabaseData, getSupabaseClient, getSupabaseUrl } from '../lib/supabaseClient';
-import { GOLD_PER_DIAMOND } from '../constants/economy';
 
 // ---------------------------------------------------------------------------
 // Holiday keys — must match the ids in HolidayPreferencesSection.HOLIDAY_OPTIONS
@@ -28,6 +27,17 @@ export type RevealMechanic = 'flip' | 'scratch' | 'unwrap';
 export type SeasonType = 'holiday' | 'personal_quest' | 'birthday' | 'special_event';
 export type DoorStatus = 'locked' | 'available' | 'today' | 'opened' | 'missed';
 
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+/** Calendars with 25+ doors (e.g., Christmas) get bonus diamonds on final day */
+const LONG_CALENDAR_THRESHOLD = 25;
+
+// ---------------------------------------------------------------------------
+// Reward Tier Configuration
+// ---------------------------------------------------------------------------
+
 /** Maps reward tier to display info */
 export const REWARD_TIER_INFO: Record<RewardTier, {
   label: string;
@@ -40,6 +50,25 @@ export const REWARD_TIER_INFO: Record<RewardTier, {
   4: { label: 'Large Gold', rarityLabel: '✦✦✦ Rare', rarityClass: 'rare' },
   5: { label: 'Diamond', rarityLabel: '💎 Legendary', rarityClass: 'legendary' },
 };
+
+/** Reward amount ranges for each tier */
+const REWARD_AMOUNT_RANGES: Record<RewardTier, { min: number; max: number }> = {
+  1: { min: 0, max: 0 },         // Empty
+  2: { min: 50, max: 150 },      // Small gold
+  3: { min: 200, max: 500 },     // Medium gold
+  4: { min: 600, max: 900 },     // Large gold
+  5: { min: 1, max: 3 },         // Diamond (count)
+};
+
+/**
+ * Generate a random reward amount for a given tier.
+ * Uses consistent logic across all reward generation.
+ */
+function getRewardAmountForTier(tier: RewardTier): number {
+  const range = REWARD_AMOUNT_RANGES[tier];
+  if (tier === 1) return 0;
+  return range.min + Math.floor(Math.random() * (range.max - range.min + 1));
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -497,13 +526,13 @@ function generateRewardSchedule(totalDays: number): Array<{
         schedule.push({ tier: 5, currency: 'diamond', amount: 1 });
       } else if (day === totalDays - 1 && totalDays >= 4) {
         // Penultimate day: Large gold
-        schedule.push({ tier: 4, currency: 'gold', amount: 600 + Math.floor(Math.random() * 300) });
+        schedule.push({ tier: 4, currency: 'gold', amount: getRewardAmountForTier(4) });
       } else if (day === totalDays - 2 || day === 2) {
         // Medium gold
-        schedule.push({ tier: 3, currency: 'gold', amount: 200 + Math.floor(Math.random() * 300) });
+        schedule.push({ tier: 3, currency: 'gold', amount: getRewardAmountForTier(3) });
       } else {
         // Small gold
-        schedule.push({ tier: 2, currency: 'gold', amount: 50 + Math.floor(Math.random() * 100) });
+        schedule.push({ tier: 2, currency: 'gold', amount: getRewardAmountForTier(2) });
       }
     }
     return schedule;
@@ -526,15 +555,15 @@ function generateRewardSchedule(totalDays: number): Array<{
       if (day === totalDays) {
         schedule.push({ tier: 5, currency: 'diamond', amount: 1 });
       } else if (day === totalDays - 1) {
-        schedule.push({ tier: 4, currency: 'gold', amount: 600 + Math.floor(Math.random() * 300) });
+        schedule.push({ tier: 4, currency: 'gold', amount: getRewardAmountForTier(4) });
       } else if (emptyDays.has(day)) {
         schedule.push({ tier: 1, currency: null, amount: null });
       } else if (day > totalDays - 4) {
-        schedule.push({ tier: 3, currency: 'gold', amount: 200 + Math.floor(Math.random() * 300) });
+        schedule.push({ tier: 3, currency: 'gold', amount: getRewardAmountForTier(3) });
       } else if (Math.random() < 0.4) {
-        schedule.push({ tier: 3, currency: 'gold', amount: 200 + Math.floor(Math.random() * 300) });
+        schedule.push({ tier: 3, currency: 'gold', amount: getRewardAmountForTier(3) });
       } else {
-        schedule.push({ tier: 2, currency: 'gold', amount: 50 + Math.floor(Math.random() * 100) });
+        schedule.push({ tier: 2, currency: 'gold', amount: getRewardAmountForTier(2) });
       }
     }
     return schedule;
@@ -568,18 +597,19 @@ function generateRewardSchedule(totalDays: number): Array<{
 
   for (let day = 1; day <= totalDays; day++) {
     if (day === totalDays) {
-      // Final day: 2-3 diamonds for Christmas
-      schedule.push({ tier: 5, currency: 'diamond', amount: totalDays >= 25 ? 2 + Math.floor(Math.random() * 2) : 1 });
+      // Final day: 2-3 diamonds for long calendars (Christmas-style), 1 for others
+      const diamondCount = totalDays >= LONG_CALENDAR_THRESHOLD ? 2 + Math.floor(Math.random() * 2) : 1;
+      schedule.push({ tier: 5, currency: 'diamond', amount: diamondCount });
     } else if (day === totalDays - 1) {
-      schedule.push({ tier: 4, currency: 'gold', amount: 600 + Math.floor(Math.random() * 300) });
+      schedule.push({ tier: 4, currency: 'gold', amount: getRewardAmountForTier(4) });
     } else if (day >= totalDays - 3) {
-      schedule.push({ tier: 3, currency: 'gold', amount: 200 + Math.floor(Math.random() * 300) });
+      schedule.push({ tier: 3, currency: 'gold', amount: getRewardAmountForTier(3) });
     } else if (emptyDays.has(day)) {
       schedule.push({ tier: 1, currency: null, amount: null });
     } else if (day > totalDays * 0.7 || Math.random() < 0.25) {
-      schedule.push({ tier: 3, currency: 'gold', amount: 200 + Math.floor(Math.random() * 300) });
+      schedule.push({ tier: 3, currency: 'gold', amount: getRewardAmountForTier(3) });
     } else {
-      schedule.push({ tier: 2, currency: 'gold', amount: 50 + Math.floor(Math.random() * 100) });
+      schedule.push({ tier: 2, currency: 'gold', amount: getRewardAmountForTier(2) });
     }
   }
 
@@ -687,11 +717,10 @@ function buildPersonalQuestSeasonData(userId: string): CalendarSeasonData {
       created_at: season.created_at,
     });
 
-    // Bonus door (habit-gated) — better rewards
+    // Bonus door (habit-gated) — better rewards (one tier up from free)
     const bonusTier: RewardTier = freeReward.tier === 1 ? 2 : Math.min(5, freeReward.tier + 1) as RewardTier;
     const bonusCurrency: RewardCurrency = bonusTier === 5 ? 'diamond' : 'gold';
-    const bonusAmount = bonusTier === 5 ? 1 : bonusTier === 4 ? 600 + Math.floor(Math.random() * 300)
-      : bonusTier === 3 ? 200 + Math.floor(Math.random() * 300) : 50 + Math.floor(Math.random() * 100);
+    const bonusAmount = getRewardAmountForTier(bonusTier);
 
     hatches.push({
       id: `demo-quest-hatch-${dayIndex}-bonus`,
@@ -780,7 +809,7 @@ function buildDemoSeasonData(userId: string): CalendarSeasonData {
     // unless it's the final day which gets the big reward
     const freeTier: RewardTier = isFinalDay ? freeReward.tier : (freeReward.tier <= 2 ? freeReward.tier : 2);
     const freeCurrency: RewardCurrency = isFinalDay ? freeReward.currency : (freeTier === 1 ? null : 'gold');
-    const freeAmount = isFinalDay ? freeReward.amount : (freeTier === 1 ? null : 50 + Math.floor(Math.random() * 100));
+    const freeAmount = isFinalDay ? freeReward.amount : (freeTier === 1 ? null : getRewardAmountForTier(2));
 
     hatches.push({
       id: `demo-hatch-${dayIndex}-free`,
@@ -806,9 +835,10 @@ function buildDemoSeasonData(userId: string): CalendarSeasonData {
     // Bonus door always gets the "real" scheduled reward or better
     const bonusTier: RewardTier = isFinalDay ? 5 : Math.max(3, freeReward.tier) as RewardTier;
     const bonusCurrency: RewardCurrency = bonusTier === 5 ? 'diamond' : 'gold';
-    const bonusAmount = bonusTier === 5 ? (isFinalDay && totalDays >= 25 ? 2 + Math.floor(Math.random() * 2) : 1)
-      : bonusTier === 4 ? 600 + Math.floor(Math.random() * 300)
-      : 200 + Math.floor(Math.random() * 300);
+    // Final day of long calendars (Christmas) gets 2-3 diamonds; others get standard tier amounts
+    const bonusAmount = isFinalDay && totalDays >= LONG_CALENDAR_THRESHOLD
+      ? 2 + Math.floor(Math.random() * 2)
+      : getRewardAmountForTier(bonusTier);
 
     hatches.push({
       id: `demo-hatch-${dayIndex}-bonus`,
@@ -1092,8 +1122,9 @@ export async function openTodayHatch(
  */
 export async function isHabitCompletedToday(userId: string): Promise<boolean> {
   if (!canUseSupabaseData()) {
-    // Demo mode: check localStorage for habit completions
-    // For demo purposes, return true 50% of the time to show both states
+    // Demo mode: randomly return true/false with 50% probability.
+    // This allows QA and demos to test both locked and unlocked bonus door
+    // states without needing to complete actual habits.
     return Math.random() > 0.5;
   }
 
