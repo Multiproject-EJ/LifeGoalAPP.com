@@ -230,6 +230,10 @@ Deno.serve(async (req) => {
 
     return json({
       reward_payload: rewardPayload,
+      reward_currency: hatch?.reward_currency ?? null,
+      reward_amount: hatch?.reward_amount ?? null,
+      reward_tier: hatch?.reward_tier ?? null,
+      reveal_mechanic: hatch?.reveal_mechanic ?? 'flip',
       day_index,
       door_type: validatedDoorType,
       opened_days: updatedOpenedDays,
