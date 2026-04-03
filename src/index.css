@@ -19097,6 +19097,518 @@ html.platform-ipad .workspace-shell__menu-edge {
   width: fit-content;
 }
 
+/* ── Holiday Calendar v2.0 Components ─────────────────────────────────────── */
+
+/* RewardCard Component */
+.reward-card {
+  display: grid;
+  gap: 0.5rem;
+  text-align: center;
+  padding: 1rem;
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(241, 245, 249, 0.9));
+  border: 2px solid rgba(148, 163, 184, 0.3);
+}
+
+.reward-card--common {
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+.reward-card--uncommon {
+  border-color: rgba(34, 197, 94, 0.5);
+  background: linear-gradient(145deg, rgba(240, 253, 244, 0.95), rgba(220, 252, 231, 0.9));
+}
+
+.reward-card--rare {
+  border-color: rgba(249, 115, 22, 0.5);
+  background: linear-gradient(145deg, rgba(255, 247, 237, 0.95), rgba(254, 215, 170, 0.9));
+}
+
+.reward-card--legendary {
+  border-color: rgba(168, 85, 247, 0.6);
+  background: linear-gradient(145deg, rgba(250, 245, 255, 0.95), rgba(233, 213, 255, 0.9));
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
+}
+
+.reward-card__rarity {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.reward-card--uncommon .reward-card__rarity { color: #16a34a; }
+.reward-card--rare .reward-card__rarity { color: #ea580c; }
+.reward-card--legendary .reward-card__rarity { color: #9333ea; }
+
+.reward-card__icon {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.reward-card__label {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.reward-card__flavour {
+  font-size: 0.8rem;
+  color: #475569;
+  font-style: italic;
+  padding: 0 0.5rem;
+}
+
+.reward-card__claim {
+  margin-top: 0.5rem;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6, #06b6d4);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.reward-card__claim:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.reward-card--legendary .reward-card__claim {
+  background: linear-gradient(135deg, #9333ea, #db2777);
+}
+
+/* CalendarDoorFlip Component — 3D Card Flip Animation */
+.door-flip {
+  perspective: 1000px;
+  cursor: pointer;
+}
+
+.door-flip__inner {
+  position: relative;
+  width: 100%;
+  min-height: 280px;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.door-flip--flipped .door-flip__inner {
+  transform: rotateY(180deg);
+}
+
+.door-flip__front,
+.door-flip__back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.door-flip__front {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(226, 232, 240, 0.85));
+  border: 2px solid rgba(148, 163, 184, 0.4);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+}
+
+.door-flip__back {
+  transform: rotateY(180deg);
+  padding: 1rem;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(241, 245, 249, 0.9));
+}
+
+.door-flip__number {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.door-flip__emoji {
+  font-size: 2.5rem;
+  filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.1));
+}
+
+.door-flip__hint {
+  font-size: 0.7rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+/* CalendarDoorUnwrap Component — Gift/Envelope Unwrap Animation */
+.door-unwrap {
+  position: relative;
+  min-height: 280px;
+  cursor: pointer;
+}
+
+.door-unwrap__wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 280px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(255, 215, 0, 0.15), rgba(255, 165, 0, 0.1));
+  border: 2px solid rgba(255, 165, 0, 0.4);
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.door-unwrap__wrapper:hover {
+  transform: scale(1.02);
+}
+
+.door-unwrap--unwrapping .door-unwrap__wrapper {
+  animation: unwrap-shake 0.4s ease, unwrap-fade 0.8s ease forwards;
+}
+
+@keyframes unwrap-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+@keyframes unwrap-fade {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.9); }
+}
+
+.door-unwrap__ribbon {
+  position: absolute;
+  width: 20px;
+  height: 100%;
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+
+.door-unwrap__ribbon--left {
+  left: 45%;
+}
+
+.door-unwrap__ribbon--right {
+  top: 45%;
+  left: 0;
+  width: 100%;
+  height: 20px;
+}
+
+.door-unwrap__bow {
+  position: absolute;
+  top: 10px;
+  font-size: 2rem;
+  z-index: 2;
+}
+
+.door-unwrap__icon {
+  filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.2));
+}
+
+.door-unwrap__number {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #1e293b;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  z-index: 3;
+}
+
+.door-unwrap__emoji {
+  font-size: 2rem;
+  z-index: 1;
+}
+
+.door-unwrap__hint {
+  font-size: 0.7rem;
+  color: #92400e;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+.door-unwrap__content {
+  animation: unwrap-reveal 0.5s ease forwards;
+}
+
+@keyframes unwrap-reveal {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* CalendarDoorScratch Component — Canvas Scratch with Confetti */
+.door-scratch {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.door-scratch__card {
+  position: relative;
+  border-radius: 18px;
+  padding: 1rem;
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(226, 232, 240, 0.8));
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  min-height: 300px;
+  overflow: hidden;
+}
+
+.door-scratch__card--revealed {
+  box-shadow: 0 12px 24px rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.door-scratch--diamond .door-scratch__card--revealed {
+  box-shadow: 0 12px 24px rgba(168, 85, 247, 0.25);
+  border-color: rgba(168, 85, 247, 0.5);
+}
+
+.door-scratch__content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.door-scratch__day-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.door-scratch__day-number {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.door-scratch__day-emoji {
+  font-size: 1.2rem;
+}
+
+.door-scratch__canvas {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  cursor: pointer;
+  touch-action: none;
+  transition: opacity 0.3s ease;
+}
+
+.door-scratch__canvas--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.door-scratch__button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  background: rgba(15, 23, 42, 0.08);
+  color: #1e293b;
+  font-weight: 600;
+  cursor: pointer;
+  width: fit-content;
+  justify-self: center;
+  transition: background 0.15s ease;
+}
+
+.door-scratch__button:hover:not(:disabled) {
+  background: rgba(15, 23, 42, 0.12);
+}
+
+.door-scratch__button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Diamond flash effect */
+.door-scratch__diamond-flash {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(219, 39, 119, 0.4));
+  animation: diamond-flash 1s ease forwards;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes diamond-flash {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Confetti burst */
+.door-scratch__confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 5;
+}
+
+.door-scratch__confetti-piece {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  animation: confetti-fall 2s ease forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(200px) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* Door status styles for two-door layout */
+.daily-treats-calendar__hatch--missed {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.daily-treats-calendar__hatch--missed::after {
+  content: '✗';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: rgba(100, 116, 139, 0.6);
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: inherit;
+}
+
+/* Bonus door locked state */
+.daily-treats-calendar__bonus-door--locked {
+  position: relative;
+  opacity: 0.7;
+}
+
+.daily-treats-calendar__bonus-door--locked::before {
+  content: '🎁';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-size: 1.2rem;
+  filter: grayscale(0.5);
+}
+
+/* Bonus door unlocked state — pulsing glow */
+.daily-treats-calendar__bonus-door--unlocked {
+  animation: bonus-pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.4);
+}
+
+@keyframes bonus-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(234, 179, 8, 0.2); }
+}
+
+/* Personal Quest Calendar theme */
+.daily-treats-calendar--personal-quest .daily-treats-calendar__dialog {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(219, 234, 254, 0.9));
+}
+
+.daily-treats-calendar--personal-quest .daily-treats-calendar__button {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+}
+
+.daily-treats-calendar--personal-quest .daily-treats-calendar__countdown {
+  color: #3b82f6;
+}
+
+.daily-treats-calendar--personal-quest .daily-treats-calendar__hatch--today {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.35);
+}
+
+/* Two-door layout: day pair container */
+.daily-treats-calendar__day-pair {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Bonus door button */
+.daily-treats-calendar__bonus-door {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 2px solid rgba(234, 179, 8, 0.4);
+  background: linear-gradient(145deg, rgba(254, 252, 232, 0.9), rgba(254, 243, 199, 0.8));
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.daily-treats-calendar__bonus-door--locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.6);
+}
+
+.daily-treats-calendar__bonus-door--unlocked {
+  animation: bonus-pulse 2s ease-in-out infinite;
+  border-color: rgba(234, 179, 8, 0.8);
+}
+
+.daily-treats-calendar__bonus-door--opened {
+  background: rgba(74, 222, 128, 0.2);
+  border-color: rgba(74, 222, 128, 0.5);
+  cursor: default;
+}
+
+.daily-treats-calendar__bonus-door:hover:not(:disabled) {
+  transform: scale(1.1);
+}
+
+/* Bonus hint text */
+.daily-treats-calendar__bonus-hint {
+  margin: 0.5rem 0;
+  font-size: 0.8rem;
+  color: #92400e;
+  text-align: center;
+  padding: 0.5rem;
+  background: rgba(254, 243, 199, 0.5);
+  border-radius: 8px;
+}
+
+.daily-treats-calendar__bonus-reminder {
+  margin: 0.75rem 0;
+  font-size: 0.85rem;
+  color: #166534;
+  text-align: center;
+  padding: 0.6rem 1rem;
+  background: rgba(220, 252, 231, 0.6);
+  border-radius: 8px;
+  border: 1px solid rgba(74, 222, 128, 0.4);
+}
+
 .daily-treats-modal__close,
 .daily-treats-placeholder__close {
   position: absolute;

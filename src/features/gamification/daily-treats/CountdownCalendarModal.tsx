@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   DEFAULT_SYMBOLS,
   hasOpenedToday,
@@ -8,12 +8,27 @@ import {
   type ScratchCardState,
 } from './scratchCard';
 import { ScratchCardReveal } from './ScratchCardReveal';
+import { CalendarDoorFlip } from './CalendarDoorFlip';
+import { CalendarDoorUnwrap } from './CalendarDoorUnwrap';
+import { CalendarDoorScratch } from './CalendarDoorScratch';
 import { awardDailyTreatGold } from '../../../services/dailyTreats';
 import {
   buildPreviewAdventMeta,
+  fetchCurrentSeason,
   getActiveAdventMeta,
   getAdventDoorCount,
+  isHabitCompletedToday,
+  openTodayHatch,
+  computeDoorStatus,
+  getHatchesForDay,
+  type CalendarSeasonData,
+  type CalendarHatch,
+  type DoorType,
+  type DoorStatus,
   type HolidayKey,
+  type RewardTier,
+  type RewardCurrency,
+  type RevealMechanic,
 } from '../../../services/treatCalendarService';
 import { fetchHolidayPreferences } from '../../../services/holidayPreferences';
 import { getHolidayThemeAssets } from '../../../services/holidayThemeAssets';
@@ -47,6 +62,13 @@ const HOLIDAY_THEME: Record<string, string> = {
   st_patricks_day:  'st-patricks',
 };
 
+type RevealState = {
+  isRevealing: boolean;
+  dayIndex: number;
+  doorType: DoorType;
+  hatch: CalendarHatch | null;
+};
+
 export const CountdownCalendarModal = ({
   isOpen,
   onClose,
@@ -55,15 +77,19 @@ export const CountdownCalendarModal = ({
 }: CountdownCalendarModalProps) => {
   const [scratchState, setScratchState] = useState<ScratchCardState | null>(null);
   const [revealResult, setRevealResult] = useState<RevealCardResult | null>(null);
-  const [activeAdvent, setActiveAdvent] = useState<ReturnType<typeof getActiveAdventMeta> | undefined>(undefined); // undefined = loading
+  const [activeAdvent, setActiveAdvent] = useState<ReturnType<typeof getActiveAdventMeta> | undefined>(undefined);
+  const [seasonData, setSeasonData] = useState<CalendarSeasonData | null>(null);
+  const [habitCompleted, setHabitCompleted] = useState(false);
+  const [revealState, setRevealState] = useState<RevealState | null>(null);
 
-  // Load holiday preferences then derive the active advent window
+  // Load holiday preferences then derive the active advent window and season data
   useEffect(() => {
     if (!isOpen) return;
     setRevealResult(null);
+    setRevealState(null);
     setScratchState(loadScratchCardState(userId));
 
-    const loadAdvent = async () => {
+    const loadData = async () => {
       if (previewHolidayKey) {
         setActiveAdvent(buildPreviewAdventMeta(previewHolidayKey));
         return;
@@ -79,14 +105,29 @@ export const CountdownCalendarModal = ({
               .map(([k]) => k),
           );
         }
-        // On error fall through with undefined → all holidays eligible
       }
-      setActiveAdvent(getActiveAdventMeta(enabledHolidays));
+      
+      const advent = getActiveAdventMeta(enabledHolidays);
+      setActiveAdvent(advent);
+
+      // Load season data from service (uses demo mode when not authenticated)
+      if (userId) {
+        const { data: season, error: seasonError } = await fetchCurrentSeason(userId, advent?.meta.holiday_key);
+        if (seasonError) {
+          console.warn('Failed to load season data:', seasonError);
+        } else if (season) {
+          setSeasonData(season);
+        }
+        // Check habit completion for bonus door gating
+        const completed = await isHabitCompletedToday(userId);
+        setHabitCompleted(completed);
+      }
     };
 
-    void loadAdvent();
+    void loadData();
   }, [isOpen, previewHolidayKey, userId]);
 
+  // Handle gold rewards from legacy scratch card system
   useEffect(() => {
     if (!revealResult || !userId) return;
     if (revealResult.goldReward <= 0) return;
@@ -97,6 +138,42 @@ export const CountdownCalendarModal = ({
     );
   }, [revealResult, userId]);
 
+  const handleOpenDoor = useCallback(async (dayIndex: number, doorType: DoorType, hatch: CalendarHatch) => {
+    if (!userId || !seasonData) return;
+
+    // Start reveal animation
+    setRevealState({
+      isRevealing: true,
+      dayIndex,
+      doorType,
+      hatch,
+    });
+
+    // Call backend to record the open
+    const { data: reward, error } = await openTodayHatch(userId, seasonData.season.id, dayIndex, doorType);
+    
+    if (error) {
+      console.warn('Failed to open hatch:', error);
+      setRevealState(null);
+      return;
+    }
+
+    // Award gold if applicable
+    if (reward?.reward_currency === 'gold' && reward.reward_amount) {
+      void awardDailyTreatGold(userId, reward.reward_amount, `Day ${dayIndex} ${doorType} door`);
+    }
+
+    // Refresh season data to update progress
+    const { data: updated } = await fetchCurrentSeason(userId, seasonData.season.holiday_key ?? undefined);
+    if (updated) {
+      setSeasonData(updated);
+    }
+  }, [userId, seasonData]);
+
+  const handleClaimReward = useCallback(() => {
+    setRevealState(null);
+  }, []);
+
   if (!isOpen) return null;
 
   // Still loading holiday prefs — avoid a flash of wrong content
@@ -105,14 +182,14 @@ export const CountdownCalendarModal = ({
   const resolvedState = scratchState ?? fallbackState;
   const alreadyOpenedToday = hasOpenedToday(resolvedState);
 
-  // No active holiday countdown right now — show an empty state
-  if (activeAdvent === null) {
+  // No active holiday countdown AND no season data — show Personal Quest or empty state
+  if (activeAdvent === null && !seasonData) {
     return (
       <div
-        className="daily-treats-calendar daily-treats-calendar--holiday-none"
+        className="daily-treats-calendar daily-treats-calendar--personal-quest"
         role="dialog"
         aria-modal="true"
-        aria-label="Holiday calendar"
+        aria-label="Personal Quest Calendar"
       >
         <div className="daily-treats-modal__backdrop" onClick={onClose} role="presentation" />
         <div className="daily-treats-modal__dialog daily-treats-calendar__dialog">
@@ -125,14 +202,13 @@ export const CountdownCalendarModal = ({
             ×
           </button>
           <div className="daily-treats-calendar__content">
-            <p className="daily-treats-modal__eyebrow">Holiday Calendar</p>
-            <h3 className="daily-treats-calendar__title">No holiday countdown active 🗓️</h3>
+            <p className="daily-treats-modal__eyebrow">Personal Quest</p>
+            <h3 className="daily-treats-calendar__title">🧭 Weekly Sprint</h3>
             <p className="daily-treats-calendar__subtitle">
-              Check back when the next holiday season starts! Enable your favourite holidays in
-              Settings → Holiday Preferences to unlock their holiday calendars.
+              No holiday countdown active right now. Your Personal Quest Calendar keeps you engaged between holidays!
             </p>
             <button type="button" className="daily-treats-calendar__button" onClick={onClose}>
-              Back to Holiday Calendar
+              Got it
             </button>
           </div>
         </div>
@@ -140,31 +216,110 @@ export const CountdownCalendarModal = ({
     );
   }
 
-  const { meta, daysRemaining } = activeAdvent;
-  const totalDoors = getAdventDoorCount(meta);
-  const themeMod = HOLIDAY_THEME[meta.holiday_key] ?? 'generic';
-  const { calendarBackgroundUrl } = getHolidayThemeAssets(meta.holiday_key);
+  // Use season data if available, otherwise fall back to advent meta
+  const isPersonalQuest = seasonData?.season.season_type === 'personal_quest';
+  const holidayKey = seasonData?.season.holiday_key ?? activeAdvent?.meta.holiday_key ?? null;
+  const themeMod = isPersonalQuest ? 'personal-quest' : (holidayKey ? HOLIDAY_THEME[holidayKey] ?? 'generic' : 'generic');
+  const themeAssets = holidayKey ? getHolidayThemeAssets(holidayKey) : null;
+  const calendarBackgroundUrl = themeAssets?.calendarBackgroundUrl ?? null;
 
-  // Cap the active day to the advent door count (advent windows are shorter than calendar months)
-  const activeDay = Math.min(resolvedState.dayInCycle, totalDoors);
+  // Calculate total doors and today's index
+  const totalDoors = seasonData
+    ? Math.max(...seasonData.hatches.filter(h => h.door_type === 'free').map(h => h.day_index))
+    : (activeAdvent ? getAdventDoorCount(activeAdvent.meta) : 7);
+  
+  const todayIndex = seasonData?.today_day_index ?? Math.min(resolvedState.dayInCycle, totalDoors);
+  const progress = seasonData?.progress;
 
-  const countdownLabel =
-    daysRemaining === 0
-      ? `🎉 Today is ${meta.displayName}!`
+  // Theme info
+  const themeName = seasonData?.season.theme_name ?? activeAdvent?.meta.theme_name ?? 'Weekly Sprint';
+  const themeEmojis = activeAdvent?.meta.emojis ?? ['🧭', '⭐', '🎯', '🏆', '💪'];
+  const daysRemaining = activeAdvent?.daysRemaining ?? 0;
+
+  const countdownLabel = isPersonalQuest
+    ? `Day ${todayIndex} of ${totalDoors}`
+    : daysRemaining === 0
+      ? `🎉 Today is ${activeAdvent?.meta.displayName ?? themeName}!`
       : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} to go`;
 
-  const hasOpenableHatch = Array.from({ length: activeDay }, (_, i) => {
-    return !resolvedState.revealedSymbols?.[i + 1];
-  }).some(Boolean);
+  // Check if today's free door is already opened
+  const todayFreeOpened = progress?.opened_days.includes(todayIndex) ?? false;
+  const todayBonusOpened = progress?.opened_bonus_days?.includes(todayIndex) ?? false;
+  const isAdventComplete = todayFreeOpened && todayIndex === totalDoors;
 
-  const isAdventComplete = alreadyOpenedToday && activeDay === totalDoors;
+  // Render reveal modal if actively revealing
+  if (revealState?.isRevealing && revealState.hatch) {
+    const { hatch, dayIndex, doorType } = revealState;
+    const emoji = hatch.symbol_emoji ?? themeEmojis[(dayIndex - 1) % themeEmojis.length];
+    const tier = hatch.reward_tier ?? 2;
+    const currency = hatch.reward_currency;
+    const amount = hatch.reward_amount;
+    const mechanic = hatch.reveal_mechanic;
+
+    return (
+      <div
+        className={`daily-treats-calendar daily-treats-calendar--holiday-${themeMod}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Revealing Day ${dayIndex} ${doorType} door`}
+      >
+        <div className="daily-treats-modal__backdrop" role="presentation" />
+        <div className="daily-treats-modal__dialog daily-treats-calendar__dialog">
+          <div className="daily-treats-calendar__content">
+            <p className="daily-treats-modal__eyebrow">
+              {doorType === 'bonus' ? '🎁 Bonus Door' : 'Daily Door'}
+            </p>
+            <h3 className="daily-treats-calendar__title">Day {dayIndex}</h3>
+            
+            {mechanic === 'flip' && (
+              <CalendarDoorFlip
+                dayNumber={dayIndex}
+                emoji={emoji}
+                tier={tier as RewardTier}
+                currency={currency}
+                amount={amount}
+                holidayKey={holidayKey}
+                onClaim={handleClaimReward}
+                isPersonalQuest={isPersonalQuest}
+              />
+            )}
+            {mechanic === 'unwrap' && (
+              <CalendarDoorUnwrap
+                dayNumber={dayIndex}
+                emoji={emoji}
+                tier={tier as RewardTier}
+                currency={currency}
+                amount={amount}
+                holidayKey={holidayKey}
+                onClaim={handleClaimReward}
+                isPersonalQuest={isPersonalQuest}
+                variant={doorType === 'bonus' ? 'gift' : 'envelope'}
+              />
+            )}
+            {mechanic === 'scratch' && (
+              <CalendarDoorScratch
+                dayNumber={dayIndex}
+                emoji={emoji}
+                tier={tier as RewardTier}
+                currency={currency}
+                amount={amount}
+                holidayKey={holidayKey}
+                onClaim={handleClaimReward}
+                isPersonalQuest={isPersonalQuest}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
       className={`daily-treats-calendar daily-treats-calendar--holiday-${themeMod}`}
       role="dialog"
       aria-modal="true"
-      aria-label={`${meta.theme_name} holiday calendar`}
+      aria-label={`${themeName} calendar`}
     >
       <div className="daily-treats-modal__backdrop" onClick={onClose} role="presentation" />
       <div
@@ -182,106 +337,175 @@ export const CountdownCalendarModal = ({
         <button
           type="button"
           className="daily-treats-modal__close"
-          aria-label="Close holiday calendar"
+          aria-label="Close calendar"
           onClick={onClose}
         >
           ×
         </button>
         <div className="daily-treats-calendar__content">
-          <p className="daily-treats-modal__eyebrow">Holiday Calendar</p>
+          <p className="daily-treats-modal__eyebrow">
+            {isPersonalQuest ? 'Personal Quest' : 'Holiday Calendar'}
+          </p>
           <h3 className="daily-treats-calendar__title">
-            {meta.emojis[0]} {meta.theme_name}
+            {themeEmojis[0]} {themeName}
           </h3>
           <p className="daily-treats-calendar__countdown">{countdownLabel}</p>
           <p className="daily-treats-calendar__subtitle">
-            Day {activeDay} of {totalDoors}
-            {alreadyOpenedToday
+            Day {todayIndex} of {totalDoors}
+            {todayFreeOpened
               ? " • today's treat already revealed!"
               : " • open today's door to reveal your treat."}
           </p>
-          {hasOpenableHatch ? (
-            <p className="daily-treats-calendar__hint">Tap today&apos;s door to reveal your treat.</p>
-          ) : null}
+
+          {/* Bonus door status */}
+          {!todayBonusOpened && (
+            <p className="daily-treats-calendar__bonus-hint">
+              {habitCompleted
+                ? '✨ Bonus door unlocked! Complete a habit to claim extra rewards.'
+                : '🎁 Complete a habit today to unlock your bonus door!'}
+            </p>
+          )}
 
           <div className="daily-treats-calendar__grid" role="list">
             {Array.from({ length: totalDoors }, (_, index) => {
               const day = index + 1;
-              const revealedSymbol = resolvedState.revealedSymbols?.[day];
-              const status = revealedSymbol
-                ? 'opened'
-                : day === activeDay
-                  ? 'today'
-                  : day < activeDay
-                    ? 'available'
-                    : 'locked';
-              const label = `Day ${day} ${status === 'today' ? '(today\'s door)' : `(${status})`}`;
-              const canOpen = day <= activeDay && !revealedSymbol;
+              const { free: freeHatch, bonus: bonusHatch } = seasonData
+                ? getHatchesForDay(seasonData.hatches, day)
+                : { free: null, bonus: null };
 
-              // Holiday emoji rotated through the door array; locked doors show a padlock
-              const doorEmoji = meta.emojis[(day - 1) % meta.emojis.length];
+              const freeOpened = progress?.opened_days.includes(day) ?? false;
+              const bonusOpened = progress?.opened_bonus_days?.includes(day) ?? false;
+
+              // Use legacy state for backwards compatibility
+              const revealedSymbol = resolvedState.revealedSymbols?.[day];
+              const isOpenedLegacy = Boolean(revealedSymbol);
+
+              const status: DoorStatus = computeDoorStatus(day, todayIndex, freeOpened || isOpenedLegacy, 'free');
+              const canOpenFree = day === todayIndex && !freeOpened && !isOpenedLegacy;
+              const canOpenBonus = day === todayIndex && !bonusOpened && habitCompleted;
+
+              const doorEmoji = themeEmojis[(day - 1) % themeEmojis.length];
+              const label = `Day ${day} ${status === 'today' ? "(today's door)" : `(${status})`}`;
 
               const doorBody = (
                 <>
                   <span className="daily-treats-calendar__hatch-number">{day}</span>
-                  {revealedSymbol ? (
+                  {(freeOpened || isOpenedLegacy) ? (
                     <span className="daily-treats-calendar__hatch-symbol" aria-hidden="true">
-                      {revealedSymbol.emoji}
+                      {revealedSymbol?.emoji ?? '✓'}
                     </span>
                   ) : (
                     <span className="daily-treats-calendar__hatch-status" aria-hidden="true">
-                      {status === 'locked' ? '🔒' : doorEmoji}
+                      {status === 'locked' ? '🔒' : status === 'missed' ? '✗' : doorEmoji}
                     </span>
                   )}
                 </>
               );
 
-              return canOpen ? (
-                <button
-                  key={`calendar-day-${day}`}
-                  type="button"
-                  className={`daily-treats-calendar__hatch daily-treats-calendar__hatch--${status} daily-treats-calendar__hatch-button`}
-                  role="listitem"
-                  aria-label={label}
-                  onClick={() => {
-                    const result = revealScratchCardForDayWithPersistence(userId, day);
-                    if (!result) return;
-                    setRevealResult(result);
-                    setScratchState(loadScratchCardState(userId));
-                  }}
-                >
-                  {doorBody}
-                </button>
-              ) : (
-                <div
-                  key={`calendar-day-${day}`}
-                  className={`daily-treats-calendar__hatch daily-treats-calendar__hatch--${status}`}
-                  role="listitem"
-                  aria-label={label}
-                >
-                  {doorBody}
+              return (
+                <div key={`calendar-day-${day}`} className="daily-treats-calendar__day-pair">
+                  {/* Free door */}
+                  {canOpenFree && freeHatch ? (
+                    <button
+                      type="button"
+                      className={`daily-treats-calendar__hatch daily-treats-calendar__hatch--${status} daily-treats-calendar__hatch-button`}
+                      role="listitem"
+                      aria-label={label}
+                      onClick={() => {
+                        if (freeHatch) {
+                          void handleOpenDoor(day, 'free', freeHatch);
+                        } else {
+                          // Legacy mode
+                          const result = revealScratchCardForDayWithPersistence(userId, day);
+                          if (!result) return;
+                          setRevealResult(result);
+                          setScratchState(loadScratchCardState(userId));
+                        }
+                      }}
+                    >
+                      {doorBody}
+                    </button>
+                  ) : canOpenFree && !freeHatch ? (
+                    // Legacy mode without season data
+                    <button
+                      type="button"
+                      className={`daily-treats-calendar__hatch daily-treats-calendar__hatch--${status} daily-treats-calendar__hatch-button`}
+                      role="listitem"
+                      aria-label={label}
+                      onClick={() => {
+                        const result = revealScratchCardForDayWithPersistence(userId, day);
+                        if (!result) return;
+                        setRevealResult(result);
+                        setScratchState(loadScratchCardState(userId));
+                      }}
+                    >
+                      {doorBody}
+                    </button>
+                  ) : (
+                    <div
+                      className={`daily-treats-calendar__hatch daily-treats-calendar__hatch--${status}`}
+                      role="listitem"
+                      aria-label={label}
+                    >
+                      {doorBody}
+                    </div>
+                  )}
+
+                  {/* Bonus door indicator for today */}
+                  {day === todayIndex && bonusHatch && (
+                    <button
+                      type="button"
+                      className={`daily-treats-calendar__bonus-door ${
+                        bonusOpened
+                          ? 'daily-treats-calendar__bonus-door--opened'
+                          : habitCompleted
+                            ? 'daily-treats-calendar__bonus-door--unlocked'
+                            : 'daily-treats-calendar__bonus-door--locked'
+                      }`}
+                      disabled={!canOpenBonus}
+                      onClick={() => canOpenBonus && void handleOpenDoor(day, 'bonus', bonusHatch)}
+                      aria-label={`Bonus door for day ${day}${habitCompleted ? ' - unlocked' : ' - locked'}`}
+                    >
+                      {bonusOpened ? '✓' : '🎁'}
+                    </button>
+                  )}
                 </div>
               );
             })}
           </div>
 
-          {alreadyOpenedToday ? (
+          {todayFreeOpened && !todayBonusOpened && habitCompleted && (
+            <div className="daily-treats-calendar__bonus-reminder">
+              Your bonus door is ready to open! Tap the 🎁 to claim extra rewards.
+            </div>
+          )}
+
+          {todayFreeOpened && todayBonusOpened ? (
             <div className="daily-treats-calendar__rest">
-              You revealed today&apos;s treat {meta.emojis[0]} Come back tomorrow for the next surprise.
+              You revealed all of today&apos;s treats {themeEmojis[0]} Come back tomorrow for more!
+            </div>
+          ) : todayFreeOpened ? (
+            <div className="daily-treats-calendar__rest">
+              You revealed today&apos;s free treat {themeEmojis[0]} 
+              {!todayBonusOpened && !habitCompleted && ' Complete a habit to unlock the bonus door!'}
             </div>
           ) : null}
 
           {isAdventComplete ? (
             <div className="daily-treats-calendar__rollover">
               <p className="daily-treats-calendar__rollover-title">
-                Advent complete {meta.emojis[0]}
+                {isPersonalQuest ? 'Quest complete' : 'Advent complete'} {themeEmojis[0]}
               </p>
               <p className="daily-treats-calendar__rollover-copy">
-                You opened every door of the {meta.theme_name}. Enjoy the holiday — see you at the
-                next holiday calendar!
+                You opened every door of the {themeName}. 
+                {isPersonalQuest
+                  ? 'A new quest begins next week!'
+                  : 'Enjoy the holiday — see you at the next calendar!'}
               </p>
             </div>
           ) : null}
 
+          {/* Legacy scratch card reveal for backwards compatibility */}
           {revealResult ? <ScratchCardReveal result={revealResult} /> : null}
 
           <div className="daily-treats-calendar__tracker">
@@ -321,7 +545,7 @@ export const CountdownCalendarModal = ({
           </div>
 
           <button type="button" className="daily-treats-calendar__button" onClick={onClose}>
-            Back to Holiday Calendar
+            {isPersonalQuest ? 'Back to Today' : 'Back to Holiday Calendar'}
           </button>
         </div>
       </div>

@@ -17,6 +17,60 @@ export type HolidayKey =
   | 'christmas';
 
 // ---------------------------------------------------------------------------
+// Reward Types
+// ---------------------------------------------------------------------------
+
+export type RewardTier = 1 | 2 | 3 | 4 | 5;
+export type RewardCurrency = 'gold' | 'diamond' | null;
+export type DoorType = 'free' | 'bonus';
+export type RevealMechanic = 'flip' | 'scratch' | 'unwrap';
+export type SeasonType = 'holiday' | 'personal_quest' | 'birthday' | 'special_event';
+export type DoorStatus = 'locked' | 'available' | 'today' | 'opened' | 'missed';
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+/** Calendars with 25+ doors (e.g., Christmas) get bonus diamonds on final day */
+const LONG_CALENDAR_THRESHOLD = 25;
+
+// ---------------------------------------------------------------------------
+// Reward Tier Configuration
+// ---------------------------------------------------------------------------
+
+/** Maps reward tier to display info */
+export const REWARD_TIER_INFO: Record<RewardTier, {
+  label: string;
+  rarityLabel: string;
+  rarityClass: string;
+}> = {
+  1: { label: 'Nothing today', rarityLabel: '✦ Common', rarityClass: 'common' },
+  2: { label: 'Small Gold', rarityLabel: '✦ Common', rarityClass: 'common' },
+  3: { label: 'Medium Gold', rarityLabel: '✦✦ Uncommon', rarityClass: 'uncommon' },
+  4: { label: 'Large Gold', rarityLabel: '✦✦✦ Rare', rarityClass: 'rare' },
+  5: { label: 'Diamond', rarityLabel: '💎 Legendary', rarityClass: 'legendary' },
+};
+
+/** Reward amount ranges for each tier */
+const REWARD_AMOUNT_RANGES: Record<RewardTier, { min: number; max: number }> = {
+  1: { min: 0, max: 0 },         // Empty
+  2: { min: 50, max: 150 },      // Small gold
+  3: { min: 200, max: 500 },     // Medium gold
+  4: { min: 600, max: 900 },     // Large gold
+  5: { min: 1, max: 3 },         // Diamond (count)
+};
+
+/**
+ * Generate a random reward amount for a given tier.
+ * Uses consistent logic across all reward generation.
+ */
+function getRewardAmountForTier(tier: RewardTier): number {
+  const range = REWARD_AMOUNT_RANGES[tier];
+  if (tier === 1) return 0;
+  return range.min + Math.floor(Math.random() * (range.max - range.min + 1));
+}
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -30,6 +84,10 @@ export type CalendarSeason = {
   status: 'active' | 'archived' | 'draft';
   /** Which holiday this advent calendar belongs to, e.g. 'christmas' */
   holiday_key: HolidayKey | null;
+  /** Type of season: holiday, personal_quest, birthday, special_event */
+  season_type: SeasonType;
+  /** User ID owner for personal quest / birthday calendars */
+  user_id_owner: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -38,12 +96,22 @@ export type CalendarHatch = {
   id: string;
   season_id: string;
   day_index: number;
+  /** Door type: free (always available) or bonus (habit-gated) */
+  door_type: DoorType;
   symbol_name: string | null;
   symbol_emoji: string | null;
   numbers: number[] | null;
   number_reward: number | null;
   symbol_reward: string | null;
   reward_payload: Record<string, unknown>;
+  /** Reward currency: gold, diamond, or null (empty) */
+  reward_currency: RewardCurrency;
+  /** Numeric reward amount */
+  reward_amount: number | null;
+  /** Reward tier: 1=empty, 2=small_gold, 3=medium_gold, 4=large_gold, 5=diamond */
+  reward_tier: RewardTier | null;
+  /** Animation type: flip, scratch, unwrap */
+  reveal_mechanic: RevealMechanic;
   created_at: string;
 };
 
@@ -52,7 +120,10 @@ export type CalendarProgress = {
   season_id: string;
   last_opened_date: string | null;
   last_opened_day: number;
+  /** Track opened (day_index, door_type) pairs as "day:type" strings */
   opened_days: number[];
+  /** Track opened bonus doors separately */
+  opened_bonus_days?: number[];
   symbol_counts: Record<string, number>;
   created_at: string;
   updated_at: string;
@@ -62,6 +133,7 @@ export type CalendarSeasonData = {
   season: CalendarSeason;
   hatches: CalendarHatch[];
   progress: CalendarProgress | null;
+  /** Server-computed day index — the only trusted source for "today" */
   today_day_index: number;
 };
 
@@ -147,6 +219,7 @@ export type ActiveAdventMetaResult = {
 
 const ADVENT_META: AdventMeta[] = [
   {
+    // Christmas: 25 doors, Dec 1 → Dec 25 — the gold standard
     theme_name: 'Christmas Advent',
     displayName: 'Christmas',
     holiday_key: 'christmas',
@@ -155,42 +228,46 @@ const ADVENT_META: AdventMeta[] = [
     emojis: ['🎄', '⭐', '🎁', '🦌', '🔔', '❄️', '🕯️', '🍪', '🧦', '☃️'],
   },
   {
+    // Halloween: 7 doors, Oct 25 → Oct 31 — final week only (reduced from 31)
     theme_name: 'Halloween Countdown',
     displayName: 'Halloween',
     holiday_key: 'halloween',
-    countdownStart: { month: 9, day: 1 },
+    countdownStart: { month: 9, day: 25 },
     holidayDate: { month: 9, day: 31 },
     emojis: ['🎃', '👻', '🕷️', '🦇', '🕯️', '💀', '🕸️', '🍬', '🧙', '🌙'],
   },
   {
-    // Easter is a movable feast (Mar 22 – Apr 25). The demo window covers the
-    // common range; production seasons should seed the exact date per year.
+    // Easter: 8 doors, Palm Sunday → Easter Sunday (Holy Week)
+    // Movable feast — this demo window is approximate; production seasons
+    // should seed the exact date per year.
     theme_name: 'Easter Countdown',
     displayName: 'Easter',
     holiday_key: 'easter',
-    countdownStart: { month: 2, day: 18 },
-    holidayDate: { month: 3, day: 25 },
+    countdownStart: { month: 3, day: 13 },
+    holidayDate: { month: 3, day: 20 },
     emojis: ['🐣', '🌸', '🥚', '🐰', '🌷', '🦋', '🌼', '🍀', '✨', '🌈'],
   },
   {
-    // Eid al-Fitr is lunar and shifts each year. This demo window is an
-    // approximation; production seasons should seed the exact date per year.
+    // Eid: 3 doors — 3 days of Eid al-Fitr
+    // Lunar calendar — production seasons should seed the exact date per year.
     theme_name: 'Eid Mubarak Countdown',
     displayName: 'Eid Mubarak',
     holiday_key: 'eid_mubarak',
-    countdownStart: { month: 2, day: 30 },
+    countdownStart: { month: 3, day: 8 },
     holidayDate: { month: 3, day: 10 },
     emojis: ['🌙', '🕌', '✨', '🤲', '⭐', '🕯️', '🌟', '💛', '🎉', '🪔'],
   },
   {
+    // Valentine's: 5 doors, Feb 10 → Feb 14 — extended from 3 for more build-up
     theme_name: 'Valentine\'s Countdown',
     displayName: 'Valentine\'s Day',
     holiday_key: 'valentines_day',
-    countdownStart: { month: 1, day: 12 },
+    countdownStart: { month: 1, day: 10 },
     holidayDate: { month: 1, day: 14 },
     emojis: ['💘', '❤️', '🌹', '💌', '💝', '🍫', '💕', '✨', '🎀', '💗'],
   },
   {
+    // New Year: 7 doors, Dec 26 → Jan 1 — tight and exciting
     theme_name: 'New Year Countdown',
     displayName: 'New Year',
     holiday_key: 'new_year',
@@ -199,17 +276,19 @@ const ADVENT_META: AdventMeta[] = [
     emojis: ['🎉', '🥂', '🎆', '🎊', '⭐', '✨', '🎇', '🕛', '🥳', '🌟'],
   },
   {
-    // US Thanksgiving falls on the 4th Thursday of November (Nov 22–28).
-    // The demo window covers Nov 1–28; production seasons should seed the
-    // exact date per year.
+    // Thanksgiving: 4 doors, Mon → Thu of Thanksgiving week (reduced from 28)
+    // US Thanksgiving is 4th Thursday of November — production seasons
+    // should seed the exact date per year.
     theme_name: 'Thanksgiving Countdown',
     displayName: 'Thanksgiving',
     holiday_key: 'thanksgiving',
-    countdownStart: { month: 10, day: 1 },
+    countdownStart: { month: 10, day: 25 },
     holidayDate: { month: 10, day: 28 },
     emojis: ['🦃', '🍂', '🌽', '🥧', '🍁', '🌾', '🥕', '🙏', '🍎', '🍠'],
   },
   {
+    // Hanukkah: 8 doors, Night 1 → Night 8 — exactly right for 8 nights
+    // Lunar calendar — production seasons should seed the exact date per year.
     theme_name: 'Hanukkah Countdown',
     displayName: 'Hanukkah',
     holiday_key: 'hanukkah',
@@ -218,10 +297,11 @@ const ADVENT_META: AdventMeta[] = [
     emojis: ['🕎', '✡️', '🕯️', '💙', '⭐', '🎁', '🪙', '🥞', '🌟', '✨'],
   },
   {
+    // St. Patrick's: 3 doors, Mar 15 → Mar 17 — minor holiday
     theme_name: 'St. Patrick\'s Day Countdown',
     displayName: 'St. Patrick\'s Day',
     holiday_key: 'st_patricks_day',
-    countdownStart: { month: 2, day: 10 },
+    countdownStart: { month: 2, day: 15 },
     holidayDate: { month: 2, day: 17 },
     emojis: ['☘️', '🍀', '🌈', '🟢', '🎩', '🪙', '🍺', '✨', '🌿', '⭐'],
   },
@@ -342,12 +422,206 @@ export function getAdventDoorCount(meta: AdventMeta): number {
   return Math.floor((endMs - startMs) / (1000 * 60 * 60 * 24)) + 1;
 }
 
+// ---------------------------------------------------------------------------
+// Reveal Mechanic Assignment
+// ---------------------------------------------------------------------------
+
+const HOLIDAY_REVEAL_MECHANICS: Record<HolidayKey, {
+  standardDoor: RevealMechanic;
+  finalDoor: RevealMechanic;
+  symbolBonus: RevealMechanic;
+}> = {
+  christmas:       { standardDoor: 'flip',   finalDoor: 'scratch', symbolBonus: 'unwrap' },
+  new_year:        { standardDoor: 'flip',   finalDoor: 'scratch', symbolBonus: 'scratch' },
+  valentines_day:  { standardDoor: 'flip',   finalDoor: 'unwrap',  symbolBonus: 'unwrap' },
+  easter:          { standardDoor: 'unwrap', finalDoor: 'scratch', symbolBonus: 'flip' },
+  eid_mubarak:     { standardDoor: 'unwrap', finalDoor: 'unwrap',  symbolBonus: 'unwrap' },
+  halloween:       { standardDoor: 'flip',   finalDoor: 'scratch', symbolBonus: 'scratch' },
+  thanksgiving:    { standardDoor: 'flip',   finalDoor: 'unwrap',  symbolBonus: 'flip' },
+  hanukkah:        { standardDoor: 'flip',   finalDoor: 'unwrap',  symbolBonus: 'unwrap' },
+  st_patricks_day: { standardDoor: 'flip',   finalDoor: 'scratch', symbolBonus: 'flip' },
+};
+
+function getRevealMechanic(
+  holidayKey: HolidayKey | null,
+  dayIndex: number,
+  totalDays: number,
+  doorType: DoorType,
+): RevealMechanic {
+  const isFinalDay = dayIndex === totalDays;
+  const key = holidayKey ?? 'christmas';
+  const mechanics = HOLIDAY_REVEAL_MECHANICS[key];
+
+  if (isFinalDay) return mechanics.finalDoor;
+  if (doorType === 'bonus') return mechanics.symbolBonus;
+  return mechanics.standardDoor;
+}
+
+// ---------------------------------------------------------------------------
+// Reward Generation
+// ---------------------------------------------------------------------------
+
+/** Holiday flavour text banks for empty doors */
+const EMPTY_DOOR_FLAVOUR: Record<HolidayKey, string[]> = {
+  christmas: [
+    'The elves are saving the good stuff for later 🎄',
+    'Santa is checking his list... try tomorrow! 🎅',
+    'The North Pole is quiet today ❄️',
+  ],
+  halloween: [
+    'Boo! Nothing here... yet 🎃',
+    'The spirits are resting tonight 👻',
+    'Check back tomorrow for spookier treats 🕷️',
+  ],
+  easter: [
+    'The bunny is still hiding this one 🐰',
+    'Not all eggs hatch at once 🥚',
+    'Spring patience brings sweet rewards 🌸',
+  ],
+  eid_mubarak: [
+    'Blessings come in their own time 🌙',
+    'The crescent awaits ✨',
+    'Tomorrow brings new gifts 🕌',
+  ],
+  valentines_day: [
+    'Love takes time to bloom 🌹',
+    'Sweet things are worth the wait 💕',
+    'Patience, dear heart 💘',
+  ],
+  new_year: [
+    'The countdown continues... 🎉',
+    'Good things come to those who wait 🥂',
+    'The best is yet to come ✨',
+  ],
+  thanksgiving: [
+    'Gratitude grows with time 🦃',
+    'The harvest is not ready yet 🌾',
+    'More blessings are on the way 🙏',
+  ],
+  hanukkah: [
+    'The light grows brighter each night 🕎',
+    'Patience is a mitzvah ✡️',
+    'More miracles await 🕯️',
+  ],
+  st_patricks_day: [
+    'The leprechaun is hiding this gold 🍀',
+    'Luck comes when you least expect it ☘️',
+    'Keep searching for that rainbow 🌈',
+  ],
+};
+
+/** Generate a reward tier distribution for a calendar of given length */
+function generateRewardSchedule(totalDays: number): Array<{
+  tier: RewardTier;
+  currency: RewardCurrency;
+  amount: number | null;
+}> {
+  const schedule: Array<{ tier: RewardTier; currency: RewardCurrency; amount: number | null }> = [];
+
+  // Short calendars (3-5 doors): no empty, small→medium→large→diamond
+  if (totalDays <= 5) {
+    for (let day = 1; day <= totalDays; day++) {
+      if (day === totalDays) {
+        // Final day: Diamond
+        schedule.push({ tier: 5, currency: 'diamond', amount: 1 });
+      } else if (day === totalDays - 1 && totalDays >= 4) {
+        // Penultimate day: Large gold
+        schedule.push({ tier: 4, currency: 'gold', amount: getRewardAmountForTier(4) });
+      } else if (day === totalDays - 2 || day === 2) {
+        // Medium gold
+        schedule.push({ tier: 3, currency: 'gold', amount: getRewardAmountForTier(3) });
+      } else {
+        // Small gold
+        schedule.push({ tier: 2, currency: 'gold', amount: getRewardAmountForTier(2) });
+      }
+    }
+    return schedule;
+  }
+
+  // Medium calendars (6-9 doors): ~30% empty, mix of rewards
+  if (totalDays <= 9) {
+    const emptyCount = Math.floor(totalDays * 0.3);
+    const emptyDays = new Set<number>();
+
+    // Distribute empty days but never in last 3 or consecutive
+    while (emptyDays.size < emptyCount) {
+      const candidate = 1 + Math.floor(Math.random() * (totalDays - 3));
+      if (!emptyDays.has(candidate - 1) && !emptyDays.has(candidate + 1)) {
+        emptyDays.add(candidate);
+      }
+    }
+
+    for (let day = 1; day <= totalDays; day++) {
+      if (day === totalDays) {
+        schedule.push({ tier: 5, currency: 'diamond', amount: 1 });
+      } else if (day === totalDays - 1) {
+        schedule.push({ tier: 4, currency: 'gold', amount: getRewardAmountForTier(4) });
+      } else if (emptyDays.has(day)) {
+        schedule.push({ tier: 1, currency: null, amount: null });
+      } else if (day > totalDays - 4) {
+        schedule.push({ tier: 3, currency: 'gold', amount: getRewardAmountForTier(3) });
+      } else if (Math.random() < 0.4) {
+        schedule.push({ tier: 3, currency: 'gold', amount: getRewardAmountForTier(3) });
+      } else {
+        schedule.push({ tier: 2, currency: 'gold', amount: getRewardAmountForTier(2) });
+      }
+    }
+    return schedule;
+  }
+
+  // Long calendars (10-25 doors, mainly Christmas): heavier empty early, rewards build
+  const emptyCount = Math.floor(totalDays * 0.4);
+  const emptyDays = new Set<number>();
+
+  // First third: 50% empty
+  const firstThird = Math.floor(totalDays / 3);
+  let earlyEmpty = Math.floor(firstThird * 0.5);
+  while (emptyDays.size < earlyEmpty) {
+    const candidate = 1 + Math.floor(Math.random() * firstThird);
+    if (!emptyDays.has(candidate - 1) && !emptyDays.has(candidate + 1)) {
+      emptyDays.add(candidate);
+    }
+  }
+
+  // Middle third: 30% empty
+  const midStart = firstThird + 1;
+  const midEnd = firstThird * 2;
+  let midEmpty = Math.floor((midEnd - midStart + 1) * 0.3);
+  const targetMidEmpty = emptyDays.size + midEmpty;
+  while (emptyDays.size < targetMidEmpty && emptyDays.size < emptyCount) {
+    const candidate = midStart + Math.floor(Math.random() * (midEnd - midStart + 1));
+    if (!emptyDays.has(candidate - 1) && !emptyDays.has(candidate + 1)) {
+      emptyDays.add(candidate);
+    }
+  }
+
+  for (let day = 1; day <= totalDays; day++) {
+    if (day === totalDays) {
+      // Final day: 2-3 diamonds for long calendars (Christmas-style), 1 for others
+      const diamondCount = totalDays >= LONG_CALENDAR_THRESHOLD ? 2 + Math.floor(Math.random() * 2) : 1;
+      schedule.push({ tier: 5, currency: 'diamond', amount: diamondCount });
+    } else if (day === totalDays - 1) {
+      schedule.push({ tier: 4, currency: 'gold', amount: getRewardAmountForTier(4) });
+    } else if (day >= totalDays - 3) {
+      schedule.push({ tier: 3, currency: 'gold', amount: getRewardAmountForTier(3) });
+    } else if (emptyDays.has(day)) {
+      schedule.push({ tier: 1, currency: null, amount: null });
+    } else if (day > totalDays * 0.7 || Math.random() < 0.25) {
+      schedule.push({ tier: 3, currency: 'gold', amount: getRewardAmountForTier(3) });
+    } else {
+      schedule.push({ tier: 2, currency: 'gold', amount: getRewardAmountForTier(2) });
+    }
+  }
+
+  return schedule;
+}
+
 /**
  * Pick a demo advent season to display.
  * Prefers the advent whose countdown window includes today;
- * falls back to Christmas as the canonical advent calendar.
+ * falls back to Personal Quest Calendar if no holiday is active.
  */
-function pickDemoAdventMeta(year: number): { meta: AdventMeta; startsOn: string; endsOn: string } {
+function pickDemoAdventMeta(year: number): { meta: AdventMeta; startsOn: string; endsOn: string } | null {
   const today = new Date();
   const todayM = today.getMonth();
   const todayD = today.getDate();
@@ -356,25 +630,147 @@ function pickDemoAdventMeta(year: number): { meta: AdventMeta; startsOn: string;
     const { countdownStart: cs, holidayDate: hd } = meta;
     if (isInCountdownWindow(todayM, todayD, cs.month, cs.day, hd.month, hd.day)) {
       const startsOn = new Date(year, cs.month, cs.day).toISOString().split('T')[0];
-      const endsOn = new Date(year, hd.month, hd.day).toISOString().split('T')[0];
+      // Handle cross-year for New Year
+      const endYear = hd.month < cs.month ? year + 1 : year;
+      const endsOn = new Date(endYear, hd.month, hd.day).toISOString().split('T')[0];
       return { meta, startsOn, endsOn };
     }
   }
 
-  // Default: Christmas advent in the current year
-  const xmas = ADVENT_META[0];
-  return {
-    meta: xmas,
-    startsOn: new Date(year, xmas.countdownStart.month, xmas.countdownStart.day).toISOString().split('T')[0],
-    endsOn: new Date(year, xmas.holidayDate.month, xmas.holidayDate.day).toISOString().split('T')[0],
+  return null; // No active holiday → will trigger Personal Quest Calendar
+}
+
+// ---------------------------------------------------------------------------
+// Personal Quest Calendar
+// ---------------------------------------------------------------------------
+
+const PERSONAL_QUEST_THEMES = [
+  { theme_name: 'Weekly Sprint', displayName: 'Weekly Sprint', emoji: '🧭' },
+  { theme_name: 'Focus Reset', displayName: 'Focus Reset', emoji: '🎯' },
+  { theme_name: 'Body Builder', displayName: 'Body Builder', emoji: '💪' },
+  { theme_name: 'Mind Month', displayName: 'Mind Month', emoji: '🧠' },
+  { theme_name: 'Habit Hero', displayName: 'Habit Hero', emoji: '⭐' },
+];
+
+function buildPersonalQuestSeasonData(userId: string): CalendarSeasonData {
+  const now = new Date();
+  // Personal Quest runs weekly, starting Monday
+  const dayOfWeek = now.getDay(); // 0 = Sunday
+  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const mondayStart = new Date(now);
+  mondayStart.setDate(now.getDate() - daysToMonday);
+  mondayStart.setHours(0, 0, 0, 0);
+
+  const sundayEnd = new Date(mondayStart);
+  sundayEnd.setDate(mondayStart.getDate() + 6);
+
+  const startsOn = mondayStart.toISOString().split('T')[0];
+  const endsOn = sundayEnd.toISOString().split('T')[0];
+
+  // Pick a random theme
+  const theme = PERSONAL_QUEST_THEMES[Math.floor(Math.random() * PERSONAL_QUEST_THEMES.length)];
+
+  const season: CalendarSeason = {
+    id: `demo-personal-quest-${startsOn}`,
+    theme_name: theme.theme_name,
+    starts_on: startsOn,
+    ends_on: endsOn,
+    status: 'active',
+    holiday_key: null,
+    season_type: 'personal_quest',
+    user_id_owner: userId,
+    created_at: mondayStart.toISOString(),
+    updated_at: mondayStart.toISOString(),
   };
+
+  const totalDays = 7;
+  const rewardSchedule = generateRewardSchedule(totalDays);
+
+  // Personal Quest emojis
+  const questEmojis = ['🧭', '⭐', '🎯', '🏆', '💪', '🧠', '✨', '🔥', '💎', '🌟'];
+
+  // Generate hatches with two-door system
+  const hatches: CalendarHatch[] = [];
+  for (let i = 0; i < totalDays; i++) {
+    const dayIndex = i + 1;
+    const freeReward = rewardSchedule[i];
+    const emoji = questEmojis[dayIndex % questEmojis.length];
+
+    // Free door (always available)
+    hatches.push({
+      id: `demo-quest-hatch-${dayIndex}-free`,
+      season_id: season.id,
+      day_index: dayIndex,
+      door_type: 'free',
+      symbol_name: null,
+      symbol_emoji: emoji,
+      numbers: null,
+      number_reward: null,
+      symbol_reward: null,
+      reward_payload: freeReward.currency
+        ? { reward_type: freeReward.currency, reward_value: freeReward.amount }
+        : {},
+      reward_currency: freeReward.currency,
+      reward_amount: freeReward.amount,
+      reward_tier: freeReward.tier,
+      reveal_mechanic: dayIndex === totalDays ? 'scratch' : 'flip',
+      created_at: season.created_at,
+    });
+
+    // Bonus door (habit-gated) — better rewards (one tier up from free)
+    const bonusTier: RewardTier = freeReward.tier === 1 ? 2 : Math.min(5, freeReward.tier + 1) as RewardTier;
+    const bonusCurrency: RewardCurrency = bonusTier === 5 ? 'diamond' : 'gold';
+    const bonusAmount = getRewardAmountForTier(bonusTier);
+
+    hatches.push({
+      id: `demo-quest-hatch-${dayIndex}-bonus`,
+      season_id: season.id,
+      day_index: dayIndex,
+      door_type: 'bonus',
+      symbol_name: null,
+      symbol_emoji: emoji,
+      numbers: null,
+      number_reward: null,
+      symbol_reward: null,
+      reward_payload: { reward_type: bonusCurrency, reward_value: bonusAmount },
+      reward_currency: bonusCurrency,
+      reward_amount: bonusAmount,
+      reward_tier: bonusTier,
+      reveal_mechanic: 'unwrap',
+      created_at: season.created_at,
+    });
+  }
+
+  const todayIndex = computeTodayDayIndex(startsOn);
+
+  const storedProgress = getDemoProgress(season.id);
+  const progress: CalendarProgress = storedProgress ?? {
+    user_id: userId,
+    season_id: season.id,
+    last_opened_date: null,
+    last_opened_day: 0,
+    opened_days: [],
+    opened_bonus_days: [],
+    symbol_counts: {},
+    created_at: season.created_at,
+    updated_at: new Date().toISOString(),
+  };
+
+  return { season, hatches, progress, today_day_index: todayIndex };
 }
 
 /** Build a demo advent season for the nearest matching holiday. */
 function buildDemoSeasonData(userId: string): CalendarSeasonData {
   const now = new Date();
   const year = now.getFullYear();
-  const { meta, startsOn, endsOn } = pickDemoAdventMeta(year);
+  const picked = pickDemoAdventMeta(year);
+
+  // No active holiday? Return Personal Quest Calendar
+  if (!picked) {
+    return buildPersonalQuestSeasonData(userId);
+  }
+
+  const { meta, startsOn, endsOn } = picked;
 
   const season: CalendarSeason = {
     id: `demo-season-${meta.holiday_key}`,
@@ -383,11 +779,11 @@ function buildDemoSeasonData(userId: string): CalendarSeasonData {
     ends_on: endsOn,
     status: 'active',
     holiday_key: meta.holiday_key,
+    season_type: 'holiday',
+    user_id_owner: null,
     created_at: new Date(startsOn).toISOString(),
     updated_at: new Date(startsOn).toISOString(),
   };
-
-  const rewardTypes = ['xp', 'shard', 'cosmetic', 'bonus', 'mystery'] as const;
 
   // Compute the total number of hatch doors (days in the countdown)
   const start = new Date(startsOn);
@@ -399,43 +795,80 @@ function buildDemoSeasonData(userId: string): CalendarSeasonData {
         (1000 * 60 * 60 * 24),
     ) + 1;
 
-  const hatches: CalendarHatch[] = Array.from({ length: totalDays }, (_, i) => {
+  const rewardSchedule = generateRewardSchedule(totalDays);
+
+  // Generate hatches with two-door system
+  const hatches: CalendarHatch[] = [];
+  for (let i = 0; i < totalDays; i++) {
     const dayIndex = i + 1;
-    const rewardType = rewardTypes[dayIndex % rewardTypes.length];
+    const freeReward = rewardSchedule[i];
     const emoji = meta.emojis[dayIndex % meta.emojis.length];
-    const rewardValue = rewardType === 'xp' ? 20 + (dayIndex % 3) * 10 : 10 + dayIndex;
-    return {
-      id: `demo-hatch-${dayIndex}`,
+    const isFinalDay = dayIndex === totalDays;
+
+    // Free door (always available) — for free doors, give Type 1-2 rewards
+    // unless it's the final day which gets the big reward
+    const freeTier: RewardTier = isFinalDay ? freeReward.tier : (freeReward.tier <= 2 ? freeReward.tier : 2);
+    const freeCurrency: RewardCurrency = isFinalDay ? freeReward.currency : (freeTier === 1 ? null : 'gold');
+    const freeAmount = isFinalDay ? freeReward.amount : (freeTier === 1 ? null : getRewardAmountForTier(2));
+
+    hatches.push({
+      id: `demo-hatch-${dayIndex}-free`,
       season_id: season.id,
       day_index: dayIndex,
-      symbol_name: `reward_${rewardType}`,
+      door_type: 'free',
+      symbol_name: null,
       symbol_emoji: emoji,
       numbers: null,
       number_reward: null,
-      symbol_reward: rewardType,
-      reward_payload: { reward_type: rewardType, reward_value: rewardValue },
+      symbol_reward: null,
+      reward_payload: freeCurrency
+        ? { reward_type: freeCurrency, reward_value: freeAmount }
+        : {},
+      reward_currency: freeCurrency,
+      reward_amount: freeAmount,
+      reward_tier: freeTier,
+      reveal_mechanic: getRevealMechanic(meta.holiday_key, dayIndex, totalDays, 'free'),
       created_at: season.created_at,
-    };
-  });
+    });
+
+    // Bonus door (habit-gated) — better rewards (Type 3-5)
+    // Bonus door always gets the "real" scheduled reward or better
+    const bonusTier: RewardTier = isFinalDay ? 5 : Math.max(3, freeReward.tier) as RewardTier;
+    const bonusCurrency: RewardCurrency = bonusTier === 5 ? 'diamond' : 'gold';
+    // Final day of long calendars (Christmas) gets 2-3 diamonds; others get standard tier amounts
+    const bonusAmount = isFinalDay && totalDays >= LONG_CALENDAR_THRESHOLD
+      ? 2 + Math.floor(Math.random() * 2)
+      : getRewardAmountForTier(bonusTier);
+
+    hatches.push({
+      id: `demo-hatch-${dayIndex}-bonus`,
+      season_id: season.id,
+      day_index: dayIndex,
+      door_type: 'bonus',
+      symbol_name: null,
+      symbol_emoji: emoji,
+      numbers: null,
+      number_reward: null,
+      symbol_reward: null,
+      reward_payload: { reward_type: bonusCurrency, reward_value: bonusAmount },
+      reward_currency: bonusCurrency,
+      reward_amount: bonusAmount,
+      reward_tier: bonusTier,
+      reveal_mechanic: getRevealMechanic(meta.holiday_key, dayIndex, totalDays, 'bonus'),
+      created_at: season.created_at,
+    });
+  }
 
   const todayIndex = computeTodayDayIndex(startsOn);
-
-  // Pre-open the first few days up to (but not including) today, to show
-  // the scratch-card reveal state in the UI.
-  const preOpenedDays = Array.from(
-    { length: Math.max(0, Math.min(todayIndex - 1, 5)) },
-    (_, i) => i + 1,
-  );
 
   const storedProgress = getDemoProgress(season.id);
   const progress: CalendarProgress = storedProgress ?? {
     user_id: userId,
     season_id: season.id,
-    last_opened_date: preOpenedDays.length > 0
-      ? new Date(start.getFullYear(), start.getMonth(), preOpenedDays[preOpenedDays.length - 1]).toISOString().split('T')[0]
-      : null,
-    last_opened_day: preOpenedDays[preOpenedDays.length - 1] ?? 0,
-    opened_days: preOpenedDays,
+    last_opened_date: null,
+    last_opened_day: 0,
+    opened_days: [],
+    opened_bonus_days: [],
     symbol_counts: {},
     created_at: season.created_at,
     updated_at: new Date().toISOString(),
@@ -553,15 +986,23 @@ export async function fetchUserProgress(
  *
  * Validates:
  * - day_index matches today within the active season
- * - the user has not already opened today's hatch
+ * - the user has not already opened today's hatch for this door_type
+ * - for bonus doors, validates habit completion
  *
- * @returns The reward_payload for the opened hatch
+ * @returns The reward info including currency, amount, and tier
  */
 export async function openTodayHatch(
   userId: string,
   seasonId: string,
   dayIndex: number,
-): Promise<ServiceResponse<Record<string, unknown>>> {
+  doorType: DoorType = 'free',
+): Promise<ServiceResponse<{
+  reward_currency: RewardCurrency;
+  reward_amount: number | null;
+  reward_tier: RewardTier | null;
+  reveal_mechanic: RevealMechanic;
+  reward_payload: Record<string, unknown>;
+}>> {
   if (!canUseSupabaseData()) {
     // Demo mode: update localStorage progress
     const cached = getDemoSeason();
@@ -579,23 +1020,35 @@ export async function openTodayHatch(
       last_opened_date: null,
       last_opened_day: 0,
       opened_days: [],
+      opened_bonus_days: [],
       symbol_counts: {},
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
-    if (progress.opened_days.includes(dayIndex)) {
-      return { data: null, error: new Error('You already opened today\'s hatch') };
+    // Check if this specific door type has been opened today
+    const openedDays = doorType === 'free' ? progress.opened_days : (progress.opened_bonus_days ?? []);
+    if (openedDays.includes(dayIndex)) {
+      return { data: null, error: new Error(`You already opened today's ${doorType} hatch`) };
     }
 
-    const hatch = cached?.hatches.find((h) => h.day_index === dayIndex);
-    const rewardPayload = hatch?.reward_payload ?? { reward_type: 'xp', reward_value: 10 };
+    // For bonus doors, check if habit is completed (demo mode: always unlocked for testing)
+    // In production, this would check actual habit completion
+
+    // Find the hatch for this day and door type
+    const hatch = cached?.hatches.find((h) => h.day_index === dayIndex && h.door_type === doorType);
+    if (!hatch) {
+      return { data: null, error: new Error('Hatch not found') };
+    }
 
     const updated: CalendarProgress = {
       ...progress,
       last_opened_date: new Date().toISOString().split('T')[0],
       last_opened_day: dayIndex,
-      opened_days: [...progress.opened_days, dayIndex],
+      opened_days: doorType === 'free' ? [...progress.opened_days, dayIndex] : progress.opened_days,
+      opened_bonus_days: doorType === 'bonus'
+        ? [...(progress.opened_bonus_days ?? []), dayIndex]
+        : (progress.opened_bonus_days ?? []),
       updated_at: new Date().toISOString(),
     };
 
@@ -606,7 +1059,16 @@ export async function openTodayHatch(
       setDemoSeason({ ...cached, progress: updated });
     }
 
-    return { data: rewardPayload, error: null };
+    return {
+      data: {
+        reward_currency: hatch.reward_currency,
+        reward_amount: hatch.reward_amount,
+        reward_tier: hatch.reward_tier,
+        reveal_mechanic: hatch.reveal_mechanic,
+        reward_payload: hatch.reward_payload,
+      },
+      error: null,
+    };
   }
 
   // Production mode: call the edge function
@@ -624,7 +1086,7 @@ export async function openTodayHatch(
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ season_id: seasonId, day_index: dayIndex }),
+      body: JSON.stringify({ season_id: seasonId, day_index: dayIndex, door_type: doorType }),
     });
 
     const body = await response.json();
@@ -632,8 +1094,108 @@ export async function openTodayHatch(
       return { data: null, error: new Error(body.error ?? 'Failed to open hatch') };
     }
 
-    return { data: body.reward_payload as Record<string, unknown>, error: null };
+    return {
+      data: {
+        reward_currency: body.reward_currency as RewardCurrency,
+        reward_amount: body.reward_amount as number | null,
+        reward_tier: body.reward_tier as RewardTier | null,
+        reveal_mechanic: body.reveal_mechanic as RevealMechanic,
+        reward_payload: body.reward_payload as Record<string, unknown>,
+      },
+      error: null,
+    };
   } catch (e) {
     return { data: null, error: e instanceof Error ? e : new Error(String(e)) };
   }
+}
+
+// ---------------------------------------------------------------------------
+// Habit Completion Check (for bonus door gating)
+// ---------------------------------------------------------------------------
+
+/**
+ * Check if the user has completed at least one habit today.
+ * Used to gate bonus door access.
+ *
+ * @param userId - The user's ID
+ * @returns true if at least one habit was completed today
+ */
+export async function isHabitCompletedToday(userId: string): Promise<boolean> {
+  if (!canUseSupabaseData()) {
+    // Demo mode: randomly return true/false with 50% probability.
+    // This allows QA and demos to test both locked and unlocked bonus door
+    // states without needing to complete actual habits.
+    return Math.random() > 0.5;
+  }
+
+  try {
+    const supabase = getSupabaseClient();
+    const today = new Date().toISOString().split('T')[0];
+
+    const { data, error } = await supabase
+      .from('habit_logs_v2')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('date', today)
+      .limit(1);
+
+    if (error) {
+      console.warn('Failed to check habit completion:', error);
+      return false;
+    }
+
+    return (data?.length ?? 0) > 0;
+  } catch (e) {
+    console.warn('Failed to check habit completion:', e);
+    return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Door Status Computation
+// ---------------------------------------------------------------------------
+
+/**
+ * Compute the status of a door in the calendar grid.
+ *
+ * @param dayIndex - The day index of the door (1-based)
+ * @param todayIndex - Today's day index in the season (1-based)
+ * @param isOpened - Whether the door has been opened
+ * @param doorType - The type of door (free/bonus)
+ * @returns The door status
+ */
+export function computeDoorStatus(
+  dayIndex: number,
+  todayIndex: number,
+  isOpened: boolean,
+  doorType: DoorType = 'free',
+): DoorStatus {
+  if (isOpened) return 'opened';
+  if (dayIndex === todayIndex) return 'today';
+  if (dayIndex < todayIndex) return 'missed';
+  if (dayIndex > todayIndex) return 'locked';
+  return 'available';
+}
+
+/**
+ * Get the empty door flavour text for a holiday.
+ */
+export function getEmptyDoorFlavour(holidayKey: HolidayKey | null): string {
+  const key = holidayKey ?? 'christmas';
+  const texts = EMPTY_DOOR_FLAVOUR[key] ?? EMPTY_DOOR_FLAVOUR.christmas;
+  return texts[Math.floor(Math.random() * texts.length)];
+}
+
+/**
+ * Get hatches for a specific day, grouped by door type.
+ */
+export function getHatchesForDay(
+  hatches: CalendarHatch[],
+  dayIndex: number,
+): { free: CalendarHatch | null; bonus: CalendarHatch | null } {
+  const dayHatches = hatches.filter((h) => h.day_index === dayIndex);
+  return {
+    free: dayHatches.find((h) => h.door_type === 'free') ?? null,
+    bonus: dayHatches.find((h) => h.door_type === 'bonus') ?? null,
+  };
 }
