@@ -19543,6 +19543,72 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.35);
 }
 
+/* Two-door layout: day pair container */
+.daily-treats-calendar__day-pair {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Bonus door button */
+.daily-treats-calendar__bonus-door {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 2px solid rgba(234, 179, 8, 0.4);
+  background: linear-gradient(145deg, rgba(254, 252, 232, 0.9), rgba(254, 243, 199, 0.8));
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.daily-treats-calendar__bonus-door--locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.6);
+}
+
+.daily-treats-calendar__bonus-door--unlocked {
+  animation: bonus-pulse 2s ease-in-out infinite;
+  border-color: rgba(234, 179, 8, 0.8);
+}
+
+.daily-treats-calendar__bonus-door--opened {
+  background: rgba(74, 222, 128, 0.2);
+  border-color: rgba(74, 222, 128, 0.5);
+  cursor: default;
+}
+
+.daily-treats-calendar__bonus-door:hover:not(:disabled) {
+  transform: scale(1.1);
+}
+
+/* Bonus hint text */
+.daily-treats-calendar__bonus-hint {
+  margin: 0.5rem 0;
+  font-size: 0.8rem;
+  color: #92400e;
+  text-align: center;
+  padding: 0.5rem;
+  background: rgba(254, 243, 199, 0.5);
+  border-radius: 8px;
+}
+
+.daily-treats-calendar__bonus-reminder {
+  margin: 0.75rem 0;
+  font-size: 0.85rem;
+  color: #166534;
+  text-align: center;
+  padding: 0.6rem 1rem;
+  background: rgba(220, 252, 231, 0.6);
+  border-radius: 8px;
+  border: 1px solid rgba(74, 222, 128, 0.4);
+}
+
 .daily-treats-modal__close,
 .daily-treats-placeholder__close {
   position: absolute;
