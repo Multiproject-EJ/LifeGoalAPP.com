@@ -1482,11 +1482,20 @@ export default function App({ forceAuthOnMount }: AppProps) {
     };
   }, [activeSession?.user?.id, isMobileMenuOpen]);
 
+  // Reset stuck feedback/support modal state if session is absent when menu opens.
+  // This is a safety net for the case where showMobileFeedbackModal/showMobileSupportModal
+  // was left true from a previous failed open attempt (null session race condition).
+  useEffect(() => {
+    if (isMobileMenuOpen && !activeSession) {
+      setShowMobileFeedbackModal(false);
+      setShowMobileSupportModal(false);
+    }
+  }, [isMobileMenuOpen, activeSession]);
+
   useEffect(() => {
     if (!profileStrengthSnapshot || !profileStrengthSignals) {
       return;
     }
-
     const previousSnapshot = profileStrengthSnapshotRef.current;
     const previousSignals = profileStrengthSignalsRef.current;
     profileStrengthSnapshotRef.current = profileStrengthSnapshot;
@@ -1993,6 +2002,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
     closeGameBoardOverlayIfOpen();
+
+    // Guard: cannot open a case submission modal without an active session.
+    // If activeSession is null (unauthenticated), opening the modal would pass
+    // null as the session prop, causing the modal to silently fail to render
+    // while leaving showMobileFeedbackModal/showMobileSupportModal stuck as true.
+    // That stale state then causes the modal to appear on the NEXT menu interaction.
+    if (!activeSession) {
+      openAuthOverlay('login');
+      return;
+    }
 
     if (mode === 'feedback') {
       setShowMobileFeedbackModal(true);
@@ -4795,7 +4814,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         />
       )}
 
-      {showMobileFeedbackModal ? (
+      {showMobileFeedbackModal && activeSession ? (
         <CaseSubmissionModal
           session={activeSession}
           caseType="feedback"
@@ -4804,7 +4823,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         />
       ) : null}
 
-      {showMobileSupportModal ? (
+      {showMobileSupportModal && activeSession ? (
         <CaseSubmissionModal
           session={activeSession}
           caseType="support"
