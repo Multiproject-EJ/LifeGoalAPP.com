@@ -1,6 +1,5 @@
 import {
   FormEvent,
-  MouseEvent,
   PointerEvent,
   ReactNode,
   useCallback,
@@ -167,6 +166,7 @@ type MobileMenuNavItem = {
   ariaLabel: string;
   icon: ReactNode;
   summary: string;
+  modalKey?: 'feedback' | 'support'; // present = opens a modal instead of navigating
 };
 
 const PROFILE_STRENGTH_AREA_LABELS: Record<AreaKey, string> = {
@@ -771,7 +771,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     const findWorkspaceItem = (navId: string) =>
       workspaceNavItems.find((item) => item.id === navId);
 
-    return MOBILE_FOOTER_WORKSPACE_IDS.map((navId) => {
+    const baseItems = MOBILE_FOOTER_WORKSPACE_IDS.map((navId) => {
       const item = findWorkspaceItem(navId);
       const shortLabel = item?.shortLabel ?? item?.label ?? navId;
       const formattedLabel =
@@ -838,15 +838,33 @@ export default function App({ forceAuthOnMount }: AppProps) {
         icon: item?.icon ?? '•',
         summary: item?.summary ?? 'Open this section.',
       } satisfies MobileMenuNavItem;
-    }).concat([
+    });
+    const extraItems: MobileMenuNavItem[] = [
       {
         id: 'coach',
         label: 'Coach',
         ariaLabel: 'AI Coach - Get a guided next step',
         icon: '🪈',
         summary: 'Get a guided next step from your AI coach.',
-      } satisfies MobileMenuNavItem,
-    ]);
+      },
+      {
+        id: 'menu-feedback',
+        label: 'Feedback',
+        ariaLabel: 'Send product feedback',
+        icon: '💬',
+        summary: 'Share bugs, ideas, and product feedback.',
+        modalKey: 'feedback',
+      },
+      {
+        id: 'menu-support',
+        label: 'Support',
+        ariaLabel: 'Request support',
+        icon: '🛟',
+        summary: 'Ask for account, billing, or cancellation help.',
+        modalKey: 'support',
+      },
+    ];
+    return [...baseItems, ...extraItems];
   }, [workspaceNavItems]);
 
   useEffect(() => {
@@ -1981,12 +1999,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     } else {
       setShowMobileSupportModal(true);
     }
-  };
-
-  const handleFeedbackSupportClick = (event: MouseEvent<HTMLButtonElement>, mode: 'feedback' | 'support') => {
-    event.preventDefault();
-    event.stopPropagation();
-    openFeedbackSupportFromMobileMenu(mode);
   };
 
   const handleEnergySelect = (category: 'mind' | 'body') => {
@@ -3407,6 +3419,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
                         menuHelperHoldTriggeredRef.current = false;
                         return;
                       }
+                      if (item.modalKey) {
+                        openFeedbackSupportFromMobileMenu(item.modalKey);
+                        return;
+                      }
                       if (isBreathingItem) {
                         setIsBreatheSubmenuOpen((prev) => !prev);
                         return;
@@ -3533,32 +3549,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       </li>
                     );
                   })}
-                <li className="mobile-menu-overlay__item">
-                  <button
-                    type="button"
-                    aria-label="Send product feedback"
-                    onClick={(event) => handleFeedbackSupportClick(event, 'feedback')}
-                  >
-                    <span aria-hidden="true" className="mobile-menu-overlay__icon">💬</span>
-                    <span className="mobile-menu-overlay__texts">
-                      <span className="mobile-menu-overlay__label">Feedback</span>
-                      <span className="mobile-menu-overlay__summary">Share bugs, ideas, and product feedback.</span>
-                    </span>
-                  </button>
-                </li>
-                <li className="mobile-menu-overlay__item">
-                  <button
-                    type="button"
-                    aria-label="Request support"
-                    onClick={(event) => handleFeedbackSupportClick(event, 'support')}
-                  >
-                    <span aria-hidden="true" className="mobile-menu-overlay__icon">🛟</span>
-                    <span className="mobile-menu-overlay__texts">
-                      <span className="mobile-menu-overlay__label">Support</span>
-                      <span className="mobile-menu-overlay__summary">Ask for account, billing, or cancellation help.</span>
-                    </span>
-                  </button>
-                </li>
               </ul>
             </div>
             <div className="mobile-menu-overlay__settings">
