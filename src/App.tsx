@@ -1482,15 +1482,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
     };
   }, [activeSession?.user?.id, isMobileMenuOpen]);
 
-  // Reset stuck feedback/support modal state if session is absent when menu opens.
-  // This is a safety net for the case where showMobileFeedbackModal/showMobileSupportModal
-  // was left true from a previous failed open attempt (null session race condition).
+  // Reset stale feedback/support modal flags whenever mobile menu opens.
+  // Prevents flags from surviving menu reopen cycles.
   useEffect(() => {
-    if (isMobileMenuOpen && !activeSession) {
+    if (isMobileMenuOpen) {
       setShowMobileFeedbackModal(false);
       setShowMobileSupportModal(false);
     }
-  }, [isMobileMenuOpen, activeSession]);
+  }, [isMobileMenuOpen]);
 
   useEffect(() => {
     if (!profileStrengthSnapshot || !profileStrengthSignals) {
@@ -2002,16 +2001,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
     closeGameBoardOverlayIfOpen();
-
-    // Guard: cannot open a case submission modal without an active session.
-    // If activeSession is null (unauthenticated), opening the modal would pass
-    // null as the session prop, causing the modal to silently fail to render
-    // while leaving showMobileFeedbackModal/showMobileSupportModal stuck as true.
-    // That stale state then causes the modal to appear on the NEXT menu interaction.
-    if (!activeSession) {
-      openAuthOverlay('login');
-      return;
-    }
 
     if (mode === 'feedback') {
       setShowMobileFeedbackModal(true);
@@ -4470,6 +4459,22 @@ export default function App({ forceAuthOnMount }: AppProps) {
         {dailyTreatsModal}
         {luckyRollModal}
         {countdownCalendarModal}
+        {showMobileFeedbackModal ? (
+          <CaseSubmissionModal
+            session={activeSession}
+            caseType="feedback"
+            sourceSurface="mobile_menu_overlay"
+            onClose={() => setShowMobileFeedbackModal(false)}
+          />
+        ) : null}
+        {showMobileSupportModal ? (
+          <CaseSubmissionModal
+            session={activeSession}
+            caseType="support"
+            sourceSurface="mobile_menu_overlay"
+            onClose={() => setShowMobileSupportModal(false)}
+          />
+        ) : null}
       </div>
     );
   }
@@ -4814,7 +4819,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         />
       )}
 
-      {showMobileFeedbackModal && activeSession ? (
+      {showMobileFeedbackModal ? (
         <CaseSubmissionModal
           session={activeSession}
           caseType="feedback"
@@ -4823,7 +4828,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         />
       ) : null}
 
-      {showMobileSupportModal && activeSession ? (
+      {showMobileSupportModal ? (
         <CaseSubmissionModal
           session={activeSession}
           caseType="support"
