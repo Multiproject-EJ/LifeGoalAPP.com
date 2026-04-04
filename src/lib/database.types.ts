@@ -21,6 +21,168 @@ export type JournalEntryType =
 export interface Database {
   public: {
     Tables: {
+      billing_customers: {
+        Row: {
+          user_id: string;
+          stripe_customer_id: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          stripe_customer_id: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          stripe_customer_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      billing_subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          stripe_customer_id: string;
+          stripe_subscription_id: string;
+          stripe_price_id: string | null;
+          status: string;
+          current_period_start: string | null;
+          current_period_end: string | null;
+          cancel_at_period_end: boolean;
+          canceled_at: string | null;
+          trial_start: string | null;
+          trial_end: string | null;
+          raw: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          stripe_customer_id: string;
+          stripe_subscription_id: string;
+          stripe_price_id?: string | null;
+          status: string;
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          cancel_at_period_end?: boolean;
+          canceled_at?: string | null;
+          trial_start?: string | null;
+          trial_end?: string | null;
+          raw?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          stripe_customer_id?: string;
+          stripe_subscription_id?: string;
+          stripe_price_id?: string | null;
+          status?: string;
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          cancel_at_period_end?: boolean;
+          canceled_at?: string | null;
+          trial_start?: string | null;
+          trial_end?: string | null;
+          raw?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      billing_entitlements: {
+        Row: {
+          user_id: string;
+          is_pro: boolean;
+          entitlements: Json;
+          source: string | null;
+          effective_from: string | null;
+          effective_to: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          is_pro?: boolean;
+          entitlements?: Json;
+          source?: string | null;
+          effective_from?: string | null;
+          effective_to?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          is_pro?: boolean;
+          entitlements?: Json;
+          source?: string | null;
+          effective_from?: string | null;
+          effective_to?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      billing_webhook_events: {
+        Row: {
+          stripe_event_id: string;
+          user_id: string | null;
+          event_type: string;
+          stripe_created_at: string | null;
+          object_id: string | null;
+          checkout_session_id: string | null;
+          dedupe_scope: string | null;
+          dedupe_key: string | null;
+          status: string;
+          payload: Json;
+          processing_error: string | null;
+          received_at: string;
+          processed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          stripe_event_id: string;
+          user_id?: string | null;
+          event_type: string;
+          stripe_created_at?: string | null;
+          object_id?: string | null;
+          checkout_session_id?: string | null;
+          dedupe_scope?: string | null;
+          dedupe_key?: string | null;
+          status?: string;
+          payload?: Json;
+          processing_error?: string | null;
+          received_at?: string;
+          processed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          stripe_event_id?: string;
+          user_id?: string | null;
+          event_type?: string;
+          stripe_created_at?: string | null;
+          object_id?: string | null;
+          checkout_session_id?: string | null;
+          dedupe_scope?: string | null;
+          dedupe_key?: string | null;
+          status?: string;
+          payload?: Json;
+          processing_error?: string | null;
+          received_at?: string;
+          processed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           user_id: string;
@@ -2943,6 +3105,27 @@ export interface Database {
         };
         Relationships: [];
       };
+      user_wallets: {
+        Row: {
+          user_id: string;
+          dice_rolls: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          dice_rolls?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          dice_rolls?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       v_habit_streaks: {
@@ -2984,6 +3167,16 @@ export interface Database {
           total_habits_completed: number;
           longest_streak: number;
           most_active_category: string | null;
+        }[];
+      };
+      increment_user_dice_rolls: {
+        Args: {
+          p_user_id: string;
+          p_delta: number;
+        };
+        Returns: {
+          user_id: string;
+          dice_rolls: number;
         }[];
       };
     };
