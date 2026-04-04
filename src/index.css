@@ -5959,6 +5959,11 @@ html.platform-ipad .workspace-shell__menu-edge {
   z-index: 2100;
 }
 
+.habit-day-nav__vision-modal-backdrop:has(.habit-day-nav__offer-teaser--hero-image) {
+  align-items: center;
+  padding: 0;
+}
+
 .habit-day-nav__vision-modal {
   position: relative;
   width: min(420px, 100%);

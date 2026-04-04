@@ -313,11 +313,16 @@
 
 .habit-day-nav__offer-teaser--hero-image {
   background-size: cover;
-  background-position: center top;
+  background-position: center;
   padding: 0;
   overflow: hidden;
   border: none;
-  min-height: clamp(260px, 60vw, 360px);
+  position: relative;
+  width: 95vw;
+  height: 95vh;
+  max-width: 95vw;
+  max-height: 95vh;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -328,10 +333,17 @@
 }
 
 .habit-day-nav__offer-teaser--hero-image .habit-day-nav__offer-teaser-cta {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  min-width: 200px;
   margin-top: 0;
-  border-radius: 0;
+  border-radius: 0.85rem;
   padding: 1rem 1.6rem;
   font-size: 1.05rem;
   background: linear-gradient(135deg, rgba(127,90,240,0.97), rgba(66,33,153,0.97));
   border: none;
+  white-space: nowrap;
 }
