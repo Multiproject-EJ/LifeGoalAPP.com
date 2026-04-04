@@ -7318,11 +7318,17 @@ export function DailyHabitTracker({
       : editHabitModalContent
     : null;
 
+  const offerTeaserPortal = offerTeaserModal
+    ? modalRoot
+      ? createPortal(offerTeaserModal, modalRoot)
+      : offerTeaserModal
+    : null;
+
   if (isCompact) {
     return (
       <section className="habit-tracker habit-tracker--compact">
         {renderCompactExperience()}
-        {offerTeaserModal}
+        {offerTeaserPortal}
         {weeklyHabitReviewModal}
         {visionRewardModal}
         {visionVisualizationModal}
@@ -7517,7 +7523,7 @@ export function DailyHabitTracker({
           </ul>
         </>
       )}
-      {offerTeaserModal}
+      {offerTeaserPortal}
       {weeklyHabitReviewModal}
       {visionRewardModal}
       {visionVisualizationModal}
