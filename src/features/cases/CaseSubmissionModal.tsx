@@ -53,6 +53,7 @@ export function CaseSubmissionModal({ session, caseType, sourceSurface, onClose 
   const [featureArea, setFeatureArea] = useState(FEATURE_AREAS[0].value);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // Ghost-click guard: ignore backdrop clicks shortly after mount so that a
   // lingering touch event from the trigger button (e.g. mobile menu) cannot
@@ -69,7 +70,6 @@ export function CaseSubmissionModal({ session, caseType, sourceSurface, onClose 
     if (!canDismissRef.current) return;
     onClose();
   };
-  const [success, setSuccess] = useState<string | null>(null);
 
   const categoryOptions = useMemo(
     () => (caseType === 'feedback' ? FEEDBACK_CATEGORIES : SUPPORT_CATEGORIES),
