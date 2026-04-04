@@ -19,6 +19,7 @@ import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
 import { recordTelemetryEvent } from '../../services/telemetry';
 import { getActiveAdventMeta } from '../../services/treatCalendarService';
+import { getHolidayThemeAssets } from '../../services/holidayThemeAssets';
 import { XP_TO_GOLD_RATIO, convertXpToGold } from '../../constants/economy';
 import { PointsBadge } from '../../components/PointsBadge';
 import {
@@ -2155,7 +2156,10 @@ export function DailyHabitTracker({
     const teaserAdventMeta = getActiveAdventMeta();
     const teaserCalendarTitle = teaserAdventMeta ? `${teaserAdventMeta.meta.displayName} Calendar` : 'Treat Calendar';
     const teaserCalendarCta = teaserAdventMeta ? `Open ${teaserAdventMeta.meta.displayName} Calendar →` : 'Open Treat Calendar →';
-    const map: Record<TimeBoundOfferId, { title: string; description: string; cta: string; icon: string }> = {
+    const teaserBgImageUrl = teaserAdventMeta
+      ? getHolidayThemeAssets(teaserAdventMeta.meta.holiday_key).introBackgroundUrl
+      : null;
+    const map: Record<TimeBoundOfferId, { title: string; description: string; cta: string; icon: string; backgroundImageUrl?: string | null }> = {
       island_run: { title: 'Island Run', description: 'Your next island is ready to open.', cta: 'Open Island Run →', icon: '🏝️' },
       vision_star: {
         title: 'Vision Star',
@@ -2168,6 +2172,7 @@ export function DailyHabitTracker({
         description: "Your calendar is ready with today's treat.",
         cta: teaserCalendarCta,
         icon: '🎁',
+        backgroundImageUrl: teaserBgImageUrl,
       },
       lucky_roll: {
         title: 'Lucky Roll',
@@ -2192,7 +2197,11 @@ export function DailyHabitTracker({
 
   const offerTeaserModal = activeOfferTeaser && activeOfferTeaserConfig ? (
     <div className="habit-day-nav__vision-modal-backdrop" role="dialog" aria-modal="true" aria-label="Offer teaser" onClick={() => setActiveOfferTeaser(null)}>
-      <div className="habit-day-nav__vision-modal habit-day-nav__offer-teaser" onClick={(event) => event.stopPropagation()}>
+      <div
+        className={`habit-day-nav__vision-modal habit-day-nav__offer-teaser${activeOfferTeaserConfig.backgroundImageUrl ? ' habit-day-nav__offer-teaser--hero-image' : ''}`}
+        style={activeOfferTeaserConfig.backgroundImageUrl ? { backgroundImage: `url(${activeOfferTeaserConfig.backgroundImageUrl})` } : undefined}
+        onClick={(event) => event.stopPropagation()}
+      >
         <button
           type="button"
           className="habit-day-nav__vision-modal-close"
@@ -2201,9 +2210,13 @@ export function DailyHabitTracker({
         >
           ×
         </button>
-        <p className="habit-day-nav__offer-teaser-icon" aria-hidden="true">{activeOfferTeaserConfig.icon}</p>
-        <p className="habit-day-nav__offer-teaser-title">{activeOfferTeaserConfig.title}</p>
-        <p className="habit-day-nav__offer-teaser-copy">{activeOfferTeaserConfig.description}</p>
+        {!activeOfferTeaserConfig.backgroundImageUrl && (
+          <>
+            <p className="habit-day-nav__offer-teaser-icon" aria-hidden="true">{activeOfferTeaserConfig.icon}</p>
+            <p className="habit-day-nav__offer-teaser-title">{activeOfferTeaserConfig.title}</p>
+            <p className="habit-day-nav__offer-teaser-copy">{activeOfferTeaserConfig.description}</p>
+          </>
+        )}
         <button
           type="button"
           className="habit-day-nav__offer-teaser-cta"
