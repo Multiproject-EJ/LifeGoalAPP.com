@@ -3411,16 +3411,20 @@ export default function App({ forceAuthOnMount }: AppProps) {
                         : 'mobile-menu-overlay__icon-badge';
                     const isHelperHoldTarget = !profileStrengthArea;
                     const handleItemClick = () => {
+                      // Modal-key items (feedback/support) must always open the
+                      // modal regardless of hold state – check them first.
+                      if (item.modalKey) {
+                        menuHelperHoldTriggeredRef.current = false;
+                        profileStrengthHoldTriggeredRef.current = false;
+                        openFeedbackSupportFromMobileMenu(item.modalKey);
+                        return;
+                      }
                       if (profileStrengthArea && profileStrengthHoldTriggeredRef.current) {
                         profileStrengthHoldTriggeredRef.current = false;
                         return;
                       }
                       if (isHelperHoldTarget && menuHelperHoldTriggeredRef.current) {
                         menuHelperHoldTriggeredRef.current = false;
-                        return;
-                      }
-                      if (item.modalKey) {
-                        openFeedbackSupportFromMobileMenu(item.modalKey);
                         return;
                       }
                       if (isBreathingItem) {
@@ -3439,6 +3443,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
                           aria-expanded={isBreathingItem ? isSubmenuOpen : undefined}
                           aria-controls={isBreathingItem ? submenuId : undefined}
                           onPointerDown={(event) => {
+                            // Skip hold timer for modal-key items (feedback /
+                            // support) – they navigate to a modal, not a
+                            // tooltip, so the hold gesture is not useful.
+                            if (item.modalKey) {
+                              return;
+                            }
                             if (profileStrengthArea) {
                               handleProfileStrengthHoldStart(event, profileStrengthArea);
                               return;
