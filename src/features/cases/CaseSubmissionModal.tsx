@@ -1,6 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { createCaseThread, type CaseType } from '../../services/cases';
+
+/**
+ * How long after mount to ignore backdrop clicks (ms).
+ * On mobile devices a "ghost click" from the touch that opened the modal can
+ * land on the backdrop and immediately dismiss it.  Ignoring clicks for a
+ * short window after mount prevents this without affecting normal UX (the user
+ * needs time to read the form before intentionally closing it).
+ */
+const BACKDROP_CLICK_GUARD_MS = 350;
 
 type CaseSubmissionModalProps = {
   session: Session;
@@ -44,6 +53,22 @@ export function CaseSubmissionModal({ session, caseType, sourceSurface, onClose 
   const [featureArea, setFeatureArea] = useState(FEATURE_AREAS[0].value);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Ghost-click guard: ignore backdrop clicks shortly after mount so that a
+  // lingering touch event from the trigger button (e.g. mobile menu) cannot
+  // instantly dismiss the modal.
+  const canDismissRef = useRef(false);
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      canDismissRef.current = true;
+    }, BACKDROP_CLICK_GUARD_MS);
+    return () => window.clearTimeout(id);
+  }, []);
+
+  const handleBackdropClose = () => {
+    if (!canDismissRef.current) return;
+    onClose();
+  };
   const [success, setSuccess] = useState<string | null>(null);
 
   const categoryOptions = useMemo(
@@ -99,7 +124,7 @@ export function CaseSubmissionModal({ session, caseType, sourceSurface, onClose 
 
   return (
     <div className="auth-overlay" role="dialog" aria-modal="true" aria-label={title}>
-      <button type="button" className="auth-overlay__backdrop" onClick={onClose} aria-label="Close" />
+      <button type="button" className="auth-overlay__backdrop" onClick={handleBackdropClose} aria-label="Close" />
       <div className="auth-panel auth-panel--auth-card" style={{ maxWidth: 560 }}>
         <div className="auth-card">
           <header className="auth-card__header">
