@@ -48,16 +48,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabase = createClient(
+    const supabaseUser = createClient(
       getRequiredEnv('SUPABASE_URL'),
       getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY'),
       { global: { headers: { Authorization: authHeader } } },
+    );
+    const supabaseAdmin = createClient(
+      getRequiredEnv('SUPABASE_URL'),
+      getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY'),
     );
 
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } = await supabaseUser.auth.getUser();
 
     if (authError || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized.' }), {
@@ -75,7 +79,7 @@ Deno.serve(async (req) => {
     const priceId = resolvePriceId(billingCycle);
 
     let stripeCustomerId: string | null = null;
-    const { data: customerRow, error: customerLookupError } = await supabase
+    const { data: customerRow, error: customerLookupError } = await supabaseAdmin
       .from('billing_customers')
       .select('stripe_customer_id')
       .eq('user_id', user.id)
@@ -97,7 +101,7 @@ Deno.serve(async (req) => {
 
       stripeCustomerId = customer.id;
 
-      const { error: insertError } = await supabase
+      const { error: insertError } = await supabaseAdmin
         .from('billing_customers')
         .upsert({
           user_id: user.id,
@@ -142,6 +146,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
+    console.error('[create-checkout-session-subscription] failed to create session', error);
     return new Response(JSON.stringify({
       error: error instanceof Error ? error.message : 'Unexpected error creating subscription checkout session.',
     }), {
