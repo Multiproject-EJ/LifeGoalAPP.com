@@ -45,7 +45,7 @@ export function MeditationSessionPlayer({
     }
   }, [isOpen, durationSeconds]);
 
-  const playGong = useCallback(() => {
+  const playEndGong = useCallback(() => {
     const context = audioContextRef.current ?? new AudioContext();
     audioContextRef.current = context;
 
@@ -118,6 +118,64 @@ export function MeditationSessionPlayer({
     });
   }, []);
 
+  const playGuidanceGong = useCallback(() => {
+    const context = audioContextRef.current ?? new AudioContext();
+    audioContextRef.current = context;
+
+    const now = context.currentTime;
+    const output = context.createGain();
+    output.gain.setValueAtTime(0.2, now);
+    output.connect(context.destination);
+
+    const reverbLikeDelay = context.createDelay(1.2);
+    reverbLikeDelay.delayTime.setValueAtTime(0.16, now);
+    const delayFeedback = context.createGain();
+    delayFeedback.gain.setValueAtTime(0.22, now);
+    reverbLikeDelay.connect(delayFeedback);
+    delayFeedback.connect(reverbLikeDelay);
+
+    const dryGain = context.createGain();
+    dryGain.gain.setValueAtTime(0.86, now);
+    const wetGain = context.createGain();
+    wetGain.gain.setValueAtTime(0.24, now);
+
+    dryGain.connect(output);
+    wetGain.connect(output);
+    reverbLikeDelay.connect(wetGain);
+
+    const highShelf = context.createBiquadFilter();
+    highShelf.type = 'highshelf';
+    highShelf.frequency.setValueAtTime(1900, now);
+    highShelf.gain.setValueAtTime(2.5, now);
+    highShelf.connect(dryGain);
+    highShelf.connect(reverbLikeDelay);
+
+    const partials: Array<{ frequency: number; gain: number; decay: number }> = [
+      { frequency: 392, gain: 0.12, decay: 4.6 },
+      { frequency: 523, gain: 0.1, decay: 4.2 },
+      { frequency: 659, gain: 0.08, decay: 3.9 },
+      { frequency: 784, gain: 0.06, decay: 3.4 },
+      { frequency: 988, gain: 0.05, decay: 3.1 },
+    ];
+
+    partials.forEach(({ frequency, gain, decay }, index) => {
+      const oscillator = context.createOscillator();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(frequency, now);
+      oscillator.detune.setValueAtTime(index % 2 === 0 ? 4 : -4, now);
+
+      const partialGain = context.createGain();
+      partialGain.gain.setValueAtTime(0.0001, now);
+      partialGain.gain.exponentialRampToValueAtTime(gain, now + 0.03);
+      partialGain.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+
+      oscillator.connect(partialGain);
+      partialGain.connect(highShelf);
+      oscillator.start(now);
+      oscillator.stop(now + decay + 0.06);
+    });
+  }, []);
+
   useEffect(() => {
     if (!isRunning || timeRemaining <= 0) return;
 
@@ -126,7 +184,7 @@ export function MeditationSessionPlayer({
         if (prev <= 1) {
           setIsRunning(false);
           if (soundEnabled) {
-            playGong();
+            playEndGong();
           }
           onComplete();
           return 0;
@@ -136,7 +194,7 @@ export function MeditationSessionPlayer({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isRunning, timeRemaining, onComplete, playGong, soundEnabled]);
+  }, [isRunning, timeRemaining, onComplete, playEndGong, soundEnabled]);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -146,7 +204,7 @@ export function MeditationSessionPlayer({
     if (!soundEnabled || !gongIntervalSeconds) return;
 
     if (elapsed >= nextGongAt && nextGongAt <= durationSeconds) {
-      playGong();
+      playGuidanceGong();
       setNextGongAt((prev) => prev + gongIntervalSeconds);
     }
   }, [
@@ -154,7 +212,7 @@ export function MeditationSessionPlayer({
     durationSeconds,
     timeRemaining,
     nextGongAt,
-    playGong,
+    playGuidanceGong,
     soundEnabled,
     gongIntervalSeconds,
   ]);
@@ -197,7 +255,7 @@ export function MeditationSessionPlayer({
   const handleStart = () => {
     if (!hasStarted) {
       if (soundEnabled) {
-        playGong();
+        playGuidanceGong();
       }
       setHasStarted(true);
     }
