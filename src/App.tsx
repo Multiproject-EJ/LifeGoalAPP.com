@@ -169,6 +169,11 @@ type MobileMenuNavItem = {
   modalKey?: 'feedback' | 'support'; // present = opens a modal instead of navigating
 };
 
+type BillingReturnBanner = {
+  kind: 'processing' | 'success' | 'canceled';
+  message: string;
+} | null;
+
 const PROFILE_STRENGTH_AREA_LABELS: Record<AreaKey, string> = {
   goals: 'Goals',
   habits: 'Habits',
@@ -429,9 +434,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
     return 'goals';
   });
-  const [initialSearch] = useState(() =>
+  const [initialSearch, setInitialSearch] = useState(() =>
     typeof window !== 'undefined' ? window.location.search : '',
   );
+  const [billingReturnBanner, setBillingReturnBanner] = useState<BillingReturnBanner>(null);
   const [showAuthPanel, setShowAuthPanel] = useState(false);
   const isMobileViewport = useMediaQuery(WORKSPACE_MOBILE_MEDIA_QUERY);
   const [isDesktopUiResearchPreviewEnabled, setIsDesktopUiResearchPreviewEnabled] = useState(false);
@@ -630,6 +636,39 @@ export default function App({ forceAuthOnMount }: AppProps) {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(DAILY_TREATS_SEEN_KEY, 'true');
     }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    const checkoutState = (url.searchParams.get('checkout') || url.searchParams.get('billing') || '').toLowerCase();
+    if (!checkoutState) return;
+
+    if (checkoutState === 'success' || checkoutState === 'completed') {
+      setBillingReturnBanner({
+        kind: 'processing',
+        message: 'Stripe checkout completed. We are syncing your billing status now.',
+      });
+      setActiveWorkspaceNav('account');
+    } else if (checkoutState === 'canceled' || checkoutState === 'cancel') {
+      setBillingReturnBanner({
+        kind: 'canceled',
+        message: 'Checkout was canceled. No billing changes were applied.',
+      });
+      setActiveWorkspaceNav('account');
+    } else if (checkoutState === 'processing') {
+      setBillingReturnBanner({
+        kind: 'processing',
+        message: 'Billing update is still processing. Please refresh shortly.',
+      });
+      setActiveWorkspaceNav('account');
+    }
+
+    url.searchParams.delete('checkout');
+    url.searchParams.delete('billing');
+    const nextSearch = url.search;
+    setInitialSearch(nextSearch);
+    window.history.replaceState(window.history.state, '', `${url.pathname}${nextSearch}${url.hash}`);
   }, []);
 
   const markDailyTreatsDailyVisit = useCallback(() => {
@@ -2904,6 +2943,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             onProfileUpdate={setWorkspaceProfile}
             onLaunchWeeklyHabitReview={() => setActiveWorkspaceNav('planning')}
             onLaunchDailyCatchUpPrompt={() => setActiveWorkspaceNav('planning')}
+            billingReturnBanner={billingReturnBanner}
           />
         </div>
       );
