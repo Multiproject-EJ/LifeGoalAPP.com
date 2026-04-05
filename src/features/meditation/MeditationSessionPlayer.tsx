@@ -50,15 +50,35 @@ export function MeditationSessionPlayer({
     audioContextRef.current = context;
 
     const now = context.currentTime;
+    const compressor = context.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-20, now);
+    compressor.knee.setValueAtTime(30, now);
+    compressor.ratio.setValueAtTime(6, now);
+    compressor.attack.setValueAtTime(0.003, now);
+    compressor.release.setValueAtTime(0.35, now);
+    compressor.connect(context.destination);
+
     const output = context.createGain();
-    output.gain.setValueAtTime(0.26, now);
-    output.connect(context.destination);
+    output.gain.setValueAtTime(0.44, now);
+    output.connect(compressor);
 
     const lowpass = context.createBiquadFilter();
     lowpass.type = 'lowpass';
-    lowpass.frequency.setValueAtTime(4200, now);
-    lowpass.Q.setValueAtTime(0.6, now);
+    lowpass.frequency.setValueAtTime(3600, now);
+    lowpass.Q.setValueAtTime(0.8, now);
     lowpass.connect(output);
+
+    const reverbDelay = context.createDelay(2);
+    reverbDelay.delayTime.setValueAtTime(0.23, now);
+    const reverbFeedback = context.createGain();
+    reverbFeedback.gain.setValueAtTime(0.42, now);
+    reverbDelay.connect(reverbFeedback);
+    reverbFeedback.connect(reverbDelay);
+
+    const reverbMix = context.createGain();
+    reverbMix.gain.setValueAtTime(0.22, now);
+    reverbDelay.connect(reverbMix);
+    reverbMix.connect(output);
 
     const strikeNoise = context.createBufferSource();
     const strikeDuration = 0.07;
@@ -72,29 +92,31 @@ export function MeditationSessionPlayer({
 
     const strikeFilter = context.createBiquadFilter();
     strikeFilter.type = 'bandpass';
-    strikeFilter.frequency.setValueAtTime(2100, now);
-    strikeFilter.Q.setValueAtTime(1.2, now);
+    strikeFilter.frequency.setValueAtTime(1650, now);
+    strikeFilter.Q.setValueAtTime(0.9, now);
 
     const strikeGain = context.createGain();
     strikeGain.gain.setValueAtTime(0.0001, now);
-    strikeGain.gain.exponentialRampToValueAtTime(0.12, now + 0.005);
-    strikeGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+    strikeGain.gain.exponentialRampToValueAtTime(0.25, now + 0.005);
+    strikeGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
 
     strikeNoise.buffer = strikeBuffer;
     strikeNoise.connect(strikeFilter);
     strikeFilter.connect(strikeGain);
     strikeGain.connect(lowpass);
+    strikeGain.connect(reverbDelay);
     strikeNoise.start(now);
     strikeNoise.stop(now + strikeDuration);
 
     const partials: Array<{ frequency: number; gain: number; decay: number }> = [
-      { frequency: 146, gain: 0.16, decay: 4.2 },
-      { frequency: 219, gain: 0.13, decay: 3.8 },
-      { frequency: 294, gain: 0.1, decay: 3.2 },
-      { frequency: 374, gain: 0.08, decay: 2.8 },
-      { frequency: 498, gain: 0.06, decay: 2.4 },
-      { frequency: 632, gain: 0.05, decay: 2.1 },
-      { frequency: 811, gain: 0.04, decay: 1.8 },
+      { frequency: 94, gain: 0.32, decay: 10.8 },
+      { frequency: 141, gain: 0.27, decay: 9.6 },
+      { frequency: 208, gain: 0.22, decay: 8.8 },
+      { frequency: 289, gain: 0.18, decay: 7.9 },
+      { frequency: 391, gain: 0.13, decay: 6.7 },
+      { frequency: 524, gain: 0.1, decay: 5.9 },
+      { frequency: 703, gain: 0.08, decay: 5.1 },
+      { frequency: 931, gain: 0.06, decay: 4.5 },
     ];
 
     partials.forEach(({ frequency, gain, decay }, index) => {
@@ -112,67 +134,10 @@ export function MeditationSessionPlayer({
 
       oscillator.connect(partialGain);
       partialGain.connect(lowpass);
+      partialGain.connect(reverbDelay);
 
       oscillator.start(now);
       oscillator.stop(now + decay + 0.05);
-    });
-  }, []);
-
-  const playGuidanceGong = useCallback(() => {
-    const context = audioContextRef.current ?? new AudioContext();
-    audioContextRef.current = context;
-
-    const now = context.currentTime;
-    const output = context.createGain();
-    output.gain.setValueAtTime(0.2, now);
-    output.connect(context.destination);
-
-    const reverbLikeDelay = context.createDelay(1.2);
-    reverbLikeDelay.delayTime.setValueAtTime(0.16, now);
-    const delayFeedback = context.createGain();
-    delayFeedback.gain.setValueAtTime(0.22, now);
-    reverbLikeDelay.connect(delayFeedback);
-    delayFeedback.connect(reverbLikeDelay);
-
-    const dryGain = context.createGain();
-    dryGain.gain.setValueAtTime(0.86, now);
-    const wetGain = context.createGain();
-    wetGain.gain.setValueAtTime(0.24, now);
-
-    dryGain.connect(output);
-    wetGain.connect(output);
-    reverbLikeDelay.connect(wetGain);
-
-    const highShelf = context.createBiquadFilter();
-    highShelf.type = 'highshelf';
-    highShelf.frequency.setValueAtTime(1900, now);
-    highShelf.gain.setValueAtTime(2.5, now);
-    highShelf.connect(dryGain);
-    highShelf.connect(reverbLikeDelay);
-
-    const partials: Array<{ frequency: number; gain: number; decay: number }> = [
-      { frequency: 392, gain: 0.12, decay: 4.6 },
-      { frequency: 523, gain: 0.1, decay: 4.2 },
-      { frequency: 659, gain: 0.08, decay: 3.9 },
-      { frequency: 784, gain: 0.06, decay: 3.4 },
-      { frequency: 988, gain: 0.05, decay: 3.1 },
-    ];
-
-    partials.forEach(({ frequency, gain, decay }, index) => {
-      const oscillator = context.createOscillator();
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(frequency, now);
-      oscillator.detune.setValueAtTime(index % 2 === 0 ? 4 : -4, now);
-
-      const partialGain = context.createGain();
-      partialGain.gain.setValueAtTime(0.0001, now);
-      partialGain.gain.exponentialRampToValueAtTime(gain, now + 0.03);
-      partialGain.gain.exponentialRampToValueAtTime(0.0001, now + decay);
-
-      oscillator.connect(partialGain);
-      partialGain.connect(highShelf);
-      oscillator.start(now);
-      oscillator.stop(now + decay + 0.06);
     });
   }, []);
 
