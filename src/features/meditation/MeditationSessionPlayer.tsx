@@ -50,22 +50,95 @@ export function MeditationSessionPlayer({
     audioContextRef.current = context;
 
     const now = context.currentTime;
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
+    const compressor = context.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-20, now);
+    compressor.knee.setValueAtTime(30, now);
+    compressor.ratio.setValueAtTime(6, now);
+    compressor.attack.setValueAtTime(0.003, now);
+    compressor.release.setValueAtTime(0.35, now);
+    compressor.connect(context.destination);
 
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(520, now);
-    oscillator.frequency.exponentialRampToValueAtTime(180, now + 1.5);
+    const output = context.createGain();
+    output.gain.setValueAtTime(0.44, now);
+    output.connect(compressor);
 
-    gain.gain.setValueAtTime(0.001, now);
-    gain.gain.exponentialRampToValueAtTime(0.25, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 2);
+    const lowpass = context.createBiquadFilter();
+    lowpass.type = 'lowpass';
+    lowpass.frequency.setValueAtTime(3600, now);
+    lowpass.Q.setValueAtTime(0.8, now);
+    lowpass.connect(output);
 
-    oscillator.connect(gain);
-    gain.connect(context.destination);
+    const reverbDelay = context.createDelay(2);
+    reverbDelay.delayTime.setValueAtTime(0.23, now);
+    const reverbFeedback = context.createGain();
+    reverbFeedback.gain.setValueAtTime(0.42, now);
+    reverbDelay.connect(reverbFeedback);
+    reverbFeedback.connect(reverbDelay);
 
-    oscillator.start(now);
-    oscillator.stop(now + 2);
+    const reverbMix = context.createGain();
+    reverbMix.gain.setValueAtTime(0.22, now);
+    reverbDelay.connect(reverbMix);
+    reverbMix.connect(output);
+
+    const strikeNoise = context.createBufferSource();
+    const strikeDuration = 0.07;
+    const strikeBuffer = context.createBuffer(1, Math.floor(context.sampleRate * strikeDuration), context.sampleRate);
+    const strikeData = strikeBuffer.getChannelData(0);
+
+    for (let i = 0; i < strikeData.length; i += 1) {
+      const envelope = 1 - i / strikeData.length;
+      strikeData[i] = (Math.random() * 2 - 1) * envelope;
+    }
+
+    const strikeFilter = context.createBiquadFilter();
+    strikeFilter.type = 'bandpass';
+    strikeFilter.frequency.setValueAtTime(1650, now);
+    strikeFilter.Q.setValueAtTime(0.9, now);
+
+    const strikeGain = context.createGain();
+    strikeGain.gain.setValueAtTime(0.0001, now);
+    strikeGain.gain.exponentialRampToValueAtTime(0.25, now + 0.005);
+    strikeGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+    strikeNoise.buffer = strikeBuffer;
+    strikeNoise.connect(strikeFilter);
+    strikeFilter.connect(strikeGain);
+    strikeGain.connect(lowpass);
+    strikeGain.connect(reverbDelay);
+    strikeNoise.start(now);
+    strikeNoise.stop(now + strikeDuration);
+
+    const partials: Array<{ frequency: number; gain: number; decay: number }> = [
+      { frequency: 94, gain: 0.32, decay: 10.8 },
+      { frequency: 141, gain: 0.27, decay: 9.6 },
+      { frequency: 208, gain: 0.22, decay: 8.8 },
+      { frequency: 289, gain: 0.18, decay: 7.9 },
+      { frequency: 391, gain: 0.13, decay: 6.7 },
+      { frequency: 524, gain: 0.1, decay: 5.9 },
+      { frequency: 703, gain: 0.08, decay: 5.1 },
+      { frequency: 931, gain: 0.06, decay: 4.5 },
+    ];
+
+    partials.forEach(({ frequency, gain, decay }, index) => {
+      const oscillator = context.createOscillator();
+      oscillator.type = 'sine';
+
+      const detuneCents = index % 2 === 0 ? -6 : 7;
+      oscillator.frequency.setValueAtTime(frequency, now);
+      oscillator.detune.setValueAtTime(detuneCents, now);
+
+      const partialGain = context.createGain();
+      partialGain.gain.setValueAtTime(0.0001, now);
+      partialGain.gain.exponentialRampToValueAtTime(gain, now + 0.02);
+      partialGain.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+
+      oscillator.connect(partialGain);
+      partialGain.connect(lowpass);
+      partialGain.connect(reverbDelay);
+
+      oscillator.start(now);
+      oscillator.stop(now + decay + 0.05);
+    });
   }, []);
 
   useEffect(() => {
