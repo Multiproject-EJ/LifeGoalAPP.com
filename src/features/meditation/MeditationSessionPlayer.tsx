@@ -50,22 +50,72 @@ export function MeditationSessionPlayer({
     audioContextRef.current = context;
 
     const now = context.currentTime;
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
+    const output = context.createGain();
+    output.gain.setValueAtTime(0.26, now);
+    output.connect(context.destination);
 
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(520, now);
-    oscillator.frequency.exponentialRampToValueAtTime(180, now + 1.5);
+    const lowpass = context.createBiquadFilter();
+    lowpass.type = 'lowpass';
+    lowpass.frequency.setValueAtTime(4200, now);
+    lowpass.Q.setValueAtTime(0.6, now);
+    lowpass.connect(output);
 
-    gain.gain.setValueAtTime(0.001, now);
-    gain.gain.exponentialRampToValueAtTime(0.25, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 2);
+    const strikeNoise = context.createBufferSource();
+    const strikeDuration = 0.07;
+    const strikeBuffer = context.createBuffer(1, Math.floor(context.sampleRate * strikeDuration), context.sampleRate);
+    const strikeData = strikeBuffer.getChannelData(0);
 
-    oscillator.connect(gain);
-    gain.connect(context.destination);
+    for (let i = 0; i < strikeData.length; i += 1) {
+      const envelope = 1 - i / strikeData.length;
+      strikeData[i] = (Math.random() * 2 - 1) * envelope;
+    }
 
-    oscillator.start(now);
-    oscillator.stop(now + 2);
+    const strikeFilter = context.createBiquadFilter();
+    strikeFilter.type = 'bandpass';
+    strikeFilter.frequency.setValueAtTime(2100, now);
+    strikeFilter.Q.setValueAtTime(1.2, now);
+
+    const strikeGain = context.createGain();
+    strikeGain.gain.setValueAtTime(0.0001, now);
+    strikeGain.gain.exponentialRampToValueAtTime(0.12, now + 0.005);
+    strikeGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+
+    strikeNoise.buffer = strikeBuffer;
+    strikeNoise.connect(strikeFilter);
+    strikeFilter.connect(strikeGain);
+    strikeGain.connect(lowpass);
+    strikeNoise.start(now);
+    strikeNoise.stop(now + strikeDuration);
+
+    const partials: Array<{ frequency: number; gain: number; decay: number }> = [
+      { frequency: 146, gain: 0.16, decay: 4.2 },
+      { frequency: 219, gain: 0.13, decay: 3.8 },
+      { frequency: 294, gain: 0.1, decay: 3.2 },
+      { frequency: 374, gain: 0.08, decay: 2.8 },
+      { frequency: 498, gain: 0.06, decay: 2.4 },
+      { frequency: 632, gain: 0.05, decay: 2.1 },
+      { frequency: 811, gain: 0.04, decay: 1.8 },
+    ];
+
+    partials.forEach(({ frequency, gain, decay }, index) => {
+      const oscillator = context.createOscillator();
+      oscillator.type = 'sine';
+
+      const detuneCents = index % 2 === 0 ? -6 : 7;
+      oscillator.frequency.setValueAtTime(frequency, now);
+      oscillator.detune.setValueAtTime(detuneCents, now);
+
+      const partialGain = context.createGain();
+      partialGain.gain.setValueAtTime(0.0001, now);
+      partialGain.gain.exponentialRampToValueAtTime(gain, now + 0.02);
+      partialGain.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+
+      oscillator.connect(partialGain);
+      partialGain.connect(lowpass);
+
+      oscillator.start(now);
+      oscillator.stop(now + decay + 0.05);
+    });
   }, []);
 
   useEffect(() => {
