@@ -45,7 +45,7 @@ export function MeditationSessionPlayer({
     }
   }, [isOpen, durationSeconds]);
 
-  const playGong = useCallback(() => {
+  const playEndGong = useCallback(() => {
     const context = audioContextRef.current ?? new AudioContext();
     audioContextRef.current = context;
 
@@ -149,7 +149,7 @@ export function MeditationSessionPlayer({
         if (prev <= 1) {
           setIsRunning(false);
           if (soundEnabled) {
-            playGong();
+            playEndGong();
           }
           onComplete();
           return 0;
@@ -159,7 +159,7 @@ export function MeditationSessionPlayer({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isRunning, timeRemaining, onComplete, playGong, soundEnabled]);
+  }, [isRunning, timeRemaining, onComplete, playEndGong, soundEnabled]);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -169,7 +169,7 @@ export function MeditationSessionPlayer({
     if (!soundEnabled || !gongIntervalSeconds) return;
 
     if (elapsed >= nextGongAt && nextGongAt <= durationSeconds) {
-      playGong();
+      playGuidanceGong();
       setNextGongAt((prev) => prev + gongIntervalSeconds);
     }
   }, [
@@ -177,7 +177,7 @@ export function MeditationSessionPlayer({
     durationSeconds,
     timeRemaining,
     nextGongAt,
-    playGong,
+    playGuidanceGong,
     soundEnabled,
     gongIntervalSeconds,
   ]);
@@ -220,7 +220,7 @@ export function MeditationSessionPlayer({
   const handleStart = () => {
     if (!hasStarted) {
       if (soundEnabled) {
-        playGong();
+        playGuidanceGong();
       }
       setHasStarted(true);
     }
