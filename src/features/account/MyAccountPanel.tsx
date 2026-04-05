@@ -22,6 +22,13 @@ import { upsertWorkspaceProfile } from '../../services/workspaceProfile';
 import { generateInitials } from '../../utils/initials';
 import { getHapticMode, setHapticMode, triggerCompletionHaptic, type HapticMode } from '../../utils/completionHaptics';
 import { getLegacyAliasSunsetReadiness, type LegacyAliasSunsetReadiness } from '../../services/gameRewards';
+import {
+  createCustomerPortalSession,
+  createDicePackCheckoutSession,
+  createSubscriptionCheckoutSession,
+  fetchBillingSnapshot,
+  type BillingSnapshot,
+} from '../../services/billing';
 
 type MyAccountPanelProps = {
   session: Session;
@@ -37,6 +44,10 @@ type MyAccountPanelProps = {
   onProfileUpdate?: (profile: WorkspaceProfileRow) => void;
   onLaunchWeeklyHabitReview?: () => void;
   onLaunchDailyCatchUpPrompt?: () => void;
+  billingReturnBanner?: {
+    kind: 'processing' | 'success' | 'canceled';
+    message: string;
+  } | null;
 };
 
 function formatDate(value?: string | null, options?: Intl.DateTimeFormatOptions) {
@@ -62,6 +73,7 @@ export function MyAccountPanel({
   onProfileUpdate,
   onLaunchWeeklyHabitReview,
   onLaunchDailyCatchUpPrompt,
+  billingReturnBanner = null,
 }: MyAccountPanelProps) {
   const [folder1Open, setFolder1Open] = useState(false);
   const [folder2Open, setFolder2Open] = useState(false);
@@ -77,22 +89,27 @@ export function MyAccountPanel({
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [billingSnapshot, setBillingSnapshot] = useState<BillingSnapshot | null>(null);
+  const [billingLoading, setBillingLoading] = useState(false);
+  const [billingError, setBillingError] = useState<string | null>(null);
+  const [billingActionLoading, setBillingActionLoading] = useState<'upgrade_monthly' | 'upgrade_yearly' | 'manage' | 'buy_rolls' | null>(null);
   
   const user = session.user;
   const userInitials = profile?.initials || generateInitials(profile?.full_name || '');
 
-  const planName =
-    (user.user_metadata?.subscription_plan as string | undefined) ||
-    (isDemoExperience ? 'Demo preview' : 'LifeGoal workspace');
-  const planStatus =
-    (user.user_metadata?.subscription_status as string | undefined) ||
-    (isDemoExperience ? 'Preview mode' : 'Active');
-  const renewsOn = formatDate(
-    (user.user_metadata?.subscription_renews_on as string | undefined) ?? null,
-    {
-      dateStyle: 'medium',
-    },
-  );
+  const isPro = billingSnapshot?.entitlement?.is_pro ?? false;
+  const subscriptionStatus = billingSnapshot?.subscription?.status ?? null;
+  const planName = isDemoExperience ? 'Demo preview' : isPro ? 'HabitGame Pro' : 'Free';
+  const planStatus = isDemoExperience ? 'Preview mode' : subscriptionStatus ? subscriptionStatus.replace(/_/g, ' ') : 'No active subscription';
+  const renewsOn = formatDate(billingSnapshot?.subscription?.current_period_end ?? null, { dateStyle: 'medium' });
+  const walletRolls = billingSnapshot?.wallet?.dice_rolls ?? 0;
+  const canManageBilling = !isDemoExperience && (isPro || Boolean(billingSnapshot?.customer?.stripe_customer_id));
+  const resolvedBillingBanner = billingReturnBanner?.kind === 'processing' && isPro
+    ? {
+      kind: 'success' as const,
+      message: 'Billing synced. HabitGame Pro is active on your account.',
+    }
+    : billingReturnBanner;
 
   const memberSince = formatDate(user.created_at, { dateStyle: 'medium' });
   const lastSignIn = formatDate(user.last_sign_in_at, {
@@ -154,6 +171,37 @@ export function MyAccountPanel({
       active = false;
     };
   }, [session.user.id]);
+
+  useEffect(() => {
+    if (isDemoExperience) {
+      setBillingSnapshot(null);
+      setBillingError(null);
+      setBillingLoading(false);
+      return;
+    }
+
+    let active = true;
+    setBillingLoading(true);
+    fetchBillingSnapshot(session.user.id)
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) {
+          setBillingError(error.message);
+          return;
+        }
+        setBillingSnapshot(data);
+        setBillingError(null);
+      })
+      .finally(() => {
+        if (active) {
+          setBillingLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [session.user.id, isDemoExperience, billingReturnBanner]);
 
   const handleToggleInitialsInMenu = async (enabled: boolean) => {
     if (!profile || isDemoExperience) return;
@@ -252,6 +300,29 @@ export function MyAccountPanel({
     onLaunchWeeklyHabitReview?.();
   };
 
+  const redirectToUrl = (url: string) => {
+    if (typeof window === 'undefined') return;
+    window.location.assign(url);
+  };
+
+  const runBillingAction = async (
+    action: 'upgrade_monthly' | 'upgrade_yearly' | 'manage' | 'buy_rolls',
+    runner: () => Promise<{ url: string | null; error: Error | null }>,
+  ) => {
+    setBillingActionLoading(action);
+    setBillingError(null);
+    try {
+      const { url, error } = await runner();
+      if (error || !url) {
+        setBillingError(error?.message ?? 'Unable to start billing action.');
+        return;
+      }
+      redirectToUrl(url);
+    } finally {
+      setBillingActionLoading(null);
+    }
+  };
+
   return (
     <div className="account-panel">
       {showDemoNotice ? (
@@ -334,8 +405,25 @@ export function MyAccountPanel({
           <p className="account-panel__eyebrow">Subscription</p>
           <h3 id="account-subscription">Plan overview</h3>
           <p className="account-panel__hint">
-            Manage billing from your Supabase dashboard. Updates sync instantly to this workspace.
+            Billing status is synced from Stripe webhooks into Supabase and shown here.
           </p>
+          {resolvedBillingBanner ? (
+            <p className={`notification-preferences__message ${
+              resolvedBillingBanner.kind === 'canceled'
+                ? 'notification-preferences__message--error'
+                : 'notification-preferences__message--success'
+            }`} role="status">
+              {resolvedBillingBanner.message}
+            </p>
+          ) : null}
+          {billingLoading ? (
+            <p className="account-panel__hint">Syncing billing status…</p>
+          ) : null}
+          {billingError ? (
+            <p className="notification-preferences__message notification-preferences__message--error" role="alert">
+              {billingError}
+            </p>
+          ) : null}
           <dl className="account-panel__details">
             <div>
               <dt>Plan</dt>
@@ -349,7 +437,53 @@ export function MyAccountPanel({
               <dt>Renews</dt>
               <dd>{renewsOn}</dd>
             </div>
+            <div>
+              <dt>Dice rolls</dt>
+              <dd>{walletRolls}</dd>
+            </div>
           </dl>
+          <div className="account-panel__actions-row" style={{ marginTop: '0.75rem' }}>
+            {!isPro && !isDemoExperience ? (
+              <>
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  disabled={billingActionLoading !== null}
+                  onClick={() => runBillingAction('upgrade_monthly', () => createSubscriptionCheckoutSession('monthly'))}
+                >
+                  {billingActionLoading === 'upgrade_monthly' ? 'Starting…' : 'Upgrade to Pro (Monthly)'}
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={billingActionLoading !== null}
+                  onClick={() => runBillingAction('upgrade_yearly', () => createSubscriptionCheckoutSession('yearly'))}
+                >
+                  {billingActionLoading === 'upgrade_yearly' ? 'Starting…' : 'Upgrade to Pro (Yearly)'}
+                </button>
+              </>
+            ) : null}
+            {canManageBilling ? (
+              <button
+                type="button"
+                className="btn btn--secondary"
+                disabled={billingActionLoading !== null}
+                onClick={() => runBillingAction('manage', () => createCustomerPortalSession())}
+              >
+                {billingActionLoading === 'manage' ? 'Opening…' : 'Manage Billing'}
+              </button>
+            ) : null}
+            {!isDemoExperience ? (
+              <button
+                type="button"
+                className="btn"
+                disabled={billingActionLoading !== null}
+                onClick={() => runBillingAction('buy_rolls', () => createDicePackCheckoutSession())}
+              >
+                {billingActionLoading === 'buy_rolls' ? 'Starting…' : 'Buy 500 Rolls'}
+              </button>
+            ) : null}
+          </div>
         </section>
 
         <section className="account-panel__card" aria-labelledby="account-haptics">
