@@ -140,6 +140,7 @@ export function MeditationSessionPlayer({
       oscillator.stop(now + decay + 0.05);
     });
   }, []);
+  const playGuidanceGong = playGong;
 
   useEffect(() => {
     if (!isRunning || timeRemaining <= 0) return;
@@ -149,7 +150,7 @@ export function MeditationSessionPlayer({
         if (prev <= 1) {
           setIsRunning(false);
           if (soundEnabled) {
-            playEndGong();
+            playGuidanceGong();
           }
           onComplete();
           return 0;
@@ -159,7 +160,7 @@ export function MeditationSessionPlayer({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isRunning, timeRemaining, onComplete, playEndGong, soundEnabled]);
+  }, [isRunning, timeRemaining, onComplete, playGuidanceGong, soundEnabled]);
 
   useEffect(() => {
     if (!isRunning) return;
