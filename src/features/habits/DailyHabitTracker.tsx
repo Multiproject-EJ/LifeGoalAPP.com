@@ -130,6 +130,9 @@ import { RoutinesTodayLane } from '../routines';
 
 // Constants
 const DONE_ISH_DEFAULT_PERCENTAGE = 85;
+const HABIT_SWIPE_MAX_PX = 132;
+const HABIT_SWIPE_ARM_THRESHOLD_PX = 84;
+const HABIT_SWIPE_SUPPRESS_CLICK_MS = 260;
 
 function getNextUtcMidnightMs(): number {
   const now = new Date();
@@ -141,6 +144,16 @@ function getNextUtcMidnightMs(): number {
 
 function getTodayUtcDateKey(): string {
   return new Date().toISOString().split('T')[0];
+}
+
+function isInteractiveHabitChild(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  return Boolean(
+    target.closest('button, input, textarea, select, a, [role="button"], [role="menu"], [data-swipe-ignore="true"]'),
+  );
 }
 
 type DailyHabitTrackerVariant = 'full' | 'compact';
@@ -172,6 +185,9 @@ type HabitCompletionState = {
   completionPercentage?: number;
   loggedStage?: AutoProgressTier | null;
 };
+
+type HabitSwipeDirection = 'left' | 'right';
+type HabitSwipeAction = 'complete' | 'undo-complete' | 'skip' | 'undo-skip';
 
 /**
  * Monthly completion state for a single habit across all days in the selected month.
@@ -523,7 +539,19 @@ export function DailyHabitTracker({
   const [skipReason, setSkipReason] = useState('');
   const [skipSaving, setSkipSaving] = useState(false);
   const [skipError, setSkipError] = useState<string | null>(null);
+  const [swipeOffsetByHabitId, setSwipeOffsetByHabitId] = useState<Record<string, number>>({});
+  const [swipeArmedByHabitId, setSwipeArmedByHabitId] = useState<Record<string, HabitSwipeDirection | null>>({});
   const skipMenuRef = useRef<HTMLDivElement | null>(null);
+  const swipeGestureRef = useRef<{
+    habitId: string;
+    pointerId: number;
+    startX: number;
+    startY: number;
+    isHorizontal: boolean;
+    hasSwiped: boolean;
+    armedDirection: HabitSwipeDirection | null;
+  } | null>(null);
+  const swipeSuppressClickUntilByHabitIdRef = useRef<Record<string, number>>({});
   const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
   const [isCompactView, setIsCompactView] = useState(preferredCompactView ?? forceCompactView);
 
@@ -4518,6 +4546,81 @@ export function DailyHabitTracker({
     setSkipError(null);
   };
 
+  const handleUndoHabitSkip = async (habit: HabitWithGoal) => {
+    if (!isConfigured && !isDemoExperience) {
+      setErrorMessage('Supabase credentials are not configured yet.');
+      return;
+    }
+
+    setSaving((current) => ({ ...current, [habit.id]: true }));
+    setErrorMessage(null);
+
+    try {
+      const dateISO = activeDate;
+      const { error } = await clearHabitCompletion(habit.id, dateISO);
+      if (error) {
+        throw error;
+      }
+
+      setCompletions((current) => ({ ...current, [habit.id]: { logId: null, completed: false } }));
+      setMonthlyCompletions((current) => {
+        const next = { ...current };
+        const habitMatrix = { ...(next[habit.id] ?? {}) };
+        habitMatrix[dateISO] = { logId: null, completed: false };
+        next[habit.id] = habitMatrix;
+        return next;
+      });
+      setHistoricalLogs((current) => {
+        const nextLogs = current.filter((log) => !(log.habit_id === habit.id && log.date === dateISO));
+        setHabitInsights(calculateHabitInsights(habits, nextLogs, activeDate));
+        return nextLogs;
+      });
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to clear habit skip.');
+    } finally {
+      setSaving((current) => ({ ...current, [habit.id]: false }));
+    }
+  };
+
+  const getSwipeActionForHabit = useCallback(
+    (
+      habit: HabitWithGoal,
+      state: HabitCompletionState | undefined,
+      direction: HabitSwipeDirection,
+      options: { scheduledToday: boolean; isExpanded: boolean; isSkipDisabled: boolean; isSaving: boolean },
+    ): HabitSwipeAction | null => {
+      if (options.isExpanded || options.isSaving || skipSaving) {
+        return null;
+      }
+
+      if (state?.progressState === 'missed') {
+        return null;
+      }
+
+      if (direction === 'right') {
+        if (state?.progressState === 'skipped') {
+          return null;
+        }
+        if (state?.completed) {
+          return 'undo-complete';
+        }
+        if (!options.scheduledToday) {
+          return null;
+        }
+        return 'complete';
+      }
+
+      if (options.isSkipDisabled || state?.completed || !options.scheduledToday) {
+        return null;
+      }
+      if (state?.progressState === 'skipped') {
+        return 'undo-skip';
+      }
+      return 'skip';
+    },
+    [skipSaving],
+  );
+
   const handleLogHabitSkip = async (habit: HabitWithGoal, reason?: string) => {
     if (!isConfigured && !isDemoExperience) {
       setSkipError('Connect Supabase to log skip reasons.');
@@ -4669,6 +4772,21 @@ export function DailyHabitTracker({
       setSkipSaving(false);
     }
   };
+
+  const triggerSwipeAction = useCallback(
+    (habit: HabitWithGoal, action: HabitSwipeAction) => {
+      if (action === 'complete' || action === 'undo-complete') {
+        void toggleHabitForDate(habit, activeDate);
+        return;
+      }
+      if (action === 'skip') {
+        void handleLogHabitSkip(habit);
+        return;
+      }
+      void handleUndoHabitSkip(habit);
+    },
+    [activeDate, handleLogHabitSkip, handleUndoHabitSkip, toggleHabitForDate],
+  );
 
   const buildAutoProgressHabit = useCallback(
     (habit: HabitWithGoal): HabitV2Row => ({
@@ -5126,6 +5244,34 @@ export function DailyHabitTracker({
               adherencePercent >= AUTO_PROGRESS_UPGRADE_RULES.minAdherence30;
             const isUpdatingAutoProgress = autoProgressHabitIds.has(habit.id);
             const suggestedDownshiftStage = downshiftTier && adherencePercent < 50 ? downshiftTier : null;
+            const swipeOffset = swipeOffsetByHabitId[habit.id] ?? 0;
+            const swipeArmedDirection = swipeArmedByHabitId[habit.id] ?? null;
+            const rightSwipeAction = getSwipeActionForHabit(habit, state, 'right', {
+              scheduledToday,
+              isExpanded,
+              isSkipDisabled,
+              isSaving,
+            });
+            const leftSwipeAction = getSwipeActionForHabit(habit, state, 'left', {
+              scheduledToday,
+              isExpanded,
+              isSkipDisabled,
+              isSaving,
+            });
+            const getSwipeActionIcon = (action: HabitSwipeAction | null) => {
+              if (action === 'complete') return '✅';
+              if (action === 'undo-complete') return '↩️';
+              if (action === 'skip') return '⏭️';
+              if (action === 'undo-skip') return '↩️';
+              return '•';
+            };
+            const getSwipeActionLabel = (action: HabitSwipeAction | null) => {
+              if (action === 'complete') return 'Complete';
+              if (action === 'undo-complete') return 'Undo complete';
+              if (action === 'skip') return 'Skip';
+              if (action === 'undo-skip') return 'Undo skip';
+              return 'No action';
+            };
 
             return (
               <li
@@ -5150,66 +5296,177 @@ export function DailyHabitTracker({
                     }
                   />
                 ) : null}
-                <div
-                  className={`habit-checklist__row ${isExpanded ? 'habit-checklist__row--expanded' : ''}`}
-                  role="button"
-                  tabIndex={0}
-                  aria-expanded={isExpanded}
-                  aria-controls={detailPanelId}
-                  onClick={() => toggleExpanded(habit.id)}
-                  onKeyDown={(event) => {
-                    if (event.currentTarget !== event.target) {
-                      return;
-                    }
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      toggleExpanded(habit.id);
-                    }
-                  }}
-                >
-                  <input
-                    id={checkboxId}
-                    type="checkbox"
-                    className="habit-checklist__checkbox"
-                    checked={isCompleted}
-                    aria-label={`Mark ${habit.name} as ${isCompleted ? 'incomplete' : 'complete'}`}
-                    onClick={(event) => event.stopPropagation()}
-                    onChange={(event) => {
-                      event.stopPropagation();
-                      void toggleHabit(habit, event.currentTarget);
+                <div className="habit-checklist__swipe-frame" aria-hidden={isExpanded ? 'true' : undefined}>
+                  <div
+                    className={`habit-checklist__swipe-lane habit-checklist__swipe-lane--right ${
+                      swipeArmedDirection === 'right' ? 'habit-checklist__swipe-lane--armed' : ''
+                    } ${rightSwipeAction ? '' : 'habit-checklist__swipe-lane--disabled'}`}
+                    aria-hidden="true"
+                  >
+                    <span className="habit-checklist__swipe-icon">{getSwipeActionIcon(rightSwipeAction)}</span>
+                    <span className="habit-checklist__swipe-label">{getSwipeActionLabel(rightSwipeAction)}</span>
+                  </div>
+                  <div
+                    className={`habit-checklist__swipe-lane habit-checklist__swipe-lane--left ${
+                      swipeArmedDirection === 'left' ? 'habit-checklist__swipe-lane--armed' : ''
+                    } ${leftSwipeAction ? '' : 'habit-checklist__swipe-lane--disabled'}`}
+                    aria-hidden="true"
+                  >
+                    <span className="habit-checklist__swipe-icon">{getSwipeActionIcon(leftSwipeAction)}</span>
+                    <span className="habit-checklist__swipe-label">{getSwipeActionLabel(leftSwipeAction)}</span>
+                  </div>
+                  <div
+                    className={`habit-checklist__swipe-row ${swipeOffset !== 0 ? 'habit-checklist__swipe-row--dragging' : ''}`}
+                    style={{ transform: `translateX(${swipeOffset}px)` }}
+                    onPointerDown={(event) => {
+                      if (isExpanded || isInteractiveHabitChild(event.target) || event.button !== 0) {
+                        return;
+                      }
+                      swipeGestureRef.current = {
+                        habitId: habit.id,
+                        pointerId: event.pointerId,
+                        startX: event.clientX,
+                        startY: event.clientY,
+                        isHorizontal: false,
+                        hasSwiped: false,
+                        armedDirection: swipeArmedDirection,
+                      };
+                      event.currentTarget.setPointerCapture(event.pointerId);
                     }}
-                    disabled={isSaving || (!scheduledToday && !isCompleted)}
-                  />
-                  {/* Progress state badge */}
-                  {(isCompleted || state?.progressState === 'skipped' || state?.progressState === 'missed') && state?.progressState && (
-                    <span
-                      className={`progress-state-badge ${getProgressStateColorClass(state.progressState)}`}
-                      aria-label={getProgressStateLabel(state.progressState)}
+                    onPointerMove={(event) => {
+                      const gesture = swipeGestureRef.current;
+                      if (!gesture || gesture.habitId !== habit.id || gesture.pointerId !== event.pointerId || isExpanded) {
+                        return;
+                      }
+                      const deltaX = event.clientX - gesture.startX;
+                      const deltaY = event.clientY - gesture.startY;
+                      if (!gesture.isHorizontal) {
+                        if (Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) {
+                          return;
+                        }
+                        if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                          swipeGestureRef.current = null;
+                          return;
+                        }
+                        gesture.isHorizontal = true;
+                      }
+                      event.preventDefault();
+                      const clamped = Math.max(-HABIT_SWIPE_MAX_PX, Math.min(HABIT_SWIPE_MAX_PX, deltaX));
+                      if (Math.abs(clamped) > 6) {
+                        gesture.hasSwiped = true;
+                      }
+                      setSwipeOffsetByHabitId((current) => ({ ...current, [habit.id]: clamped }));
+                      const direction: HabitSwipeDirection = clamped >= 0 ? 'right' : 'left';
+                      const nextAction = direction === 'right' ? rightSwipeAction : leftSwipeAction;
+                      const armedDirection =
+                        Math.abs(clamped) >= HABIT_SWIPE_ARM_THRESHOLD_PX && nextAction ? direction : null;
+                      if (gesture.armedDirection !== armedDirection) {
+                        triggerCompletionHaptic('light', { channel: 'navigation', minIntervalMs: 120 });
+                        gesture.armedDirection = armedDirection;
+                      }
+                      setSwipeArmedByHabitId((current) => ({ ...current, [habit.id]: armedDirection }));
+                    }}
+                    onPointerUp={(event) => {
+                      const gesture = swipeGestureRef.current;
+                      if (!gesture || gesture.habitId !== habit.id || gesture.pointerId !== event.pointerId) {
+                        return;
+                      }
+                      event.currentTarget.releasePointerCapture(event.pointerId);
+                      swipeGestureRef.current = null;
+
+                      if (gesture.hasSwiped) {
+                        swipeSuppressClickUntilByHabitIdRef.current[habit.id] = Date.now() + HABIT_SWIPE_SUPPRESS_CLICK_MS;
+                      }
+
+                      const armedDirection = gesture.armedDirection;
+                      const nextAction =
+                        armedDirection === 'right'
+                          ? rightSwipeAction
+                          : armedDirection === 'left'
+                            ? leftSwipeAction
+                            : null;
+                      setSwipeOffsetByHabitId((current) => ({ ...current, [habit.id]: 0 }));
+                      setSwipeArmedByHabitId((current) => ({ ...current, [habit.id]: null }));
+
+                      if (!nextAction) {
+                        return;
+                      }
+                      triggerCompletionHaptic('medium', { channel: 'habit', minIntervalMs: 120 });
+                      triggerSwipeAction(habit, nextAction);
+                    }}
+                    onPointerCancel={() => {
+                      swipeGestureRef.current = null;
+                      setSwipeOffsetByHabitId((current) => ({ ...current, [habit.id]: 0 }));
+                      setSwipeArmedByHabitId((current) => ({ ...current, [habit.id]: null }));
+                    }}
+                  >
+                    <div
+                      className={`habit-checklist__row ${isExpanded ? 'habit-checklist__row--expanded' : ''}`}
+                      role="button"
+                      tabIndex={0}
+                      aria-expanded={isExpanded}
+                      aria-controls={detailPanelId}
+                      onClick={() => {
+                        const suppressUntil = swipeSuppressClickUntilByHabitIdRef.current[habit.id] ?? 0;
+                        if (Date.now() < suppressUntil) {
+                          return;
+                        }
+                        toggleExpanded(habit.id);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.currentTarget !== event.target) {
+                          return;
+                        }
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          toggleExpanded(habit.id);
+                        }
+                      }}
                     >
-                      {getProgressStateIcon(state.progressState)} {getProgressStateLabel(state.progressState)}
-                    </span>
-                  )}
-                  <span className="habit-checklist__name">
-                    {!isCompactView && habit.emoji ? (
-                      <span className="habit-checklist__icon" aria-hidden="true">
-                        {habit.emoji}
+                      <input
+                        id={checkboxId}
+                        type="checkbox"
+                        className="habit-checklist__checkbox"
+                        checked={isCompleted}
+                        aria-label={`Mark ${habit.name} as ${isCompleted ? 'incomplete' : 'complete'}`}
+                        onClick={(event) => event.stopPropagation()}
+                        onChange={(event) => {
+                          event.stopPropagation();
+                          void toggleHabit(habit, event.currentTarget);
+                        }}
+                        disabled={isSaving || (!scheduledToday && !isCompleted)}
+                      />
+                      {(isCompleted || state?.progressState === 'skipped' || state?.progressState === 'missed') && state?.progressState && (
+                        <span
+                          className={`progress-state-badge ${getProgressStateColorClass(state.progressState)}`}
+                          aria-label={getProgressStateLabel(state.progressState)}
+                        >
+                          {getProgressStateIcon(state.progressState)} {getProgressStateLabel(state.progressState)}
+                        </span>
+                      )}
+                      <span className="habit-checklist__name">
+                        {!isCompactView && habit.emoji ? (
+                          <span className="habit-checklist__icon" aria-hidden="true">
+                            {habit.emoji}
+                          </span>
+                        ) : null}
+                        {habit.name}
                       </span>
-                    ) : null}
-                    {habit.name}
-                  </span>
-                  {habitHealthState !== 'active' ? (
-                    <span
-                      className={`habit-health-badge habit-health-badge--${habitHealthState}`}
-                      aria-label={`Habit health status: ${getHabitHealthBadgeLabel(habitHealthState)}`}
-                    >
-                      {getHabitHealthBadgeLabel(habitHealthState)}
-                    </span>
-                  ) : null}
-                  {isOfferHabit && timeLimitedCountdownLabel ? (
-                    <span className="habit-checklist__offer-timer" aria-label="Offer time remaining">
-                      ⏳ {timeLimitedCountdownLabel}
-                    </span>
-                  ) : null}
+                      {habitHealthState !== 'active' ? (
+                        <span
+                          className={`habit-health-badge habit-health-badge--${habitHealthState}`}
+                          aria-label={`Habit health status: ${getHabitHealthBadgeLabel(habitHealthState)}`}
+                        >
+                          {getHabitHealthBadgeLabel(habitHealthState)}
+                        </span>
+                      ) : null}
+                      {isOfferHabit && timeLimitedCountdownLabel ? (
+                        <span className="habit-checklist__offer-timer" aria-label="Offer time remaining">
+                          ⏳ {timeLimitedCountdownLabel}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
                 </div>
                 <div
                   className={`habit-checklist__details-panel ${
