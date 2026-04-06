@@ -5194,7 +5194,7 @@ html.platform-ipad .workspace-shell__menu-edge {
     height: 100dvh;
     max-height: 100dvh;
     border-radius: 0;
-    padding: 16px 14px 20px;
+    padding: calc(env(safe-area-inset-top, 0px) + 18px) 14px calc(env(safe-area-inset-bottom, 0px) + 20px);
   }
 }
 
