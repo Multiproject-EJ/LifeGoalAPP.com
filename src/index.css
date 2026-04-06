@@ -6896,6 +6896,72 @@ html.platform-ipad .workspace-shell__menu-edge {
   min-width: 0;
 }
 
+.habit-checklist__swipe-frame {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.habit-checklist__swipe-lane {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 44%;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  opacity: 0.92;
+  pointer-events: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.habit-checklist__swipe-lane--right {
+  left: 0;
+  justify-content: flex-start;
+  padding-left: 0.7rem;
+  color: #065f46;
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.28), rgba(255, 255, 255, 0));
+}
+
+.habit-checklist__swipe-lane--left {
+  right: 0;
+  justify-content: flex-end;
+  padding-right: 0.7rem;
+  color: #9a3412;
+  background: linear-gradient(270deg, rgba(249, 115, 22, 0.26), rgba(255, 255, 255, 0));
+}
+
+.habit-checklist__swipe-lane--disabled {
+  opacity: 0.32;
+}
+
+.habit-checklist__swipe-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.habit-checklist__swipe-lane--armed .habit-checklist__swipe-icon {
+  transform: scale(1.2);
+}
+
+.habit-checklist__swipe-row {
+  position: relative;
+  z-index: 1;
+  background: #fff;
+  border-radius: 12px;
+  transition: transform 0.2s ease;
+  will-change: transform;
+  touch-action: pan-y;
+}
+
+.habit-checklist__swipe-row--dragging {
+  transition: none;
+}
+
 .habit-checklist__row--expanded {
   background: rgba(14, 165, 233, 0.08);
 }
