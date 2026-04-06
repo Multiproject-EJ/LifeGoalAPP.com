@@ -6944,6 +6944,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .habit-checklist__item {
+  --habit-card-surface: #ffffff;
   background: #ffffff;
   border-radius: 18px;
   padding: 0.5rem 0.75rem;
@@ -6954,6 +6955,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .habit-checklist__item--offer {
+  --habit-card-surface: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(59, 130, 246, 0.2));
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(59, 130, 246, 0.2));
   border: 1px solid rgba(59, 130, 246, 0.25);
   box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
@@ -7004,6 +7006,8 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .habit-checklist__swipe-frame {
+  --habit-swipe-right-progress: 0;
+  --habit-swipe-left-progress: 0;
   position: relative;
   border-radius: 12px;
   overflow: hidden;
@@ -7013,52 +7017,62 @@ html.platform-ipad .workspace-shell__menu-edge {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 44%;
+  width: 46%;
   display: flex;
   align-items: center;
   gap: 0.35rem;
   font-size: 0.72rem;
   font-weight: 700;
-  opacity: 0.92;
+  opacity: 0;
   pointer-events: none;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition: transform 0.16s ease, opacity 0.16s ease;
 }
 
 .habit-checklist__swipe-lane--right {
+  --lane-progress: var(--habit-swipe-right-progress);
   left: 0;
   justify-content: flex-start;
   padding-left: 0.7rem;
   color: #065f46;
-  background: linear-gradient(90deg, rgba(16, 185, 129, 0.28), rgba(255, 255, 255, 0));
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.35), rgba(16, 185, 129, 0.1) 68%, rgba(255, 255, 255, 0));
+  opacity: var(--lane-progress);
 }
 
 .habit-checklist__swipe-lane--left {
+  --lane-progress: var(--habit-swipe-left-progress);
   right: 0;
   justify-content: flex-end;
   padding-right: 0.7rem;
   color: #9a3412;
-  background: linear-gradient(270deg, rgba(249, 115, 22, 0.26), rgba(255, 255, 255, 0));
+  background: linear-gradient(270deg, rgba(249, 115, 22, 0.35), rgba(249, 115, 22, 0.1) 68%, rgba(255, 255, 255, 0));
+  opacity: var(--lane-progress);
 }
 
 .habit-checklist__swipe-lane--disabled {
-  opacity: 0.32;
+  opacity: 0;
 }
 
 .habit-checklist__swipe-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease;
+  transform: scale(calc(0.84 + (var(--lane-progress) * 0.26)));
+  transition: transform 0.16s ease;
+}
+
+.habit-checklist__swipe-label {
+  opacity: calc(var(--lane-progress) * 0.92);
+  transition: opacity 0.16s ease;
 }
 
 .habit-checklist__swipe-lane--armed .habit-checklist__swipe-icon {
-  transform: scale(1.2);
+  transform: scale(1.28);
 }
 
 .habit-checklist__swipe-row {
   position: relative;
   z-index: 1;
-  background: inherit;
+  background: var(--habit-card-surface, #ffffff);
   border-radius: 12px;
   transition: transform 0.2s ease;
   will-change: transform;
@@ -7090,6 +7104,15 @@ html.platform-ipad .workspace-shell__menu-edge {
   background-color: rgba(15, 23, 42, 0.85);
   border: 2px solid rgba(226, 232, 240, 0.8);
   accent-color: #38bdf8;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-habit-home .habit-checklist__swipe-row {
+  background: var(--habit-card-surface, rgba(15, 23, 42, 0.92));
 }
 
 /* Done-ish button */
@@ -15246,12 +15269,14 @@ html.platform-ipad .workspace-shell__menu-edge {
   [data-theme='flow-night'],
   [data-theme='bio-night']
 ) .mobile-habit-home .habit-checklist__item {
+  --habit-card-surface: rgba(15, 23, 42, 0.92);
   background: rgba(15, 23, 42, 0.92);
   border-color: rgba(148, 163, 184, 0.22);
   box-shadow: 0 14px 30px rgba(5, 10, 20, 0.55);
 }
 
 [data-theme='flow-night'] .mobile-habit-home .habit-checklist__item {
+  --habit-card-surface: rgba(15, 23, 42, 0.78);
   background: rgba(15, 23, 42, 0.78);
 }
 

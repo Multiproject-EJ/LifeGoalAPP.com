@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, useId } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useId, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
@@ -155,7 +155,7 @@ function isInteractiveHabitChild(target: EventTarget | null): boolean {
   }
 
   return Boolean(
-    target.closest('button, input, textarea, select, a, [role="button"], [role="menu"], [data-swipe-ignore="true"]'),
+    target.closest('button, input, textarea, select, a, [role="menu"], [data-swipe-ignore="true"]'),
   );
 }
 
@@ -5344,6 +5344,9 @@ export function DailyHabitTracker({
             const isUpdatingAutoProgress = autoProgressHabitIds.has(habit.id);
             const suggestedDownshiftStage = downshiftTier && adherencePercent < 50 ? downshiftTier : null;
             const swipeOffset = swipeOffsetByHabitId[habit.id] ?? 0;
+            const swipeProgress = Math.min(1, Math.abs(swipeOffset) / HABIT_SWIPE_MAX_PX);
+            const rightSwipeProgress = swipeOffset > 0 ? swipeProgress : 0;
+            const leftSwipeProgress = swipeOffset < 0 ? swipeProgress : 0;
             const swipeArmedDirection = swipeArmedByHabitId[habit.id] ?? null;
             const rightSwipeAction = getSwipeActionForHabit(habit, state, 'right', {
               scheduledToday,
@@ -5395,7 +5398,16 @@ export function DailyHabitTracker({
                     }
                   />
                 ) : null}
-                <div className="habit-checklist__swipe-frame" aria-hidden={isExpanded ? 'true' : undefined}>
+                <div
+                  className="habit-checklist__swipe-frame"
+                  aria-hidden={isExpanded ? 'true' : undefined}
+                  style={
+                    {
+                      '--habit-swipe-right-progress': rightSwipeProgress,
+                      '--habit-swipe-left-progress': leftSwipeProgress,
+                    } as CSSProperties
+                  }
+                >
                   <div
                     className={`habit-checklist__swipe-lane habit-checklist__swipe-lane--right ${
                       swipeArmedDirection === 'right' ? 'habit-checklist__swipe-lane--armed' : ''
@@ -5419,6 +5431,7 @@ export function DailyHabitTracker({
                     style={{ transform: `translateX(${swipeOffset}px)` }}
                     onPointerDown={(event) => {
                       if (
+                        swipeGestureRef.current ||
                         isExpanded ||
                         isInteractiveHabitChild(event.target) ||
                         (event.pointerType === 'mouse' && event.button !== 0)
@@ -5498,6 +5511,97 @@ export function DailyHabitTracker({
                       triggerSwipeAction(habit, nextAction);
                     }}
                     onPointerCancel={() => {
+                      swipeGestureRef.current = null;
+                      setSwipeOffsetByHabitId((current) => ({ ...current, [habit.id]: 0 }));
+                      setSwipeArmedByHabitId((current) => ({ ...current, [habit.id]: null }));
+                    }}
+                    onTouchStart={(event) => {
+                      if (swipeGestureRef.current || isExpanded || isInteractiveHabitChild(event.target)) {
+                        return;
+                      }
+                      const touch = event.changedTouches[0];
+                      if (!touch) {
+                        return;
+                      }
+                      swipeGestureRef.current = {
+                        habitId: habit.id,
+                        pointerId: touch.identifier,
+                        startX: touch.clientX,
+                        startY: touch.clientY,
+                        isHorizontal: false,
+                        hasSwiped: false,
+                        armedDirection: swipeArmedDirection,
+                      };
+                    }}
+                    onTouchMove={(event) => {
+                      const gesture = swipeGestureRef.current;
+                      if (!gesture || gesture.habitId !== habit.id || isExpanded) {
+                        return;
+                      }
+                      const touch = Array.from(event.touches).find((entry) => entry.identifier === gesture.pointerId);
+                      if (!touch) {
+                        return;
+                      }
+                      const deltaX = touch.clientX - gesture.startX;
+                      const deltaY = touch.clientY - gesture.startY;
+                      if (!gesture.isHorizontal) {
+                        if (Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) {
+                          return;
+                        }
+                        if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                          swipeGestureRef.current = null;
+                          return;
+                        }
+                        gesture.isHorizontal = true;
+                      }
+                      event.preventDefault();
+                      const clamped = Math.max(-HABIT_SWIPE_MAX_PX, Math.min(HABIT_SWIPE_MAX_PX, deltaX));
+                      if (Math.abs(clamped) > 6) {
+                        gesture.hasSwiped = true;
+                      }
+                      setSwipeOffsetByHabitId((current) => ({ ...current, [habit.id]: clamped }));
+                      const direction: HabitSwipeDirection = clamped >= 0 ? 'right' : 'left';
+                      const nextAction = direction === 'right' ? rightSwipeAction : leftSwipeAction;
+                      const armedDirection =
+                        Math.abs(clamped) >= HABIT_SWIPE_ARM_THRESHOLD_PX && nextAction ? direction : null;
+                      if (gesture.armedDirection !== armedDirection) {
+                        triggerCompletionHaptic('light', { channel: 'navigation', minIntervalMs: 120 });
+                        gesture.armedDirection = armedDirection;
+                      }
+                      setSwipeArmedByHabitId((current) => ({ ...current, [habit.id]: armedDirection }));
+                    }}
+                    onTouchEnd={(event) => {
+                      const gesture = swipeGestureRef.current;
+                      if (!gesture || gesture.habitId !== habit.id) {
+                        return;
+                      }
+                      const touch = Array.from(event.changedTouches).find((entry) => entry.identifier === gesture.pointerId);
+                      if (!touch) {
+                        return;
+                      }
+                      swipeGestureRef.current = null;
+
+                      if (gesture.hasSwiped) {
+                        swipeSuppressClickUntilByHabitIdRef.current[habit.id] = Date.now() + HABIT_SWIPE_SUPPRESS_CLICK_MS;
+                      }
+
+                      const armedDirection = gesture.armedDirection;
+                      const nextAction =
+                        armedDirection === 'right'
+                          ? rightSwipeAction
+                          : armedDirection === 'left'
+                            ? leftSwipeAction
+                            : null;
+                      setSwipeOffsetByHabitId((current) => ({ ...current, [habit.id]: 0 }));
+                      setSwipeArmedByHabitId((current) => ({ ...current, [habit.id]: null }));
+
+                      if (!nextAction) {
+                        return;
+                      }
+                      triggerCompletionHaptic('medium', { channel: 'habit', minIntervalMs: 120 });
+                      triggerSwipeAction(habit, nextAction);
+                    }}
+                    onTouchCancel={() => {
                       swipeGestureRef.current = null;
                       setSwipeOffsetByHabitId((current) => ({ ...current, [habit.id]: 0 }));
                       setSwipeArmedByHabitId((current) => ({ ...current, [habit.id]: null }));
