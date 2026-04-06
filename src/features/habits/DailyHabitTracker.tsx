@@ -4720,38 +4720,47 @@ export function DailyHabitTracker({
     [skipSaving],
   );
 
-  const handleLogHabitSkip = async (habit: HabitWithGoal, reason?: string) => {
+  const handleLogHabitSkip = async (
+    habit: HabitWithGoal,
+    options?: {
+      reason?: string;
+      createJournalEntry?: boolean;
+    },
+  ) => {
     if (!isConfigured && !isDemoExperience) {
       setSkipError('Connect Supabase to log skip reasons.');
       return;
     }
 
     const dateISO = activeDate;
-    const trimmedReason = reason?.trim();
+    const trimmedReason = options?.reason?.trim();
     const content = trimmedReason
       ? `Reason:\n${trimmedReason}`
       : `Skipped ${habit.name} today.`;
+    const shouldCreateJournalEntry = options?.createJournalEntry ?? false;
 
     setSkipSaving(true);
     setSkipError(null);
 
     try {
-      await createJournalEntry({
-        user_id: session.user.id,
-        entry_date: activeDate,
-        title: `Skipped habit: ${habit.name}`,
-        content,
-        mood: null,
-        tags: ['habit_skip'],
-        linked_goal_ids: habit.goal?.id ? [habit.goal.id] : null,
-        linked_habit_ids: [habit.id],
-        is_private: true,
-        type: 'quick',
-        mood_score: null,
-        category: null,
-        unlock_date: null,
-        goal_id: habit.goal?.id ?? null,
-      });
+      if (shouldCreateJournalEntry) {
+        await createJournalEntry({
+          user_id: session.user.id,
+          entry_date: activeDate,
+          title: `Skipped habit: ${habit.name}`,
+          content,
+          mood: null,
+          tags: ['habit_skip'],
+          linked_goal_ids: habit.goal?.id ? [habit.goal.id] : null,
+          linked_habit_ids: [habit.id],
+          is_private: true,
+          type: 'quick',
+          mood_score: null,
+          category: null,
+          unlock_date: null,
+          goal_id: habit.goal?.id ?? null,
+        });
+      }
 
       const skipPayload: HabitLogInsert = {
         habit_id: habit.id,
@@ -5998,7 +6007,10 @@ export function DailyHabitTracker({
                                         setSkipError('Add a reason to log this skip.');
                                         return;
                                       }
-                                      void handleLogHabitSkip(habit, skipReason);
+                                      void handleLogHabitSkip(habit, {
+                                        reason: skipReason,
+                                        createJournalEntry: true,
+                                      });
                                     }}
                                     disabled={skipSaving}
                                   >
