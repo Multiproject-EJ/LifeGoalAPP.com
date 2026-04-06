@@ -45,7 +45,7 @@ export function MeditationSessionPlayer({
     }
   }, [isOpen, durationSeconds]);
 
-  const playGong = useCallback(() => {
+  const playEndGong = useCallback(() => {
     const context = audioContextRef.current ?? new AudioContext();
     audioContextRef.current = context;
 
