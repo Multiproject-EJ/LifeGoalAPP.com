@@ -5319,7 +5319,11 @@ export function DailyHabitTracker({
                     className={`habit-checklist__swipe-row ${swipeOffset !== 0 ? 'habit-checklist__swipe-row--dragging' : ''}`}
                     style={{ transform: `translateX(${swipeOffset}px)` }}
                     onPointerDown={(event) => {
-                      if (isExpanded || isInteractiveHabitChild(event.target) || event.button !== 0) {
+                      if (
+                        isExpanded ||
+                        isInteractiveHabitChild(event.target) ||
+                        (event.pointerType === 'mouse' && event.button !== 0)
+                      ) {
                         return;
                       }
                       swipeGestureRef.current = {

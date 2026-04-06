@@ -6951,7 +6951,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 .habit-checklist__swipe-row {
   position: relative;
   z-index: 1;
-  background: #fff;
+  background: inherit;
   border-radius: 12px;
   transition: transform 0.2s ease;
   will-change: transform;
