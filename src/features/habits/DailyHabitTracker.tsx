@@ -6547,6 +6547,46 @@ export function DailyHabitTracker({
     const intentionsButtonClassName = `habit-checklist-card__intentions-button ${
       isIntentionsNoticeViewed ? 'habit-checklist-card__intentions-button--seen habit-checklist-card__intentions-button--compact' : ''
     }`;
+    const todayWinsModalContent = isTodayWinsOpen ? (
+      <div className="today-wins-modal" role="dialog" aria-modal="true" aria-label="Today's Wins">
+        <button
+          type="button"
+          className="today-wins-modal__backdrop"
+          onClick={() => setIsTodayWinsOpen(false)}
+          aria-label="Close Today's Wins"
+        />
+        <div className="today-wins-modal__card" role="document">
+          <div className="today-wins-modal__header">
+            <h3>Today's Wins</h3>
+            <button
+              type="button"
+              className="today-wins-modal__close"
+              onClick={() => setIsTodayWinsOpen(false)}
+            >
+              Close
+            </button>
+          </div>
+          {todayWinsTiles.length > 0 ? (
+            <div className="today-wins-modal__grid" role="list" aria-label="Today's completed categories">
+              {todayWinsTiles.map((tile) => (
+                <div key={tile.id} className="today-wins-modal__tile" role="listitem">
+                  <span className="today-wins-modal__tile-icon" aria-hidden="true">{tile.icon}</span>
+                  <span className="today-wins-modal__tile-value">{tile.value.toLocaleString()}</span>
+                  <span className="today-wins-modal__tile-label">{tile.label}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="today-wins-modal__empty">No wins logged yet for this day.</p>
+          )}
+        </div>
+      </div>
+    ) : null;
+    const todayWinsModal = todayWinsModalContent
+      ? modalRoot
+        ? createPortal(todayWinsModalContent, modalRoot)
+        : todayWinsModalContent
+      : null;
 
     return (
       <div className={checklistCardClassName} role="region" aria-label={ariaLabel}>
@@ -6604,41 +6644,7 @@ export function DailyHabitTracker({
             </div>
           </div>
         ) : null}
-        {isTodayWinsOpen ? (
-          <div className="today-wins-modal" role="dialog" aria-modal="true" aria-label="Today's Wins">
-            <button
-              type="button"
-              className="today-wins-modal__backdrop"
-              onClick={() => setIsTodayWinsOpen(false)}
-              aria-label="Close Today's Wins"
-            />
-            <div className="today-wins-modal__card" role="document">
-              <div className="today-wins-modal__header">
-                <h3>Today's Wins</h3>
-                <button
-                  type="button"
-                  className="today-wins-modal__close"
-                  onClick={() => setIsTodayWinsOpen(false)}
-                >
-                  Close
-                </button>
-              </div>
-              {todayWinsTiles.length > 0 ? (
-                <div className="today-wins-modal__grid" role="list" aria-label="Today's completed categories">
-                  {todayWinsTiles.map((tile) => (
-                    <div key={tile.id} className="today-wins-modal__tile" role="listitem">
-                      <span className="today-wins-modal__tile-icon" aria-hidden="true">{tile.icon}</span>
-                      <span className="today-wins-modal__tile-value">{tile.value.toLocaleString()}</span>
-                      <span className="today-wins-modal__tile-label">{tile.label}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="today-wins-modal__empty">No wins logged yet for this day.</p>
-              )}
-            </div>
-          </div>
-        ) : null}
+        {todayWinsModal}
         <div className="habit-checklist-card__board">
           <div className="habit-checklist-card__board-head">
             <div className="habit-checklist-card__date-wrap">
