@@ -15467,7 +15467,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   display: flex;
   justify-content: center;
   pointer-events: none;
-  overflow-x: clip;
+  overflow: visible;
   transform: translateY(0);
   transition: transform 0.38s ease;
   will-change: transform;
