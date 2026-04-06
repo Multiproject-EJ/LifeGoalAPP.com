@@ -102,6 +102,9 @@ import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { useDailySpinStatus } from '../../hooks/useDailySpinStatus';
 import { useLuckyRollStatus } from '../../hooks/useLuckyRollStatus';
 import { hasCollectedDailyHeartsToday } from '../../services/dailyTreats';
+import { fetchXPTransactions } from '../../services/gamification';
+import { fetchZenTokenTransactions } from '../../services/zenGarden';
+import { getRewardHistory } from '../../services/gameRewards';
 import { TimeBoundOfferRow, type TimeBoundOfferItem, type TimeBoundOfferId } from './TimeBoundOfferRow';
 import { readIslandRunRuntimeState } from '../gamification/level-worlds/services/islandRunRuntimeState';
 import { generateIslandStopPlan } from '../gamification/level-worlds/services/islandRunStops';
@@ -234,6 +237,17 @@ type HabitEditDraft = {
   name: string;
   schedule: Json | null;
   goalId: string | null;
+};
+
+type TodayWinsSummary = {
+  journalCount: number;
+  lotusEarned: number;
+  xpEarned: number;
+  gameRewardsTotal: number;
+  gameGoldEarned: number;
+  gameDiceEarned: number;
+  gameTokensEarned: number;
+  gameHeartsEarned: number;
 };
 
 type QuickJournalDraft = {
@@ -489,6 +503,17 @@ export function DailyHabitTracker({
   const [today, setToday] = useState(() => formatISODate(new Date()));
   const [activeDate, setActiveDate] = useState(() => formatISODate(new Date()));
   const [completedActionsCount, setCompletedActionsCount] = useState(0);
+  const [isTodayWinsOpen, setIsTodayWinsOpen] = useState(false);
+  const [todayWinsSummary, setTodayWinsSummary] = useState<TodayWinsSummary>({
+    journalCount: 0,
+    lotusEarned: 0,
+    xpEarned: 0,
+    gameRewardsTotal: 0,
+    gameGoldEarned: 0,
+    gameDiceEarned: 0,
+    gameTokensEarned: 0,
+    gameHeartsEarned: 0,
+  });
   const isViewingToday = activeDate === today;
   const [monthDays, setMonthDays] = useState<string[]>([]);
   const [habitInsights, setHabitInsights] = useState<Record<string, HabitInsights>>({});
@@ -1438,6 +1463,80 @@ export function DailyHabitTracker({
       isActive = false;
     };
   }, [activeDate]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadTodayWinsSummary = async () => {
+      const userId = session.user.id;
+
+      const [journalResult, zenResult, xpResult] = await Promise.all([
+        listJournalEntries({
+          fromDate: activeDate,
+          toDate: activeDate,
+          limit: 300,
+        }),
+        fetchZenTokenTransactions(userId, 400),
+        fetchXPTransactions(userId, 500),
+      ]);
+
+      if (!isActive) return;
+
+      const journalCount = journalResult.data?.length ?? 0;
+
+      const lotusEarned = (zenResult.data ?? []).reduce((sum, transaction) => {
+        const isSameDay = getLocalDateKeyFromISO(transaction.created_at) === activeDate;
+        if (!isSameDay || transaction.action !== 'earn' || transaction.token_amount <= 0) {
+          return sum;
+        }
+        return sum + transaction.token_amount;
+      }, 0);
+
+      const xpEarned = (xpResult.data ?? []).reduce((sum, transaction) => {
+        const isSameDay = getLocalDateKeyFromISO(transaction.created_at) === activeDate;
+        if (!isSameDay || transaction.xp_amount <= 0) {
+          return sum;
+        }
+        return sum + transaction.xp_amount;
+      }, 0);
+
+      const gameRewards = getRewardHistory(userId).filter((event) => (
+        event.amount > 0
+        && getLocalDateKeyFromISO(event.timestamp) === activeDate
+      ));
+
+      const gameGoldEarned = gameRewards
+        .filter((event) => event.currency === 'gold')
+        .reduce((sum, event) => sum + event.amount, 0);
+      const gameDiceEarned = gameRewards
+        .filter((event) => event.currency === 'dice')
+        .reduce((sum, event) => sum + event.amount, 0);
+      const gameTokensEarned = gameRewards
+        .filter((event) => event.currency === 'game_tokens')
+        .reduce((sum, event) => sum + event.amount, 0);
+      const gameHeartsEarned = gameRewards
+        .filter((event) => event.currency === 'hearts')
+        .reduce((sum, event) => sum + event.amount, 0);
+      const gameRewardsTotal = gameGoldEarned + gameDiceEarned + gameTokensEarned + gameHeartsEarned;
+
+      setTodayWinsSummary({
+        journalCount,
+        lotusEarned,
+        xpEarned,
+        gameRewardsTotal,
+        gameGoldEarned,
+        gameDiceEarned,
+        gameTokensEarned,
+        gameHeartsEarned,
+      });
+    };
+
+    void loadTodayWinsSummary();
+
+    return () => {
+      isActive = false;
+    };
+  }, [activeDate, session.user.id]);
 
   useEffect(() => {
     const storedDayStatus = loadDraft<Record<string, DayStatus>>(dayStatusStorageKey(session.user.id));
@@ -5933,15 +6032,43 @@ export function DailyHabitTracker({
           ? 'warning'
           : 'muted';
 
+    const todayWinsTiles = [
+      { id: 'habits', icon: '✅', label: 'Habits', value: completedCount },
+      { id: 'journal', icon: '📓', label: 'Journal', value: todayWinsSummary.journalCount },
+      { id: 'actions', icon: '⚡', label: 'Actions', value: completedActionsCount },
+      { id: 'lotus', icon: '🪷', label: 'Lotus', value: todayWinsSummary.lotusEarned },
+      { id: 'xp', icon: '⭐', label: 'XP', value: todayWinsSummary.xpEarned },
+      { id: 'game-total', icon: '🎮', label: 'Game', value: todayWinsSummary.gameRewardsTotal },
+      { id: 'game-gold', icon: '🪙', label: 'Gold', value: todayWinsSummary.gameGoldEarned },
+      { id: 'game-dice', icon: '🎲', label: 'Dice', value: todayWinsSummary.gameDiceEarned },
+      { id: 'game-token', icon: '🎟️', label: 'Tokens', value: todayWinsSummary.gameTokensEarned },
+      { id: 'game-hearts', icon: '❤️', label: 'Hearts', value: todayWinsSummary.gameHeartsEarned },
+    ].filter((tile) => tile.value > 0);
+    const todayWinsTileCount = todayWinsTiles.length;
+    const orbState = todayWinsTileCount === 0
+      ? 'empty'
+      : todayWinsTileCount <= 2
+        ? 'active'
+        : todayWinsTileCount <= 5
+          ? 'strong'
+          : 'charged';
+    const orbIcon = orbState === 'empty'
+      ? '◌'
+      : orbState === 'active'
+        ? '✨'
+        : orbState === 'strong'
+          ? '💫'
+          : '🏆';
+
     const progressNode = (
-      <span
-        className={`habit-checklist-card__progress${
+      <button
+        type="button"
+        className={`habit-checklist-card__progress habit-checklist-card__progress--${orbState}${
           progressStage !== 'none' ? ` habit-checklist-card__progress--${progressStage}` : ''
         }`}
-        role="img"
-        aria-label={progressLabel}
+        onClick={() => setIsTodayWinsOpen(true)}
+        aria-label={`Open Today's Wins (${todayWinsTileCount} categories)`}
       >
-        <span className="sr-only">{progressLabel}</span>
         <svg className="habit-checklist-card__progress-ring" viewBox="0 0 36 36" aria-hidden="true">
           <defs>
             <linearGradient id={progressGradientId} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -5961,14 +6088,12 @@ export function DailyHabitTracker({
           />
         </svg>
         <span className="habit-checklist-card__progress-count" aria-hidden="true">
-          {completedCount}
+          {todayWinsTileCount}
         </span>
-        {progressIcon ? (
-          <span className="habit-checklist-card__progress-symbol" aria-hidden="true">
-            {progressIcon}
-          </span>
-        ) : null}
-      </span>
+        <span className="habit-checklist-card__progress-symbol" aria-hidden="true">
+          {orbIcon}
+        </span>
+      </button>
     );
 
     const ariaLabel = `Habit checklist for ${formatDateLabel(activeDate)}`;
@@ -6372,6 +6497,41 @@ export function DailyHabitTracker({
                   </p>
                 ) : null}
               </div>
+            </div>
+          </div>
+        ) : null}
+        {isTodayWinsOpen ? (
+          <div className="today-wins-modal" role="dialog" aria-modal="true" aria-label="Today's Wins">
+            <button
+              type="button"
+              className="today-wins-modal__backdrop"
+              onClick={() => setIsTodayWinsOpen(false)}
+              aria-label="Close Today's Wins"
+            />
+            <div className="today-wins-modal__card" role="document">
+              <div className="today-wins-modal__header">
+                <h3>Today's Wins</h3>
+                <button
+                  type="button"
+                  className="today-wins-modal__close"
+                  onClick={() => setIsTodayWinsOpen(false)}
+                >
+                  Close
+                </button>
+              </div>
+              {todayWinsTiles.length > 0 ? (
+                <div className="today-wins-modal__grid" role="list" aria-label="Today's completed categories">
+                  {todayWinsTiles.map((tile) => (
+                    <div key={tile.id} className="today-wins-modal__tile" role="listitem">
+                      <span className="today-wins-modal__tile-icon" aria-hidden="true">{tile.icon}</span>
+                      <span className="today-wins-modal__tile-value">{tile.value.toLocaleString()}</span>
+                      <span className="today-wins-modal__tile-label">{tile.label}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="today-wins-modal__empty">No wins logged yet for this day.</p>
+              )}
             </div>
           </div>
         ) : null}
@@ -8179,6 +8339,14 @@ function formatISODate(date: Date) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+function getLocalDateKeyFromISO(iso: string): string {
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) {
+    return '';
+  }
+  return formatISODate(parsed);
 }
 
 function getSkipStreak(dateISO: string, statusMap: Record<string, DayStatus>) {
