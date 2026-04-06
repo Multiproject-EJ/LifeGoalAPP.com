@@ -140,6 +140,7 @@ export function MeditationSessionPlayer({
       oscillator.stop(now + decay + 0.05);
     });
   }, []);
+  const playGuidanceGong = playGong;
 
   useEffect(() => {
     if (!isRunning || timeRemaining <= 0) return;
