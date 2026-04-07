@@ -122,6 +122,14 @@ import {
 } from '../services/islandRunStopCompletion';
 import { isIslandRunContractV2Enabled } from '../services/islandRunFeatureFlags';
 import {
+  canRetryBossTrial,
+  canUseSpinForMovement,
+  isIslandRunRollEnergyDepleted,
+  resolveIslandRunRollButtonMode,
+  resolveIslandRunTimerLabel,
+  shouldConsumeHeartOnBossFailure,
+} from '../services/islandRunContractV2Energy';
+import {
   resolveIslandRunContractV2Stops,
   resolveIslandRunFullClearForProgression,
   resolveIslandRunStep1CompleteForProgression,
@@ -2532,28 +2540,37 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     stopStatesByIndex: runtimeState.stopStatesByIndex,
     legacyIslandFullyCleared: legacyIsCurrentIslandFullyCleared,
   });
-  const isEnergyDepletedForRoll = dicePool < DICE_PER_ROLL && hearts < 1;
-  const rollButtonMode: 'rolling' | 'step1' | 'roll' | 'convert' = isRolling
-    ? 'rolling'
-    : !step1Complete
-      ? 'step1'
-      : dicePool >= DICE_PER_ROLL
-        ? 'roll'
-        : 'convert';
+  const isEnergyDepletedForRoll = isIslandRunRollEnergyDepleted({
+    islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+    dicePool,
+    hearts,
+    dicePerRoll: DICE_PER_ROLL,
+  });
+  const rollButtonMode = resolveIslandRunRollButtonMode({
+    islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+    isRolling,
+    step1Complete,
+    dicePool,
+    dicePerRoll: DICE_PER_ROLL,
+  });
   const rollButtonLabel = rollButtonMode === 'rolling'
     ? 'Rolling...'
     : rollButtonMode === 'step1'
       ? 'Open Stop 1 (Hatchery)'
       : rollButtonMode === 'roll'
         ? 'Roll (2 dice)'
-        : `Convert 1 heart → ${dicePerHeart} dice`;
+        : rollButtonMode === 'convert'
+          ? `Convert 1 heart → ${dicePerHeart} dice`
+          : 'Need 2 dice to roll';
   const compactRollButtonLabel = rollButtonMode === 'rolling'
     ? 'Rolling...'
     : rollButtonMode === 'step1'
       ? 'Stop 1'
       : rollButtonMode === 'roll'
         ? 'Roll'
-        : 'Convert';
+        : rollButtonMode === 'convert'
+          ? 'Convert'
+          : 'Need dice';
 
   const activateCurrentIsland = useCallback(() => {
     const nowMs = Date.now();
@@ -2563,7 +2580,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setIslandExpiresAtMs(expiresAtMs);
     setTimeLeftSec(Math.ceil(durationMs / 1000));
     setIsIslandTimerPendingStart(false);
-    setLandingText('Island timer started. Complete Stop 1 (Hatchery) to unlock dice.');
+    setLandingText(ISLAND_RUN_CONTRACT_V2_ENABLED
+      ? 'Island run started. Timer shown for event context only.'
+      : 'Island timer started. Complete Stop 1 (Hatchery) to unlock dice.');
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
@@ -2603,6 +2622,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     if (dicePool < DICE_PER_ROLL) {
+      if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
+        setLandingText(`Need ${DICE_PER_ROLL} dice to roll.`);
+        return;
+      }
+
       if (hearts < 1) {
         return;
       }
@@ -2728,6 +2752,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // B2-1: handleSpin — costs 1 spin token, rolls SPIN_MIN–SPIN_MAX
   const handleSpin = async () => {
+    if (!canUseSpinForMovement(ISLAND_RUN_CONTRACT_V2_ENABLED)) {
+      setLandingText('Spin movement is unavailable in contract-v2. Use dice rolls to move.');
+      return;
+    }
+
     // M11C: Step 1 enforcement — player must complete Stop 1 before spinning
     if (!step1Complete) {
       setLandingText(`Complete Stop 1 (${step1Stop?.title ?? 'first stop'}) before rolling or spinning.`);
@@ -3682,8 +3711,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         handleResolveBossTrial();
         setBossTrialPhase('success');
       } else {
-        // Failed: deduct 1 heart, track attempt
-        setHearts((h) => Math.max(0, h - 1));
+        // Failed: legacy mode deducts 1 heart; v2 bypasses heart-based gating
+        if (shouldConsumeHeartOnBossFailure(ISLAND_RUN_CONTRACT_V2_ENABLED)) {
+          setHearts((h) => Math.max(0, h - 1));
+        }
         setBossAttemptCount((c) => c + 1);
         setBossTrialPhase('failed');
         playIslandRunSound('boss_trial_start');
@@ -3729,7 +3760,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   };
 
   const handleBossTrialRetry = () => {
-    if (hearts < 1) return;
+    if (!canRetryBossTrial({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, hearts })) return;
     const { trialDurationSec } = getBossTrialConfig(islandNumber);
     setBossTrialPhase('in_progress');
     setBossTrialTimeLeft(trialDurationSec);
@@ -4869,7 +4900,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           >
             {rollButtonLabel}
           </button>
-          {spinTokens > 0 && (
+          {canUseSpinForMovement(ISLAND_RUN_CONTRACT_V2_ENABLED) && spinTokens > 0 && (
             <button
               type="button"
               className="island-run-prototype__spin-btn"
@@ -5010,7 +5041,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <span className="island-run-prototype__stat-chip">Tile: <strong>{tokenIndex}</strong></span>
               <span className="island-run-prototype__stat-chip">Island: <strong>{islandNumber}</strong></span>
               <span className="island-run-prototype__stat-chip">Last roll: <strong>{rollValue ?? '-'}</strong></span>
-              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">{isIslandTimerPendingStart ? 'Ready:' : 'Ends in:'} <strong>{timerDisplay}</strong></span>
+              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">{resolveIslandRunTimerLabel({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, isIslandTimerPendingStart })} <strong>{timerDisplay}</strong></span>
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">Spins: <strong>{spinTokens}</strong></span>
               {/* M11C: stop progress chip */}
               {(() => {
@@ -5118,7 +5149,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   : `Morning Hearts (+${dailyRewardPlan.hearts} hearts)`}
             </button>
           )}
-          {hearts < 1 && dicePool < DICE_PER_ROLL && (
+          {!ISLAND_RUN_CONTRACT_V2_ENABLED && hearts < 1 && dicePool < DICE_PER_ROLL && (
             <button
               type="button"
               className="island-run-prototype__booster-btn"
@@ -5283,7 +5314,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">🎲 <strong>{dicePool}</strong></span>
             <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--hearts">❤️ <strong>{hearts}</strong></span>
             <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">⏱ <strong>{timerDisplay}</strong></span>
-            {spinTokens > 0 && (
+            {canUseSpinForMovement(ISLAND_RUN_CONTRACT_V2_ENABLED) && spinTokens > 0 && (
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">🌀 <strong>{spinTokens}</strong></span>
             )}
             <div className="island-run-prototype__footer-dice" aria-label="Dice result">
@@ -5300,7 +5331,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             >
               {isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}
             </button>
-            {spinTokens > 0 && (
+            {canUseSpinForMovement(ISLAND_RUN_CONTRACT_V2_ENABLED) && spinTokens > 0 && (
               <button
                 type="button"
                 className="island-run-prototype__spin-btn island-run-prototype__spin-btn--footer"
@@ -5784,9 +5815,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                           {bossReward.spinTokens > 0 ? <>, <strong>+{bossReward.spinTokens} spin</strong></> : null}
                           , <strong>+3 🔷 shards</strong>
                         </p>
-                        <p className="island-boss-trial__lives-note">
-                          💡 Lives = Hearts — a failed attempt costs 1 ❤️. You have <strong>{hearts}</strong> {hearts === 1 ? 'heart' : 'hearts'}.
-                        </p>
+                        {ISLAND_RUN_CONTRACT_V2_ENABLED ? (
+                          <p className="island-boss-trial__lives-note">
+                            💡 Failed attempts do not consume hearts in contract-v2 mode.
+                          </p>
+                        ) : (
+                          <p className="island-boss-trial__lives-note">
+                            💡 Lives = Hearts — a failed attempt costs 1 ❤️. You have <strong>{hearts}</strong> {hearts === 1 ? 'heart' : 'hearts'}.
+                          </p>
+                        )}
                         <div className="island-boss-trial__cta">
                           <button
                             type="button"
@@ -5848,19 +5885,21 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       <div className="island-boss-trial__phase island-boss-trial__phase--failed">
                         <p className="island-boss-trial__result island-boss-trial__result--fail">💔 Trial Failed</p>
                         <p className="island-boss-trial__failed-copy">
-                          You scored {bossTrialScore} / {bossConfig.scoreTarget}. 1 heart deducted.
+                          You scored {bossTrialScore} / {bossConfig.scoreTarget}. {ISLAND_RUN_CONTRACT_V2_ENABLED ? 'Retry when ready.' : '1 heart deducted.'}
                         </p>
-                        <p className="island-boss-trial__hearts-left">
-                          Hearts remaining: <strong>{hearts}</strong>
-                        </p>
-                        {hearts > 0 ? (
+                        {!ISLAND_RUN_CONTRACT_V2_ENABLED && (
+                          <p className="island-boss-trial__hearts-left">
+                            Hearts remaining: <strong>{hearts}</strong>
+                          </p>
+                        )}
+                        {canRetryBossTrial({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, hearts }) ? (
                           <div className="island-boss-trial__cta">
                             <button
                               type="button"
                               className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary island-boss-trial__retry-btn"
                               onClick={handleBossTrialRetry}
                             >
-                              🔄 Retry (costs 1 ❤️)
+                              {ISLAND_RUN_CONTRACT_V2_ENABLED ? '🔄 Retry' : '🔄 Retry (costs 1 ❤️)'}
                             </button>
                           </div>
                         ) : (
