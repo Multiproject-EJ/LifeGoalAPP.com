@@ -4,6 +4,7 @@ import { creatureTreatInventoryServiceTests } from './creatureTreatInventoryServ
 import { creatureFitEngineTests } from './creatureFitEngine.test';
 import { encounterServiceTests } from './encounterService.test';
 import { islandRunFoundationTests } from './islandRunFoundations.test';
+import { islandRunContractV2StopResolverTests } from './islandRunContractV2StopResolver.test';
 import { islandRunProgressionTests } from './islandRunProgression.test';
 import { islandRunRuntimeStateIntegrationTests } from './islandRunRuntimeState.integration.test';
 import { islandRunStopCompletionTests } from './islandRunStopCompletion.test';
@@ -16,6 +17,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'creatureFitEngine', tests: creatureFitEngineTests },
   { label: 'encounterService', tests: encounterServiceTests },
   { label: 'islandRunFoundations', tests: islandRunFoundationTests },
+  { label: 'islandRunContractV2StopResolver', tests: islandRunContractV2StopResolverTests },
   { label: 'islandRunProgression', tests: islandRunProgressionTests },
   { label: 'islandRunRuntimeStateIntegration', tests: islandRunRuntimeStateIntegrationTests },
   { label: 'islandRunStopCompletion', tests: islandRunStopCompletionTests },

@@ -353,8 +353,8 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
               const fallbackEntry = current.stopStatesByIndex[index] ?? { objectiveComplete: false, buildComplete: false };
               if (!entry) return fallbackEntry;
               return {
-                objectiveComplete: Boolean(entry.objectiveComplete),
-                buildComplete: Boolean(entry.buildComplete),
+                objectiveComplete: entry.objectiveComplete === true,
+                buildComplete: entry.buildComplete === true,
                 ...(typeof entry.completedAtMs === 'number' && Number.isFinite(entry.completedAtMs)
                   ? { completedAtMs: entry.completedAtMs }
                   : {}),

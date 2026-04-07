@@ -119,6 +119,11 @@ import {
   shouldAutoOpenIslandStopOnLoad,
 } from '../services/islandRunStopCompletion';
 import { isIslandRunContractV2Enabled } from '../services/islandRunFeatureFlags';
+import {
+  resolveIslandRunContractV2Stops,
+  resolveIslandRunFullClearForProgression,
+  resolveIslandRunStep1CompleteForProgression,
+} from '../services/islandRunContractV2StopResolver';
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 3;
@@ -2177,6 +2182,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [completedStops, effectiveCompletedStops, hasHydratedRuntimeState]);
 
   const stopStateMap = useMemo(() => {
+    if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
+      const contractV2Stops = resolveIslandRunContractV2Stops({
+        stopStatesByIndex: runtimeState.stopStatesByIndex,
+      });
+      const map = new Map<string, StopProgressState>();
+      islandStopPlan.forEach((stop, index) => {
+        map.set(stop.stopId, contractV2Stops.statusesByIndex[index] ?? 'locked');
+      });
+      return map;
+    }
+
     const map = new Map<string, StopProgressState>();
     const effectiveCompletedStopSet = new Set(effectiveCompletedStops);
     const nonBossStops = islandStopPlan.filter((stop) => stop.stopId !== 'boss');
@@ -2197,7 +2213,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     return map;
-  }, [effectiveCompletedStops, islandStopPlan]);
+  }, [effectiveCompletedStops, islandStopPlan, runtimeState.stopStatesByIndex]);
 
   const stopMap = useMemo(() => {
     const map = new Map<number, string>();
@@ -2483,7 +2499,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const timerDisplay = isIslandTimerPendingStart ? 'Ready' : formatIslandCountdown(timeLeftSec);
   const dicePerHeart = getDicePerHeartForIsland(islandNumber);
   const step1Stop = islandStopPlan[0] ?? null;
-  const step1Complete = step1Stop
+  const legacyStep1Complete = step1Stop
     ? isIslandStopEffectivelyCompleted({
         stopId: step1Stop.stopId,
         completedStops,
@@ -2491,7 +2507,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         islandEggSlotUsed,
       })
     : true;
-  const isCurrentIslandFullyCleared = isIslandFullyCleared(islandNumber, effectiveCompletedStops);
+  const step1Complete = resolveIslandRunStep1CompleteForProgression({
+    islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+    stopStatesByIndex: runtimeState.stopStatesByIndex,
+    legacyStep1Complete,
+  });
+  const legacyIsCurrentIslandFullyCleared = isIslandFullyCleared(islandNumber, effectiveCompletedStops);
+  const isCurrentIslandFullyCleared = resolveIslandRunFullClearForProgression({
+    islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+    stopStatesByIndex: runtimeState.stopStatesByIndex,
+    legacyIslandFullyCleared: legacyIsCurrentIslandFullyCleared,
+  });
   const isEnergyDepletedForRoll = dicePool < DICE_PER_ROLL && hearts < 1;
   const rollButtonMode: 'rolling' | 'step1' | 'roll' | 'convert' = isRolling
     ? 'rolling'
