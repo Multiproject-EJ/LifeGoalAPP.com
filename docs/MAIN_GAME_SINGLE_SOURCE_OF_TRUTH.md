@@ -1,3 +1,11 @@
+> [!WARNING]
+> This document is no longer the primary authoritative gameplay source of truth.
+>
+> The canonical gameplay contract is now:
+> `docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md`
+>
+> This file may still contain useful supporting detail, implementation notes, or historical context, but it must not override the canonical gameplay contract.
+
 # Main Game Single Source of Truth (Island Run)
 
 Status: **Canonical source for main game implementation**  

@@ -1,10 +1,17 @@
+> [!WARNING]
+> This document is no longer the primary authoritative gameplay source of truth.
+>
+> The canonical gameplay contract is now:
+> `docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md`
+>
+> This file may still contain useful supporting detail, implementation notes, or historical context, but it must not override the canonical gameplay contract.
+
 # HABITGAME — MAIN GAME 120 ISLANDS (INDEX)
 
 > ⚠️ **Status update (2026-02-27):** This file is now secondary context.
-> The canonical main-game implementation source is:
-> **[`docs/MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md`](./MAIN_GAME_SINGLE_SOURCE_OF_TRUTH.md)**.
-> 
-> If any direction here conflicts with the canonical file, follow the canonical file.
+> This file is an index/navigation aid for the legacy main-game doc set.
+> For gameplay-rule authority, follow:
+> **`docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md`**.
 
 Owner: EJ  
 Product: habitgame.app / lifegoalapp.com  
@@ -16,7 +23,7 @@ A time-limited Island Run loop (**48 h for normal islands / 72 h for special isl
 - Fixed board coordinates reused across all islands (art swaps only)
 - 17 tile anchors on a pond loop
 - Token movement (Hearts = Dice)
-- 5 Stops per island as **outer POIs** (Step 1 gates dice; Stop 5 is Boss); stops are not tiles on the ring — see `docs/07_MAIN_GAME_PROGRESS.md` for canonical rules
+- 5 Stops per island as **outer POIs** (Step 1 gates dice; Stop 5 is Boss); stops are not tiles on the ring — see `docs/07_MAIN_GAME_PROGRESS.md` for additional legacy implementation detail
 - Hatchery + Egg lifecycle + Dormant egg carryover
 - Home Island always-collect hatchery
 - Encounter tile (easy bonus challenge)
@@ -33,8 +40,8 @@ A time-limited Island Run loop (**48 h for normal islands / 72 h for special isl
 
 
 
-## Canonical doc set (for agent prompts)
-Use these exact files as the HabitGame Main Loop source set:
+## Legacy doc set (for agent prompts)
+Use these files as a navigation set for HabitGame Main Loop planning/history:
 - `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md` (entrypoint + current milestone + Next Slice)
 - `docs/01_MAIN_GAME_AGENT_PROTOCOL.md` (execution rules + handoff format)
 - `docs/02_MAIN_GAME_DATA_MODEL_AND_SUPABASE.md` (DB + RLS + migrations)
@@ -43,13 +50,13 @@ Use these exact files as the HabitGame Main Loop source set:
 - `docs/05_MAIN_GAME_AUDIO_HAPTICS_ASSETS_MINIGAME_TEMPLATE.md` (audio/haptics/assets + minigame template)
 - `docs/06_MAIN_GAME_NEXT_SLICE_PROMPT_TEMPLATE.md` (copy/paste prompt for next implementation slice)
 - `docs/07_MAIN_GAME_PROGRESS.md` (append-only progress log)
-- `docs/12_MINIGAME_BOSS_ECONOMY_PLAYER_LEVEL_DESIGN.md` (canonical mini-game roster, boss system, heart economy, player level)
-- `docs/13_COLLECTIBLE_PROGRESS_BAR.md` (canonical collectible progress bar design — shard sub-currency, milestone chain, HUD pill)
-- `docs/17_CURRENCIES_AND_SHIELD.md` (canonical currency list: Coins/Diamonds/Hearts/Shards/Tickets/Shields; egg hatch timer surprise rules; HUD display order)
+- `docs/12_MINIGAME_BOSS_ECONOMY_PLAYER_LEVEL_DESIGN.md` (legacy mini-game roster, boss system, heart economy, player level notes)
+- `docs/13_COLLECTIBLE_PROGRESS_BAR.md` (legacy collectible progress bar design — shard sub-currency, milestone chain, HUD pill)
+- `docs/17_CURRENCIES_AND_SHIELD.md` (legacy currency list notes: Coins/Diamonds/Hearts/Shards/Tickets/Shields; egg hatch timer surprise rules; HUD display order)
 
 Naming convention is intentional:
 - Numeric prefix controls read order and avoids ambiguity in generic prompts.
-- `MAIN_GAME_120_ISLANDS_INDEX` is the source-of-truth entrypoint.
+- `MAIN_GAME_120_ISLANDS_INDEX` is the index/navigation entrypoint.
 - `07_MAIN_GAME_PROGRESS.md` is append-only and never replaced.
 
 ---

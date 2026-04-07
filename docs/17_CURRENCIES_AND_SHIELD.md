@@ -1,3 +1,11 @@
+> [!WARNING]
+> This document is no longer the primary authoritative gameplay source of truth.
+>
+> The canonical gameplay contract is now:
+> `docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md`
+>
+> This file may still contain useful supporting detail, implementation notes, or historical context, but it must not override the canonical gameplay contract.
+
 # CURRENCIES, SHARDS & SHIELD REWARD — CANONICAL DESIGN
 
 > **Status:** Canonical. Authored 2026-03-03. Updated 2026-03-04.
