@@ -1,5 +1,7 @@
 // islandBoardTileMap.ts
-// Generates the 17-tile type map for a given island run.
+// Generates a topology-aware tile type map for a given island run.
+
+import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
 
 export type IslandTileType = 'currency' | 'chest' | 'event' | 'hazard' | 'egg_shard' | 'micro' | 'encounter' | 'stop';
 
@@ -11,14 +13,7 @@ export type IslandTileMapEntry = {
   stopId?: string;
 };
 
-// Canonical stop indices
-const STOP_INDICES: Record<number, string> = {
-  0: 'hatchery',
-  4: 'minigame',
-  8: 'market',
-  12: 'utility',
-  16: 'boss',
-};
+const STOP_IDS = ['hatchery', 'minigame', 'market', 'utility', 'boss'] as const;
 
 // Encounter tile indices by island rarity.
 // Normal: 1 tile (index 6, gated by dayIndex); Seasonal: 2 tiles; Rare: 2 tiles (always active).
@@ -64,33 +59,40 @@ export function getIslandRarity(islandNumber: number): IslandRarity {
   return 'normal';
 }
 
+function getStopIndexMap(stopTileIndices: number[]): Record<number, string> {
+  return stopTileIndices.reduce<Record<number, string>>((map, tileIndex, index) => {
+    map[tileIndex] = STOP_IDS[index] ?? `stop_${index}`;
+    return map;
+  }, {});
+}
+
 /**
- * Generates a 17-tile type map for the given island run parameters.
+ * Generates a tile map for the given island run parameters.
  */
 export function generateTileMap(
   islandNumber: number,
   rarity: IslandRarity,
   _themeId: string,
   dayIndex: number,
+  options?: { profileId?: IslandBoardProfileId },
 ): IslandTileMapEntry[] {
+  const boardProfile = resolveIslandBoardProfile(options?.profileId);
+  const tileCount = boardProfile.tileCount;
+  const stopIndices = getStopIndexMap([...boardProfile.stopTileIndices]);
   const tiles: IslandTileMapEntry[] = [];
 
-  for (let tileIndex = 0; tileIndex < 17; tileIndex++) {
-    // Canonical stop tiles
-    if (STOP_INDICES[tileIndex] !== undefined) {
-      tiles.push({ index: tileIndex, tileType: 'stop', stopId: STOP_INDICES[tileIndex] });
+  for (let tileIndex = 0; tileIndex < tileCount; tileIndex++) {
+    if (stopIndices[tileIndex] !== undefined) {
+      tiles.push({ index: tileIndex, tileType: 'stop', stopId: stopIndices[tileIndex] });
       continue;
     }
 
-    // Encounter tiles: indices defined per rarity.
-    // Normal islands: encounter only when dayIndex >= 2; seasonal/rare always.
-    const encounterIndices = ENCOUNTER_INDICES[rarity];
+    const encounterIndices = ENCOUNTER_INDICES[rarity].filter((index) => index < tileCount);
     if (encounterIndices.includes(tileIndex)) {
       if (rarity !== 'normal' || dayIndex >= 2) {
         tiles.push({ index: tileIndex, tileType: 'encounter' });
       } else {
-        // Default to a non-encounter tile using seeded random
-        const seed = islandNumber * 17 + tileIndex;
+        const seed = islandNumber * tileCount + tileIndex;
         const rand = seededRandom(seed);
         const poolIndex = Math.floor(rand * TILE_POOL.length);
         tiles.push({ index: tileIndex, tileType: TILE_POOL[poolIndex] });
@@ -98,8 +100,7 @@ export function generateTileMap(
       continue;
     }
 
-    // Non-stop tiles use deterministic seeded random
-    const seed = islandNumber * 17 + tileIndex;
+    const seed = islandNumber * tileCount + tileIndex;
     const rand = seededRandom(seed);
     const poolIndex = Math.floor(rand * TILE_POOL.length);
     tiles.push({ index: tileIndex, tileType: TILE_POOL[poolIndex] });

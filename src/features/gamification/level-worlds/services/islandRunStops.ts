@@ -1,3 +1,5 @@
+import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
+
 export type IslandDynamicStopKind =
   | 'habit_action'
   | 'checkin_reflection'
@@ -77,13 +79,17 @@ function pickUniqueIndices(seedBase: number, count: number, max: number) {
   return Array.from(selected).slice(0, count);
 }
 
-export function generateIslandStopPlan(islandNumber: number): IslandStopPlanEntry[] {
+export function generateIslandStopPlan(
+  islandNumber: number,
+  options?: { profileId?: IslandBoardProfileId },
+): IslandStopPlanEntry[] {
   const safeIsland = Number.isFinite(islandNumber) ? Math.max(1, Math.floor(islandNumber)) : 1;
+  const boardProfile = resolveIslandBoardProfile(options?.profileId);
+  const [hatcheryIndex, minigameIndex, utilityIndex, dynamicIndex, bossIndex] = boardProfile.stopTileIndices;
 
-  // Three dynamic stop slots map to stop ids minigame/utility/dynamic on tiles 4/8/12;
-  // all three use dynamically selected content from DYNAMIC_STOP_POOL.
+  // Three dynamic stop slots map to stop ids minigame/utility/dynamic.
   const dynamicIndices = pickUniqueIndices(97 + safeIsland * 13, 3, DYNAMIC_STOP_POOL.length);
-  let selected = dynamicIndices.map((idx) => DYNAMIC_STOP_POOL[idx]);
+  const selected = dynamicIndices.map((idx) => DYNAMIC_STOP_POOL[idx]);
 
   // Constraint: each island must contain at least one real-life behavior stop.
   if (!selected.some((entry) => entry.isBehaviorStop)) {
@@ -93,7 +99,7 @@ export function generateIslandStopPlan(islandNumber: number): IslandStopPlanEntr
   return [
     {
       stopId: 'hatchery',
-      tileIndex: 0,
+      tileIndex: hatcheryIndex,
       title: '🥚 Hatchery Stop',
       description: 'Set one egg and track stage progression over time.',
       kind: 'fixed_hatchery',
@@ -101,7 +107,7 @@ export function generateIslandStopPlan(islandNumber: number): IslandStopPlanEntr
     },
     {
       stopId: 'minigame',
-      tileIndex: 4,
+      tileIndex: minigameIndex,
       title: selected[0].title,
       description: selected[0].description,
       kind: selected[0].kind,
@@ -109,7 +115,7 @@ export function generateIslandStopPlan(islandNumber: number): IslandStopPlanEntr
     },
     {
       stopId: 'utility',
-      tileIndex: 8,
+      tileIndex: utilityIndex,
       title: selected[1].title,
       description: selected[1].description,
       kind: selected[1].kind,
@@ -117,7 +123,7 @@ export function generateIslandStopPlan(islandNumber: number): IslandStopPlanEntr
     },
     {
       stopId: 'dynamic',
-      tileIndex: 12,
+      tileIndex: dynamicIndex,
       title: selected[2].title,
       description: selected[2].description,
       kind: selected[2].kind,
@@ -125,7 +131,7 @@ export function generateIslandStopPlan(islandNumber: number): IslandStopPlanEntr
     },
     {
       stopId: 'boss',
-      tileIndex: 16,
+      tileIndex: bossIndex,
       title: '👑 Boss Stop',
       description: 'Boss trial closes the island and unlocks the next island.',
       kind: 'fixed_boss',
