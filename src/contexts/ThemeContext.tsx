@@ -317,6 +317,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   useEffect(() => {
     // Apply theme to document
     document.documentElement.setAttribute('data-theme', theme);
+    const isDarkTheme = getThemeCategory(theme) === 'dark';
+    const colorScheme = isDarkTheme ? 'dark' : 'light';
+    document.documentElement.style.colorScheme = colorScheme;
     
     // Persist settings
     persistValue(THEME_STORAGE_KEY, theme);
@@ -329,6 +332,18 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     if (metaThemeColor) {
       const themeData = AVAILABLE_THEMES.find(t => t.id === theme);
       metaThemeColor.setAttribute('content', themeData?.metaColor || '#e0f2fe');
+    }
+
+    // Ensure browser canvas / pull-down backdrop follows active theme.
+    const bgMain = getComputedStyle(document.documentElement)
+      .getPropertyValue('--color-bg-main')
+      .trim();
+    const fallbackBg = AVAILABLE_THEMES.find(t => t.id === theme)?.metaColor || '#0a0e1a';
+    const resolvedBackground = bgMain || fallbackBg;
+    document.documentElement.style.backgroundColor = resolvedBackground;
+    if (document.body) {
+      document.body.style.backgroundColor = resolvedBackground;
+      document.body.style.colorScheme = colorScheme;
     }
   }, [theme, themeMode, lightTheme, darkTheme]);
 

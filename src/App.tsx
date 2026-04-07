@@ -88,6 +88,7 @@ import {
 import { fetchWorkspaceStats, type WorkspaceStats } from './services/workspaceStats';
 import { getSupabaseClient } from './lib/supabaseClient';
 import { useContinuousSave } from './hooks/useContinuousSave';
+import { isStandaloneMode } from './routes/detectStandalone';
 import { useDailySpinStatus } from './hooks/useDailySpinStatus';
 import { useLuckyRollStatus } from './hooks/useLuckyRollStatus';
 import { generateInitials } from './utils/initials';
@@ -2723,6 +2724,29 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, []);
 
   const shouldLockAppScroll = showGameBoardOverlay || showLuckyRoll || showDailySpinWheel || showCalendarPlaceholder || showLevelWorldsFromEntry;
+  const isStandalonePwa = useMemo(
+    () => (typeof window !== 'undefined' ? isStandaloneMode() : false),
+    [],
+  );
+
+  useEffect(() => {
+    if (!isStandalonePwa) {
+      return undefined;
+    }
+
+    const html = document.documentElement;
+    const body = document.body;
+    const previousHtmlOverscrollBehaviorY = html.style.overscrollBehaviorY;
+    const previousBodyOverscrollBehaviorY = body.style.overscrollBehaviorY;
+
+    html.style.overscrollBehaviorY = 'none';
+    body.style.overscrollBehaviorY = 'none';
+
+    return () => {
+      html.style.overscrollBehaviorY = previousHtmlOverscrollBehaviorY;
+      body.style.overscrollBehaviorY = previousBodyOverscrollBehaviorY;
+    };
+  }, [isStandalonePwa]);
 
   useEffect(() => {
     if (!shouldLockAppScroll) {
@@ -2740,7 +2764,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     const previousBodyWidth = body.style.width;
     const previousBodyTouchAction = body.style.touchAction;
     const previousHtmlOverflow = html.style.overflow;
-    const previousHtmlOverscrollBehavior = html.style.overscrollBehavior;
+    const previousHtmlOverscrollBehaviorY = html.style.overscrollBehaviorY;
+    const previousBodyOverscrollBehaviorY = body.style.overscrollBehaviorY;
     const previousRootOverflow = root?.style.overflow ?? '';
     const previousRootHeight = root?.style.height ?? '';
 
@@ -2750,7 +2775,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     body.style.width = '100%';
     body.style.touchAction = 'none';
     html.style.overflow = 'hidden';
-    html.style.overscrollBehavior = 'none';
+    html.style.overscrollBehaviorY = 'none';
+    body.style.overscrollBehaviorY = 'none';
 
     if (root) {
       root.style.overflow = 'hidden';
@@ -2763,8 +2789,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
       body.style.top = previousBodyTop;
       body.style.width = previousBodyWidth;
       body.style.touchAction = previousBodyTouchAction;
+      body.style.overscrollBehaviorY = previousBodyOverscrollBehaviorY;
       html.style.overflow = previousHtmlOverflow;
-      html.style.overscrollBehavior = previousHtmlOverscrollBehavior;
+      html.style.overscrollBehaviorY = previousHtmlOverscrollBehaviorY;
 
       if (root) {
         root.style.overflow = previousRootOverflow;

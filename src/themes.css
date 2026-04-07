@@ -233,7 +233,12 @@
    ============================================ */
 
 /* Update body and main backgrounds with smooth animation */
+html {
+  background-color: var(--color-bg-main);
+}
+
 body {
+  background-color: var(--color-bg-main);
   background: var(--color-bg-body);
   background-attachment: fixed;
   color: var(--color-text-primary);

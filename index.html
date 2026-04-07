@@ -3,6 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <script>
+      (() => {
+        try {
+          const THEME_MODE_KEY = 'lifegoal-theme-mode';
+          const LIGHT_THEME_KEY = 'lifegoal-light-theme';
+          const DARK_THEME_KEY = 'lifegoal-dark-theme';
+          const DARK_THEME_IDS = new Set(['dark-glass', 'midnight-purple', 'flow-night', 'bio-night']);
+
+          const mode = localStorage.getItem(THEME_MODE_KEY) || 'system';
+          const lightTheme = localStorage.getItem(LIGHT_THEME_KEY) || 'bright-sky';
+          const darkTheme = localStorage.getItem(DARK_THEME_KEY) || 'dark-glass';
+          const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const useDark = mode === 'dark' || (mode === 'system' && systemPrefersDark);
+          const resolvedTheme = useDark ? darkTheme : lightTheme;
+          const isDarkTheme = DARK_THEME_IDS.has(resolvedTheme);
+
+          document.documentElement.setAttribute('data-theme', resolvedTheme);
+          document.documentElement.style.colorScheme = isDarkTheme ? 'dark' : 'light';
+        } catch {
+          document.documentElement.setAttribute('data-theme', 'dark-glass');
+          document.documentElement.style.colorScheme = 'dark';
+        }
+      })();
+    </script>
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/png" href="/icons/V2_app_icon_large_dark.png" />
     <link rel="apple-touch-icon" href="/icons/V2_app_icon_large_dark.png" />
