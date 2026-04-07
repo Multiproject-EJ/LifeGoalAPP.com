@@ -5001,8 +5001,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               {/* M11C: stop progress chip */}
               {(() => {
                 const nonBossStops = islandStopPlan.filter((s) => s.stopId !== 'boss');
-                const effectiveCompletedStopSet = new Set(effectiveCompletedStops);
-                const completedNonBoss = nonBossStops.filter((s) => effectiveCompletedStopSet.has(s.stopId)).length;
+                const completedNonBoss = ISLAND_RUN_CONTRACT_V2_ENABLED
+                  ? nonBossStops.filter((s) => stopStateMap.get(s.stopId) === 'completed').length
+                  : nonBossStops.filter((s) => effectiveCompletedStops.includes(s.stopId)).length;
                 if (!step1Complete) {
                   return <span className="island-run-prototype__stat-chip">Complete Stop 1 to unlock dice 🔒</span>;
                 }
