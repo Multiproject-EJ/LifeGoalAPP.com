@@ -13,6 +13,8 @@ import {
 } from '../services/islandBoardThemes';
 import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
 import { generateTileMap, getIslandRarity, type IslandTileMapEntry } from '../services/islandBoardTileMap';
+import { resolveIslandBoardProfile } from '../services/islandBoardProfiles';
+import { resolveWrappedTokenIndex } from '../services/islandBoardTopology';
 import { convertHeartToDicePool, getDicePerHeartForIsland } from '../services/islandRunEconomy';
 import { generateIslandStopPlan } from '../services/islandRunStops';
 import { isIslandFullyCleared } from '../services/islandRunProgression';
@@ -140,6 +142,7 @@ const IS_DEV_TIMER = typeof window !== 'undefined' &&
 const ISLAND_DURATION_SEC = IS_DEV_TIMER ? 45 : 72 * 60 * 60;
 const ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE = true;
 const ISLAND_RUN_CONTRACT_V2_ENABLED = isIslandRunContractV2Enabled();
+const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile('legacy17');
 const PERFECT_COMPANION_MODEL_VERSION = 'phase3_v1';
 
 function getOpenHatcheryOnLoadFlag(): boolean {
@@ -791,7 +794,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // B1-3: tile map state — regenerated when islandNumber or dayIndex changes
   const [islandStartedAtMs, setIslandStartedAtMs] = useState<number>(() => Date.now());
   const [islandExpiresAtMs, setIslandExpiresAtMs] = useState<number>(() => Date.now() + getIslandDurationMs(1));
-  const [tileMap, setTileMap] = useState<IslandTileMapEntry[]>(() => generateTileMap(1, 'normal', 'forest', 0));
+  const [tileMap, setTileMap] = useState<IslandTileMapEntry[]>(() => generateTileMap(1, 'normal', 'forest', 0, { profileId: ACTIVE_BOARD_PROFILE.id }));
 
   // B2-1: spin token state
   const [spinTokens, setSpinTokens] = useState(0);
@@ -1883,7 +1886,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
   }, [showIslandClearCelebration]);
 
-  const islandStopPlan = useMemo(() => generateIslandStopPlan(islandNumber), [islandNumber]);
+  const islandStopPlan = useMemo(
+    () => generateIslandStopPlan(islandNumber, { profileId: ACTIVE_BOARD_PROFILE.id }),
+    [islandNumber],
+  );
 
   // B1-3: dayIndex computed from island start time
   const dayIndex = useMemo(
@@ -1894,7 +1900,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // B1-3: regenerate tileMap whenever islandNumber or dayIndex changes
   useEffect(() => {
     const rarity = getIslandRarity(islandNumber);
-    setTileMap(generateTileMap(islandNumber, rarity, activeTheme.tileThemeId, dayIndex));
+    setTileMap(generateTileMap(islandNumber, rarity, activeTheme.tileThemeId, dayIndex, { profileId: ACTIVE_BOARD_PROFILE.id }));
   }, [activeTheme.tileThemeId, islandNumber, dayIndex]);
 
   // B4-4: log dayIndex changes for debug
@@ -2218,7 +2224,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return map;
   }, [islandStopPlan]);
 
-  const tokenPosition = toScreen(TILE_ANCHORS[tokenIndex], boardSize.width, boardSize.height);
+  const gameplayStopMap = useMemo(() => {
+    if (ISLAND_RUN_CONTRACT_V2_ENABLED) return new Map<number, string>();
+    return stopMap;
+  }, [stopMap]);
+
+  const tokenAnchor = TILE_ANCHORS[resolveWrappedTokenIndex(tokenIndex, 0, TILE_ANCHORS.length)];
+  const tokenPosition = toScreen(tokenAnchor, boardSize.width, boardSize.height);
   const activeStop = activeStopId ? islandStopPlan.find((stop) => stop.stopId === activeStopId) ?? null : null;
 
   const orbitStopVisuals = useMemo<OrbitStopVisual[]>(() => {
@@ -2618,14 +2630,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     let currentIndex = tokenIndex;
     for (let step = 0; step < nextRoll; step += 1) {
-      currentIndex = (currentIndex + 1) % TILE_ANCHORS.length;
+      currentIndex = resolveWrappedTokenIndex(currentIndex, 1, ACTIVE_BOARD_PROFILE.tileCount);
       setTokenIndex(currentIndex);
       // M10A: token_move sound on each hop
       playIslandRunSound('token_move');
       await wait(240);
     }
 
-    const landedStop = stopMap.get(currentIndex);
+    const landedStop = gameplayStopMap.get(currentIndex);
     if (landedStop) {
       const stopConfig = islandStopPlan.find((stop) => stop.stopId === landedStop);
       const stopTitle = stopConfig?.title ?? landedStop.toUpperCase();
@@ -2738,13 +2750,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     let currentIndex = tokenIndex;
     for (let step = 0; step < nextRoll; step += 1) {
-      currentIndex = (currentIndex + 1) % TILE_ANCHORS.length;
+      currentIndex = resolveWrappedTokenIndex(currentIndex, 1, ACTIVE_BOARD_PROFILE.tileCount);
       setTokenIndex(currentIndex);
       playIslandRunSound('token_move');
       await wait(240);
     }
 
-    const landedStop = stopMap.get(currentIndex);
+    const landedStop = gameplayStopMap.get(currentIndex);
     if (landedStop) {
       const stopConfig = islandStopPlan.find((stop) => stop.stopId === landedStop);
       const stopTitle = stopConfig?.title ?? landedStop.toUpperCase();
@@ -5157,7 +5169,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
         <canvas ref={canvasRef} className="island-run-board__path" />
 
-        <div className="island-run-board__lap-label">17-tile lap</div>
+        <div className="island-run-board__lap-label">{ACTIVE_BOARD_PROFILE.tileCount}-tile lap</div>
 
         <div className="island-run-board__orbit-stops">
           {orbitStopVisuals.map((stopVisual) => (
