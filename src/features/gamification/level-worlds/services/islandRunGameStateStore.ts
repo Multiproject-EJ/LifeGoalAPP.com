@@ -92,10 +92,139 @@ export interface IslandRunGameStateRecord {
   perfectCompanionComputedAtMs: number | null;
   perfectCompanionModelVersion: string | null;
   perfectCompanionComputedCycleIndex: number | null;
+  activeStopIndex: number;
+  activeStopType: 'hatchery' | 'habit' | 'breathing' | 'wisdom' | 'boss';
+  stopStatesByIndex: Array<{
+    objectiveComplete: boolean;
+    buildComplete: boolean;
+    completedAtMs?: number;
+  }>;
+  stopBuildStateByIndex: Array<{
+    requiredEssence: number;
+    spentEssence: number;
+    buildLevel: number;
+  }>;
+  bossState: {
+    unlocked: boolean;
+    objectiveComplete: boolean;
+    buildComplete: boolean;
+    completedAtMs?: number;
+  };
+  essence: number;
+  essenceLifetimeEarned: number;
+  essenceLifetimeSpent: number;
+  diceRegenState?: {
+    maxDice: number;
+    regenRatePerHour: number;
+    lastRegenAtMs: number;
+  };
+  rewardBarProgress: number;
+  rewardBarThreshold: number;
+  rewardBarClaimCountInEvent: number;
+  rewardBarEscalationTier: number;
+  rewardBarLastClaimAtMs: number | null;
+  rewardBarBoundEventId: string | null;
+  rewardBarLadderId?: string;
+  activeTimedEvent: {
+    eventId: string;
+    eventType: string;
+    startedAtMs: number;
+    expiresAtMs: number;
+    version: number;
+  } | null;
+  activeTimedEventProgress: {
+    feedingActions: number;
+    tokensEarned: number;
+    milestonesClaimed: number;
+  };
+  stickerProgress: {
+    fragments: number;
+    guaranteedAt?: number;
+    pityCounter?: number;
+  };
+  stickerInventory: Record<string, number>;
 }
 
 const ISLAND_RUN_RUNTIME_STATE_TABLE = 'island_run_runtime_state';
 const ISLAND_RUN_REMOTE_BACKOFF_MS = 60 * 1000;
+const CONTRACT_V2_STOP_COUNT = 5;
+const DEFAULT_STOP_BUILD_REQUIRED_ESSENCE = 100; // Placeholder for phase-2 tuning.
+const DEFAULT_REWARD_BAR_THRESHOLD = 10; // Placeholder for phase-2 tuning.
+
+export function deriveIslandRunContractV2StopType(index: number): 'hatchery' | 'habit' | 'breathing' | 'wisdom' | 'boss' {
+  switch (index) {
+    case 0:
+      return 'hatchery';
+    case 1:
+      return 'habit';
+    case 2:
+      return 'breathing';
+    case 3:
+      return 'wisdom';
+    case 4:
+    default:
+      return 'boss';
+  }
+}
+
+function getDefaultStopStatesByIndex() {
+  return Array.from({ length: CONTRACT_V2_STOP_COUNT }, () => ({
+    objectiveComplete: false,
+    buildComplete: false,
+  }));
+}
+
+function getDefaultStopBuildStateByIndex() {
+  return Array.from({ length: CONTRACT_V2_STOP_COUNT }, () => ({
+    requiredEssence: DEFAULT_STOP_BUILD_REQUIRED_ESSENCE,
+    spentEssence: 0,
+    buildLevel: 0,
+  }));
+}
+
+function toStopStateEntry(value: unknown): { objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number } {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return { objectiveComplete: false, buildComplete: false };
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const completedAtMs =
+    typeof candidate.completedAtMs === 'number' && Number.isFinite(candidate.completedAtMs)
+      ? candidate.completedAtMs
+      : undefined;
+
+  return {
+    objectiveComplete: Boolean(candidate.objectiveComplete),
+    buildComplete: Boolean(candidate.buildComplete),
+    ...(typeof completedAtMs === 'number' ? { completedAtMs } : {}),
+  };
+}
+
+function toStopBuildStateEntry(value: unknown): { requiredEssence: number; spentEssence: number; buildLevel: number } {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {
+      requiredEssence: DEFAULT_STOP_BUILD_REQUIRED_ESSENCE,
+      spentEssence: 0,
+      buildLevel: 0,
+    };
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return {
+    requiredEssence:
+      typeof candidate.requiredEssence === 'number' && Number.isFinite(candidate.requiredEssence)
+        ? Math.max(0, Math.floor(candidate.requiredEssence))
+        : DEFAULT_STOP_BUILD_REQUIRED_ESSENCE,
+    spentEssence:
+      typeof candidate.spentEssence === 'number' && Number.isFinite(candidate.spentEssence)
+        ? Math.max(0, Math.floor(candidate.spentEssence))
+        : 0,
+    buildLevel:
+      typeof candidate.buildLevel === 'number' && Number.isFinite(candidate.buildLevel)
+        ? Math.max(0, Math.floor(candidate.buildLevel))
+        : 0,
+  };
+}
 
 function getStorageKey(userId: string) {
   return `island_run_runtime_state_${userId}`;
@@ -252,6 +381,34 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     perfectCompanionComputedAtMs: null,
     perfectCompanionModelVersion: null,
     perfectCompanionComputedCycleIndex: null,
+    activeStopIndex: 0,
+    activeStopType: 'hatchery',
+    stopStatesByIndex: getDefaultStopStatesByIndex(),
+    stopBuildStateByIndex: getDefaultStopBuildStateByIndex(),
+    bossState: {
+      unlocked: false,
+      objectiveComplete: false,
+      buildComplete: false,
+    },
+    essence: 0,
+    essenceLifetimeEarned: 0,
+    essenceLifetimeSpent: 0,
+    rewardBarProgress: 0,
+    rewardBarThreshold: DEFAULT_REWARD_BAR_THRESHOLD,
+    rewardBarClaimCountInEvent: 0,
+    rewardBarEscalationTier: 0,
+    rewardBarLastClaimAtMs: null,
+    rewardBarBoundEventId: null,
+    activeTimedEvent: null,
+    activeTimedEventProgress: {
+      feedingActions: 0,
+      tokensEarned: 0,
+      milestonesClaimed: 0,
+    },
+    stickerProgress: {
+      fragments: 0,
+    },
+    stickerInventory: {},
   };
 }
 
@@ -302,6 +459,16 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
   const eggTierRaw = value.activeEggTier;
   const activeEggTier: 'common' | 'rare' | 'mythic' | null =
     eggTierRaw === 'common' || eggTierRaw === 'rare' || eggTierRaw === 'mythic' ? eggTierRaw : fallback.activeEggTier;
+  const normalizedActiveStopIndex =
+    typeof value.activeStopIndex === 'number' && Number.isFinite(value.activeStopIndex)
+      ? Math.max(0, Math.min(CONTRACT_V2_STOP_COUNT - 1, Math.floor(value.activeStopIndex)))
+      : fallback.activeStopIndex;
+  const stopStatesByIndex = Array.isArray(value.stopStatesByIndex)
+    ? Array.from({ length: CONTRACT_V2_STOP_COUNT }, (_, index) => toStopStateEntry(value.stopStatesByIndex?.[index]))
+    : fallback.stopStatesByIndex;
+  const stopBuildStateByIndex = Array.isArray(value.stopBuildStateByIndex)
+    ? Array.from({ length: CONTRACT_V2_STOP_COUNT }, (_, index) => toStopBuildStateEntry(value.stopBuildStateByIndex?.[index]))
+    : fallback.stopBuildStateByIndex;
   return {
     runtimeVersion:
       typeof value.runtimeVersion === 'number' && Number.isFinite(value.runtimeVersion)
@@ -508,6 +675,148 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
         : value.perfectCompanionComputedCycleIndex === null
           ? null
           : fallback.perfectCompanionComputedCycleIndex,
+    activeStopIndex: normalizedActiveStopIndex,
+    activeStopType:
+      value.activeStopType === 'hatchery'
+      || value.activeStopType === 'habit'
+      || value.activeStopType === 'breathing'
+      || value.activeStopType === 'wisdom'
+      || value.activeStopType === 'boss'
+        ? value.activeStopType
+        : deriveIslandRunContractV2StopType(normalizedActiveStopIndex),
+    stopStatesByIndex,
+    stopBuildStateByIndex,
+    bossState:
+      value.bossState !== null && typeof value.bossState === 'object' && !Array.isArray(value.bossState)
+        ? {
+            unlocked: Boolean(value.bossState.unlocked),
+            objectiveComplete: Boolean(value.bossState.objectiveComplete),
+            buildComplete: Boolean(value.bossState.buildComplete),
+            ...(typeof value.bossState.completedAtMs === 'number' && Number.isFinite(value.bossState.completedAtMs)
+              ? { completedAtMs: value.bossState.completedAtMs }
+              : {}),
+          }
+        : fallback.bossState,
+    essence:
+      typeof value.essence === 'number' && Number.isFinite(value.essence)
+        ? Math.max(0, Math.floor(value.essence))
+        : fallback.essence,
+    essenceLifetimeEarned:
+      typeof value.essenceLifetimeEarned === 'number' && Number.isFinite(value.essenceLifetimeEarned)
+        ? Math.max(0, Math.floor(value.essenceLifetimeEarned))
+        : fallback.essenceLifetimeEarned,
+    essenceLifetimeSpent:
+      typeof value.essenceLifetimeSpent === 'number' && Number.isFinite(value.essenceLifetimeSpent)
+        ? Math.max(0, Math.floor(value.essenceLifetimeSpent))
+        : fallback.essenceLifetimeSpent,
+    diceRegenState:
+      value.diceRegenState !== null && typeof value.diceRegenState === 'object' && !Array.isArray(value.diceRegenState)
+      && typeof value.diceRegenState.maxDice === 'number'
+      && Number.isFinite(value.diceRegenState.maxDice)
+      && typeof value.diceRegenState.regenRatePerHour === 'number'
+      && Number.isFinite(value.diceRegenState.regenRatePerHour)
+      && typeof value.diceRegenState.lastRegenAtMs === 'number'
+      && Number.isFinite(value.diceRegenState.lastRegenAtMs)
+        ? {
+            maxDice: Math.max(0, Math.floor(value.diceRegenState.maxDice)),
+            regenRatePerHour: Math.max(0, value.diceRegenState.regenRatePerHour),
+            lastRegenAtMs: value.diceRegenState.lastRegenAtMs,
+          }
+        : fallback.diceRegenState,
+    rewardBarProgress:
+      typeof value.rewardBarProgress === 'number' && Number.isFinite(value.rewardBarProgress)
+        ? Math.max(0, Math.floor(value.rewardBarProgress))
+        : fallback.rewardBarProgress,
+    rewardBarThreshold:
+      typeof value.rewardBarThreshold === 'number' && Number.isFinite(value.rewardBarThreshold)
+        ? Math.max(1, Math.floor(value.rewardBarThreshold))
+        : fallback.rewardBarThreshold,
+    rewardBarClaimCountInEvent:
+      typeof value.rewardBarClaimCountInEvent === 'number' && Number.isFinite(value.rewardBarClaimCountInEvent)
+        ? Math.max(0, Math.floor(value.rewardBarClaimCountInEvent))
+        : fallback.rewardBarClaimCountInEvent,
+    rewardBarEscalationTier:
+      typeof value.rewardBarEscalationTier === 'number' && Number.isFinite(value.rewardBarEscalationTier)
+        ? Math.max(0, Math.floor(value.rewardBarEscalationTier))
+        : fallback.rewardBarEscalationTier,
+    rewardBarLastClaimAtMs:
+      typeof value.rewardBarLastClaimAtMs === 'number' && Number.isFinite(value.rewardBarLastClaimAtMs)
+        ? value.rewardBarLastClaimAtMs
+        : value.rewardBarLastClaimAtMs === null
+          ? null
+          : fallback.rewardBarLastClaimAtMs,
+    rewardBarBoundEventId:
+      typeof value.rewardBarBoundEventId === 'string' || value.rewardBarBoundEventId === null
+        ? value.rewardBarBoundEventId
+        : fallback.rewardBarBoundEventId,
+    rewardBarLadderId:
+      typeof value.rewardBarLadderId === 'string'
+        ? value.rewardBarLadderId
+        : fallback.rewardBarLadderId,
+    activeTimedEvent:
+      value.activeTimedEvent !== null
+      && typeof value.activeTimedEvent === 'object'
+      && !Array.isArray(value.activeTimedEvent)
+      && typeof value.activeTimedEvent.eventId === 'string'
+      && typeof value.activeTimedEvent.eventType === 'string'
+      && typeof value.activeTimedEvent.startedAtMs === 'number'
+      && Number.isFinite(value.activeTimedEvent.startedAtMs)
+      && typeof value.activeTimedEvent.expiresAtMs === 'number'
+      && Number.isFinite(value.activeTimedEvent.expiresAtMs)
+      && typeof value.activeTimedEvent.version === 'number'
+      && Number.isFinite(value.activeTimedEvent.version)
+        ? {
+            eventId: value.activeTimedEvent.eventId,
+            eventType: value.activeTimedEvent.eventType,
+            startedAtMs: value.activeTimedEvent.startedAtMs,
+            expiresAtMs: value.activeTimedEvent.expiresAtMs,
+            version: Math.max(0, Math.floor(value.activeTimedEvent.version)),
+          }
+        : value.activeTimedEvent === null
+          ? null
+          : fallback.activeTimedEvent,
+    activeTimedEventProgress:
+      value.activeTimedEventProgress !== null
+      && typeof value.activeTimedEventProgress === 'object'
+      && !Array.isArray(value.activeTimedEventProgress)
+        ? {
+            feedingActions:
+              typeof value.activeTimedEventProgress.feedingActions === 'number' && Number.isFinite(value.activeTimedEventProgress.feedingActions)
+                ? Math.max(0, Math.floor(value.activeTimedEventProgress.feedingActions))
+                : fallback.activeTimedEventProgress.feedingActions,
+            tokensEarned:
+              typeof value.activeTimedEventProgress.tokensEarned === 'number' && Number.isFinite(value.activeTimedEventProgress.tokensEarned)
+                ? Math.max(0, Math.floor(value.activeTimedEventProgress.tokensEarned))
+                : fallback.activeTimedEventProgress.tokensEarned,
+            milestonesClaimed:
+              typeof value.activeTimedEventProgress.milestonesClaimed === 'number' && Number.isFinite(value.activeTimedEventProgress.milestonesClaimed)
+                ? Math.max(0, Math.floor(value.activeTimedEventProgress.milestonesClaimed))
+                : fallback.activeTimedEventProgress.milestonesClaimed,
+          }
+        : fallback.activeTimedEventProgress,
+    stickerProgress:
+      value.stickerProgress !== null && typeof value.stickerProgress === 'object' && !Array.isArray(value.stickerProgress)
+        ? {
+            fragments:
+              typeof value.stickerProgress.fragments === 'number' && Number.isFinite(value.stickerProgress.fragments)
+                ? Math.max(0, Math.floor(value.stickerProgress.fragments))
+                : fallback.stickerProgress.fragments,
+            ...(typeof value.stickerProgress.guaranteedAt === 'number' && Number.isFinite(value.stickerProgress.guaranteedAt)
+              ? { guaranteedAt: Math.max(0, Math.floor(value.stickerProgress.guaranteedAt)) }
+              : {}),
+            ...(typeof value.stickerProgress.pityCounter === 'number' && Number.isFinite(value.stickerProgress.pityCounter)
+              ? { pityCounter: Math.max(0, Math.floor(value.stickerProgress.pityCounter)) }
+              : {}),
+          }
+        : fallback.stickerProgress,
+    stickerInventory:
+      value.stickerInventory !== null && typeof value.stickerInventory === 'object' && !Array.isArray(value.stickerInventory)
+        ? Object.fromEntries(
+            Object.entries(value.stickerInventory)
+              .filter(([key, count]) => typeof key === 'string' && typeof count === 'number' && Number.isFinite(count))
+              .map(([key, count]) => [key, Math.max(0, Math.floor(count))]),
+          )
+        : fallback.stickerInventory,
   };
 }
 
@@ -600,6 +909,10 @@ function mergeRecordForConflict(options: {
     perfectCompanionModelVersion: local.perfectCompanionModelVersion ?? remote.perfectCompanionModelVersion,
     perfectCompanionComputedCycleIndex:
       local.perfectCompanionComputedCycleIndex ?? remote.perfectCompanionComputedCycleIndex,
+    stickerInventory: {
+      ...remote.stickerInventory,
+      ...local.stickerInventory,
+    },
   };
 }
 
@@ -644,6 +957,26 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     perfect_companion_computed_at_ms: record.perfectCompanionComputedAtMs,
     perfect_companion_model_version: record.perfectCompanionModelVersion,
     perfect_companion_computed_cycle_index: record.perfectCompanionComputedCycleIndex,
+    active_stop_index: record.activeStopIndex,
+    active_stop_type: record.activeStopType,
+    stop_states_by_index: record.stopStatesByIndex,
+    stop_build_state_by_index: record.stopBuildStateByIndex,
+    boss_state: record.bossState,
+    essence: record.essence,
+    essence_lifetime_earned: record.essenceLifetimeEarned,
+    essence_lifetime_spent: record.essenceLifetimeSpent,
+    dice_regen_state: record.diceRegenState ?? null,
+    reward_bar_progress: record.rewardBarProgress,
+    reward_bar_threshold: record.rewardBarThreshold,
+    reward_bar_claim_count_in_event: record.rewardBarClaimCountInEvent,
+    reward_bar_escalation_tier: record.rewardBarEscalationTier,
+    reward_bar_last_claim_at_ms: record.rewardBarLastClaimAtMs,
+    reward_bar_bound_event_id: record.rewardBarBoundEventId,
+    reward_bar_ladder_id: record.rewardBarLadderId ?? null,
+    active_timed_event: record.activeTimedEvent,
+    active_timed_event_progress: record.activeTimedEventProgress,
+    sticker_progress: record.stickerProgress,
+    sticker_inventory: record.stickerInventory,
     last_writer_device_session_id: deviceSessionId,
     updated_at: new Date().toISOString(),
   };
@@ -707,7 +1040,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index')
+    .select('runtime_version,first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -760,6 +1093,26 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             perfectCompanionComputedAtMs: legacyData.perfect_companion_computed_at_ms ?? fallback.perfectCompanionComputedAtMs,
             perfectCompanionModelVersion: legacyData.perfect_companion_model_version ?? fallback.perfectCompanionModelVersion,
             perfectCompanionComputedCycleIndex: legacyData.perfect_companion_computed_cycle_index ?? fallback.perfectCompanionComputedCycleIndex,
+            activeStopIndex: legacyData.active_stop_index ?? fallback.activeStopIndex,
+            activeStopType: legacyData.active_stop_type ?? fallback.activeStopType,
+            stopStatesByIndex: legacyData.stop_states_by_index ?? fallback.stopStatesByIndex,
+            stopBuildStateByIndex: legacyData.stop_build_state_by_index ?? fallback.stopBuildStateByIndex,
+            bossState: legacyData.boss_state ?? fallback.bossState,
+            essence: legacyData.essence ?? fallback.essence,
+            essenceLifetimeEarned: legacyData.essence_lifetime_earned ?? fallback.essenceLifetimeEarned,
+            essenceLifetimeSpent: legacyData.essence_lifetime_spent ?? fallback.essenceLifetimeSpent,
+            diceRegenState: legacyData.dice_regen_state ?? fallback.diceRegenState,
+            rewardBarProgress: legacyData.reward_bar_progress ?? fallback.rewardBarProgress,
+            rewardBarThreshold: legacyData.reward_bar_threshold ?? fallback.rewardBarThreshold,
+            rewardBarClaimCountInEvent: legacyData.reward_bar_claim_count_in_event ?? fallback.rewardBarClaimCountInEvent,
+            rewardBarEscalationTier: legacyData.reward_bar_escalation_tier ?? fallback.rewardBarEscalationTier,
+            rewardBarLastClaimAtMs: legacyData.reward_bar_last_claim_at_ms ?? fallback.rewardBarLastClaimAtMs,
+            rewardBarBoundEventId: legacyData.reward_bar_bound_event_id ?? fallback.rewardBarBoundEventId,
+            rewardBarLadderId: legacyData.reward_bar_ladder_id ?? fallback.rewardBarLadderId,
+            activeTimedEvent: legacyData.active_timed_event ?? fallback.activeTimedEvent,
+            activeTimedEventProgress: legacyData.active_timed_event_progress ?? fallback.activeTimedEventProgress,
+            stickerProgress: legacyData.sticker_progress ?? fallback.stickerProgress,
+            stickerInventory: legacyData.sticker_inventory ?? fallback.stickerInventory,
           },
           fallback,
         );
@@ -848,6 +1201,26 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       perfectCompanionComputedAtMs: data.perfect_companion_computed_at_ms ?? fallback.perfectCompanionComputedAtMs,
       perfectCompanionModelVersion: data.perfect_companion_model_version ?? fallback.perfectCompanionModelVersion,
       perfectCompanionComputedCycleIndex: data.perfect_companion_computed_cycle_index ?? fallback.perfectCompanionComputedCycleIndex,
+      activeStopIndex: data.active_stop_index ?? fallback.activeStopIndex,
+      activeStopType: data.active_stop_type ?? fallback.activeStopType,
+      stopStatesByIndex: data.stop_states_by_index ?? fallback.stopStatesByIndex,
+      stopBuildStateByIndex: data.stop_build_state_by_index ?? fallback.stopBuildStateByIndex,
+      bossState: data.boss_state ?? fallback.bossState,
+      essence: data.essence ?? fallback.essence,
+      essenceLifetimeEarned: data.essence_lifetime_earned ?? fallback.essenceLifetimeEarned,
+      essenceLifetimeSpent: data.essence_lifetime_spent ?? fallback.essenceLifetimeSpent,
+      diceRegenState: data.dice_regen_state ?? fallback.diceRegenState,
+      rewardBarProgress: data.reward_bar_progress ?? fallback.rewardBarProgress,
+      rewardBarThreshold: data.reward_bar_threshold ?? fallback.rewardBarThreshold,
+      rewardBarClaimCountInEvent: data.reward_bar_claim_count_in_event ?? fallback.rewardBarClaimCountInEvent,
+      rewardBarEscalationTier: data.reward_bar_escalation_tier ?? fallback.rewardBarEscalationTier,
+      rewardBarLastClaimAtMs: data.reward_bar_last_claim_at_ms ?? fallback.rewardBarLastClaimAtMs,
+      rewardBarBoundEventId: data.reward_bar_bound_event_id ?? fallback.rewardBarBoundEventId,
+      rewardBarLadderId: data.reward_bar_ladder_id ?? fallback.rewardBarLadderId,
+      activeTimedEvent: data.active_timed_event ?? fallback.activeTimedEvent,
+      activeTimedEventProgress: data.active_timed_event_progress ?? fallback.activeTimedEventProgress,
+      stickerProgress: data.sticker_progress ?? fallback.stickerProgress,
+      stickerInventory: data.sticker_inventory ?? fallback.stickerInventory,
     },
     fallback,
   );

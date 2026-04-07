@@ -118,6 +118,7 @@ import {
   isStopCompleted,
   shouldAutoOpenIslandStopOnLoad,
 } from '../services/islandRunStopCompletion';
+import { isIslandRunContractV2Enabled } from '../services/islandRunFeatureFlags';
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 3;
@@ -129,6 +130,7 @@ const IS_DEV_TIMER = typeof window !== 'undefined' &&
   new URLSearchParams(window.location.search).get('devTimer') === '1';
 const ISLAND_DURATION_SEC = IS_DEV_TIMER ? 45 : 72 * 60 * 60;
 const ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE = true;
+const ISLAND_RUN_CONTRACT_V2_ENABLED = isIslandRunContractV2Enabled();
 const PERFECT_COMPANION_MODEL_VERSION = 'phase3_v1';
 
 function getOpenHatcheryOnLoadFlag(): boolean {
@@ -1118,11 +1120,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     logIslandRunEntryDebug('island_run_board_mount', {
       userId: session.user.id,
+      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
     });
 
     return () => {
       logIslandRunEntryDebug('island_run_board_unmount', {
         userId: session.user.id,
+        islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
       });
     };
   }, [session.user.id]);
