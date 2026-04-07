@@ -194,8 +194,8 @@ function toStopStateEntry(value: unknown): { objectiveComplete: boolean; buildCo
       : undefined;
 
   return {
-    objectiveComplete: Boolean(candidate.objectiveComplete),
-    buildComplete: Boolean(candidate.buildComplete),
+    objectiveComplete: candidate.objectiveComplete === true,
+    buildComplete: candidate.buildComplete === true,
     ...(typeof completedAtMs === 'number' ? { completedAtMs } : {}),
   };
 }

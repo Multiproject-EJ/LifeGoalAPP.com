@@ -213,4 +213,30 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       );
     },
   },
+  {
+    name: 'persistIslandRunRuntimeStatePatch requires explicit booleans for stop completion fields',
+    run: async () => {
+      resetStorage();
+      const persistResult = await persistIslandRunRuntimeStatePatch({
+        session: makeSession(),
+        client: null,
+        patch: {
+          stopStatesByIndex: [
+            { objectiveComplete: 'true' as unknown as boolean, buildComplete: 'true' as unknown as boolean },
+            { objectiveComplete: true, buildComplete: true },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+          ],
+        },
+      });
+
+      assertDeepEqual(persistResult, { ok: true }, 'Expected persistence to accept payload');
+      const state = readIslandRunRuntimeState(makeSession());
+      assertEqual(state.stopStatesByIndex[0]?.objectiveComplete, false, 'Expected non-boolean objectiveComplete to normalize to false');
+      assertEqual(state.stopStatesByIndex[0]?.buildComplete, false, 'Expected non-boolean buildComplete to normalize to false');
+      assertEqual(state.stopStatesByIndex[1]?.objectiveComplete, true, 'Expected explicit boolean objectiveComplete to persist');
+      assertEqual(state.stopStatesByIndex[1]?.buildComplete, true, 'Expected explicit boolean buildComplete to persist');
+    },
+  },
 ];
