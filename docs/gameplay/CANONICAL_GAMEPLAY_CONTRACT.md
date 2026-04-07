@@ -70,6 +70,35 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 
 ---
 
+## 3A) Dice reward sources
+
+Dice may be awarded from the following sources:
+- Boss completion
+- Stop completion
+- Egg hatching completion
+- Reward bar payouts
+- Timed minigame/event milestones
+- Microgames and larger minigames
+- Island completion
+- Sticker/collection milestones, where configured
+
+Dice reward sources should follow this qualitative pattern:
+- Boss completion = major dice payout
+- Island completion / larger milestones = meaningful payout
+- Stop completion / egg hatching = smaller reinforcement payout
+- Reward bar / minigames = variable and tunable payout
+
+## 3B) Player level progression
+
+- Player level is a long-term progression system that improves dice regeneration capacity over time.
+- Player level may increase:
+  - maximum dice capacity
+  - dice regeneration speed
+  - visible Essence income scale
+  - visible stop/build upgrade costs
+- Essence income and stop/build costs may scale upward together so the relative board-loop pressure remains familiar while the player experiences larger numbers and stronger progression fantasy.
+- Dice progression should scale more slowly and remain meaningfully constrained to preserve scarcity and monetization tension.
+
 ## 4) Stop system
 
 Each island contains exactly 5 stops, in this fixed sequence:
@@ -88,10 +117,18 @@ Stop rules:
 
 ---
 
+## 4A) Stop completion definition
+
+- Each stop requires two completion conditions:
+  1. the stop-specific objective must be completed, and
+  2. the required Essence-funded build/upgrade state must be completed.
+- A stop is not complete until both conditions are satisfied.
+- Completing a stop unlocks the next stop in sequence.
+
 ## 5) Reward bar system
 
 - Feeding tiles are the primary input for reward bar progress.
-- Reward bar progress is cumulative within the active island session unless explicitly reset by design rules.
+- Reward bar progress resets after each reward claim and fully resets when the active timed minigame/event changes.
 - Reward bar payout types are:
   - Minigame tokens
   - Occasional dice
@@ -99,6 +136,41 @@ Stop rules:
 - Reward bar tuning (fill rates, threshold counts, payout rates) is implementation-configurable but must preserve the payout type contract above.
 
 ---
+
+## 5A) Reward bar reset and escalation
+
+- Reward bar progress resets after each reward claim.
+- Reward bar rewards escalate within the currently active timed minigame/event.
+- Escalation may affect:
+  - payout quantity
+  - payout rarity
+  - sticker chance
+  - minigame token output
+  - occasional dice output
+- When the active timed minigame/event expires and a new one begins, the reward bar resets fully, including its escalation state.
+
+## 5B) Feeding tile output rules
+
+- Feeding tiles are multi-progression inputs and should usually advance multiple systems at once.
+- A feeding tile may contribute to:
+  - reward bar progress
+  - active timed minigame/event progress
+  - Essence income
+  - sticker chance or sticker-fragment style collectible progress
+  - occasional dice payout
+  - microgame trigger, where configured
+- Exact tuning is implementation-configurable, but feeding tiles must remain one of the most valuable and visible tile categories in the board loop.
+
+## 5C) Reward amplification and session dynamics
+
+- Reward intensity may increase during active play sessions (“hot state”).
+- Continued play during the same timed minigame/event may result in:
+  - higher reward bar efficiency
+  - improved minigame token output
+  - improved sticker/drop chances
+  - stronger feedback/animation intensity
+- This amplification is not required to be strictly linear and may be governed by internal tuning systems.
+- The hot-state/amplification layer resets when the active timed minigame/event rotates out and a new one begins.
 
 ## 6) Timed minigame system
 
@@ -149,13 +221,15 @@ This contract supersedes all fragmented prior gameplay-rule documents and establ
 
 Implementation and migration notes may exist in separate docs, but they must conform to this contract and cannot redefine gameplay rules.
 
-## Related Documents (Subordinate)
+## 10) Related documents (subordinate)
 
-The following documents provide additional detail but do not override this contract:
+The following documents may contain supporting detail, implementation notes, or narrower domain definitions, but they do not override this contract:
 
-- docs/16_ISLAND_RUN_STOPS_CANONICAL.md (stop definitions)
-- docs/17_CURRENCIES_AND_SHIELD.md (legacy currency notes – partially outdated)
-- docs/12_MINIGAME_BOSS_ECONOMY_PLAYER_LEVEL_DESIGN.md (event/minigame design – partially outdated)
-- docs/13_COLLECTIBLE_PROGRESS_BAR.md (reward bar design – partially outdated)
+- docs/16_ISLAND_RUN_STOPS_CANONICAL.md
+- docs/17_CURRENCIES_AND_SHIELD.md
+- docs/12_MINIGAME_BOSS_ECONOMY_PLAYER_LEVEL_DESIGN.md
+- docs/13_COLLECTIBLE_PROGRESS_BAR.md
+- docs/03_MAIN_GAME_FIXED_BOARD_UI_AND_MOVEMENT.md
+- docs/02_MAIN_GAME_DATA_MODEL_AND_SUPABASE.md
 
-These should be updated over time to align with this contract.
+If any supporting document conflicts with this contract, this contract prevails.
