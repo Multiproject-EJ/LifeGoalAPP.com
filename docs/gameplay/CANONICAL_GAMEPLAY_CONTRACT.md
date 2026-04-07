@@ -45,6 +45,29 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 - Sticker collectibles persist across islands/loops as long-term progression.
 - Timed event state persists independently of island transitions.
 
+## Board Topology Model
+
+- Board topology is profile/config-driven.
+- Board tile count is not fixed and must always be derived from the active board topology profile.
+- The current production default profile is `legacy17`.
+- Future profiles (for example larger boards around ~60 tiles) are supported.
+- Board topology must be treated as variable and extensible across profiles.
+
+### Strict board-topology rules (critical)
+- Gameplay logic must not depend on fixed tile counts (for example `17`).
+- Movement, wrap behavior, and tile-selection logic must always use profile-derived tile count.
+- Hardcoded tile-count assumptions are forbidden.
+
+### Stop decoupling rules
+- Stops are external gameplay structures, not tile positions.
+- Stop progression must not depend on landing on specific tile indices.
+- Tile positions may be used for visual stop markers only, never for gameplay correctness.
+
+### Board topology compatibility note
+- Current production board uses `legacy17` for stability.
+- Larger board profiles (for example `spark60_preview`) exist but are not yet active in production.
+- Renderer/layout remains legacy-bound at present and will be updated in later phases.
+
 ---
 
 ## 3) Currency system
