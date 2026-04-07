@@ -779,6 +779,47 @@ export function DailyHabitTracker({
       totalHabits: habits.length,
     };
   }, [adherenceByHabit, habitHealthByHabitId, habitInsights, habits, today]);
+  const weekStartISO = useMemo(() => getWeekStartISO(activeDate), [activeDate]);
+  const weeklySnapshotCompletionPercent = useMemo(() => {
+    if (weeklyReviewSnapshot.totalHabits <= 0) return 0;
+    return Math.round((weeklyReviewSnapshot.onTrack.length / weeklyReviewSnapshot.totalHabits) * 100);
+  }, [weeklyReviewSnapshot.onTrack.length, weeklyReviewSnapshot.totalHabits]);
+  const topPositiveHabits = useMemo(
+    () => weeklyReviewSnapshot.onTrack.slice(0, 2).map((habit) => habit.name),
+    [weeklyReviewSnapshot.onTrack],
+  );
+  const strongestStreakHabit = useMemo(() => {
+    let bestHabit: HabitWithGoal | null = null;
+    let bestStreak = 0;
+    for (const habit of habits) {
+      const streak = habitInsights[habit.id]?.currentStreak ?? 0;
+      if (streak > bestStreak) {
+        bestStreak = streak;
+        bestHabit = habit;
+      }
+    }
+    return bestHabit ? { name: bestHabit.name, streak: bestStreak } : null;
+  }, [habitInsights, habits]);
+  const weeklySnapshotVariant = useMemo(() => {
+    const weekSeed = parseInt(weekStartISO.split('-').join(''), 10);
+    const variants = [
+      {
+        title: 'Consistency sparkle',
+        detail: `You kept ${weeklyReviewSnapshot.onTrack.length} habits flowing this week.`,
+      },
+      {
+        title: 'Momentum unlocked',
+        detail: `${weeklySnapshotCompletionPercent}% completion is building your rhythm.`,
+      },
+      {
+        title: 'Streak spotlight',
+        detail: strongestStreakHabit
+          ? `${strongestStreakHabit.name} is on a ${strongestStreakHabit.streak}-day streak.`
+          : 'Your streak board is warming up this week.',
+      },
+    ] as const;
+    return variants[Math.abs(Number.isNaN(weekSeed) ? 0 : weekSeed) % variants.length];
+  }, [strongestStreakHabit, weekStartISO, weeklyReviewSnapshot.onTrack.length, weeklySnapshotCompletionPercent]);
   const defaultPriceByHabitId = useCallback((habitId: string) => {
     return getDefaultHabitRewardGold({
       healthState: habitHealthByHabitId[habitId],
@@ -2368,7 +2409,7 @@ export function DailyHabitTracker({
       aria-label="Weekly habit review"
       onClick={() => setIsWeeklyHabitReviewOpen(false)}
     >
-      <div className="habit-day-nav__vision-modal" onClick={(event) => event.stopPropagation()}>
+      <div className="habit-day-nav__vision-modal habit-day-nav__weekly-snapshot-modal" onClick={(event) => event.stopPropagation()}>
         <button
           type="button"
           className="habit-day-nav__vision-modal-close"
@@ -2377,24 +2418,71 @@ export function DailyHabitTracker({
         >
           ✕
         </button>
-        <span className="habit-day-nav__vision-modal-eyebrow">Weekly habit review</span>
-        <h3 className="habit-day-nav__vision-modal-title">📊 Last 30 days snapshot</h3>
-        <p className="habit-day-nav__vision-modal-caption">
-          Stage mix: Easy {stageMixSnapshot.seedCount} • Medium {stageMixSnapshot.minimumCount} • Hard {stageMixSnapshot.standardCount}
-        </p>
-        <p className="habit-day-nav__vision-modal-caption">
-          Mix: Easy {stageMixSnapshot.seedPercent}% • Medium {stageMixSnapshot.minimumPercent}% • Hard {stageMixSnapshot.standardPercent}%
-        </p>
-        <p className="habit-day-nav__vision-modal-caption">
-          On track: {weeklyReviewSnapshot.onTrack.length}/{weeklyReviewSnapshot.totalHabits} habits • Stalled: {weeklyReviewSnapshot.stalled.length}
-        </p>
-        {weeklyReviewSnapshot.stalled.length > 0 ? (
-          <p className="habit-day-nav__vision-modal-caption">
-            Needs attention: {weeklyReviewSnapshot.stalled.slice(0, 3).map((habit) => habit.name).join(' • ')}
-          </p>
-        ) : (
-          <p className="habit-day-nav__vision-modal-caption">No stalled habits detected this week. Keep the momentum.</p>
-        )}
+        <div className="habit-day-nav__weekly-snapshot-content">
+          <header className="habit-day-nav__weekly-snapshot-header">
+            <span className="habit-day-nav__vision-modal-eyebrow">Weekly habit snapshot</span>
+            <h3 className="habit-day-nav__vision-modal-title">✨ Momentum this week</h3>
+            <p className="habit-day-nav__vision-modal-caption">A celebration of your progress.</p>
+          </header>
+
+          <section className="habit-day-nav__weekly-snapshot-hero" aria-label="Completion score">
+            <div
+              className="habit-day-nav__weekly-snapshot-ring"
+              style={{ '--weekly-percent': `${weeklySnapshotCompletionPercent}%` } as CSSProperties}
+            >
+              <strong>{weeklySnapshotCompletionPercent}%</strong>
+              <span>completed</span>
+            </div>
+            <p className="habit-day-nav__weekly-snapshot-hero-copy">
+              {weeklyReviewSnapshot.onTrack.length} habits were on track this week.
+            </p>
+          </section>
+
+          <section className="habit-day-nav__weekly-snapshot-reward" aria-label="Weekly reward">
+            <p className="habit-day-nav__weekly-snapshot-reward-title">🎉 Weekly reward unlocked</p>
+            <p className="habit-day-nav__weekly-snapshot-reward-values">+50 XP • +25 Dice</p>
+          </section>
+
+          <section className="habit-day-nav__weekly-snapshot-mix" aria-label="Stage mix">
+            <p className="habit-day-nav__weekly-snapshot-label">Stage mix</p>
+            <div className="habit-day-nav__weekly-snapshot-mix-bar" role="img" aria-label={`Easy ${stageMixSnapshot.seedPercent} percent, medium ${stageMixSnapshot.minimumPercent} percent, hard ${stageMixSnapshot.standardPercent} percent`}>
+              <span style={{ width: `${stageMixSnapshot.seedPercent}%` }} />
+              <span style={{ width: `${stageMixSnapshot.minimumPercent}%` }} />
+              <span style={{ width: `${stageMixSnapshot.standardPercent}%` }} />
+            </div>
+            <p className="habit-day-nav__weekly-snapshot-mix-caption">
+              Easy {stageMixSnapshot.seedPercent}% • Medium {stageMixSnapshot.minimumPercent}% • Hard {stageMixSnapshot.standardPercent}%
+            </p>
+          </section>
+
+          <section className="habit-day-nav__weekly-snapshot-highlight" aria-label="Weekly highlight">
+            <p className="habit-day-nav__weekly-snapshot-label">{weeklySnapshotVariant.title}</p>
+            <p className="habit-day-nav__weekly-snapshot-highlight-copy">{weeklySnapshotVariant.detail}</p>
+          </section>
+
+          <details className="habit-day-nav__weekly-snapshot-details">
+            <summary>Optional details</summary>
+            <ul>
+              {topPositiveHabits.length > 0 ? (
+                <li>Top habits: {topPositiveHabits.join(' • ')}</li>
+              ) : (
+                <li>You showed up this week — that consistency matters.</li>
+              )}
+              {strongestStreakHabit ? (
+                <li>{strongestStreakHabit.name} streak: {strongestStreakHabit.streak} days.</li>
+              ) : null}
+            </ul>
+          </details>
+
+          <footer className="habit-day-nav__weekly-snapshot-actions">
+            <button type="button" className="habit-day-nav__weekly-snapshot-button habit-day-nav__weekly-snapshot-button--primary" onClick={() => setIsWeeklyHabitReviewOpen(false)}>
+              Explore next week ideas
+            </button>
+            <button type="button" className="habit-day-nav__weekly-snapshot-button habit-day-nav__weekly-snapshot-button--ghost" onClick={() => setIsWeeklyHabitReviewOpen(false)}>
+              Maybe later
+            </button>
+          </footer>
+        </div>
       </div>
     </div>
   ) : null;
