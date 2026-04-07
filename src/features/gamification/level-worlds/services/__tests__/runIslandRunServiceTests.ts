@@ -7,6 +7,7 @@ import { islandRunFoundationTests } from './islandRunFoundations.test';
 import { islandRunContractV2StopResolverTests } from './islandRunContractV2StopResolver.test';
 import { islandRunProgressionTests } from './islandRunProgression.test';
 import { islandRunRuntimeStateIntegrationTests } from './islandRunRuntimeState.integration.test';
+import { islandRunTimerProgressionTests } from './islandRunTimerProgression.test';
 import { islandRunStopCompletionTests } from './islandRunStopCompletion.test';
 import type { TestCase } from './testHarness';
 
@@ -20,6 +21,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunContractV2StopResolver', tests: islandRunContractV2StopResolverTests },
   { label: 'islandRunProgression', tests: islandRunProgressionTests },
   { label: 'islandRunRuntimeStateIntegration', tests: islandRunRuntimeStateIntegrationTests },
+  { label: 'islandRunTimerProgression', tests: islandRunTimerProgressionTests },
   { label: 'islandRunStopCompletion', tests: islandRunStopCompletionTests },
 ];
 

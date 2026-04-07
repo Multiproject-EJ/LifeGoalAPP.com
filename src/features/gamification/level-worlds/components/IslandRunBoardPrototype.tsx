@@ -124,6 +124,10 @@ import {
   resolveIslandRunFullClearForProgression,
   resolveIslandRunStep1CompleteForProgression,
 } from '../services/islandRunContractV2StopResolver';
+import {
+  resolveIslandTimerHydrationState,
+  shouldAutoAdvanceIslandOnTimerExpiry,
+} from '../services/islandRunTimerProgression';
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 3;
@@ -905,31 +909,24 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setIslandNumber((current) => (current === persistedIsland ? current : persistedIsland));
     setBossTrialResolved(runtimeState.bossTrialResolvedIslandNumber === persistedIsland);
 
-    // Restore timer from persisted islandExpiresAtMs, resume a pending island, or advance after expiry.
-    const persistedExpiresAtMs = runtimeState.islandExpiresAtMs;
-    const persistedStartedAtMs = runtimeState.islandStartedAtMs;
-    if (persistedExpiresAtMs > 0 && persistedExpiresAtMs > Date.now()) {
-      // Timer still running — restore from persisted state
-      setIslandStartedAtMs(persistedStartedAtMs);
-      setIslandExpiresAtMs(persistedExpiresAtMs);
-      setTimeLeftSec(Math.ceil((persistedExpiresAtMs - Date.now()) / 1000));
-      setIsIslandTimerPendingStart(false);
-    } else if (persistedExpiresAtMs > 0 && !showTravelOverlay) {
-      // Expired island should always advance, but the next island timer stays pending until the player starts it.
+    // Contract-v2 keeps timer fields for compatibility but prevents timer-driven progression side effects.
+    const nowMs = Date.now();
+    const hydrationTimerState = resolveIslandTimerHydrationState({
+      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+      persistedStartedAtMs: runtimeState.islandStartedAtMs,
+      persistedExpiresAtMs: runtimeState.islandExpiresAtMs,
+      nowMs,
+      defaultDurationMs: getIslandDurationMs(persistedIsland),
+    });
+
+    setIslandStartedAtMs(hydrationTimerState.islandStartedAtMs);
+    setIslandExpiresAtMs(hydrationTimerState.islandExpiresAtMs);
+    setTimeLeftSec(hydrationTimerState.timeLeftSec);
+    setIsIslandTimerPendingStart(hydrationTimerState.isIslandTimerPendingStart);
+
+    if (hydrationTimerState.shouldAutoAdvanceOnHydration && !showTravelOverlay) {
+      // Legacy-only: expired island auto-advances; v2 explicitly bypasses this path.
       performIslandTravel(persistedIsland + 1, { startTimer: false });
-    } else if (persistedStartedAtMs <= 0 && persistedExpiresAtMs <= 0 && !showTravelOverlay) {
-      setIslandStartedAtMs(0);
-      setIslandExpiresAtMs(0);
-      setTimeLeftSec(0);
-      setIsIslandTimerPendingStart(true);
-    } else if (!showTravelOverlay) {
-      // No timer stored (legacy/first-run) — initialize from current island
-      const nowMs = Date.now();
-      const durationMs = getIslandDurationMs(persistedIsland);
-      setIslandStartedAtMs(nowMs);
-      setIslandExpiresAtMs(nowMs + durationMs);
-      setTimeLeftSec(Math.ceil(durationMs / 1000));
-      setIsIslandTimerPendingStart(false);
     }
 
     // B5-3: Restore egg state from runtime state
@@ -2476,7 +2473,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [hasHydratedRuntimeState, runtimeState.storyPrologueSeen, storySeenStorageKey]);
 
   useEffect(() => {
-    if (isIslandTimerPendingStart || timeLeftSec > 0 || showTravelOverlay) {
+    if (!shouldAutoAdvanceIslandOnTimerExpiry({
+      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+      isIslandTimerPendingStart,
+      timeLeftSec,
+      showTravelOverlay,
+    })) {
       return;
     }
 
@@ -2494,7 +2496,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }, 1800);
 
     return () => window.clearTimeout(timeout);
-  }, [client, islandNumber, isIslandTimerPendingStart, session, showTravelOverlay, timeLeftSec]);
+  }, [islandNumber, isIslandTimerPendingStart, showTravelOverlay, timeLeftSec]);
 
   const timerDisplay = isIslandTimerPendingStart ? 'Ready' : formatIslandCountdown(timeLeftSec);
   const dicePerHeart = getDicePerHeartForIsland(islandNumber);
