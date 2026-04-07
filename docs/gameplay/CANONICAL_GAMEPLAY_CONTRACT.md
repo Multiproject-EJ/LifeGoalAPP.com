@@ -1,8 +1,9 @@
 # CANONICAL GAMEPLAY CONTRACT — Island Run
 
-Status: **Authoritative**  
-Version: **1.0**  
-Effective date: **2026-04-07**
+Version: 1.0  
+Status: Active  
+Last Updated: 2026-04-07  
+Owner: Gameplay System
 
 This document defines the only authoritative gameplay rules for Island Run.
 If implementation, planning notes, or legacy docs conflict with this contract, this contract prevails.
@@ -147,3 +148,14 @@ This contract supersedes all fragmented prior gameplay-rule documents and establ
 - Island completion requirements
 
 Implementation and migration notes may exist in separate docs, but they must conform to this contract and cannot redefine gameplay rules.
+
+## Related Documents (Subordinate)
+
+The following documents provide additional detail but do not override this contract:
+
+- docs/16_ISLAND_RUN_STOPS_CANONICAL.md (stop definitions)
+- docs/17_CURRENCIES_AND_SHIELD.md (legacy currency notes – partially outdated)
+- docs/12_MINIGAME_BOSS_ECONOMY_PLAYER_LEVEL_DESIGN.md (event/minigame design – partially outdated)
+- docs/13_COLLECTIBLE_PROGRESS_BAR.md (reward bar design – partially outdated)
+
+These should be updated over time to align with this contract.
