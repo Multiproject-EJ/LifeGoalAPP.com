@@ -54,6 +54,26 @@ export interface IslandRunRuntimeState {
   perfectCompanionComputedAtMs: number | null;
   perfectCompanionModelVersion: string | null;
   perfectCompanionComputedCycleIndex: number | null;
+  activeStopIndex: number;
+  activeStopType: 'hatchery' | 'habit' | 'breathing' | 'wisdom' | 'boss';
+  stopStatesByIndex: Array<{ objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number }>;
+  stopBuildStateByIndex: Array<{ requiredEssence: number; spentEssence: number; buildLevel: number }>;
+  bossState: { unlocked: boolean; objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number };
+  essence: number;
+  essenceLifetimeEarned: number;
+  essenceLifetimeSpent: number;
+  diceRegenState: { maxDice: number; regenRatePerHour: number; lastRegenAtMs: number } | null;
+  rewardBarProgress: number;
+  rewardBarThreshold: number;
+  rewardBarClaimCountInEvent: number;
+  rewardBarEscalationTier: number;
+  rewardBarLastClaimAtMs: number | null;
+  rewardBarBoundEventId: string | null;
+  rewardBarLadderId: string | null;
+  activeTimedEvent: { eventId: string; eventType: string; startedAtMs: number; expiresAtMs: number; version: number } | null;
+  activeTimedEventProgress: { feedingActions: number; tokensEarned: number; milestonesClaimed: number };
+  stickerProgress: { fragments: number; guaranteedAt?: number; pityCounter?: number };
+  stickerInventory: Record<string, number>;
 }
 
 export function readIslandRunRuntimeState(session: Session): IslandRunRuntimeState {
@@ -154,6 +174,26 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     perfectCompanionComputedAtMs?: number | null;
     perfectCompanionModelVersion?: string | null;
     perfectCompanionComputedCycleIndex?: number | null;
+    activeStopIndex?: number;
+    activeStopType?: 'hatchery' | 'habit' | 'breathing' | 'wisdom' | 'boss';
+    stopStatesByIndex?: Array<{ objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number }>;
+    stopBuildStateByIndex?: Array<{ requiredEssence: number; spentEssence: number; buildLevel: number }>;
+    bossState?: { unlocked: boolean; objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number };
+    essence?: number;
+    essenceLifetimeEarned?: number;
+    essenceLifetimeSpent?: number;
+    diceRegenState?: { maxDice: number; regenRatePerHour: number; lastRegenAtMs: number } | null;
+    rewardBarProgress?: number;
+    rewardBarThreshold?: number;
+    rewardBarClaimCountInEvent?: number;
+    rewardBarEscalationTier?: number;
+    rewardBarLastClaimAtMs?: number | null;
+    rewardBarBoundEventId?: string | null;
+    rewardBarLadderId?: string | null;
+    activeTimedEvent?: { eventId: string; eventType: string; startedAtMs: number; expiresAtMs: number; version: number } | null;
+    activeTimedEventProgress?: { feedingActions: number; tokensEarned: number; milestonesClaimed: number };
+    stickerProgress?: { fragments: number; guaranteedAt?: number; pityCounter?: number };
+    stickerInventory?: Record<string, number>;
   };
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
   const { session, client, patch } = options;
