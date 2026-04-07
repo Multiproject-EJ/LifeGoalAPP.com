@@ -306,6 +306,12 @@ Implementation shape:
 - Keep timer display optionally as non-gating cosmetic countdown if needed.
 - Ensure island completion requires 5-stop completion + boss.
 
+## Phase 3.5 — Board Topology Decoupling (completed)
+- Replaced fixed tile-count gameplay assumptions with profile-derived tile count usage.
+- Enforced movement/wrap/tile-logic dependence on board topology profile instead of hardcoded `17`.
+- Decoupled stop progression correctness from tile indices; stop markers remain visual-only where needed.
+- Kept `legacy17` as active production profile for stability while preserving compatibility for larger profiles (for example `spark60_preview`).
+
 ## Phase 4 — Energy migration (dice-only core)
 - Remove heart fallback from roll gating in v2.
 - Keep heart wallet reads/writes for compatibility integrations during transition.
