@@ -1,3 +1,14 @@
+⚠️ DEPRECATED AS SOURCE OF TRUTH
+
+This document is no longer the authoritative gameplay contract.
+
+The canonical source of truth is now:
+docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md
+
+This file may contain historical context or partial specifications but should not be used as the primary reference for new development.
+
+---
+
 # MINIGAME, BOSS, ECONOMY & PLAYER LEVEL — CANONICAL DESIGN
 
 > **Status:** Canonical. Authored 2026-03-03. Revised 2026-03-03 (post Q&A clarification session).

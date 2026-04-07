@@ -1,3 +1,14 @@
+⚠️ DEPRECATED AS SOURCE OF TRUTH
+
+This document is no longer the authoritative gameplay contract.
+
+The canonical source of truth is now:
+docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md
+
+This file may contain historical context or partial specifications but should not be used as the primary reference for new development.
+
+---
+
 # Main Game Single Source of Truth (Island Run)
 
 Status: **Canonical source for main game implementation**  
