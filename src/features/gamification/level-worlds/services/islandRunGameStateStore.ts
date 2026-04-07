@@ -113,18 +113,18 @@ export interface IslandRunGameStateRecord {
   essence: number;
   essenceLifetimeEarned: number;
   essenceLifetimeSpent: number;
-  diceRegenState?: {
+  diceRegenState: {
     maxDice: number;
     regenRatePerHour: number;
     lastRegenAtMs: number;
-  };
+  } | null;
   rewardBarProgress: number;
   rewardBarThreshold: number;
   rewardBarClaimCountInEvent: number;
   rewardBarEscalationTier: number;
   rewardBarLastClaimAtMs: number | null;
   rewardBarBoundEventId: string | null;
-  rewardBarLadderId?: string;
+  rewardBarLadderId: string | null;
   activeTimedEvent: {
     eventId: string;
     eventType: string;
@@ -393,12 +393,14 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     essence: 0,
     essenceLifetimeEarned: 0,
     essenceLifetimeSpent: 0,
+    diceRegenState: null,
     rewardBarProgress: 0,
     rewardBarThreshold: DEFAULT_REWARD_BAR_THRESHOLD,
     rewardBarClaimCountInEvent: 0,
     rewardBarEscalationTier: 0,
     rewardBarLastClaimAtMs: null,
     rewardBarBoundEventId: null,
+    rewardBarLadderId: null,
     activeTimedEvent: null,
     activeTimedEventProgress: {
       feedingActions: 0,
@@ -722,7 +724,9 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
             regenRatePerHour: Math.max(0, value.diceRegenState.regenRatePerHour),
             lastRegenAtMs: value.diceRegenState.lastRegenAtMs,
           }
-        : fallback.diceRegenState,
+        : value.diceRegenState === null
+          ? null
+          : fallback.diceRegenState,
     rewardBarProgress:
       typeof value.rewardBarProgress === 'number' && Number.isFinite(value.rewardBarProgress)
         ? Math.max(0, Math.floor(value.rewardBarProgress))
@@ -752,7 +756,9 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
     rewardBarLadderId:
       typeof value.rewardBarLadderId === 'string'
         ? value.rewardBarLadderId
-        : fallback.rewardBarLadderId,
+        : value.rewardBarLadderId === null
+          ? null
+          : fallback.rewardBarLadderId,
     activeTimedEvent:
       value.activeTimedEvent !== null
       && typeof value.activeTimedEvent === 'object'

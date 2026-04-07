@@ -83,14 +83,14 @@ export interface IslandRunRuntimeStateBackend {
       essence?: number;
       essenceLifetimeEarned?: number;
       essenceLifetimeSpent?: number;
-      diceRegenState?: { maxDice: number; regenRatePerHour: number; lastRegenAtMs: number };
+      diceRegenState?: { maxDice: number; regenRatePerHour: number; lastRegenAtMs: number } | null;
       rewardBarProgress?: number;
       rewardBarThreshold?: number;
       rewardBarClaimCountInEvent?: number;
       rewardBarEscalationTier?: number;
       rewardBarLastClaimAtMs?: number | null;
       rewardBarBoundEventId?: string | null;
-      rewardBarLadderId?: string;
+      rewardBarLadderId?: string | null;
       activeTimedEvent?: { eventId: string; eventType: string; startedAtMs: number; expiresAtMs: number; version: number } | null;
       activeTimedEventProgress?: { feedingActions: number; tokensEarned: number; milestonesClaimed: number };
       stickerProgress?: { fragments: number; guaranteedAt?: number; pityCounter?: number };
@@ -421,6 +421,8 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
               regenRatePerHour: Math.max(0, patch.diceRegenState.regenRatePerHour),
               lastRegenAtMs: patch.diceRegenState.lastRegenAtMs,
             }
+          : patch.diceRegenState === null
+            ? null
           : current.diceRegenState,
       rewardBarProgress:
         typeof patch.rewardBarProgress === 'number' && Number.isFinite(patch.rewardBarProgress)
@@ -451,6 +453,8 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
       rewardBarLadderId:
         typeof patch.rewardBarLadderId === 'string'
           ? patch.rewardBarLadderId
+          : patch.rewardBarLadderId === null
+            ? null
           : current.rewardBarLadderId,
       activeTimedEvent:
         patch.activeTimedEvent !== null
@@ -510,11 +514,14 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
           : current.stickerProgress,
       stickerInventory:
         patch.stickerInventory !== null && typeof patch.stickerInventory === 'object' && !Array.isArray(patch.stickerInventory)
-          ? Object.fromEntries(
-              Object.entries(patch.stickerInventory)
-                .filter(([key, count]) => typeof key === 'string' && typeof count === 'number' && Number.isFinite(count))
-                .map(([key, count]) => [key, Math.max(0, Math.floor(count))]),
-            )
+          ? {
+              ...current.stickerInventory,
+              ...Object.fromEntries(
+                Object.entries(patch.stickerInventory)
+                  .filter(([key, count]) => typeof key === 'string' && typeof count === 'number' && Number.isFinite(count))
+                  .map(([key, count]) => [key, Math.max(0, Math.floor(count))]),
+              ),
+            }
           : current.stickerInventory,
     };
 
