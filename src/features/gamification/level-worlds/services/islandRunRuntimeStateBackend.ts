@@ -8,6 +8,7 @@ import type {
   PerfectCompanionReason,
 } from './islandRunGameStateStore';
 import {
+  deriveIslandRunContractV2StopType,
   hydrateIslandRunGameStateRecord,
   hydrateIslandRunGameStateRecordWithSource,
   readIslandRunGameStateRecord,
@@ -74,6 +75,26 @@ export interface IslandRunRuntimeStateBackend {
       perfectCompanionComputedAtMs?: number | null;
       perfectCompanionModelVersion?: string | null;
       perfectCompanionComputedCycleIndex?: number | null;
+      activeStopIndex?: number;
+      activeStopType?: 'hatchery' | 'habit' | 'breathing' | 'wisdom' | 'boss';
+      stopStatesByIndex?: Array<{ objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number }>;
+      stopBuildStateByIndex?: Array<{ requiredEssence: number; spentEssence: number; buildLevel: number }>;
+      bossState?: { unlocked: boolean; objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number };
+      essence?: number;
+      essenceLifetimeEarned?: number;
+      essenceLifetimeSpent?: number;
+      diceRegenState?: { maxDice: number; regenRatePerHour: number; lastRegenAtMs: number };
+      rewardBarProgress?: number;
+      rewardBarThreshold?: number;
+      rewardBarClaimCountInEvent?: number;
+      rewardBarEscalationTier?: number;
+      rewardBarLastClaimAtMs?: number | null;
+      rewardBarBoundEventId?: string | null;
+      rewardBarLadderId?: string;
+      activeTimedEvent?: { eventId: string; eventType: string; startedAtMs: number; expiresAtMs: number; version: number } | null;
+      activeTimedEventProgress?: { feedingActions: number; tokensEarned: number; milestonesClaimed: number };
+      stickerProgress?: { fragments: number; guaranteedAt?: number; pityCounter?: number };
+      stickerInventory?: Record<string, number>;
     };
   }): Promise<{ ok: true } | { ok: false; errorMessage: string }>;
 }
@@ -94,6 +115,10 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
 
   async persistPatch({ session, client, patch }) {
     const current = await hydrateIslandRunGameStateRecord({ session, client });
+    const nextActiveStopIndex =
+      typeof patch.activeStopIndex === 'number' && Number.isFinite(patch.activeStopIndex)
+        ? Math.max(0, Math.min(4, Math.floor(patch.activeStopIndex)))
+        : current.activeStopIndex;
     const nextState: IslandRunRuntimeState = {
       runtimeVersion: current.runtimeVersion,
       firstRunClaimed: typeof patch.firstRunClaimed === 'boolean' ? patch.firstRunClaimed : current.firstRunClaimed,
@@ -307,6 +332,190 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
           : patch.perfectCompanionComputedCycleIndex === null
             ? null
             : current.perfectCompanionComputedCycleIndex,
+      activeStopIndex:
+        nextActiveStopIndex,
+      activeStopType:
+        patch.activeStopType === 'hatchery'
+        || patch.activeStopType === 'habit'
+        || patch.activeStopType === 'breathing'
+        || patch.activeStopType === 'wisdom'
+        || patch.activeStopType === 'boss'
+          ? patch.activeStopType
+          : 'activeStopType' in patch
+            ? deriveIslandRunContractV2StopType(
+                nextActiveStopIndex,
+              )
+            : ('activeStopIndex' in patch ? deriveIslandRunContractV2StopType(nextActiveStopIndex) : current.activeStopType),
+      stopStatesByIndex:
+        Array.isArray(patch.stopStatesByIndex)
+          ? Array.from({ length: 5 }, (_, index) => {
+              const entry = patch.stopStatesByIndex?.[index];
+              const fallbackEntry = current.stopStatesByIndex[index] ?? { objectiveComplete: false, buildComplete: false };
+              if (!entry) return fallbackEntry;
+              return {
+                objectiveComplete: Boolean(entry.objectiveComplete),
+                buildComplete: Boolean(entry.buildComplete),
+                ...(typeof entry.completedAtMs === 'number' && Number.isFinite(entry.completedAtMs)
+                  ? { completedAtMs: entry.completedAtMs }
+                  : {}),
+              };
+            })
+          : current.stopStatesByIndex,
+      stopBuildStateByIndex:
+        Array.isArray(patch.stopBuildStateByIndex)
+          ? Array.from({ length: 5 }, (_, index) => {
+              const entry = patch.stopBuildStateByIndex?.[index];
+              const fallbackEntry = current.stopBuildStateByIndex[index] ?? { requiredEssence: 0, spentEssence: 0, buildLevel: 0 };
+              if (!entry) return fallbackEntry;
+              return {
+                requiredEssence:
+                  typeof entry.requiredEssence === 'number' && Number.isFinite(entry.requiredEssence)
+                    ? Math.max(0, Math.floor(entry.requiredEssence))
+                    : fallbackEntry.requiredEssence,
+                spentEssence:
+                  typeof entry.spentEssence === 'number' && Number.isFinite(entry.spentEssence)
+                    ? Math.max(0, Math.floor(entry.spentEssence))
+                    : fallbackEntry.spentEssence,
+                buildLevel:
+                  typeof entry.buildLevel === 'number' && Number.isFinite(entry.buildLevel)
+                    ? Math.max(0, Math.floor(entry.buildLevel))
+                    : fallbackEntry.buildLevel,
+              };
+            })
+          : current.stopBuildStateByIndex,
+      bossState:
+        patch.bossState !== null && typeof patch.bossState === 'object' && !Array.isArray(patch.bossState)
+          ? {
+              unlocked: Boolean(patch.bossState.unlocked),
+              objectiveComplete: Boolean(patch.bossState.objectiveComplete),
+              buildComplete: Boolean(patch.bossState.buildComplete),
+              ...(typeof patch.bossState.completedAtMs === 'number' && Number.isFinite(patch.bossState.completedAtMs)
+                ? { completedAtMs: patch.bossState.completedAtMs }
+                : {}),
+            }
+          : current.bossState,
+      essence:
+        typeof patch.essence === 'number' && Number.isFinite(patch.essence)
+          ? Math.max(0, Math.floor(patch.essence))
+          : current.essence,
+      essenceLifetimeEarned:
+        typeof patch.essenceLifetimeEarned === 'number' && Number.isFinite(patch.essenceLifetimeEarned)
+          ? Math.max(0, Math.floor(patch.essenceLifetimeEarned))
+          : current.essenceLifetimeEarned,
+      essenceLifetimeSpent:
+        typeof patch.essenceLifetimeSpent === 'number' && Number.isFinite(patch.essenceLifetimeSpent)
+          ? Math.max(0, Math.floor(patch.essenceLifetimeSpent))
+          : current.essenceLifetimeSpent,
+      diceRegenState:
+        patch.diceRegenState !== null
+        && typeof patch.diceRegenState === 'object'
+        && !Array.isArray(patch.diceRegenState)
+        && typeof patch.diceRegenState.maxDice === 'number'
+        && Number.isFinite(patch.diceRegenState.maxDice)
+        && typeof patch.diceRegenState.regenRatePerHour === 'number'
+        && Number.isFinite(patch.diceRegenState.regenRatePerHour)
+        && typeof patch.diceRegenState.lastRegenAtMs === 'number'
+        && Number.isFinite(patch.diceRegenState.lastRegenAtMs)
+          ? {
+              maxDice: Math.max(0, Math.floor(patch.diceRegenState.maxDice)),
+              regenRatePerHour: Math.max(0, patch.diceRegenState.regenRatePerHour),
+              lastRegenAtMs: patch.diceRegenState.lastRegenAtMs,
+            }
+          : current.diceRegenState,
+      rewardBarProgress:
+        typeof patch.rewardBarProgress === 'number' && Number.isFinite(patch.rewardBarProgress)
+          ? Math.max(0, Math.floor(patch.rewardBarProgress))
+          : current.rewardBarProgress,
+      rewardBarThreshold:
+        typeof patch.rewardBarThreshold === 'number' && Number.isFinite(patch.rewardBarThreshold)
+          ? Math.max(1, Math.floor(patch.rewardBarThreshold))
+          : current.rewardBarThreshold,
+      rewardBarClaimCountInEvent:
+        typeof patch.rewardBarClaimCountInEvent === 'number' && Number.isFinite(patch.rewardBarClaimCountInEvent)
+          ? Math.max(0, Math.floor(patch.rewardBarClaimCountInEvent))
+          : current.rewardBarClaimCountInEvent,
+      rewardBarEscalationTier:
+        typeof patch.rewardBarEscalationTier === 'number' && Number.isFinite(patch.rewardBarEscalationTier)
+          ? Math.max(0, Math.floor(patch.rewardBarEscalationTier))
+          : current.rewardBarEscalationTier,
+      rewardBarLastClaimAtMs:
+        typeof patch.rewardBarLastClaimAtMs === 'number' && Number.isFinite(patch.rewardBarLastClaimAtMs)
+          ? patch.rewardBarLastClaimAtMs
+          : patch.rewardBarLastClaimAtMs === null
+            ? null
+            : current.rewardBarLastClaimAtMs,
+      rewardBarBoundEventId:
+        typeof patch.rewardBarBoundEventId === 'string' || patch.rewardBarBoundEventId === null
+          ? patch.rewardBarBoundEventId
+          : current.rewardBarBoundEventId,
+      rewardBarLadderId:
+        typeof patch.rewardBarLadderId === 'string'
+          ? patch.rewardBarLadderId
+          : current.rewardBarLadderId,
+      activeTimedEvent:
+        patch.activeTimedEvent !== null
+        && typeof patch.activeTimedEvent === 'object'
+        && !Array.isArray(patch.activeTimedEvent)
+        && typeof patch.activeTimedEvent.eventId === 'string'
+        && typeof patch.activeTimedEvent.eventType === 'string'
+        && typeof patch.activeTimedEvent.startedAtMs === 'number'
+        && Number.isFinite(patch.activeTimedEvent.startedAtMs)
+        && typeof patch.activeTimedEvent.expiresAtMs === 'number'
+        && Number.isFinite(patch.activeTimedEvent.expiresAtMs)
+        && typeof patch.activeTimedEvent.version === 'number'
+        && Number.isFinite(patch.activeTimedEvent.version)
+          ? {
+              eventId: patch.activeTimedEvent.eventId,
+              eventType: patch.activeTimedEvent.eventType,
+              startedAtMs: patch.activeTimedEvent.startedAtMs,
+              expiresAtMs: patch.activeTimedEvent.expiresAtMs,
+              version: Math.max(0, Math.floor(patch.activeTimedEvent.version)),
+            }
+          : patch.activeTimedEvent === null
+            ? null
+            : current.activeTimedEvent,
+      activeTimedEventProgress:
+        patch.activeTimedEventProgress !== null
+        && typeof patch.activeTimedEventProgress === 'object'
+        && !Array.isArray(patch.activeTimedEventProgress)
+          ? {
+              feedingActions:
+                typeof patch.activeTimedEventProgress.feedingActions === 'number' && Number.isFinite(patch.activeTimedEventProgress.feedingActions)
+                  ? Math.max(0, Math.floor(patch.activeTimedEventProgress.feedingActions))
+                  : current.activeTimedEventProgress.feedingActions,
+              tokensEarned:
+                typeof patch.activeTimedEventProgress.tokensEarned === 'number' && Number.isFinite(patch.activeTimedEventProgress.tokensEarned)
+                  ? Math.max(0, Math.floor(patch.activeTimedEventProgress.tokensEarned))
+                  : current.activeTimedEventProgress.tokensEarned,
+              milestonesClaimed:
+                typeof patch.activeTimedEventProgress.milestonesClaimed === 'number' && Number.isFinite(patch.activeTimedEventProgress.milestonesClaimed)
+                  ? Math.max(0, Math.floor(patch.activeTimedEventProgress.milestonesClaimed))
+                  : current.activeTimedEventProgress.milestonesClaimed,
+            }
+          : current.activeTimedEventProgress,
+      stickerProgress:
+        patch.stickerProgress !== null && typeof patch.stickerProgress === 'object' && !Array.isArray(patch.stickerProgress)
+          ? {
+              fragments:
+                typeof patch.stickerProgress.fragments === 'number' && Number.isFinite(patch.stickerProgress.fragments)
+                  ? Math.max(0, Math.floor(patch.stickerProgress.fragments))
+                  : current.stickerProgress.fragments,
+              ...(typeof patch.stickerProgress.guaranteedAt === 'number' && Number.isFinite(patch.stickerProgress.guaranteedAt)
+                ? { guaranteedAt: Math.max(0, Math.floor(patch.stickerProgress.guaranteedAt)) }
+                : {}),
+              ...(typeof patch.stickerProgress.pityCounter === 'number' && Number.isFinite(patch.stickerProgress.pityCounter)
+                ? { pityCounter: Math.max(0, Math.floor(patch.stickerProgress.pityCounter)) }
+                : {}),
+            }
+          : current.stickerProgress,
+      stickerInventory:
+        patch.stickerInventory !== null && typeof patch.stickerInventory === 'object' && !Array.isArray(patch.stickerInventory)
+          ? Object.fromEntries(
+              Object.entries(patch.stickerInventory)
+                .filter(([key, count]) => typeof key === 'string' && typeof count === 'number' && Number.isFinite(count))
+                .map(([key, count]) => [key, Math.max(0, Math.floor(count))]),
+            )
+          : current.stickerInventory,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({
