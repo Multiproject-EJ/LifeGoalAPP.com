@@ -8,7 +8,9 @@
  *  3. Derives a BoardRendererContractV1 snapshot via selectBoardRendererContractV1 (the PWA adapter).
  *  4. Passes the contract snapshot to <ContractBoardRenderer> for pure presentation.
  *  5. Routes `roll_requested` intents to the PWA roll-action pipeline (executeIslandRunRollAction).
- *  6. Keeps all other intents (claim, openStop, spendEssence, etc.) as no-op/logged — they are
+ *  6. Routes `claim_reward_requested` intents to the PWA claim-action pipeline
+ *     (executeIslandRunClaimRewardAction).
+ *  7. Keeps all other intents (openStop, spendEssence, etc.) as no-op/logged — they are
  *     intentionally unwired in this slice and will be enabled in future stages.
  *
  * Architecture:
@@ -16,6 +18,8 @@
  *  - Renderer never owns or generates gameplay truth (dice, movement, rewards, state).
  *  - Roll outcomes (random numbers, token position) are produced entirely in
  *    executeIslandRunRollAction — never in the renderer component.
+ *  - Reward-bar claim payouts (tokens, dice, stickers) are computed entirely in
+ *    executeIslandRunClaimRewardAction — never in the renderer component.
  *
  * This host must NOT:
  *  - let the renderer decide dice values or token movement
@@ -32,6 +36,7 @@ import { readIslandRunRuntimeState, type IslandRunRuntimeState } from '../servic
 import { selectBoardRendererContractV1 } from '../services/islandRunBoardRendererAdapterV1';
 import type { BoardRendererContractV1Intent } from '../services/islandRunBoardRendererContractV1';
 import { executeIslandRunRollAction } from '../services/islandRunRollAction';
+import { executeIslandRunClaimRewardAction } from '../services/islandRunClaimRewardAction';
 import { ContractBoardRenderer } from './ContractBoardRenderer';
 
 export interface ContractBoardRendererHostProps {
@@ -136,16 +141,24 @@ export function ContractBoardRendererHost({ session }: ContractBoardRendererHost
   const [busyRoll, setBusyRoll] = useState(false);
   const busyRollRef = useRef(false);
 
+  // ── claim busy guard ───────────────────────────────────────────────────────
+  // Mirrors the roll busy guard pattern: ref for idempotency inside the handler,
+  // state for driving the contract's ui.busy.claim flag shown to the renderer.
+  const [busyClaim, setBusyClaim] = useState(false);
+  const busyClaimRef = useRef(false);
+
   // ── intent handler ─────────────────────────────────────────────────────────
   /**
    * Routes renderer intents to PWA gameplay actions.
    *
-   * Only `roll_requested` is wired in this slice; all other intents are
-   * intentionally no-op/logged and will be connected in future stages.
+   * `roll_requested` and `claim_reward_requested` are wired in this slice;
+   * all other intents are intentionally no-op/logged and will be connected
+   * in future stages.
    *
    * Architecture note: the renderer emits intent signals only — it never
-   * generates gameplay outcomes (dice values, token movement, rewards).
-   * Those always originate in PWA services (executeIslandRunRollAction).
+   * generates gameplay outcomes (dice values, token movement, reward payouts).
+   * Those always originate in PWA services (executeIslandRunRollAction,
+   * executeIslandRunClaimRewardAction).
    */
   const handleIntent = useCallback((intent: BoardRendererContractV1Intent) => {
     if (intent.type === 'roll_requested') {
@@ -181,29 +194,63 @@ export function ContractBoardRendererHost({ session }: ContractBoardRendererHost
       return;
     }
 
+    if (intent.type === 'claim_reward_requested') {
+      // Same ref-based guard pattern as roll: prevents duplicate claim triggers
+      // from rapid taps before the first setState settles.
+      if (busyClaimRef.current) {
+        if (import.meta.env.DEV) {
+          console.log('[ContractBoardRendererHost] claim already in progress, ignoring duplicate intent');
+        }
+        return;
+      }
+
+      busyClaimRef.current = true;
+      setBusyClaim(true);
+      void executeIslandRunClaimRewardAction({ session, client })
+        .then((result) => {
+          if (import.meta.env.DEV) {
+            console.log('[ContractBoardRendererHost] claim result:', result);
+          }
+          // Refresh state from localStorage so the renderer reflects the
+          // updated reward-bar and resource pool immediately after the claim.
+          refreshFromStorage();
+        })
+        .catch((err: unknown) => {
+          if (import.meta.env.DEV) {
+            console.error('[ContractBoardRendererHost] claim error:', err);
+          }
+        })
+        .finally(() => {
+          busyClaimRef.current = false;
+          setBusyClaim(false);
+        });
+      return;
+    }
+
     // All other intents remain no-op in this slice.
     // They will be wired in future integration stages.
     if (import.meta.env.DEV) {
       console.log('[ContractBoardRendererHost] intent (no-op — not yet wired):', intent);
     }
-  // busyRoll (state) is intentionally excluded from deps: the guard uses
-  // busyRollRef (always current) so the callback does not need to recreate on
-  // every busy-flag change, avoiding unnecessary re-renders of ContractBoardRenderer.
+  // busyRoll and busyClaim (state) are intentionally excluded from deps: the
+  // guards use busyRollRef / busyClaimRef (always current) so the callback does
+  // not need to recreate on every busy-flag change, avoiding unnecessary
+  // re-renders of ContractBoardRenderer.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client, refreshFromStorage, session]);
 
   // ── derive renderer contract ───────────────────────────────────────────────
-  // Pass the live busy.roll flag so the renderer can disable the button
-  // during the async roll and re-enable it when done.
+  // Pass the live busy.roll and busy.claim flags so the renderer can disable
+  // the respective buttons during async actions and re-enable when done.
   const contract = useMemo(
     () =>
       selectBoardRendererContractV1({
         runtimeState,
         islandNumber: runtimeState.currentIslandNumber,
         nowMs: Date.now(),
-        busy: { roll: busyRoll },
+        busy: { roll: busyRoll, claim: busyClaim },
       }),
-    [runtimeState, busyRoll],
+    [runtimeState, busyRoll, busyClaim],
   );
 
   return (
