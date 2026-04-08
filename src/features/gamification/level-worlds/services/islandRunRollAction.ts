@@ -41,6 +41,11 @@ const ROLL_MAX = 3;
 /** Number of dice drawn from the pool per roll. */
 const DICE_PER_ROLL = 2;
 
+/** Returns a single die face in [ROLL_MIN, ROLL_MAX]. Random source stays in PWA. */
+function rollDie(): number {
+  return Math.floor(Math.random() * (ROLL_MAX - ROLL_MIN + 1)) + ROLL_MIN;
+}
+
 // ── result types ──────────────────────────────────────────────────────────────
 
 /** Discriminant for the roll action outcome. */
@@ -105,8 +110,8 @@ export async function executeIslandRunRollAction(options: {
 
   // 4. Generate dice outcomes — randomness stays here in the PWA.
   //    The renderer only emits the intent; it never generates the values.
-  const dieOne = Math.floor(Math.random() * (ROLL_MAX - ROLL_MIN + 1)) + ROLL_MIN;
-  const dieTwo = Math.floor(Math.random() * (ROLL_MAX - ROLL_MIN + 1)) + ROLL_MIN;
+  const dieOne = rollDie();
+  const dieTwo = rollDie();
   const total = dieOne + dieTwo;
 
   // 5. Move the token step-by-step using the canonical topology helper so that

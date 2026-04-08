@@ -127,9 +127,14 @@ export function ContractBoardRendererHost({ session }: ContractBoardRendererHost
   }, [refreshFromStorage]);
 
   // ── roll busy guard ────────────────────────────────────────────────────────
-  // Prevents concurrent roll dispatches and surfaces the busy state to the
-  // renderer via the contract's ui.busy.roll flag.
+  // `busyRollRef` is checked inside the intent handler to avoid race conditions
+  // from stale closure captures — the ref is always current regardless of render
+  // cycle.  `busyRoll` state is kept separately to drive contract derivation
+  // (the ui.busy.roll flag shown to the renderer) without including it in the
+  // handleIntent dependency array (which would recreate the callback and force
+  // unnecessary re-renders of ContractBoardRenderer).
   const [busyRoll, setBusyRoll] = useState(false);
+  const busyRollRef = useRef(false);
 
   // ── intent handler ─────────────────────────────────────────────────────────
   /**
@@ -144,13 +149,16 @@ export function ContractBoardRendererHost({ session }: ContractBoardRendererHost
    */
   const handleIntent = useCallback((intent: BoardRendererContractV1Intent) => {
     if (intent.type === 'roll_requested') {
-      if (busyRoll) {
+      // Use the ref for the guard so we always read the latest value, even
+      // if two rapid clicks arrive before the first setState completes.
+      if (busyRollRef.current) {
         if (import.meta.env.DEV) {
           console.log('[ContractBoardRendererHost] roll already in progress, ignoring duplicate intent');
         }
         return;
       }
 
+      busyRollRef.current = true;
       setBusyRoll(true);
       void executeIslandRunRollAction({ session, client })
         .then((result) => {
@@ -167,6 +175,7 @@ export function ContractBoardRendererHost({ session }: ContractBoardRendererHost
           }
         })
         .finally(() => {
+          busyRollRef.current = false;
           setBusyRoll(false);
         });
       return;
@@ -177,7 +186,11 @@ export function ContractBoardRendererHost({ session }: ContractBoardRendererHost
     if (import.meta.env.DEV) {
       console.log('[ContractBoardRendererHost] intent (no-op — not yet wired):', intent);
     }
-  }, [busyRoll, client, refreshFromStorage, session]);
+  // busyRoll (state) is intentionally excluded from deps: the guard uses
+  // busyRollRef (always current) so the callback does not need to recreate on
+  // every busy-flag change, avoiding unnecessary re-renders of ContractBoardRenderer.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, refreshFromStorage, session]);
 
   // ── derive renderer contract ───────────────────────────────────────────────
   // Pass the live busy.roll flag so the renderer can disable the button
