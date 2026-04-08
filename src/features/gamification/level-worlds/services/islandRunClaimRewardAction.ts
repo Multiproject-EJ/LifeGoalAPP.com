@@ -101,7 +101,7 @@ export async function executeIslandRunClaimRewardAction(options: {
     rewardBarLastClaimAtMs: nextRewardBarSlice.rewardBarLastClaimAtMs,
     rewardBarBoundEventId: nextRewardBarSlice.rewardBarBoundEventId,
     rewardBarLadderId: nextRewardBarSlice.rewardBarLadderId,
-    activeTimedEvent: nextRewardBarSlice.activeTimedEvent ?? null,
+    activeTimedEvent: nextRewardBarSlice.activeTimedEvent,
     activeTimedEventProgress: nextRewardBarSlice.activeTimedEventProgress,
     stickerProgress: nextRewardBarSlice.stickerProgress,
     stickerInventory: nextRewardBarSlice.stickerInventory,
