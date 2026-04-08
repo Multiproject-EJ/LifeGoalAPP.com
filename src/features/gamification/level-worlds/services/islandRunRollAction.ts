@@ -31,7 +31,7 @@ import {
   deriveIslandRunContractV2StopType,
 } from './islandRunGameStateStore';
 import { resolveWrappedTokenIndex } from './islandBoardTopology';
-import { resolveIslandBoardProfile } from './islandBoardProfiles';
+import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
 import { isIslandRunContractV2StopCompleteAtIndex } from './islandRunContractV2StopResolver';
 
 // ── roll constants (must match IslandRunBoardPrototype) ───────────────────────
@@ -87,6 +87,8 @@ export interface IslandRunRollActionResult {
 export async function executeIslandRunRollAction(options: {
   session: Session;
   client: SupabaseClient | null;
+  /** Board profile to use for tile-count and stop-tile resolution. Defaults to 'legacy17'. */
+  boardProfileId?: IslandBoardProfileId;
 }): Promise<IslandRunRollActionResult> {
   const { session, client } = options;
 
@@ -116,7 +118,7 @@ export async function executeIslandRunRollAction(options: {
 
   // 5. Move the token step-by-step using the canonical topology helper so that
   //    board wrap-around (lap completion) is handled correctly.
-  const boardProfile = resolveIslandBoardProfile('legacy17');
+  const boardProfile = resolveIslandBoardProfile(options.boardProfileId ?? 'legacy17');
   let newTokenIndex = state.tokenIndex;
   for (let step = 0; step < total; step += 1) {
     newTokenIndex = resolveWrappedTokenIndex(newTokenIndex, 1, boardProfile.tileCount);

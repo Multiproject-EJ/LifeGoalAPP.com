@@ -67,6 +67,9 @@ function hasRuntimeStateChanged(prev: IslandRunRuntimeState, next: IslandRunRunt
   );
 }
 
+/** Board profile used by the new contract-renderer path. Distinct from the legacy prototype default. */
+const CONTRACT_RENDERER_BOARD_PROFILE_ID = 'spark60_preview' as const;
+
 export function ContractBoardRendererHost({ session }: ContractBoardRendererHostProps) {
   // ── Supabase client (for remote state persistence on roll) ────────────────
   // Mirrors the pattern used by IslandRunBoardPrototype.
@@ -173,7 +176,7 @@ export function ContractBoardRendererHost({ session }: ContractBoardRendererHost
 
       busyRollRef.current = true;
       setBusyRoll(true);
-      void executeIslandRunRollAction({ session, client })
+      void executeIslandRunRollAction({ session, client, boardProfileId: CONTRACT_RENDERER_BOARD_PROFILE_ID })
         .then((result) => {
           if (import.meta.env.DEV) {
             console.log('[ContractBoardRendererHost] roll result:', result);
@@ -247,6 +250,7 @@ export function ContractBoardRendererHost({ session }: ContractBoardRendererHost
       selectBoardRendererContractV1({
         runtimeState,
         islandNumber: runtimeState.currentIslandNumber,
+        boardProfileId: CONTRACT_RENDERER_BOARD_PROFILE_ID,
         nowMs: Date.now(),
         busy: { roll: busyRoll, claim: busyClaim },
       }),
