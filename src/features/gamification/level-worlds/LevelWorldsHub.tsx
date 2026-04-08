@@ -9,6 +9,8 @@ import { WorldBoard } from './components/WorldBoard';
 import { NodeDetailSheet } from './components/NodeDetailSheet';
 import { BoardCompleteOverlay } from './components/BoardCompleteOverlay';
 import { IslandRunBoardPrototype } from './components/IslandRunBoardPrototype';
+import { ContractBoardRendererHost } from './components/ContractBoardRendererHost';
+import { isContractBoardRendererEnabled } from './services/islandRunFeatureFlags';
 import type { WorldNode } from './types/levelWorlds';
 import { logIslandRunEntryDebug } from './services/islandRunEntryDebug';
 
@@ -57,6 +59,10 @@ export function LevelWorldsHub({ session, onClose, initialPanel = 'default' }: L
   const islandRunDevParam = new URLSearchParams(window.location.search).get('islandRunDev');
   // Island Run is the production surface. Legacy WorldBoard only renders if ?islandRunDev=0 is set.
   const isIslandRunPrototype = islandRunDevParam !== '0';
+
+  // Feature flag: mount the cleaned ContractBoardRenderer in read-only mode (default OFF).
+  // Enable via: ?island_run_contract_renderer=1  OR  localStorage feature_flag_island_run_contract_renderer=1
+  const useContractRenderer = isContractBoardRendererEnabled();
 
 
   useEffect(() => {
@@ -186,7 +192,14 @@ export function LevelWorldsHub({ session, onClose, initialPanel = 'default' }: L
         >
           ← Back
         </button>
-        <IslandRunBoardPrototype session={session} initialPanel={initialPanel} />
+        {/* Feature flag: island_run_contract_renderer
+            When ON: mount the cleaned ContractBoardRenderer in read-only mode.
+            When OFF (default): existing IslandRunBoardPrototype renders as normal.
+            Fallback is automatic — if the flag is off, IslandRunBoardPrototype runs unchanged. */}
+        {useContractRenderer
+          ? <ContractBoardRendererHost session={session} />
+          : <IslandRunBoardPrototype session={session} initialPanel={initialPanel} />
+        }
       </div>
     );
   }
