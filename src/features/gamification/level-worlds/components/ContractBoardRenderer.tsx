@@ -292,9 +292,9 @@ export function ContractBoardRenderer({
           </button>
         </div>
 
-        {/* Read-only badge — visible reminder that mutations are disabled */}
+        {/* Status badge — roll is wired; other intents remain no-op in this slice */}
         <p className="contract-board-renderer__readonly-badge" aria-live="polite">
-          👁️ Read-only renderer (flag: island_run_contract_renderer)
+          🎲 Roll wired · other intents no-op (flag: island_run_contract_renderer)
         </p>
 
         {/* Errors from contract */}

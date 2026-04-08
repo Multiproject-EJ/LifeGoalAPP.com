@@ -1,5 +1,5 @@
 /**
- * ContractBoardRendererHost — thin PWA adapter host for the read-only ContractBoardRenderer.
+ * ContractBoardRendererHost — thin PWA adapter host for the ContractBoardRenderer.
  *
  * Responsibilities:
  *  1. Reads live IslandRunRuntimeState from the canonical PWA source (readIslandRunRuntimeState).
@@ -7,11 +7,18 @@
  *     stay synchronized with gameplay changes written by the active IslandRunBoardPrototype.
  *  3. Derives a BoardRendererContractV1 snapshot via selectBoardRendererContractV1 (the PWA adapter).
  *  4. Passes the contract snapshot to <ContractBoardRenderer> for pure presentation.
- *  5. Supplies no-op intent handlers — all intents are console-logged only; no gameplay mutations.
+ *  5. Routes `roll_requested` intents to the PWA roll-action pipeline (executeIslandRunRollAction).
+ *  6. Keeps all other intents (claim, openStop, spendEssence, etc.) as no-op/logged — they are
+ *     intentionally unwired in this slice and will be enabled in future stages.
+ *
+ * Architecture:
+ *  - The renderer emits intents; this host resolves them via PWA services.
+ *  - Renderer never owns or generates gameplay truth (dice, movement, rewards, state).
+ *  - Roll outcomes (random numbers, token position) are produced entirely in
+ *    executeIslandRunRollAction — never in the renderer component.
  *
  * This host must NOT:
- *  - mutate gameplay state
- *  - own progression rules or dice logic
+ *  - let the renderer decide dice values or token movement
  *  - replicate fixture/demo data
  *
  * Feature flag: island_run_contract_renderer (default OFF).
@@ -20,23 +27,15 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { useSupabaseAuth } from '../../../auth/SupabaseAuthProvider';
 import { readIslandRunRuntimeState, type IslandRunRuntimeState } from '../services/islandRunRuntimeState';
 import { selectBoardRendererContractV1 } from '../services/islandRunBoardRendererAdapterV1';
 import type { BoardRendererContractV1Intent } from '../services/islandRunBoardRendererContractV1';
+import { executeIslandRunRollAction } from '../services/islandRunRollAction';
 import { ContractBoardRenderer } from './ContractBoardRenderer';
 
 export interface ContractBoardRendererHostProps {
   session: Session;
-}
-
-/**
- * No-op intent handler: logs the intent for debugging but performs no gameplay mutations.
- * Replace with real PWA action dispatch in a future slice when intent wiring is ready.
- */
-function handleIntentNoOp(intent: BoardRendererContractV1Intent): void {
-  if (import.meta.env.DEV) {
-    console.log('[ContractBoardRendererHost] intent (read-only, no-op):', intent);
-  }
 }
 
 /** Polling interval for re-reading runtime state from localStorage (ms). */
@@ -64,6 +63,10 @@ function hasRuntimeStateChanged(prev: IslandRunRuntimeState, next: IslandRunRunt
 }
 
 export function ContractBoardRendererHost({ session }: ContractBoardRendererHostProps) {
+  // ── Supabase client (for remote state persistence on roll) ────────────────
+  // Mirrors the pattern used by IslandRunBoardPrototype.
+  const { client } = useSupabaseAuth();
+
   // ── live runtime state ─────────────────────────────────────────────────────
   // Initialize from the canonical PWA localStorage source, then keep in sync
   // via polling + storage events + visibilitychange — strictly read-only.
@@ -123,21 +126,77 @@ export function ContractBoardRendererHost({ session }: ContractBoardRendererHost
     };
   }, [refreshFromStorage]);
 
+  // ── roll busy guard ────────────────────────────────────────────────────────
+  // Prevents concurrent roll dispatches and surfaces the busy state to the
+  // renderer via the contract's ui.busy.roll flag.
+  const [busyRoll, setBusyRoll] = useState(false);
+
+  // ── intent handler ─────────────────────────────────────────────────────────
+  /**
+   * Routes renderer intents to PWA gameplay actions.
+   *
+   * Only `roll_requested` is wired in this slice; all other intents are
+   * intentionally no-op/logged and will be connected in future stages.
+   *
+   * Architecture note: the renderer emits intent signals only — it never
+   * generates gameplay outcomes (dice values, token movement, rewards).
+   * Those always originate in PWA services (executeIslandRunRollAction).
+   */
+  const handleIntent = useCallback((intent: BoardRendererContractV1Intent) => {
+    if (intent.type === 'roll_requested') {
+      if (busyRoll) {
+        if (import.meta.env.DEV) {
+          console.log('[ContractBoardRendererHost] roll already in progress, ignoring duplicate intent');
+        }
+        return;
+      }
+
+      setBusyRoll(true);
+      void executeIslandRunRollAction({ session, client })
+        .then((result) => {
+          if (import.meta.env.DEV) {
+            console.log('[ContractBoardRendererHost] roll result:', result);
+          }
+          // Refresh state from localStorage now that the roll has been persisted.
+          // (Same-tab writes do not trigger the storage event, so we refresh manually.)
+          refreshFromStorage();
+        })
+        .catch((err: unknown) => {
+          if (import.meta.env.DEV) {
+            console.error('[ContractBoardRendererHost] roll error:', err);
+          }
+        })
+        .finally(() => {
+          setBusyRoll(false);
+        });
+      return;
+    }
+
+    // All other intents remain no-op in this slice.
+    // They will be wired in future integration stages.
+    if (import.meta.env.DEV) {
+      console.log('[ContractBoardRendererHost] intent (no-op — not yet wired):', intent);
+    }
+  }, [busyRoll, client, refreshFromStorage, session]);
+
   // ── derive renderer contract ───────────────────────────────────────────────
+  // Pass the live busy.roll flag so the renderer can disable the button
+  // during the async roll and re-enable it when done.
   const contract = useMemo(
     () =>
       selectBoardRendererContractV1({
         runtimeState,
         islandNumber: runtimeState.currentIslandNumber,
         nowMs: Date.now(),
+        busy: { roll: busyRoll },
       }),
-    [runtimeState],
+    [runtimeState, busyRoll],
   );
 
   return (
     <ContractBoardRenderer
       contract={contract}
-      onIntent={handleIntentNoOp}
+      onIntent={handleIntent}
       islandNumber={runtimeState.currentIslandNumber}
     />
   );
