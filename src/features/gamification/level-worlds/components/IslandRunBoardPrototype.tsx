@@ -147,6 +147,11 @@ import {
   resolveIslandRunStep1CompleteForProgression,
 } from '../services/islandRunContractV2StopResolver';
 import {
+  formatIslandRunSpinTokenReward,
+  resolveIslandRunContractV2RewardHudState,
+  resolveIslandRunSpinTokenWalletLabel,
+} from '../services/islandRunContractV2Semantics';
+import {
   resolveIslandTimerHydrationState,
   shouldAutoAdvanceIslandOnTimerExpiry,
 } from '../services/islandRunTimerProgression';
@@ -827,7 +832,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [islandExpiresAtMs, setIslandExpiresAtMs] = useState<number>(() => Date.now() + getIslandDurationMs(1));
   const [tileMap, setTileMap] = useState<IslandTileMapEntry[]>(() => generateTileMap(1, 'normal', 'forest', 0, { profileId: ACTIVE_BOARD_PROFILE.id }));
 
-  // B2-1: spin token state
+  // B2-1: legacy wallet field.
+  // In contract-v2 this wallet currently tracks minigame/event tokens (not movement spins).
   const [spinTokens, setSpinTokens] = useState(0);
 
   // B2-2: token landing animation state
@@ -2737,13 +2743,21 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         : rollButtonMode === 'convert'
           ? 'Convert'
           : 'Need dice';
-  const activeTimedEvent = runtimeState.activeTimedEvent;
-  const rewardBarThreshold = Math.max(1, runtimeState.rewardBarThreshold);
-  const rewardBarProgress = Math.max(0, runtimeState.rewardBarProgress);
-  const canClaimRewardBar = ISLAND_RUN_CONTRACT_V2_ENABLED && rewardBarProgress >= rewardBarThreshold;
-  const rewardBarPercent = Math.min(100, (rewardBarProgress / rewardBarThreshold) * 100);
+  const spinTokenWalletLabel = resolveIslandRunSpinTokenWalletLabel(ISLAND_RUN_CONTRACT_V2_ENABLED);
+  const {
+    activeTimedEvent,
+    rewardBarThreshold,
+    rewardBarProgress,
+    canClaimRewardBar,
+    rewardBarPercent,
+    timedEventRemainingMs,
+  } = resolveIslandRunContractV2RewardHudState({
+    islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+    runtimeState,
+    nowMs,
+  });
   const timedEventRemainingLabel = activeTimedEvent
-    ? formatEventRemaining(Math.max(0, activeTimedEvent.expiresAtMs - nowMs))
+    ? formatEventRemaining(timedEventRemainingMs)
     : '—';
 
   const activateCurrentIsland = useCallback(() => {
@@ -3945,7 +3959,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     playIslandRunSound('boss_trial_resolve');
     triggerIslandRunHaptic('boss_trial_resolve');
 
-    const rewardText = `Boss challenge resolved: +${bossReward.hearts} hearts, +${bossReward.coins} coins${bossReward.spinTokens > 0 ? `, +${bossReward.spinTokens} spin` : ''}.`;
+    const rewardText = `Boss challenge resolved: +${bossReward.hearts} hearts, +${bossReward.coins} coins${bossReward.spinTokens > 0 ? `, ${formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: bossReward.spinTokens })}` : ''}.`;
     setBossRewardSummary(rewardText);
     setLandingText(`${rewardText} Claim island clear to travel.`);
 
@@ -5525,7 +5539,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <span className="island-run-prototype__stat-chip">Island: <strong>{islandNumber}</strong></span>
               <span className="island-run-prototype__stat-chip">Last roll: <strong>{rollValue ?? '-'}</strong></span>
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">{resolveIslandRunTimerLabel({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, isIslandTimerPendingStart })} <strong>{timerDisplay}</strong></span>
-              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">Spins: <strong>{spinTokens}</strong></span>
+              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">{spinTokenWalletLabel}: <strong>{spinTokens}</strong></span>
               {/* M11C: stop progress chip */}
               {(() => {
                 const nonBossStops = islandStopPlan.filter((s) => s.stopId !== 'boss');
@@ -5608,7 +5622,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     <span className="island-run-prototype__stat-chip">Tile: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.tokenIndex ?? '—'}</strong></span>
                     <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--hearts">Hearts: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.hearts ?? '—'}</strong></span>
                     <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">Coins: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.coins ?? '—'}</strong></span>
-                    <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">Spins: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.spinTokens ?? '—'}</strong></span>
+                    <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">{spinTokenWalletLabel}: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.spinTokens ?? '—'}</strong></span>
                     <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">Dice: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.dicePool ?? '—'}</strong></span>
                   </div>
                   <p className="island-run-prototype__landing island-run-prototype__qa-note" role="note">
@@ -6296,7 +6310,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                           🎁 Reward on win:{' '}
                           <strong>+{bossReward.hearts} ❤️</strong>,{' '}
                           <strong>+{bossReward.coins} 🪙</strong>
-                          {bossReward.spinTokens > 0 ? <>, <strong>+{bossReward.spinTokens} spin</strong></> : null}
+                          {bossReward.spinTokens > 0
+                            ? <>, <strong>{formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: bossReward.spinTokens })}</strong></>
+                            : null}
                           , <strong>+3 🔷 shards</strong>
                         </p>
                         {ISLAND_RUN_CONTRACT_V2_ENABLED ? (
@@ -6521,7 +6537,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   {encounterRewardData.heart && <span className="island-encounter__reward-item">❤️ +1 heart</span>}
                   {encounterRewardData.walletShards && <span className="island-encounter__reward-item">✨ +1 shard</span>}
                   {encounterRewardData.dice > 0 && <span className="island-encounter__reward-item">🎲 +{encounterRewardData.dice} dice</span>}
-                  {encounterRewardData.spinTokens > 0 && <span className="island-encounter__reward-item">🌀 +{encounterRewardData.spinTokens} spin</span>}
+                  {encounterRewardData.spinTokens > 0 && (
+                    <span className="island-encounter__reward-item">🌀 {formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: encounterRewardData.spinTokens })}</span>
+                  )}
                 </div>
                 <p className="island-encounter__reward-tagline">Keep going — you're on a streak!</p>
               </div>
