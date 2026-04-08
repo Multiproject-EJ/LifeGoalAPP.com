@@ -136,7 +136,7 @@ export async function executeIslandRunRollAction(options: {
     ...state,
     runtimeVersion: state.runtimeVersion + 1,
     tokenIndex: newTokenIndex,
-    dicePool: Math.max(0, state.dicePool - DICE_PER_ROLL),
+    dicePool: state.dicePool - DICE_PER_ROLL,
     ...(landedStopIndex >= 0
       ? {
         activeStopIndex: landedStopIndex,
