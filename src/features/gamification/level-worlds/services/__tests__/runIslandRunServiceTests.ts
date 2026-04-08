@@ -7,6 +7,7 @@ import { islandBoardTopologyTests } from './islandBoardTopology.test';
 import { islandRunFoundationTests } from './islandRunFoundations.test';
 import { islandRunContractV2EnergyTests } from './islandRunContractV2Energy.test';
 import { islandRunContractV2StopResolverTests } from './islandRunContractV2StopResolver.test';
+import { islandRunContractV2EssenceBuildTests } from './islandRunContractV2EssenceBuild.test';
 import { islandRunProgressionTests } from './islandRunProgression.test';
 import { islandRunRuntimeStateIntegrationTests } from './islandRunRuntimeState.integration.test';
 import { islandRunTimerProgressionTests } from './islandRunTimerProgression.test';
@@ -23,6 +24,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunFoundations', tests: islandRunFoundationTests },
   { label: 'islandRunContractV2Energy', tests: islandRunContractV2EnergyTests },
   { label: 'islandRunContractV2StopResolver', tests: islandRunContractV2StopResolverTests },
+  { label: 'islandRunContractV2EssenceBuild', tests: islandRunContractV2EssenceBuildTests },
   { label: 'islandRunProgression', tests: islandRunProgressionTests },
   { label: 'islandRunRuntimeStateIntegration', tests: islandRunRuntimeStateIntegrationTests },
   { label: 'islandRunTimerProgression', tests: islandRunTimerProgressionTests },

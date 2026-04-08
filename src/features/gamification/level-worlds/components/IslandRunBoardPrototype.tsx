@@ -122,6 +122,13 @@ import {
 } from '../services/islandRunStopCompletion';
 import { isIslandRunContractV2Enabled } from '../services/islandRunFeatureFlags';
 import {
+  awardIslandRunContractV2Essence,
+  canIslandRunContractV2CompleteStop,
+  isIslandRunContractV2BuildPanelVisibleForStop,
+  resolveIslandRunContractV2EssenceEarnForTile,
+  spendIslandRunContractV2EssenceOnStopBuild,
+} from '../services/islandRunContractV2EssenceBuild';
+import {
   canRetryBossTrial,
   canUseSpinForMovement,
   isIslandRunRollEnergyDepleted,
@@ -301,6 +308,7 @@ const UTILITY_DICE_BONUS_COST = 30;
 const UTILITY_TIMER_EXT_COST_DIAMONDS = 3;
 const UTILITY_TIMER_EXT_HOURS = 12;
 const MAX_HEARTS = 10;
+const CONTRACT_V2_ESSENCE_SPEND_STEP = 10;
 const CREATURE_FEED_COOLDOWN_MS = 8 * 60 * 60 * 1000;
 const CREATURE_TREAT_OPTIONS: Array<{ type: CreatureTreatType; label: string; xpGain: number; summary: string }> = [
   { type: 'basic', label: 'Basic Treat', xpGain: 1, summary: '+1 bond XP' },
@@ -2145,6 +2153,41 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // M16B/M16C: award shards from a given source, update local state, and persist.
   // shard_tier_index does NOT advance here — that happens on player claim (M16E).
+  const awardContractV2Essence = useCallback((amount: number, source: string) => {
+    const result = awardIslandRunContractV2Essence({
+      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+      essence: runtimeStateRef.current.essence,
+      essenceLifetimeEarned: runtimeStateRef.current.essenceLifetimeEarned,
+      amount,
+    });
+
+    if (result.earned < 1) return;
+
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        essence: result.essence,
+        essenceLifetimeEarned: result.essenceLifetimeEarned,
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      essence: result.essence,
+      essenceLifetimeEarned: result.essenceLifetimeEarned,
+    }));
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'island_run_contract_v2_essence_earn',
+        island_number: islandNumber,
+        source,
+        amount: result.earned,
+      },
+    });
+  }, [client, islandNumber, session.user.id]);
+
   const awardShards = useCallback((source: ShardEarnSource) => {
     const amount = SHARD_EARN[source];
     const result = computeShardEarn(
@@ -2534,6 +2577,25 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     stopStatesByIndex: runtimeState.stopStatesByIndex,
     legacyStep1Complete,
   });
+  const contractV2StopResolution = resolveIslandRunContractV2Stops({
+    stopStatesByIndex: runtimeState.stopStatesByIndex,
+  });
+  const contractV2ActiveStopIndex = contractV2StopResolution.activeStopIndex;
+  const contractV2OpenedStopIndex = activeStopId ? islandStopPlan.findIndex((stop) => stop.stopId === activeStopId) : -1;
+  const showContractV2BuildPanel = isIslandRunContractV2BuildPanelVisibleForStop({
+    islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+    openedStopIndex: contractV2OpenedStopIndex,
+    activeStopIndex: contractV2ActiveStopIndex,
+  });
+  const contractV2BuildPanelStopState = showContractV2BuildPanel
+    ? (runtimeState.stopStatesByIndex[contractV2OpenedStopIndex] ?? { objectiveComplete: false, buildComplete: false })
+    : null;
+  const contractV2BuildPanelBuildState = showContractV2BuildPanel
+    ? (runtimeState.stopBuildStateByIndex[contractV2OpenedStopIndex] ?? { requiredEssence: 0, spentEssence: 0, buildLevel: 0 })
+    : null;
+  const contractV2BuildPanelRemainingEssence = contractV2BuildPanelBuildState
+    ? Math.max(0, contractV2BuildPanelBuildState.requiredEssence - contractV2BuildPanelBuildState.spentEssence)
+    : 0;
   const legacyIsCurrentIslandFullyCleared = isIslandFullyCleared(islandNumber, effectiveCompletedStops);
   const isCurrentIslandFullyCleared = resolveIslandRunFullClearForProgression({
     islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
@@ -2708,6 +2770,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // B2-3: resolve non-stop, non-encounter tile landings with real outcomes
   const resolveTileLanding = (tileType: string) => {
+    const essenceEarn = resolveIslandRunContractV2EssenceEarnForTile(tileType);
     const EVENT_MESSAGES = [
       '⚡ Island event!',
       '⚡ Something stirs...',
@@ -2747,6 +2810,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       default:
         setLandingText(`Landed on tile #${tokenIndex}`);
         break;
+    }
+
+    if (essenceEarn > 0) {
+      awardContractV2Essence(essenceEarn, `tile_${tileType}`);
     }
   };
 
@@ -4146,6 +4213,69 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setCompletedStops((current) => current.includes(stopId) ? current : [...current, stopId]);
   };
 
+  const handleSpendEssenceOnActiveStopBuild = () => {
+    if (!ISLAND_RUN_CONTRACT_V2_ENABLED || !activeStopId) return;
+
+    const stopIndex = islandStopPlan.findIndex((stop) => stop.stopId === activeStopId);
+    if (stopIndex < 0) return;
+
+    const activeStopIndex = resolveIslandRunContractV2Stops({
+      stopStatesByIndex: runtimeStateRef.current.stopStatesByIndex,
+    }).activeStopIndex;
+    if (stopIndex !== activeStopIndex) {
+      setLandingText('Build upgrades are only available on the active stop.');
+      return;
+    }
+
+    const spendResult = spendIslandRunContractV2EssenceOnStopBuild({
+      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+      stopIndex,
+      spendAmount: CONTRACT_V2_ESSENCE_SPEND_STEP,
+      essence: runtimeStateRef.current.essence,
+      essenceLifetimeSpent: runtimeStateRef.current.essenceLifetimeSpent,
+      stopBuildStateByIndex: runtimeStateRef.current.stopBuildStateByIndex,
+      stopStatesByIndex: runtimeStateRef.current.stopStatesByIndex,
+    });
+
+    if (spendResult.spent < 1) {
+      setLandingText('Need more Essence to upgrade this stop build.');
+      return;
+    }
+
+    const stopResolution = resolveIslandRunContractV2Stops({
+      stopStatesByIndex: spendResult.stopStatesByIndex,
+    });
+
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        essence: spendResult.essence,
+        essenceLifetimeSpent: spendResult.essenceLifetimeSpent,
+        stopBuildStateByIndex: spendResult.stopBuildStateByIndex,
+        stopStatesByIndex: spendResult.stopStatesByIndex,
+        activeStopIndex: stopResolution.activeStopIndex,
+        activeStopType: stopResolution.activeStopType,
+      },
+    });
+
+    setRuntimeState((current) => ({
+      ...current,
+      essence: spendResult.essence,
+      essenceLifetimeSpent: spendResult.essenceLifetimeSpent,
+      stopBuildStateByIndex: spendResult.stopBuildStateByIndex,
+      stopStatesByIndex: spendResult.stopStatesByIndex,
+      activeStopIndex: stopResolution.activeStopIndex,
+      activeStopType: stopResolution.activeStopType,
+    }));
+
+    const nextBuildState = spendResult.stopBuildStateByIndex[stopIndex];
+    const nextRemaining = Math.max(0, nextBuildState.requiredEssence - nextBuildState.spentEssence);
+    setLandingText(nextRemaining === 0
+      ? 'Build upgrade funded! Complete the objective to finish this stop.'
+      : `Build progress +${spendResult.spent} Essence (${nextBuildState.spentEssence}/${nextBuildState.requiredEssence}).`);
+  };
+
   const handleCompleteActiveStop = () => {
     if (!activeStopId) return;
 
@@ -4158,6 +4288,125 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
     if (completionBlockReason) {
       setLandingText(completionBlockReason);
+      return;
+    }
+
+    if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
+      const stopIndex = islandStopPlan.findIndex((stop) => stop.stopId === activeStopId);
+      if (stopIndex < 0) return;
+
+      const activeStopIndex = resolveIslandRunContractV2Stops({
+        stopStatesByIndex: runtimeStateRef.current.stopStatesByIndex,
+      }).activeStopIndex;
+      if (stopIndex !== activeStopIndex) {
+        setLandingText('Only the active stop can be progressed in contract-v2.');
+        return;
+      }
+
+      const priorStopState = runtimeStateRef.current.stopStatesByIndex[stopIndex] ?? { objectiveComplete: false, buildComplete: false };
+      const nextStopStatesByIndex = runtimeStateRef.current.stopStatesByIndex.map((entry, index) => {
+        if (index !== stopIndex) return entry;
+        const objectiveComplete = true;
+        const buildComplete = entry?.buildComplete === true;
+        return {
+          objectiveComplete,
+          buildComplete,
+          ...(objectiveComplete && buildComplete ? { completedAtMs: Date.now() } : {}),
+        };
+      });
+
+      const stopResolution = resolveIslandRunContractV2Stops({
+        stopStatesByIndex: nextStopStatesByIndex,
+      });
+
+      void persistIslandRunRuntimeStatePatch({
+        session,
+        client,
+        patch: {
+          stopStatesByIndex: nextStopStatesByIndex,
+          activeStopIndex: stopResolution.activeStopIndex,
+          activeStopType: stopResolution.activeStopType,
+        },
+      });
+
+      setRuntimeState((current) => ({
+        ...current,
+        stopStatesByIndex: nextStopStatesByIndex,
+        activeStopIndex: stopResolution.activeStopIndex,
+        activeStopType: stopResolution.activeStopType,
+      }));
+
+      const nextStopState = nextStopStatesByIndex[stopIndex];
+      if (!canIslandRunContractV2CompleteStop({
+        islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+        stopStatesByIndex: nextStopStatesByIndex,
+        stopIndex,
+      })) {
+        setLandingText('Objective complete. Spend Essence to finish this stop build.');
+        return;
+      }
+
+      if (!priorStopState.objectiveComplete || !priorStopState.buildComplete) {
+        awardShards('stop_complete');
+        awardWalletShards(1);
+      }
+
+      if (activeStopId === 'boss') {
+        const bossReward = getBossReward(islandNumber);
+        setLandingText('Boss stop complete! Island clear. Next island unlocked.');
+        setCompletedStops((current) => ensureStopCompleted(current, 'boss'));
+        awardShards('boss_defeat');
+        awardWalletShards(3);
+
+        logGameSession(session.user.id, {
+          gameId: 'shooter_blitz',
+          action: 'complete',
+          timestamp: new Date().toISOString(),
+          metadata: {
+            stage: 'island_run_boss_island_cleared',
+            island_number: islandNumber,
+            rewards_granted: {
+              hearts: bossReward.hearts,
+              coins: bossReward.coins,
+            },
+          },
+        });
+
+        void recordTelemetryEvent({
+          userId: session.user.id,
+          eventType: 'economy_earn',
+          metadata: {
+            stage: 'island_run_boss_island_cleared',
+            source: 'shooter_blitz',
+            island_number: islandNumber,
+            boss_trial_resolved: true,
+          },
+        });
+
+        playIslandRunSound('boss_island_clear');
+        triggerIslandRunHaptic('boss_island_clear');
+
+        setShowIslandClearCelebration(true);
+        setIslandClearStats({
+          islandNumber,
+          heartsEarned: bossReward.hearts,
+          coinsEarned: bossReward.coins,
+          stopsCleared: completedStops.length + 1,
+        });
+
+        setShowTravelOverlay(true);
+        window.setTimeout(() => {
+          const nextIsland = islandNumber + 1;
+          setShowTravelOverlay(false);
+          performIslandTravel(nextIsland, { startTimer: true });
+        }, 1400);
+        return;
+      }
+
+      setCompletedStops((current) => ensureStopCompleted(current, activeStopId));
+      setMysteryStopReward(null);
+      setLandingText(`${activeStopId.toUpperCase()} stop completed.`);
+      setActiveStopId(null);
       return;
     }
 
@@ -4193,11 +4442,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         },
       });
 
-      // M10C: boss_island_clear sound + haptic
       playIslandRunSound('boss_island_clear');
       triggerIslandRunHaptic('boss_island_clear');
 
-      // B3-5: island clear celebration
       setShowIslandClearCelebration(true);
       setIslandClearStats({
         islandNumber,
@@ -4958,6 +5205,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--hearts">❤️ <strong>{hearts}</strong></span>
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">🎲 <strong>{dicePool}</strong></span>
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">🪙 <strong>{coins}</strong></span>
+          {ISLAND_RUN_CONTRACT_V2_ENABLED && <span className="island-run-prototype__stat-chip">🟣 <strong>{runtimeState.essence}</strong></span>}
           {activeCompanion && activeCompanionBonus ? (
             <span className="island-run-prototype__stat-chip">
               🐾 <strong>{activeCompanion.creature.name}</strong> · {activeCompanionBonus.label}
@@ -5314,6 +5562,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">🎲 <strong>{dicePool}</strong></span>
             <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--hearts">❤️ <strong>{hearts}</strong></span>
             <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">⏱ <strong>{timerDisplay}</strong></span>
+            {ISLAND_RUN_CONTRACT_V2_ENABLED && <span className="island-run-prototype__stat-chip">🟣 <strong>{runtimeState.essence}</strong></span>}
             {canUseSpinForMovement(ISLAND_RUN_CONTRACT_V2_ENABLED) && spinTokens > 0 && (
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">🌀 <strong>{spinTokens}</strong></span>
             )}
@@ -5674,7 +5923,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>⏱ Timer Extension — needs {UTILITY_TIMER_EXT_COST_DIAMONDS} 💎 (have {diamonds})</p>
                   )}
                 </div>
-                <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
                   <button
                     type="button"
                     className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
@@ -5912,6 +6161,25 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   </div>
                 );
               })()
+            ) : null}
+
+            {showContractV2BuildPanel && contractV2BuildPanelBuildState && contractV2BuildPanelStopState ? (
+              <div style={{ marginTop: '0.75rem', marginBottom: '0.75rem', padding: '0.65rem', borderRadius: '10px', background: 'rgba(84, 63, 130, 0.2)', border: '1px solid rgba(197, 172, 255, 0.35)' }}>
+                <p className="island-stop-modal__copy" style={{ marginBottom: '0.35rem' }}>
+                  Essence: <strong>{runtimeState.essence}</strong> · Build: <strong>{contractV2BuildPanelBuildState.spentEssence}</strong>/<strong>{contractV2BuildPanelBuildState.requiredEssence}</strong>
+                </p>
+                <p className="island-stop-modal__copy" style={{ marginBottom: '0.55rem', opacity: 0.9 }}>
+                  Objective {contractV2BuildPanelStopState.objectiveComplete ? '✅' : '⏳'} · Build {contractV2BuildPanelStopState.buildComplete ? '✅' : `⏳ (${contractV2BuildPanelRemainingEssence} Essence left)`}
+                </p>
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                  onClick={handleSpendEssenceOnActiveStopBuild}
+                  disabled={contractV2BuildPanelRemainingEssence <= 0 || runtimeState.essence <= 0}
+                >
+                  Spend {Math.min(CONTRACT_V2_ESSENCE_SPEND_STEP, Math.max(1, contractV2BuildPanelRemainingEssence))} Essence on Build
+                </button>
+              </div>
             ) : null}
 
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
