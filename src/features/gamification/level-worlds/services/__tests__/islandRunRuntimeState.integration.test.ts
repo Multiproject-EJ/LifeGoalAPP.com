@@ -79,6 +79,99 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
     },
   },
   {
+    name: 'legacy-only patch does not create contract-v2 active event or reward-bar side effects',
+    run: async () => {
+      resetStorage();
+      const session = makeSession();
+      const before = readIslandRunRuntimeState(session);
+      assertEqual(before.activeTimedEvent, null, 'Expected no active timed event in fresh baseline');
+
+      const persistResult = await persistIslandRunRuntimeStatePatch({
+        session,
+        client: null,
+        patch: {
+          currentIslandNumber: 3,
+          tokenIndex: 6,
+          hearts: 4,
+          coins: 20,
+          dicePool: 12,
+        },
+      });
+
+      assertDeepEqual(persistResult, { ok: true }, 'Expected legacy-only patch persistence to succeed');
+      const after = readIslandRunRuntimeState(session);
+      assertEqual(after.activeTimedEvent, null, 'Expected legacy patch to avoid creating active timed event');
+      assertEqual(after.rewardBarBoundEventId, null, 'Expected legacy patch to avoid binding reward bar to an event');
+      assertEqual(after.rewardBarClaimCountInEvent, 0, 'Expected reward-bar claim state to remain untouched');
+      assertEqual(after.rewardBarEscalationTier, 0, 'Expected reward-bar escalation state to remain untouched');
+      assertEqual(after.rewardBarProgress, 0, 'Expected reward-bar progress to remain untouched');
+    },
+  },
+  {
+    name: 'island transition patch preserves non-expired active event and event-bound reward state',
+    run: async () => {
+      resetStorage();
+      const session = makeSession();
+      const seededEvent = {
+        eventId: 'feeding_frenzy:1234',
+        eventType: 'feeding_frenzy',
+        startedAtMs: 1234,
+        expiresAtMs: 1234 + (8 * 60 * 60 * 1000),
+        version: 1,
+      };
+
+      const seedResult = await persistIslandRunRuntimeStatePatch({
+        session,
+        client: null,
+        patch: {
+          activeTimedEvent: seededEvent,
+          rewardBarBoundEventId: seededEvent.eventId,
+          rewardBarLadderId: 'feeding_frenzy_ladder_v1',
+          rewardBarProgress: 6,
+          rewardBarThreshold: 10,
+          rewardBarClaimCountInEvent: 2,
+          rewardBarEscalationTier: 2,
+          rewardBarLastClaimAtMs: 9_999,
+          activeTimedEventProgress: {
+            feedingActions: 4,
+            tokensEarned: 7,
+            milestonesClaimed: 2,
+          },
+        },
+      });
+      assertDeepEqual(seedResult, { ok: true }, 'Expected v2 event state seed to persist');
+
+      // Simulate island transition patch shape (travel-related fields only).
+      const travelResult = await persistIslandRunRuntimeStatePatch({
+        session,
+        client: null,
+        patch: {
+          currentIslandNumber: 9,
+          cycleIndex: 2,
+          islandStartedAtMs: 50_000,
+          islandExpiresAtMs: 80_000,
+          tokenIndex: 0,
+          hearts: 5,
+          dicePool: 20,
+          spinTokens: 0,
+        },
+      });
+      assertDeepEqual(travelResult, { ok: true }, 'Expected island transition patch to persist');
+
+      const afterTravel = readIslandRunRuntimeState(session);
+      assertDeepEqual(afterTravel.activeTimedEvent, seededEvent, 'Expected non-expired active event to remain unchanged across island transition patch');
+      assertEqual(afterTravel.rewardBarBoundEventId, seededEvent.eventId, 'Expected reward-bar bound event to remain unchanged across island transition patch');
+      assertEqual(afterTravel.rewardBarProgress, 6, 'Expected reward-bar progress to remain unchanged across island transition patch');
+      assertEqual(afterTravel.rewardBarClaimCountInEvent, 2, 'Expected event claim count to remain unchanged across island transition patch');
+      assertEqual(afterTravel.rewardBarEscalationTier, 2, 'Expected event escalation tier to remain unchanged across island transition patch');
+      assertDeepEqual(afterTravel.activeTimedEventProgress, {
+        feedingActions: 4,
+        tokensEarned: 7,
+        milestonesClaimed: 2,
+      }, 'Expected event progress counters to remain unchanged across island transition patch');
+    },
+  },
+  {
     name: 'persistIslandRunRuntimeStatePatch merges ledger and stop state while sanitizing numeric values',
     run: async () => {
       resetStorage({

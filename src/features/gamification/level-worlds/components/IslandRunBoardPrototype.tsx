@@ -129,6 +129,11 @@ import {
   spendIslandRunContractV2EssenceOnStopBuild,
 } from '../services/islandRunContractV2EssenceBuild';
 import {
+  applyIslandRunContractV2RewardBarProgress,
+  claimIslandRunContractV2RewardBar,
+  ensureIslandRunContractV2ActiveTimedEvent,
+} from '../services/islandRunContractV2RewardBar';
+import {
   canRetryBossTrial,
   canUseSpinForMovement,
   isIslandRunRollEnergyDepleted,
@@ -338,6 +343,16 @@ function formatCooldownRemaining(remainingMs: number): string {
   const days = Math.floor(totalHours / 24);
   const hours = totalHours % 24;
   return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+}
+
+function formatEventRemaining(remainingMs: number): string {
+  if (remainingMs <= 0) return 'Expired';
+  const totalSeconds = Math.ceil(remainingMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  const seconds = totalSeconds % 60;
+  return `${minutes}m ${seconds}s`;
 }
 
 type SanctuaryFilterMode = 'all' | 'reward_ready' | 'active' | 'common' | 'rare' | 'mythic';
@@ -2188,6 +2203,95 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
   }, [client, islandNumber, session.user.id]);
 
+  const applyContractV2RewardBarRuntimeState = useCallback((nextRewardBarState: {
+    rewardBarProgress: number;
+    rewardBarThreshold: number;
+    rewardBarClaimCountInEvent: number;
+    rewardBarEscalationTier: number;
+    rewardBarLastClaimAtMs: number | null;
+    rewardBarBoundEventId: string | null;
+    rewardBarLadderId: string | null;
+    activeTimedEvent: { eventId: string; eventType: string; startedAtMs: number; expiresAtMs: number; version: number } | null;
+    activeTimedEventProgress: { feedingActions: number; tokensEarned: number; milestonesClaimed: number };
+    stickerProgress: { fragments: number; guaranteedAt?: number; pityCounter?: number };
+    stickerInventory: Record<string, number>;
+  }) => {
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        rewardBarProgress: nextRewardBarState.rewardBarProgress,
+        rewardBarThreshold: nextRewardBarState.rewardBarThreshold,
+        rewardBarClaimCountInEvent: nextRewardBarState.rewardBarClaimCountInEvent,
+        rewardBarEscalationTier: nextRewardBarState.rewardBarEscalationTier,
+        rewardBarLastClaimAtMs: nextRewardBarState.rewardBarLastClaimAtMs,
+        rewardBarBoundEventId: nextRewardBarState.rewardBarBoundEventId,
+        rewardBarLadderId: nextRewardBarState.rewardBarLadderId,
+        activeTimedEvent: nextRewardBarState.activeTimedEvent,
+        activeTimedEventProgress: nextRewardBarState.activeTimedEventProgress,
+        stickerProgress: nextRewardBarState.stickerProgress,
+        stickerInventory: nextRewardBarState.stickerInventory,
+      },
+    });
+
+    setRuntimeState((current) => ({
+      ...current,
+      rewardBarProgress: nextRewardBarState.rewardBarProgress,
+      rewardBarThreshold: nextRewardBarState.rewardBarThreshold,
+      rewardBarClaimCountInEvent: nextRewardBarState.rewardBarClaimCountInEvent,
+      rewardBarEscalationTier: nextRewardBarState.rewardBarEscalationTier,
+      rewardBarLastClaimAtMs: nextRewardBarState.rewardBarLastClaimAtMs,
+      rewardBarBoundEventId: nextRewardBarState.rewardBarBoundEventId,
+      rewardBarLadderId: nextRewardBarState.rewardBarLadderId,
+      activeTimedEvent: nextRewardBarState.activeTimedEvent,
+      activeTimedEventProgress: nextRewardBarState.activeTimedEventProgress,
+      stickerProgress: nextRewardBarState.stickerProgress,
+      stickerInventory: nextRewardBarState.stickerInventory,
+    }));
+  }, [client, session]);
+
+  useEffect(() => {
+    if (!ISLAND_RUN_CONTRACT_V2_ENABLED || !hasHydratedRuntimeState) return;
+
+    const syncEventLifecycle = () => {
+      const current = runtimeStateRef.current;
+      const ensured = ensureIslandRunContractV2ActiveTimedEvent({
+        nowMs: Date.now(),
+        state: {
+          rewardBarProgress: current.rewardBarProgress,
+          rewardBarThreshold: current.rewardBarThreshold,
+          rewardBarClaimCountInEvent: current.rewardBarClaimCountInEvent,
+          rewardBarEscalationTier: current.rewardBarEscalationTier,
+          rewardBarLastClaimAtMs: current.rewardBarLastClaimAtMs,
+          rewardBarBoundEventId: current.rewardBarBoundEventId,
+          rewardBarLadderId: current.rewardBarLadderId,
+          activeTimedEvent: current.activeTimedEvent,
+          activeTimedEventProgress: current.activeTimedEventProgress,
+          stickerProgress: current.stickerProgress,
+          stickerInventory: current.stickerInventory,
+        },
+      });
+
+      if (
+        ensured.state.activeTimedEvent?.eventId === current.activeTimedEvent?.eventId
+        && ensured.state.rewardBarBoundEventId === current.rewardBarBoundEventId
+        && ensured.state.rewardBarLadderId === current.rewardBarLadderId
+        && ensured.state.rewardBarProgress === current.rewardBarProgress
+        && ensured.state.rewardBarClaimCountInEvent === current.rewardBarClaimCountInEvent
+        && ensured.state.rewardBarEscalationTier === current.rewardBarEscalationTier
+        && ensured.state.rewardBarLastClaimAtMs === current.rewardBarLastClaimAtMs
+      ) {
+        return;
+      }
+
+      applyContractV2RewardBarRuntimeState(ensured.state);
+    };
+
+    syncEventLifecycle();
+    const timer = window.setInterval(syncEventLifecycle, 30 * 1000);
+    return () => window.clearInterval(timer);
+  }, [applyContractV2RewardBarRuntimeState, hasHydratedRuntimeState]);
+
   const awardShards = useCallback((source: ShardEarnSource) => {
     const amount = SHARD_EARN[source];
     const result = computeShardEarn(
@@ -2633,6 +2737,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         : rollButtonMode === 'convert'
           ? 'Convert'
           : 'Need dice';
+  const activeTimedEvent = runtimeState.activeTimedEvent;
+  const rewardBarThreshold = Math.max(1, runtimeState.rewardBarThreshold);
+  const rewardBarProgress = Math.max(0, runtimeState.rewardBarProgress);
+  const canClaimRewardBar = ISLAND_RUN_CONTRACT_V2_ENABLED && rewardBarProgress >= rewardBarThreshold;
+  const rewardBarPercent = Math.min(100, (rewardBarProgress / rewardBarThreshold) * 100);
+  const timedEventRemainingLabel = activeTimedEvent
+    ? formatEventRemaining(Math.max(0, activeTimedEvent.expiresAtMs - nowMs))
+    : '—';
 
   const activateCurrentIsland = useCallback(() => {
     const nowMs = Date.now();
@@ -2667,6 +2779,68 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const openStep1Stop = () => {
     if (!step1Stop?.stopId) return;
     setActiveStopId(step1Stop.stopId);
+  };
+
+  const handleContractV2RewardBarClaim = () => {
+    if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return;
+
+    const nowMs = Date.now();
+    const result = claimIslandRunContractV2RewardBar({
+      state: {
+        rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
+        rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
+        rewardBarClaimCountInEvent: runtimeStateRef.current.rewardBarClaimCountInEvent,
+        rewardBarEscalationTier: runtimeStateRef.current.rewardBarEscalationTier,
+        rewardBarLastClaimAtMs: runtimeStateRef.current.rewardBarLastClaimAtMs,
+        rewardBarBoundEventId: runtimeStateRef.current.rewardBarBoundEventId,
+        rewardBarLadderId: runtimeStateRef.current.rewardBarLadderId,
+        activeTimedEvent: runtimeStateRef.current.activeTimedEvent,
+        activeTimedEventProgress: runtimeStateRef.current.activeTimedEventProgress,
+        stickerProgress: runtimeStateRef.current.stickerProgress,
+        stickerInventory: runtimeStateRef.current.stickerInventory,
+      },
+      nowMs,
+    });
+
+    if (!result.payout) {
+      setLandingText('Reward bar is not full yet.');
+      return;
+    }
+    const payout = result.payout;
+
+    if (payout.minigameTokens > 0) {
+      setSpinTokens((current) => current + payout.minigameTokens);
+    }
+    if (payout.dice > 0) {
+      setDicePool((current) => current + payout.dice);
+    }
+
+    applyContractV2RewardBarRuntimeState(result.state);
+    const nextSpinTokens = runtimeStateRef.current.spinTokens + payout.minigameTokens;
+    const nextDicePool = runtimeStateRef.current.dicePool + payout.dice;
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        spinTokens: nextSpinTokens,
+        dicePool: nextDicePool,
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      spinTokens: nextSpinTokens,
+      dicePool: nextDicePool,
+    }));
+
+    const payoutSummary = [
+      `+${payout.minigameTokens} minigame token${payout.minigameTokens === 1 ? '' : 's'}`,
+      ...(payout.dice > 0 ? [`+${payout.dice} dice`] : []),
+      `+${payout.stickerFragments} sticker fragment${payout.stickerFragments === 1 ? '' : 's'}`,
+      ...(payout.stickersGranted > 0 ? [`+${payout.stickersGranted} sticker`] : []),
+    ].join(', ');
+    setLandingText(`Reward bar claimed: ${payoutSummary}.`);
+    playIslandRunSound('encounter_resolve');
+    triggerIslandRunHaptic('reward_claim');
   };
 
   const handleRoll = async () => {
@@ -2814,6 +2988,27 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     if (essenceEarn > 0) {
       awardContractV2Essence(essenceEarn, `tile_${tileType}`);
+    }
+
+    if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
+      const nextRewardBarState = applyIslandRunContractV2RewardBarProgress({
+        state: {
+          rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
+          rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
+          rewardBarClaimCountInEvent: runtimeStateRef.current.rewardBarClaimCountInEvent,
+          rewardBarEscalationTier: runtimeStateRef.current.rewardBarEscalationTier,
+          rewardBarLastClaimAtMs: runtimeStateRef.current.rewardBarLastClaimAtMs,
+          rewardBarBoundEventId: runtimeStateRef.current.rewardBarBoundEventId,
+          rewardBarLadderId: runtimeStateRef.current.rewardBarLadderId,
+          activeTimedEvent: runtimeStateRef.current.activeTimedEvent,
+          activeTimedEventProgress: runtimeStateRef.current.activeTimedEventProgress,
+          stickerProgress: runtimeStateRef.current.stickerProgress,
+          stickerInventory: runtimeStateRef.current.stickerInventory,
+        },
+        source: { kind: 'tile', tileType },
+        nowMs: Date.now(),
+      });
+      applyContractV2RewardBarRuntimeState(nextRewardBarState);
     }
   };
 
@@ -4791,6 +4986,27 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setLandingText(`${target.creature.name} enjoyed a ${treatOption.label.toLowerCase()} and feels closer to you.`);
       playIslandRunSound('encounter_resolve');
       triggerIslandRunHaptic('reward_claim');
+
+      if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
+        const nextRewardBarState = applyIslandRunContractV2RewardBarProgress({
+          state: {
+            rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
+            rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
+            rewardBarClaimCountInEvent: runtimeStateRef.current.rewardBarClaimCountInEvent,
+            rewardBarEscalationTier: runtimeStateRef.current.rewardBarEscalationTier,
+            rewardBarLastClaimAtMs: runtimeStateRef.current.rewardBarLastClaimAtMs,
+            rewardBarBoundEventId: runtimeStateRef.current.rewardBarBoundEventId,
+            rewardBarLadderId: runtimeStateRef.current.rewardBarLadderId,
+            activeTimedEvent: runtimeStateRef.current.activeTimedEvent,
+            activeTimedEventProgress: runtimeStateRef.current.activeTimedEventProgress,
+            stickerProgress: runtimeStateRef.current.stickerProgress,
+            stickerInventory: runtimeStateRef.current.stickerInventory,
+          },
+          source: { kind: 'creature_feed', treatType },
+          nowMs,
+        });
+        applyContractV2RewardBarRuntimeState(nextRewardBarState);
+      }
     },
     claimBondReward: (creatureId: string, milestoneLevel: number) => {
       const target = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
@@ -5228,6 +5444,25 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         >
           {landingText}
         </p>
+        {ISLAND_RUN_CONTRACT_V2_ENABLED && activeTimedEvent ? (
+          <div className="island-run-prototype__shard-pill" aria-label="Contract-v2 timed event reward bar">
+            <div className="island-run-prototype__shard-pill-fill" style={{ width: `${rewardBarPercent}%` }} />
+            <span className="island-run-prototype__shard-pill-content">
+              <span>⏳ {activeTimedEvent.eventType}</span>
+              <span className="island-run-prototype__shard-pill-count">
+                {timedEventRemainingLabel} · {rewardBarProgress}/{rewardBarThreshold} · Tier {runtimeState.rewardBarEscalationTier}
+              </span>
+            </span>
+            <button
+              type="button"
+              className="island-run-prototype__shard-pill-claim-btn"
+              onClick={handleContractV2RewardBarClaim}
+              disabled={!canClaimRewardBar}
+            >
+              Claim bar
+            </button>
+          </div>
+        ) : null}
         {/* M17A: shields HUD chip — only shown when player has at least 1 shield */}
         {shields > 0 && (
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--shields">
