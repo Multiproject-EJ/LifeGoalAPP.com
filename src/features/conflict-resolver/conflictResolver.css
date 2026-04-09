@@ -136,13 +136,38 @@
 
 .conflict-resolver__hero-image {
   width: 100%;
-  max-width: 560px;
+  max-width: 448px;
   align-self: center;
   border-radius: 22px;
   object-fit: cover;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 16px 34px rgba(10, 14, 28, 0.22);
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.conflict-resolver__header--mode {
+  align-items: center;
+  text-align: center;
+}
+
+.conflict-resolver__title--mode,
+.conflict-resolver__subtitle--mode {
+  text-align: center;
+}
+
+.conflict-resolver__copy-fade-in,
+.conflict-resolver__copy-fade-out {
+  transition: opacity 280ms ease, transform 280ms ease;
+}
+
+.conflict-resolver__copy-fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.conflict-resolver__copy-fade-out {
+  opacity: 0;
+  transform: translateY(4px);
 }
 
 .conflict-resolver__title {
