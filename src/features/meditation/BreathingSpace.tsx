@@ -134,9 +134,8 @@ export function BreathingSpace({
   const handleEnergyReset = (category: MobileCategory) => {
     setActiveMobileCategory(category);
     onMobileCategoryChange?.(category);
-    if (activeMobileTab && !MOBILE_CATEGORY_TABS[category].includes(activeMobileTab)) {
-      setActiveMobileTab(null);
-    }
+    setActiveMobileTab(null);
+    onMobileTabChange?.(null);
   };
 
   // Watch for level-up events
@@ -166,12 +165,6 @@ export function BreathingSpace({
       window.removeEventListener('breathing:open', handleBreathingOpen as EventListener);
     };
   }, [session.user.id]);
-
-  useEffect(() => {
-    if (initialMobileTab !== undefined) {
-      setActiveMobileTab(initialMobileTab ?? null);
-    }
-  }, [initialMobileTab]);
 
   useEffect(() => {
     if (!reminderOpen) {
@@ -438,27 +431,7 @@ export function BreathingSpace({
               Body
             </button>
           </div>
-          {activeMobileTab ? (
-            <div className="breathing-space__mobile-tabs" role="tablist" aria-label="Energy options">
-              {activeCategoryTabs.map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeMobileTab === tab}
-                  className={`breathing-space__mobile-tab ${
-                    activeMobileTab === tab ? 'breathing-space__mobile-tab--active' : ''
-                  }`}
-                  onClick={() => handleMobileTabChange(tab)}
-                >
-                  <span className="breathing-space__mobile-tab-icon" aria-hidden="true">
-                    {mobileTabOptions[tab].icon}
-                  </span>
-                  <span className="breathing-space__mobile-tab-title">{mobileTabOptions[tab].uppercaseLabel}</span>
-                </button>
-              ))}
-            </div>
-          ) : (
+          {activeMobileTab ? null : (
             <div className="breathing-space__mobile-launch" role="group" aria-label="Choose an energy focus">
               {activeCategoryTabs.map((tab) => (
                 <button
