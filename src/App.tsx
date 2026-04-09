@@ -4475,7 +4475,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const isMobileFrameLocked = !isDesktopExperience;
   const appClassName = `app app--workspace${activeWorkspaceNav === 'insights' ? ' app--vision-board' : ''}${
     isAnyModalVisible ? ' app--auth-overlay' : ''
-  }${isMobileFrameLocked ? ' app--mobile-frame' : ''}${isDesktopExperience ? ' app--desktop-preview' : ''}`;
+  }${isMobileFrameLocked ? ' app--mobile-frame' : ''}${isDesktopExperience ? ' app--desktop-preview' : ''}${
+    isConflictResolverFullscreen ? ' app--conflict-resolver' : ''
+  }`;
   const workspaceShellClassName = `workspace-shell ${
     isAnyModalVisible ? 'workspace-shell--blurred' : ''
   }${!isMobileExperience && !isDesktopMenuOpen ? ' workspace-shell--menu-collapsed' : ''}`;

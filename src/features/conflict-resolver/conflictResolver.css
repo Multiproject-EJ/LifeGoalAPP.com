@@ -199,23 +199,6 @@
   font-size: var(--fs-sm);
 }
 
-:root:not([data-theme='dark-glass']):not([data-theme='midnight-purple']):not([data-theme='flow-night']):not([data-theme='bio-night'])
-  .breathing-space[data-mobile-tab='conflict'] .conflict-resolver-entry {
-  background-image: url('/icons/Energy/peace_skybg.webp');
-  background-repeat: no-repeat;
-  background-position: center bottom;
-  background-size: 100% auto;
-}
-
-:root:not([data-theme='dark-glass']):not([data-theme='midnight-purple']):not([data-theme='flow-night']):not([data-theme='bio-night'])
-  .breathing-space[data-mobile-tab='conflict'] .breathing-space__section--conflict {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
 .conflict-resolver__title {
   margin: 0;
   font-size: clamp(1.35rem, 2.6vw, 1.8rem);
