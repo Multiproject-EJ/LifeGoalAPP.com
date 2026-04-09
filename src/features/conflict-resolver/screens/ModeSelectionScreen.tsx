@@ -54,6 +54,16 @@ export function ModeSelectionScreen({
   );
   const [copyIndex, setCopyIndex] = useState(0);
   const [isCopyFadingOut, setIsCopyFadingOut] = useState(false);
+  const introSteps = useMemo(
+    () => ([
+      'Understanding without judgment',
+      'Creative ways to meet in the middle',
+      'Apologies that truly land',
+      'A sense of resolution',
+    ]),
+    [],
+  );
+  const [animatedStepIndex, setAnimatedStepIndex] = useState(-1);
 
   useEffect(() => {
     if (isPeaceBetween) return undefined;
@@ -74,6 +84,25 @@ export function ModeSelectionScreen({
       }
     };
   }, [isPeaceBetween, rotatingCopy.length]);
+
+  useEffect(() => {
+    const prefersReducedMotion = typeof window !== 'undefined'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReducedMotion) {
+      setAnimatedStepIndex(introSteps.length - 1);
+      return undefined;
+    }
+
+    setAnimatedStepIndex(-1);
+    const timeoutIds = introSteps.map((_, index) => window.setTimeout(() => {
+      setAnimatedStepIndex(index);
+    }, 300 + (index * 680)));
+
+    return () => {
+      timeoutIds.forEach((id) => window.clearTimeout(id));
+    };
+  }, [introSteps]);
 
   const modeTitle = isPeaceBetween ? 'Where would you like to begin?' : rotatingCopy[copyIndex].title;
   const modeSubtitle = isPeaceBetween
@@ -102,11 +131,22 @@ export function ModeSelectionScreen({
       </header>
 
       <section className="conflict-resolver__intro-points" aria-label="Conflict resolver principles">
-        <ol>
-          <li>Understanding without judgment</li>
-          <li>Creative ways to meet in the middle</li>
-          <li>Apologies that truly land</li>
-          <li>A sense of resolution</li>
+        <ol className="conflict-resolver__intro-list">
+          {introSteps.map((step, index) => {
+            const isDone = index < animatedStepIndex;
+            const isActive = index === animatedStepIndex;
+            return (
+              <li
+                key={step}
+                className={`conflict-resolver__intro-item ${isDone ? 'conflict-resolver__intro-item--done' : ''} ${isActive ? 'conflict-resolver__intro-item--active' : ''}`.trim()}
+              >
+                <span className="conflict-resolver__intro-node" aria-hidden="true">
+                  {isDone ? '✓' : index + 1}
+                </span>
+                <span className="conflict-resolver__intro-copy">{step}</span>
+              </li>
+            );
+          })}
         </ol>
       </section>
 
