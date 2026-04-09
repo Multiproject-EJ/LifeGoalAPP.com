@@ -45,11 +45,6 @@ const MOBILE_CATEGORY_TABS: Record<MobileCategory, MobileTab[]> = {
   body: ['yoga', 'food', 'exercise'],
 };
 
-const MOBILE_CATEGORY_DEFAULT_TAB: Record<MobileCategory, MobileTab> = {
-  mind: 'breathing',
-  body: 'yoga',
-};
-
 const getCategoryForTab = (tab: MobileTab): MobileCategory => {
   if (MOBILE_CATEGORY_TABS.body.includes(tab)) {
     return 'body';
@@ -81,34 +76,27 @@ export function BreathingSpace({
   const [reminderOpen, setReminderOpen] = useState(false);
   const [reminderSet, setReminderSet] = useState(false);
   const reminderRef = useRef<HTMLDivElement>(null);
-  const [activeMobileTab, setActiveMobileTab] = useState<MobileTab | null>(
-    initialMobileTab ?? MOBILE_CATEGORY_DEFAULT_TAB[initialMobileCategory ?? 'mind'],
-  );
+  const [activeMobileTab, setActiveMobileTab] = useState<MobileTab | null>(initialMobileTab ?? null);
   const [activeMobileCategory, setActiveMobileCategory] = useState<MobileCategory>(
     initialMobileCategory ?? (initialMobileTab ? getCategoryForTab(initialMobileTab) : 'mind'),
   );
 
   useEffect(() => {
-    const fallbackCategory = initialMobileCategory ?? (initialMobileTab ? getCategoryForTab(initialMobileTab) : 'mind');
-    setActiveMobileTab(initialMobileTab ?? MOBILE_CATEGORY_DEFAULT_TAB[fallbackCategory]);
+    setActiveMobileTab(initialMobileTab ?? null);
     if (initialMobileTab) {
       const nextCategory = getCategoryForTab(initialMobileTab);
       setActiveMobileCategory(nextCategory);
-    } else if (initialMobileCategory) {
-      setActiveMobileCategory(initialMobileCategory);
     }
-  }, [initialMobileCategory, initialMobileTab]);
+  }, [initialMobileTab]);
 
   useEffect(() => {
     if (initialMobileCategory) {
       setActiveMobileCategory(initialMobileCategory);
       if (activeMobileTab && !MOBILE_CATEGORY_TABS[initialMobileCategory].includes(activeMobileTab)) {
-        const defaultTab = MOBILE_CATEGORY_DEFAULT_TAB[initialMobileCategory];
-        setActiveMobileTab(defaultTab);
-        onMobileTabChange?.(defaultTab);
+        setActiveMobileTab(null);
       }
     }
-  }, [activeMobileTab, initialMobileCategory, onMobileTabChange]);
+  }, [activeMobileTab, initialMobileCategory]);
   
   // Guided meditation state
   const [guidedPlayerOpen, setGuidedPlayerOpen] = useState(false);
@@ -126,20 +114,29 @@ export function BreathingSpace({
   const [sessionFeedbackClassName, setSessionFeedbackClassName] = useState('');
   const { earnXP, recordActivity, refreshProfile, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
 
+  const handleMobileTabChange = (tab: MobileTab) => {
+    setActiveMobileTab(tab);
+    const nextCategory = getCategoryForTab(tab);
+    if (nextCategory !== activeMobileCategory) {
+      setActiveMobileCategory(nextCategory);
+      onMobileCategoryChange?.(nextCategory);
+    }
+    onMobileTabChange?.(tab);
+  };
+
   const handleExitConflictResolver = () => {
     setActiveMobileCategory('mind');
     onMobileCategoryChange?.('mind');
-    const defaultMindTab = MOBILE_CATEGORY_DEFAULT_TAB.mind;
-    setActiveMobileTab(defaultMindTab);
-    onMobileTabChange?.(defaultMindTab);
+    setActiveMobileTab(null);
+    onMobileTabChange?.(null);
   };
 
   const handleMobileCategoryChange = (category: MobileCategory) => {
     setActiveMobileCategory(category);
     onMobileCategoryChange?.(category);
-    const defaultTab = MOBILE_CATEGORY_DEFAULT_TAB[category];
-    setActiveMobileTab(defaultTab);
-    onMobileTabChange?.(defaultTab);
+    if (activeMobileTab && !MOBILE_CATEGORY_TABS[category].includes(activeMobileTab)) {
+      setActiveMobileTab(null);
+    }
   };
 
   // Watch for level-up events
@@ -172,10 +169,9 @@ export function BreathingSpace({
 
   useEffect(() => {
     if (initialMobileTab !== undefined) {
-      const fallbackTab = MOBILE_CATEGORY_DEFAULT_TAB[activeMobileCategory];
-      setActiveMobileTab(initialMobileTab ?? fallbackTab);
+      setActiveMobileTab(initialMobileTab ?? null);
     }
-  }, [activeMobileCategory, initialMobileTab]);
+  }, [initialMobileTab]);
 
   useEffect(() => {
     if (!reminderOpen) {
@@ -370,6 +366,40 @@ export function BreathingSpace({
     return null;
   }
 
+  const mobileTabOptions: Record<
+    MobileTab,
+    { icon: string; label: string; uppercaseLabel: string; launchTitle?: string; launchSubtitle?: string; iconImageSrc?: string }
+  > = {
+    breathing: {
+      icon: '🌬️',
+      label: 'Focus Breathing',
+      uppercaseLabel: 'FOCUS BREATHING',
+      launchTitle: 'FOCUS RESET',
+      launchSubtitle: 'Breathing Space',
+      iconImageSrc: '/icons/Energy/focus_breathe.webp',
+    },
+    meditation: {
+      icon: '🧘',
+      label: 'Meditation',
+      uppercaseLabel: 'MEDITATION',
+      launchTitle: 'MEDITATION',
+      launchSubtitle: 'Upgrade your mind',
+      iconImageSrc: '/icons/Energy/Meditating_blue.webp',
+    },
+    conflict: {
+      icon: '🤝',
+      label: 'Conflict Resolver',
+      uppercaseLabel: 'CONFLICT',
+      launchTitle: 'CONFLICT RESOLVER',
+      launchSubtitle: 'Peace Between',
+      iconImageSrc: '/icons/Energy/peace_between.webp',
+    },
+    yoga: { icon: '🧘‍♀️', label: 'Yoga', uppercaseLabel: 'YOGA' },
+    food: { icon: '🥗', label: 'Food', uppercaseLabel: 'FOOD' },
+    exercise: { icon: '🏋️', label: 'Exercise', uppercaseLabel: 'EXERCISE' },
+  };
+
+  const activeCategoryTabs = MOBILE_CATEGORY_TABS[activeMobileCategory];
   const isConflictFullscreen = activeMobileTab === 'conflict';
 
   return (
@@ -416,6 +446,67 @@ export function BreathingSpace({
               Body
             </button>
           </div>
+          {activeMobileTab ? (
+            <div className="breathing-space__mobile-tabs" role="tablist" aria-label="Energy options">
+              {activeCategoryTabs.map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeMobileTab === tab}
+                  className={`breathing-space__mobile-tab ${
+                    activeMobileTab === tab ? 'breathing-space__mobile-tab--active' : ''
+                  }`}
+                  onClick={() => handleMobileTabChange(tab)}
+                >
+                  <span className="breathing-space__mobile-tab-icon" aria-hidden="true">
+                    {mobileTabOptions[tab].icon}
+                  </span>
+                  <span className="breathing-space__mobile-tab-title">{mobileTabOptions[tab].uppercaseLabel}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="breathing-space__mobile-launch" role="group" aria-label="Choose an energy focus">
+              {activeCategoryTabs.map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  className="breathing-space__mobile-launch-card"
+                  onClick={() => handleMobileTabChange(tab)}
+                >
+                  <img
+                    className="breathing-space__mobile-launch-background"
+                    src="/icons/Energy/Energy_mind_button.webp"
+                    alt=""
+                    aria-hidden="true"
+                  />
+                  {mobileTabOptions[tab].iconImageSrc ? (
+                    <img
+                      className="breathing-space__mobile-launch-icon-image"
+                      src={mobileTabOptions[tab].iconImageSrc}
+                      alt=""
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <span className="breathing-space__mobile-launch-icon" aria-hidden="true">
+                      {mobileTabOptions[tab].icon}
+                    </span>
+                  )}
+                  <span className="breathing-space__mobile-launch-copy">
+                    <span className="breathing-space__mobile-launch-title">
+                      {mobileTabOptions[tab].launchTitle ?? mobileTabOptions[tab].uppercaseLabel}
+                    </span>
+                    {mobileTabOptions[tab].launchSubtitle ? (
+                      <span className="breathing-space__mobile-launch-subtitle">
+                        {mobileTabOptions[tab].launchSubtitle}
+                      </span>
+                    ) : null}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </>
       )}
 
