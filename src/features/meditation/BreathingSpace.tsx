@@ -103,8 +103,9 @@ export function BreathingSpace({
     if (initialMobileCategory) {
       setActiveMobileCategory(initialMobileCategory);
       if (activeMobileTab && !MOBILE_CATEGORY_TABS[initialMobileCategory].includes(activeMobileTab)) {
-        setActiveMobileTab(null);
-        onMobileTabChange?.(null);
+        const defaultTab = MOBILE_CATEGORY_DEFAULT_TAB[initialMobileCategory];
+        setActiveMobileTab(defaultTab);
+        onMobileTabChange?.(defaultTab);
       }
     }
   }, [activeMobileTab, initialMobileCategory, onMobileTabChange]);
@@ -136,8 +137,9 @@ export function BreathingSpace({
   const handleMobileCategoryChange = (category: MobileCategory) => {
     setActiveMobileCategory(category);
     onMobileCategoryChange?.(category);
-    setActiveMobileTab(null);
-    onMobileTabChange?.(null);
+    const defaultTab = MOBILE_CATEGORY_DEFAULT_TAB[category];
+    setActiveMobileTab(defaultTab);
+    onMobileTabChange?.(defaultTab);
   };
 
   // Watch for level-up events
@@ -414,50 +416,6 @@ export function BreathingSpace({
               Body
             </button>
           </div>
-          {!activeMobileTab ? (
-            <div className="breathing-space__mobile-launch" role="group" aria-label="Choose an energy focus">
-              {activeCategoryTabs.map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  className="breathing-space__mobile-launch-card"
-                  onClick={() => {
-                    setActiveMobileTab(tab);
-                    onMobileTabChange?.(tab);
-                  }}
-                >
-                  <img
-                    className="breathing-space__mobile-launch-background"
-                    src="/icons/Energy/Energy_mind_button.webp"
-                    alt=""
-                    aria-hidden="true"
-                  />
-                  {mobileTabOptions[tab].iconImageSrc ? (
-                    <img
-                      className="breathing-space__mobile-launch-icon-image"
-                      src={mobileTabOptions[tab].iconImageSrc}
-                      alt=""
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <span className="breathing-space__mobile-launch-icon" aria-hidden="true">
-                      {mobileTabOptions[tab].icon}
-                    </span>
-                  )}
-                  <span className="breathing-space__mobile-launch-copy">
-                    <span className="breathing-space__mobile-launch-title">
-                      {mobileTabOptions[tab].launchTitle ?? mobileTabOptions[tab].uppercaseLabel}
-                    </span>
-                    {mobileTabOptions[tab].launchSubtitle ? (
-                      <span className="breathing-space__mobile-launch-subtitle">
-                        {mobileTabOptions[tab].launchSubtitle}
-                      </span>
-                    ) : null}
-                  </span>
-                </button>
-              ))}
-            </div>
-          ) : null}
         </>
       )}
 
