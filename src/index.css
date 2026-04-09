@@ -899,6 +899,37 @@ body {
   pointer-events: none;
 }
 
+.app--conflict-resolver {
+  position: relative;
+  --conflict-resolver-bg: url('/icons/Energy/peace_skybg.webp');
+}
+
+:is(
+  [data-theme]:not([data-theme='dark-glass']):not([data-theme='midnight-purple']):not([data-theme='flow-night']):not([data-theme='bio-night'])
+) .app--conflict-resolver::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    var(--conflict-resolver-bg) center bottom / min(560px, 100vw) auto no-repeat,
+    #ffffff;
+  z-index: 0;
+  pointer-events: none;
+}
+
+:is(
+  [data-theme]:not([data-theme='dark-glass']):not([data-theme='midnight-purple']):not([data-theme='flow-night']):not([data-theme='bio-night'])
+) .app--conflict-resolver .workspace-stage,
+:is(
+  [data-theme]:not([data-theme='dark-glass']):not([data-theme='midnight-purple']):not([data-theme='flow-night']):not([data-theme='bio-night'])
+) .app--conflict-resolver .breathing-space__section--conflict {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .workspace-shell {
   position: relative;
   width: min(
