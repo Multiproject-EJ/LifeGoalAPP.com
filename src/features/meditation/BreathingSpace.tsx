@@ -475,28 +475,39 @@ export function BreathingSpace({
         </>
       )}
 
-      {/* Left Column: Quick Start & Reminder */}
+      {/* Left Column: Progress, Quick Start & Reminder */}
       <div className="breathing-space__left-column breathing-space__section breathing-space__section--breathing">
-        {/* Daily Reminder Toggle */}
-        <div className="breathing-space__reminder" ref={reminderRef}>
-          <button
-            type="button"
-            className={`breathing-space__reminder-button ${
-              reminderSet ? '' : 'breathing-space__reminder-button--glow'
-            }`}
-            onClick={() => setReminderOpen((prev) => !prev)}
-            aria-expanded={reminderOpen}
-            aria-label="Toggle daily reminder"
-          >
-            ⏰
-          </button>
-          <div
-            className={`breathing-space__reminder-card ${
-              reminderOpen ? 'breathing-space__reminder-card--open' : ''
-            }`}
-          >
-            <ReminderCard userId={session.user.id} onReminderStatusChange={setReminderSet} />
+        {/* Progress Snapshot */}
+        <div className="breathing-space__card breathing-space__progress">
+          <div className="breathing-space__progress-hero">
+            <img
+              className="breathing-space__progress-icon-image"
+              src="/icons/Energy/focus_breathe.webp"
+              alt=""
+              aria-hidden="true"
+            />
+            <h3 className="breathing-space__card-title">Your Progress</h3>
           </div>
+          {loading ? (
+            <p className="breathing-space__loading">Loading stats...</p>
+          ) : error ? (
+            <p className="breathing-space__error">{error}</p>
+          ) : (
+            <div className="breathing-space__stats">
+              <div className="breathing-space__stat">
+                <div className="breathing-space__stat-value">{stats.totalMinutes}</div>
+                <div className="breathing-space__stat-label">Total Minutes</div>
+              </div>
+              <div className="breathing-space__stat">
+                <div className="breathing-space__stat-value">{stats.totalSessions}</div>
+                <div className="breathing-space__stat-label">Sessions</div>
+              </div>
+              <div className="breathing-space__stat">
+                <div className="breathing-space__stat-value">{stats.currentStreak}</div>
+                <div className="breathing-space__stat-label">Day Streak</div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Quick Start Card */}
@@ -545,38 +556,32 @@ export function BreathingSpace({
         <div className="breathing-space__section breathing-space__section--exercise">
           <TrainingTab />
         </div>
+
+        {/* Daily Reminder Toggle */}
+        <div className="breathing-space__reminder" ref={reminderRef}>
+          <button
+            type="button"
+            className={`breathing-space__reminder-button ${
+              reminderSet ? '' : 'breathing-space__reminder-button--glow'
+            }`}
+            onClick={() => setReminderOpen((prev) => !prev)}
+            aria-expanded={reminderOpen}
+            aria-label="Toggle daily reminder"
+          >
+            ⏰
+          </button>
+          <div
+            className={`breathing-space__reminder-card ${
+              reminderOpen ? 'breathing-space__reminder-card--open' : ''
+            }`}
+          >
+            <ReminderCard userId={session.user.id} onReminderStatusChange={setReminderSet} />
+          </div>
+        </div>
       </div>
 
-      {/* Right Column: Progress & Library */}
+      {/* Right Column: Library */}
       <div className="breathing-space__right-column">
-        {/* Progress Snapshot */}
-        <div className="breathing-space__card breathing-space__progress breathing-space__section breathing-space__section--breathing">
-          <div className="breathing-space__card-header">
-            <span className="breathing-space__card-icon">📊</span>
-            <h3 className="breathing-space__card-title">Your Progress</h3>
-          </div>
-          {loading ? (
-            <p className="breathing-space__loading">Loading stats...</p>
-          ) : error ? (
-            <p className="breathing-space__error">{error}</p>
-          ) : (
-            <div className="breathing-space__stats">
-              <div className="breathing-space__stat">
-                <div className="breathing-space__stat-value">{stats.totalMinutes}</div>
-                <div className="breathing-space__stat-label">Total Minutes</div>
-              </div>
-              <div className="breathing-space__stat">
-                <div className="breathing-space__stat-value">{stats.totalSessions}</div>
-                <div className="breathing-space__stat-label">Sessions</div>
-              </div>
-              <div className="breathing-space__stat">
-                <div className="breathing-space__stat-value">{stats.currentStreak}</div>
-                <div className="breathing-space__stat-label">Day Streak</div>
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* Meditation Library */}
         <div className="breathing-space__library breathing-space__section breathing-space__section--meditation">
           <div className="breathing-space__library-header">
