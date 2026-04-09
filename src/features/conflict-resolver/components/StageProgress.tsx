@@ -1,3 +1,5 @@
+import type { ConflictType } from '../types/conflictSession';
+
 type ConflictResolverUiStage =
   | 'mode_selection'
   | 'grounding'
@@ -12,13 +14,15 @@ type ConflictResolverUiStage =
 
 type StageProgressProps = {
   stage: ConflictResolverUiStage;
+  selectedType: ConflictType | null;
 };
 
-const STAGE_ORDER: Array<{ id: ConflictResolverUiStage; label: string; shortLabel: string }> = [
+type StageDefinition = { id: ConflictResolverUiStage; label: string; shortLabel: string };
+
+const SHARED_STAGE_ORDER: StageDefinition[] = [
   { id: 'mode_selection', label: 'Mode', shortLabel: 'Mode' },
   { id: 'grounding', label: 'Grounding', shortLabel: 'Ground' },
   { id: 'private_capture', label: 'Private capture', shortLabel: 'Private' },
-  { id: 'inner_next_step', label: 'Inner guidance', shortLabel: 'Guidance' },
   { id: 'collect_pile', label: 'Collect pile', shortLabel: 'Collect' },
   { id: 'parallel_read', label: 'Parallel read', shortLabel: 'Read' },
   { id: 'resolution_builder', label: 'Resolution builder', shortLabel: 'Resolve' },
@@ -27,18 +31,40 @@ const STAGE_ORDER: Array<{ id: ConflictResolverUiStage; label: string; shortLabe
   { id: 'agreement_finalized', label: 'Agreement finalized', shortLabel: 'Done' },
 ];
 
-export function StageProgress({ stage }: StageProgressProps) {
-  const currentIndex = STAGE_ORDER.findIndex((item) => item.id === stage);
+const INNER_STAGE_ORDER: StageDefinition[] = [
+  { id: 'mode_selection', label: 'Mode', shortLabel: 'Mode' },
+  { id: 'grounding', label: 'Grounding', shortLabel: 'Ground' },
+  { id: 'private_capture', label: 'Private capture', shortLabel: 'Private' },
+  { id: 'inner_next_step', label: 'Inner guidance', shortLabel: 'Guidance' },
+  { id: 'agreement_preview', label: 'Agreement preview', shortLabel: 'Preview' },
+  { id: 'agreement_finalized', label: 'Agreement finalized', shortLabel: 'Done' },
+];
+
+function getStageOrder(selectedType: ConflictType | null): StageDefinition[] {
+  if (selectedType === 'inner_tension') return INNER_STAGE_ORDER;
+  return SHARED_STAGE_ORDER;
+}
+
+export function StageProgress({ stage, selectedType }: StageProgressProps) {
+  if (stage === 'mode_selection') {
+    return null;
+  }
+
+  const stageOrder = getStageOrder(selectedType);
+  const currentIndex = stageOrder.findIndex((item) => item.id === stage);
 
   return (
     <nav className="conflict-resolver__stage-progress" aria-label="Conflict resolver progress">
       <ol className="conflict-resolver__stage-progress-list">
-        {STAGE_ORDER.map((item, index) => {
+        {stageOrder.map((item, index) => {
           const isDone = index < currentIndex;
           const isCurrent = index === currentIndex;
 
           return (
-            <li key={item.id} className="conflict-resolver__stage-progress-item">
+            <li
+              key={item.id}
+              className={`conflict-resolver__stage-progress-item ${isCurrent ? 'conflict-resolver__stage-progress-item--current' : ''}`.trim()}
+            >
               <span
                 className={`conflict-resolver__stage-dot ${
                   isCurrent ? 'conflict-resolver__stage-dot--current' : ''
