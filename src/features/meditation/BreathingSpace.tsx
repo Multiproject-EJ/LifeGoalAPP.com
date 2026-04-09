@@ -94,9 +94,10 @@ export function BreathingSpace({
       setActiveMobileCategory(initialMobileCategory);
       if (activeMobileTab && !MOBILE_CATEGORY_TABS[initialMobileCategory].includes(activeMobileTab)) {
         setActiveMobileTab(null);
+        onMobileTabChange?.(null);
       }
     }
-  }, [activeMobileTab, initialMobileCategory]);
+  }, [activeMobileTab, initialMobileCategory, onMobileTabChange]);
   
   // Guided meditation state
   const [guidedPlayerOpen, setGuidedPlayerOpen] = useState(false);
@@ -114,16 +115,6 @@ export function BreathingSpace({
   const [sessionFeedbackClassName, setSessionFeedbackClassName] = useState('');
   const { earnXP, recordActivity, refreshProfile, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
 
-  const handleMobileTabChange = (tab: MobileTab) => {
-    setActiveMobileTab(tab);
-    const nextCategory = getCategoryForTab(tab);
-    if (nextCategory !== activeMobileCategory) {
-      setActiveMobileCategory(nextCategory);
-      onMobileCategoryChange?.(nextCategory);
-    }
-    onMobileTabChange?.(tab);
-  };
-
   const handleExitConflictResolver = () => {
     setActiveMobileCategory('mind');
     onMobileCategoryChange?.('mind');
@@ -134,9 +125,8 @@ export function BreathingSpace({
   const handleMobileCategoryChange = (category: MobileCategory) => {
     setActiveMobileCategory(category);
     onMobileCategoryChange?.(category);
-    if (activeMobileTab && !MOBILE_CATEGORY_TABS[category].includes(activeMobileTab)) {
-      setActiveMobileTab(null);
-    }
+    setActiveMobileTab(null);
+    onMobileTabChange?.(null);
   };
 
   // Watch for level-up events
@@ -446,34 +436,17 @@ export function BreathingSpace({
               Body
             </button>
           </div>
-          {activeMobileTab ? (
-            <div className="breathing-space__mobile-tabs" role="tablist" aria-label="Energy options">
-              {activeCategoryTabs.map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeMobileTab === tab}
-                  className={`breathing-space__mobile-tab ${
-                    activeMobileTab === tab ? 'breathing-space__mobile-tab--active' : ''
-                  }`}
-                  onClick={() => handleMobileTabChange(tab)}
-                >
-                  <span className="breathing-space__mobile-tab-icon" aria-hidden="true">
-                    {mobileTabOptions[tab].icon}
-                  </span>
-                  <span className="breathing-space__mobile-tab-title">{mobileTabOptions[tab].uppercaseLabel}</span>
-                </button>
-              ))}
-            </div>
-          ) : (
+          {!activeMobileTab ? (
             <div className="breathing-space__mobile-launch" role="group" aria-label="Choose an energy focus">
               {activeCategoryTabs.map((tab) => (
                 <button
                   key={tab}
                   type="button"
                   className="breathing-space__mobile-launch-card"
-                  onClick={() => handleMobileTabChange(tab)}
+                  onClick={() => {
+                    setActiveMobileTab(tab);
+                    onMobileTabChange?.(tab);
+                  }}
                 >
                   <img
                     className="breathing-space__mobile-launch-background"
@@ -506,7 +479,7 @@ export function BreathingSpace({
                 </button>
               ))}
             </div>
-          )}
+          ) : null}
         </>
       )}
 
