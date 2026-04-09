@@ -36,6 +36,8 @@ type ActionsTabProps = {
   session: Session;
   onNavigateToProjects?: () => void;
   onNavigateToTimer?: (context?: TimerLaunchContext) => void;
+  onNavigateToJournal?: () => void;
+  onNavigateToVisionBoard?: () => void;
   showPointsBadges?: boolean;
   isMobileView?: boolean;
   resetToLauncherSignal?: number;
@@ -51,6 +53,8 @@ export function ActionsTab({
   session,
   onNavigateToProjects,
   onNavigateToTimer,
+  onNavigateToJournal,
+  onNavigateToVisionBoard,
   showPointsBadges = false,
   isMobileView = false,
   resetToLauncherSignal = 0,
@@ -505,6 +509,28 @@ export function ActionsTab({
               </span>
               <span className="actions-tab__launcher-label">Tasks</span>
             </button>
+            {onNavigateToJournal && (
+              <button
+                type="button"
+                className="actions-tab__launcher-button"
+                onClick={onNavigateToJournal}
+                aria-label="Open journal"
+              >
+                <span className="actions-tab__launcher-icon" aria-hidden="true">📔</span>
+                <span className="actions-tab__launcher-label">Journal</span>
+              </button>
+            )}
+            {onNavigateToVisionBoard && (
+              <button
+                type="button"
+                className="actions-tab__launcher-button"
+                onClick={onNavigateToVisionBoard}
+                aria-label="Open vision board"
+              >
+                <span className="actions-tab__launcher-icon" aria-hidden="true">🖼️</span>
+                <span className="actions-tab__launcher-label">Vision Board</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
