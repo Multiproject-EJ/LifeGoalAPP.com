@@ -46,6 +46,11 @@ export function ModeSelectionScreen({
 
   return (
     <section className="conflict-resolver__screen" aria-labelledby="conflict-mode-title">
+      <img
+        className="conflict-resolver__hero-image"
+        src="/icons/Energy/peace_between.webp"
+        alt="Two people reconnecting calmly"
+      />
       <header className="conflict-resolver__header">
         <h3 id="conflict-mode-title" className="conflict-resolver__title">
           {isPeaceBetween ? 'Where would you like to begin?' : 'Let’s clear something up'}
