@@ -13,6 +13,13 @@
   min-width: 0;
 }
 
+.conflict-resolver__screen--entry {
+  background-image: url('/icons/Energy/peace_between.webp');
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  background-size: 100% auto;
+}
+
 @keyframes conflict-screen-enter {
   from {
     opacity: 0;
@@ -431,6 +438,26 @@
 
 .conflict-resolver__mode-card-media {
   width: 80px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.conflict-resolver__mode-card-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.conflict-resolver__mode-icon-image {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.conflict-resolver__mode-card-media {
+  width: 64px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
