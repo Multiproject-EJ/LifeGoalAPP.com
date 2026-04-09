@@ -510,24 +510,6 @@ export function BreathingSpace({
         </>
       )}
 
-      {onNavigateToTimer && !isConflictFullscreen ? (
-        <div className="breathing-space__timer-launch">
-          <button
-            type="button"
-            className="btn breathing-space__timer-launch-button"
-            onClick={() =>
-              onNavigateToTimer({
-                sourceType: 'meditation',
-                sourceName: 'Breathing Space session',
-              })
-            }
-            aria-label="Open meditation focus timer"
-          >
-            ⏱️ Meditation timer
-          </button>
-        </div>
-      ) : null}
-
       {/* Left Column: Quick Start & Reminder */}
       <div className="breathing-space__left-column breathing-space__section breathing-space__section--breathing">
         {/* Daily Reminder Toggle */}
