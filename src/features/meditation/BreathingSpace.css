@@ -399,6 +399,9 @@
 
 .breathing-space__library {
   margin-top: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 .breathing-space__library-title {
