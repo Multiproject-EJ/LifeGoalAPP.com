@@ -376,6 +376,8 @@ const MOBILE_POPUP_EXCLUDED_IDS = [
   'breathing-space',
   'planning',
   'actions',
+  'journal',
+  'insights',
   'goals',
   'score',
   'game',
@@ -3054,6 +3056,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 }
                 setActiveWorkspaceNav('timer');
               }}
+              onNavigateToJournal={() => setActiveWorkspaceNav('journal')}
+              onNavigateToVisionBoard={() => setActiveWorkspaceNav('insights')}
               isMobileView={isMobileExperience}
               resetToLauncherSignal={actionsLauncherResetSignal}
               onViewChange={setActionsTabView}
