@@ -27,7 +27,7 @@ export function ConflictResolverExperience({ surface = 'habitgame' }: ConflictRe
 
   const withProgress = (content: ReactNode) => (
     <>
-      <StageProgress stage={session.stage} />
+      <StageProgress stage={session.stage} selectedType={session.selectedType} />
       {content}
     </>
   );
