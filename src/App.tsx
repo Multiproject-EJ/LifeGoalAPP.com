@@ -454,7 +454,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [workspaceSetupDismissed, setWorkspaceSetupDismissed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileProfileDialogOpen, setIsMobileProfileDialogOpen] = useState(false);
-  const [isBreatheSubmenuOpen, setIsBreatheSubmenuOpen] = useState(false);
   const [breathingSpaceMobileTab, setBreathingSpaceMobileTab] = useState<
     'breathing' | 'meditation' | 'conflict' | 'yoga' | 'food' | 'exercise' | null
   >(null);
@@ -906,12 +905,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     ];
     return [...baseItems, ...extraItems];
   }, [workspaceNavItems]);
-
-  useEffect(() => {
-    if (!isMobileMenuOpen) {
-      setIsBreatheSubmenuOpen(false);
-    }
-  }, [isMobileMenuOpen]);
 
   useEffect(() => {
     return () => {
@@ -3471,8 +3464,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   .filter((item) => !MOBILE_POPUP_EXCLUDED_IDS.includes(item.id as typeof MOBILE_POPUP_EXCLUDED_IDS[number]))
                   .map((item) => {
                     const isBreathingItem = item.id === 'breathing-space';
-                    const isSubmenuOpen = isBreathingItem && isBreatheSubmenuOpen;
-                    const submenuId = 'mobile-breathe-submenu';
                     const profileStrengthArea = PROFILE_STRENGTH_MENU_AREAS[item.id];
                     const profileStrengthScore =
                       profileStrengthArea ? profileStrengthSnapshot?.areaScores[profileStrengthArea] ?? null : null;
@@ -3503,7 +3494,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                         return;
                       }
                       if (isBreathingItem) {
-                        setIsBreatheSubmenuOpen((prev) => !prev);
+                        handleMobileNavSelect('breathing-space');
                         return;
                       }
                       handleMobileNavSelect(item.id);
@@ -3515,8 +3506,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                           type="button"
                           onClick={handleItemClick}
                           aria-label={item.ariaLabel}
-                          aria-expanded={isBreathingItem ? isSubmenuOpen : undefined}
-                          aria-controls={isBreathingItem ? submenuId : undefined}
                           onPointerDown={(event) => {
                             // Skip hold timer for modal-key items (feedback /
                             // support) – they navigate to a modal, not a
@@ -3567,70 +3556,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                             </span>
                             <span className="mobile-menu-overlay__summary">{item.summary}</span>
                           </span>
-                          {isBreathingItem ? (
-                            <span
-                              aria-hidden="true"
-                              className={`mobile-menu-overlay__caret${
-                                isSubmenuOpen ? ' mobile-menu-overlay__caret--open' : ''
-                              }`}
-                            >
-                              ▾
-                            </span>
-                          ) : null}
                         </button>
-                        {isBreathingItem ? (
-                          <div
-                            id={submenuId}
-                            className={`mobile-menu-overlay__submenu${
-                              isSubmenuOpen ? ' mobile-menu-overlay__submenu--open' : ''
-                            }`}
-                          >
-                            <button
-                              type="button"
-                              className="mobile-menu-overlay__submenu-button"
-                              onClick={() => {
-                                setBreathingSpaceMobileTab('breathing');
-                                handleMobileNavSelect('breathing-space', { preserveBreatheTab: true });
-                              }}
-                            >
-                              <span aria-hidden="true" className="mobile-menu-overlay__submenu-icon">🌬️</span>
-                              Focus breathing
-                            </button>
-                            <button
-                              type="button"
-                              className="mobile-menu-overlay__submenu-button"
-                              onClick={() => {
-                                setBreathingSpaceMobileTab('meditation');
-                                handleMobileNavSelect('breathing-space', { preserveBreatheTab: true });
-                              }}
-                            >
-                              <span aria-hidden="true" className="mobile-menu-overlay__submenu-icon">🧘</span>
-                              Meditation
-                            </button>
-                            <button
-                              type="button"
-                              className="mobile-menu-overlay__submenu-button"
-                              onClick={() => {
-                                setBreathingSpaceMobileTab('conflict');
-                                handleMobileNavSelect('breathing-space', { preserveBreatheTab: true });
-                              }}
-                            >
-                              <span aria-hidden="true" className="mobile-menu-overlay__submenu-icon">🤝</span>
-                              Conflict Resolver
-                            </button>
-                            <button
-                              type="button"
-                              className="mobile-menu-overlay__submenu-button"
-                              onClick={() => {
-                                setBreathingSpaceMobileTab('yoga');
-                                handleMobileNavSelect('breathing-space', { preserveBreatheTab: true });
-                              }}
-                            >
-                              <span aria-hidden="true" className="mobile-menu-overlay__submenu-icon">🧘‍♀️</span>
-                              Yoga
-                            </button>
-                          </div>
-                        ) : null}
                       </li>
                     );
                   })}
