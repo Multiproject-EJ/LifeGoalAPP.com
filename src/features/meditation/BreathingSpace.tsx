@@ -134,7 +134,7 @@ export function BreathingSpace({
     onMobileTabChange?.(defaultMindTab);
   };
 
-  const handleMobileCategoryChange = (category: MobileCategory) => {
+  const handleEnergyReset = (category: MobileCategory) => {
     setActiveMobileCategory(category);
     onMobileCategoryChange?.(category);
     const defaultTab = MOBILE_CATEGORY_DEFAULT_TAB[category];
@@ -392,26 +392,18 @@ export function BreathingSpace({
         </div>
       ) : (
         <>
-          <div className="breathing-space__mobile-category-tabs" role="tablist" aria-label="Energy focus">
+          <div className="breathing-space__mobile-category-tabs" aria-label="Energy shortcuts">
             <button
               type="button"
-              role="tab"
-              aria-selected={activeMobileCategory === 'mind'}
-              className={`breathing-space__mobile-category-tab ${
-                activeMobileCategory === 'mind' ? 'breathing-space__mobile-category-tab--active' : ''
-              }`}
-              onClick={() => handleMobileCategoryChange('mind')}
+              className="breathing-space__mobile-category-tab"
+              onClick={() => handleEnergyReset('mind')}
             >
               Mind
             </button>
             <button
               type="button"
-              role="tab"
-              aria-selected={activeMobileCategory === 'body'}
-              className={`breathing-space__mobile-category-tab ${
-                activeMobileCategory === 'body' ? 'breathing-space__mobile-category-tab--active' : ''
-              }`}
-              onClick={() => handleMobileCategoryChange('body')}
+              className="breathing-space__mobile-category-tab"
+              onClick={() => handleEnergyReset('body')}
             >
               Body
             </button>
