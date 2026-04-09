@@ -48,7 +48,7 @@ export function ModeSelectionScreen({
     () => ([
       { title: 'Let’s clear something up', subtitle: 'No blame. Just clarity.' },
       { title: 'No miscommunication', subtitle: 'No judging. No point scoring.' },
-      { title: 'Let’s learn different inner lives', subtitle: 'No manipulation. Let’s squash it.' },
+      { title: 'Inside each of us lives a different world', subtitle: 'No manipulation. Let’s squash it.' },
     ]),
     [],
   );
@@ -81,7 +81,7 @@ export function ModeSelectionScreen({
     : rotatingCopy[copyIndex].subtitle;
 
   return (
-    <section className="conflict-resolver__screen conflict-resolver__screen--entry" aria-labelledby="conflict-mode-title">
+    <section className="conflict-resolver__screen" aria-labelledby="conflict-mode-title">
       <img
         className="conflict-resolver__hero-image"
         src="/icons/Energy/peace_between.webp"
@@ -100,6 +100,15 @@ export function ModeSelectionScreen({
           {modeSubtitle}
         </p>
       </header>
+
+      <section className="conflict-resolver__intro-points" aria-label="Conflict resolver principles">
+        <ol>
+          <li>Understanding without judgment</li>
+          <li>Creative ways to meet in the middle</li>
+          <li>Apologies that truly land</li>
+          <li>A sense of resolution</li>
+        </ol>
+      </section>
 
       {recoverableDraft ? (
         <section className="conflict-resolver__shared-session-card" aria-label="Resume previous session">
