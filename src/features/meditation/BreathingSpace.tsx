@@ -557,27 +557,6 @@ export function BreathingSpace({
           <TrainingTab />
         </div>
 
-        {/* Daily Reminder Toggle */}
-        <div className="breathing-space__reminder" ref={reminderRef}>
-          <button
-            type="button"
-            className={`breathing-space__reminder-button ${
-              reminderSet ? '' : 'breathing-space__reminder-button--glow'
-            }`}
-            onClick={() => setReminderOpen((prev) => !prev)}
-            aria-expanded={reminderOpen}
-            aria-label="Toggle daily reminder"
-          >
-            ⏰
-          </button>
-          <div
-            className={`breathing-space__reminder-card ${
-              reminderOpen ? 'breathing-space__reminder-card--open' : ''
-            }`}
-          >
-            <ReminderCard userId={session.user.id} onReminderStatusChange={setReminderSet} />
-          </div>
-        </div>
       </div>
 
       {/* Right Column: Library */}
@@ -759,6 +738,31 @@ export function BreathingSpace({
               </button>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Daily Reminder Toggle */}
+      <div
+        className="breathing-space__reminder breathing-space__reminder--bottom breathing-space__section breathing-space__section--breathing"
+        ref={reminderRef}
+      >
+        <button
+          type="button"
+          className={`breathing-space__reminder-button ${
+            reminderSet ? '' : 'breathing-space__reminder-button--glow'
+          }`}
+          onClick={() => setReminderOpen((prev) => !prev)}
+          aria-expanded={reminderOpen}
+          aria-label="Toggle daily reminder"
+        >
+          ⏰
+        </button>
+        <div
+          className={`breathing-space__reminder-card ${
+            reminderOpen ? 'breathing-space__reminder-card--open' : ''
+          }`}
+        >
+          <ReminderCard userId={session.user.id} onReminderStatusChange={setReminderSet} />
         </div>
       </div>
 
