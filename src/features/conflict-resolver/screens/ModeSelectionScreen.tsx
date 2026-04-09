@@ -81,7 +81,7 @@ export function ModeSelectionScreen({
     : rotatingCopy[copyIndex].subtitle;
 
   return (
-    <section className="conflict-resolver__screen" aria-labelledby="conflict-mode-title">
+    <section className="conflict-resolver__screen conflict-resolver__screen--entry" aria-labelledby="conflict-mode-title">
       <img
         className="conflict-resolver__hero-image"
         src="/icons/Energy/peace_between.webp"

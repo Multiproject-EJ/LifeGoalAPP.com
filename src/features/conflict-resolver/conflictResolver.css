@@ -13,6 +13,13 @@
   min-width: 0;
 }
 
+.conflict-resolver__screen--entry {
+  background-image: url('/icons/Energy/peace_between.webp');
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  background-size: 100% auto;
+}
+
 @keyframes conflict-screen-enter {
   from {
     opacity: 0;
