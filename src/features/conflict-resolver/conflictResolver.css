@@ -394,6 +394,7 @@
   align-items: center;
   gap: var(--space-3);
   text-align: left;
+  min-height: 132px;
 }
 
 .conflict-resolver__mode-card--selected {
@@ -423,7 +424,30 @@
 }
 
 .conflict-resolver__mode-icon {
-  font-size: 2rem;
+  font-size: 2.7rem;
+  line-height: 1;
+  width: 80px;
+  text-align: center;
+}
+
+.conflict-resolver__mode-icon-image {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+
+.conflict-resolver__mode-card-media {
+  width: 80px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.conflict-resolver__mode-card-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .conflict-resolver__mode-icon-image {
@@ -448,6 +472,8 @@
 
 .conflict-resolver__mode-title {
   font-weight: 700;
+  font-size: clamp(1.3rem, 2.4vw, 1.55rem);
+  line-height: 1.1;
 }
 
 .conflict-resolver__mode-subtitle {
