@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react';
 import type { ConflictType } from '../types/conflictSession';
 import type { AppSurface } from '../../../surfaces/surfaceContext';
 
@@ -43,19 +44,111 @@ export function ModeSelectionScreen({
   onStartFresh,
 }: ModeSelectionScreenProps) {
   const isPeaceBetween = surface === 'peacebetween';
+  const rotatingCopy = useMemo(
+    () => ([
+      { title: 'Let’s clear something up', subtitle: 'No blame. Just clarity.' },
+      { title: 'No miscommunication', subtitle: 'No judging. No point scoring.' },
+      { title: 'Inside each of us lives a different world', subtitle: 'No manipulation. Let’s squash it.' },
+    ]),
+    [],
+  );
+  const [copyIndex, setCopyIndex] = useState(0);
+  const [isCopyFadingOut, setIsCopyFadingOut] = useState(false);
+  const introSteps = useMemo(
+    () => ([
+      'Understanding without judgment',
+      'Creative ways to meet in the middle',
+      'Apologies that truly land',
+      'A sense of resolution',
+    ]),
+    [],
+  );
+  const [animatedStepIndex, setAnimatedStepIndex] = useState(-1);
+
+  useEffect(() => {
+    if (isPeaceBetween) return undefined;
+    let fadeTimeoutId: number | null = null;
+
+    const intervalId = window.setInterval(() => {
+      setIsCopyFadingOut(true);
+      fadeTimeoutId = window.setTimeout(() => {
+        setCopyIndex((prev) => (prev + 1) % rotatingCopy.length);
+        setIsCopyFadingOut(false);
+      }, 280);
+    }, 3000);
+
+    return () => {
+      window.clearInterval(intervalId);
+      if (fadeTimeoutId !== null) {
+        window.clearTimeout(fadeTimeoutId);
+      }
+    };
+  }, [isPeaceBetween, rotatingCopy.length]);
+
+  useEffect(() => {
+    const prefersReducedMotion = typeof window !== 'undefined'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReducedMotion) {
+      setAnimatedStepIndex(introSteps.length - 1);
+      return undefined;
+    }
+
+    setAnimatedStepIndex(-1);
+    const timeoutIds = introSteps.map((_, index) => window.setTimeout(() => {
+      setAnimatedStepIndex(index);
+    }, 300 + (index * 680)));
+
+    return () => {
+      timeoutIds.forEach((id) => window.clearTimeout(id));
+    };
+  }, [introSteps]);
+
+  const modeTitle = isPeaceBetween ? 'Where would you like to begin?' : rotatingCopy[copyIndex].title;
+  const modeSubtitle = isPeaceBetween
+    ? 'Choose a path to bring more clarity, care, and understanding to this conversation.'
+    : rotatingCopy[copyIndex].subtitle;
 
   return (
     <section className="conflict-resolver__screen" aria-labelledby="conflict-mode-title">
-      <header className="conflict-resolver__header">
-        <h3 id="conflict-mode-title" className="conflict-resolver__title">
-          {isPeaceBetween ? 'Where would you like to begin?' : 'Let’s clear something up'}
+      <img
+        className="conflict-resolver__hero-image"
+        src="/icons/Energy/peace_between.webp"
+        alt="Two people reconnecting calmly"
+      />
+      <header className="conflict-resolver__header conflict-resolver__header--mode">
+        <h3
+          id="conflict-mode-title"
+          className={`conflict-resolver__title conflict-resolver__title--mode ${isCopyFadingOut ? 'conflict-resolver__copy-fade-out' : 'conflict-resolver__copy-fade-in'}`}
+        >
+          {modeTitle}
         </h3>
-        <p className="conflict-resolver__subtitle">
-          {isPeaceBetween
-            ? 'Choose a path to bring more clarity, care, and understanding to this conversation.'
-            : 'No blame. Just clarity.'}
+        <p
+          className={`conflict-resolver__subtitle conflict-resolver__subtitle--mode ${isCopyFadingOut ? 'conflict-resolver__copy-fade-out' : 'conflict-resolver__copy-fade-in'}`}
+        >
+          {modeSubtitle}
         </p>
       </header>
+
+      <section className="conflict-resolver__intro-points" aria-label="Conflict resolver principles">
+        <ol className="conflict-resolver__intro-list">
+          {introSteps.map((step, index) => {
+            const isDone = index < animatedStepIndex;
+            const isActive = index === animatedStepIndex;
+            return (
+              <li
+                key={step}
+                className={`conflict-resolver__intro-item ${isDone ? 'conflict-resolver__intro-item--done' : ''} ${isActive ? 'conflict-resolver__intro-item--active' : ''}`.trim()}
+              >
+                <span className="conflict-resolver__intro-node" aria-hidden="true">
+                  {isDone ? '✓' : index + 1}
+                </span>
+                <span className="conflict-resolver__intro-copy">{step}</span>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
 
       {recoverableDraft ? (
         <section className="conflict-resolver__shared-session-card" aria-label="Resume previous session">
