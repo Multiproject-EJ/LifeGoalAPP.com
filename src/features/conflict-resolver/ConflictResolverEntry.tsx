@@ -10,7 +10,11 @@ export function ConflictResolverEntry({ surface }: ConflictResolverEntryProps) {
   const config = getConflictSurfaceConfig(surface);
 
   return (
-    <section data-conflict-surface={config.surface} data-conflict-product={config.productLabel}>
+    <section
+      className="conflict-resolver-entry"
+      data-conflict-surface={config.surface}
+      data-conflict-product={config.productLabel}
+    >
       <ConflictResolverExperience surface={config.surface} />
     </section>
   );

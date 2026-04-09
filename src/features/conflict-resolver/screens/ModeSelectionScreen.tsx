@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react';
 import type { ConflictType } from '../types/conflictSession';
 import type { AppSurface } from '../../../surfaces/surfaceContext';
 
@@ -43,22 +44,122 @@ export function ModeSelectionScreen({
   onStartFresh,
 }: ModeSelectionScreenProps) {
   const isPeaceBetween = surface === 'peacebetween';
+  const rotatingCopy = useMemo(
+    () => ([
+      { title: 'Let’s clear something up', subtitle: 'No blame. Just clarity.' },
+      { title: 'No miscommunication', subtitle: 'No judging. No point scoring.' },
+      { title: 'Inside each of us lives a different world', subtitle: 'No manipulation. Let’s squash it.' },
+    ]),
+    [],
+  );
+  const [copyIndex, setCopyIndex] = useState(0);
+  const [isCopyFadingOut, setIsCopyFadingOut] = useState(false);
+  const [innerIconMissing, setInnerIconMissing] = useState(false);
+  const introSteps = useMemo(
+    () => ([
+      'Understanding without judgment',
+      'Creative ways to meet in the middle',
+      'Apologies that truly land',
+      'A sense of resolution',
+    ]),
+    [],
+  );
+  const [animatedStepIndex, setAnimatedStepIndex] = useState(-1);
+
+  useEffect(() => {
+    if (isPeaceBetween) return undefined;
+    let fadeTimeoutId: number | null = null;
+
+    const intervalId = window.setInterval(() => {
+      setIsCopyFadingOut(true);
+      fadeTimeoutId = window.setTimeout(() => {
+        setCopyIndex((prev) => (prev + 1) % rotatingCopy.length);
+        setIsCopyFadingOut(false);
+      }, 280);
+    }, 3000);
+
+    return () => {
+      window.clearInterval(intervalId);
+      if (fadeTimeoutId !== null) {
+        window.clearTimeout(fadeTimeoutId);
+      }
+    };
+  }, [isPeaceBetween, rotatingCopy.length]);
+
+  useEffect(() => {
+    const prefersReducedMotion = typeof window !== 'undefined'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReducedMotion) {
+      setAnimatedStepIndex(introSteps.length);
+      return undefined;
+    }
+
+    setAnimatedStepIndex(-1);
+    const timeoutIds = introSteps.map((_, index) => window.setTimeout(() => {
+      setAnimatedStepIndex(index);
+    }, 650 + (index * 1300)));
+    timeoutIds.push(window.setTimeout(() => {
+      setAnimatedStepIndex(introSteps.length);
+    }, 650 + (introSteps.length * 1300)));
+
+    return () => {
+      timeoutIds.forEach((id) => window.clearTimeout(id));
+    };
+  }, [introSteps]);
+
+  const modeTitle = isPeaceBetween ? 'Where would you like to begin?' : rotatingCopy[copyIndex].title;
+  const modeSubtitle = isPeaceBetween
+    ? 'Choose a path to bring more clarity, care, and understanding to this conversation.'
+    : rotatingCopy[copyIndex].subtitle;
 
   return (
     <section className="conflict-resolver__screen" aria-labelledby="conflict-mode-title">
-      <header className="conflict-resolver__header">
-        <h3 id="conflict-mode-title" className="conflict-resolver__title">
-          {isPeaceBetween ? 'Where would you like to begin?' : 'Let’s clear something up'}
+      <img
+        className="conflict-resolver__hero-image"
+        src="/icons/Energy/peace_between.webp"
+        alt="Two people reconnecting calmly"
+      />
+      <header className="conflict-resolver__header conflict-resolver__header--mode">
+        <h3
+          id="conflict-mode-title"
+          className={`conflict-resolver__title conflict-resolver__title--mode ${isCopyFadingOut ? 'conflict-resolver__copy-fade-out' : 'conflict-resolver__copy-fade-in'}`}
+        >
+          {modeTitle}
         </h3>
-        <p className="conflict-resolver__subtitle">
-          {isPeaceBetween
-            ? 'Choose a path to bring more clarity, care, and understanding to this conversation.'
-            : 'No blame. Just clarity.'}
+        <p
+          className={`conflict-resolver__subtitle conflict-resolver__subtitle--mode ${isCopyFadingOut ? 'conflict-resolver__copy-fade-out' : 'conflict-resolver__copy-fade-in'}`}
+        >
+          {modeSubtitle}
         </p>
       </header>
 
+      <section className="conflict-resolver__intro-points" aria-label="Conflict resolver principles">
+        <p className="conflict-resolver__intro-heading">4 guided steps</p>
+        <ol className="conflict-resolver__intro-list">
+          {introSteps.map((step, index) => {
+            const isDone = index < animatedStepIndex;
+            const isActive = index === animatedStepIndex;
+            return (
+              <li
+                key={step}
+                className={`conflict-resolver__intro-item ${isDone ? 'conflict-resolver__intro-item--done' : ''} ${isActive ? 'conflict-resolver__intro-item--active' : ''}`.trim()}
+              >
+                <span className="conflict-resolver__intro-node" aria-hidden="true">
+                  {isDone ? '✓' : index + 1}
+                </span>
+                <span className="conflict-resolver__intro-copy">{step}</span>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
+
       {recoverableDraft ? (
-        <section className="conflict-resolver__shared-session-card" aria-label="Resume previous session">
+        <section
+          className="conflict-resolver__shared-session-card conflict-resolver__shared-session-card--resume"
+          aria-label="Resume previous session"
+        >
           <h4>Resume last session?</h4>
           <p>We found a saved conflict draft from your last visit.</p>
           <div className="conflict-resolver__shared-session-actions">
@@ -82,10 +183,23 @@ export function ModeSelectionScreen({
           }`}
           onClick={() => onSelectType('inner_tension')}
         >
-          <span className="conflict-resolver__mode-icon" aria-hidden="true">🧠</span>
-          <span className="conflict-resolver__mode-title">{isPeaceBetween ? 'Personal reflection' : 'Inner Tension'}</span>
-          <span className="conflict-resolver__mode-subtitle">
-            {isPeaceBetween ? 'Clarify your own feelings before speaking with someone else.' : 'You vs yourself'}
+          <span className="conflict-resolver__mode-card-media" aria-hidden="true">
+            {innerIconMissing ? (
+              <span className="conflict-resolver__mode-icon">🧠</span>
+            ) : (
+              <img
+                className="conflict-resolver__mode-icon-image"
+                src="/icons/Energy/Inner_tension.webp"
+                alt=""
+                onError={() => setInnerIconMissing(true)}
+              />
+            )}
+          </span>
+          <span className="conflict-resolver__mode-card-copy">
+            <span className="conflict-resolver__mode-title">{isPeaceBetween ? 'Personal reflection' : 'Inner Tension'}</span>
+            <span className="conflict-resolver__mode-subtitle">
+              {isPeaceBetween ? 'Clarify your own feelings before speaking with someone else.' : 'You vs yourself'}
+            </span>
           </span>
         </button>
 
@@ -98,10 +212,14 @@ export function ModeSelectionScreen({
           }`}
           onClick={() => onSelectType('shared_conflict')}
         >
-          <span className="conflict-resolver__mode-icon" aria-hidden="true">🤝</span>
-          <span className="conflict-resolver__mode-title">{isPeaceBetween ? 'Shared conversation' : 'Shared Conflict'}</span>
-          <span className="conflict-resolver__mode-subtitle">
-            {isPeaceBetween ? 'Work through this with another person in a guided shared session.' : 'You + others'}
+          <span className="conflict-resolver__mode-card-media" aria-hidden="true">
+            <span className="conflict-resolver__mode-icon">🤝</span>
+          </span>
+          <span className="conflict-resolver__mode-card-copy">
+            <span className="conflict-resolver__mode-title">{isPeaceBetween ? 'Shared conversation' : 'Shared Conflict'}</span>
+            <span className="conflict-resolver__mode-subtitle">
+              {isPeaceBetween ? 'Work through this with another person in a guided shared session.' : 'You + others'}
+            </span>
           </span>
         </button>
       </div>
