@@ -54,6 +54,7 @@ export function ModeSelectionScreen({
   );
   const [copyIndex, setCopyIndex] = useState(0);
   const [isCopyFadingOut, setIsCopyFadingOut] = useState(false);
+  const [innerIconMissing, setInnerIconMissing] = useState(false);
   const introSteps = useMemo(
     () => ([
       'Understanding without judgment',
@@ -90,14 +91,17 @@ export function ModeSelectionScreen({
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     if (prefersReducedMotion) {
-      setAnimatedStepIndex(introSteps.length - 1);
+      setAnimatedStepIndex(introSteps.length);
       return undefined;
     }
 
     setAnimatedStepIndex(-1);
     const timeoutIds = introSteps.map((_, index) => window.setTimeout(() => {
       setAnimatedStepIndex(index);
-    }, 300 + (index * 680)));
+    }, 650 + (index * 1300)));
+    timeoutIds.push(window.setTimeout(() => {
+      setAnimatedStepIndex(introSteps.length);
+    }, 650 + (introSteps.length * 1300)));
 
     return () => {
       timeoutIds.forEach((id) => window.clearTimeout(id));
@@ -131,6 +135,7 @@ export function ModeSelectionScreen({
       </header>
 
       <section className="conflict-resolver__intro-points" aria-label="Conflict resolver principles">
+        <p className="conflict-resolver__intro-heading">4 guided steps</p>
         <ol className="conflict-resolver__intro-list">
           {introSteps.map((step, index) => {
             const isDone = index < animatedStepIndex;
@@ -178,10 +183,23 @@ export function ModeSelectionScreen({
           }`}
           onClick={() => onSelectType('inner_tension')}
         >
-          <span className="conflict-resolver__mode-icon" aria-hidden="true">🧠</span>
-          <span className="conflict-resolver__mode-title">{isPeaceBetween ? 'Personal reflection' : 'Inner Tension'}</span>
-          <span className="conflict-resolver__mode-subtitle">
-            {isPeaceBetween ? 'Clarify your own feelings before speaking with someone else.' : 'You vs yourself'}
+          <span className="conflict-resolver__mode-card-media" aria-hidden="true">
+            {innerIconMissing ? (
+              <span className="conflict-resolver__mode-icon">🧠</span>
+            ) : (
+              <img
+                className="conflict-resolver__mode-icon-image"
+                src="/icons/Energy/Inner_tension.webp"
+                alt=""
+                onError={() => setInnerIconMissing(true)}
+              />
+            )}
+          </span>
+          <span className="conflict-resolver__mode-card-copy">
+            <span className="conflict-resolver__mode-title">{isPeaceBetween ? 'Personal reflection' : 'Inner Tension'}</span>
+            <span className="conflict-resolver__mode-subtitle">
+              {isPeaceBetween ? 'Clarify your own feelings before speaking with someone else.' : 'You vs yourself'}
+            </span>
           </span>
         </button>
 
@@ -194,10 +212,14 @@ export function ModeSelectionScreen({
           }`}
           onClick={() => onSelectType('shared_conflict')}
         >
-          <span className="conflict-resolver__mode-icon" aria-hidden="true">🤝</span>
-          <span className="conflict-resolver__mode-title">{isPeaceBetween ? 'Shared conversation' : 'Shared Conflict'}</span>
-          <span className="conflict-resolver__mode-subtitle">
-            {isPeaceBetween ? 'Work through this with another person in a guided shared session.' : 'You + others'}
+          <span className="conflict-resolver__mode-card-media" aria-hidden="true">
+            <span className="conflict-resolver__mode-icon">🤝</span>
+          </span>
+          <span className="conflict-resolver__mode-card-copy">
+            <span className="conflict-resolver__mode-title">{isPeaceBetween ? 'Shared conversation' : 'Shared Conflict'}</span>
+            <span className="conflict-resolver__mode-subtitle">
+              {isPeaceBetween ? 'Work through this with another person in a guided shared session.' : 'You + others'}
+            </span>
           </span>
         </button>
       </div>
