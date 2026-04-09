@@ -151,7 +151,10 @@ export function ModeSelectionScreen({
       </section>
 
       {recoverableDraft ? (
-        <section className="conflict-resolver__shared-session-card" aria-label="Resume previous session">
+        <section
+          className="conflict-resolver__shared-session-card conflict-resolver__shared-session-card--resume"
+          aria-label="Resume previous session"
+        >
           <h4>Resume last session?</h4>
           <p>We found a saved conflict draft from your last visit.</p>
           <div className="conflict-resolver__shared-session-actions">
