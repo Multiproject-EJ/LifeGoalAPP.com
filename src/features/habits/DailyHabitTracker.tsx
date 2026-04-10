@@ -116,6 +116,7 @@ import {
   triggerHabitHapticFeedback,
   type HabitFeedbackType,
 } from '../../utils/habitFeedback';
+import { playChime, playSweep } from '../../utils/audioUtils';
 import type { CommitmentContract } from '../../types/gamification';
 import {
   cancelContract,
@@ -136,6 +137,32 @@ const DONE_ISH_DEFAULT_PERCENTAGE = 85;
 const HABIT_SWIPE_MAX_PX = 132;
 const HABIT_SWIPE_ARM_THRESHOLD_PX = 84;
 const HABIT_SWIPE_SUPPRESS_CLICK_MS = 260;
+const HABIT_SFX_ENABLED_STORAGE_KEY = 'lifegoal.habits.sfx.enabled';
+
+function isHabitSfxEnabled(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const rawPreference = window.localStorage.getItem(HABIT_SFX_ENABLED_STORAGE_KEY);
+  return rawPreference !== 'false';
+}
+
+function playHabitCompleteSfx(): void {
+  if (!isHabitSfxEnabled()) {
+    return;
+  }
+
+  playChime([880, 1320, 1760], 65, 0.13, 0.12);
+}
+
+function playHabitSkipSfx(): void {
+  if (!isHabitSfxEnabled()) {
+    return;
+  }
+
+  playSweep(1200, 280, 0.16, 0.07);
+}
 
 function getNextUtcMidnightMs(): number {
   const now = new Date();
@@ -3543,6 +3570,8 @@ export function DailyHabitTracker({
 
         // 🎮 Award XP for completing today's habits
         if (isToday) {
+          playHabitCompleteSfx();
+
           const now = new Date();
           const xpAmount = now.getHours() < 9
             ? XP_REWARDS.HABIT_COMPLETE_EARLY
@@ -3736,6 +3765,8 @@ export function DailyHabitTracker({
 
       // Award reduced XP for done-ish completion (70% of full XP)
       if (isToday) {
+        playHabitCompleteSfx();
+
         const now = new Date();
         const baseXP = now.getHours() < 9 ? XP_REWARDS.HABIT_COMPLETE_EARLY : XP_REWARDS.HABIT_COMPLETE;
         const xpAmount = Math.round(baseXP * 0.7);
@@ -3874,6 +3905,8 @@ export function DailyHabitTracker({
       }
 
       if (isToday) {
+        playHabitCompleteSfx();
+
         const now = new Date();
         const baseXP = now.getHours() < 9 ? XP_REWARDS.HABIT_COMPLETE_EARLY : XP_REWARDS.HABIT_COMPLETE;
         const stageMultiplier = getStageCreditMultiplier(stage);
@@ -4892,6 +4925,10 @@ export function DailyHabitTracker({
           eventType: 'habit_skipped',
           metadata: { habitId: habit.id, habitName: habit.name, progressState: 'skipped' },
         });
+      }
+
+      if (dateISO === today) {
+        playHabitSkipSfx();
       }
 
       setSkipMenuHabitId(null);
