@@ -11,8 +11,9 @@ import { ProjectTimeline } from './components/ProjectTimeline';
 import type { Project, ProjectStatus, CreateProjectInput, TaskStatus, ProjectTaskItem } from '../../types/actions';
 import type { TimerLaunchContext } from '../timer/timerSession';
 import { PROJECT_STATUS_CONFIG } from '../../types/actions';
-import projectsIcon from '../../assets/Projects.webp';
 import './ProjectsManager.css';
+
+const projectsIcon = '/icons/Actions/actions_projects.webp';
 
 interface ProjectsManagerProps {
   session: Session | null;
