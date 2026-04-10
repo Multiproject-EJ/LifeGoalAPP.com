@@ -55,8 +55,8 @@ interface ScoreTabProps {
   onNavigateToZenGarden?: () => void;
   onNavigateToGarage?: () => void;
   onNavigateToShipCompanions?: () => void;
-  initialActiveTab?: 'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard';
-  onActiveTabChange?: (tab: 'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard') => void;
+  initialActiveTab?: 'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard' | 'collections';
+  onActiveTabChange?: (tab: 'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard' | 'collections') => void;
 }
 
 const REWARD_CATEGORIES: Array<{ value: RewardCategory; emoji: string; label: string }> = [
@@ -92,7 +92,7 @@ export function ScoreTab({
     ? Math.max(levelInfo.xpForNextLevel - levelInfo.currentXP, 0)
     : 0;
   const goldRatioLabel = `1 gold per ${Math.round(1 / XP_TO_GOLD_RATIO)} XP`;
-  const [activeTab, setActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard'>(initialActiveTab ?? 'home');
+  const [activeTab, setActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard' | 'collections'>(initialActiveTab ?? 'home');
   const [transactions, setTransactions] = useState<XPTransaction[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
@@ -173,7 +173,7 @@ export function ScoreTab({
     setPerfectCompanionOps(readPerfectCompanionRuntimeConfig(session.user.id));
   }, [session?.user?.id, activeTab]);
 
-  const handleTabChange = (tab: 'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard') => {
+  const handleTabChange = (tab: 'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard' | 'collections') => {
     setActiveTab(tab);
     onActiveTabChange?.(tab);
   };
@@ -636,25 +636,6 @@ export function ScoreTab({
 
       {activeTab === 'home' && (
         <div className="score-tab__hub">
-          <button type="button" className="score-tab__hub-card" onClick={onNavigateToAchievements}>
-            <span className="score-tab__hub-visual" aria-hidden="true">
-              <img className="score-tab__hub-image" src={scoreAchievements} alt="" />
-            </span>
-            <span className="score-tab__hub-title">Achievements</span>
-          </button>
-          <button
-            type="button"
-            className="score-tab__hub-card"
-            onClick={() => {
-              handleTabChange('bank');
-              onNavigateToBank?.();
-            }}
-          >
-            <span className="score-tab__hub-visual" aria-hidden="true">
-              <img className="score-tab__hub-image" src={scoreBank} alt="" />
-            </span>
-            <span className="score-tab__hub-title">Bank</span>
-          </button>
           <button
             type="button"
             className="score-tab__hub-card"
@@ -667,6 +648,37 @@ export function ScoreTab({
               <img className="score-tab__hub-image" src={scoreShop} alt="" />
             </span>
             <span className="score-tab__hub-title">Player Shop</span>
+          </button>
+          <button
+            type="button"
+            className="score-tab__hub-card"
+            onClick={() => {
+              handleTabChange('garage');
+              onNavigateToGarage?.();
+            }}
+          >
+            <span className="score-tab__hub-visual" aria-hidden="true">
+              <img className="score-tab__hub-image" src="/icons/Scoreshop_garage.webp" alt="" />
+            </span>
+            <span className="score-tab__hub-title">Garage</span>
+          </button>
+          <button
+            type="button"
+            className="score-tab__hub-card score-tab__hub-card--full"
+            onClick={() => {
+              handleTabChange('collections');
+            }}
+          >
+            <span className="score-tab__hub-visual" aria-hidden="true">
+              <img className="score-tab__hub-image" src="/icons/score_collection.webp" alt="" />
+            </span>
+            <span className="score-tab__hub-title">Collections</span>
+          </button>
+          <button type="button" className="score-tab__hub-card" onClick={onNavigateToAchievements}>
+            <span className="score-tab__hub-visual" aria-hidden="true">
+              <img className="score-tab__hub-image" src={scoreAchievements} alt="" />
+            </span>
+            <span className="score-tab__hub-title">Achievements</span>
           </button>
           <button
             type="button"
@@ -697,14 +709,14 @@ export function ScoreTab({
             type="button"
             className="score-tab__hub-card"
             onClick={() => {
-              handleTabChange('garage');
-              onNavigateToGarage?.();
+              handleTabChange('bank');
+              onNavigateToBank?.();
             }}
           >
             <span className="score-tab__hub-visual" aria-hidden="true">
-              <img className="score-tab__hub-image" src="/icons/Scoreshop_garage.webp" alt="" />
+              <img className="score-tab__hub-image" src={scoreBank} alt="" />
             </span>
-            <span className="score-tab__hub-title">Garage</span>
+            <span className="score-tab__hub-title">Bank</span>
           </button>
         </div>
       )}
@@ -1510,6 +1522,15 @@ export function ScoreTab({
           onDecline={handleDeclineEvolution}
           onClose={() => setEvolutionPrompt(null)}
         />
+      )}
+
+      {!loading && enabled && activeTab === 'collections' && (
+        <div className="score-tab__content">
+          <div className="score-tab__bank-intro">
+            <h2 className="score-tab__headline">Collections</h2>
+            <p className="score-tab__subtitle">This is a placeholder for your Collections tab content.</p>
+          </div>
+        </div>
       )}
     </section>
   );
