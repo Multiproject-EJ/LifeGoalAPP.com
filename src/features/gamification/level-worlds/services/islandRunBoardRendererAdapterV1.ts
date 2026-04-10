@@ -144,6 +144,10 @@ export function selectBoardRendererContractV1(options: {
         current: options.runtimeState.essence,
         spendable: options.runtimeState.essence,
       },
+      dicePool: options.runtimeState.dicePool,
+      hearts: options.runtimeState.hearts,
+      coins: options.runtimeState.coins,
+      spinTokens: options.runtimeState.spinTokens,
     },
     rewardBar: {
       eventId: rewardHud.activeTimedEvent?.eventId ?? null,

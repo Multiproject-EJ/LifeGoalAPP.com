@@ -90,6 +90,15 @@ export interface BoardRendererContractV1 {
       spendable: number;
       deltaPreview?: number;
     };
+    dicePool: number;
+    hearts: number;
+    coins: number;
+    spinTokens: number;
+  };
+  /** Last roll outcome — populated after every dice roll; absent until first roll. */
+  lastRolled?: {
+    total: number;
+    dice: number[];
   };
   rewardBar: {
     eventId: string | null;
