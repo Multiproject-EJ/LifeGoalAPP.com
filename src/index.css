@@ -16997,9 +16997,14 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__header-top {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.mobile-menu-overlay__top-controls {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
+  justify-content: space-between;
   gap: 0.75rem;
 }
 
@@ -17044,6 +17049,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   align-items: stretch;
   gap: 0.65rem;
   flex: 1;
+  width: 100%;
   min-width: 0;
   border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 16px;
@@ -17543,7 +17549,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 .mobile-menu-overlay__game-mode {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.25rem;
   margin-top: 0.35rem;
 }
@@ -17619,7 +17625,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__item--large {
-  grid-column: span 2;
+  grid-column: 1 / -1;
 }
 
 .mobile-menu-overlay__item--large button {

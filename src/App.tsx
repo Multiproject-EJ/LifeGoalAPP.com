@@ -893,13 +893,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
     return [...baseItems, ...extraItems];
   }, [workspaceNavItems]);
 
-  const popupLauncherItems = useMemo(
-    () =>
-      mobileMenuNavItems.filter((item) =>
-        ['my-quest', 'coach', 'account', 'feedback-support'].includes(item.id),
-      ),
-    [mobileMenuNavItems],
-  );
+  const popupLauncherItems = useMemo(() => {
+    const orderedIds: MobileMenuNavItem['id'][] = ['my-quest', 'coach', 'account', 'feedback-support'];
+    return orderedIds
+      .map((id) => mobileMenuNavItems.find((item) => item.id === id))
+      .filter((item): item is MobileMenuNavItem => Boolean(item));
+  }, [mobileMenuNavItems]);
 
   useEffect(() => {
     return () => {
@@ -3327,6 +3326,44 @@ export default function App({ forceAuthOnMount }: AppProps) {
           <>
             <div className="mobile-menu-overlay__header">
               <div className="mobile-menu-overlay__header-top">
+                <div className="mobile-menu-overlay__top-controls">
+                  <div className="mobile-menu-overlay__game-mode">
+                    <button
+                      type="button"
+                      className={`mobile-footer-nav__diode-toggle ${
+                        isMobileMenuImageActive
+                          ? 'mobile-footer-nav__diode-toggle--on'
+                          : 'mobile-footer-nav__diode-toggle--off'
+                      }`}
+                      aria-pressed={isMobileMenuImageActive}
+                      aria-label="Toggle diode indicator"
+                      onClick={() => {
+                        const nextIsActive = !isMobileMenuImageActive;
+                        void handleGameModePreferenceChange(nextIsActive);
+                      }}
+                    />
+                    <span
+                      className={`mobile-menu-overlay__game-mode-label ${
+                        isMobileMenuImageActive
+                          ? 'mobile-menu-overlay__game-mode-label--on'
+                          : 'mobile-menu-overlay__game-mode-label--off'
+                      }`}
+                    >
+                      GAME MODE ({isMobileMenuImageActive ? 'ON' : 'OFF'})
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="mobile-menu-overlay__close mobile-menu-overlay__close--enlarged"
+                    aria-label="Close menu"
+                    onClick={() => {
+                      setIsMobileProfileDialogOpen(false);
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
                 <button
                   type="button"
                   className="mobile-menu-overlay__profile-launch"
@@ -3359,44 +3396,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                     )}
                   </div>
                 </button>
-                <div className="mobile-menu-overlay__controls">
-                  <button
-                    type="button"
-                    className="mobile-menu-overlay__close mobile-menu-overlay__close--enlarged"
-                    aria-label="Close menu"
-                    onClick={() => {
-                      setIsMobileProfileDialogOpen(false);
-                      setIsMobileMenuOpen(false);
-                    }}
-                  >
-                    ×
-                  </button>
-                  <div className="mobile-menu-overlay__game-mode">
-                    <button
-                      type="button"
-                      className={`mobile-footer-nav__diode-toggle ${
-                        isMobileMenuImageActive
-                          ? 'mobile-footer-nav__diode-toggle--on'
-                          : 'mobile-footer-nav__diode-toggle--off'
-                      }`}
-                      aria-pressed={isMobileMenuImageActive}
-                      aria-label="Toggle diode indicator"
-                      onClick={() => {
-                        const nextIsActive = !isMobileMenuImageActive;
-                        void handleGameModePreferenceChange(nextIsActive);
-                      }}
-                    />
-                    <span
-                      className={`mobile-menu-overlay__game-mode-label ${
-                        isMobileMenuImageActive
-                          ? 'mobile-menu-overlay__game-mode-label--on'
-                          : 'mobile-menu-overlay__game-mode-label--off'
-                      }`}
-                    >
-                      GAME MODE ({isMobileMenuImageActive ? 'ON' : 'OFF'})
-                    </span>
-                  </div>
-                </div>
               </div>
             </div>
             {isMobileProfileDialogOpen ? (
