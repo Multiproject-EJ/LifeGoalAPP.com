@@ -13,10 +13,11 @@ import {
   type TimerSourceType,
   writeTimerSession,
 } from './timerSession';
-import timerIcon from '../../assets/Timer.webp';
 import './TimerTab.css';
 import { SessionPlanner } from './SessionPlanner';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
+
+const timerIcon = '/icons/Actions/actions_timer.webp';
 
 type TimerTabProps = {
   onNavigateToActions?: () => void;

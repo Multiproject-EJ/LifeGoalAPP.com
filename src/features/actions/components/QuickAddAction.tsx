@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { ActionCategory, CreateActionInput, Project } from '../../../types/actions';
 import { ACTION_CATEGORY_CONFIG } from '../../../types/actions';
-import taskIcon from '../../../assets/Task.webp';
+
+const taskIcon = '/icons/Actions/actions_tasks.webp';
 
 export interface QuickAddActionProps {
   onAdd: (input: CreateActionInput) => Promise<void>;
