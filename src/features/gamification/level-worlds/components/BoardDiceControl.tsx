@@ -24,6 +24,8 @@ export function BoardDiceControl({ contract, onIntent }: BoardDiceControlProps) 
   const { ui, resources, stops, lastRolled } = contract;
   const { canRoll, canOpenStop, canSpendEssence } = ui.flags;
   const { roll: busyRoll } = ui.busy;
+  const step1 = stops.stopList[0];
+  const step1Complete = Boolean(step1?.progress.objectiveComplete && step1?.progress.buildComplete);
 
   const rollBtnClass = [
     'board-dice-control__roll-btn',
@@ -35,7 +37,9 @@ export function BoardDiceControl({ contract, onIntent }: BoardDiceControlProps) 
     ? 'Rolling…'
     : canRoll
       ? `Roll (${resources.dicePool})`
-      : resources.dicePool === 0
+      : !step1Complete
+        ? 'Finish Hatchery'
+        : resources.dicePool === 0
         ? 'Need dice'
         : 'Roll';
 

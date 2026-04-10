@@ -39,8 +39,11 @@ export function Dice3D({ value, isRolling, seed }: Dice3DProps) {
 
   return (
     <div
-      className="relative w-10 h-10"
       style={{
+        position: 'relative',
+        width: 40,
+        height: 40,
+        flexShrink: 0,
         transformStyle: 'preserve-3d',
         perspective: '800px',
         transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale})`,
@@ -50,8 +53,10 @@ export function Dice3D({ value, isRolling, seed }: Dice3DProps) {
       }}
     >
       <div
-        className="relative w-full h-full"
         style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
           transformStyle: 'preserve-3d',
           transform: 'translateZ(0)',
         }}
@@ -84,20 +89,46 @@ function DiceFace({ position, value }: DiceFaceProps) {
 
   return (
     <div
-      className="absolute w-full h-full bg-gradient-to-br from-red-500 via-rose-600 to-red-700 rounded-lg shadow-[inset_0_2px_8px_rgba(255,255,255,0.4),inset_0_-2px_6px_rgba(0,0,0,0.3)] border border-red-400/40"
       style={{
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        borderRadius: 8,
+        border: '1px solid rgba(248,113,113,0.4)',
+        background: 'linear-gradient(135deg, rgb(239, 68, 68), rgb(225, 29, 72), rgb(185, 28, 28))',
+        boxShadow: 'inset 0 2px 8px rgba(255,255,255,0.4), inset 0 -2px 6px rgba(0,0,0,0.3)',
         transform: transforms[position],
         backfaceVisibility: 'visible',
         transformStyle: 'preserve-3d',
       }}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10 rounded-lg" />
-      <div className="relative w-full h-full flex items-center justify-center">
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          borderRadius: 8,
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.1), transparent, rgba(0,0,0,0.1))',
+        }}
+      />
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         {getDiceFacePositions(value).map((pos, i) => (
           <div
             key={i}
-            className="absolute w-2 h-2 bg-white rounded-full shadow-[0_2px_6px_rgba(0,0,0,0.4),inset_0_1px_2px_rgba(255,255,255,0.6)]"
             style={{
+              position: 'absolute',
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: '#fff',
               left: `${pos.x}%`,
               top: `${pos.y}%`,
               transform: 'translate(-50%, -50%) translateZ(2px)',
