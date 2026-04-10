@@ -150,6 +150,13 @@ export function ContractBoardRendererHost({ session }: ContractBoardRendererHost
   const [busyClaim, setBusyClaim] = useState(false);
   const busyClaimRef = useRef(false);
 
+  // ── last roll result (transient display data) ──────────────────────────────
+  // Captured from the PWA-authority roll result and passed through the adapter
+  // to populate contract.lastRolled for the dice display.  Not persisted — this
+  // is purely presentation state scoped to the current session.
+  const [lastRolled, setLastRolled] = useState<{ total: number; dice: number[] } | undefined>(undefined);
+  const lastRolledRef = useRef(lastRolled);
+
   // ── intent handler ─────────────────────────────────────────────────────────
   /**
    * Routes renderer intents to PWA gameplay actions.
@@ -180,6 +187,14 @@ export function ContractBoardRendererHost({ session }: ContractBoardRendererHost
         .then((result) => {
           if (import.meta.env.DEV) {
             console.log('[ContractBoardRendererHost] roll result:', result);
+          }
+          // Capture authoritative dice result for the renderer's dice display.
+          // This is transient presentation state — the values originate entirely
+          // from executeIslandRunRollAction (PWA authority), not the renderer.
+          if (result.status === 'ok' && result.dieOne != null && result.dieTwo != null && result.total != null) {
+            const rolled = { total: result.total, dice: [result.dieOne, result.dieTwo] };
+            lastRolledRef.current = rolled;
+            setLastRolled(rolled);
           }
           // Refresh state from localStorage now that the roll has been persisted.
           // (Same-tab writes do not trigger the storage event, so we refresh manually.)
@@ -245,6 +260,7 @@ export function ContractBoardRendererHost({ session }: ContractBoardRendererHost
   // ── derive renderer contract ───────────────────────────────────────────────
   // Pass the live busy.roll and busy.claim flags so the renderer can disable
   // the respective buttons during async actions and re-enable when done.
+  // Pass lastRolled so the dice display can show landed die faces.
   const contract = useMemo(
     () =>
       selectBoardRendererContractV1({
@@ -253,8 +269,9 @@ export function ContractBoardRendererHost({ session }: ContractBoardRendererHost
         boardProfileId: CONTRACT_RENDERER_BOARD_PROFILE_ID,
         nowMs: Date.now(),
         busy: { roll: busyRoll, claim: busyClaim },
+        lastRolled,
       }),
-    [runtimeState, busyRoll, busyClaim],
+    [runtimeState, busyRoll, busyClaim, lastRolled],
   );
 
   return (

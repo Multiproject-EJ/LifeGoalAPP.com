@@ -1,11 +1,12 @@
 /**
- * ContractBoardRenderer — read-only presentation component.
+ * ContractBoardRenderer — rich presentation component.
  *
- * Receives a canonical BoardRendererContractV1 snapshot and renders
- * board/token/stop visual state without owning or mutating gameplay truth.
+ * Receives a canonical BoardRendererContractV1 snapshot and renders the full
+ * board presentation: board scene, GameHUD, ProgressMeter, and DiceControl.
+ * Does not own or mutate gameplay truth.
  *
  * All user-intent callbacks (roll, claim, etc.) are supplied by the host
- * and are intentionally no-op / console-logged in the current read-only mount.
+ * and are routed back via `onIntent`. Some intents remain no-op in this slice.
  *
  * This component must NOT contain gameplay logic, progression rules, or
  * persistence side-effects. It is purely presentational.
@@ -26,6 +27,9 @@ import type {
   BoardRendererContractV1,
   BoardRendererContractV1Intent,
 } from '../services/islandRunBoardRendererContractV1';
+import { BoardGameHUD } from './BoardGameHUD';
+import { BoardProgressMeter } from './BoardProgressMeter';
+import { BoardDiceControl } from './BoardDiceControl';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -134,16 +138,19 @@ export function ContractBoardRenderer({
 
   const isMoving = contract.token.isMoving;
 
-  const { canRoll, canClaimReward, canSpendEssence, canOpenStop } = contract.ui.flags;
+  const { canClaimReward } = contract.ui.flags;
   const { roll: busyRoll, claim: busyClaim } = contract.ui.busy;
 
   return (
     <div className="contract-board-renderer">
+      {/* ── GameHUD: top bar with resources + stop info ── */}
+      <BoardGameHUD contract={contract} islandNumber={islandNumber} />
+
       {/* ── board scene ── */}
       <div
         ref={boardRef}
         className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${theme.sceneClass} ${!bgAvailable ? 'island-run-board--no-bg' : ''} contract-board-renderer__scene`}
-        aria-label="Island Run board (read-only view)"
+        aria-label="Island Run board"
       >
         {bgAvailable && (
           <img
@@ -222,92 +229,37 @@ export function ContractBoardRenderer({
         />
       </div>
 
-      {/* ── read-only HUD ── */}
-      <div className="contract-board-renderer__hud" aria-label="Island Run read-only HUD">
-        <div className="contract-board-renderer__hud-row">
-          {/* Essence */}
-          <div className="contract-board-renderer__hud-chip" aria-label={`Essence: ${contract.resources.essence.current}`}>
-            <span aria-hidden="true">🔮</span>
-            <span>{contract.resources.essence.current}</span>
-          </div>
+      {/* ── ProgressMeter: reward bar ── */}
+      <BoardProgressMeter
+        rewardBar={contract.rewardBar}
+        event={contract.event}
+        busyClaim={busyClaim}
+        canClaim={canClaimReward}
+        onIntent={onIntent}
+      />
 
-          {/* Reward bar */}
-          <div
-            className={`contract-board-renderer__hud-chip ${contract.rewardBar.isClaimable ? 'contract-board-renderer__hud-chip--claimable' : ''}`}
-            aria-label={`Reward bar: ${contract.rewardBar.progress} / ${contract.rewardBar.nextThreshold}`}
-          >
-            <span aria-hidden="true">⭐</span>
-            <span>{contract.rewardBar.progress}/{contract.rewardBar.nextThreshold}</span>
-          </div>
+      {/* ── DiceControl: dice visualization + actions ── */}
+      <BoardDiceControl contract={contract} onIntent={onIntent} />
 
-          {/* Active stop */}
-          {contract.stops.activeStop && (
-            <div className="contract-board-renderer__hud-chip" aria-label={`Active stop: ${contract.stops.activeStop.type}`}>
-              <span aria-hidden="true">📍</span>
-              <span>{contract.stops.activeStop.type}</span>
-            </div>
-          )}
+      {/* Errors from contract */}
+      {contract.ui.errors.length > 0 && (
+        <ul className="contract-board-renderer__errors" aria-label="Renderer errors" role="alert">
+          {contract.ui.errors.map((err) => (
+            <li key={err.code} className="contract-board-renderer__error-item">
+              [{err.scope}] {err.message}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Busy roll overlay — shows progress on top of board while rolling */}
+      {busyRoll && (
+        <div className="contract-board-renderer__roll-overlay" aria-live="polite" aria-label="Rolling dice…">
+          <span className="contract-board-renderer__roll-overlay-dice" aria-hidden="true">🎲</span>
+          <span>Rolling…</span>
         </div>
-
-        {/* Intent buttons — no-op in read-only mode, disabled when flag criteria not met */}
-        <div className="contract-board-renderer__hud-actions" aria-label="Disabled intent buttons (read-only mode)">
-          <button
-            type="button"
-            className="contract-board-renderer__intent-btn"
-            disabled={!canRoll || busyRoll}
-            aria-label="Roll dice (read-only)"
-            onClick={() => onIntent({ type: 'roll_requested' })}
-          >
-            🎲 Roll{busyRoll ? '…' : ''}
-          </button>
-
-          <button
-            type="button"
-            className="contract-board-renderer__intent-btn"
-            disabled={!canClaimReward || busyClaim}
-            aria-label="Claim reward (read-only)"
-            onClick={() => onIntent({ type: 'claim_reward_requested' })}
-          >
-            🎁 Claim
-          </button>
-
-          <button
-            type="button"
-            className="contract-board-renderer__intent-btn"
-            disabled={!canOpenStop}
-            aria-label="Open stop (read-only)"
-            onClick={() => onIntent({ type: 'open_active_stop_requested' })}
-          >
-            🏝️ Stop
-          </button>
-
-          <button
-            type="button"
-            className="contract-board-renderer__intent-btn"
-            disabled={!canSpendEssence}
-            aria-label="Spend essence (read-only)"
-            onClick={() => onIntent({ type: 'spend_essence_requested', amount: 1 })}
-          >
-            🔮 Build
-          </button>
-        </div>
-
-        {/* Status badge — roll is wired; other intents remain no-op in this slice */}
-        <p className="contract-board-renderer__readonly-badge" aria-live="polite">
-          🎲 Roll wired · other intents no-op (flag: island_run_contract_renderer)
-        </p>
-
-        {/* Errors from contract */}
-        {contract.ui.errors.length > 0 && (
-          <ul className="contract-board-renderer__errors" aria-label="Renderer errors" role="alert">
-            {contract.ui.errors.map((err) => (
-              <li key={err.code} className="contract-board-renderer__error-item">
-                [{err.scope}] {err.message}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      )}
     </div>
   );
 }
+

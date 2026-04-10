@@ -21,6 +21,8 @@ export function selectBoardRendererContractV1(options: {
   movementPreviewRoll?: number | null;
   busy?: Partial<BoardRendererContractV1['ui']['busy']>;
   errors?: BoardRendererContractV1['ui']['errors'];
+  /** Authoritative last-roll result from the PWA roll action. Pass-through only — never generated here. */
+  lastRolled?: BoardRendererContractV1['lastRolled'];
 }): BoardRendererContractV1 {
   const boardProfile = resolveIslandBoardProfile(options.boardProfileId ?? 'legacy17');
   const nowMs = Math.floor(options.nowMs ?? Date.now());
@@ -144,7 +146,12 @@ export function selectBoardRendererContractV1(options: {
         current: options.runtimeState.essence,
         spendable: options.runtimeState.essence,
       },
+      dicePool: options.runtimeState.dicePool,
+      hearts: options.runtimeState.hearts,
+      coins: options.runtimeState.coins,
+      spinTokens: options.runtimeState.spinTokens,
     },
+    lastRolled: options.lastRolled,
     rewardBar: {
       eventId: rewardHud.activeTimedEvent?.eventId ?? null,
       progress: rewardHud.rewardBarProgress,
