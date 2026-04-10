@@ -5154,12 +5154,36 @@ html.platform-ipad .workspace-shell__menu-edge {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.today-wins-modal__hero {
+  position: relative;
+  width: min(100%, 280px);
+}
+
+.today-wins-modal__hero-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+}
+
+.today-wins-modal__title-wrap {
+  flex: 1;
+  min-width: 220px;
 }
 
 .today-wins-modal__header h3 {
   margin: 0;
   font-size: 1.08rem;
   font-weight: 700;
+}
+
+.today-wins-modal__tier-copy {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: rgba(191, 219, 254, 0.92);
 }
 
 .today-wins-modal__close {
@@ -5170,6 +5194,58 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-size: 0.76rem;
   font-weight: 600;
   padding: 6px 12px;
+}
+
+.today-wins-modal__flare {
+  position: absolute;
+  color: rgba(253, 230, 138, 0.95);
+  text-shadow: 0 0 10px rgba(254, 240, 138, 0.7);
+  pointer-events: none;
+  opacity: 0;
+  animation: today-wins-flare 2.6s ease-in-out infinite;
+}
+
+.today-wins-modal__flare--1 {
+  top: 10%;
+  left: 8%;
+  animation-delay: 0s;
+}
+
+.today-wins-modal__flare--2 {
+  top: 18%;
+  right: 12%;
+  animation-delay: 0.6s;
+}
+
+.today-wins-modal__flare--3 {
+  bottom: 12%;
+  left: 18%;
+  animation-delay: 1.2s;
+}
+
+.today-wins-modal__flare--4 {
+  bottom: 18%;
+  right: 10%;
+  animation-delay: 1.8s;
+}
+
+@keyframes today-wins-flare {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(2px);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.15) translateY(0);
+  }
+  55% {
+    opacity: 0.75;
+    transform: scale(1) translateY(-2px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8) translateY(-5px);
+  }
 }
 
 .today-wins-modal__grid {
@@ -5225,7 +5301,14 @@ html.platform-ipad .workspace-shell__menu-edge {
     height: 100dvh;
     max-height: 100dvh;
     border-radius: 0;
-    padding: calc(env(safe-area-inset-top, 0px) + 18px) 14px calc(env(safe-area-inset-bottom, 0px) + 20px);
+    padding:
+      calc(env(safe-area-inset-top, 0px) + 40px)
+      14px
+      calc(env(safe-area-inset-bottom, 0px) + 20px);
+  }
+
+  .today-wins-modal__header {
+    margin-top: 8px;
   }
 }
 

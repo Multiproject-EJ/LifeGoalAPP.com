@@ -313,6 +313,8 @@ type TodayWinsSummary = {
   gameHeartsEarned: number;
 };
 
+type TodayWinsTier = 'one_star' | 'two_star' | 'three_star';
+
 type QuickJournalDraft = {
   isOpen: boolean;
   mode: QuickJournalMode;
@@ -376,6 +378,18 @@ const AUTO_PROGRESS_STAGE_LABELS: Record<AutoProgressTier, string> = {
 };
 
 const SCALE_STAGE_ORDER: AutoProgressTier[] = ['seed', 'minimum', 'standard'];
+
+const TODAY_WINS_IMAGES: Record<TodayWinsTier, string> = {
+  one_star: '/icons/todays_win/todays_win1.webp',
+  two_star: '/icons/todays_win/todays_win2.webp',
+  three_star: '/icons/todays_win/todays_win3.webp',
+};
+
+const getTodayWinsTier = (score: number): TodayWinsTier => {
+  if (score >= 75) return 'three_star';
+  if (score >= 40) return 'two_star';
+  return 'one_star';
+};
 
 // Vision star slot machine animation constants
 const SLOT_MACHINE_ANIMATION_DURATION_MS = 2500;
@@ -6323,14 +6337,33 @@ export function DailyHabitTracker({
       { id: 'game-token', icon: '🎟️', label: 'Tokens', value: todayWinsSummary.gameTokensEarned },
       { id: 'game-hearts', icon: '❤️', label: 'Hearts', value: todayWinsSummary.gameHeartsEarned },
     ].filter((tile) => tile.value > 0);
+    const habitCompletionPercent = scheduledTarget ? Math.round((completedCount / scheduledTarget) * 100) : 0;
+    const otherWinsCount = [
+      todayWinsSummary.journalCount > 0,
+      completedActionsCount > 0,
+      todayWinsSummary.lotusEarned > 0,
+      todayWinsSummary.xpEarned > 0,
+      todayWinsSummary.gameRewardsTotal > 0,
+    ].filter(Boolean).length;
+    const todayWinsScore = Math.round((habitCompletionPercent * 0.75) + ((Math.min(otherWinsCount, 5) / 5) * 25));
+    const todayWinsTier = getTodayWinsTier(todayWinsScore);
+    const todayWinsImageSrc = TODAY_WINS_IMAGES[todayWinsTier];
+    const todayWinsStarsLabel =
+      todayWinsTier === 'three_star' ? '3 Stars' : todayWinsTier === 'two_star' ? '2 Stars' : '1 Star';
+    const todayWinsTierCaption =
+      todayWinsTier === 'three_star'
+        ? 'Outstanding momentum today.'
+        : todayWinsTier === 'two_star'
+          ? 'Solid progress logged today.'
+          : 'A meaningful start for today.';
     const todayWinsTileCount = todayWinsTiles.length;
     const orbState = todayWinsTileCount === 0
       ? 'empty'
-      : todayWinsTileCount <= 2
-        ? 'active'
-        : todayWinsTileCount <= 5
+      : todayWinsTier === 'three_star'
+        ? 'charged'
+        : todayWinsTier === 'two_star'
           ? 'strong'
-          : 'charged';
+          : 'active';
     const orbIcon = orbState === 'empty'
       ? '◌'
       : orbState === 'active'
@@ -6732,7 +6765,27 @@ export function DailyHabitTracker({
         />
         <div className="today-wins-modal__card" role="document">
           <div className="today-wins-modal__header">
-            <h3>Today's Wins</h3>
+            <div className={`today-wins-modal__hero today-wins-modal__hero--${todayWinsTier}`}>
+              <img
+                src={todayWinsImageSrc}
+                alt={`${todayWinsStarsLabel} Today's Wins`}
+                className="today-wins-modal__hero-image"
+              />
+              {todayWinsTier === 'three_star' ? (
+                <>
+                  <span className="today-wins-modal__flare today-wins-modal__flare--1" aria-hidden="true">✦</span>
+                  <span className="today-wins-modal__flare today-wins-modal__flare--2" aria-hidden="true">✧</span>
+                  <span className="today-wins-modal__flare today-wins-modal__flare--3" aria-hidden="true">✦</span>
+                  <span className="today-wins-modal__flare today-wins-modal__flare--4" aria-hidden="true">✧</span>
+                </>
+              ) : null}
+            </div>
+            <div className="today-wins-modal__title-wrap">
+              <h3>Today's Wins · {todayWinsStarsLabel}</h3>
+              <p className="today-wins-modal__tier-copy">
+                {todayWinsTierCaption} · Score {todayWinsScore}
+              </p>
+            </div>
             <button
               type="button"
               className="today-wins-modal__close"
