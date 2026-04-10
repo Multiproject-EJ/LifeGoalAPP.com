@@ -17618,6 +17618,14 @@ html.platform-ipad .workspace-shell__menu-edge {
   -webkit-touch-callout: none;
 }
 
+.mobile-menu-overlay__item--large {
+  grid-column: span 2;
+}
+
+.mobile-menu-overlay__item--large button {
+  min-height: 102px;
+}
+
 :is(
   [data-theme='dark-glass'],
   [data-theme='midnight-purple'],
@@ -18040,6 +18048,11 @@ html.platform-ipad .workspace-shell__menu-edge {
   z-index: 1;
   display: grid;
   gap: 0.85rem;
+}
+
+.mobile-menu-overlay__submenu-sheet {
+  max-height: min(78vh, 560px);
+  overflow-y: auto;
 }
 
 .mobile-menu-overlay__hold-header {

@@ -170,6 +170,13 @@ type MobileMenuNavItem = {
   modalKey?: 'feedback' | 'support'; // present = opens a modal instead of navigating
 };
 
+type LauncherSubmenuAction = {
+  id: string;
+  label: string;
+  icon: string;
+  onSelect: () => void;
+};
+
 type BillingReturnBanner = {
   kind: 'processing' | 'success' | 'canceled';
   message: string;
@@ -364,28 +371,6 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
   'placeholder',
 ] as const;
 
-// IDs to exclude from the mobile popup menu
-// - 'breathing-space': shown in main footer nav
-// - 'planning': replaced by ID button (Today is in main footer nav)
-// - 'actions': replaced by Settings button (Actions is in main footer nav)
-// - 'goals': dashboard removed from popup menu
-// - 'score': shop removed from popup menu
-// - 'game': Game of Life lives in main menu only
-// - 'placeholder': Soon lives in main menu only
-const MOBILE_POPUP_EXCLUDED_IDS = [
-  'breathing-space',
-  'planning',
-  'actions',
-  'journal',
-  'insights',
-  'goals',
-  'score',
-  'game',
-  'placeholder',
-  'identity', // Moved to quick actions section
-  'player-avatar', // Moved to quick actions section
-] as const;
-
 const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'account', 'projects', 'timer', 'journal']);
 const MOBILE_FOOTER_AUTO_COLLAPSE_DELAY_MS = 3800;
 const MOBILE_FOOTER_SNAP_RESET_MS = 160;
@@ -577,6 +562,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [isProfileStrengthOpen, setIsProfileStrengthOpen] = useState(false);
   const [showMobileFeedbackModal, setShowMobileFeedbackModal] = useState(false);
   const [showMobileSupportModal, setShowMobileSupportModal] = useState(false);
+  const [isMyQuestSubmenuOpen, setIsMyQuestSubmenuOpen] = useState(false);
+  const [isFeedbackSupportSubmenuOpen, setIsFeedbackSupportSubmenuOpen] = useState(false);
   const [activeProfileStrengthHold, setActiveProfileStrengthHold] = useState<{
     area: AreaKey;
     task: NextTask | null;
@@ -882,6 +869,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
     });
     const extraItems: MobileMenuNavItem[] = [
       {
+        id: 'my-quest',
+        label: 'My Quest',
+        ariaLabel: 'Open my quest categories',
+        icon: '🧭',
+        summary: 'Open health goals, habits, routines, goals, check-ins, and contracts.',
+      },
+      {
         id: 'coach',
         label: 'Coach',
         ariaLabel: 'AI Coach - Get a guided next step',
@@ -889,24 +883,23 @@ export default function App({ forceAuthOnMount }: AppProps) {
         summary: 'Get a guided next step from your AI coach.',
       },
       {
-        id: 'menu-feedback',
-        label: 'Feedback',
-        ariaLabel: 'Send product feedback',
-        icon: '💬',
-        summary: 'Share bugs, ideas, and product feedback.',
-        modalKey: 'feedback',
-      },
-      {
-        id: 'menu-support',
-        label: 'Support',
-        ariaLabel: 'Request support',
-        icon: '🛟',
-        summary: 'Ask for account, billing, or cancellation help.',
-        modalKey: 'support',
+        id: 'feedback-support',
+        label: 'Feedback & Support',
+        ariaLabel: 'Open feedback and support options',
+        icon: '🫶',
+        summary: 'Send feedback or request support.',
       },
     ];
     return [...baseItems, ...extraItems];
   }, [workspaceNavItems]);
+
+  const popupLauncherItems = useMemo(
+    () =>
+      mobileMenuNavItems.filter((item) =>
+        ['my-quest', 'coach', 'account', 'feedback-support'].includes(item.id),
+      ),
+    [mobileMenuNavItems],
+  );
 
   useEffect(() => {
     return () => {
@@ -1523,6 +1516,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     if (isMobileMenuOpen) {
       setShowMobileFeedbackModal(false);
       setShowMobileSupportModal(false);
+      setIsMyQuestSubmenuOpen(false);
+      setIsFeedbackSupportSubmenuOpen(false);
     }
   }, [isMobileMenuOpen]);
 
@@ -1972,6 +1967,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
+    setIsMyQuestSubmenuOpen(false);
+    setIsFeedbackSupportSubmenuOpen(false);
     closeGameBoardOverlayIfOpen();
     
     const preserveBreatheTab = options?.preserveBreatheTab ?? false;
@@ -2035,6 +2032,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
+    setIsMyQuestSubmenuOpen(false);
+    setIsFeedbackSupportSubmenuOpen(false);
     closeGameBoardOverlayIfOpen();
 
     if (mode === 'feedback') {
@@ -2043,6 +2042,26 @@ export default function App({ forceAuthOnMount }: AppProps) {
       setShowMobileSupportModal(true);
     }
   };
+
+  const myQuestSubmenuActions: LauncherSubmenuAction[] = useMemo(
+    () => [
+      { id: 'body', label: 'Health Goals', icon: '💪', onSelect: () => handleMobileNavSelect('body') },
+      { id: 'habits', label: 'Habits', icon: '🔄', onSelect: () => handleMobileNavSelect('habits') },
+      { id: 'routines', label: 'Routines', icon: '🧩', onSelect: () => handleMobileNavSelect('routines') },
+      { id: 'support', label: 'Goals', icon: '🎯', onSelect: () => handleMobileNavSelect('support') },
+      { id: 'planning', label: 'Check-ins', icon: '✅', onSelect: () => handleMobileNavSelect('planning') },
+      { id: 'contracts', label: 'Contracts', icon: '🤝', onSelect: () => handleMobileNavSelect('contracts') },
+    ],
+    [handleMobileNavSelect],
+  );
+
+  const feedbackSupportSubmenuActions: LauncherSubmenuAction[] = useMemo(
+    () => [
+      { id: 'feedback', label: 'Feedback', icon: '💬', onSelect: () => openFeedbackSupportFromMobileMenu('feedback') },
+      { id: 'support', label: 'Support', icon: '🛟', onSelect: () => openFeedbackSupportFromMobileMenu('support') },
+    ],
+    [openFeedbackSupportFromMobileMenu],
+  );
 
   const handleEnergySelect = (category: 'mind' | 'body') => {
     closeGameBoardOverlayIfOpen();
@@ -3464,9 +3483,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             ) : null}
             <div className="mobile-menu-overlay__content">
               <ul className="mobile-menu-overlay__list">
-                {mobileMenuNavItems
-                  .filter((item) => !MOBILE_POPUP_EXCLUDED_IDS.includes(item.id as typeof MOBILE_POPUP_EXCLUDED_IDS[number]))
-                  .map((item) => {
+                {popupLauncherItems.map((item) => {
                     const isBreathingItem = item.id === 'breathing-space';
                     const profileStrengthArea = PROFILE_STRENGTH_MENU_AREAS[item.id];
                     const profileStrengthScore =
@@ -3481,8 +3498,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
                         : 'mobile-menu-overlay__icon-badge';
                     const isHelperHoldTarget = !profileStrengthArea;
                     const handleItemClick = () => {
-                      // Modal-key items (feedback/support) must always open the
-                      // modal regardless of hold state – check them first.
+                      if (item.id === 'my-quest') {
+                        setIsMyQuestSubmenuOpen(true);
+                        return;
+                      }
+                      if (item.id === 'feedback-support') {
+                        setIsFeedbackSupportSubmenuOpen(true);
+                        return;
+                      }
+                      // Modal-key items (if configured) must always open the
+                      // modal regardless of hold state.
                       if (item.modalKey) {
                         menuHelperHoldTriggeredRef.current = false;
                         profileStrengthHoldTriggeredRef.current = false;
@@ -3505,7 +3530,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
                     };
 
                     return (
-                      <li key={item.id} className="mobile-menu-overlay__item">
+                      <li
+                        key={item.id}
+                        className={`mobile-menu-overlay__item${
+                          item.id === 'my-quest' ? ' mobile-menu-overlay__item--large' : ''
+                        }`}
+                      >
                         <button
                           type="button"
                           onClick={handleItemClick}
@@ -3566,6 +3596,78 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   })}
               </ul>
             </div>
+            {isMyQuestSubmenuOpen ? (
+              <div className="mobile-menu-overlay__hold-modal" role="dialog" aria-modal="true" aria-label="My Quest menu">
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__hold-backdrop"
+                  aria-label="Close My Quest menu"
+                  onClick={() => setIsMyQuestSubmenuOpen(false)}
+                />
+                <div className="mobile-menu-overlay__hold-panel mobile-menu-overlay__submenu-sheet">
+                  <div className="mobile-menu-overlay__hold-header">
+                    <div>
+                      <p className="mobile-menu-overlay__hold-eyebrow">Quest menu</p>
+                      <h3 className="mobile-menu-overlay__hold-title">My Quest</h3>
+                    </div>
+                    <button
+                      type="button"
+                      className="mobile-menu-overlay__hold-close"
+                      aria-label="Close My Quest menu"
+                      onClick={() => setIsMyQuestSubmenuOpen(false)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="mobile-menu-overlay__submenu mobile-menu-overlay__submenu--open">
+                    {myQuestSubmenuActions.map((action) => (
+                      <button key={action.id} type="button" className="mobile-menu-overlay__submenu-button" onClick={action.onSelect}>
+                        <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">
+                          {action.icon}
+                        </span>
+                        <span>{action.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+            {isFeedbackSupportSubmenuOpen ? (
+              <div className="mobile-menu-overlay__hold-modal" role="dialog" aria-modal="true" aria-label="Feedback and support menu">
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__hold-backdrop"
+                  aria-label="Close feedback and support menu"
+                  onClick={() => setIsFeedbackSupportSubmenuOpen(false)}
+                />
+                <div className="mobile-menu-overlay__hold-panel mobile-menu-overlay__submenu-sheet">
+                  <div className="mobile-menu-overlay__hold-header">
+                    <div>
+                      <p className="mobile-menu-overlay__hold-eyebrow">Help</p>
+                      <h3 className="mobile-menu-overlay__hold-title">Feedback &amp; Support</h3>
+                    </div>
+                    <button
+                      type="button"
+                      className="mobile-menu-overlay__hold-close"
+                      aria-label="Close feedback and support menu"
+                      onClick={() => setIsFeedbackSupportSubmenuOpen(false)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="mobile-menu-overlay__submenu mobile-menu-overlay__submenu--open">
+                    {feedbackSupportSubmenuActions.map((action) => (
+                      <button key={action.id} type="button" className="mobile-menu-overlay__submenu-button" onClick={action.onSelect}>
+                        <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">
+                          {action.icon}
+                        </span>
+                        <span>{action.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : null}
             <div className="mobile-menu-overlay__settings">
               <button
                 type="button"
