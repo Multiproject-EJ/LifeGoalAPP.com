@@ -1,6 +1,6 @@
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
 import { generateTileMap, getIslandRarity } from './islandBoardTileMap';
-import { resolveIslandRunContractV2Stops } from './islandRunContractV2StopResolver';
+import { isIslandRunContractV2StopCompleteAtIndex, resolveIslandRunContractV2Stops } from './islandRunContractV2StopResolver';
 import { resolveIslandRunContractV2RewardHudState } from './islandRunContractV2Semantics';
 import { isIslandRunContractV2BuildPanelVisibleForStop } from './islandRunContractV2EssenceBuild';
 import { resolveWrappedTokenIndex } from './islandBoardTopology';
@@ -57,6 +57,10 @@ export function selectBoardRendererContractV1(options: {
 
   const activeStopId = STOP_IDS[resolvedStops.activeStopIndex] ?? 'boss';
   const canSpendEssence = activeStopBuild.requiredEssence > activeStopBuild.spentEssence && options.runtimeState.essence > 0;
+  const step1Complete = isIslandRunContractV2StopCompleteAtIndex({
+    stopStatesByIndex: options.runtimeState.stopStatesByIndex,
+    index: 0,
+  });
 
   return {
     meta: {
@@ -166,12 +170,12 @@ export function selectBoardRendererContractV1(options: {
       endsAtMs: rewardHud.activeTimedEvent?.expiresAtMs ?? null,
       remainingMs: rewardHud.timedEventRemainingMs,
       themeKey: rewardHud.activeTimedEvent?.eventType ?? 'default',
-    },
-    ui: {
-      flags: {
-        canRoll: options.runtimeState.dicePool > 0,
-        canClaimReward: rewardHud.canClaimRewardBar,
-        canSpendEssence,
+      },
+      ui: {
+        flags: {
+          canRoll: step1Complete && options.runtimeState.dicePool > 0,
+          canClaimReward: rewardHud.canClaimRewardBar,
+          canSpendEssence,
         canOpenStop: isIslandRunContractV2BuildPanelVisibleForStop({
           islandRunContractV2Enabled: true,
           openedStopIndex: resolvedStops.activeStopIndex,

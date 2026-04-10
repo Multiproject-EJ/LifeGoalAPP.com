@@ -2,61 +2,14 @@
  * BoardDiceControl — dice visualization + primary action control.
  *
  * Adapted from the board-repo Dice3D.tsx presentation direction.
- * Shows styled CSS dice faces instead of emoji, with animation on roll.
+ * Uses the transplanted Dice3D visual component, fed by contract dice/busy state.
  *
  * Pure presentation: receives contract snapshot, emits intents only.
  * No gameplay truth — dice outcome is provided by the contract, not generated here.
  */
 
 import type { BoardRendererContractV1, BoardRendererContractV1Intent } from '../services/islandRunBoardRendererContractV1';
-
-// ─── helpers ──────────────────────────────────────────────────────────────────
-
-/** Dot positions for each die face value 1–6.
- *  Each tuple is [col, row] in a 3×3 grid (0-indexed). */
-const DOT_POSITIONS: Record<number, Array<[number, number]>> = {
-  1: [[1, 1]],
-  2: [[0, 0], [2, 2]],
-  3: [[0, 0], [1, 1], [2, 2]],
-  4: [[0, 0], [2, 0], [0, 2], [2, 2]],
-  5: [[0, 0], [2, 0], [1, 1], [0, 2], [2, 2]],
-  6: [[0, 0], [2, 0], [0, 1], [2, 1], [0, 2], [2, 2]],
-};
-
-interface DieFaceProps {
-  value: number;
-  isRolling?: boolean;
-  isLanded?: boolean;
-  isIdle?: boolean;
-  label?: string;
-}
-
-function DieFace({ value, isRolling, isLanded, isIdle, label }: DieFaceProps) {
-  const dots = DOT_POSITIONS[Math.max(1, Math.min(6, value))] ?? DOT_POSITIONS[1];
-  const cls = [
-    'dice-face',
-    isRolling ? 'dice-face--rolling' : '',
-    isLanded ? 'dice-face--landed' : '',
-    isIdle ? 'dice-face--idle' : '',
-  ].filter(Boolean).join(' ');
-
-  return (
-    <div className={cls} aria-label={label ?? `Die: ${value}`} role="img">
-      <div className="dice-face__grid" aria-hidden="true">
-        {dots.map(([col, row], i) => (
-          <span
-            key={i}
-            className="dice-face__dot"
-            style={{
-              gridColumn: col + 1,
-              gridRow: row + 1,
-            }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
+import { Dice3D } from './Dice3D';
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -71,6 +24,8 @@ export function BoardDiceControl({ contract, onIntent }: BoardDiceControlProps) 
   const { ui, resources, stops, lastRolled } = contract;
   const { canRoll, canOpenStop, canSpendEssence } = ui.flags;
   const { roll: busyRoll } = ui.busy;
+  const step1 = stops.stopList[0];
+  const step1Complete = Boolean(step1?.progress.objectiveComplete && step1?.progress.buildComplete);
 
   const rollBtnClass = [
     'board-dice-control__roll-btn',
@@ -82,7 +37,9 @@ export function BoardDiceControl({ contract, onIntent }: BoardDiceControlProps) 
     ? 'Rolling…'
     : canRoll
       ? `Roll (${resources.dicePool})`
-      : resources.dicePool === 0
+      : !step1Complete
+        ? 'Finish Hatchery'
+        : resources.dicePool === 0
         ? 'Need dice'
         : 'Roll';
 
@@ -93,8 +50,8 @@ export function BoardDiceControl({ contract, onIntent }: BoardDiceControlProps) 
         {busyRoll ? (
           /* Rolling animation: two dice spinning */
           <>
-            <DieFace value={3} isRolling label="Rolling…" />
-            <DieFace value={5} isRolling isIdle label="Rolling…" />
+            <Dice3D value={lastRolled?.dice[0] ?? 6} isRolling seed={1} />
+            <Dice3D value={lastRolled?.dice[1] ?? 4} isRolling seed={2} />
             <span className="board-dice-control__roll-status" aria-live="polite">
               Rolling…
             </span>
@@ -103,11 +60,11 @@ export function BoardDiceControl({ contract, onIntent }: BoardDiceControlProps) 
           /* Last roll result */
           <>
             {lastRolled.dice.map((val, i) => (
-              <DieFace
+              <Dice3D
                 key={i}
                 value={val}
-                isLanded
-                label={`Die ${i + 1}: ${val}`}
+                isRolling={false}
+                seed={i + 1}
               />
             ))}
             <span
@@ -121,7 +78,7 @@ export function BoardDiceControl({ contract, onIntent }: BoardDiceControlProps) 
         ) : (
           /* Idle: pool count */
           <>
-            <DieFace value={1} isIdle label={`${resources.dicePool} dice available`} />
+            <Dice3D value={1} isRolling={false} seed={1} />
             <span className="board-dice-control__pool-label" aria-label={`${resources.dicePool} dice`}>
               <strong>{resources.dicePool}</strong>
               <span className="board-dice-control__pool-sub"> dice</span>
