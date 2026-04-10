@@ -5138,14 +5138,16 @@ html.platform-ipad .workspace-shell__menu-edge {
   width: min(560px, 100%);
   max-height: calc(100dvh - clamp(24px, 5vw, 48px));
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
   border-radius: 20px;
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  background: linear-gradient(155deg, rgba(10, 30, 58, 0.98), rgba(9, 22, 48, 0.96));
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  background: linear-gradient(155deg, rgba(250, 253, 255, 0.98), rgba(238, 246, 255, 0.96));
   backdrop-filter: blur(12px);
   padding: 16px;
   box-shadow: 0 24px 54px rgba(2, 6, 23, 0.45);
-  color: #dbeafe;
+  color: #0f172a;
 }
 
 .today-wins-modal__header {
@@ -5187,7 +5189,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 .today-wins-modal__tier-copy {
   margin: 4px 0 0;
   font-size: 0.78rem;
-  color: rgba(191, 219, 254, 0.92);
+  color: rgba(30, 41, 59, 0.9);
 }
 
 .today-wins-modal__close {
@@ -5203,7 +5205,8 @@ html.platform-ipad .workspace-shell__menu-edge {
 .today-wins-modal__footer {
   display: flex;
   justify-content: center;
-  margin-top: 16px;
+  margin-top: auto;
+  padding-top: clamp(38px, 10vh, 120px);
   margin-bottom: 10px;
 }
 
@@ -5294,7 +5297,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   border: 1px solid rgba(148, 163, 184, 0.28);
   border-radius: 14px;
   padding: 10px 6px;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(255, 255, 255, 0.62);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -5311,20 +5314,43 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-size: 1.02rem;
   font-weight: 800;
   line-height: 1;
-  color: #f8fafc;
+  color: #0f172a;
 }
 
 .today-wins-modal__tile-label {
   font-size: 0.72rem;
-  color: rgba(203, 213, 225, 0.9);
+  color: rgba(51, 65, 85, 0.92);
   text-align: center;
   overflow-wrap: anywhere;
 }
 
 .today-wins-modal__empty {
   margin: 0;
-  color: rgba(203, 213, 225, 0.9);
+  color: rgba(30, 41, 59, 0.86);
   font-size: 0.86rem;
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .today-wins-modal__card {
+  border-color: rgba(148, 163, 184, 0.28);
+  background: linear-gradient(155deg, rgba(10, 30, 58, 0.98), rgba(9, 22, 48, 0.96));
+  color: #dbeafe;
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .today-wins-modal__tier-copy {
+  color: rgba(191, 219, 254, 0.92);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .today-wins-modal__tile {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .today-wins-modal__tile-value {
+  color: #f8fafc;
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .today-wins-modal__tile-label,
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .today-wins-modal__empty {
+  color: rgba(203, 213, 225, 0.9);
 }
 
 @media (max-width: 640px) {
@@ -5348,7 +5374,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   }
 
   .today-wins-modal__footer {
-    margin-top: 18px;
+    margin-top: auto;
+    padding-top: clamp(36px, 16vh, 150px);
     margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
   }
 }
