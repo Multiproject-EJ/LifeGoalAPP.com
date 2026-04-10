@@ -18,11 +18,14 @@ import { ActionFilters, type FilterOption } from './components/ActionFilters';
 import { DEMO_USER_ID } from '../../services/demoData';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
-import projectsIcon from '../../assets/Projects.webp';
-import timerIcon from '../../assets/Timer.webp';
-import taskIcon from '../../assets/Task.webp';
 import type { TimerLaunchContext } from '../timer/timerSession';
 import './ActionsTab.css';
+
+const projectsIcon = '/icons/Actions/actions_projects.webp';
+const timerIcon = '/icons/Actions/actions_timer.webp';
+const taskIcon = '/icons/Actions/actions_tasks.webp';
+const journalIcon = '/icons/Actions/actions_journal.webp';
+const visionBoardIcon = '/icons/Actions/actions_visonboard.webp';
 
 // Constants
 const EXPIRING_SOON_THRESHOLD_HOURS = 24;
@@ -516,7 +519,13 @@ export function ActionsTab({
                 onClick={onNavigateToJournal}
                 aria-label="Open journal"
               >
-                <span className="actions-tab__launcher-icon" aria-hidden="true">📔</span>
+                <span className="actions-tab__launcher-icon" aria-hidden="true">
+                  <img
+                    className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
+                    src={journalIcon}
+                    alt=""
+                  />
+                </span>
                 <span className="actions-tab__launcher-label">Journal</span>
               </button>
             )}
@@ -527,7 +536,13 @@ export function ActionsTab({
                 onClick={onNavigateToVisionBoard}
                 aria-label="Open vision board"
               >
-                <span className="actions-tab__launcher-icon" aria-hidden="true">🖼️</span>
+                <span className="actions-tab__launcher-icon" aria-hidden="true">
+                  <img
+                    className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
+                    src={visionBoardIcon}
+                    alt=""
+                  />
+                </span>
                 <span className="actions-tab__launcher-label">Vision Board</span>
               </button>
             )}
