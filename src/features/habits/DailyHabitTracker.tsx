@@ -116,6 +116,7 @@ import {
   triggerHabitHapticFeedback,
   type HabitFeedbackType,
 } from '../../utils/habitFeedback';
+import { playChime } from '../../utils/audioUtils';
 import type { CommitmentContract } from '../../types/gamification';
 import {
   cancelContract,
@@ -136,6 +137,68 @@ const DONE_ISH_DEFAULT_PERCENTAGE = 85;
 const HABIT_SWIPE_MAX_PX = 132;
 const HABIT_SWIPE_ARM_THRESHOLD_PX = 84;
 const HABIT_SWIPE_SUPPRESS_CLICK_MS = 260;
+const HABIT_SFX_ENABLED_STORAGE_KEY = 'lifegoal.habits.sfx.enabled';
+
+function isHabitSfxEnabled(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const rawPreference = window.localStorage.getItem(HABIT_SFX_ENABLED_STORAGE_KEY);
+  return rawPreference !== 'false';
+}
+
+function playHabitCompleteSfx(): void {
+  if (!isHabitSfxEnabled()) {
+    return;
+  }
+
+  playChime([880, 1320, 1760], 65, 0.13, 0.12);
+}
+
+function playHabitSkipSfx(): void {
+  if (!isHabitSfxEnabled()) {
+    return;
+  }
+
+  const AudioContextCtor =
+    window.AudioContext ||
+    (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!AudioContextCtor) {
+    return;
+  }
+
+  const context = new AudioContextCtor();
+  const duration = 0.22;
+  const frameCount = Math.max(1, Math.floor(context.sampleRate * duration));
+  const noiseBuffer = context.createBuffer(1, frameCount, context.sampleRate);
+  const data = noiseBuffer.getChannelData(0);
+
+  for (let index = 0; index < frameCount; index += 1) {
+    data[index] = (Math.random() * 2 - 1) * (1 - index / frameCount);
+  }
+
+  const source = context.createBufferSource();
+  source.buffer = noiseBuffer;
+
+  const filter = context.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(1300, context.currentTime);
+  filter.frequency.exponentialRampToValueAtTime(420, context.currentTime + duration);
+  filter.Q.setValueAtTime(0.9, context.currentTime);
+
+  const gainNode = context.createGain();
+  gainNode.gain.setValueAtTime(0.0001, context.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.06, context.currentTime + 0.035);
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration);
+
+  source.connect(filter);
+  filter.connect(gainNode);
+  gainNode.connect(context.destination);
+
+  source.start(context.currentTime);
+  source.stop(context.currentTime + duration);
+}
 
 function getNextUtcMidnightMs(): number {
   const now = new Date();
@@ -3542,7 +3605,9 @@ export function DailyHabitTracker({
         });
 
         // 🎮 Award XP for completing today's habits
-        if (isToday) {
+        if (isActiveDay) {
+          playHabitCompleteSfx();
+
           const now = new Date();
           const xpAmount = now.getHours() < 9
             ? XP_REWARDS.HABIT_COMPLETE_EARLY
@@ -3652,6 +3717,7 @@ export function DailyHabitTracker({
     }
 
     const dateISO = activeDate;
+    const isActiveDay = dateISO === activeDate;
     const isToday = dateISO === today;
 
     if (originElement) {
@@ -3735,7 +3801,9 @@ export function DailyHabitTracker({
       }
 
       // Award reduced XP for done-ish completion (70% of full XP)
-      if (isToday) {
+      if (isActiveDay) {
+        playHabitCompleteSfx();
+
         const now = new Date();
         const baseXP = now.getHours() < 9 ? XP_REWARDS.HABIT_COMPLETE_EARLY : XP_REWARDS.HABIT_COMPLETE;
         const xpAmount = Math.round(baseXP * 0.7);
@@ -3783,6 +3851,7 @@ export function DailyHabitTracker({
     }
 
     const dateISO = activeDate;
+    const isActiveDay = dateISO === activeDate;
     const isToday = dateISO === today;
     const autoProgressHabit = buildAutoProgressHabit(habit);
     const scalePlan = getHabitScalePlan(autoProgressHabit);
@@ -3873,7 +3942,9 @@ export function DailyHabitTracker({
         });
       }
 
-      if (isToday) {
+      if (isActiveDay) {
+        playHabitCompleteSfx();
+
         const now = new Date();
         const baseXP = now.getHours() < 9 ? XP_REWARDS.HABIT_COMPLETE_EARLY : XP_REWARDS.HABIT_COMPLETE;
         const stageMultiplier = getStageCreditMultiplier(stage);
@@ -4892,6 +4963,10 @@ export function DailyHabitTracker({
           eventType: 'habit_skipped',
           metadata: { habitId: habit.id, habitName: habit.name, progressState: 'skipped' },
         });
+      }
+
+      if (dateISO === activeDate) {
+        playHabitSkipSfx();
       }
 
       setSkipMenuHabitId(null);
