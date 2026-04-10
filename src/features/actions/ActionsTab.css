@@ -196,10 +196,24 @@
 }
 
 .actions-tab__launcher-actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 0.6rem;
   align-items: stretch;
+}
+
+.actions-tab__launcher-row {
+  display: grid;
+  gap: 0.6rem;
+  align-items: stretch;
+}
+
+.actions-tab__launcher-row--single {
+  grid-template-columns: 1fr;
+}
+
+.actions-tab__launcher-row--trio {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .actions-tab__launcher-button {
@@ -259,9 +273,28 @@
   font-size: 1rem;
 }
 
+.actions-tab__launcher-button--full-width {
+  aspect-ratio: auto;
+  min-height: 6.25rem;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 0.85rem;
+  padding: 0.8rem 1rem;
+}
+
+.actions-tab__launcher-button--full-width .actions-tab__launcher-icon {
+  width: 5rem;
+  flex: 0 0 5rem;
+}
+
+.actions-tab__launcher-button--full-width .actions-tab__launcher-label {
+  font-size: 1.02rem;
+  text-align: left;
+}
+
 @media (max-width: 420px) {
-  .actions-tab__launcher-actions {
-    grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
+  .actions-tab__launcher-row--trio {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
