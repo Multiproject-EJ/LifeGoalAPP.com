@@ -463,89 +463,95 @@ export function ActionsTab({
         <div className="actions-tab__launcher-card">
           <QuickAddAction onAdd={handleAddAction} projects={projects} showTaskImage={false} />
           <div className="actions-tab__launcher-actions">
-            {onNavigateToProjects && (
-              <button
-                type="button"
-                className="actions-tab__launcher-button"
-                onClick={onNavigateToProjects}
-                aria-label="Open projects"
-              >
-                <span className="actions-tab__launcher-icon" aria-hidden="true">
-                  <img
-                    className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
-                    src={projectsIcon}
-                    alt=""
-                  />
-                </span>
-                <span className="actions-tab__launcher-label">Projects</span>
-              </button>
-            )}
-            {onNavigateToTimer && (
-              <button
-                type="button"
-                className="actions-tab__launcher-button"
-                onClick={() => onNavigateToTimer({ sourceType: 'general' })}
-                aria-label="Open timer"
-              >
-                <span className="actions-tab__launcher-icon" aria-hidden="true">
-                  <img
-                    className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
-                    src={timerIcon}
-                    alt=""
-                  />
-                </span>
-                <span className="actions-tab__launcher-label">Timer</span>
-              </button>
-            )}
-            <button
-              type="button"
-              className="actions-tab__launcher-button actions-tab__launcher-button--primary"
-              onClick={() => setActiveView('tasks')}
-              aria-label="Open tasks list"
-            >
-              <span className="actions-tab__launcher-icon" aria-hidden="true">
-                <img
-                  className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
-                  src={taskIcon}
-                  alt=""
-                />
-              </span>
-              <span className="actions-tab__launcher-label">Tasks</span>
-            </button>
             {onNavigateToJournal && (
-              <button
-                type="button"
-                className="actions-tab__launcher-button"
-                onClick={onNavigateToJournal}
-                aria-label="Open journal"
-              >
-                <span className="actions-tab__launcher-icon" aria-hidden="true">
-                  <img
-                    className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
-                    src={journalIcon}
-                    alt=""
-                  />
-                </span>
-                <span className="actions-tab__launcher-label">Journal</span>
-              </button>
+              <div className="actions-tab__launcher-row actions-tab__launcher-row--single">
+                <button
+                  type="button"
+                  className="actions-tab__launcher-button actions-tab__launcher-button--full-width"
+                  onClick={onNavigateToJournal}
+                  aria-label="Open journal"
+                >
+                  <span className="actions-tab__launcher-icon" aria-hidden="true">
+                    <img
+                      className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
+                      src={journalIcon}
+                      alt=""
+                    />
+                  </span>
+                  <span className="actions-tab__launcher-label">Journal</span>
+                </button>
+              </div>
             )}
             {onNavigateToVisionBoard && (
+              <div className="actions-tab__launcher-row actions-tab__launcher-row--single">
+                <button
+                  type="button"
+                  className="actions-tab__launcher-button actions-tab__launcher-button--full-width"
+                  onClick={onNavigateToVisionBoard}
+                  aria-label="Open vision board"
+                >
+                  <span className="actions-tab__launcher-icon" aria-hidden="true">
+                    <img
+                      className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
+                      src={visionBoardIcon}
+                      alt=""
+                    />
+                  </span>
+                  <span className="actions-tab__launcher-label">Vision Board</span>
+                </button>
+              </div>
+            )}
+            <div className="actions-tab__launcher-row actions-tab__launcher-row--trio">
+              {onNavigateToProjects && (
+                <button
+                  type="button"
+                  className="actions-tab__launcher-button"
+                  onClick={onNavigateToProjects}
+                  aria-label="Open projects"
+                >
+                  <span className="actions-tab__launcher-icon" aria-hidden="true">
+                    <img
+                      className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
+                      src={projectsIcon}
+                      alt=""
+                    />
+                  </span>
+                  <span className="actions-tab__launcher-label">Projects</span>
+                </button>
+              )}
+              {onNavigateToTimer && (
+                <button
+                  type="button"
+                  className="actions-tab__launcher-button"
+                  onClick={() => onNavigateToTimer({ sourceType: 'general' })}
+                  aria-label="Open timer"
+                >
+                  <span className="actions-tab__launcher-icon" aria-hidden="true">
+                    <img
+                      className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
+                      src={timerIcon}
+                      alt=""
+                    />
+                  </span>
+                  <span className="actions-tab__launcher-label">Timer</span>
+                </button>
+              )}
               <button
                 type="button"
-                className="actions-tab__launcher-button"
-                onClick={onNavigateToVisionBoard}
-                aria-label="Open vision board"
+                className="actions-tab__launcher-button actions-tab__launcher-button--primary"
+                onClick={() => setActiveView('tasks')}
+                aria-label="Open tasks list"
               >
                 <span className="actions-tab__launcher-icon" aria-hidden="true">
                   <img
                     className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
-                    src={visionBoardIcon}
+                    src={taskIcon}
                     alt=""
                   />
                 </span>
-                <span className="actions-tab__launcher-label">Vision Board</span>
+                <span className="actions-tab__launcher-label">Tasks</span>
               </button>
-            )}
+            </div>
           </div>
         </div>
       </div>
