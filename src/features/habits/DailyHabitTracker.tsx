@@ -6786,13 +6786,6 @@ export function DailyHabitTracker({
                 {todayWinsTierCaption} · Score {todayWinsScore}
               </p>
             </div>
-            <button
-              type="button"
-              className="today-wins-modal__close"
-              onClick={() => setIsTodayWinsOpen(false)}
-            >
-              Close
-            </button>
           </div>
           {todayWinsTiles.length > 0 ? (
             <div className="today-wins-modal__grid" role="list" aria-label="Today's completed categories">
@@ -6807,6 +6800,15 @@ export function DailyHabitTracker({
           ) : (
             <p className="today-wins-modal__empty">No wins logged yet for this day.</p>
           )}
+          <div className="today-wins-modal__footer">
+            <button
+              type="button"
+              className="today-wins-modal__close today-wins-modal__close--gold"
+              onClick={() => setIsTodayWinsOpen(false)}
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     ) : null;
