@@ -1054,6 +1054,10 @@
   box-shadow: 0 20px 36px rgba(15, 23, 42, 0.16);
 }
 
+.score-tab__hub-card--full {
+  grid-column: 1 / -1;
+}
+
 .score-tab__hub-visual {
   width: 100%;
   flex: 1;
