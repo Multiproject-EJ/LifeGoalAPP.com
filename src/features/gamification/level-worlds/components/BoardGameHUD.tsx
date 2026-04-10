@@ -45,8 +45,8 @@ export interface BoardGameHUDProps {
 export function BoardGameHUD({ contract, islandNumber }: BoardGameHUDProps) {
   const { resources, rewardBar, stops, event, ui } = contract;
   const activeStop = stops.activeStop;
-  const stopIcon = STOP_TYPE_ICONS[activeStop.type] ?? '📍';
-  const stopStatusLabel = STOP_STATUS_LABELS[activeStop.status] ?? activeStop.status;
+  const stopIcon = activeStop ? (STOP_TYPE_ICONS[activeStop.type] ?? '📍') : '📍';
+  const stopStatusLabel = activeStop ? (STOP_STATUS_LABELS[activeStop.status] ?? activeStop.status) : '';
   const busyRoll = ui.busy.roll;
 
   return (
@@ -110,19 +110,21 @@ export function BoardGameHUD({ contract, islandNumber }: BoardGameHUDProps) {
 
       {/* ── second row: active stop + event timer ────────────────────────── */}
       <div className="board-hud__info-row">
-        <div
-          className={`board-hud__stop-chip board-hud__stop-chip--${activeStop.status}`}
-          aria-label={`Active stop: ${activeStop.type} (${stopStatusLabel})`}
-        >
-          <span aria-hidden="true">{stopIcon}</span>
-          <span className="board-hud__stop-name">
-            {activeStop.type.charAt(0).toUpperCase() + activeStop.type.slice(1)}
-          </span>
-          <span className="board-hud__stop-status">{stopStatusLabel}</span>
-          <span className="board-hud__stop-index">
-            {activeStop.index + 1}/5
-          </span>
-        </div>
+        {activeStop && (
+          <div
+            className={`board-hud__stop-chip board-hud__stop-chip--${activeStop.status}`}
+            aria-label={`Active stop: ${activeStop.type} (${stopStatusLabel})`}
+          >
+            <span aria-hidden="true">{stopIcon}</span>
+            <span className="board-hud__stop-name">
+              {activeStop.type.charAt(0).toUpperCase() + activeStop.type.slice(1)}
+            </span>
+            <span className="board-hud__stop-status">{stopStatusLabel}</span>
+            <span className="board-hud__stop-index">
+              {activeStop.index + 1}/5
+            </span>
+          </div>
+        )}
 
         {event.active && (
           <div

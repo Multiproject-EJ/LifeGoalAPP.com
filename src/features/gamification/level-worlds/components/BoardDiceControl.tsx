@@ -121,13 +121,13 @@ export function BoardDiceControl({ contract, onIntent }: BoardDiceControlProps) 
           onClick={() => onIntent({ type: 'open_active_stop_requested' })}
         >
           <span aria-hidden="true">
-            {stops.activeStop.type === 'hatchery' ? '🥚'
-              : stops.activeStop.type === 'boss' ? '👑'
+            {stops.activeStop?.type === 'hatchery' ? '🥚'
+              : stops.activeStop?.type === 'boss' ? '👑'
               : '🏝️'}
           </span>
           <span>
-            {stops.activeStop.type === 'hatchery' ? 'Hatchery'
-              : stops.activeStop.type === 'boss' ? 'Boss'
+            {stops.activeStop?.type === 'hatchery' ? 'Hatchery'
+              : stops.activeStop?.type === 'boss' ? 'Boss'
               : 'Stop'}
           </span>
         </button>
