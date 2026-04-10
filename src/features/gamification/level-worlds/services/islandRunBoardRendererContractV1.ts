@@ -5,6 +5,7 @@ export const BOARD_RENDERER_CONTRACT_V1_VERSION = 'v1' as const;
 export type BoardRendererContractV1StopId =
   | 'hatchery'
   | 'minigame'
+  | 'market'
   | 'utility'
   | 'dynamic'
   | 'boss';

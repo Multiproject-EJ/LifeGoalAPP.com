@@ -4039,3 +4039,399 @@
   cursor: not-allowed;
 }
 
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   IslandBoardScene — spark60 board scene (replaces old 17-tile board)
+   Used inside the feature-flagged ContractBoardRenderer path.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.island-board-v2 {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  overflow: visible;
+}
+
+/* ── SVG path layer ─────────────────────────────────────────────── */
+
+.island-board-v2__svg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* ── Path tile dots ─────────────────────────────────────────────── */
+
+.island-board-v2__tiles {
+  position: absolute;
+  inset: 0;
+}
+
+.island-path-tile {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,248,0.72) 0%, rgba(210,180,120,0.92) 100%);
+  border: 1.5px solid rgba(255,240,190,0.8);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.45);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Use CSS custom property --tile-s for depth-scaled size; hover adds 0.25 to the base scale */
+  transform: translate(-50%, -50%) scale(var(--tile-s, 1));
+  transition: transform 0.15s ease;
+}
+
+.island-path-tile:hover {
+  transform: translate(-50%, -50%) scale(calc(var(--tile-s, 1) + 0.25));
+}
+
+.island-path-tile__icon {
+  font-size: 9px;
+  line-height: 1;
+  display: block;
+}
+
+.island-path-tile--back {
+  filter: brightness(0.82) saturate(0.9);
+}
+
+.island-path-tile--front {
+  filter: brightness(1.08);
+}
+
+.island-path-tile--current {
+  background: radial-gradient(circle at 35% 28%, rgba(255,255,200,0.9) 0%, rgba(255,220,80,0.95) 100%);
+  border-color: rgba(255,235,120,0.98);
+  box-shadow: 0 0 0 3px rgba(255,230,80,0.7), 0 3px 8px rgba(0,0,0,0.35);
+  z-index: 2;
+}
+
+.island-path-tile--currency  { background: radial-gradient(circle at 35% 28%, #fff8c0, #ffd740); border-color: #ffe57a; }
+.island-path-tile--chest     { background: radial-gradient(circle at 35% 28%, #c8f0ff, #60b8ff); border-color: #90d4ff; }
+.island-path-tile--event     { background: radial-gradient(circle at 35% 28%, #fff0a0, #ffa040); border-color: #ffcc70; }
+.island-path-tile--hazard    { background: radial-gradient(circle at 35% 28%, #ffcccc, #ff5555); border-color: #ff8888; }
+.island-path-tile--egg_shard { background: radial-gradient(circle at 35% 28%, #e0d8ff, #9060f0); border-color: #c0a8ff; }
+.island-path-tile--micro     { background: radial-gradient(circle at 35% 28%, #e8fff0, #60e890); border-color: #90ffb8; }
+.island-path-tile--encounter { background: radial-gradient(circle at 35% 28%, #ffd0c0, #ff6030); border-color: #ffa080; }
+
+/* ── Stop nodes ──────────────────────────────────────────────────── */
+
+.island-board-v2__stops {
+  position: absolute;
+  inset: 0;
+}
+
+.island-stop-node {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 2.5px solid rgba(180,240,255,0.7);
+  background: linear-gradient(150deg, rgba(8,28,44,0.94) 0%, rgba(4,16,28,0.97) 100%);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 0 0 1px rgba(160,228,255,0.18) inset;
+  cursor: pointer;
+  padding: 0;
+  color: #e0f6ff;
+  z-index: 3;
+  /* Use CSS custom property --tile-s for depth-scaled positioning */
+  transform: translate(-50%, -50%) scale(var(--tile-s, 1));
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.island-stop-node:hover {
+  transform: translate(-50%, -50%) scale(calc(var(--tile-s, 1) + 0.12));
+  box-shadow: 0 6px 20px rgba(0,0,0,0.55), 0 0 16px rgba(100,220,255,0.3);
+}
+
+.island-stop-node__icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  display: block;
+}
+
+.island-stop-node__label {
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(210,245,255,0.85);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.island-stop-node__badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-size: 0.6rem;
+  color: #7ef8e8;
+  background: rgba(4,20,30,0.9);
+  border: 1px solid rgba(126,248,232,0.7);
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* Stop type colours */
+.island-stop-node--stop-hatchery { border-color: rgba(180,255,140,0.75); background: linear-gradient(150deg, rgba(14,40,16,0.94), rgba(8,24,10,0.97)); }
+.island-stop-node--stop-minigame { border-color: rgba(130,200,255,0.75); background: linear-gradient(150deg, rgba(10,28,52,0.94), rgba(4,14,32,0.97)); }
+.island-stop-node--stop-market   { border-color: rgba(255,220,100,0.75); background: linear-gradient(150deg, rgba(44,34,8,0.94), rgba(28,20,4,0.97)); }
+.island-stop-node--stop-utility  { border-color: rgba(200,160,255,0.75); background: linear-gradient(150deg, rgba(30,16,48,0.94), rgba(16,8,28,0.97)); }
+.island-stop-node--stop-boss     { border-color: rgba(255,130,130,0.75); background: linear-gradient(150deg, rgba(50,12,12,0.94), rgba(28,6,6,0.97)); }
+
+/* Stop states */
+.island-stop-node--active {
+  border-color: rgba(80,255,240,0.95);
+  box-shadow: 0 0 0 3px rgba(80,255,240,0.35), 0 4px 20px rgba(0,0,0,0.5);
+  animation: island-stop-node-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes island-stop-node-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(80,255,240,0.3), 0 4px 20px rgba(0,0,0,0.5); }
+  50%       { box-shadow: 0 0 0 5px rgba(80,255,240,0.5), 0 4px 24px rgba(80,255,240,0.25); }
+}
+
+.island-stop-node--completed {
+  border-color: rgba(100,240,130,0.85);
+  opacity: 0.8;
+}
+
+.island-stop-node--locked {
+  border-color: rgba(140,140,160,0.5);
+  opacity: 0.6;
+}
+
+.island-stop-node--current {
+  box-shadow: 0 0 0 4px rgba(255,240,80,0.6), 0 4px 18px rgba(0,0,0,0.5);
+  z-index: 4;
+}
+
+/* ── Player token (v2, on spark60 board) ─────────────────────────── */
+
+.island-token-v2 {
+  position: absolute;
+  translate: -50% -130%;
+  z-index: 7;
+  transition: left 250ms cubic-bezier(0.22, 0.61, 0.36, 1), top 250ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  pointer-events: none;
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6));
+}
+
+.island-token-v2__ship {
+  position: relative;
+  width: 30px;
+  height: 40px;
+}
+
+.island-token-v2__body {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 32px;
+  border-radius: 50% 50% 38% 38% / 58% 58% 42% 42%;
+  background: radial-gradient(ellipse at 36% 26%, #d4f0ff 0%, #58c0f4 30%, #2472c8 70%, #0c44a0 100%);
+  box-shadow: inset 2px 3px 5px rgba(255,255,255,0.5), inset -2px -2px 4px rgba(0,16,70,0.5), 0 0 12px rgba(70,160,255,0.55);
+}
+
+.island-token-v2__fin {
+  position: absolute;
+  bottom: 4px;
+  width: 8px;
+  height: 14px;
+  background: linear-gradient(150deg, #3880d8 0%, #1440a0 100%);
+  border-radius: 2px 2px 5px 5px;
+}
+
+.island-token-v2__fin--left  { left: 1px; transform: skewY(8deg); }
+.island-token-v2__fin--right { right: 1px; transform: skewY(-8deg); }
+
+.island-token-v2__thruster {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 12px;
+  border-radius: 0 0 50% 50%;
+  background: radial-gradient(ellipse at 50% 20%, #fff8b0 0%, #ffb820 40%, #ff5500 75%, rgba(255,60,0,0) 100%);
+  animation: island-token-thruster 180ms ease-in-out infinite alternate;
+  opacity: 0.9;
+}
+
+.island-token-v2__window {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 33% 28%, #e4f6ff 0%, #68ccff 50%, #1850c0 100%);
+  box-shadow: inset 1px 1px 2px rgba(255,255,255,0.65), 0 0 5px rgba(90,200,255,0.5);
+}
+
+.island-token-v2--back  { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.35)) brightness(0.88); }
+.island-token-v2--mid   { filter: drop-shadow(0 6px 9px rgba(0,0,0,0.48)); }
+.island-token-v2--front { filter: drop-shadow(0 9px 13px rgba(0,0,0,0.62)) brightness(1.06); }
+
+.island-token-v2--moving {
+  animation: island-token-v2-bob 200ms ease-in-out infinite alternate;
+}
+
+@keyframes island-token-v2-bob {
+  from { translate: -50% -134%; }
+  to   { translate: -50% -126%; }
+}
+
+/* ── Lap/tile badge ─────────────────────────────────────────────── */
+
+.island-board-v2__lap-badge {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(4,16,24,0.78);
+  border: 1px solid rgba(160,230,255,0.5);
+  color: #c8f0ff;
+  font-weight: 750;
+  pointer-events: none;
+}
+
+.island-board-v2__lap-tile  { font-size: 1rem; color: #e8f8ff; }
+.island-board-v2__lap-sep   { font-size: 0.75rem; opacity: 0.55; }
+.island-board-v2__lap-total { font-size: 0.75rem; opacity: 0.75; }
+
+/* ── Roll overlay (inside board scene) ──────────────────────────── */
+
+.island-board-v2__roll-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: rgba(4,12,22,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #d9f8ff;
+  font-weight: 700;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.island-board-v2__roll-dice {
+  font-size: 2.8rem;
+  animation: island-run-dice-jitter 240ms ease-in-out infinite;
+  display: block;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CSS Dice Face — replaces emoji dice in BoardDiceControl
+   ═══════════════════════════════════════════════════════════════════ */
+
+.dice-face {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #f8f4e8 0%, #e8dfc8 45%, #d4c8a8 100%);
+  border: 2px solid rgba(180,150,90,0.8);
+  box-shadow:
+    3px 3px 0 rgba(0,0,0,0.18),
+    inset 1px 1px 0 rgba(255,255,255,0.65),
+    inset -1px -1px 0 rgba(0,0,0,0.12);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.dice-face--rolling {
+  animation: dice-face-spin 300ms ease-in-out infinite alternate;
+  background: linear-gradient(145deg, #a8e8ff 0%, #60b8f0 45%, #2888d8 100%);
+  border-color: rgba(80,180,255,0.85);
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.2), 0 0 12px rgba(80,160,255,0.5), inset 1px 1px 0 rgba(255,255,255,0.55);
+}
+
+.dice-face--idle {
+  opacity: 0.5;
+}
+
+.dice-face--landed {
+  animation: dice-face-land 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes dice-face-spin {
+  0%   { transform: rotate(-15deg) scale(0.9); }
+  100% { transform: rotate(15deg)  scale(1.05); }
+}
+
+@keyframes dice-face-land {
+  0%   { transform: scale(0.55) rotate(-25deg); opacity: 0.3; }
+  100% { transform: scale(1)    rotate(0deg);   opacity: 1; }
+}
+
+.dice-face__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 30px;
+  height: 30px;
+  gap: 0;
+}
+
+.dice-face__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #555 0%, #111 100%);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);
+  place-self: center;
+}
+
+.dice-face--rolling .dice-face__dot {
+  background: radial-gradient(circle at 35% 30%, #e0f4ff 0%, #90c8f0 100%);
+}
+
+/* ── Updated roll-button spinner ────────────────────────────────── */
+
+.board-dice-control__roll-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: rgba(255,255,255,0.9);
+  border-radius: 50%;
+  animation: board-dice-spinner 0.5s linear infinite;
+  vertical-align: middle;
+  margin-right: 0.35rem;
+}
+
+@keyframes board-dice-spinner {
+  to { transform: rotate(360deg); }
+}
