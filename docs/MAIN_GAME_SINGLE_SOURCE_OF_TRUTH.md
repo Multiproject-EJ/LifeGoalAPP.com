@@ -20,7 +20,7 @@ This document replaces prior split guidance across Lucky Roll + Level Worlds doc
 
 **Canonical direction:**
 - Main game is **Island Run**.
-- Main board loop is **17-tile dice traversal**.
+- Main board loop is **60-tile dice traversal**.
 - Island progression loop is **5 stops + 1 boss stop**.
 - Mini-games are accessed from Island Run traversal/events (not direct menu-first).
 - Day Zero onboarding is merged into first-run game flow with celebration + guided launch.
@@ -36,7 +36,7 @@ This document replaces prior split guidance across Lucky Roll + Level Worlds doc
 ## 2.1 Dual-loop model
 
 ### Micro loop (within island)
-- Player spends dice to move across a **17-tile loop**.
+- Player spends dice to move across a **60-tile loop**.
 - Tile outcomes include:
   - rewards (coins, items, boosts)
   - hazards (loss/penalty state)
@@ -54,7 +54,7 @@ This document replaces prior split guidance across Lucky Roll + Level Worlds doc
 ## 3) Board + Stop Structure (Island Run v1)
 
 ## 3.1 Board
-- Fixed board geometry across islands: **17 tile anchors**.
+- Fixed board geometry across islands: **60 tile anchors**.
 - Different islands can change visuals/theme and event tables, while preserving board readability and movement consistency.
 
 ## 3.2 Stops
@@ -159,7 +159,7 @@ Trigger when account is new/onboarding incomplete.
 1. Finalize this spec + lock economy constants.
 2. First-run gate + celebration + starter grants + intro sequence.
 3. Make Island Run the canonical play loop surface.
-4. Implement 17-tile loop progression with stop gating fully integrated.
+4. Implement 60-tile loop progression with stop gating fully integrated.
 5. Implement dynamic stop objective pools.
 6. Implement shooter mini-game replacement and hook to island triggers.
 7. Add telemetry + balancing pass.
@@ -214,7 +214,7 @@ Trigger when account is new/onboarding incomplete.
 - Add acceptance checks so each island includes at least one real-life behavior stop.
 - Use deterministic stop generation seeded by island number so layouts are reproducible for QA and balancing.
 - Add stop progression states (`active/completed/locked`) and gate boss availability until non-boss stops are completed.
-- Visualize stops as outer-orbit markers around the 17-tile lap (include Shop marker) while keeping tile-based triggers on the loop.
+- Visualize stops as outer-orbit markers around the 60-tile lap (include Shop marker) while keeping tile-based triggers on the loop.
 - Use canonical board-relative anchor coordinates for orbit stops so placement remains stable across scenes/screen sizes.
 - Replace placeholder stop chips with scene-aware icon markers and collision-safe label offsets/responsive hiding rules.
 

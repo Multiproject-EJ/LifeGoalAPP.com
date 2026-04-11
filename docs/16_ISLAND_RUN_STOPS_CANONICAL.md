@@ -18,8 +18,8 @@
 
 | Term | Definition |
 |---|---|
-| **Tile** | One of the 17 spaces on the looping dice board |
-| **Stop / Step** | One of the 5 special nodes that sit *outside* the 17-tile ring. Reached by landing on a `stop` tile. |
+| **Tile** | One of the 60 spaces on the looping dice board |
+| **Stop / Step** | One of the 5 special nodes that sit *outside* the 60-tile ring. Reached by landing on a `stop` tile. |
 
 **Do not use "stop" and "tile" interchangeably.** Tiles are on the board. Stops are the special actions outside the board.
 

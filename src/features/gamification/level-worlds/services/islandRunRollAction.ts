@@ -87,7 +87,7 @@ export interface IslandRunRollActionResult {
 export async function executeIslandRunRollAction(options: {
   session: Session;
   client: SupabaseClient | null;
-  /** Board profile to use for tile-count and stop-tile resolution. Defaults to 'legacy17'. */
+  /** Board profile to use for tile-count and stop-tile resolution. Defaults to 'spark60_preview'. */
   boardProfileId?: IslandBoardProfileId;
 }): Promise<IslandRunRollActionResult> {
   const { session, client } = options;
@@ -118,7 +118,7 @@ export async function executeIslandRunRollAction(options: {
 
   // 5. Move the token step-by-step using the canonical topology helper so that
   //    board wrap-around (lap completion) is handled correctly.
-  const boardProfile = resolveIslandBoardProfile(options.boardProfileId ?? 'legacy17');
+  const boardProfile = resolveIslandBoardProfile(options.boardProfileId ?? 'spark60_preview');
   let newTokenIndex = state.tokenIndex;
   for (let step = 0; step < total; step += 1) {
     newTokenIndex = resolveWrappedTokenIndex(newTokenIndex, 1, boardProfile.tileCount);

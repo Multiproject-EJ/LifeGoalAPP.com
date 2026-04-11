@@ -58,21 +58,19 @@ export const TOKEN_START_TILE_INDEX = 0;
 
 
 export const OUTER_STOP_ANCHORS: OrbitStopAnchor[] = [
-  { id: 'hatchery', x: 200, y: 130 },
-  { id: 'stopA', x: 500, y: 85 },
-  { id: 'stopB', x: 790, y: 160 },
-  { id: 'stopC', x: 890, y: 500 },
-  { id: 'boss', x: 540, y: 905 },
+  // Four non-boss stops at outer corners around the board ring.
+  { id: 'hatchery', x: 140, y: 140 },
+  { id: 'stopA', x: 860, y: 140 },
+  { id: 'stopB', x: 860, y: 860 },
+  { id: 'stopC', x: 140, y: 860 },
+  // Boss stop in the middle of the board, inside the ring.
+  { id: 'boss', x: 500, y: 500 },
   { id: 'shop', x: 120, y: 500 },
 ];
 
 // ─── 60-tile board layout (spark60) ──────────────────────────────────────────
 //
-// 60 tiles arranged as five curve segments connecting the five OUTER_STOP_ANCHORS:
-//   Segment 1 — tiles  0-12:  hatchery (200,130) → minigame (500, 85)   top arc
-//   Segment 2 — tiles 12-24:  minigame (500, 85) → market   (790,160)   top-right arc
-//   Segment 3 — tiles 24-36:  market   (790,160) → utility  (890,500)   right descent
-//   Segment 4 — tiles 36-59:  utility  (890,500) → boss     (540,905)   long bottom sweep
+// 60 tiles arranged around the island ring in canonical 1000×1000 board space.
 //
 // Stop tiles: 0 (hatchery), 12 (minigame), 24 (market), 36 (utility), 59 (boss).
 // All positions are in the canonical 1000×1000 coordinate space.

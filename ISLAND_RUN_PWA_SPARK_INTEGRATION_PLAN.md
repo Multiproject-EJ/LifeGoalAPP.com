@@ -133,7 +133,7 @@ Before first transplant, Spark should refine these against mocked `BoardRenderer
 
 1. **60-tile capable path system**
    - Support larger topology, spacing density, and readability at multiple zoom levels.
-   - Ensure path segmentation allows non-17-tile assumptions.
+   - Ensure path segmentation allows non-60-tile assumptions.
 
 2. **Layered scene architecture**
    - Background/midground/interactive/FX/UI overlay layering.

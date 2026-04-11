@@ -7,8 +7,8 @@ Status: Proposal (awaiting approval)
 
 - **Phase 1 (started): topology/profile activation plumbing**
   - Add runtime-selectable board profile entry (`boardProfile=spark60_preview`) in Island Run.
-  - Ensure renderer uses profile-matching anchor set (legacy17 vs spark60_preview).
-  - Keep default profile as `legacy17` during parity buildout.
+  - Ensure renderer uses profile-matching anchor set (spark60_preview vs future profiles).
+  - Keep default profile as `spark60_preview` during parity buildout.
 - **Phase 2 (next): continuous ring renderer**
   - Replace discrete tile puck visuals with continuous segmented lane for spark60.
   - **Started:** added first-pass spark60 segmented ring lane visual layer and compact marker-style tiles for spark profile.
@@ -81,7 +81,7 @@ For mobile readability:
 ### E. Backward compatibility
 
 Use profile gate:
-- keep `legacy17` profile for fallback/dev QA
+- keep `spark60_preview` profile as default and add optional fallback/dev QA profile only if needed
 - switch production default to `spark60` only after parity checks
 - support live rollback by profile flag if issues occur
 
@@ -233,7 +233,7 @@ Entry-point telemetry:
 In `docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md`, update/clarify:
 
 1. Board topology compatibility note:
-   - current production default becomes `spark60` (instead of `legacy17`)
+   - current production default remains `spark60_preview` (60 tiles)
 2. Add explicit rendering guidance:
    - tiles are contiguous segments on a continuous ring lane
    - isolated circular node rendering is legacy/fallback only

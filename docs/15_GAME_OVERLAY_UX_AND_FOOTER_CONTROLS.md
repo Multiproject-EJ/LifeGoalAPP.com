@@ -21,7 +21,7 @@ When the player taps the **Play button** (game controller icon in footer), the g
 ```
 GameBoardOverlay (full-screen, z-index top)
 ├── TopBar (island name, cycle, timer countdown)
-├── IslandRunBoardPrototype (17-tile board + token)
+├── IslandRunBoardPrototype (60-tile board + token)
 ├── StopModals (conditionally rendered on top of board)
 ├── HUD row: [Coins] [Diamonds] [Hearts] [Shields] [Shards] [Dice count]
 └── Permanent utility icons (Creature Collection + Garage) and active reward icons (Spin/Lucky Roll only when available)

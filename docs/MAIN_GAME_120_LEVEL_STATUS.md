@@ -61,7 +61,7 @@
 ## 3. Island Run (Production Prototype)
 
 > Island Run is the **current production surface** for the main game. It is a time-limited loop
-> (**48 h for normal islands, 72 h for special islands**) with a fixed 17-tile board that reuses
+> (**48 h for normal islands, 72 h for special islands**) with a fixed 60-tile board that reuses
 > board geometry across all 120 islands (art only changes).  See `docs/07_MAIN_GAME_PROGRESS.md`
 > for canonical timer and special-island rules.
 >
@@ -73,9 +73,9 @@
 #### Board + Movement
 - [x] **M1 hybrid 3D board renderer** — core ring/anchor layout, canvas path glow, dev overlay, background art (3 procedural SVG scenes), production-quality foreground depth-mask SVGs (rocks/foliage/trunks), pseudo-3D tile disc lighting, styled CSS spaceship token, tile-type visual differentiation  
   → [`src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`](../src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx), [`src/features/gamification/level-worlds/LevelWorlds.css`](../src/features/gamification/level-worlds/LevelWorlds.css), [`public/assets/islands/`](../public/assets/islands/)
-- [x] Fixed 17-tile anchor layout with `zBand` (back / mid / front), `tangentDeg`, and `scale` per anchor  
+- [x] Fixed 60-tile anchor layout with `zBand` (back / mid / front), `tangentDeg`, and `scale` per anchor  
   → [`src/features/gamification/level-worlds/services/islandBoardLayout.ts`](../src/features/gamification/level-worlds/services/islandBoardLayout.ts)
-- [x] 5 outer stop POIs (Steps 1–5) accessible from the board; the 17-tile ring is for movement and resource earning. **Stops are not tiles on the ring** — they are POIs around the island unlocked by completing prior steps. Boss is always Step 5; Step 1 gates dice. Current implementation uses ring tile indices (0, 4, 8, 12, 16) as stop trigger points — to be refactored to the canonical outer-POI model; see `docs/07_MAIN_GAME_PROGRESS.md`.
+- [x] 5 outer stop POIs (Steps 1–5) accessible from the board; the 60-tile ring is for movement and resource earning. **Stops are not tiles on the ring** — they are POIs around the island unlocked by completing prior steps. Boss is always Step 5; Step 1 gates dice. Current implementation uses ring tile indices (0, 12, 24, 36, 59) as stop trigger points — to be refactored to the canonical outer-POI model; see `docs/07_MAIN_GAME_PROGRESS.md`.
 - [x] Token movement: paired 2-dice roll (each die 1–3, total 2–6 tiles, costs 2 dice from pool) and spin move (1–5 tiles, costs 1 spin token), modulo-17 wraparound
 - [x] Per-island tile-type map (`generateTileMap`) — deterministic seeded assignment of `currency / chest / event / hazard / egg_shard / micro / encounter / stop` to non-stop tiles  
   → [`src/features/gamification/level-worlds/services/islandBoardTileMap.ts`](../src/features/gamification/level-worlds/services/islandBoardTileMap.ts)
@@ -217,7 +217,7 @@
 | `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx` | Main Island Run game loop component |
 | `src/features/gamification/level-worlds/components/WorldBoard.tsx` | Legacy campaign board (deprecated primary loop) |
 | `src/features/gamification/level-worlds/services/islandBoardLayout.ts` | Fixed 17-anchor coordinates, stop tile assignments, `zBand` / `tangentDeg` / `scale` |
-| `src/features/gamification/level-worlds/services/islandBoardTileMap.ts` | `generateTileMap` — 17-tile type assignment per island |
+| `src/features/gamification/level-worlds/services/islandBoardTileMap.ts` | `generateTileMap` — 60-tile type assignment per island |
 | `src/features/gamification/level-worlds/services/islandRunStops.ts` | `generateIslandStopPlan` — dynamic stop pool with behaviour-stop constraint |
 | `src/features/gamification/level-worlds/services/islandRunEconomy.ts` | Heart → dice conversion, `getDicePerHeartForIsland` |
 | `src/features/gamification/level-worlds/services/islandRunDailyRewards.ts` | `planDailyHeartReward` — daily heart grant schedule |

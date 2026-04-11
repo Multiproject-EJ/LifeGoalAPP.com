@@ -49,7 +49,7 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 
 - Board topology is profile/config-driven.
 - Board tile count is not fixed and must always be derived from the active board topology profile.
-- The current production default profile is `legacy17`.
+- The current production default profile is `spark60_preview` (60 tiles).
 - Future profiles (for example larger boards around ~60 tiles) are supported.
 - Board topology must be treated as variable and extensible across profiles.
 
@@ -64,8 +64,8 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 - Tile positions may be used for visual stop markers only, never for gameplay correctness.
 
 ### Board topology compatibility note
-- Current production board uses `legacy17` for stability.
-- Larger board profiles (for example `spark60_preview`) exist but are not yet active in production.
+- Current production board uses a 60-tile topology profile for stability.
+- Additional board profiles may exist for experimentation, but production gameplay is standardized on the 60-tile profile.
 - Renderer/layout remains legacy-bound at present and will be updated in later phases.
 
 ---
@@ -222,7 +222,7 @@ Additional rules:
 The following are not part of the canonical Island Run gameplay contract:
 
 - Time-based island completion gates.
-- Fixed 17-tile board requirement.
+- Fixed board-tile-count requirement.
 - Stop-as-tile modeling.
 - Hearts as core board-loop energy.
 - Multi-active timed minigame/event states.

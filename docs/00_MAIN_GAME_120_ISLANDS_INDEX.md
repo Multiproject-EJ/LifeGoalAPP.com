@@ -21,7 +21,7 @@ Build Mode: AI agent slices
 ## What this system is
 A time-limited Island Run loop (**48 h for normal islands / 72 h for special islands**; Catch-up Rule A on resume) with:
 - Fixed board coordinates reused across all islands (art swaps only)
-- 17 tile anchors on a pond loop
+- 60 tile anchors on a continuous ring loop
 - Token movement (Hearts = Dice)
 - 5 Stops per island as **outer POIs** (Step 1 gates dice; Stop 5 is Boss); stops are not tiles on the ring — see `docs/07_MAIN_GAME_PROGRESS.md` for additional legacy implementation detail
 - Hatchery + Egg lifecycle + Dormant egg carryover
@@ -75,8 +75,8 @@ It forces the agent to:
 Legend: ✅ Done | 🟡 Partial | ⛔ Blocked
 
 ## Milestones
-- [✅] M1: Hybrid 3D board foundation (ring path + 17 anchors + depth masks) renders on top of island art (M1A shipped in dev mode; M1B-COMPLETE — board renders for all logged-in users without dev flags)
-- [✅] M2: Dice movement + token animation along 17 anchors (M2-COMPLETE — token hops tile-to-tile with CSS transitions, squash/stretch on land, zBand shadow depth, roll result chip + landing feed in production HUD)
+- [✅] M1: Hybrid 3D board foundation (ring path + 60 anchors + depth masks) renders on top of island art (M1A shipped in dev mode; M1B-COMPLETE — board renders for all logged-in users without dev flags)
+- [✅] M2: Dice movement + token animation along 60 anchors (M2-COMPLETE — token hops tile-to-tile with CSS transitions, squash/stretch on land, zBand shadow depth, roll result chip + landing feed in production HUD)
 - [✅] M3: Stops (5) land-to-open modals wired (M3A stop modal stubs wired in prototype; M3-COMPLETE — all 5 stop modals open on tile landing + orbit-stop POI tap; stop state locked/active/completed reflected on orbit buttons with ✅/🔒 icons; Escape key closes modals; Dynamic stop kind-specific content blocks added)
 - [✅] M4: Island timer + expiry -> travel overlay -> advance (M4A dev simulation shipped; M4-COMPLETE — production-grade timer for all users; travel overlay triggers on expiry; island advance with correct state reset; Catch-up Rule A; island 120 → 1 wrap with cycle_index increment)
 - [✅] M5: Hatchery + egg stages + dormant carryover (M5A egg scaffold shipped in prototype; M5-COMPLETE — random tier assignment weighted (common 70%/rare 25%/mythic 5%), random hatch delay 24–72 h, no countdown shown to player, stage names (Smooth/Mostly Gold/Cracked/Ready to Open) with emoji visuals, all 5 hatchery modal states production-ready, Island 1 forced egg set onboarding, per-island egg persistence with location flag (island/dormant), dormant carryover on travel, new eggService.ts with rollEggRewards/rollEggTierWeighted/getRandomHatchDelayMs/stage helpers)
@@ -119,7 +119,7 @@ Quality direction:
 
 # Notes / Decisions Locked
 - Board tile positions are fixed across all islands (art only changes); stops are outer POIs accessible via stop trigger tiles on the ring
-- 17 tile anchors (±1 tolerated later, but v1 = 17)
+- 60 tile anchors (production board standard)
 - Board visual style: **3D-hybrid** (2D art + pseudo-3D board layer + depth/occlusion masks)
 - Movement: 1 Heart converts into dice pool; each move consumes a **2-dice pair** (each die 1–3, total move 2–6 tiles). Occasional Spin Move (1–5 tiles).
 - Stops: 1 Hatchery, 2 Minigame, 3 Utility, 4 Dynamic, 5 Boss — **Shop is NOT a stop**; shop is a persistent HUD button always accessible
