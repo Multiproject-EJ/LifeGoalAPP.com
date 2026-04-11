@@ -4,13 +4,15 @@
 > Delete this file before launch.
 
 ## Environment
-- App URL: `https://habitgame.app`
+- App URL: from env var `APP_BASE_URL`
 - Auth provider: Email + Password (Supabase Auth)
 - Role: Normal user (no admin permissions)
 
-## Temporary Account To Create
-- Email: `qa.codex.islandrun@lifegoalapp.com`
-- Password: `LGA!IslandRunQA#2026`
+## Credentials Source
+Use environment variables in the Codex runtime (do not hardcode credentials in this repo):
+
+- `QA_EMAIL`
+- `QA_PASSWORD`
 
 ## Notes
 - Keep this account scoped to normal app access only.
