@@ -14,7 +14,7 @@
 
 ---
 
-## 1. Canonical Currency List (4 App-Wide + 1 Temporary)
+## 1. Canonical Currency List (Core App-Wide + 1 Temporary)
 
 ### 1a. App-Wide Persistent Currencies
 
@@ -22,10 +22,9 @@
 |---|---|---|---|---|
 | 1 | **Coins** | 🪙 | `coins` | General currency. Primary tile and stop reward. |
 | 2 | **Diamonds** | 💎 | `diamonds` | Premium currency. 1 diamond = 1,000 coins. |
-| 3 | **Hearts** | ❤️ | `hearts` | Play energy. Never reset. Spent for dice conversion (1 heart = 20–50+ dice). |
-| 4 | **Shards** | (placeholder icon — TBD) | `shards` | New 4th currency. Earned via specific actions (see §2). Used for special unlocks/upgrades. |
+| 3 | **Shards** | (placeholder icon — TBD) | `shards` | Persistent progression currency. Earned via specific actions (see §2). Used for special unlocks/upgrades. |
 
-> Diamonds are displayed after Hearts in the HUD order: Coins → Diamonds → Hearts → Shards.
+> Island Run canonical HUD order for core loop resources is: Dice → Coins → Essence (v2) + optional progression chips.
 > Shards use a placeholder icon until the final asset is designed.
 
 ### 1b. Temporary Island / Mini-Game Currency
