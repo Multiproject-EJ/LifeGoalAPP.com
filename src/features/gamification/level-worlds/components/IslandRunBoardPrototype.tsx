@@ -8,6 +8,7 @@ import {
   OUTER_STOP_ANCHORS,
   type TileAnchor,
 } from '../services/islandBoardLayout';
+import { BoardStage, type BoardStageCameraControls } from './board';
 import {
   getIslandBoardThemeForIslandNumber,
   type IslandBoardTheme,
@@ -821,6 +822,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
   const [cameraMode, setCameraMode] = useState<IslandRunCameraMode>('board_follow');
   const [focusedStopId, setFocusedStopId] = useState<string | null>(null);
+
+  // BoardStage camera controls (set by BoardStage via onCameraReady)
+  const boardCameraRef = useRef<BoardStageCameraControls | null>(null);
 
   const [hearts, setHearts] = useState(5);
   const [dicePool, setDicePool] = useState(() => convertHeartToDicePool(1));
@@ -6010,7 +6014,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 type="button"
                 className="island-run-board__topbar-menu-item"
                 onClick={() => {
-                  setCameraMode((current) => (current === 'overview_manual' ? 'board_follow' : 'overview_manual'));
+                  if (cameraMode === 'overview_manual') {
+                    setCameraMode('board_follow');
+                    boardCameraRef.current?.goDefault();
+                  } else {
+                    setCameraMode('overview_manual');
+                    boardCameraRef.current?.goOverview();
+                  }
                   setShowTopbarMenu(false);
                 }}
               >
@@ -6022,6 +6032,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 onClick={() => {
                   setCameraMode('board_follow');
                   setFocusedStopId(null);
+                  boardCameraRef.current?.goDefault();
                   setShowTopbarMenu(false);
                 }}
               >
@@ -6050,143 +6061,36 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           </div>
         </button>
 
-        <div className="island-run-board__camera-stage" style={{ transform: cameraTransform }}>
-        {activeTheme.pathOverlayImage && (
-          <img
-            className="island-run-board__path-overlay"
-            src={activeTheme.pathOverlayImage}
-            alt=""
-            aria-hidden="true"
-          />
-        )}
-
-        <canvas ref={canvasRef} className="island-run-board__path" />
-
-        {isSpark60BoardProfile && (
-          <div
-            className="island-run-board__spark60-ring"
-            style={{
-              ['--spark-segment-count' as string]: String(activeTileAnchors.length),
-              ['--spark-ring-segments' as string]: spark60RingSegmentsGradient,
-            }}
-            aria-hidden="true"
-          />
-        )}
-
-        <div className="island-run-board__lap-label">{ACTIVE_BOARD_PROFILE.tileCount}-tile lap</div>
-
-        <div className="island-run-board__orbit-stops">
-          {orbitStopVisuals.map((stopVisual) => (
-            <button
-              key={stopVisual.id}
-              type="button"
-              className={`island-orbit-stop island-orbit-stop--${stopVisual.state} island-orbit-stop--${activeTheme.sceneClass} ${
-                stopVisual.stopId && stopVisual.stopId === activeStopId ? 'island-orbit-stop--selected' : ''
-              }`}
-              style={{ left: stopVisual.x, top: stopVisual.y }}
-              onClick={() => {
-                if (stopVisual.stopId && stopVisual.state !== 'locked') {
-                  requestActiveStopTransition(stopVisual.stopId, 'orbit_stop_click');
-                  setFocusedStopId(stopVisual.stopId);
-                  setCameraMode('stop_focus');
-                }
-              }}
-              disabled={!stopVisual.stopId || stopVisual.state === 'locked'}
-              aria-label={`${stopVisual.label} — ${stopVisual.state}`}
-            >
-              <span className="island-orbit-stop__icon" aria-hidden="true">{getOrbitStopDisplayIcon(stopVisual.state, stopVisual.icon)}</span>
-              <span
-                className={`island-orbit-stop__label ${stopVisual.hideLabel ? 'island-orbit-stop__label--hidden' : ''}`}
-                style={{ transform: `translate(calc(-50% + ${stopVisual.labelOffsetX}px), calc(-50% + ${stopVisual.labelOffsetY}px))` }}
-                title={stopVisual.label}
-              >
-                {stopVisual.label}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        <div className="island-run-board__tiles">
-          {activeTileAnchors.map((anchor, index) => {
-            const position = toScreen(anchor, boardSize.width, boardSize.height);
-            const isStop = stopMap.has(index);
-            const tileType = tileMap[index]?.tileType;
-            const isEncounter = tileType === 'encounter';
-            // M6-COMPLETE: completed encounter tiles show a distinct visual state
-            const isEncounterCompleted = isEncounter && completedEncounterIndices.has(index);
-            const tileTypeClass = !isStop && tileType ? `island-tile--${tileType}` : '';
-
-            return (
-              <div
-                key={anchor.id}
-                className={`island-tile island-tile--${anchor.zBand} ${isStop ? 'island-tile--stop' : ''} ${isEncounter ? 'island-tile--encounter' : ''} ${isEncounterCompleted ? 'island-tile--encounter-completed' : ''} ${tileTypeClass} ${
-                  index === tokenIndex ? 'island-tile--token-current' : ''
-                }`}
-                style={{
-                  left: position.x,
-                  top: position.y,
-                  // For spark60 trapezoid tiles, use the precomputed anchor rotation directly.
-                  // (Subtracting 90° makes tiles follow the path direction and appear like a curved row.)
-                  ['--tile-rotation-deg' as string]: `${isSpark60BoardProfile ? anchor.tangentDeg + 180 : 0}deg`,
-                  transform: `translate(-50%, -50%) rotate(var(--tile-rotation-deg)) scale(${anchor.scale})`,
-                }}
-              >
-                <span className="island-tile__value">
-                  {isEncounterCompleted ? '✅' : isEncounter ? '⚔️' : !isStop && tileType && TILE_TYPE_ICONS[tileType] ? TILE_TYPE_ICONS[tileType] : index + 1}
-                </span>
-                {showDebug && <small className="island-tile__anchor-id">{anchor.id}</small>}
-              </div>
-            );
-          })}
-
-          <div
-            className={`island-token ${isRolling ? 'island-token--moving' : ''} ${isTokenLanding ? 'island-token--landing' : ''} ${`island-token--zband-${activeTileAnchors[tokenIndex]?.zBand ?? 'mid'}`}`}
-            style={{
-              left: tokenPosition.x,
-              top: tokenPosition.y,
-            }}
-          >
-            <div className="island-token__ship" aria-hidden="true">
-              <div className="island-token__ship-body"/>
-              <div className="island-token__ship-fin island-token__ship-fin--left"/>
-              <div className="island-token__ship-fin island-token__ship-fin--right"/>
-              <div className="island-token__ship-thruster"/>
-              <div className="island-token__ship-window"/>
-            </div>
-          </div>
-        </div>
-
-        <img
-          className="island-run-board__depth-mask"
-          src={activeTheme.depthMaskImage}
-          alt=""
-          aria-hidden="true"
+        <BoardStage
+          anchors={activeTileAnchors}
+          theme={activeTheme}
+          backgroundSrc={islandBackgroundSrc}
+          isBackgroundAvailable={isIslandBackgroundAvailable}
+          onBackgroundError={() => setIsIslandBackgroundAvailable(false)}
+          spark60RingGradient={spark60RingSegmentsGradient}
+          isSpark60={isSpark60BoardProfile}
+          showDebug={showDebug}
+          tileMap={tileMap}
+          stopMap={stopMap}
+          completedEncounterIndices={completedEncounterIndices}
+          tokenIndex={tokenIndex}
+          orbitStopVisuals={orbitStopVisuals}
+          activeStopId={activeStopId}
+          getOrbitStopDisplayIcon={getOrbitStopDisplayIcon}
+          onStopClick={(stopId) => {
+            requestActiveStopTransition(stopId, 'orbit_stop_click');
+            setFocusedStopId(stopId);
+            setCameraMode('stop_focus');
+          }}
+          onCameraReady={(controls) => { boardCameraRef.current = controls; }}
+          onTokenHop={(tileIndex) => {
+            playIslandRunSound('token_move');
+          }}
+          onTokenLand={(tileIndex) => {
+            playIslandRunSound('stop_land');
+            triggerIslandRunHaptic('stop_land');
+          }}
         />
-
-        {showDebug && (
-          <svg className="island-debug-overlay" viewBox={`0 0 ${boardSize.width} ${boardSize.height}`}>
-            {activeTileAnchors.map((anchor, index) => {
-              const position = toScreen(anchor, boardSize.width, boardSize.height);
-              const tangentLength = 28;
-              const tangentX = position.x + Math.cos((anchor.tangentDeg * Math.PI) / 180) * tangentLength;
-              const tangentY = position.y + Math.sin((anchor.tangentDeg * Math.PI) / 180) * tangentLength;
-
-              return (
-                <g key={`${anchor.id}_debug`}>
-                  <circle cx={position.x} cy={position.y} r="17" fill="none" stroke={ZBAND_COLORS[anchor.zBand]} strokeWidth="2" />
-                  <line x1={position.x} y1={position.y} x2={tangentX} y2={tangentY} stroke={ZBAND_COLORS[anchor.zBand]} strokeWidth="2" />
-                  <text x={position.x + 10} y={position.y - 12} fill="#fff" fontSize="10">#{index}</text>
-                  {stopMap.has(index) && (
-                    <text x={position.x + 10} y={position.y + 18} fill="#9ef0ff" fontSize="10">
-                      {stopMap.get(index)}
-                    </text>
-                  )}
-                </g>
-              );
-            })}
-          </svg>
-        )}
-        </div>
       </div>
 
       <div className="island-run-prototype__footer" aria-label="Island Run footer controls">
