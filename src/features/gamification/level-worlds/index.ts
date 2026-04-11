@@ -52,11 +52,3 @@ export type {
   WorldNode as WorldNodeType,
   WorldBoard as WorldBoardType
 } from './types/levelWorlds';
-
-export { selectBoardRendererContractV1 } from './services/islandRunBoardRendererAdapterV1';
-export { boardRendererContractV1Fixtures } from './services/islandRunBoardRendererContractV1.fixtures';
-export type {
-  BoardRendererContractV1,
-  BoardRendererContractV1Callbacks,
-  BoardRendererContractV1Intent,
-} from './services/islandRunBoardRendererContractV1';
