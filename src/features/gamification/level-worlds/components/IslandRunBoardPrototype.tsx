@@ -33,6 +33,7 @@ import {
   persistIslandRunRuntimeStatePatch,
   readIslandRunRuntimeState,
   resolveCollectibleForClaim,
+  type IslandRunRuntimeState,
 } from '../services/islandRunRuntimeState';
 import { ShardClaimModal } from './ShardClaimModal';
 import { IslandRunReflectionComposer } from './IslandRunReflectionComposer';
@@ -172,6 +173,53 @@ function resolveRequestedBoardProfileId(): IslandBoardProfileId {
 }
 const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile(resolveRequestedBoardProfileId());
 const PERFECT_COMPANION_MODEL_VERSION = 'phase3_v1';
+// Temporary diagnostics for Stop 1↔2 flicker + roll lock on Island 120 startup.
+const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_ISLAND = 120;
+const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_WINDOW_MS = 10_000;
+
+function isIsland120StartupDiagnosticTarget(islandNumber: number) {
+  return islandNumber === ISLAND_RUN_120_STARTUP_DIAGNOSTIC_ISLAND;
+}
+
+function compactStopStatesForDiagnostics(
+  stopStatesByIndex: IslandRunRuntimeState['stopStatesByIndex'],
+) {
+  return stopStatesByIndex.map((entry, index) => ({
+    i: index,
+    o: entry.objectiveComplete ? 1 : 0,
+    b: entry.buildComplete ? 1 : 0,
+    ...(typeof entry.completedAtMs === 'number' ? { c: 1 } : {}),
+  }));
+}
+
+function collectHydrationChangedKeysForDiagnostics(options: {
+  before: IslandRunRuntimeState;
+  after: IslandRunRuntimeState;
+  islandNumber: number;
+}) {
+  const { before, after, islandNumber } = options;
+  const islandKey = String(islandNumber);
+  const beforeCurrentIslandStops = before.completedStopsByIsland?.[islandKey] ?? [];
+  const afterCurrentIslandStops = after.completedStopsByIsland?.[islandKey] ?? [];
+  const checks: Array<{ key: string; before: unknown; after: unknown }> = [
+    { key: 'runtimeVersion', before: before.runtimeVersion, after: after.runtimeVersion },
+    { key: 'currentIslandNumber', before: before.currentIslandNumber, after: after.currentIslandNumber },
+    { key: 'activeStopIndex', before: before.activeStopIndex, after: after.activeStopIndex },
+    {
+      key: 'stopStatesByIndex',
+      before: compactStopStatesForDiagnostics(before.stopStatesByIndex),
+      after: compactStopStatesForDiagnostics(after.stopStatesByIndex),
+    },
+    { key: 'completedStopsCurrentIsland', before: beforeCurrentIslandStops, after: afterCurrentIslandStops },
+    { key: 'perIslandEggCurrentIsland', before: before.perIslandEggs?.[islandKey] ?? null, after: after.perIslandEggs?.[islandKey] ?? null },
+    { key: 'dicePool', before: before.dicePool, after: after.dicePool },
+    { key: 'tokenIndex', before: before.tokenIndex, after: after.tokenIndex },
+    { key: 'hearts', before: before.hearts, after: after.hearts },
+  ];
+  return checks
+    .filter((entry) => JSON.stringify(entry.before) !== JSON.stringify(entry.after))
+    .map((entry) => entry.key);
+}
 
 function getOpenHatcheryOnLoadFlag(): boolean {
   return typeof window !== 'undefined'
@@ -986,6 +1034,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const companionBonusAppliedVisitKeyRef = useRef<string | null>(null);
   const isOnboardingComplete = Boolean(session.user.user_metadata?.onboarding_complete);
   const isFirstRunClaimed = runtimeState.firstRunClaimed;
+  const island120StartupDiagnosticSessionStartMsRef = useRef<number | null>(null);
+  const island120StartupSnapshotLoggedRef = useRef(false);
+  const island120PendingStopTransitionRef = useRef<{
+    source: string;
+    requestedStopId: string | null;
+  } | null>(null);
+  const island120PrevActiveStopIdRef = useRef<string | null>(null);
+  const island120ToggleHintCounterByPairRef = useRef<Record<string, number>>({});
+  const isIsland120StartupDiagnosticActive = isIsland120StartupDiagnosticTarget(
+    runtimeState.currentIslandNumber ?? islandNumber,
+  );
 
   useEffect(() => {
     runtimeStateRef.current = runtimeState;
@@ -1024,6 +1083,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         return;
       }
 
+      const changedKeys = collectHydrationChangedKeysForDiagnostics({
+        before: runtimeStateRef.current,
+        after: hydrationResult.state,
+        islandNumber: hydrationResult.state.currentIslandNumber,
+      });
       setRuntimeState(hydrationResult.state);
       logIslandRunEntryDebug('island_run_runtime_reconciled', {
         userId: session.user.id,
@@ -1032,6 +1096,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         incomingRuntimeVersion,
         currentIslandNumber: hydrationResult.state.currentIslandNumber,
       });
+      if (isIsland120StartupDiagnosticTarget(hydrationResult.state.currentIslandNumber)) {
+        logIslandRunEntryDebug('island120_hydration_reconciliation', {
+          userId: session.user.id,
+          trigger: reason,
+          source: hydrationResult.source,
+          sourceOrder: ['in_memory', hydrationResult.source],
+          previousRuntimeVersion: currentRuntimeVersion,
+          incomingRuntimeVersion,
+          changedKeys,
+          wasOverwrite: changedKeys.length > 0,
+        });
+      }
 
     } catch (error) {
       logIslandRunEntryDebug('island_run_runtime_reconcile_error', {
@@ -1043,6 +1119,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       isReconcilingRuntimeStateRef.current = false;
     }
   }, [client, hasHydratedRuntimeState, session]);
+
+  const requestActiveStopTransition = useCallback((nextStopId: string | null, source: string) => {
+    island120PendingStopTransitionRef.current = {
+      source,
+      requestedStopId: nextStopId,
+    };
+    setActiveStopId(nextStopId);
+  }, []);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) {
@@ -1222,7 +1306,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         shouldAutoOpen,
       });
       if (shouldAutoOpen) {
-        setActiveStopId('hatchery');
+        requestActiveStopTransition('hatchery', 'auto_open_hatchery');
       }
       // Clean the URL param without a reload
       const url = new URL(window.location.href);
@@ -1250,14 +1334,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         shouldAutoOpen,
       });
       if (shouldAutoOpen) {
-        setActiveStopId(openIslandStopOnLoad);
+        requestActiveStopTransition(openIslandStopOnLoad, 'auto_open_stop_query_param');
       }
       // Clean the URL param without a reload
       const url = new URL(window.location.href);
       url.searchParams.delete('openIslandStop');
       window.history.replaceState({}, '', url.toString());
     }
-  }, [hasHydratedRuntimeState, islandNumber, runtimeState.completedStopsByIsland, runtimeState.currentIslandNumber, runtimeState.perIslandEggs, session.user.id]);
+  }, [hasHydratedRuntimeState, islandNumber, requestActiveStopTransition, runtimeState.completedStopsByIsland, runtimeState.currentIslandNumber, runtimeState.perIslandEggs, session.user.id]);
 
   useEffect(() => {
     logIslandRunEntryDebug('island_run_board_mount', {
@@ -1303,12 +1387,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        setActiveStopId(null);
+        requestActiveStopTransition(null, 'escape_close');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeStopId]);
+  }, [activeStopId, requestActiveStopTransition]);
 
   useEffect(() => {
     if (!showRewardDetailsModal) return;
@@ -1549,10 +1633,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   useEffect(() => {
     let isActive = true;
+    const localSnapshotBeforeHydration = readIslandRunRuntimeState(session);
 
     setHasHydratedRuntimeState(false);
     setRuntimeHydrationSource(null);
-    setRuntimeState(readIslandRunRuntimeState(session));
+    setRuntimeState(localSnapshotBeforeHydration);
 
     void hydrateIslandRunRuntimeStateWithSource({ session, client })
       .then((hydrationResult) => {
@@ -1572,6 +1657,27 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           spinTokens: hydrationResult.state.spinTokens,
           dicePool: hydrationResult.state.dicePool,
         });
+
+        if (
+          isIsland120StartupDiagnosticTarget(localSnapshotBeforeHydration.currentIslandNumber)
+          || isIsland120StartupDiagnosticTarget(hydrationResult.state.currentIslandNumber)
+        ) {
+          const changedKeys = collectHydrationChangedKeysForDiagnostics({
+            before: localSnapshotBeforeHydration,
+            after: hydrationResult.state,
+            islandNumber: hydrationResult.state.currentIslandNumber,
+          });
+          logIslandRunEntryDebug('island120_hydration_reconciliation', {
+            userId: session.user.id,
+            trigger: 'initial_hydrate',
+            source: hydrationResult.source,
+            sourceOrder: ['local_storage', hydrationResult.source],
+            localIslandNumber: localSnapshotBeforeHydration.currentIslandNumber,
+            incomingIslandNumber: hydrationResult.state.currentIslandNumber,
+            changedKeys,
+            wasOverwrite: hydrationResult.source === 'table' && changedKeys.length > 0,
+          });
+        }
 
         setRuntimeVerificationSnapshot(window.__islandRunEntryDebugRuntimeStateSummary?.() ?? null);
 
@@ -1634,6 +1740,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       isActive = false;
     };
   }, [client, session.user.id]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState || !isIsland120StartupDiagnosticActive) return;
+    if (island120StartupDiagnosticSessionStartMsRef.current !== null) return;
+    island120StartupDiagnosticSessionStartMsRef.current = Date.now();
+    island120PrevActiveStopIdRef.current = activeStopId;
+    island120ToggleHintCounterByPairRef.current = {};
+    island120StartupSnapshotLoggedRef.current = false;
+  }, [activeStopId, hasHydratedRuntimeState, isIsland120StartupDiagnosticActive]);
 
   const isRuntimeSyncBlocked =
     hasHydratedRuntimeState &&
@@ -2690,6 +2805,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         : rollButtonMode === 'convert'
           ? 'Convert'
           : 'Need dice';
+  const rollDisabledReason = showFirstRunCelebration
+    ? 'first_run_celebration'
+    : isRolling
+      ? 'already_rolling'
+      : showTravelOverlay
+        ? 'travel_overlay'
+        : step1Complete && isEnergyDepletedForRoll
+          ? 'insufficient_dice'
+          : null;
+  const canRoll = !showFirstRunCelebration && !isRolling && !showTravelOverlay && step1Complete && dicePool >= DICE_PER_ROLL;
   const spinTokenWalletLabel = resolveIslandRunSpinTokenWalletLabel(ISLAND_RUN_CONTRACT_V2_ENABLED);
   const {
     activeTimedEvent,
@@ -2722,6 +2847,118 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const shouldPromptDicePurchase = dicePool < DICE_PER_ROLL
     && (ISLAND_RUN_CONTRACT_V2_ENABLED || hearts < 1);
   const wasDicePurchasePromptEligibleRef = useRef(false);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState || !isIsland120StartupDiagnosticActive) return;
+    if (island120StartupSnapshotLoggedRef.current) return;
+
+    island120StartupSnapshotLoggedRef.current = true;
+    const currentIslandKey = String(runtimeState.currentIslandNumber ?? islandNumber);
+    const completedStopsForIsland = runtimeState.completedStopsByIsland?.[currentIslandKey] ?? [];
+    const activeStopIndex = activeStopId
+      ? islandStopPlan.findIndex((stop) => stop.stopId === activeStopId)
+      : runtimeState.activeStopIndex;
+
+    logIslandRunEntryDebug('island120_startup_snapshot', {
+      userId: session.user.id,
+      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+      currentIslandNumber: runtimeState.currentIslandNumber ?? islandNumber,
+      activeStopId,
+      activeStopIndex: activeStopIndex >= 0 ? activeStopIndex : null,
+      stopStatesByIndex: compactStopStatesForDiagnostics(runtimeState.stopStatesByIndex),
+      completedStopsByIslandCurrentIsland: completedStopsForIsland,
+      hasActiveEgg: Boolean(activeEgg),
+      islandEggSlotUsed,
+      legacyStep1Complete,
+      resolvedStep1ProgressionValue: step1Complete,
+      roll: {
+        canRoll,
+        isRolling,
+        isBusy: isRolling || showFirstRunCelebration || showTravelOverlay,
+        buttonDisabled: Boolean(rollDisabledReason),
+        disabledReason: rollDisabledReason,
+        mode: rollButtonMode,
+        label: rollButtonLabel,
+      },
+    });
+  }, [
+    activeEgg,
+    activeStopId,
+    canRoll,
+    hasHydratedRuntimeState,
+    island120StartupSnapshotLoggedRef,
+    islandEggSlotUsed,
+    islandNumber,
+    islandStopPlan,
+    isIsland120StartupDiagnosticActive,
+    isRolling,
+    legacyStep1Complete,
+    rollButtonLabel,
+    rollButtonMode,
+    rollDisabledReason,
+    runtimeState.activeStopIndex,
+    runtimeState.completedStopsByIsland,
+    runtimeState.currentIslandNumber,
+    runtimeState.stopStatesByIndex,
+    session.user.id,
+    showFirstRunCelebration,
+    showTravelOverlay,
+    step1Complete,
+  ]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState || !isIsland120StartupDiagnosticActive) return;
+    const startMs = island120StartupDiagnosticSessionStartMsRef.current;
+    if (startMs === null) return;
+
+    const elapsedMs = Date.now() - startMs;
+    const previousActiveStopId = island120PrevActiveStopIdRef.current;
+    island120PrevActiveStopIdRef.current = activeStopId;
+
+    if (elapsedMs > ISLAND_RUN_120_STARTUP_DIAGNOSTIC_WINDOW_MS) {
+      island120PendingStopTransitionRef.current = null;
+      return;
+    }
+
+    const pendingTransition = island120PendingStopTransitionRef.current;
+    const requestedStopId = pendingTransition?.requestedStopId ?? activeStopId;
+    const previousActiveStopIndex = previousActiveStopId
+      ? islandStopPlan.findIndex((stop) => stop.stopId === previousActiveStopId)
+      : -1;
+    const requestedStopIndex = requestedStopId
+      ? islandStopPlan.findIndex((stop) => stop.stopId === requestedStopId)
+      : -1;
+    const nextActiveStopIndex = activeStopId
+      ? islandStopPlan.findIndex((stop) => stop.stopId === activeStopId)
+      : -1;
+
+    let loopHintCounter: number | undefined;
+    if (
+      previousActiveStopId
+      && activeStopId
+      && previousActiveStopId !== activeStopId
+    ) {
+      const pairKey = [previousActiveStopId, activeStopId].sort().join('<->');
+      const nextCount = (island120ToggleHintCounterByPairRef.current[pairKey] ?? 0) + 1;
+      island120ToggleHintCounterByPairRef.current[pairKey] = nextCount;
+      loopHintCounter = nextCount;
+    }
+
+    logIslandRunEntryDebug('island120_stop_transition', {
+      userId: session.user.id,
+      elapsedMs,
+      source: pendingTransition?.source ?? 'effect_or_unknown',
+      requestedStopId,
+      requestedStopIndex: requestedStopIndex >= 0 ? requestedStopIndex : null,
+      previousActiveStopId,
+      previousActiveStopIndex: previousActiveStopIndex >= 0 ? previousActiveStopIndex : null,
+      nextActiveStopId: activeStopId,
+      nextActiveStopIndex: nextActiveStopIndex >= 0 ? nextActiveStopIndex : null,
+      loopHintCounter,
+    });
+
+    island120PendingStopTransitionRef.current = null;
+  }, [activeStopId, hasHydratedRuntimeState, islandStopPlan, isIsland120StartupDiagnosticActive, session.user.id]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState || isDemoSession(session)) {
@@ -2769,7 +3006,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const openStep1Stop = () => {
     if (!step1Stop?.stopId) return;
-    setActiveStopId(step1Stop.stopId);
+    requestActiveStopTransition(step1Stop.stopId, 'step1_guard_open');
   };
 
   const handleContractV2RewardBarClaim = () => {
@@ -2835,27 +3072,83 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   };
 
   const handleRoll = async () => {
-    if (showFirstRunCelebration) return;
+    const rollDecisionFlags = {
+      canRoll,
+      showFirstRunCelebration,
+      showTravelOverlay,
+      step1Complete,
+      isRolling,
+      dicePool,
+      requiredDicePerRoll: DICE_PER_ROLL,
+      isEnergyDepletedForRoll,
+      rollButtonMode,
+      rollButtonLabel,
+      rollDisabledReason,
+    };
+    if (isIsland120StartupDiagnosticActive) {
+      logIslandRunEntryDebug('island120_roll_interaction', {
+        userId: session.user.id,
+        action: 'click_attempt',
+        clickHandlerFired: true,
+        ...rollDecisionFlags,
+      });
+    }
+
+    if (showFirstRunCelebration) {
+      if (isIsland120StartupDiagnosticActive) {
+        logIslandRunEntryDebug('island120_roll_interaction', {
+          userId: session.user.id,
+          action: 'blocked',
+          blockReason: 'first_run_celebration',
+          ...rollDecisionFlags,
+        });
+      }
+      return;
+    }
 
     // M11C: Step 1 enforcement — player must complete Stop 1 before rolling
     if (!step1Complete) {
+      if (isIsland120StartupDiagnosticActive) {
+        logIslandRunEntryDebug('island120_roll_interaction', {
+          userId: session.user.id,
+          action: 'blocked',
+          blockReason: 'step1_required',
+          ...rollDecisionFlags,
+        });
+      }
       setLandingText(`Complete Stop 1 (${step1Stop?.title ?? 'first stop'}) before rolling dice.`);
       openStep1Stop();
       return;
     }
 
     if (isRolling) {
+      if (isIsland120StartupDiagnosticActive) {
+        logIslandRunEntryDebug('island120_roll_interaction', {
+          userId: session.user.id,
+          action: 'blocked',
+          blockReason: 'already_rolling',
+          ...rollDecisionFlags,
+        });
+      }
       return;
     }
 
     if (dicePool < DICE_PER_ROLL) {
+      if (isIsland120StartupDiagnosticActive) {
+        logIslandRunEntryDebug('island120_roll_interaction', {
+          userId: session.user.id,
+          action: 'blocked',
+          blockReason: 'insufficient_dice',
+          ...rollDecisionFlags,
+        });
+      }
       setLandingText(`Need ${DICE_PER_ROLL} dice to roll.`);
       return;
     }
 
     setIsRolling(true);
     setCameraMode('board_follow');
-    setActiveStopId(null);
+    requestActiveStopTransition(null, 'roll_start_close_stop');
 
     // M10A: roll sound + haptic
     playIslandRunSound('roll');
@@ -2868,6 +3161,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
 
     if (rollResult.status !== 'ok' || rollResult.total === undefined || rollResult.dieOne === undefined || rollResult.dieTwo === undefined) {
+      if (isIsland120StartupDiagnosticActive) {
+        logIslandRunEntryDebug('island120_roll_interaction', {
+          userId: session.user.id,
+          action: 'blocked',
+          blockReason: rollResult.status === 'step1_required' ? 'step1_required_action_result' : 'roll_action_rejected',
+          rollResultStatus: rollResult.status,
+          ...rollDecisionFlags,
+        });
+      }
       setIsRolling(false);
       setLandingText(
         rollResult.status === 'step1_required'
@@ -2875,6 +3177,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           : `Need ${DICE_PER_ROLL} dice to roll.`,
       );
       return;
+    }
+    if (isIsland120StartupDiagnosticActive) {
+      logIslandRunEntryDebug('island120_roll_interaction', {
+        userId: session.user.id,
+        action: 'accepted',
+        blockReason: null,
+        rollResultStatus: rollResult.status,
+        ...rollDecisionFlags,
+      });
     }
 
     const dieOne = rollResult.dieOne;
@@ -2909,10 +3220,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
       if (state === 'locked') {
         setLandingText(`Boss stop locked: complete all 5 stops before boss.`);
-        setActiveStopId(null);
+        requestActiveStopTransition(null, 'tile_land_stop_locked');
       } else {
         setLandingText(`Landed on STOP: ${stopTitle} (#${currentIndex})`);
-        setActiveStopId(landedStop);
+        requestActiveStopTransition(landedStop, 'tile_land_stop_open');
         // M10A: stop_land sound + haptic
         playIslandRunSound('stop_land');
         triggerIslandRunHaptic('stop_land');
@@ -3033,7 +3344,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (isRolling || spinTokens < 1) return;
 
     setIsRolling(true);
-    setActiveStopId(null);
+    requestActiveStopTransition(null, 'spin_start_close_stop');
     setSpinTokens((s) => Math.max(0, s - 1));
 
     playIslandRunSound('roll');
@@ -3059,10 +3370,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
       if (state === 'locked') {
         setLandingText(`Boss stop locked: complete all 5 stops before boss.`);
-        setActiveStopId(null);
+        requestActiveStopTransition(null, 'spin_tile_land_stop_locked');
       } else {
         setLandingText(`Landed on STOP: ${stopTitle} (#${currentIndex})`);
-        setActiveStopId(landedStop);
+        requestActiveStopTransition(landedStop, 'spin_tile_land_stop_open');
         playIslandRunSound('stop_land');
         triggerIslandRunHaptic('stop_land');
         if (landedStop === 'boss') {
@@ -5736,7 +6047,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               style={{ left: stopVisual.x, top: stopVisual.y }}
               onClick={() => {
                 if (stopVisual.stopId && stopVisual.state !== 'locked') {
-                  setActiveStopId(stopVisual.stopId);
+                  requestActiveStopTransition(stopVisual.stopId, 'orbit_stop_click');
                   setFocusedStopId(stopVisual.stopId);
                   setCameraMode('stop_focus');
                 }
