@@ -17,10 +17,11 @@ import {
 
 export interface IslandRunRuntimeStateBackend {
   read(session: Session): IslandRunRuntimeState;
-  hydrate(options: { session: Session; client: SupabaseClient | null }): Promise<IslandRunRuntimeState>;
+  hydrate(options: { session: Session; client: SupabaseClient | null; forceRemote?: boolean }): Promise<IslandRunRuntimeState>;
   hydrateWithSource(options: {
     session: Session;
     client: SupabaseClient | null;
+    forceRemote?: boolean;
   }): Promise<{
     state: IslandRunRuntimeState;
     source: IslandRunRuntimeHydrationSource;
@@ -104,12 +105,12 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
     return readIslandRunGameStateRecord(session);
   },
 
-  async hydrate({ session, client }) {
-    return hydrateIslandRunGameStateRecord({ session, client });
+  async hydrate({ session, client, forceRemote }) {
+    return hydrateIslandRunGameStateRecord({ session, client, forceRemote });
   },
 
-  async hydrateWithSource({ session, client }) {
-    const result = await hydrateIslandRunGameStateRecordWithSource({ session, client });
+  async hydrateWithSource({ session, client, forceRemote }) {
+    const result = await hydrateIslandRunGameStateRecordWithSource({ session, client, forceRemote });
     return { state: result.record, source: result.source };
   },
 

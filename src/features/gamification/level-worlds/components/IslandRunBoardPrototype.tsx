@@ -1021,8 +1021,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     isReconcilingRuntimeStateRef.current = true;
     try {
       const hydrationResult = await hydrateIslandRunRuntimeStateWithSource({ session, client });
-      setRuntimeHydrationSource(hydrationResult.source);
+      if (hydrationResult.source === 'table') {
+        setRuntimeHydrationSource('table');
+      }
       if (hydrationResult.source !== 'table') {
+        logIslandRunEntryDebug('island_run_runtime_reconcile_skipped_non_table_source', {
+          userId: session.user.id,
+          reason,
+          source: hydrationResult.source,
+        });
         return;
       }
 
@@ -1731,7 +1738,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       }
 
       const hydrationResult = await withTimeout(
-        hydrateIslandRunRuntimeStateWithSource({ session, client }),
+        hydrateIslandRunRuntimeStateWithSource({ session, client, forceRemote: true }),
         12000,
         'Timed out while trying to hydrate Island Run runtime state.',
       );
@@ -6126,7 +6133,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   top: position.y,
                   // For spark60 trapezoid tiles, use the precomputed anchor rotation directly.
                   // (Subtracting 90° makes tiles follow the path direction and appear like a curved row.)
-                  ['--tile-rotation-deg' as string]: `${isSpark60BoardProfile ? anchor.tangentDeg : 0}deg`,
+                  ['--tile-rotation-deg' as string]: `${isSpark60BoardProfile ? anchor.tangentDeg + 180 : 0}deg`,
                   transform: `translate(-50%, -50%) rotate(var(--tile-rotation-deg)) scale(${anchor.scale})`,
                 }}
               >

@@ -77,17 +77,17 @@ export const OUTER_STOP_ANCHORS: OrbitStopAnchor[] = [
 
 const SPARK60_CENTER_X = 500;
 const SPARK60_CENTER_Y = 500;
-const SPARK60_RADIUS_X = 360;
-const SPARK60_RADIUS_Y = 300;
+const SPARK60_RADIUS = 338;
+const SPARK60_ROTATION_OFFSET_RAD = (-6 * Math.PI) / 180;
 
 export const TILE_ANCHORS_60: TileAnchor[] = Array.from({ length: 60 }, (_, index) => {
-  const theta = ((index / 60) * Math.PI * 2) - (Math.PI / 2);
-  const x = SPARK60_CENTER_X + Math.cos(theta) * SPARK60_RADIUS_X;
-  const y = SPARK60_CENTER_Y + Math.sin(theta) * SPARK60_RADIUS_Y;
+  const theta = ((index / 60) * Math.PI * 2) - (Math.PI / 2) + SPARK60_ROTATION_OFFSET_RAD;
+  const x = SPARK60_CENTER_X + Math.cos(theta) * SPARK60_RADIUS;
+  const y = SPARK60_CENTER_Y + Math.sin(theta) * SPARK60_RADIUS;
 
   const zBand: ZBand = y < 430 ? 'back' : y > 570 ? 'front' : 'mid';
   const tangentDeg = ((theta * 180) / Math.PI) + 90;
-  const normalizedY = (y - SPARK60_CENTER_Y) / SPARK60_RADIUS_Y;
+  const normalizedY = (y - SPARK60_CENTER_Y) / SPARK60_RADIUS;
   const scale = Number((1 + normalizedY * 0.08).toFixed(2));
 
   return {

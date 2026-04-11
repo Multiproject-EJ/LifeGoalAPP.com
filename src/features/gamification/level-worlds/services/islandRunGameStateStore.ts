@@ -1008,8 +1008,9 @@ export type IslandRunGameStateHydrationSource = IslandRunRuntimeHydrationSource;
 export async function hydrateIslandRunGameStateRecordWithSource(options: {
   session: Session;
   client: SupabaseClient | null;
+  forceRemote?: boolean;
 }): Promise<{ record: IslandRunGameStateRecord; source: IslandRunGameStateHydrationSource }> {
-  const { session, client } = options;
+  const { session, client, forceRemote = false } = options;
   const fallback = readIslandRunGameStateRecord(session);
 
   if (isDemoSession(session) || !client) {
@@ -1024,7 +1025,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
   }
 
   const remoteBackoffUntil = getRemoteBackoffUntil(session.user.id);
-  if (remoteBackoffUntil !== null) {
+  if (!forceRemote && remoteBackoffUntil !== null) {
     logIslandRunEntryDebug('runtime_state_hydrate_skipped_remote', {
       userId: session.user.id,
       reason: 'remote_backoff_active',
@@ -1033,7 +1034,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       fallbackCurrentIslandNumber: fallback.currentIslandNumber,
       fallbackBossTrialResolvedIslandNumber: fallback.bossTrialResolvedIslandNumber,
     });
-    return { record: fallback, source: 'fallback_query_error' };
+    return { record: fallback, source: 'fallback_backoff_active' };
   }
 
   logIslandRunEntryDebug('runtime_state_hydrate_query_start', {
@@ -1253,6 +1254,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 export async function hydrateIslandRunGameStateRecord(options: {
   session: Session;
   client: SupabaseClient | null;
+  forceRemote?: boolean;
 }): Promise<IslandRunGameStateRecord> {
   const result = await hydrateIslandRunGameStateRecordWithSource(options);
   return result.record;

@@ -83,20 +83,22 @@ export function readIslandRunRuntimeState(session: Session): IslandRunRuntimeSta
 export async function hydrateIslandRunRuntimeState(options: {
   session: Session;
   client: SupabaseClient | null;
+  forceRemote?: boolean;
 }): Promise<IslandRunRuntimeState> {
-  const { session, client } = options;
-  return getIslandRunRuntimeStateBackend().hydrate({ session, client });
+  const { session, client, forceRemote } = options;
+  return getIslandRunRuntimeStateBackend().hydrate({ session, client, forceRemote });
 }
 
 export async function hydrateIslandRunRuntimeStateWithSource(options: {
   session: Session;
   client: SupabaseClient | null;
+  forceRemote?: boolean;
 }): Promise<{
   state: IslandRunRuntimeState;
   source: IslandRunRuntimeHydrationSource;
 }> {
-  const { session, client } = options;
-  return getIslandRunRuntimeStateBackend().hydrateWithSource({ session, client });
+  const { session, client, forceRemote } = options;
+  return getIslandRunRuntimeStateBackend().hydrateWithSource({ session, client, forceRemote });
 }
 
 // M16E: Collectible roster for the blind-box reveal (era order, cycling by shard_tier_index)
