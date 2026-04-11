@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import {
   CANONICAL_BOARD_SIZE,
   TILE_ANCHORS,
+  TILE_ANCHORS_60,
   TOKEN_START_TILE_INDEX,
   OUTER_STOP_ANCHORS,
   type TileAnchor,
@@ -13,7 +14,7 @@ import {
 } from '../services/islandBoardThemes';
 import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
 import { generateTileMap, getIslandRarity, type IslandTileMapEntry } from '../services/islandBoardTileMap';
-import { resolveIslandBoardProfile } from '../services/islandBoardProfiles';
+import { resolveIslandBoardProfile, type IslandBoardProfileId } from '../services/islandBoardProfiles';
 import { resolveWrappedTokenIndex } from '../services/islandBoardTopology';
 import { convertHeartToDicePool, getDicePerHeartForIsland } from '../services/islandRunEconomy';
 import { generateIslandStopPlan } from '../services/islandRunStops';
@@ -155,6 +156,7 @@ import {
   resolveIslandTimerHydrationState,
   shouldAutoAdvanceIslandOnTimerExpiry,
 } from '../services/islandRunTimerProgression';
+import { createDicePackCheckoutSession } from '../../../../services/billing';
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 3;
@@ -167,7 +169,13 @@ const IS_DEV_TIMER = typeof window !== 'undefined' &&
 const ISLAND_DURATION_SEC = IS_DEV_TIMER ? 45 : 72 * 60 * 60;
 const ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE = true;
 const ISLAND_RUN_CONTRACT_V2_ENABLED = isIslandRunContractV2Enabled();
-const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile('legacy17');
+function resolveRequestedBoardProfileId(): IslandBoardProfileId {
+  if (typeof window === 'undefined') return 'legacy17';
+  const query = new URLSearchParams(window.location.search).get('boardProfile')?.trim().toLowerCase();
+  if (query === 'spark60' || query === 'spark60_preview') return 'spark60_preview';
+  return 'legacy17';
+}
+const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile(resolveRequestedBoardProfileId());
 const PERFECT_COMPANION_MODEL_VERSION = 'phase3_v1';
 
 function getOpenHatcheryOnLoadFlag(): boolean {
@@ -492,6 +500,7 @@ function getBossReward(islandNumber: number): { hearts: number; coins: number; s
 }
 
 type StopProgressState = 'pending' | 'active' | 'completed' | 'locked';
+type IslandRunCameraMode = 'board_follow' | 'stop_focus' | 'overview_manual';
 
 
 
@@ -697,6 +706,17 @@ const TILE_TYPE_ICONS: Record<string, string> = {
   micro: '✨',
 };
 
+const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
+  currency: '#f7df7a',
+  chest: '#7dd8ff',
+  event: '#d39bff',
+  hazard: '#ff8f8f',
+  egg_shard: '#9ef0ff',
+  micro: '#9dffbe',
+  encounter: '#ffa765',
+  stop: '#7afcff',
+};
+
 interface IslandRunBoardPrototypeProps {
   session: Session;
   initialPanel?: 'default' | 'sanctuary';
@@ -704,8 +724,15 @@ interface IslandRunBoardPrototypeProps {
 
 export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: IslandRunBoardPrototypeProps) {
   const { client } = useSupabaseAuth();
+  const activeTileAnchors = useMemo(
+    () => (ACTIVE_BOARD_PROFILE.id === 'spark60_preview' ? TILE_ANCHORS_60 : TILE_ANCHORS),
+    [],
+  );
+  const isSpark60BoardProfile = ACTIVE_BOARD_PROFILE.id === 'spark60_preview';
   const [deviceSessionId] = useState(() => getIslandRunDeviceSessionId(session.user.id));
   const boardRef = useRef<HTMLDivElement>(null);
+  const topbarMenuRef = useRef<HTMLDivElement>(null);
+  const topbarMenuFirstItemRef = useRef<HTMLButtonElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // M16D: track previous shard count to detect island-travel reset (snap fill bar to 0, no animation)
   const prevShardsRef = useRef<number>(0);
@@ -715,6 +742,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
   const [isDevPanelOpen, setIsDevPanelOpen] = useState(false);
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
+  const [showTopbarMenu, setShowTopbarMenu] = useState(false);
+  const [cameraMode, setCameraMode] = useState<IslandRunCameraMode>('board_follow');
+  const [focusedStopId, setFocusedStopId] = useState<string | null>(null);
 
   const [hearts, setHearts] = useState(5);
   const [dicePool, setDicePool] = useState(() => convertHeartToDicePool(1));
@@ -817,6 +847,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [audioEnabled, setAudioEnabled] = useState(true);
   // M4-COMPLETE: cycleIndex tracks full laps through 120 islands (island 120 → 1 increments this)
   const [cycleIndex, setCycleIndex] = useState<number>(0);
+  const boardProfileExposureTrackedRef = useRef(false);
 
 
   useEffect(() => {
@@ -824,8 +855,61 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [activeTheme]);
 
   useEffect(() => {
+    if (boardProfileExposureTrackedRef.current) return;
+    boardProfileExposureTrackedRef.current = true;
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'island_run_board_profile_exposed',
+        board_profile_id: ACTIVE_BOARD_PROFILE.id,
+        board_profile_tile_count: ACTIVE_BOARD_PROFILE.tileCount,
+      },
+    });
+  }, [session.user.id]);
+
+  useEffect(() => {
     setIsIslandBackgroundAvailable(true);
   }, [islandBackgroundSrc]);
+
+  useEffect(() => {
+    if (!showTopbarMenu) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!topbarMenuRef.current) {
+        return;
+      }
+      if (topbarMenuRef.current.contains(event.target as Node)) {
+        return;
+      }
+      setShowTopbarMenu(false);
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowTopbarMenu(false);
+      }
+    };
+
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [showTopbarMenu]);
+
+  useEffect(() => {
+    if (!showTopbarMenu) {
+      return;
+    }
+    const frame = window.requestAnimationFrame(() => {
+      topbarMenuFirstItemRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [showTopbarMenu]);
 
   // B1-3: tile map state — regenerated when islandNumber or dayIndex changes
   const [islandStartedAtMs, setIslandStartedAtMs] = useState<number>(() => Date.now());
@@ -847,6 +931,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // M14: persistent shop panel state
   const [showShopPanel, setShowShopPanel] = useState(false);
+  const [showMarketPanel, setShowMarketPanel] = useState(false);
+  const [showRewardDetailsModal, setShowRewardDetailsModal] = useState(false);
+  const [showOutOfDicePurchasePrompt, setShowOutOfDicePurchasePrompt] = useState(false);
+  const [isStartingDiceCheckout, setIsStartingDiceCheckout] = useState(false);
+  const [diceCheckoutError, setDiceCheckoutError] = useState<string | null>(null);
   const [showSanctuaryPanel, setShowSanctuaryPanel] = useState(false);
   const [creatureCollection, setCreatureCollection] = useState(() => fetchCreatureCollection(session.user.id));
   const [activeCompanionId, setActiveCompanionId] = useState<string | null>(() => fetchActiveCompanionId(session.user.id));
@@ -867,6 +956,32 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const [showStoryReader, setShowStoryReader] = useState(false);
   const storySeenStorageKey = `island_run_story_seen_prologue_${session.user.id}`;
+
+  useEffect(() => {
+    if (
+      showTopbarMenu &&
+      (showShopPanel ||
+        showMarketPanel ||
+        showOutOfDicePurchasePrompt ||
+        showRewardDetailsModal ||
+        showSanctuaryPanel ||
+        showStoryReader ||
+        showEncounterModal ||
+        showClaimModal)
+    ) {
+      setShowTopbarMenu(false);
+    }
+  }, [
+    showClaimModal,
+    showEncounterModal,
+    showMarketPanel,
+    showOutOfDicePurchasePrompt,
+    showRewardDetailsModal,
+    showSanctuaryPanel,
+    showShopPanel,
+    showStoryReader,
+    showTopbarMenu,
+  ]);
 
   // B3-4: utility stop state
   const [utilityInteracted, setUtilityInteracted] = useState(false);
@@ -1209,6 +1324,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeStopId]);
+
+  useEffect(() => {
+    if (!showRewardDetailsModal) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowRewardDetailsModal(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showRewardDetailsModal]);
 
   // M6-COMPLETE: Escape key closes encounter modal
   useEffect(() => {
@@ -1871,7 +1997,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
     context.clearRect(0, 0, boardSize.width, boardSize.height);
 
-    const points = TILE_ANCHORS.map((anchor) => toScreen(anchor, boardSize.width, boardSize.height));
+    const points = activeTileAnchors.map((anchor) => toScreen(anchor, boardSize.width, boardSize.height));
     if (!points.length) return;
 
     context.lineCap = 'round';
@@ -1984,6 +2110,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
     setCompletedStops((current) => (current.length === 0 ? current : []));
   }, [getStoredCompletedStopsForIsland, hasHydratedRuntimeState, islandNumber]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    const nextActiveStop = islandStopPlan.find((stop) => !completedStops.includes(stop.stopId));
+    if (!nextActiveStop) return;
+    setFocusedStopId(nextActiveStop.stopId);
+    setCameraMode('stop_focus');
+  }, [completedStops, hasHydratedRuntimeState, islandNumber, islandStopPlan]);
+
+  const focusNextAvailableStop = useCallback(() => {
+    const nextActiveStop = islandStopPlan.find((stop) => !completedStops.includes(stop.stopId));
+    if (!nextActiveStop) return;
+    setFocusedStopId(nextActiveStop.stopId);
+    setCameraMode('stop_focus');
+    setLandingText(`Focused on ${nextActiveStop.title}.`);
+  }, [completedStops, islandStopPlan]);
 
   // M11D: persist completedStops to both localStorage and Supabase runtime state
   useEffect(() => {
@@ -2390,9 +2532,36 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return stopMap;
   }, [stopMap]);
 
-  const tokenAnchor = TILE_ANCHORS[resolveWrappedTokenIndex(tokenIndex, 0, TILE_ANCHORS.length)];
+  const tokenAnchor = activeTileAnchors[resolveWrappedTokenIndex(tokenIndex, 0, activeTileAnchors.length)];
   const tokenPosition = toScreen(tokenAnchor, boardSize.width, boardSize.height);
   const activeStop = activeStopId ? islandStopPlan.find((stop) => stop.stopId === activeStopId) ?? null : null;
+  const focusAnchorByStopId = useMemo(() => {
+    const anchors = OUTER_STOP_ANCHORS.filter((anchor) => anchor.id !== 'shop');
+    const entries = islandStopPlan.map((stop, index) => [stop.stopId, anchors[index]] as const);
+    return Object.fromEntries(entries) as Record<string, (typeof OUTER_STOP_ANCHORS)[number] | undefined>;
+  }, [islandStopPlan]);
+  const focusedAnchor = focusedStopId ? focusAnchorByStopId[focusedStopId] ?? null : null;
+  const focusedAnchorScreen = focusedAnchor
+    ? toScreen({
+      id: `focus_${focusedAnchor.id}`,
+      x: focusedAnchor.x,
+      y: focusedAnchor.y,
+      zBand: 'front',
+      tangentDeg: 0,
+      scale: 1,
+    }, boardSize.width, boardSize.height)
+    : null;
+  const cameraTransform = useMemo(() => {
+    if (cameraMode === 'overview_manual') {
+      return 'translate(0px, 0px) scale(0.88)';
+    }
+    if (cameraMode === 'stop_focus' && focusedAnchorScreen) {
+      const dx = (boardSize.width / 2) - focusedAnchorScreen.x;
+      const dy = (boardSize.height / 2) - focusedAnchorScreen.y;
+      return `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) scale(1.14)`;
+    }
+    return 'translate(0px, 0px) scale(1)';
+  }, [boardSize.height, boardSize.width, cameraMode, focusedAnchorScreen]);
 
   const orbitStopVisuals = useMemo<OrbitStopVisual[]>(() => {
     const orderedAnchors = OUTER_STOP_ANCHORS.filter((anchor) => anchor.id !== 'shop');
@@ -2759,6 +2928,36 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const timedEventRemainingLabel = activeTimedEvent
     ? formatEventRemaining(timedEventRemainingMs)
     : '—';
+  const spark60RingSegmentsGradient = useMemo(() => {
+    if (!isSpark60BoardProfile || !activeTileAnchors.length) return '';
+    const segmentSize = 360 / activeTileAnchors.length;
+    const segments = Array.from({ length: activeTileAnchors.length }, (_, index) => {
+        const tileType = tileMap[index]?.tileType ?? 'micro';
+        const start = (index * segmentSize).toFixed(3);
+        const end = ((index + 1) * segmentSize).toFixed(3);
+        const color = SPARK60_TILE_COLOR[tileType] ?? '#f0dfad';
+        return `${color} ${start}deg ${end}deg`;
+      })
+      .join(', ');
+    return `conic-gradient(from -90deg, ${segments})`;
+  }, [activeTileAnchors.length, isSpark60BoardProfile, tileMap]);
+  const shouldPromptDicePurchase = dicePool < DICE_PER_ROLL
+    && (ISLAND_RUN_CONTRACT_V2_ENABLED || hearts < 1);
+  const wasDicePurchasePromptEligibleRef = useRef(false);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState || isDemoSession(session)) {
+      return;
+    }
+
+    if (shouldPromptDicePurchase && !wasDicePurchasePromptEligibleRef.current) {
+      setShowOutOfDicePurchasePrompt(true);
+      setDiceCheckoutError(null);
+      setLandingText(`You're out of dice. Open the shop or buy more rolls.`);
+    }
+
+    wasDicePurchasePromptEligibleRef.current = shouldPromptDicePurchase;
+  }, [hasHydratedRuntimeState, session, shouldPromptDicePurchase]);
 
   const activateCurrentIsland = useCallback(() => {
     const nowMs = Date.now();
@@ -2888,6 +3087,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     setIsRolling(true);
+    setCameraMode('board_follow');
     setActiveStopId(null);
     setDicePool((current) => Math.max(0, current - DICE_PER_ROLL));
 
@@ -4847,6 +5047,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const openShopPanel = () => {
     setShowShopPanel(true);
+    setShowMarketPanel(false);
+    setShowOutOfDicePurchasePrompt(false);
+    setDiceCheckoutError(null);
     setMarketPurchaseFeedback(null);
     setMarketInteracted(false);
     playIslandRunSound('shop_open');
@@ -4856,6 +5059,64 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       metadata: { stage: 'shop_open', island_number: islandNumber },
     });
   };
+
+  const openMarketPanel = () => {
+    setShowMarketPanel(true);
+    setShowShopPanel(false);
+    setShowOutOfDicePurchasePrompt(false);
+    setDiceCheckoutError(null);
+    setMarketPurchaseFeedback(null);
+    setLandingText('Market opened — time-limited offers are available.');
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: { stage: 'market_open', island_number: islandNumber },
+    });
+  };
+
+  const openRewardDetailsModal = () => {
+    setShowRewardDetailsModal(true);
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'island_run_reward_bar_details_opened',
+        island_number: islandNumber,
+        reward_progress: Math.floor(rewardBarProgress),
+        reward_threshold: Math.floor(rewardBarThreshold),
+        event_type: activeTimedEvent?.eventType ?? null,
+      },
+    });
+  };
+
+  const handleStartDiceCheckout = useCallback(async (entryPoint: 'shop_panel' | 'market_panel' | 'out_of_dice_prompt') => {
+    if (isDemoSession(session)) {
+      setDiceCheckoutError('Checkout is unavailable in demo mode.');
+      return;
+    }
+
+    setIsStartingDiceCheckout(true);
+    setDiceCheckoutError(null);
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: { stage: 'dice_checkout_start', entry_point: entryPoint, island_number: islandNumber },
+    });
+
+    const result = await createDicePackCheckoutSession();
+    if (!result.url) {
+      setDiceCheckoutError(result.error?.message ?? 'Unable to start checkout right now.');
+      setIsStartingDiceCheckout(false);
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'economy_earn',
+        metadata: { stage: 'dice_checkout_error', entry_point: entryPoint, island_number: islandNumber },
+      });
+      return;
+    }
+
+    window.location.assign(result.url);
+  }, [islandNumber, session]);
 
   const openSanctuaryPanel = useCallback(() => {
     setShowSanctuaryPanel(true);
@@ -5568,6 +5829,30 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           </div>
         </div>
         <div className="island-run-prototype__controls" aria-label={`Board controls (scene: ${activeTheme.label})`}>
+          <button
+            type="button"
+            className="island-run-prototype__debug-btn"
+            onClick={focusNextAvailableStop}
+          >
+            Focus next stop
+          </button>
+          <button
+            type="button"
+            className="island-run-prototype__debug-btn"
+            onClick={() => setCameraMode((current) => (current === 'overview_manual' ? 'board_follow' : 'overview_manual'))}
+          >
+            {cameraMode === 'overview_manual' ? 'Exit overview' : 'Overview'}
+          </button>
+          <button
+            type="button"
+            className="island-run-prototype__debug-btn"
+            onClick={() => {
+              setCameraMode('board_follow');
+              setFocusedStopId(null);
+            }}
+          >
+            Reset view
+          </button>
           <button type="button" className="island-run-prototype__debug-btn" onClick={() => setShowDebug((value) => !value)}>
             {showDebug ? 'Hide' : 'Show'} anchor/depth debug
           </button>
@@ -5674,7 +5959,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         </header>
       ) : null}
 
-      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${!isIslandBackgroundAvailable ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''}`}>
+      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${!isIslandBackgroundAvailable ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark60BoardProfile ? 'island-run-board--spark60' : ''}`}>
         {isIslandBackgroundAvailable && (
           <img
             key={islandBackgroundSrc}
@@ -5686,6 +5971,85 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           />
         )}
 
+        <div ref={topbarMenuRef}>
+          <div className="island-run-board__topbar" aria-label="Island Run top bar">
+            <button type="button" className="island-run-board__topbar-avatar" aria-label="Player profile">
+              {(session.user.user_metadata?.full_name?.[0] ?? session.user.email?.[0] ?? 'P').toUpperCase()}
+            </button>
+            <div className="island-run-board__topbar-wallet" aria-label="Essence wallet">
+              🟣 <strong>{runtimeState.essence}</strong>
+            </div>
+            <button
+              type="button"
+              className="island-run-board__topbar-menu"
+              aria-label="Toggle HUD details"
+              aria-expanded={showTopbarMenu}
+              aria-haspopup="menu"
+              aria-controls="island-run-topbar-menu"
+              onClick={() => setShowTopbarMenu((current) => !current)}
+            >
+              ☰
+            </button>
+          </div>
+
+          {showTopbarMenu && (
+            <div id="island-run-topbar-menu" className="island-run-board__topbar-menu-panel" role="menu" aria-label="Board menu">
+              <button
+                ref={topbarMenuFirstItemRef}
+                type="button"
+                className="island-run-board__topbar-menu-item"
+                onClick={() => {
+                  setIsHudCollapsed((current) => !current);
+                  setShowTopbarMenu(false);
+                }}
+              >
+                {isHudCollapsed ? 'Expand HUD' : 'Collapse HUD'}
+              </button>
+              <button
+                type="button"
+                className="island-run-board__topbar-menu-item"
+                onClick={() => {
+                  setCameraMode((current) => (current === 'overview_manual' ? 'board_follow' : 'overview_manual'));
+                  setShowTopbarMenu(false);
+                }}
+              >
+                {cameraMode === 'overview_manual' ? 'Exit overview' : 'Overview mode'}
+              </button>
+              <button
+                type="button"
+                className="island-run-board__topbar-menu-item"
+                onClick={() => {
+                  setCameraMode('board_follow');
+                  setFocusedStopId(null);
+                  setShowTopbarMenu(false);
+                }}
+              >
+                Reset camera
+              </button>
+            </div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          className="island-run-board__rewardbar"
+          aria-label="Reward progress"
+          onClick={openRewardDetailsModal}
+        >
+          <div className="island-run-board__rewardbar-header">
+            <span>{activeTimedEvent?.eventType ? `Event: ${activeTimedEvent.eventType}` : 'Reward Bar'}</span>
+            <span>{Math.floor(rewardBarProgress)}/{Math.floor(rewardBarThreshold)}</span>
+          </div>
+          <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
+            <span style={{ width: `${rewardBarPercent}%` }} />
+          </div>
+          <div className="island-run-board__rewardbar-footer">
+            <span>{timedEventRemainingLabel}</span>
+            <span>{canClaimRewardBar ? 'Claim ready' : 'Fill feeding tiles'}</span>
+          </div>
+        </button>
+
+        <div className="island-run-board__camera-stage" style={{ transform: cameraTransform }}>
         {activeTheme.pathOverlayImage && (
           <img
             className="island-run-board__path-overlay"
@@ -5696,6 +6060,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         )}
 
         <canvas ref={canvasRef} className="island-run-board__path" />
+
+        {isSpark60BoardProfile && (
+          <div
+            className="island-run-board__spark60-ring"
+            style={{
+              ['--spark-segment-count' as string]: String(activeTileAnchors.length),
+              ['--spark-ring-segments' as string]: spark60RingSegmentsGradient,
+            }}
+            aria-hidden="true"
+          />
+        )}
 
         <div className="island-run-board__lap-label">{ACTIVE_BOARD_PROFILE.tileCount}-tile lap</div>
 
@@ -5709,7 +6084,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               }`}
               style={{ left: stopVisual.x, top: stopVisual.y }}
               onClick={() => {
-                if (stopVisual.stopId && stopVisual.state !== 'locked') setActiveStopId(stopVisual.stopId);
+                if (stopVisual.stopId && stopVisual.state !== 'locked') {
+                  setActiveStopId(stopVisual.stopId);
+                  setFocusedStopId(stopVisual.stopId);
+                  setCameraMode('stop_focus');
+                }
               }}
               disabled={!stopVisual.stopId || stopVisual.state === 'locked'}
               aria-label={`${stopVisual.label} — ${stopVisual.state}`}
@@ -5727,7 +6106,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         </div>
 
         <div className="island-run-board__tiles">
-          {TILE_ANCHORS.map((anchor, index) => {
+          {activeTileAnchors.map((anchor, index) => {
             const position = toScreen(anchor, boardSize.width, boardSize.height);
             const isStop = stopMap.has(index);
             const tileType = tileMap[index]?.tileType;
@@ -5757,7 +6136,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           })}
 
           <div
-            className={`island-token ${isRolling ? 'island-token--moving' : ''} ${isTokenLanding ? 'island-token--landing' : ''} ${`island-token--zband-${TILE_ANCHORS[tokenIndex]?.zBand ?? 'mid'}`}`}
+            className={`island-token ${isRolling ? 'island-token--moving' : ''} ${isTokenLanding ? 'island-token--landing' : ''} ${`island-token--zband-${activeTileAnchors[tokenIndex]?.zBand ?? 'mid'}`}`}
             style={{
               left: tokenPosition.x,
               top: tokenPosition.y,
@@ -5782,7 +6161,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
         {showDebug && (
           <svg className="island-debug-overlay" viewBox={`0 0 ${boardSize.width} ${boardSize.height}`}>
-            {TILE_ANCHORS.map((anchor, index) => {
+            {activeTileAnchors.map((anchor, index) => {
               const position = toScreen(anchor, boardSize.width, boardSize.height);
               const tangentLength = 28;
               const tangentX = position.x + Math.cos((anchor.tangentDeg * Math.PI) / 180) * tangentLength;
@@ -5803,6 +6182,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             })}
           </svg>
         )}
+        </div>
       </div>
 
       <div className="island-run-prototype__footer" aria-label="Island Run footer controls">
@@ -5823,11 +6203,39 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           <div className="island-run-prototype__footer-actions">
             <button
               type="button"
+              className="island-run-prototype__footer-nav-btn"
+              onClick={openSanctuaryPanel}
+            >
+              🐾 Creatures
+            </button>
+            <button
+              type="button"
+              className="island-run-prototype__footer-nav-btn"
+              onClick={() => setShowStoryReader(true)}
+            >
+              📖 Story
+            </button>
+            <button
+              type="button"
               className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'step1' || rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
               onClick={isIslandTimerPendingStart ? activateCurrentIsland : (step1Complete ? () => void handleRoll() : openStep1Stop)}
               disabled={showFirstRunCelebration || isRolling || (step1Complete && isEnergyDepletedForRoll && !isIslandTimerPendingStart) || showTravelOverlay}
             >
               {isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}
+            </button>
+            <button
+              type="button"
+              className="island-run-prototype__footer-nav-btn"
+              onClick={openShopPanel}
+            >
+              🛍️ Shop
+            </button>
+            <button
+              type="button"
+              className="island-run-prototype__footer-nav-btn"
+              onClick={openMarketPanel}
+            >
+              🏪 Market
             </button>
             {canUseSpinForMovement(ISLAND_RUN_CONTRACT_V2_ENABLED) && spinTokens > 0 && (
               <button
@@ -6592,6 +7000,71 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         </div>
       )}
 
+      {showOutOfDicePurchasePrompt && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Out of dice">
+            <h3 className="island-stop-modal__title">🎲 Out of Dice</h3>
+            <p className="island-stop-modal__copy">
+              You do not have enough dice to roll right now.
+              {ISLAND_RUN_CONTRACT_V2_ENABLED ? ' Buy more rolls or keep exploring stops.' : ' Buy more rolls or top up via hearts/boosters.'}
+            </p>
+            {diceCheckoutError ? <p className="island-run-prototype__error">{diceCheckoutError}</p> : null}
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                onClick={() => void handleStartDiceCheckout('out_of_dice_prompt')}
+                disabled={isStartingDiceCheckout}
+              >
+                {isStartingDiceCheckout ? 'Starting checkout…' : 'Buy 500 Rolls (Stripe)'}
+              </button>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action"
+                onClick={openShopPanel}
+              >
+                Open Shop
+              </button>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => setShowOutOfDicePurchasePrompt(false)}
+              >
+                Not now
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {showRewardDetailsModal && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Reward details">
+            <h3 className="island-stop-modal__title">🎁 Reward Bar Details</h3>
+            <p className="island-stop-modal__copy">
+              Progress: <strong>{Math.floor(rewardBarProgress)}</strong> / <strong>{Math.floor(rewardBarThreshold)}</strong>
+            </p>
+            <p className="island-stop-modal__copy">
+              {activeTimedEvent?.eventType
+                ? `Active event: ${activeTimedEvent.eventType}.`
+                : 'No active timed event right now.'}
+            </p>
+            <p className="island-stop-modal__copy">
+              {canClaimRewardBar ? 'Reward is ready to claim.' : 'Keep landing on feeding tiles to fill the bar.'}
+            </p>
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => setShowRewardDetailsModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
       {showIslandClearCelebration && islandClearStats && (
         <div className="island-clear-celebration" role="status" aria-live="polite">
           <div className="island-clear-celebration__card island-clear-celebration__card--boss">
@@ -6609,6 +7082,43 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       )}
 
       {/* M14: persistent shop panel */}
+      {showMarketPanel && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section className="island-run-shop-panel island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Market">
+            <h3 className="island-stop-modal__title">🏪 Market</h3>
+            <p className="island-stop-modal__copy">Time-limited offers and flash bundles.</p>
+            <div className="island-hatchery-card">
+              <p><strong>Flash Offer — Dice Top-up</strong></p>
+              <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>Limited-time checkout entry for 500 rolls.</p>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                onClick={() => void handleStartDiceCheckout('market_panel')}
+                disabled={isStartingDiceCheckout}
+              >
+                {isStartingDiceCheckout ? 'Starting checkout…' : 'Buy 500 Rolls (Stripe)'}
+              </button>
+            </div>
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action"
+                onClick={openShopPanel}
+              >
+                Open Shop
+              </button>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => setShowMarketPanel(false)}
+              >
+                ✕ Close
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
       {showShopPanel && (
         <div className="island-stop-modal-backdrop" role="presentation">
           <section className="island-run-shop-panel island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Shop">
@@ -6649,6 +7159,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   </button>
                 )}
               </div>
+            </div>
+
+            <div className="island-hatchery-card">
+              <p><strong>Dice Rolls (Stripe)</strong></p>
+              <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>Real-money top-up for 500 rolls.</p>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                onClick={() => void handleStartDiceCheckout('shop_panel')}
+                disabled={isStartingDiceCheckout}
+              >
+                {isStartingDiceCheckout ? 'Starting checkout…' : 'Buy 500 Rolls (Stripe)'}
+              </button>
             </div>
 
             <div className="island-hatchery-card">

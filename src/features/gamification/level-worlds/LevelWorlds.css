@@ -751,12 +751,24 @@
 }
 
 .island-run-prototype__roll-btn--footer {
-  flex: 1 1 12rem;
+  flex: 1 1 10rem;
   min-width: 0;
   min-height: 2.9rem;
   padding-inline: 1rem;
   font-size: 0.96rem;
   font-weight: 800;
+}
+
+.island-run-prototype__footer-nav-btn {
+  flex: 0 1 8.2rem;
+  min-width: 0;
+  min-height: 2.65rem;
+  border-radius: 12px;
+  border: 1px solid rgba(167, 214, 235, 0.5);
+  background: rgba(16, 43, 69, 0.78);
+  color: #d9f5ff;
+  font-weight: 700;
+  font-size: 0.76rem;
 }
 
 .island-run-prototype__hud-grid {
@@ -1264,6 +1276,14 @@
   inset: 0;
 }
 
+.island-run-board__camera-stage {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+  transition: transform 360ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  z-index: 2;
+}
+
 .island-run-board__bg {
   position: absolute;
   inset: 0;
@@ -1290,10 +1310,144 @@
   z-index: 3;
 }
 
+.island-run-board__spark60-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(88%, 620px);
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, 0) 57%, rgba(0, 0, 0, 0.18) 59%, rgba(0, 0, 0, 0) 64%),
+    radial-gradient(circle at center, rgba(255, 255, 255, 0) 66%, rgba(255, 252, 236, 0.9) 68%, rgba(198, 174, 112, 0.92) 72%, rgba(110, 86, 38, 0.94) 76%, rgba(0, 0, 0, 0) 80%),
+    var(--spark-ring-segments, repeating-conic-gradient(
+      from -90deg,
+      rgba(250, 244, 214, 0.88) 0 calc(360deg / var(--spark-segment-count, 60) - 0.8deg),
+      rgba(82, 66, 24, 0.9) calc(360deg / var(--spark-segment-count, 60) - 0.8deg) calc(360deg / var(--spark-segment-count, 60))
+    ));
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 243, 204, 0.64),
+    inset 0 0 24px rgba(255, 221, 144, 0.25),
+    0 10px 30px rgba(0, 0, 0, 0.28);
+}
+
 .island-run-board__orbit-stops {
   position: absolute;
   inset: 0;
   z-index: 8;
+}
+
+.island-run-board__topbar {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 10px;
+  z-index: 9;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(230, 216, 172, 0.9);
+  border-radius: 14px;
+  padding: 6px 10px;
+}
+
+.island-run-board__topbar-avatar,
+.island-run-board__topbar-menu {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(179, 151, 92, 0.78);
+  background: linear-gradient(180deg, #fffaf0 0%, #f8eac5 100%);
+  color: #593d07;
+  font-weight: 800;
+}
+
+.island-run-board__topbar-wallet {
+  justify-self: center;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(205, 178, 255, 0.6);
+  border-radius: 999px;
+  padding: 0.28rem 0.72rem;
+  color: #3f2455;
+  font-weight: 800;
+}
+
+.island-run-board__rewardbar {
+  position: absolute;
+  left: 50%;
+  top: 58px;
+  transform: translateX(-50%);
+  width: min(92%, 420px);
+  z-index: 9;
+  border-radius: 12px;
+  border: 1px solid rgba(180, 236, 247, 0.86);
+  background: rgba(10, 31, 42, 0.85);
+  padding: 8px 10px;
+  color: #eaf8ff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.island-run-board__rewardbar:focus-visible {
+  outline: 2px solid rgba(120, 238, 255, 0.95);
+  outline-offset: 2px;
+}
+
+.island-run-board__rewardbar-header,
+.island-run-board__rewardbar-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.73rem;
+  gap: 8px;
+}
+
+.island-run-board__rewardbar-track {
+  margin: 6px 0;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+}
+
+.island-run-board__rewardbar-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #31d2ff 0%, #8ff0b8 45%, #e7ff72 100%);
+  transition: width 220ms ease;
+}
+
+.island-run-board__topbar-menu-panel {
+  position: absolute;
+  right: 12px;
+  top: 50px;
+  z-index: 10;
+  min-width: 170px;
+  border-radius: 12px;
+  border: 1px solid rgba(170, 226, 248, 0.7);
+  background: rgba(7, 29, 44, 0.94);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
+  padding: 6px;
+  display: grid;
+  gap: 6px;
+}
+
+.island-run-board__topbar-menu-item {
+  width: 100%;
+  text-align: left;
+  border-radius: 8px;
+  border: 1px solid rgba(153, 216, 240, 0.42);
+  background: rgba(17, 58, 82, 0.9);
+  color: #daf4ff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.48rem 0.56rem;
 }
 
 .island-run-board__tiles {
@@ -1435,6 +1589,19 @@
   color: #261605;
   font-weight: 850;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.62);
+}
+
+.island-run-board--spark60 .island-tile {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  border-width: 1.5px;
+  font-size: 0.68rem;
+  opacity: 0.88;
+}
+
+.island-run-board--spark60 .island-tile__value {
+  font-size: 0.68rem;
 }
 
 .island-tile__value {
@@ -3392,9 +3559,16 @@
   }
 
   .island-run-prototype__roll-btn--footer {
-    flex: 1 1 10rem;
+    flex: 1 1 8.5rem;
     min-width: 0;
     padding-inline: 0.82rem;
+  }
+
+  .island-run-prototype__footer-nav-btn {
+    flex: 0 1 5.8rem;
+    min-height: 2rem;
+    font-size: 0.64rem;
+    padding-inline: 0.35rem;
   }
 
   .island-run-prototype__spin-btn--footer,
