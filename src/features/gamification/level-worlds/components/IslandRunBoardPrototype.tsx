@@ -6124,7 +6124,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 style={{
                   left: position.x,
                   top: position.y,
-                  transform: `translate(-50%, -50%) scale(${anchor.scale})`,
+                  ['--tile-rotation-deg' as string]: `${isSpark60BoardProfile ? (anchor.tangentDeg - 90) : 0}deg`,
+                  transform: `translate(-50%, -50%) rotate(var(--tile-rotation-deg)) scale(${anchor.scale})`,
                 }}
               >
                 <span className="island-tile__value">
