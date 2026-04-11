@@ -28,9 +28,9 @@ conflicting description in the progress log entries below.
   (1 → 2 → … → 120 → 1 → …); the cycle index increments on each full lap.
   **The player progresses through islands in a fixed sequence and cannot skip or
   select specific islands.**
-- **Each island has a 17-tile loop board** (Monopoly GO style) arranged around a pond.
+- **Each island has a 60-tile loop board** (Monopoly GO style) arranged around a pond.
   Tiles are a mix of currency, chest, hazard, egg_shard, encounter/event, and stop tiles.
-- **Each island has exactly 5 required steps/stops** placed outside the 17-tile ring.
+- **Each island has exactly 5 required steps/stops** placed outside the 60-tile ring.
   **The Boss is always Step 5.**  Stop tiles on the board lead to these steps.
 - **Step 1 must be completed before the player can roll dice** on a new island.
   This is the onboarding/orientation gate for each island.
@@ -128,7 +128,7 @@ reality" section.
 |---|---|
 | `island_number` | Current island/level pointer (1–120) |
 | `cycle_index` | Full-lap counter (how many times the player has completed all 120 islands) |
-| `token_index` | Current tile index on the 17-tile board (0–16) |
+| `token_index` | Current tile index on the 60-tile board (0–59) |
 | `island_started_at` | ISO timestamp when the current island was entered |
 | `island_expires_at` | ISO timestamp when the island timer expires and travel is forced |
 | `hearts` | Current heart count |
@@ -240,7 +240,7 @@ toward production readiness.
 
 The main game is considered **production-ready** when all of the following are true:
 
-1. All 120 islands are reachable, each with a generated 17-tile board.
+1. All 120 islands are reachable, each with a generated 60-tile board.
 2. Step 1 is enforced as a gate before dice rolling on every new island.
 3. Steps 2–4 vary per island and include at least one wired mini-game and one
    LifeGoal app action (habit/goal/journal/check-in).
@@ -2055,7 +2055,7 @@ Slice: M7N.2 — Activate Island Run surface for `/level-worlds.html`
 Summary:
 - Replaced legacy static `/level-worlds.html` 1/7 arc map with a redirect shim into the app runtime (`openIslandRun=1`) so users land on the current Island Run implementation.
 - Added app bootstrap handling to auto-open Lucky Roll -> Level Worlds hub when `openIslandRun=1` is present.
-- Added Lucky Roll prop-based auto-open path for Level Worlds so `islandRunDev=1` links now surface the 17-tile prototype instead of legacy dots UI.
+- Added Lucky Roll prop-based auto-open path for Level Worlds so `islandRunDev=1` links now surface the 60-tile prototype instead of legacy dots UI.
 Files changed:
 - public/level-worlds.html
 - src/App.tsx
@@ -2278,9 +2278,9 @@ Next:
 - M7D replace text chips with scene-aware stop art assets and collision-safe label rules.
 
 Date: 2026-02-27
-Slice: M7B — 17-tile lap readability + outer-orbit stop markers (incl. shop)
+Slice: M7B — 60-tile lap readability + outer-orbit stop markers (incl. shop)
 Summary:
-- Improved board readability so the 17-tile lap is visually explicit in the prototype (center lap label + stronger foreground layering).
+- Improved board readability so the 60-tile lap is visually explicit in the prototype (center lap label + stronger foreground layering).
 - Added outer-orbit stop markers around the loop and included a Shop marker as a dedicated outside-of-loop destination marker.
 - Kept gameplay triggers tile-based while making orbit markers clickable shortcuts for stop modal inspection during prototype balancing.
 Files changed:
@@ -2415,7 +2415,7 @@ Next:
 - M1B token movement/actions and landing resolution scaffolding.
 
 Date: 2026-02-24
-Slice: M1B — Token movement v1 on 17 anchors
+Slice: M1B — Token movement v1 on 60 anchors
 Summary:
 - Added roll interaction to prototype board (`Roll (1 heart)`) using 1..3 dice outcomes.
 - Implemented heart consumption, modulo-17 movement, and per-hop token animation over intermediate anchors.
@@ -2435,7 +2435,7 @@ Next:
 Date: 2026-02-24
 Slice: M3A — Stop modal wiring on landing
 Summary:
-- Added stop-modal routing for stop tiles (0/4/8/12/16) using stop IDs from canonical stop mapping.
+- Added stop-modal routing for stop tiles (0/12/24/36/59) using stop IDs from canonical stop mapping.
 - Implemented five modal stubs (Hatchery, Minigame, Market, Utility, Boss) shown only when landing on stop tiles.
 - Kept non-stop tile landings modal-free while preserving roll/hop movement behavior.
 - Added modal styling and close action with lightweight dev-friendly presentation.
@@ -2565,7 +2565,7 @@ Next:
 
 #### Island mini-game ticket loop (Monopoly GO style)
 
-1. Player rolls dice on the 17-tile ring.
+1. Player rolls dice on the 60-tile ring.
 2. Landing on certain tiles awards **island mini-game tickets** (temporary, island-scoped).
 3. Completing LifeGoal actions (habits, journal entries, check-ins, goals) **also awards
    tickets** for the current island — even outside the game.
@@ -2576,7 +2576,7 @@ Next:
 
 #### Step unlocker tile
 
-- There is one special **"step unlocker tile"** on the 17-tile ring — visually larger and
+- There is one special **"step unlocker tile"** on the 60-tile ring — visually larger and
   distinct from other tiles.
 - Flow:
   1. Player arrives on island → **Step 1 is automatically active** (no landing needed).
