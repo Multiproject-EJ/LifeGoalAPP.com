@@ -6124,7 +6124,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 style={{
                   left: position.x,
                   top: position.y,
-                  ['--tile-rotation-deg' as string]: `${isSpark60BoardProfile ? (anchor.tangentDeg - 90) : 0}deg`,
+                  // For spark60 trapezoid tiles, use the precomputed anchor rotation directly.
+                  // (Subtracting 90° makes tiles follow the path direction and appear like a curved row.)
+                  ['--tile-rotation-deg' as string]: `${isSpark60BoardProfile ? anchor.tangentDeg : 0}deg`,
                   transform: `translate(-50%, -50%) rotate(var(--tile-rotation-deg)) scale(${anchor.scale})`,
                 }}
               >
