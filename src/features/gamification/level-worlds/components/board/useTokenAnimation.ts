@@ -90,7 +90,10 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
 
       let hopIndex = 0;
       let hopStartTime = 0;
-      let fromPos = toScreen(anchors[indices[0] - 1 < 0 ? anchors.length - 1 : indices[0] - 1] ?? anchors[0]);
+
+      // Get the position of the tile just before the first hop target
+      const previousTileIndex = indices[0] - 1 < 0 ? anchors.length - 1 : indices[0] - 1;
+      let fromPos = toScreen(anchors[previousTileIndex] ?? anchors[0]);
 
       function startNextHop(now: number) {
         hopStartTime = now;

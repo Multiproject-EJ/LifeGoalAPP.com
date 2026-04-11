@@ -54,10 +54,14 @@ export function BoardPathCanvas(props: BoardPathCanvasProps) {
         const midY = (prev.y + current.y) / 2;
         ctx.quadraticCurveTo(prev.x, prev.y, midX, midY);
       }
-      // Close path
+      // Close path — curve from last through midpoint and back to first
       const last = points[points.length - 1];
       const first = points[0];
-      ctx.quadraticCurveTo(last.x, last.y, (last.x + first.x) / 2, (last.y + first.y) / 2);
+      const closeMidX = (last.x + first.x) / 2;
+      const closeMidY = (last.y + first.y) / 2;
+      ctx.quadraticCurveTo(last.x, last.y, closeMidX, closeMidY);
+      ctx.quadraticCurveTo(closeMidX, closeMidY, first.x, first.y);
+      ctx.closePath();
 
       // Layer 1: Outer glow (wide, translucent)
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';

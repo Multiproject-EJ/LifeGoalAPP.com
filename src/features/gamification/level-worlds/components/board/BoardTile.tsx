@@ -91,7 +91,13 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
   // Choose icon
   let iconContent: JSX.Element | string;
   if (isEncounterCompleted) {
-    iconContent = TILE_SVG_ICONS.encounter ?? '✅';
+    // Distinct "completed" check icon for finished encounters
+    iconContent = (
+      <svg viewBox="0 0 18 18" width="14" height="14" fill="none" aria-hidden="true">
+        <circle cx="9" cy="9" r="7" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1.2"/>
+        <path d="M5.5 9.5L8 12L12.5 6.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
   } else if (isEncounter) {
     iconContent = TILE_SVG_ICONS.encounter;
   } else if (!isStop && tileType && TILE_SVG_ICONS[tileType]) {

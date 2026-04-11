@@ -187,13 +187,15 @@ export function BoardStage(props: BoardStageProps) {
     hopDurationMs: 220,
   });
 
-  // Snap token to current position when not animating
+  // Snap token to current position when not animating.
+  // We intentionally exclude tokenAnim from deps to avoid re-snapping during animation.
+  // snapTo is stable (useCallback with [toScreen]), and isMoving is checked inside.
   useEffect(() => {
     if (!tokenAnim.animState.isMoving) {
       const anchor = anchors[tokenIndex];
       if (anchor) tokenAnim.snapTo(anchor);
     }
-  }, [tokenIndex, anchors, toScreen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tokenIndex, anchors, toScreen, tokenAnim.animState.isMoving, tokenAnim.snapTo]);
 
   // Particle burst state
   const [burstPos, setBurstPos] = useState<{ x: number; y: number } | null>(null);
