@@ -6,7 +6,7 @@
  *  2. Generates dice outcomes — **random numbers originate here in the PWA,
  *     never in the renderer**.
  *  3. Moves the token via canonical topology rules (resolveWrappedTokenIndex).
- *  4. Resolves landing type: stop tile vs. regular tile.
+ *  4. Resolves landing type for board-tile movement.
  *  5. Persists the state patch via the existing PWA write path
  *     (writeIslandRunGameStateRecord — the same authority used by IslandRunBoardPrototype).
  *
@@ -28,7 +28,6 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import {
   readIslandRunGameStateRecord,
   writeIslandRunGameStateRecord,
-  deriveIslandRunContractV2StopType,
 } from './islandRunGameStateStore';
 import { resolveWrappedTokenIndex } from './islandBoardTopology';
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
@@ -63,13 +62,8 @@ export interface IslandRunRollActionResult {
   total?: number;
   /** New token position after movement (set when status is 'ok'). */
   newTokenIndex?: number;
-  /** Whether the token landed on a stop tile or a regular tile. */
-  landingKind?: 'stop' | 'tile';
-  /**
-   * Stop slot index (0–4) when landingKind is 'stop'.
-   * Maps to: 0=hatchery, 1=habit, 2=breathing, 3=wisdom, 4=boss.
-   */
-  stopIndex?: number;
+  /** Landing kind in canonical movement loop (tile traversal). */
+  landingKind?: 'tile';
 }
 
 // ── action ────────────────────────────────────────────────────────────────────
@@ -124,10 +118,9 @@ export async function executeIslandRunRollAction(options: {
     newTokenIndex = resolveWrappedTokenIndex(newTokenIndex, 1, boardProfile.tileCount);
   }
 
-  // 6. Resolve landing type: check whether the destination tile is a stop tile.
-  const stopTileIndices = boardProfile.stopTileIndices;
-  const landedStopIndex = stopTileIndices.indexOf(newTokenIndex);
-  const landingKind: 'stop' | 'tile' = landedStopIndex >= 0 ? 'stop' : 'tile';
+  // 6. Canonical contract: movement is tile-based and stops are external progression
+  //    structures. Rolling should not force stop progression from tile indices.
+  const landingKind: 'tile' = 'tile';
 
   // 7. Persist the roll state patch via the same write path used by
   //    IslandRunBoardPrototype (writeIslandRunGameStateRecord).
@@ -139,12 +132,6 @@ export async function executeIslandRunRollAction(options: {
     runtimeVersion: state.runtimeVersion + 1,
     tokenIndex: newTokenIndex,
     dicePool: state.dicePool - DICE_PER_ROLL,
-    ...(landedStopIndex >= 0
-      ? {
-        activeStopIndex: landedStopIndex,
-        activeStopType: deriveIslandRunContractV2StopType(landedStopIndex),
-      }
-      : {}),
   };
 
   await writeIslandRunGameStateRecord({ session, client, record: nextState });
@@ -156,6 +143,5 @@ export async function executeIslandRunRollAction(options: {
     total,
     newTokenIndex,
     landingKind,
-    ...(landedStopIndex >= 0 ? { stopIndex: landedStopIndex } : {}),
   };
 }

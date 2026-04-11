@@ -121,7 +121,7 @@ import {
   isStopCompleted,
   shouldAutoOpenIslandStopOnLoad,
 } from '../services/islandRunStopCompletion';
-import { isIslandRunContractV2Enabled } from '../services/islandRunFeatureFlags';
+import { executeIslandRunRollAction } from '../services/islandRunRollAction';
 import {
   awardIslandRunContractV2Essence,
   canIslandRunContractV2CompleteStop,
@@ -168,7 +168,9 @@ const IS_DEV_TIMER = typeof window !== 'undefined' &&
   new URLSearchParams(window.location.search).get('devTimer') === '1';
 const ISLAND_DURATION_SEC = IS_DEV_TIMER ? 45 : 72 * 60 * 60;
 const ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE = true;
-const ISLAND_RUN_CONTRACT_V2_ENABLED = isIslandRunContractV2Enabled();
+// Canonical contract is now enforced as source-of-truth runtime behavior.
+// Legacy pre-contract-v2 movement/energy rules are intentionally disabled.
+const ISLAND_RUN_CONTRACT_V2_ENABLED = true;
 function resolveRequestedBoardProfileId(): IslandBoardProfileId {
   if (typeof window === 'undefined') return 'spark60_preview';
   const query = new URLSearchParams(window.location.search).get('boardProfile')?.trim().toLowerCase();
@@ -3078,34 +3080,38 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     if (dicePool < DICE_PER_ROLL) {
-      if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
-        setLandingText(`Need ${DICE_PER_ROLL} dice to roll.`);
-        return;
-      }
-
-      if (hearts < 1) {
-        return;
-      }
-
-      setHearts((current) => Math.max(0, current - 1));
-      setDicePool((current) => current + convertHeartToDicePool(islandNumber));
-      setLandingText(`Converted 1 heart into ${convertHeartToDicePool(islandNumber)} dice rolls.`);
+      setLandingText(`Need ${DICE_PER_ROLL} dice to roll.`);
       return;
     }
 
     setIsRolling(true);
     setCameraMode('board_follow');
     setActiveStopId(null);
-    setDicePool((current) => Math.max(0, current - DICE_PER_ROLL));
 
     // M10A: roll sound + haptic
     playIslandRunSound('roll');
     triggerIslandRunHaptic('roll');
 
-    const dieOne = Math.floor(Math.random() * (ROLL_MAX - ROLL_MIN + 1)) + ROLL_MIN;
-    const dieTwo = Math.floor(Math.random() * (ROLL_MAX - ROLL_MIN + 1)) + ROLL_MIN;
+    const rollResult = await executeIslandRunRollAction({
+      session,
+      client,
+      boardProfileId: ACTIVE_BOARD_PROFILE.id,
+    });
+
+    if (rollResult.status !== 'ok' || rollResult.total === undefined || rollResult.dieOne === undefined || rollResult.dieTwo === undefined) {
+      setIsRolling(false);
+      setLandingText(
+        rollResult.status === 'step1_required'
+          ? `Complete Stop 1 (${step1Stop?.title ?? 'first stop'}) before rolling dice.`
+          : `Need ${DICE_PER_ROLL} dice to roll.`,
+      );
+      return;
+    }
+
+    const dieOne = rollResult.dieOne;
+    const dieTwo = rollResult.dieTwo;
     setRollingDiceFaces([dieOne, dieTwo]);
-    const nextRoll = dieOne + dieTwo;
+    const nextRoll = rollResult.total;
     setRollValue(nextRoll);
     setLandingText(`Rolling ${dieOne} + ${dieTwo} = ${nextRoll}...`);
 
@@ -3118,7 +3124,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       await wait(240);
     }
 
-    const landedStop = gameplayStopMap.get(currentIndex);
+    const nextDicePool = Math.max(0, dicePool - DICE_PER_ROLL);
+    setDicePool(nextDicePool);
+    setRuntimeState((current) => ({
+      ...current,
+      tokenIndex: currentIndex,
+      dicePool: nextDicePool,
+    }));
+
+    const landedStop = ISLAND_RUN_CONTRACT_V2_ENABLED ? undefined : gameplayStopMap.get(currentIndex);
     if (landedStop) {
       const stopConfig = islandStopPlan.find((stop) => stop.stopId === landedStop);
       const stopTitle = stopConfig?.title ?? landedStop.toUpperCase();
@@ -5574,17 +5588,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setRuntimeState((current) => ({ ...current, storyPrologueSeen: true }));
   };
 
-  const diceThrowDisplay = (
-    <div
-      className={`island-run-prototype__dice-throw ${isRolling ? 'island-run-prototype__dice-throw--active' : ''}`}
-      aria-live="polite"
-    >
-      <span className={`island-run-prototype__dice-face ${isRolling ? 'island-run-prototype__dice-face--rolling' : ''}`}>🎲 {rollingDiceFaces[0]}</span>
-      <span className={`island-run-prototype__dice-face ${isRolling ? 'island-run-prototype__dice-face--rolling' : ''}`}>🎲 {rollingDiceFaces[1]}</span>
-      {rollValue !== null ? <span className="island-run-prototype__dice-total">= {rollValue}</span> : null}
-    </div>
-  );
-
   if (isRuntimeSyncBlocked || isOwnershipBlocked) {
     return (
       <section className="island-run-prototype">
@@ -6198,16 +6201,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       <div className="island-run-prototype__footer" aria-label="Island Run footer controls">
         <div className="island-run-prototype__footer-main">
           <div className="island-run-prototype__footer-stats" aria-label="Run resources">
-            <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">🎲 <strong>{dicePool}</strong></span>
             <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--hearts">❤️ <strong>{hearts}</strong></span>
             <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">⏱ <strong>{timerDisplay}</strong></span>
             {ISLAND_RUN_CONTRACT_V2_ENABLED && <span className="island-run-prototype__stat-chip">🟣 <strong>{runtimeState.essence}</strong></span>}
             {canUseSpinForMovement(ISLAND_RUN_CONTRACT_V2_ENABLED) && spinTokens > 0 && (
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">🌀 <strong>{spinTokens}</strong></span>
             )}
-            <div className="island-run-prototype__footer-dice" aria-label="Dice result">
-              {diceThrowDisplay}
-            </div>
+            {rollValue !== null ? (
+              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--roll" aria-label="Last roll result">
+                🎯 <strong>{rollValue}</strong>
+              </span>
+            ) : null}
           </div>
 
           <div className="island-run-prototype__footer-actions">
@@ -6231,7 +6235,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               onClick={isIslandTimerPendingStart ? activateCurrentIsland : (step1Complete ? () => void handleRoll() : openStep1Stop)}
               disabled={showFirstRunCelebration || isRolling || (step1Complete && isEnergyDepletedForRoll && !isIslandTimerPendingStart) || showTravelOverlay}
             >
-              {isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}
+              <span className="island-run-prototype__footer-roll-btn-content">
+                <span className="island-run-prototype__footer-roll-btn-dice">🎲 {dicePool}</span>
+                <span>{isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}</span>
+              </span>
             </button>
             <button
               type="button"
@@ -6268,15 +6275,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 {isDevPanelOpen ? 'Dev ▲' : 'Dev ▼'}
               </button>
             )}
-            <button
-              type="button"
-              className="island-run-prototype__dev-toggle island-run-prototype__dev-toggle--primary island-run-prototype__dev-toggle--footer"
-              aria-expanded={!isHudCollapsed}
-              aria-controls="island-run-main-hud"
-              onClick={() => setIsHudCollapsed((value) => !value)}
-            >
-              {isHudCollapsed ? 'HUD' : 'Hide HUD'}
-            </button>
           </div>
         </div>
       </div>
