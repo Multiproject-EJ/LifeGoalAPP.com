@@ -44,9 +44,9 @@ The code matches the canonical direction on variable topology support, profile-d
    - Tile map still includes `market` stop ID in stop-index mapping.
    - This does not match the canonical stop taxonomy.
 
-5. **Energy model is mixed in legacy mode (dice + heart conversion).**
+5. **Energy model historically mixed in legacy mode (dice + heart conversion).**
    - Canonical says dice is the only board energy.
-   - Legacy roll path still allows converting hearts into dice when dice is low.
+   - Hearts should be treated as legacy compatibility data only (not a core board-loop HUD/control input).
 
 ## Practical conclusion
 - If **Contract-v2 is ON** and used as primary runtime path, board behavior is substantially closer to canonical.
@@ -56,5 +56,5 @@ The code matches the canonical direction on variable topology support, profile-d
 1. Make Contract-v2 the enforced default path for Island Run board logic.
 2. Remove or hard-disable legacy landing-coupled stop progression logic.
 3. Unify stop IDs and stop labels to canonical names (or formally update canonical contract if product direction changed).
-4. Remove legacy heart→dice conversion from movement energy model.
+4. Remove legacy heart→dice conversion from movement energy model (and keep hearts non-core/hidden in board HUD).
 5. Add an explicit board compliance test matrix for both topology profiles (`spark60_preview`, plus any future profiles) and stop progression invariants.

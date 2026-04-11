@@ -19,7 +19,6 @@ import { resolveWrappedTokenIndex } from '../services/islandBoardTopology';
 import { convertHeartToDicePool, getDicePerHeartForIsland } from '../services/islandRunEconomy';
 import { generateIslandStopPlan } from '../services/islandRunStops';
 import { isIslandFullyCleared } from '../services/islandRunProgression';
-import { planDailyHeartReward } from '../services/islandRunDailyRewards';
 import { recordTelemetryEvent } from '../../../../services/telemetry';
 import {
   ISLAND_RUN_RUNTIME_HYDRATION_FAILED_STAGE,
@@ -466,7 +465,7 @@ type BondMilestoneReward = {
   label: string;
   summary: string;
   coins?: number;
-  hearts?: number;
+  dice?: number;
   spinTokens?: number;
 };
 
@@ -475,11 +474,11 @@ function getBondMilestoneReward(level: number): BondMilestoneReward | null {
     case 3:
       return { level, label: 'Level 3 Cache', summary: '+25 coins', coins: 25 };
     case 5:
-      return { level, label: 'Level 5 Care Pack', summary: '+1 heart', hearts: 1 };
+      return { level, label: 'Level 5 Care Pack', summary: '+8 dice', dice: 8 };
     case 8:
       return { level, label: 'Level 8 Momentum Pack', summary: '+1 spin token', spinTokens: 1 };
     case 10:
-      return { level, label: "Level 10 Captain's Stash", summary: '+40 coins, +1 heart', coins: 40, hearts: 1 };
+      return { level, label: "Level 10 Captain's Stash", summary: '+40 coins, +8 dice', coins: 40, dice: 8 };
     default:
       return null;
   }
@@ -492,10 +491,10 @@ interface ActiveEgg {
   isDormant?: boolean;
 }
 
-function getBossReward(islandNumber: number): { hearts: number; coins: number; spinTokens: number } {
+function getBossReward(islandNumber: number): { dice: number; coins: number; spinTokens: number } {
   const tier = Math.floor((islandNumber - 1) / 10);
   return {
-    hearts: 2 + tier,
+    dice: 10 + tier * 2,
     coins: 120 + tier * 40,
     spinTokens: tier >= 2 ? 1 : 0,
   };
@@ -521,14 +520,12 @@ type IslandRunMarketStatusCoverageReport = {
 
 type IslandRunMarketPurchaseSnapshotRow = {
   status?: 'attempt' | 'insufficient_coins' | 'success' | 'already_owned';
-  bundle?: 'dice_bundle' | 'heart_bundle';
+  bundle?: 'dice_bundle';
   costCoins?: number;
   rewardDice?: number;
-  rewardHearts?: number;
   coinsBefore?: number;
   coinsAfter?: number;
   ownedDiceBundle?: boolean;
-  ownedHeartBundle?: boolean;
   timestamp: string;
 };
 
@@ -569,7 +566,6 @@ type OrbitStopVisual = {
 
 type MysteryStopReward =
   | { type: 'coins'; amount: number; message: string }
-  | { type: 'hearts'; amount: number; message: string }
   | { type: 'dice'; amount: number; message: string }
   | { type: 'lucky_roll'; amount: number; message: string };
 
@@ -614,9 +610,7 @@ function resolveMysteryStopReward(): MysteryStopReward {
   if (randomValue < 0.60) {
     return { type: 'dice', amount: 8, message: '🎲 Mystery momentum! +8 dice.' };
   }
-  if (randomValue < 0.82) {
-    return { type: 'hearts', amount: 1, message: '❤️ Mystery recovery! +1 heart.' };
-  }
+  if (randomValue < 0.82) return { type: 'dice', amount: 6, message: '🎲 Mystery recovery! +6 dice.' };
 
   return { type: 'lucky_roll', amount: 1, message: '🎲 Lucky Roll unlocked! +1 bonus run.' };
 }
@@ -809,10 +803,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [mysteryStopReward, setMysteryStopReward] = useState<MysteryStopReward | null>(null);
   const [marketPurchaseFeedback, setMarketPurchaseFeedback] = useState<string | null>(null);
-  const [marketOwnedBundles, setMarketOwnedBundles] = useState<Record<'dice_bundle' | 'heart_bundle' | 'heart_boost_bundle', boolean>>({
+  const [marketOwnedBundles, setMarketOwnedBundles] = useState<Record<'dice_bundle', boolean>>({
     dice_bundle: false,
-    heart_bundle: false,
-    heart_boost_bundle: false,
   });
   const [marketMarkerBaselineMs, setMarketMarkerBaselineMs] = useState<number | null>(null);
   const [showFirstRunCelebration, setShowFirstRunCelebration] = useState(false);
@@ -844,7 +836,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   } | null>(null);
   const [firstRunStep, setFirstRunStep] = useState<'celebration' | 'launch'>('celebration');
   const [isPersistingFirstRunCompletion, setIsPersistingFirstRunCompletion] = useState(false);
-  const [dailyHeartsClaimed, setDailyHeartsClaimed] = useState(false);
   const [hasHydratedRuntimeState, setHasHydratedRuntimeState] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
   // M4-COMPLETE: cycleIndex tracks full laps through 120 islands (island 120 → 1 increments this)
@@ -991,9 +982,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // B3-5: island clear celebration
   const [showIslandClearCelebration, setShowIslandClearCelebration] = useState(false);
-  const [islandClearStats, setIslandClearStats] = useState<{ islandNumber: number; heartsEarned: number; coinsEarned: number; stopsCleared: number } | null>(null);
+  const [islandClearStats, setIslandClearStats] = useState<{ islandNumber: number; diceEarned: number; coinsEarned: number; stopsCleared: number } | null>(null);
 
-  const dailyRewardPlan = planDailyHeartReward(session.user.id);
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
   const [runtimeHydrationSource, setRuntimeHydrationSource] = useState<IslandRunRuntimeHydrationSource | null>(null);
   const [isActiveSessionOwner, setIsActiveSessionOwner] = useState(() => isDemoSession(session));
@@ -1001,6 +991,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [isRetryingSync, setIsRetryingSync] = useState(false);
   const [perfectCompanionRuntimeConfig, setPerfectCompanionRuntimeConfig] = useState(() => readPerfectCompanionRuntimeConfig(session.user.id));
   const runtimeStateRef = useRef(runtimeState);
+  const companionBonusAppliedVisitKeyRef = useRef<string | null>(null);
   const isOnboardingComplete = Boolean(session.user.user_metadata?.onboarding_complete);
   const isFirstRunClaimed = runtimeState.firstRunClaimed;
 
@@ -1142,8 +1133,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (runtimeOwnedBundles) {
       setMarketOwnedBundles({
         dice_bundle: Boolean(runtimeOwnedBundles.dice_bundle),
-        heart_bundle: Boolean(runtimeOwnedBundles.heart_bundle),
-        heart_boost_bundle: Boolean(runtimeOwnedBundles.heart_boost_bundle),
       });
     } else if (!ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE) {
       const localStorageKey = `island_run_shop_owned_${session.user.id}_island_${persistedIsland}`;
@@ -1154,20 +1143,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           if (parsed && typeof parsed === 'object') {
             setMarketOwnedBundles({
               dice_bundle: Boolean(parsed.dice_bundle),
-              heart_bundle: Boolean(parsed.heart_bundle),
-              heart_boost_bundle: Boolean(parsed.heart_boost_bundle),
             });
           } else {
-            setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
+            setMarketOwnedBundles({ dice_bundle: false });
           }
         } else {
-          setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
+          setMarketOwnedBundles({ dice_bundle: false });
         }
       } catch {
-        setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
+        setMarketOwnedBundles({ dice_bundle: false });
       }
     } else {
-      setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
+      setMarketOwnedBundles({ dice_bundle: false });
     }
     // M4-COMPLETE: Restore cycleIndex from runtime state
     setCycleIndex(runtimeState.cycleIndex ?? 0);
@@ -1494,11 +1481,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         bundle: event.payload?.bundle as IslandRunMarketPurchaseSnapshotRow['bundle'],
         costCoins: event.payload?.costCoins as number | undefined,
         rewardDice: event.payload?.rewardDice as number | undefined,
-        rewardHearts: event.payload?.rewardHearts as number | undefined,
         coinsBefore: event.payload?.coinsBefore as number | undefined,
         coinsAfter: event.payload?.coinsAfter as number | undefined,
         ownedDiceBundle: event.payload?.ownedDiceBundle as boolean | undefined,
-        ownedHeartBundle: event.payload?.ownedHeartBundle as boolean | undefined,
         timestamp: event.timestamp,
       }));
 
@@ -1548,8 +1533,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setMarketPurchaseFeedback(null);
       setMarketOwnedBundles({
         dice_bundle: false,
-        heart_bundle: false,
-        heart_boost_bundle: false,
       });
 
       const result = {
@@ -1943,10 +1926,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [hasHydratedRuntimeState, isFirstRunClaimed, isOnboardingComplete, islandNumber, session.user.id]);
 
   useEffect(() => {
-    setDailyHeartsClaimed(runtimeState.dailyHeartsClaimedDayKey === dailyRewardPlan.dayKey);
-  }, [dailyRewardPlan.dayKey, runtimeState.dailyHeartsClaimedDayKey]);
-
-  useEffect(() => {
     if (!hasHydratedRuntimeState) return;
     if (runtimeState.onboardingDisplayNameLoopCompleted === isDisplayNameLoopCompleted) return;
     void persistIslandRunRuntimeStatePatch({
@@ -2227,16 +2206,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (
       persisted
       && persisted.dice_bundle === marketOwnedBundles.dice_bundle
-      && persisted.heart_bundle === marketOwnedBundles.heart_bundle
-      && persisted.heart_boost_bundle === marketOwnedBundles.heart_boost_bundle
     ) {
       return;
     }
     const patch = {
       [islandKey]: {
         dice_bundle: marketOwnedBundles.dice_bundle,
-        heart_bundle: marketOwnedBundles.heart_bundle,
-        heart_boost_bundle: marketOwnedBundles.heart_boost_bundle,
+        heart_bundle: false,
+        heart_boost_bundle: false,
       },
     };
     void persistIslandRunRuntimeStatePatch({
@@ -3684,12 +3661,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   ]);
 
   useEffect(() => {
+    if (!isActiveSessionOwner) {
+      return;
+    }
     if (!hasHydratedRuntimeState || !activeCompanion || !activeCompanionBonus || typeof window === 'undefined') {
       return;
     }
 
     const visitKey = `${cycleIndex}:${islandNumber}`;
+    if (companionBonusAppliedVisitKeyRef.current === visitKey) {
+      return;
+    }
     if (runtimeState.companionBonusLastVisitKey === visitKey) {
+      companionBonusAppliedVisitKeyRef.current = visitKey;
       return;
     }
 
@@ -3704,6 +3688,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       ...current,
       companionBonusLastVisitKey: visitKey,
     }));
+    companionBonusAppliedVisitKeyRef.current = visitKey;
 
     const isPerfectCompanionActive = perfectCompanionIdSet.has(activeCompanion.creatureId);
     const perfectCompanionStartupBonus = isPerfectCompanionActive
@@ -3746,6 +3731,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     activeCompanionBonus,
     cycleIndex,
     client,
+    isActiveSessionOwner,
     hasHydratedRuntimeState,
     islandNumber,
     perfectCompanionIdSet,
@@ -3916,7 +3902,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const specialtySellBonusCoins = activeCompanionSpecialty?.effect === 'sell_bonus_coins'
       ? Math.max(0, Math.floor((bundle.coinsDelta * activeCompanionSpecialty.amount) / 100))
       : 0;
-    if (bundle.heartsDelta > 0) setHearts((current) => current + bundle.heartsDelta);
+    const diceFromLegacyHeartDelta = bundle.heartsDelta > 0 ? bundle.heartsDelta * convertHeartToDicePool(islandNumber) : 0;
+    if (diceFromLegacyHeartDelta > 0) setDicePool((current) => current + diceFromLegacyHeartDelta);
     if (bundle.coinsDelta + specialtySellBonusCoins > 0) setCoins((c) => c + bundle.coinsDelta + specialtySellBonusCoins);
     if (bundle.spinTokensDelta > 0) setSpinTokens((t) => t + bundle.spinTokensDelta);
     if (bundle.diamondsDelta > 0) setDiamonds((d) => d + bundle.diamondsDelta);
@@ -3927,7 +3914,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     playIslandRunSound('market_purchase_success');
     triggerIslandRunHaptic('market_purchase_success');
     const rewardParts: string[] = [];
-    if (bundle.heartsDelta > 0) rewardParts.push(`+${bundle.heartsDelta} ❤️`);
+    if (diceFromLegacyHeartDelta > 0) rewardParts.push(`+${diceFromLegacyHeartDelta} 🎲`);
     if (bundle.coinsDelta > 0) rewardParts.push(`+${bundle.coinsDelta} 🪙`);
     if (specialtySellBonusCoins > 0) rewardParts.push(`+${specialtySellBonusCoins} 🪙 specialty`);
     if (bundle.diamondsDelta > 0) rewardParts.push(`+${bundle.diamondsDelta} 💎`);
@@ -3944,7 +3931,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         creature_name: creature.name,
         reward_coins: bundle.coinsDelta,
         specialty_bonus_coins: specialtySellBonusCoins,
-        reward_hearts: bundle.heartsDelta,
+        reward_dice_from_legacy_hearts: diceFromLegacyHeartDelta,
         reward_spin_tokens: bundle.spinTokensDelta,
         reward_diamonds: bundle.diamondsDelta,
       },
@@ -3956,7 +3943,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       creatureName: creature.name,
       rewardCoins: bundle.coinsDelta,
       specialtyBonusCoins: specialtySellBonusCoins,
-      rewardHearts: bundle.heartsDelta,
+      rewardDiceFromLegacyHearts: diceFromLegacyHeartDelta,
       rewardSpinTokens: bundle.spinTokensDelta,
       rewardDiamonds: bundle.diamondsDelta,
     });
@@ -3995,8 +3982,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     setIsDisplayNameLoopCompleted(true);
-    setHearts((current) => current + 1);
-    setLandingText(`Onboarding display-name loop complete for ${trimmedName}. +1 heart rewarded.`);
+    const diceBonus = Math.max(1, convertHeartToDicePool(islandNumber));
+    setDicePool((current) => current + diceBonus);
+    setLandingText(`Onboarding display-name loop complete for ${trimmedName}. +${diceBonus} dice rewarded.`);
     setShowOnboardingBooster(false);
     setBoosterError(null);
   };
@@ -4143,7 +4131,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     const bossReward = getBossReward(islandNumber);
 
-    awardHearts(session.user.id, bossReward.hearts, 'shooter_blitz', 'Island Run boss trial resolved');
     awardGold(session.user.id, bossReward.coins, 'shooter_blitz', 'Island Run boss trial resolved');
 
     logGameSession(session.user.id, {
@@ -4152,7 +4139,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       timestamp: new Date().toISOString(),
       metadata: {
         stage: 'island_run_boss_trial_resolved',
-        reward_hearts: bossReward.hearts,
+        reward_dice: bossReward.dice,
         reward_coins: bossReward.coins,
         island_number: islandNumber,
       },
@@ -4164,14 +4151,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       metadata: {
         stage: 'island_run_boss_trial_resolved',
         source: 'shooter_blitz',
-        hearts: bossReward.hearts,
+        dice: bossReward.dice,
         coins: bossReward.coins,
         island_number: islandNumber,
       },
     });
 
     setBossTrialResolved(true);
-    setHearts((current) => current + bossReward.hearts);
+    setDicePool((current) => current + bossReward.dice);
     setCoins((current) => current + bossReward.coins);
     if (bossReward.spinTokens > 0) {
       setSpinTokens((t) => t + bossReward.spinTokens);
@@ -4180,7 +4167,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     playIslandRunSound('boss_trial_resolve');
     triggerIslandRunHaptic('boss_trial_resolve');
 
-    const rewardText = `Boss challenge resolved: +${bossReward.hearts} hearts, +${bossReward.coins} coins${bossReward.spinTokens > 0 ? `, ${formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: bossReward.spinTokens })}` : ''}.`;
+    const rewardText = `Boss challenge resolved: +${bossReward.dice} dice, +${bossReward.coins} coins${bossReward.spinTokens > 0 ? `, ${formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: bossReward.spinTokens })}` : ''}.`;
     setBossRewardSummary(rewardText);
     setLandingText(`${rewardText} Claim island clear to travel.`);
 
@@ -4274,15 +4261,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   };
 
   const emitMarketPurchaseMarker = (payload: {
-    bundle: 'dice_bundle' | 'heart_bundle';
+    bundle: 'dice_bundle';
     status: 'attempt' | 'insufficient_coins' | 'success' | 'already_owned';
     costCoins: number;
     rewardDice?: number;
-    rewardHearts?: number;
     coinsBefore: number;
     coinsAfter: number;
     ownedDiceBundle?: boolean;
-    ownedHeartBundle?: boolean;
   }) => {
     logIslandRunEntryDebug('island_run_market_purchase', {
       islandNumber,
@@ -4299,19 +4284,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         status: payload.status,
         cost_coins: payload.costCoins,
         reward_dice: payload.rewardDice ?? 0,
-        reward_hearts: payload.rewardHearts ?? 0,
         coins_before: payload.coinsBefore,
         coins_after: payload.coinsAfter,
         owned_dice_bundle: payload.ownedDiceBundle,
-        owned_heart_bundle: payload.ownedHeartBundle,
       },
     });
   };
 
-  const handleQaTriggerMarketAlreadyOwnedMarker = (bundle: 'dice_bundle' | 'heart_bundle' = 'dice_bundle') => {
-    const costCoins = bundle === 'dice_bundle' ? MARKET_DICE_BUNDLE_COST : MARKET_HEART_BUNDLE_COST;
-    const rewardDice = bundle === 'dice_bundle' ? MARKET_DICE_BUNDLE_REWARD : undefined;
-    const rewardHearts = bundle === 'heart_bundle' ? 1 : undefined;
+  const handleQaTriggerMarketAlreadyOwnedMarker = (bundle: 'dice_bundle' = 'dice_bundle') => {
+    const costCoins = MARKET_DICE_BUNDLE_COST;
+    const rewardDice = MARKET_DICE_BUNDLE_REWARD;
 
     setMarketOwnedBundles((current) => ({
       ...current,
@@ -4323,116 +4305,53 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       status: 'already_owned',
       costCoins,
       rewardDice,
-      rewardHearts,
       coinsBefore: coins,
       coinsAfter: coins,
-      ownedDiceBundle: bundle === 'dice_bundle' ? true : marketOwnedBundles.dice_bundle,
-      ownedHeartBundle: bundle === 'heart_bundle' ? true : marketOwnedBundles.heart_bundle,
+      ownedDiceBundle: true,
     });
 
-    const message =
-      bundle === 'dice_bundle'
-        ? 'QA marker: Dice Bundle already owned path emitted.'
-        : 'QA marker: Heart Bundle already owned path emitted.';
+    const message = 'QA marker: Dice Bundle already owned path emitted.';
 
     setMarketPurchaseFeedback(message);
     setLandingText(message);
   };
 
-  const handleMarketPrototypePurchase = (bundle: 'dice_bundle' | 'heart_bundle') => {
+  const handleMarketPrototypePurchase = (bundle: 'dice_bundle') => {
     if (marketOwnedBundles[bundle]) {
       emitMarketPurchaseMarker({
         bundle,
         status: 'already_owned',
-        costCoins: bundle === 'dice_bundle' ? MARKET_DICE_BUNDLE_COST : MARKET_HEART_BUNDLE_COST,
-        rewardDice: bundle === 'dice_bundle' ? MARKET_DICE_BUNDLE_REWARD : undefined,
-        rewardHearts: bundle === 'heart_bundle' ? 1 : undefined,
+        costCoins: MARKET_DICE_BUNDLE_COST,
+        rewardDice: MARKET_DICE_BUNDLE_REWARD,
         coinsBefore: coins,
         coinsAfter: coins,
         ownedDiceBundle: marketOwnedBundles.dice_bundle,
-        ownedHeartBundle: marketOwnedBundles.heart_bundle,
       });
 
-      const ownedMessage =
-        bundle === 'dice_bundle'
-          ? 'Dice Bundle already owned for this island run.'
-          : 'Heart Bundle already owned for this island run.';
+      const ownedMessage = 'Dice Bundle already owned for this island run.';
       setMarketPurchaseFeedback(ownedMessage);
       setLandingText(ownedMessage);
       setMarketInteracted(true);
       return;
     }
-    if (bundle === 'dice_bundle') {
-      // M10B: market_purchase_attempt sound on purchase tap
-      playIslandRunSound('market_purchase_attempt');
-      emitMarketPurchaseMarker({
-        bundle,
-        status: 'attempt',
-        costCoins: MARKET_DICE_BUNDLE_COST,
-        rewardDice: MARKET_DICE_BUNDLE_REWARD,
-        coinsBefore: coins,
-        coinsAfter: coins,
-      });
-
-      if (coins < MARKET_DICE_BUNDLE_COST) {
-        const message = `Not enough coins for Dice Bundle (${MARKET_DICE_BUNDLE_COST} required).`;
-        emitMarketPurchaseMarker({
-          bundle,
-          status: 'insufficient_coins',
-          costCoins: MARKET_DICE_BUNDLE_COST,
-          rewardDice: MARKET_DICE_BUNDLE_REWARD,
-          coinsBefore: coins,
-          coinsAfter: coins,
-        });
-        // M10B: market_insufficient_coins sound on failure
-        playIslandRunSound('market_insufficient_coins');
-        setMarketPurchaseFeedback(message);
-        setLandingText(message);
-        setMarketInteracted(true);
-        return;
-      }
-
-      setCoins((current) => current - MARKET_DICE_BUNDLE_COST);
-      setDicePool((current) => current + MARKET_DICE_BUNDLE_REWARD);
-
-      emitMarketPurchaseMarker({
-        bundle,
-        status: 'success',
-        costCoins: MARKET_DICE_BUNDLE_COST,
-        rewardDice: MARKET_DICE_BUNDLE_REWARD,
-        coinsBefore: coins,
-        coinsAfter: coins - MARKET_DICE_BUNDLE_COST,
-      });
-
-      // M10B: market_purchase_success sound + haptic
-      playIslandRunSound('market_purchase_success');
-      triggerIslandRunHaptic('market_purchase_success');
-      const message = `Purchased Dice Bundle: -${MARKET_DICE_BUNDLE_COST} coins, +${MARKET_DICE_BUNDLE_REWARD} dice.`;
-      setMarketOwnedBundles((current) => ({ ...current, dice_bundle: true }));
-      setMarketPurchaseFeedback(message);
-      setLandingText(message);
-      setMarketInteracted(true);
-      return;
-    }
-
     // M10B: market_purchase_attempt sound on purchase tap
     playIslandRunSound('market_purchase_attempt');
     emitMarketPurchaseMarker({
       bundle,
       status: 'attempt',
-      costCoins: MARKET_HEART_BUNDLE_COST,
-      rewardHearts: 1,
+      costCoins: MARKET_DICE_BUNDLE_COST,
+      rewardDice: MARKET_DICE_BUNDLE_REWARD,
       coinsBefore: coins,
       coinsAfter: coins,
     });
 
-    if (coins < MARKET_HEART_BUNDLE_COST) {
-      const message = `Not enough coins for Heart Bundle (${MARKET_HEART_BUNDLE_COST} required).`;
+    if (coins < MARKET_DICE_BUNDLE_COST) {
+      const message = `Not enough coins for Dice Bundle (${MARKET_DICE_BUNDLE_COST} required).`;
       emitMarketPurchaseMarker({
         bundle,
         status: 'insufficient_coins',
-        costCoins: MARKET_HEART_BUNDLE_COST,
-        rewardHearts: 1,
+        costCoins: MARKET_DICE_BUNDLE_COST,
+        rewardDice: MARKET_DICE_BUNDLE_REWARD,
         coinsBefore: coins,
         coinsAfter: coins,
       });
@@ -4444,48 +4363,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    setCoins((current) => current - MARKET_HEART_BUNDLE_COST);
-    setHearts((current) => current + 1);
+    setCoins((current) => current - MARKET_DICE_BUNDLE_COST);
+    setDicePool((current) => current + MARKET_DICE_BUNDLE_REWARD);
 
     emitMarketPurchaseMarker({
       bundle,
       status: 'success',
-      costCoins: MARKET_HEART_BUNDLE_COST,
-      rewardHearts: 1,
+      costCoins: MARKET_DICE_BUNDLE_COST,
+      rewardDice: MARKET_DICE_BUNDLE_REWARD,
       coinsBefore: coins,
-      coinsAfter: coins - MARKET_HEART_BUNDLE_COST,
+      coinsAfter: coins - MARKET_DICE_BUNDLE_COST,
     });
 
     // M10B: market_purchase_success sound + haptic
     playIslandRunSound('market_purchase_success');
     triggerIslandRunHaptic('market_purchase_success');
-    const message = `Purchased Heart Bundle: -${MARKET_HEART_BUNDLE_COST} coins, +1 heart.`;
-    setMarketOwnedBundles((current) => ({ ...current, heart_bundle: true }));
-    setMarketPurchaseFeedback(message);
-    setLandingText(message);
-    setMarketInteracted(true);
-  };
-
-  // M14: Tier 2 Heart Boost Bundle purchase (available only after boss defeated)
-  const handleHeartBoostPurchase = () => {
-    if (marketOwnedBundles.heart_boost_bundle) {
-      setMarketPurchaseFeedback('Heart Boost Bundle already owned for this island run.');
-      setMarketInteracted(true);
-      return;
-    }
-    if (coins < HEART_BOOST_BUNDLE_COST) {
-      playIslandRunSound('market_insufficient_coins');
-      setMarketPurchaseFeedback(`Not enough coins for Heart Boost Bundle (${HEART_BOOST_BUNDLE_COST} required).`);
-      setMarketInteracted(true);
-      return;
-    }
-    playIslandRunSound('market_purchase_attempt');
-    setCoins((c) => c - HEART_BOOST_BUNDLE_COST);
-    setHearts((h) => h + 3);
-    playIslandRunSound('market_purchase_success');
-    triggerIslandRunHaptic('market_purchase_success');
-    setMarketOwnedBundles((current) => ({ ...current, heart_boost_bundle: true }));
-    const message = `Purchased Heart Boost Bundle: -${HEART_BOOST_BUNDLE_COST} coins, +3 hearts.`;
+    const message = `Purchased Dice Bundle: -${MARKET_DICE_BUNDLE_COST} coins, +${MARKET_DICE_BUNDLE_REWARD} dice.`;
+    setMarketOwnedBundles((current) => ({ ...current, dice_bundle: true }));
     setMarketPurchaseFeedback(message);
     setLandingText(message);
     setMarketInteracted(true);
@@ -4598,7 +4492,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setBossAttemptCount(0);
     setSpinTokens(0);
     setMarketInteracted(false);
-    setMarketOwnedBundles({ dice_bundle: false, heart_bundle: false, heart_boost_bundle: false });
+    setMarketOwnedBundles({ dice_bundle: false });
     // M8-COMPLETE: clear per-island shop owned state from localStorage on travel
     try {
       window.localStorage.removeItem(`island_run_shop_owned_${session.user.id}_island_${islandNumber}`);
@@ -4796,7 +4690,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             stage: 'island_run_boss_island_cleared',
             island_number: islandNumber,
             rewards_granted: {
-              hearts: bossReward.hearts,
+              dice: bossReward.dice,
               coins: bossReward.coins,
             },
           },
@@ -4819,7 +4713,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         setShowIslandClearCelebration(true);
         setIslandClearStats({
           islandNumber,
-          heartsEarned: bossReward.hearts,
+          diceEarned: bossReward.dice,
           coinsEarned: bossReward.coins,
           stopsCleared: completedStops.length + 1,
         });
@@ -4855,7 +4749,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           stage: 'island_run_boss_island_cleared',
           island_number: islandNumber,
           rewards_granted: {
-            hearts: bossReward.hearts,
+            dice: bossReward.dice,
             coins: bossReward.coins,
           },
         },
@@ -4878,7 +4772,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setShowIslandClearCelebration(true);
       setIslandClearStats({
         islandNumber,
-        heartsEarned: bossReward.hearts,
+        diceEarned: bossReward.dice,
         coinsEarned: bossReward.coins,
         stopsCleared: completedStops.length + 1,
       });
@@ -4925,44 +4819,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }));
 
     return true;
-  };
-
-  const handleClaimDailyHearts = async (source: 'spin_of_the_day' | 'daily_hatch') => {
-    if (!hasHydratedRuntimeState || dailyHeartsClaimed || dailyRewardPlan.source !== source) return;
-
-    const result = await persistIslandRunRuntimeStatePatch({
-      session,
-      client,
-      patch: {
-        dailyHeartsClaimedDayKey: dailyRewardPlan.dayKey,
-      },
-    });
-
-    if (!result.ok) {
-      setLandingText(`Could not claim daily hearts: ${result.errorMessage}`);
-      return;
-    }
-
-    setRuntimeState((current) => ({
-      ...current,
-      dailyHeartsClaimedDayKey: dailyRewardPlan.dayKey,
-    }));
-    setHearts((current) => current + dailyRewardPlan.hearts);
-    setDailyHeartsClaimed(true);
-    // M10A: reward_claim haptic on daily hearts claimed
-    triggerIslandRunHaptic('reward_claim');
-    setLandingText(`Morning reward claimed from ${source === 'spin_of_the_day' ? 'Spin of the Day' : 'Daily Hatch'}: +${dailyRewardPlan.hearts} hearts.`);
-
-    void recordTelemetryEvent({
-      userId: session.user.id,
-      eventType: 'economy_earn',
-      metadata: {
-        source,
-        hearts: dailyRewardPlan.hearts,
-        day_key: dailyRewardPlan.dayKey,
-        stage: 'island_run_daily_hearts_claimed',
-      },
-    });
   };
 
   const handleQaMarkBossResolved = () => {
@@ -5034,10 +4890,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const handleClaimFirstRunRewards = async () => {
     if (firstRunStep === 'celebration') {
-      setHearts((current) => current + 5);
+      const starterDiceBonus = convertHeartToDicePool(islandNumber) * 2;
       setCoins((current) => current + 250);
-      setDicePool((current) => current + convertHeartToDicePool(islandNumber));
-      setLandingText('Starter claim complete: +5 hearts, +250 coins, +1 heart worth of dice.');
+      setDicePool((current) => current + starterDiceBonus);
+      setLandingText(`Starter claim complete: +250 coins, +${starterDiceBonus} dice.`);
       setFirstRunStep('launch');
       void recordTelemetryEvent({
         userId: session.user.id,
@@ -5045,7 +4901,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         metadata: {
           stage: 'island_run_first_run_rewards_claimed',
           island: islandNumber,
-          rewards: { hearts: 5, coins: 250, dice_bonus: convertHeartToDicePool(islandNumber) },
+          rewards: { coins: 250, dice_bonus: starterDiceBonus },
         },
       });
       return;
@@ -5318,16 +5174,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       }));
 
       const rewardCoins = reward.coins ?? 0;
-      const rewardHearts = reward.hearts ?? 0;
+      const rewardDice = reward.dice ?? 0;
       const rewardSpinTokens = reward.spinTokens ?? 0;
 
       if (rewardCoins > 0) {
         setCoins((current) => current + rewardCoins);
         void awardGold(session.user.id, rewardCoins, 'shooter_blitz', 'island_run_creature_bond_milestone');
       }
-      if (rewardHearts > 0) {
-        setHearts((current) => Math.min(MAX_HEARTS, current + rewardHearts));
-        void awardHearts(session.user.id, rewardHearts, 'shooter_blitz', 'Island Run creature bond milestone');
+      if (rewardDice > 0) {
+        setDicePool((current) => current + rewardDice);
       }
       if (rewardSpinTokens > 0) {
         setSpinTokens((current) => current + rewardSpinTokens);
@@ -5343,7 +5198,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           creature_name: target.creature.name,
           milestone_level: milestoneLevel,
           reward_coins: rewardCoins,
-          reward_hearts: rewardHearts,
+          reward_dice: rewardDice,
           reward_spin_tokens: rewardSpinTokens,
         },
       });
@@ -5353,7 +5208,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         creatureName: target.creature.name,
         milestoneLevel,
         rewardCoins,
-        rewardHearts,
+        rewardDice,
         rewardSpinTokens,
       });
       setSanctuaryFeedback(`${target.creature.name} claimed ${reward.label}: ${reward.summary}.`);
@@ -5520,16 +5375,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }));
 
     const rewardCoins = reward.coins ?? 0;
-    const rewardHearts = reward.hearts ?? 0;
+    const rewardDice = reward.dice ?? 0;
     const rewardSpinTokens = reward.spinTokens ?? 0;
 
     if (rewardCoins > 0) {
       setCoins((current) => current + rewardCoins);
       void awardGold(session.user.id, rewardCoins, 'shooter_blitz', 'island_run_creature_bond_milestone');
     }
-    if (rewardHearts > 0) {
-      setHearts((current) => Math.min(MAX_HEARTS, current + rewardHearts));
-      void awardHearts(session.user.id, rewardHearts, 'shooter_blitz', 'Island Run creature bond milestone');
+    if (rewardDice > 0) {
+      setDicePool((current) => current + rewardDice);
     }
     if (rewardSpinTokens > 0) {
       setSpinTokens((current) => current + rewardSpinTokens);
@@ -5545,7 +5399,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         creature_name: target.creature.name,
         milestone_level: milestoneLevel,
         reward_coins: rewardCoins,
-        reward_hearts: rewardHearts,
+        reward_dice: rewardDice,
         reward_spin_tokens: rewardSpinTokens,
       },
     });
@@ -5555,7 +5409,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       creatureName: target.creature.name,
       milestoneLevel,
       rewardCoins,
-      rewardHearts,
+      rewardDice,
       rewardSpinTokens,
     });
     setSanctuaryFeedback(`${target.creature.name} claimed ${reward.label}: ${reward.summary}.`);
@@ -5703,7 +5557,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         </div>
         {/* M1B: Production HUD — always visible for all logged-in users */}
         <div className="island-run-prototype__status-row island-run-prototype__status-row--production">
-          <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--hearts">❤️ <strong>{hearts}</strong></span>
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">🎲 <strong>{dicePool}</strong></span>
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">🪙 <strong>{coins}</strong></span>
           {ISLAND_RUN_CONTRACT_V2_ENABLED && <span className="island-run-prototype__stat-chip">🟣 <strong>{runtimeState.essence}</strong></span>}
@@ -5802,7 +5655,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           <div className="island-run-prototype__hud-section">
             <p className="island-run-prototype__hud-label">Run status</p>
             <div className="island-run-prototype__status-row">
-              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--hearts">Hearts: <strong>{hearts}</strong></span>
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">Dice: <strong>{dicePool}</strong></span>
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">Coins: <strong>{coins}</strong></span>
               <span className="island-run-prototype__stat-chip island-run-prototype__level-chip">LEVEL <strong>{islandNumber}</strong> / 120</span>
@@ -5888,13 +5740,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <button
                 type="button"
                 className="island-run-prototype__debug-btn"
-                onClick={() => handleQaTriggerMarketAlreadyOwnedMarker('heart_bundle')}
-              >
-                QA: Market already-owned (heart)
-              </button>
-              <button
-                type="button"
-                className="island-run-prototype__debug-btn"
                 onClick={() => window.__islandRunMarketDebugResetState?.()}
               >
                 QA: Market reset marker baseline
@@ -5915,33 +5760,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     <span className="island-run-prototype__stat-chip">Island: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.currentIslandNumber ?? '—'}</strong></span>
                     <span className="island-run-prototype__stat-chip">Cycle: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.cycleIndex ?? '—'}</strong></span>
                     <span className="island-run-prototype__stat-chip">Tile: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.tokenIndex ?? '—'}</strong></span>
-                    <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--hearts">Hearts: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.hearts ?? '—'}</strong></span>
                     <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">Coins: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.coins ?? '—'}</strong></span>
                     <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">{spinTokenWalletLabel}: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.spinTokens ?? '—'}</strong></span>
                     <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">Dice: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.dicePool ?? '—'}</strong></span>
                   </div>
                   <p className="island-run-prototype__landing island-run-prototype__qa-note" role="note">
-                    Latest persist success: island <strong>{runtimeVerificationSnapshot.latestPersistSuccess?.currentIslandNumber ?? '—'}</strong>, tile <strong>{runtimeVerificationSnapshot.latestPersistSuccess?.tokenIndex ?? '—'}</strong>, hearts <strong>{runtimeVerificationSnapshot.latestPersistSuccess?.hearts ?? '—'}</strong>, dice <strong>{runtimeVerificationSnapshot.latestPersistSuccess?.dicePool ?? '—'}</strong>.
+                    Latest persist success: island <strong>{runtimeVerificationSnapshot.latestPersistSuccess?.currentIslandNumber ?? '—'}</strong>, tile <strong>{runtimeVerificationSnapshot.latestPersistSuccess?.tokenIndex ?? '—'}</strong>, dice <strong>{runtimeVerificationSnapshot.latestPersistSuccess?.dicePool ?? '—'}</strong>.
                   </p>
                 </div>
               )}
             </div>
           )}
-          {(dailyRewardPlan.source === 'spin_of_the_day' || dailyRewardPlan.source === 'daily_hatch') && (
-            <button
-              type="button"
-              className="island-run-prototype__booster-btn"
-              onClick={() => void handleClaimDailyHearts(dailyRewardPlan.source)}
-              disabled={!hasHydratedRuntimeState || dailyHeartsClaimed}
-            >
-              {dailyHeartsClaimed
-                ? 'Morning hearts claimed'
-                : dailyRewardPlan.source === 'spin_of_the_day'
-                  ? `Spin of the Day (+${dailyRewardPlan.hearts} hearts)`
-                  : `Morning Hearts (+${dailyRewardPlan.hearts} hearts)`}
-            </button>
-          )}
-          {!ISLAND_RUN_CONTRACT_V2_ENABLED && hearts < 1 && dicePool < DICE_PER_ROLL && (
+          {!ISLAND_RUN_CONTRACT_V2_ENABLED && dicePool < DICE_PER_ROLL && (
             <button
               type="button"
               className="island-run-prototype__booster-btn"
@@ -5951,7 +5781,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               }}
               disabled={isDisplayNameLoopCompleted}
             >
-              {isDisplayNameLoopCompleted ? 'Onboarding booster used' : 'Use onboarding booster (+1 heart)'}
+              {isDisplayNameLoopCompleted ? 'Onboarding booster used' : 'Use onboarding booster (+dice)'}
             </button>
           )}
           {/* M17D: dev simulate wallet shards button */}
@@ -6201,7 +6031,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       <div className="island-run-prototype__footer" aria-label="Island Run footer controls">
         <div className="island-run-prototype__footer-main">
           <div className="island-run-prototype__footer-stats" aria-label="Run resources">
-            <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--hearts">❤️ <strong>{hearts}</strong></span>
             <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">⏱ <strong>{timerDisplay}</strong></span>
             {ISLAND_RUN_CONTRACT_V2_ENABLED && <span className="island-run-prototype__stat-chip">🟣 <strong>{runtimeState.essence}</strong></span>}
             {canUseSpinForMovement(ISLAND_RUN_CONTRACT_V2_ENABLED) && spinTokens > 0 && (
@@ -6518,31 +6347,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             {activeStopId === 'utility' && (
               <div className="island-hatchery-card">
                 <p className="island-stop-modal__copy"><strong>⚡ Recovery Actions</strong></p>
-                {/* Heart refill — hidden when already at max */}
-                {hearts < MAX_HEARTS ? (
-                  <div className="island-hatchery-card__actions">
-                    <button
-                      type="button"
-                      className="island-stop-modal__btn island-stop-modal__btn--action"
-                      disabled={coins < UTILITY_HEART_REFILL_COST}
-                      onClick={() => {
-                        setCoins((c) => c - UTILITY_HEART_REFILL_COST);
-                        setHearts((h) => Math.min(MAX_HEARTS, h + 1));
-                        setUtilityInteracted(true);
-                        playIslandRunSound('utility_stop_complete');
-                        triggerIslandRunHaptic('utility_stop_complete');
-                        void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_spend', metadata: { stage: 'utility_heart_refill', island_number: islandNumber, cost_coins: UTILITY_HEART_REFILL_COST } });
-                        setLandingText(`Heart refilled! -${UTILITY_HEART_REFILL_COST} coins, +1 ❤️`);
-                        handleCompleteActiveStop();
-                      }}
-                    >
-                      💚 Heart Refill — {UTILITY_HEART_REFILL_COST} 🪙 → +1 ❤️
-                      {coins < UTILITY_HEART_REFILL_COST && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {UTILITY_HEART_REFILL_COST - coins} more)</span>}
-                    </button>
-                  </div>
-                ) : (
-                  <p style={{ fontSize: '0.85rem', opacity: 0.65, marginBottom: '0.5rem' }}>❤️ Hearts already full ({hearts}/{MAX_HEARTS})</p>
-                )}
                 {/* Dice bonus */}
                 <div className="island-hatchery-card__actions">
                   <button
@@ -6629,8 +6433,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                             onClick={() => {
                               if (mysteryStopReward.type === 'coins') {
                                 setCoins((current) => current + mysteryStopReward.amount);
-                              } else if (mysteryStopReward.type === 'hearts') {
-                                setHearts((current) => Math.min(MAX_HEARTS, current + mysteryStopReward.amount));
                               } else if (mysteryStopReward.type === 'dice') {
                                 setDicePool((current) => current + mysteryStopReward.amount);
                               } else if (mysteryStopReward.type === 'lucky_roll') {
@@ -6724,22 +6526,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         </p>
                         <p className="island-boss-trial__reward-preview">
                           🎁 Reward on win:{' '}
-                          <strong>+{bossReward.hearts} ❤️</strong>,{' '}
+                          <strong>+{bossReward.dice} 🎲</strong>,{' '}
                           <strong>+{bossReward.coins} 🪙</strong>
                           {bossReward.spinTokens > 0
                             ? <>, <strong>{formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: bossReward.spinTokens })}</strong></>
                             : null}
                           , <strong>+3 🔷 shards</strong>
                         </p>
-                        {ISLAND_RUN_CONTRACT_V2_ENABLED ? (
-                          <p className="island-boss-trial__lives-note">
-                            💡 Failed attempts do not consume hearts in contract-v2 mode.
-                          </p>
-                        ) : (
-                          <p className="island-boss-trial__lives-note">
-                            💡 Lives = Hearts — a failed attempt costs 1 ❤️. You have <strong>{hearts}</strong> {hearts === 1 ? 'heart' : 'hearts'}.
-                          </p>
-                        )}
+                        <p className="island-boss-trial__lives-note">
+                          💡 Failed attempts do not consume hearts in contract-v2 mode.
+                        </p>
                         <div className="island-boss-trial__cta">
                           <button
                             type="button"
@@ -6790,7 +6586,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       <div className="island-boss-trial__phase island-boss-trial__phase--success">
                         <p className="island-boss-trial__result island-boss-trial__result--win">🏆 Trial Complete!</p>
                         <p className="island-boss-trial__reward-text">
-                          {bossRewardSummary ?? `Rewards: +${bossReward.hearts} ❤️, +${bossReward.coins} 🪙, +3 🔷`}
+                          {bossRewardSummary ?? `Rewards: +${bossReward.coins} 🪙, +3 🔷`}
                         </p>
                         <p className="island-boss-trial__next-hint">Tap <strong>Claim Island Clear</strong> to celebrate and travel.</p>
                       </div>
@@ -6801,13 +6597,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       <div className="island-boss-trial__phase island-boss-trial__phase--failed">
                         <p className="island-boss-trial__result island-boss-trial__result--fail">💔 Trial Failed</p>
                         <p className="island-boss-trial__failed-copy">
-                          You scored {bossTrialScore} / {bossConfig.scoreTarget}. {ISLAND_RUN_CONTRACT_V2_ENABLED ? 'Retry when ready.' : '1 heart deducted.'}
+                          You scored {bossTrialScore} / {bossConfig.scoreTarget}. Retry when ready.
                         </p>
-                        {!ISLAND_RUN_CONTRACT_V2_ENABLED && (
-                          <p className="island-boss-trial__hearts-left">
-                            Hearts remaining: <strong>{hearts}</strong>
-                          </p>
-                        )}
                         {canRetryBossTrial({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, hearts }) ? (
                           <div className="island-boss-trial__cta">
                             <button
@@ -6815,12 +6606,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                               className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary island-boss-trial__retry-btn"
                               onClick={handleBossTrialRetry}
                             >
-                              {ISLAND_RUN_CONTRACT_V2_ENABLED ? '🔄 Retry' : '🔄 Retry (costs 1 ❤️)'}
+                              🔄 Retry
                             </button>
                           </div>
                         ) : (
                           <p className="island-boss-trial__no-hearts">
-                            ❤️ No hearts left. Return tomorrow for daily hearts or purchase from the shop.
+                            Not enough energy to retry yet. Earn more dice to continue.
                           </p>
                         )}
                       </div>
@@ -6950,7 +6741,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 <p className="island-encounter__eyebrow">Challenge Complete! 🎉</p>
                 <div className="island-encounter__reward-reveal">
                   <span className="island-encounter__reward-item">🪙 +{encounterRewardData.coins} coins</span>
-                  {encounterRewardData.heart && <span className="island-encounter__reward-item">❤️ +1 heart</span>}
                   {encounterRewardData.walletShards && <span className="island-encounter__reward-item">✨ +1 shard</span>}
                   {encounterRewardData.dice > 0 && <span className="island-encounter__reward-item">🎲 +{encounterRewardData.dice} dice</span>}
                   {encounterRewardData.spinTokens > 0 && (
@@ -7080,7 +6870,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <p className="island-clear-celebration__eyebrow">Boss Defeated! Island Cleared!</p>
             <p className="island-clear-celebration__title">🏆 Island {islandClearStats.islandNumber} Complete!</p>
             <div className="island-clear-celebration__rewards">
-              <span className="island-clear-celebration__reward-item">❤️ +{islandClearStats.heartsEarned}</span>
+              <span className="island-clear-celebration__reward-item">🎲 +{islandClearStats.diceEarned}</span>
               <span className="island-clear-celebration__reward-item">🪙 +{islandClearStats.coinsEarned}</span>
               <span className="island-clear-celebration__reward-item">🔷 +3</span>
             </div>
@@ -7151,21 +6941,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     {coins < MARKET_DICE_BUNDLE_COST && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {MARKET_DICE_BUNDLE_COST - coins} more)</span>}
                   </button>
                 )}
-                {marketOwnedBundles.heart_bundle ? (
-                  <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action" disabled aria-label="Heart Bundle already owned">
-                    ❤️ Heart Bundle — Owned ✅
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="island-stop-modal__btn island-stop-modal__btn--action"
-                    disabled={coins < MARKET_HEART_BUNDLE_COST}
-                    onClick={() => handleMarketPrototypePurchase('heart_bundle')}
-                  >
-                    ❤️ Heart Bundle — {MARKET_HEART_BUNDLE_COST} 🪙 → +1 ❤️
-                    {coins < MARKET_HEART_BUNDLE_COST && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {MARKET_HEART_BUNDLE_COST - coins} more)</span>}
-                  </button>
-                )}
               </div>
             </div>
 
@@ -7185,21 +6960,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <div className="island-hatchery-card">
               <p><strong>Tier 2 — Post-boss unlock</strong></p>
               {completedStops.includes('boss') ? (
-                marketOwnedBundles.heart_boost_bundle ? (
-                  <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action" disabled aria-label="Heart Boost Bundle already owned">
-                    💗 Heart Boost Bundle — Owned ✅
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="island-stop-modal__btn island-stop-modal__btn--action"
-                    disabled={coins < HEART_BOOST_BUNDLE_COST}
-                    onClick={handleHeartBoostPurchase}
-                  >
-                    💗 Heart Boost Bundle — {HEART_BOOST_BUNDLE_COST} 🪙 → +3 ❤️
-                    {coins < HEART_BOOST_BUNDLE_COST && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {HEART_BOOST_BUNDLE_COST - coins} more)</span>}
-                  </button>
-                )
+                <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>👑 Tier 2 bundles are being redesigned for dice/essence-only economy.</p>
               ) : (
                 <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>👑 Defeat the boss to unlock</p>
               )}
@@ -7819,13 +7580,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             islandNumber={islandNumber}
             onComplete={(result) => {
               if (result.completed && result.reward) {
-                const { coins: rewardCoins = 0, dice: rewardDice = 0, hearts: rewardHearts = 0, spinTokens: rewardSpinTokens = 0 } = result.reward;
+                const { coins: rewardCoins = 0, dice: rewardDice = 0, spinTokens: rewardSpinTokens = 0 } = result.reward;
                 if (rewardCoins > 0) {
                   setCoins((c) => c + rewardCoins);
                   void awardGold(session.user.id, rewardCoins, 'shooter_blitz', 'island_run_minigame_reward');
                 }
                 if (rewardDice > 0) setDicePool((d) => d + rewardDice);
-                if (rewardHearts > 0) setHearts((h) => h + rewardHearts);
                 if (rewardSpinTokens > 0) setSpinTokens((t) => t + rewardSpinTokens);
                 // M17D: award wallet shards on minigame reward
                 awardWalletShards(1);

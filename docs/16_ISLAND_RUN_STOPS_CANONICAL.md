@@ -32,7 +32,7 @@
 | 1 | `hatchery` | 0 | 🥚 Hatchery | The egg hatchery. The player either sets a new egg OR collects/sells a ready egg. **Must be resolved before the player can roll dice on a new island.** (Onboarding/orientation gate.) |
 | 2 | `minigame` | 4 | 🎮 Mini-Game | Triggers the currently active global mini-game. Entry cost = island mini-game currency (tickets). |
 | 3 | `mystery` | 8 | 🎭 Mystery Stop | A **blind box / mystery stop**. The content is unknown until opened. Could be: a gift, a task, a short story/webtoon panel, a life-goal reflection prompt, a bonus reward, a challenge — anything. Rotated/seeded per island. |
-| 4 | `dynamic` | 12 | ⚡ Dynamic Stop | A flexible, semi-predictable stop. Common examples: a brief Life Wheel slice review (1–2 min timer/countdown), a quick goal check-in, a habit nudge, a utility action (heart refill, dice gift). Could also be a "countdown challenge" (30–120 second timed task). |
+| 4 | `dynamic` | 12 | ⚡ Dynamic Stop | A flexible, semi-predictable stop. Common examples: a brief Life Wheel slice review (1–2 min timer/countdown), a quick goal check-in, a habit nudge, a utility action (dice gift, essence boost). Could also be a "countdown challenge" (30–120 second timed task). |
 | 5 | `boss` | 16 | 👾 Boss | Always Stop 5. The island boss battle. Defeat to mark island as `boss_defeated` and unlock shop tiers. |
 
 > **Hatchery and Mini-Game can swap position (Stop 1 ↔ Stop 2)** per island, as specified by the island definition. Default order: Hatchery = Stop 1, Mini-Game = Stop 2. When swapped, the **hatchery is still the onboarding gate** (wherever it falls, it must be resolved before dice roll if it is Stop 1; if it swaps to Stop 2, then there is no dice-block gate on that island).
@@ -56,7 +56,7 @@ The Mystery Stop is intentionally opaque. The player sees a sealed box/envelope 
 
 | Weight | Content Type | Description |
 |---|---|---|
-| 3 | 🎁 Gift | Instant reward: coins, dice, hearts, or a shard |
+| 3 | 🎁 Gift | Instant reward: coins, dice, essence, or a shard |
 | 2 | 📋 Task | Complete a short in-app action (log a habit, write a journal line, etc.) for a reward |
 | 2 | 📖 Story | A short webtoon-style panel or narrative beat (lore of the island / world) |
 | 2 | 🧭 Reflection | A single Life Wheel slice review or goal reflection prompt |
@@ -73,7 +73,7 @@ Stop 4 is predictable in flavour (the player knows it's a "do something useful" 
 
 - 🕐 **Timed review:** A Life Wheel slice is shown with a 1–2 minute countdown; player rates it and optionally writes a note. Reward on completion.
 - 🎯 **Goal check-in:** Review progress on one active goal; mark a step done or add a note. Reward on completion.
-- 💊 **Utility bonus:** Receive a free heart top-up or dice bundle (no action required; just claim).
+- 💊 **Utility bonus:** Receive a free dice bundle or essence bonus (no action required; just claim).
 - 🏋️ **Habit nudge:** Reminder to complete a specific habit today; clicking through to log it awards a bonus.
 - 🧠 **Community quiz pulse (occasional):** A single multiple-choice community question appears (for example: "I love tracking habits daily" with options like A/B/C player-style preferences). After answering, the player immediately sees aggregate community distribution (e.g. `20% A / 45% B / 35% C`). Questions can be scoped to a specific archetype/player-type cohort or to the full player base.
 
