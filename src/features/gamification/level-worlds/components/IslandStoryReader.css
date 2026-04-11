@@ -14,11 +14,13 @@
   color: #eaf1ff;
   display: flex;
   flex-direction: column;
+  padding-top: max(0.55rem, env(safe-area-inset-top));
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .island-story-reader__header {
   position: sticky;
-  top: 0;
+  top: env(safe-area-inset-top);
   z-index: 2;
   display: flex;
   align-items: center;
