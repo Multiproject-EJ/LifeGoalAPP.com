@@ -1,5 +1,4 @@
 const CONTRACT_V2_FLAG_KEY = 'island_run_contract_v2';
-const CONTRACT_RENDERER_FLAG_KEY = 'island_run_contract_renderer';
 
 function readQueryFlagValue(flagName: string): string | null {
   if (typeof window === 'undefined') return null;
@@ -29,26 +28,4 @@ export function isIslandRunContractV2Enabled(): boolean {
   if (localValue !== null) return isTruthyFlag(localValue);
 
   return isTruthyFlag(import.meta.env.VITE_ISLAND_RUN_CONTRACT_V2);
-}
-
-/**
- * Feature flag: cleaned ContractBoardRenderer read-only mount.
- *
- * Default: OFF (false). Enable via:
- *  - Query param: ?island_run_contract_renderer=1
- *  - localStorage: feature_flag_island_run_contract_renderer = "1"
- *  - Env var: VITE_ISLAND_RUN_CONTRACT_RENDERER=true
- *
- * When ON, the PWA mounts ContractBoardRenderer (read-only, no gameplay mutations)
- * fed by canonical PWA contract/selector output, instead of the full IslandRunBoardPrototype.
- * Fallback to existing renderer when OFF or on mount error.
- */
-export function isContractBoardRendererEnabled(): boolean {
-  const queryValue = readQueryFlagValue(CONTRACT_RENDERER_FLAG_KEY);
-  if (queryValue !== null) return isTruthyFlag(queryValue);
-
-  const localValue = readLocalStorageFlagValue(CONTRACT_RENDERER_FLAG_KEY);
-  if (localValue !== null) return isTruthyFlag(localValue);
-
-  return isTruthyFlag(import.meta.env.VITE_ISLAND_RUN_CONTRACT_RENDERER);
 }
