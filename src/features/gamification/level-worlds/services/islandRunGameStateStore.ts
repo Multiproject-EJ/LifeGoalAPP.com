@@ -4,6 +4,7 @@ import { getIslandRunDeviceSessionId } from './islandRunDeviceSession';
 import { convertHeartToDicePool } from './islandRunEconomy';
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
 import { logIslandRunEntryDebug } from './islandRunEntryDebug';
+import { commitIslandRunRuntimeSnapshot } from './islandRunCommitActionService';
 
 export type PerIslandEggStatus = 'incubating' | 'ready' | 'animal_ready' | 'collected' | 'sold' | 'animal_sold';
 
@@ -1322,61 +1323,6 @@ export async function writeIslandRunGameStateRecord(options: {
   }
 
   const deviceSessionId = getIslandRunDeviceSessionId(session.user.id);
-  if (typeof (client as { rpc?: unknown }).rpc === 'function') {
-    const { data: ownershipValidationData, error: ownershipValidationError } = await client.rpc(
-      'island_run_validate_session_owner',
-      {
-        p_device_session_id: deviceSessionId,
-      },
-    );
-
-    if (ownershipValidationError) {
-      logIslandRunEntryDebug('runtime_state_persist_error', {
-        userId: session.user.id,
-        message: ownershipValidationError.message,
-        code: ownershipValidationError.code ?? null,
-        stage: 'ownership_validation_rpc_failed',
-        deviceSessionId,
-        ...getRuntimeStateDebugFields(localRecord),
-      });
-      return { ok: false, errorMessage: ownershipValidationError.message ?? 'Unable to validate Island Run session ownership.' };
-    }
-
-    const ownershipRow = Array.isArray(ownershipValidationData)
-      ? ownershipValidationData[0]
-      : ownershipValidationData;
-    const isOwner = Boolean((ownershipRow as { is_owner?: unknown } | null)?.is_owner);
-    let leaseIsActive = Boolean((ownershipRow as { lease_is_active?: unknown } | null)?.lease_is_active);
-
-    if (isOwner && !leaseIsActive) {
-      const { data: reclaimData, error: reclaimError } = await client.rpc('island_run_claim_active_session', {
-        p_device_session_id: deviceSessionId,
-        p_force_takeover: true,
-        p_takeover_reason: 'auto_reclaim_expired_lease',
-        p_metadata: { source: 'runtime_write_auto_reclaim' },
-      });
-
-      if (!reclaimError) {
-        const reclaimRow = Array.isArray(reclaimData) ? reclaimData[0] : reclaimData;
-        const reclaimStatus = (reclaimRow as { ownership_status?: unknown } | null)?.ownership_status;
-        leaseIsActive = reclaimStatus === 'granted' || reclaimStatus === 'already_owner';
-      }
-    }
-
-    if (!isOwner || !leaseIsActive) {
-      logIslandRunEntryDebug('runtime_state_persist_error', {
-        userId: session.user.id,
-        message: 'Runtime write blocked: device is not active Island Run owner.',
-        code: 'runtime_write_rejected_not_owner',
-        stage: 'ownership_validation_failed',
-        deviceSessionId,
-        isOwner,
-        leaseIsActive,
-        ...getRuntimeStateDebugFields(localRecord),
-      });
-      return { ok: false, errorMessage: 'Island Run is active on another device. Take over this session to continue.' };
-    }
-  }
 
   const remoteBackoffUntil = getRemoteBackoffUntil(session.user.id);
   if (remoteBackoffUntil !== null) {
@@ -1416,61 +1362,33 @@ export async function writeIslandRunGameStateRecord(options: {
 
   const tryConditionalWrite = async (candidate: IslandRunGameStateRecord): Promise<
     | { status: 'ok'; nextVersion: number }
-    | { status: 'missing_row' }
     | { status: 'conflict' }
     | { status: 'error'; error: { message?: string | null; code?: string | null } }
   > => {
     const expectedVersion = Math.max(0, Math.floor(candidate.runtimeVersion));
-    const nextVersion = expectedVersion + 1;
-    const payload = toRemoteRow(candidate, nextVersion, deviceSessionId);
-    payload.user_id = session.user.id;
+    const payload = toRemoteRow(candidate, expectedVersion + 1, deviceSessionId) as Record<string, unknown>;
+    const commitResult = await commitIslandRunRuntimeSnapshot({
+      client,
+      deviceSessionId,
+      expectedVersion,
+      payload,
+    });
 
-    const { data, error } = await client
-      .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-      .update(payload)
-      .eq('user_id', session.user.id)
-      .eq('runtime_version', expectedVersion)
-      .select('runtime_version')
-      .maybeSingle();
-
-    if (error) {
-      return { status: 'error', error };
+    if (commitResult.status === 'applied' && typeof commitResult.nextVersion === 'number') {
+      return { status: 'ok', nextVersion: commitResult.nextVersion };
     }
 
-    if (data) {
-      return { status: 'ok', nextVersion };
+    if (commitResult.status === 'conflict') {
+      return { status: 'conflict' };
     }
 
-    const { data: rowExists, error: existsError } = await client
-      .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-      .select('user_id')
-      .eq('user_id', session.user.id)
-      .maybeSingle();
-
-    if (existsError) {
-      return { status: 'error', error: existsError };
-    }
-
-    return rowExists ? { status: 'conflict' } : { status: 'missing_row' };
+    return {
+      status: 'error',
+      error: commitResult.error ?? { message: 'Unknown commit action error.', code: 'unknown_commit_action_error' },
+    };
   };
 
   let writeResult = await tryConditionalWrite(localRecord);
-
-  if (writeResult.status === 'missing_row') {
-    const payload = toRemoteRow(localRecord, 0, deviceSessionId);
-    payload.user_id = session.user.id;
-    const { error: insertError } = await client
-      .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-      .insert(payload);
-
-    if (!insertError) {
-      writeResult = { status: 'ok', nextVersion: 0 };
-    } else if (insertError.code === '23505') {
-      writeResult = { status: 'conflict' };
-    } else {
-      writeResult = { status: 'error', error: insertError };
-    }
-  }
 
   if (writeResult.status === 'conflict') {
     const latest = await hydrateIslandRunGameStateRecordWithSource({ session, client });
