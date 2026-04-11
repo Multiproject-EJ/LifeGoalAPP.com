@@ -176,6 +176,11 @@ const PERFECT_COMPANION_MODEL_VERSION = 'phase3_v1';
 // Temporary diagnostics for Stop 1↔2 flicker + roll lock on Island 120 startup.
 const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_ISLAND = 120;
 const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_WINDOW_MS = 10_000;
+const ISLAND_RUN_120_STOP_PAIR_DELIMITER = '_to_';
+
+function buildHydrationSourceOrder(baseSource: 'local_storage' | 'in_memory', hydrationSource: string) {
+  return [baseSource, hydrationSource];
+}
 
 function isIsland120StartupDiagnosticTarget(islandNumber: number) {
   return islandNumber === ISLAND_RUN_120_STARTUP_DIAGNOSTIC_ISLAND;
@@ -192,6 +197,35 @@ function compactStopStatesForDiagnostics(
   }));
 }
 
+function areCompactStopStatesEqual(
+  left: ReturnType<typeof compactStopStatesForDiagnostics>,
+  right: ReturnType<typeof compactStopStatesForDiagnostics>,
+) {
+  if (left.length !== right.length) return false;
+  for (let index = 0; index < left.length; index += 1) {
+    const leftEntry = left[index];
+    const rightEntry = right[index];
+    if (!leftEntry || !rightEntry) return false;
+    if (
+      leftEntry.i !== rightEntry.i
+      || leftEntry.o !== rightEntry.o
+      || leftEntry.b !== rightEntry.b
+      || Boolean(leftEntry.c) !== Boolean(rightEntry.c)
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function areStringArraysEqualForDiagnostics(left: string[], right: string[]) {
+  if (left.length !== right.length) return false;
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index] !== right[index]) return false;
+  }
+  return true;
+}
+
 function collectHydrationChangedKeysForDiagnostics(options: {
   before: IslandRunRuntimeState;
   after: IslandRunRuntimeState;
@@ -201,24 +235,29 @@ function collectHydrationChangedKeysForDiagnostics(options: {
   const islandKey = String(islandNumber);
   const beforeCurrentIslandStops = before.completedStopsByIsland?.[islandKey] ?? [];
   const afterCurrentIslandStops = after.completedStopsByIsland?.[islandKey] ?? [];
-  const checks: Array<{ key: string; before: unknown; after: unknown }> = [
-    { key: 'runtimeVersion', before: before.runtimeVersion, after: after.runtimeVersion },
-    { key: 'currentIslandNumber', before: before.currentIslandNumber, after: after.currentIslandNumber },
-    { key: 'activeStopIndex', before: before.activeStopIndex, after: after.activeStopIndex },
-    {
-      key: 'stopStatesByIndex',
-      before: compactStopStatesForDiagnostics(before.stopStatesByIndex),
-      after: compactStopStatesForDiagnostics(after.stopStatesByIndex),
-    },
-    { key: 'completedStopsCurrentIsland', before: beforeCurrentIslandStops, after: afterCurrentIslandStops },
-    { key: 'perIslandEggCurrentIsland', before: before.perIslandEggs?.[islandKey] ?? null, after: after.perIslandEggs?.[islandKey] ?? null },
-    { key: 'dicePool', before: before.dicePool, after: after.dicePool },
-    { key: 'tokenIndex', before: before.tokenIndex, after: after.tokenIndex },
-    { key: 'hearts', before: before.hearts, after: after.hearts },
-  ];
-  return checks
-    .filter((entry) => JSON.stringify(entry.before) !== JSON.stringify(entry.after))
-    .map((entry) => entry.key);
+  const beforeCompactStops = compactStopStatesForDiagnostics(before.stopStatesByIndex);
+  const afterCompactStops = compactStopStatesForDiagnostics(after.stopStatesByIndex);
+  const beforeEgg = before.perIslandEggs?.[islandKey] ?? null;
+  const afterEgg = after.perIslandEggs?.[islandKey] ?? null;
+  const changedKeys: string[] = [];
+  if (before.runtimeVersion !== after.runtimeVersion) changedKeys.push('runtimeVersion');
+  if (before.currentIslandNumber !== after.currentIslandNumber) changedKeys.push('currentIslandNumber');
+  if (before.activeStopIndex !== after.activeStopIndex) changedKeys.push('activeStopIndex');
+  if (!areCompactStopStatesEqual(beforeCompactStops, afterCompactStops)) changedKeys.push('stopStatesByIndex');
+  if (!areStringArraysEqualForDiagnostics(beforeCurrentIslandStops, afterCurrentIslandStops)) changedKeys.push('completedStopsCurrentIsland');
+  if (
+    beforeEgg?.status !== afterEgg?.status
+    || beforeEgg?.tier !== afterEgg?.tier
+    || beforeEgg?.setAtMs !== afterEgg?.setAtMs
+    || beforeEgg?.hatchAtMs !== afterEgg?.hatchAtMs
+    || beforeEgg?.location !== afterEgg?.location
+  ) {
+    changedKeys.push('perIslandEggCurrentIsland');
+  }
+  if (before.dicePool !== after.dicePool) changedKeys.push('dicePool');
+  if (before.tokenIndex !== after.tokenIndex) changedKeys.push('tokenIndex');
+  if (before.hearts !== after.hearts) changedKeys.push('hearts');
+  return changedKeys;
 }
 
 function getOpenHatcheryOnLoadFlag(): boolean {
@@ -1101,7 +1140,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           userId: session.user.id,
           trigger: reason,
           source: hydrationResult.source,
-          sourceOrder: ['in_memory', hydrationResult.source],
+          sourceOrder: buildHydrationSourceOrder('in_memory', hydrationResult.source),
           previousRuntimeVersion: currentRuntimeVersion,
           incomingRuntimeVersion,
           changedKeys,
@@ -1671,7 +1710,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             userId: session.user.id,
             trigger: 'initial_hydrate',
             source: hydrationResult.source,
-            sourceOrder: ['local_storage', hydrationResult.source],
+            sourceOrder: buildHydrationSourceOrder('local_storage', hydrationResult.source),
             localIslandNumber: localSnapshotBeforeHydration.currentIslandNumber,
             incomingIslandNumber: hydrationResult.state.currentIslandNumber,
             changedKeys,
@@ -2938,7 +2977,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       && activeStopId
       && previousActiveStopId !== activeStopId
     ) {
-      const pairKey = [previousActiveStopId, activeStopId].sort().join('<->');
+      const pairKey = `${previousActiveStopId}${ISLAND_RUN_120_STOP_PAIR_DELIMITER}${activeStopId}`;
       const nextCount = (island120ToggleHintCounterByPairRef.current[pairKey] ?? 0) + 1;
       island120ToggleHintCounterByPairRef.current[pairKey] = nextCount;
       loopHintCounter = nextCount;
