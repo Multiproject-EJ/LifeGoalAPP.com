@@ -5,6 +5,7 @@ export const ISLAND_RUN_RUNTIME_HYDRATION_SOURCES = [
   'table',
   'fallback_demo_or_no_client',
   'fallback_query_error',
+  'fallback_backoff_active',
   'fallback_no_row',
 ] as const;
 

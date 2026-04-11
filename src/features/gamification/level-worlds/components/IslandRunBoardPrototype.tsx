@@ -1738,7 +1738,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       }
 
       const hydrationResult = await withTimeout(
-        hydrateIslandRunRuntimeStateWithSource({ session, client }),
+        hydrateIslandRunRuntimeStateWithSource({ session, client, forceRemote: true }),
         12000,
         'Timed out while trying to hydrate Island Run runtime state.',
       );
