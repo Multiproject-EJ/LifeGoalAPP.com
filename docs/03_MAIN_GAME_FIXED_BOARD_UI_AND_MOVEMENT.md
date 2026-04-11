@@ -13,12 +13,12 @@
 Only the background image changes.
 
 The board layer includes:
-- 17 tile anchors (movement ring positions)
+- 60 tile anchors (movement ring positions)
 - Stop trigger tiles on the ring that provide access to the 5 outer stop POIs
 - token path animation between anchors
 - touch hitboxes
 
-> **Canonical rule:** The 17-tile ring is for movement and resource earning only.
+> **Canonical rule:** The 60-tile ring is for movement and resource earning only.
 > The **5 steps/stops (Steps 1–5)** are **outer POIs** positioned around the island,
 > outside the ring.  A "stop trigger tile" on the ring, when landed on, opens the
 > corresponding outer stop.  Steps are unlocked sequentially; **Step 1 gates dice**.
@@ -41,7 +41,7 @@ This gives a 3D look while staying performant in mobile web.
 To avoid regressions, migrate visuals in-place and keep traversal logic unchanged.
 
 **Phase 1 (fast visual uplift):**
-- Keep existing 17-tile indices/order and movement rules exactly as implemented.
+- Keep existing 60-tile indices/order and movement rules exactly as implemented.
 - Replace flat oval treatment with one island background + path overlay.
 - Continue absolute positioning for tiles/token, but anchor from canonical board coords (0..1 normalized).
 
@@ -116,7 +116,7 @@ Purpose:
 ## Data: boardLayout.ts
 Create a single file that exports:
 
-- `TILE_ANCHORS: {id, x, y}[]` length 17
+- `TILE_ANCHORS: {id, x, y}[]` length 60
 - `STOP_TRIGGER_TILES: { stopId, tileIndex }[]` (up to 5 entries — ring tiles that open the corresponding outer stop POI when landed on)
 - `TOKEN_START_TILE_INDEX` (0)
 
@@ -144,7 +144,7 @@ Example stop trigger tile mapping (indices are illustrative; adjust once and loc
 ## Stop Unlock & Access Mechanics
 
 Stops are outer POIs — they exist around the island perimeter and are not positions on the
-17-tile movement ring.
+60-tile movement ring.
 
 ### How stops become accessible
 1. **Step 1 (Hatchery / onboarding stop)** is unlocked at the start of each new island,
@@ -156,7 +156,7 @@ Stops are outer POIs — they exist around the island perimeter and are not posi
    island as "boss defeated".
 
 ### How stops are opened from the board
-- Five tiles on the 17-tile ring are designated **stop trigger tiles**.
+- Five tiles on the 60-tile ring are designated **stop trigger tiles**.
 - When the player's token lands on a stop trigger tile, the corresponding outer stop POI panel
   opens automatically.
 - Stop trigger tiles are visually distinct from regular resource tiles (different icon/color).
@@ -174,7 +174,7 @@ Stops are outer POIs — they exist around the island perimeter and are not posi
 
 1) Background image (island art)
 2) Board path layer (ring trail around pond)
-3) Tile glow/base layer (17 anchors)
+3) Tile glow/base layer (60 anchors)
 4) Stop markers (5 special markers)
 5) Token layer (spaceship)
 6) Foreground depth mask (occlusion for 3D illusion)
@@ -187,7 +187,7 @@ Depth mask must be able to hide token/tile portions in selected regions.
 
 ## Dev Mode Overlay (required)
 Implement a dev toggle:
-- shows all 17 anchors
+- shows all 60 anchors
 - shows indices
 - shows stop labels
 - shows zBand color coding (back=blue, mid=yellow, front=magenta)
@@ -207,7 +207,7 @@ Actions:
 - USE_SPIN (cost 1 spin token): steps = rand 1..5
 
 Advance:
-- nextIndex = (currentIndex + steps) % 17
+- nextIndex = (currentIndex + steps) % 60
 
 Animate:
 - token moves through intermediate anchors (for juice)
@@ -228,7 +228,7 @@ On landing:
 Because board positions are fixed, tile *types* must be data-driven per island run.
 
 Create `generateTileMap(islandNumber, rarity, themeId, dayIndex)`:
-- returns array length 17:
+- returns array length 60:
   - tileType: 'currency'|'chest'|'event'|'hazard'|'egg_shard'|'micro'|'encounter'|'stop'
   - stopId if stop
 

@@ -178,7 +178,7 @@ Repeat similarly for other tables.
 | `island_started_at_ms` | bigint | current ms | Active island start timestamp in unix ms |
 | `island_expires_at_ms` | bigint | current ms + duration | Active island expiry timestamp in unix ms |
 | `island_shards` | int | 0 | Lifetime cumulative shard count for the Collectible Progress Bar |
-| `token_index` | int | 0 | Current token tile index on the 17-tile board |
+| `token_index` | int | 0 | Current token tile index on the 60-tile board |
 | `hearts` | int | 5 | Active Island Run heart count for the in-flight island session |
 | `coins` | int | 0 | Active Island Run coin balance for the in-flight island session |
 | `spin_tokens` | int | 0 | Active Island Run spin-token balance for the in-flight island session |

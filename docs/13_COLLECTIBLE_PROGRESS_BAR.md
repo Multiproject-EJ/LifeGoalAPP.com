@@ -154,7 +154,7 @@ The Player Shop (accessible via the persistent 🛍️ HUD button, always availa
 | Pet accessory | Ribbon / Hat / Cape | 80–150 shards | Cosmetic only. Equippable in the Pet panel. |
 | Pet upgrade | Pet level boost | 200 shards | Grants +1 pet level (see Section 5). |
 | Board cosmetic | Token skin (era-themed) | 250 shards | Replaces the board token sprite for the current era. |
-| Board cosmetic | Board border skin | 400 shards | Decorative ring around the 17-tile board. |
+| Board cosmetic | Board border skin | 400 shards | Decorative ring around the 60-tile board. |
 | Boost | Extra dice roll (×5) | 30 shards | 5 bonus dice added to pool immediately. |
 | Boost | Heart top-up (×3) | 50 shards | 3 hearts added immediately. |
 

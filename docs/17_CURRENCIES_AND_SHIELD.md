@@ -40,7 +40,7 @@
 
 ### 2a. How Shards are earned
 
-- **NOT collected on the 17-tile board.** Shards are a reward, not a tile pick-up.
+- **NOT collected on the 60-tile board.** Shards are a reward, not a tile pick-up.
 - Awarded as a reward from: stops, boss defeats, eggs, shop purchases, special events.
 - May be awarded by the Mini-Game reward output (`IslandRunMinigameReward`).
 - **The Collectible Progress Bar (doc 13) does NOT track shards.** The progress bar tracks the era-specific sub-currency (Energy Cells, Petals, etc.). Shards are a separate persistent currency.

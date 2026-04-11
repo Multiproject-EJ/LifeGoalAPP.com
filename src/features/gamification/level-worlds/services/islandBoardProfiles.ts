@@ -1,4 +1,4 @@
-export type IslandBoardProfileId = 'legacy17' | 'spark60_preview';
+export type IslandBoardProfileId = 'spark60_preview';
 
 export interface IslandBoardProfile {
   id: IslandBoardProfileId;
@@ -7,11 +7,6 @@ export interface IslandBoardProfile {
 }
 
 const BOARD_PROFILES: Record<IslandBoardProfileId, IslandBoardProfile> = {
-  legacy17: {
-    id: 'legacy17',
-    tileCount: 17,
-    stopTileIndices: [0, 4, 8, 12, 16],
-  },
   spark60_preview: {
     id: 'spark60_preview',
     tileCount: 60,
@@ -20,7 +15,7 @@ const BOARD_PROFILES: Record<IslandBoardProfileId, IslandBoardProfile> = {
   },
 };
 
-export const DEFAULT_ISLAND_BOARD_PROFILE_ID: IslandBoardProfileId = 'legacy17';
+export const DEFAULT_ISLAND_BOARD_PROFILE_ID: IslandBoardProfileId = 'spark60_preview';
 
 export function resolveIslandBoardProfile(profileId: IslandBoardProfileId = DEFAULT_ISLAND_BOARD_PROFILE_ID): IslandBoardProfile {
   return BOARD_PROFILES[profileId] ?? BOARD_PROFILES[DEFAULT_ISLAND_BOARD_PROFILE_ID];

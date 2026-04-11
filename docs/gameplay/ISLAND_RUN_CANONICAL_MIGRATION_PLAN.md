@@ -61,11 +61,11 @@ Safest migration path is a **feature-flagged contract-v2 runtime layer** that in
 - `islandRunStops.ts`
 - board component stop-map usage.
 
-**Current issue:** hard-coded 17-tile loop and stop tile indices (0/4/8/12/16).
+**Current issue:** hard-coded assumptions are still present in some legacy paths; production target is a 60-tile loop and stop tile indices (0/12/24/36/59).
 
 **Refactor direction:**
 - Introduce board-config object with tile count and stop rendering separated from tile map.
-- Keep current 17-tile geometry as default layout profile for now, but remove game logic dependence on stop tile positions.
+- Keep 60-tile geometry as default layout profile, and remove game logic dependence on stop tile positions.
 
 ### 3.3 Energy/currency flow (high)
 **Where:**
@@ -310,7 +310,7 @@ Implementation shape:
 - Replaced fixed tile-count gameplay assumptions with profile-derived tile count usage.
 - Enforced movement/wrap/tile-logic dependence on board topology profile instead of hardcoded `17`.
 - Decoupled stop progression correctness from tile indices; stop markers remain visual-only where needed.
-- Kept `legacy17` as active production profile for stability while preserving compatibility for larger profiles (for example `spark60_preview`).
+- Kept `spark60_preview` as active production profile for stability while preserving compatibility for future larger profiles.
 
 ## Phase 4 — Energy migration (dice-only core)
 - Remove heart fallback from roll gating in v2.

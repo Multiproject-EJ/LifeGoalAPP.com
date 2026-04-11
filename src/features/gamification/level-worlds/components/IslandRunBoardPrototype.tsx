@@ -170,10 +170,10 @@ const ISLAND_DURATION_SEC = IS_DEV_TIMER ? 45 : 72 * 60 * 60;
 const ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE = true;
 const ISLAND_RUN_CONTRACT_V2_ENABLED = isIslandRunContractV2Enabled();
 function resolveRequestedBoardProfileId(): IslandBoardProfileId {
-  if (typeof window === 'undefined') return 'legacy17';
+  if (typeof window === 'undefined') return 'spark60_preview';
   const query = new URLSearchParams(window.location.search).get('boardProfile')?.trim().toLowerCase();
   if (query === 'spark60' || query === 'spark60_preview') return 'spark60_preview';
-  return 'legacy17';
+  return 'spark60_preview';
 }
 const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile(resolveRequestedBoardProfileId());
 const PERFECT_COMPANION_MODEL_VERSION = 'phase3_v1';
@@ -6124,7 +6124,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 style={{
                   left: position.x,
                   top: position.y,
-                  transform: `translate(-50%, -50%) scale(${anchor.scale})`,
+                  ['--tile-rotation-deg' as string]: `${isSpark60BoardProfile ? (anchor.tangentDeg - 90) : 0}deg`,
+                  transform: `translate(-50%, -50%) rotate(var(--tile-rotation-deg)) scale(${anchor.scale})`,
                 }}
               >
                 <span className="island-tile__value">

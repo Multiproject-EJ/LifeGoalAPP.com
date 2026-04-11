@@ -34,18 +34,18 @@ export const islandBoardTopologyTests: TestCase[] = [
     },
   },
   {
-    name: 'default board profile still resolves to current 17-tile behavior',
+    name: 'default board profile resolves to spark60_preview topology',
     run: () => {
       const defaultProfile = resolveIslandBoardProfile();
-      assertEqual(defaultProfile.id, 'legacy17', 'Expected legacy17 as the default active profile');
-      assertEqual(defaultProfile.tileCount, 17, 'Expected 17 tiles for the default profile');
+      assertEqual(defaultProfile.id, 'spark60_preview', 'Expected spark60_preview as the default active profile');
+      assertEqual(defaultProfile.tileCount, 60, 'Expected 60 tiles for the default profile');
 
       const tileMap = generateTileMap(3, 'normal', 'forest', 0);
-      assertEqual(tileMap.length, 17, 'Expected generated tile map length to remain 17 in default profile');
+      assertEqual(tileMap.length, 60, 'Expected generated tile map length to default to 60');
     },
   },
   {
-    name: 'future spark preview profile resolves safely but remains dormant until selected',
+    name: 'explicit spark preview profile resolves safely',
     run: () => {
       const previewProfile = resolveIslandBoardProfile('spark60_preview');
       assertEqual(previewProfile.tileCount, 60, 'Expected preview profile to expose 60-tile topology');

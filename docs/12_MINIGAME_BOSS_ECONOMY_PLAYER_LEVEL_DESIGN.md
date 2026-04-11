@@ -20,7 +20,7 @@
 Before any rules: these principles govern every design decision below.
 
 1. **Hearts = dice rolls.** Hearts are not mini-game tickets. 1 heart converts to dice rolls (conversion rate scales with player level). Hearts are the _primary play energy_ for rolling on the board.
-2. **Mini-game tickets (island currency) = entry to the mini-game stop (Stop 2).** Tickets are earned by landing on specific tiles on the 17-tile ring. Tickets are temporary — lost on island travel. Hearts and tickets are completely separate resources.
+2. **Mini-game tickets (island currency) = entry to the mini-game stop (Stop 2).** Tickets are earned by landing on specific tiles on the 60-tile ring. Tickets are temporary — lost on island travel. Hearts and tickets are completely separate resources.
 3. **Stop 1 is a meaningful micro-action, not a passive confirm.** It always asks the player to do one small real-world or intentional action before the island "opens". The action type varies per island (seeded, unpredictable). This is the hook that makes the game feel alive and tied to real life.
 4. **Stops should feel surprising.** The player should never know exactly what they'll be asked to do. Variety > repetition.
 5. **Player level is slow, meaningful progression.** Levelling up gives real, visible benefits. The pace should feel earned — not too fast, not grindy.
@@ -76,7 +76,7 @@ But each island has a **featured** mini-game that is used for milestone boss dif
 
 ### 1c. Ticket (Island Mini-Game Currency) Rules
 
-- Tickets are earned by landing on **ticket-tile** types on the 17-tile ring. Specific tile types award tickets (1–3 per landing, seeded per island).
+- Tickets are earned by landing on **ticket-tile** types on the 60-tile ring. Specific tile types award tickets (1–3 per landing, seeded per island).
 - Completing LifeGoal actions (habits, journals, check-ins, goals) **also awards tickets** while on the active island — even outside the game app.
 - Tickets have **no cap** within an island session.
 - **All unspent tickets are lost when the player travels to a new island.** No carry-forward.
@@ -233,7 +233,7 @@ Hearts are the **primary play energy**. 1 heart converts to a set number of dice
 | Resource | What it is | How earned | How spent | Lost on island travel? |
 |---|---|---|---|---|
 | **Hearts ❤️** | Play energy | Many sources (see 4b) | Converted to dice rolls (1 heart = N dice); also spent as lives in fight bosses | ❌ Never lost |
-| **Dice 🎲** | Roll tokens | Converted from hearts; some rewards | Roll on the 17-tile board (1 dice = 1 roll) | ❌ Never lost (they are a global pool) |
+| **Dice 🎲** | Roll tokens | Converted from hearts; some rewards | Roll on the 60-tile board (1 dice = 1 roll) | ❌ Never lost (they are a global pool) |
 | **Tickets 🎟️** | Mini-game entry tokens | Earned by landing on ticket tiles on the board; earned by completing LifeGoal app actions | Enter the mini-game stop (Stop 2) — 1 ticket per round | ✅ Lost on island travel |
 | **Coins 🪙** | General currency | Tiles, stops, bosses, eggs | Shop purchases | ❌ Never lost |
 | **Diamonds 💎** | Premium currency | Rare tiles, boss victories, special rewards | Shop (premium items) | ❌ Never lost |
