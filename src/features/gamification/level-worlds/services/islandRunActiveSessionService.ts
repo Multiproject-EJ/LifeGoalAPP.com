@@ -1,5 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+/**
+ * @deprecated Legacy single-active-session lease service.
+ * Island Run now uses versioned action commits and this module is kept only
+ * as a temporary rollback surface during migration hardening.
+ */
 export type IslandRunClaimOwnershipStatus = 'granted' | 'already_owner' | 'conflict';
 
 export interface IslandRunClaimSessionResult {

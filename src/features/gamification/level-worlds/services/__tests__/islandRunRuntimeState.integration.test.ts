@@ -22,38 +22,21 @@ function resetStorage(initial: Record<string, string> = {}): void {
 }
 
 function createAlwaysSuccessfulRuntimeClient() {
-  let updateCalls = 0;
+  let commitCalls = 0;
   const client = {
-    from() {
-      return {
-        update() {
-          updateCalls += 1;
-          return {
-            eq() {
-              return this;
-            },
-            select() {
-              return this;
-            },
-            maybeSingle: async () => ({ data: { runtime_version: updateCalls }, error: null }),
-          };
-        },
-        insert: async () => ({ error: null }),
-        select() {
-          return {
-            eq() {
-              return this;
-            },
-            maybeSingle: async () => ({ data: { user_id: USER_ID }, error: null }),
-          };
-        },
-      };
+    rpc(_name: string, args: { p_expected_runtime_version?: number }) {
+      commitCalls += 1;
+      const expected = Math.max(0, Math.floor(args.p_expected_runtime_version ?? 0));
+      return Promise.resolve({
+        data: [{ status: 'applied', runtime_version: expected + 1 }],
+        error: null,
+      });
     },
   } as unknown as import('@supabase/supabase-js').SupabaseClient;
 
   return {
     client,
-    getUpdateCalls: () => updateCalls,
+    getUpdateCalls: () => commitCalls,
   };
 }
 
