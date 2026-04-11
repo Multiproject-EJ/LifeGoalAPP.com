@@ -116,7 +116,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
           legacyStep1Complete: true,
         }),
         false,
-        'Expected v2 mode to ignore legacy-complete step1 and stay incomplete',
+        'Expected v2 mode to ignore legacy-complete step1 without hatchery flag and stay incomplete',
       );
       assertEqual(
         resolveIslandRunFullClearForProgression({
@@ -135,6 +135,54 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
         }),
         true,
         'Expected legacy mode to preserve existing step1 behavior',
+      );
+    },
+  },
+  {
+    name: 'v2 step1 resolves true when hatcheryEffectivelyComplete bridges egg lifecycle to v2 state',
+    run: () => {
+      const stopStatesByIndex = [
+        { objectiveComplete: false, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+      ];
+      assertEqual(
+        resolveIslandRunStep1CompleteForProgression({
+          islandRunContractV2Enabled: true,
+          stopStatesByIndex,
+          legacyStep1Complete: true,
+          hatcheryEffectivelyComplete: true,
+        }),
+        true,
+        'Expected hatcheryEffectivelyComplete to unblock step1 in v2 when egg has been set/collected/sold',
+      );
+      assertEqual(
+        resolveIslandRunStep1CompleteForProgression({
+          islandRunContractV2Enabled: true,
+          stopStatesByIndex,
+          legacyStep1Complete: false,
+          hatcheryEffectivelyComplete: false,
+        }),
+        false,
+        'Expected step1 to remain incomplete when neither v2 state nor hatchery flag says done',
+      );
+      assertEqual(
+        resolveIslandRunStep1CompleteForProgression({
+          islandRunContractV2Enabled: true,
+          stopStatesByIndex: [
+            { objectiveComplete: true, buildComplete: true },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+          ],
+          legacyStep1Complete: false,
+          hatcheryEffectivelyComplete: false,
+        }),
+        true,
+        'Expected v2 stop state to take priority even when hatchery flag is false',
       );
     },
   },

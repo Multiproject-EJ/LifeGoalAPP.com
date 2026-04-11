@@ -2632,6 +2632,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
     stopStatesByIndex: runtimeState.stopStatesByIndex,
     legacyStep1Complete,
+    hatcheryEffectivelyComplete: legacyStep1Complete,
   });
   const contractV2StopResolution = resolveIslandRunContractV2Stops({
     stopStatesByIndex: runtimeState.stopStatesByIndex,
@@ -3093,6 +3094,36 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setIsRolling(false);
   };
 
+  /** Mark v2 stop 0 (hatchery) as fully complete when the egg lifecycle resolves it.
+   *  This keeps stopStatesByIndex in sync so future sessions don't regress step1. */
+  const markHatcheryStopCompleteInV2 = () => {
+    if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return;
+    const currentStates = runtimeStateRef.current.stopStatesByIndex;
+    const entry = currentStates[0];
+    if (entry?.objectiveComplete === true && entry?.buildComplete === true) return; // already done
+    const nowMs = Date.now();
+    const nextStopStatesByIndex = currentStates.map((s, index) => {
+      if (index !== 0) return s;
+      return { objectiveComplete: true, buildComplete: true, completedAtMs: nowMs };
+    });
+    const stopResolution = resolveIslandRunContractV2Stops({ stopStatesByIndex: nextStopStatesByIndex });
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        stopStatesByIndex: nextStopStatesByIndex,
+        activeStopIndex: stopResolution.activeStopIndex,
+        activeStopType: stopResolution.activeStopType,
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      stopStatesByIndex: nextStopStatesByIndex,
+      activeStopIndex: stopResolution.activeStopIndex,
+      activeStopType: stopResolution.activeStopType,
+    }));
+  };
+
   // M5-COMPLETE: handleSetEgg — no tier argument; tier assigned randomly (weighted), hatch delay random 24–72 h
   const handleSetEgg = async () => {
     if (isSettingEgg) return;
@@ -3113,22 +3144,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const nextCompletedStops = activeStopId === 'hatchery'
       ? ensureStopCompleted(completedStops, 'hatchery')
       : completedStops;
-    const nextRuntimeState = {
-      ...runtimeState,
+    const eggPatch = {
       activeEggTier: tier,
       activeEggSetAtMs: start,
       activeEggHatchDurationMs: hatchDurationMs,
       activeEggIsDormant: false,
-      perIslandEggs: { ...runtimeState.perIslandEggs, [islandKey]: ledgerEntry },
-      completedStopsByIsland: {
-        ...runtimeState.completedStopsByIsland,
-        [islandKey]: nextCompletedStops,
-      },
+      perIslandEggs: { [islandKey]: ledgerEntry },
+      completedStopsByIsland: { [islandKey]: nextCompletedStops },
     };
-    const persistResult = await writeIslandRunGameStateRecord({
+    const persistResult = await persistIslandRunRuntimeStatePatch({
       session,
       client,
-      record: nextRuntimeState,
+      patch: eggPatch,
     });
 
     if (!persistResult.ok) {
@@ -3151,7 +3178,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       },
     });
     logIslandRunEntryDebug('island_egg_set', { tier, source: 'island_hatchery' });
-    setRuntimeState(nextRuntimeState);
+    setRuntimeState((current) => ({
+      ...current,
+      activeEggTier: tier,
+      activeEggSetAtMs: start,
+      activeEggHatchDurationMs: hatchDurationMs,
+      activeEggIsDormant: false,
+      perIslandEggs: { ...current.perIslandEggs, [islandKey]: ledgerEntry },
+      completedStopsByIsland: {
+        ...current.completedStopsByIsland,
+        [islandKey]: nextCompletedStops,
+      },
+    }));
 
     if (activeStopId === 'hatchery') {
       if (!isStopCompleted(completedStops, 'hatchery')) {
@@ -3159,6 +3197,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         awardWalletShards(1);
       }
       setCompletedStops(nextCompletedStops);
+      markHatcheryStopCompleteInV2();
       setLandingText(`Egg set! Hatchery stop completed with a ${tier} egg now incubating.`);
       setActiveStopId(null);
     }
@@ -3654,6 +3693,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       },
     });
     setCompletedStops(nextCompletedStops);
+    markHatcheryStopCompleteInV2();
     setRuntimeState((current) => ({
       ...current,
       perIslandEggs: { ...current.perIslandEggs, [islandKey]: collectedEntry },
@@ -3747,6 +3787,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       },
     });
     setCompletedStops(nextCompletedStops);
+    markHatcheryStopCompleteInV2();
     setRuntimeState((current) => ({
       ...current,
       perIslandEggs: { ...current.perIslandEggs, [islandKey]: soldEntry },
@@ -5835,7 +5876,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               disabled={showFirstRunCelebration || isRolling || (step1Complete && isEnergyDepletedForRoll && !isIslandTimerPendingStart) || showTravelOverlay}
             >
               <span className="island-run-prototype__footer-roll-btn-content">
-                <span className="island-run-prototype__footer-roll-btn-dice">🎲 {dicePool}</span>
+                <span className="island-run-prototype__footer-roll-btn-dice">🎲 {hasHydratedRuntimeState ? dicePool : '—'}</span>
                 <span>{isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}</span>
               </span>
             </button>
