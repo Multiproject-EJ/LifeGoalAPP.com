@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   CANONICAL_BOARD_SIZE,
-  TILE_ANCHORS,
   TILE_ANCHORS_40,
   TOKEN_START_TILE_INDEX,
   OUTER_STOP_ANCHORS,
@@ -847,14 +846,13 @@ interface IslandRunBoardPrototypeProps {
 export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: IslandRunBoardPrototypeProps) {
   const { client } = useSupabaseAuth();
   const activeTileAnchors = useMemo(
-    () => (ACTIVE_BOARD_PROFILE.id === 'spark60_preview' ? TILE_ANCHORS_40 : TILE_ANCHORS),
+    () => TILE_ANCHORS_40,
     [],
   );
   const isSpark60BoardProfile = ACTIVE_BOARD_PROFILE.id === 'spark60_preview';
   const boardRef = useRef<HTMLDivElement>(null);
   const topbarMenuRef = useRef<HTMLDivElement>(null);
   const topbarMenuFirstItemRef = useRef<HTMLButtonElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   // M16D: track previous shard count to detect island-travel reset (snap fill bar to 0, no animation)
   const prevShardsRef = useRef<number>(0);
   const [shardFillNoTransition, setShardFillNoTransition] = useState(false);
@@ -1049,9 +1047,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // B2-1: legacy wallet field.
   // In contract-v2 this wallet currently tracks minigame/event tokens (not movement spins).
   const [spinTokens, setSpinTokens] = useState(0);
-
-  // B2-2: token landing animation state
-  const [isTokenLanding, setIsTokenLanding] = useState(false);
 
   // B3-2: minigame launcher state (M11B framework)
   const [activeLaunchedMinigameId, setActiveLaunchedMinigameId] = useState<string | null>(null);
@@ -1991,65 +1986,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return () => window.removeEventListener('resize', updateBoardSize);
   }, []);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ratio = window.devicePixelRatio || 1;
-    canvas.width = Math.floor(boardSize.width * ratio);
-    canvas.height = Math.floor(boardSize.height * ratio);
-    canvas.style.width = `${boardSize.width}px`;
-    canvas.style.height = `${boardSize.height}px`;
-
-    const context = canvas.getContext('2d');
-    if (!context) return;
-    context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    context.clearRect(0, 0, boardSize.width, boardSize.height);
-
-    const points = activeTileAnchors.map((anchor) => toScreen(anchor, boardSize.width, boardSize.height));
-    if (!points.length) return;
-
-    context.lineCap = 'round';
-    context.lineJoin = 'round';
-
-    context.beginPath();
-    context.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i += 1) {
-      const prev = points[i - 1];
-      const current = points[i];
-      const midX = (prev.x + current.x) / 2;
-      const midY = (prev.y + current.y) / 2;
-      context.quadraticCurveTo(prev.x, prev.y, midX, midY);
-    }
-
-    const last = points[points.length - 1];
-    const first = points[0];
-    const closeMidX = (last.x + first.x) / 2;
-    const closeMidY = (last.y + first.y) / 2;
-    context.quadraticCurveTo(last.x, last.y, closeMidX, closeMidY);
-
-    const glowGradient = context.createLinearGradient(0, 0, 0, boardSize.height);
-    glowGradient.addColorStop(0, activeTheme.pathGlowStops[0]);
-    glowGradient.addColorStop(0.5, activeTheme.pathGlowStops[1]);
-    glowGradient.addColorStop(1, activeTheme.pathGlowStops[2]);
-
-    context.strokeStyle = 'rgba(255, 255, 255, 0.26)';
-    context.lineWidth = 26;
-    context.stroke();
-
-    context.strokeStyle = glowGradient;
-    context.lineWidth = 13;
-    context.stroke();
-
-    if (showDebug) {
-      context.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-      context.setLineDash([8, 8]);
-      context.lineWidth = 2;
-      context.stroke();
-      context.setLineDash([]);
-    }
-  }, [activeTheme.pathGlowStops, boardSize, showDebug]);
-
   // B3-5: island clear celebration auto-dismiss
   useEffect(() => {
     if (showIslandClearCelebration) {
@@ -2562,36 +2498,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return stopMap;
   }, [stopMap]);
 
-  const tokenAnchor = activeTileAnchors[resolveWrappedTokenIndex(tokenIndex, 0, activeTileAnchors.length)];
-  const tokenPosition = toScreen(tokenAnchor, boardSize.width, boardSize.height);
   const activeStop = activeStopId ? islandStopPlan.find((stop) => stop.stopId === activeStopId) ?? null : null;
-  const focusAnchorByStopId = useMemo(() => {
-    const anchors = OUTER_STOP_ANCHORS.filter((anchor) => anchor.id !== 'shop');
-    const entries = islandStopPlan.map((stop, index) => [stop.stopId, anchors[index]] as const);
-    return Object.fromEntries(entries) as Record<string, (typeof OUTER_STOP_ANCHORS)[number] | undefined>;
-  }, [islandStopPlan]);
-  const focusedAnchor = focusedStopId ? focusAnchorByStopId[focusedStopId] ?? null : null;
-  const focusedAnchorScreen = focusedAnchor
-    ? toScreen({
-      id: `focus_${focusedAnchor.id}`,
-      x: focusedAnchor.x,
-      y: focusedAnchor.y,
-      zBand: 'front',
-      tangentDeg: 0,
-      scale: 1,
-    }, boardSize.width, boardSize.height)
-    : null;
-  const cameraTransform = useMemo(() => {
-    if (cameraMode === 'overview_manual') {
-      return 'translate(0px, 0px) scale(0.88)';
-    }
-    if (cameraMode === 'stop_focus' && focusedAnchorScreen) {
-      const dx = (boardSize.width / 2) - focusedAnchorScreen.x;
-      const dy = (boardSize.height / 2) - focusedAnchorScreen.y;
-      return `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) scale(1.14)`;
-    }
-    return 'translate(0px, 0px) scale(1)';
-  }, [boardSize.height, boardSize.width, cameraMode, focusedAnchorScreen]);
 
   const orbitStopVisuals = useMemo<OrbitStopVisual[]>(() => {
     const orderedAnchors = OUTER_STOP_ANCHORS.filter((anchor) => anchor.id !== 'shop');
@@ -3311,10 +3218,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setEncounterResolved(false);
     }
 
-    // B2-2: trigger landing animation
-    setIsTokenLanding(true);
-    window.setTimeout(() => setIsTokenLanding(false), 400);
-
     setIsRolling(false);
   };
 
@@ -3451,10 +3354,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setShowEncounterModal(false);
       setEncounterResolved(false);
     }
-
-    // B2-2: trigger landing animation
-    setIsTokenLanding(true);
-    window.setTimeout(() => setIsTokenLanding(false), 400);
 
     setIsRolling(false);
   };

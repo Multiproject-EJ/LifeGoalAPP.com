@@ -62,10 +62,14 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
 
   const rafRef = useRef<number>(0);
   const isAnimatingRef = useRef(false);
+  /** Tracks the token's current rendered position so animateHops can arc from the live spot,
+   *  even if a previous animation was interrupted mid-flight. */
+  const animPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   /** Snap token to a tile (no animation) */
   const snapTo = useCallback((anchor: TileAnchor) => {
     const pos = toScreen(anchor);
+    animPosRef.current = pos;
     setAnimState({
       x: pos.x, y: pos.y,
       scaleX: 1, scaleY: 1,
@@ -91,9 +95,10 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
       let hopIndex = 0;
       let hopStartTime = 0;
 
-      // Get the position of the tile just before the first hop target
-      const previousTileIndex = indices[0] - 1 < 0 ? anchors.length - 1 : indices[0] - 1;
-      let fromPos = toScreen(anchors[previousTileIndex] ?? anchors[0]);
+      // Arc from the token's current live position so that interrupting a
+      // mid-flight animation starts the new arc from the correct screen spot,
+      // rather than inferring the previous tile's anchor position.
+      let fromPos = { x: animPosRef.current.x, y: animPosRef.current.y };
 
       function startNextHop(now: number) {
         hopStartTime = now;
@@ -147,6 +152,7 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
           scaleY = 1 - 0.20 * (1 - landT);
         }
 
+        animPosRef.current = { x: pos.x, y: pos.y };
         setAnimState({
           x: pos.x,
           y: pos.y,
@@ -166,6 +172,7 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
           } else {
             // All hops done — landing!
             isAnimatingRef.current = false;
+            animPosRef.current = { x: toPos.x, y: toPos.y };
             setAnimState({
               x: toPos.x,
               y: toPos.y,
