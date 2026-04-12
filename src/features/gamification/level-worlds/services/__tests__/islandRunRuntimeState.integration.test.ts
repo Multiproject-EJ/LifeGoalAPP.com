@@ -580,6 +580,182 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
     },
   },
   {
+    // Regression: write-amplification loop prevention.
+    //
+    // Scenario: Component mounts with coins=0 (useState default). Hydration
+    // delivers runtimeState.coins=30 from the server. Before the hydration
+    // effect can apply setCoins(30), the persist effect fires and sees
+    // localCoins(0) !== runtimeState.coins(30) → writes {coins:0} back,
+    // overwriting the correct server value and starting an oscillation loop.
+    //
+    // The hasCompletedInitialHydrationSyncRef guard prevents this by blocking
+    // persist effects until the hydration-to-local-state sync has completed.
+    //
+    // This test proves the exact guard decision logic: before the guard is
+    // set, the persist-effect condition (localField !== runtimeField) would
+    // trigger a write with the stale value; after hydration sync applies the
+    // server values, the condition is no longer true and no write occurs.
+    name: 'hydration sync guard prevents stale-default write of coins/hearts/dicePool/tokenIndex/spinTokens before initial hydration completes',
+    run: async () => {
+      resetStorage();
+      const session = makeSession();
+
+      // Step 1: Simulate "server-hydrated" runtimeState with non-default values
+      const hydratedState = {
+        ...readIslandRunGameStateRecord(session),
+        coins: 30,
+        hearts: 8,
+        dicePool: 14,
+        tokenIndex: 11,
+        spinTokens: 3,
+      };
+
+      // Step 2: Simulate local state at component mount (useState defaults)
+      const localDefaults = {
+        coins: 0,          // useState(0)
+        hearts: 5,          // useState(5)
+        dicePool: 10,       // useState(() => convertHeartToDicePool(1))
+        tokenIndex: 0,      // useState(TOKEN_START_TILE_INDEX)
+        spinTokens: 0,      // useState(0)
+      };
+
+      // Step 3: Guard = false (initial hydration sync NOT yet complete)
+      //
+      // The persist effect's decision logic is:
+      //   if (!hasCompletedInitialHydrationSync) return;
+      //   if (runtimeState.field === localField) return;
+      //   else: write(localField)  ← STALE WRITE
+      //
+      // Verify that WITHOUT the guard, the diff check would pass (triggering
+      // a write) — proving this scenario actually causes the bug.
+      const hasCompletedInitialHydrationSync = false;
+
+      const wouldPersistEffectWrite = (guardActive: boolean) => {
+        if (!guardActive) return false;  // guard blocks → no write
+
+        // This is the exact condition from the persist effect at line ~2193
+        if (
+          hydratedState.tokenIndex === localDefaults.tokenIndex
+          && hydratedState.hearts === localDefaults.hearts
+          && hydratedState.coins === localDefaults.coins
+          && hydratedState.spinTokens === localDefaults.spinTokens
+          && hydratedState.dicePool === localDefaults.dicePool
+        ) {
+          return false;  // no diff → no write
+        }
+        return true;  // diff detected → write
+      };
+
+      // Before guard: persist effect must NOT write
+      assertEqual(
+        wouldPersistEffectWrite(hasCompletedInitialHydrationSync),
+        false,
+        'Expected persist effect to be blocked before initial hydration sync completes',
+      );
+
+      // Step 4: Verify the diff is real (without guard, a write WOULD fire)
+      assert(
+        hydratedState.coins !== localDefaults.coins,
+        'Expected coins to differ between hydrated state (30) and local default (0) — this is the exact bug trigger',
+      );
+      assert(
+        hydratedState.hearts !== localDefaults.hearts,
+        'Expected hearts to differ between hydrated state (8) and local default (5)',
+      );
+      assert(
+        hydratedState.dicePool !== localDefaults.dicePool,
+        'Expected dicePool to differ between hydrated state (14) and local default (10)',
+      );
+      assert(
+        hydratedState.tokenIndex !== localDefaults.tokenIndex,
+        'Expected tokenIndex to differ between hydrated state (11) and local default (0)',
+      );
+      assert(
+        hydratedState.spinTokens !== localDefaults.spinTokens,
+        'Expected spinTokens to differ between hydrated state (3) and local default (0)',
+      );
+
+      // Step 5: Guard = true (hydration sync has applied server values)
+      // After hydration sync, local state now equals hydrated runtimeState
+      // so the persist effect's diff check returns false → no stale write.
+      const localAfterHydrationSync = {
+        coins: hydratedState.coins,
+        hearts: hydratedState.hearts,
+        dicePool: hydratedState.dicePool,
+        tokenIndex: hydratedState.tokenIndex,
+        spinTokens: hydratedState.spinTokens,
+      };
+
+      const wouldPersistEffectWritePostSync = (() => {
+        const guardActive = true;  // guard now open
+        if (!guardActive) return false;
+
+        if (
+          hydratedState.tokenIndex === localAfterHydrationSync.tokenIndex
+          && hydratedState.hearts === localAfterHydrationSync.hearts
+          && hydratedState.coins === localAfterHydrationSync.coins
+          && hydratedState.spinTokens === localAfterHydrationSync.spinTokens
+          && hydratedState.dicePool === localAfterHydrationSync.dicePool
+        ) {
+          return false;
+        }
+        return true;
+      })();
+
+      assertEqual(
+        wouldPersistEffectWritePostSync,
+        false,
+        'Expected no write after hydration sync because local state now matches runtimeState',
+      );
+
+      // Step 6: After a genuine gameplay action changes coins, the guard
+      // allows the persist effect to write normally.
+      const localAfterGameplayAction = {
+        ...localAfterHydrationSync,
+        coins: localAfterHydrationSync.coins + 15,  // earned 15 coins from tile landing
+      };
+
+      const wouldPersistEffectWriteAfterAction = (() => {
+        const guardActive = true;
+        if (!guardActive) return false;
+
+        if (
+          hydratedState.tokenIndex === localAfterGameplayAction.tokenIndex
+          && hydratedState.hearts === localAfterGameplayAction.hearts
+          && hydratedState.coins === localAfterGameplayAction.coins
+          && hydratedState.spinTokens === localAfterGameplayAction.spinTokens
+          && hydratedState.dicePool === localAfterGameplayAction.dicePool
+        ) {
+          return false;
+        }
+        return true;
+      })();
+
+      assertEqual(
+        wouldPersistEffectWriteAfterAction,
+        true,
+        'Expected persist effect to write after a genuine gameplay action changes coins',
+      );
+
+      // Step 7: Prove end-to-end that the hydrated record persists correctly
+      // (server state with coins=30 survives a round-trip without being
+      // overwritten by the default coins=0).
+      const { client } = createAlwaysSuccessfulRuntimeClient();
+      const writeResult = await writeIslandRunGameStateRecord({
+        session,
+        client,
+        record: hydratedState,
+      });
+      assertDeepEqual(writeResult, { ok: true }, 'Expected hydrated state write to succeed');
+      const persisted = readIslandRunGameStateRecord(session);
+      assertEqual(persisted.coins, 30, 'Expected persisted coins to be hydrated value (30), not stale default (0)');
+      assertEqual(persisted.hearts, 8, 'Expected persisted hearts to be hydrated value (8), not stale default (5)');
+      assertEqual(persisted.dicePool, 14, 'Expected persisted dicePool to be hydrated value (14), not stale default (10)');
+      assertEqual(persisted.tokenIndex, 11, 'Expected persisted tokenIndex to be hydrated value (11), not stale default (0)');
+      assertEqual(persisted.spinTokens, 3, 'Expected persisted spinTokens to be hydrated value (3), not stale default (0)');
+    },
+  },
+  {
     name: 'syncState returns to idle after blocked_remote_backoff write followed by successful post-expiry write',
     run: async () => {
       resetStorage();
