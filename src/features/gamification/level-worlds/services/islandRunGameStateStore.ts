@@ -152,6 +152,93 @@ const CONTRACT_V2_STOP_COUNT = 5;
 const DEFAULT_STOP_BUILD_REQUIRED_ESSENCE = 100; // Placeholder for phase-2 tuning.
 const DEFAULT_REWARD_BAR_THRESHOLD = 10; // Placeholder for phase-2 tuning.
 
+type IslandRunRuntimeCommitSyncState = 'idle' | 'committing' | 'blocked_remote_backoff' | 'blocked_conflict_recovery';
+type IslandRunRuntimeCommitParkReason = 'single_flight' | 'backoff' | 'conflict_recovery';
+
+/**
+ * Runtime commit coordinator — enforced invariants:
+ *
+ * 1. Max 1 in-flight commit per user at any time (single-flight via inFlightCount).
+ * 2. No commits are attempted while remote backoff is active.
+ * 3. Parked writes resume only after the in-flight slot clears (via setTimeout).
+ * 4. clientActionId includes a monotonic counter, guaranteeing no false dedupe.
+ * 5. syncState always resets to 'idle' in the finally block when inFlightCount === 0.
+ */
+interface IslandRunRuntimeCommitCoordinator {
+  syncState: IslandRunRuntimeCommitSyncState;
+  inFlightCount: number;
+  inFlightActionIds: Set<string>;
+  parkedActionId: string | null;
+  parkedRecord: IslandRunGameStateRecord | null;
+  parkedReason: IslandRunRuntimeCommitParkReason | null;
+}
+
+const runtimeCommitCoordinatorByUser = new Map<string, IslandRunRuntimeCommitCoordinator>();
+let runtimeCommitAttemptCounter = 0;
+
+export function resetIslandRunRuntimeCommitCoordinatorForTests(): void {
+  runtimeCommitCoordinatorByUser.clear();
+  runtimeCommitAttemptCounter = 0;
+}
+
+export function getIslandRunRuntimeCommitSyncStateForTests(userId: string): IslandRunRuntimeCommitSyncState {
+  return getRuntimeCommitCoordinator(userId).syncState;
+}
+
+function getRuntimeCommitCoordinator(userId: string): IslandRunRuntimeCommitCoordinator {
+  const existing = runtimeCommitCoordinatorByUser.get(userId);
+  if (existing) return existing;
+
+  const created: IslandRunRuntimeCommitCoordinator = {
+    syncState: 'idle',
+    inFlightCount: 0,
+    inFlightActionIds: new Set<string>(),
+    parkedActionId: null,
+    parkedRecord: null,
+    parkedReason: null,
+  };
+  runtimeCommitCoordinatorByUser.set(userId, created);
+  return created;
+}
+
+function buildRuntimeCommitAttemptId(userId: string) {
+  runtimeCommitAttemptCounter += 1;
+  return `runtime-commit-${userId}-${Date.now()}-${runtimeCommitAttemptCounter}`;
+}
+
+/**
+ * Lightweight deterministic hash used for client action dedupe keys only.
+ * This is intentionally non-cryptographic and not used for security decisions.
+ */
+function hashRuntimeCommitPayload(input: string): string {
+  let hash = 2166136261;
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
+function stableRuntimeCommitStringify(value: unknown): string {
+  if (value === null || typeof value !== 'object') {
+    return JSON.stringify(value);
+  }
+
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => stableRuntimeCommitStringify(entry)).join(',')}]`;
+  }
+
+  const entries = Object.entries(value as Record<string, unknown>)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, entryValue]) => `${JSON.stringify(key)}:${stableRuntimeCommitStringify(entryValue)}`);
+  return `{${entries.join(',')}}`;
+}
+
+function buildRuntimeClientActionId(userId: string, record: IslandRunGameStateRecord): string {
+  runtimeCommitAttemptCounter += 1;
+  return `runtime-${userId}-${runtimeCommitAttemptCounter}-${Math.max(0, Math.floor(record.runtimeVersion))}-${hashRuntimeCommitPayload(stableRuntimeCommitStringify(record))}`;
+}
+
 export function deriveIslandRunContractV2StopType(index: number): 'hatchery' | 'habit' | 'breathing' | 'wisdom' | 'boss' {
   switch (index) {
     case 0:
@@ -1266,13 +1353,17 @@ export async function writeIslandRunGameStateRecord(options: {
   client: SupabaseClient | null;
   record: IslandRunGameStateRecord;
   skipQueueReplay?: boolean;
+  triggerSource?: string;
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
-  const { session, client, record, skipQueueReplay = false } = options;
+  const { session, client, record, skipQueueReplay = false, triggerSource = 'runtime_state_write' } = options;
   const existingLocalRecord = readIslandRunGameStateRecord(session);
   const localRecord: IslandRunGameStateRecord = {
     ...record,
     runtimeVersion: Math.max(record.runtimeVersion, existingLocalRecord.runtimeVersion),
   };
+  const runtimeBaseVersion = Math.max(0, Math.floor(localRecord.runtimeVersion));
+  const clientActionId = buildRuntimeClientActionId(session.user.id, localRecord);
+  const coordinator = getRuntimeCommitCoordinator(session.user.id);
 
   if (typeof window !== 'undefined') {
     try {
@@ -1312,6 +1403,15 @@ export async function writeIslandRunGameStateRecord(options: {
     }
   };
 
+  const parkCommitAction = (
+    reason: IslandRunRuntimeCommitParkReason,
+    parkedRecord: IslandRunGameStateRecord,
+  ) => {
+    coordinator.parkedReason = reason;
+    coordinator.parkedActionId = buildRuntimeClientActionId(session.user.id, parkedRecord);
+    coordinator.parkedRecord = parkedRecord;
+  };
+
   if (isDemoSession(session) || !client) {
     enqueuePendingWrite(localRecord);
     logIslandRunEntryDebug('runtime_state_persist_skipped_remote', {
@@ -1326,7 +1426,35 @@ export async function writeIslandRunGameStateRecord(options: {
 
   const remoteBackoffUntil = getRemoteBackoffUntil(session.user.id);
   if (remoteBackoffUntil !== null) {
+    coordinator.syncState = 'blocked_remote_backoff';
+    parkCommitAction('backoff', localRecord);
     enqueuePendingWrite(localRecord);
+    logIslandRunEntryDebug('runtime_state_commit_blocked', {
+      userId: session.user.id,
+      reason: 'remote_backoff_active',
+      backoffUntil: new Date(remoteBackoffUntil).toISOString(),
+      clientActionId,
+      commitAttemptId: buildRuntimeCommitAttemptId(session.user.id),
+      runtimeBaseVersion,
+      inFlightCount: coordinator.inFlightCount,
+      syncState: coordinator.syncState,
+      isPersistBlocked: true,
+      triggerSource,
+      ...getRuntimeStateDebugFields(localRecord),
+    });
+    logIslandRunEntryDebug('runtime_state_commit_parked', {
+      userId: session.user.id,
+      reason: 'remote_backoff_active',
+      backoffUntil: new Date(remoteBackoffUntil).toISOString(),
+      clientActionId,
+      commitAttemptId: buildRuntimeCommitAttemptId(session.user.id),
+      runtimeBaseVersion,
+      inFlightCount: coordinator.inFlightCount,
+      syncState: coordinator.syncState,
+      isPersistBlocked: true,
+      triggerSource,
+      ...getRuntimeStateDebugFields(localRecord),
+    });
     logIslandRunEntryDebug('runtime_state_persist_skipped_remote', {
       userId: session.user.id,
       reason: 'remote_backoff_active',
@@ -1336,9 +1464,49 @@ export async function writeIslandRunGameStateRecord(options: {
     return { ok: true };
   }
 
+  if (coordinator.inFlightActionIds.has(clientActionId) || coordinator.parkedActionId === clientActionId) {
+    logIslandRunEntryDebug('runtime_state_commit_blocked', {
+      userId: session.user.id,
+      reason: 'duplicate_client_action_id',
+      clientActionId,
+      commitAttemptId: buildRuntimeCommitAttemptId(session.user.id),
+      runtimeBaseVersion,
+      inFlightCount: coordinator.inFlightCount,
+      syncState: coordinator.syncState,
+      isPersistBlocked: true,
+      triggerSource,
+      ...getRuntimeStateDebugFields(localRecord),
+    });
+    return { ok: true };
+  }
+
+  if (coordinator.inFlightCount > 0) {
+    parkCommitAction('single_flight', localRecord);
+    logIslandRunEntryDebug('runtime_state_commit_parked', {
+      userId: session.user.id,
+      reason: 'single_flight_inflight',
+      clientActionId,
+      commitAttemptId: buildRuntimeCommitAttemptId(session.user.id),
+      runtimeBaseVersion,
+      inFlightCount: coordinator.inFlightCount,
+      syncState: coordinator.syncState,
+      isPersistBlocked: true,
+      triggerSource,
+      ...getRuntimeStateDebugFields(localRecord),
+    });
+    return { ok: true };
+  }
+
   logIslandRunEntryDebug('runtime_state_persist_start', {
     userId: session.user.id,
     table: ISLAND_RUN_RUNTIME_STATE_TABLE,
+    clientActionId,
+    commitAttemptId: buildRuntimeCommitAttemptId(session.user.id),
+    runtimeBaseVersion,
+    inFlightCount: coordinator.inFlightCount,
+    syncState: coordinator.syncState,
+    isPersistBlocked: false,
+    triggerSource,
     ...getRuntimeStateDebugFields(localRecord),
     runtimeVersion: localRecord.runtimeVersion,
   });
@@ -1346,11 +1514,25 @@ export async function writeIslandRunGameStateRecord(options: {
   if (!skipQueueReplay) {
     const pendingWrite = readPendingWrite();
     if (pendingWrite) {
+      const resumedActionId = buildRuntimeClientActionId(session.user.id, pendingWrite);
+      logIslandRunEntryDebug('runtime_state_commit_resumed', {
+        userId: session.user.id,
+        reason: 'pending_write_replay',
+        clientActionId: resumedActionId,
+        commitAttemptId: buildRuntimeCommitAttemptId(session.user.id),
+        runtimeBaseVersion: pendingWrite.runtimeVersion,
+        inFlightCount: coordinator.inFlightCount,
+        syncState: coordinator.syncState,
+        isPersistBlocked: false,
+        triggerSource,
+        ...getRuntimeStateDebugFields(pendingWrite),
+      });
       const replayResult = await writeIslandRunGameStateRecord({
         session,
         client,
         record: pendingWrite,
         skipQueueReplay: true,
+        triggerSource: 'queue_replay',
       });
       if (replayResult.ok) {
         clearPendingWrite();
@@ -1360,18 +1542,35 @@ export async function writeIslandRunGameStateRecord(options: {
     }
   }
 
+  coordinator.inFlightCount += 1;
+  coordinator.inFlightActionIds.add(clientActionId);
+  coordinator.syncState = 'committing';
+
   const tryConditionalWrite = async (candidate: IslandRunGameStateRecord): Promise<
     | { status: 'ok'; nextVersion: number }
     | { status: 'conflict' }
     | { status: 'error'; error: { message?: string | null; code?: string | null } }
   > => {
     const expectedVersion = Math.max(0, Math.floor(candidate.runtimeVersion));
+    const commitAttemptId = buildRuntimeCommitAttemptId(session.user.id);
+    logIslandRunEntryDebug('runtime_state_commit_attempt', {
+      userId: session.user.id,
+      clientActionId,
+      commitAttemptId,
+      runtimeBaseVersion: expectedVersion,
+      inFlightCount: coordinator.inFlightCount,
+      syncState: coordinator.syncState,
+      isPersistBlocked: false,
+      triggerSource,
+      ...getRuntimeStateDebugFields(candidate),
+    });
     const payload = toRemoteRow(candidate, expectedVersion + 1, deviceSessionId) as Record<string, unknown>;
     const commitResult = await commitIslandRunRuntimeSnapshot({
       client,
       deviceSessionId,
       expectedVersion,
       payload,
+      clientActionId,
     });
 
     if (commitResult.status === 'applied' && typeof commitResult.nextVersion === 'number') {
@@ -1388,73 +1587,199 @@ export async function writeIslandRunGameStateRecord(options: {
     };
   };
 
-  let writeResult = await tryConditionalWrite(localRecord);
+  try {
+    let writeResult = await tryConditionalWrite(localRecord);
 
-  if (writeResult.status === 'conflict') {
-    const latest = await hydrateIslandRunGameStateRecordWithSource({ session, client });
-    if (latest.source === 'table') {
-      const merged = mergeRecordForConflict({
-        remote: latest.record,
-        local: localRecord,
-      });
-      writeResult = await tryConditionalWrite(merged);
-    } else {
-      writeResult = {
-        status: 'error',
-        error: {
-          message: 'Runtime state conflict detected and latest server row could not be loaded.',
-          code: 'runtime_conflict_remote_unavailable',
-        },
-      };
+    if (writeResult.status === 'conflict') {
+      const latest = await hydrateIslandRunGameStateRecordWithSource({ session, client });
+      if (latest.source === 'table') {
+        const merged = mergeRecordForConflict({
+          remote: latest.record,
+          local: localRecord,
+        });
+        writeResult = await tryConditionalWrite(merged);
+      } else {
+        writeResult = {
+          status: 'error',
+          error: {
+            message: 'Runtime state conflict detected and latest server row could not be loaded.',
+            code: 'runtime_conflict_remote_unavailable',
+          },
+        };
+      }
     }
-  }
 
-  if (writeResult.status === 'error') {
-    const { error } = writeResult;
-    const remoteBackoffTriggered = isTransportLikeRuntimeStateError(error) || isSchemaMismatchRuntimeStateError(error);
-    const backoffUntil = remoteBackoffTriggered ? activateRemoteBackoff(session.user.id) : null;
+    if (writeResult.status === 'error') {
+      const { error } = writeResult;
+      const conflictRecoveryGateTriggered = getNormalizedRuntimeStateError(error).code === 'runtime_conflict_remote_unavailable';
+      const remoteBackoffTriggered =
+        conflictRecoveryGateTriggered
+        || isTransportLikeRuntimeStateError(error)
+        || isSchemaMismatchRuntimeStateError(error);
+      const backoffUntil = remoteBackoffTriggered ? activateRemoteBackoff(session.user.id) : null;
+      if (conflictRecoveryGateTriggered) {
+        coordinator.syncState = 'blocked_conflict_recovery';
+      } else if (remoteBackoffTriggered) {
+        coordinator.syncState = 'blocked_remote_backoff';
+      }
 
-    logIslandRunEntryDebug('runtime_state_persist_error', {
+      logIslandRunEntryDebug('runtime_state_persist_error', {
+        userId: session.user.id,
+        message: error.message,
+        code: error.code ?? null,
+        remoteBackoffTriggered,
+        remoteBackoffUntil: backoffUntil !== null ? new Date(backoffUntil).toISOString() : null,
+        clientActionId,
+        commitAttemptId: buildRuntimeCommitAttemptId(session.user.id),
+        runtimeBaseVersion,
+        inFlightCount: coordinator.inFlightCount,
+        syncState: coordinator.syncState,
+        isPersistBlocked: remoteBackoffTriggered,
+        triggerSource,
+        ...getRuntimeStateDebugFields(localRecord),
+      });
+
+      if (remoteBackoffTriggered) {
+        parkCommitAction(conflictRecoveryGateTriggered ? 'conflict_recovery' : 'backoff', localRecord);
+        enqueuePendingWrite(localRecord);
+        logIslandRunEntryDebug('runtime_state_commit_blocked', {
+          userId: session.user.id,
+          reason: conflictRecoveryGateTriggered ? 'conflict_recovery_gate_active' : 'remote_backoff_active',
+          backoffUntil: backoffUntil !== null ? new Date(backoffUntil).toISOString() : null,
+          clientActionId,
+          commitAttemptId: buildRuntimeCommitAttemptId(session.user.id),
+          runtimeBaseVersion,
+          inFlightCount: coordinator.inFlightCount,
+          syncState: coordinator.syncState,
+          isPersistBlocked: true,
+          triggerSource,
+          ...getRuntimeStateDebugFields(localRecord),
+        });
+        return { ok: true };
+      }
+
+      return { ok: false, errorMessage: error.message ?? 'Unknown runtime state persistence error.' };
+    }
+
+    if (writeResult.status !== 'ok') {
+      return { ok: false, errorMessage: 'Runtime state persistence did not reach a terminal success state.' };
+    }
+
+    setRemoteBackoffUntil(session.user.id, null);
+    clearPendingWrite();
+
+    if (typeof window !== 'undefined') {
+      try {
+        const persisted = {
+          ...localRecord,
+          runtimeVersion: writeResult.nextVersion,
+        };
+        window.localStorage.setItem(getStorageKey(session.user.id), JSON.stringify(persisted));
+      } catch {
+        // ignore local persistence failures in prototype mode
+      }
+    }
+
+    coordinator.syncState = 'idle';
+
+    logIslandRunEntryDebug('runtime_state_persist_success', {
       userId: session.user.id,
-      message: error.message,
-      code: error.code ?? null,
-      remoteBackoffTriggered,
-      remoteBackoffUntil: backoffUntil !== null ? new Date(backoffUntil).toISOString() : null,
+      clientActionId,
+      commitAttemptId: buildRuntimeCommitAttemptId(session.user.id),
+      runtimeBaseVersion,
+      inFlightCount: coordinator.inFlightCount,
+      syncState: coordinator.syncState,
+      isPersistBlocked: false,
+      triggerSource,
       ...getRuntimeStateDebugFields(localRecord),
+      runtimeVersion: writeResult.nextVersion,
     });
 
-    if (remoteBackoffTriggered) {
-      enqueuePendingWrite(localRecord);
-      return { ok: true };
+    if (coordinator.parkedRecord && coordinator.parkedActionId && coordinator.parkedActionId !== clientActionId) {
+      const resumedRecord = coordinator.parkedRecord;
+      const resumedActionId = coordinator.parkedActionId;
+      const resumedReason = coordinator.parkedReason;
+      coordinator.parkedRecord = null;
+      coordinator.parkedActionId = null;
+      coordinator.parkedReason = null;
+
+      // Targeted debug log for mobile Safari debugging — captures field-level diff
+      // between the parked snapshot and current local state so staleness is visible.
+      const currentLocalAtResume = readIslandRunGameStateRecord(session);
+      logIslandRunEntryDebug('runtime_state_parked_resume_debug', {
+        userId: session.user.id,
+        clientActionId: resumedActionId,
+        resumedRuntimeVersion: resumedRecord.runtimeVersion,
+        currentLocalRuntimeVersion: currentLocalAtResume.runtimeVersion,
+        syncState: coordinator.syncState,
+        resumedTokenIndex: resumedRecord.tokenIndex,
+        currentLocalTokenIndex: currentLocalAtResume.tokenIndex,
+        resumedCoins: resumedRecord.coins,
+        currentLocalCoins: currentLocalAtResume.coins,
+        resumedDicePool: resumedRecord.dicePool,
+        currentLocalDicePool: currentLocalAtResume.dicePool,
+        resumedHearts: resumedRecord.hearts,
+        currentLocalHearts: currentLocalAtResume.hearts,
+        reason: resumedReason === 'single_flight' ? 'single_flight_drain' : 'backoff_expired',
+      });
+
+      logIslandRunEntryDebug('runtime_state_commit_resumed', {
+        userId: session.user.id,
+        reason: resumedReason === 'single_flight' ? 'single_flight_drain' : 'backoff_expired',
+        clientActionId: resumedActionId,
+        commitAttemptId: buildRuntimeCommitAttemptId(session.user.id),
+        runtimeBaseVersion: resumedRecord.runtimeVersion,
+        inFlightCount: coordinator.inFlightCount,
+        syncState: coordinator.syncState,
+        isPersistBlocked: false,
+        triggerSource: 'resume_from_parked_action',
+        ...getRuntimeStateDebugFields(resumedRecord),
+      });
+      const nextTriggerSource = resumedReason === 'single_flight' ? 'resume_after_single_flight' : 'resume_after_backoff';
+      if (typeof window !== 'undefined' && typeof window.setTimeout === 'function') {
+        window.setTimeout(() => {
+          void writeIslandRunGameStateRecord({
+            session,
+            client,
+            record: resumedRecord,
+            skipQueueReplay: true,
+            triggerSource: nextTriggerSource,
+          });
+        }, 0);
+      } else {
+        void Promise.resolve().then(() =>
+          writeIslandRunGameStateRecord({
+            session,
+            client,
+            record: resumedRecord,
+            skipQueueReplay: true,
+            triggerSource: nextTriggerSource,
+          }),
+        );
+      }
     }
 
-    return { ok: false, errorMessage: error.message ?? 'Unknown runtime state persistence error.' };
-  }
-
-  if (writeResult.status !== 'ok') {
-    return { ok: false, errorMessage: 'Runtime state persistence did not reach a terminal success state.' };
-  }
-
-  setRemoteBackoffUntil(session.user.id, null);
-  clearPendingWrite();
-
-  if (typeof window !== 'undefined') {
-    try {
-      const persisted = {
-        ...localRecord,
-        runtimeVersion: writeResult.nextVersion,
-      };
-      window.localStorage.setItem(getStorageKey(session.user.id), JSON.stringify(persisted));
-    } catch {
-      // ignore local persistence failures in prototype mode
+    return { ok: true };
+  } finally {
+    // Invariant: always clean up in-flight tracking so the coordinator stays consistent.
+    // When inFlightCount reaches 0, unconditionally reset syncState to 'idle' to prevent
+    // stuck states (e.g. blocked_conflict_recovery persisting after error paths).
+    coordinator.inFlightActionIds.delete(clientActionId);
+    if (coordinator.inFlightCount <= 0) {
+      logIslandRunEntryDebug('runtime_state_commit_coordinator_inflight_underflow', {
+        userId: session.user.id,
+        clientActionId,
+        runtimeBaseVersion,
+        inFlightCount: coordinator.inFlightCount,
+        syncState: coordinator.syncState,
+        triggerSource,
+      });
+      coordinator.inFlightCount = 0;
+    } else {
+      coordinator.inFlightCount -= 1;
+    }
+    if (coordinator.inFlightCount === 0) {
+      coordinator.syncState = 'idle';
     }
   }
-
-  logIslandRunEntryDebug('runtime_state_persist_success', {
-    userId: session.user.id,
-    ...getRuntimeStateDebugFields(localRecord),
-    runtimeVersion: writeResult.nextVersion,
-  });
-
-  return { ok: true };
 }

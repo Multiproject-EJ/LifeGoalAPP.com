@@ -13,6 +13,7 @@ interface CommitRuntimeSnapshotOptions {
   deviceSessionId: string;
   expectedVersion: number;
   payload: Record<string, unknown>;
+  clientActionId?: string;
 }
 
 /**
@@ -25,9 +26,12 @@ interface CommitRuntimeSnapshotOptions {
 export async function commitIslandRunRuntimeSnapshot(
   options: CommitRuntimeSnapshotOptions,
 ): Promise<IslandRunCommitActionResult> {
-  const { client, deviceSessionId, expectedVersion, payload } = options;
+  const { client, deviceSessionId, expectedVersion, payload, clientActionId: incomingClientActionId } = options;
   const nextVersion = Math.max(0, Math.floor(expectedVersion)) + 1;
   const clientActionId =
+    typeof incomingClientActionId === 'string' && incomingClientActionId.trim().length > 0
+      ? incomingClientActionId
+      :
     typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
       ? crypto.randomUUID()
       : `island-run-action-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
