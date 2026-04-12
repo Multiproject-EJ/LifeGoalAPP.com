@@ -172,6 +172,10 @@ export function resetIslandRunRuntimeCommitCoordinatorForTests(): void {
   runtimeCommitAttemptCounter = 0;
 }
 
+export function getIslandRunRuntimeCommitSyncStateForTests(userId: string): IslandRunRuntimeCommitSyncState {
+  return getRuntimeCommitCoordinator(userId).syncState;
+}
+
 function getRuntimeCommitCoordinator(userId: string): IslandRunRuntimeCommitCoordinator {
   const existing = runtimeCommitCoordinatorByUser.get(userId);
   if (existing) return existing;
@@ -222,7 +226,8 @@ function stableRuntimeCommitStringify(value: unknown): string {
 }
 
 function buildRuntimeClientActionId(userId: string, record: IslandRunGameStateRecord): string {
-  return `runtime-${userId}-${Math.max(0, Math.floor(record.runtimeVersion))}-${hashRuntimeCommitPayload(stableRuntimeCommitStringify(record))}`;
+  runtimeCommitAttemptCounter += 1;
+  return `runtime-${userId}-${runtimeCommitAttemptCounter}-${Math.max(0, Math.floor(record.runtimeVersion))}-${hashRuntimeCommitPayload(stableRuntimeCommitStringify(record))}`;
 }
 
 export function deriveIslandRunContractV2StopType(index: number): 'hatchery' | 'habit' | 'breathing' | 'wisdom' | 'boss' {
@@ -1740,7 +1745,7 @@ export async function writeIslandRunGameStateRecord(options: {
     } else {
       coordinator.inFlightCount -= 1;
     }
-    if (coordinator.inFlightCount === 0 && coordinator.syncState === 'committing') {
+    if (coordinator.inFlightCount === 0) {
       coordinator.syncState = 'idle';
     }
   }

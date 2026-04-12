@@ -1,4 +1,5 @@
 import {
+  getIslandRunRuntimeCommitSyncStateForTests,
   hydrateIslandRunGameStateRecordWithSource,
   readIslandRunGameStateRecord,
   resetIslandRunRuntimeCommitCoordinatorForTests,
@@ -403,7 +404,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
     },
   },
   {
-    name: 'writeIslandRunGameStateRecord enforces single-flight and dedupes same action while in-flight',
+    name: 'writeIslandRunGameStateRecord does not false-dedupe content-identical writes; parks and resumes second',
     run: async () => {
       resetStorage();
       const session = makeSession();
@@ -419,7 +420,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
         },
       });
 
-      const writeADupe = writeIslandRunGameStateRecord({
+      const writeAIdentical = writeIslandRunGameStateRecord({
         session,
         client,
         record: {
@@ -429,14 +430,16 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       });
 
       await Promise.resolve();
-      assertEqual(getCommitCalls(), 1, 'Expected duplicate in-flight action to avoid a second commit call');
+      assertEqual(getCommitCalls(), 1, 'Expected content-identical write to park via single-flight while first is in-flight');
 
       releaseNext();
-      const resultA = await writeA;
-      const resultDupe = await writeADupe;
-      assertDeepEqual(resultA, { ok: true }, 'Expected first write to succeed');
-      assertDeepEqual(resultDupe, { ok: true }, 'Expected duplicate in-flight write to be acknowledged without resend');
-      assertEqual(getCommitCalls(), 1, 'Expected only one commit attempt for duplicate action ids');
+      await writeA;
+      await writeAIdentical;
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      releaseNext();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      assertEqual(getCommitCalls(), 2, 'Expected both content-identical writes to produce separate commits (no false dedupe)');
       assertEqual(getMaxInFlight(), 1, 'Expected max one in-flight commit at any moment');
     },
   },
@@ -504,6 +507,134 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       assertEqual(state.stopStatesByIndex[0]?.buildComplete, false, 'Expected non-boolean buildComplete to normalize to false');
       assertEqual(state.stopStatesByIndex[1]?.objectiveComplete, true, 'Expected explicit boolean objectiveComplete to persist');
       assertEqual(state.stopStatesByIndex[1]?.buildComplete, true, 'Expected explicit boolean buildComplete to persist');
+    },
+  },
+  {
+    name: 'writeIslandRunGameStateRecord allows writes again after backoff expires',
+    run: async () => {
+      resetStorage();
+      const session = makeSession();
+      const baseline = readIslandRunGameStateRecord(session);
+
+      // Phase 1: Trigger conflict → backoff activates
+      const { client: conflictClient } = createConflictRuntimeClient();
+      await writeIslandRunGameStateRecord({
+        session,
+        client: conflictClient,
+        record: { ...baseline, hearts: baseline.hearts + 1 },
+      });
+
+      // Verify backoff is stored
+      const backoffKey = `island_run_runtime_state_${USER_ID}_remote_backoff_until`;
+      assert(window.localStorage.getItem(backoffKey) !== null, 'Expected backoff timestamp to be stored after conflict');
+
+      // Simulate expiry by setting timestamp in the past
+      window.localStorage.setItem(backoffKey, String(Date.now() - 1000));
+
+      // Reset coordinator to isolate backoff-gate behavior from stale parked-replay concerns
+      resetIslandRunRuntimeCommitCoordinatorForTests();
+
+      // Clear pending write to isolate the test
+      window.localStorage.removeItem(`island_run_runtime_state_${USER_ID}_pending_write`);
+
+      // Phase 2: Write with successful client — should not be blocked
+      const { client: successClient, getUpdateCalls } = createAlwaysSuccessfulRuntimeClient();
+      const result = await writeIslandRunGameStateRecord({
+        session,
+        client: successClient,
+        record: { ...baseline, hearts: baseline.hearts + 2 },
+      });
+
+      assertDeepEqual(result, { ok: true }, 'Expected write to succeed after backoff expired');
+      assert(getUpdateCalls() >= 1, 'Expected at least one commit RPC after backoff expired');
+    },
+  },
+  {
+    name: 'syncState returns to idle after conflict error triggers blocked_conflict_recovery',
+    run: async () => {
+      resetStorage();
+      const session = makeSession();
+      const baseline = readIslandRunGameStateRecord(session);
+
+      // Before any write, syncState is idle
+      assertEqual(
+        getIslandRunRuntimeCommitSyncStateForTests(USER_ID),
+        'idle',
+        'Expected initial syncState to be idle',
+      );
+
+      // Trigger conflict → error path sets blocked_conflict_recovery, but finally block should reset to idle
+      const { client: conflictClient } = createConflictRuntimeClient();
+      await writeIslandRunGameStateRecord({
+        session,
+        client: conflictClient,
+        record: { ...baseline, hearts: baseline.hearts + 1 },
+      });
+
+      // With the fix, the finally block unconditionally resets syncState to idle when inFlightCount === 0
+      assertEqual(
+        getIslandRunRuntimeCommitSyncStateForTests(USER_ID),
+        'idle',
+        'Expected syncState to be reset to idle after conflict error (not stuck at blocked_conflict_recovery)',
+      );
+    },
+  },
+  {
+    name: 'syncState returns to idle after blocked_remote_backoff write followed by successful post-expiry write',
+    run: async () => {
+      resetStorage();
+      const session = makeSession();
+      const baseline = readIslandRunGameStateRecord(session);
+      const backoffKey = `island_run_runtime_state_${USER_ID}_remote_backoff_until`;
+
+      // Trigger conflict → backoff activates
+      const { client: conflictClient } = createConflictRuntimeClient();
+      await writeIslandRunGameStateRecord({
+        session,
+        client: conflictClient,
+        record: { ...baseline, hearts: baseline.hearts + 1 },
+      });
+
+      // syncState was reset to idle in finally block (fix #2)
+      assertEqual(
+        getIslandRunRuntimeCommitSyncStateForTests(USER_ID),
+        'idle',
+        'Expected syncState to be idle after conflict write finally block',
+      );
+
+      // Write during active backoff — sets syncState to blocked_remote_backoff (early return, no finally)
+      await writeIslandRunGameStateRecord({
+        session,
+        client: conflictClient,
+        record: { ...baseline, hearts: baseline.hearts + 2 },
+      });
+
+      assertEqual(
+        getIslandRunRuntimeCommitSyncStateForTests(USER_ID),
+        'blocked_remote_backoff',
+        'Expected syncState to be blocked_remote_backoff during active backoff',
+      );
+
+      // Simulate backoff expiry
+      window.localStorage.setItem(backoffKey, String(Date.now() - 1000));
+
+      // Reset coordinator to avoid parked-replay complications, but re-verify from fresh coordinator
+      resetIslandRunRuntimeCommitCoordinatorForTests();
+      window.localStorage.removeItem(`island_run_runtime_state_${USER_ID}_pending_write`);
+
+      // Write with success client
+      const { client: successClient } = createAlwaysSuccessfulRuntimeClient();
+      await writeIslandRunGameStateRecord({
+        session,
+        client: successClient,
+        record: { ...baseline, hearts: baseline.hearts + 3 },
+      });
+
+      assertEqual(
+        getIslandRunRuntimeCommitSyncStateForTests(USER_ID),
+        'idle',
+        'Expected syncState to be idle after successful post-expiry write',
+      );
     },
   },
 ];
