@@ -750,7 +750,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       const persisted = readIslandRunGameStateRecord(session);
       assertEqual(persisted.coins, 30, 'Expected persisted coins to be hydrated value (30), not stale default (0)');
       assertEqual(persisted.hearts, 8, 'Expected persisted hearts to be hydrated value (8), not stale default (5)');
-      assertEqual(persisted.dicePool, 14, 'Expected persisted dicePool to be hydrated value (14), not stale default');
+      assertEqual(persisted.dicePool, 14, 'Expected persisted dicePool to be hydrated value (14), not stale default (10)');
       assertEqual(persisted.tokenIndex, 11, 'Expected persisted tokenIndex to be hydrated value (11), not stale default (0)');
       assertEqual(persisted.spinTokens, 3, 'Expected persisted spinTokens to be hydrated value (3), not stale default (0)');
     },
