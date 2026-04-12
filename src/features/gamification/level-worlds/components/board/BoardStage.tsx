@@ -234,6 +234,10 @@ export function BoardStage(props: BoardStageProps) {
       tokenAnim.snapTo(anchor);
     }
   // tokenAnim.animateHops and tokenAnim.snapTo are stable useCallback refs
+  // (created with `useCallback([toScreen])`) whose identity only changes when
+  // `toScreen` changes (i.e. on viewport resize).  Adding them to the dep array
+  // would cause a re-run on every render where the parent re-memoises toScreen,
+  // not just on genuine tokenIndex / anchors changes.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tokenIndex, anchors]);
 

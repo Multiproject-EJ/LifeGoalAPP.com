@@ -103,5 +103,7 @@ export const TILE_ANCHORS_40: TileAnchor[] = Array.from({ length: 40 }, (_, inde
   };
 });
 
-/** Stop tile indices for the 40-tile spark board (used by the spark60_preview profile, now 40 tiles). */
+/** Stop tile indices for the 40-tile ring board.
+ *  Profile ID is 'spark60_preview' for backwards-compatibility with persisted state;
+ *  the name no longer implies 60 tiles. */
 export const STOP_TILE_INDICES_40 = [0, 10, 20, 30, 39] as const;
