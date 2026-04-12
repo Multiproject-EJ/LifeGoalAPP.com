@@ -35,6 +35,9 @@ export interface BoardStageProps {
   showDebug: boolean;
   /** Disable decorative board art for production art integration */
   isMinimalBoardArt?: boolean;
+  /** Optional tilt overrides for quick camera framing tuning */
+  boardTiltXDeg?: number;
+  boardRotateZDeg?: number;
 
   /** Tile state data */
   tileMap: Record<number, IslandTileMapEntry>;
@@ -76,6 +79,8 @@ export function BoardStage(props: BoardStageProps) {
     isSpark60,
     showDebug,
     isMinimalBoardArt = false,
+    boardTiltXDeg = BOARD_TILT_X_DEG,
+    boardRotateZDeg = BOARD_ROTATE_Z_DEG,
     tileMap,
     stopMap,
     completedEncounterIndices,
@@ -209,7 +214,7 @@ export function BoardStage(props: BoardStageProps) {
 
   // ── Debug overlay ────────────────────────────────────────────────────────
   const ZBAND_COLORS: Record<string, string> = { back: '#50a5ff', mid: '#ffe066', front: '#ff4ff5' };
-  const cameraStageTransform = `${camera.cameraTransform} rotateX(${BOARD_TILT_X_DEG}deg) rotateZ(${BOARD_ROTATE_Z_DEG}deg)`;
+  const cameraStageTransform = `${camera.cameraTransform} rotateX(${boardTiltXDeg}deg) rotateZ(${boardRotateZDeg}deg)`;
 
   return (
     <div

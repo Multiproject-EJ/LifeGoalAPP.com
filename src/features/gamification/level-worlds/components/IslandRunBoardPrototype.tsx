@@ -672,6 +672,20 @@ function toScreen<T extends { x: number; y: number }>(anchor: T, width: number, 
   };
 }
 
+function readNumericParam(
+  params: URLSearchParams,
+  key: string,
+  fallback: number,
+  min: number,
+  max: number,
+) {
+  const raw = params.get(key);
+  if (!raw) return fallback;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) return fallback;
+  return clamp(parsed, min, max);
+}
+
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function formatClock(seconds: number) {
@@ -816,11 +830,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const prevShardsRef = useRef<number>(0);
   const [shardFillNoTransition, setShardFillNoTransition] = useState(false);
   const [showDebug, setShowDebug] = useState(() => new URLSearchParams(window.location.search).get('debugBoard') === '1');
-  const showQaHooks = useMemo(() => new URLSearchParams(window.location.search).get('islandRunQa') === '1', []);
-  const isMinimalBoardArt = useMemo(
-    () => new URLSearchParams(window.location.search).get('minimalBoardArt') === '1',
-    [],
-  );
+  const boardRenderTuning = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      showQaHooks: params.get('islandRunQa') === '1',
+      isMinimalBoardArt: params.get('minimalBoardArt') === '1',
+      boardTiltXDeg: readNumericParam(params, 'boardTiltX', 40, 0, 80),
+      boardRotateZDeg: readNumericParam(params, 'boardRotateZ', 0, -45, 45),
+    };
+  }, []);
+  const { showQaHooks, isMinimalBoardArt, boardTiltXDeg, boardRotateZDeg } = boardRenderTuning;
   const [boardSize, setBoardSize] = useState({ width: 360, height: 360 });
   const [isDevPanelOpen, setIsDevPanelOpen] = useState(false);
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
@@ -6088,6 +6107,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           isSpark60={isSpark60BoardProfile}
           showDebug={showDebug}
           isMinimalBoardArt={isMinimalBoardArt}
+          boardTiltXDeg={boardTiltXDeg}
+          boardRotateZDeg={boardRotateZDeg}
           tileMap={tileMap}
           stopMap={stopMap}
           completedEncounterIndices={completedEncounterIndices}
