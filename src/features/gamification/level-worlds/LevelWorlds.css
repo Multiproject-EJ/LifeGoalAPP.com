@@ -1570,12 +1570,7 @@
   pointer-events: none;
 }
 
-/* Claim-ready state: add glow to entire bar */
-.island-run-board__rewardbar--claimable {
-  box-shadow: 0 0 12px 2px rgba(255, 190, 0, 0.35), 0 4px 14px rgba(120, 90, 30, 0.12);
-}
-
-/* Milestone pulse animation for the bar itself */
+/* Claim-ready state: glow + shimmer on entire bar */
 @keyframes rewardbar-claim-shimmer {
   0%   { box-shadow: 0 0 12px 2px rgba(255, 190, 0, 0.35), 0 4px 14px rgba(120, 90, 30, 0.12); }
   50%  { box-shadow: 0 0 18px 4px rgba(255, 190, 0, 0.55), 0 4px 14px rgba(120, 90, 30, 0.12); }
@@ -1583,6 +1578,7 @@
 }
 
 .island-run-board__rewardbar--claimable {
+  box-shadow: 0 0 12px 2px rgba(255, 190, 0, 0.35), 0 4px 14px rgba(120, 90, 30, 0.12);
   animation: rewardbar-claim-shimmer 1.5s ease-in-out infinite;
 }
 
