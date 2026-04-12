@@ -662,8 +662,9 @@
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
-  gap: 0.95rem;
+  gap: 0;
   min-height: 0;
+  position: relative;
 }
 
 .island-run-prototype__header {
@@ -675,6 +676,8 @@
   background: linear-gradient(160deg, rgba(12, 26, 36, 0.9), rgba(6, 18, 28, 0.85));
   border: 1px solid rgba(145, 206, 230, 0.5);
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+  position: relative;
+  z-index: 20;
 }
 
 .island-run-prototype__header h2 {
@@ -710,9 +713,9 @@
 }
 
 .island-run-prototype__footer {
-  position: sticky;
-  bottom: 0;
-  z-index: 18;
+  position: relative;
+  z-index: 20;
+  margin-top: auto;
   padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 0.45rem);
 }
 
@@ -1234,9 +1237,8 @@
 }
 
 .island-run-board {
-  position: relative;
-  flex: 1 1 auto;
-  width: 100%;
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1245,6 +1247,7 @@
   border: none;
   box-shadow: none;
   isolation: isolate;
+  z-index: 1;
 }
 
 .island-run-board--hud-collapsed {
@@ -3564,12 +3567,11 @@
 .island-run-board__stage-wrapper {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1;
-  max-width: min(100vw, calc(100vh - 220px));
+  height: 100%;
   margin: 0 auto;
   z-index: 2;
   overflow: hidden;
-  flex-shrink: 0;
+  flex: 1 1 auto;
   perspective: 1400px;
   perspective-origin: 50% 35%;
 }

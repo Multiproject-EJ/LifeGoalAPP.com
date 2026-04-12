@@ -96,7 +96,7 @@ export function BoardStage(props: BoardStageProps) {
 
   const boardRef = useRef<HTMLDivElement>(null);
   const gestureLayerRef = useRef<HTMLDivElement>(null);
-  const [boardSize, setBoardSize] = useState({ width: 360, height: 360 });
+  const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
 
   // ── Board size tracking ──────────────────────────────────────────────────
   useEffect(() => {
@@ -105,21 +105,36 @@ export function BoardStage(props: BoardStageProps) {
 
     const updateSize = () => {
       const rect = el.getBoundingClientRect();
-      const side = Math.min(rect.width, rect.height);
-      setBoardSize({ width: side, height: side });
+      setBoardSize({ width: rect.width, height: rect.height });
     };
     updateSize();
     window.addEventListener('resize', updateSize);
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // ── Coordinate transform ─────────────────────────────────────────────────
+  // ── Coordinate transform (uniform scale + centering) ────────────────────
+  // The canonical board is 1000×1000 (square). On a tall phone viewport we
+  // scale uniformly by the narrower dimension and center the content so that
+  // tile proportions are preserved while the full viewport is filled by the
+  // background and camera stage.
+  const { uniformScale, offsetX, offsetY } = useMemo(() => {
+    const s = Math.min(
+      boardSize.width / CANONICAL_BOARD_SIZE.width,
+      boardSize.height / CANONICAL_BOARD_SIZE.height,
+    );
+    return {
+      uniformScale: s,
+      offsetX: (boardSize.width - CANONICAL_BOARD_SIZE.width * s) / 2,
+      offsetY: (boardSize.height - CANONICAL_BOARD_SIZE.height * s) / 2,
+    };
+  }, [boardSize.width, boardSize.height]);
+
   const toScreen = useCallback(
     (anchor: TileAnchor) => ({
-      x: (anchor.x / CANONICAL_BOARD_SIZE.width) * boardSize.width,
-      y: (anchor.y / CANONICAL_BOARD_SIZE.height) * boardSize.height,
+      x: offsetX + anchor.x * uniformScale,
+      y: offsetY + anchor.y * uniformScale,
     }),
-    [boardSize.width, boardSize.height],
+    [uniformScale, offsetX, offsetY],
   );
 
   // ── Camera ───────────────────────────────────────────────────────────────
@@ -220,7 +235,7 @@ export function BoardStage(props: BoardStageProps) {
     <div
       ref={boardRef}
       className={`island-run-board__stage-wrapper ${isMinimalBoardArt ? 'island-run-board__stage-wrapper--minimal-art' : ''}`}
-      style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1' }}
+      style={{ position: 'relative', width: '100%', height: '100%' }}
     >
       {/* Gesture capture layer (invisible, on top) */}
       <div
