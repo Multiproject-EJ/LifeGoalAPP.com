@@ -664,10 +664,11 @@ const ZBAND_COLORS: Record<TileAnchor['zBand'], string> = {
   front: '#ff4ff5',
 };
 
-function toScreen(anchor: TileAnchor, width: number, height: number) {
+function toScreen<T extends { x: number; y: number }>(anchor: T, width: number, height: number) {
+  const side = Math.min(width, height);
   return {
-    x: (anchor.x / CANONICAL_BOARD_SIZE.width) * width,
-    y: (anchor.y / CANONICAL_BOARD_SIZE.height) * height,
+    x: (anchor.x / CANONICAL_BOARD_SIZE.width) * side,
+    y: (anchor.y / CANONICAL_BOARD_SIZE.height) * side,
   };
 }
 
@@ -2791,7 +2792,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
     stopStatesByIndex: runtimeState.stopStatesByIndex,
     legacyStep1Complete,
-    hatcheryEffectivelyComplete: legacyStep1Complete,
+    hatcheryEffectivelyComplete: true,
   });
   const contractV2StopResolution = resolveIslandRunContractV2Stops({
     stopStatesByIndex: runtimeState.stopStatesByIndex,
@@ -5660,14 +5661,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         <header className="island-run-prototype__header">
           <div id="island-run-main-hud">
         <div className="island-run-prototype__always-controls">
-          <button
-            type="button"
-            className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta ${rollButtonMode === 'step1' || rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
-            onClick={step1Complete ? handleRoll : openStep1Stop}
-            disabled={showFirstRunCelebration || isRolling || (step1Complete && isEnergyDepletedForRoll) || showTravelOverlay}
-          >
-            {rollButtonLabel}
-          </button>
+            <button
+              type="button"
+              className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta ${rollButtonMode === 'step1' || rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
+              onClick={step1Complete ? handleRoll : openStep1Stop}
+              disabled={Boolean(rollDisabledReason)}
+            >
+              {rollButtonLabel}
+            </button>
           {canUseSpinForMovement(ISLAND_RUN_CONTRACT_V2_ENABLED) && spinTokens > 0 && (
             <button
               type="button"
@@ -6138,7 +6139,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               type="button"
               className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'step1' || rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
               onClick={isIslandTimerPendingStart ? activateCurrentIsland : (step1Complete ? () => void handleRoll() : openStep1Stop)}
-              disabled={showFirstRunCelebration || isRolling || (step1Complete && isEnergyDepletedForRoll && !isIslandTimerPendingStart) || showTravelOverlay}
+              disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
             >
               <span className="island-run-prototype__footer-roll-btn-content">
                 <span className="island-run-prototype__footer-roll-btn-dice">🎲 {hasHydratedRuntimeState ? dicePool : '—'}</span>
