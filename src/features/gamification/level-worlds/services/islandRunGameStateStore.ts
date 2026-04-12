@@ -193,6 +193,10 @@ function buildRuntimeCommitAttemptId(userId: string) {
   return `runtime-commit-${userId}-${Date.now()}-${runtimeCommitAttemptCounter}`;
 }
 
+/**
+ * Lightweight deterministic hash used for client action dedupe keys only.
+ * This is intentionally non-cryptographic and not used for security decisions.
+ */
 function hashRuntimeCommitPayload(input: string): string {
   let hash = 2166136261;
   for (let index = 0; index < input.length; index += 1) {
@@ -1723,7 +1727,19 @@ export async function writeIslandRunGameStateRecord(options: {
     return { ok: true };
   } finally {
     coordinator.inFlightActionIds.delete(clientActionId);
-    coordinator.inFlightCount = Math.max(0, coordinator.inFlightCount - 1);
+    if (coordinator.inFlightCount <= 0) {
+      logIslandRunEntryDebug('runtime_state_commit_coordinator_inflight_underflow', {
+        userId: session.user.id,
+        clientActionId,
+        runtimeBaseVersion,
+        inFlightCount: coordinator.inFlightCount,
+        syncState: coordinator.syncState,
+        triggerSource,
+      });
+      coordinator.inFlightCount = 0;
+    } else {
+      coordinator.inFlightCount -= 1;
+    }
     if (coordinator.inFlightCount === 0 && coordinator.syncState === 'committing') {
       coordinator.syncState = 'idle';
     }
