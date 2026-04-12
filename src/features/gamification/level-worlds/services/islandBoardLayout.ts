@@ -70,26 +70,27 @@ export const OUTER_STOP_ANCHORS: OrbitStopAnchor[] = [
   { id: 'shop', x: 120, y: 500 },
 ];
 
-// ─── 60-tile board layout (spark60) ──────────────────────────────────────────
+// ─── 40-tile board layout (spark40 / ring40) ─────────────────────────────────
 //
-// 60 tiles arranged around the island ring in canonical 1000×1000 board space.
+// 40 tiles arranged around the island ring in canonical 1000×1000 board space.
+// Matches Monopoly GO's tile count — larger tiles, perfectly readable on mobile.
 //
-// Stop tiles: 0 (hatchery), 12 (minigame), 24 (market), 36 (utility), 59 (boss).
+// Stop tiles: 0 (hatchery), 10 (minigame), 20 (market), 30 (utility), 39 (boss).
 // All positions are in the canonical 1000×1000 coordinate space.
 
-const SPARK60_CENTER_X = 500;
-const SPARK60_CENTER_Y = 500;
-const SPARK60_RADIUS = 340;
-const SPARK60_ROTATION_OFFSET_RAD = (-6 * Math.PI) / 180;
+const SPARK40_CENTER_X = 500;
+const SPARK40_CENTER_Y = 500;
+const SPARK40_RADIUS = 340;
+const SPARK40_ROTATION_OFFSET_RAD = (-6 * Math.PI) / 180;
 
-export const TILE_ANCHORS_60: TileAnchor[] = Array.from({ length: 60 }, (_, index) => {
-  const theta = ((index / 60) * Math.PI * 2) - (Math.PI / 2) + SPARK60_ROTATION_OFFSET_RAD;
-  const x = SPARK60_CENTER_X + Math.cos(theta) * SPARK60_RADIUS;
-  const y = SPARK60_CENTER_Y + Math.sin(theta) * SPARK60_RADIUS;
+export const TILE_ANCHORS_40: TileAnchor[] = Array.from({ length: 40 }, (_, index) => {
+  const theta = ((index / 40) * Math.PI * 2) - (Math.PI / 2) + SPARK40_ROTATION_OFFSET_RAD;
+  const x = SPARK40_CENTER_X + Math.cos(theta) * SPARK40_RADIUS;
+  const y = SPARK40_CENTER_Y + Math.sin(theta) * SPARK40_RADIUS;
 
   const zBand: ZBand = y < 430 ? 'back' : y > 570 ? 'front' : 'mid';
   const tangentDeg = ((theta * 180) / Math.PI) + 90;
-  const normalizedY = (y - SPARK60_CENTER_Y) / SPARK60_RADIUS;
+  const normalizedY = (y - SPARK40_CENTER_Y) / SPARK40_RADIUS;
   const scale = Number((1 + normalizedY * 0.08).toFixed(2));
 
   return {
@@ -102,5 +103,11 @@ export const TILE_ANCHORS_60: TileAnchor[] = Array.from({ length: 60 }, (_, inde
   };
 });
 
-/** Stop tile indices for the 60-tile spark board (maps to spark60_preview profile). */
-export const STOP_TILE_INDICES_60 = [0, 12, 24, 36, 59] as const;
+/** Stop tile indices for the 40-tile spark board (maps to spark60_preview profile). */
+export const STOP_TILE_INDICES_40 = [0, 10, 20, 30, 39] as const;
+
+// ─── Legacy 60-tile anchors (kept for reference) ─────────────────────────────
+/** @deprecated Use TILE_ANCHORS_40. Retained only for historical reference. */
+export const TILE_ANCHORS_60 = TILE_ANCHORS_40;
+/** @deprecated Use STOP_TILE_INDICES_40. */
+export const STOP_TILE_INDICES_60 = STOP_TILE_INDICES_40;

@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import {
   CANONICAL_BOARD_SIZE,
   TILE_ANCHORS,
-  TILE_ANCHORS_60,
+  TILE_ANCHORS_40,
   TOKEN_START_TILE_INDEX,
   OUTER_STOP_ANCHORS,
   type TileAnchor,
@@ -140,7 +140,6 @@ import {
 import {
   resolveIslandRunContractV2Stops,
   resolveIslandRunFullClearForProgression,
-  resolveIslandRunStep1CompleteForProgression,
 } from '../services/islandRunContractV2StopResolver';
 import {
   formatIslandRunSpinTokenReward,
@@ -848,7 +847,7 @@ interface IslandRunBoardPrototypeProps {
 export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: IslandRunBoardPrototypeProps) {
   const { client } = useSupabaseAuth();
   const activeTileAnchors = useMemo(
-    () => (ACTIVE_BOARD_PROFILE.id === 'spark60_preview' ? TILE_ANCHORS_60 : TILE_ANCHORS),
+    () => (ACTIVE_BOARD_PROFILE.id === 'spark60_preview' ? TILE_ANCHORS_40 : TILE_ANCHORS),
     [],
   );
   const isSpark60BoardProfile = ACTIVE_BOARD_PROFILE.id === 'spark60_preview';
@@ -898,7 +897,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [travelOverlayDestinationIsland, setTravelOverlayDestinationIsland] = useState(2);
   const [travelOverlayMode, setTravelOverlayMode] = useState<'advance' | 'retry'>('advance');
   const [isIslandTimerPendingStart, setIsIslandTimerPendingStart] = useState(false);
-  const [step1PromptedIsland, setStep1PromptedIsland] = useState<number | null>(null);
   const [activeEgg, setActiveEgg] = useState<ActiveEgg | null>(null);
   const [isSettingEgg, setIsSettingEgg] = useState(false);
   const [nowMs, setNowMs] = useState(Date.now());
@@ -2766,46 +2764,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [isIslandTimerPendingStart, showTravelOverlay, islandNumber, islandExpiresAtMs]);
 
   useEffect(() => {
-    if (!hasHydratedRuntimeState || showFirstRunCelebration || showTravelOverlay) return;
-
-    const step1Stop = islandStopPlan[0];
-    const step1Complete = step1Stop
-      ? isIslandStopEffectivelyCompleted({
-          stopId: step1Stop.stopId,
-          completedStops: effectiveCompletedStops,
-          hasActiveEgg: Boolean(activeEgg),
-          islandEggSlotUsed,
-        })
-      : true;
-    if (step1Complete) return;
-    if (step1PromptedIsland === islandNumber) return;
-
-    if (step1Stop?.stopId) {
-      setStep1PromptedIsland(islandNumber);
-      setLandingText(`Start here: complete Stop 1 (${step1Stop.title}) to unlock dice.`);
-      logIslandRunEntryDebug('island_step1_prompt_ready', {
-        userId: session.user.id,
-        islandNumber,
-        stopId: step1Stop.stopId,
-        effectiveCompletedStops,
-        hasActiveEgg: Boolean(activeEgg),
-        islandEggSlotUsed,
-      });
-    }
-  }, [
-    hasHydratedRuntimeState,
-    showFirstRunCelebration,
-    showTravelOverlay,
-    islandStopPlan,
-    effectiveCompletedStops,
-    activeEgg,
-    islandEggSlotUsed,
-    step1PromptedIsland,
-    islandNumber,
-    session.user.id,
-  ]);
-
-  useEffect(() => {
     if (!isRolling) return;
 
     const timer = window.setInterval(() => {
@@ -2875,20 +2833,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const timerDisplay = isIslandTimerPendingStart ? 'Ready' : formatIslandCountdown(timeLeftSec);
   const dicePerHeart = getDicePerHeartForIsland(islandNumber);
   const step1Stop = islandStopPlan[0] ?? null;
-  const legacyStep1Complete = step1Stop
-    ? isIslandStopEffectivelyCompleted({
-        stopId: step1Stop.stopId,
-        completedStops,
-        hasActiveEgg: Boolean(activeEgg),
-        islandEggSlotUsed,
-      })
-    : true;
-  const step1Complete = resolveIslandRunStep1CompleteForProgression({
-    islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
-    stopStatesByIndex: runtimeState.stopStatesByIndex,
-    legacyStep1Complete,
-    hatcheryEffectivelyComplete: true,
-  });
+  // Rolling is always free — no stop-gate. step1Complete kept as `true` for
+  // diagnostic logging continuity only.
+  const legacyStep1Complete = true;
+  const step1Complete = true;
   const contractV2StopResolution = resolveIslandRunContractV2Stops({
     stopStatesByIndex: runtimeState.stopStatesByIndex,
   });
@@ -2923,38 +2871,33 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const rollButtonMode = resolveIslandRunRollButtonMode({
     islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
     isRolling,
-    step1Complete,
     dicePool,
     dicePerRoll: DICE_PER_ROLL,
   });
   const rollButtonLabel = rollButtonMode === 'rolling'
     ? 'Rolling...'
-    : rollButtonMode === 'step1'
-      ? 'Open Stop 1 (Hatchery)'
-      : rollButtonMode === 'roll'
-        ? 'Roll (2 dice)'
-        : rollButtonMode === 'convert'
-          ? `Convert 1 heart → ${dicePerHeart} dice`
-          : 'Need 2 dice to roll';
+    : rollButtonMode === 'roll'
+      ? 'Roll (2 dice)'
+      : rollButtonMode === 'convert'
+        ? `Convert 1 heart → ${dicePerHeart} dice`
+        : 'Need 2 dice to roll';
   const compactRollButtonLabel = rollButtonMode === 'rolling'
     ? 'Rolling...'
-    : rollButtonMode === 'step1'
-      ? 'Stop 1'
-      : rollButtonMode === 'roll'
-        ? 'Roll'
-        : rollButtonMode === 'convert'
-          ? 'Convert'
-          : 'Need dice';
+    : rollButtonMode === 'roll'
+      ? 'Roll'
+      : rollButtonMode === 'convert'
+        ? 'Convert'
+        : 'Need dice';
   const rollDisabledReason = showFirstRunCelebration
     ? 'first_run_celebration'
     : isRolling
       ? 'already_rolling'
       : showTravelOverlay
         ? 'travel_overlay'
-        : step1Complete && isEnergyDepletedForRoll
+        : isEnergyDepletedForRoll
           ? 'insufficient_dice'
           : null;
-  const canRoll = !showFirstRunCelebration && !isRolling && !showTravelOverlay && step1Complete && dicePool >= DICE_PER_ROLL;
+  const canRoll = !showFirstRunCelebration && !isRolling && !showTravelOverlay && dicePool >= DICE_PER_ROLL;
   const spinTokenWalletLabel = resolveIslandRunSpinTokenWalletLabel(ISLAND_RUN_CONTRACT_V2_ENABLED);
   const {
     activeTimedEvent,
@@ -3124,7 +3067,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setIsIslandTimerPendingStart(false);
     setLandingText(ISLAND_RUN_CONTRACT_V2_ENABLED
       ? 'Island run started. Timer shown for event context only.'
-      : 'Island timer started. Complete Stop 1 (Hatchery) to unlock dice.');
+      : 'Island timer started. Roll dice to move!');
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
@@ -3143,11 +3086,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       islandExpiresAtMs: expiresAtMs,
     }));
   }, [client, cycleIndex, islandNumber, session]);
-
-  const openStep1Stop = () => {
-    if (!step1Stop?.stopId) return;
-    requestActiveStopTransition(step1Stop.stopId, 'step1_guard_open');
-  };
 
   const handleContractV2RewardBarClaim = () => {
     if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return;
@@ -3246,20 +3184,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    // M11C: Step 1 enforcement — player must complete Stop 1 before rolling
-    if (!step1Complete) {
-      if (isIsland120StartupDiagnosticActive) {
-        logIslandRunEntryDebug('island120_roll_interaction', {
-          userId: session.user.id,
-          action: 'blocked',
-          blockReason: 'step1_required',
-          ...rollDecisionFlags,
-        });
-      }
-      setLandingText(`Complete Stop 1 (${step1Stop?.title ?? 'first stop'}) before rolling dice.`);
-      openStep1Stop();
-      return;
-    }
+    // M11C: Step 1 enforcement removed — rolling is always free when dice are available.
 
     if (isRolling) {
       if (isIsland120StartupDiagnosticActive) {
@@ -3305,17 +3230,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         logIslandRunEntryDebug('island120_roll_interaction', {
           userId: session.user.id,
           action: 'blocked',
-          blockReason: rollResult.status === 'step1_required' ? 'step1_required_action_result' : 'roll_action_rejected',
+          blockReason: 'roll_action_rejected',
           rollResultStatus: rollResult.status,
           ...rollDecisionFlags,
         });
       }
       setIsRolling(false);
-      setLandingText(
-        rollResult.status === 'step1_required'
-          ? `Complete Stop 1 (${step1Stop?.title ?? 'first stop'}) before rolling dice.`
-          : `Need ${DICE_PER_ROLL} dice to roll.`,
-      );
+      setLandingText(`Need ${DICE_PER_ROLL} dice to roll.`);
       return;
     }
     if (isIsland120StartupDiagnosticActive) {
@@ -3471,13 +3392,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const handleSpin = async () => {
     if (!canUseSpinForMovement(ISLAND_RUN_CONTRACT_V2_ENABLED)) {
       setLandingText('Spin movement is unavailable in contract-v2. Use dice rolls to move.');
-      return;
-    }
-
-    // M11C: Step 1 enforcement — player must complete Stop 1 before spinning
-    if (!step1Complete) {
-      setLandingText(`Complete Stop 1 (${step1Stop?.title ?? 'first stop'}) before rolling or spinning.`);
-      openStep1Stop();
       return;
     }
 
@@ -4796,9 +4710,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setMysteryStopReward(null);
     setRollValue(null);
     setRollingDiceFaces([1, 1]);
-    setStep1PromptedIsland(null);
     setLandingText(startTimer
-      ? 'Arrived at new island. Complete Stop 1 (Hatchery) to unlock dice.'
+      ? 'Arrived at new island. Roll dice to move!'
       : 'New island unlocked. Start it when you are ready.');
     void persistIslandRunRuntimeStatePatch({
       session,
@@ -5750,8 +5663,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         <div className="island-run-prototype__always-controls">
             <button
               type="button"
-              className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta ${rollButtonMode === 'step1' || rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
-              onClick={step1Complete ? handleRoll : openStep1Stop}
+              className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
+              onClick={handleRoll}
               disabled={Boolean(rollDisabledReason)}
             >
               {rollButtonLabel}
@@ -5805,10 +5718,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           >
             📖 Story
           </button>
-          {!step1Complete ? (
-            <span className="island-run-prototype__stat-chip">Complete Stop 1 to unlock dice 🔒</span>
-          ) : null}
-        </div>
+          </div>
         {/* M1B: Production HUD — always visible for all logged-in users */}
         <div className="island-run-prototype__status-row island-run-prototype__status-row--production">
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">🎲 <strong>{dicePool}</strong></span>
@@ -5923,9 +5833,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 const completedNonBoss = ISLAND_RUN_CONTRACT_V2_ENABLED
                   ? nonBossStops.filter((s) => stopStateMap.get(s.stopId) === 'completed').length
                   : nonBossStops.filter((s) => effectiveCompletedStops.includes(s.stopId)).length;
-                if (!step1Complete) {
-                  return <span className="island-run-prototype__stat-chip">Complete Stop 1 to unlock dice 🔒</span>;
-                }
                 if (completedNonBoss < nonBossStops.length) {
                   return <span className="island-run-prototype__stat-chip">{completedNonBoss}/{nonBossStops.length} stops done — unlock boss!</span>;
                 }
@@ -6249,8 +6156,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </button>
             <button
               type="button"
-              className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'step1' || rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
-              onClick={isIslandTimerPendingStart ? activateCurrentIsland : (step1Complete ? () => void handleRoll() : openStep1Stop)}
+              className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
+              onClick={isIslandTimerPendingStart ? activateCurrentIsland : () => void handleRoll()}
               disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
             >
               <span className="island-run-prototype__footer-roll-btn-content">

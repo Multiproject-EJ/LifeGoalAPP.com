@@ -2,7 +2,7 @@
  * islandRunRollAction — PWA-authority roll execution service.
  *
  * This module encapsulates the gameplay truth for a single Island Run roll:
- *  1. Validates preconditions (step-1 completion, dice pool availability).
+ *  1. Validates preconditions (dice pool availability).
  *  2. Generates dice outcomes — **random numbers originate here in the PWA,
  *     never in the renderer**.
  *  3. Moves the token via canonical topology rules (resolveWrappedTokenIndex).
@@ -31,7 +31,6 @@ import {
 } from './islandRunGameStateStore';
 import { resolveWrappedTokenIndex } from './islandBoardTopology';
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
-import { isIslandRunContractV2StopCompleteAtIndex } from './islandRunContractV2StopResolver';
 
 // ── roll constants (must match IslandRunBoardPrototype) ───────────────────────
 
@@ -50,8 +49,7 @@ function rollDie(): number {
 /** Discriminant for the roll action outcome. */
 export type IslandRunRollActionStatus =
   | 'ok'
-  | 'insufficient_dice'
-  | 'step1_required';
+  | 'insufficient_dice';
 
 export interface IslandRunRollActionResult {
   status: IslandRunRollActionStatus;
@@ -89,17 +87,7 @@ export async function executeIslandRunRollAction(options: {
   // 1. Read current state from the canonical PWA localStorage store.
   const state = readIslandRunGameStateRecord(session);
 
-  // 2. Guard: step 1 (first stop, hatchery at index 0) must be completed before
-  //    the player may roll.  Mirrors the M11C enforcement in IslandRunBoardPrototype.
-  const step1Complete = isIslandRunContractV2StopCompleteAtIndex({
-    stopStatesByIndex: state.stopStatesByIndex,
-    index: 0,
-  });
-  if (!step1Complete) {
-    return { status: 'step1_required' };
-  }
-
-  // 3. Guard: player needs at least DICE_PER_ROLL dice in the pool.
+  // 2. Guard: player needs at least DICE_PER_ROLL dice in the pool.
   if (state.dicePool < DICE_PER_ROLL) {
     return { status: 'insufficient_dice' };
   }

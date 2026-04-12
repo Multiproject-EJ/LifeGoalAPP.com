@@ -9,9 +9,9 @@ export interface IslandBoardProfile {
 const BOARD_PROFILES: Record<IslandBoardProfileId, IslandBoardProfile> = {
   spark60_preview: {
     id: 'spark60_preview',
-    tileCount: 60,
-    // Dormant preview profile for future Spark topology; not active by default.
-    stopTileIndices: [0, 12, 24, 36, 59],
+    tileCount: 40,
+    // 40-tile ring matching Monopoly GO's tile count — stops at quarters (0, 10, 20, 30) + boss (39).
+    stopTileIndices: [0, 10, 20, 30, 39],
   },
 };
 

@@ -15,7 +15,6 @@ export const islandRunContractV2EnergyTests: TestCase[] = [
       const mode = resolveIslandRunRollButtonMode({
         islandRunContractV2Enabled: true,
         isRolling: false,
-        step1Complete: true,
         dicePool: 1,
         dicePerRoll: 2,
       });
@@ -36,7 +35,6 @@ export const islandRunContractV2EnergyTests: TestCase[] = [
       const mode = resolveIslandRunRollButtonMode({
         islandRunContractV2Enabled: true,
         isRolling: false,
-        step1Complete: true,
         dicePool: 0,
         dicePerRoll: 2,
       });
@@ -72,7 +70,6 @@ export const islandRunContractV2EnergyTests: TestCase[] = [
       const mode = resolveIslandRunRollButtonMode({
         islandRunContractV2Enabled: false,
         isRolling: false,
-        step1Complete: true,
         dicePool: 0,
         dicePerRoll: 2,
       });
