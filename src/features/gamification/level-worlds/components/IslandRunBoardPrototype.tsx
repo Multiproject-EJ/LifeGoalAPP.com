@@ -6081,20 +6081,43 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
         <button
           type="button"
-          className="island-run-board__rewardbar"
+          className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}`}
           aria-label="Reward progress"
           onClick={openRewardDetailsModal}
         >
-          <div className="island-run-board__rewardbar-header">
-            <span>{activeTimedEvent?.eventType ? `Event: ${activeTimedEvent.eventType}` : 'Reward Bar'}</span>
-            <span>{Math.floor(rewardBarProgress)}/{Math.floor(rewardBarThreshold)}</span>
+          {/* Decorative themed event banner */}
+          <div className={`island-run-board__rewardbar-banner island-run-board__rewardbar-banner--${activeTimedEvent?.eventType ?? 'feeding_frenzy'}`}>
+            <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">
+              {activeTimedEvent?.eventType === 'harvest_sprint' ? '🌾' : activeTimedEvent?.eventType === 'companion_feast' ? '🐾' : '🔥'}
+            </i>
+            <span>{activeTimedEvent?.eventType ? activeTimedEvent.eventType.replace(/_/g, ' ') : 'Reward Event'}</span>
+            <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">
+              {activeTimedEvent?.eventType === 'harvest_sprint' ? '🌾' : activeTimedEvent?.eventType === 'companion_feast' ? '🐾' : '🔥'}
+            </i>
           </div>
-          <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
-            <span style={{ width: `${rewardBarPercent}%` }} />
+          <div className="island-run-board__rewardbar-header">
+            <span>{Math.floor(rewardBarProgress)}/{Math.floor(rewardBarThreshold)}</span>
+            <span>{canClaimRewardBar ? '✨ Claim ready!' : 'Fill feeding tiles'}</span>
+          </div>
+          {/* Track row: avatar → track with milestones → endcap */}
+          <div className="island-run-board__rewardbar-track-row">
+            <span className="island-run-board__rewardbar-avatar-indicator" aria-hidden="true">
+              {(session.user.user_metadata?.full_name?.[0] ?? session.user.email?.[0] ?? 'P').toUpperCase()}
+            </span>
+            <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
+              <span className="island-run-board__rewardbar-track-fill" style={{ width: `${rewardBarPercent}%` }} />
+              {/* Milestone markers at 33%, 66%, 100% */}
+              <span className={`island-run-board__rewardbar-milestone${rewardBarPercent >= 33 ? ' island-run-board__rewardbar-milestone--reached' : ''}`} style={{ left: '33%' }} aria-hidden="true">🎲</span>
+              <span className={`island-run-board__rewardbar-milestone${rewardBarPercent >= 66 ? ' island-run-board__rewardbar-milestone--reached' : ''}`} style={{ left: '66%' }} aria-hidden="true">💎</span>
+              <span className={`island-run-board__rewardbar-milestone${rewardBarPercent >= 100 ? ' island-run-board__rewardbar-milestone--reached' : ''}`} style={{ left: '100%' }} aria-hidden="true">🎫</span>
+              {/* Position indicator riding the fill edge */}
+              <span className="island-run-board__rewardbar-position" style={{ left: `${Math.min(rewardBarPercent, 100)}%` }} aria-hidden="true" />
+            </div>
+            <span className={`island-run-board__rewardbar-endcap${canClaimRewardBar ? ' island-run-board__rewardbar-endcap--claimable' : ''}`} aria-hidden="true">🏆</span>
           </div>
           <div className="island-run-board__rewardbar-footer">
-            <span>{timedEventRemainingLabel}</span>
-            <span>{canClaimRewardBar ? 'Claim ready' : 'Fill feeding tiles'}</span>
+            <span className={`${timedEventRemainingMs > 4 * 60 * 60 * 1000 ? 'island-run-board__rewardbar-timer--ok' : timedEventRemainingMs > 1 * 60 * 60 * 1000 ? 'island-run-board__rewardbar-timer--warn' : 'island-run-board__rewardbar-timer--urgent'}`}>⏱ {timedEventRemainingLabel}</span>
+            <span>Tier {runtimeState.rewardBarEscalationTier}</span>
           </div>
         </button>
 
