@@ -155,6 +155,15 @@ const DEFAULT_REWARD_BAR_THRESHOLD = 10; // Placeholder for phase-2 tuning.
 type IslandRunRuntimeCommitSyncState = 'idle' | 'committing' | 'blocked_remote_backoff' | 'blocked_conflict_recovery';
 type IslandRunRuntimeCommitParkReason = 'single_flight' | 'backoff' | 'conflict_recovery';
 
+/**
+ * Runtime commit coordinator — enforced invariants:
+ *
+ * 1. Max 1 in-flight commit per user at any time (single-flight via inFlightCount).
+ * 2. No commits are attempted while remote backoff is active.
+ * 3. Parked writes resume only after the in-flight slot clears (via setTimeout).
+ * 4. clientActionId includes a monotonic counter, guaranteeing no false dedupe.
+ * 5. syncState always resets to 'idle' in the finally block when inFlightCount === 0.
+ */
 interface IslandRunRuntimeCommitCoordinator {
   syncState: IslandRunRuntimeCommitSyncState;
   inFlightCount: number;
@@ -1693,6 +1702,27 @@ export async function writeIslandRunGameStateRecord(options: {
       coordinator.parkedRecord = null;
       coordinator.parkedActionId = null;
       coordinator.parkedReason = null;
+
+      // Targeted debug log for mobile Safari debugging — captures field-level diff
+      // between the parked snapshot and current local state so staleness is visible.
+      const currentLocalAtResume = readIslandRunGameStateRecord(session);
+      logIslandRunEntryDebug('runtime_state_parked_resume_debug', {
+        userId: session.user.id,
+        clientActionId: resumedActionId,
+        resumedRuntimeVersion: resumedRecord.runtimeVersion,
+        currentLocalRuntimeVersion: currentLocalAtResume.runtimeVersion,
+        syncState: coordinator.syncState,
+        resumedTokenIndex: resumedRecord.tokenIndex,
+        currentLocalTokenIndex: currentLocalAtResume.tokenIndex,
+        resumedCoins: resumedRecord.coins,
+        currentLocalCoins: currentLocalAtResume.coins,
+        resumedDicePool: resumedRecord.dicePool,
+        currentLocalDicePool: currentLocalAtResume.dicePool,
+        resumedHearts: resumedRecord.hearts,
+        currentLocalHearts: currentLocalAtResume.hearts,
+        reason: resumedReason === 'single_flight' ? 'single_flight_drain' : 'backoff_expired',
+      });
+
       logIslandRunEntryDebug('runtime_state_commit_resumed', {
         userId: session.user.id,
         reason: resumedReason === 'single_flight' ? 'single_flight_drain' : 'backoff_expired',
@@ -1731,6 +1761,9 @@ export async function writeIslandRunGameStateRecord(options: {
 
     return { ok: true };
   } finally {
+    // Invariant: always clean up in-flight tracking so the coordinator stays consistent.
+    // When inFlightCount reaches 0, unconditionally reset syncState to 'idle' to prevent
+    // stuck states (e.g. blocked_conflict_recovery persisting after error paths).
     coordinator.inFlightActionIds.delete(clientActionId);
     if (coordinator.inFlightCount <= 0) {
       logIslandRunEntryDebug('runtime_state_commit_coordinator_inflight_underflow', {
