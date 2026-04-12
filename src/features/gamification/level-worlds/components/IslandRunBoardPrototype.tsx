@@ -451,6 +451,32 @@ function formatEventRemaining(remainingMs: number): string {
   return `${minutes}m ${seconds}s`;
 }
 
+/* ── Reward bar helpers ──────────────────────────────────────── */
+const TIMER_OK_THRESHOLD_MS = 4 * 60 * 60 * 1000;    // > 4 h  → green
+const TIMER_WARN_THRESHOLD_MS = 1 * 60 * 60 * 1000;  // 1–4 h → orange; < 1 h → red
+
+const REWARD_BAR_MILESTONES: readonly { pct: number; icon: string }[] = [
+  { pct: 33, icon: '🎲' },
+  { pct: 66, icon: '💎' },
+  { pct: 100, icon: '🎫' },
+] as const;
+
+const EVENT_BANNER_META: Readonly<Record<string, { icon: string; displayName: string }>> = {
+  feeding_frenzy:   { icon: '🔥', displayName: 'Feeding Frenzy' },
+  harvest_sprint:   { icon: '🌾', displayName: 'Harvest Sprint' },
+  companion_feast:  { icon: '🐾', displayName: 'Companion Feast' },
+};
+
+function getTimerUrgencyClass(remainingMs: number): string {
+  if (remainingMs > TIMER_OK_THRESHOLD_MS) return 'island-run-board__rewardbar-timer--ok';
+  if (remainingMs > TIMER_WARN_THRESHOLD_MS) return 'island-run-board__rewardbar-timer--warn';
+  return 'island-run-board__rewardbar-timer--urgent';
+}
+
+function getAvatarInitial(user: { user_metadata?: { full_name?: string | null } | null; email?: string | null }): string {
+  return (user.user_metadata?.full_name?.[0] ?? user.email?.[0] ?? 'P').toUpperCase();
+}
+
 type SanctuaryFilterMode = 'all' | 'reward_ready' | 'active' | 'common' | 'rare' | 'mythic';
 type SanctuarySortMode = 'recent' | 'bond' | 'tier' | 'active';
 type SanctuaryZoneFilter = 'all' | ShipZone;
@@ -6081,20 +6107,45 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
         <button
           type="button"
-          className="island-run-board__rewardbar"
+          className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}`}
           aria-label="Reward progress"
           onClick={openRewardDetailsModal}
         >
+          {/* Decorative themed event banner — only shown when an event is active */}
+          {activeTimedEvent ? (() => {
+            const meta = EVENT_BANNER_META[activeTimedEvent.eventType] ?? { icon: '⭐', displayName: activeTimedEvent.eventType.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) };
+            return (
+              <div className={`island-run-board__rewardbar-banner island-run-board__rewardbar-banner--${activeTimedEvent.eventType}`}>
+                <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{meta.icon}</i>
+                <span>{meta.displayName}</span>
+                <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{meta.icon}</i>
+              </div>
+            );
+          })() : null}
           <div className="island-run-board__rewardbar-header">
-            <span>{activeTimedEvent?.eventType ? `Event: ${activeTimedEvent.eventType}` : 'Reward Bar'}</span>
             <span>{Math.floor(rewardBarProgress)}/{Math.floor(rewardBarThreshold)}</span>
+            <span>{canClaimRewardBar ? '✨ Claim ready!' : `Tier ${runtimeState.rewardBarEscalationTier}`}</span>
           </div>
-          <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
-            <span style={{ width: `${rewardBarPercent}%` }} />
+          {/* Track row: avatar → track with milestones → endcap */}
+          <div className="island-run-board__rewardbar-track-row">
+            <span className="island-run-board__rewardbar-avatar-indicator" aria-hidden="true">
+              {getAvatarInitial(session.user)}
+            </span>
+            <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
+              <span className="island-run-board__rewardbar-track-fill" style={{ width: `${rewardBarPercent}%` }} />
+              {REWARD_BAR_MILESTONES.map((ms) => (
+                <span key={ms.pct} className={`island-run-board__rewardbar-milestone${rewardBarPercent >= ms.pct ? ' island-run-board__rewardbar-milestone--reached' : ''}`} style={{ left: `${ms.pct}%` }} aria-hidden="true">{ms.icon}</span>
+              ))}
+              {/* Position indicator riding the fill edge */}
+              <span className="island-run-board__rewardbar-position" style={{ left: `${Math.min(rewardBarPercent, 100)}%` }} aria-hidden="true" />
+            </div>
+            <span className={`island-run-board__rewardbar-endcap${canClaimRewardBar ? ' island-run-board__rewardbar-endcap--claimable' : ''}`} aria-hidden="true">🏆</span>
           </div>
-          <div className="island-run-board__rewardbar-footer">
-            <span>{timedEventRemainingLabel}</span>
-            <span>{canClaimRewardBar ? 'Claim ready' : 'Fill feeding tiles'}</span>
+          {/* Unified timer row — event timer + island timer in one place */}
+          <div className="island-run-board__rewardbar-timers">
+            <span className={getTimerUrgencyClass(timedEventRemainingMs)}>🎪 Event: {timedEventRemainingLabel}</span>
+            <span className="island-run-board__rewardbar-timers-sep" aria-hidden="true" />
+            <span className="island-run-board__rewardbar-island-timer">🏝️ Island: <strong>{timerDisplay}</strong></span>
           </div>
         </button>
 
@@ -6136,7 +6187,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       <div className="island-run-prototype__footer" aria-label="Island Run footer controls">
         <div className="island-run-prototype__footer-main">
           <div className="island-run-prototype__footer-stats" aria-label="Run resources">
-            <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">⏱ <strong>{timerDisplay}</strong></span>
             {ISLAND_RUN_CONTRACT_V2_ENABLED && <span className="island-run-prototype__stat-chip">🟣 <strong>{runtimeState.essence}</strong></span>}
             {canUseSpinForMovement(ISLAND_RUN_CONTRACT_V2_ENABLED) && spinTokens > 0 && (
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">🌀 <strong>{spinTokens}</strong></span>
