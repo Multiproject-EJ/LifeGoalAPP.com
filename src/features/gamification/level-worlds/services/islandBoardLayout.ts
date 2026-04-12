@@ -77,7 +77,7 @@ export const OUTER_STOP_ANCHORS: OrbitStopAnchor[] = [
 
 const SPARK60_CENTER_X = 500;
 const SPARK60_CENTER_Y = 500;
-const SPARK60_RADIUS = 338;
+const SPARK60_RADIUS = 340;
 const SPARK60_ROTATION_OFFSET_RAD = (-6 * Math.PI) / 180;
 
 export const TILE_ANCHORS_60: TileAnchor[] = Array.from({ length: 60 }, (_, index) => {

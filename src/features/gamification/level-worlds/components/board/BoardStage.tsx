@@ -85,7 +85,7 @@ export function BoardStage(props: BoardStageProps) {
 
   const boardRef = useRef<HTMLDivElement>(null);
   const gestureLayerRef = useRef<HTMLDivElement>(null);
-  const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
+  const [boardSize, setBoardSize] = useState({ width: 360, height: 360 });
 
   // ── Board size tracking ──────────────────────────────────────────────────
   useEffect(() => {
@@ -94,7 +94,8 @@ export function BoardStage(props: BoardStageProps) {
 
     const updateSize = () => {
       const rect = el.getBoundingClientRect();
-      setBoardSize({ width: rect.width, height: rect.height });
+      const side = Math.min(rect.width, rect.height);
+      setBoardSize({ width: side, height: side });
     };
     updateSize();
     window.addEventListener('resize', updateSize);
@@ -204,7 +205,11 @@ export function BoardStage(props: BoardStageProps) {
   const ZBAND_COLORS: Record<string, string> = { back: '#50a5ff', mid: '#ffe066', front: '#ff4ff5' };
 
   return (
-    <div ref={boardRef} className="island-run-board__stage-wrapper">
+    <div
+      ref={boardRef}
+      className="island-run-board__stage-wrapper"
+      style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1' }}
+    >
       {/* Gesture capture layer (invisible, on top) */}
       <div
         ref={gestureLayerRef}

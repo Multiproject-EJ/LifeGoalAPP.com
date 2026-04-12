@@ -1235,6 +1235,9 @@
   height: min(76vh, 680px);
   height: min(76dvh, 680px);
   min-height: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid rgba(176, 237, 255, 0.46);
@@ -1303,7 +1306,10 @@
 .island-run-board__camera-stage {
   position: absolute;
   inset: 0;
-  transform-origin: 50% 50%;
+  transform-origin: center center;
+  transform: translateZ(0);
+  will-change: transform;
+  contain: layout style paint;
   transition: transform 360ms cubic-bezier(0.22, 0.61, 0.36, 1);
   z-index: 2;
 }
@@ -1476,6 +1482,7 @@
 
 .island-run-board__tiles {
   z-index: 6;
+  contain: layout style;
 }
 
 .island-run-board__lap-label {
@@ -1616,19 +1623,10 @@
 }
 
 .island-run-board--spark60 .island-tile {
-  width: 20px;
-  height: 46px;
-  border-radius: 4px;
-  border-width: 1.25px;
-  clip-path: polygon(34% 0%, 66% 0%, 100% 100%, 0% 100%);
-  background:
-    linear-gradient(180deg, rgba(253, 248, 225, 0.96) 0%, rgba(238, 216, 152, 0.98) 45%, rgba(214, 172, 92, 0.98) 100%);
-  box-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.16);
-  font-size: 0.6rem;
-  opacity: 0.96;
+  width: 104px;
+  height: 52px;
+  border-radius: 6px 6px 10px 10px;
+  clip-path: polygon(calc(50% - 36px) 0%, calc(50% + 36px) 0%, calc(50% + 52px) 100%, calc(50% - 52px) 100%);
 }
 
 .island-run-board--spark60 .island-tile__value {
@@ -1653,163 +1651,98 @@
 }
 
 .island-tile--back {
-  filter: brightness(0.88) contrast(1.06);
-  box-shadow:
-    0 3px 8px rgba(0, 0, 0, 0.28),
-    0 1px 3px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.38),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.14);
+  filter: saturate(0.55) brightness(0.75);
+  opacity: 0.72;
+}
+.island-tile--mid {
+  filter: saturate(1.0) brightness(0.95);
 }
 .island-tile--front {
-  filter: brightness(1.10) contrast(1.03);
-  box-shadow:
-    0 8px 20px rgba(0, 0, 0, 0.38),
-    0 3px 6px rgba(0, 0, 0, 0.24),
-    inset 0 2px 0 rgba(255, 255, 255, 0.62),
-    inset 0 -3px 5px rgba(0, 0, 0, 0.18),
-    inset 0 0 12px rgba(255, 230, 160, 0.26);
+  filter: saturate(1.25) brightness(1.08);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 .island-tile--stop {
-  animation: island-stop-tile-pulse 2.2s ease-in-out infinite;
-  box-shadow:
-    0 0 0 3px rgba(106, 251, 255, 0.80),
-    0 0 28px rgba(106, 251, 255, 0.40),
-    0 6px 16px rgba(0, 0, 0, 0.36),
-    inset 0 2px 0 rgba(255, 255, 255, 0.60),
-    inset 0 0 10px rgba(106, 251, 255, 0.18);
+  background: linear-gradient(160deg, #fff3c0 0%, #ffd700 40%, #ff8c00 100%);
+  border: 2.5px solid #ffd700;
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.8), 0 0 28px rgba(255, 165, 0, 0.4);
+  z-index: 8 !important;
+  animation: island-tile-stop-pulse 2s ease-in-out infinite, island-tile-idle 3.5s ease-in-out infinite;
+  animation-delay: 0s, calc(var(--tile-index, 0) * 0.06s);
 }
-
-@keyframes island-stop-tile-pulse {
-  0%, 100% {
-    box-shadow:
-      0 0 0 2px rgba(106, 251, 255, 0.75),
-      0 0 22px rgba(106, 251, 255, 0.35),
-      0 6px 16px rgba(0, 0, 0, 0.34),
-      inset 0 2px 0 rgba(255, 255, 255, 0.55);
-  }
-  50% {
-    box-shadow:
-      0 0 0 4px rgba(106, 251, 255, 0.92),
-      0 0 36px rgba(106, 251, 255, 0.55),
-      0 6px 16px rgba(0, 0, 0, 0.34),
-      inset 0 2px 0 rgba(255, 255, 255, 0.55);
-  }
-}
-
 .island-tile--encounter {
-  box-shadow:
-    0 0 0 2px rgba(255, 170, 110, 0.8),
-    0 0 24px rgba(255, 128, 64, 0.45),
-    0 6px 16px rgba(0, 0, 0, 0.36),
-    inset 0 2px 0 rgba(255, 255, 255, 0.50),
-    inset 0 0 10px rgba(255, 160, 80, 0.22);
-  border-color: rgba(255, 220, 180, 0.95);
+  animation: island-tile-encounter-flicker 2.4s ease-in-out infinite, island-tile-idle 3.5s ease-in-out infinite;
 }
 
 .island-tile--token-current {
-  box-shadow:
-    0 0 0 2px rgba(255, 246, 150, 0.78),
-    0 0 20px rgba(255, 223, 110, 0.55),
-    0 5px 14px rgba(0, 0, 0, 0.26),
-    inset 0 2px 0 rgba(255, 255, 255, 0.60),
-    inset 0 0 12px rgba(255, 240, 160, 0.30);
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(100, 220, 255, 0.9), 0 0 18px rgba(100, 220, 255, 0.7) !important;
+  animation: island-tile-current-pulse 1.2s ease-in-out infinite !important;
+  z-index: 9 !important;
 }
 
 .island-token {
   position: absolute;
-  translate: -50% -120%;
-  z-index: 6;
-  transition: left 220ms cubic-bezier(0.22, 0.61, 0.36, 1), top 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
-  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.55));
+  width: 32px;
+  height: 32px;
+  transform-origin: center center;
+  translate: -50% -50%;
+  z-index: 10;
+  pointer-events: none;
+  will-change: transform, left, top;
+  contain: layout style;
 }
 
 /* Styled CSS spaceship token */
 .island-token__ship {
   position: relative;
-  width: 34px;
-  height: 44px;
+  width: 100%;
+  height: 100%;
 }
 
 .island-token__ship-body {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  left: 50%; top: 50%;
+  width: 16px; height: 22px;
   transform: translate(-50%, -50%);
-  width: 22px;
-  height: 36px;
-  border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%;
-  background: radial-gradient(ellipse at 38% 28%, #d8f4ff 0%, #60c8f8 30%, #2880d8 70%, #1050b0 100%);
-  box-shadow:
-    inset 2px 3px 6px rgba(255, 255, 255, 0.55),
-    inset -2px -2px 5px rgba(0, 20, 80, 0.55),
-    0 0 14px rgba(80, 180, 255, 0.60),
-    0 0 28px rgba(40, 120, 220, 0.35);
+  background: linear-gradient(180deg, #e0f4ff 0%, #7dd8ff 40%, #1a90d0 100%);
+  border-radius: 50% 50% 40% 40%;
+  box-shadow: 0 0 8px rgba(100, 200, 255, 0.8), inset 0 2px 4px rgba(255,255,255,0.5);
 }
 
-.island-token__ship-fin {
-  position: absolute;
-  bottom: 4px;
-  width: 10px;
-  height: 16px;
-  background: linear-gradient(160deg, #4090e0 0%, #1850a8 100%);
-  border-radius: 2px 2px 6px 6px;
-  box-shadow: inset 1px 1px 3px rgba(180, 220, 255, 0.45);
-}
-
-.island-token__ship-fin--left {
-  left: 0;
-  transform: skewY(8deg);
-}
-
+.island-token__ship-fin--left,
 .island-token__ship-fin--right {
-  right: 0;
-  transform: skewY(-8deg);
+  position: absolute;
+  bottom: 6px;
+  width: 7px; height: 10px;
+  background: linear-gradient(180deg, #56b4e0 0%, #1a5f8a 100%);
+  border-radius: 4px 4px 2px 2px;
 }
+.island-token__ship-fin--left  { left: 1px;  transform: rotate(-18deg); }
+.island-token__ship-fin--right { right: 1px; transform: rotate(18deg); }
 
 .island-token__ship-thruster {
   position: absolute;
-  bottom: 0;
-  left: 50%;
+  bottom: 1px; left: 50%;
   transform: translateX(-50%);
-  width: 12px;
-  height: 14px;
+  width: 8px; height: 6px;
+  background: radial-gradient(circle, #ffdf00 0%, #ff8c00 60%, transparent 100%);
   border-radius: 0 0 50% 50%;
-  background: radial-gradient(ellipse at 50% 20%, #fff9c0 0%, #ffcc30 35%, #ff6600 70%, rgba(255, 80, 0, 0) 100%);
-  animation: island-token-thruster 180ms ease-in-out infinite alternate;
-  opacity: 0.9;
+  animation: island-token-thrust 0.18s ease-in-out infinite alternate;
 }
 
-@keyframes island-token-thruster {
-  from { transform: translateX(-50%) scaleY(1) scaleX(1); opacity: 0.82; }
-  to { transform: translateX(-50%) scaleY(1.22) scaleX(0.88); opacity: 1; }
+@keyframes island-token-thrust {
+  from { opacity: 0.7; height: 5px; }
+  to   { opacity: 1.0; height: 9px; }
 }
+.island-token--moving .island-token__ship-thruster { height: 12px; opacity: 1; }
 
 .island-token__ship-window {
   position: absolute;
-  top: 8px;
-  left: 50%;
+  top: 7px; left: 50%;
   transform: translateX(-50%);
-  width: 9px;
-  height: 9px;
+  width: 7px; height: 7px;
+  background: radial-gradient(circle, #e0f8ff 30%, #80d0ff 100%);
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #e8f8ff 0%, #70d4ff 50%, #2060c8 100%);
-  box-shadow: inset 1px 1px 3px rgba(255, 255, 255, 0.7), 0 0 6px rgba(100, 210, 255, 0.55);
-}
-
-/* Token aura (pulsing glow ring) */
-.island-token::before {
-  content: '';
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(80, 180, 255, 0.28) 0%, rgba(40, 120, 220, 0) 70%);
-  animation: island-token-aura 1.6s ease-in-out infinite alternate;
-  pointer-events: none;
-}
-
-@keyframes island-token-aura {
-  from { opacity: 0.5; transform: scale(0.92); }
-  to { opacity: 1; transform: scale(1.08); }
+  border: 1px solid rgba(255,255,255,0.6);
 }
 
 .island-token--moving {
@@ -1817,9 +1750,13 @@
 }
 
 @keyframes island-token-bob {
-  from { translate: -50% -124%; transform: scale(1); }
-  to { translate: -50% -116%; transform: scale(1.07); }
+  from { translate: -50% -54%; transform: scale(1); }
+  to { translate: -50% -46%; transform: scale(1.07); }
 }
+
+.island-token--zband-back  { transform: translate(-50%, -50%) scale(0.82); filter: brightness(0.7) saturate(0.7); }
+.island-token--zband-mid   { transform: translate(-50%, -50%) scale(0.92); }
+.island-token--zband-front { transform: translate(-50%, -50%) scale(1.10); filter: brightness(1.1) saturate(1.1); }
 
 @keyframes island-active-stop-pulse {
   0%,
@@ -2572,11 +2509,6 @@
   opacity: 0.88;
 }
 
-/* B2-2: Token transition and animation */
-.island-token {
-  transition: left 0.22s cubic-bezier(0.33, 1, 0.58, 1), top 0.22s cubic-bezier(0.33, 1, 0.58, 1);
-}
-
 @keyframes islandTokenLand {
   0% { transform: scaleX(1.35) scaleY(0.65); }
   55% { transform: scaleX(0.9) scaleY(1.12); }
@@ -2587,73 +2519,37 @@
   animation: islandTokenLand 0.38s ease-out forwards;
 }
 
-/* B2-2: zBand drop shadow variants */
-.island-token--zband-front { filter: drop-shadow(0 6px 8px rgba(0,0,0,0.55)); }
-.island-token--zband-mid { filter: drop-shadow(0 4px 5px rgba(0,0,0,0.3)); }
-.island-token--zband-back { filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15)); }
-
 /* B2-2: Tile type classes — distinct gradient + inner glow per type */
 .island-tile--currency {
-  background:
-    radial-gradient(circle at 32% 22%, rgba(255, 255, 200, 0.50) 0%, rgba(255, 255, 255, 0) 46%),
-    radial-gradient(circle at 30% 24%, rgba(255, 248, 180, 0.98), rgba(220, 170, 30, 0.95));
-  border-color: rgba(255, 215, 0, 0.75);
-  box-shadow:
-    0 6px 16px rgba(0, 0, 0, 0.30),
-    inset 0 2px 0 rgba(255, 255, 200, 0.60),
-    inset 0 0 10px rgba(255, 215, 0, 0.28);
+  background: linear-gradient(160deg, #ffe66d 0%, #f7c948 50%, #c8941a 100%);
+  border: 1.5px solid #f0b429;
 }
 .island-tile--chest {
-  background:
-    radial-gradient(circle at 32% 22%, rgba(255, 240, 180, 0.50) 0%, rgba(255, 255, 255, 0) 46%),
-    radial-gradient(circle at 30% 24%, rgba(255, 220, 140, 0.98), rgba(200, 120, 30, 0.95));
-  border-color: rgba(255, 165, 0, 0.80);
-  box-shadow:
-    0 6px 16px rgba(0, 0, 0, 0.30),
-    inset 0 2px 0 rgba(255, 230, 160, 0.58),
-    inset 0 0 10px rgba(220, 140, 40, 0.26);
-}
-.island-tile--hazard {
-  background:
-    radial-gradient(circle at 32% 22%, rgba(255, 200, 180, 0.48) 0%, rgba(255, 255, 255, 0) 46%),
-    radial-gradient(circle at 30% 24%, rgba(240, 160, 130, 0.98), rgba(180, 50, 40, 0.95));
-  border-color: rgba(220, 50, 50, 0.78);
-  box-shadow:
-    0 6px 16px rgba(0, 0, 0, 0.32),
-    inset 0 2px 0 rgba(255, 180, 160, 0.52),
-    inset 0 0 10px rgba(220, 60, 50, 0.26);
-}
-.island-tile--egg_shard {
-  background:
-    radial-gradient(circle at 32% 22%, rgba(200, 255, 240, 0.50) 0%, rgba(255, 255, 255, 0) 46%),
-    radial-gradient(circle at 30% 24%, rgba(160, 240, 210, 0.98), rgba(40, 160, 130, 0.95));
-  border-color: rgba(100, 220, 180, 0.75);
-  box-shadow:
-    0 6px 16px rgba(0, 0, 0, 0.28),
-    inset 0 2px 0 rgba(180, 255, 230, 0.56),
-    inset 0 0 10px rgba(80, 200, 165, 0.26);
-}
-.island-tile--micro {
-  background:
-    radial-gradient(circle at 32% 22%, rgba(230, 210, 255, 0.50) 0%, rgba(255, 255, 255, 0) 46%),
-    radial-gradient(circle at 30% 24%, rgba(210, 175, 255, 0.98), rgba(130, 80, 210, 0.95));
-  border-color: rgba(200, 160, 255, 0.72);
-  box-shadow:
-    0 6px 16px rgba(0, 0, 0, 0.28),
-    inset 0 2px 0 rgba(230, 210, 255, 0.56),
-    inset 0 0 10px rgba(160, 100, 255, 0.24);
+  background: linear-gradient(160deg, #e8a87c 0%, #c87533 50%, #8b4513 100%);
+  border: 1.5px solid #dda15e;
 }
 .island-tile--event {
-  background:
-    radial-gradient(circle at 32% 22%, rgba(255, 250, 200, 0.50) 0%, rgba(255, 255, 255, 0) 46%),
-    radial-gradient(circle at 30% 24%, rgba(255, 240, 160, 0.98), rgba(190, 150, 20, 0.95));
-  border-color: rgba(255, 220, 50, 0.76);
-  box-shadow:
-    0 6px 16px rgba(0, 0, 0, 0.28),
-    inset 0 2px 0 rgba(255, 245, 190, 0.58),
-    inset 0 0 10px rgba(220, 185, 30, 0.26);
+  background: linear-gradient(160deg, #fff4a8 0%, #ffe066 50%, #cca300 100%);
+  border: 1.5px solid #f0d000;
 }
-.island-tile--encounter { border-color: rgba(255, 80, 80, 0.8); }
+.island-tile--hazard {
+  background: linear-gradient(160deg, #ff9999 0%, #ff4444 50%, #cc0000 100%);
+  border: 1.5px solid #ff6b6b;
+  box-shadow: 0 0 8px rgba(255, 68, 68, 0.5);
+}
+.island-tile--egg_shard {
+  background: linear-gradient(160deg, #d4f1f4 0%, #b0e0e6 50%, #5f9ea0 100%);
+  border: 1.5px solid #80d0d8;
+}
+.island-tile--micro {
+  background: linear-gradient(160deg, #e8d5ff 0%, #c8a2ff 50%, #9b59b6 100%);
+  border: 1.5px solid #b88ee8;
+}
+.island-tile--encounter {
+  background: linear-gradient(160deg, #ffb347 0%, #ff6b35 50%, #cc3300 100%);
+  border: 1.5px solid #ff8c42;
+  box-shadow: 0 0 10px rgba(255, 107, 53, 0.6);
+}
 
 
 /* B3-5: Island clear celebration */
@@ -2731,14 +2627,8 @@
 /* ─── M6-COMPLETE: Encounter tile — completed visual state ──────────────────── */
 
 .island-tile--encounter-completed {
-  box-shadow:
-    0 0 0 2px rgba(140, 230, 130, 0.85),
-    0 0 18px rgba(100, 210, 80, 0.35),
-    0 6px 16px rgba(0, 0, 0, 0.36),
-    inset 0 2px 0 rgba(255, 255, 255, 0.45),
-    inset 0 0 8px rgba(120, 220, 100, 0.18);
-  border-color: rgba(190, 255, 170, 0.9);
-  opacity: 0.78;
+  filter: saturate(0.3) brightness(0.8) !important;
+  animation: none !important;
 }
 
 /* ─── M6-COMPLETE: Encounter modal — production challenge UI ────────────────── */
@@ -3704,10 +3594,14 @@
 
 /* ── Stage wrapper (contains gesture layer + camera stage) ─────────────────── */
 .island-run-board__stage-wrapper {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-width: min(100vw, calc(100vh - 220px));
+  margin: 0 auto;
   z-index: 2;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .island-run-board__gesture-layer {
@@ -3723,8 +3617,10 @@
 
 /* ── Enhanced camera stage with GPU compositing ────────────────────────────── */
 .island-run-board__stage-wrapper .island-run-board__camera-stage {
+  transform-origin: center center;
+  transform: translateZ(0);
   will-change: transform;
-  contain: layout style;
+  contain: layout style paint;
   transition: none; /* spring engine handles transitions now */
 }
 
@@ -3814,48 +3710,39 @@
 /* Completed encounter badge */
 .island-tile__completed-badge {
   position: absolute;
-  bottom: -4px;
-  right: -4px;
-  font-size: 0.6rem;
-  background: rgba(30, 180, 80, 0.9);
-  color: #fff;
-  border-radius: 50%;
-  width: 14px;
-  height: 14px;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
-  font-weight: 800;
+  font-size: 1rem;
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 0 4px rgba(0,0,0,0.8);
+  pointer-events: none;
   z-index: 3;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 /* Upcoming tiles — subtle glow to show where token will land */
 .island-tile--upcoming {
-  box-shadow:
-    0 0 0 1.5px rgba(255, 255, 200, 0.5),
-    0 0 12px rgba(255, 240, 160, 0.3),
-    0 4px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0 2px rgba(180, 240, 255, 0.7), 0 0 12px rgba(100, 200, 255, 0.5) !important;
 }
 
 /* ── Enhanced depth rendering ──────────────────────────────────────────────── */
 
 /* Stronger back tiles: more desaturation, smaller, dimmer */
 .island-tile--back {
-  filter: brightness(0.78) contrast(1.08) saturate(0.72);
-  opacity: 0.8;
+  filter: saturate(0.55) brightness(0.75);
+  opacity: 0.72;
+}
+
+/* Mid tiles: neutral baseline */
+.island-tile--mid {
+  filter: saturate(1.0) brightness(0.95);
 }
 
 /* Front tiles: vivid, large, pronounced shadow */
 .island-tile--front {
-  filter: brightness(1.14) contrast(1.05) saturate(1.12);
-  box-shadow:
-    0 10px 24px rgba(0, 0, 0, 0.42),
-    0 4px 8px rgba(0, 0, 0, 0.28),
-    inset 0 2px 0 rgba(255, 255, 255, 0.65),
-    inset 0 -3px 6px rgba(0, 0, 0, 0.20),
-    inset 0 0 14px rgba(255, 230, 160, 0.30);
+  filter: saturate(1.25) brightness(1.08);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 /* ── Token enhancements ────────────────────────────────────────────────────── */
@@ -3863,28 +3750,18 @@
 /* Landing ripple ring */
 .island-token__landing-ripple {
   position: absolute;
-  left: 50%;
-  top: 100%;
-  width: 50px;
-  height: 50px;
+  left: 50%; top: 50%;
+  width: 10px; height: 10px;
+  transform: translate(-50%, -50%);
   border-radius: 50%;
-  border: 2px solid rgba(100, 200, 255, 0.7);
-  transform: translate(-50%, -50%) scale(0.3);
-  animation: island-token-ripple 0.5s ease-out forwards;
+  border: 2.5px solid rgba(100, 220, 255, 0.9);
+  animation: island-token-ripple 0.4s ease-out forwards;
   pointer-events: none;
 }
 
 @keyframes island-token-ripple {
-  0% {
-    transform: translate(-50%, -50%) scale(0.3);
-    opacity: 1;
-    border-width: 3px;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(2.5);
-    opacity: 0;
-    border-width: 0.5px;
-  }
+  from { width: 10px;  height: 10px;  opacity: 1;   transform: translate(-50%, -50%); }
+  to   { width: 64px;  height: 64px;  opacity: 0;   transform: translate(-50%, -50%); }
 }
 
 /* Enhanced token with inline transform support (squash/stretch) */
@@ -3900,6 +3777,8 @@
   inset: 0;
   pointer-events: none;
   z-index: 7;
+  transform: translateZ(0);
+  will-change: contents;
 }
 
 /* ── Performance: reduce motion ────────────────────────────────────────────── */
@@ -3914,94 +3793,29 @@
   }
 }
 
-/* ── Spark60 enhanced tile gradients per type ──────────────────────────────── */
-
 .island-run-board--spark60 .island-tile--stop {
-  background: linear-gradient(180deg,
-    rgba(120, 255, 255, 0.95) 0%,
-    rgba(60, 200, 220, 0.98) 50%,
-    rgba(0, 160, 180, 0.95) 100%);
-  border-color: rgba(106, 251, 255, 0.9);
+  width: 116px;
+  height: 58px;
+  clip-path: polygon(calc(50% - 40px) 0%, calc(50% + 40px) 0%, calc(50% + 58px) 100%, calc(50% - 58px) 100%);
 }
 
-.island-run-board--spark60 .island-tile--currency {
-  background: linear-gradient(180deg,
-    rgba(255, 248, 200, 0.96) 0%,
-    rgba(255, 220, 80, 0.98) 50%,
-    rgba(200, 160, 20, 0.95) 100%);
+@keyframes island-tile-stop-pulse {
+  0%, 100% { box-shadow: 0 0 14px rgba(255, 215, 0, 0.8), 0 0 28px rgba(255, 165, 0, 0.4); }
+  50%      { box-shadow: 0 0 22px rgba(255, 215, 0, 1.0), 0 0 44px rgba(255, 165, 0, 0.7), 0 0 60px rgba(255, 200, 0, 0.3); }
 }
 
-.island-run-board--spark60 .island-tile--chest {
-  background: linear-gradient(180deg,
-    rgba(255, 235, 180, 0.96) 0%,
-    rgba(230, 170, 60, 0.98) 50%,
-    rgba(180, 110, 20, 0.95) 100%);
+@keyframes island-tile-current-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(100, 220, 255, 0.9), 0 0 18px rgba(100, 220, 255, 0.7); }
+  50%      { box-shadow: 0 0 0 3px #fff, 0 0 0 7px rgba(100, 220, 255, 1.0), 0 0 28px rgba(100, 220, 255, 0.9); }
 }
 
-.island-run-board--spark60 .island-tile--hazard {
-  background: linear-gradient(180deg,
-    rgba(255, 180, 160, 0.96) 0%,
-    rgba(220, 80, 60, 0.98) 50%,
-    rgba(160, 30, 20, 0.95) 100%);
+@keyframes island-tile-encounter-flicker {
+  0%, 85%, 100% { box-shadow: 0 0 10px rgba(255, 107, 53, 0.6); }
+  90%           { box-shadow: 0 0 20px rgba(255, 80, 20, 0.95), 0 0 35px rgba(255, 60, 0, 0.5); }
+  95%           { box-shadow: 0 0 10px rgba(255, 107, 53, 0.5); }
 }
 
-.island-run-board--spark60 .island-tile--egg_shard {
-  background: linear-gradient(180deg,
-    rgba(200, 255, 240, 0.96) 0%,
-    rgba(80, 210, 180, 0.98) 50%,
-    rgba(20, 140, 110, 0.95) 100%);
-}
-
-.island-run-board--spark60 .island-tile--micro {
-  background: linear-gradient(180deg,
-    rgba(220, 200, 255, 0.96) 0%,
-    rgba(160, 110, 230, 0.98) 50%,
-    rgba(100, 60, 180, 0.95) 100%);
-}
-
-.island-run-board--spark60 .island-tile--event {
-  background: linear-gradient(180deg,
-    rgba(255, 250, 200, 0.96) 0%,
-    rgba(230, 195, 50, 0.98) 50%,
-    rgba(170, 140, 10, 0.95) 100%);
-}
-
-.island-run-board--spark60 .island-tile--encounter {
-  background: linear-gradient(180deg,
-    rgba(255, 200, 160, 0.96) 0%,
-    rgba(255, 120, 50, 0.98) 50%,
-    rgba(200, 60, 10, 0.95) 100%);
-  border-color: rgba(255, 100, 60, 0.85);
-}
-
-/* ── Encounter tile subtle red shimmer ─────────────────────────────────────── */
-.island-tile--encounter::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  background: radial-gradient(circle, rgba(255, 80, 40, 0.2) 0%, transparent 70%);
-  animation: island-encounter-shimmer 2s ease-in-out infinite alternate;
-  pointer-events: none;
-}
-
-@keyframes island-encounter-shimmer {
-  from { opacity: 0.4; transform: scale(0.95); }
-  to { opacity: 0.8; transform: scale(1.05); }
-}
-
-/* ── Stop tile enhanced pulsing glow ───────────────────────────────────────── */
-.island-tile--stop::after {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: inherit;
-  border: 2px solid rgba(106, 251, 255, 0.6);
-  animation: island-stop-outer-pulse 2.2s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes island-stop-outer-pulse {
-  0%, 100% { transform: scale(1); opacity: 0.4; }
-  50% { transform: scale(1.12); opacity: 0.8; }
+.island-tile--pressed {
+  transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(calc(var(--tile-scale, 1) * 0.88)) !important;
+  transition: transform 80ms ease-out;
 }

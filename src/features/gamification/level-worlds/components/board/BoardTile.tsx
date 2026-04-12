@@ -87,6 +87,9 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
   } = props;
 
   const tileTypeClass = !isStop && tileType ? `island-tile--${tileType}` : '';
+  const wedgeClipPath = isSpark60
+    ? 'polygon(calc(50% - 36px) 0%, calc(50% + 36px) 0%, calc(50% + 52px) 100%, calc(50% - 52px) 100%)'
+    : undefined;
 
   // Choose icon
   let iconContent: JSX.Element | string;
@@ -124,7 +127,9 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         top: position.y,
         ['--tile-rotation-deg' as string]: `${isSpark60 ? anchor.tangentDeg + 180 : 0}deg`,
         ['--tile-index' as string]: String(index),
+        ['--tile-scale' as string]: String(anchor.scale),
         transform: `translate(-50%, -50%) rotate(var(--tile-rotation-deg)) scale(${anchor.scale})`,
+        ...(isSpark60 ? { width: '104px', height: '52px', clipPath: wedgeClipPath } : {}),
       }}
     >
       {/* Shine overlay */}
