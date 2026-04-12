@@ -1127,6 +1127,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const isRetryingSync = false;
   const [perfectCompanionRuntimeConfig, setPerfectCompanionRuntimeConfig] = useState(() => readPerfectCompanionRuntimeConfig(session.user.id));
   const runtimeStateRef = useRef(runtimeState);
+  // Guard ref to prevent persist effects from writing stale local state before
+  // the hydration effect has applied server values to local state. This prevents
+  // the write amplification loop where persist effects see {coins: 0} (initial)
+  // vs runtimeState.coins = 30 (hydrated) and emit a redundant write.
+  const hasCompletedInitialHydrationSyncRef = useRef(false);
   const companionBonusAppliedVisitKeyRef = useRef<string | null>(null);
   const isOnboardingComplete = Boolean(session.user.user_metadata?.onboarding_complete);
   const isFirstRunClaimed = runtimeState.firstRunClaimed;
@@ -1331,6 +1336,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setIslandRunAudioEnabled(runtimeState.audioEnabled ?? true);
     setActiveCompanionId(runtimeState.activeCompanionId ?? fetchActiveCompanionId(session.user.id));
     setCreatureTreatInventory(runtimeState.creatureTreatInventory ?? fetchCreatureTreatInventory(session.user.id));
+
+    // Mark initial hydration sync as complete so persist effects can now safely write.
+    // This prevents the write amplification loop by ensuring local state (coins, hearts,
+    // etc.) has been synced from runtimeState before persist effects compare them.
+    hasCompletedInitialHydrationSyncRef.current = true;
   }, [hasHydratedRuntimeState, runtimeState.activeCompanionId, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.audioEnabled, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.hearts, runtimeState.coins, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.creatureTreatInventory, runtimeState.marketOwnedBundlesByIsland, session.user.id]);
 
   // M16D: Snap fill bar to 0 immediately on island travel reset (no slide-back animation)
@@ -1929,6 +1939,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    // Guard: Skip until the initial hydration sync effect has applied server values
+    // to local state. This prevents the write amplification loop.
+    if (!hasCompletedInitialHydrationSyncRef.current) return;
     if (runtimeState.onboardingDisplayNameLoopCompleted === isDisplayNameLoopCompleted) return;
     void persistIslandRunRuntimeStatePatch({
       session,
@@ -1943,6 +1956,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    // Guard: Skip until the initial hydration sync effect has applied server values
+    // to local state. This prevents the write amplification loop.
+    if (!hasCompletedInitialHydrationSyncRef.current) return;
     if (runtimeState.audioEnabled === audioEnabled) return;
     void persistIslandRunRuntimeStatePatch({
       session,
@@ -2120,6 +2136,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // M11D: persist completedStops to both localStorage and Supabase runtime state
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    // Guard: Skip until the initial hydration sync effect has applied server values
+    // to local state. This prevents the write amplification loop.
+    if (!hasCompletedInitialHydrationSyncRef.current) return;
     if (!ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE) {
       const key = `island_run_stops_${session.user.id}_island_${islandNumber}`;
       try {
@@ -2157,6 +2176,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    // Guard: Skip until the initial hydration sync effect has applied server values
+    // to local state. This prevents the write amplification loop where this effect
+    // sees stale local state (e.g., coins=0 from useState default) before the
+    // hydration effect applies the correct value (e.g., coins=30 from server).
+    if (!hasCompletedInitialHydrationSyncRef.current) return;
 
     const nextPatch = {
       tokenIndex,
@@ -2191,6 +2215,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // M19A: persist diamonds to runtime state (cross-device)
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    // Guard: Skip until the initial hydration sync effect has applied server values
+    // to local state. This prevents the write amplification loop.
+    if (!hasCompletedInitialHydrationSyncRef.current) return;
     if (runtimeState.diamonds === diamonds) return;
     void persistIslandRunRuntimeStatePatch({
       session,
@@ -2203,6 +2230,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // M19A: persist market owned state to runtime state map (and mirror legacy local storage key for compatibility)
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    // Guard: Skip until the initial hydration sync effect has applied server values
+    // to local state. This prevents the write amplification loop.
+    if (!hasCompletedInitialHydrationSyncRef.current) return;
     const islandKey = String(islandNumber);
     const persisted = runtimeState.marketOwnedBundlesByIsland?.[islandKey];
     if (
@@ -2243,6 +2273,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    // Guard: Skip until the initial hydration sync effect has applied server values
+    // to local state. This prevents the write amplification loop.
+    if (!hasCompletedInitialHydrationSyncRef.current) return;
     const runtimeInventory = runtimeState.creatureTreatInventory;
     if (
       runtimeInventory
@@ -2267,6 +2300,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    // Guard: Skip until the initial hydration sync effect has applied server values
+    // to local state. This prevents the write amplification loop.
+    if (!hasCompletedInitialHydrationSyncRef.current) return;
     const runtimeCollection = runtimeState.creatureCollection ?? [];
     if (JSON.stringify(runtimeCollection) === JSON.stringify(creatureCollection)) return;
     void persistIslandRunRuntimeStatePatch({
@@ -2281,6 +2317,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    // Guard: Skip until the initial hydration sync effect has applied server values
+    // to local state. This prevents the write amplification loop.
+    if (!hasCompletedInitialHydrationSyncRef.current) return;
     if ((runtimeState.activeCompanionId ?? null) === (activeCompanionId ?? null)) return;
     void persistIslandRunRuntimeStatePatch({
       session,
