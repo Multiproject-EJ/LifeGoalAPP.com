@@ -817,7 +817,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [shardFillNoTransition, setShardFillNoTransition] = useState(false);
   const [showDebug, setShowDebug] = useState(() => new URLSearchParams(window.location.search).get('debugBoard') === '1');
   const showQaHooks = useMemo(() => new URLSearchParams(window.location.search).get('islandRunQa') === '1', []);
-  const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
+  const isMinimalBoardArt = useMemo(
+    () => new URLSearchParams(window.location.search).get('minimalBoardArt') === '1',
+    [],
+  );
+  const [boardSize, setBoardSize] = useState({ width: 360, height: 360 });
   const [isDevPanelOpen, setIsDevPanelOpen] = useState(false);
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
@@ -1913,7 +1917,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const updateBoardSize = () => {
       if (!boardRef.current) return;
       const rect = boardRef.current.getBoundingClientRect();
-      setBoardSize({ width: rect.width, height: rect.height });
+      const side = Math.min(rect.width, rect.height);
+      setBoardSize({ width: side, height: side });
     };
 
     updateBoardSize();
@@ -6082,6 +6087,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           spark60RingGradient={spark60RingSegmentsGradient}
           isSpark60={isSpark60BoardProfile}
           showDebug={showDebug}
+          isMinimalBoardArt={isMinimalBoardArt}
           tileMap={tileMap}
           stopMap={stopMap}
           completedEncounterIndices={completedEncounterIndices}

@@ -11,6 +11,9 @@ import { BoardToken } from './BoardToken';
 import { BoardParticles } from './BoardParticles';
 import { BoardOrbitStops, type OrbitStopVisualData, type StopProgressState } from './BoardOrbitStops';
 
+const BOARD_TILT_X_DEG = 40;
+const BOARD_ROTATE_Z_DEG = 0;
+
 // ─── BoardStage: the visual orchestrator ─────────────────────────────────────
 // Composes camera, gestures, tiles, token, path, particles into the board scene.
 // Game logic (rolling, stops, etc.) stays in IslandRunBoardPrototype.
@@ -30,6 +33,8 @@ export interface BoardStageProps {
   isSpark60: boolean;
   /** Show debug overlay */
   showDebug: boolean;
+  /** Disable decorative board art for production art integration */
+  isMinimalBoardArt?: boolean;
 
   /** Tile state data */
   tileMap: Record<number, IslandTileMapEntry>;
@@ -70,6 +75,7 @@ export function BoardStage(props: BoardStageProps) {
     spark60RingGradient,
     isSpark60,
     showDebug,
+    isMinimalBoardArt = false,
     tileMap,
     stopMap,
     completedEncounterIndices,
@@ -203,11 +209,12 @@ export function BoardStage(props: BoardStageProps) {
 
   // ── Debug overlay ────────────────────────────────────────────────────────
   const ZBAND_COLORS: Record<string, string> = { back: '#50a5ff', mid: '#ffe066', front: '#ff4ff5' };
+  const cameraStageTransform = `${camera.cameraTransform} rotateX(${BOARD_TILT_X_DEG}deg) rotateZ(${BOARD_ROTATE_Z_DEG}deg)`;
 
   return (
     <div
       ref={boardRef}
-      className="island-run-board__stage-wrapper"
+      className={`island-run-board__stage-wrapper ${isMinimalBoardArt ? 'island-run-board__stage-wrapper--minimal-art' : ''}`}
       style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1' }}
     >
       {/* Gesture capture layer (invisible, on top) */}
@@ -220,10 +227,10 @@ export function BoardStage(props: BoardStageProps) {
       {/* Camera stage — everything inside moves with the camera */}
       <div
         className="island-run-board__camera-stage"
-        style={{ transform: camera.cameraTransform, willChange: 'transform' }}
+        style={{ transform: cameraStageTransform, willChange: 'transform' }}
       >
         {/* Path overlay image */}
-        {theme.pathOverlayImage && (
+        {theme.pathOverlayImage && !isMinimalBoardArt && (
           <img
             className="island-run-board__path-overlay"
             src={theme.pathOverlayImage}
@@ -239,6 +246,7 @@ export function BoardStage(props: BoardStageProps) {
           boardHeight={boardSize.height}
           theme={theme}
           showDebug={showDebug}
+          isMinimalBoardArt={isMinimalBoardArt}
           toScreen={toScreen}
         />
 
@@ -265,6 +273,7 @@ export function BoardStage(props: BoardStageProps) {
           tokenIndex={tokenIndex}
           isSpark60={isSpark60}
           showDebug={showDebug}
+          isMinimalBoardArt={isMinimalBoardArt}
           toScreen={toScreen}
         />
 
@@ -318,14 +327,16 @@ export function BoardStage(props: BoardStageProps) {
         )}
 
         {/* Particles (ambient + trail + burst) */}
-        <BoardParticles
-          boardWidth={boardSize.width}
-          boardHeight={boardSize.height}
-          tokenX={tokenAnim.animState.x}
-          tokenY={tokenAnim.animState.y}
-          isTokenMoving={tokenAnim.animState.isMoving}
-          burstAt={burstPos}
-        />
+        {!isMinimalBoardArt && (
+          <BoardParticles
+            boardWidth={boardSize.width}
+            boardHeight={boardSize.height}
+            tokenX={tokenAnim.animState.x}
+            tokenY={tokenAnim.animState.y}
+            isTokenMoving={tokenAnim.animState.isMoving}
+            burstAt={burstPos}
+          />
+        )}
       </div>
     </div>
   );

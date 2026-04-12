@@ -69,6 +69,7 @@ export interface BoardTileProps {
   isSpark60: boolean;
   tileIndex: number;
   showDebug: boolean;
+  isMinimalBoardArt: boolean;
 }
 
 export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
@@ -84,6 +85,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     isUpcoming,
     isSpark60,
     showDebug,
+    isMinimalBoardArt,
   } = props;
 
   const tileTypeClass = !isStop && tileType ? `island-tile--${tileType}` : '';
@@ -120,7 +122,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         tileTypeClass,
         isTokenCurrent ? 'island-tile--token-current' : '',
         isUpcoming ? 'island-tile--upcoming' : '',
-        'island-tile--alive', // enables idle shimmer
+        !isMinimalBoardArt ? 'island-tile--alive' : '',
       ].filter(Boolean).join(' ')}
       style={{
         left: position.x,
@@ -132,8 +134,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         ...(isSpark60 ? { width: '104px', height: '52px', clipPath: wedgeClipPath } : {}),
       }}
     >
-      {/* Shine overlay */}
-      <span className="island-tile__shine" aria-hidden="true" />
+      {!isMinimalBoardArt && <span className="island-tile__shine" aria-hidden="true" />}
 
       <span className="island-tile__value">
         {iconContent}

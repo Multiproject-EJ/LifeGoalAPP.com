@@ -3570,6 +3570,8 @@
   z-index: 2;
   overflow: hidden;
   flex-shrink: 0;
+  perspective: 1400px;
+  perspective-origin: 50% 35%;
 }
 
 .island-run-board__gesture-layer {
@@ -3587,9 +3589,15 @@
 .island-run-board__stage-wrapper .island-run-board__camera-stage {
   transform-origin: center center;
   transform: translateZ(0);
+  transform-style: preserve-3d;
   will-change: transform;
   contain: layout style paint;
   transition: none; /* spring engine handles transitions now */
+}
+
+.island-run-board__stage-wrapper--minimal-art .island-tile__shine,
+.island-run-board__stage-wrapper--minimal-art .island-run-board__path-overlay {
+  display: none !important;
 }
 
 /* ── Tile enhancements ─────────────────────────────────────────────────────── */
@@ -3751,6 +3759,9 @@
 
 /* ── Performance: reduce motion ────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+  .island-run-board__camera-stage {
+    transition: none !important;
+  }
   .island-tile--alive,
   .island-tile__shine::after,
   .island-token__landing-ripple {
