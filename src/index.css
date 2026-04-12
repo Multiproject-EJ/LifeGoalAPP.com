@@ -2923,13 +2923,21 @@ html.platform-ipad .workspace-shell__menu-edge {
 /* Today mobile route should own the full viewport height.
    Override framed shell-height math only when mobile-home + mobile-frame are both active. */
 .app--mobile-home-frame.app--mobile-frame {
+  --mobile-frame-width: 100vw;
   --mobile-frame-height: 100vh;
   --mobile-frame-height: 100dvh;
 }
 
 .app--mobile-home-frame.app--mobile-frame .workspace-shell {
+  width: 100%;
+  max-width: 100%;
   min-height: 100vh;
   min-height: 100dvh;
+}
+
+.app--mobile-home-frame.app--mobile-frame .mobile-footer-nav {
+  left: 0;
+  right: 0;
 }
 
 @media (max-width: 720px), (max-height: 720px) and (pointer: coarse) {
