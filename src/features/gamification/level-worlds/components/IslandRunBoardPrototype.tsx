@@ -408,6 +408,8 @@ const UTILITY_HEART_REFILL_COST = 50;
 const UTILITY_DICE_BONUS_COST = 30;
 const UTILITY_TIMER_EXT_COST_DIAMONDS = 3;
 const UTILITY_TIMER_EXT_HOURS = 12;
+const UTILITY_ESSENCE_BONUS_COST_DIAMONDS = 3;
+const UTILITY_ESSENCE_BONUS_AMOUNT = 15;
 const MAX_HEARTS = 10;
 const CONTRACT_V2_ESSENCE_SPEND_STEP = 10;
 const CREATURE_FEED_COOLDOWN_MS = 8 * 60 * 60 * 1000;
@@ -1062,6 +1064,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // M14: persistent shop panel state
   const [showShopPanel, setShowShopPanel] = useState(false);
   const [showMarketPanel, setShowMarketPanel] = useState(false);
+  const [showBuildPanel, setShowBuildPanel] = useState(false);
   const [showRewardDetailsModal, setShowRewardDetailsModal] = useState(false);
   const [showOutOfDicePurchasePrompt, setShowOutOfDicePurchasePrompt] = useState(false);
   const [isStartingDiceCheckout, setIsStartingDiceCheckout] = useState(false);
@@ -1092,6 +1095,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       showTopbarMenu &&
       (showShopPanel ||
         showMarketPanel ||
+        showBuildPanel ||
         showOutOfDicePurchasePrompt ||
         showRewardDetailsModal ||
         showSanctuaryPanel ||
@@ -1102,6 +1106,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setShowTopbarMenu(false);
     }
   }, [
+    showBuildPanel,
     showClaimModal,
     showEncounterModal,
     showMarketPanel,
@@ -5199,6 +5204,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const openShopPanel = () => {
     setShowShopPanel(true);
     setShowMarketPanel(false);
+    setShowBuildPanel(false);
     setShowOutOfDicePurchasePrompt(false);
     setDiceCheckoutError(null);
     setMarketPurchaseFeedback(null);
@@ -5212,17 +5218,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   };
 
   const openMarketPanel = () => {
-    setShowMarketPanel(true);
-    setShowShopPanel(false);
-    setShowOutOfDicePurchasePrompt(false);
-    setDiceCheckoutError(null);
-    setMarketPurchaseFeedback(null);
-    setLandingText('Market opened — time-limited offers are available.');
-    void recordTelemetryEvent({
-      userId: session.user.id,
-      eventType: 'economy_earn',
-      metadata: { stage: 'market_open', island_number: islandNumber },
-    });
+    // Market is now merged into the shop panel — redirect to shop
+    openShopPanel();
   };
 
   const openRewardDetailsModal = () => {
@@ -6180,11 +6177,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </div>
             <span className={`island-run-board__rewardbar-endcap${canClaimRewardBar ? ' island-run-board__rewardbar-endcap--claimable' : ''}`} aria-hidden="true">🏆</span>
           </div>
-          {/* Unified timer row — event timer + island timer in one place */}
+          {/* Event timer row — island timer removed: islands advance via boss completion, not timer */}
           <div className="island-run-board__rewardbar-timers">
             <span className={getTimerUrgencyClass(timedEventRemainingMs)}>🎪 Event: {timedEventRemainingLabel}</span>
-            <span className="island-run-board__rewardbar-timers-sep" aria-hidden="true" />
-            <span className="island-run-board__rewardbar-island-timer">🏝️ Island: <strong>{timerDisplay}</strong></span>
           </div>
         </button>
 
@@ -6273,9 +6268,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <button
               type="button"
               className="island-run-prototype__footer-nav-btn"
-              onClick={openMarketPanel}
+              onClick={() => setShowBuildPanel(true)}
             >
-              🏪 Market
+              🔨 Build
             </button>
             {canUseSpinForMovement(ISLAND_RUN_CONTRACT_V2_ENABLED) && spinTokens > 0 && (
               <button
@@ -6562,28 +6557,55 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     {coins < UTILITY_DICE_BONUS_COST && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {UTILITY_DICE_BONUS_COST - coins} more)</span>}
                   </button>
                 </div>
-                {/* Timer extension — spend diamonds */}
+                {/* Essence bonus — spend diamonds (V2: replaces legacy timer extension) */}
                 <div className="island-hatchery-card__actions">
-                  {diamonds >= UTILITY_TIMER_EXT_COST_DIAMONDS ? (
-                    <button
-                      type="button"
-                      className="island-stop-modal__btn island-stop-modal__btn--action"
-                      onClick={() => {
-                        setDiamonds((d) => d - UTILITY_TIMER_EXT_COST_DIAMONDS);
-                        const extensionMs = UTILITY_TIMER_EXT_HOURS * 60 * 60 * 1000;
-                        setIslandExpiresAtMs((current) => current + extensionMs);
-                        setUtilityInteracted(true);
-                        playIslandRunSound('utility_stop_complete');
-                        triggerIslandRunHaptic('utility_stop_complete');
-                        void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_spend', metadata: { stage: 'utility_timer_extension', island_number: islandNumber, cost_diamonds: UTILITY_TIMER_EXT_COST_DIAMONDS, extension_hours: UTILITY_TIMER_EXT_HOURS } });
-                        setLandingText(`Timer extended! -${UTILITY_TIMER_EXT_COST_DIAMONDS} 💎, +${UTILITY_TIMER_EXT_HOURS}h`);
-                        handleCompleteActiveStop();
-                      }}
-                    >
-                      ⏱ Timer Extension — {UTILITY_TIMER_EXT_COST_DIAMONDS} 💎 → +{UTILITY_TIMER_EXT_HOURS}h
-                    </button>
+                  {ISLAND_RUN_CONTRACT_V2_ENABLED ? (
+                    diamonds >= UTILITY_ESSENCE_BONUS_COST_DIAMONDS ? (
+                      <button
+                        type="button"
+                        className="island-stop-modal__btn island-stop-modal__btn--action"
+                        onClick={() => {
+                          setDiamonds((d) => d - UTILITY_ESSENCE_BONUS_COST_DIAMONDS);
+                          setRuntimeState((prev) => ({
+                            ...prev,
+                            essence: prev.essence + UTILITY_ESSENCE_BONUS_AMOUNT,
+                            essenceLifetimeEarned: prev.essenceLifetimeEarned + UTILITY_ESSENCE_BONUS_AMOUNT,
+                          }));
+                          setUtilityInteracted(true);
+                          playIslandRunSound('utility_stop_complete');
+                          triggerIslandRunHaptic('utility_stop_complete');
+                          void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_spend', metadata: { stage: 'utility_essence_bonus', island_number: islandNumber, cost_diamonds: UTILITY_ESSENCE_BONUS_COST_DIAMONDS, essence_gained: UTILITY_ESSENCE_BONUS_AMOUNT } });
+                          setLandingText(`Essence bonus! -${UTILITY_ESSENCE_BONUS_COST_DIAMONDS} 💎, +${UTILITY_ESSENCE_BONUS_AMOUNT} 🟣`);
+                          handleCompleteActiveStop();
+                        }}
+                      >
+                        🟣 Essence Bonus — {UTILITY_ESSENCE_BONUS_COST_DIAMONDS} 💎 → +{UTILITY_ESSENCE_BONUS_AMOUNT} Essence
+                      </button>
+                    ) : (
+                      <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>🟣 Essence Bonus — needs {UTILITY_ESSENCE_BONUS_COST_DIAMONDS} 💎 (have {diamonds})</p>
+                    )
                   ) : (
-                    <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>⏱ Timer Extension — needs {UTILITY_TIMER_EXT_COST_DIAMONDS} 💎 (have {diamonds})</p>
+                    diamonds >= UTILITY_TIMER_EXT_COST_DIAMONDS ? (
+                      <button
+                        type="button"
+                        className="island-stop-modal__btn island-stop-modal__btn--action"
+                        onClick={() => {
+                          setDiamonds((d) => d - UTILITY_TIMER_EXT_COST_DIAMONDS);
+                          const extensionMs = UTILITY_TIMER_EXT_HOURS * 60 * 60 * 1000;
+                          setIslandExpiresAtMs((current) => current + extensionMs);
+                          setUtilityInteracted(true);
+                          playIslandRunSound('utility_stop_complete');
+                          triggerIslandRunHaptic('utility_stop_complete');
+                          void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_spend', metadata: { stage: 'utility_timer_extension', island_number: islandNumber, cost_diamonds: UTILITY_TIMER_EXT_COST_DIAMONDS, extension_hours: UTILITY_TIMER_EXT_HOURS } });
+                          setLandingText(`Timer extended! -${UTILITY_TIMER_EXT_COST_DIAMONDS} 💎, +${UTILITY_TIMER_EXT_HOURS}h`);
+                          handleCompleteActiveStop();
+                        }}
+                      >
+                        ⏱ Timer Extension — {UTILITY_TIMER_EXT_COST_DIAMONDS} 💎 → +{UTILITY_TIMER_EXT_HOURS}h
+                      </button>
+                    ) : (
+                      <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>⏱ Timer Extension — needs {UTILITY_TIMER_EXT_COST_DIAMONDS} 💎 (have {diamonds})</p>
+                    )
                   )}
                 </div>
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
@@ -7073,49 +7095,25 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         </div>
       )}
 
-      {/* M14: persistent shop panel */}
-      {showMarketPanel && (
+      {/* M14: unified shop panel (merged shop + market) */}
+      {showShopPanel && (
         <div className="island-stop-modal-backdrop" role="presentation">
-          <section className="island-run-shop-panel island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Market">
-            <h3 className="island-stop-modal__title">🏪 Market</h3>
-            <p className="island-stop-modal__copy">Time-limited offers and flash bundles.</p>
+          <section className="island-run-shop-panel island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Shop">
+            <h3 className="island-stop-modal__title">🛍️ Shop</h3>
+            <p className="island-stop-modal__copy"><strong>🪙 {coins} coins</strong></p>
+
             <div className="island-hatchery-card">
               <p><strong>Flash Offer — Dice Top-up</strong></p>
               <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>Limited-time checkout entry for 500 rolls.</p>
               <button
                 type="button"
                 className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                onClick={() => void handleStartDiceCheckout('market_panel')}
+                onClick={() => void handleStartDiceCheckout('shop_panel')}
                 disabled={isStartingDiceCheckout}
               >
                 {isStartingDiceCheckout ? 'Starting checkout…' : 'Buy 500 Rolls (Stripe)'}
               </button>
             </div>
-            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action"
-                onClick={openShopPanel}
-              >
-                Open Shop
-              </button>
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                onClick={() => setShowMarketPanel(false)}
-              >
-                ✕ Close
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {showShopPanel && (
-        <div className="island-stop-modal-backdrop" role="presentation">
-          <section className="island-run-shop-panel island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Shop">
-            <h3 className="island-stop-modal__title">🛍️ Shop</h3>
-            <p className="island-stop-modal__copy"><strong>🪙 {coins} coins</strong></p>
 
             <div className="island-hatchery-card">
               <p><strong>Tier 1 — Always available</strong></p>
@@ -7136,19 +7134,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   </button>
                 )}
               </div>
-            </div>
-
-            <div className="island-hatchery-card">
-              <p><strong>Dice Rolls (Stripe)</strong></p>
-              <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>Real-money top-up for 500 rolls.</p>
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                onClick={() => void handleStartDiceCheckout('shop_panel')}
-                disabled={isStartingDiceCheckout}
-              >
-                {isStartingDiceCheckout ? 'Starting checkout…' : 'Buy 500 Rolls (Stripe)'}
-              </button>
             </div>
 
             <div className="island-hatchery-card">
@@ -7176,6 +7161,65 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   setMarketPurchaseFeedback(null);
                   void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_earn', metadata: { stage: 'shop_close', island_number: islandNumber } });
                 }}
+              >
+                ✕ Close
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* Build panel — standalone essence build overview */}
+      {showBuildPanel && ISLAND_RUN_CONTRACT_V2_ENABLED && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Build overview">
+            <h3 className="island-stop-modal__title">🔨 Build Overview</h3>
+            <p className="island-stop-modal__copy">
+              Essence: <strong>🟣 {runtimeState.essence}</strong> · Lifetime earned: <strong>{runtimeState.essenceLifetimeEarned}</strong>
+            </p>
+            <div className="island-hatchery-card">
+              <p><strong>Stop Build Progress</strong></p>
+              {runtimeState.stopBuildStateByIndex.map((buildState, idx) => {
+                const stopEntry = islandStopPlan[idx];
+                const stopState = runtimeState.stopStatesByIndex[idx];
+                if (!stopEntry || !buildState) return null;
+                const remaining = Math.max(0, buildState.requiredEssence - buildState.spentEssence);
+                return (
+                  <div key={stopEntry.stopId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.35rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                    <span style={{ fontSize: '0.85rem' }}>{stopEntry.title ?? stopEntry.stopId}</span>
+                    <span style={{ fontSize: '0.82rem', opacity: 0.85 }}>
+                      {stopState?.buildComplete
+                        ? '✅ Built'
+                        : `${buildState.spentEssence}/${buildState.requiredEssence} 🟣 (${remaining} left)`}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {contractV2ActiveStopIndex >= 0 && contractV2BuildPanelBuildState && contractV2BuildPanelStopState && !contractV2BuildPanelStopState.buildComplete && (
+              <div className="island-hatchery-card">
+                <p><strong>Active Stop Build</strong></p>
+                <p className="island-stop-modal__copy" style={{ marginBottom: '0.35rem' }}>
+                  Build: <strong>{contractV2BuildPanelBuildState.spentEssence}</strong>/<strong>{contractV2BuildPanelBuildState.requiredEssence}</strong>
+                  {' · '}Objective {contractV2BuildPanelStopState.objectiveComplete ? '✅' : '⏳'}
+                </p>
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                  onClick={() => {
+                    handleSpendEssenceOnActiveStopBuild();
+                  }}
+                  disabled={contractV2BuildPanelRemainingEssence <= 0 || runtimeState.essence <= 0}
+                >
+                  Spend {Math.min(CONTRACT_V2_ESSENCE_SPEND_STEP, Math.max(1, contractV2BuildPanelRemainingEssence))} Essence on Build
+                </button>
+              </div>
+            )}
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => setShowBuildPanel(false)}
               >
                 ✕ Close
               </button>
