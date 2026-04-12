@@ -1794,14 +1794,15 @@
 }
 
 .island-run-board--spark60 .island-tile {
-  width: 104px;
-  height: 52px;
+  width: 120px;
+  height: 58px;
   border-radius: 6px 6px 10px 10px;
-  clip-path: polygon(calc(50% - 36px) 0%, calc(50% + 36px) 0%, calc(50% + 52px) 100%, calc(50% - 52px) 100%);
+  /* Wedge clip-path proportioned for 40-tile ring (9° per tile) */
+  clip-path: polygon(calc(50% - 42px) 0%, calc(50% + 42px) 0%, calc(50% + 60px) 100%, calc(50% - 60px) 100%);
 }
 
 .island-run-board--spark60 .island-tile__value {
-  font-size: 0.56rem;
+  font-size: 0.65rem;
   transform: rotate(calc(-1 * var(--tile-rotation-deg, 0deg)));
   transform-origin: center center;
 }
@@ -1925,9 +1926,11 @@
   to { translate: -50% -46%; transform: scale(1.07); }
 }
 
-.island-token--zband-back  { transform: translate(-50%, -50%) scale(0.82); filter: brightness(0.7) saturate(0.7); }
-.island-token--zband-mid   { transform: translate(-50%, -50%) scale(0.92); }
-.island-token--zband-front { transform: translate(-50%, -50%) scale(1.10); filter: brightness(1.1) saturate(1.1); }
+/* Z-band depth tiers — use CSS 'scale' individual property so squash/stretch
+   from inline transform (animateHops) composes correctly without conflict. */
+.island-token--zband-back  { scale: 0.82; filter: brightness(0.7) saturate(0.7); }
+.island-token--zband-mid   { scale: 0.92; }
+.island-token--zband-front { scale: 1.10; filter: brightness(1.1) saturate(1.1); }
 
 @keyframes island-active-stop-pulse {
   0%,
@@ -2677,13 +2680,14 @@
 }
 
 @keyframes islandTokenLand {
-  0% { transform: scaleX(1.35) scaleY(0.65); }
-  55% { transform: scaleX(0.9) scaleY(1.12); }
-  100% { transform: scaleX(1) scaleY(1); }
+  0%   { transform: scaleX(1.42) scaleY(0.58); }
+  40%  { transform: scaleX(0.88) scaleY(1.20); }
+  70%  { transform: scaleX(1.06) scaleY(0.95); }
+  100% { transform: scaleX(1)    scaleY(1);    }
 }
 
 .island-token--landing {
-  animation: islandTokenLand 0.38s ease-out forwards;
+  animation: islandTokenLand 0.48s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
 }
 
 /* B2-2: Tile type classes — distinct gradient + inner glow per type */
@@ -3816,15 +3820,15 @@
   }
 }
 
-/* Override for spark60 — include the anchor scale in the idle bob */
+/* Override for spark40 ring — idle bob respects the perspective anchor scale. */
 .island-run-board--spark60 .island-tile--alive {
   animation: island-tile-idle-spark60 3.5s ease-in-out infinite;
   animation-delay: calc(var(--tile-index, 0) * 0.06s);
 }
 
 @keyframes island-tile-idle-spark60 {
-  0%, 100% { transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(1); }
-  50% { transform: translate(-50%, calc(-50% - 1.2px)) rotate(var(--tile-rotation-deg, 0deg)) scale(1.01); }
+  0%, 100% { transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(var(--tile-scale, 1)); }
+  50% { transform: translate(-50%, calc(-50% - 1.2px)) rotate(var(--tile-rotation-deg, 0deg)) scale(calc(var(--tile-scale, 1) * 1.01)); }
 }
 
 /* Shine overlay — animated gradient sweep */
@@ -3876,9 +3880,10 @@
   z-index: 2;
   opacity: 0.8;
 }
-/* Hide badge on spark60 (too small) */
+/* Tile number badge — smaller on ring board but visible since tiles are bigger now */
 .island-run-board--spark60 .island-tile__badge {
-  display: none;
+  font-size: 0.38rem;
+  padding: 1px 2px;
 }
 
 /* Completed encounter badge */
@@ -3934,15 +3939,21 @@
 }
 
 @keyframes island-token-ripple {
-  from { width: 10px;  height: 10px;  opacity: 1;   transform: translate(-50%, -50%); }
-  to   { width: 64px;  height: 64px;  opacity: 0;   transform: translate(-50%, -50%); }
+  from { width: 12px;  height: 12px;  opacity: 1;   transform: translate(-50%, -50%); }
+  to   { width: 80px;  height: 80px;  opacity: 0;   transform: translate(-50%, -50%); }
 }
 
-/* Enhanced token with inline transform support (squash/stretch) */
+/* Enhanced token with inline transform support (squash/stretch during animateHops) */
 .island-run-board__stage-wrapper .island-token {
   transition: left 180ms cubic-bezier(0.22, 0.61, 0.36, 1),
               top 180ms cubic-bezier(0.22, 0.61, 0.36, 1);
   will-change: transform, left, top;
+}
+
+/* Disable CSS position transitions during rAF-controlled hop animation so
+   the bezier arc path drives position directly without a 180ms lag. */
+.island-run-board__stage-wrapper .island-token.island-token--moving {
+  transition: none !important;
 }
 
 /* ── Particle canvas layer ─────────────────────────────────────────────────── */
@@ -3970,10 +3981,11 @@
   }
 }
 
+/* Stop tiles on the 40-tile ring — proportionally wider than regular tiles */
 .island-run-board--spark60 .island-tile--stop {
-  width: 116px;
-  height: 58px;
-  clip-path: polygon(calc(50% - 40px) 0%, calc(50% + 40px) 0%, calc(50% + 58px) 100%, calc(50% - 58px) 100%);
+  width: 132px;
+  height: 64px;
+  clip-path: polygon(calc(50% - 46px) 0%, calc(50% + 46px) 0%, calc(50% + 66px) 100%, calc(50% - 66px) 100%);
 }
 
 @keyframes island-tile-stop-pulse {

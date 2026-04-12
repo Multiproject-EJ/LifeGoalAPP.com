@@ -90,7 +90,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
 
   const tileTypeClass = !isStop && tileType ? `island-tile--${tileType}` : '';
   const wedgeClipPath = isSpark60
-    ? 'polygon(calc(50% - 36px) 0%, calc(50% + 36px) 0%, calc(50% + 52px) 100%, calc(50% - 52px) 100%)'
+    ? 'polygon(calc(50% - 42px) 0%, calc(50% + 42px) 0%, calc(50% + 60px) 100%, calc(50% - 60px) 100%)'
     : undefined;
 
   // Choose icon
@@ -131,7 +131,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         ['--tile-index' as string]: String(index),
         ['--tile-scale' as string]: String(anchor.scale),
         transform: `translate(-50%, -50%) rotate(var(--tile-rotation-deg)) scale(${anchor.scale})`,
-        ...(isSpark60 ? { width: '104px', height: '52px', clipPath: wedgeClipPath } : {}),
+        ...(isSpark60 ? { width: '120px', height: '58px', clipPath: wedgeClipPath } : {}),
       }}
     >
       {!isMinimalBoardArt && <span className="island-tile__shine" aria-hidden="true" />}

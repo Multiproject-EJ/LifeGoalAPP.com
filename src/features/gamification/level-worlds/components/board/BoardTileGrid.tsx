@@ -18,7 +18,7 @@ export interface BoardTileGridProps {
 }
 
 /**
- * Renders the grid of 60 tiles using memoized BoardTile components.
+ * Renders the grid of 40 ring tiles using memoized BoardTile components.
  */
 export function BoardTileGrid(props: BoardTileGridProps) {
   const {
