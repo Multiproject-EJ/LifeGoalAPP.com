@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react';
-import boardTopbar from '../assets/IMG_8564.webp';
-import boardMatchbar from '../assets/IMG_8562.webp';
 import boardIconsRight1 from '../assets/board_icons_right1.webp';
 import boardIconsRight2 from '../assets/board_icons_right2.webp';
 import spinWheelImg from '../assets/Daily_treats_spinnwheel.webp';
@@ -116,6 +114,12 @@ export function GameBoardOverlay({
   };
 
   const clampedMomentum = Math.min(100, Math.max(0, momentumPercent));
+  const rewardMilestones = [
+    { pct: 25, icon: '🎁' },
+    { pct: 50, icon: '🎉' },
+    { pct: 75, icon: '⭐' },
+  ];
+  const topbarAvatar = (profilePlaystyleIcon && profilePlaystyleIcon.trim()) || 'P';
 
   return (
     <div
@@ -132,36 +136,56 @@ export function GameBoardOverlay({
             className="game-board-overlay__island-scene-img"
           />
         </div>
-        {/* Top Bar - Now the matchbar at full width */}
-        <div 
-          className={`game-board-overlay__topbar ${onTopbarClick ? 'game-board-overlay__topbar--clickable' : ''}`}
-          onClick={onTopbarClick}
-        >
-          <img src={boardMatchbar} alt="Game board top bar" className="game-board-overlay__topbar-image" />
-          {profilePlaystyleIcon ? (
-            <div className="game-board-overlay__topbar-playstyle" aria-label={profilePlaystyleLabel}>
-              <span role="img" aria-hidden="true">
-                {profilePlaystyleIcon}
-              </span>
-            </div>
-          ) : null}
+        <div className="game-board-overlay__hud">
           <div
-            className={`game-board-overlay__topbar-level ${currentLevel >= 10 ? 'game-board-overlay__topbar-level--double' : ''}`}
-            aria-label={`Level ${currentLevel}`}
+            className={`island-run-board__topbar ${onTopbarClick ? 'game-board-overlay__topbar--clickable' : ''}`}
+            onClick={onTopbarClick}
+            aria-label="Island Run top bar"
           >
-            Lv.{currentLevel}
-          </div>
-          <div className="game-board-overlay__momentum" aria-label={`Momentum ${clampedMomentum}%`}>
-            <div className="game-board-overlay__momentum-track">
-              <div className="game-board-overlay__momentum-fill" style={{ width: `${clampedMomentum}%` }} />
+            <button
+              type="button"
+              className="island-run-board__topbar-avatar"
+              aria-label={profilePlaystyleLabel ?? 'Player profile'}
+            >
+              {topbarAvatar}
+            </button>
+            <div className="island-run-board__topbar-wallet" aria-label={`Level ${currentLevel}`}>
+              ⭐ <strong>Lv.{currentLevel}</strong>
             </div>
-            <span className="game-board-overlay__momentum-label">Momentum</span>
+            <button
+              type="button"
+              className="island-run-board__topbar-menu"
+              aria-label="Open gamification"
+            >
+              ☰
+            </button>
           </div>
-        </div>
 
-        {/* Secondary Bar - Previously the topbar, now smaller */}
-        <div className="game-board-overlay__secondarybar">
-          <img src={boardTopbar} alt="Game board secondary bar" className="game-board-overlay__secondarybar-image" />
+          <div
+            className="island-run-board__rewardbar"
+            aria-label={`Reward progress ${clampedMomentum}%`}
+          >
+            <div className="island-run-board__rewardbar-header">
+              <span>{Math.floor(clampedMomentum)}/100</span>
+              <span>{clampedMomentum >= 100 ? '✨ Claim ready!' : 'Momentum'}</span>
+            </div>
+            <div className="island-run-board__rewardbar-track-row">
+              <span className="island-run-board__rewardbar-avatar-indicator" aria-hidden="true">
+                {topbarAvatar}
+              </span>
+              <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(clampedMomentum)} aria-valuemin={0} aria-valuemax={100}>
+                <span className="island-run-board__rewardbar-track-fill" style={{ width: `${clampedMomentum}%` }} />
+                {rewardMilestones.map((milestone) => (
+                  <span key={milestone.pct} className={`island-run-board__rewardbar-milestone${clampedMomentum >= milestone.pct ? ' island-run-board__rewardbar-milestone--reached' : ''}`} style={{ left: `${milestone.pct}%` }} aria-hidden="true">{milestone.icon}</span>
+                ))}
+                <span className="island-run-board__rewardbar-position" style={{ left: `${clampedMomentum}%` }} aria-hidden="true" />
+              </div>
+              <span className={`island-run-board__rewardbar-endcap${clampedMomentum >= 100 ? ' island-run-board__rewardbar-endcap--claimable' : ''}`} aria-hidden="true">🏆</span>
+            </div>
+            <div className="island-run-board__rewardbar-timers">
+              <span>🏝️ Island: {islandTimeLabel}</span>
+            </div>
+          </div>
         </div>
 
         {/* Middle Section with Side Icons */}
