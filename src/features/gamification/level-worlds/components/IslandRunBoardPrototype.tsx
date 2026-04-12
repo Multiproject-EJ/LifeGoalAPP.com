@@ -665,10 +665,12 @@ const ZBAND_COLORS: Record<TileAnchor['zBand'], string> = {
 };
 
 function toScreen<T extends { x: number; y: number }>(anchor: T, width: number, height: number) {
-  const side = Math.min(width, height);
+  const scale = Math.min(width / CANONICAL_BOARD_SIZE.width, height / CANONICAL_BOARD_SIZE.height);
+  const ox = (width - CANONICAL_BOARD_SIZE.width * scale) / 2;
+  const oy = (height - CANONICAL_BOARD_SIZE.height * scale) / 2;
   return {
-    x: (anchor.x / CANONICAL_BOARD_SIZE.width) * side,
-    y: (anchor.y / CANONICAL_BOARD_SIZE.height) * side,
+    x: ox + anchor.x * scale,
+    y: oy + anchor.y * scale,
   };
 }
 
@@ -840,7 +842,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     };
   }, []);
   const { showQaHooks, isMinimalBoardArt, boardTiltXDeg, boardRotateZDeg } = boardRenderTuning;
-  const [boardSize, setBoardSize] = useState({ width: 360, height: 360 });
+  const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
   const [isDevPanelOpen, setIsDevPanelOpen] = useState(false);
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
@@ -1936,8 +1938,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const updateBoardSize = () => {
       if (!boardRef.current) return;
       const rect = boardRef.current.getBoundingClientRect();
-      const side = Math.min(rect.width, rect.height);
-      setBoardSize({ width: side, height: side });
+      setBoardSize({ width: rect.width, height: rect.height });
     };
 
     updateBoardSize();
