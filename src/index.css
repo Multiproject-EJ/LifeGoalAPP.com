@@ -15367,61 +15367,61 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 @media (max-width: 720px) {
   .mobile-habit-home {
-    background: linear-gradient(180deg, rgba(15, 23, 42, 0) 0%, rgba(15, 23, 42, 0.5) 20%, #0f172a 42%);
+    background: linear-gradient(180deg, #0f172a 0%, #0f172a 42%);
     padding-top: clamp(0.75rem, 4vw, 1.25rem);
     padding-right: max(var(--safe-area-right), 0.5rem);
     padding-left: max(var(--safe-area-left), 0.5rem);
   }
 
   [data-theme='bright-sky'] .mobile-habit-home {
-    background: linear-gradient(180deg, rgba(219, 234, 254, 0) 0%, rgba(219, 234, 254, 0.5) 20%, #dbeafe 40%, #bfdbfe 68%, #93c5fd 100%);
+    background: linear-gradient(180deg, #dbeafe 0%, #dbeafe 40%, #bfdbfe 68%, #93c5fd 100%);
   }
 
   [data-theme='ocean-breeze'] .mobile-habit-home {
-    background: linear-gradient(180deg, rgba(224, 242, 254, 0) 0%, rgba(224, 242, 254, 0.5) 20%, #e0f2fe 40%, #bae6fd 68%, #7dd3fc 100%);
+    background: linear-gradient(180deg, #e0f2fe 0%, #e0f2fe 40%, #bae6fd 68%, #7dd3fc 100%);
   }
 
   [data-theme='forest-green'] .mobile-habit-home {
-    background: linear-gradient(180deg, rgba(220, 252, 231, 0) 0%, rgba(220, 252, 231, 0.5) 20%, #dcfce7 40%, #bbf7d0 63%, #86efac 100%);
+    background: linear-gradient(180deg, #dcfce7 0%, #dcfce7 40%, #bbf7d0 63%, #86efac 100%);
   }
 
   [data-theme='sunset-glow'] .mobile-habit-home {
-    background: linear-gradient(180deg, rgba(255, 237, 213, 0) 0%, rgba(255, 237, 213, 0.5) 20%, #ffedd5 40%, #fed7aa 63%, #fdba74 100%);
+    background: linear-gradient(180deg, #ffedd5 0%, #ffedd5 40%, #fed7aa 63%, #fdba74 100%);
   }
 
   [data-theme='cherry-blossom'] .mobile-habit-home {
-    background: linear-gradient(180deg, rgba(253, 242, 248, 0) 0%, rgba(253, 242, 248, 0.5) 20%, #fdf2f8 40%, #fbcfe8 64%, #f9a8d4 100%);
+    background: linear-gradient(180deg, #fdf2f8 0%, #fdf2f8 40%, #fbcfe8 64%, #f9a8d4 100%);
   }
 
   [data-theme='desert-sand'] .mobile-habit-home {
-    background: linear-gradient(180deg, rgba(254, 243, 199, 0) 0%, rgba(254, 243, 199, 0.5) 20%, #fef3c7 40%, #fde68a 63%, #facc15 100%);
+    background: linear-gradient(180deg, #fef3c7 0%, #fef3c7 40%, #fde68a 63%, #facc15 100%);
   }
 
   [data-theme='arctic-frost'] .mobile-habit-home {
-    background: linear-gradient(180deg, rgba(236, 254, 255, 0) 0%, rgba(236, 254, 255, 0.5) 20%, #ecfeff 40%, #cffafe 64%, #a5f3fc 100%);
+    background: linear-gradient(180deg, #ecfeff 0%, #ecfeff 40%, #cffafe 64%, #a5f3fc 100%);
   }
 
   [data-theme='autumn-harvest'] .mobile-habit-home {
-    background: linear-gradient(180deg, rgba(255, 237, 213, 0) 0%, rgba(255, 237, 213, 0.5) 20%, #ffedd5 40%, #fdba74 63%, #f97316 100%);
+    background: linear-gradient(180deg, #ffedd5 0%, #ffedd5 40%, #fdba74 63%, #f97316 100%);
   }
 
   [data-theme='lavender-dream'] .mobile-habit-home {
-    background: linear-gradient(180deg, rgba(245, 243, 255, 0) 0%, rgba(245, 243, 255, 0.5) 20%, #f5f3ff 40%, #e9d5ff 64%, #d8b4fe 100%);
+    background: linear-gradient(180deg, #f5f3ff 0%, #f5f3ff 40%, #e9d5ff 64%, #d8b4fe 100%);
   }
 
   [data-theme='flow-day'] .mobile-habit-home {
-    background: linear-gradient(180deg, rgba(238, 242, 255, 0) 0%, rgba(238, 242, 255, 0.5) 20%, #eef2ff 40%, #e9d5ff 64%, #c4b5fd 100%);
+    background: linear-gradient(180deg, #eef2ff 0%, #eef2ff 40%, #e9d5ff 64%, #c4b5fd 100%);
   }
 
   [data-theme='bio-day'] .mobile-habit-home {
-    background: linear-gradient(180deg, rgba(236, 254, 255, 0) 0%, rgba(236, 254, 255, 0.5) 20%, #ecfeff 40%, #d1fae5 64%, #a7f3d0 100%);
+    background: linear-gradient(180deg, #ecfeff 0%, #ecfeff 40%, #d1fae5 64%, #a7f3d0 100%);
   }
 
   [data-theme='dark-glass'] .mobile-habit-home,
   [data-theme='midnight-purple'] .mobile-habit-home,
   [data-theme='flow-night'] .mobile-habit-home,
   [data-theme='bio-night'] .mobile-habit-home {
-    background: linear-gradient(180deg, rgba(11, 17, 32, 0) 0%, rgba(11, 17, 32, 0.5) 20%, #0b1120 40%, #0f172a 70%, #111827 100%);
+    background: linear-gradient(180deg, #0b1120 0%, #0b1120 40%, #0f172a 70%, #111827 100%);
   }
 
   .mobile-habit-home .habit-checklist-card__board-body {
