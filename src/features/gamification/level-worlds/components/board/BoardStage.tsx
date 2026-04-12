@@ -211,18 +211,35 @@ export function BoardStage(props: BoardStageProps) {
       camera.shake(2.5, 180);
       setBurstPos({ x: tokenAnim.animState.x, y: tokenAnim.animState.y });
     },
-    hopDurationMs: 220,
+    hopDurationMs: 200,
   });
 
-  // Snap token to current position when not animating.
-  // We intentionally exclude tokenAnim from deps to avoid re-snapping during animation.
-  // snapTo is stable (useCallback with [toScreen]), and isMoving is checked inside.
+  // Track previous tokenIndex to distinguish movement from initial snap.
+  const prevTokenIndexRef = useRef<number | null>(null);
+
+  // Drive token animation: arc-hop when tokenIndex changes, snap on initial render
+  // or when anchors array reference changes (island travel reset).
   useEffect(() => {
-    if (!tokenAnim.animState.isMoving) {
-      const anchor = anchors[tokenIndex];
-      if (anchor) tokenAnim.snapTo(anchor);
+    const prev = prevTokenIndexRef.current;
+    prevTokenIndexRef.current = tokenIndex;
+
+    const anchor = anchors[tokenIndex];
+    if (!anchor) return;
+
+    if (prev !== null && prev !== tokenIndex) {
+      // Token moved one step — play bezier arc hop animation.
+      void tokenAnim.animateHops(anchors, [tokenIndex]);
+    } else {
+      // Initial render or same index — snap without animation.
+      tokenAnim.snapTo(anchor);
     }
-  }, [tokenIndex, anchors, toScreen, tokenAnim.animState.isMoving, tokenAnim.snapTo]);
+  // tokenAnim.animateHops and tokenAnim.snapTo are stable useCallback refs
+  // (created with `useCallback([toScreen])`) whose identity only changes when
+  // `toScreen` changes (i.e. on viewport resize).  Adding them to the dep array
+  // would cause a re-run on every render where the parent re-memoises toScreen,
+  // not just on genuine tokenIndex / anchors changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tokenIndex, anchors]);
 
   // Particle burst state
   const [burstPos, setBurstPos] = useState<{ x: number; y: number } | null>(null);

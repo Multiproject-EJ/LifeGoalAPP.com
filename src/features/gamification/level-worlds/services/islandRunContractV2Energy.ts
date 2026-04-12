@@ -1,22 +1,19 @@
-export type IslandRunRollButtonMode = 'rolling' | 'step1' | 'roll' | 'convert' | 'no_dice';
+export type IslandRunRollButtonMode = 'rolling' | 'roll' | 'convert' | 'no_dice';
 
 export function resolveIslandRunRollButtonMode(params: {
   islandRunContractV2Enabled: boolean;
   isRolling: boolean;
-  step1Complete: boolean;
   dicePool: number;
   dicePerRoll: number;
 }): IslandRunRollButtonMode {
   const {
     islandRunContractV2Enabled,
     isRolling,
-    step1Complete,
     dicePool,
     dicePerRoll,
   } = params;
 
   if (isRolling) return 'rolling';
-  if (!step1Complete) return 'step1';
   if (dicePool >= dicePerRoll) return 'roll';
   return islandRunContractV2Enabled ? 'no_dice' : 'convert';
 }

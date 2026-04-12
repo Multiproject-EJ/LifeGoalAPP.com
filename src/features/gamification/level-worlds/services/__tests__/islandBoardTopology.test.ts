@@ -10,7 +10,7 @@ export const islandBoardTopologyTests: TestCase[] = [
     name: 'movement wrap uses profile tile count rather than hardcoded 17',
     run: () => {
       assertEqual(resolveWrappedTokenIndex(16, 1, 17), 0, 'Expected 17-tile topology to wrap 16 -> 0');
-      assertEqual(resolveWrappedTokenIndex(58, 3, 60), 1, 'Expected 60-tile topology to wrap 58 + 3 -> 1');
+      assertEqual(resolveWrappedTokenIndex(38, 3, 40), 1, 'Expected 40-tile topology to wrap 38 + 3 -> 1');
     },
   },
   {
@@ -38,20 +38,20 @@ export const islandBoardTopologyTests: TestCase[] = [
     run: () => {
       const defaultProfile = resolveIslandBoardProfile();
       assertEqual(defaultProfile.id, 'spark60_preview', 'Expected spark60_preview as the default active profile');
-      assertEqual(defaultProfile.tileCount, 60, 'Expected 60 tiles for the default profile');
+      assertEqual(defaultProfile.tileCount, 40, 'Expected 40 tiles for the default profile');
 
       const tileMap = generateTileMap(3, 'normal', 'forest', 0);
-      assertEqual(tileMap.length, 60, 'Expected generated tile map length to default to 60');
+      assertEqual(tileMap.length, 40, 'Expected generated tile map length to default to 40');
     },
   },
   {
     name: 'explicit spark preview profile resolves safely',
     run: () => {
       const previewProfile = resolveIslandBoardProfile('spark60_preview');
-      assertEqual(previewProfile.tileCount, 60, 'Expected preview profile to expose 60-tile topology');
+      assertEqual(previewProfile.tileCount, 40, 'Expected preview profile to expose 40-tile topology');
 
       const previewTileMap = generateTileMap(3, 'normal', 'forest', 0, { profileId: 'spark60_preview' });
-      assertEqual(previewTileMap.length, 60, 'Expected preview tile map generation to support 60 tiles');
+      assertEqual(previewTileMap.length, 40, 'Expected preview tile map generation to support 40 tiles');
     },
   },
 ];
