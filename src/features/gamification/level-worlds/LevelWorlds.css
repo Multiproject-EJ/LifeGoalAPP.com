@@ -1594,6 +1594,36 @@
   font-weight: 700;
 }
 
+/* Unified timer row beneath the reward bar — shows both event + island timers */
+.island-run-board__rewardbar-timers {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin: 4px -10px -7px;
+  padding: 4px 12px;
+  border-radius: 0 0 14px 14px;
+  background: rgba(245, 235, 215, 0.85);
+  border-top: 1px solid rgba(220, 200, 160, 0.5);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #5a3d12;
+  letter-spacing: 0.02em;
+}
+
+.island-run-board__rewardbar-timers-sep {
+  width: 1px;
+  height: 12px;
+  background: rgba(179, 151, 92, 0.4);
+  flex-shrink: 0;
+}
+
+.island-run-board__rewardbar-island-timer {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
 .island-run-board__topbar-menu-panel {
   position: absolute;
   right: 12px;

@@ -6145,6 +6145,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <span className={getTimerUrgencyClass(timedEventRemainingMs)}>⏱ {timedEventRemainingLabel}</span>
             <span>Tier {runtimeState.rewardBarEscalationTier}</span>
           </div>
+          {/* Unified timer row — event timer + island timer in one place */}
+          <div className="island-run-board__rewardbar-timers">
+            <span className={getTimerUrgencyClass(timedEventRemainingMs)}>🎪 Event: {timedEventRemainingLabel}</span>
+            <span className="island-run-board__rewardbar-timers-sep" aria-hidden="true" />
+            <span className="island-run-board__rewardbar-island-timer">🏝️ Island: <strong>{timerDisplay}</strong></span>
+          </div>
         </button>
 
         <BoardStage
@@ -6185,7 +6191,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       <div className="island-run-prototype__footer" aria-label="Island Run footer controls">
         <div className="island-run-prototype__footer-main">
           <div className="island-run-prototype__footer-stats" aria-label="Run resources">
-            <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">⏱ <strong>{timerDisplay}</strong></span>
             {ISLAND_RUN_CONTRACT_V2_ENABLED && <span className="island-run-prototype__stat-chip">🟣 <strong>{runtimeState.essence}</strong></span>}
             {canUseSpinForMovement(ISLAND_RUN_CONTRACT_V2_ENABLED) && spinTokens > 0 && (
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">🌀 <strong>{spinTokens}</strong></span>
