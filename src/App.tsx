@@ -2774,10 +2774,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
     const previousBodyOverflow = body.style.overflow;
     const previousBodyPosition = body.style.position;
     const previousBodyTop = body.style.top;
+    const previousBodyBottom = body.style.bottom;
     const previousBodyWidth = body.style.width;
     const previousBodyTouchAction = body.style.touchAction;
     const previousHtmlOverflow = html.style.overflow;
     const previousHtmlOverscrollBehaviorY = html.style.overscrollBehaviorY;
+    const previousHtmlBg = html.style.backgroundColor;
     const previousBodyOverscrollBehaviorY = body.style.overscrollBehaviorY;
     const previousRootOverflow = root?.style.overflow ?? '';
     const previousRootHeight = root?.style.height ?? '';
@@ -2785,26 +2787,30 @@ export default function App({ forceAuthOnMount }: AppProps) {
     body.style.overflow = 'hidden';
     body.style.position = 'fixed';
     body.style.top = `-${scrollY}px`;
+    body.style.bottom = '0';
     body.style.width = '100%';
     body.style.touchAction = 'none';
     html.style.overflow = 'hidden';
     html.style.overscrollBehaviorY = 'none';
+    html.style.backgroundColor = '#000';
     body.style.overscrollBehaviorY = 'none';
 
     if (root) {
       root.style.overflow = 'hidden';
-      root.style.height = '100vh';
+      root.style.height = '100%';
     }
 
     return () => {
       body.style.overflow = previousBodyOverflow;
       body.style.position = previousBodyPosition;
       body.style.top = previousBodyTop;
+      body.style.bottom = previousBodyBottom;
       body.style.width = previousBodyWidth;
       body.style.touchAction = previousBodyTouchAction;
       body.style.overscrollBehaviorY = previousBodyOverscrollBehaviorY;
       html.style.overflow = previousHtmlOverflow;
       html.style.overscrollBehaviorY = previousHtmlOverscrollBehaviorY;
+      html.style.backgroundColor = previousHtmlBg;
 
       if (root) {
         root.style.overflow = previousRootOverflow;
