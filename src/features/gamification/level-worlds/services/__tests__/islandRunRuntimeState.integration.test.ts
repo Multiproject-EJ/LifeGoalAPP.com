@@ -1,4 +1,9 @@
-import { hydrateIslandRunGameStateRecordWithSource, readIslandRunGameStateRecord, writeIslandRunGameStateRecord } from '../islandRunGameStateStore';
+import {
+  hydrateIslandRunGameStateRecordWithSource,
+  readIslandRunGameStateRecord,
+  resetIslandRunRuntimeCommitCoordinatorForTests,
+  writeIslandRunGameStateRecord,
+} from '../islandRunGameStateStore';
 import { persistIslandRunRuntimeStatePatch, readIslandRunRuntimeState } from '../islandRunRuntimeState';
 import { assert, assertDeepEqual, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
@@ -18,6 +23,7 @@ function makeSession() {
 }
 
 function resetStorage(initial: Record<string, string> = {}): void {
+  resetIslandRunRuntimeCommitCoordinatorForTests();
   installWindowWithStorage(createMemoryStorage(initial));
 }
 
@@ -37,6 +43,82 @@ function createAlwaysSuccessfulRuntimeClient() {
   return {
     client,
     getUpdateCalls: () => commitCalls,
+  };
+}
+
+function createConflictRuntimeClient() {
+  let commitCalls = 0;
+  const client = {
+    rpc(name: string) {
+      if (name === 'island_run_commit_action') {
+        commitCalls += 1;
+        return Promise.resolve({
+          data: [{ status: 'conflict' }],
+          error: null,
+        });
+      }
+      return Promise.resolve({
+        data: null,
+        error: { message: 'network request failed', code: 'failed_to_fetch' },
+      });
+    },
+    from() {
+      return {
+        select() {
+          return {
+            eq() {
+              return {
+                maybeSingle() {
+                  return Promise.resolve({
+                    data: null,
+                    error: { message: 'network request failed', code: 'failed_to_fetch' },
+                  });
+                },
+              };
+            },
+          };
+        },
+      };
+    },
+  } as unknown as import('@supabase/supabase-js').SupabaseClient;
+
+  return {
+    client,
+    getCommitCalls: () => commitCalls,
+  };
+}
+
+function createDeferredSingleFlightClient() {
+  let commitCalls = 0;
+  let inFlight = 0;
+  let maxInFlight = 0;
+  const pendingResolvers: Array<() => void> = [];
+  const client = {
+    rpc(_name: string, args: { p_expected_runtime_version?: number }) {
+      commitCalls += 1;
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      const expected = Math.max(0, Math.floor(args.p_expected_runtime_version ?? 0));
+      return new Promise<{ data: Array<{ status: string; runtime_version: number }>; error: null }>((resolve) => {
+        pendingResolvers.push(() => {
+          inFlight -= 1;
+          resolve({
+            data: [{ status: 'applied', runtime_version: expected + 1 }],
+            error: null,
+          });
+        });
+      });
+    },
+  } as unknown as import('@supabase/supabase-js').SupabaseClient;
+
+  return {
+    client,
+    getCommitCalls: () => commitCalls,
+    getMaxInFlight: () => maxInFlight,
+    releaseNext: () => {
+      const next = pendingResolvers.shift();
+      if (next) next();
+    },
   };
 }
 
@@ -287,6 +369,115 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
         null,
         'Expected pending write queue to be cleared after successful replay',
       );
+    },
+  },
+  {
+    name: 'writeIslandRunGameStateRecord blocks retry storm after conflict recovery remote-unavailable error',
+    run: async () => {
+      resetStorage();
+      const session = makeSession();
+      const { client, getCommitCalls } = createConflictRuntimeClient();
+      const baseline = readIslandRunGameStateRecord(session);
+
+      const first = await writeIslandRunGameStateRecord({
+        session,
+        client,
+        record: {
+          ...baseline,
+          hearts: baseline.hearts + 1,
+        },
+      });
+
+      const second = await writeIslandRunGameStateRecord({
+        session,
+        client,
+        record: {
+          ...baseline,
+          hearts: baseline.hearts + 2,
+        },
+      });
+
+      assertDeepEqual(first, { ok: true }, 'Expected first conflict write to degrade into queued backoff mode');
+      assertDeepEqual(second, { ok: true }, 'Expected subsequent write during backoff to stay queued');
+      assertEqual(getCommitCalls(), 1, 'Expected only one commit RPC call while conflict/backoff gate is active');
+    },
+  },
+  {
+    name: 'writeIslandRunGameStateRecord enforces single-flight and dedupes same action while in-flight',
+    run: async () => {
+      resetStorage();
+      const session = makeSession();
+      const baseline = readIslandRunGameStateRecord(session);
+      const { client, getCommitCalls, getMaxInFlight, releaseNext } = createDeferredSingleFlightClient();
+
+      const writeA = writeIslandRunGameStateRecord({
+        session,
+        client,
+        record: {
+          ...baseline,
+          hearts: baseline.hearts + 1,
+        },
+      });
+
+      const writeADupe = writeIslandRunGameStateRecord({
+        session,
+        client,
+        record: {
+          ...baseline,
+          hearts: baseline.hearts + 1,
+        },
+      });
+
+      await Promise.resolve();
+      assertEqual(getCommitCalls(), 1, 'Expected duplicate in-flight action to avoid a second commit call');
+
+      releaseNext();
+      const resultA = await writeA;
+      const resultDupe = await writeADupe;
+      assertDeepEqual(resultA, { ok: true }, 'Expected first write to succeed');
+      assertDeepEqual(resultDupe, { ok: true }, 'Expected duplicate in-flight write to be acknowledged without resend');
+      assertEqual(getCommitCalls(), 1, 'Expected only one commit attempt for duplicate action ids');
+      assertEqual(getMaxInFlight(), 1, 'Expected max one in-flight commit at any moment');
+    },
+  },
+  {
+    name: 'writeIslandRunGameStateRecord resumes parked action after single-flight slot frees',
+    run: async () => {
+      resetStorage();
+      const session = makeSession();
+      const baseline = readIslandRunGameStateRecord(session);
+      const { client, getCommitCalls, getMaxInFlight, releaseNext } = createDeferredSingleFlightClient();
+
+      const firstWrite = writeIslandRunGameStateRecord({
+        session,
+        client,
+        record: {
+          ...baseline,
+          hearts: baseline.hearts + 1,
+        },
+      });
+
+      const parkedWrite = writeIslandRunGameStateRecord({
+        session,
+        client,
+        record: {
+          ...baseline,
+          hearts: baseline.hearts + 2,
+        },
+      });
+
+      await Promise.resolve();
+      assertEqual(getCommitCalls(), 1, 'Expected second write to park while first is in-flight');
+
+      releaseNext();
+      await firstWrite;
+      await parkedWrite;
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      releaseNext();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      assertEqual(getCommitCalls(), 2, 'Expected parked action to resume after single-flight slot is released');
+      assertEqual(getMaxInFlight(), 1, 'Expected resumed write to still honor single-flight limit');
     },
   },
   {
