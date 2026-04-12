@@ -56,13 +56,15 @@ export const STOP_TILES: StopTile[] = [
 
 export const TOKEN_START_TILE_INDEX = 0;
 
+const OUTER_STOP_CORNER_PAD = 120;
+const OUTER_STOP_CORNER_MAX = CANONICAL_BOARD_SIZE.width - OUTER_STOP_CORNER_PAD;
 
 export const OUTER_STOP_ANCHORS: OrbitStopAnchor[] = [
   // Four non-boss stops at outer corners around the board ring.
-  { id: 'hatchery', x: 140, y: 140 },
-  { id: 'stopA', x: 860, y: 140 },
-  { id: 'stopB', x: 860, y: 860 },
-  { id: 'stopC', x: 140, y: 860 },
+  { id: 'hatchery', x: OUTER_STOP_CORNER_PAD, y: OUTER_STOP_CORNER_PAD },
+  { id: 'stopA', x: OUTER_STOP_CORNER_MAX, y: OUTER_STOP_CORNER_PAD },
+  { id: 'stopB', x: OUTER_STOP_CORNER_MAX, y: OUTER_STOP_CORNER_MAX },
+  { id: 'stopC', x: OUTER_STOP_CORNER_PAD, y: OUTER_STOP_CORNER_MAX },
   // Boss stop in the middle of the board, inside the ring.
   { id: 'boss', x: 500, y: 500 },
   { id: 'shop', x: 120, y: 500 },

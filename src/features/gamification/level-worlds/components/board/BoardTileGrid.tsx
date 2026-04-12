@@ -13,6 +13,7 @@ export interface BoardTileGridProps {
   tokenIndex: number;
   isSpark60: boolean;
   showDebug: boolean;
+  isMinimalBoardArt: boolean;
   toScreen: (anchor: TileAnchor) => { x: number; y: number };
 }
 
@@ -28,6 +29,7 @@ export function BoardTileGrid(props: BoardTileGridProps) {
     tokenIndex,
     isSpark60,
     showDebug,
+    isMinimalBoardArt,
     toScreen,
   } = props;
 
@@ -62,12 +64,13 @@ export function BoardTileGrid(props: BoardTileGridProps) {
             isEncounterCompleted={isEncounterCompleted}
             isTokenCurrent={index === tokenIndex}
             isUpcoming={upcomingSet.has(index)}
-            isSpark60={isSpark60}
-            tileIndex={index}
-            showDebug={showDebug}
-          />
-        );
-      })}
+              isSpark60={isSpark60}
+              tileIndex={index}
+              showDebug={showDebug}
+              isMinimalBoardArt={isMinimalBoardArt}
+            />
+          );
+        })}
     </div>
   );
 }

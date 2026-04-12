@@ -11,6 +11,9 @@ import { BoardToken } from './BoardToken';
 import { BoardParticles } from './BoardParticles';
 import { BoardOrbitStops, type OrbitStopVisualData, type StopProgressState } from './BoardOrbitStops';
 
+const BOARD_TILT_X_DEG = 40;
+const BOARD_ROTATE_Z_DEG = 0;
+
 // ─── BoardStage: the visual orchestrator ─────────────────────────────────────
 // Composes camera, gestures, tiles, token, path, particles into the board scene.
 // Game logic (rolling, stops, etc.) stays in IslandRunBoardPrototype.
@@ -30,6 +33,11 @@ export interface BoardStageProps {
   isSpark60: boolean;
   /** Show debug overlay */
   showDebug: boolean;
+  /** Disable decorative board art for production art integration */
+  isMinimalBoardArt?: boolean;
+  /** Optional tilt overrides for quick camera framing tuning */
+  boardTiltXDeg?: number;
+  boardRotateZDeg?: number;
 
   /** Tile state data */
   tileMap: Record<number, IslandTileMapEntry>;
@@ -70,6 +78,9 @@ export function BoardStage(props: BoardStageProps) {
     spark60RingGradient,
     isSpark60,
     showDebug,
+    isMinimalBoardArt = false,
+    boardTiltXDeg = BOARD_TILT_X_DEG,
+    boardRotateZDeg = BOARD_ROTATE_Z_DEG,
     tileMap,
     stopMap,
     completedEncounterIndices,
@@ -85,7 +96,7 @@ export function BoardStage(props: BoardStageProps) {
 
   const boardRef = useRef<HTMLDivElement>(null);
   const gestureLayerRef = useRef<HTMLDivElement>(null);
-  const [boardSize, setBoardSize] = useState({ width: 360, height: 360 });
+  const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
 
   // ── Board size tracking ──────────────────────────────────────────────────
   useEffect(() => {
@@ -94,21 +105,36 @@ export function BoardStage(props: BoardStageProps) {
 
     const updateSize = () => {
       const rect = el.getBoundingClientRect();
-      const side = Math.min(rect.width, rect.height);
-      setBoardSize({ width: side, height: side });
+      setBoardSize({ width: rect.width, height: rect.height });
     };
     updateSize();
     window.addEventListener('resize', updateSize);
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // ── Coordinate transform ─────────────────────────────────────────────────
+  // ── Coordinate transform (uniform scale + centering) ────────────────────
+  // The canonical board is 1000×1000 (square). On a tall phone viewport we
+  // scale uniformly by the narrower dimension and center the content so that
+  // tile proportions are preserved while the full viewport is filled by the
+  // background and camera stage.
+  const { uniformScale, offsetX, offsetY } = useMemo(() => {
+    const s = Math.min(
+      boardSize.width / CANONICAL_BOARD_SIZE.width,
+      boardSize.height / CANONICAL_BOARD_SIZE.height,
+    );
+    return {
+      uniformScale: s,
+      offsetX: (boardSize.width - CANONICAL_BOARD_SIZE.width * s) / 2,
+      offsetY: (boardSize.height - CANONICAL_BOARD_SIZE.height * s) / 2,
+    };
+  }, [boardSize.width, boardSize.height]);
+
   const toScreen = useCallback(
     (anchor: TileAnchor) => ({
-      x: (anchor.x / CANONICAL_BOARD_SIZE.width) * boardSize.width,
-      y: (anchor.y / CANONICAL_BOARD_SIZE.height) * boardSize.height,
+      x: offsetX + anchor.x * uniformScale,
+      y: offsetY + anchor.y * uniformScale,
     }),
-    [boardSize.width, boardSize.height],
+    [uniformScale, offsetX, offsetY],
   );
 
   // ── Camera ───────────────────────────────────────────────────────────────
@@ -203,12 +229,13 @@ export function BoardStage(props: BoardStageProps) {
 
   // ── Debug overlay ────────────────────────────────────────────────────────
   const ZBAND_COLORS: Record<string, string> = { back: '#50a5ff', mid: '#ffe066', front: '#ff4ff5' };
+  const cameraStageTransform = `${camera.cameraTransform} rotateX(${boardTiltXDeg}deg) rotateZ(${boardRotateZDeg}deg)`;
 
   return (
     <div
       ref={boardRef}
-      className="island-run-board__stage-wrapper"
-      style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1' }}
+      className={`island-run-board__stage-wrapper ${isMinimalBoardArt ? 'island-run-board__stage-wrapper--minimal-art' : ''}`}
+      style={{ position: 'relative', width: '100%', height: '100%' }}
     >
       {/* Gesture capture layer (invisible, on top) */}
       <div
@@ -220,10 +247,10 @@ export function BoardStage(props: BoardStageProps) {
       {/* Camera stage — everything inside moves with the camera */}
       <div
         className="island-run-board__camera-stage"
-        style={{ transform: camera.cameraTransform, willChange: 'transform' }}
+        style={{ transform: cameraStageTransform, willChange: 'transform' }}
       >
         {/* Path overlay image */}
-        {theme.pathOverlayImage && (
+        {theme.pathOverlayImage && !isMinimalBoardArt && (
           <img
             className="island-run-board__path-overlay"
             src={theme.pathOverlayImage}
@@ -239,6 +266,7 @@ export function BoardStage(props: BoardStageProps) {
           boardHeight={boardSize.height}
           theme={theme}
           showDebug={showDebug}
+          isMinimalBoardArt={isMinimalBoardArt}
           toScreen={toScreen}
         />
 
@@ -265,6 +293,7 @@ export function BoardStage(props: BoardStageProps) {
           tokenIndex={tokenIndex}
           isSpark60={isSpark60}
           showDebug={showDebug}
+          isMinimalBoardArt={isMinimalBoardArt}
           toScreen={toScreen}
         />
 
@@ -318,14 +347,16 @@ export function BoardStage(props: BoardStageProps) {
         )}
 
         {/* Particles (ambient + trail + burst) */}
-        <BoardParticles
-          boardWidth={boardSize.width}
-          boardHeight={boardSize.height}
-          tokenX={tokenAnim.animState.x}
-          tokenY={tokenAnim.animState.y}
-          isTokenMoving={tokenAnim.animState.isMoving}
-          burstAt={burstPos}
-        />
+        {!isMinimalBoardArt && (
+          <BoardParticles
+            boardWidth={boardSize.width}
+            boardHeight={boardSize.height}
+            tokenX={tokenAnim.animState.x}
+            tokenY={tokenAnim.animState.y}
+            isTokenMoving={tokenAnim.animState.isMoving}
+            burstAt={burstPos}
+          />
+        )}
       </div>
     </div>
   );

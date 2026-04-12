@@ -8,6 +8,7 @@ export interface BoardPathCanvasProps {
   boardHeight: number;
   theme: IslandBoardTheme;
   showDebug: boolean;
+  isMinimalBoardArt: boolean;
   toScreen: (anchor: TileAnchor) => { x: number; y: number };
 }
 
@@ -16,7 +17,15 @@ export interface BoardPathCanvasProps {
  * Uses quadratic Bezier curves for smooth arcs + gradient glow + animated dash flow.
  */
 export function BoardPathCanvas(props: BoardPathCanvasProps) {
-  const { anchors, boardWidth, boardHeight, theme, showDebug, toScreen } = props;
+  const {
+    anchors,
+    boardWidth,
+    boardHeight,
+    theme,
+    showDebug,
+    isMinimalBoardArt,
+    toScreen,
+  } = props;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dashOffsetRef = useRef(0);
   const rafRef = useRef(0);
@@ -63,34 +72,41 @@ export function BoardPathCanvas(props: BoardPathCanvasProps) {
       ctx.quadraticCurveTo(closeMidX, closeMidY, first.x, first.y);
       ctx.closePath();
 
-      // Layer 1: Outer glow (wide, translucent)
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
-      ctx.lineWidth = 30;
-      ctx.setLineDash([]);
-      ctx.stroke();
+      if (isMinimalBoardArt) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([]);
+        ctx.stroke();
+      } else {
+        // Layer 1: Outer glow (wide, translucent)
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+        ctx.lineWidth = 30;
+        ctx.setLineDash([]);
+        ctx.stroke();
 
-      // Layer 2: Gradient path
-      const gradient = ctx.createLinearGradient(0, 0, 0, boardHeight);
-      gradient.addColorStop(0, theme.pathGlowStops[0]);
-      gradient.addColorStop(0.5, theme.pathGlowStops[1]);
-      gradient.addColorStop(1, theme.pathGlowStops[2]);
-      ctx.strokeStyle = gradient;
-      ctx.lineWidth = 14;
-      ctx.stroke();
+        // Layer 2: Gradient path
+        const gradient = ctx.createLinearGradient(0, 0, 0, boardHeight);
+        gradient.addColorStop(0, theme.pathGlowStops[0]);
+        gradient.addColorStop(0.5, theme.pathGlowStops[1]);
+        gradient.addColorStop(1, theme.pathGlowStops[2]);
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 14;
+        ctx.stroke();
 
-      // Layer 3: Inner bright core
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.32)';
-      ctx.lineWidth = 4;
-      ctx.stroke();
+        // Layer 3: Inner bright core
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.32)';
+        ctx.lineWidth = 4;
+        ctx.stroke();
 
-      // Layer 4: Animated flowing dash
-      dashOffsetRef.current -= 0.6;
-      ctx.setLineDash([6, 14]);
-      ctx.lineDashOffset = dashOffsetRef.current;
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.setLineDash([]);
+        // Layer 4: Animated flowing dash
+        dashOffsetRef.current -= 0.6;
+        ctx.setLineDash([6, 14]);
+        ctx.lineDashOffset = dashOffsetRef.current;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
 
       if (showDebug) {
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
@@ -100,13 +116,15 @@ export function BoardPathCanvas(props: BoardPathCanvasProps) {
         ctx.setLineDash([]);
       }
 
-      rafRef.current = requestAnimationFrame(draw);
+      if (!isMinimalBoardArt) {
+        rafRef.current = requestAnimationFrame(draw);
+      }
     }
 
     draw();
 
     return () => cancelAnimationFrame(rafRef.current);
-  }, [anchors, boardWidth, boardHeight, theme.pathGlowStops, showDebug, toScreen]);
+  }, [anchors, boardWidth, boardHeight, theme.pathGlowStops, showDebug, isMinimalBoardArt, toScreen]);
 
   return <canvas ref={canvasRef} className="island-run-board__path" />;
 }
