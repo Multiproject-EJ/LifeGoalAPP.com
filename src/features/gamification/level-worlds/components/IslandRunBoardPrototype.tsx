@@ -838,6 +838,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const activeTheme = useMemo(() => getIslandBoardThemeForIslandNumber(islandNumber), [islandNumber]);
   const islandBackgroundSrc = useMemo(() => getIslandBackgroundImageSrc(islandNumber), [islandNumber]);
   const [isIslandBackgroundAvailable, setIsIslandBackgroundAvailable] = useState(true);
+  const [isBackgroundHidden, setIsBackgroundHidden] = useState(false);
   const [timeLeftSec, setTimeLeftSec] = useState(ISLAND_DURATION_SEC);
   const [showTravelOverlay, setShowTravelOverlay] = useState(false);
   const [travelOverlayDestinationIsland, setTravelOverlayDestinationIsland] = useState(2);
@@ -5964,8 +5965,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         </header>
       ) : null}
 
-      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${!isIslandBackgroundAvailable ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark60BoardProfile ? 'island-run-board--spark60' : ''}`}>
-        {isIslandBackgroundAvailable && (
+      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${(!isIslandBackgroundAvailable || isBackgroundHidden) ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark60BoardProfile ? 'island-run-board--spark60' : ''}`}>
+        {isIslandBackgroundAvailable && !isBackgroundHidden && (
           <img
             key={islandBackgroundSrc}
             className="island-run-board__bg"
@@ -6037,6 +6038,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 }}
               >
                 Reset camera
+              </button>
+              <button
+                type="button"
+                className="island-run-board__topbar-menu-item"
+                onClick={() => {
+                  setIsBackgroundHidden((current) => !current);
+                  setShowTopbarMenu(false);
+                }}
+              >
+                {isBackgroundHidden ? 'Show background' : 'Hide background'}
               </button>
             </div>
           )}
