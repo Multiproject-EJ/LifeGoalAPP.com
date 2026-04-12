@@ -6,6 +6,12 @@ import heartsImg from '../assets/Daily_treats_hearts.webp';
 import '../styles/game-board-overlay.css';
 import { getIslandBackgroundImageSrc } from '../features/gamification/level-worlds/services/islandBackgrounds';
 
+const REWARD_MILESTONES = [
+  { pct: 25, icon: '🎁' },
+  { pct: 50, icon: '🎉' },
+  { pct: 75, icon: '⭐' },
+] as const;
+
 function formatCountdown(resetAtMs: number | undefined, nowMs: number): string {
   if (!resetAtMs) return '';
   const remainingMs = resetAtMs - nowMs;
@@ -114,11 +120,6 @@ export function GameBoardOverlay({
   };
 
   const clampedMomentum = Math.min(100, Math.max(0, momentumPercent));
-  const rewardMilestones = [
-    { pct: 25, icon: '🎁' },
-    { pct: 50, icon: '🎉' },
-    { pct: 75, icon: '⭐' },
-  ];
   const topbarAvatar = (profilePlaystyleIcon && profilePlaystyleIcon.trim()) || 'P';
 
   return (
@@ -175,9 +176,14 @@ export function GameBoardOverlay({
               </span>
               <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(clampedMomentum)} aria-valuemin={0} aria-valuemax={100}>
                 <span className="island-run-board__rewardbar-track-fill" style={{ width: `${clampedMomentum}%` }} />
-                {rewardMilestones.map((milestone) => (
-                  <span key={milestone.pct} className={`island-run-board__rewardbar-milestone${clampedMomentum >= milestone.pct ? ' island-run-board__rewardbar-milestone--reached' : ''}`} style={{ left: `${milestone.pct}%` }} aria-hidden="true">{milestone.icon}</span>
-                ))}
+                {REWARD_MILESTONES.map((milestone) => {
+                  const milestoneClassName = clampedMomentum >= milestone.pct
+                    ? 'island-run-board__rewardbar-milestone island-run-board__rewardbar-milestone--reached'
+                    : 'island-run-board__rewardbar-milestone';
+                  return (
+                    <span key={milestone.pct} className={milestoneClassName} style={{ left: `${milestone.pct}%` }} aria-hidden="true">{milestone.icon}</span>
+                  );
+                })}
                 <span className="island-run-board__rewardbar-position" style={{ left: `${clampedMomentum}%` }} aria-hidden="true" />
               </div>
               <span className={`island-run-board__rewardbar-endcap${clampedMomentum >= 100 ? ' island-run-board__rewardbar-endcap--claimable' : ''}`} aria-hidden="true">🏆</span>
