@@ -6124,7 +6124,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           })() : null}
           <div className="island-run-board__rewardbar-header">
             <span>{Math.floor(rewardBarProgress)}/{Math.floor(rewardBarThreshold)}</span>
-            <span>{canClaimRewardBar ? '✨ Claim ready!' : 'Fill feeding tiles'}</span>
+            <span>{canClaimRewardBar ? '✨ Claim ready!' : `Tier ${runtimeState.rewardBarEscalationTier}`}</span>
           </div>
           {/* Track row: avatar → track with milestones → endcap */}
           <div className="island-run-board__rewardbar-track-row">
@@ -6140,10 +6140,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <span className="island-run-board__rewardbar-position" style={{ left: `${Math.min(rewardBarPercent, 100)}%` }} aria-hidden="true" />
             </div>
             <span className={`island-run-board__rewardbar-endcap${canClaimRewardBar ? ' island-run-board__rewardbar-endcap--claimable' : ''}`} aria-hidden="true">🏆</span>
-          </div>
-          <div className="island-run-board__rewardbar-footer">
-            <span className={getTimerUrgencyClass(timedEventRemainingMs)}>⏱ {timedEventRemainingLabel}</span>
-            <span>Tier {runtimeState.rewardBarEscalationTier}</span>
           </div>
           {/* Unified timer row — event timer + island timer in one place */}
           <div className="island-run-board__rewardbar-timers">
