@@ -7,10 +7,17 @@ import '../styles/game-board-overlay.css';
 import { getIslandBackgroundImageSrc } from '../features/gamification/level-worlds/services/islandBackgrounds';
 
 const REWARD_MILESTONES = [
-  { pct: 25, icon: '🎁' },
-  { pct: 50, icon: '🎉' },
-  { pct: 75, icon: '⭐' },
+  { pct: 33, icon: '🎲' },
+  { pct: 66, icon: '💎' },
+  { pct: 100, icon: '🎫' },
 ] as const;
+const TIMER_OK_THRESHOLD_MS = 4 * 60 * 60 * 1000;
+const TIMER_WARN_THRESHOLD_MS = 1 * 60 * 60 * 1000;
+const EVENT_BANNER_META: Readonly<Record<string, { icon: string; displayName: string }>> = {
+  feeding_frenzy: { icon: '🔥', displayName: 'Feeding Frenzy' },
+  harvest_sprint: { icon: '🌾', displayName: 'Harvest Sprint' },
+  companion_feast: { icon: '🐾', displayName: 'Companion Feast' },
+};
 
 function formatCountdown(resetAtMs: number | undefined, nowMs: number): string {
   if (!resetAtMs) return '';
@@ -37,9 +44,15 @@ type GameBoardOverlayProps = {
   onCreatureCollectionClick?: () => void;
   onGarageClick?: () => void;
   profilePlaystyleIcon?: string;
+  profileAvatarUrl?: string;
   profilePlaystyleLabel?: string;
-  currentLevel?: number;
-  momentumPercent?: number;
+  essenceBalance?: number;
+  rewardBarProgress?: number;
+  rewardBarThreshold?: number;
+  activeTimedEventType?: string | null;
+  activeTimedEventExpiresAtMs?: number | null;
+  islandNumber?: number;
+  islandDisplayName?: string;
   spinsRemaining?: number;
   islandTimeLabel?: string;
   spinWinResetAtMs?: number;
@@ -63,9 +76,15 @@ export function GameBoardOverlay({
   onCreatureCollectionClick,
   onGarageClick,
   profilePlaystyleIcon,
+  profileAvatarUrl,
   profilePlaystyleLabel,
-  currentLevel = 1,
-  momentumPercent = 0,
+  essenceBalance = 0,
+  rewardBarProgress = 0,
+  rewardBarThreshold = 10,
+  activeTimedEventType = null,
+  activeTimedEventExpiresAtMs = null,
+  islandNumber = 1,
+  islandDisplayName = 'Island 1',
   spinsRemaining = 0,
   islandTimeLabel = '—',
   spinWinResetAtMs,
@@ -119,8 +138,26 @@ export function GameBoardOverlay({
     }
   };
 
-  const clampedMomentum = Math.min(100, Math.max(0, momentumPercent));
   const topbarAvatar = (profilePlaystyleIcon && profilePlaystyleIcon.trim()) || 'P';
+  const normalizedThreshold = Math.max(1, Math.floor(rewardBarThreshold));
+  const normalizedProgress = Math.max(0, Math.floor(rewardBarProgress));
+  const rewardBarPercent = Math.min(100, (normalizedProgress / normalizedThreshold) * 100);
+  const canClaimRewardBar = normalizedProgress >= normalizedThreshold;
+  const timedEventRemainingMs = activeTimedEventExpiresAtMs
+    ? Math.max(0, activeTimedEventExpiresAtMs - nowMs)
+    : 0;
+  const timedEventLabel = formatCountdown(activeTimedEventExpiresAtMs ?? undefined, nowMs) || '—';
+  const timedEventMeta = activeTimedEventType
+    ? (EVENT_BANNER_META[activeTimedEventType] ?? {
+      icon: '⭐',
+      displayName: activeTimedEventType.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+    })
+    : null;
+  const timerUrgencyClass = timedEventRemainingMs > TIMER_OK_THRESHOLD_MS
+    ? 'island-run-board__rewardbar-timer--ok'
+    : timedEventRemainingMs > TIMER_WARN_THRESHOLD_MS
+      ? 'island-run-board__rewardbar-timer--warn'
+      : 'island-run-board__rewardbar-timer--urgent';
 
   return (
     <div
@@ -148,10 +185,14 @@ export function GameBoardOverlay({
               className="island-run-board__topbar-avatar"
               aria-label={profilePlaystyleLabel ?? 'Player profile'}
             >
-              {topbarAvatar}
+              {profileAvatarUrl ? (
+                <img src={profileAvatarUrl} alt="" className="island-run-board__topbar-avatar-img" />
+              ) : (
+                topbarAvatar
+              )}
             </button>
-            <div className="island-run-board__topbar-wallet" aria-label={`Level ${currentLevel}`}>
-              ⭐ <strong>Lv.{currentLevel}</strong>
+            <div className="island-run-board__topbar-wallet" aria-label="Essence wallet">
+              🟣 <strong>{essenceBalance}</strong>
             </div>
             <button
               type="button"
@@ -163,33 +204,44 @@ export function GameBoardOverlay({
           </div>
 
           <div
-            className="island-run-board__rewardbar"
-            aria-label={`Reward progress ${clampedMomentum}%`}
+            className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}`}
+            aria-label={`Reward progress ${Math.floor(rewardBarPercent)}%`}
           >
+            {timedEventMeta ? (
+              <div className={`island-run-board__rewardbar-banner island-run-board__rewardbar-banner--${activeTimedEventType}`}>
+                <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{timedEventMeta.icon}</i>
+                <span>{timedEventMeta.displayName}</span>
+                <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{timedEventMeta.icon}</i>
+              </div>
+            ) : null}
             <div className="island-run-board__rewardbar-header">
-              <span>{Math.floor(clampedMomentum)}/100</span>
-              <span>{clampedMomentum >= 100 ? '✨ Claim ready!' : 'Momentum'}</span>
+              <span>{normalizedProgress}/{normalizedThreshold}</span>
+              <span>{`Island ${islandNumber} · ${islandDisplayName}`}</span>
             </div>
             <div className="island-run-board__rewardbar-track-row">
               <span className="island-run-board__rewardbar-avatar-indicator" aria-hidden="true">
-                {topbarAvatar}
+                {profileAvatarUrl ? (
+                  <img src={profileAvatarUrl} alt="" className="island-run-board__rewardbar-avatar-img" />
+                ) : (
+                  topbarAvatar
+                )}
               </span>
-              <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(clampedMomentum)} aria-valuemin={0} aria-valuemax={100}>
-                <span className="island-run-board__rewardbar-track-fill" style={{ width: `${clampedMomentum}%` }} />
+              <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
+                <span className="island-run-board__rewardbar-track-fill" style={{ width: `${rewardBarPercent}%` }} />
                 {REWARD_MILESTONES.map((milestone) => {
-                  const milestoneClassName = clampedMomentum >= milestone.pct
+                  const milestoneClassName = rewardBarPercent >= milestone.pct
                     ? 'island-run-board__rewardbar-milestone island-run-board__rewardbar-milestone--reached'
                     : 'island-run-board__rewardbar-milestone';
                   return (
                     <span key={milestone.pct} className={milestoneClassName} style={{ left: `${milestone.pct}%` }} aria-hidden="true">{milestone.icon}</span>
                   );
                 })}
-                <span className="island-run-board__rewardbar-position" style={{ left: `${clampedMomentum}%` }} aria-hidden="true" />
+                <span className="island-run-board__rewardbar-position" style={{ left: `${Math.min(rewardBarPercent, 100)}%` }} aria-hidden="true" />
               </div>
-              <span className={`island-run-board__rewardbar-endcap${clampedMomentum >= 100 ? ' island-run-board__rewardbar-endcap--claimable' : ''}`} aria-hidden="true">🏆</span>
+              <span className={`island-run-board__rewardbar-endcap${canClaimRewardBar ? ' island-run-board__rewardbar-endcap--claimable' : ''}`} aria-hidden="true">🏆</span>
             </div>
             <div className="island-run-board__rewardbar-timers">
-              <span>🏝️ Island: {islandTimeLabel}</span>
+              <span className={timerUrgencyClass}>{timedEventLabel}</span>
             </div>
           </div>
         </div>

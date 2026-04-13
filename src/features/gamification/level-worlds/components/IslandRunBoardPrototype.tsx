@@ -13,6 +13,7 @@ import {
   type IslandBoardTheme,
 } from '../services/islandBoardThemes';
 import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
+import { getIslandDisplayName } from '../services/islandNames';
 import { generateTileMap, getIslandRarity, type IslandTileMapEntry } from '../services/islandBoardTileMap';
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from '../services/islandBoardProfiles';
 import { resolveWrappedTokenIndex } from '../services/islandBoardTopology';
@@ -475,6 +476,12 @@ function getTimerUrgencyClass(remainingMs: number): string {
 
 function getAvatarInitial(user: { user_metadata?: { full_name?: string | null } | null; email?: string | null }): string {
   return (user.user_metadata?.full_name?.[0] ?? user.email?.[0] ?? 'P').toUpperCase();
+}
+
+function getAvatarImageUrl(user: { user_metadata?: Record<string, unknown> | null }): string | null {
+  const meta = user.user_metadata ?? {};
+  const avatarUrl = meta.avatar_url ?? meta.picture ?? meta.profile_image_url;
+  return typeof avatarUrl === 'string' && avatarUrl.trim().length > 0 ? avatarUrl : null;
 }
 
 type SanctuaryFilterMode = 'all' | 'reward_ready' | 'active' | 'common' | 'rare' | 'mythic';
@@ -2686,6 +2693,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
+      const islandNameForSummary = getIslandDisplayName(islandNumber);
       const summary = {
         currentIslandNumber: islandNumber,
         islandStartedAtMs,
@@ -2693,12 +2701,29 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         isIslandTimerPendingStart,
         activeEggSetAtMs: activeEgg?.setAtMs ?? null,
         activeEggHatchDurationMs: activeEgg ? activeEgg.hatchAtMs - activeEgg.setAtMs : null,
+        essence: runtimeState.essence,
+        rewardBarProgress: runtimeState.rewardBarProgress,
+        rewardBarThreshold: runtimeState.rewardBarThreshold,
+        rewardBarEscalationTier: runtimeState.rewardBarEscalationTier,
+        activeTimedEvent: runtimeState.activeTimedEvent,
+        islandDisplayName: islandNameForSummary,
       };
       window.localStorage.setItem('lifegoal_island_run_runtime_state', JSON.stringify(summary));
     } catch {
       // ignore storage errors
     }
-  }, [activeEgg, islandExpiresAtMs, islandNumber, islandStartedAtMs, isIslandTimerPendingStart]);
+  }, [
+    activeEgg,
+    islandExpiresAtMs,
+    islandNumber,
+    islandStartedAtMs,
+    isIslandTimerPendingStart,
+    runtimeState.activeTimedEvent,
+    runtimeState.essence,
+    runtimeState.rewardBarEscalationTier,
+    runtimeState.rewardBarProgress,
+    runtimeState.rewardBarThreshold,
+  ]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !hasHydratedRuntimeState) {
@@ -2821,6 +2846,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const timedEventRemainingLabel = activeTimedEvent
     ? formatEventRemaining(timedEventRemainingMs)
     : '—';
+  const avatarImageUrl = getAvatarImageUrl(session.user);
+  const islandDisplayName = getIslandDisplayName(islandNumber);
   const spark60RingSegmentsGradient = useMemo(() => {
     if (!isSpark60BoardProfile || !activeTileAnchors.length) return '';
     const segmentSize = 360 / activeTileAnchors.length;
@@ -5874,7 +5901,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         <div ref={topbarMenuRef}>
           <div className="island-run-board__topbar" aria-label="Island Run top bar">
             <button type="button" className="island-run-board__topbar-avatar" aria-label="Player profile">
-              {(session.user.user_metadata?.full_name?.[0] ?? session.user.email?.[0] ?? 'P').toUpperCase()}
+              {avatarImageUrl ? (
+                <img src={avatarImageUrl} alt="" className="island-run-board__topbar-avatar-img" />
+              ) : (
+                (session.user.user_metadata?.full_name?.[0] ?? session.user.email?.[0] ?? 'P').toUpperCase()
+              )}
             </button>
             <div className="island-run-board__topbar-wallet" aria-label="Essence wallet">
               🟣 <strong>{runtimeState.essence}</strong>
@@ -5966,12 +5997,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           })() : null}
           <div className="island-run-board__rewardbar-header">
             <span>{Math.floor(rewardBarProgress)}/{Math.floor(rewardBarThreshold)}</span>
-            <span>{canClaimRewardBar ? '✨ Claim ready!' : `Tier ${runtimeState.rewardBarEscalationTier}`}</span>
+            <span>{`Island ${islandNumber} · ${islandDisplayName}`}</span>
           </div>
           {/* Track row: avatar → track with milestones → endcap */}
           <div className="island-run-board__rewardbar-track-row">
             <span className="island-run-board__rewardbar-avatar-indicator" aria-hidden="true">
-              {getAvatarInitial(session.user)}
+              {avatarImageUrl ? (
+                <img src={avatarImageUrl} alt="" className="island-run-board__rewardbar-avatar-img" />
+              ) : (
+                getAvatarInitial(session.user)
+              )}
             </span>
             <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
               <span className="island-run-board__rewardbar-track-fill" style={{ width: `${rewardBarPercent}%` }} />
@@ -5985,7 +6020,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           </div>
           {/* Event timer row — island timer removed: islands advance via boss completion, not timer */}
           <div className="island-run-board__rewardbar-timers">
-            <span className={getTimerUrgencyClass(timedEventRemainingMs)}>🎪 Event: {timedEventRemainingLabel}</span>
+            <span className={getTimerUrgencyClass(timedEventRemainingMs)}>{timedEventRemainingLabel}</span>
           </div>
         </button>
 
