@@ -4476,6 +4476,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     />
   );
 
+  const isIslandFullscreenActive = showGameBoardOverlay || showLevelWorldsFromEntry;
+
   if (isMobileExperience && showMobileHome) {
     const mobileHomeAppClassName = `app app--workspace app--mobile-frame app--mobile-home-frame${
       isAnyModalVisible ? ' app--auth-overlay' : ''
@@ -4505,7 +4507,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             hiddenHabitIds={[]}
           />
         </div>
-        {!showZenGardenFullScreen && !isConflictResolverFullscreen && (
+        {!showZenGardenFullScreen && !isConflictResolverFullscreen && !isIslandFullscreenActive && (
           <MobileFooterNav
             items={mobileFooterNavItems}
             status={mobileFooterStatus}
@@ -4807,7 +4809,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           </section>
         </main>
       </div>
-      {isMobileExperience && !showZenGardenFullScreen && !isConflictResolverFullscreen ? (
+      {isMobileExperience && !showZenGardenFullScreen && !isConflictResolverFullscreen && !isIslandFullscreenActive ? (
         <MobileFooterNav
           items={mobileFooterNavItems}
           status={mobileFooterStatus}
