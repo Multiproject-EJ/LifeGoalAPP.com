@@ -68,36 +68,6 @@ body {
   scrollbar-gutter: stable both-edges;
 }
 
-/* TEMP RUNTIME DEBUG COLORS — enabled when RuntimeLayoutDebugOverlay mounts. */
-html.layout-debug-active {
-  background: #ff3b30 !important;
-}
-
-html.layout-debug-active body {
-  background: #007aff !important;
-}
-
-html.layout-debug-active #root {
-  background: #34c759 !important;
-}
-
-html.layout-debug-active .app {
-  background: #ff9500 !important;
-}
-
-html.layout-debug-active .app--workspace {
-  background: #af52de !important;
-}
-
-html.layout-debug-active .workspace-shell {
-  background: #ffd60a !important;
-}
-
-html.layout-debug-active .world-hero,
-html.layout-debug-active .world-home {
-  background: #ff2d55 !important;
-}
-
 /* Hide native scrollbars app-wide while preserving scroll behavior */
 * {
   -ms-overflow-style: none; /* IE and legacy Edge */

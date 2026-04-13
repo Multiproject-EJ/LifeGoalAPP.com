@@ -8,7 +8,6 @@ import { resolveRoute } from './routes/resolveRoute.ts';
 import { WorldHome } from './world/WorldHome.tsx';
 import { Lobby } from './world/Lobby.tsx';
 import { TrustPage } from './world/TrustPage.tsx';
-import { RuntimeLayoutDebugOverlay } from './components/RuntimeLayoutDebugOverlay.tsx';
 import type { BeforeInstallPromptEvent } from './world/useInstallState.ts';
 
 if (typeof window !== 'undefined') {
@@ -133,7 +132,6 @@ function LobbyRoute({ onEnterApp }: { onEnterApp: () => void }) {
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <Root />
-    <RuntimeLayoutDebugOverlay />
   </React.StrictMode>
 );
 
