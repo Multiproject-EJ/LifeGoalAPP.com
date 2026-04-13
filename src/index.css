@@ -1719,6 +1719,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .app--mobile-frame .workspace-stage:not(.workspace-stage--vision-board):not(.workspace-stage--account) {
+  padding-top: 0;
   border-radius: 0;
   border: none;
   backdrop-filter: none;
