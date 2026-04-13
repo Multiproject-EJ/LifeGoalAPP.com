@@ -161,7 +161,7 @@
 - [ ] **Progression gating** — islands 2–120 are accessible by incrementing `currentIslandNumber`; there is no gate that requires clearing all stops (incl. boss) before advancing
 - [ ] **Minigame framework (M11)** — no `IslandRunMinigame` interface, entry/exit contract, or reward-passthrough shape; `ShooterBlitz` is launched ad-hoc rather than via a framework  
   → Next slice: **M11A**
-- [ ] **120-level narrative / world differentiation** — no per-island copy, art, named events, or difficulty ramp across the full 120-island arc
+- [ ] **120-level narrative / world differentiation** — canonical island names are now defined, but there is still no deeper per-island narrative copy, custom art coverage, named event scripting, or full difficulty ramp across the 120-island arc
 - [ ] **Boss real-life objective verification** — boss challenge prompts are flavour text only; no backend check that the player actually completed a habit/goal before claiming the boss reward
 
 #### Assets
