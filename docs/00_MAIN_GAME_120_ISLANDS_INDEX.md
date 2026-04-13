@@ -50,6 +50,7 @@ Use these files as a navigation set for HabitGame Main Loop planning/history:
 - `docs/05_MAIN_GAME_AUDIO_HAPTICS_ASSETS_MINIGAME_TEMPLATE.md` (audio/haptics/assets + minigame template)
 - `docs/06_MAIN_GAME_NEXT_SLICE_PROMPT_TEMPLATE.md` (copy/paste prompt for next implementation slice)
 - `docs/07_MAIN_GAME_PROGRESS.md` (append-only progress log)
+- `docs/ISLAND_RUN_120_ISLAND_NAMES_CANONICAL.md` (canonical 1–120 island name roster)
 - `docs/12_MINIGAME_BOSS_ECONOMY_PLAYER_LEVEL_DESIGN.md` (legacy mini-game roster, boss system, heart economy, player level notes)
 - `docs/13_COLLECTIBLE_PROGRESS_BAR.md` (legacy collectible progress bar design — shard sub-currency, milestone chain, HUD pill)
 - `docs/17_CURRENCIES_AND_SHIELD.md` (legacy currency list notes: Coins/Diamonds/Hearts/Shards/Tickets/Shields; egg hatch timer surprise rules; HUD display order)

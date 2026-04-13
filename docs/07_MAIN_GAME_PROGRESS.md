@@ -161,6 +161,7 @@ overrides:
 | [`docs/03_MAIN_GAME_FIXED_BOARD_UI_AND_MOVEMENT.md`](./03_MAIN_GAME_FIXED_BOARD_UI_AND_MOVEMENT.md) | Board renderer, tile coordinates, token movement, and QA |
 | [`docs/04_MAIN_GAME_EGGS_HATCHERY_HOME.md`](./04_MAIN_GAME_EGGS_HATCHERY_HOME.md) | Egg lifecycle, stages, dormant carryover, hatchery rules |
 | [`docs/05_MAIN_GAME_AUDIO_HAPTICS_ASSETS_MINIGAME_TEMPLATE.md`](./05_MAIN_GAME_AUDIO_HAPTICS_ASSETS_MINIGAME_TEMPLATE.md) | Audio/haptics map, asset naming, and mini-game dev-plan template |
+| [`docs/ISLAND_RUN_120_ISLAND_NAMES_CANONICAL.md`](./ISLAND_RUN_120_ISLAND_NAMES_CANONICAL.md) | Canonical 120-island display-name roster by arc |
 | [`docs/MAIN_GAME_120_ISLANDS_DOCSET_SUMMARY.md`](./MAIN_GAME_120_ISLANDS_DOCSET_SUMMARY.md) | High-level docset summary for external context |
 
 ---
