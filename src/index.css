@@ -2913,13 +2913,6 @@ html.platform-ipad .workspace-shell__menu-edge {
   }
 }
 
-/* Keep the Today mobile route flush to y=0 across breakpoints.
-   Scoped to the mobile-home route wrapper only, so non-Today screens
-   still use normal `.app--workspace` mobile padding behavior. */
-.app--mobile-home-frame.app--workspace {
-  padding: 0;
-}
-
 @media (max-width: 720px), (max-height: 720px) and (pointer: coarse) {
   .workspace-main {
     padding-bottom: clamp(6rem, 14vw, 7.25rem);
