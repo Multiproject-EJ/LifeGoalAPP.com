@@ -1,4 +1,21 @@
 .level-worlds-island-run-shell {
-    padding-bottom: 0px;
-    /* other existing styles remain unchanged */
+  padding: 10px 15px 0px 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.level-worlds-island-title {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.level-worlds-island-content {
+  font-size: 16px;
+  margin: 10px 0;
+}
+
+.level-worlds-island-footer {
+  display: flex;
+  justify-content: flex-end;
+  
 }
