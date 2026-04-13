@@ -49,9 +49,10 @@ type GameBoardOverlayProps = {
   essenceBalance?: number;
   rewardBarProgress?: number;
   rewardBarThreshold?: number;
-  rewardBarEscalationTier?: number;
   activeTimedEventType?: string | null;
   activeTimedEventExpiresAtMs?: number | null;
+  islandNumber?: number;
+  islandDisplayName?: string;
   spinsRemaining?: number;
   islandTimeLabel?: string;
   spinWinResetAtMs?: number;
@@ -80,9 +81,10 @@ export function GameBoardOverlay({
   essenceBalance = 0,
   rewardBarProgress = 0,
   rewardBarThreshold = 10,
-  rewardBarEscalationTier = 0,
   activeTimedEventType = null,
   activeTimedEventExpiresAtMs = null,
+  islandNumber = 1,
+  islandDisplayName = 'Island 1',
   spinsRemaining = 0,
   islandTimeLabel = '—',
   spinWinResetAtMs,
@@ -214,7 +216,7 @@ export function GameBoardOverlay({
             ) : null}
             <div className="island-run-board__rewardbar-header">
               <span>{normalizedProgress}/{normalizedThreshold}</span>
-              <span>{canClaimRewardBar ? '✨ Claim ready!' : `Tier ${rewardBarEscalationTier}`}</span>
+              <span>{`Island ${islandNumber} · ${islandDisplayName}`}</span>
             </div>
             <div className="island-run-board__rewardbar-track-row">
               <span className="island-run-board__rewardbar-avatar-indicator" aria-hidden="true">
@@ -239,7 +241,7 @@ export function GameBoardOverlay({
               <span className={`island-run-board__rewardbar-endcap${canClaimRewardBar ? ' island-run-board__rewardbar-endcap--claimable' : ''}`} aria-hidden="true">🏆</span>
             </div>
             <div className="island-run-board__rewardbar-timers">
-              <span className={timerUrgencyClass}>🎪 Event: {timedEventLabel}</span>
+              <span className={timerUrgencyClass}>{timedEventLabel}</span>
             </div>
           </div>
         </div>

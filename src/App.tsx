@@ -459,9 +459,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [overlayEssenceBalance, setOverlayEssenceBalance] = useState(0);
   const [overlayRewardBarProgress, setOverlayRewardBarProgress] = useState(0);
   const [overlayRewardBarThreshold, setOverlayRewardBarThreshold] = useState(10);
-  const [overlayRewardBarEscalationTier, setOverlayRewardBarEscalationTier] = useState(0);
   const [overlayActiveTimedEventType, setOverlayActiveTimedEventType] = useState<string | null>(null);
   const [overlayActiveTimedEventExpiresAtMs, setOverlayActiveTimedEventExpiresAtMs] = useState<number | null>(null);
+  const [overlayIslandNumber, setOverlayIslandNumber] = useState(1);
+  const [overlayIslandDisplayName, setOverlayIslandDisplayName] = useState('Island 1');
   const [, setHeartsResetAtMs] = useState<number | undefined>(undefined);
   const [, setEggHatchResetAtMs] = useState<number | undefined>(undefined);
   const [currentIslandBackgroundSrc, setCurrentIslandBackgroundSrc] = useState(() => getIslandBackgroundImageSrc(1));
@@ -480,9 +481,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
           setOverlayEssenceBalance(0);
           setOverlayRewardBarProgress(0);
           setOverlayRewardBarThreshold(10);
-          setOverlayRewardBarEscalationTier(0);
           setOverlayActiveTimedEventType(null);
           setOverlayActiveTimedEventExpiresAtMs(null);
+          setOverlayIslandNumber(1);
+          setOverlayIslandDisplayName('Island 1');
           setHeartsResetAtMs(undefined);
           setEggHatchResetAtMs(undefined);
           setCurrentIslandBackgroundSrc(getIslandBackgroundImageSrc(1));
@@ -494,11 +496,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
           activeEggSetAtMs?: number;
           activeEggHatchDurationMs?: number;
           currentIslandNumber?: number;
+          islandDisplayName?: string;
           isIslandTimerPendingStart?: boolean;
           essence?: number;
           rewardBarProgress?: number;
           rewardBarThreshold?: number;
-          rewardBarEscalationTier?: number;
           activeTimedEvent?: {
             eventType?: string;
             expiresAtMs?: number;
@@ -507,9 +509,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
         setOverlayEssenceBalance(Math.max(0, Math.floor(state?.essence ?? 0)));
         setOverlayRewardBarProgress(Math.max(0, Math.floor(state?.rewardBarProgress ?? 0)));
         setOverlayRewardBarThreshold(Math.max(1, Math.floor(state?.rewardBarThreshold ?? 10)));
-        setOverlayRewardBarEscalationTier(Math.max(0, Math.floor(state?.rewardBarEscalationTier ?? 0)));
         setOverlayActiveTimedEventType(state?.activeTimedEvent?.eventType ?? null);
         setOverlayActiveTimedEventExpiresAtMs(state?.activeTimedEvent?.expiresAtMs ?? null);
+        const safeIslandNumber = Math.max(1, Math.floor(state?.currentIslandNumber ?? 1));
+        setOverlayIslandNumber(safeIslandNumber);
+        setOverlayIslandDisplayName(state?.islandDisplayName ?? `Island ${safeIslandNumber}`);
         setCurrentIslandBackgroundSrc(getIslandBackgroundImageSrc(state?.currentIslandNumber ?? 1));
         const expiresAtMs = state?.islandExpiresAtMs;
         if (state?.isIslandTimerPendingStart) {
@@ -541,9 +545,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
         setOverlayEssenceBalance(0);
         setOverlayRewardBarProgress(0);
         setOverlayRewardBarThreshold(10);
-        setOverlayRewardBarEscalationTier(0);
         setOverlayActiveTimedEventType(null);
         setOverlayActiveTimedEventExpiresAtMs(null);
+        setOverlayIslandNumber(1);
+        setOverlayIslandDisplayName('Island 1');
         setHeartsResetAtMs(undefined);
         setEggHatchResetAtMs(undefined);
         setCurrentIslandBackgroundSrc(getIslandBackgroundImageSrc(1));
@@ -1026,15 +1031,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
     return {
       label: 'Game',
-      levelLabel: `Level ${levelNumber}`,
+      levelLabel: `Island ${overlayIslandNumber}`,
       description:
         progressPercent > 0
-          ? `${progressPercent}% to L${levelNumber + 1} • ${xpProgressLabel}`
-          : `Keep building your streak • ${xpProgressLabel}`,
+          ? `${overlayIslandDisplayName} • ${progressPercent}% to L${levelNumber + 1}`
+          : `${overlayIslandDisplayName} • ${xpProgressLabel}`,
       icon: '🎮',
       progress: progressPercent,
     } as const;
-  }, [levelInfo]);
+  }, [levelInfo, overlayIslandDisplayName, overlayIslandNumber]);
 
   const isGameNearNextLevel = Math.round(levelInfo?.progressPercentage ?? 0) >= 95;
   const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
@@ -4577,9 +4582,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
           essenceBalance={overlayEssenceBalance}
           rewardBarProgress={overlayRewardBarProgress}
           rewardBarThreshold={overlayRewardBarThreshold}
-          rewardBarEscalationTier={overlayRewardBarEscalationTier}
           activeTimedEventType={overlayActiveTimedEventType}
           activeTimedEventExpiresAtMs={overlayActiveTimedEventExpiresAtMs}
+          islandNumber={overlayIslandNumber}
+          islandDisplayName={overlayIslandDisplayName}
           spinsRemaining={dailyTreatsInventory.spinsRemaining}
           islandSceneSrc={currentIslandBackgroundSrc}
           islandTimeLabel={islandTimeLabelForOverlay}
@@ -4894,9 +4900,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
         essenceBalance={overlayEssenceBalance}
         rewardBarProgress={overlayRewardBarProgress}
         rewardBarThreshold={overlayRewardBarThreshold}
-        rewardBarEscalationTier={overlayRewardBarEscalationTier}
         activeTimedEventType={overlayActiveTimedEventType}
         activeTimedEventExpiresAtMs={overlayActiveTimedEventExpiresAtMs}
+        islandNumber={overlayIslandNumber}
+        islandDisplayName={overlayIslandDisplayName}
         spinsRemaining={dailyTreatsInventory.spinsRemaining}
         islandSceneSrc={currentIslandBackgroundSrc}
         islandTimeLabel={islandTimeLabelForOverlay}

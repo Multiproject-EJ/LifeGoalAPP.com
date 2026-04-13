@@ -13,6 +13,7 @@ import {
   type IslandBoardTheme,
 } from '../services/islandBoardThemes';
 import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
+import { getIslandDisplayName } from '../services/islandNames';
 import { generateTileMap, getIslandRarity, type IslandTileMapEntry } from '../services/islandBoardTileMap';
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from '../services/islandBoardProfiles';
 import { resolveWrappedTokenIndex } from '../services/islandBoardTopology';
@@ -2692,6 +2693,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
+      const islandNameForSummary = getIslandDisplayName(islandNumber);
       const summary = {
         currentIslandNumber: islandNumber,
         islandStartedAtMs,
@@ -2704,6 +2706,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         rewardBarThreshold: runtimeState.rewardBarThreshold,
         rewardBarEscalationTier: runtimeState.rewardBarEscalationTier,
         activeTimedEvent: runtimeState.activeTimedEvent,
+        islandDisplayName: islandNameForSummary,
       };
       window.localStorage.setItem('lifegoal_island_run_runtime_state', JSON.stringify(summary));
     } catch {
@@ -2844,6 +2847,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     ? formatEventRemaining(timedEventRemainingMs)
     : '—';
   const avatarImageUrl = getAvatarImageUrl(session.user);
+  const islandDisplayName = getIslandDisplayName(islandNumber);
   const spark60RingSegmentsGradient = useMemo(() => {
     if (!isSpark60BoardProfile || !activeTileAnchors.length) return '';
     const segmentSize = 360 / activeTileAnchors.length;
@@ -5993,7 +5997,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           })() : null}
           <div className="island-run-board__rewardbar-header">
             <span>{Math.floor(rewardBarProgress)}/{Math.floor(rewardBarThreshold)}</span>
-            <span>{canClaimRewardBar ? '✨ Claim ready!' : `Tier ${runtimeState.rewardBarEscalationTier}`}</span>
+            <span>{`Island ${islandNumber} · ${islandDisplayName}`}</span>
           </div>
           {/* Track row: avatar → track with milestones → endcap */}
           <div className="island-run-board__rewardbar-track-row">
@@ -6016,7 +6020,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           </div>
           {/* Event timer row — island timer removed: islands advance via boss completion, not timer */}
           <div className="island-run-board__rewardbar-timers">
-            <span className={getTimerUrgencyClass(timedEventRemainingMs)}>🎪 Event: {timedEventRemainingLabel}</span>
+            <span className={getTimerUrgencyClass(timedEventRemainingMs)}>{timedEventRemainingLabel}</span>
           </div>
         </button>
 
