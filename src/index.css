@@ -884,6 +884,13 @@ body {
   pointer-events: none;
 }
 
+.app--workspace:not(.app--vision-board)::before {
+  position: fixed;
+  background: var(--color-workspace-bg);
+  opacity: 1;
+  animation: none;
+}
+
 .app--vision-board {
   position: relative;
   --vision-board-bg: url('./assets/Visiontablight.webp');
@@ -2794,6 +2801,10 @@ html.platform-ipad .workspace-shell__menu-edge {
     --workspace-shell-offset: 0px;
     --workspace-shell-gutter: clamp(16px, 5vw, 24px);
     padding: clamp(2rem, 10vw, 3.5rem) clamp(1.5rem, 6vw, 2.5rem);
+  }
+
+  .app--workspace.app--mobile-frame {
+    padding: 0;
   }
 
   .workspace-shell {
