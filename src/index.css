@@ -1726,6 +1726,10 @@ html.platform-ipad .workspace-shell__menu-edge {
   -webkit-backdrop-filter: none;
 }
 
+.app--mobile-frame .workspace-stage:not(.workspace-stage--vision-board):not(.workspace-stage--account) .workspace-content {
+  padding-top: calc(var(--workspace-padding) + 0.625rem);
+}
+
 .workspace-stage--vision-board {
   background: var(--vision-board-bg) center / cover no-repeat;
   background-color: #eef2ff;
