@@ -456,6 +456,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [showGameBoardOverlay, setShowGameBoardOverlay] = useState(false);
   const [islandTimeLabelForOverlay, setIslandTimeLabelForOverlay] = useState('—');
+  const [overlayEssenceBalance, setOverlayEssenceBalance] = useState(0);
+  const [overlayRewardBarProgress, setOverlayRewardBarProgress] = useState(0);
+  const [overlayRewardBarThreshold, setOverlayRewardBarThreshold] = useState(10);
+  const [overlayRewardBarEscalationTier, setOverlayRewardBarEscalationTier] = useState(0);
+  const [overlayActiveTimedEventType, setOverlayActiveTimedEventType] = useState<string | null>(null);
+  const [overlayActiveTimedEventExpiresAtMs, setOverlayActiveTimedEventExpiresAtMs] = useState<number | null>(null);
   const [, setHeartsResetAtMs] = useState<number | undefined>(undefined);
   const [, setEggHatchResetAtMs] = useState<number | undefined>(undefined);
   const [currentIslandBackgroundSrc, setCurrentIslandBackgroundSrc] = useState(() => getIslandBackgroundImageSrc(1));
@@ -471,6 +477,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
         const raw = localStorage.getItem(ISLAND_RUN_RUNTIME_STATE_KEY);
         if (!raw) {
           setIslandTimeLabelForOverlay('—');
+          setOverlayEssenceBalance(0);
+          setOverlayRewardBarProgress(0);
+          setOverlayRewardBarThreshold(10);
+          setOverlayRewardBarEscalationTier(0);
+          setOverlayActiveTimedEventType(null);
+          setOverlayActiveTimedEventExpiresAtMs(null);
           setHeartsResetAtMs(undefined);
           setEggHatchResetAtMs(undefined);
           setCurrentIslandBackgroundSrc(getIslandBackgroundImageSrc(1));
@@ -483,7 +495,21 @@ export default function App({ forceAuthOnMount }: AppProps) {
           activeEggHatchDurationMs?: number;
           currentIslandNumber?: number;
           isIslandTimerPendingStart?: boolean;
+          essence?: number;
+          rewardBarProgress?: number;
+          rewardBarThreshold?: number;
+          rewardBarEscalationTier?: number;
+          activeTimedEvent?: {
+            eventType?: string;
+            expiresAtMs?: number;
+          } | null;
         };
+        setOverlayEssenceBalance(Math.max(0, Math.floor(state?.essence ?? 0)));
+        setOverlayRewardBarProgress(Math.max(0, Math.floor(state?.rewardBarProgress ?? 0)));
+        setOverlayRewardBarThreshold(Math.max(1, Math.floor(state?.rewardBarThreshold ?? 10)));
+        setOverlayRewardBarEscalationTier(Math.max(0, Math.floor(state?.rewardBarEscalationTier ?? 0)));
+        setOverlayActiveTimedEventType(state?.activeTimedEvent?.eventType ?? null);
+        setOverlayActiveTimedEventExpiresAtMs(state?.activeTimedEvent?.expiresAtMs ?? null);
         setCurrentIslandBackgroundSrc(getIslandBackgroundImageSrc(state?.currentIslandNumber ?? 1));
         const expiresAtMs = state?.islandExpiresAtMs;
         if (state?.isIslandTimerPendingStart) {
@@ -512,6 +538,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
         }
       } catch {
         setIslandTimeLabelForOverlay('—');
+        setOverlayEssenceBalance(0);
+        setOverlayRewardBarProgress(0);
+        setOverlayRewardBarThreshold(10);
+        setOverlayRewardBarEscalationTier(0);
+        setOverlayActiveTimedEventType(null);
+        setOverlayActiveTimedEventExpiresAtMs(null);
         setHeartsResetAtMs(undefined);
         setEggHatchResetAtMs(undefined);
         setCurrentIslandBackgroundSrc(getIslandBackgroundImageSrc(1));
@@ -719,6 +751,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const zenTokenBalance = gamificationProfile?.zen_tokens ?? 0;
   const streakMomentum = gamificationProfile?.current_streak ?? 0;
   const currentLevel = levelInfo?.currentLevel ?? 1;
+  const profileAvatarUrl =
+    (supabaseSession?.user?.user_metadata?.avatar_url as string | undefined)
+    ?? (supabaseSession?.user?.user_metadata?.picture as string | undefined)
+    ?? undefined;
   const isGameModeActive = gamificationEnabled && isMobileMenuImageActive;
   const shouldShowPointsBadges = isGameModeActive && isMobileExperience;
   
@@ -3791,6 +3827,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
                     >
                       Take next step
                     </button>
+                    <button
+                      type="button"
+                      className="mobile-menu-overlay__profile-button"
+                      onClick={() => {
+                        setIsProfileStrengthOpen(false);
+                        setShowMobileGamification(true);
+                      }}
+                    >
+                      Open Quest Menu
+                    </button>
                   </div>
                 </div>
               </div>
@@ -3893,7 +3939,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         <div className="mobile-gamification-overlay__panel">
           <header className="mobile-gamification-overlay__header">
             <div>
-              <p className="mobile-gamification-overlay__eyebrow">Game Menu</p>
+              <p className="mobile-gamification-overlay__eyebrow">Quest Menu</p>
               <h2 className="mobile-gamification-overlay__title">Keep building your streak</h2>
               <p className="mobile-gamification-overlay__subtitle">{todayLabel}</p>
             </div>
@@ -4502,10 +4548,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
             setLevelWorldsEntryPanel('default');
             setShowLevelWorldsFromEntry(true);
           }}
-          onTopbarClick={() => {
-            setShowGameBoardOverlay(false);
-            setShowMobileGamification(true);
-          }}
           onSpinWinClick={() => {
             setShowGameBoardOverlay(false);
             setReopenGameOverlayOnRewardClose(true);
@@ -4530,9 +4572,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
             setActiveWorkspaceNav('score');
           }}
           profilePlaystyleIcon={playstyleIcon ?? undefined}
+          profileAvatarUrl={profileAvatarUrl}
           profilePlaystyleLabel={playstyleLabel ?? undefined}
-          currentLevel={currentLevel}
-          momentumPercent={Math.min(100, streakMomentum * 4)}
+          essenceBalance={overlayEssenceBalance}
+          rewardBarProgress={overlayRewardBarProgress}
+          rewardBarThreshold={overlayRewardBarThreshold}
+          rewardBarEscalationTier={overlayRewardBarEscalationTier}
+          activeTimedEventType={overlayActiveTimedEventType}
+          activeTimedEventExpiresAtMs={overlayActiveTimedEventExpiresAtMs}
           spinsRemaining={dailyTreatsInventory.spinsRemaining}
           islandSceneSrc={currentIslandBackgroundSrc}
           islandTimeLabel={islandTimeLabelForOverlay}
@@ -4820,10 +4867,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
           setLevelWorldsEntryPanel('default');
           setShowLevelWorldsFromEntry(true);
         }}
-        onTopbarClick={() => {
-          setShowGameBoardOverlay(false);
-          setShowMobileGamification(true);
-        }}
         onSpinWinClick={() => {
           setShowGameBoardOverlay(false);
           setReopenGameOverlayOnRewardClose(true);
@@ -4846,9 +4889,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
           setActiveWorkspaceNav('score');
         }}
         profilePlaystyleIcon={playstyleIcon ?? undefined}
+        profileAvatarUrl={profileAvatarUrl}
         profilePlaystyleLabel={playstyleLabel ?? undefined}
-        currentLevel={currentLevel}
-        momentumPercent={Math.min(100, streakMomentum * 4)}
+        essenceBalance={overlayEssenceBalance}
+        rewardBarProgress={overlayRewardBarProgress}
+        rewardBarThreshold={overlayRewardBarThreshold}
+        rewardBarEscalationTier={overlayRewardBarEscalationTier}
+        activeTimedEventType={overlayActiveTimedEventType}
+        activeTimedEventExpiresAtMs={overlayActiveTimedEventExpiresAtMs}
         spinsRemaining={dailyTreatsInventory.spinsRemaining}
         islandSceneSrc={currentIslandBackgroundSrc}
         islandTimeLabel={islandTimeLabelForOverlay}
