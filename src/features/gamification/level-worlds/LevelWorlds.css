@@ -27,7 +27,7 @@
   padding:
     calc(env(safe-area-inset-top, 0px) + 0.9rem)
     max(0.75rem, env(safe-area-inset-right, 0px))
-    env(safe-area-inset-bottom, 0px)
+    0
     max(0.75rem, env(safe-area-inset-left, 0px));
   box-sizing: border-box;
 }
@@ -713,9 +713,11 @@
 }
 
 .island-run-prototype__footer {
-  position: relative;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 20;
-  margin-top: auto;
   padding: 0 0 env(safe-area-inset-bottom, 0px);
 }
 
