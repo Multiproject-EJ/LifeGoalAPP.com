@@ -920,7 +920,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         id: 'coach',
         label: 'Coach',
         ariaLabel: 'AI Coach - Get a guided next step',
-        icon: '🪈',
+        icon: <img src="/icons/ai_coach/aicoach_small.webp" alt="" loading="lazy" decoding="async" />,
         summary: 'Get a guided next step from your AI coach.',
       },
       {
