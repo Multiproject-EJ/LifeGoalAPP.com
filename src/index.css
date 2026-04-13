@@ -2872,16 +2872,6 @@ html.platform-ipad .workspace-shell__menu-edge {
     padding: clamp(1.25rem, 7vw, 2rem) clamp(0.5rem, 3vw, 0.75rem);
   }
 
-  /* Task 1 — seam fix: the single-class `.app--mobile-home-frame { padding: 0 }` rule
-     in the earlier @media (max-width: 720px) block is overridden by the equal-specificity
-     `.app--workspace` rule above (which appears later in the file).
-     Using a two-class compound selector raises specificity so the mobile home frame
-     always has zero outer padding, ensuring .mobile-habit-home reaches y=0 and the
-     layer seen behind the iOS status bar is the Today canvas itself, not the app backdrop. */
-  .app--mobile-home-frame.app--workspace {
-    padding: 0;
-  }
-
   .workspace-sidebar {
     padding: clamp(0.75rem, 4vw, 1rem);
     border-radius: 18px;
@@ -15351,9 +15341,6 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .mobile-habit-home {
   min-height: 100vh;
-  position: relative;    /* required so ::before is positioned within this element */
-  isolation: isolate;    /* creates a new stacking context; keeps ::before z-index: -1
-                            above our own background but below all in-flow children */
   background: linear-gradient(180deg, #0f172a 0%, #1e293b 35%, #f8fafc 100%);
   padding-top: clamp(1.25rem, 6vw, 2.25rem);
   padding-right: max(var(--safe-area-right), clamp(1rem, 5vw, 1.5rem));
@@ -15361,47 +15348,6 @@ html.platform-ipad .workspace-shell__menu-edge {
   padding-left: max(var(--safe-area-left), clamp(1rem, 5vw, 1.5rem));
   display: grid;
   gap: clamp(1.5rem, 4vw, 2.5rem);
-}
-
-/* Task 2 — premium edge treatment on the Today surface.
-   This pseudo-element is a pure visual layer that lives between the canvas background
-   and all in-flow content (z-index: -1 within the isolation: isolate stacking context).
-   It provides three layered effects without affecting layout:
-   1. A hairline specular rim at the very top edge — like looking at the edge of thick glass.
-   2. Soft corner radials at the upper-left and upper-right — simulate rounded corners
-      without border-radius / overflow:hidden (which would clip fixed descendants).
-   3. A gentle ambient bloom from the top-center — adds perceptible depth to the surface. */
-.mobile-habit-home::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: clamp(90px, 24vw, 200px);
-  pointer-events: none;
-  z-index: -1;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.045) 0%,
-      rgba(255, 255, 255, 0.015) 15%,
-      transparent 42%
-    ),
-    radial-gradient(
-      ellipse 45% 70% at 0% 0%,
-      rgba(0, 0, 0, 0.13) 0%,
-      transparent 100%
-    ),
-    radial-gradient(
-      ellipse 45% 70% at 100% 0%,
-      rgba(0, 0, 0, 0.13) 0%,
-      transparent 100%
-    ),
-    radial-gradient(
-      ellipse 90% 50% at 50% 0%,
-      rgba(100, 116, 139, 0.07) 0%,
-      transparent 100%
-    );
 }
 
 :is(
