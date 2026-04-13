@@ -15898,10 +15898,17 @@ html.platform-ipad .workspace-shell__menu-edge {
   will-change: transform;
 }
 
-/* TEMP DEBUG: Island bottom-edge ownership color map */
-.app--island-bottom-debug .mobile-footer-nav {
-  background: rgba(255, 20, 147, 0.28) !important;
-  outline: 2px solid rgba(255, 20, 147, 0.95) !important;
+/* TEMP DEBUG: top-level ownership (single layer at a time) */
+.app--island-ownership-debug-app {
+  background: #ffea00 !important;
+}
+
+.app--island-ownership-debug-app-workspace.app--workspace {
+  background: #00e5ff !important;
+}
+
+.app--island-ownership-debug-level-worlds-entry-modal .level-worlds-entry-modal {
+  background: #ff6d00 !important;
 }
 
 .mobile-footer-nav--collapsed {

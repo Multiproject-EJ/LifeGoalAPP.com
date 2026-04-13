@@ -4028,33 +4028,7 @@
   transition: transform 80ms ease-out;
 }
 
-/* TEMP DEBUG: Island bottom-edge ownership color map */
-.app--island-bottom-debug .level-worlds-island-run-shell {
-  background: rgba(255, 0, 0, 0.28) !important;
-  outline: 2px solid rgba(255, 0, 0, 0.95) !important;
-}
-
-.app--island-bottom-debug .island-run-prototype {
-  background: rgba(255, 165, 0, 0.32) !important;
-  outline: 2px solid rgba(255, 165, 0, 0.95) !important;
-}
-
-.app--island-bottom-debug .island-run-board {
-  background: rgba(255, 255, 0, 0.28) !important;
-  outline: 2px solid rgba(255, 255, 0, 0.95) !important;
-}
-
-.app--island-bottom-debug .island-run-board__stage-wrapper {
-  background: rgba(0, 255, 0, 0.28) !important;
-  outline: 2px solid rgba(0, 255, 0, 0.95) !important;
-}
-
-.app--island-bottom-debug .island-run-prototype__footer {
-  background: rgba(0, 255, 255, 0.32) !important;
-  outline: 2px solid rgba(0, 255, 255, 0.95) !important;
-}
-
-.app--island-bottom-debug .island-run-prototype__footer-main {
-  background: rgba(0, 0, 255, 0.32) !important;
-  outline: 2px solid rgba(125, 125, 255, 0.95) !important;
+/* TEMP DEBUG: top-level ownership (single layer at a time) */
+.app--island-ownership-debug-level-worlds-island-run-shell .level-worlds-island-run-shell {
+  background: #39ff14 !important;
 }

@@ -398,13 +398,7 @@
   }
 }
 
-/* TEMP DEBUG: Island bottom-edge ownership color map */
-.app--island-bottom-debug .game-board-overlay {
-  background: rgba(255, 0, 255, 0.28) !important;
-  outline: 2px solid rgba(255, 0, 255, 0.95) !important;
-}
-
-.app--island-bottom-debug .game-board-overlay__content {
-  background: rgba(128, 0, 255, 0.28) !important;
-  outline: 2px solid rgba(190, 120, 255, 0.95) !important;
+/* TEMP DEBUG: top-level ownership (single layer at a time) */
+.app--island-ownership-debug-game-board-overlay .game-board-overlay {
+  background: #ff2d55 !important;
 }
