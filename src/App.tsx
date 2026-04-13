@@ -4476,10 +4476,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
     />
   );
 
+  const isIslandFullscreenActive = showGameBoardOverlay || showLevelWorldsFromEntry;
+  const islandOwnershipDebugLayer: 'app' | 'app-workspace' | 'level-worlds-entry-modal' | 'game-board-overlay' | 'level-worlds-island-run-shell' = 'app';
+  const islandOwnershipDebugClassName =
+    isIslandFullscreenActive
+      ? ` app--island-ownership-debug-${islandOwnershipDebugLayer}`
+      : '';
+
   if (isMobileExperience && showMobileHome) {
     const mobileHomeAppClassName = `app app--workspace app--mobile-frame app--mobile-home-frame${
       isAnyModalVisible ? ' app--auth-overlay' : ''
-    }`;
+    }${islandOwnershipDebugClassName}`;
     return (
       <div className={mobileHomeAppClassName}>
         <div className="workspace-shell">
@@ -4641,7 +4648,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     isAnyModalVisible ? ' app--auth-overlay' : ''
   }${isMobileFrameLocked ? ' app--mobile-frame' : ''}${isDesktopExperience ? ' app--desktop-preview' : ''}${
     isConflictResolverFullscreen ? ' app--conflict-resolver' : ''
-  }`;
+  }${islandOwnershipDebugClassName}`;
   const workspaceShellClassName = `workspace-shell ${
     isAnyModalVisible ? 'workspace-shell--blurred' : ''
   }${!isMobileExperience && !isDesktopMenuOpen ? ' workspace-shell--menu-collapsed' : ''}`;

@@ -4027,3 +4027,8 @@
   transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(calc(var(--tile-scale, 1) * 0.88)) !important;
   transition: transform 80ms ease-out;
 }
+
+/* TEMP DEBUG: top-level ownership (single layer at a time) */
+.app--island-ownership-debug-level-worlds-island-run-shell .level-worlds-island-run-shell {
+  background: #39ff14 !important;
+}
