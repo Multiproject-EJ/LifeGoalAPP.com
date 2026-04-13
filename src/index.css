@@ -445,6 +445,14 @@ body {
   overflow-x: hidden;
 }
 
+.app--island-fullscreen.app--workspace {
+  padding: 0;
+}
+
+.app--island-fullscreen .workspace-shell {
+  min-height: 100dvh;
+}
+
 .app--auth-overlay {
   overflow: hidden;
 }
