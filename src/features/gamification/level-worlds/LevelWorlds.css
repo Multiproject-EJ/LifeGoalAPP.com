@@ -1,9 +1,4010 @@
-/* Add your styles here */
+/* Level Worlds CSS - Mobile-First Design */
+/* Warm wood/amber/gold aesthetic matching Lucky Roll */
 
-/* Restored content based on commit 9e105e24a670667846c18f0c57a257cc8298f991 */
+/* === Hub Container === */
+.level-worlds-hub {
+  position: fixed;
+  inset: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: linear-gradient(135deg, #2c1810 0%, #1a0f08 100%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1000;
+}
 
-.level-world {
-    /* Example style */
-    background-color: #f0f0f0;
-    /* Additional styles */
+.level-worlds-island-run-shell {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: linear-gradient(135deg, #091624 0%, #050d18 100%);
+  overflow: hidden;
+  padding:
+    calc(env(safe-area-inset-top, 0px) + 0.9rem)
+    max(0.75rem, env(safe-area-inset-right, 0px))
+    env(safe-area-inset-bottom, 0px)
+    max(0.75rem, env(safe-area-inset-left, 0px));
+  box-sizing: border-box;
+}
+
+.level-worlds-island-run-shell__back-button {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 0.9rem);
+  left: max(0.75rem, env(safe-area-inset-left, 0px));
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 700;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
+}
+
+/* === Header === */
+.level-worlds-header {
+  padding: 1rem;
+  background: rgba(139, 90, 43, 0.2);
+  border-bottom: 2px solid rgba(218, 165, 32, 0.3);
+}
+
+.level-worlds-back-button {
+  background: none;
+  border: none;
+  color: #daa520;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.level-worlds-title {
+  color: #daa520;
+  font-size: 1.5rem;
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+.level-worlds-stats {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: rgba(218, 165, 32, 0.7);
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #daa520;
+}
+
+/* === Content Area === */
+.level-worlds-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.level-worlds-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #daa520;
+  font-size: 1.2rem;
+}
+
+/* === World Board Container === */
+.world-board-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.world-board-header {
+  text-align: center;
+  padding: 1rem;
+  background: rgba(139, 90, 43, 0.3);
+  border-radius: 12px;
+}
+
+.world-board-title {
+  color: #daa520;
+  font-size: 1.75rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.world-board-description {
+  color: rgba(218, 165, 32, 0.8);
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.world-board-level {
+  display: inline-block;
+  padding: 0.25rem 1rem;
+  background: rgba(218, 165, 32, 0.2);
+  border: 1px solid #daa520;
+  border-radius: 20px;
+  color: #daa520;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+/* === World Board === */
+.world-board {
+  position: relative;
+  min-height: 500px;
+  border-radius: 12px;
+  padding: 2rem 1rem;
+  background: linear-gradient(135deg, rgba(139, 90, 43, 0.2) 0%, rgba(101, 67, 33, 0.2) 100%);
+  border: 2px solid rgba(218, 165, 32, 0.3);
+}
+
+/* Theme variations */
+.world-board--theme-forest {
+  background: linear-gradient(135deg, rgba(34, 139, 34, 0.2) 0%, rgba(0, 100, 0, 0.2) 100%);
+}
+
+.world-board--theme-ocean {
+  background: linear-gradient(135deg, rgba(30, 144, 255, 0.2) 0%, rgba(0, 0, 139, 0.2) 100%);
+}
+
+.world-board--theme-cosmic {
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.2) 0%, rgba(75, 0, 130, 0.2) 100%);
+}
+
+.world-board--theme-desert {
+  background: linear-gradient(135deg, rgba(244, 164, 96, 0.2) 0%, rgba(210, 105, 30, 0.2) 100%);
+}
+
+.world-board--theme-mountain {
+  background: linear-gradient(135deg, rgba(176, 196, 222, 0.2) 0%, rgba(119, 136, 153, 0.2) 100%);
+}
+
+.world-board--theme-village {
+  background: linear-gradient(135deg, rgba(160, 82, 45, 0.2) 0%, rgba(139, 69, 19, 0.2) 100%);
+}
+
+/* === World Node === */
+.world-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.3s ease;
+}
+
+.world-node__icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  position: relative;
+  border: 3px solid;
+  background: rgba(139, 90, 43, 0.8);
+}
+
+.world-node--locked .world-node__icon {
+  border-color: rgba(128, 128, 128, 0.5);
+  background: rgba(64, 64, 64, 0.5);
+  opacity: 0.5;
+}
+
+.world-node--active .world-node__icon {
+  border-color: #daa520;
+  background: rgba(218, 165, 32, 0.3);
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(218, 165, 32, 0.5);
+}
+
+.world-node--active:hover .world-node__icon {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(218, 165, 32, 0.7);
+}
+
+.world-node--completed .world-node__icon {
+  border-color: #4caf50;
+  background: rgba(76, 175, 80, 0.3);
+}
+
+.world-node__pulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid #daa520;
+  animation: pulse 2s ease-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.world-node__emoji {
+  font-size: 1.5rem;
+}
+
+.world-node__check {
+  color: #4caf50;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.world-node__lock {
+  font-size: 1.2rem;
+}
+
+.world-node__label {
+  font-size: 0.7rem;
+  color: #daa520;
+  text-align: center;
+  white-space: nowrap;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* === World Progress === */
+.world-board-progress {
+  padding: 1rem;
+  background: rgba(139, 90, 43, 0.2);
+  border-radius: 12px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #daa520, #b8860b);
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  text-align: center;
+  color: #daa520;
+  font-size: 0.9rem;
+}
+
+/* === Node Detail Sheet === */
+.node-detail-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: flex-end;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.node-detail-sheet {
+  width: 100%;
+  max-height: 80vh;
+  background: linear-gradient(135deg, #2c1810 0%, #1a0f08 100%);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  padding: 1.5rem;
+  animation: slideUp 0.3s ease;
+  position: relative;
+  overflow-y: auto;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.node-detail-sheet__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #daa520;
+  font-size: 2rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+}
+
+.node-detail-sheet__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.node-detail-sheet__emoji {
+  font-size: 3rem;
+}
+
+.node-detail-sheet__title {
+  color: #daa520;
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.node-detail-sheet__content {
+  margin-bottom: 2rem;
+}
+
+.node-detail-sheet__description {
+  color: rgba(218, 165, 32, 0.9);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.node-detail-sheet__rewards h3 {
+  color: #daa520;
+  font-size: 1rem;
+  margin: 0 0 0.75rem 0;
+}
+
+.node-detail-sheet__reward-list {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.reward-item {
+  padding: 0.5rem 1rem;
+  background: rgba(218, 165, 32, 0.2);
+  border: 1px solid rgba(218, 165, 32, 0.4);
+  border-radius: 8px;
+  color: #daa520;
+  font-weight: bold;
+}
+
+.reward-item--large {
+  padding: 0.75rem 1.25rem;
+  font-size: 1.1rem;
+}
+
+.node-detail-sheet__actions {
+  display: flex;
+  justify-content: center;
+}
+
+.node-detail-sheet__action-button {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #daa520 0%, #b8860b 100%);
+  color: #1a0f08;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.node-detail-sheet__action-button:hover {
+  transform: scale(1.05);
+}
+
+/* === Board Complete Overlay === */
+.board-complete-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  animation: fadeIn 0.5s ease;
+}
+
+.board-complete-content {
+  max-width: 500px;
+  width: 90%;
+  padding: 2rem;
+  background: linear-gradient(135deg, #2c1810 0%, #1a0f08 100%);
+  border: 3px solid #daa520;
+  border-radius: 20px;
+  text-align: center;
+}
+
+.board-complete-animation {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.board-complete-icon {
+  font-size: 5rem;
+  animation: bounce 1s ease infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.board-complete-sparkles {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 2rem;
+  animation: sparkle 2s ease infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.5);
+  }
+}
+
+.board-complete-title {
+  color: #daa520;
+  font-size: 2rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.board-complete-message {
+  color: rgba(218, 165, 32, 0.8);
+  margin: 0 0 2rem 0;
+}
+
+.board-complete-rewards {
+  margin-bottom: 2rem;
+}
+
+.board-complete-rewards h3 {
+  color: #daa520;
+  margin: 0 0 1rem 0;
+}
+
+.board-complete-reward-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.reward-icon {
+  font-size: 1.5rem;
+  margin-right: 0.5rem;
+}
+
+.reward-amount {
+  font-size: 1.2rem;
+}
+
+.board-complete-title-unlock,
+.board-complete-cosmetic-unlock {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(218, 165, 32, 0.2);
+  border: 1px solid #daa520;
+  border-radius: 8px;
+  color: #daa520;
+}
+
+.board-complete-button {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #daa520 0%, #b8860b 100%);
+  color: #1a0f08;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.board-complete-button:hover {
+  transform: scale(1.05);
+}
+
+/* === Loading Overlay === */
+.level-worlds-loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4000;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(218, 165, 32, 0.3);
+  border-top-color: #daa520;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* === Notification Toast === */
+.level-worlds-notification {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 90%;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #2c1810 0%, #1a0f08 100%);
+  border: 2px solid #daa520;
+  border-radius: 12px;
+  color: #daa520;
+  font-size: 0.95rem;
+  text-align: center;
+  z-index: 5000;
+  animation: slideUpFade 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* === Responsive Design === */
+@media (min-width: 768px) {
+  .level-worlds-title {
+    font-size: 2rem;
+  }
+
+  .world-board {
+    min-height: 600px;
+  }
+
+  .world-node {
+    width: 80px;
+    height: 80px;
+  }
+
+  .world-node__icon {
+    width: 70px;
+    height: 70px;
+    font-size: 2rem;
+  }
+
+  .world-node__pulse {
+    width: 70px;
+    height: 70px;
+  }
+
+  .node-detail-sheet {
+    max-width: 600px;
+    margin: 0 auto;
+    border-radius: 20px;
+  }
+
+  .board-complete-reward-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* === Island Run M1A Prototype === */
+.island-run-prototype {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 0;
+  min-height: 0;
+  position: relative;
+}
+
+.island-run-prototype__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem 0.85rem;
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(12, 26, 36, 0.9), rgba(6, 18, 28, 0.85));
+  border: 1px solid rgba(145, 206, 230, 0.5);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+  position: relative;
+  z-index: 20;
+}
+
+.island-run-prototype__header h2 {
+  margin: 0;
+  color: #d8f5ff;
+  font-size: 1.12rem;
+  letter-spacing: 0.01em;
+  font-weight: 800;
+}
+
+.island-run-prototype__title {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.island-run-prototype__title-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.island-run-prototype--hud-collapsed {
+  gap: 0.45rem;
+}
+
+.island-run-prototype--hud-collapsed .island-run-prototype__header {
+  padding: 0.55rem 0.75rem;
+}
+
+.island-run-prototype__footer {
+  position: relative;
+  z-index: 20;
+  margin-top: auto;
+  padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 0.45rem);
+}
+
+.island-run-prototype__footer-main {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 18px;
+  background: linear-gradient(160deg, rgba(5, 16, 30, 0.94), rgba(10, 26, 45, 0.92));
+  border: 1px solid rgba(145, 206, 230, 0.45);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.island-run-prototype__footer-stats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.island-run-prototype__footer-dice {
+  flex: 0 0 auto;
+}
+
+.island-run-prototype__footer-actions {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: stretch;
+  gap: 0.45rem;
+  flex-wrap: nowrap;
+}
+
+.island-run-prototype__footer .island-run-prototype__stat-chip,
+.island-run-prototype__footer .island-run-prototype__dice-throw {
+  min-height: 2.1rem;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+}
+
+.island-run-prototype__roll-btn--footer {
+  flex: 3 1 18rem;
+  min-width: 0;
+  min-height: 8.7rem;
+  padding-inline: 1.2rem;
+  font-size: 1.28rem;
+  font-weight: 800;
+}
+
+.island-run-prototype__footer-roll-btn-content {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: center;
+  line-height: 1.15;
+}
+
+.island-run-prototype__footer-roll-btn-dice {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.4rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  background: rgba(7, 15, 28, 0.5);
+  font-size: 1.08rem;
+  font-weight: 900;
+}
+
+.island-run-prototype__footer-nav-btn {
+  flex: 0 1 8.2rem;
+  min-width: 0;
+  min-height: 2.65rem;
+  border-radius: 12px;
+  border: 1px solid rgba(167, 214, 235, 0.5);
+  background: rgba(16, 43, 69, 0.78);
+  color: #d9f5ff;
+  font-weight: 700;
+  font-size: 0.76rem;
+}
+
+.island-run-prototype__hud-grid {
+  display: grid;
+  gap: 0.54rem;
+}
+
+.island-run-prototype__hud-section {
+  display: grid;
+  gap: 0.38rem;
+  padding: 0.58rem 0.64rem;
+  border-radius: 10px;
+  background: rgba(101, 186, 220, 0.08);
+  border: 1px solid rgba(142, 216, 244, 0.24);
+}
+
+.island-run-prototype__hud-section--landing {
+  background: rgba(75, 161, 199, 0.11);
+}
+
+.island-run-prototype__hud-label {
+  margin: 0;
+  font-size: 0.67rem;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.085em;
+  color: rgba(185, 239, 255, 0.82);
+  font-weight: 700;
+}
+.island-run-prototype__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.22rem;
+}
+
+.island-run-prototype__dev-toggle {
+  font-size: 0.72rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.07);
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.island-run-prototype__dev-toggle--primary {
+  color: #dff7ff;
+  border-color: rgba(149, 224, 255, 0.45);
+  background: linear-gradient(180deg, rgba(46, 133, 255, 0.45), rgba(12, 74, 160, 0.55));
+}
+
+.island-run-prototype__always-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.4rem 0.75rem;
+}
+
+.island-run-prototype__status-row {
+  display: flex;
+  gap: 0.44rem;
+  flex-wrap: wrap;
+  color: #d5f8ff;
+  font-size: 1rem;
+  line-height: 1.24;
+}
+
+/* M1B: production HUD row — always visible, padded to match always-controls */
+.island-run-prototype__status-row--production {
+  padding: 0.3rem 0.75rem 0.4rem;
+}
+
+.island-run-prototype__status-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(127, 201, 233, 0.18);
+  border: 1px solid rgba(127, 201, 233, 0.34);
+}
+
+.island-run-prototype__stat-chip--hearts {
+  background: rgba(255, 151, 184, 0.2);
+  border-color: rgba(255, 166, 194, 0.46);
+}
+
+.island-run-prototype__stat-chip--dice {
+  background: rgba(166, 229, 255, 0.2);
+  border-color: rgba(163, 231, 255, 0.46);
+}
+
+.island-run-prototype__stat-chip--coins {
+  background: rgba(255, 219, 144, 0.22);
+  border-color: rgba(255, 229, 169, 0.5);
+}
+
+.island-run-prototype__stat-chip--timer {
+  background: rgba(182, 255, 204, 0.2);
+  border-color: rgba(173, 248, 192, 0.46);
+}
+
+/* M16C/M16D: Shard progress pill with fill animation — always visible in HUD */
+.island-run-prototype__shard-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 219, 90, 0.15);
+  border: 1px solid rgba(255, 232, 130, 0.45);
+  color: #fff5cc;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 0.3rem;
+}
+
+/* M16D: Fill bar — positioned absolutely behind the text */
+.island-run-prototype__shard-pill-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: rgba(255, 219, 90, 0.32);
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+/* M16D: Content wrapper keeps text above the fill bar */
+.island-run-prototype__shard-pill-content {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.7rem;
+}
+
+.island-run-prototype__shard-pill-count {
+  color: #ffe97a;
+  letter-spacing: 0.02em;
+}
+
+/* M16D: Celebration pulse when milestone is reached */
+@keyframes shard-pill-milestone-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(255, 232, 130, 0.85); }
+  60%  { box-shadow: 0 0 0 8px rgba(255, 232, 130, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 232, 130, 0); }
+}
+
+.island-run-prototype__shard-pill--milestone {
+  animation: shard-pill-milestone-pulse 0.6s ease-out;
+}
+
+/* M16E: Claim button inside the shard pill */
+.island-run-prototype__shard-pill-claim-btn {
+  position: relative;
+  z-index: 2;
+  margin-left: 0.3rem;
+  margin-right: 0.25rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #ffd700, #ff9d00);
+  color: #1a0f08;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  line-height: 1.3;
+  box-shadow: 0 2px 6px rgba(255, 190, 0, 0.45);
+  animation: shard-pill-claim-bounce 0.7s ease-in-out infinite alternate;
+}
+.island-run-prototype__shard-pill-claim-btn:active {
+  transform: scale(0.93);
+}
+
+@keyframes shard-pill-claim-bounce {
+  from { transform: scale(1);    box-shadow: 0 2px 6px rgba(255, 190, 0, 0.45); }
+  to   { transform: scale(1.07); box-shadow: 0 4px 12px rgba(255, 190, 0, 0.7); }
+}
+
+/* M16E: Blind-box collectible reveal modal */
+.shard-claim-modal {
+  text-align: center;
+}
+
+.shard-claim-modal__reveal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 110px;
+  justify-content: center;
+  padding: 0.8rem 0;
+}
+
+/* Shimmer placeholder before reveal */
+.shard-claim-modal__shimmer {
+  display: block;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 232, 130, 0.15) 0%,
+    rgba(255, 232, 130, 0.55) 40%,
+    rgba(255, 232, 130, 0.15) 100%
+  );
+  background-size: 200% 100%;
+  animation: shard-claim-shimmer 0.8s linear infinite;
+}
+
+@keyframes shard-claim-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Collectible emoji pop-in */
+.shard-claim-modal__reveal--shown .shard-claim-modal__emoji {
+  font-size: 3.2rem;
+  line-height: 1;
+  animation: shard-claim-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes shard-claim-pop {
+  0%   { transform: scale(0.3); opacity: 0; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+.shard-claim-modal__name {
+  margin: 0;
+  color: #fff5cc;
+  font-size: 1.1rem;
+  font-weight: 780;
+}
+
+.shard-claim-modal__era {
+  margin: 0;
+  color: rgba(185, 232, 247, 0.82);
+  font-size: 0.78rem;
+}
+
+.island-run-prototype__landing {
+  margin: 0;
+  color: #bdefff;
+  font-size: 0.82rem;
+  line-height: 1.36;
+}
+
+.island-run-prototype__landing--info {
+  color: #caf3ff;
+}
+
+.island-run-prototype__landing--plan {
+  color: #b8ecff;
+}
+
+.island-run-prototype__landing--states {
+  color: #ffe6aa;
+}
+
+.island-run-prototype__landing--success {
+  color: #c6ffd8;
+}
+
+.island-run-prototype__landing--warn {
+  color: #ffe3b0;
+}
+
+.island-run-prototype__home-panel {
+  display: grid;
+  gap: 0.34rem;
+  margin-top: 0.22rem;
+  padding: 0.56rem 0.66rem;
+  border-radius: 10px;
+  background: rgba(90, 178, 218, 0.09);
+  border: 1px solid rgba(130, 213, 246, 0.28);
+}
+
+.island-run-prototype__scene-btn,
+.island-run-prototype__debug-btn,
+.island-run-prototype__roll-btn,
+.island-run-prototype__booster-btn {
+  min-height: 38px;
+  padding: 0.34rem 0.78rem;
+  font-size: 1rem;
+  line-height: 1.2;
+  border-radius: 999px;
+  border: 1px solid rgba(182, 231, 248, 0.38);
+  background: rgba(10, 24, 34, 0.78);
+  color: #f0fbff;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.island-run-prototype__scene-btn,
+.island-run-prototype__debug-btn,
+.island-run-prototype__booster-btn {
+  min-height: 36px;
+  font-size: 0.78rem;
+  font-weight: 620;
+}
+
+.island-run-prototype__roll-btn--cta {
+  min-height: 40px;
+  font-size: 0.83rem;
+  font-weight: 700;
+  padding-inline: 0.92rem;
+}
+
+.island-run-prototype__dice-throw {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 36px;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(179, 225, 244, 0.35);
+  background: rgba(11, 27, 39, 0.64);
+  color: #d6f5ff;
+  font-size: 0.74rem;
+  font-weight: 650;
+}
+
+.island-run-prototype__dice-throw--active {
+  border-color: rgba(255, 227, 142, 0.8);
+  box-shadow: 0 0 0 1px rgba(255, 232, 165, 0.36) inset, 0 0 20px rgba(255, 207, 102, 0.35);
+}
+
+.island-run-prototype__dice-face {
+  min-width: 2.25rem;
+}
+
+.island-run-prototype__dice-face--rolling {
+  animation: island-run-dice-jitter 240ms ease-in-out infinite;
+}
+
+.island-run-prototype__dice-total {
+  color: #fff0bb;
+}
+
+.island-run-prototype__spin-btn--footer {
+  min-width: 4.6rem;
+  min-height: 2.35rem;
+}
+
+.island-run-prototype__dev-toggle--footer {
+  min-height: 2.2rem;
+}
+
+@keyframes island-run-dice-jitter {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translateY(-1px) rotate(-4deg) scale(1.02);
+  }
+  50% {
+    transform: translateY(1px) rotate(5deg) scale(0.99);
+  }
+  75% {
+    transform: translateY(-1px) rotate(-3deg) scale(1.01);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+}
+
+.island-run-prototype__qa-controls .island-run-prototype__debug-btn {
+  flex: 1 1 172px;
+}
+
+.island-run-prototype__debug-btn {
+  border-color: rgba(154, 182, 195, 0.28);
+  background: rgba(18, 31, 40, 0.62);
+  color: rgba(211, 233, 243, 0.9);
+  font-weight: 560;
+}
+
+.island-run-prototype__qa-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.48rem 0.55rem;
+  margin-top: 0.2rem;
+  border-radius: 10px;
+  border: 1px dashed rgba(138, 181, 201, 0.32);
+  background: rgba(13, 25, 33, 0.35);
+}
+
+.island-run-prototype__qa-label {
+  width: 100%;
+  margin: 0;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: rgba(171, 206, 222, 0.78);
+}
+
+.island-run-prototype__qa-note {
+  width: 100%;
+  font-size: 0.74rem;
+  line-height: 1.32;
+  color: rgba(182, 222, 238, 0.86);
+}
+
+
+.island-run-prototype__roll-btn--primary {
+  background: linear-gradient(180deg, rgba(63, 152, 193, 0.98), rgba(33, 114, 152, 0.97));
+  border-color: rgba(187, 239, 255, 0.72);
+  box-shadow: 0 0 0 1px rgba(176, 235, 255, 0.45) inset, 0 8px 20px rgba(38, 131, 171, 0.35);
+}
+
+.island-run-prototype__roll-btn--convert {
+  background: linear-gradient(180deg, rgba(103, 93, 169, 0.95), rgba(69, 61, 129, 0.95));
+  border-color: rgba(206, 198, 255, 0.55);
+}
+
+.island-run-prototype__roll-btn:disabled,
+.island-run-prototype__booster-btn:disabled,
+.island-stop-modal__btn:disabled {
+  opacity: 0.52;
+  filter: saturate(0.65);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.island-run-prototype__scene-btn--active {
+  border-color: #93f7ff;
+  box-shadow: 0 0 0 1px rgba(147, 247, 255, 0.7) inset;
+}
+
+.island-run-board {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  isolation: isolate;
+  z-index: 1;
+}
+
+.island-run-board--hud-collapsed {
+  /* height now managed by flex layout */
+}
+
+.island-run-board--framed {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.island-run-board::before,
+.island-run-board::after {
+  display: none;
+}
+
+.island-run-board::before {
+  display: none;
+}
+
+.island-run-board::after {
+  display: none;
+}
+
+.island-run-board--focus::before {
+  display: none;
+}
+
+.island-run-board--scene-1,
+.island-run-board--scene-2,
+.island-run-board--scene-3,
+.island-run-board--scene-4,
+.island-run-board--scene-5 {
+  background: transparent;
+}
+
+.island-run-board--no-bg {
+  background: #000 !important;
+}
+
+.island-run-board__path,
+.island-run-board__tiles,
+.island-debug-overlay,
+.island-run-board__depth-mask {
+  position: absolute;
+  inset: 0;
+}
+
+.island-run-board__camera-stage {
+  position: absolute;
+  inset: 0;
+  transform-origin: center center;
+  transform: translateZ(0);
+  will-change: transform;
+  contain: layout style paint;
+  transition: transform 360ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  z-index: 2;
+}
+
+.island-run-board__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.island-run-board__path-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.36;
+  mix-blend-mode: screen;
+}
+
+.island-run-board__path {
+  z-index: 3;
+  opacity: 0;
+}
+
+.island-run-board__spark60-ring {
+  display: none;
+}
+
+.island-run-board__orbit-stops {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+}
+
+.island-run-board__topbar {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 10px;
+  z-index: 9;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(230, 216, 172, 0.9);
+  border-radius: 14px;
+  padding: 6px 10px;
+}
+
+.island-run-board__topbar-avatar,
+.island-run-board__topbar-menu {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(179, 151, 92, 0.78);
+  background: linear-gradient(180deg, #fffaf0 0%, #f8eac5 100%);
+  color: #593d07;
+  font-weight: 800;
+}
+
+.island-run-board__topbar-wallet {
+  justify-self: center;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(205, 178, 255, 0.6);
+  border-radius: 999px;
+  padding: 0.28rem 0.72rem;
+  color: #3f2455;
+  font-weight: 800;
+}
+
+/* ── Reward bar: MG-style event progress bar ────────────────────── */
+.island-run-board__rewardbar {
+  position: absolute;
+  left: 50%;
+  top: 58px;
+  transform: translateX(-50%);
+  width: min(92%, 420px);
+  z-index: 9;
+  border-radius: 14px;
+  border: 1px solid rgba(230, 216, 172, 0.9);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 0 10px 7px;
+  color: #4a3310;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(120, 90, 30, 0.12);
+}
+
+.island-run-board__rewardbar:focus-visible {
+  outline: 2px solid rgba(210, 170, 60, 0.85);
+  outline-offset: 2px;
+}
+
+/* Decorative event title banner */
+.island-run-board__rewardbar-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 -10px;
+  padding: 5px 12px;
+  border-radius: 14px 14px 0 0;
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 50%, #922b21 100%);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  line-height: 1.3;
+}
+
+.island-run-board__rewardbar-banner--feeding_frenzy {
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 50%, #922b21 100%);
+}
+.island-run-board__rewardbar-banner--harvest_sprint {
+  background: linear-gradient(135deg, #d4a017 0%, #b8860b 50%, #9a7209 100%);
+}
+.island-run-board__rewardbar-banner--companion_feast {
+  background: linear-gradient(135deg, #1e8449 0%, #196f3d 50%, #145a32 100%);
+}
+
+.island-run-board__rewardbar-banner-icon {
+  font-style: normal;
+  font-size: 0.85rem;
+}
+
+.island-run-board__rewardbar-header,
+.island-run-board__rewardbar-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.73rem;
+  font-weight: 600;
+  gap: 8px;
+  color: #5a3d12;
+}
+
+.island-run-board__rewardbar-header {
+  margin-top: 6px;
+}
+
+/* Track container with end-cap icons */
+.island-run-board__rewardbar-track-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 5px 0 4px;
+}
+
+.island-run-board__rewardbar-avatar-indicator {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 2px solid rgba(179, 151, 92, 0.8);
+  background: linear-gradient(180deg, #fffaf0 0%, #f8eac5 100%);
+  color: #593d07;
+  font-size: 0.6rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.island-run-board__rewardbar-endcap {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 2px solid rgba(179, 151, 92, 0.5);
+  background: linear-gradient(180deg, #fff8e7 0%, #f5e4b3 100%);
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.island-run-board__rewardbar-endcap--claimable {
+  border-color: rgba(255, 180, 0, 0.9);
+  background: linear-gradient(180deg, #fff3c4 0%, #ffd700 100%);
+  animation: rewardbar-endcap-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes rewardbar-endcap-pulse {
+  from { transform: scale(1);    box-shadow: 0 0 0 0 rgba(255, 190, 0, 0.5); }
+  to   { transform: scale(1.12); box-shadow: 0 0 8px 3px rgba(255, 190, 0, 0.45); }
+}
+
+.island-run-board__rewardbar-track {
+  position: relative;
+  flex: 1;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(180, 160, 120, 0.18);
+  border: 1px solid rgba(200, 180, 140, 0.35);
+  overflow: visible;
+}
+
+.island-run-board__rewardbar-track-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e8457c 0%, #f06292 40%, #f48fb1 100%);
+  transition: width 280ms ease;
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+/* Milestone markers along the track */
+.island-run-board__rewardbar-milestone {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid rgba(179, 151, 92, 0.7);
+  background: linear-gradient(180deg, #fff8e7 0%, #f5e4b3 100%);
+  font-size: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.island-run-board__rewardbar-milestone--reached {
+  border-color: rgba(255, 180, 0, 0.9);
+  background: linear-gradient(180deg, #fff3c4 0%, #ffd700 100%);
+  animation: rewardbar-milestone-pop 0.4s ease-out;
+}
+
+@keyframes rewardbar-milestone-pop {
+  0%   { transform: translate(-50%, -50%) scale(0.5); }
+  60%  { transform: translate(-50%, -50%) scale(1.25); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Position indicator — small circle riding the fill edge */
+.island-run-board__rewardbar-position {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2px solid #fff;
+  background: #e8457c;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%);
+  transition: left 280ms ease;
+  pointer-events: none;
+}
+
+/* Claim-ready state: glow + shimmer on entire bar */
+@keyframes rewardbar-claim-shimmer {
+  0%   { box-shadow: 0 0 12px 2px rgba(255, 190, 0, 0.35), 0 4px 14px rgba(120, 90, 30, 0.12); }
+  50%  { box-shadow: 0 0 18px 4px rgba(255, 190, 0, 0.55), 0 4px 14px rgba(120, 90, 30, 0.12); }
+  100% { box-shadow: 0 0 12px 2px rgba(255, 190, 0, 0.35), 0 4px 14px rgba(120, 90, 30, 0.12); }
+}
+
+.island-run-board__rewardbar--claimable {
+  box-shadow: 0 0 12px 2px rgba(255, 190, 0, 0.35), 0 4px 14px rgba(120, 90, 30, 0.12);
+  animation: rewardbar-claim-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Timer urgency colors */
+.island-run-board__rewardbar-timer--ok {
+  color: #2e7d32;
+}
+.island-run-board__rewardbar-timer--warn {
+  color: #e65100;
+}
+.island-run-board__rewardbar-timer--urgent {
+  color: #b71c1c;
+  font-weight: 700;
+}
+
+/* Unified timer row beneath the reward bar — shows both event + island timers */
+.island-run-board__rewardbar-timers {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin: 4px -10px -7px;
+  padding: 4px 12px;
+  border-radius: 0 0 14px 14px;
+  background: rgba(245, 235, 215, 0.85);
+  border-top: 1px solid rgba(220, 200, 160, 0.5);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #5a3d12;
+  letter-spacing: 0.02em;
+}
+
+.island-run-board__rewardbar-timers-sep {
+  width: 1px;
+  height: 12px;
+  background: rgba(179, 151, 92, 0.4);
+  flex-shrink: 0;
+}
+
+.island-run-board__rewardbar-island-timer {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.island-run-board__topbar-menu-panel {
+  position: absolute;
+  right: 12px;
+  top: 50px;
+  z-index: 10;
+  min-width: 170px;
+  border-radius: 12px;
+  border: 1px solid rgba(170, 226, 248, 0.7);
+  background: rgba(7, 29, 44, 0.94);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
+  padding: 6px;
+  display: grid;
+  gap: 6px;
+}
+
+.island-run-board__topbar-menu-item {
+  width: 100%;
+  text-align: left;
+  border-radius: 8px;
+  border: 1px solid rgba(153, 216, 240, 0.42);
+  background: rgba(17, 58, 82, 0.9);
+  color: #daf4ff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.48rem 0.56rem;
+}
+
+.island-run-board__tiles {
+  z-index: 6;
+  contain: layout style;
+}
+
+.island-run-board__lap-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  padding: 0.46rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(4, 17, 24, 0.72);
+  border: 1px solid rgba(178, 241, 255, 0.72);
+  color: #d9f8ff;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(214, 247, 255, 0.14) inset;
+}
+
+.island-orbit-stop {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(7, 27, 35, 0.88);
+  color: #e8f8ff;
+  font-weight: 700;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.island-orbit-stop__icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+
+.island-orbit-stop__label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  min-width: 72px;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #ecfbff;
+  padding: 0.14rem 0.34rem;
+  border-radius: 999px;
+  background: rgba(2, 12, 17, 0.88);
+  border: 1px solid rgba(190, 237, 255, 0.58);
+  white-space: nowrap;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.52);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+  pointer-events: none;
+}
+
+.island-orbit-stop--scene-1 .island-orbit-stop__label,
+.island-orbit-stop--scene-2 .island-orbit-stop__label,
+.island-orbit-stop--scene-3 .island-orbit-stop__label {
+  background: rgba(1, 10, 15, 0.92);
+  border-color: rgba(206, 244, 255, 0.72);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.32);
+}
+
+
+.island-orbit-stop__label--hidden {
+  display: none;
+}
+
+.island-orbit-stop--scene-3 .island-orbit-stop__label {
+  border-color: rgba(220, 207, 255, 0.72);
+}
+
+.island-orbit-stop--scene-2 .island-orbit-stop__icon {
+  filter: drop-shadow(0 0 6px rgba(169, 249, 255, 0.45));
+}
+
+.island-orbit-stop--scene-3 .island-orbit-stop__icon {
+  filter: drop-shadow(0 0 6px rgba(230, 182, 255, 0.55));
+}
+
+.island-orbit-stop--active {
+  border-color: rgba(126, 255, 248, 0.95);
+  box-shadow: 0 0 0 1px rgba(126, 255, 248, 0.75), 0 0 12px rgba(126, 255, 248, 0.45);
+  animation: island-active-stop-pulse 1.6s ease-in-out infinite;
+}
+
+.island-orbit-stop--selected {
+  border-color: rgba(255, 250, 186, 0.98);
+  box-shadow: 0 0 0 2px rgba(255, 239, 145, 0.65), 0 0 18px rgba(255, 238, 131, 0.45);
+}
+
+.island-orbit-stop--completed {
+  border-color: rgba(149, 255, 149, 0.95);
+  background: rgba(18, 56, 26, 0.9);
+}
+
+.island-orbit-stop--locked {
+  border-color: rgba(255, 180, 120, 0.85);
+  background: rgba(67, 40, 16, 0.9);
+}
+
+.island-orbit-stop--shop {
+  border-color: rgba(255, 230, 120, 0.95);
+  background: rgba(54, 44, 8, 0.9);
+}
+
+.island-orbit-stop:disabled {
+  cursor: default;
+}
+
+.island-tile {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 248, 0.55) 0%, rgba(255, 255, 255, 0) 48%),
+    radial-gradient(circle at 30% 24%, rgba(255, 243, 202, 0.98), rgba(198, 145, 76, 0.95));
+  border: 2px solid rgba(255, 247, 208, 0.95);
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.34),
+    0 2px 4px rgba(0, 0, 0, 0.22),
+    inset 0 2px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.18),
+    inset 0 0 10px rgba(255, 220, 140, 0.22);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #261605;
+  font-weight: 850;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.62);
+}
+
+.island-run-board--spark60 .island-tile {
+  width: 120px;
+  height: 58px;
+  border-radius: 6px 6px 10px 10px;
+  /* Wedge clip-path proportioned for 40-tile ring (9° per tile) */
+  clip-path: polygon(calc(50% - 42px) 0%, calc(50% + 42px) 0%, calc(50% + 60px) 100%, calc(50% - 60px) 100%);
+}
+
+.island-run-board--spark60 .island-tile__value {
+  font-size: 0.65rem;
+  transform: rotate(calc(-1 * var(--tile-rotation-deg, 0deg)));
+  transform-origin: center center;
+}
+
+.island-tile__value {
+  font-size: 1rem;
+  line-height: 1;
+  color: #1f1205;
+  text-shadow: 0 1px 0 rgba(255, 248, 222, 0.88), 0 0 1px rgba(0, 0, 0, 0.22);
+}
+
+.island-tile__anchor-id {
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+  color: rgba(36, 21, 8, 0.9);
+  text-shadow: 0 1px 0 rgba(255, 243, 208, 0.72);
+}
+
+.island-tile--back {
+  filter: saturate(0.55) brightness(0.75);
+  opacity: 0.72;
+}
+.island-tile--mid {
+  filter: saturate(1.0) brightness(0.95);
+}
+.island-tile--front {
+  filter: saturate(1.25) brightness(1.08);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+.island-tile--stop {
+  background: linear-gradient(160deg, #fff3c0 0%, #ffd700 40%, #ff8c00 100%);
+  border: 2.5px solid #ffd700;
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.8), 0 0 28px rgba(255, 165, 0, 0.4);
+  z-index: 8 !important;
+  animation: island-tile-stop-pulse 2s ease-in-out infinite, island-tile-idle 3.5s ease-in-out infinite;
+  animation-delay: 0s, calc(var(--tile-index, 0) * 0.06s);
+}
+.island-tile--encounter {
+  animation: island-tile-encounter-flicker 2.4s ease-in-out infinite, island-tile-idle 3.5s ease-in-out infinite;
+}
+
+.island-tile--token-current {
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(100, 220, 255, 0.9), 0 0 18px rgba(100, 220, 255, 0.7) !important;
+  animation: island-tile-current-pulse 1.2s ease-in-out infinite !important;
+  z-index: 9 !important;
+}
+
+.island-token {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  transform-origin: center center;
+  translate: -50% -50%;
+  z-index: 10;
+  pointer-events: none;
+  will-change: transform, left, top;
+  contain: layout style;
+}
+
+/* Styled CSS spaceship token */
+.island-token__ship {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.island-token__ship-body {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 16px; height: 22px;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(180deg, #e0f4ff 0%, #7dd8ff 40%, #1a90d0 100%);
+  border-radius: 50% 50% 40% 40%;
+  box-shadow: 0 0 8px rgba(100, 200, 255, 0.8), inset 0 2px 4px rgba(255,255,255,0.5);
+}
+
+.island-token__ship-fin--left,
+.island-token__ship-fin--right {
+  position: absolute;
+  bottom: 6px;
+  width: 7px; height: 10px;
+  background: linear-gradient(180deg, #56b4e0 0%, #1a5f8a 100%);
+  border-radius: 4px 4px 2px 2px;
+}
+.island-token__ship-fin--left  { left: 1px;  transform: rotate(-18deg); }
+.island-token__ship-fin--right { right: 1px; transform: rotate(18deg); }
+
+.island-token__ship-thruster {
+  position: absolute;
+  bottom: 1px; left: 50%;
+  transform: translateX(-50%);
+  width: 8px; height: 6px;
+  background: radial-gradient(circle, #ffdf00 0%, #ff8c00 60%, transparent 100%);
+  border-radius: 0 0 50% 50%;
+  animation: island-token-thrust 0.18s ease-in-out infinite alternate;
+}
+
+@keyframes island-token-thrust {
+  from { opacity: 0.7; height: 5px; }
+  to   { opacity: 1.0; height: 9px; }
+}
+.island-token--moving .island-token__ship-thruster { height: 12px; opacity: 1; }
+
+.island-token__ship-window {
+  position: absolute;
+  top: 7px; left: 50%;
+  transform: translateX(-50%);
+  width: 7px; height: 7px;
+  background: radial-gradient(circle, #e0f8ff 30%, #80d0ff 100%);
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.6);
+}
+
+.island-token--moving {
+  animation: island-token-bob 220ms ease-in-out infinite alternate;
+}
+
+@keyframes island-token-bob {
+  from { translate: -50% -54%; transform: scale(1); }
+  to { translate: -50% -46%; transform: scale(1.07); }
+}
+
+/* Z-band depth tiers — use CSS 'scale' individual property so squash/stretch
+   from inline transform (animateHops) composes correctly without conflict. */
+.island-token--zband-back  { scale: 0.82; filter: brightness(0.7) saturate(0.7); }
+.island-token--zband-mid   { scale: 0.92; }
+.island-token--zband-front { scale: 1.10; filter: brightness(1.1) saturate(1.1); }
+
+@keyframes island-active-stop-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px rgba(126, 255, 248, 0.72), 0 0 10px rgba(126, 255, 248, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgba(126, 255, 248, 0.92), 0 0 16px rgba(126, 255, 248, 0.52);
+  }
+}
+
+.island-run-board__depth-mask {
+  display: none;
+}
+
+.island-debug-overlay {
+  z-index: 9;
+  pointer-events: none;
+}
+
+
+.island-stop-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(0, 0, 0, 0.52);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  backdrop-filter: blur(3px);
+}
+
+.island-stop-modal {
+  width: min(430px, 100%);
+  border-radius: 18px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.58rem;
+  background: linear-gradient(180deg, rgba(20, 36, 49, 0.98), rgba(9, 18, 27, 0.97));
+  border: 1px solid rgba(163, 231, 255, 0.58);
+  box-shadow: 0 22px 56px rgba(0, 0, 0, 0.46);
+}
+
+
+.island-stop-modal__eyebrow {
+  margin: 0;
+  font-size: 0.62rem;
+  line-height: 1.18;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(171, 220, 238, 0.78);
+}
+
+.island-stop-modal h3,
+.island-stop-modal__title {
+  margin: 0;
+  color: #e8fbff;
+  font-size: 1.08rem;
+  font-weight: 780;
+  line-height: 1.3;
+}
+
+.island-stop-modal p {
+  margin: 0;
+  color: rgba(185, 232, 247, 0.92);
+  font-size: 1rem;
+  line-height: 1.38;
+}
+
+
+.island-stop-modal__eyebrow + .island-stop-modal__title,
+.island-stop-modal__eyebrow + h3 {
+  margin-top: 0.08rem;
+}
+
+.island-stop-modal__title + p,
+.island-stop-modal h3 + p {
+  margin-top: 0.14rem;
+}
+
+.island-stop-modal__copy {
+  color: rgba(186, 228, 243, 0.9);
+}
+
+
+.island-stop-modal--readable p + p {
+  margin-top: 0.07rem;
+}
+
+
+.island-stop-modal__context {
+  display: grid;
+  gap: 0.08rem;
+}
+
+
+.island-stop-modal--dense {
+  gap: 0.54rem;
+}
+
+.island-stop-modal--dense .island-stop-modal__context {
+  gap: 0.06rem;
+}
+
+.island-stop-modal--dense .island-stop-modal__cta {
+  margin-top: 0.2rem;
+  padding-top: 0.2rem;
+  border-top-color: rgba(156, 213, 235, 0.18);
+}
+
+
+.island-stop-modal--longcopy p,
+.island-stop-modal--longcopy .island-stop-modal__copy {
+  max-width: 46ch;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.island-stop-modal--longcopy .island-stop-modal__context {
+  row-gap: 0.08rem;
+}
+
+.island-stop-modal--longcopy .island-stop-modal__copy + .island-stop-modal__copy {
+  margin-top: 0.12rem;
+}
+
+.island-stop-modal__cta {
+  margin-top: 0.24rem;
+  padding-top: 0.22rem;
+  border-top: 1px solid rgba(156, 213, 235, 0.16);
+}
+
+.island-stop-modal__cta .supabase-auth__action {
+  width: 100%;
+}
+
+.island-stop-modal button {
+  margin-top: 0;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(26, 61, 80, 0.9);
+  color: #ecfbff;
+  font-weight: 620;
+  font-size: 1rem;
+  line-height: 1.2;
+  padding: 0.34rem 0.84rem;
+}
+
+.island-stop-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.44rem;
+  margin-top: 0.28rem;
+  padding-top: 0.12rem;
+  border-top: 1px solid rgba(154, 214, 236, 0.16);
+}
+
+
+.island-stop-modal__cta--balanced {
+  min-height: 44px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.island-stop-modal__actions--balanced {
+  min-height: 44px;
+  align-items: stretch;
+}
+
+/* M12Y: vertically anchor all action-row variants at the top so position is
+   independent of body-copy length — applies to both cta and actions rows */
+.island-stop-modal__cta--anchored,
+.island-stop-modal__actions--anchored {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+.island-stop-modal__actions--aligned {
+  justify-content: center;
+}
+
+.island-stop-modal__actions--aligned .island-stop-modal__btn {
+  margin-top: 0;
+  flex: 1 1 152px;
+  max-width: 100%;
+}
+
+.island-stop-modal__actions--aligned .island-stop-modal__btn:only-child {
+  flex: 0 1 min(100%, 19rem);
+}
+
+.island-stop-modal__btn {
+  min-height: 42px;
+  font-size: 0.82rem;
+  font-weight: 660;
+}
+
+.island-stop-modal__btn--primary {
+  background: linear-gradient(180deg, rgba(48, 127, 162, 0.95), rgba(32, 96, 130, 0.95));
+  border-color: rgba(176, 233, 255, 0.56);
+}
+
+.island-stop-modal__btn--secondary {
+  background: rgba(23, 49, 65, 0.9);
+  border-color: rgba(175, 221, 240, 0.34);
+}
+
+
+.island-stop-modal__cta-btn,
+.island-stop-modal__btn {
+  transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease, border-color 140ms ease;
+}
+
+
+.island-stop-modal__btn--action {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(138, 221, 255, 0.3);
+}
+
+.island-stop-modal__cta-btn:focus-visible,
+.island-stop-modal__btn--action:focus-visible {
+  outline: 2px solid rgba(170, 236, 255, 0.96);
+  outline-offset: 2px;
+}
+
+.island-stop-modal__cta-btn:active:not(:disabled),
+.island-stop-modal__btn--action:active:not(:disabled) {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+
+.island-stop-modal__cta-btn:hover:not(:disabled),
+.island-stop-modal__cta-btn:focus-visible,
+.island-stop-modal__btn:hover:not(:disabled),
+.island-stop-modal__btn:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(8, 22, 32, 0.34);
+}
+
+.island-stop-modal__btn--primary:hover:not(:disabled),
+.island-stop-modal__btn--primary:focus-visible,
+.island-stop-modal__cta-btn:hover:not(:disabled),
+.island-stop-modal__cta-btn:focus-visible {
+  border-color: rgba(210, 243, 255, 0.72);
+  filter: brightness(1.04);
+}
+
+.island-stop-modal__btn--secondary:hover:not(:disabled),
+.island-stop-modal__btn--secondary:focus-visible {
+  border-color: rgba(198, 230, 244, 0.52);
+  filter: brightness(1.05);
+}
+
+.island-stop-modal__cta-btn:disabled,
+.island-stop-modal__btn:disabled {
+  transform: none;
+  box-shadow: none;
+  filter: saturate(0.66) brightness(0.94);
+}
+
+
+.island-travel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1090;
+  display: grid;
+  place-items: center;
+  background: rgba(6, 14, 22, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.island-travel-overlay__card {
+  padding: 0.9rem 1.12rem;
+  border-radius: 16px;
+  border: 1px solid rgba(168, 234, 255, 0.65);
+  background: linear-gradient(180deg, rgba(9, 26, 38, 0.95), rgba(7, 20, 30, 0.94));
+  color: #d5f4ff;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+}
+
+.island-travel-overlay__eyebrow {
+  margin: 0;
+  font-size: 0.61rem;
+  line-height: 1.16;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(182, 228, 245, 0.76);
+}
+
+.island-travel-overlay__title {
+  margin: 0;
+  font-weight: 820;
+  font-size: 1.03rem;
+  color: #eafcff;
+  line-height: 1.3;
+}
+
+.island-travel-overlay__eyebrow + .island-travel-overlay__title--headline {
+  margin-top: 0.1rem;
+}
+
+.island-travel-overlay__subtitle {
+  margin: 0.16rem 0 0;
+  color: rgba(188, 232, 246, 0.86);
+  font-size: 0.78rem;
+  line-height: 1.34;
+}
+
+.island-travel-overlay__copy {
+  color: rgba(186, 228, 243, 0.84);
+}
+
+.island-travel-overlay__copy--long {
+  max-width: 44ch;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+
+.island-hatchery-card {
+  margin-top: 0.85rem;
+  padding: 0.7rem;
+  border: 1px solid rgba(145, 225, 255, 0.4);
+  border-radius: 12px;
+  background: rgba(15, 38, 54, 0.7);
+}
+
+.island-hatchery-card p {
+  margin: 0.25rem 0;
+}
+
+.island-stop-modal__header-row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.island-stop-modal__help-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(163, 231, 255, 0.42);
+  background: rgba(127, 201, 233, 0.16);
+  color: #d5f8ff;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.island-stop-modal__help-btn:hover:not(:disabled) {
+  background: rgba(127, 201, 233, 0.28);
+  border-color: rgba(163, 231, 255, 0.62);
+  transform: translateY(-1px);
+}
+
+.island-stop-modal__help-btn:focus-visible {
+  outline: 2px solid rgba(170, 236, 255, 0.96);
+  outline-offset: 2px;
+}
+
+.island-stop-modal__help-card {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  z-index: 2;
+  width: min(280px, calc(100vw - 4rem));
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid rgba(145, 225, 255, 0.32);
+  background: rgba(11, 31, 46, 0.96);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.34);
+  color: rgba(221, 245, 255, 0.92);
+}
+
+.island-stop-modal__help-title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 760;
+  color: #f0fcff;
+}
+
+.island-stop-modal__help-list {
+  margin: 0.45rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.28rem;
+  color: rgba(205, 236, 248, 0.9);
+  font-size: 0.8rem;
+  line-height: 1.42;
+}
+
+.island-stop-modal__help-list li {
+  margin: 0;
+}
+
+.island-hatchery-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.island-hatchery-card__actions button {
+  min-height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(32, 77, 102, 0.86);
+  color: #e8faff;
+  font-size: 0.82rem;
+  padding: 0.25rem 0.6rem;
+}
+
+/* M5-COMPLETE: hatchery card state blocks */
+.island-hatchery-card__state {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.island-hatchery-card__stage-emoji {
+  font-size: 2rem;
+  line-height: 1;
+  margin: 0.2rem 0;
+}
+
+.island-hatchery-card__stage-art {
+  display: block;
+  width: min(100%, clamp(280px, 88vw, 560px));
+  height: auto;
+  max-height: min(48dvh, 520px);
+  object-fit: contain;
+  align-self: center;
+  margin: 0.1rem auto 0.55rem;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
+}
+
+.island-home-panel__reward-art {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  margin: 0 auto 0.2rem;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
+}
+
+.island-hatchery-card__headline {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #d5f8ff;
+  margin: 0.1rem 0 0.2rem;
+}
+
+.island-hatchery-card__copy {
+  font-size: 0.82rem;
+  opacity: 0.85;
+  margin: 0.1rem 0 0.35rem;
+}
+
+.island-hatchery-card__timeline {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0.35rem 0 0.55rem;
+  padding: 0.35rem 0.25rem 0.15rem;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(10, 25, 38, 0.46), rgba(8, 20, 31, 0.18));
+}
+
+.island-hatchery-card__timeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  position: relative;
+  text-align: center;
+}
+
+.island-hatchery-card__timeline-step::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: calc(50% + 18px);
+  width: calc(100% - 8px);
+  height: 2px;
+  background: rgba(150, 214, 235, 0.28);
+}
+
+.island-hatchery-card__timeline-step:last-child::after {
+  display: none;
+}
+
+.island-hatchery-card__timeline-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  font-weight: 800;
+  border: 1px solid rgba(162, 228, 255, 0.4);
+  background: rgba(10, 25, 38, 0.82);
+  color: rgba(217, 245, 255, 0.88);
+  z-index: 1;
+}
+
+.island-hatchery-card__timeline-label {
+  font-size: 0.66rem;
+  color: rgba(214, 241, 252, 0.78);
+}
+
+.island-hatchery-card__timeline-step--complete .island-hatchery-card__timeline-dot {
+  background: linear-gradient(180deg, rgba(68, 176, 128, 0.98), rgba(46, 128, 91, 0.96));
+  border-color: rgba(159, 255, 204, 0.72);
+  color: #f4fffa;
+  box-shadow: 0 0 18px rgba(88, 214, 160, 0.18);
+}
+
+.island-hatchery-card__timeline-step--complete::after,
+.island-hatchery-card__timeline-step--current::after {
+  background: linear-gradient(90deg, rgba(112, 239, 202, 0.85), rgba(111, 205, 255, 0.55));
+}
+
+.island-hatchery-card__timeline-step--current .island-hatchery-card__timeline-dot {
+  background: linear-gradient(180deg, rgba(79, 149, 216, 1), rgba(42, 95, 158, 0.98));
+  border-color: rgba(145, 229, 255, 0.95);
+  color: #f6fdff;
+  box-shadow: 0 0 0 4px rgba(111, 205, 255, 0.16), 0 0 24px rgba(111, 205, 255, 0.32);
+  animation: island-hatchery-timeline-pulse 1.8s ease-in-out infinite;
+}
+
+.island-hatchery-card__timeline-step--current .island-hatchery-card__timeline-label {
+  color: #e9fbff;
+}
+
+.island-hatchery-card__timeline-step--upcoming .island-hatchery-card__timeline-dot {
+  opacity: 0.78;
+  background: rgba(7, 20, 31, 0.82);
+}
+
+@keyframes island-hatchery-timeline-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 4px rgba(111, 205, 255, 0.16), 0 0 24px rgba(111, 205, 255, 0.28);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 7px rgba(111, 205, 255, 0.14), 0 0 34px rgba(111, 205, 255, 0.38);
+  }
+}
+
+.island-hatchery-card__state--ready .island-hatchery-card__headline {
+  color: #ffe066;
+}
+
+.island-hatchery-card__state--done .island-hatchery-card__headline,
+.island-hatchery-card__state--done p {
+  opacity: 0.7;
+}
+
+.island-hatchery-card__state--incubating .island-hatchery-card__headline {
+  color: #91e1ff;
+}
+
+
+.island-run-prototype__error {
+  margin-top: 0.5rem;
+  color: #ffb8b8;
+  font-size: 0.82rem;
+}
+
+.island-stop-modal--onboarding {
+  width: min(520px, 100%);
+}
+
+/* M12Z: market modal width matches onboarding for consistent overlay sizing */
+.island-stop-modal--market {
+  width: min(480px, 100%);
+}
+
+/* M12Z: bare h3/title in non-context stop modals (market, encounter) get consistent
+   bottom spacing so body copy gap matches the context-block rhythm */
+.island-stop-modal--market .island-stop-modal__title,
+.island-stop-modal--market h3,
+.island-stop-modal:not(:has(.island-stop-modal__context)) .island-stop-modal__title,
+.island-stop-modal:not(:has(.island-stop-modal__context)) h3 {
+  padding-bottom: 0.06rem;
+}
+
+/* M12Z: hatchery-card buttons inside stop modals inherit consistent sizing/weight */
+.island-stop-modal .island-hatchery-card button:not(.island-stop-modal__btn) {
+  min-height: 40px;
+  font-size: 1rem;
+  font-weight: 640;
+}
+
+/* M12Z: audio toggle button in HUD — compact icon-only chip style */
+.island-run-prototype__audio-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  min-width: 36px;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(163, 231, 255, 0.38);
+  background: rgba(127, 201, 233, 0.16);
+  color: #d5f8ff;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.island-run-prototype__audio-toggle:hover:not(:disabled) {
+  background: rgba(127, 201, 233, 0.28);
+  border-color: rgba(163, 231, 255, 0.56);
+}
+
+.island-run-prototype__audio-toggle:focus-visible {
+  outline: 2px solid rgba(170, 236, 255, 0.96);
+  outline-offset: 2px;
+}
+
+
+
+/* M14: HUD Shop button */
+.island-run-prototype__shop-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0.18rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 210, 120, 0.45);
+  background: rgba(160, 100, 20, 0.22);
+  color: #ffe9a0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.island-run-prototype__shop-btn:hover:not(:disabled) {
+  background: rgba(160, 100, 20, 0.38);
+  border-color: rgba(255, 210, 120, 0.7);
+}
+
+.island-run-prototype__shop-btn:focus-visible {
+  outline: 2px solid rgba(255, 220, 120, 0.96);
+  outline-offset: 2px;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .island-orbit-stop--active,
+  .island-token--moving {
+    animation: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .island-orbit-stop__label {
+    display: block;
+    min-width: 56px;
+    max-width: 78px;
+    font-size: 0.58rem;
+    padding: 0.1rem 0.26rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* B1-4: Level chip */
+.island-run-prototype__level-chip {
+  background: linear-gradient(90deg, #1a3a5c, #0d2540);
+  border: 1px solid rgba(145, 206, 230, 0.6);
+  color: #9ef0ff;
+  font-weight: 800;
+  padding: 0.2rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+}
+
+/* B2-1: Spin button */
+.island-run-prototype__spin-btn {
+  background: linear-gradient(135deg, #3b1f6e, #5c2fa0);
+  color: #e8d4ff;
+  border: 1px solid rgba(180, 120, 255, 0.5);
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.92rem;
+}
+.island-run-prototype__spin-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* B2-1: Spin chip */
+.island-run-prototype__stat-chip--spin {
+  background: rgba(90, 40, 160, 0.3);
+  border-color: rgba(180, 120, 255, 0.4);
+  color: #d4aaff;
+}
+
+/* M17A: Shield wallet currency chip */
+.island-run-prototype__stat-chip--shields {
+  background: rgba(100, 160, 255, 0.2);
+  border-color: rgba(130, 190, 255, 0.46);
+  color: #c8e4ff;
+}
+
+.island-run-prototype__stat-chip--shards {
+  background: rgba(160, 100, 255, 0.2);
+  border-color: rgba(190, 130, 255, 0.46);
+  color: #e0c8ff;
+}
+
+
+/* M2: Roll result chip */
+.island-run-prototype__stat-chip--roll {
+  background: rgba(40, 180, 100, 0.2);
+  border-color: rgba(80, 220, 140, 0.46);
+  color: #b0ffd0;
+}
+
+/* M2: Production roll/land feedback line — always visible */
+.island-run-prototype__landing-feed {
+  margin: 0.18rem 0 0;
+  padding: 0.22rem 0.5rem;
+  color: #caf3ff;
+  font-size: 1rem;
+  line-height: 1.4;
+  min-height: 1.4em;
+  opacity: 0.88;
+}
+
+@keyframes islandTokenLand {
+  0%   { transform: scaleX(1.42) scaleY(0.58); }
+  40%  { transform: scaleX(0.88) scaleY(1.20); }
+  70%  { transform: scaleX(1.06) scaleY(0.95); }
+  100% { transform: scaleX(1)    scaleY(1);    }
+}
+
+.island-token--landing {
+  animation: islandTokenLand 0.48s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+/* B2-2: Tile type classes — distinct gradient + inner glow per type */
+.island-tile--currency {
+  background: linear-gradient(160deg, #ffe66d 0%, #f7c948 50%, #c8941a 100%);
+  border: 1.5px solid #f0b429;
+}
+.island-tile--chest {
+  background: linear-gradient(160deg, #e8a87c 0%, #c87533 50%, #8b4513 100%);
+  border: 1.5px solid #dda15e;
+}
+.island-tile--event {
+  background: linear-gradient(160deg, #fff4a8 0%, #ffe066 50%, #cca300 100%);
+  border: 1.5px solid #f0d000;
+}
+.island-tile--hazard {
+  background: linear-gradient(160deg, #ff9999 0%, #ff4444 50%, #cc0000 100%);
+  border: 1.5px solid #ff6b6b;
+  box-shadow: 0 0 8px rgba(255, 68, 68, 0.5);
+}
+.island-tile--egg_shard {
+  background: linear-gradient(160deg, #d4f1f4 0%, #b0e0e6 50%, #5f9ea0 100%);
+  border: 1.5px solid #80d0d8;
+}
+.island-tile--micro {
+  background: linear-gradient(160deg, #e8d5ff 0%, #c8a2ff 50%, #9b59b6 100%);
+  border: 1.5px solid #b88ee8;
+}
+.island-tile--encounter {
+  background: linear-gradient(160deg, #ffb347 0%, #ff6b35 50%, #cc3300 100%);
+  border: 1.5px solid #ff8c42;
+  box-shadow: 0 0 10px rgba(255, 107, 53, 0.6);
+}
+
+
+/* B3-5: Island clear celebration */
+.island-clear-celebration {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 200;
+}
+.island-clear-celebration__card {
+  background: linear-gradient(160deg, rgba(10, 30, 50, 0.97), rgba(5, 18, 32, 0.95));
+  border: 1px solid rgba(145, 206, 230, 0.5);
+  border-radius: 20px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: #d8f5ff;
+  max-width: 340px;
+  width: calc(100% - 3rem);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.island-clear-celebration__eyebrow {
+  font-size: 0.78rem;
+  color: #7ecfff;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.4rem;
+}
+.island-clear-celebration__title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin: 0 0 0.8rem;
+  color: #fff;
+}
+
+/* B5-4: Dormant egg badge */
+.island-run-prototype__dormant-badge {
+  display: inline-block;
+  background: rgba(60, 30, 90, 0.5);
+  border: 1px solid rgba(180, 100, 255, 0.4);
+  color: #d4aaff;
+  font-size: 0.78rem;
+  border-radius: 8px;
+  padding: 0.15rem 0.5rem;
+  margin-top: 0.3rem;
+}
+
+/* M14: Shop HUD button */
+.island-run-shop-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0.18rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 200, 80, 0.5);
+  background: rgba(180, 120, 20, 0.22);
+  color: #ffe080;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.island-run-shop-btn:hover:not(:disabled) {
+  background: rgba(180, 120, 20, 0.38);
+  border-color: rgba(255, 200, 80, 0.72);
+}
+.island-run-shop-btn:focus-visible {
+  outline: 2px solid rgba(255, 210, 100, 0.9);
+  outline-offset: 2px;
+}
+
+/* ─── M6-COMPLETE: Encounter tile — completed visual state ──────────────────── */
+
+.island-tile--encounter-completed {
+  filter: saturate(0.3) brightness(0.8) !important;
+  animation: none !important;
+}
+
+/* ─── M6-COMPLETE: Encounter modal — production challenge UI ────────────────── */
+
+.island-stop-modal--encounter {
+  width: min(420px, 100%);
+}
+
+.island-encounter__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 200, 120, 0.9);
+  margin: 0 0 0.3rem;
+}
+
+.island-encounter__question {
+  font-size: 0.96rem;
+  font-weight: 600;
+  color: #e8f0ff;
+  line-height: 1.45;
+  margin: 0 0 0.85rem;
+}
+
+.island-encounter__challenge {
+  display: grid;
+  gap: 0.55rem;
+}
+
+/* Quiz: answer buttons stacked vertically */
+.island-encounter__answers {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.island-encounter__answer-btn {
+  text-align: left;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+/* Breathing: animated pulsing orb */
+.island-encounter__breathing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 0;
+}
+
+@keyframes encounter-breathe {
+  0%   { transform: scale(0.82); opacity: 0.55; }
+  50%  { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(0.82); opacity: 0.55; }
+}
+
+.island-encounter__breathing-orb {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(130, 200, 255, 0.9) 0%, rgba(80, 150, 220, 0.5) 60%, transparent 100%);
+  animation: encounter-breathe 3s ease-in-out infinite;
+}
+
+.island-encounter__breathing-countdown {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #a3e8ff;
+  line-height: 1;
+  margin: 0;
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+.island-encounter__hint {
+  font-size: 0.78rem;
+  color: rgba(200, 230, 255, 0.6);
+  text-align: center;
+  margin: 0;
+}
+
+/* Gratitude: textarea input */
+.island-encounter__gratitude-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 72px;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid rgba(163, 210, 255, 0.35);
+  background: rgba(10, 25, 40, 0.7);
+  color: #d8ecff;
+  font-size: 0.9rem;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 120ms ease;
+}
+
+.island-encounter__gratitude-input::placeholder {
+  color: rgba(160, 200, 240, 0.35);
+}
+
+.island-encounter__gratitude-input:focus {
+  outline: none;
+  border-color: rgba(163, 210, 255, 0.7);
+}
+
+/* Reward reveal section */
+.island-encounter__reward {
+  display: grid;
+  gap: 0.55rem;
+}
+
+@keyframes encounter-reward-pop {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.9); }
+  60%  { transform: translateY(-2px) scale(1.04); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.island-encounter__reward-reveal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.65rem 0.5rem;
+}
+
+.island-encounter__reward-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 200, 80, 0.18);
+  border: 1px solid rgba(255, 210, 100, 0.4);
+  color: #ffe9a0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  animation: encounter-reward-pop 380ms cubic-bezier(0.18, 1.3, 0.5, 1) both;
+}
+
+.island-encounter__reward-item:nth-child(2) { animation-delay: 90ms; }
+.island-encounter__reward-item:nth-child(3) { animation-delay: 180ms; }
+
+.island-encounter__reward-tagline {
+  font-size: 0.82rem;
+  color: rgba(200, 235, 255, 0.65);
+  text-align: center;
+  margin: 0.1rem 0 0;
+}
+
+/* ================================================================
+   M7-COMPLETE: Boss Trial UI
+   ================================================================ */
+
+.island-boss-trial {
+  display: grid;
+  gap: 0.75rem;
+}
+
+/* Boss type + difficulty badges */
+.island-boss-trial__badges {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.island-boss-trial__badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid;
+}
+
+.island-boss-trial__badge--type {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.island-boss-trial__badge--difficulty {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(200, 200, 200, 0.35);
+  color: rgba(220, 235, 255, 0.85);
+}
+
+/* Phase containers */
+.island-boss-trial__phase {
+  display: grid;
+  gap: 0.55rem;
+}
+
+/* Idle phase */
+.island-boss-trial__challenge-label {
+  font-size: 0.85rem;
+  color: rgba(200, 235, 255, 0.92);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.island-boss-trial__reward-preview {
+  font-size: 0.82rem;
+  color: rgba(180, 225, 245, 0.82);
+  margin: 0;
+}
+
+.island-boss-trial__lives-note {
+  font-size: 0.78rem;
+  color: rgba(255, 180, 180, 0.82);
+  margin: 0;
+}
+
+/* Begin button */
+.island-boss-trial__begin-btn {
+  background: linear-gradient(135deg, #daa520 0%, #b8860b 100%) !important;
+  color: #1a0f08 !important;
+  font-weight: 800 !important;
+  font-size: 0.95rem !important;
+  letter-spacing: 0.02em;
+}
+
+.island-boss-trial__cta {
+  margin-top: 0.2rem;
+}
+
+/* In-progress phase */
+.island-boss-trial__phase--active {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(200, 230, 255, 0.15);
+  border-radius: 12px;
+  padding: 0.75rem;
+  gap: 0.6rem;
+}
+
+.island-boss-trial__timer-row,
+.island-boss-trial__score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.island-boss-trial__timer-label,
+.island-boss-trial__score-label {
+  font-size: 0.78rem;
+  color: rgba(180, 220, 240, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.island-boss-trial__timer-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #7ecfff;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.3s;
+}
+
+.island-boss-trial__timer-value--urgent {
+  color: #ff6b4a;
+  animation: boss-timer-pulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes boss-timer-pulse {
+  from { opacity: 1; }
+  to   { opacity: 0.6; }
+}
+
+.island-boss-trial__score-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #e8fbff;
+  font-variant-numeric: tabular-nums;
+}
+
+.island-boss-trial__progress-bar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.island-boss-trial__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #daa520, #7ecfff);
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+.island-boss-trial__tap-btn {
+  width: 100%;
+  font-size: 1.1rem !important;
+  font-weight: 800 !important;
+  padding: 0.9rem !important;
+  background: linear-gradient(135deg, rgba(218, 165, 32, 0.25) 0%, rgba(218, 165, 32, 0.1) 100%) !important;
+  border: 2px solid rgba(218, 165, 32, 0.6) !important;
+  color: #ffe080 !important;
+  border-radius: 12px !important;
+  cursor: pointer;
+  transition: transform 0.08s, background 0.1s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.island-boss-trial__tap-btn:active {
+  transform: scale(0.94);
+  background: linear-gradient(135deg, rgba(218, 165, 32, 0.45) 0%, rgba(218, 165, 32, 0.25) 100%) !important;
+}
+
+/* Success phase */
+.island-boss-trial__phase--success {
+  background: rgba(50, 200, 120, 0.08);
+  border: 1px solid rgba(50, 200, 120, 0.3);
+  border-radius: 12px;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.island-boss-trial__result {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.island-boss-trial__result--win {
+  color: #5de89e;
+}
+
+.island-boss-trial__result--fail {
+  color: #ff7070;
+}
+
+.island-boss-trial__reward-text {
+  font-size: 0.85rem;
+  color: rgba(200, 255, 220, 0.9);
+  margin: 0;
+}
+
+.island-boss-trial__next-hint {
+  font-size: 0.78rem;
+  color: rgba(180, 230, 200, 0.7);
+  margin: 0;
+}
+
+/* Failed phase */
+.island-boss-trial__phase--failed {
+  background: rgba(255, 80, 80, 0.07);
+  border: 1px solid rgba(255, 100, 100, 0.25);
+  border-radius: 12px;
+  padding: 0.75rem;
+  text-align: center;
+  gap: 0.45rem;
+}
+
+.island-boss-trial__failed-copy,
+.island-boss-trial__hearts-left,
+.island-boss-trial__no-hearts {
+  font-size: 0.82rem;
+  color: rgba(255, 200, 200, 0.85);
+  margin: 0;
+}
+
+.island-boss-trial__retry-btn {
+  background: linear-gradient(135deg, #8b2020 0%, #5a1010 100%) !important;
+  color: #ffd4d4 !important;
+  border: 1px solid rgba(255, 120, 120, 0.4) !important;
+}
+
+/* ================================================================
+   M7-COMPLETE: Enhanced island clear celebration
+   ================================================================ */
+
+.island-clear-celebration__card--boss {
+  border-color: rgba(218, 165, 32, 0.7) !important;
+  background: linear-gradient(160deg, rgba(30, 18, 5, 0.97), rgba(10, 6, 2, 0.96)) !important;
+  box-shadow: 0 0 40px rgba(218, 165, 32, 0.25), 0 20px 60px rgba(0, 0, 0, 0.5) !important;
+}
+
+.island-clear-celebration__confetti {
+  font-size: 1.4rem;
+  margin: 0 0 0.4rem;
+  letter-spacing: 0.2em;
+  animation: confetti-bounce 0.6s ease-out both;
+}
+
+@keyframes confetti-bounce {
+  0%   { transform: scale(0.5); opacity: 0; }
+  60%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.island-clear-celebration__rewards {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 0.2rem 0;
+}
+
+.island-clear-celebration__reward-item {
+  background: rgba(218, 165, 32, 0.15);
+  border: 1px solid rgba(218, 165, 32, 0.35);
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffe080;
+}
+
+.island-clear-celebration__stops {
+  font-size: 0.78rem;
+  color: rgba(200, 240, 220, 0.7);
+  margin: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Sanctuary / Creature Manifest overlay
+   ───────────────────────────────────────────────────────────────────────── */
+
+.island-run-sanctuary-panel {
+  max-height: 90dvh;
+  overflow-y: auto;
+}
+
+.island-run-sanctuary-panel__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+
+.island-run-sanctuary-panel__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(95, 175, 255, 0.14);
+  border: 1px solid rgba(120, 200, 255, 0.26);
+  color: rgba(220, 245, 255, 0.92);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.island-run-sanctuary-toolbar {
+  display: grid;
+  gap: 0.7rem;
+  margin-bottom: 0.9rem;
+}
+
+.island-run-sanctuary-quest {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.7rem 0.8rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 214, 132, 0.28);
+  background: linear-gradient(160deg, rgba(255, 215, 130, 0.12), rgba(125, 190, 255, 0.12));
+}
+
+.island-run-sanctuary-quest__title {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 780;
+  color: rgba(255, 243, 214, 0.98);
+}
+
+.island-run-sanctuary-quest__body {
+  margin: 0.18rem 0 0;
+  font-size: 0.8rem;
+  color: rgba(226, 241, 252, 0.9);
+}
+
+.island-run-sanctuary-quest__meta {
+  margin: 0.24rem 0 0;
+  font-size: 0.78rem;
+  color: rgba(255, 232, 176, 0.92);
+}
+
+.island-run-sanctuary-toolbar__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.island-run-sanctuary-zone-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.island-run-sanctuary-zone-capacity {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.island-run-sanctuary-zone-capacity__card {
+  padding: 0.55rem 0.65rem;
+  border-radius: 12px;
+  border: 1px solid rgba(120, 200, 255, 0.2);
+  background: rgba(12, 24, 45, 0.7);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.island-run-sanctuary-zone-capacity__title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 760;
+  color: rgba(232, 246, 255, 0.94);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.island-run-sanctuary-zone-capacity__meta {
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgba(206, 232, 246, 0.82);
+}
+
+.island-run-sanctuary-zone-capacity__track {
+  width: 100%;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.island-run-sanctuary-zone-capacity__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #7ec9ff, #7dffcf);
+}
+
+.island-run-sanctuary-zone-capacity__progress-note {
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgba(255, 232, 185, 0.92);
+}
+
+.island-run-sanctuary-filter {
+  border: 1px solid rgba(120, 200, 255, 0.2);
+  background: rgba(11, 26, 46, 0.78);
+  color: rgba(220, 242, 252, 0.88);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.island-run-sanctuary-filter--active {
+  background: rgba(98, 198, 255, 0.2);
+  border-color: rgba(140, 220, 255, 0.38);
+  color: #fff;
+}
+
+.island-run-sanctuary-toolbar__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(220, 238, 248, 0.9);
+  font-size: 0.84rem;
+}
+
+.island-run-sanctuary-toolbar__sort select {
+  border-radius: 10px;
+  border: 1px solid rgba(120, 200, 255, 0.2);
+  background: rgba(11, 26, 46, 0.88);
+  color: rgba(240, 249, 255, 0.96);
+  padding: 0.42rem 0.65rem;
+}
+
+.island-run-sanctuary-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.island-run-sanctuary-card {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  border-radius: 16px;
+  border: 1px solid rgba(120, 200, 255, 0.18);
+  background: linear-gradient(160deg, rgba(8, 18, 36, 0.92), rgba(14, 34, 62, 0.85));
+}
+
+.island-run-sanctuary-card__art {
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+  justify-self: center;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.28));
+}
+
+.island-run-sanctuary-card__body {
+  display: grid;
+  gap: 0.28rem;
+}
+
+.island-run-sanctuary-card__eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(165, 220, 240, 0.68);
+}
+
+.island-run-sanctuary-card__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 780;
+  color: #f8fcff;
+}
+
+.island-run-sanctuary-card__meta {
+  margin: 0;
+  font-size: 0.84rem;
+  color: rgba(212, 236, 245, 0.84);
+}
+
+
+.island-run-sanctuary-panel__feedback {
+  margin: 0 0 0.9rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
+  background: rgba(98, 198, 255, 0.14);
+  border: 1px solid rgba(120, 210, 255, 0.2);
+  color: rgba(232, 247, 255, 0.92);
+  font-size: 0.86rem;
+}
+
+.island-run-sanctuary-panel__starter-note {
+  margin: 0 0 0.8rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  color: rgba(248, 236, 197, 0.94);
+  border: 1px solid rgba(255, 220, 125, 0.28);
+  background: rgba(255, 215, 117, 0.12);
+}
+
+.island-run-sanctuary-top3 {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.island-run-sanctuary-top3__title {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(220, 241, 255, 0.88);
+}
+
+.island-run-sanctuary-top3__chips {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.island-run-sanctuary-top3__chip {
+  border: 1px solid rgba(255, 220, 125, 0.34);
+  background: rgba(255, 219, 126, 0.14);
+  color: rgba(255, 245, 224, 0.96);
+  border-radius: 999px;
+  padding: 0.35rem 0.62rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.island-run-sanctuary-detail {
+  display: grid;
+  gap: 0.8rem;
+  padding: 0.95rem;
+  margin-bottom: 0.95rem;
+  border-radius: 18px;
+  border: 1px solid rgba(120, 200, 255, 0.2);
+  background: linear-gradient(180deg, rgba(17, 35, 60, 0.94), rgba(8, 18, 36, 0.92));
+}
+
+.island-run-sanctuary-detail__header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: center;
+}
+
+.island-run-sanctuary-detail__art {
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.3));
+}
+
+.island-run-sanctuary-detail__identity {
+  display: grid;
+  gap: 0.35rem;
+  flex: 1 1 220px;
+}
+
+.island-run-sanctuary-detail__title {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #f9fcff;
+}
+
+.island-run-sanctuary-detail__copy {
+  margin: 0;
+  color: rgba(220, 238, 248, 0.85);
+  font-size: 0.9rem;
+}
+
+.island-run-sanctuary-detail__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.island-run-sanctuary-reason {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.island-run-sanctuary-compare {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(124, 189, 255, 0.12);
+  border: 1px solid rgba(140, 210, 255, 0.24);
+}
+
+.island-run-sanctuary-compare__title {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 760;
+  color: rgba(241, 250, 255, 0.98);
+}
+
+.island-run-sanctuary-compare__row {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(220, 238, 248, 0.9);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.island-run-sanctuary-compare__delta {
+  font-weight: 780;
+}
+
+.island-run-sanctuary-compare__delta--up {
+  color: rgba(165, 255, 198, 0.95);
+}
+
+.island-run-sanctuary-compare__delta--down {
+  color: rgba(255, 170, 170, 0.95);
+}
+
+.island-run-sanctuary-reason__body {
+  padding: 0.68rem 0.78rem;
+  border-radius: 12px;
+  background: rgba(105, 182, 255, 0.12);
+  border: 1px solid rgba(132, 206, 255, 0.22);
+  color: rgba(228, 246, 255, 0.92);
+  font-size: 0.82rem;
+}
+
+.island-run-sanctuary-reason__body ul {
+  margin: 0.3rem 0 0.6rem 1rem;
+  padding: 0;
+}
+
+.island-run-sanctuary-reason__label {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(245, 252, 255, 0.98);
+}
+
+.island-run-sanctuary-reward {
+  padding: 0.7rem 0.85rem;
+  border-radius: 14px;
+  background: rgba(255, 208, 120, 0.12);
+  border: 1px solid rgba(255, 212, 140, 0.24);
+}
+
+.island-run-sanctuary-reward__title {
+  margin: 0 0 0.18rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 231, 184, 0.88);
+}
+
+.island-run-sanctuary-treats {
+  display: grid;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.island-run-sanctuary-card__progress,
+.island-run-sanctuary-detail__progress {
+  width: 100%;
+  height: 0.55rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.island-run-sanctuary-card__progress-fill,
+.island-run-sanctuary-detail__progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #86d6ff, #9fffd8);
+}
+
+@media (max-width: 640px) {
+  .level-worlds-island-run-shell {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 1rem);
+  }
+
+  .island-run-prototype__footer-main {
+    gap: 0.45rem;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .island-run-prototype__footer-stats {
+    gap: 0.35rem;
+  }
+
+  .island-run-prototype__footer .island-run-prototype__stat-chip,
+  .island-run-prototype__footer .island-run-prototype__dice-throw,
+  .island-run-prototype__footer .island-run-prototype__dev-toggle,
+  .island-run-prototype__roll-btn--footer,
+  .island-run-prototype__spin-btn--footer {
+    min-height: 2rem;
+    font-size: 0.69rem;
+  }
+
+  .island-run-prototype__roll-btn--footer {
+    flex: 3 1 11rem;
+    min-width: 0;
+    min-height: 6rem;
+    padding-inline: 0.9rem;
+    font-size: 0.98rem;
+  }
+
+  .island-run-prototype__footer-nav-btn {
+    flex: 0 1 5.8rem;
+    min-height: 2rem;
+    font-size: 0.64rem;
+    padding-inline: 0.35rem;
+  }
+
+  .island-run-prototype__spin-btn--footer,
+  .island-run-prototype__dev-toggle--footer {
+    min-width: 3.9rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CSS Dice Face — replaces emoji dice in BoardDiceControl
+   ═══════════════════════════════════════════════════════════════════ */
+
+.dice-face {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #f8f4e8 0%, #e8dfc8 45%, #d4c8a8 100%);
+  border: 2px solid rgba(180,150,90,0.8);
+  box-shadow:
+    3px 3px 0 rgba(0,0,0,0.18),
+    inset 1px 1px 0 rgba(255,255,255,0.65),
+    inset -1px -1px 0 rgba(0,0,0,0.12);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.dice-face--rolling {
+  animation: dice-face-spin 300ms ease-in-out infinite alternate;
+  background: linear-gradient(145deg, #a8e8ff 0%, #60b8f0 45%, #2888d8 100%);
+  border-color: rgba(80,180,255,0.85);
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.2), 0 0 12px rgba(80,160,255,0.5), inset 1px 1px 0 rgba(255,255,255,0.55);
+}
+
+.dice-face--idle {
+  opacity: 0.5;
+}
+
+.dice-face--landed {
+  animation: dice-face-land 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes dice-face-spin {
+  0%   { transform: rotate(-15deg) scale(0.9); }
+  100% { transform: rotate(15deg)  scale(1.05); }
+}
+
+@keyframes dice-face-land {
+  0%   { transform: scale(0.55) rotate(-25deg); opacity: 0.3; }
+  100% { transform: scale(1)    rotate(0deg);   opacity: 1; }
+}
+
+.dice-face__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 30px;
+  height: 30px;
+  gap: 0;
+}
+
+.dice-face__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #555 0%, #111 100%);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);
+  place-self: center;
+}
+
+.dice-face--rolling .dice-face__dot {
+  background: radial-gradient(circle at 35% 30%, #e0f4ff 0%, #90c8f0 100%);
+}
+
+/* ── Updated roll-button spinner ────────────────────────────────── */
+
+.board-dice-control__roll-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: rgba(255,255,255,0.9);
+  border-radius: 50%;
+  animation: board-dice-spinner 0.5s linear infinite;
+  vertical-align: middle;
+  margin-right: 0.35rem;
+}
+
+@keyframes board-dice-spinner {
+  to { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   BOARD STAGE — Phase 1-8 Enhancements
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Stage wrapper (contains gesture layer + camera stage) ─────────────────── */
+.island-run-board__stage-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  z-index: 2;
+  overflow: hidden;
+  flex: 1 1 auto;
+  perspective: 1400px;
+  perspective-origin: 50% 35%;
+}
+
+.island-run-board__gesture-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  touch-action: none;
+  cursor: grab;
+}
+.island-run-board__gesture-layer:active {
+  cursor: grabbing;
+}
+
+/* ── Enhanced camera stage with GPU compositing ────────────────────────────── */
+.island-run-board__stage-wrapper .island-run-board__camera-stage {
+  transform-origin: center center;
+  transform: translateZ(0);
+  transform-style: preserve-3d;
+  will-change: transform;
+  contain: layout style paint;
+  transition: none; /* spring engine handles transitions now */
+}
+
+.island-run-board__stage-wrapper--minimal-art .island-tile__shine,
+.island-run-board__stage-wrapper--minimal-art .island-run-board__path-overlay {
+  display: none !important;
+}
+
+/* ── Tile enhancements ─────────────────────────────────────────────────────── */
+
+/* Idle shimmer animation (staggered per tile) */
+.island-tile--alive {
+  animation: island-tile-idle 3.5s ease-in-out infinite;
+  animation-delay: calc(var(--tile-index, 0) * 0.06s);
+  will-change: transform;
+}
+
+@keyframes island-tile-idle {
+  0%, 100% {
+    transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(var(--tile-scale, 1));
+  }
+  50% {
+    transform: translate(-50%, calc(-50% - 1.5px)) rotate(var(--tile-rotation-deg, 0deg)) scale(var(--tile-scale, 1));
+  }
+}
+
+/* Override for spark40 ring — idle bob respects the perspective anchor scale. */
+.island-run-board--spark60 .island-tile--alive {
+  animation: island-tile-idle-spark60 3.5s ease-in-out infinite;
+  animation-delay: calc(var(--tile-index, 0) * 0.06s);
+}
+
+@keyframes island-tile-idle-spark60 {
+  0%, 100% { transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(var(--tile-scale, 1)); }
+  50% { transform: translate(-50%, calc(-50% - 1.2px)) rotate(var(--tile-rotation-deg, 0deg)) scale(calc(var(--tile-scale, 1) * 1.01)); }
+}
+
+/* Shine overlay — animated gradient sweep */
+.island-tile__shine {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+.island-tile__shine::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -80%;
+  width: 40%;
+  height: 200%;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.25) 48%,
+    rgba(255, 255, 255, 0.35) 50%,
+    rgba(255, 255, 255, 0.25) 52%,
+    transparent 70%
+  );
+  animation: island-tile-shine-sweep 6s ease-in-out infinite;
+  animation-delay: calc(var(--tile-index, 0) * 0.1s);
+}
+
+@keyframes island-tile-shine-sweep {
+  0%, 75% { left: -80%; }
+  100% { left: 180%; }
+}
+
+/* Tile number badge */
+.island-tile__badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 0.45rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 1.5px 3px;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.8;
+}
+/* Tile number badge — smaller on ring board but visible since tiles are bigger now */
+.island-run-board--spark60 .island-tile__badge {
+  font-size: 0.38rem;
+  padding: 1px 2px;
+}
+
+/* Completed encounter badge */
+.island-tile__completed-badge {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 0 4px rgba(0,0,0,0.8);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Upcoming tiles — subtle glow to show where token will land */
+.island-tile--upcoming {
+  box-shadow: 0 0 0 2px rgba(180, 240, 255, 0.7), 0 0 12px rgba(100, 200, 255, 0.5) !important;
+}
+
+/* ── Enhanced depth rendering ──────────────────────────────────────────────── */
+
+/* Stronger back tiles: more desaturation, smaller, dimmer */
+.island-tile--back {
+  filter: saturate(0.55) brightness(0.75);
+  opacity: 0.72;
+}
+
+/* Mid tiles: neutral baseline */
+.island-tile--mid {
+  filter: saturate(1.0) brightness(0.95);
+}
+
+/* Front tiles: vivid, large, pronounced shadow */
+.island-tile--front {
+  filter: saturate(1.25) brightness(1.08);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Token enhancements ────────────────────────────────────────────────────── */
+
+/* Landing ripple ring */
+.island-token__landing-ripple {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 10px; height: 10px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2.5px solid rgba(100, 220, 255, 0.9);
+  animation: island-token-ripple 0.4s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes island-token-ripple {
+  from { width: 12px;  height: 12px;  opacity: 1;   transform: translate(-50%, -50%); }
+  to   { width: 80px;  height: 80px;  opacity: 0;   transform: translate(-50%, -50%); }
+}
+
+/* Enhanced token with inline transform support (squash/stretch during animateHops) */
+.island-run-board__stage-wrapper .island-token {
+  transition: left 180ms cubic-bezier(0.22, 0.61, 0.36, 1),
+              top 180ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform, left, top;
+}
+
+/* Disable CSS position transitions during rAF-controlled hop animation so
+   the bezier arc path drives position directly without a 180ms lag. */
+.island-run-board__stage-wrapper .island-token.island-token--moving {
+  transition: none !important;
+}
+
+/* ── Particle canvas layer ─────────────────────────────────────────────────── */
+.island-run-board__particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 7;
+  transform: translateZ(0);
+  will-change: contents;
+}
+
+/* ── Performance: reduce motion ────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .island-run-board__camera-stage {
+    transition: none !important;
+  }
+  .island-tile--alive,
+  .island-tile__shine::after,
+  .island-token__landing-ripple {
+    animation: none !important;
+  }
+  .island-run-board__particles {
+    display: none;
+  }
+}
+
+/* Stop tiles on the 40-tile ring — proportionally wider than regular tiles */
+.island-run-board--spark60 .island-tile--stop {
+  width: 132px;
+  height: 64px;
+  clip-path: polygon(calc(50% - 46px) 0%, calc(50% + 46px) 0%, calc(50% + 66px) 100%, calc(50% - 66px) 100%);
+}
+
+@keyframes island-tile-stop-pulse {
+  0%, 100% { box-shadow: 0 0 14px rgba(255, 215, 0, 0.8), 0 0 28px rgba(255, 165, 0, 0.4); }
+  50%      { box-shadow: 0 0 22px rgba(255, 215, 0, 1.0), 0 0 44px rgba(255, 165, 0, 0.7), 0 0 60px rgba(255, 200, 0, 0.3); }
+}
+
+@keyframes island-tile-current-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(100, 220, 255, 0.9), 0 0 18px rgba(100, 220, 255, 0.7); }
+  50%      { box-shadow: 0 0 0 3px #fff, 0 0 0 7px rgba(100, 220, 255, 1.0), 0 0 28px rgba(100, 220, 255, 0.9); }
+}
+
+@keyframes island-tile-encounter-flicker {
+  0%, 85%, 100% { box-shadow: 0 0 10px rgba(255, 107, 53, 0.6); }
+  90%           { box-shadow: 0 0 20px rgba(255, 80, 20, 0.95), 0 0 35px rgba(255, 60, 0, 0.5); }
+  95%           { box-shadow: 0 0 10px rgba(255, 107, 53, 0.5); }
+}
+
+.island-tile--pressed {
+  transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(calc(var(--tile-scale, 1) * 0.88)) !important;
+  transition: transform 80ms ease-out;
 }
