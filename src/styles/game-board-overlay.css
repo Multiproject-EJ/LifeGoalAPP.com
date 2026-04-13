@@ -397,3 +397,8 @@
     padding-top: max(0.35rem, env(safe-area-inset-top, 0px));
   }
 }
+
+/* TEMP DEBUG: top-level ownership (single layer at a time) */
+.app--island-ownership-debug-game-board-overlay .game-board-overlay {
+  background: #ff2d55 !important;
+}
