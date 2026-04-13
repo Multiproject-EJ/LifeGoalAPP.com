@@ -1718,6 +1718,13 @@ html.platform-ipad .workspace-shell__menu-edge {
   overflow: hidden;
 }
 
+.app--mobile-frame .workspace-stage:not(.workspace-stage--vision-board):not(.workspace-stage--account) {
+  border-radius: 0;
+  border: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .workspace-stage--vision-board {
   background: var(--vision-board-bg) center / cover no-repeat;
   background-color: #eef2ff;
