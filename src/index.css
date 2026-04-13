@@ -15898,6 +15898,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   will-change: transform;
 }
 
+/* TEMP DEBUG: Island bottom-edge ownership color map */
+.app--island-bottom-debug .mobile-footer-nav {
+  background: rgba(255, 20, 147, 0.28) !important;
+  outline: 2px solid rgba(255, 20, 147, 0.95) !important;
+}
+
 .mobile-footer-nav--collapsed {
   transform: translateY(70%);
 }

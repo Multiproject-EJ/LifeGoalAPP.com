@@ -4476,10 +4476,53 @@ export default function App({ forceAuthOnMount }: AppProps) {
     />
   );
 
+  const isIslandFullscreenActive = showGameBoardOverlay || showLevelWorldsFromEntry;
+  const enableIslandBottomEdgeDebug = true;
+  const isIslandBottomEdgeDebugActive = enableIslandBottomEdgeDebug && isIslandFullscreenActive;
+
+  useEffect(() => {
+    if (!isIslandBottomEdgeDebugActive) return;
+
+    const selectors = [
+      '.level-worlds-island-run-shell',
+      '.island-run-prototype',
+      '.island-run-board',
+      '.island-run-board__stage-wrapper',
+      '.island-run-prototype__footer',
+      '.island-run-prototype__footer-main',
+      '.mobile-footer-nav',
+      '.game-board-overlay',
+      '.game-board-overlay__content',
+    ] as const;
+
+    const frame = window.requestAnimationFrame(() => {
+      const viewportHeight = window.innerHeight;
+      const rows = selectors.map((selector) => {
+        const el = document.querySelector(selector) as HTMLElement | null;
+        if (!el) {
+          return { selector, visible: false };
+        }
+        const rect = el.getBoundingClientRect();
+        return {
+          selector,
+          visible: rect.width > 0 && rect.height > 0,
+          top: Math.round(rect.top),
+          bottom: Math.round(rect.bottom),
+          height: Math.round(rect.height),
+          distanceFromViewportBottom: Math.round(viewportHeight - rect.bottom),
+        };
+      });
+      // Temporary debug output for on-device Island bottom-edge ownership verification.
+      console.table(rows);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [isIslandBottomEdgeDebugActive]);
+
   if (isMobileExperience && showMobileHome) {
     const mobileHomeAppClassName = `app app--workspace app--mobile-frame app--mobile-home-frame${
       isAnyModalVisible ? ' app--auth-overlay' : ''
-    }`;
+    }${isIslandBottomEdgeDebugActive ? ' app--island-bottom-debug' : ''}`;
     return (
       <div className={mobileHomeAppClassName}>
         <div className="workspace-shell">
@@ -4641,7 +4684,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     isAnyModalVisible ? ' app--auth-overlay' : ''
   }${isMobileFrameLocked ? ' app--mobile-frame' : ''}${isDesktopExperience ? ' app--desktop-preview' : ''}${
     isConflictResolverFullscreen ? ' app--conflict-resolver' : ''
-  }`;
+  }${isIslandBottomEdgeDebugActive ? ' app--island-bottom-debug' : ''}`;
   const workspaceShellClassName = `workspace-shell ${
     isAnyModalVisible ? 'workspace-shell--blurred' : ''
   }${!isMobileExperience && !isDesktopMenuOpen ? ' workspace-shell--menu-collapsed' : ''}`;

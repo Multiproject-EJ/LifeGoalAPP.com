@@ -397,3 +397,14 @@
     padding-top: max(0.35rem, env(safe-area-inset-top, 0px));
   }
 }
+
+/* TEMP DEBUG: Island bottom-edge ownership color map */
+.app--island-bottom-debug .game-board-overlay {
+  background: rgba(255, 0, 255, 0.28) !important;
+  outline: 2px solid rgba(255, 0, 255, 0.95) !important;
+}
+
+.app--island-bottom-debug .game-board-overlay__content {
+  background: rgba(128, 0, 255, 0.28) !important;
+  outline: 2px solid rgba(190, 120, 255, 0.95) !important;
+}
