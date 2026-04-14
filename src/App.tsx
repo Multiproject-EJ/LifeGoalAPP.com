@@ -2828,7 +2828,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     body.style.overflow = 'hidden';
     body.style.position = 'fixed';
     body.style.top = `-${scrollY}px`;
-    body.style.bottom = '0';
+    body.style.bottom = 'calc(-1 * env(safe-area-inset-bottom, 0px))';
     body.style.width = '100%';
     body.style.touchAction = 'none';
     html.style.overflow = 'hidden';
