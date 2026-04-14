@@ -2821,6 +2821,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     const previousHtmlOverflow = html.style.overflow;
     const previousHtmlOverscrollBehaviorY = html.style.overscrollBehaviorY;
     const previousHtmlBg = html.style.backgroundColor;
+    const previousBodyBg = body.style.backgroundColor;
     const previousBodyOverscrollBehaviorY = body.style.overscrollBehaviorY;
     const previousRootOverflow = root?.style.overflow ?? '';
     const previousRootHeight = root?.style.height ?? '';
@@ -2834,6 +2835,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     html.style.overflow = 'hidden';
     html.style.overscrollBehaviorY = 'none';
     html.style.backgroundColor = '#000';
+    body.style.backgroundColor = '#000';
     body.style.overscrollBehaviorY = 'none';
 
     if (root) {
@@ -2852,6 +2854,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       html.style.overflow = previousHtmlOverflow;
       html.style.overscrollBehaviorY = previousHtmlOverscrollBehaviorY;
       html.style.backgroundColor = previousHtmlBg;
+      body.style.backgroundColor = previousBodyBg;
 
       if (root) {
         root.style.overflow = previousRootOverflow;
