@@ -93,8 +93,12 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
   } = props;
 
   const tileTypeClass = !isStop && tileType ? `island-tile--${tileType}` : '';
+  // Clip-path dimensions derived from ring geometry:
+  //   N=40 tiles, radius=340, tile height=58 (half=29), sin(π/40)≈0.07846
+  //   outer arc chord = 2×369×sin(π/40) ≈ 57.9px → box width = 58px → ±29px
+  //   inner arc chord = 2×311×sin(π/40) ≈ 48.8px → top clip ±24.5px
   const wedgeClipPath = isSpark60
-    ? 'polygon(calc(50% - 42px) 0%, calc(50% + 42px) 0%, calc(50% + 60px) 100%, calc(50% - 60px) 100%)'
+    ? 'polygon(calc(50% - 24.5px) 0%, calc(50% + 24.5px) 0%, calc(50% + 29px) 100%, calc(50% - 29px) 100%)'
     : undefined;
 
   // Choose icon
@@ -135,7 +139,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         ['--tile-index' as string]: String(index),
         ['--tile-scale' as string]: String(anchor.scale),
         transform: `translate(-50%, -50%) rotate(var(--tile-rotation-deg)) scale(${(anchor.scale * uniformScale).toFixed(4)})`,
-        ...(isSpark60 ? { width: '120px', height: '58px', clipPath: wedgeClipPath } : {}),
+        ...(isSpark60 ? { width: '58px', height: '58px', clipPath: wedgeClipPath } : {}),
       }}
     >
       {!isMinimalBoardArt && <span className="island-tile__shine" aria-hidden="true" />}
