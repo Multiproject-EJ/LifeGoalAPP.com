@@ -15906,6 +15906,10 @@ html.platform-ipad .workspace-shell__menu-edge {
   will-change: transform;
 }
 
+.app--island-fullscreen .mobile-footer-nav {
+  padding-bottom: clamp(0.35rem, 1.5vw, 0.65rem);
+}
+
 /* TEMP DEBUG: top-level ownership (single layer at a time) */
 .app--island-ownership-debug-app {
   background: #ffea00 !important;
