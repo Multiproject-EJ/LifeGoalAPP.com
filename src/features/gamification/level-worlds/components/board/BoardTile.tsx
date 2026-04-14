@@ -138,6 +138,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         ['--tile-rotation-deg' as string]: `${isSpark60 ? anchor.tangentDeg + 180 : 0}deg`,
         ['--tile-index' as string]: String(index),
         ['--tile-scale' as string]: String(anchor.scale),
+        ['--tile-render-scale' as string]: (anchor.scale * uniformScale).toFixed(4),
         transform: `translate(-50%, -50%) rotate(var(--tile-rotation-deg)) scale(${(anchor.scale * uniformScale).toFixed(4)})`,
         ...(isSpark60 ? { width: '58px', height: '58px', clipPath: wedgeClipPath } : {}),
       }}
