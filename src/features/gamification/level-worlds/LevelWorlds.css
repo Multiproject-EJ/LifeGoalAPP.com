@@ -3833,10 +3833,10 @@
 
 @keyframes island-tile-idle {
   0%, 100% {
-    transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(var(--tile-scale, 1));
+    transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(var(--tile-render-scale, var(--tile-scale, 1)));
   }
   50% {
-    transform: translate(-50%, calc(-50% - 1.5px)) rotate(var(--tile-rotation-deg, 0deg)) scale(var(--tile-scale, 1));
+    transform: translate(-50%, calc(-50% - 1.5px)) rotate(var(--tile-rotation-deg, 0deg)) scale(var(--tile-render-scale, var(--tile-scale, 1)));
   }
 }
 
@@ -3847,8 +3847,8 @@
 }
 
 @keyframes island-tile-idle-spark60 {
-  0%, 100% { transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(var(--tile-scale, 1)); }
-  50% { transform: translate(-50%, calc(-50% - 1.2px)) rotate(var(--tile-rotation-deg, 0deg)) scale(calc(var(--tile-scale, 1) * 1.01)); }
+  0%, 100% { transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(var(--tile-render-scale, var(--tile-scale, 1))); }
+  50% { transform: translate(-50%, calc(-50% - 1.2px)) rotate(var(--tile-rotation-deg, 0deg)) scale(calc(var(--tile-render-scale, var(--tile-scale, 1)) * 1.01)); }
 }
 
 /* Shine overlay — animated gradient sweep */
@@ -3875,8 +3875,12 @@
     rgba(255, 255, 255, 0.25) 52%,
     transparent 70%
   );
-  animation: island-tile-shine-sweep 6s ease-in-out infinite;
+  animation: island-tile-shine-sweep 60s ease-in-out infinite;
   animation-delay: calc(var(--tile-index, 0) * 0.1s);
+}
+
+.island-run-board__stage-wrapper:has(.island-token--moving) .island-tile__shine::after {
+  animation-play-state: paused;
 }
 
 @keyframes island-tile-shine-sweep {
