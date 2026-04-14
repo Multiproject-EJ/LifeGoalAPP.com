@@ -16841,6 +16841,12 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-footer-nav__menu-button {
+  --menu-orb-accent-1: rgba(56, 189, 248, 0.82);
+  --menu-orb-accent-2: rgba(99, 102, 241, 0.78);
+  --menu-orb-accent-3: rgba(244, 114, 182, 0.72);
+  --menu-orb-core: rgba(255, 255, 255, 0.92);
+  --menu-orb-ring: rgba(255, 255, 255, 0.3);
+  --menu-orb-shadow: rgba(56, 189, 248, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -16888,6 +16894,151 @@ html.platform-ipad .workspace-shell__menu-edge {
 .mobile-footer-nav__menu-icon {
   font-size: 3.2rem;
   line-height: 1;
+}
+
+.mobile-footer-nav__menu-button--orb {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--menu-orb-accent-1) 40%, transparent);
+  background:
+    radial-gradient(circle at 34% 30%, var(--menu-orb-core) 0 20%, rgba(255, 255, 255, 0.35) 38%, transparent 62%),
+    conic-gradient(from 0deg, var(--menu-orb-accent-1), var(--menu-orb-accent-2), var(--menu-orb-accent-3), var(--menu-orb-accent-1));
+  box-shadow:
+    0 0 0 1px var(--menu-orb-ring),
+    0 12px 24px var(--menu-orb-shadow),
+    inset 0 1px 10px rgba(255, 255, 255, 0.5);
+}
+
+.mobile-footer-nav__menu-button--orb::before,
+.mobile-footer-nav__menu-button--orb::after {
+  content: '';
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.mobile-footer-nav__menu-button--orb::before {
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.5), transparent 70%);
+  animation: mobile-footer-nav-orb-shimmer 7s ease-in-out infinite;
+}
+
+.mobile-footer-nav__menu-button--orb::after {
+  inset: 4%;
+  border: 1px solid color-mix(in srgb, var(--menu-orb-ring) 85%, transparent);
+  box-shadow:
+    0 0 18px color-mix(in srgb, var(--menu-orb-accent-2) 50%, transparent),
+    inset 0 0 14px color-mix(in srgb, var(--menu-orb-accent-1) 55%, transparent);
+  animation: mobile-footer-nav-orb-pulse 4.8s ease-in-out infinite;
+}
+
+.mobile-footer-nav:not(.mobile-footer-nav--collapsed) .mobile-footer-nav__menu-button--orb {
+  animation: mobile-footer-nav-menu-spin-up 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mobile-footer-nav.mobile-footer-nav--collapsed .mobile-footer-nav__menu-button--orb {
+  animation: mobile-footer-nav-menu-spin-down 0.34s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.mobile-footer-nav__surface--image .mobile-footer-nav__menu-button--orb:hover,
+.mobile-footer-nav__surface--image .mobile-footer-nav__menu-button--orb:focus-visible {
+  transform: translateY(-19px) scale(1.03);
+  box-shadow:
+    0 0 0 1px var(--menu-orb-ring),
+    0 16px 30px color-mix(in srgb, var(--menu-orb-shadow) 120%, transparent),
+    0 0 24px color-mix(in srgb, var(--menu-orb-accent-2) 55%, transparent),
+    inset 0 1px 14px rgba(255, 255, 255, 0.58);
+}
+
+[data-theme='dark-glass'] .mobile-footer-nav__menu-button--orb {
+  --menu-orb-accent-1: rgba(34, 211, 238, 0.82);
+  --menu-orb-accent-2: rgba(168, 85, 247, 0.82);
+  --menu-orb-accent-3: rgba(59, 130, 246, 0.72);
+  --menu-orb-core: rgba(226, 232, 240, 0.18);
+  --menu-orb-ring: rgba(125, 211, 252, 0.34);
+  --menu-orb-shadow: rgba(37, 99, 235, 0.45);
+}
+
+[data-theme='midnight-purple'] .mobile-footer-nav__menu-button--orb {
+  --menu-orb-accent-1: rgba(192, 132, 252, 0.84);
+  --menu-orb-accent-2: rgba(217, 70, 239, 0.84);
+  --menu-orb-accent-3: rgba(129, 140, 248, 0.74);
+  --menu-orb-core: rgba(243, 232, 255, 0.2);
+  --menu-orb-ring: rgba(233, 213, 255, 0.32);
+  --menu-orb-shadow: rgba(126, 34, 206, 0.48);
+}
+
+[data-theme='flow-night'] .mobile-footer-nav__menu-button--orb {
+  --menu-orb-accent-1: rgba(34, 211, 238, 0.82);
+  --menu-orb-accent-2: rgba(59, 130, 246, 0.8);
+  --menu-orb-accent-3: rgba(99, 102, 241, 0.74);
+  --menu-orb-core: rgba(224, 242, 254, 0.2);
+  --menu-orb-ring: rgba(147, 197, 253, 0.32);
+  --menu-orb-shadow: rgba(14, 116, 144, 0.48);
+}
+
+[data-theme='bio-night'] .mobile-footer-nav__menu-button--orb {
+  --menu-orb-accent-1: rgba(74, 222, 128, 0.82);
+  --menu-orb-accent-2: rgba(20, 184, 166, 0.78);
+  --menu-orb-accent-3: rgba(34, 197, 94, 0.72);
+  --menu-orb-core: rgba(220, 252, 231, 0.18);
+  --menu-orb-ring: rgba(134, 239, 172, 0.3);
+  --menu-orb-shadow: rgba(22, 163, 74, 0.46);
+}
+
+@keyframes mobile-footer-nav-orb-shimmer {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: translate3d(-2%, -2%, 0) scale(0.96);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate3d(2%, 1%, 0) scale(1.04);
+  }
+}
+
+@keyframes mobile-footer-nav-orb-pulse {
+  0%,
+  100% {
+    opacity: 0.58;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes mobile-footer-nav-menu-spin-up {
+  from {
+    transform: translateY(-18px) rotate(-120deg) scale(0.76);
+    opacity: 0.7;
+  }
+  to {
+    transform: translateY(-18px) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes mobile-footer-nav-menu-spin-down {
+  from {
+    transform: translateY(-18px) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-18px) rotate(90deg) scale(0.74);
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-footer-nav__menu-button--orb,
+  .mobile-footer-nav__menu-button--orb::before,
+  .mobile-footer-nav__menu-button--orb::after {
+    animation: none !important;
+  }
 }
 
 .mobile-footer-nav__menu-label {
