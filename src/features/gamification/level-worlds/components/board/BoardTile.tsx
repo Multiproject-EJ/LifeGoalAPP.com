@@ -70,6 +70,9 @@ export interface BoardTileProps {
   tileIndex: number;
   showDebug: boolean;
   isMinimalBoardArt: boolean;
+  /** Uniform board scale (canonical 1000px → screen px). Used to size tiles to
+   *  match the ring geometry regardless of viewport dimensions. */
+  uniformScale: number;
 }
 
 export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
@@ -86,6 +89,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     isSpark60,
     showDebug,
     isMinimalBoardArt,
+    uniformScale,
   } = props;
 
   const tileTypeClass = !isStop && tileType ? `island-tile--${tileType}` : '';
@@ -130,7 +134,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         ['--tile-rotation-deg' as string]: `${isSpark60 ? anchor.tangentDeg + 180 : 0}deg`,
         ['--tile-index' as string]: String(index),
         ['--tile-scale' as string]: String(anchor.scale),
-        transform: `translate(-50%, -50%) rotate(var(--tile-rotation-deg)) scale(${anchor.scale})`,
+        transform: `translate(-50%, -50%) rotate(var(--tile-rotation-deg)) scale(${(anchor.scale * uniformScale).toFixed(4)})`,
         ...(isSpark60 ? { width: '120px', height: '58px', clipPath: wedgeClipPath } : {}),
       }}
     >

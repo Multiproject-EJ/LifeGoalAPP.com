@@ -14,6 +14,8 @@ export interface BoardTileGridProps {
   isSpark60: boolean;
   showDebug: boolean;
   isMinimalBoardArt: boolean;
+  /** Uniform board scale forwarded from BoardStage (canonical px → screen px). */
+  uniformScale: number;
   toScreen: (anchor: TileAnchor) => { x: number; y: number };
 }
 
@@ -30,6 +32,7 @@ export function BoardTileGrid(props: BoardTileGridProps) {
     isSpark60,
     showDebug,
     isMinimalBoardArt,
+    uniformScale,
     toScreen,
   } = props;
 
@@ -68,6 +71,7 @@ export function BoardTileGrid(props: BoardTileGridProps) {
               tileIndex={index}
               showDebug={showDebug}
               isMinimalBoardArt={isMinimalBoardArt}
+              uniformScale={uniformScale}
             />
           );
         })}

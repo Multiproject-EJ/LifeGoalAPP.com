@@ -311,6 +311,7 @@ export function BoardStage(props: BoardStageProps) {
           isSpark60={isSpark60}
           showDebug={showDebug}
           isMinimalBoardArt={isMinimalBoardArt}
+          uniformScale={uniformScale}
           toScreen={toScreen}
         />
 
