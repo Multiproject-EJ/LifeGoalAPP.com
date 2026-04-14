@@ -15907,7 +15907,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .app--island-fullscreen .mobile-footer-nav {
-  padding-bottom: calc(clamp(0.35rem, 1.5vw, 0.65rem) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: clamp(0.35rem, 1.5vw, 0.65rem);
 }
 
 .app--island-fullscreen .mobile-footer-nav__surface--image::after {
