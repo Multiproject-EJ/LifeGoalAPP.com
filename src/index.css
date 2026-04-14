@@ -12589,7 +12589,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 @media (max-width: 600px) {
   body {
     align-items: flex-start;
-    padding: 2rem 0;
+    padding: 0;
   }
 
   .app-shell {
