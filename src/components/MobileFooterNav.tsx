@@ -52,6 +52,7 @@ type MobileFooterNavProps = {
   onSnapExpand?: () => void;
   onCollapse?: () => void;
   pointsBalance?: number;
+  className?: string;
 };
 
 const isNavItem = (item: FooterListItem): item is MobileFooterNavItem => 'id' in item;
@@ -83,6 +84,7 @@ export function MobileFooterNav({
   onSnapExpand,
   onCollapse,
   pointsBalance,
+  className,
 }: MobileFooterNavProps) {
   const [statusHoldProgress, setStatusHoldProgress] = useState(0);
   const [isStatusHoldActive, setIsStatusHoldActive] = useState(false);
@@ -428,7 +430,7 @@ export function MobileFooterNav({
         areControlsFaded ? ' mobile-footer-nav--controls-faded' : ''
       }${isDiamondFaded ? ' mobile-footer-nav--diamond-faded' : ''}${
         isEnergyMenuOpen && isDiodeActive ? ' mobile-footer-nav--energy-focus' : ''
-      }`}
+      }${className ? ` ${className}` : ''}`}
       aria-label="Primary navigation"
       onWheelCapture={blockBackgroundScroll}
       onTouchMoveCapture={blockBackgroundScroll}

@@ -15906,6 +15906,10 @@ html.platform-ipad .workspace-shell__menu-edge {
   will-change: transform;
 }
 
+.mobile-footer-nav--game-overlay-lowered {
+  transform: translateY(18%);
+}
+
 .app--island-fullscreen .mobile-footer-nav {
   padding-bottom: clamp(0.35rem, 1.5vw, 0.65rem);
 }
