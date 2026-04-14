@@ -2812,6 +2812,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
     const root = document.getElementById('root');
     const scrollY = window.scrollY;
 
+    // Scroll to top before locking so body.style.top is always '0'.
+    // Both fullscreen overlays (game + island) completely cover the page,
+    // so the scroll jump is invisible. Without this, body.style.top = -scrollY
+    // inflates the body height on iOS WebKit, pushing the footer and overlay
+    // up by scrollY pixels and leaving a white strip at the bottom.
+    if (scrollY > 0) {
+      window.scrollTo(0, 0);
+    }
+
     const previousBodyOverflow = body.style.overflow;
     const previousBodyPosition = body.style.position;
     const previousBodyTop = body.style.top;
@@ -2821,19 +2830,21 @@ export default function App({ forceAuthOnMount }: AppProps) {
     const previousHtmlOverflow = html.style.overflow;
     const previousHtmlOverscrollBehaviorY = html.style.overscrollBehaviorY;
     const previousHtmlBg = html.style.backgroundColor;
+    const previousBodyBg = body.style.backgroundColor;
     const previousBodyOverscrollBehaviorY = body.style.overscrollBehaviorY;
     const previousRootOverflow = root?.style.overflow ?? '';
     const previousRootHeight = root?.style.height ?? '';
 
     body.style.overflow = 'hidden';
     body.style.position = 'fixed';
-    body.style.top = `-${scrollY}px`;
+    body.style.top = '0px';
     body.style.bottom = 'calc(-1 * env(safe-area-inset-bottom, 0px))';
     body.style.width = '100%';
     body.style.touchAction = 'none';
     html.style.overflow = 'hidden';
     html.style.overscrollBehaviorY = 'none';
     html.style.backgroundColor = '#000';
+    body.style.backgroundColor = '#000';
     body.style.overscrollBehaviorY = 'none';
 
     if (root) {
@@ -2852,6 +2863,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       html.style.overflow = previousHtmlOverflow;
       html.style.overscrollBehaviorY = previousHtmlOverscrollBehaviorY;
       html.style.backgroundColor = previousHtmlBg;
+      body.style.backgroundColor = previousBodyBg;
 
       if (root) {
         root.style.overflow = previousRootOverflow;
