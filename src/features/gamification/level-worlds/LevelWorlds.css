@@ -718,7 +718,7 @@
   right: 0;
   bottom: 0;
   z-index: 20;
-  padding: 0 0 env(safe-area-inset-bottom, 0px);
+  padding: 0;
 }
 
 .island-run-prototype__footer-main {
