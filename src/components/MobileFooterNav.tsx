@@ -454,14 +454,16 @@ export function MobileFooterNav({
           <div className="mobile-footer-nav__menu-row">
             <button
               type="button"
-              className="mobile-footer-nav__menu-button"
+              className={`mobile-footer-nav__menu-button${
+                isDiodeActive ? ' mobile-footer-nav__menu-button--orb' : ''
+              }`}
               onClick={() => {
                 revealControllerUI();
                 onOpenMenu();
               }}
             >
               <span aria-hidden="true" className="mobile-footer-nav__menu-icon">
-                •
+                {isDiodeActive ? '✦' : '•'}
               </span>
               <span className="sr-only">Open full navigation</span>
             </button>
