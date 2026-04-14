@@ -463,7 +463,7 @@ export function MobileFooterNav({
               }}
             >
               <span aria-hidden="true" className="mobile-footer-nav__menu-icon">
-                •
+                {isDiodeActive ? '✦' : '•'}
               </span>
               <span className="sr-only">Open full navigation</span>
             </button>
