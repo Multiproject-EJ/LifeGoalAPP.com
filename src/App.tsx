@@ -4554,7 +4554,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
             }}
             onCollapse={handleMobileFooterCollapse}
             pointsBalance={goldBalance}
-            className={showGameBoardOverlay ? 'mobile-footer-nav--game-overlay-lowered' : undefined}
           />
         )}
         {mobileMenuOverlay}
@@ -4857,7 +4856,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
           }}
           onCollapse={handleMobileFooterCollapse}
           pointsBalance={goldBalance}
-          className={showGameBoardOverlay ? 'mobile-footer-nav--game-overlay-lowered' : undefined}
         />
       ) : null}
 
