@@ -77,7 +77,6 @@ export function WorkspaceSetupDialog({
         workspace_name: workspaceName.trim() || null,
         birthday: birthday || null,
         gender: gender || null,
-        initials: generateInitials(trimmedName),
       });
       if (error || !data) {
         throw error ?? new Error('Unable to save profile.');
