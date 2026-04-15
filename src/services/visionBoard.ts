@@ -15,12 +15,7 @@ import {
   upsertLocalVisionImageRecord,
 } from '../data/visionBoardOfflineRepo';
 import {
-  DEMO_USER_ID,
-  addDemoVisionImage,
   fileToDataUrl,
-  getDemoVisionImages,
-  removeDemoVisionImage,
-  updateDemoVisionImage,
 } from './demoData';
 import { recordOfflineSyncEvent } from './offlineSyncTelemetry';
 
@@ -36,6 +31,10 @@ type ServiceResponse<T> = {
   data: T | null;
   error: ServiceError;
 };
+
+function authRequiredError(message: string): Error {
+  return new Error(message);
+}
 
 export type VisionImageQueueStatus = { pending: number; failed: number };
 
@@ -73,7 +72,7 @@ function isBucketNotFoundError(message: string): boolean {
 
 export async function fetchVisionImages(userId: string): Promise<ServiceResponse<VisionImageRow[]>> {
   if (!canUseSupabaseData()) {
-    return { data: getDemoVisionImages(userId || DEMO_USER_ID), error: null };
+    return { data: [], error: null };
   }
 
   const supabase = getSupabaseClient();
@@ -211,22 +210,7 @@ export async function uploadVisionImage({
   linkedHabitIds,
 }: UploadPayload): Promise<ServiceResponse<VisionImageRow>> {
   if (!canUseSupabaseData()) {
-    try {
-      const dataUrl = await fileToDataUrl(file);
-      const record = addDemoVisionImage({
-        user_id: userId || DEMO_USER_ID,
-        image_path: dataUrl,
-        caption: caption?.trim() ? caption.trim() : null,
-        file_format: originalFormat || null,
-        vision_type: visionType ?? null,
-        review_interval_days: reviewIntervalDays ?? null,
-        linked_goal_ids: linkedGoalIds ?? [],
-        linked_habit_ids: linkedHabitIds ?? [],
-      });
-      return { data: record, error: null };
-    } catch (error) {
-      return { data: null, error: error instanceof Error ? error : new Error('Unable to store vision image.') };
-    }
+    return { data: null, error: authRequiredError('Authentication required.') };
   }
 
   const supabase = getSupabaseClient();
@@ -382,21 +366,7 @@ export async function uploadVisionImageFromUrl({
   }
 
   if (!canUseSupabaseData()) {
-    try {
-      const record = addDemoVisionImage({
-        user_id: userId || DEMO_USER_ID,
-        image_url: imageUrl,
-        image_source: 'url',
-        caption: caption?.trim() ? caption.trim() : null,
-        vision_type: visionType ?? null,
-        review_interval_days: reviewIntervalDays ?? null,
-        linked_goal_ids: linkedGoalIds ?? [],
-        linked_habit_ids: linkedHabitIds ?? [],
-      });
-      return { data: record, error: null };
-    } catch (error) {
-      return { data: null, error: error instanceof Error ? error : new Error('Unable to store vision image.') };
-    }
+    return { data: null, error: authRequiredError('Authentication required.') };
   }
 
   const supabase = getSupabaseClient();
@@ -602,11 +572,7 @@ export async function updateVisionImage(
   payload: VisionImageUpdate,
 ): Promise<ServiceResponse<VisionImageRow>> {
   if (!canUseSupabaseData()) {
-    const record = updateDemoVisionImage(id, payload);
-    if (!record) {
-      return { data: null, error: new Error('Vision board entry not found.') };
-    }
-    return { data: record, error: null };
+    return { data: null, error: authRequiredError('Authentication required.') };
   }
 
   const supabase = getSupabaseClient();
@@ -623,8 +589,7 @@ export async function updateVisionImage(
 
 export async function deleteVisionImage(record: VisionImageRow): Promise<ServiceError> {
   if (!canUseSupabaseData()) {
-    removeDemoVisionImage(record.id);
-    return null;
+    return authRequiredError('Authentication required.');
   }
 
   const supabase = getSupabaseClient();

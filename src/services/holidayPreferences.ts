@@ -1,4 +1,5 @@
 import type { Database, Json } from '../lib/database.types';
+import { isValidUuid } from '../lib/isValidUuid';
 import { getSupabaseClient } from '../lib/supabaseClient';
 
 export type HolidayPreferences = Record<string, boolean>;
@@ -38,6 +39,10 @@ export async function fetchHolidayPreferences(userId: string): Promise<{
   data: HolidayPreferencesRow | null;
   error: Error | null;
 }> {
+  if (!isValidUuid(userId)) {
+    return { data: null, error: null };
+  }
+
   try {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase
@@ -70,6 +75,10 @@ export async function upsertHolidayPreferences(
   data: HolidayPreferencesRow | null;
   error: Error | null;
 }> {
+  if (!isValidUuid(userId)) {
+    return { data: null, error: null };
+  }
+
   try {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase

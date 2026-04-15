@@ -3,21 +3,16 @@ import type { Session, SignInWithPasswordCredentials, SignUpWithPasswordCredenti
 import {
   getSupabaseClient,
   getSupabaseRedirectUrl,
-  hasSupabaseCredentials,
   setSupabaseSession,
   type TypedSupabaseClient,
 } from '../../lib/supabaseClient';
-import { DEMO_USER_EMAIL } from '../../services/demoData';
-import { createDemoSession } from '../../services/demoSession';
-
-type AuthProviderMode = 'supabase' | 'demo';
 
 type AuthContextValue = {
   session: Session | null;
   initializing: boolean;
   isConfigured: boolean;
   isAuthenticated: boolean;
-  mode: AuthProviderMode;
+  mode: 'supabase';
   client: TypedSupabaseClient | null;
   signInWithPassword: (credentials: SignInWithPasswordCredentials) => Promise<void>;
   signUpWithPassword: (credentials: SignUpWithPasswordCredentials) => Promise<void>;
@@ -59,23 +54,14 @@ function ensureSupabaseAuthError(error: unknown): Error {
 }
 
 export function SupabaseAuthProvider({ children }: { children: React.ReactNode }) {
-  const mode: AuthProviderMode = hasSupabaseCredentials() ? 'supabase' : 'demo';
+  const mode = 'supabase' as const;
 
   const [session, setSession] = useState<Session | null>(null);
-  const [initializing, setInitializing] = useState(mode === 'supabase');
+  const [initializing, setInitializing] = useState(true);
   const [supabaseError, setSupabaseError] = useState<Error | null>(null);
   const [supabase, setSupabase] = useState<TypedSupabaseClient | null>(null);
 
   useEffect(() => {
-    if (mode === 'demo') {
-      setSupabase(null);
-      setSupabaseError(null);
-      setSession(null);
-      setSupabaseSession(null);
-      setInitializing(false);
-      return;
-    }
-
     try {
       setSupabase(getSupabaseClient());
       setSupabaseError(null);
@@ -124,11 +110,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   }, [mode, supabase]);
 
   const signInWithPassword = useCallback(async (credentials: SignInWithPasswordCredentials) => {
-    if (mode === 'demo') {
-      setSession(createDemoSession());
-      setSupabaseSession(null);
-      return;
-    }
     if (!supabase) {
       throw supabaseError ?? new Error('Supabase credentials are not configured.');
     }
@@ -138,11 +119,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   const signUpWithPassword = useCallback(
     async (credentials: SignUpWithPasswordCredentials) => {
-      if (mode === 'demo') {
-        setSession(createDemoSession());
-        setSupabaseSession(null);
-        return;
-      }
       if (!supabase) {
         throw supabaseError ?? new Error('Supabase credentials are not configured.');
       }
@@ -154,11 +130,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   const signInWithOtp = useCallback(
     async (email: string) => {
-      if (mode === 'demo') {
-        setSession(createDemoSession());
-        setSupabaseSession(null);
-        return;
-      }
       if (!supabase) {
         throw supabaseError ?? new Error('Supabase credentials are not configured.');
       }
@@ -169,11 +140,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   );
 
   const signInWithGoogle = useCallback(async () => {
-    if (mode === 'demo') {
-      setSession(createDemoSession());
-      setSupabaseSession(null);
-      return;
-    }
     if (!supabase) {
       throw supabaseError ?? new Error('Supabase credentials are not configured.');
     }
@@ -199,9 +165,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   const sendPasswordReset = useCallback(
     async (email: string) => {
-      if (mode === 'demo') {
-        return;
-      }
       if (!supabase) {
         throw supabaseError ?? new Error('Supabase credentials are not configured.');
       }
@@ -212,11 +175,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   );
 
   const signOut = useCallback(async () => {
-    if (mode === 'demo') {
-      setSession(null);
-      setSupabaseSession(null);
-      return;
-    }
     if (!supabase) {
       throw supabaseError ?? new Error('Supabase credentials are not configured.');
     }
@@ -228,7 +186,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     () => ({
       session,
       initializing,
-      isConfigured: mode === 'demo' ? true : Boolean(supabase),
+      isConfigured: Boolean(supabase),
       isAuthenticated: Boolean(session),
       mode,
       client: supabase,

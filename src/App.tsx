@@ -49,8 +49,6 @@ import { RoutinesTab } from './features/routines';
 import { ScoreTab } from './features/gamification/ScoreTab';
 import { ContractsTab } from './features/gamification/ContractsTab';
 import { ZenGarden } from './features/zen-garden/ZenGarden';
-import { DEMO_USER_EMAIL, DEMO_USER_NAME, getDemoProfile, updateDemoProfile } from './services/demoData';
-import { createDemoSession, isDemoSession } from './services/demoSession';
 import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
 import { GameBoardOverlay } from './components/GameBoardOverlay';
@@ -151,7 +149,7 @@ const RoutinesTodayLane = (_props: {
 
 type AuthMode = 'password' | 'signup';
 
-type AuthTab = 'login' | 'signup' | 'demo';
+type AuthTab = 'login' | 'signup';
 
 type WorkspaceNavItem = {
   id: string;
@@ -708,7 +706,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const handleDailyTreatsCongratsClose = useCallback(() => {
     // Collect daily hearts when claiming treats
     // Note: We use supabaseSession directly here instead of activeSession to avoid dependency issues
-    const userId = supabaseSession?.user?.id ?? createDemoSession().user.id;
+    const userId = supabaseSession?.user?.id;
     if (userId) {
       const result = collectDailyHearts(userId);
       if (result) {
@@ -800,7 +798,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
   // Dynamic daily treats inventory based on collection status
   const dailyTreatsInventory = useMemo(() => {
     // Note: We use supabaseSession directly here instead of activeSession to avoid dependency issues
-    const userId = supabaseSession?.user?.id ?? createDemoSession().user.id;
+    const userId = supabaseSession?.user?.id;
+    if (!userId) {
+      return {
+        spinsRemaining: spinAvailable ? 1 : 0,
+        heartsRemaining: 0,
+        hatchesRemaining: 0,
+      };
+    }
     
     // Check if hearts have been collected today
     const heartsCollectedToday = hasCollectedDailyHeartsToday(userId);
@@ -1176,11 +1181,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setActionsTabView((current) => (current === 'tasks' ? current : 'launcher'));
   }, [activeWorkspaceNav, isMobileExperience]);
 
-  const isDemoMode = mode === 'demo';
-  const [demoProfile, setDemoProfile] = useState(() => getDemoProfile());
-
   useEffect(() => {
-    if (forceAuthOnMount && !isAuthenticated && !isDemoMode) {
+    if (forceAuthOnMount && !isAuthenticated) {
       setShowAuthPanel(true);
       setActiveAuthTab('login');
     }
@@ -1188,12 +1190,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const activeSession = useMemo(() => {
-    if (supabaseSession) {
-      return supabaseSession;
-    }
-    return createDemoSession();
-  }, [supabaseSession, demoProfile]);
+  const activeSession = useMemo(() => supabaseSession as Session, [supabaseSession]);
 
   const handleGameModePreferenceChange = useCallback(async (nextIsActive: boolean) => {
     setIsMobileMenuImageActive(nextIsActive);
@@ -1618,7 +1615,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   useEffect(() => {
     if (!supabaseSession) {
-      setDisplayName((activeSession.user.user_metadata?.full_name as string | undefined) ?? '');
+      setDisplayName('');
       setManualProfileSaving(false);
       return;
     }
@@ -1753,8 +1750,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, []);
 
   const isOnboardingComplete = useMemo(() => {
-    return Boolean(activeSession.user.user_metadata?.onboarding_complete);
-  }, [activeSession]);
+    return Boolean(supabaseSession?.user.user_metadata?.onboarding_complete);
+  }, [supabaseSession]);
 
   useEffect(() => {
     if (!isOnboardingComplete) return;
@@ -1779,9 +1776,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const handleLaunchOnboarding = useCallback(
     (options?: { reset?: boolean }) => {
-      if (options?.reset) {
-        window.localStorage.removeItem(`gol_onboarding_${activeSession.user.id}`);
-        window.localStorage.removeItem(`day_zero_onboarding_${activeSession.user.id}`);
+      if (options?.reset && supabaseSession?.user.id) {
+        window.localStorage.removeItem(`gol_onboarding_${supabaseSession.user.id}`);
+        window.localStorage.removeItem(`day_zero_onboarding_${supabaseSession.user.id}`);
       }
       setShowDayZeroOnboarding(false);
       setIsOnboardingDismissed(false);
@@ -1789,13 +1786,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
       setShowOnboardingNudge(false);
       setActiveWorkspaceNav('goals');
     },
-    [activeSession.user.id],
+    [supabaseSession?.user.id],
   );
 
   const handleLaunchDayZeroOnboarding = useCallback(
     (options?: { reset?: boolean }) => {
-      if (options?.reset) {
-        window.localStorage.removeItem(`day_zero_onboarding_${activeSession.user.id}`);
+      if (options?.reset && supabaseSession?.user.id) {
+        window.localStorage.removeItem(`day_zero_onboarding_${supabaseSession.user.id}`);
       }
       setShowDayZeroOnboarding(true);
       setIsOnboardingDismissed(true);
@@ -1803,13 +1800,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
       setShowOnboardingNudge(false);
       setActiveWorkspaceNav('goals');
     },
-    [activeSession.user.id],
+    [supabaseSession?.user.id],
   );
 
   const handleDemoProfileSave = useCallback(
-    (payload: { displayName: string; onboardingComplete: boolean }) => {
-      updateDemoProfile(payload);
-      setDemoProfile(getDemoProfile());
+    (_payload: { displayName: string; onboardingComplete: boolean }) => {
+      // Demo profile persistence removed in real-auth-only phase.
     },
     [],
   );
@@ -1926,25 +1922,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setShowWorkspaceSetup(true);
   };
 
-  const handleDemoSignIn = async () => {
-    setAuthMessage(null);
-    setAuthError(null);
-    setSubmitting(true);
-    try {
-      await signInWithPassword({ email: DEMO_USER_EMAIL, password: 'demo-password' });
-      setAuthMessage('Signed in to the demo workspace.');
-      setShowAuthPanel(false);
-      setActiveWorkspaceNav('planning');
-      if (isMobileExperience) {
-        setShowMobileHome(true);
-      }
-    } catch (error) {
-      setAuthError(error instanceof Error ? error.message : 'Unable to sign in right now.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const handleGoogleSignIn = async () => {
     setAuthMessage(null);
     setAuthError(null);
@@ -1995,7 +1972,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const requiresAuthenticatedAccess = (navId: string) => navId === 'insights';
 
-  const shouldRequireAuthentication = !isAuthenticated && !isDemoMode;
+  const shouldRequireAuthentication = !isAuthenticated;
 
   const closeGameBoardOverlayIfOpen = () => {
     if (showGameBoardOverlay) {
@@ -2327,10 +2304,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const renderAuthPanel = () => {
     const authTabs: { id: AuthTab; label: string }[] = [
-    { id: 'login', label: 'Log in' },
-    { id: 'signup', label: 'Sign up' },
-    { id: 'demo', label: 'Demo Account' },
-  ];
+      { id: 'login', label: 'Log in' },
+      { id: 'signup', label: 'Sign up' },
+    ];
 
     const authTabCopy: Record<AuthTab, { title: string; subtitle: string }> = {
     login: {
@@ -2341,11 +2317,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       title: 'Create your LifeGoal account',
       subtitle: 'Sign up with email or Google to unlock the full workspace.',
     },
-    demo: {
-      title: 'Take the demo for a spin',
-      subtitle: `Instantly browse the workspace as ${DEMO_USER_NAME}.`,
-    },
-  };
+    };
 
     const renderLoginPanel = () => (
     <div
@@ -2468,33 +2440,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     </div>
     );
 
-    const renderDemoPanel = () => (
-    <div
-      className="auth-tab-panel"
-      role="tabpanel"
-      id="auth-panel-demo"
-      aria-labelledby="auth-tab-demo"
-    >
-      <p className="auth-card__hint">
-        Launch the fully-populated demo workspace to explore rituals, goal planning boards, and daily trackers
-        without creating an account.
-      </p>
-      <ul className="auth-demo-list">
-        <li>Preview Today's Habits and goal dashboards.</li>
-        <li>Make changes locally without affecting production data.</li>
-        <li>Decide later if you want to connect your own Supabase project.</li>
-      </ul>
-      <button
-        type="button"
-        className="supabase-auth__action auth-card__primary"
-        onClick={handleDemoSignIn}
-        disabled={submitting}
-      >
-        Enter the demo workspace
-      </button>
-    </div>
-    );
-
     const renderTabPanel = () => {
     if (initializing) {
       return <p className="supabase-auth__status supabase-auth__status--info">Loading session…</p>;
@@ -2505,7 +2450,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     if (activeAuthTab === 'signup') {
       return renderSignupPanel();
     }
-    return renderDemoPanel();
+    return renderLoginPanel();
   };
 
     return (
@@ -2552,8 +2497,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const userDisplay =
     displayName ||
-    (activeSession.user.user_metadata?.full_name as string | undefined) ||
-    activeSession.user.email;
+    ((supabaseSession?.user.user_metadata?.full_name as string | undefined) ?? '') ||
+    supabaseSession?.user.email ||
+    '';
   const userInitial = (userDisplay || '').trim().charAt(0).toUpperCase() || 'U';
 
   const profileInitials =
@@ -2605,7 +2551,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     workspaceNavItems.find((item) => item.id === activeWorkspaceNav) ??
     workspaceNavItems[workspaceNavItems.length - 1];
 
-  const isDemoExperience = isDemoMode && isDemoSession(activeSession);
+  const isDemoExperience = false;
   const normalizedDisplayName =
     displayName.trim() ||
     workspaceProfile?.full_name ||
@@ -2613,12 +2559,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
     '';
   const accountDisplayName = normalizedDisplayName || userDisplay || 'Guest';
   const accountInitials = profileInitials || generateInitials(accountDisplayName);
-  const accountEmail = activeSession.user.email || 'No email on file';
+  const accountEmail = supabaseSession?.user.email || 'No email on file';
   const accountWorkspaceName = workspaceProfile?.workspace_name || 'Personal rituals workspace';
-  const accountWorkspaceMode = isDemoExperience ? 'Demo (local device only)' : 'Connected to Supabase';
+  const accountWorkspaceMode = supabaseSession ? 'Connected to Supabase' : 'Not connected';
   const accountBirthday = workspaceProfile?.birthday || 'Not set';
   const accountGender = workspaceProfile?.gender || 'Not set';
-  const accountOnboardingStatus = activeSession.user.user_metadata?.onboarding_complete ? 'Complete' : 'In progress';
+  const accountOnboardingStatus = supabaseSession?.user.user_metadata?.onboarding_complete ? 'Complete' : 'In progress';
 
   const profileAutoSaveResetKey = supabaseSession
     ? `${
@@ -2628,7 +2574,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         ((supabaseSession.user.user_metadata?.full_name as string | undefined) ?? '') ||
         ''
       }`
-    : 'demo';
+    : 'logged-out';
 
   const persistProfileName = useCallback(
     async (nextName: string) => {

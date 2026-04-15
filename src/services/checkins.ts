@@ -1,7 +1,6 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
-import { DEMO_USER_ID, addDemoCheckin, getDemoCheckins, updateDemoCheckin } from './demoData';
 
 type CheckinRow = Database['public']['Tables']['checkins']['Row'];
 type CheckinInsert = Database['public']['Tables']['checkins']['Insert'];
@@ -12,12 +11,22 @@ type ServiceResponse<T> = {
   error: PostgrestError | null;
 };
 
+function authRequiredError(): PostgrestError {
+  return {
+    name: 'PostgrestError',
+    code: 'AUTH_REQUIRED',
+    details: 'No active authenticated Supabase session.',
+    hint: 'Sign in to manage check-ins.',
+    message: 'Authentication required.',
+  };
+}
+
 export async function fetchCheckinsForUser(
   userId: string,
   limit = 12,
 ): Promise<ServiceResponse<CheckinRow[]>> {
   if (!canUseSupabaseData()) {
-    return { data: getDemoCheckins(userId || DEMO_USER_ID, limit), error: null };
+    return { data: [], error: null };
   }
 
   const supabase = getSupabaseClient();
@@ -32,7 +41,7 @@ export async function fetchCheckinsForUser(
 
 export async function insertCheckin(payload: CheckinInsert): Promise<ServiceResponse<CheckinRow>> {
   if (!canUseSupabaseData()) {
-    return { data: addDemoCheckin(payload), error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
@@ -46,7 +55,7 @@ export async function insertCheckin(payload: CheckinInsert): Promise<ServiceResp
 
 export async function updateCheckin(id: string, payload: CheckinUpdate): Promise<ServiceResponse<CheckinRow>> {
   if (!canUseSupabaseData()) {
-    return { data: updateDemoCheckin(id, payload), error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();

@@ -1,10 +1,6 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import {
-  addDemoGoalReflection,
-  getDemoGoalReflections,
-  removeDemoGoalReflection,
-  updateDemoGoalReflection,
   type GoalReflectionInsert,
   type GoalReflectionRow,
   type GoalReflectionUpdate,
@@ -17,11 +13,21 @@ type ServiceResponse<T> = {
   error: PostgrestError | null;
 };
 
+function authRequiredError(): PostgrestError {
+  return {
+    name: 'PostgrestError',
+    code: 'AUTH_REQUIRED',
+    details: 'No active authenticated Supabase session.',
+    hint: 'Sign in to manage goal reflections.',
+    message: 'Authentication required.',
+  };
+}
+
 export async function fetchGoalReflections(
   goalId: string,
 ): Promise<ServiceResponse<GoalReflectionRow[]>> {
   if (!canUseSupabaseData()) {
-    return { data: getDemoGoalReflections(goalId), error: null };
+    return { data: [], error: null };
   }
 
   const supabase = getSupabaseClient();
@@ -38,7 +44,7 @@ export async function insertGoalReflection(
   payload: GoalReflectionInsert,
 ): Promise<ServiceResponse<GoalReflectionRow>> {
   if (!canUseSupabaseData()) {
-    return { data: addDemoGoalReflection(payload), error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
@@ -55,7 +61,7 @@ export async function updateGoalReflection(
   payload: GoalReflectionUpdate,
 ): Promise<ServiceResponse<GoalReflectionRow>> {
   if (!canUseSupabaseData()) {
-    return { data: updateDemoGoalReflection(id, payload), error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
@@ -72,7 +78,7 @@ export async function deleteGoalReflection(
   id: string,
 ): Promise<ServiceResponse<GoalReflectionRow>> {
   if (!canUseSupabaseData()) {
-    return { data: removeDemoGoalReflection(id), error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();

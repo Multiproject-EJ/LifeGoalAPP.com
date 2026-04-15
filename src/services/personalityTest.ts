@@ -1,4 +1,5 @@
 import type { PostgrestError } from '@supabase/supabase-js';
+import { isValidUuid } from '../lib/isValidUuid';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 import { loadPersonalityTestHistory } from '../data/personalityTestRepo';
@@ -84,7 +85,7 @@ function mergePersonalityTests(
 export async function upsertPersonalityProfile(
   payload: PersonalityProfileInsert,
 ): Promise<PersonalityProfileResponse> {
-  if (!canUseSupabaseData()) {
+  if (!canUseSupabaseData() || !isValidUuid(payload.user_id ?? null)) {
     return { data: null, error: null };
   }
 
@@ -101,7 +102,7 @@ export async function upsertPersonalityProfile(
 export async function fetchPersonalityProfile(
   userId: string,
 ): Promise<PersonalityProfileResponse> {
-  if (!canUseSupabaseData()) {
+  if (!canUseSupabaseData() || !isValidUuid(userId)) {
     return { data: null, error: null };
   }
 
@@ -118,7 +119,7 @@ export async function fetchPersonalityProfile(
 export async function fetchPersonalityTestsFromSupabase(
   userId: string,
 ): Promise<PersonalityTestValue[]> {
-  if (!canUseSupabaseData()) {
+  if (!canUseSupabaseData() || !isValidUuid(userId)) {
     return [];
   }
 
@@ -167,7 +168,7 @@ export async function loadPersonalityTestHistoryWithSupabase(
 }
 
 export async function syncPersonalityTestsWithSupabase(userId: string): Promise<void> {
-  if (!canUseSupabaseData()) {
+  if (!canUseSupabaseData() || !isValidUuid(userId)) {
     return;
   }
 

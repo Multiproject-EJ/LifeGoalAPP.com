@@ -1,12 +1,6 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database, Json } from '../lib/database.types';
-import {
-  DEMO_USER_ID,
-  clearDemoNotificationPreferences,
-  getDemoNotificationPreferences,
-  upsertDemoNotificationPreferences,
-} from './demoData';
 
 export type NotificationPreferencesRow = Database['public']['Tables']['notification_preferences']['Row'];
 export type NotificationPreferencesInsert = Database['public']['Tables']['notification_preferences']['Insert'];
@@ -16,6 +10,16 @@ type ServiceResponse<T> = {
   data: T | null;
   error: PostgrestError | null;
 };
+
+function authRequiredError(): PostgrestError {
+  return {
+    name: 'PostgrestError',
+    code: 'AUTH_REQUIRED',
+    details: 'No active authenticated Supabase session.',
+    hint: 'Sign in to manage notification preferences.',
+    message: 'Authentication required.',
+  };
+}
 
 export type NotificationPreferencePayload = {
   habitRemindersEnabled: boolean;
@@ -32,7 +36,7 @@ function serializeSubscription(subscription: PushSubscriptionJSON | null): Json 
 
 export async function fetchNotificationPreferences(userId: string): Promise<ServiceResponse<NotificationPreferencesRow>> {
   if (!canUseSupabaseData()) {
-    return { data: getDemoNotificationPreferences(userId || DEMO_USER_ID), error: null };
+    return { data: null, error: null };
   }
 
   const supabase = getSupabaseClient();
@@ -48,15 +52,7 @@ export async function upsertNotificationPreferences(
   payload: NotificationPreferencePayload,
 ): Promise<ServiceResponse<NotificationPreferencesRow>> {
   if (!canUseSupabaseData()) {
-    const record: NotificationPreferencesInsert = {
-      user_id: userId || DEMO_USER_ID,
-      habit_reminders_enabled: payload.habitRemindersEnabled,
-      habit_reminder_time: payload.reminderTime,
-      checkin_nudges_enabled: payload.checkinNudgesEnabled,
-      timezone: payload.timezone,
-      subscription: serializeSubscription(payload.subscription),
-    };
-    return { data: upsertDemoNotificationPreferences(userId || DEMO_USER_ID, record), error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
@@ -80,10 +76,7 @@ export async function disableNotificationPreferences(
   userId: string,
 ): Promise<ServiceResponse<NotificationPreferencesRow>> {
   if (!canUseSupabaseData()) {
-    return {
-      data: clearDemoNotificationPreferences(userId || DEMO_USER_ID),
-      error: null,
-    };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();

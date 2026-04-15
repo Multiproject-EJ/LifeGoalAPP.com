@@ -19,7 +19,6 @@ import {
   TRAIT_LABELS,
 } from './personalitySummary';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
-import { createDemoSession } from '../../services/demoSession';
 import { queuePersonalityTestResult, type PersonalityTestRecord } from '../../data/personalityTestRepo';
 import {
   clearQueuedPersonalityTestMutations,
@@ -518,7 +517,7 @@ const formatHistoryDate = (value: string): string => {
 };
 
 export default function PersonalityTest() {
-  const { session, mode } = useSupabaseAuth();
+  const { session } = useSupabaseAuth();
   const [step, setStep] = useState<TestStep>('intro');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
@@ -539,11 +538,8 @@ export default function PersonalityTest() {
     if (session) {
       return session;
     }
-    if (mode === 'demo') {
-      return createDemoSession();
-    }
     return null;
-  }, [mode, session]);
+  }, [session]);
 
   const activeUserId = activeSession?.user?.id ?? null;
 

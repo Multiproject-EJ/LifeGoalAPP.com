@@ -24,13 +24,6 @@ import {
   normalizeEnvironmentContext,
 } from '../features/environment/environmentSchema';
 import {
-  DEMO_USER_ID,
-  addDemoGoal,
-  getDemoGoals,
-  removeDemoGoal,
-  updateDemoGoal,
-} from './demoData';
-import {
   buildSnapshotSummary,
   createGoalSnapshot,
   inferSnapshotType,
@@ -45,6 +38,16 @@ type ServiceResponse<T> = {
   data: T | null;
   error: PostgrestError | null;
 };
+
+function authRequiredError(): PostgrestError {
+  return {
+    name: 'PostgrestError',
+    code: 'AUTH_REQUIRED',
+    details: 'No active authenticated Supabase session.',
+    hint: 'Sign in to manage goals.',
+    message: 'Authentication required.',
+  };
+}
 
 const LOCAL_GOAL_PREFIX = 'local-goal-';
 
@@ -361,7 +364,7 @@ function buildGoalEnvironmentPatch(
 
 export async function fetchGoals(): Promise<ServiceResponse<GoalRow[]>> {
   if (!canUseSupabaseData()) {
-    return { data: getDemoGoals(DEMO_USER_ID), error: null };
+    return { data: [], error: null };
   }
 
   await syncQueuedGoals();
@@ -387,7 +390,7 @@ export async function insertGoal(payload: GoalInsert): Promise<ServiceResponse<G
   };
 
   if (!canUseSupabaseData()) {
-    return { data: addDemoGoal(payloadWithQuality), error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
@@ -438,18 +441,7 @@ export async function insertGoal(payload: GoalInsert): Promise<ServiceResponse<G
 
 export async function updateGoal(id: string, payload: GoalUpdate): Promise<ServiceResponse<GoalRow>> {
   if (!canUseSupabaseData()) {
-    const existingGoal = getDemoGoals(DEMO_USER_ID).find((goal) => goal.id === id);
-    const mergedGoalForScoring = {
-      ...existingGoal,
-      ...payload,
-    } as GoalRow;
-
-    const record = updateDemoGoal(id, {
-      ...payload,
-      ...buildPlanQualityPatch(mergedGoalForScoring),
-      ...buildGoalEnvironmentPatch(mergedGoalForScoring),
-    });
-    return { data: record, error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
@@ -520,8 +512,7 @@ export async function updateGoal(id: string, payload: GoalUpdate): Promise<Servi
 
 export async function deleteGoal(id: string): Promise<ServiceResponse<GoalRow>> {
   if (!canUseSupabaseData()) {
-    const removed = removeDemoGoal(id);
-    return { data: removed, error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
