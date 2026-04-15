@@ -19,6 +19,7 @@ import {
   TRAIT_LABELS,
 } from './personalitySummary';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
+import { isValidUuid } from '../../lib/isValidUuid';
 import { queuePersonalityTestResult, type PersonalityTestRecord } from '../../data/personalityTestRepo';
 import {
   clearQueuedPersonalityTestMutations,
@@ -541,7 +542,7 @@ export default function PersonalityTest() {
     return null;
   }, [session]);
 
-  const activeUserId = activeSession?.user?.id ?? null;
+  const activeUserId = isValidUuid(activeSession?.user?.id) ? activeSession.user.id : null;
 
   const currentQuestion: PersonalityQuestion | undefined =
     PERSONALITY_QUESTION_BANK[currentIndex];

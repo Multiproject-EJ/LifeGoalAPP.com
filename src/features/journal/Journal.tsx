@@ -22,6 +22,7 @@ import { JournalEntryDetail } from './JournalEntryDetail';
 import { JournalEntryEditor, type JournalEntryDraft, type JournalMoodOption } from './JournalEntryEditor';
 import { JournalTypeSelector } from './JournalTypeSelector';
 import type { Database, JournalEntryType, Json } from '../../lib/database.types';
+import { isValidUuid } from '../../lib/isValidUuid';
 import { DEFAULT_JOURNAL_TYPE } from './constants';
 import { getModeLabel, isEntryLocked } from './utils';
 import { useGamification } from '../../hooks/useGamification';
@@ -308,6 +309,11 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
     let cancelled = false;
 
     async function loadPersonalityGuidance() {
+      if (!isValidUuid(session.user.id)) {
+        setArchetypeHand(null);
+        setTraitGuidance([]);
+        return;
+      }
       try {
         const history = await loadPersonalityTestHistoryWithSupabase(session.user.id);
         if (cancelled || history.length === 0) return;
