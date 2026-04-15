@@ -11,8 +11,6 @@ type MobileHabitHomeProps = {
   profileStrengthSignals?: ProfileStrengthSignalSnapshot | null;
   personalitySummary?: string | null;
   onOpenDailyTreat?: () => void;
-  onOpenLuckyRoll?: () => void;
-  onOpenSpinWheel?: () => void;
   onOpenIslandRunStop?: (stopId: 'boss' | 'hatchery' | 'dynamic') => void;
   forceCompactView?: boolean;
   preferredCompactView?: boolean;
@@ -29,8 +27,6 @@ export function MobileHabitHome({
   profileStrengthSignals,
   personalitySummary,
   onOpenDailyTreat,
-  onOpenLuckyRoll,
-  onOpenSpinWheel,
   onOpenIslandRunStop,
   forceCompactView = false,
   preferredCompactView,
@@ -50,8 +46,6 @@ export function MobileHabitHome({
         profileStrengthSignals={profileStrengthSignals}
         personalitySummary={personalitySummary}
         onOpenDailyTreat={onOpenDailyTreat}
-        onOpenLuckyRoll={onOpenLuckyRoll}
-        onOpenSpinWheel={onOpenSpinWheel}
         onOpenIslandRunStop={onOpenIslandRunStop}
         forceCompactView={forceCompactView}
         preferredCompactView={preferredCompactView}

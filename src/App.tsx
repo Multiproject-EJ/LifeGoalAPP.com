@@ -3042,8 +3042,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
               profileStrengthSnapshot={profileStrengthSnapshot}
               profileStrengthSignals={profileStrengthSignals}
               personalitySummary={personalitySummary}
-              onOpenSpinWheel={() => setShowDailySpinWheel(true)}
-              onOpenLuckyRoll={() => setShowLuckyRoll(true)}
               onOpenDailyTreat={() => setShowCalendarPlaceholder(true)}
               onOpenIslandRunStop={(stopId) => {
                 setIslandRunOpenStopParam(stopId);
@@ -4451,8 +4449,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
             profileStrengthSnapshot={profileStrengthSnapshot}
             profileStrengthSignals={profileStrengthSignals}
             personalitySummary={personalitySummary}
-            onOpenSpinWheel={() => setShowDailySpinWheel(true)}
-            onOpenLuckyRoll={() => setShowLuckyRoll(true)}
             onOpenDailyTreat={() => setShowCalendarPlaceholder(true)}
             onOpenIslandRunStop={(stopId) => {
               setIslandRunOpenStopParam(stopId);
