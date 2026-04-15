@@ -1,4 +1,5 @@
 import type { Database } from '../../lib/database.types';
+import { isValidUuid } from '../../lib/isValidUuid';
 import { fetchCheckinsForUser } from '../../services/checkins';
 import { fetchGoals } from '../../services/goals';
 import { listHabitsV2 } from '../../services/habitsV2';
@@ -283,7 +284,7 @@ export const loadProfileStrengthSignals = async (
   const checkinsPromise = userId
     ? fetchCheckinsForUser(userId, 12).catch(() => ({ data: null, error: new Error('checkins') }))
     : Promise.resolve({ data: null, error: new Error('checkins') });
-  const identityPromise = userId
+  const identityPromise = isValidUuid(userId)
     ? loadPersonalityTestHistoryWithSupabase(userId).catch(() => null)
     : Promise.resolve(null);
 

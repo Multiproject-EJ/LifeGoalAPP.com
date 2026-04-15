@@ -85,6 +85,7 @@ import {
 } from './services/workspaceProfile';
 import { fetchWorkspaceStats, type WorkspaceStats } from './services/workspaceStats';
 import { getSupabaseClient } from './lib/supabaseClient';
+import { isValidUuid } from './lib/isValidUuid';
 import { useContinuousSave } from './hooks/useContinuousSave';
 import { isStandaloneMode } from './routes/detectStandalone';
 import { useDailySpinStatus } from './hooks/useDailySpinStatus';
@@ -1373,7 +1374,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, [activeSession?.user?.id, isProfileStrengthDebugActive]);
 
   useEffect(() => {
-    if (!activeSession?.user?.id) {
+    const activeUserId = activeSession?.user?.id ?? null;
+    if (!isValidUuid(activeUserId)) {
       setPersonalitySummary(null);
       setPersonalityScores(null);
       setArchetypeHand(null);
