@@ -22,17 +22,13 @@ export async function fetchAiSettings(userId: string): Promise<{
       .select('user_id, provider, api_key, model')
       .eq('user_id', userId)
       .eq('provider', 'openai')
-      .single();
+      .limit(1);
 
     if (error) {
-      // If no row exists, that's not an error - just return null
-      if (error.code === 'PGRST116') {
-        return { data: null, error: null };
-      }
       throw error;
     }
 
-    return { data, error: null };
+    return { data: data?.[0] ?? null, error: null };
   } catch (error) {
     console.error('Failed to fetch AI settings:', error);
     return {
