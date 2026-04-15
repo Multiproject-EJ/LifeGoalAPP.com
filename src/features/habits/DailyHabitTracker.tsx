@@ -2193,6 +2193,7 @@ export function DailyHabitTracker({
     const nextUtcMidnight = getNextUtcMidnightMs();
     const adventMeta = getActiveAdventMeta();
     const calendarLabel = adventMeta ? `${adventMeta.meta.displayName} Calendar` : 'Treat Calendar';
+    const hasCollectedDailyTreat = hasCollectedDailyHeartsToday(session.user.id);
 
     return [
       {
@@ -2203,6 +2204,7 @@ export function DailyHabitTracker({
         badgeLabelOverride: islandRunOfferBadge,
         isCollected: false,
         isVisible: isIslandRunOfferVisible,
+        isActionable: isIslandRunOfferVisible,
         sortPriority: 0,
       },
       {
@@ -2213,6 +2215,7 @@ export function DailyHabitTracker({
         badgeLabelOverride: hasClaimedVisionStar ? '✓ Done' : 'Open',
         isCollected: hasClaimedVisionStar,
         isVisible: true,
+        isActionable: !hasClaimedVisionStar,
         sortPriority: 1,
       },
       {
@@ -2220,8 +2223,9 @@ export function DailyHabitTracker({
         label: calendarLabel,
         icon: '🎁',
         expiresAtMs: nextUtcMidnight,
-        isCollected: hasCollectedDailyHeartsToday(session.user.id),
+        isCollected: hasCollectedDailyTreat,
         isVisible: true,
+        isActionable: !hasCollectedDailyTreat,
         sortPriority: 2,
       },
       {
@@ -2234,6 +2238,7 @@ export function DailyHabitTracker({
           : undefined,
         isCollected: false,
         isVisible: luckyRollAvailable,
+        isActionable: luckyRollAvailable,
         sortPriority: 3,
       },
       {
@@ -2243,6 +2248,7 @@ export function DailyHabitTracker({
         expiresAtMs: nextUtcMidnight,
         isCollected: false,
         isVisible: spinAvailable,
+        isActionable: spinAvailable,
         sortPriority: 4,
       },
       {
@@ -2252,6 +2258,7 @@ export function DailyHabitTracker({
         expiresAtMs: null,
         isCollected: false,
         isVisible: isBossChallengeAvailable,
+        isActionable: isBossChallengeAvailable,
         sortPriority: 5,
       },
       {
@@ -2261,6 +2268,7 @@ export function DailyHabitTracker({
         expiresAtMs: null,
         isCollected: false,
         isVisible: isEggReadyToCollectOnActiveIsland,
+        isActionable: isEggReadyToCollectOnActiveIsland,
         sortPriority: 6,
       },
       {
@@ -2270,6 +2278,7 @@ export function DailyHabitTracker({
         expiresAtMs: null,
         isCollected: false,
         isVisible: isMysteryStopAvailable,
+        isActionable: isMysteryStopAvailable,
         sortPriority: 7,
       },
     ];
