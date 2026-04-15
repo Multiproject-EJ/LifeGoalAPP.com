@@ -99,12 +99,11 @@ import {
   setYesterdayRecapLastShown,
 } from '../../services/yesterdayRecapPrefs';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
-import { useDailySpinStatus } from '../../hooks/useDailySpinStatus';
-import { useLuckyRollStatus } from '../../hooks/useLuckyRollStatus';
 import { hasCollectedDailyHeartsToday } from '../../services/dailyTreats';
 import { fetchXPTransactions } from '../../services/gamification';
 import { fetchZenTokenTransactions } from '../../services/zenGarden';
 import { getRewardHistory } from '../../services/gameRewards';
+import { createDicePackCheckoutSession } from '../../services/billing';
 import { TimeBoundOfferRow, type TimeBoundOfferItem, type TimeBoundOfferId } from './TimeBoundOfferRow';
 import { readIslandRunRuntimeState } from '../gamification/level-worlds/services/islandRunRuntimeState';
 import { generateIslandStopPlan } from '../gamification/level-worlds/services/islandRunStops';
@@ -233,8 +232,6 @@ type DailyHabitTrackerProps = {
   profileStrengthSignals?: ProfileStrengthSignalSnapshot | null;
   personalitySummary?: string | null;
   onOpenDailyTreat?: () => void;
-  onOpenLuckyRoll?: () => void;
-  onOpenSpinWheel?: () => void;
   onOpenIslandRunStop?: (stopId: 'boss' | 'hatchery' | 'dynamic') => void;
   forceCompactView?: boolean;
   preferredCompactView?: boolean;
@@ -535,8 +532,6 @@ export function DailyHabitTracker({
   profileStrengthSignals,
   personalitySummary,
   onOpenDailyTreat,
-  onOpenLuckyRoll,
-  onOpenSpinWheel,
   onOpenIslandRunStop,
   forceCompactView = false,
   preferredCompactView,
@@ -547,13 +542,6 @@ export function DailyHabitTracker({
 }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
-  const { spinAvailable } = useDailySpinStatus(session.user.id);
-  const {
-    available: luckyRollAvailable,
-    monthlyWindowEndsAtMs: luckyRollExpiresAtMs,
-    earnedRuns: luckyRollEarnedRuns,
-    activeSource: luckyRollActiveSource,
-  } = useLuckyRollStatus(session.user.id);
   const isCompact = variant === 'compact';
   const [activeOfferTeaser, setActiveOfferTeaser] = useState<TimeBoundOfferId | null>(null);
   const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
@@ -2118,13 +2106,6 @@ export function DailyHabitTracker({
   const completedStopsOnActiveIsland = islandRunRuntime.completedStopsByIsland?.[String(activeIsland)] ?? [];
   const stopPlanForActiveIsland = useMemo(() => generateIslandStopPlan(activeIsland), [activeIsland]);
 
-  const isBossChallengeAvailable = useMemo(() => {
-    const nonBossStops = stopPlanForActiveIsland.filter((stop) => stop.stopId !== 'boss');
-    const nonBossDone = nonBossStops.every((stop) => completedStopsOnActiveIsland.includes(stop.stopId));
-    const bossDone = completedStopsOnActiveIsland.includes('boss');
-    return nonBossDone && !bossDone;
-  }, [completedStopsOnActiveIsland, stopPlanForActiveIsland]);
-
   const activeIslandEgg = islandRunRuntime.perIslandEggs?.[String(activeIsland)];
   const activeIslandEggReadyAtMs = useMemo(() => {
     if (activeIslandEgg && activeIslandEgg.status === 'incubating') {
@@ -2229,37 +2210,15 @@ export function DailyHabitTracker({
         sortPriority: 2,
       },
       {
-        id: 'lucky_roll',
-        label: 'Lucky Roll',
-        icon: '🎲',
-        expiresAtMs: luckyRollExpiresAtMs ?? nextUtcMidnight,
-        badgeLabelOverride: luckyRollActiveSource === 'earned'
-          ? `${luckyRollEarnedRuns} ${luckyRollEarnedRuns === 1 ? 'run' : 'runs'}`
-          : undefined,
-        isCollected: false,
-        isVisible: luckyRollAvailable,
-        isActionable: luckyRollAvailable,
-        sortPriority: 3,
-      },
-      {
-        id: 'spin_wheel',
-        label: 'Spin Wheel',
-        icon: '🎡',
-        expiresAtMs: nextUtcMidnight,
-        isCollected: false,
-        isVisible: spinAvailable,
-        isActionable: spinAvailable,
-        sortPriority: 4,
-      },
-      {
-        id: 'boss_challenge',
-        label: 'Boss',
-        icon: '⚔️',
+        id: 'todays_offer',
+        label: "Today's Offer",
+        icon: '🛍️',
         expiresAtMs: null,
+        badgeLabelOverride: 'Open',
         isCollected: false,
-        isVisible: isBossChallengeAvailable,
-        isActionable: isBossChallengeAvailable,
-        sortPriority: 5,
+        isVisible: true,
+        isActionable: true,
+        sortPriority: 3,
       },
       {
         id: 'egg_hatch',
@@ -2269,7 +2228,7 @@ export function DailyHabitTracker({
         isCollected: false,
         isVisible: isEggReadyToCollectOnActiveIsland,
         isActionable: isEggReadyToCollectOnActiveIsland,
-        sortPriority: 6,
+        sortPriority: 4,
       },
       {
         id: 'mystery_stop',
@@ -2279,7 +2238,7 @@ export function DailyHabitTracker({
         isCollected: false,
         isVisible: isMysteryStopAvailable,
         isActionable: isMysteryStopAvailable,
-        sortPriority: 7,
+        sortPriority: 5,
       },
     ];
   }, [
@@ -2290,20 +2249,29 @@ export function DailyHabitTracker({
     islandRunOfferLabel,
     isIslandRunOfferVisible,
     isIslandRunReadyToStart,
-    isBossChallengeAvailable,
     isEggReadyToCollectOnActiveIsland,
     isSpecialVisionStarDay,
     isMysteryStopAvailable,
-    luckyRollActiveSource,
-    luckyRollAvailable,
-    luckyRollEarnedRuns,
-    luckyRollExpiresAtMs,
     session.user.id,
-    spinAvailable,
   ]);
 
 
   const offerTeaserKey = useCallback((offerId: TimeBoundOfferId) => `${getTodayUtcDateKey()}:${offerId}`, []);
+
+  const startTodaysOfferCheckout = useCallback(async () => {
+    if (isDemoExperience) {
+      setVisionRewardError('Checkout is unavailable in demo mode.');
+      return;
+    }
+
+    const result = await createDicePackCheckoutSession();
+    if (!result.url) {
+      setVisionRewardError(result.error?.message ?? 'Unable to start checkout right now.');
+      return;
+    }
+
+    window.location.assign(result.url);
+  }, [isDemoExperience]);
 
   const openOfferContent = useCallback((offerId: TimeBoundOfferId) => {
     if (offerId === 'island_run') {
@@ -2320,15 +2288,6 @@ export function DailyHabitTracker({
       return;
     }
 
-    if (offerId === 'spin_wheel') {
-      if (onOpenSpinWheel) {
-        onOpenSpinWheel();
-      } else {
-        setVisionRewardError('Spin Wheel launcher is unavailable in this view.');
-      }
-      return;
-    }
-
     if (offerId === 'daily_treat') {
       if (onOpenDailyTreat) {
         onOpenDailyTreat();
@@ -2338,21 +2297,8 @@ export function DailyHabitTracker({
       return;
     }
 
-    if (offerId === 'lucky_roll') {
-      if (onOpenLuckyRoll) {
-        onOpenLuckyRoll();
-      } else {
-        setVisionRewardError('Lucky Roll launcher is unavailable in this view.');
-      }
-      return;
-    }
-
-    if (offerId === 'boss_challenge') {
-      if (onOpenIslandRunStop) {
-        onOpenIslandRunStop('boss');
-      } else {
-        setVisionRewardError('Boss challenge launcher is unavailable in this view.');
-      }
+    if (offerId === 'todays_offer') {
+      void startTodaysOfferCheckout();
       return;
     }
 
@@ -2372,7 +2318,7 @@ export function DailyHabitTracker({
         setVisionRewardError('Mystery stop launcher is unavailable in this view.');
       }
     }
-  }, [handleVisionRewardClick, onOpenDailyTreat, onOpenIslandRunStop, onOpenLuckyRoll, onOpenSpinWheel]);
+  }, [handleVisionRewardClick, onOpenDailyTreat, onOpenIslandRunStop, startTodaysOfferCheckout]);
 
   const handleTimeBoundOfferClick = useCallback((offerId: TimeBoundOfferId) => {
     // UX: some offers should open directly (no intermediate teaser modal)
@@ -2428,26 +2374,17 @@ export function DailyHabitTracker({
         icon: '🎁',
         backgroundImageUrl: teaserBgImageUrl,
       },
-      lucky_roll: {
-        title: 'Lucky Roll',
-        description: luckyRollActiveSource === 'earned'
-          ? `You have ${luckyRollEarnedRuns} earned Lucky Roll ${luckyRollEarnedRuns === 1 ? 'run' : 'runs'} ready to use.`
-          : 'Your monthly free Lucky Roll window is active now.',
-        cta: 'Open Lucky Roll →',
-        icon: '🎲',
+      todays_offer: {
+        title: "Today's Offer",
+        description: 'Get 500 rolls via the existing Stripe checkout flow.',
+        cta: "Open Today's Offer →",
+        icon: '🛍️',
       },
-      spin_wheel: {
-        title: 'Spin Wheel',
-        description: "Your spin status is available now. Spin to collect today's prize.",
-        cta: 'Open Spin Wheel →',
-        icon: '🎡',
-      },
-      boss_challenge: { title: 'Boss', description: 'Boss challenge is available.', cta: 'Open Boss →', icon: '⚔️' },
       egg_hatch: { title: 'Egg Ready', description: 'Your current island egg is ready to collect.', cta: 'Open Hatchery →', icon: '🥚' },
       mystery_stop: { title: 'Mystery', description: 'A mystery stop is available.', cta: 'Open Mystery →', icon: '🎭' },
     };
     return map[activeOfferTeaser];
-  }, [activeOfferTeaser, luckyRollActiveSource, luckyRollEarnedRuns]);
+  }, [activeOfferTeaser]);
 
   const offerTeaserModal = activeOfferTeaser && activeOfferTeaserConfig ? (
     <div className="habit-day-nav__vision-modal-backdrop" role="dialog" aria-modal="true" aria-label="Offer teaser" onClick={() => setActiveOfferTeaser(null)}>

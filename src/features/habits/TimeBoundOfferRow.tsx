@@ -3,9 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 export type TimeBoundOfferId =
   | 'vision_star'
   | 'daily_treat'
-  | 'lucky_roll'
-  | 'spin_wheel'
-  | 'boss_challenge'
+  | 'todays_offer'
   | 'egg_hatch'
   | 'mystery_stop'
   | 'island_run';
