@@ -709,7 +709,7 @@ export function MyAccountPanel({
       <section className="account-panel__card">
         <SettingsFolderButton
           title="Advanced Tools"
-          description="Advanced workspace, analytics, and debugging tools"
+          description="Advanced ship, analytics, and debugging tools"
           icon="🔧"
           itemCount={6}
           onClick={() => setFolder1Open(true)}
@@ -735,7 +735,7 @@ export function MyAccountPanel({
       >
         <section className="account-panel__card" aria-labelledby="account-data">
           <p className="account-panel__eyebrow">Data &amp; security</p>
-          <h3 id="account-data">Workspace data</h3>
+          <h3 id="account-data">Ship data</h3>
           <p className="account-panel__hint">
             View high-level metadata about your profile. Detailed exports are available through Supabase.
           </p>

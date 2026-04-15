@@ -859,7 +859,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           label: 'Settings',
           ariaLabel: 'Settings and profile',
           icon: '⚙️',
-          summary: 'Manage your profile, workspace, and preferences.',
+          summary: 'Manage your profile, ship, and preferences.',
         } satisfies MobileMenuNavItem;
       }
 
@@ -1877,7 +1877,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           return;
         }
         if (!formFullName) {
-          setAuthError('Share your name so we can personalize your workspace.');
+          setAuthError('Share your name so we can personalize your ship.');
           return;
         }
         await signUpWithPassword({
@@ -2315,7 +2315,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     },
     signup: {
       title: 'Create your LifeGoal account',
-      subtitle: 'Sign up with email or Google to unlock the full workspace.',
+      subtitle: 'Sign up with email or Google to unlock your full ship.',
     },
     };
 
@@ -2559,8 +2559,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const accountDisplayName = normalizedDisplayName || userDisplay || 'Guest';
   const accountInitials = profileInitials || generateInitials(accountDisplayName);
   const accountEmail = supabaseSession?.user.email || 'No email on file';
-  const accountWorkspaceName = workspaceProfile?.workspace_name || 'Personal rituals workspace';
-  const accountWorkspaceMode = supabaseSession ? 'Connected to Supabase' : 'Not connected';
+  const accountShipName = workspaceProfile?.workspace_name || 'Personal rituals ship';
+  const accountShipMode = supabaseSession ? 'Connected to Supabase' : 'Not connected';
   const accountBirthday = workspaceProfile?.birthday || 'Not set';
   const accountGender = workspaceProfile?.gender || 'Not set';
   const accountOnboardingStatus = supabaseSession?.user.user_metadata?.onboarding_complete ? 'Complete' : 'In progress';
@@ -2916,7 +2916,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 <h3>Launch your Game of Life 2.0 setup</h3>
                 <p>
                   Walk through the Agency, Awareness, Rationality, and Vitality loops to unlock the full
-                  workspace.
+                  ship.
                 </p>
               </div>
               <div className="onboarding-start-card__actions">
@@ -2935,7 +2935,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             <div className="onboarding-nudge">
               <div>
                 <strong>Ready to rebalance your four axes?</strong>
-                <p>Continue the Game of Life 2.0 onboarding to unlock your full workspace.</p>
+                <p>Continue the Game of Life 2.0 onboarding to unlock your full ship.</p>
               </div>
               <div className="onboarding-nudge__actions">
                 <button
@@ -2962,7 +2962,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             </div>
           ) : (
             <p className="workspace-onboarding-hint">
-              Finish onboarding to unlock the goal workspace and habit trackers.
+              Finish onboarding to unlock the goal ship and habit trackers.
             </p>
           )}
         </>
@@ -3297,7 +3297,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               <h2>{activeWorkspaceItem.label}</h2>
               <p>{activeWorkspaceItem.summary}</p>
               <p className="workspace-stage__placeholder-hint">
-                Select "Goals & Habits" to access the full workspace preview.
+                Select "Goals & Habits" to access the full ship preview.
               </p>
             </div>
           </div>
@@ -3414,7 +3414,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       <p className="mobile-menu-overlay__profile-dialog-eyebrow">Player Profile</p>
                       <h3 className="mobile-menu-overlay__profile-dialog-title">My account</h3>
                       <p className="mobile-menu-overlay__profile-dialog-lead">
-                        Review your identity details and workspace access.
+                        Review your identity details and ship access.
                       </p>
                     </div>
                     <button
@@ -3441,8 +3441,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <dl className="mobile-menu-overlay__profile-dialog-details">
                     <div><dt>Initials</dt><dd>{accountInitials || 'Not set'}</dd></div>
                     <div><dt>Email</dt><dd>{accountEmail}</dd></div>
-                    <div><dt>Workspace Name</dt><dd>{accountWorkspaceName}</dd></div>
-                    <div><dt>Workspace Mode</dt><dd>{accountWorkspaceMode}</dd></div>
+                    <div><dt>Ship Name</dt><dd>{accountShipName}</dd></div>
+                    <div><dt>Ship Mode</dt><dd>{accountShipMode}</dd></div>
                     <div><dt>Birthday</dt><dd>{accountBirthday}</dd></div>
                     <div><dt>Gender</dt><dd>{accountGender}</dd></div>
                     <div><dt>Onboarding</dt><dd>{accountOnboardingStatus}</dd></div>
@@ -4611,17 +4611,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
     <div className={appClassName}>
       <div className={workspaceShellClassName}>
         {!isMobileExperience && !isDesktopMenuOpen && (
-          <button
-            type="button"
-            className="workspace-shell__menu-edge"
-            aria-label="Open workspace menu"
-            onClick={() => setIsDesktopMenuOpen(true)}
-          />
+            <button
+              type="button"
+              className="workspace-shell__menu-edge"
+              aria-label="Open ship menu"
+              onClick={() => setIsDesktopMenuOpen(true)}
+            />
         )}
         {!isMobileExperience && (
           <aside
             className="workspace-sidebar"
-            aria-label="Workspace navigation"
+            aria-label="Ship navigation"
             aria-hidden={!isDesktopMenuOpen}
           >
             <div className="workspace-sidebar__masthead">

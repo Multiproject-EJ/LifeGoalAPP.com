@@ -23,7 +23,7 @@ export function WorkspaceSetupDialog({
 }: WorkspaceSetupDialogProps) {
   const { client } = useSupabaseAuth();
   const [fullName, setFullName] = useState('');
-  const [workspaceName, setWorkspaceName] = useState('');
+  const [shipName, setShipName] = useState('');
   const [birthday, setBirthday] = useState('');
   const [gender, setGender] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -36,13 +36,13 @@ export function WorkspaceSetupDialog({
   useEffect(() => {
     if (!profile) {
       setFullName('');
-      setWorkspaceName('');
+      setShipName('');
       setBirthday('');
       setGender('');
       return;
     }
     setFullName(profile.full_name ?? '');
-    setWorkspaceName(profile.workspace_name ?? '');
+    setShipName(profile.workspace_name ?? '');
     setBirthday(profile.birthday ?? '');
     setGender(profile.gender ?? '');
   }, [profile]);
@@ -62,7 +62,7 @@ export function WorkspaceSetupDialog({
     event.preventDefault();
     const trimmedName = fullName.trim();
     if (!trimmedName) {
-      setErrorMessage('Add your name to personalize the workspace.');
+      setErrorMessage('Add your name to personalize your ship.');
       return;
     }
 
@@ -74,7 +74,7 @@ export function WorkspaceSetupDialog({
       const { data, error } = await upsertWorkspaceProfile({
         user_id: session.user.id,
         full_name: trimmedName,
-        workspace_name: workspaceName.trim() || null,
+        workspace_name: shipName.trim() || null,
         birthday: birthday || null,
         gender: gender || null,
       });
@@ -101,18 +101,18 @@ export function WorkspaceSetupDialog({
   };
 
   return (
-    <div className="workspace-setup" role="dialog" aria-modal="true" aria-label="Workspace setup">
+    <div className="workspace-setup" role="dialog" aria-modal="true" aria-label="Ship setup">
       <div className="workspace-setup__backdrop" onClick={onClose} role="presentation" />
       <div className="workspace-setup__card">
         <button type="button" className="workspace-setup__close" onClick={onClose}>
           <span aria-hidden="true">×</span>
-          <span className="sr-only">Close workspace setup</span>
+          <span className="sr-only">Close ship setup</span>
         </button>
         <div className="workspace-setup__header">
           <p className="workspace-setup__eyebrow">Complete your account</p>
           <h2>Save your account details</h2>
           <p>
-            Share your name, optional birthday, optional gender, and workspace title so your account looks personalized every time you
+            Share your name, optional birthday, optional gender, and ship name so your account looks personalized every time you
             sign in. We’ll sync these details to Supabase.
           </p>
         </div>
@@ -139,11 +139,11 @@ export function WorkspaceSetupDialog({
             />
           </label>
           <label className="supabase-auth__field">
-            <span>Workspace name</span>
+            <span>Ship name</span>
             <input
               type="text"
-              value={workspaceName}
-              onChange={(event) => setWorkspaceName(event.target.value)}
+              value={shipName}
+              onChange={(event) => setShipName(event.target.value)}
               placeholder="My rituals HQ"
             />
           </label>
