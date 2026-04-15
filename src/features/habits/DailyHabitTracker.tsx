@@ -19,7 +19,6 @@ import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
 import { recordTelemetryEvent } from '../../services/telemetry';
 import { getActiveAdventMeta } from '../../services/treatCalendarService';
-import { getHolidayThemeAssets } from '../../services/holidayThemeAssets';
 import { XP_TO_GOLD_RATIO, convertXpToGold } from '../../constants/economy';
 import { PointsBadge } from '../../components/PointsBadge';
 import {
@@ -544,6 +543,7 @@ export function DailyHabitTracker({
   const isDemoExperience = isDemoSession(session);
   const isCompact = variant === 'compact';
   const [activeOfferTeaser, setActiveOfferTeaser] = useState<TimeBoundOfferId | null>(null);
+  const [isTodaysOfferModalOpen, setIsTodaysOfferModalOpen] = useState(false);
   const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
   const [seenOfferTeasers, setSeenOfferTeasers] = useState<Record<string, boolean>>({});
   const progressGradientId = useId();
@@ -2322,8 +2322,13 @@ export function DailyHabitTracker({
 
   const handleTimeBoundOfferClick = useCallback((offerId: TimeBoundOfferId) => {
     // UX: some offers should open directly (no intermediate teaser modal)
-    if (offerId === 'egg_hatch' || offerId === 'vision_star' || offerId === 'island_run') {
+    if (offerId === 'egg_hatch' || offerId === 'vision_star' || offerId === 'island_run' || offerId === 'daily_treat') {
       openOfferContent(offerId);
+      return;
+    }
+
+    if (offerId === 'todays_offer') {
+      setIsTodaysOfferModalOpen(true);
       return;
     }
 
@@ -2352,45 +2357,19 @@ export function DailyHabitTracker({
 
 
   const activeOfferTeaserConfig = useMemo(() => {
-    if (!activeOfferTeaser) return null;
-    const teaserAdventMeta = getActiveAdventMeta();
-    const teaserCalendarTitle = teaserAdventMeta ? `${teaserAdventMeta.meta.displayName} Calendar` : 'Treat Calendar';
-    const teaserCalendarCta = teaserAdventMeta ? `Open ${teaserAdventMeta.meta.displayName} Calendar →` : 'Open Treat Calendar →';
-    const teaserBgImageUrl = teaserAdventMeta
-      ? getHolidayThemeAssets(teaserAdventMeta.meta.holiday_key).introBackgroundUrl
-      : null;
-    const map: Record<TimeBoundOfferId, { title: string; description: string; cta: string; icon: string; backgroundImageUrl?: string | null }> = {
-      island_run: { title: 'Island Run', description: 'Your next island is ready to open.', cta: 'Open Island Run →', icon: '🏝️' },
-      vision_star: {
-        title: 'Vision Star',
-        description: 'Your daily vision boost is ready. Open now to claim it.',
-        cta: 'Open Vision Star →',
-        icon: '🌟',
-      },
-      daily_treat: {
-        title: teaserCalendarTitle,
-        description: "Your calendar is ready with today's treat.",
-        cta: teaserCalendarCta,
-        icon: '🎁',
-        backgroundImageUrl: teaserBgImageUrl,
-      },
-      todays_offer: {
-        title: "Today's Offer",
-        description: 'Get 500 rolls via the existing Stripe checkout flow.',
-        cta: "Open Today's Offer →",
-        icon: '🛍️',
-      },
-      egg_hatch: { title: 'Egg Ready', description: 'Your current island egg is ready to collect.', cta: 'Open Hatchery →', icon: '🥚' },
-      mystery_stop: { title: 'Mystery', description: 'A mystery stop is available.', cta: 'Open Mystery →', icon: '🎭' },
+    if (activeOfferTeaser !== 'mystery_stop') return null;
+    return {
+      title: 'Mystery',
+      description: 'A mystery stop is available.',
+      cta: 'Open Mystery →',
+      icon: '🎭',
     };
-    return map[activeOfferTeaser];
   }, [activeOfferTeaser]);
 
   const offerTeaserModal = activeOfferTeaser && activeOfferTeaserConfig ? (
     <div className="habit-day-nav__vision-modal-backdrop" role="dialog" aria-modal="true" aria-label="Offer teaser" onClick={() => setActiveOfferTeaser(null)}>
       <div
-        className={`habit-day-nav__vision-modal habit-day-nav__offer-teaser${activeOfferTeaserConfig.backgroundImageUrl ? ' habit-day-nav__offer-teaser--hero-image' : ''}`}
-        style={activeOfferTeaserConfig.backgroundImageUrl ? { backgroundImage: `url(${activeOfferTeaserConfig.backgroundImageUrl})` } : undefined}
+        className="habit-day-nav__vision-modal habit-day-nav__offer-teaser"
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -2401,13 +2380,11 @@ export function DailyHabitTracker({
         >
           ×
         </button>
-        {!activeOfferTeaserConfig.backgroundImageUrl && (
-          <>
-            <p className="habit-day-nav__offer-teaser-icon" aria-hidden="true">{activeOfferTeaserConfig.icon}</p>
-            <p className="habit-day-nav__offer-teaser-title">{activeOfferTeaserConfig.title}</p>
-            <p className="habit-day-nav__offer-teaser-copy">{activeOfferTeaserConfig.description}</p>
-          </>
-        )}
+        <>
+          <p className="habit-day-nav__offer-teaser-icon" aria-hidden="true">{activeOfferTeaserConfig.icon}</p>
+          <p className="habit-day-nav__offer-teaser-title">{activeOfferTeaserConfig.title}</p>
+          <p className="habit-day-nav__offer-teaser-copy">{activeOfferTeaserConfig.description}</p>
+        </>
         <button
           type="button"
           className="habit-day-nav__offer-teaser-cta"
@@ -2419,6 +2396,39 @@ export function DailyHabitTracker({
           }}
         >
           {activeOfferTeaserConfig.cta}
+        </button>
+      </div>
+    </div>
+  ) : null;
+
+  const todaysOfferModal = isTodaysOfferModalOpen ? (
+    <div
+      className="habit-day-nav__vision-modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Today's offer"
+      onClick={() => setIsTodaysOfferModalOpen(false)}
+    >
+      <div
+        className="habit-day-nav__vision-modal habit-day-nav__todays-offer-modal"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="habit-day-nav__vision-modal-close habit-day-nav__todays-offer-close"
+          onClick={() => setIsTodaysOfferModalOpen(false)}
+          aria-label="Close today's offer"
+        >
+          ×
+        </button>
+        <button
+          type="button"
+          className="habit-day-nav__todays-offer-buy"
+          onClick={() => {
+            void startTodaysOfferCheckout();
+          }}
+        >
+          Buy
         </button>
       </div>
     </div>
@@ -8031,11 +8041,18 @@ export function DailyHabitTracker({
       : offerTeaserModal
     : null;
 
+  const todaysOfferPortal = todaysOfferModal
+    ? modalRoot
+      ? createPortal(todaysOfferModal, modalRoot)
+      : todaysOfferModal
+    : null;
+
   if (isCompact) {
     return (
       <section className="habit-tracker habit-tracker--compact">
         {renderCompactExperience()}
         {offerTeaserPortal}
+        {todaysOfferPortal}
         {weeklyHabitReviewModal}
         {visionRewardModal}
         {visionVisualizationModal}
@@ -8231,6 +8248,7 @@ export function DailyHabitTracker({
         </>
       )}
       {offerTeaserPortal}
+      {todaysOfferPortal}
       {weeklyHabitReviewModal}
       {visionRewardModal}
       {visionVisualizationModal}
