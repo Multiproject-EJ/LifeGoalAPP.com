@@ -95,7 +95,7 @@ export function MyAccountPanel({
   const [billingActionLoading, setBillingActionLoading] = useState<'upgrade_monthly' | 'upgrade_yearly' | 'manage' | 'buy_rolls' | null>(null);
   
   const user = session.user;
-  const userInitials = profile?.initials || generateInitials(profile?.full_name || '');
+  const userInitials = generateInitials(profile?.full_name || '');
 
   const isPro = billingSnapshot?.entitlement?.is_pro ?? false;
   const subscriptionStatus = billingSnapshot?.subscription?.status ?? null;

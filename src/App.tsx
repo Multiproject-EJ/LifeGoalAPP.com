@@ -2502,8 +2502,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     '';
   const userInitial = (userDisplay || '').trim().charAt(0).toUpperCase() || 'U';
 
-  const profileInitials =
-    workspaceProfile?.initials || generateInitials(workspaceProfile?.full_name || '');
+  const profileInitials = generateInitials(workspaceProfile?.full_name || '');
   // Use initials from profile if enabled, otherwise use first letter
   const shouldShowInitials = isAuthenticated && workspaceProfile?.show_initials_in_menu && profileInitials;
   const menuIconContent = shouldShowInitials ? profileInitials : '🌿';
@@ -2610,7 +2609,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
               ...workspaceProfile,
               user_id: supabaseSession.user.id,
               full_name: trimmed,
-              initials: generateInitials(trimmed),
             })
           : Promise.resolve({ data: workspaceProfile ?? null, error: null }),
       ]);
