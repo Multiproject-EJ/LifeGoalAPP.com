@@ -3,17 +3,6 @@
 
 import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
-import {
-  DEMO_USER_ID,
-  getDemoProjects,
-  addDemoProject,
-  updateDemoProject,
-  removeDemoProject,
-  getDemoProjectTasks,
-  addDemoProjectTask,
-  updateDemoProjectTask,
-  removeDemoProjectTask,
-} from './demoData';
 import type {
   Project,
   ProjectStatus,
@@ -30,6 +19,16 @@ type ServiceResponse<T> = {
   error: PostgrestError | null;
 };
 
+function authRequiredError(): PostgrestError {
+  return {
+    name: 'PostgrestError',
+    code: 'AUTH_REQUIRED',
+    details: 'No active authenticated Supabase session.',
+    hint: 'Sign in to access projects.',
+    message: 'Authentication required.',
+  };
+}
+
 // =====================================================
 // PROJECTS CRUD OPERATIONS
 // =====================================================
@@ -39,7 +38,7 @@ type ServiceResponse<T> = {
  */
 export async function fetchProjects(): Promise<ServiceResponse<Project[]>> {
   if (!canUseSupabaseData()) {
-    return { data: getDemoProjects(DEMO_USER_ID), error: null };
+    return { data: [], error: null };
   }
 
   const supabase = getSupabaseClient();
@@ -58,9 +57,7 @@ export async function fetchProjectsByStatus(
   status: ProjectStatus
 ): Promise<ServiceResponse<Project[]>> {
   if (!canUseSupabaseData()) {
-    const allProjects = getDemoProjects(DEMO_USER_ID);
-    const filtered = allProjects.filter((p) => p.status === status);
-    return { data: filtered, error: null };
+    return { data: [], error: null };
   }
 
   const supabase = getSupabaseClient();
@@ -78,11 +75,7 @@ export async function fetchProjectsByStatus(
  */
 export async function fetchActiveProjects(): Promise<ServiceResponse<Project[]>> {
   if (!canUseSupabaseData()) {
-    const allProjects = getDemoProjects(DEMO_USER_ID);
-    const filtered = allProjects.filter(
-      (p) => p.status !== 'archived' && p.status !== 'completed'
-    );
-    return { data: filtered, error: null };
+    return { data: [], error: null };
   }
 
   const supabase = getSupabaseClient();
@@ -100,9 +93,7 @@ export async function fetchActiveProjects(): Promise<ServiceResponse<Project[]>>
  */
 export async function fetchProject(id: string): Promise<ServiceResponse<Project>> {
   if (!canUseSupabaseData()) {
-    const allProjects = getDemoProjects(DEMO_USER_ID);
-    const project = allProjects.find((p) => p.id === id) ?? null;
-    return { data: project, error: null };
+    return { data: null, error: null };
   }
 
   const supabase = getSupabaseClient();
@@ -122,8 +113,7 @@ export async function insertProject(
   input: CreateProjectInput
 ): Promise<ServiceResponse<Project>> {
   if (!canUseSupabaseData()) {
-    const newProject = addDemoProject(userId, input);
-    return { data: newProject, error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
@@ -153,8 +143,7 @@ export async function updateProject(
   input: UpdateProjectInput
 ): Promise<ServiceResponse<Project>> {
   if (!canUseSupabaseData()) {
-    const updated = updateDemoProject(id, input);
-    return { data: updated, error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
@@ -195,8 +184,7 @@ export async function archiveProject(id: string): Promise<ServiceResponse<Projec
  */
 export async function deleteProject(id: string): Promise<ServiceResponse<Project>> {
   if (!canUseSupabaseData()) {
-    const removed = removeDemoProject(id);
-    return { data: removed, error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
@@ -219,9 +207,7 @@ export async function fetchProjectTasks(
   projectId: string
 ): Promise<ServiceResponse<ProjectTask[]>> {
   if (!canUseSupabaseData()) {
-    const allTasks = getDemoProjectTasks(DEMO_USER_ID);
-    const filtered = allTasks.filter((t) => t.project_id === projectId);
-    return { data: filtered, error: null };
+    return { data: [], error: null };
   }
 
   const supabase = getSupabaseClient();
@@ -242,11 +228,7 @@ export async function fetchProjectTasksByStatus(
   status: TaskStatus
 ): Promise<ServiceResponse<ProjectTask[]>> {
   if (!canUseSupabaseData()) {
-    const allTasks = getDemoProjectTasks(DEMO_USER_ID);
-    const filtered = allTasks.filter(
-      (t) => t.project_id === projectId && t.status === status
-    );
-    return { data: filtered, error: null };
+    return { data: [], error: null };
   }
 
   const supabase = getSupabaseClient();
@@ -280,8 +262,7 @@ export async function insertProjectTask(
   }
 
   if (!canUseSupabaseData()) {
-    const newTask = addDemoProjectTask(userId, input);
-    return { data: newTask, error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
@@ -312,8 +293,7 @@ export async function updateProjectTask(
   input: UpdateProjectTaskInput
 ): Promise<ServiceResponse<ProjectTask>> {
   if (!canUseSupabaseData()) {
-    const updated = updateDemoProjectTask(id, input);
-    return { data: updated, error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
@@ -353,8 +333,7 @@ export async function deleteProjectTask(
   id: string
 ): Promise<ServiceResponse<ProjectTask>> {
   if (!canUseSupabaseData()) {
-    const removed = removeDemoProjectTask(id);
-    return { data: removed, error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
@@ -373,10 +352,7 @@ export async function reorderProjectTasks(
   tasks: Array<{ id: string; order_index: number }>
 ): Promise<{ success: boolean; error: PostgrestError | null }> {
   if (!canUseSupabaseData()) {
-    for (const task of tasks) {
-      updateDemoProjectTask(task.id, { order_index: task.order_index });
-    }
-    return { success: true, error: null };
+    return { success: false, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();

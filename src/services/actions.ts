@@ -3,13 +3,6 @@
 
 import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
-import {
-  DEMO_USER_ID,
-  getDemoActions,
-  addDemoAction,
-  updateDemoAction,
-  removeDemoAction,
-} from './demoData';
 import type {
   Action,
   ActionCategory,
@@ -22,6 +15,16 @@ type ServiceResponse<T> = {
   error: PostgrestError | null;
 };
 
+function authRequiredError(): PostgrestError {
+  return {
+    name: 'PostgrestError',
+    code: 'AUTH_REQUIRED',
+    details: 'No active authenticated Supabase session.',
+    hint: 'Sign in to access actions.',
+    message: 'Authentication required.',
+  };
+}
+
 // =====================================================
 // ACTIONS CRUD OPERATIONS
 // =====================================================
@@ -31,7 +34,7 @@ type ServiceResponse<T> = {
  */
 export async function fetchActions(): Promise<ServiceResponse<Action[]>> {
   if (!canUseSupabaseData()) {
-    return { data: getDemoActions(DEMO_USER_ID), error: null };
+    return { data: [], error: null };
   }
 
   const supabase = getSupabaseClient();
@@ -50,9 +53,7 @@ export async function fetchActionsByCategory(
   category: ActionCategory
 ): Promise<ServiceResponse<Action[]>> {
   if (!canUseSupabaseData()) {
-    const allActions = getDemoActions(DEMO_USER_ID);
-    const filtered = allActions.filter((a) => a.category === category);
-    return { data: filtered, error: null };
+    return { data: [], error: null };
   }
 
   const supabase = getSupabaseClient();
@@ -70,9 +71,7 @@ export async function fetchActionsByCategory(
  */
 export async function fetchActiveActions(): Promise<ServiceResponse<Action[]>> {
   if (!canUseSupabaseData()) {
-    const allActions = getDemoActions(DEMO_USER_ID);
-    const filtered = allActions.filter((a) => !a.completed);
-    return { data: filtered, error: null };
+    return { data: [], error: null };
   }
 
   const supabase = getSupabaseClient();
@@ -95,14 +94,7 @@ export async function fetchCompletedActionsForDate(
   const endOfDay = new Date(`${dateISO}T23:59:59.999`);
 
   if (!canUseSupabaseData()) {
-    const allActions = getDemoActions(DEMO_USER_ID);
-    const filtered = allActions.filter((action) => {
-      if (!action.completed || !action.completed_at) return false;
-      if (action.migrated_to_project_id) return false;
-      const completedAt = new Date(action.completed_at);
-      return completedAt >= startOfDay && completedAt <= endOfDay;
-    });
-    return { data: filtered, error: null };
+    return { data: [], error: null };
   }
 
   const supabase = getSupabaseClient();
@@ -125,8 +117,7 @@ export async function insertAction(
   input: CreateActionInput
 ): Promise<ServiceResponse<Action>> {
   if (!canUseSupabaseData()) {
-    const newAction = addDemoAction(userId, input);
-    return { data: newAction, error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
@@ -158,8 +149,7 @@ export async function updateAction(
   input: UpdateActionInput
 ): Promise<ServiceResponse<Action>> {
   if (!canUseSupabaseData()) {
-    const updated = updateDemoAction(id, input);
-    return { data: updated, error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
@@ -188,9 +178,7 @@ export async function fetchActionsByProjectId(
   projectId: string
 ): Promise<ServiceResponse<Action[]>> {
   if (!canUseSupabaseData()) {
-    const allActions = getDemoActions(DEMO_USER_ID);
-    const filtered = allActions.filter((a) => a.project_id === projectId);
-    return { data: filtered, error: null };
+    return { data: [], error: null };
   }
 
   const supabase = getSupabaseClient();
@@ -211,11 +199,7 @@ export async function completeAction(
   xpAwarded: number = 0
 ): Promise<ServiceResponse<Action>> {
   if (!canUseSupabaseData()) {
-    const updated = updateDemoAction(id, {
-      completed: true,
-      xp_awarded: xpAwarded,
-    } as UpdateActionInput & { xp_awarded: number });
-    return { data: updated, error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
@@ -237,8 +221,7 @@ export async function completeAction(
  */
 export async function deleteAction(id: string): Promise<ServiceResponse<Action>> {
   if (!canUseSupabaseData()) {
-    const removed = removeDemoAction(id);
-    return { data: removed, error: null };
+    return { data: null, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
@@ -257,11 +240,7 @@ export async function reorderActions(
   actions: Array<{ id: string; order_index: number }>
 ): Promise<{ success: boolean; error: PostgrestError | null }> {
   if (!canUseSupabaseData()) {
-    // Update demo actions order
-    for (const action of actions) {
-      updateDemoAction(action.id, { order_index: action.order_index });
-    }
-    return { success: true, error: null };
+    return { success: false, error: authRequiredError() };
   }
 
   const supabase = getSupabaseClient();
@@ -287,14 +266,7 @@ export async function reorderActions(
  */
 export async function fetchExpiredActions(): Promise<ServiceResponse<Action[]>> {
   if (!canUseSupabaseData()) {
-    const allActions = getDemoActions(DEMO_USER_ID);
-    const now = new Date();
-    const expired = allActions.filter((a) => {
-      if (a.completed) return false;
-      if (a.category === 'must_do') return false; // must_do never expires
-      return new Date(a.expires_at) < now;
-    });
-    return { data: expired, error: null };
+    return { data: [], error: null };
   }
 
   const supabase = getSupabaseClient();
