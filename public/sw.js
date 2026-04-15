@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const SHELL_CACHE = `lifegoalapp-shell-${CACHE_VERSION}`;
 const DATA_CACHE = `lifegoalapp-data-${CACHE_VERSION}`;
 const APP_SHELL = [
@@ -7,6 +7,7 @@ const APP_SHELL = [
   '/icons/app-icon-512.svg'
 ];
 const DOCUMENT_FALLBACKS = ['/', '/index.html'];
+const STATIC_ASSET_EXTENSIONS = /\.(?:css|js|mjs|map|woff2?|ttf|otf|eot|png|jpe?g|gif|svg|webp|avif|ico)$/i;
 
 const SUPABASE_HOST_MATCHER = /supabase\.(co|in)$/;
 const SUPABASE_SYNC_TAG = 'lifegoalapp-supabase-sync';
@@ -229,7 +230,19 @@ self.addEventListener('install', (event) => {
       await cache.put('/', documentResponse.clone());
 
       if (APP_SHELL.length) {
-        await cache.addAll(APP_SHELL);
+        await Promise.allSettled(
+          APP_SHELL.map(async (url) => {
+            try {
+              const response = await fetch(new Request(url, { cache: 'reload' }));
+              if (!response || !response.ok) {
+                throw new Error(`Failed to precache ${url}: ${response?.status ?? 'no-response'}`);
+              }
+              await cache.put(url, response);
+            } catch (error) {
+              console.warn('[sw] Skipped precache asset during install:', url, error);
+            }
+          })
+        );
       }
 
       await self.skipWaiting();
@@ -282,6 +295,27 @@ function cacheAppShell(event) {
         return networkResponse;
       });
     })
+  );
+}
+
+function networkFirstStaticAsset(event) {
+  event.respondWith(
+    (async () => {
+      const cache = await caches.open(SHELL_CACHE);
+      try {
+        const networkResponse = await fetch(event.request, { cache: 'no-store' });
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          await cache.put(event.request, networkResponse.clone());
+        }
+        return networkResponse;
+      } catch (error) {
+        const cachedResponse = await cache.match(event.request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        throw error;
+      }
+    })()
   );
 }
 
@@ -359,6 +393,11 @@ self.addEventListener('fetch', (event) => {
           }
         })()
       );
+      return;
+    }
+
+    if (STATIC_ASSET_EXTENSIONS.test(requestUrl.pathname)) {
+      networkFirstStaticAsset(event);
       return;
     }
 
