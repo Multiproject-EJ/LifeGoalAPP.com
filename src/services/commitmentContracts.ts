@@ -1,5 +1,5 @@
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
-import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import { canUseSupabaseData, getActiveSupabaseSession, getSupabaseClient } from '../lib/supabaseClient';
 import { isValidUuid } from '../lib/isValidUuid';
 import { listHabitLogsForRangeV2 } from './habitsV2';
 import { fetchGoals } from './goals';
@@ -1679,6 +1679,15 @@ export async function evaluateDueContracts(
   try {
     if (canUseSupabaseData() && isValidUuid(userId)) {
       const supabase = getSupabaseClient();
+      const activeSessionUserId =
+        getActiveSupabaseSession()?.user?.id
+        ?? (await supabase.auth.getSession()).data.session?.user?.id
+        ?? null;
+
+      if (!activeSessionUserId || activeSessionUserId !== userId) {
+        return { data: [], error: null };
+      }
+
       const { data, error } = await (supabase as any).rpc('evaluate_due_commitment_contracts', {
         p_user_id: userId,
         p_max_windows: 12,
