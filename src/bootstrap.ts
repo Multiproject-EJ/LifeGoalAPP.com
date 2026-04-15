@@ -376,7 +376,7 @@ const mountFallback = (error: unknown) => {
   ].join(';');
 
   const heading = document.createElement('h1');
-  heading.textContent = 'We hit a snag starting LifeGoalApp';
+  heading.textContent = 'We hit a snag starting HabitGame';
   heading.style.cssText = 'margin:0 0 0.75rem;font-size:1.5rem;';
 
   const intro = document.createElement('p');

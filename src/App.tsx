@@ -329,7 +329,7 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   },
   {
     id: 'support',
-    label: 'Life Goals',
+    label: 'Goals',
     summary: 'Review your long-term goals and celebrate progress milestones.',
     icon: '🎯',
     shortLabel: 'GOALS',
@@ -2851,8 +2851,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     return (
       <div className="app app--auth-gate">
         <header className="auth-gate__masthead">
-          <a className="auth-gate__brand" href="/" aria-label="LifeGoalApp home">
-            LifeGoalApp
+          <a className="auth-gate__brand" href="/" aria-label="HabitGame home">
+            HabitGame
           </a>
           <ThemeToggle className="auth-gate__theme-toggle" />
         </header>
@@ -3313,7 +3313,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         className={`mobile-menu-overlay${isMobileMenuImageActive ? ' mobile-menu-overlay--diode-on' : ''}`}
         role="dialog"
         aria-modal="true"
-        aria-label="Open full LifeGoalApp menu"
+        aria-label="Open full HabitGame menu"
       >
         <div
           className="mobile-menu-overlay__backdrop"
@@ -4627,9 +4627,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
             aria-hidden={!isDesktopMenuOpen}
           >
             <div className="workspace-sidebar__masthead">
-              <a className="workspace-sidebar__brand" href="/" aria-label="LifeGoalApp home">
+              <a className="workspace-sidebar__brand" href="/" aria-label="HabitGame home">
                 <span aria-hidden="true">{menuIconContent}</span>
-                <span className="sr-only">LifeGoalApp</span>
+                <span className="sr-only">HabitGame</span>
               </a>
               <div className="workspace-sidebar__masthead-actions">
                 <ThemeToggle className="btn btn--ghost workspace-sidebar__masthead-toggle" />
@@ -4879,7 +4879,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       />
 
       {isAuthOverlayVisible ? (
-        <div className="auth-overlay" role="dialog" aria-modal="true" aria-label="Authenticate with LifeGoalApp">
+        <div className="auth-overlay" role="dialog" aria-modal="true" aria-label="Authenticate with HabitGame">
           <div
             className="auth-overlay__backdrop"
             onClick={() => (canDismissOverlay ? setShowAuthPanel(false) : null)}

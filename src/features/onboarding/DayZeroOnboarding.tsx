@@ -179,7 +179,7 @@ export function DayZeroOnboarding({
         },
       });
 
-      setAuthMessage('Quick-start complete! Welcome to LifeGoalApp.');
+      setAuthMessage('Quick-start complete! Welcome to HabitGame.');
       window.localStorage.removeItem(storageKey);
       onClose();
     } catch (error) {

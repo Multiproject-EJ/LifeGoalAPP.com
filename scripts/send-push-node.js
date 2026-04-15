@@ -131,7 +131,7 @@ async function sendPush(subscription, payload) {
   }
 
   const notificationPayload = JSON.stringify({
-    title: payload.title || 'LifeGoalApp',
+    title: payload.title || 'HabitGame',
     body: payload.body || 'You have a notification',
     icon: payload.icon || '/icons/app-icon-192.svg',
     badge: payload.badge || '/icons/app-icon-192.svg',

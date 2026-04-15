@@ -832,7 +832,7 @@ export function LifeGoalInputDialog({
       <div className="life-goal-dialog" onClick={(e) => e.stopPropagation()}>
         <header className="life-goal-dialog__header">
           <div>
-            <h2>{isGuidedMode ? 'Guided goal coach' : 'Create Life Goal'}</h2>
+            <h2>{isGuidedMode ? 'Guided goal coach' : 'Create Goal'}</h2>
             {isGuidedMode ? <p className="life-goal-dialog__guided-subtitle">Follow each step to build one clear goal before you save.</p> : null}
           </div>
           <button

@@ -61,7 +61,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('push', (event) => {
   console.log('[service-worker.js] Push event received');
   
-  const defaultTitle = 'LifeGoalApp';
+  const defaultTitle = 'HabitGame';
   const defaultBody = 'You have a new notification';
   const defaultIcon = '/icons/app-icon-192.svg';
   const defaultBadge = '/icons/app-icon-192.svg';

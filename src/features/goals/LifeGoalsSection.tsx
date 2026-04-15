@@ -313,14 +313,14 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
         <div className="life-goals-section__eyebrow">Long-term roadmap</div>
         <div className="life-goals-section__heading-row">
           <div>
-            <h2>Life Goals</h2>
+            <h2>Goals</h2>
             <p>
               Use the life wheel to explore different areas of your life. Click or tap on a slice to view goal ideas and
-              create detailed life goals with steps, timing, and notifications.
+              create detailed goals with steps, timing, and notifications.
             </p>
           </div>
           <button className="life-goals-section__cta" type="button" onClick={() => handleAddGoal()}>
-            Add a life goal
+            Add a goal
           </button>
         </div>
         <div className="life-goals-section__mobile-bar" aria-live="polite">
