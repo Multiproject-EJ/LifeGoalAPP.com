@@ -1,5 +1,6 @@
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import { isValidUuid } from '../lib/isValidUuid';
 import { listHabitLogsForRangeV2 } from './habitsV2';
 import { fetchGoals } from './goals';
 import type {
@@ -1676,7 +1677,7 @@ export async function evaluateDueContracts(
   userId: string
 ): Promise<ServiceResponse<ContractEvaluation[]>> {
   try {
-    if (canUseSupabaseData()) {
+    if (canUseSupabaseData() && isValidUuid(userId)) {
       const supabase = getSupabaseClient();
       const { data, error } = await (supabase as any).rpc('evaluate_due_commitment_contracts', {
         p_user_id: userId,
