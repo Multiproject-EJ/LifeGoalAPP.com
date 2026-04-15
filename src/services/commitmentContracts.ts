@@ -1689,7 +1689,6 @@ export async function evaluateDueContracts(
       }
 
       const { data, error } = await (supabase as any).rpc('evaluate_due_commitment_contracts', {
-        p_user_id: userId,
         p_max_windows: 12,
       });
 
