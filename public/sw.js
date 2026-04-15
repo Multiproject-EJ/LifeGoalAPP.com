@@ -3,8 +3,8 @@ const SHELL_CACHE = `lifegoalapp-shell-${CACHE_VERSION}`;
 const DATA_CACHE = `lifegoalapp-data-${CACHE_VERSION}`;
 const APP_SHELL = [
   '/manifest.webmanifest',
-  '/icons/icon-192x192.svg',
-  '/icons/icon-512x512.svg'
+  '/icons/app-icon-192.svg',
+  '/icons/app-icon-512.svg'
 ];
 const DOCUMENT_FALLBACKS = ['/', '/index.html'];
 
@@ -429,8 +429,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body,
-    icon: payload.icon || '/icons/icon-192x192.svg',
-    badge: payload.badge || '/icons/icon-192x192.svg',
+    icon: payload.icon || '/icons/app-icon-192.svg',
+    badge: payload.badge || '/icons/app-icon-192.svg',
     image: payload.image,
     data,
     actions: payload.actions || undefined,
@@ -499,8 +499,8 @@ self.addEventListener('notificationclick', (event) => {
               const habitTitle = notificationData.habit_title || 'Habit';
               await self.registration.showNotification('✓ Marked as done', {
                 body: `${habitTitle} completed for today`,
-                icon: '/icons/icon-192x192.svg',
-                badge: '/icons/icon-192x192.svg',
+                icon: '/icons/app-icon-192.svg',
+                badge: '/icons/app-icon-192.svg',
                 tag: 'habit-completion-confirmation',
               });
             }

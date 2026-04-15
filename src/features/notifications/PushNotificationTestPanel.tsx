@@ -8,7 +8,7 @@ import {
 } from '../../services/pushNotifications';
 import { hasSupabaseCredentials, getSupabaseUrl } from '../../lib/supabaseClient';
 
-const NOTIFICATION_ICON = '/icons/icon-192x192.svg';
+const NOTIFICATION_ICON = '/icons/app-icon-192.svg';
 
 type StatusMessage = {
   kind: 'success' | 'error' | 'info';
