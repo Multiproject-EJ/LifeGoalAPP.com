@@ -137,7 +137,7 @@ export function ContractsTab({
   const loadContract = async () => {
     if (!userId) return;
 
-    const { data: dueEvaluations } = await evaluateDueContracts(userId);
+    const { data: dueEvaluations } = await evaluateDueContracts();
     const { data: latestSweepHealth } = await fetchContractSweepHealth();
     setSweepHealth(latestSweepHealth);
 

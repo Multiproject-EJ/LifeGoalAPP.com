@@ -1674,17 +1674,23 @@ export async function evaluateContract(
 }
 
 export async function evaluateDueContracts(
-  userId: string
+  userId?: string
 ): Promise<ServiceResponse<ContractEvaluation[]>> {
   try {
-    if (canUseSupabaseData() && isValidUuid(userId)) {
+    const requestedUserId = typeof userId === 'string' && userId.length > 0 ? userId : null;
+
+    if (canUseSupabaseData()) {
       const supabase = getSupabaseClient();
       const activeSessionUserId =
         getActiveSupabaseSession()?.user?.id
         ?? (await supabase.auth.getSession()).data.session?.user?.id
         ?? null;
 
-      if (!activeSessionUserId || activeSessionUserId !== userId) {
+      if (!activeSessionUserId) {
+        return { data: [], error: null };
+      }
+
+      if (requestedUserId && activeSessionUserId !== requestedUserId) {
         return { data: [], error: null };
       }
 
@@ -1700,7 +1706,11 @@ export async function evaluateDueContracts(
       return { data: evaluations, error: null };
     }
 
-    const { data: contracts, error } = await fetchContracts(userId);
+    if (!requestedUserId || !isValidUuid(requestedUserId)) {
+      return { data: [], error: null };
+    }
+
+    const { data: contracts, error } = await fetchContracts(requestedUserId);
     if (error || !contracts) {
       return { data: null, error: error || new Error('Contracts not found') };
     }
@@ -1732,7 +1742,7 @@ export async function evaluateDueContracts(
       let shouldContinue = true;
 
       while (shouldContinue && windowsProcessed < maxCatchUpWindowsPerSweep) {
-        const { data: evaluation, error: evaluationError } = await evaluateContract(userId, contract.id);
+        const { data: evaluation, error: evaluationError } = await evaluateContract(requestedUserId, contract.id);
         if (evaluationError || !evaluation) {
           break;
         }
@@ -1740,7 +1750,7 @@ export async function evaluateDueContracts(
         evaluations.push(evaluation);
         windowsProcessed += 1;
 
-        const { data: refreshedContracts, error: refreshedContractsError } = await fetchContracts(userId);
+        const { data: refreshedContracts, error: refreshedContractsError } = await fetchContracts(requestedUserId);
         if (refreshedContractsError || !refreshedContracts) {
           break;
         }
