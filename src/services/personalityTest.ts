@@ -82,10 +82,18 @@ function mergePersonalityTests(
   return Array.from(merged.values()).sort((a, b) => b.taken_at.localeCompare(a.taken_at));
 }
 
+function canQueryPersonalityData(userId: string | null | undefined): userId is string {
+  if (!isValidUuid(userId)) {
+    return false;
+  }
+  const normalized = userId.toLowerCase();
+  return !normalized.startsWith('demo-') && !normalized.startsWith('fake-');
+}
+
 export async function upsertPersonalityProfile(
   payload: PersonalityProfileInsert,
 ): Promise<PersonalityProfileResponse> {
-  if (!canUseSupabaseData() || !isValidUuid(payload.user_id ?? null)) {
+  if (!canUseSupabaseData() || !canQueryPersonalityData(payload.user_id ?? null)) {
     return { data: null, error: null };
   }
 
@@ -102,7 +110,7 @@ export async function upsertPersonalityProfile(
 export async function fetchPersonalityProfile(
   userId: string,
 ): Promise<PersonalityProfileResponse> {
-  if (!canUseSupabaseData() || !isValidUuid(userId)) {
+  if (!canUseSupabaseData() || !canQueryPersonalityData(userId)) {
     return { data: null, error: null };
   }
 
@@ -119,7 +127,7 @@ export async function fetchPersonalityProfile(
 export async function fetchPersonalityTestsFromSupabase(
   userId: string,
 ): Promise<PersonalityTestValue[]> {
-  if (!canUseSupabaseData() || !isValidUuid(userId)) {
+  if (!canUseSupabaseData() || !canQueryPersonalityData(userId)) {
     return [];
   }
 
@@ -155,7 +163,7 @@ export async function loadPersonalityTestHistoryWithSupabase(
 ): Promise<PersonalityTestValue[]> {
   const localRecords = await loadPersonalityTestHistory(userId);
 
-  if (!canUseSupabaseData()) {
+  if (!canUseSupabaseData() || !canQueryPersonalityData(userId)) {
     return localRecords;
   }
 
@@ -168,7 +176,7 @@ export async function loadPersonalityTestHistoryWithSupabase(
 }
 
 export async function syncPersonalityTestsWithSupabase(userId: string): Promise<void> {
-  if (!canUseSupabaseData() || !isValidUuid(userId)) {
+  if (!canUseSupabaseData() || !canQueryPersonalityData(userId)) {
     return;
   }
 
