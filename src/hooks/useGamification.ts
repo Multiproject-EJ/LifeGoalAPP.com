@@ -18,7 +18,6 @@ import {
   updateStreak,
   getLevelInfo,
 } from '../services/gamification';
-import { evaluateDueContracts } from '../services/commitmentContracts';
 
 export function useGamification(session: Session | null) {
   const instanceId = useRef(`gamification-${Math.random().toString(36).slice(2)}`);
@@ -37,7 +36,6 @@ export function useGamification(session: Session | null) {
 
   const userId = session?.user?.id;
   const refreshEventName = 'gamificationProfileUpdated';
-  const contractsEvaluatedEventName = 'contractsDueEvaluated';
 
   const broadcastRefresh = useCallback(() => {
     if (typeof window === 'undefined' || !userId) return;
@@ -168,54 +166,10 @@ export function useGamification(session: Session | null) {
     };
   }, [userId, loadGamificationData, refreshEventName]);
 
-  useEffect(() => {
-    if (!userId || !enabled || typeof window === 'undefined') {
-      return;
-    }
-
-    let isMounted = true;
-
-    const runDueContractEvaluationSweep = async () => {
-      const { data: evaluations, error } = await evaluateDueContracts();
-      if (!isMounted || error || !evaluations || evaluations.length === 0) {
-        return;
-      }
-
-      window.dispatchEvent(
-        new CustomEvent(contractsEvaluatedEventName, {
-          detail: {
-            userId,
-            evaluationCount: evaluations.length,
-            evaluatedAt: new Date().toISOString(),
-          },
-        })
-      );
-
-      await loadGamificationData();
-    };
-
-    void runDueContractEvaluationSweep();
-
-    const intervalId = window.setInterval(() => {
-      void runDueContractEvaluationSweep();
-    }, 60_000);
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        void runDueContractEvaluationSweep();
-      }
-    };
-
-    window.addEventListener('focus', handleVisibilityChange);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      isMounted = false;
-      window.clearInterval(intervalId);
-      window.removeEventListener('focus', handleVisibilityChange);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [userId, enabled, loadGamificationData, contractsEvaluatedEventName]);
+  // Temporary production timeout mitigation:
+  // Automatic/background due-contract RPC sweeps were intentionally removed from
+  // global app lifecycle hooks in this file. Due evaluations remain available
+  // via Contracts-tab-driven paths.
 
   const refreshProfile = useCallback(async () => {
     await loadGamificationData();

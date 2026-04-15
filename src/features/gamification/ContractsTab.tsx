@@ -118,7 +118,6 @@ export function ContractsTab({
   const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [historyEvaluations, setHistoryEvaluations] = useState<ContractEvaluation[]>([]);
-  const [lastAutoCheckAt, setLastAutoCheckAt] = useState<string | null>(null);
   const [overdueCatchUpMessage, setOverdueCatchUpMessage] = useState<string | null>(null);
   const [sweepHealth, setSweepHealth] = useState<ContractSweepHealth | null>(null);
 
@@ -216,32 +215,6 @@ export function ContractsTab({
 
   useEffect(() => {
     void loadContract();
-  }, [userId]);
-
-  useEffect(() => {
-    if (!userId || typeof window === 'undefined') {
-      return;
-    }
-
-    const handleContractsEvaluated = (event: Event) => {
-      const payload = event as CustomEvent<{
-        userId?: string;
-        evaluatedAt?: string;
-      }>;
-
-      if (!payload.detail || payload.detail.userId !== userId) {
-        return;
-      }
-
-      setLastAutoCheckAt(payload.detail.evaluatedAt ?? new Date().toISOString());
-      void loadContract();
-    };
-
-    window.addEventListener('contractsDueEvaluated', handleContractsEvaluated);
-
-    return () => {
-      window.removeEventListener('contractsDueEvaluated', handleContractsEvaluated);
-    };
   }, [userId]);
 
   useEffect(() => {
@@ -591,9 +564,8 @@ export function ContractsTab({
               Stake Gold or Tokens to stay accountable to your goals.
             </p>
             <p className="score-tab__meta">
-              Auto-checks run every minute while the app is open, with server-backed due-window sweeps for durability.
+              Due-window checks run while this Contracts screen is open, with server-backed sweeps for durability while the app is closed.
               Sweep runs are audit-logged for reliability monitoring.
-              {lastAutoCheckAt ? ` Last check: ${new Date(lastAutoCheckAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.` : ''}
             </p>
             <p className="score-tab__meta">{getSweepHealthCopy()}</p>
           </div>
