@@ -176,7 +176,7 @@ export function useGamification(session: Session | null) {
     let isMounted = true;
 
     const runDueContractEvaluationSweep = async () => {
-      const { data: evaluations, error } = await evaluateDueContracts(userId);
+      const { data: evaluations, error } = await evaluateDueContracts();
       if (!isMounted || error || !evaluations || evaluations.length === 0) {
         return;
       }
