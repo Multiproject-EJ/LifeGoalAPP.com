@@ -30,7 +30,7 @@ export function AchievementDetailModal({ achievement, onClose }: Props) {
   }, [onClose]);
 
   const handleShare = () => {
-    const text = `I just unlocked "${achievement.name}" ${achievement.icon} in LifeGoalApp! 🎉`;
+    const text = `I just unlocked "${achievement.name}" ${achievement.icon} in HabitGame! 🎉`;
     if (navigator.share) {
       navigator.share({ text }).catch(() => {
         // Fallback to clipboard

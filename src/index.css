@@ -26576,7 +26576,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   }
 
   body::before {
-    content: 'LifeGoalApp is available only in portrait mode. Please rotate your phone upright.';
+    content: 'HabitGame is available only in portrait mode. Please rotate your phone upright.';
     position: fixed;
     inset: 0;
     display: flex;

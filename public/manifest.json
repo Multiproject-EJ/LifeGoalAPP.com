@@ -1,7 +1,7 @@
 {
-  "name": "LifeGoalApp",
-  "short_name": "LifeGoals",
-  "description": "Track your life goals and daily habits with push notification reminders",
+  "name": "HabitGame",
+  "short_name": "HabitGame",
+  "description": "Turn daily habits into a game with reminders, streaks, and progress tracking",
   "start_url": "/",
   "scope": "/",
   "display": "fullscreen",

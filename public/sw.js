@@ -429,7 +429,7 @@ self.addEventListener('message', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  const defaultTitle = 'LifeGoalApp Reminder';
+  const defaultTitle = 'HabitGame Reminder';
   const defaultBody = 'Stay on track with your goals today.';
   let payload = {};
   let fallbackText = '';

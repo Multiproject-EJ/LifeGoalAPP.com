@@ -284,7 +284,7 @@ export function NotificationPreferences({ session }: Props) {
       <header className="notification-preferences__header">
         <h2>Habit &amp; Check-in Notifications</h2>
         <p>
-          Configure push reminders so LifeGoalApp can nudge you when it&apos;s time to complete habits or capture a life wheel
+          Configure push reminders so HabitGame can nudge you when it&apos;s time to complete habits or capture a life wheel
           check-in.
         </p>
       </header>
