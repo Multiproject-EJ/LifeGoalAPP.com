@@ -10,14 +10,18 @@ export type TimeBoundOfferId =
   | 'mystery_stop'
   | 'island_run';
 
+type TimeBoundOfferKey = TimeBoundOfferId | `placeholder_${number}`;
+
 export type TimeBoundOfferItem = {
-  id: TimeBoundOfferId;
+  id: TimeBoundOfferKey;
   label: string;
   icon: string;
   expiresAtMs: number | null;
   badgeLabelOverride?: string;
   isCollected: boolean;
   isVisible: boolean;
+  isActionable?: boolean;
+  isPlaceholder?: boolean;
   sortPriority?: number;
 };
 
@@ -79,13 +83,15 @@ export function TimeBoundOfferRow({ offers, onOfferClick }: TimeBoundOfferRowPro
   const padded = useMemo(() => {
     if (sorted.length >= 4) return sorted;
     const placeholders: TimeBoundOfferItem[] = Array.from({ length: 4 - sorted.length }, (_, idx) => ({
-      id: `placeholder_${idx}` as TimeBoundOfferId,
+      id: `placeholder_${idx}`,
       label: 'Waiting',
       icon: '⏳',
       expiresAtMs: null,
-      badgeLabelOverride: '✓ Done',
-      isCollected: true,
+      badgeLabelOverride: 'Soon',
+      isCollected: false,
       isVisible: true,
+      isActionable: false,
+      isPlaceholder: true,
     }));
     return [...sorted, ...placeholders];
   }, [sorted]);
@@ -93,20 +99,29 @@ export function TimeBoundOfferRow({ offers, onOfferClick }: TimeBoundOfferRowPro
   return (
     <section className="time-bound-offers" aria-label="Time-bound offers">
       {padded.map((offer) => {
-        const isPlaceholder = offer.id.startsWith('placeholder_');
-        const isDone = offer.isCollected || isPlaceholder;
-        const badgeLabel = offer.badgeLabelOverride ?? (isDone ? '✓ Done' : formatOfferCountdown(offer.expiresAtMs, nowMs));
+        const isPlaceholder = offer.isPlaceholder === true;
+        const isDone = offer.isCollected && !isPlaceholder;
+        const isActionable = offer.isActionable ?? (!isDone && !isPlaceholder);
+        const badgeLabel = isPlaceholder
+          ? offer.badgeLabelOverride ?? 'Soon'
+          : offer.badgeLabelOverride ?? (isDone ? '✓ Done' : formatOfferCountdown(offer.expiresAtMs, nowMs));
+        const itemStateClass = isPlaceholder
+          ? 'time-bound-offers__item--placeholder'
+          : isDone
+            ? 'time-bound-offers__item--done'
+            : '';
 
         return (
           <button
             key={`${offer.id}-${offer.label}`}
             type="button"
-            className={`time-bound-offers__item ${isDone ? 'time-bound-offers__item--done' : ''}`}
-            onClick={() => !isDone && !isPlaceholder && onOfferClick(offer.id)}
+            className={`time-bound-offers__item ${itemStateClass}`.trim()}
+            onClick={() => !isDone && !isPlaceholder && onOfferClick(offer.id as TimeBoundOfferId)}
             disabled={isDone || isPlaceholder}
-            aria-label={`${offer.label} ${isDone ? 'done' : badgeLabel}`}
+            aria-label={`${offer.label} ${isPlaceholder ? 'placeholder' : isDone ? 'done' : badgeLabel}`}
           >
             <span className="time-bound-offers__circle" aria-hidden="true">
+              {isActionable ? <span className="time-bound-offers__notification" /> : null}
               <span className="time-bound-offers__icon">{offer.icon}</span>
               <span className="time-bound-offers__badge">{badgeLabel}</span>
             </span>
