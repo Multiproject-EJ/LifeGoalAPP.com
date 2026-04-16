@@ -77,7 +77,6 @@ import {
 } from './features/gamification/level-worlds/services/islandRunEntryDebug';
 import { SPIN_PRIZES } from './types/gamification';
 import { splitGoldBalance } from './constants/economy';
-import { hasCollectedDailyHeartsToday } from './services/dailyTreats';
 import {
   fetchWorkspaceProfile,
   upsertWorkspaceProfile,
@@ -788,25 +787,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
   
   // Dynamic daily treats inventory based on collection status
   const dailyTreatsInventory = useMemo(() => {
-    // Note: We use supabaseSession directly here instead of activeSession to avoid dependency issues
-    const userId = supabaseSession?.user?.id;
-    if (!userId) {
-      return {
-        spinsRemaining: spinAvailable ? 1 : 0,
-        heartsRemaining: 0,
-        hatchesRemaining: 0,
-      };
-    }
-    
-    // Check if hearts have been collected today
-    const heartsCollectedToday = hasCollectedDailyHeartsToday(userId);
-    
     return {
       spinsRemaining: spinAvailable ? 1 : 0,
-      heartsRemaining: heartsCollectedToday ? 0 : 5,
       hatchesRemaining: 1,
     };
-  }, [spinAvailable, supabaseSession?.user?.id]);
+  }, [spinAvailable]);
   
   const todayDailyTreatsKey = getTodayDateKey();
   const hasOpenedDailyTreatsToday = dailyTreatsFirstVisitDate === todayDailyTreatsKey;
@@ -4198,13 +4183,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
               <button
                 type="button"
                 className={`daily-treats-modal__card${
-                  dailyTreatsInventory.heartsRemaining === 0
-                    ? ' daily-treats-modal__card--spent'
-                    : hasOpenedDailyTreatsToday
-                      ? ' daily-treats-modal__card--opened'
-                      : ' daily-treats-modal__card--active'
+                  hasOpenedDailyTreatsToday
+                    ? ' daily-treats-modal__card--opened'
+                    : ' daily-treats-modal__card--active'
                 }`}
-                disabled={dailyTreatsInventory.heartsRemaining === 0}
                 onClick={() => {
                   setShowDailyTreatsMenu(false);
                   setReopenGameOverlayOnRewardClose(false);
@@ -4214,16 +4196,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 <span className="daily-treats-modal__card-image" aria-hidden="true">
                   <img src={dailyTreatsHearts} alt="" />
                 </span>
-                {dailyTreatsInventory.heartsRemaining > 0 ? (
-                  <span className="daily-treats-modal__card-indicator" aria-label="Available hearts">
-                    {dailyTreatsInventory.heartsRemaining}
-                  </span>
-                ) : null}
               </button>
               <button
                 type="button"
                 className="daily-treats-modal__card-action"
-                disabled={dailyTreatsInventory.heartsRemaining === 0}
                 onClick={() => {
                   setShowDailyTreatsMenu(false);
                   setReopenGameOverlayOnRewardClose(false);
