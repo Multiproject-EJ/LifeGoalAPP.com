@@ -213,11 +213,12 @@ function computeTodayDayIndex(startsOn: string): number {
 /**
  * Compute the "today" index for a Personal Quest (treat) calendar.
  *
- * Unlike holiday calendars which are tied to real dates, treat calendars
- * advance sequentially: Day 1 is the first day the user opens it,
- * Day 2 is the next time they open it (regardless of how many real days pass).
+ * Only one door may be opened per calendar day (Monopoly GO-style).
+ * The next available day = highest opened day + 1, but *only* if the
+ * last door was opened on a previous calendar day. If the user already
+ * opened a door today, the today-index stays at the most recently
+ * opened day (so the UI shows it as "opened", not as a new clickable door).
  *
- * The next available day = highest opened day + 1, capped at totalDays.
  * If nothing has been opened yet, returns 1.
  */
 function computePersonalQuestTodayIndex(
@@ -226,6 +227,15 @@ function computePersonalQuestTodayIndex(
 ): number {
   if (!progress || progress.opened_days.length === 0) return 1;
   const maxOpened = Math.max(...progress.opened_days);
+
+  // Gate: only advance past the last opened day if `last_opened_date` is
+  // strictly before the current calendar date (local midnight comparison).
+  const todayStr = new Date().toISOString().split('T')[0];
+  if (progress.last_opened_date === todayStr) {
+    // Already opened a door today — stay on that day (shows as "opened")
+    return Math.min(maxOpened, totalDays);
+  }
+
   return Math.min(maxOpened + 1, totalDays);
 }
 
@@ -635,34 +645,14 @@ function generateRewardSchedule(
     return schedule;
   }
 
-  // Medium calendars (7–9 doors): fixed 7-door template, extended proportionally
-  // Template: Small(100), Small(150), Medium(250), Small(100), Medium(350), Large(700), Dice cache
+  // Medium calendars (7–9 doors): every day awards dice (Monopoly GO-style
+  // daily treat streak). Day 1 = 25 dice, increasing by 10 each day.
+  // Day 7 = 85 dice. For 8-9 door calendars the pattern continues.
   if (totalDays <= 9) {
-    const mediumTemplate: Array<{ tier: RewardTier; currency: RewardCurrency; amount: number | null }> = [
-      { tier: 2, currency: 'gold', amount: 100 },
-      { tier: 2, currency: 'gold', amount: 150 },
-      { tier: 3, currency: 'gold', amount: 250 },
-      { tier: 2, currency: 'gold', amount: 100 },
-      { tier: 3, currency: 'gold', amount: 350 },
-      { tier: 4, currency: 'gold', amount: 700 },
-      { tier: 5, currency: 'dice', amount: 25 },
-    ];
-
     for (let day = 1; day <= totalDays; day++) {
-      if (day === totalDays) {
-        schedule.push({ tier: 5, currency: 'dice', amount: 25 });
-      } else if (day === totalDays - 1) {
-        schedule.push({ tier: 4, currency: 'gold', amount: 700 });
-      } else {
-        // Map intermediate days proportionally to the 5-slot middle of the template
-        const midSlots = 5;
-        const midDays = totalDays - 2; // days between day1 and penultimate
-        const slotIndex = Math.min(
-          midSlots - 1,
-          Math.floor(((day - 1) / midDays) * midSlots),
-        );
-        schedule.push(mediumTemplate[slotIndex]);
-      }
+      const diceAmount = 25 + (day - 1) * 10; // 25, 35, 45, 55, 65, 75, 85 …
+      const tier: RewardTier = day === totalDays ? 5 : day >= totalDays - 1 ? 4 : day >= 4 ? 3 : 2;
+      schedule.push({ tier, currency: 'dice', amount: diceAmount });
     }
     return schedule;
   }
@@ -1432,4 +1422,71 @@ export function getHatchesForDay(
     free: dayHatches.find((h) => h.door_type === 'free') ?? null,
     bonus: dayHatches.find((h) => h.door_type === 'bonus') ?? null,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Streak computation (Monopoly GO-style daily treat streak)
+// ---------------------------------------------------------------------------
+
+export type StreakInfo = {
+  /** Number of consecutive days the user has opened doors (1-7). */
+  currentStreak: number;
+  /** Whether the streak is still alive (user opened a door today or yesterday). */
+  isActive: boolean;
+  /** Streak multiplier label, e.g. "×2" for 2-day streaks. */
+  multiplierLabel: string;
+  /** Bonus dice awarded for maintaining the streak (0 if streak < 3). */
+  streakBonusDice: number;
+};
+
+/**
+ * Compute the user's current daily treat streak from their progress record.
+ *
+ * A streak is the number of consecutive calendar days the user has opened
+ * at least one door. The streak resets if the user misses a day (Monopoly
+ * GO-style). The maximum streak shown is 7 (one full quest cycle).
+ *
+ * Within a single Personal Quest cycle, opened_days tracks sequential day
+ * indices (1, 2, 3, …) and each day can only be opened once per calendar
+ * day (enforced by computePersonalQuestTodayIndex). So the count of
+ * opened days equals the consecutive streak as long as the streak is active
+ * (last_opened_date is today or yesterday). If the user missed a day the
+ * `isActive` check fails and streak returns 0.
+ *
+ * Streak bonuses:
+ *   3-day streak:  +5 bonus dice on next open
+ *   5-day streak:  +15 bonus dice on next open
+ *   7-day streak:  +30 bonus dice on next open (full cycle)
+ */
+export function computeStreak(progress: CalendarProgress | null): StreakInfo {
+  const fallback: StreakInfo = { currentStreak: 0, isActive: false, multiplierLabel: '', streakBonusDice: 0 };
+  if (!progress || progress.opened_days.length === 0) return fallback;
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+  const lastDate = progress.last_opened_date;
+  if (!lastDate) return fallback;
+
+  // Streak is alive if the user opened a door today or yesterday.
+  // If more than 1 calendar day has elapsed since last_opened_date the
+  // streak is broken — user missed a day.
+  const isActive = lastDate === todayStr || lastDate === yesterdayStr;
+  if (!isActive) return fallback;
+
+  const currentStreak = Math.min(progress.opened_days.length, 7);
+  const multiplierLabel = currentStreak >= 2 ? `×${currentStreak}` : '';
+
+  let streakBonusDice = 0;
+  if (currentStreak >= 7) {
+    streakBonusDice = 30;
+  } else if (currentStreak >= 5) {
+    streakBonusDice = 15;
+  } else if (currentStreak >= 3) {
+    streakBonusDice = 5;
+  }
+
+  return { currentStreak, isActive, multiplierLabel, streakBonusDice };
 }

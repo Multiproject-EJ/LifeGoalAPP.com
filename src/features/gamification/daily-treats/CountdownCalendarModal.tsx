@@ -23,6 +23,7 @@ import {
   openTodayHatch,
   computeDoorStatus,
   getHatchesForDay,
+  computeStreak,
   type CalendarSeasonData,
   type CalendarHatch,
   type DoorType,
@@ -209,6 +210,21 @@ export const CountdownCalendarModal = ({
       // Award dice if applicable
       if (reward?.reward_currency === 'dice' && reward.reward_amount) {
         awardDice(userId, reward.reward_amount, 'daily_treats', `Day ${dayIndex} ${doorType} door`);
+      }
+
+      // Award streak bonus dice for Personal Quest calendars
+      if (seasonData.season.season_type === 'personal_quest' && doorType === 'free') {
+        const updatedProgressForStreak = seasonData.progress
+          ? {
+              ...seasonData.progress,
+              opened_days: [...seasonData.progress.opened_days, dayIndex],
+              last_opened_date: new Date().toISOString().split('T')[0],
+            }
+          : null;
+        const streak = computeStreak(updatedProgressForStreak);
+        if (streak.streakBonusDice > 0) {
+          awardDice(userId, streak.streakBonusDice, 'daily_treats', `${streak.currentStreak}-day streak bonus`);
+        }
       }
 
       // Refresh season data to update progress
@@ -462,6 +478,13 @@ export const CountdownCalendarModal = ({
               const statusLabel = status === 'catchup' ? 'missed day, available to open' : status;
               const label = `Day ${day} ${status === 'today' ? "(today's door)" : `(${statusLabel})`}`;
 
+              // Show dice amount on tile for personal quest calendars.
+              // Currency check is defensive — all PQ doors are now dice, but keeps
+              // the label correct if the schedule ever changes.
+              const diceAmount = isPersonalQuest && freeHatch?.reward_currency === 'dice'
+                ? freeHatch.reward_amount
+                : null;
+
               const doorBody = (
                 <>
                   <span className="daily-treats-calendar__hatch-number">{day}</span>
@@ -473,6 +496,9 @@ export const CountdownCalendarModal = ({
                     <span className="daily-treats-calendar__hatch-status" aria-hidden="true">
                       {status === 'locked' ? '🔒' : status === 'missed' ? '✗' : status === 'catchup' ? '🔓' : doorEmoji}
                     </span>
+                  )}
+                  {diceAmount != null && !(freeOpened || isOpenedLegacy) && (
+                    <span className="daily-treats-calendar__hatch-dice">🎲 {diceAmount}</span>
                   )}
                 </>
               );
@@ -587,7 +613,7 @@ export const CountdownCalendarModal = ({
               <p className="daily-treats-calendar__rollover-copy">
                 You opened every door of the {themeName}. 
                 {isPersonalQuest
-                  ? 'A new quest begins next week!'
+                  ? 'Come back tomorrow to start a new streak!'
                   : 'Enjoy the holiday — see you at the next calendar!'}
               </p>
             </div>
@@ -596,50 +622,83 @@ export const CountdownCalendarModal = ({
           {/* Legacy scratch card reveal for backwards compatibility */}
           {revealResult ? <ScratchCardReveal result={revealResult} /> : null}
 
-          <div className={`daily-treats-calendar__tracker${trackerExpanded ? '' : ' daily-treats-calendar__tracker--collapsed'}`}>
-            <button
-              type="button"
-              className="daily-treats-calendar__tracker-toggle"
-              onClick={() => setTrackerExpanded(prev => !prev)}
-              aria-expanded={trackerExpanded}
-              aria-label={trackerExpanded ? 'Collapse reward tracker' : 'Expand reward tracker'}
-            >
-              <span>Reward tracker</span>
-              <span aria-hidden="true">{trackerExpanded ? '▲' : '▼'}</span>
-            </button>
-            <div className="daily-treats-calendar__tracker-grid">
-              {DEFAULT_SYMBOLS.map((symbol) => {
-                const count = resolvedState.symbolCounts?.[symbol.name] ?? 0;
-                const isActive = count > 0;
-                const foundSymbols =
-                  count > 0
-                    ? Array.from({ length: count }, (_, i) => (
-                        <span key={`${symbol.name}-${i}`} aria-hidden="true">
-                          {symbol.emoji}
-                        </span>
-                      ))
-                    : '—';
-                return (
-                  <div
-                    key={`symbol-tracker-${symbol.name}`}
-                    className={`daily-treats-calendar__tracker-item${
-                      isActive ? ' daily-treats-calendar__tracker-item--active' : ''
-                    }`}
-                  >
-                    <span className="daily-treats-calendar__tracker-emoji" aria-hidden="true">
-                      {symbol.emoji}
-                    </span>
-                    <span
-                      className="daily-treats-calendar__tracker-label"
-                      aria-label={`${count} ${symbol.name} collected`}
+          {/* Streak tracker for Personal Quest (replaces old reward tracker) */}
+          {isPersonalQuest && seasonData?.progress && (() => {
+            const streak = computeStreak(seasonData.progress);
+            return (
+              <div className="daily-treats-calendar__streak">
+                <div className="daily-treats-calendar__streak-bar">
+                  {Array.from({ length: 7 }, (_, i) => (
+                    <div
+                      key={`streak-dot-${i}`}
+                      className={`daily-treats-calendar__streak-dot${
+                        i < streak.currentStreak ? ' daily-treats-calendar__streak-dot--filled' : ''
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="daily-treats-calendar__streak-label">
+                  {streak.currentStreak === 0
+                    ? 'Open a door to start your streak!'
+                    : `🔥 ${streak.currentStreak}-day streak${streak.multiplierLabel ? ` ${streak.multiplierLabel}` : ''}`}
+                  {streak.streakBonusDice > 0 && ` · +${streak.streakBonusDice} 🎲 bonus`}
+                </p>
+                {streak.currentStreak > 0 && streak.currentStreak < 7 && (
+                  <p className="daily-treats-calendar__streak-hint">
+                    Come back tomorrow to keep your streak alive!
+                  </p>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* Symbol tracker — only for holiday calendars using the scratch mechanic */}
+          {!isPersonalQuest && (
+            <div className={`daily-treats-calendar__tracker${trackerExpanded ? '' : ' daily-treats-calendar__tracker--collapsed'}`}>
+              <button
+                type="button"
+                className="daily-treats-calendar__tracker-toggle"
+                onClick={() => setTrackerExpanded(prev => !prev)}
+                aria-expanded={trackerExpanded}
+                aria-label={trackerExpanded ? 'Collapse reward tracker' : 'Expand reward tracker'}
+              >
+                <span>Reward tracker</span>
+                <span aria-hidden="true">{trackerExpanded ? '▲' : '▼'}</span>
+              </button>
+              <div className="daily-treats-calendar__tracker-grid">
+                {DEFAULT_SYMBOLS.map((symbol) => {
+                  const count = resolvedState.symbolCounts?.[symbol.name] ?? 0;
+                  const isActive = count > 0;
+                  const foundSymbols =
+                    count > 0
+                      ? Array.from({ length: count }, (_, i) => (
+                          <span key={`${symbol.name}-${i}`} aria-hidden="true">
+                            {symbol.emoji}
+                          </span>
+                        ))
+                      : '—';
+                  return (
+                    <div
+                      key={`symbol-tracker-${symbol.name}`}
+                      className={`daily-treats-calendar__tracker-item${
+                        isActive ? ' daily-treats-calendar__tracker-item--active' : ''
+                      }`}
                     >
-                      {foundSymbols}
-                    </span>
-                  </div>
-                );
-              })}
+                      <span className="daily-treats-calendar__tracker-emoji" aria-hidden="true">
+                        {symbol.emoji}
+                      </span>
+                      <span
+                        className="daily-treats-calendar__tracker-label"
+                        aria-label={`${count} ${symbol.name} collected`}
+                      >
+                        {foundSymbols}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           <button type="button" className="daily-treats-calendar__button" onClick={onClose}>
             Close
