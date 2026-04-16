@@ -107,7 +107,9 @@ export function TimeBoundOfferRow({ offers, onOfferClick }: TimeBoundOfferRowPro
           ? 'time-bound-offers__item--placeholder'
           : isDone
             ? 'time-bound-offers__item--done'
-            : '';
+            : isActionable
+              ? 'time-bound-offers__item--actionable'
+              : '';
 
         return (
           <button
