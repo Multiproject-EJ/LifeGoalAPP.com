@@ -240,6 +240,18 @@
   box-shadow: 0 8px 18px rgba(22, 9, 63, 0.25);
 }
 
+.time-bound-offers__item--actionable .time-bound-offers__circle::before {
+  content: '';
+  position: absolute;
+  inset: -0.12rem;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(197, 168, 255, 0.2) 0%, rgba(197, 168, 255, 0) 72%);
+  opacity: 0.3;
+  transform: scale(1);
+  animation: time-bound-offers-actionable-glow 2.6s ease-in-out infinite;
+}
+
 .time-bound-offers__icon {
   font-size: var(--offer-icon-size);
   line-height: 1;
@@ -308,6 +320,18 @@
 .time-bound-offers__item:disabled {
   cursor: not-allowed;
   opacity: 0.92;
+}
+
+@keyframes time-bound-offers-actionable-glow {
+  0%,
+  100% {
+    opacity: 0.22;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.42;
+    transform: scale(1.02);
+  }
 }
 
 .habit-day-nav__offer-teaser {
