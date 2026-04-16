@@ -19694,6 +19694,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease;
+  will-change: transform;
 }
 
 .daily-treats-calendar__hatch-number {
@@ -19742,6 +19744,13 @@ html.platform-ipad .workspace-shell__menu-edge {
 @keyframes calendar-today-pulse {
   0%, 100% { box-shadow: 0 8px 24px rgba(37, 99, 235, 0.45), 0 0 0 3px rgba(37, 99, 235, 0.18); }
   50% { box-shadow: 0 12px 32px rgba(37, 99, 235, 0.65), 0 0 0 5px rgba(37, 99, 235, 0.3); }
+}
+
+/* Today tile: press-down feedback — scale shrinks, shadow softens, pulse pauses */
+.daily-treats-calendar__hatch--today.daily-treats-calendar__hatch-button:active {
+  transform: scale(0.97);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3), 0 0 0 2px rgba(37, 99, 235, 0.12);
+  animation: none;
 }
 
 .daily-treats-calendar__hatch--locked {
@@ -20505,15 +20514,24 @@ html.platform-ipad .workspace-shell__menu-edge {
   filter: grayscale(0.5);
 }
 
-/* Bonus door unlocked state — pulsing glow */
+/* Bonus door unlocked state — warm golden glow, enhanced size */
 .daily-treats-calendar__bonus-door--unlocked {
-  animation: bonus-pulse 2s ease-in-out infinite;
-  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.4);
+  width: 32px;
+  height: 32px;
+  border-color: rgba(234, 179, 8, 0.9);
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.45), 0 4px 12px rgba(234, 179, 8, 0.3);
+  animation: bonus-pulse-warm 1.8s ease-in-out infinite;
 }
 
-@keyframes bonus-pulse {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.4); }
-  50% { box-shadow: 0 0 0 6px rgba(234, 179, 8, 0.2); }
+@keyframes bonus-pulse-warm {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.45), 0 4px 12px rgba(234, 179, 8, 0.3);
+    border-color: rgba(234, 179, 8, 0.9);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(234, 179, 8, 0.28), 0 6px 18px rgba(234, 179, 8, 0.5);
+    border-color: rgba(251, 191, 36, 1);
+  }
 }
 
 /* Personal Quest Calendar theme */
@@ -20565,8 +20583,17 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .daily-treats-calendar__bonus-door--unlocked {
-  animation: bonus-pulse 2s ease-in-out infinite;
-  border-color: rgba(234, 179, 8, 0.8);
+  width: 32px;
+  height: 32px;
+  border-color: rgba(234, 179, 8, 0.9);
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.45), 0 4px 12px rgba(234, 179, 8, 0.3);
+  animation: bonus-pulse-warm 1.8s ease-in-out infinite;
+}
+
+.daily-treats-calendar__bonus-door--unlocked:active {
+  transform: scale(0.88);
+  animation: none;
+  box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.3);
 }
 
 .daily-treats-calendar__bonus-door--opened {
@@ -27997,5 +28024,27 @@ html.platform-ipad .workspace-shell__menu-edge {
 
   .holiday-season-dialog__hero {
     max-height: 55dvh;
+  }
+}
+
+/* ── Treat Calendar: prefers-reduced-motion ─────────────────────────────────
+   Disable all calendar micro-animations for motion-sensitive users.
+   The visual hierarchy (scale, color, shadow) is preserved; only motion stops.
+   ─────────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .daily-treats-calendar__hatch {
+    transition: none;
+    will-change: auto;
+  }
+
+  .daily-treats-calendar__hatch--today,
+  .daily-treats-calendar__hatch--today.daily-treats-calendar__hatch-button:active {
+    animation: none;
+  }
+
+  .daily-treats-calendar__bonus-door--unlocked,
+  .daily-treats-calendar__bonus-door--unlocked:active {
+    animation: none;
+    transition: none;
   }
 }

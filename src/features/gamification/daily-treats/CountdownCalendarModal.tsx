@@ -486,13 +486,16 @@ export const CountdownCalendarModal = ({
                       aria-label={label}
                       onClick={() => {
                         if (freeHatch) {
-                          void handleOpenDoor(day, 'free', freeHatch);
+                          // Brief delay lets the press spring-back animation complete before the reveal replaces the tile
+                          setTimeout(() => void handleOpenDoor(day, 'free', freeHatch), 180);
                         } else {
                           // Legacy mode
-                          const result = revealScratchCardForDayWithPersistence(userId, day);
-                          if (!result) return;
-                          setRevealResult(result);
-                          setScratchState(loadScratchCardState(userId));
+                          setTimeout(() => {
+                            const result = revealScratchCardForDayWithPersistence(userId, day);
+                            if (!result) return;
+                            setRevealResult(result);
+                            setScratchState(loadScratchCardState(userId));
+                          }, 180);
                         }
                       }}
                     >
@@ -506,10 +509,12 @@ export const CountdownCalendarModal = ({
                       role="listitem"
                       aria-label={label}
                       onClick={() => {
-                        const result = revealScratchCardForDayWithPersistence(userId, day);
-                        if (!result) return;
-                        setRevealResult(result);
-                        setScratchState(loadScratchCardState(userId));
+                        setTimeout(() => {
+                          const result = revealScratchCardForDayWithPersistence(userId, day);
+                          if (!result) return;
+                          setRevealResult(result);
+                          setScratchState(loadScratchCardState(userId));
+                        }, 180);
                       }}
                     >
                       {doorBody}
@@ -536,7 +541,12 @@ export const CountdownCalendarModal = ({
                             : 'daily-treats-calendar__bonus-door--locked'
                       }`}
                       disabled={!canOpenBonus}
-                      onClick={() => canOpenBonus && void handleOpenDoor(day, 'bonus', bonusHatch)}
+                      onClick={() => {
+                        if (canOpenBonus) {
+                          // Brief delay lets the press animation complete before the reveal appears
+                          setTimeout(() => void handleOpenDoor(day, 'bonus', bonusHatch), 150);
+                        }
+                      }}
                       aria-label={`Bonus door for day ${day}${habitCompleted ? ' - unlocked' : ' - locked'}`}
                     >
                       {bonusOpened ? '✓' : '🎁'}
