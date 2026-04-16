@@ -19629,7 +19629,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   padding-top: env(safe-area-inset-top, 16px);
   padding-right: 0.25rem;
   padding-left: 0.25rem;
-  padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 1rem);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
   max-height: calc(100dvh - env(safe-area-inset-top, 16px) - env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
   scrollbar-width: none;
