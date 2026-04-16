@@ -11,9 +11,12 @@ import {
 } from '../environment/environmentSchema';
 import './HabitWizard.css';
 
-// Placeholder schedule type - will be refined to match habits_v2 JSON schema later
 export interface ScheduleDraft {
   choice: 'every_day' | 'specific_days' | 'x_per_week';
+  /** Number of completions per week (for x_per_week choice) */
+  timesPerWeek?: number;
+  /** Day-of-week indices (0=Sun … 6=Sat) for specific_days choice */
+  days?: number[];
 }
 
 export interface HabitWizardDraft {
@@ -67,6 +70,8 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
   
   // Step 2: Schedule
   const [scheduleChoice, setScheduleChoice] = useState<ScheduleChoice>('every_day');
+  const [timesPerWeek, setTimesPerWeek] = useState<number>(3);
+  const [specificDays, setSpecificDays] = useState<number[]>([1, 2, 3, 4, 5]); // Mon–Fri
   
   // Step 3: Targets & Reminders
   const [targetValue, setTargetValue] = useState<number | undefined>(undefined);
@@ -97,6 +102,8 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
       setTitle(initialDraft.title);
       setType(initialDraft.type);
       setScheduleChoice(initialDraft.schedule.choice);
+      setTimesPerWeek(initialDraft.schedule.timesPerWeek ?? 3);
+      setSpecificDays(initialDraft.schedule.days ?? [1, 2, 3, 4, 5]);
       setTargetValue(initialDraft.targetValue ?? undefined);
       setTargetUnit(initialDraft.targetUnit || '');
       setRemindersEnabled(initialDraft.remindersEnabled ?? false);
@@ -176,7 +183,11 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
       title,
       emoji: emoji || null,
       type,
-      schedule: { choice: scheduleChoice },
+      schedule: {
+        choice: scheduleChoice,
+        ...(scheduleChoice === 'x_per_week' && { timesPerWeek: Math.max(1, Math.min(7, timesPerWeek)) }),
+        ...(scheduleChoice === 'specific_days' && { days: specificDays }),
+      },
       remindersEnabled,
       reminderTimes: remindersEnabled && reminderTime ? [reminderTime] : [],
       habitEnvironment: habitEnvironment.trim() || undefined,
@@ -429,9 +440,90 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
 
           <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>
             {scheduleChoice === 'every_day' && 'This habit will be tracked every single day.'}
-            {scheduleChoice === 'specific_days' && "You'll be able to select specific days of the week."}
-            {scheduleChoice === 'x_per_week' && "You'll set a weekly goal for how many times to complete this habit."}
+            {scheduleChoice === 'specific_days' && 'Select which days of the week to track this habit.'}
+            {scheduleChoice === 'x_per_week' && 'Set how many times per week you want to complete this habit.'}
           </p>
+
+          {/* Times-per-week picker */}
+          {scheduleChoice === 'x_per_week' && (
+            <div style={{ marginTop: '1.25rem' }}>
+              <label
+                htmlFor="habit-times-per-week"
+                style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
+              >
+                Times per week (1–7)
+              </label>
+              <input
+                id="habit-times-per-week"
+                type="number"
+                min={1}
+                max={7}
+                value={timesPerWeek}
+                onChange={(e) => setTimesPerWeek(Math.max(1, Math.min(7, parseInt(e.target.value, 10) || 1)))}
+                style={{
+                  width: '5rem',
+                  padding: '0.625rem 0.75rem',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0.5rem 0 0' }}>
+                The habit will show in your checklist each day until you've hit this count for the week.
+              </p>
+            </div>
+          )}
+
+          {/* Specific-days picker */}
+          {scheduleChoice === 'specific_days' && (
+            <div style={{ marginTop: '1.25rem' }}>
+              <p style={{ fontSize: '0.875rem', fontWeight: 500, margin: '0 0 0.625rem' }}>
+                Which days?
+              </p>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                {[
+                  { label: 'Mon', index: 1 },
+                  { label: 'Tue', index: 2 },
+                  { label: 'Wed', index: 3 },
+                  { label: 'Thu', index: 4 },
+                  { label: 'Fri', index: 5 },
+                  { label: 'Sat', index: 6 },
+                  { label: 'Sun', index: 0 },
+                ].map(({ label, index }) => {
+                  const selected = specificDays.includes(index);
+                  return (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() =>
+                        setSpecificDays((prev) =>
+                          selected ? prev.filter((d) => d !== index) : [...prev, index],
+                        )
+                      }
+                      style={{
+                        padding: '0.5rem 0.75rem',
+                        border: `2px solid ${selected ? '#667eea' : '#e2e8f0'}`,
+                        borderRadius: '8px',
+                        background: selected ? '#eef2ff' : 'white',
+                        color: selected ? '#4338ca' : '#64748b',
+                        fontWeight: selected ? 600 : 400,
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              {specificDays.length === 0 && (
+                <p style={{ fontSize: '0.75rem', color: '#ef4444', margin: '0.5rem 0 0' }}>
+                  Please select at least one day.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -727,25 +819,30 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
 
         <button
           onClick={step === 3 ? handleCreateDraft : handleNext}
-          disabled={step === 1 && !title}
+          disabled={
+            (step === 1 && !title) ||
+            (step === 2 && scheduleChoice === 'specific_days' && specificDays.length === 0)
+          }
           style={{
             padding: '0.75rem 1.5rem',
             border: 'none',
             borderRadius: '8px',
-            background: 
-              (step === 1 && !title)
+            background:
+              (step === 1 && !title) ||
+              (step === 2 && scheduleChoice === 'specific_days' && specificDays.length === 0)
                 ? '#e2e8f0'
                 : '#667eea',
             color: 'white',
             fontSize: '1rem',
             fontWeight: 500,
-            cursor: 
-              (step === 1 && !title)
+            cursor:
+              (step === 1 && !title) ||
+              (step === 2 && scheduleChoice === 'specific_days' && specificDays.length === 0)
                 ? 'not-allowed'
                 : 'pointer',
           }}
         >
-          {step === 3 ? (isEditMode ? 'Save changes' : 'Create draft') : 'Next'}
+          {step === 3 ? (isEditMode ? 'Save changes' : 'Create habit') : 'Next'}
         </button>
       </div>
     </div>

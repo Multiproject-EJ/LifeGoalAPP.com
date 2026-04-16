@@ -846,6 +846,18 @@ export function DailyHabitTracker({
     };
   }, [adherenceByHabit, habitHealthByHabitId, habitInsights, habits, today]);
   const weekStartISO = useMemo(() => getWeekStartISO(activeDate), [activeDate]);
+
+  // Compute how many times each habit was marked completed in the current week.
+  // Used to show "X/Y this week" badge for times_per_week habits.
+  const weekCompletionsByHabit = useMemo(() => {
+    const result: Record<string, number> = {};
+    for (const log of historicalLogs) {
+      if (log.date >= weekStartISO && log.date <= activeDate && log.completed) {
+        result[log.habit_id] = (result[log.habit_id] ?? 0) + 1;
+      }
+    }
+    return result;
+  }, [historicalLogs, weekStartISO, activeDate]);
   const weeklySnapshotCompletionPercent = useMemo(() => {
     if (weeklyReviewSnapshot.totalHabits <= 0) return 0;
     return Math.round((weeklyReviewSnapshot.onTrack.length / weeklyReviewSnapshot.totalHabits) * 100);
@@ -5856,6 +5868,25 @@ export function DailyHabitTracker({
                           {getHabitHealthBadgeLabel(habitHealthState)}
                         </span>
                       ) : null}
+                      {(() => {
+                        const scheduleObj = habit.schedule as Record<string, unknown> | null;
+                        if (
+                          scheduleObj?.mode === 'times_per_week' &&
+                          typeof scheduleObj.timesPerWeek === 'number'
+                        ) {
+                          const completed = weekCompletionsByHabit[habit.id] ?? 0;
+                          const target = scheduleObj.timesPerWeek;
+                          return (
+                            <span
+                              className="habit-weekly-progress-badge"
+                              aria-label={`${completed} of ${target} times completed this week`}
+                            >
+                              {completed}/{target} this week
+                            </span>
+                          );
+                        }
+                        return null;
+                      })()}
                       {isOfferHabit && timeLimitedCountdownLabel ? (
                         <span className="habit-checklist__offer-timer" aria-label="Offer time remaining">
                           ⏳ {timeLimitedCountdownLabel}

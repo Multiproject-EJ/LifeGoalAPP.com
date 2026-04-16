@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { listHabitsV2, listTodayHabitLogsV2, createHabitV2, logHabitCompletionV2, listHabitStreaksV2, archiveHabitV2, listHabitLogsForWeekV2, listHabitLogsForRangeMultiV2, updateHabitFullV2, isHabitLifecycleActive, getHabitLifecycleStatus, pauseHabitV2, resumeHabitV2, deactivateHabitV2, reactivateHabitV2, getHabitsV2QueueStatus, getHabitLogV2QueueStatus, syncQueuedHabitsV2Mutations, syncQueuedHabitLogsV2Mutations, type HabitV2Row, type HabitLogV2Row, type HabitStreakRow } from '../../services/habitsV2';
 import { buildAdherenceSnapshots, type HabitAdherenceSnapshot } from '../../services/adherenceMetrics';
 import { saveAndApplySuggestion, revertSuggestionForHabit, listRevertableSuggestions, type HabitAdjustmentRow } from '../../services/habitAdjustments';
-import { HabitWizard, type HabitWizardDraft } from './HabitWizard';
+import { HabitWizard, type HabitWizardDraft, type ScheduleDraft } from './HabitWizard';
 import { environmentContextToJson, normalizeEnvironmentContext } from '../environment/environmentSchema';
 import { loadHabitTemplates, type HabitTemplate } from './habitTemplates';
 import { HabitsInsights } from './HabitsInsights';
@@ -33,6 +33,23 @@ import {
 } from './progressGrading';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { HabitPauseDialog } from './HabitPauseDialog';
+
+/**
+ * Convert a wizard ScheduleDraft to the habits_v2 DB schedule JSON format.
+ * This is the single authoritative mapping from wizard UI choice → stored data.
+ */
+function draftScheduleToDbSchedule(s: ScheduleDraft): Record<string, unknown> {
+  switch (s.choice) {
+    case 'every_day':
+      return { mode: 'daily' };
+    case 'specific_days':
+      return { mode: 'specific_days', days: s.days ?? [] };
+    case 'x_per_week':
+      return { mode: 'times_per_week', timesPerWeek: Math.max(1, Math.min(7, s.timesPerWeek ?? 3)) };
+    default:
+      return { mode: 'daily' };
+  }
+}
 
 // Check if habit suggestions feature is enabled via environment variable
 const SUGGESTIONS_ENABLED = import.meta.env.VITE_ENABLE_HABIT_SUGGESTIONS === '1';
@@ -1157,9 +1174,14 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
       type: habit.type,
       targetValue: habit.target_num,
       targetUnit: habit.target_unit,
-      schedule: {
-        choice: mapScheduleToChoice(habit.schedule),
-      },
+      schedule: (() => {
+        const s = habit.schedule as Record<string, unknown> | null;
+        return {
+          choice: mapScheduleToChoice(habit.schedule),
+          timesPerWeek: typeof s?.timesPerWeek === 'number' ? s.timesPerWeek : undefined,
+          days: Array.isArray(s?.days) ? (s.days as number[]) : undefined,
+        };
+      })(),
       remindersEnabled: false,
       reminderTimes: [],
       habitEnvironment: habit.habit_environment ?? undefined,
@@ -1240,7 +1262,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           type: draft.type,
           target_num: draft.targetValue ?? null,
           target_unit: draft.targetUnit ?? null,
-          schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
+          schedule: draftScheduleToDbSchedule(draft.schedule) as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
           habit_environment: draft.habitEnvironment ?? null,
           environment_context: environmentContextToJson(draft.environmentContext ?? null),
           environment_score: draft.environmentScore ?? null,
@@ -1248,7 +1270,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           done_ish_config: doneIshConfig as unknown as Database['public']['Tables']['habits_v2']['Row']['done_ish_config'],
           autoprog: {
             ...(existingAutoprog ?? buildDefaultAutoProgressState({
-              schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
+              schedule: draftScheduleToDbSchedule(draft.schedule) as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
               target: draft.targetValue ?? null,
             })),
             scale_plan: {
@@ -1316,14 +1338,14 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           type: draft.type,
           target_num: draft.targetValue ?? null,
           target_unit: draft.targetUnit ?? null,
-          schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
+          schedule: draftScheduleToDbSchedule(draft.schedule) as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
           habit_environment: draft.habitEnvironment ?? null,
           environment_context: environmentContextToJson(draft.environmentContext ?? null),
           environment_score: draft.environmentScore ?? null,
           environment_risk_tags: draft.environmentRiskTags ?? [],
           done_ish_config: doneIshConfig as unknown as Database['public']['Tables']['habits_v2']['Insert']['done_ish_config'],
           autoprog: buildDefaultAutoProgressState({
-            schedule: draft.schedule as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
+            schedule: draftScheduleToDbSchedule(draft.schedule) as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
             target: draft.targetValue ?? null,
           }) as Database['public']['Tables']['habits_v2']['Insert']['autoprog'],
           archived: false,
@@ -1545,7 +1567,9 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
       targetValue: template.target_num ?? null,
       targetUnit: template.target_unit ?? null,
       schedule: {
-        choice: mapTemplateScheduleToChoice(template.schedule)
+        choice: mapTemplateScheduleToChoice(template.schedule),
+        timesPerWeek: template.schedule.value,
+        days: template.schedule.days,
       },
       remindersEnabled: (template.reminders && template.reminders.length > 0) || false,
       reminderTimes: template.reminders || []
