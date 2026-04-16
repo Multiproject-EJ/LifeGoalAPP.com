@@ -72,6 +72,11 @@ type RevealState = {
   hatch: CalendarHatch | null;
 };
 
+/** ms to wait after press before opening the reveal — lets the spring snap-back animation complete */
+const PRESS_ANIMATION_DELAY_MS = 180;
+/** Shorter delay for the compact bonus door button */
+const BONUS_PRESS_ANIMATION_DELAY_MS = 150;
+
 export const CountdownCalendarModal = ({
   isOpen,
   onClose,
@@ -487,7 +492,7 @@ export const CountdownCalendarModal = ({
                       onClick={() => {
                         if (freeHatch) {
                           // Brief delay lets the press spring-back animation complete before the reveal replaces the tile
-                          setTimeout(() => void handleOpenDoor(day, 'free', freeHatch), 180);
+                          setTimeout(() => void handleOpenDoor(day, 'free', freeHatch), PRESS_ANIMATION_DELAY_MS);
                         } else {
                           // Legacy mode
                           setTimeout(() => {
@@ -495,7 +500,7 @@ export const CountdownCalendarModal = ({
                             if (!result) return;
                             setRevealResult(result);
                             setScratchState(loadScratchCardState(userId));
-                          }, 180);
+                          }, PRESS_ANIMATION_DELAY_MS);
                         }
                       }}
                     >
@@ -514,7 +519,7 @@ export const CountdownCalendarModal = ({
                           if (!result) return;
                           setRevealResult(result);
                           setScratchState(loadScratchCardState(userId));
-                        }, 180);
+                        }, PRESS_ANIMATION_DELAY_MS);
                       }}
                     >
                       {doorBody}
@@ -544,7 +549,7 @@ export const CountdownCalendarModal = ({
                       onClick={() => {
                         if (canOpenBonus) {
                           // Brief delay lets the press animation complete before the reveal appears
-                          setTimeout(() => void handleOpenDoor(day, 'bonus', bonusHatch), 150);
+                          setTimeout(() => void handleOpenDoor(day, 'bonus', bonusHatch), BONUS_PRESS_ANIMATION_DELAY_MS);
                         }
                       }}
                       aria-label={`Bonus door for day ${day}${habitCompleted ? ' - unlocked' : ' - locked'}`}
