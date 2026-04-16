@@ -295,7 +295,7 @@ export const CountdownCalendarModal = ({
   const themeMod = isPersonalQuest ? 'personal-quest' : (holidayKey ? HOLIDAY_THEME[holidayKey] ?? 'generic' : 'generic');
   const themeAssets = holidayKey ? getHolidayThemeAssets(holidayKey) : null;
   const calendarBackgroundUrl = isPersonalQuest
-    ? '/icons/DAILY TREAT/dailymomentumnight.webp'
+    ? '/icons/DAILY%20TREAT/dailymomentumnight.webp'
     : (themeAssets?.calendarBackgroundUrl ?? null);
 
   // Calculate total doors and today's index
@@ -433,7 +433,7 @@ export const CountdownCalendarModal = ({
           </p>
           {isPersonalQuest ? (
             <img
-              src="/icons/DAILY TREAT/dailymomentum_title.webp"
+              src="/icons/DAILY%20TREAT/dailymomentum_title.webp"
               alt="Daily Momentum"
               className="daily-treats-calendar__title-image"
             />
