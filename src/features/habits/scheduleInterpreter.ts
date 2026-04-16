@@ -40,7 +40,30 @@ export function parseSchedule(schedule: unknown): HabitSchedule | null {
   }
   
   const scheduleObj = schedule as Record<string, unknown>;
-  
+
+  // Backward-compat: handle the old wizard stub format { choice: '...' } that was
+  // mistakenly written to the DB before the fix.  Convert it to proper mode format.
+  if (scheduleObj.mode === undefined && typeof scheduleObj.choice === 'string') {
+    const choice = scheduleObj.choice as string;
+    if (choice === 'every_day') {
+      return { mode: 'daily' };
+    }
+    if (choice === 'specific_days') {
+      return {
+        mode: 'specific_days',
+        days: Array.isArray(scheduleObj.days) ? (scheduleObj.days as number[]) : [],
+      };
+    }
+    if (choice === 'x_per_week') {
+      return {
+        mode: 'times_per_week',
+        timesPerWeek: typeof scheduleObj.timesPerWeek === 'number' ? scheduleObj.timesPerWeek : 3,
+      };
+    }
+    // Unknown choice — fall through to daily default
+    return { mode: 'daily' };
+  }
+
   if (scheduleObj.mode !== undefined && !isValidScheduleMode(scheduleObj.mode)) {
     return null;
   }
