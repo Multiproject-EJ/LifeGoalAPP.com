@@ -268,6 +268,32 @@
   opacity: 0.96;
 }
 
+.time-bound-offers__item--actionable .time-bound-offers__circle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(100% + 0.44rem);
+  height: calc(100% + 0.44rem);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(circle, rgba(165, 127, 245, 0.22) 0%, rgba(165, 127, 245, 0.12) 48%, rgba(165, 127, 245, 0) 76%);
+  filter: blur(2px);
+  opacity: 0.78;
+  transform: translate(-50%, -50%);
+  animation: time-bound-offers-actionable-glow 2.6s ease-in-out infinite;
+}
+
+[data-theme='dark-glass'] .time-bound-offers__item--actionable .time-bound-offers__circle::before,
+[data-theme='midnight-purple'] .time-bound-offers__item--actionable .time-bound-offers__circle::before,
+[data-theme='flow-night'] .time-bound-offers__item--actionable .time-bound-offers__circle::before,
+[data-theme='bio-night'] .time-bound-offers__item--actionable .time-bound-offers__circle::before {
+  background: radial-gradient(circle, rgba(191, 157, 255, 0.34) 0%, rgba(191, 157, 255, 0.2) 52%, rgba(191, 157, 255, 0) 80%);
+  filter: blur(2.4px);
+  opacity: 0.92;
+}
+
 .time-bound-offers__icon {
   font-size: var(--offer-icon-size);
   line-height: 1;
