@@ -1081,6 +1081,9 @@ export async function getPersonalQuestSeason(
 
   // Demo / unauthenticated / no existing season: generate locally with deterministic seed
   const demo = buildPersonalQuestSeasonData(userId, now);
+  // Cache in localStorage so openTodayHatch can find the season data when the
+  // locally-generated (non-UUID) season ID is used later.
+  setDemoSeason(demo);
   return { data: demo, error: null };
 }
 
@@ -1206,8 +1209,13 @@ export async function openTodayHatch(
   reveal_mechanic: RevealMechanic;
   reward_payload: Record<string, unknown>;
 }>> {
-  if (!await canUseSupabaseDataAsync()) {
-    // Demo mode: update localStorage progress
+  // Season IDs that start with "demo-" are locally-generated (not real DB UUIDs).
+  // Always use the local/demo path for these to avoid sending a non-UUID to the
+  // backend edge function which expects a valid UUID column value.
+  const isLocalSeasonId = seasonId.startsWith('demo-');
+
+  if (!await canUseSupabaseDataAsync() || isLocalSeasonId) {
+    // Demo / local mode: update localStorage progress
     const cached = getDemoSeason();
     const season = cached?.season;
     if (!season) return { data: null, error: new Error('No active demo season') };
