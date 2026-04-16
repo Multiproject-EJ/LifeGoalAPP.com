@@ -20727,6 +20727,77 @@ html.platform-ipad .workspace-shell__menu-edge {
   border: 1px solid rgba(74, 222, 128, 0.4);
 }
 
+/* ── Bonus door popup — large centered card, shown only when bonus is ready ── */
+.daily-treats-calendar__bonus-popup {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1.1rem 1rem 1.25rem;
+  border-radius: 20px;
+  text-align: center;
+  background: linear-gradient(150deg, rgba(254, 243, 199, 0.95), rgba(253, 230, 138, 0.88));
+  border: 2px solid rgba(234, 179, 8, 0.65);
+  box-shadow: 0 6px 22px rgba(234, 179, 8, 0.28), 0 0 0 4px rgba(234, 179, 8, 0.1);
+  animation: bonus-popup-appear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes bonus-popup-appear {
+  from { opacity: 0; transform: scale(0.88) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.daily-treats-calendar__bonus-popup-icon {
+  font-size: 2.8rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(234, 179, 8, 0.4));
+  animation: bonus-icon-sway 2s ease-in-out infinite;
+}
+
+@keyframes bonus-icon-sway {
+  0%, 100% { transform: rotate(-6deg) scale(1); }
+  50%       { transform: rotate(6deg) scale(1.08); }
+}
+
+.daily-treats-calendar__bonus-popup-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #78350f;
+  letter-spacing: -0.01em;
+}
+
+.daily-treats-calendar__bonus-popup-text {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #92400e;
+  line-height: 1.5;
+}
+
+.daily-treats-calendar__bonus-popup-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.5rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+  justify-self: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  animation: bonus-btn-glow 1.8s ease-in-out infinite;
+}
+
+.daily-treats-calendar__bonus-popup-btn:active {
+  transform: scale(0.94);
+  box-shadow: 0 3px 8px rgba(245, 158, 11, 0.3);
+  animation: none;
+}
+
+@keyframes bonus-btn-glow {
+  0%, 100% { box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4); }
+  50%       { box-shadow: 0 8px 22px rgba(245, 158, 11, 0.6); }
+}
+
 .daily-treats-calendar__symbol-bonus-toast {
   padding: 0.5rem 0.75rem;
   background: rgba(254, 243, 199, 0.9);
@@ -21142,6 +21213,21 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: rgba(15, 80, 30, 0.3);
   color: #86efac;
   border-color: rgba(74, 222, 128, 0.3);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__bonus-popup {
+  background: linear-gradient(150deg, rgba(92, 40, 8, 0.7), rgba(120, 53, 15, 0.65));
+  border-color: rgba(234, 179, 8, 0.55);
+  box-shadow: 0 6px 22px rgba(234, 179, 8, 0.18), 0 0 0 4px rgba(234, 179, 8, 0.08);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__bonus-popup-title {
+  color: #fde68a;
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__bonus-popup-text {
+  color: #fcd34d;
+  opacity: 0.9;
 }
 
 :is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__bonus-door--locked {
