@@ -33,7 +33,7 @@ const FLAVOUR_TEXT_BANK: HolidayFlavourBank = {
       'The spirit of giving rewards the faithful. 🎄',
       'A Christmas miracle just for you! ⭐',
       'The ultimate gift beneath the tree. 🎁',
-      'You found the diamond in the snow! 💎',
+      'You found a legendary dice cache in the snow! 🎲',
       'Santa\'s finest treasure — you\'ve earned it! 🎅',
     ],
   },
@@ -59,7 +59,7 @@ const FLAVOUR_TEXT_BANK: HolidayFlavourBank = {
       'A legendary treat from the spirits! 🎃',
       'The ultimate Halloween treasure is yours! 💀',
       'The spirits saved their finest for last. 👻',
-      'A diamond hidden in the pumpkin patch! 💎',
+      'A legendary dice cache hidden in the pumpkin patch! 🎲',
       'The witching hour delivers its greatest prize! 🧙',
     ],
   },
@@ -84,7 +84,7 @@ const FLAVOUR_TEXT_BANK: HolidayFlavourBank = {
     5: [
       'The golden egg has been found! 🐰',
       'The rarest Easter treasure is yours! 🥚',
-      'A diamond hidden inside the final egg! 💎',
+      'A legendary dice cache hidden inside the final egg! 🎲',
       'The Easter miracle has arrived! 🌈',
       'The bunny saved the best for last! 🐣',
     ],
@@ -109,10 +109,10 @@ const FLAVOUR_TEXT_BANK: HolidayFlavourBank = {
     ],
     5: [
       'True love deserves the finest gem. 💕',
-      'The diamond of devotion is yours! 💎',
+      'A legendary reward of devotion is yours! 🎲',
       'A love story with the grandest finale! 💘',
       'Cupid delivers the ultimate valentine! 💝',
-      'Heart and soul — rewarded in diamonds. ❤️',
+      'Heart and soul — rewarded in full. ❤️',
     ],
   },
   new_year: {
@@ -135,7 +135,7 @@ const FLAVOUR_TEXT_BANK: HolidayFlavourBank = {
     ],
     5: [
       'A brilliant start to new beginnings! 🎉',
-      'The new year\'s finest diamond is yours! 💎',
+      'The new year\'s finest reward is yours! 🎲',
       'Midnight strikes — and fortune follows! 🕛',
       'The ultimate new year\'s treasure! 🎆',
       'A legendary reward for a fresh start! ✨',
@@ -161,7 +161,7 @@ const FLAVOUR_TEXT_BANK: HolidayFlavourBank = {
     ],
     5: [
       'Gratitude brings the greatest rewards. 🦃',
-      'The harvest of a lifetime is yours! 💎',
+      'The harvest of a lifetime is yours! 🎲',
       'A Thanksgiving miracle at the table! 🙏',
       'The finest treasure the harvest has to offer. 🌾',
       'Thankfulness rewarded beyond measure! 🍂',
@@ -187,7 +187,7 @@ const FLAVOUR_TEXT_BANK: HolidayFlavourBank = {
     ],
     5: [
       'A miracle worthy of celebration! 🕎',
-      'The diamond shines like the eternal flame! 💎',
+      'The reward shines like the eternal flame! 🎲',
       'Eight nights lead to one legendary reward. ✡️',
       'The greatest gift of the Festival. 🕯️',
       'A Hanukkah miracle beyond measure! ⭐',
@@ -213,8 +213,8 @@ const FLAVOUR_TEXT_BANK: HolidayFlavourBank = {
     ],
     5: [
       'Blessed with the rarest gift! 🌙',
-      'The ultimate Eid treasure is yours! 💎',
-      'A diamond blessing for the devoted! ✨',
+      'The ultimate Eid treasure is yours! 🎲',
+      'A legendary blessing for the devoted! ✨',
       'The crescent reveals its finest reward. 🌟',
       'Eid\'s greatest miracle — you\'ve earned it! 🕌',
     ],
@@ -239,7 +239,7 @@ const FLAVOUR_TEXT_BANK: HolidayFlavourBank = {
     ],
     5: [
       'The pot of gold is yours! ☘️',
-      'A diamond at the end of the rainbow! 💎',
+      'A legendary prize at the end of the rainbow! 🎲',
       'The leprechaun\'s greatest treasure revealed! 🍀',
       'Legendary Irish luck — you found it! 🌈',
       'The finest gem in all of Ireland! 🎩',
@@ -268,9 +268,9 @@ const PERSONAL_QUEST_FLAVOUR: Record<FlavourTierKey, string[]> = {
   ],
   5: [
     'Your dedication has paid off! 🌟',
-    'Quest complete — a legendary reward! 💎',
+    'Quest complete — a legendary reward! 🎲',
     'The ultimate quest treasure is yours! 🏆',
-    'Diamond-grade dedication! ✨',
+    'Top-tier dedication! ✨',
     'A true quest hero — nothing can stop you! 🚀',
   ],
 };
@@ -306,14 +306,14 @@ export const RewardCard = ({
 
   const getRewardIcon = (): string => {
     if (isEmpty) return '✦';
-    if (currency === 'diamond') return '💎';
+    if (currency === 'dice') return '🎲';
     return '🪙';
   };
 
   const getRewardLabel = (): string => {
     if (isEmpty) return 'Nothing today';
-    if (currency === 'diamond') {
-      return amount === 1 ? '1 Diamond' : `${amount} Diamonds`;
+    if (currency === 'dice') {
+      return `${amount} Dice`;
     }
     return `${amount} Gold`;
   };
@@ -343,7 +343,7 @@ export const RewardCard = ({
       2: ['A small treat to brighten your day. ✨', 'Every little bit counts! 🌟', 'A modest reward — more to come. ⭐'],
       3: ['A worthy reward for your effort. 🌟', 'Well deserved! Keep going. ✨', 'Nice progress — the streak builds! ⭐'],
       4: ['An impressive reward for dedication! 🔥', 'Rare fortune favours the consistent. ✨', 'Your persistence pays off big! ⭐'],
-      5: ['A legendary reward for your dedication! 💎', 'The ultimate treasure — you earned it! ✨', 'Diamond-grade excellence! 🌟'],
+      5: ['A legendary reward for your dedication! 🎲', 'The ultimate treasure — you earned it! ✨', 'Legendary excellence! 🌟'],
     };
     return pickFlavour(genericFallback[tierKey]);
   };

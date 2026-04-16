@@ -21,7 +21,7 @@ export type HolidayKey =
 // ---------------------------------------------------------------------------
 
 export type RewardTier = 1 | 2 | 3 | 4 | 5;
-export type RewardCurrency = 'gold' | 'diamond' | null;
+export type RewardCurrency = 'gold' | 'dice' | null;
 export type DoorType = 'free' | 'bonus';
 export type RevealMechanic = 'flip' | 'scratch' | 'unwrap';
 export type SeasonType = 'holiday' | 'personal_quest' | 'birthday' | 'special_event';
@@ -31,7 +31,7 @@ export type DoorStatus = 'locked' | 'available' | 'today' | 'opened' | 'missed' 
 // Constants
 // ---------------------------------------------------------------------------
 
-/** Calendars with 25+ doors (e.g., Christmas) get bonus diamonds on final day */
+/** Calendars with 25+ doors (e.g., Christmas) get bonus dice on final day */
 const LONG_CALENDAR_THRESHOLD = 25;
 
 // ---------------------------------------------------------------------------
@@ -48,7 +48,7 @@ export const REWARD_TIER_INFO: Record<RewardTier, {
   2: { label: 'Small Gold', rarityLabel: '✦ Common', rarityClass: 'common' },
   3: { label: 'Medium Gold', rarityLabel: '✦✦ Uncommon', rarityClass: 'uncommon' },
   4: { label: 'Large Gold', rarityLabel: '✦✦✦ Rare', rarityClass: 'rare' },
-  5: { label: 'Diamond', rarityLabel: '💎 Legendary', rarityClass: 'legendary' },
+  5: { label: 'Dice Cache', rarityLabel: '🎲 Legendary', rarityClass: 'legendary' },
 };
 
 /** Reward amount ranges for each tier */
@@ -57,7 +57,7 @@ const REWARD_AMOUNT_RANGES: Record<RewardTier, { min: number; max: number }> = {
   2: { min: 50, max: 150 },      // Small gold
   3: { min: 200, max: 500 },     // Medium gold
   4: { min: 600, max: 900 },     // Large gold
-  5: { min: 1, max: 3 },         // Diamond (count)
+  5: { min: 25, max: 75 },       // Dice cache
 };
 
 /**
@@ -119,11 +119,11 @@ export type CalendarHatch = {
   number_reward: number | null;
   symbol_reward: string | null;
   reward_payload: Record<string, unknown>;
-  /** Reward currency: gold, diamond, or null (empty) */
+  /** Reward currency: gold, dice, or null (empty) */
   reward_currency: RewardCurrency;
   /** Numeric reward amount */
   reward_amount: number | null;
-  /** Reward tier: 1=empty, 2=small_gold, 3=medium_gold, 4=large_gold, 5=diamond */
+  /** Reward tier: 1=empty, 2=small_gold, 3=medium_gold, 4=large_gold, 5=dice_cache */
   reward_tier: RewardTier | null;
   /** Animation type: flip, scratch, unwrap */
   reveal_mechanic: RevealMechanic;
@@ -241,6 +241,45 @@ function computeTotalFreeDoors(
     .filter(h => h.door_type === 'free')
     .map(h => h.day_index);
   return freeDayIndices.length > 0 ? Math.max(...freeDayIndices) : fallback;
+}
+
+function normalizeRewardCurrency(currency: RewardCurrency | 'diamond' | null): RewardCurrency {
+  if (currency === 'diamond') return 'dice';
+  return currency;
+}
+
+function normalizeRewardAmount(
+  currency: RewardCurrency | 'diamond' | null,
+  amount: number | null,
+): number | null {
+  if (amount == null) return null;
+  if (currency === 'diamond') {
+    // Migrate legacy diamond count into dice payout.
+    return Math.max(25, amount * 25);
+  }
+  return amount;
+}
+
+function normalizeHatches(hatches: CalendarHatch[]): CalendarHatch[] {
+  return hatches.map((hatch) => {
+    const normalizedCurrency = normalizeRewardCurrency(hatch.reward_currency as RewardCurrency | 'diamond' | null);
+    return {
+      ...hatch,
+      reward_currency: normalizedCurrency,
+      reward_amount: normalizeRewardAmount(hatch.reward_currency as RewardCurrency | 'diamond' | null, hatch.reward_amount),
+      reward_payload:
+        hatch.reward_payload && typeof hatch.reward_payload === 'object'
+          ? {
+              ...hatch.reward_payload,
+              reward_type: normalizedCurrency,
+              reward_value: normalizeRewardAmount(
+                hatch.reward_currency as RewardCurrency | 'diamond' | null,
+                hatch.reward_amount,
+              ),
+            }
+          : hatch.reward_payload,
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -562,9 +601,9 @@ const EMPTY_DOOR_FLAVOUR: Record<HolidayKey, string[]> = {
 
 /** Generate a reward tier distribution for a calendar of given length.
  * Follows the spec schedule exactly:
- *   Short  (3–5 doors): fixed Day 1=Small, Day 2=Medium, Day N-1=Large, Day N=Diamond
+ *   Short  (3–5 doors): fixed Day 1=Small, Day 2=Medium, Day N-1=Large, Day N=Dice cache
  *   Medium (7–9 doors): fixed 7-day template, extended proportionally for 8–9 doors
- *   Long  (25 doors):   alternating empty/small early, medium build, large D24, 2 diamonds D25
+ *   Long  (25 doors):   alternating empty/small early, medium build, large D24, dice cache D25
  *
  * @param totalDays - Total number of free doors in the season
  * @param rng       - Optional seeded RNG for deterministic generation (Personal Quest)
@@ -580,11 +619,11 @@ function generateRewardSchedule(
   const schedule: Array<{ tier: RewardTier; currency: RewardCurrency; amount: number | null }> = [];
 
   // Short calendars (3–5 doors): fixed schedule per spec
-  // Day 1=Small(100), Day 2=Medium(300), Day N-1=Large(700)[if ≥4], Day N=Diamond
+  // Day 1=Small(100), Day 2=Medium(300), Day N-1=Large(700)[if ≥4], Day N=Dice cache
   if (totalDays <= 5) {
     for (let day = 1; day <= totalDays; day++) {
       if (day === totalDays) {
-        schedule.push({ tier: 5, currency: 'diamond', amount: 1 });
+        schedule.push({ tier: 5, currency: 'dice', amount: 25 });
       } else if (day === totalDays - 1 && totalDays >= 4) {
         schedule.push({ tier: 4, currency: 'gold', amount: 700 });
       } else if (day === 2) {
@@ -597,7 +636,7 @@ function generateRewardSchedule(
   }
 
   // Medium calendars (7–9 doors): fixed 7-door template, extended proportionally
-  // Template: Small(100), Small(150), Medium(250), Small(100), Medium(350), Large(700), Diamond
+  // Template: Small(100), Small(150), Medium(250), Small(100), Medium(350), Large(700), Dice cache
   if (totalDays <= 9) {
     const mediumTemplate: Array<{ tier: RewardTier; currency: RewardCurrency; amount: number | null }> = [
       { tier: 2, currency: 'gold', amount: 100 },
@@ -606,12 +645,12 @@ function generateRewardSchedule(
       { tier: 2, currency: 'gold', amount: 100 },
       { tier: 3, currency: 'gold', amount: 350 },
       { tier: 4, currency: 'gold', amount: 700 },
-      { tier: 5, currency: 'diamond', amount: 1 },
+      { tier: 5, currency: 'dice', amount: 25 },
     ];
 
     for (let day = 1; day <= totalDays; day++) {
       if (day === totalDays) {
-        schedule.push({ tier: 5, currency: 'diamond', amount: 1 });
+        schedule.push({ tier: 5, currency: 'dice', amount: 25 });
       } else if (day === totalDays - 1) {
         schedule.push({ tier: 4, currency: 'gold', amount: 700 });
       } else {
@@ -633,7 +672,7 @@ function generateRewardSchedule(
   // Days 11–20: Small/Medium(150–350), ~30% empty
   // Days 21–23: Medium(400–500)
   // Day 24:     Large(800)
-  // Day 25:     2 Diamonds
+  // Day 25:     Dice cache
   const lastDay = totalDays;
   const penultimate = totalDays - 1;
 
@@ -661,8 +700,8 @@ function generateRewardSchedule(
 
   for (let day = 1; day <= totalDays; day++) {
     if (day === lastDay) {
-      const diamondCount = totalDays >= LONG_CALENDAR_THRESHOLD ? 2 : 1;
-      schedule.push({ tier: 5, currency: 'diamond', amount: diamondCount });
+      const diceAmount = totalDays >= LONG_CALENDAR_THRESHOLD ? 75 : 50;
+      schedule.push({ tier: 5, currency: 'dice', amount: diceAmount });
     } else if (day === penultimate) {
       schedule.push({ tier: 4, currency: 'gold', amount: 800 });
     } else if (day >= lastDay - 3) {
@@ -802,7 +841,7 @@ function buildPersonalQuestSeasonData(userId: string, refDate: Date = new Date()
 
     // Bonus door (habit-gated) — at least one tier above free, min Medium Gold
     const bonusTier: RewardTier = Math.max(3, Math.min(5, freeReward.tier + 1)) as RewardTier;
-    const bonusCurrency: RewardCurrency = bonusTier === 5 ? 'diamond' : 'gold';
+    const bonusCurrency: RewardCurrency = bonusTier === 5 ? 'dice' : 'gold';
     const bonusAmount = getRewardAmountForTier(bonusTier, rng);
 
     hatches.push({
@@ -918,10 +957,10 @@ function buildDemoSeasonData(userId: string): CalendarSeasonData {
     // Bonus door (habit-gated) — better rewards (Type 3-5)
     // Bonus door always gets the "real" scheduled reward or better
     const bonusTier: RewardTier = isFinalDay ? 5 : Math.max(3, freeReward.tier) as RewardTier;
-    const bonusCurrency: RewardCurrency = bonusTier === 5 ? 'diamond' : 'gold';
-    // Final day of long calendars (Christmas) gets 2-3 diamonds; others get standard tier amounts
+    const bonusCurrency: RewardCurrency = bonusTier === 5 ? 'dice' : 'gold';
+    // Final day of long calendars (Christmas) gets a larger dice payout; others get standard tier amounts
     const bonusAmount = isFinalDay && totalDays >= LONG_CALENDAR_THRESHOLD
-      ? 2 + Math.floor(Math.random() * 2)
+      ? 75
       : getRewardAmountForTier(bonusTier);
 
     hatches.push({
@@ -1024,7 +1063,7 @@ export async function getPersonalQuestSeason(
           return {
             data: {
               season,
-              hatches: (hatches ?? []) as unknown as CalendarHatch[],
+              hatches: normalizeHatches((hatches ?? []) as unknown as CalendarHatch[]),
               progress: progress as unknown as CalendarProgress | null,
               today_day_index: computePersonalQuestTodayIndex(
                 progress as unknown as CalendarProgress | null,
@@ -1107,7 +1146,7 @@ export async function fetchCurrentSeason(
     return {
       data: {
         season,
-        hatches: (hatches ?? []) as unknown as CalendarHatch[],
+        hatches: normalizeHatches((hatches ?? []) as unknown as CalendarHatch[]),
         progress: progress as unknown as CalendarProgress | null,
         today_day_index: computeTodayDayIndex(season.starts_on),
       },
@@ -1236,8 +1275,11 @@ export async function openTodayHatch(
 
     return {
       data: {
-        reward_currency: hatch.reward_currency,
-        reward_amount: hatch.reward_amount,
+        reward_currency: normalizeRewardCurrency(hatch.reward_currency as RewardCurrency | 'diamond' | null),
+        reward_amount: normalizeRewardAmount(
+          hatch.reward_currency as RewardCurrency | 'diamond' | null,
+          hatch.reward_amount,
+        ),
         reward_tier: hatch.reward_tier,
         reveal_mechanic: hatch.reveal_mechanic,
         reward_payload: hatch.reward_payload,
@@ -1271,8 +1313,11 @@ export async function openTodayHatch(
 
     return {
       data: {
-        reward_currency: body.reward_currency as RewardCurrency,
-        reward_amount: body.reward_amount as number | null,
+        reward_currency: normalizeRewardCurrency(body.reward_currency as RewardCurrency | 'diamond' | null),
+        reward_amount: normalizeRewardAmount(
+          body.reward_currency as RewardCurrency | 'diamond' | null,
+          body.reward_amount as number | null,
+        ),
         reward_tier: body.reward_tier as RewardTier | null,
         reveal_mechanic: body.reveal_mechanic as RevealMechanic,
         reward_payload: body.reward_payload as Record<string, unknown>,

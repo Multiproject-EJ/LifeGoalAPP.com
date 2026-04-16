@@ -18,7 +18,7 @@ import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
 import { recordTelemetryEvent } from '../../services/telemetry';
-import { getActiveAdventMeta } from '../../services/treatCalendarService';
+import { fetchCurrentSeason, getActiveAdventMeta, getPersonalQuestSeason } from '../../services/treatCalendarService';
 import { XP_TO_GOLD_RATIO, convertXpToGold } from '../../constants/economy';
 import { PointsBadge } from '../../components/PointsBadge';
 import {
@@ -98,10 +98,9 @@ import {
   setYesterdayRecapLastShown,
 } from '../../services/yesterdayRecapPrefs';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
-import { hasCollectedDailyHeartsToday } from '../../services/dailyTreats';
 import { fetchXPTransactions } from '../../services/gamification';
 import { fetchZenTokenTransactions } from '../../services/zenGarden';
-import { getRewardHistory } from '../../services/gameRewards';
+import { awardDice, getRewardHistory } from '../../services/gameRewards';
 import { createDicePackCheckoutSession } from '../../services/billing';
 import { TimeBoundOfferRow, type TimeBoundOfferItem, type TimeBoundOfferId } from './TimeBoundOfferRow';
 import { readIslandRunRuntimeState } from '../gamification/level-worlds/services/islandRunRuntimeState';
@@ -342,6 +341,7 @@ type VisionReward = {
   imageUrl: string;
   caption: string | null;
   xpAwarded: number;
+  diceAwarded: number;
   isSuperBoost: boolean;
   isSpecial?: boolean;
   specialStoryPanels?: string[];
@@ -690,6 +690,7 @@ export function DailyHabitTracker({
   const [isStarBursting, setIsStarBursting] = useState(false);
   const [isVisionImageLoaded, setIsVisionImageLoaded] = useState(false);
   const [hasClaimedVisionStar, setHasClaimedVisionStar] = useState(false);
+  const [hasOpenedTreatCalendarToday, setHasOpenedTreatCalendarToday] = useState(false);
   const [visionStarCount, setVisionStarCount] = useState(0);
   const [isVisionVisualizationOpen, setIsVisionVisualizationOpen] = useState(false);
   const [visionVisualizationStep, setVisionVisualizationStep] = useState<1 | 2 | 3>(1);
@@ -1784,6 +1785,7 @@ export function DailyHabitTracker({
     const isSpecial = activeVisionStarWindow.isSpecial;
     const isSuperBoost = !isSpecial && nextCount % 20 === 0;
     const xpAmount = isSpecial ? 320 : isSuperBoost ? 250 : XP_REWARDS.VISION_BOARD_STAR;
+    const diceAmount = 25;
 
     // Wait for slot machine animation to complete
     await new Promise(resolve => setTimeout(resolve, SLOT_MACHINE_ANIMATION_DURATION_MS));
@@ -1796,6 +1798,7 @@ export function DailyHabitTracker({
         selection.id,
         isSpecial ? 'Special weekly vision star story' : 'Vision board star boost'
       );
+      awardDice(session.user.id, diceAmount, 'daily_treats', 'Vision Star reward');
       await recordActivity();
       const fallbackStoryPanels = buildSpecialVisionStoryPanels({
         habitNames: sortedHabits.map((habit) => habit.name),
@@ -1841,6 +1844,7 @@ export function DailyHabitTracker({
         imageUrl: selectedImageUrl,
         caption: selectedCaption,
         xpAwarded: result?.xpAwarded ?? xpAmount,
+        diceAwarded: diceAmount,
         isSuperBoost,
         isSpecial,
         specialStoryPanels,
@@ -1858,6 +1862,7 @@ export function DailyHabitTracker({
         imageUrl: persistImageUrl,
         caption: selectedCaption,
         xpAwarded: result?.xpAwarded ?? xpAmount,
+        diceAwarded: diceAmount,
         isSuperBoost,
         isSpecial,
         specialStoryPanels,
@@ -2044,7 +2049,7 @@ export function DailyHabitTracker({
 
   const isVisionRewardReady = Boolean(visionReward);
   const visionRewardClaimLabel = visionReward
-    ? `Claim ${visionReward.xpAwarded} XP`
+    ? `Claim ${visionReward.xpAwarded} XP + ${visionReward.diceAwarded} Dice`
     : 'Preparing reward';
   const shouldShowVisionLoading =
     isVisionRewardSelecting || (visionReward?.imageUrl && !isVisionImageLoaded);
@@ -2170,11 +2175,50 @@ export function DailyHabitTracker({
   const islandRunOfferLabel = isIslandRunReadyToStart ? `Island ${activeIsland}` : `Island ${activeIsland}`;
   const islandRunOfferBadge = isIslandRunReadyToStart ? 'Open' : undefined;
 
+  const refreshTreatCalendarCollectedState = useCallback(async () => {
+    if (!session?.user?.id || !isViewingToday) {
+      setHasOpenedTreatCalendarToday(false);
+      return;
+    }
+
+    const adventMeta = getActiveAdventMeta();
+    const seasonResult = adventMeta
+      ? await fetchCurrentSeason(session.user.id, adventMeta.meta.holiday_key)
+      : await getPersonalQuestSeason(session.user.id);
+    const season = seasonResult.data;
+
+    if (!season) {
+      setHasOpenedTreatCalendarToday(false);
+      return;
+    }
+
+    const todayIndex = season.today_day_index;
+    const freeOpened = season.progress?.opened_days.includes(todayIndex) ?? false;
+    const bonusOpened = season.progress?.opened_bonus_days?.includes(todayIndex) ?? false;
+    setHasOpenedTreatCalendarToday(freeOpened || bonusOpened);
+  }, [isViewingToday, session?.user?.id]);
+
+  useEffect(() => {
+    void refreshTreatCalendarCollectedState();
+  }, [refreshTreatCalendarCollectedState]);
+
+  useEffect(() => {
+    const handleVisibilityOrFocus = () => {
+      void refreshTreatCalendarCollectedState();
+    };
+    window.addEventListener('focus', handleVisibilityOrFocus);
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    return () => {
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+    };
+  }, [refreshTreatCalendarCollectedState]);
+
   const timeBoundOffers = useMemo<TimeBoundOfferItem[]>(() => {
     const nextUtcMidnight = getNextUtcMidnightMs();
     const adventMeta = getActiveAdventMeta();
     const calendarLabel = adventMeta ? `${adventMeta.meta.displayName} Calendar` : 'Treat Calendar';
-    const hasCollectedDailyTreat = hasCollectedDailyHeartsToday(session.user.id);
+    const hasCollectedDailyTreat = hasOpenedTreatCalendarToday;
 
     return [
       {
@@ -2252,7 +2296,7 @@ export function DailyHabitTracker({
     isEggReadyToCollectOnActiveIsland,
     isSpecialVisionStarDay,
     isMysteryStopAvailable,
-    session.user.id,
+    hasOpenedTreatCalendarToday,
   ]);
 
 
@@ -2883,7 +2927,10 @@ export function DailyHabitTracker({
   useEffect(() => {
     const storedReward = loadDraft<VisionReward>(visionStarRewardKey(session.user.id, activeDate));
     if (storedReward) {
-      setVisionReward(storedReward);
+      setVisionReward({
+        ...storedReward,
+        diceAwarded: storedReward.diceAwarded ?? 25,
+      });
       setVisionRewardDate(activeDate);
       return;
     }
@@ -4637,8 +4684,8 @@ export function DailyHabitTracker({
     const visionRewardForDay = visionRewardDate === activeDate ? visionReward : null;
     const isNextVisionSuperBoost = !hasClaimedVisionStar && (visionStarCount + 1) % 20 === 0;
     const visionBoostLabel = isNextVisionSuperBoost
-      ? '+250 XP claim · Super boost'
-      : `+${XP_REWARDS.VISION_BOARD_STAR} XP boost`;
+      ? '+250 XP +25 Dice claim · Super boost'
+      : `+${XP_REWARDS.VISION_BOARD_STAR} XP +25 Dice boost`;
     const shouldGlowBonus = Boolean(
       visionRewardForDay?.isSuperBoost || (isViewingToday && isNextVisionSuperBoost)
     );
