@@ -128,6 +128,14 @@ import {
   applyIslandRunContractV2RewardBarProgress,
   claimIslandRunContractV2RewardBar,
   ensureIslandRunContractV2ActiveTimedEvent,
+  resolveChainedRewardBarClaims,
+  resolveNextRewardKind,
+  REWARD_KIND_ICON,
+  TIMED_EVENT_SEQUENCE,
+  resolveAvailableMultiplierTiers,
+  clampMultiplierToPool,
+  resolveDiceCostForMultiplier,
+  type RewardBarClaimPayout,
 } from '../services/islandRunContractV2RewardBar';
 import {
   canRetryBossTrial,
@@ -453,16 +461,11 @@ function formatEventRemaining(remainingMs: number): string {
 const TIMER_OK_THRESHOLD_MS = 4 * 60 * 60 * 1000;    // > 4 h  → green
 const TIMER_WARN_THRESHOLD_MS = 1 * 60 * 60 * 1000;  // 1–4 h → orange; < 1 h → red
 
-const REWARD_BAR_MILESTONES: readonly { pct: number; icon: string }[] = [
-  { pct: 33, icon: '🎲' },
-  { pct: 66, icon: '💎' },
-  { pct: 100, icon: '🎫' },
-] as const;
-
 const EVENT_BANNER_META: Readonly<Record<string, { icon: string; displayName: string }>> = {
   feeding_frenzy:   { icon: '🔥', displayName: 'Feeding Frenzy' },
   harvest_sprint:   { icon: '🌾', displayName: 'Harvest Sprint' },
   companion_feast:  { icon: '🐾', displayName: 'Companion Feast' },
+  lucky_spin:       { icon: '🎰', displayName: 'Lucky Spin' },
 };
 
 function getTimerUrgencyClass(remainingMs: number): string {
@@ -1066,6 +1069,34 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [isStartingDiceCheckout, setIsStartingDiceCheckout] = useState(false);
   const [diceCheckoutError, setDiceCheckoutError] = useState<string | null>(null);
   const [showSanctuaryPanel, setShowSanctuaryPanel] = useState(false);
+
+  // ── Dice multiplier (dice-pool-gated, Monopoly GO style) ────────────────────
+  const [diceMultiplier, setDiceMultiplier] = useState(1);
+
+  // Derived: available tiers (with unlocked status), effective cost, and auto-clamp
+  const multiplierTiers = resolveAvailableMultiplierTiers(dicePool);
+  const effectiveMultiplier = clampMultiplierToPool(diceMultiplier, dicePool);
+  const effectiveDiceCost = resolveDiceCostForMultiplier(effectiveMultiplier);
+
+  // Auto-downgrade multiplier when pool drops below current tier's gate
+  // (e.g. after a roll drains dice below the ×10 threshold)
+  useEffect(() => {
+    if (effectiveMultiplier !== diceMultiplier) {
+      setDiceMultiplier(effectiveMultiplier);
+    }
+  }, [effectiveMultiplier, diceMultiplier]);
+
+  // ── Reward bar animation state ─────────────────────────────────────────────
+  const [rewardBarBurstAnimating, setRewardBarBurstAnimating] = useState(false);
+  const [rewardBarCascadePayouts, setRewardBarCascadePayouts] = useState<RewardBarClaimPayout[]>([]);
+  const [feedParticleActive, setFeedParticleActive] = useState(false);
+
+  // ── Minigame popup dialog ──────────────────────────────────────────────────
+  const [showMinigameDialog, setShowMinigameDialog] = useState(false);
+
+  // ── Sticker album dialog ───────────────────────────────────────────────────
+  const [showStickerAlbumDialog, setShowStickerAlbumDialog] = useState(false);
+
   const [creatureCollection, setCreatureCollection] = useState(() => fetchCreatureCollection(session.user.id));
   const [activeCompanionId, setActiveCompanionId] = useState<string | null>(() => fetchActiveCompanionId(session.user.id));
   const [selectedSanctuaryCreatureId, setSelectedSanctuaryCreatureId] = useState<string | null>(null);
@@ -1094,6 +1125,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         showBuildPanel ||
         showOutOfDicePurchasePrompt ||
         showRewardDetailsModal ||
+        showMinigameDialog ||
+        showStickerAlbumDialog ||
         showSanctuaryPanel ||
         showStoryReader ||
         showEncounterModal ||
@@ -2786,18 +2819,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   });
   const isEnergyDepletedForRoll = isIslandRunRollEnergyDepleted({
     dicePool,
-    dicePerRoll: DICE_PER_ROLL,
+    dicePerRoll: effectiveDiceCost,
   });
   const rollButtonMode = resolveIslandRunRollButtonMode({
     isRolling,
     dicePool,
-    dicePerRoll: DICE_PER_ROLL,
+    dicePerRoll: effectiveDiceCost,
   });
   const rollButtonLabel = rollButtonMode === 'rolling'
     ? 'Rolling...'
     : rollButtonMode === 'roll'
-      ? 'Roll (2 dice)'
-      : 'Need 2 dice to roll';
+      ? `Roll (${effectiveDiceCost} dice)`
+      : `Need ${effectiveDiceCost} dice to roll`;
   const compactRollButtonLabel = rollButtonMode === 'rolling'
     ? 'Rolling...'
     : rollButtonMode === 'roll'
@@ -2812,7 +2845,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         : isEnergyDepletedForRoll
           ? 'insufficient_dice'
           : null;
-  const canRoll = !showFirstRunCelebration && !isRolling && !showTravelOverlay && dicePool >= DICE_PER_ROLL;
+  const canRoll = !showFirstRunCelebration && !isRolling && !showTravelOverlay && dicePool >= effectiveDiceCost;
   const spinTokenWalletLabel = resolveIslandRunSpinTokenWalletLabel(ISLAND_RUN_CONTRACT_V2_ENABLED);
   const {
     activeTimedEvent,
@@ -2821,6 +2854,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     canClaimRewardBar,
     rewardBarPercent,
     timedEventRemainingMs,
+    nextRewardKind,
+    nextRewardIcon,
   } = resolveIslandRunContractV2RewardHudState({
     islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
     runtimeState,
@@ -3007,7 +3042,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return;
 
     const nowMs = Date.now();
-    const result = claimIslandRunContractV2RewardBar({
+    // Use chained claims to resolve cascade (Monopoly GO rapid multi-fill)
+    const chainResult = resolveChainedRewardBarClaims({
       state: {
         rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
         rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
@@ -3024,45 +3060,74 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       nowMs,
     });
 
-    if (!result.payout) {
+    if (chainResult.payouts.length === 0) {
       setLandingText('Reward bar is not full yet.');
       return;
     }
-    const payout = result.payout;
 
-    if (payout.minigameTokens > 0) {
-      setSpinTokens((current) => current + payout.minigameTokens);
-    }
-    if (payout.dice > 0) {
-      setDicePool((current) => current + payout.dice);
+    // Aggregate totals from all chained payouts
+    let totalDice = 0;
+    let totalEssence = 0;
+    let totalMinigameTokens = 0;
+    let totalStickerFragments = 0;
+    let totalStickersGranted = 0;
+    for (const payout of chainResult.payouts) {
+      totalDice += payout.dice;
+      totalEssence += payout.essence;
+      totalMinigameTokens += payout.minigameTokens;
+      totalStickerFragments += payout.stickerFragments;
+      totalStickersGranted += payout.stickersGranted;
     }
 
-    applyContractV2RewardBarRuntimeState(result.state);
-    const nextSpinTokens = runtimeStateRef.current.spinTokens + payout.minigameTokens;
-    const nextDicePool = runtimeStateRef.current.dicePool + payout.dice;
+    if (totalMinigameTokens > 0) {
+      setSpinTokens((current) => current + totalMinigameTokens);
+    }
+    if (totalDice > 0) {
+      setDicePool((current) => current + totalDice);
+    }
+
+    applyContractV2RewardBarRuntimeState(chainResult.state);
+    const nextSpinTokens = runtimeStateRef.current.spinTokens + totalMinigameTokens;
+    const nextDicePool = runtimeStateRef.current.dicePool + totalDice;
+    const nextEssence = runtimeStateRef.current.essence + totalEssence;
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
       patch: {
         spinTokens: nextSpinTokens,
         dicePool: nextDicePool,
+        essence: nextEssence,
       },
     });
     setRuntimeState((current) => ({
       ...current,
       spinTokens: nextSpinTokens,
       dicePool: nextDicePool,
+      essence: nextEssence,
     }));
 
-    const payoutSummary = [
-      `+${payout.minigameTokens} minigame token${payout.minigameTokens === 1 ? '' : 's'}`,
-      ...(payout.dice > 0 ? [`+${payout.dice} dice`] : []),
-      `+${payout.stickerFragments} sticker fragment${payout.stickerFragments === 1 ? '' : 's'}`,
-      ...(payout.stickersGranted > 0 ? [`+${payout.stickersGranted} sticker`] : []),
-    ].join(', ');
-    setLandingText(`Reward bar claimed: ${payoutSummary}.`);
-    playIslandRunSound('encounter_resolve');
-    triggerIslandRunHaptic('reward_claim');
+    // Trigger burst animation + cascade display
+    setRewardBarBurstAnimating(true);
+    setRewardBarCascadePayouts(chainResult.payouts);
+    setTimeout(() => {
+      setRewardBarBurstAnimating(false);
+      setRewardBarCascadePayouts([]);
+    }, chainResult.payouts.length * 600 + 400);
+
+    const payoutParts: string[] = [];
+    if (totalDice > 0) payoutParts.push(`+${totalDice} 🎲`);
+    if (totalEssence > 0) payoutParts.push(`+${totalEssence} 🟣`);
+    if (totalMinigameTokens > 0) payoutParts.push(`+${totalMinigameTokens} 🎫`);
+    if (totalStickerFragments > 0) payoutParts.push(`+${totalStickerFragments} 🧩`);
+    if (totalStickersGranted > 0) payoutParts.push(`+${totalStickersGranted} 🏆sticker`);
+    const cascadeNote = chainResult.payouts.length > 1 ? ` (${chainResult.payouts.length}x cascade!)` : '';
+    setLandingText(`Reward claimed: ${payoutParts.join(' ')}${cascadeNote}`);
+    playIslandRunSound(chainResult.payouts.length > 1 ? 'reward_bar_cascade' : 'reward_bar_claim_burst');
+    triggerIslandRunHaptic(chainResult.payouts.length > 1 ? 'reward_bar_cascade' : 'reward_claim');
+    if (totalStickersGranted > 0) {
+      playIslandRunSound('sticker_complete');
+      triggerIslandRunHaptic('sticker_complete');
+    }
   };
 
   const handleRoll = async () => {
@@ -3073,7 +3138,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       step1Complete,
       isRolling,
       dicePool,
-      requiredDicePerRoll: DICE_PER_ROLL,
+      requiredDicePerRoll: effectiveDiceCost,
       isEnergyDepletedForRoll,
       rollButtonMode,
       rollButtonLabel,
@@ -3114,7 +3179,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    if (dicePool < DICE_PER_ROLL) {
+    if (dicePool < effectiveDiceCost) {
       if (isIsland120StartupDiagnosticActive) {
         logIslandRunEntryDebug('island120_roll_interaction', {
           userId: session.user.id,
@@ -3123,7 +3188,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           ...rollDecisionFlags,
         });
       }
-      setLandingText(`Need ${DICE_PER_ROLL} dice to roll.`);
+      setLandingText(`Need ${effectiveDiceCost} dice to roll at ×${effectiveMultiplier}.`);
       return;
     }
 
@@ -3139,6 +3204,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       session,
       client,
       boardProfileId: ACTIVE_BOARD_PROFILE.id,
+      diceMultiplier: effectiveMultiplier,
     });
 
     if (rollResult.status !== 'ok' || rollResult.total === undefined || rollResult.dieOne === undefined || rollResult.dieTwo === undefined) {
@@ -3152,7 +3218,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         });
       }
       setIsRolling(false);
-      setLandingText(`Need ${DICE_PER_ROLL} dice to roll.`);
+      setLandingText(`Need ${effectiveDiceCost} dice to roll at ×${effectiveMultiplier}.`);
       return;
     }
     if (isIsland120StartupDiagnosticActive) {
@@ -3182,9 +3248,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     // Sync local state to match what the roll action already persisted.
-    // The service deducted DICE_PER_ROLL and wrote the new tokenIndex —
-    // we just mirror that into React state for the UI.
-    const nextDicePool = Math.max(0, dicePool - DICE_PER_ROLL);
+    // The service deducted effectiveDiceCost (= BASE_DICE_PER_ROLL × multiplier)
+    // and wrote the new tokenIndex — we mirror that into React state for the UI.
+    const nextDicePool = Math.max(0, dicePool - effectiveDiceCost);
     setDicePool(nextDicePool);
     setRuntimeState((current) => ({
       ...current,
@@ -3237,7 +3303,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // B2-3: resolve non-stop, non-encounter tile landings with real outcomes
   const resolveTileLanding = (tileType: string) => {
-    const essenceEarn = resolveIslandRunContractV2EssenceEarnForTile(tileType);
+    const mult = Math.max(1, effectiveMultiplier);
+    const essenceEarn = resolveIslandRunContractV2EssenceEarnForTile(tileType) * mult;
     const EVENT_MESSAGES = [
       '⚡ Island event!',
       '⚡ Something stirs...',
@@ -3246,28 +3313,28 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       '⚡ Fortune favors the bold.',
     ];
 
+    const multLabel = mult > 1 ? ` (x${mult})` : '';
     switch (tileType) {
       case 'currency':
-        setCoins((c) => c + 15);
-        void awardGold(session.user.id, 15, 'shooter_blitz', 'island_run_tile_currency');
-        setLandingText('💰 Currency tile! +15 coins');
+        setCoins((c) => c + 15 * mult);
+        void awardGold(session.user.id, 15 * mult, 'shooter_blitz', 'island_run_tile_currency');
+        setLandingText(`💰 Currency tile! +${15 * mult} coins${multLabel}`);
         break;
       case 'chest':
-        setCoins((c) => c + 30);
-        void awardGold(session.user.id, 30, 'shooter_blitz', 'island_run_tile_chest');
-        setLandingText('🎁 Treasure chest! +30 coins');
+        setCoins((c) => c + 30 * mult);
+        void awardGold(session.user.id, 30 * mult, 'shooter_blitz', 'island_run_tile_chest');
+        setLandingText(`🎁 Treasure chest! +${30 * mult} coins${multLabel}`);
         break;
       case 'hazard':
         setCoins((c) => Math.max(0, c - 10));
         setLandingText('☠️ Hazard! -10 coins');
         break;
       case 'egg_shard':
-        setLandingText('🧩 Egg Shard! +1 shard');
+        setLandingText(`🧩 Egg Shard! +1 shard${multLabel}`);
         awardShards('egg_shard_tile');
         break;
       case 'micro':
-        // Essence is awarded below via essenceEarn (applies to all tile types)
-        setLandingText(essenceEarn > 0 ? `✨ Micro reward! +${essenceEarn} essence` : '✨ Micro reward!');
+        setLandingText(essenceEarn > 0 ? `✨ Micro reward! +${essenceEarn} essence${multLabel}` : '✨ Micro reward!');
         break;
       case 'event':
         setLandingText(EVENT_MESSAGES[(islandNumber + tokenIndex) % EVENT_MESSAGES.length]);
@@ -3282,6 +3349,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
+      // Trigger flying feed particle animation for feeding tiles
+      const isFeedingTile = tileType === 'egg_shard' || tileType === 'chest' || tileType === 'currency' || tileType === 'micro';
+      if (isFeedingTile) {
+        setFeedParticleActive(true);
+        setTimeout(() => setFeedParticleActive(false), 600);
+      }
+
       const nextRewardBarState = applyIslandRunContractV2RewardBarProgress({
         state: {
           rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
@@ -3298,8 +3372,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         },
         source: { kind: 'tile', tileType },
         nowMs: Date.now(),
+        multiplier: mult,
       });
       applyContractV2RewardBarRuntimeState(nextRewardBarState);
+
+      // Auto-claim: if bar is now full, trigger the claim cascade automatically
+      // with a short delay for the fill animation to play first
+      if (nextRewardBarState.rewardBarProgress >= nextRewardBarState.rewardBarThreshold) {
+        playIslandRunSound('reward_bar_fill');
+        setTimeout(() => handleContractV2RewardBarClaim(), 500);
+      }
     }
   };
 
@@ -5581,9 +5663,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           <div className="island-run-prototype__shard-pill" aria-label="Contract-v2 timed event reward bar">
             <div className="island-run-prototype__shard-pill-fill" style={{ width: `${rewardBarPercent}%` }} />
             <span className="island-run-prototype__shard-pill-content">
-              <span>⏳ {activeTimedEvent.eventType}</span>
+              <span>{nextRewardIcon} {activeTimedEvent.eventType} · Next: {nextRewardKind}</span>
               <span className="island-run-prototype__shard-pill-count">
-                {timedEventRemainingLabel} · {rewardBarProgress}/{rewardBarThreshold} · Tier {runtimeState.rewardBarEscalationTier}
+                {timedEventRemainingLabel} · {rewardBarProgress}/{rewardBarThreshold} · Tier {runtimeState.rewardBarEscalationTier}{effectiveMultiplier > 1 ? ` · ×${effectiveMultiplier} (−${effectiveDiceCost}/roll)` : ''}
               </span>
             </span>
             <button
@@ -5885,10 +5967,28 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
         <button
           type="button"
-          className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}`}
+          className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}${rewardBarBurstAnimating ? ' island-run-board__rewardbar--burst' : ''}`}
           aria-label="Reward progress"
-          onClick={openRewardDetailsModal}
+          onClick={canClaimRewardBar ? handleContractV2RewardBarClaim : openRewardDetailsModal}
         >
+          {/* Flying feed particle animation */}
+          {feedParticleActive && (
+            <span className="island-run-board__rewardbar-feed-particle" aria-hidden="true">✨</span>
+          )}
+          {/* Cascade payout display — shows each reward popping */}
+          {rewardBarCascadePayouts.length > 0 && (
+            <div className="island-run-board__rewardbar-cascade" aria-live="polite">
+              {rewardBarCascadePayouts.map((p, i) => (
+                <span
+                  key={i}
+                  className="island-run-board__rewardbar-cascade-item"
+                  style={{ animationDelay: `${i * 0.5}s` }}
+                >
+                  {REWARD_KIND_ICON[p.rewardKind]} {p.rewardKind === 'dice' ? `+${p.dice}` : p.rewardKind === 'essence' ? `+${p.essence}` : p.rewardKind === 'minigame_tokens' ? `+${p.minigameTokens}` : `+${p.stickerFragments}`}
+                </span>
+              ))}
+            </div>
+          )}
           {/* Decorative themed event banner — only shown when an event is active */}
           {activeTimedEvent ? (() => {
             const meta = EVENT_BANNER_META[activeTimedEvent.eventType] ?? { icon: '⭐', displayName: activeTimedEvent.eventType.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) };
@@ -5902,9 +6002,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           })() : null}
           <div className="island-run-board__rewardbar-header">
             <span>{Math.floor(rewardBarProgress)}/{Math.floor(rewardBarThreshold)}</span>
-            <span>{`Island ${islandNumber} · ${islandDisplayName}`}</span>
+            <span>{`Tier ${runtimeState.rewardBarEscalationTier}`}</span>
           </div>
-          {/* Track row: avatar → track with milestones → endcap */}
+          {/* Track row: avatar → track → single reward endcap (no milestones) */}
           <div className="island-run-board__rewardbar-track-row">
             <span className="island-run-board__rewardbar-avatar-indicator" aria-hidden="true">
               {avatarImageUrl ? (
@@ -5915,18 +6015,47 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </span>
             <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
               <span className="island-run-board__rewardbar-track-fill" style={{ width: `${rewardBarPercent}%` }} />
-              {REWARD_BAR_MILESTONES.map((ms) => (
-                <span key={ms.pct} className={`island-run-board__rewardbar-milestone${rewardBarPercent >= ms.pct ? ' island-run-board__rewardbar-milestone--reached' : ''}`} style={{ left: `${ms.pct}%` }} aria-hidden="true">{ms.icon}</span>
-              ))}
               {/* Position indicator riding the fill edge */}
               <span className="island-run-board__rewardbar-position" style={{ left: `${Math.min(rewardBarPercent, 100)}%` }} aria-hidden="true" />
             </div>
-            <span className={`island-run-board__rewardbar-endcap${canClaimRewardBar ? ' island-run-board__rewardbar-endcap--claimable' : ''}`} aria-hidden="true">🏆</span>
+            {/* Single reward endcap — shows what you'll get next */}
+            <span className={`island-run-board__rewardbar-endcap${canClaimRewardBar ? ' island-run-board__rewardbar-endcap--claimable' : ''}`} aria-hidden="true">{nextRewardIcon}</span>
           </div>
-          {/* Event timer row — island timer removed: islands advance via boss completion, not timer */}
+          {/* Event timer + multiplier row */}
           <div className="island-run-board__rewardbar-timers">
             <span className={getTimerUrgencyClass(timedEventRemainingMs)}>{timedEventRemainingLabel}</span>
+            {effectiveMultiplier > 1 && (
+              <span className="island-run-board__rewardbar-multiplier-badge">×{effectiveMultiplier}</span>
+            )}
           </div>
+        </button>
+
+        {/* Mini-game icon button — positioned near top-right of board */}
+        {activeTimedEvent && (
+          <button
+            type="button"
+            className="island-run-board__minigame-icon-btn"
+            aria-label="Open mini-game"
+            onClick={() => {
+              setShowMinigameDialog(true);
+              playIslandRunSound('minigame_open');
+            }}
+          >
+            <span className="island-run-board__minigame-icon-emoji" aria-hidden="true">
+              {EVENT_BANNER_META[activeTimedEvent.eventType]?.icon ?? '🎮'}
+            </span>
+            <span className="island-run-board__minigame-icon-label">{spinTokens} 🎫</span>
+          </button>
+        )}
+
+        {/* Sticker album button */}
+        <button
+          type="button"
+          className="island-run-board__sticker-album-btn"
+          aria-label="Sticker album"
+          onClick={() => setShowStickerAlbumDialog(true)}
+        >
+          🧩 {runtimeState.stickerProgress.fragments}/5
         </button>
 
         <BoardStage
@@ -6000,9 +6129,25 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
             >
               <span className="island-run-prototype__footer-roll-btn-content">
-                <span className="island-run-prototype__footer-roll-btn-dice">🎲 {hasHydratedRuntimeState ? dicePool : '—'}</span>
+                <span className="island-run-prototype__footer-roll-btn-dice">🎲 {hasHydratedRuntimeState ? dicePool : '—'}{effectiveMultiplier > 1 ? ` ×${effectiveMultiplier}` : ''}</span>
                 <span>{isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}</span>
               </span>
+            </button>
+            {/* Multiplier selector — cycles through unlocked tiers (dice-pool gated) */}
+            <button
+              type="button"
+              className={`island-run-prototype__footer-nav-btn${effectiveMultiplier > 1 ? ' island-run-prototype__footer-nav-btn--active-mult' : ''}`}
+              onClick={() => {
+                const unlocked = multiplierTiers.filter((t) => t.unlocked).map((t) => t.multiplier);
+                if (unlocked.length <= 1) return;
+                const currentIdx = unlocked.indexOf(effectiveMultiplier);
+                const nextIdx = (currentIdx + 1) % unlocked.length;
+                setDiceMultiplier(unlocked[nextIdx]!);
+              }}
+              title={`Cost: ${effectiveDiceCost} dice/roll · Max: ×${multiplierTiers.filter((t) => t.unlocked).pop()?.multiplier ?? 1}`}
+            >
+              ×{effectiveMultiplier}
+              {effectiveMultiplier > 1 && <span className="island-run-prototype__footer-nav-btn-cost"> (-{effectiveDiceCost})</span>}
             </button>
             <button
               type="button"
@@ -6801,21 +6946,147 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Reward details">
             <h3 className="island-stop-modal__title">🎁 Reward Bar Details</h3>
             <p className="island-stop-modal__copy">
-              Progress: <strong>{Math.floor(rewardBarProgress)}</strong> / <strong>{Math.floor(rewardBarThreshold)}</strong>
+              Progress: <strong>{Math.floor(rewardBarProgress)}</strong> / <strong>{Math.floor(rewardBarThreshold)}</strong> · Tier {runtimeState.rewardBarEscalationTier}
+            </p>
+            <p className="island-stop-modal__copy">
+              Next reward: <strong>{nextRewardIcon} {nextRewardKind.replace(/_/g, ' ')}</strong>
             </p>
             <p className="island-stop-modal__copy">
               {activeTimedEvent?.eventType
-                ? `Active event: ${activeTimedEvent.eventType}.`
+                ? `Active event: ${(EVENT_BANNER_META[activeTimedEvent.eventType]?.displayName ?? activeTimedEvent.eventType)}`
                 : 'No active timed event right now.'}
             </p>
             <p className="island-stop-modal__copy">
-              {canClaimRewardBar ? 'Reward is ready to claim.' : 'Keep landing on feeding tiles to fill the bar.'}
+              Claims this event: {runtimeState.rewardBarClaimCountInEvent} · 🧩 Sticker fragments: {runtimeState.stickerProgress.fragments}/5
+            </p>
+            <p className="island-stop-modal__copy">
+              Stickers collected: {Object.values(runtimeState.stickerInventory).reduce((a, b) => a + b, 0)}
+              {runtimeState.stickerProgress.fragments >= 4 ? ' — 🎉 Almost a complete sticker!' : ''}
+            </p>
+            {effectiveMultiplier > 1 && (
+              <p className="island-stop-modal__copy">
+                🔥 Active multiplier: <strong>×{effectiveMultiplier}</strong> (costs {effectiveDiceCost} dice/roll) — rewards and progress are amplified!
+              </p>
+            )}
+            <p className="island-stop-modal__copy" style={{ opacity: 0.7, fontSize: '0.85em' }}>
+              The bar escalates: threshold grows each fill. Higher multipliers unlock with more dice (×2 at 20, ×5 at 100, ×10 at 200, ×50 at 1k, ×100 at 2k). Higher multipliers cost more dice per roll but fill the bar faster!
+            </p>
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+              {canClaimRewardBar && (
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                  onClick={() => { handleContractV2RewardBarClaim(); setShowRewardDetailsModal(false); }}
+                >
+                  Claim Reward {nextRewardIcon}
+                </button>
+              )}
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => setShowRewardDetailsModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* ── Mini-game popup dialog ──────────────────────────────────────── */}
+      {showMinigameDialog && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Mini-game">
+            <h3 className="island-stop-modal__title">
+              {activeTimedEvent ? `${EVENT_BANNER_META[activeTimedEvent.eventType]?.icon ?? '🎮'} ${EVENT_BANNER_META[activeTimedEvent.eventType]?.displayName ?? 'Mini-game'}` : '🎮 Mini-game'}
+            </h3>
+            <p className="island-stop-modal__copy">
+              You have <strong>{spinTokens}</strong> 🎫 tokens to spend.
+            </p>
+            <p className="island-stop-modal__copy">
+              Each play costs <strong>3</strong> tokens. Win dice, essence, or sticker fragments!
+            </p>
+            <p className="island-stop-modal__copy" style={{ opacity: 0.7, fontSize: '0.85em' }}>
+              Mini-game prototype — actual gameplay coming soon. For now, spending tokens simulates a play.
+            </p>
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                disabled={spinTokens < 3}
+                onClick={() => {
+                  // Mock mini-game play: spend 3 tokens, award random reward
+                  const reward = Math.random();
+                  setSpinTokens((c) => Math.max(0, c - 3));
+                  setRuntimeState((c) => ({ ...c, spinTokens: Math.max(0, c.spinTokens - 3) }));
+                  if (reward < 0.4) {
+                    const dice = 3 + Math.floor(Math.random() * 8);
+                    setDicePool((c) => c + dice);
+                    setRuntimeState((c) => ({ ...c, dicePool: c.dicePool + dice }));
+                    setLandingText(`🎮 Mini-game: Won +${dice} 🎲!`);
+                  } else if (reward < 0.7) {
+                    const ess = 5 + Math.floor(Math.random() * 10);
+                    setRuntimeState((c) => ({ ...c, essence: c.essence + ess }));
+                    setLandingText(`🎮 Mini-game: Won +${ess} 🟣 essence!`);
+                  } else {
+                    setLandingText('🎮 Mini-game: Better luck next time!');
+                  }
+                  playIslandRunSound('minigame_complete');
+                }}
+              >
+                {spinTokens >= 3 ? 'Play (3 🎫)' : 'Not enough tokens'}
+              </button>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => setShowMinigameDialog(false)}
+              >
+                Close
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* ── Sticker album dialog ────────────────────────────────────────── */}
+      {showStickerAlbumDialog && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Sticker album">
+            <h3 className="island-stop-modal__title">🧩 Sticker Album</h3>
+            <p className="island-stop-modal__copy">
+              Fragments: <strong>{runtimeState.stickerProgress.fragments}</strong> / 5
+              {runtimeState.stickerProgress.fragments >= 5 ? ' — Ready to create a sticker!' : ''}
+            </p>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', padding: '8px 0' }}>
+              {TIMED_EVENT_SEQUENCE.map((template) => {
+                const count = runtimeState.stickerInventory[template.stickerId] ?? 0;
+                return (
+                  <div key={template.templateId} style={{
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    background: count > 0 ? 'rgba(255,215,0,0.15)' : 'rgba(128,128,128,0.1)',
+                    border: count > 0 ? '1px solid rgba(255,215,0,0.4)' : '1px solid rgba(128,128,128,0.2)',
+                    textAlign: 'center',
+                    minWidth: '80px',
+                  }}>
+                    <div style={{ fontSize: '1.5em' }}>{template.icon}</div>
+                    <div style={{ fontSize: '0.75em', opacity: 0.8 }}>{template.eventType.replace(/_/g, ' ')}</div>
+                    <div style={{ fontWeight: 'bold' }}>{count > 0 ? `×${count}` : '—'}</div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="island-stop-modal__copy">
+              Each complete sticker awards <strong>+100 🎲 dice</strong> and <strong>+50 🟣 essence</strong>!
+            </p>
+            <p className="island-stop-modal__copy" style={{ opacity: 0.7, fontSize: '0.85em' }}>
+              Collect sticker fragments from the reward bar. Every 5 fragments complete one sticker.
             </p>
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
               <button
                 type="button"
                 className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                onClick={() => setShowRewardDetailsModal(false)}
+                onClick={() => setShowStickerAlbumDialog(false)}
               >
                 Close
               </button>

@@ -93,14 +93,21 @@ export async function executeIslandRunRollAction(options: {
   client: SupabaseClient | null;
   /** Board profile to use for tile-count and stop-tile resolution. Defaults to 'spark60_preview'. */
   boardProfileId?: IslandBoardProfileId;
+  /**
+   * Dice multiplier (default 1). The total dice cost per roll = DICE_PER_ROLL × multiplier.
+   * Higher multipliers burn more dice but amplify tile rewards + reward bar progress.
+   */
+  diceMultiplier?: number;
 }): Promise<IslandRunRollActionResult> {
   const { session, client } = options;
+  const multiplier = Math.max(1, Math.floor(options.diceMultiplier ?? 1));
+  const diceCost = DICE_PER_ROLL * multiplier;
 
   // 1. Read current state from the canonical PWA localStorage store.
   const state = readIslandRunGameStateRecord(session);
 
-  // 2. Guard: player needs at least DICE_PER_ROLL dice in the pool.
-  if (state.dicePool < DICE_PER_ROLL) {
+  // 2. Guard: player needs at least diceCost dice in the pool.
+  if (state.dicePool < diceCost) {
     return { status: 'insufficient_dice' };
   }
 
@@ -124,14 +131,12 @@ export async function executeIslandRunRollAction(options: {
 
   // 7. Persist the roll state patch via the same write path used by
   //    IslandRunBoardPrototype (writeIslandRunGameStateRecord).
-  //    Only the minimal roll-relevant fields are updated; all other gameplay
-  //    fields (rewards, encounters, essence, etc.) are left unchanged — they
-  //    remain the responsibility of future wiring slices.
+  //    Dice deduction uses the full multiplied cost (DICE_PER_ROLL × multiplier).
   const nextState = {
     ...state,
     runtimeVersion: state.runtimeVersion + 1,
     tokenIndex: newTokenIndex,
-    dicePool: state.dicePool - DICE_PER_ROLL,
+    dicePool: state.dicePool - diceCost,
   };
 
   await writeIslandRunGameStateRecord({ session, client, record: nextState });

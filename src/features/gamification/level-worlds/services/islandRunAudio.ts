@@ -39,7 +39,16 @@ export type IslandRunSoundEvent =
   | 'island_travel_complete'
   // M8-COMPLETE: shop open + utility stop events
   | 'shop_open'
-  | 'utility_stop_complete';
+  | 'utility_stop_complete'
+  // Reward bar events
+  | 'reward_bar_fill'
+  | 'reward_bar_claim_burst'
+  | 'reward_bar_cascade'
+  // Minigame events
+  | 'minigame_open'
+  | 'minigame_complete'
+  // Sticker events
+  | 'sticker_complete';
 
 export type IslandRunHapticEvent =
   | 'roll'
@@ -58,7 +67,10 @@ export type IslandRunHapticEvent =
   | 'market_stop_complete'
   | 'island_travel_complete'
   // M8-COMPLETE: utility stop haptic
-  | 'utility_stop_complete';
+  | 'utility_stop_complete'
+  // Reward bar haptics
+  | 'reward_bar_cascade'
+  | 'sticker_complete';
 
 // ─── Preference helpers ────────────────────────────────────────────────────────
 
@@ -92,6 +104,9 @@ const HAPTIC_PATTERNS: Record<IslandRunHapticEvent, number | number[]> = {
   island_travel_complete: [30, 50, 30, 50, 30],
   // M8-COMPLETE
   utility_stop_complete: [20, 35, 20],
+  // Reward bar
+  reward_bar_cascade: [15, 20, 15, 20, 15, 20, 15],
+  sticker_complete: [30, 40, 30, 40, 30, 40, 30],
 };
 
 // ─── Sound event map (placeholder — no files needed yet) ──────────────────────
@@ -121,6 +136,15 @@ const SOUND_ASSET_MAP: Record<IslandRunSoundEvent, string> = {
   // M8-COMPLETE
   shop_open: '/assets/audio/sfx/sfx_shop_open.mp3',
   utility_stop_complete: '/assets/audio/sfx/sfx_utility_complete.mp3',
+  // Reward bar
+  reward_bar_fill: '/assets/audio/sfx/sfx_reward_bar_fill.mp3',
+  reward_bar_claim_burst: '/assets/audio/sfx/sfx_reward_bar_claim_burst.mp3',
+  reward_bar_cascade: '/assets/audio/sfx/sfx_reward_bar_cascade.mp3',
+  // Minigame
+  minigame_open: '/assets/audio/sfx/sfx_minigame_open.mp3',
+  minigame_complete: '/assets/audio/sfx/sfx_minigame_complete.mp3',
+  // Sticker
+  sticker_complete: '/assets/audio/sfx/sfx_sticker_complete.mp3',
 };
 
 // ─── Public API ───────────────────────────────────────────────────────────────

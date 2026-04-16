@@ -108,6 +108,7 @@ export async function executeIslandRunClaimRewardAction(options: {
     // Resource pool adjustments:
     spinTokens: state.spinTokens + payout.minigameTokens,
     dicePool: state.dicePool + payout.dice,
+    essence: state.essence + payout.essence,
   };
 
   await writeIslandRunGameStateRecord({ session, client, record: nextState });
