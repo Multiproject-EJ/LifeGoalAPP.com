@@ -1446,6 +1446,13 @@ export type StreakInfo = {
  * at least one door. The streak resets if the user misses a day (Monopoly
  * GO-style). The maximum streak shown is 7 (one full quest cycle).
  *
+ * Within a single Personal Quest cycle, opened_days tracks sequential day
+ * indices (1, 2, 3, …) and each day can only be opened once per calendar
+ * day (enforced by computePersonalQuestTodayIndex). So the count of
+ * opened days equals the consecutive streak as long as the streak is active
+ * (last_opened_date is today or yesterday). If the user missed a day the
+ * `isActive` check fails and streak returns 0.
+ *
  * Streak bonuses:
  *   3-day streak:  +5 bonus dice on next open
  *   5-day streak:  +15 bonus dice on next open
@@ -1463,17 +1470,23 @@ export function computeStreak(progress: CalendarProgress | null): StreakInfo {
   const lastDate = progress.last_opened_date;
   if (!lastDate) return fallback;
 
-  // Streak is alive if the user opened a door today or yesterday
+  // Streak is alive if the user opened a door today or yesterday.
+  // If more than 1 calendar day has elapsed since last_opened_date the
+  // streak is broken — user missed a day.
   const isActive = lastDate === todayStr || lastDate === yesterdayStr;
   if (!isActive) return fallback;
 
-  // Count the streak — how many consecutive days have doors been opened?
-  // We use the opened_days count as the streak length since each day can
-  // only be opened once per calendar day (enforced by computePersonalQuestTodayIndex).
   const currentStreak = Math.min(progress.opened_days.length, 7);
-
   const multiplierLabel = currentStreak >= 2 ? `×${currentStreak}` : '';
-  const streakBonusDice = currentStreak >= 7 ? 30 : currentStreak >= 5 ? 15 : currentStreak >= 3 ? 5 : 0;
+
+  let streakBonusDice = 0;
+  if (currentStreak >= 7) {
+    streakBonusDice = 30;
+  } else if (currentStreak >= 5) {
+    streakBonusDice = 15;
+  } else if (currentStreak >= 3) {
+    streakBonusDice = 5;
+  }
 
   return { currentStreak, isActive, multiplierLabel, streakBonusDice };
 }

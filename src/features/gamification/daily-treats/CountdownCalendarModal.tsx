@@ -212,6 +212,21 @@ export const CountdownCalendarModal = ({
         awardDice(userId, reward.reward_amount, 'daily_treats', `Day ${dayIndex} ${doorType} door`);
       }
 
+      // Award streak bonus dice for Personal Quest calendars
+      if (seasonData.season.season_type === 'personal_quest' && doorType === 'free') {
+        const updatedProgressForStreak = seasonData.progress
+          ? {
+              ...seasonData.progress,
+              opened_days: [...seasonData.progress.opened_days, dayIndex],
+              last_opened_date: new Date().toISOString().split('T')[0],
+            }
+          : null;
+        const streak = computeStreak(updatedProgressForStreak);
+        if (streak.streakBonusDice > 0) {
+          awardDice(userId, streak.streakBonusDice, 'daily_treats', `${streak.currentStreak}-day streak bonus`);
+        }
+      }
+
       // Refresh season data to update progress
       if (seasonData.season.season_type === 'personal_quest') {
         const { data: updated } = await getPersonalQuestSeason(userId);
@@ -463,7 +478,9 @@ export const CountdownCalendarModal = ({
               const statusLabel = status === 'catchup' ? 'missed day, available to open' : status;
               const label = `Day ${day} ${status === 'today' ? "(today's door)" : `(${statusLabel})`}`;
 
-              // Show dice amount on tile for personal quest calendars
+              // Show dice amount on tile for personal quest calendars.
+              // Currency check is defensive — all PQ doors are now dice, but keeps
+              // the label correct if the schedule ever changes.
               const diceAmount = isPersonalQuest && freeHatch?.reward_currency === 'dice'
                 ? freeHatch.reward_amount
                 : null;
