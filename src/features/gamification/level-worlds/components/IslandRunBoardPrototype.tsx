@@ -17,7 +17,7 @@ import { getIslandDisplayName } from '../services/islandNames';
 import { generateTileMap, getIslandRarity, type IslandTileMapEntry } from '../services/islandBoardTileMap';
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from '../services/islandBoardProfiles';
 import { resolveWrappedTokenIndex } from '../services/islandBoardTopology';
-import { convertHeartToDicePool, getDicePerHeartForIsland } from '../services/islandRunEconomy';
+import { ISLAND_RUN_DEFAULT_STARTING_DICE } from '../services/islandRunEconomy';
 import { generateIslandStopPlan } from '../services/islandRunStops';
 import { isIslandFullyCleared } from '../services/islandRunProgression';
 import { recordTelemetryEvent } from '../../../../services/telemetry';
@@ -131,11 +131,9 @@ import {
 } from '../services/islandRunContractV2RewardBar';
 import {
   canRetryBossTrial,
-  canUseSpinForMovement,
   isIslandRunRollEnergyDepleted,
   resolveIslandRunRollButtonMode,
   resolveIslandRunTimerLabel,
-  shouldConsumeHeartOnBossFailure,
 } from '../services/islandRunContractV2Energy';
 import {
   resolveIslandRunContractV2Stops,
@@ -153,7 +151,7 @@ import {
 import { createDicePackCheckoutSession } from '../../../../services/billing';
 
 const ROLL_MIN = 1;
-const ROLL_MAX = 3;
+const ROLL_MAX = 6;
 const DICE_PER_ROLL = 2;
 const SPIN_MIN = 1;
 const SPIN_MAX = 5;
@@ -884,8 +882,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // BoardStage camera controls (set by BoardStage via onCameraReady)
   const boardCameraRef = useRef<BoardStageCameraControls | null>(null);
 
-  const [hearts, setHearts] = useState(5);
-  const [dicePool, setDicePool] = useState(() => convertHeartToDicePool(1));
+  const [dicePool, setDicePool] = useState(ISLAND_RUN_DEFAULT_STARTING_DICE);
   const [tokenIndex, setTokenIndex] = useState(TOKEN_START_TILE_INDEX);
   const [rollValue, setRollValue] = useState<number | null>(null);
   const [rollingDiceFaces, setRollingDiceFaces] = useState<[number, number]>([1, 1]);
@@ -1288,7 +1285,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setHearts(runtimeState.hearts ?? 5);
     setCoins(runtimeState.coins ?? 0);
     setSpinTokens(runtimeState.spinTokens ?? 0);
-    setDicePool(runtimeState.dicePool ?? convertHeartToDicePool(persistedIsland));
+    setDicePool(runtimeState.dicePool ?? ISLAND_RUN_DEFAULT_STARTING_DICE);
 
     // M16B: Restore shard state from runtime state on hydration
     const hydratedShards = runtimeState.islandShards ?? 0;
@@ -2763,7 +2760,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [islandNumber, isIslandTimerPendingStart, showTravelOverlay, timeLeftSec]);
 
   const timerDisplay = isIslandTimerPendingStart ? 'Ready' : formatIslandCountdown(timeLeftSec);
-  const dicePerHeart = getDicePerHeartForIsland(islandNumber);
   const step1Stop = islandStopPlan[0] ?? null;
   // Rolling is always free — no stop-gate. step1Complete kept as `true` for
   // diagnostic logging continuity only.
@@ -2795,13 +2791,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     legacyIslandFullyCleared: legacyIsCurrentIslandFullyCleared,
   });
   const isEnergyDepletedForRoll = isIslandRunRollEnergyDepleted({
-    islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
     dicePool,
-    hearts,
     dicePerRoll: DICE_PER_ROLL,
   });
   const rollButtonMode = resolveIslandRunRollButtonMode({
-    islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
     isRolling,
     dicePool,
     dicePerRoll: DICE_PER_ROLL,
@@ -2810,16 +2803,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     ? 'Rolling...'
     : rollButtonMode === 'roll'
       ? 'Roll (2 dice)'
-      : rollButtonMode === 'convert'
-        ? `Convert 1 heart → ${dicePerHeart} dice`
-        : 'Need 2 dice to roll';
+      : 'Need 2 dice to roll';
   const compactRollButtonLabel = rollButtonMode === 'rolling'
     ? 'Rolling...'
     : rollButtonMode === 'roll'
       ? 'Roll'
-      : rollButtonMode === 'convert'
-        ? 'Convert'
-        : 'Need dice';
+      : 'Need dice';
   const rollDisabledReason = showFirstRunCelebration
     ? 'first_run_celebration'
     : isRolling
@@ -2861,8 +2850,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       .join(', ');
     return `conic-gradient(from -90deg, ${segments})`;
   }, [activeTileAnchors.length, isSpark60BoardProfile, tileMap]);
-  const shouldPromptDicePurchase = dicePool < DICE_PER_ROLL
-    && (ISLAND_RUN_CONTRACT_V2_ENABLED || hearts < 1);
+  const shouldPromptDicePurchase = dicePool < DICE_PER_ROLL;
   const wasDicePurchasePromptEligibleRef = useRef(false);
 
   useEffect(() => {
@@ -3199,12 +3187,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       await wait(240);
     }
 
+    // Sync local state to match what the roll action already persisted.
+    // The service deducted DICE_PER_ROLL and wrote the new tokenIndex —
+    // we just mirror that into React state for the UI.
     const nextDicePool = Math.max(0, dicePool - DICE_PER_ROLL);
     setDicePool(nextDicePool);
     setRuntimeState((current) => ({
       ...current,
       tokenIndex: currentIndex,
-      dicePool: nextDicePool,
     }));
 
     const landedStop = ISLAND_RUN_CONTRACT_V2_ENABLED ? undefined : gameplayStopMap.get(currentIndex);
@@ -3267,22 +3257,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         break;
       case 'chest':
         setCoins((c) => c + 30);
-        setDicePool((d) => d + 5);
         void awardGold(session.user.id, 30, 'shooter_blitz', 'island_run_tile_chest');
-        setLandingText('🎁 Treasure chest! +30 coins, +5 dice');
+        setLandingText('🎁 Treasure chest! +30 coins');
         break;
       case 'hazard':
         setCoins((c) => Math.max(0, c - 10));
         setLandingText('☠️ Hazard! -10 coins');
         break;
       case 'egg_shard':
-        setDicePool((d) => d + 2);
-        setLandingText('🧩 Egg Shard! +2 dice, +1 shard');
+        setLandingText('🧩 Egg Shard! +1 shard');
         awardShards('egg_shard_tile');
         break;
       case 'micro':
-        setDicePool((d) => d + 3);
-        setLandingText('✨ Micro reward! +3 dice');
+        setLandingText('✨ Micro reward! +essence');
         break;
       case 'event':
         setLandingText(EVENT_MESSAGES[(islandNumber + tokenIndex) % EVENT_MESSAGES.length]);
@@ -3318,21 +3305,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
   };
 
-  // B2-1: handleSpin — costs 1 spin token, rolls SPIN_MIN–SPIN_MAX
+  // B2-1: handleSpin — spin-based movement is retired.
   const handleSpin = async () => {
-    if (!canUseSpinForMovement(ISLAND_RUN_CONTRACT_V2_ENABLED)) {
-      setLandingText('Spin movement is unavailable in contract-v2. Use dice rolls to move.');
-      return;
-    }
-
-    if (isRolling || spinTokens < 1) return;
-
-    setIsRolling(true);
-    requestActiveStopTransition(null, 'spin_start_close_stop');
-    setSpinTokens((s) => Math.max(0, s - 1));
-
-    playIslandRunSound('roll');
-    triggerIslandRunHaptic('roll');
+    setLandingText('Spin movement is retired. Use dice rolls to move.');
+    return;
 
     const nextRoll = Math.floor(Math.random() * (SPIN_MAX - SPIN_MIN + 1)) + SPIN_MIN;
     setRollValue(nextRoll);
@@ -4020,8 +3996,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const specialtySellBonusCoins = activeCompanionSpecialty?.effect === 'sell_bonus_coins'
       ? Math.max(0, Math.floor((bundle.coinsDelta * activeCompanionSpecialty.amount) / 100))
       : 0;
-    const diceFromLegacyHeartDelta = bundle.heartsDelta > 0 ? bundle.heartsDelta * convertHeartToDicePool(islandNumber) : 0;
-    if (diceFromLegacyHeartDelta > 0) setDicePool((current) => current + diceFromLegacyHeartDelta);
+    // Legacy heart-to-dice conversion retired — creature sell no longer gives dice.
     if (bundle.coinsDelta + specialtySellBonusCoins > 0) setCoins((c) => c + bundle.coinsDelta + specialtySellBonusCoins);
     if (bundle.spinTokensDelta > 0) setSpinTokens((t) => t + bundle.spinTokensDelta);
     if (bundle.diamondsDelta > 0) setDiamonds((d) => d + bundle.diamondsDelta);
@@ -4032,7 +4007,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     playIslandRunSound('market_purchase_success');
     triggerIslandRunHaptic('market_purchase_success');
     const rewardParts: string[] = [];
-    if (diceFromLegacyHeartDelta > 0) rewardParts.push(`+${diceFromLegacyHeartDelta} 🎲`);
     if (bundle.coinsDelta > 0) rewardParts.push(`+${bundle.coinsDelta} 🪙`);
     if (specialtySellBonusCoins > 0) rewardParts.push(`+${specialtySellBonusCoins} 🪙 specialty`);
     if (bundle.diamondsDelta > 0) rewardParts.push(`+${bundle.diamondsDelta} 💎`);
@@ -4049,7 +4023,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         creature_name: creature.name,
         reward_coins: bundle.coinsDelta,
         specialty_bonus_coins: specialtySellBonusCoins,
-        reward_dice_from_legacy_hearts: diceFromLegacyHeartDelta,
         reward_spin_tokens: bundle.spinTokensDelta,
         reward_diamonds: bundle.diamondsDelta,
       },
@@ -4061,7 +4034,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       creatureName: creature.name,
       rewardCoins: bundle.coinsDelta,
       specialtyBonusCoins: specialtySellBonusCoins,
-      rewardDiceFromLegacyHearts: diceFromLegacyHeartDelta,
       rewardSpinTokens: bundle.spinTokensDelta,
       rewardDiamonds: bundle.diamondsDelta,
     });
@@ -4101,7 +4073,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     setIsDisplayNameLoopCompleted(true);
-    const diceBonus = Math.max(1, convertHeartToDicePool(islandNumber));
+    const diceBonus = ISLAND_RUN_DEFAULT_STARTING_DICE;
     setDicePool((current) => current + diceBonus);
     setLandingText(`Onboarding display-name loop complete for ${trimmedName}. +${diceBonus} dice rewarded.`);
     setShowOnboardingBooster(false);
@@ -4111,30 +4083,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // M6-COMPLETE: Core reward application for encounter completion
   const applyEncounterReward = (reward: EncounterReward) => {
     const specialtyEncounterBonusCoins = activeCompanionSpecialty?.effect === 'encounter_bonus_coins' ? activeCompanionSpecialty.amount : 0;
-    const specialtyEncounterBonusHearts = activeCompanionSpecialty?.effect === 'encounter_bonus_hearts' ? activeCompanionSpecialty.amount : 0;
     const isPerfectCompanionActive = Boolean(activeCompanion && perfectCompanionIdSet.has(activeCompanion.creatureId));
     const perfectCompanionEncounterBonus = isPerfectCompanionActive
       ? {
           coins: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.coins, 3),
-          hearts: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.hearts, reward.heart ? 0 : 1),
           dice: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.dice, reward.dice > 0 ? 1 : 0),
           spinTokens: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.spinTokens, reward.spinTokens > 0 ? 0 : 1),
         }
-      : { coins: 0, hearts: 0, dice: 0, spinTokens: 0 };
+      : { coins: 0, dice: 0, spinTokens: 0 };
     const challengeType = currentEncounterChallenge?.type ?? null;
     const challengeId = currentEncounterChallenge?.id ?? null;
 
     const totalEncounterCoins = reward.coins + specialtyEncounterBonusCoins + perfectCompanionEncounterBonus.coins;
-    const totalEncounterHearts = (reward.heart ? 1 : 0) + specialtyEncounterBonusHearts + perfectCompanionEncounterBonus.hearts;
     const totalEncounterDice = reward.dice + perfectCompanionEncounterBonus.dice;
     const totalEncounterSpinTokens = reward.spinTokens + perfectCompanionEncounterBonus.spinTokens;
 
     setCoins((c) => c + totalEncounterCoins);
     void awardGold(session.user.id, totalEncounterCoins, 'shooter_blitz', 'island_run_encounter_reward');
-    if (totalEncounterHearts > 0) {
-      setHearts((h) => h + totalEncounterHearts);
-      void awardHearts(session.user.id, totalEncounterHearts, 'shooter_blitz', 'Island Run encounter reward');
-    }
     if (totalEncounterDice > 0) {
       setDicePool((current) => current + totalEncounterDice);
     }
@@ -4155,9 +4120,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const summary = formatEncounterRewardSummary(reward);
     const specialtySummaryParts: string[] = [];
     if (specialtyEncounterBonusCoins > 0) specialtySummaryParts.push(`+${specialtyEncounterBonusCoins} coins`);
-    if (specialtyEncounterBonusHearts > 0) specialtySummaryParts.push(`+${specialtyEncounterBonusHearts} heart${specialtyEncounterBonusHearts === 1 ? '' : 's'}`);
     if (perfectCompanionEncounterBonus.coins > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.coins} perfect coins`);
-    if (perfectCompanionEncounterBonus.hearts > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.hearts} perfect heart`);
     if (perfectCompanionEncounterBonus.dice > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.dice} perfect dice`);
     if (perfectCompanionEncounterBonus.spinTokens > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.spinTokens} perfect spin`);
     const specialtySuffix = specialtySummaryParts.length > 0 && activeCompanion
@@ -4179,9 +4142,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         reward_dice: reward.dice,
         reward_spin_tokens: reward.spinTokens,
         specialty_bonus_coins: specialtyEncounterBonusCoins,
-        specialty_bonus_hearts: specialtyEncounterBonusHearts,
         perfect_bonus_coins: perfectCompanionEncounterBonus.coins,
-        perfect_bonus_hearts: perfectCompanionEncounterBonus.hearts,
         perfect_bonus_dice: perfectCompanionEncounterBonus.dice,
         perfect_bonus_spin_tokens: perfectCompanionEncounterBonus.spinTokens,
         specialty_effect: activeCompanionSpecialty?.effect,
@@ -4198,7 +4159,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           creature_id: activeCompanion?.creature.id ?? null,
           creature_name: activeCompanion?.creature.name ?? null,
           bonus_coins: perfectCompanionEncounterBonus.coins,
-          bonus_hearts: perfectCompanionEncounterBonus.hearts,
           bonus_dice: perfectCompanionEncounterBonus.dice,
           bonus_spin_tokens: perfectCompanionEncounterBonus.spinTokens,
         },
@@ -4314,10 +4274,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         handleResolveBossTrial();
         setBossTrialPhase('success');
       } else {
-        // Failed: legacy mode deducts 1 heart; v2 bypasses heart-based gating
-        if (shouldConsumeHeartOnBossFailure(ISLAND_RUN_CONTRACT_V2_ENABLED)) {
-          setHearts((h) => Math.max(0, h - 1));
-        }
+        // Boss failure: no heart penalty (hearts retired)
         setBossAttemptCount((c) => c + 1);
         setBossTrialPhase('failed');
         playIslandRunSound('boss_trial_start');
@@ -4363,7 +4320,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   };
 
   const handleBossTrialRetry = () => {
-    if (!canRetryBossTrial({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, hearts })) return;
+    if (!canRetryBossTrial()) return;
     const { trialDurationSec } = getBossTrialConfig(islandNumber);
     setBossTrialPhase('in_progress');
     setBossTrialTimeLeft(trialDurationSec);
@@ -4588,9 +4545,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }));
     setIslandNumber(resolvedIsland);
     setCycleIndex(nextCycleIndex);
-    setDicePool(convertHeartToDicePool(resolvedIsland));
+    setDicePool(ISLAND_RUN_DEFAULT_STARTING_DICE);
     setTokenIndex(TOKEN_START_TILE_INDEX);
-    setHearts(5);
     setRollValue(null);
     setActiveStopId(null);
     setShowEncounterModal(false);
@@ -4962,7 +4918,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const handleQaAdvanceIsland = () => {
     const nextIsland = islandNumber + 1;
     setIslandNumber(nextIsland);
-    setDicePool(convertHeartToDicePool(nextIsland));
+    setDicePool(ISLAND_RUN_DEFAULT_STARTING_DICE);
     setTokenIndex(TOKEN_START_TILE_INDEX);
     setBossTrialResolved(false);
     setBossRewardSummary(null);
@@ -4985,7 +4941,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const handleQaResetProgression = () => {
     setIslandNumber(1);
-    setDicePool(convertHeartToDicePool(1));
+    setDicePool(ISLAND_RUN_DEFAULT_STARTING_DICE);
     setTokenIndex(TOKEN_START_TILE_INDEX);
     setBossTrialResolved(false);
     setBossRewardSummary(null);
@@ -5008,7 +4964,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const handleClaimFirstRunRewards = async () => {
     if (firstRunStep === 'celebration') {
-      const starterDiceBonus = convertHeartToDicePool(islandNumber) * 2;
+      const starterDiceBonus = ISLAND_RUN_DEFAULT_STARTING_DICE * 2;
       setCoins((current) => current + 250);
       setDicePool((current) => current + starterDiceBonus);
       setLandingText(`Starter claim complete: +250 coins, +${starterDiceBonus} dice.`);
@@ -5595,7 +5551,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             >
               {rollButtonLabel}
             </button>
-          {canUseSpinForMovement(ISLAND_RUN_CONTRACT_V2_ENABLED) && spinTokens > 0 && (
+          {false && spinTokens > 0 && (
             <button
               type="button"
               className="island-run-prototype__spin-btn"
@@ -5751,7 +5707,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <span className="island-run-prototype__stat-chip">Tile: <strong>{tokenIndex}</strong></span>
               <span className="island-run-prototype__stat-chip">Island: <strong>{islandNumber}</strong></span>
               <span className="island-run-prototype__stat-chip">Last roll: <strong>{rollValue ?? '-'}</strong></span>
-              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">{resolveIslandRunTimerLabel({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, isIslandTimerPendingStart })} <strong>{timerDisplay}</strong></span>
+              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">{resolveIslandRunTimerLabel()} <strong>{timerDisplay}</strong></span>
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">{spinTokenWalletLabel}: <strong>{spinTokens}</strong></span>
               {/* M11C: stop progress chip */}
               {(() => {
@@ -6063,7 +6019,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         <div className="island-run-prototype__footer-main">
           <div className="island-run-prototype__footer-stats" aria-label="Run resources">
             {ISLAND_RUN_CONTRACT_V2_ENABLED && <span className="island-run-prototype__stat-chip">🟣 <strong>{runtimeState.essence}</strong></span>}
-            {canUseSpinForMovement(ISLAND_RUN_CONTRACT_V2_ENABLED) && spinTokens > 0 && (
+            {false && spinTokens > 0 && (
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">🌀 <strong>{spinTokens}</strong></span>
             )}
             {rollValue !== null ? (
@@ -6113,7 +6069,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             >
               🔨 Build
             </button>
-            {canUseSpinForMovement(ISLAND_RUN_CONTRACT_V2_ENABLED) && spinTokens > 0 && (
+            {false && spinTokens > 0 && (
               <button
                 type="button"
                 className="island-run-prototype__spin-btn island-run-prototype__spin-btn--footer"

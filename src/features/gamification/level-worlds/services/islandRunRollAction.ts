@@ -35,7 +35,7 @@ import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBo
 // ── roll constants (must match IslandRunBoardPrototype) ───────────────────────
 
 const ROLL_MIN = 1;
-const ROLL_MAX = 3;
+const ROLL_MAX = 6;
 /** Number of dice drawn from the pool per roll. */
 const DICE_PER_ROLL = 2;
 

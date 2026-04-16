@@ -1,31 +1,16 @@
-export const ISLAND_RUN_BASE_DICE_PER_HEART = 20;
+/**
+ * islandRunEconomy — Dice economy constants for Island Run.
+ *
+ * Hearts are fully retired. Dice is the only board energy and is sourced
+ * from regeneration (level-based), reward bar payouts, boss/stop/island
+ * completion, daily treats, lucky spin, and shop purchases.
+ *
+ * The starting dice pool for a new island or fresh state is a flat constant
+ * so that dice scarcity is governed entirely by the regeneration system.
+ */
 
-export type IslandRunConversionTier = {
-  minIsland: number;
-  dicePerHeart: number;
-};
+/** Starting dice pool for a brand-new game state or island reset. */
+export const ISLAND_RUN_DEFAULT_STARTING_DICE = 30;
 
-export const ISLAND_RUN_CONVERSION_TIERS: IslandRunConversionTier[] = [
-  { minIsland: 1, dicePerHeart: 20 },
-  { minIsland: 5, dicePerHeart: 30 },
-  { minIsland: 10, dicePerHeart: 40 },
-  { minIsland: 15, dicePerHeart: 50 },
-];
-
-export function getDicePerHeartForIsland(islandNumber: number): number {
-  const safeIsland = Number.isFinite(islandNumber) ? Math.max(1, Math.floor(islandNumber)) : 1;
-
-  let dicePerHeart = ISLAND_RUN_BASE_DICE_PER_HEART;
-
-  for (const tier of ISLAND_RUN_CONVERSION_TIERS) {
-    if (safeIsland >= tier.minIsland) {
-      dicePerHeart = tier.dicePerHeart;
-    }
-  }
-
-  return dicePerHeart;
-}
-
-export function convertHeartToDicePool(islandNumber: number): number {
-  return getDicePerHeartForIsland(islandNumber);
-}
+/** Dice cost per roll — always flat, regardless of island or level. */
+export const ISLAND_RUN_DICE_PER_ROLL = 2;
