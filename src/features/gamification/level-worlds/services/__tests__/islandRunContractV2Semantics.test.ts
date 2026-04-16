@@ -37,6 +37,8 @@ export const islandRunContractV2SemanticsTests: TestCase[] = [
           },
           rewardBarProgress: 8.8,
           rewardBarThreshold: 4.2,
+          rewardBarEscalationTier: 0,
+          rewardBarClaimCountInEvent: 0,
         },
         nowMs: 300,
       });
@@ -46,6 +48,8 @@ export const islandRunContractV2SemanticsTests: TestCase[] = [
       assertEqual(state.canClaimRewardBar, true, 'Expected claimability when progress meets threshold in v2');
       assertEqual(state.timedEventRemainingMs, 500, 'Expected remaining event ms to derive from nowMs');
       assertEqual(state.rewardBarPercent, 100, 'Expected reward bar percent to clamp to 100');
+      assertEqual(state.nextRewardKind, 'dice', 'Expected first reward kind to be dice');
+      assertEqual(state.nextRewardIcon, '🎲', 'Expected dice reward icon');
     },
   },
 ];

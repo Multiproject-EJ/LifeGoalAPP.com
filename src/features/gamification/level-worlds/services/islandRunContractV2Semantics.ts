@@ -1,4 +1,10 @@
 import type { IslandRunRuntimeState } from './islandRunRuntimeState';
+import {
+  resolveEscalatingThreshold,
+  resolveNextRewardKind,
+  REWARD_KIND_ICON,
+  type RewardBarRewardKind,
+} from './islandRunContractV2RewardBar';
 
 export function resolveIslandRunSpinTokenWalletLabel(islandRunContractV2Enabled: boolean): string {
   return islandRunContractV2Enabled ? 'Minigame tokens' : 'Spins';
@@ -15,7 +21,7 @@ export function formatIslandRunSpinTokenReward(params: {
 
 export function resolveIslandRunContractV2RewardHudState(params: {
   islandRunContractV2Enabled: boolean;
-  runtimeState: Pick<IslandRunRuntimeState, 'activeTimedEvent' | 'rewardBarProgress' | 'rewardBarThreshold'>;
+  runtimeState: Pick<IslandRunRuntimeState, 'activeTimedEvent' | 'rewardBarProgress' | 'rewardBarThreshold' | 'rewardBarEscalationTier' | 'rewardBarClaimCountInEvent'>;
   nowMs: number;
 }): {
   activeTimedEvent: IslandRunRuntimeState['activeTimedEvent'];
@@ -24,13 +30,19 @@ export function resolveIslandRunContractV2RewardHudState(params: {
   rewardBarPercent: number;
   canClaimRewardBar: boolean;
   timedEventRemainingMs: number;
+  nextRewardKind: RewardBarRewardKind;
+  nextRewardIcon: string;
 } {
-  const rewardBarThreshold = Math.max(1, Math.floor(params.runtimeState.rewardBarThreshold));
+  const tier = Math.max(0, Math.floor(params.runtimeState.rewardBarEscalationTier));
+  const rewardBarThreshold = resolveEscalatingThreshold(tier);
   const rewardBarProgress = Math.max(0, Math.floor(params.runtimeState.rewardBarProgress));
   const activeTimedEvent = params.runtimeState.activeTimedEvent;
   const timedEventRemainingMs = activeTimedEvent
     ? Math.max(0, activeTimedEvent.expiresAtMs - params.nowMs)
     : 0;
+  const claimCount = Math.max(0, Math.floor(params.runtimeState.rewardBarClaimCountInEvent));
+  const nextRewardKind = resolveNextRewardKind(claimCount);
+  const nextRewardIcon = REWARD_KIND_ICON[nextRewardKind];
 
   return {
     activeTimedEvent,
@@ -39,6 +51,8 @@ export function resolveIslandRunContractV2RewardHudState(params: {
     rewardBarPercent: Math.min(100, (rewardBarProgress / rewardBarThreshold) * 100),
     canClaimRewardBar: params.islandRunContractV2Enabled && rewardBarProgress >= rewardBarThreshold,
     timedEventRemainingMs,
+    nextRewardKind,
+    nextRewardIcon,
   };
 }
 
