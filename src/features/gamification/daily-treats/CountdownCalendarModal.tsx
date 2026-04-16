@@ -424,8 +424,8 @@ export const CountdownCalendarModal = ({
           {!todayBonusOpened && (
             <p className="daily-treats-calendar__bonus-hint">
               {habitCompleted
-                ? '✨ Bonus door ready — tap 🎁 to claim!'
-                : '🎁 Complete a habit → unlock bonus door'}
+                ? '✨ Bonus door ready — tap the gift to claim!'
+                : '🎁 Complete a habit to unlock your bonus door'}
             </p>
           )}
 
@@ -587,6 +587,7 @@ export const CountdownCalendarModal = ({
               className="daily-treats-calendar__tracker-toggle"
               onClick={() => setTrackerExpanded(prev => !prev)}
               aria-expanded={trackerExpanded}
+              aria-label={trackerExpanded ? 'Collapse reward tracker' : 'Expand reward tracker'}
             >
               <span>Reward tracker</span>
               <span aria-hidden="true">{trackerExpanded ? '▲' : '▼'}</span>
