@@ -1,6 +1,16 @@
 /**
  * islandRunRollAction — PWA-authority roll execution service.
  *
+ * This module is the **single authoritative bookkeeping path** for dice deduction
+ * and roll execution. The renderer (IslandRunBoardPrototype) mirrors the dice pool
+ * change into React state for UI display, but this service is the sole source of
+ * truth that persists dice changes to the game state store.
+ *
+ * Canonical dice rules:
+ *  - Each roll costs exactly 2 dice (flat, never varies).
+ *  - Each die rolls 1–6 (standard dice), producing total movement of 2–12 tiles.
+ *  - Tiles never award dice. Dice come from reward bar, stops, boss, events, regen, shop.
+ *
  * This module encapsulates the gameplay truth for a single Island Run roll:
  *  1. Validates preconditions (dice pool availability).
  *  2. Generates dice outcomes — **random numbers originate here in the PWA,
@@ -15,6 +25,8 @@
  *  - Renderer components emit a `roll_requested` intent; the host then calls
  *    executeIslandRunRollAction.  The renderer never touches this module directly.
  *  - Roll result and all resulting state transitions remain solely in the PWA.
+ *  - **There is exactly one dice deduction path** — this service. The board component
+ *    syncs its local React state to match but does NOT write dice changes to the store.
  *
  * Intentionally NOT in scope for this service (handled elsewhere or future slices):
  *  - Tile reward application (coins, essence, shards, etc.)

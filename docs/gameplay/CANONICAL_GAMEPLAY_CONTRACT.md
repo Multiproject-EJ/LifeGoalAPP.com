@@ -27,8 +27,11 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 
 ### A. Movement loop
 - Player movement is tile-based and consumes **dice**.
+- Each roll costs exactly **2 dice** (flat cost, never changes).
+- Each roll uses **2 standard dice** (each rolls 1–6), producing a total movement of **2–12 tiles** per roll.
 - Board tile count and board presentation are configurable and may change over time.
 - Stops are external structures and are not part of tile movement.
+- **Spin-based movement is fully retired.**
 
 ### B. Reward loop
 - Feeding tiles are the central reward-driver in board play.
@@ -75,11 +78,14 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 ### Dice
 - Dice is the **only board energy**.
 - Dice is required for movement and core board interactions.
+- Each roll costs exactly 2 dice.
+- **Tiles never award dice directly.** Dice are only sourced from: reward bar payouts, boss/stop/island completion, daily treats, lucky spin, shop purchases, and passive regeneration.
 
 ### Essence
 - Essence is a **board-loop currency**.
 - Essence is earned primarily through board gameplay and reward-loop outputs.
 - Essence is spent on stop/building upgrades tied to island progression.
+- Tiles may award essence directly as a landing reward.
 
 ### Gold
 - Gold is a persistent economy currency.
@@ -90,6 +96,11 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 - Stickers are collectible progression assets, not movement energy.
 - Stickers are earned through reward systems and island progression.
 - Sticker collections persist long-term across loops.
+
+### Hearts (RETIRED)
+- Hearts are **fully removed** from the game.
+- No heart-based conversion, heart-gated boss retries, or heart economy exists.
+- All references to hearts in code and docs are legacy and must not be re-introduced.
 
 ---
 
@@ -103,7 +114,13 @@ Dice may be awarded from the following sources:
 - Timed minigame/event milestones
 - Microgames and larger minigames
 - Island completion
+- New island start
 - Sticker/collection milestones, where configured
+- Daily treat calendar
+- Lucky spin
+- Shop/market purchases
+
+**Tiles do NOT award dice directly.** Tile rewards are limited to essence, island-native currency, reward bar progress, and lucky spin triggers.
 
 Dice reward sources should follow this qualitative pattern:
 - Boss completion = major dice payout
@@ -111,22 +128,44 @@ Dice reward sources should follow this qualitative pattern:
 - Stop completion / egg hatching = smaller reinforcement payout
 - Reward bar / minigames = variable and tunable payout
 
-## 3B) Player level progression
+## 3B) Player level progression and dice regeneration
 
-- Player level is a long-term progression system that improves dice regeneration capacity over time.
-- Player level may increase:
-  - maximum dice capacity
-  - dice regeneration speed
+- Player level is a long-term progression system tied to XP points.
+- Player level determines dice regeneration capacity via a **minimum-roll passive regeneration system** (Monopoly GO style).
+
+### Dice regeneration rules (canonical)
+- The regeneration system operates as a **minimum-roll floor**: if the player has fewer dice than their level's minimum threshold, dice regenerate passively over time.
+- If the player already has dice at or above the minimum threshold, **no regeneration occurs**.
+- Full regeneration from 0 to the minimum takes exactly **2 hours**.
+- The regeneration rate scales with player level according to the tier table below.
+- Roll cost is always flat: **2 dice per roll**, regardless of level or island.
+
+### Dice regeneration tier table
+
+| Player Level | Min Dice Threshold | Effective Rolls (2h) | Regen Rate |
+|---|---|---|---|
+| 1 | 30 | ~15 rolls | 1 roll / ~8 min |
+| 5 | 40 | ~20 rolls | 1 roll / ~6 min |
+| 10 | 50 | ~25 rolls | 1 roll / ~4.8 min |
+| 15 | 60 | ~30 rolls | 1 roll / ~4 min |
+| 20 | 70 | ~35 rolls | 1 roll / ~3.4 min |
+| 30 | 90 | ~45 rolls | 1 roll / ~2.7 min |
+| 50 | 120 | ~60 rolls | 1 roll / ~2 min |
+| 75 | 140 | ~70 rolls | 1 roll / ~1.7 min |
+| 100 | 160 | ~80 rolls | 1 roll / ~1.5 min |
+
+### Additional player-level scaling
+- Player level may also increase:
   - visible Essence income scale
   - visible stop/build upgrade costs
 - Essence income and stop/build costs may scale upward together so the relative board-loop pressure remains familiar while the player experiences larger numbers and stronger progression fantasy.
-- Dice progression should scale more slowly and remain meaningfully constrained to preserve scarcity and monetization tension.
+- Dice progression should scale slowly and remain meaningfully constrained to preserve scarcity and monetization tension.
 
 ## 4) Stop system
 
 Each island contains exactly 5 stops, in this fixed sequence:
 
-1. **Hatchery**
+1. **Hatchery** (always Stop 1 — the egg stop)
 2. **Habit**
 3. **Breathing**
 4. **Wisdom**
@@ -137,6 +176,18 @@ Stop rules:
 - Stops are sequential; parallel stop completion is not allowed.
 - A stop is considered complete only when its defined objective is fulfilled.
 - Boss is always the final gate for island completion.
+
+### Stop unlock rules
+- When an island starts, only Stop 1 (Hatchery) is **open**. All other stops are **closed**.
+- Stop 2 opens when the Hatchery egg is **set to hatch** (not when collected, hatched, or sold — it is "done" when set for hatching).
+- Each subsequent stop opens when the previous stop is completed.
+
+### Hatchery (Stop 1) — egg lifecycle and checkmark rules
+- The Hatchery is **always Stop 1** on every island.
+- The egg goes through 4 states, each shown progressively in the 4 stop-progress circles.
+- When the egg is **set to hatch**, Stop 2 unlocks and the Hatchery shows a **yellow checkmark** on the board (indicating "halfway complete").
+- The Hatchery checkmark turns **green** when the animal is **collected or sold**.
+- The egg states continue to update in the 4 circles as each new state is reached.
 
 ---
 
@@ -224,9 +275,13 @@ The following are not part of the canonical Island Run gameplay contract:
 - Time-based island completion gates.
 - Fixed board-tile-count requirement.
 - Stop-as-tile modeling.
-- Hearts as core board-loop energy.
+- **Hearts as any form of currency, energy, or game mechanic** (fully retired).
+- Heart-to-dice conversion.
+- Spin-based token movement (fully retired).
 - Multi-active timed minigame/event states.
 - Non-sequential stop progression.
+- Tiles awarding dice directly (dice only come from reward bar, stops, boss, events, shop, regeneration).
+- Variable roll costs (roll cost is always flat: 2 dice).
 
 ---
 

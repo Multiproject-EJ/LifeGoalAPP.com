@@ -81,7 +81,7 @@ import {
 import { readPerfectCompanionRuntimeConfig } from '../services/perfectCompanionConfig';
 import { getDefaultZonePreferencesForArchetypes } from '../services/creatureArchetypeBridge';
 import { logIslandRunEntryDebug, setIslandRunDebugRuntimeSnapshotProvider } from '../services/islandRunEntryDebug';
-import { awardHearts, logGameSession } from '../../../../services/gameRewards';
+import { logGameSession } from '../../../../services/gameRewards';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 import { awardLuckyRollRuns } from '../../../../services/luckyRollAccess';
 import {
@@ -407,7 +407,6 @@ const UTILITY_TIMER_EXT_COST_DIAMONDS = 3;
 const UTILITY_TIMER_EXT_HOURS = 12;
 const UTILITY_ESSENCE_BONUS_COST_DIAMONDS = 3;
 const UTILITY_ESSENCE_BONUS_AMOUNT = 15;
-const MAX_HEARTS = 10;
 const CONTRACT_V2_ESSENCE_SPEND_STEP = 10;
 const CREATURE_FEED_COOLDOWN_MS = 8 * 60 * 60 * 1000;
 const CREATURE_TREAT_OPTIONS: Array<{ type: CreatureTreatType; label: string; xpGain: number; summary: string }> = [
@@ -1282,7 +1281,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     setTokenIndex(runtimeState.tokenIndex ?? TOKEN_START_TILE_INDEX);
-    setHearts(runtimeState.hearts ?? 5);
     setCoins(runtimeState.coins ?? 0);
     setSpinTokens(runtimeState.spinTokens ?? 0);
     setDicePool(runtimeState.dicePool ?? ISLAND_RUN_DEFAULT_STARTING_DICE);
@@ -2127,7 +2125,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     const nextPatch = {
       tokenIndex,
-      hearts,
       coins,
       spinTokens,
       dicePool,
@@ -2135,7 +2132,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     if (
       runtimeState.tokenIndex === nextPatch.tokenIndex
-      && runtimeState.hearts === nextPatch.hearts
       && runtimeState.coins === nextPatch.coins
       && runtimeState.spinTokens === nextPatch.spinTokens
       && runtimeState.dicePool === nextPatch.dicePool
@@ -2153,7 +2149,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       record: nextRuntimeState,
     });
     setRuntimeState((current) => ({ ...current, ...nextPatch }));
-  }, [client, coins, dicePool, hasHydratedRuntimeState, hearts, runtimeState.coins, runtimeState.dicePool, runtimeState.hearts, runtimeState.spinTokens, runtimeState.tokenIndex, session, spinTokens, tokenIndex]);
+  }, [client, coins, dicePool, hasHydratedRuntimeState, runtimeState.coins, runtimeState.dicePool, runtimeState.spinTokens, runtimeState.tokenIndex, session, spinTokens, tokenIndex]);
 
   // M19A: persist diamonds to runtime state (cross-device)
   useEffect(() => {
@@ -2618,7 +2614,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       activeEgg,
       eggStage,
       completedStops,
-      hearts,
       coins,
       dicePool,
       spinTokens,
@@ -2637,7 +2632,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     activeEgg,
     eggStage,
     completedStops,
-    hearts,
     coins,
     dicePool,
     spinTokens,
@@ -3197,8 +3191,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       tokenIndex: currentIndex,
     }));
 
-    const landedStop = ISLAND_RUN_CONTRACT_V2_ENABLED ? undefined : gameplayStopMap.get(currentIndex);
-    if (landedStop) {
+    // Legacy stop-landing path (dead code when ISLAND_RUN_CONTRACT_V2_ENABLED is true, retained for backward compat)
+    const landedStopRaw = ISLAND_RUN_CONTRACT_V2_ENABLED ? undefined : gameplayStopMap.get(currentIndex);
+    const landedStop = landedStopRaw as string | null;
+    if (typeof landedStop === 'string') {
       const stopConfig = islandStopPlan.find((stop) => stop.stopId === landedStop);
       const stopTitle = stopConfig?.title ?? landedStop.toUpperCase();
       const state = stopStateMap.get(landedStop) ?? 'active';
@@ -3308,57 +3304,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // B2-1: handleSpin — spin-based movement is retired.
   const handleSpin = async () => {
     setLandingText('Spin movement is retired. Use dice rolls to move.');
-    return;
-
-    const nextRoll = Math.floor(Math.random() * (SPIN_MAX - SPIN_MIN + 1)) + SPIN_MIN;
-    setRollValue(nextRoll);
-    setLandingText(`Spinning ${nextRoll}...`);
-
-    let currentIndex = tokenIndex;
-    for (let step = 0; step < nextRoll; step += 1) {
-      currentIndex = resolveWrappedTokenIndex(currentIndex, 1, ACTIVE_BOARD_PROFILE.tileCount);
-      setTokenIndex(currentIndex);
-      playIslandRunSound('token_move');
-      await wait(240);
-    }
-
-    const landedStop = gameplayStopMap.get(currentIndex);
-    if (landedStop) {
-      const stopConfig = islandStopPlan.find((stop) => stop.stopId === landedStop);
-      const stopTitle = stopConfig?.title ?? landedStop.toUpperCase();
-      const state = stopStateMap.get(landedStop) ?? 'active';
-
-      if (state === 'locked') {
-        setLandingText(`Boss stop locked: complete all 5 stops before boss.`);
-        requestActiveStopTransition(null, 'spin_tile_land_stop_locked');
-      } else {
-        setLandingText(`Landed on STOP: ${stopTitle} (#${currentIndex})`);
-        requestActiveStopTransition(landedStop, 'spin_tile_land_stop_open');
-        playIslandRunSound('stop_land');
-        triggerIslandRunHaptic('stop_land');
-        if (landedStop === 'boss') {
-          playIslandRunSound('boss_trial_start');
-        }
-      }
-
-      setShowEncounterModal(false);
-      setEncounterResolved(false);
-    } else if (tileMap[currentIndex]?.tileType === 'encounter') {
-      // M6-COMPLETE: check if this encounter tile was already completed this visit
-      if (completedEncounterIndices.has(currentIndex)) {
-        setLandingText(`Encounter tile (#${currentIndex}) — already completed this visit. ✅`);
-        setShowEncounterModal(false);
-      } else {
-        const challenge = drawEncounterChallenge(islandNumber, currentIndex);
-        openEncounterChallenge(challenge, currentIndex);
-      }
-    } else {
-      resolveTileLanding(tileMap[currentIndex]?.tileType ?? 'micro');
-      setShowEncounterModal(false);
-      setEncounterResolved(false);
-    }
-
-    setIsRolling(false);
   };
 
   /** Mark v2 stop 0 (hatchery) as fully complete when the egg lifecycle resolves it.
@@ -3791,7 +3736,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const totalStartupBonus = activeCompanionBonus.amount + perfectCompanionStartupBonus;
 
     if (activeCompanionBonus.effect === 'bonus_heart') {
-      setHearts((current) => Math.min(MAX_HEARTS, current + totalStartupBonus));
+      // Hearts retired — bonus_heart now converts to dice
+      setDicePool((current) => current + totalStartupBonus);
     } else if (activeCompanionBonus.effect === 'bonus_spin') {
       setSpinTokens((current) => current + totalStartupBonus);
     } else {
@@ -6547,7 +6493,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                           , <strong>+3 🔷 shards</strong>
                         </p>
                         <p className="island-boss-trial__lives-note">
-                          💡 Failed attempts do not consume hearts in contract-v2 mode.
+                          💡 Failed attempts have no penalty. Keep trying!
                         </p>
                         <div className="island-boss-trial__cta">
                           <button
@@ -6612,7 +6558,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         <p className="island-boss-trial__failed-copy">
                           You scored {bossTrialScore} / {bossConfig.scoreTarget}. Retry when ready.
                         </p>
-                        {canRetryBossTrial({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, hearts }) ? (
+                        {canRetryBossTrial() ? (
                           <div className="island-boss-trial__cta">
                             <button
                               type="button"
@@ -6816,8 +6762,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Out of dice">
             <h3 className="island-stop-modal__title">🎲 Out of Dice</h3>
             <p className="island-stop-modal__copy">
-              You do not have enough dice to roll right now.
-              {ISLAND_RUN_CONTRACT_V2_ENABLED ? ' Buy more rolls or keep exploring stops.' : ' Buy more rolls or top up via hearts/boosters.'}
+              You do not have enough dice to roll right now. Buy more rolls or wait for dice to regenerate.
             </p>
             {diceCheckoutError ? <p className="island-run-prototype__error">{diceCheckoutError}</p> : null}
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
