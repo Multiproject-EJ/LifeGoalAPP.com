@@ -3189,6 +3189,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setRuntimeState((current) => ({
       ...current,
       tokenIndex: currentIndex,
+      dicePool: nextDicePool,
     }));
 
     // Legacy stop-landing path (dead code when ISLAND_RUN_CONTRACT_V2_ENABLED is true, retained for backward compat)
@@ -3265,7 +3266,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         awardShards('egg_shard_tile');
         break;
       case 'micro':
-        setLandingText('✨ Micro reward! +essence');
+        // Essence is awarded below via essenceEarn (applies to all tile types)
+        setLandingText(essenceEarn > 0 ? `✨ Micro reward! +${essenceEarn} essence` : '✨ Micro reward!');
         break;
       case 'event':
         setLandingText(EVENT_MESSAGES[(islandNumber + tokenIndex) % EVENT_MESSAGES.length]);
@@ -3736,7 +3738,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const totalStartupBonus = activeCompanionBonus.amount + perfectCompanionStartupBonus;
 
     if (activeCompanionBonus.effect === 'bonus_heart') {
-      // Hearts retired — bonus_heart now converts to dice
+      // Hearts retired — bonus_heart converts 1:1 to dice (intentional: companion
+      // bonus amounts are small, typically 1–3, so 1:1 is appropriate for dice).
       setDicePool((current) => current + totalStartupBonus);
     } else if (activeCompanionBonus.effect === 'bonus_spin') {
       setSpinTokens((current) => current + totalStartupBonus);
