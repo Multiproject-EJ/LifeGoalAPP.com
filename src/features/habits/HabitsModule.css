@@ -232,12 +232,37 @@
   width: 100%;
   aspect-ratio: 1 / 1;
   border-radius: 999px;
+  isolation: isolate;
+  overflow: visible;
   display: flex;
   align-items: center;
   justify-content: center;
   background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.38), rgba(91,61,184,0.88));
   border: 1px solid rgba(255,255,255,0.35);
   box-shadow: 0 8px 18px rgba(22, 9, 63, 0.25);
+}
+
+.time-bound-offers__item--actionable .time-bound-offers__circle::before {
+  content: '';
+  position: absolute;
+  inset: -0.18rem;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(circle, rgba(165, 127, 245, 0.24) 0%, rgba(165, 127, 245, 0.1) 46%, rgba(165, 127, 245, 0) 75%);
+  filter: drop-shadow(0 0 0.75rem rgba(150, 106, 244, 0.16)) drop-shadow(0 0 1.25rem rgba(121, 73, 220, 0.1));
+  opacity: 0.78;
+  transform: scale(1);
+  animation: time-bound-offers-actionable-glow 2.6s ease-in-out infinite;
+}
+
+[data-theme='dark-glass'] .time-bound-offers__item--actionable .time-bound-offers__circle::before,
+[data-theme='midnight-purple'] .time-bound-offers__item--actionable .time-bound-offers__circle::before,
+[data-theme='flow-night'] .time-bound-offers__item--actionable .time-bound-offers__circle::before,
+[data-theme='bio-night'] .time-bound-offers__item--actionable .time-bound-offers__circle::before {
+  background: radial-gradient(circle, rgba(191, 157, 255, 0.34) 0%, rgba(191, 157, 255, 0.16) 50%, rgba(191, 157, 255, 0) 78%);
+  filter: drop-shadow(0 0 0.95rem rgba(194, 161, 255, 0.26)) drop-shadow(0 0 1.65rem rgba(164, 121, 255, 0.2));
+  opacity: 0.9;
 }
 
 .time-bound-offers__icon {
@@ -308,6 +333,18 @@
 .time-bound-offers__item:disabled {
   cursor: not-allowed;
   opacity: 0.92;
+}
+
+@keyframes time-bound-offers-actionable-glow {
+  0%,
+  100% {
+    opacity: 0.62;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.92;
+    transform: scale(1.045);
+  }
 }
 
 .habit-day-nav__offer-teaser {
