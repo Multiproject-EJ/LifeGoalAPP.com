@@ -243,10 +243,6 @@
   box-shadow: 0 8px 18px rgba(22, 9, 63, 0.25);
 }
 
-.time-bound-offers__item--actionable .time-bound-offers__circle {
-  border-color: transparent;
-}
-
 .time-bound-offers__item--actionable::before {
   content: '';
   position: absolute;
