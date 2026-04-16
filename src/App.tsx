@@ -2963,6 +2963,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             onProfileUpdate={setWorkspaceProfile}
             onLaunchWeeklyHabitReview={() => setActiveWorkspaceNav('planning')}
             onLaunchDailyCatchUpPrompt={() => setActiveWorkspaceNav('planning')}
+            onLaunchDailyTreatCalendar={() => setShowCalendarPlaceholder(true)}
             billingReturnBanner={billingReturnBanner}
           />
         </div>

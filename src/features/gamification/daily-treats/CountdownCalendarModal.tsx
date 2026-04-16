@@ -294,7 +294,9 @@ export const CountdownCalendarModal = ({
   const holidayKey = seasonData?.season.holiday_key ?? activeAdvent?.meta.holiday_key ?? null;
   const themeMod = isPersonalQuest ? 'personal-quest' : (holidayKey ? HOLIDAY_THEME[holidayKey] ?? 'generic' : 'generic');
   const themeAssets = holidayKey ? getHolidayThemeAssets(holidayKey) : null;
-  const calendarBackgroundUrl = themeAssets?.calendarBackgroundUrl ?? null;
+  const calendarBackgroundUrl = isPersonalQuest
+    ? '/icons/DAILY%20TREAT/dailymomentumnight.webp'
+    : (themeAssets?.calendarBackgroundUrl ?? null);
 
   // Calculate total doors and today's index
   const totalDoors = seasonData
@@ -429,9 +431,17 @@ export const CountdownCalendarModal = ({
           <p className="daily-treats-modal__eyebrow">
             {isPersonalQuest ? 'Personal Quest' : (activeAdvent ? `${activeAdvent.meta.displayName} Calendar` : 'Treat Calendar')}
           </p>
-          <h3 className="daily-treats-calendar__title">
-            {themeEmojis[0]} {themeName}
-          </h3>
+          {isPersonalQuest ? (
+            <img
+              src="/icons/DAILY%20TREAT/dailymomentum_title.webp"
+              alt="Daily Momentum"
+              className="daily-treats-calendar__title-image"
+            />
+          ) : (
+            <h3 className="daily-treats-calendar__title">
+              {themeEmojis[0]} {themeName}
+            </h3>
+          )}
           <p className="daily-treats-calendar__countdown">{countdownLabel}</p>
           {!isPersonalQuest && (
             <p className="daily-treats-calendar__subtitle">

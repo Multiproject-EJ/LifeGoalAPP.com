@@ -44,6 +44,7 @@ type MyAccountPanelProps = {
   onProfileUpdate?: (profile: WorkspaceProfileRow) => void;
   onLaunchWeeklyHabitReview?: () => void;
   onLaunchDailyCatchUpPrompt?: () => void;
+  onLaunchDailyTreatCalendar?: () => void;
   billingReturnBanner?: {
     kind: 'processing' | 'success' | 'canceled';
     message: string;
@@ -73,6 +74,7 @@ export function MyAccountPanel({
   onProfileUpdate,
   onLaunchWeeklyHabitReview,
   onLaunchDailyCatchUpPrompt,
+  onLaunchDailyTreatCalendar,
   billingReturnBanner = null,
 }: MyAccountPanelProps) {
   const [folder1Open, setFolder1Open] = useState(false);
@@ -835,6 +837,28 @@ export function MyAccountPanel({
           session={session} 
           isDemoExperience={isDemoExperience} 
         />
+
+        {onLaunchDailyTreatCalendar && (
+          <section className="account-panel__card" aria-labelledby="dev-daily-treat-calendar">
+            <p className="account-panel__eyebrow">Daily Treats</p>
+            <h3 id="dev-daily-treat-calendar">Daily Treat Calendar</h3>
+            <p className="account-panel__hint">
+              Open the Daily Treat Calendar (Personal Quest) directly for development and preview.
+            </p>
+            <div className="account-panel__actions-row">
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  setFolder1Open(false);
+                  onLaunchDailyTreatCalendar();
+                }}
+              >
+                Launch Daily Treat Calendar
+              </button>
+            </div>
+          </section>
+        )}
       </SettingsFolderPopup>
 
       <SettingsFolderPopup
