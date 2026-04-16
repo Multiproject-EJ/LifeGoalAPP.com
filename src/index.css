@@ -20608,6 +20608,21 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(219, 234, 254, 0.9));
 }
 
+.daily-treats-calendar--personal-quest .daily-treats-calendar__dialog--image {
+  background-size: cover;
+  background-position: center top;
+}
+
+.daily-treats-calendar__title-image {
+  display: block;
+  max-width: 220px;
+  width: 100%;
+  height: auto;
+  margin: 0 auto 0.5rem;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
+}
+
 .daily-treats-calendar--personal-quest .daily-treats-calendar__button {
   background: linear-gradient(135deg, #3b82f6, #8b5cf6);
 }
