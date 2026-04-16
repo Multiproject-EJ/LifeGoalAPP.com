@@ -3204,6 +3204,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       session,
       client,
       boardProfileId: ACTIVE_BOARD_PROFILE.id,
+      diceMultiplier: effectiveMultiplier,
     });
 
     if (rollResult.status !== 'ok' || rollResult.total === undefined || rollResult.dieOne === undefined || rollResult.dieTwo === undefined) {
@@ -3247,10 +3248,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     // Sync local state to match what the roll action already persisted.
-    // The service deducted BASE_DICE_PER_ROLL (2) and wrote the new tokenIndex.
-    // The multiplier adds extra cost: total cost = effectiveDiceCost.
-    // The service only knows about the base cost, so we deduct the full
-    // multiplied cost here for UI accuracy (the service handles the base).
+    // The service deducted effectiveDiceCost (= BASE_DICE_PER_ROLL × multiplier)
+    // and wrote the new tokenIndex — we mirror that into React state for the UI.
     const nextDicePool = Math.max(0, dicePool - effectiveDiceCost);
     setDicePool(nextDicePool);
     setRuntimeState((current) => ({
