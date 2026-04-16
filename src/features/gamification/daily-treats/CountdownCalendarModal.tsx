@@ -72,6 +72,11 @@ type RevealState = {
   hatch: CalendarHatch | null;
 };
 
+/** ms to wait after press before opening the reveal — lets the spring snap-back animation complete */
+const PRESS_ANIMATION_DELAY_MS = 180;
+/** Shorter delay for the compact bonus door button */
+const BONUS_PRESS_ANIMATION_DELAY_MS = 150;
+
 export const CountdownCalendarModal = ({
   isOpen,
   onClose,
@@ -85,6 +90,7 @@ export const CountdownCalendarModal = ({
   const [habitCompleted, setHabitCompleted] = useState(false);
   const [revealState, setRevealState] = useState<RevealState | null>(null);
   const [symbolBonusNotification, setSymbolBonusNotification] = useState<string | null>(null);
+  const [trackerExpanded, setTrackerExpanded] = useState(false);
 
   // Load holiday preferences then derive the active advent window and season data
   useEffect(() => {
@@ -411,23 +417,20 @@ export const CountdownCalendarModal = ({
             {themeEmojis[0]} {themeName}
           </h3>
           <p className="daily-treats-calendar__countdown">{countdownLabel}</p>
-          <p className="daily-treats-calendar__subtitle">
-            Day {todayIndex} of {totalDoors}
-            {todayFreeOpened
-              ? isPersonalQuest
-                ? ' • come back anytime to open the next door!'
-                : " • today's treat already revealed!"
-              : isPersonalQuest
-                ? ' • open this door to reveal your treat.'
-                : " • open today's door to reveal your treat."}
-          </p>
+          {!isPersonalQuest && (
+            <p className="daily-treats-calendar__subtitle">
+              {todayFreeOpened
+                ? "Today's treat already revealed!"
+                : "Open today's door to reveal your treat."}
+            </p>
+          )}
 
           {/* Bonus door status */}
           {!todayBonusOpened && (
             <p className="daily-treats-calendar__bonus-hint">
               {habitCompleted
-                ? '✨ Bonus door unlocked! Complete a habit to claim extra rewards.'
-                : '🎁 Complete a habit today to unlock your bonus door!'}
+                ? '✨ Bonus door ready — tap the gift to claim!'
+                : '🎁 Complete a habit to unlock your bonus door'}
             </p>
           )}
 
@@ -488,13 +491,16 @@ export const CountdownCalendarModal = ({
                       aria-label={label}
                       onClick={() => {
                         if (freeHatch) {
-                          void handleOpenDoor(day, 'free', freeHatch);
+                          // Brief delay lets the press spring-back animation complete before the reveal replaces the tile
+                          setTimeout(() => void handleOpenDoor(day, 'free', freeHatch), PRESS_ANIMATION_DELAY_MS);
                         } else {
                           // Legacy mode
-                          const result = revealScratchCardForDayWithPersistence(userId, day);
-                          if (!result) return;
-                          setRevealResult(result);
-                          setScratchState(loadScratchCardState(userId));
+                          setTimeout(() => {
+                            const result = revealScratchCardForDayWithPersistence(userId, day);
+                            if (!result) return;
+                            setRevealResult(result);
+                            setScratchState(loadScratchCardState(userId));
+                          }, PRESS_ANIMATION_DELAY_MS);
                         }
                       }}
                     >
@@ -508,10 +514,12 @@ export const CountdownCalendarModal = ({
                       role="listitem"
                       aria-label={label}
                       onClick={() => {
-                        const result = revealScratchCardForDayWithPersistence(userId, day);
-                        if (!result) return;
-                        setRevealResult(result);
-                        setScratchState(loadScratchCardState(userId));
+                        setTimeout(() => {
+                          const result = revealScratchCardForDayWithPersistence(userId, day);
+                          if (!result) return;
+                          setRevealResult(result);
+                          setScratchState(loadScratchCardState(userId));
+                        }, PRESS_ANIMATION_DELAY_MS);
                       }}
                     >
                       {doorBody}
@@ -538,7 +546,12 @@ export const CountdownCalendarModal = ({
                             : 'daily-treats-calendar__bonus-door--locked'
                       }`}
                       disabled={!canOpenBonus}
-                      onClick={() => canOpenBonus && void handleOpenDoor(day, 'bonus', bonusHatch)}
+                      onClick={() => {
+                        if (canOpenBonus) {
+                          // Brief delay lets the press animation complete before the reveal appears
+                          setTimeout(() => void handleOpenDoor(day, 'bonus', bonusHatch), BONUS_PRESS_ANIMATION_DELAY_MS);
+                        }
+                      }}
                       aria-label={`Bonus door for day ${day}${habitCompleted ? ' - unlocked' : ' - locked'}`}
                     >
                       {bonusOpened ? '✓' : '🎁'}
@@ -583,8 +596,17 @@ export const CountdownCalendarModal = ({
           {/* Legacy scratch card reveal for backwards compatibility */}
           {revealResult ? <ScratchCardReveal result={revealResult} /> : null}
 
-          <div className="daily-treats-calendar__tracker">
-            <p className="daily-treats-calendar__tracker-title">Reward tracker</p>
+          <div className={`daily-treats-calendar__tracker${trackerExpanded ? '' : ' daily-treats-calendar__tracker--collapsed'}`}>
+            <button
+              type="button"
+              className="daily-treats-calendar__tracker-toggle"
+              onClick={() => setTrackerExpanded(prev => !prev)}
+              aria-expanded={trackerExpanded}
+              aria-label={trackerExpanded ? 'Collapse reward tracker' : 'Expand reward tracker'}
+            >
+              <span>Reward tracker</span>
+              <span aria-hidden="true">{trackerExpanded ? '▲' : '▼'}</span>
+            </button>
             <div className="daily-treats-calendar__tracker-grid">
               {DEFAULT_SYMBOLS.map((symbol) => {
                 const count = resolvedState.symbolCounts?.[symbol.name] ?? 0;
