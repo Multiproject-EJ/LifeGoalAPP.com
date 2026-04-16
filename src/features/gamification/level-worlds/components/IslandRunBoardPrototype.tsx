@@ -5648,7 +5648,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <span className="island-run-prototype__shard-pill-content">
               <span>{nextRewardIcon} {activeTimedEvent.eventType} · Next: {nextRewardKind}</span>
               <span className="island-run-prototype__shard-pill-count">
-                {timedEventRemainingLabel} · {rewardBarProgress}/{rewardBarThreshold} · Tier {runtimeState.rewardBarEscalationTier}{diceMultiplier > 1 ? ` · x${diceMultiplier}` : ''}
+                {timedEventRemainingLabel} · {rewardBarProgress}/{rewardBarThreshold} · Tier {runtimeState.rewardBarEscalationTier}{diceMultiplier > 1 ? ` · ×${diceMultiplier}` : ''}
               </span>
             </span>
             <button
@@ -6008,7 +6008,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           <div className="island-run-board__rewardbar-timers">
             <span className={getTimerUrgencyClass(timedEventRemainingMs)}>{timedEventRemainingLabel}</span>
             {diceMultiplier > 1 && (
-              <span className="island-run-board__rewardbar-multiplier-badge">x{diceMultiplier}</span>
+              <span className="island-run-board__rewardbar-multiplier-badge">×{diceMultiplier}</span>
             )}
           </div>
         </button>
@@ -6945,7 +6945,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </p>
             {diceMultiplier > 1 && (
               <p className="island-stop-modal__copy">
-                🔥 Active multiplier: <strong>x{diceMultiplier}</strong> — rewards and progress are amplified!
+                🔥 Active multiplier: <strong>×{diceMultiplier}</strong> — rewards and progress are amplified!
               </p>
             )}
             <p className="island-stop-modal__copy" style={{ opacity: 0.7, fontSize: '0.85em' }}>
@@ -6997,7 +6997,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 onClick={() => {
                   // Mock mini-game play: spend 3 tokens, award random reward
                   const reward = Math.random();
-                  setSpinTokens((c) => c - 3);
+                  setSpinTokens((c) => Math.max(0, c - 3));
                   setRuntimeState((c) => ({ ...c, spinTokens: Math.max(0, c.spinTokens - 3) }));
                   if (reward < 0.4) {
                     const dice = 3 + Math.floor(Math.random() * 8);
