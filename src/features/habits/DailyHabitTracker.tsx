@@ -128,6 +128,12 @@ import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
 import { HabitPauseDialog } from './HabitPauseDialog';
 import { RoutinesTodayLane } from '../routines';
+import {
+  getQuestHabit,
+  setQuestHabit,
+  clearQuestHabit,
+  type QuestHabit,
+} from '../../services/questHabit';
 
 // Constants
 const DONE_ISH_DEFAULT_PERCENTAGE = 85;
@@ -644,6 +650,21 @@ export function DailyHabitTracker({
   const swipeSuppressClickUntilByHabitIdRef = useRef<Record<string, number>>({});
   const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
   const [isCompactView, setIsCompactView] = useState(preferredCompactView ?? forceCompactView);
+
+  // Quest Habit — the single habit designated to unlock the bonus door in the Personal Quest calendar
+  const [questHabit, setQuestHabitState] = useState<QuestHabit | null>(() =>
+    getQuestHabit(session.user.id),
+  );
+
+  const handleSetQuestHabit = useCallback((habit: QuestHabit) => {
+    setQuestHabit(session.user.id, habit);
+    setQuestHabitState(habit);
+  }, [session.user.id]);
+
+  const handleClearQuestHabit = useCallback(() => {
+    clearQuestHabit(session.user.id);
+    setQuestHabitState(null);
+  }, [session.user.id]);
 
   useEffect(() => {
     if (typeof preferredCompactView === 'boolean') {
@@ -5576,6 +5597,8 @@ export function DailyHabitTracker({
               return 'No action';
             };
 
+            const isQuestHabit = questHabit?.habitId === habit.id;
+
             return (
               <li
                 key={habit.id}
@@ -5583,7 +5606,7 @@ export function DailyHabitTracker({
                   isCompleted ? 'habit-checklist__item--completed' : ''
                 } ${isJustCompleted ? `habit-item--just-completed ${feedbackClassName}` : ''} ${
                   isOfferHabit ? 'habit-checklist__item--offer' : ''
-                }`}
+                } ${isQuestHabit ? 'habit-checklist__item--quest' : ''}`}
               >
                 {(shouldShowHabitPoints || isOfferHabit) ? (
                   <PointsBadge
@@ -5892,6 +5915,33 @@ export function DailyHabitTracker({
                           ⏳ {timeLimitedCountdownLabel}
                         </span>
                       ) : null}
+                      {/* Quest habit badge — visible on the active quest habit */}
+                      {isQuestHabit ? (
+                        <span className="habit-checklist__quest-badge" aria-label="Quest Habit — unlocks your bonus door">
+                          ⭐ Quest Habit
+                        </span>
+                      ) : null}
+                      {/* Quest habit toggle button — tap to designate/remove this habit as the Quest Habit */}
+                      <button
+                        type="button"
+                        className={`habit-checklist__quest-btn${isQuestHabit ? ' habit-checklist__quest-btn--active' : ''}`}
+                        aria-label={isQuestHabit ? 'Remove Quest Habit designation' : 'Set as Quest Habit'}
+                        title={isQuestHabit ? 'Remove Quest Habit' : 'Set as Quest Habit (unlocks bonus door)'}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (isQuestHabit) {
+                            handleClearQuestHabit();
+                          } else {
+                            handleSetQuestHabit({
+                              habitId: habit.id,
+                              title: habit.name,
+                              emoji: habit.emoji ?? null,
+                            });
+                          }
+                        }}
+                      >
+                        {isQuestHabit ? '⭐' : '☆'}
+                      </button>
                     </div>
                   </div>
                 </div>

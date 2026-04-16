@@ -7427,6 +7427,76 @@ html.platform-ipad .workspace-shell__menu-edge {
   animation: offerPulse 3.2s ease-in-out infinite;
 }
 
+/* ── Quest Habit — golden glow card modifier ── */
+.habit-checklist__item--quest {
+  border: 1.5px solid rgba(234, 179, 8, 0.55);
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.12), 0 10px 24px rgba(15, 23, 42, 0.08);
+  background: linear-gradient(155deg, rgba(255, 251, 235, 0.95), rgba(254, 243, 199, 0.9));
+  animation: questItemGlow 3s ease-in-out infinite;
+}
+
+@keyframes questItemGlow {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.12), 0 10px 24px rgba(15, 23, 42, 0.08); }
+  50%       { box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.22), 0 12px 28px rgba(234, 179, 8, 0.1); }
+}
+
+/* Quest badge pill — shown inside the row on the active quest habit */
+.habit-checklist__quest-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #78350f;
+  background: linear-gradient(135deg, rgba(254, 243, 199, 0.95), rgba(253, 230, 138, 0.85));
+  border: 1px solid rgba(234, 179, 8, 0.5);
+  border-radius: 999px;
+  padding: 0.15em 0.55em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Quest toggle button — shown on every habit row */
+.habit-checklist__quest-btn {
+  flex-shrink: 0;
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.35;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.habit-checklist__quest-btn:hover {
+  opacity: 0.7;
+  transform: scale(1.15);
+}
+
+.habit-checklist__quest-btn--active {
+  opacity: 1;
+  animation: questBtnPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes questBtnPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 3px rgba(234, 179, 8, 0.4)); }
+  50%       { transform: scale(1.12); filter: drop-shadow(0 0 6px rgba(234, 179, 8, 0.65)); }
+}
+
+.habit-checklist__quest-btn--active:hover {
+  animation: none;
+  opacity: 0.75;
+}
+
+
 .habit-checklist__item--offer::after {
   content: '';
   position: absolute;
@@ -15757,6 +15827,30 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-shadow: 0 14px 30px rgba(5, 10, 20, 0.55);
 }
 
+/* Dark theme — Quest Habit card override */
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-habit-home .habit-checklist__item--quest {
+  background: linear-gradient(155deg, rgba(92, 40, 8, 0.55), rgba(120, 53, 15, 0.45));
+  border-color: rgba(234, 179, 8, 0.5);
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.1), 0 14px 30px rgba(5, 10, 20, 0.55);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-habit-home .habit-checklist__quest-badge {
+  background: linear-gradient(135deg, rgba(92, 40, 8, 0.8), rgba(120, 53, 15, 0.7));
+  color: #fde68a;
+  border-color: rgba(234, 179, 8, 0.45);
+}
+
+
 [data-theme='flow-night'] .mobile-habit-home .habit-checklist__item {
   --habit-card-surface: rgba(15, 23, 42, 0.78);
   background: rgba(15, 23, 42, 0.78);
@@ -20727,6 +20821,90 @@ html.platform-ipad .workspace-shell__menu-edge {
   border: 1px solid rgba(74, 222, 128, 0.4);
 }
 
+/* ── Locked bonus door hint — subtle amber pill shown when bonus is not yet unlocked ── */
+.daily-treats-calendar__bonus-locked-hint {
+  margin: 0.5rem 0;
+  font-size: 0.8rem;
+  color: #92400e;
+  text-align: center;
+  padding: 0.55rem 0.75rem;
+  background: rgba(254, 243, 199, 0.55);
+  border: 1px dashed rgba(234, 179, 8, 0.45);
+  border-radius: 10px;
+}
+
+
+/* ── Bonus door popup — large centered card, shown only when bonus is ready ── */
+.daily-treats-calendar__bonus-popup {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1.1rem 1rem 1.25rem;
+  border-radius: 20px;
+  text-align: center;
+  background: linear-gradient(150deg, rgba(254, 243, 199, 0.95), rgba(253, 230, 138, 0.88));
+  border: 2px solid rgba(234, 179, 8, 0.65);
+  box-shadow: 0 6px 22px rgba(234, 179, 8, 0.28), 0 0 0 4px rgba(234, 179, 8, 0.1);
+  animation: bonus-popup-appear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes bonus-popup-appear {
+  from { opacity: 0; transform: scale(0.88) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.daily-treats-calendar__bonus-popup-icon {
+  font-size: 2.8rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(234, 179, 8, 0.4));
+  animation: bonus-icon-sway 2s ease-in-out infinite;
+}
+
+@keyframes bonus-icon-sway {
+  0%, 100% { transform: rotate(-6deg) scale(1); }
+  50%       { transform: rotate(6deg) scale(1.08); }
+}
+
+.daily-treats-calendar__bonus-popup-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #78350f;
+  letter-spacing: -0.01em;
+}
+
+.daily-treats-calendar__bonus-popup-text {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #92400e;
+  line-height: 1.5;
+}
+
+.daily-treats-calendar__bonus-popup-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.5rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+  justify-self: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  animation: bonus-btn-glow 1.8s ease-in-out infinite;
+}
+
+.daily-treats-calendar__bonus-popup-btn:active {
+  transform: scale(0.94);
+  box-shadow: 0 3px 8px rgba(245, 158, 11, 0.3);
+  animation: none;
+}
+
+@keyframes bonus-btn-glow {
+  0%, 100% { box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4); }
+  50%       { box-shadow: 0 8px 22px rgba(245, 158, 11, 0.6); }
+}
+
 .daily-treats-calendar__symbol-bonus-toast {
   padding: 0.5rem 0.75rem;
   background: rgba(254, 243, 199, 0.9);
@@ -21142,6 +21320,27 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: rgba(15, 80, 30, 0.3);
   color: #86efac;
   border-color: rgba(74, 222, 128, 0.3);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__bonus-locked-hint {
+  background: rgba(100, 80, 15, 0.28);
+  color: #fcd34d;
+  border-color: rgba(234, 179, 8, 0.3);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__bonus-popup {
+  background: linear-gradient(150deg, rgba(92, 40, 8, 0.7), rgba(120, 53, 15, 0.65));
+  border-color: rgba(234, 179, 8, 0.55);
+  box-shadow: 0 6px 22px rgba(234, 179, 8, 0.18), 0 0 0 4px rgba(234, 179, 8, 0.08);
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__bonus-popup-title {
+  color: #fde68a;
+}
+
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__bonus-popup-text {
+  color: #fcd34d;
+  opacity: 0.9;
 }
 
 :is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__bonus-door--locked {

@@ -1338,7 +1338,21 @@ export async function openTodayHatch(
  * @param userId - The user's ID
  * @returns true if at least one habit was completed today
  */
-export async function isHabitCompletedToday(userId: string): Promise<boolean> {
+/**
+ * Check whether the bonus-door trigger condition has been met for today.
+ *
+ * When `questHabitId` is supplied the check is scoped to that specific habit
+ * (the user's designated "Quest Habit").  When omitted, any completed habit
+ * counts — the legacy behaviour.
+ *
+ * @param userId - The user's ID
+ * @param questHabitId - Optional: ID of the habit that must be completed.
+ *   Pass `null` or omit to use the "any habit" fallback.
+ */
+export async function isHabitCompletedToday(
+  userId: string,
+  questHabitId?: string | null,
+): Promise<boolean> {
   if (!await canUseSupabaseDataAsync()) {
     // Demo mode: randomly return true/false with 50% probability.
     // This allows QA and demos to test both locked and unlocked bonus door
@@ -1350,12 +1364,17 @@ export async function isHabitCompletedToday(userId: string): Promise<boolean> {
     const supabase = getSupabaseClient();
     const today = new Date().toISOString().split('T')[0];
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('habit_logs_v2')
       .select('id')
       .eq('user_id', userId)
-      .eq('date', today)
-      .limit(1);
+      .eq('date', today);
+
+    if (questHabitId) {
+      query = query.eq('habit_id', questHabitId);
+    }
+
+    const { data, error } = await query.limit(1);
 
     if (error) {
       console.warn('Failed to check habit completion:', error);

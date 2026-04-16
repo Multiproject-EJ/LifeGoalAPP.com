@@ -36,6 +36,7 @@ import {
 } from '../../../services/treatCalendarService';
 import { fetchHolidayPreferences } from '../../../services/holidayPreferences';
 import { getHolidayThemeAssets } from '../../../services/holidayThemeAssets';
+import { getQuestHabit, type QuestHabit } from '../../../services/questHabit';
 
 type CountdownCalendarModalProps = {
   isOpen: boolean;
@@ -89,6 +90,7 @@ export const CountdownCalendarModal = ({
   const [activeAdvent, setActiveAdvent] = useState<ReturnType<typeof getActiveAdventMeta> | undefined>(undefined);
   const [seasonData, setSeasonData] = useState<CalendarSeasonData | null>(null);
   const [habitCompleted, setHabitCompleted] = useState(false);
+  const [questHabit, setQuestHabit] = useState<QuestHabit | null>(null);
   const [revealState, setRevealState] = useState<RevealState | null>(null);
   const [symbolBonusNotification, setSymbolBonusNotification] = useState<string | null>(null);
   const [trackerExpanded, setTrackerExpanded] = useState(false);
@@ -140,8 +142,10 @@ export const CountdownCalendarModal = ({
             setSeasonData(questSeason);
           }
         }
-        // Check habit completion for bonus door gating
-        const completed = await isHabitCompletedToday(userId);
+        // Load the user's designated quest habit (if any) then check completion
+        const qh = getQuestHabit(userId);
+        setQuestHabit(qh);
+        const completed = await isHabitCompletedToday(userId, qh?.habitId);
         setHabitCompleted(completed);
       }
     };
@@ -322,6 +326,11 @@ export const CountdownCalendarModal = ({
   const todayBonusOpened = progress?.opened_bonus_days?.includes(todayIndex) ?? false;
   const isAdventComplete = todayFreeOpened && todayIndex === totalDoors;
 
+  // Pre-compute today's bonus hatch for the popup rendered outside the grid loop
+  const { bonus: todayBonusHatch } = seasonData
+    ? getHatchesForDay(seasonData.hatches, todayIndex)
+    : { bonus: null };
+
   // Render reveal modal if actively revealing
   if (revealState?.isRevealing && revealState.hatch) {
     const { hatch, dayIndex, doorType } = revealState;
@@ -405,6 +414,9 @@ export const CountdownCalendarModal = ({
           calendarBackgroundUrl
             ? {
                 backgroundImage: `linear-gradient(180deg, rgba(15, 23, 42, 0.2), rgba(15, 23, 42, 0.88)), url(${calendarBackgroundUrl})`,
+                backgroundSize: 'cover, contain',
+                backgroundPosition: 'center, center top',
+                backgroundRepeat: 'no-repeat, no-repeat',
               }
             : undefined
         }
@@ -451,25 +463,49 @@ export const CountdownCalendarModal = ({
             </p>
           )}
 
-          {/* Bonus door status */}
-          {!todayBonusOpened && (
-            <p className="daily-treats-calendar__bonus-hint">
-              {habitCompleted
-                ? '✨ Bonus door ready — tap the gift to claim!'
+          {/* Bonus door popup — prominent card, only shown when bonus is available and not yet opened */}
+          {todayBonusHatch && habitCompleted && !todayBonusOpened && (
+            <div className="daily-treats-calendar__bonus-popup">
+              <div className="daily-treats-calendar__bonus-popup-icon">🎁</div>
+              <p className="daily-treats-calendar__bonus-popup-title">✨ Bonus Door Ready!</p>
+              <p className="daily-treats-calendar__bonus-popup-text">
+                {questHabit
+                  ? <>You completed <strong>{questHabit.emoji ? `${questHabit.emoji} ` : ''}{questHabit.title}</strong> — your bonus door is ready to claim!</>
+                  : 'Your bonus door is ready to open! Tap below to claim extra rewards.'}
+              </p>
+              <button
+                type="button"
+                className="daily-treats-calendar__bonus-popup-btn"
+                onClick={() => {
+                  setTimeout(
+                    () => void handleOpenDoor(todayIndex, 'bonus', todayBonusHatch),
+                    BONUS_PRESS_ANIMATION_DELAY_MS,
+                  );
+                }}
+              >
+                Open Bonus Door 🎁
+              </button>
+            </div>
+          )}
+
+          {/* Locked bonus door hint — shown only when bonus is not yet unlocked */}
+          {todayBonusHatch && !habitCompleted && !todayBonusOpened && (
+            <div className="daily-treats-calendar__bonus-locked-hint">
+              {questHabit
+                ? <>🔐 Complete <strong>{questHabit.emoji ? `${questHabit.emoji} ` : ''}{questHabit.title}</strong> to unlock your bonus door</>
                 : '🎁 Complete a habit to unlock your bonus door'}
-            </p>
+            </div>
           )}
 
           <div className="daily-treats-calendar__grid" role="list">
             {Array.from({ length: totalDoors }, (_, index) => {
               const day = index + 1;
               const isFinalDay = day === totalDoors;
-              const { free: freeHatch, bonus: bonusHatch } = seasonData
+              const { free: freeHatch } = seasonData
                 ? getHatchesForDay(seasonData.hatches, day)
-                : { free: null, bonus: null };
+                : { free: null };
 
               const freeOpened = progress?.opened_days.includes(day) ?? false;
-              const bonusOpened = progress?.opened_bonus_days?.includes(day) ?? false;
 
               // Use legacy state for backwards compatibility
               const revealedSymbol = resolvedState.revealedSymbols?.[day];
@@ -482,7 +518,6 @@ export const CountdownCalendarModal = ({
               // - 'today' status: always openable
               // - 'catchup' status (holiday missed days): openable
               const canOpenFree = (status === 'today' || status === 'catchup') && !freeOpened && !isOpenedLegacy;
-              const canOpenBonus = day === todayIndex && !bonusOpened && habitCompleted;
 
               const doorEmoji = themeEmojis[(day - 1) % themeEmojis.length];
               const statusLabel = status === 'catchup' ? 'missed day, available to open' : status;
@@ -569,40 +604,10 @@ export const CountdownCalendarModal = ({
                       {doorBody}
                     </div>
                   )}
-
-                  {/* Bonus door indicator for today */}
-                  {day === todayIndex && bonusHatch && (
-                    <button
-                      type="button"
-                      className={`daily-treats-calendar__bonus-door ${
-                        bonusOpened
-                          ? 'daily-treats-calendar__bonus-door--opened'
-                          : habitCompleted
-                            ? 'daily-treats-calendar__bonus-door--unlocked'
-                            : 'daily-treats-calendar__bonus-door--locked'
-                      }`}
-                      disabled={!canOpenBonus}
-                      onClick={() => {
-                        if (canOpenBonus) {
-                          // Brief delay lets the press animation complete before the reveal appears
-                          setTimeout(() => void handleOpenDoor(day, 'bonus', bonusHatch), BONUS_PRESS_ANIMATION_DELAY_MS);
-                        }
-                      }}
-                      aria-label={`Bonus door for day ${day}${habitCompleted ? ' - unlocked' : ' - locked'}`}
-                    >
-                      {bonusOpened ? '✓' : '🎁'}
-                    </button>
-                  )}
                 </div>
               );
             })}
           </div>
-
-          {todayFreeOpened && !todayBonusOpened && habitCompleted && (
-            <div className="daily-treats-calendar__bonus-reminder">
-              Your bonus door is ready to open! Tap the 🎁 to claim extra rewards.
-            </div>
-          )}
 
           {todayFreeOpened && todayBonusOpened ? (
             <div className="daily-treats-calendar__rest">
@@ -610,8 +615,12 @@ export const CountdownCalendarModal = ({
             </div>
           ) : todayFreeOpened ? (
             <div className="daily-treats-calendar__rest">
-              You revealed today&apos;s free treat {themeEmojis[0]} 
-              {!todayBonusOpened && !habitCompleted && ' Complete a habit to unlock the bonus door!'}
+              You revealed today&apos;s free treat {themeEmojis[0]}
+              {!todayBonusOpened && !habitCompleted && (
+                questHabit
+                  ? ` Complete ${questHabit.emoji ? questHabit.emoji + ' ' : ''}${questHabit.title} to unlock the bonus door!`
+                  : ' Complete a habit to unlock the bonus door!'
+              )}
             </div>
           ) : null}
 
