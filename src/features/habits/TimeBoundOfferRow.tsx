@@ -47,7 +47,6 @@ function formatOfferCountdown(expiresAtMs: number | null, nowMs: number): string
 
 export function TimeBoundOfferRow({ offers, onOfferClick }: TimeBoundOfferRowProps) {
   const [nowMs, setNowMs] = useState(() => Date.now());
-  const diagnosticCircleSurfaceOnly = true;
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setNowMs(Date.now()), 1000);
@@ -123,8 +122,8 @@ export function TimeBoundOfferRow({ offers, onOfferClick }: TimeBoundOfferRowPro
           >
             <span className="time-bound-offers__circle" aria-hidden="true">
               {isActionable ? <span className="time-bound-offers__notification" /> : null}
-              {!diagnosticCircleSurfaceOnly ? <span className="time-bound-offers__icon">{offer.icon}</span> : null}
-              {!diagnosticCircleSurfaceOnly ? <span className="time-bound-offers__badge">{badgeLabel}</span> : null}
+              <span className="time-bound-offers__icon">{offer.icon}</span>
+              <span className="time-bound-offers__badge">{badgeLabel}</span>
             </span>
             <span className="time-bound-offers__label">{offer.label}</span>
           </button>
