@@ -142,7 +142,123 @@ export function resolveNextRewardKind(claimCount: number): RewardBarRewardKind {
   return REWARD_ROTATION[Math.max(0, Math.floor(claimCount)) % REWARD_ROTATION.length]!;
 }
 
-// ── Multiplier support ───────────────────────────────────────────────────────
+// ── Multiplier support (Monopoly GO-style dice-pool gating) ──────────────────
+//
+// The multiplier scales with the player's current dice stash.
+// More dice = higher multiplier options unlocked.
+// Higher multiplier = more dice cost per roll (risk/reward).
+//
+// Key design goals (mirroring Monopoly GO):
+//  1. Prevent early burn-out — new players can't nuke their dice instantly.
+//  2. Create "power feeling" later — big stacks = big plays = casino energy.
+//  3. Encourage hoarding → then spending — save dice, burst during events.
+//  4. Faster reward bar progression, but faster dice burn + higher variance.
+
+/**
+ * Each tier defines a multiplier and the minimum dice pool required to unlock it.
+ * The base cost per roll is DICE_PER_ROLL (2). At multiplier ×N, cost = 2×N.
+ *
+ * Tier gates are tuned for a prototype with regen ceiling ~30–160 dice:
+ *  - ×1 is always available (0 dice).
+ *  - Early game: ×2, ×3, ×5 unlock at modest thresholds.
+ *  - Mid game: ×10, ×20, ×50 for players who have been hoarding.
+ *  - Late / whale: ×100, ×200 for very large stashes.
+ */
+export type MultiplierTier = {
+  multiplier: number;
+  /** Minimum dice in pool to unlock this tier. */
+  minDice: number;
+};
+
+export const MULTIPLIER_TIERS: readonly MultiplierTier[] = [
+  { multiplier: 1,   minDice: 0 },
+  { multiplier: 2,   minDice: 20 },
+  { multiplier: 3,   minDice: 50 },
+  { multiplier: 5,   minDice: 100 },
+  { multiplier: 10,  minDice: 200 },
+  { multiplier: 20,  minDice: 500 },
+  { multiplier: 50,  minDice: 1_000 },
+  { multiplier: 100, minDice: 2_000 },
+  { multiplier: 200, minDice: 5_000 },
+] as const;
+
+/** Base dice deducted per roll (before multiplier scaling). */
+export const BASE_DICE_PER_ROLL = 2;
+
+/**
+ * Resolve all multiplier tiers available given the current dice pool.
+ * Returns entries sorted ascending. Always includes ×1.
+ * Each entry includes an `unlocked` flag for UI display of locked tiers.
+ */
+export function resolveAvailableMultiplierTiers(dicePool: number): (MultiplierTier & { unlocked: boolean })[] {
+  const safeDice = Math.max(0, Math.floor(dicePool));
+  return MULTIPLIER_TIERS.map((tier) => ({
+    ...tier,
+    unlocked: safeDice >= tier.minDice,
+  }));
+}
+
+/**
+ * Resolve the highest multiplier the player can currently select.
+ * Only tiers where dicePool ≥ minDice are eligible.
+ * Optional `eventBoostMax` temporarily raises the ceiling during events.
+ */
+export function resolveMaxMultiplierForPool(dicePool: number, eventBoostMax?: number): number {
+  const safeDice = Math.max(0, Math.floor(dicePool));
+  let maxMult = 1;
+  for (const tier of MULTIPLIER_TIERS) {
+    if (safeDice >= tier.minDice) {
+      maxMult = tier.multiplier;
+    }
+  }
+  // Event boost: raise ceiling by one extra tier (if active)
+  if (eventBoostMax !== undefined && eventBoostMax > 0) {
+    const boostedIdx = MULTIPLIER_TIERS.findIndex((t) => t.multiplier === maxMult);
+    if (boostedIdx >= 0 && boostedIdx + 1 < MULTIPLIER_TIERS.length) {
+      maxMult = Math.min(MULTIPLIER_TIERS[boostedIdx + 1]!.multiplier, eventBoostMax);
+    }
+  }
+  return maxMult;
+}
+
+/**
+ * Dice cost for a single roll at the given multiplier.
+ * Cost = BASE_DICE_PER_ROLL × multiplier.
+ * This means ×10 costs 20 dice per roll — fast burn, but massive progress.
+ */
+export function resolveDiceCostForMultiplier(multiplier: number): number {
+  return BASE_DICE_PER_ROLL * Math.max(1, Math.floor(multiplier));
+}
+
+/**
+ * Clamp the selected multiplier down if the player no longer has enough dice.
+ * Returns the highest eligible multiplier ≤ the current selection.
+ * Falls back to ×1 if pool is too low for anything else.
+ */
+export function clampMultiplierToPool(selectedMultiplier: number, dicePool: number): number {
+  const safeDice = Math.max(0, Math.floor(dicePool));
+  const safeMult = Math.max(1, Math.floor(selectedMultiplier));
+  let best = 1;
+  for (const tier of MULTIPLIER_TIERS) {
+    if (tier.multiplier <= safeMult && safeDice >= tier.minDice) {
+      best = tier.multiplier;
+    }
+  }
+  // Also check player can actually afford at least one roll at this multiplier
+  const cost = resolveDiceCostForMultiplier(best);
+  if (safeDice < cost) {
+    // Fall back to the highest affordable tier
+    let fallback = 1;
+    for (const tier of MULTIPLIER_TIERS) {
+      const tierCost = resolveDiceCostForMultiplier(tier.multiplier);
+      if (safeDice >= tierCost && safeDice >= tier.minDice) {
+        fallback = tier.multiplier;
+      }
+    }
+    return fallback;
+  }
+  return best;
+}
 
 /**
  * Apply a dice multiplier to reward bar progress.

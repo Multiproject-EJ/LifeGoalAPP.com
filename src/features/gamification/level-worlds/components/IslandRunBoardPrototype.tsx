@@ -132,6 +132,9 @@ import {
   resolveNextRewardKind,
   REWARD_KIND_ICON,
   TIMED_EVENT_SEQUENCE,
+  resolveAvailableMultiplierTiers,
+  clampMultiplierToPool,
+  resolveDiceCostForMultiplier,
   type RewardBarClaimPayout,
 } from '../services/islandRunContractV2RewardBar';
 import {
@@ -1067,8 +1070,21 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [diceCheckoutError, setDiceCheckoutError] = useState<string | null>(null);
   const [showSanctuaryPanel, setShowSanctuaryPanel] = useState(false);
 
-  // ── Dice multiplier (affects rewards + feeding progress) ───────────────────
+  // ── Dice multiplier (dice-pool-gated, Monopoly GO style) ────────────────────
   const [diceMultiplier, setDiceMultiplier] = useState(1);
+
+  // Derived: available tiers (with unlocked status), effective cost, and auto-clamp
+  const multiplierTiers = resolveAvailableMultiplierTiers(dicePool);
+  const effectiveMultiplier = clampMultiplierToPool(diceMultiplier, dicePool);
+  const effectiveDiceCost = resolveDiceCostForMultiplier(effectiveMultiplier);
+
+  // Auto-downgrade multiplier when pool drops below current tier's gate
+  // (e.g. after a roll drains dice below the ×10 threshold)
+  useEffect(() => {
+    if (effectiveMultiplier !== diceMultiplier) {
+      setDiceMultiplier(effectiveMultiplier);
+    }
+  }, [effectiveMultiplier, diceMultiplier]);
 
   // ── Reward bar animation state ─────────────────────────────────────────────
   const [rewardBarBurstAnimating, setRewardBarBurstAnimating] = useState(false);
@@ -2803,18 +2819,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   });
   const isEnergyDepletedForRoll = isIslandRunRollEnergyDepleted({
     dicePool,
-    dicePerRoll: DICE_PER_ROLL,
+    dicePerRoll: effectiveDiceCost,
   });
   const rollButtonMode = resolveIslandRunRollButtonMode({
     isRolling,
     dicePool,
-    dicePerRoll: DICE_PER_ROLL,
+    dicePerRoll: effectiveDiceCost,
   });
   const rollButtonLabel = rollButtonMode === 'rolling'
     ? 'Rolling...'
     : rollButtonMode === 'roll'
-      ? 'Roll (2 dice)'
-      : 'Need 2 dice to roll';
+      ? `Roll (${effectiveDiceCost} dice)`
+      : `Need ${effectiveDiceCost} dice to roll`;
   const compactRollButtonLabel = rollButtonMode === 'rolling'
     ? 'Rolling...'
     : rollButtonMode === 'roll'
@@ -2829,7 +2845,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         : isEnergyDepletedForRoll
           ? 'insufficient_dice'
           : null;
-  const canRoll = !showFirstRunCelebration && !isRolling && !showTravelOverlay && dicePool >= DICE_PER_ROLL;
+  const canRoll = !showFirstRunCelebration && !isRolling && !showTravelOverlay && dicePool >= effectiveDiceCost;
   const spinTokenWalletLabel = resolveIslandRunSpinTokenWalletLabel(ISLAND_RUN_CONTRACT_V2_ENABLED);
   const {
     activeTimedEvent,
@@ -3122,7 +3138,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       step1Complete,
       isRolling,
       dicePool,
-      requiredDicePerRoll: DICE_PER_ROLL,
+      requiredDicePerRoll: effectiveDiceCost,
       isEnergyDepletedForRoll,
       rollButtonMode,
       rollButtonLabel,
@@ -3163,7 +3179,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    if (dicePool < DICE_PER_ROLL) {
+    if (dicePool < effectiveDiceCost) {
       if (isIsland120StartupDiagnosticActive) {
         logIslandRunEntryDebug('island120_roll_interaction', {
           userId: session.user.id,
@@ -3172,7 +3188,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           ...rollDecisionFlags,
         });
       }
-      setLandingText(`Need ${DICE_PER_ROLL} dice to roll.`);
+      setLandingText(`Need ${effectiveDiceCost} dice to roll at ×${effectiveMultiplier}.`);
       return;
     }
 
@@ -3201,7 +3217,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         });
       }
       setIsRolling(false);
-      setLandingText(`Need ${DICE_PER_ROLL} dice to roll.`);
+      setLandingText(`Need ${effectiveDiceCost} dice to roll at ×${effectiveMultiplier}.`);
       return;
     }
     if (isIsland120StartupDiagnosticActive) {
@@ -3231,9 +3247,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     // Sync local state to match what the roll action already persisted.
-    // The service deducted DICE_PER_ROLL and wrote the new tokenIndex —
-    // we just mirror that into React state for the UI.
-    const nextDicePool = Math.max(0, dicePool - DICE_PER_ROLL);
+    // The service deducted BASE_DICE_PER_ROLL (2) and wrote the new tokenIndex.
+    // The multiplier adds extra cost: total cost = effectiveDiceCost.
+    // The service only knows about the base cost, so we deduct the full
+    // multiplied cost here for UI accuracy (the service handles the base).
+    const nextDicePool = Math.max(0, dicePool - effectiveDiceCost);
     setDicePool(nextDicePool);
     setRuntimeState((current) => ({
       ...current,
@@ -3286,7 +3304,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // B2-3: resolve non-stop, non-encounter tile landings with real outcomes
   const resolveTileLanding = (tileType: string) => {
-    const mult = Math.max(1, diceMultiplier);
+    const mult = Math.max(1, effectiveMultiplier);
     const essenceEarn = resolveIslandRunContractV2EssenceEarnForTile(tileType) * mult;
     const EVENT_MESSAGES = [
       '⚡ Island event!',
@@ -5648,7 +5666,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <span className="island-run-prototype__shard-pill-content">
               <span>{nextRewardIcon} {activeTimedEvent.eventType} · Next: {nextRewardKind}</span>
               <span className="island-run-prototype__shard-pill-count">
-                {timedEventRemainingLabel} · {rewardBarProgress}/{rewardBarThreshold} · Tier {runtimeState.rewardBarEscalationTier}{diceMultiplier > 1 ? ` · ×${diceMultiplier}` : ''}
+                {timedEventRemainingLabel} · {rewardBarProgress}/{rewardBarThreshold} · Tier {runtimeState.rewardBarEscalationTier}{effectiveMultiplier > 1 ? ` · ×${effectiveMultiplier} (−${effectiveDiceCost}/roll)` : ''}
               </span>
             </span>
             <button
@@ -6007,8 +6025,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           {/* Event timer + multiplier row */}
           <div className="island-run-board__rewardbar-timers">
             <span className={getTimerUrgencyClass(timedEventRemainingMs)}>{timedEventRemainingLabel}</span>
-            {diceMultiplier > 1 && (
-              <span className="island-run-board__rewardbar-multiplier-badge">×{diceMultiplier}</span>
+            {effectiveMultiplier > 1 && (
+              <span className="island-run-board__rewardbar-multiplier-badge">×{effectiveMultiplier}</span>
             )}
           </div>
         </button>
@@ -6112,22 +6130,25 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
             >
               <span className="island-run-prototype__footer-roll-btn-content">
-                <span className="island-run-prototype__footer-roll-btn-dice">🎲 {hasHydratedRuntimeState ? dicePool : '—'}{diceMultiplier > 1 ? ` ×${diceMultiplier}` : ''}</span>
+                <span className="island-run-prototype__footer-roll-btn-dice">🎲 {hasHydratedRuntimeState ? dicePool : '—'}{effectiveMultiplier > 1 ? ` ×${effectiveMultiplier}` : ''}</span>
                 <span>{isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}</span>
               </span>
             </button>
-            {/* Multiplier selector — prototype toggle between x1, x2, x3, x5 */}
+            {/* Multiplier selector — cycles through unlocked tiers (dice-pool gated) */}
             <button
               type="button"
-              className={`island-run-prototype__footer-nav-btn${diceMultiplier > 1 ? ' island-run-prototype__footer-nav-btn--active-mult' : ''}`}
+              className={`island-run-prototype__footer-nav-btn${effectiveMultiplier > 1 ? ' island-run-prototype__footer-nav-btn--active-mult' : ''}`}
               onClick={() => {
-                const levels = [1, 2, 3, 5];
-                const currentIdx = levels.indexOf(diceMultiplier);
-                const nextIdx = (currentIdx + 1) % levels.length;
-                setDiceMultiplier(levels[nextIdx]!);
+                const unlocked = multiplierTiers.filter((t) => t.unlocked).map((t) => t.multiplier);
+                if (unlocked.length <= 1) return;
+                const currentIdx = unlocked.indexOf(effectiveMultiplier);
+                const nextIdx = (currentIdx + 1) % unlocked.length;
+                setDiceMultiplier(unlocked[nextIdx]!);
               }}
+              title={`Cost: ${effectiveDiceCost} dice/roll · Max: ×${multiplierTiers.filter((t) => t.unlocked).pop()?.multiplier ?? 1}`}
             >
-              ×{diceMultiplier}
+              ×{effectiveMultiplier}
+              {effectiveMultiplier > 1 && <span className="island-run-prototype__footer-nav-btn-cost"> (-{effectiveDiceCost})</span>}
             </button>
             <button
               type="button"
@@ -6943,13 +6964,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               Stickers collected: {Object.values(runtimeState.stickerInventory).reduce((a, b) => a + b, 0)}
               {runtimeState.stickerProgress.fragments >= 4 ? ' — 🎉 Almost a complete sticker!' : ''}
             </p>
-            {diceMultiplier > 1 && (
+            {effectiveMultiplier > 1 && (
               <p className="island-stop-modal__copy">
-                🔥 Active multiplier: <strong>×{diceMultiplier}</strong> — rewards and progress are amplified!
+                🔥 Active multiplier: <strong>×{effectiveMultiplier}</strong> (costs {effectiveDiceCost} dice/roll) — rewards and progress are amplified!
               </p>
             )}
             <p className="island-stop-modal__copy" style={{ opacity: 0.7, fontSize: '0.85em' }}>
-              The bar escalates: threshold grows each fill. High multipliers can trigger multi-fill cascades!
+              The bar escalates: threshold grows each fill. Higher multipliers unlock with more dice (×2 at 20, ×5 at 100, ×10 at 200, ×50 at 1k, ×100 at 2k). Higher multipliers cost more dice per roll but fill the bar faster!
             </p>
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
               {canClaimRewardBar && (

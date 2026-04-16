@@ -811,6 +811,15 @@
   box-shadow: 0 0 8px rgba(255, 100, 50, 0.4);
 }
 
+.island-run-prototype__footer-nav-btn-cost {
+  display: block;
+  font-size: 0.55rem;
+  font-weight: 600;
+  opacity: 0.8;
+  line-height: 1;
+  margin-top: 1px;
+}
+
 .island-run-prototype__hud-grid {
   display: grid;
   gap: 0.54rem;

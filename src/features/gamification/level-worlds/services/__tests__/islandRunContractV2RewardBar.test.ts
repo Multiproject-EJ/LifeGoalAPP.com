@@ -6,6 +6,12 @@ import {
   resolveEscalatingThreshold,
   resolveNextRewardKind,
   resolveChainedRewardBarClaims,
+  resolveAvailableMultiplierTiers,
+  resolveMaxMultiplierForPool,
+  resolveDiceCostForMultiplier,
+  clampMultiplierToPool,
+  MULTIPLIER_TIERS,
+  BASE_DICE_PER_ROLL,
 } from '../islandRunContractV2RewardBar';
 import type { IslandRunRewardBarRuntimeSlice } from '../islandRunContractV2RewardBar';
 import { assert, assertEqual, type TestCase } from './testHarness';
@@ -265,6 +271,81 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
 
       assert(rotated.state.activeTimedEvent, 'Expected rotated event to exist');
       assertEqual(rotated.state.activeTimedEvent?.eventType, 'lucky_spin', 'Expected lucky_spin event after companion_feast');
+    },
+  },
+  // ── Smart multiplier tier tests ──────────────────────────────────────────
+  {
+    name: 'multiplier: x1 always available even at 0 dice',
+    run: () => {
+      const tiers = resolveAvailableMultiplierTiers(0);
+      assert(tiers.length > 0, 'Expected at least one tier');
+      assertEqual(tiers[0]!.multiplier, 1, 'Expected ×1 tier');
+      assertEqual(tiers[0]!.unlocked, true, 'Expected ×1 always unlocked');
+    },
+  },
+  {
+    name: 'multiplier: higher tiers lock when dice pool is small',
+    run: () => {
+      const tiers = resolveAvailableMultiplierTiers(10);
+      const x2 = tiers.find((t) => t.multiplier === 2);
+      const x5 = tiers.find((t) => t.multiplier === 5);
+      assert(x2, 'Expected ×2 tier to exist');
+      assertEqual(x2!.unlocked, false, 'Expected ×2 locked at 10 dice (needs 20)');
+      assertEqual(x5!.unlocked, false, 'Expected ×5 locked at 10 dice');
+    },
+  },
+  {
+    name: 'multiplier: tiers unlock progressively with dice stash',
+    run: () => {
+      const tiers50 = resolveAvailableMultiplierTiers(50);
+      const tiers500 = resolveAvailableMultiplierTiers(500);
+      const unlocked50 = tiers50.filter((t) => t.unlocked).map((t) => t.multiplier);
+      const unlocked500 = tiers500.filter((t) => t.unlocked).map((t) => t.multiplier);
+      assert(unlocked50.includes(1), 'Expected ×1 unlocked at 50 dice');
+      assert(unlocked50.includes(2), 'Expected ×2 unlocked at 50 dice');
+      assert(unlocked50.includes(3), 'Expected ×3 unlocked at 50 dice');
+      assert(!unlocked50.includes(10), 'Expected ×10 locked at 50 dice');
+      assert(unlocked500.includes(20), 'Expected ×20 unlocked at 500 dice');
+    },
+  },
+  {
+    name: 'multiplier: resolveMaxMultiplierForPool returns highest unlocked',
+    run: () => {
+      assertEqual(resolveMaxMultiplierForPool(0), 1, 'Expected max ×1 at 0 dice');
+      assertEqual(resolveMaxMultiplierForPool(30), 2, 'Expected max ×2 at 30 dice');
+      assertEqual(resolveMaxMultiplierForPool(100), 5, 'Expected max ×5 at 100 dice');
+      assertEqual(resolveMaxMultiplierForPool(500), 20, 'Expected max ×20 at 500 dice');
+      assertEqual(resolveMaxMultiplierForPool(5000), 200, 'Expected max ×200 at 5000 dice');
+    },
+  },
+  {
+    name: 'multiplier: dice cost scales with multiplier',
+    run: () => {
+      assertEqual(resolveDiceCostForMultiplier(1), 2, 'Expected cost 2 at ×1');
+      assertEqual(resolveDiceCostForMultiplier(5), 10, 'Expected cost 10 at ×5');
+      assertEqual(resolveDiceCostForMultiplier(10), 20, 'Expected cost 20 at ×10');
+      assertEqual(resolveDiceCostForMultiplier(100), 200, 'Expected cost 200 at ×100');
+    },
+  },
+  {
+    name: 'multiplier: clampMultiplierToPool downgrades when pool drops',
+    run: () => {
+      // Player selected ×10 but only has 15 dice now
+      assertEqual(clampMultiplierToPool(10, 15), 1, 'Expected clamp to ×1 at 15 dice (cant afford ×2 roll of 4 but minDice gate)');
+      // Player selected ×5 with 100 dice — OK, they can afford it
+      assertEqual(clampMultiplierToPool(5, 100), 5, 'Expected ×5 stays at 100 dice');
+      // Player selected ×50 but only has 200 dice — max they can use is ×10
+      assertEqual(clampMultiplierToPool(50, 200), 10, 'Expected clamp to ×10 at 200 dice');
+    },
+  },
+  {
+    name: 'multiplier: clampMultiplierToPool ensures affordability',
+    run: () => {
+      // Player has exactly 4 dice — can afford ×1 (cost 2) and ×2 (cost 4), but ×2 needs 20 dice gate
+      const clamped = clampMultiplierToPool(100, 4);
+      const cost = resolveDiceCostForMultiplier(clamped);
+      assert(cost <= 4, `Expected clamped multiplier cost (${cost}) to be affordable with 4 dice`);
+      assertEqual(clamped, 1, 'Expected ×1 at 4 dice');
     },
   },
 ];
