@@ -1,5 +1,5 @@
 import { generateTileMap, getIslandRarity } from '../islandBoardTileMap';
-import { getDicePerHeartForIsland } from '../islandRunEconomy';
+import { ISLAND_RUN_DEFAULT_STARTING_DICE } from '../islandRunEconomy';
 import { generateIslandStopPlan } from '../islandRunStops';
 import { resolveCollectibleForClaim } from '../islandRunRuntimeState';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
@@ -40,11 +40,11 @@ export const islandRunFoundationTests: TestCase[] = [
     },
   },
   {
-    name: 'getDicePerHeartForIsland follows configured conversion tiers',
+    name: 'ISLAND_RUN_DEFAULT_STARTING_DICE is a sane starting value',
     run: () => {
-      assertEqual(getDicePerHeartForIsland(1), 20, 'Expected island 1 base conversion');
-      assertEqual(getDicePerHeartForIsland(5), 30, 'Expected island 5 conversion tier');
-      assertEqual(getDicePerHeartForIsland(15), 50, 'Expected island 15 conversion tier');
+      assert(ISLAND_RUN_DEFAULT_STARTING_DICE >= 10, 'Expected starting dice to be at least 10');
+      assert(ISLAND_RUN_DEFAULT_STARTING_DICE <= 200, 'Expected starting dice to be at most 200');
+      assertEqual(ISLAND_RUN_DEFAULT_STARTING_DICE, 30, 'Expected default starting dice to be 30');
     },
   },
   {

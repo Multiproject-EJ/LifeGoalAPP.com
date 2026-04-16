@@ -613,8 +613,8 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       // Step 2: Simulate local state at component mount (useState defaults)
       const localDefaults = {
         coins: 0,          // useState(0)
-        hearts: 5,          // useState(5)
-        dicePool: 10,       // useState(() => convertHeartToDicePool(1))
+        hearts: 0,          // hearts retired
+        dicePool: 30,       // useState(ISLAND_RUN_DEFAULT_STARTING_DICE)
         tokenIndex: 0,      // useState(TOKEN_START_TILE_INDEX)
         spinTokens: 0,      // useState(0)
       };

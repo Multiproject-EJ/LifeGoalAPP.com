@@ -2,89 +2,70 @@ import {
   canRetryBossTrial,
   isIslandRunRollEnergyDepleted,
   resolveIslandRunRollButtonMode,
-  canUseSpinForMovement,
-  shouldConsumeHeartOnBossFailure,
   resolveIslandRunTimerLabel,
 } from '../islandRunContractV2Energy';
 import { assertEqual, type TestCase } from './testHarness';
 
 export const islandRunContractV2EnergyTests: TestCase[] = [
   {
-    name: 'v2 ON: roll availability depends on dice only',
+    name: 'roll availability depends on dice only',
     run: () => {
       const mode = resolveIslandRunRollButtonMode({
-        islandRunContractV2Enabled: true,
         isRolling: false,
         dicePool: 1,
         dicePerRoll: 2,
       });
       const depleted = isIslandRunRollEnergyDepleted({
-        islandRunContractV2Enabled: true,
         dicePool: 1,
-        hearts: 99,
         dicePerRoll: 2,
       });
 
-      assertEqual(mode, 'no_dice', 'Expected v2 mode to block roll without enough dice');
-      assertEqual(depleted, true, 'Expected hearts to be ignored as movement fallback in v2');
+      assertEqual(mode, 'no_dice', 'Expected mode to block roll without enough dice');
+      assertEqual(depleted, true, 'Expected energy to be depleted when dicePool < dicePerRoll');
     },
   },
   {
-    name: 'v2 ON: no heart fallback conversion mode is offered',
+    name: 'roll is available when dice pool is sufficient',
     run: () => {
       const mode = resolveIslandRunRollButtonMode({
-        islandRunContractV2Enabled: true,
         isRolling: false,
-        dicePool: 0,
+        dicePool: 2,
         dicePerRoll: 2,
       });
-      assertEqual(mode, 'no_dice', 'Expected no conversion mode while v2 contract is enabled');
+      const depleted = isIslandRunRollEnergyDepleted({
+        dicePool: 2,
+        dicePerRoll: 2,
+      });
+
+      assertEqual(mode, 'roll', 'Expected roll mode when dice are available');
+      assertEqual(depleted, false, 'Expected energy not depleted with enough dice');
     },
   },
   {
-    name: 'v2 ON: boss retry/failure does not require hearts',
+    name: 'boss retry is always allowed (hearts retired)',
     run: () => {
-      assertEqual(shouldConsumeHeartOnBossFailure(true), false, 'Expected v2 boss failure to not consume hearts');
-      assertEqual(canRetryBossTrial({ islandRunContractV2Enabled: true, hearts: 0 }), true, 'Expected v2 retry to be available without hearts');
+      assertEqual(canRetryBossTrial(), true, 'Expected boss retry to always be available');
     },
   },
   {
-    name: 'v2 ON: timer label copy avoids progression-gated wording',
+    name: 'timer label is always Timer:',
     run: () => {
       assertEqual(
-        resolveIslandRunTimerLabel({ islandRunContractV2Enabled: true, isIslandTimerPendingStart: false }),
+        resolveIslandRunTimerLabel(),
         'Timer:',
-        "Expected v2 timer label to avoid legacy 'Ends in' phrasing",
+        'Expected timer label to always be Timer:',
       );
     },
   },
   {
-    name: 'v2 ON: spin cannot be used as alternate movement path',
-    run: () => {
-      assertEqual(canUseSpinForMovement(true), false, 'Expected v2 mode to disable spin-based token movement');
-    },
-  },
-  {
-    name: 'v2 OFF: legacy heart conversion and boss gating remain intact',
+    name: 'rolling state returns rolling mode',
     run: () => {
       const mode = resolveIslandRunRollButtonMode({
-        islandRunContractV2Enabled: false,
-        isRolling: false,
-        dicePool: 0,
+        isRolling: true,
+        dicePool: 100,
         dicePerRoll: 2,
       });
-      const depleted = isIslandRunRollEnergyDepleted({
-        islandRunContractV2Enabled: false,
-        dicePool: 0,
-        hearts: 1,
-        dicePerRoll: 2,
-      });
-
-      assertEqual(mode, 'convert', 'Expected legacy mode to keep conversion path');
-      assertEqual(depleted, false, 'Expected legacy mode hearts to remain valid fallback energy');
-      assertEqual(shouldConsumeHeartOnBossFailure(false), true, 'Expected legacy boss failure to still cost hearts');
-      assertEqual(canRetryBossTrial({ islandRunContractV2Enabled: false, hearts: 0 }), false, 'Expected legacy retry to remain heart-gated');
-      assertEqual(canUseSpinForMovement(false), true, 'Expected legacy mode to preserve spin-based movement');
+      assertEqual(mode, 'rolling', 'Expected rolling mode when isRolling is true');
     },
   },
 ];

@@ -1,63 +1,28 @@
-export type IslandRunRollButtonMode = 'rolling' | 'roll' | 'convert' | 'no_dice';
+export type IslandRunRollButtonMode = 'rolling' | 'roll' | 'no_dice';
 
 export function resolveIslandRunRollButtonMode(params: {
-  islandRunContractV2Enabled: boolean;
   isRolling: boolean;
   dicePool: number;
   dicePerRoll: number;
 }): IslandRunRollButtonMode {
-  const {
-    islandRunContractV2Enabled,
-    isRolling,
-    dicePool,
-    dicePerRoll,
-  } = params;
+  const { isRolling, dicePool, dicePerRoll } = params;
 
   if (isRolling) return 'rolling';
   if (dicePool >= dicePerRoll) return 'roll';
-  return islandRunContractV2Enabled ? 'no_dice' : 'convert';
+  return 'no_dice';
 }
 
 export function isIslandRunRollEnergyDepleted(params: {
-  islandRunContractV2Enabled: boolean;
   dicePool: number;
-  hearts: number;
   dicePerRoll: number;
 }): boolean {
-  const {
-    islandRunContractV2Enabled,
-    dicePool,
-    hearts,
-    dicePerRoll,
-  } = params;
-
-  if (islandRunContractV2Enabled) {
-    return dicePool < dicePerRoll;
-  }
-
-  return dicePool < dicePerRoll && hearts < 1;
+  return params.dicePool < params.dicePerRoll;
 }
 
-export function shouldConsumeHeartOnBossFailure(islandRunContractV2Enabled: boolean): boolean {
-  return !islandRunContractV2Enabled;
+export function canRetryBossTrial(): boolean {
+  return true;
 }
 
-export function canRetryBossTrial(params: {
-  islandRunContractV2Enabled: boolean;
-  hearts: number;
-}): boolean {
-  if (params.islandRunContractV2Enabled) return true;
-  return params.hearts > 0;
-}
-
-export function resolveIslandRunTimerLabel(params: {
-  islandRunContractV2Enabled: boolean;
-  isIslandTimerPendingStart: boolean;
-}): string {
-  if (params.islandRunContractV2Enabled) return 'Timer:';
-  return params.isIslandTimerPendingStart ? 'Ready:' : 'Ends in:';
-}
-
-export function canUseSpinForMovement(islandRunContractV2Enabled: boolean): boolean {
-  return !islandRunContractV2Enabled;
+export function resolveIslandRunTimerLabel(): string {
+  return 'Timer:';
 }

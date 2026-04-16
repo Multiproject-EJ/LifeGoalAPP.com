@@ -1,7 +1,7 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { isDemoSession } from '../../../../services/demoSession';
 import { getIslandRunDeviceSessionId } from './islandRunDeviceSession';
-import { convertHeartToDicePool } from './islandRunEconomy';
+import { ISLAND_RUN_DEFAULT_STARTING_DICE } from './islandRunEconomy';
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
 import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 import { commitIslandRunRuntimeSnapshot } from './islandRunCommitActionService';
@@ -445,10 +445,10 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     islandExpiresAtMs: nowMs + 48 * 60 * 60 * 1000,
     islandShards: 0,
     tokenIndex: 0,
-    hearts: 5,
+    hearts: 0,
     coins: 0,
     spinTokens: 0,
-    dicePool: convertHeartToDicePool(1),
+    dicePool: ISLAND_RUN_DEFAULT_STARTING_DICE,
     shardTierIndex: 0,
     shardClaimCount: 0,
     shields: 0,
