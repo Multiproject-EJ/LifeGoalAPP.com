@@ -77,7 +77,7 @@ import {
 } from './features/gamification/level-worlds/services/islandRunEntryDebug';
 import { SPIN_PRIZES } from './types/gamification';
 import { splitGoldBalance } from './constants/economy';
-import { collectDailyHearts, hasCollectedDailyHeartsToday } from './services/dailyTreats';
+import { hasCollectedDailyHeartsToday } from './services/dailyTreats';
 import {
   fetchWorkspaceProfile,
   upsertWorkspaceProfile,
@@ -705,22 +705,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, [getTodayDateKey]);
 
   const handleDailyTreatsCongratsClose = useCallback(() => {
-    // Collect daily hearts when claiming treats
-    // Note: We use supabaseSession directly here instead of activeSession to avoid dependency issues
-    const userId = supabaseSession?.user?.id;
-    if (userId) {
-      const result = collectDailyHearts(userId);
-      if (result) {
-        console.log(`Collected ${result.heartsAwarded} hearts. New balance: ${result.newBalance}`);
-      }
-    }
-    
     setShowDailyTreatsCongrats(false);
     if (pendingDailyTreatsOpen) {
       setShowDailyTreatsMenu(true);
       setPendingDailyTreatsOpen(false);
     }
-  }, [pendingDailyTreatsOpen, supabaseSession?.user?.id]);
+  }, [pendingDailyTreatsOpen]);
 
   const {
     earnXP,
@@ -4113,11 +4103,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
             </div>
             <div className="daily-treats-congrats__reward">
               <span className="daily-treats-congrats__reward-icon" aria-hidden="true">
-                ❤️
+                🎲
               </span>
               <div>
-                <p className="daily-treats-congrats__reward-title">5 League Hearts</p>
-                <p className="daily-treats-congrats__reward-detail">Fuel your daily matches and streaks.</p>
+                <p className="daily-treats-congrats__reward-title">25 Bonus Dice</p>
+                <p className="daily-treats-congrats__reward-detail">Fuel your daily game runs and boosts.</p>
               </div>
             </div>
             <div className="daily-treats-congrats__reward">
