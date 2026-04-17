@@ -855,6 +855,21 @@
   box-shadow: 0 0 8px rgba(255, 100, 50, 0.4);
 }
 
+/* ── Dice regen timer ──────────────────────────────────────────────────────── */
+.island-run-prototype__dice-regen-timer {
+  text-align: center;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: rgba(180, 220, 255, 0.85);
+  line-height: 1.2;
+  padding: 0.15rem 0;
+  letter-spacing: 0.02em;
+}
+.island-run-prototype__dice-regen-timer strong {
+  font-weight: 800;
+  color: #b3f0ff;
+}
+
 .island-run-prototype__hud-grid {
   display: grid;
   gap: 0.54rem;
@@ -1380,8 +1395,8 @@
   object-fit: cover;
   z-index: 2;
   pointer-events: none;
-  opacity: 0.36;
-  mix-blend-mode: screen;
+  /* Decorative path ring hidden — the ellipses create a confusing second circle */
+  display: none;
 }
 
 .island-run-board__path {
@@ -1415,10 +1430,27 @@
   padding: 5px 10px;
 }
 
-.island-run-board__topbar-avatar,
+.island-run-board__topbar-avatar {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 2px solid rgba(179, 151, 92, 0.85);
+  background: linear-gradient(180deg, #fffaf0 0%, #f8eac5 100%);
+  color: #593d07;
+  font-weight: 800;
+  /* Allow the avatar to overflow the top bar slightly */
+  margin: -4px 0;
+  z-index: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
 .island-run-board__topbar-menu {
-  width: 29px;
-  height: 29px;
+  width: 24px;
+  height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1428,6 +1460,7 @@
   background: linear-gradient(180deg, #fffaf0 0%, #f8eac5 100%);
   color: #593d07;
   font-weight: 800;
+  font-size: 0.72rem;
 }
 
 .island-run-board__topbar-avatar-img {

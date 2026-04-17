@@ -165,6 +165,9 @@ import {
 } from '../services/islandRunTimerProgression';
 import { createDicePackCheckoutSession } from '../../../../services/billing';
 import { scheduleEggHatchNotification } from '../../../../services/habitAlertNotifications';
+import {
+  type DiceRegenState,
+} from '../services/islandRunDiceRegeneration';
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 6;
@@ -1110,6 +1113,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
   }, [effectiveMultiplier, diceMultiplier]);
 
+  // ── Dice regen countdown (Monopoly GO style: "X rolls ready in MM:SS") ────
+  const [diceRegenCountdown, setDiceRegenCountdown] = useState<string | null>(null);
+  const [diceRegenRollsReady, setDiceRegenRollsReady] = useState<number | null>(null);
+
+  // NOTE: The useEffect for the dice regen countdown timer is placed after runtimeState declaration below.
+
   // ── Reward bar animation state ─────────────────────────────────────────────
   const [rewardBarBurstAnimating, setRewardBarBurstAnimating] = useState(false);
   const [rewardBarCascadePayouts, setRewardBarCascadePayouts] = useState<RewardBarClaimPayout[]>([]);
@@ -1208,6 +1217,37 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     runtimeStateRef.current = runtimeState;
   }, [runtimeState]);
+
+  // ── Dice regen countdown timer (lives after runtimeState so it can read diceRegenState) ──
+  useEffect(() => {
+    const regenState: DiceRegenState | null = runtimeState.diceRegenState ?? null;
+    if (!regenState || dicePool >= regenState.maxDice) {
+      setDiceRegenCountdown(null);
+      setDiceRegenRollsReady(null);
+      return;
+    }
+
+    function tick() {
+      if (!regenState) return;
+      const deficit = Math.max(0, regenState.maxDice - dicePool);
+      // Time to fill the full deficit at regenRatePerHour
+      const hoursToFill = deficit / Math.max(1, regenState.regenRatePerHour);
+      const msToFill = hoursToFill * 60 * 60 * 1000;
+      // Rolls ready at full = maxDice / 2 (base cost of 2 dice per roll)
+      const totalRollsAtFull = Math.floor(regenState.maxDice / DICE_PER_ROLL);
+
+      const remainingSec = Math.max(0, Math.ceil(msToFill / 1000));
+      const minutes = Math.floor(remainingSec / 60);
+      const seconds = remainingSec % 60;
+      const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      setDiceRegenCountdown(timeStr);
+      setDiceRegenRollsReady(totalRollsAtFull);
+    }
+
+    tick();
+    const intervalId = setInterval(tick, 1000);
+    return () => clearInterval(intervalId);
+  }, [dicePool, runtimeState.diceRegenState]);
 
   useEffect(() => {
     setPerfectCompanionRuntimeConfig(readPerfectCompanionRuntimeConfig(session.user.id));
@@ -6342,6 +6382,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   <span>{isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}</span>
                 </span>
               </button>
+              {/* Dice regen countdown — like Monopoly GO "X rolls ready in MM:SS" */}
+              {diceRegenCountdown && diceRegenRollsReady != null && (
+                <div className="island-run-prototype__dice-regen-timer" aria-live="polite">
+                  <strong>{diceRegenRollsReady}</strong> rolls ready in <strong>{diceRegenCountdown}</strong>
+                </div>
+              )}
             </div>
             <button
               type="button"
