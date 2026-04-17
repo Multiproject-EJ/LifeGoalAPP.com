@@ -189,7 +189,7 @@ export function migrateLegacyEggLedgerToCollection(options: {
   let didChange = false;
 
   Object.entries(perIslandEggs ?? {}).forEach(([islandKey, entry]) => {
-    if (entry.status !== 'collected' && entry.status !== 'animal_ready') return;
+    if (entry.status !== 'collected') return;
     const islandNumber = Math.max(1, Number(islandKey) || 1);
     const creature = selectCreatureForEgg({ eggTier: entry.tier, seed: entry.setAtMs, islandNumber });
     const collectedAtMs = entry.openedAt ?? entry.animalCollectedAtMs ?? entry.hatchAtMs;

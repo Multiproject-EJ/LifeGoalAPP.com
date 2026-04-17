@@ -38,14 +38,9 @@ export function rollEggTierWeighted(): EggTier {
 
 /**
  * Returns a random hatch delay in milliseconds.
- * Production: hatchDelayHours = random integer in [24, 72] inclusive.
- * Dev mode (devMode=true): random integer in [15, 30] seconds inclusive for fast iteration.
+ * hatchDelayHours = random integer in [24, 72] inclusive.
  */
-export function getRandomHatchDelayMs(devMode = false): number {
-  if (devMode) {
-    const seconds = Math.floor(Math.random() * 16) + 15; // [15, 30] s inclusive
-    return seconds * 1000;
-  }
+export function getRandomHatchDelayMs(): number {
   const hours = Math.floor(Math.random() * 49) + 24; // [24, 72] h inclusive
   return hours * 60 * 60 * 1000;
 }

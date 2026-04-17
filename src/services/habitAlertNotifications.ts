@@ -18,7 +18,7 @@ export type ScheduledReminder = {
   user_id: string;
   habit_id: string | null;
   habit_title: string | null;
-  notification_type: 'habit_reminder' | 'coach_nudge' | 'checkin_nudge' | 'streak_warning';
+  notification_type: 'habit_reminder' | 'coach_nudge' | 'checkin_nudge' | 'streak_warning' | 'egg_hatch_ready';
   scheduled_at: string; // ISO 8601 timestamp
   status: 'pending' | 'sent' | 'cancelled';
   created_at: string;
@@ -489,4 +489,61 @@ export async function getHabitAlertSummary(
   }
   
   return summary;
+}
+
+/**
+ * Schedule a push notification for when the player's egg is ready to collect.
+ * Cancels any previous pending egg_hatch_ready notification for this user before
+ * inserting a new record keyed to the exact hatch timestamp.
+ *
+ * The send-reminders edge function cron (every 15 minutes) dispatches the push
+ * when scheduled_at is reached.
+ *
+ * @param userId  - Authenticated user ID
+ * @param hatchAtMs - Unix ms timestamp when the egg will be ready
+ */
+export async function scheduleEggHatchNotification(userId: string, hatchAtMs: number): Promise<void> {
+  const now = new Date();
+  const scheduledAt = new Date(hatchAtMs);
+  // Don't schedule notifications in the past
+  if (scheduledAt <= now) return;
+
+  const newReminder: ScheduledReminder = {
+    id: generateReminderId(),
+    user_id: userId,
+    habit_id: null,
+    habit_title: null,
+    notification_type: 'egg_hatch_ready',
+    scheduled_at: scheduledAt.toISOString(),
+    status: 'pending',
+    created_at: now.toISOString(),
+    updated_at: now.toISOString(),
+  };
+
+  if (canUseSupabaseData()) {
+    try {
+      const supabase = getSupabaseClient();
+      // Cancel any previous pending egg hatch notification for this user
+      await supabase
+        .from('scheduled_reminders')
+        .update({ status: 'cancelled', updated_at: now.toISOString() })
+        .eq('user_id', userId)
+        .eq('notification_type', 'egg_hatch_ready')
+        .eq('status', 'pending');
+      // Insert the new notification
+      await supabase.from('scheduled_reminders').insert([newReminder]);
+    } catch {
+      // Non-fatal: push notification scheduling is best-effort
+    }
+  } else {
+    // Demo mode: store in localStorage for client-side preview
+    const stored = getDemoStoredReminders();
+    const filtered = stored.map((r) =>
+      r.notification_type === 'egg_hatch_ready' && r.user_id === userId && r.status === 'pending'
+        ? { ...r, status: 'cancelled' as const, updated_at: now.toISOString() }
+        : r,
+    );
+    filtered.push(newReminder);
+    setDemoStoredReminders(filtered);
+  }
 }

@@ -27,43 +27,37 @@ The Today tab gets an upgraded "Time-Bound Offers Row" — a persistent row of *
 
 | ID | Label | Icon | Timer source | Notes |
 |---|---|---|---|---|
+| `island_run` | Island Run | 🏝️ | Island countdown timer | Opens Island Run |
 | `vision_star` | Vision Star | 🌟 | Vision Star claim window timer | Opens Vision Star pop-up |
-| `daily_treat` | Daily Treat | 🎁 | Resets daily at midnight UTC | Opens Calendar pop-up (moved here from game overlay) |
-| `lucky_roll` | Lucky Roll | 🎲 | Only while unlocked / monthly free window is active | Opens Lucky Roll |
-| `spin_wheel` | Spin Wheel | 🎡 | Only while a spin is still available | Opens Spin Wheel |
-| `boss_challenge` | Boss | ⚔️ | None (permanent until completed) | Opens island run boss modal; only shown if boss is available |
-| `egg_hatch` | Egg Ready | 🥚 | None (permanent) | Opens egg hatchery pop-up; only shown if egg is hatched/ready |
+| `daily_treat` | Daily Treat | 🎁 | Resets daily at midnight UTC | Opens Calendar pop-up |
+| `egg_hatch` | Egg Ready | 🥚 | None (permanent while ready) | Opens egg hatchery directly; only shown when egg is ready to collect. Sorted above `todays_offer`. Red badge clears once the circle is opened for today on the current island. |
+| `todays_offer` | Today's Offer | 🛍️ | None (permanent) | Opens checkout |
 | `mystery_stop` | Mystery | 🎭 | None (permanent until claimed) | Opens the mystery stop modal; only shown if one is available |
+
+> Note: `lucky_roll`, `spin_wheel`, and `boss_challenge` are not implemented as Today-tab
+> circles. The boss stop is accessed from the Island Run board directly.
 
 ### 2c. Queue logic
 
 - The row always shows **exactly 4** circles.
 - Items populate the row from the **active/uncollected** pool.
-- If more than 4 active items exist simultaneously, only the first 4 (by expiry: soonest first) are shown. The rest wait in queue.
+- If more than 4 active items exist simultaneously, only the first 4 are shown (by expiry: soonest first, then by `sortPriority` ascending).
 - **Queue shift:** When an item expires (not when it's collected), it leaves the row and the next item in the queue enters.
-- **Lucky Roll / Spin Wheel special rule:** These are only shown while actionable. When not currently available, they should be hidden instead of lingering as permanent “done” fixtures.
-- **If fewer than 4 items are available** (all collected or all shown): remaining circles show the most recently collected items in "collected" state. The row never shrinks below 4 — it always shows 4 circles.
-- Items **never disappear from the row until they expire** — collected items remain visible as "done" until expiry, then drop off.
+- **If fewer than 4 items are available** (all collected or all shown): remaining circles show placeholder "Waiting ⏳" items. The row never shrinks below 4.
 
-### 2d. Entry flow: every item opens a pop-up
+### 2d. egg_hatch freshness and check-off rules
 
-All items now open a **two-layer pop-up flow**:
+- The `egg_hatch` circle shows a **red notification badge** when the egg is ready AND the player has not yet opened the circle today on the current island.
+- When the player taps the egg_hatch circle, the hatchery modal opens and the circle is **marked as seen** (via localStorage key `lifegoal:egg_hatch_viewed:{userId}:{date}:{islandNumber}`). The red badge disappears.
+- Once seen, the circle's `sortPriority` drops so other unchecked circles take precedence.
+- The circle can still be tapped after being seen (button is not disabled) but shows no red badge.
+- The seen state resets automatically at midnight UTC, when the island number changes, or on a new day.
 
-**Layer 1 — Teaser pop-up:**
-- Small bottom sheet or card pop-up
-- Shows the item's icon, title, brief description, timer countdown
-- CTA button: e.g. "Open Vision Star →" or "Claim Daily Treat →"
-- Tapping the CTA opens Layer 2
+### 2e. Entry flow
 
-**Layer 2 — Content pop-up:**
-- The full content experience (what used to be inline in the today tab, or the full modal)
-- For Vision Star: the image + star claim UI (existing VisionStarSpecial content)
-- For Daily Treat: the full CountdownCalendar modal (moved here)
-- For Lucky Roll: opens Lucky Roll
-- For Spin Wheel: opens Spin Wheel
-- All other types: their respective modals
-
-> **UX note:** The teaser pop-up can be skipped if the user has already seen it for that session — opening the same circle a second time in the same session goes directly to Layer 2.
+- `egg_hatch`, `vision_star`, `island_run`, and `daily_treat` all open their content directly (no teaser modal).
+- `mystery_stop` uses a teaser pop-up on first open; subsequent opens go directly to content.
+- `todays_offer` opens a checkout modal.
 
 ---
 
