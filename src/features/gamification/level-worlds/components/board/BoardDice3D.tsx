@@ -31,6 +31,7 @@ const FACE_ROTATIONS: Record<number, { rx: number; ry: number }> = {
 const ROLL_DURATION_MS = 900;
 
 function Die({ value, isRolling, delay }: { value: number; isRolling: boolean; delay: number }) {
+  const safeValue = Math.max(1, Math.min(6, Math.round(value)));
   const [tumbleRotation, setTumbleRotation] = useState({ rx: 0, ry: 0, rz: 0 });
   const [settled, setSettled] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
@@ -51,14 +52,14 @@ function Die({ value, isRolling, delay }: { value: number; isRolling: boolean; d
       // Settle to final face after roll duration
       timeoutRef.current = setTimeout(() => {
         clearInterval(intervalRef.current);
-        const face = FACE_ROTATIONS[value] ?? FACE_ROTATIONS[1];
+        const face = FACE_ROTATIONS[safeValue] ?? FACE_ROTATIONS[1];
         setTumbleRotation({ rx: face.rx, ry: face.ry, rz: 0 });
         setSettled(true);
       }, ROLL_DURATION_MS + delay);
     } else {
       // Not rolling — show final face immediately
       clearInterval(intervalRef.current);
-      const face = FACE_ROTATIONS[value] ?? FACE_ROTATIONS[1];
+      const face = FACE_ROTATIONS[safeValue] ?? FACE_ROTATIONS[1];
       setTumbleRotation({ rx: face.rx, ry: face.ry, rz: 0 });
       setSettled(true);
     }
@@ -67,7 +68,7 @@ function Die({ value, isRolling, delay }: { value: number; isRolling: boolean; d
       clearInterval(intervalRef.current);
       clearTimeout(timeoutRef.current);
     };
-  }, [isRolling, value, delay]);
+  }, [isRolling, safeValue, delay]);
 
   const transitionDuration = isRolling && !settled ? '0.1s' : '0.35s';
   const transitionTimingFunction = settled ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'ease-out';

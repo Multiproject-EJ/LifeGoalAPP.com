@@ -892,6 +892,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   /** Full tile-by-tile hop sequence for current roll (Monopoly GO style). */
   const [pendingHopSequence, setPendingHopSequence] = useState<number[] | null>(null);
   const hopSequenceResolverRef = useRef<(() => void) | null>(null);
+  // Cleanup: resolve any pending hop sequence promise on unmount to prevent leaks
+  useEffect(() => () => {
+    hopSequenceResolverRef.current?.();
+    hopSequenceResolverRef.current = null;
+  }, []);
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
   const [islandNumber, setIslandNumber] = useState(1);
@@ -2628,6 +2633,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       } satisfies OrbitStopVisual;
     });
   }, [boardSize.height, boardSize.width, islandStopPlan, stopStateMap]);
+
+  // Camera zoom-to-stop: when cameraMode is 'stop_focus' and a stop is focused,
+  // smoothly zoom the camera to that stop's screen position.
+  useEffect(() => {
+    if (cameraMode !== 'stop_focus' || !focusedStopId || !boardCameraRef.current) return;
+    const visual = orbitStopVisuals.find((v) => v.id === focusedStopId);
+    if (!visual) return;
+    boardCameraRef.current.goFocusPoint(visual.x, visual.y);
+  }, [cameraMode, focusedStopId, orbitStopVisuals]);
 
   const eggStage = useMemo(() => {
     if (!activeEgg) return 0;

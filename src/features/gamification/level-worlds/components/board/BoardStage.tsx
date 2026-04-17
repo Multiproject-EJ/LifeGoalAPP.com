@@ -226,6 +226,9 @@ export function BoardStage(props: BoardStageProps) {
 
   useBoardGestures(gestureLayerRef, gestureCallbacks);
 
+  // Ref for landing-settle setTimeout cleanup
+  const landingSettleTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
   // ── Token animation ──────────────────────────────────────────────────────
   const tokenAnim = useTokenAnimation({
     toScreen,
@@ -246,7 +249,8 @@ export function BoardStage(props: BoardStageProps) {
       setBurstPos({ x: tokenAnim.animState.x, y: tokenAnim.animState.y });
 
       // Settle back to follow framing after landing emphasis
-      setTimeout(() => {
+      clearTimeout(landingSettleTimeoutRef.current);
+      landingSettleTimeoutRef.current = setTimeout(() => {
         const a = anchors[idx];
         if (a) {
           const p = toScreen(a);
@@ -256,6 +260,9 @@ export function BoardStage(props: BoardStageProps) {
     },
     hopDurationMs: 200,
   });
+
+  // Cleanup landing settle timeout on unmount
+  useEffect(() => () => { clearTimeout(landingSettleTimeoutRef.current); }, []);
 
   // Track previous tokenIndex to distinguish movement from initial snap.
   const prevTokenIndexRef = useRef<number | null>(null);
