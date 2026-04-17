@@ -4243,6 +4243,31 @@
   transition: opacity 0.15s ease-in;
 }
 
+/* ─── Dice roll total overlay ─────────────────────────────────────────────── */
+@keyframes dice-roll-overlay-pop {
+  0%   { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+  30%  { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+.island-run-board__dice-roll-overlay {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 25;
+  background: rgba(0, 0, 0, 0.82);
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: 900;
+  padding: 0.5rem 1.2rem;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  animation: dice-roll-overlay-pop 0.35s ease-out forwards;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.04em;
+}
+
 .board-dice-3d__die-wrapper {
   width: 42px;
   height: 42px;

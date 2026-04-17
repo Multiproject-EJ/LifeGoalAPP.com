@@ -893,13 +893,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [rollValue, setRollValue] = useState<number | null>(null);
   const [rollingDiceFaces, setRollingDiceFaces] = useState<[number, number]>([1, 1]);
   const [isRolling, setIsRolling] = useState(false);
+  /** Shown briefly over the dice after the roll animation finishes (e.g. "Rolled 8!") */
+  const [diceRollTotalOverlay, setDiceRollTotalOverlay] = useState<string | null>(null);
   /** Full tile-by-tile hop sequence for current roll (Monopoly GO style). */
   const [pendingHopSequence, setPendingHopSequence] = useState<number[] | null>(null);
   const hopSequenceResolverRef = useRef<(() => void) | null>(null);
+  const diceRollCompleteResolverRef = useRef<(() => void) | null>(null);
   // Cleanup: resolve any pending hop sequence promise on unmount to prevent leaks
   useEffect(() => () => {
     hopSequenceResolverRef.current?.();
     hopSequenceResolverRef.current = null;
+    diceRollCompleteResolverRef.current?.();
+    diceRollCompleteResolverRef.current = null;
   }, []);
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
@@ -3332,6 +3337,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const nextRoll = rollResult.total;
     setRollValue(nextRoll);
     setLandingText(`Rolling ${dieOne} + ${dieTwo} = ${nextRoll}...`);
+
+    // Wait for dice animation to finish before moving the token
+    await new Promise<void>((resolve) => {
+      diceRollCompleteResolverRef.current = resolve;
+    });
+
+    // Show the roll total briefly over the dice area
+    setDiceRollTotalOverlay(`Rolled ${nextRoll}!`);
+    await new Promise<void>((resolve) => { setTimeout(resolve, 800); });
+    setDiceRollTotalOverlay(null);
 
     let currentIndex = tokenIndex;
     const hopIndices: number[] = [];
@@ -6264,8 +6279,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           }}
           isRolling={isRolling}
           diceFaces={rollingDiceFaces}
+          onDiceRollComplete={() => {
+            diceRollCompleteResolverRef.current?.();
+            diceRollCompleteResolverRef.current = null;
+          }}
         />
       </div>
+
+      {/* Dice roll total overlay — shown briefly after dice settle */}
+      {diceRollTotalOverlay && (
+        <div className="island-run-board__dice-roll-overlay" aria-live="polite">
+          {diceRollTotalOverlay}
+        </div>
+      )}
 
       <div className="island-run-prototype__footer" aria-label="Island Run footer controls">
         <div className="island-run-prototype__footer-main">
