@@ -819,6 +819,7 @@ function getOrbitStopDisplayIcon(state: StopProgressState | 'shop', icon: string
   if (state === 'locked') return '🔒';
   if (state === 'completed') return '✅';
   if (state === 'partial') return '🟡';
+  if (state === 'active') return '🔓';
   return icon;
 }
 
@@ -2550,8 +2551,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const stopStateMap = useMemo(() => {
     if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
+      // Bridge: legacy completedStops may include stops that v2 stopStatesByIndex
+      // hasn't marked objectiveComplete yet (e.g. completed before v2 migration).
+      // Merge them so the resolver sees those stops as complete.
+      const mergedStopStatesByIndex = runtimeState.stopStatesByIndex.map((entry, index) => {
+        const stopId = islandStopPlan[index]?.stopId;
+        if (stopId && completedStops.includes(stopId) && !entry?.objectiveComplete) {
+          return { ...(entry ?? { buildComplete: false }), objectiveComplete: true };
+        }
+        return entry;
+      });
       const contractV2Stops = resolveIslandRunContractV2Stops({
-        stopStatesByIndex: runtimeState.stopStatesByIndex,
+        stopStatesByIndex: mergedStopStatesByIndex,
       });
       const map = new Map<string, StopProgressState>();
       islandStopPlan.forEach((stop, index) => {
@@ -2586,7 +2597,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     return map;
-  }, [effectiveCompletedStops, islandEggSlotUsed, islandStopPlan, runtimeState.stopStatesByIndex]);
+  }, [completedStops, effectiveCompletedStops, islandEggSlotUsed, islandStopPlan, runtimeState.stopStatesByIndex]);
 
   const stopMap = useMemo(() => {
     const map = new Map<number, string>();
@@ -3993,6 +4004,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const handleCollectCreature = () => {
     if (!activeEgg || eggStage < 4) return;
+    // Guard: prevent collecting if the egg slot is already used (collected/sold)
+    if (islandEggSlotUsed) return;
     const resolvedEgg = activeEgg;
     const nowTs = Date.now();
     const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg);
@@ -4093,6 +4106,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const handleSellEggForRewards = () => {
     if (!activeEgg || eggStage < 4) return;
+    // Guard: prevent selling if the egg slot is already used (collected/sold)
+    if (islandEggSlotUsed) return;
     const resolvedEgg = activeEgg;
     const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg);
     const bundle = rollEggRewards(resolvedEgg.tier, resolvedEgg.setAtMs);
@@ -6258,17 +6273,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
       <div className="island-run-prototype__footer" aria-label="Island Run footer controls">
         <div className="island-run-prototype__footer-main">
-          <div className="island-run-prototype__footer-stats" aria-label="Run resources">
-            {ISLAND_RUN_CONTRACT_V2_ENABLED && <span className="island-run-prototype__stat-chip">🟣 <strong>{runtimeState.essence}</strong></span>}
-            {false && spinTokens > 0 && (
-              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">🌀 <strong>{spinTokens}</strong></span>
-            )}
-            {rollValue !== null ? (
-              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--roll" aria-label="Last roll result">
-                🎯 <strong>{rollValue}</strong>
-              </span>
-            ) : null}
-          </div>
+          {/* Footer stats row removed: essence icon (duplicate of top bar) and 🎯 roll chip removed per UI cleanup */}
 
           <div className="island-run-prototype__footer-actions">
             <button
@@ -6461,7 +6466,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     <p className="island-hatchery-card__headline">Egg already completed — no new egg on this island.</p>
                     <p style={{ fontSize: '0.82rem', opacity: 0.65 }}>Each island's egg slot is permanent and non-renewable.</p>
                   </div>
-                ) : activeEgg && eggStage >= 4 ? (
+                ) : activeEgg && !islandEggSlotUsed && eggStage >= 4 ? (
                   /* State 4/5: Egg ready to open (or dormant egg ready on revisit) */
                   <div className="island-hatchery-card__state island-hatchery-card__state--ready">
                     <img
