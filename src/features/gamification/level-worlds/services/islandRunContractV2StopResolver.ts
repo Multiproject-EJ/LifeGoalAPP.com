@@ -46,6 +46,7 @@ export function areIslandRunContractV2ObjectivesComplete(options: {
  * Island is fully cleared when:
  *  1. All 5 stop objectives are complete.
  *  2. The hatchery egg has been collected or sold (hatcheryEggResolved).
+ *     Note: egg *set* unlocks stop 2; egg *collected/sold* is required for island clear.
  *  3. All 5 stop buildings are fully built (each buildLevel === MAX_BUILD_LEVEL).
  */
 export function isIslandRunFullyClearedV2(options: {

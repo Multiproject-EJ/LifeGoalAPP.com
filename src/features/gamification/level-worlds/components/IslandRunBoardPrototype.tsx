@@ -3477,7 +3477,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (entry?.objectiveComplete === true) return; // already done
     const nextStopStatesByIndex = currentStates.map((s, index) => {
       if (index !== 0) return s;
-      return { ...s, objectiveComplete: true };
+      return { ...(s ?? { buildComplete: false }), objectiveComplete: true };
     });
     const stopResolution = resolveIslandRunContractV2Stops({ stopStatesByIndex: nextStopStatesByIndex });
     void persistIslandRunRuntimeStatePatch({
@@ -4713,7 +4713,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     // CONTRACT V2: reset stop objective states and initialize fresh building costs for new island.
     if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
-      const nextEffectiveIslandNumber = nextCycleIndex * 120 + resolvedIsland;
+      const nextEffectiveIslandNumber = getEffectiveIslandNumber(resolvedIsland, nextCycleIndex);
       const freshStopStates = Array.from({ length: 5 }, () => ({ objectiveComplete: false, buildComplete: false }));
       const freshBuildStates = initStopBuildStatesForIsland(nextEffectiveIslandNumber);
       void persistIslandRunRuntimeStatePatch({
@@ -7366,6 +7366,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   };
                   holdTimer = window.setTimeout(() => {
                     holdInterval = window.setInterval(() => {
+                      // Re-check on each tick: stop if fully built or out of essence.
+                      const liveBuildState = runtimeStateRef.current.stopBuildStateByIndex[idx];
+                      if (!liveBuildState || isStopBuildFullyComplete(liveBuildState)) {
+                        stopHold();
+                        return;
+                      }
+                      if (runtimeStateRef.current.essence < CONTRACT_V2_ESSENCE_SPEND_STEP) {
+                        stopHold();
+                        return;
+                      }
                       handleSpendEssenceOnBuild(idx);
                     }, 150);
                   }, 500);

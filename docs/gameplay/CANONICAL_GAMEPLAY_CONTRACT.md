@@ -216,7 +216,7 @@ Each island has **5 buildings**, one per stop. Buildings are **completely decoup
 
 **Build cost scaling:**
 - Build costs scale with `effectiveIslandNumber = cycleIndex × 120 + islandNumber`.
-- Island 1 (cycle 0) uses effectiveIslandNumber = 1. Island 1 on cycle 2 uses effectiveIslandNumber = 241.
+- Island 1 (cycle 0, `cycleIndex=0`) uses effectiveIslandNumber = 1. Island 1 on cycle 1 (`cycleIndex=1`) uses effectiveIslandNumber = 121. Island 1 on cycle 2 (`cycleIndex=2`) uses effectiveIslandNumber = 241.
 - This ensures costs are substantially higher on every new cycle, preserving meta-progression tension.
 - Costs also scale with stop index (boss stop costs 4× base).
 
