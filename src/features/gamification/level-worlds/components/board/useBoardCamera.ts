@@ -32,10 +32,10 @@ interface CameraSprings {
 }
 
 const OVERVIEW_ZOOM = 0.88;
-const FOCUS_ZOOM = 1.14;
+const FOCUS_ZOOM = 1.5;
 const DEFAULT_ZOOM = 1.0;
-const FOLLOW_ZOOM = 1.08;
-const LANDING_ZOOM = 1.18;
+const FOLLOW_ZOOM = 1.5;
+const LANDING_ZOOM = 1.7;
 const MIN_ZOOM = 0.4;
 const MAX_ZOOM = 3.0;
 

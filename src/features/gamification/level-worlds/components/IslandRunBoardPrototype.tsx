@@ -165,6 +165,9 @@ import {
 } from '../services/islandRunTimerProgression';
 import { createDicePackCheckoutSession } from '../../../../services/billing';
 import { scheduleEggHatchNotification } from '../../../../services/habitAlertNotifications';
+import {
+  type DiceRegenState,
+} from '../services/islandRunDiceRegeneration';
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 6;
@@ -460,6 +463,7 @@ function formatEventRemaining(remainingMs: number): string {
 /* ── Reward bar helpers ──────────────────────────────────────── */
 const TIMER_OK_THRESHOLD_MS = 4 * 60 * 60 * 1000;    // > 4 h  → green
 const TIMER_WARN_THRESHOLD_MS = 1 * 60 * 60 * 1000;  // 1–4 h → orange; < 1 h → red
+const DICE_ROLL_OVERLAY_DURATION_MS = 800;  // how long the "Rolled N!" overlay stays visible
 
 const EVENT_BANNER_META: Readonly<Record<string, { icon: string; displayName: string }>> = {
   feeding_frenzy:   { icon: '🔥', displayName: 'Feeding Frenzy' },
@@ -819,6 +823,7 @@ function getOrbitStopDisplayIcon(state: StopProgressState | 'shop', icon: string
   if (state === 'locked') return '🔒';
   if (state === 'completed') return '✅';
   if (state === 'partial') return '🟡';
+  if (state === 'active') return '🔓';
   return icon;
 }
 
@@ -892,13 +897,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [rollValue, setRollValue] = useState<number | null>(null);
   const [rollingDiceFaces, setRollingDiceFaces] = useState<[number, number]>([1, 1]);
   const [isRolling, setIsRolling] = useState(false);
+  /** Shown briefly over the dice after the roll animation finishes (e.g. "Rolled 8!") */
+  const [diceRollTotalOverlay, setDiceRollTotalOverlay] = useState<string | null>(null);
   /** Full tile-by-tile hop sequence for current roll (Monopoly GO style). */
   const [pendingHopSequence, setPendingHopSequence] = useState<number[] | null>(null);
   const hopSequenceResolverRef = useRef<(() => void) | null>(null);
+  const diceRollCompleteResolverRef = useRef<(() => void) | null>(null);
   // Cleanup: resolve any pending hop sequence promise on unmount to prevent leaks
   useEffect(() => () => {
     hopSequenceResolverRef.current?.();
     hopSequenceResolverRef.current = null;
+    diceRollCompleteResolverRef.current?.();
+    diceRollCompleteResolverRef.current = null;
   }, []);
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
@@ -1103,6 +1113,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
   }, [effectiveMultiplier, diceMultiplier]);
 
+  // ── Dice regen countdown (Monopoly GO style: "X rolls ready in MM:SS") ────
+  const [diceRegenCountdown, setDiceRegenCountdown] = useState<string | null>(null);
+  const [diceRegenRollsReady, setDiceRegenRollsReady] = useState<number | null>(null);
+
+  // NOTE: The useEffect for the dice regen countdown timer is placed after runtimeState declaration below.
+
   // ── Reward bar animation state ─────────────────────────────────────────────
   const [rewardBarBurstAnimating, setRewardBarBurstAnimating] = useState(false);
   const [rewardBarCascadePayouts, setRewardBarCascadePayouts] = useState<RewardBarClaimPayout[]>([]);
@@ -1201,6 +1217,37 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     runtimeStateRef.current = runtimeState;
   }, [runtimeState]);
+
+  // ── Dice regen countdown timer (lives after runtimeState so it can read diceRegenState) ──
+  useEffect(() => {
+    const regenState: DiceRegenState | null = runtimeState.diceRegenState ?? null;
+    if (!regenState || dicePool >= regenState.maxDice) {
+      setDiceRegenCountdown(null);
+      setDiceRegenRollsReady(null);
+      return;
+    }
+
+    function tick() {
+      if (!regenState) return;
+      const deficit = Math.max(0, regenState.maxDice - dicePool);
+      // Time to fill the full deficit at regenRatePerHour
+      const hoursToFill = deficit / Math.max(1, regenState.regenRatePerHour);
+      const msToFill = hoursToFill * 60 * 60 * 1000;
+      // Rolls ready at full = maxDice / 2 (base cost of 2 dice per roll)
+      const totalRollsAtFull = Math.floor(regenState.maxDice / DICE_PER_ROLL);
+
+      const remainingSec = Math.max(0, Math.ceil(msToFill / 1000));
+      const minutes = Math.floor(remainingSec / 60);
+      const seconds = remainingSec % 60;
+      const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      setDiceRegenCountdown(timeStr);
+      setDiceRegenRollsReady(totalRollsAtFull);
+    }
+
+    tick();
+    const intervalId = setInterval(tick, 1000);
+    return () => clearInterval(intervalId);
+  }, [dicePool, runtimeState.diceRegenState]);
 
   useEffect(() => {
     setPerfectCompanionRuntimeConfig(readPerfectCompanionRuntimeConfig(session.user.id));
@@ -2550,8 +2597,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const stopStateMap = useMemo(() => {
     if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
+      // Bridge: legacy completedStops may include stops that v2 stopStatesByIndex
+      // hasn't marked objectiveComplete yet (e.g. completed before v2 migration).
+      // Merge them so the resolver sees those stops as complete.
+      const completedStopsSet = new Set(completedStops);
+      const mergedStopStatesByIndex = runtimeState.stopStatesByIndex.map((entry, index) => {
+        const stopId = islandStopPlan[index]?.stopId;
+        if (stopId && completedStopsSet.has(stopId) && !entry?.objectiveComplete) {
+          return { ...(entry ?? { buildComplete: false }), objectiveComplete: true };
+        }
+        return entry;
+      });
       const contractV2Stops = resolveIslandRunContractV2Stops({
-        stopStatesByIndex: runtimeState.stopStatesByIndex,
+        stopStatesByIndex: mergedStopStatesByIndex,
       });
       const map = new Map<string, StopProgressState>();
       islandStopPlan.forEach((stop, index) => {
@@ -2586,7 +2644,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     return map;
-  }, [effectiveCompletedStops, islandEggSlotUsed, islandStopPlan, runtimeState.stopStatesByIndex]);
+  }, [completedStops, effectiveCompletedStops, islandEggSlotUsed, islandStopPlan, runtimeState.stopStatesByIndex]);
 
   const stopMap = useMemo(() => {
     const map = new Map<number, string>();
@@ -3322,6 +3380,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setRollValue(nextRoll);
     setLandingText(`Rolling ${dieOne} + ${dieTwo} = ${nextRoll}...`);
 
+    // Wait for dice animation to finish before moving the token
+    await new Promise<void>((resolve) => {
+      diceRollCompleteResolverRef.current = resolve;
+    });
+
+    // Show the roll total briefly over the dice area
+    setDiceRollTotalOverlay(`Rolled ${nextRoll}!`);
+    await new Promise<void>((resolve) => { setTimeout(resolve, DICE_ROLL_OVERLAY_DURATION_MS); });
+    setDiceRollTotalOverlay(null);
+
     let currentIndex = tokenIndex;
     const hopIndices: number[] = [];
     for (let step = 0; step < nextRoll; step += 1) {
@@ -3993,6 +4061,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const handleCollectCreature = () => {
     if (!activeEgg || eggStage < 4) return;
+    // Guard: prevent collecting if the egg slot is already used (collected/sold)
+    if (islandEggSlotUsed) return;
     const resolvedEgg = activeEgg;
     const nowTs = Date.now();
     const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg);
@@ -4093,6 +4163,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const handleSellEggForRewards = () => {
     if (!activeEgg || eggStage < 4) return;
+    // Guard: prevent selling if the egg slot is already used (collected/sold)
+    if (islandEggSlotUsed) return;
     const resolvedEgg = activeEgg;
     const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg);
     const bundle = rollEggRewards(resolvedEgg.tier, resolvedEgg.setAtMs);
@@ -6159,14 +6231,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <span>{Math.floor(rewardBarProgress)}/{Math.floor(rewardBarThreshold)}</span>
             <span>{`Tier ${runtimeState.rewardBarEscalationTier}`}</span>
           </div>
-          {/* Track row: avatar → track → single reward endcap (no milestones) */}
+          {/* Track row: event feed icon → track → single reward endcap (no milestones) */}
           <div className="island-run-board__rewardbar-track-row">
             <span className="island-run-board__rewardbar-avatar-indicator" aria-hidden="true">
-              {avatarImageUrl ? (
-                <img src={avatarImageUrl} alt="" className="island-run-board__rewardbar-avatar-img" />
-              ) : (
-                getAvatarInitial(session.user)
-              )}
+              {(EVENT_BANNER_META[activeTimedEvent?.eventType ?? '']?.icon) ?? '⭐'}
             </span>
             <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
               <span className="island-run-board__rewardbar-track-fill" style={{ width: `${rewardBarPercent}%` }} />
@@ -6253,22 +6321,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           }}
           isRolling={isRolling}
           diceFaces={rollingDiceFaces}
+          onDiceRollComplete={() => {
+            diceRollCompleteResolverRef.current?.();
+            diceRollCompleteResolverRef.current = null;
+          }}
         />
       </div>
 
+      {/* Dice roll total overlay — shown briefly after dice settle */}
+      {diceRollTotalOverlay && (
+        <div className="island-run-board__dice-roll-overlay" aria-live="polite">
+          {diceRollTotalOverlay}
+        </div>
+      )}
+
       <div className="island-run-prototype__footer" aria-label="Island Run footer controls">
         <div className="island-run-prototype__footer-main">
-          <div className="island-run-prototype__footer-stats" aria-label="Run resources">
-            {ISLAND_RUN_CONTRACT_V2_ENABLED && <span className="island-run-prototype__stat-chip">🟣 <strong>{runtimeState.essence}</strong></span>}
-            {false && spinTokens > 0 && (
-              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">🌀 <strong>{spinTokens}</strong></span>
-            )}
-            {rollValue !== null ? (
-              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--roll" aria-label="Last roll result">
-                🎯 <strong>{rollValue}</strong>
-              </span>
-            ) : null}
-          </div>
+          {/* Footer stats row removed: essence icon (duplicate of top bar) and 🎯 roll chip removed per UI cleanup */}
 
           <div className="island-run-prototype__footer-actions">
             <button
@@ -6285,33 +6354,41 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             >
               📖 Story
             </button>
-            <button
-              type="button"
-              className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
-              onClick={isIslandTimerPendingStart ? activateCurrentIsland : () => void handleRoll()}
-              disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
-            >
-              <span className="island-run-prototype__footer-roll-btn-content">
-                <span className="island-run-prototype__footer-roll-btn-dice">🎲 {hasHydratedRuntimeState ? dicePool : '—'}{effectiveMultiplier > 1 ? ` ×${effectiveMultiplier}` : ''}</span>
-                <span>{isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}</span>
-              </span>
-            </button>
-            {/* Multiplier selector — cycles through unlocked tiers (dice-pool gated) */}
-            <button
-              type="button"
-              className={`island-run-prototype__footer-nav-btn${effectiveMultiplier > 1 ? ' island-run-prototype__footer-nav-btn--active-mult' : ''}`}
-              onClick={() => {
-                const unlocked = multiplierTiers.filter((t) => t.unlocked).map((t) => t.multiplier);
-                if (unlocked.length <= 1) return;
-                const currentIdx = unlocked.indexOf(effectiveMultiplier);
-                const nextIdx = (currentIdx + 1) % unlocked.length;
-                setDiceMultiplier(unlocked[nextIdx]!);
-              }}
-              title={`Cost: ${effectiveDiceCost} dice/roll · Max: ×${multiplierTiers.filter((t) => t.unlocked).pop()?.multiplier ?? 1}`}
-            >
-              ×{effectiveMultiplier}
-              {effectiveMultiplier > 1 && <span className="island-run-prototype__footer-nav-btn-cost"> (-{effectiveDiceCost})</span>}
-            </button>
+            <div className="island-run-prototype__footer-dice-group">
+              {/* Multiplier selector — placed above dice for symmetry */}
+              <button
+                type="button"
+                className={`island-run-prototype__footer-multiplier-btn${effectiveMultiplier > 1 ? ' island-run-prototype__footer-multiplier-btn--active' : ''}`}
+                onClick={() => {
+                  const unlocked = multiplierTiers.filter((t) => t.unlocked).map((t) => t.multiplier);
+                  if (unlocked.length <= 1) return;
+                  const currentIdx = unlocked.indexOf(effectiveMultiplier);
+                  const nextIdx = (currentIdx + 1) % unlocked.length;
+                  setDiceMultiplier(unlocked[nextIdx]!);
+                }}
+                title={`Cost: ${effectiveDiceCost} dice/roll · Max: ×${multiplierTiers.filter((t) => t.unlocked).pop()?.multiplier ?? 1}`}
+              >
+                ×{effectiveMultiplier}
+                {effectiveMultiplier > 1 && <span className="island-run-prototype__footer-nav-btn-cost"> (-{effectiveDiceCost})</span>}
+              </button>
+              <button
+                type="button"
+                className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
+                onClick={isIslandTimerPendingStart ? activateCurrentIsland : () => void handleRoll()}
+                disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
+              >
+                <span className="island-run-prototype__footer-roll-btn-content">
+                  <span className="island-run-prototype__footer-roll-btn-dice">🎲 {hasHydratedRuntimeState ? dicePool : '—'}{effectiveMultiplier > 1 ? ` ×${effectiveMultiplier}` : ''}</span>
+                  <span>{isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}</span>
+                </span>
+              </button>
+              {/* Dice regen countdown — like Monopoly GO "X rolls ready in MM:SS" */}
+              {diceRegenCountdown && diceRegenRollsReady != null && (
+                <div className="island-run-prototype__dice-regen-timer" aria-live="polite">
+                  <strong>{diceRegenRollsReady}</strong> rolls ready in <strong>{diceRegenCountdown}</strong>
+                </div>
+              )}
+            </div>
             <button
               type="button"
               className="island-run-prototype__footer-nav-btn"
@@ -6461,7 +6538,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     <p className="island-hatchery-card__headline">Egg already completed — no new egg on this island.</p>
                     <p style={{ fontSize: '0.82rem', opacity: 0.65 }}>Each island's egg slot is permanent and non-renewable.</p>
                   </div>
-                ) : activeEgg && eggStage >= 4 ? (
+                ) : activeEgg && !islandEggSlotUsed && eggStage >= 4 ? (
                   /* State 4/5: Egg ready to open (or dormant egg ready on revisit) */
                   <div className="island-hatchery-card__state island-hatchery-card__state--ready">
                     <img
