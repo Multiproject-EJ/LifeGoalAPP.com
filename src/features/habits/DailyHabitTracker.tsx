@@ -2203,7 +2203,10 @@ export function DailyHabitTracker({
   // Track whether the player has already opened the egg hatch circle today for this island.
   // Key: per-user, per-day, per-island so it resets naturally when egg moves to a new island
   // or the day rolls over. This controls the red notification dot and sort priority.
-  const eggHatchViewedStorageKey = `lifegoal:egg_hatch_viewed:${session.user.id}:${getTodayUtcDateKey()}:${activeIsland}`;
+  const eggHatchViewedStorageKey = useMemo(
+    () => `lifegoal:egg_hatch_viewed:${session.user.id}:${getTodayUtcDateKey()}:${activeIsland}`,
+    [session.user.id, activeIsland],
+  );
   const hasSeenEggHatch = typeof window !== 'undefined'
     ? localStorage.getItem(eggHatchViewedStorageKey) === '1'
     : false;

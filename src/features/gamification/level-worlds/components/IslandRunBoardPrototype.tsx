@@ -2762,11 +2762,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [eggStage]);
 
   // Show egg-ready banner on initial load if egg is already ready and banner not yet dismissed
-  const hasShownEggReadyBannerOnLoadRef = useRef(false);
+  const eggReadyBannerShownOnceRef = useRef(false);
   useEffect(() => {
-    if (hasShownEggReadyBannerOnLoadRef.current) return;
+    if (eggReadyBannerShownOnceRef.current) return;
     if (eggStage === 4 && hasHydratedRuntimeState) {
-      hasShownEggReadyBannerOnLoadRef.current = true;
+      eggReadyBannerShownOnceRef.current = true;
       setShowEggReadyBanner(true);
     }
   }, [eggStage, hasHydratedRuntimeState]);
@@ -3550,7 +3550,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     playIslandRunSound('egg_set');
     triggerIslandRunHaptic('egg_set');
     // Schedule push notification for when the egg is ready to collect
-    void scheduleEggHatchNotification(session.user.id, nextActiveEgg.hatchAtMs);
+    scheduleEggHatchNotification(session.user.id, nextActiveEgg.hatchAtMs).catch((err) => {
+      logIslandRunEntryDebug('egg_hatch_notification_schedule_failed', { error: String(err) });
+    });
     void recordTelemetryEvent({
       userId: session.user.id,
       eventType: 'economy_earn',
