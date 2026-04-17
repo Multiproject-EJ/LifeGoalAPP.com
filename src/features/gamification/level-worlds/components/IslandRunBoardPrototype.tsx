@@ -6174,14 +6174,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <span>{Math.floor(rewardBarProgress)}/{Math.floor(rewardBarThreshold)}</span>
             <span>{`Tier ${runtimeState.rewardBarEscalationTier}`}</span>
           </div>
-          {/* Track row: avatar → track → single reward endcap (no milestones) */}
+          {/* Track row: event feed icon → track → single reward endcap (no milestones) */}
           <div className="island-run-board__rewardbar-track-row">
             <span className="island-run-board__rewardbar-avatar-indicator" aria-hidden="true">
-              {avatarImageUrl ? (
-                <img src={avatarImageUrl} alt="" className="island-run-board__rewardbar-avatar-img" />
-              ) : (
-                getAvatarInitial(session.user)
-              )}
+              {(EVENT_BANNER_META[activeTimedEvent?.eventType ?? '']?.icon) ?? '⭐'}
             </span>
             <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
               <span className="island-run-board__rewardbar-track-fill" style={{ width: `${rewardBarPercent}%` }} />
@@ -6290,33 +6286,35 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             >
               📖 Story
             </button>
-            <button
-              type="button"
-              className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
-              onClick={isIslandTimerPendingStart ? activateCurrentIsland : () => void handleRoll()}
-              disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
-            >
-              <span className="island-run-prototype__footer-roll-btn-content">
-                <span className="island-run-prototype__footer-roll-btn-dice">🎲 {hasHydratedRuntimeState ? dicePool : '—'}{effectiveMultiplier > 1 ? ` ×${effectiveMultiplier}` : ''}</span>
-                <span>{isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}</span>
-              </span>
-            </button>
-            {/* Multiplier selector — cycles through unlocked tiers (dice-pool gated) */}
-            <button
-              type="button"
-              className={`island-run-prototype__footer-nav-btn${effectiveMultiplier > 1 ? ' island-run-prototype__footer-nav-btn--active-mult' : ''}`}
-              onClick={() => {
-                const unlocked = multiplierTiers.filter((t) => t.unlocked).map((t) => t.multiplier);
-                if (unlocked.length <= 1) return;
-                const currentIdx = unlocked.indexOf(effectiveMultiplier);
-                const nextIdx = (currentIdx + 1) % unlocked.length;
-                setDiceMultiplier(unlocked[nextIdx]!);
-              }}
-              title={`Cost: ${effectiveDiceCost} dice/roll · Max: ×${multiplierTiers.filter((t) => t.unlocked).pop()?.multiplier ?? 1}`}
-            >
-              ×{effectiveMultiplier}
-              {effectiveMultiplier > 1 && <span className="island-run-prototype__footer-nav-btn-cost"> (-{effectiveDiceCost})</span>}
-            </button>
+            <div className="island-run-prototype__footer-dice-group">
+              {/* Multiplier selector — placed above dice for symmetry */}
+              <button
+                type="button"
+                className={`island-run-prototype__footer-multiplier-btn${effectiveMultiplier > 1 ? ' island-run-prototype__footer-multiplier-btn--active' : ''}`}
+                onClick={() => {
+                  const unlocked = multiplierTiers.filter((t) => t.unlocked).map((t) => t.multiplier);
+                  if (unlocked.length <= 1) return;
+                  const currentIdx = unlocked.indexOf(effectiveMultiplier);
+                  const nextIdx = (currentIdx + 1) % unlocked.length;
+                  setDiceMultiplier(unlocked[nextIdx]!);
+                }}
+                title={`Cost: ${effectiveDiceCost} dice/roll · Max: ×${multiplierTiers.filter((t) => t.unlocked).pop()?.multiplier ?? 1}`}
+              >
+                ×{effectiveMultiplier}
+                {effectiveMultiplier > 1 && <span className="island-run-prototype__footer-nav-btn-cost"> (-{effectiveDiceCost})</span>}
+              </button>
+              <button
+                type="button"
+                className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
+                onClick={isIslandTimerPendingStart ? activateCurrentIsland : () => void handleRoll()}
+                disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
+              >
+                <span className="island-run-prototype__footer-roll-btn-content">
+                  <span className="island-run-prototype__footer-roll-btn-dice">🎲 {hasHydratedRuntimeState ? dicePool : '—'}{effectiveMultiplier > 1 ? ` ×${effectiveMultiplier}` : ''}</span>
+                  <span>{isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}</span>
+                </span>
+              </button>
+            </div>
             <button
               type="button"
               className="island-run-prototype__footer-nav-btn"
