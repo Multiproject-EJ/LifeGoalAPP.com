@@ -4280,3 +4280,129 @@
 .board-dice-3d__dot--mid-right    { grid-row: 2; grid-column: 3; align-self: center; justify-self: end; }
 .board-dice-3d__dot--bottom-left  { grid-row: 3; grid-column: 1; align-self: end; justify-self: start; }
 .board-dice-3d__dot--bottom-right { grid-row: 3; grid-column: 3; align-self: end; justify-self: end; }
+
+/* ─────────────────────────────────────────────────
+   Build Panel — 5-building modal
+   ───────────────────────────────────────────────── */
+
+.build-panel-modal {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.build-panel__buildings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+.build-panel__building {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(84, 63, 130, 0.22);
+  border: 2px solid rgba(197, 172, 255, 0.25);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.2s, transform 0.1s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.build-panel__building:active {
+  transform: scale(0.97);
+  background: rgba(84, 63, 130, 0.4);
+  border-color: rgba(197, 172, 255, 0.6);
+}
+
+.build-panel__building--complete {
+  background: rgba(50, 130, 80, 0.2);
+  border-color: rgba(80, 220, 130, 0.5);
+  cursor: default;
+}
+
+/* Icon grows with level — level-0 is smallest, level-3 largest */
+.build-panel__building-icon {
+  font-size: 1.6rem;
+  min-width: 2.2rem;
+  text-align: center;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.35s;
+}
+
+.build-panel__building--level-0 .build-panel__building-icon { transform: scale(0.75); filter: grayscale(0.6) opacity(0.7); }
+.build-panel__building--level-1 .build-panel__building-icon { transform: scale(0.9); filter: grayscale(0.3) opacity(0.85); }
+.build-panel__building--level-2 .build-panel__building-icon { transform: scale(1.05); filter: none; }
+.build-panel__building--level-3 .build-panel__building-icon { transform: scale(1.2); filter: drop-shadow(0 0 6px rgba(197, 172, 255, 0.9)); }
+
+/* Level-up animation: triggered by class cycling */
+@keyframes build-level-up-pulse {
+  0%   { transform: scale(1.0); }
+  35%  { transform: scale(1.45); filter: drop-shadow(0 0 12px rgba(255, 220, 80, 1)); }
+  70%  { transform: scale(1.15); }
+  100% { transform: scale(1.2); }
+}
+
+.build-panel__building--level-3 .build-panel__building-icon {
+  animation: build-level-up-pulse 0.6s ease-out;
+}
+
+.build-panel__building-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.build-panel__building-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.build-panel__building-status {
+  font-size: 0.78rem;
+  color: rgba(197, 172, 255, 0.85);
+}
+
+.build-panel__building--complete .build-panel__building-status {
+  color: rgba(80, 220, 130, 0.9);
+}
+
+.build-panel__level-bar {
+  display: flex;
+  gap: 4px;
+  margin-top: 0.15rem;
+}
+
+.build-panel__level-pip {
+  height: 5px;
+  flex: 1;
+  border-radius: 3px;
+  background: rgba(197, 172, 255, 0.2);
+  transition: background 0.3s;
+}
+
+.build-panel__level-pip--done {
+  background: rgba(197, 172, 255, 0.85);
+}
+
+.build-panel__level-pip--active {
+  background: rgba(255, 220, 80, 0.7);
+  animation: build-pip-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes build-pip-pulse {
+  0%, 100% { background: rgba(255, 220, 80, 0.5); }
+  50%       { background: rgba(255, 220, 80, 1); }
+}
+
+.build-panel__building-objective {
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.55);
+}

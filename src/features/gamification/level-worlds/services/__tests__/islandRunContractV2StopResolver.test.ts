@@ -3,37 +3,50 @@ import {
   resolveIslandRunStep1CompleteForProgression,
   resolveIslandRunFullClearForProgression,
 } from '../islandRunContractV2StopResolver';
+import { MAX_BUILD_LEVEL } from '../islandRunContractV2EssenceBuild';
 import { assertDeepEqual, assertEqual, type TestCase } from './testHarness';
+
+const FULL_BUILD_STATES = Array.from({ length: 5 }, () => ({
+  requiredEssence: 50,
+  spentEssence: 50,
+  buildLevel: MAX_BUILD_LEVEL,
+}));
+
+const EMPTY_BUILD_STATES = Array.from({ length: 5 }, () => ({
+  requiredEssence: 50,
+  spentEssence: 0,
+  buildLevel: 0,
+}));
 
 export const islandRunContractV2StopResolverTests: TestCase[] = [
   {
-    name: 'resolver picks first incomplete stop as active and locks all later stops',
+    name: 'resolver picks first stop without objective complete as active and locks all later stops',
     run: () => {
       const result = resolveIslandRunContractV2Stops({
         stopStatesByIndex: [
-          { objectiveComplete: true, buildComplete: true },
-          { objectiveComplete: true, buildComplete: false },
+          { objectiveComplete: true, buildComplete: false }, // objective done, build pending — still counted as done for sequencing
+          { objectiveComplete: false, buildComplete: false }, // objective not done → active
           { objectiveComplete: true, buildComplete: true },
           { objectiveComplete: false, buildComplete: false },
           { objectiveComplete: false, buildComplete: false },
         ],
       });
 
-      assertEqual(result.activeStopIndex, 1, 'Expected stop index 1 to be active (first incomplete stop)');
+      assertEqual(result.activeStopIndex, 1, 'Expected stop index 1 to be active (first stop without objective)');
       assertEqual(result.activeStopType, 'habit', 'Expected active stop type to match index 1');
       assertDeepEqual(
         result.statusesByIndex,
         ['completed', 'active', 'locked', 'locked', 'locked'],
-        'Expected strict sequential progression with no early unlocks',
+        'Expected stop 0 completed (objective done) and stop 1 active',
       );
     },
   },
   {
-    name: 'resolver treats buildComplete as required and does not infer completion from objectiveComplete',
+    name: 'resolver advances on objectiveComplete alone — build does not gate stop unlock',
     run: () => {
       const result = resolveIslandRunContractV2Stops({
         stopStatesByIndex: [
-          { objectiveComplete: true, buildComplete: false },
+          { objectiveComplete: true, buildComplete: false }, // objective done, no build
           { objectiveComplete: false, buildComplete: false },
           { objectiveComplete: false, buildComplete: false },
           { objectiveComplete: false, buildComplete: false },
@@ -41,17 +54,17 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
         ],
       });
 
-      assertEqual(result.activeStopIndex, 0, 'Expected stop 0 to remain active until both completion flags are true');
-      assertEqual(result.activeStopType, 'hatchery', 'Expected hatchery to remain active');
+      assertEqual(result.activeStopIndex, 1, 'Expected stop 1 to be active — stop 0 objective done even without build');
+      assertEqual(result.activeStopType, 'habit', 'Expected hatchery to be followed by habit');
       assertDeepEqual(
         result.statusesByIndex,
-        ['active', 'locked', 'locked', 'locked', 'locked'],
-        'Expected all later stops to remain locked while active stop is incomplete',
+        ['completed', 'active', 'locked', 'locked', 'locked'],
+        'Expected stop 0 completed when objective complete, regardless of build',
       );
     },
   },
   {
-    name: 'resolver returns last index when all stops are complete while marking every stop completed',
+    name: 'resolver returns last index when all objectives are complete while marking every stop completed',
     run: () => {
       const result = resolveIslandRunContractV2Stops({
         stopStatesByIndex: [
@@ -122,10 +135,12 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
         resolveIslandRunFullClearForProgression({
           islandRunContractV2Enabled: true,
           stopStatesByIndex,
+          stopBuildStateByIndex: FULL_BUILD_STATES,
+          hatcheryEggResolved: true,
           legacyIslandFullyCleared: true,
         }),
         false,
-        'Expected v2 mode to ignore legacy full-clear and stay incomplete',
+        'Expected v2 mode to ignore legacy full-clear when objectives are not done',
       );
       assertEqual(
         resolveIslandRunStep1CompleteForProgression({
@@ -135,6 +150,48 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
         }),
         true,
         'Expected legacy mode to preserve existing step1 behavior',
+      );
+    },
+  },
+  {
+    name: 'v2 full clear requires objectives + builds + hatchery egg resolved',
+    run: () => {
+      const allObjectives = Array.from({ length: 5 }, () => ({ objectiveComplete: true, buildComplete: false }));
+
+      assertEqual(
+        resolveIslandRunFullClearForProgression({
+          islandRunContractV2Enabled: true,
+          stopStatesByIndex: allObjectives,
+          stopBuildStateByIndex: EMPTY_BUILD_STATES,
+          hatcheryEggResolved: true,
+          legacyIslandFullyCleared: false,
+        }),
+        false,
+        'Expected not cleared: builds not done',
+      );
+
+      assertEqual(
+        resolveIslandRunFullClearForProgression({
+          islandRunContractV2Enabled: true,
+          stopStatesByIndex: allObjectives,
+          stopBuildStateByIndex: FULL_BUILD_STATES,
+          hatcheryEggResolved: false,
+          legacyIslandFullyCleared: false,
+        }),
+        false,
+        'Expected not cleared: hatchery egg not resolved',
+      );
+
+      assertEqual(
+        resolveIslandRunFullClearForProgression({
+          islandRunContractV2Enabled: true,
+          stopStatesByIndex: allObjectives,
+          stopBuildStateByIndex: FULL_BUILD_STATES,
+          hatcheryEggResolved: true,
+          legacyIslandFullyCleared: false,
+        }),
+        true,
+        'Expected cleared when all objectives + all builds + egg resolved',
       );
     },
   },
@@ -156,7 +213,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
           hatcheryEffectivelyComplete: true,
         }),
         true,
-        'Expected hatcheryEffectivelyComplete to unblock step1 in v2 when egg has been set/collected/sold',
+        'Expected hatcheryEffectivelyComplete to unblock step1 in v2 when egg has been set',
       );
       assertEqual(
         resolveIslandRunStep1CompleteForProgression({
@@ -172,7 +229,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
         resolveIslandRunStep1CompleteForProgression({
           islandRunContractV2Enabled: true,
           stopStatesByIndex: [
-            { objectiveComplete: true, buildComplete: true },
+            { objectiveComplete: true, buildComplete: false },
             { objectiveComplete: false, buildComplete: false },
             { objectiveComplete: false, buildComplete: false },
             { objectiveComplete: false, buildComplete: false },
@@ -182,7 +239,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
           hatcheryEffectivelyComplete: false,
         }),
         true,
-        'Expected v2 stop state to take priority even when hatchery flag is false',
+        'Expected v2 stop objective state to take priority even when hatchery flag is false',
       );
     },
   },
