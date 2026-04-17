@@ -47,7 +47,7 @@ export function resolveIslandRunContractV2EssenceEarnForTile(
   const island = options?.islandNumber ?? 1;
   const seed = options?.seed ?? Date.now();
   const mult = getIslandEssenceMultiplier(island);
-  // Deterministic pick within range
+  // Deterministic pick within range using LCG (Linear Congruential Generator)
   const t = ((seed * 9301 + 49297) % 233280) / 233280; // 0–1
   const base = Math.floor(range.min + t * (range.max - range.min + 1));
   return Math.max(1, Math.floor(base * mult));
