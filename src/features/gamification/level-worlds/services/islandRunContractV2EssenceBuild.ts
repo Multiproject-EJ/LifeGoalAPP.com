@@ -10,6 +10,43 @@ export type IslandRunContractV2BuildState = {
   buildLevel: number;
 };
 
+/**
+ * Maximum build level per stop (number of cost tiers = number of building levels).
+ * A stop's build is fully complete when buildLevel === MAX_BUILD_LEVEL.
+ */
+export const MAX_BUILD_LEVEL = 3; // L1, L2, L3 (matches STOP_UPGRADE_BASE_COSTS.length)
+
+/**
+ * Compute the effective island number for scaling purposes.
+ * After completing all 120 islands (cycle increments), costs and rewards
+ * continue to scale upward by treating island 1 on cycle 2 as island 121, etc.
+ * effectiveIslandNumber = cycleIndex × 120 + islandNumber
+ */
+export function getEffectiveIslandNumber(islandNumber: number, cycleIndex: number): number {
+  const safeIsland = Math.max(1, Math.floor(islandNumber));
+  const safeCycle = Math.max(0, Math.floor(cycleIndex));
+  return safeCycle * 120 + safeIsland;
+}
+
+/**
+ * Returns true when the stop's build is fully complete (all levels funded).
+ */
+export function isStopBuildFullyComplete(buildState: IslandRunContractV2BuildState): boolean {
+  return buildState.buildLevel >= MAX_BUILD_LEVEL;
+}
+
+/**
+ * Initialize the build state array for all 5 stops on a new island visit.
+ * Uses the effective island number (cycleIndex × 120 + islandNumber) for scaling.
+ */
+export function initStopBuildStatesForIsland(effectiveIslandNumber: number): IslandRunContractV2BuildState[] {
+  return Array.from({ length: 5 }, (_, stopIndex) => ({
+    requiredEssence: getStopUpgradeCost({ islandNumber: effectiveIslandNumber, stopIndex, currentBuildLevel: 0 }),
+    spentEssence: 0,
+    buildLevel: 0,
+  }));
+}
+
 // ─── Monopoly GO–style Essence Economy ────────────────────────────────
 // Base earnings per tile type.  These are the *floor* values for island 1.
 // Actual earn = base × islandMultiplier, where multiplier grows ~1.5× every 10 islands.
@@ -98,15 +135,21 @@ export const ESSENCE_DRIFT_RATE_PER_HOUR = 0.05;  // lose 5% of excess per hour
 
 /**
  * Calculate essence after applying drift/decay for elapsed time.
+ * Drift is suspended when the island is already fully cleared (all objectives,
+ * all builds at max level, hatchery egg resolved) — there is nothing left to spend on.
  * Returns the new essence value and amount lost.
  */
 export function applyEssenceDrift(options: {
   essence: number;
   islandNumber: number;
   elapsedMs: number;
+  /** Pass true to suppress drift when the island is fully cleared. */
+  isIslandComplete?: boolean;
 }): { essence: number; driftLost: number } {
-  const { essence, islandNumber, elapsedMs } = options;
+  const { essence, islandNumber, elapsedMs, isIslandComplete } = options;
   if (essence <= 0 || elapsedMs <= 0) return { essence, driftLost: 0 };
+  // No decay once the island is done — there is nothing to spend essence on.
+  if (isIslandComplete) return { essence, driftLost: 0 };
 
   const islandCost = getIslandTotalEssenceCost(islandNumber);
   const threshold = Math.floor(islandCost * ESSENCE_DRIFT_THRESHOLD_RATIO);
@@ -125,26 +168,6 @@ export function applyEssenceDrift(options: {
     essence: threshold + remaining,
     driftLost: lost,
   };
-}
-
-export function isIslandRunContractV2BuildPanelVisibleForStop(options: {
-  islandRunContractV2Enabled: boolean;
-  openedStopIndex: number;
-  activeStopIndex: number;
-}): boolean {
-  if (!options.islandRunContractV2Enabled) return false;
-  return options.openedStopIndex === options.activeStopIndex;
-}
-
-export function canIslandRunContractV2CompleteStop(options: {
-  islandRunContractV2Enabled: boolean;
-  stopStatesByIndex: IslandRunContractV2StopState[];
-  stopIndex: number;
-}): boolean {
-  if (!options.islandRunContractV2Enabled) return true;
-  const normalizedIndex = Math.max(0, Math.floor(options.stopIndex));
-  const entry = options.stopStatesByIndex[normalizedIndex];
-  return entry?.objectiveComplete === true && entry?.buildComplete === true;
 }
 
 export function awardIslandRunContractV2Essence(options: {
@@ -177,6 +200,13 @@ export function awardIslandRunContractV2Essence(options: {
   };
 }
 
+/**
+ * Spend essence on a stop's building.
+ * Build is DECOUPLED from stop objective/sequencing — any stop can be funded at any time.
+ * Multi-level: when a level is fully funded the building advances to the next level
+ * (spentEssence resets, requiredEssence updates to the next tier cost) until MAX_BUILD_LEVEL
+ * is reached, at which point buildComplete is set on the stop state.
+ */
 export function spendIslandRunContractV2EssenceOnStopBuild(options: {
   islandRunContractV2Enabled: boolean;
   stopIndex: number;
@@ -185,36 +215,35 @@ export function spendIslandRunContractV2EssenceOnStopBuild(options: {
   essenceLifetimeSpent: number;
   stopBuildStateByIndex: IslandRunContractV2BuildState[];
   stopStatesByIndex: IslandRunContractV2StopState[];
+  /** Effective island number (cycleIndex × 120 + islandNumber) for next-level cost lookup. */
+  effectiveIslandNumber: number;
 }): {
   essence: number;
   essenceLifetimeSpent: number;
   stopBuildStateByIndex: IslandRunContractV2BuildState[];
   stopStatesByIndex: IslandRunContractV2StopState[];
   spent: number;
+  leveledUp: boolean;
 } {
-  if (!options.islandRunContractV2Enabled) {
-    return {
-      essence: options.essence,
-      essenceLifetimeSpent: options.essenceLifetimeSpent,
-      stopBuildStateByIndex: options.stopBuildStateByIndex,
-      stopStatesByIndex: options.stopStatesByIndex,
-      spent: 0,
-    };
-  }
+  const noChange = {
+    essence: options.essence,
+    essenceLifetimeSpent: options.essenceLifetimeSpent,
+    stopBuildStateByIndex: options.stopBuildStateByIndex,
+    stopStatesByIndex: options.stopStatesByIndex,
+    spent: 0,
+    leveledUp: false,
+  };
+
+  if (!options.islandRunContractV2Enabled) return noChange;
 
   const normalizedStopIndex = Math.max(0, Math.floor(options.stopIndex));
   const currentBuildState = options.stopBuildStateByIndex[normalizedStopIndex];
   const currentStopState = options.stopStatesByIndex[normalizedStopIndex] ?? { objectiveComplete: false, buildComplete: false };
 
-  if (!currentBuildState) {
-    return {
-      essence: options.essence,
-      essenceLifetimeSpent: options.essenceLifetimeSpent,
-      stopBuildStateByIndex: options.stopBuildStateByIndex,
-      stopStatesByIndex: options.stopStatesByIndex,
-      spent: 0,
-    };
-  }
+  if (!currentBuildState) return noChange;
+
+  // Already fully built — nothing to do.
+  if (isStopBuildFullyComplete(currentBuildState)) return noChange;
 
   const budget = Math.max(0, Math.floor(options.essence));
   const request = Math.max(0, Math.floor(options.spendAmount));
@@ -224,33 +253,51 @@ export function spendIslandRunContractV2EssenceOnStopBuild(options: {
   const spent = Math.max(0, Math.min(request, budget, remaining));
 
   if (spent < 1) {
-    return {
-      essence: budget,
-      essenceLifetimeSpent: Math.max(0, Math.floor(options.essenceLifetimeSpent)),
-      stopBuildStateByIndex: options.stopBuildStateByIndex,
-      stopStatesByIndex: options.stopStatesByIndex,
-      spent: 0,
-    };
+    return { ...noChange, essence: budget };
   }
 
   const nextSpentEssence = alreadySpent + spent;
-  const nextBuildComplete = nextSpentEssence >= requiredEssence;
+  const levelComplete = nextSpentEssence >= requiredEssence;
+  const nextBuildLevel = levelComplete ? currentBuildState.buildLevel + 1 : currentBuildState.buildLevel;
+  const buildFullyComplete = nextBuildLevel >= MAX_BUILD_LEVEL;
 
-  const nextStopBuildStateByIndex = options.stopBuildStateByIndex.map((entry, index) => {
-    if (index !== normalizedStopIndex) return entry;
-    return {
+  let nextBuildState: IslandRunContractV2BuildState;
+  if (levelComplete && !buildFullyComplete) {
+    // Advance to next level: reset progress and compute the new required amount.
+    const nextLevelCost = getStopUpgradeCost({
+      islandNumber: options.effectiveIslandNumber,
+      stopIndex: normalizedStopIndex,
+      currentBuildLevel: nextBuildLevel,
+    });
+    nextBuildState = {
+      requiredEssence: nextLevelCost,
+      spentEssence: 0,
+      buildLevel: nextBuildLevel,
+    };
+  } else if (buildFullyComplete) {
+    nextBuildState = {
+      requiredEssence,
+      spentEssence: requiredEssence, // fully spent
+      buildLevel: MAX_BUILD_LEVEL,
+    };
+  } else {
+    nextBuildState = {
       requiredEssence,
       spentEssence: nextSpentEssence,
-      buildLevel: nextBuildComplete ? Math.max(1, entry.buildLevel) : entry.buildLevel,
+      buildLevel: currentBuildState.buildLevel,
     };
-  });
+  }
+
+  const nextStopBuildStateByIndex = options.stopBuildStateByIndex.map((entry, index) =>
+    index !== normalizedStopIndex ? entry : nextBuildState,
+  );
 
   const nextStopStatesByIndex = options.stopStatesByIndex.map((entry, index) => {
     if (index !== normalizedStopIndex) return entry;
     return {
       ...currentStopState,
-      buildComplete: nextBuildComplete,
-      ...(nextBuildComplete && currentStopState.objectiveComplete ? { completedAtMs: Date.now() } : {}),
+      buildComplete: buildFullyComplete,
+      ...(buildFullyComplete && currentStopState.objectiveComplete ? { completedAtMs: Date.now() } : {}),
     };
   });
 
@@ -260,5 +307,6 @@ export function spendIslandRunContractV2EssenceOnStopBuild(options: {
     stopBuildStateByIndex: nextStopBuildStateByIndex,
     stopStatesByIndex: nextStopStatesByIndex,
     spent,
+    leveledUp: levelComplete,
   };
 }

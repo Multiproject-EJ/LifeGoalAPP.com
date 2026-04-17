@@ -191,13 +191,45 @@ Stop rules:
 
 ---
 
-## 4A) Stop completion definition
+## 4A) Stop completion and stop unlock definition
 
-- Each stop requires two completion conditions:
-  1. the stop-specific objective must be completed, and
-  2. the required Essence-funded build/upgrade state must be completed.
-- A stop is not complete until both conditions are satisfied.
-- Completing a stop unlocks the next stop in sequence.
+**Stop unlock (sequential progression):**
+- A stop advances to the next stop in sequence when the stop's **objective** is complete.
+- Build completion is **NOT** required to unlock the next stop.
+- Only the active stop's objective can be completed (stops are strictly sequential).
+
+**Hatchery stop objective:**
+- Stop 1 (Hatchery) objective = **egg set to hatch**. This immediately unlocks Stop 2.
+- Egg collected/sold is **NOT** the objective for stop unlocking — it is a separate island-clear condition (see §7).
+
+**Non-hatchery stops:**
+- Each stop's objective is its defined stop-specific task (habit check-in, breathing exercise, wisdom activity, boss trial).
+
+## 4B) Building system
+
+Each island has **5 buildings**, one per stop. Buildings are **completely decoupled from stop unlock sequencing**:
+- A building can be funded at **any time**, regardless of which stop is currently active.
+- Buildings have **3 levels (L1, L2, L3)**. Each level requires Essence to fund.
+- Tapping a building in the Build Panel spends 10 Essence toward the current level. Holding continues spending.
+- When a level is fully funded, the building animates and advances to the next level.
+- When **all 3 levels are funded**, the building's `buildComplete` flag is set.
+
+**Build cost scaling:**
+- Build costs scale with `effectiveIslandNumber = cycleIndex × 120 + islandNumber`.
+- Island 1 (cycle 0, `cycleIndex=0`) uses effectiveIslandNumber = 1. Island 1 on cycle 1 (`cycleIndex=1`) uses effectiveIslandNumber = 121. Island 1 on cycle 2 (`cycleIndex=2`) uses effectiveIslandNumber = 241.
+- This ensures costs are substantially higher on every new cycle, preserving meta-progression tension.
+- Costs also scale with stop index (boss stop costs 4× base).
+
+**Building visuals (L0→L3):** 🏗️ → 🏠 → 🏡 → 🏰 with a scale+glow animation on level-up.
+
+**Essence drift:**
+- Excess essence above 80% of island cost decays at 5%/hour.
+- Drift is **suspended** when the island is fully cleared (nothing left to build/spend on).
+- Drift is also suspended when the island is completely finished (player has claimed island clear).
+
+**Building reset on island travel:**
+- All 5 buildings reset to Level 0 on every island travel (fresh build costs for the new island).
+
 
 ## 5) Reward bar system
 
@@ -257,14 +289,18 @@ Stop rules:
 
 ## 7) Island completion rules
 
-An island is complete **only** when:
-1. Stops 1–4 are completed in order, and
-2. Stop 5 (Boss) is completed.
+An island is complete **only** when ALL of the following are satisfied:
+1. All 5 stop **objectives** are complete (Hatchery→Habit→Breathing→Wisdom→Boss, in sequence).
+2. The Hatchery egg has been **collected or sold** (not just set — the egg must fully resolve).
+3. All 5 **buildings** are at **Level 3** (fully built via the Build Panel).
+
+When all three conditions are met, the Build Panel shows a **"🎉 Claim Island Clear!"** button. The player must tap it to trigger island travel (no auto-travel).
 
 Additional rules:
 - Island progression is **not** time-based.
 - Timer expiration cannot auto-complete or auto-fail island progression.
-- Advancing to the next island requires successful completion of all 5 stops.
+- A completed island **cannot** decay (Essence drift is suspended once island is fully cleared).
+- Buildings **reset** to Level 0 on island travel.
 
 ---
 
