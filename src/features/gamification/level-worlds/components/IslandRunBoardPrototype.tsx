@@ -889,6 +889,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [rollValue, setRollValue] = useState<number | null>(null);
   const [rollingDiceFaces, setRollingDiceFaces] = useState<[number, number]>([1, 1]);
   const [isRolling, setIsRolling] = useState(false);
+  /** Full tile-by-tile hop sequence for current roll (Monopoly GO style). */
+  const [pendingHopSequence, setPendingHopSequence] = useState<number[] | null>(null);
+  const hopSequenceResolverRef = useRef<(() => void) | null>(null);
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
   const [islandNumber, setIslandNumber] = useState(1);
@@ -3239,13 +3242,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setLandingText(`Rolling ${dieOne} + ${dieTwo} = ${nextRoll}...`);
 
     let currentIndex = tokenIndex;
+    const hopIndices: number[] = [];
     for (let step = 0; step < nextRoll; step += 1) {
       currentIndex = resolveWrappedTokenIndex(currentIndex, 1, ACTIVE_BOARD_PROFILE.tileCount);
-      setTokenIndex(currentIndex);
-      // M10A: token_move sound on each hop
-      playIslandRunSound('token_move');
-      await wait(240);
+      hopIndices.push(currentIndex);
     }
+
+    // Set the full hop sequence — BoardStage will animate tile-by-tile
+    // with camera follow (Monopoly GO style).
+    setPendingHopSequence(hopIndices);
+    await new Promise<void>((resolve) => {
+      hopSequenceResolverRef.current = resolve;
+    });
+    setTokenIndex(currentIndex);
 
     // Sync local state to match what the roll action already persisted.
     // The service deducted effectiveDiceCost (= BASE_DICE_PER_ROLL × multiplier)
@@ -6082,6 +6091,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             setFocusedStopId(stopId);
             setCameraMode('stop_focus');
           }}
+          pendingHopSequence={pendingHopSequence}
+          onHopSequenceComplete={() => {
+            setPendingHopSequence(null);
+            hopSequenceResolverRef.current?.();
+            hopSequenceResolverRef.current = null;
+          }}
           onCameraReady={(controls) => { boardCameraRef.current = controls; }}
           onTokenHop={(tileIndex) => {
             playIslandRunSound('token_move');
@@ -6090,6 +6105,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             playIslandRunSound('stop_land');
             triggerIslandRunHaptic('stop_land');
           }}
+          isRolling={isRolling}
+          diceFaces={rollingDiceFaces}
         />
       </div>
 
