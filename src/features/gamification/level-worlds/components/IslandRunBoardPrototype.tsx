@@ -460,6 +460,7 @@ function formatEventRemaining(remainingMs: number): string {
 /* ── Reward bar helpers ──────────────────────────────────────── */
 const TIMER_OK_THRESHOLD_MS = 4 * 60 * 60 * 1000;    // > 4 h  → green
 const TIMER_WARN_THRESHOLD_MS = 1 * 60 * 60 * 1000;  // 1–4 h → orange; < 1 h → red
+const DICE_ROLL_OVERLAY_DURATION_MS = 800;  // how long the "Rolled N!" overlay stays visible
 
 const EVENT_BANNER_META: Readonly<Record<string, { icon: string; displayName: string }>> = {
   feeding_frenzy:   { icon: '🔥', displayName: 'Feeding Frenzy' },
@@ -2559,9 +2560,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       // Bridge: legacy completedStops may include stops that v2 stopStatesByIndex
       // hasn't marked objectiveComplete yet (e.g. completed before v2 migration).
       // Merge them so the resolver sees those stops as complete.
+      const completedStopsSet = new Set(completedStops);
       const mergedStopStatesByIndex = runtimeState.stopStatesByIndex.map((entry, index) => {
         const stopId = islandStopPlan[index]?.stopId;
-        if (stopId && completedStops.includes(stopId) && !entry?.objectiveComplete) {
+        if (stopId && completedStopsSet.has(stopId) && !entry?.objectiveComplete) {
           return { ...(entry ?? { buildComplete: false }), objectiveComplete: true };
         }
         return entry;
@@ -3345,7 +3347,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     // Show the roll total briefly over the dice area
     setDiceRollTotalOverlay(`Rolled ${nextRoll}!`);
-    await new Promise<void>((resolve) => { setTimeout(resolve, 800); });
+    await new Promise<void>((resolve) => { setTimeout(resolve, DICE_ROLL_OVERLAY_DURATION_MS); });
     setDiceRollTotalOverlay(null);
 
     let currentIndex = tokenIndex;
