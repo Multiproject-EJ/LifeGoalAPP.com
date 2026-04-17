@@ -883,6 +883,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // BoardStage camera controls (set by BoardStage via onCameraReady)
   const boardCameraRef = useRef<BoardStageCameraControls | null>(null);
+  // Guard: prevent repeated stop-focus camera jumps after initial hydration
+  const hasAppliedInitialStopFocusRef = useRef(false);
 
   const [dicePool, setDicePool] = useState(ISLAND_RUN_DEFAULT_STARTING_DICE);
   const [tokenIndex, setTokenIndex] = useState(TOKEN_START_TILE_INDEX);
@@ -2101,8 +2103,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    // Only set stop-focus camera on first hydration. Subsequent completedStops
+    // changes (e.g. during gameplay) must not hijack the camera from the token
+    // animation follow mode — that causes the "shaking back and forth" bug.
+    if (hasAppliedInitialStopFocusRef.current) return;
     const nextActiveStop = islandStopPlan.find((stop) => !completedStops.includes(stop.stopId));
     if (!nextActiveStop) return;
+    hasAppliedInitialStopFocusRef.current = true;
     setFocusedStopId(nextActiveStop.stopId);
     setCameraMode('stop_focus');
   }, [completedStops, hasHydratedRuntimeState, islandNumber, islandStopPlan]);
