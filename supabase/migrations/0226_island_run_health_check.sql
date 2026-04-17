@@ -78,7 +78,6 @@ DECLARE
     'active_timed_event_progress',
     'sticker_progress',
     'sticker_inventory',
-    'device_session_id',
     'last_writer_device_session_id'
   ];
 
