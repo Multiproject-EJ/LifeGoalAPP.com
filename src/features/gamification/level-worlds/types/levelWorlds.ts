@@ -41,11 +41,17 @@ export type NodeObjective =
   | { type: 'boss'; challenges: NodeObjective[]; };
 
 export interface NodeReward {
+  /** @deprecated Hearts are retired — field kept for backward compat, always 0. */
   hearts?: number;
   dice?: number;
+  /** @deprecated Coins retired from island game — field kept for backward compat, always 0. */
   coins?: number;
   gameTokens?: number;
   xp?: number;
+  /** Essence earned (island run currency for stop upgrades). */
+  essence?: number;
+  /** Egg shards earned (sanctuary currency). */
+  shards?: number;
 }
 
 export interface WorldBoard {
@@ -62,11 +68,17 @@ export interface WorldBoard {
 }
 
 export interface BoardCompletionReward {
-  hearts: number;
+  /** @deprecated Hearts are retired — field kept for backward compat, always 0. */
+  hearts?: number;
   dice: number;
-  coins: number;
+  /** @deprecated Coins retired from island game — field kept for backward compat, always 0. */
+  coins?: number;
   gameTokens: number;
   xp: number;
+  /** Essence earned (island run currency for stop upgrades). */
+  essence?: number;
+  /** Egg shards earned (sanctuary currency). */
+  shards?: number;
   cosmetic?: string;           // Optional cosmetic unlock
   title?: string;              // Achievement title
 }

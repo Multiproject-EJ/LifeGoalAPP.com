@@ -18,13 +18,13 @@ export const creatureCatalogTests: TestCase[] = [
     },
   },
   {
-    name: 'guardian-style affinities grant heart companion bonuses that scale every 5 bond levels',
+    name: 'guardian-style affinities grant essence companion bonuses that scale every 5 bond levels',
     run: () => {
       const creature = selectCreatureForEgg({ eggTier: 'common', seed: 12345, islandNumber: 1 });
       const bonus = getCompanionBonusForCreature({ ...creature, affinity: 'Guardian' }, 6);
-      assertEqual(bonus.effect, 'bonus_heart', 'Expected guardian affinity to grant hearts');
-      assertEqual(bonus.amount, 2, 'Expected bonus to scale at bond level 6');
-      assertEqual(bonus.nextBondMilestoneLevel, 11, 'Expected next heart milestone at level 11');
+      assertEqual(bonus.effect, 'bonus_essence', 'Expected guardian affinity to grant essence');
+      assertEqual(bonus.amount, 10, 'Expected bonus to scale at bond level 6 (2 * 5 essence)');
+      assertEqual(bonus.nextBondMilestoneLevel, 11, 'Expected next essence milestone at level 11');
     },
   },
   {
@@ -32,7 +32,7 @@ export const creatureCatalogTests: TestCase[] = [
     run: () => {
       const creature = selectCreatureForEgg({ eggTier: 'common', seed: 67890, islandNumber: 3 });
       const specialty = getCreatureSpecialtyForCompanion({ ...creature, affinity: 'Builder' }, 5);
-      assertEqual(specialty.effect, 'sell_bonus_coins', 'Expected builder affinity to boost sell rewards');
+      assertEqual(specialty.effect, 'sell_bonus_essence', 'Expected builder affinity to boost sell rewards');
       assert(specialty.amount >= 20, 'Expected builder specialty amount to scale upward');
     },
   },

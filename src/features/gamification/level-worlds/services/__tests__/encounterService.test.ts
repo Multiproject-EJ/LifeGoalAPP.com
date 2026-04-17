@@ -25,7 +25,7 @@ export const encounterServiceTests: TestCase[] = [
       const values = [0.5, 0.01, 0.01, 0.01, 0.01];
       let index = 0;
       const reward = rollEncounterReward({ islandNumber: 65, challengeType: 'quiz', random: () => values[index++] ?? 0.01 });
-      assert(reward.coins >= 14, 'Expected higher-tier encounter rewards to scale coin floor upward');
+      assert(reward.essence >= 14, 'Expected higher-tier encounter rewards to scale essence floor upward');
       assertEqual(reward.dice > 0, true, 'Expected quiz rewards to be able to grant dice');
       assertEqual(reward.spinTokens, 1, 'Expected deterministic random path to grant a spin token');
     },
@@ -33,16 +33,17 @@ export const encounterServiceTests: TestCase[] = [
   {
     name: 'formatEncounterRewardSummary includes dice and spin rewards when present',
     run: () => {
-      const summary = formatEncounterRewardSummary({ coins: 18, heart: true, walletShards: true, dice: 4, spinTokens: 1 });
+      const summary = formatEncounterRewardSummary({ essence: 18, coins: 0, heart: false, walletShards: true, dice: 4, spinTokens: 1 });
       assert(summary.includes('+4 dice'), 'Expected dice reward text in summary');
       assert(summary.includes('+1 spin'), 'Expected spin reward text in summary');
+      assert(summary.includes('+18 essence'), 'Expected essence reward text in summary');
     },
   },
   {
     name: 'formatEncounterRewardSummary omits optional rewards when absent',
     run: () => {
-      const summary = formatEncounterRewardSummary({ coins: 9, heart: false, walletShards: false, dice: 0, spinTokens: 0 });
-      assertEqual(summary, '+9 coins', 'Expected summary to stay compact when only coins are awarded');
+      const summary = formatEncounterRewardSummary({ essence: 9, coins: 0, heart: false, walletShards: false, dice: 0, spinTokens: 0 });
+      assertEqual(summary, '+9 essence', 'Expected summary to stay compact when only essence is awarded');
     },
   },
 ];

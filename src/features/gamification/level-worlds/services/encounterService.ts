@@ -211,7 +211,11 @@ export function drawEncounterChallenge(islandNumber: number, tileIndex: number):
 // ─── Reward rolling ───────────────────────────────────────────────────────────
 
 export interface EncounterReward {
+  /** Essence earned (replaces retired coins). */
+  essence: number;
+  /** @deprecated Coins retired — use essence instead. */
   coins: number;
+  /** @deprecated Hearts retired — always false. */
   heart: boolean;
   walletShards: boolean;
   dice: number;
@@ -235,27 +239,28 @@ export function rollEncounterReward(options?: {
   const random = options?.random ?? Math.random;
   const tier = getEncounterTier(islandNumber);
   const rarity = getIslandRarity(islandNumber);
-  const rarityCoinBonus = rarity === 'normal' ? 0 : 4;
-  const baseCoins = 5 + tier * 3 + rarityCoinBonus;
-  const coinSpread = 11 + tier * 2;
-  const coins = baseCoins + Math.floor(random() * coinSpread);
 
-  const heartChance = challengeType === 'breathing' ? 0.35 : challengeType === 'gratitude' ? 0.2 : 0.15;
+  // ── Essence (replaces retired coins) ─────────────────────────────────────
+  // Monopoly GO-style: tile rewards scale with island tier + rarity.
+  const rarityEssenceBonus = rarity === 'normal' ? 0 : 3;
+  const baseEssence = 5 + tier * 4 + rarityEssenceBonus;
+  const essenceSpread = 8 + tier * 3;
+  const essence = baseEssence + Math.floor(random() * essenceSpread);
+
   const shardChance = rarity !== 'normal' ? 0.45 : challengeType === 'gratitude' ? 0.35 : 0.25;
   const diceChance = challengeType === 'quiz' ? 0.5 : 0.25;
   const spinChance = rarity !== 'normal' ? 0.22 : challengeType === 'quiz' ? 0.12 : 0.08;
 
-  const heart = random() < heartChance;
   const walletShards = random() < shardChance;
   const dice = random() < diceChance ? 2 + tier * 2 : 0;
   const spinTokens = random() < spinChance ? 1 : 0;
 
-  return { coins, heart, walletShards, dice, spinTokens };
+  return { essence, coins: 0, heart: false, walletShards, dice, spinTokens };
 }
 
 export function formatEncounterRewardSummary(reward: EncounterReward): string {
-  const parts: string[] = [`+${reward.coins} coins`];
-  if (reward.heart) parts.push('+1 ❤️');
+  const parts: string[] = [];
+  if (reward.essence > 0) parts.push(`+${reward.essence} essence`);
   if (reward.walletShards) parts.push('+1 shard');
   if (reward.dice > 0) parts.push(`+${reward.dice} dice`);
   if (reward.spinTokens > 0) parts.push(`+${reward.spinTokens} spin`);

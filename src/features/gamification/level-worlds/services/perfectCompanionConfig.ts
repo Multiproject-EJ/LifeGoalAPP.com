@@ -7,10 +7,9 @@ export interface PerfectCompanionRuntimeConfig {
   gameplay: {
     pityIslandThreshold: number;
     softBiasPercent: number;
-    startupBonusByEffect: Record<'bonus_dice' | 'bonus_heart' | 'bonus_spin', number>;
+    startupBonusByEffect: Record<'bonus_dice' | 'bonus_essence' | 'bonus_spin', number>;
     encounterBonusCaps: {
-      coins: number;
-      hearts: number;
+      essence: number;
       dice: number;
       spinTokens: number;
     };
@@ -34,12 +33,11 @@ export const DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG: PerfectCompanionRuntimeCo
     softBiasPercent: 35,
     startupBonusByEffect: {
       bonus_dice: 2,
-      bonus_heart: 1,
+      bonus_essence: 5,
       bonus_spin: 1,
     },
     encounterBonusCaps: {
-      coins: 4,
-      hearts: 1,
+      essence: 8,
       dice: 2,
       spinTokens: 1,
     },
@@ -102,11 +100,11 @@ function sanitizeConfig(candidate: Partial<PerfectCompanionRuntimeConfig>): Perf
           0,
           5,
         ),
-        bonus_heart: clampInt(
-          candidate.gameplay?.startupBonusByEffect?.bonus_heart ?? DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG.gameplay.startupBonusByEffect.bonus_heart,
-          DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG.gameplay.startupBonusByEffect.bonus_heart,
+        bonus_essence: clampInt(
+          candidate.gameplay?.startupBonusByEffect?.bonus_essence ?? DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG.gameplay.startupBonusByEffect.bonus_essence,
+          DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG.gameplay.startupBonusByEffect.bonus_essence,
           0,
-          3,
+          20,
         ),
         bonus_spin: clampInt(
           candidate.gameplay?.startupBonusByEffect?.bonus_spin ?? DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG.gameplay.startupBonusByEffect.bonus_spin,
@@ -116,17 +114,11 @@ function sanitizeConfig(candidate: Partial<PerfectCompanionRuntimeConfig>): Perf
         ),
       },
       encounterBonusCaps: {
-        coins: clampInt(
-          candidate.gameplay?.encounterBonusCaps?.coins ?? DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG.gameplay.encounterBonusCaps.coins,
-          DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG.gameplay.encounterBonusCaps.coins,
+        essence: clampInt(
+          candidate.gameplay?.encounterBonusCaps?.essence ?? DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG.gameplay.encounterBonusCaps.essence,
+          DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG.gameplay.encounterBonusCaps.essence,
           0,
-          10,
-        ),
-        hearts: clampInt(
-          candidate.gameplay?.encounterBonusCaps?.hearts ?? DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG.gameplay.encounterBonusCaps.hearts,
-          DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG.gameplay.encounterBonusCaps.hearts,
-          0,
-          3,
+          20,
         ),
         dice: clampInt(
           candidate.gameplay?.encounterBonusCaps?.dice ?? DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG.gameplay.encounterBonusCaps.dice,

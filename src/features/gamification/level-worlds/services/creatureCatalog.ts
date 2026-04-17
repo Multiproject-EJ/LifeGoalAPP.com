@@ -12,7 +12,7 @@ export interface CreatureDefinition {
 }
 
 export interface CreatureCompanionBonus {
-  effect: 'bonus_dice' | 'bonus_heart' | 'bonus_spin';
+  effect: 'bonus_dice' | 'bonus_essence' | 'bonus_spin';
   amount: number;
   label: string;
   description: string;
@@ -21,7 +21,7 @@ export interface CreatureCompanionBonus {
 }
 
 export interface CreatureSpecialtyBonus {
-  effect: 'sell_bonus_coins' | 'encounter_bonus_coins' | 'encounter_bonus_hearts';
+  effect: 'sell_bonus_essence' | 'encounter_bonus_essence';
   amount: number;
   label: string;
   description: string;
@@ -153,10 +153,10 @@ export function getCompanionBonusForCreature(creature: CreatureDefinition, bondL
   if (['Guardian', 'Caregiver', 'Mentor', 'Peacemaker'].includes(creature.affinity)) {
     const amount = getScaledBonusAmount(1, bondLevel, 5);
     return {
-      effect: 'bonus_heart',
-      amount,
-      label: `+${amount} Heart${amount === 1 ? '' : 's'}` ,
-      description: `Supportive companion — grants +${amount} heart${amount === 1 ? '' : 's'} at the start of each island. Grows every 5 bond levels.`,
+      effect: 'bonus_essence',
+      amount: amount * 5, // hearts retired → convert to meaningful essence amounts
+      label: `+${amount * 5} Essence`,
+      description: `Supportive companion — grants +${amount * 5} essence at the start of each island. Grows every 5 bond levels.`,
       bondLevel: getSafeBondLevel(bondLevel),
       nextBondMilestoneLevel: getNextBondMilestoneLevel(bondLevel, 5),
     };
@@ -189,31 +189,20 @@ export function getCreatureSpecialtyForCompanion(creature: CreatureDefinition, b
   if (['Builder', 'Grounded', 'Steady', 'Architect', 'Strategist', 'Commander', 'Champion'].includes(creature.affinity)) {
     const amount = 15 + (Math.floor((safeBondLevel - 1) / 4) * 5);
     return {
-      effect: 'sell_bonus_coins',
+      effect: 'sell_bonus_essence',
       amount,
       label: `Hatchery Negotiator +${amount}%`,
-      description: `When you sell a hatched creature, gain +${amount}% bonus coins.`,
+      description: `When you sell a hatched creature, gain +${amount}% bonus essence.`,
       bondLevel: safeBondLevel,
     };
   }
 
-  if (['Guardian', 'Caregiver', 'Mentor', 'Peacemaker', 'Sage', 'Radiant'].includes(creature.affinity)) {
-    const amount = 1 + Math.floor((safeBondLevel - 1) / 6);
-    return {
-      effect: 'encounter_bonus_hearts',
-      amount,
-      label: `Encounter Guardian +${amount} heart${amount === 1 ? '' : 's'}` ,
-      description: `On successful encounters, gain +${amount} extra heart${amount === 1 ? '' : 's'}.`,
-      bondLevel: safeBondLevel,
-    };
-  }
-
-  const amount = 10 + (Math.floor((safeBondLevel - 1) / 4) * 5);
+  const amount = 5 + (Math.floor((safeBondLevel - 1) / 4) * 3);
   return {
-    effect: 'encounter_bonus_coins',
+    effect: 'encounter_bonus_essence',
     amount,
-    label: `Fortune Scout +${amount} coins`,
-    description: `On successful encounters, gain +${amount} extra coins.`,
+    label: `Fortune Scout +${amount} essence`,
+    description: `On successful encounters, gain +${amount} extra essence.`,
     bondLevel: safeBondLevel,
   };
 }

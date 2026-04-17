@@ -62,6 +62,7 @@ import {
   type CreatureCollectionEntry,
 } from '../services/creatureCollectionService';
 import {
+  earnCreatureTreatsForUser,
   fetchCreatureTreatInventory,
   type CreatureTreatType,
 } from '../services/creatureTreatInventoryService';
@@ -118,8 +119,11 @@ import {
 } from '../services/islandRunStopCompletion';
 import { executeIslandRunRollAction } from '../services/islandRunRollAction';
 import {
+  applyEssenceDrift,
   awardIslandRunContractV2Essence,
   canIslandRunContractV2CompleteStop,
+  getIslandTotalEssenceCost,
+  getStopUpgradeCost,
   isIslandRunContractV2BuildPanelVisibleForStop,
   resolveIslandRunContractV2EssenceEarnForTile,
   spendIslandRunContractV2EssenceOnStopBuild,
@@ -579,7 +583,7 @@ type BondMilestoneReward = {
   level: number;
   label: string;
   summary: string;
-  coins?: number;
+  essence?: number;
   dice?: number;
   spinTokens?: number;
 };
@@ -587,13 +591,13 @@ type BondMilestoneReward = {
 function getBondMilestoneReward(level: number): BondMilestoneReward | null {
   switch (level) {
     case 3:
-      return { level, label: 'Level 3 Cache', summary: '+25 coins', coins: 25 };
+      return { level, label: 'Level 3 Cache', summary: '+15 essence', essence: 15 };
     case 5:
       return { level, label: 'Level 5 Care Pack', summary: '+8 dice', dice: 8 };
     case 8:
       return { level, label: 'Level 8 Momentum Pack', summary: '+1 spin token', spinTokens: 1 };
     case 10:
-      return { level, label: "Level 10 Captain's Stash", summary: '+40 coins, +8 dice', coins: 40, dice: 8 };
+      return { level, label: "Level 10 Captain's Stash", summary: '+25 essence, +8 dice', essence: 25, dice: 8 };
     default:
       return null;
   }
@@ -606,11 +610,11 @@ interface ActiveEgg {
   isDormant?: boolean;
 }
 
-function getBossReward(islandNumber: number): { dice: number; coins: number; spinTokens: number } {
+function getBossReward(islandNumber: number): { dice: number; essence: number; spinTokens: number } {
   const tier = Math.floor((islandNumber - 1) / 10);
   return {
     dice: 10 + tier * 2,
-    coins: 120 + tier * 40,
+    essence: 80 + tier * 25,
     spinTokens: tier >= 2 ? 1 : 0,
   };
 }
@@ -883,6 +887,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // BoardStage camera controls (set by BoardStage via onCameraReady)
   const boardCameraRef = useRef<BoardStageCameraControls | null>(null);
+  // Guard: prevent repeated stop-focus camera jumps after initial hydration
+  const hasAppliedInitialStopFocusRef = useRef(false);
 
   const [dicePool, setDicePool] = useState(ISLAND_RUN_DEFAULT_STARTING_DICE);
   const [tokenIndex, setTokenIndex] = useState(TOKEN_START_TILE_INDEX);
@@ -1161,7 +1167,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // B3-5: island clear celebration
   const [showIslandClearCelebration, setShowIslandClearCelebration] = useState(false);
-  const [islandClearStats, setIslandClearStats] = useState<{ islandNumber: number; diceEarned: number; coinsEarned: number; stopsCleared: number } | null>(null);
+  const [islandClearStats, setIslandClearStats] = useState<{ islandNumber: number; diceEarned: number; essenceEarned: number; stopsCleared: number } | null>(null);
 
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
   const [runtimeHydrationSource, setRuntimeHydrationSource] = useState<IslandRunRuntimeHydrationSource | null>(null);
@@ -2101,8 +2107,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    // Only set stop-focus camera on first hydration. Subsequent completedStops
+    // changes (e.g. during gameplay) must not hijack the camera from the token
+    // animation follow mode — that causes the "shaking back and forth" bug.
+    if (hasAppliedInitialStopFocusRef.current) return;
     const nextActiveStop = islandStopPlan.find((stop) => !completedStops.includes(stop.stopId));
     if (!nextActiveStop) return;
+    hasAppliedInitialStopFocusRef.current = true;
     setFocusedStopId(nextActiveStop.stopId);
     setCameraMode('stop_focus');
   }, [completedStops, hasHydratedRuntimeState, islandNumber, islandStopPlan]);
@@ -2446,6 +2457,38 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const timer = window.setInterval(syncEventLifecycle, 30 * 1000);
     return () => window.clearInterval(timer);
   }, [applyContractV2RewardBarRuntimeState, hasHydratedRuntimeState]);
+
+  // ── Essence Drift: apply Monopoly GO-style decay to excess essence every 5 min ──
+  useEffect(() => {
+    if (!ISLAND_RUN_CONTRACT_V2_ENABLED || !hasHydratedRuntimeState) return;
+    const DRIFT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+    const lastDriftRef = { ms: Date.now() };
+
+    const timer = window.setInterval(() => {
+      const now = Date.now();
+      const elapsed = now - lastDriftRef.ms;
+      lastDriftRef.ms = now;
+      const currentEssence = runtimeStateRef.current.essence;
+      if (currentEssence <= 0) return;
+
+      const driftResult = applyEssenceDrift({
+        essence: currentEssence,
+        islandNumber,
+        elapsedMs: elapsed,
+      });
+
+      if (driftResult.driftLost > 0) {
+        setRuntimeState((prev) => ({ ...prev, essence: driftResult.essence }));
+        void persistIslandRunRuntimeStatePatch({
+          session,
+          client,
+          patch: { essence: driftResult.essence },
+        });
+      }
+    }, DRIFT_INTERVAL_MS);
+
+    return () => window.clearInterval(timer);
+  }, [hasHydratedRuntimeState, islandNumber, session, client]);
 
   const awardShards = useCallback((source: ShardEarnSource) => {
     const amount = SHARD_EARN[source];
@@ -3327,7 +3370,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // B2-3: resolve non-stop, non-encounter tile landings with real outcomes
   const resolveTileLanding = (tileType: string) => {
     const mult = Math.max(1, effectiveMultiplier);
-    const essenceEarn = resolveIslandRunContractV2EssenceEarnForTile(tileType) * mult;
+    const essenceEarn = resolveIslandRunContractV2EssenceEarnForTile(tileType, { islandNumber, seed: Date.now() + tokenIndex }) * mult;
     const EVENT_MESSAGES = [
       '⚡ Island event!',
       '⚡ Something stirs...',
@@ -3339,21 +3382,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const multLabel = mult > 1 ? ` (x${mult})` : '';
     switch (tileType) {
       case 'currency':
-        setCoins((c) => c + 15 * mult);
-        void awardGold(session.user.id, 15 * mult, 'shooter_blitz', 'island_run_tile_currency');
-        setLandingText(`💰 Currency tile! +${15 * mult} coins${multLabel}`);
+        setLandingText(`💰 Currency tile! +${essenceEarn} essence${multLabel}`);
         break;
       case 'chest':
-        setCoins((c) => c + 30 * mult);
-        void awardGold(session.user.id, 30 * mult, 'shooter_blitz', 'island_run_tile_chest');
-        setLandingText(`🎁 Treasure chest! +${30 * mult} coins${multLabel}`);
+        setLandingText(`🎁 Treasure chest! +${essenceEarn} essence${multLabel}`);
         break;
       case 'hazard':
-        setCoins((c) => Math.max(0, c - 10));
-        setLandingText('☠️ Hazard! -10 coins');
+        setLandingText(essenceEarn > 0 ? `☠️ Hazard! +${essenceEarn} essence (scraped)${multLabel}` : '☠️ Hazard! Nothing gained.');
         break;
       case 'egg_shard':
-        setLandingText(`🧩 Egg Shard! +1 shard${multLabel}`);
+        setLandingText(`🧩 Egg Shard! +1 shard, +${essenceEarn} essence${multLabel}`);
         awardShards('egg_shard_tile');
         break;
       case 'micro':
@@ -3842,10 +3880,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       : 0;
     const totalStartupBonus = activeCompanionBonus.amount + perfectCompanionStartupBonus;
 
-    if (activeCompanionBonus.effect === 'bonus_heart') {
-      // Hearts retired — bonus_heart converts 1:1 to dice (intentional: companion
-      // bonus amounts are small, typically 1–3, so 1:1 is appropriate for dice).
-      setDicePool((current) => current + totalStartupBonus);
+    if (activeCompanionBonus.effect === 'bonus_essence') {
+      // Essence companion bonus — award to runtime state
+      setRuntimeState((prev) => ({
+        ...prev,
+        essence: prev.essence + totalStartupBonus,
+        essenceLifetimeEarned: prev.essenceLifetimeEarned + totalStartupBonus,
+      }));
     } else if (activeCompanionBonus.effect === 'bonus_spin') {
       setSpinTokens((current) => current + totalStartupBonus);
     } else {
@@ -4047,22 +4088,30 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           openedAt: nowTs,
           location: 'island',
         };
-    const specialtySellBonusCoins = activeCompanionSpecialty?.effect === 'sell_bonus_coins'
-      ? Math.max(0, Math.floor((bundle.coinsDelta * activeCompanionSpecialty.amount) / 100))
+    const specialtySellBonusEssence = activeCompanionSpecialty?.effect === 'sell_bonus_essence'
+      ? Math.max(0, Math.floor((bundle.essenceDelta * activeCompanionSpecialty.amount) / 100))
       : 0;
-    // Legacy heart-to-dice conversion retired — creature sell no longer gives dice.
-    if (bundle.coinsDelta + specialtySellBonusCoins > 0) setCoins((c) => c + bundle.coinsDelta + specialtySellBonusCoins);
+    // Hearts/coins retired — creature sell now awards essence + shards
+    const totalSellEssence = bundle.essenceDelta + specialtySellBonusEssence;
+    if (totalSellEssence > 0) {
+      setRuntimeState((prev) => ({
+        ...prev,
+        essence: prev.essence + totalSellEssence,
+        essenceLifetimeEarned: prev.essenceLifetimeEarned + totalSellEssence,
+      }));
+    }
     if (bundle.spinTokensDelta > 0) setSpinTokens((t) => t + bundle.spinTokensDelta);
     if (bundle.diamondsDelta > 0) setDiamonds((d) => d + bundle.diamondsDelta);
+    if (bundle.shardsDelta > 0) awardWalletShards(bundle.shardsDelta);
     awardShards('egg_open');
     awardWalletShards(2);
-    void awardGold(session.user.id, bundle.coinsDelta + specialtySellBonusCoins, 'shooter_blitz', 'island_run_hatchery_sell_creature');
     setActiveEgg(null);
     playIslandRunSound('market_purchase_success');
     triggerIslandRunHaptic('market_purchase_success');
     const rewardParts: string[] = [];
-    if (bundle.coinsDelta > 0) rewardParts.push(`+${bundle.coinsDelta} 🪙`);
-    if (specialtySellBonusCoins > 0) rewardParts.push(`+${specialtySellBonusCoins} 🪙 specialty`);
+    if (bundle.essenceDelta > 0) rewardParts.push(`+${bundle.essenceDelta} 🟣`);
+    if (specialtySellBonusEssence > 0) rewardParts.push(`+${specialtySellBonusEssence} 🟣 specialty`);
+    if (bundle.shardsDelta > 0) rewardParts.push(`+${bundle.shardsDelta} 🔮 shards`);
     if (bundle.diamondsDelta > 0) rewardParts.push(`+${bundle.diamondsDelta} 💎`);
     if (bundle.spinTokensDelta > 0) rewardParts.push(`+${bundle.spinTokensDelta} 🌀 spin`);
     setLandingText(`Sold ${creature.name}. Rewards: ${rewardParts.join(', ') || 'applied'}.`);
@@ -4075,8 +4124,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         tier: resolvedEgg.tier,
         creature_id: creature.id,
         creature_name: creature.name,
-        reward_coins: bundle.coinsDelta,
-        specialty_bonus_coins: specialtySellBonusCoins,
+        reward_essence: bundle.essenceDelta,
+        specialty_bonus_essence: specialtySellBonusEssence,
+        reward_shards: bundle.shardsDelta,
         reward_spin_tokens: bundle.spinTokensDelta,
         reward_diamonds: bundle.diamondsDelta,
       },
@@ -4086,8 +4136,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       tier: resolvedEgg.tier,
       creatureId: creature.id,
       creatureName: creature.name,
-      rewardCoins: bundle.coinsDelta,
-      specialtyBonusCoins: specialtySellBonusCoins,
+      rewardEssence: bundle.essenceDelta,
+      specialtyBonusEssence: specialtySellBonusEssence,
+      rewardShards: bundle.shardsDelta,
       rewardSpinTokens: bundle.spinTokensDelta,
       rewardDiamonds: bundle.diamondsDelta,
     });
@@ -4136,24 +4187,28 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // M6-COMPLETE: Core reward application for encounter completion
   const applyEncounterReward = (reward: EncounterReward) => {
-    const specialtyEncounterBonusCoins = activeCompanionSpecialty?.effect === 'encounter_bonus_coins' ? activeCompanionSpecialty.amount : 0;
+    const specialtyEncounterBonusEssence = activeCompanionSpecialty?.effect === 'encounter_bonus_essence' ? activeCompanionSpecialty.amount : 0;
     const isPerfectCompanionActive = Boolean(activeCompanion && perfectCompanionIdSet.has(activeCompanion.creatureId));
     const perfectCompanionEncounterBonus = isPerfectCompanionActive
       ? {
-          coins: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.coins, 3),
+          essence: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.essence, 5),
           dice: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.dice, reward.dice > 0 ? 1 : 0),
           spinTokens: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.spinTokens, reward.spinTokens > 0 ? 0 : 1),
         }
-      : { coins: 0, dice: 0, spinTokens: 0 };
+      : { essence: 0, dice: 0, spinTokens: 0 };
     const challengeType = currentEncounterChallenge?.type ?? null;
     const challengeId = currentEncounterChallenge?.id ?? null;
 
-    const totalEncounterCoins = reward.coins + specialtyEncounterBonusCoins + perfectCompanionEncounterBonus.coins;
+    const totalEncounterEssence = reward.essence + specialtyEncounterBonusEssence + perfectCompanionEncounterBonus.essence;
     const totalEncounterDice = reward.dice + perfectCompanionEncounterBonus.dice;
     const totalEncounterSpinTokens = reward.spinTokens + perfectCompanionEncounterBonus.spinTokens;
 
-    setCoins((c) => c + totalEncounterCoins);
-    void awardGold(session.user.id, totalEncounterCoins, 'shooter_blitz', 'island_run_encounter_reward');
+    // Award essence to the island run runtime state (not coins — coins are retired)
+    setRuntimeState((prev) => ({
+      ...prev,
+      essence: prev.essence + totalEncounterEssence,
+      essenceLifetimeEarned: prev.essenceLifetimeEarned + totalEncounterEssence,
+    }));
     if (totalEncounterDice > 0) {
       setDicePool((current) => current + totalEncounterDice);
     }
@@ -4173,8 +4228,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setEncounterResolved(true);
     const summary = formatEncounterRewardSummary(reward);
     const specialtySummaryParts: string[] = [];
-    if (specialtyEncounterBonusCoins > 0) specialtySummaryParts.push(`+${specialtyEncounterBonusCoins} coins`);
-    if (perfectCompanionEncounterBonus.coins > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.coins} perfect coins`);
+    if (specialtyEncounterBonusEssence > 0) specialtySummaryParts.push(`+${specialtyEncounterBonusEssence} essence`);
+    if (perfectCompanionEncounterBonus.essence > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.essence} perfect essence`);
     if (perfectCompanionEncounterBonus.dice > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.dice} perfect dice`);
     if (perfectCompanionEncounterBonus.spinTokens > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.spinTokens} perfect spin`);
     const specialtySuffix = specialtySummaryParts.length > 0 && activeCompanion
@@ -4190,13 +4245,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         tile_index: activeEncounterTileIndex,
         challenge_type: challengeType,
         challenge_id: challengeId,
-        reward_coins: reward.coins,
-        reward_heart: reward.heart,
+        reward_essence: reward.essence,
         reward_wallet_shards: reward.walletShards,
         reward_dice: reward.dice,
         reward_spin_tokens: reward.spinTokens,
-        specialty_bonus_coins: specialtyEncounterBonusCoins,
-        perfect_bonus_coins: perfectCompanionEncounterBonus.coins,
+        specialty_bonus_essence: specialtyEncounterBonusEssence,
+        perfect_bonus_essence: perfectCompanionEncounterBonus.essence,
         perfect_bonus_dice: perfectCompanionEncounterBonus.dice,
         perfect_bonus_spin_tokens: perfectCompanionEncounterBonus.spinTokens,
         specialty_effect: activeCompanionSpecialty?.effect,
@@ -4212,7 +4266,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           island_number: islandNumber,
           creature_id: activeCompanion?.creature.id ?? null,
           creature_name: activeCompanion?.creature.name ?? null,
-          bonus_coins: perfectCompanionEncounterBonus.coins,
+          bonus_essence: perfectCompanionEncounterBonus.essence,
           bonus_dice: perfectCompanionEncounterBonus.dice,
           bonus_spin_tokens: perfectCompanionEncounterBonus.spinTokens,
         },
@@ -4264,8 +4318,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     const bossReward = getBossReward(islandNumber);
 
-    awardGold(session.user.id, bossReward.coins, 'shooter_blitz', 'Island Run boss trial resolved');
-
     logGameSession(session.user.id, {
       gameId: 'shooter_blitz',
       action: 'reward',
@@ -4273,7 +4325,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       metadata: {
         stage: 'island_run_boss_trial_resolved',
         reward_dice: bossReward.dice,
-        reward_coins: bossReward.coins,
+        reward_essence: bossReward.essence,
         island_number: islandNumber,
       },
     });
@@ -4285,14 +4337,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         stage: 'island_run_boss_trial_resolved',
         source: 'shooter_blitz',
         dice: bossReward.dice,
-        coins: bossReward.coins,
+        essence: bossReward.essence,
         island_number: islandNumber,
       },
     });
 
     setBossTrialResolved(true);
     setDicePool((current) => current + bossReward.dice);
-    setCoins((current) => current + bossReward.coins);
+    setRuntimeState((prev) => ({
+      ...prev,
+      essence: prev.essence + bossReward.essence,
+      essenceLifetimeEarned: prev.essenceLifetimeEarned + bossReward.essence,
+    }));
     if (bossReward.spinTokens > 0) {
       setSpinTokens((t) => t + bossReward.spinTokens);
     }
@@ -4300,7 +4356,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     playIslandRunSound('boss_trial_resolve');
     triggerIslandRunHaptic('boss_trial_resolve');
 
-    const rewardText = `Boss challenge resolved: +${bossReward.dice} dice, +${bossReward.coins} coins${bossReward.spinTokens > 0 ? `, ${formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: bossReward.spinTokens })}` : ''}.`;
+    const rewardText = `Boss challenge resolved: +${bossReward.dice} dice, +${bossReward.essence} essence${bossReward.spinTokens > 0 ? `, ${formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: bossReward.spinTokens })}` : ''}.`;
     setBossRewardSummary(rewardText);
     setLandingText(`${rewardText} Claim island clear to travel.`);
 
@@ -4453,8 +4509,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         status: 'already_owned',
         costCoins: MARKET_DICE_BUNDLE_COST,
         rewardDice: MARKET_DICE_BUNDLE_REWARD,
-        coinsBefore: coins,
-        coinsAfter: coins,
+        coinsBefore: runtimeState.essence,
+        coinsAfter: runtimeState.essence,
         ownedDiceBundle: marketOwnedBundles.dice_bundle,
       });
 
@@ -4471,19 +4527,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       status: 'attempt',
       costCoins: MARKET_DICE_BUNDLE_COST,
       rewardDice: MARKET_DICE_BUNDLE_REWARD,
-      coinsBefore: coins,
-      coinsAfter: coins,
+      coinsBefore: runtimeState.essence,
+      coinsAfter: runtimeState.essence,
     });
 
-    if (coins < MARKET_DICE_BUNDLE_COST) {
-      const message = `Not enough coins for Dice Bundle (${MARKET_DICE_BUNDLE_COST} required).`;
+    if (runtimeState.essence < MARKET_DICE_BUNDLE_COST) {
+      const message = `Not enough essence for Dice Bundle (${MARKET_DICE_BUNDLE_COST} required).`;
       emitMarketPurchaseMarker({
         bundle,
         status: 'insufficient_coins',
         costCoins: MARKET_DICE_BUNDLE_COST,
         rewardDice: MARKET_DICE_BUNDLE_REWARD,
-        coinsBefore: coins,
-        coinsAfter: coins,
+        coinsBefore: runtimeState.essence,
+        coinsAfter: runtimeState.essence,
       });
       // M10B: market_insufficient_coins sound on failure
       playIslandRunSound('market_insufficient_coins');
@@ -4493,7 +4549,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    setCoins((current) => current - MARKET_DICE_BUNDLE_COST);
+    const newEssence = runtimeState.essence - MARKET_DICE_BUNDLE_COST;
+    setRuntimeState((prev) => ({
+      ...prev,
+      essence: newEssence,
+      essenceLifetimeSpent: prev.essenceLifetimeSpent + MARKET_DICE_BUNDLE_COST,
+    }));
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: { essence: newEssence, essenceLifetimeSpent: runtimeState.essenceLifetimeSpent + MARKET_DICE_BUNDLE_COST },
+    });
     setDicePool((current) => current + MARKET_DICE_BUNDLE_REWARD);
 
     emitMarketPurchaseMarker({
@@ -4501,14 +4567,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       status: 'success',
       costCoins: MARKET_DICE_BUNDLE_COST,
       rewardDice: MARKET_DICE_BUNDLE_REWARD,
-      coinsBefore: coins,
-      coinsAfter: coins - MARKET_DICE_BUNDLE_COST,
+      coinsBefore: runtimeState.essence,
+      coinsAfter: newEssence,
     });
 
     // M10B: market_purchase_success sound + haptic
     playIslandRunSound('market_purchase_success');
     triggerIslandRunHaptic('market_purchase_success');
-    const message = `Purchased Dice Bundle: -${MARKET_DICE_BUNDLE_COST} coins, +${MARKET_DICE_BUNDLE_REWARD} dice.`;
+    const message = `Purchased Dice Bundle: -${MARKET_DICE_BUNDLE_COST} essence, +${MARKET_DICE_BUNDLE_REWARD} dice.`;
     setMarketOwnedBundles((current) => ({ ...current, dice_bundle: true }));
     setMarketPurchaseFeedback(message);
     setLandingText(message);
@@ -4819,8 +4885,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             island_number: islandNumber,
             rewards_granted: {
               dice: bossReward.dice,
-              coins: bossReward.coins,
-            },
+              coins: 0, // coins retired
+              essence: bossReward.essence,            },
           },
         });
 
@@ -4842,7 +4908,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         setIslandClearStats({
           islandNumber,
           diceEarned: bossReward.dice,
-          coinsEarned: bossReward.coins,
+          essenceEarned: bossReward.essence,
           stopsCleared: completedStops.length + 1,
         });
 
@@ -4878,7 +4944,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           island_number: islandNumber,
           rewards_granted: {
             dice: bossReward.dice,
-            coins: bossReward.coins,
+            coins: 0, // coins retired
+            essence: bossReward.essence,
           },
         },
       });
@@ -4901,7 +4968,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setIslandClearStats({
         islandNumber,
         diceEarned: bossReward.dice,
-        coinsEarned: bossReward.coins,
+        essenceEarned: bossReward.essence,
         stopsCleared: completedStops.length + 1,
       });
 
@@ -5293,13 +5360,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         milestoneLevel,
       }));
 
-      const rewardCoins = reward.coins ?? 0;
+      const rewardEssence = reward.essence ?? 0;
       const rewardDice = reward.dice ?? 0;
       const rewardSpinTokens = reward.spinTokens ?? 0;
 
-      if (rewardCoins > 0) {
-        setCoins((current) => current + rewardCoins);
-        void awardGold(session.user.id, rewardCoins, 'shooter_blitz', 'island_run_creature_bond_milestone');
+      if (rewardEssence > 0) {
+        setRuntimeState((prev) => ({
+          ...prev,
+          essence: prev.essence + rewardEssence,
+          essenceLifetimeEarned: prev.essenceLifetimeEarned + rewardEssence,
+        }));
       }
       if (rewardDice > 0) {
         setDicePool((current) => current + rewardDice);
@@ -5317,7 +5387,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           creature_id: target.creature.id,
           creature_name: target.creature.name,
           milestone_level: milestoneLevel,
-          reward_coins: rewardCoins,
+          reward_essence: rewardEssence,
           reward_dice: rewardDice,
           reward_spin_tokens: rewardSpinTokens,
         },
@@ -5327,7 +5397,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         creatureId: target.creature.id,
         creatureName: target.creature.name,
         milestoneLevel,
-        rewardCoins,
+        rewardEssence,
         rewardDice,
         rewardSpinTokens,
       });
@@ -5336,13 +5406,33 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       playIslandRunSound('market_purchase_success');
       triggerIslandRunHaptic('reward_claim');
     },
-    storyRewardClaim: (coinsReward: number) => {
-      if (coinsReward <= 0) {
+    storyRewardClaim: (essenceReward: number) => {
+      if (essenceReward <= 0) {
         return;
       }
-      setCoins((current) => current + coinsReward);
-      void awardGold(session.user.id, coinsReward, 'shooter_blitz', 'island_story_episode_reward');
-      setLandingText(`Story reward claimed: +${coinsReward} coins.`);
+      awardContractV2Essence(essenceReward, 'island_story_episode_reward');
+      setLandingText(`Story reward claimed: +${essenceReward} essence.`);
+    },
+    awardBondXp: (creatureId: string, xpAmount: number) => {
+      const target = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
+      if (!target || xpAmount <= 0) return;
+      const previousBondLevel = target.bondLevel;
+      setCreatureCollection(feedCreatureForUser({
+        userId: session.user.id,
+        creatureId,
+        fedAtMs: 0, // no feed timestamp — this is a direct XP award, not a treat
+        xpGain: xpAmount,
+      }));
+      const nextBondXp = target.bondXp + xpAmount;
+      const nextBondLevel = Math.floor(nextBondXp / CREATURE_BOND_XP_PER_LEVEL) + 1;
+      if (nextBondLevel > previousBondLevel) {
+        const rewardPreview = getBondMilestoneReward(nextBondLevel);
+        setSanctuaryFeedback(
+          rewardPreview
+            ? `${target.creature.name} reached bond level ${nextBondLevel}! ${rewardPreview.label} is ready to claim.`
+            : `${target.creature.name} reached bond level ${nextBondLevel}!`,
+        );
+      }
     },
   };
 
@@ -5494,13 +5584,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       milestoneLevel,
     }));
 
-    const rewardCoins = reward.coins ?? 0;
+    const rewardEssence = reward.essence ?? 0;
     const rewardDice = reward.dice ?? 0;
     const rewardSpinTokens = reward.spinTokens ?? 0;
 
-    if (rewardCoins > 0) {
-      setCoins((current) => current + rewardCoins);
-      void awardGold(session.user.id, rewardCoins, 'shooter_blitz', 'island_run_creature_bond_milestone');
+    if (rewardEssence > 0) {
+      setRuntimeState((prev) => ({
+        ...prev,
+        essence: prev.essence + rewardEssence,
+        essenceLifetimeEarned: prev.essenceLifetimeEarned + rewardEssence,
+      }));
     }
     if (rewardDice > 0) {
       setDicePool((current) => current + rewardDice);
@@ -5518,7 +5611,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         creature_id: target.creature.id,
         creature_name: target.creature.name,
         milestone_level: milestoneLevel,
-        reward_coins: rewardCoins,
+        reward_essence: rewardEssence,
         reward_dice: rewardDice,
         reward_spin_tokens: rewardSpinTokens,
       },
@@ -5528,7 +5621,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       creatureId: target.creature.id,
       creatureName: target.creature.name,
       milestoneLevel,
-      rewardCoins,
+      rewardEssence,
       rewardDice,
       rewardSpinTokens,
     });
@@ -5538,13 +5631,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     triggerIslandRunHaptic('reward_claim');
   };
 
-  const handleStoryRewardClaim = (coinsReward: number) => {
-    if (coinsReward <= 0) {
+  const handleStoryRewardClaim = (essenceReward: number) => {
+    if (essenceReward <= 0) {
       return;
     }
-    setCoins((current) => current + coinsReward);
-    void awardGold(session.user.id, coinsReward, 'shooter_blitz', 'island_story_episode_reward');
-    setLandingText(`Story reward claimed: +${coinsReward} coins.`);
+    setRuntimeState((prev) => ({
+      ...prev,
+      essence: prev.essence + essenceReward,
+      essenceLifetimeEarned: prev.essenceLifetimeEarned + essenceReward,
+    }));
+    setLandingText(`Story reward claimed: +${essenceReward} essence.`);
   };
 
   const handleCloseStoryReader = () => {
@@ -5629,14 +5725,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           >
             {audioEnabled ? '🔊' : '🔇'}
           </button>
-          {/* M14: persistent HUD Shop button */}
+          {/* M14: persistent HUD Market button */}
           <button
             type="button"
             className="island-run-prototype__shop-btn"
-            aria-label="Open shop"
+            aria-label="Open market"
             onClick={openShopPanel}
           >
-            🛍️ Shop
+            🛍️ Market
           </button>
           <button
             type="button"
@@ -6185,7 +6281,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               className="island-run-prototype__footer-nav-btn"
               onClick={openShopPanel}
             >
-              🛍️ Shop
+              🛍️ Market
             </button>
             <button
               type="button"
@@ -6665,7 +6761,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         <p className="island-boss-trial__reward-preview">
                           🎁 Reward on win:{' '}
                           <strong>+{bossReward.dice} 🎲</strong>,{' '}
-                          <strong>+{bossReward.coins} 🪙</strong>
+                          <strong>+{bossReward.essence} 🟣</strong>
                           {bossReward.spinTokens > 0
                             ? <>, <strong>{formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: bossReward.spinTokens })}</strong></>
                             : null}
@@ -6724,7 +6820,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       <div className="island-boss-trial__phase island-boss-trial__phase--success">
                         <p className="island-boss-trial__result island-boss-trial__result--win">🏆 Trial Complete!</p>
                         <p className="island-boss-trial__reward-text">
-                          {bossRewardSummary ?? `Rewards: +${bossReward.coins} 🪙, +3 🔷`}
+                          {bossRewardSummary ?? `Rewards: +${bossReward.essence} 🟣, +3 🔷`}
                         </p>
                         <p className="island-boss-trial__next-hint">Tap <strong>Claim Island Clear</strong> to celebrate and travel.</p>
                       </div>
@@ -6878,7 +6974,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <div className="island-encounter__reward">
                 <p className="island-encounter__eyebrow">Challenge Complete! 🎉</p>
                 <div className="island-encounter__reward-reveal">
-                  <span className="island-encounter__reward-item">🪙 +{encounterRewardData.coins} coins</span>
+                  <span className="island-encounter__reward-item">🟣 +{encounterRewardData.essence} essence</span>
                   {encounterRewardData.walletShards && <span className="island-encounter__reward-item">✨ +1 shard</span>}
                   {encounterRewardData.dice > 0 && <span className="island-encounter__reward-item">🎲 +{encounterRewardData.dice} dice</span>}
                   {encounterRewardData.spinTokens > 0 && (
@@ -7134,10 +7230,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <p className="island-clear-celebration__title">🏆 Island {islandClearStats.islandNumber} Complete!</p>
             <div className="island-clear-celebration__rewards">
               <span className="island-clear-celebration__reward-item">🎲 +{islandClearStats.diceEarned}</span>
-              <span className="island-clear-celebration__reward-item">🪙 +{islandClearStats.coinsEarned}</span>
+              <span className="island-clear-celebration__reward-item">🟣 +{islandClearStats.essenceEarned}</span>
               <span className="island-clear-celebration__reward-item">🔷 +3</span>
             </div>
-            <p className="island-clear-celebration__stops">✅ {islandClearStats.stopsCleared} stops cleared · 🛍️ Shop Tier 2 unlocked</p>
+            <p className="island-clear-celebration__stops">✅ {islandClearStats.stopsCleared} stops cleared · 🛍️ Market Tier 2 unlocked</p>
           </div>
         </div>
       )}
@@ -7146,8 +7242,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       {showShopPanel && (
         <div className="island-stop-modal-backdrop" role="presentation">
           <section className="island-run-shop-panel island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Shop">
-            <h3 className="island-stop-modal__title">🛍️ Shop</h3>
-            <p className="island-stop-modal__copy"><strong>🪙 {coins} coins</strong></p>
+            <h3 className="island-stop-modal__title">🛍️ Market</h3>
+            <p className="island-stop-modal__copy"><strong>🟣 {runtimeState.essence} essence</strong> · Island {islandNumber}</p>
 
             <div className="island-hatchery-card">
               <p><strong>Flash Offer — Dice Top-up</strong></p>
@@ -7155,7 +7251,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <button
                 type="button"
                 className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                onClick={() => void handleStartDiceCheckout('shop_panel')}
+                onClick={() => void handleStartDiceCheckout('market_panel')}
                 disabled={isStartingDiceCheckout}
               >
                 {isStartingDiceCheckout ? 'Starting checkout…' : 'Buy 500 Rolls (Stripe)'}
@@ -7173,11 +7269,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   <button
                     type="button"
                     className="island-stop-modal__btn island-stop-modal__btn--action"
-                    disabled={coins < MARKET_DICE_BUNDLE_COST}
+                    disabled={runtimeState.essence < MARKET_DICE_BUNDLE_COST}
                     onClick={() => handleMarketPrototypePurchase('dice_bundle')}
                   >
-                    🎲 Dice Bundle — {MARKET_DICE_BUNDLE_COST} 🪙 → +{MARKET_DICE_BUNDLE_REWARD} 🎲
-                    {coins < MARKET_DICE_BUNDLE_COST && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {MARKET_DICE_BUNDLE_COST - coins} more)</span>}
+                    🎲 Dice Bundle — {MARKET_DICE_BUNDLE_COST} 🟣 → +{MARKET_DICE_BUNDLE_REWARD} 🎲
+                    {runtimeState.essence < MARKET_DICE_BUNDLE_COST && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {MARKET_DICE_BUNDLE_COST - runtimeState.essence} more)</span>}
                   </button>
                 )}
               </div>
@@ -7186,7 +7282,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <div className="island-hatchery-card">
               <p><strong>Tier 2 — Post-boss unlock</strong></p>
               {completedStops.includes('boss') ? (
-                <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>👑 Tier 2 bundles are being redesigned for dice/essence-only economy.</p>
+                <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>👑 Tier 2 bundles: bigger dice packs + essence boosters available soon.</p>
               ) : (
                 <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>👑 Defeat the boss to unlock</p>
               )}
@@ -7373,9 +7469,114 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               </span>
               <span className="island-run-sanctuary-panel__pill">Current island: <strong>{islandNumber}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Rewards ready: <strong>{sanctuaryRewardReadyCount}</strong></span>
+              <span className="island-run-sanctuary-panel__pill">🔮 Shards: <strong>{runtimeState.shards}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Basic treats: <strong>{creatureTreatInventory.basic}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Favorite snacks: <strong>{creatureTreatInventory.favorite}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Rare feasts: <strong>{creatureTreatInventory.rare}</strong></span>
+            </div>
+
+            {/* ── Shard Shop: buy treats & creature items with egg shards ── */}
+            <div className="island-hatchery-card" style={{ marginBottom: '0.75rem' }}>
+              <p><strong>🔮 Shard Shop</strong> — Spend egg shards on your creatures</p>
+              <p style={{ fontSize: '0.82rem', opacity: 0.7, marginBottom: '0.5rem' }}>
+                Shards are earned from tiles, egg hatching, and stop completions. Spend them here!
+              </p>
+              <div className="island-hatchery-card__actions" style={{ flexDirection: 'column', gap: '0.35rem' }}>
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action"
+                  disabled={runtimeState.shards < 3}
+                  onClick={() => {
+                    if (runtimeState.shards < 3) return;
+                    const newShards = runtimeState.shards - 3;
+                    setRuntimeState((prev) => ({ ...prev, shards: newShards }));
+                    void persistIslandRunRuntimeStatePatch({ session, client, patch: { shards: newShards } });
+                    setCreatureTreatInventory((prev) => ({ ...prev, basic: prev.basic + 2 }));
+                    if (session?.user?.id) {
+                      earnCreatureTreatsForUser(session.user.id, { basic: 2 });
+                    }
+                    setLandingText('🔮 Bought 2 Basic Treats for 3 shards!');
+                    playIslandRunSound('market_purchase_success');
+                  }}
+                >
+                  🍖 Basic Treat ×2 — 3 🔮 {runtimeState.shards < 3 && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {3 - runtimeState.shards} more)</span>}
+                </button>
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action"
+                  disabled={runtimeState.shards < 5}
+                  onClick={() => {
+                    if (runtimeState.shards < 5) return;
+                    const newShards = runtimeState.shards - 5;
+                    setRuntimeState((prev) => ({ ...prev, shards: newShards }));
+                    void persistIslandRunRuntimeStatePatch({ session, client, patch: { shards: newShards } });
+                    setCreatureTreatInventory((prev) => ({ ...prev, favorite: prev.favorite + 1 }));
+                    if (session?.user?.id) {
+                      earnCreatureTreatsForUser(session.user.id, { favorite: 1 });
+                    }
+                    setLandingText('🔮 Bought 1 Favorite Snack for 5 shards!');
+                    playIslandRunSound('market_purchase_success');
+                  }}
+                >
+                  🐟 Favorite Snack ×1 — 5 🔮 {runtimeState.shards < 5 && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {5 - runtimeState.shards} more)</span>}
+                </button>
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action"
+                  disabled={runtimeState.shards < 10}
+                  onClick={() => {
+                    if (runtimeState.shards < 10) return;
+                    const newShards = runtimeState.shards - 10;
+                    setRuntimeState((prev) => ({ ...prev, shards: newShards }));
+                    void persistIslandRunRuntimeStatePatch({ session, client, patch: { shards: newShards } });
+                    setCreatureTreatInventory((prev) => ({ ...prev, rare: prev.rare + 1 }));
+                    if (session?.user?.id) {
+                      earnCreatureTreatsForUser(session.user.id, { rare: 1 });
+                    }
+                    setLandingText('🔮 Bought 1 Rare Feast for 10 shards!');
+                    playIslandRunSound('market_purchase_success');
+                  }}
+                >
+                  🍗 Rare Feast ×1 — 10 🔮 {runtimeState.shards < 10 && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {10 - runtimeState.shards} more)</span>}
+                </button>
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action"
+                  disabled={runtimeState.shards < 8 || !activeCompanion}
+                  onClick={() => {
+                    if (runtimeState.shards < 8 || !activeCompanion) return;
+                    const newShards = runtimeState.shards - 8;
+                    setRuntimeState((prev) => ({ ...prev, shards: newShards }));
+                    void persistIslandRunRuntimeStatePatch({ session, client, patch: { shards: newShards } });
+                    // Award 3 bond XP directly to active companion
+                    sanctuaryHandlers.awardBondXp(activeCompanion.creatureId, 3);
+                    setLandingText(`🔮 Enrichment Kit applied to ${activeCompanion.creature.name}: +3 bond XP!`);
+                    playIslandRunSound('market_purchase_success');
+                  }}
+                >
+                  🧸 Enrichment Kit — 8 🔮 → +3 bond XP to active companion {!activeCompanion && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (no active companion)</span>}
+                  {activeCompanion && runtimeState.shards < 8 && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {8 - runtimeState.shards} more)</span>}
+                </button>
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action"
+                  disabled={runtimeState.shards < 20 || !activeCompanion}
+                  onClick={() => {
+                    if (runtimeState.shards < 20 || !activeCompanion) return;
+                    const newShards = runtimeState.shards - 20;
+                    setRuntimeState((prev) => ({ ...prev, shards: newShards }));
+                    void persistIslandRunRuntimeStatePatch({ session, client, patch: { shards: newShards } });
+                    // Award 8 bond XP (habitat upgrade bonus)
+                    sanctuaryHandlers.awardBondXp(activeCompanion.creatureId, 8);
+                    setLandingText(`🔮 Habitat Upgrade for ${activeCompanion.creature.name}: +8 bond XP!`);
+                    playIslandRunSound('market_purchase_success');
+                    triggerIslandRunHaptic('market_purchase_success');
+                  }}
+                >
+                  🏠 Habitat Upgrade — 20 🔮 → +8 bond XP to active companion {!activeCompanion && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (no active companion)</span>}
+                  {activeCompanion && runtimeState.shards < 20 && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {20 - runtimeState.shards} more)</span>}
+                </button>
+              </div>
             </div>
             <div className="island-hatchery-card__actions" style={{ marginBottom: '0.75rem' }}>
               <button

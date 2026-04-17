@@ -1,4 +1,7 @@
-export type CurrencyKey = 'xp' | 'gold' | 'zen_tokens' | 'dice' | 'game_tokens' | 'hearts';
+export type CurrencyKey = 'xp' | 'gold' | 'zen_tokens' | 'dice' | 'game_tokens' | 'essence' | 'shards';
+
+/** @deprecated Hearts are fully retired from the island game economy. */
+export type LegacyCurrencyKey = 'hearts';
 
 export type EconomySourceKey =
   | 'habits'
@@ -57,7 +60,7 @@ export const ECONOMY_MATRIX = {
     shooter_blitz: 'Shooter Blitz mission completion rewards',
     vision_quest: 'Vision Quest passive multipliers',
     wheel_of_wins: 'Wheel of Wins spin prizes',
-    dice_packs: 'Dice pack purchases with hearts',
+    dice_packs: 'Dice pack purchases with essence or event rewards',
   } satisfies Record<EconomySourceKey, string>,
   currencies: {
     xp: {
@@ -77,18 +80,23 @@ export const ECONOMY_MATRIX = {
     },
     dice: {
       label: 'Dice',
-      description: 'Rolling currency for the Lucky Roll board. Purchased with hearts via dice packs.',
-      earnedFrom: ['dice_packs', 'lucky_roll', 'task_tower', 'shooter_blitz'],
+      description: 'Rolling currency for the Island Run board. Regenerates over time and earned from reward bar.',
+      earnedFrom: ['lucky_roll', 'task_tower', 'shooter_blitz', 'daily_treats'],
     },
     game_tokens: {
       label: 'Game Tokens',
-      description: 'Entry currency for mini-games. Earned from dice packs and Lucky Roll tiles.',
-      earnedFrom: ['dice_packs', 'lucky_roll'],
+      description: 'Entry currency for mini-games. Earned from reward bar and Lucky Roll tiles.',
+      earnedFrom: ['lucky_roll'],
     },
-    hearts: {
-      label: 'Hearts',
-      description: 'Master play tickets. Spent on dice packs to fuel Lucky Roll sessions.',
-      earnedFrom: ['daily_treats', 'habits', 'achievements'],
+    essence: {
+      label: 'Essence',
+      description: 'Island Run soft currency for stop upgrades. Earned from tile landings and reward bar. Subject to Monopoly GO-style pressure — spend it or lose it.',
+      earnedFrom: ['lucky_roll'],
+    },
+    shards: {
+      label: 'Egg Shards',
+      description: 'Sanctuary currency for creature feeding and upgrades. Earned from tiles, eggs, and island progression.',
+      earnedFrom: ['lucky_roll', 'daily_treats'],
     },
   } satisfies Record<CurrencyKey, {
     label: string;
@@ -100,16 +108,17 @@ export const ECONOMY_MATRIX = {
     cosmetics: 'Cosmetics and visual customizations',
     trophies: 'Trophies, plaques, and medals',
     zen_garden: 'Zen Garden-only purchases (Zen Tokens)',
-    dice_packs: 'Dice and game token packs purchased with hearts',
+    dice_packs: 'Dice packs available via reward bar and events',
     game_entry: 'Game token cost to enter mini-games',
   } satisfies Record<EconomySinkKey, string>,
 } as const;
 
+/** @deprecated Heart-based dice packs are retired. Dice are now earned via regen + reward bar. */
 export const DICE_PACK_DEFINITIONS = [
-  { id: 'starter', label: 'Starter Pack', heartCost: 2, diceCount: 15, tokenCount: 4, description: 'A casual session bundle' },
-  { id: 'value', label: 'Value Pack', heartCost: 4, diceCount: 35, tokenCount: 10, description: 'A solid play session' },
-  { id: 'power', label: 'Power Pack', heartCost: 6, diceCount: 50, tokenCount: 18, description: 'Extended session, best value' },
-  { id: 'mystery', label: 'Mystery Box', heartCost: 3, diceCount: -1, tokenCount: -1, description: 'Blind box: 5–750 dice, could be amazing' },
+  { id: 'starter', label: 'Starter Pack', heartCost: 0, essenceCost: 30, diceCount: 15, tokenCount: 4, description: 'A casual session bundle' },
+  { id: 'value', label: 'Value Pack', heartCost: 0, essenceCost: 60, diceCount: 35, tokenCount: 10, description: 'A solid play session' },
+  { id: 'power', label: 'Power Pack', heartCost: 0, essenceCost: 100, diceCount: 50, tokenCount: 18, description: 'Extended session, best value' },
+  { id: 'mystery', label: 'Mystery Box', heartCost: 0, essenceCost: 50, diceCount: -1, tokenCount: -1, description: 'Blind box: 5–750 dice, could be amazing' },
 ] as const;
 
 export type DicePackId = typeof DICE_PACK_DEFINITIONS[number]['id'];
