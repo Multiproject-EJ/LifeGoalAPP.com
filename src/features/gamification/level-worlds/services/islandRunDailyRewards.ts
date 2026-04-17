@@ -1,8 +1,16 @@
-export type DailyHeartRewardSource = 'spin_of_the_day' | 'daily_hatch';
+export type DailyDiceRewardSource = 'spin_of_the_day' | 'daily_hatch';
 
-export interface DailyHeartRewardPlan {
-  source: DailyHeartRewardSource;
-  hearts: 1 | 2 | 3;
+/**
+ * Daily dice reward plan — hearts retired, replaced with direct dice awards.
+ * The dice amounts are tuned to roughly match what 1-3 hearts used to buy
+ * via the starter dice pack (2 hearts → 15 dice).
+ */
+export interface DailyDiceRewardPlan {
+  source: DailyDiceRewardSource;
+  /** Dice awarded (replaces hearts). */
+  dice: 5 | 10 | 15;
+  /** Bonus essence awarded. */
+  essence: number;
   dayKey: string;
 }
 
@@ -27,10 +35,21 @@ export function getUtcDayKey(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
-export function planDailyHeartReward(userId: string, dayKey = getUtcDayKey()): DailyHeartRewardPlan {
-  const base = hashString(`${userId}:${dayKey}`);
-  const hearts = (Math.floor(seededRandom(base + 11.3) * 3) + 1) as 1 | 2 | 3;
-  const source: DailyHeartRewardSource = seededRandom(base + 29.7) > 0.5 ? 'spin_of_the_day' : 'daily_hatch';
+const DICE_TIERS = [5, 10, 15] as const;
 
-  return { source, hearts, dayKey };
+export function planDailyDiceReward(userId: string, dayKey = getUtcDayKey()): DailyDiceRewardPlan {
+  const base = hashString(`${userId}:${dayKey}`);
+  const dice = DICE_TIERS[Math.floor(seededRandom(base + 11.3) * 3)] ?? 5;
+  const essence = Math.floor(seededRandom(base + 7.1) * 8) + 3; // 3–10 bonus essence
+  const source: DailyDiceRewardSource = seededRandom(base + 29.7) > 0.5 ? 'spin_of_the_day' : 'daily_hatch';
+
+  return { source, dice, essence, dayKey };
 }
+
+// ── Legacy compat aliases (deprecated) ──────────────────────────────────────
+/** @deprecated Use DailyDiceRewardSource instead. */
+export type DailyHeartRewardSource = DailyDiceRewardSource;
+/** @deprecated Use DailyDiceRewardPlan instead. Hearts are retired. */
+export type DailyHeartRewardPlan = DailyDiceRewardPlan;
+/** @deprecated Use planDailyDiceReward instead. Hearts are retired. */
+export const planDailyHeartReward = planDailyDiceReward;

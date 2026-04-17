@@ -11,10 +11,16 @@ export type EggLocation = 'island' | 'dormant';
 
 /** Reward payload returned by rollEggRewards. */
 export interface RewardBundle {
+  /** @deprecated Hearts retired — always 0. Use essenceDelta instead. */
   heartsDelta: number;
+  /** @deprecated Coins retired from island game — always 0. Use shardsDelta instead. */
   coinsDelta: number;
   diamondsDelta: number;
   spinTokensDelta: number;
+  /** Essence earned (island run currency for stop upgrades). */
+  essenceDelta: number;
+  /** Egg shards earned (sanctuary currency). */
+  shardsDelta: number;
   boosters: string[];
   cosmetics: string[];
 }
@@ -85,8 +91,8 @@ export function getEggStageArtSrc(eggTier: EggTier, stage: number): string {
  * Roll egg rewards based on tier and a numeric seed.
  * seed is used for reproducible results (e.g. setAtMs).
  *
- * v1 reward schedule (per docs/04_MAIN_GAME_EGGS_HATCHERY_HOME.md):
- *   common  — small hearts + small coins + occasional spin
+ * v2 reward schedule (hearts + coins retired → replaced with essence + shards):
+ *   common  — small essence + small shards + occasional spin
  *   rare    — bigger bundle + guaranteed spin
  *   mythic  — large bundle + cosmetic chance
  */
@@ -100,8 +106,10 @@ export function rollEggRewards(eggTier: EggTier, seed: number): RewardBundle {
   switch (eggTier) {
     case 'common':
       return {
-        heartsDelta: 1,
-        coinsDelta: Math.floor(rand() * 15) + 5, // 5–19
+        heartsDelta: 0,
+        coinsDelta: 0,
+        essenceDelta: Math.floor(rand() * 8) + 3, // 3–10
+        shardsDelta: 1,
         diamondsDelta: 0,
         spinTokensDelta: rand() < 0.25 ? 1 : 0,
         boosters: [],
@@ -109,8 +117,10 @@ export function rollEggRewards(eggTier: EggTier, seed: number): RewardBundle {
       };
     case 'rare':
       return {
-        heartsDelta: 2,
-        coinsDelta: Math.floor(rand() * 30) + 20, // 20–49
+        heartsDelta: 0,
+        coinsDelta: 0,
+        essenceDelta: Math.floor(rand() * 15) + 10, // 10–24
+        shardsDelta: Math.floor(rand() * 2) + 2, // 2–3
         diamondsDelta: 0,
         spinTokensDelta: 1,
         boosters: [],
@@ -118,8 +128,10 @@ export function rollEggRewards(eggTier: EggTier, seed: number): RewardBundle {
       };
     case 'mythic':
       return {
-        heartsDelta: 3,
-        coinsDelta: Math.floor(rand() * 50) + 75, // 75–124
+        heartsDelta: 0,
+        coinsDelta: 0,
+        essenceDelta: Math.floor(rand() * 25) + 30, // 30–54
+        shardsDelta: Math.floor(rand() * 3) + 4, // 4–6
         diamondsDelta: rand() < 0.15 ? 1 : 0,
         spinTokensDelta: 2,
         boosters: [],

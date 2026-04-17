@@ -50,19 +50,19 @@ export function NodeDetailSheet({ node, userId, onClose, onAction }: NodeDetailS
           <div className="node-detail-sheet__rewards">
             <h3>Rewards</h3>
             <div className="node-detail-sheet__reward-list">
-              {node.nodeReward.hearts && (
-                <div className="reward-item">
-                  <span>❤️ {node.nodeReward.hearts}</span>
-                </div>
-              )}
               {node.nodeReward.dice && (
                 <div className="reward-item">
                   <span>🎲 {node.nodeReward.dice}</span>
                 </div>
               )}
-              {node.nodeReward.coins && (
+              {node.nodeReward.essence && (
                 <div className="reward-item">
-                  <span>🪙 {node.nodeReward.coins}</span>
+                  <span>🟣 {node.nodeReward.essence}</span>
+                </div>
+              )}
+              {node.nodeReward.shards && (
+                <div className="reward-item">
+                  <span>🔮 {node.nodeReward.shards}</span>
                 </div>
               )}
               {node.nodeReward.xp && (

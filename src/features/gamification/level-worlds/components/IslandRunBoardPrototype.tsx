@@ -579,7 +579,7 @@ type BondMilestoneReward = {
   level: number;
   label: string;
   summary: string;
-  coins?: number;
+  essence?: number;
   dice?: number;
   spinTokens?: number;
 };
@@ -587,13 +587,13 @@ type BondMilestoneReward = {
 function getBondMilestoneReward(level: number): BondMilestoneReward | null {
   switch (level) {
     case 3:
-      return { level, label: 'Level 3 Cache', summary: '+25 coins', coins: 25 };
+      return { level, label: 'Level 3 Cache', summary: '+15 essence', essence: 15 };
     case 5:
       return { level, label: 'Level 5 Care Pack', summary: '+8 dice', dice: 8 };
     case 8:
       return { level, label: 'Level 8 Momentum Pack', summary: '+1 spin token', spinTokens: 1 };
     case 10:
-      return { level, label: "Level 10 Captain's Stash", summary: '+40 coins, +8 dice', coins: 40, dice: 8 };
+      return { level, label: "Level 10 Captain's Stash", summary: '+25 essence, +8 dice', essence: 25, dice: 8 };
     default:
       return null;
   }
@@ -606,11 +606,11 @@ interface ActiveEgg {
   isDormant?: boolean;
 }
 
-function getBossReward(islandNumber: number): { dice: number; coins: number; spinTokens: number } {
+function getBossReward(islandNumber: number): { dice: number; essence: number; spinTokens: number } {
   const tier = Math.floor((islandNumber - 1) / 10);
   return {
     dice: 10 + tier * 2,
-    coins: 120 + tier * 40,
+    essence: 80 + tier * 25,
     spinTokens: tier >= 2 ? 1 : 0,
   };
 }
@@ -4143,24 +4143,28 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // M6-COMPLETE: Core reward application for encounter completion
   const applyEncounterReward = (reward: EncounterReward) => {
-    const specialtyEncounterBonusCoins = activeCompanionSpecialty?.effect === 'encounter_bonus_coins' ? activeCompanionSpecialty.amount : 0;
+    const specialtyEncounterBonusEssence = activeCompanionSpecialty?.effect === 'encounter_bonus_coins' ? activeCompanionSpecialty.amount : 0;
     const isPerfectCompanionActive = Boolean(activeCompanion && perfectCompanionIdSet.has(activeCompanion.creatureId));
     const perfectCompanionEncounterBonus = isPerfectCompanionActive
       ? {
-          coins: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.coins, 3),
+          essence: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.essence, 5),
           dice: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.dice, reward.dice > 0 ? 1 : 0),
           spinTokens: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.spinTokens, reward.spinTokens > 0 ? 0 : 1),
         }
-      : { coins: 0, dice: 0, spinTokens: 0 };
+      : { essence: 0, dice: 0, spinTokens: 0 };
     const challengeType = currentEncounterChallenge?.type ?? null;
     const challengeId = currentEncounterChallenge?.id ?? null;
 
-    const totalEncounterCoins = reward.coins + specialtyEncounterBonusCoins + perfectCompanionEncounterBonus.coins;
+    const totalEncounterEssence = reward.essence + specialtyEncounterBonusEssence + perfectCompanionEncounterBonus.essence;
     const totalEncounterDice = reward.dice + perfectCompanionEncounterBonus.dice;
     const totalEncounterSpinTokens = reward.spinTokens + perfectCompanionEncounterBonus.spinTokens;
 
-    setCoins((c) => c + totalEncounterCoins);
-    void awardGold(session.user.id, totalEncounterCoins, 'shooter_blitz', 'island_run_encounter_reward');
+    // Award essence to the island run runtime state (not coins — coins are retired)
+    setRuntimeState((prev) => ({
+      ...prev,
+      essence: prev.essence + totalEncounterEssence,
+      essenceLifetimeEarned: prev.essenceLifetimeEarned + totalEncounterEssence,
+    }));
     if (totalEncounterDice > 0) {
       setDicePool((current) => current + totalEncounterDice);
     }
@@ -4180,8 +4184,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setEncounterResolved(true);
     const summary = formatEncounterRewardSummary(reward);
     const specialtySummaryParts: string[] = [];
-    if (specialtyEncounterBonusCoins > 0) specialtySummaryParts.push(`+${specialtyEncounterBonusCoins} coins`);
-    if (perfectCompanionEncounterBonus.coins > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.coins} perfect coins`);
+    if (specialtyEncounterBonusEssence > 0) specialtySummaryParts.push(`+${specialtyEncounterBonusEssence} essence`);
+    if (perfectCompanionEncounterBonus.essence > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.essence} perfect essence`);
     if (perfectCompanionEncounterBonus.dice > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.dice} perfect dice`);
     if (perfectCompanionEncounterBonus.spinTokens > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.spinTokens} perfect spin`);
     const specialtySuffix = specialtySummaryParts.length > 0 && activeCompanion
@@ -4197,13 +4201,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         tile_index: activeEncounterTileIndex,
         challenge_type: challengeType,
         challenge_id: challengeId,
-        reward_coins: reward.coins,
-        reward_heart: reward.heart,
+        reward_essence: reward.essence,
         reward_wallet_shards: reward.walletShards,
         reward_dice: reward.dice,
         reward_spin_tokens: reward.spinTokens,
-        specialty_bonus_coins: specialtyEncounterBonusCoins,
-        perfect_bonus_coins: perfectCompanionEncounterBonus.coins,
+        specialty_bonus_essence: specialtyEncounterBonusEssence,
+        perfect_bonus_essence: perfectCompanionEncounterBonus.essence,
         perfect_bonus_dice: perfectCompanionEncounterBonus.dice,
         perfect_bonus_spin_tokens: perfectCompanionEncounterBonus.spinTokens,
         specialty_effect: activeCompanionSpecialty?.effect,
@@ -5300,13 +5303,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         milestoneLevel,
       }));
 
-      const rewardCoins = reward.coins ?? 0;
+      const rewardEssence = reward.essence ?? 0;
       const rewardDice = reward.dice ?? 0;
       const rewardSpinTokens = reward.spinTokens ?? 0;
 
-      if (rewardCoins > 0) {
-        setCoins((current) => current + rewardCoins);
-        void awardGold(session.user.id, rewardCoins, 'shooter_blitz', 'island_run_creature_bond_milestone');
+      if (rewardEssence > 0) {
+        setRuntimeState((prev) => ({
+          ...prev,
+          essence: prev.essence + rewardEssence,
+          essenceLifetimeEarned: prev.essenceLifetimeEarned + rewardEssence,
+        }));
       }
       if (rewardDice > 0) {
         setDicePool((current) => current + rewardDice);
@@ -5324,7 +5330,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           creature_id: target.creature.id,
           creature_name: target.creature.name,
           milestone_level: milestoneLevel,
-          reward_coins: rewardCoins,
+          reward_essence: rewardEssence,
           reward_dice: rewardDice,
           reward_spin_tokens: rewardSpinTokens,
         },
@@ -5334,7 +5340,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         creatureId: target.creature.id,
         creatureName: target.creature.name,
         milestoneLevel,
-        rewardCoins,
+        rewardEssence,
         rewardDice,
         rewardSpinTokens,
       });
@@ -5501,13 +5507,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       milestoneLevel,
     }));
 
-    const rewardCoins = reward.coins ?? 0;
+    const rewardEssence = reward.essence ?? 0;
     const rewardDice = reward.dice ?? 0;
     const rewardSpinTokens = reward.spinTokens ?? 0;
 
-    if (rewardCoins > 0) {
-      setCoins((current) => current + rewardCoins);
-      void awardGold(session.user.id, rewardCoins, 'shooter_blitz', 'island_run_creature_bond_milestone');
+    if (rewardEssence > 0) {
+      setRuntimeState((prev) => ({
+        ...prev,
+        essence: prev.essence + rewardEssence,
+        essenceLifetimeEarned: prev.essenceLifetimeEarned + rewardEssence,
+      }));
     }
     if (rewardDice > 0) {
       setDicePool((current) => current + rewardDice);
@@ -5525,7 +5534,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         creature_id: target.creature.id,
         creature_name: target.creature.name,
         milestone_level: milestoneLevel,
-        reward_coins: rewardCoins,
+        reward_essence: rewardEssence,
         reward_dice: rewardDice,
         reward_spin_tokens: rewardSpinTokens,
       },
@@ -5535,7 +5544,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       creatureId: target.creature.id,
       creatureName: target.creature.name,
       milestoneLevel,
-      rewardCoins,
+      rewardEssence,
       rewardDice,
       rewardSpinTokens,
     });
@@ -5545,13 +5554,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     triggerIslandRunHaptic('reward_claim');
   };
 
-  const handleStoryRewardClaim = (coinsReward: number) => {
-    if (coinsReward <= 0) {
+  const handleStoryRewardClaim = (essenceReward: number) => {
+    if (essenceReward <= 0) {
       return;
     }
-    setCoins((current) => current + coinsReward);
-    void awardGold(session.user.id, coinsReward, 'shooter_blitz', 'island_story_episode_reward');
-    setLandingText(`Story reward claimed: +${coinsReward} coins.`);
+    setRuntimeState((prev) => ({
+      ...prev,
+      essence: prev.essence + essenceReward,
+      essenceLifetimeEarned: prev.essenceLifetimeEarned + essenceReward,
+    }));
+    setLandingText(`Story reward claimed: +${essenceReward} essence.`);
   };
 
   const handleCloseStoryReader = () => {
@@ -6885,7 +6897,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <div className="island-encounter__reward">
                 <p className="island-encounter__eyebrow">Challenge Complete! 🎉</p>
                 <div className="island-encounter__reward-reveal">
-                  <span className="island-encounter__reward-item">🪙 +{encounterRewardData.coins} coins</span>
+                  <span className="island-encounter__reward-item">🟣 +{encounterRewardData.essence} essence</span>
                   {encounterRewardData.walletShards && <span className="island-encounter__reward-item">✨ +1 shard</span>}
                   {encounterRewardData.dice > 0 && <span className="island-encounter__reward-item">🎲 +{encounterRewardData.dice} dice</span>}
                   {encounterRewardData.spinTokens > 0 && (

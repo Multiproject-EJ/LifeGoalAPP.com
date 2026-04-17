@@ -29,17 +29,21 @@ export function BoardCompleteOverlay({ board, onContinue }: BoardCompleteOverlay
           <h3>Rewards Earned</h3>
           <div className="board-complete-reward-grid">
             <div className="reward-item reward-item--large">
-              <span className="reward-icon">❤️</span>
-              <span className="reward-amount">{board.completionReward.hearts}</span>
-            </div>
-            <div className="reward-item reward-item--large">
               <span className="reward-icon">🎲</span>
               <span className="reward-amount">{board.completionReward.dice}</span>
             </div>
-            <div className="reward-item reward-item--large">
-              <span className="reward-icon">🪙</span>
-              <span className="reward-amount">{board.completionReward.coins}</span>
-            </div>
+            {board.completionReward.essence ? (
+              <div className="reward-item reward-item--large">
+                <span className="reward-icon">🟣</span>
+                <span className="reward-amount">{board.completionReward.essence}</span>
+              </div>
+            ) : null}
+            {board.completionReward.shards ? (
+              <div className="reward-item reward-item--large">
+                <span className="reward-icon">🔮</span>
+                <span className="reward-amount">{board.completionReward.shards}</span>
+              </div>
+            ) : null}
             <div className="reward-item reward-item--large">
               <span className="reward-icon">⭐</span>
               <span className="reward-amount">{board.completionReward.xp} XP</span>
