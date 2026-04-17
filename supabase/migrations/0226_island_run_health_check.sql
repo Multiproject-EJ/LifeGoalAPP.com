@@ -142,13 +142,13 @@ BEGIN
       array_to_string(_missing_functions, ', ');
   END IF;
 
-  -- ─── 5. Check active_session_locks table exists (session locking) ─────────
+  -- ─── 5. Check active_sessions table exists (session locking) ─────────────
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.tables
     WHERE table_schema = 'public'
-      AND table_name = 'island_run_active_session_locks'
+      AND table_name = 'island_run_active_sessions'
   ) THEN
-    RAISE EXCEPTION '[HEALTH CHECK FAILED] Table "public.island_run_active_session_locks" does not exist. Run migration 0196.';
+    RAISE EXCEPTION '[HEALTH CHECK FAILED] Table "public.island_run_active_sessions" does not exist. Run migration 0196.';
   END IF;
 
   -- ─── 6. Check RLS is enabled on the runtime state table ──────────────────
