@@ -34,6 +34,8 @@ interface CameraSprings {
 const OVERVIEW_ZOOM = 0.88;
 const FOCUS_ZOOM = 1.14;
 const DEFAULT_ZOOM = 1.0;
+const FOLLOW_ZOOM = 1.08;
+const LANDING_ZOOM = 1.18;
 const MIN_ZOOM = 0.4;
 const MAX_ZOOM = 3.0;
 
@@ -108,6 +110,32 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     ensureAnimating();
   }, [boardWidth, boardHeight, ensureAnimating]);
 
+  /**
+   * Follow token during movement — slightly tighter zoom than default,
+   * with a soft lag so the camera feels cinematic, not locked.
+   * Uses the 'smooth' spring preset (inherited) for gentle tracking.
+   */
+  const goFollowToken = useCallback((screenX: number, screenY: number) => {
+    const s = springsRef.current;
+    s.x.target = (boardWidth / 2) - screenX;
+    s.y.target = (boardHeight / 2) - screenY;
+    s.zoom.target = FOLLOW_ZOOM;
+    setMode('board_follow');
+    ensureAnimating();
+  }, [boardWidth, boardHeight, ensureAnimating]);
+
+  /**
+   * Tighter landing focus — used briefly when token reaches its final tile.
+   */
+  const goLandingFocus = useCallback((screenX: number, screenY: number) => {
+    const s = springsRef.current;
+    s.x.target = (boardWidth / 2) - screenX;
+    s.y.target = (boardHeight / 2) - screenY;
+    s.zoom.target = LANDING_ZOOM;
+    setMode('board_follow');
+    ensureAnimating();
+  }, [boardWidth, boardHeight, ensureAnimating]);
+
   /** Smoothly return to default camera (no offset, zoom 1). */
   const goDefault = useCallback(() => {
     const s = springsRef.current;
@@ -170,6 +198,8 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     mode,
     goOverview,
     goFocusPoint,
+    goFollowToken,
+    goLandingFocus,
     goDefault,
     shake,
     setGestureCamera,

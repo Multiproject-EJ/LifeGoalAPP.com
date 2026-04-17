@@ -28,6 +28,8 @@ export interface UseTokenAnimationOptions {
   toScreen: (anchor: TileAnchor) => { x: number; y: number };
   /** Callback on each hop (for sound/haptics) */
   onHop?: (tileIndex: number) => void;
+  /** Callback with screen position on each hop — used for camera follow */
+  onHopPosition?: (screenX: number, screenY: number, tileIndex: number) => void;
   /** Callback when landing on final tile */
   onLand?: (tileIndex: number) => void;
   /** Ms per hop — defaults to 220 */
@@ -54,7 +56,7 @@ function easeOutCubic(t: number) {
 }
 
 export function useTokenAnimation(opts: UseTokenAnimationOptions) {
-  const { toScreen, onHop, onLand, hopDurationMs = 220 } = opts;
+  const { toScreen, onHop, onHopPosition, onLand, hopDurationMs = 220 } = opts;
 
   const [animState, setAnimState] = useState<TokenAnimState>({
     x: 0, y: 0, scaleX: 1, scaleY: 1, isMoving: false, isLanding: false,
@@ -109,6 +111,10 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
 
         // Fire hop callback
         onHop?.(currentTileIdx);
+
+        // Fire camera-follow callback with target screen position
+        const targetPos = toScreen(anchors[currentTileIdx]);
+        onHopPosition?.(targetPos.x, targetPos.y, currentTileIdx);
       }
 
       function animLoop(now: number) {
@@ -197,7 +203,7 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
 
       rafRef.current = requestAnimationFrame(animLoop);
     });
-  }, [toScreen, onHop, onLand, hopDurationMs]);
+  }, [toScreen, onHop, onHopPosition, onLand, hopDurationMs]);
 
   /** Cancel any in-progress animation */
   const cancelAnimation = useCallback(() => {

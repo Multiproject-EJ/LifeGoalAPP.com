@@ -2,6 +2,7 @@ export { BoardStage, type BoardStageProps, type BoardStageCameraControls } from 
 export { BoardTile, type BoardTileProps } from './BoardTile';
 export { BoardTileGrid, type BoardTileGridProps } from './BoardTileGrid';
 export { BoardToken, type BoardTokenProps } from './BoardToken';
+export { BoardDice3D, type BoardDice3DProps } from './BoardDice3D';
 export { BoardPathCanvas, type BoardPathCanvasProps } from './BoardPathCanvas';
 export { BoardParticles, type BoardParticlesProps } from './BoardParticles';
 export { BoardOrbitStops, type BoardOrbitStopsProps, type OrbitStopVisualData, type StopProgressState } from './BoardOrbitStops';

@@ -10,6 +10,7 @@ import { BoardTileGrid } from './BoardTileGrid';
 import { BoardToken } from './BoardToken';
 import { BoardParticles } from './BoardParticles';
 import { BoardOrbitStops, type OrbitStopVisualData, type StopProgressState } from './BoardOrbitStops';
+import { BoardDice3D } from './BoardDice3D';
 
 const BOARD_TILT_X_DEG = 40;
 const BOARD_ROTATE_Z_DEG = 0;
@@ -47,6 +48,17 @@ export interface BoardStageProps {
   /** Token state — the index on the board */
   tokenIndex: number;
 
+  /**
+   * When provided, the token animates through this full sequence of tile
+   * indices one hop at a time (Monopoly GO style).  The parent sets this to
+   * the list of intermediate + final tiles after a dice roll, then clears it
+   * (set to null) once the animation completes via `onHopSequenceComplete`.
+   * While a hop sequence is active, plain `tokenIndex` changes are ignored.
+   */
+  pendingHopSequence?: number[] | null;
+  /** Called when the hop sequence animation finishes (all hops done). */
+  onHopSequenceComplete?: () => void;
+
   /** Orbit stop visuals */
   orbitStopVisuals: OrbitStopVisualData[];
   activeStopId: string | null;
@@ -59,12 +71,18 @@ export interface BoardStageProps {
   /** Sound/haptic callbacks */
   onTokenHop?: (tileIndex: number) => void;
   onTokenLand?: (tileIndex: number) => void;
+
+  /** 3D dice state */
+  isRolling?: boolean;
+  diceFaces?: [number, number];
+  onDiceRollComplete?: () => void;
 }
 
 export interface BoardStageCameraControls {
   goOverview: () => void;
   goDefault: () => void;
   goFocusPoint: (screenX: number, screenY: number, zoom?: number) => void;
+  goFollowToken: (screenX: number, screenY: number) => void;
   shake: (amplitude?: number, durationMs?: number) => void;
 }
 
@@ -92,6 +110,11 @@ export function BoardStage(props: BoardStageProps) {
     onCameraReady,
     onTokenHop,
     onTokenLand,
+    pendingHopSequence = null,
+    onHopSequenceComplete,
+    isRolling = false,
+    diceFaces = [1, 1],
+    onDiceRollComplete,
   } = props;
 
   const boardRef = useRef<HTMLDivElement>(null);
@@ -149,9 +172,10 @@ export function BoardStage(props: BoardStageProps) {
       goOverview: camera.goOverview,
       goDefault: camera.goDefault,
       goFocusPoint: camera.goFocusPoint,
+      goFollowToken: camera.goFollowToken,
       shake: camera.shake,
     });
-  }, [camera.goOverview, camera.goDefault, camera.goFocusPoint, camera.shake, onCameraReady]);
+  }, [camera.goOverview, camera.goDefault, camera.goFocusPoint, camera.goFollowToken, camera.shake, onCameraReady]);
 
   // ── Gestures ─────────────────────────────────────────────────────────────
   const gestureCallbacks = useMemo(() => ({
@@ -202,24 +226,82 @@ export function BoardStage(props: BoardStageProps) {
 
   useBoardGestures(gestureLayerRef, gestureCallbacks);
 
+  // Ref for landing-settle setTimeout cleanup
+  const landingSettleTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
   // ── Token animation ──────────────────────────────────────────────────────
   const tokenAnim = useTokenAnimation({
     toScreen,
     onHop: onTokenHop,
+    onHopPosition: (screenX, screenY, _tileIndex) => {
+      // Camera follows token on each hop with soft spring lag
+      camera.goFollowToken(screenX, screenY);
+    },
     onLand: (idx) => {
       onTokenLand?.(idx);
+      // Landing emphasis: tighter zoom + shake
+      const anchor = anchors[idx];
+      if (anchor) {
+        const pos = toScreen(anchor);
+        camera.goLandingFocus(pos.x, pos.y);
+      }
       camera.shake(2.5, 180);
       setBurstPos({ x: tokenAnim.animState.x, y: tokenAnim.animState.y });
+
+      // Settle back to follow framing after landing emphasis
+      clearTimeout(landingSettleTimeoutRef.current);
+      landingSettleTimeoutRef.current = setTimeout(() => {
+        const a = anchors[idx];
+        if (a) {
+          const p = toScreen(a);
+          camera.goFollowToken(p.x, p.y);
+        }
+      }, 350);
     },
     hopDurationMs: 200,
   });
 
+  // Cleanup landing settle timeout on unmount
+  useEffect(() => () => { clearTimeout(landingSettleTimeoutRef.current); }, []);
+
   // Track previous tokenIndex to distinguish movement from initial snap.
   const prevTokenIndexRef = useRef<number | null>(null);
+  // Guard: when a pendingHopSequence is actively animating, ignore tokenIndex prop changes.
+  const hopSequenceActiveRef = useRef(false);
+  // Track the last pendingHopSequence to detect new sequences.
+  const lastHopSequenceRef = useRef<number[] | null>(null);
 
-  // Drive token animation: arc-hop when tokenIndex changes, snap on initial render
-  // or when anchors array reference changes (island travel reset).
+  // Drive token animation from pendingHopSequence (full sequence) or single-step tokenIndex.
   useEffect(() => {
+    // --- Full hop sequence (Monopoly GO style) ---
+    if (
+      pendingHopSequence
+      && pendingHopSequence.length > 0
+      && pendingHopSequence !== lastHopSequenceRef.current
+    ) {
+      lastHopSequenceRef.current = pendingHopSequence;
+      hopSequenceActiveRef.current = true;
+
+      // Zoom in slightly for movement phase
+      camera.goFollowToken(
+        tokenAnim.animState.x || boardSize.width / 2,
+        tokenAnim.animState.y || boardSize.height / 2,
+      );
+
+      void tokenAnim.animateHops(anchors, pendingHopSequence).then(() => {
+        hopSequenceActiveRef.current = false;
+        lastHopSequenceRef.current = null;
+        // Update prevTokenIndexRef to the final tile so subsequent single-step
+        // changes don't replay the sequence.
+        prevTokenIndexRef.current = pendingHopSequence[pendingHopSequence.length - 1] ?? tokenIndex;
+        onHopSequenceComplete?.();
+      });
+      return;
+    }
+
+    // --- Single-step fallback (used for snap / non-roll index changes) ---
+    if (hopSequenceActiveRef.current) return; // ignore while sequence is playing
+
     const prev = prevTokenIndexRef.current;
     prevTokenIndexRef.current = tokenIndex;
 
@@ -233,13 +315,8 @@ export function BoardStage(props: BoardStageProps) {
       // Initial render or same index — snap without animation.
       tokenAnim.snapTo(anchor);
     }
-  // tokenAnim.animateHops and tokenAnim.snapTo are stable useCallback refs
-  // (created with `useCallback([toScreen])`) whose identity only changes when
-  // `toScreen` changes (i.e. on viewport resize).  Adding them to the dep array
-  // would cause a re-run on every render where the parent re-memoises toScreen,
-  // not just on genuine tokenIndex / anchors changes.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokenIndex, anchors]);
+  }, [tokenIndex, anchors, pendingHopSequence]);
 
   // Particle burst state
   const [burstPos, setBurstPos] = useState<{ x: number; y: number } | null>(null);
@@ -322,6 +399,16 @@ export function BoardStage(props: BoardStageProps) {
             zBand={anchors[tokenIndex]?.zBand ?? 'mid'}
           />
         </div>
+
+        {/* 3D Dice — rendered in board-space near the token */}
+        <BoardDice3D
+          value1={diceFaces[0]}
+          value2={diceFaces[1]}
+          isRolling={isRolling}
+          x={tokenAnim.animState.x}
+          y={tokenAnim.animState.y - 52}
+          onRollComplete={onDiceRollComplete}
+        />
 
         {/* Orbit stops */}
         <BoardOrbitStops
