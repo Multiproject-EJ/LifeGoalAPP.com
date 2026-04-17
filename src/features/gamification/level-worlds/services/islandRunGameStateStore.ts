@@ -6,7 +6,7 @@ import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetr
 import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 import { commitIslandRunRuntimeSnapshot } from './islandRunCommitActionService';
 
-export type PerIslandEggStatus = 'incubating' | 'ready' | 'animal_ready' | 'collected' | 'sold' | 'animal_sold';
+export type PerIslandEggStatus = 'incubating' | 'ready' | 'collected' | 'sold';
 
 /** Where an egg lives: on a specific island, or dormant after hatching while the player is away. */
 export type PerIslandEggLocation = 'island' | 'dormant';

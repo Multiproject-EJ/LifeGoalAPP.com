@@ -164,16 +164,15 @@ import {
   shouldAutoAdvanceIslandOnTimerExpiry,
 } from '../services/islandRunTimerProgression';
 import { createDicePackCheckoutSession } from '../../../../services/billing';
+import { scheduleEggHatchNotification } from '../../../../services/habitAlertNotifications';
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 6;
 const DICE_PER_ROLL = 2;
 const SPIN_MIN = 1;
 const SPIN_MAX = 5;
-// Production island duration: 72 hours. Use ?devTimer=1 for 45s dev mode.
-const IS_DEV_TIMER = typeof window !== 'undefined' &&
-  new URLSearchParams(window.location.search).get('devTimer') === '1';
-const ISLAND_DURATION_SEC = IS_DEV_TIMER ? 45 : 72 * 60 * 60;
+// Island duration: 72 hours for special islands, 48 hours for standard islands.
+const ISLAND_DURATION_SEC = 72 * 60 * 60;
 const ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE = true;
 // Canonical contract is now enforced as source-of-truth runtime behavior.
 // Legacy pre-contract-v2 movement/energy rules are intentionally disabled.
@@ -295,7 +294,6 @@ function getShardEraEmoji(islandNum: number, tierIndex: number): string {
 }
 
 function getIslandDurationMs(islandNum: number): number {
-  if (IS_DEV_TIMER) return 45_000;
   return SPECIAL_ISLAND_NUMBERS.has(islandNum) ? 72 * 60 * 60 * 1000 : 48 * 60 * 60 * 1000;
 }
 
@@ -429,11 +427,6 @@ const CREATURE_TREAT_OPTIONS: Array<{ type: CreatureTreatType; label: string; xp
   { type: 'favorite', label: 'Favorite Snack', xpGain: 2, summary: '+2 bond XP' },
   { type: 'rare', label: 'Rare Feast', xpGain: 4, summary: '+4 bond XP' },
 ];
-const CREATURE_TREAT_EARN_BY_EGG_TIER: Record<EggTier, Partial<Record<CreatureTreatType, number>>> = {
-  common: { basic: 1 },
-  rare: { basic: 1, favorite: 1 },
-  mythic: { favorite: 1, rare: 1 },
-};
 
 function formatRelativeTimeFromNow(timestampMs: number | null): string {
   if (!timestampMs) return 'Never';
@@ -622,7 +615,7 @@ function getBossReward(islandNumber: number): { dice: number; essence: number; s
   };
 }
 
-type StopProgressState = 'pending' | 'active' | 'completed' | 'locked';
+type StopProgressState = 'pending' | 'active' | 'completed' | 'partial' | 'locked';
 type IslandRunCameraMode = 'board_follow' | 'stop_focus' | 'overview_manual';
 
 
@@ -825,6 +818,7 @@ function getStopIcon(kind: string, stopId: string) {
 function getOrbitStopDisplayIcon(state: StopProgressState | 'shop', icon: string): string {
   if (state === 'locked') return '🔒';
   if (state === 'completed') return '✅';
+  if (state === 'partial') return '🟡';
   return icon;
 }
 
@@ -1079,6 +1073,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // B3-3: market interaction gate
   const [marketInteracted, setMarketInteracted] = useState(false);
+
+  // Egg-ready in-app banner: shown when egg transitions to stage 4 or on app open with ready egg
+  const [showEggReadyBanner, setShowEggReadyBanner] = useState(false);
 
   // M14: persistent shop panel state
   const [showShopPanel, setShowShopPanel] = useState(false);
@@ -1441,9 +1438,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         && runtimeState.activeEggHatchDurationMs,
       );
     const islandEggSlotUsedOnLoad = currentIslandEggEntry?.status === 'collected'
-      || currentIslandEggEntry?.status === 'sold'
-      || currentIslandEggEntry?.status === 'animal_ready'
-      || currentIslandEggEntry?.status === 'animal_sold';
+      || currentIslandEggEntry?.status === 'sold';
     if (openHatcheryOnLoad) {
       const shouldAutoOpen = shouldAutoOpenIslandStopOnLoad({
         requestedStopId: 'hatchery',
@@ -2481,9 +2476,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       // Compute egg slot status from the live runtime ref to avoid stale closure issues.
       const currentIslandEntry = runtimeStateRef.current.perIslandEggs?.[String(islandNumber)];
       const currentEggResolved = currentIslandEntry?.status === 'collected'
-        || currentIslandEntry?.status === 'sold'
-        || currentIslandEntry?.status === 'animal_ready'
-        || currentIslandEntry?.status === 'animal_sold';
+        || currentIslandEntry?.status === 'sold';
       const islandComplete = isIslandRunFullyClearedV2({
         stopStatesByIndex: runtimeStateRef.current.stopStatesByIndex,
         stopBuildStateByIndex: runtimeStateRef.current.stopBuildStateByIndex,
@@ -2538,9 +2531,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const islandEggEntry = useMemo(() => runtimeState.perIslandEggs?.[String(islandNumber)] ?? null, [runtimeState.perIslandEggs, islandNumber]);
   const islandEggSlotUsed = useMemo(() => {
     return islandEggEntry?.status === 'collected'
-      || islandEggEntry?.status === 'sold'
-      || islandEggEntry?.status === 'animal_ready'
-      || islandEggEntry?.status === 'animal_sold';
+      || islandEggEntry?.status === 'sold';
   }, [islandEggEntry]);
   const effectiveCompletedStops = useMemo(
     () => getEffectiveCompletedStops({
@@ -2564,7 +2555,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       });
       const map = new Map<string, StopProgressState>();
       islandStopPlan.forEach((stop, index) => {
-        map.set(stop.stopId, contractV2Stops.statusesByIndex[index] ?? 'locked');
+        let status: StopProgressState = contractV2Stops.statusesByIndex[index] ?? 'locked';
+        // Hatchery (index 0): show yellow 'partial' when egg is set but not yet collected/sold.
+        // Green 'completed' only once the animal is collected or sold (island-clear condition).
+        if (index === 0 && status === 'completed' && !islandEggSlotUsed) {
+          status = 'partial';
+        }
+        map.set(stop.stopId, status);
       });
       return map;
     }
@@ -2589,7 +2586,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     return map;
-  }, [effectiveCompletedStops, islandStopPlan, runtimeState.stopStatesByIndex]);
+  }, [effectiveCompletedStops, islandEggSlotUsed, islandStopPlan, runtimeState.stopStatesByIndex]);
 
   const stopMap = useMemo(() => {
     const map = new Map<number, string>();
@@ -2759,9 +2756,20 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     if (eggStage === 4 && prevEggStageRef.current < 4) {
       playIslandRunSound('egg_ready');
+      setShowEggReadyBanner(true);
     }
     prevEggStageRef.current = eggStage;
   }, [eggStage]);
+
+  // Show egg-ready banner on initial load if egg is already ready and banner not yet dismissed
+  const hasShownEggReadyBannerOnLoadRef = useRef(false);
+  useEffect(() => {
+    if (hasShownEggReadyBannerOnLoadRef.current) return;
+    if (eggStage === 4 && hasHydratedRuntimeState) {
+      hasShownEggReadyBannerOnLoadRef.current = true;
+      setShowEggReadyBanner(true);
+    }
+  }, [eggStage, hasHydratedRuntimeState]);
 
   useEffect(() => {
     if (activeStopId !== 'hatchery') {
@@ -3504,7 +3512,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setLandingText('Setting egg...');
     const start = Date.now();
     const tier = rollEggTierWeighted();
-    const hatchDurationMs = getRandomHatchDelayMs(IS_DEV_TIMER);
+    const hatchDurationMs = getRandomHatchDelayMs();
     const nextActiveEgg = { tier, setAtMs: start, hatchAtMs: start + hatchDurationMs };
     const islandKey = String(islandNumber);
     const ledgerEntry: PerIslandEggEntry = {
@@ -3541,6 +3549,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // M10B: egg_set sound + haptic
     playIslandRunSound('egg_set');
     triggerIslandRunHaptic('egg_set');
+    // Schedule push notification for when the egg is ready to collect
+    void scheduleEggHatchNotification(session.user.id, nextActiveEgg.hatchAtMs);
     void recordTelemetryEvent({
       userId: session.user.id,
       eventType: 'economy_earn',
@@ -4011,12 +4021,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       creature,
       islandNumber,
       collectedAtMs: nowTs,
-    }));
-    const earnedTreats = CREATURE_TREAT_EARN_BY_EGG_TIER[resolvedEgg.tier];
-    setCreatureTreatInventory((current) => ({
-      basic: Math.max(0, current.basic + (earnedTreats.basic ?? 0)),
-      favorite: Math.max(0, current.favorite + (earnedTreats.favorite ?? 0)),
-      rare: Math.max(0, current.rare + (earnedTreats.rare ?? 0)),
     }));
     playIslandRunSound('egg_open');
     triggerIslandRunHaptic('egg_open');
@@ -7133,6 +7137,37 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 onClick={() => setShowRewardDetailsModal(false)}
               >
                 Close
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* ── Egg-ready in-app banner ──────────────────────────────────────── */}
+      {showEggReadyBanner && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense" role="dialog" aria-modal="true" aria-label="Egg ready">
+            <h3 className="island-stop-modal__title">🌟🥚 Egg Ready to Open!</h3>
+            <p className="island-stop-modal__copy">
+              Your egg has finished incubating and is ready to open. Head to the Hatchery stop to collect your creature or sell for rewards!
+            </p>
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                onClick={() => {
+                  setShowEggReadyBanner(false);
+                  requestActiveStopTransition('hatchery', 'egg_ready_banner');
+                }}
+              >
+                Go to Hatchery
+              </button>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => setShowEggReadyBanner(false)}
+              >
+                Later
               </button>
             </div>
           </section>

@@ -2200,6 +2200,14 @@ export function DailyHabitTracker({
     return !completedStopsOnActiveIsland.includes(eventStop.stopId);
   }, [completedStopsOnActiveIsland, stopPlanForActiveIsland]);
 
+  // Track whether the player has already opened the egg hatch circle today for this island.
+  // Key: per-user, per-day, per-island so it resets naturally when egg moves to a new island
+  // or the day rolls over. This controls the red notification dot and sort priority.
+  const eggHatchViewedStorageKey = `lifegoal:egg_hatch_viewed:${session.user.id}:${getTodayUtcDateKey()}:${activeIsland}`;
+  const hasSeenEggHatch = typeof window !== 'undefined'
+    ? localStorage.getItem(eggHatchViewedStorageKey) === '1'
+    : false;
+
   const islandRunCountdownExpiresAtMs = islandRunRuntime.islandExpiresAtMs > Date.now()
     ? islandRunRuntime.islandExpiresAtMs
     : null;
@@ -2302,10 +2310,12 @@ export function DailyHabitTracker({
         label: 'Egg Ready',
         icon: '🥚',
         expiresAtMs: null,
+        // Once the player opens the egg hatch circle today, remove the red badge and lower
+        // priority so other unchecked circles take precedence.
         isCollected: false,
         isVisible: isEggReadyToCollectOnActiveIsland,
-        isActionable: isEggReadyToCollectOnActiveIsland,
-        sortPriority: 4,
+        isActionable: isEggReadyToCollectOnActiveIsland && !hasSeenEggHatch,
+        sortPriority: hasSeenEggHatch ? 5 : 2.5,
       },
       {
         id: 'mystery_stop',
@@ -2321,6 +2331,7 @@ export function DailyHabitTracker({
   }, [
     activeIsland,
     hasClaimedVisionStar,
+    hasSeenEggHatch,
     islandRunCountdownExpiresAtMs,
     islandRunOfferBadge,
     islandRunOfferLabel,
@@ -2380,6 +2391,10 @@ export function DailyHabitTracker({
     }
 
     if (offerId === 'egg_hatch') {
+      // Mark as viewed for today on this island so the red badge is cleared
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(eggHatchViewedStorageKey, '1');
+      }
       if (onOpenIslandRunStop) {
         onOpenIslandRunStop('hatchery');
       } else {
@@ -2395,7 +2410,7 @@ export function DailyHabitTracker({
         setVisionRewardError('Mystery stop launcher is unavailable in this view.');
       }
     }
-  }, [handleVisionRewardClick, onOpenDailyTreat, onOpenIslandRunStop, startTodaysOfferCheckout]);
+  }, [eggHatchViewedStorageKey, handleVisionRewardClick, onOpenDailyTreat, onOpenIslandRunStop, startTodaysOfferCheckout]);
 
   const handleTimeBoundOfferClick = useCallback((offerId: TimeBoundOfferId) => {
     // UX: some offers should open directly (no intermediate teaser modal)

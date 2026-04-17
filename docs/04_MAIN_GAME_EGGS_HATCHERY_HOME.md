@@ -99,31 +99,29 @@ Define function:
 `rollEggRewards(eggTier, seed) -> RewardBundle`
 
 RewardBundle includes:
-- heartsDelta (Hearts — persistent app-wide energy)
-- coinsDelta (Coins — app-wide currency)
-- diamondsDelta (Diamonds — premium app-wide currency; 1 diamond = 1,000 coins)
-- spinTokensDelta
+- essenceDelta (Essence — island run soft currency for stop upgrades)
+- shardsDelta (Egg Shards — sanctuary currency for treats and upgrades)
+- diamondsDelta (Diamonds — premium currency; 15% chance on mythic)
+- spinTokensDelta (Minigame tokens — general-purpose currency for mini-game plays)
 - boosters[] (optional)
 - cosmetics[] (rare)
 
-v1: keep simple
-- common: small hearts, small coins, occasional spin
-- rare: bigger bundle + guaranteed spin
-- mythic: large bundle + cosmetic chance
+> Note: `heartsDelta` and `coinsDelta` are deprecated and always 0. Hearts and coins are fully
+> retired from the island game economy.
+
+v2 reward schedule:
+- common → 3–10 essence, +1 shard, 25% chance of +1 minigame token
+- rare → 10–24 essence, 2–3 shards, +1 minigame token
+- mythic → 30–54 essence, 4–6 shards, 15% chance of +1 diamond, +2 minigame tokens,
+  30% chance of cosmetic
 
 Current implementation notes:
 - Island eggs use `rollEggRewards(...)` when the player chooses **Sell for Rewards** in the
   hatchery overlay.
 - Reward output is deterministic per egg because the seed is the egg's `set_at` timestamp.
-
-Current v1 reward schedule in code:
-- common → `+1 heart`, `+5–19 coins`, `25%` chance of `+1 spin token`
-- rare → `+2 hearts`, `+20–49 coins`, `+1 spin token`
-- mythic → `+3 hearts`, `+75–124 coins`, `15%` chance of `+1 diamond`, `+2 spin tokens`,
-  `30%` chance of cosmetic
-
-Additional current rewards:
 - Selling a hatched creature also awards `+2 wallet shards`.
+- **Creature treats are NOT earned from egg collection.** Treats are purchased exclusively
+  in the Animal Sanctuary by spending shards.
 
 ---
 
