@@ -1163,7 +1163,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // B3-5: island clear celebration
   const [showIslandClearCelebration, setShowIslandClearCelebration] = useState(false);
-  const [islandClearStats, setIslandClearStats] = useState<{ islandNumber: number; diceEarned: number; coinsEarned: number; stopsCleared: number } | null>(null);
+  const [islandClearStats, setIslandClearStats] = useState<{ islandNumber: number; diceEarned: number; essenceEarned: number; stopsCleared: number } | null>(null);
 
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
   const [runtimeHydrationSource, setRuntimeHydrationSource] = useState<IslandRunRuntimeHydrationSource | null>(null);
@@ -3849,10 +3849,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       : 0;
     const totalStartupBonus = activeCompanionBonus.amount + perfectCompanionStartupBonus;
 
-    if (activeCompanionBonus.effect === 'bonus_heart') {
-      // Hearts retired — bonus_heart converts 1:1 to dice (intentional: companion
-      // bonus amounts are small, typically 1–3, so 1:1 is appropriate for dice).
-      setDicePool((current) => current + totalStartupBonus);
+    if (activeCompanionBonus.effect === 'bonus_essence') {
+      // Essence companion bonus — award to runtime state
+      setRuntimeState((prev) => ({
+        ...prev,
+        essence: prev.essence + totalStartupBonus,
+        essenceLifetimeEarned: prev.essenceLifetimeEarned + totalStartupBonus,
+      }));
     } else if (activeCompanionBonus.effect === 'bonus_spin') {
       setSpinTokens((current) => current + totalStartupBonus);
     } else {
@@ -4054,22 +4057,30 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           openedAt: nowTs,
           location: 'island',
         };
-    const specialtySellBonusCoins = activeCompanionSpecialty?.effect === 'sell_bonus_coins'
-      ? Math.max(0, Math.floor((bundle.coinsDelta * activeCompanionSpecialty.amount) / 100))
+    const specialtySellBonusEssence = activeCompanionSpecialty?.effect === 'sell_bonus_essence'
+      ? Math.max(0, Math.floor((bundle.essenceDelta * activeCompanionSpecialty.amount) / 100))
       : 0;
-    // Legacy heart-to-dice conversion retired — creature sell no longer gives dice.
-    if (bundle.coinsDelta + specialtySellBonusCoins > 0) setCoins((c) => c + bundle.coinsDelta + specialtySellBonusCoins);
+    // Hearts/coins retired — creature sell now awards essence + shards
+    const totalSellEssence = bundle.essenceDelta + specialtySellBonusEssence;
+    if (totalSellEssence > 0) {
+      setRuntimeState((prev) => ({
+        ...prev,
+        essence: prev.essence + totalSellEssence,
+        essenceLifetimeEarned: prev.essenceLifetimeEarned + totalSellEssence,
+      }));
+    }
     if (bundle.spinTokensDelta > 0) setSpinTokens((t) => t + bundle.spinTokensDelta);
     if (bundle.diamondsDelta > 0) setDiamonds((d) => d + bundle.diamondsDelta);
+    if (bundle.shardsDelta > 0) awardWalletShards(bundle.shardsDelta);
     awardShards('egg_open');
     awardWalletShards(2);
-    void awardGold(session.user.id, bundle.coinsDelta + specialtySellBonusCoins, 'shooter_blitz', 'island_run_hatchery_sell_creature');
     setActiveEgg(null);
     playIslandRunSound('market_purchase_success');
     triggerIslandRunHaptic('market_purchase_success');
     const rewardParts: string[] = [];
-    if (bundle.coinsDelta > 0) rewardParts.push(`+${bundle.coinsDelta} 🪙`);
-    if (specialtySellBonusCoins > 0) rewardParts.push(`+${specialtySellBonusCoins} 🪙 specialty`);
+    if (bundle.essenceDelta > 0) rewardParts.push(`+${bundle.essenceDelta} 🟣`);
+    if (specialtySellBonusEssence > 0) rewardParts.push(`+${specialtySellBonusEssence} 🟣 specialty`);
+    if (bundle.shardsDelta > 0) rewardParts.push(`+${bundle.shardsDelta} 🔮 shards`);
     if (bundle.diamondsDelta > 0) rewardParts.push(`+${bundle.diamondsDelta} 💎`);
     if (bundle.spinTokensDelta > 0) rewardParts.push(`+${bundle.spinTokensDelta} 🌀 spin`);
     setLandingText(`Sold ${creature.name}. Rewards: ${rewardParts.join(', ') || 'applied'}.`);
@@ -4082,8 +4093,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         tier: resolvedEgg.tier,
         creature_id: creature.id,
         creature_name: creature.name,
-        reward_coins: bundle.coinsDelta,
-        specialty_bonus_coins: specialtySellBonusCoins,
+        reward_essence: bundle.essenceDelta,
+        specialty_bonus_essence: specialtySellBonusEssence,
+        reward_shards: bundle.shardsDelta,
         reward_spin_tokens: bundle.spinTokensDelta,
         reward_diamonds: bundle.diamondsDelta,
       },
@@ -4093,8 +4105,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       tier: resolvedEgg.tier,
       creatureId: creature.id,
       creatureName: creature.name,
-      rewardCoins: bundle.coinsDelta,
-      specialtyBonusCoins: specialtySellBonusCoins,
+      rewardEssence: bundle.essenceDelta,
+      specialtyBonusEssence: specialtySellBonusEssence,
+      rewardShards: bundle.shardsDelta,
       rewardSpinTokens: bundle.spinTokensDelta,
       rewardDiamonds: bundle.diamondsDelta,
     });
@@ -4143,7 +4156,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // M6-COMPLETE: Core reward application for encounter completion
   const applyEncounterReward = (reward: EncounterReward) => {
-    const specialtyEncounterBonusEssence = activeCompanionSpecialty?.effect === 'encounter_bonus_coins' ? activeCompanionSpecialty.amount : 0;
+    const specialtyEncounterBonusEssence = activeCompanionSpecialty?.effect === 'encounter_bonus_essence' ? activeCompanionSpecialty.amount : 0;
     const isPerfectCompanionActive = Boolean(activeCompanion && perfectCompanionIdSet.has(activeCompanion.creatureId));
     const perfectCompanionEncounterBonus = isPerfectCompanionActive
       ? {
@@ -4222,7 +4235,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           island_number: islandNumber,
           creature_id: activeCompanion?.creature.id ?? null,
           creature_name: activeCompanion?.creature.name ?? null,
-          bonus_coins: perfectCompanionEncounterBonus.coins,
+          bonus_essence: perfectCompanionEncounterBonus.essence,
           bonus_dice: perfectCompanionEncounterBonus.dice,
           bonus_spin_tokens: perfectCompanionEncounterBonus.spinTokens,
         },
@@ -4274,8 +4287,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     const bossReward = getBossReward(islandNumber);
 
-    awardGold(session.user.id, bossReward.coins, 'shooter_blitz', 'Island Run boss trial resolved');
-
     logGameSession(session.user.id, {
       gameId: 'shooter_blitz',
       action: 'reward',
@@ -4283,7 +4294,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       metadata: {
         stage: 'island_run_boss_trial_resolved',
         reward_dice: bossReward.dice,
-        reward_coins: bossReward.coins,
+        reward_essence: bossReward.essence,
         island_number: islandNumber,
       },
     });
@@ -4295,14 +4306,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         stage: 'island_run_boss_trial_resolved',
         source: 'shooter_blitz',
         dice: bossReward.dice,
-        coins: bossReward.coins,
+        essence: bossReward.essence,
         island_number: islandNumber,
       },
     });
 
     setBossTrialResolved(true);
     setDicePool((current) => current + bossReward.dice);
-    setCoins((current) => current + bossReward.coins);
+    setRuntimeState((prev) => ({
+      ...prev,
+      essence: prev.essence + bossReward.essence,
+      essenceLifetimeEarned: prev.essenceLifetimeEarned + bossReward.essence,
+    }));
     if (bossReward.spinTokens > 0) {
       setSpinTokens((t) => t + bossReward.spinTokens);
     }
@@ -4310,7 +4325,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     playIslandRunSound('boss_trial_resolve');
     triggerIslandRunHaptic('boss_trial_resolve');
 
-    const rewardText = `Boss challenge resolved: +${bossReward.dice} dice, +${bossReward.coins} coins${bossReward.spinTokens > 0 ? `, ${formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: bossReward.spinTokens })}` : ''}.`;
+    const rewardText = `Boss challenge resolved: +${bossReward.dice} dice, +${bossReward.essence} essence${bossReward.spinTokens > 0 ? `, ${formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: bossReward.spinTokens })}` : ''}.`;
     setBossRewardSummary(rewardText);
     setLandingText(`${rewardText} Claim island clear to travel.`);
 
@@ -4829,8 +4844,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             island_number: islandNumber,
             rewards_granted: {
               dice: bossReward.dice,
-              coins: bossReward.coins,
-            },
+              coins: 0, // coins retired
+              essence: bossReward.essence,            },
           },
         });
 
@@ -4852,7 +4867,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         setIslandClearStats({
           islandNumber,
           diceEarned: bossReward.dice,
-          coinsEarned: bossReward.coins,
+          essenceEarned: bossReward.essence,
           stopsCleared: completedStops.length + 1,
         });
 
@@ -4888,7 +4903,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           island_number: islandNumber,
           rewards_granted: {
             dice: bossReward.dice,
-            coins: bossReward.coins,
+            coins: 0, // coins retired
+            essence: bossReward.essence,
           },
         },
       });
@@ -4911,7 +4927,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setIslandClearStats({
         islandNumber,
         diceEarned: bossReward.dice,
-        coinsEarned: bossReward.coins,
+        essenceEarned: bossReward.essence,
         stopsCleared: completedStops.length + 1,
       });
 
@@ -6684,7 +6700,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         <p className="island-boss-trial__reward-preview">
                           🎁 Reward on win:{' '}
                           <strong>+{bossReward.dice} 🎲</strong>,{' '}
-                          <strong>+{bossReward.coins} 🪙</strong>
+                          <strong>+{bossReward.essence} 🟣</strong>
                           {bossReward.spinTokens > 0
                             ? <>, <strong>{formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: bossReward.spinTokens })}</strong></>
                             : null}
@@ -6743,7 +6759,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       <div className="island-boss-trial__phase island-boss-trial__phase--success">
                         <p className="island-boss-trial__result island-boss-trial__result--win">🏆 Trial Complete!</p>
                         <p className="island-boss-trial__reward-text">
-                          {bossRewardSummary ?? `Rewards: +${bossReward.coins} 🪙, +3 🔷`}
+                          {bossRewardSummary ?? `Rewards: +${bossReward.essence} 🟣, +3 🔷`}
                         </p>
                         <p className="island-boss-trial__next-hint">Tap <strong>Claim Island Clear</strong> to celebrate and travel.</p>
                       </div>
@@ -7153,7 +7169,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <p className="island-clear-celebration__title">🏆 Island {islandClearStats.islandNumber} Complete!</p>
             <div className="island-clear-celebration__rewards">
               <span className="island-clear-celebration__reward-item">🎲 +{islandClearStats.diceEarned}</span>
-              <span className="island-clear-celebration__reward-item">🪙 +{islandClearStats.coinsEarned}</span>
+              <span className="island-clear-celebration__reward-item">🟣 +{islandClearStats.essenceEarned}</span>
               <span className="island-clear-celebration__reward-item">🔷 +3</span>
             </div>
             <p className="island-clear-celebration__stops">✅ {islandClearStats.stopsCleared} stops cleared · 🛍️ Shop Tier 2 unlocked</p>
