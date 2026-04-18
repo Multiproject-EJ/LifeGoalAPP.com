@@ -168,6 +168,7 @@ import { scheduleEggHatchNotification } from '../../../../services/habitAlertNot
 import {
   type DiceRegenState,
 } from '../services/islandRunDiceRegeneration';
+import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 6;
@@ -884,6 +885,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [isDevPanelOpen, setIsDevPanelOpen] = useState(false);
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [cameraMode, setCameraMode] = useState<IslandRunCameraMode>('board_follow');
   const [focusedStopId, setFocusedStopId] = useState<string | null>(null);
 
@@ -1377,7 +1379,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         const updatedLedger = { ...runtimeState.perIslandEggs, [islandKey]: updatedEntry };
         setRuntimeState((prev) => ({ ...prev, perIslandEggs: updatedLedger }));
         if (client) {
-          void persistIslandRunRuntimeStatePatch(session, client, { perIslandEggs: updatedLedger });
+          void persistIslandRunRuntimeStatePatch({ session, client, patch: { perIslandEggs: updatedLedger } });
         }
       }
       setActiveEgg({
@@ -6202,6 +6204,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               >
                 {isBackgroundHidden ? 'Show background' : 'Hide background'}
               </button>
+              <button
+                type="button"
+                className="island-run-board__topbar-menu-item"
+                onClick={() => {
+                  setShowDebugPanel(true);
+                  setShowTopbarMenu(false);
+                }}
+              >
+                🔧 Debug panel
+              </button>
             </div>
           )}
         </div>
@@ -8375,6 +8387,37 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               },
             });
           }}
+        />
+      )}
+
+      {/* ── Debug Panel ───────────────────────────────────────────────── */}
+      {showDebugPanel && (
+        <IslandRunDebugPanel
+          session={session}
+          client={client}
+          runtimeState={runtimeState}
+          localState={{
+            islandNumber,
+            tokenIndex,
+            dicePool,
+            essence: runtimeState.essence,
+            shards: runtimeState.shards,
+            shields: runtimeState.shields,
+            diamonds: runtimeState.diamonds,
+            coins,
+            spinTokens,
+            eggStage,
+            activeStopId,
+            isRolling,
+            cameraMode,
+            timeLeftSec,
+            showTravelOverlay,
+            islandExpiresAtMs,
+            islandStartedAtMs,
+            hasHydratedRuntimeState,
+            diceRegenCountdown,
+          }}
+          onClose={() => setShowDebugPanel(false)}
         />
       )}
 
