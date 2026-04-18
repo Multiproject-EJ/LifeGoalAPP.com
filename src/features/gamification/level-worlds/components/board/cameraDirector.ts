@@ -199,26 +199,47 @@ export function computeDirectionalLead(
 // ─── Variable hop timing ─────────────────────────────────────────────────────
 
 /**
- * Compute per-hop durations for a multi-tile hop sequence.
- * Middle hops are fast (narrative compression), final hops are slow (landing emphasis).
+ * Compute per-hop durations for a multi-tile hop sequence using a Monopoly GO-style
+ * compressed power-curve so short rolls feel punchy and long rolls don't drag.
  *
- * @param hopCount  Total number of hops in the sequence
- * @param fastMs    Duration for fast middle hops (default 120)
- * @param slowMs    Duration for the final landing hops (default 220)
- * @param slowCount How many hops at the end get the slow treatment (default 2)
+ * Total duration formula:
+ *   effective = hopCount ^ 0.9          (compression — longer rolls cost less per tile)
+ *   total     = clamp(180 + effective × 220, 750, 2450)  ms
+ *
+ * The budget is then split across hops:
+ *   - The final 2 hops ("landing emphasis") each run 12 % slower than cruise hops.
+ *   - Remaining time is divided equally across the earlier "cruise" hops.
+ *
+ * Reference feel targets:
+ *   3 tiles ≈  850 ms   5 tiles ≈ 1 100 ms
+ *   8 tiles ≈ 1 600 ms  12 tiles ≈ 2 180 ms
+ *
+ * @param hopCount Total number of hops in the sequence
  */
-export function computeHopDurations(
-  hopCount: number,
-  fastMs = 120,
-  slowMs = 220,
-  slowCount = 2,
-): number[] {
+export function computeHopDurations(hopCount: number): number[] {
   if (hopCount <= 0) return [];
-  if (hopCount <= slowCount) {
-    // All hops are "final" — use slow timing
-    return Array.from({ length: hopCount }, () => slowMs);
+
+  // Compressed total duration (Monopoly GO parity)
+  const effective = Math.pow(hopCount, 0.9);
+  const totalMs = Math.max(750, Math.min(2450, 180 + effective * 220));
+
+  const finalCount = Math.min(2, hopCount);
+  const cruiseCount = hopCount - finalCount;
+
+  let cruiseMs: number;
+  let finalMs: number;
+
+  if (cruiseCount === 0) {
+    // 1–2 tile roll: every hop is a "final" hop — split evenly
+    cruiseMs = 0;
+    finalMs = totalMs / hopCount;
+  } else {
+    // Solve: cruiseCount × cruiseMs + finalCount × (cruiseMs × 1.12) = totalMs
+    cruiseMs = totalMs / (cruiseCount + finalCount * 1.12);
+    finalMs = cruiseMs * 1.12;
   }
+
   return Array.from({ length: hopCount }, (_, i) =>
-    i >= hopCount - slowCount ? slowMs : fastMs,
+    i >= hopCount - finalCount ? finalMs : cruiseMs,
   );
 }
