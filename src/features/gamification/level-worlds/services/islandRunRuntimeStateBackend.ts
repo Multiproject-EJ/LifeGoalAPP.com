@@ -96,6 +96,7 @@ export interface IslandRunRuntimeStateBackend {
       activeTimedEventProgress?: { feedingActions: number; tokensEarned: number; milestonesClaimed: number };
       stickerProgress?: { fragments: number; guaranteedAt?: number; pityCounter?: number };
       stickerInventory?: Record<string, number>;
+      lastEssenceDriftLost?: number;
     };
   }): Promise<{ ok: true } | { ok: false; errorMessage: string }>;
 }
@@ -524,6 +525,10 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
               ),
             }
           : current.stickerInventory,
+      lastEssenceDriftLost:
+        typeof patch.lastEssenceDriftLost === 'number' && Number.isFinite(patch.lastEssenceDriftLost)
+          ? Math.max(0, Math.floor(patch.lastEssenceDriftLost))
+          : current.lastEssenceDriftLost,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({

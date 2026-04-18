@@ -1,8 +1,8 @@
 # CANONICAL GAMEPLAY CONTRACT — Island Run
 
-Version: 1.0  
+Version: 2.0  
 Status: Active  
-Last Updated: 2026-04-07  
+Last Updated: 2026-04-18  
 Owner: Gameplay System
 
 This document defines the only authoritative gameplay rules for Island Run.
@@ -52,8 +52,8 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 
 - Board topology is profile/config-driven.
 - Board tile count is not fixed and must always be derived from the active board topology profile.
-- The current production default profile is `spark60_preview` (60 tiles).
-- Future profiles (for example larger boards around ~60 tiles) are supported.
+- The current production default profile is `spark40_ring` (40 tiles).
+- Future profiles are supported.
 - Board topology must be treated as variable and extensible across profiles.
 
 ### Strict board-topology rules (critical)
@@ -67,9 +67,8 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 - Tile positions may be used for visual stop markers only, never for gameplay correctness.
 
 ### Board topology compatibility note
-- Current production board uses a 60-tile topology profile for stability.
-- Additional board profiles may exist for experimentation, but production gameplay is standardized on the 60-tile profile.
-- Renderer/layout remains legacy-bound at present and will be updated in later phases.
+- Current production board uses a 40-tile topology profile.
+- Additional board profiles may exist for experimentation, but production gameplay is standardized on the 40-tile profile.
 
 ---
 
@@ -87,10 +86,11 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 - Essence is spent on stop/building upgrades tied to island progression.
 - Tiles may award essence directly as a landing reward.
 
-### Gold
-- Gold is a persistent economy currency.
-- Gold remains meaningful and relatively scarce.
-- Gold is not the primary spend path for core board movement.
+### Egg Shards
+- Egg shards are the **sanctuary currency**.
+- Shards are earned from: reward bar payouts, stop completion, boss wins, and egg sell choices.
+- **Tiles do NOT award shards.** Shards are removed from tile rewards.
+- Shards are spent on creature treats and creature upgrades in the Animal Sanctuary shard shop.
 
 ### Collectibles (Stickers)
 - Stickers are collectible progression assets, not movement energy.
@@ -101,6 +101,11 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 - Hearts are **fully removed** from the game.
 - No heart-based conversion, heart-gated boss retries, or heart economy exists.
 - All references to hearts in code and docs are legacy and must not be re-introduced.
+
+### Coins (RETIRED)
+- Coins are **fully removed** from the island game.
+- No coin economy exists. Use essence and shards instead.
+- All references to coins in code and docs are legacy and must not be re-introduced.
 
 ---
 
@@ -131,28 +136,34 @@ Dice reward sources should follow this qualitative pattern:
 ## 3B) Player level progression and dice regeneration
 
 - Player level is a long-term progression system tied to XP points.
+- XP is earned from habits, goals, journal, check-ins, vision boards, meditation, streaks, challenges, etc.
 - Player level determines dice regeneration capacity via a **minimum-roll passive regeneration system** (Monopoly GO style).
+- XP requirements are **conservative** (formula: 150 × (level-1) × level), meaning levels are meaningful achievements.
 
 ### Dice regeneration rules (canonical)
 - The regeneration system operates as a **minimum-roll floor**: if the player has fewer dice than their level's minimum threshold, dice regenerate passively over time.
 - If the player already has dice at or above the minimum threshold, **no regeneration occurs**.
 - Full regeneration from 0 to the minimum takes exactly **2 hours**.
-- The regeneration rate scales with player level according to the tier table below.
 - Roll cost is always flat: **2 dice per roll**, regardless of level or island.
+- There is **no hard cap** on dice regen — the formula works for any player level.
 
-### Dice regeneration tier table
+### Dice regeneration formula (continuous, no cap)
+
+The minimum dice threshold uses a continuous logarithmic formula:
+```
+minDice = 30 + floor(20 × ln(level))
+```
 
 | Player Level | Min Dice Threshold | Effective Rolls (2h) | Regen Rate |
 |---|---|---|---|
 | 1 | 30 | ~15 rolls | 1 roll / ~8 min |
-| 5 | 40 | ~20 rolls | 1 roll / ~6 min |
-| 10 | 50 | ~25 rolls | 1 roll / ~4.8 min |
-| 15 | 60 | ~30 rolls | 1 roll / ~4 min |
-| 20 | 70 | ~35 rolls | 1 roll / ~3.4 min |
-| 30 | 90 | ~45 rolls | 1 roll / ~2.7 min |
-| 50 | 120 | ~60 rolls | 1 roll / ~2 min |
-| 75 | 140 | ~70 rolls | 1 roll / ~1.7 min |
-| 100 | 160 | ~80 rolls | 1 roll / ~1.5 min |
+| 5 | 62 | ~31 rolls | 1 roll / ~3.9 min |
+| 10 | 76 | ~38 rolls | 1 roll / ~3.2 min |
+| 20 | 90 | ~45 rolls | 1 roll / ~2.7 min |
+| 50 | 108 | ~54 rolls | 1 roll / ~2.2 min |
+| 100 | 122 | ~61 rolls | 1 roll / ~2.0 min |
+| 500 | 154 | ~77 rolls | 1 roll / ~1.6 min |
+| 1000 | 168 | ~84 rolls | 1 roll / ~1.4 min |
 
 ### Additional player-level scaling
 - Player level may also increase:
@@ -166,16 +177,18 @@ Dice reward sources should follow this qualitative pattern:
 Each island contains exactly 5 stops, in this fixed sequence:
 
 1. **Hatchery** (always Stop 1 — the egg stop)
-2. **Habit**
-3. **Breathing**
-4. **Wisdom**
-5. **Boss**
+2. **Habit** (complete a habit/action)
+3. **Mystery** (rotating content: breathing, guided meditation, check-in, etc.)
+4. **Wisdom** (story, questionnaire, learning content)
+5. **Boss** (always the final gate)
 
 Stop rules:
 - Stops are external structures, never board tiles.
 - Stops are sequential; parallel stop completion is not allowed.
 - A stop is considered complete only when its defined objective is fulfilled.
 - Boss is always the final gate for island completion.
+- The Mystery stop's **content** rotates per island (currently: breathing exercise, action challenge, or check-in reflection). The stop ID is always 'mystery'.
+- All stops are designed to be completed **in-game** — the player should never need to leave the game to complete a stop (e.g., breathing is done via an in-game mini exercise).
 
 ### Stop unlock rules
 - When an island starts, only Stop 1 (Hatchery) is **open**. All other stops are **closed**.
@@ -283,14 +296,24 @@ Each island has **5 buildings**, one per stop. Buildings are **completely decoup
 - At any given time, there is exactly **one** active timed minigame/event.
 - The active timed minigame/event is global for the player and persists across island transitions.
 - The active timed minigame/event remains available until its timer expires.
-- On expiry, a new timed minigame/event may replace it according to live-ops scheduling.
+- On expiry, the next event in the rotation starts automatically.
+- Each event has its own micro/currency required to play the associated minigame.
+
+### Timed event rotation
+
+| Event | Duration | Icon | Description |
+|---|---|---|---|
+| Feeding Frenzy | 8 hours | 🔥 | Feed creatures for bonus rewards |
+| Lucky Spin | 24 hours | 🎰 | Spin for prizes |
+| Space Excavator | 2 days | 🚀 | Excavation/resource gathering event |
+| Companion Feast | 4 days | 🐾 | Extended companion bonding event |
 
 ---
 
 ## 7) Island completion rules
 
 An island is complete **only** when ALL of the following are satisfied:
-1. All 5 stop **objectives** are complete (Hatchery→Habit→Breathing→Wisdom→Boss, in sequence).
+1. All 5 stop **objectives** are complete (Hatchery→Habit→Mystery→Wisdom→Boss, in sequence).
 2. The Hatchery egg has been **collected or sold** (not just set — the egg must fully resolve).
 3. All 5 **buildings** are at **Level 3** (fully built via the Build Panel).
 
@@ -308,16 +331,29 @@ Additional rules:
 
 The following are not part of the canonical Island Run gameplay contract:
 
-- Time-based island completion gates.
+- Time-based island completion gates (island timers are **fully retired**).
+- Island timer expiry auto-advance.
 - Fixed board-tile-count requirement.
 - Stop-as-tile modeling.
 - **Hearts as any form of currency, energy, or game mechanic** (fully retired).
+- **Coins as any form of island game currency** (fully retired).
 - Heart-to-dice conversion.
 - Spin-based token movement (fully retired).
 - Multi-active timed minigame/event states.
 - Non-sequential stop progression.
 - Tiles awarding dice directly (dice only come from reward bar, stops, boss, events, shop, regeneration).
+- **Tiles awarding egg shards** (shards only from reward bar, stop completion, boss wins, egg sell).
 - Variable roll costs (roll cost is always flat: 2 dice).
+- Capped dice regeneration tier table (replaced with continuous logarithmic formula).
+
+### Egg sell reward choice
+- When selling an egg instead of collecting the creature, the player **chooses** between a shard payout or a dice payout.
+- Mythic eggs give more than rare, rare gives more than common.
+- This gives the player agency over their reward.
+
+### Essence drift notification
+- When essence drift has been applied on session open, a small red animation shows the amount lost (e.g., "- 42 🟣").
+- The `lastEssenceDriftLost` field in runtime state tracks this value for UI display.
 
 ---
 

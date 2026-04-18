@@ -379,7 +379,7 @@ export function resolveIslandRunContractV2RewardBarProgressDelta(source: RewardB
 
   const tileProgress = FEEDING_TILE_PROGRESS[source.tileType] ?? 0;
   if (tileProgress > 0) {
-    return { progressDelta: tileProgress, feedingActionDelta: source.tileType === 'egg_shard' ? 1 : 0 };
+    return { progressDelta: tileProgress, feedingActionDelta: 1 };
   }
 
   return { progressDelta: 0, feedingActionDelta: 0 };

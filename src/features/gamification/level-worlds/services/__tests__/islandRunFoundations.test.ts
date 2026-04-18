@@ -13,9 +13,9 @@ export const islandRunFoundationTests: TestCase[] = [
         map.filter((tile: { tileType: string }) => tile.tileType === 'stop').map((tile: { index: number; stopId?: string }) => ({ index: tile.index, stopId: tile.stopId })),
         [
           { index: 0, stopId: 'hatchery' },
-          { index: 10, stopId: 'minigame' },
-          { index: 20, stopId: 'market' },
-          { index: 30, stopId: 'utility' },
+          { index: 10, stopId: 'habit' },
+          { index: 20, stopId: 'mystery' },
+          { index: 30, stopId: 'wisdom' },
           { index: 39, stopId: 'boss' },
         ],
         'Expected stop positions to remain canonical',

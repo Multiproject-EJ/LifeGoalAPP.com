@@ -74,6 +74,8 @@ export interface IslandRunRuntimeState {
   activeTimedEventProgress: { feedingActions: number; tokensEarned: number; milestonesClaimed: number };
   stickerProgress: { fragments: number; guaranteedAt?: number; pityCounter?: number };
   stickerInventory: Record<string, number>;
+  /** Essence lost to drift on last hydration/session-open (for UI notification). 0 = no drift. */
+  lastEssenceDriftLost: number;
 }
 
 export function readIslandRunRuntimeState(session: Session): IslandRunRuntimeState {
@@ -196,6 +198,7 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     activeTimedEventProgress?: { feedingActions: number; tokensEarned: number; milestonesClaimed: number };
     stickerProgress?: { fragments: number; guaranteedAt?: number; pityCounter?: number };
     stickerInventory?: Record<string, number>;
+    lastEssenceDriftLost?: number;
   };
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
   const { session, client, patch } = options;

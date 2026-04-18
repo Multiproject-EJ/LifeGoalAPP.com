@@ -97,7 +97,7 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
       const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
       const next = applyIslandRunContractV2RewardBarProgress({
         state: withEvent,
-        source: { kind: 'tile', tileType: 'egg_shard' },
+        source: { kind: 'tile', tileType: 'chest' },
         nowMs: 1_100,
       });
 
@@ -189,18 +189,18 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
       const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
       const x1 = applyIslandRunContractV2RewardBarProgress({
         state: withEvent,
-        source: { kind: 'tile', tileType: 'egg_shard' },
+        source: { kind: 'tile', tileType: 'chest' },
         nowMs: 1_100,
         multiplier: 1,
       });
       const x3 = applyIslandRunContractV2RewardBarProgress({
         state: withEvent,
-        source: { kind: 'tile', tileType: 'egg_shard' },
+        source: { kind: 'tile', tileType: 'chest' },
         nowMs: 1_100,
         multiplier: 3,
       });
-      assertEqual(x1.rewardBarProgress, 4, 'Expected x1 multiplier progress of 4');
-      assertEqual(x3.rewardBarProgress, 12, 'Expected x3 multiplier progress of 12');
+      assertEqual(x1.rewardBarProgress, 2, 'Expected x1 multiplier progress of 2 (chest=2)');
+      assertEqual(x3.rewardBarProgress, 6, 'Expected x3 multiplier progress of 6 (chest=2×3)');
     },
   },
   {
@@ -249,10 +249,10 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
     },
   },
   {
-    name: 'v2 on: lucky_spin event rotates in after companion_feast',
+    name: 'v2 on: feeding_frenzy event rotates in after companion_feast (sequence wraps)',
     run: () => {
       const nowMs = 10_000;
-      // companion_feast is index 2; next should be lucky_spin (index 3)
+      // companion_feast is index 3; next wraps to feeding_frenzy (index 0)
       const rotated = ensureIslandRunContractV2ActiveTimedEvent({
         nowMs,
         state: {
@@ -262,7 +262,7 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
             eventType: 'companion_feast',
             startedAtMs: 0,
             expiresAtMs: 5_000,
-            version: 3,
+            version: 4,
           },
           rewardBarBoundEventId: 'companion_feast:0',
           rewardBarLadderId: 'companion_feast_ladder_v1',
@@ -270,7 +270,7 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
       });
 
       assert(rotated.state.activeTimedEvent, 'Expected rotated event to exist');
-      assertEqual(rotated.state.activeTimedEvent?.eventType, 'lucky_spin', 'Expected lucky_spin event after companion_feast');
+      assertEqual(rotated.state.activeTimedEvent?.eventType, 'feeding_frenzy', 'Expected feeding_frenzy event after companion_feast (wrap)');
     },
   },
   // ── Smart multiplier tier tests ──────────────────────────────────────────
