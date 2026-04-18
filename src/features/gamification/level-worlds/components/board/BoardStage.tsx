@@ -29,9 +29,9 @@ export interface BoardStageProps {
   isBackgroundAvailable: boolean;
   onBackgroundError: () => void;
   /** Spark60 ring gradient CSS value */
-  spark60RingGradient: string;
-  /** Whether this is a spark60 board */
-  isSpark60: boolean;
+  spark40RingGradient: string;
+  /** Whether this is a spark40 board */
+  isSpark40: boolean;
   /** Show debug overlay */
   showDebug: boolean;
   /** Disable decorative board art for production art integration */
@@ -93,8 +93,8 @@ export function BoardStage(props: BoardStageProps) {
     backgroundSrc,
     isBackgroundAvailable,
     onBackgroundError,
-    spark60RingGradient,
-    isSpark60,
+    spark40RingGradient,
+    isSpark40,
     showDebug,
     isMinimalBoardArt = false,
     boardTiltXDeg = BOARD_TILT_X_DEG,
@@ -365,12 +365,12 @@ export function BoardStage(props: BoardStageProps) {
         />
 
         {/* Spark60 ring */}
-        {isSpark60 && (
+        {isSpark40 && (
           <div
-            className="island-run-board__spark60-ring"
+            className="island-run-board__spark40-ring"
             style={{
               ['--spark-segment-count' as string]: String(anchors.length),
-              ['--spark-ring-segments' as string]: spark60RingGradient,
+              ['--spark-ring-segments' as string]: spark40RingGradient,
             }}
             aria-hidden="true"
           />
@@ -385,7 +385,7 @@ export function BoardStage(props: BoardStageProps) {
           tileMap={tileMap}
           completedEncounterIndices={completedEncounterIndices}
           tokenIndex={tokenIndex}
-          isSpark60={isSpark60}
+          isSpark40={isSpark40}
           showDebug={showDebug}
           isMinimalBoardArt={isMinimalBoardArt}
           uniformScale={uniformScale}

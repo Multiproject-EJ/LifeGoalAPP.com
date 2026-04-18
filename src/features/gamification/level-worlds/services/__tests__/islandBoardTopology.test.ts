@@ -16,7 +16,7 @@ export const islandBoardTopologyTests: TestCase[] = [
   {
     name: 'v2 stop progression remains strict sequential and independent of board tile indices',
     run: () => {
-      const stopPlan = generateIslandStopPlan(7, { profileId: 'spark60_preview' });
+      const stopPlan = generateIslandStopPlan(7, { profileId: 'spark40_ring' });
       assertEqual(stopPlan.length, 5, 'Expected five-stop plan regardless of board size');
 
       const result = resolveIslandRunContractV2Stops({
@@ -34,10 +34,10 @@ export const islandBoardTopologyTests: TestCase[] = [
     },
   },
   {
-    name: 'default board profile resolves to spark60_preview topology',
+    name: 'default board profile resolves to spark40_ring topology',
     run: () => {
       const defaultProfile = resolveIslandBoardProfile();
-      assertEqual(defaultProfile.id, 'spark60_preview', 'Expected spark60_preview as the default active profile');
+      assertEqual(defaultProfile.id, 'spark40_ring', 'Expected spark40_ring as the default active profile');
       assertEqual(defaultProfile.tileCount, 40, 'Expected 40 tiles for the default profile');
 
       const tileMap = generateTileMap(3, 'normal', 'forest', 0);
@@ -45,13 +45,13 @@ export const islandBoardTopologyTests: TestCase[] = [
     },
   },
   {
-    name: 'explicit spark preview profile resolves safely',
+    name: 'explicit spark40 ring profile resolves safely',
     run: () => {
-      const previewProfile = resolveIslandBoardProfile('spark60_preview');
-      assertEqual(previewProfile.tileCount, 40, 'Expected preview profile to expose 40-tile topology');
+      const previewProfile = resolveIslandBoardProfile('spark40_ring');
+      assertEqual(previewProfile.tileCount, 40, 'Expected ring profile to expose 40-tile topology');
 
-      const previewTileMap = generateTileMap(3, 'normal', 'forest', 0, { profileId: 'spark60_preview' });
-      assertEqual(previewTileMap.length, 40, 'Expected preview tile map generation to support 40 tiles');
+      const previewTileMap = generateTileMap(3, 'normal', 'forest', 0, { profileId: 'spark40_ring' });
+      assertEqual(previewTileMap.length, 40, 'Expected ring tile map generation to support 40 tiles');
     },
   },
 ];

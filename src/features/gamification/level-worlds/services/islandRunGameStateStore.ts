@@ -94,7 +94,7 @@ export interface IslandRunGameStateRecord {
   perfectCompanionModelVersion: string | null;
   perfectCompanionComputedCycleIndex: number | null;
   activeStopIndex: number;
-  activeStopType: 'hatchery' | 'habit' | 'breathing' | 'wisdom' | 'boss';
+  activeStopType: 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
   stopStatesByIndex: Array<{
     objectiveComplete: boolean;
     buildComplete: boolean;
@@ -239,14 +239,14 @@ function buildRuntimeClientActionId(userId: string, record: IslandRunGameStateRe
   return `runtime-${userId}-${runtimeCommitAttemptCounter}-${Math.max(0, Math.floor(record.runtimeVersion))}-${hashRuntimeCommitPayload(stableRuntimeCommitStringify(record))}`;
 }
 
-export function deriveIslandRunContractV2StopType(index: number): 'hatchery' | 'habit' | 'breathing' | 'wisdom' | 'boss' {
+export function deriveIslandRunContractV2StopType(index: number): 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss' {
   switch (index) {
     case 0:
       return 'hatchery';
     case 1:
       return 'habit';
     case 2:
-      return 'breathing';
+      return 'mystery';
     case 3:
       return 'wisdom';
     case 4:
@@ -769,7 +769,7 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
     activeStopType:
       value.activeStopType === 'hatchery'
       || value.activeStopType === 'habit'
-      || value.activeStopType === 'breathing'
+      || value.activeStopType === 'mystery'
       || value.activeStopType === 'wisdom'
       || value.activeStopType === 'boss'
         ? value.activeStopType

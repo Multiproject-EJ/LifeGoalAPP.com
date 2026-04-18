@@ -1,9 +1,9 @@
 import { MAX_BUILD_LEVEL, type IslandRunContractV2BuildState } from './islandRunContractV2EssenceBuild';
 
-export type IslandRunContractV2StopType = 'hatchery' | 'habit' | 'breathing' | 'wisdom' | 'boss';
+export type IslandRunContractV2StopType = 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
 export type IslandRunContractV2StopStatus = 'completed' | 'active' | 'locked';
 
-const CONTRACT_V2_STOP_TYPES: IslandRunContractV2StopType[] = ['hatchery', 'habit', 'breathing', 'wisdom', 'boss'];
+const CONTRACT_V2_STOP_TYPES: IslandRunContractV2StopType[] = ['hatchery', 'habit', 'mystery', 'wisdom', 'boss'];
 
 type StopRuntimeStateEntry = {
   objectiveComplete: boolean;

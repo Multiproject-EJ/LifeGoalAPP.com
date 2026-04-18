@@ -91,7 +91,7 @@ export interface IslandRunRollActionResult {
 export async function executeIslandRunRollAction(options: {
   session: Session;
   client: SupabaseClient | null;
-  /** Board profile to use for tile-count and stop-tile resolution. Defaults to 'spark60_preview'. */
+  /** Board profile to use for tile-count and stop-tile resolution. Defaults to 'spark40_ring'. */
   boardProfileId?: IslandBoardProfileId;
   /**
    * Dice multiplier (default 1). The total dice cost per roll = DICE_PER_ROLL × multiplier.
@@ -119,7 +119,7 @@ export async function executeIslandRunRollAction(options: {
 
   // 5. Move the token step-by-step using the canonical topology helper so that
   //    board wrap-around (lap completion) is handled correctly.
-  const boardProfile = resolveIslandBoardProfile(options.boardProfileId ?? 'spark60_preview');
+  const boardProfile = resolveIslandBoardProfile(options.boardProfileId ?? 'spark40_ring');
   let newTokenIndex = state.tokenIndex;
   for (let step = 0; step < total; step += 1) {
     newTokenIndex = resolveWrappedTokenIndex(newTokenIndex, 1, boardProfile.tileCount);

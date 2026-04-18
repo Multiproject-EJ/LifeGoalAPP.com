@@ -66,7 +66,7 @@ export interface BoardTileProps {
   isEncounterCompleted: boolean;
   isTokenCurrent: boolean;
   isUpcoming: boolean;
-  isSpark60: boolean;
+  isSpark40: boolean;
   tileIndex: number;
   showDebug: boolean;
   isMinimalBoardArt: boolean;
@@ -86,7 +86,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     isEncounterCompleted,
     isTokenCurrent,
     isUpcoming,
-    isSpark60,
+    isSpark40,
     showDebug,
     isMinimalBoardArt,
     uniformScale,
@@ -97,7 +97,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
   //   N=40 tiles, radius=340, tile height=58 (half=29), sin(π/40)≈0.07846
   //   outer arc chord = 2×369×sin(π/40) ≈ 57.9px → box width = 58px → ±29px
   //   inner arc chord = 2×311×sin(π/40) ≈ 48.8px → top clip ±24.5px
-  const wedgeClipPath = isSpark60
+  const wedgeClipPath = isSpark40
     ? 'polygon(calc(50% - 24.5px) 0%, calc(50% + 24.5px) 0%, calc(50% + 29px) 100%, calc(50% - 29px) 100%)'
     : undefined;
 
@@ -135,12 +135,12 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
       style={{
         left: position.x,
         top: position.y,
-        ['--tile-rotation-deg' as string]: `${isSpark60 ? anchor.tangentDeg + 180 : 0}deg`,
+        ['--tile-rotation-deg' as string]: `${isSpark40 ? anchor.tangentDeg + 180 : 0}deg`,
         ['--tile-index' as string]: String(index),
         ['--tile-scale' as string]: String(anchor.scale),
         ['--tile-render-scale' as string]: (anchor.scale * uniformScale).toFixed(4),
         transform: `translate(-50%, -50%) rotate(var(--tile-rotation-deg)) scale(${(anchor.scale * uniformScale).toFixed(4)})`,
-        ...(isSpark60 ? { width: '58px', height: '58px', clipPath: wedgeClipPath } : {}),
+        ...(isSpark40 ? { width: '58px', height: '58px', clipPath: wedgeClipPath } : {}),
       }}
     >
       {!isMinimalBoardArt && <span className="island-tile__shine" aria-hidden="true" />}

@@ -55,7 +55,7 @@ export interface IslandRunRuntimeState {
   perfectCompanionModelVersion: string | null;
   perfectCompanionComputedCycleIndex: number | null;
   activeStopIndex: number;
-  activeStopType: 'hatchery' | 'habit' | 'breathing' | 'wisdom' | 'boss';
+  activeStopType: 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
   stopStatesByIndex: Array<{ objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number }>;
   stopBuildStateByIndex: Array<{ requiredEssence: number; spentEssence: number; buildLevel: number }>;
   bossState: { unlocked: boolean; objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number };
@@ -177,7 +177,7 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     perfectCompanionModelVersion?: string | null;
     perfectCompanionComputedCycleIndex?: number | null;
     activeStopIndex?: number;
-    activeStopType?: 'hatchery' | 'habit' | 'breathing' | 'wisdom' | 'boss';
+    activeStopType?: 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
     stopStatesByIndex?: Array<{ objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number }>;
     stopBuildStateByIndex?: Array<{ requiredEssence: number; spentEssence: number; buildLevel: number }>;
     bossState?: { unlocked: boolean; objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number };

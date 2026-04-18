@@ -182,10 +182,10 @@ const ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE = true;
 // Legacy pre-contract-v2 movement/energy rules are intentionally disabled.
 const ISLAND_RUN_CONTRACT_V2_ENABLED = true;
 function resolveRequestedBoardProfileId(): IslandBoardProfileId {
-  if (typeof window === 'undefined') return 'spark60_preview';
+  if (typeof window === 'undefined') return 'spark40_ring';
   const query = new URLSearchParams(window.location.search).get('boardProfile')?.trim().toLowerCase();
-  if (query === 'spark60' || query === 'spark60_preview') return 'spark60_preview';
-  return 'spark60_preview';
+  if (query === 'spark40' || query === 'spark40_ring' || query === 'spark40' || query === 'spark40_preview') return 'spark40_ring';
+  return 'spark40_ring';
 }
 const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile(resolveRequestedBoardProfileId());
 const PERFECT_COMPANION_MODEL_VERSION = 'phase3_v1';
@@ -868,7 +868,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     () => TILE_ANCHORS_40,
     [],
   );
-  const isSpark60BoardProfile = ACTIVE_BOARD_PROFILE.id === 'spark60_preview';
+  const isSpark40BoardProfile = ACTIVE_BOARD_PROFILE.id === 'spark40_ring';
   const boardRef = useRef<HTMLDivElement>(null);
   const topbarMenuRef = useRef<HTMLDivElement>(null);
   const topbarMenuFirstItemRef = useRef<HTMLButtonElement>(null);
@@ -3029,8 +3029,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     : '—';
   const avatarImageUrl = getAvatarImageUrl(session.user);
   const islandDisplayName = getIslandDisplayName(islandNumber);
-  const spark60RingSegmentsGradient = useMemo(() => {
-    if (!isSpark60BoardProfile || !activeTileAnchors.length) return '';
+  const spark40RingSegmentsGradient = useMemo(() => {
+    if (!isSpark40BoardProfile || !activeTileAnchors.length) return '';
     const segmentSize = 360 / activeTileAnchors.length;
     const segments = Array.from({ length: activeTileAnchors.length }, (_, index) => {
         const tileType = tileMap[index]?.tileType ?? 'micro';
@@ -3041,7 +3041,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       })
       .join(', ');
     return `conic-gradient(from -90deg, ${segments})`;
-  }, [activeTileAnchors.length, isSpark60BoardProfile, tileMap]);
+  }, [activeTileAnchors.length, isSpark40BoardProfile, tileMap]);
   const shouldPromptDicePurchase = dicePool < DICE_PER_ROLL;
   const wasDicePurchasePromptEligibleRef = useRef(false);
 
@@ -6121,7 +6121,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         </header>
       ) : null}
 
-      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${(!isIslandBackgroundAvailable || isBackgroundHidden) ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark60BoardProfile ? 'island-run-board--spark60' : ''}`}>
+      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${(!isIslandBackgroundAvailable || isBackgroundHidden) ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark40BoardProfile ? 'island-run-board--spark40' : ''}`}>
         {isIslandBackgroundAvailable && !isBackgroundHidden && (
           <img
             key={islandBackgroundSrc}
@@ -6318,8 +6318,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           backgroundSrc={islandBackgroundSrc}
           isBackgroundAvailable={isIslandBackgroundAvailable}
           onBackgroundError={() => setIsIslandBackgroundAvailable(false)}
-          spark60RingGradient={spark60RingSegmentsGradient}
-          isSpark60={isSpark60BoardProfile}
+          spark40RingGradient={spark40RingSegmentsGradient}
+          isSpark40={isSpark40BoardProfile}
           showDebug={showDebug}
           isMinimalBoardArt={isMinimalBoardArt}
           boardTiltXDeg={boardTiltXDeg}
