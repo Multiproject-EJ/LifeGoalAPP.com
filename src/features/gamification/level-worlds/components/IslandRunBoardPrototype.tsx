@@ -2847,17 +2847,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return () => window.clearInterval(timer);
   }, [isIslandTimerPendingStart, showTravelOverlay, islandNumber, islandExpiresAtMs]);
 
-  useEffect(() => {
-    if (!isRolling) return;
-
-    const timer = window.setInterval(() => {
-      const left = Math.floor(Math.random() * (ROLL_MAX - ROLL_MIN + 1)) + ROLL_MIN;
-      const right = Math.floor(Math.random() * (ROLL_MAX - ROLL_MIN + 1)) + ROLL_MIN;
-      setRollingDiceFaces([left, right]);
-    }, 90);
-
-    return () => window.clearInterval(timer);
-  }, [isRolling]);
 
   // M15G: Write summary to global key so App.tsx overlay can read islandExpiresAtMs
   useEffect(() => {
