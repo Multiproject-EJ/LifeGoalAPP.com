@@ -6603,6 +6603,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </div>
             {activeStopId !== 'hatchery' ? <p>{activeStop.description}</p> : null}
             {activeStopId !== 'hatchery' ? <p><strong>Status:</strong> {stopStateMap.get(activeStop.stopId) ?? 'active'}</p> : null}
+            {activeStopId !== 'hatchery' && stopStateMap.get(activeStop.stopId) === 'locked' ? (
+              <p className="island-stop-modal__locked-notice">🔒 This stop is not open yet. Complete the previous stop first to unlock it.</p>
+            ) : null}
             {activeStop.isBehaviorStop ? <p><strong>Behavior stop:</strong> yes (habit/check-in/reflection)</p> : null}
 
             {activeStopId === 'hatchery' && (
@@ -6741,7 +6744,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             )}
 
             {/* ── Stop 3: Mystery (rotating content: breathing/meditation/check-in) ── */}
-            {activeStopId === 'mystery' && (
+            {activeStopId === 'mystery' && stopStateMap.get('mystery') !== 'locked' && (
               <div className="island-hatchery-card">
                 {activeStop.kind === 'breathing' ? (
                   <div>
@@ -6793,7 +6796,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             )}
 
             {/* ── Stop 4: Wisdom (story, questionnaire, learning content) ── */}
-            {activeStopId === 'wisdom' && (
+            {activeStopId === 'wisdom' && stopStateMap.get('wisdom') !== 'locked' && (
               <div className="island-hatchery-card">
                 <p className="island-stop-modal__copy"><strong>📖 Wisdom Stop</strong></p>
                 <p>Gain insight from a short story, reflection, or questionnaire. Wisdom content evolves as you progress.</p>
@@ -6837,7 +6840,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               </div>
             )}
 
-            {activeStop.stopId === 'boss' ? (
+            {activeStop.stopId === 'boss' && stopStateMap.get('boss') !== 'locked' ? (
               (() => {
                 const bossConfig = getBossTrialConfig(islandNumber);
                 const bossReward = getBossReward(islandNumber);
@@ -6976,7 +6979,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               && activeStop.stopId !== 'boss'
               && activeStop.stopId !== 'mystery'
               && activeStop.stopId !== 'wisdom'
-              && activeStop.kind !== 'checkin_reflection' ? (
+              && activeStop.kind !== 'checkin_reflection'
+              && stopStateMap.get(activeStop.stopId) !== 'locked' ? (
                 <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
                   Complete Stop
                 </button>

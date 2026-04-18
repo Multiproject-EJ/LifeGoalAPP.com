@@ -41,11 +41,11 @@ export const BoardOrbitStops = memo(function BoardOrbitStops(props: BoardOrbitSt
           ].filter(Boolean).join(' ')}
           style={{ left: stopVisual.x, top: stopVisual.y }}
           onClick={() => {
-            if (stopVisual.stopId && stopVisual.state !== 'locked') {
+            if (stopVisual.stopId) {
               onStopClick(stopVisual.stopId);
             }
           }}
-          disabled={!stopVisual.stopId || stopVisual.state === 'locked'}
+          disabled={!stopVisual.stopId}
           aria-label={`${stopVisual.label} — ${stopVisual.state}`}
         >
           <span className="island-orbit-stop__icon" aria-hidden="true">
