@@ -52,10 +52,10 @@ function getRarity(seg: WheelSegment): RarityTier {
 }
 
 const RARITY_META: Record<RarityTier, { label: string; dot: string }> = {
-  common:    { label: 'Common',    dot: '\u26AA' },
-  uncommon:  { label: 'Uncommon',  dot: '\uD83D\uDFE2' },
-  rare:      { label: 'Rare',      dot: '\uD83D\uDFE1' },
-  legendary: { label: 'Legendary', dot: '\uD83D\uDFE3' },
+  common:    { label: 'Common',    dot: '⚪' },
+  uncommon:  { label: 'Uncommon',  dot: '🟢' },
+  rare:      { label: 'Rare',      dot: '🟡' },
+  legendary: { label: 'Legendary', dot: '🟣' },
 };
 
 /* ------------------------------------------------------------------ */
@@ -425,10 +425,10 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
             onClick={onClose}
             aria-label="Close spin wheel"
           >
-            &#x2715;
+            ✕
           </button>
           <div className="new-daily-spin-modal__loading">
-            <div className="spinner">{'\uD83C\uDFA1'}</div>
+            <div className="spinner">🎡</div>
             <p>Loading spin wheel...</p>
           </div>
         </div>
@@ -450,7 +450,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
   const headerSubtitle = error
     ? 'We could not load the spin. Check your connection and retry.'
     : canSpin
-      ? 'Your spin is ready \u2014 give it a whirl!'
+      ? 'Your spin is ready — give it a whirl!'
       : 'No spins left. Earn more by completing habits today.';
 
   return (
@@ -465,11 +465,11 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
           onClick={onClose}
           aria-label="Close spin wheel"
         >
-          &#x2715;
+          ✕
         </button>
 
         <header className="new-daily-spin-modal__header">
-          <h2>{'\uD83C\uDFA1'} Daily Spin Wheel</h2>
+          <h2>🎡 Daily Spin Wheel</h2>
           <p className="new-daily-spin-modal__subtitle">{headerSubtitle}</p>
         </header>
 
@@ -553,7 +553,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
               onClick={handleSpin}
               disabled={spinning}
             >
-              {spinning ? '\uD83C\uDFA1 SPINNING...' : '\uD83C\uDFA1 SPIN!'}
+              {spinning ? '🎡 SPINNING...' : '🎡 SPIN!'}
             </button>
           ) : wonPrize ? (
             <div className="new-daily-spin-modal__result">
@@ -570,14 +570,14 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
             </div>
           ) : (
             <div className="new-daily-spin-modal__locked">
-              <p className="new-daily-spin-modal__locked-icon">{'\uD83D\uDD12'}</p>
+              <p className="new-daily-spin-modal__locked-icon">🔒</p>
               <p className="new-daily-spin-modal__locked-text">
                 Earn spins by finishing habits:
               </p>
               <ul className="new-daily-spin-modal__locked-list">
-                <li>Complete 1+ habits today {'\u2192'} 1 spin</li>
-                <li>Complete all of today&apos;s habits {'\u2192'} 2 spins</li>
-                <li>Keep a 7+ day streak {'\u2192'} +1 bonus spin at reset</li>
+                <li>Complete 1+ habits today → 1 spin</li>
+                <li>Complete all of today&apos;s habits → 2 spins</li>
+                <li>Keep a 7+ day streak → +1 bonus spin at reset</li>
               </ul>
             </div>
           )}
@@ -598,7 +598,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
               onClick={(e) => e.stopPropagation()}
             >
               <div className="new-daily-spin-modal__reward-burst">
-                {isSpecialPrize ? '\uD83D\uDDDD\uFE0F' : '\uD83C\uDF89'}
+                {isSpecialPrize ? '🗝️' : '🎉'}
               </div>
               <h3 className="new-daily-spin-modal__reward-title">
                 {wonPrize.type === 'mystery' ? 'Mystery Revealed!' : 'Reward Claimed!'}

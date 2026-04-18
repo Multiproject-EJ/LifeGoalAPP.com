@@ -453,20 +453,17 @@ async function awardPrize(userId: string, prize: SpinPrize): Promise<void> {
       return;
     }
 
-    await supabase.rpc('island_run_add_currency' as any, {
+    const { error: rpcError } = await supabase.rpc('island_run_add_currency' as any, {
       p_user_id: userId,
       p_field: field,
       p_amount: amount,
-    }).then(({ error }) => {
-      // If the RPC doesn't exist yet, fall back to a direct update
-      if (error) {
-        console.warn(`island_run_add_currency RPC failed (${field}), falling back:`, error.message);
-        return supabase
-          .from('island_run' as any)
-          .update({ [field]: amount } as any)
-          .eq('user_id', userId);
-      }
     });
+
+    if (rpcError) {
+      // If the RPC doesn't exist yet, fall back to profile points (properly incremented)
+      console.warn(`island_run_add_currency RPC failed (${field}), falling back to profile:`, rpcError.message);
+      await addToProfile('total_points', amount);
+    }
 
     void recordTelemetryEvent({
       userId,
