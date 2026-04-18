@@ -131,6 +131,14 @@ function Die({ value, isRolling, delay }: { value: number; isRolling: boolean; d
 
 export function BoardDice3D({ value1, value2, isRolling, x, y, onRollComplete }: BoardDice3DProps) {
   const hasCalledCompleteRef = useRef(false);
+  // Keep a stable ref to the latest callback so the timer effect only depends on
+  // `isRolling`. Without this, any parent re-render (e.g. the 1-second clock tick)
+  // creates a new inline arrow function, changing `onRollComplete`'s identity and
+  // cancelling/restarting the timer — meaning it could reset indefinitely and never fire.
+  const onRollCompleteRef = useRef(onRollComplete);
+  useEffect(() => {
+    onRollCompleteRef.current = onRollComplete;
+  });
 
   useEffect(() => {
     if (!isRolling) {
@@ -142,12 +150,12 @@ export function BoardDice3D({ value1, value2, isRolling, x, y, onRollComplete }:
     const timer = setTimeout(() => {
       if (!hasCalledCompleteRef.current) {
         hasCalledCompleteRef.current = true;
-        onRollComplete?.();
+        onRollCompleteRef.current?.();
       }
     }, ROLL_DURATION_MS + 200); // die2 delay(100) + settle
 
     return () => clearTimeout(timer);
-  }, [isRolling, onRollComplete]);
+  }, [isRolling]);
 
   const posStyle: React.CSSProperties = {};
   if (typeof x === 'number' && typeof y === 'number') {
