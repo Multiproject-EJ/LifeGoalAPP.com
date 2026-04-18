@@ -410,15 +410,6 @@ export function BoardStage(props: BoardStageProps) {
           onRollComplete={onDiceRollComplete}
         />
 
-        {/* Orbit stops */}
-        <BoardOrbitStops
-          stopVisuals={orbitStopVisuals}
-          activeStopId={activeStopId}
-          sceneClass={theme.sceneClass}
-          onStopClick={onStopClick}
-          getOrbitStopDisplayIcon={getOrbitStopDisplayIcon}
-        />
-
         {/* Depth mask */}
         <img
           className="island-run-board__depth-mask"
@@ -463,6 +454,14 @@ export function BoardStage(props: BoardStageProps) {
           />
         )}
       </div>
+      {/* Orbit stops — HUD layer above gesture capture so clicks reach the buttons */}
+      <BoardOrbitStops
+        stopVisuals={orbitStopVisuals}
+        activeStopId={activeStopId}
+        sceneClass={theme.sceneClass}
+        onStopClick={onStopClick}
+        getOrbitStopDisplayIcon={getOrbitStopDisplayIcon}
+      />
     </div>
   );
 }
