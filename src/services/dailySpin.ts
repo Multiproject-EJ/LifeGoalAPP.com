@@ -420,7 +420,7 @@ async function awardPrize(userId: string, prize: SpinPrize): Promise<void> {
   const addToProfile = async (field: string, amount: number) => {
     const { data: profile } = await fetchGamificationProfile(userId);
     if (!profile) return;
-    const current = (profile as Record<string, number>)[field] ?? 0;
+    const current = (profile as unknown as Record<string, number>)[field] ?? 0;
     const next = current + amount;
 
     if (!canUseSupabaseData()) {
