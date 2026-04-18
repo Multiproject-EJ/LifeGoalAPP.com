@@ -375,7 +375,7 @@ export const DEMO_ACHIEVEMENTS_KEY = 'lifegoal_demo_user_achievements';
 // =====================================================
 
 // Daily Spin types
-export type PrizeType = 'gold' | 'treasure_chest';
+export type PrizeType = 'gold' | 'treasure_chest' | 'essence' | 'shards' | 'dice' | 'game_tokens' | 'mystery';
 
 export interface DailySpinState {
   userId: string;
@@ -410,33 +410,19 @@ export interface SpinResult {
   spinsRemaining: number;
 }
 
-// Prize configuration
+// Prize configuration — multi-currency pool aligned with island-run economy
 export const SPIN_PRIZES: SpinPrize[] = [
-  { type: 'gold', value: 5, label: '5 Gold', icon: '🪙', wheelSize: 'medium', wheelWeight: 4 },
-  { type: 'gold', value: 8, label: '8 Gold', icon: '🪙', wheelSize: 'medium', wheelWeight: 4 },
-  { type: 'gold', value: 12, label: '12 Gold', icon: '🪙', wheelSize: 'medium', wheelWeight: 3 },
-  { type: 'gold', value: 16, label: '16 Gold', icon: '🪙', wheelSize: 'medium', wheelWeight: 3 },
-  { type: 'gold', value: 20, label: '20 Gold', icon: '🪙', wheelSize: 'large', wheelWeight: 3 },
-  { type: 'gold', value: 24, label: '24 Gold', icon: '🪙', wheelSize: 'large', wheelWeight: 2 },
-  { type: 'gold', value: 30, label: '30 Gold', icon: '🪙', wheelSize: 'large', wheelWeight: 2 },
-  { type: 'treasure_chest', value: 120, label: 'Treasure Chest (120)', icon: '🧰', wheelSize: 'small', wheelWeight: 2 },
-  { type: 'treasure_chest', value: 260, label: 'Treasure Chest (260)', icon: '🧰', wheelSize: 'small', wheelWeight: 1 },
-  { type: 'treasure_chest', value: 740, label: 'Legendary Chest (740)', icon: '🧰', wheelSize: 'small', wheelWeight: 1 },
+  { type: 'essence',        value: 10,  label: '10 Essence',      icon: '🟣', wheelSize: 'medium', wheelWeight: 4 },
+  { type: 'essence',        value: 25,  label: '25 Essence',      icon: '🟣', wheelSize: 'medium', wheelWeight: 3 },
+  { type: 'essence',        value: 50,  label: '50 Essence',      icon: '🟣', wheelSize: 'large',  wheelWeight: 2 },
+  { type: 'shards',         value: 2,   label: '2 Shards',        icon: '🔮', wheelSize: 'medium', wheelWeight: 3 },
+  { type: 'shards',         value: 5,   label: '5 Shards',        icon: '🔮', wheelSize: 'large',  wheelWeight: 2 },
+  { type: 'dice',           value: 8,   label: '8 Dice',          icon: '🎲', wheelSize: 'medium', wheelWeight: 3 },
+  { type: 'dice',           value: 15,  label: '15 Dice',         icon: '🎲', wheelSize: 'large',  wheelWeight: 2 },
+  { type: 'game_tokens',    value: 2,   label: '2 Tokens',        icon: '🎟️', wheelSize: 'medium', wheelWeight: 3 },
+  { type: 'treasure_chest', value: 1,   label: 'Treasure Chest',  icon: '🧰', wheelSize: 'small',  wheelWeight: 2, details: { rarity: 'rare' } },
+  { type: 'mystery',        value: 1,   label: 'Mystery Box',     icon: '🎁', wheelSize: 'small',  wheelWeight: 1, details: { rarity: 'legendary' } },
 ];
-
-// Weighted prize probabilities (must sum to 100)
-export const PRIZE_WEIGHTS: Record<number, number> = {
-  0: 15, // 5 Gold
-  1: 15, // 8 Gold
-  2: 12, // 12 Gold
-  3: 11, // 16 Gold
-  4: 11, // 20 Gold
-  5: 10, // 24 Gold
-  6: 10, // 30 Gold
-  7: 8,  // Treasure Chest (120)
-  8: 5,  // Treasure Chest (260)
-  9: 3,  // Legendary Chest (740)
-};
 
 // =====================================================
 // POWER-UPS STORE TYPES
