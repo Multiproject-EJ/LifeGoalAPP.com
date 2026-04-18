@@ -6604,7 +6604,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             {activeStopId !== 'hatchery' ? <p>{activeStop.description}</p> : null}
             {activeStopId !== 'hatchery' ? <p><strong>Status:</strong> {stopStateMap.get(activeStop.stopId) ?? 'active'}</p> : null}
             {activeStopId !== 'hatchery' && stopStateMap.get(activeStop.stopId) === 'locked' ? (
-              <p className="island-stop-modal__locked-notice">🔒 This stop is not open yet. Complete the previous stop first to unlock it.</p>
+              <p className="island-stop-modal__locked-notice" role="status"><span aria-hidden="true">🔒</span> This stop is not open yet. Complete the previous stop first to unlock it.</p>
             ) : null}
             {activeStop.isBehaviorStop ? <p><strong>Behavior stop:</strong> yes (habit/check-in/reflection)</p> : null}
 
@@ -6744,7 +6744,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             )}
 
             {/* ── Stop 3: Mystery (rotating content: breathing/meditation/check-in) ── */}
-            {activeStopId === 'mystery' && stopStateMap.get('mystery') !== 'locked' && (
+            {activeStopId === 'mystery' && stopStateMap.get(activeStop.stopId) !== 'locked' && (
               <div className="island-hatchery-card">
                 {activeStop.kind === 'breathing' ? (
                   <div>
@@ -6796,7 +6796,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             )}
 
             {/* ── Stop 4: Wisdom (story, questionnaire, learning content) ── */}
-            {activeStopId === 'wisdom' && stopStateMap.get('wisdom') !== 'locked' && (
+            {activeStopId === 'wisdom' && stopStateMap.get(activeStop.stopId) !== 'locked' && (
               <div className="island-hatchery-card">
                 <p className="island-stop-modal__copy"><strong>📖 Wisdom Stop</strong></p>
                 <p>Gain insight from a short story, reflection, or questionnaire. Wisdom content evolves as you progress.</p>
