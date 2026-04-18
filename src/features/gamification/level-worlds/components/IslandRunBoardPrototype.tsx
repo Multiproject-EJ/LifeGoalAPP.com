@@ -1859,7 +1859,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       .then((hydrationResult) => {
         if (!isActive) return;
         setRuntimeHydrationSource(hydrationResult.source);
-        setRuntimeState(hydrationResult.state);
+        // Only apply the remote state when it is strictly newer than the local snapshot.
+        // When local and remote share the same runtimeVersion but differ in content (e.g.
+        // a build or essence earn was written to localStorage but the Supabase commit was
+        // interrupted), the local snapshot is the authoritative source of truth.
+        // For non-'table' sources the hydration result IS the local fallback, so applying
+        // it is always safe and is left unchanged.
+        if (
+          hydrationResult.source !== 'table' ||
+          hydrationResult.state.runtimeVersion > localSnapshotBeforeHydration.runtimeVersion
+        ) {
+          setRuntimeState(hydrationResult.state);
+        }
 
         logIslandRunEntryDebug('island_run_runtime_hydration_result', {
           userId: session.user.id,
@@ -2407,10 +2418,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     if (result.earned < 1) return;
 
-    void persistIslandRunRuntimeStatePatch({
+    // Write directly (no remote pre-read) so localStorage is updated immediately,
+    // matching the dice-roll pattern. This prevents earned essence from being lost
+    // when the user exits before the async Supabase round-trip completes.
+    void writeIslandRunGameStateRecord({
       session,
       client,
-      patch: {
+      record: {
+        ...runtimeStateRef.current,
         essence: result.essence,
         essenceLifetimeEarned: result.essenceLifetimeEarned,
       },
@@ -4939,10 +4954,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    void persistIslandRunRuntimeStatePatch({
+    // Write directly (no remote pre-read) so localStorage is updated immediately,
+    // matching the dice-roll pattern. This prevents build progress from being lost
+    // when the user exits before the async Supabase round-trip completes.
+    void writeIslandRunGameStateRecord({
       session,
       client,
-      patch: {
+      record: {
+        ...runtimeStateRef.current,
         essence: spendResult.essence,
         essenceLifetimeSpent: spendResult.essenceLifetimeSpent,
         stopBuildStateByIndex: spendResult.stopBuildStateByIndex,

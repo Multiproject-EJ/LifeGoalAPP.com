@@ -1221,7 +1221,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
           fallback,
         );
 
-        if (typeof window !== 'undefined') {
+        // Only overwrite localStorage when the remote state is strictly newer.
+        // This prevents a stale Supabase row from clobbering local writes whose
+        // Supabase commit was interrupted (e.g., a build tap that was in-flight).
+        if (legacyHydratedRecord.runtimeVersion > fallback.runtimeVersion && typeof window !== 'undefined') {
           try {
             window.localStorage.setItem(getStorageKey(session.user.id), JSON.stringify(legacyHydratedRecord));
           } catch {
@@ -1330,7 +1333,11 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
     fallback,
   );
 
-  if (typeof window !== 'undefined') {
+  // Only overwrite localStorage when the remote state is strictly newer.
+  // This prevents a stale Supabase row from clobbering local writes whose
+  // Supabase commit was interrupted (e.g., a build tap or essence earn
+  // that was still in-flight when the user exited).
+  if (hydratedRecord.runtimeVersion > fallback.runtimeVersion && typeof window !== 'undefined') {
     try {
       window.localStorage.setItem(getStorageKey(session.user.id), JSON.stringify(hydratedRecord));
     } catch {
