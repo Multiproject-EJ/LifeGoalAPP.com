@@ -144,7 +144,10 @@ export async function executeIslandRunRollAction(options: {
   };
 
   // Fire-and-forget: don't block the UI on the remote persist.
-  void writeIslandRunGameStateRecord({ session, client, record: nextState });
+  writeIslandRunGameStateRecord({ session, client, record: nextState }).catch((err) => {
+    // eslint-disable-next-line no-console
+    console.warn('[IslandRun] Background dice roll persist failed:', err);
+  });
 
   return {
     status: 'ok',

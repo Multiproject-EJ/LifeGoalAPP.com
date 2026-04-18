@@ -198,6 +198,11 @@ function buildHydrationSourceOrder(baseSource: 'local_storage' | 'in_memory', hy
   return [baseSource, hydrationSource];
 }
 
+/** localStorage key for tracking egg-ready banner dismissal per egg instance. */
+function getEggReadyBannerKey(userId: string, eggSetAtMs: number): string {
+  return `lifegoal:egg_ready_banner_shown:${userId}:${eggSetAtMs}`;
+}
+
 function isIsland120StartupDiagnosticTarget(islandNumber: number) {
   return islandNumber === ISLAND_RUN_120_STARTUP_DIAGNOSTIC_ISLAND;
 }
@@ -2836,7 +2841,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (eggStage === 4 && prevEggStageRef.current < 4) {
       playIslandRunSound('egg_ready');
       // Only show banner if not already dismissed for this specific egg
-      const bannerKey = activeEgg ? `lifegoal:egg_ready_banner_shown:${session.user.id}:${activeEgg.setAtMs}` : null;
+      const bannerKey = activeEgg ? getEggReadyBannerKey(session.user.id, activeEgg.setAtMs) : null;
       const alreadyDismissed = bannerKey ? window.localStorage.getItem(bannerKey) === '1' : false;
       if (!alreadyDismissed) {
         setShowEggReadyBanner(true);
@@ -2848,7 +2853,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // Show egg-ready banner on initial load if egg is already ready and banner not yet dismissed
   useEffect(() => {
     if (eggStage === 4 && hasHydratedRuntimeState && activeEgg) {
-      const bannerKey = `lifegoal:egg_ready_banner_shown:${session.user.id}:${activeEgg.setAtMs}`;
+      const bannerKey = getEggReadyBannerKey(session.user.id, activeEgg.setAtMs);
       const alreadyDismissed = window.localStorage.getItem(bannerKey) === '1';
       if (!alreadyDismissed) {
         setShowEggReadyBanner(true);
@@ -7262,7 +7267,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
                 onClick={() => {
                   if (activeEgg) {
-                    try { window.localStorage.setItem(`lifegoal:egg_ready_banner_shown:${session.user.id}:${activeEgg.setAtMs}`, '1'); } catch { /* ignore */ }
+                    try { window.localStorage.setItem(getEggReadyBannerKey(session.user.id, activeEgg.setAtMs), '1'); } catch { /* ignore */ }
                   }
                   setShowEggReadyBanner(false);
                   requestActiveStopTransition('hatchery', 'egg_ready_banner');
@@ -7275,7 +7280,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
                 onClick={() => {
                   if (activeEgg) {
-                    try { window.localStorage.setItem(`lifegoal:egg_ready_banner_shown:${session.user.id}:${activeEgg.setAtMs}`, '1'); } catch { /* ignore */ }
+                    try { window.localStorage.setItem(getEggReadyBannerKey(session.user.id, activeEgg.setAtMs), '1'); } catch { /* ignore */ }
                   }
                   setShowEggReadyBanner(false);
                 }}

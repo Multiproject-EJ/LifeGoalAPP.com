@@ -306,7 +306,12 @@ export function IslandRunDebugPanel({ session, client, runtimeState, localState,
         setCopiedToClipboard(true);
         setTimeout(() => setCopiedToClipboard(false), 2000);
       },
-      () => { /* clipboard fail is non-critical */ },
+      () => {
+        // Clipboard write can fail in some browsers/contexts. Show feedback.
+        setCopiedToClipboard(false);
+        // eslint-disable-next-line no-console
+        console.warn('[IslandRun] Debug panel: clipboard write failed');
+      },
     );
   };
 
