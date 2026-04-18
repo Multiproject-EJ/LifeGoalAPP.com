@@ -6574,7 +6574,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         </div>
       )}
 
-      {activeStop && (
+      {activeStop && (() => {
+        const openedStopIndex = islandStopPlan.findIndex((s) => s.stopId === activeStop.stopId);
+        const openedStopState = stopStateMap.get(activeStop.stopId) ?? 'active';
+        const openedStopIsLocked = openedStopState === 'locked';
+        const openedStopIsCompleted = openedStopState === 'completed' || openedStopState === 'partial';
+        const openedStopIsPlayable = !openedStopIsLocked && !openedStopIsCompleted;
+        const priorStop = openedStopIndex > 0 ? islandStopPlan[openedStopIndex - 1] : null;
+        return (
         <div className="island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label={activeStop.title}>
             <div className="island-stop-modal__header-row">
@@ -6602,9 +6609,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               ) : null}
             </div>
             {activeStopId !== 'hatchery' ? <p>{activeStop.description}</p> : null}
-            {activeStopId !== 'hatchery' ? <p><strong>Status:</strong> {stopStateMap.get(activeStop.stopId) ?? 'active'}</p> : null}
-            {activeStopId !== 'hatchery' && stopStateMap.get(activeStop.stopId) === 'locked' ? (
-              <p className="island-stop-modal__locked-notice" role="status"><span aria-hidden="true">🔒</span> This stop is not open yet. Complete the previous stop first to unlock it.</p>
+            {activeStopId !== 'hatchery' ? <p><strong>Status:</strong> {openedStopState}</p> : null}
+            {activeStopId !== 'hatchery' && openedStopIsLocked ? (
+              <p className="island-stop-modal__locked-notice" role="status">
+                <span aria-hidden="true">🔒</span>{' '}
+                {priorStop
+                  ? <>Complete <strong>{priorStop.title}</strong> first to unlock this stop.</>
+                  : 'This stop is not open yet. Complete the previous stop first to unlock it.'}
+              </p>
+            ) : null}
+            {activeStopId !== 'hatchery' && openedStopIsCompleted ? (
+              <div className="island-stop-modal__completed-banner" role="status">
+                <span aria-hidden="true">✅</span> This stop is complete for this island. Well done!
+              </div>
             ) : null}
             {activeStop.isBehaviorStop ? <p><strong>Behavior stop:</strong> yes (habit/check-in/reflection)</p> : null}
 
@@ -6744,7 +6761,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             )}
 
             {/* ── Stop 3: Mystery (rotating content: breathing/meditation/check-in) ── */}
-            {activeStopId === 'mystery' && stopStateMap.get(activeStop.stopId) !== 'locked' && (
+            {activeStopId === 'mystery' && openedStopIsPlayable && (
               <div className="island-hatchery-card">
                 {activeStop.kind === 'breathing' ? (
                   <div>
@@ -6796,7 +6813,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             )}
 
             {/* ── Stop 4: Wisdom (story, questionnaire, learning content) ── */}
-            {activeStopId === 'wisdom' && stopStateMap.get(activeStop.stopId) !== 'locked' && (
+            {activeStopId === 'wisdom' && openedStopIsPlayable && (
               <div className="island-hatchery-card">
                 <p className="island-stop-modal__copy"><strong>📖 Wisdom Stop</strong></p>
                 <p>Gain insight from a short story, reflection, or questionnaire. Wisdom content evolves as you progress.</p>
@@ -6840,7 +6857,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               </div>
             )}
 
-            {activeStop.stopId === 'boss' && stopStateMap.get('boss') !== 'locked' ? (
+            {activeStop.stopId === 'boss' && openedStopIsPlayable ? (
               (() => {
                 const bossConfig = getBossTrialConfig(islandNumber);
                 const bossReward = getBossReward(islandNumber);
@@ -6980,12 +6997,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               && activeStop.stopId !== 'mystery'
               && activeStop.stopId !== 'wisdom'
               && activeStop.kind !== 'checkin_reflection'
-              && stopStateMap.get(activeStop.stopId) !== 'locked' ? (
+              && openedStopIsPlayable ? (
                 <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
                   Complete Stop
                 </button>
               ) : null}
-              {activeStop.stopId === 'boss' ? (
+              {activeStop.stopId === 'boss' && openedStopIsPlayable ? (
                 <button
                   type="button"
                   className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
@@ -7001,7 +7018,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </div>
           </section>
         </div>
-      )}
+        );
+      })()}
 
 
       {showEncounterModal && (
