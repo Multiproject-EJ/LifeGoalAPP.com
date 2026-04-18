@@ -10,3 +10,13 @@ export { useBoardCamera, type CameraState, type CameraMode, type UseBoardCameraO
 export { useBoardGestures, type GestureCallbacks } from './useBoardGestures';
 export { useTokenAnimation, type TokenAnimState, type UseTokenAnimationOptions } from './useTokenAnimation';
 export { createSpring, stepSpring, stepSprings, SPRING_PRESETS, type SpringConfig, type SpringState } from './springEngine';
+export {
+  CAMERA_ZOOM,
+  getShotPreset,
+  landingEventForTile,
+  computeDirectionalLead,
+  computeHopDurations,
+  type CameraEventKind,
+  type ShotPreset,
+  type StopId,
+} from './cameraDirector';

@@ -11,6 +11,12 @@ import { BoardToken } from './BoardToken';
 import { BoardParticles } from './BoardParticles';
 import { BoardOrbitStops, type OrbitStopVisualData, type StopProgressState } from './BoardOrbitStops';
 import { BoardDice3D } from './BoardDice3D';
+import {
+  computeDirectionalLead,
+  computeHopDurations,
+  getShotPreset,
+  landingEventForTile,
+} from './cameraDirector';
 
 const BOARD_TILT_X_DEG = 40;
 const BOARD_ROTATE_Z_DEG = 0;
@@ -82,7 +88,8 @@ export interface BoardStageCameraControls {
   goOverview: () => void;
   goDefault: () => void;
   goFocusPoint: (screenX: number, screenY: number, zoom?: number) => void;
-  goFollowToken: (screenX: number, screenY: number) => void;
+  goFollowToken: (screenX: number, screenY: number, leadX?: number, leadY?: number) => void;
+  goPreRoll: (screenX: number, screenY: number) => void;
   shake: (amplitude?: number, durationMs?: number) => void;
 }
 
@@ -173,9 +180,10 @@ export function BoardStage(props: BoardStageProps) {
       goDefault: camera.goDefault,
       goFocusPoint: camera.goFocusPoint,
       goFollowToken: camera.goFollowToken,
+      goPreRoll: camera.goPreRoll,
       shake: camera.shake,
     });
-  }, [camera.goOverview, camera.goDefault, camera.goFocusPoint, camera.goFollowToken, camera.shake, onCameraReady]);
+  }, [camera.goOverview, camera.goDefault, camera.goFocusPoint, camera.goFollowToken, camera.goPreRoll, camera.shake, onCameraReady]);
 
   // ── Gestures ─────────────────────────────────────────────────────────────
   const gestureCallbacks = useMemo(() => ({
@@ -229,34 +237,48 @@ export function BoardStage(props: BoardStageProps) {
   // Ref for landing-settle setTimeout cleanup
   const landingSettleTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
+  // Track the previous hop position for directional lead computation
+  const prevHopPosRef = useRef<{ x: number; y: number }>({ x: boardSize.width / 2, y: boardSize.height / 2 });
+
   // ── Token animation ──────────────────────────────────────────────────────
   const tokenAnim = useTokenAnimation({
     toScreen,
     onHop: onTokenHop,
     onHopPosition: (screenX, screenY, _tileIndex) => {
-      // Camera follows token on each hop with soft spring lag
-      camera.goFollowToken(screenX, screenY);
+      // Compute directional lead from previous hop position
+      const prev = prevHopPosRef.current;
+      const { leadX, leadY } = computeDirectionalLead(prev.x, prev.y, screenX, screenY);
+      prevHopPosRef.current = { x: screenX, y: screenY };
+      // Camera follows token on each hop with soft spring lag + directional lead
+      camera.goFollowToken(screenX, screenY, leadX, leadY);
     },
     onLand: (idx) => {
       onTokenLand?.(idx);
-      // Landing emphasis: tighter zoom + shake
+      // Determine camera event kind from stop map (per-stop interest scoring)
+      const eventKind = landingEventForTile(idx, stopMap);
+      const preset = getShotPreset(eventKind);
+
+      // Landing emphasis: zoom + shake driven by shot preset
       const anchor = anchors[idx];
       if (anchor) {
         const pos = toScreen(anchor);
-        camera.goLandingFocus(pos.x, pos.y);
+        camera.goLandingFocus(pos.x, pos.y, preset);
       }
-      camera.shake(2.5, 180);
+      if (preset.shakeAmplitude > 0) {
+        camera.shake(preset.shakeAmplitude, preset.shakeDurationMs);
+      }
       setBurstPos({ x: tokenAnim.animState.x, y: tokenAnim.animState.y });
 
-      // Settle back to follow framing after landing emphasis
+      // Settle back to follow framing after the preset's hold duration
+      // Uses smooth spring for the return (asymmetric: fast in, slow out)
       clearTimeout(landingSettleTimeoutRef.current);
       landingSettleTimeoutRef.current = setTimeout(() => {
         const a = anchors[idx];
         if (a) {
           const p = toScreen(a);
-          camera.goFollowToken(p.x, p.y);
+          camera.goReturnToFollow(p.x, p.y, preset);
         }
-      }, 350);
+      }, preset.holdMs);
     },
     hopDurationMs: 200,
   });
@@ -282,20 +304,33 @@ export function BoardStage(props: BoardStageProps) {
       lastHopSequenceRef.current = pendingHopSequence;
       hopSequenceActiveRef.current = true;
 
-      // Zoom in slightly for movement phase
-      camera.goFollowToken(
-        tokenAnim.animState.x || boardSize.width / 2,
-        tokenAnim.animState.y || boardSize.height / 2,
-      );
+      const tokenX = tokenAnim.animState.x || boardSize.width / 2;
+      const tokenY = tokenAnim.animState.y || boardSize.height / 2;
 
-      void tokenAnim.animateHops(anchors, pendingHopSequence).then(() => {
-        hopSequenceActiveRef.current = false;
-        lastHopSequenceRef.current = null;
-        // Update prevTokenIndexRef to the final tile so subsequent single-step
-        // changes don't replay the sequence.
-        prevTokenIndexRef.current = pendingHopSequence[pendingHopSequence.length - 1] ?? tokenIndex;
-        onHopSequenceComplete?.();
-      });
+      // Pre-roll anticipation beat — micro push-in before movement
+      const preRollPreset = getShotPreset('pre_roll');
+      camera.goPreRoll(tokenX, tokenY, preRollPreset);
+
+      // Compute variable hop durations: fast middle hops, slow final hops
+      const hopDurations = computeHopDurations(pendingHopSequence.length);
+
+      // Start the hop animation after a short anticipation hold (150ms)
+      setTimeout(() => {
+        // Reset directional lead tracking from current token position
+        prevHopPosRef.current = { x: tokenX, y: tokenY };
+
+        // Switch to smooth travel spring for the movement phase
+        camera.goFollowToken(tokenX, tokenY);
+
+        void tokenAnim.animateHops(anchors, pendingHopSequence, hopDurations).then(() => {
+          hopSequenceActiveRef.current = false;
+          lastHopSequenceRef.current = null;
+          // Update prevTokenIndexRef to the final tile so subsequent single-step
+          // changes don't replay the sequence.
+          prevTokenIndexRef.current = pendingHopSequence[pendingHopSequence.length - 1] ?? tokenIndex;
+          onHopSequenceComplete?.();
+        });
+      }, 150);
       return;
     }
 
