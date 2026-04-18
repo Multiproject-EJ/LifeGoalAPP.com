@@ -184,7 +184,7 @@ const ISLAND_RUN_CONTRACT_V2_ENABLED = true;
 function resolveRequestedBoardProfileId(): IslandBoardProfileId {
   if (typeof window === 'undefined') return 'spark40_ring';
   const query = new URLSearchParams(window.location.search).get('boardProfile')?.trim().toLowerCase();
-  if (query === 'spark40' || query === 'spark40_ring' || query === 'spark40' || query === 'spark40_preview') return 'spark40_ring';
+  if (query === 'spark40' || query === 'spark40_ring') return 'spark40_ring';
   return 'spark40_ring';
 }
 const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile(resolveRequestedBoardProfileId());

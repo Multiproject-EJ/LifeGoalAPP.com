@@ -1216,7 +1216,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             activeTimedEventProgress: legacyData.active_timed_event_progress ?? fallback.activeTimedEventProgress,
             stickerProgress: legacyData.sticker_progress ?? fallback.stickerProgress,
             stickerInventory: legacyData.sticker_inventory ?? fallback.stickerInventory,
-            lastEssenceDriftLost: (legacyData as Record<string, unknown>).last_essence_drift_lost as number ?? fallback.lastEssenceDriftLost,
+            lastEssenceDriftLost: ((legacyData as Record<string, unknown>).last_essence_drift_lost as number) ?? fallback.lastEssenceDriftLost,
           },
           fallback,
         );
@@ -1325,7 +1325,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       activeTimedEventProgress: data.active_timed_event_progress ?? fallback.activeTimedEventProgress,
       stickerProgress: data.sticker_progress ?? fallback.stickerProgress,
       stickerInventory: data.sticker_inventory ?? fallback.stickerInventory,
-      lastEssenceDriftLost: (data as Record<string, unknown>).last_essence_drift_lost as number ?? fallback.lastEssenceDriftLost,
+      lastEssenceDriftLost: ((data as Record<string, unknown>).last_essence_drift_lost as number) ?? fallback.lastEssenceDriftLost,
     },
     fallback,
   );
