@@ -33,7 +33,7 @@ interface CameraSprings {
 }
 
 const OVERVIEW_ZOOM = CAMERA_ZOOM.overview;
-const FOCUS_ZOOM = 1.5;
+const FOCUS_ZOOM = CAMERA_ZOOM.travelMedium;
 const DEFAULT_ZOOM = CAMERA_ZOOM.boardWide;
 const FOLLOW_ZOOM = CAMERA_ZOOM.travelMedium;
 const MIN_ZOOM = 0.4;
@@ -125,7 +125,7 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
   }, [ensureAnimating, restoreDefaultSpring]);
 
   /** Smoothly animate to focus on a screen-space point (px). */
-  const goFocusPoint = useCallback((screenX: number, screenY: number, zoom = FOCUS_ZOOM) => {
+  const goFocusPoint = useCallback((screenX: number, screenY: number, zoom: number = FOCUS_ZOOM) => {
     const s = springsRef.current;
     s.x.target = (boardWidth / 2) - screenX;
     s.y.target = (boardHeight / 2) - screenY;
@@ -193,7 +193,7 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
    * Uses snappy spring for fast in, then the travel/follow will take over.
    */
   const goPreRoll = useCallback((screenX: number, screenY: number, preset?: ShotPreset) => {
-    const zoom = preset?.zoom ?? 1.15;
+    const zoom = preset?.zoom ?? CAMERA_ZOOM.preRoll;
     applyPresetSpring(preset, 'springIn');
     const s = springsRef.current;
     s.x.target = (boardWidth / 2) - screenX;

@@ -11,16 +11,18 @@ import { SPRING_PRESETS, type SpringConfig } from './springEngine';
 // ─── Named zoom presets ──────────────────────────────────────────────────────
 
 export const CAMERA_ZOOM = {
-  /** Resting board view — medium-wide */
+  /** Resting board view — medium-wide, full ring visible */
   boardWide:    1.0,
-  /** During token travel */
-  travelMedium: 1.5,
-  /** Normal tile landing */
-  tileClose:    1.7,
-  /** High-interest stop landing (boss, hatchery) */
-  rewardClose:  1.9,
+  /** During token travel — tight enough to see ~5-7 tiles (Monopoly GO parity) */
+  travelMedium: 2.2,
+  /** Normal tile landing — punchy close-up, ~4 tiles visible */
+  tileClose:    2.5,
+  /** High-interest stop landing (boss, hatchery) — dramatic punch-in */
+  rewardClose:  2.8,
   /** Overview zoom-out */
   overview:     0.88,
+  /** Pre-roll anticipation crouch — noticeable push-in from boardWide */
+  preRoll:      1.5,
 } as const;
 
 // ─── Event priorities (higher number = higher priority) ──────────────────────
@@ -72,7 +74,7 @@ const SHOT_PRESETS: Record<CameraEventKind, ShotPreset> = {
     shakeDurationMs: 0,
   },
   pre_roll: {
-    zoom: 1.15, // micro push-in for anticipation
+    zoom: CAMERA_ZOOM.preRoll,
     springIn: SPRING_PRESETS.snappy,
     springOut: SPRING_PRESETS.smooth,
     holdMs: 0, // held until travel starts
@@ -163,8 +165,9 @@ export function shouldOverride(current: CameraEventKind, incoming: CameraEventKi
 
 // ─── Directional lead ─────────────────────────────────────────────────────────
 
-/** Pixels of lead offset in the token's direction of travel (screen space). */
-const LEAD_OFFSET_PX = 40;
+/** Pixels of lead offset in the token's direction of travel (screen space).
+ *  Increased to 60 to stay proportional at the tighter 2.2× travel zoom. */
+const LEAD_OFFSET_PX = 60;
 
 /**
  * Compute a directional lead offset so the token sits at ~40% of screen
