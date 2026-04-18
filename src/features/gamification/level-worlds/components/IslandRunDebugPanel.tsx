@@ -86,11 +86,11 @@ export function IslandRunDebugPanel({ session, client, runtimeState, localState,
     (async () => {
       try {
         const { error } = await client
-          .from('profiles')
-          .select('id')
-          .eq('id', session.user.id)
+          .from('island_run_runtime_state')
+          .select('user_id')
+          .eq('user_id', session.user.id)
           .limit(1)
-          .single();
+          .maybeSingle();
         const elapsed = Math.round(performance.now() - start);
         setSupabaseLatencyMs(elapsed);
         if (error) {
