@@ -353,18 +353,6 @@ type VisionReward = {
   specialStoryPanels?: string[];
 };
 
-type VisionStarScheduleWindow = {
-  id: string;
-  windowStart: number;
-  windowEnd: number;
-  isSpecial: boolean;
-};
-
-type VisionStarDailySchedule = {
-  date: string;
-  windows: VisionStarScheduleWindow[];
-};
-
 type HabitReviewAction = 'pause' | 'redesign' | 'replace' | 'archive';
 
 type HabitReviewAiDraft = {
@@ -395,9 +383,9 @@ const getTodayWinsTier = (score: number): TodayWinsTier => {
 
 // Vision star slot machine animation constants
 const SLOT_MACHINE_ANIMATION_DURATION_MS = 2500;
+const SLOT_MACHINE_LANDING_DURATION_MS = 500;
 const SLOT_MACHINE_TOTAL_ITEMS = 15;
 const SLOT_MACHINE_SELECTED_INDEX = 12;
-const VISION_STAR_WINDOW_DURATION_MS = 2 * 60 * 1000;
 
 const LIFE_WHEEL_COLORS: Record<string, string> = {
   health: '#22c55e',
@@ -448,8 +436,6 @@ const visionStarStorageKey = (userId: string, dateISO: string) =>
 const visionStarRewardKey = (userId: string, dateISO: string) =>
   `lifegoal.vision-star-reward:${userId}:${dateISO}`;
 const visionStarCountKey = (userId: string) => `lifegoal.vision-star-count:${userId}`;
-const visionStarScheduleKey = (userId: string, dateISO: string) =>
-  `lifegoal.vision-star-schedule:${userId}:${dateISO}`;
 const weeklySpecialVisionStarKey = (userId: string, weekStartISO: string) =>
   `lifegoal.special-vision-star-week:${userId}:${weekStartISO}`;
 const weeklyHabitReviewShownKey = (userId: string, weekStartISO: string) =>
@@ -708,6 +694,7 @@ export function DailyHabitTracker({
   const [visionPreviewImage, setVisionPreviewImage] = useState<VisionImage | null>(null);
   const [isVisionRewardOpen, setIsVisionRewardOpen] = useState(false);
   const [isVisionRewardSelecting, setIsVisionRewardSelecting] = useState(false);
+  const [isSlotLanding, setIsSlotLanding] = useState(false);
   const [isStarBursting, setIsStarBursting] = useState(false);
   const [isVisionImageLoaded, setIsVisionImageLoaded] = useState(false);
   const [hasClaimedVisionStar, setHasClaimedVisionStar] = useState(false);
@@ -740,10 +727,6 @@ export function DailyHabitTracker({
   const [isWeeklyHabitReviewOpen, setIsWeeklyHabitReviewOpen] = useState(false);
   const [shouldFadeTrackingMeta, setShouldFadeTrackingMeta] = useState(false);
   const trackingMetaFadeTimeoutRef = useRef<number | null>(null);
-  const [visionStarSchedule, setVisionStarSchedule] = useState<VisionStarDailySchedule>({
-    date: '',
-    windows: [],
-  });
   const [timeLimitedOffer, setTimeLimitedOffer] = useState<{
     date: string;
     nextHabitId: string | null;
@@ -1332,99 +1315,6 @@ export function DailyHabitTracker({
   }, [session.user.id, timeLimitedOffer]);
 
   useEffect(() => {
-    if (!isViewingToday) {
-      return;
-    }
-
-    const storedSchedule = loadDraft<VisionStarDailySchedule>(visionStarScheduleKey(session.user.id, activeDate));
-    if (storedSchedule?.date === activeDate && Array.isArray(storedSchedule.windows) && storedSchedule.windows.length > 0) {
-      setVisionStarSchedule(storedSchedule);
-      return;
-    }
-
-    const weekStartISO = getWeekStartISO(activeDate);
-    let specialDayOffset = loadDraft<number>(weeklySpecialVisionStarKey(session.user.id, weekStartISO));
-    if (typeof specialDayOffset !== 'number' || specialDayOffset < 0 || specialDayOffset > 6) {
-      specialDayOffset = Math.floor(Math.random() * 7);
-      saveDraft(weeklySpecialVisionStarKey(session.user.id, weekStartISO), specialDayOffset);
-    }
-
-    const baseDate = parseISODate(activeDate);
-    baseDate.setHours(0, 0, 0, 0);
-    const dayStart = baseDate.getTime();
-
-    const windows: VisionStarScheduleWindow[] = [];
-    const avoidWindows = [
-      timeLimitedOffer.windowStart && timeLimitedOffer.windowEnd
-        ? { windowStart: timeLimitedOffer.windowStart, windowEnd: timeLimitedOffer.windowEnd }
-        : null,
-      habitReviewWindow.windowStart && habitReviewWindow.windowEnd
-        ? { windowStart: habitReviewWindow.windowStart, windowEnd: habitReviewWindow.windowEnd }
-        : null,
-    ].filter(Boolean) as HabitPromptWindow[];
-
-    const preferredRanges = [
-      { startMinute: 8 * 60 + 30, endMinute: 14 * 60 + 30 },
-      { startMinute: 15 * 60 + 30, endMinute: 22 * 60 + 30 },
-    ];
-
-    preferredRanges.forEach((range, index) => {
-      for (let attempt = 0; attempt < 14; attempt += 1) {
-        const candidateStartMinute =
-          range.startMinute + Math.floor(Math.random() * Math.max(1, range.endMinute - range.startMinute));
-        const start = dayStart + candidateStartMinute * 60 * 1000;
-        const end = start + VISION_STAR_WINDOW_DURATION_MS;
-
-        const overlaps = [...avoidWindows, ...windows].some((window) => {
-          if (!window.windowStart || !window.windowEnd) {
-            return false;
-          }
-          return start < window.windowEnd && end > window.windowStart;
-        });
-
-        if (overlaps) {
-          continue;
-        }
-
-        windows.push({
-          id: `${activeDate}-${index + 1}`,
-          windowStart: start,
-          windowEnd: end,
-          isSpecial: false,
-        });
-        break;
-      }
-    });
-
-    const parsedDay = parseISODate(activeDate).getDay();
-    const mondayBasedIndex = parsedDay === 0 ? 6 : parsedDay - 1;
-    const specialWindowIndex = mondayBasedIndex === specialDayOffset && windows.length > 0 ? Math.floor(Math.random() * windows.length) : -1;
-
-    if (specialWindowIndex >= 0) {
-      windows[specialWindowIndex] = {
-        ...windows[specialWindowIndex],
-        isSpecial: true,
-      };
-    }
-
-    const nextSchedule: VisionStarDailySchedule = {
-      date: activeDate,
-      windows,
-    };
-
-    setVisionStarSchedule(nextSchedule);
-    saveDraft(visionStarScheduleKey(session.user.id, activeDate), nextSchedule);
-  }, [
-    activeDate,
-    habitReviewWindow.windowEnd,
-    habitReviewWindow.windowStart,
-    isViewingToday,
-    session.user.id,
-    timeLimitedOffer.windowEnd,
-    timeLimitedOffer.windowStart,
-  ]);
-
-  useEffect(() => {
     if (typeof window === 'undefined') return;
     const launchKey = weeklyHabitReviewLaunchKey(session.user.id);
     if (loadDraft<boolean>(launchKey)) {
@@ -1820,8 +1710,12 @@ export function DailyHabitTracker({
     const xpAmount = isSpecial ? 320 : isSuperBoost ? 250 : XP_REWARDS.VISION_BOARD_STAR;
     const diceAmount = 25;
 
-    // Wait for slot machine animation to complete
+    // Wait for slot machine spin animation to complete, then fade out
     await new Promise(resolve => setTimeout(resolve, SLOT_MACHINE_ANIMATION_DURATION_MS));
+    setIsSlotLanding(true);
+    await new Promise(resolve => setTimeout(resolve, SLOT_MACHINE_LANDING_DURATION_MS));
+    setIsVisionRewardSelecting(false);
+    setIsSlotLanding(false);
 
     setVisionRewarding(true);
     try {
@@ -2011,6 +1905,7 @@ export function DailyHabitTracker({
   const closeVisionReward = () => {
     setIsVisionRewardOpen(false);
     setIsVisionRewardSelecting(false);
+    setIsSlotLanding(false);
   };
 
   const revokeObjectUrl = (url: string | null) => {
@@ -2647,7 +2542,7 @@ export function DailyHabitTracker({
           </div>
           <div className="habit-day-nav__vision-modal-frame">
             {isVisionRewardSelecting && visionImages.length > 0 && (
-              <div className="habit-day-nav__vision-modal-slot-container" aria-hidden="true">
+              <div className={`habit-day-nav__vision-modal-slot-container${isSlotLanding ? ' habit-day-nav__vision-modal-slot-container--landing' : ''}`} aria-hidden="true">
                 <div className="habit-day-nav__vision-modal-slot-reel">
                   {/* Create a repeating list of images for the slot machine effect */}
                   {Array.from({ length: SLOT_MACHINE_TOTAL_ITEMS }).map((_, idx) => {
@@ -2689,6 +2584,7 @@ export function DailyHabitTracker({
                 alt={visionReward.caption ? `Vision board: ${visionReward.caption}` : 'Vision board inspiration'}
                 onLoad={() => setIsVisionImageLoaded(true)}
                 onError={() => setIsVisionImageLoaded(true)}
+                onClick={() => setVisionPreviewImage({ id: 'vision-star-reward', publicUrl: visionReward.imageUrl, caption: visionReward.caption } as VisionImage)}
               />
             ) : null}
           </div>
@@ -2968,6 +2864,7 @@ export function DailyHabitTracker({
     setVisionRewardError(null);
     setIsStarBursting(false);
     setIsVisionRewardSelecting(false);
+    setIsSlotLanding(false);
   }, [activeDate]);
 
   useEffect(() => {
