@@ -3402,6 +3402,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setDiceRollTotalOverlay(`Rolled ${nextRoll}!`);
     await new Promise<void>((resolve) => { setTimeout(resolve, DICE_ROLL_OVERLAY_DURATION_MS); });
     setDiceRollTotalOverlay(null);
+    setIsRolling(false);
 
     let currentIndex = tokenIndex;
     const hopIndices: number[] = [];
@@ -3468,8 +3469,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setShowEncounterModal(false);
       setEncounterResolved(false);
     }
-
-    setIsRolling(false);
   };
 
   // B2-3: resolve non-stop, non-encounter tile landings with real outcomes
