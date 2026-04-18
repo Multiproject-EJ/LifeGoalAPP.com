@@ -5,7 +5,6 @@ export type TimeBoundOfferId =
   | 'daily_treat'
   | 'todays_offer'
   | 'egg_hatch'
-  | 'mystery_stop'
   | 'island_run';
 
 type TimeBoundOfferKey = TimeBoundOfferId | `placeholder_${number}`;
