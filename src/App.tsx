@@ -776,13 +776,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
     return badges;
   }, [goldBalance]);
   const spinGoldRange = useMemo(() => {
-    const goldValues = SPIN_PRIZES.filter((prize) => prize.type === 'gold').map((prize) => prize.value);
-    if (goldValues.length === 0) {
+    // With the new economy-aligned prize pool, gold-type prizes are retired.
+    // Essence is the primary spin currency now.
+    const essenceValues = SPIN_PRIZES.filter((prize) => prize.type === 'essence').map((prize) => prize.value);
+    if (essenceValues.length === 0) {
       return null;
     }
-    const minGold = Math.min(...goldValues);
-    const maxGold = Math.max(...goldValues);
-    return formatGoldRange(minGold, maxGold);
+    const minEssence = Math.min(...essenceValues);
+    const maxEssence = Math.max(...essenceValues);
+    return formatGoldRange(minEssence, maxEssence);
   }, []);
   
   // Dynamic daily treats inventory based on collection status
