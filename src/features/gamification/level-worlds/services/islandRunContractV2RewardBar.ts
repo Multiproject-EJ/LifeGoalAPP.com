@@ -57,23 +57,7 @@ export const TIMED_EVENT_SEQUENCE: readonly TimedEventTemplate[] = [
     ladderId: 'feeding_frenzy_ladder_v1',
     stickerId: 'feeding_frenzy_sticker',
     icon: '🔥',
-    durationMs: 8 * 60 * 60 * 1000,
-  },
-  {
-    templateId: 'harvest_sprint',
-    eventType: 'harvest_sprint',
-    ladderId: 'harvest_sprint_ladder_v1',
-    stickerId: 'harvest_sprint_sticker',
-    icon: '🌾',
-    durationMs: 8 * 60 * 60 * 1000,
-  },
-  {
-    templateId: 'companion_feast',
-    eventType: 'companion_feast',
-    ladderId: 'companion_feast_ladder_v1',
-    stickerId: 'companion_feast_sticker',
-    icon: '🐾',
-    durationMs: 8 * 60 * 60 * 1000,
+    durationMs: 8 * 60 * 60 * 1000, // 8 hours
   },
   {
     templateId: 'lucky_spin',
@@ -81,14 +65,29 @@ export const TIMED_EVENT_SEQUENCE: readonly TimedEventTemplate[] = [
     ladderId: 'lucky_spin_ladder_v1',
     stickerId: 'lucky_spin_sticker',
     icon: '🎰',
-    durationMs: 8 * 60 * 60 * 1000,
+    durationMs: 24 * 60 * 60 * 1000, // 24 hours
+  },
+  {
+    templateId: 'space_excavator',
+    eventType: 'space_excavator',
+    ladderId: 'space_excavator_ladder_v1',
+    stickerId: 'space_excavator_sticker',
+    icon: '🚀',
+    durationMs: 2 * 24 * 60 * 60 * 1000, // 2 days
+  },
+  {
+    templateId: 'companion_feast',
+    eventType: 'companion_feast',
+    ladderId: 'companion_feast_ladder_v1',
+    stickerId: 'companion_feast_sticker',
+    icon: '🐾',
+    durationMs: 4 * 24 * 60 * 60 * 1000, // 4 days
   },
 ] as const;
 
 // ── Progress sources ─────────────────────────────────────────────────────────
 
 const FEEDING_TILE_PROGRESS: Readonly<Record<string, number>> = {
-  egg_shard: 4,
   chest: 2,
   micro: 1,
   currency: 1,
@@ -380,7 +379,7 @@ export function resolveIslandRunContractV2RewardBarProgressDelta(source: RewardB
 
   const tileProgress = FEEDING_TILE_PROGRESS[source.tileType] ?? 0;
   if (tileProgress > 0) {
-    return { progressDelta: tileProgress, feedingActionDelta: source.tileType === 'egg_shard' ? 1 : 0 };
+    return { progressDelta: tileProgress, feedingActionDelta: 1 };
   }
 
   return { progressDelta: 0, feedingActionDelta: 0 };

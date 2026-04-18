@@ -13,17 +13,17 @@ export const islandRunStopCompletionTests: TestCase[] = [
   {
     name: 'ensureStopCompleted appends missing stop ids only once',
     run: () => {
-      const first = ensureStopCompleted(['minigame'], 'hatchery');
+      const first = ensureStopCompleted(['habit'], 'hatchery');
       const second = ensureStopCompleted(first, 'hatchery');
-      assertDeepEqual(first, ['minigame', 'hatchery'], 'Expected missing stop id to be appended');
-      assertDeepEqual(second, ['minigame', 'hatchery'], 'Expected duplicate stop ids to be avoided');
+      assertDeepEqual(first, ['habit', 'hatchery'], 'Expected missing stop id to be appended');
+      assertDeepEqual(second, ['habit', 'hatchery'], 'Expected duplicate stop ids to be avoided');
     },
   },
   {
     name: 'isStopCompleted detects whether a stop id is already in the island ledger',
     run: () => {
-      assertEqual(isStopCompleted(['hatchery', 'utility'], 'hatchery'), true, 'Expected hatchery to be marked complete');
-      assertEqual(isStopCompleted(['hatchery', 'utility'], 'boss'), false, 'Expected boss to remain incomplete');
+      assertEqual(isStopCompleted(['hatchery', 'mystery'], 'hatchery'), true, 'Expected hatchery to be marked complete');
+      assertEqual(isStopCompleted(['hatchery', 'mystery'], 'boss'), false, 'Expected boss to remain incomplete');
     },
   },
   {
@@ -51,7 +51,7 @@ export const islandRunStopCompletionTests: TestCase[] = [
       );
       assertEqual(
         isIslandStopEffectivelyCompleted({
-          stopId: 'dynamic',
+          stopId: 'mystery',
           completedStops: [],
           hasActiveEgg: true,
           islandEggSlotUsed: true,
@@ -66,29 +66,29 @@ export const islandRunStopCompletionTests: TestCase[] = [
     run: () => {
       assertDeepEqual(
         getEffectiveCompletedStops({
-          completedStops: ['utility'],
+          completedStops: ['mystery'],
           hasActiveEgg: false,
           islandEggSlotUsed: true,
         }),
-        ['utility', 'hatchery'],
+        ['mystery', 'hatchery'],
         'Expected hatchery to be backfilled when the egg slot is already used',
       );
       assertDeepEqual(
         getEffectiveCompletedStops({
-          completedStops: ['hatchery', 'utility'],
+          completedStops: ['hatchery', 'mystery'],
           hasActiveEgg: false,
           islandEggSlotUsed: true,
         }),
-        ['hatchery', 'utility'],
+        ['hatchery', 'mystery'],
         'Expected existing hatchery completion to remain stable',
       );
       assertDeepEqual(
         getEffectiveCompletedStops({
-          completedStops: ['utility'],
+          completedStops: ['mystery'],
           hasActiveEgg: false,
           islandEggSlotUsed: false,
         }),
-        ['utility'],
+        ['mystery'],
         'Expected unrelated stop ledgers to remain untouched',
       );
     },
@@ -96,8 +96,8 @@ export const islandRunStopCompletionTests: TestCase[] = [
   {
     name: 'getCompletedStopsForIsland returns the island-specific persisted stops',
     run: () => {
-      const stops = getCompletedStopsForIsland({ '3': ['hatchery', 'utility'] }, 3);
-      assertDeepEqual(stops, ['hatchery', 'utility'], 'Expected island-specific completed stops');
+      const stops = getCompletedStopsForIsland({ '3': ['hatchery', 'mystery'] }, 3);
+      assertDeepEqual(stops, ['hatchery', 'mystery'], 'Expected island-specific completed stops');
     },
   },
   {
@@ -117,7 +117,7 @@ export const islandRunStopCompletionTests: TestCase[] = [
       assertEqual(
         getStopCompletionBlockReason({
           stopId: 'boss',
-          completedStops: ['hatchery', 'minigame', 'utility', 'dynamic'],
+          completedStops: ['hatchery', 'habit', 'mystery', 'wisdom'],
           hasActiveEgg: true,
           islandEggSlotUsed: true,
           bossTrialResolved: false,
@@ -128,7 +128,7 @@ export const islandRunStopCompletionTests: TestCase[] = [
       assertEqual(
         getStopCompletionBlockReason({
           stopId: 'boss',
-          completedStops: ['hatchery', 'minigame', 'utility', 'dynamic'],
+          completedStops: ['hatchery', 'habit', 'mystery', 'wisdom'],
           hasActiveEgg: true,
           islandEggSlotUsed: true,
           bossTrialResolved: true,
@@ -155,7 +155,7 @@ export const islandRunStopCompletionTests: TestCase[] = [
         shouldAutoOpenIslandStopOnLoad({
           requestedStopId: 'hatchery',
           islandNumber: 8,
-          completedStopsByIsland: { '8': ['minigame'] },
+          completedStopsByIsland: { '8': ['habit'] },
           islandEggSlotUsed: false,
         }),
         true,
@@ -165,7 +165,7 @@ export const islandRunStopCompletionTests: TestCase[] = [
         shouldAutoOpenIslandStopOnLoad({
           requestedStopId: 'hatchery',
           islandNumber: 8,
-          completedStopsByIsland: { '8': ['minigame'] },
+          completedStopsByIsland: { '8': ['habit'] },
           hasActiveEgg: true,
         }),
         false,
@@ -175,7 +175,7 @@ export const islandRunStopCompletionTests: TestCase[] = [
         shouldAutoOpenIslandStopOnLoad({
           requestedStopId: 'hatchery',
           islandNumber: 8,
-          completedStopsByIsland: { '8': ['minigame'] },
+          completedStopsByIsland: { '8': ['habit'] },
           islandEggSlotUsed: true,
         }),
         false,
@@ -192,7 +192,7 @@ export const islandRunStopCompletionTests: TestCase[] = [
       );
       assertEqual(
         shouldAutoOpenIslandStopOnLoad({
-          requestedStopId: 'dynamic',
+          requestedStopId: 'mystery',
           islandNumber: 8,
           completedStopsByIsland: { '8': ['hatchery'] },
         }),

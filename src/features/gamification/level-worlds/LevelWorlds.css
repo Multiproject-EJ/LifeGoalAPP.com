@@ -1404,7 +1404,7 @@
   opacity: 0;
 }
 
-.island-run-board__spark60-ring {
+.island-run-board__spark40-ring {
   display: none;
 }
 
@@ -1524,8 +1524,8 @@
 .island-run-board__rewardbar-banner--feeding_frenzy {
   background: linear-gradient(135deg, #c0392b 0%, #a93226 50%, #922b21 100%);
 }
-.island-run-board__rewardbar-banner--harvest_sprint {
-  background: linear-gradient(135deg, #d4a017 0%, #b8860b 50%, #9a7209 100%);
+.island-run-board__rewardbar-banner--space_excavator {
+  background: linear-gradient(135deg, #2c3e50 0%, #1a252f 50%, #0d1117 100%);
 }
 .island-run-board__rewardbar-banner--companion_feast {
   background: linear-gradient(135deg, #1e8449 0%, #196f3d 50%, #145a32 100%);
@@ -2033,7 +2033,7 @@
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.62);
 }
 
-.island-run-board--spark60 .island-tile {
+.island-run-board--spark40 .island-tile {
   /* Width = outer arc chord: 2×369×sin(π/40) ≈ 58px for a 40-tile ring at r=340 */
   width: 58px;
   height: 58px;
@@ -2042,7 +2042,7 @@
   clip-path: polygon(calc(50% - 24.5px) 0%, calc(50% + 24.5px) 0%, calc(50% + 29px) 100%, calc(50% - 29px) 100%);
 }
 
-.island-run-board--spark60 .island-tile__value {
+.island-run-board--spark40 .island-tile__value {
   font-size: 0.65rem;
   transform: rotate(calc(-1 * var(--tile-rotation-deg, 0deg)));
   transform-origin: center center;
@@ -4062,12 +4062,12 @@
 }
 
 /* Override for spark40 ring — idle bob respects the perspective anchor scale. */
-.island-run-board--spark60 .island-tile--alive {
-  animation: island-tile-idle-spark60 3.5s ease-in-out infinite;
+.island-run-board--spark40 .island-tile--alive {
+  animation: island-tile-idle-spark40 3.5s ease-in-out infinite;
   animation-delay: calc(var(--tile-index, 0) * 0.06s);
 }
 
-@keyframes island-tile-idle-spark60 {
+@keyframes island-tile-idle-spark40 {
   0%, 100% { transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(var(--tile-render-scale, var(--tile-scale, 1))); }
   50% { transform: translate(-50%, calc(-50% - 1.2px)) rotate(var(--tile-rotation-deg, 0deg)) scale(calc(var(--tile-render-scale, var(--tile-scale, 1)) * 1.01)); }
 }
@@ -4126,7 +4126,7 @@
   opacity: 0.8;
 }
 /* Tile number badge — smaller on ring board but visible since tiles are bigger now */
-.island-run-board--spark60 .island-tile__badge {
+.island-run-board--spark40 .island-tile__badge {
   font-size: 0.38rem;
   padding: 1px 2px;
 }
@@ -4227,7 +4227,7 @@
 }
 
 /* Stop tiles on the 40-tile ring — same geometry as regular tiles; visual emphasis via color/glow */
-.island-run-board--spark60 .island-tile--stop {
+.island-run-board--spark40 .island-tile--stop {
   width: 58px;
   height: 58px;
   clip-path: polygon(calc(50% - 24.5px) 0%, calc(50% + 24.5px) 0%, calc(50% + 29px) 100%, calc(50% - 29px) 100%);
@@ -4621,4 +4621,16 @@
 .island-run-debug-panel__row--warn .island-run-debug-panel__value {
   color: #ffab40;
   font-weight: 600;
+}
+
+/* Drift notice animation */
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-4px); }
+  15% { opacity: 1; transform: translateY(0); }
+  75% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(4px); }
+}
+
+.island-run-prototype__drift-notice {
+  pointer-events: none;
 }

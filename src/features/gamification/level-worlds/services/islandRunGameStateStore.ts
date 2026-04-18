@@ -94,7 +94,7 @@ export interface IslandRunGameStateRecord {
   perfectCompanionModelVersion: string | null;
   perfectCompanionComputedCycleIndex: number | null;
   activeStopIndex: number;
-  activeStopType: 'hatchery' | 'habit' | 'breathing' | 'wisdom' | 'boss';
+  activeStopType: 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
   stopStatesByIndex: Array<{
     objectiveComplete: boolean;
     buildComplete: boolean;
@@ -144,6 +144,7 @@ export interface IslandRunGameStateRecord {
     pityCounter?: number;
   };
   stickerInventory: Record<string, number>;
+  lastEssenceDriftLost: number;
 }
 
 const ISLAND_RUN_RUNTIME_STATE_TABLE = 'island_run_runtime_state';
@@ -239,14 +240,14 @@ function buildRuntimeClientActionId(userId: string, record: IslandRunGameStateRe
   return `runtime-${userId}-${runtimeCommitAttemptCounter}-${Math.max(0, Math.floor(record.runtimeVersion))}-${hashRuntimeCommitPayload(stableRuntimeCommitStringify(record))}`;
 }
 
-export function deriveIslandRunContractV2StopType(index: number): 'hatchery' | 'habit' | 'breathing' | 'wisdom' | 'boss' {
+export function deriveIslandRunContractV2StopType(index: number): 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss' {
   switch (index) {
     case 0:
       return 'hatchery';
     case 1:
       return 'habit';
     case 2:
-      return 'breathing';
+      return 'mystery';
     case 3:
       return 'wisdom';
     case 4:
@@ -499,6 +500,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
       fragments: 0,
     },
     stickerInventory: {},
+    lastEssenceDriftLost: 0,
   };
 }
 
@@ -769,7 +771,7 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
     activeStopType:
       value.activeStopType === 'hatchery'
       || value.activeStopType === 'habit'
-      || value.activeStopType === 'breathing'
+      || value.activeStopType === 'mystery'
       || value.activeStopType === 'wisdom'
       || value.activeStopType === 'boss'
         ? value.activeStopType
@@ -911,6 +913,10 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
               .map(([key, count]) => [key, Math.max(0, Math.floor(count))]),
           )
         : fallback.stickerInventory,
+    lastEssenceDriftLost:
+      typeof value.lastEssenceDriftLost === 'number' && Number.isFinite(value.lastEssenceDriftLost)
+        ? Math.max(0, Math.floor(value.lastEssenceDriftLost))
+        : fallback.lastEssenceDriftLost,
   };
 }
 
@@ -1007,6 +1013,7 @@ function mergeRecordForConflict(options: {
       ...remote.stickerInventory,
       ...local.stickerInventory,
     },
+    lastEssenceDriftLost: Math.max(local.lastEssenceDriftLost, remote.lastEssenceDriftLost),
   };
 }
 
@@ -1071,6 +1078,7 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     active_timed_event_progress: record.activeTimedEventProgress,
     sticker_progress: record.stickerProgress,
     sticker_inventory: record.stickerInventory,
+    last_essence_drift_lost: record.lastEssenceDriftLost,
     last_writer_device_session_id: deviceSessionId,
     updated_at: new Date().toISOString(),
   };
@@ -1208,6 +1216,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             activeTimedEventProgress: legacyData.active_timed_event_progress ?? fallback.activeTimedEventProgress,
             stickerProgress: legacyData.sticker_progress ?? fallback.stickerProgress,
             stickerInventory: legacyData.sticker_inventory ?? fallback.stickerInventory,
+            lastEssenceDriftLost: ((legacyData as Record<string, unknown>).last_essence_drift_lost as number) ?? fallback.lastEssenceDriftLost,
           },
           fallback,
         );
@@ -1316,6 +1325,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       activeTimedEventProgress: data.active_timed_event_progress ?? fallback.activeTimedEventProgress,
       stickerProgress: data.sticker_progress ?? fallback.stickerProgress,
       stickerInventory: data.sticker_inventory ?? fallback.stickerInventory,
+      lastEssenceDriftLost: ((data as Record<string, unknown>).last_essence_drift_lost as number) ?? fallback.lastEssenceDriftLost,
     },
     fallback,
   );

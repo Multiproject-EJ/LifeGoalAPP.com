@@ -55,7 +55,7 @@ export interface IslandRunRuntimeState {
   perfectCompanionModelVersion: string | null;
   perfectCompanionComputedCycleIndex: number | null;
   activeStopIndex: number;
-  activeStopType: 'hatchery' | 'habit' | 'breathing' | 'wisdom' | 'boss';
+  activeStopType: 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
   stopStatesByIndex: Array<{ objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number }>;
   stopBuildStateByIndex: Array<{ requiredEssence: number; spentEssence: number; buildLevel: number }>;
   bossState: { unlocked: boolean; objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number };
@@ -74,6 +74,8 @@ export interface IslandRunRuntimeState {
   activeTimedEventProgress: { feedingActions: number; tokensEarned: number; milestonesClaimed: number };
   stickerProgress: { fragments: number; guaranteedAt?: number; pityCounter?: number };
   stickerInventory: Record<string, number>;
+  /** Essence lost to drift on last hydration/session-open (for UI notification). 0 = no drift. */
+  lastEssenceDriftLost: number;
 }
 
 export function readIslandRunRuntimeState(session: Session): IslandRunRuntimeState {
@@ -177,7 +179,7 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     perfectCompanionModelVersion?: string | null;
     perfectCompanionComputedCycleIndex?: number | null;
     activeStopIndex?: number;
-    activeStopType?: 'hatchery' | 'habit' | 'breathing' | 'wisdom' | 'boss';
+    activeStopType?: 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
     stopStatesByIndex?: Array<{ objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number }>;
     stopBuildStateByIndex?: Array<{ requiredEssence: number; spentEssence: number; buildLevel: number }>;
     bossState?: { unlocked: boolean; objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number };
@@ -196,6 +198,7 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     activeTimedEventProgress?: { feedingActions: number; tokensEarned: number; milestonesClaimed: number };
     stickerProgress?: { fragments: number; guaranteedAt?: number; pityCounter?: number };
     stickerInventory?: Record<string, number>;
+    lastEssenceDriftLost?: number;
   };
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
   const { session, client, patch } = options;

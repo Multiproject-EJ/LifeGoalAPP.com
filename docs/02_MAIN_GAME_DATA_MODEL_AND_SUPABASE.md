@@ -10,7 +10,7 @@
 
 Goal: Minimal durable schema that supports:
 - 120 island definitions (mostly metadata)
-- user island run state (timer, token pos, hearts, currency)
+- user island run state (token pos, essence, dice, currency)
 - egg inventory (active + dormant + home eggs)
 - owned islands + home selection
 
@@ -51,10 +51,10 @@ create table if not exists user_island_state (
   island_number int not null,
   started_at timestamptz not null,
   expires_at timestamptz not null,
-  token_tile_index int not null default 0, -- 0..16
-  hearts int not null default 30,         -- app-wide persistent energy
-  coins int not null default 0,           -- app-wide persistent currency
-  diamonds int not null default 0,        -- app-wide premium currency (1 diamond = 1,000 coins)
+  token_tile_index int not null default 0, -- 0..39 (40-tile ring)
+  dice_pool int not null default 30,       -- app-wide dice pool
+  essence int not null default 0,          -- app-wide essence currency
+  diamonds int not null default 0,        -- app-wide premium currency
   island_mini_game_currency int not null default 0, -- temporary; zeroed on island travel
   spin_tokens int not null default 0,
   stop_completion jsonb not null default '{}'::jsonb,
@@ -68,9 +68,9 @@ create table if not exists user_island_state (
 ```json
 {
   "stop_hatchery": true,
-  "stop_minigame": false,
-  "stop_market": true,
-  "stop_utility": false,
+  "stop_habit": false,
+  "stop_mystery": false,
+  "stop_wisdom": false,
   "stop_boss": false
 }
 ```

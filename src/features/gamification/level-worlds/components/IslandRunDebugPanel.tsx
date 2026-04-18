@@ -28,7 +28,6 @@ export interface IslandRunDebugLocalState {
   shards: number;
   shields: number;
   diamonds: number;
-  coins: number;
   spinTokens: number;
   eggStage: number;
   activeStopId: string | null;
@@ -36,10 +35,9 @@ export interface IslandRunDebugLocalState {
   cameraMode: string;
   timeLeftSec: number;
   showTravelOverlay: boolean;
-  islandExpiresAtMs: number;
-  islandStartedAtMs: number;
   hasHydratedRuntimeState: boolean;
   diceRegenCountdown: string | null;
+  playerLevel: number;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -131,13 +129,11 @@ export function IslandRunDebugPanel({ session, client, runtimeState, localState,
         { label: 'Cycle index', value: String(rs.cycleIndex) },
         { label: 'Token index (runtime)', value: String(rs.tokenIndex) },
         { label: 'Token index (local)', value: String(ls.tokenIndex), warn: rs.tokenIndex !== ls.tokenIndex },
-        { label: 'Island started', value: fmtMs(rs.islandStartedAtMs) },
-        { label: 'Island expires', value: fmtMs(rs.islandExpiresAtMs) },
-        { label: 'Time left (sec)', value: String(ls.timeLeftSec) },
-        { label: 'Timer pending start', value: fmtBool(ls.islandExpiresAtMs <= 0) },
+        { label: 'Player level', value: String(ls.playerLevel) },
         { label: 'Travel overlay visible', value: fmtBool(ls.showTravelOverlay) },
         { label: 'Hydrated', value: fmtBool(ls.hasHydratedRuntimeState) },
         { label: 'Runtime version', value: String(rs.runtimeVersion) },
+        { label: 'Last essence drift lost', value: String(rs.lastEssenceDriftLost ?? 0) },
       ],
     };
 
@@ -160,7 +156,6 @@ export function IslandRunDebugPanel({ session, client, runtimeState, localState,
         { label: 'Essence', value: String(rs.essence) },
         { label: 'Essence lifetime earned', value: String(rs.essenceLifetimeEarned) },
         { label: 'Essence lifetime spent', value: String(rs.essenceLifetimeSpent) },
-        { label: 'Coins (legacy)', value: String(rs.coins) },
         { label: 'Shards', value: String(rs.shards) },
         { label: 'Shields', value: String(rs.shields) },
         { label: 'Diamonds', value: String(rs.diamonds) },

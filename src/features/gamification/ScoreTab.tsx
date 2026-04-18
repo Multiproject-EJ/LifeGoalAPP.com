@@ -913,16 +913,6 @@ export function ScoreTab({
               <p className="score-tab__meta">1 Diamond = 1,000 Coins. Earned by accumulating large gold totals.</p>
             </article>
 
-            {/* M17E: Hearts row */}
-            <article className="score-tab__card">
-              <div className="score-tab__card-row">
-                <h3 className="score-tab__card-title">❤️ Hearts</h3>
-                <span className="score-tab__pill">Lives</span>
-              </div>
-              <p className="score-tab__value">❤️ {heartsBalance}</p>
-              <p className="score-tab__meta">Hearts are your Island Run lives. Earned from daily check-ins and rewards.</p>
-            </article>
-
             {/* M17B: Shields row */}
             <article className="score-tab__card">
               <div className="score-tab__card-row">

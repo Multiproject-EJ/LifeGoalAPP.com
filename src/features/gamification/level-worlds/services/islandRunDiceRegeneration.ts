@@ -9,61 +9,44 @@
  * - The regeneration period is always 2 hours for a full fill from 0 to the minimum.
  * - Higher levels increase the minimum threshold (more dice regenerated).
  *
- * The system is intentionally slow to preserve scarcity and monetization tension
- * as prescribed by the canonical gameplay contract.
+ * The system uses a continuous logarithmic formula instead of a capped tier table,
+ * so it works for any player level (1 to infinity). The formula is:
+ *   minDice = 30 + floor(20 × ln(level))
+ * This gives:
+ *   Level 1:   30 dice
+ *   Level 5:   62 dice
+ *   Level 10:  76 dice
+ *   Level 20:  90 dice
+ *   Level 50:  108 dice
+ *   Level 100: 122 dice
+ *   Level 500: 154 dice
+ *   Level 1000: 168 dice
+ *
+ * No hard cap — the curve flattens naturally via logarithm.
  */
 
-// ── Regeneration tier table ─────────────────────────────────────────────────
-// Each tier defines the minimum dice the player regenerates up to within
-// a 2-hour window. Regeneration rate is derived: minDice / 120 minutes.
-//
-// Level 1:  minDice = 30  → ~15 rolls (at 2 dice/roll) per 2h  → 1 roll every ~8 min
-// Level 5:  minDice = 40  → ~20 rolls per 2h  → 1 roll every ~6 min
-// Level 10: minDice = 50  → ~25 rolls per 2h  → 1 roll every ~4.8 min
-// Level 15: minDice = 60  → ~30 rolls per 2h  → 1 roll every ~4 min
-// Level 20: minDice = 70  → ~35 rolls per 2h  → 1 roll every ~3.4 min
-// Level 30: minDice = 90  → ~45 rolls per 2h  → 1 roll every ~2.7 min
-// Level 50: minDice =120  → ~60 rolls per 2h  → 1 roll every ~2 min
-// Level 75: minDice =140  → ~70 rolls per 2h  → 1 roll every ~1.7 min
-// Level 100:minDice =160  → ~80 rolls per 2h  → 1 roll every ~1.5 min
+// ── Continuous formula ──────────────────────────────────────────────────
 
-export interface DiceRegenTier {
-  /** Minimum PWA user level for this tier. */
-  minLevel: number;
-  /** Minimum dice threshold — regen fills up to this value within 2 hours. */
-  minDice: number;
-}
+/** Base minimum dice for level 1 players. */
+const DICE_REGEN_BASE = 30;
 
-export const DICE_REGEN_TIERS: readonly DiceRegenTier[] = [
-  { minLevel: 1, minDice: 30 },
-  { minLevel: 5, minDice: 40 },
-  { minLevel: 10, minDice: 50 },
-  { minLevel: 15, minDice: 60 },
-  { minLevel: 20, minDice: 70 },
-  { minLevel: 30, minDice: 90 },
-  { minLevel: 50, minDice: 120 },
-  { minLevel: 75, minDice: 140 },
-  { minLevel: 100, minDice: 160 },
-] as const;
+/** Logarithmic scaling coefficient for dice regen. */
+const DICE_REGEN_LOG_COEFFICIENT = 20;
 
 /** Full regeneration window in milliseconds (2 hours). */
 export const DICE_REGEN_FULL_WINDOW_MS = 2 * 60 * 60 * 1000;
 
-// ── Tier resolution ─────────────────────────────────────────────────────────
+// ── Tier resolution (continuous — no cap) ─────────────────────────────
 
 /**
  * Resolves the minimum-dice threshold for the given player level.
- * Uses the highest tier whose minLevel ≤ playerLevel.
+ * Uses a continuous logarithmic formula: 30 + floor(20 × ln(level)).
+ * Works for any level from 1 to infinity with no hard cap.
  */
 export function resolveDiceRegenMinDice(playerLevel: number): number {
   const safeLevel = Number.isFinite(playerLevel) ? Math.max(1, Math.floor(playerLevel)) : 1;
-  let result = DICE_REGEN_TIERS[0].minDice;
-  for (const tier of DICE_REGEN_TIERS) {
-    if (safeLevel >= tier.minLevel) {
-      result = tier.minDice;
-    }
-  }
-  return result;
+  if (safeLevel <= 1) return DICE_REGEN_BASE;
+  return DICE_REGEN_BASE + Math.floor(DICE_REGEN_LOG_COEFFICIENT * Math.log(safeLevel));
 }
 
 /**
@@ -74,7 +57,7 @@ export function resolveDiceRegenRatePerHour(playerLevel: number): number {
   return resolveDiceRegenMinDice(playerLevel) / 2;
 }
 
-// ── Regeneration state ──────────────────────────────────────────────────────
+// ── Regeneration state ──────────────────────────────────────────────────
 
 export interface DiceRegenState {
   /** Minimum dice threshold — regen fills up to this. */
@@ -120,7 +103,7 @@ export function applyDiceRegeneration(params: {
   const safePool = Math.max(0, Math.floor(currentDicePool));
   const safeNow = Math.floor(nowMs);
 
-  // Resolve tier for current level (may differ from stored state if level changed).
+  // Resolve for current level (may differ from stored state if level changed).
   const minDice = resolveDiceRegenMinDice(playerLevel);
   const ratePerHour = resolveDiceRegenRatePerHour(playerLevel);
 

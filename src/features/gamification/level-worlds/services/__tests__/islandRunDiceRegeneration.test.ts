@@ -9,28 +9,37 @@ import { assert, assertEqual, type TestCase } from './testHarness';
 
 export const islandRunDiceRegenerationTests: TestCase[] = [
   {
-    name: 'level 1 resolves base tier minimum dice of 30',
+    name: 'level 1 resolves base minimum dice of 30',
     run: () => {
       assertEqual(resolveDiceRegenMinDice(1), 30, 'Expected level 1 minDice = 30');
     },
   },
   {
-    name: 'level 10 resolves tier 3 minimum dice of 50',
+    name: 'level 10 resolves logarithmic minimum dice of 76',
     run: () => {
-      assertEqual(resolveDiceRegenMinDice(10), 50, 'Expected level 10 minDice = 50');
+      // 30 + floor(20 × ln(10)) = 30 + floor(46.05) = 76
+      assertEqual(resolveDiceRegenMinDice(10), 76, 'Expected level 10 minDice = 76');
     },
   },
   {
-    name: 'level 100 resolves top tier minimum dice of 160',
+    name: 'level 100 resolves logarithmic minimum dice of 122',
     run: () => {
-      assertEqual(resolveDiceRegenMinDice(100), 160, 'Expected level 100 minDice = 160');
+      // 30 + floor(20 × ln(100)) = 30 + floor(92.10) = 122
+      assertEqual(resolveDiceRegenMinDice(100), 122, 'Expected level 100 minDice = 122');
+    },
+  },
+  {
+    name: 'level 500 works without cap — returns 154',
+    run: () => {
+      // 30 + floor(20 × ln(500)) = 30 + floor(124.21) = 154
+      assertEqual(resolveDiceRegenMinDice(500), 154, 'Expected level 500 minDice = 154 (no cap)');
     },
   },
   {
     name: 'regen rate per hour is minDice / 2',
     run: () => {
       assertEqual(resolveDiceRegenRatePerHour(1), 15, 'Expected level 1 regen rate = 15/hr');
-      assertEqual(resolveDiceRegenRatePerHour(50), 60, 'Expected level 50 regen rate = 60/hr');
+      assertEqual(resolveDiceRegenRatePerHour(50), 54, 'Expected level 50 regen rate = 54/hr');
     },
   },
   {
@@ -107,18 +116,18 @@ export const islandRunDiceRegenerationTests: TestCase[] = [
     },
   },
   {
-    name: 'regen tier updates when player level increases',
+    name: 'regen updates when player level increases to 50',
     run: () => {
       const state = buildInitialDiceRegenState(1, 0);
-      // Player leveled up to 50 (minDice = 120)
+      // Player leveled up to 50 (minDice = 108)
       const result = applyDiceRegeneration({
         currentDicePool: 0,
         regenState: state,
         playerLevel: 50,
         nowMs: DICE_REGEN_FULL_WINDOW_MS,
       });
-      assertEqual(result.regenState.maxDice, 120, 'Expected tier to update to level 50 minDice');
-      assertEqual(result.dicePool, 120, 'Expected full regen at new tier');
+      assertEqual(result.regenState.maxDice, 108, 'Expected maxDice to update to level 50 value');
+      assertEqual(result.dicePool, 108, 'Expected full regen at new level');
     },
   },
   {

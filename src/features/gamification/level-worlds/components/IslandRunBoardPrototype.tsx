@@ -46,7 +46,9 @@ import {
   getEggStageEmoji,
   getEggStageArtSrc,
   rollEggRewards,
+  getEggSellRewardOptions,
   type EggTier,
+  type EggSellRewardChoice,
 } from '../services/eggService';
 import {
   fetchCreatureCollection,
@@ -182,10 +184,10 @@ const ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE = true;
 // Legacy pre-contract-v2 movement/energy rules are intentionally disabled.
 const ISLAND_RUN_CONTRACT_V2_ENABLED = true;
 function resolveRequestedBoardProfileId(): IslandBoardProfileId {
-  if (typeof window === 'undefined') return 'spark60_preview';
+  if (typeof window === 'undefined') return 'spark40_ring';
   const query = new URLSearchParams(window.location.search).get('boardProfile')?.trim().toLowerCase();
-  if (query === 'spark60' || query === 'spark60_preview') return 'spark60_preview';
-  return 'spark60_preview';
+  if (query === 'spark40' || query === 'spark40_ring') return 'spark40_ring';
+  return 'spark40_ring';
 }
 const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile(resolveRequestedBoardProfileId());
 const PERFECT_COMPANION_MODEL_VERSION = 'phase3_v1';
@@ -422,13 +424,10 @@ const MARKET_DICE_BUNDLE_REWARD = 6;
 const MARKET_HEART_BUNDLE_COST = 40;
 const HEART_BOOST_BUNDLE_COST = 80;
 
-// M8-COMPLETE: utility stop costs
-const UTILITY_HEART_REFILL_COST = 50;
-const UTILITY_DICE_BONUS_COST = 30;
-const UTILITY_TIMER_EXT_COST_DIAMONDS = 3;
-const UTILITY_TIMER_EXT_HOURS = 12;
-const UTILITY_ESSENCE_BONUS_COST_DIAMONDS = 3;
-const UTILITY_ESSENCE_BONUS_AMOUNT = 15;
+// Utility stop constants retired (hearts/coins/timer all retired).
+// Kept only essence bonus for wisdom stop (diamonds → essence).
+const WISDOM_ESSENCE_BONUS_COST_DIAMONDS = 3;
+const WISDOM_ESSENCE_BONUS_AMOUNT = 15;
 const CONTRACT_V2_ESSENCE_SPEND_STEP = 10;
 const CREATURE_FEED_COOLDOWN_MS = 8 * 60 * 60 * 1000;
 const CREATURE_TREAT_OPTIONS: Array<{ type: CreatureTreatType; label: string; xpGain: number; summary: string }> = [
@@ -473,7 +472,7 @@ const DICE_ROLL_OVERLAY_DURATION_MS = 800;  // how long the "Rolled N!" overlay 
 
 const EVENT_BANNER_META: Readonly<Record<string, { icon: string; displayName: string }>> = {
   feeding_frenzy:   { icon: '🔥', displayName: 'Feeding Frenzy' },
-  harvest_sprint:   { icon: '🌾', displayName: 'Harvest Sprint' },
+  space_excavator:  { icon: '🚀', displayName: 'Space Excavator' },
   companion_feast:  { icon: '🐾', displayName: 'Companion Feast' },
   lucky_spin:       { icon: '🎰', displayName: 'Lucky Spin' },
 };
@@ -690,7 +689,7 @@ type OrbitStopVisual = {
 };
 
 type MysteryStopReward =
-  | { type: 'coins'; amount: number; message: string }
+  | { type: 'essence'; amount: number; message: string }
   | { type: 'dice'; amount: number; message: string }
   | { type: 'lucky_roll'; amount: number; message: string };
 
@@ -746,13 +745,14 @@ function resolveMysteryStopReward(): MysteryStopReward {
       })()
     : Math.random();
 
+  // Hearts/coins retired — mystery rewards are now essence, dice, or lucky rolls only
   if (randomValue < 0.35) {
-    return { type: 'coins', amount: 80, message: '🪙 Mystery cache! +80 coins.' };
+    return { type: 'dice', amount: 10, message: '🎲 Mystery momentum! +10 dice.' };
   }
-  if (randomValue < 0.60) {
-    return { type: 'dice', amount: 8, message: '🎲 Mystery momentum! +8 dice.' };
+  if (randomValue < 0.65) {
+    return { type: 'dice', amount: 6, message: '🎲 Mystery recovery! +6 dice.' };
   }
-  if (randomValue < 0.82) return { type: 'dice', amount: 6, message: '🎲 Mystery recovery! +6 dice.' };
+  if (randomValue < 0.85) return { type: 'essence', amount: 15, message: '🟣 Mystery essence! +15 essence.' };
 
   return { type: 'lucky_roll', amount: 1, message: '🎲 Lucky Roll unlocked! +1 bonus run.' };
 }
@@ -812,14 +812,8 @@ function getStopIcon(kind: string, stopId: string) {
       return '✅';
     case 'checkin_reflection':
       return '🧭';
-    case 'mystery_reward':
-      return '🎁';
-    case 'utility_support':
-      return '🧰';
-    case 'event_challenge':
-      return '⚡';
-    case 'mini_game':
-      return '🎮';
+    case 'breathing':
+      return '🧘';
     default:
       return '📍';
   }
@@ -842,7 +836,6 @@ const TILE_TYPE_ICONS: Record<string, string> = {
   chest: '🎁',
   event: '⚡',
   hazard: '☠️',
-  egg_shard: '🧩',
   micro: '✨',
 };
 
@@ -851,7 +844,6 @@ const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
   chest: '#7dd8ff',
   event: '#d39bff',
   hazard: '#ff8f8f',
-  egg_shard: '#9ef0ff',
   micro: '#9dffbe',
   encounter: '#ffa765',
   stop: '#7afcff',
@@ -868,7 +860,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     () => TILE_ANCHORS_40,
     [],
   );
-  const isSpark60BoardProfile = ACTIVE_BOARD_PROFILE.id === 'spark60_preview';
+  const isSpark40BoardProfile = ACTIVE_BOARD_PROFILE.id === 'spark40_ring';
   const boardRef = useRef<HTMLDivElement>(null);
   const topbarMenuRef = useRef<HTMLDivElement>(null);
   const topbarMenuFirstItemRef = useRef<HTMLButtonElement>(null);
@@ -971,6 +963,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [pendingClaimTierIndex, setPendingClaimTierIndex] = useState<number | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [mysteryStopReward, setMysteryStopReward] = useState<MysteryStopReward | null>(null);
+  const [driftNotice, setDriftNotice] = useState<number | null>(null);
   const [marketPurchaseFeedback, setMarketPurchaseFeedback] = useState<string | null>(null);
   const [marketOwnedBundles, setMarketOwnedBundles] = useState<Record<'dice_bundle', boolean>>({
     dice_bundle: false,
@@ -1542,7 +1535,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    if (openIslandStopOnLoad === 'boss' || openIslandStopOnLoad === 'dynamic') {
+    if (openIslandStopOnLoad === 'boss' || openIslandStopOnLoad === 'mystery') {
       const shouldAutoOpen = shouldAutoOpenIslandStopOnLoad({
         requestedStopId: openIslandStopOnLoad,
         islandNumber: runtimeState.currentIslandNumber ?? islandNumber,
@@ -1593,10 +1586,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [session.user.email, session.user.user_metadata]);
 
   useEffect(() => {
-    if (activeStopId === 'market') {
-      setMarketPurchaseFeedback('Prototype inventory ready.');
-      setMarketInteracted(false);
-    }
     // M7-COMPLETE: sync trial phase when boss modal opens (e.g. after page reload with already-resolved state)
     if (activeStopId === 'boss' && bossTrialResolved && bossTrialPhase === 'idle') {
       setBossTrialPhase('success');
@@ -2565,10 +2554,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
       if (driftResult.driftLost > 0) {
         setRuntimeState((prev) => ({ ...prev, essence: driftResult.essence }));
+        // Show a brief drift notice on screen
+        setDriftNotice(driftResult.driftLost);
+        setTimeout(() => setDriftNotice(null), 2500);
         void persistIslandRunRuntimeStatePatch({
           session,
           client,
-          patch: { essence: driftResult.essence },
+          patch: { essence: driftResult.essence, lastEssenceDriftLost: driftResult.driftLost },
         });
       }
     }, DRIFT_INTERVAL_MS);
@@ -3029,8 +3021,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     : '—';
   const avatarImageUrl = getAvatarImageUrl(session.user);
   const islandDisplayName = getIslandDisplayName(islandNumber);
-  const spark60RingSegmentsGradient = useMemo(() => {
-    if (!isSpark60BoardProfile || !activeTileAnchors.length) return '';
+  const spark40RingSegmentsGradient = useMemo(() => {
+    if (!isSpark40BoardProfile || !activeTileAnchors.length) return '';
     const segmentSize = 360 / activeTileAnchors.length;
     const segments = Array.from({ length: activeTileAnchors.length }, (_, index) => {
         const tileType = tileMap[index]?.tileType ?? 'micro';
@@ -3041,7 +3033,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       })
       .join(', ');
     return `conic-gradient(from -90deg, ${segments})`;
-  }, [activeTileAnchors.length, isSpark60BoardProfile, tileMap]);
+  }, [activeTileAnchors.length, isSpark40BoardProfile, tileMap]);
   const shouldPromptDicePurchase = dicePool < DICE_PER_ROLL;
   const wasDicePurchasePromptEligibleRef = useRef(false);
 
@@ -3503,10 +3495,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       case 'hazard':
         setLandingText(essenceEarn > 0 ? `☠️ Hazard! +${essenceEarn} essence (scraped)${multLabel}` : '☠️ Hazard! Nothing gained.');
         break;
-      case 'egg_shard':
-        setLandingText(`🧩 Egg Shard! +1 shard, +${essenceEarn} essence${multLabel}`);
-        awardShards('egg_shard_tile');
-        break;
       case 'micro':
         setLandingText(essenceEarn > 0 ? `✨ Micro reward! +${essenceEarn} essence${multLabel}` : '✨ Micro reward!');
         break;
@@ -3524,7 +3512,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
       // Trigger flying feed particle animation for feeding tiles
-      const isFeedingTile = tileType === 'egg_shard' || tileType === 'chest' || tileType === 'currency' || tileType === 'micro';
+      const isFeedingTile = tileType === 'chest' || tileType === 'currency' || tileType === 'micro';
       if (isFeedingTile) {
         setFeedParticleActive(true);
         setTimeout(() => setFeedParticleActive(false), 600);
@@ -4279,6 +4267,62 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         [islandKey]: nextCompletedStops,
       },
     }));
+    if (activeStopId === 'hatchery') {
+      setActiveStopId(null);
+    }
+  };
+
+  /** Egg sell with player choice: shards or dice */
+  const handleSellEggForChoice = (choice: EggSellRewardChoice) => {
+    if (!activeEgg || eggStage < 4) return;
+    if (islandEggSlotUsed) return;
+    const resolvedEgg = activeEgg;
+    const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg);
+    const bundle = rollEggRewards(resolvedEgg.tier, resolvedEgg.setAtMs);
+    const options = getEggSellRewardOptions(resolvedEgg.tier);
+    const picked = options.find((o) => o.choice === choice) ?? options[0];
+    const nowTs = Date.now();
+    const islandKey = String(islandNumber);
+    const existingEntry = runtimeState.perIslandEggs?.[islandKey];
+    const nextCompletedStops = ensureStopCompleted(completedStops, 'hatchery');
+    const soldEntry: PerIslandEggEntry = existingEntry
+      ? { ...existingEntry, status: 'sold', openedAt: nowTs, location: 'island' }
+      : { tier: resolvedEgg.tier, setAtMs: resolvedEgg.setAtMs, hatchAtMs: resolvedEgg.hatchAtMs, status: 'sold', openedAt: nowTs, location: 'island' };
+
+    // Apply chosen reward
+    if (choice === 'shards') {
+      awardWalletShards(picked.amount);
+    } else {
+      setDicePool((d) => d + picked.amount);
+    }
+    // Also give essence from bundle (always)
+    const specialtySellBonusEssence = activeCompanionSpecialty?.effect === 'sell_bonus_essence'
+      ? Math.max(0, Math.floor((bundle.essenceDelta * activeCompanionSpecialty.amount) / 100))
+      : 0;
+    const totalSellEssence = bundle.essenceDelta + specialtySellBonusEssence;
+    if (totalSellEssence > 0) {
+      setRuntimeState((prev) => ({ ...prev, essence: prev.essence + totalSellEssence, essenceLifetimeEarned: prev.essenceLifetimeEarned + totalSellEssence }));
+    }
+    if (bundle.spinTokensDelta > 0) setSpinTokens((t) => t + bundle.spinTokensDelta);
+    if (bundle.diamondsDelta > 0) setDiamonds((d) => d + bundle.diamondsDelta);
+    awardShards('egg_open');
+
+    setActiveEgg(null);
+    playIslandRunSound('market_purchase_success');
+    triggerIslandRunHaptic('market_purchase_success');
+    setLandingText(`Sold ${creature.name}. Chose: ${picked.label}. +${bundle.essenceDelta} 🟣 essence.`);
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: { stage: 'island_creature_sold', island_number: islandNumber, tier: resolvedEgg.tier, creature_id: creature.id, sell_choice: choice, sell_amount: picked.amount },
+    });
+    setCompletedStops(nextCompletedStops);
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: { perIslandEggs: { ...runtimeState.perIslandEggs, [islandKey]: soldEntry }, completedStopsByIsland: { ...runtimeState.completedStopsByIsland, [islandKey]: nextCompletedStops } },
+    });
+    setRuntimeState((current) => ({ ...current, perIslandEggs: { ...current.perIslandEggs, [islandKey]: soldEntry }, completedStopsByIsland: { ...current.completedStopsByIsland, [islandKey]: nextCompletedStops } }));
     if (activeStopId === 'hatchery') {
       setActiveStopId(null);
     }
@@ -5215,9 +5259,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const handleClaimFirstRunRewards = async () => {
     if (firstRunStep === 'celebration') {
       const starterDiceBonus = ISLAND_RUN_DEFAULT_STARTING_DICE * 2;
-      setCoins((current) => current + 250);
+      const starterEssenceBonus = 250;
+      setRuntimeState((prev) => ({ ...prev, essence: prev.essence + starterEssenceBonus, essenceLifetimeEarned: prev.essenceLifetimeEarned + starterEssenceBonus }));
       setDicePool((current) => current + starterDiceBonus);
-      setLandingText(`Starter claim complete: +250 coins, +${starterDiceBonus} dice.`);
+      setLandingText(`Starter claim complete: +${starterEssenceBonus} 🟣 essence, +${starterDiceBonus} dice.`);
       setFirstRunStep('launch');
       void recordTelemetryEvent({
         userId: session.user.id,
@@ -5907,6 +5952,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         >
           {landingText}
         </p>
+        {driftNotice !== null && (
+          <p className="island-run-prototype__drift-notice" aria-live="assertive" role="alert" style={{ color: '#ff6b6b', fontSize: '0.82rem', fontWeight: 600, textAlign: 'center', margin: '0.15rem 0', animation: 'fadeInOut 2.5s ease forwards' }}>
+            − {driftNotice} 🟣 essence drift
+          </p>
+        )}
         {ISLAND_RUN_CONTRACT_V2_ENABLED && activeTimedEvent ? (
           <div className="island-run-prototype__shard-pill" aria-label="Contract-v2 timed event reward bar">
             <div className="island-run-prototype__shard-pill-fill" style={{ width: `${rewardBarPercent}%` }} />
@@ -6121,7 +6171,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         </header>
       ) : null}
 
-      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${(!isIslandBackgroundAvailable || isBackgroundHidden) ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark60BoardProfile ? 'island-run-board--spark60' : ''}`}>
+      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${(!isIslandBackgroundAvailable || isBackgroundHidden) ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark40BoardProfile ? 'island-run-board--spark40' : ''}`}>
         {isIslandBackgroundAvailable && !isBackgroundHidden && (
           <img
             key={islandBackgroundSrc}
@@ -6318,8 +6368,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           backgroundSrc={islandBackgroundSrc}
           isBackgroundAvailable={isIslandBackgroundAvailable}
           onBackgroundError={() => setIsIslandBackgroundAvailable(false)}
-          spark60RingGradient={spark60RingSegmentsGradient}
-          isSpark60={isSpark60BoardProfile}
+          spark40RingGradient={spark40RingSegmentsGradient}
+          isSpark40={isSpark40BoardProfile}
           showDebug={showDebug}
           isMinimalBoardArt={isMinimalBoardArt}
           boardTiltXDeg={boardTiltXDeg}
@@ -6588,7 +6638,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         <p className="island-hatchery-card__copy">Your <strong>{activeEgg.tier}</strong> egg has hatched. Choose whether to collect the creature or sell it now for rewards.</p>
                       </>
                     )}
-                    <div className="island-hatchery-card__actions">
+                    <div className="island-hatchery-card__actions" style={{ flexDirection: 'column', gap: '0.5rem' }}>
                       <button
                         type="button"
                         className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
@@ -6596,13 +6646,26 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       >
                         Collect Creature 🐾
                       </button>
-                      <button
-                        type="button"
-                        className="island-stop-modal__btn island-stop-modal__btn--action"
-                        onClick={handleSellEggForRewards}
-                      >
-                        Sell for Rewards 💰
-                      </button>
+                      {(() => {
+                        const sellOptions = getEggSellRewardOptions(activeEgg.tier);
+                        return (
+                          <>
+                            <p style={{ fontSize: '0.8rem', opacity: 0.7, margin: '0.25rem 0 0' }}>— or sell for —</p>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              {sellOptions.map((opt) => (
+                                <button
+                                  key={opt.choice}
+                                  type="button"
+                                  className="island-stop-modal__btn island-stop-modal__btn--action"
+                                  onClick={() => handleSellEggForChoice(opt.choice)}
+                                >
+                                  {opt.label}
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 ) : activeEgg && eggStage < 4 ? (
@@ -6677,118 +6740,43 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               </>
             )}
 
-            {activeStopId === 'minigame' && (
+            {/* ── Stop 3: Mystery (rotating content: breathing/meditation/check-in) ── */}
+            {activeStopId === 'mystery' && (
               <div className="island-hatchery-card">
-                <p>Launch the minigame to complete this stop and earn rewards.</p>
-                <div className="island-hatchery-card__actions">
-                  <button
-                    type="button"
-                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                    onClick={() => {
-                      setActiveLaunchedMinigameId(resolveMinigameForStop(islandNumber));
-                      setActiveStopId(null);
-                    }}
-                  >
-                    ▶ Launch Minigame
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {activeStopId === 'utility' && (
-              <div className="island-hatchery-card">
-                <p className="island-stop-modal__copy"><strong>⚡ Recovery Actions</strong></p>
-                {/* Dice bonus */}
-                <div className="island-hatchery-card__actions">
-                  <button
-                    type="button"
-                    className="island-stop-modal__btn island-stop-modal__btn--action"
-                    disabled={coins < UTILITY_DICE_BONUS_COST}
-                    onClick={() => {
-                      setCoins((c) => c - UTILITY_DICE_BONUS_COST);
-                      setDicePool((d) => d + 10);
-                      setUtilityInteracted(true);
-                      playIslandRunSound('utility_stop_complete');
-                      triggerIslandRunHaptic('utility_stop_complete');
-                      void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_spend', metadata: { stage: 'utility_dice_bonus', island_number: islandNumber, cost_coins: UTILITY_DICE_BONUS_COST } });
-                      setLandingText(`Dice bonus! -${UTILITY_DICE_BONUS_COST} coins, +10 🎲`);
-                      handleCompleteActiveStop();
-                    }}
-                  >
-                    🎲 Dice Bonus — {UTILITY_DICE_BONUS_COST} 🪙 → +10 🎲
-                    {coins < UTILITY_DICE_BONUS_COST && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {UTILITY_DICE_BONUS_COST - coins} more)</span>}
-                  </button>
-                </div>
-                {/* Essence bonus — spend diamonds (V2: replaces legacy timer extension) */}
-                <div className="island-hatchery-card__actions">
-                  {ISLAND_RUN_CONTRACT_V2_ENABLED ? (
-                    diamonds >= UTILITY_ESSENCE_BONUS_COST_DIAMONDS ? (
+                {activeStop.kind === 'breathing' ? (
+                  <div>
+                    <p className="island-stop-modal__copy">🧘 <strong>Guided Breathing / Meditation</strong></p>
+                    <p>Take a moment to breathe. Tap the button below to begin a 1-minute breathing exercise right here.</p>
+                    <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
                       <button
                         type="button"
-                        className="island-stop-modal__btn island-stop-modal__btn--action"
+                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
                         onClick={() => {
-                          setDiamonds((d) => d - UTILITY_ESSENCE_BONUS_COST_DIAMONDS);
-                          setRuntimeState((prev) => ({
-                            ...prev,
-                            essence: prev.essence + UTILITY_ESSENCE_BONUS_AMOUNT,
-                            essenceLifetimeEarned: prev.essenceLifetimeEarned + UTILITY_ESSENCE_BONUS_AMOUNT,
-                          }));
-                          setUtilityInteracted(true);
-                          playIslandRunSound('utility_stop_complete');
-                          triggerIslandRunHaptic('utility_stop_complete');
-                          void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_spend', metadata: { stage: 'utility_essence_bonus', island_number: islandNumber, cost_diamonds: UTILITY_ESSENCE_BONUS_COST_DIAMONDS, essence_gained: UTILITY_ESSENCE_BONUS_AMOUNT } });
-                          setLandingText(`Essence bonus! -${UTILITY_ESSENCE_BONUS_COST_DIAMONDS} 💎, +${UTILITY_ESSENCE_BONUS_AMOUNT} 🟣`);
+                          setLandingText('🧘 Breathing exercise complete! Well done.');
                           handleCompleteActiveStop();
                         }}
                       >
-                        🟣 Essence Bonus — {UTILITY_ESSENCE_BONUS_COST_DIAMONDS} 💎 → +{UTILITY_ESSENCE_BONUS_AMOUNT} Essence
+                        🧘 Complete Breathing Exercise
                       </button>
-                    ) : (
-                      <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>🟣 Essence Bonus — needs {UTILITY_ESSENCE_BONUS_COST_DIAMONDS} 💎 (have {diamonds})</p>
-                    )
-                  ) : (
-                    diamonds >= UTILITY_TIMER_EXT_COST_DIAMONDS ? (
+                    </div>
+                  </div>
+                ) : activeStop.kind === 'habit_action' ? (
+                  <div>
+                    <p className="island-stop-modal__copy">✅ <strong>Action Challenge</strong></p>
+                    <p>Complete one habit or action objective to earn your reward and stabilize momentum.</p>
+                    <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
                       <button
                         type="button"
-                        className="island-stop-modal__btn island-stop-modal__btn--action"
+                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
                         onClick={() => {
-                          setDiamonds((d) => d - UTILITY_TIMER_EXT_COST_DIAMONDS);
-                          const extensionMs = UTILITY_TIMER_EXT_HOURS * 60 * 60 * 1000;
-                          setIslandExpiresAtMs((current) => current + extensionMs);
-                          setUtilityInteracted(true);
-                          playIslandRunSound('utility_stop_complete');
-                          triggerIslandRunHaptic('utility_stop_complete');
-                          void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_spend', metadata: { stage: 'utility_timer_extension', island_number: islandNumber, cost_diamonds: UTILITY_TIMER_EXT_COST_DIAMONDS, extension_hours: UTILITY_TIMER_EXT_HOURS } });
-                          setLandingText(`Timer extended! -${UTILITY_TIMER_EXT_COST_DIAMONDS} 💎, +${UTILITY_TIMER_EXT_HOURS}h`);
+                          setLandingText('✅ Action challenge complete!');
                           handleCompleteActiveStop();
                         }}
                       >
-                        ⏱ Timer Extension — {UTILITY_TIMER_EXT_COST_DIAMONDS} 💎 → +{UTILITY_TIMER_EXT_HOURS}h
+                        ✅ Complete Action
                       </button>
-                    ) : (
-                      <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>⏱ Timer Extension — needs {UTILITY_TIMER_EXT_COST_DIAMONDS} 💎 (have {diamonds})</p>
-                    )
-                  )}
-                </div>
-            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-                  <button
-                    type="button"
-                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                    onClick={() => {
-                      setUtilityInteracted(true);
-                      handleCompleteActiveStop();
-                    }}
-                  >
-                    ✓ Skip
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {activeStopId === 'dynamic' && (
-              <div className="island-hatchery-card">
-                {activeStop.kind === 'habit_action' ? (
-                  <p>✅ Complete one habit or action objective to earn your reward and stabilize momentum.</p>
+                    </div>
+                  </div>
                 ) : activeStop.kind === 'checkin_reflection' ? (
                   <IslandRunReflectionComposer
                     session={session}
@@ -6798,78 +6786,54 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       handleCompleteActiveStop();
                     }}
                   />
-                ) : activeStop.kind === 'mystery_reward' ? (
-                  <div>
-                    <p>🎁 Reveal a mystery reward. Some mystery stops can unlock bonus Lucky Roll runs from Island Run.</p>
-                    {mysteryStopReward ? (
-                      <div>
-                        <p style={{ marginTop: 12 }}>{mysteryStopReward.message}</p>
-                        <div className="island-hatchery-card__actions">
-                          <button
-                            type="button"
-                            className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                            onClick={() => {
-                              if (mysteryStopReward.type === 'coins') {
-                                setCoins((current) => current + mysteryStopReward.amount);
-                              } else if (mysteryStopReward.type === 'dice') {
-                                setDicePool((current) => current + mysteryStopReward.amount);
-                              } else if (mysteryStopReward.type === 'lucky_roll') {
-                                awardLuckyRollRuns(session.user.id, mysteryStopReward.amount);
-                              }
-
-                              setLandingText(mysteryStopReward.message);
-                              void recordTelemetryEvent({
-                                userId: session.user.id,
-                                eventType: 'economy_earn',
-                                metadata: {
-                                  stage: 'island_run_mystery_stop_claim',
-                                  island_number: islandNumber,
-                                  reward_type: mysteryStopReward.type,
-                                  reward_amount: mysteryStopReward.amount,
-                                },
-                              });
-                              handleCompleteActiveStop();
-                            }}
-                          >
-                            Claim Mystery Reward
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="island-hatchery-card__actions">
-                        <button
-                          type="button"
-                          className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                          onClick={() => setMysteryStopReward(resolveMysteryStopReward())}
-                        >
-                          Reveal Mystery Reward
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ) : activeStop.kind === 'utility_support' ? (
-                  <p>🧰 Take a utility or support action — shield up, clean your queue, reroute, or prepare for the next stretch.</p>
-                ) : activeStop.kind === 'event_challenge' ? (
-                  <p>⚡ A challenge event has emerged. Commit to resolving it for risk/reward tradeoffs on your journey.</p>
-                ) : activeStop.kind === 'mini_game' ? (
-                  <div>
-                    <p>🎮 A mini-game challenge awaits at this stop. Launch it to complete the stop and earn rewards.</p>
-                    <div className="island-hatchery-card__actions">
-                      <button
-                        type="button"
-                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                        onClick={() => {
-                          setActiveLaunchedMinigameId(resolveMinigameForStop(islandNumber));
-                          setActiveStopId(null);
-                        }}
-                      >
-                        ▶ Launch Minigame
-                      </button>
-                    </div>
-                  </div>
                 ) : (
-                  <p>Complete this stop to progress.</p>
+                  <p>Complete this mystery stop to progress.</p>
                 )}
+              </div>
+            )}
+
+            {/* ── Stop 4: Wisdom (story, questionnaire, learning content) ── */}
+            {activeStopId === 'wisdom' && (
+              <div className="island-hatchery-card">
+                <p className="island-stop-modal__copy"><strong>📖 Wisdom Stop</strong></p>
+                <p>Gain insight from a short story, reflection, or questionnaire. Wisdom content evolves as you progress.</p>
+                {ISLAND_RUN_CONTRACT_V2_ENABLED && diamonds >= WISDOM_ESSENCE_BONUS_COST_DIAMONDS ? (
+                  <div className="island-hatchery-card__actions" style={{ marginTop: '0.5rem' }}>
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action"
+                      onClick={() => {
+                        setDiamonds((d) => d - WISDOM_ESSENCE_BONUS_COST_DIAMONDS);
+                        setRuntimeState((prev) => ({
+                          ...prev,
+                          essence: prev.essence + WISDOM_ESSENCE_BONUS_AMOUNT,
+                          essenceLifetimeEarned: prev.essenceLifetimeEarned + WISDOM_ESSENCE_BONUS_AMOUNT,
+                        }));
+                        playIslandRunSound('utility_stop_complete');
+                        triggerIslandRunHaptic('utility_stop_complete');
+                        void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_spend', metadata: { stage: 'wisdom_essence_bonus', island_number: islandNumber, cost_diamonds: WISDOM_ESSENCE_BONUS_COST_DIAMONDS, essence_gained: WISDOM_ESSENCE_BONUS_AMOUNT } });
+                        setLandingText(`Wisdom bonus! -${WISDOM_ESSENCE_BONUS_COST_DIAMONDS} 💎, +${WISDOM_ESSENCE_BONUS_AMOUNT} 🟣`);
+                        handleCompleteActiveStop();
+                      }}
+                    >
+                      🟣 Essence Bonus — {WISDOM_ESSENCE_BONUS_COST_DIAMONDS} 💎 → +{WISDOM_ESSENCE_BONUS_AMOUNT} Essence
+                    </button>
+                  </div>
+                ) : ISLAND_RUN_CONTRACT_V2_ENABLED ? (
+                  <p style={{ fontSize: '0.85rem', opacity: 0.65, marginTop: '0.5rem' }}>🟣 Essence Bonus — needs {WISDOM_ESSENCE_BONUS_COST_DIAMONDS} 💎 (have {diamonds})</p>
+                ) : null}
+                <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored" style={{ marginTop: '0.75rem' }}>
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                    onClick={() => {
+                      setLandingText('📖 Wisdom stop complete!');
+                      handleCompleteActiveStop();
+                    }}
+                  >
+                    Complete Wisdom Stop
+                  </button>
+                </div>
               </div>
             )}
 
@@ -7010,9 +6974,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
               {activeStop.stopId !== 'hatchery'
               && activeStop.stopId !== 'boss'
-              && activeStop.stopId !== 'utility'
-              && activeStop.kind !== 'checkin_reflection'
-              && activeStop.kind !== 'mystery_reward' ? (
+              && activeStop.stopId !== 'mystery'
+              && activeStop.stopId !== 'wisdom'
+              && activeStop.kind !== 'checkin_reflection' ? (
                 <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
                   Complete Stop
                 </button>
@@ -8324,11 +8288,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             islandNumber={islandNumber}
             onComplete={(result) => {
               if (result.completed && result.reward) {
-                const { coins: rewardCoins = 0, dice: rewardDice = 0, spinTokens: rewardSpinTokens = 0 } = result.reward;
-                if (rewardCoins > 0) {
-                  setCoins((c) => c + rewardCoins);
-                  void awardGold(session.user.id, rewardCoins, 'shooter_blitz', 'island_run_minigame_reward');
-                }
+                const { dice: rewardDice = 0, spinTokens: rewardSpinTokens = 0 } = result.reward;
                 if (rewardDice > 0) setDicePool((d) => d + rewardDice);
                 if (rewardSpinTokens > 0) setSpinTokens((t) => t + rewardSpinTokens);
                 // M17D: award wallet shards on minigame reward
@@ -8344,7 +8304,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 });
               }
               setActiveLaunchedMinigameId(null);
-              handleCompleteStopById('minigame');
+              // Minigame launched from encounter — no stop completion needed
             }}
           />
         </div>
@@ -8409,7 +8369,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             shards: runtimeState.shards,
             shields: runtimeState.shields,
             diamonds: runtimeState.diamonds,
-            coins,
             spinTokens,
             eggStage,
             activeStopId,
@@ -8417,10 +8376,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             cameraMode,
             timeLeftSec,
             showTravelOverlay,
-            islandExpiresAtMs,
-            islandStartedAtMs,
             hasHydratedRuntimeState,
             diceRegenCountdown,
+            playerLevel: islandNumber,
           }}
           onClose={() => setShowDebugPanel(false)}
         />

@@ -77,7 +77,7 @@ export interface IslandRunRuntimeStateBackend {
       perfectCompanionModelVersion?: string | null;
       perfectCompanionComputedCycleIndex?: number | null;
       activeStopIndex?: number;
-      activeStopType?: 'hatchery' | 'habit' | 'breathing' | 'wisdom' | 'boss';
+      activeStopType?: 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
       stopStatesByIndex?: Array<{ objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number }>;
       stopBuildStateByIndex?: Array<{ requiredEssence: number; spentEssence: number; buildLevel: number }>;
       bossState?: { unlocked: boolean; objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number };
@@ -96,6 +96,7 @@ export interface IslandRunRuntimeStateBackend {
       activeTimedEventProgress?: { feedingActions: number; tokensEarned: number; milestonesClaimed: number };
       stickerProgress?: { fragments: number; guaranteedAt?: number; pityCounter?: number };
       stickerInventory?: Record<string, number>;
+      lastEssenceDriftLost?: number;
     };
   }): Promise<{ ok: true } | { ok: false; errorMessage: string }>;
 }
@@ -338,7 +339,7 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
       activeStopType:
         patch.activeStopType === 'hatchery'
         || patch.activeStopType === 'habit'
-        || patch.activeStopType === 'breathing'
+        || patch.activeStopType === 'mystery'
         || patch.activeStopType === 'wisdom'
         || patch.activeStopType === 'boss'
           ? patch.activeStopType
@@ -524,6 +525,10 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
               ),
             }
           : current.stickerInventory,
+      lastEssenceDriftLost:
+        typeof patch.lastEssenceDriftLost === 'number' && Number.isFinite(patch.lastEssenceDriftLost)
+          ? Math.max(0, Math.floor(patch.lastEssenceDriftLost))
+          : current.lastEssenceDriftLost,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({

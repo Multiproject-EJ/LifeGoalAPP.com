@@ -60,13 +60,12 @@ Implement via:
 `tile_chest.webp`
 `tile_event.webp`
 `tile_hazard.webp`
-`tile_egg_shard.webp`
 `tile_micro.webp`
 `tile_encounter.webp`
 `tile_stop_hatchery.webp`
-`tile_stop_minigame.webp`
-`tile_stop_market.webp`
-`tile_stop_utility.webp`
+`tile_stop_habit.webp`
+`tile_stop_mystery.webp`
+`tile_stop_wisdom.webp`
 `tile_stop_boss.webp`
 
 ## Token

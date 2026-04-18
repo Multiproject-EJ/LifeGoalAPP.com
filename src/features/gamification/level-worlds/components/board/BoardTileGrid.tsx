@@ -11,7 +11,7 @@ export interface BoardTileGridProps {
   tileMap: Record<number, IslandTileMapEntry>;
   completedEncounterIndices: Set<number>;
   tokenIndex: number;
-  isSpark60: boolean;
+  isSpark40: boolean;
   showDebug: boolean;
   isMinimalBoardArt: boolean;
   /** Uniform board scale forwarded from BoardStage (canonical px → screen px). */
@@ -29,7 +29,7 @@ export function BoardTileGrid(props: BoardTileGridProps) {
     tileMap,
     completedEncounterIndices,
     tokenIndex,
-    isSpark60,
+    isSpark40,
     showDebug,
     isMinimalBoardArt,
     uniformScale,
@@ -67,7 +67,7 @@ export function BoardTileGrid(props: BoardTileGridProps) {
             isEncounterCompleted={isEncounterCompleted}
             isTokenCurrent={index === tokenIndex}
             isUpcoming={upcomingSet.has(index)}
-              isSpark60={isSpark60}
+              isSpark40={isSpark40}
               tileIndex={index}
               showDebug={showDebug}
               isMinimalBoardArt={isMinimalBoardArt}

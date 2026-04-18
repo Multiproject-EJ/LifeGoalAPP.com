@@ -3,7 +3,7 @@
 
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
 
-export type IslandTileType = 'currency' | 'chest' | 'event' | 'hazard' | 'egg_shard' | 'micro' | 'encounter' | 'stop';
+export type IslandTileType = 'currency' | 'chest' | 'event' | 'hazard' | 'micro' | 'encounter' | 'stop';
 
 export type IslandRarity = 'normal' | 'seasonal' | 'rare';
 
@@ -13,7 +13,7 @@ export type IslandTileMapEntry = {
   stopId?: string;
 };
 
-const STOP_IDS = ['hatchery', 'minigame', 'market', 'utility', 'boss'] as const;
+const STOP_IDS = ['hatchery', 'habit', 'mystery', 'wisdom', 'boss'] as const;
 
 // Encounter tile indices by island rarity.
 // Normal: 1 tile (index 6, gated by dayIndex); Seasonal: 2 tiles; Rare: 2 tiles (always active).
@@ -23,7 +23,7 @@ const ENCOUNTER_INDICES: Record<IslandRarity, number[]> = {
   rare: [6, 11],
 };
 
-// Non-stop tile pool (weighted)
+// Non-stop tile pool (weighted). egg_shard tiles retired — shards only from reward bar/stop/boss.
 const TILE_POOL: IslandTileType[] = [
   'currency',
   'currency',
@@ -33,7 +33,7 @@ const TILE_POOL: IslandTileType[] = [
   'event',
   'event',
   'hazard',
-  'egg_shard',
+  'micro',
   'micro',
 ];
 

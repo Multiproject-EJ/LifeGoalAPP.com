@@ -128,10 +128,10 @@ Extend anchor schema to:
 
 Example stop trigger tile mapping (indices are illustrative; adjust once and lock):
 - stop_hatchery trigger → tile 0
-- stop_minigame trigger → tile 4
-- stop_market trigger → tile 8
-- stop_utility trigger → tile 12
-- stop_boss trigger → tile 16
+- stop_habit trigger → tile 8
+- stop_mystery trigger → tile 16
+- stop_wisdom trigger → tile 24
+- stop_boss trigger → tile 32
 
 > **Note:** These tile indices mark where landing triggers the corresponding **outer stop POI**;
 > the stop itself is not located on the ring.  Landing on a stop trigger tile opens the stop
@@ -174,11 +174,11 @@ Stops are outer POIs — they exist around the island perimeter and are not posi
 
 1) Background image (island art)
 2) Board path layer (ring trail around pond)
-3) Tile glow/base layer (60 anchors)
-4) Stop markers (5 special markers)
+3) Tile glow/base layer (40 anchors)
+4) Stop markers (5 special markers: hatchery/habit/mystery/wisdom/boss)
 5) Token layer (spaceship)
 6) Foreground depth mask (occlusion for 3D illusion)
-7) HUD (hearts, timer, currency)
+7) HUD (dice, essence, timer)
 8) Modals (stop content)
 
 Depth mask must be able to hide token/tile portions in selected regions.
@@ -187,7 +187,7 @@ Depth mask must be able to hide token/tile portions in selected regions.
 
 ## Dev Mode Overlay (required)
 Implement a dev toggle:
-- shows all 60 anchors
+- shows all 40 anchors
 - shows indices
 - shows stop labels
 - shows zBand color coding (back=blue, mid=yellow, front=magenta)
@@ -199,15 +199,15 @@ This is essential for QA and future islands.
 ## Movement Algorithm
 Inputs:
 - currentTileIndex
-- hearts
+- dicePool
 - spinTokens
 
 Actions:
-- ROLL_DICE (cost 1 heart): steps = rand 1..3
+- ROLL_DICE (cost from dicePool): steps = rand 1..6
 - USE_SPIN (cost 1 spin token): steps = rand 1..5
 
 Advance:
-- nextIndex = (currentIndex + steps) % 60
+- nextIndex = (currentIndex + steps) % 40
 
 Animate:
 - token moves through intermediate anchors (for juice)
@@ -256,7 +256,7 @@ Expiry triggers in 3 places:
 If expired:
 - show TravelOverlay
 - advance island_number
-- reset run state (hearts, currency, token index, stops)
+- reset run state (dice, essence, token index, stops)
 - handle eggs: convert ready island egg to dormant if not collected
 - load next background
 - hide overlay
@@ -268,16 +268,16 @@ If expired:
 - top-left: LEVEL x / 120
 - top-right: close
 - top-mid/small: ends in HH:MM
-- bottom HUD: hearts, currency, spin tokens
+- bottom HUD: dice pool, essence, spin tokens
 - tap primary CTA: “Roll” (large button)
 - secondary CTA: “Spin” appears if spinTokens>0
 
 ### Stop Modals
 - Hatchery modal
-- Minigame modal (stub)
-- Market modal
-- Utility modal (stub)
-- Boss modal (stub)
+- Habit modal (complete a habit)
+- Mystery modal (breathing/meditation/reflection)
+- Wisdom modal (story/questionnaire)
+- Boss modal (trial challenge)
 
 ---
 
@@ -287,7 +287,7 @@ If expired:
 - board ring appears integrated with pond (not floating)
 - depth mask correctly occludes token/tile in defined zones
 - stop tiles open only on landing
-- dice consumes hearts
+- dice roll consumes from dice pool
 - spin consumes spin token
 - expiry advances island and plays overlay
 - dev overlay shows anchors & indices
