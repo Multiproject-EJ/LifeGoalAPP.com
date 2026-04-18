@@ -689,7 +689,7 @@ type OrbitStopVisual = {
 };
 
 type MysteryStopReward =
-  | { type: 'coins'; amount: number; message: string }
+  | { type: 'essence'; amount: number; message: string }
   | { type: 'dice'; amount: number; message: string }
   | { type: 'lucky_roll'; amount: number; message: string };
 
@@ -836,7 +836,6 @@ const TILE_TYPE_ICONS: Record<string, string> = {
   chest: '🎁',
   event: '⚡',
   hazard: '☠️',
-  egg_shard: '🧩',
   micro: '✨',
 };
 
@@ -845,7 +844,6 @@ const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
   chest: '#7dd8ff',
   event: '#d39bff',
   hazard: '#ff8f8f',
-  egg_shard: '#9ef0ff',
   micro: '#9dffbe',
   encounter: '#ffa765',
   stop: '#7afcff',
@@ -8371,7 +8369,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             shards: runtimeState.shards,
             shields: runtimeState.shields,
             diamonds: runtimeState.diamonds,
-            coins,
             spinTokens,
             eggStage,
             activeStopId,
@@ -8379,10 +8376,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             cameraMode,
             timeLeftSec,
             showTravelOverlay,
-            islandExpiresAtMs,
-            islandStartedAtMs,
             hasHydratedRuntimeState,
             diceRegenCountdown,
+            playerLevel: islandNumber,
           }}
           onClose={() => setShowDebugPanel(false)}
         />

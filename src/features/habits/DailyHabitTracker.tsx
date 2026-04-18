@@ -2090,9 +2090,9 @@ export function DailyHabitTracker({
   ]);
 
   const isMysteryStopAvailable = useMemo(() => {
-    const eventStop = stopPlanForActiveIsland.find((stop) => stop.kind === 'event_challenge');
-    if (!eventStop) return false;
-    return !completedStopsOnActiveIsland.includes(eventStop.stopId);
+    const mysteryStop = stopPlanForActiveIsland.find((stop) => stop.stopId === 'mystery');
+    if (!mysteryStop) return false;
+    return !completedStopsOnActiveIsland.includes(mysteryStop.stopId);
   }, [completedStopsOnActiveIsland, stopPlanForActiveIsland]);
 
   // Track whether the player has already opened the egg hatch circle today for this island.
