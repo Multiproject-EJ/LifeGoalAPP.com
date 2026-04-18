@@ -2089,11 +2089,6 @@ export function DailyHabitTracker({
     islandRunRuntime.activeEggTier,
   ]);
 
-  const isMysteryStopAvailable = useMemo(() => {
-    const mysteryStop = stopPlanForActiveIsland.find((stop) => stop.stopId === 'mystery');
-    if (!mysteryStop) return false;
-    return !completedStopsOnActiveIsland.includes(mysteryStop.stopId);
-  }, [completedStopsOnActiveIsland, stopPlanForActiveIsland]);
 
   // Track whether the player has already opened the egg hatch circle today for this island.
   // Key: per-user, per-day, per-island so it resets naturally when egg moves to a new island
@@ -2215,16 +2210,6 @@ export function DailyHabitTracker({
         isActionable: isEggReadyToCollectOnActiveIsland && !hasSeenEggHatch,
         sortPriority: hasSeenEggHatch ? 5 : 2.5,
       },
-      {
-        id: 'mystery_stop',
-        label: 'Mystery',
-        icon: '🎭',
-        expiresAtMs: null,
-        isCollected: false,
-        isVisible: isMysteryStopAvailable,
-        isActionable: isMysteryStopAvailable,
-        sortPriority: 5,
-      },
     ];
   }, [
     activeIsland,
@@ -2237,7 +2222,6 @@ export function DailyHabitTracker({
     isIslandRunReadyToStart,
     isEggReadyToCollectOnActiveIsland,
     isSpecialVisionStarDay,
-    isMysteryStopAvailable,
     hasOpenedTreatCalendarToday,
   ]);
 
@@ -2298,15 +2282,6 @@ export function DailyHabitTracker({
       } else {
         setVisionRewardError('Egg hatch launcher is unavailable in this view.');
       }
-      return;
-    }
-
-    if (offerId === 'mystery_stop') {
-      if (onOpenIslandRunStop) {
-        onOpenIslandRunStop('dynamic');
-      } else {
-        setVisionRewardError('Mystery stop launcher is unavailable in this view.');
-      }
     }
   }, [eggHatchViewedStorageKey, handleVisionRewardClick, onOpenDailyTreat, onOpenIslandRunStop, startTodaysOfferCheckout]);
 
@@ -2346,15 +2321,7 @@ export function DailyHabitTracker({
   }, [handleTimeBoundOfferClick, isViewingToday, onPendingOfferHandled, pendingOfferToOpen, today]);
 
 
-  const activeOfferTeaserConfig = useMemo(() => {
-    if (activeOfferTeaser !== 'mystery_stop') return null;
-    return {
-      title: 'Mystery',
-      description: 'A mystery stop is available.',
-      cta: 'Open Mystery →',
-      icon: '🎭',
-    };
-  }, [activeOfferTeaser]);
+  const activeOfferTeaserConfig = null;
 
   const offerTeaserModal = activeOfferTeaser && activeOfferTeaserConfig ? (
     <div className="habit-day-nav__vision-modal-backdrop" role="dialog" aria-modal="true" aria-label="Offer teaser" onClick={() => setActiveOfferTeaser(null)}>
