@@ -15,8 +15,9 @@ const TIMER_OK_THRESHOLD_MS = 4 * 60 * 60 * 1000;
 const TIMER_WARN_THRESHOLD_MS = 1 * 60 * 60 * 1000;
 const EVENT_BANNER_META: Readonly<Record<string, { icon: string; displayName: string }>> = {
   feeding_frenzy: { icon: '🔥', displayName: 'Feeding Frenzy' },
-  harvest_sprint: { icon: '🌾', displayName: 'Harvest Sprint' },
+  space_excavator: { icon: '🚀', displayName: 'Space Excavator' },
   companion_feast: { icon: '🐾', displayName: 'Companion Feast' },
+  lucky_spin: { icon: '🎰', displayName: 'Lucky Spin' },
 };
 
 function formatCountdown(resetAtMs: number | undefined, nowMs: number): string {

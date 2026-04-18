@@ -1524,8 +1524,8 @@
 .island-run-board__rewardbar-banner--feeding_frenzy {
   background: linear-gradient(135deg, #c0392b 0%, #a93226 50%, #922b21 100%);
 }
-.island-run-board__rewardbar-banner--harvest_sprint {
-  background: linear-gradient(135deg, #d4a017 0%, #b8860b 50%, #9a7209 100%);
+.island-run-board__rewardbar-banner--space_excavator {
+  background: linear-gradient(135deg, #2c3e50 0%, #1a252f 50%, #0d1117 100%);
 }
 .island-run-board__rewardbar-banner--companion_feast {
   background: linear-gradient(135deg, #1e8449 0%, #196f3d 50%, #145a32 100%);
@@ -4621,4 +4621,16 @@
 .island-run-debug-panel__row--warn .island-run-debug-panel__value {
   color: #ffab40;
   font-weight: 600;
+}
+
+/* Drift notice animation */
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-4px); }
+  15% { opacity: 1; transform: translateY(0); }
+  75% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(4px); }
+}
+
+.island-run-prototype__drift-notice {
+  pointer-events: none;
 }

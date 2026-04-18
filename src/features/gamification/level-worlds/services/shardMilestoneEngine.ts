@@ -8,7 +8,6 @@ export const SHARD_EXTENDED_BASE_THRESHOLD = 500; // T6 = 500
 export const SHARD_EXTENDED_TIER_INCREMENT = 150; // T7 = 650, T8 = 800, …
 
 export const SHARD_EARN = {
-  egg_shard_tile: 1,  // landing on egg_shard tile
   stop_complete: 2,   // completing any non-boss stop
   boss_defeat: 5,     // defeating the boss
   egg_open: 2,        // opening / hatching an egg

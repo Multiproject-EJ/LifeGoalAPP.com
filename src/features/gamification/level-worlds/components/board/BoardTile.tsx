@@ -30,12 +30,6 @@ const TILE_SVG_ICONS: Record<string, JSX.Element> = {
       <text x="9" y="13" textAnchor="middle" fontSize="8" fontWeight="900" fill="#fff">!</text>
     </svg>
   ),
-  egg_shard: (
-    <svg viewBox="0 0 18 18" width="14" height="14" fill="none" aria-hidden="true">
-      <path d="M9 2C6 2 4 6 4 10C4 13.3 6.2 16 9 16C11.8 16 14 13.3 14 10C14 6 12 2 9 2Z" fill="#B0E0E6" stroke="#5F9EA0" strokeWidth="0.8"/>
-      <path d="M7 8L9 6L11 8L9 10Z" fill="#7EC8E3" opacity="0.7"/>
-    </svg>
-  ),
   micro: (
     <svg viewBox="0 0 18 18" width="14" height="14" fill="none" aria-hidden="true">
       <circle cx="9" cy="9" r="3" fill="#C8A2FF"/>
