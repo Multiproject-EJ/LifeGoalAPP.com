@@ -132,6 +132,10 @@ export async function executeIslandRunRollAction(options: {
   // 7. Persist the roll state patch via the same write path used by
   //    IslandRunBoardPrototype (writeIslandRunGameStateRecord).
   //    Dice deduction uses the full multiplied cost (DICE_PER_ROLL × multiplier).
+  //    Persistence is fire-and-forget so the dice animation + token movement can
+  //    start immediately without waiting for the Supabase RPC round-trip.
+  //    Local state (localStorage) is updated synchronously inside the write call,
+  //    so the PWA remains authoritative even if the remote write is slow or fails.
   const nextState = {
     ...state,
     runtimeVersion: state.runtimeVersion + 1,
@@ -139,7 +143,8 @@ export async function executeIslandRunRollAction(options: {
     dicePool: state.dicePool - diceCost,
   };
 
-  await writeIslandRunGameStateRecord({ session, client, record: nextState });
+  // Fire-and-forget: don't block the UI on the remote persist.
+  void writeIslandRunGameStateRecord({ session, client, record: nextState });
 
   return {
     status: 'ok',

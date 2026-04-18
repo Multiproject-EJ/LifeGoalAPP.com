@@ -1219,6 +1219,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [runtimeState]);
 
   // ── Dice regen countdown timer (lives after runtimeState so it can read diceRegenState) ──
+  // Uses real elapsed time since lastRegenAtMs so the countdown decrements every
+  // second and works correctly when the PWA is reopened after being in the background.
   useEffect(() => {
     const regenState: DiceRegenState | null = runtimeState.diceRegenState ?? null;
     if (!regenState || dicePool >= regenState.maxDice) {
@@ -1229,14 +1231,20 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     function tick() {
       if (!regenState) return;
+      const now = Date.now();
       const deficit = Math.max(0, regenState.maxDice - dicePool);
-      // Time to fill the full deficit at regenRatePerHour
+      // How long it takes to fill the full deficit
       const hoursToFill = deficit / Math.max(1, regenState.regenRatePerHour);
       const msToFill = hoursToFill * 60 * 60 * 1000;
-      // Rolls ready at full = maxDice / 2 (base cost of 2 dice per roll)
+      // Elapsed time since last regen tick
+      const elapsedMs = Math.max(0, now - regenState.lastRegenAtMs);
+      // Remaining = total fill time minus what already elapsed
+      const msRemaining = Math.max(0, msToFill - elapsedMs);
+
+      // Rolls ready at full = maxDice / DICE_PER_ROLL
       const totalRollsAtFull = Math.floor(regenState.maxDice / DICE_PER_ROLL);
 
-      const remainingSec = Math.max(0, Math.ceil(msToFill / 1000));
+      const remainingSec = Math.max(0, Math.ceil(msRemaining / 1000));
       const minutes = Math.floor(remainingSec / 60);
       const seconds = remainingSec % 60;
       const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
@@ -1361,6 +1369,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const islandKey = String(persistedIsland);
     const ledgerEntry = runtimeState.perIslandEggs?.[islandKey];
     if (ledgerEntry && (ledgerEntry.status === 'incubating' || ledgerEntry.status === 'ready')) {
+      // Auto-transition incubating → ready if hatch time has passed (covers background/offline hatching)
+      const nowHydrate = Date.now();
+      const isHatched = nowHydrate >= ledgerEntry.hatchAtMs;
+      if (isHatched && ledgerEntry.status === 'incubating') {
+        const updatedEntry: PerIslandEggEntry = { ...ledgerEntry, status: 'ready' };
+        const updatedLedger = { ...runtimeState.perIslandEggs, [islandKey]: updatedEntry };
+        setRuntimeState((prev) => ({ ...prev, perIslandEggs: updatedLedger }));
+        if (client) {
+          void persistIslandRunRuntimeStatePatch(session, client, { perIslandEggs: updatedLedger });
+        }
+      }
       setActiveEgg({
         tier: ledgerEntry.tier,
         setAtMs: ledgerEntry.setAtMs,
@@ -2814,20 +2833,26 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     if (eggStage === 4 && prevEggStageRef.current < 4) {
       playIslandRunSound('egg_ready');
-      setShowEggReadyBanner(true);
+      // Only show banner if not already dismissed for this specific egg
+      const bannerKey = activeEgg ? `lifegoal:egg_ready_banner_shown:${session.user.id}:${activeEgg.setAtMs}` : null;
+      const alreadyDismissed = bannerKey ? window.localStorage.getItem(bannerKey) === '1' : false;
+      if (!alreadyDismissed) {
+        setShowEggReadyBanner(true);
+      }
     }
     prevEggStageRef.current = eggStage;
-  }, [eggStage]);
+  }, [eggStage, activeEgg, session.user.id]);
 
   // Show egg-ready banner on initial load if egg is already ready and banner not yet dismissed
-  const eggReadyBannerShownOnceRef = useRef(false);
   useEffect(() => {
-    if (eggReadyBannerShownOnceRef.current) return;
-    if (eggStage === 4 && hasHydratedRuntimeState) {
-      eggReadyBannerShownOnceRef.current = true;
-      setShowEggReadyBanner(true);
+    if (eggStage === 4 && hasHydratedRuntimeState && activeEgg) {
+      const bannerKey = `lifegoal:egg_ready_banner_shown:${session.user.id}:${activeEgg.setAtMs}`;
+      const alreadyDismissed = window.localStorage.getItem(bannerKey) === '1';
+      if (!alreadyDismissed) {
+        setShowEggReadyBanner(true);
+      }
     }
-  }, [eggStage, hasHydratedRuntimeState]);
+  }, [eggStage, hasHydratedRuntimeState, activeEgg, session.user.id]);
 
   useEffect(() => {
     if (activeStopId !== 'hatchery') {
@@ -7224,6 +7249,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 type="button"
                 className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
                 onClick={() => {
+                  if (activeEgg) {
+                    try { window.localStorage.setItem(`lifegoal:egg_ready_banner_shown:${session.user.id}:${activeEgg.setAtMs}`, '1'); } catch { /* ignore */ }
+                  }
                   setShowEggReadyBanner(false);
                   requestActiveStopTransition('hatchery', 'egg_ready_banner');
                 }}
@@ -7233,7 +7261,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <button
                 type="button"
                 className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                onClick={() => setShowEggReadyBanner(false)}
+                onClick={() => {
+                  if (activeEgg) {
+                    try { window.localStorage.setItem(`lifegoal:egg_ready_banner_shown:${session.user.id}:${activeEgg.setAtMs}`, '1'); } catch { /* ignore */ }
+                  }
+                  setShowEggReadyBanner(false);
+                }}
               >
                 Later
               </button>
