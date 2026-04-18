@@ -32,7 +32,7 @@ export interface UseTokenAnimationOptions {
   onHopPosition?: (screenX: number, screenY: number, tileIndex: number) => void;
   /** Callback when landing on final tile */
   onLand?: (tileIndex: number) => void;
-  /** Ms per hop — defaults to 220 */
+  /** Ms per hop — defaults to 220.  Used when no per-hop durations are supplied. */
   hopDurationMs?: number;
 }
 
@@ -82,10 +82,17 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
   /**
    * Animate the token hopping through a sequence of tile anchors.
    * Returns a Promise that resolves when the full animation completes.
+   *
+   * @param anchors   Full tile anchor array for the board
+   * @param indices   Tile indices to hop through (in order)
+   * @param perHopMs  Optional per-hop duration array from `computeHopDurations()`.
+   *                  When supplied, each hop uses its own timing for narrative compression
+   *                  (fast middle hops, slow landing hops).  Falls back to `hopDurationMs`.
    */
   const animateHops = useCallback((
     anchors: TileAnchor[],
     indices: number[],
+    perHopMs?: number[],
   ): Promise<void> => {
     return new Promise<void>((resolve) => {
       if (indices.length === 0) { resolve(); return; }
@@ -121,8 +128,11 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
         if (!isAnimatingRef.current) { resolve(); return; }
         if (hopStartTime === 0) startNextHop(now);
 
+        // Use per-hop duration if provided, otherwise fall back to default
+        const currentHopMs = perHopMs?.[hopIndex] ?? hopDurationMs;
+
         const elapsed = now - hopStartTime;
-        const progress = Math.min(elapsed / hopDurationMs, 1);
+        const progress = Math.min(elapsed / currentHopMs, 1);
         const eased = easeOutCubic(progress);
 
         const currentIdx = indices[hopIndex];

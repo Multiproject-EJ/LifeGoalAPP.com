@@ -6,6 +6,7 @@ import {
   type SpringConfig,
   type SpringState,
 } from './springEngine';
+import { CAMERA_ZOOM, type ShotPreset } from './cameraDirector';
 
 // ─── Camera state ────────────────────────────────────────────────────────────
 
@@ -31,11 +32,10 @@ interface CameraSprings {
   zoom: SpringState;
 }
 
-const OVERVIEW_ZOOM = 0.88;
-const FOCUS_ZOOM = 1.5;
-const DEFAULT_ZOOM = 1.0;
-const FOLLOW_ZOOM = 1.5;
-const LANDING_ZOOM = 1.7;
+const OVERVIEW_ZOOM = CAMERA_ZOOM.overview;
+const FOCUS_ZOOM = CAMERA_ZOOM.travelMedium;
+const DEFAULT_ZOOM = CAMERA_ZOOM.boardWide;
+const FOLLOW_ZOOM = CAMERA_ZOOM.travelMedium;
 const MIN_ZOOM = 0.4;
 const MAX_ZOOM = 3.0;
 
@@ -88,20 +88,44 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
   // Cleanup on unmount.
   useEffect(() => () => { cancelAnimationFrame(rafRef.current); }, []);
 
+  // ── Asymmetric spring helpers ──────────────────────────────────────────────
+  /** Temporarily use a given spring config; the next "return" call restores smooth. */
+  const useSpringConfig = useCallback((config: SpringConfig) => {
+    configRef.current = config;
+  }, []);
+
+  const restoreDefaultSpring = useCallback(() => {
+    configRef.current = springPreset;
+  }, [springPreset]);
+
+  /** Apply spring config from a ShotPreset — extracts the right config key and falls back. */
+  const applyPresetSpring = useCallback((
+    preset: ShotPreset | undefined,
+    phase: 'springIn' | 'springOut',
+  ) => {
+    const config = preset?.[phase];
+    if (config) {
+      useSpringConfig(config);
+    } else {
+      restoreDefaultSpring();
+    }
+  }, [useSpringConfig, restoreDefaultSpring]);
+
   // ── Public API ─────────────────────────────────────────────────────────────
 
   /** Smoothly animate to overview (zoomed out, centered). */
   const goOverview = useCallback(() => {
+    restoreDefaultSpring();
     const s = springsRef.current;
     s.x.target = 0;
     s.y.target = 0;
     s.zoom.target = OVERVIEW_ZOOM;
     setMode('overview_manual');
     ensureAnimating();
-  }, [ensureAnimating]);
+  }, [ensureAnimating, restoreDefaultSpring]);
 
   /** Smoothly animate to focus on a screen-space point (px). */
-  const goFocusPoint = useCallback((screenX: number, screenY: number, zoom = FOCUS_ZOOM) => {
+  const goFocusPoint = useCallback((screenX: number, screenY: number, zoom: number = FOCUS_ZOOM) => {
     const s = springsRef.current;
     s.x.target = (boardWidth / 2) - screenX;
     s.y.target = (boardHeight / 2) - screenY;
@@ -111,40 +135,85 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
   }, [boardWidth, boardHeight, ensureAnimating]);
 
   /**
-   * Follow token during movement — slightly tighter zoom than default,
-   * with a soft lag so the camera feels cinematic, not locked.
-   * Uses the 'smooth' spring preset (inherited) for gentle tracking.
+   * Follow token during movement with directional lead offset.
+   *
+   * The token is placed at ~40% in its direction of travel (not dead center)
+   * so the board "has somewhere to go."  The optional leadX/leadY come from
+   * `computeDirectionalLead()` in cameraDirector.ts.
    */
-  const goFollowToken = useCallback((screenX: number, screenY: number) => {
+  const goFollowToken = useCallback((
+    screenX: number,
+    screenY: number,
+    leadX = 0,
+    leadY = 0,
+  ) => {
     const s = springsRef.current;
-    s.x.target = (boardWidth / 2) - screenX;
-    s.y.target = (boardHeight / 2) - screenY;
+    s.x.target = (boardWidth / 2) - screenX - leadX;
+    s.y.target = (boardHeight / 2) - screenY - leadY;
     s.zoom.target = FOLLOW_ZOOM;
     setMode('board_follow');
     ensureAnimating();
   }, [boardWidth, boardHeight, ensureAnimating]);
 
   /**
-   * Tighter landing focus — used briefly when token reaches its final tile.
+   * Landing focus driven by a ShotPreset from the CameraDirector.
+   * Uses the preset's zoom level and switches to its springIn config
+   * for the snappy punch-in feel.
    */
-  const goLandingFocus = useCallback((screenX: number, screenY: number) => {
+  const goLandingFocus = useCallback((
+    screenX: number,
+    screenY: number,
+    preset?: ShotPreset,
+  ) => {
+    const zoom = preset?.zoom ?? CAMERA_ZOOM.tileClose;
+    // Asymmetric spring: use snappy config for the punch-in
+    applyPresetSpring(preset, 'springIn');
     const s = springsRef.current;
     s.x.target = (boardWidth / 2) - screenX;
     s.y.target = (boardHeight / 2) - screenY;
-    s.zoom.target = LANDING_ZOOM;
+    s.zoom.target = zoom;
     setMode('board_follow');
     ensureAnimating();
-  }, [boardWidth, boardHeight, ensureAnimating]);
+  }, [boardWidth, boardHeight, ensureAnimating, applyPresetSpring]);
 
   /** Smoothly return to default camera (no offset, zoom 1). */
   const goDefault = useCallback(() => {
+    // Asymmetric spring: use smooth config for the return
+    restoreDefaultSpring();
     const s = springsRef.current;
     s.x.target = 0;
     s.y.target = 0;
     s.zoom.target = DEFAULT_ZOOM;
     setMode('board_follow');
     ensureAnimating();
-  }, [ensureAnimating]);
+  }, [ensureAnimating, restoreDefaultSpring]);
+
+  /**
+   * Pre-roll anticipation beat — micro push-in before the dice even roll.
+   * Uses snappy spring for fast in, then the travel/follow will take over.
+   */
+  const goPreRoll = useCallback((screenX: number, screenY: number, preset?: ShotPreset) => {
+    const zoom = preset?.zoom ?? CAMERA_ZOOM.preRoll;
+    applyPresetSpring(preset, 'springIn');
+    const s = springsRef.current;
+    s.x.target = (boardWidth / 2) - screenX;
+    s.y.target = (boardHeight / 2) - screenY;
+    s.zoom.target = zoom;
+    setMode('board_follow');
+    ensureAnimating();
+  }, [boardWidth, boardHeight, ensureAnimating, applyPresetSpring]);
+
+  /** Return to follow framing after a landing hold, using smooth spring. */
+  const goReturnToFollow = useCallback((screenX: number, screenY: number, preset?: ShotPreset) => {
+    // Asymmetric: slower out
+    applyPresetSpring(preset, 'springOut');
+    const s = springsRef.current;
+    s.x.target = (boardWidth / 2) - screenX;
+    s.y.target = (boardHeight / 2) - screenY;
+    s.zoom.target = FOLLOW_ZOOM;
+    setMode('board_follow');
+    ensureAnimating();
+  }, [boardWidth, boardHeight, ensureAnimating, applyPresetSpring]);
 
   /** Apply a small camera shake (used on token landing). */
   const shake = useCallback((amplitude = 3, durationMs = 200) => {
@@ -201,6 +270,8 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     goFollowToken,
     goLandingFocus,
     goDefault,
+    goPreRoll,
+    goReturnToFollow,
     shake,
     setGestureCamera,
     releaseGesture,
