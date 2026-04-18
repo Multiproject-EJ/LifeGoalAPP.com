@@ -2321,42 +2321,7 @@ export function DailyHabitTracker({
   }, [handleTimeBoundOfferClick, isViewingToday, onPendingOfferHandled, pendingOfferToOpen, today]);
 
 
-  const activeOfferTeaserConfig = null;
-
-  const offerTeaserModal = activeOfferTeaser && activeOfferTeaserConfig ? (
-    <div className="habit-day-nav__vision-modal-backdrop" role="dialog" aria-modal="true" aria-label="Offer teaser" onClick={() => setActiveOfferTeaser(null)}>
-      <div
-        className="habit-day-nav__vision-modal habit-day-nav__offer-teaser"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <button
-          type="button"
-          className="habit-day-nav__vision-modal-close"
-          onClick={() => setActiveOfferTeaser(null)}
-          aria-label="Close offer teaser"
-        >
-          ×
-        </button>
-        <>
-          <p className="habit-day-nav__offer-teaser-icon" aria-hidden="true">{activeOfferTeaserConfig.icon}</p>
-          <p className="habit-day-nav__offer-teaser-title">{activeOfferTeaserConfig.title}</p>
-          <p className="habit-day-nav__offer-teaser-copy">{activeOfferTeaserConfig.description}</p>
-        </>
-        <button
-          type="button"
-          className="habit-day-nav__offer-teaser-cta"
-          onClick={() => {
-            const key = offerTeaserKey(activeOfferTeaser);
-            setSeenOfferTeasers((current) => ({ ...current, [key]: true }));
-            setActiveOfferTeaser(null);
-            openOfferContent(activeOfferTeaser);
-          }}
-        >
-          {activeOfferTeaserConfig.cta}
-        </button>
-      </div>
-    </div>
-  ) : null;
+  const offerTeaserModal = null;
 
   const todaysOfferModal = isTodaysOfferModalOpen ? (
     <div
