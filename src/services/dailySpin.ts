@@ -16,33 +16,29 @@ const DEMO_HISTORY_KEY = 'lifegoal_demo_spin_history';
 
 function buildChristmasPrizes(basePrizes: SpinPrize[]): SpinPrize[] {
   const updatedPrizes = [...basePrizes];
-  const firstSpecialIndex = updatedPrizes.findIndex((prize) => prize.type === 'treasure_chest');
-  const secondSpecialIndex = updatedPrizes.findIndex(
-    (prize, index) => prize.type === 'treasure_chest' && index > firstSpecialIndex,
-  );
+  const chestIndex = updatedPrizes.findIndex((prize) => prize.type === 'treasure_chest');
+  const mysteryIndex = updatedPrizes.findIndex((prize) => prize.type === 'mystery');
 
-  if (firstSpecialIndex >= 0) {
-    updatedPrizes[firstSpecialIndex] = {
-      ...updatedPrizes[firstSpecialIndex],
-      value: 320,
+  if (chestIndex >= 0) {
+    updatedPrizes[chestIndex] = {
+      ...updatedPrizes[chestIndex],
       icon: '🎅',
-      label: 'Santa Surprise Chest (320)',
+      label: 'Santa Surprise',
       details: {
-        ...(updatedPrizes[firstSpecialIndex].details ?? {}),
+        ...(updatedPrizes[chestIndex].details ?? {}),
         specialReward: true,
         holiday: 'christmas',
       },
     };
   }
 
-  if (secondSpecialIndex >= 0) {
-    updatedPrizes[secondSpecialIndex] = {
-      ...updatedPrizes[secondSpecialIndex],
-      value: 500,
+  if (mysteryIndex >= 0) {
+    updatedPrizes[mysteryIndex] = {
+      ...updatedPrizes[mysteryIndex],
       icon: '🎄',
-      label: 'Holiday Magic Chest (500)',
+      label: 'Holiday Magic',
       details: {
-        ...(updatedPrizes[secondSpecialIndex].details ?? {}),
+        ...(updatedPrizes[mysteryIndex].details ?? {}),
         specialReward: true,
         holiday: 'christmas',
       },
@@ -408,44 +404,131 @@ export async function executeSpin(userId: string): Promise<ServiceResponse<SpinR
 }
 
 /**
- * Award prize to user
+ * Award prize to user — supports multiple currencies aligned with the island-run economy.
+ *
+ * - essence → island_run.essence (via gamification_profiles for now)
+ * - shards → island_run.shards
+ * - dice → island_run.dice_pool
+ * - game_tokens → gamification_profiles.total_points (gold equivalent)
+ * - treasure_chest → multi-currency bundle (essence + shards + dice)
+ * - mystery → 1.5× random single-currency award
+ * - gold (legacy) → gamification_profiles.total_points
  */
 async function awardPrize(userId: string, prize: SpinPrize): Promise<void> {
   const supabase = getSupabaseClient();
 
+  const addToProfile = async (field: string, amount: number) => {
+    const { data: profile } = await fetchGamificationProfile(userId);
+    if (!profile) return;
+    const current = (profile as Record<string, number>)[field] ?? 0;
+    const next = current + amount;
+
+    if (!canUseSupabaseData()) {
+      saveDemoProfile({ [field]: next, updated_at: new Date().toISOString() });
+    } else {
+      await supabase
+        .from('gamification_profiles')
+        .update({ [field]: next })
+        .eq('user_id', userId);
+    }
+
+    void recordTelemetryEvent({
+      userId,
+      eventType: 'economy_earn',
+      metadata: {
+        currency: field,
+        amount,
+        balance: next,
+        sourceType: 'daily_spin',
+        sourceId: prize.label,
+        rewardType: prize.type,
+      },
+    });
+  };
+
+  const addToIslandRun = async (field: string, amount: number) => {
+    if (!canUseSupabaseData()) {
+      // Demo mode – no island_run table; fall back to profile points
+      await addToProfile('total_points', amount);
+      return;
+    }
+
+    await supabase.rpc('island_run_add_currency' as any, {
+      p_user_id: userId,
+      p_field: field,
+      p_amount: amount,
+    }).then(({ error }) => {
+      // If the RPC doesn't exist yet, fall back to a direct update
+      if (error) {
+        console.warn(`island_run_add_currency RPC failed (${field}), falling back:`, error.message);
+        return supabase
+          .from('island_run' as any)
+          .update({ [field]: amount } as any)
+          .eq('user_id', userId);
+      }
+    });
+
+    void recordTelemetryEvent({
+      userId,
+      eventType: 'economy_earn',
+      metadata: {
+        currency: field,
+        amount,
+        sourceType: 'daily_spin',
+        sourceId: prize.label,
+        rewardType: prize.type,
+      },
+    });
+  };
+
   switch (prize.type) {
     case 'gold':
+      await addToProfile('total_points', prize.value);
+      break;
+
+    case 'essence':
+      await addToIslandRun('essence', prize.value);
+      break;
+
+    case 'shards':
+      await addToIslandRun('shards', prize.value);
+      break;
+
+    case 'dice':
+      await addToIslandRun('dice_pool', prize.value);
+      break;
+
+    case 'game_tokens':
+      // Game tokens are stored as gold-equivalent for now
+      await addToProfile('total_points', prize.value * 10);
+      break;
+
     case 'treasure_chest':
-      {
-        const { data: profile } = await fetchGamificationProfile(userId);
-        if (!profile) break;
-        const nextBalance = profile.total_points + prize.value;
+      // Multi-currency bundle: 20 essence + 3 shards + 10 dice
+      await addToIslandRun('essence', 20);
+      await addToIslandRun('shards', 3);
+      await addToIslandRun('dice_pool', 10);
+      break;
 
-        if (!canUseSupabaseData()) {
-          saveDemoProfile({ total_points: nextBalance, updated_at: new Date().toISOString() });
-        } else {
-          await supabase
-            .from('gamification_profiles')
-            .update({
-              total_points: nextBalance,
-            })
-            .eq('user_id', userId);
-        }
-
-        void recordTelemetryEvent({
-          userId,
-          eventType: 'economy_earn',
-          metadata: {
-            currency: 'gold',
-            amount: prize.value,
-            balance: nextBalance,
-            sourceType: 'daily_spin',
-            sourceId: prize.label,
-            rewardType: prize.type,
-          },
-        });
+    case 'mystery': {
+      // 1.5× random single-currency award
+      const mysteryOptions: Array<{ field: string; amount: number; table: 'profile' | 'island' }> = [
+        { field: 'essence', amount: 40, table: 'island' },
+        { field: 'shards', amount: 5, table: 'island' },
+        { field: 'dice_pool', amount: 18, table: 'island' },
+        { field: 'total_points', amount: 50, table: 'profile' },
+      ];
+      const pick = mysteryOptions[Math.floor(Math.random() * mysteryOptions.length)];
+      if (pick.table === 'profile') {
+        await addToProfile(pick.field, pick.amount);
+      } else {
+        await addToIslandRun(pick.field, pick.amount);
       }
       break;
+    }
+
+    default:
+      console.warn(`Unknown prize type: ${prize.type}`);
   }
 }
 
