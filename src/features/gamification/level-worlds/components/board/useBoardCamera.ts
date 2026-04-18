@@ -98,6 +98,19 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     configRef.current = springPreset;
   }, [springPreset]);
 
+  /** Apply spring config from a ShotPreset — extracts the right config key and falls back. */
+  const applyPresetSpring = useCallback((
+    preset: ShotPreset | undefined,
+    phase: 'springIn' | 'springOut',
+  ) => {
+    const config = preset?.[phase];
+    if (config) {
+      useSpringConfig(config);
+    } else {
+      restoreDefaultSpring();
+    }
+  }, [useSpringConfig, restoreDefaultSpring]);
+
   // ── Public API ─────────────────────────────────────────────────────────────
 
   /** Smoothly animate to overview (zoomed out, centered). */
@@ -154,14 +167,14 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
   ) => {
     const zoom = preset?.zoom ?? CAMERA_ZOOM.tileClose;
     // Asymmetric spring: use snappy config for the punch-in
-    if (preset?.springIn) useSpringConfig(preset.springIn);
+    applyPresetSpring(preset, 'springIn');
     const s = springsRef.current;
     s.x.target = (boardWidth / 2) - screenX;
     s.y.target = (boardHeight / 2) - screenY;
     s.zoom.target = zoom;
     setMode('board_follow');
     ensureAnimating();
-  }, [boardWidth, boardHeight, ensureAnimating, useSpringConfig]);
+  }, [boardWidth, boardHeight, ensureAnimating, applyPresetSpring]);
 
   /** Smoothly return to default camera (no offset, zoom 1). */
   const goDefault = useCallback(() => {
@@ -181,30 +194,26 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
    */
   const goPreRoll = useCallback((screenX: number, screenY: number, preset?: ShotPreset) => {
     const zoom = preset?.zoom ?? 1.15;
-    if (preset?.springIn) useSpringConfig(preset.springIn);
+    applyPresetSpring(preset, 'springIn');
     const s = springsRef.current;
     s.x.target = (boardWidth / 2) - screenX;
     s.y.target = (boardHeight / 2) - screenY;
     s.zoom.target = zoom;
     setMode('board_follow');
     ensureAnimating();
-  }, [boardWidth, boardHeight, ensureAnimating, useSpringConfig]);
+  }, [boardWidth, boardHeight, ensureAnimating, applyPresetSpring]);
 
   /** Return to follow framing after a landing hold, using smooth spring. */
   const goReturnToFollow = useCallback((screenX: number, screenY: number, preset?: ShotPreset) => {
     // Asymmetric: slower out
-    if (preset?.springOut) {
-      useSpringConfig(preset.springOut);
-    } else {
-      restoreDefaultSpring();
-    }
+    applyPresetSpring(preset, 'springOut');
     const s = springsRef.current;
     s.x.target = (boardWidth / 2) - screenX;
     s.y.target = (boardHeight / 2) - screenY;
     s.zoom.target = FOLLOW_ZOOM;
     setMode('board_follow');
     ensureAnimating();
-  }, [boardWidth, boardHeight, ensureAnimating, useSpringConfig, restoreDefaultSpring]);
+  }, [boardWidth, boardHeight, ensureAnimating, applyPresetSpring]);
 
   /** Apply a small camera shake (used on token landing). */
   const shake = useCallback((amplitude = 3, durationMs = 200) => {

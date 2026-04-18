@@ -20,6 +20,8 @@ import {
 
 const BOARD_TILT_X_DEG = 40;
 const BOARD_ROTATE_Z_DEG = 0;
+/** How long (ms) the pre-roll anticipation push-in holds before travel begins. */
+const PRE_ROLL_HOLD_MS = 150;
 
 // ─── BoardStage: the visual orchestrator ─────────────────────────────────────
 // Composes camera, gestures, tiles, token, path, particles into the board scene.
@@ -314,7 +316,7 @@ export function BoardStage(props: BoardStageProps) {
       // Compute variable hop durations: fast middle hops, slow final hops
       const hopDurations = computeHopDurations(pendingHopSequence.length);
 
-      // Start the hop animation after a short anticipation hold (150ms)
+      // Start the hop animation after the anticipation hold
       setTimeout(() => {
         // Reset directional lead tracking from current token position
         prevHopPosRef.current = { x: tokenX, y: tokenY };
@@ -330,7 +332,7 @@ export function BoardStage(props: BoardStageProps) {
           prevTokenIndexRef.current = pendingHopSequence[pendingHopSequence.length - 1] ?? tokenIndex;
           onHopSequenceComplete?.();
         });
-      }, 150);
+      }, PRE_ROLL_HOLD_MS);
       return;
     }
 
