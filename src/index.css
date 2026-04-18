@@ -6328,9 +6328,9 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: rgba(15, 23, 42, 0.5);
   backdrop-filter: blur(6px);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: calc(env(safe-area-inset-top) + 1rem) 1.5rem 2rem;
+  padding: 1.5rem;
   z-index: 2100;
 }
 
@@ -6347,6 +6347,8 @@ html.platform-ipad .workspace-shell__menu-edge {
 .habit-day-nav__vision-modal {
   position: relative;
   width: min(420px, 100%);
+  max-height: calc(100dvh - 3rem);
+  overflow-y: auto;
   background: radial-gradient(circle at top, rgba(253, 230, 138, 0.7), rgba(251, 191, 36, 0.2)),
     linear-gradient(135deg, #fff7ed, #ecfeff);
   border-radius: 28px;
@@ -6403,11 +6405,12 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .habit-day-nav__vision-modal-image {
   width: 100%;
-  height: 100%;
+  max-height: min(60vh, 400px);
   border-radius: 18px;
-  object-fit: cover;
+  object-fit: contain;
   opacity: 0;
   transition: opacity 0.4s ease;
+  cursor: zoom-in;
 }
 
 .habit-day-nav__vision-modal-image--loaded {
@@ -6416,7 +6419,8 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .habit-day-nav__vision-modal-frame {
   width: min(320px, 100%);
-  aspect-ratio: 1 / 1;
+  min-height: 180px;
+  max-height: min(60vh, 400px);
   margin: 0 auto;
   border-radius: 20px;
   background: linear-gradient(135deg, rgba(248, 250, 252, 0.9), rgba(241, 245, 249, 0.6));
@@ -7079,6 +7083,11 @@ html.platform-ipad .workspace-shell__menu-edge {
   align-items: center;
   justify-content: center;
   background: radial-gradient(circle at 30% 20%, rgba(224, 231, 255, 0.6), rgba(248, 250, 252, 0.3));
+  transition: opacity 0.5s ease;
+}
+
+.habit-day-nav__vision-modal-slot-container--landing {
+  opacity: 0;
 }
 
 .habit-day-nav__vision-modal-slot-reel {
