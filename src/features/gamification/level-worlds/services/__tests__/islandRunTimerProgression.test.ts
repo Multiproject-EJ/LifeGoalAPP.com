@@ -6,7 +6,7 @@ import { assertEqual, type TestCase } from './testHarness';
 
 export const islandRunTimerProgressionTests: TestCase[] = [
   {
-    name: 'v2 flag ON: timer expiry does not auto-advance island',
+    name: 'island timers retired: auto-advance never triggers',
     run: () => {
       const shouldAutoAdvance = shouldAutoAdvanceIslandOnTimerExpiry({
         islandRunContractV2Enabled: true,
@@ -15,11 +15,11 @@ export const islandRunTimerProgressionTests: TestCase[] = [
         showTravelOverlay: false,
       });
 
-      assertEqual(shouldAutoAdvance, false, 'Expected v2 mode to bypass timer-expiry auto-advance behavior');
+      assertEqual(shouldAutoAdvance, false, 'Expected retired timer to never auto-advance');
     },
   },
   {
-    name: 'v2 flag ON: hydration keeps expired islands on current island and does not mark completion via expiry',
+    name: 'island timers retired: hydration always returns inert state',
     run: () => {
       const nowMs = 1_000_000;
       const hydrationState = resolveIslandTimerHydrationState({
@@ -30,13 +30,13 @@ export const islandRunTimerProgressionTests: TestCase[] = [
         defaultDurationMs: 60_000,
       });
 
-      assertEqual(hydrationState.shouldAutoAdvanceOnHydration, false, 'Expected v2 mode to avoid hydration-time auto-advance on expired timer');
-      assertEqual(hydrationState.isIslandTimerPendingStart, false, 'Expected v2 mode to keep timer non-gating (no pending-start gate)');
-      assertEqual(hydrationState.timeLeftSec, 0, 'Expected expired timer to clamp at 0 without progression side effects');
+      assertEqual(hydrationState.shouldAutoAdvanceOnHydration, false, 'Expected retired timer hydration to never auto-advance');
+      assertEqual(hydrationState.isIslandTimerPendingStart, false, 'Expected retired timer to not be pending');
+      assertEqual(hydrationState.timeLeftSec, 0, 'Expected retired timer to report 0 time left');
     },
   },
   {
-    name: 'v2 flag OFF: legacy timer expiry behavior remains auto-advance capable',
+    name: 'island timers retired: legacy mode also returns inert state',
     run: () => {
       const nowMs = 1_000_000;
       const hydrationState = resolveIslandTimerHydrationState({
@@ -53,8 +53,8 @@ export const islandRunTimerProgressionTests: TestCase[] = [
         showTravelOverlay: false,
       });
 
-      assertEqual(hydrationState.shouldAutoAdvanceOnHydration, true, 'Expected legacy mode hydration to preserve expiry auto-advance behavior');
-      assertEqual(shouldAutoAdvance, true, 'Expected legacy mode interval check to preserve expiry auto-advance behavior');
+      assertEqual(hydrationState.shouldAutoAdvanceOnHydration, false, 'Expected retired timer to never auto-advance even in legacy mode');
+      assertEqual(shouldAutoAdvance, false, 'Expected retired timer auto-advance check to always return false');
     },
   },
 ];

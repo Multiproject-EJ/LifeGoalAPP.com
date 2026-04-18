@@ -11,10 +11,6 @@ export type EggLocation = 'island' | 'dormant';
 
 /** Reward payload returned by rollEggRewards. */
 export interface RewardBundle {
-  /** @deprecated Hearts retired — always 0. Use essenceDelta instead. */
-  heartsDelta: number;
-  /** @deprecated Coins retired from island game — always 0. Use shardsDelta instead. */
-  coinsDelta: number;
   diamondsDelta: number;
   spinTokensDelta: number;
   /** Essence earned (island run currency for stop upgrades). */
@@ -101,8 +97,6 @@ export function rollEggRewards(eggTier: EggTier, seed: number): RewardBundle {
   switch (eggTier) {
     case 'common':
       return {
-        heartsDelta: 0,
-        coinsDelta: 0,
         essenceDelta: Math.floor(rand() * 8) + 3, // 3–10
         shardsDelta: 1,
         diamondsDelta: 0,
@@ -112,8 +106,6 @@ export function rollEggRewards(eggTier: EggTier, seed: number): RewardBundle {
       };
     case 'rare':
       return {
-        heartsDelta: 0,
-        coinsDelta: 0,
         essenceDelta: Math.floor(rand() * 15) + 10, // 10–24
         shardsDelta: Math.floor(rand() * 2) + 2, // 2–3
         diamondsDelta: 0,
@@ -123,8 +115,6 @@ export function rollEggRewards(eggTier: EggTier, seed: number): RewardBundle {
       };
     case 'mythic':
       return {
-        heartsDelta: 0,
-        coinsDelta: 0,
         essenceDelta: Math.floor(rand() * 25) + 30, // 30–54
         shardsDelta: Math.floor(rand() * 3) + 4, // 4–6
         diamondsDelta: rand() < 0.15 ? 1 : 0,
@@ -133,4 +123,34 @@ export function rollEggRewards(eggTier: EggTier, seed: number): RewardBundle {
         cosmetics: rand() < 0.30 ? ['mystery_cosmetic'] : [],
       };
   }
+}
+
+// ── Egg Sell Reward Choice ───────────────────────────────────────────
+// When the player sells an egg instead of collecting the creature,
+// they choose between a shard payout or a dice payout. Mythic > Rare > Common.
+
+export type EggSellRewardChoice = 'shards' | 'dice';
+
+export interface EggSellRewardOption {
+  choice: EggSellRewardChoice;
+  amount: number;
+  label: string;
+}
+
+const EGG_SELL_REWARDS: Record<EggTier, { shards: number; dice: number }> = {
+  common:  { shards: 3,  dice: 10 },
+  rare:    { shards: 8,  dice: 25 },
+  mythic:  { shards: 15, dice: 50 },
+};
+
+/**
+ * Returns the two sell reward options for a hatched egg.
+ * Player picks one: shards OR dice.
+ */
+export function getEggSellRewardOptions(eggTier: EggTier): [EggSellRewardOption, EggSellRewardOption] {
+  const rewards = EGG_SELL_REWARDS[eggTier];
+  return [
+    { choice: 'shards', amount: rewards.shards, label: `${rewards.shards} 🔮 Shards` },
+    { choice: 'dice',   amount: rewards.dice,   label: `${rewards.dice} 🎲 Dice` },
+  ];
 }
