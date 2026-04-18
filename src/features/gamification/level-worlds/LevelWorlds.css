@@ -1411,7 +1411,10 @@
 .island-run-board__orbit-stops {
   position: absolute;
   inset: 0;
-  z-index: 8;
+  /* z-index 11 sits above the gesture-capture layer (z-index 10) so orbit
+     stop buttons receive pointer events directly. */
+  z-index: 11;
+  pointer-events: none; /* container is transparent; only the buttons are hit-targets */
 }
 
 .island-run-board__topbar {
@@ -1917,6 +1920,7 @@
   position: absolute;
   width: 56px;
   height: 56px;
+  pointer-events: auto;
   transform: translate(-50%, -50%);
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.7);
