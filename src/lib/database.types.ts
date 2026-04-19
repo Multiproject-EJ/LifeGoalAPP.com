@@ -1207,8 +1207,6 @@ export interface Database {
           boss_trial_resolved_island_number: number | null;
           island_shards: number;
           token_index: number;
-          hearts: number;
-          coins: number;
           spin_tokens: number;
           dice_pool: number;
           shard_tier_index: number;
@@ -1235,8 +1233,6 @@ export interface Database {
           boss_trial_resolved_island_number?: number | null;
           island_shards?: number;
           token_index?: number;
-          hearts?: number;
-          coins?: number;
           spin_tokens?: number;
           dice_pool?: number;
           shard_tier_index?: number;
@@ -1263,8 +1259,6 @@ export interface Database {
           boss_trial_resolved_island_number?: number | null;
           island_shards?: number;
           token_index?: number;
-          hearts?: number;
-          coins?: number;
           spin_tokens?: number;
           dice_pool?: number;
           shard_tier_index?: number;

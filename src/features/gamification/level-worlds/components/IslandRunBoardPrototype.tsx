@@ -148,6 +148,7 @@ import {
   resolveNextRewardKind,
   REWARD_KIND_ICON,
   TIMED_EVENT_SEQUENCE,
+  EVENT_BANNER_META,
   resolveAvailableMultiplierTiers,
   clampMultiplierToPool,
   resolveDiceCostForMultiplier,
@@ -282,7 +283,6 @@ function collectHydrationChangedKeysForDiagnostics(options: {
   }
   if (before.dicePool !== after.dicePool) changedKeys.push('dicePool');
   if (before.tokenIndex !== after.tokenIndex) changedKeys.push('tokenIndex');
-  if (before.hearts !== after.hearts) changedKeys.push('hearts');
   return changedKeys;
 }
 
@@ -472,13 +472,6 @@ function formatEventRemaining(remainingMs: number): string {
 const TIMER_OK_THRESHOLD_MS = 4 * 60 * 60 * 1000;    // > 4 h  → green
 const TIMER_WARN_THRESHOLD_MS = 1 * 60 * 60 * 1000;  // 1–4 h → orange; < 1 h → red
 const DICE_ROLL_OVERLAY_DURATION_MS = 800;  // how long the "Rolled N!" overlay stays visible
-
-const EVENT_BANNER_META: Readonly<Record<string, { icon: string; displayName: string }>> = {
-  feeding_frenzy:   { icon: '🔥', displayName: 'Feeding Frenzy' },
-  space_excavator:  { icon: '🚀', displayName: 'Space Excavator' },
-  companion_feast:  { icon: '🐾', displayName: 'Companion Feast' },
-  lucky_spin:       { icon: '🎰', displayName: 'Lucky Spin' },
-};
 
 function getTimerUrgencyClass(remainingMs: number): string {
   if (remainingMs > TIMER_OK_THRESHOLD_MS) return 'island-run-board__rewardbar-timer--ok';
@@ -955,7 +948,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [bossTrialTimeLeft, setBossTrialTimeLeft] = useState<number>(0);
   const [bossTrialScore, setBossTrialScore] = useState<number>(0);
   const [bossAttemptCount, setBossAttemptCount] = useState<number>(0);
-  const [coins, setCoins] = useState(0);
   const [islandShards, setIslandShards] = useState<number>(0);
   const [shardTierIndex, setShardTierIndex] = useState<number>(0);
   const [shardClaimCount, setShardClaimCount] = useState<number>(0);
@@ -987,8 +979,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       bossTrialResolvedIslandNumber?: number | null;
       cycleIndex?: number;
       tokenIndex?: number;
-      hearts?: number;
-      coins?: number;
       spinTokens?: number;
       dicePool?: number;
     };
@@ -998,8 +988,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       bossTrialResolvedIslandNumber?: number | null;
       cycleIndex?: number;
       tokenIndex?: number;
-      hearts?: number;
-      coins?: number;
       spinTokens?: number;
       dicePool?: number;
     };
@@ -1204,8 +1192,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const runtimeStateRef = useRef(runtimeState);
   // Guard ref to prevent persist effects from writing stale local state before
   // the hydration effect has applied server values to local state. This prevents
-  // the write amplification loop where persist effects see {coins: 0} (initial)
-  // vs runtimeState.coins = 30 (hydrated) and emit a redundant write.
+  // the write amplification loop where persist effects see stale local state
+  // vs runtimeState after hydration and emit redundant writes.
   const hasCompletedInitialHydrationSyncRef = useRef(false);
   const companionBonusAppliedVisitKeyRef = useRef<string | null>(null);
   const isOnboardingComplete = Boolean(session.user.user_metadata?.onboarding_complete);
@@ -1412,7 +1400,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     setTokenIndex(runtimeState.tokenIndex ?? TOKEN_START_TILE_INDEX);
-    setCoins(runtimeState.coins ?? 0);
     setSpinTokens(runtimeState.spinTokens ?? 0);
     setDicePool(runtimeState.dicePool ?? ISLAND_RUN_DEFAULT_STARTING_DICE);
 
@@ -1450,10 +1437,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setCreatureTreatInventory(runtimeState.creatureTreatInventory ?? fetchCreatureTreatInventory(session.user.id));
 
     // Mark initial hydration sync as complete so persist effects can now safely write.
-    // This prevents the write amplification loop by ensuring local state (coins, hearts,
-    // etc.) has been synced from runtimeState before persist effects compare them.
+    // This prevents the write amplification loop by ensuring local state (essence,
+    // dice, etc.) has been synced from runtimeState before persist effects compare them.
     hasCompletedInitialHydrationSyncRef.current = true;
-  }, [hasHydratedRuntimeState, runtimeState.activeCompanionId, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.audioEnabled, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.hearts, runtimeState.coins, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.creatureTreatInventory, runtimeState.marketOwnedBundlesByIsland, session.user.id]);
+  }, [hasHydratedRuntimeState, runtimeState.activeCompanionId, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.audioEnabled, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.creatureTreatInventory, runtimeState.marketOwnedBundlesByIsland, session.user.id]);
 
   // M16D: Snap fill bar to 0 immediately on island travel reset (no slide-back animation)
   useEffect(() => {
@@ -1861,8 +1848,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           bossTrialResolvedIslandNumber: hydrationResult.state.bossTrialResolvedIslandNumber,
           cycleIndex: hydrationResult.state.cycleIndex,
           tokenIndex: hydrationResult.state.tokenIndex,
-          hearts: hydrationResult.state.hearts,
-          coins: hydrationResult.state.coins,
           spinTokens: hydrationResult.state.spinTokens,
           dicePool: hydrationResult.state.dicePool,
         });
@@ -1909,8 +1894,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               boss_trial_resolved_island_number: hydrationResult.state.bossTrialResolvedIslandNumber,
               cycle_index: hydrationResult.state.cycleIndex,
               token_index: hydrationResult.state.tokenIndex,
-              hearts: hydrationResult.state.hearts,
-              coins: hydrationResult.state.coins,
               spin_tokens: hydrationResult.state.spinTokens,
               dice_pool: hydrationResult.state.dicePool,
             },
@@ -2202,20 +2185,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (!hasHydratedRuntimeState) return;
     // Guard: Skip until the initial hydration sync effect has applied server values
     // to local state. This prevents the write amplification loop where this effect
-    // sees stale local state (e.g., coins=0 from useState default) before the
-    // hydration effect applies the correct value (e.g., coins=30 from server).
+    // sees stale local state (e.g., dicePool=0 from useState default) before the
+    // hydration effect applies the correct value (e.g., dicePool=30 from server).
     if (!hasCompletedInitialHydrationSyncRef.current) return;
 
     const nextPatch = {
       tokenIndex,
-      coins,
       spinTokens,
       dicePool,
     };
 
     if (
       runtimeState.tokenIndex === nextPatch.tokenIndex
-      && runtimeState.coins === nextPatch.coins
       && runtimeState.spinTokens === nextPatch.spinTokens
       && runtimeState.dicePool === nextPatch.dicePool
     ) {
@@ -2232,7 +2213,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       record: nextRuntimeState,
     });
     setRuntimeState((current) => ({ ...current, ...nextPatch }));
-  }, [client, coins, dicePool, hasHydratedRuntimeState, runtimeState.coins, runtimeState.dicePool, runtimeState.spinTokens, runtimeState.tokenIndex, session, spinTokens, tokenIndex]);
+  }, [client, dicePool, hasHydratedRuntimeState, runtimeState.dicePool, runtimeState.spinTokens, runtimeState.tokenIndex, session, spinTokens, tokenIndex]);
 
   // M19A: persist diamonds to runtime state (cross-device)
   useEffect(() => {
@@ -2923,7 +2904,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       activeEgg,
       eggStage,
       completedStops,
-      coins,
       dicePool,
       spinTokens,
       tokenIndex,
@@ -2941,7 +2921,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     activeEgg,
     eggStage,
     completedStops,
-    coins,
     dicePool,
     spinTokens,
     tokenIndex,
@@ -4785,8 +4764,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       status: 'already_owned',
       costCoins,
       rewardDice,
-      coinsBefore: coins,
-      coinsAfter: coins,
+      coinsBefore: runtimeState.essence,
+      coinsAfter: runtimeState.essence,
       ownedDiceBundle: true,
     });
 
@@ -5210,7 +5189,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             metadata: {
               stage: 'island_run_boss_island_cleared',
               island_number: islandNumber,
-              rewards_granted: { dice: bossReward.dice, coins: 0, essence: bossReward.essence },
+              rewards_granted: { dice: bossReward.dice, essence: bossReward.essence },
             },
           });
           setShowIslandClearCelebration(true);
@@ -5256,7 +5235,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           island_number: islandNumber,
           rewards_granted: {
             dice: bossReward.dice,
-            coins: 0, // coins retired
             essence: bossReward.essence,
           },
         },
@@ -5409,7 +5387,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         metadata: {
           stage: 'island_run_first_run_rewards_claimed',
           island: islandNumber,
-          rewards: { coins: 250, dice_bonus: starterDiceBonus },
+          rewards: { essence: starterEssenceBonus, dice_bonus: starterDiceBonus },
         },
       });
       return;
@@ -6057,7 +6035,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         {/* M1B: Production HUD — always visible for all logged-in users */}
         <div className="island-run-prototype__status-row island-run-prototype__status-row--production">
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">🎲 <strong>{dicePool}</strong></span>
-          <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">🪙 <strong>{coins}</strong></span>
           {ISLAND_RUN_CONTRACT_V2_ENABLED && <span className="island-run-prototype__stat-chip">🟣 <strong>{runtimeState.essence}</strong></span>}
           {activeCompanion && activeCompanionBonus ? (
             <span className="island-run-prototype__stat-chip">
@@ -6160,7 +6137,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <p className="island-run-prototype__hud-label">Run status</p>
             <div className="island-run-prototype__status-row">
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">Dice: <strong>{dicePool}</strong></span>
-              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">Coins: <strong>{coins}</strong></span>
+              <span className="island-run-prototype__stat-chip">Essence: <strong>{runtimeState.essence}</strong></span>
               <span className="island-run-prototype__stat-chip island-run-prototype__level-chip">LEVEL <strong>{islandNumber}</strong> / 120</span>
               <span className="island-run-prototype__stat-chip">Tile: <strong>{tokenIndex}</strong></span>
               <span className="island-run-prototype__stat-chip">Island: <strong>{islandNumber}</strong></span>
@@ -6261,7 +6238,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     <span className="island-run-prototype__stat-chip">Island: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.currentIslandNumber ?? '—'}</strong></span>
                     <span className="island-run-prototype__stat-chip">Cycle: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.cycleIndex ?? '—'}</strong></span>
                     <span className="island-run-prototype__stat-chip">Tile: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.tokenIndex ?? '—'}</strong></span>
-                    <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">Coins: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.coins ?? '—'}</strong></span>
                     <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">{spinTokenWalletLabel}: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.spinTokens ?? '—'}</strong></span>
                     <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">Dice: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.dicePool ?? '—'}</strong></span>
                   </div>
@@ -7696,7 +7672,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       metadata: {
                         stage: 'island_run_boss_island_cleared',
                         island_number: islandNumber,
-                        rewards_granted: { dice: bossReward.dice, coins: 0, essence: bossReward.essence },
+                        rewards_granted: { dice: bossReward.dice, essence: bossReward.essence },
                       },
                     });
                     setShowIslandClearCelebration(true);

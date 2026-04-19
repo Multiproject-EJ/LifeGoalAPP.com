@@ -33,7 +33,7 @@ export const encounterServiceTests: TestCase[] = [
   {
     name: 'formatEncounterRewardSummary includes dice and spin rewards when present',
     run: () => {
-      const summary = formatEncounterRewardSummary({ essence: 18, coins: 0, heart: false, walletShards: true, dice: 4, spinTokens: 1 });
+      const summary = formatEncounterRewardSummary({ essence: 18, walletShards: true, dice: 4, spinTokens: 1 });
       assert(summary.includes('+4 dice'), 'Expected dice reward text in summary');
       assert(summary.includes('+1 spin'), 'Expected spin reward text in summary');
       assert(summary.includes('+18 essence'), 'Expected essence reward text in summary');
@@ -42,7 +42,7 @@ export const encounterServiceTests: TestCase[] = [
   {
     name: 'formatEncounterRewardSummary omits optional rewards when absent',
     run: () => {
-      const summary = formatEncounterRewardSummary({ essence: 9, coins: 0, heart: false, walletShards: false, dice: 0, spinTokens: 0 });
+      const summary = formatEncounterRewardSummary({ essence: 9, walletShards: false, dice: 0, spinTokens: 0 });
       assertEqual(summary, '+9 essence', 'Expected summary to stay compact when only essence is awarded');
     },
   },

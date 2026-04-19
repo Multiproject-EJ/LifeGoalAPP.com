@@ -3,9 +3,7 @@
  * All fields are optional — a game may award only some reward types.
  */
 export interface IslandRunMinigameReward {
-  coins?: number;
   dice?: number;
-  hearts?: number;
   spinTokens?: number;
   diamonds?: number;
   xp?: number;

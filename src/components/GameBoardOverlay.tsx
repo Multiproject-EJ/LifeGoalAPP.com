@@ -5,6 +5,7 @@ import spinWheelImg from '../assets/Daily_treats_spinnwheel.webp';
 import heartsImg from '../assets/Daily_treats_hearts.webp';
 import '../styles/game-board-overlay.css';
 import { getIslandBackgroundImageSrc } from '../features/gamification/level-worlds/services/islandBackgrounds';
+import { EVENT_BANNER_META } from '../features/gamification/level-worlds/services/islandRunContractV2RewardBar';
 
 const REWARD_MILESTONES = [
   { pct: 33, icon: '🎲' },
@@ -13,12 +14,6 @@ const REWARD_MILESTONES = [
 ] as const;
 const TIMER_OK_THRESHOLD_MS = 4 * 60 * 60 * 1000;
 const TIMER_WARN_THRESHOLD_MS = 1 * 60 * 60 * 1000;
-const EVENT_BANNER_META: Readonly<Record<string, { icon: string; displayName: string }>> = {
-  feeding_frenzy: { icon: '🔥', displayName: 'Feeding Frenzy' },
-  space_excavator: { icon: '🚀', displayName: 'Space Excavator' },
-  companion_feast: { icon: '🐾', displayName: 'Companion Feast' },
-  lucky_spin: { icon: '🎰', displayName: 'Lucky Spin' },
-};
 
 function formatCountdown(resetAtMs: number | undefined, nowMs: number): string {
   if (!resetAtMs) return '';

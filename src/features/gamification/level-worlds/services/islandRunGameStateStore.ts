@@ -66,8 +66,6 @@ export interface IslandRunGameStateRecord {
   islandExpiresAtMs: number;
   islandShards: number;
   tokenIndex: number;
-  hearts: number;
-  coins: number;
   spinTokens: number;
   dicePool: number;
   shardTierIndex: number;
@@ -420,14 +418,12 @@ function activateRemoteBackoff(userId: string): number {
   return backoffUntil;
 }
 
-function getRuntimeStateDebugFields(record: Pick<IslandRunGameStateRecord, 'currentIslandNumber' | 'bossTrialResolvedIslandNumber' | 'cycleIndex' | 'tokenIndex' | 'hearts' | 'coins' | 'spinTokens' | 'dicePool'>) {
+function getRuntimeStateDebugFields(record: Pick<IslandRunGameStateRecord, 'currentIslandNumber' | 'bossTrialResolvedIslandNumber' | 'cycleIndex' | 'tokenIndex' | 'spinTokens' | 'dicePool'>) {
   return {
     currentIslandNumber: record.currentIslandNumber,
     bossTrialResolvedIslandNumber: record.bossTrialResolvedIslandNumber,
     cycleIndex: record.cycleIndex,
     tokenIndex: record.tokenIndex,
-    hearts: record.hearts,
-    coins: record.coins,
     spinTokens: record.spinTokens,
     dicePool: record.dicePool,
   };
@@ -454,8 +450,6 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     islandExpiresAtMs: nowMs + 48 * 60 * 60 * 1000,
     islandShards: 0,
     tokenIndex: 0,
-    hearts: 0,
-    coins: 0,
     spinTokens: 0,
     dicePool: ISLAND_RUN_DEFAULT_STARTING_DICE,
     shardTierIndex: 0,
@@ -639,14 +633,6 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
       typeof value.tokenIndex === 'number' && Number.isFinite(value.tokenIndex)
         ? Math.max(0, Math.floor(value.tokenIndex))
         : fallback.tokenIndex,
-    hearts:
-      typeof value.hearts === 'number' && Number.isFinite(value.hearts)
-        ? Math.max(0, Math.floor(value.hearts))
-        : fallback.hearts,
-    coins:
-      typeof value.coins === 'number' && Number.isFinite(value.coins)
-        ? Math.max(0, Math.floor(value.coins))
-        : fallback.coins,
     spinTokens:
       typeof value.spinTokens === 'number' && Number.isFinite(value.spinTokens)
         ? Math.max(0, Math.floor(value.spinTokens))
@@ -1066,8 +1052,6 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     island_expires_at_ms: record.islandExpiresAtMs,
     island_shards: record.islandShards,
     token_index: record.tokenIndex,
-    hearts: record.hearts,
-    coins: record.coins,
     spin_tokens: record.spinTokens,
     dice_pool: record.dicePool,
     shard_tier_index: record.shardTierIndex,
@@ -1172,7 +1156,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,hearts,coins,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory')
+    .select('runtime_version,first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -1205,8 +1189,6 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             islandExpiresAtMs: legacyData.island_expires_at_ms,
             islandShards: legacyData.island_shards ?? 0,
             tokenIndex: legacyData.token_index ?? 0,
-            hearts: legacyData.hearts ?? 5,
-            coins: legacyData.coins ?? 0,
             spinTokens: legacyData.spin_tokens ?? 0,
             dicePool: legacyData.dice_pool ?? fallback.dicePool,
             shardTierIndex: legacyData.shard_tier_index ?? 0,
@@ -1320,8 +1302,6 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       islandExpiresAtMs: data.island_expires_at_ms,
       islandShards: data.island_shards ?? 0,
       tokenIndex: data.token_index ?? 0,
-      hearts: data.hearts ?? 5,
-      coins: data.coins ?? 0,
       spinTokens: data.spin_tokens ?? 0,
       dicePool: data.dice_pool ?? fallback.dicePool,
       shardTierIndex: data.shard_tier_index ?? 0,
@@ -1766,12 +1746,10 @@ export async function writeIslandRunGameStateRecord(options: {
         syncState: coordinator.syncState,
         resumedTokenIndex: resumedRecord.tokenIndex,
         currentLocalTokenIndex: currentLocalAtResume.tokenIndex,
-        resumedCoins: resumedRecord.coins,
-        currentLocalCoins: currentLocalAtResume.coins,
         resumedDicePool: resumedRecord.dicePool,
         currentLocalDicePool: currentLocalAtResume.dicePool,
-        resumedHearts: resumedRecord.hearts,
-        currentLocalHearts: currentLocalAtResume.hearts,
+        resumedEssence: resumedRecord.essence,
+        currentLocalEssence: currentLocalAtResume.essence,
         reason: resumedReason === 'single_flight' ? 'single_flight_drain' : 'backoff_expired',
       });
 
