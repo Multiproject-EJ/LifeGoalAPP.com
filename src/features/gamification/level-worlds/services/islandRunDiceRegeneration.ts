@@ -158,3 +158,82 @@ export function applyDiceRegeneration(params: {
     diceAdded,
   };
 }
+
+// ── ETA helpers (pure, for UI countdowns) ────────────────────────────────
+//
+// The runtime dice-regen timer in IslandRunBoardPrototype.tsx uses its own
+// tick() closure for live updates, but out-of-dice modals and similar
+// empty-state UI benefit from a pure, testable computation for:
+//   - ms until the pool reaches a target threshold (e.g. one roll)
+//   - ms until the pool is fully refilled to maxDice
+// Both functions respect the same rules as `applyDiceRegeneration`:
+//   - Regen only happens while `dicePool < maxDice`.
+//   - Rate is `regenRatePerHour` dice per hour.
+//   - `lastRegenAtMs` is the anchor; callers pass `nowMs` explicitly so the
+//     functions remain deterministic and testable.
+
+/**
+ * Milliseconds until the dice pool reaches the given target threshold.
+ *
+ * Returns:
+ *   - `0` if `dicePool >= target` already.
+ *   - `Number.POSITIVE_INFINITY` if `target > maxDice` (regen caps at maxDice
+ *     so the threshold is unreachable via passive regen alone).
+ *   - A finite ms value otherwise, computed from the fractional elapsed time
+ *     since `lastRegenAtMs` so the countdown matches what `applyDiceRegeneration`
+ *     would actually grant.
+ *
+ * When `regenState` is `null`/undefined the pool can't regen, so the answer is
+ * `POSITIVE_INFINITY` unless the pool already meets the target.
+ */
+export function resolveNextRollEtaMs(params: {
+  dicePool: number;
+  target: number;
+  regenState: DiceRegenState | null | undefined;
+  nowMs: number;
+}): number {
+  const { dicePool, target, regenState, nowMs } = params;
+  const safePool = Math.max(0, Math.floor(dicePool));
+  const safeTarget = Math.max(0, Math.floor(target));
+  const safeNow = Math.floor(nowMs);
+
+  if (safePool >= safeTarget) return 0;
+  if (!regenState) return Number.POSITIVE_INFINITY;
+
+  const { maxDice, regenRatePerHour, lastRegenAtMs } = regenState;
+  // Passive regen never exceeds maxDice; any target above the cap is
+  // unreachable from regen alone.
+  if (safeTarget > maxDice) return Number.POSITIVE_INFINITY;
+  if (regenRatePerHour <= 0) return Number.POSITIVE_INFINITY;
+
+  const msPerDie = (60 * 60 * 1000) / regenRatePerHour;
+  const needed = safeTarget - safePool;
+  // Total time for `needed` dice from the anchor (lastRegenAtMs).
+  const totalMsFromAnchor = needed * msPerDie;
+  const elapsedMs = Math.max(0, safeNow - lastRegenAtMs);
+  const remainingMs = Math.max(0, Math.ceil(totalMsFromAnchor - elapsedMs));
+  return remainingMs;
+}
+
+/**
+ * Milliseconds until the dice pool is fully refilled to `maxDice`.
+ * Thin wrapper around `resolveNextRollEtaMs` with `target = maxDice`.
+ */
+export function resolveFullRefillEtaMs(params: {
+  dicePool: number;
+  regenState: DiceRegenState | null | undefined;
+  nowMs: number;
+}): number {
+  const { dicePool, regenState, nowMs } = params;
+  if (!regenState) {
+    // No regen state means no regen — already full if pool covers maxDice
+    // (impossible without a maxDice anchor) or unreachable otherwise.
+    return Number.POSITIVE_INFINITY;
+  }
+  return resolveNextRollEtaMs({
+    dicePool,
+    target: regenState.maxDice,
+    regenState,
+    nowMs,
+  });
+}

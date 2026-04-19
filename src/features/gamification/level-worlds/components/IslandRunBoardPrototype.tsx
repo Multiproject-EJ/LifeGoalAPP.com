@@ -10,6 +10,7 @@ import {
 import { BoardStage, type BoardStageCameraControls } from './board';
 import { ConfettiBurst } from './ConfettiBurst';
 import { StatDriftNumbers } from './StatDriftNumbers';
+import { OutOfDiceRegenStatus } from './OutOfDiceRegenStatus';
 import {
   getIslandBoardThemeForIslandNumber,
   type IslandBoardTheme,
@@ -3173,6 +3174,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           ? 'insufficient_dice'
           : null;
   const canRoll = !showFirstRunCelebration && !isRolling && !showTravelOverlay && dicePool >= effectiveDiceCost;
+  /** PR6: Human-readable reason for screen readers + tooltips when the roll
+   * button is disabled. Keys mirror the internal `rollDisabledReason` codes. */
+  const rollDisabledMessage = (() => {
+    switch (rollDisabledReason) {
+      case 'first_run_celebration':
+        return 'Roll is paused while the welcome celebration is playing.';
+      case 'already_rolling':
+        return 'A roll is already in progress — please wait.';
+      case 'travel_overlay':
+        return 'Island travel is in progress — please wait.';
+      case 'insufficient_dice':
+        return `Not enough dice to roll. You need ${effectiveDiceCost} dice per roll.`;
+      default:
+        return null;
+    }
+  })();
   const spinTokenWalletLabel = resolveIslandRunSpinTokenWalletLabel(ISLAND_RUN_CONTRACT_V2_ENABLED);
   const {
     activeTimedEvent,
@@ -6095,8 +6112,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
               onClick={handleRoll}
               disabled={Boolean(rollDisabledReason)}
+              aria-disabled={Boolean(rollDisabledReason)}
+              title={rollDisabledMessage ?? undefined}
             >
               {rollButtonLabel}
+              {rollDisabledMessage && (
+                <span className="sr-only"> — {rollDisabledMessage}</span>
+              )}
             </button>
           {/* M10A: audio toggle */}
           <button
@@ -6154,6 +6176,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           ) : null}
           <span className="island-run-prototype__stat-chip island-run-prototype__level-chip">Lvl <strong>{islandNumber}</strong></span>
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">⏱ <strong>{timerDisplay}</strong></span>
+          {/* PR6: Sticker "one away" nudge — tiny pulse when player is 1 fragment from completing a sticker. */}
+          {runtimeState.stickerProgress.fragments === 4 && (
+            <span
+              className="island-run-prototype__sticker-nudge"
+              aria-live="polite"
+              title="You are one fragment away from completing a sticker — claim the reward bar to earn it!"
+            >
+              🧩 1 away
+            </span>
+          )}
           {/* M2: roll result chip — visible in production after every roll */}
           {rollValue !== null && (
             <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--roll" aria-live="polite">
@@ -6732,11 +6764,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
                 onClick={isIslandTimerPendingStart ? activateCurrentIsland : () => void handleRoll()}
                 disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
+                aria-disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
+                title={!isIslandTimerPendingStart ? (rollDisabledMessage ?? undefined) : undefined}
               >
                 <span className="island-run-prototype__footer-roll-btn-content">
                   <span className="island-run-prototype__footer-roll-btn-dice">🎲 {hasHydratedRuntimeState ? dicePool : '—'}{effectiveMultiplier > 1 ? ` ×${effectiveMultiplier}` : ''}</span>
                   <span>{isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}</span>
                 </span>
+                {!isIslandTimerPendingStart && rollDisabledMessage && (
+                  <span className="sr-only"> — {rollDisabledMessage}</span>
+                )}
               </button>
               {/* Dice regen countdown — like Monopoly GO "X rolls ready in MM:SS" */}
               {diceRegenCountdown && diceRegenRollsReady != null && (
@@ -7423,6 +7460,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <p className="island-stop-modal__copy">
               You do not have enough dice to roll right now. Buy more rolls or wait for dice to regenerate.
             </p>
+            <OutOfDiceRegenStatus
+              dicePool={dicePool}
+              diceCostPerRoll={effectiveDiceCost}
+              regenState={runtimeState.diceRegenState ?? null}
+            />
             {diceCheckoutError ? <p className="island-run-prototype__error">{diceCheckoutError}</p> : null}
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
               <button
