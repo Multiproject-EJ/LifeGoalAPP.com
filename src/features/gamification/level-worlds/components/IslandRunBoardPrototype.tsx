@@ -16,7 +16,8 @@ import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
 import { getIslandDisplayName } from '../services/islandNames';
 import { generateTileMap, getIslandRarity, type IslandTileMapEntry } from '../services/islandBoardTileMap';
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from '../services/islandBoardProfiles';
-import { resolveWrappedTokenIndex } from '../services/islandBoardTopology';
+// resolveWrappedTokenIndex retired from this component: the roll action service
+// is the single authoritative source of truth for token movement and hop order.
 import { ISLAND_RUN_DEFAULT_STARTING_DICE } from '../services/islandRunEconomy';
 import { generateIslandStopPlan } from '../services/islandRunStops';
 import { isIslandFullyCleared } from '../services/islandRunProgression';
@@ -123,6 +124,7 @@ import { executeIslandRunRollAction } from '../services/islandRunRollAction';
 import {
   applyEssenceDrift,
   awardIslandRunContractV2Essence,
+  deductIslandRunContractV2Essence,
   getEffectiveIslandNumber,
   getIslandTotalEssenceCost,
   getStopUpgradeCost,
@@ -846,7 +848,6 @@ const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
   hazard: '#ff8f8f',
   micro: '#9dffbe',
   encounter: '#ffa765',
-  stop: '#7afcff',
 };
 
 interface IslandRunBoardPrototypeProps {
@@ -2447,6 +2448,47 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
   }, [client, islandNumber, session.user.id]);
 
+  /**
+   * Withdraw essence from the wallet (hazard tile penalty, stop ticket purchase, …).
+   * Clamps at zero — players can never owe essence. Returns the amount actually
+   * deducted (may be less than requested if the wallet was short).
+   */
+  const deductContractV2Essence = useCallback((amount: number, source: string): number => {
+    const result = deductIslandRunContractV2Essence({
+      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+      essence: runtimeStateRef.current.essence,
+      essenceLifetimeSpent: runtimeStateRef.current.essenceLifetimeSpent,
+      amount,
+    });
+    if (result.spent < 1) return 0;
+
+    void writeIslandRunGameStateRecord({
+      session,
+      client,
+      record: {
+        ...runtimeStateRef.current,
+        essence: result.essence,
+        essenceLifetimeSpent: result.essenceLifetimeSpent,
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      essence: result.essence,
+      essenceLifetimeSpent: result.essenceLifetimeSpent,
+    }));
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_spend',
+      metadata: {
+        stage: 'island_run_contract_v2_essence_deduct',
+        island_number: islandNumber,
+        source,
+        amount: result.spent,
+      },
+    });
+    return result.spent;
+  }, [client, islandNumber, session.user.id]);
+
   const applyContractV2RewardBarRuntimeState = useCallback((nextRewardBarState: {
     rewardBarProgress: number;
     rewardBarThreshold: number;
@@ -2679,16 +2721,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return map;
   }, [completedStops, effectiveCompletedStops, islandEggSlotUsed, islandStopPlan, runtimeState.stopStatesByIndex]);
 
-  const stopMap = useMemo(() => {
-    const map = new Map<number, string>();
-    islandStopPlan.forEach((stop) => map.set(stop.tileIndex, stop.stopId));
-    return map;
-  }, [islandStopPlan]);
-
-  const gameplayStopMap = useMemo(() => {
-    if (ISLAND_RUN_CONTRACT_V2_ENABLED) return new Map<number, string>();
-    return stopMap;
-  }, [stopMap]);
+  // stopMap intentionally remains empty: per the canonical gameplay contract,
+  // stops are EXTERNAL side-quest structures (orbit HUD buttons). No tile on
+  // the 40-tile ring is rendered as a "stop tile". The Map type is retained
+  // for camera-director backward compatibility.
+  const stopMap = useMemo(() => new Map<number, string>(), []);
 
   const activeStop = activeStopId ? islandStopPlan.find((stop) => stop.stopId === activeStopId) ?? null : null;
 
@@ -3365,6 +3402,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setIsRolling(true);
     setCameraMode('board_follow');
     requestActiveStopTransition(null, 'roll_start_close_stop');
+    // Increment per-session roll counter — used to seed deterministic tile-landing RNG.
+    rollIndexRef.current += 1;
 
     // M10A: roll sound + haptic
     playIslandRunSound('roll');
@@ -3377,7 +3416,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       diceMultiplier: effectiveMultiplier,
     });
 
-    if (rollResult.status !== 'ok' || rollResult.total === undefined || rollResult.dieOne === undefined || rollResult.dieTwo === undefined) {
+    if (
+      rollResult.status !== 'ok'
+      || rollResult.total === undefined
+      || rollResult.dieOne === undefined
+      || rollResult.dieTwo === undefined
+      || rollResult.newTokenIndex === undefined
+      || !rollResult.hopSequence
+    ) {
       if (isIsland120StartupDiagnosticActive) {
         logIslandRunEntryDebug('island120_roll_interaction', {
           userId: session.user.id,
@@ -3419,12 +3465,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setDiceRollTotalOverlay(null);
     setIsRolling(false);
 
-    let currentIndex = tokenIndex;
-    const hopIndices: number[] = [];
-    for (let step = 0; step < nextRoll; step += 1) {
-      currentIndex = resolveWrappedTokenIndex(currentIndex, 1, ACTIVE_BOARD_PROFILE.tileCount);
-      hopIndices.push(currentIndex);
-    }
+    // Trust the service's authoritative hop sequence + final index. Local state
+    // mirrors (never re-derives) the canonical movement — this closes the
+    // drift window where two independent `resolveWrappedTokenIndex` walks could
+    // disagree if the service ever changes its topology rules.
+    const hopIndices = rollResult.hopSequence;
+    const currentIndex = rollResult.newTokenIndex;
+    const diceCostApplied = rollResult.diceCost ?? effectiveDiceCost;
 
     // Set the full hop sequence — BoardStage will animate tile-by-tile
     // with camera follow (Monopoly GO style).
@@ -3434,10 +3481,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
     setTokenIndex(currentIndex);
 
-    // Sync local state to match what the roll action already persisted.
-    // The service deducted effectiveDiceCost (= BASE_DICE_PER_ROLL × multiplier)
-    // and wrote the new tokenIndex — we mirror that into React state for the UI.
-    const nextDicePool = Math.max(0, dicePool - effectiveDiceCost);
+    // Sync local React state to match what the roll action already persisted.
+    const nextDicePool = Math.max(0, dicePool - diceCostApplied);
     setDicePool(nextDicePool);
     setRuntimeState((current) => ({
       ...current,
@@ -3445,32 +3490,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       dicePool: nextDicePool,
     }));
 
-    // Legacy stop-landing path (dead code when ISLAND_RUN_CONTRACT_V2_ENABLED is true, retained for backward compat)
-    const landedStopRaw = ISLAND_RUN_CONTRACT_V2_ENABLED ? undefined : gameplayStopMap.get(currentIndex);
-    const landedStop = landedStopRaw as string | null;
-    if (typeof landedStop === 'string') {
-      const stopConfig = islandStopPlan.find((stop) => stop.stopId === landedStop);
-      const stopTitle = stopConfig?.title ?? landedStop.toUpperCase();
-      const state = stopStateMap.get(landedStop) ?? 'active';
-
-      if (state === 'locked') {
-        setLandingText(`Boss stop locked: complete all 5 stops before boss.`);
-        requestActiveStopTransition(null, 'tile_land_stop_locked');
-      } else {
-        setLandingText(`Landed on STOP: ${stopTitle} (#${currentIndex})`);
-        requestActiveStopTransition(landedStop, 'tile_land_stop_open');
-        // M10A: stop_land sound + haptic
-        playIslandRunSound('stop_land');
-        triggerIslandRunHaptic('stop_land');
-        // M10C: boss_trial_start sound when boss modal opens
-        if (landedStop === 'boss') {
-          playIslandRunSound('boss_trial_start');
-        }
-      }
-
-      setShowEncounterModal(false);
-      setEncounterResolved(false);
-    } else if (tileMap[currentIndex]?.tileType === 'encounter') {
+    // Stops are side-quest structures — the player piece never lands on a stop.
+    // Encounter tiles open their challenge modal; every other tile funnels through
+    // resolveTileLanding for essence / feed / hazard outcomes.
+    if (tileMap[currentIndex]?.tileType === 'encounter') {
       // M6-COMPLETE: check if this encounter tile was already completed this visit
       if (completedEncounterIndices.has(currentIndex)) {
         setLandingText(`Encounter tile (#${currentIndex}) — already completed this visit. ✅`);
@@ -3486,10 +3509,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
   };
 
-  // B2-3: resolve non-stop, non-encounter tile landings with real outcomes
+  // Track roll index for deterministic (non-time-based) tile-landing RNG seeding.
+  const rollIndexRef = useRef(0);
+
+  // B2-3: resolve non-encounter tile landings with real outcomes.
+  // Hazard tiles DEDUCT essence (clamped at 0). All other rewarded tiles add essence.
   const resolveTileLanding = (tileType: string) => {
     const mult = Math.max(1, effectiveMultiplier);
-    const essenceEarn = resolveIslandRunContractV2EssenceEarnForTile(tileType, { islandNumber: effectiveIslandNumber, seed: Date.now() + tokenIndex }) * mult;
+    // Deterministic seed — derived from island, tile, and the per-session roll
+    // index (not Date.now()). Same landing on reload yields the same outcome.
+    const landingSeed = (effectiveIslandNumber * 10_000) + (tokenIndex * 100) + rollIndexRef.current;
+    const rawEssence = resolveIslandRunContractV2EssenceEarnForTile(tileType, { islandNumber: effectiveIslandNumber, seed: landingSeed });
+    // Apply the dice multiplier. For hazards (negative) this scales the loss too.
+    const essenceDelta = rawEssence * mult;
     const EVENT_MESSAGES = [
       '⚡ Island event!',
       '⚡ Something stirs...',
@@ -3501,16 +3533,28 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const multLabel = mult > 1 ? ` (x${mult})` : '';
     switch (tileType) {
       case 'currency':
-        setLandingText(`💰 Currency tile! +${essenceEarn} essence${multLabel}`);
+        setLandingText(`💰 Currency tile! +${essenceDelta} essence${multLabel}`);
         break;
       case 'chest':
-        setLandingText(`🎁 Treasure chest! +${essenceEarn} essence${multLabel}`);
+        setLandingText(`🎁 Treasure chest! +${essenceDelta} essence${multLabel}`);
         break;
-      case 'hazard':
-        setLandingText(essenceEarn > 0 ? `☠️ Hazard! +${essenceEarn} essence (scraped)${multLabel}` : '☠️ Hazard! Nothing gained.');
+      case 'hazard': {
+        const penalty = Math.abs(essenceDelta);
+        if (penalty > 0) {
+          const actuallyLost = deductContractV2Essence(penalty, `tile_hazard`);
+          if (actuallyLost > 0) {
+            setLandingText(`☠️ Hazard! −${actuallyLost} essence${multLabel}`);
+          } else {
+            // Wallet empty — no essence to take.
+            setLandingText(`☠️ Hazard — nothing to lose (empty wallet)${multLabel}`);
+          }
+        } else {
+          setLandingText('☠️ Hazard! (grazed safely)');
+        }
         break;
+      }
       case 'micro':
-        setLandingText(essenceEarn > 0 ? `✨ Micro reward! +${essenceEarn} essence${multLabel}` : '✨ Micro reward!');
+        setLandingText(essenceDelta > 0 ? `✨ Micro reward! +${essenceDelta} essence${multLabel}` : '✨ Micro reward!');
         break;
       case 'event':
         setLandingText(EVENT_MESSAGES[(islandNumber + tokenIndex) % EVENT_MESSAGES.length]);
@@ -3520,8 +3564,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         break;
     }
 
-    if (essenceEarn > 0) {
-      awardContractV2Essence(essenceEarn, `tile_${tileType}`);
+    // Positive tiles award essence. Hazards already called deductContractV2Essence above.
+    if (essenceDelta > 0 && tileType !== 'hazard') {
+      awardContractV2Essence(essenceDelta, `tile_${tileType}`);
     }
 
     if (ISLAND_RUN_CONTRACT_V2_ENABLED) {

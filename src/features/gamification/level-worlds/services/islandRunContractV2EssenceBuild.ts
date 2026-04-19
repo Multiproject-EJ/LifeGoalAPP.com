@@ -50,11 +50,14 @@ export function initStopBuildStatesForIsland(effectiveIslandNumber: number): Isl
 // ─── Monopoly GO–style Essence Economy ────────────────────────────────
 // Base earnings per tile type.  These are the *floor* values for island 1.
 // Actual earn = base × islandMultiplier, where multiplier grows ~1.5× every 10 islands.
+// Hazard tiles have NEGATIVE ranges — landing on a hazard DEDUCTS essence from
+// the player's wallet (clamped to zero so it can never go below 0). This keeps
+// hazards a real risk rather than just "a micro tile with different copy".
 export const ISLAND_RUN_CONTRACT_V2_ESSENCE_EARN_BY_TILE: Readonly<Record<string, { min: number; max: number }>> = {
   currency: { min: 5, max: 15 },
   chest:    { min: 20, max: 40 },
   event:    { min: 8, max: 20 },
-  hazard:   { min: 1, max: 3 },
+  hazard:   { min: -10, max: -3 },
   micro:    { min: 3, max: 10 },
 };
 
@@ -86,7 +89,49 @@ export function resolveIslandRunContractV2EssenceEarnForTile(
   // Deterministic pick within range using LCG (Linear Congruential Generator)
   const t = ((seed * 9301 + 49297) % 233280) / 233280; // 0–1
   const base = Math.floor(range.min + t * (range.max - range.min + 1));
-  return Math.max(1, Math.floor(base * mult));
+  const scaled = Math.floor(base * mult);
+  // Negative ranges (hazard) → pass through a negative value (caller clamps wallet).
+  if (range.max < 0) return Math.min(-1, scaled);
+  // Positive ranges → clamp to at least 1 so feeding tiles never silently no-op.
+  return Math.max(1, scaled);
+}
+
+/**
+ * Deduct essence from the wallet (for hazard tiles or ticket purchases).
+ * The wallet is clamped at 0 — players can never owe essence.
+ * `essenceLifetimeSpent` grows by the amount actually deducted (not the
+ * requested amount if the wallet was short). When `essenceLifetimeEarned`
+ * is provided it is LEFT UNCHANGED — drift/hazard losses are not lifetime
+ * unearnings, they're just withdrawals.
+ */
+export function deductIslandRunContractV2Essence(options: {
+  islandRunContractV2Enabled: boolean;
+  essence: number;
+  essenceLifetimeSpent: number;
+  amount: number;
+}): { essence: number; essenceLifetimeSpent: number; spent: number } {
+  if (!options.islandRunContractV2Enabled) {
+    return {
+      essence: options.essence,
+      essenceLifetimeSpent: options.essenceLifetimeSpent,
+      spent: 0,
+    };
+  }
+  const requested = Math.max(0, Math.floor(options.amount));
+  if (requested < 1) {
+    return {
+      essence: options.essence,
+      essenceLifetimeSpent: options.essenceLifetimeSpent,
+      spent: 0,
+    };
+  }
+  const wallet = Math.max(0, Math.floor(options.essence));
+  const actual = Math.min(wallet, requested);
+  return {
+    essence: wallet - actual,
+    essenceLifetimeSpent: Math.max(0, Math.floor(options.essenceLifetimeSpent)) + actual,
+    spent: actual,
+  };
 }
 
 // ─── Stop upgrade cost curves (Monopoly GO–style scaling) ─────────────
@@ -126,11 +171,22 @@ export function getIslandTotalEssenceCost(islandNumber: number): number {
 }
 
 // ─── Essence Drift (soft pressure) ───────────────────────────────────
-// When player holds essence above 80% of the island's total cost,
-// a small % decays every hour. This is the non-toxic replacement for
-// Monopoly GO's "heists" — it creates urgency to spend without punishing.
-export const ESSENCE_DRIFT_THRESHOLD_RATIO = 0.8; // decay starts above 80% of island cost
-export const ESSENCE_DRIFT_RATE_PER_HOUR = 0.05;  // lose 5% of excess per hour
+// When a player hoards essence far above what the current island actually
+// needs, a small % of the EXCESS decays per hour. This replaces the toxic
+// "heists" pattern with a gentle nudge to spend.
+//
+// Threshold is intentionally set to 1.5× the island's total build cost — a
+// player can safely hold enough essence for a full island + half of the next
+// one before any drift kicks in.
+//
+// The rate was tuned down substantially (5%/h → 0.5%/h) based on playtest
+// feedback — the previous rate punished weekend-away players by erasing
+// ~97% of their excess after 72h.  At 0.5%/h, 72h of excess retains ~70%.
+// A per-session cap further limits any single reconnection loss.
+export const ESSENCE_DRIFT_THRESHOLD_RATIO = 1.5; // decay starts above 1.5× island cost
+export const ESSENCE_DRIFT_RATE_PER_HOUR = 0.005; // lose 0.5% of excess per hour
+/** Maximum fraction of the player's excess that a single drift application can remove. */
+export const ESSENCE_DRIFT_MAX_SESSION_LOSS_RATIO = 0.2; // cap at 20% of excess per call
 
 /**
  * Calculate essence after applying drift/decay for elapsed time.
@@ -159,12 +215,17 @@ export function applyEssenceDrift(options: {
   const hoursElapsed = elapsedMs / (60 * 60 * 1000);
   // Compound decay: remaining = excess × (1 - rate)^hours
   const remaining = Math.floor(excess * Math.pow(1 - ESSENCE_DRIFT_RATE_PER_HOUR, hoursElapsed));
-  const lost = excess - remaining;
+  let lost = excess - remaining;
 
   if (lost <= 0) return { essence, driftLost: 0 };
 
+  // Session cap — never remove more than 20% of excess in a single application
+  // so returning after a long absence doesn't feel punitive.
+  const sessionCap = Math.floor(excess * ESSENCE_DRIFT_MAX_SESSION_LOSS_RATIO);
+  if (lost > sessionCap) lost = sessionCap;
+
   return {
-    essence: threshold + remaining,
+    essence: essence - lost,
     driftLost: lost,
   };
 }

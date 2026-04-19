@@ -308,13 +308,13 @@ export const islandRunContractV2EssenceBuildTests: TestCase[] = [
     },
   },
   {
-    name: 'essence drift decays excess above 80% threshold',
+    name: 'essence drift decays excess above threshold',
     run: () => {
       const islandCost = getIslandTotalEssenceCost(1);
-      const threshold = Math.floor(islandCost * 0.8);
+      const threshold = Math.floor(islandCost * 1.5); // ESSENCE_DRIFT_THRESHOLD_RATIO
       const noDrift = applyEssenceDrift({ essence: threshold, islandNumber: 1, elapsedMs: 60 * 60 * 1000 });
       assertEqual(noDrift.driftLost, 0, 'No drift at or below threshold');
-      const highEssence = threshold + 100;
+      const highEssence = threshold + 1000;
       const drifted = applyEssenceDrift({ essence: highEssence, islandNumber: 1, elapsedMs: 60 * 60 * 1000 });
       assertEqual(drifted.driftLost > 0, true, 'Should lose essence when above threshold');
       assertEqual(drifted.essence, highEssence - drifted.driftLost, 'Remaining should equal original minus lost');
@@ -325,7 +325,7 @@ export const islandRunContractV2EssenceBuildTests: TestCase[] = [
     name: 'essence drift zero elapsed yields no loss',
     run: () => {
       const islandCost = getIslandTotalEssenceCost(1);
-      const threshold = Math.floor(islandCost * 0.8);
+      const threshold = Math.floor(islandCost * 1.5);
       const result = applyEssenceDrift({ essence: threshold + 500, islandNumber: 1, elapsedMs: 0 });
       assertEqual(result.driftLost, 0, 'No drift when no time has passed');
     },

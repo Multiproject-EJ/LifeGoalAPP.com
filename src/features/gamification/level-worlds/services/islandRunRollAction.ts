@@ -72,6 +72,15 @@ export interface IslandRunRollActionResult {
   total?: number;
   /** New token position after movement (set when status is 'ok'). */
   newTokenIndex?: number;
+  /**
+   * Ordered list of tile indices the token traverses for this roll, in visit
+   * order. The last entry equals `newTokenIndex`. Used by the renderer to drive
+   * the hop-by-hop animation without re-walking the board locally (single
+   * source of truth — matches the service's authoritative movement).
+   */
+  hopSequence?: number[];
+  /** Total dice actually deducted for this roll (= DICE_PER_ROLL × multiplier). */
+  diceCost?: number;
   /** Landing kind in canonical movement loop (tile traversal). */
   landingKind?: 'tile';
 }
@@ -118,11 +127,15 @@ export async function executeIslandRunRollAction(options: {
   const total = dieOne + dieTwo;
 
   // 5. Move the token step-by-step using the canonical topology helper so that
-  //    board wrap-around (lap completion) is handled correctly.
+  //    board wrap-around (lap completion) is handled correctly. Also record each
+  //    intermediate index so the renderer can animate hop-by-hop without having
+  //    to re-walk the board locally (which could drift from the service's truth).
   const boardProfile = resolveIslandBoardProfile(options.boardProfileId ?? 'spark40_ring');
   let newTokenIndex = state.tokenIndex;
+  const hopSequence: number[] = [];
   for (let step = 0; step < total; step += 1) {
     newTokenIndex = resolveWrappedTokenIndex(newTokenIndex, 1, boardProfile.tileCount);
+    hopSequence.push(newTokenIndex);
   }
 
   // 6. Canonical contract: movement is tile-based and stops are external progression
@@ -155,6 +168,8 @@ export async function executeIslandRunRollAction(options: {
     dieTwo,
     total,
     newTokenIndex,
+    hopSequence,
+    diceCost,
     landingKind,
   };
 }
