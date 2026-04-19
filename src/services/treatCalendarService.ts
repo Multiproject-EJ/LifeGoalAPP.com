@@ -1139,38 +1139,33 @@ export async function fetchCurrentSeason(
 ): Promise<ServiceResponse<CalendarSeasonData>> {
   if (!await canUseSupabaseDataAsync()) {
     const cached = getDemoSeason();
-    // Format today as YYYY-MM-DD using local calendar day (so timezone drift
-    // doesn't falsely invalidate the season in the few hours around UTC midnight).
-    const now = new Date();
-    const todayYmd =
-      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    // Reuse the cached season only when:
-    //   - it exists,
-    //   - it matches the requested holiday (or no holiday filter was supplied),
-    //   - today is still within the season window (`ends_on >= today`).
-    // Otherwise fall through and rebuild from scratch so a stale season
-    // from a previous holiday window doesn't keep getting served.
-    const cacheIsUsable =
-      !!cached &&
-      (!holidayKey || cached.season.holiday_key === holidayKey) &&
-      (!cached.season.ends_on || cached.season.ends_on >= todayYmd);
-    if (cacheIsUsable && cached) {
-      // Always refresh time-sensitive fields on read: the cache was written
-      // when the season was first built, but `today_day_index` and `progress`
-      // evolve with each door open and each new calendar day. Returning the
-      // cache verbatim caused the Today tab's daily-treat circle to be
-      // incorrectly shown as collected (yesterday's opened day compared
-      // against yesterday's stored `today_day_index`) and in turn dropped
-      // from the 4-slot TimeBoundOfferRow.
-      const freshProgress = getDemoProgress(cached.season.id) ?? cached.progress;
-      return {
-        data: {
-          ...cached,
-          progress: freshProgress,
-          today_day_index: computeTodayDayIndex(cached.season.starts_on),
-        },
-        error: null,
-      };
+    if (cached && (!holidayKey || cached.season.holiday_key === holidayKey)) {
+      // Format today as YYYY-MM-DD using local calendar day (avoids timezone
+      // drift around UTC midnight falsely invalidating the season).
+      const now = new Date();
+      const todayYmd =
+        `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      // Reuse the cached season only while today is still within its window.
+      // Once `ends_on` has passed, fall through to rebuild so a stale season
+      // from a previous holiday window isn't served indefinitely.
+      if (!cached.season.ends_on || cached.season.ends_on >= todayYmd) {
+        // Always refresh time-sensitive fields on read: the cache was written
+        // when the season was first built, but `today_day_index` and
+        // `progress` evolve with each door open and each new calendar day.
+        // Returning the cache verbatim caused the Today tab's daily-treat
+        // circle to be incorrectly shown as collected (yesterday's opened day
+        // compared against yesterday's stored `today_day_index`) and in turn
+        // dropped from the 4-slot TimeBoundOfferRow.
+        const freshProgress = getDemoProgress(cached.season.id) ?? cached.progress;
+        return {
+          data: {
+            ...cached,
+            progress: freshProgress,
+            today_day_index: computeTodayDayIndex(cached.season.starts_on),
+          },
+          error: null,
+        };
+      }
     }
     const demo = buildDemoSeasonData(userId);
     setDemoSeason(demo);
