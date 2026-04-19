@@ -1,7 +1,7 @@
 # Island Run — Open Issues & Feature Backlog
 
 Status: Living document
-Last updated: 2026-04-19
+Last updated: 2026-04-19 (session 2)
 Owner: Gameplay System
 
 This document tracks every unresolved issue, bug, inconsistency, or scoped
@@ -197,19 +197,12 @@ action write `stopStatesByIndex[0].objectiveComplete = true` immediately, so
 ---
 
 ### P1-7. Stop-ticket sanitization vs. lookup agree on index 0
-**File:** `islandRunStopTickets.ts`
-`sanitizeStopTicketsPaidByIsland` drops `idx <= 0`; `getStopTicketsPaidForIsland`
-keeps `idx >= 0`. Malformed payloads containing a `0` return different
-"paid" sets between the two code paths. Both should forbid 0 (Hatchery is
-implicitly paid).
+**Status:** ✅ Closed in session 2 — see Closed section below.
 
 ---
 
 ### P1-8. `payStopTicket({stopIndex: 0})` return shape
-**File:** `islandRunStopTickets.ts:142`
-Hatchery being free is a no-op, not a failure. Callers wired to treat
-`ok:false` as an error will flash toasts on legitimate clicks. Either return
-`ok:true, cost:0` or add a dedicated `already_free` success branch.
+**Status:** ✅ Closed in session 2 — see Closed section below.
 
 ---
 
@@ -257,15 +250,10 @@ rotating content variant on a sibling `mysteryContentKind?: MysteryStopContentKi
 field.
 
 ### P2-7. `ISLAND_RUN_DEFAULT_STARTING_DICE` naming
-The constant equals the level-1 regen floor. Rename to
-`ISLAND_RUN_LEVEL1_DICE_FLOOR` (or add a doc-block that explicitly states
-"equals `resolveDiceRegenMinDice(1)`") so the XP-level relationship is
-obvious. Starting dice is NOT an independent tunable: it is a derived
-constant.
+**Status:** ✅ Closed in session 2 — see Closed section below.
 
 ### P2-8. Stale docstrings
-`islandRunRollAction.ts` header lists *"coins, essence, shards"* in its
-"intentionally not in scope" comment. Coins are retired. Clean up.
+**Status:** ✅ Closed in session 2 — see Closed section below.
 
 ### P2-9. Encounter tile position collisions
 Seasonal/rare encounters at fractions `0.275` / `0.775` land on tile indices
@@ -301,3 +289,38 @@ supplied (legacy callers).
 Comments that claimed tile indices 0/10/20/30/39 resolved landmarks have
 been removed in favour of the new "no tile index is reserved for a
 landmark" wording.
+
+## Closed in session 2 (2026-04-19)
+
+### ✅ P1-7. Stop-ticket sanitization vs. lookup agree on index 0
+`getStopTicketsPaidForIsland` now also rejects `idx <= 0` (previously only
+rejected `idx < 0`), matching `sanitizeStopTicketsPaidByIsland`. Hatchery
+(index 0) is implicitly always paid and must never appear in the persisted
+list; both helpers now drop it uniformly so a malformed payload containing
+a `0` returns the same "paid" set no matter which helper reads it.
+
+### ✅ P1-8. `payStopTicket({stopIndex: 0})` return shape
+Hatchery payment is now a **no-op success**: `payStopTicket({stopIndex: 0})`
+returns `ok: true, cost: 0, alreadyFree: true` with wallet fields
+unchanged. Removed the `'hatchery_free'` failure reason. The `PayStopTicketResult`
+success branch gained an optional `alreadyFree?: boolean` flag so callers
+can differentiate "paid now" from "already free" (skipping telemetry +
+toast copy for the no-op case). `handlePayStopTicket` in
+`IslandRunBoardPrototype.tsx` now guards the `economy_spend` telemetry and
+"N 🟣 paid" landing toast behind `!result.alreadyFree` so a defensive
+hatchery click produces no spurious event.
+
+### ✅ P2-7. `ISLAND_RUN_DEFAULT_STARTING_DICE` documented, not renamed
+Left the constant name in place (rename would ripple through ~10 callers
+and a serialization-stable default) but added an explicit docblock stating
+it **equals the level-1 dice-regen floor**
+(`resolveDiceRegenMinDice(1) = 30 + ⌊20 × ln(1)⌋ = 30`). Starting dice is
+therefore a *derived* value from the XP-level curve, not an independent
+tunable — the comment now makes that relationship explicit for the next
+reader.
+
+### ✅ P2-8. Stale `islandRunRollAction.ts` docstring
+Removed the reference to **coins** from the "intentionally not in scope"
+list in `islandRunRollAction.ts` (coins are retired) and refreshed the
+tile-reward example list to mention the live currencies + bonus-tile
+charge.

@@ -2815,36 +2815,41 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     // Happy path: deduct essence, record ticket, open stop.
-    void writeIslandRunGameStateRecord({
-      session,
-      client,
-      record: {
-        ...runtimeStateRef.current,
+    // Hatchery (stop 0) is free — `alreadyFree` means this was a no-op success
+    // and we just want to open the stop without writing, telemetry, or a
+    // "paid" landing toast.
+    if (!result.alreadyFree) {
+      void writeIslandRunGameStateRecord({
+        session,
+        client,
+        record: {
+          ...runtimeStateRef.current,
+          essence: result.essence,
+          essenceLifetimeSpent: result.essenceLifetimeSpent,
+          stopTicketsPaidByIsland: result.stopTicketsPaidByIsland,
+        },
+      });
+      setRuntimeState((current) => ({
+        ...current,
         essence: result.essence,
         essenceLifetimeSpent: result.essenceLifetimeSpent,
         stopTicketsPaidByIsland: result.stopTicketsPaidByIsland,
-      },
-    });
-    setRuntimeState((current) => ({
-      ...current,
-      essence: result.essence,
-      essenceLifetimeSpent: result.essenceLifetimeSpent,
-      stopTicketsPaidByIsland: result.stopTicketsPaidByIsland,
-    }));
-    void recordTelemetryEvent({
-      userId: session.user.id,
-      eventType: 'economy_spend',
-      metadata: {
-        stage: 'island_run_stop_ticket_paid',
-        island_number: islandNumber,
-        stop_id: stopId,
-        stop_index: stopIndex,
-        cost: result.cost,
-      },
-    });
+      }));
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'economy_spend',
+        metadata: {
+          stage: 'island_run_stop_ticket_paid',
+          island_number: islandNumber,
+          stop_id: stopId,
+          stop_index: stopIndex,
+          cost: result.cost,
+        },
+      });
+      const paidStop = islandStopPlan.find((s) => s.stopId === stopId);
+      setLandingText(`${paidStop?.title ?? stopId} unlocked — ${result.cost} 🟣 paid.`);
+    }
     setTicketPromptStopId(null);
-    const paidStop = islandStopPlan.find((s) => s.stopId === stopId);
-    setLandingText(`${paidStop?.title ?? stopId} unlocked — ${result.cost} 🟣 paid.`);
     requestActiveStopTransition(stopId, 'ticket_paid_open');
     setFocusedStopId(stopId);
     setCameraMode('stop_focus');

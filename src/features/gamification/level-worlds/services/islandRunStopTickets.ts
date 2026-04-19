@@ -61,7 +61,12 @@ export function getStopTicketCost(options: {
   return Math.max(1, Math.floor(base * mult));
 }
 
-/** Returns the list of paid-ticket stop indices for a given island number. */
+/** Returns the list of paid-ticket stop indices for a given island number.
+ *
+ * Agrees with `sanitizeStopTicketsPaidByIsland`: entries for the hatchery
+ * (idx 0 — always implicitly paid) and out-of-range indices are filtered
+ * out so malformed payloads can't desync the two code paths.
+ */
 export function getStopTicketsPaidForIsland(
   stopTicketsPaidByIsland: Record<string, number[]> | undefined | null,
   islandNumber: number,
@@ -69,13 +74,15 @@ export function getStopTicketsPaidForIsland(
   if (!stopTicketsPaidByIsland) return [];
   const entry = stopTicketsPaidByIsland[String(islandNumber)];
   if (!Array.isArray(entry)) return [];
-  // Defensive: sanitize to unique, in-range integers.
+  // Defensive: sanitize to unique, in-range integers. Index 0 (Hatchery) is
+  // implicitly free and must never appear in the list — mirror the rule in
+  // `sanitizeStopTicketsPaidByIsland`.
   const seen = new Set<number>();
   const out: number[] = [];
   for (const raw of entry) {
     const idx = Math.floor(raw);
     if (!Number.isFinite(idx)) continue;
-    if (idx < 0 || idx >= STOP_COUNT) continue;
+    if (idx <= 0 || idx >= STOP_COUNT) continue;
     if (seen.has(idx)) continue;
     seen.add(idx);
     out.push(idx);
@@ -93,7 +100,6 @@ export function isStopTicketPaid(options: {
 }
 
 export type PayStopTicketReason =
-  | 'hatchery_free'
   | 'already_paid'
   | 'invalid_stop_index'
   | 'previous_stop_not_complete'
@@ -106,6 +112,13 @@ export type PayStopTicketResult =
       essenceLifetimeSpent: number;
       stopTicketsPaidByIsland: Record<string, number[]>;
       cost: number;
+      /**
+       * True when the result is a no-op because the requested stop is free
+       * (Hatchery / stop 0). Callers that want to differentiate "paid now"
+       * from "already free" should check this flag. Wallet fields are
+       * returned unchanged when `alreadyFree === true`.
+       */
+      alreadyFree?: boolean;
     }
   | {
       ok: false;
@@ -118,7 +131,12 @@ export type PayStopTicketResult =
  * wallet, and marks the stop index as paid in `stopTicketsPaidByIsland`.
  *
  * Preconditions (checked in order):
- *   - stopIndex must be in [1, STOP_COUNT-1] (hatchery is free; never paid).
+ *   - stopIndex 0 (Hatchery) is a **no-op success**: returns `ok: true` with
+ *     `alreadyFree: true`, cost 0, and wallet fields unchanged. Hatchery is
+ *     implicitly free on every island, so a caller clicking "pay ticket" for
+ *     it is a legitimate request that simply does nothing — not an error.
+ *   - stopIndex must be in [0, STOP_COUNT-1]; out-of-range returns
+ *     `invalid_stop_index`.
  *   - Ticket must not already be paid.
  *   - Previous stop's objective must be marked complete
  *     (stopStatesByIndex[stopIndex-1].objectiveComplete === true).
@@ -139,7 +157,18 @@ export function payStopTicket(options: {
     stopIndex,
   });
 
-  if (stopIndex === 0) return { ok: false, reason: 'hatchery_free', cost };
+  if (stopIndex === 0) {
+    // Hatchery is implicitly free. Return a no-op success so callers don't
+    // have to special-case an error reason for a legitimate click.
+    return {
+      ok: true,
+      essence: Math.max(0, Math.floor(options.essence)),
+      essenceLifetimeSpent: Math.max(0, Math.floor(options.essenceLifetimeSpent)),
+      stopTicketsPaidByIsland: { ...(options.stopTicketsPaidByIsland ?? {}) },
+      cost: 0,
+      alreadyFree: true,
+    };
+  }
   if (stopIndex < 0 || stopIndex >= STOP_COUNT) {
     return { ok: false, reason: 'invalid_stop_index', cost };
   }
