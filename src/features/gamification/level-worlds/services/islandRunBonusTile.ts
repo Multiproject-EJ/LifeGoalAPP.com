@@ -53,8 +53,11 @@ export const BONUS_BASE_RELEASE_PAYOUT: Readonly<BonusTileReleasePayout> = {
 };
 
 export interface ApplyBonusTileChargeInput {
+  /** Current ledger. `null`/`undefined` is treated as "no charges yet". */
   bonusTileChargeByIsland: BonusTileChargeByIsland | null | undefined;
+  /** Island whose bonus tile was landed on. Non-finite values → no-op. */
   islandNumber: number;
+  /** Ring tile index that was landed on. Negative or non-finite → no-op. */
   tileIndex: number;
 }
 

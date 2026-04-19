@@ -23,7 +23,7 @@ import { resolveIslandBoardProfile } from '../services/islandBoardProfiles';
 // resolveWrappedTokenIndex retired from this component: the roll action service
 // is the single authoritative source of truth for token movement and hop order.
 import { ISLAND_RUN_DEFAULT_STARTING_DICE } from '../services/islandRunEconomy';
-import { generateIslandStopPlan } from '../services/islandRunStops';
+import { generateIslandStopPlan, type IslandStopPlanEntry } from '../services/islandRunStops';
 import {
   getStopTicketCost,
   getStopTicketsPaidForIsland,
@@ -807,7 +807,7 @@ function preloadThemeAssets(theme: IslandBoardTheme) {
   });
 }
 
-function getStopIcon(stop: { stopId: string; mysteryContentKind?: string }): string {
+function getStopIcon(stop: Pick<IslandStopPlanEntry, 'stopId' | 'mysteryContentKind'>): string {
   if (stop.stopId === 'boss') return '👑';
   if (stop.stopId === 'hatchery') return '🥚';
   if (stop.stopId === 'habit') return '✅';
