@@ -192,8 +192,17 @@ Stop rules:
 
 ### Stop unlock rules
 - When an island starts, only Stop 1 (Hatchery) is **open**. All other stops are **closed**.
-- Stop 2 opens when the Hatchery egg is **set to hatch** (not when collected, hatched, or sold — it is "done" when set for hatching).
-- Each subsequent stop opens when the previous stop is completed.
+- Each subsequent stop (2, 3, 4, 5) is **gated by two conditions** that must BOTH be satisfied before the stop can be opened:
+  1. The previous stop's objective is complete (for the Hatchery this means the egg is **set to hatch** — not collected/sold/hatched — so "halfway completion" is sufficient to unlock the next stop).
+  2. The player pays an essence **ticket** (opening fee) for that stop.
+- Ticket costs are paid from the essence wallet and scale with `effectiveIslandNumber` using the same multiplier as build costs:
+  - Stop 2 (Habit): **30 essence** base
+  - Stop 3 (Mystery): **60 essence** base
+  - Stop 4 (Wisdom): **100 essence** base
+  - Stop 5 (Boss): **150 essence** base
+- Tickets are **per-island**: a paid ticket unlocks that stop for the current island only. Travelling to a new island requires paying the ticket again.
+- The Hatchery (Stop 1) **never** has a ticket cost — it is always free on a new island.
+- The ticket rule prevents "rush-through" completion: the player must earn essence on the 40-tile board before each new stop can be opened.
 
 ### Hatchery (Stop 1) — egg lifecycle and checkmark rules
 - The Hatchery is **always Stop 1** on every island.
@@ -236,9 +245,9 @@ Each island has **5 buildings**, one per stop. Buildings are **completely decoup
 **Building visuals (L0→L3):** 🏗️ → 🏠 → 🏡 → 🏰 with a scale+glow animation on level-up.
 
 **Essence drift:**
-- Excess essence above 80% of island cost decays at 5%/hour.
-- Drift is **suspended** when the island is fully cleared (nothing left to build/spend on).
-- Drift is also suspended when the island is completely finished (player has claimed island clear).
+- Excess essence above **150%** of the remaining island build cost decays at **0.5%/hour** (linear, not compounding), capped at a **20% loss per hydration session**.
+- Drift is **suspended** when the island is fully cleared (nothing left to build/spend on) or when the player has claimed the island-clear reward.
+- The softened drift rate (previously 5%/hour above 80%) is intentional: the player needs a comfortable essence buffer to pay stop tickets AND fund builds without losing essence faster than it can be earned on the board.
 
 **Building reset on island travel:**
 - All 5 buildings reset to Level 0 on every island travel (fresh build costs for the new island).
@@ -279,6 +288,22 @@ Each island has **5 buildings**, one per stop. Buildings are **completely decoup
   - occasional dice payout
   - microgame trigger, where configured
 - Exact tuning is implementation-configurable, but feeding tiles must remain one of the most valuable and visible tile categories in the board loop.
+
+## 5D) Tile type catalogue (authoritative)
+
+The 40-tile ring uses the following tile types. **Tile-type `'stop'` is fully retired** — stops are external HUD structures, never board tiles (see §Board Topology).
+
+| Tile type | On-land effect | Notes |
+|---|---|---|
+| `currency` | Awards essence | Primary essence income on the board. |
+| `chest` | Awards essence bundle + reward bar progress | Larger payout than `currency`. |
+| `micro` | Awards reward bar progress + small essence | Most common tile; light feed. |
+| `hazard` | **Deducts essence** (never zero) | Intentionally negative outcome. Deduction is capped by the wallet (never goes below 0). |
+| `encounter` | Opens encounter modal | Once-per-visit; completed tiles become inert. |
+| `event` | Progresses the active timed minigame | Cosmetic overlay; no essence payout by itself. |
+| `bonus` | Rotating on-land bonus (shutdown / coin-flip / accumulator / heist-style) | Tunable; must never award retired currencies. |
+
+Tile topology is **feature-gated via the board profile** — the active profile (`spark40_ring` in production) determines how many tiles of each type exist and their positions, but every tile must be one of the types above.
 
 ## 5C) Reward amplification and session dynamics
 

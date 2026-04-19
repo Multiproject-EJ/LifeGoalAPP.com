@@ -140,12 +140,20 @@ export function applyDiceRegeneration(params: {
   const deficit = Math.max(0, minDice - safePool);
   const diceAdded = Math.min(rawRegen, deficit);
 
+  // Only advance lastRegenAtMs by the time that produced the whole dice we
+  // actually granted. The sub-die fractional remainder of elapsedMs carries
+  // forward to the next call, so short sessions don't silently lose regen.
+  // msPerDie = (60×60×1000) / ratePerHour.
+  const msPerDie = ratePerHour > 0 ? (60 * 60 * 1000) / ratePerHour : Number.POSITIVE_INFINITY;
+  const consumedMs = Number.isFinite(msPerDie) ? Math.floor(diceAdded * msPerDie) : elapsedMs;
+  const nextLastRegenAtMs = lastRegenAtMs + consumedMs;
+
   return {
     dicePool: safePool + diceAdded,
     regenState: {
       maxDice: minDice,
       regenRatePerHour: ratePerHour,
-      lastRegenAtMs: safeNow,
+      lastRegenAtMs: nextLastRegenAtMs,
     },
     diceAdded,
   };

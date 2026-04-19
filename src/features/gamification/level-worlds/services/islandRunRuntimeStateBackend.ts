@@ -64,6 +64,7 @@ export interface IslandRunRuntimeStateBackend {
       };
       companionBonusLastVisitKey?: string | null;
       completedStopsByIsland?: Record<string, string[]>;
+      stopTicketsPaidByIsland?: Record<string, number[]>;
       marketOwnedBundlesByIsland?: Record<string, {
         dice_bundle: boolean;
         heart_bundle: boolean;
@@ -259,6 +260,26 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
               ),
             }
           : current.completedStopsByIsland,
+      stopTicketsPaidByIsland:
+        patch.stopTicketsPaidByIsland !== null && typeof patch.stopTicketsPaidByIsland === 'object' && !Array.isArray(patch.stopTicketsPaidByIsland)
+          ? {
+              ...current.stopTicketsPaidByIsland,
+              ...Object.fromEntries(
+                Object.entries(patch.stopTicketsPaidByIsland).map(([islandKey, ticketIndices]) => [
+                  islandKey,
+                  Array.isArray(ticketIndices)
+                    ? Array.from(
+                        new Set(
+                          ticketIndices
+                            .map((v) => Math.floor(v as number))
+                            .filter((v) => Number.isFinite(v) && v > 0 && v < 5),
+                        ),
+                      ).sort((a, b) => a - b)
+                    : [],
+                ]),
+              ),
+            }
+          : current.stopTicketsPaidByIsland,
       marketOwnedBundlesByIsland:
         patch.marketOwnedBundlesByIsland !== null && typeof patch.marketOwnedBundlesByIsland === 'object' && !Array.isArray(patch.marketOwnedBundlesByIsland)
           ? {

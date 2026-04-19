@@ -93,9 +93,8 @@ export function getStopCompletionBlockReason(options: {
     return 'Boss challenge is still pending. Resolve the boss trial before clearing the island.';
   }
 
-  if (isIslandStopEffectivelyCompleted({ stopId, completedStops, hasActiveEgg, islandEggSlotUsed })) {
-    return null;
-  }
-
+  // No blocking reason — stop is either already effectively completed (the
+  // `isIslandStopEffectivelyCompleted` path) or nothing else prevents the
+  // caller from proceeding. Either way there is no message to surface.
   return null;
 }

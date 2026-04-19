@@ -15,10 +15,17 @@ import {
 import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
 import { getIslandDisplayName } from '../services/islandNames';
 import { generateTileMap, getIslandRarity, type IslandTileMapEntry } from '../services/islandBoardTileMap';
-import { resolveIslandBoardProfile, type IslandBoardProfileId } from '../services/islandBoardProfiles';
-import { resolveWrappedTokenIndex } from '../services/islandBoardTopology';
+import { resolveIslandBoardProfile } from '../services/islandBoardProfiles';
+// resolveWrappedTokenIndex retired from this component: the roll action service
+// is the single authoritative source of truth for token movement and hop order.
 import { ISLAND_RUN_DEFAULT_STARTING_DICE } from '../services/islandRunEconomy';
 import { generateIslandStopPlan } from '../services/islandRunStops';
+import {
+  getStopTicketCost,
+  getStopTicketsPaidForIsland,
+  isStopTicketPaid,
+  payStopTicket,
+} from '../services/islandRunStopTickets';
 import { isIslandFullyCleared } from '../services/islandRunProgression';
 import { recordTelemetryEvent } from '../../../../services/telemetry';
 import {
@@ -123,6 +130,7 @@ import { executeIslandRunRollAction } from '../services/islandRunRollAction';
 import {
   applyEssenceDrift,
   awardIslandRunContractV2Essence,
+  deductIslandRunContractV2Essence,
   getEffectiveIslandNumber,
   getIslandTotalEssenceCost,
   getStopUpgradeCost,
@@ -179,17 +187,12 @@ const SPIN_MIN = 1;
 const SPIN_MAX = 5;
 // Island duration: 72 hours for special islands, 48 hours for standard islands.
 const ISLAND_DURATION_SEC = 72 * 60 * 60;
-const ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE = true;
 // Canonical contract is now enforced as source-of-truth runtime behavior.
 // Legacy pre-contract-v2 movement/energy rules are intentionally disabled.
 const ISLAND_RUN_CONTRACT_V2_ENABLED = true;
-function resolveRequestedBoardProfileId(): IslandBoardProfileId {
-  if (typeof window === 'undefined') return 'spark40_ring';
-  const query = new URLSearchParams(window.location.search).get('boardProfile')?.trim().toLowerCase();
-  if (query === 'spark40' || query === 'spark40_ring') return 'spark40_ring';
-  return 'spark40_ring';
-}
-const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile(resolveRequestedBoardProfileId());
+// Only one board profile ships today. Historically this was query-param gated,
+// but every branch collapsed to the same result — so the helper was removed.
+const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile('spark40_ring');
 const PERFECT_COMPANION_MODEL_VERSION = 'phase3_v1';
 // Temporary diagnostics for Stop 1↔2 flicker + roll lock on Island 120 startup.
 const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_ISLAND = 120;
@@ -846,7 +849,6 @@ const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
   hazard: '#ff8f8f',
   micro: '#9dffbe',
   encounter: '#ffa765',
-  stop: '#7afcff',
 };
 
 interface IslandRunBoardPrototypeProps {
@@ -885,6 +887,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [cameraMode, setCameraMode] = useState<IslandRunCameraMode>('board_follow');
   const [focusedStopId, setFocusedStopId] = useState<string | null>(null);
+  /**
+   * When set, we show the ticket-price prompt modal for this stop instead of
+   * opening the stop directly. User can either pay the essence ticket to unlock
+   * and open the stop, or cancel. Hatchery never uses this path (always free).
+   */
+  const [ticketPromptStopId, setTicketPromptStopId] = useState<string | null>(null);
 
   // BoardStage camera controls (set by BoardStage via onCameraReady)
   const boardCameraRef = useRef<BoardStageCameraControls | null>(null);
@@ -1212,7 +1220,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const island120ToggleHintCounterByPairRef = useRef<Record<string, number>>({});
   const isIsland120StartupDiagnosticActive = isIsland120StartupDiagnosticTarget(
     runtimeState.currentIslandNumber ?? islandNumber,
-  );
+  )
+    // User-requested gate (2026-04): the island-120 diagnostic is a heavy,
+    // noisy logger intended for deep bug-hunting only. Keep the logic fully
+    // available, but only ACTIVATE when the debug panel is open — this way
+    // the diagnostic is reachable via the ☰ debug panel and the game-export
+    // log in settings (both already surface recent diagnostic events) without
+    // paying its cost on every normal play session.
+    && showDebugPanel;
 
   useEffect(() => {
     runtimeStateRef.current = runtimeState;
@@ -1424,25 +1439,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setMarketOwnedBundles({
         dice_bundle: Boolean(runtimeOwnedBundles.dice_bundle),
       });
-    } else if (!ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE) {
-      const localStorageKey = `island_run_shop_owned_${session.user.id}_island_${persistedIsland}`;
-      try {
-        const raw = window.localStorage.getItem(localStorageKey);
-        if (raw) {
-          const parsed = JSON.parse(raw) as Record<string, boolean>;
-          if (parsed && typeof parsed === 'object') {
-            setMarketOwnedBundles({
-              dice_bundle: Boolean(parsed.dice_bundle),
-            });
-          } else {
-            setMarketOwnedBundles({ dice_bundle: false });
-          }
-        } else {
-          setMarketOwnedBundles({ dice_bundle: false });
-        }
-      } catch {
-        setMarketOwnedBundles({ dice_bundle: false });
-      }
     } else {
       setMarketOwnedBundles({ dice_bundle: false });
     }
@@ -1479,21 +1475,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const targetIslandNumber = runtimeState.currentIslandNumber ?? islandNumber;
     const storedStops = Array.isArray(runtimeState.completedStopsByIsland?.[String(targetIslandNumber)])
       ? runtimeState.completedStopsByIsland[String(targetIslandNumber)]!.filter((x): x is string => typeof x === 'string')
-      : (() => {
-          if (ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE) return [];
-          if (typeof window === 'undefined') return [];
-          const key = `island_run_stops_${session.user.id}_island_${targetIslandNumber}`;
-          try {
-            const raw = window.localStorage.getItem(key);
-            if (!raw) return [];
-            const parsed = JSON.parse(raw) as unknown;
-            return Array.isArray(parsed)
-              ? parsed.filter((x): x is string => typeof x === 'string')
-              : [];
-          } catch {
-            return [];
-          }
-        })();
+      : [];
     const currentIslandEggEntry = runtimeState.perIslandEggs?.[String(runtimeState.currentIslandNumber ?? islandNumber)] ?? null;
     const hasActiveEggOnLoad = currentIslandEggEntry?.status === 'incubating'
       || currentIslandEggEntry?.status === 'ready'
@@ -2146,27 +2128,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (Array.isArray(persistedStops)) {
       return persistedStops.filter((x): x is string => typeof x === 'string');
     }
-
-    if (typeof window === 'undefined') {
-      return [];
-    }
-
-    if (ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE) {
-      return [];
-    }
-
-    const key = `island_run_stops_${session.user.id}_island_${targetIslandNumber}`;
-    try {
-      const raw = window.localStorage.getItem(key);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw) as unknown;
-      return Array.isArray(parsed)
-        ? parsed.filter((x): x is string => typeof x === 'string')
-        : [];
-    } catch {
-      return [];
-    }
-  }, [runtimeState.completedStopsByIsland, session.user.id]);
+    // Runtime migration is complete — no localStorage fallback needed.
+    return [];
+  }, [runtimeState.completedStopsByIsland]);
 
   // M11D: restore completedStops from table-backed runtime state first; fallback to localStorage
   useEffect(() => {
@@ -2200,20 +2164,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setLandingText(`Focused on ${nextActiveStop.title}.`);
   }, [completedStops, islandStopPlan]);
 
-  // M11D: persist completedStops to both localStorage and Supabase runtime state
+  // M11D: persist completedStops to Supabase runtime state (the localStorage
+  // mirror was removed once runtime migration completed).
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
     // Guard: Skip until the initial hydration sync effect has applied server values
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
-    if (!ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE) {
-      const key = `island_run_stops_${session.user.id}_island_${islandNumber}`;
-      try {
-        window.localStorage.setItem(key, JSON.stringify(completedStops));
-      } catch {
-        // ignore storage errors
-      }
-    }
     const islandKey = String(islandNumber);
     const persistedStops = runtimeState.completedStopsByIsland?.[islandKey] ?? [];
     if (areStringArraysEqual(persistedStops, completedStops)) {
@@ -2325,15 +2282,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         ...patch,
       },
     }));
-
-    if (!ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE) {
-      const key = `island_run_shop_owned_${session.user.id}_island_${islandNumber}`;
-      try {
-        window.localStorage.setItem(key, JSON.stringify(marketOwnedBundles));
-      } catch {
-        // ignore storage errors
-      }
-    }
   }, [client, hasHydratedRuntimeState, islandNumber, marketOwnedBundles, runtimeState.marketOwnedBundlesByIsland, session]);
 
   useEffect(() => {
@@ -2445,6 +2393,47 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         amount: result.earned,
       },
     });
+  }, [client, islandNumber, session.user.id]);
+
+  /**
+   * Withdraw essence from the wallet (hazard tile penalty, stop ticket purchase, …).
+   * Clamps at zero — players can never owe essence. Returns the amount actually
+   * deducted (may be less than requested if the wallet was short).
+   */
+  const deductContractV2Essence = useCallback((amount: number, source: string): number => {
+    const result = deductIslandRunContractV2Essence({
+      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+      essence: runtimeStateRef.current.essence,
+      essenceLifetimeSpent: runtimeStateRef.current.essenceLifetimeSpent,
+      amount,
+    });
+    if (result.spent < 1) return 0;
+
+    void writeIslandRunGameStateRecord({
+      session,
+      client,
+      record: {
+        ...runtimeStateRef.current,
+        essence: result.essence,
+        essenceLifetimeSpent: result.essenceLifetimeSpent,
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      essence: result.essence,
+      essenceLifetimeSpent: result.essenceLifetimeSpent,
+    }));
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_spend',
+      metadata: {
+        stage: 'island_run_contract_v2_essence_deduct',
+        island_number: islandNumber,
+        source,
+        amount: result.spent,
+      },
+    });
+    return result.spent;
   }, [client, islandNumber, session.user.id]);
 
   const applyContractV2RewardBarRuntimeState = useCallback((nextRewardBarState: {
@@ -2679,16 +2668,128 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return map;
   }, [completedStops, effectiveCompletedStops, islandEggSlotUsed, islandStopPlan, runtimeState.stopStatesByIndex]);
 
-  const stopMap = useMemo(() => {
-    const map = new Map<number, string>();
-    islandStopPlan.forEach((stop) => map.set(stop.tileIndex, stop.stopId));
+  // stopMap intentionally remains empty: per the canonical gameplay contract,
+  // stops are EXTERNAL side-quest structures (orbit HUD buttons). No tile on
+  // the 40-tile ring is rendered as a "stop tile". The Map type is retained
+  // for camera-director backward compatibility.
+  const stopMap = useMemo(() => new Map<number, string>(), []);
+
+  // ── Ticket-aware stop unlock ─────────────────────────────────────────────
+  // Helpers that let the orbit click handler decide whether to open a stop
+  // directly, surface the ticket-pay prompt, or leave it locked.
+  const stopIndexByStopId = useMemo(() => {
+    const map = new Map<string, number>();
+    islandStopPlan.forEach((stop, index) => map.set(stop.stopId, index));
     return map;
   }, [islandStopPlan]);
 
-  const gameplayStopMap = useMemo(() => {
-    if (ISLAND_RUN_CONTRACT_V2_ENABLED) return new Map<number, string>();
-    return stopMap;
-  }, [stopMap]);
+  const ticketsPaidForCurrentIsland = useMemo(
+    () => getStopTicketsPaidForIsland(runtimeState.stopTicketsPaidByIsland, islandNumber),
+    [runtimeState.stopTicketsPaidByIsland, islandNumber],
+  );
+
+  /**
+   * True when `stopId` is waiting on an essence ticket — the previous stop is
+   * complete but this stop hasn't been paid yet. Orbit clicks on such stops
+   * open the ticket-prompt modal instead of the stop itself.
+   */
+  const doesStopRequireTicketPayment = useCallback((stopId: string): boolean => {
+    const stopIndex = stopIndexByStopId.get(stopId);
+    if (stopIndex === undefined) return false;
+    if (stopIndex === 0) return false; // hatchery is always free
+    if (isStopTicketPaid({ ticketsPaid: ticketsPaidForCurrentIsland, stopIndex })) return false;
+    const prevState = runtimeState.stopStatesByIndex[stopIndex - 1];
+    return Boolean(prevState?.objectiveComplete);
+  }, [stopIndexByStopId, ticketsPaidForCurrentIsland, runtimeState.stopStatesByIndex]);
+
+  /**
+   * Orbit-stop click dispatcher. Routes the click to the appropriate outcome:
+   *   - Hatchery / already-paid stop → open the stop and focus the camera.
+   *   - Previous stop complete, ticket unpaid → open the ticket-prompt modal.
+   *   - Otherwise → leave closed (stop is sequence-locked; no-op).
+   */
+  const handleStopOpenRequest = useCallback((stopId: string) => {
+    if (doesStopRequireTicketPayment(stopId)) {
+      setTicketPromptStopId(stopId);
+      return;
+    }
+    requestActiveStopTransition(stopId, 'orbit_stop_click');
+    setFocusedStopId(stopId);
+    setCameraMode('stop_focus');
+  }, [doesStopRequireTicketPayment, requestActiveStopTransition]);
+
+  /**
+   * Pay the essence ticket for `stopId`. On success: persist the updated
+   * wallet + ticket ledger, dismiss the prompt, and open the stop. On failure
+   * (insufficient essence, etc.): surface the reason via landing text and keep
+   * the prompt open so the user can earn more and retry.
+   */
+  const handlePayStopTicket = useCallback((stopId: string) => {
+    const stopIndex = stopIndexByStopId.get(stopId);
+    if (stopIndex === undefined) return;
+    const result = payStopTicket({
+      effectiveIslandNumber,
+      islandNumber,
+      stopIndex,
+      essence: runtimeStateRef.current.essence,
+      essenceLifetimeSpent: runtimeStateRef.current.essenceLifetimeSpent,
+      stopTicketsPaidByIsland: runtimeStateRef.current.stopTicketsPaidByIsland,
+      stopStatesByIndex: runtimeStateRef.current.stopStatesByIndex,
+    });
+
+    if (!result.ok) {
+      if (result.reason === 'insufficient_essence') {
+        setLandingText(`Not enough essence — need ${result.cost} 🟣 to open this stop.`);
+      } else if (result.reason === 'previous_stop_not_complete') {
+        setLandingText('Complete the previous stop before opening this one.');
+        setTicketPromptStopId(null);
+      } else if (result.reason === 'already_paid') {
+        // Ticket already paid (race with another action) — open the stop.
+        setTicketPromptStopId(null);
+        requestActiveStopTransition(stopId, 'ticket_already_paid');
+        setFocusedStopId(stopId);
+        setCameraMode('stop_focus');
+      } else {
+        setTicketPromptStopId(null);
+      }
+      return;
+    }
+
+    // Happy path: deduct essence, record ticket, open stop.
+    void writeIslandRunGameStateRecord({
+      session,
+      client,
+      record: {
+        ...runtimeStateRef.current,
+        essence: result.essence,
+        essenceLifetimeSpent: result.essenceLifetimeSpent,
+        stopTicketsPaidByIsland: result.stopTicketsPaidByIsland,
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      essence: result.essence,
+      essenceLifetimeSpent: result.essenceLifetimeSpent,
+      stopTicketsPaidByIsland: result.stopTicketsPaidByIsland,
+    }));
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_spend',
+      metadata: {
+        stage: 'island_run_stop_ticket_paid',
+        island_number: islandNumber,
+        stop_id: stopId,
+        stop_index: stopIndex,
+        cost: result.cost,
+      },
+    });
+    setTicketPromptStopId(null);
+    const paidStop = islandStopPlan.find((s) => s.stopId === stopId);
+    setLandingText(`${paidStop?.title ?? stopId} unlocked — ${result.cost} 🟣 paid.`);
+    requestActiveStopTransition(stopId, 'ticket_paid_open');
+    setFocusedStopId(stopId);
+    setCameraMode('stop_focus');
+  }, [client, effectiveIslandNumber, islandNumber, islandStopPlan, requestActiveStopTransition, session, stopIndexByStopId]);
 
   const activeStop = activeStopId ? islandStopPlan.find((stop) => stop.stopId === activeStopId) ?? null : null;
 
@@ -2719,9 +2820,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         visualY = Math.max(visualY, 152);
       }
 
+      // Prefix a ticket emoji to the label when this stop is sequence-unlocked
+      // but still awaiting its essence ticket — makes the ticket gate visible
+      // before the player taps the orbit button.
+      const baseLabel = stop.title.replace(/^\S+\s/, '');
+      const needsTicket = doesStopRequireTicketPayment(stop.stopId);
+      const label = needsTicket ? `🎫 ${baseLabel}` : baseLabel;
+
       return {
         id: stop.stopId,
-        label: stop.title.replace(/^\S+\s/, ''),
+        label,
         x: visualX,
         y: visualY,
         state: stopStateMap.get(stop.stopId) ?? 'active',
@@ -2783,7 +2891,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         hideLabel: isSmallBoard,
       } satisfies OrbitStopVisual;
     });
-  }, [boardSize.height, boardSize.width, islandStopPlan, stopStateMap]);
+  }, [boardSize.height, boardSize.width, islandStopPlan, stopStateMap, doesStopRequireTicketPayment]);
 
   // Camera zoom-to-stop: when cameraMode is 'stop_focus' and a stop is focused,
   // smoothly zoom the camera to that stop's screen position.
@@ -3365,6 +3473,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setIsRolling(true);
     setCameraMode('board_follow');
     requestActiveStopTransition(null, 'roll_start_close_stop');
+    // Increment per-session roll counter — used to seed deterministic tile-landing RNG.
+    rollIndexRef.current += 1;
 
     // M10A: roll sound + haptic
     playIslandRunSound('roll');
@@ -3377,7 +3487,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       diceMultiplier: effectiveMultiplier,
     });
 
-    if (rollResult.status !== 'ok' || rollResult.total === undefined || rollResult.dieOne === undefined || rollResult.dieTwo === undefined) {
+    if (
+      rollResult.status !== 'ok'
+      || rollResult.total === undefined
+      || rollResult.dieOne === undefined
+      || rollResult.dieTwo === undefined
+      || rollResult.newTokenIndex === undefined
+      || !rollResult.hopSequence
+    ) {
       if (isIsland120StartupDiagnosticActive) {
         logIslandRunEntryDebug('island120_roll_interaction', {
           userId: session.user.id,
@@ -3419,12 +3536,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setDiceRollTotalOverlay(null);
     setIsRolling(false);
 
-    let currentIndex = tokenIndex;
-    const hopIndices: number[] = [];
-    for (let step = 0; step < nextRoll; step += 1) {
-      currentIndex = resolveWrappedTokenIndex(currentIndex, 1, ACTIVE_BOARD_PROFILE.tileCount);
-      hopIndices.push(currentIndex);
-    }
+    // Trust the service's authoritative hop sequence + final index. Local state
+    // mirrors (never re-derives) the canonical movement — this closes the
+    // drift window where two independent `resolveWrappedTokenIndex` walks could
+    // disagree if the service ever changes its topology rules.
+    const hopIndices = rollResult.hopSequence;
+    const currentIndex = rollResult.newTokenIndex;
+    const diceCostApplied = rollResult.diceCost ?? effectiveDiceCost;
 
     // Set the full hop sequence — BoardStage will animate tile-by-tile
     // with camera follow (Monopoly GO style).
@@ -3434,10 +3552,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
     setTokenIndex(currentIndex);
 
-    // Sync local state to match what the roll action already persisted.
-    // The service deducted effectiveDiceCost (= BASE_DICE_PER_ROLL × multiplier)
-    // and wrote the new tokenIndex — we mirror that into React state for the UI.
-    const nextDicePool = Math.max(0, dicePool - effectiveDiceCost);
+    // Sync local React state to match what the roll action already persisted.
+    const nextDicePool = Math.max(0, dicePool - diceCostApplied);
     setDicePool(nextDicePool);
     setRuntimeState((current) => ({
       ...current,
@@ -3445,32 +3561,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       dicePool: nextDicePool,
     }));
 
-    // Legacy stop-landing path (dead code when ISLAND_RUN_CONTRACT_V2_ENABLED is true, retained for backward compat)
-    const landedStopRaw = ISLAND_RUN_CONTRACT_V2_ENABLED ? undefined : gameplayStopMap.get(currentIndex);
-    const landedStop = landedStopRaw as string | null;
-    if (typeof landedStop === 'string') {
-      const stopConfig = islandStopPlan.find((stop) => stop.stopId === landedStop);
-      const stopTitle = stopConfig?.title ?? landedStop.toUpperCase();
-      const state = stopStateMap.get(landedStop) ?? 'active';
-
-      if (state === 'locked') {
-        setLandingText(`Boss stop locked: complete all 5 stops before boss.`);
-        requestActiveStopTransition(null, 'tile_land_stop_locked');
-      } else {
-        setLandingText(`Landed on STOP: ${stopTitle} (#${currentIndex})`);
-        requestActiveStopTransition(landedStop, 'tile_land_stop_open');
-        // M10A: stop_land sound + haptic
-        playIslandRunSound('stop_land');
-        triggerIslandRunHaptic('stop_land');
-        // M10C: boss_trial_start sound when boss modal opens
-        if (landedStop === 'boss') {
-          playIslandRunSound('boss_trial_start');
-        }
-      }
-
-      setShowEncounterModal(false);
-      setEncounterResolved(false);
-    } else if (tileMap[currentIndex]?.tileType === 'encounter') {
+    // Stops are side-quest structures — the player piece never lands on a stop.
+    // Encounter tiles open their challenge modal; every other tile funnels through
+    // resolveTileLanding for essence / feed / hazard outcomes.
+    if (tileMap[currentIndex]?.tileType === 'encounter') {
       // M6-COMPLETE: check if this encounter tile was already completed this visit
       if (completedEncounterIndices.has(currentIndex)) {
         setLandingText(`Encounter tile (#${currentIndex}) — already completed this visit. ✅`);
@@ -3486,10 +3580,29 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
   };
 
-  // B2-3: resolve non-stop, non-encounter tile landings with real outcomes
+  // Track roll index for deterministic (non-time-based) tile-landing RNG seeding.
+  const rollIndexRef = useRef(0);
+
+  // Seed spacing constants. The landing seed packs three independent dimensions
+  // into one 32-bit integer: island number × ISLAND_SEED_STRIDE + tile index ×
+  // TILE_SEED_STRIDE + roll index. Strides are large enough that no two
+  // (island, tile, roll) triples within realistic bounds can collide:
+  //   islands: up to ~100k per cycle → needs > 10_000 per tile
+  //   tiles:   40 per board          → needs > 100 per roll
+  //   rolls:   < 100 per session
+  const ISLAND_SEED_STRIDE = 10_000;
+  const TILE_SEED_STRIDE = 100;
+
+  // B2-3: resolve non-encounter tile landings with real outcomes.
+  // Hazard tiles DEDUCT essence (clamped at 0). All other rewarded tiles add essence.
   const resolveTileLanding = (tileType: string) => {
     const mult = Math.max(1, effectiveMultiplier);
-    const essenceEarn = resolveIslandRunContractV2EssenceEarnForTile(tileType, { islandNumber: effectiveIslandNumber, seed: Date.now() + tokenIndex }) * mult;
+    // Deterministic seed — derived from island, tile, and the per-session roll
+    // index (not Date.now()). Same landing on reload yields the same outcome.
+    const landingSeed = (effectiveIslandNumber * ISLAND_SEED_STRIDE) + (tokenIndex * TILE_SEED_STRIDE) + rollIndexRef.current;
+    const rawEssence = resolveIslandRunContractV2EssenceEarnForTile(tileType, { islandNumber: effectiveIslandNumber, seed: landingSeed });
+    // Apply the dice multiplier. For hazards (negative) this scales the loss too.
+    const essenceDelta = rawEssence * mult;
     const EVENT_MESSAGES = [
       '⚡ Island event!',
       '⚡ Something stirs...',
@@ -3501,16 +3614,28 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const multLabel = mult > 1 ? ` (x${mult})` : '';
     switch (tileType) {
       case 'currency':
-        setLandingText(`💰 Currency tile! +${essenceEarn} essence${multLabel}`);
+        setLandingText(`💰 Currency tile! +${essenceDelta} essence${multLabel}`);
         break;
       case 'chest':
-        setLandingText(`🎁 Treasure chest! +${essenceEarn} essence${multLabel}`);
+        setLandingText(`🎁 Treasure chest! +${essenceDelta} essence${multLabel}`);
         break;
-      case 'hazard':
-        setLandingText(essenceEarn > 0 ? `☠️ Hazard! +${essenceEarn} essence (scraped)${multLabel}` : '☠️ Hazard! Nothing gained.');
+      case 'hazard': {
+        const penalty = Math.abs(essenceDelta);
+        if (penalty > 0) {
+          const actuallyLost = deductContractV2Essence(penalty, `tile_hazard`);
+          if (actuallyLost > 0) {
+            setLandingText(`☠️ Hazard! −${actuallyLost} essence${multLabel}`);
+          } else {
+            // Wallet empty — no essence to take.
+            setLandingText(`☠️ Hazard — nothing to lose (empty wallet)${multLabel}`);
+          }
+        } else {
+          setLandingText('☠️ Hazard! (grazed safely)');
+        }
         break;
+      }
       case 'micro':
-        setLandingText(essenceEarn > 0 ? `✨ Micro reward! +${essenceEarn} essence${multLabel}` : '✨ Micro reward!');
+        setLandingText(essenceDelta > 0 ? `✨ Micro reward! +${essenceDelta} essence${multLabel}` : '✨ Micro reward!');
         break;
       case 'event':
         setLandingText(EVENT_MESSAGES[(islandNumber + tokenIndex) % EVENT_MESSAGES.length]);
@@ -3520,8 +3645,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         break;
     }
 
-    if (essenceEarn > 0) {
-      awardContractV2Essence(essenceEarn, `tile_${tileType}`);
+    // Positive tiles award essence. Hazards already called deductContractV2Essence above.
+    if (essenceDelta > 0 && tileType !== 'hazard') {
+      awardContractV2Essence(essenceDelta, `tile_${tileType}`);
     }
 
     if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
@@ -3559,11 +3685,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         setTimeout(() => handleContractV2RewardBarClaim(), 500);
       }
     }
-  };
-
-  // B2-1: handleSpin — spin-based movement is retired.
-  const handleSpin = async () => {
-    setLandingText('Spin movement is retired. Use dice rolls to move.');
   };
 
   /** Mark v2 stop 0 (hatchery) objective as complete when the egg is set.
@@ -5893,16 +6014,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             >
               {rollButtonLabel}
             </button>
-          {false && spinTokens > 0 && (
-            <button
-              type="button"
-              className="island-run-prototype__spin-btn"
-              onClick={() => void handleSpin()}
-              disabled={isRolling}
-            >
-              🌀 Spin
-            </button>
-          )}
           {/* M10A: audio toggle */}
           <button
             type="button"
@@ -6400,9 +6511,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           activeStopId={activeStopId}
           getOrbitStopDisplayIcon={getOrbitStopDisplayIcon}
           onStopClick={(stopId) => {
-            requestActiveStopTransition(stopId, 'orbit_stop_click');
-            setFocusedStopId(stopId);
-            setCameraMode('stop_focus');
+            handleStopOpenRequest(stopId);
           }}
           pendingHopSequence={pendingHopSequence}
           onHopSequenceComplete={() => {
@@ -6502,16 +6611,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             >
               🔨 Build
             </button>
-            {false && spinTokens > 0 && (
-              <button
-                type="button"
-                className="island-run-prototype__spin-btn island-run-prototype__spin-btn--footer"
-                onClick={() => void handleSpin()}
-                disabled={isRolling || spinTokens < 1 || showFirstRunCelebration}
-              >
-                Spin
-              </button>
-            )}
             {!isHudCollapsed && (
               <button
                 type="button"
@@ -8394,6 +8493,57 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           }}
         />
       )}
+
+      {/* ── Stop Ticket Prompt ────────────────────────────────────────────
+          Opens when the player clicks an orbit stop whose previous stop is
+          complete but whose essence ticket hasn't been paid. Lets them pay
+          and unlock the stop, or cancel. Hatchery never reaches this path. */}
+      {ticketPromptStopId && (() => {
+        const promptedStop = islandStopPlan.find((s) => s.stopId === ticketPromptStopId);
+        const stopIndex = stopIndexByStopId.get(ticketPromptStopId) ?? 0;
+        const cost = getStopTicketCost({ effectiveIslandNumber, stopIndex });
+        const wallet = runtimeState.essence;
+        const canAfford = wallet >= cost;
+        return (
+          <div
+            className="island-run-modal-backdrop"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="stop-ticket-prompt-title"
+            onClick={() => setTicketPromptStopId(null)}
+          >
+            <div className="island-run-modal" onClick={(e) => e.stopPropagation()}>
+              <h2 id="stop-ticket-prompt-title" style={{ margin: 0, fontSize: 20 }}>
+                🎫 Open {promptedStop?.title ?? ticketPromptStopId}
+              </h2>
+              <p style={{ marginTop: 12, marginBottom: 8, opacity: 0.85 }}>
+                This stop needs an essence ticket to open on this island.
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '12px 0 16px', fontSize: 16 }}>
+                <div><strong>Cost:</strong> {cost} 🟣</div>
+                <div><strong>Wallet:</strong> {wallet} 🟣</div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setTicketPromptStopId(null)}
+                  style={{ padding: '8px 16px' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePayStopTicket(ticketPromptStopId)}
+                  disabled={!canAfford}
+                  style={{ padding: '8px 16px', opacity: canAfford ? 1 : 0.5 }}
+                >
+                  {canAfford ? `Pay ${cost} 🟣` : `Need ${cost - wallet} more 🟣`}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Debug Panel ───────────────────────────────────────────────── */}
       {showDebugPanel && (

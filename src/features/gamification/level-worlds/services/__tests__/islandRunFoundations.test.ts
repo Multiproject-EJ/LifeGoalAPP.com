@@ -2,24 +2,21 @@ import { generateTileMap, getIslandRarity } from '../islandBoardTileMap';
 import { ISLAND_RUN_DEFAULT_STARTING_DICE } from '../islandRunEconomy';
 import { generateIslandStopPlan } from '../islandRunStops';
 import { resolveCollectibleForClaim } from '../islandRunRuntimeState';
-import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
+import { assert, assertEqual, type TestCase } from './testHarness';
 
 export const islandRunFoundationTests: TestCase[] = [
   {
-    name: 'generateTileMap keeps canonical stop layout intact',
+    name: 'generateTileMap produces no stop tiles (stops are external side quests)',
     run: () => {
       const map = generateTileMap(9, getIslandRarity(9), 'forest', 0);
-      assertDeepEqual(
-        map.filter((tile: { tileType: string }) => tile.tileType === 'stop').map((tile: { index: number; stopId?: string }) => ({ index: tile.index, stopId: tile.stopId })),
-        [
-          { index: 0, stopId: 'hatchery' },
-          { index: 10, stopId: 'habit' },
-          { index: 20, stopId: 'mystery' },
-          { index: 30, stopId: 'wisdom' },
-          { index: 39, stopId: 'boss' },
-        ],
-        'Expected stop positions to remain canonical',
-      );
+      assertEqual(map.length, 40, 'Expected 40 tiles on the spark40 ring');
+      const stopTiles = map.filter((tile: { tileType: string }) => (tile.tileType as string) === 'stop');
+      assertEqual(stopTiles.length, 0, 'Expected zero tiles with tileType="stop" — stops are off-board');
+      // Every tile should be a regular feeding / event / hazard / encounter / micro tile.
+      const validTypes = new Set(['currency', 'chest', 'event', 'hazard', 'micro', 'encounter']);
+      map.forEach((tile: { index: number; tileType: string }) => {
+        assertEqual(validTypes.has(tile.tileType), true, `Tile #${tile.index} has unexpected tileType "${tile.tileType}"`);
+      });
     },
   },
   {
