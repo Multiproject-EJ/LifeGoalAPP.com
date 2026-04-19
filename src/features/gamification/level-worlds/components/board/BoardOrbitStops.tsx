@@ -21,6 +21,14 @@ export interface OrbitStopVisualData {
    * without opening the prompt.
    */
   ticketCost?: number;
+  /**
+   * Optional "next best action" hint:
+   *  - 'affordable' → locked landmark the player can open RIGHT NOW (sequence
+   *    prerequisite met AND wallet ≥ ticket cost). Rendered as a pulsing red
+   *    corner dot to draw the eye. Used by the PR2 attention-hints feature.
+   *  - undefined → no dot rendered.
+   */
+  attentionHint?: 'affordable';
 }
 
 export interface BoardOrbitStopsProps {
@@ -59,9 +67,11 @@ export const BoardOrbitStops = memo(function BoardOrbitStops(props: BoardOrbitSt
           }}
           disabled={!stopVisual.stopId}
           aria-label={
-            showTicketCost
-              ? `${stopVisual.label} — locked, costs ${stopVisual.ticketCost} essence to open`
-              : `${stopVisual.label} — ${stopVisual.state}`
+            stopVisual.attentionHint === 'affordable' && showTicketCost
+              ? `${stopVisual.label} — ready to open, costs ${stopVisual.ticketCost} essence`
+              : showTicketCost
+                ? `${stopVisual.label} — locked, costs ${stopVisual.ticketCost} essence to open`
+                : `${stopVisual.label} — ${stopVisual.state}`
           }
         >
           <span className="island-orbit-stop__icon" aria-hidden="true">
@@ -71,6 +81,12 @@ export const BoardOrbitStops = memo(function BoardOrbitStops(props: BoardOrbitSt
             <span className="island-orbit-stop__ticket-cost" aria-hidden="true">
               {stopVisual.ticketCost} ✨
             </span>
+          ) : null}
+          {stopVisual.attentionHint === 'affordable' ? (
+            <span
+              className="island-orbit-stop__attention-dot island-orbit-stop__attention-dot--affordable"
+              aria-hidden="true"
+            />
           ) : null}
           <span
             className={`island-orbit-stop__label ${stopVisual.hideLabel ? 'island-orbit-stop__label--hidden' : ''}`}

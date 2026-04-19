@@ -684,6 +684,7 @@ type OrbitStopVisual = {
   hideLabel: boolean;
   stopId?: string;
   ticketCost?: number;
+  attentionHint?: 'affordable';
 };
 
 type MysteryStopReward =
@@ -2845,6 +2846,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         ? getStopTicketCost({ effectiveIslandNumber, stopIndex })
         : undefined;
 
+      // Attention dot: pulse on the landmark when the player can open it
+      // RIGHT NOW (sequence prerequisite met AND wallet ≥ ticket cost). This
+      // is the highest-value "next best action" cue — the UI stops whispering
+      // and tells you: "tap me." Hatchery and already-paid stops never pulse.
+      const canAffordNow =
+        needsTicket
+        && typeof ticketCost === 'number'
+        && runtimeState.essence >= ticketCost;
+      const attentionHint: 'affordable' | undefined = canAffordNow ? 'affordable' : undefined;
+
       return {
         id: stop.stopId,
         label,
@@ -2857,6 +2868,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         hideLabel: false,
         stopId: stop.stopId,
         ticketCost,
+        attentionHint,
       } satisfies OrbitStopVisual;
     });
 
@@ -2910,7 +2922,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         hideLabel: isSmallBoard,
       } satisfies OrbitStopVisual;
     });
-  }, [boardSize.height, boardSize.width, islandStopPlan, stopStateMap, doesStopRequireTicketPayment, stopIndexByStopId, effectiveIslandNumber]);
+  }, [boardSize.height, boardSize.width, islandStopPlan, stopStateMap, doesStopRequireTicketPayment, stopIndexByStopId, effectiveIslandNumber, runtimeState.essence]);
 
   // Camera zoom-to-stop: when cameraMode is 'stop_focus' and a stop is focused,
   // smoothly zoom the camera to that stop's screen position.

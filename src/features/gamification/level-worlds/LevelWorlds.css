@@ -2048,6 +2048,40 @@
   pointer-events: none;
 }
 
+/* ── Attention dot ─────────────────────────────────────────────
+   Small pulsing badge in the top-right of a landmark HUD button
+   signalling the player can open it right now (wallet ≥ ticket
+   cost AND sequence prerequisite met). Red = "tap me". Respects
+   prefers-reduced-motion by disabling the pulse keyframes. */
+.island-orbit-stop__attention-dot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 2;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.18);
+}
+
+.island-orbit-stop__attention-dot--affordable {
+  background: radial-gradient(circle at 35% 35%, #ff9a9a 0%, #ff3b3b 60%, #b10c0c 100%);
+  animation: island-orbit-stop-attention-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes island-orbit-stop-attention-pulse {
+  0%   { transform: scale(1);    box-shadow: 0 0 0 0    rgba(255, 59, 59, 0.70), 0 0 0 2px rgba(0, 0, 0, 0.18); }
+  60%  { transform: scale(1.15); box-shadow: 0 0 0 10px rgba(255, 59, 59, 0.00), 0 0 0 2px rgba(0, 0, 0, 0.18); }
+  100% { transform: scale(1);    box-shadow: 0 0 0 0    rgba(255, 59, 59, 0.00), 0 0 0 2px rgba(0, 0, 0, 0.18); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-orbit-stop__attention-dot--affordable {
+    animation: none;
+  }
+}
+
 
 .island-orbit-stop__label {
   position: absolute;
