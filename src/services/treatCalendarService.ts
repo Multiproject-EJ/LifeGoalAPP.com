@@ -1142,9 +1142,7 @@ export async function fetchCurrentSeason(
     if (cached && (!holidayKey || cached.season.holiday_key === holidayKey)) {
       // Format today as YYYY-MM-DD using local calendar day (avoids timezone
       // drift around UTC midnight falsely invalidating the season).
-      const now = new Date();
-      const todayYmd =
-        `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const todayYmd = formatLocalYmd(new Date());
       // Reuse the cached season only while today is still within its window.
       // Once `ends_on` has passed, fall through to rebuild so a stale season
       // from a previous holiday window isn't served indefinitely.
