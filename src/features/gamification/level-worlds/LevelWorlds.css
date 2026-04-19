@@ -1720,6 +1720,70 @@
   min-width: 0;
 }
 
+/* ─── B8: tier-based rarity colors on the reward bar ─────────────────────────
+ * The reward bar's escalationTier (1-5) determines the gradient of the fill,
+ * the position indicator, and the endcap — giving the player a visual cue
+ * that rewards are getting more valuable as they chain claims within an event.
+ * Tier 1 is the default pink; higher tiers shift bronze → silver → gold →
+ * ruby → violet. Applies to both the GameBoardOverlay preview bar and the
+ * in-game reward bar inside IslandRunBoardPrototype.
+ */
+.island-run-board__rewardbar--tier-2 .island-run-board__rewardbar-track-fill {
+  background: linear-gradient(90deg, #a97142 0%, #cd9b6a 45%, #e8c9a6 100%);
+}
+.island-run-board__rewardbar--tier-2 .island-run-board__rewardbar-position {
+  background: #a97142;
+}
+.island-run-board__rewardbar--tier-3 .island-run-board__rewardbar-track-fill {
+  background: linear-gradient(90deg, #6e7885 0%, #a8b5c4 45%, #dde4ec 100%);
+}
+.island-run-board__rewardbar--tier-3 .island-run-board__rewardbar-position {
+  background: #6e7885;
+}
+.island-run-board__rewardbar--tier-4 .island-run-board__rewardbar-track-fill {
+  background: linear-gradient(90deg, #c48218 0%, #f5c34b 45%, #ffe79a 100%);
+  box-shadow: 0 0 6px rgba(255, 200, 70, 0.4);
+}
+.island-run-board__rewardbar--tier-4 .island-run-board__rewardbar-position {
+  background: #c48218;
+}
+.island-run-board__rewardbar--tier-4 .island-run-board__rewardbar-endcap {
+  border-color: rgba(255, 200, 70, 0.85);
+  background: linear-gradient(180deg, #fff0c4 0%, #ffca3d 100%);
+}
+.island-run-board__rewardbar--tier-5 .island-run-board__rewardbar-track-fill {
+  background: linear-gradient(90deg, #7a2a8e 0%, #c24cd8 45%, #f4b6ff 100%);
+  box-shadow: 0 0 8px rgba(220, 120, 255, 0.5);
+}
+.island-run-board__rewardbar--tier-5 .island-run-board__rewardbar-position {
+  background: #7a2a8e;
+}
+.island-run-board__rewardbar--tier-5 .island-run-board__rewardbar-endcap {
+  border-color: rgba(220, 120, 255, 0.95);
+  background: linear-gradient(180deg, #f4d6ff 0%, #c24cd8 100%);
+  color: #fff;
+}
+
+/* ─── B8: fill "snap" when the bar crosses into a claimable state ──────────
+ * The parent component adds this modifier for ~420ms the moment
+ * `canClaimRewardBar` flips false→true. It gives a satisfying pop + brief
+ * glow without disturbing the continuous width transition.
+ */
+@keyframes rewardbar-fill-snap {
+  0%   { filter: brightness(1);    transform: scaleY(1); }
+  35%  { filter: brightness(1.45); transform: scaleY(1.18); }
+  100% { filter: brightness(1);    transform: scaleY(1); }
+}
+.island-run-board__rewardbar-track-fill--snap {
+  animation: rewardbar-fill-snap 420ms ease-out;
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .island-run-board__rewardbar-track-fill--snap {
+    animation: none;
+  }
+}
+
 /* Milestone markers along the track */
 .island-run-board__rewardbar-milestone {
   position: absolute;
@@ -4836,4 +4900,29 @@
 
 .island-run-prototype__drift-notice {
   pointer-events: none;
+}
+
+/* ─── B12: Stat drift numbers (floating "+N" over stat chips) ─────────────── */
+.island-run-stat-drift__token {
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #d4af37;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: island-run-stat-drift 1100ms ease-out forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes island-run-stat-drift {
+  0%   { opacity: 0; transform: translate(-50%, 0) scale(0.85); }
+  15%  { opacity: 1; transform: translate(-50%, -6px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -38px) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-run-stat-drift__token { animation: none; opacity: 0; }
 }

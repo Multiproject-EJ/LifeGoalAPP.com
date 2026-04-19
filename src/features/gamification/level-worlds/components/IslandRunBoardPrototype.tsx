@@ -9,6 +9,7 @@ import {
 } from '../services/islandBoardLayout';
 import { BoardStage, type BoardStageCameraControls } from './board';
 import { ConfettiBurst } from './ConfettiBurst';
+import { StatDriftNumbers } from './StatDriftNumbers';
 import {
   getIslandBoardThemeForIslandNumber,
   type IslandBoardTheme,
@@ -1154,6 +1155,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [rewardBarBurstAnimating, setRewardBarBurstAnimating] = useState(false);
   const [rewardBarCascadePayouts, setRewardBarCascadePayouts] = useState<RewardBarClaimPayout[]>([]);
   const [feedParticleActive, setFeedParticleActive] = useState(false);
+  // B8: brief "snap" flash on the fill when the bar first becomes claimable.
+  const [rewardBarSnapActive, setRewardBarSnapActive] = useState(false);
+  const rewardBarWasClaimableRef = useRef(false);
 
   // ── Minigame popup dialog ──────────────────────────────────────────────────
   const [showMinigameDialog, setShowMinigameDialog] = useState(false);
@@ -3187,6 +3191,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const timedEventRemainingLabel = activeTimedEvent
     ? formatEventRemaining(timedEventRemainingMs)
     : '—';
+  // B8: detect the bar becoming claimable and play a one-shot "snap" flash.
+  useEffect(() => {
+    if (canClaimRewardBar && !rewardBarWasClaimableRef.current) {
+      rewardBarWasClaimableRef.current = true;
+      setRewardBarSnapActive(true);
+      const timer = setTimeout(() => setRewardBarSnapActive(false), 460);
+      return () => clearTimeout(timer);
+    }
+    if (!canClaimRewardBar && rewardBarWasClaimableRef.current) {
+      rewardBarWasClaimableRef.current = false;
+    }
+  }, [canClaimRewardBar]);
+  // B8: tier-class modifier for rarity coloring (clamped 1..5 to match palette).
+  const rewardBarTierClass = (() => {
+    const tier = Math.max(1, Math.min(5, runtimeState.rewardBarEscalationTier || 1));
+    return ` island-run-board__rewardbar--tier-${tier}`;
+  })();
   const avatarImageUrl = getAvatarImageUrl(session.user);
   const islandDisplayName = getIslandDisplayName(islandNumber);
   const spark40RingSegmentsGradient = useMemo(() => {
@@ -6120,7 +6141,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         {/* M1B: Production HUD — always visible for all logged-in users */}
         <div className="island-run-prototype__status-row island-run-prototype__status-row--production">
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">🎲 <strong>{dicePool}</strong></span>
-          {ISLAND_RUN_CONTRACT_V2_ENABLED && <span className="island-run-prototype__stat-chip">🟣 <strong>{runtimeState.essence}</strong></span>}
+          {ISLAND_RUN_CONTRACT_V2_ENABLED && (
+            <span className="island-run-prototype__stat-chip" style={{ position: 'relative' }}>
+              🟣 <strong>{runtimeState.essence}</strong>
+              <StatDriftNumbers value={runtimeState.essence} icon="🟣" />
+            </span>
+          )}
           {activeCompanion && activeCompanionBonus ? (
             <span className="island-run-prototype__stat-chip">
               🐾 <strong>{activeCompanion.creature.name}</strong> · {activeCompanionBonus.label}
@@ -6526,7 +6552,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
         <button
           type="button"
-          className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}${rewardBarBurstAnimating ? ' island-run-board__rewardbar--burst' : ''}`}
+          className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}${rewardBarBurstAnimating ? ' island-run-board__rewardbar--burst' : ''}${rewardBarTierClass}`}
           aria-label="Reward progress"
           onClick={canClaimRewardBar ? handleContractV2RewardBarClaim : openRewardDetailsModal}
         >
@@ -6569,7 +6595,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               {(EVENT_BANNER_META[activeTimedEvent?.eventType ?? '']?.icon) ?? '⭐'}
             </span>
             <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
-              <span className="island-run-board__rewardbar-track-fill" style={{ width: `${rewardBarPercent}%` }} />
+              <span className={`island-run-board__rewardbar-track-fill${rewardBarSnapActive ? ' island-run-board__rewardbar-track-fill--snap' : ''}`} style={{ width: `${rewardBarPercent}%` }} />
               {/* Position indicator riding the fill edge */}
               <span className="island-run-board__rewardbar-position" style={{ left: `${Math.min(rewardBarPercent, 100)}%` }} aria-hidden="true" />
             </div>

@@ -45,6 +45,8 @@ type GameBoardOverlayProps = {
   essenceBalance?: number;
   rewardBarProgress?: number;
   rewardBarThreshold?: number;
+  /** B8: reward-bar escalation tier (1..5) → rarity-color the fill/endcap. */
+  rewardBarTier?: number;
   activeTimedEventType?: string | null;
   activeTimedEventExpiresAtMs?: number | null;
   islandNumber?: number;
@@ -77,6 +79,7 @@ export function GameBoardOverlay({
   essenceBalance = 0,
   rewardBarProgress = 0,
   rewardBarThreshold = 10,
+  rewardBarTier = 1,
   activeTimedEventType = null,
   activeTimedEventExpiresAtMs = null,
   islandNumber = 1,
@@ -200,7 +203,7 @@ export function GameBoardOverlay({
           </div>
 
           <div
-            className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}`}
+            className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''} island-run-board__rewardbar--tier-${Math.max(1, Math.min(5, Math.floor(rewardBarTier) || 1))}`}
             aria-label={`Reward progress ${Math.floor(rewardBarPercent)}%`}
           >
             {timedEventMeta ? (

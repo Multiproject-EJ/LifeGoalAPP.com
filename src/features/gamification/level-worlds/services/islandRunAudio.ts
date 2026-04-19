@@ -9,8 +9,17 @@
  * Audio: placeholder wiring only — no audio files required yet. Calls will be
  * no-ops until real assets are wired in a future slice.
  *
- * Haptics: short mobile-friendly patterns via the Vibration API.
+ * Haptics: short mobile-friendly patterns via the Vibration API. In addition
+ * to the audio-enabled flag, haptic dispatch additionally honors:
+ *   - `prefers-reduced-motion: reduce` (silent no-op for accessibility)
+ *   - the global `HapticMode` preference ('off' | 'subtle' | 'balanced') shared
+ *     with the rest of the app via `completionHaptics.ts` — 'off' no-ops,
+ *     'subtle' attenuates multi-pulse patterns to a single short pulse.
+ *   - a per-event throttle so rapid events (tile_land / token_move) can't
+ *     saturate the vibration queue.
  */
+
+import { getHapticMode } from '../../../../utils/completionHaptics';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -169,16 +178,64 @@ export function playIslandRunSound(eventId: IslandRunSoundEvent): void {
 /**
  * Triggers an Island Run haptic feedback pattern.
  * Uses the Vibration API; gracefully no-ops when unavailable.
+ *
+ * Respects (in order):
+ *   1. `islandRunAudioEnabled` flag (shared with sound effects)
+ *   2. `prefers-reduced-motion: reduce`
+ *   3. global `HapticMode` — 'off' no-ops, 'subtle' clamps patterns to a
+ *      single short pulse (max 30 ms), 'balanced' uses the full pattern
+ *   4. a 60 ms per-event throttle to prevent saturation during rapid events
+ *      (e.g. hop-by-hop tile_land bursts)
  */
 export function triggerIslandRunHaptic(eventId: IslandRunHapticEvent): void {
   if (!getIslandRunAudioEnabled()) return;
 
   if (typeof window === 'undefined' || !navigator.vibrate) return;
 
-  const pattern = HAPTIC_PATTERNS[eventId];
+  // Accessibility: skip haptics when user prefers reduced motion.
+  if (typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return;
+  }
+
+  // Respect the app-wide haptic mode preference.
+  const mode = getHapticMode();
+  if (mode === 'off') return;
+
+  // Per-event throttle — prevents vibration queue saturation when rapid
+  // events fire (e.g. multi-tile token moves, chained reward claims).
+  const now = Date.now();
+  const lastFiredAt = lastFiredAtByEvent[eventId] ?? 0;
+  if (now - lastFiredAt < HAPTIC_MIN_INTERVAL_MS) return;
+  lastFiredAtByEvent[eventId] = now;
+
+  const rawPattern = HAPTIC_PATTERNS[eventId];
+  const pattern = mode === 'subtle' ? attenuatePattern(rawPattern) : rawPattern;
+
   try {
     navigator.vibrate(pattern);
   } catch {
     // Vibration API call failed — ignore silently
   }
+}
+
+// ─── Haptic throttle + attenuation helpers ────────────────────────────────────
+
+/** Minimum gap between identical haptic events (ms). */
+const HAPTIC_MIN_INTERVAL_MS = 60;
+
+const lastFiredAtByEvent: Partial<Record<IslandRunHapticEvent, number>> = {};
+
+/**
+ * Collapses a multi-pulse pattern to a single short pulse for 'subtle' mode.
+ * Accepts either a bare number or an alternating [on, off, on, …] array and
+ * returns a single value clamped to 30 ms — matches the 'light' profile used
+ * elsewhere in the app (see `completionHaptics.ts` HAPTIC_PATTERNS.light).
+ */
+function attenuatePattern(pattern: number | number[]): number {
+  if (typeof pattern === 'number') {
+    return Math.min(pattern, 30);
+  }
+  const first = pattern[0] ?? 20;
+  return Math.min(first, 30);
 }
