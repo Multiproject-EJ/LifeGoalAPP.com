@@ -23,21 +23,22 @@ import { getIslandEssenceMultiplier } from './islandRunContractV2EssenceBuild';
 
 /**
  * Base essence ticket cost per stop index, before the island multiplier is
- * applied. Tuned so that opening all 4 tickets on island 1 costs ~340 essence,
- * roughly 7% of the full-island build cost — a meaningful gate but nowhere
- * near build-breaking.
+ * applied. The curve steepens toward the boss so late landmarks carry real
+ * economic weight rather than being a cosmetic step-up:
  *   - Stop 0 (Hatchery): free (always open on a fresh island).
- *   - Stop 1 (Habit):    30 essence
- *   - Stop 2 (Mystery):  60 essence
- *   - Stop 3 (Wisdom):  100 essence
- *   - Stop 4 (Boss):    150 essence
+ *   - Stop 1 (Habit):     30 essence
+ *   - Stop 2 (Mystery):   70 essence
+ *   - Stop 3 (Wisdom):   130 essence
+ *   - Stop 4 (Boss):     220 essence
+ * On island 1 the total to open all 4 is 450 essence; it still scales up each
+ * tier by `getIslandEssenceMultiplier` so cycle 2 is meaningfully pricier.
  */
 export const STOP_TICKET_BASE_COSTS: readonly [number, number, number, number, number] = [
   0,
   30,
-  60,
-  100,
-  150,
+  70,
+  130,
+  220,
 ];
 
 /** Number of stops on an island (including Hatchery + Boss). */

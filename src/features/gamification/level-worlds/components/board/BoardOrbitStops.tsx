@@ -14,6 +14,21 @@ export interface OrbitStopVisualData {
   hideLabel?: boolean;
   labelOffsetX?: number;
   labelOffsetY?: number;
+  /**
+   * When the landmark is locked behind an unpaid essence ticket, this is the
+   * ticket cost in essence for the current island. Rendered as a small badge
+   * on top of the lock icon ("🔒 70 ✨") so the player can see the price
+   * without opening the prompt.
+   */
+  ticketCost?: number;
+  /**
+   * Optional "next best action" hint:
+   *  - 'affordable' → locked landmark the player can open RIGHT NOW (sequence
+   *    prerequisite met AND wallet ≥ ticket cost). Rendered as a pulsing red
+   *    corner dot to draw the eye. Used by the PR2 attention-hints feature.
+   *  - undefined → no dot rendered.
+   */
+  attentionHint?: 'affordable';
 }
 
 export interface BoardOrbitStopsProps {
@@ -29,7 +44,12 @@ export const BoardOrbitStops = memo(function BoardOrbitStops(props: BoardOrbitSt
 
   return (
     <div className="island-run-board__orbit-stops">
-      {stopVisuals.map((stopVisual) => (
+      {stopVisuals.map((stopVisual) => {
+        const showTicketCost =
+          stopVisual.state === 'locked'
+          && typeof stopVisual.ticketCost === 'number'
+          && stopVisual.ticketCost > 0;
+        return (
         <button
           key={stopVisual.id}
           type="button"
@@ -46,11 +66,28 @@ export const BoardOrbitStops = memo(function BoardOrbitStops(props: BoardOrbitSt
             }
           }}
           disabled={!stopVisual.stopId}
-          aria-label={`${stopVisual.label} — ${stopVisual.state}`}
+          aria-label={
+            stopVisual.attentionHint === 'affordable' && showTicketCost
+              ? `${stopVisual.label} — ready to open, costs ${stopVisual.ticketCost} essence`
+              : showTicketCost
+                ? `${stopVisual.label} — locked, costs ${stopVisual.ticketCost} essence to open`
+                : `${stopVisual.label} — ${stopVisual.state}`
+          }
         >
           <span className="island-orbit-stop__icon" aria-hidden="true">
             {getOrbitStopDisplayIcon(stopVisual.state, stopVisual.icon)}
           </span>
+          {showTicketCost ? (
+            <span className="island-orbit-stop__ticket-cost" aria-hidden="true">
+              {stopVisual.ticketCost} ✨
+            </span>
+          ) : null}
+          {stopVisual.attentionHint === 'affordable' ? (
+            <span
+              className="island-orbit-stop__attention-dot island-orbit-stop__attention-dot--affordable"
+              aria-hidden="true"
+            />
+          ) : null}
           <span
             className={`island-orbit-stop__label ${stopVisual.hideLabel ? 'island-orbit-stop__label--hidden' : ''}`}
             style={{
@@ -61,7 +98,8 @@ export const BoardOrbitStops = memo(function BoardOrbitStops(props: BoardOrbitSt
             {stopVisual.label}
           </span>
         </button>
-      ))}
+        );
+      })}
     </div>
   );
 });

@@ -95,7 +95,7 @@ export function ShooterBlitz({ session: sessionProp, onClose, onComplete }: Shoo
     });
 
     triggerCompletionHaptic('strong', { channel: 'gamification', minIntervalMs: 2500 });
-    onComplete({ completed: true, reward: { coins: SHOOTER_REWARDS.coins } });
+    onComplete({ completed: true, reward: {} });
   };
 
   const handleExit = () => {

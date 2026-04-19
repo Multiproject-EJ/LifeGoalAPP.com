@@ -61,10 +61,12 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 - Movement, wrap behavior, and tile-selection logic must always use profile-derived tile count.
 - Hardcoded tile-count assumptions are forbidden.
 
-### Stop decoupling rules
-- Stops are external gameplay structures, not tile positions.
-- Stop progression must not depend on landing on specific tile indices.
-- Tile positions may be used for visual stop markers only, never for gameplay correctness.
+### Stop decoupling rules (a.k.a. Landmarks)
+- Stops — the 5 side-quest structures on each island — are increasingly referred to in UI and new code as **Landmarks**. The terms are equivalent in this contract; internal code symbols (`stopId`, `stopTicketsPaidByIsland`, `IslandStopPlanEntry`, etc.) still use "stop" pending a future rename PR.
+- Landmarks are external gameplay structures, not tile positions.
+- Landmark progression must not depend on landing on specific tile indices.
+- The player token **never** lands on a landmark. Landmarks are accessed only by tapping the landmark button on the orbit HUD.
+- Board profiles expose `landmarkOrbitAnchors` (historically `stopTileIndices`) — these are purely **visual positioning** for the 5 orbit HUD buttons and have no gameplay meaning. The 40 ring tiles are pure movement tiles whose rewards are picked by the normal tile-map generator.
 
 ### Board topology compatibility note
 - Current production board uses a 40-tile topology profile.
@@ -100,11 +102,13 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 ### Hearts (RETIRED)
 - Hearts are **fully removed** from the game.
 - No heart-based conversion, heart-gated boss retries, or heart economy exists.
+- The `hearts` column on `island_run_runtime_state` was dropped in migration `0227_retire_hearts_coins_island_run.sql`. Client code keeps a tolerant read-fallback for one release so older rows hydrate cleanly.
 - All references to hearts in code and docs are legacy and must not be re-introduced.
 
 ### Coins (RETIRED)
 - Coins are **fully removed** from the island game.
 - No coin economy exists. Use essence and shards instead.
+- The `coins` column on `island_run_runtime_state` was dropped in migration `0227_retire_hearts_coins_island_run.sql` (paired with `hearts`).
 - All references to coins in code and docs are legacy and must not be re-introduced.
 
 ---
@@ -195,11 +199,11 @@ Stop rules:
 - Each subsequent stop (2, 3, 4, 5) is **gated by two conditions** that must BOTH be satisfied before the stop can be opened:
   1. The previous stop's objective is complete (for the Hatchery this means the egg is **set to hatch** — not collected/sold/hatched — so "halfway completion" is sufficient to unlock the next stop).
   2. The player pays an essence **ticket** (opening fee) for that stop.
-- Ticket costs are paid from the essence wallet and scale with `effectiveIslandNumber` using the same multiplier as build costs:
+- Ticket costs are paid from the essence wallet and scale with `effectiveIslandNumber` using the same multiplier as build costs. The base curve steepens toward the boss so the final gate carries real weight:
   - Stop 2 (Habit): **30 essence** base
-  - Stop 3 (Mystery): **60 essence** base
-  - Stop 4 (Wisdom): **100 essence** base
-  - Stop 5 (Boss): **150 essence** base
+  - Stop 3 (Mystery): **70 essence** base
+  - Stop 4 (Wisdom): **130 essence** base
+  - Stop 5 (Boss): **220 essence** base
 - Tickets are **per-island**: a paid ticket unlocks that stop for the current island only. Travelling to a new island requires paying the ticket again.
 - The Hatchery (Stop 1) **never** has a ticket cost — it is always free on a new island.
 - The ticket rule prevents "rush-through" completion: the player must earn essence on the 40-tile board before each new stop can be opened.

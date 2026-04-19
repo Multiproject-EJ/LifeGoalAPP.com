@@ -158,8 +158,6 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
         patch: {
           currentIslandNumber: 3,
           tokenIndex: 6,
-          hearts: 4,
-          coins: 20,
           dicePool: 12,
         },
       });
@@ -217,7 +215,6 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
           islandStartedAtMs: 50_000,
           islandExpiresAtMs: 80_000,
           tokenIndex: 0,
-          hearts: 5,
           dicePool: 20,
           spinTokens: 0,
         },
@@ -251,8 +248,6 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
             '2': ['hatchery'],
           },
           tokenIndex: 4,
-          hearts: 3,
-          coins: 12,
           spinTokens: 1,
           dicePool: 6,
           shields: 1,
@@ -273,8 +268,6 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
             '5': ['boss', 123 as unknown as string],
           },
           tokenIndex: 8.7,
-          hearts: -2,
-          coins: 41.6,
           spinTokens: 2.2,
           dicePool: 13.9,
           shields: -4,
@@ -299,8 +292,6 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       assertEqual(state.currentIslandNumber, 5, 'Expected island number to be floored to a positive integer');
       assertEqual(state.cycleIndex, 0, 'Expected cycle index to clamp at zero');
       assertEqual(state.tokenIndex, 8, 'Expected token index to floor to a non-negative integer');
-      assertEqual(state.hearts, 0, 'Expected hearts to clamp at zero');
-      assertEqual(state.coins, 41, 'Expected coins to be floored');
       assertEqual(state.spinTokens, 2, 'Expected spin tokens to be floored');
       assertEqual(state.dicePool, 13, 'Expected dice pool to be floored');
       assertEqual(state.shields, 0, 'Expected shields to clamp at zero');
@@ -331,7 +322,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
         client: null,
         record: {
           ...baseline,
-          hearts: baseline.hearts + 1,
+          dicePool: baseline.dicePool + 1,
         },
       });
 
@@ -350,7 +341,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
         `island_run_runtime_state_${USER_ID}_pending_write`,
         JSON.stringify({
           ...baseline,
-          hearts: baseline.hearts + 2,
+          dicePool: baseline.dicePool + 2,
         }),
       );
       const { client, getUpdateCalls } = createAlwaysSuccessfulRuntimeClient();
@@ -359,7 +350,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
         client,
         record: {
           ...baseline,
-          hearts: baseline.hearts + 3,
+          dicePool: baseline.dicePool + 3,
         },
       });
 
@@ -385,7 +376,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
         client,
         record: {
           ...baseline,
-          hearts: baseline.hearts + 1,
+          dicePool: baseline.dicePool + 1,
         },
       });
 
@@ -394,7 +385,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
         client,
         record: {
           ...baseline,
-          hearts: baseline.hearts + 2,
+          dicePool: baseline.dicePool + 2,
         },
       });
 
@@ -416,7 +407,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
         client,
         record: {
           ...baseline,
-          hearts: baseline.hearts + 1,
+          dicePool: baseline.dicePool + 1,
         },
       });
 
@@ -425,7 +416,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
         client,
         record: {
           ...baseline,
-          hearts: baseline.hearts + 1,
+          dicePool: baseline.dicePool + 1,
         },
       });
 
@@ -456,7 +447,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
         client,
         record: {
           ...baseline,
-          hearts: baseline.hearts + 1,
+          dicePool: baseline.dicePool + 1,
         },
       });
 
@@ -465,7 +456,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
         client,
         record: {
           ...baseline,
-          hearts: baseline.hearts + 2,
+          dicePool: baseline.dicePool + 2,
         },
       });
 
@@ -521,7 +512,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       await writeIslandRunGameStateRecord({
         session,
         client: conflictClient,
-        record: { ...baseline, hearts: baseline.hearts + 1 },
+        record: { ...baseline, dicePool: baseline.dicePool + 1 },
       });
 
       // Verify backoff is stored
@@ -542,7 +533,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       const result = await writeIslandRunGameStateRecord({
         session,
         client: successClient,
-        record: { ...baseline, hearts: baseline.hearts + 2 },
+        record: { ...baseline, dicePool: baseline.dicePool + 2 },
       });
 
       assertDeepEqual(result, { ok: true }, 'Expected write to succeed after backoff expired');
@@ -568,7 +559,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       await writeIslandRunGameStateRecord({
         session,
         client: conflictClient,
-        record: { ...baseline, hearts: baseline.hearts + 1 },
+        record: { ...baseline, dicePool: baseline.dicePool + 1 },
       });
 
       // With the fix, the finally block unconditionally resets syncState to idle when inFlightCount === 0
@@ -582,10 +573,10 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
   {
     // Regression: write-amplification loop prevention.
     //
-    // Scenario: Component mounts with coins=0 (useState default). Hydration
-    // delivers runtimeState.coins=30 from the server. Before the hydration
-    // effect can apply setCoins(30), the persist effect fires and sees
-    // localCoins(0) !== runtimeState.coins(30) → writes {coins:0} back,
+    // Scenario: Component mounts with dicePool=30 (useState default). Hydration
+    // delivers runtimeState.dicePool=14 from the server. Before the hydration
+    // effect can apply setDicePool(14), the persist effect fires and sees
+    // localDicePool(30) !== runtimeState.dicePool(14) → writes {dicePool:30} back,
     // overwriting the correct server value and starting an oscillation loop.
     //
     // The hasCompletedInitialHydrationSyncRef guard prevents this by blocking
@@ -595,7 +586,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
     // set, the persist-effect condition (localField !== runtimeField) would
     // trigger a write with the stale value; after hydration sync applies the
     // server values, the condition is no longer true and no write occurs.
-    name: 'hydration sync guard prevents stale-default write of coins/hearts/dicePool/tokenIndex/spinTokens before initial hydration completes',
+    name: 'hydration sync guard prevents stale-default write of dicePool/tokenIndex/spinTokens before initial hydration completes',
     run: async () => {
       resetStorage();
       const session = makeSession();
@@ -603,8 +594,6 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       // Step 1: Simulate "server-hydrated" runtimeState with non-default values
       const hydratedState = {
         ...readIslandRunGameStateRecord(session),
-        coins: 30,
-        hearts: 8,
         dicePool: 14,
         tokenIndex: 11,
         spinTokens: 3,
@@ -612,8 +601,6 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
 
       // Step 2: Simulate local state at component mount (useState defaults)
       const localDefaults = {
-        coins: 0,          // useState(0)
-        hearts: 0,          // hearts retired
         dicePool: 30,       // useState(ISLAND_RUN_DEFAULT_STARTING_DICE)
         tokenIndex: 0,      // useState(TOKEN_START_TILE_INDEX)
         spinTokens: 0,      // useState(0)
@@ -633,11 +620,9 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       const wouldPersistEffectWrite = (guardActive: boolean) => {
         if (!guardActive) return false;  // guard blocks → no write
 
-        // This is the exact condition from the persist effect at line ~2193
+        // This is the exact condition from the persist effect.
         if (
           hydratedState.tokenIndex === localDefaults.tokenIndex
-          && hydratedState.hearts === localDefaults.hearts
-          && hydratedState.coins === localDefaults.coins
           && hydratedState.spinTokens === localDefaults.spinTokens
           && hydratedState.dicePool === localDefaults.dicePool
         ) {
@@ -655,16 +640,8 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
 
       // Step 4: Verify the diff is real (without guard, a write WOULD fire)
       assert(
-        hydratedState.coins !== localDefaults.coins,
-        'Expected coins to differ between hydrated state (30) and local default (0) — this is the exact bug trigger',
-      );
-      assert(
-        hydratedState.hearts !== localDefaults.hearts,
-        'Expected hearts to differ between hydrated state (8) and local default (5)',
-      );
-      assert(
         hydratedState.dicePool !== localDefaults.dicePool,
-        'Expected dicePool to differ between hydrated state (14) and local default (10)',
+        'Expected dicePool to differ between hydrated state (14) and local default (30) — this is the exact bug trigger',
       );
       assert(
         hydratedState.tokenIndex !== localDefaults.tokenIndex,
@@ -679,8 +656,6 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       // After hydration sync, local state now equals hydrated runtimeState
       // so the persist effect's diff check returns false → no stale write.
       const localAfterHydrationSync = {
-        coins: hydratedState.coins,
-        hearts: hydratedState.hearts,
         dicePool: hydratedState.dicePool,
         tokenIndex: hydratedState.tokenIndex,
         spinTokens: hydratedState.spinTokens,
@@ -692,8 +667,6 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
 
         if (
           hydratedState.tokenIndex === localAfterHydrationSync.tokenIndex
-          && hydratedState.hearts === localAfterHydrationSync.hearts
-          && hydratedState.coins === localAfterHydrationSync.coins
           && hydratedState.spinTokens === localAfterHydrationSync.spinTokens
           && hydratedState.dicePool === localAfterHydrationSync.dicePool
         ) {
@@ -708,11 +681,11 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
         'Expected no write after hydration sync because local state now matches runtimeState',
       );
 
-      // Step 6: After a genuine gameplay action changes coins, the guard
+      // Step 6: After a genuine gameplay action changes dicePool, the guard
       // allows the persist effect to write normally.
       const localAfterGameplayAction = {
         ...localAfterHydrationSync,
-        coins: localAfterHydrationSync.coins + 15,  // earned 15 coins from tile landing
+        dicePool: localAfterHydrationSync.dicePool + 15,  // earned 15 dice from a reward claim
       };
 
       const wouldPersistEffectWriteAfterAction = (() => {
@@ -721,8 +694,6 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
 
         if (
           hydratedState.tokenIndex === localAfterGameplayAction.tokenIndex
-          && hydratedState.hearts === localAfterGameplayAction.hearts
-          && hydratedState.coins === localAfterGameplayAction.coins
           && hydratedState.spinTokens === localAfterGameplayAction.spinTokens
           && hydratedState.dicePool === localAfterGameplayAction.dicePool
         ) {
@@ -734,12 +705,12 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       assertEqual(
         wouldPersistEffectWriteAfterAction,
         true,
-        'Expected persist effect to write after a genuine gameplay action changes coins',
+        'Expected persist effect to write after a genuine gameplay action changes dicePool',
       );
 
       // Step 7: Prove end-to-end that the hydrated record persists correctly
-      // (server state with coins=30 survives a round-trip without being
-      // overwritten by the default coins=0).
+      // (server state with dicePool=14 survives a round-trip without being
+      // overwritten by the default dicePool=30).
       const { client } = createAlwaysSuccessfulRuntimeClient();
       const writeResult = await writeIslandRunGameStateRecord({
         session,
@@ -748,9 +719,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       });
       assertDeepEqual(writeResult, { ok: true }, 'Expected hydrated state write to succeed');
       const persisted = readIslandRunGameStateRecord(session);
-      assertEqual(persisted.coins, 30, 'Expected persisted coins to be hydrated value (30), not stale default (0)');
-      assertEqual(persisted.hearts, 8, 'Expected persisted hearts to be hydrated value (8), not stale default (5)');
-      assertEqual(persisted.dicePool, 14, 'Expected persisted dicePool to be hydrated value (14), not stale default (10)');
+      assertEqual(persisted.dicePool, 14, 'Expected persisted dicePool to be hydrated value (14), not stale default (30)');
       assertEqual(persisted.tokenIndex, 11, 'Expected persisted tokenIndex to be hydrated value (11), not stale default (0)');
       assertEqual(persisted.spinTokens, 3, 'Expected persisted spinTokens to be hydrated value (3), not stale default (0)');
     },
@@ -768,7 +737,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       await writeIslandRunGameStateRecord({
         session,
         client: conflictClient,
-        record: { ...baseline, hearts: baseline.hearts + 1 },
+        record: { ...baseline, dicePool: baseline.dicePool + 1 },
       });
 
       // syncState was reset to idle in finally block (fix #2)
@@ -782,7 +751,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       await writeIslandRunGameStateRecord({
         session,
         client: conflictClient,
-        record: { ...baseline, hearts: baseline.hearts + 2 },
+        record: { ...baseline, dicePool: baseline.dicePool + 2 },
       });
 
       assertEqual(
@@ -803,7 +772,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       await writeIslandRunGameStateRecord({
         session,
         client: successClient,
-        record: { ...baseline, hearts: baseline.hearts + 3 },
+        record: { ...baseline, dicePool: baseline.dicePool + 3 },
       });
 
       assertEqual(

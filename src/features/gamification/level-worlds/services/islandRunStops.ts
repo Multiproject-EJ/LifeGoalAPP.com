@@ -70,7 +70,7 @@ export function generateIslandStopPlan(
 ): IslandStopPlanEntry[] {
   const safeIsland = Number.isFinite(islandNumber) ? Math.max(1, Math.floor(islandNumber)) : 1;
   const boardProfile = resolveIslandBoardProfile(options?.profileId);
-  const [hatcheryIndex, habitIndex, mysteryIndex, wisdomIndex, bossIndex] = boardProfile.stopTileIndices;
+  const [hatcheryIndex, habitIndex, mysteryIndex, wisdomIndex, bossIndex] = boardProfile.landmarkOrbitAnchors;
 
   // Select rotating content for the Mystery stop (seeded per island).
   const mysteryContentIndex = Math.floor(seededRandom(97 + safeIsland * 13) * MYSTERY_STOP_CONTENT_POOL.length);
@@ -80,7 +80,7 @@ export function generateIslandStopPlan(
     {
       stopId: 'hatchery',
       tileIndex: hatcheryIndex,
-      title: '🥚 Hatchery Stop',
+      title: '🥚 Hatchery Landmark',
       description: 'Set one egg and track stage progression over time.',
       kind: 'fixed_hatchery',
       isBehaviorStop: false,
@@ -88,7 +88,7 @@ export function generateIslandStopPlan(
     {
       stopId: 'habit',
       tileIndex: habitIndex,
-      title: '✅ Habit Stop',
+      title: '✅ Habit Landmark',
       description: 'Complete one habit or action objective to maintain momentum.',
       kind: 'fixed_habit',
       isBehaviorStop: true,
@@ -104,7 +104,7 @@ export function generateIslandStopPlan(
     {
       stopId: 'wisdom',
       tileIndex: wisdomIndex,
-      title: '📖 Wisdom Stop',
+      title: '📖 Wisdom Landmark',
       description: 'A short story, questionnaire, or learning moment to reflect on.',
       kind: 'fixed_wisdom',
       isBehaviorStop: false,
@@ -112,7 +112,7 @@ export function generateIslandStopPlan(
     {
       stopId: 'boss',
       tileIndex: bossIndex,
-      title: '👑 Boss Stop',
+      title: '👑 Boss Landmark',
       description: 'Boss trial closes the island and unlocks the next island.',
       kind: 'fixed_boss',
       isBehaviorStop: false,

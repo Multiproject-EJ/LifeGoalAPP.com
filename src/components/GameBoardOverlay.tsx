@@ -5,6 +5,7 @@ import spinWheelImg from '../assets/Daily_treats_spinnwheel.webp';
 import heartsImg from '../assets/Daily_treats_hearts.webp';
 import '../styles/game-board-overlay.css';
 import { getIslandBackgroundImageSrc } from '../features/gamification/level-worlds/services/islandBackgrounds';
+import { EVENT_BANNER_META } from '../features/gamification/level-worlds/services/islandRunContractV2RewardBar';
 
 const REWARD_MILESTONES = [
   { pct: 33, icon: '🎲' },
@@ -13,12 +14,6 @@ const REWARD_MILESTONES = [
 ] as const;
 const TIMER_OK_THRESHOLD_MS = 4 * 60 * 60 * 1000;
 const TIMER_WARN_THRESHOLD_MS = 1 * 60 * 60 * 1000;
-const EVENT_BANNER_META: Readonly<Record<string, { icon: string; displayName: string }>> = {
-  feeding_frenzy: { icon: '🔥', displayName: 'Feeding Frenzy' },
-  space_excavator: { icon: '🚀', displayName: 'Space Excavator' },
-  companion_feast: { icon: '🐾', displayName: 'Companion Feast' },
-  lucky_spin: { icon: '🎰', displayName: 'Lucky Spin' },
-};
 
 function formatCountdown(resetAtMs: number | undefined, nowMs: number): string {
   if (!resetAtMs) return '';
@@ -50,6 +45,8 @@ type GameBoardOverlayProps = {
   essenceBalance?: number;
   rewardBarProgress?: number;
   rewardBarThreshold?: number;
+  /** B8: reward-bar escalation tier (1..5) → rarity-color the fill/endcap. */
+  rewardBarTier?: number;
   activeTimedEventType?: string | null;
   activeTimedEventExpiresAtMs?: number | null;
   islandNumber?: number;
@@ -82,6 +79,7 @@ export function GameBoardOverlay({
   essenceBalance = 0,
   rewardBarProgress = 0,
   rewardBarThreshold = 10,
+  rewardBarTier = 1,
   activeTimedEventType = null,
   activeTimedEventExpiresAtMs = null,
   islandNumber = 1,
@@ -205,7 +203,7 @@ export function GameBoardOverlay({
           </div>
 
           <div
-            className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}`}
+            className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''} island-run-board__rewardbar--tier-${Math.max(1, Math.min(5, Math.floor(rewardBarTier) || 1))}`}
             aria-label={`Reward progress ${Math.floor(rewardBarPercent)}%`}
           >
             {timedEventMeta ? (

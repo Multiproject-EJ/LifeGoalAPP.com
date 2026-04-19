@@ -110,8 +110,6 @@ type IslandRunRuntimeVerificationSummary = {
     bossTrialResolvedIslandNumber?: number | null;
     cycleIndex?: number;
     tokenIndex?: number;
-    hearts?: number;
-    coins?: number;
     spinTokens?: number;
     dicePool?: number;
   };
@@ -121,8 +119,6 @@ type IslandRunRuntimeVerificationSummary = {
     bossTrialResolvedIslandNumber?: number | null;
     cycleIndex?: number;
     tokenIndex?: number;
-    hearts?: number;
-    coins?: number;
     spinTokens?: number;
     dicePool?: number;
   };
@@ -530,8 +526,6 @@ function summarizeRuntimeVerification(events: IslandRunEntryDebugEntry[]): Islan
           bossTrialResolvedIslandNumber: hydrationEvent.payload?.bossTrialResolvedIslandNumber as number | null | undefined,
           cycleIndex: hydrationEvent.payload?.cycleIndex as number | undefined,
           tokenIndex: hydrationEvent.payload?.tokenIndex as number | undefined,
-          hearts: hydrationEvent.payload?.hearts as number | undefined,
-          coins: hydrationEvent.payload?.coins as number | undefined,
           spinTokens: hydrationEvent.payload?.spinTokens as number | undefined,
           dicePool: hydrationEvent.payload?.dicePool as number | undefined,
         }
@@ -543,8 +537,6 @@ function summarizeRuntimeVerification(events: IslandRunEntryDebugEntry[]): Islan
           bossTrialResolvedIslandNumber: persistEvent.payload?.bossTrialResolvedIslandNumber as number | null | undefined,
           cycleIndex: persistEvent.payload?.cycleIndex as number | undefined,
           tokenIndex: persistEvent.payload?.tokenIndex as number | undefined,
-          hearts: persistEvent.payload?.hearts as number | undefined,
-          coins: persistEvent.payload?.coins as number | undefined,
           spinTokens: persistEvent.payload?.spinTokens as number | undefined,
           dicePool: persistEvent.payload?.dicePool as number | undefined,
         }

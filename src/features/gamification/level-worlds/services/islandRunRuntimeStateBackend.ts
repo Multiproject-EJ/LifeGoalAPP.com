@@ -48,8 +48,6 @@ export interface IslandRunRuntimeStateBackend {
       islandExpiresAtMs?: number;
       islandShards?: number;
       tokenIndex?: number;
-      hearts?: number;
-      coins?: number;
       spinTokens?: number;
       dicePool?: number;
       shardTierIndex?: number;
@@ -194,14 +192,6 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.tokenIndex === 'number' && Number.isFinite(patch.tokenIndex)
           ? Math.max(0, Math.floor(patch.tokenIndex))
           : current.tokenIndex,
-      hearts:
-        typeof patch.hearts === 'number' && Number.isFinite(patch.hearts)
-          ? Math.max(0, Math.floor(patch.hearts))
-          : current.hearts,
-      coins:
-        typeof patch.coins === 'number' && Number.isFinite(patch.coins)
-          ? Math.max(0, Math.floor(patch.coins))
-          : current.coins,
       spinTokens:
         typeof patch.spinTokens === 'number' && Number.isFinite(patch.spinTokens)
           ? Math.max(0, Math.floor(patch.spinTokens))

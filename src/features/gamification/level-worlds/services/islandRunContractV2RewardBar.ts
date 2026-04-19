@@ -85,6 +85,18 @@ export const TIMED_EVENT_SEQUENCE: readonly TimedEventTemplate[] = [
   },
 ] as const;
 
+/**
+ * UI metadata for each timed-event banner (icon + human-readable display name).
+ * Authoritative source — imported by `IslandRunBoardPrototype.tsx` and
+ * `components/GameBoardOverlay.tsx`. Keep in sync with TIMED_EVENT_SEQUENCE above.
+ */
+export const EVENT_BANNER_META: Readonly<Record<string, { icon: string; displayName: string }>> = {
+  feeding_frenzy: { icon: '🔥', displayName: 'Feeding Frenzy' },
+  space_excavator: { icon: '🚀', displayName: 'Space Excavator' },
+  companion_feast: { icon: '🐾', displayName: 'Companion Feast' },
+  lucky_spin: { icon: '🎰', displayName: 'Lucky Spin' },
+};
+
 // ── Progress sources ─────────────────────────────────────────────────────────
 
 const FEEDING_TILE_PROGRESS: Readonly<Record<string, number>> = {

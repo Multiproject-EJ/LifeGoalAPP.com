@@ -16,6 +16,7 @@ import { islandRunTimerProgressionTests } from './islandRunTimerProgression.test
 import { islandRunStopCompletionTests } from './islandRunStopCompletion.test';
 import { islandRunDiceRegenerationTests } from './islandRunDiceRegeneration.test';
 import { islandRunStopTicketsTests } from './islandRunStopTickets.test';
+import { islandRunShopAffordabilityTests } from './islandRunShopAffordability.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -37,6 +38,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunStopCompletion', tests: islandRunStopCompletionTests },
   { label: 'islandRunDiceRegeneration', tests: islandRunDiceRegenerationTests },
   { label: 'islandRunStopTickets', tests: islandRunStopTicketsTests },
+  { label: 'islandRunShopAffordability', tests: islandRunShopAffordabilityTests },
 ];
 
 async function main() {

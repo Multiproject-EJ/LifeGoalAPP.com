@@ -8,6 +8,10 @@ import {
   type TileAnchor,
 } from '../services/islandBoardLayout';
 import { BoardStage, type BoardStageCameraControls } from './board';
+import { ConfettiBurst } from './ConfettiBurst';
+import { StatDriftNumbers } from './StatDriftNumbers';
+import { OutOfDiceRegenStatus } from './OutOfDiceRegenStatus';
+import { ShopItemCostLine } from './ShopItemCostLine';
 import {
   getIslandBoardThemeForIslandNumber,
   type IslandBoardTheme,
@@ -35,6 +39,7 @@ import {
   shouldEmitIslandRunRuntimeHydrationTelemetry,
 } from '../services/islandRunRuntimeTelemetry';
 import { useSupabaseAuth } from '../../../auth/SupabaseAuthProvider';
+import { useGamification } from '../../../../hooks/useGamification';
 import { isDemoSession } from '../../../../services/demoSession';
 import {
   hydrateIslandRunRuntimeStateWithSource,
@@ -148,6 +153,7 @@ import {
   resolveNextRewardKind,
   REWARD_KIND_ICON,
   TIMED_EVENT_SEQUENCE,
+  EVENT_BANNER_META,
   resolveAvailableMultiplierTiers,
   clampMultiplierToPool,
   resolveDiceCostForMultiplier,
@@ -282,7 +288,6 @@ function collectHydrationChangedKeysForDiagnostics(options: {
   }
   if (before.dicePool !== after.dicePool) changedKeys.push('dicePool');
   if (before.tokenIndex !== after.tokenIndex) changedKeys.push('tokenIndex');
-  if (before.hearts !== after.hearts) changedKeys.push('hearts');
   return changedKeys;
 }
 
@@ -472,13 +477,6 @@ function formatEventRemaining(remainingMs: number): string {
 const TIMER_OK_THRESHOLD_MS = 4 * 60 * 60 * 1000;    // > 4 h  → green
 const TIMER_WARN_THRESHOLD_MS = 1 * 60 * 60 * 1000;  // 1–4 h → orange; < 1 h → red
 const DICE_ROLL_OVERLAY_DURATION_MS = 800;  // how long the "Rolled N!" overlay stays visible
-
-const EVENT_BANNER_META: Readonly<Record<string, { icon: string; displayName: string }>> = {
-  feeding_frenzy:   { icon: '🔥', displayName: 'Feeding Frenzy' },
-  space_excavator:  { icon: '🚀', displayName: 'Space Excavator' },
-  companion_feast:  { icon: '🐾', displayName: 'Companion Feast' },
-  lucky_spin:       { icon: '🎰', displayName: 'Lucky Spin' },
-};
 
 function getTimerUrgencyClass(remainingMs: number): string {
   if (remainingMs > TIMER_OK_THRESHOLD_MS) return 'island-run-board__rewardbar-timer--ok';
@@ -689,6 +687,8 @@ type OrbitStopVisual = {
   labelOffsetX: number;
   hideLabel: boolean;
   stopId?: string;
+  ticketCost?: number;
+  attentionHint?: 'affordable';
 };
 
 type MysteryStopReward =
@@ -858,6 +858,13 @@ interface IslandRunBoardPrototypeProps {
 
 export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: IslandRunBoardPrototypeProps) {
   const { client } = useSupabaseAuth();
+  // Player-level chip: pull levelInfo from the gamification hook so the top-bar
+  // chip stays in sync with the profile's total_xp. The hook also handles its
+  // own refresh via 'gamificationProfileUpdated' events, so any XP award
+  // elsewhere in the app will flow into the chip automatically.
+  const { levelInfo: playerLevelInfo } = useGamification(session);
+  const [showLevelPopover, setShowLevelPopover] = useState(false);
+  const levelChipContainerRef = useRef<HTMLDivElement>(null);
   const activeTileAnchors = useMemo(
     () => TILE_ANCHORS_40,
     [],
@@ -920,6 +927,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
   const [islandNumber, setIslandNumber] = useState(1);
+  // PR7: brief "level-up flash" class driver. Flips true when `islandNumber`
+  // advances to a higher value (ignoring cycle wrap 120→1) and auto-resets
+  // after the animation runs. Driven by a useEffect+prev ref pattern below.
+  const [islandLevelFlash, setIslandLevelFlash] = useState(false);
+  const prevIslandNumberForFlashRef = useRef<number>(1);
+  useEffect(() => {
+    const prev = prevIslandNumberForFlashRef.current;
+    prevIslandNumberForFlashRef.current = islandNumber;
+    // Only flash when we *advance* (prev < next). Cycle wrap 120 → 1 and
+    // backwards dev toggles should not trigger the celebratory flash.
+    if (islandNumber > prev) {
+      setIslandLevelFlash(true);
+      const timeoutId = window.setTimeout(() => setIslandLevelFlash(false), 1200);
+      return () => window.clearTimeout(timeoutId);
+    }
+    return undefined;
+  }, [islandNumber]);
   const activeTheme = useMemo(() => getIslandBoardThemeForIslandNumber(islandNumber), [islandNumber]);
   const islandBackgroundSrc = useMemo(() => getIslandBackgroundImageSrc(islandNumber), [islandNumber]);
   const [isIslandBackgroundAvailable, setIsIslandBackgroundAvailable] = useState(true);
@@ -955,7 +979,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [bossTrialTimeLeft, setBossTrialTimeLeft] = useState<number>(0);
   const [bossTrialScore, setBossTrialScore] = useState<number>(0);
   const [bossAttemptCount, setBossAttemptCount] = useState<number>(0);
-  const [coins, setCoins] = useState(0);
   const [islandShards, setIslandShards] = useState<number>(0);
   const [shardTierIndex, setShardTierIndex] = useState<number>(0);
   const [shardClaimCount, setShardClaimCount] = useState<number>(0);
@@ -987,8 +1010,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       bossTrialResolvedIslandNumber?: number | null;
       cycleIndex?: number;
       tokenIndex?: number;
-      hearts?: number;
-      coins?: number;
       spinTokens?: number;
       dicePool?: number;
     };
@@ -998,8 +1019,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       bossTrialResolvedIslandNumber?: number | null;
       cycleIndex?: number;
       tokenIndex?: number;
-      hearts?: number;
-      coins?: number;
       spinTokens?: number;
       dicePool?: number;
     };
@@ -1077,6 +1096,30 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return () => window.cancelAnimationFrame(frame);
   }, [showTopbarMenu]);
 
+  // Close the player-level popover on outside pointer-down or Escape.
+  useEffect(() => {
+    if (!showLevelPopover) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!levelChipContainerRef.current) return;
+      if (levelChipContainerRef.current.contains(event.target as Node)) return;
+      setShowLevelPopover(false);
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setShowLevelPopover(false);
+    };
+
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [showLevelPopover]);
+
   // B1-3: tile map state — regenerated when islandNumber or dayIndex changes
   const [islandStartedAtMs, setIslandStartedAtMs] = useState<number>(() => Date.now());
   const [islandExpiresAtMs, setIslandExpiresAtMs] = useState<number>(() => Date.now() + getIslandDurationMs(1));
@@ -1131,6 +1174,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [rewardBarBurstAnimating, setRewardBarBurstAnimating] = useState(false);
   const [rewardBarCascadePayouts, setRewardBarCascadePayouts] = useState<RewardBarClaimPayout[]>([]);
   const [feedParticleActive, setFeedParticleActive] = useState(false);
+  // B8: brief "snap" flash on the fill when the bar first becomes claimable.
+  const [rewardBarSnapActive, setRewardBarSnapActive] = useState(false);
+  const rewardBarWasClaimableRef = useRef(false);
 
   // ── Minigame popup dialog ──────────────────────────────────────────────────
   const [showMinigameDialog, setShowMinigameDialog] = useState(false);
@@ -1194,7 +1240,24 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // B3-5: island clear celebration
   const [showIslandClearCelebration, setShowIslandClearCelebration] = useState(false);
-  const [islandClearStats, setIslandClearStats] = useState<{ islandNumber: number; diceEarned: number; essenceEarned: number; stopsCleared: number } | null>(null);
+  const [islandClearStats, setIslandClearStats] = useState<{
+    islandNumber: number;
+    diceEarned: number;
+    essenceEarned: number;
+    stopsCleared: number;
+    /**
+     * Island number to travel to when the player taps the "Travel to next
+     * island" CTA. Typically `islandNumber + 1`, but lives on the stats so
+     * future variants (e.g. a skip or a branch) can override it.
+     */
+    pendingNextIsland: number;
+    /**
+     * True when this island-clear is the final island of a 120-cycle
+     * (islandNumber % 120 === 0). Triggers the "Cycle Complete" capstone
+     * flourish in the celebration modal.
+     */
+    isCycleCapstone: boolean;
+  } | null>(null);
 
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
   const [runtimeHydrationSource, setRuntimeHydrationSource] = useState<IslandRunRuntimeHydrationSource | null>(null);
@@ -1204,8 +1267,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const runtimeStateRef = useRef(runtimeState);
   // Guard ref to prevent persist effects from writing stale local state before
   // the hydration effect has applied server values to local state. This prevents
-  // the write amplification loop where persist effects see {coins: 0} (initial)
-  // vs runtimeState.coins = 30 (hydrated) and emit a redundant write.
+  // the write amplification loop where persist effects see stale local state
+  // vs runtimeState after hydration and emit redundant writes.
   const hasCompletedInitialHydrationSyncRef = useRef(false);
   const companionBonusAppliedVisitKeyRef = useRef<string | null>(null);
   const isOnboardingComplete = Boolean(session.user.user_metadata?.onboarding_complete);
@@ -1412,7 +1475,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     setTokenIndex(runtimeState.tokenIndex ?? TOKEN_START_TILE_INDEX);
-    setCoins(runtimeState.coins ?? 0);
     setSpinTokens(runtimeState.spinTokens ?? 0);
     setDicePool(runtimeState.dicePool ?? ISLAND_RUN_DEFAULT_STARTING_DICE);
 
@@ -1450,10 +1512,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setCreatureTreatInventory(runtimeState.creatureTreatInventory ?? fetchCreatureTreatInventory(session.user.id));
 
     // Mark initial hydration sync as complete so persist effects can now safely write.
-    // This prevents the write amplification loop by ensuring local state (coins, hearts,
-    // etc.) has been synced from runtimeState before persist effects compare them.
+    // This prevents the write amplification loop by ensuring local state (essence,
+    // dice, etc.) has been synced from runtimeState before persist effects compare them.
     hasCompletedInitialHydrationSyncRef.current = true;
-  }, [hasHydratedRuntimeState, runtimeState.activeCompanionId, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.audioEnabled, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.hearts, runtimeState.coins, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.creatureTreatInventory, runtimeState.marketOwnedBundlesByIsland, session.user.id]);
+  }, [hasHydratedRuntimeState, runtimeState.activeCompanionId, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.audioEnabled, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.creatureTreatInventory, runtimeState.marketOwnedBundlesByIsland, session.user.id]);
 
   // M16D: Snap fill bar to 0 immediately on island travel reset (no slide-back animation)
   useEffect(() => {
@@ -1861,8 +1923,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           bossTrialResolvedIslandNumber: hydrationResult.state.bossTrialResolvedIslandNumber,
           cycleIndex: hydrationResult.state.cycleIndex,
           tokenIndex: hydrationResult.state.tokenIndex,
-          hearts: hydrationResult.state.hearts,
-          coins: hydrationResult.state.coins,
           spinTokens: hydrationResult.state.spinTokens,
           dicePool: hydrationResult.state.dicePool,
         });
@@ -1909,8 +1969,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               boss_trial_resolved_island_number: hydrationResult.state.bossTrialResolvedIslandNumber,
               cycle_index: hydrationResult.state.cycleIndex,
               token_index: hydrationResult.state.tokenIndex,
-              hearts: hydrationResult.state.hearts,
-              coins: hydrationResult.state.coins,
               spin_tokens: hydrationResult.state.spinTokens,
               dice_pool: hydrationResult.state.dicePool,
             },
@@ -2091,13 +2149,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return () => window.removeEventListener('resize', updateBoardSize);
   }, []);
 
-  // B3-5: island clear celebration auto-dismiss
-  useEffect(() => {
-    if (showIslandClearCelebration) {
-      const t = window.setTimeout(() => setShowIslandClearCelebration(false), 4000);
-      return () => window.clearTimeout(t);
-    }
-  }, [showIslandClearCelebration]);
+  // Island clear celebration is now gated by the "Travel to next island" CTA,
+  // so it no longer auto-dismisses. The modal closes inside
+  // handleTravelFromCelebration (which also triggers performIslandTravel).
+  // performIslandTravel itself clears showIslandClearCelebration + stats, so
+  // the celebration can never persist across an island change.
 
   const islandStopPlan = useMemo(
     () => generateIslandStopPlan(islandNumber, { profileId: ACTIVE_BOARD_PROFILE.id }),
@@ -2202,20 +2258,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (!hasHydratedRuntimeState) return;
     // Guard: Skip until the initial hydration sync effect has applied server values
     // to local state. This prevents the write amplification loop where this effect
-    // sees stale local state (e.g., coins=0 from useState default) before the
-    // hydration effect applies the correct value (e.g., coins=30 from server).
+    // sees stale local state (e.g., dicePool=0 from useState default) before the
+    // hydration effect applies the correct value (e.g., dicePool=30 from server).
     if (!hasCompletedInitialHydrationSyncRef.current) return;
 
     const nextPatch = {
       tokenIndex,
-      coins,
       spinTokens,
       dicePool,
     };
 
     if (
       runtimeState.tokenIndex === nextPatch.tokenIndex
-      && runtimeState.coins === nextPatch.coins
       && runtimeState.spinTokens === nextPatch.spinTokens
       && runtimeState.dicePool === nextPatch.dicePool
     ) {
@@ -2232,7 +2286,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       record: nextRuntimeState,
     });
     setRuntimeState((current) => ({ ...current, ...nextPatch }));
-  }, [client, coins, dicePool, hasHydratedRuntimeState, runtimeState.coins, runtimeState.dicePool, runtimeState.spinTokens, runtimeState.tokenIndex, session, spinTokens, tokenIndex]);
+  }, [client, dicePool, hasHydratedRuntimeState, runtimeState.dicePool, runtimeState.spinTokens, runtimeState.tokenIndex, session, spinTokens, tokenIndex]);
 
   // M19A: persist diamonds to runtime state (cross-device)
   useEffect(() => {
@@ -2826,6 +2880,20 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const baseLabel = stop.title.replace(/^\S+\s/, '');
       const needsTicket = doesStopRequireTicketPayment(stop.stopId);
       const label = needsTicket ? `🎫 ${baseLabel}` : baseLabel;
+      const stopIndex = stopIndexByStopId.get(stop.stopId);
+      const ticketCost = needsTicket && stopIndex !== undefined
+        ? getStopTicketCost({ effectiveIslandNumber, stopIndex })
+        : undefined;
+
+      // Attention dot: pulse on the landmark when the player can open it
+      // RIGHT NOW (sequence prerequisite met AND wallet ≥ ticket cost). This
+      // is the highest-value "next best action" cue — the UI stops whispering
+      // and tells you: "tap me." Hatchery and already-paid stops never pulse.
+      const canAffordNow =
+        needsTicket
+        && typeof ticketCost === 'number'
+        && runtimeState.essence >= ticketCost;
+      const attentionHint: 'affordable' | undefined = canAffordNow ? 'affordable' : undefined;
 
       return {
         id: stop.stopId,
@@ -2838,6 +2906,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         labelOffsetX: 0,
         hideLabel: false,
         stopId: stop.stopId,
+        ticketCost,
+        attentionHint,
       } satisfies OrbitStopVisual;
     });
 
@@ -2891,7 +2961,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         hideLabel: isSmallBoard,
       } satisfies OrbitStopVisual;
     });
-  }, [boardSize.height, boardSize.width, islandStopPlan, stopStateMap, doesStopRequireTicketPayment]);
+  }, [boardSize.height, boardSize.width, islandStopPlan, stopStateMap, doesStopRequireTicketPayment, stopIndexByStopId, effectiveIslandNumber, runtimeState.essence]);
 
   // Camera zoom-to-stop: when cameraMode is 'stop_focus' and a stop is focused,
   // smoothly zoom the camera to that stop's screen position.
@@ -2923,7 +2993,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       activeEgg,
       eggStage,
       completedStops,
-      coins,
       dicePool,
       spinTokens,
       tokenIndex,
@@ -2941,7 +3010,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     activeEgg,
     eggStage,
     completedStops,
-    coins,
     dicePool,
     spinTokens,
     tokenIndex,
@@ -3124,6 +3192,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           ? 'insufficient_dice'
           : null;
   const canRoll = !showFirstRunCelebration && !isRolling && !showTravelOverlay && dicePool >= effectiveDiceCost;
+  /** PR6: Human-readable reason for screen readers + tooltips when the roll
+   * button is disabled. Keys mirror the internal `rollDisabledReason` codes. */
+  const rollDisabledMessage = (() => {
+    switch (rollDisabledReason) {
+      case 'first_run_celebration':
+        return 'Roll is paused while the welcome celebration is playing.';
+      case 'already_rolling':
+        return 'A roll is already in progress — please wait.';
+      case 'travel_overlay':
+        return 'Island travel is in progress — please wait.';
+      case 'insufficient_dice':
+        return `Not enough dice to roll. You need ${effectiveDiceCost} dice per roll.`;
+      default:
+        return null;
+    }
+  })();
   const spinTokenWalletLabel = resolveIslandRunSpinTokenWalletLabel(ISLAND_RUN_CONTRACT_V2_ENABLED);
   const {
     activeTimedEvent,
@@ -3142,6 +3226,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const timedEventRemainingLabel = activeTimedEvent
     ? formatEventRemaining(timedEventRemainingMs)
     : '—';
+  // B8: detect the bar becoming claimable and play a one-shot "snap" flash.
+  useEffect(() => {
+    if (canClaimRewardBar && !rewardBarWasClaimableRef.current) {
+      rewardBarWasClaimableRef.current = true;
+      setRewardBarSnapActive(true);
+      const timer = setTimeout(() => setRewardBarSnapActive(false), 460);
+      return () => clearTimeout(timer);
+    }
+    if (!canClaimRewardBar && rewardBarWasClaimableRef.current) {
+      rewardBarWasClaimableRef.current = false;
+    }
+  }, [canClaimRewardBar]);
+  // B8: tier-class modifier for rarity coloring (clamped 1..5 to match palette).
+  const rewardBarTierClass = (() => {
+    const tier = Math.max(1, Math.min(5, runtimeState.rewardBarEscalationTier || 1));
+    return ` island-run-board__rewardbar--tier-${tier}`;
+  })();
   const avatarImageUrl = getAvatarImageUrl(session.user);
   const islandDisplayName = getIslandDisplayName(islandNumber);
   const spark40RingSegmentsGradient = useMemo(() => {
@@ -4785,8 +4886,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       status: 'already_owned',
       costCoins,
       rewardDice,
-      coinsBefore: coins,
-      coinsAfter: coins,
+      coinsBefore: runtimeState.essence,
+      coinsAfter: runtimeState.essence,
       ownedDiceBundle: true,
     });
 
@@ -5044,6 +5145,29 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     triggerIslandRunHaptic('island_travel_complete');
   };
 
+  /**
+   * Island-clear celebration CTA handler. Gates island travel behind the
+   * player tapping "Travel to next island" (or the cycle-capstone "Begin
+   * new cycle" button). Plays the travel overlay for the same 1.4s window
+   * as before so the audio/visual choreography is unchanged; only the
+   * trigger moves from an auto-timer to the explicit tap.
+   *
+   * Safe to call when no celebration is mounted — does nothing in that
+   * case, which keeps us resilient if the CTA fires during a race (e.g.
+   * double-tap right as performIslandTravel clears the stats).
+   */
+  const handleTravelFromCelebration = () => {
+    const stats = islandClearStats;
+    if (!stats) return;
+    const nextIsland = stats.pendingNextIsland;
+    setShowIslandClearCelebration(false);
+    setShowTravelOverlay(true);
+    window.setTimeout(() => {
+      setShowTravelOverlay(false);
+      performIslandTravel(nextIsland, { startTimer: true });
+    }, 1400);
+  };
+
   // B3-2: handleCompleteStopById helper
   const handleCompleteStopById = (stopId: string) => {
     setCompletedStops((current) => current.includes(stopId) ? current : [...current, stopId]);
@@ -5210,7 +5334,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             metadata: {
               stage: 'island_run_boss_island_cleared',
               island_number: islandNumber,
-              rewards_granted: { dice: bossReward.dice, coins: 0, essence: bossReward.essence },
+              rewards_granted: { dice: bossReward.dice, essence: bossReward.essence },
             },
           });
           setShowIslandClearCelebration(true);
@@ -5219,13 +5343,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             diceEarned: bossReward.dice,
             essenceEarned: bossReward.essence,
             stopsCleared: completedStops.length + 1,
+            pendingNextIsland: islandNumber + 1,
+            isCycleCapstone: islandNumber % 120 === 0,
           });
-          setShowTravelOverlay(true);
-          window.setTimeout(() => {
-            const nextIsland = islandNumber + 1;
-            setShowTravelOverlay(false);
-            performIslandTravel(nextIsland, { startTimer: true });
-          }, 1400);
+          // Travel is now gated on the celebration CTA; see
+          // handleTravelFromCelebration.
         } else {
           setLandingText('👾 Boss defeated! Open the Build Panel 🔨 and finish all 5 buildings to claim island clear.');
           setActiveStopId(null);
@@ -5256,7 +5378,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           island_number: islandNumber,
           rewards_granted: {
             dice: bossReward.dice,
-            coins: 0, // coins retired
             essence: bossReward.essence,
           },
         },
@@ -5282,14 +5403,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         diceEarned: bossReward.dice,
         essenceEarned: bossReward.essence,
         stopsCleared: completedStops.length + 1,
+        pendingNextIsland: islandNumber + 1,
+        isCycleCapstone: islandNumber % 120 === 0,
       });
 
-      setShowTravelOverlay(true);
-      window.setTimeout(() => {
-        const nextIsland = islandNumber + 1;
-        setShowTravelOverlay(false);
-        performIslandTravel(nextIsland, { startTimer: true });
-      }, 1400);
+      // Travel is gated behind the celebration CTA; see
+      // handleTravelFromCelebration.
       return;
     }
 
@@ -5409,7 +5528,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         metadata: {
           stage: 'island_run_first_run_rewards_claimed',
           island: islandNumber,
-          rewards: { coins: 250, dice_bonus: starterDiceBonus },
+          rewards: { essence: starterEssenceBonus, dice_bonus: starterDiceBonus },
         },
       });
       return;
@@ -6011,8 +6130,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
               onClick={handleRoll}
               disabled={Boolean(rollDisabledReason)}
+              aria-disabled={Boolean(rollDisabledReason)}
+              title={rollDisabledMessage ?? undefined}
             >
               {rollButtonLabel}
+              {rollDisabledMessage && (
+                <span className="sr-only"> — {rollDisabledMessage}</span>
+              )}
             </button>
           {/* M10A: audio toggle */}
           <button
@@ -6057,15 +6181,29 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         {/* M1B: Production HUD — always visible for all logged-in users */}
         <div className="island-run-prototype__status-row island-run-prototype__status-row--production">
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">🎲 <strong>{dicePool}</strong></span>
-          <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">🪙 <strong>{coins}</strong></span>
-          {ISLAND_RUN_CONTRACT_V2_ENABLED && <span className="island-run-prototype__stat-chip">🟣 <strong>{runtimeState.essence}</strong></span>}
+          {ISLAND_RUN_CONTRACT_V2_ENABLED && (
+            <span className="island-run-prototype__stat-chip" style={{ position: 'relative' }}>
+              🟣 <strong>{runtimeState.essence}</strong>
+              <StatDriftNumbers value={runtimeState.essence} icon="🟣" />
+            </span>
+          )}
           {activeCompanion && activeCompanionBonus ? (
             <span className="island-run-prototype__stat-chip">
               🐾 <strong>{activeCompanion.creature.name}</strong> · {activeCompanionBonus.label}
             </span>
           ) : null}
-          <span className="island-run-prototype__stat-chip island-run-prototype__level-chip">Lvl <strong>{islandNumber}</strong></span>
+          <span className={`island-run-prototype__stat-chip island-run-prototype__level-chip${islandLevelFlash ? ' island-run-prototype__level-chip--levelup' : ''}`}>Lvl <strong>{islandNumber}</strong></span>
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">⏱ <strong>{timerDisplay}</strong></span>
+          {/* PR6: Sticker "one away" nudge — tiny pulse when player is 1 fragment from completing a sticker. */}
+          {runtimeState.stickerProgress.fragments === 4 && (
+            <span
+              className="island-run-prototype__sticker-nudge"
+              aria-live="polite"
+              title="You are one fragment away from completing a sticker — claim the reward bar to earn it!"
+            >
+              🧩 1 away
+            </span>
+          )}
           {/* M2: roll result chip — visible in production after every roll */}
           {rollValue !== null && (
             <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--roll" aria-live="polite">
@@ -6160,8 +6298,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <p className="island-run-prototype__hud-label">Run status</p>
             <div className="island-run-prototype__status-row">
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">Dice: <strong>{dicePool}</strong></span>
-              <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">Coins: <strong>{coins}</strong></span>
-              <span className="island-run-prototype__stat-chip island-run-prototype__level-chip">LEVEL <strong>{islandNumber}</strong> / 120</span>
+              <span className="island-run-prototype__stat-chip">Essence: <strong>{runtimeState.essence}</strong></span>
+              <span className={`island-run-prototype__stat-chip island-run-prototype__level-chip${islandLevelFlash ? ' island-run-prototype__level-chip--levelup' : ''}`}>LEVEL <strong>{islandNumber}</strong> / 120</span>
               <span className="island-run-prototype__stat-chip">Tile: <strong>{tokenIndex}</strong></span>
               <span className="island-run-prototype__stat-chip">Island: <strong>{islandNumber}</strong></span>
               <span className="island-run-prototype__stat-chip">Last roll: <strong>{rollValue ?? '-'}</strong></span>
@@ -6261,7 +6399,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     <span className="island-run-prototype__stat-chip">Island: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.currentIslandNumber ?? '—'}</strong></span>
                     <span className="island-run-prototype__stat-chip">Cycle: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.cycleIndex ?? '—'}</strong></span>
                     <span className="island-run-prototype__stat-chip">Tile: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.tokenIndex ?? '—'}</strong></span>
-                    <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--coins">Coins: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.coins ?? '—'}</strong></span>
                     <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">{spinTokenWalletLabel}: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.spinTokens ?? '—'}</strong></span>
                     <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">Dice: <strong>{runtimeVerificationSnapshot.latestHydrationResult?.dicePool ?? '—'}</strong></span>
                   </div>
@@ -6323,6 +6460,67 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </button>
             <div className="island-run-board__topbar-wallet" aria-label="Essence wallet">
               🟣 <strong>{runtimeState.essence}</strong>
+            </div>
+            <div
+              ref={levelChipContainerRef}
+              className="island-run-board__topbar-level"
+            >
+              <button
+                type="button"
+                className="island-run-board__topbar-level-chip"
+                aria-label={
+                  playerLevelInfo
+                    ? `Player level ${playerLevelInfo.currentLevel}. Tap to see XP progress.`
+                    : 'Player level loading'
+                }
+                aria-haspopup="dialog"
+                aria-expanded={showLevelPopover}
+                onClick={() => setShowLevelPopover((v) => !v)}
+                disabled={!playerLevelInfo}
+              >
+                <span className="island-run-board__topbar-level-chip-label">Lv</span>
+                <strong className="island-run-board__topbar-level-chip-value">
+                  {playerLevelInfo ? playerLevelInfo.currentLevel : '—'}
+                </strong>
+              </button>
+              {showLevelPopover && playerLevelInfo ? (() => {
+                const xpInLevel = Math.max(0, playerLevelInfo.xpProgress);
+                const xpNeededInLevel = Math.max(
+                  1,
+                  playerLevelInfo.xpForNextLevel - playerLevelInfo.xpForCurrentLevel,
+                );
+                const xpToNext = Math.max(0, playerLevelInfo.xpForNextLevel - playerLevelInfo.currentXP);
+                const pct = Math.max(0, Math.min(100, playerLevelInfo.progressPercentage));
+                return (
+                  <div
+                    className="island-run-board__topbar-level-popover"
+                    role="dialog"
+                    aria-label={`Level ${playerLevelInfo.currentLevel} progress`}
+                  >
+                    <div className="island-run-board__topbar-level-popover-title">
+                      Level {playerLevelInfo.currentLevel}
+                    </div>
+                    <div className="island-run-board__topbar-level-popover-row">
+                      <span>{xpInLevel.toLocaleString()} / {xpNeededInLevel.toLocaleString()} XP</span>
+                    </div>
+                    <div
+                      className="island-run-board__topbar-level-popover-bar"
+                      role="progressbar"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={Math.round(pct)}
+                    >
+                      <div
+                        className="island-run-board__topbar-level-popover-bar-fill"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className="island-run-board__topbar-level-popover-row island-run-board__topbar-level-popover-row--muted">
+                      {xpToNext.toLocaleString()} XP to Lv {playerLevelInfo.currentLevel + 1}
+                    </div>
+                  </div>
+                );
+              })() : null}
             </div>
             <button
               type="button"
@@ -6404,7 +6602,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
         <button
           type="button"
-          className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}${rewardBarBurstAnimating ? ' island-run-board__rewardbar--burst' : ''}`}
+          className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}${rewardBarBurstAnimating ? ' island-run-board__rewardbar--burst' : ''}${rewardBarTierClass}`}
           aria-label="Reward progress"
           onClick={canClaimRewardBar ? handleContractV2RewardBarClaim : openRewardDetailsModal}
         >
@@ -6447,7 +6645,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               {(EVENT_BANNER_META[activeTimedEvent?.eventType ?? '']?.icon) ?? '⭐'}
             </span>
             <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
-              <span className="island-run-board__rewardbar-track-fill" style={{ width: `${rewardBarPercent}%` }} />
+              <span className={`island-run-board__rewardbar-track-fill${rewardBarSnapActive ? ' island-run-board__rewardbar-track-fill--snap' : ''}`} style={{ width: `${rewardBarPercent}%` }} />
               {/* Position indicator riding the fill edge */}
               <span className="island-run-board__rewardbar-position" style={{ left: `${Math.min(rewardBarPercent, 100)}%` }} aria-hidden="true" />
             </div>
@@ -6584,11 +6782,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
                 onClick={isIslandTimerPendingStart ? activateCurrentIsland : () => void handleRoll()}
                 disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
+                aria-disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
+                title={!isIslandTimerPendingStart ? (rollDisabledMessage ?? undefined) : undefined}
               >
                 <span className="island-run-prototype__footer-roll-btn-content">
                   <span className="island-run-prototype__footer-roll-btn-dice">🎲 {hasHydratedRuntimeState ? dicePool : '—'}{effectiveMultiplier > 1 ? ` ×${effectiveMultiplier}` : ''}</span>
                   <span>{isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}</span>
                 </span>
+                {!isIslandTimerPendingStart && rollDisabledMessage && (
+                  <span className="sr-only"> — {rollDisabledMessage}</span>
+                )}
               </button>
               {/* Dice regen countdown — like Monopoly GO "X rolls ready in MM:SS" */}
               {diceRegenCountdown && diceRegenRollsReady != null && (
@@ -7275,6 +7478,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <p className="island-stop-modal__copy">
               You do not have enough dice to roll right now. Buy more rolls or wait for dice to regenerate.
             </p>
+            <OutOfDiceRegenStatus
+              dicePool={dicePool}
+              diceCostPerRoll={effectiveDiceCost}
+              regenState={runtimeState.diceRegenState ?? null}
+            />
             {diceCheckoutError ? <p className="island-run-prototype__error">{diceCheckoutError}</p> : null}
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
               <button
@@ -7498,19 +7706,62 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       )}
 
       {showIslandClearCelebration && islandClearStats && (
-        <div className="island-clear-celebration" role="status" aria-live="polite">
-          <div className="island-clear-celebration__card island-clear-celebration__card--boss">
-            <p className="island-clear-celebration__confetti" aria-hidden="true">🎉✨🏆✨🎉</p>
-            <p className="island-clear-celebration__eyebrow">Boss Defeated! Island Cleared!</p>
-            <p className="island-clear-celebration__title">🏆 Island {islandClearStats.islandNumber} Complete!</p>
+        <>
+          {/* B7 / F6: celebration confetti burst behind the modal backdrop.
+              The overlay is purely decorative (aria-hidden) and self-dismisses
+              once all pieces fall off-screen. Unmounted automatically alongside
+              the celebration modal. */}
+          <ConfettiBurst
+            active
+            variant={islandClearStats.isCycleCapstone ? 'capstone' : 'standard'}
+          />
+          <div
+          className={`island-clear-celebration${islandClearStats.isCycleCapstone ? ' island-clear-celebration--capstone' : ''}`}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="island-clear-celebration-title"
+        >
+          <div
+            className={`island-clear-celebration__card island-clear-celebration__card--boss${islandClearStats.isCycleCapstone ? ' island-clear-celebration__card--capstone' : ''}`}
+          >
+            <p className="island-clear-celebration__confetti" aria-hidden="true">
+              {islandClearStats.isCycleCapstone ? '🌌✨🏆✨🌌' : '🎉✨🏆✨🎉'}
+            </p>
+            <p className="island-clear-celebration__eyebrow">
+              {islandClearStats.isCycleCapstone
+                ? `Cycle ${Math.floor((islandClearStats.islandNumber - 1) / 120) + 1} Complete!`
+                : 'Boss Defeated! Island Cleared!'}
+            </p>
+            <p className="island-clear-celebration__title" id="island-clear-celebration-title">
+              {islandClearStats.isCycleCapstone
+                ? `🌠 Chapter Close — Island ${islandClearStats.islandNumber}`
+                : `🏆 Island ${islandClearStats.islandNumber} Complete!`}
+            </p>
             <div className="island-clear-celebration__rewards">
               <span className="island-clear-celebration__reward-item">🎲 +{islandClearStats.diceEarned}</span>
               <span className="island-clear-celebration__reward-item">🟣 +{islandClearStats.essenceEarned}</span>
               <span className="island-clear-celebration__reward-item">🔷 +3</span>
             </div>
-            <p className="island-clear-celebration__stops">✅ {islandClearStats.stopsCleared} stops cleared · 🛍️ Market Tier 2 unlocked</p>
+            <p className="island-clear-celebration__stops">
+              {islandClearStats.isCycleCapstone
+                ? `✅ ${islandClearStats.stopsCleared} stops cleared · 🧭 A new cycle awaits on the far horizon.`
+                : `✅ ${islandClearStats.stopsCleared} stops cleared · 🛍️ Market Tier 2 unlocked`}
+            </p>
+            <div className="island-clear-celebration__actions">
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary island-clear-celebration__cta"
+                onClick={handleTravelFromCelebration}
+                autoFocus
+              >
+                {islandClearStats.isCycleCapstone
+                  ? `🌌 Begin Cycle ${Math.floor((islandClearStats.islandNumber - 1) / 120) + 2}`
+                  : `⛵ Travel to Island ${islandClearStats.pendingNextIsland}`}
+              </button>
+            </div>
           </div>
         </div>
+        </>
       )}
 
       {/* M14: unified shop panel (merged shop + market) */}
@@ -7547,8 +7798,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     disabled={runtimeState.essence < MARKET_DICE_BUNDLE_COST}
                     onClick={() => handleMarketPrototypePurchase('dice_bundle')}
                   >
-                    🎲 Dice Bundle — {MARKET_DICE_BUNDLE_COST} 🟣 → +{MARKET_DICE_BUNDLE_REWARD} 🎲
-                    {runtimeState.essence < MARKET_DICE_BUNDLE_COST && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {MARKET_DICE_BUNDLE_COST - runtimeState.essence} more)</span>}
+                    🎲 Dice Bundle —{' '}
+                    <ShopItemCostLine
+                      cost={MARKET_DICE_BUNDLE_COST}
+                      balance={runtimeState.essence}
+                      currencyIcon="🟣"
+                      currencyName="essence"
+                    />{' '}
+                    → +{MARKET_DICE_BUNDLE_REWARD} 🎲
                   </button>
                 )}
               </div>
@@ -7696,7 +7953,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       metadata: {
                         stage: 'island_run_boss_island_cleared',
                         island_number: islandNumber,
-                        rewards_granted: { dice: bossReward.dice, coins: 0, essence: bossReward.essence },
+                        rewards_granted: { dice: bossReward.dice, essence: bossReward.essence },
                       },
                     });
                     setShowIslandClearCelebration(true);
@@ -7705,13 +7962,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       diceEarned: bossReward.dice,
                       essenceEarned: bossReward.essence,
                       stopsCleared: 5,
+                      pendingNextIsland: islandNumber + 1,
+                      isCycleCapstone: islandNumber % 120 === 0,
                     });
-                    setShowTravelOverlay(true);
-                    window.setTimeout(() => {
-                      const nextIsland = islandNumber + 1;
-                      setShowTravelOverlay(false);
-                      performIslandTravel(nextIsland, { startTimer: true });
-                    }, 1400);
+                    // Travel is gated behind the celebration CTA; see
+                    // handleTravelFromCelebration.
                   }}
                 >
                   🎉 Claim Island Clear!
@@ -8517,7 +8772,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 🎫 Open {promptedStop?.title ?? ticketPromptStopId}
               </h2>
               <p style={{ marginTop: 12, marginBottom: 8, opacity: 0.85 }}>
-                This stop needs an essence ticket to open on this island.
+                This landmark needs an essence ticket to open on this island.
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '12px 0 16px', fontSize: 16 }}>
                 <div><strong>Cost:</strong> {cost} 🟣</div>

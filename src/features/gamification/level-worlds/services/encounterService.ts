@@ -213,10 +213,6 @@ export function drawEncounterChallenge(islandNumber: number, tileIndex: number):
 export interface EncounterReward {
   /** Essence earned (replaces retired coins). */
   essence: number;
-  /** @deprecated Coins retired — use essence instead. */
-  coins: number;
-  /** @deprecated Hearts retired — always false. */
-  heart: boolean;
   walletShards: boolean;
   dice: number;
   spinTokens: number;
@@ -255,7 +251,7 @@ export function rollEncounterReward(options?: {
   const dice = random() < diceChance ? 2 + tier * 2 : 0;
   const spinTokens = random() < spinChance ? 1 : 0;
 
-  return { essence, coins: 0, heart: false, walletShards, dice, spinTokens };
+  return { essence, walletShards, dice, spinTokens };
 }
 
 export function formatEncounterRewardSummary(reward: EncounterReward): string {
