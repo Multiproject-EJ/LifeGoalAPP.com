@@ -3583,13 +3583,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // Track roll index for deterministic (non-time-based) tile-landing RNG seeding.
   const rollIndexRef = useRef(0);
 
+  // Seed spacing constants. The landing seed packs three independent dimensions
+  // into one 32-bit integer: island number × ISLAND_SEED_STRIDE + tile index ×
+  // TILE_SEED_STRIDE + roll index. Strides are large enough that no two
+  // (island, tile, roll) triples within realistic bounds can collide:
+  //   islands: up to ~100k per cycle → needs > 10_000 per tile
+  //   tiles:   40 per board          → needs > 100 per roll
+  //   rolls:   < 100 per session
+  const ISLAND_SEED_STRIDE = 10_000;
+  const TILE_SEED_STRIDE = 100;
+
   // B2-3: resolve non-encounter tile landings with real outcomes.
   // Hazard tiles DEDUCT essence (clamped at 0). All other rewarded tiles add essence.
   const resolveTileLanding = (tileType: string) => {
     const mult = Math.max(1, effectiveMultiplier);
     // Deterministic seed — derived from island, tile, and the per-session roll
     // index (not Date.now()). Same landing on reload yields the same outcome.
-    const landingSeed = (effectiveIslandNumber * 10_000) + (tokenIndex * 100) + rollIndexRef.current;
+    const landingSeed = (effectiveIslandNumber * ISLAND_SEED_STRIDE) + (tokenIndex * TILE_SEED_STRIDE) + rollIndexRef.current;
     const rawEssence = resolveIslandRunContractV2EssenceEarnForTile(tileType, { islandNumber: effectiveIslandNumber, seed: landingSeed });
     // Apply the dice multiplier. For hazards (negative) this scales the loss too.
     const essenceDelta = rawEssence * mult;
