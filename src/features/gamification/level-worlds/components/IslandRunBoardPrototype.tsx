@@ -807,20 +807,24 @@ function preloadThemeAssets(theme: IslandBoardTheme) {
   });
 }
 
-function getStopIcon(kind: string, stopId: string) {
-  if (stopId === 'boss') return '👑';
-  if (stopId === 'hatchery') return '🥚';
-
-  switch (kind) {
-    case 'habit_action':
-      return '✅';
-    case 'checkin_reflection':
-      return '🧭';
-    case 'breathing':
-      return '🧘';
-    default:
-      return '📍';
+function getStopIcon(stop: { stopId: string; mysteryContentKind?: string }): string {
+  if (stop.stopId === 'boss') return '👑';
+  if (stop.stopId === 'hatchery') return '🥚';
+  if (stop.stopId === 'habit') return '✅';
+  if (stop.stopId === 'wisdom') return '📖';
+  if (stop.stopId === 'mystery') {
+    switch (stop.mysteryContentKind) {
+      case 'habit_action':
+        return '✅';
+      case 'checkin_reflection':
+        return '🧭';
+      case 'breathing':
+        return '🧘';
+      default:
+        return '❓';
+    }
   }
+  return '📍';
 }
 
 function getOrbitStopDisplayIcon(state: StopProgressState | 'shop', icon: string): string {
@@ -838,7 +842,6 @@ function clamp(value: number, min: number, max: number) {
 const TILE_TYPE_ICONS: Record<string, string> = {
   currency: '💰',
   chest: '🎁',
-  event: '⚡',
   hazard: '☠️',
   micro: '✨',
 };
@@ -846,7 +849,6 @@ const TILE_TYPE_ICONS: Record<string, string> = {
 const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
   currency: '#f7df7a',
   chest: '#7dd8ff',
-  event: '#d39bff',
   hazard: '#ff8f8f',
   micro: '#9dffbe',
   encounter: '#ffa765',
@@ -2911,7 +2913,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         x: visualX,
         y: visualY,
         state: stopStateMap.get(stop.stopId) ?? 'active',
-        icon: getStopIcon(stop.kind, stop.stopId),
+        icon: getStopIcon(stop),
         labelOffsetY,
         labelOffsetX: 0,
         hideLabel: false,
@@ -3714,13 +3716,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const rawEssence = resolveIslandRunContractV2EssenceEarnForTile(tileType, { islandNumber: effectiveIslandNumber, seed: landingSeed });
     // Apply the dice multiplier. For hazards (negative) this scales the loss too.
     const essenceDelta = rawEssence * mult;
-    const EVENT_MESSAGES = [
-      '⚡ Island event!',
-      '⚡ Something stirs...',
-      '⚡ A challenge echoes...',
-      '⚡ The island pulses.',
-      '⚡ Fortune favors the bold.',
-    ];
 
     const multLabel = mult > 1 ? ` (x${mult})` : '';
     switch (tileType) {
@@ -3747,9 +3742,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       }
       case 'micro':
         setLandingText(essenceDelta > 0 ? `✨ Micro reward! +${essenceDelta} essence${multLabel}` : '✨ Micro reward!');
-        break;
-      case 'event':
-        setLandingText(EVENT_MESSAGES[(islandNumber + tokenIndex) % EVENT_MESSAGES.length]);
         break;
       default:
         setLandingText(`Landed on tile #${tokenIndex}`);
@@ -7093,7 +7085,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             {/* ── Stop 3: Mystery (rotating content: breathing/meditation/check-in) ── */}
             {activeStopId === 'mystery' && openedStopIsPlayable && (
               <div className="island-hatchery-card">
-                {activeStop.kind === 'breathing' ? (
+                {activeStop.mysteryContentKind === 'breathing' ? (
                   <div>
                     <p className="island-stop-modal__copy">🧘 <strong>Guided Breathing / Meditation</strong></p>
                     <p>Take a moment to breathe. Tap the button below to begin a 1-minute breathing exercise right here.</p>
@@ -7110,7 +7102,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       </button>
                     </div>
                   </div>
-                ) : activeStop.kind === 'habit_action' ? (
+                ) : activeStop.mysteryContentKind === 'habit_action' ? (
                   <div>
                     <p className="island-stop-modal__copy">✅ <strong>Action Challenge</strong></p>
                     <p>Complete one habit or action objective to earn your reward and stabilize momentum.</p>
@@ -7127,7 +7119,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       </button>
                     </div>
                   </div>
-                ) : activeStop.kind === 'checkin_reflection' ? (
+                ) : activeStop.mysteryContentKind === 'checkin_reflection' ? (
                   <IslandRunReflectionComposer
                     session={session}
                     islandNumber={islandNumber}
@@ -7326,7 +7318,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               && activeStop.stopId !== 'boss'
               && activeStop.stopId !== 'mystery'
               && activeStop.stopId !== 'wisdom'
-              && activeStop.kind !== 'checkin_reflection'
               && openedStopIsPlayable ? (
                 <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
                   Complete Stop

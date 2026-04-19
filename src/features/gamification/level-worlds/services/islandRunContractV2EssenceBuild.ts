@@ -56,7 +56,6 @@ export function initStopBuildStatesForIsland(effectiveIslandNumber: number): Isl
 export const ISLAND_RUN_CONTRACT_V2_ESSENCE_EARN_BY_TILE: Readonly<Record<string, { min: number; max: number }>> = {
   currency: { min: 5, max: 15 },
   chest:    { min: 20, max: 40 },
-  event:    { min: 8, max: 20 },
   hazard:   { min: -10, max: -3 },
   micro:    { min: 3, max: 10 },
 };

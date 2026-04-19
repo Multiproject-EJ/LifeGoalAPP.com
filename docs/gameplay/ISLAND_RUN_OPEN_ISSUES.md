@@ -1,7 +1,7 @@
 # Island Run — Open Issues & Feature Backlog
 
 Status: Living document
-Last updated: 2026-04-19 (session 2)
+Last updated: 2026-04-19 (session 3)
 Owner: Gameplay System
 
 This document tracks every unresolved issue, bug, inconsistency, or scoped
@@ -71,29 +71,7 @@ row drifts from the client's truth.
 
 ## P1 — Contract mismatches / feature parity
 
-### P1-1. Drop `event` tile type, rename mini-games → "events"
-**Files:**
-- `src/features/gamification/level-worlds/services/islandBoardTileMap.ts`
-- `src/features/gamification/level-worlds/services/islandRunContractV2EssenceBuild.ts` (`ISLAND_RUN_CONTRACT_V2_ESSENCE_EARN_BY_TILE`)
-- `docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md` §5D, §6
-- Renderer / landing-effect handlers in `IslandRunBoardPrototype.tsx`
-
-**Reasoning (from user feedback).** The ring-tile type called `event` has no
-clean purpose distinct from `micro`, and the name collides with the timed
-mini-games ("feeding_frenzy", "lucky_spin", etc.) which should own the
-terminology. Mini-games become "events"; the board loses a confusing tile
-type.
-
-**Change.**
-- Remove `'event'` from `IslandTileType` and `TILE_POOL`.
-- Remove its `ISLAND_RUN_CONTRACT_V2_ESSENCE_EARN_BY_TILE` row.
-- Update renderer to route old `'event'` tiles to `'micro'` or
-  `'currency'` during hydration so old seeds don't crash.
-- Rename "timed mini-games" → "events" in doc + UI copy. Active event is
-  accessed from its own HUD button; entry tickets/tokens come from the
-  reward bar and landmark completions (not from an `event` tile).
-
----
+### P1-1. Drop `event` tile type — ✅ Closed (session 3)
 
 ### P1-2. Tile pool redesign — new Monopoly-GO-style ring tiles
 **Files:**
@@ -103,6 +81,11 @@ type.
 - Canonical contract §5D
 - Tile 3D props (see P2-4)
 
+**Status note (session 3).** The `bonus` tile logic layer is now shipped
+(see P1-3, closed) so all that remains for this item is the three remaining
+new types — `coin_flip`, `bank_heist`, `shutdown` — plus their renderer
+handlers and 3D props.
+
 **New tile taxonomy (all regular board tiles — NOT events/mini-games):**
 
 | Tile | On-land effect |
@@ -111,8 +94,8 @@ type.
 | `chest` | Larger essence burst + reward-bar progress. |
 | `micro` | Small essence drip + reward-bar progress. Most common. |
 | `hazard` | Deduct essence (wallet-clamped). |
-| `encounter` | Open encounter modal (once per island; see P2-5 for glossary). |
-| `bonus` ⭐ | Charging accumulator tile — full spec in **P1-3**. |
+| `encounter` | Open encounter modal (once per island; see contract §5D glossary). |
+| `bonus` ⭐ | Charging accumulator tile — logic layer live (see P1-3 closed). Renderer wiring + 3D prop still pending. |
 | `coin_flip` | 50/50: double the most recent on-land essence reward, or lose it. |
 | `bank_heist` | Trigger a short bank-heist sequence; awards a large essence windfall against an "island bank" that fills from passive play. |
 | `shutdown` | Temporarily locks one of the player's building stops; unlock with a small essence bribe or after a cooldown. |
@@ -130,69 +113,35 @@ beats and most tiles stay feeding-type.
 
 ---
 
-### P1-3. Glowing bonus tile with 9-hit accumulator
-**Files:**
-- `islandBoardTileMap.ts` (new `'bonus'` tile type)
-- `islandRunRuntimeState.ts` / `islandRunGameStateStore.ts` (new persistent field)
-- Landing handler in `IslandRunBoardPrototype.tsx`
-- Canonical contract §5D
-- New migration if we persist tile state to Supabase
-
-**Mechanic (from user spec).**
-- When the player lands on the bonus tile, increment a tile-local counter.
-- UI lights one more dot per landing (1/8, 2/8, …).
-- At 8/8 the entire tile glows ("primed").
-- The **next** landing (the 9th) releases the accumulated bonus and resets
-  the counter to 0.
-- Bonus payload: large essence burst + dice kicker + reward-bar surge
-  (exact numbers TBD during tuning pass).
-
-**State shape.**
-```ts
-// In IslandRunGameStateRecord
-bonusTileChargeByIsland: Record<string, Record<number, number>>;
-// key = islandNumber, inner key = tileIndex, value = charge count (0..8)
-```
-Reset to `{}` on island travel (same pattern as `stopTicketsPaidByIsland`).
-
-**Acceptance.**
-- Pure service function `applyBonusTileCharge(state, tileIndex, islandNumber)`
-  returns `{ state, released: boolean, payout: BonusPayout | null }`.
-- Renderer reads the map to drive the dot lamps; no game logic in the renderer.
-- Unit tests cover: 1st→8th landing increments; 9th releases; release resets;
-  island travel resets.
-- Contract §5D rewritten to cover the mechanic.
+### P1-3. Glowing bonus tile with 9-hit accumulator — ✅ Logic layer closed (session 3)
+The pure service (`islandRunBonusTile.ts`) + its 12-case unit suite + the
+contract §5E spec are merged. The renderer wiring (dot lamps, released
+burst animation, 3D prop) + the runtime-state field + Supabase migration
+are the remaining follow-up and ride with P1-2's other new tile types.
 
 ---
 
-### P1-4. Reward-bar payout set vs. contract
-**File:** `src/features/gamification/level-worlds/services/islandRunContractV2RewardBar.ts`
-Contract §5 lists payout types as `{ tokens, dice, stickers }`, but
-`RewardBarRewardKind` also includes `'essence'`. Either widen §5 to admit
-essence (probably correct — essence reward bar ticks are useful) or remove
-the essence branch from the rotation.
+### P1-4. Reward-bar payout set vs. contract — ✅ Closed (session 3)
+Contract §5 now explicitly lists `essence` alongside tokens, dice, and
+sticker fragments as a reward-bar payout kind (matches the shipping
+`RewardBarRewardKind` union and the `REWARD_ROTATION` table).
 
 ---
 
-### P1-5. Dice multiplier plumbed but outlawed by the contract
-**File:** `islandRunRollAction.ts` (`diceMultiplier` param)
-Contract §2A/§8: roll cost is always flat 2. Either delete the parameter or
-update the contract to allow an opt-in "burn more dice for amplified tile
-rewards" mode.
+### P1-5. Dice multiplier plumbed but outlawed by the contract — ✅ Closed (session 3)
+Contract §2A + §2E now document the dice multiplier as an **opt-in amplifier**
+(×1/×2/×3/×5/×10/×20/×50/×100/×200) with per-tier dice-pool unlock gates.
+Cost per roll = `2 × N`. Movement is unchanged; only cost and reward
+amplification scale.
 
 ---
 
-### P1-6. Hatchery dual source of truth
-**Files:**
-- `islandRunContractV2StopResolver.ts:73-85`
-- Renderer egg-lifecycle code in `IslandRunBoardPrototype.tsx`
-
-`resolveIslandRunStep1CompleteForProgression` accepts **either**
-`stopStatesByIndex[0].objectiveComplete` **or** a derived
-`hatcheryEffectivelyComplete`. Any code path that only reads the former can
-disagree with UI that uses this helper. Reconcile by having the egg-set
-action write `stopStatesByIndex[0].objectiveComplete = true` immediately, so
-`hatcheryEffectivelyComplete` becomes dead code that can be deleted.
+### P1-6. Hatchery dual source of truth — ✅ Closed (session 3)
+`hatcheryEffectivelyComplete` is removed from
+`resolveIslandRunStop1CompleteForProgression`'s signature (zero production
+callers). The V2 path now reads `stopStatesByIndex[0].objectiveComplete`
+only. The renderer already flips that flag on egg-set, so there is no
+longer a dual source of truth.
 
 ---
 
@@ -215,15 +164,17 @@ ticket-curve steepening was not paired with a build-cost rebalance — run a
 math sanity pass on expected minutes-per-island and either soften the build
 curve, raise per-tile essence, or accept the longer pacing and document it.
 
-### P2-2. `TILE_POOL` weighting vs. doc
-Contract calls `micro` "most common tile" but the pool is `currency:3,
-chest:2, micro:2, event:2, hazard:1`. Reconcile once the P1-1/P1-2 redesign
-lands.
+### P2-2. `TILE_POOL` weighting vs. doc — ✅ Closed (session 3)
+Contract §5D now mirrors the live weighting (`currency:3, chest:2,
+micro:4, hazard:1` post-`event`-retirement) and explicitly calls `micro` the
+most common tile on the ring.
 
-### P2-3. Day-gated encounters on normal islands
-`generateTileMap` suppresses encounters on normal islands while
-`dayIndex < 2`. This is undocumented in the canonical contract. Either
-document the gate or remove it.
+### P2-3. Day-gated encounters on normal islands — ✅ Closed (session 3)
+Day-gate documented in contract §5F (`Encounter tile placement`). Normal
+islands surface their single encounter only once `dayIndex >= 2`; seasonal
+and rare islands have no gate. The fractional positions `{0.15}` /
+`{0.275, 0.775}` are published so any future board profile inherits the
+same spread.
 
 ### P2-4. Tile 3D prop audit
 User feedback: confirm every tile type renders a recognisable 3D prop (chest
@@ -233,21 +184,17 @@ heist bag for `bank_heist`, coin disc for `coin_flip`, padlock for
 per-type render branch in `BoardStage.tsx`. File missing-asset tickets for
 each.
 
-### P2-5. Glossary — "encounter modal"
-**Definition (for the doc + in-game help):**
-> **Encounter modal.** A one-shot side-quest popup that opens when the
-> player lands on an `encounter` tile. Content is drawn from
-> `encounterService.ts` (Quiz / Breathing / Gratitude prompts —
-> intentionally easy, near-guaranteed completion). Rewards: essence +
-> reward-bar progress + optional sticker chance. Once completed the
-> encounter tile goes inert for the rest of that island.
+### P2-5. Glossary — "encounter modal" — ✅ Closed (session 3)
+Glossary entry folded into contract §5D directly below the tile catalogue
+(same location a consumer would reach for it).
 
-### P2-6. Mystery-stop typing
-`IslandStopPlanEntry.kind` unions `'fixed_*'` with the three Mystery content
-variants. Consumers that switch on `kind` must enumerate five rotating
-variants. Introduce a `'fixed_mystery'` discriminator and surface the
-rotating content variant on a sibling `mysteryContentKind?: MysteryStopContentKind`
-field.
+### P2-6. Mystery-stop typing — ✅ Closed (session 3)
+`IslandStopPlanEntry.kind` is now a stable 5-value discriminator
+(`fixed_hatchery` / `fixed_habit` / `fixed_mystery` / `fixed_wisdom` /
+`fixed_boss`). The rotating variant lives on a sibling
+`mysteryContentKind?: MysteryStopContentKind` field (only set when
+`kind === 'fixed_mystery'`). `getStopIcon` and the mystery-stop modal
+switches were updated to read `mysteryContentKind` directly.
 
 ### P2-7. `ISLAND_RUN_DEFAULT_STARTING_DICE` naming
 **Status:** ✅ Closed in session 2 — see Closed section below.
@@ -324,3 +271,82 @@ Removed the reference to **coins** from the "intentionally not in scope"
 list in `islandRunRollAction.ts` (coins are retired) and refreshed the
 tile-reward example list to mention the live currencies + bonus-tile
 charge.
+
+## Closed in session 3 (2026-04-19)
+
+### ✅ P1-1. Drop `event` tile type
+`'event'` is removed from `IslandTileType`, `TILE_POOL`, and
+`ISLAND_RUN_CONTRACT_V2_ESSENCE_EARN_BY_TILE`. The tile generator now
+reshuffles the pool as `currency:3, chest:2, micro:4, hazard:1`, making
+`micro` the most common ring tile (matches the contract's "most common
+tile" wording). The renderer's `case 'event':` branch, its `EVENT_MESSAGES`
+copy, and the `event` entries in `TILE_TYPE_ICONS` + `SPARK60_TILE_COLOR`
+are all deleted. The word "event" is now reserved solely for the timed
+minigame rotation (feeding_frenzy / lucky_spin / space_excavator /
+companion_feast). Foundations test + contract §5D updated.
+
+### ✅ P1-3. Bonus tile 9-hit accumulator — game-logic layer
+New pure service `services/islandRunBonusTile.ts` exporting
+`applyBonusTileCharge`, `getBonusTileCharge`,
+`resetBonusTileChargeForIsland`, `sanitizeBonusTileChargeByIsland`, plus
+the canonical `BONUS_CHARGE_TARGET = 8`, `BONUS_CYCLE_LENGTH = 9`, and
+`BONUS_BASE_RELEASE_PAYOUT` constants. 12-case unit test suite covers:
+single-increment per landing, 8-then-release cycle, release-resets-to-0,
+two consecutive cycles = two releases, immutable-input guarantee,
+per-(island, tileIndex) independence, invalid-index no-op,
+`resetBonusTileChargeForIsland` preserves other islands, and
+`sanitize...` drops malformed entries / clamps overshoots. Payload
+baseline is `{ essence: 80, dice: 4, rewardBarProgress: 5 }` — the island
+essence multiplier is applied by the renderer caller when it eventually
+wires up, matching how the rest of the economy scales. Contract §5E
+documents the mechanic, payout, state shape, and invariants.
+
+### ✅ P1-4. Reward-bar payout set matches code
+Contract §5 now lists `Essence / Dice / Minigame tokens / Sticker
+fragments` as the rotating payout kinds, pointing at `REWARD_ROTATION`
+in `islandRunContractV2RewardBar.ts` as the source of truth.
+
+### ✅ P1-5. Dice multiplier is documented
+Contract §2A keeps the 2–12 movement invariant; the new §2E documents
+the full multiplier tier ladder, the `2 × N` cost formula, per-tier
+unlock gates, the auto-downgrade rule (via `clampMultiplierToPool`),
+and the fact that hazards are amplified too (so high multiplier = real
+risk). §3 Dice was updated to reference §2E instead of claiming a flat
+cost.
+
+### ✅ P1-6. Hatchery dual source of truth removed
+`hatcheryEffectivelyComplete` parameter is dropped from
+`resolveIslandRunStep1CompleteForProgression`. Its V2 implementation now
+reads only `stopStatesByIndex[0].objectiveComplete`. The egg-set action
+in `IslandRunBoardPrototype.tsx` already writes that flag synchronously,
+so there is no longer a separate "effectively complete" bridge. Test
+suite `islandRunContractV2StopResolver.test.ts` was simplified to match
+the new signature.
+
+### ✅ P2-2. Tile pool weighting reconciled
+Pool weighting is documented inline in `islandBoardTileMap.ts` and
+mirrored in contract §5D (`currency:3, chest:2, micro:4, hazard:1`).
+`micro` is now genuinely the most common tile, matching the contract's
+long-standing claim.
+
+### ✅ P2-3. Day-gated encounters documented
+Contract §5F (`Encounter tile placement`) publishes the normal-island
+day-gate (`dayIndex >= 2`) alongside the seasonal/rare "always on"
+behaviour and the fractional positions used on every board profile.
+
+### ✅ P2-5. Encounter modal glossary
+Folded the glossary entry into contract §5D directly below the tile
+catalogue.
+
+### ✅ P2-6. Mystery-stop typing discriminator
+`IslandStopPlanEntry.kind` now has exactly 5 discriminants (one per
+stopId). The Mystery stop's rotating content variant moved to the new
+sibling field `mysteryContentKind?: MysteryStopContentKind`, which is
+only populated when `kind === 'fixed_mystery'`. `getStopIcon` in
+`IslandRunBoardPrototype.tsx` was refactored to take the stop object and
+branch on `mysteryContentKind` explicitly. The mystery-stop modal's
+switch chain now also reads from `mysteryContentKind`. Dead `kind`
+checks in the generic complete-stop footer branch were cleaned up as
+part of the edit (the outer `stopId !== 'mystery'` guard already
+dominated the check).
+

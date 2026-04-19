@@ -11,7 +11,7 @@
 
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
 
-export type IslandTileType = 'currency' | 'chest' | 'event' | 'hazard' | 'micro' | 'encounter';
+export type IslandTileType = 'currency' | 'chest' | 'hazard' | 'micro' | 'encounter';
 
 export type IslandRarity = 'normal' | 'seasonal' | 'rare';
 
@@ -31,18 +31,25 @@ const ENCOUNTER_FRACTIONS: Record<IslandRarity, number[]> = {
   rare: [0.275, 0.775],
 };
 
-// Non-stop tile pool (weighted). egg_shard tiles retired — shards only from reward bar/stop/boss.
+// Non-stop tile pool (weighted). Retired tile types:
+//   - `egg_shard` (shards now only come from reward bar / stops / boss / egg sell).
+//   - `event` (conflicted with the timed minigame terminology; the word "event"
+//      is now reserved for the timed minigame rotation. Reward-bar progress that
+//      used to come from `event` tiles is now fully covered by `micro`.)
+// Weighting note: `micro` is intentionally the most common tile (matches
+// contract §5D). `currency`/`chest` are the primary essence drivers; `hazard`
+// stays rare so a hazard landing keeps its bite.
 const TILE_POOL: IslandTileType[] = [
   'currency',
   'currency',
   'currency',
   'chest',
   'chest',
-  'event',
-  'event',
+  'micro',
+  'micro',
+  'micro',
+  'micro',
   'hazard',
-  'micro',
-  'micro',
 ];
 
 /** Deterministic seeded pseudo-random number in [0, 1) */

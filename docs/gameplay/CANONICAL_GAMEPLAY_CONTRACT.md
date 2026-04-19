@@ -27,8 +27,8 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 
 ### A. Movement loop
 - Player movement is tile-based and consumes **dice**.
-- Each roll costs exactly **2 dice** (flat cost, never changes).
-- Each roll uses **2 standard dice** (each rolls 1–6), producing a total movement of **2–12 tiles** per roll.
+- Each roll costs `2 × N` dice, where `N` is the player's currently selected **dice multiplier** (default `×1` = flat 2 dice). See §2E.
+- Each roll uses **2 standard dice** (each rolls 1–6), producing a total movement of **2–12 tiles** per roll — the multiplier affects cost and reward amplification only, never the movement distance.
 - Board tile count and board presentation are configurable and may change over time.
 - Stops are external structures and are not part of tile movement.
 - **Spin-based movement is fully retired.**
@@ -47,6 +47,26 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 - Players progress island-to-island by completing all 5 stops.
 - Sticker collectibles persist across islands/loops as long-term progression.
 - Timed event state persists independently of island transitions.
+
+### E. Dice multiplier (opt-in amplifier)
+- The roll cost is `2 × N` where `N ∈ { 1, 2, 3, 5, 10, 20, 50, 100, 200 }`.
+- Each tier unlocks at a minimum dice stash so players can't burn out early. Canonical tiers (source of truth: `MULTIPLIER_TIERS` in `islandRunContractV2RewardBar.ts`):
+
+| Multiplier | Unlocks at (dice pool) | Dice cost per roll |
+|---|---|---|
+| ×1 | 0 | 2 |
+| ×2 | 20 | 4 |
+| ×3 | 50 | 6 |
+| ×5 | 100 | 10 |
+| ×10 | 200 | 20 |
+| ×20 | 500 | 40 |
+| ×50 | 1 000 | 100 |
+| ×100 | 2 000 | 200 |
+| ×200 | 5 000 | 400 |
+
+- The multiplier scales positive essence tile rewards **and** reward-bar progress from tile landings. Hazard deductions are also scaled by the multiplier (high multiplier = high risk too).
+- The multiplier auto-downgrades if the player's pool drops below the current tier's unlock threshold, so the dice button can never become un-rollable silently. See `clampMultiplierToPool`.
+- The multiplier is player-controlled (via the footer ×N button); default `×1` for every new session.
 
 ## Board Topology Model
 
@@ -79,7 +99,7 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 ### Dice
 - Dice is the **only board energy**.
 - Dice is required for movement and core board interactions.
-- Each roll costs exactly 2 dice.
+- Each roll costs `2 × N` dice where `N` is the player's selected multiplier (default `×1`). See §2E.
 - **Tiles never award dice directly.** Dice are only sourced from: reward bar payouts, boss/stop/island completion, daily treats, lucky spin, shop purchases, and passive regeneration.
 
 ### Essence
@@ -262,11 +282,13 @@ Each island has **5 buildings**, one per stop. Buildings are **completely decoup
 
 - Feeding tiles are the primary input for reward bar progress.
 - Reward bar progress resets after each reward claim and fully resets when the active timed minigame/event changes.
-- Reward bar payout types are:
-  - Minigame tokens
-  - Occasional dice
-  - Stickers
-- Reward bar tuning (fill rates, threshold counts, payout rates) is implementation-configurable but must preserve the payout type contract above.
+- Reward bar payout types (one per fill, rotated):
+  - **Essence** (wallet income for stop tickets + buildings)
+  - **Dice** (occasional; adds to the dice pool)
+  - **Minigame tokens** (entry currency for the active timed event)
+  - **Sticker fragments** (long-term collectibles)
+- Payouts rotate deterministically in the order above; see `REWARD_ROTATION` in `islandRunContractV2RewardBar.ts`. Exact quantities scale with the escalation ladder (§5A).
+- Reward bar tuning (fill rates, threshold counts, payout rates) is implementation-configurable but must preserve the payout-kind set above.
 
 ---
 
@@ -296,19 +318,63 @@ Each island has **5 buildings**, one per stop. Buildings are **completely decoup
 
 ## 5D) Tile type catalogue (authoritative)
 
-The 40-tile ring uses the following tile types. **Tile-type `'stop'` is fully retired** — stops are external HUD structures, never board tiles (see §Board Topology).
+The 40-tile ring uses the following tile types. **Tile-type `'stop'` is fully retired** — stops are external HUD structures, never board tiles (see §Board Topology). **Tile-type `'event'` is also retired** — the word "event" is reserved for the timed-minigame rotation; reward-bar progress that used to come from `event` tiles is fully covered by `micro`.
 
 | Tile type | On-land effect | Notes |
 |---|---|---|
 | `currency` | Awards essence | Primary essence income on the board. |
 | `chest` | Awards essence bundle + reward bar progress | Larger payout than `currency`. |
-| `micro` | Awards reward bar progress + small essence | Most common tile; light feed. |
-| `hazard` | **Deducts essence** (never zero) | Intentionally negative outcome. Deduction is capped by the wallet (never goes below 0). |
-| `encounter` | Opens encounter modal | Once-per-visit; completed tiles become inert. |
-| `event` | Progresses the active timed minigame | Cosmetic overlay; no essence payout by itself. |
-| `bonus` | Rotating on-land bonus (shutdown / coin-flip / accumulator / heist-style) | Tunable; must never award retired currencies. |
+| `micro` | Awards reward bar progress + small essence | **Most common tile** on the ring; light feed. |
+| `hazard` | **Deducts essence** (never zero) | Intentionally negative outcome. Deduction is capped by the wallet (never goes below 0). Scaled by the dice multiplier. |
+| `encounter` | Opens encounter modal | Once-per-visit; completed tiles become inert. See glossary below. |
+| `bonus` | Glowing 9-hit accumulator — see §5E | Logic layer shipped; renderer wiring follows in a later PR. |
+
+Weighting on the production profile (`spark40_ring`) is `currency:3, chest:2, micro:4, hazard:1` drawn deterministically per-island from the pool in `islandBoardTileMap.ts`. Encounter tiles are injected at fixed fractional positions (§5F).
 
 Tile topology is **feature-gated via the board profile** — the active profile (`spark40_ring` in production) determines how many tiles of each type exist and their positions, but every tile must be one of the types above.
+
+### Glossary — encounter modal
+
+> **Encounter modal.** A one-shot side-quest popup that opens when the player lands on an `encounter` tile. Content is drawn from `encounterService.ts` (Quiz / Breathing / Gratitude prompts — intentionally easy, near-guaranteed completion). Rewards: essence + reward-bar progress + optional sticker chance. Once completed the encounter tile goes inert for the rest of that island visit.
+
+## 5E) Bonus tile — 9-hit accumulator
+
+The `bonus` tile is a charging accumulator. Each landing lights one more dot on a shared 8-lamp ring around the tile:
+
+1. Landings 1..8 each increment the tile's per-(island, tileIndex) charge counter by 1.
+2. At 8/8 the entire tile glows ("primed").
+3. The **next** (9th) landing releases the accumulated payout and resets the counter to 0.
+
+**Per-release payout (island-1 base values, scale by `getIslandEssenceMultiplier(effectiveIslandNumber)` before awarding):**
+
+| Component | Value |
+|---|---|
+| Essence burst | 80 |
+| Dice kicker | 4 |
+| Reward-bar progress | 5 |
+
+Source of truth: `BONUS_BASE_RELEASE_PAYOUT` in `islandRunBonusTile.ts`.
+
+**State shape (persisted):**
+```ts
+// On IslandRunRuntimeState (added when the renderer wires up the bonus tile):
+bonusTileChargeByIsland: Record<string, Record<number, number>>;
+// outer key: island number (string); inner key: tile index; value: charge 0..8.
+```
+Resets to `{}` via `resetBonusTileChargeForIsland` on island travel (same pattern as `stopTicketsPaidByIsland`).
+
+Invariants:
+- `applyBonusTileCharge` never mutates its input and always returns a fresh ledger map.
+- Two different bonus tiles on the same island have fully independent counters.
+- Resetting one island's charges never touches other islands' charges.
+
+### 5F) Encounter tile placement
+
+- Normal islands (rarity `normal`): **1** encounter tile, placed at fractional position `0.15` of the ring. **Day-gated**: on a normal island the encounter only materialises once `dayIndex >= 2`; on day 0 or day 1 the fractional slot falls back to a deterministic pool tile. This protects brand-new players from hitting a modal inside the first two sessions.
+- Seasonal islands (every 5th that is not also a 10th): **2** encounter tiles at fractions `0.275` and `0.775`. No day-gate.
+- Rare islands (every 10th): **2** encounter tiles at the same fractions. No day-gate.
+
+Fractional positions mean the encounter placement works on any `tileCount` without hard-coded indices.
 
 ## 5C) Reward amplification and session dynamics
 

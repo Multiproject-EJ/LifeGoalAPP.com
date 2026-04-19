@@ -14,7 +14,19 @@ export interface IslandStopPlanEntry {
   stopId: 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
   title: string;
   description: string;
-  kind: 'fixed_hatchery' | 'fixed_habit' | 'fixed_wisdom' | 'fixed_boss' | MysteryStopContentKind;
+  /**
+   * Discriminator for rendering. Mystery rotates its visible content but the
+   * discriminator is always `'fixed_mystery'` — the actual rotation variant
+   * lives on the sibling `mysteryContentKind` field so consumers can enumerate
+   * five stable `kind` values (one per stopId) rather than five content-variant
+   * tags blended into the same union.
+   */
+  kind: 'fixed_hatchery' | 'fixed_habit' | 'fixed_mystery' | 'fixed_wisdom' | 'fixed_boss';
+  /**
+   * Only set when `kind === 'fixed_mystery'` — identifies which rotating
+   * Mystery-stop activity this island draws. `undefined` on every other stop.
+   */
+  mysteryContentKind?: MysteryStopContentKind;
   isBehaviorStop: boolean;
 }
 
@@ -96,7 +108,8 @@ export function generateIslandStopPlan(
       stopId: 'mystery',
       title: mysteryContent.title,
       description: mysteryContent.description,
-      kind: mysteryContent.kind,
+      kind: 'fixed_mystery',
+      mysteryContentKind: mysteryContent.kind,
       isBehaviorStop: true,
     },
     {

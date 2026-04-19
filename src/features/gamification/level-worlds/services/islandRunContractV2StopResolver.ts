@@ -67,21 +67,12 @@ export function resolveIslandRunStep1CompleteForProgression(options: {
   islandRunContractV2Enabled: boolean;
   stopStatesByIndex: Array<StopRuntimeStateEntry | null | undefined>;
   legacyStep1Complete: boolean;
-  /** When true, the hatchery egg has been set — meaning stop 0 (hatchery) is
-   *  effectively resolved even if v2 stopStatesByIndex hasn't been written yet.
-   *  This bridges the gap between the egg-slot lifecycle and the v2 progression
-   *  model so the dice button doesn't get stuck on "Open Stop 1". */
-  hatcheryEffectivelyComplete?: boolean;
 }): boolean {
   if (!options.islandRunContractV2Enabled) return options.legacyStep1Complete;
-  if (isIslandRunContractV2StopCompleteAtIndex({
+  return isIslandRunContractV2StopCompleteAtIndex({
     stopStatesByIndex: options.stopStatesByIndex,
     index: 0,
-  })) {
-    return true;
-  }
-  // Fallback: if the egg lifecycle has resolved the hatchery (egg set), treat step 1 as done.
-  return options.hatcheryEffectivelyComplete === true;
+  });
 }
 
 export function resolveIslandRunFullClearForProgression(options: {
