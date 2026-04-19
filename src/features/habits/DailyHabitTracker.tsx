@@ -2140,11 +2140,16 @@ export function DailyHabitTracker({
     const handleVisibilityOrFocus = () => {
       void refreshTreatCalendarCollectedState();
     };
+    // Also refresh when a calendar door is opened inside the CountdownCalendarModal
+    // so the Today-tab "daily_treat" circle flips to ✓ Done immediately, rather
+    // than waiting for the user to blur and refocus the window.
     window.addEventListener('focus', handleVisibilityOrFocus);
     document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    window.addEventListener('lifegoal:treat-calendar-opened', handleVisibilityOrFocus);
     return () => {
       window.removeEventListener('focus', handleVisibilityOrFocus);
       document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      window.removeEventListener('lifegoal:treat-calendar-opened', handleVisibilityOrFocus);
     };
   }, [refreshTreatCalendarCollectedState]);
 
