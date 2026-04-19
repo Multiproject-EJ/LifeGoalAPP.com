@@ -138,6 +138,7 @@ import {
   deductIslandRunContractV2Essence,
   getEffectiveIslandNumber,
   getIslandTotalEssenceCost,
+  getRemainingIslandBuildCost,
   getStopUpgradeCost,
   initStopBuildStatesForIsland,
   isStopBuildFullyComplete,
@@ -2608,6 +2609,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         islandNumber: effectiveIslandNumber,
         elapsedMs: elapsed,
         isIslandComplete: islandComplete,
+        remainingIslandCost: getRemainingIslandBuildCost({
+          effectiveIslandNumber,
+          stopBuildStateByIndex: runtimeStateRef.current.stopBuildStateByIndex,
+        }),
       });
 
       if (driftResult.driftLost > 0) {

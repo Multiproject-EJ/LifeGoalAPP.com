@@ -66,7 +66,7 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 - Landmarks are external gameplay structures, not tile positions.
 - Landmark progression must not depend on landing on specific tile indices.
 - The player token **never** lands on a landmark. Landmarks are accessed only by tapping the landmark button on the orbit HUD.
-- Board profiles expose `landmarkOrbitAnchors` (historically `stopTileIndices`) — these are purely **visual positioning** for the 5 orbit HUD buttons and have no gameplay meaning. The 40 ring tiles are pure movement tiles whose rewards are picked by the normal tile-map generator.
+- Board profiles no longer expose per-stop tile indices. Landmarks are **fully decoupled from ring tile indices** — the 5 HUD buttons are positioned in screen space by the UI layer (`OUTER_STOP_ANCHORS` in `islandBoardLayout.ts`). Every one of the ring tiles is a pure movement tile picked by the normal tile-map generator; no index is reserved for a landmark.
 
 ### Board topology compatibility note
 - Current production board uses a 40-tile topology profile.
@@ -249,9 +249,10 @@ Each island has **5 buildings**, one per stop. Buildings are **completely decoup
 **Building visuals (L0→L3):** 🏗️ → 🏠 → 🏡 → 🏰 with a scale+glow animation on level-up.
 
 **Essence drift:**
-- Excess essence above **150%** of the remaining island build cost decays at **0.5%/hour** (linear, not compounding), capped at a **20% loss per hydration session**.
+- Excess essence above **150% of the REMAINING island build cost** (essence still owed to finish all 5 buildings on the current island) decays at **0.5%/hour** (linear, not compounding), capped at a **20% loss per hydration session**.
 - Drift is **suspended** when the island is fully cleared (nothing left to build/spend on) or when the player has claimed the island-clear reward.
 - The softened drift rate (previously 5%/hour above 80%) is intentional: the player needs a comfortable essence buffer to pay stop tickets AND fund builds without losing essence faster than it can be earned on the board.
+- Using the *remaining* cost (not the fresh-island total) keeps late-island hoarding visible: once most buildings are funded, the drift threshold contracts and the system nudges the player to spend on the final stops or start saving for the next island.
 
 **Building reset on island travel:**
 - All 5 buildings reset to Level 0 on every island travel (fresh build costs for the new island).

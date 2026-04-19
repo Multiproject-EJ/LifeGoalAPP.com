@@ -170,21 +170,70 @@ export function getIslandTotalEssenceCost(islandNumber: number): number {
   return total;
 }
 
+/**
+ * Essence still owed to fully fund every building on the island given the
+ * current live build state. This is what drift's "remaining cost" threshold
+ * is measured against so that a player who has already funded most of the
+ * island can't sit on a huge hoard without drift nudging them to spend.
+ *
+ * For each stop the remaining cost is:
+ *   - for the current in-progress level: (requiredEssence - spentEssence)
+ *   - plus the full cost of every level above the current one, computed from
+ *     `getStopUpgradeCost` at the supplied `effectiveIslandNumber`.
+ */
+export function getRemainingIslandBuildCost(options: {
+  effectiveIslandNumber: number;
+  stopBuildStateByIndex: ReadonlyArray<IslandRunContractV2BuildState | null | undefined>;
+}): number {
+  const { effectiveIslandNumber, stopBuildStateByIndex } = options;
+  let total = 0;
+  for (let stop = 0; stop < 5; stop++) {
+    const build = stopBuildStateByIndex[stop];
+    const currentLevel = Math.max(0, Math.floor(build?.buildLevel ?? 0));
+    if (currentLevel >= MAX_BUILD_LEVEL) continue;
+
+    // In-progress level: whatever is still owed for this tier.
+    if (build) {
+      const required = Math.max(0, Math.floor(build.requiredEssence));
+      const spent = Math.max(0, Math.floor(build.spentEssence));
+      total += Math.max(0, required - spent);
+    } else {
+      total += getStopUpgradeCost({
+        islandNumber: effectiveIslandNumber,
+        stopIndex: stop,
+        currentBuildLevel: currentLevel,
+      });
+    }
+
+    // Remaining levels above the current one — full tier cost each.
+    for (let level = currentLevel + 1; level < MAX_BUILD_LEVEL; level++) {
+      total += getStopUpgradeCost({
+        islandNumber: effectiveIslandNumber,
+        stopIndex: stop,
+        currentBuildLevel: level,
+      });
+    }
+  }
+  return total;
+}
+
 // ─── Essence Drift (soft pressure) ───────────────────────────────────
 // When a player hoards essence far above what the current island actually
 // needs, a small % of the EXCESS decays per hour. This replaces the toxic
 // "heists" pattern with a gentle nudge to spend.
 //
-// Threshold is intentionally set to 1.5× the island's total build cost — a
-// player can safely hold enough essence for a full island + half of the next
-// one before any drift kicks in.
+// Threshold is set to 1.5× the **remaining** island build cost (not total) —
+// once most of an island is already built, hoarding becomes visible sooner,
+// which pushes the player to either fund the last stops or start saving for
+// the next island. A player can still safely hold enough essence for what's
+// left of this island plus roughly half of the next one before drift kicks in.
 //
 // The rate was tuned down substantially (5%/h → 0.5%/h) based on playtest
 // feedback — the previous rate punished weekend-away players by erasing
-// ~97% of their excess after 72h.  At 0.5%/h, 72h of excess retains ~70%.
-// A per-session cap further limits any single reconnection loss.
-export const ESSENCE_DRIFT_THRESHOLD_RATIO = 1.5; // decay starts above 1.5× island cost
-export const ESSENCE_DRIFT_RATE_PER_HOUR = 0.005; // lose 0.5% of excess per hour
+// ~97% of their excess after 72h.  At 0.5%/h linear, 72h of excess retains
+// ~64%.  A per-session cap further limits any single reconnection loss.
+export const ESSENCE_DRIFT_THRESHOLD_RATIO = 1.5; // decay starts above 1.5× remaining island cost
+export const ESSENCE_DRIFT_RATE_PER_HOUR = 0.005; // lose 0.5% of excess per hour (linear)
 /** Maximum fraction of the player's excess that a single drift application can remove. */
 export const ESSENCE_DRIFT_MAX_SESSION_LOSS_RATIO = 0.2; // cap at 20% of excess per call
 
@@ -193,6 +242,16 @@ export const ESSENCE_DRIFT_MAX_SESSION_LOSS_RATIO = 0.2; // cap at 20% of excess
  * Drift is suspended when the island is already fully cleared (all objectives,
  * all builds at max level, hatchery egg resolved) — there is nothing left to spend on.
  * Returns the new essence value and amount lost.
+ *
+ * Drift uses **linear** decay (contract §4B): `lost = excess × rate × hours`,
+ * clamped to the excess and to the per-session cap. This deliberately avoids
+ * compound decay so the player can reason about "how much will I lose if I'm
+ * away for N hours" without a surprise exponential.
+ *
+ * The threshold is based on **remaining** island build cost (not total) so
+ * that late-island hoarding still triggers drift. `remainingIslandCost` must
+ * be supplied by the caller from the live build state; when omitted, we
+ * fall back to the full island cost (legacy behaviour) to stay safe.
  */
 export function applyEssenceDrift(options: {
   essence: number;
@@ -200,24 +259,35 @@ export function applyEssenceDrift(options: {
   elapsedMs: number;
   /** Pass true to suppress drift when the island is fully cleared. */
   isIslandComplete?: boolean;
+  /**
+   * Essence still owed to finish the current island's buildings + tickets.
+   * When omitted falls back to `getIslandTotalEssenceCost(islandNumber)`.
+   */
+  remainingIslandCost?: number;
 }): { essence: number; driftLost: number } {
   const { essence, islandNumber, elapsedMs, isIslandComplete } = options;
   if (essence <= 0 || elapsedMs <= 0) return { essence, driftLost: 0 };
   // No decay once the island is done — there is nothing to spend essence on.
   if (isIslandComplete) return { essence, driftLost: 0 };
 
-  const islandCost = getIslandTotalEssenceCost(islandNumber);
-  const threshold = Math.floor(islandCost * ESSENCE_DRIFT_THRESHOLD_RATIO);
+  const fallbackCost = getIslandTotalEssenceCost(islandNumber);
+  const remainingRaw = typeof options.remainingIslandCost === 'number'
+    ? options.remainingIslandCost
+    : fallbackCost;
+  // Guard against 0/negative remaining costs (e.g. after all builds funded but
+  // before isIslandComplete flips): fall back to a small positive floor so the
+  // threshold doesn't collapse to 0 and drift everything.
+  const remainingIslandCost = Math.max(1, Math.floor(remainingRaw));
+  const threshold = Math.floor(remainingIslandCost * ESSENCE_DRIFT_THRESHOLD_RATIO);
 
   if (essence <= threshold) return { essence, driftLost: 0 };
 
   const excess = essence - threshold;
   const hoursElapsed = elapsedMs / (60 * 60 * 1000);
-  // Compound decay: remaining = excess × (1 - rate)^hours
-  const remaining = Math.floor(excess * Math.pow(1 - ESSENCE_DRIFT_RATE_PER_HOUR, hoursElapsed));
-  let lost = excess - remaining;
-
+  // Linear decay (per contract): lost = excess × rate × hours, capped at excess.
+  let lost = Math.floor(excess * ESSENCE_DRIFT_RATE_PER_HOUR * hoursElapsed);
   if (lost <= 0) return { essence, driftLost: 0 };
+  if (lost > excess) lost = excess;
 
   // Session cap — never remove more than 20% of excess in a single application
   // so returning after a long absence doesn't feel punitive.

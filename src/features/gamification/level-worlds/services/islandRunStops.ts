@@ -1,4 +1,4 @@
-import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
+import type { IslandBoardProfileId } from './islandBoardProfiles';
 
 /**
  * Mystery stop content kinds — the rotating content that fills the Mystery (Stop 3) slot.
@@ -12,7 +12,6 @@ export type MysteryStopContentKind =
 export interface IslandStopPlanEntry {
   /** Canonical stop ID matching the V2 contract: hatchery → habit → mystery → wisdom → boss. */
   stopId: 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
-  tileIndex: number;
   title: string;
   description: string;
   kind: 'fixed_hatchery' | 'fixed_habit' | 'fixed_wisdom' | 'fixed_boss' | MysteryStopContentKind;
@@ -63,14 +62,16 @@ function seededRandom(seed: number) {
  *
  * The Mystery stop's *content* rotates per island using seeded random selection
  * from MYSTERY_STOP_CONTENT_POOL, but the stop ID is always 'mystery'.
+ *
+ * Landmarks are fully decoupled from ring tile indices — the `profileId` arg
+ * is accepted for forward-compat with future board profiles but no longer
+ * controls landmark positioning (that lives in the HUD layer).
  */
 export function generateIslandStopPlan(
   islandNumber: number,
-  options?: { profileId?: IslandBoardProfileId },
+  _options?: { profileId?: IslandBoardProfileId },
 ): IslandStopPlanEntry[] {
   const safeIsland = Number.isFinite(islandNumber) ? Math.max(1, Math.floor(islandNumber)) : 1;
-  const boardProfile = resolveIslandBoardProfile(options?.profileId);
-  const [hatcheryIndex, habitIndex, mysteryIndex, wisdomIndex, bossIndex] = boardProfile.landmarkOrbitAnchors;
 
   // Select rotating content for the Mystery stop (seeded per island).
   const mysteryContentIndex = Math.floor(seededRandom(97 + safeIsland * 13) * MYSTERY_STOP_CONTENT_POOL.length);
@@ -79,7 +80,6 @@ export function generateIslandStopPlan(
   return [
     {
       stopId: 'hatchery',
-      tileIndex: hatcheryIndex,
       title: '🥚 Hatchery Landmark',
       description: 'Set one egg and track stage progression over time.',
       kind: 'fixed_hatchery',
@@ -87,7 +87,6 @@ export function generateIslandStopPlan(
     },
     {
       stopId: 'habit',
-      tileIndex: habitIndex,
       title: '✅ Habit Landmark',
       description: 'Complete one habit or action objective to maintain momentum.',
       kind: 'fixed_habit',
@@ -95,7 +94,6 @@ export function generateIslandStopPlan(
     },
     {
       stopId: 'mystery',
-      tileIndex: mysteryIndex,
       title: mysteryContent.title,
       description: mysteryContent.description,
       kind: mysteryContent.kind,
@@ -103,7 +101,6 @@ export function generateIslandStopPlan(
     },
     {
       stopId: 'wisdom',
-      tileIndex: wisdomIndex,
       title: '📖 Wisdom Landmark',
       description: 'A short story, questionnaire, or learning moment to reflect on.',
       kind: 'fixed_wisdom',
@@ -111,7 +108,6 @@ export function generateIslandStopPlan(
     },
     {
       stopId: 'boss',
-      tileIndex: bossIndex,
       title: '👑 Boss Landmark',
       description: 'Boss trial closes the island and unlocks the next island.',
       kind: 'fixed_boss',
