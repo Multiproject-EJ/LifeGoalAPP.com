@@ -491,14 +491,34 @@ export function BoardStage(props: BoardStageProps) {
           />
         )}
       </div>
-      {/* Orbit stops — HUD layer above gesture capture so clicks reach the buttons */}
-      <BoardOrbitStops
-        stopVisuals={orbitStopVisuals}
-        activeStopId={activeStopId}
-        sceneClass={theme.sceneClass}
-        onStopClick={onStopClick}
-        getOrbitStopDisplayIcon={getOrbitStopDisplayIcon}
-      />
+      {/*
+        Orbit stops HUD — visually shares the board's 3D plane (applies the
+        same camera + tilt transform), but sits OUTSIDE the camera-stage DOM
+        so it renders above the gesture-capture layer and the stop buttons
+        remain clickable. Absent the matching transform the orbit buttons
+        would "float" in screen-space while the board zooms/pans/tilts
+        behind them (the bug the user reported).
+      */}
+      <div
+        className="island-run-board__orbit-stops-plane"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          transform: cameraStageTransform,
+          transformOrigin: 'center center',
+          willChange: 'transform',
+          zIndex: 11,
+        }}
+      >
+        <BoardOrbitStops
+          stopVisuals={orbitStopVisuals}
+          activeStopId={activeStopId}
+          sceneClass={theme.sceneClass}
+          onStopClick={onStopClick}
+          getOrbitStopDisplayIcon={getOrbitStopDisplayIcon}
+        />
+      </div>
     </div>
   );
 }
