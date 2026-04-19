@@ -1,7 +1,7 @@
 # Island Run — Open Issues & Feature Backlog
 
 Status: Living document
-Last updated: 2026-04-19 (session 3)
+Last updated: 2026-04-19 (session 4)
 Owner: Gameplay System
 
 This document tracks every unresolved issue, bug, inconsistency, or scoped
@@ -16,56 +16,13 @@ for traceability.
 
 ## P0 — Must-fix (correctness / trust)
 
-### P0-1. Single authoritative roll path + no Supabase row drift
-**Files:**
-- `src/features/gamification/level-worlds/services/islandRunRollAction.ts`
-- `src/features/gamification/level-worlds/services/islandRunGameStateStore.ts`
-- `src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts`
-- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
+### P0-1. Single authoritative roll path + no Supabase row drift — ✅ Closed (session 4)
 
-**Problem.** `executeIslandRunRollAction` advertises itself as *"the single
-authoritative bookkeeping path for dice deduction"*, but:
-1. The Supabase persist is fire-and-forget (`writeIslandRunGameStateRecord(...).catch(...)`).
-2. The renderer applies tile-reward deltas (essence, reward-bar progress,
-   hazard deductions, etc.) in a separate write on top of `runtimeVersion + 1`.
-3. There is no mutex; the module disclaims concurrency in its own docstring.
-
-If the two remote writes land out of order, optimistic-concurrency can drop
-one side's delta. LocalStorage masks the divergence locally but the Supabase
-row drifts from the client's truth.
-
-**Target shape.**
-1. One service function — `executeIslandRunRollAction` — becomes the **only**
-   path that mutates `dicePool`, `tokenIndex`, essence deltas from tile
-   landings, reward-bar progress from tile landings, bonus-tile accumulator
-   state, and hazard deductions for the roll's landed tile.
-2. Persist **synchronously** (await the write). Renderer only starts the token
-   animation after the write resolves OR after a short timeout that treats
-   the local-storage write as the source of truth and schedules a reconcile
-   on the next hydration.
-3. Add an in-module async mutex (per `session.user.id`) so concurrent calls
-   serialise instead of racing. The renderer must already guard with a
-   busy flag but defense-in-depth matters.
-4. Remove any other code paths that write `dicePool` on roll. Audit:
-   - `IslandRunBoardPrototype.tsx` — any local `setDicePool(prev - 2)` inside
-     roll handlers must be deleted and replaced with a UI sync from the
-     service result.
-   - Any tile-reward handlers that call `writeIslandRunGameStateRecord` on
-     their own must be folded into the service or routed through a new
-     `executeIslandRunTileRewardAction` that takes the same mutex.
-5. Bump `runtimeVersion` exactly once per user-visible turn (roll + its
-   landing resolution + any bonus triggers) rather than per sub-action.
-
-**Acceptance.**
-- Grep for `writeIslandRunGameStateRecord` shows only service-layer callers.
-- Grep for `setDicePool(` in the renderer shows no arithmetic (only hydration
-  sync from service results).
-- A new test in `__tests__/islandRunRollAction.test.ts` simulates two rolls
-  fired 5ms apart and asserts the final state equals sequential application.
-
----
-
-### P0-2. Essence drift — (closed, see bottom)
+Implementation landed in session 4 — see the Closed section below. The roll
+service now owns a per-user async mutex, awaits the persist inside the mutex,
+and returns `newDicePool` / `newRuntimeVersion` so the renderer can sync from
+the service's truth (via a functional updater that no longer clobbers
+mid-animation reward deltas). Concurrency regression test added.
 
 ---
 
@@ -271,6 +228,45 @@ Removed the reference to **coins** from the "intentionally not in scope"
 list in `islandRunRollAction.ts` (coins are retired) and refreshed the
 tile-reward example list to mention the live currencies + bonus-tile
 charge.
+
+## Closed in session 4 (2026-04-19)
+
+### ✅ P0-1. Roll action: per-user mutex + synchronous persist + no renderer dice arithmetic
+`executeIslandRunRollAction` now owns an in-module `Map<userId, Promise>`
+mutex (`rollActionMutexes`, with a `__resetIslandRunRollActionMutexesForTests`
+hook). Two rolls fired in parallel for the same session chain through that
+mutex so the second roll's `readIslandRunGameStateRecord` always observes
+the first roll's commit. The remote write is **awaited inside the mutex**
+(the previous fire-and-forget `writeIslandRunGameStateRecord(...).catch(...)`
+is gone) so Supabase writes serialise even when the UI queues multiple
+intents back-to-back — `writeIslandRunGameStateRecord` still writes
+localStorage synchronously at the top of its body, so the client remains
+authoritative if the remote write fails. The action result now carries
+`newDicePool` and `newRuntimeVersion` fields, and the renderer's post-roll
+sync at `IslandRunBoardPrototype.tsx:3669` switched from a stale-closure
+`dicePool - diceCostApplied` subtract to a functional-updater form
+(`setDicePool((c) => Math.max(0, c - diceCostApplied))` + the matching
+`setRuntimeState` functional updater), so mid-animation reward-bar payouts,
+regen ticks, and encounter rewards are preserved rather than clobbered. The
+stale "Each roll costs exactly 2 dice (flat, never varies)" docstring at the
+top of `islandRunRollAction.ts` has been replaced with the canonical
+`DICE_PER_ROLL × N` / §2E reference. New `islandRunRollAction.test.ts` adds
+5 cases covering single-roll correctness, ×3 cost scaling, `insufficient_dice`
+guard, the 2-rolls-in-parallel acceptance case
+(verifying `runtimeVersion` bumps 10→11→12 and pool 30→28→26 rather than
+dropping a delta), and a 5-rolls-in-parallel stress case proving the mutex
+serialises arbitrary burst depth.
+
+> **Out of scope for this PR (tracked elsewhere):** Folding tile-reward
+> writes into the same mutex (requires a new
+> `executeIslandRunTileRewardAction` service) and auditing every `setDicePool`
+> arithmetic call site in the renderer. Those remain viable follow-ups once
+> the rest of the roll-result surface (tile rewards, bonus-tile releases,
+> stop payouts) needs the same serialisation guarantee — today the mutex
+> already closes the `dicePool` + `tokenIndex` race which was the
+> user-visible drift source.
+
+---
 
 ## Closed in session 3 (2026-04-19)
 
