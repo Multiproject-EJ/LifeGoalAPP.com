@@ -168,7 +168,7 @@ Dice reward sources should follow this qualitative pattern:
 - The regeneration system operates as a **minimum-roll floor**: if the player has fewer dice than their level's minimum threshold, dice regenerate passively over time.
 - If the player already has dice at or above the minimum threshold, **no regeneration occurs**.
 - Full regeneration from 0 to the minimum takes exactly **2 hours**.
-- Roll cost is always flat: **2 dice per roll**, regardless of level or island.
+- Each roll costs `2 × N` dice, where `N` is the currently selected **dice multiplier** (default `×1`). See §2E for the full ladder and unlock gates. The dice-regen system is unaffected by `N` — regen targets the level's floor on a per-hour basis regardless of spend velocity.
 - There is **no hard cap** on dice regen — the formula works for any player level.
 
 ### Dice regeneration formula (continuous, no cap)
@@ -439,8 +439,11 @@ The following are not part of the canonical Island Run gameplay contract:
 - Non-sequential stop progression.
 - Tiles awarding dice directly (dice only come from reward bar, stops, boss, events, shop, regeneration).
 - **Tiles awarding egg shards** (shards only from reward bar, stop completion, boss wins, egg sell).
-- Variable roll costs (roll cost is always flat: 2 dice).
 - Capped dice regeneration tier table (replaced with continuous logarithmic formula).
+
+> **Note on roll cost.** The dice multiplier (§2E) is part of the **current**
+> design, not a removed feature — cost is `2 × N`. Earlier drafts of this
+> contract claimed a strictly flat cost; that wording has been superseded.
 
 ### Egg sell reward choice
 - When selling an egg instead of collecting the creature, the player **chooses** between a shard payout or a dice payout.

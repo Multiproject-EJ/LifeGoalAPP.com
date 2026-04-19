@@ -1,6 +1,21 @@
 # Island Run Canonical Gameplay Migration Plan (Production Mapping)
 
-Date: 2026-04-07  
+Date: 2026-04-07
+Status: **✅ HISTORICAL — migration complete.** This plan describes the
+feature-flagged contract-v2 roll-out that moved Island Run off the pre-v2
+legacy path. All retirements described below (island timers, hearts/coins,
+heart→dice conversion, stop-as-tile coupling, shard-milestone reward bar,
+multi-active timed events) have **already shipped**. Per-file citations are
+in the canonical contract, `ISLAND_RUN_OPEN_ISSUES.md` "Closed" sections,
+and the repository memory bank.
+
+Treat this document as archival context. Do not re-open any of the migration
+steps, and do not reintroduce the feature flag — the v2 path is now the only
+path. If a statement here disagrees with
+`docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md`, the contract wins.
+
+---
+
 Source contract: `docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md`
 
 ## 1) Executive summary
