@@ -4639,6 +4639,42 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setCompletedEncounterIndices((prev) => new Set([...prev, activeEncounterTileIndex]));
     }
     setEncounterResolved(true);
+
+    // Encounter completion contributes reward-bar progress (contract §5D).
+    // Chest/micro/currency feeding tiles already tick the bar via
+    // resolveTileLanding — the encounter path was the last live progress
+    // source missing from the code, so encounters were landing essence/dice
+    // rewards but delivering zero reward-bar progress. The dice-multiplier
+    // amplifier (§2E) applies here too, matching how feeding tiles scale.
+    {
+      const nextRewardBarState = applyIslandRunContractV2RewardBarProgress({
+        state: {
+          rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
+          rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
+          rewardBarClaimCountInEvent: runtimeStateRef.current.rewardBarClaimCountInEvent,
+          rewardBarEscalationTier: runtimeStateRef.current.rewardBarEscalationTier,
+          rewardBarLastClaimAtMs: runtimeStateRef.current.rewardBarLastClaimAtMs,
+          rewardBarBoundEventId: runtimeStateRef.current.rewardBarBoundEventId,
+          rewardBarLadderId: runtimeStateRef.current.rewardBarLadderId,
+          activeTimedEvent: runtimeStateRef.current.activeTimedEvent,
+          activeTimedEventProgress: runtimeStateRef.current.activeTimedEventProgress,
+          stickerProgress: runtimeStateRef.current.stickerProgress,
+          stickerInventory: runtimeStateRef.current.stickerInventory,
+        },
+        source: { kind: 'encounter_resolve' },
+        nowMs: Date.now(),
+        multiplier: Math.max(1, effectiveMultiplier),
+      });
+      applyContractV2RewardBarRuntimeState(nextRewardBarState);
+
+      // Auto-claim if the encounter tick pushed the bar past the threshold —
+      // mirrors the tile-landing auto-claim cascade.
+      if (nextRewardBarState.rewardBarProgress >= nextRewardBarState.rewardBarThreshold) {
+        playIslandRunSound('reward_bar_fill');
+        setTimeout(() => handleContractV2RewardBarClaim(), 500);
+      }
+    }
+
     const summary = formatEncounterRewardSummary(reward);
     const specialtySummaryParts: string[] = [];
     if (specialtyEncounterBonusEssence > 0) specialtySummaryParts.push(`+${specialtyEncounterBonusEssence} essence`);
@@ -5008,11 +5044,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     } catch {
       // ignore storage errors
     }
+    // P1-13: also clear paid stop tickets for the old island. The ticket map
+    // is keyed by island number as a string (no cycle index), so without this
+    // clear a cycle wrap from 120 → 1 would leave the previous cycle's paid
+    // tickets in place and unlock stops 2–5 for free on the next pass.
+    // Hatchery (index 0) is implicitly free regardless. The persist layer
+    // shallow-merges record patches (never deletes keys), so we explicitly
+    // set the island's entry to `[]` — matching how `completedStopsByIsland`
+    // is cleared just above.
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
       patch: {
         completedStopsByIsland: {
+          [oldIslandKey]: [],
+        },
+        stopTicketsPaidByIsland: {
           [oldIslandKey]: [],
         },
       },
@@ -5021,6 +5068,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       ...current,
       completedStopsByIsland: {
         ...current.completedStopsByIsland,
+        [oldIslandKey]: [],
+      },
+      stopTicketsPaidByIsland: {
+        ...(current.stopTicketsPaidByIsland ?? {}),
         [oldIslandKey]: [],
       },
     }));

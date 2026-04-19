@@ -1,7 +1,7 @@
 # Island Run — Open Issues & Feature Backlog
 
 Status: Living document
-Last updated: 2026-04-19 (session 5)
+Last updated: 2026-04-19 (session 6)
 Owner: Gameplay System
 
 This document tracks every unresolved issue, bug, inconsistency, or scoped
@@ -134,20 +134,8 @@ existing 5-parallel-rolls case.
 
 ---
 
-### P1-10. Encounter resolution must tick the reward bar
-**Files:**
-- `src/features/gamification/level-worlds/services/islandRunContractV2RewardBar.ts`
-  (`FEEDING_TILE_PROGRESS`, `resolveIslandRunContractV2RewardBarProgressDelta`)
-- Encounter handler in `IslandRunBoardPrototype.tsx`
-- Canonical contract §5D ("encounter" row)
-
-**Why.** `FEEDING_TILE_PROGRESS` only lists `chest` / `micro` / `currency`.
-Contract §5D promises "essence + reward-bar progress + optional sticker
-chance" for encounters, but the encounter-completion path does not call
-`applyIslandRunContractV2RewardBarProgress` so encounters contribute zero
-reward-bar progress today. Fix: add a new `'encounter_resolve'` source to
-`RewardBarProgressSource` (probably worth 2 or 3 progress, matching a
-chest's impact) and fire it from the encounter success branch.
+### P1-10. Encounter resolution must tick the reward bar — ✅ Closed (session 6)
+See the Closed section below.
 
 ---
 
@@ -167,35 +155,16 @@ hasn't been paid.
 
 ---
 
-### P1-12. Essence drift threshold collapses at end-of-island
-**Files:**
-- `src/features/gamification/level-worlds/services/islandRunContractV2EssenceBuild.ts`
-  (`applyEssenceDrift`, `getRemainingIslandBuildCost`)
-
-**Why.** When every building is L3 and `getRemainingIslandBuildCost`
-returns 0, the current `Math.max(1, …)` clamp produces `threshold = ⌊1 × 1.5⌋ = 1`
-and the entire wallet becomes "excess". That's the opposite of the intended
-"nothing left to build → no drift". Fix: short-circuit `applyEssenceDrift`
-to return zero loss when `remainingIslandCost === 0` **or** when
-`isStopBuildFullyComplete` across all 5 stops is true. Add an
-`islandRunContractV2EssenceBuild.test.ts` case covering the L3/L3/L3/L3/L3
-state with full wallet.
+### P1-12. Essence drift threshold collapses at end-of-island — ✅ Closed (session 6)
+See the Closed section below.
 
 ---
 
-### P1-13. `performIslandTravel` cleanup for per-island state maps
-**Files:**
-- `IslandRunBoardPrototype.tsx` (`performIslandTravel`)
-- `islandRunBonusTile.ts` (`resetBonusTileChargeForIsland`,
-  `sanitizeBonusTileChargeByIsland`)
-- `islandRunStopTickets.ts` (`sanitizeStopTicketsPaidByIsland`)
-
-**Why.** Travel clears `completedStopsByIsland[oldIslandKey]` but does not
-run `resetBonusTileChargeForIsland` or the ticket sanitization helper. Once
-the bonus-tile field lands in runtime state (P1-3 renderer wiring) and
-once a 120→1 cycle wraps with a populated ticket map, stale entries can
-linger. Fix: call both sanitizers from `performIslandTravel` alongside the
-existing `completedStopsByIsland` reset.
+### P1-13. `performIslandTravel` cleanup for per-island state maps — ✅ Closed (session 6, ticket map only)
+Ticket-map cleanup closed. The bonus-tile field does not land until P1-3's
+renderer wiring ships, so the sanitizer call in `performIslandTravel` will
+be added alongside that PR. See Closed section below for the ticket
+cleanup.
 
 ---
 
@@ -252,14 +221,8 @@ Seasonal/rare encounters at fractions `0.275` / `0.775` land on tile indices
 Cosmetically fine now that anchors are gone, but re-evaluate once P1-2 adds
 more tile types and we want an even spread.
 
-### P2-10. `seededRandom(0)` corner case
-**Files:** `src/features/gamification/level-worlds/services/islandBoardTileMap.ts`
-
-**Why.** `seededRandom` returns 0 for seed 0, which pins every tile to
-`currency` for the whole island. Production always calls with `islandNumber ≥ 1`
-so the case is unreachable today, but any dev/QA path that feeds
-`islandNumber = 0` silently produces a degenerate board. One-line fix:
-`s = (seed | 0) || 1` at the top of the helper (or equivalent fallback).
+### P2-10. `seededRandom(0)` corner case — ✅ Closed (session 6)
+See Closed section below.
 
 ### P2-11. `DiceRegenState.maxDice` is really a minimum floor
 **Files:** `src/features/gamification/level-worlds/services/islandRunDiceRegeneration.ts`
@@ -335,6 +298,63 @@ Removed the reference to **coins** from the "intentionally not in scope"
 list in `islandRunRollAction.ts` (coins are retired) and refreshed the
 tile-reward example list to mention the live currencies + bonus-tile
 charge.
+
+## Closed in session 6 (2026-04-19)
+
+### ✅ P1-12. Essence drift no longer collapses at end-of-island
+`applyEssenceDrift` now short-circuits to zero loss when the caller
+explicitly reports `remainingIslandCost <= 0`. Previously the
+`Math.max(1, Math.floor(remainingRaw))` clamp turned a zero remaining
+cost into a threshold of `⌊1 × 1.5⌋ = 1`, and every essence unit above 1
+was counted as "excess" and drifted away — the inverse of the contract's
+"nothing left to build → no drift" semantics. This reliably bit the
+L3/L3/L3/L3/L3 window where all 5 buildings are fully funded but the
+`isIslandComplete` flag hasn't flipped yet (still waiting on objectives,
+egg hatch, or boss). The fallback-path clamp (when `remainingIslandCost`
+is omitted) is preserved so legacy callers don't regress. Two new
+regression tests cover the `remainingIslandCost: 0` case and the
+defensive `remainingIslandCost: -42` case; total essence-build suite
+gains 2 cases.
+
+### ✅ P1-10. Encounter completion ticks the reward bar
+A new `RewardBarProgressSource` variant `{ kind: 'encounter_resolve' }`
+contributes `ENCOUNTER_REWARD_BAR_PROGRESS = 3` (above chest's 2 because
+encounters are once-per-island + gated by an interactive mini-task, below
+a creature-feed's 4). `resolveIslandRunContractV2RewardBarProgressDelta`
+returns `{ progressDelta: 3, feedingActionDelta: 1 }` for the new kind so
+the active timed-event feeding counter ticks alongside the bar.
+`applyEncounterReward` in `IslandRunBoardPrototype.tsx` calls
+`applyIslandRunContractV2RewardBarProgress` with the active
+`effectiveMultiplier`, matching the dice-multiplier amplification rule
+for feeding tiles (§2E). If the encounter tick pushes the bar past its
+threshold, the same auto-claim cascade as the feeding-tile path fires
+with a 500 ms settle delay. Two reward-bar test cases added (progress =
+3 at ×1, progress = 15 at ×5).
+
+### ✅ P1-13. `performIslandTravel` clears stale paid stop tickets
+`performIslandTravel` now writes `stopTicketsPaidByIsland[oldIslandKey] = []`
+alongside the existing `completedStopsByIsland[oldIslandKey] = []` clear.
+Without this, a cycle wrap from island 120 → 1 would leave the previous
+cycle's paid tickets in the ledger and unlock stops 2–5 for free on the
+next visit to that island number (the map is keyed by `String(islandNumber)`
+with no cycle suffix). The persist-patch layer merges record fields by
+shallow spread (never deletes keys), so we explicitly overwrite the entry
+with an empty array rather than trying to `delete` the key — same pattern
+the completed-stops clear uses. The bonus-tile cleanup half of the original
+P1-13 scope defers to P1-3's renderer-wiring PR where the runtime field
+actually lands.
+
+### ✅ P2-10. `seededRandom(0)` no longer collapses the tile pool
+`seededRandom` in `islandBoardTileMap.ts` now normalises seed=0 via
+`s = (seed | 0) || 1`. The xorshift operations on a starting state of 0
+stayed at 0, which made the downstream `Math.floor(rand * TILE_POOL.length)`
+pick `TILE_POOL[0]` (`currency`) for every non-encounter tile — a silent
+all-currency degenerate board any time `islandNumber = 0` reached the
+helper. Production callers pass island numbers ≥ 1, but dev/QA paths
+could hit it. A regression test in `islandBoardTopology.test.ts` asserts
+the seed-0 tile map yields ≥ 3 distinct tile types.
+
+---
 
 ## Closed in session 5 (2026-04-19)
 

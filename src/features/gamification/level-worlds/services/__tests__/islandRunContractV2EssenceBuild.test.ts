@@ -340,4 +340,48 @@ export const islandRunContractV2EssenceBuildTests: TestCase[] = [
       assertEqual(result.essence, highEssence, 'Essence unchanged when island is complete');
     },
   },
+  {
+    // P1-12 regression. Before the fix, `remainingIslandCost: 0` combined with
+    // `Math.max(1, …)` collapsed the drift threshold to `1.5 × 1 = 1`, so the
+    // player's entire wallet above 1 essence was "excess" and drifted every
+    // hour. That's the exact inverse of the contract's "nothing left to build
+    // → no drift" rule. The L3/L3/L3/L3/L3 state is reachable naturally:
+    // fully-funded island where the player is still resolving objectives
+    // (e.g., hatching the egg, beating the boss) before `isIslandComplete`
+    // flips. This case locks that door shut.
+    name: 'P1-12: no drift when remainingIslandCost is 0 (all buildings L3 but objectives not yet flipped)',
+    run: () => {
+      const islandCost = getIslandTotalEssenceCost(1);
+      const highEssence = islandCost * 10; // 10× the island cost — way above the old collapsed threshold
+
+      const result = applyEssenceDrift({
+        essence: highEssence,
+        islandNumber: 1,
+        elapsedMs: 24 * 60 * 60 * 1000, // 24h of "drift time"
+        remainingIslandCost: 0,         // fully built out
+        // Note: isIslandComplete deliberately false to simulate the window
+        // where all 5 buildings are L3 but the egg / boss / final objective
+        // hasn't flipped the island-complete flag yet.
+      });
+
+      assertEqual(result.driftLost, 0, 'No drift when remainingIslandCost is 0');
+      assertEqual(result.essence, highEssence, 'Essence unchanged when nothing is left to build');
+    },
+  },
+  {
+    name: 'P1-12: negative remainingIslandCost is also treated as fully built out',
+    run: () => {
+      // Defensive — should never happen, but if a buggy caller passes a
+      // negative value the drift must not silently flip to "drain everything"
+      // as it did with the old clamp semantics.
+      const result = applyEssenceDrift({
+        essence: 50_000,
+        islandNumber: 1,
+        elapsedMs: 72 * 60 * 60 * 1000,
+        remainingIslandCost: -42,
+      });
+      assertEqual(result.driftLost, 0, 'No drift when remainingIslandCost is negative');
+      assertEqual(result.essence, 50_000, 'Essence unchanged on negative remaining cost');
+    },
+  },
 ];

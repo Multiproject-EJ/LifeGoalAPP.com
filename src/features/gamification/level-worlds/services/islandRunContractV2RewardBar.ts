@@ -19,7 +19,8 @@ export type IslandRunRewardBarRuntimeSlice = Pick<
 
 export type RewardBarProgressSource =
   | { kind: 'tile'; tileType: string }
-  | { kind: 'creature_feed'; treatType: string };
+  | { kind: 'creature_feed'; treatType: string }
+  | { kind: 'encounter_resolve' };
 
 /**
  * Reward type that rotates each time the bar is filled.
@@ -388,12 +389,25 @@ export function ensureIslandRunContractV2ActiveTimedEvent(options: {
   };
 }
 
+/**
+ * Reward-bar progress contributed by completing an encounter challenge.
+ * Encounters are the dramatic beats on the ring — once per island, gated by
+ * an interactive mini-task — so they tick a bit more than a chest (2) but
+ * not so much that they skew the bar's pacing. Contract §5D lists encounters
+ * as a reward-bar source alongside feeding tiles.
+ */
+export const ENCOUNTER_REWARD_BAR_PROGRESS = 3;
+
 export function resolveIslandRunContractV2RewardBarProgressDelta(source: RewardBarProgressSource): {
   progressDelta: number;
   feedingActionDelta: number;
 } {
   if (source.kind === 'creature_feed') {
     return { progressDelta: 4, feedingActionDelta: 1 };
+  }
+
+  if (source.kind === 'encounter_resolve') {
+    return { progressDelta: ENCOUNTER_REWARD_BAR_PROGRESS, feedingActionDelta: 1 };
   }
 
   const tileProgress = FEEDING_TILE_PROGRESS[source.tileType] ?? 0;

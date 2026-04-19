@@ -204,6 +204,47 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
     },
   },
   {
+    // P1-10 regression. Before the fix, `applyEncounterReward` silently
+    // skipped the reward bar — encounters awarded essence/dice but delivered
+    // 0 reward-bar progress despite the contract §5D promise that they tick
+    // the bar alongside feeding tiles. Encounter weight (3) is intentionally
+    // above chest's 2 since encounters are once-per-island and gated by an
+    // active mini-task; keeping the delta in this range preserves bar
+    // pacing.
+    name: 'P1-10: encounter_resolve source ticks reward bar progress',
+    run: () => {
+      const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
+      const baseProgress = withEvent.rewardBarProgress;
+      const next = applyIslandRunContractV2RewardBarProgress({
+        state: withEvent,
+        source: { kind: 'encounter_resolve' },
+        nowMs: 1_100,
+      });
+      assertEqual(next.rewardBarProgress, baseProgress + 3, 'Expected encounter_resolve to contribute 3 progress at ×1');
+      assertEqual(next.activeTimedEventProgress.feedingActions, 1, 'Expected feeding-action counter to increment on encounter');
+    },
+  },
+  {
+    name: 'P1-10: encounter_resolve progress scales with dice multiplier',
+    run: () => {
+      const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
+      const x1 = applyIslandRunContractV2RewardBarProgress({
+        state: withEvent,
+        source: { kind: 'encounter_resolve' },
+        nowMs: 1_100,
+        multiplier: 1,
+      });
+      const x5 = applyIslandRunContractV2RewardBarProgress({
+        state: withEvent,
+        source: { kind: 'encounter_resolve' },
+        nowMs: 1_100,
+        multiplier: 5,
+      });
+      assertEqual(x1.rewardBarProgress, 3, 'Expected encounter at ×1 = 3 progress');
+      assertEqual(x5.rewardBarProgress, 15, 'Expected encounter at ×5 = 15 progress (3×5)');
+    },
+  },
+  {
     name: 'v2 on: overflow progress carries to next fill (chained claims)',
     run: () => {
       const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;

@@ -271,13 +271,27 @@ export function applyEssenceDrift(options: {
   // No decay once the island is done — there is nothing to spend essence on.
   if (isIslandComplete) return { essence, driftLost: 0 };
 
+  // If the caller explicitly reports zero (or negative) remaining build cost,
+  // the island is effectively built-out even if the broader `isIslandComplete`
+  // flag hasn't flipped yet (that flag also requires objectives + egg state).
+  // The previous `Math.max(1, …)` clamp collapsed the threshold to 1 in this
+  // case, so every stored essence unit above 1 was counted as "excess" and
+  // drifted away — the exact opposite of the intended "nothing left to build
+  // → no drift" semantics. Short-circuit here so a fully-funded island never
+  // leaks essence while the player finishes the remaining objectives or
+  // hatches their egg.
+  if (typeof options.remainingIslandCost === 'number' && options.remainingIslandCost <= 0) {
+    return { essence, driftLost: 0 };
+  }
+
   const fallbackCost = getIslandTotalEssenceCost(islandNumber);
   const remainingRaw = typeof options.remainingIslandCost === 'number'
     ? options.remainingIslandCost
     : fallbackCost;
-  // Guard against 0/negative remaining costs (e.g. after all builds funded but
-  // before isIslandComplete flips): fall back to a small positive floor so the
-  // threshold doesn't collapse to 0 and drift everything.
+  // Guard against 0/negative remaining costs from the fallback path (legacy
+  // callers that don't pass `remainingIslandCost`): clamp to a positive floor
+  // so the threshold remains sensible. The explicit-zero case above has
+  // already short-circuited.
   const remainingIslandCost = Math.max(1, Math.floor(remainingRaw));
   const threshold = Math.floor(remainingIslandCost * ESSENCE_DRIFT_THRESHOLD_RATIO);
 
