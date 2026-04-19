@@ -2423,14 +2423,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     if (result.earned < 1) return;
 
-    // Write directly (no remote pre-read) so localStorage is updated immediately,
-    // matching the dice-roll pattern. This prevents earned essence from being lost
-    // when the user exits before the async Supabase round-trip completes.
-    void writeIslandRunGameStateRecord({
+    // Persist only the essence-related fields via persistIslandRunRuntimeStatePatch.
+    // Previously this path wrote a full-record spread (`{...runtimeStateRef.current,
+    // essence}`) through writeIslandRunGameStateRecord, which clobbered every
+    // other field with whatever snapshot the ref held at call time. When multiple
+    // in-flight updates resolved in the same React tick (e.g. tile landing +
+    // reward-bar auto-claim), the later writer overwrote the earlier one's
+    // deltas. The patch path does a read-modify-write at the storage layer so
+    // concurrent updates to disjoint fields no longer silently drop data.
+    void persistIslandRunRuntimeStatePatch({
       session,
       client,
-      record: {
-        ...runtimeStateRef.current,
+      patch: {
         essence: result.essence,
         essenceLifetimeEarned: result.essenceLifetimeEarned,
       },
@@ -2466,11 +2470,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
     if (result.spent < 1) return 0;
 
-    void writeIslandRunGameStateRecord({
+    // Patch-only persistence mirrors awardContractV2Essence — see the block
+    // comment there for why the previous full-record spread through
+    // writeIslandRunGameStateRecord was a cross-field clobber hazard.
+    void persistIslandRunRuntimeStatePatch({
       session,
       client,
-      record: {
-        ...runtimeStateRef.current,
+      patch: {
         essence: result.essence,
         essenceLifetimeSpent: result.essenceLifetimeSpent,
       },
@@ -3689,7 +3695,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         openEncounterChallenge(challenge, currentIndex);
       }
     } else {
-      resolveTileLanding(tileMap[currentIndex]?.tileType ?? 'micro');
+      resolveTileLanding(tileMap[currentIndex]?.tileType ?? 'micro', currentIndex);
       setShowEncounterModal(false);
       setEncounterResolved(false);
     }
@@ -3710,11 +3716,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // B2-3: resolve non-encounter tile landings with real outcomes.
   // Hazard tiles DEDUCT essence (clamped at 0). All other rewarded tiles add essence.
-  const resolveTileLanding = (tileType: string) => {
+  //
+  // `landingTileIndex` is the post-movement tile the token actually settled on
+  // (i.e. `rollResult.newTokenIndex`). It is passed as a parameter instead of
+  // reading the `tokenIndex` React state because `setTokenIndex(currentIndex)`
+  // earlier in the same handler does not flush synchronously — the closure
+  // still holds the pre-roll tokenIndex. Using that stale value seeded the
+  // RNG against the wrong tile and violated the "same landing on reload
+  // yields the same outcome" contract this seed is designed to provide.
+  const resolveTileLanding = (tileType: string, landingTileIndex: number) => {
     const mult = Math.max(1, effectiveMultiplier);
     // Deterministic seed — derived from island, tile, and the per-session roll
     // index (not Date.now()). Same landing on reload yields the same outcome.
-    const landingSeed = (effectiveIslandNumber * ISLAND_SEED_STRIDE) + (tokenIndex * TILE_SEED_STRIDE) + rollIndexRef.current;
+    const landingSeed = (effectiveIslandNumber * ISLAND_SEED_STRIDE) + (landingTileIndex * TILE_SEED_STRIDE) + rollIndexRef.current;
     const rawEssence = resolveIslandRunContractV2EssenceEarnForTile(tileType, { islandNumber: effectiveIslandNumber, seed: landingSeed });
     // Apply the dice multiplier. For hazards (negative) this scales the loss too.
     const essenceDelta = rawEssence * mult;
@@ -3746,7 +3760,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         setLandingText(essenceDelta > 0 ? `✨ Micro reward! +${essenceDelta} essence${multLabel}` : '✨ Micro reward!');
         break;
       default:
-        setLandingText(`Landed on tile #${tokenIndex}`);
+        setLandingText(`Landed on tile #${landingTileIndex}`);
         break;
     }
 
@@ -4625,6 +4639,42 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setCompletedEncounterIndices((prev) => new Set([...prev, activeEncounterTileIndex]));
     }
     setEncounterResolved(true);
+
+    // Encounter completion contributes reward-bar progress (contract §5D).
+    // Chest/micro/currency feeding tiles already tick the bar via
+    // resolveTileLanding — the encounter path was the last live progress
+    // source missing from the code, so encounters were landing essence/dice
+    // rewards but delivering zero reward-bar progress. The dice-multiplier
+    // amplifier (§2E) applies here too, matching how feeding tiles scale.
+    {
+      const nextRewardBarState = applyIslandRunContractV2RewardBarProgress({
+        state: {
+          rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
+          rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
+          rewardBarClaimCountInEvent: runtimeStateRef.current.rewardBarClaimCountInEvent,
+          rewardBarEscalationTier: runtimeStateRef.current.rewardBarEscalationTier,
+          rewardBarLastClaimAtMs: runtimeStateRef.current.rewardBarLastClaimAtMs,
+          rewardBarBoundEventId: runtimeStateRef.current.rewardBarBoundEventId,
+          rewardBarLadderId: runtimeStateRef.current.rewardBarLadderId,
+          activeTimedEvent: runtimeStateRef.current.activeTimedEvent,
+          activeTimedEventProgress: runtimeStateRef.current.activeTimedEventProgress,
+          stickerProgress: runtimeStateRef.current.stickerProgress,
+          stickerInventory: runtimeStateRef.current.stickerInventory,
+        },
+        source: { kind: 'encounter_resolve' },
+        nowMs: Date.now(),
+        multiplier: Math.max(1, effectiveMultiplier),
+      });
+      applyContractV2RewardBarRuntimeState(nextRewardBarState);
+
+      // Auto-claim if the encounter tick pushed the bar past the threshold —
+      // mirrors the tile-landing auto-claim cascade.
+      if (nextRewardBarState.rewardBarProgress >= nextRewardBarState.rewardBarThreshold) {
+        playIslandRunSound('reward_bar_fill');
+        setTimeout(() => handleContractV2RewardBarClaim(), 500);
+      }
+    }
+
     const summary = formatEncounterRewardSummary(reward);
     const specialtySummaryParts: string[] = [];
     if (specialtyEncounterBonusEssence > 0) specialtySummaryParts.push(`+${specialtyEncounterBonusEssence} essence`);
@@ -4994,11 +5044,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     } catch {
       // ignore storage errors
     }
+    // P1-13: also clear paid stop tickets for the old island. The ticket map
+    // is keyed by island number as a string (no cycle index), so without this
+    // clear a cycle wrap from 120 → 1 would leave the previous cycle's paid
+    // tickets in place and unlock stops 2–5 for free on the next pass.
+    // Hatchery (index 0) is implicitly free regardless. The persist layer
+    // shallow-merges record patches (never deletes keys), so we explicitly
+    // set the island's entry to `[]` — matching how `completedStopsByIsland`
+    // is cleared just above.
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
       patch: {
         completedStopsByIsland: {
+          [oldIslandKey]: [],
+        },
+        stopTicketsPaidByIsland: {
           [oldIslandKey]: [],
         },
       },
@@ -5007,6 +5068,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       ...current,
       completedStopsByIsland: {
         ...current.completedStopsByIsland,
+        [oldIslandKey]: [],
+      },
+      stopTicketsPaidByIsland: {
+        ...(current.stopTicketsPaidByIsland ?? {}),
         [oldIslandKey]: [],
       },
     }));
@@ -5064,7 +5129,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }));
     setIslandNumber(resolvedIsland);
     setCycleIndex(nextCycleIndex);
-    setDicePool(ISLAND_RUN_DEFAULT_STARTING_DICE);
+    // Note: the dice pool is intentionally NOT reset on island travel. Per
+    // the canonical contract §3 Dice, dice are only sourced from reward bar,
+    // stops, boss, events, shop, and passive regen — never implicitly
+    // clobbered. The previous code called `setDicePool(ISLAND_RUN_DEFAULT_STARTING_DICE)`
+    // here without also persisting the reset, which produced a UI/storage
+    // desync (UI showed 30 while Supabase/localStorage retained the pre-travel
+    // value). Removed 2026-04-19.
     setTokenIndex(TOKEN_START_TILE_INDEX);
     setRollValue(null);
     setActiveStopId(null);
@@ -5480,18 +5551,25 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setBossRewardSummary(null);
     setLandingText(`QA: advanced to island ${nextIsland}.`);
 
+    // Persist the dice/token reset alongside the island bump so storage and
+    // UI stay in sync (previously this patch omitted dicePool/tokenIndex and
+    // produced the #1 desync pattern on next hydration).
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
       patch: {
         currentIslandNumber: nextIsland,
         bossTrialResolvedIslandNumber: null,
+        dicePool: ISLAND_RUN_DEFAULT_STARTING_DICE,
+        tokenIndex: TOKEN_START_TILE_INDEX,
       },
     });
     setRuntimeState((current) => ({
       ...current,
       currentIslandNumber: nextIsland,
       bossTrialResolvedIslandNumber: null,
+      dicePool: ISLAND_RUN_DEFAULT_STARTING_DICE,
+      tokenIndex: TOKEN_START_TILE_INDEX,
     }));
   };
 
@@ -5509,12 +5587,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       patch: {
         currentIslandNumber: 1,
         bossTrialResolvedIslandNumber: null,
+        dicePool: ISLAND_RUN_DEFAULT_STARTING_DICE,
+        tokenIndex: TOKEN_START_TILE_INDEX,
       },
     });
     setRuntimeState((current) => ({
       ...current,
       currentIslandNumber: 1,
       bossTrialResolvedIslandNumber: null,
+      dicePool: ISLAND_RUN_DEFAULT_STARTING_DICE,
+      tokenIndex: TOKEN_START_TILE_INDEX,
     }));
   };
 

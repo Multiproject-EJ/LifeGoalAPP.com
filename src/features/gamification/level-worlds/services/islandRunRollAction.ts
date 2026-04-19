@@ -9,6 +9,9 @@
  * Canonical dice rules (see CANONICAL_GAMEPLAY_CONTRACT §2A, §2E, §3 Dice):
  *  - Each roll costs `DICE_PER_ROLL × N` dice, where `N` is the player-selected
  *    dice multiplier (default `N = 1`, tier ladder `×1/×2/×3/×5/×10/×20/×50/×100/×200`).
+ *  - `DICE_PER_ROLL` is **1** (softened from 2 on 2026-04-19 playtest feedback so
+ *    ×1 rolls burn the pool at half the rate and low-multiplier play stays
+ *    accessible). Higher multipliers still scale linearly (×3 → 3, ×10 → 10, …).
  *  - Each die rolls 1–6 (standard dice), producing total movement of 2–12 tiles.
  *    The multiplier affects cost and reward amplification only, never distance.
  *  - Tiles never award dice. Dice come from reward bar, stops, boss, events, regen, shop.
@@ -62,8 +65,11 @@ import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBo
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 6;
-/** Number of dice drawn from the pool per roll. */
-const DICE_PER_ROLL = 2;
+/** Number of dice drawn from the pool per roll at ×1 (softened from 2 → 1 on
+ *  2026-04-19 so low-multiplier rolls burn the pool at half the rate).
+ *  The `BASE_DICE_PER_ROLL` constant in `islandRunContractV2RewardBar.ts` mirrors
+ *  this value and is the source of truth for `resolveDiceCostForMultiplier`. */
+const DICE_PER_ROLL = 1;
 
 /** Returns a single die face in [ROLL_MIN, ROLL_MAX]. Random source stays in PWA. */
 function rollDie(): number {

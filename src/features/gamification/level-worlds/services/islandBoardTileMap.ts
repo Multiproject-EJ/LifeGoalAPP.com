@@ -52,10 +52,19 @@ const TILE_POOL: IslandTileType[] = [
   'hazard',
 ];
 
-/** Deterministic seeded pseudo-random number in [0, 1) */
+/** Deterministic seeded pseudo-random number in [0, 1).
+ *
+ * Guards against seed=0: xorshift from 0 produces 0, which would make every
+ * downstream consumer pick `TILE_POOL[0]` (= `'currency'`) for every tile on
+ * that island. Production callers always pass a positive island number, but
+ * any dev/QA path that feeds `islandNumber = 0` (or `tileIndex = 0` in a
+ * seed that happens to resolve to 0) would silently produce a degenerate
+ * all-`currency` board. Falling back to `1` preserves determinism while
+ * eliminating the degenerate case.
+ */
 function seededRandom(seed: number): number {
   // Simple xorshift-based hash
-  let s = seed | 0;
+  let s = (seed | 0) || 1;
   s ^= s << 13;
   s ^= s >> 17;
   s ^= s << 5;

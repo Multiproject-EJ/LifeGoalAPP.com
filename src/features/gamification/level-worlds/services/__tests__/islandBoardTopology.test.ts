@@ -54,4 +54,22 @@ export const islandBoardTopologyTests: TestCase[] = [
       assertEqual(previewTileMap.length, 40, 'Expected ring tile map generation to support 40 tiles');
     },
   },
+  {
+    // P2-10 regression. `seededRandom(0)` previously returned 0 because
+    // xorshift from 0 stays at 0, which caused `generateTileMap` to pick
+    // `TILE_POOL[0]` (currency) for every tile — a silent degenerate board.
+    // Production callers pass `islandNumber ≥ 1`, but any dev/QA path
+    // that fed island 0 hit this. The fallback clamp inside seededRandom
+    // (`s = (seed | 0) || 1`) restores variety.
+    name: 'P2-10: seed=0 does not collapse the tile pool to a single type',
+    run: () => {
+      const tileMap = generateTileMap(0, 'normal', 'forest', 0);
+      assertEqual(tileMap.length, 40, 'Expected 40 tiles for seed 0');
+      const uniqueTypes = new Set(tileMap.map((t) => t.tileType));
+      // Encounter may not appear for every island; but at minimum the four
+      // base pool types should collectively produce >=3 distinct entries.
+      // Anything less than 3 means the seeded RNG has collapsed.
+      assertEqual(uniqueTypes.size >= 3, true, `Expected tile variety for seed 0, got types: ${[...uniqueTypes].join(', ')}`);
+    },
+  },
 ];
