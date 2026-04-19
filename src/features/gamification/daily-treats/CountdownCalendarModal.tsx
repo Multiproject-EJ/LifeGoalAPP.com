@@ -187,7 +187,11 @@ export const CountdownCalendarModal = ({
     if (!userId || !seasonData) return;
     setDoorError(null);
 
-    // Start reveal animation
+    // Show a lightweight "opening" reveal state immediately so the grid tile
+    // disappears while the server resolves the reward. The actual reveal card
+    // is built from the **server** response below to guarantee the reward the
+    // user sees matches what was granted (prevents reveal/award divergence
+    // when server-side rules differ from the locally cached hatch).
     setRevealState({
       isRevealing: true,
       dayIndex,
@@ -206,6 +210,20 @@ export const CountdownCalendarModal = ({
         return;
       }
 
+      // Replace the reveal hatch with the authoritative server reward so the
+      // animated card shows exactly what the user was granted.
+      if (reward) {
+        const authoritativeHatch: CalendarHatch = {
+          ...hatch,
+          reward_currency: reward.reward_currency,
+          reward_amount: reward.reward_amount,
+          reward_tier: reward.reward_tier,
+          reveal_mechanic: reward.reveal_mechanic ?? hatch.reveal_mechanic,
+          reward_payload: reward.reward_payload ?? hatch.reward_payload,
+        };
+        setRevealState({ isRevealing: true, dayIndex, doorType, hatch: authoritativeHatch });
+      }
+
       // Award gold if applicable
       if (reward?.reward_currency === 'gold' && reward.reward_amount) {
         void awardDailyTreatGold(userId, reward.reward_amount, `Day ${dayIndex} ${doorType} door`);
@@ -216,13 +234,34 @@ export const CountdownCalendarModal = ({
         awardDice(userId, reward.reward_amount, 'daily_treats', `Day ${dayIndex} ${doorType} door`);
       }
 
-      // Award streak bonus dice for Personal Quest calendars
+      // Award streak bonus dice for Personal Quest calendars.
+      // We mirror the server-side streak_count update so the bonus reflects
+      // the *new* consecutive-day streak (incremented when the previous open
+      // was yesterday, reset to 1 after a missed day).
       if (seasonData.season.season_type === 'personal_quest' && doorType === 'free') {
-        const updatedProgressForStreak = seasonData.progress
+        const todayStr = (() => {
+          const d = new Date();
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        })();
+        const yesterdayStr = (() => {
+          const d = new Date();
+          d.setDate(d.getDate() - 1);
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        })();
+        const prev = seasonData.progress;
+        const prevStreak = prev?.streak_count ?? prev?.opened_days.length ?? 0;
+        const nextStreak =
+          prev?.last_opened_date === todayStr
+            ? Math.max(1, prevStreak)
+            : prev?.last_opened_date === yesterdayStr
+              ? prevStreak + 1
+              : 1;
+        const updatedProgressForStreak = prev
           ? {
-              ...seasonData.progress,
-              opened_days: [...seasonData.progress.opened_days, dayIndex],
-              last_opened_date: new Date().toISOString().split('T')[0],
+              ...prev,
+              opened_days: [...prev.opened_days, dayIndex],
+              last_opened_date: todayStr,
+              streak_count: nextStreak,
             }
           : null;
         const streak = computeStreak(updatedProgressForStreak);

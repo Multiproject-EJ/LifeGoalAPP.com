@@ -139,6 +139,14 @@ export type CalendarProgress = {
   opened_days: number[];
   /** Track opened bonus doors separately */
   opened_bonus_days?: number[];
+  /**
+   * Current consecutive-day open streak.
+   * Incremented on opens where `last_opened_date` was yesterday; reset to 1
+   * on opens where `last_opened_date` is older than yesterday (missed days).
+   * Used by `computeStreak` so Personal Quest streaks correctly reset on a
+   * missed calendar day rather than counting `opened_days.length`.
+   */
+  streak_count?: number;
   symbol_counts: Record<string, number>;
   created_at: string;
   updated_at: string;
@@ -200,14 +208,46 @@ function setDemoProgress(seasonId: string, progress: CalendarProgress): void {
   }
 }
 
+/**
+ * Format a Date as "YYYY-MM-DD" using the user's **local** calendar day.
+ * This is preferred over `date.toISOString().split('T')[0]` for any calendar
+ * comparison against "today", because `toISOString()` converts to UTC and
+ * can shift the date by one for users east or west of UTC.
+ */
+function formatLocalYmd(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * Parse a "YYYY-MM-DD" string into a UTC-midnight timestamp.
+ * `new Date("YYYY-MM-DD")` is parsed as UTC, but its local-time getters
+ * (`getFullYear/getMonth/getDate`) then return the *local* calendar day,
+ * which shifts west of UTC. This helper keeps the interpretation purely in
+ * the UTC calendar so day-index math is stable across timezones.
+ */
+function parseYmdUtc(ymd: string): { year: number; month: number; day: number } {
+  const parts = ymd.split('-');
+  return {
+    year: Number(parts[0]),
+    month: Number(parts[1]) - 1,
+    day: Number(parts[2]),
+  };
+}
+
 /** Compute which day-index today falls on within the season (1-based). */
-function computeTodayDayIndex(startsOn: string): number {
-  const start = new Date(startsOn);
+function computeTodayDayIndex(startsOn: string, totalDays?: number): number {
+  const start = parseYmdUtc(startsOn);
   const today = new Date();
-  const startUTC = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+  const startUTC = Date.UTC(start.year, start.month, start.day);
   const todayUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
   const diffDays = Math.floor((todayUTC - startUTC) / (1000 * 60 * 60 * 24));
-  return Math.max(1, diffDays + 1);
+  const idx = Math.max(1, diffDays + 1);
+  // Clamp to the season length so post-season dates don't produce a runaway
+  // "today" index (which would show every door as `catchup` in the UI).
+  return typeof totalDays === 'number' && totalDays > 0 ? Math.min(idx, totalDays) : idx;
 }
 
 /**
@@ -230,7 +270,7 @@ function computePersonalQuestTodayIndex(
 
   // Gate: only advance past the last opened day if `last_opened_date` is
   // strictly before the current calendar date (local midnight comparison).
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = formatLocalYmd(new Date());
   if (progress.last_opened_date === todayStr) {
     // Already opened a door today — stay on that day (shows as "opened")
     return Math.min(maxOpened, totalDays);
@@ -265,7 +305,9 @@ function normalizeRewardAmount(
   if (amount == null) return null;
   if (currency === 'diamond') {
     // Migrate legacy diamond count into dice payout.
-    return Math.max(25, amount * 25);
+    // Guard against 0-diamond rows so users still receive the minimum dice
+    // cache (25) rather than nothing.
+    return Math.max(25, (amount || 1) * 25);
   }
   return amount;
 }
@@ -727,10 +769,16 @@ function pickDemoAdventMeta(year: number): { meta: AdventMeta; startsOn: string;
   for (const meta of ADVENT_META) {
     const { countdownStart: cs, holidayDate: hd } = meta;
     if (isInCountdownWindow(todayM, todayD, cs.month, cs.day, hd.month, hd.day)) {
-      const startsOn = new Date(year, cs.month, cs.day).toISOString().split('T')[0];
-      // Handle cross-year for New Year
-      const endYear = hd.month < cs.month ? year + 1 : year;
-      const endsOn = new Date(endYear, hd.month, hd.day).toISOString().split('T')[0];
+      // Cross-year windows (e.g. New Year: Dec 26 → Jan 1):
+      //   - When today is in the calendar year containing the holiday date
+      //     (e.g. Jan 1), the season actually *started* the previous year.
+      //   - When today is in the calendar year containing the countdown start
+      //     (e.g. Dec 28), the holiday is in the next calendar year.
+      const crossesYearBoundary = hd.month < cs.month;
+      const startYear = crossesYearBoundary && todayM <= hd.month ? year - 1 : year;
+      const endYear = crossesYearBoundary ? startYear + 1 : startYear;
+      const startsOn = formatLocalYmd(new Date(startYear, cs.month, cs.day));
+      const endsOn = formatLocalYmd(new Date(endYear, hd.month, hd.day));
       return { meta, startsOn, endsOn };
     }
   }
@@ -772,8 +820,8 @@ function buildPersonalQuestSeasonData(userId: string, refDate: Date = new Date()
   const sundayEnd = new Date(mondayStart);
   sundayEnd.setDate(mondayStart.getDate() + 6);
 
-  const startsOn = mondayStart.toISOString().split('T')[0];
-  const endsOn = sundayEnd.toISOString().split('T')[0];
+  const startsOn = formatLocalYmd(mondayStart);
+  const endsOn = formatLocalYmd(sundayEnd);
 
   // Deterministic seed: ISO week string so same user sees same doors within a week
   const weekSeed = `${userId}:${getIsoWeekString(mondayStart)}`;
@@ -806,7 +854,7 @@ function buildPersonalQuestSeasonData(userId: string, refDate: Date = new Date()
   for (let i = 0; i < totalDays; i++) {
     const dayIndex = i + 1;
     const freeReward = rewardSchedule[i];
-    const emoji = questEmojis[dayIndex % questEmojis.length];
+    const emoji = questEmojis[(dayIndex - 1) % questEmojis.length];
 
     // Free door (always available)
     hatches.push({
@@ -915,7 +963,7 @@ function buildDemoSeasonData(userId: string): CalendarSeasonData {
   for (let i = 0; i < totalDays; i++) {
     const dayIndex = i + 1;
     const freeReward = rewardSchedule[i];
-    const emoji = meta.emojis[dayIndex % meta.emojis.length];
+    const emoji = meta.emojis[(dayIndex - 1) % meta.emojis.length];
     const isFinalDay = dayIndex === totalDays;
 
     // Free door (always available) — for free doors, give Type 1-2 rewards
@@ -972,7 +1020,7 @@ function buildDemoSeasonData(userId: string): CalendarSeasonData {
     });
   }
 
-  const todayIndex = computeTodayDayIndex(startsOn);
+  const todayIndex = computeTodayDayIndex(startsOn, totalDays);
 
   const storedProgress = getDemoProgress(season.id);
   const progress: CalendarProgress = storedProgress ?? {
@@ -1014,7 +1062,7 @@ export async function getPersonalQuestSeason(
   const mondayStart = new Date(now);
   mondayStart.setDate(now.getDate() - daysToMonday);
   mondayStart.setHours(0, 0, 0, 0);
-  const weekStartsOn = mondayStart.toISOString().split('T')[0];
+  const weekStartsOn = formatLocalYmd(mondayStart);
 
   if (await canUseSupabaseDataAsync()) {
     try {
@@ -1136,12 +1184,17 @@ export async function fetchCurrentSeason(
 
     if (hatchError) return { data: null, error: new Error(hatchError.message) };
 
+    const normalizedHatches = normalizeHatches((hatches ?? []) as unknown as CalendarHatch[]);
+    const totalDays = computeTotalFreeDoors(
+      normalizedHatches.map((h) => ({ door_type: h.door_type, day_index: h.day_index })),
+    );
+
     return {
       data: {
         season,
-        hatches: normalizeHatches((hatches ?? []) as unknown as CalendarHatch[]),
+        hatches: normalizedHatches,
         progress: progress as unknown as CalendarProgress | null,
-        today_day_index: computeTodayDayIndex(season.starts_on),
+        today_day_index: computeTodayDayIndex(season.starts_on, totalDays),
       },
       error: null,
     };
@@ -1238,7 +1291,8 @@ export async function openTodayHatch(
       }
     } else {
       // Holiday: can open today's door or any missed (past) door
-      const todayIndex = computeTodayDayIndex(season.starts_on);
+      const totalDays = computeTotalFreeDoors(cached?.hatches ?? []);
+      const todayIndex = computeTodayDayIndex(season.starts_on, totalDays);
       if (dayIndex > todayIndex) {
         return { data: null, error: new Error(`Day ${dayIndex} is not available yet`) };
       }
@@ -1253,14 +1307,34 @@ export async function openTodayHatch(
       return { data: null, error: new Error('Hatch not found') };
     }
 
+    // Compute next streak count: consecutive calendar opens only. If the
+    // previous open was yesterday, increment; if today (second door same day)
+    // keep the existing streak; otherwise (missed one or more days, or first
+    // ever open) reset to 1. Personal Quest streaks are the primary consumer,
+    // but we maintain the counter for holiday calendars too for consistency.
+    const todayLocalStr = formatLocalYmd(new Date());
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayLocalStr = formatLocalYmd(yesterdayDate);
+    const prevStreak = progress.streak_count ?? progress.opened_days.length;
+    let nextStreak: number;
+    if (progress.last_opened_date === todayLocalStr) {
+      nextStreak = Math.max(1, prevStreak);
+    } else if (progress.last_opened_date === yesterdayLocalStr) {
+      nextStreak = prevStreak + 1;
+    } else {
+      nextStreak = 1;
+    }
+
     const updated: CalendarProgress = {
       ...progress,
-      last_opened_date: new Date().toISOString().split('T')[0],
+      last_opened_date: todayLocalStr,
       last_opened_day: dayIndex,
       opened_days: doorType === 'free' ? [...progress.opened_days, dayIndex] : progress.opened_days,
       opened_bonus_days: doorType === 'bonus'
         ? [...(progress.opened_bonus_days ?? []), dayIndex]
         : (progress.opened_bonus_days ?? []),
+      streak_count: nextStreak,
       updated_at: new Date().toISOString(),
     };
 
@@ -1362,7 +1436,7 @@ export async function isHabitCompletedToday(
 
   try {
     const supabase = getSupabaseClient();
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatLocalYmd(new Date());
 
     let query = supabase
       .from('habit_logs_v2')
@@ -1481,10 +1555,10 @@ export function computeStreak(progress: CalendarProgress | null): StreakInfo {
   const fallback: StreakInfo = { currentStreak: 0, isActive: false, multiplierLabel: '', streakBonusDice: 0 };
   if (!progress || progress.opened_days.length === 0) return fallback;
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = formatLocalYmd(new Date());
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  const yesterdayStr = formatLocalYmd(yesterday);
 
   const lastDate = progress.last_opened_date;
   if (!lastDate) return fallback;
@@ -1495,7 +1569,12 @@ export function computeStreak(progress: CalendarProgress | null): StreakInfo {
   const isActive = lastDate === todayStr || lastDate === yesterdayStr;
   if (!isActive) return fallback;
 
-  const currentStreak = Math.min(progress.opened_days.length, 7);
+  // Prefer the explicit `streak_count` that the open-door flow maintains,
+  // which correctly resets on missed calendar days. Fall back to the length
+  // of `opened_days` only for legacy progress records that predate the
+  // `streak_count` field (in which case we're assuming no missed days).
+  const rawStreak = progress.streak_count ?? progress.opened_days.length;
+  const currentStreak = Math.min(Math.max(0, rawStreak), 7);
   const multiplierLabel = currentStreak >= 2 ? `×${currentStreak}` : '';
 
   let streakBonusDice = 0;
