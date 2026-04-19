@@ -20,6 +20,12 @@ import { resolveIslandBoardProfile, type IslandBoardProfileId } from '../service
 // is the single authoritative source of truth for token movement and hop order.
 import { ISLAND_RUN_DEFAULT_STARTING_DICE } from '../services/islandRunEconomy';
 import { generateIslandStopPlan } from '../services/islandRunStops';
+import {
+  getStopTicketCost,
+  getStopTicketsPaidForIsland,
+  isStopTicketPaid,
+  payStopTicket,
+} from '../services/islandRunStopTickets';
 import { isIslandFullyCleared } from '../services/islandRunProgression';
 import { recordTelemetryEvent } from '../../../../services/telemetry';
 import {
@@ -886,6 +892,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [cameraMode, setCameraMode] = useState<IslandRunCameraMode>('board_follow');
   const [focusedStopId, setFocusedStopId] = useState<string | null>(null);
+  /**
+   * When set, we show the ticket-price prompt modal for this stop instead of
+   * opening the stop directly. User can either pay the essence ticket to unlock
+   * and open the stop, or cancel. Hatchery never uses this path (always free).
+   */
+  const [ticketPromptStopId, setTicketPromptStopId] = useState<string | null>(null);
 
   // BoardStage camera controls (set by BoardStage via onCameraReady)
   const boardCameraRef = useRef<BoardStageCameraControls | null>(null);
@@ -2726,6 +2738,122 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // the 40-tile ring is rendered as a "stop tile". The Map type is retained
   // for camera-director backward compatibility.
   const stopMap = useMemo(() => new Map<number, string>(), []);
+
+  // ── Ticket-aware stop unlock ─────────────────────────────────────────────
+  // Helpers that let the orbit click handler decide whether to open a stop
+  // directly, surface the ticket-pay prompt, or leave it locked.
+  const stopIndexByStopId = useMemo(() => {
+    const map = new Map<string, number>();
+    islandStopPlan.forEach((stop, index) => map.set(stop.stopId, index));
+    return map;
+  }, [islandStopPlan]);
+
+  const ticketsPaidForCurrentIsland = useMemo(
+    () => getStopTicketsPaidForIsland(runtimeState.stopTicketsPaidByIsland, islandNumber),
+    [runtimeState.stopTicketsPaidByIsland, islandNumber],
+  );
+
+  /**
+   * True when `stopId` is waiting on an essence ticket — the previous stop is
+   * complete but this stop hasn't been paid yet. Orbit clicks on such stops
+   * open the ticket-prompt modal instead of the stop itself.
+   */
+  const doesStopRequireTicketPayment = useCallback((stopId: string): boolean => {
+    const stopIndex = stopIndexByStopId.get(stopId);
+    if (stopIndex === undefined) return false;
+    if (stopIndex === 0) return false; // hatchery is always free
+    if (isStopTicketPaid({ ticketsPaid: ticketsPaidForCurrentIsland, stopIndex })) return false;
+    const prevState = runtimeState.stopStatesByIndex[stopIndex - 1];
+    return Boolean(prevState?.objectiveComplete);
+  }, [stopIndexByStopId, ticketsPaidForCurrentIsland, runtimeState.stopStatesByIndex]);
+
+  /**
+   * Orbit-stop click dispatcher. Routes the click to the appropriate outcome:
+   *   - Hatchery / already-paid stop → open the stop and focus the camera.
+   *   - Previous stop complete, ticket unpaid → open the ticket-prompt modal.
+   *   - Otherwise → leave closed (stop is sequence-locked; no-op).
+   */
+  const handleStopOpenRequest = useCallback((stopId: string) => {
+    if (doesStopRequireTicketPayment(stopId)) {
+      setTicketPromptStopId(stopId);
+      return;
+    }
+    requestActiveStopTransition(stopId, 'orbit_stop_click');
+    setFocusedStopId(stopId);
+    setCameraMode('stop_focus');
+  }, [doesStopRequireTicketPayment, requestActiveStopTransition]);
+
+  /**
+   * Pay the essence ticket for `stopId`. On success: persist the updated
+   * wallet + ticket ledger, dismiss the prompt, and open the stop. On failure
+   * (insufficient essence, etc.): surface the reason via landing text and keep
+   * the prompt open so the user can earn more and retry.
+   */
+  const handlePayStopTicket = useCallback((stopId: string) => {
+    const stopIndex = stopIndexByStopId.get(stopId);
+    if (stopIndex === undefined) return;
+    const result = payStopTicket({
+      effectiveIslandNumber,
+      islandNumber,
+      stopIndex,
+      essence: runtimeStateRef.current.essence,
+      essenceLifetimeSpent: runtimeStateRef.current.essenceLifetimeSpent,
+      stopTicketsPaidByIsland: runtimeStateRef.current.stopTicketsPaidByIsland,
+      stopStatesByIndex: runtimeStateRef.current.stopStatesByIndex,
+    });
+
+    if (!result.ok) {
+      if (result.reason === 'insufficient_essence') {
+        setLandingText(`Not enough essence — need ${result.cost} 🟣 to open this stop.`);
+      } else if (result.reason === 'previous_stop_not_complete') {
+        setLandingText('Complete the previous stop before opening this one.');
+        setTicketPromptStopId(null);
+      } else if (result.reason === 'already_paid') {
+        // Ticket already paid (race with another action) — open the stop.
+        setTicketPromptStopId(null);
+        requestActiveStopTransition(stopId, 'ticket_already_paid');
+        setFocusedStopId(stopId);
+        setCameraMode('stop_focus');
+      } else {
+        setTicketPromptStopId(null);
+      }
+      return;
+    }
+
+    // Happy path: deduct essence, record ticket, open stop.
+    void writeIslandRunGameStateRecord({
+      session,
+      client,
+      record: {
+        ...runtimeStateRef.current,
+        essence: result.essence,
+        essenceLifetimeSpent: result.essenceLifetimeSpent,
+        stopTicketsPaidByIsland: result.stopTicketsPaidByIsland,
+      },
+    });
+    setRuntimeState((current) => ({
+      ...current,
+      essence: result.essence,
+      essenceLifetimeSpent: result.essenceLifetimeSpent,
+      stopTicketsPaidByIsland: result.stopTicketsPaidByIsland,
+    }));
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_spend',
+      metadata: {
+        stage: 'island_run_stop_ticket_paid',
+        island_number: islandNumber,
+        stop_id: stopId,
+        stop_index: stopIndex,
+        cost: result.cost,
+      },
+    });
+    setTicketPromptStopId(null);
+    setLandingText(`${stopId.toUpperCase()} unlocked — ${result.cost} 🟣 paid.`);
+    requestActiveStopTransition(stopId, 'ticket_paid_open');
+    setFocusedStopId(stopId);
+    setCameraMode('stop_focus');
+  }, [client, effectiveIslandNumber, islandNumber, requestActiveStopTransition, session, stopIndexByStopId]);
 
   const activeStop = activeStopId ? islandStopPlan.find((stop) => stop.stopId === activeStopId) ?? null : null;
 
@@ -6445,9 +6573,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           activeStopId={activeStopId}
           getOrbitStopDisplayIcon={getOrbitStopDisplayIcon}
           onStopClick={(stopId) => {
-            requestActiveStopTransition(stopId, 'orbit_stop_click');
-            setFocusedStopId(stopId);
-            setCameraMode('stop_focus');
+            handleStopOpenRequest(stopId);
           }}
           pendingHopSequence={pendingHopSequence}
           onHopSequenceComplete={() => {
@@ -8439,6 +8565,57 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           }}
         />
       )}
+
+      {/* ── Stop Ticket Prompt ────────────────────────────────────────────
+          Opens when the player clicks an orbit stop whose previous stop is
+          complete but whose essence ticket hasn't been paid. Lets them pay
+          and unlock the stop, or cancel. Hatchery never reaches this path. */}
+      {ticketPromptStopId && (() => {
+        const promptedStop = islandStopPlan.find((s) => s.stopId === ticketPromptStopId);
+        const stopIndex = stopIndexByStopId.get(ticketPromptStopId) ?? 0;
+        const cost = getStopTicketCost({ effectiveIslandNumber, stopIndex });
+        const wallet = runtimeState.essence;
+        const canAfford = wallet >= cost;
+        return (
+          <div
+            className="island-run-modal-backdrop"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="stop-ticket-prompt-title"
+            onClick={() => setTicketPromptStopId(null)}
+          >
+            <div className="island-run-modal" onClick={(e) => e.stopPropagation()}>
+              <h2 id="stop-ticket-prompt-title" style={{ margin: 0, fontSize: 20 }}>
+                🎫 Open {promptedStop?.title ?? ticketPromptStopId}
+              </h2>
+              <p style={{ marginTop: 12, marginBottom: 8, opacity: 0.85 }}>
+                This stop needs an essence ticket to open on this island.
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '12px 0 16px', fontSize: 16 }}>
+                <div><strong>Cost:</strong> {cost} 🟣</div>
+                <div><strong>Wallet:</strong> {wallet} 🟣</div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setTicketPromptStopId(null)}
+                  style={{ padding: '8px 16px' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePayStopTicket(ticketPromptStopId)}
+                  disabled={!canAfford}
+                  style={{ padding: '8px 16px', opacity: canAfford ? 1 : 0.5 }}
+                >
+                  {canAfford ? `Pay ${cost} 🟣` : `Need ${cost - wallet} more 🟣`}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Debug Panel ───────────────────────────────────────────────── */}
       {showDebugPanel && (

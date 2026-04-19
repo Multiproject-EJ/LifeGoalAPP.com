@@ -42,6 +42,8 @@ export interface IslandRunRuntimeState {
   };
   companionBonusLastVisitKey: string | null;
   completedStopsByIsland: Record<string, string[]>;
+  /** Per-island essence-ticket ledger (stop indices 1-4 whose ticket was paid). */
+  stopTicketsPaidByIsland: Record<string, number[]>;
   marketOwnedBundlesByIsland: Record<string, {
     dice_bundle: boolean;
     heart_bundle: boolean;
@@ -166,6 +168,7 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     };
     companionBonusLastVisitKey?: string | null;
     completedStopsByIsland?: Record<string, string[]>;
+    stopTicketsPaidByIsland?: Record<string, number[]>;
     marketOwnedBundlesByIsland?: Record<string, {
       dice_bundle: boolean;
       heart_bundle: boolean;

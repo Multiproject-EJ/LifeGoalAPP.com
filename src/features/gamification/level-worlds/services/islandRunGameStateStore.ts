@@ -5,6 +5,7 @@ import { ISLAND_RUN_DEFAULT_STARTING_DICE } from './islandRunEconomy';
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
 import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 import { commitIslandRunRuntimeSnapshot } from './islandRunCommitActionService';
+import { sanitizeStopTicketsPaidByIsland } from './islandRunStopTickets';
 
 export type PerIslandEggStatus = 'incubating' | 'ready' | 'collected' | 'sold';
 
@@ -81,6 +82,13 @@ export interface IslandRunGameStateRecord {
   };
   companionBonusLastVisitKey: string | null;
   completedStopsByIsland: Record<string, string[]>;
+  /**
+   * Per-island essence-ticket ledger. Key = islandNumber (string), value = list
+   * of stop indices (1–4) whose ticket has been paid for that island visit.
+   * Hatchery (index 0) is implicitly always paid and must never appear in the
+   * list. See `islandRunStopTickets.ts` for the pay/resolve semantics.
+   */
+  stopTicketsPaidByIsland: Record<string, number[]>;
   marketOwnedBundlesByIsland: Record<string, {
     dice_bundle: boolean;
     heart_bundle: boolean;
@@ -462,6 +470,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     },
     companionBonusLastVisitKey: null,
     completedStopsByIsland: {},
+    stopTicketsPaidByIsland: {},
     marketOwnedBundlesByIsland: {},
     creatureCollection: [],
     activeCompanionId: null,
@@ -693,6 +702,10 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
             ]),
           )
         : fallback.completedStopsByIsland,
+    stopTicketsPaidByIsland:
+      value.stopTicketsPaidByIsland !== null && typeof value.stopTicketsPaidByIsland === 'object' && !Array.isArray(value.stopTicketsPaidByIsland)
+        ? sanitizeStopTicketsPaidByIsland(value.stopTicketsPaidByIsland as Record<string, number[]>)
+        : fallback.stopTicketsPaidByIsland,
     marketOwnedBundlesByIsland:
       value.marketOwnedBundlesByIsland !== null && typeof value.marketOwnedBundlesByIsland === 'object' && !Array.isArray(value.marketOwnedBundlesByIsland)
         ? Object.fromEntries(
@@ -973,6 +986,20 @@ function mergeRecordForConflict(options: {
     );
   });
 
+  // Ticket ledger: union per-island (paying once on one device must not
+  // require paying again after syncing). Numbers are unique per island.
+  const mergedStopTicketsPaidByIsland: Record<string, number[]> = {
+    ...remote.stopTicketsPaidByIsland,
+    ...local.stopTicketsPaidByIsland,
+  };
+  Object.keys(mergedStopTicketsPaidByIsland).forEach((islandKey) => {
+    const unionSet = new Set<number>([
+      ...(remote.stopTicketsPaidByIsland[islandKey] ?? []),
+      ...(local.stopTicketsPaidByIsland[islandKey] ?? []),
+    ]);
+    mergedStopTicketsPaidByIsland[islandKey] = Array.from(unionSet).sort((a, b) => a - b);
+  });
+
   const mergedMarketOwnedBundlesByIsland = {
     ...remote.marketOwnedBundlesByIsland,
     ...local.marketOwnedBundlesByIsland,
@@ -998,6 +1025,7 @@ function mergeRecordForConflict(options: {
     },
     companionBonusLastVisitKey: local.companionBonusLastVisitKey ?? remote.companionBonusLastVisitKey,
     completedStopsByIsland: mergedCompletedStopsByIsland,
+    stopTicketsPaidByIsland: mergedStopTicketsPaidByIsland,
     marketOwnedBundlesByIsland: mergedMarketOwnedBundlesByIsland,
     creatureCollection: mergeCreatureCollection(remote.creatureCollection, local.creatureCollection),
     perfectCompanionIds: local.perfectCompanionIds.length > 0 ? local.perfectCompanionIds : remote.perfectCompanionIds,
@@ -1050,6 +1078,7 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     creature_treat_inventory: record.creatureTreatInventory,
     companion_bonus_last_visit_key: record.companionBonusLastVisitKey,
     completed_stops_by_island: record.completedStopsByIsland,
+    stop_tickets_paid_by_island: record.stopTicketsPaidByIsland,
     market_owned_bundles_by_island: record.marketOwnedBundlesByIsland,
     creature_collection: record.creatureCollection,
     active_companion_id: record.activeCompanionId,
@@ -1188,6 +1217,9 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             creatureTreatInventory: legacyData.creature_treat_inventory ?? fallback.creatureTreatInventory,
             companionBonusLastVisitKey: legacyData.companion_bonus_last_visit_key ?? null,
             completedStopsByIsland: legacyData.completed_stops_by_island ?? {},
+            stopTicketsPaidByIsland: sanitizeStopTicketsPaidByIsland(
+              ((legacyData as Record<string, unknown>).stop_tickets_paid_by_island as Record<string, number[]> | undefined) ?? {},
+            ),
             marketOwnedBundlesByIsland: legacyData.market_owned_bundles_by_island ?? {},
             creatureCollection: legacyData.creature_collection ?? [],
             activeCompanionId: legacyData.active_companion_id ?? null,
@@ -1300,6 +1332,9 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       creatureTreatInventory: data.creature_treat_inventory ?? fallback.creatureTreatInventory,
       companionBonusLastVisitKey: data.companion_bonus_last_visit_key ?? null,
       completedStopsByIsland: data.completed_stops_by_island ?? {},
+      stopTicketsPaidByIsland: sanitizeStopTicketsPaidByIsland(
+        ((data as Record<string, unknown>).stop_tickets_paid_by_island as Record<string, number[]> | undefined) ?? {},
+      ),
       marketOwnedBundlesByIsland: data.market_owned_bundles_by_island ?? {},
       creatureCollection: data.creature_collection ?? [],
       activeCompanionId: data.active_companion_id ?? null,
