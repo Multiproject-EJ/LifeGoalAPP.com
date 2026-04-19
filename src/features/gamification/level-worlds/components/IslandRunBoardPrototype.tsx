@@ -3666,12 +3666,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setTokenIndex(currentIndex);
 
     // Sync local React state to match what the roll action already persisted.
-    const nextDicePool = Math.max(0, dicePool - diceCostApplied);
-    setDicePool(nextDicePool);
+    // Use functional updaters (never a closed-over `dicePool` subtract) so any
+    // reward-bar payout, regen tick, or encounter reward that landed mid-animation
+    // is preserved rather than clobbered by a stale pre-roll snapshot.
+    setDicePool((current) => Math.max(0, current - diceCostApplied));
     setRuntimeState((current) => ({
       ...current,
       tokenIndex: currentIndex,
-      dicePool: nextDicePool,
+      dicePool: Math.max(0, (current.dicePool ?? 0) - diceCostApplied),
     }));
 
     // Stops are side-quest structures — the player piece never lands on a stop.

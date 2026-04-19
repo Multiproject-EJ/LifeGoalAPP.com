@@ -6,13 +6,15 @@
  * change into React state for UI display, but this service is the sole source of
  * truth that persists dice changes to the game state store.
  *
- * Canonical dice rules:
- *  - Each roll costs exactly 2 dice (flat, never varies).
+ * Canonical dice rules (see CANONICAL_GAMEPLAY_CONTRACT §2A, §2E, §3 Dice):
+ *  - Each roll costs `DICE_PER_ROLL × N` dice, where `N` is the player-selected
+ *    dice multiplier (default `N = 1`, tier ladder `×1/×2/×3/×5/×10/×20/×50/×100/×200`).
  *  - Each die rolls 1–6 (standard dice), producing total movement of 2–12 tiles.
+ *    The multiplier affects cost and reward amplification only, never distance.
  *  - Tiles never award dice. Dice come from reward bar, stops, boss, events, regen, shop.
  *
  * This module encapsulates the gameplay truth for a single Island Run roll:
- *  1. Validates preconditions (dice pool availability).
+ *  1. Validates preconditions (dice pool availability at the effective cost).
  *  2. Generates dice outcomes — **random numbers originate here in the PWA,
  *     never in the renderer**.
  *  3. Moves the token via canonical topology rules (resolveWrappedTokenIndex).
@@ -27,9 +29,21 @@
  *  - Roll result and all resulting state transitions remain solely in the PWA.
  *  - **There is exactly one dice deduction path** — this service. The board component
  *    syncs its local React state to match but does NOT write dice changes to the store.
+ *  - **Concurrency.** This module owns a per-user async mutex (`rollActionMutexes`).
+ *    Two rolls fired in parallel for the same session serialise through that mutex,
+ *    so the second roll's read always observes the first roll's commit. This is
+ *    defence-in-depth on top of the renderer's busy flag — without it, two writes
+ *    from the same user on the same `runtimeVersion` could race and the Supabase
+ *    row could drift from the client's truth.
+ *  - **Synchronous persist.** The remote write is awaited inside the mutex before
+ *    the service returns. `writeIslandRunGameStateRecord` already updates
+ *    localStorage synchronously at the top of its body, so the client remains
+ *    authoritative even if the remote write later fails; awaiting only serialises
+ *    the remote queue so two rolls can't land at Supabase in the wrong order.
  *
  * Intentionally NOT in scope for this service (handled elsewhere or future slices):
- *  - Tile reward application (essence, shards, dice kickers, bonus-tile charge)
+ *  - Tile reward application (essence, reward-bar progress, hazard deduction,
+ *    bonus-tile charge, encounter payouts)
  *  - Encounter/event logic
  *  - Sound / haptic effects
  *  - Animation state
@@ -81,8 +95,37 @@ export interface IslandRunRollActionResult {
   hopSequence?: number[];
   /** Total dice actually deducted for this roll (= DICE_PER_ROLL × multiplier). */
   diceCost?: number;
+  /**
+   * Authoritative dice pool value **after** this roll's deduction has been
+   * persisted. The renderer should sync its React state from this field (via a
+   * functional updater) rather than re-deriving the subtraction from a
+   * possibly-stale closure. Set when status is 'ok'.
+   */
+  newDicePool?: number;
+  /**
+   * Runtime-version counter stamped on the persisted state after this roll.
+   * Useful for debugging / telemetry; the renderer does not need to track it
+   * directly. Set when status is 'ok'.
+   */
+  newRuntimeVersion?: number;
   /** Landing kind in canonical movement loop (tile traversal). */
   landingKind?: 'tile';
+}
+
+// ── per-user async mutex (defence-in-depth against concurrent rolls) ──────────
+//
+// Two rolls fired in parallel for the same session MUST serialise so the second
+// roll's `readIslandRunGameStateRecord` sees the first roll's commit. Without
+// this, both rolls would read the same pre-roll state, both write
+// `runtimeVersion + 1`, and one of the two remote writes would silently drop
+// the other's delta. The renderer already guards against rapid re-entry with a
+// busy flag but this mutex protects against React strict-mode double-invocation,
+// effect-loop bugs, and any future call-site that forgets the renderer guard.
+const rollActionMutexes = new Map<string, Promise<unknown>>();
+
+/** @internal Test hook — resets the mutex map so concurrent-case tests start clean. */
+export function __resetIslandRunRollActionMutexesForTests(): void {
+  rollActionMutexes.clear();
 }
 
 // ── action ────────────────────────────────────────────────────────────────────
@@ -90,14 +133,16 @@ export interface IslandRunRollActionResult {
 /**
  * Executes a single roll on behalf of the player via the PWA gameplay authority.
  *
- * Callers must guard against concurrent calls (e.g. with a busy/loading flag)
- * because this function does not hold its own mutex.
+ * Concurrent calls for the same `session.user.id` are serialised through an
+ * in-module async mutex (see `rollActionMutexes`). Callers may additionally
+ * guard with a UI busy flag to avoid queueing up intents; the mutex guarantees
+ * state correctness regardless.
  *
  * @param options.session - Active Supabase session (used for state key + write auth).
  * @param options.client  - Supabase client for remote persistence; null = local/demo mode.
  * @returns Typed result indicating success or the specific precondition failure.
  */
-export async function executeIslandRunRollAction(options: {
+export function executeIslandRunRollAction(options: {
   session: Session;
   client: SupabaseClient | null;
   /** Board profile to use for tile-count and stop-tile resolution. Defaults to 'spark40_ring'. */
@@ -106,6 +151,36 @@ export async function executeIslandRunRollAction(options: {
    * Dice multiplier (default 1). The total dice cost per roll = DICE_PER_ROLL × multiplier.
    * Higher multipliers burn more dice but amplify tile rewards + reward bar progress.
    */
+  diceMultiplier?: number;
+}): Promise<IslandRunRollActionResult> {
+  const userId = options.session.user.id;
+  const previous = rollActionMutexes.get(userId) ?? Promise.resolve();
+  // Chain the next roll after the prior one's persist completes. Swallow the
+  // predecessor's rejection (we don't want a prior failure to abort the current
+  // attempt) — but keep the chain going so later callers still serialise.
+  const next: Promise<IslandRunRollActionResult> = previous
+    .catch(() => undefined)
+    .then(() => performRollAction(options));
+  // Record this call as the new mutex tail; swallow rejections so a failed roll
+  // doesn't leave an un-awaitable rejected promise at the head of the queue.
+  const tail = next.catch(() => undefined);
+  rollActionMutexes.set(userId, tail);
+  // Evict the entry once this tail resolves IFF no later call has already
+  // appended itself (i.e. we're still the head of the chain for this user).
+  // Prevents the Map from growing unbounded across long-lived sessions / many
+  // distinct user ids (test runs, multi-account devices, etc.).
+  void tail.finally(() => {
+    if (rollActionMutexes.get(userId) === tail) {
+      rollActionMutexes.delete(userId);
+    }
+  });
+  return next;
+}
+
+async function performRollAction(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  boardProfileId?: IslandBoardProfileId;
   diceMultiplier?: number;
 }): Promise<IslandRunRollActionResult> {
   const { session, client } = options;
@@ -145,22 +220,30 @@ export async function executeIslandRunRollAction(options: {
   // 7. Persist the roll state patch via the same write path used by
   //    IslandRunBoardPrototype (writeIslandRunGameStateRecord).
   //    Dice deduction uses the full multiplied cost (DICE_PER_ROLL × multiplier).
-  //    Persistence is fire-and-forget so the dice animation + token movement can
-  //    start immediately without waiting for the Supabase RPC round-trip.
-  //    Local state (localStorage) is updated synchronously inside the write call,
-  //    so the PWA remains authoritative even if the remote write is slow or fails.
+  //    `writeIslandRunGameStateRecord` updates localStorage synchronously at the
+  //    top of its body, so the client remains authoritative even if the remote
+  //    write later fails or is skipped (demo session / no client).
+  const newDicePool = state.dicePool - diceCost;
+  const newRuntimeVersion = state.runtimeVersion + 1;
   const nextState = {
     ...state,
-    runtimeVersion: state.runtimeVersion + 1,
+    runtimeVersion: newRuntimeVersion,
     tokenIndex: newTokenIndex,
-    dicePool: state.dicePool - diceCost,
+    dicePool: newDicePool,
   };
 
-  // Fire-and-forget: don't block the UI on the remote persist.
-  writeIslandRunGameStateRecord({ session, client, record: nextState }).catch((err) => {
+  // Await the write inside the mutex. Local-storage persistence is synchronous;
+  // awaiting only serialises the remote queue so two rolls can never land at
+  // Supabase in the wrong order (the earlier call's mutex tail resolves only
+  // after its remote round-trip completes).
+  try {
+    await writeIslandRunGameStateRecord({ session, client, record: nextState });
+  } catch (err) {
+    // Local storage already reflects the new state (see note above). Log and
+    // let the next hydration reconcile the remote row.
     // eslint-disable-next-line no-console
-    console.warn('[IslandRun] Background dice roll persist failed:', err);
-  });
+    console.warn('[IslandRun] Roll persist failed (local storage authoritative, remote will reconcile on next hydration):', err);
+  }
 
   return {
     status: 'ok',
@@ -170,6 +253,8 @@ export async function executeIslandRunRollAction(options: {
     newTokenIndex,
     hopSequence,
     diceCost,
+    newDicePool,
+    newRuntimeVersion,
     landingKind,
   };
 }

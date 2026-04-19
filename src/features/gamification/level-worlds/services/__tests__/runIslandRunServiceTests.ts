@@ -18,6 +18,7 @@ import { islandRunDiceRegenerationTests } from './islandRunDiceRegeneration.test
 import { islandRunStopTicketsTests } from './islandRunStopTickets.test';
 import { islandRunShopAffordabilityTests } from './islandRunShopAffordability.test';
 import { islandRunBonusTileTests } from './islandRunBonusTile.test';
+import { islandRunRollActionTests } from './islandRunRollAction.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -41,6 +42,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunStopTickets', tests: islandRunStopTicketsTests },
   { label: 'islandRunShopAffordability', tests: islandRunShopAffordabilityTests },
   { label: 'islandRunBonusTile', tests: islandRunBonusTileTests },
+  { label: 'islandRunRollAction', tests: islandRunRollActionTests },
 ];
 
 async function main() {
