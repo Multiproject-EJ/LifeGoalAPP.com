@@ -230,8 +230,10 @@ export function getRemainingIslandBuildCost(options: {
 //
 // The rate was tuned down substantially (5%/h → 0.5%/h) based on playtest
 // feedback — the previous rate punished weekend-away players by erasing
-// ~97% of their excess after 72h.  At 0.5%/h linear, 72h of excess retains
-// ~64%.  A per-session cap further limits any single reconnection loss.
+// ~97% of their excess after 72h.  At 0.5%/h linear, a raw 72h session
+// would want to erase 36% of excess, but the 20% per-session cap below
+// clamps any single reconnection loss to that ceiling — so players who
+// disappear for days still retain at least 80% of their excess on return.
 export const ESSENCE_DRIFT_THRESHOLD_RATIO = 1.5; // decay starts above 1.5× remaining island cost
 export const ESSENCE_DRIFT_RATE_PER_HOUR = 0.005; // lose 0.5% of excess per hour (linear)
 /** Maximum fraction of the player's excess that a single drift application can remove. */
