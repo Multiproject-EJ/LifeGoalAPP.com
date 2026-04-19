@@ -1225,7 +1225,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const island120ToggleHintCounterByPairRef = useRef<Record<string, number>>({});
   const isIsland120StartupDiagnosticActive = isIsland120StartupDiagnosticTarget(
     runtimeState.currentIslandNumber ?? islandNumber,
-  );
+  )
+    // User-requested gate (2026-04): the island-120 diagnostic is a heavy,
+    // noisy logger intended for deep bug-hunting only. Keep the logic fully
+    // available, but only ACTIVATE when the debug panel is open — this way
+    // the diagnostic is reachable via the ☰ debug panel and the game-export
+    // log in settings (both already surface recent diagnostic events) without
+    // paying its cost on every normal play session.
+    && showDebugPanel;
 
   useEffect(() => {
     runtimeStateRef.current = runtimeState;
@@ -2849,11 +2856,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       },
     });
     setTicketPromptStopId(null);
-    setLandingText(`${stopId.toUpperCase()} unlocked — ${result.cost} 🟣 paid.`);
+    const paidStop = islandStopPlan.find((s) => s.stopId === stopId);
+    setLandingText(`${paidStop?.title ?? stopId} unlocked — ${result.cost} 🟣 paid.`);
     requestActiveStopTransition(stopId, 'ticket_paid_open');
     setFocusedStopId(stopId);
     setCameraMode('stop_focus');
-  }, [client, effectiveIslandNumber, islandNumber, requestActiveStopTransition, session, stopIndexByStopId]);
+  }, [client, effectiveIslandNumber, islandNumber, islandStopPlan, requestActiveStopTransition, session, stopIndexByStopId]);
 
   const activeStop = activeStopId ? islandStopPlan.find((stop) => stop.stopId === activeStopId) ?? null : null;
 
@@ -2884,9 +2892,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         visualY = Math.max(visualY, 152);
       }
 
+      // Prefix a ticket emoji to the label when this stop is sequence-unlocked
+      // but still awaiting its essence ticket — makes the ticket gate visible
+      // before the player taps the orbit button.
+      const baseLabel = stop.title.replace(/^\S+\s/, '');
+      const needsTicket = doesStopRequireTicketPayment(stop.stopId);
+      const label = needsTicket ? `🎫 ${baseLabel}` : baseLabel;
+
       return {
         id: stop.stopId,
-        label: stop.title.replace(/^\S+\s/, ''),
+        label,
         x: visualX,
         y: visualY,
         state: stopStateMap.get(stop.stopId) ?? 'active',
@@ -2948,7 +2963,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         hideLabel: isSmallBoard,
       } satisfies OrbitStopVisual;
     });
-  }, [boardSize.height, boardSize.width, islandStopPlan, stopStateMap]);
+  }, [boardSize.height, boardSize.width, islandStopPlan, stopStateMap, doesStopRequireTicketPayment]);
 
   // Camera zoom-to-stop: when cameraMode is 'stop_focus' and a stop is focused,
   // smoothly zoom the camera to that stop's screen position.

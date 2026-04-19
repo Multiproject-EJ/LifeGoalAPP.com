@@ -185,7 +185,10 @@ export function sanitizeStopTicketsPaidByIsland(
     for (const raw of value) {
       const idx = Math.floor(raw);
       if (!Number.isFinite(idx)) continue;
-      if (idx <= 0 || idx >= STOP_COUNT) continue; // drop hatchery (0) + out-of-range
+      // Drop entries that cannot be a legitimate paid ticket:
+      //   - idx <= 0 covers both the free hatchery (0) and malformed negative values
+      //   - idx >= STOP_COUNT covers out-of-range (>= 5) entries
+      if (idx <= 0 || idx >= STOP_COUNT) continue;
       if (seen.has(idx)) continue;
       seen.add(idx);
       cleaned.push(idx);
