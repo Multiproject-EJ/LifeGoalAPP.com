@@ -3606,6 +3606,61 @@
   margin: 0;
 }
 
+/* ── Island-clear CTA row ──────────────────────────────────────
+   Added alongside the celebration upgrade from "auto-dismiss card"
+   to "gated modal with a Travel CTA". The CTA is the primary focus
+   target (autoFocus in JSX) so keyboard users can press Enter. */
+.island-clear-celebration__actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.island-clear-celebration__cta {
+  min-width: 220px;
+  font-size: 0.98rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  padding: 0.65rem 1.1rem;
+}
+
+/* ── Cycle capstone flourish (island 120 → 121) ─────────────────
+   Triggered when islandClearStats.isCycleCapstone is true. Swaps
+   the boss palette for a cosmic night palette and layers a slow
+   radial glow behind the card. The CTA reads "Begin Cycle N+1"
+   and the confetti/eyebrow/title shift to "Chapter Close" copy. */
+.island-clear-celebration--capstone {
+  background: radial-gradient(
+      ellipse at center,
+      rgba(60, 20, 120, 0.55) 0%,
+      rgba(5, 0, 25, 0.9) 70%
+    ),
+    rgba(0, 0, 0, 0.85);
+}
+
+.island-clear-celebration__card--capstone {
+  border-color: rgba(180, 140, 255, 0.75) !important;
+  background: linear-gradient(160deg, rgba(22, 10, 50, 0.97), rgba(8, 4, 25, 0.96)) !important;
+  box-shadow: 0 0 60px rgba(180, 140, 255, 0.35), 0 20px 60px rgba(0, 0, 0, 0.6) !important;
+  animation: island-clear-capstone-breathe 3.2s ease-in-out infinite;
+}
+
+.island-clear-celebration__card--capstone .island-clear-celebration__reward-item {
+  background: rgba(180, 140, 255, 0.18);
+  border-color: rgba(180, 140, 255, 0.5);
+  color: #e4d6ff;
+}
+
+@keyframes island-clear-capstone-breathe {
+  0%, 100% { box-shadow: 0 0 60px  rgba(180, 140, 255, 0.35), 0 20px 60px rgba(0, 0, 0, 0.6); }
+  50%      { box-shadow: 0 0 100px rgba(180, 140, 255, 0.55), 0 20px 60px rgba(0, 0, 0, 0.6); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-clear-celebration__confetti { animation: none; }
+  .island-clear-celebration__card--capstone { animation: none; }
+}
+
 /* ─────────────────────────────────────────────────────────────────────────
    Sanctuary / Creature Manifest overlay
    ───────────────────────────────────────────────────────────────────────── */

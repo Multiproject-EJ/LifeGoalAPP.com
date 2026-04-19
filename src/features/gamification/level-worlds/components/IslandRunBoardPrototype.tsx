@@ -1216,7 +1216,24 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // B3-5: island clear celebration
   const [showIslandClearCelebration, setShowIslandClearCelebration] = useState(false);
-  const [islandClearStats, setIslandClearStats] = useState<{ islandNumber: number; diceEarned: number; essenceEarned: number; stopsCleared: number } | null>(null);
+  const [islandClearStats, setIslandClearStats] = useState<{
+    islandNumber: number;
+    diceEarned: number;
+    essenceEarned: number;
+    stopsCleared: number;
+    /**
+     * Island number to travel to when the player taps the "Travel to next
+     * island" CTA. Typically `islandNumber + 1`, but lives on the stats so
+     * future variants (e.g. a skip or a branch) can override it.
+     */
+    pendingNextIsland: number;
+    /**
+     * True when this island-clear is the final island of a 120-cycle
+     * (islandNumber % 120 === 0). Triggers the "Cycle Complete" capstone
+     * flourish in the celebration modal.
+     */
+    isCycleCapstone: boolean;
+  } | null>(null);
 
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
   const [runtimeHydrationSource, setRuntimeHydrationSource] = useState<IslandRunRuntimeHydrationSource | null>(null);
@@ -2108,13 +2125,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return () => window.removeEventListener('resize', updateBoardSize);
   }, []);
 
-  // B3-5: island clear celebration auto-dismiss
-  useEffect(() => {
-    if (showIslandClearCelebration) {
-      const t = window.setTimeout(() => setShowIslandClearCelebration(false), 4000);
-      return () => window.clearTimeout(t);
-    }
-  }, [showIslandClearCelebration]);
+  // Island clear celebration is now gated by the "Travel to next island" CTA,
+  // so it no longer auto-dismisses. The modal closes inside
+  // handleTravelFromCelebration (which also triggers performIslandTravel).
+  // performIslandTravel itself clears showIslandClearCelebration + stats, so
+  // the celebration can never persist across an island change.
 
   const islandStopPlan = useMemo(
     () => generateIslandStopPlan(islandNumber, { profileId: ACTIVE_BOARD_PROFILE.id }),
@@ -5073,6 +5088,29 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     triggerIslandRunHaptic('island_travel_complete');
   };
 
+  /**
+   * Island-clear celebration CTA handler. Gates island travel behind the
+   * player tapping "Travel to next island" (or the cycle-capstone "Begin
+   * new cycle" button). Plays the travel overlay for the same 1.4s window
+   * as before so the audio/visual choreography is unchanged; only the
+   * trigger moves from an auto-timer to the explicit tap.
+   *
+   * Safe to call when no celebration is mounted — does nothing in that
+   * case, which keeps us resilient if the CTA fires during a race (e.g.
+   * double-tap right as performIslandTravel clears the stats).
+   */
+  const handleTravelFromCelebration = () => {
+    const stats = islandClearStats;
+    if (!stats) return;
+    const nextIsland = stats.pendingNextIsland;
+    setShowIslandClearCelebration(false);
+    setShowTravelOverlay(true);
+    window.setTimeout(() => {
+      setShowTravelOverlay(false);
+      performIslandTravel(nextIsland, { startTimer: true });
+    }, 1400);
+  };
+
   // B3-2: handleCompleteStopById helper
   const handleCompleteStopById = (stopId: string) => {
     setCompletedStops((current) => current.includes(stopId) ? current : [...current, stopId]);
@@ -5248,13 +5286,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             diceEarned: bossReward.dice,
             essenceEarned: bossReward.essence,
             stopsCleared: completedStops.length + 1,
+            pendingNextIsland: islandNumber + 1,
+            isCycleCapstone: islandNumber % 120 === 0,
           });
-          setShowTravelOverlay(true);
-          window.setTimeout(() => {
-            const nextIsland = islandNumber + 1;
-            setShowTravelOverlay(false);
-            performIslandTravel(nextIsland, { startTimer: true });
-          }, 1400);
+          // Travel is now gated on the celebration CTA; see
+          // handleTravelFromCelebration.
         } else {
           setLandingText('👾 Boss defeated! Open the Build Panel 🔨 and finish all 5 buildings to claim island clear.');
           setActiveStopId(null);
@@ -5310,14 +5346,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         diceEarned: bossReward.dice,
         essenceEarned: bossReward.essence,
         stopsCleared: completedStops.length + 1,
+        pendingNextIsland: islandNumber + 1,
+        isCycleCapstone: islandNumber % 120 === 0,
       });
 
-      setShowTravelOverlay(true);
-      window.setTimeout(() => {
-        const nextIsland = islandNumber + 1;
-        setShowTravelOverlay(false);
-        performIslandTravel(nextIsland, { startTimer: true });
-      }, 1400);
+      // Travel is gated behind the celebration CTA; see
+      // handleTravelFromCelebration.
       return;
     }
 
@@ -7585,17 +7619,50 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       )}
 
       {showIslandClearCelebration && islandClearStats && (
-        <div className="island-clear-celebration" role="status" aria-live="polite">
-          <div className="island-clear-celebration__card island-clear-celebration__card--boss">
-            <p className="island-clear-celebration__confetti" aria-hidden="true">🎉✨🏆✨🎉</p>
-            <p className="island-clear-celebration__eyebrow">Boss Defeated! Island Cleared!</p>
-            <p className="island-clear-celebration__title">🏆 Island {islandClearStats.islandNumber} Complete!</p>
+        <div
+          className={`island-clear-celebration${islandClearStats.isCycleCapstone ? ' island-clear-celebration--capstone' : ''}`}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="island-clear-celebration-title"
+        >
+          <div
+            className={`island-clear-celebration__card island-clear-celebration__card--boss${islandClearStats.isCycleCapstone ? ' island-clear-celebration__card--capstone' : ''}`}
+          >
+            <p className="island-clear-celebration__confetti" aria-hidden="true">
+              {islandClearStats.isCycleCapstone ? '🌌✨🏆✨🌌' : '🎉✨🏆✨🎉'}
+            </p>
+            <p className="island-clear-celebration__eyebrow">
+              {islandClearStats.isCycleCapstone
+                ? `Cycle ${Math.floor((islandClearStats.islandNumber - 1) / 120) + 1} Complete!`
+                : 'Boss Defeated! Island Cleared!'}
+            </p>
+            <p className="island-clear-celebration__title" id="island-clear-celebration-title">
+              {islandClearStats.isCycleCapstone
+                ? `🌠 Chapter Close — Island ${islandClearStats.islandNumber}`
+                : `🏆 Island ${islandClearStats.islandNumber} Complete!`}
+            </p>
             <div className="island-clear-celebration__rewards">
               <span className="island-clear-celebration__reward-item">🎲 +{islandClearStats.diceEarned}</span>
               <span className="island-clear-celebration__reward-item">🟣 +{islandClearStats.essenceEarned}</span>
               <span className="island-clear-celebration__reward-item">🔷 +3</span>
             </div>
-            <p className="island-clear-celebration__stops">✅ {islandClearStats.stopsCleared} stops cleared · 🛍️ Market Tier 2 unlocked</p>
+            <p className="island-clear-celebration__stops">
+              {islandClearStats.isCycleCapstone
+                ? `✅ ${islandClearStats.stopsCleared} stops cleared · 🧭 A new cycle awaits on the far horizon.`
+                : `✅ ${islandClearStats.stopsCleared} stops cleared · 🛍️ Market Tier 2 unlocked`}
+            </p>
+            <div className="island-clear-celebration__actions">
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary island-clear-celebration__cta"
+                onClick={handleTravelFromCelebration}
+                autoFocus
+              >
+                {islandClearStats.isCycleCapstone
+                  ? `🌌 Begin Cycle ${Math.floor((islandClearStats.islandNumber - 1) / 120) + 2}`
+                  : `⛵ Travel to Island ${islandClearStats.pendingNextIsland}`}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -7792,13 +7859,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       diceEarned: bossReward.dice,
                       essenceEarned: bossReward.essence,
                       stopsCleared: 5,
+                      pendingNextIsland: islandNumber + 1,
+                      isCycleCapstone: islandNumber % 120 === 0,
                     });
-                    setShowTravelOverlay(true);
-                    window.setTimeout(() => {
-                      const nextIsland = islandNumber + 1;
-                      setShowTravelOverlay(false);
-                      performIslandTravel(nextIsland, { startTimer: true });
-                    }, 1400);
+                    // Travel is gated behind the celebration CTA; see
+                    // handleTravelFromCelebration.
                   }}
                 >
                   🎉 Claim Island Clear!
