@@ -274,6 +274,13 @@ export const CountdownCalendarModal = ({
         const { data: updated } = await fetchCurrentSeason(userId, seasonData.season.holiday_key ?? undefined);
         if (updated) setSeasonData(updated);
       }
+
+      // Notify in-app listeners (e.g. the Today-tab TimeBoundOfferRow) that a
+      // treat-calendar door was opened so they can refresh their "collected"
+      // state without waiting for a window focus / visibility change.
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lifegoal:treat-calendar-opened'));
+      }
     } catch (err) {
       console.error('Door open failed unexpectedly:', err);
       setDoorError(`Something went wrong opening this door. Please try again.`);
