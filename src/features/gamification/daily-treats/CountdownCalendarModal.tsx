@@ -24,6 +24,7 @@ import {
   computeDoorStatus,
   getHatchesForDay,
   computeStreak,
+  formatLocalYmd,
   type CalendarSeasonData,
   type CalendarHatch,
   type DoorType,
@@ -239,15 +240,10 @@ export const CountdownCalendarModal = ({
       // the *new* consecutive-day streak (incremented when the previous open
       // was yesterday, reset to 1 after a missed day).
       if (seasonData.season.season_type === 'personal_quest' && doorType === 'free') {
-        const todayStr = (() => {
-          const d = new Date();
-          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        })();
-        const yesterdayStr = (() => {
-          const d = new Date();
-          d.setDate(d.getDate() - 1);
-          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        })();
+        const todayStr = formatLocalYmd(new Date());
+        const yesterdayDate = new Date();
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        const yesterdayStr = formatLocalYmd(yesterdayDate);
         const prev = seasonData.progress;
         const prevStreak = prev?.streak_count ?? prev?.opened_days.length ?? 0;
         const nextStreak =
