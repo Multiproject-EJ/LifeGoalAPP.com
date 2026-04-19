@@ -321,10 +321,10 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
   {
     name: 'multiplier: dice cost scales with multiplier',
     run: () => {
-      assertEqual(resolveDiceCostForMultiplier(1), 2, 'Expected cost 2 at ×1');
-      assertEqual(resolveDiceCostForMultiplier(5), 10, 'Expected cost 10 at ×5');
-      assertEqual(resolveDiceCostForMultiplier(10), 20, 'Expected cost 20 at ×10');
-      assertEqual(resolveDiceCostForMultiplier(100), 200, 'Expected cost 200 at ×100');
+      assertEqual(resolveDiceCostForMultiplier(1), 1, 'Expected cost 1 at ×1');
+      assertEqual(resolveDiceCostForMultiplier(5), 5, 'Expected cost 5 at ×5');
+      assertEqual(resolveDiceCostForMultiplier(10), 10, 'Expected cost 10 at ×10');
+      assertEqual(resolveDiceCostForMultiplier(100), 100, 'Expected cost 100 at ×100');
     },
   },
   {
@@ -341,7 +341,7 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
   {
     name: 'multiplier: clampMultiplierToPool ensures affordability',
     run: () => {
-      // Player has exactly 4 dice — can afford ×1 (cost 2) and ×2 (cost 4), but ×2 needs 20 dice gate
+      // Player has exactly 4 dice — can afford ×1 (cost 1), but ×2 needs 20 dice gate
       const clamped = clampMultiplierToPool(100, 4);
       const cost = resolveDiceCostForMultiplier(clamped);
       assert(cost <= 4, `Expected clamped multiplier cost (${cost}) to be affordable with 4 dice`);

@@ -167,7 +167,7 @@ export function resolveNextRewardKind(claimCount: number): RewardBarRewardKind {
 
 /**
  * Each tier defines a multiplier and the minimum dice pool required to unlock it.
- * The base cost per roll is DICE_PER_ROLL (2). At multiplier ×N, cost = 2×N.
+ * The base cost per roll is DICE_PER_ROLL (1). At multiplier ×N, cost = 1×N.
  *
  * Tier gates are tuned for a prototype with regen ceiling ~30–160 dice:
  *  - ×1 is always available (0 dice).
@@ -193,8 +193,16 @@ export const MULTIPLIER_TIERS: readonly MultiplierTier[] = [
   { multiplier: 200, minDice: 5_000 },
 ] as const;
 
-/** Base dice deducted per roll (before multiplier scaling). */
-export const BASE_DICE_PER_ROLL = 2;
+/**
+ * Base dice deducted per roll (before multiplier scaling). Softened from 2 → 1
+ * on 2026-04-19 per playtest feedback — low-multiplier play now burns the
+ * pool at half the previous rate, keeping ×1 sessions accessible while high
+ * multipliers still scale linearly (×3 = 3 dice, ×10 = 10 dice, …).
+ *
+ * Mirrored by `DICE_PER_ROLL` in `islandRunRollAction.ts`; both constants must
+ * stay in sync. Source of truth for `resolveDiceCostForMultiplier` below.
+ */
+export const BASE_DICE_PER_ROLL = 1;
 
 /**
  * Resolve all multiplier tiers available given the current dice pool.
@@ -234,8 +242,7 @@ export function resolveMaxMultiplierForPool(dicePool: number, eventBoostMax?: nu
 
 /**
  * Dice cost for a single roll at the given multiplier.
- * Cost = BASE_DICE_PER_ROLL × multiplier.
- * This means ×10 costs 20 dice per roll — fast burn, but massive progress.
+ * Cost = BASE_DICE_PER_ROLL × multiplier. With BASE=1, ×10 costs 10 dice per roll.
  */
 export function resolveDiceCostForMultiplier(multiplier: number): number {
   return BASE_DICE_PER_ROLL * Math.max(1, Math.floor(multiplier));

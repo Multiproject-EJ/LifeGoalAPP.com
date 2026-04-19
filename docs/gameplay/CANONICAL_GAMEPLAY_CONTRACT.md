@@ -27,7 +27,7 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 
 ### A. Movement loop
 - Player movement is tile-based and consumes **dice**.
-- Each roll costs `2 × N` dice, where `N` is the player's currently selected **dice multiplier** (default `×1` = flat 2 dice). See §2E.
+- Each roll costs `1 × N` dice, where `N` is the player's currently selected **dice multiplier** (default `×1` = flat 1 die). See §2E.
 - Each roll uses **2 standard dice** (each rolls 1–6), producing a total movement of **2–12 tiles** per roll — the multiplier affects cost and reward amplification only, never the movement distance.
 - Board tile count and board presentation are configurable and may change over time.
 - Stops are external structures and are not part of tile movement.
@@ -49,20 +49,20 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 - Timed event state persists independently of island transitions.
 
 ### E. Dice multiplier (opt-in amplifier)
-- The roll cost is `2 × N` where `N ∈ { 1, 2, 3, 5, 10, 20, 50, 100, 200 }`.
+- The roll cost is `1 × N` where `N ∈ { 1, 2, 3, 5, 10, 20, 50, 100, 200 }`.
 - Each tier unlocks at a minimum dice stash so players can't burn out early. Canonical tiers (source of truth: `MULTIPLIER_TIERS` in `islandRunContractV2RewardBar.ts`):
 
 | Multiplier | Unlocks at (dice pool) | Dice cost per roll |
 |---|---|---|
-| ×1 | 0 | 2 |
-| ×2 | 20 | 4 |
-| ×3 | 50 | 6 |
-| ×5 | 100 | 10 |
-| ×10 | 200 | 20 |
-| ×20 | 500 | 40 |
-| ×50 | 1 000 | 100 |
-| ×100 | 2 000 | 200 |
-| ×200 | 5 000 | 400 |
+| ×1 | 0 | 1 |
+| ×2 | 20 | 2 |
+| ×3 | 50 | 3 |
+| ×5 | 100 | 5 |
+| ×10 | 200 | 10 |
+| ×20 | 500 | 20 |
+| ×50 | 1 000 | 50 |
+| ×100 | 2 000 | 100 |
+| ×200 | 5 000 | 200 |
 
 - The multiplier scales positive essence tile rewards **and** reward-bar progress from tile landings. Hazard deductions are also scaled by the multiplier (high multiplier = high risk too).
 - The multiplier auto-downgrades if the player's pool drops below the current tier's unlock threshold, so the dice button can never become un-rollable silently. See `clampMultiplierToPool`.
@@ -99,8 +99,9 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 ### Dice
 - Dice is the **only board energy**.
 - Dice is required for movement and core board interactions.
-- Each roll costs `2 × N` dice where `N` is the player's selected multiplier (default `×1`). See §2E.
+- Each roll costs `1 × N` dice where `N` is the player's selected multiplier (default `×1`). See §2E.
 - **Tiles never award dice directly.** Dice are only sourced from: reward bar payouts, boss/stop/island completion, daily treats, lucky spin, shop purchases, and passive regeneration.
+- **The dice pool is never implicitly reset.** Hoarded dice carry over across rolls, island travel, and cycle wraps. The only ways the pool shrinks are: being spent on rolls, and losses explicitly awarded by a game event (none exist today). If a future event resets the pool it must persist the reset in the same patch as it updates the React state — see the historical `performIslandTravel` desync, fixed 2026-04-19.
 
 ### Essence
 - Essence is a **board-loop currency**.
@@ -168,7 +169,7 @@ Dice reward sources should follow this qualitative pattern:
 - The regeneration system operates as a **minimum-roll floor**: if the player has fewer dice than their level's minimum threshold, dice regenerate passively over time.
 - If the player already has dice at or above the minimum threshold, **no regeneration occurs**.
 - Full regeneration from 0 to the minimum takes exactly **2 hours**.
-- Each roll costs `2 × N` dice, where `N` is the currently selected **dice multiplier** (default `×1`). See §2E for the full ladder and unlock gates. The dice-regen system is unaffected by `N` — regen targets the level's floor on a per-hour basis regardless of spend velocity.
+- Each roll costs `1 × N` dice, where `N` is the currently selected **dice multiplier** (default `×1`). See §2E for the full ladder and unlock gates. The dice-regen system is unaffected by `N` — regen targets the level's floor on a per-hour basis regardless of spend velocity.
 - There is **no hard cap** on dice regen — the formula works for any player level.
 
 ### Dice regeneration formula (continuous, no cap)
@@ -442,8 +443,9 @@ The following are not part of the canonical Island Run gameplay contract:
 - Capped dice regeneration tier table (replaced with continuous logarithmic formula).
 
 > **Note on roll cost.** The dice multiplier (§2E) is part of the **current**
-> design, not a removed feature — cost is `2 × N`. Earlier drafts of this
-> contract claimed a strictly flat cost; that wording has been superseded.
+> design, not a removed feature — cost is `1 × N` (softened from `2 × N` on
+> 2026-04-19). Earlier drafts of this contract claimed a strictly flat cost;
+> that wording has been superseded.
 
 ### Egg sell reward choice
 - When selling an egg instead of collecting the creature, the player **chooses** between a shard payout or a dice payout.

@@ -1,7 +1,7 @@
 # Island Run — Open Issues & Feature Backlog
 
 Status: Living document
-Last updated: 2026-04-19 (session 4)
+Last updated: 2026-04-19 (session 5)
 Owner: Gameplay System
 
 This document tracks every unresolved issue, bug, inconsistency, or scoped
@@ -85,11 +85,11 @@ sticker fragments as a reward-bar payout kind (matches the shipping
 
 ---
 
-### P1-5. Dice multiplier plumbed but outlawed by the contract — ✅ Closed (session 3)
+### P1-5. Dice multiplier plumbed but outlawed by the contract — ✅ Closed (session 3, formula softened in session 5)
 Contract §2A + §2E now document the dice multiplier as an **opt-in amplifier**
 (×1/×2/×3/×5/×10/×20/×50/×100/×200) with per-tier dice-pool unlock gates.
-Cost per roll = `2 × N`. Movement is unchanged; only cost and reward
-amplification scale.
+Cost per roll = `1 × N` (softened from `2 × N` in session 5). Movement is
+unchanged; only cost and reward amplification scale.
 
 ---
 
@@ -109,6 +109,93 @@ longer a dual source of truth.
 
 ### P1-8. `payStopTicket({stopIndex: 0})` return shape
 **Status:** ✅ Closed in session 2 — see Closed section below.
+
+---
+
+### P1-9. Fold tile-reward writes into a serialised service
+**Files:**
+- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
+  (`awardContractV2Essence`, `deductContractV2Essence`, `resolveTileLanding`,
+  reward-bar apply path)
+- Proposed new `src/features/gamification/level-worlds/services/islandRunTileRewardAction.ts`
+
+**Why.** Session 5 patched the most visible clobber by switching essence
+writes from full-record `writeIslandRunGameStateRecord` spreads to
+`persistIslandRunRuntimeStatePatch` so disjoint fields no longer overwrite
+each other. That closes the cross-field clobber but still performs two
+independent async read-modify-writes when a single landing awards essence
+AND reward-bar progress. A proper fix is a dedicated
+`executeIslandRunTileRewardAction` service that takes the whole landing
+(essence delta, reward-bar progress delta, optional sticker / bonus-tile
+effects) and runs it under the same per-user mutex as `executeIslandRunRollAction`.
+Acceptance: all landing-effect writes chain through the mutex; a
+`tile-reward-interleaves-with-roll` regression test exists mirroring the
+existing 5-parallel-rolls case.
+
+---
+
+### P1-10. Encounter resolution must tick the reward bar
+**Files:**
+- `src/features/gamification/level-worlds/services/islandRunContractV2RewardBar.ts`
+  (`FEEDING_TILE_PROGRESS`, `resolveIslandRunContractV2RewardBarProgressDelta`)
+- Encounter handler in `IslandRunBoardPrototype.tsx`
+- Canonical contract §5D ("encounter" row)
+
+**Why.** `FEEDING_TILE_PROGRESS` only lists `chest` / `micro` / `currency`.
+Contract §5D promises "essence + reward-bar progress + optional sticker
+chance" for encounters, but the encounter-completion path does not call
+`applyIslandRunContractV2RewardBarProgress` so encounters contribute zero
+reward-bar progress today. Fix: add a new `'encounter_resolve'` source to
+`RewardBarProgressSource` (probably worth 2 or 3 progress, matching a
+chest's impact) and fire it from the encounter success branch.
+
+---
+
+### P1-11. Stop status reporting ignores ticket-paid state
+**Files:**
+- `src/features/gamification/level-worlds/services/islandRunContractV2StopResolver.ts`
+  (`resolveIslandRunContractV2Stops.statusesByIndex`)
+
+**Why.** `statusesByIndex` returns `'active'` for the first index whose
+`objectiveComplete` is false, ignoring `stopTicketsPaidByIsland`. The modal
+open-path separately enforces `isStopTicketPaid`, so this is not exploitable
+today — but every telemetry/HUD consumer that reads `statusesByIndex`
+misreports "active" for a ticket-locked stop. Fix: pass
+`stopTicketsPaidByIsland` + current island key into the resolver and emit a
+new `'ticket_required'` status for the first-incomplete stop whose ticket
+hasn't been paid.
+
+---
+
+### P1-12. Essence drift threshold collapses at end-of-island
+**Files:**
+- `src/features/gamification/level-worlds/services/islandRunContractV2EssenceBuild.ts`
+  (`applyEssenceDrift`, `getRemainingIslandBuildCost`)
+
+**Why.** When every building is L3 and `getRemainingIslandBuildCost`
+returns 0, the current `Math.max(1, …)` clamp produces `threshold = ⌊1 × 1.5⌋ = 1`
+and the entire wallet becomes "excess". That's the opposite of the intended
+"nothing left to build → no drift". Fix: short-circuit `applyEssenceDrift`
+to return zero loss when `remainingIslandCost === 0` **or** when
+`isStopBuildFullyComplete` across all 5 stops is true. Add an
+`islandRunContractV2EssenceBuild.test.ts` case covering the L3/L3/L3/L3/L3
+state with full wallet.
+
+---
+
+### P1-13. `performIslandTravel` cleanup for per-island state maps
+**Files:**
+- `IslandRunBoardPrototype.tsx` (`performIslandTravel`)
+- `islandRunBonusTile.ts` (`resetBonusTileChargeForIsland`,
+  `sanitizeBonusTileChargeByIsland`)
+- `islandRunStopTickets.ts` (`sanitizeStopTicketsPaidByIsland`)
+
+**Why.** Travel clears `completedStopsByIsland[oldIslandKey]` but does not
+run `resetBonusTileChargeForIsland` or the ticket sanitization helper. Once
+the bonus-tile field lands in runtime state (P1-3 renderer wiring) and
+once a 120→1 cycle wraps with a populated ticket map, stale entries can
+linger. Fix: call both sanitizers from `performIslandTravel` alongside the
+existing `completedStopsByIsland` reset.
 
 ---
 
@@ -164,6 +251,26 @@ Seasonal/rare encounters at fractions `0.275` / `0.775` land on tile indices
 `11` and `31` on a 40-tile ring — adjacent to the removed landmark anchors.
 Cosmetically fine now that anchors are gone, but re-evaluate once P1-2 adds
 more tile types and we want an even spread.
+
+### P2-10. `seededRandom(0)` corner case
+**Files:** `src/features/gamification/level-worlds/services/islandBoardTileMap.ts`
+
+**Why.** `seededRandom` returns 0 for seed 0, which pins every tile to
+`currency` for the whole island. Production always calls with `islandNumber ≥ 1`
+so the case is unreachable today, but any dev/QA path that feeds
+`islandNumber = 0` silently produces a degenerate board. One-line fix:
+`s = (seed | 0) || 1` at the top of the helper (or equivalent fallback).
+
+### P2-11. `DiceRegenState.maxDice` is really a minimum floor
+**Files:** `src/features/gamification/level-worlds/services/islandRunDiceRegeneration.ts`
+
+**Why.** Contract §3B says "no hard cap" on dice regen, and `applyDiceRegeneration`
+treats `minDice` as a minimum-roll floor (regen never exceeds it, but the player
+can hoard arbitrarily above it). The persisted field is named `maxDice`, which
+invites future readers to add an incorrect upper clamp. Either rename
+the runtime field to `minRollFloor` (with a migration to copy the stored
+value) or add an explicit docblock on the `DiceRegenState` type saying the
+name is historical and the value is a floor, not a cap.
 
 ---
 
@@ -228,6 +335,61 @@ Removed the reference to **coins** from the "intentionally not in scope"
 list in `islandRunRollAction.ts` (coins are retired) and refreshed the
 tile-reward example list to mention the live currencies + bonus-tile
 charge.
+
+## Closed in session 5 (2026-04-19)
+
+### ✅ Roll cost softened from `2 × N` to `1 × N` dice per roll
+Playtest feedback: the ×1 default (2 dice per roll) burned fresh-session
+pools too quickly. `DICE_PER_ROLL` in `islandRunRollAction.ts` and
+`BASE_DICE_PER_ROLL` in `islandRunContractV2RewardBar.ts` both drop to **1**.
+`resolveDiceCostForMultiplier` and `clampMultiplierToPool` are unchanged
+(they derive from `BASE_DICE_PER_ROLL`). Canonical contract §2A, §2E (tier
+table), §3 Dice, and the §8 "Note on roll cost" block all updated to the
+new formula. Test suite (`islandRunRollAction.test.ts`,
+`islandRunContractV2RewardBar.test.ts`) re-anchored to the new cost:
+`×1 = 1`, `×3 = 3`, `×5 = 5`, 5-parallel-rolls drains `100 → 95`.
+
+### ✅ `performIslandTravel` dice-pool desync
+`setDicePool(ISLAND_RUN_DEFAULT_STARTING_DICE)` is removed from
+`performIslandTravel`. Hoarded dice now carry over across island travel
+(including the `120 → 1` cycle wrap), matching contract §3 Dice: "dice are
+only sourced from reward bar, stops, boss, events, shop, and passive regen
+— never implicitly clobbered." This eliminates the previous desync where
+the UI reset to 30 but the persist patch omitted `dicePool`, so the
+Supabase/localStorage record retained the pre-travel value and snapped back
+on the next hydration. The QA helpers `handleQaAdvanceIsland` and
+`handleQaResetProgression` keep their explicit resets but now pass
+`dicePool` and `tokenIndex` into their `persistIslandRunRuntimeStatePatch`
+patches so their resets stay in sync with storage too. Contract §3 Dice
+carries an explicit "dice pool is never implicitly reset" clause.
+
+### ✅ Tile-reward write cross-field clobber
+`awardContractV2Essence` and `deductContractV2Essence` in
+`IslandRunBoardPrototype.tsx` switched from
+`writeIslandRunGameStateRecord({record: {...runtimeStateRef.current, essence}})`
+— which overwrote **every** runtime field with whatever ref snapshot the
+caller held — to `persistIslandRunRuntimeStatePatch({patch: {essence, essenceLifetime*}})`.
+The patch path does a read-modify-write at the storage layer, so when a
+tile landing fires an essence award and a reward-bar apply in the same
+React tick the two persists no longer clobber each other's disjoint
+fields. The functional `setRuntimeState` updaters are preserved so
+in-memory state also composes correctly. A fully serialised landing
+service (rolling tile rewards into the same mutex as `executeIslandRunRollAction`)
+remains P1-9 above.
+
+### ✅ Landing RNG mis-seeded from stale `tokenIndex`
+`resolveTileLanding` in `IslandRunBoardPrototype.tsx` now takes an explicit
+`landingTileIndex` parameter (passed `currentIndex` by the only call site)
+instead of reading the React `tokenIndex` state via closure. The previous
+code seeded `landingSeed = island × 10k + tokenIndex × 100 + rollIndex`
+**before** the `setTokenIndex(currentIndex)` call flushed, so the seed was
+keyed to the tile the token left rather than the tile it actually settled
+on — and the "Landed on tile #N" fallback toast printed the same wrong
+index. Both now use the post-movement tile index, restoring the
+"same landing on reload → same outcome" determinism the seed is designed
+to provide.
+
+---
 
 ## Closed in session 4 (2026-04-19)
 
@@ -304,11 +466,11 @@ in `islandRunContractV2RewardBar.ts` as the source of truth.
 
 ### ✅ P1-5. Dice multiplier is documented
 Contract §2A keeps the 2–12 movement invariant; the new §2E documents
-the full multiplier tier ladder, the `2 × N` cost formula, per-tier
-unlock gates, the auto-downgrade rule (via `clampMultiplierToPool`),
-and the fact that hazards are amplified too (so high multiplier = real
-risk). §3 Dice was updated to reference §2E instead of claiming a flat
-cost.
+the full multiplier tier ladder, the `1 × N` cost formula (softened from
+`2 × N` in session 5), per-tier unlock gates, the auto-downgrade rule
+(via `clampMultiplierToPool`), and the fact that hazards are amplified
+too (so high multiplier = real risk). §3 Dice was updated to reference
+§2E instead of claiming a flat cost.
 
 ### ✅ P1-6. Hatchery dual source of truth removed
 `hatcheryEffectivelyComplete` parameter is dropped from
