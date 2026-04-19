@@ -78,9 +78,9 @@ begin
     if found then
       return query
       select
-        coalesce(v_existing_log.status, 'duplicate')::text,
-        coalesce(v_existing_log.applied_runtime_version, 0)::bigint,
-        coalesce(v_existing_log.response_json -> 'latest_state', null)::jsonb,
+        coalesce((v_existing_log).status, 'duplicate')::text,
+        coalesce((v_existing_log).applied_runtime_version, 0)::bigint,
+        coalesce((v_existing_log).response_json -> 'latest_state', null)::jsonb,
         'Duplicate action id; returning cached response.'::text;
       return;
     end if;
@@ -104,7 +104,7 @@ begin
       return query
       select
         'conflict'::text,
-        coalesce(v_existing.runtime_version, 0)::bigint,
+        coalesce((v_existing).runtime_version, 0)::bigint,
         to_jsonb(v_existing),
         'Runtime version mismatch.'::text;
       return;
