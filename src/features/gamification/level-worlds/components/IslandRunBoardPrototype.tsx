@@ -15,7 +15,7 @@ import {
 import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
 import { getIslandDisplayName } from '../services/islandNames';
 import { generateTileMap, getIslandRarity, type IslandTileMapEntry } from '../services/islandBoardTileMap';
-import { resolveIslandBoardProfile, type IslandBoardProfileId } from '../services/islandBoardProfiles';
+import { resolveIslandBoardProfile } from '../services/islandBoardProfiles';
 // resolveWrappedTokenIndex retired from this component: the roll action service
 // is the single authoritative source of truth for token movement and hop order.
 import { ISLAND_RUN_DEFAULT_STARTING_DICE } from '../services/islandRunEconomy';
@@ -187,17 +187,12 @@ const SPIN_MIN = 1;
 const SPIN_MAX = 5;
 // Island duration: 72 hours for special islands, 48 hours for standard islands.
 const ISLAND_DURATION_SEC = 72 * 60 * 60;
-const ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE = true;
 // Canonical contract is now enforced as source-of-truth runtime behavior.
 // Legacy pre-contract-v2 movement/energy rules are intentionally disabled.
 const ISLAND_RUN_CONTRACT_V2_ENABLED = true;
-function resolveRequestedBoardProfileId(): IslandBoardProfileId {
-  if (typeof window === 'undefined') return 'spark40_ring';
-  const query = new URLSearchParams(window.location.search).get('boardProfile')?.trim().toLowerCase();
-  if (query === 'spark40' || query === 'spark40_ring') return 'spark40_ring';
-  return 'spark40_ring';
-}
-const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile(resolveRequestedBoardProfileId());
+// Only one board profile ships today. Historically this was query-param gated,
+// but every branch collapsed to the same result — so the helper was removed.
+const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile('spark40_ring');
 const PERFECT_COMPANION_MODEL_VERSION = 'phase3_v1';
 // Temporary diagnostics for Stop 1↔2 flicker + roll lock on Island 120 startup.
 const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_ISLAND = 120;
@@ -1444,25 +1439,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setMarketOwnedBundles({
         dice_bundle: Boolean(runtimeOwnedBundles.dice_bundle),
       });
-    } else if (!ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE) {
-      const localStorageKey = `island_run_shop_owned_${session.user.id}_island_${persistedIsland}`;
-      try {
-        const raw = window.localStorage.getItem(localStorageKey);
-        if (raw) {
-          const parsed = JSON.parse(raw) as Record<string, boolean>;
-          if (parsed && typeof parsed === 'object') {
-            setMarketOwnedBundles({
-              dice_bundle: Boolean(parsed.dice_bundle),
-            });
-          } else {
-            setMarketOwnedBundles({ dice_bundle: false });
-          }
-        } else {
-          setMarketOwnedBundles({ dice_bundle: false });
-        }
-      } catch {
-        setMarketOwnedBundles({ dice_bundle: false });
-      }
     } else {
       setMarketOwnedBundles({ dice_bundle: false });
     }
@@ -1499,21 +1475,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const targetIslandNumber = runtimeState.currentIslandNumber ?? islandNumber;
     const storedStops = Array.isArray(runtimeState.completedStopsByIsland?.[String(targetIslandNumber)])
       ? runtimeState.completedStopsByIsland[String(targetIslandNumber)]!.filter((x): x is string => typeof x === 'string')
-      : (() => {
-          if (ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE) return [];
-          if (typeof window === 'undefined') return [];
-          const key = `island_run_stops_${session.user.id}_island_${targetIslandNumber}`;
-          try {
-            const raw = window.localStorage.getItem(key);
-            if (!raw) return [];
-            const parsed = JSON.parse(raw) as unknown;
-            return Array.isArray(parsed)
-              ? parsed.filter((x): x is string => typeof x === 'string')
-              : [];
-          } catch {
-            return [];
-          }
-        })();
+      : [];
     const currentIslandEggEntry = runtimeState.perIslandEggs?.[String(runtimeState.currentIslandNumber ?? islandNumber)] ?? null;
     const hasActiveEggOnLoad = currentIslandEggEntry?.status === 'incubating'
       || currentIslandEggEntry?.status === 'ready'
@@ -2166,27 +2128,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (Array.isArray(persistedStops)) {
       return persistedStops.filter((x): x is string => typeof x === 'string');
     }
-
-    if (typeof window === 'undefined') {
-      return [];
-    }
-
-    if (ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE) {
-      return [];
-    }
-
-    const key = `island_run_stops_${session.user.id}_island_${targetIslandNumber}`;
-    try {
-      const raw = window.localStorage.getItem(key);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw) as unknown;
-      return Array.isArray(parsed)
-        ? parsed.filter((x): x is string => typeof x === 'string')
-        : [];
-    } catch {
-      return [];
-    }
-  }, [runtimeState.completedStopsByIsland, session.user.id]);
+    // Runtime migration is complete — no localStorage fallback needed.
+    return [];
+  }, [runtimeState.completedStopsByIsland]);
 
   // M11D: restore completedStops from table-backed runtime state first; fallback to localStorage
   useEffect(() => {
@@ -2220,20 +2164,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setLandingText(`Focused on ${nextActiveStop.title}.`);
   }, [completedStops, islandStopPlan]);
 
-  // M11D: persist completedStops to both localStorage and Supabase runtime state
+  // M11D: persist completedStops to Supabase runtime state (the localStorage
+  // mirror was removed once runtime migration completed).
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
     // Guard: Skip until the initial hydration sync effect has applied server values
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
-    if (!ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE) {
-      const key = `island_run_stops_${session.user.id}_island_${islandNumber}`;
-      try {
-        window.localStorage.setItem(key, JSON.stringify(completedStops));
-      } catch {
-        // ignore storage errors
-      }
-    }
     const islandKey = String(islandNumber);
     const persistedStops = runtimeState.completedStopsByIsland?.[islandKey] ?? [];
     if (areStringArraysEqual(persistedStops, completedStops)) {
@@ -2345,15 +2282,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         ...patch,
       },
     }));
-
-    if (!ISLAND_RUN_RUNTIME_MIGRATION_COMPLETE) {
-      const key = `island_run_shop_owned_${session.user.id}_island_${islandNumber}`;
-      try {
-        window.localStorage.setItem(key, JSON.stringify(marketOwnedBundles));
-      } catch {
-        // ignore storage errors
-      }
-    }
   }, [client, hasHydratedRuntimeState, islandNumber, marketOwnedBundles, runtimeState.marketOwnedBundlesByIsland, session]);
 
   useEffect(() => {
@@ -3747,11 +3675,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         setTimeout(() => handleContractV2RewardBarClaim(), 500);
       }
     }
-  };
-
-  // B2-1: handleSpin — spin-based movement is retired.
-  const handleSpin = async () => {
-    setLandingText('Spin movement is retired. Use dice rolls to move.');
   };
 
   /** Mark v2 stop 0 (hatchery) objective as complete when the egg is set.
@@ -6081,16 +6004,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             >
               {rollButtonLabel}
             </button>
-          {false && spinTokens > 0 && (
-            <button
-              type="button"
-              className="island-run-prototype__spin-btn"
-              onClick={() => void handleSpin()}
-              disabled={isRolling}
-            >
-              🌀 Spin
-            </button>
-          )}
           {/* M10A: audio toggle */}
           <button
             type="button"
@@ -6688,16 +6601,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             >
               🔨 Build
             </button>
-            {false && spinTokens > 0 && (
-              <button
-                type="button"
-                className="island-run-prototype__spin-btn island-run-prototype__spin-btn--footer"
-                onClick={() => void handleSpin()}
-                disabled={isRolling || spinTokens < 1 || showFirstRunCelebration}
-              >
-                Spin
-              </button>
-            )}
             {!isHudCollapsed && (
               <button
                 type="button"
