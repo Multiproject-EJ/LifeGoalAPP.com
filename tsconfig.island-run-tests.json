@@ -23,6 +23,7 @@
     "src/features/gamification/level-worlds/services/islandRunRuntimeState.ts",
     "src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts",
     "src/features/gamification/level-worlds/services/islandRunGameStateStore.ts",
+    "src/features/gamification/level-worlds/services/islandRunProgressReset.ts",
     "src/features/gamification/level-worlds/services/islandRunProfile.ts",
     "src/features/gamification/level-worlds/services/islandRunRuntimeTelemetry.ts",
     "src/features/gamification/level-worlds/services/islandRunEntryDebug.ts",
