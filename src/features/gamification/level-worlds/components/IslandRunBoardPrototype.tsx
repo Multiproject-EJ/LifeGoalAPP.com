@@ -682,6 +682,7 @@ type OrbitStopVisual = {
   labelOffsetX: number;
   hideLabel: boolean;
   stopId?: string;
+  ticketCost?: number;
 };
 
 type MysteryStopReward =
@@ -2807,6 +2808,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const baseLabel = stop.title.replace(/^\S+\s/, '');
       const needsTicket = doesStopRequireTicketPayment(stop.stopId);
       const label = needsTicket ? `🎫 ${baseLabel}` : baseLabel;
+      const stopIndex = stopIndexByStopId.get(stop.stopId);
+      const ticketCost = needsTicket && stopIndex !== undefined
+        ? getStopTicketCost({ effectiveIslandNumber, stopIndex })
+        : undefined;
 
       return {
         id: stop.stopId,
@@ -2819,6 +2824,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         labelOffsetX: 0,
         hideLabel: false,
         stopId: stop.stopId,
+        ticketCost,
       } satisfies OrbitStopVisual;
     });
 
@@ -2872,7 +2878,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         hideLabel: isSmallBoard,
       } satisfies OrbitStopVisual;
     });
-  }, [boardSize.height, boardSize.width, islandStopPlan, stopStateMap, doesStopRequireTicketPayment]);
+  }, [boardSize.height, boardSize.width, islandStopPlan, stopStateMap, doesStopRequireTicketPayment, stopIndexByStopId, effectiveIslandNumber]);
 
   // Camera zoom-to-stop: when cameraMode is 'stop_focus' and a stop is focused,
   // smoothly zoom the camera to that stop's screen position.
@@ -8493,7 +8499,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 🎫 Open {promptedStop?.title ?? ticketPromptStopId}
               </h2>
               <p style={{ marginTop: 12, marginBottom: 8, opacity: 0.85 }}>
-                This stop needs an essence ticket to open on this island.
+                This landmark needs an essence ticket to open on this island.
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '12px 0 16px', fontSize: 16 }}>
                 <div><strong>Cost:</strong> {cost} 🟣</div>
