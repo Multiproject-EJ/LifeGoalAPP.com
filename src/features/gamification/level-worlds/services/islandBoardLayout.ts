@@ -42,20 +42,12 @@ export const OUTER_STOP_ANCHORS: OrbitStopAnchor[] = [
 // 40 tiles arranged around the island ring in canonical 1000×1000 board space.
 // Matches Monopoly GO's tile count — larger tiles, perfectly readable on mobile.
 //
-// These tile indices are ring-position markers only — they serve two purposes:
-//   1. Visual: the ring renders a waypoint indicator at these positions.
-//   2. Token arrival: when the token lands on one of these indices the game
-//      resolves the corresponding orbit stop (see islandRunStops.ts).
-//
-// The five orbit stop indices map to:
-//   tile  0 → Hatchery stop
-//   tile 10 → Habit stop
-//   tile 20 → Mystery stop (rotating content)
-//   tile 30 → Wisdom stop
-//   tile 39 → Boss stop
-//
-// Important: the orbit stops themselves are NOT tiles. They are a separate HUD
-// layer (BoardOrbitStops) rendered above the board ring and are always clickable.
+// Every one of the 40 indices is a pure movement tile whose on-land effect is
+// picked by the tile-map generator (currency / chest / micro / hazard /
+// encounter / bonus / …). **No tile index is reserved for a landmark.** The
+// 5 landmark HUD buttons are positioned in screen space by OUTER_STOP_ANCHORS
+// above, and the player token never lands on a landmark — landmarks are
+// opened by tapping the orbit HUD button.
 // All positions are in the canonical 1000×1000 coordinate space.
 
 const SPARK40_CENTER_X = 500;

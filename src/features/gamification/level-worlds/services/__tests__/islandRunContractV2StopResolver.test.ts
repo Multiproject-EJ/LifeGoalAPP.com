@@ -196,9 +196,9 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
     },
   },
   {
-    name: 'v2 step1 resolves true when hatcheryEffectivelyComplete bridges egg lifecycle to v2 state',
+    name: 'v2 step1 resolves from stopStatesByIndex[0].objectiveComplete only',
     run: () => {
-      const stopStatesByIndex = [
+      const incompleteStates = [
         { objectiveComplete: false, buildComplete: false },
         { objectiveComplete: false, buildComplete: false },
         { objectiveComplete: false, buildComplete: false },
@@ -208,22 +208,11 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
       assertEqual(
         resolveIslandRunStep1CompleteForProgression({
           islandRunContractV2Enabled: true,
-          stopStatesByIndex,
+          stopStatesByIndex: incompleteStates,
           legacyStep1Complete: true,
-          hatcheryEffectivelyComplete: true,
-        }),
-        true,
-        'Expected hatcheryEffectivelyComplete to unblock step1 in v2 when egg has been set',
-      );
-      assertEqual(
-        resolveIslandRunStep1CompleteForProgression({
-          islandRunContractV2Enabled: true,
-          stopStatesByIndex,
-          legacyStep1Complete: false,
-          hatcheryEffectivelyComplete: false,
         }),
         false,
-        'Expected step1 to remain incomplete when neither v2 state nor hatchery flag says done',
+        'Expected step1 to remain incomplete when v2 stop 0 objective is false, regardless of legacy flag',
       );
       assertEqual(
         resolveIslandRunStep1CompleteForProgression({
@@ -236,10 +225,9 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
             { objectiveComplete: false, buildComplete: false },
           ],
           legacyStep1Complete: false,
-          hatcheryEffectivelyComplete: false,
         }),
         true,
-        'Expected v2 stop objective state to take priority even when hatchery flag is false',
+        'Expected step1 to resolve true when v2 stop 0 objective is complete',
       );
     },
   },

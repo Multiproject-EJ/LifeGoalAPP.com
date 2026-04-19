@@ -29,7 +29,7 @@
  *    syncs its local React state to match but does NOT write dice changes to the store.
  *
  * Intentionally NOT in scope for this service (handled elsewhere or future slices):
- *  - Tile reward application (coins, essence, shards, etc.)
+ *  - Tile reward application (essence, shards, dice kickers, bonus-tile charge)
  *  - Encounter/event logic
  *  - Sound / haptic effects
  *  - Animation state

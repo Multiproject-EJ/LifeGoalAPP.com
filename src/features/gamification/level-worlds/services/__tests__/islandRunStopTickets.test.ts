@@ -74,7 +74,7 @@ export const islandRunStopTicketsTests: TestCase[] = [
     },
   },
   {
-    name: 'payStopTicket rejects hatchery (free, can never be paid)',
+    name: 'payStopTicket treats hatchery (free) as a no-op success',
     run: () => {
       const result = payStopTicket({
         effectiveIslandNumber: 1,
@@ -85,8 +85,13 @@ export const islandRunStopTicketsTests: TestCase[] = [
         stopTicketsPaidByIsland: {},
         stopStatesByIndex: OBJECTIVE_DONE(0),
       });
-      assertEqual(result.ok, false, 'Hatchery payment should be rejected');
-      if (!result.ok) assertEqual(result.reason, 'hatchery_free', 'Reason = hatchery_free');
+      assertEqual(result.ok, true, 'Hatchery is free — treated as a no-op success, not an error');
+      if (result.ok) {
+        assertEqual(result.cost, 0, 'Hatchery cost is always 0');
+        assertEqual(result.alreadyFree === true, true, 'alreadyFree flag is set for hatchery');
+        assertEqual(result.essence, 1000, 'Wallet unchanged');
+        assertEqual(result.essenceLifetimeSpent, 0, 'Lifetime spent unchanged');
+      }
     },
   },
   {

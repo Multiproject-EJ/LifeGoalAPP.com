@@ -1,7 +1,21 @@
 # Island Run Proposal: 60-Tile Continuous Circular Board
 
-Date: 2026-04-11  
-Status: Proposal (awaiting approval)
+Date: 2026-04-11
+Status: **⚠️ SUPERSEDED (historical).** Do not treat any statement in this file
+as a target state or an open action item. The production board ships on the
+**`spark40_ring`** profile (40 discrete ring tiles + 5 landmark orbit HUD
+buttons), and the references to `spark60` / `spark60_preview` below are the
+*prior proposal wording* preserved only for archival purposes. Every
+subsequent change — rename from `spark60_preview` → `spark40_ring`, landmark
+decoupling, camera director, reward-bar v2 — has already shipped. Canonical
+source of truth is `docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md`.
+
+If you are an agent asked to work on board topology, **do not** resurrect
+`spark60_preview`, the continuous-lane renderer, or the 60-segment proposal
+from this file without an explicit instruction that names the doc and the
+section. Prefer editing the contract or `islandBoardProfiles.ts` directly.
+
+---
 
 ## Implementation execution phases (agreed kickoff)
 
