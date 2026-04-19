@@ -5004,3 +5004,63 @@
   .island-run-prototype__sticker-nudge { animation: none; }
   .island-run-prototype__out-of-dice-regen-bar-fill { transition: none; }
 }
+
+/* ─── PR7: Shop item cost line (affordability readout) ──────────────────── */
+.island-run-shop-cost-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.island-run-shop-cost-line__cost {
+  font-weight: 700;
+}
+
+.island-run-shop-cost-line__shortfall {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #a23a2a;
+  background: rgba(255, 210, 195, 0.65);
+  border: 1px solid rgba(162, 58, 42, 0.45);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+.island-run-shop-cost-line__bar {
+  display: inline-block;
+  position: relative;
+  flex: 0 0 auto;
+  width: 72px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(180, 160, 120, 0.22);
+  border: 1px solid rgba(162, 58, 42, 0.35);
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+.island-run-shop-cost-line__bar-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #d4a657 0%, #e8c379 100%);
+  transition: width 300ms ease;
+}
+
+/* ─── PR7: Level-up flash on the HUD level chip ─────────────────────────── */
+@keyframes island-run-level-chip-levelup {
+  0%   { background-color: rgba(255, 215, 0, 0);    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);   transform: scale(1); }
+  20%  { background-color: rgba(255, 215, 0, 0.55); box-shadow: 0 0 10px 4px rgba(255, 215, 0, 0.55); transform: scale(1.08); }
+  60%  { background-color: rgba(255, 215, 0, 0.35); box-shadow: 0 0 6px 2px rgba(255, 215, 0, 0.35); transform: scale(1.02); }
+  100% { background-color: rgba(255, 215, 0, 0);    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);   transform: scale(1); }
+}
+
+.island-run-prototype__level-chip--levelup {
+  animation: island-run-level-chip-levelup 1.2s ease-out 1;
+  will-change: transform, box-shadow, background-color;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-run-prototype__level-chip--levelup { animation: none; }
+  .island-run-shop-cost-line__bar-fill { transition: none; }
+}

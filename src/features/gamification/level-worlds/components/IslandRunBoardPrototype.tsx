@@ -11,6 +11,7 @@ import { BoardStage, type BoardStageCameraControls } from './board';
 import { ConfettiBurst } from './ConfettiBurst';
 import { StatDriftNumbers } from './StatDriftNumbers';
 import { OutOfDiceRegenStatus } from './OutOfDiceRegenStatus';
+import { ShopItemCostLine } from './ShopItemCostLine';
 import {
   getIslandBoardThemeForIslandNumber,
   type IslandBoardTheme,
@@ -926,6 +927,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
   const [islandNumber, setIslandNumber] = useState(1);
+  // PR7: brief "level-up flash" class driver. Flips true when `islandNumber`
+  // advances to a higher value (ignoring cycle wrap 120→1) and auto-resets
+  // after the animation runs. Driven by a useEffect+prev ref pattern below.
+  const [islandLevelFlash, setIslandLevelFlash] = useState(false);
+  const prevIslandNumberForFlashRef = useRef<number>(1);
+  useEffect(() => {
+    const prev = prevIslandNumberForFlashRef.current;
+    prevIslandNumberForFlashRef.current = islandNumber;
+    // Only flash when we *advance* (prev < next). Cycle wrap 120 → 1 and
+    // backwards dev toggles should not trigger the celebratory flash.
+    if (islandNumber > prev) {
+      setIslandLevelFlash(true);
+      const timeoutId = window.setTimeout(() => setIslandLevelFlash(false), 1200);
+      return () => window.clearTimeout(timeoutId);
+    }
+    return undefined;
+  }, [islandNumber]);
   const activeTheme = useMemo(() => getIslandBoardThemeForIslandNumber(islandNumber), [islandNumber]);
   const islandBackgroundSrc = useMemo(() => getIslandBackgroundImageSrc(islandNumber), [islandNumber]);
   const [isIslandBackgroundAvailable, setIsIslandBackgroundAvailable] = useState(true);
@@ -6174,7 +6192,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               🐾 <strong>{activeCompanion.creature.name}</strong> · {activeCompanionBonus.label}
             </span>
           ) : null}
-          <span className="island-run-prototype__stat-chip island-run-prototype__level-chip">Lvl <strong>{islandNumber}</strong></span>
+          <span className={`island-run-prototype__stat-chip island-run-prototype__level-chip${islandLevelFlash ? ' island-run-prototype__level-chip--levelup' : ''}`}>Lvl <strong>{islandNumber}</strong></span>
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">⏱ <strong>{timerDisplay}</strong></span>
           {/* PR6: Sticker "one away" nudge — tiny pulse when player is 1 fragment from completing a sticker. */}
           {runtimeState.stickerProgress.fragments === 4 && (
@@ -6281,7 +6299,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <div className="island-run-prototype__status-row">
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">Dice: <strong>{dicePool}</strong></span>
               <span className="island-run-prototype__stat-chip">Essence: <strong>{runtimeState.essence}</strong></span>
-              <span className="island-run-prototype__stat-chip island-run-prototype__level-chip">LEVEL <strong>{islandNumber}</strong> / 120</span>
+              <span className={`island-run-prototype__stat-chip island-run-prototype__level-chip${islandLevelFlash ? ' island-run-prototype__level-chip--levelup' : ''}`}>LEVEL <strong>{islandNumber}</strong> / 120</span>
               <span className="island-run-prototype__stat-chip">Tile: <strong>{tokenIndex}</strong></span>
               <span className="island-run-prototype__stat-chip">Island: <strong>{islandNumber}</strong></span>
               <span className="island-run-prototype__stat-chip">Last roll: <strong>{rollValue ?? '-'}</strong></span>
@@ -7780,8 +7798,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     disabled={runtimeState.essence < MARKET_DICE_BUNDLE_COST}
                     onClick={() => handleMarketPrototypePurchase('dice_bundle')}
                   >
-                    🎲 Dice Bundle — {MARKET_DICE_BUNDLE_COST} 🟣 → +{MARKET_DICE_BUNDLE_REWARD} 🎲
-                    {runtimeState.essence < MARKET_DICE_BUNDLE_COST && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {MARKET_DICE_BUNDLE_COST - runtimeState.essence} more)</span>}
+                    🎲 Dice Bundle —{' '}
+                    <ShopItemCostLine
+                      cost={MARKET_DICE_BUNDLE_COST}
+                      balance={runtimeState.essence}
+                      currencyIcon="🟣"
+                      currencyName="essence"
+                    />{' '}
+                    → +{MARKET_DICE_BUNDLE_REWARD} 🎲
                   </button>
                 )}
               </div>
