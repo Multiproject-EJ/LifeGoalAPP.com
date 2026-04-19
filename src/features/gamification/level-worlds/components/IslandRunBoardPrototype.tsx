@@ -8,6 +8,7 @@ import {
   type TileAnchor,
 } from '../services/islandBoardLayout';
 import { BoardStage, type BoardStageCameraControls } from './board';
+import { ConfettiBurst } from './ConfettiBurst';
 import {
   getIslandBoardThemeForIslandNumber,
   type IslandBoardTheme,
@@ -7619,7 +7620,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       )}
 
       {showIslandClearCelebration && islandClearStats && (
-        <div
+        <>
+          {/* B7 / F6: celebration confetti burst behind the modal backdrop.
+              The overlay is purely decorative (aria-hidden) and self-dismisses
+              once all pieces fall off-screen. Unmounted automatically alongside
+              the celebration modal. */}
+          <ConfettiBurst
+            active
+            variant={islandClearStats.isCycleCapstone ? 'capstone' : 'standard'}
+          />
+          <div
           className={`island-clear-celebration${islandClearStats.isCycleCapstone ? ' island-clear-celebration--capstone' : ''}`}
           role="dialog"
           aria-modal="true"
@@ -7665,6 +7675,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </div>
           </div>
         </div>
+        </>
       )}
 
       {/* M14: unified shop panel (merged shop + market) */}
