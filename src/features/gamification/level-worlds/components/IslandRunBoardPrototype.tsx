@@ -35,6 +35,7 @@ import {
   shouldEmitIslandRunRuntimeHydrationTelemetry,
 } from '../services/islandRunRuntimeTelemetry';
 import { useSupabaseAuth } from '../../../auth/SupabaseAuthProvider';
+import { useGamification } from '../../../../hooks/useGamification';
 import { isDemoSession } from '../../../../services/demoSession';
 import {
   hydrateIslandRunRuntimeStateWithSource,
@@ -852,6 +853,13 @@ interface IslandRunBoardPrototypeProps {
 
 export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: IslandRunBoardPrototypeProps) {
   const { client } = useSupabaseAuth();
+  // Player-level chip: pull levelInfo from the gamification hook so the top-bar
+  // chip stays in sync with the profile's total_xp. The hook also handles its
+  // own refresh via 'gamificationProfileUpdated' events, so any XP award
+  // elsewhere in the app will flow into the chip automatically.
+  const { levelInfo: playerLevelInfo } = useGamification(session);
+  const [showLevelPopover, setShowLevelPopover] = useState(false);
+  const levelChipContainerRef = useRef<HTMLDivElement>(null);
   const activeTileAnchors = useMemo(
     () => TILE_ANCHORS_40,
     [],
@@ -1065,6 +1073,30 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
     return () => window.cancelAnimationFrame(frame);
   }, [showTopbarMenu]);
+
+  // Close the player-level popover on outside pointer-down or Escape.
+  useEffect(() => {
+    if (!showLevelPopover) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!levelChipContainerRef.current) return;
+      if (levelChipContainerRef.current.contains(event.target as Node)) return;
+      setShowLevelPopover(false);
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setShowLevelPopover(false);
+    };
+
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [showLevelPopover]);
 
   // B1-3: tile map state — regenerated when islandNumber or dayIndex changes
   const [islandStartedAtMs, setIslandStartedAtMs] = useState<number>(() => Date.now());
@@ -6305,6 +6337,67 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </button>
             <div className="island-run-board__topbar-wallet" aria-label="Essence wallet">
               🟣 <strong>{runtimeState.essence}</strong>
+            </div>
+            <div
+              ref={levelChipContainerRef}
+              className="island-run-board__topbar-level"
+            >
+              <button
+                type="button"
+                className="island-run-board__topbar-level-chip"
+                aria-label={
+                  playerLevelInfo
+                    ? `Player level ${playerLevelInfo.currentLevel}. Tap to see XP progress.`
+                    : 'Player level loading'
+                }
+                aria-haspopup="dialog"
+                aria-expanded={showLevelPopover}
+                onClick={() => setShowLevelPopover((v) => !v)}
+                disabled={!playerLevelInfo}
+              >
+                <span className="island-run-board__topbar-level-chip-label">Lv</span>
+                <strong className="island-run-board__topbar-level-chip-value">
+                  {playerLevelInfo ? playerLevelInfo.currentLevel : '—'}
+                </strong>
+              </button>
+              {showLevelPopover && playerLevelInfo ? (() => {
+                const xpInLevel = Math.max(0, playerLevelInfo.xpProgress);
+                const xpNeededInLevel = Math.max(
+                  1,
+                  playerLevelInfo.xpForNextLevel - playerLevelInfo.xpForCurrentLevel,
+                );
+                const xpToNext = Math.max(0, playerLevelInfo.xpForNextLevel - playerLevelInfo.currentXP);
+                const pct = Math.max(0, Math.min(100, playerLevelInfo.progressPercentage));
+                return (
+                  <div
+                    className="island-run-board__topbar-level-popover"
+                    role="dialog"
+                    aria-label={`Level ${playerLevelInfo.currentLevel} progress`}
+                  >
+                    <div className="island-run-board__topbar-level-popover-title">
+                      Level {playerLevelInfo.currentLevel}
+                    </div>
+                    <div className="island-run-board__topbar-level-popover-row">
+                      <span>{xpInLevel.toLocaleString()} / {xpNeededInLevel.toLocaleString()} XP</span>
+                    </div>
+                    <div
+                      className="island-run-board__topbar-level-popover-bar"
+                      role="progressbar"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={Math.round(pct)}
+                    >
+                      <div
+                        className="island-run-board__topbar-level-popover-bar-fill"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className="island-run-board__topbar-level-popover-row island-run-board__topbar-level-popover-row--muted">
+                      {xpToNext.toLocaleString()} XP to Lv {playerLevelInfo.currentLevel + 1}
+                    </div>
+                  </div>
+                );
+              })() : null}
             </div>
             <button
               type="button"

@@ -199,11 +199,11 @@ Stop rules:
 - Each subsequent stop (2, 3, 4, 5) is **gated by two conditions** that must BOTH be satisfied before the stop can be opened:
   1. The previous stop's objective is complete (for the Hatchery this means the egg is **set to hatch** — not collected/sold/hatched — so "halfway completion" is sufficient to unlock the next stop).
   2. The player pays an essence **ticket** (opening fee) for that stop.
-- Ticket costs are paid from the essence wallet and scale with `effectiveIslandNumber` using the same multiplier as build costs:
+- Ticket costs are paid from the essence wallet and scale with `effectiveIslandNumber` using the same multiplier as build costs. The base curve steepens toward the boss so the final gate carries real weight:
   - Stop 2 (Habit): **30 essence** base
-  - Stop 3 (Mystery): **60 essence** base
-  - Stop 4 (Wisdom): **100 essence** base
-  - Stop 5 (Boss): **150 essence** base
+  - Stop 3 (Mystery): **70 essence** base
+  - Stop 4 (Wisdom): **130 essence** base
+  - Stop 5 (Boss): **220 essence** base
 - Tickets are **per-island**: a paid ticket unlocks that stop for the current island only. Travelling to a new island requires paying the ticket again.
 - The Hatchery (Stop 1) **never** has a ticket cost — it is always free on a new island.
 - The ticket rule prevents "rush-through" completion: the player must earn essence on the 40-tile board before each new stop can be opened.
