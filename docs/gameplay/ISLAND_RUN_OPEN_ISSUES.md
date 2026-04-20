@@ -1,7 +1,7 @@
 # Island Run — Open Issues & Feature Backlog
 
 Status: Living document
-Last updated: 2026-04-19 (session 6)
+Last updated: 2026-04-20 (session 8 — state architecture refactor stages A+B+E)
 Owner: Gameplay System
 
 This document tracks every unresolved issue, bug, inconsistency, or scoped
@@ -16,13 +16,99 @@ for traceability.
 
 ## P0 — Must-fix (correctness / trust)
 
-### P0-1. Single authoritative roll path + no Supabase row drift — ✅ Closed (session 4)
+### P0-2. Single authoritative gameplay state (state architecture refactor) — 🟡 In progress (session 8)
+
+Session 7 landed tactical fixes for the cross-device / dice-oscillation /
+token-rollback bugs. Root cause diagnosis in session 8: Island Run has
+three co-equal state representations competing for truth — the low-level
+record store, the renderer's `runtimeState` React mirror, and ~130 per-field
+`useState` mirrors — with four write paths and three hydrate paths. Every
+gameplay mutation is a 3-legged write (useState + runtimeState + store)
+issued from the renderer with no ordering guarantee. All session-7 bugs are
+instances of the three legs disagreeing.
+
+**Target architecture (accepted session 8).** One authoritative in-memory
+record, one mutation path via actions → `commit`, one persistence path via
+the existing low-level writer. UI state (useState) is presentation-only:
+modals, animations, form inputs. Gameplay fields (`dicePool`, `tokenIndex`,
+`essence`, `islandNumber`, `completedStopsByIsland`, …) live **only** in the
+store and are read via the `useIslandRunState` hook.
+
+**Stage A — Unify the state type — ✅ Closed (session 8).**
+`IslandRunRuntimeState` is now a type alias of `IslandRunGameStateRecord`
+(they were structurally identical). Single source of truth for the shape.
+
+**Stage B — Subscribable store + React hook — ✅ Closed (session 8).**
+- New module: `islandRunStateStore.ts` (`getIslandRunStateSnapshot`,
+  `subscribeIslandRunState`, `commitIslandRunState`, `hydrateIslandRunState`,
+  `resetIslandRunStateSnapshot`). In-memory mirror of
+  `IslandRunGameStateRecord`, delegating persistence to the existing
+  `writeIslandRunGameStateRecord` (single-flight, conflict merge, pending
+  queue, backoff — all preserved).
+- New hook: `hooks/useIslandRunState.ts` using `useSyncExternalStore` so
+  React strict-mode double-invocation / concurrent rendering are safe by
+  construction (no "effect mirrors store" race).
+- Coverage: 8 new `islandRunStateStore` cases covering snapshot stability,
+  subscribe/unsubscribe, synchronous publish before remote resolve,
+  hydrate-notifies-subscribers, in-flight unsubscribe safety.
+
+**Stage C — Migrate renderer action-by-action — ⏳ Pending follow-up PRs.**
+Each domain is its own PR (one per commit): roll → tile-reward → encounter
+→ stop-completion → stop-ticket → egg → market → travel → boss →
+shard-claim → reward-bar → essence-drift → companion → onboarding. Each PR
+adds the action to `islandRunStateActions.ts`, deletes the matching
+`setRuntimeState` / `persistIslandRunRuntimeStatePatch` /
+`writeIslandRunGameStateRecord` call-sites plus their per-field
+`useState`/`useEffect` pairs from `IslandRunBoardPrototype.tsx`.
+
+**Stage D — Retire legacy APIs — ⏳ Pending final cleanup PR.** Once Stage C
+is complete and a grep confirms zero call-sites, delete
+`islandRunRuntimeState.ts`, `islandRunRuntimeStateBackend.ts`, and the
+`runtimeStateRef` / `hasCompletedInitialHydrationSyncRef` /
+`lastAppliedRuntimeVersionRef` guard refs from the renderer. Those guards
+exist purely to patch over the multi-writer race and become unnecessary.
+
+### P0-1. Single authoritative roll path + no Supabase row drift — ✅ Closed (session 4, follow-ups session 7)
 
 Implementation landed in session 4 — see the Closed section below. The roll
 service now owns a per-user async mutex, awaits the persist inside the mutex,
 and returns `newDicePool` / `newRuntimeVersion` so the renderer can sync from
 the service's truth (via a functional updater that no longer clobbers
 mid-animation reward deltas). Concurrency regression test added.
+
+**Session 7 follow-ups (cross-device sync & roll drift) — ✅ Closed:**
+- **Hydration-sync regression guard** — `IslandRunBoardPrototype.tsx` now
+  tracks `lastAppliedRuntimeVersionRef`. If a later `runtimeState` update
+  carries an older runtimeVersion (e.g. from a conflict-recovery merge that
+  pulled an older Supabase row), the React mirrors (`tokenIndex`, `dicePool`,
+  `spinTokens`, …) are no longer snapped back to that stale value. This fixes
+  the "player piece jumps back to an older tile and keeps playing from there"
+  symptom.
+- **Persist-effect base = fresh localStorage record** — the dicePool/tokenIndex/
+  spinTokens persist effect now spreads `readIslandRunGameStateRecord(session)`
+  instead of `runtimeStateRef.current`, so it piggy-backs on the roll service's
+  freshly-written runtimeVersion rather than racing it. Eliminates the
+  conflict-storm that caused the dice count to oscillate between two values on
+  every reward after a roll.
+- **Force remote hydrate on login/entry** — the initial hydrate in
+  `IslandRunBoardPrototype.tsx` now passes `forceRemote: true` so a stale local
+  `island_run_remote_backoff_…` blob can no longer pin a device to its own
+  local fallback (the cause of "phone shows island 6 but desktop shows island 1"
+  even though the user is the same).
+- **Parked writes no longer dropped on commit failure** —
+  `writeIslandRunGameStateRecord` now enqueues single-flight parked snapshots
+  into the `pending_write` localStorage queue at the time of park (not only on
+  successful resume), and also enqueues on non-backoff commit errors. This
+  eliminates the data-loss window where a transient Supabase error between two
+  rolls could silently lose the first roll's delta.
+- **Null-safe `current_island_number` hydrate** — both hydrate branches now
+  fall back to the local record's `currentIslandNumber` instead of silently
+  clamping to default 1 if the Supabase column is ever NULL.
+
+Coverage: `islandRunRuntimeStateIntegration` adds two new cases:
+`writeIslandRunGameStateRecord enqueues parked single-flight snapshot into
+pending_write queue` and `writeIslandRunGameStateRecord enqueues pending_write
+on non-backoff commit error`.
 
 ---
 

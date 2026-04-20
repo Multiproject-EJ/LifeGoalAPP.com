@@ -3,80 +3,24 @@ import { getIslandRunRuntimeStateBackend } from './islandRunRuntimeStateBackend'
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
 import type {
   CreatureCollectionRuntimeEntry,
+  IslandRunGameStateRecord,
   PerIslandEggsLedger,
   PerfectCompanionReason,
 } from './islandRunGameStateStore';
 
-export interface IslandRunRuntimeState {
-  runtimeVersion: number;
-  firstRunClaimed: boolean;
-  dailyHeartsClaimedDayKey: string | null;
-  onboardingDisplayNameLoopCompleted: boolean;
-  storyPrologueSeen: boolean;
-  audioEnabled: boolean;
-  currentIslandNumber: number;
-  cycleIndex: number;
-  bossTrialResolvedIslandNumber: number | null;
-  activeEggTier: 'common' | 'rare' | 'mythic' | null;
-  activeEggSetAtMs: number | null;
-  activeEggHatchDurationMs: number | null;
-  activeEggIsDormant: boolean;
-  perIslandEggs: PerIslandEggsLedger;
-  islandStartedAtMs: number;
-  islandExpiresAtMs: number;
-  islandShards: number;
-  tokenIndex: number;
-  spinTokens: number;
-  dicePool: number;
-  shardTierIndex: number;
-  shardClaimCount: number;
-  shields: number;
-  shards: number;
-  diamonds: number;
-  creatureTreatInventory: {
-    basic: number;
-    favorite: number;
-    rare: number;
-  };
-  companionBonusLastVisitKey: string | null;
-  completedStopsByIsland: Record<string, string[]>;
-  /** Per-island essence-ticket ledger (stop indices 1-4 whose ticket was paid). */
-  stopTicketsPaidByIsland: Record<string, number[]>;
-  marketOwnedBundlesByIsland: Record<string, {
-    dice_bundle: boolean;
-    heart_bundle: boolean;
-    heart_boost_bundle: boolean;
-  }>;
-  creatureCollection: CreatureCollectionRuntimeEntry[];
-  activeCompanionId: string | null;
-  perfectCompanionIds: string[];
-  perfectCompanionReasons: Record<string, PerfectCompanionReason>;
-  perfectCompanionComputedAtMs: number | null;
-  perfectCompanionModelVersion: string | null;
-  perfectCompanionComputedCycleIndex: number | null;
-  activeStopIndex: number;
-  activeStopType: 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
-  stopStatesByIndex: Array<{ objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number }>;
-  stopBuildStateByIndex: Array<{ requiredEssence: number; spentEssence: number; buildLevel: number }>;
-  bossState: { unlocked: boolean; objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number };
-  essence: number;
-  essenceLifetimeEarned: number;
-  essenceLifetimeSpent: number;
-  diceRegenState: { maxDice: number; regenRatePerHour: number; lastRegenAtMs: number } | null;
-  rewardBarProgress: number;
-  rewardBarThreshold: number;
-  rewardBarClaimCountInEvent: number;
-  rewardBarEscalationTier: number;
-  rewardBarLastClaimAtMs: number | null;
-  rewardBarBoundEventId: string | null;
-  rewardBarLadderId: string | null;
-  activeTimedEvent: { eventId: string; eventType: string; startedAtMs: number; expiresAtMs: number; version: number } | null;
-  activeTimedEventProgress: { feedingActions: number; tokensEarned: number; milestonesClaimed: number };
-  stickerProgress: { fragments: number; guaranteedAt?: number; pityCounter?: number };
-  stickerInventory: Record<string, number>;
-  /** Essence lost to drift on last hydration/session-open (for UI notification). 0 = no drift. */
-  lastEssenceDriftLost: number;
-}
+/**
+ * Island Run runtime state.
+ *
+ * As of the state-architecture refactor (Apr 2026), this is a type alias for
+ * the canonical {@link IslandRunGameStateRecord}. The two names refer to the
+ * same shape; `IslandRunRuntimeState` is kept as a legacy alias so existing
+ * call-sites continue to compile unchanged while stages B–D of the refactor
+ * migrate the renderer onto the subscribable store (`islandRunStateStore.ts`).
+ *
+ * Do NOT add fields to this alias — add them to `IslandRunGameStateRecord` in
+ * `islandRunGameStateStore.ts`, which is the single source of truth.
+ */
+export type IslandRunRuntimeState = IslandRunGameStateRecord;
 
 export function readIslandRunRuntimeState(session: Session): IslandRunRuntimeState {
   return getIslandRunRuntimeStateBackend().read(session);

@@ -484,3 +484,68 @@ The following documents may contain supporting detail, implementation notes, or 
 - docs/02_MAIN_GAME_DATA_MODEL_AND_SUPABASE.md
 
 If any supporting document conflicts with this contract, this contract prevails.
+
+---
+
+## 11) State authority (client architecture)
+
+Added session 8 (Apr 2026) as part of the Island Run state-architecture
+refactor. This section is normative for client-side state handling.
+
+### 11A. One authoritative record
+
+The complete Island Run gameplay state is one object:
+`IslandRunGameStateRecord` (defined in
+`src/features/gamification/level-worlds/services/islandRunGameStateStore.ts`).
+`IslandRunRuntimeState` is a type alias for the same shape and carries no
+additional fields. Every gameplay field — `dicePool`, `tokenIndex`,
+`essence`, `islandNumber`, `completedStopsByIsland`,
+`stopTicketsPaidByIsland`, `perIslandEggs`, `bossState`, `rewardBarProgress`,
+`diceRegenState`, etc. — lives on this record and nowhere else.
+
+### 11B. One mutation path
+
+All gameplay mutations flow through an **action service** (e.g.
+`islandRunRollAction.ts`, and — in stage C of the refactor — the
+consolidated `islandRunStateActions.ts`). Each action:
+
+1. Acquires a per-user async mutex (so `read → compute → commit` is atomic).
+2. Reads the current record.
+3. Computes the next record purely (incrementing `runtimeVersion`).
+4. Calls `commitIslandRunState` (or the underlying
+   `writeIslandRunGameStateRecord`) exactly once.
+
+Renderers and React hooks **must not** call `writeIslandRunGameStateRecord`
+or `persistIslandRunRuntimeStatePatch` directly. They call actions.
+
+### 11C. One persistence path
+
+`writeIslandRunGameStateRecord` is the only writer to localStorage and
+Supabase. It owns the single-flight coordinator, conflict merge,
+pending-write queue, and remote backoff. `commitIslandRunState` wraps it
+with the in-memory subscribable mirror used by the React hook.
+
+### 11D. UI/local React state is presentation-only
+
+`useState` inside renderer components is reserved for presentation:
+modal open/close, animation triggers (e.g. `isRolling`,
+`rollingDiceFaces`), transient text (`landingText`), camera mode,
+overlay visibility, form inputs, debug-panel flags.
+
+UI state **must not** mirror a gameplay field. Gameplay fields are read
+via `useIslandRunState(session, client)` — a `useSyncExternalStore` hook
+that returns `{ state, commit, hydrate }`. No `useEffect` mirrors
+`state.X → localX` or `localX → store`. There is no race to guard against
+because there is only one writer.
+
+### 11E. Hydration
+
+Hydration populates the store from localStorage and Supabase. It is
+called once on session open (with `forceRemote: true` so a stale
+`remote_backoff_until` cannot pin the device to its own local fallback)
+and again on focus / visibility / online events. Hydration always
+overwrites the in-memory mirror; pending local writes are preserved by
+the commit coordinator, not by hydration logic.
+
+Breaking any of these rules is considered a regression of P0-2 in
+`docs/gameplay/ISLAND_RUN_OPEN_ISSUES.md`.
