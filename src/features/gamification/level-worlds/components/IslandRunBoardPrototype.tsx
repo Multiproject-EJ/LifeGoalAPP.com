@@ -3849,11 +3849,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       if (Array.isArray(current.stopStatesByIndex) && Array.isArray(freshRecord.stopStatesByIndex)) {
         merged.stopStatesByIndex = freshRecord.stopStatesByIndex.map((freshEntry, i) => {
           const currentEntry = current.stopStatesByIndex[i];
-          if (!currentEntry) return freshEntry;
+          if (!currentEntry || !freshEntry) return freshEntry ?? currentEntry;
           return {
             ...freshEntry,
-            objectiveComplete: Boolean(freshEntry?.objectiveComplete || currentEntry?.objectiveComplete),
-            buildComplete: Boolean(freshEntry?.buildComplete || currentEntry?.buildComplete),
+            objectiveComplete: Boolean(freshEntry.objectiveComplete || currentEntry.objectiveComplete),
+            buildComplete: Boolean(freshEntry.buildComplete || currentEntry.buildComplete),
           };
         });
       }
