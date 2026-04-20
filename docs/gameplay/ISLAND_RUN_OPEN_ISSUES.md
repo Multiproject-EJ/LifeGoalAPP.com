@@ -1,7 +1,7 @@
 # Island Run — Open Issues & Feature Backlog
 
 Status: Living document
-Last updated: 2026-04-20 (session 11 — P1-9 closed; tile-reward commits now serialised through shared per-user action mutex)
+Last updated: 2026-04-20 (session 12 — game-loop deep-dive audit; new P0-3/P0-4/P0-5 critical items added; P1-14 through P1-21 and P2-12 through P2-18 filed; false-positives annotated)
 Owner: Gameplay System
 
 This document tracks every unresolved issue, bug, inconsistency, or scoped
@@ -73,6 +73,115 @@ is complete and a grep confirms zero call-sites, delete
 `runtimeStateRef` / `hasCompletedInitialHydrationSyncRef` /
 `lastAppliedRuntimeVersionRef` guard refs from the renderer. Those guards
 exist purely to patch over the multi-writer race and become unnecessary.
+
+### P0-3. Roll mutex scope is too narrow — releases before client commit and animations 🔴
+
+**Confirmed in code — 2026-04-20 audit.**
+
+`executeIslandRunRollAction` holds `withIslandRunActionLock` only around
+`performRollAction` (the server write). The mutex unlocks as soon as
+`writeIslandRunGameStateRecord` resolves (`islandRunRollAction.ts:169,~232`).
+`handleRoll` in `IslandRunBoardPrototype.tsx` then runs ~2 s dice + ~3–6 s
+hop animation, and only after the hop calls `applyRollResult(...)` +
+`setRuntimeState(freshRecord)` + `setPendingHopSequence(null)` (~L3803–3810).
+
+During that multi-second window:
+- `localStorage` + Supabase already hold the new `tokenIndex` / `dicePool` /
+  `runtimeVersion`.
+- `runtimeStateRef.current.runtimeVersion` is still the pre-roll value.
+- Any other action that reads `runtimeVersion` for its patch base (encounter
+  resolve, tile reward from the **previous** hop, shop purchase, claim reward)
+  can interleave and build a patch from a stale version, potentially overwriting
+  freshly-persisted fields.
+
+`isAnimatingRollRef` gates hydration only (~L1451–1458); it does not gate
+other gameplay actions. This is the single largest architectural fragility in
+the current loop.
+
+**Recommended fix.** Either (a) extend the mutex to span the full
+`applyRollResult` commit, or (b) introduce a `rollInFlight` barrier that all
+other `withIslandRunActionLock` operations respect, similar to how
+`isAnimatingRollRef` already gates hydration. Option (b) is lower-risk during
+Stage C migration because it doesn't require holding the mutex across animation
+duration.
+
+**Files:**
+- `src/features/gamification/level-worlds/services/islandRunRollAction.ts`
+  (~L169, ~L232 — mutex release point)
+- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
+  (~L1451–1458 — `isAnimatingRollRef`; ~L3803–3810 — post-hop commit sequence)
+- `src/features/gamification/level-worlds/services/islandRunActionMutex.ts`
+
+---
+
+### P0-4. Island completion contract diverges between legacy and Contract-V2 paths 🔴
+
+**Confirmed in code — 2026-04-20 audit.**
+
+The two completion definitions do not agree:
+
+- **Contract-V2** (`islandRunContractV2StopResolver.ts:66–78`): island is
+  "fully cleared" when all 5 stops have both `objectiveComplete` and
+  `buildComplete: true`, AND the hatchery egg is resolved.
+- **Legacy** (`IslandRunBoardPrototype.tsx:5569–5616`): clearing triggers on
+  `activeStopId === 'boss'` completion — no build check, no egg check.
+
+`ISLAND_RUN_CONTRACT_V2_ENABLED` is a runtime feature flag. If it changes
+mid-run: a player who completed the boss legacy-style may become stuck (flag
+flips ON, new contract sees missing build completions), or advance too early
+(flag flips OFF mid-build). There is no migration or completion-state backfill
+on flag change.
+
+**Recommended fix.** Consolidate into a single `isIslandComplete(record,
+islandNumber, flagEnabled)` helper that both the renderer and the V2 resolver
+delegate to, so the definition is provably identical and the flag is one
+if-branch inside it rather than two independent code paths.
+
+**Files:**
+- `src/features/gamification/level-worlds/services/islandRunContractV2StopResolver.ts`
+  (L66–78)
+- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
+  (L5569–5616)
+
+---
+
+### P0-5. `travelToNextIsland` has no mutex and is not idempotent 🔴
+
+**Confirmed in code — 2026-04-20 audit.**
+
+`travelToNextIsland` (`islandRunStateActions.ts:457–605`) calls
+`void commitIslandRunState(...)` (fire-and-forget) and returns synchronously.
+`performIslandTravel` in the renderer (~L5236) invokes it **without**
+acquiring `withIslandRunActionLock`.
+
+Consequences:
+- Two concurrent invocations (double-tap on the celebration CTA, or a travel
+  triggered while a hop is landing on the last tile) each read the pre-travel
+  snapshot, both save the current active egg into `perIslandEggs[oldKey]`,
+  both increment `runtimeVersion`, both emit commits — the second overwrites
+  the first's already-restored new-island egg with a second copy of the
+  pre-travel egg, potentially destroying the active egg the player acquired
+  on the arriving island.
+- This is the most likely source of "lost egg on island boundary" field reports
+  if any exist.
+
+**Recommended fix.** Wrap `performIslandTravel` in `withIslandRunActionLock`
+(same mutex as roll + tile-reward). Add a guard flag
+(`isTravellingRef.current`) analogous to `isAnimatingRollRef` so the
+celebration CTA is disabled while travel is in-flight. Then make
+`travelToNextIsland` awaitable by awaiting the `commitIslandRunState` call.
+Add an integration test: call `travelToNextIsland` twice back-to-back from the
+same snapshot and assert `runtimeVersion` is strictly monotonic and
+`perIslandEggs` / active egg are stable.
+
+**Files:**
+- `src/features/gamification/level-worlds/services/islandRunStateActions.ts`
+  (L457–605 — `travelToNextIsland`, fire-and-forget commit)
+- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
+  (~L5236 — `performIslandTravel`, no lock)
+- `src/features/gamification/level-worlds/services/islandRunActionMutex.ts`
+
+---
 
 ### P0-1. Single authoritative roll path + no Supabase row drift — ✅ Closed (session 4, follow-ups session 7)
 
@@ -172,6 +281,15 @@ the dot-lamp HUD, the released-burst animation, the 3D prop, and the
 charge/release call-site inside the tile-landing handler. That PR rides
 with P1-2's other new tile types.
 
+**⚠️ 2026-04-20 audit note — `applyBonusTileCharge` call-site is confirmed
+missing.** A grep across the full repo finds zero call sites for
+`applyBonusTileCharge` outside the service itself and its tests. The bonus-tile
+mechanic is live in the state model and persistence layer but produces no
+in-game rewards because the tile-landing handler never increments the charge.
+This is the most visible outstanding gap in the P1-3 follow-up PR. Priority
+elevated: the renderer integration must ship alongside the HUD work, not after
+it.
+
 ---
 
 ### P1-4. Reward-bar payout set vs. contract — ✅ Closed (session 3)
@@ -263,6 +381,195 @@ renderer wiring (below) and the P1-2 bonus-tile renderer.
 
 ---
 
+### P1-14. Hydration SELECT list is hand-maintained — new columns silently drop
+
+**Files:**
+- `src/features/gamification/level-worlds/services/islandRunGameStateStore.ts`
+  (~L1205 — explicit select string in `hydrateIslandRunGameStateRecordWithSource`)
+
+The main Supabase hydration path uses an explicit ~57-column
+`select('runtime_version, first_run_claimed, …')` string rather than
+`select('*')`. If a new column is added to `IslandRunGameStateRecord` (and the
+matching migration) without also editing that string, hydration silently
+returns `undefined` for the new field — the sanitizer replaces it with the
+type default and the Supabase value is invisible until a full record write
+reconciles. The legacy `select('*')` fallback only fires on schema-mismatch
+errors, so this truncation is never surfaced.
+
+Every new persisted field is a trip hazard. Migration 0229 (`stop_tickets_paid_by_island`,
+`last_essence_drift_lost`) and migration 0230 (`bonus_tile_charge_by_island`)
+have already been caught manually; the pattern will recur.
+
+**Recommended fix.** Either switch the primary hydration path to `select('*')`
+with a schema-shape assertion after deserialise (so any shape drift is caught
+at runtime rather than silently defaulted), or add a CI lint step that diffs
+the column list against the `IslandRunGameStateRecord` field list and fails if
+they diverge.
+
+---
+
+### P1-15. Patch-merge accumulates empty-value island keys indefinitely
+
+**Files:**
+- `src/features/gamification/level-worlds/services/islandRunRuntimeStateBackend.ts`
+  (~L241–302 — shallow-merge for `completedStopsByIsland`,
+  `stopTicketsPaidByIsland`, `perIslandEggs`, `marketOwnedBundlesByIsland`,
+  `bonusTileChargeByIsland`)
+
+The patch-merge strategy for all `Record<string, …>` fields uses shallow
+spread — it overlays new keys onto existing keys but **never removes a key**.
+Clearing an island's entry requires patching `{ [key]: [] }` or `{ [key]: {} }`,
+which leaves the outer key permanently in the object. Across 120 islands ×
+multiple cycles the record accumulates empty-value keys. At high lap counts
+this bloats both the Supabase row and localStorage, and slows every
+`serialize` / `deserialize` call.
+
+**Recommended fix.** Add a `pruneEmptyIslandKeys(record)` pass in either
+`commitIslandRunState` or on hydrate (guarded by a configurable key-count
+threshold so it only fires when the record is actually large). The pruner
+drops any key whose value is `[]` or `{}`.
+
+---
+
+### P1-16. `cycleIndex` is unbounded; `effectiveIslandNumber` scaling has no endgame cap
+
+**Files:**
+- `src/features/gamification/level-worlds/services/islandRunStateActions.ts`
+  (~L472–476 — `cycleIndex` increment, no cap)
+- `effectiveIslandNumber = resolvedIsland + cycleIndex * 120` (~L380)
+
+`travelToNextIsland` wraps island 121 → island 1 of cycle N+1 and increments
+`cycleIndex` with no ceiling. `effectiveIslandNumber` drives essence costs,
+rewards, stop ticket prices, and dice costs. There is no soft-cap, no
+endgame state, and no sanity check against numeric overflow. Long-running
+saves can reach regimes the economy tuning was never tested against (e.g.
+cycle 100 → `effectiveIslandNumber = 12001`, which may break stop-ticket
+curves, drift thresholds, or UI display).
+
+**Recommended fix.** Document the intended maximum cycle in the canonical
+contract and add a `Math.min(cycleIndex, MAX_CYCLE_INDEX)` cap (or a flat
+`effectiveIslandNumber` cap) to prevent unbounded scaling. Add a test asserting
+the economy functions remain in-range at the boundary.
+
+---
+
+### P1-17. Tile-reward double-fire risk — server-side idempotency window unknown
+
+**Files:**
+- `src/features/gamification/level-worlds/services/islandRunTileRewardAction.ts`
+- `src/features/gamification/level-worlds/services/islandRunRollAction.ts`
+
+`executeIslandRunTileRewardAction` (P1-9, session 11) consolidates both
+essence and reward-bar into one serialised patch per landing. However, there is
+no per-tile, per-lap "already rewarded" ledger in the client record; any bug
+that fires `resolveTileLanding` twice for a single landing (re-render while the
+hop promise is in-flight, double-fire from `onHopSequenceComplete` — see
+P1-18, or a landing triggered while P0-3's mutex window is open) awards the
+reward twice.
+
+The server-side `island_run_commit_action` RPC deduplicates by
+`client_action_id` (migrations 0217/0228), but the dedup window is only as
+long as the action-log retention. Rapid double-fire with different
+`client_action_id` values could slip through.
+
+**Recommended fix.** Confirm the action-log dedup window covers the full
+session lifetime. If not, add a small `lastRewardedTileIndex + runtimeVersion`
+guard in the tile-reward action so a second call with the same version is a
+no-op.
+
+---
+
+### P1-18. `onHopSequenceComplete` callback can double-invoke on re-render
+
+**Files:**
+- `src/features/gamification/level-worlds/components/board/BoardStage.tsx`
+  (L299–364 — animation effect, `lastHopSequenceRef` guard)
+- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
+  (~L6930–6944 — `onHopSequenceComplete` handler)
+
+The animation effect in `BoardStage.tsx` depends on
+`[tokenIndex, anchors, pendingHopSequence]`. The `lastHopSequenceRef` guard
+prevents the animation from re-running, but the `.then(() =>
+onHopSequenceComplete?.())` callback from the first run is already enqueued; it
+fires even if the effect re-runs in between. The current handler is tolerant
+(nulls `hopSequenceResolverRef`, making a second call a no-op), but any future
+addition to the callback — telemetry, audio, tile-landing trigger — will
+double-fire. This interacts directly with P1-17.
+
+**Recommended fix.** Lift the `lastHopSequenceRef` guard into the callback
+itself (a one-shot flag keyed to the hop sequence ID) so double-fire is
+structurally impossible, independent of what the callback body does.
+
+---
+
+### P1-19. Payment-without-completion UX trap in stop modals
+
+**Files:**
+- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
+  (~L2893–2947 `handlePayStopTicket`; ~L5443–5492 `handleCompleteActiveStop`;
+  ~L7568 modal Close button)
+
+`handlePayStopTicket` deducts essence and persists `stopTicketsPaidByIsland`.
+`handleCompleteActiveStop` is the one that sets `objectiveComplete`.
+The modal Close button does `setActiveStopId(null)` with no state rollback.
+
+If a player pays the ticket then closes the modal without completing the stop:
+essence is gone, the stop is still locked (objective not complete), and there
+is no rollback. The player must re-open the modal and complete the stop to
+progress. This is not an exploit but is a UX flow that will surface as "the
+game took my essence".
+
+**Recommended fix.** Either (a) show an explicit "You paid — tap here to begin
+the stop" prompt so the player cannot accidentally dismiss without a clear
+recovery path, or (b) unify "pay ticket" and "enter stop" into a single CTA
+that opens the stop interaction immediately after payment.
+
+---
+
+### P1-20. Mystery stop fallback renders no completion affordance (soft-lock risk)
+
+**Files:**
+- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
+  (~L7320–7365 — mystery modal renderer)
+- `src/features/gamification/level-worlds/services/islandRunStops.ts`
+  (~L111 — `mysteryContentKind` seeded pool)
+
+The mystery modal switch falls through to a bare
+`<p>Complete this mystery stop to progress.</p>` paragraph with no button if
+`mysteryContentKind` is `undefined` or an unrecognised value. `mysteryContentKind`
+is seeded from a fixed pool so it should always be set — but any data migration,
+older saved record, or new content kind added to the union without updating the
+renderer switch silently soft-locks the player on that stop.
+
+**Recommended fix.** Replace the no-button fallback with an explicit error UI
+that surfaces the unrecognised kind value to the player (and fires a telemetry
+beacon) and offers a "skip stop (no reward)" escape hatch so the player is never
+hard-blocked.
+
+---
+
+### P1-21. Island travel is not guarded against in-flight roll animation
+
+**Files:**
+- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
+  (~L1459 — `isAnimatingRollRef` (gates hydration only);
+  ~L5236 — `performIslandTravel` (no animation gate))
+
+`isAnimatingRollRef` blocks hydration while a hop is playing, but does **not**
+block `performIslandTravel`. A travel triggered while a hop is still animating
+will reset `tokenIndex` to 0 mid-animation; when `applyRollResult` runs
+afterward it re-reads from localStorage and the pawn snaps. The practical
+trigger is landing on tile 40 (the boss tile) from a preceding hop that hasn't
+resolved yet — unlikely in normal play but deterministic in fast-forward QA
+paths.
+
+**Recommended fix.** Gate `performIslandTravel` (and the celebration CTA that
+calls it) behind `isAnimatingRollRef.current`. This is the same one-line guard
+already used for hydration; applying it to travel closes the snap race with no
+additional state.
+
+---
+
 ## P2 — Tuning / polish / terminology
 
 ### P2-1. Per-island essence math
@@ -321,6 +628,140 @@ See Closed section below.
 
 ### P2-11. `DiceRegenState.maxDice` is really a minimum floor — ✅ Closed (session 9)
 See the Closed section below.
+
+---
+
+### P2-12. Hop-ordering invariant is vigilance-only — not encoded in a helper or test
+
+**Files:**
+- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
+  (~L3796–3825 — post-roll ordering comment + code)
+- `src/features/gamification/level-worlds/components/board/BoardStage.tsx`
+  (L298–356 — effect dependency on `pendingHopSequence`)
+
+The required ordering `applyRollResult(…)` → `setRuntimeState(freshRecord)` →
+`setPendingHopSequence(null)` (see stored memory "hop animation lifecycle") is
+load-bearing: reversing the last two steps causes `BoardStage`'s effect to see
+`pendingHopSequence === null` with a stale `tokenIndex` and animate the pawn
+backward via the single-step fallback. The constraint is documented in a
+comment 10 lines from the code — purely vigilance-based.
+
+**Recommended fix.** Extract the three calls into a single `commitRollLanding(record, hopSequenceRef)`
+helper that enforces the ordering structurally. Add a test that calls it with a
+deliberate ordering violation and asserts the pawn position is correct.
+
+---
+
+### P2-13. Roll server-write failure is swallowed; no retry queue or failure telemetry
+
+**Files:**
+- `src/features/gamification/level-worlds/services/islandRunRollAction.ts`
+  (~L231–238 — error swallowed with `warn + continue`)
+
+`islandRunRollAction.ts` swallows remote write failures with a `console.warn`
+and continues. `localStorage` is authoritative, `Supabase` is stale. Subsequent
+local patches can slide the local `runtimeVersion` past Supabase without
+re-attempting the failed commit (because `persistIslandRunRuntimeStatePatch`
+does not bump `runtimeVersion`). The only recovery is a full re-hydration.
+There is no retry queue, no `lastFailedClientActionId`, and no telemetry beacon
+for persistent failure.
+
+**Recommended fix.** On remote write failure, enqueue the failed record into
+the existing `pending_write` localStorage queue (same mechanism that session 7
+added for transient errors) and fire a telemetry event so the failure rate is
+visible. A background flush on next successful online event (already partially
+wired via `writeIslandRunGameStateRecord`'s `pending_write` path) should then
+re-attempt.
+
+---
+
+### P2-14. Offline multi-device sync is last-write-wins — no per-field conflict resolution
+
+**Files:**
+- `src/features/gamification/level-worlds/services/islandRunGameStateStore.ts`
+  (`writeIslandRunGameStateRecord`, `runtimeVersion` monotonic gate)
+
+Two devices completing the same island offline then reconnecting rely on
+`client_action_id` dedup in the action log for per-action idempotency, but
+per-row commits are a straight `upsert` at the highest `runtimeVersion`.
+`runtimeVersion` is monotonic per-device, not globally unique — two devices
+diverging offline each increment from the same base, so the "winner" is
+whichever device writes last. This is documented as a known limitation but not
+explicitly tracked as an open issue.
+
+**Note:** The session-7 `forceRemote: true` hydration fix closes the
+"phone shows island 6, desktop shows island 1" presentation-layer symptom. The
+underlying last-write-wins data layer remains.
+
+---
+
+### P2-15. `setRuntimeState(freshRecord)` after `applyRollResult` is redundant (dual source of truth)
+
+**Files:**
+- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
+  (~L3803–3810)
+
+After Stage C1, `tokenIndex` / `dicePool` / `spinTokens` are store-derived via
+`useIslandRunState`. The legacy `runtimeState` `useState` is still mirrored,
+creating two simultaneous sources of truth. A 1-tick desync window exists
+between the store mirror publishing and the React `setState` flushing. In
+practice benign, but any future "remove the legacy mirror" refactor must audit
+every `runtimeState.tokenIndex` read site. Track here as a cleanup target once
+Stage C is complete.
+
+---
+
+### P2-16. Unmount during animation produces pawn teleport on re-mount
+
+**Files:**
+- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
+  (~L1001–1007 — cleanup effect clears `hopSequenceResolverRef`)
+
+The cleanup effect on unmount clears `hopSequenceResolverRef` and sets
+`isAnimatingRollRef.current = false`. If unmount happens mid-hop, the trailing
+`applyRollResult` / `setPendingHopSequence(null)` run against an unmounted
+component (React no-ops them). The server commit already happened, so the next
+hydration corrects the display — but the user sees a pawn teleport with no
+animation. Low probability in normal use; higher in tab-switch scenarios.
+
+---
+
+### P2-17. `marketOwnedBundlesByIsland` is not cleared on island travel — intent undocumented
+
+**Files:**
+- `src/features/gamification/level-worlds/services/islandRunStateActions.ts`
+  (`travelToNextIsland` — clears `completedStopsByIsland`, `stopTicketsPaidByIsland`,
+  `bonusTileChargeByIsland` on travel, but not `marketOwnedBundlesByIsland`)
+
+Three of the four per-island maps are explicitly cleared when travelling to a
+new island; `marketOwnedBundlesByIsland` is not. This asymmetry is not commented.
+It may be intentional (shop purchases persist across cycle revisits) or an
+oversight. Either way, no code comment documents the design decision.
+
+**Recommended fix.** Add an inline comment in `travelToNextIsland` explicitly
+stating whether `marketOwnedBundlesByIsland` is retained by design, to prevent
+a future reader "fixing" what isn't broken.
+
+---
+
+### P2-18. Contract-V2 `stopStatesByIndex` default silently repairs V1-era records
+
+**Files:**
+- `src/features/gamification/level-worlds/services/islandRunStateActions.ts`
+  (~L539–549 — writes a length-5 default array on every travel)
+
+`travelToNextIsland` unconditionally writes a fresh length-5 default
+`stopStatesByIndex` array. A record from the V1 era with
+`stopStatesByIndex === undefined` is silently repaired here on travel — which
+is probably the correct behaviour — but there is no explicit migration test for
+the V1→V2 upgrade path. If the flag ever flips from V1 to V2 mid-run for an
+existing user, the first travel call is the only place the repair occurs; if
+the flag flips before any travel (e.g. on a fresh island), the repair never
+runs and V2 resolver reads `undefined` as an empty array.
+
+**Recommended fix.** Add a `sanitizeStopStatesByIndex` guard in the V2 resolver
+that treats `undefined` as "all defaults" so it never reads a bare `undefined`,
+and add a test covering the V1-era record → V2 resolver path.
 
 ---
 
@@ -650,4 +1091,49 @@ switch chain now also reads from `mysteryContentKind`. Dead `kind`
 checks in the generic complete-stop footer branch were cleaned up as
 part of the edit (the outer `stopId !== 'mystery'` guard already
 dominated the check).
+
+---
+
+## Audit notes — 2026-04-20 game-loop deep-dive (session 12)
+
+A full audit of the game loop — dice roll → pawn hop → tile landing → stop
+resolution → island completion → travel → persistence — was completed in
+session 12. The items filed above as P0-3 through P2-18 originate from this
+review. The following findings from that session were investigated and
+confirmed to be **false positives** (not bugs):
+
+- **`clearCreatureCollectionForUser` does not clear active companion** — it
+  does, at `creatureCollectionService.ts:257`
+  (`window.localStorage.removeItem(getActiveCompanionStorageKey(userId))`).
+  Reset flow is correct.
+
+- **Reward-bar discriminated union is inconsistent** — confirmed consistent
+  across `islandRunContractV2RewardBar.ts`, tile-reward action, and encounter
+  flow.
+
+- **StopIds drift across islands** — they do not; `stopId` is stable and
+  completion is keyed by `(islandNumber, stopId)`.
+
+- **Boss is a tile on the 40-tile ring** — incorrect premise; the ring is pure
+  traversal. All 5 stops (including boss) are orbit-HUD structures external to
+  the ring, per the canonical gameplay contract.
+
+**Architectural themes identified in the audit (context for future work):**
+
+1. **Mutex covers server write but not the client commit / animation tail.**
+   The critical mutex boundary should extend through `applyRollResult` (P0-3).
+   Today the boundary ends when Supabase responds.
+
+2. **Ordering invariants live in prose, not types or helpers.** The roll →
+   hop-clear ordering, travel pre/post state, and "write `{oldKey: []}` to
+   clear" idiom are described in comments only (P2-12).
+
+3. **Stage C migration is partially complete.** Store-derived state + legacy
+   mirrors coexist; some paths read from one, some from the other (P2-15).
+   `persistIslandRunRuntimeStatePatch` does not bump `runtimeVersion`.
+
+4. **No integration test covers the full roll → land → complete stop → roll
+   again → finish island → travel loop on a 40-tile board crossing island
+   boundaries.** Unit tests are strong per-module; the seams between modules
+   are where the bugs sit.
 
