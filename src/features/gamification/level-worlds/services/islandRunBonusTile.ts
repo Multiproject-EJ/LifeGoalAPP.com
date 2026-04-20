@@ -13,10 +13,12 @@
  *   - inner key: tile index (0 .. tileCount-1 on the active board profile).
  *   - value: charge count in [0, BONUS_CHARGE_TARGET]. 0 after a release.
  *
- * **Persistence note.** The state field is added to the canonical runtime record
- * in the renderer-wiring PR that follows this one — the pure service layer in
- * this file does not reach into the runtime store so the game-logic contract
- * can ship and be unit-tested independently of storage plumbing.
+ * **Persistence note.** The `bonusTileChargeByIsland` field lives on
+ * `IslandRunGameStateRecord` (see `islandRunGameStateStore.ts`) and is
+ * persisted to localStorage and the `island_run_runtime_state.bonus_tile_charge_by_island`
+ * column (migration 0230). This service layer stays purely functional so
+ * the game-logic contract can be unit-tested independently of storage
+ * plumbing — callers read the ledger from the store/patch and pass it in.
  */
 
 /** Charges required before the bonus is primed and the next landing releases. */

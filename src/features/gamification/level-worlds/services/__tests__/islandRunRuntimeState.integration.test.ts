@@ -875,4 +875,93 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       assertEqual(parsed.dicePool, baseline.dicePool + 9, 'Expected queued record to carry the would-be-lost delta');
     },
   },
+  {
+    name: 'persistIslandRunRuntimeStatePatch overlay-merges bonusTileChargeByIsland with clamping',
+    run: async () => {
+      resetStorage({
+        [`island_run_runtime_state_${USER_ID}`]: JSON.stringify({
+          bonusTileChargeByIsland: {
+            '1': { 5: 3, 12: 7 },
+            '2': { 0: 2 },
+          },
+        }),
+      });
+
+      // Patch targets island 1 (adding tile 20 and incrementing tile 5) and adds
+      // island 3. Island 2 must stay untouched (overlay merge). Values that
+      // exceed BONUS_CHARGE_TARGET=8 must clamp; malformed values must drop.
+      const result = await persistIslandRunRuntimeStatePatch({
+        session: makeSession(),
+        client: null,
+        patch: {
+          bonusTileChargeByIsland: {
+            '1': { 5: 4, 20: 99, 999: Number.NaN as unknown as number },
+            '3': { 1: 1 },
+          },
+        },
+      });
+      assertDeepEqual(result, { ok: true }, 'Expected patch to succeed');
+
+      const state = readIslandRunRuntimeState(makeSession());
+      assertDeepEqual(state.bonusTileChargeByIsland, {
+        '1': { 5: 4, 20: 8 },
+        '2': { 0: 2 },
+        '3': { 1: 1 },
+      }, 'Expected overlay merge preserving untouched islands and clamping charges to 0..8');
+    },
+  },
+  {
+    name: 'persistIslandRunRuntimeStatePatch clears a bonusTileChargeByIsland entry via explicit-empty inner map (island travel)',
+    run: async () => {
+      resetStorage({
+        [`island_run_runtime_state_${USER_ID}`]: JSON.stringify({
+          bonusTileChargeByIsland: {
+            '1': { 5: 3, 12: 7 },
+            '2': { 0: 2 },
+          },
+        }),
+      });
+
+      // Mirrors `performIslandTravel`'s bonus-tile clear: patch with an empty
+      // inner map for the old island. Without the explicit-empty preservation
+      // in the backend's overlay merge, the entry would silently stay at 3/7.
+      // On read-back, the sanitizer prunes the empty shell — which is
+      // semantically equivalent to absent (no charges on island 1), so the
+      // "cleared" outcome the caller wants is observed regardless.
+      const result = await persistIslandRunRuntimeStatePatch({
+        session: makeSession(),
+        client: null,
+        patch: {
+          bonusTileChargeByIsland: {
+            '1': {},
+          },
+        },
+      });
+      assertDeepEqual(result, { ok: true }, 'Expected patch to succeed');
+
+      const state = readIslandRunRuntimeState(makeSession());
+      assertDeepEqual(state.bonusTileChargeByIsland, {
+        '2': { 0: 2 },
+      }, 'Expected island 1 charges to be cleared (pruned by sanitizer on read) and island 2 untouched');
+    },
+  },
+  {
+    name: 'toRecord sanitizes malformed bonusTileChargeByIsland on read',
+    run: async () => {
+      resetStorage({
+        [`island_run_runtime_state_${USER_ID}`]: JSON.stringify({
+          bonusTileChargeByIsland: {
+            '1': { 5: 3, 12: 99, '-4': 2, bad: 'oops' },
+            '2': 'not-an-object',
+            '3': { 0: Number.POSITIVE_INFINITY },
+          },
+        }),
+      });
+
+      const state = readIslandRunRuntimeState(makeSession());
+      assertDeepEqual(state.bonusTileChargeByIsland, {
+        '1': { 5: 3, 12: 8 },
+      }, 'Expected sanitizer to clamp, drop negatives/non-finite, drop non-object islands, and prune islands that end up empty');
+    },
+  },
 ];

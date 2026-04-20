@@ -7,6 +7,7 @@ import type {
   PerIslandEggsLedger,
   PerfectCompanionReason,
 } from './islandRunGameStateStore';
+import type { BonusTileChargeByIsland } from './islandRunBonusTile';
 
 /**
  * Island Run runtime state.
@@ -109,6 +110,7 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     companionBonusLastVisitKey?: string | null;
     completedStopsByIsland?: Record<string, string[]>;
     stopTicketsPaidByIsland?: Record<string, number[]>;
+    bonusTileChargeByIsland?: BonusTileChargeByIsland;
     marketOwnedBundlesByIsland?: Record<string, {
       dice_bundle: boolean;
       heart_bundle: boolean;

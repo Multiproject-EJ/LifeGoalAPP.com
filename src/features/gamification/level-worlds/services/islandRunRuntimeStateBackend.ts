@@ -14,6 +14,10 @@ import {
   readIslandRunGameStateRecord,
   writeIslandRunGameStateRecord,
 } from './islandRunGameStateStore';
+import {
+  BONUS_CHARGE_TARGET,
+  type BonusTileChargeByIsland,
+} from './islandRunBonusTile';
 
 export interface IslandRunRuntimeStateBackend {
   read(session: Session): IslandRunRuntimeState;
@@ -63,6 +67,7 @@ export interface IslandRunRuntimeStateBackend {
       companionBonusLastVisitKey?: string | null;
       completedStopsByIsland?: Record<string, string[]>;
       stopTicketsPaidByIsland?: Record<string, number[]>;
+      bonusTileChargeByIsland?: BonusTileChargeByIsland;
       marketOwnedBundlesByIsland?: Record<string, {
         dice_bundle: boolean;
         heart_bundle: boolean;
@@ -270,6 +275,32 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
               ),
             }
           : current.stopTicketsPaidByIsland,
+      bonusTileChargeByIsland:
+        // Overlay merge per island key — matches `stopTicketsPaidByIsland`
+        // semantics. Value clamping mirrors `sanitizeBonusTileChargeByIsland`
+        // but explicit-empty inner maps are preserved so callers can clear an
+        // island's entry by patching with `{ [islandKey]: {} }` (required by
+        // `performIslandTravel` when wrapping a cycle, where we must drop the
+        // previous cycle's bonus-tile charges).
+        patch.bonusTileChargeByIsland !== null && typeof patch.bonusTileChargeByIsland === 'object' && !Array.isArray(patch.bonusTileChargeByIsland)
+          ? {
+              ...current.bonusTileChargeByIsland,
+              ...Object.fromEntries(
+                Object.entries(patch.bonusTileChargeByIsland).map(([islandKey, inner]) => {
+                  if (!inner || typeof inner !== 'object' || Array.isArray(inner)) return [islandKey, {}];
+                  const innerCopy: Record<number, number> = {};
+                  for (const [idxKey, chargeRaw] of Object.entries(inner)) {
+                    const idx = Number(idxKey);
+                    if (!Number.isFinite(idx) || idx < 0) continue;
+                    if (typeof chargeRaw !== 'number' || !Number.isFinite(chargeRaw)) continue;
+                    const normalized = Math.max(0, Math.min(BONUS_CHARGE_TARGET, Math.floor(chargeRaw)));
+                    if (normalized > 0) innerCopy[Math.floor(idx)] = normalized;
+                  }
+                  return [islandKey, innerCopy];
+                }),
+              ),
+            }
+          : current.bonusTileChargeByIsland,
       marketOwnedBundlesByIsland:
         patch.marketOwnedBundlesByIsland !== null && typeof patch.marketOwnedBundlesByIsland === 'object' && !Array.isArray(patch.marketOwnedBundlesByIsland)
           ? {

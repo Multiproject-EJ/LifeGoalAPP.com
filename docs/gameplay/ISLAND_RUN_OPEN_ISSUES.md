@@ -1,7 +1,7 @@
 # Island Run — Open Issues & Feature Backlog
 
 Status: Living document
-Last updated: 2026-04-20 (session 9 — P1-11 ticket_required + P2-11 DiceRegenState docblock)
+Last updated: 2026-04-20 (session 10 — P1-13 + P1-3 persistence layer closed; bonus-tile ledger persisted via migration 0230)
 Owner: Gameplay System
 
 This document tracks every unresolved issue, bug, inconsistency, or scoped
@@ -157,11 +157,15 @@ beats and most tiles stay feeding-type.
 
 ---
 
-### P1-3. Glowing bonus tile with 9-hit accumulator — ✅ Logic layer closed (session 3)
+### P1-3. Glowing bonus tile with 9-hit accumulator — ✅ Logic + persistence layer closed (sessions 3 & 10)
 The pure service (`islandRunBonusTile.ts`) + its 12-case unit suite + the
-contract §5E spec are merged. The renderer wiring (dot lamps, released
-burst animation, 3D prop) + the runtime-state field + Supabase migration
-are the remaining follow-up and ride with P1-2's other new tile types.
+contract §5E spec merged in session 3. Session 10 added the runtime-state
+field `bonusTileChargeByIsland` (migration 0230), wired sanitize/merge/patch
+through the store + backend, and hooked `performIslandTravel` to clear the
+ledger on island travel. The remaining follow-up is pure renderer surface:
+the dot-lamp HUD, the released-burst animation, the 3D prop, and the
+charge/release call-site inside the tile-landing handler. That PR rides
+with P1-2's other new tile types.
 
 ---
 
@@ -236,11 +240,14 @@ See the Closed section below.
 
 ---
 
-### P1-13. `performIslandTravel` cleanup for per-island state maps — ✅ Closed (session 6, ticket map only)
-Ticket-map cleanup closed. The bonus-tile field does not land until P1-3's
-renderer wiring ships, so the sanitizer call in `performIslandTravel` will
-be added alongside that PR. See Closed section below for the ticket
-cleanup.
+### P1-13. `performIslandTravel` cleanup for per-island state maps — ✅ Closed (session 10)
+Ticket-map cleanup closed in session 6; session 10 landed the remaining
+`bonusTileChargeByIsland` field (migration 0230 + store/backend/patch plumbing)
+and wired `performIslandTravel` to clear the old island's bonus-tile charges
+via an explicit-empty inner-map patch. Both per-island maps are now cleared
+on island travel, so a cycle 120 → 1 wrap starts with a fresh ring and an
+unfunded bonus accumulator. The same plumbing unblocks the remaining P1-3
+renderer wiring (below) and the P1-2 bonus-tile renderer.
 
 ---
 

@@ -5181,14 +5181,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     } catch {
       // ignore storage errors
     }
-    // P1-13: also clear paid stop tickets for the old island. The ticket map
-    // is keyed by island number as a string (no cycle index), so without this
-    // clear a cycle wrap from 120 → 1 would leave the previous cycle's paid
-    // tickets in place and unlock stops 2–5 for free on the next pass.
-    // Hatchery (index 0) is implicitly free regardless. The persist layer
-    // shallow-merges record patches (never deletes keys), so we explicitly
-    // set the island's entry to `[]` — matching how `completedStopsByIsland`
-    // is cleared just above.
+    // P1-13: also clear paid stop tickets + bonus-tile charges for the old
+    // island. Both maps are keyed by island number as a string (no cycle
+    // index), so without these clears a cycle wrap from 120 → 1 would leave
+    // the previous cycle's paid tickets (unlocking stops 2–5 for free) and
+    // the previous cycle's bonus-tile charges (potentially releasing an
+    // 8-charged tile on the first landing of the new run) in place.
+    // Hatchery (index 0) is implicitly free regardless of ticket state.
+    // The persist layer shallow-merges record patches (never deletes keys),
+    // so we explicitly set the island's entry to `[]` / `{}` — matching how
+    // `completedStopsByIsland` is cleared just above.
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
@@ -5198,6 +5200,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         },
         stopTicketsPaidByIsland: {
           [oldIslandKey]: [],
+        },
+        bonusTileChargeByIsland: {
+          [oldIslandKey]: {},
         },
       },
     });
@@ -5210,6 +5215,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       stopTicketsPaidByIsland: {
         ...(current.stopTicketsPaidByIsland ?? {}),
         [oldIslandKey]: [],
+      },
+      bonusTileChargeByIsland: {
+        ...(current.bonusTileChargeByIsland ?? {}),
+        [oldIslandKey]: {},
       },
     }));
     // M5-COMPLETE: Save current island egg to perIslandEggs, clear activeEgg, then restore new island egg
