@@ -413,7 +413,12 @@ export interface TravelToNextIslandResult {
   /** Cycle index after possible 120→1 wrap. */
   nextCycleIndex: number;
   /** The egg to show as "active" on the new island, or `null` when the slot
-   *  is fresh. The renderer feeds this into its `setActiveEgg` React state. */
+   *  should be empty. `null` is returned in three cases: (a) no egg was ever
+   *  placed on the new island, (b) the previously-placed egg on the new
+   *  island has since been collected / sold / converted to a ready animal
+   *  (i.e. `perIslandEggs[newKey].status ∉ {'incubating','ready'}`), or (c)
+   *  no `perIslandEggs[newKey]` entry exists at all. The renderer feeds
+   *  this into its `setActiveEgg` React state. */
   restoredActiveEgg:
     | { tier: 'common' | 'rare' | 'mythic'; setAtMs: number; hatchAtMs: number; isDormant: boolean }
     | null;
