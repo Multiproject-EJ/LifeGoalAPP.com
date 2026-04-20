@@ -748,6 +748,25 @@ function formatClock(seconds: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
+/**
+ * Formats a long-form countdown (days / hours / minutes / seconds) for the
+ * hatchery incubation timer. Shows the two most-significant units so the
+ * label stays short at all ranges (e.g. "2d 4h", "47m 12s", "8s").
+ */
+function formatHatchCountdown(remainingMs: number): string {
+  const safeMs = Number.isFinite(remainingMs) ? Math.max(0, remainingMs) : 0;
+  if (safeMs <= 0) return 'Ready!';
+  const totalSec = Math.ceil(safeMs / 1000);
+  const days = Math.floor(totalSec / 86400);
+  const hours = Math.floor((totalSec % 86400) / 3600);
+  const minutes = Math.floor((totalSec % 3600) / 60);
+  const seconds = totalSec % 60;
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
+
 function resolveMysteryStopReward(): MysteryStopReward {
   const randomValue = globalThis.crypto?.getRandomValues
     ? (() => {
@@ -959,12 +978,29 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [pendingHopSequence, setPendingHopSequence] = useState<number[] | null>(null);
   const hopSequenceResolverRef = useRef<(() => void) | null>(null);
   const diceRollCompleteResolverRef = useRef<(() => void) | null>(null);
+  /**
+   * True while a roll's hop animation is playing. Used to guard other
+   * writers (hydration reconcile, island-travel resets) from stomping the
+   * `tokenIndex` mid-animation and causing the pawn to snap back to tile 0.
+   * Set just before `setPendingHopSequence(...)`, cleared when the board
+   * fires `onHopSequenceComplete`.
+   */
+  const isAnimatingRollRef = useRef(false);
+  /**
+   * Re-entrancy guard for {@link handleCollectCreature}. A ref (not state)
+   * is used so the guard is observed synchronously within a single render
+   * tick — prevents double-click / StrictMode double-invoke from awarding
+   * the hatched creature multiple times before React commits `setActiveEgg(null)`.
+   */
+  const collectingCreatureRef = useRef(false);
+  const [isCollectingCreature, setIsCollectingCreature] = useState(false);
   // Cleanup: resolve any pending hop sequence promise on unmount to prevent leaks
   useEffect(() => () => {
     hopSequenceResolverRef.current?.();
     hopSequenceResolverRef.current = null;
     diceRollCompleteResolverRef.current?.();
     diceRollCompleteResolverRef.current = null;
+    isAnimatingRollRef.current = false;
   }, []);
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
@@ -1405,6 +1441,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     reason: 'focus' | 'visibility',
   ) => {
     if (!client || isReconcilingRuntimeStateRef.current || !hasHydratedRuntimeState) {
+      return;
+    }
+    // Do NOT reconcile while a roll animation is in flight. The roll
+    // service has already written the authoritative tokenIndex to
+    // localStorage + Supabase, but `runtimeStateRef.current.runtimeVersion`
+    // won't be bumped until `applyRollResult` runs at the end of the hop
+    // sequence. A reconcile during that window could publish a snapshot
+    // that ultimately causes the pawn to snap back to tile 0 when
+    // `pendingHopSequence` clears. The next focus/visibility event after
+    // the animation ends will naturally re-trigger reconciliation.
+    if (isAnimatingRollRef.current) {
       return;
     }
 
@@ -3054,12 +3101,24 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const eggStage = useMemo(() => {
     if (!activeEgg) return 0;
-    const total = Math.max(1, activeEgg.hatchAtMs - activeEgg.setAtMs);
-    const progress = Math.min(1, Math.max(0, (nowMs - activeEgg.setAtMs) / total));
+    // Guard against corrupt timestamps (NaN / 0 / hatchAtMs <= setAtMs) that
+    // could land from a malformed hydration or manual localStorage edit — if
+    // we can't compute progress, assume the egg is ready to open so the UI
+    // doesn't wedge in stage 0 forever.
+    const { setAtMs, hatchAtMs } = activeEgg;
+    if (!Number.isFinite(setAtMs) || !Number.isFinite(hatchAtMs) || hatchAtMs <= setAtMs) {
+      return 4;
+    }
+    if (nowMs >= hatchAtMs) return 4;
+    const total = Math.max(1, hatchAtMs - setAtMs);
+    const progress = Math.min(1, Math.max(0, (nowMs - setAtMs) / total));
     return Math.min(4, Math.max(1, Math.ceil(progress * 4)));
   }, [activeEgg, nowMs]);
 
-  const eggRemainingSec = activeEgg ? Math.max(0, Math.ceil((activeEgg.hatchAtMs - nowMs) / 1000)) : 0;
+  const eggRemainingMs = activeEgg && Number.isFinite(activeEgg.hatchAtMs)
+    ? Math.max(0, activeEgg.hatchAtMs - nowMs)
+    : 0;
+  const eggCountdownLabel = activeEgg ? formatHatchCountdown(eggRemainingMs) : '';
   const hatcheryTimelineStage = useMemo(() => {
     if (islandEggSlotUsed) return HATCHERY_TIMELINE_STEPS.length;
     if (!activeEgg) return 1;
@@ -3717,6 +3776,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     // Set the full hop sequence — BoardStage will animate tile-by-tile
     // with camera follow (Monopoly GO style).
+    //
+    // Mark the animation as in-flight BEFORE scheduling the hop so that any
+    // concurrent writers (hydration reconcile, island-travel resets) see
+    // the flag and skip their `tokenIndex` updates. Without this, a stale
+    // Supabase hydration landing mid-animation would call
+    // `refreshIslandRunStateFromLocal`, overwrite the store mirror with the
+    // pre-roll tokenIndex, and cause the pawn to snap back to tile 0 when
+    // `pendingHopSequence` clears.
+    isAnimatingRollRef.current = true;
     setPendingHopSequence(hopIndices);
     await new Promise<void>((resolve) => {
       hopSequenceResolverRef.current = resolve;
@@ -4373,6 +4441,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (!activeEgg || eggStage < 4) return;
     // Guard: prevent collecting if the egg slot is already used (collected/sold)
     if (islandEggSlotUsed) return;
+    // Re-entrancy guard: block double-clicks / StrictMode double-invoke.
+    // The `islandEggSlotUsed` memo above only flips to true *after* React
+    // commits the `setActiveEgg(null)` + runtime-state update below, so a
+    // second synchronous call can slip past that check and award the
+    // creature twice. A ref is observed immediately and closes that window.
+    if (collectingCreatureRef.current) return;
+    collectingCreatureRef.current = true;
+    setIsCollectingCreature(true);
     const resolvedEgg = activeEgg;
     const nowTs = Date.now();
     const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg);
@@ -4469,6 +4545,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (activeStopId === 'hatchery') {
       setActiveStopId(null);
     }
+    // The persist above is fire-and-forget, but by this point React state
+    // has committed (setActiveEgg(null) + perIslandEggs patch), so
+    // `islandEggSlotUsed` will be true on the next render. Clear the ref so
+    // any legitimate future collection (new egg, new island) can proceed.
+    collectingCreatureRef.current = false;
+    setIsCollectingCreature(false);
   };
 
   const handleSellEggForRewards = () => {
@@ -6847,6 +6929,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           pendingHopSequence={pendingHopSequence}
           onHopSequenceComplete={() => {
             setPendingHopSequence(null);
+            // Release the animation guard so reconcile/island-travel writers
+            // can resume updating `tokenIndex`.
+            isAnimatingRollRef.current = false;
             hopSequenceResolverRef.current?.();
             hopSequenceResolverRef.current = null;
           }}
@@ -7116,8 +7201,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         type="button"
                         className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
                         onClick={handleCollectCreature}
+                        disabled={isCollectingCreature || islandEggSlotUsed}
                       >
-                        Collect Creature 🐾
+                        {isCollectingCreature ? 'Collecting…' : 'Collect Creature 🐾'}
                       </button>
                       {(() => {
                         const sellOptions = getEggSellRewardOptions(activeEgg.tier);
@@ -7153,6 +7239,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     <p className="island-hatchery-card__copy">
                       Your <strong>{activeEgg.tier}</strong> egg is incubating. Come back soon to collect your reward!
                     </p>
+                    <div
+                      className="island-hatchery-card__countdown"
+                      role="timer"
+                      aria-live="polite"
+                    >
+                      <span className="island-hatchery-card__countdown-label">Hatches in</span>
+                      <span className="island-hatchery-card__countdown-value">{eggCountdownLabel}</span>
+                    </div>
                     <div className="island-hatchery-card__timeline" aria-label="Egg hatch progress timeline">
                       {HATCHERY_TIMELINE_STEPS.map((step, index) => {
                         const stepNumber = index + 1;
@@ -7179,7 +7273,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       <p className="island-hatchery-card__headline">No egg on this island yet.</p>
                     )}
                     <p className="island-hatchery-card__copy">
-                      Set an egg now to earn rewards. The tier is a surprise — hatch time is a secret too!
+                      Set an egg now to earn rewards. The tier is a surprise, and hatch time is random (24–72h).
                     </p>
                     <div className="island-hatchery-card__timeline" aria-label="Egg hatch progress timeline">
                       {HATCHERY_TIMELINE_STEPS.map((step, index) => {

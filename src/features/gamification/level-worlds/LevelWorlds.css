@@ -2414,6 +2414,10 @@
   place-items: center;
   padding: 1rem;
   backdrop-filter: blur(3px);
+  /* Allow the backdrop itself to scroll as a last-resort fallback when the
+     modal content is taller than the viewport (e.g. small landscape phones). */
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .island-stop-modal {
@@ -2425,6 +2429,12 @@
   background: linear-gradient(180deg, rgba(20, 36, 49, 0.98), rgba(9, 18, 27, 0.97));
   border: 1px solid rgba(163, 231, 255, 0.58);
   box-shadow: 0 22px 56px rgba(0, 0, 0, 0.46);
+  /* Tall modal bodies (hatchery with timeline + sell options, long wisdom
+     copy, etc.) must be scrollable so the primary CTA remains reachable.
+     Leave room for the backdrop's 1rem padding on top and bottom. */
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 
@@ -2953,6 +2963,33 @@
 
 .island-hatchery-card__state--incubating .island-hatchery-card__headline {
   color: #91e1ff;
+}
+
+.island-hatchery-card__countdown {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  margin: 0.15rem auto 0.45rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(18, 48, 74, 0.85), rgba(10, 30, 48, 0.78));
+  border: 1px solid rgba(145, 225, 255, 0.35);
+  box-shadow: 0 0 18px rgba(111, 205, 255, 0.18);
+}
+
+.island-hatchery-card__countdown-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(202, 235, 252, 0.82);
+}
+
+.island-hatchery-card__countdown-value {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #f0faff;
+  font-variant-numeric: tabular-nums;
 }
 
 
