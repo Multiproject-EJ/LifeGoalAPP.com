@@ -2808,10 +2808,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       });
       const contractV2Stops = resolveIslandRunContractV2Stops({
         stopStatesByIndex: mergedStopStatesByIndex,
+        stopTicketsPaidByIsland: runtimeState.stopTicketsPaidByIsland,
+        islandNumber,
       });
       const map = new Map<string, StopProgressState>();
       islandStopPlan.forEach((stop, index) => {
-        let status: StopProgressState = contractV2Stops.statusesByIndex[index] ?? 'locked';
+        const resolverStatus = contractV2Stops.statusesByIndex[index];
+        // Preserve existing UI behaviour: a ticket-gated active stop still renders
+        // as 'active' here (the stop modal enforces payment separately). The new
+        // `'ticket_required'` semantic status is exposed via the resolver for HUD /
+        // telemetry consumers that want to differentiate — not for visual regression.
+        let status: StopProgressState =
+          resolverStatus === 'ticket_required' ? 'active' : (resolverStatus ?? 'locked');
         // Hatchery (index 0): show yellow 'partial' when egg is set but not yet collected/sold.
         // Green 'completed' only once the animal is collected or sold (island-clear condition).
         if (index === 0 && status === 'completed' && !islandEggSlotUsed) {
@@ -2842,7 +2850,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     return map;
-  }, [completedStops, effectiveCompletedStops, islandEggSlotUsed, islandStopPlan, runtimeState.stopStatesByIndex]);
+  }, [completedStops, effectiveCompletedStops, islandEggSlotUsed, islandNumber, islandStopPlan, runtimeState.stopStatesByIndex, runtimeState.stopTicketsPaidByIsland]);
 
   // stopMap intentionally remains empty: per the canonical gameplay contract,
   // stops are EXTERNAL side-quest structures (orbit HUD buttons). No tile on

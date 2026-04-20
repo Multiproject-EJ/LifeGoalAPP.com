@@ -1,7 +1,7 @@
 # Island Run — Open Issues & Feature Backlog
 
 Status: Living document
-Last updated: 2026-04-20 (session 8 — state architecture refactor stages A+B+E)
+Last updated: 2026-04-20 (session 9 — P1-11 ticket_required + P2-11 DiceRegenState docblock)
 Owner: Gameplay System
 
 This document tracks every unresolved issue, bug, inconsistency, or scoped
@@ -226,19 +226,8 @@ See the Closed section below.
 
 ---
 
-### P1-11. Stop status reporting ignores ticket-paid state
-**Files:**
-- `src/features/gamification/level-worlds/services/islandRunContractV2StopResolver.ts`
-  (`resolveIslandRunContractV2Stops.statusesByIndex`)
-
-**Why.** `statusesByIndex` returns `'active'` for the first index whose
-`objectiveComplete` is false, ignoring `stopTicketsPaidByIsland`. The modal
-open-path separately enforces `isStopTicketPaid`, so this is not exploitable
-today — but every telemetry/HUD consumer that reads `statusesByIndex`
-misreports "active" for a ticket-locked stop. Fix: pass
-`stopTicketsPaidByIsland` + current island key into the resolver and emit a
-new `'ticket_required'` status for the first-incomplete stop whose ticket
-hasn't been paid.
+### P1-11. Stop status reporting ignores ticket-paid state — ✅ Closed (session 9)
+See the Closed section below.
 
 ---
 
@@ -311,16 +300,8 @@ more tile types and we want an even spread.
 ### P2-10. `seededRandom(0)` corner case — ✅ Closed (session 6)
 See Closed section below.
 
-### P2-11. `DiceRegenState.maxDice` is really a minimum floor
-**Files:** `src/features/gamification/level-worlds/services/islandRunDiceRegeneration.ts`
-
-**Why.** Contract §3B says "no hard cap" on dice regen, and `applyDiceRegeneration`
-treats `minDice` as a minimum-roll floor (regen never exceeds it, but the player
-can hoard arbitrarily above it). The persisted field is named `maxDice`, which
-invites future readers to add an incorrect upper clamp. Either rename
-the runtime field to `minRollFloor` (with a migration to copy the stored
-value) or add an explicit docblock on the `DiceRegenState` type saying the
-name is historical and the value is a floor, not a cap.
+### P2-11. `DiceRegenState.maxDice` is really a minimum floor — ✅ Closed (session 9)
+See the Closed section below.
 
 ---
 
@@ -385,6 +366,42 @@ Removed the reference to **coins** from the "intentionally not in scope"
 list in `islandRunRollAction.ts` (coins are retired) and refreshed the
 tile-reward example list to mention the live currencies + bonus-tile
 charge.
+
+## Closed in session 9 (2026-04-20)
+
+### ✅ P1-11. Stop status reports `'ticket_required'` for ticket-gated active stops
+`resolveIslandRunContractV2Stops` now accepts optional
+`stopTicketsPaidByIsland` + `islandNumber` params. When supplied, the
+first-incomplete stop whose ticket (index > 0) is unpaid is emitted as
+`'ticket_required'` in `statusesByIndex`, so HUD and telemetry consumers can
+tell a ticket-locked stop apart from a genuinely interactable active one
+(the previous behaviour collapsed both to `'active'`). Hatchery (stop 0) is
+implicitly free and never reports `'ticket_required'`. Omitting the params
+preserves the legacy two-state `'active' | 'locked'` behaviour verbatim for
+any caller that doesn't track tickets. The `IslandRunContractV2StopStatus`
+union gains the `'ticket_required'` variant. The renderer's single UI
+consumer (`stopStateMap` in `IslandRunBoardPrototype.tsx`) passes the new
+params and maps `'ticket_required'` → `'active'` for visual UI parity —
+ticket enforcement on stop-modal open is unchanged (still handled by
+`doesStopRequireTicketPayment` + `isStopTicketPaid`). Six new resolver test
+cases cover: ticket unpaid → `ticket_required`, ticket paid → `active`,
+hatchery-first-incomplete is never `ticket_required`, omitted params
+preserve legacy behaviour, per-island ledger scoping (island 2 ticket
+doesn't unlock island 1), and all-complete final state reports five
+`completed`.
+
+### ✅ P2-11. `DiceRegenState.maxDice` documented as a floor (not a cap)
+Added an explicit docblock on `DiceRegenState` clarifying that `maxDice` is
+the **passive-regen ceiling / minimum-roll floor**, not an upper clamp on
+the wallet. The pool can and does exceed `maxDice` via rewards, stops,
+boss payouts, events, shop purchases, and `currency`/`chest` tile rewards
+(contract §3 Dice: "no hard cap"). Explicit "do not clamp" warning for
+future readers. Field is not renamed to `minRollFloor` because it is
+persisted in both localStorage and the `island_run_runtime_state` row —
+a rename would require a migration for zero functional gain since this
+is purely a naming-hygiene issue.
+
+---
 
 ## Closed in session 6 (2026-04-19)
 

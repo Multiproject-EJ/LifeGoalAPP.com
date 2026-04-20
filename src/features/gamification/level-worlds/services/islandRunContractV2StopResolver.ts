@@ -1,7 +1,21 @@
 import { MAX_BUILD_LEVEL, type IslandRunContractV2BuildState } from './islandRunContractV2EssenceBuild';
+import { getStopTicketsPaidForIsland, isStopTicketPaid } from './islandRunStopTickets';
 
 export type IslandRunContractV2StopType = 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
-export type IslandRunContractV2StopStatus = 'completed' | 'active' | 'locked';
+/**
+ * Stop status emitted by `resolveIslandRunContractV2Stops.statusesByIndex`:
+ *  - `completed`: objective complete (build may still be pending).
+ *  - `active`: first-incomplete stop AND its ticket is paid (or Hatchery / stop 0,
+ *    which is implicitly free). This is the only stop the player can currently
+ *    interact with through the stop modal.
+ *  - `ticket_required`: first-incomplete stop whose ticket hasn't been paid yet
+ *    on this island. It is sequentially next but the stop modal refuses to open
+ *    until `payStopTicket(...)` succeeds. Emitted only when the caller supplies
+ *    `stopTicketsPaidByIsland` + `islandNumber`; otherwise the old "active /
+ *    locked" two-state behaviour is preserved for backwards compatibility.
+ *  - `locked`: sequentially later than the active stop.
+ */
+export type IslandRunContractV2StopStatus = 'completed' | 'active' | 'ticket_required' | 'locked';
 
 const CONTRACT_V2_STOP_TYPES: IslandRunContractV2StopType[] = ['hatchery', 'habit', 'mystery', 'wisdom', 'boss'];
 
@@ -92,6 +106,23 @@ export function resolveIslandRunFullClearForProgression(options: {
 
 export function resolveIslandRunContractV2Stops(options: {
   stopStatesByIndex: Array<StopRuntimeStateEntry | null | undefined>;
+  /**
+   * Optional per-island paid-ticket ledger. When supplied alongside
+   * `islandNumber`, the first-incomplete stop whose ticket has NOT been paid
+   * is emitted as `'ticket_required'` instead of `'active'`. This fixes the
+   * HUD/telemetry consumer misreport from P1-11 where a ticket-locked stop
+   * looked identical to a genuinely interactable active stop. The stop-modal
+   * open-path already enforces `isStopTicketPaid` separately, so omitting
+   * both params preserves the legacy two-state behaviour.
+   *
+   * Hatchery (stop 0) is implicitly free on every island and is never gated
+   * by a ticket — if it's the first-incomplete stop it always resolves to
+   * `'active'`.
+   */
+  stopTicketsPaidByIsland?: Record<string, number[]> | null;
+  /** Current island number used to look up the paid-ticket list. Required
+   *  when `stopTicketsPaidByIsland` is supplied; ignored otherwise. */
+  islandNumber?: number;
 }): ResolveIslandRunContractV2StopsResult {
   const normalizedStates = CONTRACT_V2_STOP_TYPES.map((_, index) => options.stopStatesByIndex[index]);
   // Stop sequencing uses OBJECTIVE completion only — builds are decoupled.
@@ -99,10 +130,24 @@ export function resolveIslandRunContractV2Stops(options: {
   const activeStopIndex = firstIncompleteIndex >= 0 ? firstIncompleteIndex : CONTRACT_V2_STOP_TYPES.length - 1;
   const allObjectivesComplete = firstIncompleteIndex === -1;
 
+  // Resolve whether the active stop is currently ticket-gated. Only applies
+  // when the caller supplied the ledger + island number (otherwise we can't
+  // know and must preserve legacy 'active' semantics).
+  let activeStopRequiresTicket = false;
+  if (
+    !allObjectivesComplete &&
+    activeStopIndex > 0 &&
+    options.stopTicketsPaidByIsland != null &&
+    typeof options.islandNumber === 'number'
+  ) {
+    const ticketsPaid = getStopTicketsPaidForIsland(options.stopTicketsPaidByIsland, options.islandNumber);
+    activeStopRequiresTicket = !isStopTicketPaid({ ticketsPaid, stopIndex: activeStopIndex });
+  }
+
   const statusesByIndex = CONTRACT_V2_STOP_TYPES.map((_, index): IslandRunContractV2StopStatus => {
     if (allObjectivesComplete) return 'completed';
     if (index < activeStopIndex) return 'completed';
-    if (index === activeStopIndex) return 'active';
+    if (index === activeStopIndex) return activeStopRequiresTicket ? 'ticket_required' : 'active';
     return 'locked';
   });
 
