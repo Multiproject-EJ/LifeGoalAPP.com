@@ -1,6 +1,7 @@
 /**
  * islandRunProgressReset — Resets the player's Island Run game progress
- * to a fresh start (island 1, starting dice/essence, clean stops).
+ * to a fresh start (island 1, starting dice/essence, clean stops) and
+ * resets their XP/level back to 1.
  *
  * **What is reset:**
  * - Island position → island 1, tile 0
@@ -12,15 +13,16 @@
  * - Persisted creature-treat inventory (localStorage:
  *   `island_run_creature_treat_inventory_*`) — kept in sync with the
  *   runtime record's reset `creatureTreatInventory` defaults.
+ * - XP → 0, Level → 1 (gamification_profiles / demo localStorage)
  *
  * **What is preserved (user preferences):**
  * - audioEnabled (player's sound preference)
  * - onboardingDisplayNameLoopCompleted (display name already set)
  *
  * **What is NOT touched (separate systems):**
- * - XP and Level (gamification_profiles table — app-wide, not island-specific)
  * - Journals, habits, telemetry, achievements, identity data
  * - Streak data, lives, power-ups
+ * - XP transaction history (preserved as a historical log)
  */
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
@@ -32,6 +34,7 @@ import {
 import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
 import { clearCreatureCollectionForUser } from './creatureCollectionService';
 import { clearCreatureTreatInventoryForUser } from './creatureTreatInventoryService';
+import { resetXP } from '../../../../services/gamification';
 
 /**
  * Builds a fresh Island Run game state record, preserving only user
@@ -126,19 +129,27 @@ export function buildFreshIslandRunRecord(
 }
 
 /**
- * Resets the player's Island Run progress to a fresh start.
+ * Resets the player's Island Run progress to a fresh start and resets
+ * their XP and level to 1.
  *
  * Returns `{ ok: true }` on success or `{ ok: false; errorMessage: string }` on failure.
  *
  * This does NOT affect:
- * - XP, Level, or Streaks (stored in gamification_profiles — separate system)
  * - Journals, habits, telemetry, achievements, or any other app data
+ * - Streak data, lives, power-ups
+ * - XP transaction history (preserved as a historical log)
  */
 export async function resetIslandRunProgress(options: {
   session: Session;
   client: SupabaseClient | null;
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
   const { session, client } = options;
+
+  // Reset XP and level first. If this fails we bail before touching island state.
+  const xpResetResult = await resetXP(session.user.id);
+  if (!xpResetResult.ok) {
+    return xpResetResult;
+  }
 
   // Read current state to preserve user preferences.
   const current = readIslandRunGameStateRecord(session);
