@@ -51,6 +51,14 @@ import {
 import { ShardClaimModal } from './ShardClaimModal';
 import { IslandRunReflectionComposer } from './IslandRunReflectionComposer';
 import { readIslandRunGameStateRecord, writeIslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
+import { useIslandRunState } from '../hooks/useIslandRunState';
+import {
+  commitIslandRunState,
+  getIslandRunStateSnapshot,
+  patchIslandRunStateSnapshot,
+  refreshIslandRunStateFromLocal,
+} from '../services/islandRunStateStore';
+import { applyRollResult, applyTokenHopRewards } from '../services/islandRunStateActions';
 import {
   rollEggTierWeighted,
   getRandomHatchDelayMs,
@@ -909,8 +917,39 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // Guard: prevent repeated stop-focus camera jumps after initial hydration
   const hasAppliedInitialStopFocusRef = useRef(false);
 
-  const [dicePool, setDicePool] = useState(ISLAND_RUN_DEFAULT_STARTING_DICE);
-  const [tokenIndex, setTokenIndex] = useState(TOKEN_START_TILE_INDEX);
+  // ── C1 store-derived state: dicePool, tokenIndex, spinTokens ──────────────
+  // These fields are read from the authoritative store via `useIslandRunState`.
+  // Shim setters are provided for backward compat with unmigrated paths
+  // (C2–C6 will remove these shims). The persist effect at ~2290 is deleted —
+  // each shim commits through the store, and C1-specific paths (roll,
+  // reward-bar, minigame) use dedicated action functions.
+  const { state: __storeState } = useIslandRunState(session, client);
+  const dicePool = __storeState.dicePool;
+  const tokenIndex = __storeState.tokenIndex;
+
+  // C1 shim: setDicePool — commits through the store for unmigrated paths.
+  const setDicePool = useCallback((updater: number | ((current: number) => number)) => {
+    const snapshot = getIslandRunStateSnapshot(session);
+    const next = typeof updater === 'function' ? updater(snapshot.dicePool) : updater;
+    void commitIslandRunState({
+      session,
+      client,
+      record: { ...snapshot, dicePool: next, runtimeVersion: snapshot.runtimeVersion + 1 },
+      triggerSource: 'dice_pool_shim',
+    });
+  }, [session, client]);
+
+  // C1 shim: setTokenIndex — commits through the store for unmigrated paths.
+  const setTokenIndex = useCallback((updater: number | ((current: number) => number)) => {
+    const snapshot = getIslandRunStateSnapshot(session);
+    const next = typeof updater === 'function' ? updater(snapshot.tokenIndex) : updater;
+    void commitIslandRunState({
+      session,
+      client,
+      record: { ...snapshot, tokenIndex: next, runtimeVersion: snapshot.runtimeVersion + 1 },
+      triggerSource: 'token_index_shim',
+    });
+  }, [session, client]);
   const [rollValue, setRollValue] = useState<number | null>(null);
   const [rollingDiceFaces, setRollingDiceFaces] = useState<[number, number]>([1, 1]);
   const [isRolling, setIsRolling] = useState(false);
@@ -1128,9 +1167,20 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [islandExpiresAtMs, setIslandExpiresAtMs] = useState<number>(() => Date.now() + getIslandDurationMs(1));
   const [tileMap, setTileMap] = useState<IslandTileMapEntry[]>(() => generateTileMap(1, 'normal', 'forest', 0, { profileId: ACTIVE_BOARD_PROFILE.id }));
 
-  // B2-1: legacy wallet field.
-  // In contract-v2 this wallet currently tracks minigame/event tokens (not movement spins).
-  const [spinTokens, setSpinTokens] = useState(0);
+  // C1 store-derived spinTokens (see dicePool/tokenIndex above for pattern notes).
+  const spinTokens = __storeState.spinTokens;
+
+  // C1 shim: setSpinTokens — commits through the store for unmigrated paths.
+  const setSpinTokens = useCallback((updater: number | ((current: number) => number)) => {
+    const snapshot = getIslandRunStateSnapshot(session);
+    const next = typeof updater === 'function' ? updater(snapshot.spinTokens) : updater;
+    void commitIslandRunState({
+      session,
+      client,
+      record: { ...snapshot, spinTokens: next, runtimeVersion: snapshot.runtimeVersion + 1 },
+      triggerSource: 'spin_tokens_shim',
+    });
+  }, [session, client]);
 
   // B3-2: minigame launcher state (M11B framework)
   const [activeLaunchedMinigameId, setActiveLaunchedMinigameId] = useState<string | null>(null);
@@ -1385,6 +1435,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         islandNumber: hydrationResult.state.currentIslandNumber,
       });
       setRuntimeState(hydrationResult.state);
+      // C1: sync the store mirror so dicePool/tokenIndex/spinTokens reflect hydrated values.
+      refreshIslandRunStateFromLocal(session);
       logIslandRunEntryDebug('island_run_runtime_reconciled', {
         userId: session.user.id,
         reason,
@@ -1504,9 +1556,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       });
     }
 
-    setTokenIndex(runtimeState.tokenIndex ?? TOKEN_START_TILE_INDEX);
-    setSpinTokens(runtimeState.spinTokens ?? 0);
-    setDicePool(runtimeState.dicePool ?? ISLAND_RUN_DEFAULT_STARTING_DICE);
+    // C1: dicePool, tokenIndex, and spinTokens are now derived from the
+    // authoritative store (`useIslandRunState`). The store is hydrated by
+    // `hydrateIslandRunState` inside the main hydration handler; these
+    // mirror-setters are no longer needed.
+    // (Removed: setTokenIndex, setSpinTokens, setDicePool)
 
     // M16B: Restore shard state from runtime state on hydration
     const hydratedShards = runtimeState.islandShards ?? 0;
@@ -1944,6 +1998,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           hydrationResult.state.runtimeVersion > localSnapshotBeforeHydration.runtimeVersion
         ) {
           setRuntimeState(hydrationResult.state);
+          // C1: sync the store mirror so dicePool/tokenIndex/spinTokens reflect hydrated values.
+          refreshIslandRunStateFromLocal(session);
         }
 
         logIslandRunEntryDebug('island_run_runtime_hydration_result', {
@@ -2062,6 +2118,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const hydrationResult = await hydrateIslandRunRuntimeStateWithSource({ session, client, forceRemote: true });
       setRuntimeHydrationSource(hydrationResult.source);
       setRuntimeState(hydrationResult.state);
+      // C1: sync the store mirror so dicePool/tokenIndex/spinTokens reflect hydrated values.
+      refreshIslandRunStateFromLocal(session);
 
       if (hydrationResult.source === 'table') {
         setLandingText('Island Run synced successfully. You can continue playing.');
@@ -2284,47 +2342,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }));
   }, [client, completedStops, hasHydratedRuntimeState, islandNumber, runtimeState.completedStopsByIsland, session]);
 
-  useEffect(() => {
-    if (!hasHydratedRuntimeState) return;
-    // Guard: Skip until the initial hydration sync effect has applied server values
-    // to local state. This prevents the write amplification loop where this effect
-    // sees stale local state (e.g., dicePool=0 from useState default) before the
-    // hydration effect applies the correct value (e.g., dicePool=30 from server).
-    if (!hasCompletedInitialHydrationSyncRef.current) return;
-
-    const nextPatch = {
-      tokenIndex,
-      spinTokens,
-      dicePool,
-    };
-
-    if (
-      runtimeState.tokenIndex === nextPatch.tokenIndex
-      && runtimeState.spinTokens === nextPatch.spinTokens
-      && runtimeState.dicePool === nextPatch.dicePool
-    ) {
-      return;
-    }
-
-    // Use the freshest localStorage record as the base rather than
-    // `runtimeStateRef.current`. The roll service (`executeIslandRunRollAction`)
-    // writes directly to localStorage synchronously, which means
-    // `runtimeStateRef.current.runtimeVersion` can be an older value than what
-    // the store already has. Spreading the ref would race the roll service's
-    // commit and force a conflict-recovery merge on every reward, which is the
-    // root cause of the reported dice-count oscillation and token-jump-back.
-    const baseRecord = readIslandRunGameStateRecord(session);
-    const nextRuntimeState = {
-      ...baseRecord,
-      ...nextPatch,
-    };
-    void writeIslandRunGameStateRecord({
-      session,
-      client,
-      record: nextRuntimeState,
-    });
-    setRuntimeState((current) => ({ ...current, ...nextPatch }));
-  }, [client, dicePool, hasHydratedRuntimeState, runtimeState.dicePool, runtimeState.spinTokens, runtimeState.tokenIndex, session, spinTokens, tokenIndex]);
+  // ── C1: dicePool/tokenIndex/spinTokens persist effect REMOVED ────────────
+  // The old useEffect at this location watched the three mirrors and called
+  // `writeIslandRunGameStateRecord` to sync them back to localStorage. This
+  // was the #1 drift vector: the roll service committed to localStorage
+  // FIRST, then this effect fired with stale React state and overwrote the
+  // roll's authoritative values. Now that these fields are store-derived
+  // (via `useIslandRunState`), every mutation flows through
+  // `commitIslandRunState` or a dedicated action (applyRollResult,
+  // applyTokenHopRewards), and the store is the single source of truth.
+  // Unmigrated paths use shim setters that commit through the store.
 
   // M19A: persist diamonds to runtime state (cross-device)
   useEffect(() => {
@@ -3511,32 +3538,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       totalStickersGranted += payout.stickersGranted;
     }
 
-    if (totalMinigameTokens > 0) {
-      setSpinTokens((current) => current + totalMinigameTokens);
-    }
-    if (totalDice > 0) {
-      setDicePool((current) => current + totalDice);
-    }
-
     applyContractV2RewardBarRuntimeState(chainResult.state);
-    const nextSpinTokens = runtimeStateRef.current.spinTokens + totalMinigameTokens;
-    const nextDicePool = runtimeStateRef.current.dicePool + totalDice;
-    const nextEssence = runtimeStateRef.current.essence + totalEssence;
-    void persistIslandRunRuntimeStatePatch({
+
+    // C1: Route reward-bar claim deltas through the store action. This
+    // replaces the old setSpinTokens + setDicePool + persistIslandRunRuntimeStatePatch
+    // + setRuntimeState quartet that raced with the roll service.
+    const hopRecord = applyTokenHopRewards({
       session,
       client,
-      patch: {
-        spinTokens: nextSpinTokens,
-        dicePool: nextDicePool,
-        essence: nextEssence,
+      deltas: {
+        spinTokens: totalMinigameTokens,
+        dicePool: totalDice,
+        essence: totalEssence,
       },
+      triggerSource: 'reward_bar_claim',
     });
-    setRuntimeState((current) => ({
-      ...current,
-      spinTokens: nextSpinTokens,
-      dicePool: nextDicePool,
-      essence: nextEssence,
-    }));
+    setRuntimeState(hopRecord);
 
     // Trigger burst animation + cascade display
     setRewardBarBurstAnimating(true);
@@ -3704,18 +3721,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     await new Promise<void>((resolve) => {
       hopSequenceResolverRef.current = resolve;
     });
-    setTokenIndex(currentIndex);
 
-    // Sync local React state to match what the roll action already persisted.
-    // Use functional updaters (never a closed-over `dicePool` subtract) so any
-    // reward-bar payout, regen tick, or encounter reward that landed mid-animation
-    // is preserved rather than clobbered by a stale pre-roll snapshot.
-    setDicePool((current) => Math.max(0, current - diceCostApplied));
-    setRuntimeState((current) => ({
-      ...current,
-      tokenIndex: currentIndex,
-      dicePool: Math.max(0, (current.dicePool ?? 0) - diceCostApplied),
-    }));
+    // C1: Sync the store mirror from localStorage (the roll service already
+    // committed the authoritative tokenIndex + dicePool there). This replaces
+    // the old setTokenIndex / setDicePool / setRuntimeState sequence and
+    // eliminates the drift window the persist effect used to create.
+    const freshRecord = applyRollResult({ session });
+    setRuntimeState(freshRecord);
 
     // Stops are side-quest structures — the player piece never lands on a stop.
     // Encounter tiles open their challenge modal; every other tile funnels through
@@ -7747,18 +7759,20 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 onClick={() => {
                   // Mock mini-game play: spend 3 tokens, award random reward
                   const reward = Math.random();
-                  setSpinTokens((c) => Math.max(0, c - 3));
-                  setRuntimeState((c) => ({ ...c, spinTokens: Math.max(0, c.spinTokens - 3) }));
+                  // C1: Route minigame currency deltas through the store action.
                   if (reward < 0.4) {
                     const dice = 3 + Math.floor(Math.random() * 8);
-                    setDicePool((c) => c + dice);
-                    setRuntimeState((c) => ({ ...c, dicePool: c.dicePool + dice }));
+                    const record = applyTokenHopRewards({ session, client, deltas: { spinTokens: -3, dicePool: dice }, triggerSource: 'minigame_dice' });
+                    setRuntimeState(record);
                     setLandingText(`🎮 Mini-game: Won +${dice} 🎲!`);
                   } else if (reward < 0.7) {
                     const ess = 5 + Math.floor(Math.random() * 10);
-                    setRuntimeState((c) => ({ ...c, essence: c.essence + ess }));
+                    const record = applyTokenHopRewards({ session, client, deltas: { spinTokens: -3, essence: ess }, triggerSource: 'minigame_essence' });
+                    setRuntimeState(record);
                     setLandingText(`🎮 Mini-game: Won +${ess} 🟣 essence!`);
                   } else {
+                    const record = applyTokenHopRewards({ session, client, deltas: { spinTokens: -3 }, triggerSource: 'minigame_loss' });
+                    setRuntimeState(record);
                     setLandingText('🎮 Mini-game: Better luck next time!');
                   }
                   playIslandRunSound('minigame_complete');

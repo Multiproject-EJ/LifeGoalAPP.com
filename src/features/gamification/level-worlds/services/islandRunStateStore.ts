@@ -214,6 +214,40 @@ export function resetIslandRunStateSnapshot(
   publish(getSlot(session), record);
 }
 
+// ── mirror sync helpers (C1) ────────────────────────────────────────────────
+
+/**
+ * Reads the current localStorage record for the session's user and
+ * publishes it as the in-memory mirror. Subscribers are notified if the
+ * record differs from the current snapshot.
+ *
+ * **No remote write is performed.** This is designed for use after an
+ * external writer (e.g. the roll-action service) has already committed to
+ * localStorage — the mirror just needs to catch up.
+ */
+export function refreshIslandRunStateFromLocal(session: Session): void {
+  const slot = getSlot(session);
+  const fresh = readIslandRunGameStateRecord(session);
+  publish(slot, fresh);
+}
+
+/**
+ * Applies a shallow patch to the in-memory mirror and publishes the
+ * result. **No persistence (localStorage / Supabase) is performed.**
+ *
+ * Intended for shim setters during the Stage-C migration: the caller
+ * updates the store mirror immediately so `useSyncExternalStore` triggers
+ * a re-render, and an existing `persistIslandRunRuntimeStatePatch` call at
+ * the same call-site handles durable storage.
+ */
+export function patchIslandRunStateSnapshot(
+  session: Session,
+  patch: Partial<IslandRunGameStateRecord>,
+): void {
+  const slot = getSlot(session);
+  publish(slot, { ...slot.snapshot, ...patch });
+}
+
 // ── test hooks ───────────────────────────────────────────────────────────────
 
 /**
