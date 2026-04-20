@@ -305,7 +305,6 @@ export function BoardStage(props: BoardStageProps) {
     ) {
       lastHopSequenceRef.current = pendingHopSequence;
       hopSequenceActiveRef.current = true;
-
       const tokenX = tokenAnim.animState.x || boardSize.width / 2;
       const tokenY = tokenAnim.animState.y || boardSize.height / 2;
 
@@ -326,9 +325,18 @@ export function BoardStage(props: BoardStageProps) {
 
         void tokenAnim.animateHops(anchors, pendingHopSequence, hopDurations).then(() => {
           hopSequenceActiveRef.current = false;
-          lastHopSequenceRef.current = null;
-          // Update prevTokenIndexRef to the final tile so subsequent single-step
-          // changes don't replay the sequence.
+          // NOTE: Do NOT reset `lastHopSequenceRef.current = null` here.
+          // Keeping the just-completed sequence reference means that if this
+          // effect re-runs before the parent has cleared `pendingHopSequence`
+          // (e.g. an unrelated re-render between `.then()` and the parent
+          // committing the post-hop state), the
+          // `pendingHopSequence !== lastHopSequenceRef.current` guard will
+          // be false and we won't replay the animation. The next real roll
+          // will pass a fresh array reference, which differs from this one
+          // and re-triggers the animation as expected.
+          //
+          // Update prevTokenIndexRef to the final tile so subsequent
+          // single-step changes don't replay the sequence.
           prevTokenIndexRef.current = pendingHopSequence[pendingHopSequence.length - 1] ?? tokenIndex;
           onHopSequenceComplete?.();
         });

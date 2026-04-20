@@ -3696,6 +3696,26 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
+    // A previous roll's hop animation may still be playing (we clear
+    // `isRolling` before awaiting the hop sequence so the dice tray UI
+    // can settle). Re-entering `handleRoll` while the pawn is mid-hop
+    // would overwrite `hopSequenceResolverRef.current` and orphan the
+    // first roll's resolver — leaving its `await` hanging forever and
+    // freezing subsequent rolls (the previous roll's `applyRollResult`
+    // and `setPendingHopSequence(null)` cleanup never runs). Block
+    // re-entry until the hop animation finishes.
+    if (isAnimatingRollRef.current) {
+      if (isIsland120StartupDiagnosticActive) {
+        logIslandRunEntryDebug('island120_roll_interaction', {
+          userId: session.user.id,
+          action: 'blocked',
+          blockReason: 'hop_animation_in_flight',
+          ...rollDecisionFlags,
+        });
+      }
+      return;
+    }
+
     if (dicePool < effectiveDiceCost) {
       if (isIsland120StartupDiagnosticActive) {
         logIslandRunEntryDebug('island120_roll_interaction', {
@@ -3803,8 +3823,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // committed the authoritative tokenIndex + dicePool there). This replaces
     // the old setTokenIndex / setDicePool / setRuntimeState sequence and
     // eliminates the drift window the persist effect used to create.
+    //
+    // IMPORTANT: do this BEFORE clearing `pendingHopSequence` below. If we
+    // cleared the hop sequence first, BoardStage's effect would observe
+    // `pendingHopSequence === null` while `tokenIndex` was still the
+    // pre-roll value, fall through to the single-step fallback, and
+    // animate the pawn BACK from the hop's last tile to the stale
+    // pre-roll tile (the "jumps tiles, then jumps back, then redoes it"
+    // bug). Updating runtime state first guarantees `tokenIndex` already
+    // matches the hop's final index when the clear lands.
     const freshRecord = applyRollResult({ session });
     setRuntimeState(freshRecord);
+
+    // Now safe to clear the hop sequence — the BoardStage's
+    // `onHopSequenceComplete` no longer does this for us (see the
+    // comment above for why). The `isAnimatingRollRef` flag was already
+    // cleared by `onHopSequenceComplete`.
+    setPendingHopSequence(null);
 
     // Stops are side-quest structures — the player piece never lands on a stop.
     // Encounter tiles open their challenge modal; every other tile funnels through
@@ -7001,9 +7036,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           }}
           pendingHopSequence={pendingHopSequence}
           onHopSequenceComplete={() => {
-            setPendingHopSequence(null);
             // Release the animation guard so reconcile/island-travel writers
-            // can resume updating `tokenIndex`.
+            // can resume updating `tokenIndex`. NOTE: we deliberately do
+            // NOT call `setPendingHopSequence(null)` here. Clearing the hop
+            // sequence before `handleRoll`'s `await` resumes (and commits
+            // the post-roll runtime state) would let BoardStage's effect
+            // observe a null `pendingHopSequence` with a still-stale
+            // `tokenIndex`, causing it to animate the pawn BACK to the
+            // pre-roll tile via the single-step fallback. `handleRoll`
+            // now owns clearing the hop sequence after it has updated
+            // the runtime state.
             isAnimatingRollRef.current = false;
             hopSequenceResolverRef.current?.();
             hopSequenceResolverRef.current = null;

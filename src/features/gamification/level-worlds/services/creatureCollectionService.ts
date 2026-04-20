@@ -239,3 +239,23 @@ export function saveActiveCompanionId(userId: string, creatureId: string | null)
     // ignore storage failures for now
   }
 }
+
+/**
+ * Clears the persisted creature collection AND active companion for the
+ * given user. Used by {@link resetIslandRunProgress} so a fresh-start run
+ * doesn't carry over animals collected on later islands.
+ *
+ * The runtime-state record's own `creatureCollection` field is reset
+ * separately by `buildFreshIslandRunRecord`; this function clears the
+ * parallel localStorage source-of-truth that the sanctuary UI reads from
+ * (`island_run_creature_collection_${userId}`).
+ */
+export function clearCreatureCollectionForUser(userId: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(getStorageKey(userId));
+    window.localStorage.removeItem(getActiveCompanionStorageKey(userId));
+  } catch {
+    // ignore storage failures for now
+  }
+}

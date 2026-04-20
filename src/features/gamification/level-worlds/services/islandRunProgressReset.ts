@@ -7,6 +7,11 @@
  * - Currencies → starting dice (30), 0 essence, 3 diamonds, 0 shards
  * - Stops, boss, reward bar, eggs, creatures → default/empty
  * - Onboarding flags (firstRunClaimed, storyPrologueSeen) → false
+ * - Persisted creature collection + active companion (localStorage:
+ *   `island_run_creature_collection_*`, `island_run_active_companion_*`)
+ * - Persisted creature-treat inventory (localStorage:
+ *   `island_run_creature_treat_inventory_*`) — kept in sync with the
+ *   runtime record's reset `creatureTreatInventory` defaults.
  *
  * **What is preserved (user preferences):**
  * - audioEnabled (player's sound preference)
@@ -25,6 +30,8 @@ import {
   writeIslandRunGameStateRecord,
 } from './islandRunGameStateStore';
 import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
+import { clearCreatureCollectionForUser } from './creatureCollectionService';
+import { clearCreatureTreatInventoryForUser } from './creatureTreatInventoryService';
 
 /**
  * Builds a fresh Island Run game state record, preserving only user
@@ -140,6 +147,13 @@ export async function resetIslandRunProgress(options: {
     audioEnabled: current.audioEnabled,
     onboardingDisplayNameLoopCompleted: current.onboardingDisplayNameLoopCompleted,
   });
+
+  // Clear creature-related localStorage that lives outside the runtime
+  // record (the sanctuary UI reads animals from these keys directly).
+  // Without this, animals collected on later islands would persist into
+  // the fresh-start run on island 1.
+  clearCreatureCollectionForUser(session.user.id);
+  clearCreatureTreatInventoryForUser(session.user.id);
 
   return writeIslandRunGameStateRecord({
     session,
