@@ -140,6 +140,7 @@ import {
   shouldAutoOpenIslandStopOnLoad,
 } from '../services/islandRunStopCompletion';
 import { executeIslandRunRollAction } from '../services/islandRunRollAction';
+import { executeIslandRunTileRewardAction } from '../services/islandRunTileRewardAction';
 import {
   applyEssenceDrift,
   awardIslandRunContractV2Essence,
@@ -3857,6 +3858,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const essenceDelta = rawEssence * mult;
 
     const multLabel = mult > 1 ? ` (x${mult})` : '';
+    // Pre-compute the displayed penalty optimistically from the current ref so
+    // the landing text fires in the same React tick as the landing animation
+    // (matches pre-P1-9 UX). The authoritative clamp happens inside the
+    // serialised tile-reward action below; if the wallet is actually shorter
+    // than the ref suggests, the text slightly over-reports — rare enough in
+    // practice that we accept the trade-off in exchange for synchronous UX.
     switch (tileType) {
       case 'currency':
         setLandingText(`💰 Currency tile! +${essenceDelta} essence${multLabel}`);
@@ -3867,9 +3874,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       case 'hazard': {
         const penalty = Math.abs(essenceDelta);
         if (penalty > 0) {
-          const actuallyLost = deductContractV2Essence(penalty, `tile_hazard`);
-          if (actuallyLost > 0) {
-            setLandingText(`☠️ Hazard! −${actuallyLost} essence${multLabel}`);
+          const walletSnapshot = Math.max(0, Math.floor(runtimeStateRef.current.essence));
+          const expectedLoss = Math.min(walletSnapshot, penalty);
+          if (expectedLoss > 0) {
+            setLandingText(`☠️ Hazard! −${expectedLoss} essence${multLabel}`);
           } else {
             // Wallet empty — no essence to take.
             setLandingText(`☠️ Hazard — nothing to lose (empty wallet)${multLabel}`);
@@ -3887,11 +3895,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         break;
     }
 
-    // Positive tiles award essence. Hazards already called deductContractV2Essence above.
-    if (essenceDelta > 0 && tileType !== 'hazard') {
-      awardContractV2Essence(essenceDelta, `tile_${tileType}`);
-    }
-
     if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
       // Trigger flying feed particle animation for feeding tiles
       const isFeedingTile = tileType === 'chest' || tileType === 'currency' || tileType === 'micro';
@@ -3899,34 +3902,87 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         setFeedParticleActive(true);
         setTimeout(() => setFeedParticleActive(false), 600);
       }
+    }
 
-      const nextRewardBarState = applyIslandRunContractV2RewardBarProgress({
-        state: {
-          rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
-          rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
-          rewardBarClaimCountInEvent: runtimeStateRef.current.rewardBarClaimCountInEvent,
-          rewardBarEscalationTier: runtimeStateRef.current.rewardBarEscalationTier,
-          rewardBarLastClaimAtMs: runtimeStateRef.current.rewardBarLastClaimAtMs,
-          rewardBarBoundEventId: runtimeStateRef.current.rewardBarBoundEventId,
-          rewardBarLadderId: runtimeStateRef.current.rewardBarLadderId,
-          activeTimedEvent: runtimeStateRef.current.activeTimedEvent,
-          activeTimedEventProgress: runtimeStateRef.current.activeTimedEventProgress,
-          stickerProgress: runtimeStateRef.current.stickerProgress,
-          stickerInventory: runtimeStateRef.current.stickerInventory,
-        },
-        source: { kind: 'tile', tileType },
-        nowMs: Date.now(),
-        multiplier: mult,
-      });
-      applyContractV2RewardBarRuntimeState(nextRewardBarState);
+    // P1-9: route the whole landing effect (essence award/deduct + reward-bar
+    // progress) through the serialised tile-reward action so the commit lands
+    // as ONE patch under the shared action mutex. Previously the two halves
+    // were issued as independent `persistIslandRunRuntimeStatePatch` calls in
+    // the same React tick — each hydrated off the same pre-landing snapshot
+    // and wrote a full record, so the second write silently overwrote the
+    // first's fields. The mutex also serialises this commit with any in-
+    // flight roll, preventing dicePool / runtimeVersion oscillation.
+    const tileRewardPromise = executeIslandRunTileRewardAction({
+      session,
+      client,
+      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+      essenceDelta: tileType === 'hazard' ? -Math.abs(essenceDelta) : essenceDelta,
+      rewardBarProgress: ISLAND_RUN_CONTRACT_V2_ENABLED
+        ? { source: { kind: 'tile', tileType }, multiplier: mult, nowMs: Date.now() }
+        : null,
+    });
+
+    void tileRewardPromise.then((result) => {
+      if (result.status !== 'ok') return;
+      // Mirror the authoritative post-landing values into React state + the
+      // ref so downstream render-reads observe the committed deltas. Using a
+      // functional updater keeps this stable across concurrent setRuntimeState
+      // calls (e.g. roll-completion mirror firing in the same microtask).
+      setRuntimeState((current) => ({
+        ...current,
+        essence: result.essence,
+        essenceLifetimeEarned: result.essenceLifetimeEarned,
+        essenceLifetimeSpent: result.essenceLifetimeSpent,
+        ...(result.rewardBarSlice
+          ? {
+              rewardBarProgress: result.rewardBarSlice.rewardBarProgress,
+              rewardBarThreshold: result.rewardBarSlice.rewardBarThreshold,
+              rewardBarClaimCountInEvent: result.rewardBarSlice.rewardBarClaimCountInEvent,
+              rewardBarEscalationTier: result.rewardBarSlice.rewardBarEscalationTier,
+              rewardBarLastClaimAtMs: result.rewardBarSlice.rewardBarLastClaimAtMs,
+              rewardBarBoundEventId: result.rewardBarSlice.rewardBarBoundEventId,
+              rewardBarLadderId: result.rewardBarSlice.rewardBarLadderId,
+              activeTimedEvent: result.rewardBarSlice.activeTimedEvent,
+              activeTimedEventProgress: result.rewardBarSlice.activeTimedEventProgress,
+              stickerProgress: result.rewardBarSlice.stickerProgress,
+              stickerInventory: result.rewardBarSlice.stickerInventory,
+            }
+          : {}),
+      }));
+
+      // Telemetry — mirrors the events previously emitted by
+      // awardContractV2Essence / deductContractV2Essence.
+      if (result.actualEssenceDelta > 0) {
+        void recordTelemetryEvent({
+          userId: session.user.id,
+          eventType: 'economy_earn',
+          metadata: {
+            stage: 'island_run_contract_v2_essence_earn',
+            island_number: islandNumber,
+            source: `tile_${tileType}`,
+            amount: result.actualEssenceDelta,
+          },
+        });
+      } else if (result.actualEssenceDelta < 0) {
+        void recordTelemetryEvent({
+          userId: session.user.id,
+          eventType: 'economy_spend',
+          metadata: {
+            stage: 'island_run_contract_v2_essence_deduct',
+            island_number: islandNumber,
+            source: 'tile_hazard',
+            amount: -result.actualEssenceDelta,
+          },
+        });
+      }
 
       // Auto-claim: if bar is now full, trigger the claim cascade automatically
-      // with a short delay for the fill animation to play first
-      if (nextRewardBarState.rewardBarProgress >= nextRewardBarState.rewardBarThreshold) {
+      // with a short delay for the fill animation to play first.
+      if (result.rewardBarFull) {
         playIslandRunSound('reward_bar_fill');
         setTimeout(() => handleContractV2RewardBarClaim(), 500);
       }
-    }
+    });
   };
 
   /** Mark v2 stop 0 (hatchery) objective as complete when the egg is set.

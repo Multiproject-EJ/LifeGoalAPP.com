@@ -32,12 +32,16 @@
  *  - Roll result and all resulting state transitions remain solely in the PWA.
  *  - **There is exactly one dice deduction path** — this service. The board component
  *    syncs its local React state to match but does NOT write dice changes to the store.
- *  - **Concurrency.** This module owns a per-user async mutex (`rollActionMutexes`).
- *    Two rolls fired in parallel for the same session serialise through that mutex,
- *    so the second roll's read always observes the first roll's commit. This is
- *    defence-in-depth on top of the renderer's busy flag — without it, two writes
- *    from the same user on the same `runtimeVersion` could race and the Supabase
- *    row could drift from the client's truth.
+ *  - **Concurrency.** This module delegates serialisation to the shared
+ *    Island Run action mutex (`withIslandRunActionLock` from
+ *    `islandRunActionMutex.ts`). Two rolls fired in parallel for the same
+ *    session serialise through that mutex, so the second roll's read always
+ *    observes the first roll's commit. The mutex is shared with every other
+ *    gameplay action (tile reward, encounter, stop ticket, …) so a tile-
+ *    reward write can't interleave with an in-flight roll either. This is
+ *    defence-in-depth on top of the renderer's busy flag — without it, two
+ *    writes from the same user on the same `runtimeVersion` could race and
+ *    the Supabase row could drift from the client's truth.
  *  - **Synchronous persist.** The remote write is awaited inside the mutex before
  *    the service returns. `writeIslandRunGameStateRecord` already updates
  *    localStorage synchronously at the top of its body, so the client remains
@@ -60,6 +64,10 @@ import {
 } from './islandRunGameStateStore';
 import { resolveWrappedTokenIndex } from './islandBoardTopology';
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
+import {
+  __resetIslandRunActionMutexesForTests,
+  withIslandRunActionLock,
+} from './islandRunActionMutex';
 
 // ── roll constants (must match IslandRunBoardPrototype) ───────────────────────
 
@@ -120,18 +128,17 @@ export interface IslandRunRollActionResult {
 
 // ── per-user async mutex (defence-in-depth against concurrent rolls) ──────────
 //
-// Two rolls fired in parallel for the same session MUST serialise so the second
-// roll's `readIslandRunGameStateRecord` sees the first roll's commit. Without
-// this, both rolls would read the same pre-roll state, both write
-// `runtimeVersion + 1`, and one of the two remote writes would silently drop
-// the other's delta. The renderer already guards against rapid re-entry with a
-// busy flag but this mutex protects against React strict-mode double-invocation,
-// effect-loop bugs, and any future call-site that forgets the renderer guard.
-const rollActionMutexes = new Map<string, Promise<unknown>>();
+// As of P1-9 (session 11), the roll mutex is shared with every other Island
+// Run action via `islandRunActionMutex.ts`. This lets tile-reward / encounter /
+// stop-ticket commits chain through the same queue so none of them can
+// interleave with an in-flight roll commit and silently clobber each other's
+// fields at the storage layer.
 
-/** @internal Test hook — resets the mutex map so concurrent-case tests start clean. */
+/** @internal Test hook — resets the shared action-mutex map. Kept as a
+ *  pass-through so the existing `islandRunRollAction.test.ts` reset calls
+ *  continue to work without churn. */
 export function __resetIslandRunRollActionMutexesForTests(): void {
-  rollActionMutexes.clear();
+  __resetIslandRunActionMutexesForTests();
 }
 
 // ── action ────────────────────────────────────────────────────────────────────
@@ -139,10 +146,10 @@ export function __resetIslandRunRollActionMutexesForTests(): void {
 /**
  * Executes a single roll on behalf of the player via the PWA gameplay authority.
  *
- * Concurrent calls for the same `session.user.id` are serialised through an
- * in-module async mutex (see `rollActionMutexes`). Callers may additionally
- * guard with a UI busy flag to avoid queueing up intents; the mutex guarantees
- * state correctness regardless.
+ * Concurrent calls for the same `session.user.id` are serialised through the
+ * shared Island Run action mutex (`withIslandRunActionLock`). Callers may
+ * additionally guard with a UI busy flag to avoid queueing up intents; the
+ * mutex guarantees state correctness regardless.
  *
  * @param options.session - Active Supabase session (used for state key + write auth).
  * @param options.client  - Supabase client for remote persistence; null = local/demo mode.
@@ -159,28 +166,7 @@ export function executeIslandRunRollAction(options: {
    */
   diceMultiplier?: number;
 }): Promise<IslandRunRollActionResult> {
-  const userId = options.session.user.id;
-  const previous = rollActionMutexes.get(userId) ?? Promise.resolve();
-  // Chain the next roll after the prior one's persist completes. Swallow the
-  // predecessor's rejection (we don't want a prior failure to abort the current
-  // attempt) — but keep the chain going so later callers still serialise.
-  const next: Promise<IslandRunRollActionResult> = previous
-    .catch(() => undefined)
-    .then(() => performRollAction(options));
-  // Record this call as the new mutex tail; swallow rejections so a failed roll
-  // doesn't leave an un-awaitable rejected promise at the head of the queue.
-  const tail = next.catch(() => undefined);
-  rollActionMutexes.set(userId, tail);
-  // Evict the entry once this tail resolves IFF no later call has already
-  // appended itself (i.e. we're still the head of the chain for this user).
-  // Prevents the Map from growing unbounded across long-lived sessions / many
-  // distinct user ids (test runs, multi-account devices, etc.).
-  void tail.finally(() => {
-    if (rollActionMutexes.get(userId) === tail) {
-      rollActionMutexes.delete(userId);
-    }
-  });
-  return next;
+  return withIslandRunActionLock(options.session.user.id, () => performRollAction(options));
 }
 
 async function performRollAction(options: {

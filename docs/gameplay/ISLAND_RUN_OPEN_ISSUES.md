@@ -1,7 +1,7 @@
 # Island Run — Open Issues & Feature Backlog
 
 Status: Living document
-Last updated: 2026-04-20 (session 10 — P1-13 + P1-3 persistence layer closed; bonus-tile ledger persisted via migration 0230)
+Last updated: 2026-04-20 (session 11 — P1-9 closed; tile-reward commits now serialised through shared per-user action mutex)
 Owner: Gameplay System
 
 This document tracks every unresolved issue, bug, inconsistency, or scoped
@@ -203,25 +203,32 @@ longer a dual source of truth.
 
 ---
 
-### P1-9. Fold tile-reward writes into a serialised service
+### P1-9. Fold tile-reward writes into a serialised service — ✅ Closed (session 11)
 **Files:**
-- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
-  (`awardContractV2Essence`, `deductContractV2Essence`, `resolveTileLanding`,
-  reward-bar apply path)
-- Proposed new `src/features/gamification/level-worlds/services/islandRunTileRewardAction.ts`
+- `src/features/gamification/level-worlds/services/islandRunActionMutex.ts` (new)
+- `src/features/gamification/level-worlds/services/islandRunTileRewardAction.ts` (new)
+- `src/features/gamification/level-worlds/services/islandRunRollAction.ts` (refactored to share the mutex)
+- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx` (`resolveTileLanding` rewired)
+- `src/features/gamification/level-worlds/services/__tests__/islandRunTileRewardAction.test.ts` (6 new cases)
 
-**Why.** Session 5 patched the most visible clobber by switching essence
-writes from full-record `writeIslandRunGameStateRecord` spreads to
-`persistIslandRunRuntimeStatePatch` so disjoint fields no longer overwrite
-each other. That closes the cross-field clobber but still performs two
-independent async read-modify-writes when a single landing awards essence
-AND reward-bar progress. A proper fix is a dedicated
-`executeIslandRunTileRewardAction` service that takes the whole landing
-(essence delta, reward-bar progress delta, optional sticker / bonus-tile
-effects) and runs it under the same per-user mutex as `executeIslandRunRollAction`.
-Acceptance: all landing-effect writes chain through the mutex; a
-`tile-reward-interleaves-with-roll` regression test exists mirroring the
-existing 5-parallel-rolls case.
+**Resolution.** Every tile landing previously fired TWO independent
+`persistIslandRunRuntimeStatePatch` calls in the same React tick — one for
+essence (via `awardContractV2Essence` / `deductContractV2Essence`) and one
+for reward-bar progress. Each patch did its own async read-modify-write and
+both hydrated the same pre-landing snapshot before writing a full record
+through the commit coordinator, so the later write silently overwrote the
+earlier write's delta. A tile reward fired in the same tick as a roll
+commit was subject to the same race. Session 11 consolidates both halves
+into `executeIslandRunTileRewardAction`, which hydrates once, computes the
+combined next state, and persists a **single** patch with every affected
+field. All gameplay actions (roll + tile-reward) now share the same
+per-user async mutex via `withIslandRunActionLock`, so a tile-reward
+commit can never interleave with an in-flight roll. The existing
+`awardContractV2Essence` / `deductContractV2Essence` helpers are retained
+for non-tile callers (story episode reward, stop ticket purchase, shop
+purchase) that don't pair essence with reward-bar progress and thus don't
+hit the two-write race. Regression test `islandRunTileRewardAction` fires
+a roll and a tile-reward in parallel and asserts both deltas survive.
 
 ---
 
