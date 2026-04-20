@@ -1,7 +1,7 @@
 # Stage C — Island Run State Architecture Migration
 
 **Written:** 2026-04-20 (end of session 8 / Stage A+B+E PR)
-**Status:** PENDING — foundation (Stages A, B, E) has landed; Stage C is the next work.
+**Status:** C1 LANDED — roll/dice/token movement migrated; foundation (A, B, E) merged.
 **Context file for new agent sessions.** Read this document before starting any Stage C work.
 Companion docs: `CANONICAL_GAMEPLAY_CONTRACT.md`, `ISLAND_RUN_OPEN_ISSUES.md`, `NEXT_TODO_PR_LIST.md`.
 
@@ -82,7 +82,9 @@ All chunks create actions in a new file `services/islandRunStateActions.ts` (cre
 
 ---
 
-### C1 — Roll + dice + token movement ⬅ DO THIS FIRST
+### C1 — Roll + dice + token movement ✅ LANDED
+
+**Landed:** 2026-04-20. The persist effect at line 2290 is removed. `dicePool`, `tokenIndex`, and `spinTokens` are now store-derived via `useIslandRunState`. Shim setters (`setDicePool`, `setTokenIndex`, `setSpinTokens`) are provided for backward compatibility with unmigrated C2–C6 paths — each shim commits through `commitIslandRunState` so no persist effect is needed. Actions `applyRollResult` and `applyTokenHopRewards` live in `islandRunStateActions.ts`. 9 new integration tests pass (201 total).
 
 **Why first:** The persist effect at line 2290 is the single most dangerous path alive. It re-writes `dicePool` / `tokenIndex` / `shards` / `essence` / `shields` in a `useEffect`, racing the roll service's own `writeIslandRunGameStateRecord` commit. This causes the session-7 dice oscillation and token rollback bugs. C1 eliminates the race at source.
 
