@@ -79,12 +79,13 @@ export function applyTokenHopRewards(options: {
 }): IslandRunGameStateRecord {
   const { session, client, deltas, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
+  const clamp0 = (v: number) => Math.max(0, v);
   const next: IslandRunGameStateRecord = {
     ...current,
     runtimeVersion: current.runtimeVersion + 1,
-    spinTokens: Math.max(0, current.spinTokens + (deltas.spinTokens ?? 0)),
-    dicePool: Math.max(0, current.dicePool + (deltas.dicePool ?? 0)),
-    essence: Math.max(0, current.essence + (deltas.essence ?? 0)),
+    spinTokens: clamp0(current.spinTokens + (deltas.spinTokens ?? 0)),
+    dicePool: clamp0(current.dicePool + (deltas.dicePool ?? 0)),
+    essence: clamp0(current.essence + (deltas.essence ?? 0)),
   };
   // Synchronous mirror update + async persist (fire-and-forget).
   void commitIslandRunState({

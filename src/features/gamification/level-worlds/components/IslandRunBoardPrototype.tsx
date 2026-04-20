@@ -923,7 +923,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // (C2–C6 will remove these shims). The persist effect at ~2290 is deleted —
   // each shim commits through the store, and C1-specific paths (roll,
   // reward-bar, minigame) use dedicated action functions.
-  const { state: __storeState, commit: __commitStoreRecord } = useIslandRunState(session, client);
+  const { state: __storeState } = useIslandRunState(session, client);
   const dicePool = __storeState.dicePool;
   const tokenIndex = __storeState.tokenIndex;
 
