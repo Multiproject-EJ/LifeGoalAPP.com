@@ -58,7 +58,7 @@ import {
   patchIslandRunStateSnapshot,
   refreshIslandRunStateFromLocal,
 } from '../services/islandRunStateStore';
-import { applyRollResult, applyTokenHopRewards } from '../services/islandRunStateActions';
+import { applyEssenceAward, applyEssenceDeduct, applyEssenceDriftTick, applyRewardBarState, applyRollResult, applyTokenHopRewards } from '../services/islandRunStateActions';
 import {
   rollEggTierWeighted,
   getRandomHatchDelayMs,
@@ -142,12 +142,8 @@ import {
 import { executeIslandRunRollAction } from '../services/islandRunRollAction';
 import { executeIslandRunTileRewardAction } from '../services/islandRunTileRewardAction';
 import {
-  applyEssenceDrift,
-  awardIslandRunContractV2Essence,
-  deductIslandRunContractV2Essence,
   getEffectiveIslandNumber,
   getIslandTotalEssenceCost,
-  getRemainingIslandBuildCost,
   getStopUpgradeCost,
   initStopBuildStatesForIsland,
   isStopBuildFullyComplete,
@@ -2524,35 +2520,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // M16B/M16C: award shards from a given source, update local state, and persist.
   // shard_tier_index does NOT advance here — that happens on player claim (M16E).
   const awardContractV2Essence = useCallback((amount: number, source: string) => {
-    const result = awardIslandRunContractV2Essence({
-      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
-      essence: runtimeStateRef.current.essence,
-      essenceLifetimeEarned: runtimeStateRef.current.essenceLifetimeEarned,
-      amount,
-    });
-
-    if (result.earned < 1) return;
-
-    // Persist only the essence-related fields via persistIslandRunRuntimeStatePatch.
-    // Previously this path wrote a full-record spread (`{...runtimeStateRef.current,
-    // essence}`) through writeIslandRunGameStateRecord, which clobbered every
-    // other field with whatever snapshot the ref held at call time. When multiple
-    // in-flight updates resolved in the same React tick (e.g. tile landing +
-    // reward-bar auto-claim), the later writer overwrote the earlier one's
-    // deltas. The patch path does a read-modify-write at the storage layer so
-    // concurrent updates to disjoint fields no longer silently drop data.
-    void persistIslandRunRuntimeStatePatch({
+    // C2: route through the store action (applyEssenceAward). The action owns
+    // the read-modify-write on `essence` / `essenceLifetimeEarned` against the
+    // live store snapshot + the commit path; previously this was an inlined
+    // `persistIslandRunRuntimeStatePatch` that read `runtimeStateRef.current`
+    // and raced concurrent writers on disjoint fields.
+    const { record: next, earned } = applyEssenceAward({
       session,
       client,
-      patch: {
-        essence: result.essence,
-        essenceLifetimeEarned: result.essenceLifetimeEarned,
-      },
+      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+      amount,
+      triggerSource: `essence_award:${source}`,
     });
+    if (earned < 1) return;
     setRuntimeState((current) => ({
       ...current,
-      essence: result.essence,
-      essenceLifetimeEarned: result.essenceLifetimeEarned,
+      essence: next.essence,
+      essenceLifetimeEarned: next.essenceLifetimeEarned,
     }));
     void recordTelemetryEvent({
       userId: session.user.id,
@@ -2561,10 +2545,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         stage: 'island_run_contract_v2_essence_earn',
         island_number: islandNumber,
         source,
-        amount: result.earned,
+        amount: earned,
       },
     });
-  }, [client, islandNumber, session.user.id]);
+  }, [client, islandNumber, session]);
 
   /**
    * Withdraw essence from the wallet (hazard tile penalty, stop ticket purchase, …).
@@ -2572,29 +2556,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
    * deducted (may be less than requested if the wallet was short).
    */
   const deductContractV2Essence = useCallback((amount: number, source: string): number => {
-    const result = deductIslandRunContractV2Essence({
-      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
-      essence: runtimeStateRef.current.essence,
-      essenceLifetimeSpent: runtimeStateRef.current.essenceLifetimeSpent,
-      amount,
-    });
-    if (result.spent < 1) return 0;
-
-    // Patch-only persistence mirrors awardContractV2Essence — see the block
-    // comment there for why the previous full-record spread through
-    // writeIslandRunGameStateRecord was a cross-field clobber hazard.
-    void persistIslandRunRuntimeStatePatch({
+    // C2: route through the store action (applyEssenceDeduct). Same rationale
+    // as awardContractV2Essence — the action owns the read-modify-write on
+    // `essence` / `essenceLifetimeSpent` so concurrent writers on disjoint
+    // fields don't clobber each other.
+    const { record: next, spent } = applyEssenceDeduct({
       session,
       client,
-      patch: {
-        essence: result.essence,
-        essenceLifetimeSpent: result.essenceLifetimeSpent,
-      },
+      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+      amount,
+      triggerSource: `essence_deduct:${source}`,
     });
+    if (spent < 1) return 0;
     setRuntimeState((current) => ({
       ...current,
-      essence: result.essence,
-      essenceLifetimeSpent: result.essenceLifetimeSpent,
+      essence: next.essence,
+      essenceLifetimeSpent: next.essenceLifetimeSpent,
     }));
     void recordTelemetryEvent({
       userId: session.user.id,
@@ -2603,11 +2580,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         stage: 'island_run_contract_v2_essence_deduct',
         island_number: islandNumber,
         source,
-        amount: result.spent,
+        amount: spent,
       },
     });
-    return result.spent;
-  }, [client, islandNumber, session.user.id]);
+    return spent;
+  }, [client, islandNumber, session]);
 
   const applyContractV2RewardBarRuntimeState = useCallback((nextRewardBarState: {
     rewardBarProgress: number;
@@ -2622,22 +2599,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     stickerProgress: { fragments: number; guaranteedAt?: number; pityCounter?: number };
     stickerInventory: Record<string, number>;
   }) => {
-    void persistIslandRunRuntimeStatePatch({
+    // C2: route through the store action (applyRewardBarState). The reward-bar
+    // cascade is the highest-contention non-roll write (fires on every
+    // reward-earning tile landing + every claim), so routing it through the
+    // commit coordinator removes a class of overlap bugs where a tile
+    // landing's bar progress could race an auto-claim's bar reset.
+    applyRewardBarState({
       session,
       client,
-      patch: {
-        rewardBarProgress: nextRewardBarState.rewardBarProgress,
-        rewardBarThreshold: nextRewardBarState.rewardBarThreshold,
-        rewardBarClaimCountInEvent: nextRewardBarState.rewardBarClaimCountInEvent,
-        rewardBarEscalationTier: nextRewardBarState.rewardBarEscalationTier,
-        rewardBarLastClaimAtMs: nextRewardBarState.rewardBarLastClaimAtMs,
-        rewardBarBoundEventId: nextRewardBarState.rewardBarBoundEventId,
-        rewardBarLadderId: nextRewardBarState.rewardBarLadderId,
-        activeTimedEvent: nextRewardBarState.activeTimedEvent,
-        activeTimedEventProgress: nextRewardBarState.activeTimedEventProgress,
-        stickerProgress: nextRewardBarState.stickerProgress,
-        stickerInventory: nextRewardBarState.stickerInventory,
-      },
+      nextState: nextRewardBarState,
+      triggerSource: 'reward_bar_runtime_state',
     });
 
     setRuntimeState((current) => ({
@@ -2708,41 +2679,30 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const now = Date.now();
       const elapsed = now - lastDriftRef.ms;
       lastDriftRef.ms = now;
-      const currentEssence = runtimeStateRef.current.essence;
-      if (currentEssence <= 0) return;
 
-      // No drift once island is fully cleared — nothing left to spend essence on.
-      // Compute egg slot status from the live runtime ref to avoid stale closure issues.
-      const currentIslandEntry = runtimeStateRef.current.perIslandEggs?.[String(islandNumber)];
-      const currentEggResolved = currentIslandEntry?.status === 'collected'
-        || currentIslandEntry?.status === 'sold';
-      const islandComplete = isIslandRunFullyClearedV2({
-        stopStatesByIndex: runtimeStateRef.current.stopStatesByIndex,
-        stopBuildStateByIndex: runtimeStateRef.current.stopBuildStateByIndex,
-        hatcheryEggResolved: currentEggResolved,
-      });
-
-      const driftResult = applyEssenceDrift({
-        essence: currentEssence,
-        islandNumber: effectiveIslandNumber,
+      // C2: route through the store action (applyEssenceDriftTick). The action
+      // reads the live store snapshot for wallet + stop states + egg ledger,
+      // computes drift, and commits only when essence was actually lost. The
+      // previous inlined path read `runtimeStateRef.current` five times while
+      // interleaving `setRuntimeState` + `persistIslandRunRuntimeStatePatch`
+      // — that was a classic multi-writer race against roll / reward-bar.
+      const { record: next, driftLost } = applyEssenceDriftTick({
+        session,
+        client,
+        effectiveIslandNumber,
         elapsedMs: elapsed,
-        isIslandComplete: islandComplete,
-        remainingIslandCost: getRemainingIslandBuildCost({
-          effectiveIslandNumber,
-          stopBuildStateByIndex: runtimeStateRef.current.stopBuildStateByIndex,
-        }),
+        triggerSource: 'essence_drift_tick',
       });
 
-      if (driftResult.driftLost > 0) {
-        setRuntimeState((prev) => ({ ...prev, essence: driftResult.essence }));
+      if (driftLost > 0) {
+        setRuntimeState((prev) => ({
+          ...prev,
+          essence: next.essence,
+          lastEssenceDriftLost: next.lastEssenceDriftLost,
+        }));
         // Show a brief drift notice on screen
-        setDriftNotice(driftResult.driftLost);
+        setDriftNotice(driftLost);
         setTimeout(() => setDriftNotice(null), 2500);
-        void persistIslandRunRuntimeStatePatch({
-          session,
-          client,
-          patch: { essence: driftResult.essence, lastEssenceDriftLost: driftResult.driftLost },
-        });
       }
     }, DRIFT_INTERVAL_MS);
 

@@ -1,7 +1,7 @@
 # Stage C — Island Run State Architecture Migration
 
 **Written:** 2026-04-20 (end of session 8 / Stage A+B+E PR)
-**Status:** C1 LANDED — roll/dice/token movement migrated; foundation (A, B, E) merged.
+**Status:** C1 + C2 LANDED — roll/dice/token movement + essence-award/spend/reward-bar/drift migrated; foundation (A, B, E) merged.
 **Context file for new agent sessions.** Read this document before starting any Stage C work.
 Companion docs: `CANONICAL_GAMEPLAY_CONTRACT.md`, `ISLAND_RUN_OPEN_ISSUES.md`, `NEXT_TODO_PR_LIST.md`.
 
@@ -119,9 +119,32 @@ All chunks create actions in a new file `services/islandRunStateActions.ts` (cre
 
 ---
 
-### C2 — Tile rewards + encounter rewards + reward-bar + essence drift
+### C2 — Tile rewards + encounter rewards + reward-bar + essence drift ✅ LANDED (essence + reward-bar + drift slice)
+
+**Landed:** 2026-04-20 (session 11). The essence-award / essence-spend / reward-bar / essence-drift call-sites in `IslandRunBoardPrototype.tsx` now commit through store actions. New actions in `islandRunStateActions.ts`:
+
+- `applyEssenceAward({ session, client, islandRunContractV2Enabled, amount, triggerSource })` — replaces the inlined `persistIslandRunRuntimeStatePatch({ essence, essenceLifetimeEarned })` + `setRuntimeState` pair inside `awardContractV2Essence`. Returns `{ record, earned }`.
+- `applyEssenceDeduct({ session, client, islandRunContractV2Enabled, amount, triggerSource })` — replaces the equivalent pair inside `deductContractV2Essence`. Returns `{ record, spent }`.
+- `applyRewardBarState({ session, client, nextState, triggerSource })` — replaces the cascade write inside `applyContractV2RewardBarRuntimeState`. Commits the full reward-bar + timed-event + sticker snapshot in one store commit.
+- `applyEssenceDriftTick({ session, client, effectiveIslandNumber, elapsedMs, triggerSource })` — replaces the drift-interval `useEffect`'s five `runtimeStateRef.current` reads + `setRuntimeState` + `persistIslandRunRuntimeStatePatch`. Internally uses `getIslandRunStateSnapshot`, `isIslandRunFullyClearedV2`, `getRemainingIslandBuildCost`, and `applyEssenceDrift`. Returns `{ record, driftLost }`; commits only when essence was actually lost.
+
+Renderer side: the four call-sites now call the action, then call `setRuntimeState` with the returned next-field values for legacy-mirror compatibility (runtimeState itself is retired in C7/Stage D). No `persistIslandRunRuntimeStatePatch` calls remain in these four flows. The unused renderer imports of `awardIslandRunContractV2Essence`, `deductIslandRunContractV2Essence`, `applyEssenceDrift`, and `getRemainingIslandBuildCost` were removed.
+
+Coverage: 11 new `islandRunStateActions` cases (229 total). Tests cover the positive/negative/no-op paths for each action, the single-commit-per-reward invariant, and sequential award→deduct→reward-bar→award composition without dropped deltas. `tsc -b` clean.
+
+**Deferred to later chunks (still in C2 scope per the spec but landed separately):**
+- Creature-feed shard rewards at lines 8452/71/90/509/27 of the renderer — these are the five `persistIslandRunRuntimeStatePatch({ shards })` writes from sanctuary feeding. They fit more naturally with the shard-wallet action `awardShards` in **C5**, where they will land together.
+- `completedEncounterIndices` `useState` mirror removal — deferred to the C3 stop-progress chunk, since completed-encounter tracking shares plumbing with `completedStopsByIsland`.
+
+**Why first (historical note):** C1 and C2 close the two highest-contention race paths in the renderer. With these two chunks landed, the remaining mirrors (`completedEncounterIndices`, `activeStopId`, `islandNumber`, egg/market/companion, shards, boss/flags) are all lower-rate writes that no longer race the roll service.
 
 **Gameplay domain:** currency/chest/micro/hazard tile payouts, encounter resolution payout, reward-bar threshold cascade, essence award/spend helpers, drift tick.
+
+---
+
+### C2 — Remaining sub-items for a follow-up PR
+
+**Gameplay domain:** encounter-specific payouts + creature-feed shard awards.
 
 **Actions to create:**
 - `applyTileReward(store, { tileType, islandNumber })` — from tile handler helpers; writes `essence` / `shards` / `dicePool` deltas + reward-bar progress.

@@ -52,15 +52,21 @@ store and are read via the `useIslandRunState` hook.
   subscribe/unsubscribe, synchronous publish before remote resolve,
   hydrate-notifies-subscribers, in-flight unsubscribe safety.
 
-**Stage C — Migrate renderer action-by-action — ⏳ Pending follow-up PR(s).**
-The remaining domains (tile-reward, encounter, stop-completion, stop-ticket,
-egg, market, travel, boss, shard-claim, reward-bar, essence-drift, companion,
-onboarding) should be bundled into as few PRs as possible — prefer landing
-multiple domains together when they compile clean and the tests stay green.
-Each domain adds its action(s) to `islandRunStateActions.ts` and deletes the
-matching `setRuntimeState` / `persistIslandRunRuntimeStatePatch` /
-`writeIslandRunGameStateRecord` call-sites plus their per-field
-`useState`/`useEffect` pairs from `IslandRunBoardPrototype.tsx`.
+**Stage C — Migrate renderer action-by-action — 🟡 In progress (C1 + C2 landed).**
+C1 (roll/dice/token) landed session 8 (Apr 2026). C2 (essence-award /
+essence-spend / reward-bar cascade / essence-drift tick) landed session 11 —
+four new store actions in `islandRunStateActions.ts`
+(`applyEssenceAward`, `applyEssenceDeduct`, `applyRewardBarState`,
+`applyEssenceDriftTick`) replace the four inlined
+`persistIslandRunRuntimeStatePatch` + paired `setRuntimeState` blocks. 11
+new integration tests (229 total). Still pending across the remaining
+domains (encounter-specific payouts, stop-completion, stop-ticket, egg,
+market, travel, boss, shard-claim, companion, creature-feed shard awards,
+onboarding). Each remaining domain adds its action(s) to
+`islandRunStateActions.ts` and deletes the matching `setRuntimeState` /
+`persistIslandRunRuntimeStatePatch` / `writeIslandRunGameStateRecord`
+call-sites plus their per-field `useState` / `useEffect` pairs from
+`IslandRunBoardPrototype.tsx`.
 
 **Stage D — Retire legacy APIs — ⏳ Pending final cleanup PR.** Once Stage C
 is complete and a grep confirms zero call-sites, delete
