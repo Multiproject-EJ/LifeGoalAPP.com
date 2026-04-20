@@ -1,7 +1,7 @@
 # Island Run — Open Issues & Feature Backlog
 
 Status: Living document
-Last updated: 2026-04-20 (session 7 — cross-device sync & roll drift follow-up)
+Last updated: 2026-04-20 (session 8 — state architecture refactor stages A+B+E)
 Owner: Gameplay System
 
 This document tracks every unresolved issue, bug, inconsistency, or scoped
@@ -15,6 +15,58 @@ for traceability.
 ---
 
 ## P0 — Must-fix (correctness / trust)
+
+### P0-2. Single authoritative gameplay state (state architecture refactor) — 🟡 In progress (session 8)
+
+Session 7 landed tactical fixes for the cross-device / dice-oscillation /
+token-rollback bugs. Root cause diagnosis in session 8: Island Run has
+three co-equal state representations competing for truth — the low-level
+record store, the renderer's `runtimeState` React mirror, and ~130 per-field
+`useState` mirrors — with four write paths and three hydrate paths. Every
+gameplay mutation is a 3-legged write (useState + runtimeState + store)
+issued from the renderer with no ordering guarantee. All session-7 bugs are
+instances of the three legs disagreeing.
+
+**Target architecture (accepted session 8).** One authoritative in-memory
+record, one mutation path via actions → `commit`, one persistence path via
+the existing low-level writer. UI state (useState) is presentation-only:
+modals, animations, form inputs. Gameplay fields (`dicePool`, `tokenIndex`,
+`essence`, `islandNumber`, `completedStopsByIsland`, …) live **only** in the
+store and are read via the `useIslandRunState` hook.
+
+**Stage A — Unify the state type — ✅ Closed (session 8).**
+`IslandRunRuntimeState` is now a type alias of `IslandRunGameStateRecord`
+(they were structurally identical). Single source of truth for the shape.
+
+**Stage B — Subscribable store + React hook — ✅ Closed (session 8).**
+- New module: `islandRunStateStore.ts` (`getIslandRunStateSnapshot`,
+  `subscribeIslandRunState`, `commitIslandRunState`, `hydrateIslandRunState`,
+  `resetIslandRunStateSnapshot`). In-memory mirror of
+  `IslandRunGameStateRecord`, delegating persistence to the existing
+  `writeIslandRunGameStateRecord` (single-flight, conflict merge, pending
+  queue, backoff — all preserved).
+- New hook: `hooks/useIslandRunState.ts` using `useSyncExternalStore` so
+  React strict-mode double-invocation / concurrent rendering are safe by
+  construction (no "effect mirrors store" race).
+- Coverage: 8 new `islandRunStateStore` cases covering snapshot stability,
+  subscribe/unsubscribe, synchronous publish before remote resolve,
+  hydrate-notifies-subscribers, in-flight unsubscribe safety.
+
+**Stage C — Migrate renderer action-by-action — ⏳ Pending follow-up PRs.**
+Each domain is its own PR (one per commit): roll → tile-reward → encounter
+→ stop-completion → stop-ticket → egg → market → travel → boss →
+shard-claim → reward-bar → essence-drift → companion → onboarding. Each PR
+adds the action to `islandRunStateActions.ts`, deletes the matching
+`setRuntimeState` / `persistIslandRunRuntimeStatePatch` /
+`writeIslandRunGameStateRecord` call-sites plus their per-field
+`useState`/`useEffect` pairs from `IslandRunBoardPrototype.tsx`.
+
+**Stage D — Retire legacy APIs — ⏳ Pending final cleanup PR.** Once Stage C
+is complete and a grep confirms zero call-sites, delete
+`islandRunRuntimeState.ts`, `islandRunRuntimeStateBackend.ts`, and the
+`runtimeStateRef` / `hasCompletedInitialHydrationSyncRef` /
+`lastAppliedRuntimeVersionRef` guard refs from the renderer. Those guards
+exist purely to patch over the multi-writer race and become unnecessary.
 
 ### P0-1. Single authoritative roll path + no Supabase row drift — ✅ Closed (session 4, follow-ups session 7)
 
