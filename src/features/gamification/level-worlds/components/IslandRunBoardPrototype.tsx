@@ -7243,7 +7243,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       className="island-hatchery-card__countdown"
                       role="timer"
                       aria-live="polite"
-                      aria-label={`Egg hatches in ${eggCountdownLabel}`}
                     >
                       <span className="island-hatchery-card__countdown-label">Hatches in</span>
                       <span className="island-hatchery-card__countdown-value">{eggCountdownLabel}</span>
