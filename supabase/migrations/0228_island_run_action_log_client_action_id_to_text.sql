@@ -49,6 +49,12 @@ DECLARE
   v_expected bigint := greatest(0, coalesce(p_expected_runtime_version, 0));
   v_existing_log public.island_run_action_log%rowtype;
   v_response jsonb;
+  -- Scalar extraction variables — avoids 42P01 errors from composite
+  -- variable field access inside RETURN QUERY SELECT (PG parser resolves
+  -- the composite var name as a relation reference even with parens).
+  v_tmp_status text;
+  v_tmp_version bigint;
+  v_tmp_state jsonb;
 BEGIN
   IF v_user_id IS NULL AND auth.role() <> 'service_role' THEN
     RAISE EXCEPTION 'Not authenticated';
@@ -73,11 +79,14 @@ BEGIN
      LIMIT 1;
 
     IF FOUND THEN
+      v_tmp_status  := coalesce((v_existing_log).status, 'duplicate');
+      v_tmp_version := coalesce((v_existing_log).applied_runtime_version, 0);
+      v_tmp_state   := (v_existing_log).response_json -> 'latest_state';
       RETURN QUERY
       SELECT
-        coalesce((v_existing_log).status, 'duplicate')::text,
-        coalesce((v_existing_log).applied_runtime_version, 0)::bigint,
-        coalesce((v_existing_log).response_json -> 'latest_state', NULL)::jsonb,
+        v_tmp_status::text,
+        v_tmp_version::bigint,
+        v_tmp_state::jsonb,
         'Duplicate action id; returning cached response.'::text;
       RETURN;
     END IF;
@@ -98,11 +107,13 @@ BEGIN
     v_next := jsonb_populate_record(NULL::public.island_run_runtime_state, coalesce(p_action_payload, '{}'::jsonb));
   ELSE
     IF coalesce(v_existing.runtime_version, 0) <> v_expected THEN
+      v_tmp_version := coalesce((v_existing).runtime_version, 0);
+      v_tmp_state   := to_jsonb(v_existing);
       RETURN QUERY
       SELECT
         'conflict'::text,
-        coalesce((v_existing).runtime_version, 0)::bigint,
-        to_jsonb(v_existing),
+        v_tmp_version::bigint,
+        v_tmp_state,
         'Runtime version mismatch.'::text;
       RETURN;
     END IF;
@@ -148,11 +159,14 @@ BEGIN
     v_response
   );
 
+  v_tmp_version := v_next.runtime_version;
+  v_tmp_state   := to_jsonb(v_next);
+
   RETURN QUERY
   SELECT
     'applied'::text,
-    v_next.runtime_version::bigint,
-    to_jsonb(v_next),
+    v_tmp_version::bigint,
+    v_tmp_state,
     'Action applied.'::text;
 END;
 $$;

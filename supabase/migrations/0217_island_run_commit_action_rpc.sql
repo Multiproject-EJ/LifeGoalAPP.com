@@ -52,6 +52,11 @@ declare
   v_expected bigint := greatest(0, coalesce(p_expected_runtime_version, 0));
   v_existing_log public.island_run_action_log%rowtype;
   v_response jsonb;
+  -- Scalar extraction variables — avoids 42P01 errors from composite
+  -- variable field access inside RETURN QUERY SELECT.
+  v_tmp_status text;
+  v_tmp_version bigint;
+  v_tmp_state jsonb;
 begin
   if v_user_id is null and auth.role() <> 'service_role' then
     raise exception 'Not authenticated';
@@ -76,11 +81,14 @@ begin
      limit 1;
 
     if found then
+      v_tmp_status  := coalesce((v_existing_log).status, 'duplicate');
+      v_tmp_version := coalesce((v_existing_log).applied_runtime_version, 0);
+      v_tmp_state   := (v_existing_log).response_json -> 'latest_state';
       return query
       select
-        coalesce((v_existing_log).status, 'duplicate')::text,
-        coalesce((v_existing_log).applied_runtime_version, 0)::bigint,
-        coalesce((v_existing_log).response_json -> 'latest_state', null)::jsonb,
+        v_tmp_status::text,
+        v_tmp_version::bigint,
+        v_tmp_state::jsonb,
         'Duplicate action id; returning cached response.'::text;
       return;
     end if;
@@ -101,11 +109,13 @@ begin
     v_next := jsonb_populate_record(null::public.island_run_runtime_state, coalesce(p_action_payload, '{}'::jsonb));
   else
     if coalesce(v_existing.runtime_version, 0) <> v_expected then
+      v_tmp_version := coalesce((v_existing).runtime_version, 0);
+      v_tmp_state   := to_jsonb(v_existing);
       return query
       select
         'conflict'::text,
-        coalesce((v_existing).runtime_version, 0)::bigint,
-        to_jsonb(v_existing),
+        v_tmp_version::bigint,
+        v_tmp_state,
         'Runtime version mismatch.'::text;
       return;
     end if;
@@ -151,11 +161,14 @@ begin
     v_response
   );
 
+  v_tmp_version := v_next.runtime_version;
+  v_tmp_state   := to_jsonb(v_next);
+
   return query
   select
     'applied'::text,
-    v_next.runtime_version::bigint,
-    to_jsonb(v_next),
+    v_tmp_version::bigint,
+    v_tmp_state,
     'Action applied.'::text;
 end;
 $$;
