@@ -231,4 +231,131 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
       );
     },
   },
+  // ── P1-11: ticket_required status ────────────────────────────────────────
+  {
+    name: 'ticket_required: emitted when active stop (index > 0) has no paid ticket on current island',
+    run: () => {
+      const result = resolveIslandRunContractV2Stops({
+        stopStatesByIndex: [
+          { objectiveComplete: true, buildComplete: false }, // hatchery done → stop 1 is next
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+        stopTicketsPaidByIsland: { '1': [] }, // no tickets paid on island 1
+        islandNumber: 1,
+      });
+      assertEqual(result.activeStopIndex, 1, 'Expected stop 1 to be active');
+      assertDeepEqual(
+        result.statusesByIndex,
+        ['completed', 'ticket_required', 'locked', 'locked', 'locked'],
+        'Expected ticket_required for the active stop when its ticket is unpaid',
+      );
+    },
+  },
+  {
+    name: 'ticket_required: collapses back to active once ticket is paid for that stop index on this island',
+    run: () => {
+      const result = resolveIslandRunContractV2Stops({
+        stopStatesByIndex: [
+          { objectiveComplete: true, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+        stopTicketsPaidByIsland: { '1': [1] },
+        islandNumber: 1,
+      });
+      assertDeepEqual(
+        result.statusesByIndex,
+        ['completed', 'active', 'locked', 'locked', 'locked'],
+        'Paid ticket on active stop keeps legacy active status',
+      );
+    },
+  },
+  {
+    name: 'ticket_required: hatchery (index 0) never reports ticket_required — it is implicitly free',
+    run: () => {
+      const result = resolveIslandRunContractV2Stops({
+        stopStatesByIndex: [
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+        // Even a malformed ledger that tries to "un-pay" hatchery should be ignored.
+        stopTicketsPaidByIsland: { '1': [] },
+        islandNumber: 1,
+      });
+      assertDeepEqual(
+        result.statusesByIndex,
+        ['active', 'locked', 'locked', 'locked', 'locked'],
+        'Hatchery active stays active regardless of ticket ledger',
+      );
+    },
+  },
+  {
+    name: 'ticket_required: omitted ticket params preserve legacy active/locked two-state behaviour',
+    run: () => {
+      const result = resolveIslandRunContractV2Stops({
+        stopStatesByIndex: [
+          { objectiveComplete: true, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+      });
+      assertDeepEqual(
+        result.statusesByIndex,
+        ['completed', 'active', 'locked', 'locked', 'locked'],
+        'Without ticket params, resolver falls back to legacy two-state behaviour',
+      );
+    },
+  },
+  {
+    name: 'ticket_required: ledger is scoped per island — a ticket paid on island 2 does not unlock island 1',
+    run: () => {
+      const result = resolveIslandRunContractV2Stops({
+        stopStatesByIndex: [
+          { objectiveComplete: true, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+        stopTicketsPaidByIsland: { '2': [1] }, // paid on island 2 only
+        islandNumber: 1,
+      });
+      assertDeepEqual(
+        result.statusesByIndex,
+        ['completed', 'ticket_required', 'locked', 'locked', 'locked'],
+        'Paid ticket on a different island must not leak into another island',
+      );
+    },
+  },
+  {
+    name: 'ticket_required: not emitted when all objectives are complete (final-state has no active stop)',
+    run: () => {
+      const result = resolveIslandRunContractV2Stops({
+        stopStatesByIndex: [
+          { objectiveComplete: true, buildComplete: false },
+          { objectiveComplete: true, buildComplete: false },
+          { objectiveComplete: true, buildComplete: false },
+          { objectiveComplete: true, buildComplete: false },
+          { objectiveComplete: true, buildComplete: false },
+        ],
+        stopTicketsPaidByIsland: { '1': [] },
+        islandNumber: 1,
+      });
+      assertDeepEqual(
+        result.statusesByIndex,
+        ['completed', 'completed', 'completed', 'completed', 'completed'],
+        'All-complete state reports completed across the board — no ticket_required synthesized',
+      );
+    },
+  },
 ];

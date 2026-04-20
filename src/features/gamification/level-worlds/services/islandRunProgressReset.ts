@@ -68,6 +68,7 @@ export function buildFreshIslandRunRecord(
     companionBonusLastVisitKey: null,
     completedStopsByIsland: {},
     stopTicketsPaidByIsland: {},
+    bonusTileChargeByIsland: {},
     marketOwnedBundlesByIsland: {},
     creatureCollection: [],
     activeCompanionId: null,

@@ -358,11 +358,18 @@ Source of truth: `BONUS_BASE_RELEASE_PAYOUT` in `islandRunBonusTile.ts`.
 
 **State shape (persisted):**
 ```ts
-// On IslandRunRuntimeState (added when the renderer wires up the bonus tile):
+// On IslandRunGameStateRecord (persisted to localStorage + the
+// island_run_runtime_state.bonus_tile_charge_by_island jsonb column,
+// see migration 0230):
 bonusTileChargeByIsland: Record<string, Record<number, number>>;
 // outer key: island number (string); inner key: tile index; value: charge 0..8.
 ```
-Resets to `{}` via `resetBonusTileChargeForIsland` on island travel (same pattern as `stopTicketsPaidByIsland`).
+Resets to `{}` for the current island via `resetBonusTileChargeForIsland` (or
+an explicit-empty inner-map patch through `persistIslandRunRuntimeStatePatch`)
+on island travel — same pattern as `stopTicketsPaidByIsland`. The backend
+overlay-merge preserves explicit-empty inner maps so a cycle 120 → 1 wrap
+cleanly drops the previous cycle's charges without touching untouched
+islands.
 
 Invariants:
 - `applyBonusTileCharge` never mutates its input and always returns a fresh ledger map.

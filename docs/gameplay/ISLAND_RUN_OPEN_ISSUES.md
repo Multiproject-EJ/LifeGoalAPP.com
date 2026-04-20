@@ -1,7 +1,7 @@
 # Island Run — Open Issues & Feature Backlog
 
 Status: Living document
-Last updated: 2026-04-20 (session 8 — state architecture refactor stages A+B+E)
+Last updated: 2026-04-20 (session 11 — P1-9 closed; tile-reward commits now serialised through shared per-user action mutex)
 Owner: Gameplay System
 
 This document tracks every unresolved issue, bug, inconsistency, or scoped
@@ -157,11 +157,15 @@ beats and most tiles stay feeding-type.
 
 ---
 
-### P1-3. Glowing bonus tile with 9-hit accumulator — ✅ Logic layer closed (session 3)
+### P1-3. Glowing bonus tile with 9-hit accumulator — ✅ Logic + persistence layer closed (sessions 3 & 10)
 The pure service (`islandRunBonusTile.ts`) + its 12-case unit suite + the
-contract §5E spec are merged. The renderer wiring (dot lamps, released
-burst animation, 3D prop) + the runtime-state field + Supabase migration
-are the remaining follow-up and ride with P1-2's other new tile types.
+contract §5E spec merged in session 3. Session 10 added the runtime-state
+field `bonusTileChargeByIsland` (migration 0230), wired sanitize/merge/patch
+through the store + backend, and hooked `performIslandTravel` to clear the
+ledger on island travel. The remaining follow-up is pure renderer surface:
+the dot-lamp HUD, the released-burst animation, the 3D prop, and the
+charge/release call-site inside the tile-landing handler. That PR rides
+with P1-2's other new tile types.
 
 ---
 
@@ -199,25 +203,32 @@ longer a dual source of truth.
 
 ---
 
-### P1-9. Fold tile-reward writes into a serialised service
+### P1-9. Fold tile-reward writes into a serialised service — ✅ Closed (session 11)
 **Files:**
-- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
-  (`awardContractV2Essence`, `deductContractV2Essence`, `resolveTileLanding`,
-  reward-bar apply path)
-- Proposed new `src/features/gamification/level-worlds/services/islandRunTileRewardAction.ts`
+- `src/features/gamification/level-worlds/services/islandRunActionMutex.ts` (new)
+- `src/features/gamification/level-worlds/services/islandRunTileRewardAction.ts` (new)
+- `src/features/gamification/level-worlds/services/islandRunRollAction.ts` (refactored to share the mutex)
+- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx` (`resolveTileLanding` rewired)
+- `src/features/gamification/level-worlds/services/__tests__/islandRunTileRewardAction.test.ts` (6 new cases)
 
-**Why.** Session 5 patched the most visible clobber by switching essence
-writes from full-record `writeIslandRunGameStateRecord` spreads to
-`persistIslandRunRuntimeStatePatch` so disjoint fields no longer overwrite
-each other. That closes the cross-field clobber but still performs two
-independent async read-modify-writes when a single landing awards essence
-AND reward-bar progress. A proper fix is a dedicated
-`executeIslandRunTileRewardAction` service that takes the whole landing
-(essence delta, reward-bar progress delta, optional sticker / bonus-tile
-effects) and runs it under the same per-user mutex as `executeIslandRunRollAction`.
-Acceptance: all landing-effect writes chain through the mutex; a
-`tile-reward-interleaves-with-roll` regression test exists mirroring the
-existing 5-parallel-rolls case.
+**Resolution.** Every tile landing previously fired TWO independent
+`persistIslandRunRuntimeStatePatch` calls in the same React tick — one for
+essence (via `awardContractV2Essence` / `deductContractV2Essence`) and one
+for reward-bar progress. Each patch did its own async read-modify-write and
+both hydrated the same pre-landing snapshot before writing a full record
+through the commit coordinator, so the later write silently overwrote the
+earlier write's delta. A tile reward fired in the same tick as a roll
+commit was subject to the same race. Session 11 consolidates both halves
+into `executeIslandRunTileRewardAction`, which hydrates once, computes the
+combined next state, and persists a **single** patch with every affected
+field. All gameplay actions (roll + tile-reward) now share the same
+per-user async mutex via `withIslandRunActionLock`, so a tile-reward
+commit can never interleave with an in-flight roll. The existing
+`awardContractV2Essence` / `deductContractV2Essence` helpers are retained
+for non-tile callers (story episode reward, stop ticket purchase, shop
+purchase) that don't pair essence with reward-bar progress and thus don't
+hit the two-write race. Regression test `islandRunTileRewardAction` fires
+a roll and a tile-reward in parallel and asserts both deltas survive.
 
 ---
 
@@ -226,19 +237,8 @@ See the Closed section below.
 
 ---
 
-### P1-11. Stop status reporting ignores ticket-paid state
-**Files:**
-- `src/features/gamification/level-worlds/services/islandRunContractV2StopResolver.ts`
-  (`resolveIslandRunContractV2Stops.statusesByIndex`)
-
-**Why.** `statusesByIndex` returns `'active'` for the first index whose
-`objectiveComplete` is false, ignoring `stopTicketsPaidByIsland`. The modal
-open-path separately enforces `isStopTicketPaid`, so this is not exploitable
-today — but every telemetry/HUD consumer that reads `statusesByIndex`
-misreports "active" for a ticket-locked stop. Fix: pass
-`stopTicketsPaidByIsland` + current island key into the resolver and emit a
-new `'ticket_required'` status for the first-incomplete stop whose ticket
-hasn't been paid.
+### P1-11. Stop status reporting ignores ticket-paid state — ✅ Closed (session 9)
+See the Closed section below.
 
 ---
 
@@ -247,11 +247,14 @@ See the Closed section below.
 
 ---
 
-### P1-13. `performIslandTravel` cleanup for per-island state maps — ✅ Closed (session 6, ticket map only)
-Ticket-map cleanup closed. The bonus-tile field does not land until P1-3's
-renderer wiring ships, so the sanitizer call in `performIslandTravel` will
-be added alongside that PR. See Closed section below for the ticket
-cleanup.
+### P1-13. `performIslandTravel` cleanup for per-island state maps — ✅ Closed (session 10)
+Ticket-map cleanup closed in session 6; session 10 landed the remaining
+`bonusTileChargeByIsland` field (migration 0230 + store/backend/patch plumbing)
+and wired `performIslandTravel` to clear the old island's bonus-tile charges
+via an explicit-empty inner-map patch. Both per-island maps are now cleared
+on island travel, so a cycle 120 → 1 wrap starts with a fresh ring and an
+unfunded bonus accumulator. The same plumbing unblocks the remaining P1-3
+renderer wiring (below) and the P1-2 bonus-tile renderer.
 
 ---
 
@@ -311,16 +314,8 @@ more tile types and we want an even spread.
 ### P2-10. `seededRandom(0)` corner case — ✅ Closed (session 6)
 See Closed section below.
 
-### P2-11. `DiceRegenState.maxDice` is really a minimum floor
-**Files:** `src/features/gamification/level-worlds/services/islandRunDiceRegeneration.ts`
-
-**Why.** Contract §3B says "no hard cap" on dice regen, and `applyDiceRegeneration`
-treats `minDice` as a minimum-roll floor (regen never exceeds it, but the player
-can hoard arbitrarily above it). The persisted field is named `maxDice`, which
-invites future readers to add an incorrect upper clamp. Either rename
-the runtime field to `minRollFloor` (with a migration to copy the stored
-value) or add an explicit docblock on the `DiceRegenState` type saying the
-name is historical and the value is a floor, not a cap.
+### P2-11. `DiceRegenState.maxDice` is really a minimum floor — ✅ Closed (session 9)
+See the Closed section below.
 
 ---
 
@@ -385,6 +380,42 @@ Removed the reference to **coins** from the "intentionally not in scope"
 list in `islandRunRollAction.ts` (coins are retired) and refreshed the
 tile-reward example list to mention the live currencies + bonus-tile
 charge.
+
+## Closed in session 9 (2026-04-20)
+
+### ✅ P1-11. Stop status reports `'ticket_required'` for ticket-gated active stops
+`resolveIslandRunContractV2Stops` now accepts optional
+`stopTicketsPaidByIsland` + `islandNumber` params. When supplied, the
+first-incomplete stop whose ticket (index > 0) is unpaid is emitted as
+`'ticket_required'` in `statusesByIndex`, so HUD and telemetry consumers can
+tell a ticket-locked stop apart from a genuinely interactable active one
+(the previous behaviour collapsed both to `'active'`). Hatchery (stop 0) is
+implicitly free and never reports `'ticket_required'`. Omitting the params
+preserves the legacy two-state `'active' | 'locked'` behaviour verbatim for
+any caller that doesn't track tickets. The `IslandRunContractV2StopStatus`
+union gains the `'ticket_required'` variant. The renderer's single UI
+consumer (`stopStateMap` in `IslandRunBoardPrototype.tsx`) passes the new
+params and maps `'ticket_required'` → `'active'` for visual UI parity —
+ticket enforcement on stop-modal open is unchanged (still handled by
+`doesStopRequireTicketPayment` + `isStopTicketPaid`). Six new resolver test
+cases cover: ticket unpaid → `ticket_required`, ticket paid → `active`,
+hatchery-first-incomplete is never `ticket_required`, omitted params
+preserve legacy behaviour, per-island ledger scoping (island 2 ticket
+doesn't unlock island 1), and all-complete final state reports five
+`completed`.
+
+### ✅ P2-11. `DiceRegenState.maxDice` documented as a floor (not a cap)
+Added an explicit docblock on `DiceRegenState` clarifying that `maxDice` is
+the **passive-regen ceiling / minimum-roll floor**, not an upper clamp on
+the wallet. The pool can and does exceed `maxDice` via rewards, stops,
+boss payouts, events, shop purchases, and `currency`/`chest` tile rewards
+(contract §3 Dice: "no hard cap"). Explicit "do not clamp" warning for
+future readers. Field is not renamed to `minRollFloor` because it is
+persisted in both localStorage and the `island_run_runtime_state` row —
+a rename would require a migration for zero functional gain since this
+is purely a naming-hygiene issue.
+
+---
 
 ## Closed in session 6 (2026-04-19)
 

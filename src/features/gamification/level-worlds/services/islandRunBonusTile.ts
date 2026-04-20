@@ -13,10 +13,12 @@
  *   - inner key: tile index (0 .. tileCount-1 on the active board profile).
  *   - value: charge count in [0, BONUS_CHARGE_TARGET]. 0 after a release.
  *
- * **Persistence note.** The state field is added to the canonical runtime record
- * in the renderer-wiring PR that follows this one — the pure service layer in
- * this file does not reach into the runtime store so the game-logic contract
- * can ship and be unit-tested independently of storage plumbing.
+ * **Persistence note.** The `bonusTileChargeByIsland` field lives on
+ * `IslandRunGameStateRecord` (see `islandRunGameStateStore.ts`) and is
+ * persisted to localStorage and the `island_run_runtime_state.bonus_tile_charge_by_island`
+ * column (migration 0230). This service layer stays purely functional so
+ * the game-logic contract can be unit-tested independently of storage
+ * plumbing — callers read the ledger from the store/patch and pass it in.
  */
 
 /** Charges required before the bonus is primed and the next landing releases. */
@@ -27,6 +29,16 @@ export const BONUS_CYCLE_LENGTH = BONUS_CHARGE_TARGET + 1;
 
 /** Persisted shape for the bonus-tile accumulator ledger. */
 export type BonusTileChargeByIsland = Record<string, Record<number, number>>;
+
+/**
+ * Clamp a raw charge value to the valid range `[0, BONUS_CHARGE_TARGET]`. Used
+ * everywhere the ledger is sanitised (local read, remote merge, patch overlay)
+ * so the invariant lives in exactly one place.
+ */
+export function clampBonusCharge(value: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(BONUS_CHARGE_TARGET, Math.floor(value)));
+}
 
 /** Payload released on the 9th landing. Tuning numbers live here (and the
  *  contract doc) so the renderer never invents values. */
@@ -208,7 +220,7 @@ export function sanitizeBonusTileChargeByIsland(
       const idx = Number(idxKey);
       if (!Number.isFinite(idx) || idx < 0) continue;
       if (typeof chargeRaw !== 'number' || !Number.isFinite(chargeRaw)) continue;
-      const normalized = Math.max(0, Math.min(BONUS_CHARGE_TARGET, Math.floor(chargeRaw)));
+      const normalized = clampBonusCharge(chargeRaw);
       if (normalized > 0) innerCopy[Math.floor(idx)] = normalized;
     }
     if (Object.keys(innerCopy).length > 0) nextMap[islandKey] = innerCopy;

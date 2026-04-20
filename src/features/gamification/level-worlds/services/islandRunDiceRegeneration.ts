@@ -59,8 +59,29 @@ export function resolveDiceRegenRatePerHour(playerLevel: number): number {
 
 // ── Regeneration state ──────────────────────────────────────────────────
 
+/**
+ * Runtime dice-regen state.
+ *
+ * **Naming caveat.** The field `maxDice` is named historically — it is
+ * semantically the level-based **minimum-roll floor**, not an upper cap on
+ * the pool. Passive regen fills *up to* `maxDice`; once the pool reaches
+ * that threshold no more dice are added, but the player can freely hoard
+ * dice *above* it via rewards, stops, boss payouts, events, shop purchases,
+ * and the `currency`/`chest` tile rewards (contract §3 Dice: "no hard cap").
+ * In other words: `maxDice` is the ceiling for **passive regen**, not for
+ * the wallet.
+ *
+ * The field is not renamed to `minRollFloor` to avoid a persisted-schema
+ * migration (stored in localStorage + the `island_run_runtime_state` row).
+ * Future readers: do NOT clamp the pool at `maxDice` — that would silently
+ * cap the player.
+ */
 export interface DiceRegenState {
-  /** Minimum dice threshold — regen fills up to this. */
+  /**
+   * Minimum-roll floor (historical name). Passive regen fills the pool up to
+   * this threshold and then stops; the pool may exceed it via non-regen
+   * sources (rewards, stops, events, shop) and must never be clamped down.
+   */
   maxDice: number;
   /** Dice regenerated per hour. */
   regenRatePerHour: number;
