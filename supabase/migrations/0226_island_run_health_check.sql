@@ -16,6 +16,7 @@ DECLARE
   _fn TEXT;
 
   -- All required columns on island_run_runtime_state
+  -- NOTE: hearts and coins were retired and dropped in migration 0227.
   _required_columns TEXT[] := ARRAY[
     'user_id',
     'created_at',
@@ -24,8 +25,6 @@ DECLARE
     'first_run_claimed',
     'daily_hearts_claimed_day_key',
     'token_index',
-    'hearts',
-    'coins',
     'island_shards',
     'shard_tier_index',
     'shard_claim_count',
@@ -78,7 +77,9 @@ DECLARE
     'active_timed_event_progress',
     'sticker_progress',
     'sticker_inventory',
-    'last_writer_device_session_id'
+    'last_writer_device_session_id',
+    'stop_tickets_paid_by_island',
+    'last_essence_drift_lost'
   ];
 
   -- Required RPC functions
