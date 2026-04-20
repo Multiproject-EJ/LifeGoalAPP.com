@@ -984,6 +984,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const hopSequenceResolverRef = useRef<(() => void) | null>(null);
   const diceRollCompleteResolverRef = useRef<(() => void) | null>(null);
   /**
+   * True when the `onDiceRollComplete` callback has already fired for the
+   * current roll. Set to `false` just before `executeIslandRunRollAction` is
+   * called so it resets at the start of each roll. If the dice animation
+   * completes *before* `executeIslandRunRollAction` returns (possible after an
+   * idle period when the remote write is slow), `handleRoll` skips creating the
+   * resolver promise and proceeds immediately instead of hanging forever.
+   */
+  const diceRollCompleteAlreadyFiredRef = useRef(false);
+  /**
    * True while a roll's hop animation is playing. Used to guard other
    * writers (hydration reconcile, island-travel resets) from stomping the
    * `tokenIndex` mid-animation and causing the pawn to snap back to tile 0.
@@ -3707,6 +3716,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     playIslandRunSound('roll');
     triggerIslandRunHaptic('roll');
 
+    // Reset the "animation already fired" guard before triggering the roll so
+    // that any onDiceRollComplete that arrives after the flag is cleared but
+    // before the await-promise is created (the idle-freeze race) is captured.
+    diceRollCompleteAlreadyFiredRef.current = false;
+
     const rollResult = await executeIslandRunRollAction({
       session,
       client,
@@ -3752,10 +3766,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setRollValue(nextRoll);
     setLandingText(`Rolling ${dieOne} + ${dieTwo} = ${nextRoll}...`);
 
-    // Wait for dice animation to finish before moving the token
-    await new Promise<void>((resolve) => {
-      diceRollCompleteResolverRef.current = resolve;
-    });
+    // Wait for dice animation to finish before moving the token.
+    // Guard: if the animation already completed while executeIslandRunRollAction
+    // was awaiting the remote write (idle-freeze scenario — slow network after
+    // an idle period means the server round-trip outlasts the animation), skip
+    // creating the promise entirely to avoid an unresolvable hang.
+    if (!diceRollCompleteAlreadyFiredRef.current) {
+      await new Promise<void>((resolve) => {
+        diceRollCompleteResolverRef.current = resolve;
+      });
+    }
 
     // Show the roll total briefly over the dice area
     setDiceRollTotalOverlay(`Rolled ${nextRoll}!`);
@@ -3801,7 +3821,45 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // bug). Updating runtime state first guarantees `tokenIndex` already
     // matches the hop's final index when the clear lands.
     const freshRecord = applyRollResult({ session });
-    setRuntimeState(freshRecord);
+    // Defensive merge: the freshRecord comes from localStorage, which the roll
+    // service writes synchronously (tokenIndex, dicePool, runtimeVersion).
+    // However localStorage may still have a stale completedStopsByIsland /
+    // stopStatesByIndex if a persistIslandRunRuntimeStatePatch call that
+    // started before the roll completed after it (Fix-1 addresses this at the
+    // source, but this is a second layer of defence). Merge both sources
+    // so that a completed stop can never be un-completed by a stale snapshot:
+    //  - completedStopsByIsland: take the union of stop IDs per island key.
+    //  - stopStatesByIndex: once objectiveComplete or buildComplete is true it
+    //    stays true regardless of which source has stale false.
+    setRuntimeState((current) => {
+      const merged = { ...freshRecord };
+
+      // Union-merge completedStopsByIsland
+      const mergedCompletedStops: Record<string, string[]> = { ...freshRecord.completedStopsByIsland };
+      for (const [islandKey, currentStops] of Object.entries(current.completedStopsByIsland ?? {})) {
+        const freshStops = mergedCompletedStops[islandKey] ?? [];
+        const union = Array.from(new Set([...freshStops, ...currentStops]));
+        if (union.length > freshStops.length) {
+          mergedCompletedStops[islandKey] = union;
+        }
+      }
+      merged.completedStopsByIsland = mergedCompletedStops;
+
+      // Monotonic-merge stopStatesByIndex: objectiveComplete/buildComplete stay true
+      if (Array.isArray(current.stopStatesByIndex) && Array.isArray(freshRecord.stopStatesByIndex)) {
+        merged.stopStatesByIndex = freshRecord.stopStatesByIndex.map((freshEntry, i) => {
+          const currentEntry = current.stopStatesByIndex[i];
+          if (!currentEntry) return freshEntry;
+          return {
+            ...freshEntry,
+            objectiveComplete: Boolean(freshEntry?.objectiveComplete || currentEntry?.objectiveComplete),
+            buildComplete: Boolean(freshEntry?.buildComplete || currentEntry?.buildComplete),
+          };
+        });
+      }
+
+      return merged;
+    });
 
     // Now safe to clear the hop sequence — the BoardStage's
     // `onHopSequenceComplete` no longer does this for us (see the
@@ -6953,6 +7011,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           isRolling={isRolling}
           diceFaces={rollingDiceFaces}
           onDiceRollComplete={() => {
+            diceRollCompleteAlreadyFiredRef.current = true;
             diceRollCompleteResolverRef.current?.();
             diceRollCompleteResolverRef.current = null;
           }}

@@ -13,6 +13,7 @@ import {
   hydrateIslandRunGameStateRecordWithSource,
   readIslandRunGameStateRecord,
   writeIslandRunGameStateRecord,
+  type IslandRunGameStateRecord,
 } from './islandRunGameStateStore';
 import {
   clampBonusCharge,
@@ -120,7 +121,16 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
   },
 
   async persistPatch({ session, client, patch }) {
-    const current = await hydrateIslandRunGameStateRecord({ session, client });
+    const hydratedBase = await hydrateIslandRunGameStateRecord({ session, client });
+    // Re-read local storage after the async network round-trip. Another writer
+    // (e.g. the roll service or the completedStops persist effect in the board
+    // component) may have updated localStorage while we awaited Supabase. If the
+    // fresh local record is at least as new as the hydrated result we use it as
+    // the merge base, so the patch is never applied on top of a stale snapshot
+    // that would clobber a newer tokenIndex, completedStopsByIsland, etc.
+    const freshLocal = readIslandRunGameStateRecord(session);
+    const current: IslandRunGameStateRecord =
+      freshLocal.runtimeVersion >= hydratedBase.runtimeVersion ? freshLocal : hydratedBase;
     const nextActiveStopIndex =
       typeof patch.activeStopIndex === 'number' && Number.isFinite(patch.activeStopIndex)
         ? Math.max(0, Math.min(4, Math.floor(patch.activeStopIndex)))
