@@ -58,7 +58,15 @@ import {
   patchIslandRunStateSnapshot,
   refreshIslandRunStateFromLocal,
 } from '../services/islandRunStateStore';
-import { applyEssenceAward, applyEssenceDeduct, applyEssenceDriftTick, applyRewardBarState, applyRollResult, applyTokenHopRewards } from '../services/islandRunStateActions';
+import {
+  applyEssenceAward,
+  applyEssenceDeduct,
+  applyEssenceDriftTick,
+  applyRewardBarState,
+  applyRollResult,
+  applyTokenHopRewards,
+  travelToNextIsland,
+} from '../services/islandRunStateActions';
 import {
   rollEggTierWeighted,
   getRandomHatchDelayMs,
@@ -5219,111 +5227,73 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   };
   const performIslandTravel = (nextIsland: number, options?: { startTimer?: boolean }) => {
     const startTimer = options?.startTimer ?? true;
-    // M4-COMPLETE: Handle island 120 → 1 wrap with cycle_index increment
-    const MAX_ISLAND = 120;
-    const wraps = nextIsland > MAX_ISLAND;
-    const resolvedIsland = wraps ? ((nextIsland - 1) % MAX_ISLAND) + 1 : Math.max(1, nextIsland);
-    const nextCycleIndex = wraps ? cycleIndex + 1 : cycleIndex;
 
-    // M11C/M11D: clear completed stops for the old island before travelling (local + table-backed runtime state)
-    const oldIslandKey = String(islandNumber);
+    // C3: atomic travel. All four legacy patches (old-island clears,
+    // egg save/restore, contract-v2 stop/build reset, island bookkeeping
+    // + timer) are now a single commit through the store. See
+    // `travelToNextIsland` JSDoc for the full rationale.
+    const travelNowMs = Date.now();
+    const { record: next, resolvedIsland, nextCycleIndex, restoredActiveEgg } = travelToNextIsland({
+      session,
+      client,
+      nextIsland,
+      startTimer,
+      nowMs: travelNowMs,
+      getIslandDurationMs,
+      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+      triggerSource: 'perform_island_travel',
+    });
+
+    // M11C: clear the legacy localStorage mirrors the action does not touch.
+    // The per-island completed-stop list was migrated to runtime state, but the
+    // old key may linger on older clients.
     try {
       window.localStorage.removeItem(`island_run_stops_${session.user.id}_island_${islandNumber}`);
     } catch {
       // ignore storage errors
     }
-    // P1-13: also clear paid stop tickets + bonus-tile charges for the old
-    // island. Both maps are keyed by island number as a string (no cycle
-    // index), so without these clears a cycle wrap from 120 → 1 would leave
-    // the previous cycle's paid tickets (unlocking stops 2–5 for free) and
-    // the previous cycle's bonus-tile charges (potentially releasing an
-    // 8-charged tile on the first landing of the new run) in place.
-    // Hatchery (index 0) is implicitly free regardless of ticket state.
-    // The persist layer shallow-merges record patches (never deletes keys),
-    // so we explicitly set the island's entry to `[]` / `{}` — matching how
-    // `completedStopsByIsland` is cleared just above.
-    void persistIslandRunRuntimeStatePatch({
-      session,
-      client,
-      patch: {
-        completedStopsByIsland: {
-          [oldIslandKey]: [],
-        },
-        stopTicketsPaidByIsland: {
-          [oldIslandKey]: [],
-        },
-        bonusTileChargeByIsland: {
-          [oldIslandKey]: {},
-        },
-      },
-    });
+    // M8-COMPLETE: clear per-island shop owned state from localStorage on travel
+    try {
+      window.localStorage.removeItem(`island_run_shop_owned_${session.user.id}_island_${islandNumber}`);
+    } catch {
+      // ignore storage errors
+    }
+
+    // Forward the committed record fields into the legacy `runtimeState`
+    // React mirror so unmigrated consumers (build panel, reward-bar cascade,
+    // etc.) see the same values. Stage D will retire this mirror.
     setRuntimeState((current) => ({
       ...current,
-      completedStopsByIsland: {
-        ...current.completedStopsByIsland,
-        [oldIslandKey]: [],
-      },
-      stopTicketsPaidByIsland: {
-        ...(current.stopTicketsPaidByIsland ?? {}),
-        [oldIslandKey]: [],
-      },
-      bonusTileChargeByIsland: {
-        ...(current.bonusTileChargeByIsland ?? {}),
-        [oldIslandKey]: {},
-      },
+      completedStopsByIsland: next.completedStopsByIsland,
+      stopTicketsPaidByIsland: next.stopTicketsPaidByIsland,
+      bonusTileChargeByIsland: next.bonusTileChargeByIsland,
+      perIslandEggs: next.perIslandEggs,
+      activeEggTier: next.activeEggTier,
+      activeEggSetAtMs: next.activeEggSetAtMs,
+      activeEggHatchDurationMs: next.activeEggHatchDurationMs,
+      activeEggIsDormant: next.activeEggIsDormant,
+      stopStatesByIndex: next.stopStatesByIndex,
+      stopBuildStateByIndex: next.stopBuildStateByIndex,
+      activeStopIndex: next.activeStopIndex,
+      activeStopType: next.activeStopType,
+      currentIslandNumber: next.currentIslandNumber,
+      cycleIndex: next.cycleIndex,
+      bossTrialResolvedIslandNumber: next.bossTrialResolvedIslandNumber,
+      islandStartedAtMs: next.islandStartedAtMs,
+      islandExpiresAtMs: next.islandExpiresAtMs,
     }));
-    // M5-COMPLETE: Save current island egg to perIslandEggs, clear activeEgg, then restore new island egg
-    const newIslandKey = String(resolvedIsland);
-    // Snapshot perIslandEggs now (before setRuntimeState) to read the new island's entry
-    const currentPerIslandEggs = runtimeState.perIslandEggs ?? {};
-    let eggPatch: Partial<Parameters<typeof persistIslandRunRuntimeStatePatch>[0]['patch']> = {
-      activeEggTier: null,
-      activeEggSetAtMs: null,
-      activeEggHatchDurationMs: null,
-      activeEggIsDormant: false,
-    };
-    let updatedPerIslandEggs = { ...currentPerIslandEggs };
-    if (activeEgg) {
-      const travelNow = Date.now();
-      const isReady = travelNow >= activeEgg.hatchAtMs;
-      const savedEntry: PerIslandEggEntry = {
-        tier: activeEgg.tier,
-        setAtMs: activeEgg.setAtMs,
-        hatchAtMs: activeEgg.hatchAtMs,
-        status: isReady ? 'ready' : 'incubating',
-        location: isReady ? 'dormant' : 'island',
-      };
-      updatedPerIslandEggs = { ...updatedPerIslandEggs, [oldIslandKey]: savedEntry };
-      eggPatch = { ...eggPatch, perIslandEggs: { [oldIslandKey]: savedEntry } };
-    }
-    // Restore egg for the new island if one was previously placed there and is not yet collected/sold/converted to a ready animal
-    const newIslandEntry = updatedPerIslandEggs[newIslandKey];
-    if (newIslandEntry && (newIslandEntry.status === 'incubating' || newIslandEntry.status === 'ready')) {
-      const restoreNow = Date.now();
-      const isNowReady = restoreNow >= newIslandEntry.hatchAtMs;
-      const restoredEgg = {
-        tier: newIslandEntry.tier,
-        setAtMs: newIslandEntry.setAtMs,
-        hatchAtMs: newIslandEntry.hatchAtMs,
-        isDormant: isNowReady || newIslandEntry.location === 'dormant',
-      };
-      setActiveEgg(restoredEgg);
-      eggPatch = {
-        ...eggPatch,
-        activeEggTier: newIslandEntry.tier,
-        activeEggSetAtMs: newIslandEntry.setAtMs,
-        activeEggHatchDurationMs: newIslandEntry.hatchAtMs - newIslandEntry.setAtMs,
-        activeEggIsDormant: restoredEgg.isDormant,
-      };
-    } else {
-      setActiveEgg(null);
-    }
-    // Always persist egg state changes on island travel (eggPatch always has fields to clear/update)
-    void persistIslandRunRuntimeStatePatch({ session, client, patch: eggPatch });
-    setRuntimeState((current) => ({
-      ...current,
-      perIslandEggs: updatedPerIslandEggs,
-    }));
+
+    // UI-only React state resets (not persisted — the renderer owns these).
+    setActiveEgg(
+      restoredActiveEgg === null
+        ? null
+        : {
+            tier: restoredActiveEgg.tier,
+            setAtMs: restoredActiveEgg.setAtMs,
+            hatchAtMs: restoredActiveEgg.hatchAtMs,
+            isDormant: restoredActiveEgg.isDormant,
+          },
+    );
     setIslandNumber(resolvedIsland);
     setCycleIndex(nextCycleIndex);
     // Note: the dice pool is intentionally NOT reset on island travel. Per
@@ -5355,42 +5325,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setSpinTokens(0);
     setMarketInteracted(false);
     setMarketOwnedBundles({ dice_bundle: false });
-    // M8-COMPLETE: clear per-island shop owned state from localStorage on travel
-    try {
-      window.localStorage.removeItem(`island_run_shop_owned_${session.user.id}_island_${islandNumber}`);
-    } catch {
-      // ignore storage errors
-    }
 
-    // CONTRACT V2: reset stop objective states and initialize fresh building costs for new island.
-    if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
-      const nextEffectiveIslandNumber = getEffectiveIslandNumber(resolvedIsland, nextCycleIndex);
-      const freshStopStates = Array.from({ length: 5 }, () => ({ objectiveComplete: false, buildComplete: false }));
-      const freshBuildStates = initStopBuildStatesForIsland(nextEffectiveIslandNumber);
-      void persistIslandRunRuntimeStatePatch({
-        session,
-        client,
-        patch: {
-          stopStatesByIndex: freshStopStates,
-          stopBuildStateByIndex: freshBuildStates,
-          activeStopIndex: 0,
-          activeStopType: 'hatchery',
-        },
-      });
-      setRuntimeState((current) => ({
-        ...current,
-        stopStatesByIndex: freshStopStates,
-        stopBuildStateByIndex: freshBuildStates,
-        activeStopIndex: 0,
-        activeStopType: 'hatchery',
-      }));
-    }
-    const nowMs = startTimer ? Date.now() : 0;
-    const durationMs = getIslandDurationMs(resolvedIsland);
-    const expiresAtMs = startTimer ? nowMs + durationMs : 0;
-    setTimeLeftSec(startTimer ? Math.ceil(durationMs / 1000) : 0);
-    setIslandStartedAtMs(nowMs);
-    setIslandExpiresAtMs(expiresAtMs);
+    setTimeLeftSec(startTimer ? Math.ceil(getIslandDurationMs(resolvedIsland) / 1000) : 0);
+    setIslandStartedAtMs(next.islandStartedAtMs);
+    setIslandExpiresAtMs(next.islandExpiresAtMs);
     setIsIslandTimerPendingStart(!startTimer);
     setUtilityInteracted(false);
     setIslandIntention('');
@@ -5406,12 +5344,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setLandingText(startTimer
       ? 'Arrived at new island. Roll dice to move!'
       : 'New island unlocked. Start it when you are ready.');
-    void persistIslandRunRuntimeStatePatch({
-      session,
-      client,
-      patch: { currentIslandNumber: resolvedIsland, cycleIndex: nextCycleIndex, bossTrialResolvedIslandNumber: null, islandStartedAtMs: nowMs, islandExpiresAtMs: expiresAtMs },
-    });
-    setRuntimeState((current) => ({ ...current, currentIslandNumber: resolvedIsland, cycleIndex: nextCycleIndex, bossTrialResolvedIslandNumber: null, islandStartedAtMs: nowMs, islandExpiresAtMs: expiresAtMs }));
     // M10D: island travel complete sound + haptic
     playIslandRunSound('island_travel_complete');
     triggerIslandRunHaptic('island_travel_complete');

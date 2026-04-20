@@ -33,6 +33,7 @@ import {
   applyRewardBarState,
   applyRollResult,
   applyTokenHopRewards,
+  travelToNextIsland,
 } from '../islandRunStateActions';
 import {
   assert,
@@ -612,6 +613,332 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(snapshot.essenceLifetimeSpent, 90, 'lifetime spent should be 80 + 10 = 90');
       assertEqual(snapshot.rewardBarProgress, 2, 'reward-bar progress should be committed');
       assertEqual(snapshot.runtimeVersion, 14, 'runtimeVersion should bump 4 times (10 → 14)');
+    },
+  },
+
+  // ── C3: travelToNextIsland ──────────────────────────────────────────────
+
+  {
+    name: 'travelToNextIsland commits all four legacy patches in ONE store commit',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 5,
+        currentIslandNumber: 3,
+        cycleIndex: 0,
+        completedStopsByIsland: { '3': ['hatchery', 'habit'], '5': ['boss'] },
+        stopTicketsPaidByIsland: { '3': [1, 2, 3], '5': [1] },
+        bonusTileChargeByIsland: { '3': { '5': 4, '10': 2 } as any, '5': { '7': 1 } as any },
+        islandStartedAtMs: 1_000_000,
+        islandExpiresAtMs: 2_000_000,
+        bossTrialResolvedIslandNumber: 3,
+      });
+
+      let notifications = 0;
+      const unsub = subscribeIslandRunState(session, () => { notifications += 1; });
+
+      const travelNow = 5_000_000;
+      const result = travelToNextIsland({
+        session,
+        client: null,
+        nextIsland: 4,
+        startTimer: true,
+        nowMs: travelNow,
+        getIslandDurationMs: () => 86_400_000, // 24h
+        islandRunContractV2Enabled: false, // keep stop reset out of this case
+      });
+
+      assertEqual(notifications, 1, 'exactly one subscriber notification for the whole travel');
+      assertEqual(result.resolvedIsland, 4, 'resolvedIsland should be 4');
+      assertEqual(result.nextCycleIndex, 0, 'cycleIndex should not change for 3→4');
+
+      const snapshot = getIslandRunStateSnapshot(session);
+      // Old island's entries cleared, other islands' entries preserved.
+      assertEqual(snapshot.completedStopsByIsland['3'].length, 0, "old island's completedStops cleared");
+      assertEqual(snapshot.completedStopsByIsland['5'].length, 1, "other islands' completedStops preserved");
+      assertEqual(snapshot.stopTicketsPaidByIsland['3'].length, 0, "old island's tickets cleared");
+      assertEqual(snapshot.stopTicketsPaidByIsland['5'].length, 1, "other islands' tickets preserved");
+      assertEqual(Object.keys(snapshot.bonusTileChargeByIsland['3']).length, 0, "old island's bonus charges cleared");
+      assertEqual(Object.keys(snapshot.bonusTileChargeByIsland['5']).length, 1, "other islands' bonus charges preserved");
+      // Island bookkeeping.
+      assertEqual(snapshot.currentIslandNumber, 4, 'currentIslandNumber advanced');
+      assertEqual(snapshot.cycleIndex, 0, 'cycleIndex unchanged');
+      assertEqual(snapshot.bossTrialResolvedIslandNumber, null, 'bossTrialResolvedIslandNumber cleared');
+      assertEqual(snapshot.islandStartedAtMs, travelNow, 'islandStartedAtMs set to nowMs');
+      assertEqual(snapshot.islandExpiresAtMs, travelNow + 86_400_000, 'islandExpiresAtMs = nowMs + duration');
+      assertEqual(snapshot.runtimeVersion, 6, 'runtimeVersion bumped exactly once (5 → 6)');
+
+      unsub();
+    },
+  },
+
+  {
+    name: 'travelToNextIsland: cycle wrap 120 → 1 bumps cycleIndex and preserves all ledger keys',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        currentIslandNumber: 120,
+        cycleIndex: 2,
+        completedStopsByIsland: { '120': ['boss'], '50': ['hatchery'] },
+      });
+
+      const result = travelToNextIsland({
+        session,
+        client: null,
+        nextIsland: 121, // past the cap — wraps to 1
+        startTimer: true,
+        nowMs: 1_000,
+        getIslandDurationMs: () => 10_000,
+        islandRunContractV2Enabled: false,
+      });
+
+      assertEqual(result.resolvedIsland, 1, '121 wraps to 1');
+      assertEqual(result.nextCycleIndex, 3, 'cycleIndex bumps to 3 on wrap');
+
+      const snapshot = getIslandRunStateSnapshot(session);
+      assertEqual(snapshot.currentIslandNumber, 1, 'currentIslandNumber set to 1');
+      assertEqual(snapshot.cycleIndex, 3, 'cycleIndex = 3');
+      // Both the old island (120) and an unrelated island (50) should still
+      // have their keys in completedStopsByIsland.
+      assert('120' in snapshot.completedStopsByIsland, "wrap preserves '120' key");
+      assert('50' in snapshot.completedStopsByIsland, "wrap preserves unrelated '50' key");
+      assertEqual(snapshot.completedStopsByIsland['120'].length, 0, "wrap clears old island 120's stops");
+      assertEqual(snapshot.completedStopsByIsland['50'].length, 1, "wrap preserves unrelated island's stops");
+    },
+  },
+
+  {
+    name: 'travelToNextIsland: startTimer=false leaves timer fields zeroed (pending-start flow)',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 1, currentIslandNumber: 1 });
+
+      travelToNextIsland({
+        session,
+        client: null,
+        nextIsland: 2,
+        startTimer: false,
+        nowMs: 9_999,
+        getIslandDurationMs: () => 10_000,
+        islandRunContractV2Enabled: false,
+      });
+
+      const snapshot = getIslandRunStateSnapshot(session);
+      assertEqual(snapshot.islandStartedAtMs, 0, 'startedAtMs = 0 when startTimer is false');
+      assertEqual(snapshot.islandExpiresAtMs, 0, 'expiresAtMs = 0 when startTimer is false');
+      assertEqual(snapshot.currentIslandNumber, 2, 'island still advances');
+    },
+  },
+
+  {
+    name: 'travelToNextIsland: saves old island active egg into perIslandEggs and clears active egg when new island is fresh',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      const setAt = 1_000_000;
+      const hatchDuration = 86_400_000;
+      seedState({
+        runtimeVersion: 3,
+        currentIslandNumber: 7,
+        activeEggTier: 'rare',
+        activeEggSetAtMs: setAt,
+        activeEggHatchDurationMs: hatchDuration,
+        activeEggIsDormant: false,
+        perIslandEggs: {},
+      });
+
+      const travelNow = setAt + 1000; // well before hatch
+      const result = travelToNextIsland({
+        session,
+        client: null,
+        nextIsland: 8,
+        startTimer: true,
+        nowMs: travelNow,
+        getIslandDurationMs: () => 86_400_000,
+        islandRunContractV2Enabled: false,
+      });
+
+      assertEqual(result.restoredActiveEgg, null, 'no egg to restore on a fresh new island');
+
+      const snapshot = getIslandRunStateSnapshot(session);
+      const saved = snapshot.perIslandEggs['7'];
+      assert(saved !== undefined, "old island's egg should be saved to perIslandEggs");
+      assertEqual(saved.tier, 'rare', 'saved egg tier matches');
+      assertEqual(saved.setAtMs, setAt, 'saved egg setAtMs matches');
+      assertEqual(saved.hatchAtMs, setAt + hatchDuration, 'saved egg hatchAtMs is derived');
+      assertEqual(saved.status, 'incubating', 'not ready yet → status incubating');
+      assertEqual(saved.location, 'island', 'not ready yet → location island');
+      assertEqual(snapshot.activeEggTier, null, 'active egg cleared on arrival');
+      assertEqual(snapshot.activeEggSetAtMs, null, 'active egg setAtMs cleared');
+      assertEqual(snapshot.activeEggHatchDurationMs, null, 'active egg hatchDuration cleared');
+    },
+  },
+
+  {
+    name: 'travelToNextIsland: restores previously-placed incubating egg on return visit',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      const pastSetAt = 500_000;
+      const pastHatchAt = 86_900_000; // far future
+      seedState({
+        runtimeVersion: 3,
+        currentIslandNumber: 4,
+        activeEggTier: null,
+        activeEggSetAtMs: null,
+        activeEggHatchDurationMs: null,
+        perIslandEggs: {
+          '9': {
+            tier: 'mythic',
+            setAtMs: pastSetAt,
+            hatchAtMs: pastHatchAt,
+            status: 'incubating',
+            location: 'island',
+          },
+        },
+      });
+
+      const travelNow = 1_000_000; // still before hatch
+      const result = travelToNextIsland({
+        session,
+        client: null,
+        nextIsland: 9,
+        startTimer: true,
+        nowMs: travelNow,
+        getIslandDurationMs: () => 86_400_000,
+        islandRunContractV2Enabled: false,
+      });
+
+      assert(result.restoredActiveEgg !== null, 'restored egg should be returned');
+      assertEqual(result.restoredActiveEgg!.tier, 'mythic', 'restored tier matches');
+      assertEqual(result.restoredActiveEgg!.isDormant, false, 'still incubating → not dormant');
+
+      const snapshot = getIslandRunStateSnapshot(session);
+      assertEqual(snapshot.activeEggTier, 'mythic', 'active egg tier restored');
+      assertEqual(snapshot.activeEggSetAtMs, pastSetAt, 'active egg setAtMs restored');
+      assertEqual(snapshot.activeEggHatchDurationMs, pastHatchAt - pastSetAt, 'active egg hatchDuration derived');
+    },
+  },
+
+  {
+    name: 'travelToNextIsland: contract-v2 flag resets stop + build states; disabled leaves them intact',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      const priorStopStates = [
+        { objectiveComplete: true, buildComplete: false },
+        { objectiveComplete: true, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+      ];
+      seedState({
+        runtimeVersion: 2,
+        currentIslandNumber: 1,
+        stopStatesByIndex: priorStopStates,
+        activeStopIndex: 2,
+        activeStopType: 'mystery',
+      });
+
+      // Flag OFF → stop states remain untouched
+      travelToNextIsland({
+        session,
+        client: null,
+        nextIsland: 2,
+        startTimer: true,
+        nowMs: 1_000,
+        getIslandDurationMs: () => 10_000,
+        islandRunContractV2Enabled: false,
+      });
+      let snapshot = getIslandRunStateSnapshot(session);
+      assertEqual(snapshot.stopStatesByIndex[0].objectiveComplete, true, 'flag off: stop 0 stays complete');
+      assertEqual(snapshot.activeStopIndex, 2, 'flag off: activeStopIndex unchanged');
+      assertEqual(snapshot.activeStopType, 'mystery', 'flag off: activeStopType unchanged');
+
+      // Now reseed and travel with flag ON.
+      seedState({
+        runtimeVersion: 8,
+        currentIslandNumber: 2,
+        stopStatesByIndex: priorStopStates,
+        activeStopIndex: 2,
+        activeStopType: 'mystery',
+      });
+      travelToNextIsland({
+        session,
+        client: null,
+        nextIsland: 3,
+        startTimer: true,
+        nowMs: 1_000,
+        getIslandDurationMs: () => 10_000,
+        islandRunContractV2Enabled: true,
+      });
+      snapshot = getIslandRunStateSnapshot(session);
+      assertEqual(snapshot.stopStatesByIndex.length, 5, 'flag on: 5 fresh stop states');
+      assertEqual(snapshot.stopStatesByIndex[0].objectiveComplete, false, 'flag on: stop 0 reset to incomplete');
+      assertEqual(snapshot.activeStopIndex, 0, 'flag on: activeStopIndex reset to 0');
+      assertEqual(snapshot.activeStopType, 'hatchery', 'flag on: activeStopType reset to hatchery');
+      assert(snapshot.stopBuildStateByIndex.length === 5, 'flag on: 5 fresh build states');
+    },
+  },
+
+  {
+    name: 'travelToNextIsland: atomic — a stale separate patch cannot half-apply travel',
+    run: () => {
+      // Regression for the named C3 risk. In the legacy path, four separate
+      // patches could be interleaved by another writer; the store-action
+      // path must expose subscribers to either the full pre-travel state or
+      // the full post-travel state, never a half-applied mix.
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 20,
+        currentIslandNumber: 5,
+        completedStopsByIsland: { '5': ['hatchery', 'habit', 'mystery'] },
+        stopTicketsPaidByIsland: { '5': [1, 2] },
+        islandStartedAtMs: 1_000,
+        islandExpiresAtMs: 100_000,
+        bossTrialResolvedIslandNumber: 5,
+      });
+
+      const observed: Array<{
+        currentIslandNumber: number;
+        completedStopsLen: number;
+        ticketsLen: number;
+        bossResolvedIsland: number | null;
+      }> = [];
+      const unsub = subscribeIslandRunState(session, () => {
+        const s = getIslandRunStateSnapshot(session);
+        observed.push({
+          currentIslandNumber: s.currentIslandNumber,
+          completedStopsLen: s.completedStopsByIsland['5']?.length ?? 0,
+          ticketsLen: s.stopTicketsPaidByIsland['5']?.length ?? 0,
+          bossResolvedIsland: s.bossTrialResolvedIslandNumber,
+        });
+      });
+
+      travelToNextIsland({
+        session,
+        client: null,
+        nextIsland: 6,
+        startTimer: true,
+        nowMs: 200_000,
+        getIslandDurationMs: () => 86_400_000,
+        islandRunContractV2Enabled: false,
+      });
+
+      assertEqual(observed.length, 1, 'subscribers should see exactly one intermediate state transition');
+      // In the single observed state, every field must reflect the
+      // post-travel view — no half-applied mix.
+      assertEqual(observed[0].currentIslandNumber, 6, 'post-travel: island = 6');
+      assertEqual(observed[0].completedStopsLen, 0, 'post-travel: old island stops cleared');
+      assertEqual(observed[0].ticketsLen, 0, 'post-travel: old island tickets cleared');
+      assertEqual(observed[0].bossResolvedIsland, null, 'post-travel: boss resolved island cleared');
+
+      unsub();
     },
   },
 ];

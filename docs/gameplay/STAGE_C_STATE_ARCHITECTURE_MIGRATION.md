@@ -1,7 +1,7 @@
 # Stage C — Island Run State Architecture Migration
 
 **Written:** 2026-04-20 (end of session 8 / Stage A+B+E PR)
-**Status:** C1 + C2 LANDED — roll/dice/token movement + essence-award/spend/reward-bar/drift migrated; foundation (A, B, E) merged.
+**Status:** C1 + C2 + C3 (atomic-travel slice) LANDED — roll/dice/token + essence/reward-bar/drift + atomic island travel migrated; foundation (A, B, E) merged.
 **Context file for new agent sessions.** Read this document before starting any Stage C work.
 Companion docs: `CANONICAL_GAMEPLAY_CONTRACT.md`, `ISLAND_RUN_OPEN_ISSUES.md`, `NEXT_TODO_PR_LIST.md`.
 
@@ -170,11 +170,28 @@ Coverage: 11 new `islandRunStateActions` cases (229 total). Tests cover the posi
 
 ---
 
-### C3 — Stop progress + stop tickets + island travel
+### C3 — Stop progress + stop tickets + island travel 🟡 In progress (atomic-travel slice LANDED)
 
-**Gameplay domain:** paying a stop ticket, marking a stop complete (objective + build), travelling to next island (atomic reset of per-island ledgers), starting/resetting island timer.
+**Landed:** 2026-04-20 (session 12). The headline "atomic-travel refactor" risk is closed: `performIslandTravel` now calls a single new store action instead of issuing four separate `persistIslandRunRuntimeStatePatch` calls.
 
-**Actions to create:**
+New action in `islandRunStateActions.ts`:
+
+- `travelToNextIsland({ session, client, nextIsland, startTimer, nowMs, getIslandDurationMs, islandRunContractV2Enabled, triggerSource })` — takes the raw next-island request, runs all pure domain logic (cycle wrap 120→1, egg save/restore, contract-v2 stop/build reset, timer bookkeeping), and commits ONCE through `commitIslandRunState`. Returns `{ record, resolvedIsland, nextCycleIndex, restoredActiveEgg }` so the renderer can feed the restored-egg info into its local `setActiveEgg`. `ISLAND_RUN_MAX_ISLAND = 120` is exported from the action module.
+
+Renderer side: `performIslandTravel` in `IslandRunBoardPrototype.tsx` is now ~90 lines of UI-only resets (`setTokenIndex`, `setRollValue(null)`, `setCompletedStops([])`, …) plus the one action call plus a single `setRuntimeState` forward-sync for the legacy mirror. The four inlined `persistIslandRunRuntimeStatePatch` calls (old-island clears, egg, contract-v2 reset, island bookkeeping) are gone.
+
+Coverage: 7 new `travelToNextIsland` cases (236 total — up from 229). Tests cover the one-commit invariant, cycle-wrap 120→1, `startTimer: false` deferred start, egg save + egg restore + fresh-slot clearing, contract-v2 flag on vs off, and the atomicity regression (subscribers see exactly one intermediate state transition with all post-travel fields coherent). `tsc -b` clean.
+
+**Still pending for C3 (follow-up PR):**
+- `openStopTicket({ stopIndex })` — replaces the `writeIslandRunGameStateRecord` full-record write at `IslandRunBoardPrototype.tsx` ~L2908 (ticket-pay path inside `handleConfirmStopTicket`).
+- `completeStop({ stopIndex })` — replaces the `persistIslandRunRuntimeStatePatch` calls at ~L3996 (`markHatcheryStopCompleteInV2`) and ~L5552 (`handleCompleteActiveStop` contract-v2 branch).
+- `spendStopBuildEssence({ stopIndex, amount })` — replaces the `writeIslandRunGameStateRecord` at ~L5477 (`handleSpendEssenceOnBuild`).
+- QA / debug path patches at ~L5727, ~L5754, ~L5781 — small helpers, low risk.
+- Removing the `completedStopsByIsland` sync `useEffect` at ~L2357 and its mirror-read at ~L2312.
+
+**Gameplay domain (full C3 scope):** paying a stop ticket, marking a stop complete (objective + build), travelling to next island (atomic reset of per-island ledgers), starting/resetting island timer.
+
+**Actions still to create (full C3 list):**
 - `openStopTicket(store, stopIndex)` — from the `writeIslandRunGameStateRecord` ticket-pay full-record write at line **2865**.
 - `completeStop(store, stopIndex)` — from lines **3857** / **5390**.
 - `spendStopBuildEssence(store, { stopIndex, amount })` — from `writeIslandRunGameStateRecord` at line **5315**.

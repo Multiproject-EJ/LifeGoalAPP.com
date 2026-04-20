@@ -17,6 +17,13 @@
  *   sticker snapshot.
  * - {@link applyEssenceDriftTick} — 5-minute essence drift interval.
  *
+ * Stage C3 adds (stop progress + island travel):
+ * - {@link travelToNextIsland} — single atomic commit that replaces the four
+ *   separate `persistIslandRunRuntimeStatePatch` calls that `performIslandTravel`
+ *   used to make (old-island clears, egg save/restore, contract-v2 stop/build
+ *   reset, island-number + timer update). This is the "atomic-travel refactor"
+ *   risk called out in the Stage C spec.
+ *
  * These functions replace the renderer-side `useEffect` + inlined
  * `persistIslandRunRuntimeStatePatch` calls that raced with the roll
  * service and with each other (the multi-writer drift vectors documented
@@ -33,7 +40,10 @@
  */
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
-import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
+import type {
+  IslandRunGameStateRecord,
+  PerIslandEggEntry,
+} from './islandRunGameStateStore';
 import {
   commitIslandRunState,
   getIslandRunStateSnapshot,
@@ -44,6 +54,7 @@ import {
   awardIslandRunContractV2Essence,
   deductIslandRunContractV2Essence,
   getRemainingIslandBuildCost,
+  initStopBuildStatesForIsland,
 } from './islandRunContractV2EssenceBuild';
 import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
 
@@ -353,4 +364,237 @@ export function applyEssenceDriftTick(options: ApplyEssenceDriftTickOptions): Ap
     triggerSource: triggerSource ?? 'apply_essence_drift_tick',
   });
   return { record: next, driftLost: driftResult.driftLost };
+}
+
+// ── C3: Island travel ────────────────────────────────────────────────────────
+
+/** Maximum island number before the cycle wraps back to 1. Mirrors the
+ *  constant inlined in `performIslandTravel` in the renderer. Update here if
+ *  the game ever ships more islands. */
+export const ISLAND_RUN_MAX_ISLAND = 120;
+
+/** Effective island number = resolvedIsland + cycleIndex * 120. Mirrors the
+ *  renderer helper; kept private to the action so callers don't have to
+ *  thread it through. */
+function effectiveIslandNumber(resolvedIsland: number, cycleIndex: number): number {
+  return resolvedIsland + cycleIndex * ISLAND_RUN_MAX_ISLAND;
+}
+
+export interface TravelToNextIslandOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  /** The raw requested island number. May exceed {@link ISLAND_RUN_MAX_ISLAND};
+   *  the action wraps it to `[1, 120]` and bumps `cycleIndex` on wrap. */
+  nextIsland: number;
+  /** When true (the normal case) the per-island timer starts immediately; when
+   *  false the timer is left pending (`islandStartedAtMs/Expires = 0`) so the
+   *  UI can start it on an explicit "Begin" tap. Matches the legacy
+   *  `performIslandTravel({ startTimer })` option. */
+  startTimer: boolean;
+  /** Current wall-clock ms. Injected rather than read inside the action so
+   *  tests can drive deterministic timing. */
+  nowMs: number;
+  /** Per-island timer duration in ms. Kept as a caller-supplied function so
+   *  the renderer can own the duration curve without importing it into the
+   *  service layer. */
+  getIslandDurationMs: (islandNumber: number) => number;
+  /** Contract-V2 feature flag. When enabled, the action resets `stopStatesByIndex`,
+   *  `stopBuildStateByIndex`, `activeStopIndex`, and `activeStopType` for the
+   *  new island. When false these fields are left untouched. */
+  islandRunContractV2Enabled: boolean;
+  triggerSource?: string;
+}
+
+export interface TravelToNextIslandResult {
+  /** The committed record. */
+  record: IslandRunGameStateRecord;
+  /** Island number the player arrived on after cycle-wrap resolution (1…120). */
+  resolvedIsland: number;
+  /** Cycle index after possible 120→1 wrap. */
+  nextCycleIndex: number;
+  /** The egg to show as "active" on the new island, or `null` when the slot
+   *  is fresh. The renderer feeds this into its `setActiveEgg` React state. */
+  restoredActiveEgg:
+    | { tier: 'common' | 'rare' | 'mythic'; setAtMs: number; hatchAtMs: number; isDormant: boolean }
+    | null;
+}
+
+/**
+ * Atomic island travel — THE named "atomic-travel refactor" risk from the Stage C spec.
+ *
+ * The legacy `performIslandTravel` in `IslandRunBoardPrototype.tsx` issued
+ * four separate `persistIslandRunRuntimeStatePatch` calls in sequence:
+ *   1. clear old-island maps (`completedStopsByIsland`, `stopTicketsPaidByIsland`,
+ *      `bonusTileChargeByIsland`)
+ *   2. save the old island's egg + restore the new island's egg (`perIslandEggs`,
+ *      `activeEgg*`)
+ *   3. [contract-v2] reset stop + build states (`stopStatesByIndex`,
+ *      `stopBuildStateByIndex`, `activeStopIndex`, `activeStopType`)
+ *   4. bump island bookkeeping (`currentIslandNumber`, `cycleIndex`,
+ *      `bossTrialResolvedIslandNumber`, timer)
+ *
+ * Each patch went through `persistIslandRunRuntimeStatePatch`, which shallow-
+ * merges against a fresh read of the record. If any of the four failed, or if
+ * another writer (e.g. the roll service, reward bar) landed between two of
+ * them, the travel ended up in a half-applied state: an old-island's
+ * completedStops cleared but the new island's timer not started, or a new
+ * cycle's egg ledger partially restored.
+ *
+ * This action collects every field that travel needs to mutate, applies them
+ * to a single snapshot, and commits ONCE through {@link commitIslandRunState}.
+ * The result: travel is either fully visible or not visible at all to
+ * subscribers. `runtimeVersion` bumps exactly once.
+ *
+ * The action does NOT manage UI-only React state (e.g. `setRollValue(null)`,
+ * timer ticker, feedback toasts) — the renderer still owns those and should
+ * call them immediately after `travelToNextIsland`.
+ */
+export function travelToNextIsland(options: TravelToNextIslandOptions): TravelToNextIslandResult {
+  const {
+    session,
+    client,
+    nextIsland,
+    startTimer,
+    nowMs,
+    getIslandDurationMs,
+    islandRunContractV2Enabled,
+    triggerSource,
+  } = options;
+
+  const current = getIslandRunStateSnapshot(session);
+
+  // Cycle-wrap resolution (120 → 1 bumps cycleIndex).
+  const wraps = nextIsland > ISLAND_RUN_MAX_ISLAND;
+  const resolvedIsland = wraps
+    ? ((nextIsland - 1) % ISLAND_RUN_MAX_ISLAND) + 1
+    : Math.max(1, nextIsland);
+  const nextCycleIndex = wraps ? current.cycleIndex + 1 : current.cycleIndex;
+
+  const oldIslandKey = String(current.currentIslandNumber);
+  const newIslandKey = String(resolvedIsland);
+
+  // ── Egg save/restore ────────────────────────────────────────────────────
+  // Save the old island's active egg (if any) into perIslandEggs, then check
+  // whether the new island has a previously-placed egg to restore.
+  const currentPerIslandEggs = current.perIslandEggs ?? {};
+  const updatedPerIslandEggs: Record<string, PerIslandEggEntry> = { ...currentPerIslandEggs };
+
+  const hasActiveEgg = current.activeEggTier !== null
+    && current.activeEggSetAtMs !== null
+    && current.activeEggHatchDurationMs !== null;
+
+  if (hasActiveEgg) {
+    const setAtMs = current.activeEggSetAtMs as number;
+    const hatchAtMs = setAtMs + (current.activeEggHatchDurationMs as number);
+    const isReady = nowMs >= hatchAtMs;
+    updatedPerIslandEggs[oldIslandKey] = {
+      tier: current.activeEggTier as 'common' | 'rare' | 'mythic',
+      setAtMs,
+      hatchAtMs,
+      status: isReady ? 'ready' : 'incubating',
+      location: isReady ? 'dormant' : 'island',
+    };
+  }
+
+  // Restore the new island's egg only when it's still incubating or ready.
+  // Collected/sold eggs stay in the ledger but must not repopulate the slot.
+  const newIslandEntry = updatedPerIslandEggs[newIslandKey];
+  let restoredActiveEgg: TravelToNextIslandResult['restoredActiveEgg'] = null;
+  let nextActiveEggTier: IslandRunGameStateRecord['activeEggTier'] = null;
+  let nextActiveEggSetAtMs: IslandRunGameStateRecord['activeEggSetAtMs'] = null;
+  let nextActiveEggHatchDurationMs: IslandRunGameStateRecord['activeEggHatchDurationMs'] = null;
+  let nextActiveEggIsDormant = false;
+
+  if (
+    newIslandEntry
+    && (newIslandEntry.status === 'incubating' || newIslandEntry.status === 'ready')
+  ) {
+    const isNowReady = nowMs >= newIslandEntry.hatchAtMs;
+    const isDormant = isNowReady || newIslandEntry.location === 'dormant';
+    restoredActiveEgg = {
+      tier: newIslandEntry.tier,
+      setAtMs: newIslandEntry.setAtMs,
+      hatchAtMs: newIslandEntry.hatchAtMs,
+      isDormant,
+    };
+    nextActiveEggTier = newIslandEntry.tier;
+    nextActiveEggSetAtMs = newIslandEntry.setAtMs;
+    nextActiveEggHatchDurationMs = newIslandEntry.hatchAtMs - newIslandEntry.setAtMs;
+    nextActiveEggIsDormant = isDormant;
+  }
+
+  // ── Contract-V2 stop/build reset ───────────────────────────────────────
+  // Fresh stop objective + build states for the new island. When the flag is
+  // off these fields are left untouched.
+  let nextStopStatesByIndex = current.stopStatesByIndex;
+  let nextStopBuildStateByIndex = current.stopBuildStateByIndex;
+  let nextActiveStopIndex = current.activeStopIndex;
+  let nextActiveStopType = current.activeStopType;
+
+  if (islandRunContractV2Enabled) {
+    nextStopStatesByIndex = Array.from({ length: 5 }, () => ({
+      objectiveComplete: false,
+      buildComplete: false,
+    }));
+    nextStopBuildStateByIndex = initStopBuildStatesForIsland(
+      effectiveIslandNumber(resolvedIsland, nextCycleIndex),
+    );
+    nextActiveStopIndex = 0;
+    nextActiveStopType = 'hatchery';
+  }
+
+  // ── Timer ─────────────────────────────────────────────────────────────
+  const durationMs = getIslandDurationMs(resolvedIsland);
+  const islandStartedAtMs = startTimer ? nowMs : 0;
+  const islandExpiresAtMs = startTimer ? nowMs + durationMs : 0;
+
+  // ── Single atomic commit ──────────────────────────────────────────────
+  // Shallow-overlay the three per-island Record maps so the old island's
+  // entries are explicitly cleared but other islands' entries are preserved.
+  // This mirrors the patch-merge semantics of `persistIslandRunRuntimeStatePatch`
+  // while consolidating into one commit.
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    completedStopsByIsland: {
+      ...current.completedStopsByIsland,
+      [oldIslandKey]: [],
+    },
+    stopTicketsPaidByIsland: {
+      ...(current.stopTicketsPaidByIsland ?? {}),
+      [oldIslandKey]: [],
+    },
+    bonusTileChargeByIsland: {
+      ...(current.bonusTileChargeByIsland ?? {}),
+      [oldIslandKey]: {},
+    },
+    perIslandEggs: updatedPerIslandEggs,
+    activeEggTier: nextActiveEggTier,
+    activeEggSetAtMs: nextActiveEggSetAtMs,
+    activeEggHatchDurationMs: nextActiveEggHatchDurationMs,
+    activeEggIsDormant: nextActiveEggIsDormant,
+    stopStatesByIndex: nextStopStatesByIndex,
+    stopBuildStateByIndex: nextStopBuildStateByIndex,
+    activeStopIndex: nextActiveStopIndex,
+    activeStopType: nextActiveStopType,
+    currentIslandNumber: resolvedIsland,
+    cycleIndex: nextCycleIndex,
+    bossTrialResolvedIslandNumber: null,
+    islandStartedAtMs,
+    islandExpiresAtMs,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'travel_to_next_island',
+  });
+
+  return {
+    record: next,
+    resolvedIsland,
+    nextCycleIndex,
+    restoredActiveEgg,
+  };
 }
