@@ -7,7 +7,7 @@ import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 import { commitIslandRunRuntimeSnapshot } from './islandRunCommitActionService';
 import { sanitizeStopTicketsPaidByIsland } from './islandRunStopTickets';
 import {
-  BONUS_CHARGE_TARGET,
+  clampBonusCharge,
   sanitizeBonusTileChargeByIsland,
   type BonusTileChargeByIsland,
 } from './islandRunBonusTile';
@@ -1006,8 +1006,7 @@ function mergeRecordForConflict(options: {
   // Bonus-tile charge ledger: per-(island, tileIndex) max. A release on one
   // device zeroes the tile's charge (and prunes it from the map), so taking
   // the max preserves work in progress on the other device rather than silently
-  // rolling back to 0. Clamp back to BONUS_CHARGE_TARGET to defend against
-  // malformed remote rows.
+  // rolling back to 0. `clampBonusCharge` defends against malformed remote rows.
   const mergedBonusTileChargeByIsland: BonusTileChargeByIsland = {};
   const bonusIslandKeys = new Set<string>([
     ...Object.keys(remote.bonusTileChargeByIsland ?? {}),
@@ -1022,10 +1021,12 @@ function mergeRecordForConflict(options: {
     ]);
     const innerMerged: Record<number, number> = {};
     innerKeys.forEach((idxKey) => {
-      const r = typeof remoteInner[idxKey as unknown as number] === 'number' ? remoteInner[idxKey as unknown as number] : 0;
-      const l = typeof localInner[idxKey as unknown as number] === 'number' ? localInner[idxKey as unknown as number] : 0;
-      const merged = Math.max(0, Math.min(BONUS_CHARGE_TARGET, Math.max(r, l)));
-      if (merged > 0) innerMerged[Math.floor(Number(idxKey))] = merged;
+      const idx = Number(idxKey);
+      if (!Number.isFinite(idx) || idx < 0) return;
+      const r = clampBonusCharge(remoteInner[idx]);
+      const l = clampBonusCharge(localInner[idx]);
+      const merged = Math.max(r, l);
+      if (merged > 0) innerMerged[Math.floor(idx)] = merged;
     });
     if (Object.keys(innerMerged).length > 0) mergedBonusTileChargeByIsland[islandKey] = innerMerged;
   });

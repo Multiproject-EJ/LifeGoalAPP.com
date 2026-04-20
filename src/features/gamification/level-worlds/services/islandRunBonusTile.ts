@@ -30,6 +30,16 @@ export const BONUS_CYCLE_LENGTH = BONUS_CHARGE_TARGET + 1;
 /** Persisted shape for the bonus-tile accumulator ledger. */
 export type BonusTileChargeByIsland = Record<string, Record<number, number>>;
 
+/**
+ * Clamp a raw charge value to the valid range `[0, BONUS_CHARGE_TARGET]`. Used
+ * everywhere the ledger is sanitised (local read, remote merge, patch overlay)
+ * so the invariant lives in exactly one place.
+ */
+export function clampBonusCharge(value: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(BONUS_CHARGE_TARGET, Math.floor(value)));
+}
+
 /** Payload released on the 9th landing. Tuning numbers live here (and the
  *  contract doc) so the renderer never invents values. */
 export interface BonusTileReleasePayout {
@@ -210,7 +220,7 @@ export function sanitizeBonusTileChargeByIsland(
       const idx = Number(idxKey);
       if (!Number.isFinite(idx) || idx < 0) continue;
       if (typeof chargeRaw !== 'number' || !Number.isFinite(chargeRaw)) continue;
-      const normalized = Math.max(0, Math.min(BONUS_CHARGE_TARGET, Math.floor(chargeRaw)));
+      const normalized = clampBonusCharge(chargeRaw);
       if (normalized > 0) innerCopy[Math.floor(idx)] = normalized;
     }
     if (Object.keys(innerCopy).length > 0) nextMap[islandKey] = innerCopy;

@@ -15,7 +15,7 @@ import {
   writeIslandRunGameStateRecord,
 } from './islandRunGameStateStore';
 import {
-  BONUS_CHARGE_TARGET,
+  clampBonusCharge,
   type BonusTileChargeByIsland,
 } from './islandRunBonusTile';
 
@@ -292,8 +292,7 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
                   for (const [idxKey, chargeRaw] of Object.entries(inner)) {
                     const idx = Number(idxKey);
                     if (!Number.isFinite(idx) || idx < 0) continue;
-                    if (typeof chargeRaw !== 'number' || !Number.isFinite(chargeRaw)) continue;
-                    const normalized = Math.max(0, Math.min(BONUS_CHARGE_TARGET, Math.floor(chargeRaw)));
+                    const normalized = clampBonusCharge(chargeRaw as number);
                     if (normalized > 0) innerCopy[Math.floor(idx)] = normalized;
                   }
                   return [islandKey, innerCopy];
