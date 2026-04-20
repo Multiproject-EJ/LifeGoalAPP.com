@@ -771,3 +771,47 @@ export async function fetchAchievementsWithProgress(userId: string): Promise<{
     };
   }
 }
+
+// =====================================================
+// XP RESET
+// =====================================================
+
+/**
+ * Resets the user's XP to 0 and current level to 1.
+ *
+ * This only affects the `gamification_profiles` record (or its demo-mode
+ * localStorage equivalent). It does NOT touch journals, habits, streaks,
+ * achievements, or any other app data.
+ *
+ * XP transaction history is intentionally preserved as a historical log.
+ */
+export async function resetXP(
+  userId: string,
+): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
+  try {
+    if (!canUseSupabaseData()) {
+      // Demo mode — patch the localStorage profile in place.
+      const profileJson = localStorage.getItem(DEMO_PROFILE_KEY);
+      const profile = profileJson ? JSON.parse(profileJson) : {};
+      profile.total_xp = 0;
+      profile.current_level = 1;
+      localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(profile));
+      return { ok: true };
+    }
+
+    const supabase = getSupabaseClient();
+    const { error } = await supabase
+      .from('gamification_profiles')
+      .update({ total_xp: 0, current_level: 1 })
+      .eq('user_id', userId);
+
+    if (error) throw error;
+    return { ok: true };
+  } catch (error) {
+    console.error('Failed to reset XP:', error);
+    return {
+      ok: false,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}

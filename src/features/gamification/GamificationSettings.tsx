@@ -137,7 +137,7 @@ export function GamificationSettings({ session }: GamificationSettingsProps) {
         <h4 style={{ margin: '0 0 0.5rem', fontSize: '0.95rem' }}>🏝️ Island Run Progress</h4>
         <p style={{ margin: '0 0 0.75rem', fontSize: '0.85rem', color: 'var(--color-text-secondary, #666)' }}>
           Reset your 120-island board game progress back to island 1 with starting resources.
-          Your XP, level, journals, habits, and achievements will <strong>not</strong> be affected.
+          Your <strong>XP and level will also be reset to 1</strong>. Journals, habits, and achievements will <strong>not</strong> be affected.
         </p>
 
         {!resetConfirmOpen ? (
@@ -164,7 +164,8 @@ export function GamificationSettings({ session }: GamificationSettingsProps) {
             </p>
             <p style={{ margin: '0 0 0.75rem', fontSize: '0.8rem', color: 'var(--color-text-secondary, #666)' }}>
               This will reset your island game to island 1 with 30 dice, 0 essence, and clear all
-              island stops, eggs, and creatures. This cannot be undone.
+              island stops, eggs, and creatures. Your XP and level will also be reset to 1.
+              This cannot be undone.
             </p>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
@@ -218,8 +219,16 @@ export function GamificationSettings({ session }: GamificationSettingsProps) {
         setResetConfirmOpen(false);
         setMessage({
           type: 'success',
-          text: 'Island Run progress has been reset! Refresh to start fresh on island 1.',
+          text: 'Island Run progress and XP have been reset! Your level is now 1. Refresh to reload the island board.',
         });
+        // Notify the gamification hook so the level chip updates immediately.
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('gamificationProfileUpdated', {
+              detail: { userId },
+            }),
+          );
+        }
       } else {
         setMessage({
           type: 'error',
