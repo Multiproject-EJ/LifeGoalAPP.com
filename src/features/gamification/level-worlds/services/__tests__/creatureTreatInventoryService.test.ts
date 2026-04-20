@@ -1,4 +1,4 @@
-import { earnCreatureTreatsForUser, fetchCreatureTreatInventory, spendCreatureTreatForUser } from '../creatureTreatInventoryService';
+import { clearCreatureTreatInventoryForUser, earnCreatureTreatsForUser, fetchCreatureTreatInventory, spendCreatureTreatForUser } from '../creatureTreatInventoryService';
 import { assertDeepEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
 const USER_ID = 'treat-test-user';
@@ -29,6 +29,22 @@ export const creatureTreatInventoryServiceTests: TestCase[] = [
       resetStorage();
       spendCreatureTreatForUser(USER_ID, 'rare');
       assertDeepEqual(fetchCreatureTreatInventory(USER_ID), { basic: 3, favorite: 1, rare: 0 }, 'Expected overspend to be ignored');
+    },
+  },
+  {
+    name: 'clearCreatureTreatInventoryForUser resets storage to defaults on next read',
+    run: () => {
+      resetStorage();
+      earnCreatureTreatsForUser(USER_ID, { basic: 5, favorite: 4, rare: 2 });
+      assertDeepEqual(fetchCreatureTreatInventory(USER_ID), { basic: 8, favorite: 5, rare: 2 }, 'Expected earned treats to persist before clear');
+
+      clearCreatureTreatInventoryForUser(USER_ID);
+
+      assertDeepEqual(
+        fetchCreatureTreatInventory(USER_ID),
+        { basic: 3, favorite: 1, rare: 0 },
+        'Expected defaults after clearing the persisted treat inventory',
+      );
     },
   },
 ];

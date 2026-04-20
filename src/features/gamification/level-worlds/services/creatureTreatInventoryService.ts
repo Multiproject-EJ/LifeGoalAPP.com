@@ -67,3 +67,17 @@ export function spendCreatureTreatForUser(userId: string, treatType: CreatureTre
   } satisfies CreatureTreatInventory;
   return writeCreatureTreatInventory(userId, next);
 }
+
+/**
+ * Clears the persisted creature treat inventory for the given user. Used
+ * by {@link resetIslandRunProgress} so a fresh-start run doesn't carry
+ * over treats earned on later islands.
+ */
+export function clearCreatureTreatInventoryForUser(userId: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(getStorageKey(userId));
+  } catch {
+    // ignore storage failures for now
+  }
+}

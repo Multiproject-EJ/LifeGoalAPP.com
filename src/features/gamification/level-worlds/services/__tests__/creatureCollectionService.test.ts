@@ -1,10 +1,13 @@
 import {
   claimCreatureBondMilestoneForUser,
+  clearCreatureCollectionForUser,
   collectCreatureForUser,
+  fetchActiveCompanionId,
   fetchCreatureCollection,
   feedCreatureForUser,
   getUnclaimedBondMilestones,
   migrateLegacyEggLedgerToCollection,
+  saveActiveCompanionId,
 } from '../creatureCollectionService';
 import { selectCreatureForEgg } from '../creatureCatalog';
 import { assert, assertDeepEqual, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
@@ -64,6 +67,22 @@ export const creatureCollectionServiceTests: TestCase[] = [
       assertEqual(first.didChange, true, 'Expected first migration to insert creature');
       assertEqual(second.didChange, false, 'Expected second migration to detect existing creature');
       assertEqual(first.collection.length, 1, 'Expected one migrated creature');
+    },
+  },
+  {
+    name: 'clearCreatureCollectionForUser empties the collection AND active companion',
+    run: () => {
+      resetStorage();
+      const creature = selectCreatureForEgg({ eggTier: 'common', seed: 100, islandNumber: 2 });
+      collectCreatureForUser({ userId: USER_ID, creature, islandNumber: 2, collectedAtMs: 1000 });
+      saveActiveCompanionId(USER_ID, creature.id);
+      assertEqual(fetchCreatureCollection(USER_ID).length, 1, 'Expected creature seeded before clear');
+      assertEqual(fetchActiveCompanionId(USER_ID), creature.id, 'Expected active companion seeded before clear');
+
+      clearCreatureCollectionForUser(USER_ID);
+
+      assertDeepEqual(fetchCreatureCollection(USER_ID), [], 'Expected empty collection after clear');
+      assertEqual(fetchActiveCompanionId(USER_ID), null, 'Expected null active companion after clear');
     },
   },
 ];
