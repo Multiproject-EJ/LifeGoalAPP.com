@@ -1,7 +1,7 @@
 # Stage C — Island Run State Architecture Migration
 
 **Written:** 2026-04-20 (end of session 8 / Stage A+B+E PR)
-**Status:** C1 LANDED — roll/dice/token movement migrated; foundation (A, B, E) merged.
+**Status:** C1 + C2 + C3 (atomic-travel slice) LANDED — roll/dice/token + essence/reward-bar/drift + atomic island travel migrated; foundation (A, B, E) merged.
 **Context file for new agent sessions.** Read this document before starting any Stage C work.
 Companion docs: `CANONICAL_GAMEPLAY_CONTRACT.md`, `ISLAND_RUN_OPEN_ISSUES.md`, `NEXT_TODO_PR_LIST.md`.
 
@@ -119,9 +119,32 @@ All chunks create actions in a new file `services/islandRunStateActions.ts` (cre
 
 ---
 
-### C2 — Tile rewards + encounter rewards + reward-bar + essence drift
+### C2 — Tile rewards + encounter rewards + reward-bar + essence drift ✅ LANDED (essence + reward-bar + drift slice)
+
+**Landed:** 2026-04-20 (session 11). The essence-award / essence-spend / reward-bar / essence-drift call-sites in `IslandRunBoardPrototype.tsx` now commit through store actions. New actions in `islandRunStateActions.ts`:
+
+- `applyEssenceAward({ session, client, islandRunContractV2Enabled, amount, triggerSource })` — replaces the inlined `persistIslandRunRuntimeStatePatch({ essence, essenceLifetimeEarned })` + `setRuntimeState` pair inside `awardContractV2Essence`. Returns `{ record, earned }`.
+- `applyEssenceDeduct({ session, client, islandRunContractV2Enabled, amount, triggerSource })` — replaces the equivalent pair inside `deductContractV2Essence`. Returns `{ record, spent }`.
+- `applyRewardBarState({ session, client, nextState, triggerSource })` — replaces the cascade write inside `applyContractV2RewardBarRuntimeState`. Commits the full reward-bar + timed-event + sticker snapshot in one store commit.
+- `applyEssenceDriftTick({ session, client, effectiveIslandNumber, elapsedMs, triggerSource })` — replaces the drift-interval `useEffect`'s five `runtimeStateRef.current` reads + `setRuntimeState` + `persistIslandRunRuntimeStatePatch`. Internally uses `getIslandRunStateSnapshot`, `isIslandRunFullyClearedV2`, `getRemainingIslandBuildCost`, and `applyEssenceDrift`. Returns `{ record, driftLost }`; commits only when essence was actually lost.
+
+Renderer side: the four call-sites now call the action, then call `setRuntimeState` with the returned next-field values for legacy-mirror compatibility (runtimeState itself is retired in C7/Stage D). No `persistIslandRunRuntimeStatePatch` calls remain in these four flows. The unused renderer imports of `awardIslandRunContractV2Essence`, `deductIslandRunContractV2Essence`, `applyEssenceDrift`, and `getRemainingIslandBuildCost` were removed.
+
+Coverage: 11 new `islandRunStateActions` cases (229 total). Tests cover the positive/negative/no-op paths for each action, the single-commit-per-reward invariant, and sequential award→deduct→reward-bar→award composition without dropped deltas. `tsc -b` clean.
+
+**Deferred to later chunks (still in C2 scope per the spec but landed separately):**
+- Creature-feed shard rewards at lines 8452/71/90/509/27 of the renderer — these are the five `persistIslandRunRuntimeStatePatch({ shards })` writes from sanctuary feeding. They fit more naturally with the shard-wallet action `awardShards` in **C5**, where they will land together.
+- `completedEncounterIndices` `useState` mirror removal — deferred to the C3 stop-progress chunk, since completed-encounter tracking shares plumbing with `completedStopsByIsland`.
+
+**Why first (historical note):** C1 and C2 close the two highest-contention race paths in the renderer. With these two chunks landed, the remaining mirrors (`completedEncounterIndices`, `activeStopId`, `islandNumber`, egg/market/companion, shards, boss/flags) are all lower-rate writes that no longer race the roll service.
 
 **Gameplay domain:** currency/chest/micro/hazard tile payouts, encounter resolution payout, reward-bar threshold cascade, essence award/spend helpers, drift tick.
+
+---
+
+### C2 — Remaining sub-items for a follow-up PR
+
+**Gameplay domain:** encounter-specific payouts + creature-feed shard awards.
 
 **Actions to create:**
 - `applyTileReward(store, { tileType, islandNumber })` — from tile handler helpers; writes `essence` / `shards` / `dicePool` deltas + reward-bar progress.
@@ -147,11 +170,28 @@ All chunks create actions in a new file `services/islandRunStateActions.ts` (cre
 
 ---
 
-### C3 — Stop progress + stop tickets + island travel
+### C3 — Stop progress + stop tickets + island travel 🟡 In progress (atomic-travel slice LANDED)
 
-**Gameplay domain:** paying a stop ticket, marking a stop complete (objective + build), travelling to next island (atomic reset of per-island ledgers), starting/resetting island timer.
+**Landed:** 2026-04-20 (session 12). The headline "atomic-travel refactor" risk is closed: `performIslandTravel` now calls a single new store action instead of issuing four separate `persistIslandRunRuntimeStatePatch` calls.
 
-**Actions to create:**
+New action in `islandRunStateActions.ts`:
+
+- `travelToNextIsland({ session, client, nextIsland, startTimer, nowMs, getIslandDurationMs, islandRunContractV2Enabled, triggerSource })` — takes the raw next-island request, runs all pure domain logic (cycle wrap 120→1, egg save/restore, contract-v2 stop/build reset, timer bookkeeping), and commits ONCE through `commitIslandRunState`. Returns `{ record, resolvedIsland, nextCycleIndex, restoredActiveEgg }` so the renderer can feed the restored-egg info into its local `setActiveEgg`. `ISLAND_RUN_MAX_ISLAND = 120` is exported from the action module.
+
+Renderer side: `performIslandTravel` in `IslandRunBoardPrototype.tsx` is now ~90 lines of UI-only resets (`setTokenIndex`, `setRollValue(null)`, `setCompletedStops([])`, …) plus the one action call plus a single `setRuntimeState` forward-sync for the legacy mirror. The four inlined `persistIslandRunRuntimeStatePatch` calls (old-island clears, egg, contract-v2 reset, island bookkeeping) are gone.
+
+Coverage: 7 new `travelToNextIsland` cases (236 total — up from 229). Tests cover the one-commit invariant, cycle-wrap 120→1, `startTimer: false` deferred start, egg save + egg restore + fresh-slot clearing, contract-v2 flag on vs off, and the atomicity regression (subscribers see exactly one intermediate state transition with all post-travel fields coherent). `tsc -b` clean.
+
+**Still pending for C3 (follow-up PR):**
+- `openStopTicket({ stopIndex })` — replaces the `writeIslandRunGameStateRecord` full-record write at `IslandRunBoardPrototype.tsx` ~L2908 (ticket-pay path inside `handleConfirmStopTicket`).
+- `completeStop({ stopIndex })` — replaces the `persistIslandRunRuntimeStatePatch` calls at ~L3996 (`markHatcheryStopCompleteInV2`) and ~L5552 (`handleCompleteActiveStop` contract-v2 branch).
+- `spendStopBuildEssence({ stopIndex, amount })` — replaces the `writeIslandRunGameStateRecord` at ~L5477 (`handleSpendEssenceOnBuild`).
+- QA / debug path patches at ~L5727, ~L5754, ~L5781 — small helpers, low risk.
+- Removing the `completedStopsByIsland` sync `useEffect` at ~L2357 and its mirror-read at ~L2312.
+
+**Gameplay domain (full C3 scope):** paying a stop ticket, marking a stop complete (objective + build), travelling to next island (atomic reset of per-island ledgers), starting/resetting island timer.
+
+**Actions still to create (full C3 list):**
 - `openStopTicket(store, stopIndex)` — from the `writeIslandRunGameStateRecord` ticket-pay full-record write at line **2865**.
 - `completeStop(store, stopIndex)` — from lines **3857** / **5390**.
 - `spendStopBuildEssence(store, { stopIndex, amount })` — from `writeIslandRunGameStateRecord` at line **5315**.
