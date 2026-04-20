@@ -782,4 +782,97 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       );
     },
   },
+  {
+    // Regression: parked writes must not be silently dropped.
+    //
+    // Scenario: Write A is in flight. Write B arrives and parks behind A via
+    // single-flight. If A's remote commit errors (or the tab closes) before
+    // the parked resume fires, B's snapshot would previously be lost. The fix
+    // enqueues parked records into the `pending_write` localStorage queue so
+    // the next successful write replays them.
+    name: 'writeIslandRunGameStateRecord enqueues parked single-flight snapshot into pending_write queue',
+    run: async () => {
+      resetStorage();
+      const session = makeSession();
+      const baseline = readIslandRunGameStateRecord(session);
+      const { client, releaseNext } = createDeferredSingleFlightClient();
+
+      // Write A — goes in-flight.
+      const writeA = writeIslandRunGameStateRecord({
+        session,
+        client,
+        record: { ...baseline, dicePool: baseline.dicePool + 1 },
+      });
+      await Promise.resolve();
+
+      // Write B — parks behind A via single-flight.
+      const writeB = writeIslandRunGameStateRecord({
+        session,
+        client,
+        record: { ...baseline, dicePool: baseline.dicePool + 7 },
+      });
+      await Promise.resolve();
+
+      // Write B must be visible in the pending_write queue BEFORE A resolves,
+      // so that a crash or tab-close between here and the resume schedule
+      // still leaves B recoverable.
+      const pendingRaw = window.localStorage.getItem(`island_run_runtime_state_${USER_ID}_pending_write`);
+      assert(
+        typeof pendingRaw === 'string' && pendingRaw.length > 0,
+        'Expected parked single-flight snapshot to be enqueued into pending_write queue',
+      );
+      const parsed = JSON.parse(pendingRaw!) as { dicePool?: number };
+      assertEqual(parsed.dicePool, baseline.dicePool + 7, 'Expected parked record to carry the would-be-lost delta');
+
+      // Finish both commits to leave the coordinator clean.
+      releaseNext();
+      await writeA;
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      releaseNext();
+      await writeB;
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    },
+  },
+  {
+    // Regression: non-backoff commit failure (e.g. conflict-merge retry that
+    // still rejects) previously returned `{ ok: false }` without queueing the
+    // record, silently dropping the user's delta. The fix enqueues the record
+    // into pending_write so the next successful commit replays it.
+    name: 'writeIslandRunGameStateRecord enqueues pending_write on non-backoff commit error',
+    run: async () => {
+      resetStorage();
+      const session = makeSession();
+      const baseline = readIslandRunGameStateRecord(session);
+
+      // Build a client that reports a non-transport, non-schema error so that
+      // remoteBackoffTriggered is FALSE in the write-error branch.
+      let commitCalls = 0;
+      const client = {
+        rpc(_name: string) {
+          commitCalls += 1;
+          return Promise.resolve({
+            data: null,
+            error: { message: 'unexpected rpc failure', code: 'unknown_commit_action_error' },
+          });
+        },
+      } as unknown as import('@supabase/supabase-js').SupabaseClient;
+
+      const result = await writeIslandRunGameStateRecord({
+        session,
+        client,
+        record: { ...baseline, dicePool: baseline.dicePool + 9 },
+      });
+
+      assertEqual(result.ok, false, 'Expected non-backoff commit error to surface as ok:false');
+      assert(commitCalls >= 1, 'Expected at least one commit attempt');
+
+      const pendingRaw = window.localStorage.getItem(`island_run_runtime_state_${USER_ID}_pending_write`);
+      assert(
+        typeof pendingRaw === 'string' && pendingRaw.length > 0,
+        'Expected failed write to be queued into pending_write for later replay',
+      );
+      const parsed = JSON.parse(pendingRaw!) as { dicePool?: number };
+      assertEqual(parsed.dicePool, baseline.dicePool + 9, 'Expected queued record to carry the would-be-lost delta');
+    },
+  },
 ];

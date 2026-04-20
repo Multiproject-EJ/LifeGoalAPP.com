@@ -1,7 +1,7 @@
 # Island Run — Open Issues & Feature Backlog
 
 Status: Living document
-Last updated: 2026-04-19 (session 6)
+Last updated: 2026-04-20 (session 7 — cross-device sync & roll drift follow-up)
 Owner: Gameplay System
 
 This document tracks every unresolved issue, bug, inconsistency, or scoped
@@ -16,13 +16,47 @@ for traceability.
 
 ## P0 — Must-fix (correctness / trust)
 
-### P0-1. Single authoritative roll path + no Supabase row drift — ✅ Closed (session 4)
+### P0-1. Single authoritative roll path + no Supabase row drift — ✅ Closed (session 4, follow-ups session 7)
 
 Implementation landed in session 4 — see the Closed section below. The roll
 service now owns a per-user async mutex, awaits the persist inside the mutex,
 and returns `newDicePool` / `newRuntimeVersion` so the renderer can sync from
 the service's truth (via a functional updater that no longer clobbers
 mid-animation reward deltas). Concurrency regression test added.
+
+**Session 7 follow-ups (cross-device sync & roll drift) — ✅ Closed:**
+- **Hydration-sync regression guard** — `IslandRunBoardPrototype.tsx` now
+  tracks `lastAppliedRuntimeVersionRef`. If a later `runtimeState` update
+  carries an older runtimeVersion (e.g. from a conflict-recovery merge that
+  pulled an older Supabase row), the React mirrors (`tokenIndex`, `dicePool`,
+  `spinTokens`, …) are no longer snapped back to that stale value. This fixes
+  the "player piece jumps back to an older tile and keeps playing from there"
+  symptom.
+- **Persist-effect base = fresh localStorage record** — the dicePool/tokenIndex/
+  spinTokens persist effect now spreads `readIslandRunGameStateRecord(session)`
+  instead of `runtimeStateRef.current`, so it piggy-backs on the roll service's
+  freshly-written runtimeVersion rather than racing it. Eliminates the
+  conflict-storm that caused the dice count to oscillate between two values on
+  every reward after a roll.
+- **Force remote hydrate on login/entry** — the initial hydrate in
+  `IslandRunBoardPrototype.tsx` now passes `forceRemote: true` so a stale local
+  `island_run_remote_backoff_…` blob can no longer pin a device to its own
+  local fallback (the cause of "phone shows island 6 but desktop shows island 1"
+  even though the user is the same).
+- **Parked writes no longer dropped on commit failure** —
+  `writeIslandRunGameStateRecord` now enqueues single-flight parked snapshots
+  into the `pending_write` localStorage queue at the time of park (not only on
+  successful resume), and also enqueues on non-backoff commit errors. This
+  eliminates the data-loss window where a transient Supabase error between two
+  rolls could silently lose the first roll's delta.
+- **Null-safe `current_island_number` hydrate** — both hydrate branches now
+  fall back to the local record's `currentIslandNumber` instead of silently
+  clamping to default 1 if the Supabase column is ever NULL.
+
+Coverage: `islandRunRuntimeStateIntegration` adds two new cases:
+`writeIslandRunGameStateRecord enqueues parked single-flight snapshot into
+pending_write queue` and `writeIslandRunGameStateRecord enqueues pending_write
+on non-backoff commit error`.
 
 ---
 

@@ -50,7 +50,7 @@ import {
 } from '../services/islandRunRuntimeState';
 import { ShardClaimModal } from './ShardClaimModal';
 import { IslandRunReflectionComposer } from './IslandRunReflectionComposer';
-import { writeIslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
+import { readIslandRunGameStateRecord, writeIslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import {
   rollEggTierWeighted,
   getRandomHatchDelayMs,
@@ -1268,6 +1268,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const isRetryingSync = false;
   const [perfectCompanionRuntimeConfig, setPerfectCompanionRuntimeConfig] = useState(() => readPerfectCompanionRuntimeConfig(session.user.id));
   const runtimeStateRef = useRef(runtimeState);
+  // Tracks the `runtimeState.runtimeVersion` last applied to local React state
+  // mirrors (tokenIndex, dicePool, spinTokens, islandShards, etc.). If a later
+  // `runtimeState` update carries an *older* runtimeVersion — which can happen
+  // when a conflict-recovery merge or a delayed reconcile pulls an older
+  // Supabase row — we must NOT snap React state back to that older value,
+  // otherwise the player's token and dice pool will visibly jump backward to a
+  // pre-roll position. See `ISLAND_RUN_OPEN_ISSUES.md` — P0 cross-device drift.
+  const lastAppliedRuntimeVersionRef = useRef<number>(-1);
   // Guard ref to prevent persist effects from writing stale local state before
   // the hydration effect has applied server values to local state. This prevents
   // the write amplification loop where persist effects see stale local state
@@ -1420,6 +1428,25 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (!hasHydratedRuntimeState) {
       return;
     }
+
+    // Guard against runtime-version regression: if the `runtimeState` update we
+    // are processing carries a *strictly older* runtimeVersion than the last
+    // one we already applied to React mirrors, skip the mirror updates so we
+    // don't snap the player token, dice pool, or other per-roll fields back to
+    // a pre-roll value after a conflict-recovery / stale reconcile.
+    const incomingRuntimeVersion = runtimeState.runtimeVersion ?? 0;
+    const lastAppliedRuntimeVersion = lastAppliedRuntimeVersionRef.current;
+    if (lastAppliedRuntimeVersion >= 0 && incomingRuntimeVersion < lastAppliedRuntimeVersion) {
+      logIslandRunEntryDebug('island_run_runtime_hydration_sync_regression_skipped', {
+        userId: session.user.id,
+        lastAppliedRuntimeVersion,
+        incomingRuntimeVersion,
+        incomingTokenIndex: runtimeState.tokenIndex,
+        incomingDicePool: runtimeState.dicePool,
+      });
+      return;
+    }
+    lastAppliedRuntimeVersionRef.current = incomingRuntimeVersion;
 
     const persistedIsland = runtimeState.currentIslandNumber;
     setIslandNumber((current) => (current === persistedIsland ? current : persistedIsland));
@@ -1902,7 +1929,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setRuntimeHydrationSource(null);
     setRuntimeState(localSnapshotBeforeHydration);
 
-    void hydrateIslandRunRuntimeStateWithSource({ session, client })
+    void hydrateIslandRunRuntimeStateWithSource({ session, client, forceRemote: true })
       .then((hydrationResult) => {
         if (!isActive) return;
         setRuntimeHydrationSource(hydrationResult.source);
@@ -2279,8 +2306,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
+    // Use the freshest localStorage record as the base rather than
+    // `runtimeStateRef.current`. The roll service (`executeIslandRunRollAction`)
+    // writes directly to localStorage synchronously, which means
+    // `runtimeStateRef.current.runtimeVersion` can be an older value than what
+    // the store already has. Spreading the ref would race the roll service's
+    // commit and force a conflict-recovery merge on every reward, which is the
+    // root cause of the reported dice-count oscillation and token-jump-back.
+    const baseRecord = readIslandRunGameStateRecord(session);
     const nextRuntimeState = {
-      ...runtimeStateRef.current,
+      ...baseRecord,
       ...nextPatch,
     };
     void writeIslandRunGameStateRecord({

@@ -1177,7 +1177,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             onboardingDisplayNameLoopCompleted: legacyData.onboarding_display_name_loop_completed ?? false,
             storyPrologueSeen: legacyData.story_prologue_seen ?? false,
             audioEnabled: legacyData.audio_enabled ?? true,
-            currentIslandNumber: legacyData.current_island_number,
+            currentIslandNumber: legacyData.current_island_number ?? fallback.currentIslandNumber,
             cycleIndex: legacyData.cycle_index ?? 0,
             bossTrialResolvedIslandNumber: legacyData.boss_trial_resolved_island_number,
             activeEggTier: legacyData.active_egg_tier,
@@ -1290,7 +1290,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       onboardingDisplayNameLoopCompleted: data.onboarding_display_name_loop_completed ?? false,
       storyPrologueSeen: data.story_prologue_seen ?? false,
       audioEnabled: data.audio_enabled ?? true,
-      currentIslandNumber: data.current_island_number,
+      currentIslandNumber: data.current_island_number ?? fallback.currentIslandNumber,
       cycleIndex: data.cycle_index ?? 0,
       bossTrialResolvedIslandNumber: data.boss_trial_resolved_island_number,
       activeEggTier: data.active_egg_tier,
@@ -1514,6 +1514,11 @@ export async function writeIslandRunGameStateRecord(options: {
 
   if (coordinator.inFlightCount > 0) {
     parkCommitAction('single_flight', localRecord);
+    // Defence-in-depth: also enqueue to the pending_write localStorage queue so
+    // that if the in-flight commit's resume path fails (error / tab close /
+    // crash), the next successful write will replay this snapshot rather than
+    // silently dropping the user's progress.
+    enqueuePendingWrite(localRecord);
     logIslandRunEntryDebug('runtime_state_commit_parked', {
       userId: session.user.id,
       reason: 'single_flight_inflight',
@@ -1689,6 +1694,13 @@ export async function writeIslandRunGameStateRecord(options: {
         });
         return { ok: true };
       }
+
+      // Non-backoff error (e.g. conditional write rejected after conflict-merge
+      // retry). Persist the record to the pending_write queue so the next
+      // successful commit replays it instead of silently dropping the user's
+      // progress. Without this, a transient Supabase error between two rolls
+      // could lose the first roll's delta forever.
+      enqueuePendingWrite(localRecord);
 
       return { ok: false, errorMessage: error.message ?? 'Unknown runtime state persistence error.' };
     }
