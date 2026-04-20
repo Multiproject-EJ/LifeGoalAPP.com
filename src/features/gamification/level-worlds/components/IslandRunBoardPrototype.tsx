@@ -959,12 +959,29 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [pendingHopSequence, setPendingHopSequence] = useState<number[] | null>(null);
   const hopSequenceResolverRef = useRef<(() => void) | null>(null);
   const diceRollCompleteResolverRef = useRef<(() => void) | null>(null);
+  /**
+   * True while a roll's hop animation is playing. Used to guard other
+   * writers (hydration reconcile, island-travel resets) from stomping the
+   * `tokenIndex` mid-animation and causing the pawn to snap back to tile 0.
+   * Set just before `setPendingHopSequence(...)`, cleared when the board
+   * fires `onHopSequenceComplete`.
+   */
+  const isAnimatingRollRef = useRef(false);
+  /**
+   * Re-entrancy guard for {@link handleCollectCreature}. A ref (not state)
+   * is used so the guard is observed synchronously within a single render
+   * tick — prevents double-click / StrictMode double-invoke from awarding
+   * the hatched creature multiple times before React commits `setActiveEgg(null)`.
+   */
+  const collectingCreatureRef = useRef(false);
+  const [isCollectingCreature, setIsCollectingCreature] = useState(false);
   // Cleanup: resolve any pending hop sequence promise on unmount to prevent leaks
   useEffect(() => () => {
     hopSequenceResolverRef.current?.();
     hopSequenceResolverRef.current = null;
     diceRollCompleteResolverRef.current?.();
     diceRollCompleteResolverRef.current = null;
+    isAnimatingRollRef.current = false;
   }, []);
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
@@ -1405,6 +1422,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     reason: 'focus' | 'visibility',
   ) => {
     if (!client || isReconcilingRuntimeStateRef.current || !hasHydratedRuntimeState) {
+      return;
+    }
+    // Do NOT reconcile while a roll animation is in flight. The roll
+    // service has already written the authoritative tokenIndex to
+    // localStorage + Supabase, but `runtimeStateRef.current.runtimeVersion`
+    // won't be bumped until `applyRollResult` runs at the end of the hop
+    // sequence. A reconcile during that window could publish a snapshot
+    // that ultimately causes the pawn to snap back to tile 0 when
+    // `pendingHopSequence` clears. The next focus/visibility event after
+    // the animation ends will naturally re-trigger reconciliation.
+    if (isAnimatingRollRef.current) {
       return;
     }
 
@@ -3717,6 +3745,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     // Set the full hop sequence — BoardStage will animate tile-by-tile
     // with camera follow (Monopoly GO style).
+    //
+    // Mark the animation as in-flight BEFORE scheduling the hop so that any
+    // concurrent writers (hydration reconcile, island-travel resets) see
+    // the flag and skip their `tokenIndex` updates. Without this, a stale
+    // Supabase hydration landing mid-animation would call
+    // `refreshIslandRunStateFromLocal`, overwrite the store mirror with the
+    // pre-roll tokenIndex, and cause the pawn to snap back to tile 0 when
+    // `pendingHopSequence` clears.
+    isAnimatingRollRef.current = true;
     setPendingHopSequence(hopIndices);
     await new Promise<void>((resolve) => {
       hopSequenceResolverRef.current = resolve;
@@ -4373,6 +4410,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (!activeEgg || eggStage < 4) return;
     // Guard: prevent collecting if the egg slot is already used (collected/sold)
     if (islandEggSlotUsed) return;
+    // Re-entrancy guard: block double-clicks / StrictMode double-invoke.
+    // The `islandEggSlotUsed` memo above only flips to true *after* React
+    // commits the `setActiveEgg(null)` + runtime-state update below, so a
+    // second synchronous call can slip past that check and award the
+    // creature twice. A ref is observed immediately and closes that window.
+    if (collectingCreatureRef.current) return;
+    collectingCreatureRef.current = true;
+    setIsCollectingCreature(true);
     const resolvedEgg = activeEgg;
     const nowTs = Date.now();
     const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg);
@@ -4469,6 +4514,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (activeStopId === 'hatchery') {
       setActiveStopId(null);
     }
+    // The persist above is fire-and-forget, but by this point React state
+    // has committed (setActiveEgg(null) + perIslandEggs patch), so
+    // `islandEggSlotUsed` will be true on the next render. Clear the ref so
+    // any legitimate future collection (new egg, new island) can proceed.
+    collectingCreatureRef.current = false;
+    setIsCollectingCreature(false);
   };
 
   const handleSellEggForRewards = () => {
@@ -6847,6 +6898,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           pendingHopSequence={pendingHopSequence}
           onHopSequenceComplete={() => {
             setPendingHopSequence(null);
+            // Release the animation guard so reconcile/island-travel writers
+            // can resume updating `tokenIndex`.
+            isAnimatingRollRef.current = false;
             hopSequenceResolverRef.current?.();
             hopSequenceResolverRef.current = null;
           }}
@@ -7116,8 +7170,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         type="button"
                         className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
                         onClick={handleCollectCreature}
+                        disabled={isCollectingCreature || islandEggSlotUsed}
                       >
-                        Collect Creature 🐾
+                        {isCollectingCreature ? 'Collecting…' : 'Collect Creature 🐾'}
                       </button>
                       {(() => {
                         const sellOptions = getEggSellRewardOptions(activeEgg.tier);

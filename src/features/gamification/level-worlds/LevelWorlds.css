@@ -2414,6 +2414,10 @@
   place-items: center;
   padding: 1rem;
   backdrop-filter: blur(3px);
+  /* Allow the backdrop itself to scroll as a last-resort fallback when the
+     modal content is taller than the viewport (e.g. small landscape phones). */
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .island-stop-modal {
@@ -2425,6 +2429,12 @@
   background: linear-gradient(180deg, rgba(20, 36, 49, 0.98), rgba(9, 18, 27, 0.97));
   border: 1px solid rgba(163, 231, 255, 0.58);
   box-shadow: 0 22px 56px rgba(0, 0, 0, 0.46);
+  /* Tall modal bodies (hatchery with timeline + sell options, long wisdom
+     copy, etc.) must be scrollable so the primary CTA remains reachable.
+     Leave room for the backdrop's 1rem padding on top and bottom. */
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 
