@@ -2965,6 +2965,33 @@
   color: #91e1ff;
 }
 
+.island-hatchery-card__countdown {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  margin: 0.15rem auto 0.45rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(18, 48, 74, 0.85), rgba(10, 30, 48, 0.78));
+  border: 1px solid rgba(145, 225, 255, 0.35);
+  box-shadow: 0 0 18px rgba(111, 205, 255, 0.18);
+}
+
+.island-hatchery-card__countdown-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(202, 235, 252, 0.82);
+}
+
+.island-hatchery-card__countdown-value {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #f0faff;
+  font-variant-numeric: tabular-nums;
+}
+
 
 .island-run-prototype__error {
   margin-top: 0.5rem;

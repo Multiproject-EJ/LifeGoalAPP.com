@@ -52,12 +52,13 @@ store and are read via the `useIslandRunState` hook.
   subscribe/unsubscribe, synchronous publish before remote resolve,
   hydrate-notifies-subscribers, in-flight unsubscribe safety.
 
-**Stage C — Migrate renderer action-by-action — ⏳ Pending follow-up PRs.**
-Each domain is its own PR (one per commit): roll → tile-reward → encounter
-→ stop-completion → stop-ticket → egg → market → travel → boss →
-shard-claim → reward-bar → essence-drift → companion → onboarding. Each PR
-adds the action to `islandRunStateActions.ts`, deletes the matching
-`setRuntimeState` / `persistIslandRunRuntimeStatePatch` /
+**Stage C — Migrate renderer action-by-action — ⏳ Pending follow-up PR(s).**
+The remaining domains (tile-reward, encounter, stop-completion, stop-ticket,
+egg, market, travel, boss, shard-claim, reward-bar, essence-drift, companion,
+onboarding) should be bundled into as few PRs as possible — prefer landing
+multiple domains together when they compile clean and the tests stay green.
+Each domain adds its action(s) to `islandRunStateActions.ts` and deletes the
+matching `setRuntimeState` / `persistIslandRunRuntimeStatePatch` /
 `writeIslandRunGameStateRecord` call-sites plus their per-field
 `useState`/`useEffect` pairs from `IslandRunBoardPrototype.tsx`.
 

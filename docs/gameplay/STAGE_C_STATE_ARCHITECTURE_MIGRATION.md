@@ -78,7 +78,7 @@ Stage C removes every mirror, every renderer-side persist `useEffect`, and every
 
 ## 5. Stage C chunked migration sequence
 
-All chunks create actions in a new file `services/islandRunStateActions.ts` (create in C1). Each chunk is one PR. PRs are ordered so later ones are cheaper because earlier ones have already reduced contention.
+All chunks create actions in a new file `services/islandRunStateActions.ts` (create in C1). Chunks are described independently so they can be reviewed in isolation, but **there is no requirement that each chunk be its own PR**. Bundle as many chunks as possible into a single PR — prefer landing multiple chunks together when the combined diff compiles clean and the test suite stays green. Only split when a chunk introduces risk (e.g. the C3 atomic-travel refactor) that would benefit from being reviewed on its own.
 
 ---
 
@@ -333,7 +333,7 @@ C6 (boss/flags)           ← one-shot flags; trivially safe
 C7 (reset + legacy delete) ← gate: zero grep hits, then delete everything
 ```
 
-Each PR can be reviewed and merged independently. If a PR is reverted, the earlier PRs remain valid and safe because actions are additive to the store.
+Each chunk can be reviewed and merged independently, but they do **not** have to ship separately — landing several chunks together in one PR is preferred when the combined change stays safe and green. If a PR is reverted, the earlier chunks remain valid and safe because actions are additive to the store.
 
 ---
 

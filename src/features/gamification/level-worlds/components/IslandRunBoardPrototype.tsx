@@ -748,6 +748,25 @@ function formatClock(seconds: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
+/**
+ * Formats a long-form countdown (days / hours / minutes / seconds) for the
+ * hatchery incubation timer. Shows the two most-significant units so the
+ * label stays short at all ranges (e.g. "2d 4h", "47m 12s", "8s").
+ */
+function formatHatchCountdown(remainingMs: number): string {
+  const safeMs = Number.isFinite(remainingMs) ? Math.max(0, remainingMs) : 0;
+  if (safeMs <= 0) return 'Ready!';
+  const totalSec = Math.ceil(safeMs / 1000);
+  const days = Math.floor(totalSec / 86400);
+  const hours = Math.floor((totalSec % 86400) / 3600);
+  const minutes = Math.floor((totalSec % 3600) / 60);
+  const seconds = totalSec % 60;
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
+
 function resolveMysteryStopReward(): MysteryStopReward {
   const randomValue = globalThis.crypto?.getRandomValues
     ? (() => {
@@ -3082,12 +3101,24 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const eggStage = useMemo(() => {
     if (!activeEgg) return 0;
-    const total = Math.max(1, activeEgg.hatchAtMs - activeEgg.setAtMs);
-    const progress = Math.min(1, Math.max(0, (nowMs - activeEgg.setAtMs) / total));
+    // Guard against corrupt timestamps (NaN / 0 / hatchAtMs <= setAtMs) that
+    // could land from a malformed hydration or manual localStorage edit — if
+    // we can't compute progress, assume the egg is ready to open so the UI
+    // doesn't wedge in stage 0 forever.
+    const { setAtMs, hatchAtMs } = activeEgg;
+    if (!Number.isFinite(setAtMs) || !Number.isFinite(hatchAtMs) || hatchAtMs <= setAtMs) {
+      return 4;
+    }
+    if (nowMs >= hatchAtMs) return 4;
+    const total = Math.max(1, hatchAtMs - setAtMs);
+    const progress = Math.min(1, Math.max(0, (nowMs - setAtMs) / total));
     return Math.min(4, Math.max(1, Math.ceil(progress * 4)));
   }, [activeEgg, nowMs]);
 
-  const eggRemainingSec = activeEgg ? Math.max(0, Math.ceil((activeEgg.hatchAtMs - nowMs) / 1000)) : 0;
+  const eggRemainingMs = activeEgg && Number.isFinite(activeEgg.hatchAtMs)
+    ? Math.max(0, activeEgg.hatchAtMs - nowMs)
+    : 0;
+  const eggCountdownLabel = activeEgg ? formatHatchCountdown(eggRemainingMs) : '';
   const hatcheryTimelineStage = useMemo(() => {
     if (islandEggSlotUsed) return HATCHERY_TIMELINE_STEPS.length;
     if (!activeEgg) return 1;
@@ -7208,6 +7239,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     <p className="island-hatchery-card__copy">
                       Your <strong>{activeEgg.tier}</strong> egg is incubating. Come back soon to collect your reward!
                     </p>
+                    <div
+                      className="island-hatchery-card__countdown"
+                      role="timer"
+                      aria-live="polite"
+                      aria-label={`Egg hatches in ${eggCountdownLabel}`}
+                    >
+                      <span className="island-hatchery-card__countdown-label">Hatches in</span>
+                      <span className="island-hatchery-card__countdown-value">{eggCountdownLabel}</span>
+                    </div>
                     <div className="island-hatchery-card__timeline" aria-label="Egg hatch progress timeline">
                       {HATCHERY_TIMELINE_STEPS.map((step, index) => {
                         const stepNumber = index + 1;
@@ -7234,7 +7274,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       <p className="island-hatchery-card__headline">No egg on this island yet.</p>
                     )}
                     <p className="island-hatchery-card__copy">
-                      Set an egg now to earn rewards. The tier is a surprise — hatch time is a secret too!
+                      Set an egg now to earn rewards. The tier is a surprise, and hatch time is random (24–72h).
                     </p>
                     <div className="island-hatchery-card__timeline" aria-label="Egg hatch progress timeline">
                       {HATCHERY_TIMELINE_STEPS.map((step, index) => {
