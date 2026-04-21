@@ -32,6 +32,7 @@ import {
   writeIslandRunGameStateRecord,
 } from './islandRunGameStateStore';
 import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
+import { resetIslandRunStateSnapshot } from './islandRunStateStore';
 import { clearCreatureCollectionForUser } from './creatureCollectionService';
 import { clearCreatureTreatInventoryForUser } from './creatureTreatInventoryService';
 import { resetXP } from '../../../../services/gamification';
@@ -167,10 +168,18 @@ export async function resetIslandRunProgress(options: {
   clearCreatureCollectionForUser(session.user.id);
   clearCreatureTreatInventoryForUser(session.user.id);
 
-  return writeIslandRunGameStateRecord({
+  const persistResult = await writeIslandRunGameStateRecord({
     session,
     client,
     record: freshRecord,
     triggerSource: 'island_run_progress_reset',
   });
+
+  if (persistResult.ok) {
+    // Keep the in-memory state store in sync so active Island Run screens reset
+    // immediately without requiring a manual refresh.
+    resetIslandRunStateSnapshot(session, freshRecord);
+  }
+
+  return persistResult;
 }

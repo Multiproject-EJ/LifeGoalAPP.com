@@ -219,7 +219,7 @@ export function GamificationSettings({ session }: GamificationSettingsProps) {
         setResetConfirmOpen(false);
         setMessage({
           type: 'success',
-          text: 'Island Run progress and XP have been reset! Your level is now 1. Refresh to reload the island board.',
+          text: 'Island Run progress and XP have been reset! Your level is now 1.',
         });
         // Notify the gamification hook so the level chip updates immediately.
         if (typeof window !== 'undefined') {
