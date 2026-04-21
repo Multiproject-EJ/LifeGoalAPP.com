@@ -28,7 +28,8 @@ type JournalType =
   | 'goal'
   | 'time_capsule'
   | 'problem'
-  | 'gratitude';
+  | 'gratitude'
+  | 'dream';
 
 type QuickActionsFABProps = {
   session: Session;
@@ -56,6 +57,7 @@ const JOURNAL_TYPES: { type: JournalType; icon: string; label: string }[] = [
   { type: 'time_capsule', icon: '⏳', label: 'Time Capsule' },
   { type: 'problem', icon: '🧩', label: 'Problem' },
   { type: 'gratitude', icon: '🌱', label: 'Guided Gratitude' },
+  { type: 'dream', icon: '🌙', label: 'Dream' },
 ];
 
 const QUICK_JOURNAL_SHORTCUTS = JOURNAL_TYPES.filter((jt) =>

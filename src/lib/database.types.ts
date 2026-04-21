@@ -16,7 +16,8 @@ export type JournalEntryType =
   | 'time_capsule' 
   | 'standard'
   | 'problem'
-  | 'gratitude';
+  | 'gratitude'
+  | 'dream';
 
 export interface Database {
   public: {

@@ -23,6 +23,7 @@ const JOURNAL_MODE_OPTIONS: JournalModeOption[] = [
   { value: 'time_capsule', label: 'Time Capsule', icon: '⏳' },
   { value: 'problem', label: 'Problem', icon: '🧩' },
   { value: 'gratitude', label: 'Guided Gratitude', icon: '🌱' },
+  { value: 'dream', label: 'Dream', icon: '🌙' },
 ];
 
 export function JournalTypeSelector({ journalType, onChange }: JournalTypeSelectorProps) {
