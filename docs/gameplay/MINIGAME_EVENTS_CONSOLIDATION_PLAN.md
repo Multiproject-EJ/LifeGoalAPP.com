@@ -336,6 +336,7 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 - [x] Telemetry: log event transitions (flag-gated).
 
 ### Phase 4 — Boss Stop Shooter Blitz
+- [x] **Step 1 — pure launcher resolver:** `islandRunMinigameLauncherService.ts` exports `resolveBossStopMinigame(ctx) → MinigameLaunchDescriptor | null`, flag-gated on `islandRunShooterBlitzBossEnabled`. Routes `bossType === 'fight'` to `shooter_blitz` with deterministic score/duration scaling from `bossService`. 5 unit tests.
 - [ ] Wire boss stop UI to launch Shooter Blitz via `islandRunMinigameLauncher` for `kind === 'fixed_boss'` on island 1.
 - [ ] Polish Shooter Blitz: spaceship sprite, asteroid enemies, power-ups, HP, win/lose conditions per `bossService.getBossTrialConfig`.
 - [ ] Hook footer game-controller image to Shooter Blitz inputs (left / right / fire) during boss session.
