@@ -1,0 +1,115 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.generateIslandStopPlan = generateIslandStopPlan;
+const islandRunFeatureFlags_1 = require("../../../../config/islandRunFeatureFlags");
+/**
+ * Content pool for the Mystery stop (Stop 3).
+ * Base entries: breathing exercise, habit action, or check-in reflection.
+ * Feature-flagged entries (Task Tower, Vision Quest) are appended when their
+ * flags are on — see `buildMysteryStopContentPool()`.
+ */
+const MYSTERY_STOP_CONTENT_POOL_BASE = [
+    {
+        kind: 'breathing',
+        title: '🧘 Breathing / Guided Meditation',
+        description: 'Complete a breathing exercise or guided meditation to center yourself.',
+    },
+    {
+        kind: 'habit_action',
+        title: '✅ Action Challenge',
+        description: 'Complete one habit/action objective to stabilize momentum.',
+    },
+    {
+        kind: 'checkin_reflection',
+        title: '🧭 Check-in Reflection',
+        description: 'Run a quick check-in/reflection to calibrate your next moves.',
+    },
+];
+const MYSTERY_STOP_CONTENT_TASK_TOWER = {
+    kind: 'task_tower',
+    title: '🗼 Task Tower',
+    description: 'Tap blocks to clear the tower and score multipliers for landing combos.',
+};
+const MYSTERY_STOP_CONTENT_VISION_QUEST = {
+    kind: 'vision_quest',
+    title: '🔮 Vision Quest',
+    description: 'Reflect on your long-term vision and log a short journal entry.',
+};
+/** Build the runtime Mystery-stop content pool honoring feature flags. */
+function buildMysteryStopContentPool() {
+    const flags = (0, islandRunFeatureFlags_1.getIslandRunFeatureFlags)();
+    const pool = [...MYSTERY_STOP_CONTENT_POOL_BASE];
+    if (flags.islandRunTaskTowerMysteryEnabled) {
+        pool.push(MYSTERY_STOP_CONTENT_TASK_TOWER);
+    }
+    if (flags.islandRunVisionQuestMysteryEnabled) {
+        pool.push(MYSTERY_STOP_CONTENT_VISION_QUEST);
+    }
+    return pool;
+}
+function seededRandom(seed) {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+}
+/**
+ * Generate the canonical 5-stop plan for an island.
+ *
+ * Stop sequence (unified with Contract V2):
+ *   0. Hatchery (fixed) — egg incubation
+ *   1. Habit (fixed) — complete a habit/action
+ *   2. Mystery (rotating content) — breathing, guided meditation, check-in, etc.
+ *   3. Wisdom (fixed) — story, questionnaire, learning content
+ *   4. Boss (fixed) — boss trial
+ *
+ * The Mystery stop's *content* rotates per island using seeded random selection
+ * from MYSTERY_STOP_CONTENT_POOL, but the stop ID is always 'mystery'.
+ *
+ * Landmarks are fully decoupled from ring tile indices — the `profileId` arg
+ * is accepted for forward-compat with future board profiles but no longer
+ * controls landmark positioning (that lives in the HUD layer).
+ */
+function generateIslandStopPlan(islandNumber, _options) {
+    const safeIsland = Number.isFinite(islandNumber) ? Math.max(1, Math.floor(islandNumber)) : 1;
+    // Select rotating content for the Mystery stop (seeded per island).
+    const pool = buildMysteryStopContentPool();
+    const mysteryContentIndex = Math.floor(seededRandom(97 + safeIsland * 13) * pool.length);
+    const mysteryContent = pool[mysteryContentIndex];
+    return [
+        {
+            stopId: 'hatchery',
+            title: '🥚 Hatchery Landmark',
+            description: 'Set one egg and track stage progression over time.',
+            kind: 'fixed_hatchery',
+            isBehaviorStop: false,
+        },
+        {
+            stopId: 'habit',
+            title: '✅ Habit Landmark',
+            description: 'Complete one habit or action objective to maintain momentum.',
+            kind: 'fixed_habit',
+            isBehaviorStop: true,
+        },
+        {
+            stopId: 'mystery',
+            title: mysteryContent.title,
+            description: mysteryContent.description,
+            kind: 'fixed_mystery',
+            mysteryContentKind: mysteryContent.kind,
+            isBehaviorStop: true,
+        },
+        {
+            stopId: 'wisdom',
+            title: '📖 Wisdom Landmark',
+            description: 'A short story, questionnaire, or learning moment to reflect on.',
+            kind: 'fixed_wisdom',
+            isBehaviorStop: false,
+        },
+        {
+            stopId: 'boss',
+            title: '👑 Boss Landmark',
+            description: 'Boss trial closes the island and unlocks the next island.',
+            kind: 'fixed_boss',
+            isBehaviorStop: false,
+        },
+    ];
+}

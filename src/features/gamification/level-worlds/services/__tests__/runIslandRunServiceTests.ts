@@ -25,6 +25,7 @@ import { islandRunStateStoreTests } from './islandRunStateStore.test';
 import { islandRunStateActionsTests } from './islandRunStateActions.test';
 import { minigameConsolidationPhase1Tests } from './minigameConsolidationPhase1.test';
 import { minigameConsolidationPhase2Tests } from './minigameConsolidationPhase2.test';
+import { minigameConsolidationPhase3Tests } from './minigameConsolidationPhase3.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -55,6 +56,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunStateActions', tests: islandRunStateActionsTests },
   { label: 'minigameConsolidationPhase1', tests: minigameConsolidationPhase1Tests },
   { label: 'minigameConsolidationPhase2', tests: minigameConsolidationPhase2Tests },
+  { label: 'minigameConsolidationPhase3', tests: minigameConsolidationPhase3Tests },
 ];
 
 async function main() {

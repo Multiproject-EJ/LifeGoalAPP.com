@@ -329,11 +329,11 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 - [ ] Update tests for `dailySpin.ts`.
 
 ### Phase 3 — Event engine
-- [ ] Create `islandRunEventEngine.ts` (§3.1) with rotation clock, progress, milestones, sticker-fragment routing.
-- [ ] Migrate `activeTimedEvent` reads/writes in the renderer to go through engine functions.
-- [ ] Wire reward-bar progress to `recordEventProgress`.
-- [ ] Unit tests for engine (§9).
-- [ ] Telemetry: log event transitions.
+- [x] Create `islandRunEventEngine.ts` (§3.1) with rotation clock, progress, milestones, sticker-fragment routing.
+- [ ] Migrate `activeTimedEvent` reads/writes in the renderer to go through engine functions. *(Deferred to Phase 3b — engine wrappers are pass-throughs; renderer migration is a separate low-risk follow-up.)*
+- [ ] Wire reward-bar progress to `recordEventProgress`. *(Deferred to Phase 3b — same reason.)*
+- [x] Unit tests for engine (§9).
+- [x] Telemetry: log event transitions (flag-gated).
 
 ### Phase 4 — Boss Stop Shooter Blitz
 - [ ] Wire boss stop UI to launch Shooter Blitz via `islandRunMinigameLauncher` for `kind === 'fixed_boss'` on island 1.
