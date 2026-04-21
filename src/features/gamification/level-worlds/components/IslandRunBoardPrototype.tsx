@@ -7192,6 +7192,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         const openedStopIsCompleted = openedStopState === 'completed' || openedStopState === 'partial';
         const openedStopIsPlayable = !openedStopIsLocked && !openedStopIsCompleted;
         const priorStop = openedStopIndex > 0 ? islandStopPlan[openedStopIndex - 1] : null;
+        const openedStopNeedsTicket = doesStopRequireTicketPayment(activeStop.stopId);
+        const openedStopTicketCost =
+          openedStopNeedsTicket && openedStopIndex > 0
+            ? getStopTicketCost({ effectiveIslandNumber, stopIndex: openedStopIndex })
+            : null;
+        const canAffordOpenedStopTicket =
+          openedStopNeedsTicket
+          && typeof openedStopTicketCost === 'number'
+          && runtimeState.essence >= openedStopTicketCost;
         return (
         <div className="island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label={activeStop.title}>
@@ -7224,7 +7233,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             {activeStopId !== 'hatchery' && openedStopIsLocked ? (
               <p className="island-stop-modal__locked-notice" role="status">
                 <span aria-hidden="true">🔒</span>{' '}
-                {priorStop
+                {openedStopNeedsTicket && openedStopTicketCost
+                  ? <>This stop is ready to open. Pay <strong>{openedStopTicketCost} 🟣</strong> to unlock this island ticket.</>
+                  : priorStop
                   ? <>Complete <strong>{priorStop.title}</strong> first to unlock this stop.</>
                   : 'This stop is not open yet. Complete the previous stop first to unlock it.'}
               </p>
@@ -7629,6 +7640,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   disabled={!bossTrialResolved || bossTrialPhase === 'in_progress'}
                 >
                   {isCurrentIslandFullyCleared ? '🎉 Claim Island Clear' : 'Claim Island Clear'}
+                </button>
+              ) : null}
+              {openedStopIsLocked && openedStopNeedsTicket && openedStopTicketCost ? (
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                  onClick={() => handlePayStopTicket(activeStop.stopId)}
+                  disabled={!canAffordOpenedStopTicket}
+                >
+                  {canAffordOpenedStopTicket
+                    ? `Pay ${openedStopTicketCost} 🟣 to Unlock`
+                    : `Need ${Math.max(0, openedStopTicketCost - runtimeState.essence)} more 🟣`}
                 </button>
               ) : null}
               <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={() => setActiveStopId(null)}>
