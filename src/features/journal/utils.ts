@@ -84,6 +84,7 @@ export const CONTENT_LABELS: Record<JournalEntryType, string> = {
   standard: "Content",
   problem: "Brain dump (self-destructs after timer)",
   gratitude: "3 gratitude moments + why",
+  dream: 'Dream details',
 } as const;
 
 /**
@@ -100,6 +101,7 @@ export const CONTENT_PLACEHOLDERS: Record<JournalEntryType, string> = {
   standard: "Capture what unfolded, how you felt, and any momentum you want to carry forward.",
   problem: "Write freely to get your thoughts out quickly. This will self-destruct...",
   gratitude: "List 3 things you are grateful for today, then add why each mattered...",
+  dream: 'Capture what you remember: scenes, symbols, feelings, and any meaning you want to keep.',
 } as const;
 
 /**
@@ -116,6 +118,7 @@ export const JOURNAL_TYPE_LABELS: Record<JournalEntryType, string> = {
   'standard': 'Standard',
   'problem': 'Problem',
   'gratitude': 'Guided Gratitude',
+  'dream': 'Dream',
 };
 
 /**

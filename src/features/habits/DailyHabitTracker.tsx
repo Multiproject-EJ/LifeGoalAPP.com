@@ -337,6 +337,10 @@ type QuickJournalDraft = {
   mood: number;
   focus: number;
   stress: number;
+  dreamTitle?: string;
+  dreamSymbols?: string;
+  dreamEmotions?: string;
+  dreamReflection?: string;
 };
 
 type IntentionsJournalDraft = {
@@ -346,7 +350,7 @@ type IntentionsJournalDraft = {
 };
 
 type DayStatus = 'skip' | 'vacation' | 'sick';
-type QuickJournalMode = 'written' | 'pulse';
+type QuickJournalMode = 'written' | 'pulse' | 'dream';
 
 type VisionImageRow = Database['public']['Tables']['vision_images']['Row'];
 
@@ -427,6 +431,12 @@ const QUICK_JOURNAL_PULSE_DEFAULTS = {
   mood: 6,
   focus: 6,
   stress: 4,
+};
+const QUICK_JOURNAL_DREAM_DEFAULTS = {
+  title: '',
+  symbols: '',
+  emotions: '',
+  reflection: '',
 };
 
 const quickJournalDraftKey = (userId: string, dateISO: string) =>
@@ -628,6 +638,10 @@ export function DailyHabitTracker({
   const [quickJournalMood, setQuickJournalMood] = useState(QUICK_JOURNAL_PULSE_DEFAULTS.mood);
   const [quickJournalFocus, setQuickJournalFocus] = useState(QUICK_JOURNAL_PULSE_DEFAULTS.focus);
   const [quickJournalStress, setQuickJournalStress] = useState(QUICK_JOURNAL_PULSE_DEFAULTS.stress);
+  const [quickDreamTitle, setQuickDreamTitle] = useState(QUICK_JOURNAL_DREAM_DEFAULTS.title);
+  const [quickDreamSymbols, setQuickDreamSymbols] = useState(QUICK_JOURNAL_DREAM_DEFAULTS.symbols);
+  const [quickDreamEmotions, setQuickDreamEmotions] = useState(QUICK_JOURNAL_DREAM_DEFAULTS.emotions);
+  const [quickDreamReflection, setQuickDreamReflection] = useState(QUICK_JOURNAL_DREAM_DEFAULTS.reflection);
   const [quickJournalSaving, setQuickJournalSaving] = useState(false);
   const [quickJournalError, setQuickJournalError] = useState<string | null>(null);
   const [showCompletedHabits, setShowCompletedHabits] = useState(false);
@@ -1625,13 +1639,21 @@ export function DailyHabitTracker({
       setQuickJournalMood(draft.mood ?? QUICK_JOURNAL_PULSE_DEFAULTS.mood);
       setQuickJournalFocus(draft.focus ?? QUICK_JOURNAL_PULSE_DEFAULTS.focus);
       setQuickJournalStress(draft.stress ?? QUICK_JOURNAL_PULSE_DEFAULTS.stress);
+      setQuickDreamTitle(draft.dreamTitle ?? QUICK_JOURNAL_DREAM_DEFAULTS.title);
+      setQuickDreamSymbols(draft.dreamSymbols ?? QUICK_JOURNAL_DREAM_DEFAULTS.symbols);
+      setQuickDreamEmotions(draft.dreamEmotions ?? QUICK_JOURNAL_DREAM_DEFAULTS.emotions);
+      setQuickDreamReflection(draft.dreamReflection ?? QUICK_JOURNAL_DREAM_DEFAULTS.reflection);
       const hasContent = Boolean(
         draft.mode === 'pulse' ||
           draft.morning ||
           draft.day ||
           draft.evening ||
           draft.interactions ||
-          draft.freeform
+          draft.freeform ||
+          draft.dreamTitle ||
+          draft.dreamSymbols ||
+          draft.dreamEmotions ||
+          draft.dreamReflection
       );
       setIsQuickJournalOpen(draft.isOpen || hasContent);
     } else {
@@ -1645,6 +1667,10 @@ export function DailyHabitTracker({
       setQuickJournalMood(QUICK_JOURNAL_PULSE_DEFAULTS.mood);
       setQuickJournalFocus(QUICK_JOURNAL_PULSE_DEFAULTS.focus);
       setQuickJournalStress(QUICK_JOURNAL_PULSE_DEFAULTS.stress);
+      setQuickDreamTitle(QUICK_JOURNAL_DREAM_DEFAULTS.title);
+      setQuickDreamSymbols(QUICK_JOURNAL_DREAM_DEFAULTS.symbols);
+      setQuickDreamEmotions(QUICK_JOURNAL_DREAM_DEFAULTS.emotions);
+      setQuickDreamReflection(QUICK_JOURNAL_DREAM_DEFAULTS.reflection);
       setIsQuickJournalOpen(false);
     }
     setQuickJournalError(null);
@@ -2902,7 +2928,11 @@ export function DailyHabitTracker({
         quickJournalDay ||
         quickJournalEvening ||
         quickJournalInteractions ||
-        quickJournalFreeform
+        quickJournalFreeform ||
+        quickDreamTitle ||
+        quickDreamSymbols ||
+        quickDreamEmotions ||
+        quickDreamReflection
     );
 
     if (!hasContent && !isQuickJournalOpen) {
@@ -2922,6 +2952,10 @@ export function DailyHabitTracker({
       mood: quickJournalMood,
       focus: quickJournalFocus,
       stress: quickJournalStress,
+      dreamTitle: quickDreamTitle,
+      dreamSymbols: quickDreamSymbols,
+      dreamEmotions: quickDreamEmotions,
+      dreamReflection: quickDreamReflection,
     } satisfies QuickJournalDraft);
   }, [
     activeDate,
@@ -2937,6 +2971,10 @@ export function DailyHabitTracker({
     quickJournalMood,
     quickJournalFocus,
     quickJournalStress,
+    quickDreamTitle,
+    quickDreamSymbols,
+    quickDreamEmotions,
+    quickDreamReflection,
   ]);
 
   useEffect(() => {
@@ -6417,6 +6455,17 @@ export function DailyHabitTracker({
           setQuickJournalError('Add at least one entry before saving.');
           return;
         }
+      } else if (quickJournalMode === 'dream') {
+        const hasDreamContent = Boolean(
+          quickDreamTitle.trim() ||
+            quickDreamSymbols.trim() ||
+            quickDreamEmotions.trim() ||
+            quickDreamReflection.trim(),
+        );
+        if (!hasDreamContent) {
+          setQuickJournalError('Add at least one dream detail before saving.');
+          return;
+        }
       }
 
       setQuickJournalError(null);
@@ -6433,6 +6482,10 @@ export function DailyHabitTracker({
         mood: quickJournalMood,
         focus: quickJournalFocus,
         stress: quickJournalStress,
+        dreamTitle: quickDreamTitle,
+        dreamSymbols: quickDreamSymbols,
+        dreamEmotions: quickDreamEmotions,
+        dreamReflection: quickDreamReflection,
       } satisfies QuickJournalDraft);
     };
 
@@ -6445,7 +6498,7 @@ export function DailyHabitTracker({
         parts.push(`😊 Mood: ${quickJournalMood}/10`);
         parts.push(`🎯 Focus: ${quickJournalFocus}/10`);
         parts.push(`🧘 Stress: ${quickJournalStress}/10`);
-      } else {
+      } else if (quickJournalMode === 'written') {
         if (quickJournalMorning.trim()) {
           parts.push(`🌅 Morning:\n${quickJournalMorning.trim()}`);
         }
@@ -6460,6 +6513,20 @@ export function DailyHabitTracker({
         }
         if (quickJournalFreeform.trim()) {
           parts.push(`📝 Notes:\n${quickJournalFreeform.trim()}`);
+        }
+      } else {
+        parts.push('Dream journal');
+        if (quickDreamTitle.trim()) {
+          parts.push(`🌙 Dream title:\n${quickDreamTitle.trim()}`);
+        }
+        if (quickDreamSymbols.trim()) {
+          parts.push(`🔮 Symbols or scenes:\n${quickDreamSymbols.trim()}`);
+        }
+        if (quickDreamEmotions.trim()) {
+          parts.push(`💭 Emotions:\n${quickDreamEmotions.trim()}`);
+        }
+        if (quickDreamReflection.trim()) {
+          parts.push(`🧠 Meaning or reflection:\n${quickDreamReflection.trim()}`);
         }
       }
 
@@ -6484,12 +6551,16 @@ export function DailyHabitTracker({
           linked_goal_ids: null,
           linked_habit_ids: null,
           is_private: true,
-          type: 'quick',
+          type: quickJournalMode === 'dream' ? 'dream' : 'quick',
           mood_score: null,
           category: quickJournalMode === 'pulse' ? 'nonverbal' : null,
           unlock_date: null,
           goal_id: null,
-          tags: quickJournalMode === 'pulse' ? ['nonverbal', 'pulse-check-in'] : null,
+          tags: quickJournalMode === 'pulse'
+            ? ['nonverbal', 'pulse-check-in']
+            : quickJournalMode === 'dream'
+              ? ['dream', 'sleep', 'quick-entry']
+              : null,
         };
 
         const { data, error } = await createJournalEntry(payload);
@@ -6516,6 +6587,10 @@ export function DailyHabitTracker({
         setQuickJournalMood(QUICK_JOURNAL_PULSE_DEFAULTS.mood);
         setQuickJournalFocus(QUICK_JOURNAL_PULSE_DEFAULTS.focus);
         setQuickJournalStress(QUICK_JOURNAL_PULSE_DEFAULTS.stress);
+        setQuickDreamTitle(QUICK_JOURNAL_DREAM_DEFAULTS.title);
+        setQuickDreamSymbols(QUICK_JOURNAL_DREAM_DEFAULTS.symbols);
+        setQuickDreamEmotions(QUICK_JOURNAL_DREAM_DEFAULTS.emotions);
+        setQuickDreamReflection(QUICK_JOURNAL_DREAM_DEFAULTS.reflection);
         setQuickJournalStatus('Submitted to your journal.');
       } catch (err) {
         setQuickJournalError(err instanceof Error ? err.message : 'Unable to save your journal entry.');
@@ -7177,7 +7252,9 @@ export function DailyHabitTracker({
               <p className="habit-quick-journal__hint">
                 {quickJournalMode === 'pulse'
                   ? 'Tap the sliders to capture your day without writing.'
-                  : 'Capture a few thoughts tied to the same date you are tracking above.'}
+                  : quickJournalMode === 'dream'
+                    ? 'Capture your dream while it is still fresh.'
+                    : 'Capture a few thoughts tied to the same date you are tracking above.'}
               </p>
               <div className="habit-quick-journal__type-toggle" role="tablist" aria-label="Journal type">
                 <button
@@ -7201,6 +7278,17 @@ export function DailyHabitTracker({
                   onClick={() => setQuickJournalMode('pulse')}
                 >
                   🎛️ Pulse check-in
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={quickJournalMode === 'dream'}
+                  className={`habit-quick-journal__type-button ${
+                    quickJournalMode === 'dream' ? 'habit-quick-journal__type-button--active' : ''
+                  }`}
+                  onClick={() => setQuickJournalMode('dream')}
+                >
+                  🌙 Dream journal
                 </button>
               </div>
               {!isQuickJournalOpen ? (
@@ -7268,7 +7356,7 @@ export function DailyHabitTracker({
                         </div>
                       </label>
                     </div>
-                  ) : (
+                  ) : quickJournalMode === 'written' ? (
                     <>
                       <label className="habit-quick-journal__field habit-quick-journal__field--morning">
                         <span className="habit-quick-journal__field-label">🌅 Morning</span>
@@ -7320,6 +7408,48 @@ export function DailyHabitTracker({
                         />
                       </label>
                     </>
+                  ) : (
+                    <>
+                      <label className="habit-quick-journal__field">
+                        <span className="habit-quick-journal__field-label">🌙 Dream title</span>
+                        <textarea
+                          rows={2}
+                          value={quickDreamTitle}
+                          onChange={(event) => setQuickDreamTitle(event.target.value)}
+                          placeholder="Give this dream a short title..."
+                        />
+                      </label>
+
+                      <label className="habit-quick-journal__field">
+                        <span className="habit-quick-journal__field-label">🔮 Symbols or scenes</span>
+                        <textarea
+                          rows={3}
+                          value={quickDreamSymbols}
+                          onChange={(event) => setQuickDreamSymbols(event.target.value)}
+                          placeholder="What images, places, or moments stood out?"
+                        />
+                      </label>
+
+                      <label className="habit-quick-journal__field">
+                        <span className="habit-quick-journal__field-label">💭 Emotions</span>
+                        <textarea
+                          rows={2}
+                          value={quickDreamEmotions}
+                          onChange={(event) => setQuickDreamEmotions(event.target.value)}
+                          placeholder="How did the dream feel?"
+                        />
+                      </label>
+
+                      <label className="habit-quick-journal__field">
+                        <span className="habit-quick-journal__field-label">🧠 Reflection</span>
+                        <textarea
+                          rows={3}
+                          value={quickDreamReflection}
+                          onChange={(event) => setQuickDreamReflection(event.target.value)}
+                          placeholder="Any meaning, patterns, or insights to remember?"
+                        />
+                      </label>
+                    </>
                   )}
                   
                   {quickJournalError ? (
@@ -7360,6 +7490,10 @@ export function DailyHabitTracker({
                         setQuickJournalMood(QUICK_JOURNAL_PULSE_DEFAULTS.mood);
                         setQuickJournalFocus(QUICK_JOURNAL_PULSE_DEFAULTS.focus);
                         setQuickJournalStress(QUICK_JOURNAL_PULSE_DEFAULTS.stress);
+                        setQuickDreamTitle(QUICK_JOURNAL_DREAM_DEFAULTS.title);
+                        setQuickDreamSymbols(QUICK_JOURNAL_DREAM_DEFAULTS.symbols);
+                        setQuickDreamEmotions(QUICK_JOURNAL_DREAM_DEFAULTS.emotions);
+                        setQuickDreamReflection(QUICK_JOURNAL_DREAM_DEFAULTS.reflection);
                         setQuickJournalError(null);
                       }}
                       disabled={quickJournalSaving}
