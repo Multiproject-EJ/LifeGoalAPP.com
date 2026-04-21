@@ -28,6 +28,7 @@
     "src/features/gamification/level-worlds/services/islandRunRuntimeTelemetry.ts",
     "src/features/gamification/level-worlds/services/islandRunEntryDebug.ts",
     "src/config/islandRunFeatureFlags.ts",
+    "src/services/dailySpinLimit.ts",
     "src/features/gamification/level-worlds/services/__tests__/**/*.ts"
   ]
 }

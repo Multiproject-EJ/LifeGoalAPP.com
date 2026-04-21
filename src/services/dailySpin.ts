@@ -5,6 +5,10 @@ import { SPIN_PRIZES } from '../types/gamification';
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
 import { recordTelemetryEvent } from './telemetry';
 import { fetchHolidayPreferences } from './holidayPreferences';
+import { isIslandRunFeatureEnabled } from '../config/islandRunFeatureFlags';
+import { clampSpinsForStrictDailyLimit, STRICT_DAILY_SPIN_LIMIT } from './dailySpinLimit';
+
+export { clampSpinsForStrictDailyLimit, STRICT_DAILY_SPIN_LIMIT };
 
 type ServiceResponse<T> = {
   data: T | null;
@@ -66,13 +70,21 @@ export async function getSpinPrizesForUser(userId: string): Promise<SpinPrize[]>
 
 /**
  * Fetch or initialize daily spin state for user
- * Includes streak bonus logic: +1 spin for 7+ day streaks
+ * Includes streak bonus logic: +1 spin for 7+ day streaks (legacy; disabled
+ * when the strict-1/day flag is on — see `clampSpinsForStrictDailyLimit`).
  */
 export async function getDailySpinState(userId: string): Promise<ServiceResponse<DailySpinState>> {
   const { data: spinState, error } = await fetchDailySpinState(userId);
-  
+
   if (error || !spinState) {
     return { data: null, error };
+  }
+
+  // Strict-1/day mode (Phase 2): skip the streak-bonus branch entirely. The
+  // "base spin" per day is still granted by `updateSpinsAvailable` when a
+  // habit is completed; there is no automatic bonus on top.
+  if (isIslandRunFeatureEnabled('todaysOfferSpinEntryEnabled')) {
+    return { data: spinState, error: null };
   }
 
   // Check for streak bonus
@@ -274,13 +286,18 @@ export async function updateSpinsAvailable(userId: string, spinsEarned: number):
     return { data: null, error: fetchError };
   }
 
+  // Strict-1/day clamp for Phase 2 unified Today's Offer rollout. No-op when
+  // the `todaysOfferSpinEntryEnabled` flag is off.
+  const clampedSpinsEarned = clampSpinsForStrictDailyLimit(spinsEarned);
+
   const today = new Date().toISOString().split('T')[0];
-  
+
   // Reset spins if it's a new day, otherwise add to existing
   const isNewDay = !currentState.lastSpinDate || currentState.lastSpinDate !== today;
-  const newSpins = isNewDay 
-    ? spinsEarned
-    : Math.max(currentState.spinsAvailable, spinsEarned);
+  const rawNewSpins = isNewDay
+    ? clampedSpinsEarned
+    : Math.max(currentState.spinsAvailable, clampedSpinsEarned);
+  const newSpins = clampSpinsForStrictDailyLimit(rawNewSpins);
 
   if (!canUseSupabaseData()) {
     const updated: DailySpinState = {

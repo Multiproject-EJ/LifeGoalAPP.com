@@ -12,6 +12,7 @@ type MobileHabitHomeProps = {
   personalitySummary?: string | null;
   onOpenDailyTreat?: () => void;
   onOpenIslandRunStop?: (stopId: 'boss' | 'hatchery' | 'dynamic') => void;
+  onOpenDailySpinWheel?: () => void;
   forceCompactView?: boolean;
   preferredCompactView?: boolean;
   hideTimeBoundOffers?: boolean;
@@ -28,6 +29,7 @@ export function MobileHabitHome({
   personalitySummary,
   onOpenDailyTreat,
   onOpenIslandRunStop,
+  onOpenDailySpinWheel,
   forceCompactView = false,
   preferredCompactView,
   hideTimeBoundOffers = false,
@@ -47,6 +49,7 @@ export function MobileHabitHome({
         personalitySummary={personalitySummary}
         onOpenDailyTreat={onOpenDailyTreat}
         onOpenIslandRunStop={onOpenIslandRunStop}
+        onOpenDailySpinWheel={onOpenDailySpinWheel}
         forceCompactView={forceCompactView}
         preferredCompactView={preferredCompactView}
         hideTimeBoundOffers={hideTimeBoundOffers}
