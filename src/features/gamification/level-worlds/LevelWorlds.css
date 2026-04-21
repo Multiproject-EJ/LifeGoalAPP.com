@@ -2860,6 +2860,23 @@
   margin: 0.1rem 0 0.35rem;
 }
 
+.island-hatchery-card__sell-recommended {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.08rem 0.42rem;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: rgba(56, 22, 0, 0.95);
+  background: linear-gradient(180deg, rgba(255, 220, 117, 0.98), rgba(255, 193, 70, 0.95));
+}
+
+.island-hatchery-card__sell-advisor-reason {
+  margin: 0.28rem 0 0;
+  font-size: 0.75rem;
+  color: rgba(222, 242, 252, 0.86);
+}
+
 .island-hatchery-card__timeline {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

@@ -203,6 +203,7 @@ import {
 } from '../services/islandRunDiceRegeneration';
 import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
 import { resolveNextCheapestIndex } from '../services/islandRunShopAffordability';
+import { adviseEggSellChoice } from '../services/islandRunEggSellAdvisor';
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 6;
@@ -7311,10 +7312,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       </button>
                       {(() => {
                         const sellOptions = getEggSellRewardOptions(activeEgg.tier);
+                        const sellAdvisor = adviseEggSellChoice({
+                          tier: activeEgg.tier,
+                          shardsBalance: runtimeState.shards,
+                          diceBalance: dicePool,
+                          nextStickerShardCost: getShardTierThreshold(runtimeState.shardTierIndex),
+                        });
                         return (
                           <>
                             <p style={{ fontSize: '0.8rem', opacity: 0.7, margin: '0.25rem 0 0' }}>— or sell for —</p>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                               {sellOptions.map((opt) => (
                                 <button
                                   key={opt.choice}
@@ -7323,9 +7330,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                                   onClick={() => handleSellEggForChoice(opt.choice)}
                                 >
                                   {opt.label}
+                                  {sellAdvisor.recommendedChoice === opt.choice && (
+                                    <span className="island-hatchery-card__sell-recommended">Recommended</span>
+                                  )}
                                 </button>
                               ))}
                             </div>
+                            <p className="island-hatchery-card__sell-advisor-reason">{sellAdvisor.reason}</p>
                           </>
                         );
                       })()}
