@@ -1,0 +1,384 @@
+# Minigame & Events Consolidation Plan
+
+**Written:** 2026-04-21
+**Status:** Plan approved, ready to ship in phases.
+**Related docs:** `CANONICAL_GAMEPLAY_CONTRACT.md`, `STAGE_C_STATE_ARCHITECTURE_MIGRATION.md`, `ISLAND_RUN_OPEN_ISSUES.md`, `NEXT_TODO_PR_LIST.md`
+
+---
+
+## 1. Goal
+
+Unify the two parallel concepts currently in the 120-island game:
+
+- **Events** — 4 timed events that rotate in the reward bar (Monopoly-GO-style cycle).
+- **Mini-games** — 4 standalone game components in `src/features/gamification/games/`.
+
+into a single concept: **every mini-game is the play surface of an event**, and **no mini-game exists outside of an event**. All mini-games are launched by the event engine, gated by tickets (tokens earned via the reward bar), and monetizable via Stripe in the same way dice top-ups already are.
+
+Supporting goals:
+- Give island stops (mystery + boss) real, varied, polished gameplay (ultimately up to island 120+).
+- Keep the main bundle small as games grow heavier (lazy-loading).
+- Keep game code isolated per folder so future games don't metastasize into the renderer.
+
+---
+
+## 2. Target state (one-page summary)
+
+### 2.1 The 4 events (canonical)
+
+| # | Event | Icon | Duration | Mini-game (play surface) | Source token |
+|---|---|---|---|---|---|
+| 1 | Feeding Frenzy | 🔥 | 8h | **Task Tower** (repurposed) — short burst, high-tempo | `minigame_ticket` |
+| 2 | Lucky Spin | 🎰 | 24h | **Daily Spin Wheel** (existing) — 1 free spin/day + event-ticket spins | `minigame_ticket` |
+| 3 | Space Excavator | 🚀 | 2d | **Shooter Blitz** (polished) — also serves as Boss Stop game | `minigame_ticket` |
+| 4 | Companion Feast | 🐾 | 4d | **Partner Wheel** (new mini-game, built on the old Wheel of Wins scaffold) — team of up to 4 partners, shared bar | `minigame_ticket` |
+
+Rotation: events cycle 1 → 2 → 3 → 4 → 1 … , exactly one active at a time. Each event has its own sticker collectible (fragments come from reward bar fills during that event).
+
+### 2.2 Island stops
+
+| Stop kind | Game / content | Notes |
+|---|---|---|
+| `fixed_hatchery` | (unchanged) | — |
+| `fixed_habit` | (unchanged) | — |
+| `fixed_mystery` | `breathing` / `habit_action` / `checkin_reflection` / **`vision_quest`** (new) / **`task_tower`** (new) | Variants rotate per island. Task Tower is a mystery variant AND the Feeding Frenzy event surface. |
+| `fixed_wisdom` | (unchanged) | — |
+| `fixed_boss` | **Shooter Blitz** (polished) | Boss-fight flavor (every `islandNumber % 4 === 3` → fight boss). Island 1 gets Shooter Blitz as its boss (see §2.3). |
+
+### 2.3 Island 1 focus
+
+- Boss of island 1 uses Shooter Blitz (polished spaceship shooter, uses the footer game-controller UI).
+- Next fight boss is island 4 (following existing `islandNumber % 4 === 3` rule).
+- Island 2 / island 3 bosses stay as milestone bosses for now (out of scope).
+
+### 2.4 Today's Offer dialog
+
+- Dialog becomes **scrollable**.
+- Keep existing buy-button (Stripe link for 500 dice) + red close-X at the top.
+- Add a new container at the bottom with a **Daily Spin Wheel launch button**.
+- Red notification badge logic is **unified**:
+  - Badge shown on the Today's Offer circle (today tab) AND on the new Spin button inside the dialog when `dailySpinRemaining > 0`.
+  - Badge cleared on both when the single daily spin is used.
+  - Enforce **1 spin per day max** (remove the streak-bonus +1 spin currently in `dailySpin.ts`).
+- Daily Spin Wheel is **removed from `GameBoardOverlay`** (no more overlay button / overlay timer chip).
+
+### 2.5 Game Board Overlay
+
+- **Remove**: Daily Spin Wheel button (moved to Today's Offer).
+- **Keep**: Lucky Roll button (standalone treat, unchanged gameplay).
+- **Add**: Lucky Roll keeps its entry icon here (already present — verify only).
+- **Add later (Phase 4)**: Active-event button that launches the current event's mini-game.
+
+### 2.6 Deletions
+
+- **Wheel of Wins** (`src/features/gamification/games/wheel-of-wins/*`) — **delete entirely**. The old "Lucky Roll is the board" concept is dead; WoW is unreferenced legacy. The Partner Wheel mini-game for Companion Feast will be built fresh (see §5.4), not on top of WoW. (User decision: "complete delete, i don't want stuff in the code that is not used.")
+
+---
+
+## 3. Architecture changes
+
+### 3.1 Event Engine (new layer)
+
+New module: `src/features/gamification/level-worlds/services/islandRunEventEngine.ts`
+
+**Owns:**
+- The canonical event-rotation clock (which of the 4 events is active now, when the next one starts).
+- Event lifecycle: `start(eventId) → progress(deltas) → completeMilestone(n) → expire()`.
+- Persistence hooks into `IslandRunGameStateRecord.activeTimedEvent` (the already-existing field — we don't add a new column, we formalize the owner of it).
+- Milestone reward ladder per event (`feeding_frenzy_ladder_v1`, `lucky_spin_ladder_v1`, `space_excavator_ladder_v1`, `companion_feast_ladder_v1`).
+- Sticker-fragment award routing per active event.
+
+**Exposes:**
+- `getActiveEvent(nowMs): ActiveEventDescriptor` — pure.
+- `advanceEventIfExpired(record, nowMs) → patch` — called on hydrate + on roll.
+- `recordEventProgress(record, source, amount) → patch` — wired into reward-bar progress.
+- `openEventMinigame(eventId, ticketsToSpend) → MinigameLaunchDescriptor` — returns the registry id + config to hand to the launcher.
+
+**Invariant:** exactly one active event at a time (matches user requirement §8 answer).
+
+### 3.2 Minigame Registry expansion
+
+Current registry (`islandRunMinigameRegistry.ts`) only has `shooter_blitz` + `stub_placeholder`. Expand to include:
+
+- `shooter_blitz` (boss stop + Space Excavator event)
+- `task_tower` (Feeding Frenzy event + `task_tower` mystery variant)
+- `lucky_spin` (Lucky Spin event — wraps the daily spin wheel component in minigame props)
+- `vision_quest` (Vision Quest mystery variant)
+- `partner_wheel` (Companion Feast event — new)
+
+All entries should use **`React.lazy`** so game code is not in the main bundle.
+
+### 3.3 Standard game contract (tighten existing)
+
+Every game folder under `src/features/gamification/games/<game-id>/` exports from `index.ts`:
+
+```ts
+export const manifest: MinigameManifest = {
+  id: 'shooter_blitz',
+  title: '…',
+  icon: '🚀',
+  Component: lazy(() => import('./ShooterBlitz')),
+  defaultConfig,        // per-difficulty config builder
+  resolveRewards,       // (result) => Award[] — game never awards directly
+};
+```
+
+The launcher consumes manifests; the engine consumes awards. No game imports engine or store. (This matches the existing `IslandRunMinigameProps` contract — we're formalizing and enforcing it.)
+
+### 3.4 Lazy-loading
+
+- All game components are `React.lazy` imports via their manifest.
+- Game CSS imported inside the lazy component, not at registry level.
+- `Suspense` fallback provided by `islandRunMinigameLauncher`.
+
+### 3.5 Monetization hook (Stripe)
+
+New: `src/services/minigameTicketStore.ts` (mirrors `src/services/diceStore.ts` / existing dice Stripe plumbing).
+
+- Product slots per event (e.g. `feeding_frenzy_tickets_10`, `lucky_spin_tickets_10`, …) plus a generic `minigame_tickets_10` SKU if desired.
+- `initiateStripeCheckout(skuId)` → returns URL; client opens.
+- Webhook handler grants `minigame_ticket` balance (and/or sticker fragments for "skip to next tier" bundles later).
+- Stripe URLs **left blank** in config — user will paste them in once created.
+
+Where this lives on the record: add `minigameTicketsByEvent: Record<string, number>` to `IslandRunGameStateRecord` (new column via a Supabase migration), consumed when launching an event mini-game.
+
+---
+
+## 4. Shooter Blitz polish spec
+
+**Premise:** Spaceship side-scroller / top-down shooter using the app's existing footer game-controller UI concept as **real gameplay input** (not menu navigation).
+
+- Input: left / right / fire (center button). Repurpose the existing footer controller image + 3 overlay buttons while a boss/event is active. Return to normal footer navigation on exit.
+- Enemies: simple waves of asteroids/drones scaling with `BossDifficulty` (existing enum in `bossService.ts`).
+- Win condition: reach `scoreTarget` before `trialDurationSec` expires (already modeled in `getBossTrialConfig`).
+- Lose condition: time-out OR ship destroyed (ship has HP scaling with difficulty).
+- Power-ups drop from enemies: rapid-fire, shield, triple-shot — duration-based, in-session only.
+- Visual theme per island: island 1 = asteroid field, island 4 = drone swarm, … (stub palette-swap per island now, proper theming later).
+- Rewards: converted by `resolveRewards(result)` into `Award[]` (dice / essence / fragments / minigame tokens). Game code does not mutate state.
+- Audio/haptics: reuse existing hooks already in the game (`ShooterBlitz.tsx` already has minimal versions).
+
+---
+
+## 5. Per-event mini-game specs
+
+### 5.1 Feeding Frenzy → Task Tower
+
+- Short (90–120s) block-drop / match-clear loop.
+- Blocks represent "food" for the active companion; each clear gives a feeding tick that counts toward event progress (same weight as `creature_feed` in reward bar: +4).
+- Entry cost: 1 minigame ticket per run.
+- Reuses existing Task Tower component; wrap for event config (duration, target rows cleared, theme).
+
+### 5.2 Lucky Spin → Daily Spin Wheel (as event surface)
+
+- Wrap `NewDailySpinWheel` behind the minigame contract.
+- Free daily spin (1/day, from Today's Offer dialog) still works independently.
+- Extra event spins cost 1 ticket each.
+- Each spin yields reward bar progress + sticker-fragment chance.
+
+### 5.3 Space Excavator → Shooter Blitz (event version)
+
+- Same engine as boss version but tuned for event length (longer campaign, more enemy variety).
+- Milestones at score breakpoints; cumulative across runs for the duration of the event.
+
+### 5.4 Companion Feast → Partner Wheel (new)
+
+Clone of Monopoly GO's Partner Event:
+- Team of up to 4 players (initially: single-player placeholder + 3 AI partners, real multiplayer deferred).
+- Each partner has their own progress bar.
+- Shared reward bar filled by wheel spins.
+- Wheel spins cost event tokens (earned by rolls / daily claims / tickets).
+- Milestones + final big reward shared across the team.
+- **Built fresh** under `src/features/gamification/games/partner-wheel/` — do NOT build on Wheel of Wins (which is deleted in Phase 1).
+
+---
+
+## 6. Today's Offer dialog changes
+
+**File(s):** to-be-identified (grep in Phase 2 — the current plan doc author could not locate the dialog component definitively). Likely under `src/features/dashboard/` or `src/features/today/`.
+
+Changes:
+1. Make the dialog body scrollable (`overflow-y: auto` on a bounded container).
+2. Add a new `<section>` at the bottom: "Daily Spin Wheel" with icon, name, small description, state ("Ready" / countdown), and a launch button.
+3. Launch button opens the existing `NewDailySpinWheel` as a modal.
+4. Red notification badge:
+   - On the Today tab's Today's Offer circle: bound to `dailySpinRemaining > 0`.
+   - On the new Spin button inside the dialog: same condition.
+   - Both clear automatically when the day's single spin is used (state already updates in `dailySpin.ts`).
+5. Remove the streak-bonus extra spin in `src/services/dailySpin.ts` (enforce strictly 1 spin/day).
+6. Remove Daily Spin button + timer from `GameBoardOverlay`.
+
+---
+
+## 7. Data model changes
+
+| Change | Where | Migration needed? |
+|---|---|---|
+| Add `minigameTicketsByEvent: Record<EventId, number>` to `IslandRunGameStateRecord` | `islandRunGameStateStore.ts` | **Yes** — new `jsonb` column on `island_run_runtime_state` |
+| Formalize `activeTimedEvent` shape (typed `eventId: EventId` union instead of open string) | same | No |
+| Add `'vision_quest' \| 'task_tower'` to `MysteryStopContentKind` union | `islandRunStops.ts` | No |
+| Remove `wheel-of-wins` entirely | `src/features/gamification/games/wheel-of-wins/` | No |
+| Remove streak-bonus extra spin | `src/services/dailySpin.ts` | No |
+
+Migration file name (next available): check `supabase/migrations/` — most recent appears to be `0230_add_bonus_tile_charge_by_island.sql`; new one would be `0231_add_minigame_tickets_by_event.sql`.
+
+Remember: new columns must be added to the explicit `select(...)` list in `hydrateIslandRunGameStateRecordWithSource` (~line 1205 of `islandRunGameStateStore.ts`) — per stored memory `runtime state hydrate`.
+
+---
+
+## 8. Folder / file plan
+
+```
+src/features/gamification/
+├── games/
+│   ├── shooter-blitz/        # polish this, add spaceship, controller input
+│   │   ├── index.ts          # manifest export (new)
+│   │   ├── ShooterBlitz.tsx  # polished
+│   │   ├── controller.tsx    # new — reuses footer game-controller image
+│   │   ├── enemies.ts        # new
+│   │   ├── powerups.ts       # new
+│   │   └── shooterBlitz.css
+│   ├── task-tower/           # keep as-is, wire into registry
+│   │   ├── index.ts          # manifest export (new)
+│   │   └── (existing files)
+│   ├── vision-quest/         # keep as-is, wire into registry
+│   │   ├── index.ts          # manifest export (new)
+│   │   └── (existing files)
+│   ├── partner-wheel/        # NEW
+│   │   ├── index.ts
+│   │   ├── PartnerWheel.tsx
+│   │   ├── partnerWheelState.ts
+│   │   ├── partnerWheelTypes.ts
+│   │   └── partnerWheel.css
+│   └── wheel-of-wins/        # DELETED in Phase 1
+└── level-worlds/services/
+    ├── islandRunEventEngine.ts          # NEW (§3.1)
+    ├── islandRunMinigameRegistry.ts     # expand (§3.2)
+    ├── islandRunMinigameLauncher.tsx    # add Suspense + lazy (§3.4)
+    ├── islandRunMinigameTypes.ts        # add MinigameManifest type (§3.3)
+    └── islandRunStops.ts                # add 'vision_quest' + 'task_tower' mystery variants
+
+src/services/
+├── dailySpin.ts              # 1/day enforcement, remove streak bonus
+└── minigameTicketStore.ts    # NEW — Stripe checkout for event tickets
+
+supabase/migrations/
+└── 0231_add_minigame_tickets_by_event.sql  # NEW
+```
+
+---
+
+## 9. Testing strategy
+
+- **Engine:** unit-test `islandRunEventEngine.ts` — rotation, expiry, progress accumulation, milestone emission. Place in `src/features/gamification/level-worlds/services/__tests__/islandRunEventEngine.test.ts`.
+- **Registry:** assert every manifest is lazy, and `resolveMinigameForStop('boss', islandNumber=1)` returns `shooter_blitz`.
+- **Mystery variants:** assert `'vision_quest'` and `'task_tower'` can be chosen by the seeded random and are playable.
+- **Daily spin:** update existing tests to expect 1/day and no streak bonus.
+- **Stripe:** mock the checkout service; verify ticket grant shape in the webhook handler.
+- **No tests for game internals** — they're volatile. Test the contract boundary only.
+
+---
+
+## 10. Rollout / feature flags
+
+Add flags to `src/config/featureFlags.ts` (or the existing flag file):
+- `islandRunEventEngineEnabled`
+- `islandRunShooterBlitzBossEnabled`
+- `islandRunTaskTowerMysteryEnabled`
+- `islandRunVisionQuestMysteryEnabled`
+- `islandRunPartnerWheelEnabled`
+- `todaysOfferSpinEntryEnabled`
+
+All default off; flip on per-phase as pieces ship. The registry and engine can exist in the code without being active.
+
+---
+
+## 11. Risks & open items
+
+1. **Today's Offer dialog location** — need to grep/locate the component in Phase 2 before we can wire the new Spin button in.
+2. **Footer game-controller reuse** — need to confirm the footer component is safe to hand over to Shooter Blitz and revert on exit without breaking navigation.
+3. **Partner Wheel multiplayer** — real multiplayer is out of scope for this plan; ship single-player + AI partners first.
+4. **Reward-bar sticker fragments** — current fragments logic doesn't know about events; Phase 3 wires it to the engine so fragments go to the active event's sticker.
+5. **Ticket economy balancing** — initial ticket grant rates + Stripe pricing are placeholders; design pass after Phase 3 with live numbers.
+6. **Lucky Roll stays standalone** — confirm its overlay entry icon still works after the Daily Spin removal from overlay (they are separate, but both currently render in the same overlay area).
+
+---
+
+## 12. Phased shippable plan (the checklist we work through)
+
+Each phase is one PR and independently shippable. Phase 1 is the first chunk for the next RP.
+
+### Phase 1 — Cleanup & foundations (ship first)
+- [ ] Delete `src/features/gamification/games/wheel-of-wins/` and all references.
+- [ ] Add `MinigameManifest` type to `islandRunMinigameTypes.ts`.
+- [ ] Add `index.ts` manifest exports to existing polished games (Task Tower, Vision Quest, Shooter Blitz) with `React.lazy` components — no behavior change yet; just the shape.
+- [ ] Expand `islandRunMinigameRegistry.ts` to register all four manifests (still inert — nothing launches them).
+- [ ] Add feature flags (§10) all defaulted off.
+- [ ] Add `'vision_quest'` and `'task_tower'` to `MysteryStopContentKind` + pool entries (gated behind flags).
+- [ ] Supabase migration `0231_add_minigame_tickets_by_event.sql` (column only, no reads yet).
+- [ ] Add the column to the hydrate `select(...)` list.
+- [ ] Unit tests: registry shape, mystery variant pool includes new entries when flags are on.
+
+### Phase 2 — Today's Offer + Daily Spin unification
+- [ ] Locate Today's Offer dialog component.
+- [ ] Make dialog scrollable.
+- [ ] Add Daily Spin Wheel launch button at dialog bottom.
+- [ ] Unify red badge logic (Today circle + in-dialog button) via single selector.
+- [ ] Remove streak-bonus extra spin from `dailySpin.ts`; enforce strict 1/day.
+- [ ] Remove Daily Spin button + timer from `GameBoardOverlay`.
+- [ ] Verify Lucky Roll overlay entry still intact.
+- [ ] Update tests for `dailySpin.ts`.
+
+### Phase 3 — Event engine
+- [x] Create `islandRunEventEngine.ts` (§3.1) with rotation clock, progress, milestones, sticker-fragment routing.
+- [x] Migrate `activeTimedEvent` reads/writes in the renderer to go through engine functions.
+- [x] Wire reward-bar progress to `recordEventProgress`.
+- [x] Unit tests for engine (§9).
+- [x] Telemetry: log event transitions (flag-gated).
+
+### Phase 4 — Boss Stop Shooter Blitz
+- [x] **Step 1 — pure launcher resolver:** `islandRunMinigameLauncherService.ts` exports `resolveBossStopMinigame(ctx) → MinigameLaunchDescriptor | null`, flag-gated on `islandRunShooterBlitzBossEnabled`. Routes `bossType === 'fight'` to `shooter_blitz` with deterministic score/duration scaling from `bossService`. 5 unit tests.
+- [ ] Wire boss stop UI to launch Shooter Blitz via `islandRunMinigameLauncher` for `kind === 'fixed_boss'` on island 1.
+- [ ] Polish Shooter Blitz: spaceship sprite, asteroid enemies, power-ups, HP, win/lose conditions per `bossService.getBossTrialConfig`.
+- [ ] Hook footer game-controller image to Shooter Blitz inputs (left / right / fire) during boss session.
+- [ ] `resolveRewards` → awards via engine.
+- [ ] Flip `islandRunShooterBlitzBossEnabled` on.
+
+### Phase 5 — Mystery Task Tower & Vision Quest
+- [ ] Wire mystery-stop launcher to launch Task Tower / Vision Quest components when the rolled `mysteryContentKind` selects them.
+- [ ] Manual QA: walk through 8–10 islands of mystery rotation.
+- [ ] Flip mystery flags on.
+
+### Phase 6 — Event mini-games
+- [ ] Feeding Frenzy wraps Task Tower in event config; event tickets spent to play.
+- [ ] Lucky Spin wraps daily spin wheel for event extra spins.
+- [ ] Space Excavator wraps Shooter Blitz (longer campaign variant).
+- [ ] New Partner Wheel skeleton (single-player + AI partners).
+- [ ] Reward-bar progress + sticker fragments routed via engine to active event sticker.
+
+### Phase 7 — Monetization
+- [ ] `src/services/minigameTicketStore.ts` — Stripe checkout wrapper, mirrors dice Stripe flow.
+- [ ] Placeholder Stripe URLs in config (user will paste).
+- [ ] Webhook handler grants `minigameTicketsByEvent` balance.
+- [ ] UI entry points: "Buy tickets" button in active-event panel + Today's Offer container.
+
+### Phase 8 — Polish & balance
+- [ ] Tune ticket grant rates, event durations (confirm 8h/24h/2d/4d hold up in practice), milestone ladders.
+- [ ] Visual polish per island for Shooter Blitz.
+- [ ] Per-event audio theme.
+- [ ] Final sticker artwork.
+
+---
+
+## 13. What the next RP ships (Phase 1 scope, concretely)
+
+The first shippable PR from this plan is intentionally small, low-risk, and inert:
+
+1. Delete Wheel of Wins.
+2. Add `MinigameManifest` type + `index.ts` manifest files to the 3 surviving games.
+3. Register all manifests in the registry (lazy-loaded) but don't launch them from anywhere new.
+4. Add the two new `MysteryStopContentKind` variants gated behind flags (flags off → no behavior change).
+5. Add the Supabase migration `0231_add_minigame_tickets_by_event.sql` + hydrate select-list update.
+6. Add feature flags (all off).
+7. Unit tests for the above.
+
+No runtime behavior changes for the user. Foundation for Phases 2–8.

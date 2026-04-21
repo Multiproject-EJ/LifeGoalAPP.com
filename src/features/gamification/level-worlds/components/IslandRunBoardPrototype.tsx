@@ -160,10 +160,8 @@ import {
   spendIslandRunContractV2EssenceOnStopBuild,
 } from '../services/islandRunContractV2EssenceBuild';
 import {
-  applyIslandRunContractV2RewardBarProgress,
   BASE_DICE_PER_ROLL,
   claimIslandRunContractV2RewardBar,
-  ensureIslandRunContractV2ActiveTimedEvent,
   resolveChainedRewardBarClaims,
   resolveNextRewardKind,
   REWARD_KIND_ICON,
@@ -174,6 +172,10 @@ import {
   resolveDiceCostForMultiplier,
   type RewardBarClaimPayout,
 } from '../services/islandRunContractV2RewardBar';
+import {
+  advanceEventIfExpired,
+  recordEventProgress,
+} from '../services/islandRunEventEngine';
 import {
   canRetryBossTrial,
   isIslandRunRollEnergyDepleted,
@@ -852,6 +854,10 @@ function getStopIcon(stop: Pick<IslandStopPlanEntry, 'stopId' | 'mysteryContentK
         return '🧭';
       case 'breathing':
         return '🧘';
+      case 'task_tower':
+        return '🗼';
+      case 'vision_quest':
+        return '🔮';
       default:
         return '❓';
     }
@@ -2650,9 +2656,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     const syncEventLifecycle = () => {
       const current = runtimeStateRef.current;
-      const ensured = ensureIslandRunContractV2ActiveTimedEvent({
-        nowMs: Date.now(),
-        state: {
+      const ensured = advanceEventIfExpired(
+        {
           rewardBarProgress: current.rewardBarProgress,
           rewardBarThreshold: current.rewardBarThreshold,
           rewardBarClaimCountInEvent: current.rewardBarClaimCountInEvent,
@@ -2665,7 +2670,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           stickerProgress: current.stickerProgress,
           stickerInventory: current.stickerInventory,
         },
-      });
+        Date.now(),
+      );
 
       if (
         ensured.state.activeTimedEvent?.eventId === current.activeTimedEvent?.eventId
@@ -4902,7 +4908,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // rewards but delivering zero reward-bar progress. The dice-multiplier
     // amplifier (§2E) applies here too, matching how feeding tiles scale.
     {
-      const nextRewardBarState = applyIslandRunContractV2RewardBarProgress({
+      const nextRewardBarState = recordEventProgress({
         state: {
           rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
           rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
@@ -6033,7 +6039,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       triggerIslandRunHaptic('reward_claim');
 
       if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
-        const nextRewardBarState = applyIslandRunContractV2RewardBarProgress({
+        const nextRewardBarState = recordEventProgress({
           state: {
             rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
             rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,

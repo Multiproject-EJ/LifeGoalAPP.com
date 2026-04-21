@@ -102,6 +102,7 @@ export interface IslandRunRuntimeStateBackend {
       stickerProgress?: { fragments: number; guaranteedAt?: number; pityCounter?: number };
       stickerInventory?: Record<string, number>;
       lastEssenceDriftLost?: number;
+      minigameTicketsByEvent?: Record<string, number>;
     };
   }): Promise<{ ok: true } | { ok: false; errorMessage: string }>;
 }
@@ -580,6 +581,25 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.lastEssenceDriftLost === 'number' && Number.isFinite(patch.lastEssenceDriftLost)
           ? Math.max(0, Math.floor(patch.lastEssenceDriftLost))
           : current.lastEssenceDriftLost,
+      minigameTicketsByEvent:
+        patch.minigameTicketsByEvent !== null
+        && patch.minigameTicketsByEvent !== undefined
+        && typeof patch.minigameTicketsByEvent === 'object'
+        && !Array.isArray(patch.minigameTicketsByEvent)
+          ? (() => {
+              const merged: Record<string, number> = { ...current.minigameTicketsByEvent };
+              for (const [eventId, rawCount] of Object.entries(patch.minigameTicketsByEvent)) {
+                if (typeof rawCount !== 'number' || !Number.isFinite(rawCount)) continue;
+                const count = Math.max(0, Math.floor(rawCount));
+                if (count > 0) {
+                  merged[eventId] = count;
+                } else {
+                  delete merged[eventId];
+                }
+              }
+              return merged;
+            })()
+          : current.minigameTicketsByEvent,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({

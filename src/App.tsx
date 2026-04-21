@@ -89,6 +89,7 @@ import { useContinuousSave } from './hooks/useContinuousSave';
 import { isStandaloneMode } from './routes/detectStandalone';
 import { useDailySpinStatus } from './hooks/useDailySpinStatus';
 import { useLuckyRollStatus } from './hooks/useLuckyRollStatus';
+import { isIslandRunFeatureEnabled } from './config/islandRunFeatureFlags';
 import { generateInitials } from './utils/initials';
 import { DayZeroOnboarding } from './features/onboarding/DayZeroOnboarding';
 import { GameOfLifeOnboarding } from './features/onboarding/GameOfLifeOnboarding';
@@ -726,6 +727,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const goldBreakdown = splitGoldBalance(goldBalance);
   const { spinAvailable } = useDailySpinStatus(supabaseSession?.user?.id);
   const luckyRollStatus = useLuckyRollStatus(supabaseSession?.user?.id);
+  // Phase 2 (Minigame & Events Consolidation Plan §2.5): when the
+  // `todaysOfferSpinEntryEnabled` flag is on, the Daily Spin Wheel moves
+  // into the Today's Offer dialog and is REMOVED from the board overlay.
+  // The Lucky Roll entry (and its timer) stay on the overlay unchanged.
+  const overlayShowSpinWheel =
+    spinAvailable && !isIslandRunFeatureEnabled('todaysOfferSpinEntryEnabled');
   const creatureCollectionSummary = useMemo(() => {
     if (!supabaseSession?.user?.id) {
       return { total: 0, rewardsReady: 0 };
@@ -3027,6 +3034,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 setLevelWorldsEntryPanel('default');
                 setShowLevelWorldsFromEntry(true);
               }}
+              onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
               pendingOfferToOpen={pendingTodayOfferOpen}
               onPendingOfferHandled={() => setPendingTodayOfferOpen(null)}
               hiddenHabitIds={[]}
@@ -4425,6 +4433,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               setLevelWorldsEntryPanel('default');
               setShowLevelWorldsFromEntry(true);
             }}
+            onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
             forceCompactView={!isGameModeActive}
             preferredCompactView={!isGameModeActive}
             hideTimeBoundOffers={!isGameModeActive}
@@ -4519,7 +4528,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           luckyRollResetAtMs={luckyRollStatus.monthlyWindowEndsAtMs ?? undefined}
           luckyRollRunsRemaining={luckyRollStatus.earnedRuns}
           luckyRollStatusLabel={luckyRollStatus.activeSource === 'earned' ? `${luckyRollStatus.earnedRuns} earned ${luckyRollStatus.earnedRuns === 1 ? 'run' : 'runs'}` : undefined}
-          showSpinWheel={spinAvailable}
+          showSpinWheel={overlayShowSpinWheel}
           showLuckyRoll={luckyRollStatus.available}
           creatureCollectionCount={creatureCollectionSummary.total}
           creatureRewardReadyCount={creatureCollectionSummary.rewardsReady}
@@ -4837,7 +4846,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         luckyRollResetAtMs={luckyRollStatus.monthlyWindowEndsAtMs ?? undefined}
         luckyRollRunsRemaining={luckyRollStatus.earnedRuns}
         luckyRollStatusLabel={luckyRollStatus.activeSource === 'earned' ? `${luckyRollStatus.earnedRuns} earned ${luckyRollStatus.earnedRuns === 1 ? 'run' : 'runs'}` : undefined}
-        showSpinWheel={spinAvailable}
+        showSpinWheel={overlayShowSpinWheel}
         showLuckyRoll={luckyRollStatus.available}
         creatureCollectionCount={creatureCollectionSummary.total}
         creatureRewardReadyCount={creatureCollectionSummary.rewardsReady}

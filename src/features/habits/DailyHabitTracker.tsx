@@ -43,6 +43,8 @@ import {
 } from '../../services/journal';
 import { fetchCompletedActionsForDate } from '../../services/actions';
 import { updateSpinsAvailable } from '../../services/dailySpin';
+import { useDailySpinStatus } from '../../hooks/useDailySpinStatus';
+import { isIslandRunFeatureEnabled } from '../../config/islandRunFeatureFlags';
 import { fetchGoals, insertGoal } from '../../services/goals';
 import { getHabitReminderQueueStatus, syncQueuedHabitReminderPrefs } from '../../services/habitReminderPrefs';
 import {
@@ -237,6 +239,13 @@ type DailyHabitTrackerProps = {
   personalitySummary?: string | null;
   onOpenDailyTreat?: () => void;
   onOpenIslandRunStop?: (stopId: 'boss' | 'hatchery' | 'dynamic') => void;
+  /**
+   * Phase 2 (Minigame & Events Consolidation Plan §2.4): when provided, the
+   * Today's Offer modal renders a "Daily Spin Wheel" launch button at the
+   * bottom that invokes this callback. Only has an effect while the
+   * `todaysOfferSpinEntryEnabled` feature flag is on.
+   */
+  onOpenDailySpinWheel?: () => void;
   forceCompactView?: boolean;
   preferredCompactView?: boolean;
   hideTimeBoundOffers?: boolean;
@@ -524,6 +533,7 @@ export function DailyHabitTracker({
   personalitySummary,
   onOpenDailyTreat,
   onOpenIslandRunStop,
+  onOpenDailySpinWheel,
   forceCompactView = false,
   preferredCompactView,
   hideTimeBoundOffers = false,
@@ -536,6 +546,12 @@ export function DailyHabitTracker({
   const isCompact = variant === 'compact';
   const [activeOfferTeaser, setActiveOfferTeaser] = useState<TimeBoundOfferId | null>(null);
   const [isTodaysOfferModalOpen, setIsTodaysOfferModalOpen] = useState(false);
+  // Phase 2: in-dialog Daily Spin Wheel entry. The badge/button is rendered
+  // inside the Today's Offer modal and only when the feature flag is on.
+  const isTodaysOfferSpinEntryEnabled = isIslandRunFeatureEnabled('todaysOfferSpinEntryEnabled');
+  const { spinAvailable: dailySpinAvailable } = useDailySpinStatus(
+    isTodaysOfferSpinEntryEnabled ? session?.user?.id : undefined,
+  );
   const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
   const [seenOfferTeasers, setSeenOfferTeasers] = useState<Record<string, boolean>>({});
   const progressGradientId = useId();
@@ -2337,7 +2353,9 @@ export function DailyHabitTracker({
       onClick={() => setIsTodaysOfferModalOpen(false)}
     >
       <div
-        className="habit-day-nav__vision-modal habit-day-nav__todays-offer-modal"
+        className={`habit-day-nav__vision-modal habit-day-nav__todays-offer-modal${
+          isTodaysOfferSpinEntryEnabled ? ' habit-day-nav__todays-offer-modal--scrollable' : ''
+        }`}
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -2348,15 +2366,48 @@ export function DailyHabitTracker({
         >
           ×
         </button>
-        <button
-          type="button"
-          className="habit-day-nav__todays-offer-buy"
-          onClick={() => {
-            void startTodaysOfferCheckout();
-          }}
-        >
-          Buy
-        </button>
+        <div className="habit-day-nav__todays-offer-body">
+          <button
+            type="button"
+            className="habit-day-nav__todays-offer-buy"
+            onClick={() => {
+              void startTodaysOfferCheckout();
+            }}
+          >
+            Buy
+          </button>
+          {isTodaysOfferSpinEntryEnabled && onOpenDailySpinWheel ? (
+            <div className="habit-day-nav__todays-offer-spin">
+              <button
+                type="button"
+                className="habit-day-nav__todays-offer-spin-button"
+                onClick={() => {
+                  setIsTodaysOfferModalOpen(false);
+                  onOpenDailySpinWheel();
+                }}
+                aria-label={
+                  dailySpinAvailable
+                    ? 'Spin the Daily Spin Wheel (available)'
+                    : 'Daily Spin Wheel (already used today)'
+                }
+              >
+                <span className="habit-day-nav__todays-offer-spin-icon" aria-hidden="true">🎡</span>
+                <span className="habit-day-nav__todays-offer-spin-label">Daily Spin Wheel</span>
+                {dailySpinAvailable ? (
+                  <span
+                    className="habit-day-nav__todays-offer-spin-badge"
+                    aria-hidden="true"
+                  >
+                    1
+                  </span>
+                ) : null}
+              </button>
+              <p className="habit-day-nav__todays-offer-spin-caption">
+                {dailySpinAvailable ? 'Your daily spin is ready!' : 'Come back tomorrow for your next spin.'}
+              </p>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   ) : null;

@@ -23,6 +23,10 @@ import { islandRunTileRewardActionTests } from './islandRunTileRewardAction.test
 import { islandRunProgressResetTests } from './islandRunProgressReset.test';
 import { islandRunStateStoreTests } from './islandRunStateStore.test';
 import { islandRunStateActionsTests } from './islandRunStateActions.test';
+import { minigameConsolidationPhase1Tests } from './minigameConsolidationPhase1.test';
+import { minigameConsolidationPhase2Tests } from './minigameConsolidationPhase2.test';
+import { minigameConsolidationPhase3Tests } from './minigameConsolidationPhase3.test';
+import { minigameConsolidationPhase4Tests } from './minigameConsolidationPhase4.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -51,6 +55,10 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunProgressReset', tests: islandRunProgressResetTests },
   { label: 'islandRunStateStore', tests: islandRunStateStoreTests },
   { label: 'islandRunStateActions', tests: islandRunStateActionsTests },
+  { label: 'minigameConsolidationPhase1', tests: minigameConsolidationPhase1Tests },
+  { label: 'minigameConsolidationPhase2', tests: minigameConsolidationPhase2Tests },
+  { label: 'minigameConsolidationPhase3', tests: minigameConsolidationPhase3Tests },
+  { label: 'minigameConsolidationPhase4', tests: minigameConsolidationPhase4Tests },
 ];
 
 async function main() {
