@@ -1,13 +1,21 @@
 import type { IslandBoardProfileId } from './islandBoardProfiles';
+import { getIslandRunFeatureFlags } from '../../../../config/islandRunFeatureFlags';
 
 /**
  * Mystery stop content kinds — the rotating content that fills the Mystery (Stop 3) slot.
  * Mystery = "big upgrade" stop; currently breathing/guided meditation, expanding over time.
+ *
+ * `task_tower` and `vision_quest` are gated behind their respective feature
+ * flags in `islandRunFeatureFlags.ts` (Phase 5 of the Minigame & Events
+ * Consolidation Plan). While the flags are off, those variants are never
+ * emitted by `generateIslandStopPlan` — the type is a compile-time union only.
  */
 export type MysteryStopContentKind =
   | 'habit_action'
   | 'checkin_reflection'
-  | 'breathing';
+  | 'breathing'
+  | 'task_tower'
+  | 'vision_quest';
 
 export interface IslandStopPlanEntry {
   /** Canonical stop ID matching the V2 contract: hatchery → habit → mystery → wisdom → boss. */
@@ -32,10 +40,11 @@ export interface IslandStopPlanEntry {
 
 /**
  * Content pool for the Mystery stop (Stop 3).
- * Currently: breathing exercise, habit action, or check-in reflection.
- * This will evolve to include guided meditation and other wellness activities.
+ * Base entries: breathing exercise, habit action, or check-in reflection.
+ * Feature-flagged entries (Task Tower, Vision Quest) are appended when their
+ * flags are on — see `buildMysteryStopContentPool()`.
  */
-const MYSTERY_STOP_CONTENT_POOL: Array<{
+const MYSTERY_STOP_CONTENT_POOL_BASE: Array<{
   kind: MysteryStopContentKind;
   title: string;
   description: string;
@@ -56,6 +65,43 @@ const MYSTERY_STOP_CONTENT_POOL: Array<{
     description: 'Run a quick check-in/reflection to calibrate your next moves.',
   },
 ];
+
+const MYSTERY_STOP_CONTENT_TASK_TOWER: {
+  kind: MysteryStopContentKind;
+  title: string;
+  description: string;
+} = {
+  kind: 'task_tower',
+  title: '🗼 Task Tower',
+  description: 'Tap blocks to clear the tower and score multipliers for landing combos.',
+};
+
+const MYSTERY_STOP_CONTENT_VISION_QUEST: {
+  kind: MysteryStopContentKind;
+  title: string;
+  description: string;
+} = {
+  kind: 'vision_quest',
+  title: '🔮 Vision Quest',
+  description: 'Reflect on your long-term vision and log a short journal entry.',
+};
+
+/** Build the runtime Mystery-stop content pool honoring feature flags. */
+function buildMysteryStopContentPool(): Array<{
+  kind: MysteryStopContentKind;
+  title: string;
+  description: string;
+}> {
+  const flags = getIslandRunFeatureFlags();
+  const pool = [...MYSTERY_STOP_CONTENT_POOL_BASE];
+  if (flags.islandRunTaskTowerMysteryEnabled) {
+    pool.push(MYSTERY_STOP_CONTENT_TASK_TOWER);
+  }
+  if (flags.islandRunVisionQuestMysteryEnabled) {
+    pool.push(MYSTERY_STOP_CONTENT_VISION_QUEST);
+  }
+  return pool;
+}
 
 function seededRandom(seed: number) {
   const x = Math.sin(seed) * 10000;
@@ -86,8 +132,9 @@ export function generateIslandStopPlan(
   const safeIsland = Number.isFinite(islandNumber) ? Math.max(1, Math.floor(islandNumber)) : 1;
 
   // Select rotating content for the Mystery stop (seeded per island).
-  const mysteryContentIndex = Math.floor(seededRandom(97 + safeIsland * 13) * MYSTERY_STOP_CONTENT_POOL.length);
-  const mysteryContent = MYSTERY_STOP_CONTENT_POOL[mysteryContentIndex];
+  const pool = buildMysteryStopContentPool();
+  const mysteryContentIndex = Math.floor(seededRandom(97 + safeIsland * 13) * pool.length);
+  const mysteryContent = pool[mysteryContentIndex];
 
   return [
     {

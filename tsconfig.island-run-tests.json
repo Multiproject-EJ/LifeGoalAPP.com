@@ -27,6 +27,7 @@
     "src/features/gamification/level-worlds/services/islandRunProfile.ts",
     "src/features/gamification/level-worlds/services/islandRunRuntimeTelemetry.ts",
     "src/features/gamification/level-worlds/services/islandRunEntryDebug.ts",
+    "src/config/islandRunFeatureFlags.ts",
     "src/features/gamification/level-worlds/services/__tests__/**/*.ts"
   ]
 }

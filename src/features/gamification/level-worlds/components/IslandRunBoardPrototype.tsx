@@ -852,6 +852,10 @@ function getStopIcon(stop: Pick<IslandStopPlanEntry, 'stopId' | 'mysteryContentK
         return '🧭';
       case 'breathing':
         return '🧘';
+      case 'task_tower':
+        return '🗼';
+      case 'vision_quest':
+        return '🔮';
       default:
         return '❓';
     }

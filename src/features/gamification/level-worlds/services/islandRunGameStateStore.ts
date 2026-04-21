@@ -163,6 +163,15 @@ export interface IslandRunGameStateRecord {
   };
   stickerInventory: Record<string, number>;
   lastEssenceDriftLost: number;
+  /**
+   * Per-timed-event ledger of unused minigame-launch tickets. Key: canonical
+   * event id (`feeding_frenzy` | `lucky_spin` | `space_excavator` |
+   * `companion_feast` or any future event id). Value: non-negative integer
+   * count. Zero entries are pruned on write. Populated by Stripe ticket
+   * top-ups and drained by event mini-game launches (Phase 6/7 of the
+   * Minigame & Events Consolidation Plan).
+   */
+  minigameTicketsByEvent: Record<string, number>;
 }
 
 const ISLAND_RUN_RUNTIME_STATE_TABLE = 'island_run_runtime_state';
@@ -517,6 +526,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     },
     stickerInventory: {},
     lastEssenceDriftLost: 0,
+    minigameTicketsByEvent: {},
   };
 }
 
@@ -933,7 +943,34 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
       typeof value.lastEssenceDriftLost === 'number' && Number.isFinite(value.lastEssenceDriftLost)
         ? Math.max(0, Math.floor(value.lastEssenceDriftLost))
         : fallback.lastEssenceDriftLost,
+    minigameTicketsByEvent: sanitizeMinigameTicketsByEvent(
+      value.minigameTicketsByEvent,
+      fallback.minigameTicketsByEvent,
+    ),
   };
+}
+
+/**
+ * Coerce an unknown value into a safe `minigameTicketsByEvent` record. Values
+ * are clamped to non-negative integers; zero entries are pruned. Unexpected
+ * shapes fall back to the provided default.
+ */
+function sanitizeMinigameTicketsByEvent(
+  value: unknown,
+  fallback: Record<string, number>,
+): Record<string, number> {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return { ...fallback };
+  }
+  const result: Record<string, number> = {};
+  for (const [eventId, rawCount] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof rawCount !== 'number' || !Number.isFinite(rawCount)) continue;
+    const count = Math.max(0, Math.floor(rawCount));
+    if (count > 0) {
+      result[eventId] = count;
+    }
+  }
+  return result;
 }
 
 function mergeStringArrayByUnion(left: string[] = [], right: string[] = []): string[] {
@@ -1074,7 +1111,24 @@ function mergeRecordForConflict(options: {
       ...local.stickerInventory,
     },
     lastEssenceDriftLost: Math.max(local.lastEssenceDriftLost, remote.lastEssenceDriftLost),
+    minigameTicketsByEvent: mergeMinigameTicketsByEvent(
+      remote.minigameTicketsByEvent,
+      local.minigameTicketsByEvent,
+    ),
   };
+}
+
+function mergeMinigameTicketsByEvent(
+  remote: Record<string, number>,
+  local: Record<string, number>,
+): Record<string, number> {
+  const keys = new Set([...Object.keys(remote), ...Object.keys(local)]);
+  const merged: Record<string, number> = {};
+  keys.forEach((key) => {
+    const count = Math.max(remote[key] ?? 0, local[key] ?? 0);
+    if (count > 0) merged[key] = count;
+  });
+  return merged;
 }
 
 function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, deviceSessionId: string) {
@@ -1139,6 +1193,7 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     sticker_progress: record.stickerProgress,
     sticker_inventory: record.stickerInventory,
     last_essence_drift_lost: record.lastEssenceDriftLost,
+    minigame_tickets_by_event: record.minigameTicketsByEvent,
     last_writer_device_session_id: deviceSessionId,
     updated_at: new Date().toISOString(),
   };
@@ -1203,7 +1258,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost')
+    .select('runtime_version,first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -1281,6 +1336,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             stickerProgress: legacyData.sticker_progress ?? fallback.stickerProgress,
             stickerInventory: legacyData.sticker_inventory ?? fallback.stickerInventory,
             lastEssenceDriftLost: ((legacyData as Record<string, unknown>).last_essence_drift_lost as number) ?? fallback.lastEssenceDriftLost,
+            minigameTicketsByEvent: sanitizeMinigameTicketsByEvent(
+              (legacyData as Record<string, unknown>).minigame_tickets_by_event,
+              fallback.minigameTicketsByEvent,
+            ),
           },
           fallback,
         );
@@ -1397,6 +1456,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       stickerProgress: data.sticker_progress ?? fallback.stickerProgress,
       stickerInventory: data.sticker_inventory ?? fallback.stickerInventory,
       lastEssenceDriftLost: ((data as Record<string, unknown>).last_essence_drift_lost as number) ?? fallback.lastEssenceDriftLost,
+      minigameTicketsByEvent: sanitizeMinigameTicketsByEvent(
+        (data as Record<string, unknown>).minigame_tickets_by_event,
+        fallback.minigameTicketsByEvent,
+      ),
     },
     fallback,
   );

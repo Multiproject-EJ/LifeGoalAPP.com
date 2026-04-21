@@ -1,3 +1,5 @@
+import type React from 'react';
+
 /**
  * Reward shape returned from any Island Run minigame on completion.
  * All fields are optional — a game may award only some reward types.
@@ -28,4 +30,40 @@ export interface IslandRunMinigameProps {
   islandNumber: number;
   /** Optional: cap on how many tickets/lives the player can spend */
   ticketBudget?: number;
+}
+
+/**
+ * Uniform manifest exported by each mini-game folder's `index.ts`.
+ *
+ * Phase 1 of the Minigame & Events Consolidation Plan
+ * (`docs/gameplay/MINIGAME_EVENTS_CONSOLIDATION_PLAN.md`).
+ *
+ * The manifest is the single public entry point for a mini-game — the registry
+ * and launcher should never import the game's internal modules directly. This
+ * lets each game lazy-load its bundle and keeps game code isolated from the
+ * engine.
+ *
+ * The `Component` field is typed with a wide `any`-prop shape because existing
+ * games (Task Tower, Vision Quest, Shooter Blitz) still use bespoke prop
+ * signatures (e.g. `{ session, onClose, onComplete }`). A later phase will
+ * migrate them to `IslandRunMinigameProps` via adapters; until then the type
+ * stays permissive so the manifest can point at the real component without a
+ * lie-typed adapter.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type MinigameManifestComponent = React.LazyExoticComponent<React.ComponentType<any>>;
+
+export interface MinigameManifest {
+  /** Stable registry ID (matches the `IslandRunMinigameId` union). */
+  id: string;
+  /** Short human-readable label for debug/telemetry. */
+  title: string;
+  /** Icon (emoji or short string) surfaced in launch UIs and event chips. */
+  icon: string;
+  /**
+   * Lazy-loaded React component that renders the mini-game. Importers MUST
+   * wrap this in `<Suspense fallback=…>`. Keeping it lazy is what lets us
+   * drop the game's bundle off the critical path.
+   */
+  Component: MinigameManifestComponent;
 }
