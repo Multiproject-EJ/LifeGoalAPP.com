@@ -202,6 +202,8 @@ import {
   type DiceRegenState,
 } from '../services/islandRunDiceRegeneration';
 import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
+import { resolveNextCheapestIndex } from '../services/islandRunShopAffordability';
+import { adviseEggSellChoice } from '../services/islandRunEggSellAdvisor';
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 6;
@@ -3295,6 +3297,25 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         hatcheryEggResolved: islandEggSlotUsed,
       })
     : legacyIsCurrentIslandFullyCleared;
+  const buildPanelRemainingToFullByIndex = useMemo(() => {
+    return islandStopPlan.map((_, stopIndex) => {
+      const buildState = runtimeState.stopBuildStateByIndex[stopIndex];
+      if (!buildState || isStopBuildFullyComplete(buildState)) return 0;
+
+      let remainingToFull = Math.max(0, buildState.requiredEssence - buildState.spentEssence);
+      for (let level = buildState.buildLevel + 1; level < MAX_BUILD_LEVEL; level++) {
+        remainingToFull += getStopUpgradeCost({
+          islandNumber: effectiveIslandNumber,
+          stopIndex,
+          currentBuildLevel: level,
+        });
+      }
+      return remainingToFull;
+    });
+  }, [effectiveIslandNumber, islandStopPlan, runtimeState.stopBuildStateByIndex]);
+  const { nextCheapestIndex: buildPanelNextCheapestIndex } = useMemo(() => (
+    resolveNextCheapestIndex({ remainingCosts: buildPanelRemainingToFullByIndex })
+  ), [buildPanelRemainingToFullByIndex]);
   const isEnergyDepletedForRoll = isIslandRunRollEnergyDepleted({
     dicePool,
     dicePerRoll: effectiveDiceCost,
@@ -7291,10 +7312,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       </button>
                       {(() => {
                         const sellOptions = getEggSellRewardOptions(activeEgg.tier);
+                        const sellAdvisor = adviseEggSellChoice({
+                          tier: activeEgg.tier,
+                          shardsBalance: runtimeState.shards,
+                          diceBalance: dicePool,
+                          nextStickerShardCost: getShardTierThreshold(runtimeState.shardTierIndex),
+                        });
                         return (
                           <>
                             <p style={{ fontSize: '0.8rem', opacity: 0.7, margin: '0.25rem 0 0' }}>— or sell for —</p>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                               {sellOptions.map((opt) => (
                                 <button
                                   key={opt.choice}
@@ -7303,9 +7330,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                                   onClick={() => handleSellEggForChoice(opt.choice)}
                                 >
                                   {opt.label}
+                                  {sellAdvisor.recommendedChoice === opt.choice && (
+                                    <span className="island-hatchery-card__sell-recommended">Recommended</span>
+                                  )}
                                 </button>
                               ))}
                             </div>
+                            <p className="island-hatchery-card__sell-advisor-reason">{sellAdvisor.reason}</p>
                           </>
                         );
                       })()}
@@ -8186,6 +8217,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 const isFullyBuilt = isStopBuildFullyComplete(buildState);
                 const remaining = isFullyBuilt ? 0 : Math.max(0, buildState.requiredEssence - buildState.spentEssence);
                 const canAfford = runtimeState.essence >= Math.min(CONTRACT_V2_ESSENCE_SPEND_STEP, remaining);
+                const remainingToFull = buildPanelRemainingToFullByIndex[idx] ?? 0;
                 const levelIcon = ['🏗️', '🏠', '🏡', '🏰'][Math.min(buildState.buildLevel, 3)];
 
                 const handleBuildStart = (e: React.MouseEvent | React.TouchEvent) => {
@@ -8223,7 +8255,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 return (
                   <div
                     key={stopEntry.stopId}
-                    className={`build-panel__building build-panel__building--level-${buildState.buildLevel}${isFullyBuilt ? ' build-panel__building--complete' : ''}`}
+                    className={`build-panel__building build-panel__building--level-${buildState.buildLevel}${isFullyBuilt ? ' build-panel__building--complete' : ''}${buildPanelNextCheapestIndex === idx && !isFullyBuilt ? ' build-panel__building--next-cheapest' : ''}`}
                     onMouseDown={!isFullyBuilt ? handleBuildStart : undefined}
                     onTouchStart={!isFullyBuilt ? handleBuildStart : undefined}
                     role="button"
@@ -8243,6 +8275,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                           ? `L${MAX_BUILD_LEVEL} ✅ Fully Built`
                           : `L${buildState.buildLevel + 1}: ${buildState.spentEssence}/${buildState.requiredEssence} 🟣`}
                       </span>
+                      {!isFullyBuilt && (
+                        <span className="build-panel__full-build-chip">
+                          Full build: <ShopItemCostLine cost={remainingToFull} balance={runtimeState.essence} currencyIcon="🟣" currencyName="essence" />
+                        </span>
+                      )}
                       <div className="build-panel__level-bar">
                         {Array.from({ length: MAX_BUILD_LEVEL }, (_, li) => (
                           <div
