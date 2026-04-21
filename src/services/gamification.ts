@@ -23,10 +23,10 @@ import { awardLevelUpTreeMilestones, awardStreakTreeMilestone } from './impactTr
 
 /**
  * Calculate XP required for a specific level
- * Formula: level^1.5 * 100
+ * Formula: level^1.5 * 1000
  */
 export function calculateXPForLevel(level: number): number {
-  return Math.floor(Math.pow(level, 1.5) * 100);
+  return Math.floor(Math.pow(level, 1.5) * 1000);
 }
 
 // =====================================================

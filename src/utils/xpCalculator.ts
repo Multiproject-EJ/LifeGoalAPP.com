@@ -55,30 +55,30 @@ export function calculateActivityXP(
 /**
  * Calculate level from total XP
  * Level progression uses a conservative quadratic curve:
- *   XP needed for level N = 150 × (N-1) × N
- *   Level 1 = 0 XP, Level 2 = 300 XP, Level 3 = 900 XP,
- *   Level 5 = 3000 XP, Level 10 = 13500 XP, Level 20 = 57000 XP
+ *   XP needed for level N = 1500 × (N-1) × N
+ *   Level 1 = 0 XP, Level 2 = 3000 XP, Level 3 = 9000 XP,
+ *   Level 5 = 30000 XP, Level 10 = 135000 XP, Level 20 = 570000 XP
  *
- * This is 3× harder than the previous formula (50 × (N-1) × N),
- * ensuring levels are meaningful achievements tied to consistent engagement.
+ * This is 10× harder than the previous formula (150 × (N-1) × N),
+ * ensuring levels are meaningful achievements tied to long-term consistent engagement.
  *
- * To find level from XP, we solve: 150 × level × (level + 1) = totalXP
- * Using quadratic formula: level = (-1 + sqrt(1 + 4 × totalXP / 150)) / 2
+ * To find level from XP, we solve: 1500 × level × (level + 1) = totalXP
+ * Using quadratic formula: level = (-1 + sqrt(1 + 4 × totalXP / 1500)) / 2
  */
 export function calculateLevel(totalXP: number): number {
   if (totalXP < 0) return 1;
   
-  const level = Math.floor((-1 + Math.sqrt(1 + (4 * totalXP) / 150)) / 2) + 1;
+  const level = Math.floor((-1 + Math.sqrt(1 + (4 * totalXP) / 1500)) / 2) + 1;
   return Math.max(1, level);
 }
 
 /**
  * Calculate XP required for a specific level
- * Formula: 150 × (level - 1) × level
+ * Formula: 1500 × (level - 1) × level
  */
 export function xpForLevel(level: number): number {
   if (level <= 1) return 0;
-  return 150 * (level - 1) * level;
+  return 1500 * (level - 1) * level;
 }
 
 /**
