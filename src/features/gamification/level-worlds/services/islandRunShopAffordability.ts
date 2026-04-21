@@ -23,6 +23,11 @@ export interface ShopItemAffordability {
   progressPct: number;
 }
 
+export interface NextCheapestPlan {
+  /** Index of the next item to fund, or null when all are complete/invalid. */
+  nextCheapestIndex: number | null;
+}
+
 /**
  * Computes whether the player can afford a shop/market item and how far they
  * are from being able to buy it.
@@ -57,4 +62,28 @@ export function resolveShopItemAffordability(params: {
     : Math.min(100, Math.max(0, Math.floor((balance / cost) * 100)));
 
   return { canAfford, shortfall, progressPct };
+}
+
+/**
+ * Given a list of remaining costs (e.g. "essence left to fully finish each
+ * building"), returns the cheapest unfinished index. Non-finite and negative
+ * values are treated as 0 (already complete).
+ */
+export function resolveNextCheapestIndex(params: {
+  remainingCosts: ReadonlyArray<number>;
+}): NextCheapestPlan {
+  let nextCheapestIndex: number | null = null;
+  let nextCheapestCost = Number.POSITIVE_INFINITY;
+
+  for (let index = 0; index < params.remainingCosts.length; index++) {
+    const rawRemaining = params.remainingCosts[index];
+    const remaining = Number.isFinite(rawRemaining) ? Math.max(0, Math.floor(rawRemaining)) : 0;
+    if (remaining <= 0) continue;
+    if (remaining < nextCheapestCost) {
+      nextCheapestCost = remaining;
+      nextCheapestIndex = index;
+    }
+  }
+
+  return { nextCheapestIndex };
 }

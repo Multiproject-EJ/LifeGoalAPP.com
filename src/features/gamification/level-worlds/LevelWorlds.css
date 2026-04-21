@@ -4720,6 +4720,11 @@
   cursor: default;
 }
 
+.build-panel__building--next-cheapest {
+  border-color: rgba(255, 220, 120, 0.8);
+  box-shadow: 0 0 0 2px rgba(255, 220, 120, 0.2), 0 0 22px rgba(255, 220, 120, 0.22);
+}
+
 /* Icon grows with level — level-0 is smallest, level-3 largest */
 .build-panel__building-icon {
   font-size: 1.6rem;
@@ -4765,6 +4770,11 @@
 .build-panel__building-status {
   font-size: 0.78rem;
   color: rgba(197, 172, 255, 0.85);
+}
+
+.build-panel__full-build-chip {
+  font-size: 0.73rem;
+  color: rgba(255, 255, 255, 0.74);
 }
 
 .build-panel__building--complete .build-panel__building-status {

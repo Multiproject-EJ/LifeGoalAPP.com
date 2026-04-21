@@ -1,4 +1,5 @@
 import {
+  resolveNextCheapestIndex,
   resolveShopItemAffordability,
 } from '../islandRunShopAffordability';
 import { assert, assertEqual, type TestCase } from './testHarness';
@@ -81,6 +82,27 @@ export const islandRunShopAffordabilityTests: TestCase[] = [
       const result = resolveShopItemAffordability({ cost: Number.NaN, balance: 10 });
       assertEqual(result.canAfford, true, 'Expected canAfford=true');
       assertEqual(result.shortfall, 0, 'Expected shortfall=0');
+    },
+  },
+  {
+    name: 'resolveNextCheapestIndex returns the smallest positive remaining cost index',
+    run: () => {
+      const result = resolveNextCheapestIndex({ remainingCosts: [120, 15, 45, 0, 80] });
+      assertEqual(result.nextCheapestIndex, 1, 'Expected index=1 (cost 15)');
+    },
+  },
+  {
+    name: 'resolveNextCheapestIndex skips invalid/complete entries and returns null when all complete',
+    run: () => {
+      const allDone = resolveNextCheapestIndex({ remainingCosts: [0, -3, Number.NaN, Number.POSITIVE_INFINITY] });
+      assertEqual(allDone.nextCheapestIndex, null, 'Expected null when no positive finite remaining costs');
+    },
+  },
+  {
+    name: 'resolveNextCheapestIndex uses first index on ties for stable UI highlighting',
+    run: () => {
+      const result = resolveNextCheapestIndex({ remainingCosts: [50, 20, 20, 30] });
+      assertEqual(result.nextCheapestIndex, 1, 'Expected first tied cheapest index');
     },
   },
 ];
