@@ -161,6 +161,7 @@ import {
 } from '../services/islandRunContractV2EssenceBuild';
 import {
   applyIslandRunContractV2RewardBarProgress,
+  BASE_DICE_PER_ROLL,
   claimIslandRunContractV2RewardBar,
   ensureIslandRunContractV2ActiveTimedEvent,
   resolveChainedRewardBarClaims,
@@ -202,7 +203,6 @@ import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunD
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 6;
-const DICE_PER_ROLL = 2;
 const SPIN_MIN = 1;
 const SPIN_MAX = 5;
 // Island duration: 72 hours for special islands, 48 hours for standard islands.
@@ -1430,8 +1430,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       // Remaining = total fill time minus what already elapsed
       const msRemaining = Math.max(0, msToFill - elapsedMs);
 
-      // Rolls ready at full = maxDice / DICE_PER_ROLL
-      const totalRollsAtFull = Math.floor(regenState.maxDice / DICE_PER_ROLL);
+      // Rolls available when fully refilled — use effectiveDiceCost so the
+      // count reflects the player's current multiplier selection.
+      const totalRollsAtFull = Math.floor(regenState.maxDice / effectiveDiceCost);
 
       const remainingSec = Math.max(0, Math.ceil(msRemaining / 1000));
       const minutes = Math.floor(remainingSec / 60);
@@ -1444,7 +1445,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     tick();
     const intervalId = setInterval(tick, 1000);
     return () => clearInterval(intervalId);
-  }, [dicePool, runtimeState.diceRegenState]);
+  }, [dicePool, runtimeState.diceRegenState, effectiveDiceCost]);
 
   useEffect(() => {
     setPerfectCompanionRuntimeConfig(readPerfectCompanionRuntimeConfig(session.user.id));
@@ -3383,7 +3384,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       .join(', ');
     return `conic-gradient(from -90deg, ${segments})`;
   }, [activeTileAnchors.length, isSpark40BoardProfile, tileMap]);
-  const shouldPromptDicePurchase = dicePool < DICE_PER_ROLL;
+  const shouldPromptDicePurchase = dicePool < effectiveDiceCost;
   const wasDicePurchasePromptEligibleRef = useRef(false);
 
   useEffect(() => {
@@ -6682,7 +6683,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               )}
             </div>
           )}
-          {!ISLAND_RUN_CONTRACT_V2_ENABLED && dicePool < DICE_PER_ROLL && (
+          {!ISLAND_RUN_CONTRACT_V2_ENABLED && dicePool < BASE_DICE_PER_ROLL && (
             <button
               type="button"
               className="island-run-prototype__booster-btn"
