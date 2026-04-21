@@ -330,8 +330,8 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 
 ### Phase 3 — Event engine
 - [x] Create `islandRunEventEngine.ts` (§3.1) with rotation clock, progress, milestones, sticker-fragment routing.
-- [ ] Migrate `activeTimedEvent` reads/writes in the renderer to go through engine functions. *(Deferred to Phase 3b — engine wrappers are pass-throughs; renderer migration is a separate low-risk follow-up.)*
-- [ ] Wire reward-bar progress to `recordEventProgress`. *(Deferred to Phase 3b — same reason.)*
+- [x] Migrate `activeTimedEvent` reads/writes in the renderer to go through engine functions.
+- [x] Wire reward-bar progress to `recordEventProgress`.
 - [x] Unit tests for engine (§9).
 - [x] Telemetry: log event transitions (flag-gated).
 

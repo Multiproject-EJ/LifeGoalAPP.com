@@ -36,10 +36,10 @@ import {
   deductIslandRunContractV2Essence,
 } from './islandRunContractV2EssenceBuild';
 import {
-  applyIslandRunContractV2RewardBarProgress,
   type IslandRunRewardBarRuntimeSlice,
   type RewardBarProgressSource,
 } from './islandRunContractV2RewardBar';
+import { recordEventProgress } from './islandRunEventEngine';
 import { readIslandRunGameStateRecord } from './islandRunGameStateStore';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import { persistIslandRunRuntimeStatePatch } from './islandRunRuntimeState';
@@ -141,7 +141,7 @@ async function performTileRewardAction(
   // 3. Reward-bar step: when supplied, advance off the same hydrate.
   let nextRewardBarSlice: IslandRunRewardBarRuntimeSlice | null = null;
   if (rewardBarProgress && islandRunContractV2Enabled) {
-    nextRewardBarSlice = applyIslandRunContractV2RewardBarProgress({
+    nextRewardBarSlice = recordEventProgress({
       state: {
         rewardBarProgress: state.rewardBarProgress,
         rewardBarThreshold: state.rewardBarThreshold,
