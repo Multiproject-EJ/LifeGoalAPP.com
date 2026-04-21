@@ -45,6 +45,11 @@ export const BoardOrbitStops = memo(function BoardOrbitStops(props: BoardOrbitSt
   return (
     <div className="island-run-board__orbit-stops">
       {stopVisuals.map((stopVisual) => {
+        const activateStop = () => {
+          if (stopVisual.stopId) {
+            onStopClick(stopVisual.stopId);
+          }
+        };
         const showTicketCost =
           stopVisual.state === 'locked'
           && typeof stopVisual.ticketCost === 'number'
@@ -60,10 +65,19 @@ export const BoardOrbitStops = memo(function BoardOrbitStops(props: BoardOrbitSt
             stopVisual.stopId && stopVisual.stopId === activeStopId ? 'island-orbit-stop--selected' : '',
           ].filter(Boolean).join(' ')}
           style={{ left: stopVisual.x, top: stopVisual.y }}
-          onClick={() => {
-            if (stopVisual.stopId) {
-              onStopClick(stopVisual.stopId);
-            }
+          onPointerUp={(event) => {
+            // Mobile reliability: trigger stop activation on pointer-up so touch
+            // interactions still open ticket prompts even when parent gesture
+            // layers interfere with synthesized click events.
+            event.preventDefault();
+            event.stopPropagation();
+            activateStop();
+          }}
+          onClick={(event) => {
+            // Ignore pointer-generated click (detail > 0) because pointer-up
+            // already handled it above. Keep keyboard activation (detail === 0).
+            if (event.detail > 0) return;
+            activateStop();
           }}
           disabled={!stopVisual.stopId}
           aria-label={
