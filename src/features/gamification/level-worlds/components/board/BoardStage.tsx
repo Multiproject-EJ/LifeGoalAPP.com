@@ -285,8 +285,14 @@ export function BoardStage(props: BoardStageProps) {
     hopDurationMs: 200,
   });
 
-  // Cleanup landing settle timeout on unmount
-  useEffect(() => () => { clearTimeout(landingSettleTimeoutRef.current); }, []);
+  // Cleanup landing settle + pre-roll anticipation timeouts on unmount.
+  useEffect(() => () => {
+    clearTimeout(landingSettleTimeoutRef.current);
+    if (preRollTimeoutRef.current !== null) {
+      window.clearTimeout(preRollTimeoutRef.current);
+      preRollTimeoutRef.current = null;
+    }
+  }, []);
 
   // Track previous tokenIndex to distinguish movement from initial snap.
   const prevTokenIndexRef = useRef<number | null>(null);
@@ -294,6 +300,10 @@ export function BoardStage(props: BoardStageProps) {
   const hopSequenceActiveRef = useRef(false);
   // Track the last pendingHopSequence to detect new sequences.
   const lastHopSequenceRef = useRef<number[] | null>(null);
+  // Ensure we notify completion at most once per hop-sequence reference.
+  const completedHopSequenceRef = useRef<number[] | null>(null);
+  // Allow cancellation of the anticipation delay when effect re-runs/unmounts.
+  const preRollTimeoutRef = useRef<number | null>(null);
 
   // Drive token animation from pendingHopSequence (full sequence) or single-step tokenIndex.
   useEffect(() => {
@@ -303,7 +313,12 @@ export function BoardStage(props: BoardStageProps) {
       && pendingHopSequence.length > 0
       && pendingHopSequence !== lastHopSequenceRef.current
     ) {
+      if (preRollTimeoutRef.current !== null) {
+        window.clearTimeout(preRollTimeoutRef.current);
+        preRollTimeoutRef.current = null;
+      }
       lastHopSequenceRef.current = pendingHopSequence;
+      completedHopSequenceRef.current = null;
       hopSequenceActiveRef.current = true;
       const tokenX = tokenAnim.animState.x || boardSize.width / 2;
       const tokenY = tokenAnim.animState.y || boardSize.height / 2;
@@ -316,7 +331,7 @@ export function BoardStage(props: BoardStageProps) {
       const hopDurations = computeHopDurations(pendingHopSequence.length);
 
       // Start the hop animation after the anticipation hold
-      setTimeout(() => {
+      preRollTimeoutRef.current = window.setTimeout(() => {
         // Reset directional lead tracking from current token position
         prevHopPosRef.current = { x: tokenX, y: tokenY };
 
@@ -338,10 +353,18 @@ export function BoardStage(props: BoardStageProps) {
           // Update prevTokenIndexRef to the final tile so subsequent
           // single-step changes don't replay the sequence.
           prevTokenIndexRef.current = pendingHopSequence[pendingHopSequence.length - 1] ?? tokenIndex;
-          onHopSequenceComplete?.();
+          if (completedHopSequenceRef.current !== pendingHopSequence) {
+            completedHopSequenceRef.current = pendingHopSequence;
+            onHopSequenceComplete?.();
+          }
         });
       }, PRE_ROLL_HOLD_MS);
-      return;
+      return () => {
+        if (preRollTimeoutRef.current !== null) {
+          window.clearTimeout(preRollTimeoutRef.current);
+          preRollTimeoutRef.current = null;
+        }
+      };
     }
 
     // --- Single-step fallback (used for snap / non-roll index changes) ---
