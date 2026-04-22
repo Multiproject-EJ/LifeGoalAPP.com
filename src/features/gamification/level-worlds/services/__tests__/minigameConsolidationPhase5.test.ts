@@ -1,0 +1,133 @@
+/**
+ * Phase 5 consolidation-plan tests — Mystery minigame launch + stop completion
+ * contract for Task Tower and Vision Quest.
+ */
+import {
+  __resetIslandRunFeatureFlagsForTests,
+  __setIslandRunFeatureFlagsForTests,
+} from '../../../../../config/islandRunFeatureFlags';
+import {
+  resolveMysteryStopMinigame,
+  shouldResolveMysteryStopOnMinigameComplete,
+} from '../islandRunMinigameLauncherService';
+import { assertEqual, type TestCase } from './testHarness';
+
+export const minigameConsolidationPhase5Tests: TestCase[] = [
+  {
+    name: 'resolveMysteryStopMinigame keeps task_tower and vision_quest gated while flags are off',
+    run: () => {
+      __resetIslandRunFeatureFlagsForTests();
+      assertEqual(
+        resolveMysteryStopMinigame({ kind: 'fixed_mystery', mysteryContentKind: 'task_tower' }),
+        null,
+        'task_tower must not launch while its flag is off',
+      );
+      assertEqual(
+        resolveMysteryStopMinigame({ kind: 'fixed_mystery', mysteryContentKind: 'vision_quest' }),
+        null,
+        'vision_quest must not launch while its flag is off',
+      );
+    },
+  },
+  {
+    name: 'resolveMysteryStopMinigame launches task_tower when the Task Tower mystery flag is enabled',
+    run: () => {
+      __resetIslandRunFeatureFlagsForTests();
+      __setIslandRunFeatureFlagsForTests({ islandRunTaskTowerMysteryEnabled: true });
+      const descriptor = resolveMysteryStopMinigame({
+        kind: 'fixed_mystery',
+        mysteryContentKind: 'task_tower',
+      });
+      __resetIslandRunFeatureFlagsForTests();
+      assertEqual(descriptor?.minigameId, 'task_tower', 'task_tower mystery routes to task_tower minigame');
+    },
+  },
+  {
+    name: 'resolveMysteryStopMinigame launches vision_quest when the Vision Quest mystery flag is enabled',
+    run: () => {
+      __resetIslandRunFeatureFlagsForTests();
+      __setIslandRunFeatureFlagsForTests({ islandRunVisionQuestMysteryEnabled: true });
+      const descriptor = resolveMysteryStopMinigame({
+        kind: 'fixed_mystery',
+        mysteryContentKind: 'vision_quest',
+      });
+      __resetIslandRunFeatureFlagsForTests();
+      assertEqual(
+        descriptor?.minigameId,
+        'vision_quest',
+        'vision_quest mystery routes to vision_quest minigame',
+      );
+    },
+  },
+  {
+    name: 'resolveMysteryStopMinigame ignores non-minigame mystery variants',
+    run: () => {
+      __resetIslandRunFeatureFlagsForTests();
+      __setIslandRunFeatureFlagsForTests({
+        islandRunTaskTowerMysteryEnabled: true,
+        islandRunVisionQuestMysteryEnabled: true,
+      });
+      assertEqual(
+        resolveMysteryStopMinigame({ kind: 'fixed_mystery', mysteryContentKind: 'breathing' }),
+        null,
+        'breathing stays inline and should never route to launcher',
+      );
+      assertEqual(
+        resolveMysteryStopMinigame({ kind: 'fixed_mystery', mysteryContentKind: 'habit_action' }),
+        null,
+        'habit_action stays inline and should never route to launcher',
+      );
+      __resetIslandRunFeatureFlagsForTests();
+    },
+  },
+  {
+    name: 'shouldResolveMysteryStopOnMinigameComplete only resolves stop for completed mystery task_tower / vision_quest runs',
+    run: () => {
+      assertEqual(
+        shouldResolveMysteryStopOnMinigameComplete({
+          launchSource: 'mystery_stop',
+          minigameId: 'task_tower',
+          completed: true,
+        }),
+        true,
+        'completed task_tower mystery run should resolve stop',
+      );
+      assertEqual(
+        shouldResolveMysteryStopOnMinigameComplete({
+          launchSource: 'mystery_stop',
+          minigameId: 'vision_quest',
+          completed: true,
+        }),
+        true,
+        'completed vision_quest mystery run should resolve stop',
+      );
+      assertEqual(
+        shouldResolveMysteryStopOnMinigameComplete({
+          launchSource: 'mystery_stop',
+          minigameId: 'task_tower',
+          completed: false,
+        }),
+        false,
+        'incomplete minigame run should not resolve stop',
+      );
+      assertEqual(
+        shouldResolveMysteryStopOnMinigameComplete({
+          launchSource: 'boss_trial',
+          minigameId: 'task_tower',
+          completed: true,
+        }),
+        false,
+        'non-mystery source should not resolve mystery stop',
+      );
+      assertEqual(
+        shouldResolveMysteryStopOnMinigameComplete({
+          launchSource: 'mystery_stop',
+          minigameId: 'shooter_blitz',
+          completed: true,
+        }),
+        false,
+        'unknown mystery minigame id should not auto-resolve stop',
+      );
+    },
+  },
+];

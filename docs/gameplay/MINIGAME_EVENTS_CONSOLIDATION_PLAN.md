@@ -406,12 +406,13 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 ### Phase 5 — Mystery Task Tower & Vision Quest
   - **Session 2026-04-22 foundation:** added `openEventMinigame()` mapping + ticket-gate contract in `islandRunEventEngine.ts` and `minigameConsolidationPhase6.test.ts` coverage (event→minigame routing + spend validation). UI/event-panel wiring still pending.
 - [x] Wire mystery-stop launcher to launch Task Tower / Vision Quest components when the rolled `mysteryContentKind` selects them.
-- [ ] Add focused regression tests for Mystery launch flow (task_tower + vision_quest stop completion contract).
+- [x] Add focused regression tests for Mystery launch flow (task_tower + vision_quest stop completion contract).
+  - **Session 2026-04-22 update:** added pure launcher/contract coverage in `minigameConsolidationPhase5.test.ts` for flag gating, mystery variant routing (`task_tower` + `vision_quest`), non-minigame fallback behavior, and stop-completion guard logic.
 - [ ] Manual QA: walk through 8–10 islands of mystery rotation.
 - [ ] Flip mystery flags on.
 
 **Phase 5 execution queue (refined 2026-04-22):**
-1. [ ] Land automated regression coverage for Mystery launcher + stop completion behavior (new highest-priority undone task).
+1. [x] Land automated regression coverage for Mystery launcher + stop completion behavior (new highest-priority undone task).
 2. [ ] Run manual mystery-rotation pass (8–10 islands) and log notes in `ISLAND_RUN_OPEN_ISSUES.md`.
 3. [ ] Enable `islandRunTaskTowerMysteryEnabled` + `islandRunVisionQuestMysteryEnabled` once tests + QA notes are green.
 
