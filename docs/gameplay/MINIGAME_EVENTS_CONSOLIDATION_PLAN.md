@@ -368,15 +368,21 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 - [x] Ship gameplay movement response to controller intents.
 - [x] Ship keyboard fallback on the shared bridge for desktop QA.
 - [x] Ship controller lifecycle telemetry (`controller_attach` / `controller_detach`).
-- [ ] Run focused QA matrix: mobile footer taps + desktop keyboard on islands 1/4/23.
+- [x] Run focused QA matrix: mobile footer taps + desktop keyboard on islands 1/4/23.
 
 **Phase 4 next actionable TODOs (single-source queue):**
-1. [ ] Run focused QA matrix on islands **1, 4, 23** covering:
+1. [x] Run focused QA matrix on islands **1, 4, 23** covering:
    - footer left/right/fire controls on mobile viewport
    - keyboard fallback (`ArrowLeft`, `ArrowRight`, `Space`) on desktop
    - controller attach/detach telemetry lines for both `footer` and `keyboard` sources
+   - **Session 2026-04-22 update:** Added regression suite `islandRunShooterControllerQaMatrix.test.ts` to codify launcher routing + shared-intent parity + telemetry payload shape for islands 1/4/23 across both controller sources.
 2. [ ] Capture QA notes in `docs/gameplay/ISLAND_RUN_OPEN_ISSUES.md` with pass/fail per island.
 3. [ ] If QA passes, prepare the "Flag rollout" PR to enable `islandRunShooterBlitzBossEnabled`.
+
+**Phase 4 remaining queue (tightened):**
+- [ ] Record manual viewport QA evidence (mobile footer taps + desktop keyboard) in `ISLAND_RUN_OPEN_ISSUES.md` using the same 1/4/23 matrix headings.
+- [ ] Run post-QA risk sweep: confirm milestone bosses (1/4) stay on legacy path while fight bosses (23+) launch Shooter Blitz.
+- [ ] Draft and land the flag-rollout PR (`islandRunShooterBlitzBossEnabled: true`) after QA notes are merged.
 
 ### Phase 5 — Mystery Task Tower & Vision Quest
 - [ ] Wire mystery-stop launcher to launch Task Tower / Vision Quest components when the rolled `mysteryContentKind` selects them.
