@@ -14,6 +14,6 @@ export const taskTowerManifest: MinigameManifest = {
   title: 'Task Tower',
   icon: '🗼',
   Component: lazy(() =>
-    import('./TaskTower').then((module) => ({ default: module.TaskTower })),
+    import('./TaskTowerIslandRunAdapter').then((module) => ({ default: module.TaskTowerIslandRunAdapter })),
   ),
 };
