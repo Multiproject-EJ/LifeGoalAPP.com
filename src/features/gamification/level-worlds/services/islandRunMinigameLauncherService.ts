@@ -63,16 +63,23 @@ export interface EventMinigameLaunchContext {
 }
 
 export interface EventMinigameLaunchDescriptor {
-  minigameId: 'task_tower';
+  minigameId: 'task_tower' | 'lucky_spin';
   ticketCost: number;
   ticketsSpent: number;
-  config: {
+  config:
+    | {
+      source: 'timed_event';
+      eventId: 'feeding_frenzy';
+      mode: 'feeding_frenzy';
+      sessionDurationSec: 120;
+      targetRowsCleared: 10;
+    }
+    | {
     source: 'timed_event';
-    eventId: 'feeding_frenzy';
-    mode: 'feeding_frenzy';
-    sessionDurationSec: 120;
-    targetRowsCleared: 10;
-  };
+      eventId: 'lucky_spin';
+      mode: 'lucky_spin';
+      spinMode: 'free_daily' | 'ticket_extra';
+    };
 }
 
 export type MinigameLaunchDescriptor = BossMinigameLaunchDescriptor;
@@ -178,6 +185,36 @@ export function resolveFeedingFrenzyEventMinigame(
       mode: 'feeding_frenzy',
       sessionDurationSec: 120,
       targetRowsCleared: 10,
+    },
+  };
+}
+
+/**
+ * Phase 6 step 2: Lucky Spin event surface now routes through a dedicated
+ * resolver that explicitly tags launch mode:
+ * - `free_daily` when the caller indicates a remaining free daily spin
+ * - `ticket_extra` otherwise (ticket-funded event spins)
+ */
+export function resolveLuckySpinEventMinigame(
+  ctx: EventMinigameLaunchContext & { freeDailySpinRemaining?: number },
+): EventMinigameLaunchDescriptor | null {
+  if (ctx.eventId !== 'lucky_spin') return null;
+  const launch = openEventMinigame({
+    eventId: ctx.eventId,
+    ticketsAvailable: ctx.ticketsAvailable,
+    ticketsToSpend: ctx.ticketsToSpend,
+  });
+  if (!launch || launch.minigameId !== 'lucky_spin') return null;
+
+  return {
+    minigameId: 'lucky_spin',
+    ticketCost: launch.ticketCost,
+    ticketsSpent: launch.ticketsSpent,
+    config: {
+      source: 'timed_event',
+      eventId: 'lucky_spin',
+      mode: 'lucky_spin',
+      spinMode: (ctx.freeDailySpinRemaining ?? 0) > 0 ? 'free_daily' : 'ticket_extra',
     },
   };
 }

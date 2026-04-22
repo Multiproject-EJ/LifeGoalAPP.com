@@ -426,7 +426,8 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 
 **Phase 6 execution queue (refined 2026-04-22):**
 1. [x] Implement Feeding Frenzy event-launch resolver with explicit event config + spend validation.
-2. [ ] Add Lucky Spin event-launch resolver that distinguishes free daily spin vs ticket-funded extra spins.
+2. [x] Add Lucky Spin event-launch resolver that distinguishes free daily spin vs ticket-funded extra spins.
+   - **Session 2026-04-22 update:** added `resolveLuckySpinEventMinigame()` in `islandRunMinigameLauncherService.ts` and expanded `minigameConsolidationPhase6.test.ts` coverage for launch routing + `free_daily` vs `ticket_extra` config tags.
 3. [ ] Add Space Excavator event-launch resolver that maps to Shooter Blitz event mode (longer campaign config).
 4. [ ] Add Partner Wheel launch placeholder (skeleton manifest + launcher contract only, no multiplayer).
 5. [ ] Wire event-run reward routing so completion emits reward-bar progress + active-event sticker fragments through engine.
