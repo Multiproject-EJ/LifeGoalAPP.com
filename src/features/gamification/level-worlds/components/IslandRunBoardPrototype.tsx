@@ -59,7 +59,11 @@ import {
   patchIslandRunStateSnapshot,
   refreshIslandRunStateFromLocal,
 } from '../services/islandRunStateStore';
-import { withIslandRunActionLock } from '../services/islandRunActionMutex';
+import {
+  beginIslandRunActionBarrier,
+  endIslandRunActionBarrier,
+  withIslandRunActionLock,
+} from '../services/islandRunActionMutex';
 import {
   applyEssenceAward,
   applyEssenceDeduct,
@@ -3873,11 +3877,20 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // `refreshIslandRunStateFromLocal`, overwrite the store mirror with the
     // pre-roll tokenIndex, and cause the pawn to snap back to tile 0 when
     // `pendingHopSequence` clears.
-    isAnimatingRollRef.current = true;
-    setPendingHopSequence(hopIndices);
-    await new Promise<void>((resolve) => {
-      hopSequenceResolverRef.current = resolve;
-    });
+    let rollActionBarrierActive = false;
+    try {
+      isAnimatingRollRef.current = true;
+      // P0-3: once the roll service has committed tokenIndex/dice/runtimeVersion,
+      // block all queued action-lock writers until this renderer applies the
+      // post-hop sync (`applyRollResult`). This closes the stale-base window
+      // where a second action can read pre-roll runtimeVersion mid-animation.
+      beginIslandRunActionBarrier(session.user.id);
+      rollActionBarrierActive = true;
+
+      setPendingHopSequence(hopIndices);
+      await new Promise<void>((resolve) => {
+        hopSequenceResolverRef.current = resolve;
+      });
 
     // C1: Sync the store mirror from localStorage (the roll service already
     // committed the authoritative tokenIndex + dicePool there). This replaces
@@ -3892,7 +3905,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // pre-roll tile (the "jumps tiles, then jumps back, then redoes it"
     // bug). Updating runtime state first guarantees `tokenIndex` already
     // matches the hop's final index when the clear lands.
-    const freshRecord = applyRollResult({ session });
+      const freshRecord = applyRollResult({ session });
     // Defensive merge: the freshRecord comes from localStorage, which the roll
     // service writes synchronously (tokenIndex, dicePool, runtimeVersion).
     // However localStorage may still have a stale completedStopsByIsland /
@@ -3903,46 +3916,46 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     //  - completedStopsByIsland: take the union of stop IDs per island key.
     //  - stopStatesByIndex: once objectiveComplete or buildComplete is true it
     //    stays true regardless of which source has stale false.
-    setRuntimeState((current) => {
-      const merged = { ...freshRecord };
+      setRuntimeState((current) => {
+        const merged = { ...freshRecord };
 
       // Union-merge completedStopsByIsland
-      const mergedCompletedStops: Record<string, string[]> = { ...freshRecord.completedStopsByIsland };
-      for (const [islandKey, currentStops] of Object.entries(current.completedStopsByIsland ?? {})) {
-        const freshStops = mergedCompletedStops[islandKey] ?? [];
-        const union = Array.from(new Set([...freshStops, ...currentStops]));
-        if (union.length > freshStops.length) {
-          mergedCompletedStops[islandKey] = union;
+        const mergedCompletedStops: Record<string, string[]> = { ...freshRecord.completedStopsByIsland };
+        for (const [islandKey, currentStops] of Object.entries(current.completedStopsByIsland ?? {})) {
+          const freshStops = mergedCompletedStops[islandKey] ?? [];
+          const union = Array.from(new Set([...freshStops, ...currentStops]));
+          if (union.length > freshStops.length) {
+            mergedCompletedStops[islandKey] = union;
+          }
         }
-      }
-      merged.completedStopsByIsland = mergedCompletedStops;
+        merged.completedStopsByIsland = mergedCompletedStops;
 
       // Monotonic-merge stopStatesByIndex: objectiveComplete/buildComplete stay true
-      if (Array.isArray(current.stopStatesByIndex) && Array.isArray(freshRecord.stopStatesByIndex)) {
-        merged.stopStatesByIndex = freshRecord.stopStatesByIndex.map((freshEntry, i) => {
-          const currentEntry = current.stopStatesByIndex[i];
-          if (!currentEntry || !freshEntry) return freshEntry ?? currentEntry;
-          return {
-            ...freshEntry,
-            objectiveComplete: Boolean(freshEntry.objectiveComplete || currentEntry.objectiveComplete),
-            buildComplete: Boolean(freshEntry.buildComplete || currentEntry.buildComplete),
-          };
-        });
-      }
+        if (Array.isArray(current.stopStatesByIndex) && Array.isArray(freshRecord.stopStatesByIndex)) {
+          merged.stopStatesByIndex = freshRecord.stopStatesByIndex.map((freshEntry, i) => {
+            const currentEntry = current.stopStatesByIndex[i];
+            if (!currentEntry || !freshEntry) return freshEntry ?? currentEntry;
+            return {
+              ...freshEntry,
+              objectiveComplete: Boolean(freshEntry.objectiveComplete || currentEntry.objectiveComplete),
+              buildComplete: Boolean(freshEntry.buildComplete || currentEntry.buildComplete),
+            };
+          });
+        }
 
-      return merged;
-    });
+        return merged;
+      });
 
     // Now safe to clear the hop sequence — the BoardStage's
     // `onHopSequenceComplete` no longer does this for us (see the
     // comment above for why). The `isAnimatingRollRef` flag was already
     // cleared by `onHopSequenceComplete`.
-    setPendingHopSequence(null);
+      setPendingHopSequence(null);
 
     // Stops are side-quest structures — the player piece never lands on a stop.
     // Encounter tiles open their challenge modal; every other tile funnels through
     // resolveTileLanding for essence / feed / hazard outcomes.
-    if (tileMap[currentIndex]?.tileType === 'encounter') {
+      if (tileMap[currentIndex]?.tileType === 'encounter') {
       // M6-COMPLETE: check if this encounter tile was already completed this visit
       if (completedEncounterIndices.has(currentIndex)) {
         setLandingText(`Encounter tile (#${currentIndex}) — already completed this visit. ✅`);
@@ -3951,10 +3964,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         const challenge = drawEncounterChallenge(islandNumber, currentIndex);
         openEncounterChallenge(challenge, currentIndex);
       }
-    } else {
-      resolveTileLanding(tileMap[currentIndex]?.tileType ?? 'micro', currentIndex);
-      setShowEncounterModal(false);
-      setEncounterResolved(false);
+      } else {
+        resolveTileLanding(tileMap[currentIndex]?.tileType ?? 'micro', currentIndex);
+        setShowEncounterModal(false);
+        setEncounterResolved(false);
+      }
+    } finally {
+      if (rollActionBarrierActive) {
+        endIslandRunActionBarrier(session.user.id);
+      }
     }
   };
 
