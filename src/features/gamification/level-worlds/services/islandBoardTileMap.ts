@@ -71,16 +71,25 @@ function seededRandom(seed: number): number {
   return ((s >>> 0) % 100000) / 100000;
 }
 
+const CANONICAL_SPECIAL_ISLAND_NUMBERS = new Set([
+  5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120,
+]);
+
 /**
- * Returns the rarity for a given island number:
- * - every 10th island = rare
- * - every 5th (not 10th) = seasonal
- * - rest = normal
+ * Returns the rarity for a given island number.
+ *
+ * Canonical special-island schedule:
+ * 5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120.
+ *
+ * Compatibility note:
+ * - We keep `rare` as a subset of special islands (those divisible by 10),
+ *   and classify the rest as `seasonal`.
+ * - Any island outside the canonical list is `normal`.
  */
 export function getIslandRarity(islandNumber: number): IslandRarity {
+  if (!CANONICAL_SPECIAL_ISLAND_NUMBERS.has(islandNumber)) return 'normal';
   if (islandNumber % 10 === 0) return 'rare';
-  if (islandNumber % 5 === 0) return 'seasonal';
-  return 'normal';
+  return 'seasonal';
 }
 
 function computeEncounterIndicesForProfile(rarity: IslandRarity, tileCount: number): Set<number> {
