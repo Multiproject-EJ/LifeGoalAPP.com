@@ -14,6 +14,6 @@ export const visionQuestManifest: MinigameManifest = {
   title: 'Vision Quest',
   icon: '🔮',
   Component: lazy(() =>
-    import('./VisionQuest').then((module) => ({ default: module.VisionQuest })),
+    import('./VisionQuestIslandRunAdapter').then((module) => ({ default: module.VisionQuestIslandRunAdapter })),
   ),
 };

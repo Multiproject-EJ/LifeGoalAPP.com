@@ -1260,7 +1260,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // B3-2: minigame launcher state (M11B framework)
   const [activeLaunchedMinigameId, setActiveLaunchedMinigameId] = useState<string | null>(null);
-  const [activeLaunchedMinigameSource, setActiveLaunchedMinigameSource] = useState<'boss_trial' | null>(null);
+  const [activeLaunchedMinigameSource, setActiveLaunchedMinigameSource] = useState<'boss_trial' | 'mystery_stop' | null>(null);
   const shooterControllerBridge = useMemo(() => createShooterControllerBridge(), []);
   const isShooterControllerActive = activeLaunchedMinigameId === 'shooter_blitz';
   const shooterControllerInput = shooterControllerBridge.controllerInput;
@@ -5293,6 +5293,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
   };
 
+  const handleLaunchMysteryMinigame = (minigameId: 'task_tower' | 'vision_quest') => {
+    registerAllMinigameManifests();
+    setActiveLaunchedMinigameId(minigameId);
+    setActiveLaunchedMinigameSource('mystery_stop');
+  };
+
   const handleBossTrialTap = () => {
     if (bossTrialPhase !== 'in_progress') return;
     setBossTrialScore((s) => s + 1);
@@ -7652,6 +7658,34 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       handleCompleteActiveStop();
                     }}
                   />
+                ) : activeStop.mysteryContentKind === 'task_tower' ? (
+                  <div>
+                    <p className="island-stop-modal__copy">🗼 <strong>Task Tower Challenge</strong></p>
+                    <p>Clear your active tasks inside Task Tower. Complete the run to resolve this mystery stop.</p>
+                    <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
+                      <button
+                        type="button"
+                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                        onClick={() => handleLaunchMysteryMinigame('task_tower')}
+                      >
+                        🗼 Launch Task Tower
+                      </button>
+                    </div>
+                  </div>
+                ) : activeStop.mysteryContentKind === 'vision_quest' ? (
+                  <div>
+                    <p className="island-stop-modal__copy">🔮 <strong>Vision Quest Reflection</strong></p>
+                    <p>Enter Vision Quest, finish one guided reflection, and return to claim this mystery stop.</p>
+                    <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
+                      <button
+                        type="button"
+                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                        onClick={() => handleLaunchMysteryMinigame('vision_quest')}
+                      >
+                        🔮 Launch Vision Quest
+                      </button>
+                    </div>
+                  </div>
                 ) : (
                   <p>Complete this mystery stop to progress.</p>
                 )}
@@ -9230,6 +9264,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               if (activeLaunchedMinigameSource === 'boss_trial' && result.completed) {
                 handleResolveBossTrial();
                 setBossTrialPhase('success');
+              } else if (activeLaunchedMinigameSource === 'mystery_stop' && result.completed) {
+                setLandingText(
+                  activeLaunchedMinigameId === 'vision_quest'
+                    ? '🔮 Vision Quest complete! Mystery stop resolved.'
+                    : '🗼 Task Tower complete! Mystery stop resolved.',
+                );
+                handleCompleteActiveStop();
               } else if (result.completed && result.reward) {
                 const { dice: rewardDice = 0, spinTokens: rewardSpinTokens = 0 } = result.reward;
                 if (rewardDice > 0) setDicePool((d) => d + rewardDice);
