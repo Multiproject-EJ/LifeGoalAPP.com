@@ -82,6 +82,7 @@ import {
 import {
   fetchCreatureCollection,
   collectCreatureForUser,
+  countUnclaimedCreatures,
   fetchActiveCompanionId,
   getCreatureManifestEntries,
   migrateLegacyEggLedgerToCollection,
@@ -4252,6 +4253,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     () => collectedCreatures.filter((creature) => getUnclaimedBondMilestones(creature).length > 0).length,
     [collectedCreatures],
   );
+  const unclaimedCreatureCount = useMemo(
+    () => countUnclaimedCreatures(runtimeState.perIslandEggs),
+    [runtimeState.perIslandEggs],
+  );
+  const openHatcheryQuickAccess = useCallback(() => {
+    requestActiveStopTransition('hatchery', 'manifest_quick_access');
+  }, [requestActiveStopTransition]);
   const sanctuaryZoneSummaries = useMemo(
     () => (['zen', 'energy', 'cosmic'] as ShipZone[]).map((zone) => {
       const owned = collectedCreatures.filter((entry) => resolveShipZoneForCreature(entry.creature) === zone);
@@ -6482,6 +6490,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           >
             🛍️ Market
           </button>
+          {unclaimedCreatureCount > 0 && (
+            <button
+              type="button"
+              className="island-run-prototype__shop-btn"
+              aria-label={`Open hatchery (${unclaimedCreatureCount} unclaimed creature${unclaimedCreatureCount === 1 ? '' : 's'} ready)`}
+              onClick={openHatcheryQuickAccess}
+              title="Creature ready — open Hatchery"
+            >
+              🥚 {unclaimedCreatureCount}
+            </button>
+          )}
           <button
             type="button"
             className="island-run-prototype__shop-btn"

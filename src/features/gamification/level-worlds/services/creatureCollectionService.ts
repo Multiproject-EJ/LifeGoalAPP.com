@@ -179,6 +179,20 @@ export function getCreatureManifestEntries(userId: string): Array<CreatureCollec
     .sort((a, b) => b.lastCollectedAtMs - a.lastCollectedAtMs);
 }
 
+/**
+ * Counts hatchery rewards that are ready to be claimed (collect or sell).
+ *
+ * "Unclaimed creatures" in HUD language maps to egg-ledger entries that are
+ * already hatched (`status: 'ready'`) but not yet resolved into either
+ * `collected` or `sold`.
+ */
+export function countUnclaimedCreatures(perIslandEggs: PerIslandEggsLedger | null | undefined): number {
+  if (!perIslandEggs) return 0;
+  return Object.values(perIslandEggs).reduce((count, entry) => (
+    entry?.status === 'ready' ? count + 1 : count
+  ), 0);
+}
+
 export function migrateLegacyEggLedgerToCollection(options: {
   userId: string;
   perIslandEggs: PerIslandEggsLedger;

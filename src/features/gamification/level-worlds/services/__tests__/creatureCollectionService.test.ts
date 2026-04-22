@@ -2,6 +2,7 @@ import {
   claimCreatureBondMilestoneForUser,
   clearCreatureCollectionForUser,
   collectCreatureForUser,
+  countUnclaimedCreatures,
   fetchActiveCompanionId,
   fetchCreatureCollection,
   feedCreatureForUser,
@@ -67,6 +68,19 @@ export const creatureCollectionServiceTests: TestCase[] = [
       assertEqual(first.didChange, true, 'Expected first migration to insert creature');
       assertEqual(second.didChange, false, 'Expected second migration to detect existing creature');
       assertEqual(first.collection.length, 1, 'Expected one migrated creature');
+    },
+  },
+  {
+    name: 'countUnclaimedCreatures counts only ready ledger entries',
+    run: () => {
+      const result = countUnclaimedCreatures({
+        '1': { tier: 'common', setAtMs: 1, hatchAtMs: 2, status: 'ready', location: 'island' },
+        '2': { tier: 'rare', setAtMs: 3, hatchAtMs: 4, status: 'incubating', location: 'island' },
+        '3': { tier: 'mythic', setAtMs: 5, hatchAtMs: 6, status: 'collected', openedAt: 7, location: 'island' },
+        '4': { tier: 'common', setAtMs: 8, hatchAtMs: 9, status: 'ready', location: 'dormant' },
+      });
+      assertEqual(result, 2, 'Expected only ready entries to be counted as unclaimed');
+      assertEqual(countUnclaimedCreatures(undefined), 0, 'Expected empty count for missing ledger');
     },
   },
   {
