@@ -1,7 +1,7 @@
 # Island Run — Next TODO PR List
 
-**Last updated:** 2026-04-19 (end of PR 7 batch)
-**Context:** Continuation of the Island Run polish sweep on branch `copilot/investigate-120-island-game-again`. Hand this doc to the next agent session with a prompt like "do PR 8" or "do PR 8 and PR 9 together."
+**Last updated:** 2026-04-21 (end of PR 8 batch)
+**Context:** Continuation of the Island Run polish sweep on branch `copilot/investigate-120-island-game-again`. Hand this doc to the next agent session with a prompt like "do PR 9" or "do PR 9 and PR 10 together."
 
 ---
 
@@ -14,8 +14,9 @@
 | 5   | Feel & juice              | Reward-bar rarity colors + snap; essence drift numbers; haptics a11y + throttle                        |
 | 6   | Clarity & accessibility   | Dice regen ETA service; out-of-dice modal; roll-btn a11y; sticker "one away" nudge                     |
 | 7   | Economy polish            | `resolveShopItemAffordability` service; `<ShopItemCostLine />`; HUD level-up flash                      |
+| 8   | Build-panel parity         | Build panel now uses shared affordability readout, full-build chip, and next-cheapest highlight          |
 
-Test suite sits at **154/154 passing** via `npm run test:island-run`.
+Test suite baseline remains green via `npm run test:island-run` (see latest run in this PR).
 
 ---
 
@@ -23,12 +24,12 @@ Test suite sits at **154/154 passing** via `npm run test:island-run`.
 
 Each entry is sized to be a single focused PR. Items are ordered by impact × risk; items in the same tier can be done in any order.
 
-### PR 8 — Build-panel affordability parity ⭐️ (recommended next)
+### ✅ PR 8 — Build-panel affordability parity (merged)
 **Why:** The Build panel still uses bespoke "need X more" math while the Market panel uses the new shared service. Unifying them makes future currency tuning trivial.
-- [ ] Reuse `<ShopItemCostLine />` on each Building card for the "spend step vs. remaining essence" readout
-- [ ] Add a "Full build: N 🟣" chip per building so players see the total commitment before starting a hold
-- [ ] Highlight the next-cheapest-to-finish building with a soft ring so players have a clear "go here next" nudge
-- [ ] Extend `islandRunShopAffordability` (or add a sibling) to return a `nextCheapestIndex` helper; add unit tests
+- [x] Reuse `<ShopItemCostLine />` on each Building card for the "spend step vs. remaining essence" readout
+- [x] Add a "Full build: N 🟣" chip per building so players see the total commitment before starting a hold
+- [x] Highlight the next-cheapest-to-finish building with a soft ring so players have a clear "go here next" nudge
+- [x] Extend `islandRunShopAffordability` (or add a sibling) to return a `nextCheapestIndex` helper; add unit tests
 
 **Files to touch:**
 - `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx` (build panel JSX around line 7823+)
@@ -37,7 +38,7 @@ Each entry is sized to be a single focused PR. Items are ordered by impact × ri
 
 ---
 
-### PR 9 — Egg-sell reward preview clarity
+### PR 9 — Egg-sell reward preview clarity ⭐️ (recommended next)
 **Why:** `getEggSellRewardOptions` returns tier-scaled (shards|dice) options but the modal doesn't currently show a side-by-side "which is better for you right now?" comparison.
 - [ ] New pure service `islandRunEggSellAdvisor.ts` that, given `{ tier, shardsBalance, diceBalance, nextStickerShardCost }`, returns `{ recommendedChoice: 'shards'|'dice', reason: string }`
 - [ ] Extend the sell modal in `IslandRunBoardPrototype.tsx` (around `handleSellEggForChoice`) to render a small "Recommended" badge on one option
@@ -143,8 +144,8 @@ Each of these is a multi-PR arc — start it by writing a design doc PR (docs on
 
 ## 🚦 Recommended next prompt
 
-> "Do PR 8 (build-panel affordability parity) from `docs/gameplay/NEXT_TODO_PR_LIST.md`."
+> "Do PR 9 (egg-sell reward preview clarity) from `docs/gameplay/NEXT_TODO_PR_LIST.md`."
 
 or, for a batch:
 
-> "Do PR 8, PR 9, and PR 10 from the next-todo list, each as its own commit."
+> "Do PR 9, PR 10, and PR 11 from the next-todo list, each as its own commit."
