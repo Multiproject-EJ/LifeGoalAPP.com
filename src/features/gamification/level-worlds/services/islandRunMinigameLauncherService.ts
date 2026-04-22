@@ -15,6 +15,7 @@
  */
 import { getIslandRunFeatureFlags } from '../../../../config/islandRunFeatureFlags';
 import { getBossTrialConfig, type BossType } from './bossService';
+import { openEventMinigame, type EventId } from './islandRunEventEngine';
 import type { MysteryStopContentKind } from './islandRunStops';
 
 /**
@@ -54,8 +55,31 @@ export interface MysteryMinigameLaunchDescriptor {
   };
 }
 
+export interface EventMinigameLaunchContext {
+  kind: 'timed_event';
+  eventId: EventId;
+  ticketsAvailable: number;
+  ticketsToSpend?: number;
+}
+
+export interface EventMinigameLaunchDescriptor {
+  minigameId: 'task_tower';
+  ticketCost: number;
+  ticketsSpent: number;
+  config: {
+    source: 'timed_event';
+    eventId: 'feeding_frenzy';
+    mode: 'feeding_frenzy';
+    sessionDurationSec: 120;
+    targetRowsCleared: 10;
+  };
+}
+
 export type MinigameLaunchDescriptor = BossMinigameLaunchDescriptor;
-export type AnyMinigameLaunchDescriptor = BossMinigameLaunchDescriptor | MysteryMinigameLaunchDescriptor;
+export type AnyMinigameLaunchDescriptor =
+  | BossMinigameLaunchDescriptor
+  | MysteryMinigameLaunchDescriptor
+  | EventMinigameLaunchDescriptor;
 
 /**
  * Resolve the boss-stop minigame launch for the given island.
@@ -126,4 +150,34 @@ export function shouldResolveMysteryStopOnMinigameComplete(options: {
 }): boolean {
   if (!options.completed || options.launchSource !== 'mystery_stop') return false;
   return options.minigameId === 'task_tower' || options.minigameId === 'vision_quest';
+}
+
+/**
+ * Phase 6 step 1: Feeding Frenzy uses Task Tower as its canonical event
+ * surface. This resolver intentionally only supports Feeding Frenzy for now;
+ * other events will be added in subsequent Phase 6 PRs.
+ */
+export function resolveFeedingFrenzyEventMinigame(
+  ctx: EventMinigameLaunchContext,
+): EventMinigameLaunchDescriptor | null {
+  if (ctx.eventId !== 'feeding_frenzy') return null;
+  const launch = openEventMinigame({
+    eventId: ctx.eventId,
+    ticketsAvailable: ctx.ticketsAvailable,
+    ticketsToSpend: ctx.ticketsToSpend,
+  });
+  if (!launch || launch.minigameId !== 'task_tower') return null;
+
+  return {
+    minigameId: 'task_tower',
+    ticketCost: launch.ticketCost,
+    ticketsSpent: launch.ticketsSpent,
+    config: {
+      source: 'timed_event',
+      eventId: 'feeding_frenzy',
+      mode: 'feeding_frenzy',
+      sessionDurationSec: 120,
+      targetRowsCleared: 10,
+    },
+  };
 }

@@ -417,11 +417,19 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 3. [ ] Enable `islandRunTaskTowerMysteryEnabled` + `islandRunVisionQuestMysteryEnabled` once tests + QA notes are green.
 
 ### Phase 6 — Event mini-games
-- [ ] Feeding Frenzy wraps Task Tower in event config; event tickets spent to play.
+- [x] Feeding Frenzy wraps Task Tower in event config; event tickets spent to play.
+  - **Session 2026-04-22 update:** added `resolveFeedingFrenzyEventMinigame()` in `islandRunMinigameLauncherService.ts` (ticket-gated via `openEventMinigame`) and regression coverage in `minigameConsolidationPhase6.test.ts`.
 - [ ] Lucky Spin wraps daily spin wheel for event extra spins.
 - [ ] Space Excavator wraps Shooter Blitz (longer campaign variant).
 - [ ] New Partner Wheel skeleton (single-player + AI partners).
 - [ ] Reward-bar progress + sticker fragments routed via engine to active event sticker.
+
+**Phase 6 execution queue (refined 2026-04-22):**
+1. [x] Implement Feeding Frenzy event-launch resolver with explicit event config + spend validation.
+2. [ ] Add Lucky Spin event-launch resolver that distinguishes free daily spin vs ticket-funded extra spins.
+3. [ ] Add Space Excavator event-launch resolver that maps to Shooter Blitz event mode (longer campaign config).
+4. [ ] Add Partner Wheel launch placeholder (skeleton manifest + launcher contract only, no multiplayer).
+5. [ ] Wire event-run reward routing so completion emits reward-bar progress + active-event sticker fragments through engine.
 
 ### Phase 7 — Monetization
 - [ ] `src/services/minigameTicketStore.ts` — Stripe checkout wrapper, mirrors dice Stripe flow.

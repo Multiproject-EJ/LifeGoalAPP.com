@@ -32,6 +32,8 @@ export interface IslandRunMinigameProps {
   ticketBudget?: number;
   /** Optional: external controller bridge (used by Shooter Blitz/footer adapter) */
   controllerInput?: IslandRunControllerInputProvider;
+  /** Optional launch-time tuning payload from launcher services (event/boss/mystery variants). */
+  launchConfig?: Record<string, unknown>;
 }
 
 export type IslandRunControllerIntent = 'left' | 'right' | 'fire';
