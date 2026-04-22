@@ -215,7 +215,10 @@ import {
 import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
 import { resolveNextCheapestIndex } from '../services/islandRunShopAffordability';
 import { adviseEggSellChoice } from '../services/islandRunEggSellAdvisor';
-import { createShooterControllerBridge } from '../services/islandRunShooterControllerBridge';
+import {
+  bindKeyboardToShooterBridge,
+  createShooterControllerBridge,
+} from '../services/islandRunShooterControllerBridge';
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 6;
@@ -1268,6 +1271,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (!isShooterControllerActive) {
       shooterControllerBridge.reset();
     }
+  }, [isShooterControllerActive, shooterControllerBridge]);
+
+  useEffect(() => {
+    if (!isShooterControllerActive || typeof window === 'undefined') return;
+    return bindKeyboardToShooterBridge(shooterControllerBridge, window);
   }, [isShooterControllerActive, shooterControllerBridge]);
 
   // B3-3: market interaction gate
