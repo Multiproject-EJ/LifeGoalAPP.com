@@ -2851,24 +2851,32 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setCompletedStops((current) => (areStringArraysEqual(current, effectiveCompletedStops) ? current : effectiveCompletedStops));
   }, [completedStops, effectiveCompletedStops, hasHydratedRuntimeState]);
 
+  const mergedStopStatesByIndex = useMemo(() => {
+    if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return runtimeState.stopStatesByIndex;
+    // Bridge: legacy completedStops may include stops that v2 stopStatesByIndex
+    // hasn't marked objectiveComplete yet (e.g. completed before v2 migration).
+    // Merge them so the resolver sees those stops as complete.
+    const completedStopsSet = new Set(completedStops);
+    return runtimeState.stopStatesByIndex.map((entry, index) => {
+      const stopId = islandStopPlan[index]?.stopId;
+      if (stopId && completedStopsSet.has(stopId) && !entry?.objectiveComplete) {
+        return { ...(entry ?? { buildComplete: false }), objectiveComplete: true };
+      }
+      return entry;
+    });
+  }, [completedStops, islandStopPlan, runtimeState.stopStatesByIndex]);
+
+  const contractV2Stops = useMemo(() => {
+    if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return null;
+    return resolveIslandRunContractV2Stops({
+      stopStatesByIndex: mergedStopStatesByIndex,
+      stopTicketsPaidByIsland: runtimeState.stopTicketsPaidByIsland,
+      islandNumber,
+    });
+  }, [islandNumber, mergedStopStatesByIndex, runtimeState.stopTicketsPaidByIsland]);
+
   const stopStateMap = useMemo(() => {
-    if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
-      // Bridge: legacy completedStops may include stops that v2 stopStatesByIndex
-      // hasn't marked objectiveComplete yet (e.g. completed before v2 migration).
-      // Merge them so the resolver sees those stops as complete.
-      const completedStopsSet = new Set(completedStops);
-      const mergedStopStatesByIndex = runtimeState.stopStatesByIndex.map((entry, index) => {
-        const stopId = islandStopPlan[index]?.stopId;
-        if (stopId && completedStopsSet.has(stopId) && !entry?.objectiveComplete) {
-          return { ...(entry ?? { buildComplete: false }), objectiveComplete: true };
-        }
-        return entry;
-      });
-      const contractV2Stops = resolveIslandRunContractV2Stops({
-        stopStatesByIndex: mergedStopStatesByIndex,
-        stopTicketsPaidByIsland: runtimeState.stopTicketsPaidByIsland,
-        islandNumber,
-      });
+    if (ISLAND_RUN_CONTRACT_V2_ENABLED && contractV2Stops) {
       const map = new Map<string, StopProgressState>();
       islandStopPlan.forEach((stop, index) => {
         const resolverStatus = contractV2Stops.statusesByIndex[index];
@@ -2908,7 +2916,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     return map;
-  }, [completedStops, effectiveCompletedStops, islandEggSlotUsed, islandNumber, islandStopPlan, runtimeState.stopStatesByIndex, runtimeState.stopTicketsPaidByIsland]);
+  }, [contractV2Stops, effectiveCompletedStops, islandEggSlotUsed, islandStopPlan]);
 
   // stopMap intentionally remains empty: per the canonical gameplay contract,
   // stops are EXTERNAL side-quest structures (orbit HUD buttons). No tile on
@@ -2939,10 +2947,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const stopIndex = stopIndexByStopId.get(stopId);
     if (stopIndex === undefined) return false;
     if (stopIndex === 0) return false; // hatchery is always free
+    if (ISLAND_RUN_CONTRACT_V2_ENABLED && contractV2Stops) {
+      return contractV2Stops.statusesByIndex[stopIndex] === 'ticket_required';
+    }
     if (isStopTicketPaid({ ticketsPaid: ticketsPaidForCurrentIsland, stopIndex })) return false;
     const prevState = runtimeState.stopStatesByIndex[stopIndex - 1];
     return Boolean(prevState?.objectiveComplete);
-  }, [stopIndexByStopId, ticketsPaidForCurrentIsland, runtimeState.stopStatesByIndex]);
+  }, [contractV2Stops, stopIndexByStopId, ticketsPaidForCurrentIsland, runtimeState.stopStatesByIndex]);
 
   const ticketRequirementByStopId = useMemo(() => {
     const requirements = new Map<string, { needsTicket: boolean; ticketCost?: number }>();
@@ -2963,6 +2974,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
    *   - Otherwise → leave closed (stop is sequence-locked; no-op).
    */
   const handleStopOpenRequest = useCallback((stopId: string) => {
+    const stopIndex = stopIndexByStopId.get(stopId);
+    if (ISLAND_RUN_CONTRACT_V2_ENABLED && contractV2Stops && typeof stopIndex === 'number') {
+      const stopStatus = contractV2Stops.statusesByIndex[stopIndex];
+      if (stopStatus === 'locked') {
+        setLandingText('Complete the previous stop before opening this landmark.');
+        return;
+      }
+    }
     if (doesStopRequireTicketPayment(stopId)) {
       setTicketPromptStopId(stopId);
       return;
@@ -2970,7 +2989,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     requestActiveStopTransition(stopId, 'orbit_stop_click');
     setFocusedStopId(stopId);
     setCameraMode('stop_focus');
-  }, [doesStopRequireTicketPayment, requestActiveStopTransition]);
+  }, [contractV2Stops, doesStopRequireTicketPayment, requestActiveStopTransition, stopIndexByStopId]);
 
   /**
    * Pay the essence ticket for `stopId`. On success: persist the updated
