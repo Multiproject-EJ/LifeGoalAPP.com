@@ -338,16 +338,21 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 ### Phase 4 — Boss Stop Shooter Blitz
 - [x] **Step 1 — pure launcher resolver:** `islandRunMinigameLauncherService.ts` exports `resolveBossStopMinigame(ctx) → MinigameLaunchDescriptor | null`, flag-gated on `islandRunShooterBlitzBossEnabled`. Routes `bossType === 'fight'` to `shooter_blitz` with deterministic score/duration scaling from `bossService`. 5 unit tests.
 - [x] Wire boss stop UI to launch Shooter Blitz via `islandRunMinigameLauncher` for `kind === 'fixed_boss'` on island 1.
-- [ ] Polish Shooter Blitz: spaceship sprite, asteroid enemies, power-ups, HP, win/lose conditions per `bossService.getBossTrialConfig`.
+- [x] Polish Shooter Blitz: spaceship sprite, asteroid enemies, power-ups, HP, win/lose conditions per `bossService.getBossTrialConfig`.
 - [ ] Hook footer game-controller image to Shooter Blitz inputs (left / right / fire) during boss session.
 - [ ] `resolveRewards` → awards via engine.
 - [ ] Flip `islandRunShooterBlitzBossEnabled` on.
 
 **Phase 4 — next implementation order (refined):**
-1. **Gameplay polish vertical slice** (single PR): ship sprite + HP + timer/score target parity with `bossService`, while keeping current reward grant path unchanged.
-2. **Controller wiring** (single PR): map footer controls to Shooter Blitz input; include exit/cleanup guards so nav controls always restore.
-3. **Reward contract move** (single PR): migrate Shooter Blitz direct awards into `resolveRewards` + engine-issued state deltas.
-4. **Flag rollout** (single PR): QA on islands 1/3/4/23, then enable `islandRunShooterBlitzBossEnabled`.
+1. [x] **Gameplay polish vertical slice** (single PR): ship sprite + HP + timer/score target parity with `bossService`, while keeping current reward grant path unchanged.
+2. [ ] **Controller wiring** (single PR): map footer controls to Shooter Blitz input; include exit/cleanup guards so nav controls always restore.
+3. [ ] **Reward contract move** (single PR): migrate Shooter Blitz direct awards into `resolveRewards` + engine-issued state deltas.
+4. [ ] **Flag rollout** (single PR): QA on islands 1/3/4/23, then enable `islandRunShooterBlitzBossEnabled`.
+
+**Phase 4 immediate TODO queue (next sessions):**
+- [ ] Add a `ShooterControllerAdapter` bridge in `level-worlds/components` that subscribes to footer-controller taps and emits `left/right/fire` intents.
+- [ ] Extend `IslandRunMinigameLauncher` to optionally pass down a controller-input provider (no-op by default; Shooter Blitz opt-in).
+- [ ] Add focused tests for controller cleanup on minigame exit (ensures footer navigation always restores).
 
 ### Phase 5 — Mystery Task Tower & Vision Quest
 - [ ] Wire mystery-stop launcher to launch Task Tower / Vision Quest components when the rolled `mysteryContentKind` selects them.

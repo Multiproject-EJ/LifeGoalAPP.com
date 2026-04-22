@@ -19,6 +19,22 @@
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.38);
 }
 
+.shooter-blitz--theme-nebula .shooter-blitz__panel {
+  background: radial-gradient(circle at 20% 0%, #1d315f 0%, #0f172a 48%, #0b1222 100%);
+}
+
+.shooter-blitz--theme-asteroid .shooter-blitz__panel {
+  background: radial-gradient(circle at 18% 0%, #3e2e47 0%, #1d1f39 48%, #0b1222 100%);
+}
+
+.shooter-blitz--theme-drone .shooter-blitz__panel {
+  background: radial-gradient(circle at 20% 0%, #16355f 0%, #0f183f 48%, #0b1222 100%);
+}
+
+.shooter-blitz--theme-void .shooter-blitz__panel {
+  background: radial-gradient(circle at 20% 0%, #25165f 0%, #181040 48%, #0b1222 100%);
+}
+
 .shooter-blitz__header h2 {
   margin: 0;
 }
@@ -49,6 +65,37 @@
   font-size: 0.88rem;
 }
 
+.shooter-blitz__arena {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 14px;
+  border: 1px solid rgba(124, 163, 255, 0.3);
+  background: rgba(12, 24, 51, 0.64);
+}
+
+.shooter-blitz__ship,
+.shooter-blitz__enemy {
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.shooter-blitz__hud-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+
+.shooter-blitz__hud-grid p {
+  margin: 0;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  background: rgba(116, 156, 255, 0.12);
+  border: 1px solid rgba(145, 179, 255, 0.25);
+}
+
 .shooter-blitz__phase {
   font-size: 0.9rem;
   letter-spacing: 0.02em;
@@ -71,10 +118,37 @@
   border: 1px solid rgba(146, 180, 255, 0.35);
 }
 
+.shooter-blitz__progress-track--hp {
+  background: rgba(255, 148, 148, 0.16);
+  border-color: rgba(255, 148, 148, 0.35);
+}
+
 .shooter-blitz__progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #3ea2ff, #74f0cd);
   transition: width 180ms ease;
+}
+
+.shooter-blitz__progress-fill--hp {
+  background: linear-gradient(90deg, #f87171, #fb7185);
+}
+
+.shooter-blitz__result {
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.shooter-blitz__result--win {
+  background: rgba(54, 219, 149, 0.16);
+  border: 1px solid rgba(54, 219, 149, 0.4);
+  color: #8dffd2;
+}
+
+.shooter-blitz__result--lose {
+  background: rgba(252, 87, 94, 0.16);
+  border: 1px solid rgba(252, 87, 94, 0.4);
+  color: #ffc5c8;
 }
 
 .shooter-blitz__actions {
