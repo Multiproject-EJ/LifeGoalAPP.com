@@ -141,6 +141,8 @@ import {
   resolveMinigameForStop,
   type IslandRunMinigameResult,
 } from '../services/islandRunMinigameService';
+import { registerAllMinigameManifests } from '../services/islandRunMinigameManifests';
+import { resolveBossStopMinigame } from '../services/islandRunMinigameLauncherService';
 import {
   getBossTrialConfig,
   getBossTypeColor,
@@ -1251,6 +1253,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // B3-2: minigame launcher state (M11B framework)
   const [activeLaunchedMinigameId, setActiveLaunchedMinigameId] = useState<string | null>(null);
+  const [activeLaunchedMinigameSource, setActiveLaunchedMinigameSource] = useState<'boss_trial' | null>(null);
 
   // B3-3: market interaction gate
   const [marketInteracted, setMarketInteracted] = useState(false);
@@ -5209,6 +5212,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [bossTrialPhase, bossTrialTimeLeft, bossTrialScore, bossAttemptCount, islandNumber, session.user.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleStartBossTrial = () => {
+    if (islandNumber === 1) {
+      const bossMinigame = resolveBossStopMinigame({
+        kind: 'fixed_boss',
+        islandNumber,
+      });
+      if (bossMinigame) {
+        registerAllMinigameManifests();
+        setActiveLaunchedMinigameId(bossMinigame.minigameId);
+        setActiveLaunchedMinigameSource('boss_trial');
+        return;
+      }
+    }
+
     const { trialDurationSec } = getBossTrialConfig(islandNumber);
     setBossTrialPhase('in_progress');
     setBossTrialTimeLeft(trialDurationSec);
@@ -9151,7 +9167,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             minigameId={activeLaunchedMinigameId}
             islandNumber={islandNumber}
             onComplete={(result) => {
-              if (result.completed && result.reward) {
+              if (activeLaunchedMinigameSource === 'boss_trial' && result.completed) {
+                handleResolveBossTrial();
+                setBossTrialPhase('success');
+              } else if (result.completed && result.reward) {
                 const { dice: rewardDice = 0, spinTokens: rewardSpinTokens = 0 } = result.reward;
                 if (rewardDice > 0) setDicePool((d) => d + rewardDice);
                 if (rewardSpinTokens > 0) setSpinTokens((t) => t + rewardSpinTokens);
@@ -9168,7 +9187,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 });
               }
               setActiveLaunchedMinigameId(null);
-              // Minigame launched from encounter — no stop completion needed
+              setActiveLaunchedMinigameSource(null);
             }}
           />
         </div>
