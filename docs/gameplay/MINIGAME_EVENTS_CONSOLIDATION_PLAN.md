@@ -437,8 +437,14 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 **Phase 6 next actionable TODO (refined):**
 1. [x] Add an engine-level completion hook (`recordEventMinigameCompletion`) so event mini-game runs contribute reward-bar progress through a single canonical path.
    - **Session 2026-04-22 update:** `event_minigame_complete` progress source + engine helper shipped with regression coverage in `minigameConsolidationPhase6.test.ts`.
-2. [ ] Wire the event panel + minigame launcher completion callback to call the new engine hook for all four event minigames.
+2. [x] Wire the event panel + minigame launcher completion callback to call the new engine hook for all four event minigames.
+   - **Session 2026-04-22 update:** added shared completion guard `resolveEventMinigameCompletionId(...)` and launcher callback wiring in `IslandRunBoardPrototype.tsx` so completed `timed_event` runs (`task_tower`, `lucky_spin`, `shooter_blitz`, `partner_wheel`) now funnel through `recordEventMinigameCompletion`.
 3. [ ] Ensure event-completion UI path applies reward-bar claim payouts (including sticker fragments) from the engine-owned state snapshot.
+
+**Phase 6 immediate TODO order (tightened after completion-hook wiring):**
+1. [ ] Wire active-event panel launch actions so all event entries set `activeLaunchedMinigameSource = 'timed_event'` consistently.
+2. [ ] Route event completion UI through reward-bar claim handling (`claimIslandRunContractV2RewardBar`) so sticker-fragment payouts show immediately after completed runs.
+3. [ ] Add integration tests that launch each event surface and assert end-to-end reward-bar + sticker inventory updates from launcher completion.
 
 ### Phase 7 — Monetization
 - [ ] `src/services/minigameTicketStore.ts` — Stripe checkout wrapper, mirrors dice Stripe flow.

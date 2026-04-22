@@ -4,6 +4,7 @@
 import { openEventMinigame, recordEventMinigameCompletion } from '../islandRunEventEngine';
 import { buildFreshIslandRunRecord } from '../islandRunProgressReset';
 import {
+  resolveEventMinigameCompletionId,
   resolveFeedingFrenzyEventMinigame,
   resolveLuckySpinEventMinigame,
   resolveSpaceExcavatorEventMinigame,
@@ -67,6 +68,74 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       });
       assertEqual(descriptor?.ticketsSpent, 2, 'caller-provided spend amount should be preserved');
       assertEqual(descriptor?.ticketCost, 1, 'ticketCost remains canonical per-run base cost');
+    },
+  },
+  {
+    name: 'resolveEventMinigameCompletionId only accepts completed timed_event launches for canonical event minigames',
+    run: () => {
+      assertEqual(
+        resolveEventMinigameCompletionId({
+          launchSource: 'timed_event',
+          minigameId: 'task_tower',
+          completed: true,
+        }),
+        'task_tower',
+        'timed_event completion should accept task_tower',
+      );
+      assertEqual(
+        resolveEventMinigameCompletionId({
+          launchSource: 'timed_event',
+          minigameId: 'lucky_spin',
+          completed: true,
+        }),
+        'lucky_spin',
+        'timed_event completion should accept lucky_spin',
+      );
+      assertEqual(
+        resolveEventMinigameCompletionId({
+          launchSource: 'timed_event',
+          minigameId: 'shooter_blitz',
+          completed: true,
+        }),
+        'shooter_blitz',
+        'timed_event completion should accept shooter_blitz',
+      );
+      assertEqual(
+        resolveEventMinigameCompletionId({
+          launchSource: 'timed_event',
+          minigameId: 'partner_wheel',
+          completed: true,
+        }),
+        'partner_wheel',
+        'timed_event completion should accept partner_wheel',
+      );
+      assertEqual(
+        resolveEventMinigameCompletionId({
+          launchSource: 'mystery_stop',
+          minigameId: 'task_tower',
+          completed: true,
+        }),
+        null,
+        'non-event launch sources should not trigger event completion progress',
+      );
+      assertEqual(
+        resolveEventMinigameCompletionId({
+          launchSource: 'timed_event',
+          minigameId: 'task_tower',
+          completed: false,
+        }),
+        null,
+        'abandoned/failed runs should not trigger completion progress',
+      );
+      assertEqual(
+        resolveEventMinigameCompletionId({
+          launchSource: 'timed_event',
+          minigameId: 'vision_quest',
+          completed: true,
+        }),
+        null,
+        'non-event minigames should never route into event completion progress',
+      );
     },
   },
   {

@@ -15,7 +15,7 @@
  */
 import { getIslandRunFeatureFlags } from '../../../../config/islandRunFeatureFlags';
 import { getBossTrialConfig, type BossType } from './bossService';
-import { openEventMinigame, type EventId } from './islandRunEventEngine';
+import { openEventMinigame, type EventId, type EventMinigameId } from './islandRunEventEngine';
 import type { MysteryStopContentKind } from './islandRunStops';
 
 /**
@@ -165,12 +165,36 @@ export function resolveMysteryStopMinigame(
 }
 
 export function shouldResolveMysteryStopOnMinigameComplete(options: {
-  launchSource: 'boss_trial' | 'mystery_stop' | 'shop_button' | 'event_button';
+  launchSource: MinigameLaunchSource;
   minigameId: string;
   completed: boolean;
 }): boolean {
   if (!options.completed || options.launchSource !== 'mystery_stop') return false;
   return options.minigameId === 'task_tower' || options.minigameId === 'vision_quest';
+}
+
+export type MinigameLaunchSource =
+  | 'boss_trial'
+  | 'mystery_stop'
+  | 'shop_button'
+  | 'event_button'
+  | 'timed_event';
+
+/**
+ * Phase 6 step 2/3 wiring guard: only successful timed-event launches should
+ * feed completion progress into `recordEventMinigameCompletion`.
+ */
+export function resolveEventMinigameCompletionId(options: {
+  launchSource: MinigameLaunchSource | null | undefined;
+  minigameId: string | null | undefined;
+  completed: boolean;
+}): EventMinigameId | null {
+  if (!options.completed || options.launchSource !== 'timed_event') return null;
+  if (options.minigameId === 'task_tower') return 'task_tower';
+  if (options.minigameId === 'lucky_spin') return 'lucky_spin';
+  if (options.minigameId === 'shooter_blitz') return 'shooter_blitz';
+  if (options.minigameId === 'partner_wheel') return 'partner_wheel';
+  return null;
 }
 
 /**
