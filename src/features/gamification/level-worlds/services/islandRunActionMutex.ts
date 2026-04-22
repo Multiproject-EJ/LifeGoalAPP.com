@@ -30,6 +30,11 @@
 // action for this user has finished persisting. Appending a new action means
 // chaining a `.then(work)` onto the tail and storing the new tail.
 const actionMutexes = new Map<string, Promise<unknown>>();
+const actionBarriers = new Map<string, { count: number; waitForClear: Promise<void>; resolve: () => void }>();
+
+function waitForActionBarrierToClear(userId: string): Promise<void> {
+  return actionBarriers.get(userId)?.waitForClear ?? Promise.resolve();
+}
 
 /**
  * Run `work` exclusive-of any other `withIslandRunActionLock` call for the
@@ -43,7 +48,12 @@ export function withIslandRunActionLock<T>(userId: string, work: () => Promise<T
   const previous = actionMutexes.get(userId) ?? Promise.resolve();
   // `catch(() => undefined)` on the predecessor chain prevents an earlier
   // rejection from aborting this caller (each caller gets its own outcome).
-  const next: Promise<T> = previous.catch(() => undefined).then(() => work());
+  const next: Promise<T> = previous
+    .catch(() => undefined)
+    .then(async () => {
+      await waitForActionBarrierToClear(userId);
+      return work();
+    });
   // Swallow this tail's rejection for Map bookkeeping, otherwise a rejected
   // promise would sit at the head of the queue unreferenced.
   const tail = next.catch(() => undefined);
@@ -58,7 +68,44 @@ export function withIslandRunActionLock<T>(userId: string, work: () => Promise<T
   return next;
 }
 
+/**
+ * Mark a high-risk gameplay window (for example: roll animation between server
+ * commit and post-hop `applyRollResult`) where queued actions should wait
+ * before entering the action mutex work section.
+ */
+export function beginIslandRunActionBarrier(userId: string): void {
+  const existing = actionBarriers.get(userId);
+  if (existing) {
+    existing.count += 1;
+    return;
+  }
+
+  let resolveBarrier!: () => void;
+  const waitForClear = new Promise<void>((resolve) => {
+    resolveBarrier = resolve;
+  });
+  actionBarriers.set(userId, { count: 1, waitForClear, resolve: resolveBarrier });
+}
+
+/**
+ * Clear a previously-set barrier for `userId`. Nested barriers are reference-
+ * counted; only the final `end` release unblocks queued actions.
+ */
+export function endIslandRunActionBarrier(userId: string): void {
+  const existing = actionBarriers.get(userId);
+  if (!existing) return;
+  existing.count -= 1;
+  if (existing.count <= 0) {
+    actionBarriers.delete(userId);
+    existing.resolve();
+  }
+}
+
 /** @internal Test hook — resets the mutex map so concurrent-case tests start clean. */
 export function __resetIslandRunActionMutexesForTests(): void {
   actionMutexes.clear();
+  for (const barrier of actionBarriers.values()) {
+    barrier.resolve();
+  }
+  actionBarriers.clear();
 }

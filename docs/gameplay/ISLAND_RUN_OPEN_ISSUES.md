@@ -74,9 +74,22 @@ is complete and a grep confirms zero call-sites, delete
 `lastAppliedRuntimeVersionRef` guard refs from the renderer. Those guards
 exist purely to patch over the multi-writer race and become unnecessary.
 
-### P0-3. Roll mutex scope is too narrow — releases before client commit and animations 🔴
+### P0-3. Roll mutex scope is too narrow — releases before client commit and animations — ✅ Closed (session 15)
 
-**Confirmed in code — 2026-04-20 audit.**
+**Resolution landed — 2026-04-22 (session 15).**
+
+- Added a per-user action barrier in `islandRunActionMutex.ts`:
+  `beginIslandRunActionBarrier` / `endIslandRunActionBarrier`.
+- `withIslandRunActionLock` now waits for any active barrier before entering
+  queued action work for that user.
+- `handleRoll` now begins the barrier immediately before hop animation starts
+  (after the roll service commit) and releases it in `finally` after
+  `applyRollResult` + post-hop landing handling, closing the stale-version
+  interleave window called out in this issue.
+- Added mutex barrier regression tests in
+  `services/__tests__/islandRunActionMutex.test.ts`.
+
+**Original issue (kept for traceability):**
 
 `executeIslandRunRollAction` holds `withIslandRunActionLock` only around
 `performRollAction` (the server write). The mutex unlocks as soon as

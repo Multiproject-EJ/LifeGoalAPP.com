@@ -1,6 +1,6 @@
 # Island Run — Next TODO PR List
 
-**Last updated:** 2026-04-22 (end of PR 14 batch)
+**Last updated:** 2026-04-22 (end of PR 15 batch)
 **Context:** Continuation of the Island Run polish sweep on branch `copilot/investigate-120-island-game-again`. Hand this doc to the next agent session with a prompt like "do PR 12" or "do PR 12 and PR 13 together."
 
 ---
@@ -18,6 +18,7 @@
 | 9   | Egg-sell clarity            | Added egg-sell advisor with recommended badge/reason + tests for shards/dice choice heuristics           |
 | 10  | Boss shortfall forecast     | Added boss-ticket shortfall projection service + HUD warning banner + tests                               |
 | 11  | HUD progress chip            | Replaced misleading "island streak" with clear cumulative "islands cleared" topbar counter + increment animation |
+| 15  | Roll/action interleave safety | Added per-user action barrier so queued gameplay actions wait during roll-hop commit window; regression tests added |
 
 Test suite baseline remains green via `npm run test:island-run` (see latest run in this PR).
 
@@ -116,6 +117,15 @@ Each entry is sized to be a single focused PR. Items are ordered by impact × ri
 
 ---
 
+### ✅ PR 15 — Roll-hop commit barrier (merged)
+**Why:** The roll service mutex ended before the client applied post-hop `applyRollResult`, leaving a multi-second stale-version window where queued writers could interleave and patch against pre-roll state.
+- [x] Added per-user barrier helpers in `islandRunActionMutex.ts`
+- [x] Updated `withIslandRunActionLock` to await barrier clear before work executes
+- [x] Wrapped roll hop/commit window in `beginIslandRunActionBarrier` / `endIslandRunActionBarrier` inside `handleRoll`
+- [x] Added regression coverage in `islandRunActionMutex.test.ts`
+
+---
+
 ## 🧭 Bigger-picture candidates (multi-PR arcs)
 
 If the small-PR queue feels well-handled, these are the next substantive feature arcs:
@@ -147,4 +157,4 @@ Each of these is a multi-PR arc — start it by writing a design doc PR (docs on
 
 ## 🚦 Recommended next prompt
 
-> "Start the Island theme variety arc with a docs-only design PR (tile-art set rotation by `effectiveIslandNumber % N`) and propose a 2–3 PR implementation breakdown."
+> "Do PR 16: consolidate island completion logic into a shared `isIslandComplete(...)` helper used by both Contract-V2 stop resolver and renderer travel gating (fix P0-4), with focused unit tests."
