@@ -439,18 +439,22 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
    - **Session 2026-04-22 update:** `event_minigame_complete` progress source + engine helper shipped with regression coverage in `minigameConsolidationPhase6.test.ts`.
 2. [x] Wire the event panel + minigame launcher completion callback to call the new engine hook for all four event minigames.
    - **Session 2026-04-22 update:** added shared completion guard `resolveEventMinigameCompletionId(...)` and launcher callback wiring in `IslandRunBoardPrototype.tsx` so completed `timed_event` runs (`task_tower`, `lucky_spin`, `shooter_blitz`, `partner_wheel`) now funnel through `recordEventMinigameCompletion`.
-3. [ ] Ensure event-completion UI path applies reward-bar claim payouts (including sticker fragments) from the engine-owned state snapshot.
+3. [x] Ensure event-completion UI path applies reward-bar claim payouts (including sticker fragments) from the engine-owned state snapshot.
+   - **Session 2026-04-22 update:** completed timed-event minigame runs now execute immediate reward-bar cascade claim handling from the engine-owned snapshot.
 
 **Phase 6 immediate TODO order (tightened after completion-hook wiring):**
 1. [x] Wire active-event panel launch actions so all event entries set `activeLaunchedMinigameSource = 'timed_event'` consistently.
    - **Session 2026-04-22 update:** Island Run timed-event launcher button now routes through event-specific resolver contracts (`feeding_frenzy`, `lucky_spin`, `space_excavator`, `companion_feast`) and sets `activeLaunchedMinigameSource = 'timed_event'` before opening the shared minigame launcher.
-2. [ ] Route event completion UI through reward-bar claim handling (`claimIslandRunContractV2RewardBar`) so sticker-fragment payouts show immediately after completed runs.
-3. [ ] Add integration tests that launch each event surface and assert end-to-end reward-bar + sticker inventory updates from launcher completion.
+2. [x] Route event completion UI through reward-bar claim handling (`claimIslandRunContractV2RewardBar`) so sticker-fragment payouts show immediately after completed runs.
+   - **Session 2026-04-22 update:** shared reward-bar claim cascade helper now runs on completed timed-event launcher flows in `IslandRunBoardPrototype.tsx`, so event completions can immediately materialize reward-bar payouts.
+3. [x] Add integration tests that launch each event surface and assert end-to-end reward-bar + sticker inventory updates from launcher completion.
+   - **Session 2026-04-22 update:** added four canonical event-path integration tests in `minigameConsolidationPhase6.test.ts` (Feeding Frenzy, Lucky Spin, Space Excavator, Companion Feast) covering resolver → completion-id guard → reward-bar claim handoff.
 
 **Phase 6 next-up queue (tightened for implementation focus):**
 1. [x] Implement event-completion reward-claim handoff in UI (`claimIslandRunContractV2RewardBar` on completed timed-event run path).
    - **Session 2026-04-22 update:** timed-event minigame completion now routes through shared reward-bar cascade claim handling in `IslandRunBoardPrototype`, so completed event runs can immediately surface reward-bar payouts (including sticker fragment claims) without a separate manual claim tap.
-2. [ ] Add one integration test per canonical event launcher path to validate reward-bar and sticker updates after completion.
+2. [x] Add one integration test per canonical event launcher path to validate reward-bar and sticker updates after completion.
+   - **Session 2026-04-22 update:** shipped one integration test per canonical event launcher path in `minigameConsolidationPhase6.test.ts`, validating reward-bar claimability + payout emission + sticker-state continuity after completion handoff.
 
 ### Phase 7 — Monetization
 - [ ] `src/services/minigameTicketStore.ts` — Stripe checkout wrapper, mirrors dice Stripe flow.
