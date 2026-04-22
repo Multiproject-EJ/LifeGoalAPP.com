@@ -1,6 +1,6 @@
 # Island Run — Next TODO PR List
 
-**Last updated:** 2026-04-22 (end of PR 11 batch)
+**Last updated:** 2026-04-22 (end of PR 13 batch)
 **Context:** Continuation of the Island Run polish sweep on branch `copilot/investigate-120-island-game-again`. Hand this doc to the next agent session with a prompt like "do PR 12" or "do PR 12 and PR 13 together."
 
 ---
@@ -81,11 +81,11 @@ Each entry is sized to be a single focused PR. Items are ordered by impact × ri
 
 ---
 
-### PR 12 — Creature manifest quick-access
+### ✅ PR 12 — Creature manifest quick-access (merged)
 **Why:** Hatched creatures go into the Hatchery manifest, but nothing in the HUD hints at whether unclaimed creatures are sitting there. Adds a small manifest badge.
-- [ ] Query `creatureCollectionService` for unclaimed count
-- [ ] Add a 🥚 badge with count next to the Shop button when > 0
-- [ ] Tapping opens the Hatchery directly
+- [x] Query `creatureCollectionService` for unclaimed count
+- [x] Add a 🥚 badge with count next to the Shop button when > 0
+- [x] Tapping opens the Hatchery directly
 
 **Files to touch:**
 - `services/creatureCollectionService.ts` (add `countUnclaimed` if absent)
@@ -93,11 +93,11 @@ Each entry is sized to be a single focused PR. Items are ordered by impact × ri
 
 ---
 
-### PR 13 — Performance: memoize orbit-stop visuals
+### ✅ PR 13 — Performance: memoize orbit-stop visuals (merged)
 **Why:** `stopVisuals` in `BoardOrbitStops` is re-derived on every render; on lower-end devices this can cause ~2-3ms jitter during token travel. Stable memoization should cut that.
-- [ ] Wrap the derivation in `useMemo` keyed on `completedStops`, `stopTicketsPaidByIsland[islandKey]`, `essence`, `activeStopId`
+- [x] Wrap the derivation in `useMemo` keyed on `completedStops`, `stopTicketsPaidByIsland[islandKey]`, `essence`, `activeStopId`
 - [ ] Profile before/after with the Performance tab on a throttled CPU (4×) to confirm
-- [ ] No behavioral change; purely perf
+- [x] No behavioral change; purely perf
 
 **Files to touch:**
 - `components/IslandRunBoardPrototype.tsx` stopVisuals derivation
