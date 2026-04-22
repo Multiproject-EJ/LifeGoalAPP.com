@@ -448,7 +448,8 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 3. [ ] Add integration tests that launch each event surface and assert end-to-end reward-bar + sticker inventory updates from launcher completion.
 
 **Phase 6 next-up queue (tightened for implementation focus):**
-1. [ ] Implement event-completion reward-claim handoff in UI (`claimIslandRunContractV2RewardBar` on completed timed-event run path).
+1. [x] Implement event-completion reward-claim handoff in UI (`claimIslandRunContractV2RewardBar` on completed timed-event run path).
+   - **Session 2026-04-22 update:** timed-event minigame completion now routes through shared reward-bar cascade claim handling in `IslandRunBoardPrototype`, so completed event runs can immediately surface reward-bar payouts (including sticker fragment claims) without a separate manual claim tap.
 2. [ ] Add one integration test per canonical event launcher path to validate reward-bar and sticker updates after completion.
 
 ### Phase 7 — Monetization

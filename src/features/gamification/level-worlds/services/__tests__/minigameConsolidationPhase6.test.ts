@@ -10,6 +10,7 @@ import {
   resolveSpaceExcavatorEventMinigame,
   resolveCompanionFeastEventMinigame,
 } from '../islandRunMinigameLauncherService';
+import { resolveChainedRewardBarClaims } from '../islandRunContractV2RewardBar';
 import { assertEqual, type TestCase } from './testHarness';
 
 export const minigameConsolidationPhase6Tests: TestCase[] = [
@@ -366,6 +367,29 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
         multiplier: 2,
       });
       assertEqual(next.rewardBarProgress, 8, 'multiplier should scale event minigame completion progress');
+    },
+  },
+  {
+    name: 'event minigame completion can immediately chain into reward-bar claim payouts',
+    run: () => {
+      const nowMs = Date.now();
+      const seeded = buildFreshIslandRunRecord({
+        audioEnabled: true,
+        onboardingDisplayNameLoopCompleted: false,
+      });
+      const completionApplied = recordEventMinigameCompletion({
+        state: seeded,
+        minigameId: 'task_tower',
+        nowMs,
+        multiplier: 3,
+      });
+      assertEqual(completionApplied.rewardBarProgress >= completionApplied.rewardBarThreshold, true, 'completion should push reward bar over claim threshold');
+      const claimResult = resolveChainedRewardBarClaims({
+        state: completionApplied,
+        nowMs: nowMs + 1,
+      });
+      assertEqual(claimResult.payouts.length > 0, true, 'completion-overflow state should produce at least one payout');
+      assertEqual(claimResult.state.rewardBarProgress < completionApplied.rewardBarProgress, true, 'claim should consume filled reward-bar progress');
     },
   },
 ];
