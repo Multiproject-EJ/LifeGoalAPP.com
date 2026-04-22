@@ -591,6 +591,40 @@ mid-hop token reset/snap race.
 
 ---
 
+### P1-22. Phase 4 Shooter controller QA matrix notes (islands 1 / 4 / 23)
+
+**Status:** 🟡 In progress (session 16 — automated matrix documented, manual viewport QA still pending).
+
+This item tracks the explicit Phase 4 matrix requested by
+`MINIGAME_EVENTS_CONSOLIDATION_PLAN.md` and serves as the canonical handoff
+log for flag-rollout readiness.
+
+**Automated regression coverage added (session 16):**
+- `islandRunShooterControllerQaMatrix.test.ts` now codifies the matrix checks:
+  - launcher routing expectation on islands 1/4/23 (`1/4 -> legacy`, `23 -> shooter_blitz`)
+  - shared intent parity for footer and keyboard control paths
+  - controller attach/detach telemetry payload shape across `footer` + `keyboard`
+
+**Execution status in this environment:**
+- Full Island Run harness run (`npm run test:island-run`) is currently blocked by a
+  pre-existing TypeScript test compile issue (`import.meta.env` module-mode
+  mismatch under `tsconfig.island-run-tests.json`), so matrix cases are
+  registered but not yet executable here.
+
+**QA matrix ledger (current):**
+
+| Island | Footer controls (mobile) | Keyboard fallback (desktop) | Telemetry attach/detach (`footer`,`keyboard`) | Notes |
+|---|---|---|---|---|
+| 1 | ⏳ Pending manual run | ⏳ Pending manual run | 🟡 Covered by regression spec; runtime execution blocked | Milestone boss expected to remain legacy path. |
+| 4 | ⏳ Pending manual run | ⏳ Pending manual run | 🟡 Covered by regression spec; runtime execution blocked | Milestone boss expected to remain legacy path. |
+| 23 | ⏳ Pending manual run | ⏳ Pending manual run | 🟡 Covered by regression spec; runtime execution blocked | Fight boss expected to launch `shooter_blitz`. |
+
+**Exit criteria for closing this item:**
+1. Fix test-compile environment so `npm run test:island-run` executes the new suite.
+2. Record one manual mobile + desktop pass run for each island row above.
+3. Confirm no routing regressions before enabling `islandRunShooterBlitzBossEnabled`.
+
+
 ## P2 — Tuning / polish / terminology
 
 ### P2-1. Per-island essence math

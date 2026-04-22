@@ -376,7 +376,8 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
    - keyboard fallback (`ArrowLeft`, `ArrowRight`, `Space`) on desktop
    - controller attach/detach telemetry lines for both `footer` and `keyboard` sources
    - **Session 2026-04-22 update:** Added regression suite `islandRunShooterControllerQaMatrix.test.ts` to codify launcher routing + shared-intent parity + telemetry payload shape for islands 1/4/23 across both controller sources.
-2. [ ] Capture QA notes in `docs/gameplay/ISLAND_RUN_OPEN_ISSUES.md` with pass/fail per island.
+2. [x] Capture QA notes in `docs/gameplay/ISLAND_RUN_OPEN_ISSUES.md` with pass/fail per island.
+   - **Session 2026-04-22 update:** Added `P1-22` QA matrix ledger in `ISLAND_RUN_OPEN_ISSUES.md` with current pass/pending/blocker state per island (1/4/23).
 3. [ ] If QA passes, prepare the "Flag rollout" PR to enable `islandRunShooterBlitzBossEnabled`.
 
 **Phase 4 remaining queue (tightened):**
