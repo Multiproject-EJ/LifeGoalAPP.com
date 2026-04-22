@@ -2877,6 +2877,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return Boolean(prevState?.objectiveComplete);
   }, [stopIndexByStopId, ticketsPaidForCurrentIsland, runtimeState.stopStatesByIndex]);
 
+  const ticketRequirementByStopId = useMemo(() => {
+    const requirements = new Map<string, { needsTicket: boolean; ticketCost?: number }>();
+    islandStopPlan.forEach((stop, stopIndex) => {
+      const needsTicket = doesStopRequireTicketPayment(stop.stopId);
+      const ticketCost = needsTicket
+        ? getStopTicketCost({ effectiveIslandNumber, stopIndex })
+        : undefined;
+      requirements.set(stop.stopId, { needsTicket, ticketCost });
+    });
+    return requirements;
+  }, [doesStopRequireTicketPayment, effectiveIslandNumber, islandStopPlan]);
+
   /**
    * Orbit-stop click dispatcher. Routes the click to the appropriate outcome:
    *   - Hatchery / already-paid stop → open the stop and focus the camera.
@@ -3004,12 +3016,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       // but still awaiting its essence ticket — makes the ticket gate visible
       // before the player taps the orbit button.
       const baseLabel = stop.title.replace(/^\S+\s/, '');
-      const needsTicket = doesStopRequireTicketPayment(stop.stopId);
+      const ticketRequirement = ticketRequirementByStopId.get(stop.stopId);
+      const needsTicket = ticketRequirement?.needsTicket ?? false;
       const label = needsTicket ? `🎫 ${baseLabel}` : baseLabel;
-      const stopIndex = stopIndexByStopId.get(stop.stopId);
-      const ticketCost = needsTicket && stopIndex !== undefined
-        ? getStopTicketCost({ effectiveIslandNumber, stopIndex })
-        : undefined;
+      const ticketCost = ticketRequirement?.ticketCost;
 
       // Attention dot: pulse on the landmark when the player can open it
       // RIGHT NOW (sequence prerequisite met AND wallet ≥ ticket cost). This
@@ -3087,7 +3097,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         hideLabel: isSmallBoard,
       } satisfies OrbitStopVisual;
     });
-  }, [boardSize.height, boardSize.width, islandStopPlan, stopStateMap, doesStopRequireTicketPayment, stopIndexByStopId, effectiveIslandNumber, runtimeState.essence]);
+  }, [
+    activeStopId,
+    boardSize.height,
+    boardSize.width,
+    completedStops,
+    islandStopPlan,
+    stopStateMap,
+    ticketRequirementByStopId,
+    ticketsPaidForCurrentIsland,
+    runtimeState.essence,
+  ]);
 
   // Camera zoom-to-stop: when cameraMode is 'stop_focus' and a stop is focused,
   // smoothly zoom the camera to that stop's screen position.
