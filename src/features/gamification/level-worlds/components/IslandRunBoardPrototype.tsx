@@ -31,6 +31,7 @@ import {
   payStopTicket,
 } from '../services/islandRunStopTickets';
 import { isIslandFullyCleared } from '../services/islandRunProgression';
+import { resolveIslandClearsCount } from '../services/islandRunStopStreak';
 import { recordTelemetryEvent } from '../../../../services/telemetry';
 import {
   ISLAND_RUN_RUNTIME_HYDRATION_FAILED_STAGE,
@@ -2336,6 +2337,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [islandNumber, dayIndex]);
 
   const [completedStops, setCompletedStops] = useState<string[]>([]);
+  const [streakChipAnimationClass, setStreakChipAnimationClass] = useState('');
+  const prevIslandsClearedCountRef = useRef(0);
 
   const getStoredCompletedStopsForIsland = useCallback((targetIslandNumber: number): string[] => {
     const persistedStops = runtimeState.completedStopsByIsland?.[String(targetIslandNumber)];
@@ -3297,6 +3300,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         hatcheryEggResolved: islandEggSlotUsed,
       })
     : legacyIsCurrentIslandFullyCleared;
+  const islandsClearedCount = useMemo(
+    () => resolveIslandClearsCount({
+      currentIslandNumber: islandNumber,
+      cycleIndex: runtimeState.cycleIndex,
+      isCurrentIslandFullyCleared,
+    }),
+    [isCurrentIslandFullyCleared, islandNumber, runtimeState.cycleIndex],
+  );
+  useEffect(() => {
+    const prev = prevIslandsClearedCountRef.current;
+    prevIslandsClearedCountRef.current = islandsClearedCount;
+    if (islandsClearedCount <= prev) return;
+    const animationClass = 'island-run-board__topbar-streak-chip--increment';
+    setStreakChipAnimationClass(animationClass);
+    const timeoutId = window.setTimeout(() => setStreakChipAnimationClass(''), 950);
+    return () => window.clearTimeout(timeoutId);
+  }, [islandsClearedCount]);
   const buildPanelRemainingToFullByIndex = useMemo(() => {
     return islandStopPlan.map((_, stopIndex) => {
       const buildState = runtimeState.stopBuildStateByIndex[stopIndex];
@@ -6823,6 +6843,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 );
               })() : null}
             </div>
+            {islandsClearedCount > 0 && (
+              <div
+                className={`island-run-board__topbar-streak-chip${streakChipAnimationClass ? ` ${streakChipAnimationClass}` : ''}`}
+                aria-label={`${islandsClearedCount} islands cleared`}
+                title="Total islands fully cleared in this run."
+              >
+                🏝️ {islandsClearedCount} cleared
+              </div>
+            )}
             <button
               type="button"
               className="island-run-board__topbar-menu"
