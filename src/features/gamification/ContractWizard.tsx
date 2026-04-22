@@ -5,7 +5,8 @@ import { fetchGoals, insertGoal } from '../../services/goals';
 import type { Database } from '../../lib/database.types';
 import { createContract, activateContract, fetchContracts, type ContractInput } from '../../services/commitmentContracts';
 import { listAvailableRewardsForContracts, linkRewardToContract } from '../../services/contractRewards';
-import type { RewardItem } from '../../types/gamification';
+import { createReward } from '../../services/rewards';
+import type { RewardItem, RewardCategory, RewardCooldownType } from '../../types/gamification';
 import { IdentityStatementInput } from './IdentityStatementInput';
 import { MultiStageEditor } from './MultiStageEditor';
 import { NarrativeThemePicker } from './NarrativeThemePicker';
@@ -73,6 +74,8 @@ type GuidedStrictness = 'gentle' | 'balanced' | 'high';
 type GuidedComplexity = 'simple' | 'structured' | 'advanced';
 type GuidedMeaning = 'practical' | 'meaningful';
 
+const REWARD_CATEGORY_OPTIONS: RewardCategory[] = ['Rest', 'Fun', 'Growth', 'Treat', 'Social', 'Meta'];
+
 export function ContractWizard({
   userId,
   currentGoldBalance,
@@ -123,6 +126,12 @@ export function ContractWizard({
   const [error, setError] = useState<string | null>(null);
   const [availableRewards, setAvailableRewards] = useState<RewardItem[]>([]);
   const [selectedRewardId, setSelectedRewardId] = useState('');
+  const [createRewardInline, setCreateRewardInline] = useState(false);
+  const [newRewardTitle, setNewRewardTitle] = useState('');
+  const [newRewardDescription, setNewRewardDescription] = useState('');
+  const [newRewardCategory, setNewRewardCategory] = useState<RewardCategory>('Treat');
+  const [newRewardCooldown, setNewRewardCooldown] = useState<RewardCooldownType>('none');
+  const [newRewardCooldownHours, setNewRewardCooldownHours] = useState('');
 
   // Current wizard has 5 rendered steps (0..4) for every contract type.
   const totalSteps: WizardStep = 4;
@@ -305,6 +314,10 @@ export function ContractWizard({
       setError('Please confirm you understand the consequences of a Sacred Contract.');
       return;
     }
+    if (currentStep === 3 && createRewardInline && !newRewardTitle.trim()) {
+      setError('Add a title for the new linked reward, or turn off inline reward creation.');
+      return;
+    }
 
     setError(null);
     setCurrentStep((prev) => Math.min(totalSteps as WizardStep, (prev + 1) as WizardStep) as WizardStep);
@@ -359,8 +372,25 @@ export function ContractWizard({
         throw activateError;
       }
 
-      if (selectedRewardId) {
-        const { error: linkError } = await linkRewardToContract(userId, contract.id, selectedRewardId);
+      let rewardIdToLink = selectedRewardId;
+
+      if (createRewardInline && newRewardTitle.trim()) {
+        const { data: createdReward, error: createRewardError } = await createReward(userId, {
+          title: newRewardTitle.trim(),
+          description: newRewardDescription.trim(),
+          costGold: 0,
+          category: newRewardCategory,
+          cooldownType: newRewardCooldown,
+          cooldownHours: newRewardCooldown === 'custom' ? Number(newRewardCooldownHours) || 0 : undefined,
+        });
+        if (createRewardError || !createdReward) {
+          throw createRewardError || new Error('Failed to create linked reward');
+        }
+        rewardIdToLink = createdReward.id;
+      }
+
+      if (rewardIdToLink) {
+        const { error: linkError } = await linkRewardToContract(userId, contract.id, rewardIdToLink);
         if (linkError) {
           throw linkError;
         }
@@ -962,6 +992,61 @@ export function ContractWizard({
             <p className="contract-wizard__helper-text">
               Linked rewards can be claimed from successful contract results without spending Gold.
             </p>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', fontSize: '0.9rem' }}>
+              <input
+                type="checkbox"
+                checked={createRewardInline}
+                onChange={(event) => setCreateRewardInline(event.target.checked)}
+              />
+              Create a new reward here
+            </label>
+            {createRewardInline && (
+              <div style={{ marginTop: '0.75rem', display: 'grid', gap: '0.5rem' }}>
+                <input
+                  className="contract-wizard__input"
+                  placeholder="New reward title"
+                  value={newRewardTitle}
+                  onChange={(event) => setNewRewardTitle(event.target.value)}
+                  maxLength={40}
+                />
+                <input
+                  className="contract-wizard__input"
+                  placeholder="Description (optional)"
+                  value={newRewardDescription}
+                  onChange={(event) => setNewRewardDescription(event.target.value)}
+                  maxLength={80}
+                />
+                <select
+                  className="contract-wizard__input"
+                  value={newRewardCategory}
+                  onChange={(event) => setNewRewardCategory(event.target.value as RewardCategory)}
+                >
+                  {REWARD_CATEGORY_OPTIONS.map((category) => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+                <select
+                  className="contract-wizard__input"
+                  value={newRewardCooldown}
+                  onChange={(event) => setNewRewardCooldown(event.target.value as RewardCooldownType)}
+                >
+                  <option value="none">No cooldown</option>
+                  <option value="daily">Daily (24h)</option>
+                  <option value="custom">Custom hours</option>
+                </select>
+                {newRewardCooldown === 'custom' && (
+                  <input
+                    className="contract-wizard__input"
+                    type="number"
+                    min={1}
+                    max={168}
+                    placeholder="Cooldown hours"
+                    value={newRewardCooldownHours}
+                    onChange={(event) => setNewRewardCooldownHours(event.target.value)}
+                  />
+                )}
+              </div>
+            )}
           </div>
 
 
@@ -1096,7 +1181,13 @@ export function ContractWizard({
             </div>
             <div className="contract-wizard__summary-row">
               <strong>Reward:</strong>
-              <span>{selectedRewardId ? (availableRewards.find((reward) => reward.id === selectedRewardId)?.title ?? 'Linked reward') : 'None'}</span>
+              <span>
+                {createRewardInline && newRewardTitle.trim()
+                  ? `${newRewardTitle.trim()} (new)`
+                  : selectedRewardId
+                    ? (availableRewards.find((reward) => reward.id === selectedRewardId)?.title ?? 'Linked reward')
+                    : 'None'}
+              </span>
             </div>
           </div>
 
