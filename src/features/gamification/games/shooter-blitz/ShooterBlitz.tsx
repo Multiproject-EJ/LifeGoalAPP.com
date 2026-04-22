@@ -10,6 +10,13 @@ import type {
   IslandRunMinigameResult,
 } from '../../level-worlds/services/islandRunMinigameTypes';
 import { getBossTrialConfig } from '../../level-worlds/services/bossService';
+import {
+  applyShooterStrafeIntent,
+  areLanesAligned,
+  clampShooterLane,
+  laneToPercent,
+  type ShooterLane,
+} from './shooterBlitzLaneLogic';
 import './shooterBlitz.css';
 
 interface ShooterBlitzProps {
@@ -91,6 +98,10 @@ export function ShooterBlitz({
   const [activePowerup, setActivePowerup] = useState<PowerupKind | null>(null);
   const [powerupExpiresInSec, setPowerupExpiresInSec] = useState(0);
   const [lastControllerIntent, setLastControllerIntent] = useState<IslandRunControllerIntent | null>(null);
+  const [shipTargetLane, setShipTargetLane] = useState<ShooterLane>(0);
+  const [shipVisualLane, setShipVisualLane] = useState(0);
+  const [enemyLane, setEnemyLane] = useState<ShooterLane>(0);
+  const [lastCombatEvent, setLastCombatEvent] = useState<'hit' | 'miss' | 'dodge' | 'hurt' | null>(null);
 
   const userId = session?.user.id;
 
@@ -110,6 +121,10 @@ export function ShooterBlitz({
     setIsMissionStarted(false);
     setIsMissionOver(false);
     setIsCompleting(false);
+    setShipTargetLane(0);
+    setShipVisualLane(0);
+    setEnemyLane(0);
+    setLastCombatEvent(null);
   }, [maxHp, trial.trialDurationSec]);
 
   if (!userId) {
@@ -141,6 +156,11 @@ export function ShooterBlitz({
   useEffect(() => {
     if (!isMissionStarted || isMissionOver || isCompleting) return;
 
+    const enemyLaneLoop = window.setInterval(() => {
+      const roll = Math.floor(Math.random() * 3) - 1;
+      setEnemyLane(clampShooterLane(roll));
+    }, 950);
+
     const timer = window.setInterval(() => {
       setTimeLeftSec((current) => {
         if (current <= 1) {
@@ -171,12 +191,35 @@ export function ShooterBlitz({
     const attackLoop = window.setInterval(() => {
       setHp((current) => {
         if (activePowerup === 'shield') return current;
+        if (!areLanesAligned(shipTargetLane, enemyLane)) {
+          setLastCombatEvent('dodge');
+          return current;
+        }
+        setLastCombatEvent('hurt');
         return Math.max(0, current - incomingDamage);
       });
     }, cadenceMs);
 
-    return () => window.clearInterval(attackLoop);
-  }, [activePowerup, incomingDamage, isMissionOver, isMissionStarted, isCompleting, trial.difficulty]);
+    return () => {
+      window.clearInterval(attackLoop);
+      window.clearInterval(enemyLaneLoop);
+    };
+  }, [activePowerup, enemyLane, incomingDamage, isMissionOver, isMissionStarted, isCompleting, shipTargetLane, trial.difficulty]);
+
+  useEffect(() => {
+    if (!isMissionStarted || isMissionOver) {
+      setShipVisualLane(shipTargetLane);
+      return;
+    }
+    const raf = window.requestAnimationFrame(() => {
+      setShipVisualLane((current) => {
+        const delta = shipTargetLane - current;
+        if (Math.abs(delta) < 0.02) return shipTargetLane;
+        return current + delta * 0.35;
+      });
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, [isMissionOver, isMissionStarted, shipTargetLane, shipVisualLane]);
 
   useEffect(() => {
     if (!isMissionStarted || isMissionOver || isCompleting) return;
@@ -206,6 +249,10 @@ export function ShooterBlitz({
 
   const handleFire = useCallback(() => {
     if (!isMissionStarted || isMissionOver || isCompleting) return;
+    if (!areLanesAligned(shipTargetLane, enemyLane)) {
+      setLastCombatEvent('miss');
+      return;
+    }
 
     const baseHits = activePowerup === 'rapid_fire' ? 2 : 1;
     const bonusHits = activePowerup === 'triple_shot' ? 1 : 0;
@@ -214,14 +261,18 @@ export function ShooterBlitz({
     setTargetsHit((current) => {
       const next = Math.min(trial.scoreTarget, current + totalHits);
       maybeGrantPowerup(next);
+      setLastCombatEvent('hit');
       return next;
     });
-  }, [activePowerup, isCompleting, isMissionOver, isMissionStarted, trial.scoreTarget]);
+  }, [activePowerup, enemyLane, isCompleting, isMissionOver, isMissionStarted, shipTargetLane, trial.scoreTarget]);
 
   useEffect(() => {
     if (!controllerInput) return;
     return controllerInput.subscribe((intent) => {
       setLastControllerIntent(intent);
+      if (intent === 'left' || intent === 'right') {
+        setShipTargetLane((current) => applyShooterStrafeIntent(current, intent));
+      }
       if (intent === 'fire') {
         handleFire();
       }
@@ -315,8 +366,8 @@ export function ShooterBlitz({
         ) : (
           <div className="shooter-blitz__active">
             <div className="shooter-blitz__arena" aria-label="Shooter arena">
-              <span className="shooter-blitz__ship">🛸</span>
-              <span className="shooter-blitz__enemy">{theme.enemyEmoji}</span>
+              <span className="shooter-blitz__ship" style={{ left: `${laneToPercent(clampShooterLane(shipVisualLane))}%` }}>🛸</span>
+              <span className="shooter-blitz__enemy" style={{ left: `${laneToPercent(enemyLane)}%` }}>{theme.enemyEmoji}</span>
             </div>
 
             <div className="shooter-blitz__hud-grid">
@@ -355,6 +406,18 @@ export function ShooterBlitz({
             {lastControllerIntent ? (
               <p className="shooter-blitz__phase" aria-live="polite">
                 Controller: {lastControllerIntent === 'fire' ? 'fire' : `strafe ${lastControllerIntent}`}
+              </p>
+            ) : null}
+
+            {lastCombatEvent ? (
+              <p className="shooter-blitz__phase" aria-live="polite">
+                {lastCombatEvent === 'hit'
+                  ? 'Direct hit!'
+                  : lastCombatEvent === 'miss'
+                    ? 'Shot missed — line up with target lane.'
+                    : lastCombatEvent === 'dodge'
+                      ? 'Enemy volley dodged.'
+                      : 'Direct damage taken.'}
               </p>
             ) : null}
 

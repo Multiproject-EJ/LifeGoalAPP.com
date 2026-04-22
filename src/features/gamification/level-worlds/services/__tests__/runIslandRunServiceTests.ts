@@ -31,6 +31,7 @@ import { minigameConsolidationPhase2Tests } from './minigameConsolidationPhase2.
 import { minigameConsolidationPhase3Tests } from './minigameConsolidationPhase3.test';
 import { minigameConsolidationPhase4Tests } from './minigameConsolidationPhase4.test';
 import { islandRunShooterControllerBridgeTests } from './islandRunShooterControllerBridge.test';
+import { shooterBlitzLaneLogicTests } from './shooterBlitzLaneLogic.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -67,6 +68,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'minigameConsolidationPhase3', tests: minigameConsolidationPhase3Tests },
   { label: 'minigameConsolidationPhase4', tests: minigameConsolidationPhase4Tests },
   { label: 'islandRunShooterControllerBridge', tests: islandRunShooterControllerBridgeTests },
+  { label: 'shooterBlitzLaneLogic', tests: shooterBlitzLaneLogicTests },
 ];
 
 async function main() {

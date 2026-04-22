@@ -355,9 +355,13 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 - [x] Add focused tests for controller cleanup on minigame exit (ensures footer navigation always restores).
 
 **Phase 4 immediate TODO queue (refined after controller bridge ship):**
-1. [ ] Add movement interpolation to Shooter Blitz so `left/right` intents move the ship sprite and affect hit/hurt logic (currently they are input-recognized but cosmetic).
+1. [x] Add movement interpolation to Shooter Blitz so `left/right` intents move the ship sprite and affect hit/hurt logic (currently they are input-recognized but cosmetic).
 2. [ ] Add keyboard fallback mapping (`ArrowLeft/ArrowRight/Space`) through the same controller bridge for desktop QA parity.
 3. [ ] Add a telemetry marker for controller-session lifecycle (`controller_attach`, `controller_detach`) tied to minigame open/close.
+
+**Phase 4 execution notes (kept current for future sessions):**
+- Keyboard fallback should route through the same shooter-controller bridge used by the footer adapter to keep parity with mobile controls.
+- Telemetry should include `minigameId`, `islandNumber`, and `source` (`footer` vs `keyboard`) on both attach/detach events for QA traceability.
 
 ### Phase 5 — Mystery Task Tower & Vision Quest
 - [ ] Wire mystery-stop launcher to launch Task Tower / Vision Quest components when the rolled `mysteryContentKind` selects them.
