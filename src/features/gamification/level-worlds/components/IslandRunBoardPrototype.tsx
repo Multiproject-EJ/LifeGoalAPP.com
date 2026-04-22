@@ -144,7 +144,11 @@ import {
 } from '../services/islandRunMinigameService';
 import type { IslandRunControllerIntent } from '../services/islandRunMinigameTypes';
 import { registerAllMinigameManifests } from '../services/islandRunMinigameManifests';
-import { resolveBossStopMinigame } from '../services/islandRunMinigameLauncherService';
+import {
+  resolveBossStopMinigame,
+  resolveMysteryStopMinigame,
+  shouldResolveMysteryStopOnMinigameComplete,
+} from '../services/islandRunMinigameLauncherService';
 import {
   getBossTrialConfig,
   getBossTypeColor,
@@ -5293,9 +5297,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
   };
 
-  const handleLaunchMysteryMinigame = (minigameId: 'task_tower' | 'vision_quest') => {
+  const handleLaunchMysteryMinigame = (mysteryContentKind: 'task_tower' | 'vision_quest') => {
+    const mysteryMinigame = resolveMysteryStopMinigame({
+      kind: 'fixed_mystery',
+      mysteryContentKind,
+    });
+    if (!mysteryMinigame) return;
     registerAllMinigameManifests();
-    setActiveLaunchedMinigameId(minigameId);
+    setActiveLaunchedMinigameId(mysteryMinigame.minigameId);
     setActiveLaunchedMinigameSource('mystery_stop');
   };
 
@@ -9264,7 +9273,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               if (activeLaunchedMinigameSource === 'boss_trial' && result.completed) {
                 handleResolveBossTrial();
                 setBossTrialPhase('success');
-              } else if (activeLaunchedMinigameSource === 'mystery_stop' && result.completed) {
+              } else if (
+                activeLaunchedMinigameId &&
+                shouldResolveMysteryStopOnMinigameComplete({
+                  launchSource: activeLaunchedMinigameSource ?? 'shop_button',
+                  minigameId: activeLaunchedMinigameId,
+                  completed: result.completed,
+                })
+              ) {
                 setLandingText(
                   activeLaunchedMinigameId === 'vision_quest'
                     ? '🔮 Vision Quest complete! Mystery stop resolved.'

@@ -15,6 +15,7 @@
  */
 import { getIslandRunFeatureFlags } from '../../../../config/islandRunFeatureFlags';
 import { getBossTrialConfig, type BossType } from './bossService';
+import type { MysteryStopContentKind } from './islandRunStops';
 
 /**
  * Input describing a boss stop about to be opened. Phase 4 only resolves
@@ -26,12 +27,17 @@ export interface BossStopLaunchContext {
   islandNumber: number;
 }
 
+export interface MysteryStopLaunchContext {
+  kind: 'fixed_mystery';
+  mysteryContentKind: MysteryStopContentKind;
+}
+
 /**
  * The shape the renderer hands to `IslandRunMinigameLauncher.tsx`. The
  * `minigameId` must match a registered manifest id (`getMinigame(id)`),
  * and `config` carries everything the game needs at launch — nothing more.
  */
-export interface MinigameLaunchDescriptor {
+export interface BossMinigameLaunchDescriptor {
   minigameId: 'shooter_blitz';
   config: {
     bossType: BossType;
@@ -40,6 +46,16 @@ export interface MinigameLaunchDescriptor {
     islandNumber: number;
   };
 }
+
+export interface MysteryMinigameLaunchDescriptor {
+  minigameId: 'task_tower' | 'vision_quest';
+  config: {
+    source: 'mystery_stop';
+  };
+}
+
+export type MinigameLaunchDescriptor = BossMinigameLaunchDescriptor;
+export type AnyMinigameLaunchDescriptor = BossMinigameLaunchDescriptor | MysteryMinigameLaunchDescriptor;
 
 /**
  * Resolve the boss-stop minigame launch for the given island.
@@ -72,4 +88,42 @@ export function resolveBossStopMinigame(
       islandNumber: ctx.islandNumber,
     },
   };
+}
+
+/**
+ * Resolve mystery-stop minigame launches for the two gated Phase 5 variants.
+ * Non-minigame mystery content (breathing / habit_action / checkin_reflection)
+ * returns `null` so the existing inline flow remains active.
+ */
+export function resolveMysteryStopMinigame(
+  ctx: MysteryStopLaunchContext,
+): MysteryMinigameLaunchDescriptor | null {
+  const flags = getIslandRunFeatureFlags();
+
+  if (ctx.mysteryContentKind === 'task_tower') {
+    if (!flags.islandRunTaskTowerMysteryEnabled) return null;
+    return {
+      minigameId: 'task_tower',
+      config: { source: 'mystery_stop' },
+    };
+  }
+
+  if (ctx.mysteryContentKind === 'vision_quest') {
+    if (!flags.islandRunVisionQuestMysteryEnabled) return null;
+    return {
+      minigameId: 'vision_quest',
+      config: { source: 'mystery_stop' },
+    };
+  }
+
+  return null;
+}
+
+export function shouldResolveMysteryStopOnMinigameComplete(options: {
+  launchSource: 'boss_trial' | 'mystery_stop' | 'shop_button' | 'event_button';
+  minigameId: string;
+  completed: boolean;
+}): boolean {
+  if (!options.completed || options.launchSource !== 'mystery_stop') return false;
+  return options.minigameId === 'task_tower' || options.minigameId === 'vision_quest';
 }

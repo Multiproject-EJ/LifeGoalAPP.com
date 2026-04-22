@@ -30,6 +30,7 @@ import { minigameConsolidationPhase1Tests } from './minigameConsolidationPhase1.
 import { minigameConsolidationPhase2Tests } from './minigameConsolidationPhase2.test';
 import { minigameConsolidationPhase3Tests } from './minigameConsolidationPhase3.test';
 import { minigameConsolidationPhase4Tests } from './minigameConsolidationPhase4.test';
+import { minigameConsolidationPhase5Tests } from './minigameConsolidationPhase5.test';
 import { minigameConsolidationPhase6Tests } from './minigameConsolidationPhase6.test';
 import { islandRunShooterControllerBridgeTests } from './islandRunShooterControllerBridge.test';
 import { islandRunShooterControllerTelemetryTests } from './islandRunShooterControllerTelemetry.test';
@@ -70,6 +71,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'minigameConsolidationPhase2', tests: minigameConsolidationPhase2Tests },
   { label: 'minigameConsolidationPhase3', tests: minigameConsolidationPhase3Tests },
   { label: 'minigameConsolidationPhase4', tests: minigameConsolidationPhase4Tests },
+  { label: 'minigameConsolidationPhase5', tests: minigameConsolidationPhase5Tests },
   { label: 'minigameConsolidationPhase6', tests: minigameConsolidationPhase6Tests },
   { label: 'islandRunShooterControllerBridge', tests: islandRunShooterControllerBridgeTests },
   { label: 'islandRunShooterControllerTelemetry', tests: islandRunShooterControllerTelemetryTests },
