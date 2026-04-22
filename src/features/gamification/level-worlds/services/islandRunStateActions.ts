@@ -454,7 +454,7 @@ export interface TravelToNextIslandResult {
  * timer ticker, feedback toasts) — the renderer still owns those and should
  * call them immediately after `travelToNextIsland`.
  */
-export function travelToNextIsland(options: TravelToNextIslandOptions): TravelToNextIslandResult {
+export async function travelToNextIsland(options: TravelToNextIslandOptions): Promise<TravelToNextIslandResult> {
   const {
     session,
     client,
@@ -589,7 +589,7 @@ export function travelToNextIsland(options: TravelToNextIslandOptions): TravelTo
     runtimeVersion: current.runtimeVersion + 1,
   };
 
-  void commitIslandRunState({
+  await commitIslandRunState({
     session,
     client,
     record: next,

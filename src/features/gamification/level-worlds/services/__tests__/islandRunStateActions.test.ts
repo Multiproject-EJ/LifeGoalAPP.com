@@ -81,7 +81,7 @@ export const islandRunStateActionsTests: TestCase[] = [
 
   {
     name: 'applyRollResult syncs store mirror from localStorage (no duplicate remote write)',
-    run: () => {
+    run: async () => {
       resetAll();
       const session = makeSession();
       seedState({ runtimeVersion: 5, dicePool: 30, tokenIndex: 0 });
@@ -116,7 +116,7 @@ export const islandRunStateActionsTests: TestCase[] = [
 
   {
     name: 'applyRollResult notifies store subscribers on sync',
-    run: () => {
+    run: async () => {
       resetAll();
       const session = makeSession();
       seedState({ runtimeVersion: 5, dicePool: 30, tokenIndex: 0 });
@@ -145,7 +145,7 @@ export const islandRunStateActionsTests: TestCase[] = [
 
   {
     name: 'applyTokenHopRewards applies positive deltas and commits through the store',
-    run: () => {
+    run: async () => {
       resetAll();
       const session = makeSession();
       seedState({ runtimeVersion: 10, dicePool: 20, spinTokens: 5, essence: 100 });
@@ -620,7 +620,7 @@ export const islandRunStateActionsTests: TestCase[] = [
 
   {
     name: 'travelToNextIsland commits all four legacy patches in ONE store commit',
-    run: () => {
+    run: async () => {
       resetAll();
       const session = makeSession();
       seedState({
@@ -639,7 +639,7 @@ export const islandRunStateActionsTests: TestCase[] = [
       const unsub = subscribeIslandRunState(session, () => { notifications += 1; });
 
       const travelNow = 5_000_000;
-      const result = travelToNextIsland({
+      const result = await travelToNextIsland({
         session,
         client: null,
         nextIsland: 4,
@@ -675,7 +675,7 @@ export const islandRunStateActionsTests: TestCase[] = [
 
   {
     name: 'travelToNextIsland: cycle wrap 120 → 1 bumps cycleIndex and preserves all ledger keys',
-    run: () => {
+    run: async () => {
       resetAll();
       const session = makeSession();
       seedState({
@@ -685,7 +685,7 @@ export const islandRunStateActionsTests: TestCase[] = [
         completedStopsByIsland: { '120': ['boss'], '50': ['hatchery'] },
       });
 
-      const result = travelToNextIsland({
+      const result = await travelToNextIsland({
         session,
         client: null,
         nextIsland: 121, // past the cap — wraps to 1
@@ -712,12 +712,12 @@ export const islandRunStateActionsTests: TestCase[] = [
 
   {
     name: 'travelToNextIsland: startTimer=false leaves timer fields zeroed (pending-start flow)',
-    run: () => {
+    run: async () => {
       resetAll();
       const session = makeSession();
       seedState({ runtimeVersion: 1, currentIslandNumber: 1 });
 
-      travelToNextIsland({
+      await travelToNextIsland({
         session,
         client: null,
         nextIsland: 2,
@@ -736,7 +736,7 @@ export const islandRunStateActionsTests: TestCase[] = [
 
   {
     name: 'travelToNextIsland: saves old island active egg into perIslandEggs and clears active egg when new island is fresh',
-    run: () => {
+    run: async () => {
       resetAll();
       const session = makeSession();
       const setAt = 1_000_000;
@@ -752,7 +752,7 @@ export const islandRunStateActionsTests: TestCase[] = [
       });
 
       const travelNow = setAt + 1000; // well before hatch
-      const result = travelToNextIsland({
+      const result = await travelToNextIsland({
         session,
         client: null,
         nextIsland: 8,
@@ -780,7 +780,7 @@ export const islandRunStateActionsTests: TestCase[] = [
 
   {
     name: 'travelToNextIsland: restores previously-placed incubating egg on return visit',
-    run: () => {
+    run: async () => {
       resetAll();
       const session = makeSession();
       const pastSetAt = 500_000;
@@ -803,7 +803,7 @@ export const islandRunStateActionsTests: TestCase[] = [
       });
 
       const travelNow = 1_000_000; // still before hatch
-      const result = travelToNextIsland({
+      const result = await travelToNextIsland({
         session,
         client: null,
         nextIsland: 9,
@@ -826,7 +826,7 @@ export const islandRunStateActionsTests: TestCase[] = [
 
   {
     name: 'travelToNextIsland: contract-v2 flag resets stop + build states; disabled leaves them intact',
-    run: () => {
+    run: async () => {
       resetAll();
       const session = makeSession();
       const priorStopStates = [
@@ -845,7 +845,7 @@ export const islandRunStateActionsTests: TestCase[] = [
       });
 
       // Flag OFF → stop states remain untouched
-      travelToNextIsland({
+      await travelToNextIsland({
         session,
         client: null,
         nextIsland: 2,
@@ -867,7 +867,7 @@ export const islandRunStateActionsTests: TestCase[] = [
         activeStopIndex: 2,
         activeStopType: 'mystery',
       });
-      travelToNextIsland({
+      await travelToNextIsland({
         session,
         client: null,
         nextIsland: 3,
@@ -887,7 +887,7 @@ export const islandRunStateActionsTests: TestCase[] = [
 
   {
     name: 'travelToNextIsland: atomic — a stale separate patch cannot half-apply travel',
-    run: () => {
+    run: async () => {
       // Regression for the named C3 risk. In the legacy path, four separate
       // patches could be interleaved by another writer; the store-action
       // path must expose subscribers to either the full pre-travel state or
@@ -920,7 +920,7 @@ export const islandRunStateActionsTests: TestCase[] = [
         });
       });
 
-      travelToNextIsland({
+      await travelToNextIsland({
         session,
         client: null,
         nextIsland: 6,

@@ -59,6 +59,7 @@ import {
   patchIslandRunStateSnapshot,
   refreshIslandRunStateFromLocal,
 } from '../services/islandRunStateStore';
+import { withIslandRunActionLock } from '../services/islandRunActionMutex';
 import {
   applyEssenceAward,
   applyEssenceDeduct,
@@ -1010,6 +1011,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
    * fires `onHopSequenceComplete`.
    */
   const isAnimatingRollRef = useRef(false);
+  const isTravellingRef = useRef(false);
   /**
    * Re-entrancy guard for {@link handleCollectCreature}. A ref (not state)
    * is used so the guard is observed synchronously within a single render
@@ -1025,6 +1027,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     diceRollCompleteResolverRef.current?.();
     diceRollCompleteResolverRef.current = null;
     isAnimatingRollRef.current = false;
+    isTravellingRef.current = false;
   }, []);
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
@@ -1593,7 +1596,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     if (hydrationTimerState.shouldAutoAdvanceOnHydration && !showTravelOverlay) {
       // Legacy-only: expired island auto-advances; v2 explicitly bypasses this path.
-      performIslandTravel(persistedIsland + 1, { startTimer: false });
+      void performIslandTravel(persistedIsland + 1, { startTimer: false });
     }
 
     // B5-3: Restore egg state from runtime state
@@ -3287,7 +3290,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     triggerIslandRunHaptic('island_travel');
 
     const timeout = window.setTimeout(() => {
-      performIslandTravel(nextIsland, { startTimer: false });
+      void performIslandTravel(nextIsland, { startTimer: false });
       setShowTravelOverlay(false);
     }, 1800);
 
@@ -5359,24 +5362,30 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setLandingText(message);
     setMarketInteracted(true);
   };
-  const performIslandTravel = (nextIsland: number, options?: { startTimer?: boolean }) => {
+  const performIslandTravel = async (nextIsland: number, options?: { startTimer?: boolean }) => {
+    if (isTravellingRef.current) return;
+    isTravellingRef.current = true;
     const startTimer = options?.startTimer ?? true;
+    try {
 
     // C3: atomic travel. All four legacy patches (old-island clears,
     // egg save/restore, contract-v2 stop/build reset, island bookkeeping
     // + timer) are now a single commit through the store. See
     // `travelToNextIsland` JSDoc for the full rationale.
     const travelNowMs = Date.now();
-    const { record: next, resolvedIsland, nextCycleIndex, restoredActiveEgg } = travelToNextIsland({
-      session,
-      client,
-      nextIsland,
-      startTimer,
-      nowMs: travelNowMs,
-      getIslandDurationMs,
-      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
-      triggerSource: 'perform_island_travel',
-    });
+    const { record: next, resolvedIsland, nextCycleIndex, restoredActiveEgg } = await withIslandRunActionLock(
+      session.user.id,
+      () => travelToNextIsland({
+        session,
+        client,
+        nextIsland,
+        startTimer,
+        nowMs: travelNowMs,
+        getIslandDurationMs,
+        islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+        triggerSource: 'perform_island_travel',
+      }),
+    );
 
     // M11C: clear the legacy localStorage mirrors the action does not touch.
     // The per-island completed-stop list was migrated to runtime state, but the
@@ -5481,6 +5490,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // M10D: island travel complete sound + haptic
     playIslandRunSound('island_travel_complete');
     triggerIslandRunHaptic('island_travel_complete');
+    } finally {
+      isTravellingRef.current = false;
+    }
   };
 
   /**
@@ -5502,7 +5514,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setShowTravelOverlay(true);
     window.setTimeout(() => {
       setShowTravelOverlay(false);
-      performIslandTravel(nextIsland, { startTimer: true });
+      void performIslandTravel(nextIsland, { startTimer: true });
     }, 1400);
   };
 

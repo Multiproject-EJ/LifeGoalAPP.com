@@ -1,6 +1,6 @@
 # Island Run — Next TODO PR List
 
-**Last updated:** 2026-04-22 (end of PR 13 batch)
+**Last updated:** 2026-04-22 (end of PR 14 batch)
 **Context:** Continuation of the Island Run polish sweep on branch `copilot/investigate-120-island-game-again`. Hand this doc to the next agent session with a prompt like "do PR 12" or "do PR 12 and PR 13 together."
 
 ---
@@ -105,14 +105,14 @@ Each entry is sized to be a single focused PR. Items are ordered by impact × ri
 
 ---
 
-### PR 14 — Canonical contract doc refresh
+### ✅ PR 14 — Canonical contract doc refresh (merged)
 **Why:** `docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md` references pre-PR5 rarity colors and the old "30/60/100/150" ticket curve. Refresh it so agents and humans have one source of truth.
-- [ ] Update §3 currencies (confirm hearts/coins retired)
-- [ ] Update §Stop unlock rules with the steepened `[0, 30, 70, 130, 220]` curve
-- [ ] Document the landmark orbit anchors + attention-hint affordability dot
-- [ ] Document `<ShopItemCostLine />` as the canonical cost-readout component
-- [ ] Document the dice regen ETA service contract
-- [ ] Documentation only — no code changes, no tests
+- [x] Update §3 currencies (confirm hearts/coins retired)
+- [x] Update §Stop unlock rules with the steepened `[0, 30, 70, 130, 220]` curve
+- [x] Document the landmark orbit anchors + attention-hint affordability dot
+- [x] Document `<ShopItemCostLine />` as the canonical cost-readout component
+- [x] Document the dice regen ETA service contract
+- [x] Documentation only — no code changes, no tests
 
 ---
 
@@ -147,8 +147,4 @@ Each of these is a multi-PR arc — start it by writing a design doc PR (docs on
 
 ## 🚦 Recommended next prompt
 
-> "Do PR 12 (creature manifest quick-access) from `docs/gameplay/NEXT_TODO_PR_LIST.md`."
-
-or, for a batch:
-
-> "Do PR 12 and PR 13 from the next-todo list, each as its own commit."
+> "Start the Island theme variety arc with a docs-only design PR (tile-art set rotation by `effectiveIslandNumber % N`) and propose a 2–3 PR implementation breakdown."
