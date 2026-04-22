@@ -63,23 +63,30 @@ export interface EventMinigameLaunchContext {
 }
 
 export interface EventMinigameLaunchDescriptor {
-  minigameId: 'task_tower' | 'lucky_spin';
+  minigameId: 'task_tower' | 'lucky_spin' | 'shooter_blitz';
   ticketCost: number;
   ticketsSpent: number;
   config:
     | {
-      source: 'timed_event';
-      eventId: 'feeding_frenzy';
-      mode: 'feeding_frenzy';
-      sessionDurationSec: 120;
-      targetRowsCleared: 10;
-    }
+        source: 'timed_event';
+        eventId: 'feeding_frenzy';
+        mode: 'feeding_frenzy';
+        sessionDurationSec: 120;
+        targetRowsCleared: 10;
+      }
     | {
-    source: 'timed_event';
-      eventId: 'lucky_spin';
-      mode: 'lucky_spin';
-      spinMode: 'free_daily' | 'ticket_extra';
-    };
+        source: 'timed_event';
+        eventId: 'lucky_spin';
+        mode: 'lucky_spin';
+        spinMode: 'free_daily' | 'ticket_extra';
+      }
+    | {
+        source: 'timed_event';
+        eventId: 'space_excavator';
+        mode: 'space_excavator';
+        campaignDurationSec: 180;
+        scoreTargetMultiplier: 1.5;
+      };
 }
 
 export type MinigameLaunchDescriptor = BossMinigameLaunchDescriptor;
@@ -215,6 +222,35 @@ export function resolveLuckySpinEventMinigame(
       eventId: 'lucky_spin',
       mode: 'lucky_spin',
       spinMode: (ctx.freeDailySpinRemaining ?? 0) > 0 ? 'free_daily' : 'ticket_extra',
+    },
+  };
+}
+
+/**
+ * Phase 6 step 3: Space Excavator event surface routes through Shooter Blitz
+ * using an event-mode config tuned for longer campaign-style sessions.
+ */
+export function resolveSpaceExcavatorEventMinigame(
+  ctx: EventMinigameLaunchContext,
+): EventMinigameLaunchDescriptor | null {
+  if (ctx.eventId !== 'space_excavator') return null;
+  const launch = openEventMinigame({
+    eventId: ctx.eventId,
+    ticketsAvailable: ctx.ticketsAvailable,
+    ticketsToSpend: ctx.ticketsToSpend,
+  });
+  if (!launch || launch.minigameId !== 'shooter_blitz') return null;
+
+  return {
+    minigameId: 'shooter_blitz',
+    ticketCost: launch.ticketCost,
+    ticketsSpent: launch.ticketsSpent,
+    config: {
+      source: 'timed_event',
+      eventId: 'space_excavator',
+      mode: 'space_excavator',
+      campaignDurationSec: 180,
+      scoreTargetMultiplier: 1.5,
     },
   };
 }

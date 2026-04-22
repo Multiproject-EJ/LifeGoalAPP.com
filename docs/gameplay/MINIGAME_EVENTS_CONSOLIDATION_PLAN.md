@@ -428,9 +428,14 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 1. [x] Implement Feeding Frenzy event-launch resolver with explicit event config + spend validation.
 2. [x] Add Lucky Spin event-launch resolver that distinguishes free daily spin vs ticket-funded extra spins.
    - **Session 2026-04-22 update:** added `resolveLuckySpinEventMinigame()` in `islandRunMinigameLauncherService.ts` and expanded `minigameConsolidationPhase6.test.ts` coverage for launch routing + `free_daily` vs `ticket_extra` config tags.
-3. [ ] Add Space Excavator event-launch resolver that maps to Shooter Blitz event mode (longer campaign config).
+3. [x] Add Space Excavator event-launch resolver that maps to Shooter Blitz event mode (longer campaign config).
+   - **Session 2026-04-22 update:** added `resolveSpaceExcavatorEventMinigame()` in `islandRunMinigameLauncherService.ts` with explicit event-mode config (`campaignDurationSec`, `scoreTargetMultiplier`) plus regression coverage in `minigameConsolidationPhase6.test.ts`.
 4. [ ] Add Partner Wheel launch placeholder (skeleton manifest + launcher contract only, no multiplayer).
 5. [ ] Wire event-run reward routing so completion emits reward-bar progress + active-event sticker fragments through engine.
+
+**Phase 6 next actionable TODO (refined):**
+1. [ ] Add Partner Wheel launch placeholder (skeleton manifest + launcher contract only, no multiplayer).
+2. [ ] Wire event-run reward routing so completion emits reward-bar progress + active-event sticker fragments through engine.
 
 ### Phase 7 — Monetization
 - [ ] `src/services/minigameTicketStore.ts` — Stripe checkout wrapper, mirrors dice Stripe flow.
