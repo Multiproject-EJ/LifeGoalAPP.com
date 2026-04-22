@@ -2,7 +2,10 @@
  * Phase 6 consolidation-plan tests — Event mini-game launch mapping/ticket gate.
  */
 import { openEventMinigame } from '../islandRunEventEngine';
-import { resolveFeedingFrenzyEventMinigame } from '../islandRunMinigameLauncherService';
+import {
+  resolveFeedingFrenzyEventMinigame,
+  resolveLuckySpinEventMinigame,
+} from '../islandRunMinigameLauncherService';
 import { assertEqual, type TestCase } from './testHarness';
 
 export const minigameConsolidationPhase6Tests: TestCase[] = [
@@ -102,6 +105,61 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
         }),
         null,
         'insufficient tickets should block feeding_frenzy event launch',
+      );
+    },
+  },
+  {
+    name: 'resolveLuckySpinEventMinigame routes lucky_spin event and distinguishes free_daily vs ticket_extra mode',
+    run: () => {
+      const freeDailyDescriptor = resolveLuckySpinEventMinigame({
+        kind: 'timed_event',
+        eventId: 'lucky_spin',
+        ticketsAvailable: 3,
+        freeDailySpinRemaining: 1,
+      });
+      assertEqual(freeDailyDescriptor?.minigameId, 'lucky_spin', 'lucky_spin event routes to lucky_spin minigame');
+      assertEqual(freeDailyDescriptor?.config.mode, 'lucky_spin', 'resolver should tag lucky_spin event mode');
+      assertEqual(
+        freeDailyDescriptor?.config.mode === 'lucky_spin' ? freeDailyDescriptor.config.spinMode : null,
+        'free_daily',
+        'remaining free daily spin should tag free_daily mode',
+      );
+
+      const ticketDescriptor = resolveLuckySpinEventMinigame({
+        kind: 'timed_event',
+        eventId: 'lucky_spin',
+        ticketsAvailable: 3,
+        freeDailySpinRemaining: 0,
+      });
+      assertEqual(
+        ticketDescriptor?.config.mode === 'lucky_spin' ? ticketDescriptor.config.spinMode : null,
+        'ticket_extra',
+        'no free daily spin should tag ticket_extra mode',
+      );
+    },
+  },
+  {
+    name: 'resolveLuckySpinEventMinigame is non-launching for non-lucky events or insufficient tickets',
+    run: () => {
+      assertEqual(
+        resolveLuckySpinEventMinigame({
+          kind: 'timed_event',
+          eventId: 'feeding_frenzy',
+          ticketsAvailable: 3,
+          freeDailySpinRemaining: 1,
+        }),
+        null,
+        'resolver should be scoped to lucky_spin only',
+      );
+      assertEqual(
+        resolveLuckySpinEventMinigame({
+          kind: 'timed_event',
+          eventId: 'lucky_spin',
+          ticketsAvailable: 0,
+          freeDailySpinRemaining: 1,
+        }),
+        null,
+        'insufficient tickets should block lucky_spin event launch',
       );
     },
   },
