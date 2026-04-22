@@ -1494,7 +1494,9 @@ export function ScoreTab({
                   <li key={entry.id}>
                     <span>{entry.rewardTitle}</span>
                     <span>
-                      -{formatter.format(entry.costGold)} gold ·{' '}
+                      {entry.sourceType === 'contract'
+                        ? 'Contract reward · '
+                        : `-${formatter.format(entry.costGold)} gold · `}
                       {dateFormatter.format(new Date(entry.redeemedAt))}
                     </span>
                   </li>

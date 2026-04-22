@@ -35,6 +35,7 @@ import { ContractStatusCard } from './ContractStatusCard';
 import { ContractResultModal } from './ContractResultModal';
 import { ContractHistoryCard } from './ContractHistoryCard';
 import { ReputationCard } from './ReputationCard';
+import { claimContractLinkedReward, fetchLinkedRewardForContract, type ContractRewardLink } from '../../services/contractRewards';
 
 function buildWitnessReminder(contract: CommitmentContract): string {
   const witnessName = contract.witnessLabel ?? 'my accountability witness';
@@ -120,6 +121,8 @@ export function ContractsTab({
   const [historyEvaluations, setHistoryEvaluations] = useState<ContractEvaluation[]>([]);
   const [overdueCatchUpMessage, setOverdueCatchUpMessage] = useState<string | null>(null);
   const [sweepHealth, setSweepHealth] = useState<ContractSweepHealth | null>(null);
+  const [resultLinkedReward, setResultLinkedReward] = useState<ContractRewardLink | null>(null);
+  const [claimingLinkedReward, setClaimingLinkedReward] = useState(false);
 
   // For single-contract actions, use the primary (first active) contract
   const activeContract = activeContracts[0] ?? null;
@@ -162,6 +165,8 @@ export function ContractsTab({
         if (evaluatedContract) {
           setContractResult(latestEvaluation);
           setResultContract(evaluatedContract);
+          const { data: linkedReward } = await fetchLinkedRewardForContract(userId, evaluatedContract.id);
+          setResultLinkedReward(linkedReward);
         }
       }
     } else {
@@ -198,14 +203,16 @@ export function ContractsTab({
 
       if (hydratedContract.status === 'active' && new Date() > getWindowEnd(hydratedContract)) {
         const { data: evaluation } = await evaluateContract(userId, contract.id);
-        if (evaluation) {
-          const { data: refreshedContracts } = await fetchContracts(userId);
-          const refreshed = refreshedContracts?.find((c) => c.id === hydratedContract.id) ?? null;
-          setContractResult(evaluation);
-          setResultContract(refreshed ?? hydratedContract);
-          if (refreshed) hydratedContract = refreshed;
+          if (evaluation) {
+            const { data: refreshedContracts } = await fetchContracts(userId);
+            const refreshed = refreshedContracts?.find((c) => c.id === hydratedContract.id) ?? null;
+            setContractResult(evaluation);
+            setResultContract(refreshed ?? hydratedContract);
+            const { data: linkedReward } = await fetchLinkedRewardForContract(userId, hydratedContract.id);
+            setResultLinkedReward(linkedReward);
+            if (refreshed) hydratedContract = refreshed;
+          }
         }
-      }
 
       hydratedContracts.push(hydratedContract);
     }
@@ -283,6 +290,8 @@ export function ContractsTab({
         if (latestEvaluation) {
           setContractResult(latestEvaluation);
           setResultContract(data);
+          const { data: linkedReward } = await fetchLinkedRewardForContract(userId, data.id);
+          setResultLinkedReward(linkedReward);
         }
       }
     }
@@ -306,6 +315,8 @@ export function ContractsTab({
       setResultContract(refreshed);
     }
     setContractResult(evaluation);
+    const { data: linkedReward } = await fetchLinkedRewardForContract(userId, target.id);
+    setResultLinkedReward(linkedReward);
     await loadContract();
   };
 
@@ -327,6 +338,8 @@ export function ContractsTab({
       setResultContract(refreshed);
     }
     setContractResult(evaluation);
+    const { data: linkedReward } = await fetchLinkedRewardForContract(userId, target.id);
+    setResultLinkedReward(linkedReward);
     await loadContract();
   };
 
@@ -387,10 +400,24 @@ export function ContractsTab({
   const handleContractResultClose = () => {
     setContractResult(null);
     setResultContract(null);
+    setResultLinkedReward(null);
     setReduceStakeEligibility(null);
     setGentleRecoveryEligibility(null);
     setResetEligibility(null);
     setRecoveryMessage(null);
+  };
+
+  const handleResultClaimLinkedReward = async () => {
+    if (!userId || !resultContract) return;
+    setClaimingLinkedReward(true);
+    const { data, error } = await claimContractLinkedReward(userId, resultContract.id);
+    if (error) {
+      setActionError(error.message);
+    } else {
+      setActionError(null);
+      setRecoveryMessage(`Claimed contract reward: ${data?.rewardTitle ?? 'Reward'}.`);
+    }
+    setClaimingLinkedReward(false);
   };
 
   const handleResetContract = async () => {
@@ -640,6 +667,12 @@ export function ContractsTab({
               currentTokenBalance={zenTokens}
               onComplete={handleContractWizardComplete}
               onCancel={() => setShowContractWizard(false)}
+              onRewardLinked={async (contractId) => {
+                const { data: linkedReward } = await fetchLinkedRewardForContract(userId, contractId);
+                if (resultContract?.id === contractId) {
+                  setResultLinkedReward(linkedReward);
+                }
+              }}
             />
           )}
 
@@ -662,6 +695,9 @@ export function ContractsTab({
           onActivateGentleRecovery={handleActivateGentleRecovery}
           onPauseWeek={handlePauseWeek}
           onCancelContract={handleCancelContract}
+          linkedRewardTitle={resultLinkedReward?.rewardTitle ?? null}
+          onClaimLinkedReward={handleResultClaimLinkedReward}
+          claimingLinkedReward={claimingLinkedReward}
         />
       )}
     </section>

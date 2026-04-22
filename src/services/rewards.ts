@@ -18,6 +18,11 @@ type RewardInput = {
   cooldownHours?: number;
 };
 
+type RedemptionSource = {
+  sourceType?: 'shop' | 'contract';
+  sourceContractId?: string | null;
+};
+
 const REWARD_STORAGE_KEY = 'lifegoal_rewards';
 const REDEMPTION_STORAGE_KEY = 'lifegoal_reward_redemptions';
 
@@ -194,6 +199,8 @@ export async function redeemReward(
     rewardTitle: updatedReward.title,
     costGold: updatedReward.costGold,
     redeemedAt: now,
+    sourceType: 'shop',
+    sourceContractId: null,
   };
 
   const updatedRedemptions = [redemption, ...(redemptions ?? [])].slice(0, 12);
@@ -215,6 +222,69 @@ export async function redeemReward(
   return {
     data: {
       newGoldBalance: newBalance,
+      reward: updatedReward,
+      redemption,
+    },
+    error: null,
+  };
+}
+
+export async function redeemRewardWithoutGoldSpend(
+  userId: string,
+  rewardId: string,
+  source: RedemptionSource = { sourceType: 'contract', sourceContractId: null }
+): Promise<ServiceResponse<{ reward: RewardItem; redemption: RewardRedemption }>> {
+  const { data: rewards, error } = await fetchRewardCatalog(userId);
+  if (error || !rewards) {
+    return { data: null, error: error || new Error('Rewards not found') };
+  }
+
+  const rewardIndex = rewards.findIndex((item) => item.id === rewardId);
+  if (rewardIndex === -1) {
+    return { data: null, error: new Error('Reward not found') };
+  }
+
+  const reward = rewards[rewardIndex];
+  const cooldownHours = reward.cooldownHours ?? 0;
+  if (cooldownHours > 0 && reward.lastRedeemedAt) {
+    const cooldownEnd = new Date(reward.lastRedeemedAt).getTime() + cooldownHours * 60 * 60 * 1000;
+    if (Date.now() < cooldownEnd) {
+      const remainMs = cooldownEnd - Date.now();
+      const remainH = Math.ceil(remainMs / (60 * 60 * 1000));
+      return {
+        data: null,
+        error: new Error(`Cooldown active — available again in ${remainH}h.`),
+      };
+    }
+  }
+
+  const now = new Date().toISOString();
+  const updatedReward: RewardItem = {
+    ...reward,
+    redemptionCount: reward.redemptionCount + 1,
+    lastRedeemedAt: now,
+  };
+
+  const updatedRewards = [...rewards];
+  updatedRewards[rewardIndex] = updatedReward;
+  localStorage.setItem(getRewardKey(userId), JSON.stringify(updatedRewards));
+
+  const { data: redemptions } = await fetchRewardRedemptions(userId);
+  const redemption: RewardRedemption = {
+    id: `reward-redemption-${Date.now()}`,
+    rewardId: updatedReward.id,
+    rewardTitle: updatedReward.title,
+    costGold: 0,
+    redeemedAt: now,
+    sourceType: source.sourceType ?? 'contract',
+    sourceContractId: source.sourceContractId ?? null,
+  };
+
+  const updatedRedemptions = [redemption, ...(redemptions ?? [])].slice(0, 12);
+  localStorage.setItem(getRedemptionKey(userId), JSON.stringify(updatedRedemptions));
+
+  return {
+    data: {
       reward: updatedReward,
       redemption,
     },
@@ -296,4 +366,3 @@ export async function evolveReward(
 
   return { data: updated, error: null };
 }
-
