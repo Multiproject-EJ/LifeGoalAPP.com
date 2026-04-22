@@ -1,7 +1,7 @@
 # Island Run — Open Issues & Feature Backlog
 
 Status: Living document
-Last updated: 2026-04-22 (session 13 — P0-5 closed; canonical docs refresh follow-up tracked)
+Last updated: 2026-04-22 (session 14 — P1-18 + P1-21 closed)
 Owner: Gameplay System
 
 This document tracks every unresolved issue, bug, inconsistency, or scoped
@@ -486,7 +486,7 @@ no-op.
 
 ---
 
-### P1-18. `onHopSequenceComplete` callback can double-invoke on re-render
+### P1-18. `onHopSequenceComplete` callback can double-invoke on re-render — ✅ Closed (session 14)
 
 **Files:**
 - `src/features/gamification/level-worlds/components/board/BoardStage.tsx`
@@ -503,9 +503,10 @@ fires even if the effect re-runs in between. The current handler is tolerant
 addition to the callback — telemetry, audio, tile-landing trigger — will
 double-fire. This interacts directly with P1-17.
 
-**Recommended fix.** Lift the `lastHopSequenceRef` guard into the callback
-itself (a one-shot flag keyed to the hop sequence ID) so double-fire is
-structurally impossible, independent of what the callback body does.
+**Resolution (session 14).** `BoardStage` now includes a one-shot completion
+guard keyed to the active `pendingHopSequence` reference and clears any stale
+pre-roll timeout on effect re-run/unmount. This makes hop completion
+notification structurally single-fire for each sequence reference.
 
 ---
 
@@ -555,7 +556,7 @@ hard-blocked.
 
 ---
 
-### P1-21. Island travel is not guarded against in-flight roll animation
+### P1-21. Island travel is not guarded against in-flight roll animation — ✅ Closed (session 14)
 
 **Files:**
 - `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
@@ -570,10 +571,10 @@ trigger is landing on tile 40 (the boss tile) from a preceding hop that hasn't
 resolved yet — unlikely in normal play but deterministic in fast-forward QA
 paths.
 
-**Recommended fix.** Gate `performIslandTravel` (and the celebration CTA that
-calls it) behind `isAnimatingRollRef.current`. This is the same one-line guard
-already used for hydration; applying it to travel closes the snap race with no
-additional state.
+**Resolution (session 14).** `performIslandTravel` now returns early while
+`isAnimatingRollRef.current` is true, and the island-clear celebration CTA
+handler applies the same guard before scheduling travel. This closes the
+mid-hop token reset/snap race.
 
 ---
 

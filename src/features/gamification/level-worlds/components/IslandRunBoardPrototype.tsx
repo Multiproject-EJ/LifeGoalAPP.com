@@ -5364,6 +5364,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   };
   const performIslandTravel = async (nextIsland: number, options?: { startTimer?: boolean }) => {
     if (isTravellingRef.current) return;
+    if (isAnimatingRollRef.current) {
+      // P1-21: avoid resetting token/island state while a hop animation is
+      // still resolving. Travel can be re-triggered after the active roll
+      // completes.
+      setLandingText('Please wait for the current roll animation to finish before traveling.');
+      return;
+    }
     isTravellingRef.current = true;
     const startTimer = options?.startTimer ?? true;
     try {
@@ -5509,6 +5516,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const handleTravelFromCelebration = () => {
     const stats = islandClearStats;
     if (!stats) return;
+    if (isAnimatingRollRef.current) {
+      setLandingText('Please wait for the current roll animation to finish before traveling.');
+      return;
+    }
     const nextIsland = stats.pendingNextIsland;
     setShowIslandClearCelebration(false);
     setShowTravelOverlay(true);
