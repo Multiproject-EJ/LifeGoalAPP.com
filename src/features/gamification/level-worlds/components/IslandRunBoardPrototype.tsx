@@ -146,7 +146,11 @@ import type { IslandRunControllerIntent } from '../services/islandRunMinigameTyp
 import { registerAllMinigameManifests } from '../services/islandRunMinigameManifests';
 import {
   resolveBossStopMinigame,
+  resolveCompanionFeastEventMinigame,
+  resolveFeedingFrenzyEventMinigame,
+  resolveLuckySpinEventMinigame,
   resolveEventMinigameCompletionId,
+  resolveSpaceExcavatorEventMinigame,
   type MinigameLaunchSource,
   resolveMysteryStopMinigame,
   shouldResolveMysteryStopOnMinigameComplete,
@@ -193,6 +197,7 @@ import {
   advanceEventIfExpired,
   recordEventMinigameCompletion,
   recordEventProgress,
+  type EventId,
 } from '../services/islandRunEventEngine';
 import {
   canRetryBossTrial,
@@ -232,6 +237,10 @@ const ROLL_MIN = 1;
 const ROLL_MAX = 6;
 const SPIN_MIN = 1;
 const SPIN_MAX = 5;
+const CANONICAL_EVENT_IDS: readonly EventId[] = ['feeding_frenzy', 'lucky_spin', 'space_excavator', 'companion_feast'];
+const isCanonicalEventId = (value: string): value is EventId => (
+  (CANONICAL_EVENT_IDS as readonly string[]).includes(value)
+);
 // Island duration: 72 hours for special islands, 48 hours for standard islands.
 const ISLAND_DURATION_SEC = 72 * 60 * 60;
 // Canonical contract is now enforced as source-of-truth runtime behavior.
@@ -5330,6 +5339,50 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setActiveLaunchedMinigameSource('mystery_stop');
   };
 
+  const handleLaunchTimedEventMinigame = () => {
+    if (!activeTimedEvent) return;
+    if (!isCanonicalEventId(activeTimedEvent.eventType)) {
+      setShowMinigameDialog(true);
+      playIslandRunSound('minigame_open');
+      return;
+    }
+
+    const baseContext = {
+      kind: 'timed_event' as const,
+      eventId: activeTimedEvent.eventType,
+      ticketsAvailable: spinTokens,
+    };
+
+    const descriptor = (() => {
+      switch (activeTimedEvent.eventType) {
+        case 'feeding_frenzy':
+          return resolveFeedingFrenzyEventMinigame(baseContext);
+        case 'lucky_spin':
+          return resolveLuckySpinEventMinigame({
+            ...baseContext,
+            freeDailySpinRemaining: spinTokens > 0 ? 1 : 0,
+          });
+        case 'space_excavator':
+          return resolveSpaceExcavatorEventMinigame(baseContext);
+        case 'companion_feast':
+          return resolveCompanionFeastEventMinigame(baseContext);
+        default:
+          return null;
+      }
+    })();
+
+    if (!descriptor) {
+      setShowMinigameDialog(true);
+      playIslandRunSound('minigame_open');
+      return;
+    }
+
+    registerAllMinigameManifests();
+    setActiveLaunchedMinigameId(descriptor.minigameId);
+    setActiveLaunchedMinigameSource('timed_event');
+    playIslandRunSound('minigame_open');
+  };
+
   const handleBossTrialTap = () => {
     if (bossTrialPhase !== 'in_progress') return;
     setBossTrialScore((s) => s + 1);
@@ -7183,10 +7236,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             type="button"
             className="island-run-board__minigame-icon-btn"
             aria-label="Open mini-game"
-            onClick={() => {
-              setShowMinigameDialog(true);
-              playIslandRunSound('minigame_open');
-            }}
+            onClick={handleLaunchTimedEventMinigame}
           >
             <span className="island-run-board__minigame-icon-emoji" aria-hidden="true">
               {EVENT_BANNER_META[activeTimedEvent.eventType]?.icon ?? '🎮'}
