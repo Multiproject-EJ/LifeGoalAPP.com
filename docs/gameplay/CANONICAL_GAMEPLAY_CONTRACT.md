@@ -87,6 +87,8 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 - Landmark progression must not depend on landing on specific tile indices.
 - The player token **never** lands on a landmark. Landmarks are accessed only by tapping the landmark button on the orbit HUD.
 - Board profiles no longer expose per-stop tile indices. Landmarks are **fully decoupled from ring tile indices** — the 5 HUD buttons are positioned in screen space by the UI layer (`OUTER_STOP_ANCHORS` in `islandBoardLayout.ts`). Every one of the ring tiles is a pure movement tile picked by the normal tile-map generator; no index is reserved for a landmark.
+- The canonical HUD ordering for landmark affordance is: Hatchery → Habit → Mystery → Wisdom → Boss, each pinned to `OUTER_STOP_ANCHORS`.
+- Landmark buttons should expose an **attention hint** (small affordability dot) whenever the next sequentially-eligible landmark is payable with current essence and remains unpaid.
 
 ### Board topology compatibility note
 - Current production board uses a 40-tile topology profile.
@@ -95,6 +97,13 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 ---
 
 ## 3) Currency system
+
+**Active island-run currencies (canonical):**
+- Dice
+- Essence
+- Egg Shards
+- Diamonds
+- Spin tokens
 
 ### Dice
 - Dice is the **only board energy**.
@@ -172,6 +181,12 @@ Dice reward sources should follow this qualitative pattern:
 - Each roll costs `1 × N` dice, where `N` is the currently selected **dice multiplier** (default `×1`). See §2E for the full ladder and unlock gates. The dice-regen system is unaffected by `N` — regen targets the level's floor on a per-hour basis regardless of spend velocity.
 - There is **no hard cap** on dice regen — the formula works for any player level.
 
+### Dice regeneration ETA contract (canonical UI service surface)
+- `islandRunDiceRegeneration.ts` is the canonical service for dice regen math and countdowns.
+- `resolveNextRollEtaMs({ dicePool, target, regenState, nowMs })` returns ms until the pool reaches a target threshold.
+- `resolveFullRefillEtaMs({ dicePool, regenState, nowMs })` returns ms until passive regen reaches the level floor (`regenState.maxDice`).
+- Both ETA helpers are pure/deterministic and must be used for out-of-dice countdown UI to avoid drift from ad-hoc timers.
+
 ### Dice regeneration formula (continuous, no cap)
 
 The minimum dice threshold uses a continuous logarithmic formula:
@@ -221,6 +236,12 @@ Stop rules:
   1. The previous stop's objective is complete (for the Hatchery this means the egg is **set to hatch** — not collected/sold/hatched — so "halfway completion" is sufficient to unlock the next stop).
   2. The player pays an essence **ticket** (opening fee) for that stop.
 - Ticket costs are paid from the essence wallet and scale with `effectiveIslandNumber` using the same multiplier as build costs. The base curve steepens toward the boss so the final gate carries real weight:
+  - Canonical ticket vector by stop index is: **`[0, 30, 70, 130, 220]`**.
+    - Index 0 (Stop 1 Hatchery) = 0
+    - Index 1 (Stop 2 Habit) = 30
+    - Index 2 (Stop 3 Mystery) = 70
+    - Index 3 (Stop 4 Wisdom) = 130
+    - Index 4 (Stop 5 Boss) = 220
   - Stop 2 (Habit): **30 essence** base
   - Stop 3 (Mystery): **70 essence** base
   - Stop 4 (Wisdom): **130 essence** base
@@ -228,6 +249,7 @@ Stop rules:
 - Tickets are **per-island**: a paid ticket unlocks that stop for the current island only. Travelling to a new island requires paying the ticket again.
 - The Hatchery (Stop 1) **never** has a ticket cost — it is always free on a new island.
 - The ticket rule prevents "rush-through" completion: the player must earn essence on the 40-tile board before each new stop can be opened.
+- Canonical cost UI/readout component for market + build panel is `<ShopItemCostLine />`; new cost displays should reuse it (or a shared derivative) instead of re-implementing bespoke "need X more" math.
 
 ### Hatchery (Stop 1) — egg lifecycle and checkmark rules
 - The Hatchery is **always Stop 1** on every island.

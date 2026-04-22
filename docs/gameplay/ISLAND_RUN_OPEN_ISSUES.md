@@ -1,7 +1,7 @@
 # Island Run — Open Issues & Feature Backlog
 
 Status: Living document
-Last updated: 2026-04-20 (session 12 — game-loop deep-dive audit; new P0-3/P0-4/P0-5 critical items added; P1-14 through P1-21 and P2-12 through P2-18 filed; false-positives annotated)
+Last updated: 2026-04-22 (session 13 — P0-5 closed; canonical docs refresh follow-up tracked)
 Owner: Gameplay System
 
 This document tracks every unresolved issue, bug, inconsistency, or scoped
@@ -145,9 +145,16 @@ if-branch inside it rather than two independent code paths.
 
 ---
 
-### P0-5. `travelToNextIsland` has no mutex and is not idempotent 🔴
+### P0-5. `travelToNextIsland` has no mutex and is not idempotent — ✅ Closed (session 13)
 
-**Confirmed in code — 2026-04-20 audit.**
+**Resolution landed — 2026-04-22 (session 13).**
+
+- `travelToNextIsland` is now async/await and no longer fire-and-forget.
+- Renderer `performIslandTravel` now executes through `withIslandRunActionLock`.
+- Added `isTravellingRef` re-entry guard so double taps cannot start overlapping travel commits.
+- Travel action tests now await the Promise-returning action contract.
+
+**Original issue (kept for traceability):**
 
 `travelToNextIsland` (`islandRunStateActions.ts:457–605`) calls
 `void commitIslandRunState(...)` (fire-and-forget) and returns synchronously.
@@ -1136,4 +1143,3 @@ confirmed to be **false positives** (not bugs):
    again → finish island → travel loop on a 40-tile board crossing island
    boundaries.** Unit tests are strong per-module; the seams between modules
    are where the bugs sit.
-
