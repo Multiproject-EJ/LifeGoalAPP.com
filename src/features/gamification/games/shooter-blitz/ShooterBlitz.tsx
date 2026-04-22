@@ -156,11 +156,6 @@ export function ShooterBlitz({
   useEffect(() => {
     if (!isMissionStarted || isMissionOver || isCompleting) return;
 
-    const enemyLaneLoop = window.setInterval(() => {
-      const roll = Math.floor(Math.random() * 3) - 1;
-      setEnemyLane(clampShooterLane(roll));
-    }, 950);
-
     const timer = window.setInterval(() => {
       setTimeLeftSec((current) => {
         if (current <= 1) {
@@ -186,6 +181,17 @@ export function ShooterBlitz({
   useEffect(() => {
     if (!isMissionStarted || isMissionOver || isCompleting) return;
 
+    const enemyLaneLoop = window.setInterval(() => {
+      const roll = Math.floor(Math.random() * 3) - 1;
+      setEnemyLane(clampShooterLane(roll));
+    }, 950);
+
+    return () => window.clearInterval(enemyLaneLoop);
+  }, [isCompleting, isMissionOver, isMissionStarted]);
+
+  useEffect(() => {
+    if (!isMissionStarted || isMissionOver || isCompleting) return;
+
     const cadenceMs = trial.difficulty === 'Easy' ? 1800 : trial.difficulty === 'Medium' ? 1600 : 1300;
 
     const attackLoop = window.setInterval(() => {
@@ -202,7 +208,6 @@ export function ShooterBlitz({
 
     return () => {
       window.clearInterval(attackLoop);
-      window.clearInterval(enemyLaneLoop);
     };
   }, [activePowerup, enemyLane, incomingDamage, isMissionOver, isMissionStarted, isCompleting, shipTargetLane, trial.difficulty]);
 
