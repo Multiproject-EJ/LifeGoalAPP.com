@@ -1,7 +1,8 @@
 /**
  * Phase 6 consolidation-plan tests — Event mini-game launch mapping/ticket gate.
  */
-import { openEventMinigame } from '../islandRunEventEngine';
+import { openEventMinigame, recordEventMinigameCompletion } from '../islandRunEventEngine';
+import { buildFreshIslandRunRecord } from '../islandRunProgressReset';
 import {
   resolveFeedingFrenzyEventMinigame,
   resolveLuckySpinEventMinigame,
@@ -259,6 +260,43 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
         null,
         'insufficient tickets should block companion_feast event launch',
       );
+    },
+  },
+  {
+    name: 'recordEventMinigameCompletion routes progress through engine with event_minigame_complete source',
+    run: () => {
+      const seeded = buildFreshIslandRunRecord({
+        audioEnabled: true,
+        onboardingDisplayNameLoopCompleted: false,
+      });
+      const next = recordEventMinigameCompletion({
+        state: seeded,
+        minigameId: 'task_tower',
+        nowMs: 1_000_000,
+      });
+      assertEqual(next.rewardBarProgress, 4, 'event minigame completion should add canonical progress delta');
+      assertEqual(next.activeTimedEventProgress.feedingActions, 1, 'completion should increment event feeding-action tally');
+      assertEqual(
+        next.rewardBarBoundEventId,
+        next.activeTimedEvent?.eventId ?? null,
+        'reward bar should stay bound to the active event id',
+      );
+    },
+  },
+  {
+    name: 'recordEventMinigameCompletion honors multiplier for event-mode bonus windows',
+    run: () => {
+      const seeded = buildFreshIslandRunRecord({
+        audioEnabled: true,
+        onboardingDisplayNameLoopCompleted: false,
+      });
+      const next = recordEventMinigameCompletion({
+        state: seeded,
+        minigameId: 'shooter_blitz',
+        nowMs: 2_000_000,
+        multiplier: 2,
+      });
+      assertEqual(next.rewardBarProgress, 8, 'multiplier should scale event minigame completion progress');
     },
   },
 ];

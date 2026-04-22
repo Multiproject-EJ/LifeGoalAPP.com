@@ -20,7 +20,8 @@ export type IslandRunRewardBarRuntimeSlice = Pick<
 export type RewardBarProgressSource =
   | { kind: 'tile'; tileType: string }
   | { kind: 'creature_feed'; treatType: string }
-  | { kind: 'encounter_resolve' };
+  | { kind: 'encounter_resolve' }
+  | { kind: 'event_minigame_complete'; minigameId: string };
 
 /**
  * Reward type that rotates each time the bar is filled.
@@ -397,6 +398,7 @@ export function ensureIslandRunContractV2ActiveTimedEvent(options: {
  * as a reward-bar source alongside feeding tiles.
  */
 export const ENCOUNTER_REWARD_BAR_PROGRESS = 3;
+export const EVENT_MINIGAME_REWARD_BAR_PROGRESS = 4;
 
 export function resolveIslandRunContractV2RewardBarProgressDelta(source: RewardBarProgressSource): {
   progressDelta: number;
@@ -408,6 +410,10 @@ export function resolveIslandRunContractV2RewardBarProgressDelta(source: RewardB
 
   if (source.kind === 'encounter_resolve') {
     return { progressDelta: ENCOUNTER_REWARD_BAR_PROGRESS, feedingActionDelta: 1 };
+  }
+
+  if (source.kind === 'event_minigame_complete') {
+    return { progressDelta: EVENT_MINIGAME_REWARD_BAR_PROGRESS, feedingActionDelta: 1 };
   }
 
   const tileProgress = FEEDING_TILE_PROGRESS[source.tileType] ?? 0;
