@@ -2734,7 +2734,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       stickerProgress: nextRewardBarState.stickerProgress,
       stickerInventory: nextRewardBarState.stickerInventory,
     }));
-  }, [applyContractV2RewardBarRuntimeState, client, session]);
+  }, [client, session]);
 
   useEffect(() => {
     if (!ISLAND_RUN_CONTRACT_V2_ENABLED || !hasHydratedRuntimeState) return;
