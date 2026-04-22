@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useRef } from 'react';
 import type { OrbitStopAnchor, TileAnchor } from '../../services/islandBoardLayout';
 
 export type StopProgressState = 'pending' | 'active' | 'completed' | 'partial' | 'locked' | 'shop';
@@ -41,6 +41,7 @@ export interface BoardOrbitStopsProps {
 
 export const BoardOrbitStops = memo(function BoardOrbitStops(props: BoardOrbitStopsProps) {
   const { stopVisuals, activeStopId, sceneClass, onStopClick, getOrbitStopDisplayIcon } = props;
+  const pointerHandledTargetsRef = useRef<WeakSet<EventTarget>>(new WeakSet());
 
   return (
     <div className="island-run-board__orbit-stops">
@@ -71,12 +72,18 @@ export const BoardOrbitStops = memo(function BoardOrbitStops(props: BoardOrbitSt
             // layers interfere with synthesized click events.
             event.preventDefault();
             event.stopPropagation();
+            pointerHandledTargetsRef.current.add(event.currentTarget);
             activateStop();
           }}
           onClick={(event) => {
-            // Ignore pointer-generated click (detail > 0) because pointer-up
-            // already handled it above. Keep keyboard activation (detail === 0).
-            if (event.detail > 0) return;
+            // Pointer interactions may fire both pointer-up and click. Suppress
+            // only when this exact element already handled pointer-up so we
+            // still keep click as a fallback on devices where pointer-up is
+            // swallowed by gesture layers.
+            if (pointerHandledTargetsRef.current.has(event.currentTarget)) {
+              pointerHandledTargetsRef.current.delete(event.currentTarget);
+              return;
+            }
             activateStop();
           }}
           disabled={!stopVisual.stopId}
