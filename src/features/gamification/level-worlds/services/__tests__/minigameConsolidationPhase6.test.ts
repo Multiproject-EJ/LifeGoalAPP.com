@@ -9,8 +9,48 @@ import {
   resolveLuckySpinEventMinigame,
   resolveSpaceExcavatorEventMinigame,
   resolveCompanionFeastEventMinigame,
+  type EventMinigameLaunchDescriptor,
 } from '../islandRunMinigameLauncherService';
+import { resolveChainedRewardBarClaims } from '../islandRunContractV2RewardBar';
 import { assertEqual, type TestCase } from './testHarness';
+
+function runTimedEventCompletionIntegration(options: {
+  descriptor: EventMinigameLaunchDescriptor | null;
+  expectedMinigameId: 'task_tower' | 'lucky_spin' | 'shooter_blitz' | 'partner_wheel';
+}) {
+  assertEqual(options.descriptor?.minigameId, options.expectedMinigameId, 'event resolver should return the canonical minigame id');
+  const completionId = resolveEventMinigameCompletionId({
+    launchSource: 'timed_event',
+    minigameId: options.descriptor?.minigameId,
+    completed: true,
+  });
+  assertEqual(completionId, options.expectedMinigameId, 'completed timed_event launch should resolve a completion minigame id');
+
+  const nowMs = Date.now();
+  const seeded = buildFreshIslandRunRecord({
+    audioEnabled: true,
+    onboardingDisplayNameLoopCompleted: false,
+  });
+  const completionApplied = recordEventMinigameCompletion({
+    state: {
+      ...seeded,
+      rewardBarProgress: 10,
+      rewardBarThreshold: 12,
+    },
+    minigameId: completionId!,
+    nowMs,
+  });
+  assertEqual(completionApplied.rewardBarProgress >= completionApplied.rewardBarThreshold, true, 'completion should make reward bar claimable');
+
+  const claimResult = resolveChainedRewardBarClaims({
+    state: completionApplied,
+    nowMs: nowMs + 1,
+  });
+  assertEqual(claimResult.payouts.length > 0, true, 'completion claim handoff should emit at least one payout');
+  assertEqual(claimResult.state.rewardBarClaimCountInEvent > completionApplied.rewardBarClaimCountInEvent, true, 'claim handoff should advance reward-bar claim count');
+  assertEqual(typeof claimResult.state.stickerProgress.fragments, 'number', 'sticker progress should remain available after claim handoff');
+  assertEqual(typeof claimResult.state.stickerInventory, 'object', 'sticker inventory should remain available after claim handoff');
+}
 
 export const minigameConsolidationPhase6Tests: TestCase[] = [
   {
@@ -366,6 +406,82 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
         multiplier: 2,
       });
       assertEqual(next.rewardBarProgress, 8, 'multiplier should scale event minigame completion progress');
+    },
+  },
+  {
+    name: 'event minigame completion can immediately chain into reward-bar claim payouts',
+    run: () => {
+      const nowMs = Date.now();
+      const seeded = buildFreshIslandRunRecord({
+        audioEnabled: true,
+        onboardingDisplayNameLoopCompleted: false,
+      });
+      const completionApplied = recordEventMinigameCompletion({
+        state: seeded,
+        minigameId: 'task_tower',
+        nowMs,
+        multiplier: 3,
+      });
+      assertEqual(completionApplied.rewardBarProgress >= completionApplied.rewardBarThreshold, true, 'completion should push reward bar over claim threshold');
+      const claimResult = resolveChainedRewardBarClaims({
+        state: completionApplied,
+        nowMs: nowMs + 1,
+      });
+      assertEqual(claimResult.payouts.length > 0, true, 'completion-overflow state should produce at least one payout');
+      assertEqual(claimResult.state.rewardBarProgress < completionApplied.rewardBarProgress, true, 'claim should consume filled reward-bar progress');
+    },
+  },
+  {
+    name: 'integration: Feeding Frenzy launcher path resolves completion and claim handoff end-to-end',
+    run: () => {
+      runTimedEventCompletionIntegration({
+        descriptor: resolveFeedingFrenzyEventMinigame({
+          kind: 'timed_event',
+          eventId: 'feeding_frenzy',
+          ticketsAvailable: 3,
+        }),
+        expectedMinigameId: 'task_tower',
+      });
+    },
+  },
+  {
+    name: 'integration: Lucky Spin launcher path resolves completion and claim handoff end-to-end',
+    run: () => {
+      runTimedEventCompletionIntegration({
+        descriptor: resolveLuckySpinEventMinigame({
+          kind: 'timed_event',
+          eventId: 'lucky_spin',
+          ticketsAvailable: 3,
+          freeDailySpinRemaining: 1,
+        }),
+        expectedMinigameId: 'lucky_spin',
+      });
+    },
+  },
+  {
+    name: 'integration: Space Excavator launcher path resolves completion and claim handoff end-to-end',
+    run: () => {
+      runTimedEventCompletionIntegration({
+        descriptor: resolveSpaceExcavatorEventMinigame({
+          kind: 'timed_event',
+          eventId: 'space_excavator',
+          ticketsAvailable: 3,
+        }),
+        expectedMinigameId: 'shooter_blitz',
+      });
+    },
+  },
+  {
+    name: 'integration: Companion Feast launcher path resolves completion and claim handoff end-to-end',
+    run: () => {
+      runTimedEventCompletionIntegration({
+        descriptor: resolveCompanionFeastEventMinigame({
+          kind: 'timed_event',
+          eventId: 'companion_feast',
+          ticketsAvailable: 3,
+        }),
+        expectedMinigameId: 'partner_wheel',
+      });
     },
   },
 ];

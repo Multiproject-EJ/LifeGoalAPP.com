@@ -3709,31 +3709,32 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }));
   }, [client, cycleIndex, islandNumber, session]);
 
-  const handleContractV2RewardBarClaim = () => {
-    if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return;
-
+  const runContractV2RewardBarClaimCascade = useCallback((options: {
+    state: {
+      rewardBarProgress: number;
+      rewardBarThreshold: number;
+      rewardBarClaimCountInEvent: number;
+      rewardBarEscalationTier: number;
+      rewardBarLastClaimAtMs: number | null;
+      rewardBarBoundEventId: string | null;
+      rewardBarLadderId: string | null;
+      activeTimedEvent: { eventId: string; eventType: string; startedAtMs: number; expiresAtMs: number; version: number } | null;
+      activeTimedEventProgress: { feedingActions: number; tokensEarned: number; milestonesClaimed: number };
+      stickerProgress: { fragments: number; guaranteedAt?: number; pityCounter?: number };
+      stickerInventory: Record<string, number>;
+    };
+    emptyMessage?: string;
+  }): boolean => {
+    if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return false;
     const nowMs = Date.now();
-    // Use chained claims to resolve cascade (Monopoly GO rapid multi-fill)
     const chainResult = resolveChainedRewardBarClaims({
-      state: {
-        rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
-        rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
-        rewardBarClaimCountInEvent: runtimeStateRef.current.rewardBarClaimCountInEvent,
-        rewardBarEscalationTier: runtimeStateRef.current.rewardBarEscalationTier,
-        rewardBarLastClaimAtMs: runtimeStateRef.current.rewardBarLastClaimAtMs,
-        rewardBarBoundEventId: runtimeStateRef.current.rewardBarBoundEventId,
-        rewardBarLadderId: runtimeStateRef.current.rewardBarLadderId,
-        activeTimedEvent: runtimeStateRef.current.activeTimedEvent,
-        activeTimedEventProgress: runtimeStateRef.current.activeTimedEventProgress,
-        stickerProgress: runtimeStateRef.current.stickerProgress,
-        stickerInventory: runtimeStateRef.current.stickerInventory,
-      },
+      state: options.state,
       nowMs,
     });
 
     if (chainResult.payouts.length === 0) {
-      setLandingText('Reward bar is not full yet.');
-      return;
+      if (options.emptyMessage) setLandingText(options.emptyMessage);
+      return false;
     }
 
     // Aggregate totals from all chained payouts
@@ -3789,6 +3790,26 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       playIslandRunSound('sticker_complete');
       triggerIslandRunHaptic('sticker_complete');
     }
+    return true;
+  }, [client, session]);
+
+  const handleContractV2RewardBarClaim = () => {
+    runContractV2RewardBarClaimCascade({
+      state: {
+        rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
+        rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
+        rewardBarClaimCountInEvent: runtimeStateRef.current.rewardBarClaimCountInEvent,
+        rewardBarEscalationTier: runtimeStateRef.current.rewardBarEscalationTier,
+        rewardBarLastClaimAtMs: runtimeStateRef.current.rewardBarLastClaimAtMs,
+        rewardBarBoundEventId: runtimeStateRef.current.rewardBarBoundEventId,
+        rewardBarLadderId: runtimeStateRef.current.rewardBarLadderId,
+        activeTimedEvent: runtimeStateRef.current.activeTimedEvent,
+        activeTimedEventProgress: runtimeStateRef.current.activeTimedEventProgress,
+        stickerProgress: runtimeStateRef.current.stickerProgress,
+        stickerInventory: runtimeStateRef.current.stickerInventory,
+      },
+      emptyMessage: 'Reward bar is not full yet.',
+    });
   };
 
   const handleRoll = async () => {
@@ -9371,6 +9392,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     nowMs: Date.now(),
                   });
                   applyContractV2RewardBarRuntimeState(nextRewardBarState);
+                  runContractV2RewardBarClaimCascade({ state: nextRewardBarState });
                 }
               }
               if (
