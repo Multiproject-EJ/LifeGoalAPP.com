@@ -186,6 +186,25 @@ export function recordEventProgress(options: {
 }
 
 /**
+ * Phase 6 reward-routing helper: event mini-game completions feed reward-bar
+ * progress through the engine, so downstream sticker fragments remain bound to
+ * the currently-active event.
+ */
+export function recordEventMinigameCompletion(options: {
+  state: IslandRunRewardBarRuntimeSlice;
+  minigameId: EventMinigameId;
+  nowMs: number;
+  multiplier?: number;
+}): IslandRunRewardBarRuntimeSlice {
+  return recordEventProgress({
+    state: options.state,
+    source: { kind: 'event_minigame_complete', minigameId: options.minigameId },
+    nowMs: options.nowMs,
+    multiplier: options.multiplier,
+  });
+}
+
+/**
  * Sticker-fragment routing: returns the sticker id that fragments should be
  * credited to for the given event. Sticker fragments granted by the reward
  * bar always belong to the currently-active event's sticker (plan §3.1).

@@ -435,7 +435,10 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 5. [ ] Wire event-run reward routing so completion emits reward-bar progress + active-event sticker fragments through engine.
 
 **Phase 6 next actionable TODO (refined):**
-1. [ ] Wire event-run reward routing so completion emits reward-bar progress + active-event sticker fragments through engine.
+1. [x] Add an engine-level completion hook (`recordEventMinigameCompletion`) so event mini-game runs contribute reward-bar progress through a single canonical path.
+   - **Session 2026-04-22 update:** `event_minigame_complete` progress source + engine helper shipped with regression coverage in `minigameConsolidationPhase6.test.ts`.
+2. [ ] Wire the event panel + minigame launcher completion callback to call the new engine hook for all four event minigames.
+3. [ ] Ensure event-completion UI path applies reward-bar claim payouts (including sticker fragments) from the engine-owned state snapshot.
 
 ### Phase 7 — Monetization
 - [ ] `src/services/minigameTicketStore.ts` — Stripe checkout wrapper, mirrors dice Stripe flow.
