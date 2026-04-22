@@ -1,7 +1,7 @@
 # Island Run — Next TODO PR List
 
-**Last updated:** 2026-04-22 (end of PR 10 batch)
-**Context:** Continuation of the Island Run polish sweep on branch `copilot/investigate-120-island-game-again`. Hand this doc to the next agent session with a prompt like "do PR 11" or "do PR 11 and PR 12 together."
+**Last updated:** 2026-04-22 (end of PR 11 batch)
+**Context:** Continuation of the Island Run polish sweep on branch `copilot/investigate-120-island-game-again`. Hand this doc to the next agent session with a prompt like "do PR 12" or "do PR 12 and PR 13 together."
 
 ---
 
@@ -17,6 +17,7 @@
 | 8   | Build-panel parity         | Build panel now uses shared affordability readout, full-build chip, and next-cheapest highlight          |
 | 9   | Egg-sell clarity            | Added egg-sell advisor with recommended badge/reason + tests for shards/dice choice heuristics           |
 | 10  | Boss shortfall forecast     | Added boss-ticket shortfall projection service + HUD warning banner + tests                               |
+| 11  | HUD progress chip            | Replaced misleading "island streak" with clear cumulative "islands cleared" topbar counter + increment animation |
 
 Test suite baseline remains green via `npm run test:island-run` (see latest run in this PR).
 
@@ -66,12 +67,12 @@ Each entry is sized to be a single focused PR. Items are ordered by impact × ri
 
 ---
 
-### PR 11 — Stop-completion streak meter ⭐️ (recommended next)
-**Why:** Completing all 5 stops with no failures across consecutive islands should earn a visible streak multiplier on reward-bar drops. Today the streak state exists internally but is not surfaced.
-- [ ] Add a "🔥 N islands streak" chip next to the level chip
-- [ ] Animate increment (reuse level-up flash pattern) and a gentle fade on reset
-- [ ] Confirm the streak value is already persisted in `runtimeState`; if not, thread it through (check `islandRunGameStateStore`)
-- [ ] Respect `prefers-reduced-motion`
+### ✅ PR 11 — Island-clears HUD progress chip (merged)
+**Why:** The old copy implied a "perfect streak" even though normal progression already requires island clears before travel. This PR replaced that framing with a transparent cumulative progress counter.
+- [x] Added a topbar progress chip near level/wallet with cumulative islands-cleared count
+- [x] Added increment animation + `prefers-reduced-motion` guard
+- [x] Introduced pure compute service + unit tests for cycle-wrap math
+- [x] Clarified semantics in UI copy (progress counter, not a gated/perfect streak)
 
 **Files to touch:**
 - `services/islandRunGameStateStore.ts` (verify or add streak field)
@@ -146,8 +147,8 @@ Each of these is a multi-PR arc — start it by writing a design doc PR (docs on
 
 ## 🚦 Recommended next prompt
 
-> "Do PR 11 (stop-completion streak meter) from `docs/gameplay/NEXT_TODO_PR_LIST.md`."
+> "Do PR 12 (creature manifest quick-access) from `docs/gameplay/NEXT_TODO_PR_LIST.md`."
 
 or, for a batch:
 
-> "Do PR 11, PR 12, and PR 13 from the next-todo list, each as its own commit."
+> "Do PR 12 and PR 13 from the next-todo list, each as its own commit."
