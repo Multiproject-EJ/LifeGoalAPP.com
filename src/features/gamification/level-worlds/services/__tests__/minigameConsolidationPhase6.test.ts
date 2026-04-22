@@ -6,6 +6,7 @@ import {
   resolveFeedingFrenzyEventMinigame,
   resolveLuckySpinEventMinigame,
   resolveSpaceExcavatorEventMinigame,
+  resolveCompanionFeastEventMinigame,
 } from '../islandRunMinigameLauncherService';
 import { assertEqual, type TestCase } from './testHarness';
 
@@ -206,6 +207,57 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
         }),
         null,
         'insufficient tickets should block space_excavator event launch',
+      );
+    },
+  },
+  {
+    name: 'resolveCompanionFeastEventMinigame routes to Partner Wheel placeholder with default team config',
+    run: () => {
+      const descriptor = resolveCompanionFeastEventMinigame({
+        kind: 'timed_event',
+        eventId: 'companion_feast',
+        ticketsAvailable: 3,
+        ticketsToSpend: 2,
+      });
+      assertEqual(descriptor?.minigameId, 'partner_wheel', 'companion_feast should route to partner_wheel');
+      assertEqual(descriptor?.ticketsSpent, 2, 'resolver should preserve explicit ticket spend request');
+      assertEqual(
+        descriptor?.config.mode,
+        'companion_feast',
+        'resolver should tag companion_feast event mode',
+      );
+      assertEqual(
+        descriptor?.config.mode === 'companion_feast' ? descriptor.config.teamSize : null,
+        4,
+        'partner placeholder teamSize should default to 4',
+      );
+      assertEqual(
+        descriptor?.config.mode === 'companion_feast' ? descriptor.config.aiPartnerCount : null,
+        3,
+        'partner placeholder aiPartnerCount should default to 3',
+      );
+    },
+  },
+  {
+    name: 'resolveCompanionFeastEventMinigame is non-launching for non-companion events and insufficient tickets',
+    run: () => {
+      assertEqual(
+        resolveCompanionFeastEventMinigame({
+          kind: 'timed_event',
+          eventId: 'feeding_frenzy',
+          ticketsAvailable: 3,
+        }),
+        null,
+        'resolver should be scoped to companion_feast only',
+      );
+      assertEqual(
+        resolveCompanionFeastEventMinigame({
+          kind: 'timed_event',
+          eventId: 'companion_feast',
+          ticketsAvailable: 0,
+        }),
+        null,
+        'insufficient tickets should block companion_feast event launch',
       );
     },
   },

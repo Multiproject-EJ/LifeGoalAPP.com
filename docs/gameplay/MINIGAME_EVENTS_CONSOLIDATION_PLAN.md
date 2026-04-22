@@ -419,9 +419,9 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 ### Phase 6 — Event mini-games
 - [x] Feeding Frenzy wraps Task Tower in event config; event tickets spent to play.
   - **Session 2026-04-22 update:** added `resolveFeedingFrenzyEventMinigame()` in `islandRunMinigameLauncherService.ts` (ticket-gated via `openEventMinigame`) and regression coverage in `minigameConsolidationPhase6.test.ts`.
-- [ ] Lucky Spin wraps daily spin wheel for event extra spins.
-- [ ] Space Excavator wraps Shooter Blitz (longer campaign variant).
-- [ ] New Partner Wheel skeleton (single-player + AI partners).
+- [x] Lucky Spin wraps daily spin wheel for event extra spins (resolver contract shipped; UI wiring still pending).
+- [x] Space Excavator wraps Shooter Blitz (longer campaign variant resolver shipped; UI wiring still pending).
+- [x] New Partner Wheel skeleton (single-player + AI partners placeholder).
 - [ ] Reward-bar progress + sticker fragments routed via engine to active event sticker.
 
 **Phase 6 execution queue (refined 2026-04-22):**
@@ -430,12 +430,12 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
    - **Session 2026-04-22 update:** added `resolveLuckySpinEventMinigame()` in `islandRunMinigameLauncherService.ts` and expanded `minigameConsolidationPhase6.test.ts` coverage for launch routing + `free_daily` vs `ticket_extra` config tags.
 3. [x] Add Space Excavator event-launch resolver that maps to Shooter Blitz event mode (longer campaign config).
    - **Session 2026-04-22 update:** added `resolveSpaceExcavatorEventMinigame()` in `islandRunMinigameLauncherService.ts` with explicit event-mode config (`campaignDurationSec`, `scoreTargetMultiplier`) plus regression coverage in `minigameConsolidationPhase6.test.ts`.
-4. [ ] Add Partner Wheel launch placeholder (skeleton manifest + launcher contract only, no multiplayer).
+4. [x] Add Partner Wheel launch placeholder (skeleton manifest + launcher contract only, no multiplayer).
+   - **Session 2026-04-22 update:** added `partner-wheel` skeleton manifest/component, registered it in `islandRunMinigameManifests.ts`, and added `resolveCompanionFeastEventMinigame()` + regression coverage in `minigameConsolidationPhase6.test.ts`.
 5. [ ] Wire event-run reward routing so completion emits reward-bar progress + active-event sticker fragments through engine.
 
 **Phase 6 next actionable TODO (refined):**
-1. [ ] Add Partner Wheel launch placeholder (skeleton manifest + launcher contract only, no multiplayer).
-2. [ ] Wire event-run reward routing so completion emits reward-bar progress + active-event sticker fragments through engine.
+1. [ ] Wire event-run reward routing so completion emits reward-bar progress + active-event sticker fragments through engine.
 
 ### Phase 7 — Monetization
 - [ ] `src/services/minigameTicketStore.ts` — Stripe checkout wrapper, mirrors dice Stripe flow.
