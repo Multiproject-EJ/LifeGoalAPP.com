@@ -18490,6 +18490,22 @@ html.platform-ipad .workspace-shell__menu-edge {
   gap: 0.35rem;
 }
 
+.mobile-menu-overlay__ikigai-copy {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: #334155;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__ikigai-copy {
+  color: rgba(226, 232, 240, 0.86);
+}
+
 .mobile-menu-overlay__hold-task {
   margin: 0;
   font-size: 0.95rem;

@@ -599,6 +599,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [showMobileFeedbackModal, setShowMobileFeedbackModal] = useState(false);
   const [showMobileSupportModal, setShowMobileSupportModal] = useState(false);
   const [isMyQuestSubmenuOpen, setIsMyQuestSubmenuOpen] = useState(false);
+  const [isMyIkigaiModalOpen, setIsMyIkigaiModalOpen] = useState(false);
   const [isFeedbackSupportSubmenuOpen, setIsFeedbackSupportSubmenuOpen] = useState(false);
   const [activeProfileStrengthHold, setActiveProfileStrengthHold] = useState<{
     area: AreaKey;
@@ -2046,8 +2047,48 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   };
 
+  const openMyIkigaiFromMobileMenu = useCallback(() => {
+    setIsMobileProfileDialogOpen(false);
+    setIsMobileMenuOpen(false);
+    setIsEnergyMenuOpen(false);
+    setIsMyQuestSubmenuOpen(false);
+    setIsFeedbackSupportSubmenuOpen(false);
+    closeGameBoardOverlayIfOpen();
+    setIsMyIkigaiModalOpen(true);
+  }, [closeGameBoardOverlayIfOpen]);
+
+  const openIkigaiCoachPrompt = useCallback(() => {
+    setAiCoachStarterQuestion(
+      'Help me craft my Ikigai by finding the overlap between what I love, what I am good at, what the world needs, and what can sustain my lifestyle.',
+    );
+    setShowAiCoachModal(true);
+    setIsMyIkigaiModalOpen(false);
+  }, []);
+
+  const openIkigaiJournalPrompt = useCallback(() => {
+    setJournalLaunchRequest({
+      type: 'goal',
+      openComposer: true,
+      requestId: Date.now(),
+    });
+    setActiveWorkspaceNav('journal');
+    setShowMobileHome(false);
+    setIsMyIkigaiModalOpen(false);
+  }, []);
+
+  const openIkigaiHabits = useCallback(() => {
+    handleMobileNavSelect('habits');
+    setIsMyIkigaiModalOpen(false);
+  }, [handleMobileNavSelect]);
+
+  const openIkigaiCheckins = useCallback(() => {
+    handleMobileNavSelect('planning');
+    setIsMyIkigaiModalOpen(false);
+  }, [handleMobileNavSelect]);
+
   const myQuestSubmenuActions: LauncherSubmenuAction[] = useMemo(
     () => [
+      { id: 'ikigai', label: 'My Ikigai', icon: '✨', onSelect: openMyIkigaiFromMobileMenu },
       { id: 'body', label: 'Health Goals', icon: '💪', onSelect: () => handleMobileNavSelect('body') },
       { id: 'habits', label: 'Habits', icon: '🔄', onSelect: () => handleMobileNavSelect('habits') },
       { id: 'routines', label: 'Routines', icon: '🧩', onSelect: () => handleMobileNavSelect('routines') },
@@ -2055,7 +2096,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       { id: 'planning', label: 'Check-ins', icon: '✅', onSelect: () => handleMobileNavSelect('planning') },
       { id: 'contracts', label: 'Contracts', icon: '🤝', onSelect: () => handleMobileNavSelect('contracts') },
     ],
-    [handleMobileNavSelect],
+    [handleMobileNavSelect, openMyIkigaiFromMobileMenu],
   );
 
   const feedbackSupportSubmenuActions: LauncherSubmenuAction[] = useMemo(
@@ -3616,6 +3657,53 @@ export default function App({ forceAuthOnMount }: AppProps) {
                         <span>{action.label}</span>
                       </button>
                     ))}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+            {isMyIkigaiModalOpen ? (
+              <div className="mobile-menu-overlay__hold-modal" role="dialog" aria-modal="true" aria-label="My Ikigai">
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__hold-backdrop"
+                  aria-label="Close My Ikigai"
+                  onClick={() => setIsMyIkigaiModalOpen(false)}
+                />
+                <div className="mobile-menu-overlay__hold-panel mobile-menu-overlay__submenu-sheet">
+                  <div className="mobile-menu-overlay__hold-header">
+                    <div>
+                      <p className="mobile-menu-overlay__hold-eyebrow">Purpose map</p>
+                      <h3 className="mobile-menu-overlay__hold-title">My Ikigai</h3>
+                    </div>
+                    <button
+                      type="button"
+                      className="mobile-menu-overlay__hold-close"
+                      aria-label="Close My Ikigai"
+                      onClick={() => setIsMyIkigaiModalOpen(false)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p className="mobile-menu-overlay__ikigai-copy">
+                    Build your purpose compass with one small action in each area: discover, express, align, and review.
+                  </p>
+                  <div className="mobile-menu-overlay__submenu mobile-menu-overlay__submenu--open">
+                    <button type="button" className="mobile-menu-overlay__submenu-button" onClick={openIkigaiCoachPrompt}>
+                      <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">🧠</span>
+                      <span>Brainstorm with AI Coach</span>
+                    </button>
+                    <button type="button" className="mobile-menu-overlay__submenu-button" onClick={openIkigaiJournalPrompt}>
+                      <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">📝</span>
+                      <span>Write your Ikigai note</span>
+                    </button>
+                    <button type="button" className="mobile-menu-overlay__submenu-button" onClick={openIkigaiHabits}>
+                      <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">🔁</span>
+                      <span>Pick one aligned habit</span>
+                    </button>
+                    <button type="button" className="mobile-menu-overlay__submenu-button" onClick={openIkigaiCheckins}>
+                      <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">📊</span>
+                      <span>Run weekly check-in</span>
+                    </button>
                   </div>
                 </div>
               </div>
