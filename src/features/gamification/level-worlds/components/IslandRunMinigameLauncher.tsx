@@ -10,6 +10,7 @@ interface IslandRunMinigameLauncherProps {
   islandNumber: number;
   ticketBudget?: number;
   controllerInput?: IslandRunControllerInputProvider;
+  launchConfig?: Record<string, unknown>;
   onComplete: (result: IslandRunMinigameResult) => void;
 }
 
@@ -18,6 +19,7 @@ export function IslandRunMinigameLauncher({
   islandNumber,
   ticketBudget,
   controllerInput,
+  launchConfig,
   onComplete,
 }: IslandRunMinigameLauncherProps) {
   const entry = getMinigame(minigameId);
@@ -38,6 +40,7 @@ export function IslandRunMinigameLauncher({
       islandNumber={islandNumber}
       ticketBudget={ticketBudget}
       controllerInput={controllerInput}
+      launchConfig={launchConfig}
       onComplete={onComplete}
     />
   );

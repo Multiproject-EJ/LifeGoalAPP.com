@@ -2,6 +2,7 @@
  * Phase 6 consolidation-plan tests — Event mini-game launch mapping/ticket gate.
  */
 import { openEventMinigame } from '../islandRunEventEngine';
+import { resolveFeedingFrenzyEventMinigame } from '../islandRunMinigameLauncherService';
 import { assertEqual, type TestCase } from './testHarness';
 
 export const minigameConsolidationPhase6Tests: TestCase[] = [
@@ -60,6 +61,48 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       });
       assertEqual(descriptor?.ticketsSpent, 2, 'caller-provided spend amount should be preserved');
       assertEqual(descriptor?.ticketCost, 1, 'ticketCost remains canonical per-run base cost');
+    },
+  },
+  {
+    name: 'resolveFeedingFrenzyEventMinigame returns a Task Tower event config and preserved spend metadata',
+    run: () => {
+      const descriptor = resolveFeedingFrenzyEventMinigame({
+        kind: 'timed_event',
+        eventId: 'feeding_frenzy',
+        ticketsAvailable: 3,
+        ticketsToSpend: 2,
+      });
+      assertEqual(descriptor?.minigameId, 'task_tower', 'feeding_frenzy event routes to task_tower');
+      assertEqual(descriptor?.ticketsSpent, 2, 'resolver should preserve caller spend request');
+      assertEqual(
+        descriptor?.config.mode,
+        'feeding_frenzy',
+        'resolver should tag task_tower with feeding_frenzy event mode',
+      );
+    },
+  },
+  {
+    name: 'resolveFeedingFrenzyEventMinigame is non-launching for non-feeding events and insufficient tickets',
+    run: () => {
+      assertEqual(
+        resolveFeedingFrenzyEventMinigame({
+          kind: 'timed_event',
+          eventId: 'lucky_spin',
+          ticketsAvailable: 5,
+        }),
+        null,
+        'phase-6 step-1 resolver should be scoped to feeding_frenzy only',
+      );
+
+      assertEqual(
+        resolveFeedingFrenzyEventMinigame({
+          kind: 'timed_event',
+          eventId: 'feeding_frenzy',
+          ticketsAvailable: 0,
+        }),
+        null,
+        'insufficient tickets should block feeding_frenzy event launch',
+      );
     },
   },
 ];
