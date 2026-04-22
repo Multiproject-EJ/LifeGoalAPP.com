@@ -136,11 +136,13 @@ import {
   type EncounterReward,
 } from '../services/encounterService';
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
+import { ShooterControllerAdapter } from './ShooterControllerAdapter';
 import { IslandStoryReader } from './IslandStoryReader';
 import {
   resolveMinigameForStop,
   type IslandRunMinigameResult,
 } from '../services/islandRunMinigameService';
+import type { IslandRunControllerIntent } from '../services/islandRunMinigameTypes';
 import { registerAllMinigameManifests } from '../services/islandRunMinigameManifests';
 import { resolveBossStopMinigame } from '../services/islandRunMinigameLauncherService';
 import {
@@ -213,6 +215,7 @@ import {
 import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
 import { resolveNextCheapestIndex } from '../services/islandRunShopAffordability';
 import { adviseEggSellChoice } from '../services/islandRunEggSellAdvisor';
+import { createShooterControllerBridge } from '../services/islandRunShooterControllerBridge';
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 6;
@@ -1254,6 +1257,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // B3-2: minigame launcher state (M11B framework)
   const [activeLaunchedMinigameId, setActiveLaunchedMinigameId] = useState<string | null>(null);
   const [activeLaunchedMinigameSource, setActiveLaunchedMinigameSource] = useState<'boss_trial' | null>(null);
+  const shooterControllerBridge = useMemo(() => createShooterControllerBridge(), []);
+  const isShooterControllerActive = activeLaunchedMinigameId === 'shooter_blitz';
+  const shooterControllerInput = shooterControllerBridge.controllerInput;
+  const emitShooterControllerIntent = useCallback((intent: IslandRunControllerIntent) => {
+    shooterControllerBridge.emit(intent);
+  }, [shooterControllerBridge]);
+
+  useEffect(() => {
+    if (!isShooterControllerActive) {
+      shooterControllerBridge.reset();
+    }
+  }, [isShooterControllerActive, shooterControllerBridge]);
 
   // B3-3: market interaction gate
   const [marketInteracted, setMarketInteracted] = useState(false);
@@ -7183,74 +7198,80 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           {/* Footer stats row removed: essence icon (duplicate of top bar) and 🎯 roll chip removed per UI cleanup */}
 
           <div className="island-run-prototype__footer-actions">
-            <button
-              type="button"
-              className="island-run-prototype__footer-nav-btn"
-              onClick={openSanctuaryPanel}
-            >
-              🐾 Creatures
-            </button>
-            <button
-              type="button"
-              className="island-run-prototype__footer-nav-btn"
-              onClick={() => setShowStoryReader(true)}
-            >
-              📖 Story
-            </button>
-            <div className="island-run-prototype__footer-dice-group">
-              {/* Multiplier selector — placed above dice for symmetry */}
-              <button
-                type="button"
-                className={`island-run-prototype__footer-multiplier-btn${effectiveMultiplier > 1 ? ' island-run-prototype__footer-multiplier-btn--active' : ''}`}
-                onClick={() => {
-                  const unlocked = multiplierTiers.filter((t) => t.unlocked).map((t) => t.multiplier);
-                  if (unlocked.length <= 1) return;
-                  const currentIdx = unlocked.indexOf(effectiveMultiplier);
-                  const nextIdx = (currentIdx + 1) % unlocked.length;
-                  setDiceMultiplier(unlocked[nextIdx]!);
-                }}
-                title={`Cost: ${effectiveDiceCost} dice/roll · Max: ×${multiplierTiers.filter((t) => t.unlocked).pop()?.multiplier ?? 1}`}
-              >
-                ×{effectiveMultiplier}
-                {effectiveMultiplier > 1 && <span className="island-run-prototype__footer-nav-btn-cost"> (-{effectiveDiceCost})</span>}
-              </button>
-              <button
-                type="button"
-                className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
-                onClick={isIslandTimerPendingStart ? activateCurrentIsland : () => void handleRoll()}
-                disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
-                aria-disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
-                title={!isIslandTimerPendingStart ? (rollDisabledMessage ?? undefined) : undefined}
-              >
-                <span className="island-run-prototype__footer-roll-btn-content">
-                  <span className="island-run-prototype__footer-roll-btn-dice">🎲 {hasHydratedRuntimeState ? dicePool : '—'}{effectiveMultiplier > 1 ? ` ×${effectiveMultiplier}` : ''}</span>
-                  <span>{isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}</span>
-                </span>
-                {!isIslandTimerPendingStart && rollDisabledMessage && (
-                  <span className="sr-only"> — {rollDisabledMessage}</span>
-                )}
-              </button>
-              {/* Dice regen countdown — like Monopoly GO "X rolls ready in MM:SS" */}
-              {diceRegenCountdown && diceRegenRollsReady != null && (
-                <div className="island-run-prototype__dice-regen-timer" aria-live="polite">
-                  <strong>{diceRegenRollsReady}</strong> rolls ready in <strong>{diceRegenCountdown}</strong>
+            {isShooterControllerActive ? (
+              <ShooterControllerAdapter onIntent={emitShooterControllerIntent} />
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="island-run-prototype__footer-nav-btn"
+                  onClick={openSanctuaryPanel}
+                >
+                  🐾 Creatures
+                </button>
+                <button
+                  type="button"
+                  className="island-run-prototype__footer-nav-btn"
+                  onClick={() => setShowStoryReader(true)}
+                >
+                  📖 Story
+                </button>
+                <div className="island-run-prototype__footer-dice-group">
+                  {/* Multiplier selector — placed above dice for symmetry */}
+                  <button
+                    type="button"
+                    className={`island-run-prototype__footer-multiplier-btn${effectiveMultiplier > 1 ? ' island-run-prototype__footer-multiplier-btn--active' : ''}`}
+                    onClick={() => {
+                      const unlocked = multiplierTiers.filter((t) => t.unlocked).map((t) => t.multiplier);
+                      if (unlocked.length <= 1) return;
+                      const currentIdx = unlocked.indexOf(effectiveMultiplier);
+                      const nextIdx = (currentIdx + 1) % unlocked.length;
+                      setDiceMultiplier(unlocked[nextIdx]!);
+                    }}
+                    title={`Cost: ${effectiveDiceCost} dice/roll · Max: ×${multiplierTiers.filter((t) => t.unlocked).pop()?.multiplier ?? 1}`}
+                  >
+                    ×{effectiveMultiplier}
+                    {effectiveMultiplier > 1 && <span className="island-run-prototype__footer-nav-btn-cost"> (-{effectiveDiceCost})</span>}
+                  </button>
+                  <button
+                    type="button"
+                    className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
+                    onClick={isIslandTimerPendingStart ? activateCurrentIsland : () => void handleRoll()}
+                    disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
+                    aria-disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
+                    title={!isIslandTimerPendingStart ? (rollDisabledMessage ?? undefined) : undefined}
+                  >
+                    <span className="island-run-prototype__footer-roll-btn-content">
+                      <span className="island-run-prototype__footer-roll-btn-dice">🎲 {hasHydratedRuntimeState ? dicePool : '—'}{effectiveMultiplier > 1 ? ` ×${effectiveMultiplier}` : ''}</span>
+                      <span>{isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}</span>
+                    </span>
+                    {!isIslandTimerPendingStart && rollDisabledMessage && (
+                      <span className="sr-only"> — {rollDisabledMessage}</span>
+                    )}
+                  </button>
+                  {/* Dice regen countdown — like Monopoly GO "X rolls ready in MM:SS" */}
+                  {diceRegenCountdown && diceRegenRollsReady != null && (
+                    <div className="island-run-prototype__dice-regen-timer" aria-live="polite">
+                      <strong>{diceRegenRollsReady}</strong> rolls ready in <strong>{diceRegenCountdown}</strong>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <button
-              type="button"
-              className="island-run-prototype__footer-nav-btn"
-              onClick={openShopPanel}
-            >
-              🛍️ Market
-            </button>
-            <button
-              type="button"
-              className="island-run-prototype__footer-nav-btn"
-              onClick={() => setShowBuildPanel(true)}
-            >
-              🔨 Build
-            </button>
+                <button
+                  type="button"
+                  className="island-run-prototype__footer-nav-btn"
+                  onClick={openShopPanel}
+                >
+                  🛍️ Market
+                </button>
+                <button
+                  type="button"
+                  className="island-run-prototype__footer-nav-btn"
+                  onClick={() => setShowBuildPanel(true)}
+                >
+                  🔨 Build
+                </button>
+              </>
+            )}
             {!isHudCollapsed && (
               <button
                 type="button"
@@ -9166,6 +9187,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           <IslandRunMinigameLauncher
             minigameId={activeLaunchedMinigameId}
             islandNumber={islandNumber}
+            controllerInput={activeLaunchedMinigameId === 'shooter_blitz' ? shooterControllerInput : undefined}
             onComplete={(result) => {
               if (activeLaunchedMinigameSource === 'boss_trial' && result.completed) {
                 handleResolveBossTrial();

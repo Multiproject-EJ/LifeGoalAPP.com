@@ -350,9 +350,14 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 4. [ ] **Flag rollout** (single PR): QA on islands 1/3/4/23, then enable `islandRunShooterBlitzBossEnabled`.
 
 **Phase 4 immediate TODO queue (next sessions):**
-- [ ] Add a `ShooterControllerAdapter` bridge in `level-worlds/components` that subscribes to footer-controller taps and emits `left/right/fire` intents.
-- [ ] Extend `IslandRunMinigameLauncher` to optionally pass down a controller-input provider (no-op by default; Shooter Blitz opt-in).
-- [ ] Add focused tests for controller cleanup on minigame exit (ensures footer navigation always restores).
+- [x] Add a `ShooterControllerAdapter` bridge in `level-worlds/components` that subscribes to footer-controller taps and emits `left/right/fire` intents.
+- [x] Extend `IslandRunMinigameLauncher` to optionally pass down a controller-input provider (no-op by default; Shooter Blitz opt-in).
+- [x] Add focused tests for controller cleanup on minigame exit (ensures footer navigation always restores).
+
+**Phase 4 immediate TODO queue (refined after controller bridge ship):**
+1. [ ] Add movement interpolation to Shooter Blitz so `left/right` intents move the ship sprite and affect hit/hurt logic (currently they are input-recognized but cosmetic).
+2. [ ] Add keyboard fallback mapping (`ArrowLeft/ArrowRight/Space`) through the same controller bridge for desktop QA parity.
+3. [ ] Add a telemetry marker for controller-session lifecycle (`controller_attach`, `controller_detach`) tied to minigame open/close.
 
 ### Phase 5 — Mystery Task Tower & Vision Quest
 - [ ] Wire mystery-stop launcher to launch Task Tower / Vision Quest components when the rolled `mysteryContentKind` selects them.

@@ -1,11 +1,15 @@
 import React from 'react';
 import { getMinigame } from '../services/islandRunMinigameRegistry';
-import type { IslandRunMinigameResult } from '../services/islandRunMinigameTypes';
+import type {
+  IslandRunControllerInputProvider,
+  IslandRunMinigameResult,
+} from '../services/islandRunMinigameTypes';
 
 interface IslandRunMinigameLauncherProps {
   minigameId: string;
   islandNumber: number;
   ticketBudget?: number;
+  controllerInput?: IslandRunControllerInputProvider;
   onComplete: (result: IslandRunMinigameResult) => void;
 }
 
@@ -13,6 +17,7 @@ export function IslandRunMinigameLauncher({
   minigameId,
   islandNumber,
   ticketBudget,
+  controllerInput,
   onComplete,
 }: IslandRunMinigameLauncherProps) {
   const entry = getMinigame(minigameId);
@@ -32,6 +37,7 @@ export function IslandRunMinigameLauncher({
     <Component
       islandNumber={islandNumber}
       ticketBudget={ticketBudget}
+      controllerInput={controllerInput}
       onComplete={onComplete}
     />
   );

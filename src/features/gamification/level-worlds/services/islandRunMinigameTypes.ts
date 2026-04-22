@@ -30,6 +30,14 @@ export interface IslandRunMinigameProps {
   islandNumber: number;
   /** Optional: cap on how many tickets/lives the player can spend */
   ticketBudget?: number;
+  /** Optional: external controller bridge (used by Shooter Blitz/footer adapter) */
+  controllerInput?: IslandRunControllerInputProvider;
+}
+
+export type IslandRunControllerIntent = 'left' | 'right' | 'fire';
+
+export interface IslandRunControllerInputProvider {
+  subscribe: (listener: (intent: IslandRunControllerIntent) => void) => () => void;
 }
 
 /**

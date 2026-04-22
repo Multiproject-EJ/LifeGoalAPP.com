@@ -1,10 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 import { awardDice, awardGameTokens, logGameSession } from '../../../../services/gameRewards';
 import { triggerCompletionHaptic } from '../../../../utils/completionHaptics';
 import { useSupabaseAuth } from '../../../auth/SupabaseAuthProvider';
-import type { IslandRunMinigameResult } from '../../level-worlds/services/islandRunMinigameTypes';
+import type {
+  IslandRunControllerInputProvider,
+  IslandRunControllerIntent,
+  IslandRunMinigameResult,
+} from '../../level-worlds/services/islandRunMinigameTypes';
 import { getBossTrialConfig } from '../../level-worlds/services/bossService';
 import './shooterBlitz.css';
 
@@ -19,6 +23,8 @@ interface ShooterBlitzProps {
   islandNumber?: number;
   /** Ticket budget (IslandRunMinigameProps compat) */
   ticketBudget?: number;
+  /** Optional external controller input source (footer adapter bridge) */
+  controllerInput?: IslandRunControllerInputProvider;
 }
 
 type PowerupKind = 'rapid_fire' | 'shield' | 'triple_shot';
@@ -66,7 +72,13 @@ const MAX_HP_BY_DIFFICULTY: Record<string, number> = {
 
 const POWERUP_DURATION_SEC = 6;
 
-export function ShooterBlitz({ session: sessionProp, onClose, onComplete, islandNumber = 1 }: ShooterBlitzProps) {
+export function ShooterBlitz({
+  session: sessionProp,
+  onClose,
+  onComplete,
+  islandNumber = 1,
+  controllerInput,
+}: ShooterBlitzProps) {
   const { session: contextSession } = useSupabaseAuth();
   const session = sessionProp ?? contextSession;
 
@@ -78,6 +90,7 @@ export function ShooterBlitz({ session: sessionProp, onClose, onComplete, island
   const [hp, setHp] = useState(8);
   const [activePowerup, setActivePowerup] = useState<PowerupKind | null>(null);
   const [powerupExpiresInSec, setPowerupExpiresInSec] = useState(0);
+  const [lastControllerIntent, setLastControllerIntent] = useState<IslandRunControllerIntent | null>(null);
 
   const userId = session?.user.id;
 
@@ -191,7 +204,7 @@ export function ShooterBlitz({ session: sessionProp, onClose, onComplete, island
     setPowerupExpiresInSec(POWERUP_DURATION_SEC);
   };
 
-  const handleFire = () => {
+  const handleFire = useCallback(() => {
     if (!isMissionStarted || isMissionOver || isCompleting) return;
 
     const baseHits = activePowerup === 'rapid_fire' ? 2 : 1;
@@ -203,7 +216,17 @@ export function ShooterBlitz({ session: sessionProp, onClose, onComplete, island
       maybeGrantPowerup(next);
       return next;
     });
-  };
+  }, [activePowerup, isCompleting, isMissionOver, isMissionStarted, trial.scoreTarget]);
+
+  useEffect(() => {
+    if (!controllerInput) return;
+    return controllerInput.subscribe((intent) => {
+      setLastControllerIntent(intent);
+      if (intent === 'fire') {
+        handleFire();
+      }
+    });
+  }, [controllerInput, handleFire]);
 
   const handleCompleteMission = () => {
     if (isCompleting || !isWin) return;
@@ -328,6 +351,12 @@ export function ShooterBlitz({ session: sessionProp, onClose, onComplete, island
             ) : (
               <p className="shooter-blitz__phase">Destroy every 3rd enemy to trigger a power-up drop.</p>
             )}
+
+            {lastControllerIntent ? (
+              <p className="shooter-blitz__phase" aria-live="polite">
+                Controller: {lastControllerIntent === 'fire' ? 'fire' : `strafe ${lastControllerIntent}`}
+              </p>
+            ) : null}
 
             {isMissionOver ? (
               <p className={`shooter-blitz__result ${isWin ? 'shooter-blitz__result--win' : 'shooter-blitz__result--lose'}`}>
