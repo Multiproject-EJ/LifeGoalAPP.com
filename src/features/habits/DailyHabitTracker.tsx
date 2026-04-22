@@ -5808,60 +5808,64 @@ export function DailyHabitTracker({
                         }}
                         disabled={isSaving || (!scheduledToday && !isCompleted)}
                       />
-                      {(isCompleted || state?.progressState === 'skipped' || state?.progressState === 'missed') && state?.progressState && (
-                        <span
-                          className={`progress-state-badge ${getProgressStateColorClass(state.progressState)}`}
-                          aria-label={getProgressStateLabel(state.progressState)}
-                        >
-                          {getProgressStateIcon(state.progressState)} {getProgressStateLabel(state.progressState)}
-                        </span>
-                      )}
-                      <span className="habit-checklist__name">
-                        {!isCompactView && habit.emoji ? (
-                          <span className="habit-checklist__icon" aria-hidden="true">
-                            {habit.emoji}
-                          </span>
-                        ) : null}
-                        {habit.name}
-                      </span>
-                      {habitHealthState !== 'active' ? (
-                        <span
-                          className={`habit-health-badge habit-health-badge--${habitHealthState}`}
-                          aria-label={`Habit health status: ${getHabitHealthBadgeLabel(habitHealthState)}`}
-                        >
-                          {getHabitHealthBadgeLabel(habitHealthState)}
-                        </span>
-                      ) : null}
-                      {(() => {
-                        const scheduleObj = habit.schedule as Record<string, unknown> | null;
-                        if (
-                          scheduleObj?.mode === 'times_per_week' &&
-                          typeof scheduleObj.timesPerWeek === 'number'
-                        ) {
-                          const completed = weekCompletionsByHabit[habit.id] ?? 0;
-                          const target = scheduleObj.timesPerWeek;
-                          return (
-                            <span
-                              className="habit-weekly-progress-badge"
-                              aria-label={`${completed} of ${target} times completed this week`}
-                            >
-                              {completed}/{target} this week
+                      <div className="habit-checklist__main">
+                        <span className="habit-checklist__name">
+                          {!isCompactView && habit.emoji ? (
+                            <span className="habit-checklist__icon" aria-hidden="true">
+                              {habit.emoji}
                             </span>
-                          );
-                        }
-                        return null;
-                      })()}
-                      {isOfferHabit && timeLimitedCountdownLabel ? (
-                        <span className="habit-checklist__offer-timer" aria-label="Offer time remaining">
-                          ⏳ {timeLimitedCountdownLabel}
+                          ) : null}
+                          {habit.name}
                         </span>
-                      ) : null}
-                      {/* Quest habit badge — visible on the active quest habit */}
-                      {isQuestHabit ? (
-                        <span className="habit-checklist__quest-badge" aria-label="Quest Habit — unlocks your bonus door">
-                          ⭐ Quest Habit
-                        </span>
-                      ) : null}
+                        <div className="habit-checklist__badges">
+                          {(isCompleted || state?.progressState === 'skipped' || state?.progressState === 'missed') && state?.progressState && (
+                            <span
+                              className={`progress-state-badge ${getProgressStateColorClass(state.progressState)}`}
+                              aria-label={getProgressStateLabel(state.progressState)}
+                            >
+                              {getProgressStateIcon(state.progressState)} {getProgressStateLabel(state.progressState)}
+                            </span>
+                          )}
+                          {habitHealthState !== 'active' ? (
+                            <span
+                              className={`habit-health-badge habit-health-badge--${habitHealthState}`}
+                              aria-label={`Habit health status: ${getHabitHealthBadgeLabel(habitHealthState)}`}
+                            >
+                              {getHabitHealthBadgeLabel(habitHealthState)}
+                            </span>
+                          ) : null}
+                          {(() => {
+                            const scheduleObj = habit.schedule as Record<string, unknown> | null;
+                            if (
+                              scheduleObj?.mode === 'times_per_week' &&
+                              typeof scheduleObj.timesPerWeek === 'number'
+                            ) {
+                              const completed = weekCompletionsByHabit[habit.id] ?? 0;
+                              const target = scheduleObj.timesPerWeek;
+                              return (
+                                <span
+                                  className="habit-weekly-progress-badge"
+                                  aria-label={`${completed} of ${target} times completed this week`}
+                                >
+                                  {completed}/{target} this week
+                                </span>
+                              );
+                            }
+                            return null;
+                          })()}
+                          {isOfferHabit && timeLimitedCountdownLabel ? (
+                            <span className="habit-checklist__offer-timer" aria-label="Offer time remaining">
+                              ⏳ {timeLimitedCountdownLabel}
+                            </span>
+                          ) : null}
+                          {/* Quest habit badge — visible on the active quest habit */}
+                          {isQuestHabit ? (
+                            <span className="habit-checklist__quest-badge" aria-label="Quest Habit — unlocks your bonus door">
+                              ⭐ Quest Habit
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
                       {/* Quest habit toggle button — tap to designate/remove this habit as the Quest Habit */}
                       <button
                         type="button"
