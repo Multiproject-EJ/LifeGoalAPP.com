@@ -30,6 +30,14 @@ export const islandRunFoundationTests: TestCase[] = [
     },
   },
   {
+    name: 'getIslandRarity follows canonical 120-island special schedule',
+    run: () => {
+      assertEqual(getIslandRarity(10), 'normal', 'Expected island 10 to be normal (not in canonical special list)');
+      assertEqual(getIslandRarity(12), 'seasonal', 'Expected island 12 to be seasonal (canonical special island)');
+      assertEqual(getIslandRarity(60), 'rare', 'Expected island 60 to remain rare within canonical special list');
+    },
+  },
+  {
     name: 'generateIslandStopPlan always includes at least one behavior stop',
     run: () => {
       const plan = generateIslandStopPlan(12);
