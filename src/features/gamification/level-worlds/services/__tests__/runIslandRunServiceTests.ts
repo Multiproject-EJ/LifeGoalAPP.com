@@ -33,6 +33,7 @@ import { minigameConsolidationPhase4Tests } from './minigameConsolidationPhase4.
 import { islandRunShooterControllerBridgeTests } from './islandRunShooterControllerBridge.test';
 import { islandRunShooterControllerTelemetryTests } from './islandRunShooterControllerTelemetry.test';
 import { shooterBlitzLaneLogicTests } from './shooterBlitzLaneLogic.test';
+import { islandRunShooterControllerQaMatrixTests } from './islandRunShooterControllerQaMatrix.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -71,6 +72,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunShooterControllerBridge', tests: islandRunShooterControllerBridgeTests },
   { label: 'islandRunShooterControllerTelemetry', tests: islandRunShooterControllerTelemetryTests },
   { label: 'shooterBlitzLaneLogic', tests: shooterBlitzLaneLogicTests },
+  { label: 'islandRunShooterControllerQaMatrix', tests: islandRunShooterControllerQaMatrixTests },
 ];
 
 async function main() {
