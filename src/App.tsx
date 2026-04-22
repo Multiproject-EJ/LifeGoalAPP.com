@@ -3687,6 +3687,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <p className="mobile-menu-overlay__ikigai-copy">
                     Build your purpose compass with one small action in each area: discover, express, align, and review.
                   </p>
+                  <figure className="mobile-menu-overlay__ikigai-diagram-wrap">
+                    <img
+                      className="mobile-menu-overlay__ikigai-diagram"
+                      src="/assets/ikigai/ikigai-diagram.svg"
+                      alt="Ikigai diagram with four overlapping circles: what you love, what you are good at, what the world needs, and what you can be paid for."
+                      loading="lazy"
+                    />
+                    <figcaption className="mobile-menu-overlay__ikigai-caption">
+                      Use this map to define a tiny experiment for each circle this week.
+                    </figcaption>
+                  </figure>
                   <div className="mobile-menu-overlay__submenu mobile-menu-overlay__submenu--open">
                     <button type="button" className="mobile-menu-overlay__submenu-button" onClick={openIkigaiCoachPrompt}>
                       <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">🧠</span>

@@ -18497,6 +18497,28 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: #334155;
 }
 
+.mobile-menu-overlay__ikigai-diagram-wrap {
+  margin: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.mobile-menu-overlay__ikigai-diagram {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: #f8fafc;
+}
+
+.mobile-menu-overlay__ikigai-caption {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #475569;
+  line-height: 1.4;
+}
+
 :is(
   [data-theme='dark-glass'],
   [data-theme='midnight-purple'],
@@ -18504,6 +18526,25 @@ html.platform-ipad .workspace-shell__menu-edge {
   [data-theme='bio-night']
 ) .mobile-menu-overlay__ikigai-copy {
   color: rgba(226, 232, 240, 0.86);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__ikigai-diagram {
+  border-color: rgba(148, 163, 184, 0.32);
+  background: rgba(15, 23, 42, 0.68);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__ikigai-caption {
+  color: rgba(226, 232, 240, 0.78);
 }
 
 .mobile-menu-overlay__hold-task {
