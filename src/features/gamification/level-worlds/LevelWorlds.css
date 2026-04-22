@@ -5155,3 +5155,24 @@
   .island-run-board__topbar-streak-chip--increment { animation: none; }
   .island-run-shop-cost-line__bar-fill { transition: none; }
 }
+
+.island-run-shooter-controller {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.island-run-shooter-controller__btn {
+  min-width: 90px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(12, 16, 30, 0.7);
+  color: #ffffff;
+  font-weight: 700;
+  padding: 10px 14px;
+}
+
+.island-run-shooter-controller__btn--fire {
+  background: rgba(255, 120, 62, 0.22);
+  border-color: rgba(255, 165, 88, 0.65);
+}
