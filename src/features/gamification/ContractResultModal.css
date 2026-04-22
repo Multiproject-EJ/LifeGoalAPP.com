@@ -271,6 +271,13 @@
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
+.contract-result-modal__button--secondary {
+  background: #eef2ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+  margin-bottom: 0.5rem;
+}
+
 /* ---- Cancel button ---- */
 .contract-result-modal__cancel-button {
   width: 100%;

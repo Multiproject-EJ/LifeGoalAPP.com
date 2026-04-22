@@ -4,6 +4,8 @@ import { listHabitsV2, quickAddDailyHabit, type HabitV2Row } from '../../service
 import { fetchGoals, insertGoal } from '../../services/goals';
 import type { Database } from '../../lib/database.types';
 import { createContract, activateContract, fetchContracts, type ContractInput } from '../../services/commitmentContracts';
+import { listAvailableRewardsForContracts, linkRewardToContract } from '../../services/contractRewards';
+import type { RewardItem } from '../../types/gamification';
 import { IdentityStatementInput } from './IdentityStatementInput';
 import { MultiStageEditor } from './MultiStageEditor';
 import { NarrativeThemePicker } from './NarrativeThemePicker';
@@ -18,6 +20,7 @@ interface ContractWizardProps {
   currentTokenBalance: number;
   onComplete: () => void;
   onCancel: () => void;
+  onRewardLinked?: (contractId: string) => void;
 }
 
 type WizardStep = 0 | 1 | 2 | 3 | 4;
@@ -76,6 +79,7 @@ export function ContractWizard({
   currentTokenBalance,
   onComplete,
   onCancel,
+  onRewardLinked,
 }: ContractWizardProps) {
   const [currentStep, setCurrentStep] = useState<WizardStep>(0);
   const [targetOptions, setTargetOptions] = useState<TargetOption[]>([]);
@@ -117,6 +121,8 @@ export function ContractWizard({
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availableRewards, setAvailableRewards] = useState<RewardItem[]>([]);
+  const [selectedRewardId, setSelectedRewardId] = useState('');
 
   // Current wizard has 5 rendered steps (0..4) for every contract type.
   const totalSteps: WizardStep = 4;
@@ -191,6 +197,15 @@ export function ContractWizard({
     };
 
     void loadContractSignals();
+  }, [userId]);
+
+  useEffect(() => {
+    const loadRewards = async () => {
+      const { data } = await listAvailableRewardsForContracts(userId);
+      setAvailableRewards(data ?? []);
+    };
+
+    void loadRewards();
   }, [userId]);
 
   // Update default target count when cadence changes
@@ -342,6 +357,14 @@ export function ContractWizard({
       
       if (activateError) {
         throw activateError;
+      }
+
+      if (selectedRewardId) {
+        const { error: linkError } = await linkRewardToContract(userId, contract.id, selectedRewardId);
+        if (linkError) {
+          throw linkError;
+        }
+        onRewardLinked?.(contract.id);
       }
 
       onComplete();
@@ -919,6 +942,28 @@ export function ContractWizard({
             </p>
           </div>
 
+          <div className="contract-wizard__field-group">
+            <label className="contract-wizard__label" htmlFor="linked-reward">
+              Contract reward (optional)
+            </label>
+            <select
+              id="linked-reward"
+              className="contract-wizard__input"
+              value={selectedRewardId}
+              onChange={(e) => setSelectedRewardId(e.target.value)}
+            >
+              <option value="">No linked reward</option>
+              {availableRewards.map((reward) => (
+                <option key={reward.id} value={reward.id}>
+                  {reward.title}
+                </option>
+              ))}
+            </select>
+            <p className="contract-wizard__helper-text">
+              Linked rewards can be claimed from successful contract results without spending Gold.
+            </p>
+          </div>
+
 
           <div className="contract-wizard__field-group">
             <label className="contract-wizard__label">Accountability mode</label>
@@ -1048,6 +1093,10 @@ export function ContractWizard({
             <div className="contract-wizard__summary-row">
               <strong>Cooling-off:</strong>
               <span>You can cancel within 24 hours without penalty</span>
+            </div>
+            <div className="contract-wizard__summary-row">
+              <strong>Reward:</strong>
+              <span>{selectedRewardId ? (availableRewards.find((reward) => reward.id === selectedRewardId)?.title ?? 'Linked reward') : 'None'}</span>
             </div>
           </div>
 

@@ -19,6 +19,9 @@ interface ContractResultModalProps {
   onActivateGentleRecovery: () => void;
   onPauseWeek: () => void;
   onCancelContract: () => void;
+  linkedRewardTitle?: string | null;
+  onClaimLinkedReward?: () => void;
+  claimingLinkedReward?: boolean;
 }
 
 function formatRecoveryAvailability(nextEligibleAt?: string): string | null {
@@ -57,6 +60,9 @@ export function ContractResultModal({
   onActivateGentleRecovery,
   onPauseWeek,
   onCancelContract,
+  linkedRewardTitle = null,
+  onClaimLinkedReward,
+  claimingLinkedReward = false,
 }: ContractResultModalProps) {
   const isSuccess = evaluation.result === 'success';
   const canResetContract = Boolean(resetEligibility?.eligible);
@@ -111,7 +117,25 @@ export function ContractResultModal({
               </span>
             </div>
           )}
+          {linkedRewardTitle && onClaimLinkedReward && (
+            <div className="contract-result-modal__bonus">
+              <span className="contract-result-modal__bonus-icon">🏆</span>
+              <span className="contract-result-modal__bonus-text">
+                Linked reward ready: {linkedRewardTitle}
+              </span>
+            </div>
+          )}
           <div className="contract-result-modal__actions">
+            {linkedRewardTitle && onClaimLinkedReward && (
+              <button
+                type="button"
+                className="contract-result-modal__button contract-result-modal__button--secondary"
+                onClick={onClaimLinkedReward}
+                disabled={claimingLinkedReward}
+              >
+                {claimingLinkedReward ? 'Claiming reward...' : 'Claim linked reward'}
+              </button>
+            )}
             <button
               type="button"
               className="contract-result-modal__button contract-result-modal__button--primary"

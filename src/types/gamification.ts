@@ -134,6 +134,8 @@ export interface RewardRedemption {
   rewardTitle: string;
   costGold: number;
   redeemedAt: string;
+  sourceType?: 'shop' | 'contract';
+  sourceContractId?: string | null;
 }
 
 // =====================================================
