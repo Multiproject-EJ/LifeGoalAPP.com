@@ -593,7 +593,8 @@ mid-hop token reset/snap race.
 
 ### P1-22. Phase 4 Shooter controller QA matrix notes (islands 1 / 4 / 23)
 
-**Status:** 🟡 In progress (session 16 — automated matrix documented, manual viewport QA still pending).
+**Status:** 🟡 In progress (session 18 — automated matrix executing; manual viewport QA still pending).
+**Definition:** QA here means **Quality Assurance** focused on rollout safety checks for Shooter Blitz boss routing; it is intentionally constrained to a finite matrix + explicit release gates to prevent process bloat.
 
 This item tracks the explicit Phase 4 matrix requested by
 `MINIGAME_EVENTS_CONSOLIDATION_PLAN.md` and serves as the canonical handoff
@@ -604,25 +605,24 @@ log for flag-rollout readiness.
   - launcher routing expectation on islands 1/4/23 (`1/4 -> legacy`, `23 -> shooter_blitz`)
   - shared intent parity for footer and keyboard control paths
   - controller attach/detach telemetry payload shape across `footer` + `keyboard`
+  - post-QA routing risk sweep on islands 1/4/23/24 (milestone bosses stay legacy; fight bosses route to `shooter_blitz`)
 
 **Execution status in this environment:**
-- Full Island Run harness run (`npm run test:island-run`) is currently blocked by a
-  pre-existing TypeScript test compile issue (`import.meta.env` module-mode
-  mismatch under `tsconfig.island-run-tests.json`), so matrix cases are
-  registered but not yet executable here.
+- ✅ `npm run test:island-run` now executes end-to-end in the local harness.
+- ✅ QA-matrix regression suite (including post-QA routing sweep) is now actively executed as part of the run.
 
 **QA matrix ledger (current):**
 
 | Island | Footer controls (mobile) | Keyboard fallback (desktop) | Telemetry attach/detach (`footer`,`keyboard`) | Notes |
 |---|---|---|---|---|
-| 1 | ⏳ Pending manual run | ⏳ Pending manual run | 🟡 Covered by regression spec; runtime execution blocked | Milestone boss expected to remain legacy path. |
-| 4 | ⏳ Pending manual run | ⏳ Pending manual run | 🟡 Covered by regression spec; runtime execution blocked | Milestone boss expected to remain legacy path. |
-| 23 | ⏳ Pending manual run | ⏳ Pending manual run | 🟡 Covered by regression spec; runtime execution blocked | Fight boss expected to launch `shooter_blitz`. |
+| 1 | ⏳ Pending manual run | ⏳ Pending manual run | ✅ Covered by regression suite and executing | Milestone boss expected to remain legacy path. |
+| 4 | ⏳ Pending manual run | ⏳ Pending manual run | ✅ Covered by regression suite and executing | Milestone boss expected to remain legacy path. |
+| 23 | ⏳ Pending manual run | ⏳ Pending manual run | ✅ Covered by regression suite and executing | Fight boss expected to launch `shooter_blitz`. |
 
 **Exit criteria for closing this item:**
-1. Fix test-compile environment so `npm run test:island-run` executes the new suite.
+1. ~~Fix test-compile/runtime harness so `npm run test:island-run` executes the new suite end-to-end.~~ ✅ Done (session 18).
 2. Record one manual mobile + desktop pass run for each island row above.
-3. Confirm no routing regressions before enabling `islandRunShooterBlitzBossEnabled`.
+3. Confirm no routing regressions before enabling `islandRunShooterBlitzBossEnabled` (automated sweep is now running in CI/local harness; manual confirmation remains the release gate).
 
 
 ## P2 — Tuning / polish / terminology

@@ -5,6 +5,7 @@ import {
   __setIslandRunFeatureFlagsForTests,
 } from '../../../../../config/islandRunFeatureFlags';
 import { resolveBossStopMinigame } from '../islandRunMinigameLauncherService';
+import { getBossTrialConfig } from '../bossService';
 import { assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 const QA_ISLANDS = [1, 4, 23] as const;
@@ -34,6 +35,36 @@ export const islandRunShooterControllerQaMatrixTests: TestCase[] = [
           { islandNumber: 23, minigameId: 'shooter_blitz' },
         ],
         'only fight-boss island 23 should route to shooter_blitz in the current Phase 4 contract',
+      );
+    },
+  },
+  {
+    name: 'QA matrix: post-QA risk sweep keeps milestone bosses legacy and fight bosses on Shooter Blitz',
+    run: () => {
+      __resetIslandRunFeatureFlagsForTests();
+      __setIslandRunFeatureFlagsForTests({ islandRunShooterBlitzBossEnabled: true });
+
+      const sampledIslands = [1, 4, 23, 24] as const;
+      const outcomes = sampledIslands.map((islandNumber) => {
+        const trial = getBossTrialConfig(islandNumber);
+        const launch = resolveBossStopMinigame({ kind: 'fixed_boss', islandNumber });
+        return {
+          islandNumber,
+          bossType: trial.type,
+          routedMinigame: launch?.minigameId ?? null,
+        };
+      });
+
+      __resetIslandRunFeatureFlagsForTests();
+      assertDeepEqual(
+        outcomes,
+        [
+          { islandNumber: 1, bossType: 'milestone', routedMinigame: null },
+          { islandNumber: 4, bossType: 'milestone', routedMinigame: null },
+          { islandNumber: 23, bossType: 'fight', routedMinigame: 'shooter_blitz' },
+          { islandNumber: 24, bossType: 'milestone', routedMinigame: null },
+        ],
+        'routing contract must keep milestone bosses on legacy flow while fight bosses launch shooter_blitz',
       );
     },
   },

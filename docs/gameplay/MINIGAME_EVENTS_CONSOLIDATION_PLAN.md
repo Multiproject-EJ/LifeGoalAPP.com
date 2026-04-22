@@ -363,6 +363,14 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 - Keyboard fallback should route through the same shooter-controller bridge used by the footer adapter to keep parity with mobile controls.
 - Telemetry should include `minigameId`, `islandNumber`, and `source` (`footer` vs `keyboard`) on both attach/detach events for QA traceability.
 
+**QA definition + anti-bloat guardrails (added 2026-04-22):**
+- **QA = Quality Assurance.** In this plan, QA means proving rollout-critical behavior is safe to release, not broad exploratory retesting.
+- Keep QA scoped to release risk only:
+  1. **Contract checks first** (automated): routing invariants and telemetry payload shape.
+  2. **Minimal manual matrix** (3 islands only: 1/4/23, mobile + desktop).
+  3. **Flag gate decision**: ship only if both automated + manual checks pass.
+- To avoid endless QA work, every QA task must have explicit exit criteria and should be removed from the active queue once the flag is enabled and stable.
+
 **Phase 4 micro-checklist (for step-by-step session handoffs):**
 - [x] Ship controller bridge + footer adapter UI.
 - [x] Ship gameplay movement response to controller intents.
@@ -382,8 +390,16 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 
 **Phase 4 remaining queue (tightened):**
 - [ ] Record manual viewport QA evidence (mobile footer taps + desktop keyboard) in `ISLAND_RUN_OPEN_ISSUES.md` using the same 1/4/23 matrix headings.
-- [ ] Run post-QA risk sweep: confirm milestone bosses (1/4) stay on legacy path while fight bosses (23+) launch Shooter Blitz.
+- [x] Run post-QA risk sweep: confirm milestone bosses (1/4) stay on legacy path while fight bosses (23+) launch Shooter Blitz.
+  - **Session 2026-04-22 update:** Added regression case `QA matrix: post-QA risk sweep keeps milestone bosses legacy and fight bosses on Shooter Blitz` in `islandRunShooterControllerQaMatrix.test.ts` covering islands `1/4/23/24`.
 - [ ] Draft and land the flag-rollout PR (`islandRunShooterBlitzBossEnabled: true`) after QA notes are merged.
+
+**Phase 4 execution queue (refined for handoffs):**
+1. [ ] **Manual viewport evidence:** capture one mobile-footer + one desktop-keyboard run for islands 1/4/23, then log pass/fail rows in `ISLAND_RUN_OPEN_ISSUES.md`.
+2. [ ] **Flag-rollout prep:** once manual matrix is all-pass, capture a short risk note that references the automated routing sweep (islands 1/4/23/24) + manual notes.
+3. [ ] **Rollout PR:** flip `islandRunShooterBlitzBossEnabled` to `true`, include QA evidence links in PR description, then ship.
+
+**Session 2026-04-22 progress note:** the island-run harness blocker is resolved and `npm run test:island-run` now executes the QA matrix end-to-end; the next undone Phase 4 task remains manual viewport evidence capture for islands 1/4/23.
 
 ### Phase 5 — Mystery Task Tower & Vision Quest
 - [ ] Wire mystery-stop launcher to launch Task Tower / Vision Quest components when the rolled `mysteryContentKind` selects them.
