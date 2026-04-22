@@ -2,7 +2,7 @@
 
 **Written:** 2026-04-21
 **Status:** Plan approved, ready to ship in phases.
-**Related docs:** `CANONICAL_GAMEPLAY_CONTRACT.md`, `STAGE_C_STATE_ARCHITECTURE_MIGRATION.md`, `ISLAND_RUN_OPEN_ISSUES.md`, `NEXT_TODO_PR_LIST.md`
+**Related docs:** `CANONICAL_GAMEPLAY_CONTRACT.md`, `STAGE_C_STATE_ARCHITECTURE_MIGRATION.md`, `ISLAND_RUN_OPEN_ISSUES.md`, `NEXT_TODO_PR_LIST.md`, `QA_WORKFLOW.md`
 
 ---
 
@@ -276,6 +276,8 @@ supabase/migrations/
 - **Stripe:** mock the checkout service; verify ticket grant shape in the webhook handler.
 - **No tests for game internals** — they're volatile. Test the contract boundary only.
 
+**Workflow policy (applies to all phases):** follow `docs/gameplay/QA_WORKFLOW.md` so QA stays risk-first and bounded (contract checks first, then finite manual matrices, then explicit flag decision).
+
 ---
 
 ## 10. Rollout / feature flags
@@ -402,6 +404,7 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 **Session 2026-04-22 progress note:** the island-run harness blocker is resolved and `npm run test:island-run` now executes the QA matrix end-to-end; the next undone Phase 4 task remains manual viewport evidence capture for islands 1/4/23.
 
 ### Phase 5 — Mystery Task Tower & Vision Quest
+  - **Session 2026-04-22 foundation:** added `openEventMinigame()` mapping + ticket-gate contract in `islandRunEventEngine.ts` and `minigameConsolidationPhase6.test.ts` coverage (event→minigame routing + spend validation). UI/event-panel wiring still pending.
 - [ ] Wire mystery-stop launcher to launch Task Tower / Vision Quest components when the rolled `mysteryContentKind` selects them.
 - [ ] Manual QA: walk through 8–10 islands of mystery rotation.
 - [ ] Flip mystery flags on.

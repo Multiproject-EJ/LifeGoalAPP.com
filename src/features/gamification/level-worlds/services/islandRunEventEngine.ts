@@ -238,3 +238,51 @@ export function emitEventTransitionTelemetry(payload: EventTransitionTelemetryPa
     nowMs: payload.nowMs,
   });
 }
+
+export type EventMinigameId = 'task_tower' | 'lucky_spin' | 'shooter_blitz' | 'partner_wheel';
+
+export interface EventMinigameLaunchDescriptor {
+  eventId: EventId;
+  minigameId: EventMinigameId;
+  ticketCost: number;
+  ticketsSpent: number;
+}
+
+function resolveEventMinigameId(eventId: EventId): EventMinigameId {
+  switch (eventId) {
+    case 'feeding_frenzy':
+      return 'task_tower';
+    case 'lucky_spin':
+      return 'lucky_spin';
+    case 'space_excavator':
+      return 'shooter_blitz';
+    case 'companion_feast':
+      return 'partner_wheel';
+    default:
+      return 'task_tower';
+  }
+}
+
+/**
+ * Phase 6 foundation: maps the active timed event to its canonical mini-game
+ * surface and enforces ticket spend preconditions.
+ */
+export function openEventMinigame(options: {
+  eventId: EventId;
+  ticketsAvailable: number;
+  ticketsToSpend?: number;
+}): EventMinigameLaunchDescriptor | null {
+  const ticketCost = 1;
+  const requestedSpend = Math.floor(options.ticketsToSpend ?? ticketCost);
+  if (!Number.isFinite(requestedSpend) || requestedSpend < ticketCost) return null;
+
+  const ticketsAvailable = Math.max(0, Math.floor(options.ticketsAvailable));
+  if (ticketsAvailable < requestedSpend) return null;
+
+  return {
+    eventId: options.eventId,
+    minigameId: resolveEventMinigameId(options.eventId),
+    ticketCost,
+    ticketsSpent: requestedSpend,
+  };
+}

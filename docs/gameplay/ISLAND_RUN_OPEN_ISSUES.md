@@ -594,7 +594,7 @@ mid-hop token reset/snap race.
 ### P1-22. Phase 4 Shooter controller QA matrix notes (islands 1 / 4 / 23)
 
 **Status:** 🟡 In progress (session 18 — automated matrix executing; manual viewport QA still pending).
-**Definition:** QA here means **Quality Assurance** focused on rollout safety checks for Shooter Blitz boss routing; it is intentionally constrained to a finite matrix + explicit release gates to prevent process bloat.
+**Definition:** QA here means **Quality Assurance** focused on rollout safety checks for Shooter Blitz boss routing; it is intentionally constrained to a finite matrix + explicit release gates to prevent process bloat (see shared policy: `docs/gameplay/QA_WORKFLOW.md`).
 
 This item tracks the explicit Phase 4 matrix requested by
 `MINIGAME_EVENTS_CONSOLIDATION_PLAN.md` and serves as the canonical handoff
