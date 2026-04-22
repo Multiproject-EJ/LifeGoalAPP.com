@@ -1,7 +1,7 @@
 # Island Run — Next TODO PR List
 
-**Last updated:** 2026-04-19 (end of PR 7 batch)
-**Context:** Continuation of the Island Run polish sweep on branch `copilot/investigate-120-island-game-again`. Hand this doc to the next agent session with a prompt like "do PR 8" or "do PR 8 and PR 9 together."
+**Last updated:** 2026-04-22 (end of PR 10 batch)
+**Context:** Continuation of the Island Run polish sweep on branch `copilot/investigate-120-island-game-again`. Hand this doc to the next agent session with a prompt like "do PR 11" or "do PR 11 and PR 12 together."
 
 ---
 
@@ -14,8 +14,11 @@
 | 5   | Feel & juice              | Reward-bar rarity colors + snap; essence drift numbers; haptics a11y + throttle                        |
 | 6   | Clarity & accessibility   | Dice regen ETA service; out-of-dice modal; roll-btn a11y; sticker "one away" nudge                     |
 | 7   | Economy polish            | `resolveShopItemAffordability` service; `<ShopItemCostLine />`; HUD level-up flash                      |
+| 8   | Build-panel parity         | Build panel now uses shared affordability readout, full-build chip, and next-cheapest highlight          |
+| 9   | Egg-sell clarity            | Added egg-sell advisor with recommended badge/reason + tests for shards/dice choice heuristics           |
+| 10  | Boss shortfall forecast     | Added boss-ticket shortfall projection service + HUD warning banner + tests                               |
 
-Test suite sits at **154/154 passing** via `npm run test:island-run`.
+Test suite baseline remains green via `npm run test:island-run` (see latest run in this PR).
 
 ---
 
@@ -23,12 +26,12 @@ Test suite sits at **154/154 passing** via `npm run test:island-run`.
 
 Each entry is sized to be a single focused PR. Items are ordered by impact × risk; items in the same tier can be done in any order.
 
-### PR 8 — Build-panel affordability parity ⭐️ (recommended next)
+### ✅ PR 8 — Build-panel affordability parity (merged)
 **Why:** The Build panel still uses bespoke "need X more" math while the Market panel uses the new shared service. Unifying them makes future currency tuning trivial.
-- [ ] Reuse `<ShopItemCostLine />` on each Building card for the "spend step vs. remaining essence" readout
-- [ ] Add a "Full build: N 🟣" chip per building so players see the total commitment before starting a hold
-- [ ] Highlight the next-cheapest-to-finish building with a soft ring so players have a clear "go here next" nudge
-- [ ] Extend `islandRunShopAffordability` (or add a sibling) to return a `nextCheapestIndex` helper; add unit tests
+- [x] Reuse `<ShopItemCostLine />` on each Building card for the "spend step vs. remaining essence" readout
+- [x] Add a "Full build: N 🟣" chip per building so players see the total commitment before starting a hold
+- [x] Highlight the next-cheapest-to-finish building with a soft ring so players have a clear "go here next" nudge
+- [x] Extend `islandRunShopAffordability` (or add a sibling) to return a `nextCheapestIndex` helper; add unit tests
 
 **Files to touch:**
 - `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx` (build panel JSX around line 7823+)
@@ -37,11 +40,11 @@ Each entry is sized to be a single focused PR. Items are ordered by impact × ri
 
 ---
 
-### PR 9 — Egg-sell reward preview clarity
+### ✅ PR 9 — Egg-sell reward preview clarity (merged)
 **Why:** `getEggSellRewardOptions` returns tier-scaled (shards|dice) options but the modal doesn't currently show a side-by-side "which is better for you right now?" comparison.
-- [ ] New pure service `islandRunEggSellAdvisor.ts` that, given `{ tier, shardsBalance, diceBalance, nextStickerShardCost }`, returns `{ recommendedChoice: 'shards'|'dice', reason: string }`
-- [ ] Extend the sell modal in `IslandRunBoardPrototype.tsx` (around `handleSellEggForChoice`) to render a small "Recommended" badge on one option
-- [ ] Unit tests: near-sticker-completion prefers shards; fresh/empty dice prefers dice; tie → prefer shards (long-term progression)
+- [x] New pure service `islandRunEggSellAdvisor.ts` that, given `{ tier, shardsBalance, diceBalance, nextStickerShardCost }`, returns `{ recommendedChoice: 'shards'|'dice', reason: string }`
+- [x] Extend the sell modal in `IslandRunBoardPrototype.tsx` (around `handleSellEggForChoice`) to render a small "Recommended" badge on one option
+- [x] Unit tests: near-sticker-completion prefers shards; fresh/empty dice prefers dice; tie → prefer shards (long-term progression)
 
 **Files to touch:**
 - `src/features/gamification/level-worlds/services/eggService.ts` (read-only reference for options)
@@ -50,12 +53,12 @@ Each entry is sized to be a single focused PR. Items are ordered by impact × ri
 
 ---
 
-### PR 10 — Boss-ticket shortfall forecast banner
+### ✅ PR 10 — Boss-ticket shortfall forecast banner (merged)
 **Why:** Boss ticket costs 220 essence scaled by island; players often reach the boss landmark with insufficient essence and have to grind. A forecast banner would close the loop.
-- [ ] Pure service: `projectBossEssenceShortfall({ essence, completedStops, avgEssencePerTile, tilesRemaining })` → `{ onTrack, shortfall, tilesNeeded }`
-- [ ] Show a subtle amber banner at the top of the HUD when boss is the only remaining unpaid landmark AND shortfall > 0
-- [ ] Dismiss logic: hide once affordable; re-show if balance drops back below
-- [ ] Unit tests for on-track, short, and already-paid cases
+- [x] Pure service: `projectBossEssenceShortfall({ essence, completedStops, avgEssencePerTile, tilesRemaining })` → `{ onTrack, shortfall, tilesNeeded }`
+- [x] Show a subtle amber banner at the top of the HUD when boss is the only remaining unpaid landmark AND shortfall > 0
+- [x] Dismiss logic: hide once affordable; re-show if balance drops back below
+- [x] Unit tests for on-track, short, and already-paid cases
 
 **Files to touch:**
 - New `services/islandRunBossForecast.ts` + tests
@@ -63,7 +66,7 @@ Each entry is sized to be a single focused PR. Items are ordered by impact × ri
 
 ---
 
-### PR 11 — Stop-completion streak meter
+### PR 11 — Stop-completion streak meter ⭐️ (recommended next)
 **Why:** Completing all 5 stops with no failures across consecutive islands should earn a visible streak multiplier on reward-bar drops. Today the streak state exists internally but is not surfaced.
 - [ ] Add a "🔥 N islands streak" chip next to the level chip
 - [ ] Animate increment (reuse level-up flash pattern) and a gentle fade on reset
@@ -143,8 +146,8 @@ Each of these is a multi-PR arc — start it by writing a design doc PR (docs on
 
 ## 🚦 Recommended next prompt
 
-> "Do PR 8 (build-panel affordability parity) from `docs/gameplay/NEXT_TODO_PR_LIST.md`."
+> "Do PR 11 (stop-completion streak meter) from `docs/gameplay/NEXT_TODO_PR_LIST.md`."
 
 or, for a batch:
 
-> "Do PR 8, PR 9, and PR 10 from the next-todo list, each as its own commit."
+> "Do PR 11, PR 12, and PR 13 from the next-todo list, each as its own commit."
