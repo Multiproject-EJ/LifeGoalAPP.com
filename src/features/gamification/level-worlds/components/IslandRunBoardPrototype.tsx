@@ -146,6 +146,8 @@ import type { IslandRunControllerIntent } from '../services/islandRunMinigameTyp
 import { registerAllMinigameManifests } from '../services/islandRunMinigameManifests';
 import {
   resolveBossStopMinigame,
+  resolveEventMinigameCompletionId,
+  type MinigameLaunchSource,
   resolveMysteryStopMinigame,
   shouldResolveMysteryStopOnMinigameComplete,
 } from '../services/islandRunMinigameLauncherService';
@@ -189,6 +191,7 @@ import {
 } from '../services/islandRunContractV2RewardBar';
 import {
   advanceEventIfExpired,
+  recordEventMinigameCompletion,
   recordEventProgress,
 } from '../services/islandRunEventEngine';
 import {
@@ -1264,7 +1267,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // B3-2: minigame launcher state (M11B framework)
   const [activeLaunchedMinigameId, setActiveLaunchedMinigameId] = useState<string | null>(null);
-  const [activeLaunchedMinigameSource, setActiveLaunchedMinigameSource] = useState<'boss_trial' | 'mystery_stop' | null>(null);
+  const [activeLaunchedMinigameSource, setActiveLaunchedMinigameSource] = useState<MinigameLaunchSource | null>(null);
   const shooterControllerBridge = useMemo(() => createShooterControllerBridge(), []);
   const isShooterControllerActive = activeLaunchedMinigameId === 'shooter_blitz';
   const shooterControllerInput = shooterControllerBridge.controllerInput;
@@ -9292,7 +9295,35 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               if (activeLaunchedMinigameSource === 'boss_trial' && result.completed) {
                 handleResolveBossTrial();
                 setBossTrialPhase('success');
-              } else if (
+              }
+              if (activeLaunchedMinigameId) {
+                const eventCompletionMinigameId = resolveEventMinigameCompletionId({
+                  launchSource: activeLaunchedMinigameSource,
+                  minigameId: activeLaunchedMinigameId,
+                  completed: result.completed,
+                });
+                if (eventCompletionMinigameId) {
+                  const nextRewardBarState = recordEventMinigameCompletion({
+                    state: {
+                      rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
+                      rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
+                      rewardBarClaimCountInEvent: runtimeStateRef.current.rewardBarClaimCountInEvent,
+                      rewardBarEscalationTier: runtimeStateRef.current.rewardBarEscalationTier,
+                      rewardBarLastClaimAtMs: runtimeStateRef.current.rewardBarLastClaimAtMs,
+                      rewardBarBoundEventId: runtimeStateRef.current.rewardBarBoundEventId,
+                      rewardBarLadderId: runtimeStateRef.current.rewardBarLadderId,
+                      activeTimedEvent: runtimeStateRef.current.activeTimedEvent,
+                      activeTimedEventProgress: runtimeStateRef.current.activeTimedEventProgress,
+                      stickerProgress: runtimeStateRef.current.stickerProgress,
+                      stickerInventory: runtimeStateRef.current.stickerInventory,
+                    },
+                    minigameId: eventCompletionMinigameId,
+                    nowMs: Date.now(),
+                  });
+                  applyContractV2RewardBarRuntimeState(nextRewardBarState);
+                }
+              }
+              if (
                 activeLaunchedMinigameId &&
                 shouldResolveMysteryStopOnMinigameComplete({
                   launchSource: activeLaunchedMinigameSource ?? 'shop_button',
