@@ -12,6 +12,7 @@
  * import so the first registration is what actually schedules the chunk.
  */
 
+import { partnerWheelManifest } from '../../games/partner-wheel';
 import { shooterBlitzManifest } from '../../games/shooter-blitz';
 import { taskTowerManifest } from '../../games/task-tower';
 import { visionQuestManifest } from '../../games/vision-quest';
@@ -24,6 +25,7 @@ export const ALL_MINIGAME_MANIFESTS: readonly MinigameManifest[] = Object.freeze
   shooterBlitzManifest,
   taskTowerManifest,
   visionQuestManifest,
+  partnerWheelManifest,
 ]);
 
 let registered = false;

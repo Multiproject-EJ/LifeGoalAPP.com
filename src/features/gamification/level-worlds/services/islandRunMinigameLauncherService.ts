@@ -63,7 +63,7 @@ export interface EventMinigameLaunchContext {
 }
 
 export interface EventMinigameLaunchDescriptor {
-  minigameId: 'task_tower' | 'lucky_spin' | 'shooter_blitz';
+  minigameId: 'task_tower' | 'lucky_spin' | 'shooter_blitz' | 'partner_wheel';
   ticketCost: number;
   ticketsSpent: number;
   config:
@@ -86,6 +86,13 @@ export interface EventMinigameLaunchDescriptor {
         mode: 'space_excavator';
         campaignDurationSec: 180;
         scoreTargetMultiplier: 1.5;
+      }
+    | {
+        source: 'timed_event';
+        eventId: 'companion_feast';
+        mode: 'companion_feast';
+        teamSize: 4;
+        aiPartnerCount: 3;
       };
 }
 
@@ -251,6 +258,37 @@ export function resolveSpaceExcavatorEventMinigame(
       mode: 'space_excavator',
       campaignDurationSec: 180,
       scoreTargetMultiplier: 1.5,
+    },
+  };
+}
+
+
+/**
+ * Phase 6 step 4: Companion Feast event surface routes to the Partner Wheel
+ * placeholder. This is intentionally a launcher-contract skeleton only: no
+ * multiplayer transport or persistent partner state in this step.
+ */
+export function resolveCompanionFeastEventMinigame(
+  ctx: EventMinigameLaunchContext,
+): EventMinigameLaunchDescriptor | null {
+  if (ctx.eventId !== 'companion_feast') return null;
+  const launch = openEventMinigame({
+    eventId: ctx.eventId,
+    ticketsAvailable: ctx.ticketsAvailable,
+    ticketsToSpend: ctx.ticketsToSpend,
+  });
+  if (!launch || launch.minigameId !== 'partner_wheel') return null;
+
+  return {
+    minigameId: 'partner_wheel',
+    ticketCost: launch.ticketCost,
+    ticketsSpent: launch.ticketsSpent,
+    config: {
+      source: 'timed_event',
+      eventId: 'companion_feast',
+      mode: 'companion_feast',
+      teamSize: 4,
+      aiPartnerCount: 3,
     },
   };
 }
