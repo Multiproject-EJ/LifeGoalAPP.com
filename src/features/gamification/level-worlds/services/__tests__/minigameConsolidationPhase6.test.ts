@@ -5,6 +5,7 @@ import { openEventMinigame } from '../islandRunEventEngine';
 import {
   resolveFeedingFrenzyEventMinigame,
   resolveLuckySpinEventMinigame,
+  resolveSpaceExcavatorEventMinigame,
 } from '../islandRunMinigameLauncherService';
 import { assertEqual, type TestCase } from './testHarness';
 
@@ -160,6 +161,51 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
         }),
         null,
         'insufficient tickets should block lucky_spin event launch',
+      );
+    },
+  },
+  {
+    name: 'resolveSpaceExcavatorEventMinigame routes to Shooter Blitz event mode with preserved ticket spend metadata',
+    run: () => {
+      const descriptor = resolveSpaceExcavatorEventMinigame({
+        kind: 'timed_event',
+        eventId: 'space_excavator',
+        ticketsAvailable: 4,
+        ticketsToSpend: 2,
+      });
+      assertEqual(
+        descriptor?.minigameId,
+        'shooter_blitz',
+        'space_excavator should route to shooter_blitz event surface',
+      );
+      assertEqual(descriptor?.ticketsSpent, 2, 'resolver should preserve explicit ticket spend request');
+      assertEqual(
+        descriptor?.config.mode,
+        'space_excavator',
+        'resolver should tag shooter blitz event mode as space_excavator',
+      );
+    },
+  },
+  {
+    name: 'resolveSpaceExcavatorEventMinigame is non-launching for non-space events and insufficient tickets',
+    run: () => {
+      assertEqual(
+        resolveSpaceExcavatorEventMinigame({
+          kind: 'timed_event',
+          eventId: 'feeding_frenzy',
+          ticketsAvailable: 3,
+        }),
+        null,
+        'resolver should be scoped to space_excavator only',
+      );
+      assertEqual(
+        resolveSpaceExcavatorEventMinigame({
+          kind: 'timed_event',
+          eventId: 'space_excavator',
+          ticketsAvailable: 0,
+        }),
+        null,
+        'insufficient tickets should block space_excavator event launch',
       );
     },
   },
