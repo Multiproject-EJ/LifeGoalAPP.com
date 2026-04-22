@@ -5662,6 +5662,11 @@ html.platform-ipad .workspace-shell__menu-edge {
   row-gap: 0.45rem;
 }
 
+.mobile-habit-home .habit-checklist__badges {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 .mobile-habit-home .habit-health-badge,
 .mobile-habit-home .habit-weekly-progress-badge,
 .mobile-habit-home .habit-checklist__offer-timer {
@@ -7468,7 +7473,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 /* Quest toggle button — shown on every habit row */
 .habit-checklist__quest-btn {
   flex-shrink: 0;
-  margin-left: auto;
+  margin-left: 0.2rem;
   width: 28px;
   height: 28px;
   border: none;
@@ -7540,11 +7545,26 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .habit-checklist__row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.65rem;
   cursor: pointer;
   padding: 0.35rem;
   border-radius: 12px;
+  min-width: 0;
+}
+
+.habit-checklist__main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.habit-checklist__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.4rem;
   min-width: 0;
 }
 
@@ -7787,7 +7807,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-weight: 700;
   font-size: 1rem;
   color: #0f172a;
-  flex: 1;
+  display: block;
   min-width: 0;
   word-break: break-word;
 }
@@ -7914,7 +7934,6 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .habit-checklist__offer-timer {
-  margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -7930,7 +7949,6 @@ html.platform-ipad .workspace-shell__menu-edge {
 .habit-health-badge {
   display: inline-flex;
   align-items: center;
-  margin-left: 0.5rem;
   padding: 0.15rem 0.55rem;
   border-radius: 999px;
   font-size: 0.68rem;
@@ -7957,7 +7975,6 @@ html.platform-ipad .workspace-shell__menu-edge {
 .habit-weekly-progress-badge {
   display: inline-flex;
   align-items: center;
-  margin-left: 0.5rem;
   padding: 0.15rem 0.55rem;
   border-radius: 999px;
   background: rgba(99, 102, 241, 0.12);
