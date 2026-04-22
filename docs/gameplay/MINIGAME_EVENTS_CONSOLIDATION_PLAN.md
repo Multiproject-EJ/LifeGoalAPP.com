@@ -457,10 +457,17 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
    - **Session 2026-04-22 update:** shipped one integration test per canonical event launcher path in `minigameConsolidationPhase6.test.ts`, validating reward-bar claimability + payout emission + sticker-state continuity after completion handoff.
 
 ### Phase 7 — Monetization
-- [ ] `src/services/minigameTicketStore.ts` — Stripe checkout wrapper, mirrors dice Stripe flow.
+- [x] `src/services/minigameTicketStore.ts` — Stripe checkout wrapper, mirrors dice Stripe flow.
+  - **Session 2026-04-22 update:** added `initiateMinigameTicketCheckout(...)` + event-to-SKU resolver scaffolding in `src/services/minigameTicketStore.ts` (Edge Function contract: `create-checkout-session-minigame-ticket`).
 - [ ] Placeholder Stripe URLs in config (user will paste).
 - [ ] Webhook handler grants `minigameTicketsByEvent` balance.
 - [ ] UI entry points: "Buy tickets" button in active-event panel + Today's Offer container.
+
+**Phase 7 execution queue (refined 2026-04-22):**
+1. [x] Land `minigameTicketStore` checkout wrapper + canonical SKU routing helper.
+2. [ ] Add config placeholders for per-event ticket checkout URLs/SKUs (left blank for user-provided Stripe values).
+3. [ ] Extend `stripe-webhook` to grant `minigameTicketsByEvent` by purchased SKU.
+4. [ ] Wire UI launch points (active-event panel + Today's Offer) to `initiateMinigameTicketCheckout`.
 
 ### Phase 8 — Polish & balance
 - [ ] Tune ticket grant rates, event durations (confirm 8h/24h/2d/4d hold up in practice), milestone ladders.
