@@ -219,6 +219,7 @@ import {
   bindKeyboardToShooterBridge,
   createShooterControllerBridge,
 } from '../services/islandRunShooterControllerBridge';
+import { emitShooterControllerLifecycleTelemetry } from '../services/islandRunShooterControllerTelemetry';
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 6;
@@ -1274,9 +1275,38 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [isShooterControllerActive, shooterControllerBridge]);
 
   useEffect(() => {
+    if (!isShooterControllerActive) return;
+    emitShooterControllerLifecycleTelemetry('controller_attach', {
+      minigameId: 'shooter_blitz',
+      islandNumber,
+      source: 'footer',
+    });
+    return () => {
+      emitShooterControllerLifecycleTelemetry('controller_detach', {
+        minigameId: 'shooter_blitz',
+        islandNumber,
+        source: 'footer',
+      });
+    };
+  }, [isShooterControllerActive, islandNumber]);
+
+  useEffect(() => {
     if (!isShooterControllerActive || typeof window === 'undefined') return;
-    return bindKeyboardToShooterBridge(shooterControllerBridge, window);
-  }, [isShooterControllerActive, shooterControllerBridge]);
+    emitShooterControllerLifecycleTelemetry('controller_attach', {
+      minigameId: 'shooter_blitz',
+      islandNumber,
+      source: 'keyboard',
+    });
+    const unbind = bindKeyboardToShooterBridge(shooterControllerBridge, window);
+    return () => {
+      unbind();
+      emitShooterControllerLifecycleTelemetry('controller_detach', {
+        minigameId: 'shooter_blitz',
+        islandNumber,
+        source: 'keyboard',
+      });
+    };
+  }, [isShooterControllerActive, shooterControllerBridge, islandNumber]);
 
   // B3-3: market interaction gate
   const [marketInteracted, setMarketInteracted] = useState(false);
