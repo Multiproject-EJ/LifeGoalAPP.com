@@ -1165,12 +1165,19 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
   const handleEditHabit = (habit: HabitV2Row) => {
     const autoProgressState = getAutoProgressState(habit);
     const scalePlan = autoProgressState.scale_plan;
+    const creationContext = (habit.autoprog as Record<string, unknown> | null)?.creation_context as
+      | {
+          intent?: 'build' | 'break';
+          duration?: HabitWizardDraft['duration'];
+        }
+      | undefined;
 
     // Build HabitWizardDraft from HabitV2Row
     const draft: HabitWizardDraft = {
       habitId: habit.id,
       title: habit.title,
       emoji: habit.emoji,
+      intent: creationContext?.intent ?? 'build',
       type: habit.type,
       targetValue: habit.target_num,
       targetUnit: habit.target_unit,
@@ -1184,6 +1191,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
       })(),
       remindersEnabled: false,
       reminderTimes: [],
+      duration: creationContext?.duration ?? { mode: 'none' },
       habitEnvironment: habit.habit_environment ?? undefined,
       environmentContext: normalizeEnvironmentContext(habit.environment_context ?? null, {
         fallbackText: habit.habit_environment ?? undefined,
@@ -1273,6 +1281,10 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
               schedule: draftScheduleToDbSchedule(draft.schedule) as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
               target: draft.targetValue ?? null,
             })),
+            creation_context: {
+              intent: draft.intent ?? 'build',
+              duration: draft.duration ?? { mode: 'none' },
+            },
             scale_plan: {
               enabled: draft.scalePlanEnabled ?? true,
               stages: {
@@ -1353,6 +1365,10 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
 
         insertPayload.autoprog = {
           ...(insertPayload.autoprog as Record<string, unknown>),
+          creation_context: {
+            intent: draft.intent ?? 'build',
+            duration: draft.duration ?? { mode: 'none' },
+          },
           scale_plan: {
             enabled: draft.scalePlanEnabled ?? true,
             stages: {
