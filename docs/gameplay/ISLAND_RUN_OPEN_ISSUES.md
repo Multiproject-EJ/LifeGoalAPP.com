@@ -1,7 +1,7 @@
 # Island Run — Open Issues & Feature Backlog
 
 Status: Living document
-Last updated: 2026-04-22 (session 14 — P1-18 + P1-21 closed)
+Last updated: 2026-04-23 (session 16 — Phase 5 mystery rotation revalidation + flag flip)
 Owner: Gameplay System
 
 This document tracks every unresolved issue, bug, inconsistency, or scoped
@@ -11,6 +11,22 @@ to the canonical file(s) that must change.
 
 Items already **closed** in the same review session are kept at the bottom
 for traceability.
+
+---
+
+## Phase 5 mystery rotation QA log (second pass, 2026-04-23)
+
+Scope: validate 8–10 island mystery rotation behavior before enabling compile-time
+Phase 5 flags (`islandRunTaskTowerMysteryEnabled`, `islandRunVisionQuestMysteryEnabled`).
+
+Result: **PASS** via deterministic rotation matrix coverage (`minigameConsolidationPhase5.test.ts`)
+across islands **1–10** with both flags enabled. Observed variants include both
+`task_tower` and `vision_quest`, satisfying rollout gate for mystery-minigame
+surface availability.
+
+Follow-up manual device sweep (mobile + desktop click-through) remains recommended
+as part of broader SP2 visual UX verification, but no code-path blocker remains
+for Phase 5 flag-on runtime behavior.
 
 ---
 

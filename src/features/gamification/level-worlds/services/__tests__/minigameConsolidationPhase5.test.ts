@@ -10,6 +10,7 @@ import {
   resolveMysteryStopMinigame,
   shouldResolveMysteryStopOnMinigameComplete,
 } from '../islandRunMinigameLauncherService';
+import { generateIslandStopPlan } from '../islandRunStops';
 import { assertEqual, type TestCase } from './testHarness';
 
 export const minigameConsolidationPhase5Tests: TestCase[] = [
@@ -17,6 +18,10 @@ export const minigameConsolidationPhase5Tests: TestCase[] = [
     name: 'resolveMysteryStopMinigame keeps task_tower and vision_quest gated while flags are off',
     run: () => {
       __resetIslandRunFeatureFlagsForTests();
+      __setIslandRunFeatureFlagsForTests({
+        islandRunTaskTowerMysteryEnabled: false,
+        islandRunVisionQuestMysteryEnabled: false,
+      });
       assertEqual(
         resolveMysteryStopMinigame({ kind: 'fixed_mystery', mysteryContentKind: 'task_tower' }),
         null,
@@ -78,6 +83,27 @@ export const minigameConsolidationPhase5Tests: TestCase[] = [
         'habit_action stays inline and should never route to launcher',
       );
       __resetIslandRunFeatureFlagsForTests();
+    },
+  },
+  {
+    name: 'phase-5 rollout matrix: first 10 islands include both task_tower and vision_quest mystery variants when both flags are enabled',
+    run: () => {
+      __resetIslandRunFeatureFlagsForTests();
+      __setIslandRunFeatureFlagsForTests({
+        islandRunTaskTowerMysteryEnabled: true,
+        islandRunVisionQuestMysteryEnabled: true,
+      });
+
+      const seen = new Set<string>();
+      for (let island = 1; island <= 10; island += 1) {
+        const mystery = generateIslandStopPlan(island).find((stop) => stop.stopId === 'mystery');
+        if (!mystery?.mysteryContentKind) continue;
+        seen.add(mystery.mysteryContentKind);
+      }
+      __resetIslandRunFeatureFlagsForTests();
+
+      assertEqual(seen.has('task_tower'), true, 'first 10 islands should include task_tower in mystery rotation');
+      assertEqual(seen.has('vision_quest'), true, 'first 10 islands should include vision_quest in mystery rotation');
     },
   },
   {

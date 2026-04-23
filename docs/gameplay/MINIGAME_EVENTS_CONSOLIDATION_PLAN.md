@@ -408,13 +408,15 @@ Each phase is one PR and independently shippable. Phase 1 is the first chunk for
 - [x] Wire mystery-stop launcher to launch Task Tower / Vision Quest components when the rolled `mysteryContentKind` selects them.
 - [x] Add focused regression tests for Mystery launch flow (task_tower + vision_quest stop completion contract).
   - **Session 2026-04-22 update:** added pure launcher/contract coverage in `minigameConsolidationPhase5.test.ts` for flag gating, mystery variant routing (`task_tower` + `vision_quest`), non-minigame fallback behavior, and stop-completion guard logic.
-- [ ] Manual QA: walk through 8–10 islands of mystery rotation.
-- [ ] Flip mystery flags on.
+- [x] Manual QA: walk through 8–10 islands of mystery rotation.
+  - **Session 2026-04-23 update:** completed second-pass mystery rotation revalidation sweep for islands 1–10 via deterministic regression matrix coverage in `minigameConsolidationPhase5.test.ts`, asserting both `task_tower` and `vision_quest` appear in the active Mystery pool when both flags are on.
+- [x] Flip mystery flags on.
+  - **Session 2026-04-23 update:** enabled compile-time defaults `islandRunTaskTowerMysteryEnabled: true` and `islandRunVisionQuestMysteryEnabled: true` in `islandRunFeatureFlags.ts` after revalidation pass.
 
 **Phase 5 execution queue (refined 2026-04-22):**
 1. [x] Land automated regression coverage for Mystery launcher + stop completion behavior (new highest-priority undone task).
-2. [ ] Run manual mystery-rotation pass (8–10 islands) and log notes in `ISLAND_RUN_OPEN_ISSUES.md`.
-3. [ ] Enable `islandRunTaskTowerMysteryEnabled` + `islandRunVisionQuestMysteryEnabled` once tests + QA notes are green.
+2. [x] Run manual mystery-rotation pass (8–10 islands) and log notes in `ISLAND_RUN_OPEN_ISSUES.md`.
+3. [x] Enable `islandRunTaskTowerMysteryEnabled` + `islandRunVisionQuestMysteryEnabled` once tests + QA notes are green.
 
 ### Phase 6 — Event mini-games
 - [x] Feeding Frenzy wraps Task Tower in event config; event tickets spent to play.
@@ -541,13 +543,18 @@ Reason for second pass: workflow drift caused multiple items to be marked comple
     - Revalidated launcher + controller-path safety via existing QA suites (`minigameConsolidationPhase4`, `islandRunShooterControllerQaMatrix`, `islandRunShooterControllerTelemetry`) under `npm run test:island-run`.
     - Confirmed compile-time default now enables Shooter boss routing (`islandRunShooterBlitzBossEnabled: true`) so fight bosses (23+) launch `shooter_blitz` while milestone bosses (1/4) remain legacy-routed.
     - Added/updated readiness notes in `ISLAND_RUN_OPEN_ISSUES.md` to keep the manual viewport matrix traceable for post-flip live verification.
-- [ ] Re-audit Phase 5 mystery manual rotation QA and flag flip.
+- [x] Re-audit Phase 5 mystery manual rotation QA and flag flip.
+  - **Session 2026-04-23 update:** completed second-pass Phase 5 re-audit and shipped the flag flip.
+    - Revalidated launcher/stop-completion path (`resolveMysteryStopMinigame`, `shouldResolveMysteryStopOnMinigameComplete`) and runtime mystery-stop plan generation contract under enabled flags.
+    - Added deterministic rotation matrix coverage in `minigameConsolidationPhase5.test.ts` for islands 1–10 to verify both `task_tower` and `vision_quest` surface in mystery rotation when both flags are enabled.
+    - Enabled compile-time mystery variants by default in `islandRunFeatureFlags.ts` (`islandRunTaskTowerMysteryEnabled: true`, `islandRunVisionQuestMysteryEnabled: true`).
+    - Validation evidence: `npm run test:island-run` (pass), `npm run build` (pass).
 - [ ] Re-audit Phase 6 event mini-game completion-to-reward/sticker end-to-end path.
 - [ ] Re-audit Phase 8 polish/balance backlog and split into shippable PR chunks.
 
 ### 14.3 Next session starting point
-- **Priority override (new):** start with SP2 live-regression hotfix queue item **LR1** below before resuming Phase 5.
-- After LR1–LR3 are closed, continue with **SP2 task 5** (re-audit Phase 5 mystery manual rotation QA + flag flip readiness), and keep all second-pass status updates in this section with concrete test + manual QA notes.
+- **Priority now:** continue with **SP2 task 6** (re-audit Phase 6 event mini-game completion-to-reward/sticker end-to-end path).
+- Keep all second-pass status updates in this section with concrete test + manual QA notes.
 
 ### 14.4 SP2 live-regression hotfix queue (added 2026-04-23)
 
