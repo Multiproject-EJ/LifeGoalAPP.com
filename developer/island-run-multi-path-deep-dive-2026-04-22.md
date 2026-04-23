@@ -244,6 +244,12 @@ This section is a clean execution checklist after the prior workflow issues
     - Added a dedicated `islandRunStateActions` test that verifies
       `applyEggResolution(...)` publishes once and persists egg-clear ledger
       fields plus optional essence deltas in one commit.
+    - Migrated the main contract-v2 stop objective completion path in
+      `handleCompleteActiveStop(...)` from direct
+      `persistIslandRunRuntimeStatePatch(...)` writes to
+      `applyStopObjectiveProgress(...)`, so objective-complete + active-stop
+      pointer transitions now commit through the canonical store coordinator
+      with explicit `triggerSource` tagging.
    - **Evidence checks:** `npm run test:island-run` passed on 2026-04-23 after
      this increment (320 passed / 0 failed).
   - **What remains:** migrate remaining gameplay-critical direct writes (notably
@@ -277,3 +283,9 @@ This section is a clean execution checklist after the prior workflow issues
      - at least one passing automated check
      - explicit "what remains" note
    - Do not update status docs to "done" unless all evidence is present.
+   - **Status:** 🟡 In progress on 2026-04-23.
+   - **Implementation notes (this session):** Task 4 status/evidence block kept
+     current with newly migrated objective-complete path and a fresh automated
+     check run.
+   - **Evidence checks:** `npm run test:island-run` passed on 2026-04-23 after
+     this update (321 passed / 0 failed).
