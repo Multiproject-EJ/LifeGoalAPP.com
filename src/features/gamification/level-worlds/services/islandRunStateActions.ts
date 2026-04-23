@@ -238,6 +238,27 @@ export interface ApplyFirstRunStarterRewardsOptions {
   triggerSource?: string;
 }
 
+export interface ApplyCreatureTreatInventoryOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  creatureTreatInventory: IslandRunGameStateRecord['creatureTreatInventory'];
+  triggerSource?: string;
+}
+
+export interface ApplyCreatureCollectionOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  creatureCollection: IslandRunGameStateRecord['creatureCollection'];
+  triggerSource?: string;
+}
+
+export interface ApplyActiveCompanionOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  activeCompanionId: IslandRunGameStateRecord['activeCompanionId'];
+  triggerSource?: string;
+}
+
 /**
  * Withdraws essence from the wallet through the store commit path.
  *
@@ -420,6 +441,84 @@ export function applyFirstRunClaimed(options: {
     client,
     record: next,
     triggerSource: triggerSource ?? 'apply_first_run_claimed',
+  });
+  return next;
+}
+
+/**
+ * Commits creature treat inventory through the canonical store path.
+ *
+ * Replaces renderer-side patch writes in treat inventory sync effects so
+ * collection-adjacent progression writes do not bypass the coordinator.
+ */
+export function applyCreatureTreatInventory(options: ApplyCreatureTreatInventoryOptions): IslandRunGameStateRecord {
+  const { session, client, creatureTreatInventory, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const currentInventory = current.creatureTreatInventory;
+  if (
+    currentInventory.basic === creatureTreatInventory.basic
+    && currentInventory.favorite === creatureTreatInventory.favorite
+    && currentInventory.rare === creatureTreatInventory.rare
+  ) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    creatureTreatInventory,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_creature_treat_inventory',
+  });
+  return next;
+}
+
+/**
+ * Commits creature collection ledger through the canonical store path.
+ */
+export function applyCreatureCollection(options: ApplyCreatureCollectionOptions): IslandRunGameStateRecord {
+  const { session, client, creatureCollection, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (JSON.stringify(current.creatureCollection ?? []) === JSON.stringify(creatureCollection ?? [])) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    creatureCollection,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_creature_collection',
+  });
+  return next;
+}
+
+/**
+ * Commits active companion selection through the canonical store path.
+ */
+export function applyActiveCompanion(options: ApplyActiveCompanionOptions): IslandRunGameStateRecord {
+  const { session, client, activeCompanionId, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const normalizedActiveCompanionId = activeCompanionId ?? null;
+  if ((current.activeCompanionId ?? null) === normalizedActiveCompanionId) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    activeCompanionId: normalizedActiveCompanionId,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_active_companion',
   });
   return next;
 }
