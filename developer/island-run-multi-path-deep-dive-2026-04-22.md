@@ -255,6 +255,21 @@ This section is a clean execution checklist after the prior workflow issues
    - Required scenario:
      - roll -> stop open -> ticket prompt/pay -> complete -> island clear -> travel
    - Include hydration/interleaving simulation to catch seam races.
+   - **Status:** ✅ Done on 2026-04-23.
+   - **Implementation notes:** Added a new `islandRunStateActions` integration
+     test (`full-loop gate: roll → ticket pay → stop complete → island clear →
+     travel survives hydration interleave`) that executes the canonical loop
+     through store actions:
+     1) roll sync (`applyRollResult` after simulated roll commit),
+     2) ticket payment (`applyStopTicketPayment`),
+     3) stop objective completion (`applyStopObjectiveProgress`),
+     4) island-clear ledger sync (`syncCompletedStopsForIsland`),
+     5) travel (`travelToNextIsland`) with a concurrent hydration call
+        (`hydrateIslandRunState`) to simulate interleaving.
+   - **Evidence checks:** `npm run test:island-run` passed on 2026-04-23 after
+     this increment (321 passed / 0 failed).
+   - **What remains:** Task 4 (finish remaining gameplay-critical direct write
+     migrations) and Task 6 (completion evidence discipline process guardrails).
 
 6. **Add completion evidence discipline**
    - For each task, require:
