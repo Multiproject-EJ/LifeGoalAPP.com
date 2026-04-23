@@ -65,6 +65,7 @@ import {
   withIslandRunActionLock,
 } from '../services/islandRunActionMutex';
 import {
+  applyBossTrialResolvedMarker,
   applyEggResolution,
   applyEggPlacement,
   applyStopBuildSpend,
@@ -5252,19 +5253,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setBossRewardSummary(rewardText);
     setLandingText(`${rewardText} Claim island clear to travel.`);
 
-    void persistIslandRunRuntimeStatePatch({
+    const record = applyBossTrialResolvedMarker({
       session,
       client,
-      patch: {
-        currentIslandNumber: islandNumber,
-        bossTrialResolvedIslandNumber: islandNumber,
-      },
+      islandNumber,
+      triggerSource: 'handle_resolve_boss_trial',
     });
-    setRuntimeState((current) => ({
-      ...current,
-      currentIslandNumber: islandNumber,
-      bossTrialResolvedIslandNumber: islandNumber,
-    }));
+    setRuntimeState(record);
   };
 
   // M7-COMPLETE: boss trial timer countdown

@@ -28,6 +28,7 @@ import {
   subscribeIslandRunState,
 } from '../islandRunStateStore';
 import {
+  applyBossTrialResolvedMarker,
   applyEggResolution,
   applyEggPlacement,
   applyStopBuildSpend,
@@ -279,6 +280,48 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.appliedDelta, -2, 'appliedDelta should clamp spend to available wallet');
       assertEqual(result.record.shards, 0, 'shards should floor at zero');
       assertEqual(result.record.runtimeVersion, 21, 'runtimeVersion should bump on shard spend');
+    },
+  },
+
+  {
+    name: 'applyBossTrialResolvedMarker commits island marker fields through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 14, currentIslandNumber: 2, bossTrialResolvedIslandNumber: null });
+
+      const result = applyBossTrialResolvedMarker({
+        session,
+        client: null,
+        islandNumber: 3,
+        triggerSource: 'test_boss_marker_commit',
+      });
+
+      assertEqual(result.currentIslandNumber, 3, 'currentIslandNumber should sync to resolved island');
+      assertEqual(result.bossTrialResolvedIslandNumber, 3, 'resolved marker should be written');
+      assertEqual(result.runtimeVersion, 15, 'runtimeVersion should bump on marker commit');
+
+      const snapshot = getIslandRunStateSnapshot(session);
+      assertEqual(snapshot.currentIslandNumber, 3, 'store mirror should reflect island marker commit');
+      assertEqual(snapshot.bossTrialResolvedIslandNumber, 3, 'store mirror should reflect resolved marker');
+    },
+  },
+
+  {
+    name: 'applyBossTrialResolvedMarker is a no-op when marker fields already match',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 14, currentIslandNumber: 3, bossTrialResolvedIslandNumber: 3 });
+
+      const result = applyBossTrialResolvedMarker({
+        session,
+        client: null,
+        islandNumber: 3,
+        triggerSource: 'test_boss_marker_noop',
+      });
+
+      assertEqual(result.runtimeVersion, 14, 'runtimeVersion should not change on no-op');
     },
   },
 
