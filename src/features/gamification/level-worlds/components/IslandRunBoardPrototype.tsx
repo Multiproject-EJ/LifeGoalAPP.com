@@ -1315,6 +1315,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // B3-2: minigame launcher state (M11B framework)
   const [activeLaunchedMinigameId, setActiveLaunchedMinigameId] = useState<string | null>(null);
   const [activeLaunchedMinigameSource, setActiveLaunchedMinigameSource] = useState<MinigameLaunchSource | null>(null);
+  const [activeLaunchedMinigameConfig, setActiveLaunchedMinigameConfig] = useState<Record<string, unknown> | undefined>(undefined);
   const shooterControllerBridge = useMemo(() => createShooterControllerBridge(), []);
   const isShooterControllerActive = activeLaunchedMinigameId === 'shooter_blitz';
   const shooterControllerInput = shooterControllerBridge.controllerInput;
@@ -5372,6 +5373,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         registerAllMinigameManifests();
         setActiveLaunchedMinigameId(bossMinigame.minigameId);
         setActiveLaunchedMinigameSource('boss_trial');
+        setActiveLaunchedMinigameConfig(bossMinigame.config);
         return;
       }
     }
@@ -5400,6 +5402,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     registerAllMinigameManifests();
     setActiveLaunchedMinigameId(mysteryMinigame.minigameId);
     setActiveLaunchedMinigameSource('mystery_stop');
+    setActiveLaunchedMinigameConfig(mysteryMinigame.config);
   };
 
   const handleLaunchTimedEventMinigame = () => {
@@ -5443,6 +5446,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     registerAllMinigameManifests();
     setActiveLaunchedMinigameId(descriptor.minigameId);
     setActiveLaunchedMinigameSource('timed_event');
+    setActiveLaunchedMinigameConfig(descriptor.config);
     playIslandRunSound('minigame_open');
   };
 
@@ -9464,6 +9468,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             minigameId={activeLaunchedMinigameId}
             islandNumber={islandNumber}
             controllerInput={activeLaunchedMinigameId === 'shooter_blitz' ? shooterControllerInput : undefined}
+            launchConfig={activeLaunchedMinigameConfig}
             onComplete={(result) => {
               if (activeLaunchedMinigameSource === 'boss_trial' && result.completed) {
                 handleResolveBossTrial();
@@ -9529,6 +9534,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               }
               setActiveLaunchedMinigameId(null);
               setActiveLaunchedMinigameSource(null);
+              setActiveLaunchedMinigameConfig(undefined);
             }}
           />
         </div>

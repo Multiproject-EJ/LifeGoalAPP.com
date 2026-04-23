@@ -577,10 +577,16 @@ Reason: active tester feedback identified production-facing regressions that mus
   - **Session 2026-04-23 update:** resolved the runtime write-gap by routing Daily Treat dice awards through a shared helper (`awardDailyTreatDice`) that now credits both legacy game-reward balance and canonical Island Run `dicePool` via `applyTokenHopRewards(...)` when a live app session is present; wired `CountdownCalendarModal` free-door + streak-bonus dice paths to this helper and passed `activeSession` from `App` into the modal. Added regression coverage in `minigameConsolidationPhase2.test.ts` proving the dice delta persists after an in-memory store reset + hydration cycle.
   - **Validation evidence (session 2026-04-23):** `npm run test:island-run` (pass), `npm run build` (pass). Manual device claim-flow verification remains queued with LR3 pass.
 
-- [ ] **LR3 — Space Excavator launcher fallback contract (P1):**
+- [x] **LR3 — Space Excavator launcher fallback contract (P1):**
   - Repro report: tapping Space Excavator icon exits Island Run and navigates to Today tab instead of opening a minigame surface.
   - Required fix scope:
     1. Prevent unintended navigation side effect.
     2. Until final Space Excavator UI is shipped, open an explicit placeholder modal/surface with token-spend messaging.
     3. Keep event ticket spend + completion hooks aligned with Phase 6 resolver contracts.
   - Validation gate: manual launch proof + service/UI regression coverage for non-navigating placeholder behavior.
+  - **Session 2026-04-23 update:** completed LR3 with a dedicated placeholder-mode launch surface wired through the existing event resolver contract.
+    - Runtime wiring fix: `IslandRunBoardPrototype` now persists resolver `launchConfig` into launcher state and forwards it into `IslandRunMinigameLauncher`, so event-mode payloads are no longer dropped between resolver and minigame component.
+    - `ShooterBlitz` now recognizes `launchConfig.mode === 'space_excavator'` and renders a non-navigating placeholder surface with explicit ticket-spend messaging + clear close/complete actions; this keeps the player inside Island Run while preserving timed-event completion handoff.
+    - `resolveSpaceExcavatorEventMinigame` now includes `ticketCost`/`ticketsSpent` in config payload for placeholder messaging and contract transparency.
+    - Added regression assertions in Phase 6 consolidation tests verifying Space Excavator resolver config carries ticket spend metadata.
+  - **Validation evidence (session 2026-04-23):** `npm run test:island-run` (pass), `npm run build` (pass). Manual launch click-through remains queued for next device QA pass.

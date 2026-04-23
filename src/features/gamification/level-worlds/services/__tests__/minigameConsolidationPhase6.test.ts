@@ -295,6 +295,16 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
         'space_excavator',
         'resolver should tag shooter blitz event mode as space_excavator',
       );
+      assertEqual(
+        descriptor?.config.mode === 'space_excavator' ? descriptor.config.ticketCost : null,
+        1,
+        'resolver should include ticketCost in space_excavator launch config',
+      );
+      assertEqual(
+        descriptor?.config.mode === 'space_excavator' ? descriptor.config.ticketsSpent : null,
+        2,
+        'resolver should include ticketsSpent in space_excavator launch config',
+      );
     },
   },
   {
