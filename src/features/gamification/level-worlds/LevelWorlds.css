@@ -2307,6 +2307,11 @@
   line-height: 1.35;
 }
 
+.island-run-landmark-coachmark__actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
 .island-run-landmark-coachmark__dismiss {
   border: 1px solid rgba(189, 231, 255, 0.56);
   border-radius: 999px;

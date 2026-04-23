@@ -3051,6 +3051,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
   }, [session.user.id]);
 
+  useEffect(() => {
+    if (!lockedStopInfoStopId && !ticketPromptStopId) return undefined;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (ticketPromptStopId) {
+        setTicketPromptStopId(null);
+        return;
+      }
+      if (lockedStopInfoStopId) {
+        setLockedStopInfoStopId(null);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [lockedStopInfoStopId, ticketPromptStopId]);
+
   /**
    * Pay the essence ticket for `stopId`. On success: persist the updated
    * wallet + ticket ledger, dismiss the prompt, and open the stop. On failure
@@ -7319,13 +7335,25 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <p>
               🧭 Landmarks unlock in order; some require an essence ticket before entry.
             </p>
-            <button
-              type="button"
-              className="island-run-landmark-coachmark__dismiss"
-              onClick={dismissLandmarkCoachmark}
-            >
-              Got it
-            </button>
+            <div className="island-run-landmark-coachmark__actions">
+              <button
+                type="button"
+                className="island-run-landmark-coachmark__dismiss"
+                onClick={() => {
+                  dismissLandmarkCoachmark();
+                  focusNextAvailableStop();
+                }}
+              >
+                Show next
+              </button>
+              <button
+                type="button"
+                className="island-run-landmark-coachmark__dismiss"
+                onClick={dismissLandmarkCoachmark}
+              >
+                Got it
+              </button>
+            </div>
           </aside>
         ) : null}
       </div>
@@ -9468,9 +9496,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       {lockedStopInfoStopId && (() => {
         const lockedStop = islandStopPlan.find((s) => s.stopId === lockedStopInfoStopId);
         const lockedStopIndex = stopIndexByStopId.get(lockedStopInfoStopId) ?? -1;
+        const totalStops = islandStopPlan.length;
         const previousStop = lockedStopIndex > 0
           ? islandStopPlan[lockedStopIndex - 1]
           : null;
+        const upcomingTicketCost = lockedStopIndex > 0
+          ? getStopTicketCost({ effectiveIslandNumber, stopIndex: lockedStopIndex })
+          : 0;
         return (
           <div
             className="island-run-modal-backdrop"
@@ -9486,6 +9518,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <p style={{ marginTop: 12, marginBottom: 8, opacity: 0.9 }}>
                 {lockedStop?.description ?? 'This landmark unlocks as you progress around the island.'}
               </p>
+              {lockedStopIndex >= 0 ? (
+                <p style={{ marginTop: 0, marginBottom: 8, fontSize: 13, opacity: 0.75 }}>
+                  Progress step <strong>{lockedStopIndex + 1}</strong> of <strong>{totalStops}</strong>.
+                </p>
+              ) : null}
+              {upcomingTicketCost > 0 ? (
+                <p style={{ marginTop: 0, marginBottom: 8, fontSize: 13, opacity: 0.75 }}>
+                  Ticket after unlock: <strong>{upcomingTicketCost} 🟣</strong>.
+                </p>
+              ) : null}
               {previousStop ? (
                 <p style={{ marginTop: 0, marginBottom: 16, opacity: 0.8 }}>
                   🔒 Complete <strong>{previousStop.title}</strong> first to enter this landmark.
@@ -9559,7 +9601,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     You need <strong>{shortfall} more 🟣</strong> to pay this ticket.
                   </p>
                   <div
-                    aria-hidden="true"
+                    role="progressbar"
+                    aria-label="Ticket affordability"
+                    aria-valuemin={0}
+                    aria-valuemax={cost}
+                    aria-valuenow={Math.max(0, Math.min(cost, wallet))}
                     style={{
                       width: '100%',
                       height: 8,
@@ -9608,7 +9654,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   disabled={!canAfford}
                   style={{ padding: '8px 16px', opacity: canAfford ? 1 : 0.5 }}
                 >
-                  {canAfford ? `Pay ticket (${cost} 🟣)` : `Need ${shortfall} more 🟣`}
+                  {canAfford ? `Pay ticket & enter (${cost} 🟣)` : `Need ${shortfall} more 🟣`}
                 </button>
               </div>
             </div>
