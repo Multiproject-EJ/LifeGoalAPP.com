@@ -11,6 +11,8 @@ import {
   advanceEventIfExpired,
   emitEventTransitionTelemetry,
   getActiveEvent,
+  getEventDisplayMeta,
+  getEventRotationTemplates,
   getActiveEventStickerId,
   getEventMilestoneLadder,
   parseEventId,
@@ -191,6 +193,35 @@ export const minigameConsolidationPhase3Tests: TestCase[] = [
       assertEqual(getActiveEventStickerId('space_excavator'), 'space_excavator_sticker', 'excavator');
       assertEqual(getActiveEventStickerId('companion_feast'), 'companion_feast_sticker', 'feast');
       assertEqual(getActiveEventStickerId(null), null, 'null → null');
+    },
+  },
+  {
+    name: 'getEventDisplayMeta returns canonical icon/display labels with fallback for unknown events',
+    run: () => {
+      assertDeepEqual(
+        getEventDisplayMeta('feeding_frenzy'),
+        { icon: '🔥', displayName: 'Feeding Frenzy' },
+        'canonical event meta should match banner config',
+      );
+      assertDeepEqual(
+        getEventDisplayMeta('future_event_mode'),
+        { icon: '⭐', displayName: 'Future Event Mode' },
+        'unknown event ids should still render a readable fallback',
+      );
+    },
+  },
+  {
+    name: 'getEventRotationTemplates exposes all canonical event templates for UI renderers',
+    run: () => {
+      const templates = getEventRotationTemplates();
+      assertEqual(templates.length, 4, 'all four canonical events should be exposed');
+      assertDeepEqual(
+        templates.map((template) => template.eventId),
+        ['feeding_frenzy', 'lucky_spin', 'space_excavator', 'companion_feast'],
+        'rotation template order must remain canonical',
+      );
+      assert(templates.every((template) => template.displayName.length > 0), 'every template should include a non-empty display label');
+      assert(templates.every((template) => template.icon.length > 0), 'every template should include an icon');
     },
   },
   {

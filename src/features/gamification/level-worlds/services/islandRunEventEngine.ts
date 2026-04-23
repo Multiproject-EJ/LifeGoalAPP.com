@@ -77,6 +77,21 @@ export interface ActiveEventDescriptor {
   version: number;
 }
 
+export interface EventDisplayMeta {
+  icon: string;
+  displayName: string;
+}
+
+export interface EventRotationTemplate {
+  eventId: EventId;
+  eventType: string;
+  ladderId: string;
+  stickerId: string;
+  durationMs: number;
+  icon: string;
+  displayName: string;
+}
+
 /**
  * Parse the canonical templateId from a record-level `eventId` (e.g.
  * `'feeding_frenzy:1700000000000'` → `'feeding_frenzy'`). Returns `null`
@@ -213,6 +228,49 @@ export function getActiveEventStickerId(eventId: EventId | null | undefined): st
   if (!eventId) return null;
   const template = TIMED_EVENT_SEQUENCE.find((t) => t.templateId === eventId);
   return template?.stickerId ?? null;
+}
+
+/**
+ * Canonical event display metadata for UI surfaces (banner labels/icons).
+ * Returns a safe fallback for unknown values so callers can keep rendering.
+ */
+export function getEventDisplayMeta(eventType: string | null | undefined): EventDisplayMeta {
+  const fallbackEventType = (eventType ?? '').trim();
+  if ((EVENT_IDS as readonly string[]).includes(fallbackEventType)) {
+    const eventId = fallbackEventType as EventId;
+    const meta = EVENT_BANNER_META[eventId];
+    if (meta) {
+      return meta;
+    }
+  }
+
+  const fallbackLabel = fallbackEventType.length > 0
+    ? fallbackEventType.replace(/_/g, ' ').replace(/\b\w/g, (char: string) => char.toUpperCase())
+    : 'Mini-game';
+  return {
+    icon: '⭐',
+    displayName: fallbackLabel,
+  };
+}
+
+/**
+ * Canonical event rotation templates for read-only UI rendering (sticker album,
+ * schedule inspectors, etc). Keeps call sites off raw reward-bar internals.
+ */
+export function getEventRotationTemplates(): readonly EventRotationTemplate[] {
+  return TIMED_EVENT_SEQUENCE.map((template) => {
+    const eventId = template.templateId as EventId;
+    const meta = getEventDisplayMeta(template.eventType);
+    return {
+      eventId,
+      eventType: template.eventType,
+      ladderId: template.ladderId,
+      stickerId: template.stickerId,
+      durationMs: template.durationMs,
+      icon: meta.icon,
+      displayName: meta.displayName,
+    };
+  });
 }
 
 /**
