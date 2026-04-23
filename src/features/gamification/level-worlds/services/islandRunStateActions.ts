@@ -199,6 +199,20 @@ export interface ApplyEssenceDeductResult {
   spent: number;
 }
 
+export interface ApplyWalletShardsDeltaOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  /** Positive = earn, negative = spend. */
+  delta: number;
+  triggerSource?: string;
+}
+
+export interface ApplyWalletShardsDeltaResult {
+  record: IslandRunGameStateRecord;
+  /** Actual change applied after clamp/no-op guards. */
+  appliedDelta: number;
+}
+
 /**
  * Withdraws essence from the wallet through the store commit path.
  *
@@ -233,6 +247,35 @@ export function applyEssenceDeduct(options: ApplyEssenceDeductOptions): ApplyEss
     triggerSource: triggerSource ?? 'apply_essence_deduct',
   });
   return { record: next, spent: result.spent };
+}
+
+/**
+ * Applies a wallet shard delta through the canonical store commit path.
+ *
+ * Replaces renderer-side `setRuntimeState(...shards...)` +
+ * `persistIslandRunRuntimeStatePatch({ shards })` pairs used by stop rewards
+ * and shard-shop spends, so shard mutations no longer bypass the coordinator.
+ */
+export function applyWalletShardsDelta(options: ApplyWalletShardsDeltaOptions): ApplyWalletShardsDeltaResult {
+  const { session, client, delta, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const parsedDelta = Number.isFinite(delta) ? Math.trunc(delta) : 0;
+  if (parsedDelta === 0) return { record: current, appliedDelta: 0 };
+  const nextShards = Math.max(0, current.shards + parsedDelta);
+  const appliedDelta = nextShards - current.shards;
+  if (appliedDelta === 0) return { record: current, appliedDelta: 0 };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    shards: nextShards,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_wallet_shards_delta',
+  });
+  return { record: next, appliedDelta };
 }
 
 export interface RewardBarRuntimeState {
