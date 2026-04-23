@@ -26,7 +26,7 @@ import {
 
 export const minigameConsolidationPhase1Tests: TestCase[] = [
   {
-    name: 'feature flags: every flag defaults to false',
+    name: 'feature flags: phase defaults match shipped rollout state',
     run: () => {
       __resetIslandRunFeatureFlagsForTests();
       const flags = getIslandRunFeatureFlags();
@@ -34,13 +34,13 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
         flags,
         {
           islandRunEventEngineEnabled: false,
-          islandRunShooterBlitzBossEnabled: false,
+          islandRunShooterBlitzBossEnabled: true,
           islandRunTaskTowerMysteryEnabled: false,
           islandRunVisionQuestMysteryEnabled: false,
           islandRunPartnerWheelEnabled: false,
           todaysOfferSpinEntryEnabled: false,
         },
-        'All feature flags must default to false so adding a flag cannot change behavior',
+        'Default feature flags should reflect released phases without enabling unfinished surfaces',
       );
     },
   },

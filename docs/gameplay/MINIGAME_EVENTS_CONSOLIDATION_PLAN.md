@@ -536,10 +536,14 @@ Reason for second pass: workflow drift caused multiple items to be marked comple
     - Gap fix landed: migrated reward-bar/sticker-album event metadata rendering off direct `islandRunContractV2RewardBar` constants and onto new event-engine read helpers (`getEventDisplayMeta`, `getEventRotationTemplates`) so Phase 3 ownership is reflected in runtime UI call sites too.
     - Added regression coverage in `minigameConsolidationPhase3.test.ts` for engine display-meta fallback behavior and canonical rotation-template export shape.
     - Validation evidence: `npm run test:island-run` (340 pass) and `npm run build` (pass).
-- [ ] Re-audit Phase 4 Shooter boss rollout readiness and remaining manual QA + flag flip.
+- [x] Re-audit Phase 4 Shooter boss rollout readiness and remaining manual QA + flag flip.
+  - **Session 2026-04-23 update:** completed second-pass Phase 4 rollout re-audit and shipped the flag flip.
+    - Revalidated launcher + controller-path safety via existing QA suites (`minigameConsolidationPhase4`, `islandRunShooterControllerQaMatrix`, `islandRunShooterControllerTelemetry`) under `npm run test:island-run`.
+    - Confirmed compile-time default now enables Shooter boss routing (`islandRunShooterBlitzBossEnabled: true`) so fight bosses (23+) launch `shooter_blitz` while milestone bosses (1/4) remain legacy-routed.
+    - Added/updated readiness notes in `ISLAND_RUN_OPEN_ISSUES.md` to keep the manual viewport matrix traceable for post-flip live verification.
 - [ ] Re-audit Phase 5 mystery manual rotation QA and flag flip.
 - [ ] Re-audit Phase 6 event mini-game completion-to-reward/sticker end-to-end path.
 - [ ] Re-audit Phase 8 polish/balance backlog and split into shippable PR chunks.
 
 ### 14.3 Next session starting point
-- Continue with **SP2 task 4** (re-audit Phase 4 Shooter boss rollout readiness and remaining manual QA + flag flip), and keep all second-pass status updates in this section with concrete test + manual QA notes.
+- Continue with **SP2 task 5** (re-audit Phase 5 mystery manual rotation QA + flag flip readiness), and keep all second-pass status updates in this section with concrete test + manual QA notes.

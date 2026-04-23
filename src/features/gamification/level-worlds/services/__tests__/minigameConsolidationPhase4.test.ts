@@ -30,9 +30,10 @@ function firstMilestoneIsland(): number {
 
 export const minigameConsolidationPhase4Tests: TestCase[] = [
   {
-    name: 'resolveBossStopMinigame returns null when the shooter-blitz flag is off (default)',
+    name: 'resolveBossStopMinigame returns null when the shooter-blitz flag is off',
     run: () => {
       __resetIslandRunFeatureFlagsForTests();
+      __setIslandRunFeatureFlagsForTests({ islandRunShooterBlitzBossEnabled: false });
       const result = resolveBossStopMinigame({ kind: 'fixed_boss', islandNumber: firstFightIsland() });
       assertEqual(result, null, 'flag off → no launch descriptor, legacy path stays in charge');
     },
@@ -100,13 +101,12 @@ export const minigameConsolidationPhase4Tests: TestCase[] = [
     },
   },
   {
-    name: 'resolveBossStopMinigame is pure — flipping the flag off reverts to null on the next call',
+    name: 'resolveBossStopMinigame is pure — flipping the flag false reverts to null on the next call',
     run: () => {
       __resetIslandRunFeatureFlagsForTests();
-      __setIslandRunFeatureFlagsForTests({ islandRunShooterBlitzBossEnabled: true });
       const island = firstFightIsland();
       const on = resolveBossStopMinigame({ kind: 'fixed_boss', islandNumber: island });
-      __resetIslandRunFeatureFlagsForTests();
+      __setIslandRunFeatureFlagsForTests({ islandRunShooterBlitzBossEnabled: false });
       const off = resolveBossStopMinigame({ kind: 'fixed_boss', islandNumber: island });
       assert(on !== null && off === null, 'flag controls the return value on every call (no caching)');
     },
