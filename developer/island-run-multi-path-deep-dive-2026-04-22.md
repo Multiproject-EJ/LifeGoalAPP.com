@@ -264,6 +264,49 @@ This section is a clean execution checklist after the prior workflow issues
       `bossTrialResolvedIslandNumber`) now commit through the canonical store
       coordinator instead of direct renderer-side
       `persistIslandRunRuntimeStatePatch(...)` usage.
+    - Wired non-hatchery landmark taps so sequence-locked stops no longer feel
+      dead: `handleStopOpenRequest(...)` now opens a dedicated locked-landmark
+      info prompt (title + description + prerequisite CTA) instead of only
+      posting landing text, and ticket prompts now include the landmark
+      description before payment so every stop tap has a clear info/enter
+      pathway.
+    - Continued landmark UX pass per product feedback: orbit stop buttons now
+      render color-coded state chips (`Locked` / `Ticket` / `Open` / `Done`),
+      locked prompt CTA copy now uses explicit prerequisite-open language, and
+      ticket prompt UX now includes an affordability progress bar + "find
+      essence" hint path while retaining the direct `Pay ticket` action that
+      closes prompt flow into stop entry on success.
+    - Added a one-time landmark coachmark ("Landmarks unlock in order; some
+      require an essence ticket") with per-user localStorage dismissal so first
+      sessions immediately understand non-hatchery unlock behavior.
+    - Follow-up UX polish: locked prompt now shows sequence progress step and
+      upcoming ticket price preview; coachmark now includes a "Show next"
+      shortcut that focuses the next available landmark before dismissing.
+    - Accessibility/interaction polish: both locked and ticket prompts now
+      support `Escape` key dismissal, and the ticket shortfall meter is now an
+      actual ARIA progressbar (`aria-valuemin/max/now`) so assistive tech can
+      report affordability progress.
+    - Added "Preview landmark" CTA to both locked-info and ticket prompts so
+      players can always open the full landmark stop modal (description +
+      status + actions) without first satisfying the lock/ticket gate.
+    - Tap-path reliability fallback: orbit stop taps now always open the
+      landmark stop modal directly (`requestActiveStopTransition` unconditionally),
+      while ticket-required messaging/payment remains available inside the stop
+      modal itself. This avoids "reacts but nothing opens" outcomes in
+      environments where intermediate prompt routing is brittle.
+    - Added deterministic tap-outcome classifier service
+      (`resolveIslandRunStopTapOutcome`) + dedicated service tests, and wired
+      board tap handling to emit `island_stop_tap_outcome` diagnostics with
+      stop index/status + derived ticket requirement. This gives explicit
+      runtime evidence when users report "tap reacted but no popup" issues.
+    - CI unblock follow-up: renamed the coachmark dismiss callback symbol to
+      `handleDismissLandmarkCoachmark` so merged/cherry-picked branches do not
+      trip duplicate block-scoped declaration collisions on
+      `dismissLandmarkCoachmark`.
+    - Hardening follow-up: removed dedicated dismiss callback declaration
+      entirely and inlined coachmark dismiss handlers using
+      `markLandmarkCoachmarkSeen(...)`, so stacked/cherry-picked branches cannot
+      redeclare the same block-scoped coachmark dismiss symbol.
     - Added dedicated `islandRunStateActions` tests for
       `applyBossTrialResolvedMarker(...)` commit and no-op behavior to verify
       marker field persistence and runtime-version bump/no-bump semantics.
