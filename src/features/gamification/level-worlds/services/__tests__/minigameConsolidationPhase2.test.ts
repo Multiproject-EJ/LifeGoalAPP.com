@@ -10,11 +10,38 @@ import {
   __resetIslandRunFeatureFlagsForTests,
   __setIslandRunFeatureFlagsForTests,
 } from '../../../../../config/islandRunFeatureFlags';
+import { awardDailyTreatDice } from '../../../../../services/dailyTreats';
 import {
   STRICT_DAILY_SPIN_LIMIT,
   clampSpinsForStrictDailyLimit,
 } from '../../../../../services/dailySpinLimit';
-import { assertEqual, type TestCase } from './testHarness';
+import {
+  readIslandRunGameStateRecord,
+  resetIslandRunRuntimeCommitCoordinatorForTests,
+} from '../islandRunGameStateStore';
+import { __resetIslandRunStateStoreForTests, getIslandRunStateSnapshot, hydrateIslandRunState } from '../islandRunStateStore';
+import { assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
+
+const USER_ID = 'minigame-phase2-daily-treat-user';
+
+function makeSession() {
+  return {
+    access_token: 'test-access-token',
+    refresh_token: 'test-refresh-token',
+    expires_in: 3600,
+    token_type: 'bearer',
+    user: {
+      id: USER_ID,
+      user_metadata: {},
+    },
+  } as unknown as import('@supabase/supabase-js').Session;
+}
+
+function resetRuntimeStateHarness(): void {
+  resetIslandRunRuntimeCommitCoordinatorForTests();
+  __resetIslandRunStateStoreForTests();
+  installWindowWithStorage(createMemoryStorage());
+}
 
 export const minigameConsolidationPhase2Tests: TestCase[] = [
   {
@@ -55,6 +82,29 @@ export const minigameConsolidationPhase2Tests: TestCase[] = [
       assertEqual(clampSpinsForStrictDailyLimit(-5), 0, 'negative → 0');
       assertEqual(clampSpinsForStrictDailyLimit(1.9), 1, 'fractional floored then clamped');
       __resetIslandRunFeatureFlagsForTests();
+    },
+  },
+  {
+    name: 'Daily Treat dice awards persist in Island Run dicePool across store reset + hydration',
+    run: async () => {
+      resetRuntimeStateHarness();
+      const session = makeSession();
+      const before = readIslandRunGameStateRecord(session).dicePool;
+
+      awardDailyTreatDice({
+        userId: USER_ID,
+        diceAmount: 4,
+        sourceLabel: 'LR2 regression guard',
+        islandRunSession: session,
+      });
+
+      const afterAward = getIslandRunStateSnapshot(session);
+      assertEqual(afterAward.dicePool, before + 4, 'daily treat dice should credit dicePool immediately');
+
+      // Simulate reload: clear in-memory mirror then hydrate from persisted state.
+      __resetIslandRunStateStoreForTests();
+      const hydrated = await hydrateIslandRunState({ session, client: null });
+      assertEqual(hydrated.record.dicePool, before + 4, 'hydrated state should keep credited dice delta');
     },
   },
 ];

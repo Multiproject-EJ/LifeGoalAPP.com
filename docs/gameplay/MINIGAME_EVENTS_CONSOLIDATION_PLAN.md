@@ -567,13 +567,15 @@ Reason: active tester feedback identified production-facing regressions that mus
     - Preserved Phase 2 overlay gating contract by re-validating `App.tsx` (`overlayShowSpinWheel` remains disabled when `todaysOfferSpinEntryEnabled` is on).
   - **Validation evidence (session 2026-04-23):** `npm run test:island-run` (pass), `npm run build` (pass). Manual QA remains queued for next device pass (mobile + desktop click-through).
 
-- [ ] **LR2 — Daily Treat / holiday countdown dice award not crediting game wallet (P0):**
+- [x] **LR2 — Daily Treat / holiday countdown dice award not crediting game wallet (P0):**
   - Repro report: dice earned from Daily Treat personal quest/holiday countdown are not added to Island Run dice pool.
   - Required fix scope:
     1. Trace reward-write path from Daily Treat quest completion into canonical Island Run state actions/store commit.
     2. Remove any stale `useState`-only mirror updates that bypass persisted `dicePool`.
     3. Add regression test proving dice delta survives reload/hydration.
   - Validation gate: test + manual claim flow with before/after dice counts.
+  - **Session 2026-04-23 update:** resolved the runtime write-gap by routing Daily Treat dice awards through a shared helper (`awardDailyTreatDice`) that now credits both legacy game-reward balance and canonical Island Run `dicePool` via `applyTokenHopRewards(...)` when a live app session is present; wired `CountdownCalendarModal` free-door + streak-bonus dice paths to this helper and passed `activeSession` from `App` into the modal. Added regression coverage in `minigameConsolidationPhase2.test.ts` proving the dice delta persists after an in-memory store reset + hydration cycle.
+  - **Validation evidence (session 2026-04-23):** `npm run test:island-run` (pass), `npm run build` (pass). Manual device claim-flow verification remains queued with LR3 pass.
 
 - [ ] **LR3 — Space Excavator launcher fallback contract (P1):**
   - Repro report: tapping Space Excavator icon exits Island Run and navigates to Today tab instead of opening a minigame surface.
