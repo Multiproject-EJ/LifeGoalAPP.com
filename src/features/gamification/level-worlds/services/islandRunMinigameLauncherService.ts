@@ -105,6 +105,19 @@ export type AnyMinigameLaunchDescriptor =
   | EventMinigameLaunchDescriptor;
 
 /**
+ * Phase 6 launch-spend helper: timed-event launches consume the exact number of
+ * tickets emitted by the resolver contract. Returns a clamped negative delta so
+ * caller state writes can stay simple (`spinTokens += delta` semantics).
+ */
+export function resolveTimedEventLaunchTicketDelta(
+  descriptor: EventMinigameLaunchDescriptor | null | undefined,
+): number {
+  const spend = Math.floor(descriptor?.ticketsSpent ?? 0);
+  if (!Number.isFinite(spend) || spend <= 0) return 0;
+  return -spend;
+}
+
+/**
  * Resolve the boss-stop minigame launch for the given island.
  *
  * Returns `null` when the launcher is disabled (flag off) or when the boss
