@@ -511,7 +511,8 @@ Reason for second pass: workflow drift caused multiple items to be marked comple
   - **Session 2026-04-23 update:** added blank env placeholders in `.env.example` for generic + per-event minigame ticket Stripe price IDs.
 - [x] Build/land `create-checkout-session-minigame-ticket` edge function contract and validate end-to-end invocation from `initiateMinigameTicketCheckout`.
   - **Session 2026-04-23 update:** implemented `supabase/functions/create-checkout-session-minigame-ticket/index.ts` with request validation (`sku_id` + optional `event_id`), SKU↔env price mapping, and Stripe checkout metadata for future webhook fulfillment; validated type-safe client invocation path via `npm run build`.
-- [ ] Extend Stripe webhook fulfillment to grant `minigameTicketsByEvent` by purchased SKU.
+- [x] Extend Stripe webhook fulfillment to grant `minigameTicketsByEvent` by purchased SKU.
+  - **Session 2026-04-23 update:** wired `checkout.session.completed` handling for `product_type=minigame_ticket_pack` in `stripe-webhook`, including session-level dedupe and SKU→event resolution; added atomic RPC migration `increment_user_minigame_tickets_by_event` to upsert/increment `island_run_runtime_state.minigame_tickets_by_event`.
 - [ ] Wire UI buy-ticket entry points (active-event panel + Today's Offer) to the checkout wrapper.
 
 #### SP2 — Phase-by-phase revalidation queue
@@ -524,4 +525,4 @@ Reason for second pass: workflow drift caused multiple items to be marked comple
 - [ ] Re-audit Phase 8 polish/balance backlog and split into shippable PR chunks.
 
 ### 14.3 Next session starting point
-- Start with **SP1 task 3** (Stripe webhook fulfillment for `minigameTicketsByEvent`) and keep all second-pass status updates in this section.
+- Start with **SP1 task 4** (wire UI buy-ticket entry points: active-event panel + Today's Offer → checkout wrapper) and keep all second-pass status updates in this section.
