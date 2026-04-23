@@ -5788,22 +5788,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         islandNumber,
       });
 
-      void persistIslandRunRuntimeStatePatch({
+      const nextRuntimeState = applyStopObjectiveProgress({
         session,
         client,
-        patch: {
-          stopStatesByIndex: nextStopStatesByIndex,
-          activeStopIndex: stopResolution.activeStopIndex,
-          activeStopType: stopResolution.activeStopType,
-        },
-      });
-
-      setRuntimeState((current) => ({
-        ...current,
         stopStatesByIndex: nextStopStatesByIndex,
         activeStopIndex: stopResolution.activeStopIndex,
         activeStopType: stopResolution.activeStopType,
-      }));
+        triggerSource: 'stop_objective_complete',
+      });
+      setRuntimeState(nextRuntimeState);
 
       if (!priorStopState.objectiveComplete) {
         awardShards('stop_complete');
