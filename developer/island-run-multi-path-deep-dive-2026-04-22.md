@@ -174,6 +174,15 @@ This section is a clean execution checklist after the prior workflow issues
      - `stopTicketsPaidByIsland`
      - `islandNumber`
    - Eliminate mixed 2-state vs 4-state semantics in live board flows.
+   - **Status:** ✅ Done on 2026-04-23.
+   - **Implementation notes:** `IslandRunBoardPrototype` now routes board-flow
+     stop resolution through `resolveCanonicalContractV2Stops(...)`, and handler
+     paths that mutate stop state pass current `runtimeStateRef` ticket-ledger
+     state so resolver semantics remain ticket-aware during mutation commits.
+   - **Evidence checks:** `npm run test:island-run` passed after this change.
+   - **What remains:** Task 3 onward (visual semantic alignment, Stage C/D
+     mutation-path unification, full-loop integration gate, completion evidence
+     discipline).
 
 3. **Align visual stop status with semantic stop status**
    - Remove (or explicitly redesign) `ticket_required -> active` visual remap.
