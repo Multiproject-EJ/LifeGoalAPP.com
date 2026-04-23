@@ -12,12 +12,14 @@ Improve habit creation completion and clarity by keeping the core flow guided, m
 - [x] Stored draft intent/duration metadata into `autoprog.creation_context` on create/edit save paths (temporary persistence before schema migration).
 - [x] Persist reminder settings from wizard into reminder preference backend on create/edit.
 - [ ] Add DB migration for first-class intent/duration columns.
-- [ ] Implement automated duration end evaluator (pause/deactivate when end date reached).
+- [x] Implement app-load duration end evaluator (pause/deactivate when end date reached).
 
 ### Latest implementation notes
 - Wizard create/edit now syncs reminder preference via `updateHabitReminderPref(...)` immediately after successful save.
 - If reminders are enabled in wizard, the flow updates preferred time and schedules notifications.
 - If reminders are disabled in wizard, the flow disables reminder preference and cancels scheduled notifications.
+- On habits module load, active fixed-window habits now auto-pause/deactivate if their program window has elapsed (based on `created_at + duration`).
+- Remaining work for duration automation: scheduled/background evaluator (cron/edge) so it still applies without opening the app.
 
 ## Current Constraints (from code)
 - Habit creation/edit currently runs through `HabitsModule` + `HabitWizard`.

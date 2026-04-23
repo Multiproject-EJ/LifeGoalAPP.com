@@ -237,6 +237,65 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     [inactiveHabits],
   );
 
+  const applyDurationEndAutomation = useCallback(
+    async (sourceHabits: HabitV2Row[]): Promise<HabitV2Row[]> => {
+      const now = Date.now();
+      const nextHabits = [...sourceHabits];
+
+      for (let index = 0; index < nextHabits.length; index += 1) {
+        const habit = nextHabits[index];
+        if (getHabitLifecycleStatus(habit) !== 'active') {
+          continue;
+        }
+
+        const creationContext = (habit.autoprog as Record<string, unknown> | null)?.creation_context as
+          | {
+              duration?: HabitWizardDraft['duration'];
+            }
+          | undefined;
+        const duration = creationContext?.duration;
+        if (!duration || duration.mode !== 'fixed_window' || !duration.value || duration.value < 1) {
+          continue;
+        }
+
+        const startedAtMs = Date.parse(habit.created_at ?? '');
+        if (!Number.isFinite(startedAtMs)) {
+          continue;
+        }
+
+        const endDate = new Date(startedAtMs);
+        switch (duration.unit) {
+          case 'days':
+            endDate.setDate(endDate.getDate() + duration.value);
+            break;
+          case 'months':
+            endDate.setMonth(endDate.getMonth() + duration.value);
+            break;
+          case 'weeks':
+          default:
+            endDate.setDate(endDate.getDate() + duration.value * 7);
+            break;
+        }
+
+        if (now < endDate.getTime()) {
+          continue;
+        }
+
+        const lifecycleResult = duration.onEnd === 'deactivate'
+          ? await deactivateHabitV2(habit.id, { reason: 'Program duration completed automatically' })
+          : await pauseHabitV2(habit.id, { reason: 'Program duration completed automatically' });
+
+        if (lifecycleResult.data && !lifecycleResult.error) {
+          nextHabits[index] = lifecycleResult.data;
+          await cancelHabitNotifications(habit.id);
+        }
+      }
+
+      return nextHabits;
+    },
+    [],
+  );
+
   // Load habits and today's logs on mount
   useEffect(() => {
     if (!session) return;
@@ -257,7 +316,8 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
         }
 
         const loadedHabits = habitsData ?? [];
-        setHabits(loadedHabits);
+        const lifecycleAdjustedHabits = await applyDurationEndAutomation(loadedHabits);
+        setHabits(lifecycleAdjustedHabits);
 
         // Load today's logs
         const { data: logsData, error: logsError } = await listTodayHabitLogsV2(session.user.id);
@@ -267,8 +327,8 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
         setTodayLogs(logsData ?? []);
 
         // Load week logs for times_per_week schedule support
-        if (loadedHabits.length > 0) {
-          const habitIds = loadedHabits.map(h => h.id);
+        if (lifecycleAdjustedHabits.length > 0) {
+          const habitIds = lifecycleAdjustedHabits.map(h => h.id);
           const { data: weekLogsData, error: weekLogsError } = await listHabitLogsForWeekV2(
             session.user.id,
             habitIds
@@ -298,7 +358,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     };
 
     loadData();
-  }, [session]);
+  }, [applyDurationEndAutomation, session]);
 
   // Load templates on mount
   useEffect(() => {
