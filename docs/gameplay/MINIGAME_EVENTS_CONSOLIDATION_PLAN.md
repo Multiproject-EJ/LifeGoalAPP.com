@@ -527,11 +527,19 @@ Reason for second pass: workflow drift caused multiple items to be marked comple
     Added regression coverage in `minigameConsolidationPhase1.test.ts` for manifest uniqueness/presence, idempotent registry registration, and hydration select-list column inclusion. Validation evidence: `npm run test:island-run` and `npm run build` both passed.
 - [x] Re-audit Phase 2 Today's Offer + Daily Spin unification in runtime UX.
   - **Session 2026-04-23 update:** completed runtime re-audit + gap fix for the Today-tab red badge contract. Verified the dialog location (`DailyHabitTracker`) already ships scrollable Today's Offer modal + in-dialog Daily Spin CTA under `todaysOfferSpinEntryEnabled`; verified overlay spin entry is flag-gated off while Lucky Roll remains on overlay. Found one remaining mismatch: Today's Offer circle notification stayed "always actionable" (`badgeLabelOverride: 'Open'`) instead of mirroring `dailySpinAvailable`. Fixed by deriving `todaysOfferSpinBadgeActive` and using it for both badge label (`'1'` vs `'Open'`) and actionable-dot state when the Phase 2 flag is on. Validation evidence: `npm run test:island-run` and `npm run build` passed.
-- [ ] Re-audit Phase 3 engine ownership (rotation/progress/milestones/telemetry paths).
+- [x] Re-audit Phase 3 engine ownership (rotation/progress/milestones/telemetry paths).
+  - **Session 2026-04-23 update:** completed second-pass runtime re-audit for Phase 3 and closed one remaining ownership drift in UI surfaces.
+    - Verified runtime wiring remains on engine entry points:
+      - rotation lifecycle uses `advanceEventIfExpired(...)` in `IslandRunBoardPrototype` hydration/sync loop;
+      - reward progress paths route through `recordEventProgress(...)` (tile/encounter/feed flows) and event launcher completion uses `recordEventMinigameCompletion(...)`;
+      - telemetry transition path stays engine-owned via `advanceEventIfExpired(...)` → `emitEventTransitionTelemetry(...)` (flag-gated).
+    - Gap fix landed: migrated reward-bar/sticker-album event metadata rendering off direct `islandRunContractV2RewardBar` constants and onto new event-engine read helpers (`getEventDisplayMeta`, `getEventRotationTemplates`) so Phase 3 ownership is reflected in runtime UI call sites too.
+    - Added regression coverage in `minigameConsolidationPhase3.test.ts` for engine display-meta fallback behavior and canonical rotation-template export shape.
+    - Validation evidence: `npm run test:island-run` (340 pass) and `npm run build` (pass).
 - [ ] Re-audit Phase 4 Shooter boss rollout readiness and remaining manual QA + flag flip.
 - [ ] Re-audit Phase 5 mystery manual rotation QA and flag flip.
 - [ ] Re-audit Phase 6 event mini-game completion-to-reward/sticker end-to-end path.
 - [ ] Re-audit Phase 8 polish/balance backlog and split into shippable PR chunks.
 
 ### 14.3 Next session starting point
-- Continue with **SP2 task 3** (re-audit Phase 3 engine ownership: rotation/progress/milestones/telemetry paths), and keep all second-pass status updates in this section with concrete test + manual QA notes.
+- Continue with **SP2 task 4** (re-audit Phase 4 Shooter boss rollout readiness and remaining manual QA + flag flip), and keep all second-pass status updates in this section with concrete test + manual QA notes.

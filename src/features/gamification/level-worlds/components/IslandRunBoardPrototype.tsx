@@ -201,8 +201,6 @@ import {
   resolveChainedRewardBarClaims,
   resolveNextRewardKind,
   REWARD_KIND_ICON,
-  TIMED_EVENT_SEQUENCE,
-  EVENT_BANNER_META,
   resolveAvailableMultiplierTiers,
   clampMultiplierToPool,
   resolveDiceCostForMultiplier,
@@ -210,6 +208,8 @@ import {
 } from '../services/islandRunContractV2RewardBar';
 import {
   advanceEventIfExpired,
+  getEventDisplayMeta,
+  getEventRotationTemplates,
   recordEventMinigameCompletion,
   recordEventProgress,
   type EventId,
@@ -7288,7 +7288,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           )}
           {/* Decorative themed event banner — only shown when an event is active */}
           {activeTimedEvent ? (() => {
-            const meta = EVENT_BANNER_META[activeTimedEvent.eventType] ?? { icon: '⭐', displayName: activeTimedEvent.eventType.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) };
+            const meta = getEventDisplayMeta(activeTimedEvent.eventType);
             return (
               <div className={`island-run-board__rewardbar-banner island-run-board__rewardbar-banner--${activeTimedEvent.eventType}`}>
                 <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{meta.icon}</i>
@@ -7304,7 +7304,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           {/* Track row: event feed icon → track → single reward endcap (no milestones) */}
           <div className="island-run-board__rewardbar-track-row">
             <span className="island-run-board__rewardbar-avatar-indicator" aria-hidden="true">
-              {(EVENT_BANNER_META[activeTimedEvent?.eventType ?? '']?.icon) ?? '⭐'}
+              {getEventDisplayMeta(activeTimedEvent?.eventType ?? '').icon}
             </span>
             <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
               <span className={`island-run-board__rewardbar-track-fill${rewardBarSnapActive ? ' island-run-board__rewardbar-track-fill--snap' : ''}`} style={{ width: `${rewardBarPercent}%` }} />
@@ -7332,7 +7332,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             onClick={handleLaunchTimedEventMinigame}
           >
             <span className="island-run-board__minigame-icon-emoji" aria-hidden="true">
-              {EVENT_BANNER_META[activeTimedEvent.eventType]?.icon ?? '🎮'}
+              {getEventDisplayMeta(activeTimedEvent.eventType).icon}
             </span>
             <span className="island-run-board__minigame-icon-label">{spinTokens} 🎫</span>
           </button>
@@ -8299,7 +8299,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </p>
             <p className="island-stop-modal__copy">
               {activeTimedEvent?.eventType
-                ? `Active event: ${(EVENT_BANNER_META[activeTimedEvent.eventType]?.displayName ?? activeTimedEvent.eventType)}`
+                ? `Active event: ${getEventDisplayMeta(activeTimedEvent.eventType).displayName}`
                 : 'No active timed event right now.'}
             </p>
             <p className="island-stop-modal__copy">
@@ -8396,7 +8396,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         <div className="island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Mini-game">
             <h3 className="island-stop-modal__title">
-              {activeTimedEvent ? `${EVENT_BANNER_META[activeTimedEvent.eventType]?.icon ?? '🎮'} ${EVENT_BANNER_META[activeTimedEvent.eventType]?.displayName ?? 'Mini-game'}` : '🎮 Mini-game'}
+              {activeTimedEvent ? `${getEventDisplayMeta(activeTimedEvent.eventType).icon} ${getEventDisplayMeta(activeTimedEvent.eventType).displayName}` : '🎮 Mini-game'}
             </h3>
             <p className="island-stop-modal__copy">
               You have <strong>{spinTokens}</strong> 🎫 tokens to spend.
@@ -8458,10 +8458,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               {runtimeState.stickerProgress.fragments >= 5 ? ' — Ready to create a sticker!' : ''}
             </p>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', padding: '8px 0' }}>
-              {TIMED_EVENT_SEQUENCE.map((template) => {
+              {getEventRotationTemplates().map((template) => {
                 const count = runtimeState.stickerInventory[template.stickerId] ?? 0;
                 return (
-                  <div key={template.templateId} style={{
+                  <div key={template.eventId} style={{
                     padding: '8px 12px',
                     borderRadius: '8px',
                     background: count > 0 ? 'rgba(255,215,0,0.15)' : 'rgba(128,128,128,0.1)',
@@ -8470,7 +8470,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     minWidth: '80px',
                   }}>
                     <div style={{ fontSize: '1.5em' }}>{template.icon}</div>
-                    <div style={{ fontSize: '0.75em', opacity: 0.8 }}>{template.eventType.replace(/_/g, ' ')}</div>
+                    <div style={{ fontSize: '0.75em', opacity: 0.8 }}>{template.displayName}</div>
                     <div style={{ fontWeight: 'bold' }}>{count > 0 ? `×${count}` : '—'}</div>
                   </div>
                 );
