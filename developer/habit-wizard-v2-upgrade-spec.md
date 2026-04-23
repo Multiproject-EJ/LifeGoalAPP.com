@@ -3,6 +3,17 @@
 ## Goal
 Improve habit creation completion and clarity by keeping the core flow guided, moving advanced controls out of the critical path, and adding support for "break a bad behavior" and time-bound habit programs.
 
+## Implementation Status (living notes)
+- [x] Wizard expanded to 5 steps in UI (`Basics`, `Schedule + Program Length`, `Environment`, `Reminders`, `Summary`).
+- [x] Added intent selection to basics (`build` / `break`).
+- [x] Replaced X/week free typing with plus/minus stepper controls in schedule step.
+- [x] Added time-bound duration controls in wizard draft (duration mode, value/unit, end behavior).
+- [x] Moved Done-ish + stage controls behind optional advanced panel on the summary step.
+- [x] Stored draft intent/duration metadata into `autoprog.creation_context` on create/edit save paths (temporary persistence before schema migration).
+- [ ] Persist reminder settings from wizard into reminder preference backend on create/edit.
+- [ ] Add DB migration for first-class intent/duration columns.
+- [ ] Implement automated duration end evaluator (pause/deactivate when end date reached).
+
 ## Current Constraints (from code)
 - Habit creation/edit currently runs through `HabitsModule` + `HabitWizard`.
 - Wizard has 3 steps; step 3 currently combines targets, environment, reminders, and advanced settings.
