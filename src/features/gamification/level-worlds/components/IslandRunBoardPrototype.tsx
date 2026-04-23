@@ -3025,24 +3025,35 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
    *   - Otherwise → leave closed (stop is sequence-locked; no-op).
    */
   const handleStopOpenRequest = useCallback((stopId: string) => {
-    const stopIndex = stopIndexByStopId.get(stopId);
-    if (ISLAND_RUN_CONTRACT_V2_ENABLED && contractV2Stops && typeof stopIndex === 'number') {
-      const stopStatus = contractV2Stops.statusesByIndex[stopIndex];
-      if (stopStatus === 'locked') {
-        setLockedStopInfoStopId(stopId);
-        setLandingText('This landmark is still sequence-locked. Complete the previous landmark first.');
-        return;
-      }
-    }
     setLockedStopInfoStopId(null);
-    if (doesStopRequireTicketPayment(stopId)) {
-      setTicketPromptStopId(stopId);
-      return;
-    }
+    setTicketPromptStopId(null);
     requestActiveStopTransition(stopId, 'orbit_stop_click');
     setFocusedStopId(stopId);
     setCameraMode('stop_focus');
-  }, [contractV2Stops, doesStopRequireTicketPayment, requestActiveStopTransition, stopIndexByStopId]);
+  }, [requestActiveStopTransition]);
+
+  const dismissLandmarkCoachmark = useCallback(() => {
+    setShowLandmarkCoachmark(false);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(`island_run_landmark_coachmark_seen_${session.user.id}`, '1');
+    }
+  }, [session.user.id]);
+
+  useEffect(() => {
+    if (!lockedStopInfoStopId && !ticketPromptStopId) return undefined;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (ticketPromptStopId) {
+        setTicketPromptStopId(null);
+        return;
+      }
+      if (lockedStopInfoStopId) {
+        setLockedStopInfoStopId(null);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [lockedStopInfoStopId, ticketPromptStopId]);
 
   const dismissLandmarkCoachmark = useCallback(() => {
     setShowLandmarkCoachmark(false);
@@ -7569,7 +7580,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </div>
             {activeStopId !== 'hatchery' ? <p>{activeStop.description}</p> : null}
             {activeStopId !== 'hatchery' ? <p><strong>Status:</strong> {openedStopState}</p> : null}
-            {activeStopId !== 'hatchery' && openedStopIsLocked ? (
+            {activeStopId !== 'hatchery' && (openedStopIsLocked || openedStopNeedsTicket) ? (
               <p className="island-stop-modal__locked-notice" role="status">
                 <span aria-hidden="true">🔒</span>{' '}
                 {openedStopNeedsTicket && openedStopTicketCost
@@ -8019,7 +8030,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   {isCurrentIslandFullyCleared ? '🎉 Claim Island Clear' : 'Claim Island Clear'}
                 </button>
               ) : null}
-              {openedStopIsLocked && openedStopNeedsTicket && openedStopTicketCost ? (
+              {openedStopNeedsTicket && openedStopTicketCost ? (
                 <button
                   type="button"
                   className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"

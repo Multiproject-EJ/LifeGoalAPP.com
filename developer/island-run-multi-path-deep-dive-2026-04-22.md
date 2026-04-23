@@ -289,6 +289,11 @@ This section is a clean execution checklist after the prior workflow issues
     - Added "Preview landmark" CTA to both locked-info and ticket prompts so
       players can always open the full landmark stop modal (description +
       status + actions) without first satisfying the lock/ticket gate.
+    - Tap-path reliability fallback: orbit stop taps now always open the
+      landmark stop modal directly (`requestActiveStopTransition` unconditionally),
+      while ticket-required messaging/payment remains available inside the stop
+      modal itself. This avoids "reacts but nothing opens" outcomes in
+      environments where intermediate prompt routing is brittle.
     - Added dedicated `islandRunStateActions` tests for
       `applyBossTrialResolvedMarker(...)` commit and no-op behavior to verify
       marker field persistence and runtime-version bump/no-bump semantics.
