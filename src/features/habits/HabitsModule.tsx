@@ -16,6 +16,7 @@ import type { Database } from '../../lib/database.types';
 import type { TimerLaunchContext } from '../timer/timerSession';
 import { scheduleHabitNotifications, cancelHabitNotifications } from '../../services/habitAlertNotifications';
 import { autoResumeDueHabits, isHabitReadyToResume } from '../../services/habitLifecycleAutoResume';
+import { updateHabitReminderPref } from '../../services/habitReminderPrefs';
 import './HabitsModule.css';
 import {
   AUTO_PROGRESS_TIERS,
@@ -236,6 +237,65 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     [inactiveHabits],
   );
 
+  const applyDurationEndAutomation = useCallback(
+    async (sourceHabits: HabitV2Row[]): Promise<HabitV2Row[]> => {
+      const now = Date.now();
+      const nextHabits = [...sourceHabits];
+
+      for (let index = 0; index < nextHabits.length; index += 1) {
+        const habit = nextHabits[index];
+        if (getHabitLifecycleStatus(habit) !== 'active') {
+          continue;
+        }
+
+        const creationContext = (habit.autoprog as Record<string, unknown> | null)?.creation_context as
+          | {
+              duration?: HabitWizardDraft['duration'];
+            }
+          | undefined;
+        const duration = creationContext?.duration;
+        if (!duration || duration.mode !== 'fixed_window' || !duration.value || duration.value < 1) {
+          continue;
+        }
+
+        const startedAtMs = Date.parse(habit.created_at ?? '');
+        if (!Number.isFinite(startedAtMs)) {
+          continue;
+        }
+
+        const endDate = new Date(startedAtMs);
+        switch (duration.unit) {
+          case 'days':
+            endDate.setDate(endDate.getDate() + duration.value);
+            break;
+          case 'months':
+            endDate.setMonth(endDate.getMonth() + duration.value);
+            break;
+          case 'weeks':
+          default:
+            endDate.setDate(endDate.getDate() + duration.value * 7);
+            break;
+        }
+
+        if (now < endDate.getTime()) {
+          continue;
+        }
+
+        const lifecycleResult = duration.onEnd === 'deactivate'
+          ? await deactivateHabitV2(habit.id, { reason: 'Program duration completed automatically' })
+          : await pauseHabitV2(habit.id, { reason: 'Program duration completed automatically' });
+
+        if (lifecycleResult.data && !lifecycleResult.error) {
+          nextHabits[index] = lifecycleResult.data;
+          await cancelHabitNotifications(habit.id);
+        }
+      }
+
+      return nextHabits;
+    },
+    [],
+  );
+
   // Load habits and today's logs on mount
   useEffect(() => {
     if (!session) return;
@@ -256,7 +316,8 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
         }
 
         const loadedHabits = habitsData ?? [];
-        setHabits(loadedHabits);
+        const lifecycleAdjustedHabits = await applyDurationEndAutomation(loadedHabits);
+        setHabits(lifecycleAdjustedHabits);
 
         // Load today's logs
         const { data: logsData, error: logsError } = await listTodayHabitLogsV2(session.user.id);
@@ -266,8 +327,8 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
         setTodayLogs(logsData ?? []);
 
         // Load week logs for times_per_week schedule support
-        if (loadedHabits.length > 0) {
-          const habitIds = loadedHabits.map(h => h.id);
+        if (lifecycleAdjustedHabits.length > 0) {
+          const habitIds = lifecycleAdjustedHabits.map(h => h.id);
           const { data: weekLogsData, error: weekLogsError } = await listHabitLogsForWeekV2(
             session.user.id,
             habitIds
@@ -297,7 +358,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     };
 
     loadData();
-  }, [session]);
+  }, [applyDurationEndAutomation, session]);
 
   // Load templates on mount
   useEffect(() => {
@@ -1165,12 +1226,19 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
   const handleEditHabit = (habit: HabitV2Row) => {
     const autoProgressState = getAutoProgressState(habit);
     const scalePlan = autoProgressState.scale_plan;
+    const creationContext = (habit.autoprog as Record<string, unknown> | null)?.creation_context as
+      | {
+          intent?: 'build' | 'break';
+          duration?: HabitWizardDraft['duration'];
+        }
+      | undefined;
 
     // Build HabitWizardDraft from HabitV2Row
     const draft: HabitWizardDraft = {
       habitId: habit.id,
       title: habit.title,
       emoji: habit.emoji,
+      intent: creationContext?.intent ?? 'build',
       type: habit.type,
       targetValue: habit.target_num,
       targetUnit: habit.target_unit,
@@ -1184,6 +1252,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
       })(),
       remindersEnabled: false,
       reminderTimes: [],
+      duration: creationContext?.duration ?? { mode: 'none' },
       habitEnvironment: habit.habit_environment ?? undefined,
       environmentContext: normalizeEnvironmentContext(habit.environment_context ?? null, {
         fallbackText: habit.habit_environment ?? undefined,
@@ -1245,6 +1314,29 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     const isEditMode = Boolean(draft.habitId);
     
     try {
+      const syncReminderPreferenceFromDraft = async (habitId: string) => {
+        if (draft.remindersEnabled) {
+          const preferredTime = draft.reminderTimes?.[0] ?? '08:00';
+          const { error: reminderError } = await updateHabitReminderPref(habitId, {
+            enabled: true,
+            preferred_time: preferredTime,
+          });
+          if (reminderError) {
+            throw reminderError;
+          }
+          await scheduleHabitNotifications(habitId, session.user.id);
+        } else {
+          const { error: reminderError } = await updateHabitReminderPref(habitId, {
+            enabled: false,
+            preferred_time: null,
+          });
+          if (reminderError) {
+            throw reminderError;
+          }
+          await cancelHabitNotifications(habitId);
+        }
+      };
+
       if (isEditMode && draft.habitId) {
         const existingHabit = habits.find((h) => h.id === draft.habitId);
         const existingAutoprog = existingHabit ? getAutoProgressState(existingHabit) : null;
@@ -1273,6 +1365,10 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
               schedule: draftScheduleToDbSchedule(draft.schedule) as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
               target: draft.targetValue ?? null,
             })),
+            creation_context: {
+              intent: draft.intent ?? 'build',
+              duration: draft.duration ?? { mode: 'none' },
+            },
             scale_plan: {
               enabled: draft.scalePlanEnabled ?? true,
               stages: {
@@ -1320,6 +1416,8 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
         setPendingHabitDraft(null);
         setWizardInitialDraft(undefined);
         setSuccessMessage('Habit saved successfully!');
+
+        await syncReminderPreferenceFromDraft(updatedHabit.id);
         
         // Update the habit in local state
         setHabits(prev => prev.map(h => h.id === draft.habitId ? updatedHabit : h));
@@ -1353,6 +1451,10 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
 
         insertPayload.autoprog = {
           ...(insertPayload.autoprog as Record<string, unknown>),
+          creation_context: {
+            intent: draft.intent ?? 'build',
+            duration: draft.duration ?? { mode: 'none' },
+          },
           scale_plan: {
             enabled: draft.scalePlanEnabled ?? true,
             stages: {
@@ -1399,6 +1501,8 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
         setPendingHabitDraft(null);
         setWizardInitialDraft(undefined);
         setSuccessMessage(`Habit "${draft.title}" created successfully!`);
+
+        await syncReminderPreferenceFromDraft(newHabit.id);
         
         // Prepend new habit to local state for immediate feedback
         setHabits([newHabit, ...habits]);
