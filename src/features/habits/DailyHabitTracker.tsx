@@ -571,6 +571,7 @@ export function DailyHabitTracker({
   const { spinAvailable: dailySpinAvailable } = useDailySpinStatus(
     isTodaysOfferSpinEntryEnabled ? session?.user?.id : undefined,
   );
+  const todaysOfferSpinBadgeActive = isTodaysOfferSpinEntryEnabled && dailySpinAvailable;
   const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
   const [seenOfferTeasers, setSeenOfferTeasers] = useState<Record<string, boolean>>({});
   const progressGradientId = useId();
@@ -2248,10 +2249,13 @@ export function DailyHabitTracker({
         label: "Today's Offer",
         icon: '🛍️',
         expiresAtMs: null,
-        badgeLabelOverride: 'Open',
+        badgeLabelOverride: todaysOfferSpinBadgeActive ? '1' : 'Open',
         isCollected: false,
         isVisible: true,
-        isActionable: true,
+        // Phase 2 second-pass: unify red badge logic with in-dialog Daily Spin CTA.
+        // Notification appears only when a daily spin is available; the circle stays
+        // tappable either way so users can still access the offer modal.
+        isActionable: isTodaysOfferSpinEntryEnabled ? todaysOfferSpinBadgeActive : true,
         sortPriority: 3,
       },
       {
@@ -2279,6 +2283,8 @@ export function DailyHabitTracker({
     isEggReadyToCollectOnActiveIsland,
     isSpecialVisionStarDay,
     hasOpenedTreatCalendarToday,
+    todaysOfferSpinBadgeActive,
+    isTodaysOfferSpinEntryEnabled,
   ]);
 
 

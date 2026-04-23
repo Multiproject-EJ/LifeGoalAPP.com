@@ -525,7 +525,8 @@ Reason for second pass: workflow drift caused multiple items to be marked comple
     - migration `0231_add_minigame_tickets_by_event.sql` present;
     - runtime hydration select-list includes `minigame_tickets_by_event`.
     Added regression coverage in `minigameConsolidationPhase1.test.ts` for manifest uniqueness/presence, idempotent registry registration, and hydration select-list column inclusion. Validation evidence: `npm run test:island-run` and `npm run build` both passed.
-- [ ] Re-audit Phase 2 Today's Offer + Daily Spin unification in runtime UX.
+- [x] Re-audit Phase 2 Today's Offer + Daily Spin unification in runtime UX.
+  - **Session 2026-04-23 update:** completed runtime re-audit + gap fix for the Today-tab red badge contract. Verified the dialog location (`DailyHabitTracker`) already ships scrollable Today's Offer modal + in-dialog Daily Spin CTA under `todaysOfferSpinEntryEnabled`; verified overlay spin entry is flag-gated off while Lucky Roll remains on overlay. Found one remaining mismatch: Today's Offer circle notification stayed "always actionable" (`badgeLabelOverride: 'Open'`) instead of mirroring `dailySpinAvailable`. Fixed by deriving `todaysOfferSpinBadgeActive` and using it for both badge label (`'1'` vs `'Open'`) and actionable-dot state when the Phase 2 flag is on. Validation evidence: `npm run test:island-run` and `npm run build` passed.
 - [ ] Re-audit Phase 3 engine ownership (rotation/progress/milestones/telemetry paths).
 - [ ] Re-audit Phase 4 Shooter boss rollout readiness and remaining manual QA + flag flip.
 - [ ] Re-audit Phase 5 mystery manual rotation QA and flag flip.
@@ -533,4 +534,4 @@ Reason for second pass: workflow drift caused multiple items to be marked comple
 - [ ] Re-audit Phase 8 polish/balance backlog and split into shippable PR chunks.
 
 ### 14.3 Next session starting point
-- Continue with **SP2 task 2** (re-audit Phase 2 Today's Offer + Daily Spin unification in runtime UX), and keep all second-pass status updates in this section with concrete test + manual QA notes.
+- Continue with **SP2 task 3** (re-audit Phase 3 engine ownership: rotation/progress/milestones/telemetry paths), and keep all second-pass status updates in this section with concrete test + manual QA notes.
