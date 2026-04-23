@@ -28,7 +28,10 @@ import {
   subscribeIslandRunState,
 } from '../islandRunStateStore';
 import {
+  applyActiveCompanion,
   applyBossTrialResolvedMarker,
+  applyCreatureCollection,
+  applyCreatureTreatInventory,
   applyEggResolution,
   applyEggPlacement,
   applyFirstRunClaimed,
@@ -240,6 +243,77 @@ export const islandRunStateActionsTests: TestCase[] = [
 
       assertEqual(notifications, 1, 'subscriber should be notified exactly once');
       unsub();
+    },
+  },
+
+  {
+    name: 'applyCreatureTreatInventory commits treat inventory through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 20,
+        creatureTreatInventory: { basic: 1, favorite: 0, rare: 0 },
+      });
+
+      const result = applyCreatureTreatInventory({
+        session,
+        client: null,
+        creatureTreatInventory: { basic: 2, favorite: 1, rare: 0 },
+        triggerSource: 'test_apply_treat_inventory',
+      });
+
+      assertEqual(result.creatureTreatInventory.basic, 2, 'basic treats should update');
+      assertEqual(result.creatureTreatInventory.favorite, 1, 'favorite treats should update');
+      assertEqual(result.runtimeVersion, 21, 'runtimeVersion should bump on treat inventory commit');
+    },
+  },
+
+  {
+    name: 'applyCreatureCollection commits collection through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 20,
+        creatureCollection: [],
+      });
+      const nextCollection = [{
+        creatureId: 'reef-lantern-ray',
+        nickname: 'Nova',
+      }] as unknown as IslandRunGameStateRecord['creatureCollection'];
+
+      const result = applyCreatureCollection({
+        session,
+        client: null,
+        creatureCollection: nextCollection,
+        triggerSource: 'test_apply_creature_collection',
+      });
+
+      assertEqual((result.creatureCollection ?? []).length, 1, 'creature collection should persist one entry');
+      assertEqual(result.runtimeVersion, 21, 'runtimeVersion should bump on collection commit');
+    },
+  },
+
+  {
+    name: 'applyActiveCompanion commits active companion through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 20,
+        activeCompanionId: null,
+      });
+
+      const result = applyActiveCompanion({
+        session,
+        client: null,
+        activeCompanionId: 'reef-lantern-ray',
+        triggerSource: 'test_apply_active_companion',
+      });
+
+      assertEqual(result.activeCompanionId, 'reef-lantern-ray', 'active companion id should persist');
+      assertEqual(result.runtimeVersion, 21, 'runtimeVersion should bump on active companion commit');
     },
   },
 

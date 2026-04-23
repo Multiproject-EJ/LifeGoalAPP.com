@@ -339,20 +339,30 @@ This section is a clean execution checklist after the prior workflow issues
       `markOnboardingComplete(...)` so `firstRunClaimed` ownership now commits
       through the store path (while legacy `onboardingComplete` runtime patch
       remains as a non-gameplay UI compatibility field).
+    - Added `applyCreatureTreatInventory(...)`,
+      `applyCreatureCollection(...)`, and `applyActiveCompanion(...)` in
+      `islandRunStateActions`, then migrated the corresponding
+      `IslandRunBoardPrototype` sync effects so creature/treat/companion
+      persistence no longer uses renderer-side direct
+      `persistIslandRunRuntimeStatePatch(...)` writes.
+    - Added dedicated `islandRunStateActions` tests for
+      `applyCreatureTreatInventory(...)`, `applyCreatureCollection(...)`, and
+      `applyActiveCompanion(...)` to verify canonical commit-path persistence
+      and runtime-version bump behavior for collection-adjacent writes.
     - Added dedicated `islandRunStateActions` tests for
       `applyQaProgressionSnapshot(...)`, `applyFirstRunStarterRewards(...)`,
       and `applyFirstRunClaimed(...)` to verify canonical commit-path record
       updates and runtime-version bump semantics.
    - **Evidence checks:** `npm run test:island-run` passed on 2026-04-23 after
-     this increment (332 passed / 0 failed).
+     this increment (335 passed / 0 failed).
    - **Evidence checks (build):** `npm run build` passed on 2026-04-23 after
      the duplicate-coachmark-symbol cleanup.
-  - **What remains:** migrate remaining gameplay-critical direct writes in
-     board-loop-adjacent side paths that still issue direct
-     `persistIslandRunRuntimeStatePatch(...)` writes (e.g. companion/collection
-     persistence and non-critical legacy runtime overlays), then tighten the
-     "no direct gameplay-owner patch writes" guard so new loop mutations cannot
-     bypass canonical store actions.
+  - **What remains:** migrate remaining board-loop-adjacent direct writes
+     still issuing `persistIslandRunRuntimeStatePatch(...)` (primarily
+     non-critical legacy runtime overlays such as diamonds/market-owned bundle
+     mirrors, onboarding/story booleans, and other compatibility fields), then
+     tighten the "no direct gameplay-owner patch writes" guard so new loop
+     mutations cannot bypass canonical store actions.
 
 5. **Add one canonical full-loop integration gate**
    - Required scenario:
@@ -382,8 +392,8 @@ This section is a clean execution checklist after the prior workflow issues
    - Do not update status docs to "done" unless all evidence is present.
    - **Status:** 🟡 In progress on 2026-04-23.
   - **Implementation notes (this session):** Task 4 status/evidence block kept
-     current with newly migrated first-run reward + first-run claim marker +
-     QA progression helper canonical commit-path wiring, plus new dedicated
-     action tests and a fresh automated check run.
+     current with newly migrated creature/treat/active-companion persistence
+     onto canonical state actions, plus new dedicated action tests and a fresh
+     automated check run.
    - **Evidence checks:** `npm run test:island-run` passed on 2026-04-23 after
-     this update (332 passed / 0 failed).
+     this update (335 passed / 0 failed).

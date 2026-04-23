@@ -66,7 +66,10 @@ import {
   withIslandRunActionLock,
 } from '../services/islandRunActionMutex';
 import {
+  applyActiveCompanion,
   applyBossTrialResolvedMarker,
+  applyCreatureCollection,
+  applyCreatureTreatInventory,
   applyEggResolution,
   applyEggPlacement,
   applyFirstRunClaimed,
@@ -2592,16 +2595,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     ) {
       return;
     }
-    void persistIslandRunRuntimeStatePatch({
+    const nextRecord = applyCreatureTreatInventory({
       session,
       client,
-      patch: {
-        creatureTreatInventory,
-      },
+      creatureTreatInventory,
+      triggerSource: 'sync_creature_treat_inventory_effect',
     });
     setRuntimeState((current) => ({
       ...current,
-      creatureTreatInventory,
+      creatureTreatInventory: nextRecord.creatureTreatInventory,
     }));
   }, [client, creatureTreatInventory, hasHydratedRuntimeState, runtimeState.creatureTreatInventory, session]);
 
@@ -2612,14 +2614,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (!hasCompletedInitialHydrationSyncRef.current) return;
     const runtimeCollection = runtimeState.creatureCollection ?? [];
     if (JSON.stringify(runtimeCollection) === JSON.stringify(creatureCollection)) return;
-    void persistIslandRunRuntimeStatePatch({
+    const nextRecord = applyCreatureCollection({
       session,
       client,
-      patch: {
-        creatureCollection,
-      },
+      creatureCollection,
+      triggerSource: 'sync_creature_collection_effect',
     });
-    setRuntimeState((current) => ({ ...current, creatureCollection }));
+    setRuntimeState((current) => ({ ...current, creatureCollection: nextRecord.creatureCollection }));
   }, [client, creatureCollection, hasHydratedRuntimeState, runtimeState.creatureCollection, session]);
 
   useEffect(() => {
@@ -2628,14 +2629,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
     if ((runtimeState.activeCompanionId ?? null) === (activeCompanionId ?? null)) return;
-    void persistIslandRunRuntimeStatePatch({
+    const nextRecord = applyActiveCompanion({
       session,
       client,
-      patch: {
-        activeCompanionId,
-      },
+      activeCompanionId,
+      triggerSource: 'sync_active_companion_effect',
     });
-    setRuntimeState((current) => ({ ...current, activeCompanionId: activeCompanionId ?? null }));
+    setRuntimeState((current) => ({ ...current, activeCompanionId: nextRecord.activeCompanionId ?? null }));
   }, [activeCompanionId, client, hasHydratedRuntimeState, runtimeState.activeCompanionId, session]);
 
   // M17D: award wallet shards (persistent cross-island balance) by a given amount.
