@@ -138,6 +138,13 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
     setStep(1);
   }, [initialDraft]);
 
+  useEffect(() => {
+    document.body.classList.add('habit-wizard-open');
+    return () => {
+      document.body.classList.remove('habit-wizard-open');
+    };
+  }, []);
+
   const handleGenerateAi = async () => {
     setAiLoading(true);
     setAiError(null);

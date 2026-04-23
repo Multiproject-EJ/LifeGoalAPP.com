@@ -28442,3 +28442,9 @@ html.platform-ipad .workspace-shell__menu-edge {
     transition: none;
   }
 }
+
+body.habit-wizard-open .mobile-footer-nav {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(120%) !important;
+}

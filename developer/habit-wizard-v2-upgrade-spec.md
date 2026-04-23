@@ -11,6 +11,7 @@ Improve habit creation completion and clarity by keeping the core flow guided, m
 - [x] Moved Done-ish + stage controls behind optional advanced panel on the summary step.
 - [x] Stored draft intent/duration metadata into `autoprog.creation_context` on create/edit save paths (temporary persistence before schema migration).
 - [x] Persist reminder settings from wizard into reminder preference backend on create/edit.
+- [x] Hide mobile footer nav while wizard is active to keep full focus on flow.
 - [ ] Add DB migration for first-class intent/duration columns.
 - [x] Implement app-load duration end evaluator (pause/deactivate when end date reached).
 
@@ -20,6 +21,7 @@ Improve habit creation completion and clarity by keeping the core flow guided, m
 - If reminders are disabled in wizard, the flow disables reminder preference and cancels scheduled notifications.
 - On habits module load, active fixed-window habits now auto-pause/deactivate if their program window has elapsed (based on `created_at + duration`).
 - Remaining work for duration automation: scheduled/background evaluator (cron/edge) so it still applies without opening the app.
+- Wizard now adds a `habit-wizard-open` body class while mounted; mobile footer nav is hidden in that mode.
 
 ## Current Constraints (from code)
 - Habit creation/edit currently runs through `HabitsModule` + `HabitWizard`.
