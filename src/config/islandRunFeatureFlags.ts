@@ -59,7 +59,7 @@ const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
   islandRunTaskTowerMysteryEnabled: true,
   islandRunVisionQuestMysteryEnabled: true,
   islandRunPartnerWheelEnabled: false,
-  todaysOfferSpinEntryEnabled: false,
+  todaysOfferSpinEntryEnabled: true,
 });
 
 let currentFlags: IslandRunFeatureFlags = { ...DEFAULT_FLAGS };

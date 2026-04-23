@@ -461,6 +461,7 @@
 .habit-day-nav__todays-offer-close {
   top: 1rem;
   right: 1rem;
+  z-index: 3;
   background: #dc2626;
   color: #fff;
   font-size: 1.25rem;
@@ -492,6 +493,8 @@
 }
 
 .habit-day-nav__todays-offer-body {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
   display: flex;
