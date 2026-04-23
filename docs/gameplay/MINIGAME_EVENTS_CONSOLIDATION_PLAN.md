@@ -546,4 +546,33 @@ Reason for second pass: workflow drift caused multiple items to be marked comple
 - [ ] Re-audit Phase 8 polish/balance backlog and split into shippable PR chunks.
 
 ### 14.3 Next session starting point
-- Continue with **SP2 task 5** (re-audit Phase 5 mystery manual rotation QA + flag flip readiness), and keep all second-pass status updates in this section with concrete test + manual QA notes.
+- **Priority override (new):** start with SP2 live-regression hotfix queue item **LR1** below before resuming Phase 5.
+- After LR1–LR3 are closed, continue with **SP2 task 5** (re-audit Phase 5 mystery manual rotation QA + flag flip readiness), and keep all second-pass status updates in this section with concrete test + manual QA notes.
+
+### 14.4 SP2 live-regression hotfix queue (added 2026-04-23)
+
+Reason: active tester feedback identified production-facing regressions that must be queued in second pass and handled one-by-one before additional rollout work.
+
+- [ ] **LR1 — Today's Offer modal action regression (P0):**
+  - Repro report: close `×` no longer closes modal, `Buy` CTA does not open Stripe checkout, and Daily Spin entry is missing in modal while still present on overlay.
+  - Required fix scope:
+    1. Restore close button + backdrop dismiss reliability.
+    2. Restore `startTodaysOfferCheckout` launch path and error surfacing.
+    3. Ensure Phase 2 UX contract: Daily Spin entry launches from Today's Offer modal and legacy overlay entry is removed/hidden under the same flag gate.
+  - Validation gate: manual mobile/desktop click-through + focused regression coverage for modal CTA handlers.
+
+- [ ] **LR2 — Daily Treat / holiday countdown dice award not crediting game wallet (P0):**
+  - Repro report: dice earned from Daily Treat personal quest/holiday countdown are not added to Island Run dice pool.
+  - Required fix scope:
+    1. Trace reward-write path from Daily Treat quest completion into canonical Island Run state actions/store commit.
+    2. Remove any stale `useState`-only mirror updates that bypass persisted `dicePool`.
+    3. Add regression test proving dice delta survives reload/hydration.
+  - Validation gate: test + manual claim flow with before/after dice counts.
+
+- [ ] **LR3 — Space Excavator launcher fallback contract (P1):**
+  - Repro report: tapping Space Excavator icon exits Island Run and navigates to Today tab instead of opening a minigame surface.
+  - Required fix scope:
+    1. Prevent unintended navigation side effect.
+    2. Until final Space Excavator UI is shipped, open an explicit placeholder modal/surface with token-spend messaging.
+    3. Keep event ticket spend + completion hooks aligned with Phase 6 resolver contracts.
+  - Validation gate: manual launch proof + service/UI regression coverage for non-navigating placeholder behavior.
