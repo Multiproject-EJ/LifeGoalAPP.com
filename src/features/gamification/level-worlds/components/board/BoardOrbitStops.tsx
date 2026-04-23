@@ -1,7 +1,7 @@
 import { memo, useRef } from 'react';
 import type { OrbitStopAnchor, TileAnchor } from '../../services/islandBoardLayout';
 
-export type StopProgressState = 'pending' | 'active' | 'completed' | 'partial' | 'locked' | 'shop';
+export type StopProgressState = 'pending' | 'active' | 'completed' | 'partial' | 'locked' | 'ticket_required' | 'shop';
 
 export interface OrbitStopVisualData {
   id: string;
@@ -52,7 +52,7 @@ export const BoardOrbitStops = memo(function BoardOrbitStops(props: BoardOrbitSt
           }
         };
         const showTicketCost =
-          stopVisual.state === 'locked'
+          (stopVisual.state === 'locked' || stopVisual.state === 'ticket_required')
           && typeof stopVisual.ticketCost === 'number'
           && stopVisual.ticketCost > 0;
         return (

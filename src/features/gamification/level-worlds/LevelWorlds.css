@@ -2228,6 +2228,12 @@
   background: rgba(67, 40, 16, 0.9);
 }
 
+.island-orbit-stop--ticket_required {
+  border-color: rgba(255, 220, 120, 0.95);
+  background: rgba(67, 40, 16, 0.9);
+  box-shadow: 0 0 0 1px rgba(255, 224, 130, 0.7), 0 0 12px rgba(255, 194, 92, 0.4);
+}
+
 .island-orbit-stop--shop {
   border-color: rgba(255, 230, 120, 0.95);
   background: rgba(54, 44, 8, 0.9);
