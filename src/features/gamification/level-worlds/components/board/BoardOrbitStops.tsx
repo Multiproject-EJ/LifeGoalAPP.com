@@ -29,6 +29,7 @@ export interface OrbitStopVisualData {
    *  - undefined → no dot rendered.
    */
   attentionHint?: 'affordable';
+  stateChipLabel?: string;
 }
 
 export interface BoardOrbitStopsProps {
@@ -98,6 +99,11 @@ export const BoardOrbitStops = memo(function BoardOrbitStops(props: BoardOrbitSt
           <span className="island-orbit-stop__icon" aria-hidden="true">
             {getOrbitStopDisplayIcon(stopVisual.state, stopVisual.icon)}
           </span>
+          {stopVisual.stateChipLabel ? (
+            <span className={`island-orbit-stop__state-chip island-orbit-stop__state-chip--${stopVisual.state}`} aria-hidden="true">
+              {stopVisual.stateChipLabel}
+            </span>
+          ) : null}
           {showTicketCost ? (
             <span className="island-orbit-stop__ticket-cost" aria-hidden="true">
               {stopVisual.ticketCost} ✨
