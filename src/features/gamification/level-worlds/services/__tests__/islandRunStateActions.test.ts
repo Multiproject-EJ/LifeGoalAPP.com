@@ -27,7 +27,9 @@ import {
   subscribeIslandRunState,
 } from '../islandRunStateStore';
 import {
+  applyEggPlacement,
   applyStopBuildSpend,
+  applyStopObjectiveProgress,
   applyEssenceAward,
   applyEssenceDeduct,
   applyEssenceDriftTick,
@@ -618,6 +620,85 @@ export const islandRunStateActionsTests: TestCase[] = [
   },
 
   // ── C4: applyStopBuildSpend ──────────────────────────────────────────────
+
+  {
+    name: 'applyStopObjectiveProgress commits stop objective + active stop pointer through the store',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        stopStatesByIndex: Array.from({ length: 5 }, () => ({ objectiveComplete: false, buildComplete: false })),
+        activeStopIndex: 0,
+        activeStopType: 'hatchery',
+      });
+
+      const nextStopStatesByIndex = [
+        { objectiveComplete: true, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+      ];
+
+      const result = applyStopObjectiveProgress({
+        session,
+        client: null,
+        stopStatesByIndex: nextStopStatesByIndex,
+        activeStopIndex: 1,
+        activeStopType: 'mystery',
+        triggerSource: 'test_stop_objective',
+      });
+
+      assertEqual(result.stopStatesByIndex[0]?.objectiveComplete, true, 'stop 0 objective should be complete');
+      assertEqual(result.activeStopIndex, 1, 'active stop index should advance');
+      assertEqual(result.activeStopType, 'mystery', 'active stop type should advance');
+      assertEqual(result.runtimeVersion, 11, 'runtimeVersion should bump by one');
+    },
+  },
+
+  {
+    name: 'applyEggPlacement commits egg state + per-island ledger + completed stops atomically',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 4,
+        currentIslandNumber: 7,
+        activeEggTier: null,
+        activeEggSetAtMs: null,
+        activeEggHatchDurationMs: null,
+        activeEggIsDormant: false,
+        perIslandEggs: {},
+        completedStopsByIsland: {},
+      });
+
+      const result = applyEggPlacement({
+        session,
+        client: null,
+        islandNumber: 7,
+        activeEggTier: 'rare',
+        activeEggSetAtMs: 1000,
+        activeEggHatchDurationMs: 3600,
+        perIslandEggEntry: {
+          tier: 'rare',
+          setAtMs: 1000,
+          hatchAtMs: 4600,
+          status: 'incubating',
+          location: 'island',
+        },
+        completedStops: ['hatchery'],
+        triggerSource: 'test_egg_placement',
+      });
+
+      assertEqual(result.activeEggTier, 'rare', 'active egg tier should be set');
+      assertEqual(result.activeEggSetAtMs, 1000, 'active egg setAt should be set');
+      assertEqual(result.activeEggHatchDurationMs, 3600, 'active egg hatch duration should be set');
+      assertEqual(result.perIslandEggs['7']?.status, 'incubating', 'island ledger should contain incubating egg');
+      assertEqual(result.completedStopsByIsland['7']?.[0], 'hatchery', 'completed stops should be synced for island');
+      assertEqual(result.runtimeVersion, 5, 'runtimeVersion should bump by one');
+    },
+  },
 
   {
     name: 'applyStopBuildSpend commits build-progress spend through the store in one publish',

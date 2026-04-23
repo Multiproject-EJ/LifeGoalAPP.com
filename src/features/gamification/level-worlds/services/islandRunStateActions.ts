@@ -445,6 +445,101 @@ export interface ApplyStopBuildSpendOptions {
   triggerSource?: string;
 }
 
+export interface ApplyStopObjectiveProgressOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  stopStatesByIndex: IslandRunGameStateRecord['stopStatesByIndex'];
+  activeStopIndex: IslandRunGameStateRecord['activeStopIndex'];
+  activeStopType: IslandRunGameStateRecord['activeStopType'];
+  triggerSource?: string;
+}
+
+/**
+ * Commits contract-v2 stop objective progress through the store path.
+ *
+ * Replaces renderer-side patch writes used by hatchery objective completion.
+ */
+export function applyStopObjectiveProgress(options: ApplyStopObjectiveProgressOptions): IslandRunGameStateRecord {
+  const {
+    session,
+    client,
+    stopStatesByIndex,
+    activeStopIndex,
+    activeStopType,
+    triggerSource,
+  } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    stopStatesByIndex,
+    activeStopIndex,
+    activeStopType,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_stop_objective_progress',
+  });
+  return next;
+}
+
+export interface ApplyEggPlacementOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  islandNumber: number;
+  activeEggTier: NonNullable<IslandRunGameStateRecord['activeEggTier']>;
+  activeEggSetAtMs: number;
+  activeEggHatchDurationMs: number;
+  perIslandEggEntry: PerIslandEggEntry;
+  completedStops: string[];
+  triggerSource?: string;
+}
+
+/**
+ * Commits hatchery egg placement + completed-stop sync through the store path.
+ *
+ * Replaces renderer-side `persistIslandRunRuntimeStatePatch` writes from
+ * `handleSetEgg` so egg lifecycle state and completed-stop ledger updates are
+ * committed atomically through the store coordinator.
+ */
+export function applyEggPlacement(options: ApplyEggPlacementOptions): IslandRunGameStateRecord {
+  const {
+    session,
+    client,
+    islandNumber,
+    activeEggTier,
+    activeEggSetAtMs,
+    activeEggHatchDurationMs,
+    perIslandEggEntry,
+    completedStops,
+    triggerSource,
+  } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const islandKey = String(islandNumber);
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    activeEggTier,
+    activeEggSetAtMs,
+    activeEggHatchDurationMs,
+    activeEggIsDormant: false,
+    perIslandEggs: { ...current.perIslandEggs, [islandKey]: perIslandEggEntry },
+    completedStopsByIsland: {
+      ...current.completedStopsByIsland,
+      [islandKey]: completedStops,
+    },
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_egg_placement',
+  });
+  return next;
+}
+
 /**
  * Commits a successful stop-build spend through the store path.
  *
