@@ -553,13 +553,19 @@ Reason for second pass: workflow drift caused multiple items to be marked comple
 
 Reason: active tester feedback identified production-facing regressions that must be queued in second pass and handled one-by-one before additional rollout work.
 
-- [ ] **LR1 — Today's Offer modal action regression (P0):**
+- [x] **LR1 — Today's Offer modal action regression (P0):**
   - Repro report: close `×` no longer closes modal, `Buy` CTA does not open Stripe checkout, and Daily Spin entry is missing in modal while still present on overlay.
   - Required fix scope:
     1. Restore close button + backdrop dismiss reliability.
     2. Restore `startTodaysOfferCheckout` launch path and error surfacing.
     3. Ensure Phase 2 UX contract: Daily Spin entry launches from Today's Offer modal and legacy overlay entry is removed/hidden under the same flag gate.
   - Validation gate: manual mobile/desktop click-through + focused regression coverage for modal CTA handlers.
+  - **Session 2026-04-23 update:** shipped LR1 hardening in `DailyHabitTracker`:
+    - Added dedicated close handler reuse for both close button and backdrop dismiss path.
+    - Added checkout in-flight guard + in-modal error surfacing (`todaysOfferModalError`) for Buy CTA failures (including demo-mode).
+    - Made Daily Spin entry render whenever the Phase 2 flag is enabled; if launcher callback is unavailable, entry stays visible but disabled with explicit caption/error messaging.
+    - Preserved Phase 2 overlay gating contract by re-validating `App.tsx` (`overlayShowSpinWheel` remains disabled when `todaysOfferSpinEntryEnabled` is on).
+  - **Validation evidence (session 2026-04-23):** `npm run test:island-run` (pass), `npm run build` (pass). Manual QA remains queued for next device pass (mobile + desktop click-through).
 
 - [ ] **LR2 — Daily Treat / holiday countdown dice award not crediting game wallet (P0):**
   - Repro report: dice earned from Daily Treat personal quest/holiday countdown are not added to Island Run dice pool.
