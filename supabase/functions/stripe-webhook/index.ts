@@ -8,6 +8,16 @@ const corsHeaders = {
 };
 
 const DEFAULT_DICE_PACK_ROLLS = 500;
+const DEFAULT_MINIGAME_TICKETS_PER_PACK = 10;
+
+type MinigameTicketSkuId =
+  | 'minigame_tickets_10'
+  | 'feeding_frenzy_tickets_10'
+  | 'lucky_spin_tickets_10'
+  | 'space_excavator_tickets_10'
+  | 'companion_feast_tickets_10';
+
+type TimedEventId = 'feeding_frenzy' | 'lucky_spin' | 'space_excavator' | 'companion_feast';
 
 type SupabaseLikeClient = ReturnType<typeof createClient>;
 
@@ -29,6 +39,45 @@ function parseRolls(metadata: Record<string, string> | null | undefined): number
   const parsed = raw ? Number.parseInt(raw, 10) : NaN;
   if (Number.isNaN(parsed) || parsed <= 0) return DEFAULT_DICE_PACK_ROLLS;
   return parsed;
+}
+
+function parseMinigameTickets(metadata: Record<string, string> | null | undefined): number {
+  const raw = metadata?.tickets;
+  const parsed = raw ? Number.parseInt(raw, 10) : NaN;
+  if (Number.isNaN(parsed) || parsed <= 0) return DEFAULT_MINIGAME_TICKETS_PER_PACK;
+  return parsed;
+}
+
+function isTimedEventId(value: string | null | undefined): value is TimedEventId {
+  return value === 'feeding_frenzy'
+    || value === 'lucky_spin'
+    || value === 'space_excavator'
+    || value === 'companion_feast';
+}
+
+function isMinigameTicketSkuId(value: string | null | undefined): value is MinigameTicketSkuId {
+  return value === 'minigame_tickets_10'
+    || value === 'feeding_frenzy_tickets_10'
+    || value === 'lucky_spin_tickets_10'
+    || value === 'space_excavator_tickets_10'
+    || value === 'companion_feast_tickets_10';
+}
+
+function resolveEventIdFromMinigameSku(skuId: MinigameTicketSkuId, metadataEventId: string | null | undefined): TimedEventId | null {
+  switch (skuId) {
+    case 'feeding_frenzy_tickets_10':
+      return 'feeding_frenzy';
+    case 'lucky_spin_tickets_10':
+      return 'lucky_spin';
+    case 'space_excavator_tickets_10':
+      return 'space_excavator';
+    case 'companion_feast_tickets_10':
+      return 'companion_feast';
+    case 'minigame_tickets_10':
+      return isTimedEventId(metadataEventId) ? metadataEventId : null;
+    default:
+      return null;
+  }
 }
 
 async function resolveUserIdFromCustomerId(supabase: SupabaseLikeClient, stripeCustomerId: string | null): Promise<string | null> {
@@ -175,6 +224,62 @@ async function applyDicePackCredit(
   }
 }
 
+async function applyMinigameTicketCredit(
+  supabase: SupabaseLikeClient,
+  event: Stripe.Event,
+  session: Stripe.Checkout.Session,
+): Promise<void> {
+  const sessionId = session.id;
+  const userId = session.metadata?.user_id || session.client_reference_id || null;
+  if (!sessionId || !userId) {
+    throw new Error('Minigame ticket checkout session is missing session id or user id metadata.');
+  }
+
+  const skuId = session.metadata?.sku_id ?? null;
+  if (!isMinigameTicketSkuId(skuId)) {
+    throw new Error(`Minigame ticket checkout session metadata has invalid sku_id=${String(skuId)}`);
+  }
+
+  const targetEventId = resolveEventIdFromMinigameSku(skuId, session.metadata?.event_id);
+  if (!targetEventId) {
+    throw new Error(`Minigame ticket checkout session missing resolvable event target for sku_id=${skuId}`);
+  }
+
+  const { data: dedupeReservationRow, error: dedupeError } = await supabase
+    .from('billing_webhook_events')
+    .update({
+      dedupe_scope: 'minigame_ticket_credit',
+      dedupe_key: sessionId,
+    })
+    .eq('stripe_event_id', event.id)
+    .select('stripe_event_id')
+    .maybeSingle();
+
+  if (dedupeError) {
+    if ((dedupeError as { code?: string }).code === '23505') {
+      await updateWebhookEventStatus(supabase, event.id, 'ignored', `Minigame ticket credit already applied for checkout_session_id=${sessionId}`);
+      return;
+    }
+    throw new Error(`Failed to reserve minigame-ticket dedupe key: ${dedupeError.message}`);
+  }
+
+  if (!dedupeReservationRow?.stripe_event_id) {
+    throw new Error(`Failed to reserve minigame-ticket dedupe key: webhook event row not found for stripe_event_id=${event.id}`);
+  }
+
+  const tickets = parseMinigameTickets(session.metadata);
+
+  const { error: incrementError } = await supabase.rpc('increment_user_minigame_tickets_by_event', {
+    p_user_id: userId,
+    p_event_id: targetEventId,
+    p_delta: tickets,
+  });
+
+  if (incrementError) {
+    throw new Error(`Failed to atomically increment minigame tickets: ${incrementError.message}`);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -284,6 +389,11 @@ Deno.serve(async (req) => {
 
         if (session.mode === 'payment' && session.metadata?.product_type === 'dice_pack') {
           await applyDicePackCredit(supabase, event, session);
+          break;
+        }
+
+        if (session.mode === 'payment' && session.metadata?.product_type === 'minigame_ticket_pack') {
+          await applyMinigameTicketCredit(supabase, event, session);
           break;
         }
 
