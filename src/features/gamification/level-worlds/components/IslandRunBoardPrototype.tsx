@@ -3085,45 +3085,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [lockedStopInfoStopId, ticketPromptStopId]);
 
-  const dismissLandmarkCoachmark = useCallback(() => {
-    setShowLandmarkCoachmark(false);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(`island_run_landmark_coachmark_seen_${session.user.id}`, '1');
-    }
-  }, [session.user.id]);
-
-  useEffect(() => {
-    if (!lockedStopInfoStopId && !ticketPromptStopId) return undefined;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      if (ticketPromptStopId) {
-        setTicketPromptStopId(null);
-        return;
-      }
-      if (lockedStopInfoStopId) {
-        setLockedStopInfoStopId(null);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [lockedStopInfoStopId, ticketPromptStopId]);
-
-  useEffect(() => {
-    if (!lockedStopInfoStopId && !ticketPromptStopId) return undefined;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      if (ticketPromptStopId) {
-        setTicketPromptStopId(null);
-        return;
-      }
-      if (lockedStopInfoStopId) {
-        setLockedStopInfoStopId(null);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [lockedStopInfoStopId, ticketPromptStopId]);
-
   /**
    * Pay the essence ticket for `stopId`. On success: persist the updated
    * wallet + ticket ledger, dismiss the prompt, and open the stop. On failure
@@ -5601,17 +5562,31 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    const newEssence = runtimeState.essence - MARKET_DICE_BUNDLE_COST;
-    setRuntimeState((prev) => ({
-      ...prev,
-      essence: newEssence,
-      essenceLifetimeSpent: prev.essenceLifetimeSpent + MARKET_DICE_BUNDLE_COST,
-    }));
-    void persistIslandRunRuntimeStatePatch({
+    const { record: deductedRecord, spent } = applyEssenceDeduct({
       session,
       client,
-      patch: { essence: newEssence, essenceLifetimeSpent: runtimeState.essenceLifetimeSpent + MARKET_DICE_BUNDLE_COST },
+      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+      amount: MARKET_DICE_BUNDLE_COST,
+      triggerSource: 'market_purchase_dice_bundle',
     });
+    if (spent < 1) {
+      const message = `Not enough essence for Dice Bundle (${MARKET_DICE_BUNDLE_COST} required).`;
+      emitMarketPurchaseMarker({
+        bundle,
+        status: 'insufficient_coins',
+        costCoins: MARKET_DICE_BUNDLE_COST,
+        rewardDice: MARKET_DICE_BUNDLE_REWARD,
+        coinsBefore: runtimeState.essence,
+        coinsAfter: runtimeState.essence,
+      });
+      playIslandRunSound('market_insufficient_coins');
+      setMarketPurchaseFeedback(message);
+      setLandingText(message);
+      setMarketInteracted(true);
+      return;
+    }
+    const newEssence = deductedRecord.essence;
+    setRuntimeState(deductedRecord);
     setDicePool((current) => current + MARKET_DICE_BUNDLE_REWARD);
 
     emitMarketPurchaseMarker({
