@@ -490,3 +490,37 @@ The first shippable PR from this plan is intentionally small, low-risk, and iner
 7. Unit tests for the above.
 
 No runtime behavior changes for the user. Foundation for Phases 2–8.
+
+---
+
+## 14. Second Pass Restart Plan (2026-04-23)
+
+Reason for second pass: workflow drift caused multiple items to be marked complete before they were fully production-done. This section is now the canonical handoff queue for follow-up agent sessions.
+
+### 14.1 Operating rules for second pass
+- Treat every original phase item as **needs re-validation**, including previously checked items.
+- Do not mark an item done in second pass unless both are true:
+  1. Code path exists and is wired in runtime entry points.
+  2. Focused validation evidence (test and/or manual QA note) is recorded.
+- Keep updates additive in this section so future sessions can continue from the last known state.
+
+### 14.2 Second pass checklist (reset)
+
+#### SP1 — Monetization config hardening (Phase 7 alignment)
+- [x] Add explicit placeholder config keys for per-event minigame ticket pricing/SKU wiring so Stripe values can be pasted later without code edits.
+  - **Session 2026-04-23 update:** added blank env placeholders in `.env.example` for generic + per-event minigame ticket Stripe price IDs.
+- [ ] Build/land `create-checkout-session-minigame-ticket` edge function contract and validate end-to-end invocation from `initiateMinigameTicketCheckout`.
+- [ ] Extend Stripe webhook fulfillment to grant `minigameTicketsByEvent` by purchased SKU.
+- [ ] Wire UI buy-ticket entry points (active-event panel + Today's Offer) to the checkout wrapper.
+
+#### SP2 — Phase-by-phase revalidation queue
+- [ ] Re-audit Phase 1 foundations (registry, manifests, feature flags, mystery variants, migration/hydrate select).
+- [ ] Re-audit Phase 2 Today's Offer + Daily Spin unification in runtime UX.
+- [ ] Re-audit Phase 3 engine ownership (rotation/progress/milestones/telemetry paths).
+- [ ] Re-audit Phase 4 Shooter boss rollout readiness and remaining manual QA + flag flip.
+- [ ] Re-audit Phase 5 mystery manual rotation QA and flag flip.
+- [ ] Re-audit Phase 6 event mini-game completion-to-reward/sticker end-to-end path.
+- [ ] Re-audit Phase 8 polish/balance backlog and split into shippable PR chunks.
+
+### 14.3 Next session starting point
+- Start with **SP1 task 2** (`create-checkout-session-minigame-ticket`) and keep all second-pass status updates in this section.
