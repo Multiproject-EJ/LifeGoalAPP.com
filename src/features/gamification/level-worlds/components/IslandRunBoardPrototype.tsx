@@ -546,6 +546,8 @@ function formatEventRemaining(remainingMs: number): string {
 const TIMER_OK_THRESHOLD_MS = 4 * 60 * 60 * 1000;    // > 4 h  → green
 const TIMER_WARN_THRESHOLD_MS = 1 * 60 * 60 * 1000;  // 1–4 h → orange; < 1 h → red
 const DICE_ROLL_OVERLAY_DURATION_MS = 800;  // how long the "Rolled N!" overlay stays visible
+const AUTO_ROLL_HOLD_DELAY_MS = 1400;
+const AUTO_ROLL_INTERVAL_MS = 2300;
 
 function getTimerUrgencyClass(remainingMs: number): string {
   if (remainingMs > TIMER_OK_THRESHOLD_MS) return 'island-run-board__rewardbar-timer--ok';
@@ -1055,6 +1057,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [rollValue, setRollValue] = useState<number | null>(null);
   const [rollingDiceFaces, setRollingDiceFaces] = useState<[number, number]>([1, 1]);
   const [isRolling, setIsRolling] = useState(false);
+  const [isAutoRolling, setIsAutoRolling] = useState(false);
+  const [isAutoRollHoldPending, setIsAutoRollHoldPending] = useState(false);
   /** Shown briefly over the dice after the roll animation finishes (e.g. "Rolled 8!") */
   const [diceRollTotalOverlay, setDiceRollTotalOverlay] = useState<string | null>(null);
   /** Full tile-by-tile hop sequence for current roll (Monopoly GO style). */
@@ -1078,6 +1082,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
    * fires `onHopSequenceComplete`.
    */
   const isAnimatingRollRef = useRef(false);
+  const autoRollHoldTimeoutRef = useRef<number | null>(null);
+  const autoRollLoopAbortRef = useRef(false);
+  const autoRollHoldTriggeredRef = useRef(false);
+  const suppressNextRollClickRef = useRef(false);
   const isTravellingRef = useRef(false);
   /**
    * Re-entrancy guard for {@link handleCollectCreature}. A ref (not state)
@@ -1094,6 +1102,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     diceRollCompleteResolverRef.current?.();
     diceRollCompleteResolverRef.current = null;
     isAnimatingRollRef.current = false;
+    autoRollLoopAbortRef.current = true;
+    if (autoRollHoldTimeoutRef.current !== null) {
+      window.clearTimeout(autoRollHoldTimeoutRef.current);
+      autoRollHoldTimeoutRef.current = null;
+    }
     isTravellingRef.current = false;
   }, []);
   const [landingText, setLandingText] = useState('Ready to roll');
@@ -3576,6 +3589,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           ? 'insufficient_dice'
           : null;
   const canRoll = !showFirstRunCelebration && !isRolling && !showTravelOverlay && dicePool >= effectiveDiceCost;
+  const canHoldForAutoRoll = canRoll && !isIslandTimerPendingStart;
+  const rollButtonInteractionClass = isAutoRolling
+    ? 'island-run-prototype__roll-btn--auto-active'
+    : isAutoRollHoldPending
+      ? 'island-run-prototype__roll-btn--auto-pending'
+      : '';
   /** PR6: Human-readable reason for screen readers + tooltips when the roll
    * button is disabled. Keys mirror the internal `rollDisabledReason` codes. */
   const rollDisabledMessage = (() => {
@@ -3904,7 +3923,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
   };
 
-  const handleRoll = async () => {
+  const handleRoll = async (): Promise<boolean> => {
     const rollDecisionFlags = {
       canRoll,
       showFirstRunCelebration,
@@ -3936,7 +3955,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           ...rollDecisionFlags,
         });
       }
-      return;
+      return false;
     }
 
     // M11C: Step 1 enforcement removed — rolling is always free when dice are available.
@@ -3950,7 +3969,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           ...rollDecisionFlags,
         });
       }
-      return;
+      return false;
     }
 
     // A previous roll's hop animation may still be playing (we clear
@@ -3970,7 +3989,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           ...rollDecisionFlags,
         });
       }
-      return;
+      return false;
     }
 
     if (dicePool < effectiveDiceCost) {
@@ -3983,7 +4002,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         });
       }
       setLandingText(`Need ${effectiveDiceCost} dice to roll at ×${effectiveMultiplier}.`);
-      return;
+      return false;
     }
 
     setIsRolling(true);
@@ -4027,7 +4046,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       }
       setIsRolling(false);
       setLandingText(`Need ${effectiveDiceCost} dice to roll at ×${effectiveMultiplier}.`);
-      return;
+      return false;
     }
     if (isIsland120StartupDiagnosticActive) {
       logIslandRunEntryDebug('island120_roll_interaction', {
@@ -4178,7 +4197,101 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         endIslandRunActionBarrier(session.user.id);
       }
     }
+    return true;
   };
+
+  const stopAutoRoll = useCallback(() => {
+    autoRollLoopAbortRef.current = true;
+    setIsAutoRolling(false);
+    setIsAutoRollHoldPending(false);
+    if (autoRollHoldTimeoutRef.current !== null) {
+      window.clearTimeout(autoRollHoldTimeoutRef.current);
+      autoRollHoldTimeoutRef.current = null;
+    }
+  }, []);
+
+  const beginAutoRollHold = useCallback(() => {
+    if (showFirstRunCelebration || showTravelOverlay || isRolling || isAnimatingRollRef.current || dicePool < effectiveDiceCost) {
+      return;
+    }
+    if (autoRollHoldTimeoutRef.current !== null) {
+      window.clearTimeout(autoRollHoldTimeoutRef.current);
+    }
+    autoRollHoldTriggeredRef.current = false;
+    setIsAutoRollHoldPending(true);
+    autoRollHoldTimeoutRef.current = window.setTimeout(() => {
+      autoRollHoldTimeoutRef.current = null;
+      autoRollHoldTriggeredRef.current = true;
+      suppressNextRollClickRef.current = true;
+      autoRollLoopAbortRef.current = false;
+      setIsAutoRolling(true);
+      setLandingText('Auto-roll engaged. Release to stop.');
+    }, AUTO_ROLL_HOLD_DELAY_MS);
+  }, [dicePool, effectiveDiceCost, isRolling, showFirstRunCelebration, showTravelOverlay]);
+
+  const endAutoRollHold = useCallback(() => {
+    if (autoRollHoldTimeoutRef.current !== null) {
+      window.clearTimeout(autoRollHoldTimeoutRef.current);
+      autoRollHoldTimeoutRef.current = null;
+    }
+    setIsAutoRollHoldPending(false);
+    if (autoRollHoldTriggeredRef.current) {
+      autoRollHoldTriggeredRef.current = false;
+      stopAutoRoll();
+    }
+  }, [stopAutoRoll]);
+
+  const rollHoldHandlers = canHoldForAutoRoll
+    ? {
+      onPointerDown: beginAutoRollHold,
+      onPointerUp: endAutoRollHold,
+      onPointerLeave: endAutoRollHold,
+      onPointerCancel: endAutoRollHold,
+    }
+    : {};
+
+  useEffect(() => {
+    if (!isAutoRolling) {
+      return;
+    }
+    let cancelled = false;
+    const loop = async () => {
+      while (!cancelled && !autoRollLoopAbortRef.current) {
+        const didRoll = await handleRollRef.current();
+        if (!didRoll) {
+          autoRollLoopAbortRef.current = true;
+          setIsAutoRolling(false);
+          break;
+        }
+        await new Promise<void>((resolve) => {
+          window.setTimeout(resolve, AUTO_ROLL_INTERVAL_MS);
+        });
+      }
+    };
+    void loop();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAutoRolling]);
+
+  const handleRollButtonClick = useCallback(() => {
+    if (suppressNextRollClickRef.current) {
+      suppressNextRollClickRef.current = false;
+      return;
+    }
+    void handleRoll();
+  }, [handleRoll]);
+
+  const handleRollRef = useRef(handleRoll);
+  useEffect(() => {
+    handleRollRef.current = handleRoll;
+  }, [handleRoll]);
+
+  useEffect(() => {
+    if (dicePool < effectiveDiceCost && isAutoRolling) {
+      stopAutoRoll();
+    }
+  }, [dicePool, effectiveDiceCost, isAutoRolling, stopAutoRoll]);
 
   // Track roll index for deterministic (non-time-based) tile-landing RNG seeding.
   const rollIndexRef = useRef(0);
@@ -6773,11 +6886,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         <div className="island-run-prototype__always-controls">
             <button
               type="button"
-              className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
-              onClick={handleRoll}
+              className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'} ${rollButtonInteractionClass}`.trim()}
+              onClick={handleRollButtonClick}
               disabled={Boolean(rollDisabledReason)}
               aria-disabled={Boolean(rollDisabledReason)}
               title={rollDisabledMessage ?? undefined}
+              {...rollHoldHandlers}
             >
               {rollButtonLabel}
               {rollDisabledMessage && (
@@ -7487,11 +7601,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   </button>
                   <button
                     type="button"
-                    className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'}`}
-                    onClick={isIslandTimerPendingStart ? activateCurrentIsland : () => void handleRoll()}
+                    className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'} ${rollButtonInteractionClass}`.trim()}
+                    onClick={isIslandTimerPendingStart ? activateCurrentIsland : handleRollButtonClick}
                     disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
                     aria-disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
                     title={!isIslandTimerPendingStart ? (rollDisabledMessage ?? undefined) : undefined}
+                    {...rollHoldHandlers}
                   >
                     <span className="island-run-prototype__footer-roll-btn-content">
                       <span className="island-run-prototype__footer-roll-btn-dice">🎲 {hasHydratedRuntimeState ? dicePool : '—'}{effectiveMultiplier > 1 ? ` ×${effectiveMultiplier}` : ''}</span>
