@@ -497,6 +497,17 @@ export interface ApplyEggPlacementOptions {
   triggerSource?: string;
 }
 
+export interface ApplyEggResolutionOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  islandNumber: number;
+  perIslandEggEntry: PerIslandEggEntry;
+  completedStops: string[];
+  essence?: number;
+  essenceLifetimeEarned?: number;
+  triggerSource?: string;
+}
+
 /**
  * Commits hatchery egg placement + completed-stop sync through the store path.
  *
@@ -536,6 +547,50 @@ export function applyEggPlacement(options: ApplyEggPlacementOptions): IslandRunG
     client,
     record: next,
     triggerSource: triggerSource ?? 'apply_egg_placement',
+  });
+  return next;
+}
+
+/**
+ * Commits hatchery egg resolution (collect/sell) through the store path.
+ *
+ * Replaces renderer-side `persistIslandRunRuntimeStatePatch` + `setRuntimeState`
+ * pairs in collect/sell handlers so active-egg clear + per-island egg ledger +
+ * completed-stop ledger updates stay on one canonical commit path.
+ */
+export function applyEggResolution(options: ApplyEggResolutionOptions): IslandRunGameStateRecord {
+  const {
+    session,
+    client,
+    islandNumber,
+    perIslandEggEntry,
+    completedStops,
+    essence,
+    essenceLifetimeEarned,
+    triggerSource,
+  } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const islandKey = String(islandNumber);
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    activeEggTier: null,
+    activeEggSetAtMs: null,
+    activeEggHatchDurationMs: null,
+    activeEggIsDormant: false,
+    perIslandEggs: { ...current.perIslandEggs, [islandKey]: perIslandEggEntry },
+    completedStopsByIsland: {
+      ...current.completedStopsByIsland,
+      [islandKey]: completedStops,
+    },
+    essence: essence ?? current.essence,
+    essenceLifetimeEarned: essenceLifetimeEarned ?? current.essenceLifetimeEarned,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_egg_resolution',
   });
   return next;
 }
