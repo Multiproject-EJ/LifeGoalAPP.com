@@ -32,6 +32,8 @@ interface ShooterBlitzProps {
   ticketBudget?: number;
   /** Optional external controller input source (footer adapter bridge) */
   controllerInput?: IslandRunControllerInputProvider;
+  /** Optional launcher payload used by event-mode variants. */
+  launchConfig?: Record<string, unknown>;
 }
 
 type PowerupKind = 'rapid_fire' | 'shield' | 'triple_shot';
@@ -85,6 +87,7 @@ export function ShooterBlitz({
   onComplete,
   islandNumber = 1,
   controllerInput,
+  launchConfig,
 }: ShooterBlitzProps) {
   const { session: contextSession } = useSupabaseAuth();
   const session = sessionProp ?? contextSession;
@@ -106,6 +109,13 @@ export function ShooterBlitz({
   const userId = session?.user.id;
 
   const trial = useMemo(() => getBossTrialConfig(islandNumber), [islandNumber]);
+  const isSpaceExcavatorEventMode = launchConfig?.mode === 'space_excavator';
+  const eventTicketCost = typeof launchConfig?.ticketCost === 'number' && Number.isFinite(launchConfig.ticketCost)
+    ? Math.max(0, Math.floor(launchConfig.ticketCost))
+    : 1;
+  const eventTicketsSpent = typeof launchConfig?.ticketsSpent === 'number' && Number.isFinite(launchConfig.ticketsSpent)
+    ? Math.max(0, Math.floor(launchConfig.ticketsSpent))
+    : eventTicketCost;
 
   const theme = useMemo(() => THEME_BY_ISLAND_MOD[islandNumber % 4] ?? THEME_BY_ISLAND_MOD[0], [islandNumber]);
 
@@ -331,6 +341,36 @@ export function ShooterBlitz({
 
     onComplete({ completed: false });
   };
+
+  if (isSpaceExcavatorEventMode) {
+    return (
+      <div className={`shooter-blitz game-board ${theme.skyClass}`} role="dialog" aria-label="Space Excavator event placeholder">
+        <div className="shooter-blitz__panel">
+          <header className="shooter-blitz__header">
+            <h2>🚀 Space Excavator</h2>
+            <p>Event surface in active development</p>
+          </header>
+          <div className="shooter-blitz__setup">
+            <p>
+              This event currently opens a non-gameplay placeholder so launching it never kicks you out of Island Run.
+            </p>
+            <p className="shooter-blitz__reward-copy">
+              Ticket spend contract preview: launch costs <strong>{eventTicketCost}</strong> 🎫 and resolves through the timed-event completion hook.
+            </p>
+            <p className="shooter-blitz__reward-copy">
+              Launch request consumed: <strong>{eventTicketsSpent}</strong> ticket{eventTicketsSpent === 1 ? '' : 's'}.
+            </p>
+            <button type="button" className="btn btn-primary" onClick={() => onComplete({ completed: true, reward: {} })}>
+              Mark Excavation Complete
+            </button>
+            <button type="button" className="btn btn-secondary" onClick={handleExit}>
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`shooter-blitz game-board ${theme.skyClass}`} role="dialog" aria-label="Shooter Blitz mini-game">

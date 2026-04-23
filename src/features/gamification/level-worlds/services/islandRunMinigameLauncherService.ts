@@ -86,6 +86,8 @@ export interface EventMinigameLaunchDescriptor {
         mode: 'space_excavator';
         campaignDurationSec: 180;
         scoreTargetMultiplier: 1.5;
+        ticketCost: number;
+        ticketsSpent: number;
       }
     | {
         source: 'timed_event';
@@ -282,6 +284,8 @@ export function resolveSpaceExcavatorEventMinigame(
       mode: 'space_excavator',
       campaignDurationSec: 180,
       scoreTargetMultiplier: 1.5,
+      ticketCost: launch.ticketCost,
+      ticketsSpent: launch.ticketsSpent,
     },
   };
 }
