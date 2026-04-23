@@ -9,6 +9,7 @@ import {
   resolveLuckySpinEventMinigame,
   resolveSpaceExcavatorEventMinigame,
   resolveCompanionFeastEventMinigame,
+  resolveTimedEventLaunchTicketDelta,
   type EventMinigameLaunchDescriptor,
 } from '../islandRunMinigameLauncherService';
 import { resolveChainedRewardBarClaims } from '../islandRunContractV2RewardBar';
@@ -108,6 +109,35 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       });
       assertEqual(descriptor?.ticketsSpent, 2, 'caller-provided spend amount should be preserved');
       assertEqual(descriptor?.ticketCost, 1, 'ticketCost remains canonical per-run base cost');
+    },
+  },
+  {
+    name: 'resolveTimedEventLaunchTicketDelta returns negative spend and safely clamps invalid values',
+    run: () => {
+      const descriptor = resolveSpaceExcavatorEventMinigame({
+        kind: 'timed_event',
+        eventId: 'space_excavator',
+        ticketsAvailable: 5,
+        ticketsToSpend: 2,
+      });
+      assertEqual(resolveTimedEventLaunchTicketDelta(descriptor), -2, 'ticket delta should be negative spend');
+      assertEqual(resolveTimedEventLaunchTicketDelta(null), 0, 'null descriptor should not produce a spend delta');
+      assertEqual(
+        resolveTimedEventLaunchTicketDelta({
+          minigameId: 'task_tower',
+          ticketCost: 1,
+          ticketsSpent: 0,
+          config: {
+            source: 'timed_event',
+            eventId: 'feeding_frenzy',
+            mode: 'feeding_frenzy',
+            sessionDurationSec: 120,
+            targetRowsCleared: 10,
+          },
+        }),
+        0,
+        'non-positive spend should clamp to zero delta',
+      );
     },
   },
   {

@@ -549,11 +549,19 @@ Reason for second pass: workflow drift caused multiple items to be marked comple
     - Added deterministic rotation matrix coverage in `minigameConsolidationPhase5.test.ts` for islands 1–10 to verify both `task_tower` and `vision_quest` surface in mystery rotation when both flags are enabled.
     - Enabled compile-time mystery variants by default in `islandRunFeatureFlags.ts` (`islandRunTaskTowerMysteryEnabled: true`, `islandRunVisionQuestMysteryEnabled: true`).
     - Validation evidence: `npm run test:island-run` (pass), `npm run build` (pass).
-- [ ] Re-audit Phase 6 event mini-game completion-to-reward/sticker end-to-end path.
+- [x] Re-audit Phase 6 event mini-game completion-to-reward/sticker end-to-end path.
+  - **Session 2026-04-23 update:** completed second-pass runtime re-audit for Phase 6 and closed one launch/economy gap.
+    - Revalidated runtime wiring from timed-event launch through completion and claim cascade:
+      - event launch routing in `handleLaunchTimedEventMinigame(...)` via canonical resolver set (`resolveFeedingFrenzyEventMinigame`, `resolveLuckySpinEventMinigame`, `resolveSpaceExcavatorEventMinigame`, `resolveCompanionFeastEventMinigame`);
+      - completion gate in launcher `onComplete` via `resolveEventMinigameCompletionId(...)`;
+      - reward/sticker progression handoff via `recordEventMinigameCompletion(...)` + `runContractV2RewardBarClaimCascade(...)`.
+    - Gap fix landed: timed-event launch now consumes resolver-emitted ticket spend before opening the minigame surface (`applyTokenHopRewards(..., { spinTokens: -ticketsSpent })`), preventing free re-entry loops while preserving existing completion/reward routing.
+    - Added Phase 6 regression coverage for launch spend accounting helper (`resolveTimedEventLaunchTicketDelta`) and clamp behavior.
+    - Validation evidence: `npm run test:island-run` (pass), `npm run build` (pass).
 - [ ] Re-audit Phase 8 polish/balance backlog and split into shippable PR chunks.
 
 ### 14.3 Next session starting point
-- **Priority now:** continue with **SP2 task 6** (re-audit Phase 6 event mini-game completion-to-reward/sticker end-to-end path).
+- **Priority now:** continue with **SP2 task 7** (re-audit Phase 8 polish/balance backlog and split into shippable PR chunks).
 - Keep all second-pass status updates in this section with concrete test + manual QA notes.
 
 ### 14.4 SP2 live-regression hotfix queue (added 2026-04-23)

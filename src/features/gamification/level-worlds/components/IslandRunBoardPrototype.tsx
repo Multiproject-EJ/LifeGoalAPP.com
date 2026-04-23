@@ -164,6 +164,7 @@ import {
   resolveCompanionFeastEventMinigame,
   resolveFeedingFrenzyEventMinigame,
   resolveLuckySpinEventMinigame,
+  resolveTimedEventLaunchTicketDelta,
   resolveEventMinigameCompletionId,
   resolveSpaceExcavatorEventMinigame,
   type MinigameLaunchSource,
@@ -5557,6 +5558,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     registerAllMinigameManifests();
+    const ticketDelta = resolveTimedEventLaunchTicketDelta(descriptor);
+    if (ticketDelta !== 0) {
+      applyTokenHopRewards({
+        session,
+        client,
+        deltas: { spinTokens: ticketDelta },
+        triggerSource: 'timed_event_launch',
+      });
+    }
     setActiveLaunchedMinigameId(descriptor.minigameId);
     setActiveLaunchedMinigameSource('timed_event');
     setActiveLaunchedMinigameConfig(descriptor.config);
