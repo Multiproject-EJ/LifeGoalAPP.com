@@ -65,11 +65,13 @@ import {
   withIslandRunActionLock,
 } from '../services/islandRunActionMutex';
 import {
+  applyStopTicketPayment,
   applyEssenceAward,
   applyEssenceDeduct,
   applyEssenceDriftTick,
   applyRewardBarState,
   applyRollResult,
+  syncCompletedStopsForIsland,
   applyTokenHopRewards,
   travelToNextIsland,
 } from '../services/islandRunStateActions';
@@ -2474,25 +2476,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (areStringArraysEqual(persistedStops, completedStops)) {
       return;
     }
-    const patch = { [islandKey]: completedStops };
-    const nextRuntimeState = {
-      ...runtimeStateRef.current,
-      completedStopsByIsland: {
-        ...runtimeStateRef.current.completedStopsByIsland,
-        ...patch,
-      },
-    };
-    void writeIslandRunGameStateRecord({
+    const nextRuntimeState = syncCompletedStopsForIsland({
       session,
       client,
-      record: nextRuntimeState,
+      islandNumber,
+      completedStops,
+      triggerSource: 'sync_completed_stops_effect',
     });
     setRuntimeState((current) => ({
       ...current,
-      completedStopsByIsland: {
-        ...current.completedStopsByIsland,
-        ...patch,
-      },
+      completedStopsByIsland: nextRuntimeState.completedStopsByIsland,
     }));
   }, [client, completedStops, hasHydratedRuntimeState, islandNumber, runtimeState.completedStopsByIsland, session]);
 
@@ -3053,21 +3046,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // and we just want to open the stop without writing, telemetry, or a
     // "paid" landing toast.
     if (!result.alreadyFree) {
-      void writeIslandRunGameStateRecord({
+      const nextRuntimeState = applyStopTicketPayment({
         session,
         client,
-        record: {
-          ...runtimeStateRef.current,
-          essence: result.essence,
-          essenceLifetimeSpent: result.essenceLifetimeSpent,
-          stopTicketsPaidByIsland: result.stopTicketsPaidByIsland,
-        },
-      });
-      setRuntimeState((current) => ({
-        ...current,
         essence: result.essence,
         essenceLifetimeSpent: result.essenceLifetimeSpent,
         stopTicketsPaidByIsland: result.stopTicketsPaidByIsland,
+        triggerSource: 'stop_ticket_payment',
+      });
+      setRuntimeState((current) => ({
+        ...current,
+        essence: nextRuntimeState.essence,
+        essenceLifetimeSpent: nextRuntimeState.essenceLifetimeSpent,
+        stopTicketsPaidByIsland: nextRuntimeState.stopTicketsPaidByIsland,
       }));
       void recordTelemetryEvent({
         userId: session.user.id,

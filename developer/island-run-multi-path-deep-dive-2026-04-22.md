@@ -205,6 +205,20 @@ This section is a clean execution checklist after the prior workflow issues
      - `persistIslandRunRuntimeStatePatch(...)`
      - `writeIslandRunGameStateRecord(...)`
    - Route roll/stop/travel/dice-critical changes through one canonical action path.
+   - **Status:** 🟡 In progress on 2026-04-23.
+   - **Implementation notes (this session):**
+     - Added `syncCompletedStopsForIsland(...)` in `islandRunStateActions` so
+       completed-stop island map writes now flow through `commitIslandRunState`
+       instead of direct renderer-side `writeIslandRunGameStateRecord(...)`.
+     - Added `applyStopTicketPayment(...)` in `islandRunStateActions` and wired
+       the stop-ticket happy path in `IslandRunBoardPrototype` to use it, so
+       ticket payment writes (`essence`, `essenceLifetimeSpent`,
+       `stopTicketsPaidByIsland`) no longer bypass the store commit coordinator.
+   - **Evidence checks:** `npm run test:island-run` passed after this increment.
+   - **What remains:** migrate remaining gameplay-critical direct writes (notably
+     island-travel-adjacent and reward/stop completion side paths) until the
+     board loop no longer performs direct record writes for roll/stop/travel
+     state ownership.
 
 5. **Add one canonical full-loop integration gate**
    - Required scenario:

@@ -366,6 +366,75 @@ export function applyEssenceDriftTick(options: ApplyEssenceDriftTickOptions): Ap
   return { record: next, driftLost: driftResult.driftLost };
 }
 
+// ── C4: Stop progress + ticket payment commits ──────────────────────────────
+
+export interface SyncCompletedStopsForIslandOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  islandNumber: number;
+  completedStops: string[];
+  triggerSource?: string;
+}
+
+/**
+ * Commits `completedStopsByIsland[islandNumber]` through the store path.
+ *
+ * Replaces renderer-side direct `writeIslandRunGameStateRecord` + paired
+ * `setRuntimeState` writes so stop-completion updates no longer bypass the
+ * commit coordinator.
+ */
+export function syncCompletedStopsForIsland(options: SyncCompletedStopsForIslandOptions): IslandRunGameStateRecord {
+  const { session, client, islandNumber, completedStops, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const islandKey = String(islandNumber);
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    completedStopsByIsland: {
+      ...current.completedStopsByIsland,
+      [islandKey]: completedStops,
+    },
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'sync_completed_stops_for_island',
+  });
+  return next;
+}
+
+export interface ApplyStopTicketPaymentOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  essence: number;
+  essenceLifetimeSpent: number;
+  stopTicketsPaidByIsland: IslandRunGameStateRecord['stopTicketsPaidByIsland'];
+  triggerSource?: string;
+}
+
+/**
+ * Commits a successful stop-ticket purchase through the store path.
+ */
+export function applyStopTicketPayment(options: ApplyStopTicketPaymentOptions): IslandRunGameStateRecord {
+  const { session, client, essence, essenceLifetimeSpent, stopTicketsPaidByIsland, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    essence,
+    essenceLifetimeSpent,
+    stopTicketsPaidByIsland,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_stop_ticket_payment',
+  });
+  return next;
+}
+
 // ── C3: Island travel ────────────────────────────────────────────────────────
 
 /** Maximum island number before the cycle wraps back to 1. Mirrors the
