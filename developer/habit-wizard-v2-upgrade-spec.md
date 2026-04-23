@@ -10,9 +10,14 @@ Improve habit creation completion and clarity by keeping the core flow guided, m
 - [x] Added time-bound duration controls in wizard draft (duration mode, value/unit, end behavior).
 - [x] Moved Done-ish + stage controls behind optional advanced panel on the summary step.
 - [x] Stored draft intent/duration metadata into `autoprog.creation_context` on create/edit save paths (temporary persistence before schema migration).
-- [ ] Persist reminder settings from wizard into reminder preference backend on create/edit.
+- [x] Persist reminder settings from wizard into reminder preference backend on create/edit.
 - [ ] Add DB migration for first-class intent/duration columns.
 - [ ] Implement automated duration end evaluator (pause/deactivate when end date reached).
+
+### Latest implementation notes
+- Wizard create/edit now syncs reminder preference via `updateHabitReminderPref(...)` immediately after successful save.
+- If reminders are enabled in wizard, the flow updates preferred time and schedules notifications.
+- If reminders are disabled in wizard, the flow disables reminder preference and cancels scheduled notifications.
 
 ## Current Constraints (from code)
 - Habit creation/edit currently runs through `HabitsModule` + `HabitWizard`.

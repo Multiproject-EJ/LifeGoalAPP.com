@@ -16,6 +16,7 @@ import type { Database } from '../../lib/database.types';
 import type { TimerLaunchContext } from '../timer/timerSession';
 import { scheduleHabitNotifications, cancelHabitNotifications } from '../../services/habitAlertNotifications';
 import { autoResumeDueHabits, isHabitReadyToResume } from '../../services/habitLifecycleAutoResume';
+import { updateHabitReminderPref } from '../../services/habitReminderPrefs';
 import './HabitsModule.css';
 import {
   AUTO_PROGRESS_TIERS,
@@ -1253,6 +1254,29 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     const isEditMode = Boolean(draft.habitId);
     
     try {
+      const syncReminderPreferenceFromDraft = async (habitId: string) => {
+        if (draft.remindersEnabled) {
+          const preferredTime = draft.reminderTimes?.[0] ?? '08:00';
+          const { error: reminderError } = await updateHabitReminderPref(habitId, {
+            enabled: true,
+            preferred_time: preferredTime,
+          });
+          if (reminderError) {
+            throw reminderError;
+          }
+          await scheduleHabitNotifications(habitId, session.user.id);
+        } else {
+          const { error: reminderError } = await updateHabitReminderPref(habitId, {
+            enabled: false,
+            preferred_time: null,
+          });
+          if (reminderError) {
+            throw reminderError;
+          }
+          await cancelHabitNotifications(habitId);
+        }
+      };
+
       if (isEditMode && draft.habitId) {
         const existingHabit = habits.find((h) => h.id === draft.habitId);
         const existingAutoprog = existingHabit ? getAutoProgressState(existingHabit) : null;
@@ -1332,6 +1356,8 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
         setPendingHabitDraft(null);
         setWizardInitialDraft(undefined);
         setSuccessMessage('Habit saved successfully!');
+
+        await syncReminderPreferenceFromDraft(updatedHabit.id);
         
         // Update the habit in local state
         setHabits(prev => prev.map(h => h.id === draft.habitId ? updatedHabit : h));
@@ -1415,6 +1441,8 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
         setPendingHabitDraft(null);
         setWizardInitialDraft(undefined);
         setSuccessMessage(`Habit "${draft.title}" created successfully!`);
+
+        await syncReminderPreferenceFromDraft(newHabit.id);
         
         // Prepend new habit to local state for immediate feedback
         setHabits([newHabit, ...habits]);
