@@ -111,3 +111,41 @@ Most likely primary contributors are:
 
 ## Confidence
 High confidence that multi-path architecture is still present and is a plausible root cause class for current inconsistencies. Exact user-facing repros will depend on which branch/path executes in-session.
+
+---
+
+## Recommended program-level plan for game-loop path issues
+
+To prevent repeated bug whack-a-mole, treat Island Run loop stability as a
+single-source-of-truth migration program (not isolated one-off fixes).
+
+### Priority order
+
+1. **Finish mutation-path unification (Stage C/D completion)**
+   - Remove remaining gameplay-critical legacy write paths in renderer.
+   - Make the canonical store/record commit pipeline the only writer for
+     roll/stop/travel/dice-critical fields.
+
+2. **Harden patch/version semantics**
+   - Either retire `persistIslandRunRuntimeStatePatch` from gameplay-critical
+     flows or ensure strict monotonic version behavior for those writes.
+
+3. **Enforce one stop-status semantic contract**
+   - Require a single ticket-aware resolver input shape across all call sites.
+   - Keep UI status and interaction-gating semantics aligned (avoid hidden
+     status remaps that feel like dead taps).
+
+4. **Add one full-loop integration gate test**
+   - Cover: roll -> land -> stop interaction -> island clear -> travel.
+   - Include interleaving/hydration simulation to catch seam races.
+
+5. **Keep issue probes active until clean soak**
+   - Issue 1: token mutation source-tag telemetry.
+   - Issue 2: stop-tap decision tuple telemetry.
+   - Issue 3: treat-dice bridge before/after dicePool telemetry.
+
+### Operational rule of thumb
+
+For any new gameplay-loop bug:
+- First ask: **does this path bypass canonical store write?**
+- If yes, fix path ownership first; then tune behavior.
