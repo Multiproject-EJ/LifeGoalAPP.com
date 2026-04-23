@@ -2108,6 +2108,49 @@
   line-height: 1;
 }
 
+.island-orbit-stop__state-chip {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.52rem;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.32rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  background: rgba(16, 26, 40, 0.92);
+  color: #eaf5ff;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.island-orbit-stop__state-chip--completed {
+  background: rgba(20, 78, 38, 0.94);
+  border-color: rgba(170, 255, 195, 0.7);
+  color: #d8ffe5;
+}
+
+.island-orbit-stop__state-chip--ticket_required {
+  background: rgba(86, 56, 14, 0.94);
+  border-color: rgba(255, 226, 153, 0.72);
+  color: #fff4d7;
+}
+
+.island-orbit-stop__state-chip--locked {
+  background: rgba(70, 42, 19, 0.94);
+  border-color: rgba(255, 191, 150, 0.72);
+  color: #ffe8d8;
+}
+
+.island-orbit-stop__state-chip--active {
+  background: rgba(14, 60, 86, 0.94);
+  border-color: rgba(152, 238, 255, 0.7);
+  color: #d9f7ff;
+}
+
 /* Small cost badge rendered under the 🔒 icon when a landmark is
    sequence-unlocked but still waiting on its essence ticket. */
 .island-orbit-stop__ticket-cost {
@@ -2237,6 +2280,47 @@
 .island-orbit-stop--shop {
   border-color: rgba(255, 230, 120, 0.95);
   background: rgba(54, 44, 8, 0.9);
+}
+
+.island-run-landmark-coachmark {
+  position: absolute;
+  left: 50%;
+  bottom: 86px;
+  transform: translateX(-50%);
+  z-index: 8;
+  max-width: min(92%, 420px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 12px;
+  border: 1px solid rgba(208, 238, 255, 0.56);
+  background: rgba(6, 18, 32, 0.92);
+  color: #e8f6ff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34);
+}
+
+.island-run-landmark-coachmark p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.island-run-landmark-coachmark__actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.island-run-landmark-coachmark__dismiss {
+  border: 1px solid rgba(189, 231, 255, 0.56);
+  border-radius: 999px;
+  padding: 0.26rem 0.62rem;
+  background: rgba(65, 122, 181, 0.35);
+  color: #f0f8ff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .island-orbit-stop:disabled {
