@@ -188,6 +188,16 @@ This section is a clean execution checklist after the prior workflow issues
    - Remove (or explicitly redesign) `ticket_required -> active` visual remap.
    - If UX still wants parity visuals, add a clear badge/CTA so the user sees the
      ticket gate before tap.
+   - **Status:** ✅ Done on 2026-04-23.
+   - **Implementation notes:** `IslandRunBoardPrototype` now maps resolver output
+     directly into `stopStateMap` with no `ticket_required -> active` fallback, and
+     orbit stop icon rendering now shows a dedicated ticket icon (`🎫`) for
+     `ticket_required` state. `BoardOrbitStops` also treats
+     `ticket_required` as a ticket-cost badge-eligible state so the essence cost
+     remains visible before tap.
+   - **Evidence checks:** `npm run test:island-run` passed after this change.
+   - **What remains:** Task 4 onward (Stage C/D mutation-path unification,
+     canonical full-loop integration gate, completion evidence discipline).
 
 4. **Finish mutation-path unification (Stage C/D completion)**
    - Remove gameplay-critical mirror write paths that mix:

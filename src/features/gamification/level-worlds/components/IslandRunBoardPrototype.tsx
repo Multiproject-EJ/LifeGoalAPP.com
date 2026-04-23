@@ -675,7 +675,7 @@ function getBossReward(islandNumber: number): { dice: number; essence: number; s
   };
 }
 
-type StopProgressState = 'pending' | 'active' | 'completed' | 'partial' | 'locked';
+type StopProgressState = 'pending' | 'active' | 'completed' | 'partial' | 'locked' | 'ticket_required';
 type IslandRunCameraMode = 'board_follow' | 'stop_focus' | 'overview_manual';
 
 
@@ -901,6 +901,7 @@ function getStopIcon(stop: Pick<IslandStopPlanEntry, 'stopId' | 'mysteryContentK
 
 function getOrbitStopDisplayIcon(state: StopProgressState | 'shop', icon: string): string {
   if (state === 'locked') return '🔒';
+  if (state === 'ticket_required') return '🎫';
   if (state === 'completed') return '✅';
   if (state === 'partial') return '🟡';
   if (state === 'active') return '🔓';
@@ -2904,12 +2905,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const map = new Map<string, StopProgressState>();
       islandStopPlan.forEach((stop, index) => {
         const resolverStatus = contractV2Stops.statusesByIndex[index];
-        // Preserve existing UI behaviour: a ticket-gated active stop still renders
-        // as 'active' here (the stop modal enforces payment separately). The new
-        // `'ticket_required'` semantic status is exposed via the resolver for HUD /
-        // telemetry consumers that want to differentiate — not for visual regression.
-        let status: StopProgressState =
-          resolverStatus === 'ticket_required' ? 'active' : (resolverStatus ?? 'locked');
+        let status: StopProgressState = resolverStatus ?? 'locked';
         // Hatchery (index 0): show yellow 'partial' when egg is set but not yet collected/sold.
         // Green 'completed' only once the animal is collected or sold (island-clear condition).
         if (index === 0 && status === 'completed' && !islandEggSlotUsed) {
