@@ -104,8 +104,13 @@ import { fetchXPTransactions } from '../../services/gamification';
 import { fetchZenTokenTransactions } from '../../services/zenGarden';
 import { awardDice, getRewardHistory } from '../../services/gameRewards';
 import { createDicePackCheckoutSession } from '../../services/billing';
+import {
+  initiateMinigameTicketCheckout,
+  resolveMinigameTicketSku,
+} from '../../services/minigameTicketStore';
 import { TimeBoundOfferRow, type TimeBoundOfferItem, type TimeBoundOfferId } from './TimeBoundOfferRow';
 import { readIslandRunRuntimeState } from '../gamification/level-worlds/services/islandRunRuntimeState';
+import { EVENT_IDS, type EventId } from '../gamification/level-worlds/services/islandRunEventEngine';
 import { generateIslandStopPlan } from '../gamification/level-worlds/services/islandRunStops';
 import { DEFAULT_GOAL_STATUS } from '../goals/goalStatus';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
@@ -215,6 +220,10 @@ function getNextUtcMidnightMs(): number {
 
 function getTodayUtcDateKey(): string {
   return new Date().toISOString().split('T')[0];
+}
+
+function isCanonicalEventId(value: string | null | undefined): value is EventId {
+  return Boolean(value) && EVENT_IDS.includes(value as EventId);
 }
 
 function isInteractiveHabitChild(target: EventTarget | null): boolean {
@@ -2281,14 +2290,19 @@ export function DailyHabitTracker({
       return;
     }
 
-    const result = await createDicePackCheckoutSession();
+    const activeEventType = islandRunRuntime.activeTimedEvent?.eventType;
+    const eventId = isCanonicalEventId(activeEventType) ? activeEventType : null;
+    const result = await initiateMinigameTicketCheckout({
+      skuId: resolveMinigameTicketSku(eventId),
+      eventId,
+    });
     if (!result.url) {
-      setVisionRewardError(result.error?.message ?? 'Unable to start checkout right now.');
+      setVisionRewardError(result.error?.message ?? 'Unable to start ticket checkout right now.');
       return;
     }
 
     window.location.assign(result.url);
-  }, [isDemoExperience]);
+  }, [isDemoExperience, islandRunRuntime.activeTimedEvent?.eventType]);
 
   const openOfferContent = useCallback((offerId: TimeBoundOfferId) => {
     if (offerId === 'island_run') {

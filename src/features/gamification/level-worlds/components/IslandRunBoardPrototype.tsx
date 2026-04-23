@@ -235,6 +235,10 @@ import {
   shouldAutoAdvanceIslandOnTimerExpiry,
 } from '../services/islandRunTimerProgression';
 import { createDicePackCheckoutSession } from '../../../../services/billing';
+import {
+  initiateMinigameTicketCheckout,
+  resolveMinigameTicketSku,
+} from '../../../../services/minigameTicketStore';
 import { scheduleEggHatchNotification } from '../../../../services/habitAlertNotifications';
 import {
   type DiceRegenState,
@@ -1372,6 +1376,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [showOutOfDicePurchasePrompt, setShowOutOfDicePurchasePrompt] = useState(false);
   const [isStartingDiceCheckout, setIsStartingDiceCheckout] = useState(false);
   const [diceCheckoutError, setDiceCheckoutError] = useState<string | null>(null);
+  const [isStartingMinigameTicketCheckout, setIsStartingMinigameTicketCheckout] = useState(false);
+  const [minigameTicketCheckoutError, setMinigameTicketCheckoutError] = useState<string | null>(null);
   const [showSanctuaryPanel, setShowSanctuaryPanel] = useState(false);
 
   // ── Dice multiplier (dice-pool-gated, Monopoly GO style) ────────────────────
@@ -6159,6 +6165,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   };
 
   const openRewardDetailsModal = () => {
+    setMinigameTicketCheckoutError(null);
     setShowRewardDetailsModal(true);
     void recordTelemetryEvent({
       userId: session.user.id,
@@ -6201,6 +6208,53 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     window.location.assign(result.url);
   }, [islandNumber, session]);
+
+  const handleStartMinigameTicketCheckout = useCallback(async (entryPoint: 'active_event_panel') => {
+    if (isDemoSession(session)) {
+      setMinigameTicketCheckoutError('Checkout is unavailable in demo mode.');
+      return;
+    }
+    if (!activeTimedEvent || !isCanonicalEventId(activeTimedEvent.eventType)) {
+      setMinigameTicketCheckoutError('Ticket checkout is only available while a timed event is active.');
+      return;
+    }
+
+    setIsStartingMinigameTicketCheckout(true);
+    setMinigameTicketCheckoutError(null);
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: {
+        stage: 'minigame_ticket_checkout_start',
+        entry_point: entryPoint,
+        island_number: islandNumber,
+        event_type: activeTimedEvent.eventType,
+      },
+    });
+
+    const result = await initiateMinigameTicketCheckout({
+      skuId: resolveMinigameTicketSku(activeTimedEvent.eventType),
+      eventId: activeTimedEvent.eventType,
+    });
+
+    if (!result.url) {
+      setMinigameTicketCheckoutError(result.error?.message ?? 'Unable to start ticket checkout right now.');
+      setIsStartingMinigameTicketCheckout(false);
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'economy_earn',
+        metadata: {
+          stage: 'minigame_ticket_checkout_error',
+          entry_point: entryPoint,
+          island_number: islandNumber,
+          event_type: activeTimedEvent.eventType,
+        },
+      });
+      return;
+    }
+
+    window.location.assign(result.url);
+  }, [activeTimedEvent, islandNumber, session]);
 
   const openSanctuaryPanel = useCallback(() => {
     setShowSanctuaryPanel(true);
@@ -8263,7 +8317,20 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <p className="island-stop-modal__copy" style={{ opacity: 0.7, fontSize: '0.85em' }}>
               The bar escalates: threshold grows each fill. Higher multipliers unlock with more dice (×2 at 20, ×5 at 100, ×10 at 200, ×50 at 1k, ×100 at 2k). Higher multipliers cost more dice per roll but fill the bar faster!
             </p>
+            {minigameTicketCheckoutError ? (
+              <p className="island-run-prototype__error">{minigameTicketCheckoutError}</p>
+            ) : null}
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+              {activeTimedEvent && isCanonicalEventId(activeTimedEvent.eventType) && (
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action"
+                  onClick={() => void handleStartMinigameTicketCheckout('active_event_panel')}
+                  disabled={isStartingMinigameTicketCheckout}
+                >
+                  {isStartingMinigameTicketCheckout ? 'Starting ticket checkout…' : 'Buy Tickets'}
+                </button>
+              )}
               {canClaimRewardBar && (
                 <button
                   type="button"
