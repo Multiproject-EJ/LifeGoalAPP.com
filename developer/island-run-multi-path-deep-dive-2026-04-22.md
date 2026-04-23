@@ -321,16 +321,38 @@ This section is a clean execution checklist after the prior workflow issues
       `applyEssenceDeduct(...)`, so market essence debits now commit through
       the canonical store coordinator with explicit `triggerSource` tagging
       (`market_purchase_dice_bundle`) before applying the dice reward.
+    - Added `applyQaProgressionSnapshot(...)` in `islandRunStateActions` and
+      migrated QA progression handlers in `IslandRunBoardPrototype`
+      (`handleQaAdvanceIsland`, `handleQaResetProgression`) so island marker +
+      dice/token reset snapshots now commit through the canonical store path
+      instead of direct renderer-side `persistIslandRunRuntimeStatePatch(...)`
+      writes.
+    - Rewired `handleQaMarkBossResolved(...)` in `IslandRunBoardPrototype` to
+      use `applyBossTrialResolvedMarker(...)` directly for persistence, removing
+      another direct gameplay-adjacent patch write path.
+    - Added `applyFirstRunStarterRewards(...)` in `islandRunStateActions` and
+      migrated the first-run celebration reward grant path in
+      `handleClaimFirstRunRewards(...)` so starter essence/dice wallet writes
+      are now canonical store commits instead of local-only runtime state
+      mutation.
+    - Added `applyFirstRunClaimed(...)` in `islandRunStateActions` and updated
+      `markOnboardingComplete(...)` so `firstRunClaimed` ownership now commits
+      through the store path (while legacy `onboardingComplete` runtime patch
+      remains as a non-gameplay UI compatibility field).
+    - Added dedicated `islandRunStateActions` tests for
+      `applyQaProgressionSnapshot(...)`, `applyFirstRunStarterRewards(...)`,
+      and `applyFirstRunClaimed(...)` to verify canonical commit-path record
+      updates and runtime-version bump semantics.
    - **Evidence checks:** `npm run test:island-run` passed on 2026-04-23 after
-     this increment (329 passed / 0 failed).
+     this increment (332 passed / 0 failed).
    - **Evidence checks (build):** `npm run build` passed on 2026-04-23 after
      the duplicate-coachmark-symbol cleanup.
-  - **What remains:** migrate remaining gameplay-critical direct writes (notably
-     first-run reward claim, QA progression helpers, and any remaining
-     roll/stop/travel-adjacent side paths that still issue direct
-     `persistIslandRunRuntimeStatePatch(...)` writes) until the board loop no
-     longer performs direct record writes for gameplay-critical state
-     ownership.
+  - **What remains:** migrate remaining gameplay-critical direct writes in
+     board-loop-adjacent side paths that still issue direct
+     `persistIslandRunRuntimeStatePatch(...)` writes (e.g. companion/collection
+     persistence and non-critical legacy runtime overlays), then tighten the
+     "no direct gameplay-owner patch writes" guard so new loop mutations cannot
+     bypass canonical store actions.
 
 5. **Add one canonical full-loop integration gate**
    - Required scenario:
@@ -359,8 +381,9 @@ This section is a clean execution checklist after the prior workflow issues
      - explicit "what remains" note
    - Do not update status docs to "done" unless all evidence is present.
    - **Status:** 🟡 In progress on 2026-04-23.
-   - **Implementation notes (this session):** Task 4 status/evidence block kept
-     current with newly migrated boss-trial marker commit-path action wiring
-     and a fresh automated check run.
+  - **Implementation notes (this session):** Task 4 status/evidence block kept
+     current with newly migrated first-run reward + first-run claim marker +
+     QA progression helper canonical commit-path wiring, plus new dedicated
+     action tests and a fresh automated check run.
    - **Evidence checks:** `npm run test:island-run` passed on 2026-04-23 after
-     this update (325 passed / 0 failed).
+     this update (332 passed / 0 failed).
