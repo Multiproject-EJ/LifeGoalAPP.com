@@ -3055,6 +3055,29 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [lockedStopInfoStopId, ticketPromptStopId]);
 
+  const dismissLandmarkCoachmark = useCallback(() => {
+    setShowLandmarkCoachmark(false);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(`island_run_landmark_coachmark_seen_${session.user.id}`, '1');
+    }
+  }, [session.user.id]);
+
+  useEffect(() => {
+    if (!lockedStopInfoStopId && !ticketPromptStopId) return undefined;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (ticketPromptStopId) {
+        setTicketPromptStopId(null);
+        return;
+      }
+      if (lockedStopInfoStopId) {
+        setLockedStopInfoStopId(null);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [lockedStopInfoStopId, ticketPromptStopId]);
+
   /**
    * Pay the essence ticket for `stopId`. On success: persist the updated
    * wallet + ticket ledger, dismiss the prompt, and open the stop. On failure
