@@ -264,6 +264,12 @@ This section is a clean execution checklist after the prior workflow issues
       `bossTrialResolvedIslandNumber`) now commit through the canonical store
       coordinator instead of direct renderer-side
       `persistIslandRunRuntimeStatePatch(...)` usage.
+    - Wired non-hatchery landmark taps so sequence-locked stops no longer feel
+      dead: `handleStopOpenRequest(...)` now opens a dedicated locked-landmark
+      info prompt (title + description + prerequisite CTA) instead of only
+      posting landing text, and ticket prompts now include the landmark
+      description before payment so every stop tap has a clear info/enter
+      pathway.
     - Added dedicated `islandRunStateActions` tests for
       `applyBossTrialResolvedMarker(...)` commit and no-op behavior to verify
       marker field persistence and runtime-version bump/no-bump semantics.
