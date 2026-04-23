@@ -2878,14 +2878,26 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
   }, [completedStops, islandStopPlan, runtimeState.stopStatesByIndex]);
 
+  const resolveCanonicalContractV2Stops = useCallback((options: {
+    stopStatesByIndex: IslandRunRuntimeState['stopStatesByIndex'];
+    stopTicketsPaidByIsland?: Record<string, number[]> | null;
+    islandNumber?: number;
+  }) => {
+    return resolveIslandRunContractV2Stops({
+      stopStatesByIndex: options.stopStatesByIndex,
+      stopTicketsPaidByIsland: options.stopTicketsPaidByIsland ?? runtimeState.stopTicketsPaidByIsland,
+      islandNumber: options.islandNumber ?? islandNumber,
+    });
+  }, [islandNumber, runtimeState.stopTicketsPaidByIsland]);
+
   const contractV2Stops = useMemo(() => {
     if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return null;
-    return resolveIslandRunContractV2Stops({
+    return resolveCanonicalContractV2Stops({
       stopStatesByIndex: mergedStopStatesByIndex,
       stopTicketsPaidByIsland: runtimeState.stopTicketsPaidByIsland,
       islandNumber,
     });
-  }, [islandNumber, mergedStopStatesByIndex, runtimeState.stopTicketsPaidByIsland]);
+  }, [islandNumber, mergedStopStatesByIndex, resolveCanonicalContractV2Stops, runtimeState.stopTicketsPaidByIsland]);
 
   const stopStateMap = useMemo(() => {
     if (ISLAND_RUN_CONTRACT_V2_ENABLED && contractV2Stops) {
@@ -3398,7 +3410,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // diagnostic logging continuity only.
   const legacyStep1Complete = true;
   const step1Complete = true;
-  const contractV2StopResolution = resolveIslandRunContractV2Stops({
+  const contractV2StopResolution = resolveCanonicalContractV2Stops({
     stopStatesByIndex: runtimeState.stopStatesByIndex,
   });
   const contractV2ActiveStopIndex = contractV2StopResolution.activeStopIndex;
@@ -4260,7 +4272,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       if (index !== 0) return s;
       return { ...(s ?? { buildComplete: false }), objectiveComplete: true };
     });
-    const stopResolution = resolveIslandRunContractV2Stops({ stopStatesByIndex: nextStopStatesByIndex });
+    const stopResolution = resolveCanonicalContractV2Stops({
+      stopStatesByIndex: nextStopStatesByIndex,
+      stopTicketsPaidByIsland: runtimeStateRef.current.stopTicketsPaidByIsland,
+      islandNumber,
+    });
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
@@ -5814,8 +5830,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const stopIndex = islandStopPlan.findIndex((stop) => stop.stopId === activeStopId);
       if (stopIndex < 0) return;
 
-      const activeStopIndex = resolveIslandRunContractV2Stops({
+      const activeStopIndex = resolveCanonicalContractV2Stops({
         stopStatesByIndex: runtimeStateRef.current.stopStatesByIndex,
+        stopTicketsPaidByIsland: runtimeStateRef.current.stopTicketsPaidByIsland,
+        islandNumber,
       }).activeStopIndex;
       if (stopIndex !== activeStopIndex) {
         setLandingText('Only the active stop can be progressed in contract-v2.');
@@ -5832,8 +5850,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         };
       });
 
-      const stopResolution = resolveIslandRunContractV2Stops({
+      const stopResolution = resolveCanonicalContractV2Stops({
         stopStatesByIndex: nextStopStatesByIndex,
+        stopTicketsPaidByIsland: runtimeStateRef.current.stopTicketsPaidByIsland,
+        islandNumber,
       });
 
       void persistIslandRunRuntimeStatePatch({
