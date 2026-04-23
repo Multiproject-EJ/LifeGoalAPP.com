@@ -22,6 +22,7 @@ import {
 import {
   __resetIslandRunStateStoreForTests,
   getIslandRunStateSnapshot,
+  hydrateIslandRunState,
   refreshIslandRunStateFromLocal,
   resetIslandRunStateSnapshot,
   subscribeIslandRunState,
@@ -31,11 +32,13 @@ import {
   applyEggPlacement,
   applyStopBuildSpend,
   applyStopObjectiveProgress,
+  applyStopTicketPayment,
   applyEssenceAward,
   applyEssenceDeduct,
   applyEssenceDriftTick,
   applyRewardBarState,
   applyRollResult,
+  syncCompletedStopsForIsland,
   applyTokenHopRewards,
   travelToNextIsland,
 } from '../islandRunStateActions';
@@ -1138,6 +1141,103 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(observed[0].bossResolvedIsland, null, 'post-travel: boss resolved island cleared');
 
       unsub();
+    },
+  },
+
+  {
+    name: 'full-loop gate: roll → ticket pay → stop complete → island clear → travel survives hydration interleave',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 40,
+        currentIslandNumber: 3,
+        cycleIndex: 0,
+        dicePool: 20,
+        tokenIndex: 1,
+        essence: 200,
+        essenceLifetimeSpent: 0,
+        completedStopsByIsland: { '3': [] },
+        stopTicketsPaidByIsland: { '3': [] },
+        stopStatesByIndex: [
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+        activeStopIndex: 2,
+        activeStopType: 'mystery',
+      });
+
+      // Roll service commit simulation: direct record write first, then mirror sync.
+      const postRoll = {
+        ...readIslandRunGameStateRecord(session),
+        dicePool: 17,
+        tokenIndex: 4,
+        runtimeVersion: 41,
+      };
+      void writeIslandRunGameStateRecord({ session, client: null, record: postRoll });
+      const syncedRoll = applyRollResult({ session });
+      assertEqual(syncedRoll.runtimeVersion, 41, 'roll sync should preserve roll-owned runtimeVersion');
+      assertEqual(syncedRoll.dicePool, 17, 'roll sync should expose updated dicePool');
+
+      const paid = applyStopTicketPayment({
+        session,
+        client: null,
+        essence: 150,
+        essenceLifetimeSpent: 50,
+        stopTicketsPaidByIsland: { '3': [2] },
+        triggerSource: 'test_full_loop_ticket_pay',
+      });
+      assertEqual(paid.runtimeVersion, 42, 'ticket payment should bump runtimeVersion');
+
+      const progressed = applyStopObjectiveProgress({
+        session,
+        client: null,
+        stopStatesByIndex: [
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: true, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+        activeStopIndex: 2,
+        activeStopType: 'mystery',
+        triggerSource: 'test_full_loop_stop_complete',
+      });
+      assertEqual(progressed.runtimeVersion, 43, 'objective progress should bump runtimeVersion');
+
+      const islandCleared = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 3,
+        completedStops: ['hatchery', 'habit', 'mystery', 'challenge', 'boss'],
+        triggerSource: 'test_full_loop_island_clear',
+      });
+      assertEqual(islandCleared.runtimeVersion, 44, 'island-clear ledger sync should bump runtimeVersion');
+
+      // Hydration/interleaving simulation: run travel and hydrate together.
+      await Promise.all([
+        travelToNextIsland({
+          session,
+          client: null,
+          nextIsland: 4,
+          startTimer: true,
+          nowMs: 5_000_000,
+          getIslandDurationMs: () => 86_400_000,
+          islandRunContractV2Enabled: true,
+        }),
+        hydrateIslandRunState({ session, client: null }),
+      ]);
+
+      const snapshot = getIslandRunStateSnapshot(session);
+      assertEqual(snapshot.currentIslandNumber, 4, 'travel should land on island 4');
+      assertEqual(snapshot.completedStopsByIsland['3']?.length ?? 0, 0, 'old island completed stops should be cleared');
+      assertEqual(snapshot.stopTicketsPaidByIsland['3']?.length ?? 0, 0, 'old island ticket ledger should be cleared');
+      assertEqual(snapshot.essence, 150, 'ticket payment essence spend should persist through travel');
+      assertEqual(snapshot.essenceLifetimeSpent, 50, 'lifetime spent should persist through travel');
+      assertEqual(snapshot.runtimeVersion, 45, 'full loop should end at expected runtimeVersion');
     },
   },
 ];
