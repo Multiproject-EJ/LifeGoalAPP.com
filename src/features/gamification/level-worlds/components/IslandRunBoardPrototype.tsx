@@ -984,6 +984,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
    * and open the stop, or cancel. Hatchery never uses this path (always free).
    */
   const [ticketPromptStopId, setTicketPromptStopId] = useState<string | null>(null);
+  const [lockedStopInfoStopId, setLockedStopInfoStopId] = useState<string | null>(null);
 
   // BoardStage camera controls (set by BoardStage via onCameraReady)
   const boardCameraRef = useRef<BoardStageCameraControls | null>(null);
@@ -3016,10 +3017,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (ISLAND_RUN_CONTRACT_V2_ENABLED && contractV2Stops && typeof stopIndex === 'number') {
       const stopStatus = contractV2Stops.statusesByIndex[stopIndex];
       if (stopStatus === 'locked') {
-        setLandingText('Complete the previous stop before opening this landmark.');
+        setLockedStopInfoStopId(stopId);
+        setLandingText('This landmark is still sequence-locked. Complete the previous landmark first.');
         return;
       }
     }
+    setLockedStopInfoStopId(null);
     if (doesStopRequireTicketPayment(stopId)) {
       setTicketPromptStopId(stopId);
       return;
@@ -9424,6 +9427,61 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         />
       )}
 
+      {/* ── Locked Landmark Info Prompt ─────────────────────────────────
+          Opens when the player taps a sequence-locked landmark. Gives
+          context + next action, rather than silently no-oping the tap. */}
+      {lockedStopInfoStopId && (() => {
+        const lockedStop = islandStopPlan.find((s) => s.stopId === lockedStopInfoStopId);
+        const lockedStopIndex = stopIndexByStopId.get(lockedStopInfoStopId) ?? -1;
+        const previousStop = lockedStopIndex > 0
+          ? islandStopPlan[lockedStopIndex - 1]
+          : null;
+        return (
+          <div
+            className="island-run-modal-backdrop"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="locked-stop-info-title"
+            onClick={() => setLockedStopInfoStopId(null)}
+          >
+            <div className="island-run-modal" onClick={(e) => e.stopPropagation()}>
+              <h2 id="locked-stop-info-title" style={{ margin: 0, fontSize: 20 }}>
+                {lockedStop?.title ?? 'Landmark'}
+              </h2>
+              <p style={{ marginTop: 12, marginBottom: 8, opacity: 0.9 }}>
+                {lockedStop?.description ?? 'This landmark unlocks as you progress around the island.'}
+              </p>
+              {previousStop ? (
+                <p style={{ marginTop: 0, marginBottom: 16, opacity: 0.8 }}>
+                  🔒 Complete <strong>{previousStop.title}</strong> first to enter this landmark.
+                </p>
+              ) : null}
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setLockedStopInfoStopId(null)}
+                  style={{ padding: '8px 16px' }}
+                >
+                  Close
+                </button>
+                {previousStop ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLockedStopInfoStopId(null);
+                      handleStopOpenRequest(previousStop.stopId);
+                    }}
+                    style={{ padding: '8px 16px' }}
+                  >
+                    Go to previous landmark
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── Stop Ticket Prompt ────────────────────────────────────────────
           Opens when the player clicks an orbit stop whose previous stop is
           complete but whose essence ticket hasn't been paid. Lets them pay
@@ -9449,6 +9507,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <p style={{ marginTop: 12, marginBottom: 8, opacity: 0.85 }}>
                 This landmark needs an essence ticket to open on this island.
               </p>
+              {promptedStop?.description ? (
+                <p style={{ marginTop: 0, marginBottom: 8, opacity: 0.8 }}>
+                  {promptedStop.description}
+                </p>
+              ) : null}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '12px 0 16px', fontSize: 16 }}>
                 <div><strong>Cost:</strong> {cost} 🟣</div>
                 <div><strong>Wallet:</strong> {wallet} 🟣</div>
