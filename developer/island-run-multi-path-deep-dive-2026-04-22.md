@@ -222,8 +222,20 @@ This section is a clean execution checklist after the prior workflow issues
     - Added a dedicated `islandRunStateActions` test that verifies
       `applyStopBuildSpend(...)` publishes exactly once and persists the
       stop-build + stop-state payload through the store path.
+    - Added `applyStopObjectiveProgress(...)` in `islandRunStateActions` and
+      migrated hatchery objective-complete writes in
+      `IslandRunBoardPrototype` (`markHatcheryStopCompleteInV2`) off direct
+      renderer patch writes and onto the canonical store commit path.
+    - Added `applyEggPlacement(...)` in `islandRunStateActions` and migrated
+      `handleSetEgg(...)` in `IslandRunBoardPrototype` to commit active-egg,
+      per-island egg ledger, and `completedStopsByIsland` updates through a
+      single store-coordinated action path (replacing gameplay-critical
+      direct `persistIslandRunRuntimeStatePatch(...)` usage for egg set flow).
+    - Added dedicated `islandRunStateActions` tests for both
+      `applyStopObjectiveProgress(...)` and `applyEggPlacement(...)` to assert
+      record field updates and runtime-version commit behavior.
    - **Evidence checks:** `npm run test:island-run` passed on 2026-04-23 after
-     this increment (317 passed / 0 failed).
+     this increment (319 passed / 0 failed).
    - **What remains:** migrate remaining gameplay-critical direct writes (notably
      island-travel-adjacent and reward/stop completion side paths) until the
      board loop no longer performs direct record writes for roll/stop/travel
