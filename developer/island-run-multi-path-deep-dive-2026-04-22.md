@@ -206,15 +206,24 @@ This section is a clean execution checklist after the prior workflow issues
      - `writeIslandRunGameStateRecord(...)`
    - Route roll/stop/travel/dice-critical changes through one canonical action path.
    - **Status:** 🟡 In progress on 2026-04-23.
-   - **Implementation notes (this session):**
-     - Added `syncCompletedStopsForIsland(...)` in `islandRunStateActions` so
-       completed-stop island map writes now flow through `commitIslandRunState`
-       instead of direct renderer-side `writeIslandRunGameStateRecord(...)`.
-     - Added `applyStopTicketPayment(...)` in `islandRunStateActions` and wired
-       the stop-ticket happy path in `IslandRunBoardPrototype` to use it, so
-       ticket payment writes (`essence`, `essenceLifetimeSpent`,
-       `stopTicketsPaidByIsland`) no longer bypass the store commit coordinator.
-   - **Evidence checks:** `npm run test:island-run` passed after this increment.
+  - **Implementation notes (this session):**
+    - Added `syncCompletedStopsForIsland(...)` in `islandRunStateActions` so
+      completed-stop island map writes now flow through `commitIslandRunState`
+      instead of direct renderer-side `writeIslandRunGameStateRecord(...)`.
+    - Added `applyStopTicketPayment(...)` in `islandRunStateActions` and wired
+      the stop-ticket happy path in `IslandRunBoardPrototype` to use it, so
+      ticket payment writes (`essence`, `essenceLifetimeSpent`,
+      `stopTicketsPaidByIsland`) no longer bypass the store commit coordinator.
+    - Added `applyStopBuildSpend(...)` in `islandRunStateActions` and migrated
+      `handleSpendEssenceOnBuild(...)` in `IslandRunBoardPrototype` to use it,
+      removing a gameplay-critical direct `writeIslandRunGameStateRecord(...)`
+      call for contract-v2 stop-build spend commits
+      (`essence`/`essenceLifetimeSpent`/`stopBuildStateByIndex`/`stopStatesByIndex`).
+    - Added a dedicated `islandRunStateActions` test that verifies
+      `applyStopBuildSpend(...)` publishes exactly once and persists the
+      stop-build + stop-state payload through the store path.
+   - **Evidence checks:** `npm run test:island-run` passed on 2026-04-23 after
+     this increment (317 passed / 0 failed).
    - **What remains:** migrate remaining gameplay-critical direct writes (notably
      island-travel-adjacent and reward/stop completion side paths) until the
      board loop no longer performs direct record writes for roll/stop/travel

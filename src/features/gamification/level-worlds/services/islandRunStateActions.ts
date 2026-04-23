@@ -435,6 +435,50 @@ export function applyStopTicketPayment(options: ApplyStopTicketPaymentOptions): 
   return next;
 }
 
+export interface ApplyStopBuildSpendOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  essence: number;
+  essenceLifetimeSpent: number;
+  stopBuildStateByIndex: IslandRunGameStateRecord['stopBuildStateByIndex'];
+  stopStatesByIndex: IslandRunGameStateRecord['stopStatesByIndex'];
+  triggerSource?: string;
+}
+
+/**
+ * Commits a successful stop-build spend through the store path.
+ *
+ * Replaces renderer-side direct `writeIslandRunGameStateRecord` + paired
+ * `setRuntimeState` writes for contract-v2 stop-build progression.
+ */
+export function applyStopBuildSpend(options: ApplyStopBuildSpendOptions): IslandRunGameStateRecord {
+  const {
+    session,
+    client,
+    essence,
+    essenceLifetimeSpent,
+    stopBuildStateByIndex,
+    stopStatesByIndex,
+    triggerSource,
+  } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    essence,
+    essenceLifetimeSpent,
+    stopBuildStateByIndex,
+    stopStatesByIndex,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_stop_build_spend',
+  });
+  return next;
+}
+
 // ── C3: Island travel ────────────────────────────────────────────────────────
 
 /** Maximum island number before the cycle wraps back to 1. Mirrors the

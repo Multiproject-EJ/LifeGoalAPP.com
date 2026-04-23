@@ -27,6 +27,7 @@ import {
   subscribeIslandRunState,
 } from '../islandRunStateStore';
 import {
+  applyStopBuildSpend,
   applyEssenceAward,
   applyEssenceDeduct,
   applyEssenceDriftTick,
@@ -613,6 +614,68 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(snapshot.essenceLifetimeSpent, 90, 'lifetime spent should be 80 + 10 = 90');
       assertEqual(snapshot.rewardBarProgress, 2, 'reward-bar progress should be committed');
       assertEqual(snapshot.runtimeVersion, 14, 'runtimeVersion should bump 4 times (10 → 14)');
+    },
+  },
+
+  // ── C4: applyStopBuildSpend ──────────────────────────────────────────────
+
+  {
+    name: 'applyStopBuildSpend commits build-progress spend through the store in one publish',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 12,
+        essence: 500,
+        essenceLifetimeSpent: 50,
+        stopBuildStateByIndex: [
+          { requiredEssence: 50, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 70, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 90, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 120, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 200, spentEssence: 0, buildLevel: 0 },
+        ],
+      });
+
+      let notifications = 0;
+      const unsub = subscribeIslandRunState(session, () => { notifications += 1; });
+
+      const nextBuildState = [
+        { requiredEssence: 120, spentEssence: 0, buildLevel: 1 },
+        { requiredEssence: 70, spentEssence: 0, buildLevel: 0 },
+        { requiredEssence: 90, spentEssence: 0, buildLevel: 0 },
+        { requiredEssence: 120, spentEssence: 0, buildLevel: 0 },
+        { requiredEssence: 200, spentEssence: 0, buildLevel: 0 },
+      ];
+      const nextStopStates = [
+        { objectiveComplete: true, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+      ];
+
+      const result = applyStopBuildSpend({
+        session,
+        client: null,
+        essence: 450,
+        essenceLifetimeSpent: 100,
+        stopBuildStateByIndex: nextBuildState,
+        stopStatesByIndex: nextStopStates,
+      });
+
+      assertEqual(notifications, 1, 'exactly one publish for the build spend commit');
+      assertEqual(result.runtimeVersion, 13, 'runtimeVersion should bump by 1');
+      assertEqual(result.essence, 450, 'essence should persist the updated wallet');
+      assertEqual(result.essenceLifetimeSpent, 100, 'lifetime spent should persist the updated total');
+      assert(result.stopBuildStateByIndex[0]?.buildLevel === 1, 'build level should persist for stop 0');
+      assertEqual(result.stopStatesByIndex[0]?.objectiveComplete, true, 'stop objective-complete state should persist');
+
+      const snapshot = getIslandRunStateSnapshot(session);
+      assertEqual(snapshot.runtimeVersion, 13, 'store snapshot should reflect new runtimeVersion');
+      assert(snapshot.stopBuildStateByIndex[0]?.buildLevel === 1, 'store snapshot should keep updated stop build level');
+
+      unsub();
     },
   },
 
