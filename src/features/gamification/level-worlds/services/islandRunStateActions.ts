@@ -220,6 +220,24 @@ export interface ApplyBossTrialResolvedMarkerOptions {
   triggerSource?: string;
 }
 
+export interface ApplyQaProgressionSnapshotOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  currentIslandNumber: number;
+  bossTrialResolvedIslandNumber: number | null;
+  dicePool: number;
+  tokenIndex: number;
+  triggerSource?: string;
+}
+
+export interface ApplyFirstRunStarterRewardsOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  essenceBonus: number;
+  diceBonus: number;
+  triggerSource?: string;
+}
+
 /**
  * Withdraws essence from the wallet through the store commit path.
  *
@@ -312,6 +330,96 @@ export function applyBossTrialResolvedMarker(options: ApplyBossTrialResolvedMark
     client,
     record: next,
     triggerSource: triggerSource ?? 'apply_boss_trial_resolved_marker',
+  });
+  return next;
+}
+
+/**
+ * Commits QA progression marker snapshot fields through the canonical store path.
+ *
+ * Replaces renderer-side patch + setRuntimeState pairs in QA helpers so island
+ * marker, dice, and token reset snapshots no longer bypass the coordinator.
+ */
+export function applyQaProgressionSnapshot(options: ApplyQaProgressionSnapshotOptions): IslandRunGameStateRecord {
+  const {
+    session,
+    client,
+    currentIslandNumber,
+    bossTrialResolvedIslandNumber,
+    dicePool,
+    tokenIndex,
+    triggerSource,
+  } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    currentIslandNumber,
+    bossTrialResolvedIslandNumber,
+    dicePool: Math.max(0, Math.trunc(dicePool)),
+    tokenIndex: Math.max(0, Math.trunc(tokenIndex)),
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_qa_progression_snapshot',
+  });
+  return next;
+}
+
+/**
+ * Commits first-run starter rewards through the canonical store path.
+ *
+ * Replaces renderer-side local-only `setRuntimeState` currency writes so
+ * essence + dice grants persist as one coordinated state update.
+ */
+export function applyFirstRunStarterRewards(options: ApplyFirstRunStarterRewardsOptions): IslandRunGameStateRecord {
+  const { session, client, essenceBonus, diceBonus, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const parsedEssenceBonus = Number.isFinite(essenceBonus) ? Math.max(0, Math.trunc(essenceBonus)) : 0;
+  const parsedDiceBonus = Number.isFinite(diceBonus) ? Math.max(0, Math.trunc(diceBonus)) : 0;
+  if (parsedEssenceBonus < 1 && parsedDiceBonus < 1) return current;
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    essence: current.essence + parsedEssenceBonus,
+    essenceLifetimeEarned: current.essenceLifetimeEarned + parsedEssenceBonus,
+    dicePool: current.dicePool + parsedDiceBonus,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_first_run_starter_rewards',
+  });
+  return next;
+}
+
+/**
+ * Commits the first-run claim marker through the canonical store path.
+ *
+ * Keeps `firstRunClaimed` ownership in the game-state coordinator while
+ * allowing legacy runtime-state onboarding booleans to persist separately.
+ */
+export function applyFirstRunClaimed(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  triggerSource?: string;
+}): IslandRunGameStateRecord {
+  const { session, client, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (current.firstRunClaimed) return current;
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    firstRunClaimed: true,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_first_run_claimed',
   });
   return next;
 }

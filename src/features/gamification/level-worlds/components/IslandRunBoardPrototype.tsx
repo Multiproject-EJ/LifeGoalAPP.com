@@ -69,6 +69,9 @@ import {
   applyBossTrialResolvedMarker,
   applyEggResolution,
   applyEggPlacement,
+  applyFirstRunClaimed,
+  applyFirstRunStarterRewards,
+  applyQaProgressionSnapshot,
   applyStopBuildSpend,
   applyStopObjectiveProgress,
   applyStopTicketPayment,
@@ -6015,26 +6018,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const markOnboardingComplete = async () => {
     if (isOnboardingComplete && isFirstRunClaimed) return true;
+    const record = applyFirstRunClaimed({
+      session,
+      client,
+      triggerSource: 'first_run_claim_marker',
+    });
+    setRuntimeState(record);
 
     const result = await persistIslandRunRuntimeStatePatch({
       session,
       client,
-      patch: {
-        onboardingComplete: true,
-        firstRunClaimed: true,
-      },
+      patch: { onboardingComplete: true },
     });
-
     if (!result.ok) {
       setLandingText(`Could not complete first-run setup: ${result.errorMessage}`);
       return false;
     }
-
-    setRuntimeState((current) => ({
-      ...current,
-      firstRunClaimed: true,
-    }));
-
     return true;
   };
 
@@ -6043,19 +6042,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setBossRewardSummary(`QA marker set for island ${islandNumber}.`);
     setLandingText(`QA: boss marker set for island ${islandNumber}.`);
 
-    void persistIslandRunRuntimeStatePatch({
+    const record = applyBossTrialResolvedMarker({
       session,
       client,
-      patch: {
-        currentIslandNumber: islandNumber,
-        bossTrialResolvedIslandNumber: islandNumber,
-      },
+      islandNumber,
+      triggerSource: 'qa_mark_boss_resolved',
     });
-    setRuntimeState((current) => ({
-      ...current,
-      currentIslandNumber: islandNumber,
-      bossTrialResolvedIslandNumber: islandNumber,
-    }));
+    setRuntimeState(record);
   };
 
   const handleQaAdvanceIsland = () => {
@@ -6070,23 +6063,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // Persist the dice/token reset alongside the island bump so storage and
     // UI stay in sync (previously this patch omitted dicePool/tokenIndex and
     // produced the #1 desync pattern on next hydration).
-    void persistIslandRunRuntimeStatePatch({
+    const record = applyQaProgressionSnapshot({
       session,
       client,
-      patch: {
-        currentIslandNumber: nextIsland,
-        bossTrialResolvedIslandNumber: null,
-        dicePool: ISLAND_RUN_DEFAULT_STARTING_DICE,
-        tokenIndex: TOKEN_START_TILE_INDEX,
-      },
-    });
-    setRuntimeState((current) => ({
-      ...current,
       currentIslandNumber: nextIsland,
       bossTrialResolvedIslandNumber: null,
       dicePool: ISLAND_RUN_DEFAULT_STARTING_DICE,
       tokenIndex: TOKEN_START_TILE_INDEX,
-    }));
+      triggerSource: 'qa_advance_island',
+    });
+    setRuntimeState(record);
   };
 
   const handleQaResetProgression = () => {
@@ -6097,31 +6083,31 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setBossRewardSummary(null);
     setLandingText('QA: progression markers reset to island 1.');
 
-    void persistIslandRunRuntimeStatePatch({
+    const record = applyQaProgressionSnapshot({
       session,
       client,
-      patch: {
-        currentIslandNumber: 1,
-        bossTrialResolvedIslandNumber: null,
-        dicePool: ISLAND_RUN_DEFAULT_STARTING_DICE,
-        tokenIndex: TOKEN_START_TILE_INDEX,
-      },
-    });
-    setRuntimeState((current) => ({
-      ...current,
       currentIslandNumber: 1,
       bossTrialResolvedIslandNumber: null,
       dicePool: ISLAND_RUN_DEFAULT_STARTING_DICE,
       tokenIndex: TOKEN_START_TILE_INDEX,
-    }));
+      triggerSource: 'qa_reset_progression',
+    });
+    setRuntimeState(record);
   };
 
   const handleClaimFirstRunRewards = async () => {
     if (firstRunStep === 'celebration') {
       const starterDiceBonus = ISLAND_RUN_DEFAULT_STARTING_DICE * 2;
       const starterEssenceBonus = 250;
-      setRuntimeState((prev) => ({ ...prev, essence: prev.essence + starterEssenceBonus, essenceLifetimeEarned: prev.essenceLifetimeEarned + starterEssenceBonus }));
-      setDicePool((current) => current + starterDiceBonus);
+      const record = applyFirstRunStarterRewards({
+        session,
+        client,
+        essenceBonus: starterEssenceBonus,
+        diceBonus: starterDiceBonus,
+        triggerSource: 'first_run_starter_rewards',
+      });
+      setRuntimeState(record);
+      setDicePool(record.dicePool);
       setLandingText(`Starter claim complete: +${starterEssenceBonus} 🟣 essence, +${starterDiceBonus} dice.`);
       setFirstRunStep('launch');
       void recordTelemetryEvent({

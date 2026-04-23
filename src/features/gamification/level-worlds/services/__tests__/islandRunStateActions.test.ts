@@ -31,6 +31,9 @@ import {
   applyBossTrialResolvedMarker,
   applyEggResolution,
   applyEggPlacement,
+  applyFirstRunClaimed,
+  applyFirstRunStarterRewards,
+  applyQaProgressionSnapshot,
   applyStopBuildSpend,
   applyStopObjectiveProgress,
   applyStopTicketPayment,
@@ -322,6 +325,77 @@ export const islandRunStateActionsTests: TestCase[] = [
       });
 
       assertEqual(result.runtimeVersion, 14, 'runtimeVersion should not change on no-op');
+    },
+  },
+
+  {
+    name: 'applyQaProgressionSnapshot commits island marker + dice/token fields through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 9,
+        currentIslandNumber: 2,
+        bossTrialResolvedIslandNumber: 2,
+        dicePool: 17,
+        tokenIndex: 6,
+      });
+
+      const result = applyQaProgressionSnapshot({
+        session,
+        client: null,
+        currentIslandNumber: 3,
+        bossTrialResolvedIslandNumber: null,
+        dicePool: 40,
+        tokenIndex: 0,
+        triggerSource: 'test_qa_progression_snapshot',
+      });
+
+      assertEqual(result.currentIslandNumber, 3, 'island marker should update');
+      assertEqual(result.bossTrialResolvedIslandNumber, null, 'boss marker should clear');
+      assertEqual(result.dicePool, 40, 'dicePool should sync to QA snapshot');
+      assertEqual(result.tokenIndex, 0, 'tokenIndex should sync to QA snapshot');
+      assertEqual(result.runtimeVersion, 10, 'runtimeVersion should bump by one');
+    },
+  },
+
+  {
+    name: 'applyFirstRunClaimed sets firstRunClaimed once through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 5, firstRunClaimed: false });
+
+      const result = applyFirstRunClaimed({
+        session,
+        client: null,
+        triggerSource: 'test_apply_first_run_claimed',
+      });
+
+      assertEqual(result.firstRunClaimed, true, 'firstRunClaimed should be true');
+      assertEqual(result.runtimeVersion, 6, 'runtimeVersion should bump once');
+    },
+  },
+
+  {
+    name: 'applyFirstRunStarterRewards commits essence + lifetime + dice in one store write',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 11, essence: 100, essenceLifetimeEarned: 1000, dicePool: 12 });
+
+      const result = applyFirstRunStarterRewards({
+        session,
+        client: null,
+        essenceBonus: 250,
+        diceBonus: 16,
+        triggerSource: 'test_first_run_rewards',
+      });
+
+      assertEqual(result.essence, 350, 'essence should include starter bonus');
+      assertEqual(result.essenceLifetimeEarned, 1250, 'lifetime earned should include starter bonus');
+      assertEqual(result.dicePool, 28, 'dicePool should include starter bonus');
+      assertEqual(result.runtimeVersion, 12, 'runtimeVersion should bump once');
     },
   },
 
