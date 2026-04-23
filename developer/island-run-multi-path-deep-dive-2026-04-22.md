@@ -286,6 +286,9 @@ This section is a clean execution checklist after the prior workflow issues
       support `Escape` key dismissal, and the ticket shortfall meter is now an
       actual ARIA progressbar (`aria-valuemin/max/now`) so assistive tech can
       report affordability progress.
+    - Added "Preview landmark" CTA to both locked-info and ticket prompts so
+      players can always open the full landmark stop modal (description +
+      status + actions) without first satisfying the lock/ticket gate.
     - Added dedicated `islandRunStateActions` tests for
       `applyBossTrialResolvedMarker(...)` commit and no-op behavior to verify
       marker field persistence and runtime-version bump/no-bump semantics.

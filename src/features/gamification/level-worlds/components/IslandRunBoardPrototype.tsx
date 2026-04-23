@@ -9534,6 +9534,21 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 </p>
               ) : null}
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                {lockedStopInfoStopId ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const previewStopId = lockedStopInfoStopId;
+                      setLockedStopInfoStopId(null);
+                      requestActiveStopTransition(previewStopId, 'locked_landmark_preview');
+                      setFocusedStopId(previewStopId);
+                      setCameraMode('stop_focus');
+                    }}
+                    style={{ padding: '8px 16px' }}
+                  >
+                    Preview landmark
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   onClick={() => setLockedStopInfoStopId(null)}
@@ -9628,6 +9643,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 </div>
               ) : null}
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTicketPromptStopId(null);
+                    requestActiveStopTransition(ticketPromptStopId, 'ticket_landmark_preview');
+                    setFocusedStopId(ticketPromptStopId);
+                    setCameraMode('stop_focus');
+                  }}
+                  style={{ padding: '8px 16px' }}
+                >
+                  Preview landmark
+                </button>
                 <button
                   type="button"
                   onClick={() => setTicketPromptStopId(null)}
