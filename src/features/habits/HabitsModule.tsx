@@ -283,6 +283,8 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     [inactiveHabits],
   );
 
+  // PWA architecture boundary: enforce duration windows opportunistically on app load/resume.
+  // Do not rely on background schedulers as part of the PWA product guarantee.
   const applyDurationEndAutomation = useCallback(
     async (sourceHabits: HabitV2Row[]): Promise<HabitV2Row[]> => {
       const now = Date.now();

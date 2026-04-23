@@ -3,6 +3,12 @@
 ## Goal
 Improve habit creation completion and clarity by keeping the core flow guided, moving advanced controls out of the critical path, and adding support for "break a bad behavior" and time-bound habit programs.
 
+## Architecture boundary (April 2026 decision)
+- **PWA (current product promise):** duration enforcement is opportunistic on app load/resume only.
+- **PWA:** no required cron/scheduler/background infra as a correctness dependency.
+- **Native/Capacitor (future):** robust reminder/timer/local notification behavior should live here.
+- **Edge-function background duration evaluator:** intentionally deferred (not part of active PWA runtime).
+
 ## Implementation Status (living notes)
 - [x] Wizard expanded to 5 steps in UI (`Basics`, `Schedule + Program Length`, `Environment`, `Reminders`, `Summary`).
 - [x] Added intent selection to basics (`build` / `break`).
@@ -14,19 +20,19 @@ Improve habit creation completion and clarity by keeping the core flow guided, m
 - [x] Hide mobile footer nav while wizard is active to keep full focus on flow.
 - [x] Add DB migration + app code path for first-class intent/duration columns.
 - [x] Implement app-load duration end evaluator (pause/deactivate when end date reached).
-- [x] Add server-side/background evaluator stub (Edge Function cron path) wired to pause/deactivate actions.
+- [ ] Add server-side/background evaluator (deferred by architecture decision; do not treat as active PWA dependency).
 
 ### Latest implementation notes
 - Wizard create/edit now syncs reminder preference via `updateHabitReminderPref(...)` immediately after successful save.
 - If reminders are enabled in wizard, the flow updates preferred time and schedules notifications.
 - If reminders are disabled in wizard, the flow disables reminder preference and cancels scheduled notifications.
 - On habits module load, active fixed-window habits now auto-pause/deactivate if their program window has elapsed (based on `created_at + duration`).
-- Duration automation now has both app-load handling and a server-side cron evaluator stub path.
+- Duration automation for the PWA is intentionally app-open/app-resume only.
 - Wizard now adds a `habit-wizard-open` body class while mounted; mobile footer nav is hidden in that mode.
 - Added migration `0233_habit_intent_duration_columns.sql` with backfill from `autoprog.creation_context`, checks, comments, and indexing.
 - HabitsModule create/edit now writes `habit_intent` + duration columns directly while still keeping `autoprog.creation_context` compatibility.
 - Updated TypeScript DB types and service/model wiring so demo/offline/local row constructors include the new duration/intent columns.
-- Added `supabase/functions/habit-duration-evaluator/index.ts` with `/cron` endpoint, secret validation, active fixed-window habit query, lifecycle transition writes, and reminder cleanup.
+- Removed `supabase/functions/habit-duration-evaluator/index.ts` from active implementation path to avoid implying background guarantees in the PWA.
 
 ## Current Constraints (from code)
 - Habit creation/edit currently runs through `HabitsModule` + `HabitWizard`.
