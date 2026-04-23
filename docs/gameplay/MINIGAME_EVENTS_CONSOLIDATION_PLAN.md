@@ -517,7 +517,14 @@ Reason for second pass: workflow drift caused multiple items to be marked comple
   - **Session 2026-04-23 update:** wired `initiateMinigameTicketCheckout` into (1) Island Run reward-bar details modal (`Buy Tickets` in active event panel context) with event-aware SKU routing + telemetry/error handling, and (2) Today's Offer modal `Buy` CTA with active-event fallback to generic SKU.
 
 #### SP2 — Phase-by-phase revalidation queue
-- [ ] Re-audit Phase 1 foundations (registry, manifests, feature flags, mystery variants, migration/hydrate select).
+- [x] Re-audit Phase 1 foundations (registry, manifests, feature flags, mystery variants, migration/hydrate select).
+  - **Session 2026-04-23 update:** completed second-pass revalidation for Phase 1 foundations. Verified code paths in runtime:
+    - registry/manifest wiring (`ALL_MINIGAME_MANIFESTS`, `registerAllMinigameManifests`, runtime `getMinigame` lookups from launcher path);
+    - feature flags default-off contract in `islandRunFeatureFlags`;
+    - mystery variant gating for `task_tower` / `vision_quest` in `generateIslandStopPlan`;
+    - migration `0231_add_minigame_tickets_by_event.sql` present;
+    - runtime hydration select-list includes `minigame_tickets_by_event`.
+    Added regression coverage in `minigameConsolidationPhase1.test.ts` for manifest uniqueness/presence, idempotent registry registration, and hydration select-list column inclusion. Validation evidence: `npm run test:island-run` and `npm run build` both passed.
 - [ ] Re-audit Phase 2 Today's Offer + Daily Spin unification in runtime UX.
 - [ ] Re-audit Phase 3 engine ownership (rotation/progress/milestones/telemetry paths).
 - [ ] Re-audit Phase 4 Shooter boss rollout readiness and remaining manual QA + flag flip.
@@ -526,4 +533,4 @@ Reason for second pass: workflow drift caused multiple items to be marked comple
 - [ ] Re-audit Phase 8 polish/balance backlog and split into shippable PR chunks.
 
 ### 14.3 Next session starting point
-- Start with **SP2 task 1** (re-audit Phase 1 foundations: registry, manifests, feature flags, mystery variants, migration/hydrate select), and keep all second-pass status updates in this section with concrete test + manual QA notes.
+- Continue with **SP2 task 2** (re-audit Phase 2 Today's Offer + Daily Spin unification in runtime UX), and keep all second-pass status updates in this section with concrete test + manual QA notes.
