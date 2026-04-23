@@ -509,7 +509,8 @@ Reason for second pass: workflow drift caused multiple items to be marked comple
 #### SP1 — Monetization config hardening (Phase 7 alignment)
 - [x] Add explicit placeholder config keys for per-event minigame ticket pricing/SKU wiring so Stripe values can be pasted later without code edits.
   - **Session 2026-04-23 update:** added blank env placeholders in `.env.example` for generic + per-event minigame ticket Stripe price IDs.
-- [ ] Build/land `create-checkout-session-minigame-ticket` edge function contract and validate end-to-end invocation from `initiateMinigameTicketCheckout`.
+- [x] Build/land `create-checkout-session-minigame-ticket` edge function contract and validate end-to-end invocation from `initiateMinigameTicketCheckout`.
+  - **Session 2026-04-23 update:** implemented `supabase/functions/create-checkout-session-minigame-ticket/index.ts` with request validation (`sku_id` + optional `event_id`), SKU↔env price mapping, and Stripe checkout metadata for future webhook fulfillment; validated type-safe client invocation path via `npm run build`.
 - [ ] Extend Stripe webhook fulfillment to grant `minigameTicketsByEvent` by purchased SKU.
 - [ ] Wire UI buy-ticket entry points (active-event panel + Today's Offer) to the checkout wrapper.
 
@@ -523,4 +524,4 @@ Reason for second pass: workflow drift caused multiple items to be marked comple
 - [ ] Re-audit Phase 8 polish/balance backlog and split into shippable PR chunks.
 
 ### 14.3 Next session starting point
-- Start with **SP1 task 2** (`create-checkout-session-minigame-ticket`) and keep all second-pass status updates in this section.
+- Start with **SP1 task 3** (Stripe webhook fulfillment for `minigameTicketsByEvent`) and keep all second-pass status updates in this section.
