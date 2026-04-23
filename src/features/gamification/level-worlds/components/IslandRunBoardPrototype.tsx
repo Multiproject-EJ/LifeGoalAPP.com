@@ -70,6 +70,7 @@ import {
   applyStopBuildSpend,
   applyStopObjectiveProgress,
   applyStopTicketPayment,
+  applyWalletShardsDelta,
   applyEssenceAward,
   applyEssenceDeduct,
   applyEssenceDriftTick,
@@ -2617,12 +2618,31 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // M17D: award wallet shards (persistent cross-island balance) by a given amount.
   // This is separate from awardShards (islandShards / Collectible Progress Bar).
   const awardWalletShards = useCallback((amount: number) => {
-    setShards((prev) => {
-      const next = prev + amount;
-      void persistIslandRunRuntimeStatePatch({ session, client, patch: { shards: next } });
-      return next;
+    const { record, appliedDelta } = applyWalletShardsDelta({
+      session,
+      client,
+      delta: amount,
+      triggerSource: 'wallet_shards_award',
     });
+    if (appliedDelta === 0) return;
+    setShards(record.shards);
+    setRuntimeState((current) => ({ ...current, shards: record.shards }));
   }, [session, client]);
+
+  const spendWalletShards = useCallback((amount: number, source: string): boolean => {
+    if (!Number.isFinite(amount) || amount <= 0) return false;
+    if (runtimeState.shards < amount) return false;
+    const { record, appliedDelta } = applyWalletShardsDelta({
+      session,
+      client,
+      delta: -amount,
+      triggerSource: `wallet_shards_spend:${source}`,
+    });
+    if (appliedDelta >= 0) return false;
+    setShards(record.shards);
+    setRuntimeState((current) => ({ ...current, shards: record.shards }));
+    return true;
+  }, [client, runtimeState.shards, session]);
 
   // M16B/M16C: award shards from a given source, update local state, and persist.
   // shard_tier_index does NOT advance here — that happens on player claim (M16E).
@@ -8729,10 +8749,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   className="island-stop-modal__btn island-stop-modal__btn--action"
                   disabled={runtimeState.shards < 3}
                   onClick={() => {
-                    if (runtimeState.shards < 3) return;
-                    const newShards = runtimeState.shards - 3;
-                    setRuntimeState((prev) => ({ ...prev, shards: newShards }));
-                    void persistIslandRunRuntimeStatePatch({ session, client, patch: { shards: newShards } });
+                    if (!spendWalletShards(3, 'sanctuary_shop_basic_treat')) return;
                     setCreatureTreatInventory((prev) => ({ ...prev, basic: prev.basic + 2 }));
                     if (session?.user?.id) {
                       earnCreatureTreatsForUser(session.user.id, { basic: 2 });
@@ -8748,10 +8765,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   className="island-stop-modal__btn island-stop-modal__btn--action"
                   disabled={runtimeState.shards < 5}
                   onClick={() => {
-                    if (runtimeState.shards < 5) return;
-                    const newShards = runtimeState.shards - 5;
-                    setRuntimeState((prev) => ({ ...prev, shards: newShards }));
-                    void persistIslandRunRuntimeStatePatch({ session, client, patch: { shards: newShards } });
+                    if (!spendWalletShards(5, 'sanctuary_shop_favorite_treat')) return;
                     setCreatureTreatInventory((prev) => ({ ...prev, favorite: prev.favorite + 1 }));
                     if (session?.user?.id) {
                       earnCreatureTreatsForUser(session.user.id, { favorite: 1 });
@@ -8767,10 +8781,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   className="island-stop-modal__btn island-stop-modal__btn--action"
                   disabled={runtimeState.shards < 10}
                   onClick={() => {
-                    if (runtimeState.shards < 10) return;
-                    const newShards = runtimeState.shards - 10;
-                    setRuntimeState((prev) => ({ ...prev, shards: newShards }));
-                    void persistIslandRunRuntimeStatePatch({ session, client, patch: { shards: newShards } });
+                    if (!spendWalletShards(10, 'sanctuary_shop_rare_treat')) return;
                     setCreatureTreatInventory((prev) => ({ ...prev, rare: prev.rare + 1 }));
                     if (session?.user?.id) {
                       earnCreatureTreatsForUser(session.user.id, { rare: 1 });
@@ -8786,10 +8797,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   className="island-stop-modal__btn island-stop-modal__btn--action"
                   disabled={runtimeState.shards < 8 || !activeCompanion}
                   onClick={() => {
-                    if (runtimeState.shards < 8 || !activeCompanion) return;
-                    const newShards = runtimeState.shards - 8;
-                    setRuntimeState((prev) => ({ ...prev, shards: newShards }));
-                    void persistIslandRunRuntimeStatePatch({ session, client, patch: { shards: newShards } });
+                    if (!activeCompanion) return;
+                    if (!spendWalletShards(8, 'sanctuary_shop_enrichment_kit')) return;
                     // Award 3 bond XP directly to active companion
                     sanctuaryHandlers.awardBondXp(activeCompanion.creatureId, 3);
                     setLandingText(`🔮 Enrichment Kit applied to ${activeCompanion.creature.name}: +3 bond XP!`);
@@ -8804,10 +8813,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   className="island-stop-modal__btn island-stop-modal__btn--action"
                   disabled={runtimeState.shards < 20 || !activeCompanion}
                   onClick={() => {
-                    if (runtimeState.shards < 20 || !activeCompanion) return;
-                    const newShards = runtimeState.shards - 20;
-                    setRuntimeState((prev) => ({ ...prev, shards: newShards }));
-                    void persistIslandRunRuntimeStatePatch({ session, client, patch: { shards: newShards } });
+                    if (!activeCompanion) return;
+                    if (!spendWalletShards(20, 'sanctuary_shop_habitat_upgrade')) return;
                     // Award 8 bond XP (habitat upgrade bonus)
                     sanctuaryHandlers.awardBondXp(activeCompanion.creatureId, 8);
                     setLandingText(`🔮 Habitat Upgrade for ${activeCompanion.creature.name}: +8 bond XP!`);

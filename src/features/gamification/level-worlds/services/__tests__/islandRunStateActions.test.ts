@@ -33,6 +33,7 @@ import {
   applyStopBuildSpend,
   applyStopObjectiveProgress,
   applyStopTicketPayment,
+  applyWalletShardsDelta,
   applyEssenceAward,
   applyEssenceDeduct,
   applyEssenceDriftTick,
@@ -235,6 +236,49 @@ export const islandRunStateActionsTests: TestCase[] = [
 
       assertEqual(notifications, 1, 'subscriber should be notified exactly once');
       unsub();
+    },
+  },
+
+  {
+    name: 'applyWalletShardsDelta awards shards through the store commit path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, shards: 4 });
+
+      const result = applyWalletShardsDelta({
+        session,
+        client: null,
+        delta: 3,
+        triggerSource: 'test_shards_award',
+      });
+
+      assertEqual(result.appliedDelta, 3, 'appliedDelta should reflect awarded shards');
+      assertEqual(result.record.shards, 7, 'shards should increase by 3');
+      assertEqual(result.record.runtimeVersion, 21, 'runtimeVersion should bump on shard award');
+
+      const snapshot = getIslandRunStateSnapshot(session);
+      assertEqual(snapshot.shards, 7, 'store mirror should reflect awarded shards');
+    },
+  },
+
+  {
+    name: 'applyWalletShardsDelta spends shards with floor clamp at zero',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, shards: 2 });
+
+      const result = applyWalletShardsDelta({
+        session,
+        client: null,
+        delta: -5,
+        triggerSource: 'test_shards_spend',
+      });
+
+      assertEqual(result.appliedDelta, -2, 'appliedDelta should clamp spend to available wallet');
+      assertEqual(result.record.shards, 0, 'shards should floor at zero');
+      assertEqual(result.record.runtimeVersion, 21, 'runtimeVersion should bump on shard spend');
     },
   },
 
