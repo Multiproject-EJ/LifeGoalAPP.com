@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import {
   DEFAULT_SYMBOLS,
   hasOpenedToday,
@@ -11,8 +12,7 @@ import { ScratchCardReveal } from './ScratchCardReveal';
 import { CalendarDoorFlip } from './CalendarDoorFlip';
 import { CalendarDoorUnwrap } from './CalendarDoorUnwrap';
 import { CalendarDoorScratch } from './CalendarDoorScratch';
-import { awardDailyTreatGold } from '../../../services/dailyTreats';
-import { awardDice } from '../../../services/gameRewards';
+import { awardDailyTreatDice, awardDailyTreatGold } from '../../../services/dailyTreats';
 import {
   buildPreviewAdventMeta,
   fetchCurrentSeason,
@@ -43,6 +43,7 @@ type CountdownCalendarModalProps = {
   isOpen: boolean;
   onClose: () => void;
   userId?: string;
+  islandRunSession?: Session | null;
   previewHolidayKey?: HolidayKey | null;
 };
 
@@ -84,6 +85,7 @@ export const CountdownCalendarModal = ({
   isOpen,
   onClose,
   userId,
+  islandRunSession,
   previewHolidayKey,
 }: CountdownCalendarModalProps) => {
   const [scratchState, setScratchState] = useState<ScratchCardState | null>(null);
@@ -232,7 +234,12 @@ export const CountdownCalendarModal = ({
 
       // Award dice if applicable
       if (reward?.reward_currency === 'dice' && reward.reward_amount) {
-        awardDice(userId, reward.reward_amount, 'daily_treats', `Day ${dayIndex} ${doorType} door`);
+        awardDailyTreatDice({
+          userId,
+          diceAmount: reward.reward_amount,
+          sourceLabel: `Day ${dayIndex} ${doorType} door`,
+          islandRunSession,
+        });
       }
 
       // Award streak bonus dice for Personal Quest calendars.
@@ -262,7 +269,12 @@ export const CountdownCalendarModal = ({
           : null;
         const streak = computeStreak(updatedProgressForStreak);
         if (streak.streakBonusDice > 0) {
-          awardDice(userId, streak.streakBonusDice, 'daily_treats', `${streak.currentStreak}-day streak bonus`);
+          awardDailyTreatDice({
+            userId,
+            diceAmount: streak.streakBonusDice,
+            sourceLabel: `${streak.currentStreak}-day streak bonus`,
+            islandRunSession,
+          });
         }
       }
 
@@ -286,7 +298,7 @@ export const CountdownCalendarModal = ({
       setDoorError(`Something went wrong opening this door. Please try again.`);
       setRevealState(null);
     }
-  }, [userId, seasonData]);
+  }, [userId, seasonData, islandRunSession]);
 
   const handleClaimReward = useCallback(() => {
     setRevealState(null);

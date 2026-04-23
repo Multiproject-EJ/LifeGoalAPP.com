@@ -4504,6 +4504,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         setHolidayPreviewKey(null);
       })}
       userId={activeSession?.user?.id}
+      islandRunSession={activeSession}
       previewHolidayKey={holidayPreviewKey}
     />
   );
