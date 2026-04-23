@@ -1291,6 +1291,31 @@
   border-color: rgba(206, 198, 255, 0.55);
 }
 
+.island-run-prototype__roll-btn--auto-pending {
+  background: linear-gradient(180deg, rgba(242, 177, 84, 0.96), rgba(206, 130, 42, 0.94));
+  border-color: rgba(255, 222, 168, 0.82);
+  box-shadow: 0 0 0 1px rgba(255, 236, 194, 0.45) inset, 0 0 0 0 rgba(255, 178, 72, 0.45);
+  animation: island-run-roll-hold-pulse 1.15s ease-in-out infinite;
+}
+
+.island-run-prototype__roll-btn--auto-active {
+  background: linear-gradient(180deg, rgba(103, 225, 126, 0.98), rgba(43, 171, 85, 0.96));
+  border-color: rgba(205, 255, 211, 0.86);
+  box-shadow: 0 0 0 1px rgba(214, 255, 225, 0.45) inset, 0 10px 22px rgba(63, 181, 91, 0.44);
+}
+
+@keyframes island-run-roll-hold-pulse {
+  0%,
+  100% {
+    transform: translateY(0);
+    box-shadow: 0 0 0 1px rgba(255, 236, 194, 0.45) inset, 0 0 0 0 rgba(255, 178, 72, 0.25);
+  }
+  50% {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 1px rgba(255, 236, 194, 0.52) inset, 0 0 18px 4px rgba(255, 178, 72, 0.45);
+  }
+}
+
 .island-run-prototype__roll-btn:disabled,
 .island-run-prototype__booster-btn:disabled,
 .island-stop-modal__btn:disabled {
