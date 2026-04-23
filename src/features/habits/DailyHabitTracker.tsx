@@ -565,6 +565,8 @@ export function DailyHabitTracker({
   const isCompact = variant === 'compact';
   const [activeOfferTeaser, setActiveOfferTeaser] = useState<TimeBoundOfferId | null>(null);
   const [isTodaysOfferModalOpen, setIsTodaysOfferModalOpen] = useState(false);
+  const [todaysOfferCheckoutPending, setTodaysOfferCheckoutPending] = useState(false);
+  const [todaysOfferModalError, setTodaysOfferModalError] = useState<string | null>(null);
   // Phase 2: in-dialog Daily Spin Wheel entry. The badge/button is rendered
   // inside the Today's Offer modal and only when the feature flag is on.
   const isTodaysOfferSpinEntryEnabled = isIslandRunFeatureEnabled('todaysOfferSpinEntryEnabled');
@@ -2290,11 +2292,25 @@ export function DailyHabitTracker({
 
   const offerTeaserKey = useCallback((offerId: TimeBoundOfferId) => `${getTodayUtcDateKey()}:${offerId}`, []);
 
+  const closeTodaysOfferModal = useCallback(() => {
+    setIsTodaysOfferModalOpen(false);
+    setTodaysOfferModalError(null);
+    setTodaysOfferCheckoutPending(false);
+  }, []);
+
   const startTodaysOfferCheckout = useCallback(async () => {
-    if (isDemoExperience) {
-      setVisionRewardError('Checkout is unavailable in demo mode.');
+    if (todaysOfferCheckoutPending) {
       return;
     }
+
+    setTodaysOfferModalError(null);
+
+    if (isDemoExperience) {
+      setTodaysOfferModalError('Checkout is unavailable in demo mode.');
+      return;
+    }
+
+    setTodaysOfferCheckoutPending(true);
 
     const activeEventType = islandRunRuntime.activeTimedEvent?.eventType;
     const eventId = isCanonicalEventId(activeEventType) ? activeEventType : null;
@@ -2303,12 +2319,28 @@ export function DailyHabitTracker({
       eventId,
     });
     if (!result.url) {
-      setVisionRewardError(result.error?.message ?? 'Unable to start ticket checkout right now.');
+      setTodaysOfferModalError(result.error?.message ?? 'Unable to start ticket checkout right now.');
+      setTodaysOfferCheckoutPending(false);
       return;
     }
 
     window.location.assign(result.url);
-  }, [isDemoExperience, islandRunRuntime.activeTimedEvent?.eventType]);
+  }, [isDemoExperience, islandRunRuntime.activeTimedEvent?.eventType, todaysOfferCheckoutPending]);
+
+  const launchTodaysOfferDailySpin = useCallback(() => {
+    if (!isTodaysOfferSpinEntryEnabled) {
+      return;
+    }
+
+    if (!onOpenDailySpinWheel) {
+      setTodaysOfferModalError('Daily Spin launcher is unavailable right now.');
+      return;
+    }
+
+    setTodaysOfferModalError(null);
+    setIsTodaysOfferModalOpen(false);
+    onOpenDailySpinWheel();
+  }, [isTodaysOfferSpinEntryEnabled, onOpenDailySpinWheel]);
 
   const openOfferContent = useCallback((offerId: TimeBoundOfferId) => {
     if (offerId === 'island_run') {
@@ -2360,6 +2392,7 @@ export function DailyHabitTracker({
     }
 
     if (offerId === 'todays_offer') {
+      setTodaysOfferModalError(null);
       setIsTodaysOfferModalOpen(true);
       return;
     }
@@ -2396,7 +2429,7 @@ export function DailyHabitTracker({
       role="dialog"
       aria-modal="true"
       aria-label="Today's offer"
-      onClick={() => setIsTodaysOfferModalOpen(false)}
+      onClick={closeTodaysOfferModal}
     >
       <div
         className={`habit-day-nav__vision-modal habit-day-nav__todays-offer-modal${
@@ -2407,7 +2440,7 @@ export function DailyHabitTracker({
         <button
           type="button"
           className="habit-day-nav__vision-modal-close habit-day-nav__todays-offer-close"
-          onClick={() => setIsTodaysOfferModalOpen(false)}
+          onClick={closeTodaysOfferModal}
           aria-label="Close today's offer"
         >
           ×
@@ -2416,21 +2449,20 @@ export function DailyHabitTracker({
           <button
             type="button"
             className="habit-day-nav__todays-offer-buy"
+            disabled={todaysOfferCheckoutPending}
             onClick={() => {
               void startTodaysOfferCheckout();
             }}
           >
-            Buy
+            {todaysOfferCheckoutPending ? 'Opening…' : 'Buy'}
           </button>
-          {isTodaysOfferSpinEntryEnabled && onOpenDailySpinWheel ? (
+          {isTodaysOfferSpinEntryEnabled ? (
             <div className="habit-day-nav__todays-offer-spin">
               <button
                 type="button"
                 className="habit-day-nav__todays-offer-spin-button"
-                onClick={() => {
-                  setIsTodaysOfferModalOpen(false);
-                  onOpenDailySpinWheel();
-                }}
+                disabled={!onOpenDailySpinWheel}
+                onClick={launchTodaysOfferDailySpin}
                 aria-label={
                   dailySpinAvailable
                     ? 'Spin the Daily Spin Wheel (available)'
@@ -2449,9 +2481,18 @@ export function DailyHabitTracker({
                 ) : null}
               </button>
               <p className="habit-day-nav__todays-offer-spin-caption">
-                {dailySpinAvailable ? 'Your daily spin is ready!' : 'Come back tomorrow for your next spin.'}
+                {!onOpenDailySpinWheel
+                  ? 'Daily Spin launcher unavailable in this view.'
+                  : dailySpinAvailable
+                    ? 'Your daily spin is ready!'
+                    : 'Come back tomorrow for your next spin.'}
               </p>
             </div>
+          ) : null}
+          {todaysOfferModalError ? (
+            <p className="habit-day-nav__bonus-error" role="status" aria-live="polite">
+              {todaysOfferModalError}
+            </p>
           ) : null}
         </div>
       </div>
