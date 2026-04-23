@@ -56,8 +56,8 @@ export interface IslandRunFeatureFlags {
 const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
   islandRunEventEngineEnabled: false,
   islandRunShooterBlitzBossEnabled: true,
-  islandRunTaskTowerMysteryEnabled: false,
-  islandRunVisionQuestMysteryEnabled: false,
+  islandRunTaskTowerMysteryEnabled: true,
+  islandRunVisionQuestMysteryEnabled: true,
   islandRunPartnerWheelEnabled: false,
   todaysOfferSpinEntryEnabled: false,
 });

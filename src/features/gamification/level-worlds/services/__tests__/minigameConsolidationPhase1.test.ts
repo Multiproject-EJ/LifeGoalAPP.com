@@ -35,8 +35,8 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
         {
           islandRunEventEngineEnabled: false,
           islandRunShooterBlitzBossEnabled: true,
-          islandRunTaskTowerMysteryEnabled: false,
-          islandRunVisionQuestMysteryEnabled: false,
+          islandRunTaskTowerMysteryEnabled: true,
+          islandRunVisionQuestMysteryEnabled: true,
           islandRunPartnerWheelEnabled: false,
           todaysOfferSpinEntryEnabled: false,
         },
@@ -48,12 +48,14 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
     name: 'isIslandRunFeatureEnabled reflects overlay merges',
     run: () => {
       __resetIslandRunFeatureFlagsForTests();
-      assertEqual(isIslandRunFeatureEnabled('islandRunTaskTowerMysteryEnabled'), false, 'default off');
+      assertEqual(isIslandRunFeatureEnabled('islandRunTaskTowerMysteryEnabled'), true, 'default on');
+      __setIslandRunFeatureFlagsForTests({ islandRunTaskTowerMysteryEnabled: false });
+      assertEqual(isIslandRunFeatureEnabled('islandRunTaskTowerMysteryEnabled'), false, 'flipped off by overlay');
       __setIslandRunFeatureFlagsForTests({ islandRunTaskTowerMysteryEnabled: true });
       assertEqual(isIslandRunFeatureEnabled('islandRunTaskTowerMysteryEnabled'), true, 'flipped on by overlay');
       assertEqual(
         isIslandRunFeatureEnabled('islandRunVisionQuestMysteryEnabled'),
-        false,
+        true,
         'other flags untouched',
       );
       __resetIslandRunFeatureFlagsForTests();
@@ -136,6 +138,10 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
     name: 'mystery pool ignores task_tower / vision_quest while their flags are off',
     run: () => {
       __resetIslandRunFeatureFlagsForTests();
+      __setIslandRunFeatureFlagsForTests({
+        islandRunTaskTowerMysteryEnabled: false,
+        islandRunVisionQuestMysteryEnabled: false,
+      });
       // Walk the first 200 islands — the seeded PRNG should cover the whole pool.
       for (let island = 1; island <= 200; island += 1) {
         const plan = generateIslandStopPlan(island);
@@ -147,6 +153,7 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
           `island ${island}: unexpected mystery kind "${kind}" while flags are off`,
         );
       }
+      __resetIslandRunFeatureFlagsForTests();
     },
   },
   {
