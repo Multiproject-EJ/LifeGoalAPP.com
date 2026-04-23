@@ -307,15 +307,30 @@ This section is a clean execution checklist after the prior workflow issues
       entirely and inlined coachmark dismiss handlers using
       `markLandmarkCoachmarkSeen(...)`, so stacked/cherry-picked branches cannot
       redeclare the same block-scoped coachmark dismiss symbol.
+    - Build-fix follow-up (post-merge/cherry-pick drift): removed duplicate
+      redeclarations of `dismissLandmarkCoachmark` and duplicate `Escape`
+      keydown dismissal effects in `IslandRunBoardPrototype`, leaving a single
+      canonical coachmark dismiss callback + modal Escape handler so TypeScript
+      no longer fails with TS2451 during CI/Vercel builds.
     - Added dedicated `islandRunStateActions` tests for
       `applyBossTrialResolvedMarker(...)` commit and no-op behavior to verify
       marker field persistence and runtime-version bump/no-bump semantics.
+    - Migrated market dice-bundle purchase spend flow in
+      `handleMarketPrototypePurchase(...)` from direct renderer-side
+      `persistIslandRunRuntimeStatePatch(...)` writes to
+      `applyEssenceDeduct(...)`, so market essence debits now commit through
+      the canonical store coordinator with explicit `triggerSource` tagging
+      (`market_purchase_dice_bundle`) before applying the dice reward.
    - **Evidence checks:** `npm run test:island-run` passed on 2026-04-23 after
-     this increment (325 passed / 0 failed).
+     this increment (329 passed / 0 failed).
+   - **Evidence checks (build):** `npm run build` passed on 2026-04-23 after
+     the duplicate-coachmark-symbol cleanup.
   - **What remains:** migrate remaining gameplay-critical direct writes (notably
-     island-travel-adjacent and reward/stop completion side paths) until the
-     board loop no longer performs direct record writes for roll/stop/travel
-     state ownership.
+     first-run reward claim, QA progression helpers, and any remaining
+     roll/stop/travel-adjacent side paths that still issue direct
+     `persistIslandRunRuntimeStatePatch(...)` writes) until the board loop no
+     longer performs direct record writes for gameplay-critical state
+     ownership.
 
 5. **Add one canonical full-loop integration gate**
    - Required scenario:
