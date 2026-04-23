@@ -149,3 +149,52 @@ single-source-of-truth migration program (not isolated one-off fixes).
 For any new gameplay-loop bug:
 - First ask: **does this path bypass canonical store write?**
 - If yes, fix path ownership first; then tune behavior.
+
+---
+
+## Second rundown (workflow-recovery pass, 2026-04-23)
+
+This section is a clean execution checklist after the prior workflow issues
+(partial PR creation, doc/status drift, and risk of incomplete fixes).
+
+### Task list (do in order; verify each with code + tests before marking done)
+
+1. **Hard-lock contract-v2 mode end-to-end**
+   - Remove runtime override semantics (query/localStorage/env) from the
+     contract-v2 flag helper so it cannot diverge per session/device.
+   - Keep only one deterministic return path (`true`) for gameplay contract mode.
+   - **Status:** ✅ Done on 2026-04-23.
+   - **Implementation notes:** `isIslandRunContractV2Enabled()` now always returns
+     `true`, and the old runtime override readers were removed from the helper.
+
+2. **Unify stop resolver invocation shape**
+   - Replace all resolver call sites that pass only `stopStatesByIndex` with one
+     canonical wrapper/input payload that always includes:
+     - `stopStatesByIndex`
+     - `stopTicketsPaidByIsland`
+     - `islandNumber`
+   - Eliminate mixed 2-state vs 4-state semantics in live board flows.
+
+3. **Align visual stop status with semantic stop status**
+   - Remove (or explicitly redesign) `ticket_required -> active` visual remap.
+   - If UX still wants parity visuals, add a clear badge/CTA so the user sees the
+     ticket gate before tap.
+
+4. **Finish mutation-path unification (Stage C/D completion)**
+   - Remove gameplay-critical mirror write paths that mix:
+     - `setRuntimeState(...)`
+     - `persistIslandRunRuntimeStatePatch(...)`
+     - `writeIslandRunGameStateRecord(...)`
+   - Route roll/stop/travel/dice-critical changes through one canonical action path.
+
+5. **Add one canonical full-loop integration gate**
+   - Required scenario:
+     - roll -> stop open -> ticket prompt/pay -> complete -> island clear -> travel
+   - Include hydration/interleaving simulation to catch seam races.
+
+6. **Add completion evidence discipline**
+   - For each task, require:
+     - code diff link
+     - at least one passing automated check
+     - explicit "what remains" note
+   - Do not update status docs to "done" unless all evidence is present.
