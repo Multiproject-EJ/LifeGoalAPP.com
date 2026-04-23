@@ -282,6 +282,10 @@ This section is a clean execution checklist after the prior workflow issues
     - Follow-up UX polish: locked prompt now shows sequence progress step and
       upcoming ticket price preview; coachmark now includes a "Show next"
       shortcut that focuses the next available landmark before dismissing.
+    - Accessibility/interaction polish: both locked and ticket prompts now
+      support `Escape` key dismissal, and the ticket shortfall meter is now an
+      actual ARIA progressbar (`aria-valuemin/max/now`) so assistive tech can
+      report affordability progress.
     - Added dedicated `islandRunStateActions` tests for
       `applyBossTrialResolvedMarker(...)` commit and no-op behavior to verify
       marker field persistence and runtime-version bump/no-bump semantics.

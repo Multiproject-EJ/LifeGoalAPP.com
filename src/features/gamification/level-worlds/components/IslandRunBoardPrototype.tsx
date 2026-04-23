@@ -3051,6 +3051,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
   }, [session.user.id]);
 
+  useEffect(() => {
+    if (!lockedStopInfoStopId && !ticketPromptStopId) return undefined;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (ticketPromptStopId) {
+        setTicketPromptStopId(null);
+        return;
+      }
+      if (lockedStopInfoStopId) {
+        setLockedStopInfoStopId(null);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [lockedStopInfoStopId, ticketPromptStopId]);
+
   /**
    * Pay the essence ticket for `stopId`. On success: persist the updated
    * wallet + ticket ledger, dismiss the prompt, and open the stop. On failure
@@ -9585,7 +9601,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     You need <strong>{shortfall} more 🟣</strong> to pay this ticket.
                   </p>
                   <div
-                    aria-hidden="true"
+                    role="progressbar"
+                    aria-label="Ticket affordability"
+                    aria-valuemin={0}
+                    aria-valuemax={cost}
+                    aria-valuenow={Math.max(0, Math.min(cost, wallet))}
                     style={{
                       width: '100%',
                       height: 8,
