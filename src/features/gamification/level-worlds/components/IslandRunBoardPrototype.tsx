@@ -51,7 +51,7 @@ import {
 } from '../services/islandRunRuntimeState';
 import { ShardClaimModal } from './ShardClaimModal';
 import { IslandRunReflectionComposer } from './IslandRunReflectionComposer';
-import { readIslandRunGameStateRecord, writeIslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
+import { readIslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { useIslandRunState } from '../hooks/useIslandRunState';
 import {
   commitIslandRunState,
@@ -65,6 +65,7 @@ import {
   withIslandRunActionLock,
 } from '../services/islandRunActionMutex';
 import {
+  applyStopBuildSpend,
   applyStopTicketPayment,
   applyEssenceAward,
   applyEssenceDeduct,
@@ -5761,28 +5762,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    // Write directly (no remote pre-read) so localStorage is updated immediately,
-    // matching the dice-roll pattern. This prevents build progress from being lost
-    // when the user exits before the async Supabase round-trip completes.
-    void writeIslandRunGameStateRecord({
+    const nextRuntimeState = applyStopBuildSpend({
       session,
       client,
-      record: {
-        ...runtimeStateRef.current,
-        essence: spendResult.essence,
-        essenceLifetimeSpent: spendResult.essenceLifetimeSpent,
-        stopBuildStateByIndex: spendResult.stopBuildStateByIndex,
-        stopStatesByIndex: spendResult.stopStatesByIndex,
-      },
-    });
-
-    setRuntimeState((current) => ({
-      ...current,
       essence: spendResult.essence,
       essenceLifetimeSpent: spendResult.essenceLifetimeSpent,
       stopBuildStateByIndex: spendResult.stopBuildStateByIndex,
       stopStatesByIndex: spendResult.stopStatesByIndex,
-    }));
+      triggerSource: 'stop_build_spend',
+    });
+    setRuntimeState(nextRuntimeState);
 
     const nextBuildState = spendResult.stopBuildStateByIndex[stopIndex];
     const stopEntry = islandStopPlan[stopIndex];
