@@ -136,6 +136,13 @@ async function queueLocalHabitCreate(payload: HabitV2Insert): Promise<HabitV2Row
     environment_score: payload.environment_score ?? null,
     environment_risk_tags: payload.environment_risk_tags ?? [],
     environment_last_audited_at: payload.environment_last_audited_at ?? null,
+    habit_intent: payload.habit_intent ?? null,
+    duration_mode: payload.duration_mode ?? null,
+    duration_value: payload.duration_value ?? null,
+    duration_unit: payload.duration_unit ?? null,
+    duration_start_at: payload.duration_start_at ?? null,
+    duration_end_at: payload.duration_end_at ?? null,
+    on_duration_end: payload.on_duration_end ?? null,
   };
   const nowMs = Date.now();
   await upsertLocalHabitV2Record({
@@ -728,6 +735,13 @@ export async function updateHabitFullV2(
     environment_score?: number | null;
     environment_risk_tags?: string[];
     environment_last_audited_at?: string | null;
+    habit_intent?: string | null;
+    duration_mode?: string | null;
+    duration_value?: number | null;
+    duration_unit?: string | null;
+    duration_start_at?: string | null;
+    duration_end_at?: string | null;
+    on_duration_end?: string | null;
   }
 ): Promise<ServiceResponse<HabitV2Row>> {
   const supabase = getSupabaseClient();

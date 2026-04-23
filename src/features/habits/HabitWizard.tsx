@@ -13,27 +13,32 @@ import './HabitWizard.css';
 
 export interface ScheduleDraft {
   choice: 'every_day' | 'specific_days' | 'x_per_week';
-  /** Number of completions per week (for x_per_week choice) */
   timesPerWeek?: number;
-  /** Day-of-week indices (0=Sun … 6=Sat) for specific_days choice */
   days?: number[];
 }
 
 export interface HabitWizardDraft {
   title: string;
   emoji: string | null;
+  intent?: 'build' | 'break';
   type: 'boolean' | 'quantity' | 'duration';
   targetValue?: number | null;
   targetUnit?: string | null;
   schedule: ScheduleDraft;
   remindersEnabled?: boolean;
   reminderTimes?: string[];
+  duration?: {
+    mode: 'none' | 'fixed_window';
+    value?: number;
+    unit?: 'days' | 'weeks' | 'months';
+    onEnd?: 'pause' | 'deactivate';
+  };
   habitEnvironment?: string;
   environmentContext?: EnvironmentContextV1 | null;
   environmentScore?: number | null;
   environmentRiskTags?: string[];
-  doneIshThreshold?: number; // Percentage threshold for quantity/duration (0-100)
-  booleanPartialEnabled?: boolean; // For boolean habits
+  doneIshThreshold?: number;
+  booleanPartialEnabled?: boolean;
   scalePlanEnabled?: boolean;
   stageLabels?: {
     seed: string;
@@ -45,7 +50,6 @@ export interface HabitWizardDraft {
     minimum: number;
     standard: number;
   };
-  /** If present, indicates we're editing an existing habit */
   habitId?: string;
 }
 
@@ -58,79 +62,93 @@ export type HabitWizardProps = {
 type ScheduleChoice = 'every_day' | 'specific_days' | 'x_per_week';
 
 export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWizardProps) {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  
-  // Track if we're in edit mode
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const isEditMode = Boolean(initialDraft?.habitId);
-  
-  // Step 1: Basics
-  const [emoji, setEmoji] = useState<string>('');
-  const [title, setTitle] = useState<string>('');
+
+  const [emoji, setEmoji] = useState('');
+  const [title, setTitle] = useState('');
+  const [intent, setIntent] = useState<'build' | 'break'>('build');
   const [type, setType] = useState<'boolean' | 'quantity' | 'duration'>('boolean');
-  
-  // Step 2: Schedule
+
   const [scheduleChoice, setScheduleChoice] = useState<ScheduleChoice>('every_day');
-  const [timesPerWeek, setTimesPerWeek] = useState<number>(3);
-  const [specificDays, setSpecificDays] = useState<number[]>([1, 2, 3, 4, 5]); // Mon–Fri
-  
-  // Step 3: Targets & Reminders
+  const [timesPerWeek, setTimesPerWeek] = useState(3);
+  const [specificDays, setSpecificDays] = useState<number[]>([1, 2, 3, 4, 5]);
+
   const [targetValue, setTargetValue] = useState<number | undefined>(undefined);
-  const [targetUnit, setTargetUnit] = useState<string>('');
-  const [remindersEnabled, setRemindersEnabled] = useState<boolean>(false);
-  const [reminderTime, setReminderTime] = useState<string>('08:00');
-  const [habitEnvironment, setHabitEnvironment] = useState<string>('');
+  const [targetUnit, setTargetUnit] = useState('');
+
+  const [durationMode, setDurationMode] = useState<'none' | 'fixed_window'>('none');
+  const [durationValue, setDurationValue] = useState(4);
+  const [durationUnit, setDurationUnit] = useState<'days' | 'weeks' | 'months'>('weeks');
+  const [durationOnEnd, setDurationOnEnd] = useState<'pause' | 'deactivate'>('pause');
+
+  const [habitEnvironment, setHabitEnvironment] = useState('');
   const [environmentContext, setEnvironmentContext] = useState<EnvironmentContextV1 | null>(null);
-  const [doneIshThreshold, setDoneIshThreshold] = useState<number>(80);
-  const [booleanPartialEnabled, setBooleanPartialEnabled] = useState<boolean>(true);
-  const [showAdvancedOptions, setShowAdvancedOptions] = useState<boolean>(false);
-  const [scalePlanEnabled, setScalePlanEnabled] = useState<boolean>(true);
-  const [seedStageLabel, setSeedStageLabel] = useState<string>('Quick fallback');
-  const [minimumStageLabel, setMinimumStageLabel] = useState<string>('Smaller version');
-  const [standardStageLabel, setStandardStageLabel] = useState<string>('Full version');
-  const [seedStagePercent, setSeedStagePercent] = useState<number>(50);
-  const [minimumStagePercent, setMinimumStagePercent] = useState<number>(75);
-  const [standardStagePercent, setStandardStagePercent] = useState<number>(100);
+
+  const [remindersEnabled, setRemindersEnabled] = useState(false);
+  const [reminderTime, setReminderTime] = useState('08:00');
+
+  const [doneIshThreshold, setDoneIshThreshold] = useState(80);
+  const [booleanPartialEnabled, setBooleanPartialEnabled] = useState(true);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [scalePlanEnabled, setScalePlanEnabled] = useState(true);
+  const [seedStageLabel, setSeedStageLabel] = useState('Quick fallback');
+  const [minimumStageLabel, setMinimumStageLabel] = useState('Smaller version');
+  const [standardStageLabel, setStandardStageLabel] = useState('Full version');
+  const [seedStagePercent, setSeedStagePercent] = useState(50);
+  const [minimumStagePercent, setMinimumStagePercent] = useState(75);
+  const [standardStagePercent, setStandardStagePercent] = useState(100);
+
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiApplied, setAiApplied] = useState(false);
   const [aiSource, setAiSource] = useState<'openai' | 'fallback' | 'unavailable' | null>(null);
 
-  // Reset wizard state when initialDraft changes
   useEffect(() => {
-    if (initialDraft) {
-      setEmoji(initialDraft.emoji || '');
-      setTitle(initialDraft.title);
-      setType(initialDraft.type);
-      setScheduleChoice(initialDraft.schedule.choice);
-      setTimesPerWeek(initialDraft.schedule.timesPerWeek ?? 3);
-      setSpecificDays(initialDraft.schedule.days ?? [1, 2, 3, 4, 5]);
-      setTargetValue(initialDraft.targetValue ?? undefined);
-      setTargetUnit(initialDraft.targetUnit || '');
-      setRemindersEnabled(initialDraft.remindersEnabled ?? false);
-      setReminderTime(initialDraft.reminderTimes?.[0] || '08:00');
-      setHabitEnvironment(initialDraft.habitEnvironment || '');
-      setEnvironmentContext(initialDraft.environmentContext ?? null);
-      setDoneIshThreshold(initialDraft.doneIshThreshold ?? 80);
-      setBooleanPartialEnabled(initialDraft.booleanPartialEnabled ?? true);
-      setScalePlanEnabled(initialDraft.scalePlanEnabled ?? true);
-      setSeedStageLabel(initialDraft.stageLabels?.seed ?? 'Quick fallback');
-      setMinimumStageLabel(initialDraft.stageLabels?.minimum ?? 'Smaller version');
-      setStandardStageLabel(initialDraft.stageLabels?.standard ?? 'Full version');
-      setSeedStagePercent(initialDraft.stageCompletionPercents?.seed ?? 50);
-      setMinimumStagePercent(initialDraft.stageCompletionPercents?.minimum ?? 75);
-      setStandardStagePercent(initialDraft.stageCompletionPercents?.standard ?? 100);
-      setStep(1); // Reset to first step
-      setAiError(null);
-      setAiApplied(false);
-      setAiSource(null);
-    }
+    if (!initialDraft) return;
+    setEmoji(initialDraft.emoji || '');
+    setTitle(initialDraft.title);
+    setIntent(initialDraft.intent ?? 'build');
+    setType(initialDraft.type);
+    setScheduleChoice(initialDraft.schedule.choice);
+    setTimesPerWeek(initialDraft.schedule.timesPerWeek ?? 3);
+    setSpecificDays(initialDraft.schedule.days ?? [1, 2, 3, 4, 5]);
+    setTargetValue(initialDraft.targetValue ?? undefined);
+    setTargetUnit(initialDraft.targetUnit || '');
+    setDurationMode(initialDraft.duration?.mode ?? 'none');
+    setDurationValue(initialDraft.duration?.value ?? 4);
+    setDurationUnit(initialDraft.duration?.unit ?? 'weeks');
+    setDurationOnEnd(initialDraft.duration?.onEnd ?? 'pause');
+    setRemindersEnabled(initialDraft.remindersEnabled ?? false);
+    setReminderTime(initialDraft.reminderTimes?.[0] || '08:00');
+    setHabitEnvironment(initialDraft.habitEnvironment || '');
+    setEnvironmentContext(initialDraft.environmentContext ?? null);
+    setDoneIshThreshold(initialDraft.doneIshThreshold ?? 80);
+    setBooleanPartialEnabled(initialDraft.booleanPartialEnabled ?? true);
+    setScalePlanEnabled(initialDraft.scalePlanEnabled ?? true);
+    setSeedStageLabel(initialDraft.stageLabels?.seed ?? 'Quick fallback');
+    setMinimumStageLabel(initialDraft.stageLabels?.minimum ?? 'Smaller version');
+    setStandardStageLabel(initialDraft.stageLabels?.standard ?? 'Full version');
+    setSeedStagePercent(initialDraft.stageCompletionPercents?.seed ?? 50);
+    setMinimumStagePercent(initialDraft.stageCompletionPercents?.minimum ?? 75);
+    setStandardStagePercent(initialDraft.stageCompletionPercents?.standard ?? 100);
+    setAiError(null);
+    setAiApplied(false);
+    setAiSource(null);
+    setStep(1);
   }, [initialDraft]);
+
+  useEffect(() => {
+    document.body.classList.add('habit-wizard-open');
+    return () => {
+      document.body.classList.remove('habit-wizard-open');
+    };
+  }, []);
 
   const handleGenerateAi = async () => {
     setAiLoading(true);
     setAiError(null);
     setAiApplied(false);
-
     try {
       const result = await generateHabitSuggestion({ prompt: title });
       if (result.error) {
@@ -138,7 +156,6 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
         setAiSource(result.source);
         return;
       }
-
       if (result.suggestion) {
         const suggestion = result.suggestion;
         setTitle(suggestion.title);
@@ -160,28 +177,37 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
     }
   };
 
-  const handleNext = () => {
-    if (step < 3) {
-      setStep((step + 1) as 1 | 2 | 3);
+  const canContinue = (() => {
+    if (step === 1) {
+      return title.trim().length > 0;
     }
+    if (step === 2) {
+      if (scheduleChoice === 'specific_days' && specificDays.length === 0) return false;
+      if (durationMode === 'fixed_window' && durationValue < 1) return false;
+      return true;
+    }
+    return true;
+  })();
+
+  const handleNext = () => {
+    if (step < 5) setStep((step + 1) as 1 | 2 | 3 | 4 | 5);
   };
 
   const handleBack = () => {
-    if (step > 1) {
-      setStep((step - 1) as 1 | 2 | 3);
-    }
+    if (step > 1) setStep((step - 1) as 1 | 2 | 3 | 4 | 5);
   };
 
   const handleCreateDraft = () => {
-    const normalizedEnvironment = normalizeEnvironmentContext(
-      environmentContextToJson(environmentContext),
-      { fallbackText: habitEnvironment.trim() || undefined },
-    );
+    const normalizedEnvironment = normalizeEnvironmentContext(environmentContextToJson(environmentContext), {
+      fallbackText: habitEnvironment.trim() || undefined,
+    });
     const environmentAudit = computeEnvironmentAudit(normalizedEnvironment);
     const environmentRecommendations = buildEnvironmentRecommendations(normalizedEnvironment);
+
     const draft: HabitWizardDraft = {
       title,
       emoji: emoji || null,
+      intent,
       type,
       schedule: {
         choice: scheduleChoice,
@@ -190,6 +216,15 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
       },
       remindersEnabled,
       reminderTimes: remindersEnabled && reminderTime ? [reminderTime] : [],
+      duration:
+        durationMode === 'fixed_window'
+          ? {
+              mode: 'fixed_window',
+              value: Math.max(1, durationValue),
+              unit: durationUnit,
+              onEnd: durationOnEnd,
+            }
+          : { mode: 'none' },
       habitEnvironment: habitEnvironment.trim() || undefined,
       environmentContext: normalizedEnvironment,
       environmentScore: normalizedEnvironment ? environmentAudit.score : null,
@@ -207,11 +242,9 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
         minimum: Math.max(1, Math.min(100, minimumStagePercent)),
         standard: Math.max(1, Math.min(100, standardStagePercent)),
       },
-      // Preserve habitId if editing
       habitId: initialDraft?.habitId,
     };
 
-    // Add target fields only for quantity/duration types
     if (type !== 'boolean') {
       draft.targetValue = targetValue ?? null;
       draft.targetUnit = targetUnit || null;
@@ -220,267 +253,81 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
     onCompleteDraft?.(draft);
   };
 
+  const stepTitles = ['Basics', 'Schedule', 'Environment', 'Reminders', 'Summary'];
+
   return (
-    <div
-      className="habit-wizard-container"
-      style={{
-        background: 'white',
-        border: '2px solid #667eea',
-        borderRadius: '12px',
-        padding: '2rem',
-        marginBottom: '2rem',
-        boxShadow: '0 4px 12px rgba(102, 126, 234, 0.2)',
-      }}
-    >
+    <div className="habit-wizard-container" style={{ background: 'white', border: '2px solid #667eea', borderRadius: '12px', padding: '2rem', marginBottom: '2rem', boxShadow: '0 4px 12px rgba(102, 126, 234, 0.2)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#667eea' }}>
-          {isEditMode ? 'Edit Habit' : 'Create New Habit'}
-        </h2>
-        <button
-          onClick={onCancel}
-          aria-label="Close wizard"
-          style={{
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '1.5rem',
-            color: '#64748b',
-            width: '2.75rem',
-            height: '2.75rem',
-            padding: 0,
-            borderRadius: '999px',
-            lineHeight: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          ×
-        </button>
+        <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#667eea' }}>{isEditMode ? 'Edit Habit' : 'Create New Habit'}</h2>
+        <button onClick={onCancel} aria-label="Close wizard" style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: '#64748b' }}>×</button>
       </div>
 
-      {/* Step indicator */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '2rem' }}>
-        {[1, 2, 3].map((s) => (
-          <div
-            key={s}
-            style={{
-              width: '2.5rem',
-              height: '2.5rem',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: step >= s ? '#667eea' : '#e2e8f0',
-              color: step >= s ? 'white' : '#64748b',
-              fontWeight: 600,
-              fontSize: '1rem',
-            }}
-          >
-            {s}
-          </div>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+        {[1, 2, 3, 4, 5].map((s) => (
+          <div key={s} title={stepTitles[s - 1]} style={{ width: '2rem', height: '2rem', borderRadius: '999px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: step >= s ? '#667eea' : '#e2e8f0', color: step >= s ? 'white' : '#64748b', fontSize: '0.875rem', fontWeight: 700 }}>{s}</div>
         ))}
       </div>
 
-      {/* Step 1: Basics */}
       {step === 1 && (
         <div className="habit-wizard-step" style={{ marginBottom: '2rem' }}>
-          <h3 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.25rem' }}>
-            Step 1: Basics
-          </h3>
+          <h3>Step 1: Basics</h3>
+          <label htmlFor="habit-emoji">Emoji (optional)</label>
+          <input id="habit-emoji" type="text" value={emoji} onChange={(e) => setEmoji(e.target.value)} maxLength={2} placeholder="💪" style={{ width: '100%', marginBottom: '1rem' }} />
 
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label
-              htmlFor="habit-emoji"
-              style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
-            >
-              Emoji (optional)
-            </label>
-            <input
-              id="habit-emoji"
-              type="text"
-              value={emoji}
-              onChange={(e) => setEmoji(e.target.value)}
-              placeholder="💪"
-              maxLength={2}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
+          <label htmlFor="habit-title">Habit Title *</label>
+          <input id="habit-title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g., Morning workout" style={{ width: '100%', marginBottom: '0.75rem' }} />
 
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label
-              htmlFor="habit-title"
-              style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
-            >
-              Habit Title *
-            </label>
-            <input
-              id="habit-title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Morning workout"
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                boxSizing: 'border-box',
-              }}
-            />
-            {!isEditMode && (
-              <div style={{ marginTop: '0.75rem' }}>
-                <button
-                  type="button"
-                  onClick={handleGenerateAi}
-                  disabled={!title.trim() || aiLoading}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '999px',
-                    border: '1px solid #c7d2fe',
-                    background: aiLoading ? '#e0e7ff' : '#eef2ff',
-                    color: '#4338ca',
-                    fontWeight: 600,
-                    cursor: !title.trim() || aiLoading ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  {AI_FEATURE_ICON}
-                  {aiLoading ? 'Generating...' : 'Generate with AI'}
-                </button>
-                <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: '#64748b' }}>
-                  Add a quick habit idea, then let AI suggest a starter plan.
-                </p>
-                {aiError && (
-                  <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: '#ef4444' }}>
-                    {aiError}
-                  </p>
-                )}
-                {aiApplied && (
-                  <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: '#16a34a' }}>
-                    AI suggestion applied{aiSource === 'fallback' ? ' (local)' : ''}.
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
+          {!isEditMode && (
+            <div style={{ marginBottom: '1rem' }}>
+              <button type="button" onClick={handleGenerateAi} disabled={!title.trim() || aiLoading}>
+                {AI_FEATURE_ICON} {aiLoading ? 'Generating...' : 'Generate with AI'}
+              </button>
+              {aiError ? <p style={{ color: '#ef4444', margin: '0.5rem 0 0' }}>{aiError}</p> : null}
+              {aiApplied ? <p style={{ color: '#16a34a', margin: '0.5rem 0 0' }}>AI suggestion applied{aiSource === 'fallback' ? ' (local)' : ''}.</p> : null}
+            </div>
+          )}
 
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label
-              htmlFor="habit-type"
-              style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
-            >
-              Type *
-            </label>
-            <select
-              id="habit-type"
-              value={type}
-              onChange={(e) => setType(e.target.value as 'boolean' | 'quantity' | 'duration')}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                boxSizing: 'border-box',
-                background: 'white',
-              }}
-            >
-              <option value="boolean">Yes/No (e.g., Did you meditate?)</option>
-              <option value="quantity">Quantity (e.g., 8 glasses of water)</option>
-              <option value="duration">Duration (e.g., 30 minutes of exercise)</option>
-            </select>
+          <label htmlFor="habit-type">Type *</label>
+          <select id="habit-type" value={type} onChange={(e) => setType(e.target.value as 'boolean' | 'quantity' | 'duration')} style={{ width: '100%', marginBottom: '1rem' }}>
+            <option value="boolean">Yes/No</option>
+            <option value="quantity">Quantity</option>
+            <option value="duration">Duration</option>
+          </select>
+
+          <div>
+            <p style={{ margin: '0 0 0.5rem', fontWeight: 600 }}>Intent</p>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button type="button" onClick={() => setIntent('build')} style={{ padding: '0.5rem 0.75rem', border: intent === 'build' ? '2px solid #667eea' : '1px solid #cbd5e1', background: intent === 'build' ? '#eef2ff' : 'white' }}>Build good behavior</button>
+              <button type="button" onClick={() => setIntent('break')} style={{ padding: '0.5rem 0.75rem', border: intent === 'break' ? '2px solid #667eea' : '1px solid #cbd5e1', background: intent === 'break' ? '#eef2ff' : 'white' }}>Break bad behavior</button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Step 2: Schedule */}
       {step === 2 && (
         <div className="habit-wizard-step" style={{ marginBottom: '2rem' }}>
-          <h3 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.25rem' }}>
-            Step 2: Schedule
-          </h3>
+          <h3>Step 2: Schedule + Program Length</h3>
+          <label htmlFor="habit-schedule">How often?</label>
+          <select id="habit-schedule" value={scheduleChoice} onChange={(e) => setScheduleChoice(e.target.value as ScheduleChoice)} style={{ width: '100%', marginBottom: '1rem' }}>
+            <option value="every_day">Every day</option>
+            <option value="specific_days">Specific days</option>
+            <option value="x_per_week">X times per week</option>
+          </select>
 
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label
-              htmlFor="habit-schedule"
-              style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
-            >
-              How often?
-            </label>
-            <select
-              id="habit-schedule"
-              value={scheduleChoice}
-              onChange={(e) => setScheduleChoice(e.target.value as ScheduleChoice)}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                boxSizing: 'border-box',
-                background: 'white',
-              }}
-            >
-              <option value="every_day">Every day</option>
-              <option value="specific_days">Specific days</option>
-              <option value="x_per_week">X times per week</option>
-            </select>
-          </div>
-
-          <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>
-            {scheduleChoice === 'every_day' && 'This habit will be tracked every single day.'}
-            {scheduleChoice === 'specific_days' && 'Select which days of the week to track this habit.'}
-            {scheduleChoice === 'x_per_week' && 'Set how many times per week you want to complete this habit.'}
-          </p>
-
-          {/* Times-per-week picker */}
           {scheduleChoice === 'x_per_week' && (
-            <div style={{ marginTop: '1.25rem' }}>
-              <label
-                htmlFor="habit-times-per-week"
-                style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
-              >
-                Times per week (1–7)
-              </label>
-              <input
-                id="habit-times-per-week"
-                type="number"
-                min={1}
-                max={7}
-                value={timesPerWeek}
-                onChange={(e) => setTimesPerWeek(Math.max(1, Math.min(7, parseInt(e.target.value, 10) || 1)))}
-                style={{
-                  width: '5rem',
-                  padding: '0.625rem 0.75rem',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  boxSizing: 'border-box',
-                }}
-              />
-              <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0.5rem 0 0' }}>
-                The habit will show in your checklist each day until you've hit this count for the week.
-              </p>
+            <div style={{ marginBottom: '1rem' }}>
+              <p style={{ marginBottom: '0.5rem', fontWeight: 600 }}>Times per week</p>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.75rem' }}>
+                <button type="button" onClick={() => setTimesPerWeek((prev) => Math.max(1, prev - 1))}>−</button>
+                <strong>{timesPerWeek}</strong>
+                <button type="button" onClick={() => setTimesPerWeek((prev) => Math.min(7, prev + 1))}>+</button>
+              </div>
             </div>
           )}
 
-          {/* Specific-days picker */}
           {scheduleChoice === 'specific_days' && (
-            <div style={{ marginTop: '1.25rem' }}>
-              <p style={{ fontSize: '0.875rem', fontWeight: 500, margin: '0 0 0.625rem' }}>
-                Which days?
-              </p>
+            <div style={{ marginBottom: '1rem' }}>
+              <p style={{ marginBottom: '0.5rem', fontWeight: 600 }}>Which days?</p>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 {[
                   { label: 'Mon', index: 1 },
@@ -493,357 +340,144 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
                 ].map(({ label, index }) => {
                   const selected = specificDays.includes(index);
                   return (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() =>
-                        setSpecificDays((prev) =>
-                          selected ? prev.filter((d) => d !== index) : [...prev, index],
-                        )
-                      }
-                      style={{
-                        padding: '0.5rem 0.75rem',
-                        border: `2px solid ${selected ? '#667eea' : '#e2e8f0'}`,
-                        borderRadius: '8px',
-                        background: selected ? '#eef2ff' : 'white',
-                        color: selected ? '#4338ca' : '#64748b',
-                        fontWeight: selected ? 600 : 400,
-                        fontSize: '0.875rem',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {label}
-                    </button>
+                    <button key={index} type="button" onClick={() => setSpecificDays((prev) => selected ? prev.filter((d) => d !== index) : [...prev, index])} style={{ border: selected ? '2px solid #667eea' : '1px solid #cbd5e1', background: selected ? '#eef2ff' : 'white' }}>{label}</button>
                   );
                 })}
               </div>
-              {specificDays.length === 0 && (
-                <p style={{ fontSize: '0.75rem', color: '#ef4444', margin: '0.5rem 0 0' }}>
-                  Please select at least one day.
-                </p>
-              )}
             </div>
+          )}
+
+          {type !== 'boolean' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+              <div>
+                <label htmlFor="habit-target-value">Target</label>
+                <input id="habit-target-value" type="number" value={targetValue ?? ''} onChange={(e) => setTargetValue(e.target.value ? parseFloat(e.target.value) : undefined)} min="0" step="any" style={{ width: '100%' }} />
+              </div>
+              <div>
+                <label htmlFor="habit-target-unit">Unit</label>
+                <input id="habit-target-unit" type="text" value={targetUnit} onChange={(e) => setTargetUnit(e.target.value)} style={{ width: '100%' }} />
+              </div>
+            </div>
+          )}
+
+          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+            <p style={{ margin: '0 0 0.5rem', fontWeight: 600 }}>Program length</p>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <input type="radio" checked={durationMode === 'none'} onChange={() => setDurationMode('none')} />
+              Keep habit active until I change it
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <input type="radio" checked={durationMode === 'fixed_window'} onChange={() => setDurationMode('fixed_window')} />
+              Make this a time-bound program
+            </label>
+
+            {durationMode === 'fixed_window' && (
+              <div style={{ display: 'grid', gap: '0.75rem', marginTop: '0.75rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '0.5rem' }}>
+                  <input type="number" min={1} step={1} value={durationValue} onChange={(e) => setDurationValue(Math.max(1, parseInt(e.target.value || '1', 10)))} />
+                  <select value={durationUnit} onChange={(e) => setDurationUnit(e.target.value as 'days' | 'weeks' | 'months')}>
+                    <option value="days">days</option>
+                    <option value="weeks">weeks</option>
+                    <option value="months">months</option>
+                  </select>
+                </div>
+                <div>
+                  <label>When duration ends</label>
+                  <select value={durationOnEnd} onChange={(e) => setDurationOnEnd(e.target.value as 'pause' | 'deactivate')} style={{ width: '100%' }}>
+                    <option value="pause">Pause habit</option>
+                    <option value="deactivate">Deactivate habit</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div className="habit-wizard-step" style={{ marginBottom: '2rem' }}>
+          <h3>Step 3: Environment</h3>
+          <EnvironmentStrengthCard value={environmentContext} onChange={setEnvironmentContext} title="Make this habit easier" subtitle="Optional setup that gives your habit a cue, blocker plan, and bad-day version." legacyNoteLabel="Legacy environment notes" />
+          <label htmlFor="habit-environment">Habit environment notes</label>
+          <textarea id="habit-environment" value={habitEnvironment} onChange={(e) => setHabitEnvironment(e.target.value)} rows={3} style={{ width: '100%' }} />
+        </div>
+      )}
+
+      {step === 4 && (
+        <div className="habit-wizard-step" style={{ marginBottom: '2rem' }}>
+          <h3>Step 4: Reminders</h3>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+            <input type="checkbox" checked={remindersEnabled} onChange={(e) => setRemindersEnabled(e.target.checked)} />
+            Enable reminders
+          </label>
+          {remindersEnabled && (
+            <>
+              <label htmlFor="habit-reminder-time">Reminder time</label>
+              <input id="habit-reminder-time" type="time" value={reminderTime} onChange={(e) => setReminderTime(e.target.value)} style={{ width: '100%' }} />
+            </>
           )}
         </div>
       )}
 
-      {/* Step 3: Targets & Reminders */}
-      {step === 3 && (
+      {step === 5 && (
         <div className="habit-wizard-step" style={{ marginBottom: '2rem' }}>
-          <h3 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.25rem' }}>
-            Step 3: Targets & Reminders
-          </h3>
-
-          {/* Show target fields only for quantity/duration types */}
-          {type !== 'boolean' && (
-            <>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label
-                  htmlFor="habit-target-value"
-                  style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
-                >
-                  Target {type === 'quantity' ? 'Amount' : 'Duration'}
-                </label>
-                <input
-                  id="habit-target-value"
-                  type="number"
-                  value={targetValue ?? ''}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setTargetValue(val ? parseFloat(val) : undefined);
-                  }}
-                  placeholder={type === 'quantity' ? 'e.g., 8' : 'e.g., 30'}
-                  min="0"
-                  step="any"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    boxSizing: 'border-box',
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label
-                  htmlFor="habit-target-unit"
-                  style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
-                >
-                  Unit
-                </label>
-                <input
-                  id="habit-target-unit"
-                  type="text"
-                  value={targetUnit}
-                  onChange={(e) => setTargetUnit(e.target.value)}
-                  placeholder={type === 'quantity' ? 'e.g., glasses, cups' : 'e.g., minutes, hours'}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    boxSizing: 'border-box',
-                  }}
-                />
-              </div>
-            </>
-          )}
-
-          <EnvironmentStrengthCard
-            value={environmentContext}
-            onChange={setEnvironmentContext}
-            title="Make this habit easier"
-            subtitle="Optional setup that gives your habit a cue, blocker plan, and bad-day version."
-            legacyNoteLabel="Legacy environment notes"
-          />
-
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label
-              htmlFor="habit-environment"
-              style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
-            >
-              Habit environment notes
-            </label>
-            <textarea
-              id="habit-environment"
-              value={habitEnvironment}
-              onChange={(e) => setHabitEnvironment(e.target.value)}
-              placeholder="Anything extra to remember about where, tools, or support?"
-              rows={3}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                boxSizing: 'border-box',
-                fontFamily: 'inherit',
-                resize: 'vertical',
-              }}
-            />
-            <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0.5rem 0 0 0' }}>
-              This stays optional and is preserved for backward compatibility with existing habit notes.
-            </p>
+          <h3>Step 5: Summary</h3>
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '1rem', marginBottom: '1rem' }}>
+            <p style={{ margin: 0 }}><strong>Habit:</strong> {emoji ? `${emoji} ` : ''}{title}</p>
+            <p style={{ margin: '0.25rem 0 0' }}><strong>Intent:</strong> {intent === 'build' ? 'Build good behavior' : 'Break/reduce bad behavior'}</p>
+            <p style={{ margin: '0.25rem 0 0' }}><strong>Type:</strong> {type}</p>
+            <p style={{ margin: '0.25rem 0 0' }}><strong>Schedule:</strong> {scheduleChoice === 'every_day' ? 'Every day' : scheduleChoice === 'x_per_week' ? `${timesPerWeek} times/week` : `${specificDays.length} specific days`}</p>
+            <p style={{ margin: '0.25rem 0 0' }}><strong>Program length:</strong> {durationMode === 'fixed_window' ? `${durationValue} ${durationUnit}, then ${durationOnEnd}` : 'No end date'}</p>
+            <p style={{ margin: '0.25rem 0 0' }}><strong>Reminders:</strong> {remindersEnabled ? `On at ${reminderTime}` : 'Off'}</p>
           </div>
 
-          {/* Advanced options toggle */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <button
-              type="button"
-              onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#667eea',
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                padding: 0,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}
-            >
-              {showAdvancedOptions ? '▼' : '▶'} Advanced: Done-ish + Habit Stages
-            </button>
-          </div>
+          <button type="button" onClick={() => setShowAdvancedOptions((prev) => !prev)} style={{ background: 'transparent', border: 'none', color: '#4f46e5', padding: 0, cursor: 'pointer', marginBottom: '0.75rem' }}>
+            {showAdvancedOptions ? 'Hide advanced settings' : 'Continue with advanced habit settings'}
+          </button>
 
-          {/* Advanced done-ish configuration */}
           {showAdvancedOptions && (
-            <div style={{
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
-              borderRadius: '8px',
-              padding: '1rem',
-              marginBottom: '1.5rem',
-            }}>
-              <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.875rem', fontWeight: 600, color: '#334155' }}>
-                Partial Completion ("Done-ish") Settings
-              </h4>
-              <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0 0 1rem 0' }}>
-                Set thresholds for when partial progress still counts as meaningful.
-              </p>
-
-              {type === 'boolean' && (
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={booleanPartialEnabled}
-                    onChange={(e) => setBooleanPartialEnabled(e.target.checked)}
-                    style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }}
-                  />
-                  <span style={{ fontSize: '0.875rem', color: '#334155' }}>
-                    Allow "did some" partial credit
-                  </span>
+            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '1rem' }}>
+              <h4 style={{ marginTop: 0 }}>Done-ish + Habit Stages</h4>
+              {type === 'boolean' ? (
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input type="checkbox" checked={booleanPartialEnabled} onChange={(e) => setBooleanPartialEnabled(e.target.checked)} />
+                  Allow "did some" partial credit
                 </label>
-              )}
-
-              {(type === 'quantity' || type === 'duration') && (
+              ) : (
                 <div>
-                  <label
-                    htmlFor="doneish-threshold"
-                    style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
-                  >
-                    Partial completion threshold: {doneIshThreshold}%
-                  </label>
-                  <input
-                    id="doneish-threshold"
-                    type="range"
-                    min="50"
-                    max="99"
-                    step="5"
-                    value={doneIshThreshold}
-                    onChange={(e) => setDoneIshThreshold(parseInt(e.target.value, 10))}
-                    style={{
-                      width: '100%',
-                      cursor: 'pointer',
-                    }}
-                  />
-                  <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '0.5rem 0 0 0' }}>
-                    Reaching {doneIshThreshold}% of your target will count as "done-ish" — partial credit with honest tracking.
-                  </p>
+                  <label htmlFor="doneish-threshold">Partial completion threshold: {doneIshThreshold}%</label>
+                  <input id="doneish-threshold" type="range" min="50" max="99" step="5" value={doneIshThreshold} onChange={(e) => setDoneIshThreshold(parseInt(e.target.value, 10))} style={{ width: '100%' }} />
                 </div>
               )}
 
-              <div style={{ marginTop: '1rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '0.75rem' }}>
-                  <input
-                    type="checkbox"
-                    checked={scalePlanEnabled}
-                    onChange={(e) => setScalePlanEnabled(e.target.checked)}
-                    style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }}
-                  />
-                  <span style={{ fontSize: '0.875rem', color: '#334155', fontWeight: 500 }}>
-                    Enable habit stages (easy/medium/hard fallbacks)
-                  </span>
+              <div style={{ marginTop: '1rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <input type="checkbox" checked={scalePlanEnabled} onChange={(e) => setScalePlanEnabled(e.target.checked)} />
+                  Enable habit stages
                 </label>
-
-                {scalePlanEnabled ? (
-                  <div style={{ display: 'grid', gap: '0.75rem' }}>
-                    {[
-                      { key: 'seed', label: 'Easy stage', labelValue: seedStageLabel, onLabel: setSeedStageLabel, percentValue: seedStagePercent, onPercent: setSeedStagePercent },
-                      { key: 'minimum', label: 'Medium stage', labelValue: minimumStageLabel, onLabel: setMinimumStageLabel, percentValue: minimumStagePercent, onPercent: setMinimumStagePercent },
-                      { key: 'standard', label: 'Hard stage', labelValue: standardStageLabel, onLabel: setStandardStageLabel, percentValue: standardStagePercent, onPercent: setStandardStagePercent },
-                    ].map((stage) => (
-                      <div key={stage.key} style={{ display: 'grid', gridTemplateColumns: '1fr 110px', gap: '0.5rem' }}>
-                        <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                          <span style={{ fontSize: '0.75rem', color: '#475569', fontWeight: 600 }}>{stage.label} label</span>
-                          <input
-                            type="text"
-                            value={stage.labelValue}
-                            onChange={(e) => stage.onLabel(e.target.value)}
-                            placeholder="Stage label"
-                            style={{ padding: '0.5rem', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.875rem' }}
-                          />
-                        </label>
-                        <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                          <span style={{ fontSize: '0.75rem', color: '#475569', fontWeight: 600 }}>Log %</span>
-                          <input
-                            type="number"
-                            min="1"
-                            max="100"
-                            step="1"
-                            value={stage.percentValue}
-                            onChange={(e) => stage.onPercent(parseInt(e.target.value || '0', 10))}
-                            style={{ padding: '0.5rem', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.875rem' }}
-                          />
-                        </label>
-                      </div>
-                    ))}
+                {scalePlanEnabled && (
+                  <div style={{ display: 'grid', gap: '0.5rem' }}>
+                    <input type="text" value={seedStageLabel} onChange={(e) => setSeedStageLabel(e.target.value)} placeholder="Easy stage label" />
+                    <input type="number" min="1" max="100" value={seedStagePercent} onChange={(e) => setSeedStagePercent(parseInt(e.target.value || '1', 10))} />
+                    <input type="text" value={minimumStageLabel} onChange={(e) => setMinimumStageLabel(e.target.value)} placeholder="Medium stage label" />
+                    <input type="number" min="1" max="100" value={minimumStagePercent} onChange={(e) => setMinimumStagePercent(parseInt(e.target.value || '1', 10))} />
+                    <input type="text" value={standardStageLabel} onChange={(e) => setStandardStageLabel(e.target.value)} placeholder="Hard stage label" />
+                    <input type="number" min="1" max="100" value={standardStagePercent} onChange={(e) => setStandardStagePercent(parseInt(e.target.value || '1', 10))} />
                   </div>
-                ) : null}
+                )}
               </div>
-            </div>
-          )}
-
-          {/* Reminders */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={remindersEnabled}
-                onChange={(e) => setRemindersEnabled(e.target.checked)}
-                style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }}
-              />
-              <span style={{ fontWeight: 500, fontSize: '0.875rem' }}>Enable reminders</span>
-            </label>
-          </div>
-
-          {remindersEnabled && (
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label
-                htmlFor="habit-reminder-time"
-                style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
-              >
-                Reminder Time
-              </label>
-              <input
-                id="habit-reminder-time"
-                type="time"
-                value={reminderTime}
-                onChange={(e) => setReminderTime(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  boxSizing: 'border-box',
-                }}
-              />
             </div>
           )}
         </div>
       )}
 
-      {/* Navigation buttons */}
       <div className="habit-wizard-actions" style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
-        <button
-          onClick={step === 1 ? onCancel : handleBack}
-          style={{
-            padding: '0.75rem 1.5rem',
-            border: '1px solid #e2e8f0',
-            borderRadius: '8px',
-            background: 'white',
-            color: '#64748b',
-            fontSize: '1rem',
-            fontWeight: 500,
-            cursor: 'pointer',
-          }}
-        >
-          {step === 1 ? 'Cancel' : 'Back'}
-        </button>
-
-        <button
-          onClick={step === 3 ? handleCreateDraft : handleNext}
-          disabled={
-            (step === 1 && !title) ||
-            (step === 2 && scheduleChoice === 'specific_days' && specificDays.length === 0)
-          }
-          style={{
-            padding: '0.75rem 1.5rem',
-            border: 'none',
-            borderRadius: '8px',
-            background:
-              (step === 1 && !title) ||
-              (step === 2 && scheduleChoice === 'specific_days' && specificDays.length === 0)
-                ? '#e2e8f0'
-                : '#667eea',
-            color: 'white',
-            fontSize: '1rem',
-            fontWeight: 500,
-            cursor:
-              (step === 1 && !title) ||
-              (step === 2 && scheduleChoice === 'specific_days' && specificDays.length === 0)
-                ? 'not-allowed'
-                : 'pointer',
-          }}
-        >
-          {step === 3 ? (isEditMode ? 'Save changes' : 'Create habit') : 'Next'}
-        </button>
+        <button onClick={step === 1 ? onCancel : handleBack}>{step === 1 ? 'Cancel' : 'Back'}</button>
+        {step < 5 ? (
+          <button onClick={handleNext} disabled={!canContinue}>Next</button>
+        ) : (
+          <button onClick={handleCreateDraft}>{isEditMode ? 'Save changes' : 'Create habit'}</button>
+        )}
       </div>
     </div>
   );

@@ -5079,6 +5079,13 @@ export function DailyHabitTracker({
       environment_score: null,
       environment_risk_tags: [],
       environment_last_audited_at: null,
+      habit_intent: 'build',
+      duration_mode: 'none',
+      duration_value: null,
+      duration_unit: null,
+      duration_start_at: null,
+      duration_end_at: null,
+      on_duration_end: null,
     }),
     [session.user.id],
   );

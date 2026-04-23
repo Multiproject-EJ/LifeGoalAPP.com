@@ -160,6 +160,13 @@ function createDemoHabit(seed: DemoHabitSeed): HabitRow {
     environment_score: null,
     environment_risk_tags: [],
     environment_last_audited_at: null,
+    habit_intent: 'build',
+    duration_mode: 'none',
+    duration_value: null,
+    duration_unit: null,
+    duration_start_at: null,
+    duration_end_at: null,
+    on_duration_end: null,
   };
 }
 
@@ -1147,6 +1154,13 @@ function normalizeHabitRow(habit: HabitRow): HabitRow {
     environment_score: habit.environment_score ?? null,
     environment_risk_tags: habit.environment_risk_tags ?? [],
     environment_last_audited_at: habit.environment_last_audited_at ?? null,
+    habit_intent: habit.habit_intent ?? 'build',
+    duration_mode: habit.duration_mode ?? 'none',
+    duration_value: habit.duration_value ?? null,
+    duration_unit: habit.duration_unit ?? null,
+    duration_start_at: habit.duration_start_at ?? null,
+    duration_end_at: habit.duration_end_at ?? null,
+    on_duration_end: habit.on_duration_end ?? null,
   };
 }
 
@@ -1451,6 +1465,13 @@ export function upsertDemoHabit(payload: HabitInsert | HabitUpdate): HabitRow {
       environment_risk_tags: payload.environment_risk_tags ?? (payload as HabitInsert).environment_risk_tags ?? [],
       environment_last_audited_at:
         payload.environment_last_audited_at ?? (payload as HabitInsert).environment_last_audited_at ?? null,
+      habit_intent: payload.habit_intent ?? (payload as HabitInsert).habit_intent ?? 'build',
+      duration_mode: payload.duration_mode ?? (payload as HabitInsert).duration_mode ?? 'none',
+      duration_value: payload.duration_value ?? (payload as HabitInsert).duration_value ?? null,
+      duration_unit: payload.duration_unit ?? (payload as HabitInsert).duration_unit ?? null,
+      duration_start_at: payload.duration_start_at ?? (payload as HabitInsert).duration_start_at ?? null,
+      duration_end_at: payload.duration_end_at ?? (payload as HabitInsert).duration_end_at ?? null,
+      on_duration_end: payload.on_duration_end ?? (payload as HabitInsert).on_duration_end ?? null,
     };
     nextRecord = normalizeHabitRow(nextRecord);
     habits.push(nextRecord);

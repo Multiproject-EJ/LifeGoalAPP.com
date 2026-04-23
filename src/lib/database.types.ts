@@ -744,6 +744,13 @@ export interface Database {
           environment_score: number | null;
           environment_risk_tags: string[];
           environment_last_audited_at: string | null;
+          habit_intent: string | null;
+          duration_mode: string | null;
+          duration_value: number | null;
+          duration_unit: string | null;
+          duration_start_at: string | null;
+          duration_end_at: string | null;
+          on_duration_end: string | null;
         };
         Insert: {
           id?: string;
@@ -773,6 +780,13 @@ export interface Database {
           environment_score?: number | null;
           environment_risk_tags?: string[];
           environment_last_audited_at?: string | null;
+          habit_intent?: string | null;
+          duration_mode?: string | null;
+          duration_value?: number | null;
+          duration_unit?: string | null;
+          duration_start_at?: string | null;
+          duration_end_at?: string | null;
+          on_duration_end?: string | null;
         };
         Update: {
           id?: string;
@@ -802,6 +816,13 @@ export interface Database {
           environment_score?: number | null;
           environment_risk_tags?: string[];
           environment_last_audited_at?: string | null;
+          habit_intent?: string | null;
+          duration_mode?: string | null;
+          duration_value?: number | null;
+          duration_unit?: string | null;
+          duration_start_at?: string | null;
+          duration_end_at?: string | null;
+          on_duration_end?: string | null;
         };
         Relationships: [];
       };
