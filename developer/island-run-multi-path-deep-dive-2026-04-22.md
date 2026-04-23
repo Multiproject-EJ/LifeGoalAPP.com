@@ -234,9 +234,19 @@ This section is a clean execution checklist after the prior workflow issues
     - Added dedicated `islandRunStateActions` tests for both
       `applyStopObjectiveProgress(...)` and `applyEggPlacement(...)` to assert
       record field updates and runtime-version commit behavior.
+    - Added `applyEggResolution(...)` in `islandRunStateActions` and migrated
+      hatchery collect/sell commit paths in `IslandRunBoardPrototype`
+      (`handleCollectCreature`, `handleSellEggForRewards`,
+      `handleSellEggForChoice`) so active-egg clear +
+      `perIslandEggs`/`completedStopsByIsland` updates now commit through one
+      store-coordinated action path instead of direct
+      `persistIslandRunRuntimeStatePatch(...)` writes.
+    - Added a dedicated `islandRunStateActions` test that verifies
+      `applyEggResolution(...)` publishes once and persists egg-clear ledger
+      fields plus optional essence deltas in one commit.
    - **Evidence checks:** `npm run test:island-run` passed on 2026-04-23 after
-     this increment (319 passed / 0 failed).
-   - **What remains:** migrate remaining gameplay-critical direct writes (notably
+     this increment (320 passed / 0 failed).
+  - **What remains:** migrate remaining gameplay-critical direct writes (notably
      island-travel-adjacent and reward/stop completion side paths) until the
      board loop no longer performs direct record writes for roll/stop/travel
      state ownership.

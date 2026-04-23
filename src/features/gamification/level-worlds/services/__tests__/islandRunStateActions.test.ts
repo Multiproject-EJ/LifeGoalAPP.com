@@ -27,6 +27,7 @@ import {
   subscribeIslandRunState,
 } from '../islandRunStateStore';
 import {
+  applyEggResolution,
   applyEggPlacement,
   applyStopBuildSpend,
   applyStopObjectiveProgress,
@@ -755,6 +756,60 @@ export const islandRunStateActionsTests: TestCase[] = [
       const snapshot = getIslandRunStateSnapshot(session);
       assertEqual(snapshot.runtimeVersion, 13, 'store snapshot should reflect new runtimeVersion');
       assert(snapshot.stopBuildStateByIndex[0]?.buildLevel === 1, 'store snapshot should keep updated stop build level');
+
+      unsub();
+    },
+  },
+
+  {
+    name: 'applyEggResolution commits egg clear + ledger + completed stops and optional essence in one publish',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 8,
+        currentIslandNumber: 7,
+        activeEggTier: 'mythic',
+        activeEggSetAtMs: 10_000,
+        activeEggHatchDurationMs: 3600,
+        activeEggIsDormant: true,
+        perIslandEggs: {},
+        completedStopsByIsland: {},
+        essence: 120,
+        essenceLifetimeEarned: 340,
+      });
+
+      let notifications = 0;
+      const unsub = subscribeIslandRunState(session, () => { notifications += 1; });
+
+      const result = applyEggResolution({
+        session,
+        client: null,
+        islandNumber: 7,
+        perIslandEggEntry: {
+          tier: 'mythic',
+          setAtMs: 10_000,
+          hatchAtMs: 13_600,
+          status: 'sold',
+          openedAt: 14_000,
+          location: 'island',
+        },
+        completedStops: ['hatchery'],
+        essence: 150,
+        essenceLifetimeEarned: 370,
+        triggerSource: 'test_egg_resolution',
+      });
+
+      assertEqual(notifications, 1, 'exactly one publish for egg resolution');
+      assertEqual(result.activeEggTier, null, 'active egg tier should be cleared');
+      assertEqual(result.activeEggSetAtMs, null, 'active egg set timestamp should be cleared');
+      assertEqual(result.activeEggHatchDurationMs, null, 'active egg hatch duration should be cleared');
+      assertEqual(result.activeEggIsDormant, false, 'active egg dormant flag should reset');
+      assertEqual(result.perIslandEggs['7']?.status, 'sold', 'island ledger should persist sold egg entry');
+      assertEqual(result.completedStopsByIsland['7']?.[0], 'hatchery', 'completed stops should sync for island');
+      assertEqual(result.essence, 150, 'essence should persist provided value');
+      assertEqual(result.essenceLifetimeEarned, 370, 'lifetime earned should persist provided value');
+      assertEqual(result.runtimeVersion, 9, 'runtimeVersion should bump by one');
 
       unsub();
     },
