@@ -30,6 +30,7 @@ import {
   isStopTicketPaid,
   payStopTicket,
 } from '../services/islandRunStopTickets';
+import { resolveIslandRunStopTapOutcome } from '../services/islandRunStopTapRouting';
 import { isIslandFullyCleared } from '../services/islandRunProgression';
 import { resolveIslandClearsCount } from '../services/islandRunStopStreak';
 import { recordTelemetryEvent } from '../../../../services/telemetry';
@@ -913,6 +914,11 @@ function getStopStateChipLabel(state: StopProgressState): string {
   if (state === 'ticket_required') return 'Ticket';
   if (state === 'locked') return 'Locked';
   return 'Open';
+}
+
+function markLandmarkCoachmarkSeen(userId: string) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(`island_run_landmark_coachmark_seen_${userId}`, '1');
 }
 
 function getOrbitStopDisplayIcon(state: StopProgressState | 'shop', icon: string): string {
@@ -3019,12 +3025,36 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [doesStopRequireTicketPayment, effectiveIslandNumber, islandStopPlan]);
 
   /**
-   * Orbit-stop click dispatcher. Routes the click to the appropriate outcome:
-   *   - Hatchery / already-paid stop → open the stop and focus the camera.
-   *   - Previous stop complete, ticket unpaid → open the ticket-prompt modal.
-   *   - Otherwise → leave closed (stop is sequence-locked; no-op).
+   * Orbit-stop click dispatcher.
+   * Reliability rule: always open the stop modal on tap, then surface lock /
+   * ticket guidance inside the modal copy + CTA layer.
    */
   const handleStopOpenRequest = useCallback((stopId: string) => {
+    const stopIndex = stopIndexByStopId.get(stopId);
+    const stopStatus =
+      typeof stopIndex === 'number' && contractV2Stops
+        ? contractV2Stops.statusesByIndex[stopIndex]
+        : null;
+    const needsTicket = doesStopRequireTicketPayment(stopId);
+    const tapOutcome = resolveIslandRunStopTapOutcome({
+      stopStatus,
+      requiresTicket: needsTicket,
+    });
+
+    logIslandRunEntryDebug('island_stop_tap_outcome', {
+      stopId,
+      stopIndex: typeof stopIndex === 'number' ? stopIndex : null,
+      stopStatus: stopStatus ?? null,
+      needsTicket,
+      tapOutcome,
+    });
+
+    if (tapOutcome === 'locked') {
+      setLandingText('Landmark preview opened. Complete the previous landmark to unlock actions.');
+    } else if (tapOutcome === 'ticket_required') {
+      setLandingText('Landmark preview opened. Pay ticket in the modal to enter this stop.');
+    }
+
     setLockedStopInfoStopId(null);
     setTicketPromptStopId(null);
     requestActiveStopTransition(stopId, 'orbit_stop_click');
@@ -3061,6 +3091,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       window.localStorage.setItem(`island_run_landmark_coachmark_seen_${session.user.id}`, '1');
     }
   }, [session.user.id]);
+
+  useEffect(() => {
+    if (!lockedStopInfoStopId && !ticketPromptStopId) return undefined;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (ticketPromptStopId) {
+        setTicketPromptStopId(null);
+        return;
+      }
+      if (lockedStopInfoStopId) {
+        setLockedStopInfoStopId(null);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [lockedStopInfoStopId, ticketPromptStopId]);
 
   useEffect(() => {
     if (!lockedStopInfoStopId && !ticketPromptStopId) return undefined;
@@ -7351,7 +7397,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 type="button"
                 className="island-run-landmark-coachmark__dismiss"
                 onClick={() => {
-                  dismissLandmarkCoachmark();
+                  setShowLandmarkCoachmark(false);
+                  markLandmarkCoachmarkSeen(session.user.id);
                   focusNextAvailableStop();
                 }}
               >
@@ -7360,7 +7407,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <button
                 type="button"
                 className="island-run-landmark-coachmark__dismiss"
-                onClick={dismissLandmarkCoachmark}
+                onClick={() => {
+                  setShowLandmarkCoachmark(false);
+                  markLandmarkCoachmarkSeen(session.user.id);
+                }}
               >
                 Got it
               </button>

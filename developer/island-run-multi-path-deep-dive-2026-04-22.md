@@ -294,6 +294,19 @@ This section is a clean execution checklist after the prior workflow issues
       while ticket-required messaging/payment remains available inside the stop
       modal itself. This avoids "reacts but nothing opens" outcomes in
       environments where intermediate prompt routing is brittle.
+    - Added deterministic tap-outcome classifier service
+      (`resolveIslandRunStopTapOutcome`) + dedicated service tests, and wired
+      board tap handling to emit `island_stop_tap_outcome` diagnostics with
+      stop index/status + derived ticket requirement. This gives explicit
+      runtime evidence when users report "tap reacted but no popup" issues.
+    - CI unblock follow-up: renamed the coachmark dismiss callback symbol to
+      `handleDismissLandmarkCoachmark` so merged/cherry-picked branches do not
+      trip duplicate block-scoped declaration collisions on
+      `dismissLandmarkCoachmark`.
+    - Hardening follow-up: removed dedicated dismiss callback declaration
+      entirely and inlined coachmark dismiss handlers using
+      `markLandmarkCoachmarkSeen(...)`, so stacked/cherry-picked branches cannot
+      redeclare the same block-scoped coachmark dismiss symbol.
     - Added dedicated `islandRunStateActions` tests for
       `applyBossTrialResolvedMarker(...)` commit and no-op behavior to verify
       marker field persistence and runtime-version bump/no-bump semantics.
