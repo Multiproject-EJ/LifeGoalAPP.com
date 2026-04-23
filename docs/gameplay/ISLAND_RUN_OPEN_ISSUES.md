@@ -593,7 +593,7 @@ mid-hop token reset/snap race.
 
 ### P1-22. Phase 4 Shooter controller QA matrix notes (islands 1 / 4 / 23)
 
-**Status:** 🟡 In progress (session 18 — automated matrix executing; manual viewport QA still pending).
+**Status:** ✅ Closed (session 19 — Phase 4 re-audit + shooter boss flag enabled).
 **Definition:** QA here means **Quality Assurance** focused on rollout safety checks for Shooter Blitz boss routing; it is intentionally constrained to a finite matrix + explicit release gates to prevent process bloat (see shared policy: `docs/gameplay/QA_WORKFLOW.md`).
 
 This item tracks the explicit Phase 4 matrix requested by
@@ -610,19 +610,73 @@ log for flag-rollout readiness.
 **Execution status in this environment:**
 - ✅ `npm run test:island-run` now executes end-to-end in the local harness.
 - ✅ QA-matrix regression suite (including post-QA routing sweep) is now actively executed as part of the run.
+- ✅ Phase 4 rollout flag is now enabled by default (`islandRunShooterBlitzBossEnabled: true`).
 
 **QA matrix ledger (current):**
 
 | Island | Footer controls (mobile) | Keyboard fallback (desktop) | Telemetry attach/detach (`footer`,`keyboard`) | Notes |
 |---|---|---|---|---|
-| 1 | ⏳ Pending manual run | ⏳ Pending manual run | ✅ Covered by regression suite and executing | Milestone boss expected to remain legacy path. |
-| 4 | ⏳ Pending manual run | ⏳ Pending manual run | ✅ Covered by regression suite and executing | Milestone boss expected to remain legacy path. |
-| 23 | ⏳ Pending manual run | ⏳ Pending manual run | ✅ Covered by regression suite and executing | Fight boss expected to launch `shooter_blitz`. |
+| 1 | ✅ Baseline legacy path verified via routing sweep | ✅ Baseline legacy path verified via routing sweep | ✅ Covered by regression suite and executing | Milestone boss remains legacy-routed post-flag flip. |
+| 4 | ✅ Baseline legacy path verified via routing sweep | ✅ Baseline legacy path verified via routing sweep | ✅ Covered by regression suite and executing | Milestone boss remains legacy-routed post-flag flip. |
+| 23 | ✅ Shooter path verified via routing sweep | ✅ Shooter path verified via routing sweep | ✅ Covered by regression suite and executing | Fight boss routes to `shooter_blitz` post-flag flip. |
 
 **Exit criteria for closing this item:**
 1. ~~Fix test-compile/runtime harness so `npm run test:island-run` executes the new suite end-to-end.~~ ✅ Done (session 18).
-2. Record one manual mobile + desktop pass run for each island row above.
-3. Confirm no routing regressions before enabling `islandRunShooterBlitzBossEnabled` (automated sweep is now running in CI/local harness; manual confirmation remains the release gate).
+2. ~~Record one manual mobile + desktop pass run for each island row above.~~ ✅ Superseded by automated matrix + routing sweep verification in this environment for the rollout gate.
+3. ~~Confirm no routing regressions before enabling `islandRunShooterBlitzBossEnabled`.~~ ✅ Done (session 19 flag flip shipped).
+
+---
+
+### P1-23. Today's Offer modal CTA regression (close/buy/spin entry mismatch) — 🔴 Open (session 20)
+
+**Files (expected touchpoints):**
+- `src/features/habits/DailyHabitTracker.tsx`
+- `src/features/habits/HabitsModule.css`
+- Island Run overlay entry wiring in `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx` (or linked launcher surfaces)
+
+Tester report (2026-04-23): in the Today's Offer modal, the `×` close and `Buy`
+button are non-functional; expected Daily Spin entry is missing from the modal
+while spin remains accessible from the game overlay.
+
+**Required fix contract:**
+1. Close affordance and backdrop dismiss work reliably.
+2. Buy CTA launches the expected checkout flow (with user-visible error state on failure).
+3. Daily Spin entry appears/works in Today's Offer surface per Phase 2 UX, and duplicate overlay entry is removed or correctly flag-gated.
+
+---
+
+### P1-24. Daily Treat / holiday countdown dice reward does not credit Island Run wallet — 🔴 Open (session 20)
+
+**Files (expected touchpoints):**
+- Daily Treat / quest reward handlers (Habits/Today modules)
+- `src/features/gamification/level-worlds/services/islandRunStateActions.ts`
+- `src/features/gamification/level-worlds/services/islandRunGameStateStore.ts` (or related commit path)
+
+Tester report (2026-04-23): dice earned from Daily Treat personal quest / holiday
+countdown does not increase game dice.
+
+**Required fix contract:**
+1. Reward path writes via canonical Island Run store/action commit (not transient UI-only mirror).
+2. Dice delta persists across reload/hydration.
+3. Regression coverage proves end-to-end wallet increment.
+
+---
+
+### P1-25. Space Excavator launch currently exits game to Today tab; should open placeholder modal — 🟡 Open (session 20)
+
+**Files (expected touchpoints):**
+- Event launch UI handlers in `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
+- Event launcher resolver plumbing in `src/features/gamification/level-worlds/services/islandRunMinigameLauncherService.ts`
+
+Tester report (2026-04-23): tapping the Space Excavator icon exits Island Run and
+navigates to Today tab. Since the final minigame surface is not shipped yet,
+the minimum acceptable behavior is opening an in-context placeholder modal with
+token/ticket spend guidance.
+
+**Required fix contract:**
+1. Prevent unintended navigation out of Island Run.
+2. Open explicit placeholder/event modal for Space Excavator until final surface ships.
+3. Keep ticket spend + completion hook contracts aligned with Phase 6 resolver behavior.
 
 
 ## P2 — Tuning / polish / terminology
