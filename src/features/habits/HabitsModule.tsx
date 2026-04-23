@@ -52,6 +52,52 @@ function draftScheduleToDbSchedule(s: ScheduleDraft): Record<string, unknown> {
   }
 }
 
+function buildDurationColumnPatchFromDraft(draft: HabitWizardDraft): {
+  duration_mode: string;
+  duration_value: number | null;
+  duration_unit: string | null;
+  duration_start_at: string | null;
+  duration_end_at: string | null;
+  on_duration_end: string | null;
+} {
+  const nowIso = new Date().toISOString();
+  if (!draft.duration || draft.duration.mode !== 'fixed_window') {
+    return {
+      duration_mode: 'none',
+      duration_value: null,
+      duration_unit: null,
+      duration_start_at: null,
+      duration_end_at: null,
+      on_duration_end: null,
+    };
+  }
+
+  const safeValue = Math.max(1, draft.duration.value ?? 1);
+  const safeUnit = draft.duration.unit ?? 'weeks';
+  const startAt = nowIso;
+  const endDate = new Date(startAt);
+  switch (safeUnit) {
+    case 'days':
+      endDate.setDate(endDate.getDate() + safeValue);
+      break;
+    case 'months':
+      endDate.setMonth(endDate.getMonth() + safeValue);
+      break;
+    case 'weeks':
+    default:
+      endDate.setDate(endDate.getDate() + safeValue * 7);
+      break;
+  }
+  return {
+    duration_mode: 'fixed_window',
+    duration_value: safeValue,
+    duration_unit: safeUnit,
+    duration_start_at: startAt,
+    duration_end_at: endDate.toISOString(),
+    on_duration_end: draft.duration.onEnd ?? 'pause',
+  };
+}
+
 // Check if habit suggestions feature is enabled via environment variable
 const SUGGESTIONS_ENABLED = import.meta.env.VITE_ENABLE_HABIT_SUGGESTIONS === '1';
 
@@ -253,28 +299,38 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
               duration?: HabitWizardDraft['duration'];
             }
           | undefined;
-        const duration = creationContext?.duration;
+        const duration: HabitWizardDraft['duration'] =
+          habit.duration_mode === 'fixed_window'
+            ? {
+                mode: 'fixed_window',
+                value: habit.duration_value ?? undefined,
+                unit: (habit.duration_unit as 'days' | 'weeks' | 'months' | null) ?? undefined,
+                onEnd: (habit.on_duration_end as 'pause' | 'deactivate' | null) ?? undefined,
+              }
+            : creationContext?.duration;
         if (!duration || duration.mode !== 'fixed_window' || !duration.value || duration.value < 1) {
           continue;
         }
 
-        const startedAtMs = Date.parse(habit.created_at ?? '');
+        const startedAtMs = Date.parse(habit.duration_start_at ?? habit.created_at ?? '');
         if (!Number.isFinite(startedAtMs)) {
           continue;
         }
 
-        const endDate = new Date(startedAtMs);
-        switch (duration.unit) {
-          case 'days':
-            endDate.setDate(endDate.getDate() + duration.value);
-            break;
-          case 'months':
-            endDate.setMonth(endDate.getMonth() + duration.value);
-            break;
-          case 'weeks':
-          default:
-            endDate.setDate(endDate.getDate() + duration.value * 7);
-            break;
+        const endDate = habit.duration_end_at ? new Date(habit.duration_end_at) : new Date(startedAtMs);
+        if (!habit.duration_end_at) {
+          switch (duration.unit) {
+            case 'days':
+              endDate.setDate(endDate.getDate() + duration.value);
+              break;
+            case 'months':
+              endDate.setMonth(endDate.getMonth() + duration.value);
+              break;
+            case 'weeks':
+            default:
+              endDate.setDate(endDate.getDate() + duration.value * 7);
+              break;
+          }
         }
 
         if (now < endDate.getTime()) {
@@ -1252,7 +1308,15 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
       })(),
       remindersEnabled: false,
       reminderTimes: [],
-      duration: creationContext?.duration ?? { mode: 'none' },
+      duration:
+        habit.duration_mode === 'fixed_window'
+          ? {
+              mode: 'fixed_window',
+              value: habit.duration_value ?? 1,
+              unit: (habit.duration_unit as 'days' | 'weeks' | 'months' | null) ?? 'weeks',
+              onEnd: (habit.on_duration_end as 'pause' | 'deactivate' | null) ?? 'pause',
+            }
+          : creationContext?.duration ?? { mode: 'none' },
       habitEnvironment: habit.habit_environment ?? undefined,
       environmentContext: normalizeEnvironmentContext(habit.environment_context ?? null, {
         fallbackText: habit.habit_environment ?? undefined,
@@ -1349,6 +1413,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
         };
 
         const updatePayload = {
+          habit_intent: draft.intent ?? 'build',
           title: draft.title,
           emoji: draft.emoji,
           type: draft.type,
@@ -1359,6 +1424,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           environment_context: environmentContextToJson(draft.environmentContext ?? null),
           environment_score: draft.environmentScore ?? null,
           environment_risk_tags: draft.environmentRiskTags ?? [],
+          ...buildDurationColumnPatchFromDraft(draft),
           done_ish_config: doneIshConfig as unknown as Database['public']['Tables']['habits_v2']['Row']['done_ish_config'],
           autoprog: {
             ...(existingAutoprog ?? buildDefaultAutoProgressState({
@@ -1431,6 +1497,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
         };
 
         const insertPayload: Omit<Database['public']['Tables']['habits_v2']['Insert'], 'user_id'> = {
+          habit_intent: draft.intent ?? 'build',
           title: draft.title,
           emoji: draft.emoji,
           type: draft.type,
@@ -1441,6 +1508,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           environment_context: environmentContextToJson(draft.environmentContext ?? null),
           environment_score: draft.environmentScore ?? null,
           environment_risk_tags: draft.environmentRiskTags ?? [],
+          ...buildDurationColumnPatchFromDraft(draft),
           done_ish_config: doneIshConfig as unknown as Database['public']['Tables']['habits_v2']['Insert']['done_ish_config'],
           autoprog: buildDefaultAutoProgressState({
             schedule: draftScheduleToDbSchedule(draft.schedule) as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
