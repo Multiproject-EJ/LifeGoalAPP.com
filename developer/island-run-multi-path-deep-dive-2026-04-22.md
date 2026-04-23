@@ -264,6 +264,21 @@ This section is a clean execution checklist after the prior workflow issues
       `bossTrialResolvedIslandNumber`) now commit through the canonical store
       coordinator instead of direct renderer-side
       `persistIslandRunRuntimeStatePatch(...)` usage.
+    - Wired non-hatchery landmark taps so sequence-locked stops no longer feel
+      dead: `handleStopOpenRequest(...)` now opens a dedicated locked-landmark
+      info prompt (title + description + prerequisite CTA) instead of only
+      posting landing text, and ticket prompts now include the landmark
+      description before payment so every stop tap has a clear info/enter
+      pathway.
+    - Continued landmark UX pass per product feedback: orbit stop buttons now
+      render color-coded state chips (`Locked` / `Ticket` / `Open` / `Done`),
+      locked prompt CTA copy now uses explicit prerequisite-open language, and
+      ticket prompt UX now includes an affordability progress bar + "find
+      essence" hint path while retaining the direct `Pay ticket` action that
+      closes prompt flow into stop entry on success.
+    - Added a one-time landmark coachmark ("Landmarks unlock in order; some
+      require an essence ticket") with per-user localStorage dismissal so first
+      sessions immediately understand non-hatchery unlock behavior.
     - Added dedicated `islandRunStateActions` tests for
       `applyBossTrialResolvedMarker(...)` commit and no-op behavior to verify
       marker field persistence and runtime-version bump/no-bump semantics.
