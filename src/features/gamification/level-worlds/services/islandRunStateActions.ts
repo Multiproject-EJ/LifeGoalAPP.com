@@ -213,6 +213,13 @@ export interface ApplyWalletShardsDeltaResult {
   appliedDelta: number;
 }
 
+export interface ApplyBossTrialResolvedMarkerOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  islandNumber: number;
+  triggerSource?: string;
+}
+
 /**
  * Withdraws essence from the wallet through the store commit path.
  *
@@ -276,6 +283,37 @@ export function applyWalletShardsDelta(options: ApplyWalletShardsDeltaOptions): 
     triggerSource: triggerSource ?? 'apply_wallet_shards_delta',
   });
   return { record: next, appliedDelta };
+}
+
+/**
+ * Commits boss-trial resolution marker fields through the canonical store path.
+ *
+ * Replaces renderer-side direct `persistIslandRunRuntimeStatePatch` writes for
+ * `{ currentIslandNumber, bossTrialResolvedIslandNumber }` so boss clear marker
+ * updates no longer bypass the state commit coordinator.
+ */
+export function applyBossTrialResolvedMarker(options: ApplyBossTrialResolvedMarkerOptions): IslandRunGameStateRecord {
+  const { session, client, islandNumber, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (
+    current.currentIslandNumber === islandNumber
+    && current.bossTrialResolvedIslandNumber === islandNumber
+  ) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    currentIslandNumber: islandNumber,
+    bossTrialResolvedIslandNumber: islandNumber,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_boss_trial_resolved_marker',
+  });
+  return next;
 }
 
 export interface RewardBarRuntimeState {

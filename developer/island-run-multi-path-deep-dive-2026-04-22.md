@@ -258,8 +258,17 @@ This section is a clean execution checklist after the prior workflow issues
     - Added dedicated `islandRunStateActions` tests for
       `applyWalletShardsDelta(...)` award and spend-clamp behavior to verify
       canonical commit-path persistence and runtime-version bump semantics.
+    - Added `applyBossTrialResolvedMarker(...)` in `islandRunStateActions` and
+      migrated `handleResolveBossTrial(...)` in `IslandRunBoardPrototype` so
+      boss-trial marker writes (`currentIslandNumber`,
+      `bossTrialResolvedIslandNumber`) now commit through the canonical store
+      coordinator instead of direct renderer-side
+      `persistIslandRunRuntimeStatePatch(...)` usage.
+    - Added dedicated `islandRunStateActions` tests for
+      `applyBossTrialResolvedMarker(...)` commit and no-op behavior to verify
+      marker field persistence and runtime-version bump/no-bump semantics.
    - **Evidence checks:** `npm run test:island-run` passed on 2026-04-23 after
-     this increment (323 passed / 0 failed).
+     this increment (325 passed / 0 failed).
   - **What remains:** migrate remaining gameplay-critical direct writes (notably
      island-travel-adjacent and reward/stop completion side paths) until the
      board loop no longer performs direct record writes for roll/stop/travel
@@ -293,7 +302,7 @@ This section is a clean execution checklist after the prior workflow issues
    - Do not update status docs to "done" unless all evidence is present.
    - **Status:** 🟡 In progress on 2026-04-23.
    - **Implementation notes (this session):** Task 4 status/evidence block kept
-     current with newly migrated wallet-shard commit-path actions and a fresh
-     automated check run.
+     current with newly migrated boss-trial marker commit-path action wiring
+     and a fresh automated check run.
    - **Evidence checks:** `npm run test:island-run` passed on 2026-04-23 after
-     this update (323 passed / 0 failed).
+     this update (325 passed / 0 failed).
