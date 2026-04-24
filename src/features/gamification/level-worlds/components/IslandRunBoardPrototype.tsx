@@ -1,3 +1,21 @@
+/**
+ * ISLAND RUN ARCHITECTURE WARNING
+ *
+ * This file is still in migration and contains legacy compatibility paths.
+ * Do NOT add new gameplay-state write paths here.
+ *
+ * Gameplay state mutation must flow through canonical action services:
+ * - islandRunStateActions
+ * - islandRunRollAction
+ * - islandRunTileRewardAction
+ *
+ * Forbidden for new code:
+ * - direct gameplay writes via persistIslandRunRuntimeStatePatch
+ * - new runtimeState gameplay mirrors
+ * - duplicating dice/token/reward/stop logic locally
+ *
+ * See: docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md
+ */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
@@ -45,7 +63,6 @@ import { useGamification } from '../../../../hooks/useGamification';
 import { isDemoSession } from '../../../../services/demoSession';
 import {
   hydrateIslandRunRuntimeStateWithSource,
-  persistIslandRunRuntimeStatePatch,
   readIslandRunRuntimeState,
   resolveCollectibleForClaim,
   type IslandRunRuntimeState,
@@ -57,7 +74,6 @@ import { useIslandRunState } from '../hooks/useIslandRunState';
 import {
   commitIslandRunState,
   getIslandRunStateSnapshot,
-  patchIslandRunStateSnapshot,
   refreshIslandRunStateFromLocal,
 } from '../services/islandRunStateStore';
 import {
@@ -67,17 +83,30 @@ import {
 } from '../services/islandRunActionMutex';
 import {
   applyActiveCompanion,
+  applyAudioEnabledMarker,
   applyBossTrialResolvedMarker,
+  applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
   applyCreatureTreatInventory,
+  applyActivateCurrentIslandTimer,
+  applyPassiveDiceRegenTick,
   applyEggResolution,
+  applyHydrationEggReadyTransition,
   applyEggPlacement,
   applyFirstRunClaimed,
   applyFirstRunStarterRewards,
+  applyIslandShardsSet,
+  applyMarketOwnedBundleMarker,
+  applyOnboardingDisplayNameLoopMarker,
+  applyOnboardingCompleteMarker,
+  applyPerfectCompanionSnapshot,
   applyQaProgressionSnapshot,
+  applyShardClaimProgressMarker,
+  applyStoryPrologueSeenMarker,
   applyStopBuildSpend,
   applyStopObjectiveProgress,
   applyStopTicketPayment,
+  applyWalletDiamondsSet,
   applyWalletShardsDelta,
   applyEssenceAward,
   applyEssenceDeduct,
@@ -246,7 +275,6 @@ import {
   resolveNextRollEtaMs,
   type DiceRegenState,
 } from '../services/islandRunDiceRegeneration';
-import { resolveRuntimeDiceRegenUpdate } from '../services/islandRunRuntimeRegen';
 import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
 import { resolveNextCheapestIndex } from '../services/islandRunShopAffordability';
 import { adviseEggSellChoice } from '../services/islandRunEggSellAdvisor';
@@ -1560,52 +1588,28 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const nowMs = Date.now();
     const playerLevel = Math.max(1, Math.floor(playerLevelInfo?.currentLevel ?? 1));
     const current = runtimeStateRef.current;
-    const regenUpdate = resolveRuntimeDiceRegenUpdate({
-      snapshot: {
-        dicePool: current.dicePool,
-        diceRegenState: current.diceRegenState ?? null,
-      },
-      playerLevel,
-      nowMs,
-    });
-
-    if (!regenUpdate) {
-      return current.dicePool;
-    }
-
-    const nextRuntimeState = {
-      ...current,
-      dicePool: regenUpdate.dicePool,
-      diceRegenState: regenUpdate.diceRegenState,
-    };
-    runtimeStateRef.current = nextRuntimeState;
-    setRuntimeState(nextRuntimeState);
-    // Keep the external store mirror in lockstep with regen ticks so HUD
-    // subscribers never display stale dice/countdown values between local
-    // runtime state updates and async persistence.
-    patchIslandRunStateSnapshot(session, {
-      dicePool: regenUpdate.dicePool,
-      diceRegenState: regenUpdate.diceRegenState,
-    });
-    void persistIslandRunRuntimeStatePatch({
+    const regenTick = applyPassiveDiceRegenTick({
       session,
       client,
-      patch: {
-        dicePool: regenUpdate.dicePool,
-        diceRegenState: regenUpdate.diceRegenState,
-      },
+      playerLevel,
+      nowMs,
+      triggerSource: `passive_dice_regen_${reason}`,
     });
+    const nextRuntimeState = regenTick.record;
+    runtimeStateRef.current = nextRuntimeState;
+    setRuntimeState(nextRuntimeState);
     logIslandRunEntryDebug('dice_regen_applied', {
       userId: session.user.id,
       reason,
       playerLevel,
       diceBefore: current.dicePool,
-      diceAfter: regenUpdate.dicePool,
-      diceAdded: regenUpdate.diceAdded,
-      regenMaxDice: regenUpdate.diceRegenState.maxDice,
-      regenRatePerHour: regenUpdate.diceRegenState.regenRatePerHour,
+      diceAfter: nextRuntimeState.dicePool,
+      diceAdded: regenTick.diceAdded,
+      regenMaxDice: nextRuntimeState.diceRegenState?.maxDice ?? null,
+      regenRatePerHour: nextRuntimeState.diceRegenState?.regenRatePerHour ?? null,
+      changed: regenTick.changed,
     });
-    return regenUpdate.dicePool;
+    return nextRuntimeState.dicePool;
   }, [client, hasHydratedRuntimeState, playerLevelInfo?.currentLevel, session]);
 
   useEffect(() => {
@@ -1815,12 +1819,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const nowHydrate = Date.now();
       const isHatched = nowHydrate >= ledgerEntry.hatchAtMs;
       if (isHatched && ledgerEntry.status === 'incubating') {
-        const updatedEntry: PerIslandEggEntry = { ...ledgerEntry, status: 'ready' };
-        const updatedLedger = { ...runtimeState.perIslandEggs, [islandKey]: updatedEntry };
-        setRuntimeState((prev) => ({ ...prev, perIslandEggs: updatedLedger }));
-        if (client) {
-          void persistIslandRunRuntimeStatePatch({ session, client, patch: { perIslandEggs: updatedLedger } });
-        }
+        const readyTransition = applyHydrationEggReadyTransition({
+          session,
+          client,
+          islandNumber: persistedIsland,
+          hatchNowMs: nowHydrate,
+          triggerSource: 'hydrate_egg_ready_transition',
+        });
+        setRuntimeState(readyTransition.record);
       }
       setActiveEgg({
         tier: ledgerEntry.tier,
@@ -2476,15 +2482,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
     if (runtimeState.onboardingDisplayNameLoopCompleted === isDisplayNameLoopCompleted) return;
-    void persistIslandRunRuntimeStatePatch({
+    const next = applyOnboardingDisplayNameLoopMarker({
       session,
       client,
-      patch: { onboardingDisplayNameLoopCompleted: isDisplayNameLoopCompleted },
+      completed: isDisplayNameLoopCompleted,
+      triggerSource: 'sync_onboarding_display_name_loop_marker_effect',
     });
-    setRuntimeState((current) => ({
-      ...current,
-      onboardingDisplayNameLoopCompleted: isDisplayNameLoopCompleted,
-    }));
+    setRuntimeState(next);
   }, [client, hasHydratedRuntimeState, isDisplayNameLoopCompleted, runtimeState.onboardingDisplayNameLoopCompleted, session]);
 
   useEffect(() => {
@@ -2493,15 +2497,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
     if (runtimeState.audioEnabled === audioEnabled) return;
-    void persistIslandRunRuntimeStatePatch({
+    const next = applyAudioEnabledMarker({
       session,
       client,
-      patch: { audioEnabled },
-    });
-    setRuntimeState((current) => ({
-      ...current,
       audioEnabled,
-    }));
+      triggerSource: 'sync_audio_enabled_marker_effect',
+    });
+    setRuntimeState(next);
   }, [audioEnabled, client, hasHydratedRuntimeState, runtimeState.audioEnabled, session]);
 
   useEffect(() => {
@@ -2637,12 +2639,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
     if (runtimeState.diamonds === diamonds) return;
-    void persistIslandRunRuntimeStatePatch({
+    const result = applyWalletDiamondsSet({
       session,
       client,
-      patch: { diamonds },
+      nextDiamonds: diamonds,
+      triggerSource: 'sync_diamonds_marker_effect',
     });
-    setRuntimeState((current) => ({ ...current, diamonds }));
+    setRuntimeState(result.record);
   }, [client, diamonds, hasHydratedRuntimeState, runtimeState.diamonds, session]);
 
   // M19A: persist market owned state to runtime state map (and mirror legacy local storage key for compatibility)
@@ -2659,25 +2662,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     ) {
       return;
     }
-    const patch = {
-      [islandKey]: {
-        dice_bundle: marketOwnedBundles.dice_bundle,
-        heart_bundle: false,
-        heart_boost_bundle: false,
-      },
-    };
-    void persistIslandRunRuntimeStatePatch({
+    const nextRecord = applyMarketOwnedBundleMarker({
       session,
       client,
-      patch: { marketOwnedBundlesByIsland: patch },
+      islandNumber,
+      diceBundleOwned: marketOwnedBundles.dice_bundle,
+      triggerSource: 'sync_market_owned_bundle_marker_effect',
     });
-    setRuntimeState((current) => ({
-      ...current,
-      marketOwnedBundlesByIsland: {
-        ...current.marketOwnedBundlesByIsland,
-        ...patch,
-      },
-    }));
+    setRuntimeState(nextRecord);
   }, [client, hasHydratedRuntimeState, islandNumber, marketOwnedBundles, runtimeState.marketOwnedBundlesByIsland, session]);
 
   useEffect(() => {
@@ -2966,13 +2958,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     );
     setIslandShards(result.islandShards);
     // Only persist the cumulative shard count; tier/claim state is unchanged until claim
-    void persistIslandRunRuntimeStatePatch({
+    const shardRecord = applyIslandShardsSet({
       session,
       client,
-      patch: {
-        islandShards: result.islandShards,
-      },
+      nextIslandShards: result.islandShards,
+      triggerSource: 'shard_progress_earn',
     });
+    setRuntimeState(shardRecord.record);
     // M16C: set shardMilestoneReached flag (once) when threshold is first crossed
     if (result.shardMilestoneReached && !shardMilestoneReached) {
       setShardMilestoneReached(true);
@@ -3891,31 +3883,28 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const activateCurrentIsland = useCallback(() => {
     const nowMs = Date.now();
     const durationMs = getIslandDurationMs(islandNumber);
-    const expiresAtMs = nowMs + durationMs;
-    setIslandStartedAtMs(nowMs);
-    setIslandExpiresAtMs(expiresAtMs);
-    setTimeLeftSec(Math.ceil(durationMs / 1000));
-    setIsIslandTimerPendingStart(false);
+    const activationResult = applyActivateCurrentIslandTimer({
+      session,
+      client,
+      islandNumber,
+      cycleIndex,
+      nowMs,
+      durationMs,
+      triggerSource: 'activate_current_island',
+    });
+    const nextRecord = activationResult.record;
+    setIslandStartedAtMs(nextRecord.islandStartedAtMs);
+    setIslandExpiresAtMs(nextRecord.islandExpiresAtMs);
+    setTimeLeftSec(
+      nextRecord.islandStartedAtMs > 0 && nextRecord.islandExpiresAtMs > 0
+        ? Math.max(0, Math.ceil((nextRecord.islandExpiresAtMs - nextRecord.islandStartedAtMs) / 1000))
+        : 0,
+    );
+    setIsIslandTimerPendingStart(!(nextRecord.islandStartedAtMs > 0 && nextRecord.islandExpiresAtMs > 0));
     setLandingText(ISLAND_RUN_CONTRACT_V2_ENABLED
       ? 'Island run started. Timer shown for event context only.'
       : 'Island timer started. Roll dice to move!');
-    void persistIslandRunRuntimeStatePatch({
-      session,
-      client,
-      patch: {
-        currentIslandNumber: islandNumber,
-        cycleIndex,
-        islandStartedAtMs: nowMs,
-        islandExpiresAtMs: expiresAtMs,
-      },
-    });
-    setRuntimeState((current) => ({
-      ...current,
-      currentIslandNumber: islandNumber,
-      cycleIndex,
-      islandStartedAtMs: nowMs,
-      islandExpiresAtMs: expiresAtMs,
-    }));
+    setRuntimeState(nextRecord);
   }, [client, cycleIndex, islandNumber, session]);
 
   const runContractV2RewardBarClaimCascade = useCallback((options: {
@@ -4904,26 +4893,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     );
     const computedAtMs = Date.now();
 
-    setRuntimeState((current) => ({
-      ...current,
+    const perfectCompanionSnapshot = applyPerfectCompanionSnapshot({
+      session,
+      client,
       perfectCompanionIds,
       perfectCompanionReasons,
       perfectCompanionComputedAtMs: computedAtMs,
       perfectCompanionModelVersion: PERFECT_COMPANION_MODEL_VERSION,
       perfectCompanionComputedCycleIndex: cycleIndex,
-    }));
-
-    void persistIslandRunRuntimeStatePatch({
-      session,
-      client,
-      patch: {
-        perfectCompanionIds,
-        perfectCompanionReasons,
-        perfectCompanionComputedAtMs: computedAtMs,
-        perfectCompanionModelVersion: PERFECT_COMPANION_MODEL_VERSION,
-        perfectCompanionComputedCycleIndex: cycleIndex,
-      },
+      triggerSource: 'perfect_companion_snapshot',
     });
+    setRuntimeState(perfectCompanionSnapshot.record);
   }, [
     client,
     cycleIndex,
@@ -4956,17 +4936,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    void persistIslandRunRuntimeStatePatch({
+    const next = applyCompanionBonusLastVisitKeyMarker({
       session,
       client,
-      patch: {
-        companionBonusLastVisitKey: visitKey,
-      },
+      visitKey,
+      triggerSource: 'apply_companion_bonus_visit_marker_effect',
     });
-    setRuntimeState((current) => ({
-      ...current,
-      companionBonusLastVisitKey: visitKey,
-    }));
+    setRuntimeState(next);
     companionBonusAppliedVisitKeyRef.current = visitKey;
 
     const isPerfectCompanionActive = perfectCompanionIdSet.has(activeCompanion.creatureId);
@@ -5161,94 +5137,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // any legitimate future collection (new egg, new island) can proceed.
     collectingCreatureRef.current = false;
     setIsCollectingCreature(false);
-  };
-
-  const handleSellEggForRewards = () => {
-    if (!activeEgg || eggStage < 4) return;
-    // Guard: prevent selling if the egg slot is already used (collected/sold)
-    if (islandEggSlotUsed) return;
-    const resolvedEgg = activeEgg;
-    const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg);
-    const bundle = rollEggRewards(resolvedEgg.tier, resolvedEgg.setAtMs);
-    const nowTs = Date.now();
-    const islandKey = String(islandNumber);
-    const existingEntry = runtimeState.perIslandEggs?.[islandKey];
-    const nextCompletedStops = ensureStopCompleted(completedStops, 'hatchery');
-    const soldEntry: PerIslandEggEntry = existingEntry
-      ? { ...existingEntry, status: 'sold', openedAt: nowTs, location: 'island' }
-      : {
-          tier: resolvedEgg.tier,
-          setAtMs: resolvedEgg.setAtMs,
-          hatchAtMs: resolvedEgg.hatchAtMs,
-          status: 'sold',
-          openedAt: nowTs,
-          location: 'island',
-        };
-    const specialtySellBonusEssence = activeCompanionSpecialty?.effect === 'sell_bonus_essence'
-      ? Math.max(0, Math.floor((bundle.essenceDelta * activeCompanionSpecialty.amount) / 100))
-      : 0;
-    // Hearts/coins retired — creature sell now awards essence + shards
-    const totalSellEssence = bundle.essenceDelta + specialtySellBonusEssence;
-    const nextEssence = runtimeStateRef.current.essence + totalSellEssence;
-    const nextEssenceLifetimeEarned = runtimeStateRef.current.essenceLifetimeEarned + totalSellEssence;
-    if (bundle.spinTokensDelta > 0) setSpinTokens((t) => t + bundle.spinTokensDelta);
-    if (bundle.diamondsDelta > 0) setDiamonds((d) => d + bundle.diamondsDelta);
-    if (bundle.shardsDelta > 0) awardWalletShards(bundle.shardsDelta);
-    awardShards('egg_open');
-    awardWalletShards(2);
-    setActiveEgg(null);
-    playIslandRunSound('market_purchase_success');
-    triggerIslandRunHaptic('market_purchase_success');
-    const rewardParts: string[] = [];
-    if (bundle.essenceDelta > 0) rewardParts.push(`+${bundle.essenceDelta} 🟣`);
-    if (specialtySellBonusEssence > 0) rewardParts.push(`+${specialtySellBonusEssence} 🟣 specialty`);
-    if (bundle.shardsDelta > 0) rewardParts.push(`+${bundle.shardsDelta} 🔮 shards`);
-    if (bundle.diamondsDelta > 0) rewardParts.push(`+${bundle.diamondsDelta} 💎`);
-    if (bundle.spinTokensDelta > 0) rewardParts.push(`+${bundle.spinTokensDelta} 🌀 spin`);
-    setLandingText(`Sold ${creature.name}. Rewards: ${rewardParts.join(', ') || 'applied'}.`);
-    void recordTelemetryEvent({
-      userId: session.user.id,
-      eventType: 'economy_earn',
-      metadata: {
-        stage: 'island_creature_sold',
-        island_number: islandNumber,
-        tier: resolvedEgg.tier,
-        creature_id: creature.id,
-        creature_name: creature.name,
-        reward_essence: bundle.essenceDelta,
-        specialty_bonus_essence: specialtySellBonusEssence,
-        reward_shards: bundle.shardsDelta,
-        reward_spin_tokens: bundle.spinTokensDelta,
-        reward_diamonds: bundle.diamondsDelta,
-      },
-    });
-    logIslandRunEntryDebug('island_creature_sold', {
-      islandNumber,
-      tier: resolvedEgg.tier,
-      creatureId: creature.id,
-      creatureName: creature.name,
-      rewardEssence: bundle.essenceDelta,
-      specialtyBonusEssence: specialtySellBonusEssence,
-      rewardShards: bundle.shardsDelta,
-      rewardSpinTokens: bundle.spinTokensDelta,
-      rewardDiamonds: bundle.diamondsDelta,
-    });
-    const nextRecord = applyEggResolution({
-      session,
-      client,
-      islandNumber,
-      perIslandEggEntry: soldEntry,
-      completedStops: nextCompletedStops,
-      essence: nextEssence,
-      essenceLifetimeEarned: nextEssenceLifetimeEarned,
-      triggerSource: 'island_board_sell_egg_rewards',
-    });
-    setCompletedStops(nextCompletedStops);
-    markHatcheryStopCompleteInV2();
-    setRuntimeState(nextRecord);
-    if (activeStopId === 'hatchery') {
-      setActiveStopId(null);
-    }
   };
 
   /** Egg sell with player choice: shards or dice */
@@ -5481,12 +5369,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setEncounterRewardData(reward);
     setEncounterStep('reward');
     applyEncounterReward(reward);
-  };
-
-  const handleResolveEncounter = () => {
-    if (encounterResolved) return;
-    // Legacy path — now delegates to challenge complete flow
-    handleEncounterChallengeComplete();
   };
 
   const handleResolveBossTrial = () => {
@@ -6261,13 +6143,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
     setRuntimeState(record);
 
-    const result = await persistIslandRunRuntimeStatePatch({
+    const onboardingMarkerResult = await applyOnboardingCompleteMarker({
       session,
       client,
-      patch: { onboardingComplete: true },
+      triggerSource: 'first_run_onboarding_complete_marker',
     });
-    if (!result.ok) {
-      setLandingText(`Could not complete first-run setup: ${result.errorMessage}`);
+    if (!onboardingMarkerResult.ok) {
+      setLandingText(`Could not complete first-run setup: ${onboardingMarkerResult.errorMessage}`);
       return false;
     }
     return true;
@@ -6767,186 +6649,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
   };
 
-  const closeSanctuaryPanel = () => {
-    setShowSanctuaryPanel(false);
-    setSelectedSanctuaryCreatureId(null);
-    setSanctuaryFeedback(null);
-  };
-
-  const handleSetActiveCompanion = (creatureId: string | null) => {
-    setActiveCompanionId(creatureId);
-    saveActiveCompanionId(session.user.id, creatureId);
-    const selected = creatureId ? collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null : null;
-    void recordTelemetryEvent({
-      userId: session.user.id,
-      eventType: 'economy_earn',
-      metadata: {
-        stage: 'sanctuary_active_companion_changed',
-        island_number: islandNumber,
-        creature_id: selected?.creature.id ?? null,
-        creature_name: selected?.creature.name ?? null,
-        active: Boolean(selected),
-      },
-    });
-    logIslandRunEntryDebug('sanctuary_active_companion_changed', {
-      islandNumber,
-      creatureId: selected?.creature.id ?? null,
-      creatureName: selected?.creature.name ?? null,
-      active: Boolean(selected),
-    });
-    setLandingText(
-      selected
-        ? `${selected.creature.name} is now your active companion.`
-        : 'Active companion cleared.',
-    );
-  };
-
-
-  const handleOpenSanctuaryCreature = (creatureId: string) => {
-    setSelectedSanctuaryCreatureId(creatureId);
-    setSanctuaryFeedback(null);
-    setSanctuaryClockMs(Date.now());
-  };
-
-  const handleFeedSanctuaryCreature = (creatureId: string, treatType: CreatureTreatType) => {
-    const target = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
-    if (!target) return;
-    const nowMs = Date.now();
-    const nextFeedAtMs = target.lastFedAtMs ? target.lastFedAtMs + CREATURE_FEED_COOLDOWN_MS : 0;
-    if (nextFeedAtMs > nowMs) {
-      setSanctuaryFeedback(`${target.creature.name} is still full. Feed again in ${formatCooldownRemaining(nextFeedAtMs - nowMs)}.`);
-      setSanctuaryClockMs(nowMs);
-      return;
-    }
-    const treatOption = CREATURE_TREAT_OPTIONS.find((option) => option.type === treatType);
-    if (!treatOption) return;
-    if (creatureTreatInventory[treatType] <= 0) {
-      setSanctuaryFeedback(`No ${treatOption.label.toLowerCase()} left. Earn more by collecting creatures.`);
-      return;
-    }
-    setCreatureTreatInventory((current) => ({
-      ...current,
-      [treatType]: Math.max(0, current[treatType] - 1),
-    }));
-    const previousBondLevel = target.bondLevel;
-    setCreatureCollection(feedCreatureForUser({
-      userId: session.user.id,
-      creatureId,
-      fedAtMs: nowMs,
-      xpGain: treatOption.xpGain,
-    }));
-    setSanctuaryClockMs(nowMs);
-    const nextBondXp = target.bondXp + treatOption.xpGain;
-    const nextBondLevel = Math.floor(nextBondXp / CREATURE_BOND_XP_PER_LEVEL) + 1;
-    const rewardPreview = getBondMilestoneReward(nextBondLevel);
-    void recordTelemetryEvent({
-      userId: session.user.id,
-      eventType: 'economy_earn',
-      metadata: {
-        stage: 'sanctuary_creature_fed',
-        island_number: islandNumber,
-        creature_id: target.creature.id,
-        creature_name: target.creature.name,
-        treat_type: treatType,
-        xp_gain: treatOption.xpGain,
-        previous_bond_level: previousBondLevel,
-        next_bond_level: nextBondLevel,
-      },
-    });
-    logIslandRunEntryDebug('sanctuary_creature_fed', {
-      islandNumber,
-      creatureId: target.creature.id,
-      creatureName: target.creature.name,
-      treatType,
-      xpGain: treatOption.xpGain,
-      previousBondLevel,
-      nextBondLevel,
-    });
-    setSanctuaryFeedback(
-      nextBondLevel > previousBondLevel
-        ? rewardPreview
-          ? `${target.creature.name} loved the ${treatOption.label.toLowerCase()} and reached bond level ${nextBondLevel}! ${rewardPreview.label} is ready to claim.`
-          : `${target.creature.name} loved the ${treatOption.label.toLowerCase()} and reached bond level ${nextBondLevel}!`
-        : `Fed ${target.creature.name} a ${treatOption.label.toLowerCase()}. Bond progress increased by ${treatOption.xpGain}.`,
-    );
-    setLandingText(`${target.creature.name} enjoyed a ${treatOption.label.toLowerCase()} and feels closer to you.`);
-    playIslandRunSound('encounter_resolve');
-    triggerIslandRunHaptic('reward_claim');
-  };
-
-
-  const handleClaimSanctuaryBondReward = (creatureId: string, milestoneLevel: number) => {
-    const target = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
-    const reward = getBondMilestoneReward(milestoneLevel);
-    if (!target || !reward) return;
-    const unclaimedMilestones = getUnclaimedBondMilestones(target);
-    if (!unclaimedMilestones.includes(milestoneLevel)) return;
-
-    setCreatureCollection(claimCreatureBondMilestoneForUser({
-      userId: session.user.id,
-      creatureId,
-      milestoneLevel,
-    }));
-
-    const rewardEssence = reward.essence ?? 0;
-    const rewardDice = reward.dice ?? 0;
-    const rewardSpinTokens = reward.spinTokens ?? 0;
-
-    if (rewardEssence > 0) {
-      setRuntimeState((prev) => ({
-        ...prev,
-        essence: prev.essence + rewardEssence,
-        essenceLifetimeEarned: prev.essenceLifetimeEarned + rewardEssence,
-      }));
-    }
-    if (rewardDice > 0) {
-      setDicePool((current) => current + rewardDice);
-    }
-    if (rewardSpinTokens > 0) {
-      setSpinTokens((current) => current + rewardSpinTokens);
-    }
-
-    void recordTelemetryEvent({
-      userId: session.user.id,
-      eventType: 'economy_earn',
-      metadata: {
-        stage: 'sanctuary_bond_reward_claimed',
-        island_number: islandNumber,
-        creature_id: target.creature.id,
-        creature_name: target.creature.name,
-        milestone_level: milestoneLevel,
-        reward_essence: rewardEssence,
-        reward_dice: rewardDice,
-        reward_spin_tokens: rewardSpinTokens,
-      },
-    });
-    logIslandRunEntryDebug('sanctuary_bond_reward_claimed', {
-      islandNumber,
-      creatureId: target.creature.id,
-      creatureName: target.creature.name,
-      milestoneLevel,
-      rewardEssence,
-      rewardDice,
-      rewardSpinTokens,
-    });
-    setSanctuaryFeedback(`${target.creature.name} claimed ${reward.label}: ${reward.summary}.`);
-    setLandingText(`${target.creature.name} bond milestone claimed: ${reward.summary}.`);
-    playIslandRunSound('market_purchase_success');
-    triggerIslandRunHaptic('reward_claim');
-  };
-
-  const handleStoryRewardClaim = (essenceReward: number) => {
-    if (essenceReward <= 0) {
-      return;
-    }
-    setRuntimeState((prev) => ({
-      ...prev,
-      essence: prev.essence + essenceReward,
-      essenceLifetimeEarned: prev.essenceLifetimeEarned + essenceReward,
-    }));
-    setLandingText(`Story reward claimed: +${essenceReward} essence.`);
-  };
-
   const handleCloseStoryReader = () => {
     setShowStoryReader(false);
     try {
@@ -6954,12 +6656,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     } catch {
       // ignore localStorage failures
     }
-    void persistIslandRunRuntimeStatePatch({
+    const next = applyStoryPrologueSeenMarker({
       session,
       client,
-      patch: { storyPrologueSeen: true },
+      storyPrologueSeen: true,
+      triggerSource: 'close_story_reader_marker',
     });
-    setRuntimeState((current) => ({ ...current, storyPrologueSeen: true }));
+    setRuntimeState(next);
   };
 
   if (isRuntimeSyncBlocked || isOwnershipBlocked) {
@@ -9794,11 +9497,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             setShardMilestoneReached(false);
             setShowClaimModal(false);
             setPendingClaimTierIndex(null);
-            void persistIslandRunRuntimeStatePatch({
+            const nextRecord = applyShardClaimProgressMarker({
               session,
               client,
-              patch: { shardTierIndex: newTierIndex, shardClaimCount: newClaimCount },
+              nextShardTierIndex: newTierIndex,
+              nextShardClaimCount: newClaimCount,
+              triggerSource: 'shard_progress_claim',
             });
+            setRuntimeState(nextRecord);
             setLandingText('Shard milestone claimed! +1 Lucky Roll run unlocked.');
             void recordTelemetryEvent({
               userId: session.user.id,
