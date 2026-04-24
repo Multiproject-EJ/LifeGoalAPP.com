@@ -113,3 +113,85 @@ This is exactly the pattern that causes bugs that are hard to reproduce and appe
 
 ## Bottom Line
 Your bug volume is consistent with a system mid-migration where multiple gameplay state systems are still active. The app does use different "versions" of Island Run logic/state handling depending on the path, and older compatibility pathways are still live in production-critical surfaces.
+
+
+---
+
+## Safe Cleanup Plan (No Functionality Loss)
+
+This is the practical migration path to clean up architecture while minimizing regressions.
+
+### Phase 0 — Freeze Contracts Before Refactor
+
+1. **Lock expected behavior in tests first** (before moving code):
+   - Roll flow (dice cost, hop sequence, reward resolution).
+   - Stop progression flow (unlock gating, ticket requirements, completion semantics).
+   - Cross-surface currency writes (Score/Today/Board interactions).
+   - Hydration precedence (local newer than stale remote, remote newer than local).
+2. Add integration tests specifically for "split-authority" failure modes:
+   - board action + external patch write racing in same second,
+   - hydration while action in-flight,
+   - tab switch during regen tick.
+3. Capture baseline snapshots from production test users (anonymized) to replay deterministic scenarios.
+
+### Phase 1 — Single Writer Rule (Keep Existing UI)
+
+Goal: Keep all current screens, but enforce one mutation path.
+
+1. Introduce a strict policy: **gameplay writes must go through `islandRunStateActions`**.
+2. Replace direct `persistIslandRunRuntimeStatePatch` callsites in non-board features with dedicated action helpers:
+   - shield award,
+   - shield convert,
+   - shards/dice wallet mutations,
+   - stop/completion mutations.
+3. Keep read compatibility for now, but log telemetry on any legacy direct write call (temporary warning).
+
+### Phase 2 — Board Read Unification
+
+Goal: Remove dual read authorities in `IslandRunBoardPrototype`.
+
+1. Convert canonical fields to read exclusively from `useIslandRunState().state`.
+2. Remove local mirrors for canonical fields in small slices (dice/token first, then stop/build/reward-bar).
+3. Keep UI-only ephemeral state local (`isModalOpen`, animation flags, hover state), not gameplay state.
+4. After each slice, run full island-run test suite + a deterministic manual QA script.
+
+### Phase 3 — Hydration Compatibility Sunset
+
+Goal: preserve resilience but retire permanent legacy drag.
+
+1. Keep wildcard fallback temporarily, but add metric + alert counter for fallback hits.
+2. If fallback hit-rate is below threshold for N releases, switch wildcard path to hard error + migration hint.
+3. Remove fallback mapping once schema parity is guaranteed.
+
+### Phase 4 — Feature Flag Contract Alignment
+
+1. Decide canonical truth source:
+   - either tests/spec are right and defaults must be changed,
+   - or runtime defaults are right and tests/spec must be updated.
+2. Make decision explicit in a single changelog entry and keep tests synchronized.
+3. Add CI guard that fails if default flag snapshot changes without an explicit test update.
+
+### Phase 5 — Dead Code / Trap Removal
+
+1. Remove misleading constants and bridge paths once migrations complete:
+   - legacy stop tile index constants if no longer semantically valid,
+   - runtime patch helpers for gameplay mutations,
+   - temporary shim setters in board component.
+2. Rename `IslandRunBoardPrototype` only when semantics are fully migrated (to avoid naming lying about runtime behavior).
+
+### Release Safety Controls
+
+- **Canary rollouts** for state-write pathway changes.
+- **Per-user rollback switch** to re-enable legacy writer for emergency recovery.
+- **Write-audit telemetry** (`source`, `runtimeVersion`, `field-set`) for every mutation.
+- **No mixed-mode releases**: each release either adds new canonical action coverage or removes one legacy path; never both broad changes at once.
+
+### Definition of Done
+
+Cleanup is complete only when all are true:
+
+1. No gameplay mutation path writes via `persistIslandRunRuntimeStatePatch` from UI surfaces.
+2. Board gameplay state reads come from one authority (`useIslandRunState`).
+3. Fallback wildcard hydration path is retired or strictly gated.
+4. Feature-flag defaults and consolidation tests are in sync.
+5. Existing user save data survives migration with zero-loss replay tests passing.
