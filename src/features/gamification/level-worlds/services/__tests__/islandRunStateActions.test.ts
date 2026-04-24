@@ -29,18 +29,31 @@ import {
 } from '../islandRunStateStore';
 import {
   applyActiveCompanion,
+  applyAudioEnabledMarker,
   applyBossTrialResolvedMarker,
+  applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
   applyCreatureTreatInventory,
   applyEggResolution,
   applyEggPlacement,
   applyFirstRunClaimed,
   applyFirstRunStarterRewards,
+  applyIslandShardsSet,
+  applyMarketOwnedBundleMarker,
+  applyOnboardingDisplayNameLoopMarker,
+  applyOnboardingCompleteMarker,
+  applyPerfectCompanionSnapshot,
   applyQaProgressionSnapshot,
+  applyShardClaimProgressMarker,
+  applyStoryPrologueSeenMarker,
+  applyWalletDiamondsDelta,
+  applyWalletDiamondsSet,
   applyStopBuildSpend,
   applyStopObjectiveProgress,
   applyStopTicketPayment,
   applyWalletShardsDelta,
+  applyWalletShieldsDelta,
+  applyWalletShieldsSet,
   applyEssenceAward,
   applyEssenceDeduct,
   applyEssenceDriftTick,
@@ -361,6 +374,297 @@ export const islandRunStateActionsTests: TestCase[] = [
   },
 
   {
+    name: 'applyWalletDiamondsSet writes an absolute diamonds value through the store commit path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, diamonds: 9 });
+
+      const result = applyWalletDiamondsSet({
+        session,
+        client: null,
+        nextDiamonds: 4,
+        triggerSource: 'test_diamonds_set',
+      });
+
+      assertEqual(result.changed, true, 'changed should be true when diamonds are updated');
+      assertEqual(result.record.diamonds, 4, 'diamonds should be set to target value');
+      assertEqual(result.record.runtimeVersion, 21, 'runtimeVersion should bump on diamonds commit');
+    },
+  },
+
+  {
+    name: 'applyWalletDiamondsSet is a no-op when next value equals current value',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, diamonds: 4 });
+
+      const result = applyWalletDiamondsSet({
+        session,
+        client: null,
+        nextDiamonds: 4,
+        triggerSource: 'test_diamonds_set_noop',
+      });
+
+      assertEqual(result.changed, false, 'changed should be false on no-op');
+      assertEqual(result.record.runtimeVersion, 20, 'runtimeVersion should not bump on no-op');
+    },
+  },
+
+  {
+    name: 'applyWalletDiamondsDelta applies positive/negative deltas with floor clamp',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, diamonds: 3 });
+
+      const award = applyWalletDiamondsDelta({
+        session,
+        client: null,
+        delta: 2,
+        triggerSource: 'test_diamonds_delta_award',
+      });
+      assertEqual(award.appliedDelta, 2, 'positive delta should apply');
+      assertEqual(award.record.diamonds, 5, 'diamonds should increase');
+      assertEqual(award.record.runtimeVersion, 21, 'runtimeVersion should bump on award');
+
+      const spend = applyWalletDiamondsDelta({
+        session,
+        client: null,
+        delta: -9,
+        triggerSource: 'test_diamonds_delta_spend',
+      });
+      assertEqual(spend.appliedDelta, -5, 'negative delta should clamp to available wallet');
+      assertEqual(spend.record.diamonds, 0, 'diamonds should floor at zero');
+      assertEqual(spend.record.runtimeVersion, 22, 'runtimeVersion should bump on spend');
+    },
+  },
+
+  {
+    name: 'applyMarketOwnedBundleMarker merges ownership for one island without mutating other islands',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 30,
+        marketOwnedBundlesByIsland: {
+          '1': { dice_bundle: false, heart_bundle: false, heart_boost_bundle: false },
+          '2': { dice_bundle: true, heart_bundle: false, heart_boost_bundle: false },
+        },
+      });
+
+      const record = applyMarketOwnedBundleMarker({
+        session,
+        client: null,
+        islandNumber: 1,
+        diceBundleOwned: true,
+        triggerSource: 'test_market_owned_bundle_marker',
+      });
+
+      assertEqual(record.marketOwnedBundlesByIsland['1']?.dice_bundle, true, 'current island ownership should update');
+      assertEqual(record.marketOwnedBundlesByIsland['2']?.dice_bundle, true, 'other island ownership should remain unchanged');
+      assertEqual(record.runtimeVersion, 31, 'runtimeVersion should bump on ownership update');
+    },
+  },
+
+  {
+    name: 'applyMarketOwnedBundleMarker is a no-op when ownership already matches',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 30,
+        marketOwnedBundlesByIsland: {
+          '1': { dice_bundle: true, heart_bundle: false, heart_boost_bundle: false },
+        },
+      });
+
+      const record = applyMarketOwnedBundleMarker({
+        session,
+        client: null,
+        islandNumber: 1,
+        diceBundleOwned: true,
+        triggerSource: 'test_market_owned_bundle_marker_noop',
+      });
+
+      assertEqual(record.runtimeVersion, 30, 'runtimeVersion should not change on no-op');
+    },
+  },
+
+  {
+    name: 'applyIslandShardsSet commits shard earn accumulation through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 40, islandShards: 12 });
+
+      const result = applyIslandShardsSet({
+        session,
+        client: null,
+        nextIslandShards: 17,
+        triggerSource: 'test_island_shards_set',
+      });
+
+      assertEqual(result.changed, true, 'changed should be true when cumulative shards update');
+      assertEqual(result.record.islandShards, 17, 'islandShards should update to new cumulative value');
+      assertEqual(result.record.runtimeVersion, 41, 'runtimeVersion should bump on shard accumulation');
+    },
+  },
+
+  {
+    name: 'applyIslandShardsSet is a no-op/idempotent when cumulative value is unchanged',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 40, islandShards: 17 });
+
+      const result = applyIslandShardsSet({
+        session,
+        client: null,
+        nextIslandShards: 17,
+        triggerSource: 'test_island_shards_set_noop',
+      });
+
+      assertEqual(result.changed, false, 'changed should be false on no-op');
+      assertEqual(result.record.runtimeVersion, 40, 'runtimeVersion should not bump on no-op');
+    },
+  },
+
+  {
+    name: 'applyShardClaimProgressMarker commits shard tier/count claim markers through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 40, shardTierIndex: 2, shardClaimCount: 5 });
+
+      const record = applyShardClaimProgressMarker({
+        session,
+        client: null,
+        nextShardTierIndex: 3,
+        nextShardClaimCount: 6,
+        triggerSource: 'test_shard_claim_progress',
+      });
+
+      assertEqual(record.shardTierIndex, 3, 'tier index should update');
+      assertEqual(record.shardClaimCount, 6, 'claim count should update');
+      assertEqual(record.runtimeVersion, 41, 'runtimeVersion should bump on claim marker commit');
+    },
+  },
+
+  {
+    name: 'applyShardClaimProgressMarker is no-op/idempotent and clamps invalid negatives',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 40, shardTierIndex: 0, shardClaimCount: 0 });
+
+      const clamped = applyShardClaimProgressMarker({
+        session,
+        client: null,
+        nextShardTierIndex: -10,
+        nextShardClaimCount: -5,
+        triggerSource: 'test_shard_claim_progress_clamp',
+      });
+      assertEqual(clamped.shardTierIndex, 0, 'negative tier index should clamp to 0');
+      assertEqual(clamped.shardClaimCount, 0, 'negative claim count should clamp to 0');
+      assertEqual(clamped.runtimeVersion, 40, 'clamped no-op should not bump runtimeVersion');
+
+      const noop = applyShardClaimProgressMarker({
+        session,
+        client: null,
+        nextShardTierIndex: 0,
+        nextShardClaimCount: 0,
+        triggerSource: 'test_shard_claim_progress_noop',
+      });
+      assertEqual(noop.runtimeVersion, 40, 'repeated identical input should remain no-op');
+    },
+  },
+
+  {
+    name: 'applyWalletShieldsSet writes an absolute shields value through the store commit path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, shields: 9 });
+
+      const result = applyWalletShieldsSet({
+        session,
+        client: null,
+        nextShields: 0,
+        triggerSource: 'test_shields_set_zero',
+      });
+
+      assertEqual(result.changed, true, 'changed should be true when shields are updated');
+      assertEqual(result.record.shields, 0, 'shields should be set to target value');
+      assertEqual(result.record.runtimeVersion, 21, 'runtimeVersion should bump on shields commit');
+
+      const snapshot = getIslandRunStateSnapshot(session);
+      assertEqual(snapshot.shields, 0, 'store mirror should reflect shields update');
+    },
+  },
+
+  {
+    name: 'applyWalletShieldsSet is a no-op when next value equals current value',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, shields: 0 });
+
+      const result = applyWalletShieldsSet({
+        session,
+        client: null,
+        nextShields: 0,
+        triggerSource: 'test_shields_set_noop',
+      });
+
+      assertEqual(result.changed, false, 'changed should be false on no-op');
+      assertEqual(result.record.runtimeVersion, 20, 'runtimeVersion should not bump on no-op');
+      assertEqual(result.record.shields, 0, 'shields should remain unchanged on no-op');
+    },
+  },
+
+  {
+    name: 'applyWalletShieldsDelta awards shields through the canonical store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, shields: 1 });
+
+      const result = applyWalletShieldsDelta({
+        session,
+        client: null,
+        delta: 1,
+        triggerSource: 'test_shields_delta_award',
+      });
+
+      assertEqual(result.appliedDelta, 1, 'appliedDelta should reflect awarded shields');
+      assertEqual(result.record.shields, 2, 'shields should increase by 1');
+      assertEqual(result.record.runtimeVersion, 21, 'runtimeVersion should bump on shield award');
+    },
+  },
+
+  {
+    name: 'applyWalletShieldsDelta spends shields with floor clamp at zero',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, shields: 1 });
+
+      const result = applyWalletShieldsDelta({
+        session,
+        client: null,
+        delta: -5,
+        triggerSource: 'test_shields_delta_spend',
+      });
+
+      assertEqual(result.appliedDelta, -1, 'appliedDelta should clamp spend to available shields');
+      assertEqual(result.record.shields, 0, 'shields should floor at zero');
+      assertEqual(result.record.runtimeVersion, 21, 'runtimeVersion should bump on shield spend');
+    },
+  },
+
+  {
     name: 'applyBossTrialResolvedMarker commits island marker fields through the store path',
     run: () => {
       resetAll();
@@ -448,6 +752,242 @@ export const islandRunStateActionsTests: TestCase[] = [
 
       assertEqual(result.firstRunClaimed, true, 'firstRunClaimed should be true');
       assertEqual(result.runtimeVersion, 6, 'runtimeVersion should bump once');
+    },
+  },
+
+  {
+    name: 'applyOnboardingCompleteMarker sets onboarding_complete profile metadata when missing',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      const updateUserCalls: Array<Record<string, unknown>> = [];
+      const client = {
+        auth: {
+          updateUser(payload: Record<string, unknown>) {
+            updateUserCalls.push(payload);
+            return Promise.resolve({ error: null });
+          },
+        },
+      } as unknown as import('@supabase/supabase-js').SupabaseClient;
+
+      const result = await applyOnboardingCompleteMarker({
+        session,
+        client,
+        triggerSource: 'test_onboarding_complete_marker_set',
+      });
+
+      assertEqual(result.ok, true, 'onboarding marker write should succeed');
+      assertEqual(result.changed, true, 'changed should be true when profile metadata is written');
+      assertEqual(updateUserCalls.length, 1, 'client.auth.updateUser should be called once');
+    },
+  },
+
+  {
+    name: 'applyOnboardingCompleteMarker is a no-op when onboarding_complete is already true',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      session.user = {
+        ...session.user,
+        user_metadata: {
+          ...(session.user.user_metadata ?? {}),
+          onboarding_complete: true,
+        },
+      };
+      const result = await applyOnboardingCompleteMarker({
+        session,
+        client: null,
+        triggerSource: 'test_onboarding_complete_marker_noop',
+      });
+
+      assertEqual(result.ok, true, 'no-op should still succeed');
+      assertEqual(result.changed, false, 'changed should be false on no-op');
+    },
+  },
+
+  {
+    name: 'applyOnboardingDisplayNameLoopMarker commits onboarding marker through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 8, onboardingDisplayNameLoopCompleted: false });
+
+      const result = applyOnboardingDisplayNameLoopMarker({
+        session,
+        client: null,
+        completed: true,
+        triggerSource: 'test_onboarding_display_loop_marker',
+      });
+
+      assertEqual(result.onboardingDisplayNameLoopCompleted, true, 'onboarding marker should update');
+      assertEqual(result.runtimeVersion, 9, 'runtimeVersion should bump once');
+    },
+  },
+
+  {
+    name: 'applyPerfectCompanionSnapshot commits snapshot fields through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 12,
+        perfectCompanionIds: [],
+        perfectCompanionReasons: {},
+        perfectCompanionComputedAtMs: null,
+        perfectCompanionModelVersion: null,
+        perfectCompanionComputedCycleIndex: null,
+        essence: 123,
+      });
+
+      const result = applyPerfectCompanionSnapshot({
+        session,
+        client: null,
+        perfectCompanionIds: ['creature_alpha', 'creature_beta'],
+        perfectCompanionReasons: {
+          creature_alpha: { strength: ['guardian'], weaknessSupport: [], zoneMatch: true },
+          creature_beta: { strength: ['visionary'], weaknessSupport: ['stress_fragility'], zoneMatch: false },
+        },
+        perfectCompanionComputedAtMs: 1710000000000,
+        perfectCompanionModelVersion: 'pc-model-v1',
+        perfectCompanionComputedCycleIndex: 3,
+        triggerSource: 'test_perfect_companion_snapshot_set',
+      });
+
+      assertEqual(result.changed, true, 'snapshot write should report changed=true');
+      assertEqual(result.record.runtimeVersion, 13, 'runtimeVersion should bump on snapshot write');
+      assertEqual(result.record.perfectCompanionIds.length, 2, 'perfect companion ids should be written');
+      assertEqual(result.record.perfectCompanionComputedCycleIndex, 3, 'cycle index marker should be written');
+    },
+  },
+
+  {
+    name: 'applyPerfectCompanionSnapshot is a no-op when snapshot is unchanged',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 12,
+        perfectCompanionIds: ['creature_alpha'],
+        perfectCompanionReasons: {
+          creature_alpha: { strength: ['guardian'], weaknessSupport: [], zoneMatch: true },
+        },
+        perfectCompanionComputedAtMs: 1710000000000,
+        perfectCompanionModelVersion: 'pc-model-v1',
+        perfectCompanionComputedCycleIndex: 3,
+      });
+
+      const result = applyPerfectCompanionSnapshot({
+        session,
+        client: null,
+        perfectCompanionIds: ['creature_alpha'],
+        perfectCompanionReasons: {
+          creature_alpha: { strength: ['guardian'], weaknessSupport: [], zoneMatch: true },
+        },
+        perfectCompanionComputedAtMs: 1710000000000,
+        perfectCompanionModelVersion: 'pc-model-v1',
+        perfectCompanionComputedCycleIndex: 3,
+        triggerSource: 'test_perfect_companion_snapshot_noop',
+      });
+
+      assertEqual(result.changed, false, 'identical snapshot should be no-op');
+      assertEqual(result.record.runtimeVersion, 12, 'runtimeVersion should not change on no-op');
+    },
+  },
+
+  {
+    name: 'applyPerfectCompanionSnapshot preserves unrelated fields while replacing companion snapshot payload',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 12,
+        essence: 777,
+        perfectCompanionIds: ['creature_alpha'],
+        perfectCompanionReasons: {
+          creature_alpha: { strength: ['guardian'], weaknessSupport: [], zoneMatch: true },
+        },
+        perfectCompanionComputedAtMs: 1710000000000,
+        perfectCompanionModelVersion: 'pc-model-v1',
+        perfectCompanionComputedCycleIndex: 3,
+      });
+
+      const result = applyPerfectCompanionSnapshot({
+        session,
+        client: null,
+        perfectCompanionIds: ['creature_gamma'],
+        perfectCompanionReasons: {
+          creature_gamma: { strength: ['builder'], weaknessSupport: ['decision_confusion'], zoneMatch: true },
+        },
+        perfectCompanionComputedAtMs: 1710001234567,
+        perfectCompanionModelVersion: 'pc-model-v2',
+        perfectCompanionComputedCycleIndex: 4,
+        triggerSource: 'test_perfect_companion_snapshot_replace',
+      });
+
+      assertEqual(result.record.essence, 777, 'unrelated gameplay fields should be preserved');
+      assertEqual(result.record.perfectCompanionIds[0], 'creature_gamma', 'snapshot payload should replace ids');
+      assertEqual(
+        Object.prototype.hasOwnProperty.call(result.record.perfectCompanionReasons, 'creature_alpha'),
+        false,
+        'snapshot payload should replace reasons map (no implicit merge)',
+      );
+    },
+  },
+
+  {
+    name: 'applyAudioEnabledMarker commits audio marker through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 8, audioEnabled: true });
+
+      const result = applyAudioEnabledMarker({
+        session,
+        client: null,
+        audioEnabled: false,
+        triggerSource: 'test_audio_marker',
+      });
+
+      assertEqual(result.audioEnabled, false, 'audio marker should update');
+      assertEqual(result.runtimeVersion, 9, 'runtimeVersion should bump once');
+    },
+  },
+
+  {
+    name: 'applyStoryPrologueSeenMarker commits story marker through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 8, storyPrologueSeen: false });
+
+      const result = applyStoryPrologueSeenMarker({
+        session,
+        client: null,
+        storyPrologueSeen: true,
+        triggerSource: 'test_story_marker',
+      });
+
+      assertEqual(result.storyPrologueSeen, true, 'story marker should update');
+      assertEqual(result.runtimeVersion, 9, 'runtimeVersion should bump once');
+    },
+  },
+
+  {
+    name: 'applyCompanionBonusLastVisitKeyMarker commits visit marker through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 8, companionBonusLastVisitKey: null });
+
+      const result = applyCompanionBonusLastVisitKeyMarker({
+        session,
+        client: null,
+        visitKey: '2:17',
+        triggerSource: 'test_companion_visit_marker',
+      });
+
+      assertEqual(result.companionBonusLastVisitKey, '2:17', 'visit marker should update');
+      assertEqual(result.runtimeVersion, 9, 'runtimeVersion should bump once');
     },
   },
 
