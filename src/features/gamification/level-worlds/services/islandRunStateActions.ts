@@ -385,6 +385,22 @@ export interface ApplyCompanionBonusLastVisitKeyMarkerOptions {
   triggerSource?: string;
 }
 
+export interface ApplyPerfectCompanionSnapshotOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  perfectCompanionIds: string[];
+  perfectCompanionReasons: IslandRunGameStateRecord['perfectCompanionReasons'];
+  perfectCompanionComputedAtMs: number;
+  perfectCompanionModelVersion: string;
+  perfectCompanionComputedCycleIndex: number;
+  triggerSource?: string;
+}
+
+export interface ApplyPerfectCompanionSnapshotResult {
+  record: IslandRunGameStateRecord;
+  changed: boolean;
+}
+
 /**
  * Withdraws essence from the wallet through the store commit path.
  *
@@ -966,6 +982,62 @@ export function applyCompanionBonusLastVisitKeyMarker(
     triggerSource: triggerSource ?? 'apply_companion_bonus_last_visit_key_marker',
   });
   return next;
+}
+
+/**
+ * Commits perfect-companion snapshot fields through the canonical store path.
+ */
+export function applyPerfectCompanionSnapshot(
+  options: ApplyPerfectCompanionSnapshotOptions,
+): ApplyPerfectCompanionSnapshotResult {
+  const {
+    session,
+    client,
+    perfectCompanionIds,
+    perfectCompanionReasons,
+    perfectCompanionComputedAtMs,
+    perfectCompanionModelVersion,
+    perfectCompanionComputedCycleIndex,
+    triggerSource,
+  } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const normalizedIds = Array.isArray(perfectCompanionIds)
+    ? perfectCompanionIds.filter((id): id is string => typeof id === 'string')
+    : [];
+  const normalizedReasons = perfectCompanionReasons ?? {};
+  const normalizedComputedAtMs =
+    Number.isFinite(perfectCompanionComputedAtMs) && perfectCompanionComputedAtMs > 0
+      ? Math.trunc(perfectCompanionComputedAtMs)
+      : current.perfectCompanionComputedAtMs;
+  const normalizedCycleIndex = Number.isFinite(perfectCompanionComputedCycleIndex)
+    ? Math.max(0, Math.trunc(perfectCompanionComputedCycleIndex))
+    : current.perfectCompanionComputedCycleIndex ?? 0;
+  const normalizedModelVersion = String(perfectCompanionModelVersion ?? '').trim();
+  const idsSame = JSON.stringify(current.perfectCompanionIds ?? []) === JSON.stringify(normalizedIds);
+  const reasonsSame =
+    JSON.stringify(current.perfectCompanionReasons ?? {}) === JSON.stringify(normalizedReasons ?? {});
+  const computedAtSame = (current.perfectCompanionComputedAtMs ?? null) === (normalizedComputedAtMs ?? null);
+  const modelVersionSame = (current.perfectCompanionModelVersion ?? null) === (normalizedModelVersion || null);
+  const cycleSame = (current.perfectCompanionComputedCycleIndex ?? null) === normalizedCycleIndex;
+  if (idsSame && reasonsSame && computedAtSame && modelVersionSame && cycleSame) {
+    return { record: current, changed: false };
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    perfectCompanionIds: normalizedIds,
+    perfectCompanionReasons: normalizedReasons,
+    perfectCompanionComputedAtMs: normalizedComputedAtMs,
+    perfectCompanionModelVersion: normalizedModelVersion || null,
+    perfectCompanionComputedCycleIndex: normalizedCycleIndex,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_perfect_companion_snapshot',
+  });
+  return { record: next, changed: true };
 }
 
 export interface RewardBarRuntimeState {

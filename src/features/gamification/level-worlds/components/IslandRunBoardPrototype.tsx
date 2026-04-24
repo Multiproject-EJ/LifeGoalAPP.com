@@ -98,6 +98,7 @@ import {
   applyMarketOwnedBundleMarker,
   applyOnboardingDisplayNameLoopMarker,
   applyOnboardingCompleteMarker,
+  applyPerfectCompanionSnapshot,
   applyQaProgressionSnapshot,
   applyShardClaimProgressMarker,
   applyStoryPrologueSeenMarker,
@@ -4917,26 +4918,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     );
     const computedAtMs = Date.now();
 
-    setRuntimeState((current) => ({
-      ...current,
+    const perfectCompanionSnapshot = applyPerfectCompanionSnapshot({
+      session,
+      client,
       perfectCompanionIds,
       perfectCompanionReasons,
       perfectCompanionComputedAtMs: computedAtMs,
       perfectCompanionModelVersion: PERFECT_COMPANION_MODEL_VERSION,
       perfectCompanionComputedCycleIndex: cycleIndex,
-    }));
-
-    void persistIslandRunRuntimeStatePatch({
-      session,
-      client,
-      patch: {
-        perfectCompanionIds,
-        perfectCompanionReasons,
-        perfectCompanionComputedAtMs: computedAtMs,
-        perfectCompanionModelVersion: PERFECT_COMPANION_MODEL_VERSION,
-        perfectCompanionComputedCycleIndex: cycleIndex,
-      },
+      triggerSource: 'perfect_companion_snapshot',
     });
+    setRuntimeState(perfectCompanionSnapshot.record);
   }, [
     client,
     cycleIndex,

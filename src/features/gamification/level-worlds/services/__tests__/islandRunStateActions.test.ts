@@ -42,6 +42,7 @@ import {
   applyMarketOwnedBundleMarker,
   applyOnboardingDisplayNameLoopMarker,
   applyOnboardingCompleteMarker,
+  applyPerfectCompanionSnapshot,
   applyQaProgressionSnapshot,
   applyShardClaimProgressMarker,
   applyStoryPrologueSeenMarker,
@@ -820,6 +821,116 @@ export const islandRunStateActionsTests: TestCase[] = [
 
       assertEqual(result.onboardingDisplayNameLoopCompleted, true, 'onboarding marker should update');
       assertEqual(result.runtimeVersion, 9, 'runtimeVersion should bump once');
+    },
+  },
+
+  {
+    name: 'applyPerfectCompanionSnapshot commits snapshot fields through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 12,
+        perfectCompanionIds: [],
+        perfectCompanionReasons: {},
+        perfectCompanionComputedAtMs: null,
+        perfectCompanionModelVersion: null,
+        perfectCompanionComputedCycleIndex: null,
+        essence: 123,
+      });
+
+      const result = applyPerfectCompanionSnapshot({
+        session,
+        client: null,
+        perfectCompanionIds: ['creature_alpha', 'creature_beta'],
+        perfectCompanionReasons: {
+          creature_alpha: { strength: ['guardian'], weaknessSupport: [], zoneMatch: true },
+          creature_beta: { strength: ['visionary'], weaknessSupport: ['stress_fragility'], zoneMatch: false },
+        },
+        perfectCompanionComputedAtMs: 1710000000000,
+        perfectCompanionModelVersion: 'pc-model-v1',
+        perfectCompanionComputedCycleIndex: 3,
+        triggerSource: 'test_perfect_companion_snapshot_set',
+      });
+
+      assertEqual(result.changed, true, 'snapshot write should report changed=true');
+      assertEqual(result.record.runtimeVersion, 13, 'runtimeVersion should bump on snapshot write');
+      assertEqual(result.record.perfectCompanionIds.length, 2, 'perfect companion ids should be written');
+      assertEqual(result.record.perfectCompanionComputedCycleIndex, 3, 'cycle index marker should be written');
+    },
+  },
+
+  {
+    name: 'applyPerfectCompanionSnapshot is a no-op when snapshot is unchanged',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 12,
+        perfectCompanionIds: ['creature_alpha'],
+        perfectCompanionReasons: {
+          creature_alpha: { strength: ['guardian'], weaknessSupport: [], zoneMatch: true },
+        },
+        perfectCompanionComputedAtMs: 1710000000000,
+        perfectCompanionModelVersion: 'pc-model-v1',
+        perfectCompanionComputedCycleIndex: 3,
+      });
+
+      const result = applyPerfectCompanionSnapshot({
+        session,
+        client: null,
+        perfectCompanionIds: ['creature_alpha'],
+        perfectCompanionReasons: {
+          creature_alpha: { strength: ['guardian'], weaknessSupport: [], zoneMatch: true },
+        },
+        perfectCompanionComputedAtMs: 1710000000000,
+        perfectCompanionModelVersion: 'pc-model-v1',
+        perfectCompanionComputedCycleIndex: 3,
+        triggerSource: 'test_perfect_companion_snapshot_noop',
+      });
+
+      assertEqual(result.changed, false, 'identical snapshot should be no-op');
+      assertEqual(result.record.runtimeVersion, 12, 'runtimeVersion should not change on no-op');
+    },
+  },
+
+  {
+    name: 'applyPerfectCompanionSnapshot preserves unrelated fields while replacing companion snapshot payload',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 12,
+        essence: 777,
+        perfectCompanionIds: ['creature_alpha'],
+        perfectCompanionReasons: {
+          creature_alpha: { strength: ['guardian'], weaknessSupport: [], zoneMatch: true },
+        },
+        perfectCompanionComputedAtMs: 1710000000000,
+        perfectCompanionModelVersion: 'pc-model-v1',
+        perfectCompanionComputedCycleIndex: 3,
+      });
+
+      const result = applyPerfectCompanionSnapshot({
+        session,
+        client: null,
+        perfectCompanionIds: ['creature_gamma'],
+        perfectCompanionReasons: {
+          creature_gamma: { strength: ['builder'], weaknessSupport: ['decision_confusion'], zoneMatch: true },
+        },
+        perfectCompanionComputedAtMs: 1710001234567,
+        perfectCompanionModelVersion: 'pc-model-v2',
+        perfectCompanionComputedCycleIndex: 4,
+        triggerSource: 'test_perfect_companion_snapshot_replace',
+      });
+
+      assertEqual(result.record.essence, 777, 'unrelated gameplay fields should be preserved');
+      assertEqual(result.record.perfectCompanionIds[0], 'creature_gamma', 'snapshot payload should replace ids');
+      assertEqual(
+        Object.prototype.hasOwnProperty.call(result.record.perfectCompanionReasons, 'creature_alpha'),
+        false,
+        'snapshot payload should replace reasons map (no implicit merge)',
+      );
     },
   },
 
