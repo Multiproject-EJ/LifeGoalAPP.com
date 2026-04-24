@@ -94,12 +94,14 @@ import {
   applyEggPlacement,
   applyFirstRunClaimed,
   applyFirstRunStarterRewards,
+  applyMarketOwnedBundleMarker,
   applyOnboardingDisplayNameLoopMarker,
   applyQaProgressionSnapshot,
   applyStoryPrologueSeenMarker,
   applyStopBuildSpend,
   applyStopObjectiveProgress,
   applyStopTicketPayment,
+  applyWalletDiamondsSet,
   applyWalletShardsDelta,
   applyEssenceAward,
   applyEssenceDeduct,
@@ -2655,12 +2657,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
     if (runtimeState.diamonds === diamonds) return;
-    void persistIslandRunRuntimeStatePatch({
+    const result = applyWalletDiamondsSet({
       session,
       client,
-      patch: { diamonds },
+      nextDiamonds: diamonds,
+      triggerSource: 'sync_diamonds_marker_effect',
     });
-    setRuntimeState((current) => ({ ...current, diamonds }));
+    setRuntimeState(result.record);
   }, [client, diamonds, hasHydratedRuntimeState, runtimeState.diamonds, session]);
 
   // M19A: persist market owned state to runtime state map (and mirror legacy local storage key for compatibility)
@@ -2677,25 +2680,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     ) {
       return;
     }
-    const patch = {
-      [islandKey]: {
-        dice_bundle: marketOwnedBundles.dice_bundle,
-        heart_bundle: false,
-        heart_boost_bundle: false,
-      },
-    };
-    void persistIslandRunRuntimeStatePatch({
+    const nextRecord = applyMarketOwnedBundleMarker({
       session,
       client,
-      patch: { marketOwnedBundlesByIsland: patch },
+      islandNumber,
+      diceBundleOwned: marketOwnedBundles.dice_bundle,
+      triggerSource: 'sync_market_owned_bundle_marker_effect',
     });
-    setRuntimeState((current) => ({
-      ...current,
-      marketOwnedBundlesByIsland: {
-        ...current.marketOwnedBundlesByIsland,
-        ...patch,
-      },
-    }));
+    setRuntimeState(nextRecord);
   }, [client, hasHydratedRuntimeState, islandNumber, marketOwnedBundles, runtimeState.marketOwnedBundlesByIsland, session]);
 
   useEffect(() => {

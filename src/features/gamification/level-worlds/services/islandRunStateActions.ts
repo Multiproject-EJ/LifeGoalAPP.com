@@ -213,6 +213,40 @@ export interface ApplyWalletShardsDeltaResult {
   appliedDelta: number;
 }
 
+export interface ApplyWalletDiamondsSetOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  /** Absolute diamonds wallet target. Clamped to integer >= 0. */
+  nextDiamonds: number;
+  triggerSource?: string;
+}
+
+export interface ApplyWalletDiamondsSetResult {
+  record: IslandRunGameStateRecord;
+  changed: boolean;
+}
+
+export interface ApplyWalletDiamondsDeltaOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  /** Positive = earn, negative = spend. */
+  delta: number;
+  triggerSource?: string;
+}
+
+export interface ApplyWalletDiamondsDeltaResult {
+  record: IslandRunGameStateRecord;
+  appliedDelta: number;
+}
+
+export interface ApplyMarketOwnedBundleMarkerOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  islandNumber: number;
+  diceBundleOwned: boolean;
+  triggerSource?: string;
+}
+
 export interface ApplyWalletShieldsSetOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -378,6 +412,97 @@ export function applyWalletShardsDelta(options: ApplyWalletShardsDeltaOptions): 
     triggerSource: triggerSource ?? 'apply_wallet_shards_delta',
   });
   return { record: next, appliedDelta };
+}
+
+/**
+ * Sets the diamonds wallet to an absolute value through the canonical store path.
+ */
+export function applyWalletDiamondsSet(options: ApplyWalletDiamondsSetOptions): ApplyWalletDiamondsSetResult {
+  const { session, client, nextDiamonds, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const parsed = Number.isFinite(nextDiamonds) ? Math.max(0, Math.trunc(nextDiamonds)) : current.diamonds;
+  if (parsed === current.diamonds) return { record: current, changed: false };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    diamonds: parsed,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_wallet_diamonds_set',
+  });
+  return { record: next, changed: true };
+}
+
+/**
+ * Applies a diamonds wallet delta through the canonical store path.
+ */
+export function applyWalletDiamondsDelta(options: ApplyWalletDiamondsDeltaOptions): ApplyWalletDiamondsDeltaResult {
+  const { session, client, delta, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const parsedDelta = Number.isFinite(delta) ? Math.trunc(delta) : 0;
+  if (parsedDelta === 0) return { record: current, appliedDelta: 0 };
+  const nextDiamonds = Math.max(0, current.diamonds + parsedDelta);
+  const appliedDelta = nextDiamonds - current.diamonds;
+  if (appliedDelta === 0) return { record: current, appliedDelta: 0 };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    diamonds: nextDiamonds,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_wallet_diamonds_delta',
+  });
+  return { record: next, appliedDelta };
+}
+
+/**
+ * Commits current-island market bundle ownership marker through the canonical
+ * store path.
+ *
+ * Preserves the existing board semantics:
+ * - updates only the current island key,
+ * - mirrors `dice_bundle` ownership,
+ * - pins `heart_bundle` and `heart_boost_bundle` false.
+ */
+export function applyMarketOwnedBundleMarker(options: ApplyMarketOwnedBundleMarkerOptions): IslandRunGameStateRecord {
+  const { session, client, islandNumber, diceBundleOwned, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const islandKey = String(Math.max(1, Math.trunc(islandNumber)));
+  const currentEntry = current.marketOwnedBundlesByIsland[islandKey];
+  const nextEntry = {
+    dice_bundle: Boolean(diceBundleOwned),
+    heart_bundle: false,
+    heart_boost_bundle: false,
+  };
+  if (
+    currentEntry
+    && currentEntry.dice_bundle === nextEntry.dice_bundle
+    && currentEntry.heart_bundle === nextEntry.heart_bundle
+    && currentEntry.heart_boost_bundle === nextEntry.heart_boost_bundle
+  ) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    marketOwnedBundlesByIsland: {
+      ...current.marketOwnedBundlesByIsland,
+      [islandKey]: nextEntry,
+    },
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_market_owned_bundle_marker',
+  });
+  return next;
 }
 
 /**

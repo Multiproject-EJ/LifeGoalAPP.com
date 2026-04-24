@@ -38,9 +38,12 @@ import {
   applyEggPlacement,
   applyFirstRunClaimed,
   applyFirstRunStarterRewards,
+  applyMarketOwnedBundleMarker,
   applyOnboardingDisplayNameLoopMarker,
   applyQaProgressionSnapshot,
   applyStoryPrologueSeenMarker,
+  applyWalletDiamondsDelta,
+  applyWalletDiamondsSet,
   applyStopBuildSpend,
   applyStopObjectiveProgress,
   applyStopTicketPayment,
@@ -363,6 +366,125 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.appliedDelta, -2, 'appliedDelta should clamp spend to available wallet');
       assertEqual(result.record.shards, 0, 'shards should floor at zero');
       assertEqual(result.record.runtimeVersion, 21, 'runtimeVersion should bump on shard spend');
+    },
+  },
+
+  {
+    name: 'applyWalletDiamondsSet writes an absolute diamonds value through the store commit path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, diamonds: 9 });
+
+      const result = applyWalletDiamondsSet({
+        session,
+        client: null,
+        nextDiamonds: 4,
+        triggerSource: 'test_diamonds_set',
+      });
+
+      assertEqual(result.changed, true, 'changed should be true when diamonds are updated');
+      assertEqual(result.record.diamonds, 4, 'diamonds should be set to target value');
+      assertEqual(result.record.runtimeVersion, 21, 'runtimeVersion should bump on diamonds commit');
+    },
+  },
+
+  {
+    name: 'applyWalletDiamondsSet is a no-op when next value equals current value',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, diamonds: 4 });
+
+      const result = applyWalletDiamondsSet({
+        session,
+        client: null,
+        nextDiamonds: 4,
+        triggerSource: 'test_diamonds_set_noop',
+      });
+
+      assertEqual(result.changed, false, 'changed should be false on no-op');
+      assertEqual(result.record.runtimeVersion, 20, 'runtimeVersion should not bump on no-op');
+    },
+  },
+
+  {
+    name: 'applyWalletDiamondsDelta applies positive/negative deltas with floor clamp',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, diamonds: 3 });
+
+      const award = applyWalletDiamondsDelta({
+        session,
+        client: null,
+        delta: 2,
+        triggerSource: 'test_diamonds_delta_award',
+      });
+      assertEqual(award.appliedDelta, 2, 'positive delta should apply');
+      assertEqual(award.record.diamonds, 5, 'diamonds should increase');
+      assertEqual(award.record.runtimeVersion, 21, 'runtimeVersion should bump on award');
+
+      const spend = applyWalletDiamondsDelta({
+        session,
+        client: null,
+        delta: -9,
+        triggerSource: 'test_diamonds_delta_spend',
+      });
+      assertEqual(spend.appliedDelta, -5, 'negative delta should clamp to available wallet');
+      assertEqual(spend.record.diamonds, 0, 'diamonds should floor at zero');
+      assertEqual(spend.record.runtimeVersion, 22, 'runtimeVersion should bump on spend');
+    },
+  },
+
+  {
+    name: 'applyMarketOwnedBundleMarker merges ownership for one island without mutating other islands',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 30,
+        marketOwnedBundlesByIsland: {
+          '1': { dice_bundle: false, heart_bundle: false, heart_boost_bundle: false },
+          '2': { dice_bundle: true, heart_bundle: false, heart_boost_bundle: false },
+        },
+      });
+
+      const record = applyMarketOwnedBundleMarker({
+        session,
+        client: null,
+        islandNumber: 1,
+        diceBundleOwned: true,
+        triggerSource: 'test_market_owned_bundle_marker',
+      });
+
+      assertEqual(record.marketOwnedBundlesByIsland['1']?.dice_bundle, true, 'current island ownership should update');
+      assertEqual(record.marketOwnedBundlesByIsland['2']?.dice_bundle, true, 'other island ownership should remain unchanged');
+      assertEqual(record.runtimeVersion, 31, 'runtimeVersion should bump on ownership update');
+    },
+  },
+
+  {
+    name: 'applyMarketOwnedBundleMarker is a no-op when ownership already matches',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 30,
+        marketOwnedBundlesByIsland: {
+          '1': { dice_bundle: true, heart_bundle: false, heart_boost_bundle: false },
+        },
+      });
+
+      const record = applyMarketOwnedBundleMarker({
+        session,
+        client: null,
+        islandNumber: 1,
+        diceBundleOwned: true,
+        triggerSource: 'test_market_owned_bundle_marker_noop',
+      });
+
+      assertEqual(record.runtimeVersion, 30, 'runtimeVersion should not change on no-op');
     },
   },
 
