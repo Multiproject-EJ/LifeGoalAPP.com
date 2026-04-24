@@ -41,6 +41,8 @@ import {
   applyStopObjectiveProgress,
   applyStopTicketPayment,
   applyWalletShardsDelta,
+  applyWalletShieldsDelta,
+  applyWalletShieldsSet,
   applyEssenceAward,
   applyEssenceDeduct,
   applyEssenceDriftTick,
@@ -357,6 +359,89 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.appliedDelta, -2, 'appliedDelta should clamp spend to available wallet');
       assertEqual(result.record.shards, 0, 'shards should floor at zero');
       assertEqual(result.record.runtimeVersion, 21, 'runtimeVersion should bump on shard spend');
+    },
+  },
+
+  {
+    name: 'applyWalletShieldsSet writes an absolute shields value through the store commit path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, shields: 9 });
+
+      const result = applyWalletShieldsSet({
+        session,
+        client: null,
+        nextShields: 0,
+        triggerSource: 'test_shields_set_zero',
+      });
+
+      assertEqual(result.changed, true, 'changed should be true when shields are updated');
+      assertEqual(result.record.shields, 0, 'shields should be set to target value');
+      assertEqual(result.record.runtimeVersion, 21, 'runtimeVersion should bump on shields commit');
+
+      const snapshot = getIslandRunStateSnapshot(session);
+      assertEqual(snapshot.shields, 0, 'store mirror should reflect shields update');
+    },
+  },
+
+  {
+    name: 'applyWalletShieldsSet is a no-op when next value equals current value',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, shields: 0 });
+
+      const result = applyWalletShieldsSet({
+        session,
+        client: null,
+        nextShields: 0,
+        triggerSource: 'test_shields_set_noop',
+      });
+
+      assertEqual(result.changed, false, 'changed should be false on no-op');
+      assertEqual(result.record.runtimeVersion, 20, 'runtimeVersion should not bump on no-op');
+      assertEqual(result.record.shields, 0, 'shields should remain unchanged on no-op');
+    },
+  },
+
+  {
+    name: 'applyWalletShieldsDelta awards shields through the canonical store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, shields: 1 });
+
+      const result = applyWalletShieldsDelta({
+        session,
+        client: null,
+        delta: 1,
+        triggerSource: 'test_shields_delta_award',
+      });
+
+      assertEqual(result.appliedDelta, 1, 'appliedDelta should reflect awarded shields');
+      assertEqual(result.record.shields, 2, 'shields should increase by 1');
+      assertEqual(result.record.runtimeVersion, 21, 'runtimeVersion should bump on shield award');
+    },
+  },
+
+  {
+    name: 'applyWalletShieldsDelta spends shields with floor clamp at zero',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, shields: 1 });
+
+      const result = applyWalletShieldsDelta({
+        session,
+        client: null,
+        delta: -5,
+        triggerSource: 'test_shields_delta_spend',
+      });
+
+      assertEqual(result.appliedDelta, -1, 'appliedDelta should clamp spend to available shields');
+      assertEqual(result.record.shields, 0, 'shields should floor at zero');
+      assertEqual(result.record.runtimeVersion, 21, 'runtimeVersion should bump on shield spend');
     },
   },
 
