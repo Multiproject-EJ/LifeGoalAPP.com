@@ -5139,94 +5139,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setIsCollectingCreature(false);
   };
 
-  const handleSellEggForRewards = () => {
-    if (!activeEgg || eggStage < 4) return;
-    // Guard: prevent selling if the egg slot is already used (collected/sold)
-    if (islandEggSlotUsed) return;
-    const resolvedEgg = activeEgg;
-    const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg);
-    const bundle = rollEggRewards(resolvedEgg.tier, resolvedEgg.setAtMs);
-    const nowTs = Date.now();
-    const islandKey = String(islandNumber);
-    const existingEntry = runtimeState.perIslandEggs?.[islandKey];
-    const nextCompletedStops = ensureStopCompleted(completedStops, 'hatchery');
-    const soldEntry: PerIslandEggEntry = existingEntry
-      ? { ...existingEntry, status: 'sold', openedAt: nowTs, location: 'island' }
-      : {
-          tier: resolvedEgg.tier,
-          setAtMs: resolvedEgg.setAtMs,
-          hatchAtMs: resolvedEgg.hatchAtMs,
-          status: 'sold',
-          openedAt: nowTs,
-          location: 'island',
-        };
-    const specialtySellBonusEssence = activeCompanionSpecialty?.effect === 'sell_bonus_essence'
-      ? Math.max(0, Math.floor((bundle.essenceDelta * activeCompanionSpecialty.amount) / 100))
-      : 0;
-    // Hearts/coins retired — creature sell now awards essence + shards
-    const totalSellEssence = bundle.essenceDelta + specialtySellBonusEssence;
-    const nextEssence = runtimeStateRef.current.essence + totalSellEssence;
-    const nextEssenceLifetimeEarned = runtimeStateRef.current.essenceLifetimeEarned + totalSellEssence;
-    if (bundle.spinTokensDelta > 0) setSpinTokens((t) => t + bundle.spinTokensDelta);
-    if (bundle.diamondsDelta > 0) setDiamonds((d) => d + bundle.diamondsDelta);
-    if (bundle.shardsDelta > 0) awardWalletShards(bundle.shardsDelta);
-    awardShards('egg_open');
-    awardWalletShards(2);
-    setActiveEgg(null);
-    playIslandRunSound('market_purchase_success');
-    triggerIslandRunHaptic('market_purchase_success');
-    const rewardParts: string[] = [];
-    if (bundle.essenceDelta > 0) rewardParts.push(`+${bundle.essenceDelta} 🟣`);
-    if (specialtySellBonusEssence > 0) rewardParts.push(`+${specialtySellBonusEssence} 🟣 specialty`);
-    if (bundle.shardsDelta > 0) rewardParts.push(`+${bundle.shardsDelta} 🔮 shards`);
-    if (bundle.diamondsDelta > 0) rewardParts.push(`+${bundle.diamondsDelta} 💎`);
-    if (bundle.spinTokensDelta > 0) rewardParts.push(`+${bundle.spinTokensDelta} 🌀 spin`);
-    setLandingText(`Sold ${creature.name}. Rewards: ${rewardParts.join(', ') || 'applied'}.`);
-    void recordTelemetryEvent({
-      userId: session.user.id,
-      eventType: 'economy_earn',
-      metadata: {
-        stage: 'island_creature_sold',
-        island_number: islandNumber,
-        tier: resolvedEgg.tier,
-        creature_id: creature.id,
-        creature_name: creature.name,
-        reward_essence: bundle.essenceDelta,
-        specialty_bonus_essence: specialtySellBonusEssence,
-        reward_shards: bundle.shardsDelta,
-        reward_spin_tokens: bundle.spinTokensDelta,
-        reward_diamonds: bundle.diamondsDelta,
-      },
-    });
-    logIslandRunEntryDebug('island_creature_sold', {
-      islandNumber,
-      tier: resolvedEgg.tier,
-      creatureId: creature.id,
-      creatureName: creature.name,
-      rewardEssence: bundle.essenceDelta,
-      specialtyBonusEssence: specialtySellBonusEssence,
-      rewardShards: bundle.shardsDelta,
-      rewardSpinTokens: bundle.spinTokensDelta,
-      rewardDiamonds: bundle.diamondsDelta,
-    });
-    const nextRecord = applyEggResolution({
-      session,
-      client,
-      islandNumber,
-      perIslandEggEntry: soldEntry,
-      completedStops: nextCompletedStops,
-      essence: nextEssence,
-      essenceLifetimeEarned: nextEssenceLifetimeEarned,
-      triggerSource: 'island_board_sell_egg_rewards',
-    });
-    setCompletedStops(nextCompletedStops);
-    markHatcheryStopCompleteInV2();
-    setRuntimeState(nextRecord);
-    if (activeStopId === 'hatchery') {
-      setActiveStopId(null);
-    }
-  };
-
   /** Egg sell with player choice: shards or dice */
   const handleSellEggForChoice = (choice: EggSellRewardChoice) => {
     if (!activeEgg || eggStage < 4) return;
@@ -5454,12 +5366,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setEncounterRewardData(reward);
     setEncounterStep('reward');
     applyEncounterReward(reward);
-  };
-
-  const handleResolveEncounter = () => {
-    if (encounterResolved) return;
-    // Legacy path — now delegates to challenge complete flow
-    handleEncounterChallengeComplete();
   };
 
   const handleResolveBossTrial = () => {
