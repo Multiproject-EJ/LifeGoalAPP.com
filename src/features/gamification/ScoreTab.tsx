@@ -1,3 +1,15 @@
+/**
+ * ISLAND RUN ARCHITECTURE WARNING
+ *
+ * This UI surface must not introduce new direct gameplay-state mutation paths.
+ * Prefer canonical Island Run actions for gameplay writes.
+ *
+ * Forbidden for new code:
+ * - direct gameplay writes via persistIslandRunRuntimeStatePatch
+ * - new runtimeState gameplay mirrors
+ *
+ * See: docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md
+ */
 import { useEffect, useMemo, useState, useCallback, type FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type {

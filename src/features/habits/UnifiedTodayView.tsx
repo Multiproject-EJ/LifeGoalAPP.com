@@ -6,6 +6,11 @@
  * 
  * This component is the single entry point for the unified habit tracking
  * experience in the PWA.
+ *
+ * ISLAND RUN ARCHITECTURE WARNING
+ * Do not add new direct gameplay writes via persistIslandRunRuntimeStatePatch.
+ * Gameplay state writes should use canonical Island Run action services.
+ * See: docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
