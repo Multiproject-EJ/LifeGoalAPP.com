@@ -12,6 +12,7 @@ import { islandRunContractV2EssenceBuildTests } from './islandRunContractV2Essen
 import { islandRunContractV2RewardBarTests } from './islandRunContractV2RewardBar.test';
 import { islandRunProgressionTests } from './islandRunProgression.test';
 import { islandRunRuntimeStateIntegrationTests } from './islandRunRuntimeState.integration.test';
+import { islandRunRuntimeRegenTests } from './islandRunRuntimeRegen.test';
 import { islandRunTimerProgressionTests } from './islandRunTimerProgression.test';
 import { islandRunStopCompletionTests } from './islandRunStopCompletion.test';
 import { islandRunStopStreakTests } from './islandRunStopStreak.test';
@@ -54,6 +55,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunContractV2RewardBar', tests: islandRunContractV2RewardBarTests },
   { label: 'islandRunProgression', tests: islandRunProgressionTests },
   { label: 'islandRunRuntimeStateIntegration', tests: islandRunRuntimeStateIntegrationTests },
+  { label: 'islandRunRuntimeRegen', tests: islandRunRuntimeRegenTests },
   { label: 'islandRunTimerProgression', tests: islandRunTimerProgressionTests },
   { label: 'islandRunStopCompletion', tests: islandRunStopCompletionTests },
   { label: 'islandRunStopStreak', tests: islandRunStopStreakTests },
