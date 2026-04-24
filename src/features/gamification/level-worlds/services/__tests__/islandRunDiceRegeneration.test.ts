@@ -113,7 +113,7 @@ export const islandRunDiceRegenerationTests: TestCase[] = [
     },
   },
   {
-    name: 'non-batching baseline: long elapsed window still grants exactly one die',
+    name: 'offline/background catch-up grants one die per elapsed interval',
     run: () => {
       const state = buildInitialDiceRegenState(1, 0);
       const result = applyDiceRegeneration({
@@ -122,8 +122,8 @@ export const islandRunDiceRegenerationTests: TestCase[] = [
         playerLevel: 1,
         nowMs: 24 * 60 * 1000, // 3 intervals
       });
-      assertEqual(result.diceAdded, 1, 'Expected one die grant per apply call');
-      assertEqual(result.dicePool, 1, 'Expected pool +1 after long elapsed window');
+      assertEqual(result.diceAdded, 3, 'Expected +3 across three elapsed intervals');
+      assertEqual(result.dicePool, 3, 'Expected pool +3 after long elapsed window');
     },
   },
   {

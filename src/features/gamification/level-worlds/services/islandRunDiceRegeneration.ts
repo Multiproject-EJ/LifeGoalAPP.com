@@ -114,7 +114,8 @@ export function applyDiceRegeneration(params: {
     };
   }
 
-  if (elapsedMs < intervalMs) {
+  const fullTicks = Math.floor(elapsedMs / intervalMs);
+  if (fullTicks <= 0) {
     return {
       dicePool: safePool,
       regenState: {
@@ -126,10 +127,11 @@ export function applyDiceRegeneration(params: {
     };
   }
 
-  // Strict non-batching baseline: one die per completed interval, timer resets
-  // to "now" after each grant.
-  const diceAdded = 1;
-  const nextLastRegenAtMs = safeNow;
+  // Catch-up semantics: one die per elapsed interval, capped by remaining
+  // deficit to maxDice. This allows correct offline/background accumulation.
+  const deficit = Math.max(0, config.maxDice - safePool);
+  const diceAdded = Math.min(deficit, fullTicks);
+  const nextLastRegenAtMs = params.regenState.lastRegenAtMs + (diceAdded * intervalMs);
 
   return {
     dicePool: safePool + diceAdded,
