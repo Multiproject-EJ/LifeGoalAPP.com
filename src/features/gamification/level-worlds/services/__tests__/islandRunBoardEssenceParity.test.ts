@@ -66,7 +66,7 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
     },
   },
   {
-    name: 'story reward duplicate handler remains removed; only IslandStoryReader onRewardClaim path is kept',
+    name: 'story and sanctuary duplicate handlers remain removed; active sanctuary/story wiring is kept',
     run: async () => {
       const source = await readBoardSource();
       assert(
@@ -76,6 +76,14 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       assert(
         source.includes('onRewardClaim={sanctuaryHandlers.storyRewardClaim}'),
         'IslandStoryReader should remain wired to sanctuaryHandlers.storyRewardClaim.',
+      );
+      assert(
+        !source.includes('const handleClaimSanctuaryBondReward ='),
+        'Duplicate sanctuary bond-claim handler should remain removed to prevent split wiring.',
+      );
+      assert(
+        source.includes('onClick={() => sanctuaryHandlers.claimBondReward('),
+        'Sanctuary claim UI should remain wired to sanctuaryHandlers.claimBondReward.',
       );
     },
   },

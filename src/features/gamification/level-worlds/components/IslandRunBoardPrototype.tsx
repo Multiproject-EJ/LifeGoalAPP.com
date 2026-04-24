@@ -6840,64 +6840,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     playIslandRunSound('encounter_resolve');
     triggerIslandRunHaptic('reward_claim');
   };
-
-
-  const handleClaimSanctuaryBondReward = (creatureId: string, milestoneLevel: number) => {
-    const target = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
-    const reward = getBondMilestoneReward(milestoneLevel);
-    if (!target || !reward) return;
-    const unclaimedMilestones = getUnclaimedBondMilestones(target);
-    if (!unclaimedMilestones.includes(milestoneLevel)) return;
-
-    setCreatureCollection(claimCreatureBondMilestoneForUser({
-      userId: session.user.id,
-      creatureId,
-      milestoneLevel,
-    }));
-
-    const rewardEssence = reward.essence ?? 0;
-    const rewardDice = reward.dice ?? 0;
-    const rewardSpinTokens = reward.spinTokens ?? 0;
-
-    if (rewardEssence > 0) {
-      awardContractV2Essence(rewardEssence, 'sanctuary_bond_reward_claim');
-    }
-    if (rewardDice > 0) {
-      setDicePool((current) => current + rewardDice);
-    }
-    if (rewardSpinTokens > 0) {
-      setSpinTokens((current) => current + rewardSpinTokens);
-    }
-
-    void recordTelemetryEvent({
-      userId: session.user.id,
-      eventType: 'economy_earn',
-      metadata: {
-        stage: 'sanctuary_bond_reward_claimed',
-        island_number: islandNumber,
-        creature_id: target.creature.id,
-        creature_name: target.creature.name,
-        milestone_level: milestoneLevel,
-        reward_essence: rewardEssence,
-        reward_dice: rewardDice,
-        reward_spin_tokens: rewardSpinTokens,
-      },
-    });
-    logIslandRunEntryDebug('sanctuary_bond_reward_claimed', {
-      islandNumber,
-      creatureId: target.creature.id,
-      creatureName: target.creature.name,
-      milestoneLevel,
-      rewardEssence,
-      rewardDice,
-      rewardSpinTokens,
-    });
-    setSanctuaryFeedback(`${target.creature.name} claimed ${reward.label}: ${reward.summary}.`);
-    setLandingText(`${target.creature.name} bond milestone claimed: ${reward.summary}.`);
-    playIslandRunSound('market_purchase_success');
-    triggerIslandRunHaptic('reward_claim');
-  };
-
   const handleCloseStoryReader = () => {
     setShowStoryReader(false);
     try {
