@@ -25,4 +25,4 @@
 export const ISLAND_RUN_DEFAULT_STARTING_DICE = 30;
 
 /** Dice cost per roll — always flat, regardless of island or level. */
-export const ISLAND_RUN_DICE_PER_ROLL = 2;
+export const ISLAND_RUN_DICE_PER_ROLL = 1;

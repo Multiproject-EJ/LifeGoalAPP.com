@@ -52,3 +52,23 @@ Both footer countdown and out-of-dice modal depend on `runtimeState.diceRegenSta
 4. Keep countdown as pure UI over persisted regen state (already implemented).
 5. Remove or align stale `ISLAND_RUN_DICE_PER_ROLL` constant and fix debug panel `playerLevel` wiring.
 
+## Implementation progress (2026-04-24)
+
+### ✅ Completed in this branch
+1. **Integrated passive dice regen into board runtime**:
+   - Added `applyPassiveDiceRegen(...)` in `IslandRunBoardPrototype.tsx`.
+   - Bootstraps regen state when missing and applies elapsed-time refill logic.
+   - Persists `dicePool` + `diceRegenState` via `persistIslandRunRuntimeStatePatch`.
+2. **Added deterministic trigger points**:
+   - Startup boot pass after hydration.
+   - 30s periodic interval pass while board is open.
+   - Focus / visibility resume pass.
+   - Pre-roll pass before insufficient-dice check.
+3. **Fixed dice-per-roll mismatch**:
+   - `ISLAND_RUN_DICE_PER_ROLL` changed from `2` → `1` to match roll authority.
+4. **Fixed debug panel player level wiring**:
+   - Replaced `playerLevel: islandNumber` with actual player level (`playerLevelInfo.currentLevel`, fallback `1`).
+
+### 🔜 Remaining follow-up to consider
+1. Add dedicated integration tests for the new runtime regen wiring (component/runtime-path level, not only pure helper tests).
+2. Consider centralizing dice regen into a shared state action helper so roll/board/runtime all use one integration point.
