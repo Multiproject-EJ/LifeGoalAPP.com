@@ -213,6 +213,34 @@ export interface ApplyWalletShardsDeltaResult {
   appliedDelta: number;
 }
 
+export interface ApplyWalletShieldsSetOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  /** Absolute shields wallet target. Clamped to integer >= 0. */
+  nextShields: number;
+  triggerSource?: string;
+}
+
+export interface ApplyWalletShieldsSetResult {
+  record: IslandRunGameStateRecord;
+  /** True when a commit was issued. */
+  changed: boolean;
+}
+
+export interface ApplyWalletShieldsDeltaOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  /** Positive = earn, negative = spend. */
+  delta: number;
+  triggerSource?: string;
+}
+
+export interface ApplyWalletShieldsDeltaResult {
+  record: IslandRunGameStateRecord;
+  /** Actual change applied after clamp/no-op guards. */
+  appliedDelta: number;
+}
+
 export interface ApplyBossTrialResolvedMarkerOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -256,6 +284,34 @@ export interface ApplyActiveCompanionOptions {
   session: Session;
   client: SupabaseClient | null;
   activeCompanionId: IslandRunGameStateRecord['activeCompanionId'];
+  triggerSource?: string;
+}
+
+export interface ApplyOnboardingDisplayNameLoopMarkerOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  completed: boolean;
+  triggerSource?: string;
+}
+
+export interface ApplyAudioEnabledMarkerOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  audioEnabled: boolean;
+  triggerSource?: string;
+}
+
+export interface ApplyStoryPrologueSeenMarkerOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  storyPrologueSeen: boolean;
+  triggerSource?: string;
+}
+
+export interface ApplyCompanionBonusLastVisitKeyMarkerOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  visitKey: string;
   triggerSource?: string;
 }
 
@@ -320,6 +376,59 @@ export function applyWalletShardsDelta(options: ApplyWalletShardsDeltaOptions): 
     client,
     record: next,
     triggerSource: triggerSource ?? 'apply_wallet_shards_delta',
+  });
+  return { record: next, appliedDelta };
+}
+
+/**
+ * Sets the shields wallet to an absolute value through the canonical store path.
+ *
+ * Used by non-board surfaces (e.g., ScoreTab conversion flow) so shield wallet
+ * writes no longer bypass action/store coordination via direct runtime patches.
+ */
+export function applyWalletShieldsSet(options: ApplyWalletShieldsSetOptions): ApplyWalletShieldsSetResult {
+  const { session, client, nextShields, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const parsed = Number.isFinite(nextShields) ? Math.max(0, Math.trunc(nextShields)) : current.shields;
+  if (parsed === current.shields) return { record: current, changed: false };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    shields: parsed,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_wallet_shields_set',
+  });
+  return { record: next, changed: true };
+}
+
+/**
+ * Applies a shields wallet delta through the canonical store commit path.
+ *
+ * Used by non-board gameplay surfaces (e.g., habit shield rewards) so wallet
+ * updates no longer route through direct runtime patch writes in UI components.
+ */
+export function applyWalletShieldsDelta(options: ApplyWalletShieldsDeltaOptions): ApplyWalletShieldsDeltaResult {
+  const { session, client, delta, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const parsedDelta = Number.isFinite(delta) ? Math.trunc(delta) : 0;
+  if (parsedDelta === 0) return { record: current, appliedDelta: 0 };
+  const nextShields = Math.max(0, current.shields + parsedDelta);
+  const appliedDelta = nextShields - current.shields;
+  if (appliedDelta === 0) return { record: current, appliedDelta: 0 };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    shields: nextShields,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_wallet_shields_delta',
   });
   return { record: next, appliedDelta };
 }
@@ -519,6 +628,107 @@ export function applyActiveCompanion(options: ApplyActiveCompanionOptions): Isla
     client,
     record: next,
     triggerSource: triggerSource ?? 'apply_active_companion',
+  });
+  return next;
+}
+
+/**
+ * Commits onboarding display-loop completion marker through the canonical
+ * store path.
+ */
+export function applyOnboardingDisplayNameLoopMarker(
+  options: ApplyOnboardingDisplayNameLoopMarkerOptions,
+): IslandRunGameStateRecord {
+  const { session, client, completed, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (current.onboardingDisplayNameLoopCompleted === completed) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    onboardingDisplayNameLoopCompleted: completed,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_onboarding_display_name_loop_marker',
+  });
+  return next;
+}
+
+/**
+ * Commits audio-enabled marker through the canonical store path.
+ */
+export function applyAudioEnabledMarker(options: ApplyAudioEnabledMarkerOptions): IslandRunGameStateRecord {
+  const { session, client, audioEnabled, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (current.audioEnabled === audioEnabled) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    audioEnabled,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_audio_enabled_marker',
+  });
+  return next;
+}
+
+/**
+ * Commits story-prologue seen marker through the canonical store path.
+ */
+export function applyStoryPrologueSeenMarker(options: ApplyStoryPrologueSeenMarkerOptions): IslandRunGameStateRecord {
+  const { session, client, storyPrologueSeen, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (current.storyPrologueSeen === storyPrologueSeen) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    storyPrologueSeen,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_story_prologue_seen_marker',
+  });
+  return next;
+}
+
+/**
+ * Commits companion-bonus visit marker through the canonical store path.
+ */
+export function applyCompanionBonusLastVisitKeyMarker(
+  options: ApplyCompanionBonusLastVisitKeyMarkerOptions,
+): IslandRunGameStateRecord {
+  const { session, client, visitKey, triggerSource } = options;
+  const normalizedVisitKey = visitKey.trim();
+  if (!normalizedVisitKey) {
+    return getIslandRunStateSnapshot(session);
+  }
+  const current = getIslandRunStateSnapshot(session);
+  if (current.companionBonusLastVisitKey === normalizedVisitKey) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    companionBonusLastVisitKey: normalizedVisitKey,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_companion_bonus_last_visit_key_marker',
   });
   return next;
 }
