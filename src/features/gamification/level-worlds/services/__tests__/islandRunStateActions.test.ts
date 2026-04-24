@@ -61,10 +61,12 @@ import {
   applyEssenceDriftTick,
   applyRewardBarState,
   applyRollResult,
+  applyPassiveDiceRegenTick,
   syncCompletedStopsForIsland,
   applyTokenHopRewards,
   travelToNextIsland,
 } from '../islandRunStateActions';
+import { buildInitialDiceRegenState } from '../islandRunDiceRegeneration';
 import {
   assert,
   assertEqual,
@@ -258,6 +260,143 @@ export const islandRunStateActionsTests: TestCase[] = [
 
       assertEqual(notifications, 1, 'subscriber should be notified exactly once');
       unsub();
+    },
+  },
+
+  {
+    name: 'applyPassiveDiceRegenTick commits dicePool + diceRegenState when regen is due',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        dicePool: 0,
+        diceRegenState: buildInitialDiceRegenState(1, 0),
+      });
+
+      const result = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 60 * 60 * 1000,
+        triggerSource: 'test_passive_dice_regen_tick_commit',
+      });
+
+      assertEqual(result.changed, true, 'regen tick should commit when elapsed time grants dice');
+      assertEqual(result.record.dicePool, 7, 'dicePool should increase according to regen math');
+      assert(result.record.diceRegenState !== null, 'diceRegenState should be persisted');
+      assertEqual(result.diceAdded, 7, 'returned diceAdded should match regen delta');
+      assertEqual(result.record.runtimeVersion, 11, 'runtimeVersion should bump once');
+    },
+  },
+
+  {
+    name: 'applyPassiveDiceRegenTick is no-op when no regen is due',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        dicePool: 30,
+        diceRegenState: buildInitialDiceRegenState(1, 0),
+      });
+
+      const result = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 0,
+        triggerSource: 'test_passive_dice_regen_tick_noop',
+      });
+
+      assertEqual(result.changed, false, 'no regen delta should be a no-op');
+      assertEqual(result.diceAdded, 0, 'no-op should report zero dice added');
+      assertEqual(result.record.runtimeVersion, 10, 'runtimeVersion should not change on no-op');
+    },
+  },
+
+  {
+    name: 'applyPassiveDiceRegenTick preserves unrelated fields',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 7,
+        dicePool: 0,
+        diceRegenState: buildInitialDiceRegenState(1, 0),
+        essence: 4321,
+        spinTokens: 55,
+      });
+
+      const result = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 60 * 60 * 1000,
+        triggerSource: 'test_passive_dice_regen_tick_preserve_unrelated',
+      });
+
+      assertEqual(result.changed, true, 'regen tick should commit');
+      assertEqual(result.record.essence, 4321, 'unrelated essence should remain unchanged');
+      assertEqual(result.record.spinTokens, 55, 'unrelated spinTokens should remain unchanged');
+    },
+  },
+
+  {
+    name: 'applyPassiveDiceRegenTick repeated same nowMs does not double-grant',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 3,
+        dicePool: 0,
+        diceRegenState: buildInitialDiceRegenState(1, 0),
+      });
+
+      const first = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 60 * 60 * 1000,
+        triggerSource: 'test_passive_dice_regen_tick_first',
+      });
+      const second = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 60 * 60 * 1000,
+        triggerSource: 'test_passive_dice_regen_tick_repeat_same_now',
+      });
+
+      assertEqual(first.changed, true, 'first tick should apply regen');
+      assertEqual(first.record.dicePool, 7, 'first tick should grant 7 dice');
+      assertEqual(second.changed, false, 'second tick at same nowMs should no-op');
+      assertEqual(second.diceAdded, 0, 'second tick should not add dice');
+      assertEqual(second.record.dicePool, 7, 'dice pool should remain unchanged on second tick');
+    },
+  },
+
+  {
+    name: 'applyPassiveDiceRegenTick return payload supports pre-roll gating semantics',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 5,
+        dicePool: 0,
+        diceRegenState: buildInitialDiceRegenState(1, 0),
+      });
+
+      const result = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 60 * 60 * 1000,
+        triggerSource: 'test_passive_dice_regen_tick_pre_roll_payload',
+      });
+
+      assertEqual(result.record.dicePool >= 5, true, 'returned record should expose refreshed dicePool for affordability checks');
+      assertEqual(result.diceAdded, 7, 'payload should expose the applied regen delta');
     },
   },
 

@@ -58,6 +58,7 @@ import {
   initStopBuildStatesForIsland,
 } from './islandRunContractV2EssenceBuild';
 import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
+import { resolveRuntimeDiceRegenUpdate } from './islandRunRuntimeRegen';
 
 // ── applyRollResult ──────────────────────────────────────────────────────────
 
@@ -89,6 +90,20 @@ export interface TokenHopRewardsDeltas {
   dicePool?: number;
   /** Essence delta (positive = earned). */
   essence?: number;
+}
+
+export interface ApplyPassiveDiceRegenTickOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  playerLevel: number;
+  nowMs: number;
+  triggerSource?: string;
+}
+
+export interface ApplyPassiveDiceRegenTickResult {
+  record: IslandRunGameStateRecord;
+  changed: boolean;
+  diceAdded: number;
 }
 
 /**
@@ -124,6 +139,45 @@ export function applyTokenHopRewards(options: {
     triggerSource: triggerSource ?? 'apply_token_hop_rewards',
   });
   return next;
+}
+
+/**
+ * Applies one deterministic passive dice-regen tick through the canonical
+ * store commit path.
+ */
+export function applyPassiveDiceRegenTick(
+  options: ApplyPassiveDiceRegenTickOptions,
+): ApplyPassiveDiceRegenTickResult {
+  const { session, client, playerLevel, nowMs, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const regenUpdate = resolveRuntimeDiceRegenUpdate({
+    snapshot: {
+      dicePool: current.dicePool,
+      diceRegenState: current.diceRegenState ?? null,
+    },
+    playerLevel,
+    nowMs,
+  });
+  if (!regenUpdate) {
+    return { record: current, changed: false, diceAdded: 0 };
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    dicePool: regenUpdate.dicePool,
+    diceRegenState: regenUpdate.diceRegenState,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_passive_dice_regen_tick',
+  });
+  return {
+    record: next,
+    changed: true,
+    diceAdded: regenUpdate.diceAdded,
+  };
 }
 
 // ── C2: Essence award / spend / reward-bar / drift ───────────────────────────
