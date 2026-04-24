@@ -34,6 +34,7 @@ import {
   applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
   applyCreatureTreatInventory,
+  applyHydrationEggReadyTransition,
   applyEggResolution,
   applyEggPlacement,
   applyFirstRunClaimed,
@@ -1476,6 +1477,158 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.perIslandEggs['7']?.status, 'incubating', 'island ledger should contain incubating egg');
       assertEqual(result.completedStopsByIsland['7']?.[0], 'hatchery', 'completed stops should be synced for island');
       assertEqual(result.runtimeVersion, 5, 'runtimeVersion should bump by one');
+    },
+  },
+
+  {
+    name: 'applyHydrationEggReadyTransition: incubating egg becomes ready after hatch time',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 20,
+        perIslandEggs: {
+          '7': {
+            tier: 'rare',
+            setAtMs: 1_000,
+            hatchAtMs: 4_000,
+            status: 'incubating',
+            location: 'island',
+          },
+        },
+      });
+
+      const result = applyHydrationEggReadyTransition({
+        session,
+        client: null,
+        islandNumber: 7,
+        hatchNowMs: 4_500,
+        triggerSource: 'test_hydration_egg_ready_transition',
+      });
+
+      assertEqual(result.changed, true, 'expected hydration transition to commit');
+      assertEqual(result.record.perIslandEggs['7']?.status, 'ready', 'target island egg should be marked ready');
+      assertEqual(result.record.runtimeVersion, 21, 'runtimeVersion should bump exactly once');
+    },
+  },
+
+  {
+    name: 'applyHydrationEggReadyTransition: wrong island key is not mutated',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 9,
+        perIslandEggs: {
+          '7': {
+            tier: 'common',
+            setAtMs: 1_000,
+            hatchAtMs: 2_000,
+            status: 'incubating',
+            location: 'island',
+          },
+        },
+      });
+
+      const result = applyHydrationEggReadyTransition({
+        session,
+        client: null,
+        islandNumber: 8,
+        hatchNowMs: 10_000,
+        triggerSource: 'test_hydration_egg_wrong_island_noop',
+      });
+
+      assertEqual(result.changed, false, 'missing target-island entry should no-op');
+      assertEqual(result.record.perIslandEggs['7']?.status, 'incubating', 'non-target island should remain unchanged');
+      assertEqual(result.record.runtimeVersion, 9, 'runtimeVersion should not change on no-op');
+    },
+  },
+
+  {
+    name: 'applyHydrationEggReadyTransition: unrelated ledger entries are preserved',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 4,
+        perIslandEggs: {
+          '3': {
+            tier: 'mythic',
+            setAtMs: 500,
+            hatchAtMs: 900,
+            status: 'ready',
+            location: 'dormant',
+          },
+          '7': {
+            tier: 'rare',
+            setAtMs: 1_000,
+            hatchAtMs: 4_000,
+            status: 'incubating',
+            location: 'island',
+          },
+        },
+      });
+
+      const result = applyHydrationEggReadyTransition({
+        session,
+        client: null,
+        islandNumber: 7,
+        hatchNowMs: 4_001,
+        triggerSource: 'test_hydration_egg_preserve_other_entries',
+      });
+
+      assertEqual(result.changed, true, 'target transition should apply');
+      assertEqual(result.record.perIslandEggs['7']?.status, 'ready', 'target island should become ready');
+      assertEqual(result.record.perIslandEggs['3']?.status, 'ready', 'unrelated island ledger entry should be preserved');
+      assertEqual(result.record.perIslandEggs['3']?.location, 'dormant', 'unrelated island ledger payload should be untouched');
+    },
+  },
+
+  {
+    name: 'applyHydrationEggReadyTransition: no-op/idempotent when already ready or hatch not elapsed',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 12,
+        perIslandEggs: {
+          '7': {
+            tier: 'common',
+            setAtMs: 100,
+            hatchAtMs: 300,
+            status: 'ready',
+            location: 'dormant',
+          },
+          '8': {
+            tier: 'rare',
+            setAtMs: 200,
+            hatchAtMs: 5_000,
+            status: 'incubating',
+            location: 'island',
+          },
+        },
+      });
+
+      const alreadyReady = applyHydrationEggReadyTransition({
+        session,
+        client: null,
+        islandNumber: 7,
+        hatchNowMs: 10_000,
+        triggerSource: 'test_hydration_egg_already_ready_noop',
+      });
+      assertEqual(alreadyReady.changed, false, 'already-ready entry should no-op');
+      assertEqual(alreadyReady.record.runtimeVersion, 12, 'runtimeVersion should not change for already-ready no-op');
+
+      const hatchNotElapsed = applyHydrationEggReadyTransition({
+        session,
+        client: null,
+        islandNumber: 8,
+        hatchNowMs: 4_999,
+        triggerSource: 'test_hydration_egg_not_elapsed_noop',
+      });
+      assertEqual(hatchNotElapsed.changed, false, 'incubating entry before hatchAtMs should no-op');
+      assertEqual(hatchNotElapsed.record.perIslandEggs['8']?.status, 'incubating', 'status should remain incubating');
+      assertEqual(hatchNotElapsed.record.runtimeVersion, 12, 'runtimeVersion should remain unchanged across idempotent no-ops');
     },
   },
 

@@ -91,6 +91,7 @@ import {
   applyCreatureCollection,
   applyCreatureTreatInventory,
   applyEggResolution,
+  applyHydrationEggReadyTransition,
   applyEggPlacement,
   applyFirstRunClaimed,
   applyFirstRunStarterRewards,
@@ -1843,12 +1844,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const nowHydrate = Date.now();
       const isHatched = nowHydrate >= ledgerEntry.hatchAtMs;
       if (isHatched && ledgerEntry.status === 'incubating') {
-        const updatedEntry: PerIslandEggEntry = { ...ledgerEntry, status: 'ready' };
-        const updatedLedger = { ...runtimeState.perIslandEggs, [islandKey]: updatedEntry };
-        setRuntimeState((prev) => ({ ...prev, perIslandEggs: updatedLedger }));
-        if (client) {
-          void persistIslandRunRuntimeStatePatch({ session, client, patch: { perIslandEggs: updatedLedger } });
-        }
+        const readyTransition = applyHydrationEggReadyTransition({
+          session,
+          client,
+          islandNumber: persistedIsland,
+          hatchNowMs: nowHydrate,
+          triggerSource: 'hydrate_egg_ready_transition',
+        });
+        setRuntimeState(readyTransition.record);
       }
       setActiveEgg({
         tier: ledgerEntry.tier,

@@ -1302,6 +1302,19 @@ export interface ApplyEggPlacementOptions {
   triggerSource?: string;
 }
 
+export interface ApplyHydrationEggReadyTransitionOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  islandNumber: number;
+  hatchNowMs: number;
+  triggerSource?: string;
+}
+
+export interface ApplyHydrationEggReadyTransitionResult {
+  record: IslandRunGameStateRecord;
+  changed: boolean;
+}
+
 export interface ApplyEggResolutionOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -1354,6 +1367,47 @@ export function applyEggPlacement(options: ApplyEggPlacementOptions): IslandRunG
     triggerSource: triggerSource ?? 'apply_egg_placement',
   });
   return next;
+}
+
+/**
+ * Commits hydration-time incubating → ready egg-ledger transitions through the
+ * canonical store path.
+ *
+ * This is intentionally narrow: it only updates one per-island egg ledger
+ * entry when (a) that island has an egg entry, (b) the status is `incubating`,
+ * and (c) `hatchNowMs >= hatchAtMs`.
+ */
+export function applyHydrationEggReadyTransition(
+  options: ApplyHydrationEggReadyTransitionOptions,
+): ApplyHydrationEggReadyTransitionResult {
+  const { session, client, islandNumber, hatchNowMs, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const islandKey = String(islandNumber);
+  const ledgerEntry = current.perIslandEggs?.[islandKey];
+  if (!ledgerEntry || ledgerEntry.status !== 'incubating') {
+    return { record: current, changed: false };
+  }
+  if (!Number.isFinite(hatchNowMs) || hatchNowMs < ledgerEntry.hatchAtMs) {
+    return { record: current, changed: false };
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    perIslandEggs: {
+      ...current.perIslandEggs,
+      [islandKey]: {
+        ...ledgerEntry,
+        status: 'ready',
+      },
+    },
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_hydration_egg_ready_transition',
+  });
+  return { record: next, changed: true };
 }
 
 /**
