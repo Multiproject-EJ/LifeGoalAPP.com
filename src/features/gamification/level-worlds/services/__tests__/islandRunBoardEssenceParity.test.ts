@@ -82,8 +82,40 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Duplicate sanctuary bond-claim handler should remain removed to prevent split wiring.',
       );
       assert(
+        !source.includes('const closeSanctuaryPanel ='),
+        'Duplicate sanctuary close handler should remain removed to prevent split wiring.',
+      );
+      assert(
+        !source.includes('const handleSetActiveCompanion ='),
+        'Duplicate sanctuary set-active handler should remain removed to prevent split wiring.',
+      );
+      assert(
+        !source.includes('const handleOpenSanctuaryCreature ='),
+        'Duplicate sanctuary open handler should remain removed to prevent split wiring.',
+      );
+      assert(
+        !source.includes('const handleFeedSanctuaryCreature ='),
+        'Duplicate sanctuary feed handler should remain removed to prevent split wiring.',
+      );
+      assert(
         source.includes('onClick={() => sanctuaryHandlers.claimBondReward('),
         'Sanctuary claim UI should remain wired to sanctuaryHandlers.claimBondReward.',
+      );
+      assert(
+        source.includes('onClick={() => sanctuaryHandlers.feedCreature('),
+        'Sanctuary feed UI should remain wired to sanctuaryHandlers.feedCreature.',
+      );
+      assert(
+        source.includes('onClick={() => sanctuaryHandlers.openCreature('),
+        'Sanctuary open UI should remain wired to sanctuaryHandlers.openCreature.',
+      );
+      assert(
+        source.includes('onClick={() => sanctuaryHandlers.setActiveCompanion('),
+        'Sanctuary set-active UI should remain wired to sanctuaryHandlers.setActiveCompanion.',
+      );
+      assert(
+        source.includes('onClick={sanctuaryHandlers.closePanel}'),
+        'Sanctuary close UI should remain wired to sanctuaryHandlers.closePanel.',
       );
     },
   },
