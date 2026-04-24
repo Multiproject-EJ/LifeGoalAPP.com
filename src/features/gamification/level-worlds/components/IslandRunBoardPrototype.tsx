@@ -242,6 +242,7 @@ import {
 } from '../../../../services/minigameTicketStore';
 import { scheduleEggHatchNotification } from '../../../../services/habitAlertNotifications';
 import {
+  applyDiceRegeneration,
   resolveNextRollEtaMs,
   type DiceRegenState,
 } from '../services/islandRunDiceRegeneration';
