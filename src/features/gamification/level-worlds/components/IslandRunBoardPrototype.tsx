@@ -1580,6 +1580,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     };
     runtimeStateRef.current = nextRuntimeState;
     setRuntimeState(nextRuntimeState);
+    // Keep the external store mirror in lockstep with regen ticks so HUD
+    // subscribers never display stale dice/countdown values between local
+    // runtime state updates and async persistence.
+    patchIslandRunStateSnapshot(session, {
+      dicePool: regenUpdate.dicePool,
+      diceRegenState: regenUpdate.diceRegenState,
+    });
     void persistIslandRunRuntimeStatePatch({
       session,
       client,
@@ -3651,7 +3658,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     : rollButtonMode === 'roll'
       ? 'Roll'
       : 'Need dice';
-  const rollDisabledReason = showFirstRunCelebration
+  const rollBlockedReason = showFirstRunCelebration
     ? 'first_run_celebration'
     : isRolling
       ? 'already_rolling'
@@ -3660,6 +3667,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         : isEnergyDepletedForRoll
           ? 'insufficient_dice'
           : null;
+  const rollDisabledReason = showFirstRunCelebration
+    ? 'first_run_celebration'
+    : isRolling
+      ? 'already_rolling'
+      : showTravelOverlay
+        ? 'travel_overlay'
+        : null;
   const canRoll = !showFirstRunCelebration && !isRolling && !showTravelOverlay && dicePool >= effectiveDiceCost;
   const canHoldForAutoRoll = canRoll && !isIslandTimerPendingStart;
   const rollButtonInteractionClass = isAutoRolling
@@ -3677,10 +3691,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         return 'A roll is already in progress — please wait.';
       case 'travel_overlay':
         return 'Island travel is in progress — please wait.';
-      case 'insufficient_dice':
-        return `Not enough dice to roll. You need ${effectiveDiceCost} dice per roll.`;
       default:
-        return null;
+        return isEnergyDepletedForRoll
+          ? `Not enough dice to roll. You need ${effectiveDiceCost} dice per roll.`
+          : null;
     }
   })();
   const spinTokenWalletLabel = resolveIslandRunSpinTokenWalletLabel(ISLAND_RUN_CONTRACT_V2_ENABLED);
@@ -3764,7 +3778,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         isRolling,
         isBusy: isRolling || showFirstRunCelebration || showTravelOverlay,
         buttonDisabled: Boolean(rollDisabledReason),
-        disabledReason: rollDisabledReason,
+        disabledReason: rollBlockedReason,
         mode: rollButtonMode,
         label: rollButtonLabel,
       },
@@ -3783,6 +3797,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     legacyStep1Complete,
     rollButtonLabel,
     rollButtonMode,
+    rollBlockedReason,
     rollDisabledReason,
     runtimeState.activeStopIndex,
     runtimeState.completedStopsByIsland,
@@ -3848,19 +3863,30 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     island120PendingStopTransitionRef.current = null;
   }, [activeStopId, hasHydratedRuntimeState, islandStopPlan, isIsland120StartupDiagnosticActive, session.user.id]);
 
+  const openOutOfDicePurchasePrompt = useCallback((source: 'auto_prompt' | 'roll_attempt') => {
+    setShowOutOfDicePurchasePrompt(true);
+    setDiceCheckoutError(null);
+    setLandingText(`You're out of dice. Open the shop or buy more rolls.`);
+    logIslandRunEntryDebug('out_of_dice_prompt_opened', {
+      userId: session.user.id,
+      source,
+      dicePool,
+      requiredDicePerRoll: effectiveDiceCost,
+      effectiveMultiplier,
+    });
+  }, [dicePool, effectiveDiceCost, effectiveMultiplier, session.user.id]);
+
   useEffect(() => {
     if (!hasHydratedRuntimeState || isDemoSession(session)) {
       return;
     }
 
     if (shouldPromptDicePurchase && !wasDicePurchasePromptEligibleRef.current) {
-      setShowOutOfDicePurchasePrompt(true);
-      setDiceCheckoutError(null);
-      setLandingText(`You're out of dice. Open the shop or buy more rolls.`);
+      openOutOfDicePurchasePrompt('auto_prompt');
     }
 
     wasDicePurchasePromptEligibleRef.current = shouldPromptDicePurchase;
-  }, [hasHydratedRuntimeState, session, shouldPromptDicePurchase]);
+  }, [hasHydratedRuntimeState, openOutOfDicePurchasePrompt, session, shouldPromptDicePurchase]);
 
   const activateCurrentIsland = useCallback(() => {
     const nowMs = Date.now();
@@ -4007,6 +4033,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       isEnergyDepletedForRoll,
       rollButtonMode,
       rollButtonLabel,
+      rollBlockedReason,
       rollDisabledReason,
     };
     if (isIsland120StartupDiagnosticActive) {
@@ -4074,7 +4101,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           ...rollDecisionFlags,
         });
       }
-      setLandingText(`Need ${effectiveDiceCost} dice to roll at ×${effectiveMultiplier}.`);
+      openOutOfDicePurchasePrompt('roll_attempt');
       return false;
     }
 
@@ -4118,7 +4145,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         });
       }
       setIsRolling(false);
-      setLandingText(`Need ${effectiveDiceCost} dice to roll at ×${effectiveMultiplier}.`);
+      if (rollResult.status === 'insufficient_dice') {
+        openOutOfDicePurchasePrompt('roll_attempt');
+      } else {
+        setLandingText(`Need ${effectiveDiceCost} dice to roll at ×${effectiveMultiplier}.`);
+      }
       return false;
     }
     if (isIsland120StartupDiagnosticActive) {
