@@ -1414,7 +1414,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
   }, [effectiveMultiplier, diceMultiplier]);
 
-  // ── Dice regen countdown (Monopoly GO style: "X rolls ready in MM:SS") ────
+  // ── Dice regen countdown (Monopoly GO style: "Next dice in MM:SS") ───────
   const [diceRegenCountdown, setDiceRegenCountdown] = useState<string | null>(null);
   const [diceRegenStatusLabel, setDiceRegenStatusLabel] = useState<string | null>(null);
   const [diceRegenRollsReady, setDiceRegenRollsReady] = useState<number | null>(null);
@@ -1651,8 +1651,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const seconds = remainingSec % 60;
       const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
       setDiceRegenCountdown(timeStr);
-      setDiceRegenStatusLabel('rolls ready in');
-      setDiceRegenRollsReady(1);
+      setDiceRegenStatusLabel('Next dice in');
+      setDiceRegenRollsReady(null);
     }
 
     tick();
@@ -7698,7 +7698,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       <span className="sr-only"> — {rollDisabledMessage}</span>
                     )}
                   </button>
-                  {/* Dice regen countdown — like Monopoly GO "X rolls ready in MM:SS" */}
+                  {/* Dice regen countdown — Monopoly style "Next dice in MM:SS" */}
                   {(diceRegenStatusLabel || diceRegenCountdown) && (
                     <div className="island-run-prototype__dice-regen-timer" aria-live="polite">
                       {diceRegenRollsReady != null ? <><strong>{diceRegenRollsReady}</strong> </> : null}

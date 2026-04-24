@@ -46,11 +46,11 @@ export const islandRunRuntimeRegenTests: TestCase[] = [
           diceRegenState: regen,
         },
         playerLevel: 1,
-        nowMs: 60 * 60 * 1000, // 1 hour => +15 at level 1
+        nowMs: 60 * 60 * 1000, // 1 hour at 8m interval => +7
       });
       assert(result !== null, 'Expected dice gain update');
-      assertEqual(result!.dicePool, 15, 'Expected +15 dice after one hour at L1');
-      assertEqual(result!.diceAdded, 15, 'Expected reported delta to match granted dice');
+      assertEqual(result!.dicePool, 7, 'Expected +7 dice after one hour at L1');
+      assertEqual(result!.diceAdded, 7, 'Expected reported delta to match granted dice');
     },
   },
   {
@@ -67,7 +67,7 @@ export const islandRunRuntimeRegenTests: TestCase[] = [
       });
       assert(result !== null, 'Expected regen-state update when level changes');
       assertEqual(result!.dicePool, 200, 'Expected dice unchanged above floor');
-      assertEqual(result!.diceRegenState.maxDice, 108, 'Expected L50 floor');
+      assertEqual(result!.diceRegenState.maxDice, 125, 'Expected L50 floor');
     },
   },
 ];

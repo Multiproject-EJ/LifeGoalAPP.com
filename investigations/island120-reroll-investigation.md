@@ -155,3 +155,28 @@ Goal: align the current implementation to the requested baseline/scaling spec.
 - Mid-level and high-level users: verify band transitions.
 - Out-of-dice flow: verify countdown visibility and roll unlock.
 - Resume/focus/reopen behavior: timer continuity and no duplicate grants.
+
+## Implementation pass: broad alignment update (2026-04-24)
+
+### ✅ Completed in this pass
+1. **Step 2 implemented**:
+   - Replaced logarithmic regen config with explicit level-band mapping:
+     - 1–4: 30 @ 8m
+     - 5–9: 50 @ 10m
+     - 10–19: 75 @ 10m
+     - 20–39: 100 @ 10m
+     - 40–74: 125 @ 9m
+     - 75–124: 150 @ 8m
+     - 125+: 200 @ 7m
+2. **Step 3 implemented**:
+   - `applyDiceRegeneration` now runs on interval-tick semantics derived from `regenIntervalMinutes`.
+   - Regen grants are interval-based and capped by deficit to `maxDice`.
+3. **Step 4 implemented**:
+   - Out-of-dice UI now shows only next-dice countdown copy.
+   - Full-refill line removed from modal UI.
+4. **Step 5 largely implemented**:
+   - Updated regen tests for level-band config + interval semantics + ETA behavior.
+   - Updated runtime regen integration tests to the new level-band expectations.
+
+### ⏳ Still pending
+1. **Step 6 QA checklist**: manual product QA run-through in-app is still required.
