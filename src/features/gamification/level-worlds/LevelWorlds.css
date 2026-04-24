@@ -755,6 +755,14 @@
   flex-wrap: nowrap;
 }
 
+/* Prevent mobile long-press text selection/copy handles on footer controls. */
+.island-run-prototype__footer-actions button,
+.island-run-prototype__footer-actions button * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .island-run-prototype__footer .island-run-prototype__stat-chip,
 .island-run-prototype__footer .island-run-prototype__dice-throw {
   min-height: 2.1rem;
