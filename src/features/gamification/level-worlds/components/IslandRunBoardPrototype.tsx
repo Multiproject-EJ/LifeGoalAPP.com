@@ -242,6 +242,7 @@ import {
 } from '../../../../services/minigameTicketStore';
 import { scheduleEggHatchNotification } from '../../../../services/habitAlertNotifications';
 import {
+  resolveNextRollEtaMs,
   type DiceRegenState,
 } from '../services/islandRunDiceRegeneration';
 import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
@@ -1413,7 +1414,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // ── Dice regen countdown (Monopoly GO style: "X rolls ready in MM:SS") ────
   const [diceRegenCountdown, setDiceRegenCountdown] = useState<string | null>(null);
-  const [diceRegenRollsReady, setDiceRegenRollsReady] = useState<number | null>(null);
+  const [diceRegenStatusLabel, setDiceRegenStatusLabel] = useState<string | null>(null);
 
   // NOTE: The useEffect for the dice regen countdown timer is placed after runtimeState declaration below.
 
@@ -1556,34 +1557,40 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // second and works correctly when the PWA is reopened after being in the background.
   useEffect(() => {
     const regenState: DiceRegenState | null = runtimeState.diceRegenState ?? null;
-    if (!regenState || dicePool >= regenState.maxDice) {
+    if (!regenState) {
       setDiceRegenCountdown(null);
-      setDiceRegenRollsReady(null);
+      setDiceRegenStatusLabel(null);
       return;
     }
+    const activeRegenState = regenState;
 
     function tick() {
-      if (!regenState) return;
-      const now = Date.now();
-      const deficit = Math.max(0, regenState.maxDice - dicePool);
-      // How long it takes to fill the full deficit
-      const hoursToFill = deficit / Math.max(1, regenState.regenRatePerHour);
-      const msToFill = hoursToFill * 60 * 60 * 1000;
-      // Elapsed time since last regen tick
-      const elapsedMs = Math.max(0, now - regenState.lastRegenAtMs);
-      // Remaining = total fill time minus what already elapsed
-      const msRemaining = Math.max(0, msToFill - elapsedMs);
+      const safeCost = Math.max(1, Math.floor(effectiveDiceCost) || 1);
+      const isOutOfRolls = dicePool < safeCost;
+      if (!isOutOfRolls) {
+        setDiceRegenCountdown(null);
+        setDiceRegenStatusLabel(null);
+        return;
+      }
 
-      // Rolls available when fully refilled — use effectiveDiceCost so the
-      // count reflects the player's current multiplier selection.
-      const totalRollsAtFull = Math.floor(regenState.maxDice / effectiveDiceCost);
+      const nextRollEtaMs = resolveNextRollEtaMs({
+        dicePool,
+        target: safeCost,
+        regenState: activeRegenState,
+        nowMs: Date.now(),
+      });
+      if (!Number.isFinite(nextRollEtaMs)) {
+        setDiceRegenCountdown(null);
+        setDiceRegenStatusLabel(`Need ${safeCost} dice (regen cap: ${activeRegenState.maxDice})`);
+        return;
+      }
 
-      const remainingSec = Math.max(0, Math.ceil(msRemaining / 1000));
+      const remainingSec = Math.max(0, Math.ceil(nextRollEtaMs / 1000));
       const minutes = Math.floor(remainingSec / 60);
       const seconds = remainingSec % 60;
       const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
       setDiceRegenCountdown(timeStr);
-      setDiceRegenRollsReady(totalRollsAtFull);
+      setDiceRegenStatusLabel('Next roll in');
     }
 
     tick();
@@ -7627,9 +7634,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     )}
                   </button>
                   {/* Dice regen countdown — like Monopoly GO "X rolls ready in MM:SS" */}
-                  {diceRegenCountdown && diceRegenRollsReady != null && (
+                  {(diceRegenStatusLabel || diceRegenCountdown) && (
                     <div className="island-run-prototype__dice-regen-timer" aria-live="polite">
-                      <strong>{diceRegenRollsReady}</strong> rolls ready in <strong>{diceRegenCountdown}</strong>
+                      {diceRegenStatusLabel ? <strong>{diceRegenStatusLabel}</strong> : null}
+                      {diceRegenCountdown ? <> <strong>{diceRegenCountdown}</strong></> : null}
                     </div>
                   )}
                 </div>
