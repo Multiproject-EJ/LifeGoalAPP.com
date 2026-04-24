@@ -49,6 +49,7 @@ import {
   getIslandRunStateSnapshot,
   refreshIslandRunStateFromLocal,
 } from './islandRunStateStore';
+import { persistIslandRunProfileMetadata } from './islandRunProfile';
 import {
   applyEssenceDrift,
   awardIslandRunContractV2Essence,
@@ -321,6 +322,18 @@ export interface ApplyFirstRunStarterRewardsOptions {
   essenceBonus: number;
   diceBonus: number;
   triggerSource?: string;
+}
+
+export interface ApplyOnboardingCompleteMarkerOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  triggerSource?: string;
+}
+
+export interface ApplyOnboardingCompleteMarkerResult {
+  ok: boolean;
+  changed: boolean;
+  errorMessage?: string;
 }
 
 export interface ApplyCreatureTreatInventoryOptions {
@@ -749,6 +762,31 @@ export function applyFirstRunClaimed(options: {
     triggerSource: triggerSource ?? 'apply_first_run_claimed',
   });
   return next;
+}
+
+/**
+ * Commits the profile-level onboarding_complete marker.
+ *
+ * This is intentionally separate from `firstRunClaimed`:
+ * - `firstRunClaimed` lives on Island Run game-state record,
+ * - `onboarding_complete` lives in auth profile metadata.
+ */
+export async function applyOnboardingCompleteMarker(
+  options: ApplyOnboardingCompleteMarkerOptions,
+): Promise<ApplyOnboardingCompleteMarkerResult> {
+  const { session, client } = options;
+  if (session.user.user_metadata?.onboarding_complete === true) {
+    return { ok: true, changed: false };
+  }
+  const persisted = await persistIslandRunProfileMetadata({
+    session,
+    client,
+    metadataPatch: { onboarding_complete: true },
+  });
+  if (!persisted.ok) {
+    return { ok: false, changed: false, errorMessage: persisted.errorMessage };
+  }
+  return { ok: true, changed: true };
 }
 
 /**

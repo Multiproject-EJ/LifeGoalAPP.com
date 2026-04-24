@@ -41,6 +41,7 @@ import {
   applyIslandShardsSet,
   applyMarketOwnedBundleMarker,
   applyOnboardingDisplayNameLoopMarker,
+  applyOnboardingCompleteMarker,
   applyQaProgressionSnapshot,
   applyShardClaimProgressMarker,
   applyStoryPrologueSeenMarker,
@@ -750,6 +751,56 @@ export const islandRunStateActionsTests: TestCase[] = [
 
       assertEqual(result.firstRunClaimed, true, 'firstRunClaimed should be true');
       assertEqual(result.runtimeVersion, 6, 'runtimeVersion should bump once');
+    },
+  },
+
+  {
+    name: 'applyOnboardingCompleteMarker sets onboarding_complete profile metadata when missing',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      const updateUserCalls: Array<Record<string, unknown>> = [];
+      const client = {
+        auth: {
+          updateUser(payload: Record<string, unknown>) {
+            updateUserCalls.push(payload);
+            return Promise.resolve({ error: null });
+          },
+        },
+      } as unknown as import('@supabase/supabase-js').SupabaseClient;
+
+      const result = await applyOnboardingCompleteMarker({
+        session,
+        client,
+        triggerSource: 'test_onboarding_complete_marker_set',
+      });
+
+      assertEqual(result.ok, true, 'onboarding marker write should succeed');
+      assertEqual(result.changed, true, 'changed should be true when profile metadata is written');
+      assertEqual(updateUserCalls.length, 1, 'client.auth.updateUser should be called once');
+    },
+  },
+
+  {
+    name: 'applyOnboardingCompleteMarker is a no-op when onboarding_complete is already true',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      session.user = {
+        ...session.user,
+        user_metadata: {
+          ...(session.user.user_metadata ?? {}),
+          onboarding_complete: true,
+        },
+      };
+      const result = await applyOnboardingCompleteMarker({
+        session,
+        client: null,
+        triggerSource: 'test_onboarding_complete_marker_noop',
+      });
+
+      assertEqual(result.ok, true, 'no-op should still succeed');
+      assertEqual(result.changed, false, 'changed should be false on no-op');
     },
   },
 

@@ -97,6 +97,7 @@ import {
   applyIslandShardsSet,
   applyMarketOwnedBundleMarker,
   applyOnboardingDisplayNameLoopMarker,
+  applyOnboardingCompleteMarker,
   applyQaProgressionSnapshot,
   applyShardClaimProgressMarker,
   applyStoryPrologueSeenMarker,
@@ -6269,13 +6270,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
     setRuntimeState(record);
 
-    const result = await persistIslandRunRuntimeStatePatch({
+    const onboardingMarkerResult = await applyOnboardingCompleteMarker({
       session,
       client,
-      patch: { onboardingComplete: true },
+      triggerSource: 'first_run_onboarding_complete_marker',
     });
-    if (!result.ok) {
-      setLandingText(`Could not complete first-run setup: ${result.errorMessage}`);
+    if (!onboardingMarkerResult.ok) {
+      setLandingText(`Could not complete first-run setup: ${onboardingMarkerResult.errorMessage}`);
       return false;
     }
     return true;
