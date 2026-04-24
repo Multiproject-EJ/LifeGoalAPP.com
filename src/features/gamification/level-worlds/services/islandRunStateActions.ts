@@ -213,6 +213,20 @@ export interface ApplyWalletShardsDeltaResult {
   appliedDelta: number;
 }
 
+export interface ApplyWalletShieldsSetOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  /** Absolute shields wallet target. Clamped to integer >= 0. */
+  nextShields: number;
+  triggerSource?: string;
+}
+
+export interface ApplyWalletShieldsSetResult {
+  record: IslandRunGameStateRecord;
+  /** True when a commit was issued. */
+  changed: boolean;
+}
+
 export interface ApplyBossTrialResolvedMarkerOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -322,6 +336,31 @@ export function applyWalletShardsDelta(options: ApplyWalletShardsDeltaOptions): 
     triggerSource: triggerSource ?? 'apply_wallet_shards_delta',
   });
   return { record: next, appliedDelta };
+}
+
+/**
+ * Sets the shields wallet to an absolute value through the canonical store path.
+ *
+ * Used by non-board surfaces (e.g., ScoreTab conversion flow) so shield wallet
+ * writes no longer bypass action/store coordination via direct runtime patches.
+ */
+export function applyWalletShieldsSet(options: ApplyWalletShieldsSetOptions): ApplyWalletShieldsSetResult {
+  const { session, client, nextShields, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const parsed = Number.isFinite(nextShields) ? Math.max(0, Math.trunc(nextShields)) : current.shields;
+  if (parsed === current.shields) return { record: current, changed: false };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    shields: parsed,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_wallet_shields_set',
+  });
+  return { record: next, changed: true };
 }
 
 /**
