@@ -63,7 +63,6 @@ import { useGamification } from '../../../../hooks/useGamification';
 import { isDemoSession } from '../../../../services/demoSession';
 import {
   hydrateIslandRunRuntimeStateWithSource,
-  persistIslandRunRuntimeStatePatch,
   readIslandRunRuntimeState,
   resolveCollectibleForClaim,
   type IslandRunRuntimeState,
@@ -75,7 +74,6 @@ import { useIslandRunState } from '../hooks/useIslandRunState';
 import {
   commitIslandRunState,
   getIslandRunStateSnapshot,
-  patchIslandRunStateSnapshot,
   refreshIslandRunStateFromLocal,
 } from '../services/islandRunStateStore';
 import {
@@ -91,6 +89,7 @@ import {
   applyCreatureCollection,
   applyCreatureTreatInventory,
   applyActivateCurrentIslandTimer,
+  applyPassiveDiceRegenTick,
   applyEggResolution,
   applyHydrationEggReadyTransition,
   applyEggPlacement,
@@ -276,7 +275,6 @@ import {
   resolveNextRollEtaMs,
   type DiceRegenState,
 } from '../services/islandRunDiceRegeneration';
-import { resolveRuntimeDiceRegenUpdate } from '../services/islandRunRuntimeRegen';
 import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
 import { resolveNextCheapestIndex } from '../services/islandRunShopAffordability';
 import { adviseEggSellChoice } from '../services/islandRunEggSellAdvisor';
@@ -1590,52 +1588,28 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const nowMs = Date.now();
     const playerLevel = Math.max(1, Math.floor(playerLevelInfo?.currentLevel ?? 1));
     const current = runtimeStateRef.current;
-    const regenUpdate = resolveRuntimeDiceRegenUpdate({
-      snapshot: {
-        dicePool: current.dicePool,
-        diceRegenState: current.diceRegenState ?? null,
-      },
-      playerLevel,
-      nowMs,
-    });
-
-    if (!regenUpdate) {
-      return current.dicePool;
-    }
-
-    const nextRuntimeState = {
-      ...current,
-      dicePool: regenUpdate.dicePool,
-      diceRegenState: regenUpdate.diceRegenState,
-    };
-    runtimeStateRef.current = nextRuntimeState;
-    setRuntimeState(nextRuntimeState);
-    // Keep the external store mirror in lockstep with regen ticks so HUD
-    // subscribers never display stale dice/countdown values between local
-    // runtime state updates and async persistence.
-    patchIslandRunStateSnapshot(session, {
-      dicePool: regenUpdate.dicePool,
-      diceRegenState: regenUpdate.diceRegenState,
-    });
-    void persistIslandRunRuntimeStatePatch({
+    const regenTick = applyPassiveDiceRegenTick({
       session,
       client,
-      patch: {
-        dicePool: regenUpdate.dicePool,
-        diceRegenState: regenUpdate.diceRegenState,
-      },
+      playerLevel,
+      nowMs,
+      triggerSource: `passive_dice_regen_${reason}`,
     });
+    const nextRuntimeState = regenTick.record;
+    runtimeStateRef.current = nextRuntimeState;
+    setRuntimeState(nextRuntimeState);
     logIslandRunEntryDebug('dice_regen_applied', {
       userId: session.user.id,
       reason,
       playerLevel,
       diceBefore: current.dicePool,
-      diceAfter: regenUpdate.dicePool,
-      diceAdded: regenUpdate.diceAdded,
-      regenMaxDice: regenUpdate.diceRegenState.maxDice,
-      regenRatePerHour: regenUpdate.diceRegenState.regenRatePerHour,
+      diceAfter: nextRuntimeState.dicePool,
+      diceAdded: regenTick.diceAdded,
+      regenMaxDice: nextRuntimeState.diceRegenState?.maxDice ?? null,
+      regenRatePerHour: nextRuntimeState.diceRegenState?.regenRatePerHour ?? null,
+      changed: regenTick.changed,
     });
-    return regenUpdate.dicePool;
+    return nextRuntimeState.dicePool;
   }, [client, hasHydratedRuntimeState, playerLevelInfo?.currentLevel, session]);
 
   useEffect(() => {

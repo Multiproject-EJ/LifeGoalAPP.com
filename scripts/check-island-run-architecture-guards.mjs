@@ -29,7 +29,6 @@ const RULES = [
     ],
     allowlist: new Set([
       // TEMP allowlist (migration exceptions) — remove as slices land.
-      'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx',
       'src/features/gamification/level-worlds/services/islandRunRuntimeState.ts',
       'src/features/gamification/level-worlds/services/islandRunTileRewardAction.ts',
       'src/features/gamification/level-worlds/services/__tests__/islandRunRuntimeState.integration.test.ts',
