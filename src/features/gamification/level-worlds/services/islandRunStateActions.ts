@@ -1527,6 +1527,21 @@ export interface TravelToNextIslandOptions {
   triggerSource?: string;
 }
 
+export interface ApplyActivateCurrentIslandTimerOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  islandNumber: number;
+  cycleIndex: number;
+  nowMs: number;
+  durationMs: number;
+  triggerSource?: string;
+}
+
+export interface ApplyActivateCurrentIslandTimerResult {
+  record: IslandRunGameStateRecord;
+  changed: boolean;
+}
+
 export interface TravelToNextIslandResult {
   /** The committed record. */
   record: IslandRunGameStateRecord;
@@ -1544,6 +1559,51 @@ export interface TravelToNextIslandResult {
   restoredActiveEgg:
     | { tier: 'common' | 'rare' | 'mythic'; setAtMs: number; hatchAtMs: number; isDormant: boolean }
     | null;
+}
+
+/**
+ * Commits "start current island timer" through the canonical store path.
+ *
+ * This models the pending-start CTA flow ("Start Island") where island
+ * bookkeeping fields are already known locally and only the timer should move
+ * from pending (`0/0`) to started (`nowMs` / `nowMs + durationMs`).
+ *
+ * Idempotency/no-op rule: if the current record already has a started timer
+ * (`islandStartedAtMs > 0 && islandExpiresAtMs > 0`), this helper does
+ * nothing and returns the current snapshot.
+ */
+export function applyActivateCurrentIslandTimer(
+  options: ApplyActivateCurrentIslandTimerOptions,
+): ApplyActivateCurrentIslandTimerResult {
+  const { session, client, islandNumber, cycleIndex, nowMs, durationMs, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+
+  if (current.islandStartedAtMs > 0 && current.islandExpiresAtMs > 0) {
+    return { record: current, changed: false };
+  }
+
+  const normalizedNowMs = Number.isFinite(nowMs) ? Math.max(0, Math.trunc(nowMs)) : 0;
+  const normalizedDurationMs = Number.isFinite(durationMs) ? Math.max(0, Math.trunc(durationMs)) : 0;
+  const islandStartedAtMs = normalizedNowMs;
+  const islandExpiresAtMs = normalizedNowMs + normalizedDurationMs;
+  const nextIslandNumber = Number.isFinite(islandNumber) ? Math.max(1, Math.trunc(islandNumber)) : current.currentIslandNumber;
+  const nextCycleIndex = Number.isFinite(cycleIndex) ? Math.max(0, Math.trunc(cycleIndex)) : current.cycleIndex;
+
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    currentIslandNumber: nextIslandNumber,
+    cycleIndex: nextCycleIndex,
+    islandStartedAtMs,
+    islandExpiresAtMs,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_activate_current_island_timer',
+  });
+  return { record: next, changed: true };
 }
 
 /**

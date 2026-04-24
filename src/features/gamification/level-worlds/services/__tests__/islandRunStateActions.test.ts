@@ -29,6 +29,7 @@ import {
 } from '../islandRunStateStore';
 import {
   applyActiveCompanion,
+  applyActivateCurrentIslandTimer,
   applyAudioEnabledMarker,
   applyBossTrialResolvedMarker,
   applyCompanionBonusLastVisitKeyMarker,
@@ -1747,6 +1748,99 @@ export const islandRunStateActionsTests: TestCase[] = [
   },
 
   // ── C3: travelToNextIsland ──────────────────────────────────────────────
+
+  {
+    name: 'applyActivateCurrentIslandTimer starts current island timer with correct fields',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 30,
+        currentIslandNumber: 5,
+        cycleIndex: 2,
+        islandStartedAtMs: 0,
+        islandExpiresAtMs: 0,
+      });
+
+      const result = applyActivateCurrentIslandTimer({
+        session,
+        client: null,
+        islandNumber: 5,
+        cycleIndex: 2,
+        nowMs: 1_000_000,
+        durationMs: 86_400_000,
+        triggerSource: 'test_activate_current_island_timer',
+      });
+
+      assertEqual(result.changed, true, 'timer activation should commit');
+      assertEqual(result.record.currentIslandNumber, 5, 'island number should be preserved');
+      assertEqual(result.record.cycleIndex, 2, 'cycle index should be preserved');
+      assertEqual(result.record.islandStartedAtMs, 1_000_000, 'started timestamp should match nowMs');
+      assertEqual(result.record.islandExpiresAtMs, 87_400_000, 'expires timestamp should be nowMs + durationMs');
+      assertEqual(result.record.runtimeVersion, 31, 'runtimeVersion should bump by one');
+    },
+  },
+
+  {
+    name: 'applyActivateCurrentIslandTimer is no-op/idempotent when timer already started',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 8,
+        currentIslandNumber: 9,
+        cycleIndex: 1,
+        islandStartedAtMs: 500_000,
+        islandExpiresAtMs: 600_000,
+      });
+
+      const result = applyActivateCurrentIslandTimer({
+        session,
+        client: null,
+        islandNumber: 9,
+        cycleIndex: 1,
+        nowMs: 900_000,
+        durationMs: 86_400_000,
+        triggerSource: 'test_activate_current_island_timer_idempotent',
+      });
+
+      assertEqual(result.changed, false, 'already-started timer should no-op');
+      assertEqual(result.record.islandStartedAtMs, 500_000, 'started timestamp should remain unchanged');
+      assertEqual(result.record.islandExpiresAtMs, 600_000, 'expires timestamp should remain unchanged');
+      assertEqual(result.record.runtimeVersion, 8, 'runtimeVersion should not change on no-op');
+    },
+  },
+
+  {
+    name: 'applyActivateCurrentIslandTimer does not change unrelated fields',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 12,
+        currentIslandNumber: 3,
+        cycleIndex: 0,
+        islandStartedAtMs: 0,
+        islandExpiresAtMs: 0,
+        essence: 777,
+        spinTokens: 42,
+      });
+
+      const result = applyActivateCurrentIslandTimer({
+        session,
+        client: null,
+        islandNumber: 3,
+        cycleIndex: 0,
+        nowMs: 10_000,
+        durationMs: 1_000,
+        triggerSource: 'test_activate_current_island_timer_unrelated_preserved',
+      });
+
+      assertEqual(result.changed, true, 'pending timer should activate');
+      assertEqual(result.record.essence, 777, 'unrelated essence should be preserved');
+      assertEqual(result.record.spinTokens, 42, 'unrelated spinTokens should be preserved');
+    },
+  },
 
   {
     name: 'travelToNextIsland commits all four legacy patches in ONE store commit',

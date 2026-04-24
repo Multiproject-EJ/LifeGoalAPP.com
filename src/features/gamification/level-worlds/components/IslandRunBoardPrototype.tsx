@@ -90,6 +90,7 @@ import {
   applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
   applyCreatureTreatInventory,
+  applyActivateCurrentIslandTimer,
   applyEggResolution,
   applyHydrationEggReadyTransition,
   applyEggPlacement,
@@ -3908,31 +3909,28 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const activateCurrentIsland = useCallback(() => {
     const nowMs = Date.now();
     const durationMs = getIslandDurationMs(islandNumber);
-    const expiresAtMs = nowMs + durationMs;
-    setIslandStartedAtMs(nowMs);
-    setIslandExpiresAtMs(expiresAtMs);
-    setTimeLeftSec(Math.ceil(durationMs / 1000));
-    setIsIslandTimerPendingStart(false);
+    const activationResult = applyActivateCurrentIslandTimer({
+      session,
+      client,
+      islandNumber,
+      cycleIndex,
+      nowMs,
+      durationMs,
+      triggerSource: 'activate_current_island',
+    });
+    const nextRecord = activationResult.record;
+    setIslandStartedAtMs(nextRecord.islandStartedAtMs);
+    setIslandExpiresAtMs(nextRecord.islandExpiresAtMs);
+    setTimeLeftSec(
+      nextRecord.islandStartedAtMs > 0 && nextRecord.islandExpiresAtMs > 0
+        ? Math.max(0, Math.ceil((nextRecord.islandExpiresAtMs - nextRecord.islandStartedAtMs) / 1000))
+        : 0,
+    );
+    setIsIslandTimerPendingStart(!(nextRecord.islandStartedAtMs > 0 && nextRecord.islandExpiresAtMs > 0));
     setLandingText(ISLAND_RUN_CONTRACT_V2_ENABLED
       ? 'Island run started. Timer shown for event context only.'
       : 'Island timer started. Roll dice to move!');
-    void persistIslandRunRuntimeStatePatch({
-      session,
-      client,
-      patch: {
-        currentIslandNumber: islandNumber,
-        cycleIndex,
-        islandStartedAtMs: nowMs,
-        islandExpiresAtMs: expiresAtMs,
-      },
-    });
-    setRuntimeState((current) => ({
-      ...current,
-      currentIslandNumber: islandNumber,
-      cycleIndex,
-      islandStartedAtMs: nowMs,
-      islandExpiresAtMs: expiresAtMs,
-    }));
+    setRuntimeState(nextRecord);
   }, [client, cycleIndex, islandNumber, session]);
 
   const runContractV2RewardBarClaimCascade = useCallback((options: {
