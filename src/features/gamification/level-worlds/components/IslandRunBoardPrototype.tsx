@@ -1606,7 +1606,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     applyPassiveDiceRegen('startup');
     const intervalId = window.setInterval(() => {
       applyPassiveDiceRegen('interval');
-    }, 30_000);
+    }, 1_000);
     return () => window.clearInterval(intervalId);
   }, [applyPassiveDiceRegen, hasHydratedRuntimeState]);
 

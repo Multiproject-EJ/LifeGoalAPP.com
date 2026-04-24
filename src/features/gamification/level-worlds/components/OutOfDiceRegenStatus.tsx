@@ -58,6 +58,7 @@ export function OutOfDiceRegenStatus(props: OutOfDiceRegenStatusProps) {
     nowMs,
   });
   const maxDice = regenState?.maxDice ?? 0;
+  const nextTickPool = maxDice > 0 ? Math.min(maxDice, dicePool + 1) : dicePool;
   const progressPct = maxDice > 0
     ? Math.min(100, Math.max(0, (dicePool / maxDice) * 100))
     : 0;
@@ -92,6 +93,9 @@ export function OutOfDiceRegenStatus(props: OutOfDiceRegenStatusProps) {
             <>
               <p className="island-run-prototype__out-of-dice-regen-line">
                 {DICE_REGEN_NEXT_DICE_LABEL} <strong>{formatShortCountdown(nextRollEtaMs)}</strong>
+              </p>
+              <p className="island-run-prototype__out-of-dice-regen-line island-run-prototype__out-of-dice-regen-line--muted">
+                At countdown end: <strong>{nextTickPool}</strong> / <strong>{maxDice}</strong> dice.
               </p>
             </>
           ) : (

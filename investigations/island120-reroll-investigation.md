@@ -171,9 +171,11 @@ Goal: align the current implementation to the requested baseline/scaling spec.
 2. **Step 3 implemented**:
    - `applyDiceRegeneration` now runs on interval-tick semantics derived from `regenIntervalMinutes`.
    - Regen grants accumulate one die per elapsed interval on resume/re-entry (catch-up), capped at `maxDice`.
+   - Runtime apply cadence now checks every second while Island Run is open so grants land at/near countdown completion instead of waiting up to 30s.
 3. **Step 4 implemented**:
    - Out-of-dice UI now shows only next-dice countdown copy.
    - Full-refill line removed from modal UI.
+   - Out-of-dice modal now previews the expected dice count at countdown end.
 4. **Step 5 implemented**:
    - Updated regen tests for level-band config + interval semantics + ETA behavior.
    - Updated runtime regen integration tests to the new level-band expectations.
