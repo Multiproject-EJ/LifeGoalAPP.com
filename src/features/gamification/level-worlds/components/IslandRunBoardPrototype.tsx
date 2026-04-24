@@ -85,14 +85,18 @@ import {
 } from '../services/islandRunActionMutex';
 import {
   applyActiveCompanion,
+  applyAudioEnabledMarker,
   applyBossTrialResolvedMarker,
+  applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
   applyCreatureTreatInventory,
   applyEggResolution,
   applyEggPlacement,
   applyFirstRunClaimed,
   applyFirstRunStarterRewards,
+  applyOnboardingDisplayNameLoopMarker,
   applyQaProgressionSnapshot,
+  applyStoryPrologueSeenMarker,
   applyStopBuildSpend,
   applyStopObjectiveProgress,
   applyStopTicketPayment,
@@ -2494,15 +2498,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
     if (runtimeState.onboardingDisplayNameLoopCompleted === isDisplayNameLoopCompleted) return;
-    void persistIslandRunRuntimeStatePatch({
+    const next = applyOnboardingDisplayNameLoopMarker({
       session,
       client,
-      patch: { onboardingDisplayNameLoopCompleted: isDisplayNameLoopCompleted },
+      completed: isDisplayNameLoopCompleted,
+      triggerSource: 'sync_onboarding_display_name_loop_marker_effect',
     });
-    setRuntimeState((current) => ({
-      ...current,
-      onboardingDisplayNameLoopCompleted: isDisplayNameLoopCompleted,
-    }));
+    setRuntimeState(next);
   }, [client, hasHydratedRuntimeState, isDisplayNameLoopCompleted, runtimeState.onboardingDisplayNameLoopCompleted, session]);
 
   useEffect(() => {
@@ -2511,15 +2513,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
     if (runtimeState.audioEnabled === audioEnabled) return;
-    void persistIslandRunRuntimeStatePatch({
+    const next = applyAudioEnabledMarker({
       session,
       client,
-      patch: { audioEnabled },
-    });
-    setRuntimeState((current) => ({
-      ...current,
       audioEnabled,
-    }));
+      triggerSource: 'sync_audio_enabled_marker_effect',
+    });
+    setRuntimeState(next);
   }, [audioEnabled, client, hasHydratedRuntimeState, runtimeState.audioEnabled, session]);
 
   useEffect(() => {
@@ -4974,17 +4974,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    void persistIslandRunRuntimeStatePatch({
+    const next = applyCompanionBonusLastVisitKeyMarker({
       session,
       client,
-      patch: {
-        companionBonusLastVisitKey: visitKey,
-      },
+      visitKey,
+      triggerSource: 'apply_companion_bonus_visit_marker_effect',
     });
-    setRuntimeState((current) => ({
-      ...current,
-      companionBonusLastVisitKey: visitKey,
-    }));
+    setRuntimeState(next);
     companionBonusAppliedVisitKeyRef.current = visitKey;
 
     const isPerfectCompanionActive = perfectCompanionIdSet.has(activeCompanion.creatureId);
@@ -6972,12 +6968,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     } catch {
       // ignore localStorage failures
     }
-    void persistIslandRunRuntimeStatePatch({
+    const next = applyStoryPrologueSeenMarker({
       session,
       client,
-      patch: { storyPrologueSeen: true },
+      storyPrologueSeen: true,
+      triggerSource: 'close_story_reader_marker',
     });
-    setRuntimeState((current) => ({ ...current, storyPrologueSeen: true }));
+    setRuntimeState(next);
   };
 
   if (isRuntimeSyncBlocked || isOwnershipBlocked) {

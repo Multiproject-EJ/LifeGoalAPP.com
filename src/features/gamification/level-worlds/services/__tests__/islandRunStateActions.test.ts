@@ -29,14 +29,18 @@ import {
 } from '../islandRunStateStore';
 import {
   applyActiveCompanion,
+  applyAudioEnabledMarker,
   applyBossTrialResolvedMarker,
+  applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
   applyCreatureTreatInventory,
   applyEggResolution,
   applyEggPlacement,
   applyFirstRunClaimed,
   applyFirstRunStarterRewards,
+  applyOnboardingDisplayNameLoopMarker,
   applyQaProgressionSnapshot,
+  applyStoryPrologueSeenMarker,
   applyStopBuildSpend,
   applyStopObjectiveProgress,
   applyStopTicketPayment,
@@ -533,6 +537,82 @@ export const islandRunStateActionsTests: TestCase[] = [
 
       assertEqual(result.firstRunClaimed, true, 'firstRunClaimed should be true');
       assertEqual(result.runtimeVersion, 6, 'runtimeVersion should bump once');
+    },
+  },
+
+  {
+    name: 'applyOnboardingDisplayNameLoopMarker commits onboarding marker through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 8, onboardingDisplayNameLoopCompleted: false });
+
+      const result = applyOnboardingDisplayNameLoopMarker({
+        session,
+        client: null,
+        completed: true,
+        triggerSource: 'test_onboarding_display_loop_marker',
+      });
+
+      assertEqual(result.onboardingDisplayNameLoopCompleted, true, 'onboarding marker should update');
+      assertEqual(result.runtimeVersion, 9, 'runtimeVersion should bump once');
+    },
+  },
+
+  {
+    name: 'applyAudioEnabledMarker commits audio marker through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 8, audioEnabled: true });
+
+      const result = applyAudioEnabledMarker({
+        session,
+        client: null,
+        audioEnabled: false,
+        triggerSource: 'test_audio_marker',
+      });
+
+      assertEqual(result.audioEnabled, false, 'audio marker should update');
+      assertEqual(result.runtimeVersion, 9, 'runtimeVersion should bump once');
+    },
+  },
+
+  {
+    name: 'applyStoryPrologueSeenMarker commits story marker through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 8, storyPrologueSeen: false });
+
+      const result = applyStoryPrologueSeenMarker({
+        session,
+        client: null,
+        storyPrologueSeen: true,
+        triggerSource: 'test_story_marker',
+      });
+
+      assertEqual(result.storyPrologueSeen, true, 'story marker should update');
+      assertEqual(result.runtimeVersion, 9, 'runtimeVersion should bump once');
+    },
+  },
+
+  {
+    name: 'applyCompanionBonusLastVisitKeyMarker commits visit marker through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 8, companionBonusLastVisitKey: null });
+
+      const result = applyCompanionBonusLastVisitKeyMarker({
+        session,
+        client: null,
+        visitKey: '2:17',
+        triggerSource: 'test_companion_visit_marker',
+      });
+
+      assertEqual(result.companionBonusLastVisitKey, '2:17', 'visit marker should update');
+      assertEqual(result.runtimeVersion, 9, 'runtimeVersion should bump once');
     },
   },
 

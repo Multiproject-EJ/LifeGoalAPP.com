@@ -287,6 +287,34 @@ export interface ApplyActiveCompanionOptions {
   triggerSource?: string;
 }
 
+export interface ApplyOnboardingDisplayNameLoopMarkerOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  completed: boolean;
+  triggerSource?: string;
+}
+
+export interface ApplyAudioEnabledMarkerOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  audioEnabled: boolean;
+  triggerSource?: string;
+}
+
+export interface ApplyStoryPrologueSeenMarkerOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  storyPrologueSeen: boolean;
+  triggerSource?: string;
+}
+
+export interface ApplyCompanionBonusLastVisitKeyMarkerOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  visitKey: string;
+  triggerSource?: string;
+}
+
 /**
  * Withdraws essence from the wallet through the store commit path.
  *
@@ -600,6 +628,107 @@ export function applyActiveCompanion(options: ApplyActiveCompanionOptions): Isla
     client,
     record: next,
     triggerSource: triggerSource ?? 'apply_active_companion',
+  });
+  return next;
+}
+
+/**
+ * Commits onboarding display-loop completion marker through the canonical
+ * store path.
+ */
+export function applyOnboardingDisplayNameLoopMarker(
+  options: ApplyOnboardingDisplayNameLoopMarkerOptions,
+): IslandRunGameStateRecord {
+  const { session, client, completed, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (current.onboardingDisplayNameLoopCompleted === completed) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    onboardingDisplayNameLoopCompleted: completed,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_onboarding_display_name_loop_marker',
+  });
+  return next;
+}
+
+/**
+ * Commits audio-enabled marker through the canonical store path.
+ */
+export function applyAudioEnabledMarker(options: ApplyAudioEnabledMarkerOptions): IslandRunGameStateRecord {
+  const { session, client, audioEnabled, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (current.audioEnabled === audioEnabled) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    audioEnabled,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_audio_enabled_marker',
+  });
+  return next;
+}
+
+/**
+ * Commits story-prologue seen marker through the canonical store path.
+ */
+export function applyStoryPrologueSeenMarker(options: ApplyStoryPrologueSeenMarkerOptions): IslandRunGameStateRecord {
+  const { session, client, storyPrologueSeen, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (current.storyPrologueSeen === storyPrologueSeen) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    storyPrologueSeen,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_story_prologue_seen_marker',
+  });
+  return next;
+}
+
+/**
+ * Commits companion-bonus visit marker through the canonical store path.
+ */
+export function applyCompanionBonusLastVisitKeyMarker(
+  options: ApplyCompanionBonusLastVisitKeyMarkerOptions,
+): IslandRunGameStateRecord {
+  const { session, client, visitKey, triggerSource } = options;
+  const normalizedVisitKey = visitKey.trim();
+  if (!normalizedVisitKey) {
+    return getIslandRunStateSnapshot(session);
+  }
+  const current = getIslandRunStateSnapshot(session);
+  if (current.companionBonusLastVisitKey === normalizedVisitKey) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    companionBonusLastVisitKey: normalizedVisitKey,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_companion_bonus_last_visit_key_marker',
   });
   return next;
 }
