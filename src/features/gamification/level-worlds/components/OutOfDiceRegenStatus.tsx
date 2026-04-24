@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
 import {
-  resolveFullRefillEtaMs,
   resolveNextRollEtaMs,
   type DiceRegenState,
 } from '../services/islandRunDiceRegeneration';
@@ -12,11 +11,11 @@ import {
  *
  * Renders:
  *   - A progress bar showing `dicePool / maxDice`
- *   - "Next roll in MM:SS" countdown (clamps to 0 once reached)
- *   - "Full refill in HH:MM" secondary line
+ *   - "Next dice in MM:SS" countdown (clamps to 0 once reached)
+ *   - No full-refill ETA line (countdown contract keeps only next-die timing)
  *
- * Uses the pure `resolveNextRollEtaMs` / `resolveFullRefillEtaMs` helpers so
- * the math stays testable. A 1s interval re-renders the countdown while this
+ * Uses the pure `resolveNextRollEtaMs` helper so the math stays testable.
+ * A 1s interval re-renders the countdown while this
  * component is mounted — callers should only mount it while their modal is
  * open to keep the interval scope tight.
  */
@@ -35,17 +34,6 @@ function formatShortCountdown(ms: number): string {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
-
-function formatLongCountdown(ms: number): string {
-  if (!Number.isFinite(ms)) return '—';
-  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  if (hours === 0) {
-    return `${minutes}m`;
-  }
-  return `${hours}h ${String(minutes).padStart(2, '0')}m`;
 }
 
 export function OutOfDiceRegenStatus(props: OutOfDiceRegenStatusProps) {
@@ -68,12 +56,6 @@ export function OutOfDiceRegenStatus(props: OutOfDiceRegenStatusProps) {
     regenState,
     nowMs,
   });
-  const fullRefillEtaMs = resolveFullRefillEtaMs({
-    dicePool,
-    regenState,
-    nowMs,
-  });
-
   const maxDice = regenState?.maxDice ?? 0;
   const progressPct = maxDice > 0
     ? Math.min(100, Math.max(0, (dicePool / maxDice) * 100))
@@ -108,10 +90,7 @@ export function OutOfDiceRegenStatus(props: OutOfDiceRegenStatusProps) {
           ) : hasRegen ? (
             <>
               <p className="island-run-prototype__out-of-dice-regen-line">
-                Next roll ready in <strong>{formatShortCountdown(nextRollEtaMs)}</strong>
-              </p>
-              <p className="island-run-prototype__out-of-dice-regen-line island-run-prototype__out-of-dice-regen-line--muted">
-                Full refill in {formatLongCountdown(fullRefillEtaMs)}
+                Next dice in <strong>{formatShortCountdown(nextRollEtaMs)}</strong>
               </p>
             </>
           ) : (
