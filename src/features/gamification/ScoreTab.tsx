@@ -39,8 +39,8 @@ import { RewardEvolutionModal } from './RewardEvolutionModal';
 import { PowerUpsStore } from '../power-ups/PowerUpsStore';
 import {
   readIslandRunRuntimeState,
-  persistIslandRunRuntimeStatePatch,
 } from './level-worlds/services/islandRunRuntimeState';
+import { applyWalletShieldsSet } from './level-worlds/services/islandRunStateActions';
 import {
   DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG,
   readPerfectCompanionRuntimeConfig,
@@ -239,16 +239,16 @@ export function ScoreTab({
     setShieldConverting(true);
     setShieldConvertFeedback(null);
 
-    // M17B stub: Persist shields: 0 (coins field will be added in a later slice when IslandRunRuntimeState gains a coins field)
-    const result = await persistIslandRunRuntimeStatePatch({
+    const result = applyWalletShieldsSet({
       session,
       client: null,
-      patch: { shields: 0 },
+      nextShields: 0,
+      triggerSource: 'score_tab_convert_shields',
     });
 
     setShieldConverting(false);
 
-    if (result.ok) {
+    if (result.changed || result.record.shields === 0) {
       setShieldConvertFeedback(`Converted ${shieldsBalance} shield${shieldsBalance !== 1 ? 's' : ''} → ${coinsGained} coins!`);
       setShieldsBalance(0);
     } else {
