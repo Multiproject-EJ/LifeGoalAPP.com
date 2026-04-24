@@ -83,3 +83,24 @@ Both footer countdown and out-of-dice modal depend on `runtimeState.diceRegenSta
    - `src/features/gamification/level-worlds/services/__tests__/islandRunRuntimeRegen.test.ts`
    - Covers bootstrap, no-op suppression, elapsed-time dice gain, and level-change regen-shape updates.
 4. Registered the new test suite in `runIslandRunServiceTests.ts`.
+
+## Closure assessment (2026-04-24)
+
+### Status for the reported issue
+**✅ Functionally resolved in code.**
+
+The originally reported defect was:
+1. Passive reroll/dice regen not replenishing the pool.
+2. No visible regen countdown.
+
+Both are now addressed by:
+- Runtime regen bootstrap/apply integration (`startup`, `interval`, `focus`, `visibility`, `pre_roll`).
+- Persisting `dicePool` + `diceRegenState` for UI countdown consumers.
+- Extracted, test-covered runtime regen helper used by board runtime.
+
+### Is a new AI session needed?
+**No, not required for this issue.** A new session is only needed if product/QA finds a new edge case not covered here.
+
+### What (if anything) is still left?
+1. **Recommended QA verification pass in app UI** (non-code): run through out-of-dice -> wait -> countdown appears -> roll becomes available.
+2. **Unrelated baseline test debt remains** in minigame consolidation suites (known pre-existing failures), but this does not block closing this regen issue.
