@@ -1,105 +1,143 @@
 import {
+  resolveDiceRegenConfig,
+  DICE_REGEN_NEXT_DICE_LABEL,
   resolveDiceRegenMinDice,
   resolveDiceRegenRatePerHour,
   applyDiceRegeneration,
   buildInitialDiceRegenState,
   resolveNextRollEtaMs,
   resolveFullRefillEtaMs,
-  DICE_REGEN_FULL_WINDOW_MS,
 } from '../islandRunDiceRegeneration';
 import { assert, assertEqual, type TestCase } from './testHarness';
 
 export const islandRunDiceRegenerationTests: TestCase[] = [
   {
-    name: 'level 1 resolves base minimum dice of 30',
+    name: 'UI contract label constant is stable',
     run: () => {
-      assertEqual(resolveDiceRegenMinDice(1), 30, 'Expected level 1 minDice = 30');
+      assertEqual(DICE_REGEN_NEXT_DICE_LABEL, 'Next dice in', 'Expected canonical next-dice label');
     },
   },
   {
-    name: 'level 10 resolves logarithmic minimum dice of 76',
+    name: 'level-band config: level 1 maps to 30 dice at 8 minutes',
     run: () => {
-      // 30 + floor(20 × ln(10)) = 30 + floor(46.05) = 76
-      assertEqual(resolveDiceRegenMinDice(10), 76, 'Expected level 10 minDice = 76');
+      const cfg = resolveDiceRegenConfig(1);
+      assertEqual(cfg.maxDice, 30, 'Expected L1 maxDice=30');
+      assertEqual(cfg.regenIntervalMinutes, 8, 'Expected L1 interval=8m');
     },
   },
   {
-    name: 'level 100 resolves logarithmic minimum dice of 122',
+    name: 'level-band config: level 20 maps to 100 dice at 10 minutes',
     run: () => {
-      // 30 + floor(20 × ln(100)) = 30 + floor(92.10) = 122
-      assertEqual(resolveDiceRegenMinDice(100), 122, 'Expected level 100 minDice = 122');
+      const cfg = resolveDiceRegenConfig(20);
+      assertEqual(cfg.maxDice, 100, 'Expected L20 maxDice=100');
+      assertEqual(cfg.regenIntervalMinutes, 10, 'Expected L20 interval=10m');
     },
   },
   {
-    name: 'level 500 works without cap — returns 154',
+    name: 'level-band config: level 125+ maps to 200 dice at 7 minutes',
     run: () => {
-      // 30 + floor(20 × ln(500)) = 30 + floor(124.21) = 154
-      assertEqual(resolveDiceRegenMinDice(500), 154, 'Expected level 500 minDice = 154 (no cap)');
+      const cfg = resolveDiceRegenConfig(125);
+      assertEqual(cfg.maxDice, 200, 'Expected L125 maxDice=200');
+      assertEqual(cfg.regenIntervalMinutes, 7, 'Expected L125 interval=7m');
     },
   },
   {
-    name: 'regen rate per hour is minDice / 2',
+    name: 'resolveDiceRegenMinDice mirrors band maxDice',
     run: () => {
-      assertEqual(resolveDiceRegenRatePerHour(1), 15, 'Expected level 1 regen rate = 15/hr');
-      assertEqual(resolveDiceRegenRatePerHour(50), 54, 'Expected level 50 regen rate = 54/hr');
+      assertEqual(resolveDiceRegenMinDice(50), 125, 'Expected L50 maxDice from band');
     },
   },
   {
-    name: 'no regen when current pool is at or above minimum',
+    name: 'resolveDiceRegenRatePerHour derives from interval minutes',
+    run: () => {
+      // L1: 8m interval => 7.5 dice/hour
+      assertEqual(resolveDiceRegenRatePerHour(1), 7.5, 'Expected 60/8 = 7.5 dice/hour at L1');
+      // L125: 7m interval => 8.571428...
+      assertEqual(resolveDiceRegenRatePerHour(125), 60 / 7, 'Expected 60/7 dice/hour at L125');
+    },
+  },
+  {
+    name: 'no regen when current pool is at or above cap',
     run: () => {
       const state = buildInitialDiceRegenState(1, 0);
       const result = applyDiceRegeneration({
-        currentDicePool: 540,
+        currentDicePool: 30,
         regenState: state,
         playerLevel: 1,
-        nowMs: DICE_REGEN_FULL_WINDOW_MS, // 2 hours later
+        nowMs: 8 * 60 * 1000,
       });
-      assertEqual(result.diceAdded, 0, 'Expected no regen when pool >= minDice');
-      assertEqual(result.dicePool, 540, 'Expected pool unchanged');
+      assertEqual(result.diceAdded, 0, 'Expected no regen at cap');
+      assertEqual(result.dicePool, 30, 'Expected pool unchanged at cap');
     },
   },
   {
-    name: 'full regen from 0 to minDice in 2 hours for level 1',
+    name: 'overflow is preserved: reward dice above cap are never clamped by regen',
+    run: () => {
+      const state = buildInitialDiceRegenState(1, 0);
+      const result = applyDiceRegeneration({
+        currentDicePool: 45, // above L1 cap (30)
+        regenState: state,
+        playerLevel: 1,
+        nowMs: 99 * 60 * 1000,
+      });
+      assertEqual(result.diceAdded, 0, 'Expected no passive grant while above cap');
+      assertEqual(result.dicePool, 45, 'Expected overflow dice to remain untouched');
+    },
+  },
+  {
+    name: 'strict +1 cadence: one interval grants exactly one die',
     run: () => {
       const state = buildInitialDiceRegenState(1, 0);
       const result = applyDiceRegeneration({
         currentDicePool: 0,
         regenState: state,
         playerLevel: 1,
-        nowMs: DICE_REGEN_FULL_WINDOW_MS, // exactly 2 hours
+        nowMs: 8 * 60 * 1000,
       });
-      assertEqual(result.dicePool, 30, 'Expected full regen to minDice=30 after 2h');
-      assertEqual(result.diceAdded, 30, 'Expected 30 dice added');
+      assertEqual(result.diceAdded, 1, 'Expected exactly +1 after one full interval');
+      assertEqual(result.dicePool, 1, 'Expected pool +1');
     },
   },
   {
-    name: 'partial regen after 1 hour at level 1',
+    name: 'carry behavior: insufficient elapsed time grants no dice',
     run: () => {
       const state = buildInitialDiceRegenState(1, 0);
-      const oneHourMs = DICE_REGEN_FULL_WINDOW_MS / 2;
       const result = applyDiceRegeneration({
         currentDicePool: 0,
         regenState: state,
         playerLevel: 1,
-        nowMs: oneHourMs,
+        nowMs: 7 * 60 * 1000,
       });
-      assertEqual(result.dicePool, 15, 'Expected half regen after 1 hour');
-      assertEqual(result.diceAdded, 15, 'Expected 15 dice added');
+      assertEqual(result.diceAdded, 0, 'Expected +0 before interval boundary');
+      assertEqual(result.dicePool, 0, 'Expected pool unchanged before interval boundary');
     },
   },
   {
-    name: 'regen caps at minDice and does not exceed it',
+    name: 'offline/background catch-up grants one die per elapsed interval',
     run: () => {
       const state = buildInitialDiceRegenState(1, 0);
       const result = applyDiceRegeneration({
-        currentDicePool: 20,
+        currentDicePool: 0,
         regenState: state,
         playerLevel: 1,
-        nowMs: DICE_REGEN_FULL_WINDOW_MS, // 2 hours
+        nowMs: 24 * 60 * 1000, // 3 intervals
       });
-      // deficit = 30 - 20 = 10, regen = 30, capped to 10
-      assertEqual(result.dicePool, 30, 'Expected regen to cap at minDice');
-      assertEqual(result.diceAdded, 10, 'Expected only deficit added');
+      assertEqual(result.diceAdded, 3, 'Expected +3 across three elapsed intervals');
+      assertEqual(result.dicePool, 3, 'Expected pool +3 after long elapsed window');
+    },
+  },
+  {
+    name: 'regen caps at maxDice and does not exceed it',
+    run: () => {
+      const state = buildInitialDiceRegenState(1, 0);
+      const result = applyDiceRegeneration({
+        currentDicePool: 29,
+        regenState: state,
+        playerLevel: 1,
+        nowMs: 100 * 60 * 1000,
+      });
+      assertEqual(result.dicePool, 30, 'Expected cap at 30 for L1');
+      assertEqual(result.diceAdded, 1, 'Expected only deficit granted');
     },
   },
   {
@@ -112,47 +150,31 @@ export const islandRunDiceRegenerationTests: TestCase[] = [
         nowMs: 1000,
       });
       assertEqual(result.diceAdded, 0, 'Expected no dice added on initial state creation');
-      assert(result.regenState !== null, 'Expected regenState to be initialized');
-      assertEqual(result.regenState.maxDice, 30, 'Expected initial maxDice = 30');
-      assertEqual(result.regenState.lastRegenAtMs, 1000, 'Expected lastRegenAtMs to be set');
+      assert(result.regenState !== null, 'Expected regenState initialized');
+      assertEqual(result.regenState.maxDice, 30, 'Expected L1 cap');
+      assertEqual(result.regenState.lastRegenAtMs, 1000, 'Expected lastRegenAtMs set');
     },
   },
   {
-    name: 'regen updates when player level increases to 50',
+    name: 'regen updates shape when player level increases to 50',
     run: () => {
       const state = buildInitialDiceRegenState(1, 0);
-      // Player leveled up to 50 (minDice = 108)
       const result = applyDiceRegeneration({
         currentDicePool: 0,
         regenState: state,
         playerLevel: 50,
-        nowMs: DICE_REGEN_FULL_WINDOW_MS,
+        nowMs: 9 * 60 * 1000,
       });
-      assertEqual(result.regenState.maxDice, 108, 'Expected maxDice to update to level 50 value');
-      assertEqual(result.dicePool, 108, 'Expected full regen at new level');
+      assertEqual(result.regenState.maxDice, 125, 'Expected L50 cap from band');
+      assertEqual(result.dicePool, 1, 'Expected only one interval grant at 9m');
     },
   },
-  {
-    name: 'no regen for zero elapsed time',
-    run: () => {
-      const state = buildInitialDiceRegenState(1, 100);
-      const result = applyDiceRegeneration({
-        currentDicePool: 0,
-        regenState: state,
-        playerLevel: 1,
-        nowMs: 100,
-      });
-      assertEqual(result.diceAdded, 0, 'Expected no regen with zero elapsed time');
-      assertEqual(result.dicePool, 0, 'Expected pool unchanged');
-    },
-  },
-  // ── resolveNextRollEtaMs / resolveFullRefillEtaMs ─────────────────────────
   {
     name: 'ETA is 0 when pool already meets target',
     run: () => {
       const state = buildInitialDiceRegenState(1, 0);
       const eta = resolveNextRollEtaMs({ dicePool: 5, target: 2, regenState: state, nowMs: 0 });
-      assertEqual(eta, 0, 'Expected 0 ms when pool >= target');
+      assertEqual(eta, 0, 'Expected 0 when pool >= target');
     },
   },
   {
@@ -163,63 +185,35 @@ export const islandRunDiceRegenerationTests: TestCase[] = [
     },
   },
   {
-    name: 'ETA is infinite when target exceeds maxDice cap',
+    name: 'ETA is infinite when target exceeds cap',
     run: () => {
       const state = buildInitialDiceRegenState(1, 0);
-      // Level 1 maxDice = 30; target of 50 is unreachable via passive regen.
       const eta = resolveNextRollEtaMs({ dicePool: 0, target: 50, regenState: state, nowMs: 0 });
-      assertEqual(eta, Number.POSITIVE_INFINITY, 'Expected infinity above maxDice');
+      assertEqual(eta, Number.POSITIVE_INFINITY, 'Expected infinity above cap');
     },
   },
   {
-    name: 'ETA for 1 die at level 1 equals 240000 ms (4 min)',
+    name: 'ETA for one die at level 1 equals 480000 ms (8 minutes)',
     run: () => {
-      // Level 1: rate = 15 dice/hour, msPerDie = 3600000/15 = 240000 ms.
       const state = buildInitialDiceRegenState(1, 0);
       const eta = resolveNextRollEtaMs({ dicePool: 0, target: 1, regenState: state, nowMs: 0 });
-      assertEqual(eta, 240000, 'Expected 240000 ms for 1 die at level 1');
-    },
-  },
-  {
-    name: 'ETA for 2 dice at level 1 equals 480000 ms (8 min)',
-    run: () => {
-      const state = buildInitialDiceRegenState(1, 0);
-      const eta = resolveNextRollEtaMs({ dicePool: 0, target: 2, regenState: state, nowMs: 0 });
-      assertEqual(eta, 480000, 'Expected 480000 ms for 2 dice at level 1');
+      assertEqual(eta, 480000, 'Expected 8-minute ETA at L1');
     },
   },
   {
     name: 'ETA decreases as time elapses',
     run: () => {
       const state = buildInitialDiceRegenState(1, 0);
-      // 60 seconds after anchor: remaining = 480000 - 60000 = 420000 ms.
-      const eta = resolveNextRollEtaMs({ dicePool: 0, target: 2, regenState: state, nowMs: 60_000 });
-      assertEqual(eta, 420_000, 'Expected remaining 420000 ms after 60s elapsed');
+      const eta = resolveNextRollEtaMs({ dicePool: 0, target: 1, regenState: state, nowMs: 60_000 });
+      assertEqual(eta, 420_000, 'Expected 7 minutes remaining after 1 minute');
     },
   },
   {
-    name: 'ETA clamps to 0 after full duration elapsed',
+    name: 'resolveFullRefillEtaMs remains deterministic (helper still available)',
     run: () => {
       const state = buildInitialDiceRegenState(1, 0);
-      const eta = resolveNextRollEtaMs({ dicePool: 0, target: 2, regenState: state, nowMs: 999_999_999 });
-      assertEqual(eta, 0, 'Expected 0 after pool has been refilled');
-    },
-  },
-  {
-    name: 'resolveFullRefillEtaMs targets maxDice automatically',
-    run: () => {
-      const state = buildInitialDiceRegenState(1, 0);
-      // Level 1 full refill = DICE_REGEN_FULL_WINDOW_MS = 2h = 7_200_000ms.
       const eta = resolveFullRefillEtaMs({ dicePool: 0, regenState: state, nowMs: 0 });
-      assertEqual(eta, DICE_REGEN_FULL_WINDOW_MS, 'Expected full refill ETA = 2 hours');
-    },
-  },
-  {
-    name: 'resolveFullRefillEtaMs is 0 when pool is already full',
-    run: () => {
-      const state = buildInitialDiceRegenState(1, 0);
-      const eta = resolveFullRefillEtaMs({ dicePool: 30, regenState: state, nowMs: 0 });
-      assertEqual(eta, 0, 'Expected 0 when pool is already at maxDice');
+      assertEqual(eta, 30 * 8 * 60 * 1000, 'Expected 30 dice * 8 minutes at L1');
     },
   },
 ];

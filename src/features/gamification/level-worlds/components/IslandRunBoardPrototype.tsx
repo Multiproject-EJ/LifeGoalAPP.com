@@ -242,9 +242,11 @@ import {
 } from '../../../../services/minigameTicketStore';
 import { scheduleEggHatchNotification } from '../../../../services/habitAlertNotifications';
 import {
+  DICE_REGEN_NEXT_DICE_LABEL,
   resolveNextRollEtaMs,
   type DiceRegenState,
 } from '../services/islandRunDiceRegeneration';
+import { resolveRuntimeDiceRegenUpdate } from '../services/islandRunRuntimeRegen';
 import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
 import { resolveNextCheapestIndex } from '../services/islandRunShopAffordability';
 import { adviseEggSellChoice } from '../services/islandRunEggSellAdvisor';
@@ -1412,7 +1414,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
   }, [effectiveMultiplier, diceMultiplier]);
 
-  // ── Dice regen countdown (Monopoly GO style: "X rolls ready in MM:SS") ────
+  // ── Dice regen countdown (Monopoly GO style: "Next dice in MM:SS") ───────
   const [diceRegenCountdown, setDiceRegenCountdown] = useState<string | null>(null);
   const [diceRegenStatusLabel, setDiceRegenStatusLabel] = useState<string | null>(null);
   const [diceRegenRollsReady, setDiceRegenRollsReady] = useState<number | null>(null);
@@ -1553,6 +1555,68 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     runtimeStateRef.current = runtimeState;
   }, [runtimeState]);
 
+  const applyPassiveDiceRegen = useCallback((reason: 'startup' | 'interval' | 'focus' | 'visibility' | 'pre_roll') => {
+    if (!hasHydratedRuntimeState) return runtimeStateRef.current.dicePool;
+    const nowMs = Date.now();
+    const playerLevel = Math.max(1, Math.floor(playerLevelInfo?.currentLevel ?? 1));
+    const current = runtimeStateRef.current;
+    const regenUpdate = resolveRuntimeDiceRegenUpdate({
+      snapshot: {
+        dicePool: current.dicePool,
+        diceRegenState: current.diceRegenState ?? null,
+      },
+      playerLevel,
+      nowMs,
+    });
+
+    if (!regenUpdate) {
+      return current.dicePool;
+    }
+
+    const nextRuntimeState = {
+      ...current,
+      dicePool: regenUpdate.dicePool,
+      diceRegenState: regenUpdate.diceRegenState,
+    };
+    runtimeStateRef.current = nextRuntimeState;
+    setRuntimeState(nextRuntimeState);
+    // Keep the external store mirror in lockstep with regen ticks so HUD
+    // subscribers never display stale dice/countdown values between local
+    // runtime state updates and async persistence.
+    patchIslandRunStateSnapshot(session, {
+      dicePool: regenUpdate.dicePool,
+      diceRegenState: regenUpdate.diceRegenState,
+    });
+    void persistIslandRunRuntimeStatePatch({
+      session,
+      client,
+      patch: {
+        dicePool: regenUpdate.dicePool,
+        diceRegenState: regenUpdate.diceRegenState,
+      },
+    });
+    logIslandRunEntryDebug('dice_regen_applied', {
+      userId: session.user.id,
+      reason,
+      playerLevel,
+      diceBefore: current.dicePool,
+      diceAfter: regenUpdate.dicePool,
+      diceAdded: regenUpdate.diceAdded,
+      regenMaxDice: regenUpdate.diceRegenState.maxDice,
+      regenRatePerHour: regenUpdate.diceRegenState.regenRatePerHour,
+    });
+    return regenUpdate.dicePool;
+  }, [client, hasHydratedRuntimeState, playerLevelInfo?.currentLevel, session]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    applyPassiveDiceRegen('startup');
+    const intervalId = window.setInterval(() => {
+      applyPassiveDiceRegen('interval');
+    }, 1_000);
+    return () => window.clearInterval(intervalId);
+  }, [applyPassiveDiceRegen, hasHydratedRuntimeState]);
+
   // ── Dice regen countdown timer (lives after runtimeState so it can read diceRegenState) ──
   // Uses real elapsed time since lastRegenAtMs so the countdown decrements every
   // second and works correctly when the PWA is reopened after being in the background.
@@ -1594,8 +1658,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const seconds = remainingSec % 60;
       const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
       setDiceRegenCountdown(timeStr);
-      setDiceRegenStatusLabel('rolls ready in');
-      setDiceRegenRollsReady(1);
+      setDiceRegenStatusLabel(DICE_REGEN_NEXT_DICE_LABEL);
+      setDiceRegenRollsReady(null);
     }
 
     tick();
@@ -2368,11 +2432,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     const onFocus = () => {
+      applyPassiveDiceRegen('focus');
       void reconcileRuntimeState('focus');
     };
 
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
+        applyPassiveDiceRegen('visibility');
         void reconcileRuntimeState('visibility');
       }
     };
@@ -2384,7 +2450,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [hasHydratedRuntimeState, reconcileRuntimeState]);
+  }, [applyPassiveDiceRegen, hasHydratedRuntimeState, reconcileRuntimeState]);
 
   useEffect(() => {
     setIsDisplayNameLoopCompleted(runtimeState.onboardingDisplayNameLoopCompleted === true);
@@ -3592,7 +3658,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     : rollButtonMode === 'roll'
       ? 'Roll'
       : 'Need dice';
-  const rollDisabledReason = showFirstRunCelebration
+  const rollBlockedReason = showFirstRunCelebration
     ? 'first_run_celebration'
     : isRolling
       ? 'already_rolling'
@@ -3601,6 +3667,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         : isEnergyDepletedForRoll
           ? 'insufficient_dice'
           : null;
+  const rollDisabledReason = showFirstRunCelebration
+    ? 'first_run_celebration'
+    : isRolling
+      ? 'already_rolling'
+      : showTravelOverlay
+        ? 'travel_overlay'
+        : null;
   const canRoll = !showFirstRunCelebration && !isRolling && !showTravelOverlay && dicePool >= effectiveDiceCost;
   const canHoldForAutoRoll = canRoll && !isIslandTimerPendingStart;
   const rollButtonInteractionClass = isAutoRolling
@@ -3618,10 +3691,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         return 'A roll is already in progress — please wait.';
       case 'travel_overlay':
         return 'Island travel is in progress — please wait.';
-      case 'insufficient_dice':
-        return `Not enough dice to roll. You need ${effectiveDiceCost} dice per roll.`;
       default:
-        return null;
+        return isEnergyDepletedForRoll
+          ? `Not enough dice to roll. You need ${effectiveDiceCost} dice per roll.`
+          : null;
     }
   })();
   const spinTokenWalletLabel = resolveIslandRunSpinTokenWalletLabel(ISLAND_RUN_CONTRACT_V2_ENABLED);
@@ -3705,7 +3778,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         isRolling,
         isBusy: isRolling || showFirstRunCelebration || showTravelOverlay,
         buttonDisabled: Boolean(rollDisabledReason),
-        disabledReason: rollDisabledReason,
+        disabledReason: rollBlockedReason,
         mode: rollButtonMode,
         label: rollButtonLabel,
       },
@@ -3724,6 +3797,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     legacyStep1Complete,
     rollButtonLabel,
     rollButtonMode,
+    rollBlockedReason,
     rollDisabledReason,
     runtimeState.activeStopIndex,
     runtimeState.completedStopsByIsland,
@@ -3789,19 +3863,30 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     island120PendingStopTransitionRef.current = null;
   }, [activeStopId, hasHydratedRuntimeState, islandStopPlan, isIsland120StartupDiagnosticActive, session.user.id]);
 
+  const openOutOfDicePurchasePrompt = useCallback((source: 'auto_prompt' | 'roll_attempt') => {
+    setShowOutOfDicePurchasePrompt(true);
+    setDiceCheckoutError(null);
+    setLandingText(`You're out of dice. Open the shop or buy more rolls.`);
+    logIslandRunEntryDebug('out_of_dice_prompt_opened', {
+      userId: session.user.id,
+      source,
+      dicePool,
+      requiredDicePerRoll: effectiveDiceCost,
+      effectiveMultiplier,
+    });
+  }, [dicePool, effectiveDiceCost, effectiveMultiplier, session.user.id]);
+
   useEffect(() => {
     if (!hasHydratedRuntimeState || isDemoSession(session)) {
       return;
     }
 
     if (shouldPromptDicePurchase && !wasDicePurchasePromptEligibleRef.current) {
-      setShowOutOfDicePurchasePrompt(true);
-      setDiceCheckoutError(null);
-      setLandingText(`You're out of dice. Open the shop or buy more rolls.`);
+      openOutOfDicePurchasePrompt('auto_prompt');
     }
 
     wasDicePurchasePromptEligibleRef.current = shouldPromptDicePurchase;
-  }, [hasHydratedRuntimeState, session, shouldPromptDicePurchase]);
+  }, [hasHydratedRuntimeState, openOutOfDicePurchasePrompt, session, shouldPromptDicePurchase]);
 
   const activateCurrentIsland = useCallback(() => {
     const nowMs = Date.now();
@@ -3948,6 +4033,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       isEnergyDepletedForRoll,
       rollButtonMode,
       rollButtonLabel,
+      rollBlockedReason,
       rollDisabledReason,
     };
     if (isIsland120StartupDiagnosticActive) {
@@ -4005,7 +4091,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return false;
     }
 
-    if (dicePool < effectiveDiceCost) {
+    const refreshedDicePool = applyPassiveDiceRegen('pre_roll');
+    if (refreshedDicePool < effectiveDiceCost) {
       if (isIsland120StartupDiagnosticActive) {
         logIslandRunEntryDebug('island120_roll_interaction', {
           userId: session.user.id,
@@ -4014,7 +4101,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           ...rollDecisionFlags,
         });
       }
-      setLandingText(`Need ${effectiveDiceCost} dice to roll at ×${effectiveMultiplier}.`);
+      openOutOfDicePurchasePrompt('roll_attempt');
       return false;
     }
 
@@ -4058,7 +4145,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         });
       }
       setIsRolling(false);
-      setLandingText(`Need ${effectiveDiceCost} dice to roll at ×${effectiveMultiplier}.`);
+      if (rollResult.status === 'insufficient_dice') {
+        openOutOfDicePurchasePrompt('roll_attempt');
+      } else {
+        setLandingText(`Need ${effectiveDiceCost} dice to roll at ×${effectiveMultiplier}.`);
+      }
       return false;
     }
     if (isIsland120StartupDiagnosticActive) {
@@ -7638,7 +7729,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       <span className="sr-only"> — {rollDisabledMessage}</span>
                     )}
                   </button>
-                  {/* Dice regen countdown — like Monopoly GO "X rolls ready in MM:SS" */}
+                  {/* Dice regen countdown — Monopoly style "Next dice in MM:SS" */}
                   {(diceRegenStatusLabel || diceRegenCountdown) && (
                     <div className="island-run-prototype__dice-regen-timer" aria-live="polite">
                       {diceRegenRollsReady != null ? <><strong>{diceRegenRollsReady}</strong> </> : null}
@@ -9946,7 +10037,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             showTravelOverlay,
             hasHydratedRuntimeState,
             diceRegenCountdown,
-            playerLevel: islandNumber,
+            playerLevel: playerLevelInfo?.currentLevel ?? 1,
           }}
           onClose={() => setShowDebugPanel(false)}
         />
