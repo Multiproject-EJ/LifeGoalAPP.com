@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import {
+  DICE_REGEN_NEXT_DICE_LABEL,
   resolveNextRollEtaMs,
   type DiceRegenState,
 } from '../services/islandRunDiceRegeneration';
@@ -90,7 +91,7 @@ export function OutOfDiceRegenStatus(props: OutOfDiceRegenStatusProps) {
           ) : hasRegen ? (
             <>
               <p className="island-run-prototype__out-of-dice-regen-line">
-                Next dice in <strong>{formatShortCountdown(nextRollEtaMs)}</strong>
+                {DICE_REGEN_NEXT_DICE_LABEL} <strong>{formatShortCountdown(nextRollEtaMs)}</strong>
               </p>
             </>
           ) : (

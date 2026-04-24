@@ -242,7 +242,7 @@ import {
 } from '../../../../services/minigameTicketStore';
 import { scheduleEggHatchNotification } from '../../../../services/habitAlertNotifications';
 import {
-  applyDiceRegeneration,
+  DICE_REGEN_NEXT_DICE_LABEL,
   resolveNextRollEtaMs,
   type DiceRegenState,
 } from '../services/islandRunDiceRegeneration';
@@ -1651,7 +1651,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const seconds = remainingSec % 60;
       const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
       setDiceRegenCountdown(timeStr);
-      setDiceRegenStatusLabel('Next dice in');
+      setDiceRegenStatusLabel(DICE_REGEN_NEXT_DICE_LABEL);
       setDiceRegenRollsReady(null);
     }
 

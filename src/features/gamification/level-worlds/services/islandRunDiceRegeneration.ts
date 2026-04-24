@@ -14,6 +14,8 @@ export interface DiceRegenConfig {
   regenIntervalMinutes: number;
 }
 
+export const DICE_REGEN_NEXT_DICE_LABEL = 'Next dice in';
+
 const DICE_REGEN_LEVEL_BANDS: ReadonlyArray<{
   minLevel: number;
   maxDice: number;

@@ -174,9 +174,12 @@ Goal: align the current implementation to the requested baseline/scaling spec.
 3. **Step 4 implemented**:
    - Out-of-dice UI now shows only next-dice countdown copy.
    - Full-refill line removed from modal UI.
-4. **Step 5 largely implemented**:
+4. **Step 5 implemented**:
    - Updated regen tests for level-band config + interval semantics + ETA behavior.
    - Updated runtime regen integration tests to the new level-band expectations.
+   - Added a canonical UI label constant test to lock the “Next dice in …” contract text.
 
 ### ⏳ Still pending
 1. **Step 6 QA checklist**: manual product QA run-through in-app is still required.
+2. Optional balancing iteration after QA telemetry:
+   - revisit level-band intervals if economy pressure feels too harsh/lenient.

@@ -1,5 +1,6 @@
 import {
   resolveDiceRegenConfig,
+  DICE_REGEN_NEXT_DICE_LABEL,
   resolveDiceRegenMinDice,
   resolveDiceRegenRatePerHour,
   applyDiceRegeneration,
@@ -10,6 +11,12 @@ import {
 import { assert, assertEqual, type TestCase } from './testHarness';
 
 export const islandRunDiceRegenerationTests: TestCase[] = [
+  {
+    name: 'UI contract label constant is stable',
+    run: () => {
+      assertEqual(DICE_REGEN_NEXT_DICE_LABEL, 'Next dice in', 'Expected canonical next-dice label');
+    },
+  },
   {
     name: 'level-band config: level 1 maps to 30 dice at 8 minutes',
     run: () => {
@@ -61,6 +68,20 @@ export const islandRunDiceRegenerationTests: TestCase[] = [
       });
       assertEqual(result.diceAdded, 0, 'Expected no regen at cap');
       assertEqual(result.dicePool, 30, 'Expected pool unchanged at cap');
+    },
+  },
+  {
+    name: 'overflow is preserved: reward dice above cap are never clamped by regen',
+    run: () => {
+      const state = buildInitialDiceRegenState(1, 0);
+      const result = applyDiceRegeneration({
+        currentDicePool: 45, // above L1 cap (30)
+        regenState: state,
+        playerLevel: 1,
+        nowMs: 99 * 60 * 1000,
+      });
+      assertEqual(result.diceAdded, 0, 'Expected no passive grant while above cap');
+      assertEqual(result.dicePool, 45, 'Expected overflow dice to remain untouched');
     },
   },
   {
