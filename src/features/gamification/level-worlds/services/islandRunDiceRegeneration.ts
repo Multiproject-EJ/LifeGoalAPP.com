@@ -112,8 +112,7 @@ export function applyDiceRegeneration(params: {
     };
   }
 
-  const fullTicks = Math.floor(elapsedMs / intervalMs);
-  if (fullTicks <= 0) {
+  if (elapsedMs < intervalMs) {
     return {
       dicePool: safePool,
       regenState: {
@@ -125,11 +124,10 @@ export function applyDiceRegeneration(params: {
     };
   }
 
-  const deficit = Math.max(0, config.maxDice - safePool);
-  const diceAdded = Math.min(deficit, fullTicks);
-
-  // Maintain deterministic timer carry by only consuming time for granted ticks.
-  const nextLastRegenAtMs = params.regenState.lastRegenAtMs + (diceAdded * intervalMs);
+  // Strict non-batching baseline: one die per completed interval, timer resets
+  // to "now" after each grant.
+  const diceAdded = 1;
+  const nextLastRegenAtMs = safeNow;
 
   return {
     dicePool: safePool + diceAdded,

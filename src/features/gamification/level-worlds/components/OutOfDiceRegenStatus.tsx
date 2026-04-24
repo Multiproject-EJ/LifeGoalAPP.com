@@ -11,7 +11,7 @@ import {
  *
  * Renders:
  *   - A progress bar showing `dicePool / maxDice`
- *   - "Next roll in MM:SS" countdown (clamps to 0 once reached)
+ *   - "Next dice in MM:SS" countdown (clamps to 0 once reached)
  *   - No full-refill ETA line (countdown contract keeps only next-die timing)
  *
  * Uses the pure `resolveNextRollEtaMs` helper so the math stays testable.

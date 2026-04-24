@@ -92,7 +92,7 @@ export const islandRunDiceRegenerationTests: TestCase[] = [
     },
   },
   {
-    name: 'catch-up grants one die per elapsed interval (deterministic)',
+    name: 'non-batching baseline: long elapsed window still grants exactly one die',
     run: () => {
       const state = buildInitialDiceRegenState(1, 0);
       const result = applyDiceRegeneration({
@@ -101,8 +101,8 @@ export const islandRunDiceRegenerationTests: TestCase[] = [
         playerLevel: 1,
         nowMs: 24 * 60 * 1000, // 3 intervals
       });
-      assertEqual(result.diceAdded, 3, 'Expected 3 dice across three full intervals');
-      assertEqual(result.dicePool, 3, 'Expected pool +3 after 24 minutes');
+      assertEqual(result.diceAdded, 1, 'Expected one die grant per apply call');
+      assertEqual(result.dicePool, 1, 'Expected pool +1 after long elapsed window');
     },
   },
   {

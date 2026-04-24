@@ -170,7 +170,7 @@ Goal: align the current implementation to the requested baseline/scaling spec.
      - 125+: 200 @ 7m
 2. **Step 3 implemented**:
    - `applyDiceRegeneration` now runs on interval-tick semantics derived from `regenIntervalMinutes`.
-   - Regen grants are interval-based and capped by deficit to `maxDice`.
+   - Regen grants are non-batched (+1 per apply pass once interval has elapsed) and stop at `maxDice`.
 3. **Step 4 implemented**:
    - Out-of-dice UI now shows only next-dice countdown copy.
    - Full-refill line removed from modal UI.

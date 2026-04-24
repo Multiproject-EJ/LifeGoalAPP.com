@@ -46,11 +46,11 @@ export const islandRunRuntimeRegenTests: TestCase[] = [
           diceRegenState: regen,
         },
         playerLevel: 1,
-        nowMs: 60 * 60 * 1000, // 1 hour at 8m interval => +7
+        nowMs: 60 * 60 * 1000, // long elapsed; non-batching baseline still grants +1
       });
       assert(result !== null, 'Expected dice gain update');
-      assertEqual(result!.dicePool, 7, 'Expected +7 dice after one hour at L1');
-      assertEqual(result!.diceAdded, 7, 'Expected reported delta to match granted dice');
+      assertEqual(result!.dicePool, 1, 'Expected +1 dice after one apply pass');
+      assertEqual(result!.diceAdded, 1, 'Expected reported delta to match granted dice');
     },
   },
   {
