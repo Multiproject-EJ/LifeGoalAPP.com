@@ -29,10 +29,7 @@ import { autoResumeDueHabits } from '../../services/habitLifecycleAutoResume';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
-import {
-  readIslandRunRuntimeState,
-  persistIslandRunRuntimeStatePatch,
-} from '../gamification/level-worlds/services/islandRunRuntimeState';
+import { applyWalletShieldsDelta } from '../gamification/level-worlds/services/islandRunStateActions';
 import './HabitsModule.css';
 
 // M17B: Daily Shield cap helpers — localStorage key: shields_earned_today_{userId}_{YYYY-MM-DD} (UTC)
@@ -93,12 +90,11 @@ export function UnifiedTodayView({
       clearTimeout(shieldFeedbackTimerRef.current);
     }
     if (dailyEarned < SHIELDS_DAILY_CAP) {
-      const currentState = readIslandRunRuntimeState(session);
-      const newShields = (currentState.shields ?? 0) + 1;
-      void persistIslandRunRuntimeStatePatch({
+      applyWalletShieldsDelta({
         session,
         client: null,
-        patch: { shields: newShields },
+        delta: 1,
+        triggerSource: 'unified_today_body_habit_shield_award',
       });
       incrementShieldsDailyEarned(session.user.id);
       setShieldFeedback('🛡️ +1 Body Habit Shield earned!');

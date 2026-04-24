@@ -41,6 +41,7 @@ import {
   applyStopObjectiveProgress,
   applyStopTicketPayment,
   applyWalletShardsDelta,
+  applyWalletShieldsDelta,
   applyWalletShieldsSet,
   applyEssenceAward,
   applyEssenceDeduct,
@@ -401,6 +402,46 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.changed, false, 'changed should be false on no-op');
       assertEqual(result.record.runtimeVersion, 20, 'runtimeVersion should not bump on no-op');
       assertEqual(result.record.shields, 0, 'shields should remain unchanged on no-op');
+    },
+  },
+
+  {
+    name: 'applyWalletShieldsDelta awards shields through the canonical store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, shields: 1 });
+
+      const result = applyWalletShieldsDelta({
+        session,
+        client: null,
+        delta: 1,
+        triggerSource: 'test_shields_delta_award',
+      });
+
+      assertEqual(result.appliedDelta, 1, 'appliedDelta should reflect awarded shields');
+      assertEqual(result.record.shields, 2, 'shields should increase by 1');
+      assertEqual(result.record.runtimeVersion, 21, 'runtimeVersion should bump on shield award');
+    },
+  },
+
+  {
+    name: 'applyWalletShieldsDelta spends shields with floor clamp at zero',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 20, shields: 1 });
+
+      const result = applyWalletShieldsDelta({
+        session,
+        client: null,
+        delta: -5,
+        triggerSource: 'test_shields_delta_spend',
+      });
+
+      assertEqual(result.appliedDelta, -1, 'appliedDelta should clamp spend to available shields');
+      assertEqual(result.record.shields, 0, 'shields should floor at zero');
+      assertEqual(result.record.runtimeVersion, 21, 'runtimeVersion should bump on shield spend');
     },
   },
 

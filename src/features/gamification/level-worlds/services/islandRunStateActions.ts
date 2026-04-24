@@ -227,6 +227,20 @@ export interface ApplyWalletShieldsSetResult {
   changed: boolean;
 }
 
+export interface ApplyWalletShieldsDeltaOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  /** Positive = earn, negative = spend. */
+  delta: number;
+  triggerSource?: string;
+}
+
+export interface ApplyWalletShieldsDeltaResult {
+  record: IslandRunGameStateRecord;
+  /** Actual change applied after clamp/no-op guards. */
+  appliedDelta: number;
+}
+
 export interface ApplyBossTrialResolvedMarkerOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -361,6 +375,34 @@ export function applyWalletShieldsSet(options: ApplyWalletShieldsSetOptions): Ap
     triggerSource: triggerSource ?? 'apply_wallet_shields_set',
   });
   return { record: next, changed: true };
+}
+
+/**
+ * Applies a shields wallet delta through the canonical store commit path.
+ *
+ * Used by non-board gameplay surfaces (e.g., habit shield rewards) so wallet
+ * updates no longer route through direct runtime patch writes in UI components.
+ */
+export function applyWalletShieldsDelta(options: ApplyWalletShieldsDeltaOptions): ApplyWalletShieldsDeltaResult {
+  const { session, client, delta, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const parsedDelta = Number.isFinite(delta) ? Math.trunc(delta) : 0;
+  if (parsedDelta === 0) return { record: current, appliedDelta: 0 };
+  const nextShields = Math.max(0, current.shields + parsedDelta);
+  const appliedDelta = nextShields - current.shields;
+  if (appliedDelta === 0) return { record: current, appliedDelta: 0 };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    shields: nextShields,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_wallet_shields_delta',
+  });
+  return { record: next, appliedDelta };
 }
 
 /**

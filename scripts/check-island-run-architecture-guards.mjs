@@ -30,7 +30,6 @@ const RULES = [
     allowlist: new Set([
       // TEMP allowlist (migration exceptions) — remove as slices land.
       'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx',
-      'src/features/habits/UnifiedTodayView.tsx',
       'src/features/gamification/level-worlds/services/islandRunRuntimeState.ts',
       'src/features/gamification/level-worlds/services/islandRunTileRewardAction.ts',
       'src/features/gamification/level-worlds/services/__tests__/islandRunRuntimeState.integration.test.ts',
@@ -61,7 +60,6 @@ const RULES = [
       // TEMP allowlist (known migration paths)
       'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx',
       'src/features/gamification/ScoreTab.tsx',
-      'src/features/habits/UnifiedTodayView.tsx',
       'src/features/habits/DailyHabitTracker.tsx',
       'src/features/gamification/level-worlds/services/islandRunRuntimeState.ts',
       'src/features/gamification/level-worlds/services/__tests__/islandRunRuntimeState.integration.test.ts',
