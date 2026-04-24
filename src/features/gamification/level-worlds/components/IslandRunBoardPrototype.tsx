@@ -1415,6 +1415,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // ── Dice regen countdown (Monopoly GO style: "X rolls ready in MM:SS") ────
   const [diceRegenCountdown, setDiceRegenCountdown] = useState<string | null>(null);
   const [diceRegenStatusLabel, setDiceRegenStatusLabel] = useState<string | null>(null);
+  const [diceRegenRollsReady, setDiceRegenRollsReady] = useState<number | null>(null);
 
   // NOTE: The useEffect for the dice regen countdown timer is placed after runtimeState declaration below.
 
@@ -1560,6 +1561,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (!regenState) {
       setDiceRegenCountdown(null);
       setDiceRegenStatusLabel(null);
+      setDiceRegenRollsReady(null);
       return;
     }
     const activeRegenState = regenState;
@@ -1570,6 +1572,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       if (!isOutOfRolls) {
         setDiceRegenCountdown(null);
         setDiceRegenStatusLabel(null);
+        setDiceRegenRollsReady(null);
         return;
       }
 
@@ -1582,6 +1585,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       if (!Number.isFinite(nextRollEtaMs)) {
         setDiceRegenCountdown(null);
         setDiceRegenStatusLabel(`Need ${safeCost} dice (regen cap: ${activeRegenState.maxDice})`);
+        setDiceRegenRollsReady(null);
         return;
       }
 
@@ -1590,7 +1594,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const seconds = remainingSec % 60;
       const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
       setDiceRegenCountdown(timeStr);
-      setDiceRegenStatusLabel('Next roll in');
+      setDiceRegenStatusLabel('rolls ready in');
+      setDiceRegenRollsReady(1);
     }
 
     tick();
@@ -7636,6 +7641,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   {/* Dice regen countdown — like Monopoly GO "X rolls ready in MM:SS" */}
                   {(diceRegenStatusLabel || diceRegenCountdown) && (
                     <div className="island-run-prototype__dice-regen-timer" aria-live="polite">
+                      {diceRegenRollsReady != null ? <><strong>{diceRegenRollsReady}</strong> </> : null}
                       {diceRegenStatusLabel ? <strong>{diceRegenStatusLabel}</strong> : null}
                       {diceRegenCountdown ? <> <strong>{diceRegenCountdown}</strong></> : null}
                     </div>
