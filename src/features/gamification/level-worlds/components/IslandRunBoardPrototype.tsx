@@ -6898,14 +6898,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     triggerIslandRunHaptic('reward_claim');
   };
 
-  const handleStoryRewardClaim = (essenceReward: number) => {
-    if (essenceReward <= 0) {
-      return;
-    }
-    awardContractV2Essence(essenceReward, 'island_story_episode_reward');
-    setLandingText(`Story reward claimed: +${essenceReward} essence.`);
-  };
-
   const handleCloseStoryReader = () => {
     setShowStoryReader(false);
     try {

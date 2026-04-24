@@ -14,7 +14,7 @@ async function readBoardSource(): Promise<string> {
 
 export const islandRunBoardEssenceParityTests: TestCase[] = [
   {
-    name: 'encounter/boss/sanctuary/story/wisdom essence awards remain direct runtime-state increments (legacy parity)',
+    name: 'encounter/boss/sanctuary/wisdom essence awards remain direct runtime-state increments (legacy parity)',
     run: async () => {
       const source = await readBoardSource();
 
@@ -34,12 +34,6 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         source.includes("essence: prev.essence + rewardEssence") &&
           source.includes("essenceLifetimeEarned: prev.essenceLifetimeEarned + rewardEssence"),
         'Sanctuary bond rewards should preserve direct runtime-state essence increment semantics.',
-      );
-
-      assert(
-        source.includes("essence: prev.essence + essenceReward") &&
-          source.includes("essenceLifetimeEarned: prev.essenceLifetimeEarned + essenceReward"),
-        'Story reward should preserve direct runtime-state essence increment semantics.',
       );
 
       assert(
@@ -68,6 +62,20 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       assert(
         !source.includes("awardContractV2Essence(WISDOM_ESSENCE_BONUS_AMOUNT, 'wisdom_essence_bonus')"),
         'Wisdom bonus should not route via canonical helper in parity mode.',
+      );
+    },
+  },
+  {
+    name: 'story reward duplicate handler remains removed; only IslandStoryReader onRewardClaim path is kept',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        !source.includes('const handleStoryRewardClaim ='),
+        'Duplicate local story reward handler should remain removed to prevent split wiring.',
+      );
+      assert(
+        source.includes('onRewardClaim={sanctuaryHandlers.storyRewardClaim}'),
+        'IslandStoryReader should remain wired to sanctuaryHandlers.storyRewardClaim.',
       );
     },
   },
