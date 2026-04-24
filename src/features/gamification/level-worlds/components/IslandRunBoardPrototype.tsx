@@ -94,9 +94,11 @@ import {
   applyEggPlacement,
   applyFirstRunClaimed,
   applyFirstRunStarterRewards,
+  applyIslandShardsSet,
   applyMarketOwnedBundleMarker,
   applyOnboardingDisplayNameLoopMarker,
   applyQaProgressionSnapshot,
+  applyShardClaimProgressMarker,
   applyStoryPrologueSeenMarker,
   applyStopBuildSpend,
   applyStopObjectiveProgress,
@@ -2976,13 +2978,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     );
     setIslandShards(result.islandShards);
     // Only persist the cumulative shard count; tier/claim state is unchanged until claim
-    void persistIslandRunRuntimeStatePatch({
+    const shardRecord = applyIslandShardsSet({
       session,
       client,
-      patch: {
-        islandShards: result.islandShards,
-      },
+      nextIslandShards: result.islandShards,
+      triggerSource: 'shard_progress_earn',
     });
+    setRuntimeState(shardRecord.record);
     // M16C: set shardMilestoneReached flag (once) when threshold is first crossed
     if (result.shardMilestoneReached && !shardMilestoneReached) {
       setShardMilestoneReached(true);
@@ -9801,11 +9803,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             setShardMilestoneReached(false);
             setShowClaimModal(false);
             setPendingClaimTierIndex(null);
-            void persistIslandRunRuntimeStatePatch({
+            const nextRecord = applyShardClaimProgressMarker({
               session,
               client,
-              patch: { shardTierIndex: newTierIndex, shardClaimCount: newClaimCount },
+              nextShardTierIndex: newTierIndex,
+              nextShardClaimCount: newClaimCount,
+              triggerSource: 'shard_progress_claim',
             });
+            setRuntimeState(nextRecord);
             setLandingText('Shard milestone claimed! +1 Lucky Roll run unlocked.');
             void recordTelemetryEvent({
               userId: session.user.id,

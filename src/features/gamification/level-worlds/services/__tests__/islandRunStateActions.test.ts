@@ -38,9 +38,11 @@ import {
   applyEggPlacement,
   applyFirstRunClaimed,
   applyFirstRunStarterRewards,
+  applyIslandShardsSet,
   applyMarketOwnedBundleMarker,
   applyOnboardingDisplayNameLoopMarker,
   applyQaProgressionSnapshot,
+  applyShardClaimProgressMarker,
   applyStoryPrologueSeenMarker,
   applyWalletDiamondsDelta,
   applyWalletDiamondsSet,
@@ -485,6 +487,95 @@ export const islandRunStateActionsTests: TestCase[] = [
       });
 
       assertEqual(record.runtimeVersion, 30, 'runtimeVersion should not change on no-op');
+    },
+  },
+
+  {
+    name: 'applyIslandShardsSet commits shard earn accumulation through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 40, islandShards: 12 });
+
+      const result = applyIslandShardsSet({
+        session,
+        client: null,
+        nextIslandShards: 17,
+        triggerSource: 'test_island_shards_set',
+      });
+
+      assertEqual(result.changed, true, 'changed should be true when cumulative shards update');
+      assertEqual(result.record.islandShards, 17, 'islandShards should update to new cumulative value');
+      assertEqual(result.record.runtimeVersion, 41, 'runtimeVersion should bump on shard accumulation');
+    },
+  },
+
+  {
+    name: 'applyIslandShardsSet is a no-op/idempotent when cumulative value is unchanged',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 40, islandShards: 17 });
+
+      const result = applyIslandShardsSet({
+        session,
+        client: null,
+        nextIslandShards: 17,
+        triggerSource: 'test_island_shards_set_noop',
+      });
+
+      assertEqual(result.changed, false, 'changed should be false on no-op');
+      assertEqual(result.record.runtimeVersion, 40, 'runtimeVersion should not bump on no-op');
+    },
+  },
+
+  {
+    name: 'applyShardClaimProgressMarker commits shard tier/count claim markers through the store path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 40, shardTierIndex: 2, shardClaimCount: 5 });
+
+      const record = applyShardClaimProgressMarker({
+        session,
+        client: null,
+        nextShardTierIndex: 3,
+        nextShardClaimCount: 6,
+        triggerSource: 'test_shard_claim_progress',
+      });
+
+      assertEqual(record.shardTierIndex, 3, 'tier index should update');
+      assertEqual(record.shardClaimCount, 6, 'claim count should update');
+      assertEqual(record.runtimeVersion, 41, 'runtimeVersion should bump on claim marker commit');
+    },
+  },
+
+  {
+    name: 'applyShardClaimProgressMarker is no-op/idempotent and clamps invalid negatives',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 40, shardTierIndex: 0, shardClaimCount: 0 });
+
+      const clamped = applyShardClaimProgressMarker({
+        session,
+        client: null,
+        nextShardTierIndex: -10,
+        nextShardClaimCount: -5,
+        triggerSource: 'test_shard_claim_progress_clamp',
+      });
+      assertEqual(clamped.shardTierIndex, 0, 'negative tier index should clamp to 0');
+      assertEqual(clamped.shardClaimCount, 0, 'negative claim count should clamp to 0');
+      assertEqual(clamped.runtimeVersion, 40, 'clamped no-op should not bump runtimeVersion');
+
+      const noop = applyShardClaimProgressMarker({
+        session,
+        client: null,
+        nextShardTierIndex: 0,
+        nextShardClaimCount: 0,
+        triggerSource: 'test_shard_claim_progress_noop',
+      });
+      assertEqual(noop.runtimeVersion, 40, 'repeated identical input should remain no-op');
     },
   },
 

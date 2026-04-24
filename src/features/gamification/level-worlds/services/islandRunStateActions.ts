@@ -247,6 +247,29 @@ export interface ApplyMarketOwnedBundleMarkerOptions {
   triggerSource?: string;
 }
 
+export interface ApplyIslandShardsSetOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  /** Absolute cumulative island-shards value. Clamped to integer >= 0. */
+  nextIslandShards: number;
+  triggerSource?: string;
+}
+
+export interface ApplyIslandShardsSetResult {
+  record: IslandRunGameStateRecord;
+  changed: boolean;
+}
+
+export interface ApplyShardClaimProgressMarkerOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  /** Absolute shard tier index marker. Clamped to integer >= 0. */
+  nextShardTierIndex: number;
+  /** Absolute shard claim count marker. Clamped to integer >= 0. */
+  nextShardClaimCount: number;
+  triggerSource?: string;
+}
+
 export interface ApplyWalletShieldsSetOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -501,6 +524,55 @@ export function applyMarketOwnedBundleMarker(options: ApplyMarketOwnedBundleMark
     client,
     record: next,
     triggerSource: triggerSource ?? 'apply_market_owned_bundle_marker',
+  });
+  return next;
+}
+
+/**
+ * Sets the cumulative island-shards value through the canonical store path.
+ */
+export function applyIslandShardsSet(options: ApplyIslandShardsSetOptions): ApplyIslandShardsSetResult {
+  const { session, client, nextIslandShards, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const parsed = Number.isFinite(nextIslandShards) ? Math.max(0, Math.trunc(nextIslandShards)) : current.islandShards;
+  if (parsed === current.islandShards) return { record: current, changed: false };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    islandShards: parsed,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_island_shards_set',
+  });
+  return { record: next, changed: true };
+}
+
+/**
+ * Commits shard claim marker fields (`shardTierIndex`, `shardClaimCount`)
+ * through the canonical store path.
+ */
+export function applyShardClaimProgressMarker(options: ApplyShardClaimProgressMarkerOptions): IslandRunGameStateRecord {
+  const { session, client, nextShardTierIndex, nextShardClaimCount, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const parsedTierIndex = Number.isFinite(nextShardTierIndex) ? Math.max(0, Math.trunc(nextShardTierIndex)) : current.shardTierIndex;
+  const parsedClaimCount = Number.isFinite(nextShardClaimCount) ? Math.max(0, Math.trunc(nextShardClaimCount)) : current.shardClaimCount;
+  if (parsedTierIndex === current.shardTierIndex && parsedClaimCount === current.shardClaimCount) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    shardTierIndex: parsedTierIndex,
+    shardClaimCount: parsedClaimCount,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_shard_claim_progress_marker',
   });
   return next;
 }
