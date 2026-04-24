@@ -1,3 +1,21 @@
+/**
+ * ISLAND RUN ARCHITECTURE WARNING
+ *
+ * This file is still in migration and contains legacy compatibility paths.
+ * Do NOT add new gameplay-state write paths here.
+ *
+ * Gameplay state mutation must flow through canonical action services:
+ * - islandRunStateActions
+ * - islandRunRollAction
+ * - islandRunTileRewardAction
+ *
+ * Forbidden for new code:
+ * - direct gameplay writes via persistIslandRunRuntimeStatePatch
+ * - new runtimeState gameplay mirrors
+ * - duplicating dice/token/reward/stop logic locally
+ *
+ * See: docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md
+ */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
