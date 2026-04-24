@@ -70,5 +70,16 @@ Both footer countdown and out-of-dice modal depend on `runtimeState.diceRegenSta
    - Replaced `playerLevel: islandNumber` with actual player level (`playerLevelInfo.currentLevel`, fallback `1`).
 
 ### 🔜 Remaining follow-up to consider
-1. Add dedicated integration tests for the new runtime regen wiring (component/runtime-path level, not only pure helper tests).
-2. Consider centralizing dice regen into a shared state action helper so roll/board/runtime all use one integration point.
+1. Consider centralizing dice regen into a shared state action helper so roll/board/runtime all use one integration point.
+
+## Additional progress (2026-04-24, follow-up pass)
+
+### ✅ Completed
+1. Added a dedicated runtime regen integration helper service:
+   - `src/features/gamification/level-worlds/services/islandRunRuntimeRegen.ts`
+   - Exposes `resolveRuntimeDiceRegenUpdate(...)` for deterministic runtime writes and no-op suppression.
+2. Refactored `IslandRunBoardPrototype.tsx` to use `resolveRuntimeDiceRegenUpdate(...)` instead of in-component ad hoc regen diff logic.
+3. Added new tests:
+   - `src/features/gamification/level-worlds/services/__tests__/islandRunRuntimeRegen.test.ts`
+   - Covers bootstrap, no-op suppression, elapsed-time dice gain, and level-change regen-shape updates.
+4. Registered the new test suite in `runIslandRunServiceTests.ts`.

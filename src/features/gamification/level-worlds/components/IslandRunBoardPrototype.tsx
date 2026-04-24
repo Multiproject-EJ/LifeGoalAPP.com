@@ -246,6 +246,7 @@ import {
   resolveNextRollEtaMs,
   type DiceRegenState,
 } from '../services/islandRunDiceRegeneration';
+import { resolveRuntimeDiceRegenUpdate } from '../services/islandRunRuntimeRegen';
 import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
 import { resolveNextCheapestIndex } from '../services/islandRunShopAffordability';
 import { adviseEggSellChoice } from '../services/islandRunEggSellAdvisor';
@@ -1559,30 +1560,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const nowMs = Date.now();
     const playerLevel = Math.max(1, Math.floor(playerLevelInfo?.currentLevel ?? 1));
     const current = runtimeStateRef.current;
-    const regenResult = applyDiceRegeneration({
-      currentDicePool: current.dicePool,
-      regenState: current.diceRegenState ?? null,
+    const regenUpdate = resolveRuntimeDiceRegenUpdate({
+      snapshot: {
+        dicePool: current.dicePool,
+        diceRegenState: current.diceRegenState ?? null,
+      },
       playerLevel,
       nowMs,
     });
 
-    const prevRegen = current.diceRegenState;
-    const nextRegen = regenResult.regenState;
-    const regenChanged = (
-      prevRegen === null
-      || prevRegen.maxDice !== nextRegen.maxDice
-      || prevRegen.regenRatePerHour !== nextRegen.regenRatePerHour
-      || prevRegen.lastRegenAtMs !== nextRegen.lastRegenAtMs
-    );
-    const diceChanged = regenResult.dicePool !== current.dicePool;
-    if (!diceChanged && !regenChanged) {
+    if (!regenUpdate) {
       return current.dicePool;
     }
 
     const nextRuntimeState = {
       ...current,
-      dicePool: regenResult.dicePool,
-      diceRegenState: nextRegen,
+      dicePool: regenUpdate.dicePool,
+      diceRegenState: regenUpdate.diceRegenState,
     };
     runtimeStateRef.current = nextRuntimeState;
     setRuntimeState(nextRuntimeState);
@@ -1590,8 +1584,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       session,
       client,
       patch: {
-        dicePool: regenResult.dicePool,
-        diceRegenState: nextRegen,
+        dicePool: regenUpdate.dicePool,
+        diceRegenState: regenUpdate.diceRegenState,
       },
     });
     logIslandRunEntryDebug('dice_regen_applied', {
@@ -1599,12 +1593,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       reason,
       playerLevel,
       diceBefore: current.dicePool,
-      diceAfter: regenResult.dicePool,
-      diceAdded: regenResult.diceAdded,
-      regenMaxDice: nextRegen.maxDice,
-      regenRatePerHour: nextRegen.regenRatePerHour,
+      diceAfter: regenUpdate.dicePool,
+      diceAdded: regenUpdate.diceAdded,
+      regenMaxDice: regenUpdate.diceRegenState.maxDice,
+      regenRatePerHour: regenUpdate.diceRegenState.regenRatePerHour,
     });
-    return regenResult.dicePool;
+    return regenUpdate.dicePool;
   }, [client, hasHydratedRuntimeState, playerLevelInfo?.currentLevel, session]);
 
   useEffect(() => {
