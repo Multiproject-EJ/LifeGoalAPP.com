@@ -1,3 +1,21 @@
+/**
+ * ISLAND RUN ARCHITECTURE WARNING
+ *
+ * This file is still in migration and contains legacy compatibility paths.
+ * Do NOT add new gameplay-state write paths here.
+ *
+ * Gameplay state mutation must flow through canonical action services:
+ * - islandRunStateActions
+ * - islandRunRollAction
+ * - islandRunTileRewardAction
+ *
+ * Forbidden for new code:
+ * - direct gameplay writes via persistIslandRunRuntimeStatePatch
+ * - new runtimeState gameplay mirrors
+ * - duplicating dice/token/reward/stop logic locally
+ *
+ * See: docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md
+ */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
@@ -67,17 +85,28 @@ import {
 } from '../services/islandRunActionMutex';
 import {
   applyActiveCompanion,
+  applyAudioEnabledMarker,
   applyBossTrialResolvedMarker,
+  applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
   applyCreatureTreatInventory,
   applyEggResolution,
+  applyHydrationEggReadyTransition,
   applyEggPlacement,
   applyFirstRunClaimed,
   applyFirstRunStarterRewards,
+  applyIslandShardsSet,
+  applyMarketOwnedBundleMarker,
+  applyOnboardingDisplayNameLoopMarker,
+  applyOnboardingCompleteMarker,
+  applyPerfectCompanionSnapshot,
   applyQaProgressionSnapshot,
+  applyShardClaimProgressMarker,
+  applyStoryPrologueSeenMarker,
   applyStopBuildSpend,
   applyStopObjectiveProgress,
   applyStopTicketPayment,
+  applyWalletDiamondsSet,
   applyWalletShardsDelta,
   applyEssenceAward,
   applyEssenceDeduct,
@@ -1815,12 +1844,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const nowHydrate = Date.now();
       const isHatched = nowHydrate >= ledgerEntry.hatchAtMs;
       if (isHatched && ledgerEntry.status === 'incubating') {
-        const updatedEntry: PerIslandEggEntry = { ...ledgerEntry, status: 'ready' };
-        const updatedLedger = { ...runtimeState.perIslandEggs, [islandKey]: updatedEntry };
-        setRuntimeState((prev) => ({ ...prev, perIslandEggs: updatedLedger }));
-        if (client) {
-          void persistIslandRunRuntimeStatePatch({ session, client, patch: { perIslandEggs: updatedLedger } });
-        }
+        const readyTransition = applyHydrationEggReadyTransition({
+          session,
+          client,
+          islandNumber: persistedIsland,
+          hatchNowMs: nowHydrate,
+          triggerSource: 'hydrate_egg_ready_transition',
+        });
+        setRuntimeState(readyTransition.record);
       }
       setActiveEgg({
         tier: ledgerEntry.tier,
@@ -2476,15 +2507,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
     if (runtimeState.onboardingDisplayNameLoopCompleted === isDisplayNameLoopCompleted) return;
-    void persistIslandRunRuntimeStatePatch({
+    const next = applyOnboardingDisplayNameLoopMarker({
       session,
       client,
-      patch: { onboardingDisplayNameLoopCompleted: isDisplayNameLoopCompleted },
+      completed: isDisplayNameLoopCompleted,
+      triggerSource: 'sync_onboarding_display_name_loop_marker_effect',
     });
-    setRuntimeState((current) => ({
-      ...current,
-      onboardingDisplayNameLoopCompleted: isDisplayNameLoopCompleted,
-    }));
+    setRuntimeState(next);
   }, [client, hasHydratedRuntimeState, isDisplayNameLoopCompleted, runtimeState.onboardingDisplayNameLoopCompleted, session]);
 
   useEffect(() => {
@@ -2493,15 +2522,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
     if (runtimeState.audioEnabled === audioEnabled) return;
-    void persistIslandRunRuntimeStatePatch({
+    const next = applyAudioEnabledMarker({
       session,
       client,
-      patch: { audioEnabled },
-    });
-    setRuntimeState((current) => ({
-      ...current,
       audioEnabled,
-    }));
+      triggerSource: 'sync_audio_enabled_marker_effect',
+    });
+    setRuntimeState(next);
   }, [audioEnabled, client, hasHydratedRuntimeState, runtimeState.audioEnabled, session]);
 
   useEffect(() => {
@@ -2637,12 +2664,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
     if (runtimeState.diamonds === diamonds) return;
-    void persistIslandRunRuntimeStatePatch({
+    const result = applyWalletDiamondsSet({
       session,
       client,
-      patch: { diamonds },
+      nextDiamonds: diamonds,
+      triggerSource: 'sync_diamonds_marker_effect',
     });
-    setRuntimeState((current) => ({ ...current, diamonds }));
+    setRuntimeState(result.record);
   }, [client, diamonds, hasHydratedRuntimeState, runtimeState.diamonds, session]);
 
   // M19A: persist market owned state to runtime state map (and mirror legacy local storage key for compatibility)
@@ -2659,25 +2687,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     ) {
       return;
     }
-    const patch = {
-      [islandKey]: {
-        dice_bundle: marketOwnedBundles.dice_bundle,
-        heart_bundle: false,
-        heart_boost_bundle: false,
-      },
-    };
-    void persistIslandRunRuntimeStatePatch({
+    const nextRecord = applyMarketOwnedBundleMarker({
       session,
       client,
-      patch: { marketOwnedBundlesByIsland: patch },
+      islandNumber,
+      diceBundleOwned: marketOwnedBundles.dice_bundle,
+      triggerSource: 'sync_market_owned_bundle_marker_effect',
     });
-    setRuntimeState((current) => ({
-      ...current,
-      marketOwnedBundlesByIsland: {
-        ...current.marketOwnedBundlesByIsland,
-        ...patch,
-      },
-    }));
+    setRuntimeState(nextRecord);
   }, [client, hasHydratedRuntimeState, islandNumber, marketOwnedBundles, runtimeState.marketOwnedBundlesByIsland, session]);
 
   useEffect(() => {
@@ -2966,13 +2983,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     );
     setIslandShards(result.islandShards);
     // Only persist the cumulative shard count; tier/claim state is unchanged until claim
-    void persistIslandRunRuntimeStatePatch({
+    const shardRecord = applyIslandShardsSet({
       session,
       client,
-      patch: {
-        islandShards: result.islandShards,
-      },
+      nextIslandShards: result.islandShards,
+      triggerSource: 'shard_progress_earn',
     });
+    setRuntimeState(shardRecord.record);
     // M16C: set shardMilestoneReached flag (once) when threshold is first crossed
     if (result.shardMilestoneReached && !shardMilestoneReached) {
       setShardMilestoneReached(true);
@@ -4904,26 +4921,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     );
     const computedAtMs = Date.now();
 
-    setRuntimeState((current) => ({
-      ...current,
+    const perfectCompanionSnapshot = applyPerfectCompanionSnapshot({
+      session,
+      client,
       perfectCompanionIds,
       perfectCompanionReasons,
       perfectCompanionComputedAtMs: computedAtMs,
       perfectCompanionModelVersion: PERFECT_COMPANION_MODEL_VERSION,
       perfectCompanionComputedCycleIndex: cycleIndex,
-    }));
-
-    void persistIslandRunRuntimeStatePatch({
-      session,
-      client,
-      patch: {
-        perfectCompanionIds,
-        perfectCompanionReasons,
-        perfectCompanionComputedAtMs: computedAtMs,
-        perfectCompanionModelVersion: PERFECT_COMPANION_MODEL_VERSION,
-        perfectCompanionComputedCycleIndex: cycleIndex,
-      },
+      triggerSource: 'perfect_companion_snapshot',
     });
+    setRuntimeState(perfectCompanionSnapshot.record);
   }, [
     client,
     cycleIndex,
@@ -4956,17 +4964,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
 
-    void persistIslandRunRuntimeStatePatch({
+    const next = applyCompanionBonusLastVisitKeyMarker({
       session,
       client,
-      patch: {
-        companionBonusLastVisitKey: visitKey,
-      },
+      visitKey,
+      triggerSource: 'apply_companion_bonus_visit_marker_effect',
     });
-    setRuntimeState((current) => ({
-      ...current,
-      companionBonusLastVisitKey: visitKey,
-    }));
+    setRuntimeState(next);
     companionBonusAppliedVisitKeyRef.current = visitKey;
 
     const isPerfectCompanionActive = perfectCompanionIdSet.has(activeCompanion.creatureId);
@@ -6261,13 +6265,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
     setRuntimeState(record);
 
-    const result = await persistIslandRunRuntimeStatePatch({
+    const onboardingMarkerResult = await applyOnboardingCompleteMarker({
       session,
       client,
-      patch: { onboardingComplete: true },
+      triggerSource: 'first_run_onboarding_complete_marker',
     });
-    if (!result.ok) {
-      setLandingText(`Could not complete first-run setup: ${result.errorMessage}`);
+    if (!onboardingMarkerResult.ok) {
+      setLandingText(`Could not complete first-run setup: ${onboardingMarkerResult.errorMessage}`);
       return false;
     }
     return true;
@@ -6954,12 +6958,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     } catch {
       // ignore localStorage failures
     }
-    void persistIslandRunRuntimeStatePatch({
+    const next = applyStoryPrologueSeenMarker({
       session,
       client,
-      patch: { storyPrologueSeen: true },
+      storyPrologueSeen: true,
+      triggerSource: 'close_story_reader_marker',
     });
-    setRuntimeState((current) => ({ ...current, storyPrologueSeen: true }));
+    setRuntimeState(next);
   };
 
   if (isRuntimeSyncBlocked || isOwnershipBlocked) {
@@ -9794,11 +9799,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             setShardMilestoneReached(false);
             setShowClaimModal(false);
             setPendingClaimTierIndex(null);
-            void persistIslandRunRuntimeStatePatch({
+            const nextRecord = applyShardClaimProgressMarker({
               session,
               client,
-              patch: { shardTierIndex: newTierIndex, shardClaimCount: newClaimCount },
+              nextShardTierIndex: newTierIndex,
+              nextShardClaimCount: newClaimCount,
+              triggerSource: 'shard_progress_claim',
             });
+            setRuntimeState(nextRecord);
             setLandingText('Shard milestone claimed! +1 Lucky Roll run unlocked.');
             void recordTelemetryEvent({
               userId: session.user.id,
