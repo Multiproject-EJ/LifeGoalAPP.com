@@ -104,3 +104,54 @@ Both are now addressed by:
 ### What (if anything) is still left?
 1. **Recommended QA verification pass in app UI** (non-code): run through out-of-dice -> wait -> countdown appears -> roll becomes available.
 2. **Unrelated baseline test debt remains** in minigame consolidation suites (known pre-existing failures), but this does not block closing this regen issue.
+
+## Alignment Plan: Monopoly-GO-style regen parity (step-by-step)
+
+Date: 2026-04-24
+Goal: align the current implementation to the requested baseline/scaling spec.
+
+### Current gap summary (why alignment is needed)
+1. Current model uses a logarithmic floor + “full refill in 2h” rate model.
+2. Current grant logic can batch multiple dice in one apply pass.
+3. Out-of-dice UI currently shows both next-dice ETA and full-refill ETA.
+
+### Step plan
+
+#### Step 1 — Planning/doc update (this commit) ✅
+- Record the exact target behavior and migration sequence before changing runtime logic.
+- Freeze target scope to avoid mixing balancing changes with UI changes mid-flight.
+
+#### Step 2 — Regen config model swap (pending)
+- Replace logarithmic resolver with explicit level-band config:
+  - 1–4: 30 @ 8m
+  - 5–9: 50 @ 10m
+  - 10–19: 75 @ 10m
+  - 20–39: 100 @ 10m
+  - 40–74: 125 @ 9m
+  - 75–124: 150 @ 8m
+  - 125+: 200 @ 7m
+- Expose `maxDice` + `regenIntervalMs` as canonical runtime config.
+
+#### Step 3 — Grant semantics swap to strict +1 ticks (pending)
+- Remove batch grant behavior.
+- Regen grant rule becomes: add exactly +1 when elapsed >= interval; loop in single-die increments if catch-up is needed while preserving deterministic timer carry.
+- Keep “no regen when current_dice >= max_dice”.
+
+#### Step 4 — UI contract update (pending)
+- Show only: “Next dice in MM:SS”.
+- Remove full-refill ETA from out-of-dice modal.
+- Keep existing accessibility/live-region behavior.
+
+#### Step 5 — Test realignment (pending)
+- Update/add tests for:
+  - level-band config mapping,
+  - strict +1 semantics,
+  - no-regen-at-cap,
+  - countdown copy contract (“Next dice in …” only),
+  - overflow behavior (reward dice can exceed passive regen cap).
+
+#### Step 6 — QA validation checklist (pending)
+- Fresh user at level 1: verify 8m per die cadence.
+- Mid-level and high-level users: verify band transitions.
+- Out-of-dice flow: verify countdown visibility and roll unlock.
+- Resume/focus/reopen behavior: timer continuity and no duplicate grants.
