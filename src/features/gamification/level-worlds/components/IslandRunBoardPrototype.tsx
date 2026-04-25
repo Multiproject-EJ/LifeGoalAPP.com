@@ -75,6 +75,7 @@ import {
   commitIslandRunState,
   getIslandRunStateSnapshot,
   refreshIslandRunStateFromLocal,
+  resetIslandRunStateSnapshot,
 } from '../services/islandRunStateStore';
 import {
   beginIslandRunActionBarrier,
@@ -1746,8 +1747,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         islandNumber: hydrationResult.state.currentIslandNumber,
       });
       setRuntimeState(hydrationResult.state);
-      // C1: sync the store mirror so dicePool/tokenIndex/spinTokens reflect hydrated values.
-      refreshIslandRunStateFromLocal(session);
+      // C1: publish the hydrated record directly to the store mirror. Using
+      // `refreshIslandRunStateFromLocal` here can re-apply an older local row
+      // and cause token snap-back after reopen.
+      resetIslandRunStateSnapshot(session, hydrationResult.state);
       logIslandRunEntryDebug('island_run_runtime_reconciled', {
         userId: session.user.id,
         reason,
@@ -2311,8 +2314,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           hydrationResult.state.runtimeVersion > localSnapshotBeforeHydration.runtimeVersion
         ) {
           setRuntimeState(hydrationResult.state);
-          // C1: sync the store mirror so dicePool/tokenIndex/spinTokens reflect hydrated values.
-          refreshIslandRunStateFromLocal(session);
+          // C1: publish exactly the hydrated record so the visual token source
+          // (`useIslandRunState`) cannot lag behind runtimeState on first roll.
+          resetIslandRunStateSnapshot(session, hydrationResult.state);
         }
 
         logIslandRunEntryDebug('island_run_runtime_hydration_result', {
@@ -2431,8 +2435,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const hydrationResult = await hydrateIslandRunRuntimeStateWithSource({ session, client, forceRemote: true });
       setRuntimeHydrationSource(hydrationResult.source);
       setRuntimeState(hydrationResult.state);
-      // C1: sync the store mirror so dicePool/tokenIndex/spinTokens reflect hydrated values.
-      refreshIslandRunStateFromLocal(session);
+      // Keep store mirror aligned to the hydrated runtime snapshot.
+      resetIslandRunStateSnapshot(session, hydrationResult.state);
 
       if (hydrationResult.source === 'table') {
         setLandingText('Island Run synced successfully. You can continue playing.');

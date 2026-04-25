@@ -265,11 +265,14 @@ export function BoardStage(props: BoardStageProps) {
       if (anchor) {
         const pos = toScreen(anchor);
         camera.goLandingFocus(pos.x, pos.y, preset);
+        // Anchor burst to the resolved landing tile position. Reading
+        // `tokenAnim.animState` in this callback can be one render behind and
+        // place the impact FX on the roll start tile.
+        setBurstPos({ x: pos.x, y: pos.y });
       }
       if (preset.shakeAmplitude > 0) {
         camera.shake(preset.shakeAmplitude, preset.shakeDurationMs);
       }
-      setBurstPos({ x: tokenAnim.animState.x, y: tokenAnim.animState.y });
 
       // Settle back to follow framing after the preset's hold duration
       // Uses smooth spring for the return (asymmetric: fast in, slow out)

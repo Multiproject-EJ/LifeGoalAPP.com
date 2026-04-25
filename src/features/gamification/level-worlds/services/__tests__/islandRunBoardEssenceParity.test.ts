@@ -12,6 +12,15 @@ async function readBoardSource(): Promise<string> {
   return fsMod.readFileSync(boardPath, 'utf8');
 }
 
+async function readBoardStageSource(): Promise<string> {
+  // @ts-ignore island-run test tsconfig omits node type libs
+  const fsMod = await import('fs');
+  // @ts-ignore island-run test tsconfig omits node type libs
+  const pathMod = await import('path');
+  const stagePath = pathMod.resolve(process.cwd(), 'src/features/gamification/level-worlds/components/board/BoardStage.tsx');
+  return fsMod.readFileSync(stagePath, 'utf8');
+}
+
 export const islandRunBoardEssenceParityTests: TestCase[] = [
   {
     name: 'encounter/boss/sanctuary/wisdom essence awards remain direct runtime-state increments (legacy parity)',
@@ -178,6 +187,30 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       assert(
         source.includes('return runtimeStateRef.current.dicePool;'),
         'Passive regen no-op should preserve current runtime mirror instead of reapplying store snapshot.',
+      );
+    },
+  },
+  {
+    name: 'hydration/reconcile runtime sync should publish hydrated record to store mirror (no stale local refresh)',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('resetIslandRunStateSnapshot(session, hydrationResult.state);'),
+        'Hydration/reconcile flows should publish hydrated record directly to store mirror.',
+      );
+    },
+  },
+  {
+    name: 'landing burst FX should be anchored to landing tile position (not stale token anim state)',
+    run: async () => {
+      const stageSource = await readBoardStageSource();
+      assert(
+        stageSource.includes('setBurstPos({ x: pos.x, y: pos.y });'),
+        'Landing burst should use resolved landing-tile screen position.',
+      );
+      assert(
+        !stageSource.includes('setBurstPos({ x: tokenAnim.animState.x, y: tokenAnim.animState.y });'),
+        'Landing burst should not read tokenAnim.animState in onLand callback (can be one frame stale).',
       );
     },
   },
