@@ -242,6 +242,12 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'updateCompletedStops should request sync only when completedStops actually changed.',
       );
       assert(
+        source.includes('const [hasCompletedStopsHydrationGate, setHasCompletedStopsHydrationGate] = useState(false);') &&
+          source.includes('if (!hasCompletedStopsHydrationGate) return;') &&
+          source.includes('completedStopsSyncRequestedRef.current = false;'),
+        'Completed-stop sync effect should remain blocked until hydration gate opens and should drop hydration-time sync requests.',
+      );
+      assert(
         source.includes('if (completedStopsSyncDispatchKeyRef.current === dispatchKey) {') &&
           source.includes('completedStopsSyncDispatchKeyRef.current = dispatchKey;'),
         'Completed-stop sync effect should suppress repeated dispatch while the same target sync is in flight.',

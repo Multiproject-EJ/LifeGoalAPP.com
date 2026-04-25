@@ -2739,6 +2739,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const [completedStops, setCompletedStops] = useState<string[]>([]);
   const completedStopsSyncRequestedRef = useRef(false);
+  const [hasCompletedStopsHydrationGate, setHasCompletedStopsHydrationGate] = useState(false);
   const [streakChipAnimationClass, setStreakChipAnimationClass] = useState('');
   const prevIslandsClearedCountRef = useRef(0);
 
@@ -2799,10 +2800,28 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setLandingText(`Focused on ${nextActiveStop.title}.`);
   }, [completedStops, islandStopPlan]);
 
+  // Hydration gate: suppress completed-stop sync requests during the initial
+  // hydration pass. Startup hydration can legitimately call updateCompletedStops
+  // to restore/derive local state, but those no-op or hydration-driven updates
+  // must not issue persistence writes.
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) {
+      setHasCompletedStopsHydrationGate(false);
+      completedStopsSyncRequestedRef.current = false;
+      completedStopsSyncDispatchKeyRef.current = null;
+      return;
+    }
+    // Clear any sync requests queued by hydration-side effects before opening
+    // the completed-stop persistence gate.
+    completedStopsSyncRequestedRef.current = false;
+    setHasCompletedStopsHydrationGate(true);
+  }, [hasHydratedRuntimeState]);
+
   // M11D: persist completedStops to Supabase runtime state (the localStorage
   // mirror was removed once runtime migration completed).
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    if (!hasCompletedStopsHydrationGate) return;
     // Guard: Skip until the initial hydration sync effect has applied server values
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
@@ -2841,6 +2860,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [
     client,
     completedStops,
+    hasCompletedStopsHydrationGate,
     hasHydratedRuntimeState,
     islandNumber,
     runtimeState.completedStopsByIsland,
