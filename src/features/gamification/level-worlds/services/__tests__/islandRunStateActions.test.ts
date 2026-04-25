@@ -1678,6 +1678,36 @@ export const islandRunStateActionsTests: TestCase[] = [
     },
   },
   {
+    name: 'syncCompletedStopsForIsland is semantic no-op for re-ordered/duplicate stop arrays',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 41,
+        currentIslandNumber: 7,
+        tokenIndex: 33,
+        dicePool: 43,
+        essence: 777,
+        completedStopsByIsland: {
+          '7': ['hatchery', 'habit'],
+        },
+      });
+
+      const result = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['habit', 'hatchery', 'habit'],
+        triggerSource: 'test_sync_completed_stops_semantic_noop',
+      });
+
+      assertEqual(result.runtimeVersion, 41, 'semantic no-op should not bump runtimeVersion');
+      assertEqual(result.tokenIndex, 33, 'semantic no-op must preserve tokenIndex');
+      assertEqual(result.dicePool, 43, 'semantic no-op must preserve dicePool');
+      assertEqual(result.essence, 777, 'semantic no-op must preserve essence');
+    },
+  },
+  {
     name: 'syncCompletedStopsForIsland persists only when completed stops differ',
     run: () => {
       resetAll();
@@ -1706,6 +1736,45 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.tokenIndex, 33, 'tokenIndex must be preserved');
       assertEqual(result.dicePool, 43, 'dicePool must be preserved');
       assertEqual(result.essence, 888, 'essence must be preserved');
+    },
+  },
+  {
+    name: 'syncCompletedStopsForIsland repeated renders only persist once for the same semantic target',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 60,
+        currentIslandNumber: 7,
+        tokenIndex: 33,
+        dicePool: 43,
+        essence: 999,
+        completedStopsByIsland: {
+          '7': ['hatchery'],
+        },
+      });
+
+      const first = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['habit', 'hatchery'],
+        triggerSource: 'test_sync_completed_stops_repeated_first',
+      });
+      const second = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['hatchery', 'habit', 'habit'],
+        triggerSource: 'test_sync_completed_stops_repeated_second',
+      });
+
+      assertEqual(first.runtimeVersion, 61, 'first semantic change should persist once');
+      assertEqual(second.runtimeVersion, 61, 'second semantic-equivalent render should no-op');
+      assertEqual(second.completedStopsByIsland['7']?.join(','), 'hatchery,habit', 'stored order should be canonical');
+      assertEqual(second.tokenIndex, 33, 'tokenIndex preserved across repeated calls');
+      assertEqual(second.dicePool, 43, 'dicePool preserved across repeated calls');
+      assertEqual(second.essence, 999, 'essence preserved across repeated calls');
     },
   },
 

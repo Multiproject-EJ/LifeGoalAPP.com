@@ -365,6 +365,27 @@ function areStringArraysEqualForDiagnostics(left: string[], right: string[]) {
   return true;
 }
 
+const COMPLETED_STOP_CANONICAL_ORDER = ['hatchery', 'habit', 'mystery', 'wisdom', 'boss'] as const;
+
+function normalizeCompletedStopsForSync(stops: string[]): string[] {
+  const deduped = Array.from(new Set(
+    stops
+      .filter((value): value is string => typeof value === 'string')
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0),
+  ));
+  return deduped.sort((a, b) => {
+    const aIdx = COMPLETED_STOP_CANONICAL_ORDER.indexOf(a as (typeof COMPLETED_STOP_CANONICAL_ORDER)[number]);
+    const bIdx = COMPLETED_STOP_CANONICAL_ORDER.indexOf(b as (typeof COMPLETED_STOP_CANONICAL_ORDER)[number]);
+    const aKnown = aIdx >= 0;
+    const bKnown = bIdx >= 0;
+    if (aKnown && bKnown) return aIdx - bIdx;
+    if (aKnown) return -1;
+    if (bKnown) return 1;
+    return a.localeCompare(b);
+  });
+}
+
 function collectHydrationChangedKeysForDiagnostics(options: {
   before: IslandRunRuntimeState;
   after: IslandRunRuntimeState;
@@ -2768,15 +2789,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
     const islandKey = String(islandNumber);
-    const persistedStops = runtimeState.completedStopsByIsland?.[islandKey] ?? [];
-    if (areStringArraysEqual(persistedStops, completedStops)) {
+    const persistedStops = normalizeCompletedStopsForSync(runtimeState.completedStopsByIsland?.[islandKey] ?? []);
+    const normalizedCompletedStops = normalizeCompletedStopsForSync(completedStops);
+    if (areStringArraysEqual(persistedStops, normalizedCompletedStops)) {
       return;
     }
     const nextRuntimeState = syncCompletedStopsForIsland({
       session,
       client,
       islandNumber,
-      completedStops,
+      completedStops: normalizedCompletedStops,
       triggerSource: 'sync_completed_stops_effect',
     });
     setRuntimeStateWithTrace('sync_completed_stops_effect', (current) => (

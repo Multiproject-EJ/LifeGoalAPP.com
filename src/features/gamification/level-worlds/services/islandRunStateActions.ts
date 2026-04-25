@@ -1262,6 +1262,27 @@ function areStringArraysEqual(left: string[], right: string[]): boolean {
   return true;
 }
 
+const COMPLETED_STOP_CANONICAL_ORDER = ['hatchery', 'habit', 'mystery', 'wisdom', 'boss'] as const;
+
+function normalizeCompletedStopsForSync(stops: string[]): string[] {
+  const deduped = Array.from(new Set(
+    stops
+      .filter((value): value is string => typeof value === 'string')
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0),
+  ));
+  return deduped.sort((a, b) => {
+    const aIdx = COMPLETED_STOP_CANONICAL_ORDER.indexOf(a as (typeof COMPLETED_STOP_CANONICAL_ORDER)[number]);
+    const bIdx = COMPLETED_STOP_CANONICAL_ORDER.indexOf(b as (typeof COMPLETED_STOP_CANONICAL_ORDER)[number]);
+    const aKnown = aIdx >= 0;
+    const bKnown = bIdx >= 0;
+    if (aKnown && bKnown) return aIdx - bIdx;
+    if (aKnown) return -1;
+    if (bKnown) return 1;
+    return a.localeCompare(b);
+  });
+}
+
 /**
  * Commits `completedStopsByIsland[islandNumber]` through the store path.
  *
@@ -1273,15 +1294,16 @@ export function syncCompletedStopsForIsland(options: SyncCompletedStopsForIsland
   const { session, client, islandNumber, completedStops, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
   const islandKey = String(islandNumber);
-  const currentStops = current.completedStopsByIsland?.[islandKey] ?? [];
-  if (areStringArraysEqual(currentStops, completedStops)) {
+  const currentStops = normalizeCompletedStopsForSync(current.completedStopsByIsland?.[islandKey] ?? []);
+  const normalizedCompletedStops = normalizeCompletedStopsForSync(completedStops);
+  if (areStringArraysEqual(currentStops, normalizedCompletedStops)) {
     return current;
   }
   const next: IslandRunGameStateRecord = {
     ...current,
     completedStopsByIsland: {
       ...current.completedStopsByIsland,
-      [islandKey]: completedStops,
+      [islandKey]: normalizedCompletedStops,
     },
     runtimeVersion: current.runtimeVersion + 1,
   };
