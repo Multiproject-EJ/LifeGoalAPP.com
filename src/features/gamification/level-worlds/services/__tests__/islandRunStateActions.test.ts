@@ -314,6 +314,69 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.record.runtimeVersion, 10, 'runtimeVersion should not change on no-op');
     },
   },
+  {
+    name: 'applyPassiveDiceRegenTick above cap does not churn commits/runtimeVersion',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 22,
+        dicePool: 43, // above L1 cap
+        diceRegenState: buildInitialDiceRegenState(1, 0),
+      });
+
+      const first = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 1_000,
+        triggerSource: 'test_passive_dice_regen_tick_above_cap_first',
+      });
+      const second = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 2_000,
+        triggerSource: 'test_passive_dice_regen_tick_above_cap_second',
+      });
+
+      assertEqual(first.changed, false, 'above-cap tick should be no-op');
+      assertEqual(second.changed, false, 'repeated above-cap tick should remain no-op');
+      assertEqual(first.record.runtimeVersion, 22, 'runtimeVersion should not churn on above-cap no-op');
+      assertEqual(second.record.runtimeVersion, 22, 'runtimeVersion should remain stable on repeated no-op');
+    },
+  },
+  {
+    name: 'applyPassiveDiceRegenTick at cap does not churn commits/runtimeVersion',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 30,
+        dicePool: 30, // equals L1 cap
+        diceRegenState: buildInitialDiceRegenState(1, 0),
+      });
+
+      const first = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 1_000,
+        triggerSource: 'test_passive_dice_regen_tick_at_cap_first',
+      });
+      const second = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 2_000,
+        triggerSource: 'test_passive_dice_regen_tick_at_cap_second',
+      });
+
+      assertEqual(first.changed, false, 'at-cap tick should be no-op');
+      assertEqual(second.changed, false, 'repeated at-cap tick should remain no-op');
+      assertEqual(second.record.runtimeVersion, 30, 'runtimeVersion should not churn at cap');
+    },
+  },
 
   {
     name: 'applyPassiveDiceRegenTick preserves unrelated fields',
