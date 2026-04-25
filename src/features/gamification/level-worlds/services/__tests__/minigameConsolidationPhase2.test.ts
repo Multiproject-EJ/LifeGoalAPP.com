@@ -54,10 +54,12 @@ export const minigameConsolidationPhase2Tests: TestCase[] = [
     name: 'clampSpinsForStrictDailyLimit is a no-op when the flag is OFF',
     run: () => {
       __resetIslandRunFeatureFlagsForTests();
+      __setIslandRunFeatureFlagsForTests({ todaysOfferSpinEntryEnabled: false });
       assertEqual(clampSpinsForStrictDailyLimit(0), 0, 'flag off: passthrough 0');
       assertEqual(clampSpinsForStrictDailyLimit(1), 1, 'flag off: passthrough 1');
       assertEqual(clampSpinsForStrictDailyLimit(2), 2, 'flag off: passthrough 2 (legacy all-habits-done bonus)');
       assertEqual(clampSpinsForStrictDailyLimit(3), 3, 'flag off: passthrough 3 (legacy streak bonus stacked)');
+      __resetIslandRunFeatureFlagsForTests();
     },
   },
   {
