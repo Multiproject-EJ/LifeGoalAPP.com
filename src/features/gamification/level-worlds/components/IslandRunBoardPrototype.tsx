@@ -16,7 +16,7 @@
  *
  * See: docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   CANONICAL_BOARD_SIZE,
@@ -89,6 +89,8 @@ import {
   applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
   applyCreatureTreatInventory,
+  applyDevGrantDice,
+  applyDevGrantEssence,
   applyActivateCurrentIslandTimer,
   applyPassiveDiceRegenTick,
   applyEggResolution,
@@ -201,6 +203,11 @@ import {
   resolveMysteryStopMinigame,
   shouldResolveMysteryStopOnMinigameComplete,
 } from '../services/islandRunMinigameLauncherService';
+import {
+  canOpenIslandRunOverlayWhileRollingState,
+  resolveIslandRunPlaceholderDescriptor,
+  type IslandRunPlaceholderDescriptor,
+} from '../services/islandRunPlaceholderService';
 import {
   getBossTrialConfig,
   getBossTypeColor,
@@ -358,6 +365,27 @@ function areStringArraysEqualForDiagnostics(left: string[], right: string[]) {
     if (left[index] !== right[index]) return false;
   }
   return true;
+}
+
+const COMPLETED_STOP_CANONICAL_ORDER = ['hatchery', 'habit', 'mystery', 'wisdom', 'boss'] as const;
+
+function normalizeCompletedStopsForSync(stops: string[]): string[] {
+  const deduped = Array.from(new Set(
+    stops
+      .filter((value): value is string => typeof value === 'string')
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0),
+  ));
+  return deduped.sort((a, b) => {
+    const aIdx = COMPLETED_STOP_CANONICAL_ORDER.indexOf(a as (typeof COMPLETED_STOP_CANONICAL_ORDER)[number]);
+    const bIdx = COMPLETED_STOP_CANONICAL_ORDER.indexOf(b as (typeof COMPLETED_STOP_CANONICAL_ORDER)[number]);
+    const aKnown = aIdx >= 0;
+    const bKnown = bIdx >= 0;
+    if (aKnown && bKnown) return aIdx - bIdx;
+    if (aKnown) return -1;
+    if (bKnown) return 1;
+    return a.localeCompare(b);
+  });
 }
 
 function collectHydrationChangedKeysForDiagnostics(options: {
@@ -729,7 +757,7 @@ function getBossReward(islandNumber: number): { dice: number; essence: number; s
   };
 }
 
-type StopProgressState = 'pending' | 'active' | 'completed' | 'partial' | 'locked' | 'ticket_required';
+type StopProgressState = 'pending' | 'active' | 'completed' | 'build_pending' | 'partial' | 'locked' | 'ticket_required';
 type IslandRunCameraMode = 'board_follow' | 'stop_focus' | 'overview_manual';
 
 
@@ -844,6 +872,18 @@ function formatClock(seconds: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
+function isIslandRunDevModeEnabled(): boolean {
+  const nodeEnv = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV;
+  const isNonProdNodeEnv =
+    typeof nodeEnv === 'string'
+    && nodeEnv !== 'production';
+  const isViteDev = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
+  const localStorageDevFlag =
+    typeof window !== 'undefined'
+    && window.localStorage.getItem('dev_mode') === 'true';
+  return isNonProdNodeEnv || isViteDev || localStorageDevFlag;
+}
+
 /**
  * Formats a long-form countdown (days / hours / minutes / seconds) for the
  * hatchery incubation timer. Shows the two most-significant units so the
@@ -955,7 +995,9 @@ function getStopIcon(stop: Pick<IslandStopPlanEntry, 'stopId' | 'mysteryContentK
 }
 
 function getStopStateChipLabel(state: StopProgressState): string {
-  if (state === 'completed') return 'Done';
+  if (state === 'completed') return 'Full';
+  if (state === 'build_pending') return 'L3 Req';
+  if (state === 'partial') return 'Egg';
   if (state === 'ticket_required') return 'Ticket';
   if (state === 'locked') return 'Locked';
   return 'Open';
@@ -970,6 +1012,7 @@ function getOrbitStopDisplayIcon(state: StopProgressState | 'shop', icon: string
   if (state === 'locked') return '🔒';
   if (state === 'ticket_required') return '🎫';
   if (state === 'completed') return '✅';
+  if (state === 'build_pending') return '🚧';
   if (state === 'partial') return '🟡';
   if (state === 'active') return '🔓';
   return icon;
@@ -1030,6 +1073,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     };
   }, []);
   const { showQaHooks, isMinimalBoardArt, boardTiltXDeg, boardRotateZDeg } = boardRenderTuning;
+  const isDevModeEnabled = useMemo(() => isIslandRunDevModeEnabled(), []);
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
   const [isDevPanelOpen, setIsDevPanelOpen] = useState(false);
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
@@ -1223,6 +1267,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [marketOwnedBundles, setMarketOwnedBundles] = useState<Record<'dice_bundle', boolean>>({
     dice_bundle: false,
   });
+  const [hasMarketOwnedBundleHydrationGate, setHasMarketOwnedBundleHydrationGate] = useState(false);
   const [marketMarkerBaselineMs, setMarketMarkerBaselineMs] = useState<number | null>(null);
   const [showFirstRunCelebration, setShowFirstRunCelebration] = useState(false);
   const [runtimeVerificationSnapshot, setRuntimeVerificationSnapshot] = useState<{
@@ -1464,8 +1509,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [rewardBarSnapActive, setRewardBarSnapActive] = useState(false);
   const rewardBarWasClaimableRef = useRef(false);
 
-  // ── Minigame popup dialog ──────────────────────────────────────────────────
-  const [showMinigameDialog, setShowMinigameDialog] = useState(false);
+  // ── Safe placeholder dialog ────────────────────────────────────────────────
+  const [activePlaceholder, setActivePlaceholder] = useState<IslandRunPlaceholderDescriptor | null>(null);
 
   // ── Sticker album dialog ───────────────────────────────────────────────────
   const [showStickerAlbumDialog, setShowStickerAlbumDialog] = useState(false);
@@ -1498,7 +1543,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         showBuildPanel ||
         showOutOfDicePurchasePrompt ||
         showRewardDetailsModal ||
-        showMinigameDialog ||
+        Boolean(activePlaceholder) ||
         showStickerAlbumDialog ||
         showSanctuaryPanel ||
         showStoryReader ||
@@ -1513,6 +1558,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     showEncounterModal,
     showMarketPanel,
     showOutOfDicePurchasePrompt,
+    activePlaceholder,
     showRewardDetailsModal,
     showSanctuaryPanel,
     showShopPanel,
@@ -1575,6 +1621,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   } | null>(null);
   const island120PrevActiveStopIdRef = useRef<string | null>(null);
   const island120ToggleHintCounterByPairRef = useRef<Record<string, number>>({});
+  const pendingRuntimeStateTraceSourceRef = useRef<string | null>(null);
+  const completedStopsSyncDispatchKeyRef = useRef<string | null>(null);
+  const marketOwnedBundleSyncRequestedRef = useRef(false);
+  const marketOwnedBundleSyncDispatchKeyRef = useRef<string | null>(null);
   const isIsland120StartupDiagnosticActive = isIsland120StartupDiagnosticTarget(
     runtimeState.currentIslandNumber ?? islandNumber,
   )
@@ -1590,10 +1640,52 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     runtimeStateRef.current = runtimeState;
   }, [runtimeState]);
 
+  const updateMarketOwnedBundles = useCallback((
+    updater: SetStateAction<Record<'dice_bundle', boolean>>,
+    options?: { requestSync?: boolean },
+  ) => {
+    setMarketOwnedBundles((current) => {
+      const next = typeof updater === 'function'
+        ? (updater as (value: Record<'dice_bundle', boolean>) => Record<'dice_bundle', boolean>)(current)
+        : updater;
+      const changed = Boolean(current.dice_bundle) !== Boolean(next.dice_bundle);
+      if (changed && options?.requestSync !== false) {
+        marketOwnedBundleSyncRequestedRef.current = true;
+      }
+      return changed ? next : current;
+    });
+  }, []);
+
+  const setRuntimeStateWithTrace = useCallback((
+    source: string,
+    updater: SetStateAction<IslandRunRuntimeState>,
+  ) => {
+    pendingRuntimeStateTraceSourceRef.current = source;
+    setRuntimeState((current) => {
+      const next = typeof updater === 'function'
+        ? (updater as (value: IslandRunRuntimeState) => IslandRunRuntimeState)(current)
+        : updater;
+      if (current.tokenIndex !== next.tokenIndex) {
+        logIslandRunEntryDebug('setRuntimeState_tokenIndex_change', {
+          source,
+          tokenIndexBefore: current.tokenIndex,
+          tokenIndexAfter: next.tokenIndex,
+          runtimeVersionBefore: current.runtimeVersion,
+          runtimeVersionAfter: next.runtimeVersion,
+        });
+      }
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    pendingRuntimeStateTraceSourceRef.current = null;
+  }, [runtimeState.tokenIndex, runtimeState.runtimeVersion]);
+
   const applyPassiveDiceRegen = useCallback((reason: 'startup' | 'interval' | 'focus' | 'visibility' | 'pre_roll') => {
-    if (!hasHydratedRuntimeState) return runtimeStateRef.current.dicePool;
+    if (!hasHydratedRuntimeState) return getIslandRunStateSnapshot(session).dicePool;
     if (reason !== 'pre_roll' && (isAnimatingRollRef.current || isRollSyncPendingRef.current)) {
-      return runtimeStateRef.current.dicePool;
+      return getIslandRunStateSnapshot(session).dicePool;
     }
     const nowMs = Date.now();
     const playerLevel = Math.max(1, Math.floor(playerLevelInfo?.currentLevel ?? 1));
@@ -1607,6 +1699,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
     const nextRuntimeState = regenTick.record;
     if (!regenTick.changed) {
+      runtimeStateRef.current = nextRuntimeState;
       logIslandRunEntryDebug('dice_regen_noop_skipped_runtime_sync', {
         userId: session.user.id,
         reason,
@@ -1616,10 +1709,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         essenceRef: runtimeStateRef.current.essence,
         essenceStore: nextRuntimeState.essence,
       });
-      return runtimeStateRef.current.dicePool;
+      logIslandRunEntryDebug('regen_apply_result', {
+        reason,
+        applied: false,
+        skipReason: 'no_change',
+      });
+      return nextRuntimeState.dicePool;
     }
     runtimeStateRef.current = nextRuntimeState;
-    setRuntimeState(nextRuntimeState);
+    setRuntimeStateWithTrace('applyPassiveDiceRegen', nextRuntimeState);
     logIslandRunEntryDebug('dice_regen_applied', {
       userId: session.user.id,
       reason,
@@ -1635,8 +1733,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       regenRatePerHour: nextRuntimeState.diceRegenState?.regenRatePerHour ?? null,
       changed: regenTick.changed,
     });
+    logIslandRunEntryDebug('regen_apply_result', {
+      reason,
+      applied: true,
+      diceBefore: current.dicePool,
+      diceAfter: nextRuntimeState.dicePool,
+    });
     return nextRuntimeState.dicePool;
-  }, [client, hasHydratedRuntimeState, playerLevelInfo?.currentLevel, session]);
+  }, [client, hasHydratedRuntimeState, playerLevelInfo?.currentLevel, session, setRuntimeStateWithTrace]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
@@ -1716,7 +1820,24 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // that ultimately causes the pawn to snap back to tile 0 when
     // `pendingHopSequence` clears. The next focus/visibility event after
     // the animation ends will naturally re-trigger reconciliation.
-    if (isAnimatingRollRef.current) {
+    if (isAnimatingRollRef.current || isRollSyncPendingRef.current) {
+      if (isRollSyncPendingRef.current) {
+        logIslandRunEntryDebug('island_run_runtime_reconcile_skipped_roll_sync_pending', {
+          userId: session.user.id,
+          reason,
+          source: 'pre_hydrate',
+          incomingTokenIndex: null,
+          currentTokenIndex: runtimeStateRef.current.tokenIndex,
+          incomingRuntimeVersion: null,
+          currentRuntimeVersion: runtimeStateRef.current.runtimeVersion ?? 0,
+          skipReason: 'roll_sync_pending',
+        });
+        logIslandRunEntryDebug('hydration_reconcile_skip', {
+          reason,
+          source: 'pre_hydrate',
+          skipReason: 'roll_sync_pending',
+        });
+      }
       return;
     }
 
@@ -1737,6 +1858,24 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
       const currentRuntimeVersion = runtimeStateRef.current.runtimeVersion ?? 0;
       const incomingRuntimeVersion = hydrationResult.state.runtimeVersion ?? 0;
+      if (isRollSyncPendingRef.current) {
+        logIslandRunEntryDebug('island_run_runtime_reconcile_skipped_roll_sync_pending', {
+          userId: session.user.id,
+          reason,
+          source: hydrationResult.source,
+          incomingTokenIndex: hydrationResult.state.tokenIndex,
+          currentTokenIndex: runtimeStateRef.current.tokenIndex,
+          incomingRuntimeVersion,
+          currentRuntimeVersion,
+          skipReason: 'roll_sync_pending',
+        });
+        logIslandRunEntryDebug('hydration_reconcile_skip', {
+          reason,
+          source: hydrationResult.source,
+          skipReason: 'roll_sync_pending',
+        });
+        return;
+      }
       if (incomingRuntimeVersion <= currentRuntimeVersion) {
         return;
       }
@@ -1746,7 +1885,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         after: hydrationResult.state,
         islandNumber: hydrationResult.state.currentIslandNumber,
       });
-      setRuntimeState(hydrationResult.state);
+      setRuntimeStateWithTrace(`reconcileRuntimeState:${reason}`, hydrationResult.state);
       // C1: publish the hydrated record directly to the store mirror. Using
       // `refreshIslandRunStateFromLocal` here can re-apply an older local row
       // and cause token snap-back after reopen.
@@ -1757,6 +1896,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         previousRuntimeVersion: currentRuntimeVersion,
         incomingRuntimeVersion,
         currentIslandNumber: hydrationResult.state.currentIslandNumber,
+      });
+      logIslandRunEntryDebug('hydration_reconcile_apply', {
+        reason,
+        source: hydrationResult.source,
+        previousRuntimeVersion: currentRuntimeVersion,
+        incomingRuntimeVersion,
+        tokenIndexBefore: runtimeStateRef.current.tokenIndex,
+        tokenIndexAfter: hydrationResult.state.tokenIndex,
       });
       if (isIsland120StartupDiagnosticTarget(hydrationResult.state.currentIslandNumber)) {
         logIslandRunEntryDebug('island120_hydration_reconciliation', {
@@ -1780,7 +1927,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     } finally {
       isReconcilingRuntimeStateRef.current = false;
     }
-  }, [client, hasHydratedRuntimeState, session]);
+  }, [client, hasHydratedRuntimeState, session, setRuntimeStateWithTrace]);
 
   const requestActiveStopTransition = useCallback((nextStopId: string | null, source: string) => {
     island120PendingStopTransitionRef.current = {
@@ -1898,11 +2045,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // M19A: Restore market owned bundles from runtime state map (with one-time local fallback migration)
     const runtimeOwnedBundles = runtimeState.marketOwnedBundlesByIsland?.[islandKey];
     if (runtimeOwnedBundles) {
-      setMarketOwnedBundles({
+      updateMarketOwnedBundles({
         dice_bundle: Boolean(runtimeOwnedBundles.dice_bundle),
-      });
+      }, { requestSync: false });
     } else {
-      setMarketOwnedBundles({ dice_bundle: false });
+      updateMarketOwnedBundles({ dice_bundle: false }, { requestSync: false });
     }
     // M4-COMPLETE: Restore cycleIndex from runtime state
     setCycleIndex(runtimeState.cycleIndex ?? 0);
@@ -1915,7 +2062,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // This prevents the write amplification loop by ensuring local state (essence,
     // dice, etc.) has been synced from runtimeState before persist effects compare them.
     hasCompletedInitialHydrationSyncRef.current = true;
-  }, [hasHydratedRuntimeState, runtimeState.activeCompanionId, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.audioEnabled, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.creatureTreatInventory, runtimeState.marketOwnedBundlesByIsland, session.user.id]);
+  }, [hasHydratedRuntimeState, runtimeState.activeCompanionId, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.audioEnabled, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.creatureTreatInventory, runtimeState.marketOwnedBundlesByIsland, session.user.id, updateMarketOwnedBundles]);
 
   // M16D: Snap fill bar to 0 immediately on island travel reset (no slide-back animation)
   useEffect(() => {
@@ -2264,7 +2411,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const resetMs = Date.parse(resetAt);
 
       setMarketPurchaseFeedback(null);
-      setMarketOwnedBundles({
+      updateMarketOwnedBundles({
         dice_bundle: false,
       });
 
@@ -2297,7 +2444,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     setHasHydratedRuntimeState(false);
     setRuntimeHydrationSource(null);
-    setRuntimeState(localSnapshotBeforeHydration);
+    setRuntimeStateWithTrace('initial_hydrate_local_snapshot', localSnapshotBeforeHydration);
 
     void hydrateIslandRunRuntimeStateWithSource({ session, client, forceRemote: true })
       .then((hydrationResult) => {
@@ -2313,10 +2460,34 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           hydrationResult.source !== 'table' ||
           hydrationResult.state.runtimeVersion > localSnapshotBeforeHydration.runtimeVersion
         ) {
-          setRuntimeState(hydrationResult.state);
-          // C1: publish exactly the hydrated record so the visual token source
-          // (`useIslandRunState`) cannot lag behind runtimeState on first roll.
-          resetIslandRunStateSnapshot(session, hydrationResult.state);
+          if (isRollSyncPendingRef.current) {
+            logIslandRunEntryDebug('island_run_runtime_reconcile_skipped_roll_sync_pending', {
+              userId: session.user.id,
+              reason: 'initial_hydrate',
+              source: hydrationResult.source,
+              incomingTokenIndex: hydrationResult.state.tokenIndex,
+              currentTokenIndex: runtimeStateRef.current.tokenIndex,
+              incomingRuntimeVersion: hydrationResult.state.runtimeVersion ?? 0,
+              currentRuntimeVersion: runtimeStateRef.current.runtimeVersion ?? 0,
+              skipReason: 'roll_sync_pending',
+            });
+            logIslandRunEntryDebug('hydration_reconcile_skip', {
+              reason: 'initial_hydrate',
+              source: hydrationResult.source,
+              skipReason: 'roll_sync_pending',
+            });
+          } else {
+            setRuntimeStateWithTrace('initial_hydrate_apply', hydrationResult.state);
+            // C1: publish exactly the hydrated record so the visual token source
+            // (`useIslandRunState`) cannot lag behind runtimeState on first roll.
+            resetIslandRunStateSnapshot(session, hydrationResult.state);
+            logIslandRunEntryDebug('hydration_reconcile_apply', {
+              reason: 'initial_hydrate',
+              source: hydrationResult.source,
+              tokenIndexAfter: hydrationResult.state.tokenIndex,
+              runtimeVersionAfter: hydrationResult.state.runtimeVersion ?? 0,
+            });
+          }
         }
 
         logIslandRunEntryDebug('island_run_runtime_hydration_result', {
@@ -2409,7 +2580,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return () => {
       isActive = false;
     };
-  }, [client, session.user.id]);
+  }, [client, session.user.id, setRuntimeStateWithTrace]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState || !isIsland120StartupDiagnosticActive) return;
@@ -2434,9 +2605,33 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     try {
       const hydrationResult = await hydrateIslandRunRuntimeStateWithSource({ session, client, forceRemote: true });
       setRuntimeHydrationSource(hydrationResult.source);
-      setRuntimeState(hydrationResult.state);
-      // Keep store mirror aligned to the hydrated runtime snapshot.
-      resetIslandRunStateSnapshot(session, hydrationResult.state);
+      if (isRollSyncPendingRef.current) {
+        logIslandRunEntryDebug('island_run_runtime_reconcile_skipped_roll_sync_pending', {
+          userId: session.user.id,
+          reason: 'retry_sync',
+          source: hydrationResult.source,
+          incomingTokenIndex: hydrationResult.state.tokenIndex,
+          currentTokenIndex: runtimeStateRef.current.tokenIndex,
+          incomingRuntimeVersion: hydrationResult.state.runtimeVersion ?? 0,
+          currentRuntimeVersion: runtimeStateRef.current.runtimeVersion ?? 0,
+          skipReason: 'roll_sync_pending',
+        });
+        logIslandRunEntryDebug('hydration_reconcile_skip', {
+          reason: 'retry_sync',
+          source: hydrationResult.source,
+          skipReason: 'roll_sync_pending',
+        });
+      } else {
+        setRuntimeStateWithTrace('retry_hydrate_apply', hydrationResult.state);
+        // Keep store mirror aligned to the hydrated runtime snapshot.
+        resetIslandRunStateSnapshot(session, hydrationResult.state);
+        logIslandRunEntryDebug('hydration_reconcile_apply', {
+          reason: 'retry_sync',
+          source: hydrationResult.source,
+          tokenIndexAfter: hydrationResult.state.tokenIndex,
+          runtimeVersionAfter: hydrationResult.state.runtimeVersion ?? 0,
+        });
+      }
 
       if (hydrationResult.source === 'table') {
         setLandingText('Island Run synced successfully. You can continue playing.');
@@ -2459,7 +2654,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         errorMessage: error instanceof Error ? error.message : 'unknown_error',
       });
     }
-  }, [client, session.user.id]);
+  }, [client, session.user.id, setRuntimeStateWithTrace]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState || typeof window === 'undefined' || typeof document === 'undefined') {
@@ -2581,8 +2776,26 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [islandNumber, dayIndex]);
 
   const [completedStops, setCompletedStops] = useState<string[]>([]);
+  const completedStopsSyncRequestedRef = useRef(false);
+  const [hasCompletedStopsHydrationGate, setHasCompletedStopsHydrationGate] = useState(false);
   const [streakChipAnimationClass, setStreakChipAnimationClass] = useState('');
   const prevIslandsClearedCountRef = useRef(0);
+
+  const updateCompletedStops = useCallback((
+    updater: SetStateAction<string[]>,
+    options?: { requestSync?: boolean },
+  ) => {
+    setCompletedStops((current) => {
+      const next = typeof updater === 'function'
+        ? (updater as (value: string[]) => string[])(current)
+        : updater;
+      const changed = !areStringArraysEqual(current, next);
+      if (changed && options?.requestSync !== false) {
+        completedStopsSyncRequestedRef.current = true;
+      }
+      return changed ? next : current;
+    });
+  }, []);
 
   const getStoredCompletedStopsForIsland = useCallback((targetIslandNumber: number): string[] => {
     const persistedStops = runtimeState.completedStopsByIsland?.[String(targetIslandNumber)];
@@ -2598,11 +2811,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (!hasHydratedRuntimeState) return;
     const storedStops = getStoredCompletedStopsForIsland(islandNumber);
     if (storedStops.length > 0) {
-      setCompletedStops((current) => (areStringArraysEqual(current, storedStops) ? current : storedStops));
+      updateCompletedStops((current) => (areStringArraysEqual(current, storedStops) ? current : storedStops));
       return;
     }
-    setCompletedStops((current) => (current.length === 0 ? current : []));
-  }, [getStoredCompletedStopsForIsland, hasHydratedRuntimeState, islandNumber]);
+    updateCompletedStops((current) => (current.length === 0 ? current : []));
+  }, [getStoredCompletedStopsForIsland, hasHydratedRuntimeState, islandNumber, updateCompletedStops]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
@@ -2625,30 +2838,73 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setLandingText(`Focused on ${nextActiveStop.title}.`);
   }, [completedStops, islandStopPlan]);
 
+  // Hydration gate: suppress completed-stop sync requests during the initial
+  // hydration pass. Startup hydration can legitimately call updateCompletedStops
+  // to restore/derive local state, but those no-op or hydration-driven updates
+  // must not issue persistence writes.
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) {
+      setHasCompletedStopsHydrationGate(false);
+      completedStopsSyncRequestedRef.current = false;
+      completedStopsSyncDispatchKeyRef.current = null;
+      return;
+    }
+    // Clear any sync requests queued by hydration-side effects before opening
+    // the completed-stop persistence gate.
+    completedStopsSyncRequestedRef.current = false;
+    setHasCompletedStopsHydrationGate(true);
+  }, [hasHydratedRuntimeState]);
+
   // M11D: persist completedStops to Supabase runtime state (the localStorage
   // mirror was removed once runtime migration completed).
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    if (!hasCompletedStopsHydrationGate) return;
     // Guard: Skip until the initial hydration sync effect has applied server values
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
+    if (!completedStopsSyncRequestedRef.current) return;
     const islandKey = String(islandNumber);
-    const persistedStops = runtimeState.completedStopsByIsland?.[islandKey] ?? [];
-    if (areStringArraysEqual(persistedStops, completedStops)) {
+    const persistedStops = normalizeCompletedStopsForSync(runtimeState.completedStopsByIsland?.[islandKey] ?? []);
+    const normalizedCompletedStops = normalizeCompletedStopsForSync(completedStops);
+    const dispatchKey = `${islandKey}::${normalizedCompletedStops.join('|')}`;
+    if (areStringArraysEqual(persistedStops, normalizedCompletedStops)) {
+      completedStopsSyncRequestedRef.current = false;
+      if (completedStopsSyncDispatchKeyRef.current === dispatchKey) {
+        completedStopsSyncDispatchKeyRef.current = null;
+      }
       return;
     }
+    if (completedStopsSyncDispatchKeyRef.current === dispatchKey) {
+      return;
+    }
+    completedStopsSyncRequestedRef.current = false;
+    completedStopsSyncDispatchKeyRef.current = dispatchKey;
     const nextRuntimeState = syncCompletedStopsForIsland({
       session,
       client,
       islandNumber,
-      completedStops,
+      completedStops: normalizedCompletedStops,
       triggerSource: 'sync_completed_stops_effect',
     });
-    setRuntimeState((current) => ({
-      ...current,
-      completedStopsByIsland: nextRuntimeState.completedStopsByIsland,
-    }));
-  }, [client, completedStops, hasHydratedRuntimeState, islandNumber, runtimeState.completedStopsByIsland, session]);
+    setRuntimeStateWithTrace('sync_completed_stops_effect', (current) => (
+      current.completedStopsByIsland === nextRuntimeState.completedStopsByIsland
+        ? current
+        : {
+          ...current,
+          completedStopsByIsland: nextRuntimeState.completedStopsByIsland,
+        }
+    ));
+  }, [
+    client,
+    completedStops,
+    hasCompletedStopsHydrationGate,
+    hasHydratedRuntimeState,
+    islandNumber,
+    runtimeState.completedStopsByIsland,
+    session,
+    setRuntimeStateWithTrace,
+  ]);
 
   // ── C1: dicePool/tokenIndex/spinTokens persist effect REMOVED ────────────
   // The old useEffect at this location watched the three mirrors and called
@@ -2677,29 +2933,68 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setRuntimeState(result.record);
   }, [client, diamonds, hasHydratedRuntimeState, runtimeState.diamonds, session]);
 
+  // Hydration gate: suppress market-owned bundle sync requests during initial
+  // runtime hydration/restore so startup renders cannot trigger persistence.
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) {
+      setHasMarketOwnedBundleHydrationGate(false);
+      marketOwnedBundleSyncRequestedRef.current = false;
+      marketOwnedBundleSyncDispatchKeyRef.current = null;
+      return;
+    }
+    marketOwnedBundleSyncRequestedRef.current = false;
+    setHasMarketOwnedBundleHydrationGate(true);
+  }, [hasHydratedRuntimeState]);
+
   // M19A: persist market owned state to runtime state map (and mirror legacy local storage key for compatibility)
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    if (!hasMarketOwnedBundleHydrationGate) return;
     // Guard: Skip until the initial hydration sync effect has applied server values
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
+    if (!marketOwnedBundleSyncRequestedRef.current) return;
     const islandKey = String(islandNumber);
-    const persisted = runtimeState.marketOwnedBundlesByIsland?.[islandKey];
-    if (
-      persisted
-      && persisted.dice_bundle === marketOwnedBundles.dice_bundle
-    ) {
+    const persistedOwned = Boolean(runtimeState.marketOwnedBundlesByIsland?.[islandKey]?.dice_bundle);
+    const localOwned = Boolean(marketOwnedBundles.dice_bundle);
+    const dispatchKey = `${islandKey}::dice_bundle:${localOwned ? 1 : 0}`;
+    if (persistedOwned === localOwned) {
+      marketOwnedBundleSyncRequestedRef.current = false;
+      if (marketOwnedBundleSyncDispatchKeyRef.current === dispatchKey) {
+        marketOwnedBundleSyncDispatchKeyRef.current = null;
+      }
       return;
     }
+    if (marketOwnedBundleSyncDispatchKeyRef.current === dispatchKey) {
+      return;
+    }
+    marketOwnedBundleSyncRequestedRef.current = false;
+    marketOwnedBundleSyncDispatchKeyRef.current = dispatchKey;
     const nextRecord = applyMarketOwnedBundleMarker({
       session,
       client,
       islandNumber,
-      diceBundleOwned: marketOwnedBundles.dice_bundle,
+      diceBundleOwned: localOwned,
       triggerSource: 'sync_market_owned_bundle_marker_effect',
     });
-    setRuntimeState(nextRecord);
-  }, [client, hasHydratedRuntimeState, islandNumber, marketOwnedBundles, runtimeState.marketOwnedBundlesByIsland, session]);
+    setRuntimeStateWithTrace('sync_market_owned_bundle_marker_effect', (current) => (
+      current.marketOwnedBundlesByIsland === nextRecord.marketOwnedBundlesByIsland
+        ? current
+        : {
+          ...current,
+          marketOwnedBundlesByIsland: nextRecord.marketOwnedBundlesByIsland,
+        }
+    ));
+  }, [
+    client,
+    hasHydratedRuntimeState,
+    hasMarketOwnedBundleHydrationGate,
+    islandNumber,
+    marketOwnedBundles,
+    runtimeState.marketOwnedBundlesByIsland,
+    session,
+    setRuntimeStateWithTrace,
+  ]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
@@ -3021,7 +3316,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
     if (areStringArraysEqual(completedStops, effectiveCompletedStops)) return;
-    setCompletedStops((current) => (areStringArraysEqual(current, effectiveCompletedStops) ? current : effectiveCompletedStops));
+    updateCompletedStops((current) => (areStringArraysEqual(current, effectiveCompletedStops) ? current : effectiveCompletedStops));
   }, [completedStops, effectiveCompletedStops, hasHydratedRuntimeState]);
 
   const mergedStopStatesByIndex = useMemo(() => {
@@ -3070,6 +3365,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         // Green 'completed' only once the animal is collected or sold (island-clear condition).
         if (index === 0 && status === 'completed' && !islandEggSlotUsed) {
           status = 'partial';
+        } else if (status === 'completed') {
+          const buildState = runtimeState.stopBuildStateByIndex[index];
+          const buildLevel = Math.max(0, Math.floor(buildState?.buildLevel ?? 0));
+          if (buildLevel < MAX_BUILD_LEVEL) {
+            status = 'build_pending';
+          }
         }
         map.set(stop.stopId, status);
       });
@@ -3096,7 +3397,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     return map;
-  }, [contractV2Stops, effectiveCompletedStops, islandEggSlotUsed, islandStopPlan]);
+  }, [contractV2Stops, effectiveCompletedStops, islandEggSlotUsed, islandStopPlan, runtimeState.stopBuildStateByIndex]);
 
   // stopMap intentionally remains empty: per the canonical gameplay contract,
   // stops are EXTERNAL side-quest structures (orbit HUD buttons). No tile on
@@ -4040,6 +4341,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   };
 
   const handleRoll = async (): Promise<boolean> => {
+    logIslandRunEntryDebug('roll_click_start', {
+      userId: session.user.id,
+      tokenIndex: runtimeStateRef.current.tokenIndex,
+      dicePool: runtimeStateRef.current.dicePool,
+      runtimeVersion: runtimeStateRef.current.runtimeVersion,
+      isAnimatingRoll: isAnimatingRollRef.current,
+      isRollSyncPending: isRollSyncPendingRef.current,
+    });
     const rollDecisionFlags = {
       canRoll,
       showFirstRunCelebration,
@@ -4143,6 +4452,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       client,
       boardProfileId: ACTIVE_BOARD_PROFILE.id,
       diceMultiplier: effectiveMultiplier,
+    });
+    logIslandRunEntryDebug('roll_action_result', {
+      userId: session.user.id,
+      status: rollResult.status,
+      total: rollResult.total ?? null,
+      dieOne: rollResult.dieOne ?? null,
+      dieTwo: rollResult.dieTwo ?? null,
+      newTokenIndex: rollResult.newTokenIndex ?? null,
+      hopCount: Array.isArray(rollResult.hopSequence) ? rollResult.hopSequence.length : null,
+      runtimeVersion: runtimeStateRef.current.runtimeVersion,
+      tokenIndex: runtimeStateRef.current.tokenIndex,
     });
 
     if (
@@ -4263,7 +4583,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     //  - completedStopsByIsland: take the union of stop IDs per island key.
     //  - stopStatesByIndex: once objectiveComplete or buildComplete is true it
     //    stays true regardless of which source has stale false.
-        setRuntimeState((current) => {
+        setRuntimeStateWithTrace('roll_applyRollResult_merge', (current) => {
           const merged = { ...freshRecord };
 
       // Union-merge completedStopsByIsland
@@ -4709,7 +5029,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         awardShards('stop_complete');
         awardWalletShards(1);
       }
-      setCompletedStops(nextCompletedStops);
+      updateCompletedStops(nextCompletedStops);
       markHatcheryStopCompleteInV2();
       setLandingText(`Egg set! Hatchery stop completed with a ${tier} egg now incubating.`);
       setActiveStopId(null);
@@ -5204,7 +5524,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       completedStops: nextCompletedStops,
       triggerSource: 'island_board_collect_creature',
     });
-    setCompletedStops(nextCompletedStops);
+    updateCompletedStops(nextCompletedStops);
     markHatcheryStopCompleteInV2();
     setRuntimeState(nextRecord);
     if (activeStopId === 'hatchery') {
@@ -5271,7 +5591,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       essenceLifetimeEarned: nextEssenceLifetimeEarned,
       triggerSource: 'island_board_sell_egg_choice',
     });
-    setCompletedStops(nextCompletedStops);
+    updateCompletedStops(nextCompletedStops);
     setRuntimeState(nextRecord);
     if (activeStopId === 'hatchery') {
       setActiveStopId(null);
@@ -5313,7 +5633,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const totalEncounterSpinTokens = reward.spinTokens + perfectCompanionEncounterBonus.spinTokens;
 
     if (totalEncounterEssence > 0) {
-      awardContractV2Essence(totalEncounterEssence, 'encounter_reward');
+      setRuntimeState((prev) => ({
+        ...prev,
+        essence: prev.essence + totalEncounterEssence,
+        essenceLifetimeEarned: prev.essenceLifetimeEarned + totalEncounterEssence,
+      }));
     }
     if (totalEncounterDice > 0) {
       setDicePool((current) => current + totalEncounterDice);
@@ -5481,7 +5805,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setBossTrialResolved(true);
     setDicePool((current) => current + bossReward.dice);
     if (bossReward.essence > 0) {
-      awardContractV2Essence(bossReward.essence, 'boss_trial_reward');
+      setRuntimeState((prev) => ({
+        ...prev,
+        essence: prev.essence + bossReward.essence,
+        essenceLifetimeEarned: prev.essenceLifetimeEarned + bossReward.essence,
+      }));
     }
     if (bossReward.spinTokens > 0) {
       setSpinTokens((t) => t + bossReward.spinTokens);
@@ -5567,11 +5895,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   };
 
   const handleLaunchMysteryMinigame = (mysteryContentKind: 'task_tower' | 'vision_quest') => {
+    if (!canOpenIslandRunOverlayWhileRollingState({
+      isRolling,
+      isAnimatingRoll: isAnimatingRollRef.current,
+      isRollSyncPending: isRollSyncPendingRef.current,
+    })) {
+      setActivePlaceholder(resolveIslandRunPlaceholderDescriptor('launch_blocked_while_rolling'));
+      return;
+    }
+
     const mysteryMinigame = resolveMysteryStopMinigame({
       kind: 'fixed_mystery',
       mysteryContentKind,
     });
-    if (!mysteryMinigame) return;
+    if (!mysteryMinigame) {
+      setActivePlaceholder(resolveIslandRunPlaceholderDescriptor('mystery_stop_unfinished'));
+      return;
+    }
     registerAllMinigameManifests();
     setActiveLaunchedMinigameId(mysteryMinigame.minigameId);
     setActiveLaunchedMinigameSource('mystery_stop');
@@ -5580,8 +5920,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const handleLaunchTimedEventMinigame = () => {
     if (!activeTimedEvent) return;
+    if (!canOpenIslandRunOverlayWhileRollingState({
+      isRolling,
+      isAnimatingRoll: isAnimatingRollRef.current,
+      isRollSyncPending: isRollSyncPendingRef.current,
+    })) {
+      setActivePlaceholder(resolveIslandRunPlaceholderDescriptor('launch_blocked_while_rolling'));
+      return;
+    }
     if (!isCanonicalEventId(activeTimedEvent.eventType)) {
-      setShowMinigameDialog(true);
+      setActivePlaceholder(resolveIslandRunPlaceholderDescriptor('timed_event_unavailable'));
       playIslandRunSound('minigame_open');
       return;
     }
@@ -5611,7 +5959,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     })();
 
     if (!descriptor) {
-      setShowMinigameDialog(true);
+      setActivePlaceholder(resolveIslandRunPlaceholderDescriptor('timed_event_unavailable'));
       playIslandRunSound('minigame_open');
       return;
     }
@@ -5689,7 +6037,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const costCoins = MARKET_DICE_BUNDLE_COST;
     const rewardDice = MARKET_DICE_BUNDLE_REWARD;
 
-    setMarketOwnedBundles((current) => ({
+    updateMarketOwnedBundles((current) => ({
       ...current,
       [bundle]: true,
     }));
@@ -5797,7 +6145,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     playIslandRunSound('market_purchase_success');
     triggerIslandRunHaptic('market_purchase_success');
     const message = `Purchased Dice Bundle: -${MARKET_DICE_BUNDLE_COST} essence, +${MARKET_DICE_BUNDLE_REWARD} dice.`;
-    setMarketOwnedBundles((current) => ({ ...current, dice_bundle: true }));
+    updateMarketOwnedBundles((current) => ({ ...current, dice_bundle: true }));
     setMarketPurchaseFeedback(message);
     setLandingText(message);
     setMarketInteracted(true);
@@ -5904,7 +6252,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setCurrentEncounterChallenge(null);
     setEncounterStep('challenge');
     setEncounterRewardData(null);
-    setCompletedStops([]);
+    updateCompletedStops([]);
     setBossTrialResolved(false);
     setBossRewardSummary(null);
     // M7-COMPLETE: reset boss trial phase on island travel
@@ -5914,7 +6262,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setBossAttemptCount(0);
     setSpinTokens(0);
     setMarketInteracted(false);
-    setMarketOwnedBundles({ dice_bundle: false });
+    updateMarketOwnedBundles({ dice_bundle: false });
 
     setTimeLeftSec(startTimer ? Math.ceil(getIslandDurationMs(resolvedIsland) / 1000) : 0);
     setIslandStartedAtMs(next.islandStartedAtMs);
@@ -5971,7 +6319,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // B3-2: handleCompleteStopById helper
   const handleCompleteStopById = (stopId: string) => {
-    setCompletedStops((current) => current.includes(stopId) ? current : [...current, stopId]);
+    updateCompletedStops((current) => current.includes(stopId) ? current : [...current, stopId]);
   };
 
   const handleSpendEssenceOnBuild = (stopIndex: number) => {
@@ -6093,7 +6441,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       }
 
       if (activeStopId === 'boss') {
-        setCompletedStops((current) => ensureStopCompleted(current, 'boss'));
+        updateCompletedStops((current) => ensureStopCompleted(current, 'boss'));
         awardShards('boss_defeat');
         awardWalletShards(3);
 
@@ -6142,13 +6490,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           // Travel is now gated on the celebration CTA; see
           // handleTravelFromCelebration.
         } else {
-          setLandingText('👾 Boss defeated! Open the Build Panel 🔨 and finish all 5 buildings to claim island clear.');
+          setLandingText('👾 Boss defeated, but full rewards are locked. Return to Build and upgrade every landmark to Level 3 to claim island clear.');
           setActiveStopId(null);
         }
         return;
       }
 
-      setCompletedStops((current) => ensureStopCompleted(current, activeStopId));
+      updateCompletedStops((current) => ensureStopCompleted(current, activeStopId));
       setMysteryStopReward(null);
       setLandingText(`${activeStopId.toUpperCase()} stop objective done! Open 🔨 Build to fund this island's buildings.`);
       setActiveStopId(null);
@@ -6158,7 +6506,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (activeStopId === 'boss') {
       const bossReward = getBossReward(islandNumber);
       setLandingText('Boss stop complete! Island clear. Next island unlocked.');
-      setCompletedStops((current) => ensureStopCompleted(current, 'boss'));
+      updateCompletedStops((current) => ensureStopCompleted(current, 'boss'));
       awardShards('boss_defeat');
       awardWalletShards(3);
 
@@ -6209,7 +6557,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       awardShards('stop_complete');
       awardWalletShards(1);
     }
-    setCompletedStops((current) => ensureStopCompleted(current, activeStopId));
+    updateCompletedStops((current) => ensureStopCompleted(current, activeStopId));
     setMysteryStopReward(null);
     setLandingText(`${activeStopId.toUpperCase()} stop completed.`);
     setActiveStopId(null);
@@ -6293,6 +6641,39 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
     setRuntimeState(record);
   };
+
+  const handleDevGrantDice = useCallback((amount: number) => {
+    if (!isDevModeEnabled) return;
+    const result = applyDevGrantDice({
+      session,
+      client,
+      amount,
+      triggerSource: 'dev_grant_dice',
+    });
+    if (result.applied < 1) {
+      setLandingText('DEV MODE: invalid dice grant amount.');
+      return;
+    }
+    setRuntimeState(result.record);
+    setDicePool(result.record.dicePool);
+    setLandingText(`🧪 DEV MODE: +${result.applied} dice granted via canonical action.`);
+  }, [client, isDevModeEnabled, session]);
+
+  const handleDevGrantEssence = useCallback((amount: number) => {
+    if (!isDevModeEnabled) return;
+    const result = applyDevGrantEssence({
+      session,
+      client,
+      amount,
+      triggerSource: 'dev_grant_essence',
+    });
+    if (result.applied < 1) {
+      setLandingText('DEV MODE: invalid essence grant amount.');
+      return;
+    }
+    setRuntimeState(result.record);
+    setLandingText(`🧪 DEV MODE: +${result.applied} essence granted via canonical action.`);
+  }, [client, isDevModeEnabled, session]);
 
   const handleClaimFirstRunRewards = async () => {
     if (firstRunStep === 'celebration') {
@@ -6632,7 +7013,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const rewardSpinTokens = reward.spinTokens ?? 0;
 
       if (rewardEssence > 0) {
-        awardContractV2Essence(rewardEssence, 'sanctuary_bond_reward_claim');
+        setRuntimeState((prev) => ({
+          ...prev,
+          essence: prev.essence + rewardEssence,
+          essenceLifetimeEarned: prev.essenceLifetimeEarned + rewardEssence,
+        }));
       }
       if (rewardDice > 0) {
         setDicePool((current) => current + rewardDice);
@@ -6955,7 +7340,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </div>
           );
         })()}
-        {isDevPanelOpen && (
+        {isDevModeEnabled && isDevPanelOpen && (
           <div id="island-run-dev-panel">
         <div className="island-run-prototype__hud-grid">
           <div className="island-run-prototype__hud-section">
@@ -6976,9 +7361,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   ? nonBossStops.filter((s) => stopStateMap.get(s.stopId) === 'completed').length
                   : nonBossStops.filter((s) => effectiveCompletedStops.includes(s.stopId)).length;
                 if (completedNonBoss < nonBossStops.length) {
-                  return <span className="island-run-prototype__stat-chip">{completedNonBoss}/{nonBossStops.length} stops done — unlock boss!</span>;
+                  return <span className="island-run-prototype__stat-chip">{completedNonBoss}/{nonBossStops.length} landmarks fully complete — finish upgrades for full clear.</span>;
                 }
-                return <span className="island-run-prototype__stat-chip">✅ All stops cleared</span>;
+                return <span className="island-run-prototype__stat-chip">✅ All landmarks fully complete</span>;
               })()}
             </div>
           </div>
@@ -7094,6 +7479,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           >
             Simulate wallet shards (+5)
           </button>
+          {isDevModeEnabled && (
+            <div className="island-run-prototype__qa-controls" role="group" aria-label="DEV MODE actions">
+              <p className="island-run-prototype__qa-label">🧪 DEV MODE — canonical actions only</p>
+              <div className="island-run-prototype__status-row">
+                <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">Grant Dice</span>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={() => handleDevGrantDice(10)}>+10</button>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={() => handleDevGrantDice(50)}>+50</button>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={() => handleDevGrantDice(100)}>+100</button>
+              </div>
+              <div className="island-run-prototype__status-row">
+                <span className="island-run-prototype__stat-chip">Grant Essence</span>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={() => handleDevGrantEssence(100)}>+100</button>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={() => handleDevGrantEssence(500)}>+500</button>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={() => handleDevGrantEssence(1000)}>+1000</button>
+              </div>
+            </div>
+          )}
         </div>
           </div>
         )}
@@ -7534,7 +7936,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 </button>
               </>
             )}
-            {!isHudCollapsed && (
+            {isDevModeEnabled && !isHudCollapsed && (
               <button
                 type="button"
                 className="island-run-prototype__dev-toggle"
@@ -7618,7 +8020,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         const openedStopIndex = islandStopPlan.findIndex((s) => s.stopId === activeStop.stopId);
         const openedStopState = stopStateMap.get(activeStop.stopId) ?? 'active';
         const openedStopIsLocked = openedStopState === 'locked';
-        const openedStopIsCompleted = openedStopState === 'completed' || openedStopState === 'partial';
+        const openedStopNeedsBuild = openedStopState === 'build_pending';
+        const openedStopIsCompleted = openedStopState === 'completed' || openedStopState === 'partial' || openedStopNeedsBuild;
         const openedStopIsPlayable = !openedStopIsLocked && !openedStopIsCompleted;
         const priorStop = openedStopIndex > 0 ? islandStopPlan[openedStopIndex - 1] : null;
         const openedStopNeedsTicket = doesStopRequireTicketPayment(activeStop.stopId);
@@ -7669,7 +8072,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   : 'This stop is not open yet. Complete the previous stop first to unlock it.'}
               </p>
             ) : null}
-            {activeStopId !== 'hatchery' && openedStopIsCompleted ? (
+            {activeStopId !== 'hatchery' && openedStopNeedsBuild ? (
+              <div className="island-stop-modal__completed-banner island-stop-modal__completed-banner--build-pending" role="status">
+                <span aria-hidden="true">🛠️</span> Objective complete — finish landmark upgrades (reach Level {MAX_BUILD_LEVEL}) to mark this stop fully complete.
+              </div>
+            ) : null}
+            {activeStopId !== 'hatchery' && openedStopIsCompleted && !openedStopNeedsBuild ? (
               <div className="island-stop-modal__completed-banner" role="status">
                 <span aria-hidden="true">✅</span> This stop is complete for this island. Well done!
               </div>
@@ -7905,8 +8313,37 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     </div>
                   </div>
                 ) : (
-                  <p>Complete this mystery stop to progress.</p>
+                  <div>
+                    <p className="island-stop-modal__copy">🧩 <strong>Mystery content coming soon</strong></p>
+                    <p>This mystery variant is unfinished. Open a safe placeholder inside Island Run.</p>
+                    <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
+                      <button
+                        type="button"
+                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                        onClick={() => setActivePlaceholder(resolveIslandRunPlaceholderDescriptor('mystery_stop_unfinished'))}
+                      >
+                        Open Placeholder
+                      </button>
+                    </div>
+                  </div>
                 )}
+              </div>
+            )}
+
+            {/* ── Stop 2: Habit (placeholder-safe until dedicated content ships) ── */}
+            {activeStopId === 'habit' && openedStopIsPlayable && (
+              <div className="island-hatchery-card">
+                <p className="island-stop-modal__copy"><strong>✅ Habit Stop</strong></p>
+                <p>This stop uses a safe in-board placeholder while final content is being built.</p>
+                <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                    onClick={() => setActivePlaceholder(resolveIslandRunPlaceholderDescriptor('habit_stop_unfinished'))}
+                  >
+                    Open Habit Placeholder
+                  </button>
+                </div>
               </div>
             )}
 
@@ -7922,7 +8359,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       className="island-stop-modal__btn island-stop-modal__btn--action"
                       onClick={() => {
                         setDiamonds((d) => d - WISDOM_ESSENCE_BONUS_COST_DIAMONDS);
-                        awardContractV2Essence(WISDOM_ESSENCE_BONUS_AMOUNT, 'wisdom_essence_bonus');
+                        setRuntimeState((prev) => ({
+                          ...prev,
+                          essence: prev.essence + WISDOM_ESSENCE_BONUS_AMOUNT,
+                          essenceLifetimeEarned: prev.essenceLifetimeEarned + WISDOM_ESSENCE_BONUS_AMOUNT,
+                        }));
                         playIslandRunSound('utility_stop_complete');
                         triggerIslandRunHaptic('utility_stop_complete');
                         void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_spend', metadata: { stage: 'wisdom_essence_bonus', island_number: islandNumber, cost_diamonds: WISDOM_ESSENCE_BONUS_COST_DIAMONDS, essence_gained: WISDOM_ESSENCE_BONUS_AMOUNT } });
@@ -7939,13 +8380,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored" style={{ marginTop: '0.75rem' }}>
                   <button
                     type="button"
-                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                    onClick={() => {
-                      setLandingText('📖 Wisdom stop complete!');
-                      handleCompleteActiveStop();
-                    }}
+                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                    onClick={() => setActivePlaceholder(resolveIslandRunPlaceholderDescriptor('wisdom_stop_unfinished'))}
                   >
-                    Complete Wisdom Stop
+                    Open Wisdom Placeholder
                   </button>
                 </div>
               </div>
@@ -8044,7 +8482,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         <p className="island-boss-trial__reward-text">
                           {bossRewardSummary ?? `Rewards: +${bossReward.essence} 🟣, +3 🔷`}
                         </p>
-                        <p className="island-boss-trial__next-hint">Tap <strong>Claim Island Clear</strong> to celebrate and travel.</p>
+                        <p className="island-boss-trial__next-hint">
+                          {isCurrentIslandFullyCleared
+                            ? <>Tap <strong>Claim Island Clear</strong> to celebrate and travel.</>
+                            : <>Boss defeated. <strong>Full island-clear rewards are locked</strong> until every landmark is upgraded to Level {MAX_BUILD_LEVEL}.</>}
+                        </p>
                       </div>
                     )}
 
@@ -8088,6 +8530,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
               {activeStop.stopId !== 'hatchery'
               && activeStop.stopId !== 'boss'
+              && activeStop.stopId !== 'habit'
               && activeStop.stopId !== 'mystery'
               && activeStop.stopId !== 'wisdom'
               && openedStopIsPlayable ? (
@@ -8102,8 +8545,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   onClick={handleCompleteActiveStop}
                   disabled={!bossTrialResolved || bossTrialPhase === 'in_progress'}
                 >
-                  {isCurrentIslandFullyCleared ? '🎉 Claim Island Clear' : 'Claim Island Clear'}
+                  {isCurrentIslandFullyCleared ? '🎉 Claim Island Clear' : '🔒 Full Rewards Locked — Finish Landmark Upgrades'}
                 </button>
+              ) : null}
+              {activeStop.stopId === 'boss' && openedStopIsPlayable && !isCurrentIslandFullyCleared ? (
+                <p className="island-stop-modal__locked-notice" role="status" style={{ marginTop: '0.4rem' }}>
+                  <span aria-hidden="true">🧱</span> Landmarks incomplete — finish upgrades to Level {MAX_BUILD_LEVEL} on all stops before you can claim full island-clear rewards and travel.
+                </p>
               ) : null}
               {openedStopNeedsTicket && openedStopTicketCost ? (
                 <button
@@ -8401,57 +8849,31 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         </div>
       )}
 
-      {/* ── Mini-game popup dialog ──────────────────────────────────────── */}
-      {showMinigameDialog && (
+      {/* ── Safe placeholder dialog ─────────────────────────────────────── */}
+      {activePlaceholder && (
         <div className="island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Mini-game">
-            <h3 className="island-stop-modal__title">
-              {activeTimedEvent ? `${getEventDisplayMeta(activeTimedEvent.eventType).icon} ${getEventDisplayMeta(activeTimedEvent.eventType).displayName}` : '🎮 Mini-game'}
-            </h3>
-            <p className="island-stop-modal__copy">
-              You have <strong>{spinTokens}</strong> 🎫 tokens to spend.
-            </p>
-            <p className="island-stop-modal__copy">
-              Each play costs <strong>3</strong> tokens. Win dice, essence, or sticker fragments!
-            </p>
-            <p className="island-stop-modal__copy" style={{ opacity: 0.7, fontSize: '0.85em' }}>
-              Mini-game prototype — actual gameplay coming soon. For now, spending tokens simulates a play.
-            </p>
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Island Run placeholder">
+            <h3 className="island-stop-modal__title">{activePlaceholder.title}</h3>
+            <p className="island-stop-modal__copy">{activePlaceholder.body}</p>
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                disabled={spinTokens < 3}
-                onClick={() => {
-                  // Mock mini-game play: spend 3 tokens, award random reward
-                  const reward = Math.random();
-                  // C1: Route minigame currency deltas through the store action.
-                  if (reward < 0.4) {
-                    const dice = 3 + Math.floor(Math.random() * 8);
-                    const record = applyTokenHopRewards({ session, client, deltas: { spinTokens: -3, dicePool: dice }, triggerSource: 'minigame_dice' });
-                    setRuntimeState(record);
-                    setLandingText(`🎮 Mini-game: Won +${dice} 🎲!`);
-                  } else if (reward < 0.7) {
-                    const ess = 5 + Math.floor(Math.random() * 10);
-                    const record = applyTokenHopRewards({ session, client, deltas: { spinTokens: -3, essence: ess }, triggerSource: 'minigame_essence' });
-                    setRuntimeState(record);
-                    setLandingText(`🎮 Mini-game: Won +${ess} 🟣 essence!`);
-                  } else {
-                    const record = applyTokenHopRewards({ session, client, deltas: { spinTokens: -3 }, triggerSource: 'minigame_loss' });
-                    setRuntimeState(record);
-                    setLandingText('🎮 Mini-game: Better luck next time!');
-                  }
-                  playIslandRunSound('minigame_complete');
-                }}
-              >
-                {spinTokens >= 3 ? 'Play (3 🎫)' : 'Not enough tokens'}
-              </button>
+              {activePlaceholder.completionCtaLabel ? (
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                  onClick={() => {
+                    handleCompleteActiveStop();
+                    setActivePlaceholder(null);
+                  }}
+                >
+                  {activePlaceholder.completionCtaLabel}
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                onClick={() => setShowMinigameDialog(false)}
+                onClick={() => setActivePlaceholder(null)}
               >
-                Close
+                {activePlaceholder.closeLabel}
               </button>
             </div>
           </section>
