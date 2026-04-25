@@ -314,6 +314,69 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.record.runtimeVersion, 10, 'runtimeVersion should not change on no-op');
     },
   },
+  {
+    name: 'applyPassiveDiceRegenTick above cap does not churn commits/runtimeVersion',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 22,
+        dicePool: 43, // above L1 cap
+        diceRegenState: buildInitialDiceRegenState(1, 0),
+      });
+
+      const first = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 1_000,
+        triggerSource: 'test_passive_dice_regen_tick_above_cap_first',
+      });
+      const second = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 2_000,
+        triggerSource: 'test_passive_dice_regen_tick_above_cap_second',
+      });
+
+      assertEqual(first.changed, false, 'above-cap tick should be no-op');
+      assertEqual(second.changed, false, 'repeated above-cap tick should remain no-op');
+      assertEqual(first.record.runtimeVersion, 22, 'runtimeVersion should not churn on above-cap no-op');
+      assertEqual(second.record.runtimeVersion, 22, 'runtimeVersion should remain stable on repeated no-op');
+    },
+  },
+  {
+    name: 'applyPassiveDiceRegenTick at cap does not churn commits/runtimeVersion',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 30,
+        dicePool: 30, // equals L1 cap
+        diceRegenState: buildInitialDiceRegenState(1, 0),
+      });
+
+      const first = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 1_000,
+        triggerSource: 'test_passive_dice_regen_tick_at_cap_first',
+      });
+      const second = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 2_000,
+        triggerSource: 'test_passive_dice_regen_tick_at_cap_second',
+      });
+
+      assertEqual(first.changed, false, 'at-cap tick should be no-op');
+      assertEqual(second.changed, false, 'repeated at-cap tick should remain no-op');
+      assertEqual(second.record.runtimeVersion, 30, 'runtimeVersion should not churn at cap');
+    },
+  },
 
   {
     name: 'applyPassiveDiceRegenTick preserves unrelated fields',
@@ -1574,6 +1637,144 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.activeStopIndex, 1, 'active stop index should advance');
       assertEqual(result.activeStopType, 'mystery', 'active stop type should advance');
       assertEqual(result.runtimeVersion, 11, 'runtimeVersion should bump by one');
+    },
+  },
+  {
+    name: 'syncCompletedStopsForIsland is no-op when completed stops are unchanged',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 40,
+        currentIslandNumber: 7,
+        tokenIndex: 33,
+        dicePool: 43,
+        essence: 777,
+        completedStopsByIsland: {
+          '7': ['hatchery', 'habit'],
+        },
+      });
+
+      const first = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['hatchery', 'habit'],
+        triggerSource: 'test_sync_completed_stops_noop_first_open',
+      });
+      const second = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['hatchery', 'habit'],
+        triggerSource: 'test_sync_completed_stops_noop_second_open',
+      });
+
+      assertEqual(first.runtimeVersion, 40, 'unchanged completed stops should not bump runtimeVersion');
+      assertEqual(second.runtimeVersion, 40, 'repeated unchanged sync should stay idempotent');
+      assertEqual(first.tokenIndex, 33, 'tokenIndex must remain unchanged');
+      assertEqual(first.dicePool, 43, 'dicePool must remain unchanged');
+      assertEqual(first.essence, 777, 'essence must remain unchanged');
+    },
+  },
+  {
+    name: 'syncCompletedStopsForIsland is semantic no-op for re-ordered/duplicate stop arrays',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 41,
+        currentIslandNumber: 7,
+        tokenIndex: 33,
+        dicePool: 43,
+        essence: 777,
+        completedStopsByIsland: {
+          '7': ['hatchery', 'habit'],
+        },
+      });
+
+      const result = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['habit', 'hatchery', 'habit'],
+        triggerSource: 'test_sync_completed_stops_semantic_noop',
+      });
+
+      assertEqual(result.runtimeVersion, 41, 'semantic no-op should not bump runtimeVersion');
+      assertEqual(result.tokenIndex, 33, 'semantic no-op must preserve tokenIndex');
+      assertEqual(result.dicePool, 43, 'semantic no-op must preserve dicePool');
+      assertEqual(result.essence, 777, 'semantic no-op must preserve essence');
+    },
+  },
+  {
+    name: 'syncCompletedStopsForIsland persists only when completed stops differ',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 50,
+        currentIslandNumber: 7,
+        tokenIndex: 33,
+        dicePool: 43,
+        essence: 888,
+        completedStopsByIsland: {
+          '7': ['hatchery'],
+        },
+      });
+
+      const result = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['hatchery', 'habit'],
+        triggerSource: 'test_sync_completed_stops_diff',
+      });
+
+      assertEqual(result.runtimeVersion, 51, 'changed completed stops should bump runtimeVersion once');
+      assertEqual(result.completedStopsByIsland['7']?.length ?? 0, 2, 'completed stops should update for island');
+      assertEqual(result.tokenIndex, 33, 'tokenIndex must be preserved');
+      assertEqual(result.dicePool, 43, 'dicePool must be preserved');
+      assertEqual(result.essence, 888, 'essence must be preserved');
+    },
+  },
+  {
+    name: 'syncCompletedStopsForIsland repeated renders only persist once for the same semantic target',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 60,
+        currentIslandNumber: 7,
+        tokenIndex: 33,
+        dicePool: 43,
+        essence: 999,
+        completedStopsByIsland: {
+          '7': ['hatchery'],
+        },
+      });
+
+      const first = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['habit', 'hatchery'],
+        triggerSource: 'test_sync_completed_stops_repeated_first',
+      });
+      const second = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['hatchery', 'habit', 'habit'],
+        triggerSource: 'test_sync_completed_stops_repeated_second',
+      });
+
+      assertEqual(first.runtimeVersion, 61, 'first semantic change should persist once');
+      assertEqual(second.runtimeVersion, 61, 'second semantic-equivalent render should no-op');
+      assertEqual(second.completedStopsByIsland['7']?.join(','), 'hatchery,habit', 'stored order should be canonical');
+      assertEqual(second.tokenIndex, 33, 'tokenIndex preserved across repeated calls');
+      assertEqual(second.dicePool, 43, 'dicePool preserved across repeated calls');
+      assertEqual(second.essence, 999, 'essence preserved across repeated calls');
     },
   },
 

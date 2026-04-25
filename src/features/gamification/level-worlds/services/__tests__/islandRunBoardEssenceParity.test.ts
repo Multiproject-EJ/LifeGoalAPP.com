@@ -148,6 +148,24 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
     },
   },
   {
+    name: 'roll sync guard: hydration/reconcile paths skip token snapshot publish while roll sync is pending',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('if (isAnimatingRollRef.current || isRollSyncPendingRef.current) {'),
+        'Reconcile guard should block while roll animation OR roll-sync pending is active.',
+      );
+      assert(
+        source.includes("logIslandRunEntryDebug('island_run_runtime_reconcile_skipped_roll_sync_pending'"),
+        'Roll-sync reconcile skip should emit diagnostics for token overwrite investigations.',
+      );
+      assert(
+        source.includes("skipReason: 'roll_sync_pending'"),
+        'Roll-sync reconcile skip diagnostics should label the reason as roll_sync_pending.',
+      );
+    },
+  },
+  {
     name: 'tile reward success path updates visible runtimeState essence mirror (not only error path)',
     run: async () => {
       const source = await readBoardSource();
@@ -197,6 +215,73 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       assert(
         source.includes('resetIslandRunStateSnapshot(session, hydrationResult.state);'),
         'Hydration/reconcile flows should publish hydrated record directly to store mirror.',
+      );
+    },
+  },
+  {
+    name: 'completed-stop sync effect pre-dispatch guard prevents no-op action calls',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('const normalizedCompletedStops = normalizeCompletedStopsForSync(completedStops);') &&
+          source.includes('if (areStringArraysEqual(persistedStops, normalizedCompletedStops)) {'),
+        'Completed-stop sync effect should short-circuit semantic no-op BEFORE dispatch.',
+      );
+      assert(
+        source.includes('const dispatchKey = `${islandKey}::${normalizedCompletedStops.join(\'|\')}`;'),
+        'Completed-stop sync effect should build a stable dispatch key for rerender dedupe.',
+      );
+      assert(
+        source.includes('const completedStopsSyncRequestedRef = useRef(false);') &&
+          source.includes('if (!completedStopsSyncRequestedRef.current) return;'),
+        'Completed-stop sync effect should require an explicit sync request before dispatching.',
+      );
+      assert(
+        source.includes('const changed = !areStringArraysEqual(current, next);') &&
+          source.includes('if (changed && options?.requestSync !== false) {'),
+        'updateCompletedStops should request sync only when completedStops actually changed.',
+      );
+      assert(
+        source.includes('const [hasCompletedStopsHydrationGate, setHasCompletedStopsHydrationGate] = useState(false);') &&
+          source.includes('if (!hasCompletedStopsHydrationGate) return;') &&
+          source.includes('completedStopsSyncRequestedRef.current = false;'),
+        'Completed-stop sync effect should remain blocked until hydration gate opens and should drop hydration-time sync requests.',
+      );
+      assert(
+        source.includes('if (completedStopsSyncDispatchKeyRef.current === dispatchKey) {') &&
+          source.includes('completedStopsSyncDispatchKeyRef.current = dispatchKey;'),
+        'Completed-stop sync effect should suppress repeated dispatch while the same target sync is in flight.',
+      );
+      assert(
+        source.includes('const nextRuntimeState = syncCompletedStopsForIsland({'),
+        'Completed-stop sync effect should still dispatch once when a semantic difference exists.',
+      );
+    },
+  },
+  {
+    name: 'market-owned bundle sync effect pre-dispatch guard prevents no-op action calls',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('const marketOwnedBundleSyncRequestedRef = useRef(false);') &&
+          source.includes('if (!marketOwnedBundleSyncRequestedRef.current) return;'),
+        'Market-owned bundle sync effect should require an explicit sync request before dispatching.',
+      );
+      assert(
+        source.includes('const [hasMarketOwnedBundleHydrationGate, setHasMarketOwnedBundleHydrationGate] = useState(false);') &&
+          source.includes('if (!hasMarketOwnedBundleHydrationGate) return;') &&
+          source.includes('marketOwnedBundleSyncRequestedRef.current = false;'),
+        'Market-owned bundle sync effect should remain blocked until hydration gate opens and should drop hydration-time sync requests.',
+      );
+      assert(
+        source.includes('const dispatchKey = `${islandKey}::dice_bundle:${localOwned ? 1 : 0}`;') &&
+          source.includes('if (marketOwnedBundleSyncDispatchKeyRef.current === dispatchKey) {') &&
+          source.includes('marketOwnedBundleSyncDispatchKeyRef.current = dispatchKey;'),
+        'Market-owned bundle sync effect should suppress repeated dispatch while the same target sync is in flight.',
+      );
+      assert(
+        source.includes('if (persistedOwned === localOwned) {'),
+        'Market-owned bundle sync effect should short-circuit semantic no-op BEFORE dispatch.',
       );
     },
   },

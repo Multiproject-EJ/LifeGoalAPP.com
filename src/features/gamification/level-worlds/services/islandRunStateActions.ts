@@ -49,6 +49,7 @@ import {
   getIslandRunStateSnapshot,
   refreshIslandRunStateFromLocal,
 } from './islandRunStateStore';
+import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 import { persistIslandRunProfileMetadata } from './islandRunProfile';
 import {
   applyEssenceDrift,
@@ -77,8 +78,26 @@ import { resolveRuntimeDiceRegenUpdate } from './islandRunRuntimeRegen';
 export function applyRollResult(options: {
   session: Session;
 }): IslandRunGameStateRecord {
+  const before = getIslandRunStateSnapshot(options.session);
+  logIslandRunEntryDebug('applyRollResult_before', {
+    userId: options.session.user.id,
+    runtimeVersion: before.runtimeVersion,
+    tokenIndex: before.tokenIndex,
+    dicePool: before.dicePool,
+    spinTokens: before.spinTokens,
+  });
   refreshIslandRunStateFromLocal(options.session);
-  return getIslandRunStateSnapshot(options.session);
+  const after = getIslandRunStateSnapshot(options.session);
+  logIslandRunEntryDebug('applyRollResult_after', {
+    userId: options.session.user.id,
+    runtimeVersion: after.runtimeVersion,
+    tokenIndex: after.tokenIndex,
+    dicePool: after.dicePool,
+    spinTokens: after.spinTokens,
+    tokenIndexChanged: before.tokenIndex !== after.tokenIndex,
+    dicePoolChanged: before.dicePool !== after.dicePool,
+  });
+  return after;
 }
 
 // ── applyTokenHopRewards ─────────────────────────────────────────────────────
@@ -1235,6 +1254,35 @@ export interface SyncCompletedStopsForIslandOptions {
   triggerSource?: string;
 }
 
+function areStringArraysEqual(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) return false;
+  for (let i = 0; i < left.length; i += 1) {
+    if (left[i] !== right[i]) return false;
+  }
+  return true;
+}
+
+const COMPLETED_STOP_CANONICAL_ORDER = ['hatchery', 'habit', 'mystery', 'wisdom', 'boss'] as const;
+
+function normalizeCompletedStopsForSync(stops: string[]): string[] {
+  const deduped = Array.from(new Set(
+    stops
+      .filter((value): value is string => typeof value === 'string')
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0),
+  ));
+  return deduped.sort((a, b) => {
+    const aIdx = COMPLETED_STOP_CANONICAL_ORDER.indexOf(a as (typeof COMPLETED_STOP_CANONICAL_ORDER)[number]);
+    const bIdx = COMPLETED_STOP_CANONICAL_ORDER.indexOf(b as (typeof COMPLETED_STOP_CANONICAL_ORDER)[number]);
+    const aKnown = aIdx >= 0;
+    const bKnown = bIdx >= 0;
+    if (aKnown && bKnown) return aIdx - bIdx;
+    if (aKnown) return -1;
+    if (bKnown) return 1;
+    return a.localeCompare(b);
+  });
+}
+
 /**
  * Commits `completedStopsByIsland[islandNumber]` through the store path.
  *
@@ -1246,11 +1294,16 @@ export function syncCompletedStopsForIsland(options: SyncCompletedStopsForIsland
   const { session, client, islandNumber, completedStops, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
   const islandKey = String(islandNumber);
+  const currentStops = normalizeCompletedStopsForSync(current.completedStopsByIsland?.[islandKey] ?? []);
+  const normalizedCompletedStops = normalizeCompletedStopsForSync(completedStops);
+  if (areStringArraysEqual(currentStops, normalizedCompletedStops)) {
+    return current;
+  }
   const next: IslandRunGameStateRecord = {
     ...current,
     completedStopsByIsland: {
       ...current.completedStopsByIsland,
-      [islandKey]: completedStops,
+      [islandKey]: normalizedCompletedStops,
     },
     runtimeVersion: current.runtimeVersion + 1,
   };
