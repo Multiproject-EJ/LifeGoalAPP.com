@@ -755,7 +755,7 @@ function getBossReward(islandNumber: number): { dice: number; essence: number; s
   };
 }
 
-type StopProgressState = 'pending' | 'active' | 'completed' | 'partial' | 'locked' | 'ticket_required';
+type StopProgressState = 'pending' | 'active' | 'completed' | 'build_pending' | 'partial' | 'locked' | 'ticket_required';
 type IslandRunCameraMode = 'board_follow' | 'stop_focus' | 'overview_manual';
 
 
@@ -981,7 +981,9 @@ function getStopIcon(stop: Pick<IslandStopPlanEntry, 'stopId' | 'mysteryContentK
 }
 
 function getStopStateChipLabel(state: StopProgressState): string {
-  if (state === 'completed') return 'Done';
+  if (state === 'completed') return 'Full';
+  if (state === 'build_pending') return 'L3 Req';
+  if (state === 'partial') return 'Egg';
   if (state === 'ticket_required') return 'Ticket';
   if (state === 'locked') return 'Locked';
   return 'Open';
@@ -996,6 +998,7 @@ function getOrbitStopDisplayIcon(state: StopProgressState | 'shop', icon: string
   if (state === 'locked') return '🔒';
   if (state === 'ticket_required') return '🎫';
   if (state === 'completed') return '✅';
+  if (state === 'build_pending') return '🚧';
   if (state === 'partial') return '🟡';
   if (state === 'active') return '🔓';
   return icon;
@@ -3347,6 +3350,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         // Green 'completed' only once the animal is collected or sold (island-clear condition).
         if (index === 0 && status === 'completed' && !islandEggSlotUsed) {
           status = 'partial';
+        } else if (status === 'completed') {
+          const buildState = runtimeState.stopBuildStateByIndex[index];
+          const buildLevel = Math.max(0, Math.floor(buildState?.buildLevel ?? 0));
+          if (buildLevel < MAX_BUILD_LEVEL) {
+            status = 'build_pending';
+          }
         }
         map.set(stop.stopId, status);
       });
@@ -3373,7 +3382,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     return map;
-  }, [contractV2Stops, effectiveCompletedStops, islandEggSlotUsed, islandStopPlan]);
+  }, [contractV2Stops, effectiveCompletedStops, islandEggSlotUsed, islandStopPlan, runtimeState.stopBuildStateByIndex]);
 
   // stopMap intentionally remains empty: per the canonical gameplay contract,
   // stops are EXTERNAL side-quest structures (orbit HUD buttons). No tile on
@@ -6466,7 +6475,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           // Travel is now gated on the celebration CTA; see
           // handleTravelFromCelebration.
         } else {
-          setLandingText('👾 Boss defeated! Open the Build Panel 🔨 and finish all 5 buildings to claim island clear.');
+          setLandingText('👾 Boss defeated, but full rewards are locked. Return to Build and upgrade every landmark to Level 3 to claim island clear.');
           setActiveStopId(null);
         }
         return;
@@ -7304,9 +7313,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   ? nonBossStops.filter((s) => stopStateMap.get(s.stopId) === 'completed').length
                   : nonBossStops.filter((s) => effectiveCompletedStops.includes(s.stopId)).length;
                 if (completedNonBoss < nonBossStops.length) {
-                  return <span className="island-run-prototype__stat-chip">{completedNonBoss}/{nonBossStops.length} stops done — unlock boss!</span>;
+                  return <span className="island-run-prototype__stat-chip">{completedNonBoss}/{nonBossStops.length} landmarks fully complete — finish upgrades for full clear.</span>;
                 }
-                return <span className="island-run-prototype__stat-chip">✅ All stops cleared</span>;
+                return <span className="island-run-prototype__stat-chip">✅ All landmarks fully complete</span>;
               })()}
             </div>
           </div>
@@ -7946,7 +7955,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         const openedStopIndex = islandStopPlan.findIndex((s) => s.stopId === activeStop.stopId);
         const openedStopState = stopStateMap.get(activeStop.stopId) ?? 'active';
         const openedStopIsLocked = openedStopState === 'locked';
-        const openedStopIsCompleted = openedStopState === 'completed' || openedStopState === 'partial';
+        const openedStopNeedsBuild = openedStopState === 'build_pending';
+        const openedStopIsCompleted = openedStopState === 'completed' || openedStopState === 'partial' || openedStopNeedsBuild;
         const openedStopIsPlayable = !openedStopIsLocked && !openedStopIsCompleted;
         const priorStop = openedStopIndex > 0 ? islandStopPlan[openedStopIndex - 1] : null;
         const openedStopNeedsTicket = doesStopRequireTicketPayment(activeStop.stopId);
@@ -7997,7 +8007,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   : 'This stop is not open yet. Complete the previous stop first to unlock it.'}
               </p>
             ) : null}
-            {activeStopId !== 'hatchery' && openedStopIsCompleted ? (
+            {activeStopId !== 'hatchery' && openedStopNeedsBuild ? (
+              <div className="island-stop-modal__completed-banner island-stop-modal__completed-banner--build-pending" role="status">
+                <span aria-hidden="true">🛠️</span> Objective complete — finish landmark upgrades (reach Level {MAX_BUILD_LEVEL}) to mark this stop fully complete.
+              </div>
+            ) : null}
+            {activeStopId !== 'hatchery' && openedStopIsCompleted && !openedStopNeedsBuild ? (
               <div className="island-stop-modal__completed-banner" role="status">
                 <span aria-hidden="true">✅</span> This stop is complete for this island. Well done!
               </div>
@@ -8402,7 +8417,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         <p className="island-boss-trial__reward-text">
                           {bossRewardSummary ?? `Rewards: +${bossReward.essence} 🟣, +3 🔷`}
                         </p>
-                        <p className="island-boss-trial__next-hint">Tap <strong>Claim Island Clear</strong> to celebrate and travel.</p>
+                        <p className="island-boss-trial__next-hint">
+                          {isCurrentIslandFullyCleared
+                            ? <>Tap <strong>Claim Island Clear</strong> to celebrate and travel.</>
+                            : <>Boss defeated. <strong>Full island-clear rewards are locked</strong> until every landmark is upgraded to Level {MAX_BUILD_LEVEL}.</>}
+                        </p>
                       </div>
                     )}
 
@@ -8461,8 +8480,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   onClick={handleCompleteActiveStop}
                   disabled={!bossTrialResolved || bossTrialPhase === 'in_progress'}
                 >
-                  {isCurrentIslandFullyCleared ? '🎉 Claim Island Clear' : 'Claim Island Clear'}
+                  {isCurrentIslandFullyCleared ? '🎉 Claim Island Clear' : '🔒 Full Rewards Locked — Finish Landmark Upgrades'}
                 </button>
+              ) : null}
+              {activeStop.stopId === 'boss' && openedStopIsPlayable && !isCurrentIslandFullyCleared ? (
+                <p className="island-stop-modal__locked-notice" role="status" style={{ marginTop: '0.4rem' }}>
+                  <span aria-hidden="true">🧱</span> Landmarks incomplete — finish upgrades to Level {MAX_BUILD_LEVEL} on all stops before you can claim full island-clear rewards and travel.
+                </p>
               ) : null}
               {openedStopNeedsTicket && openedStopTicketCost ? (
                 <button
