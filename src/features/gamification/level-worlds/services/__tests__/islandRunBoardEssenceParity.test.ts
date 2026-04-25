@@ -119,4 +119,26 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       );
     },
   },
+<<<<<<< codex/investigate-architecture-inconsistencies-in-game-7cs7f7
+  {
+    name: 'roll sync guard: passive regen is gated while roll/hop sync is in-flight',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes("const isRollSyncPendingRef = useRef(false);"),
+        'Board should track roll-sync pending window for stale-writer gating.',
+      );
+      assert(
+        source.includes("if (reason !== 'pre_roll' && (isAnimatingRollRef.current || isRollSyncPendingRef.current))"),
+        'Passive regen should skip interval/focus/visibility ticks while roll/hop sync is active.',
+      );
+      assert(
+        source.includes('isRollSyncPendingRef.current = true;') &&
+          source.includes('isRollSyncPendingRef.current = false;'),
+        'Roll handler should bracket post-roll sync window with pending flag set/clear.',
+      );
+    },
+  },
+=======
+>>>>>>> main
 ];
