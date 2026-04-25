@@ -10,6 +10,14 @@ import type {
 import type { BonusTileChargeByIsland } from './islandRunBonusTile';
 
 /**
+ * ISLAND RUN ARCHITECTURE WARNING
+ *
+ * This module is a compatibility bridge during migration.
+ * Do not route new gameplay mutations through this API from UI components.
+ * Prefer canonical actions + store paths.
+ *
+ * See: docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md
+ *
  * Island Run runtime state.
  *
  * As of the state-architecture refactor (Apr 2026), this is a type alias for
