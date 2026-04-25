@@ -157,8 +157,27 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Tile reward success path should sync runtimeStateRef immediately for read-after-write safety.',
       );
       assert(
+        source.includes('refreshIslandRunStateFromLocal(session);'),
+        'Tile reward success path should refresh the canonical store mirror so later store commits cannot replay stale essence.',
+      );
+      assert(
         source.includes('setRuntimeState(readIslandRunRuntimeState(session));'),
         'Error path fallback sync should remain present (separate from success-path mirror sync).',
+      );
+    },
+  },
+  {
+    name: 'passive regen no-op should not overwrite runtimeState mirror with store snapshot',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('if (!regenTick.changed) {') &&
+          source.includes("logIslandRunEntryDebug('dice_regen_noop_skipped_runtime_sync'"),
+        'Passive regen should explicitly short-circuit no-op ticks before full runtime mirror writes.',
+      );
+      assert(
+        source.includes('return runtimeStateRef.current.dicePool;'),
+        'Passive regen no-op should preserve current runtime mirror instead of reapplying store snapshot.',
       );
     },
   },

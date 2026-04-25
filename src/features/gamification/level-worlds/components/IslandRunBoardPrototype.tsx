@@ -1605,6 +1605,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       triggerSource: `passive_dice_regen_${reason}`,
     });
     const nextRuntimeState = regenTick.record;
+    if (!regenTick.changed) {
+      logIslandRunEntryDebug('dice_regen_noop_skipped_runtime_sync', {
+        userId: session.user.id,
+        reason,
+        playerLevel,
+        runtimeVersionRef: runtimeStateRef.current.runtimeVersion,
+        runtimeVersionStore: nextRuntimeState.runtimeVersion,
+        essenceRef: runtimeStateRef.current.essence,
+        essenceStore: nextRuntimeState.essence,
+      });
+      return runtimeStateRef.current.dicePool;
+    }
     runtimeStateRef.current = nextRuntimeState;
     setRuntimeState(nextRuntimeState);
     logIslandRunEntryDebug('dice_regen_applied', {
@@ -1614,6 +1626,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       diceBefore: current.dicePool,
       diceAfter: nextRuntimeState.dicePool,
       diceAdded: regenTick.diceAdded,
+      essenceBefore: current.essence,
+      essenceAfter: nextRuntimeState.essence,
+      runtimeVersionBefore: current.runtimeVersion,
+      runtimeVersionAfter: nextRuntimeState.runtimeVersion,
       regenMaxDice: nextRuntimeState.diceRegenState?.maxDice ?? null,
       regenRatePerHour: nextRuntimeState.diceRegenState?.regenRatePerHour ?? null,
       changed: regenTick.changed,
@@ -4552,6 +4568,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         runtimeStateRef.current = nextRuntimeState;
         return nextRuntimeState;
       });
+      // Keep canonical store mirror aligned with the just-persisted tile-reward
+      // patch so later store-derived full-record commits (e.g. passive regen)
+      // cannot re-apply pre-reward essence.
+      refreshIslandRunStateFromLocal(session);
 
       // Telemetry — mirrors the events previously emitted by
       // awardContractV2Essence / deductContractV2Essence.
