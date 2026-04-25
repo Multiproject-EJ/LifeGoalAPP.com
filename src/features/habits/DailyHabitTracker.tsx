@@ -109,9 +109,10 @@ import {
   resolveMinigameTicketSku,
 } from '../../services/minigameTicketStore';
 import { TimeBoundOfferRow, type TimeBoundOfferItem, type TimeBoundOfferId } from './TimeBoundOfferRow';
-import { readIslandRunRuntimeState } from '../gamification/level-worlds/services/islandRunRuntimeState';
 import { EVENT_IDS, type EventId } from '../gamification/level-worlds/services/islandRunEventEngine';
 import { generateIslandStopPlan } from '../gamification/level-worlds/services/islandRunStops';
+import { useIslandRunState } from '../gamification/level-worlds/hooks/useIslandRunState';
+import { refreshIslandRunStateFromLocal } from '../gamification/level-worlds/services/islandRunStateStore';
 import { DEFAULT_GOAL_STATUS } from '../goals/goalStatus';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import {
@@ -2072,43 +2073,55 @@ export function DailyHabitTracker({
   const bonusPlaceholderText = hasClaimedVisionStar && !shouldFadeTrackingMeta
     ? 'Vision star claimed today.'
     : '';
-  const [islandRunRuntime, setIslandRunRuntime] = useState(() => readIslandRunRuntimeState(session));
+  const { state: islandRunState } = useIslandRunState(session, null);
   const [eggReadinessNowMs, setEggReadinessNowMs] = useState(() => Date.now());
+  const [islandOfferNowMs, setIslandOfferNowMs] = useState(() => Date.now());
 
   useEffect(() => {
-    const syncIslandRunRuntime = () => {
-      setIslandRunRuntime(readIslandRunRuntimeState(session));
+    const runtimeStorageKey = `island_run_runtime_state_${session.user.id}`;
+    const syncIslandRunFromStorage = (event: StorageEvent) => {
+      if (event.storageArea !== window.localStorage) return;
+      if (event.key !== runtimeStorageKey) return;
+      refreshIslandRunStateFromLocal(session);
     };
-
-    syncIslandRunRuntime();
-    const intervalId = window.setInterval(syncIslandRunRuntime, 1000);
-    window.addEventListener('storage', syncIslandRunRuntime);
+    window.addEventListener('storage', syncIslandRunFromStorage);
     return () => {
-      window.clearInterval(intervalId);
-      window.removeEventListener('storage', syncIslandRunRuntime);
+      window.removeEventListener('storage', syncIslandRunFromStorage);
     };
   }, [session]);
 
-  const activeIsland = islandRunRuntime.currentIslandNumber;
-  const completedStopsOnActiveIsland = islandRunRuntime.completedStopsByIsland?.[String(activeIsland)] ?? [];
+  useEffect(() => {
+    const expiresAtMs = islandRunState.islandExpiresAtMs;
+    if (!(expiresAtMs > islandOfferNowMs)) {
+      return;
+    }
+    const timeoutMs = Math.max(0, expiresAtMs - Date.now());
+    const timeoutId = window.setTimeout(() => {
+      setIslandOfferNowMs(Date.now());
+    }, timeoutMs);
+    return () => window.clearTimeout(timeoutId);
+  }, [islandOfferNowMs, islandRunState.islandExpiresAtMs]);
+
+  const activeIsland = islandRunState.currentIslandNumber;
+  const completedStopsOnActiveIsland = islandRunState.completedStopsByIsland?.[String(activeIsland)] ?? [];
   const stopPlanForActiveIsland = useMemo(() => generateIslandStopPlan(activeIsland), [activeIsland]);
 
-  const activeIslandEgg = islandRunRuntime.perIslandEggs?.[String(activeIsland)];
+  const activeIslandEgg = islandRunState.perIslandEggs?.[String(activeIsland)];
   const activeIslandEggReadyAtMs = useMemo(() => {
     if (activeIslandEgg && activeIslandEgg.status === 'incubating') {
       return activeIslandEgg.hatchAtMs;
     }
 
-    if (!activeIslandEgg && islandRunRuntime.activeEggTier && islandRunRuntime.activeEggSetAtMs && islandRunRuntime.activeEggHatchDurationMs) {
-      return islandRunRuntime.activeEggSetAtMs + islandRunRuntime.activeEggHatchDurationMs;
+    if (!activeIslandEgg && islandRunState.activeEggTier && islandRunState.activeEggSetAtMs && islandRunState.activeEggHatchDurationMs) {
+      return islandRunState.activeEggSetAtMs + islandRunState.activeEggHatchDurationMs;
     }
 
     return null;
   }, [
     activeIslandEgg,
-    islandRunRuntime.activeEggHatchDurationMs,
-    islandRunRuntime.activeEggSetAtMs,
-    islandRunRuntime.activeEggTier,
+    islandRunState.activeEggHatchDurationMs,
+    islandRunState.activeEggSetAtMs,
+    islandRunState.activeEggTier,
   ]);
 
   useEffect(() => {
@@ -2130,17 +2143,17 @@ export function DailyHabitTracker({
         || (activeIslandEgg.status === 'incubating' && eggReadinessNowMs >= activeIslandEgg.hatchAtMs);
     }
 
-    if (islandRunRuntime.activeEggTier && islandRunRuntime.activeEggSetAtMs && islandRunRuntime.activeEggHatchDurationMs) {
-      return eggReadinessNowMs >= islandRunRuntime.activeEggSetAtMs + islandRunRuntime.activeEggHatchDurationMs;
+    if (islandRunState.activeEggTier && islandRunState.activeEggSetAtMs && islandRunState.activeEggHatchDurationMs) {
+      return eggReadinessNowMs >= islandRunState.activeEggSetAtMs + islandRunState.activeEggHatchDurationMs;
     }
 
     return false;
   }, [
     activeIslandEgg,
     eggReadinessNowMs,
-    islandRunRuntime.activeEggHatchDurationMs,
-    islandRunRuntime.activeEggSetAtMs,
-    islandRunRuntime.activeEggTier,
+    islandRunState.activeEggHatchDurationMs,
+    islandRunState.activeEggSetAtMs,
+    islandRunState.activeEggTier,
   ]);
 
 
@@ -2155,10 +2168,10 @@ export function DailyHabitTracker({
     ? localStorage.getItem(eggHatchViewedStorageKey) === '1'
     : false;
 
-  const islandRunCountdownExpiresAtMs = islandRunRuntime.islandExpiresAtMs > Date.now()
-    ? islandRunRuntime.islandExpiresAtMs
+  const islandRunCountdownExpiresAtMs = islandRunState.islandExpiresAtMs > islandOfferNowMs
+    ? islandRunState.islandExpiresAtMs
     : null;
-  const isIslandRunReadyToStart = islandRunRuntime.islandStartedAtMs <= 0 && islandRunRuntime.islandExpiresAtMs <= 0;
+  const isIslandRunReadyToStart = islandRunState.islandStartedAtMs <= 0 && islandRunState.islandExpiresAtMs <= 0;
   const isIslandRunOfferVisible = Boolean(islandRunCountdownExpiresAtMs) || isIslandRunReadyToStart;
   const islandRunOfferLabel = isIslandRunReadyToStart ? `Island ${activeIsland}` : `Island ${activeIsland}`;
   const islandRunOfferBadge = isIslandRunReadyToStart ? 'Open' : undefined;
@@ -2312,7 +2325,7 @@ export function DailyHabitTracker({
 
     setTodaysOfferCheckoutPending(true);
 
-    const activeEventType = islandRunRuntime.activeTimedEvent?.eventType;
+    const activeEventType = islandRunState.activeTimedEvent?.eventType;
     const eventId = isCanonicalEventId(activeEventType) ? activeEventType : null;
     const result = await initiateMinigameTicketCheckout({
       skuId: resolveMinigameTicketSku(eventId),
@@ -2325,7 +2338,7 @@ export function DailyHabitTracker({
     }
 
     window.location.assign(result.url);
-  }, [isDemoExperience, islandRunRuntime.activeTimedEvent?.eventType, todaysOfferCheckoutPending]);
+  }, [isDemoExperience, islandRunState.activeTimedEvent?.eventType, todaysOfferCheckoutPending]);
 
   const launchTodaysOfferDailySpin = useCallback(() => {
     if (!isTodaysOfferSpinEntryEnabled) {
