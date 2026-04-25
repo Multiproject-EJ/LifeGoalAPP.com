@@ -125,6 +125,30 @@ export interface ApplyPassiveDiceRegenTickResult {
   diceAdded: number;
 }
 
+export interface ApplyDevGrantDiceOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  amount: number;
+  triggerSource?: string;
+}
+
+export interface ApplyDevGrantDiceResult {
+  record: IslandRunGameStateRecord;
+  applied: number;
+}
+
+export interface ApplyDevGrantEssenceOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  amount: number;
+  triggerSource?: string;
+}
+
+export interface ApplyDevGrantEssenceResult {
+  record: IslandRunGameStateRecord;
+  applied: number;
+}
+
 /**
  * Applies per-hop or per-claim currency deltas to the authoritative store.
  *
@@ -197,6 +221,70 @@ export function applyPassiveDiceRegenTick(
     changed: true,
     diceAdded: regenUpdate.diceAdded,
   };
+}
+
+/**
+ * DEV-ONLY helper action: grant dice through the canonical commit path.
+ *
+ * This intentionally avoids direct renderer state writes so dev testing still
+ * exercises the single-flight coordinator and runtimeVersion bump semantics.
+ */
+export function applyDevGrantDice(options: ApplyDevGrantDiceOptions): ApplyDevGrantDiceResult {
+  const { session, client, amount, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const applied = Number.isFinite(amount) ? Math.max(0, Math.trunc(amount)) : 0;
+  if (applied < 1) return { record: current, applied: 0 };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    dicePool: Math.max(0, current.dicePool + applied),
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  logIslandRunEntryDebug('dev_grant_dice', {
+    userId: session.user.id,
+    applied,
+    beforeDicePool: current.dicePool,
+    afterDicePool: next.dicePool,
+    runtimeVersionBefore: current.runtimeVersion,
+    runtimeVersionAfter: next.runtimeVersion,
+  });
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'dev_grant_dice',
+  });
+  return { record: next, applied };
+}
+
+/**
+ * DEV-ONLY helper action: grant essence through the canonical commit path.
+ */
+export function applyDevGrantEssence(options: ApplyDevGrantEssenceOptions): ApplyDevGrantEssenceResult {
+  const { session, client, amount, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const applied = Number.isFinite(amount) ? Math.max(0, Math.trunc(amount)) : 0;
+  if (applied < 1) return { record: current, applied: 0 };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    essence: Math.max(0, current.essence + applied),
+    essenceLifetimeEarned: Math.max(0, current.essenceLifetimeEarned + applied),
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  logIslandRunEntryDebug('dev_grant_essence', {
+    userId: session.user.id,
+    applied,
+    beforeEssence: current.essence,
+    afterEssence: next.essence,
+    runtimeVersionBefore: current.runtimeVersion,
+    runtimeVersionAfter: next.runtimeVersion,
+  });
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'dev_grant_essence',
+  });
+  return { record: next, applied };
 }
 
 // ── C2: Essence award / spend / reward-bar / drift ───────────────────────────

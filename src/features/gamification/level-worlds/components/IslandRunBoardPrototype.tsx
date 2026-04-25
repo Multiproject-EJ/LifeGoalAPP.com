@@ -89,6 +89,8 @@ import {
   applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
   applyCreatureTreatInventory,
+  applyDevGrantDice,
+  applyDevGrantEssence,
   applyActivateCurrentIslandTimer,
   applyPassiveDiceRegenTick,
   applyEggResolution,
@@ -870,6 +872,18 @@ function formatClock(seconds: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
+function isIslandRunDevModeEnabled(): boolean {
+  const nodeEnv = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV;
+  const isNonProdNodeEnv =
+    typeof nodeEnv === 'string'
+    && nodeEnv !== 'production';
+  const isViteDev = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
+  const localStorageDevFlag =
+    typeof window !== 'undefined'
+    && window.localStorage.getItem('dev_mode') === 'true';
+  return isNonProdNodeEnv || isViteDev || localStorageDevFlag;
+}
+
 /**
  * Formats a long-form countdown (days / hours / minutes / seconds) for the
  * hatchery incubation timer. Shows the two most-significant units so the
@@ -1059,6 +1073,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     };
   }, []);
   const { showQaHooks, isMinimalBoardArt, boardTiltXDeg, boardRotateZDeg } = boardRenderTuning;
+  const isDevModeEnabled = useMemo(() => isIslandRunDevModeEnabled(), []);
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
   const [isDevPanelOpen, setIsDevPanelOpen] = useState(false);
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
@@ -6627,6 +6642,39 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setRuntimeState(record);
   };
 
+  const handleDevGrantDice = useCallback((amount: number) => {
+    if (!isDevModeEnabled) return;
+    const result = applyDevGrantDice({
+      session,
+      client,
+      amount,
+      triggerSource: 'dev_grant_dice',
+    });
+    if (result.applied < 1) {
+      setLandingText('DEV MODE: invalid dice grant amount.');
+      return;
+    }
+    setRuntimeState(result.record);
+    setDicePool(result.record.dicePool);
+    setLandingText(`🧪 DEV MODE: +${result.applied} dice granted via canonical action.`);
+  }, [client, isDevModeEnabled, session]);
+
+  const handleDevGrantEssence = useCallback((amount: number) => {
+    if (!isDevModeEnabled) return;
+    const result = applyDevGrantEssence({
+      session,
+      client,
+      amount,
+      triggerSource: 'dev_grant_essence',
+    });
+    if (result.applied < 1) {
+      setLandingText('DEV MODE: invalid essence grant amount.');
+      return;
+    }
+    setRuntimeState(result.record);
+    setLandingText(`🧪 DEV MODE: +${result.applied} essence granted via canonical action.`);
+  }, [client, isDevModeEnabled, session]);
+
   const handleClaimFirstRunRewards = async () => {
     if (firstRunStep === 'celebration') {
       const starterDiceBonus = ISLAND_RUN_DEFAULT_STARTING_DICE * 2;
@@ -7292,7 +7340,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </div>
           );
         })()}
-        {isDevPanelOpen && (
+        {isDevModeEnabled && isDevPanelOpen && (
           <div id="island-run-dev-panel">
         <div className="island-run-prototype__hud-grid">
           <div className="island-run-prototype__hud-section">
@@ -7431,6 +7479,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           >
             Simulate wallet shards (+5)
           </button>
+          {isDevModeEnabled && (
+            <div className="island-run-prototype__qa-controls" role="group" aria-label="DEV MODE actions">
+              <p className="island-run-prototype__qa-label">🧪 DEV MODE — canonical actions only</p>
+              <div className="island-run-prototype__status-row">
+                <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">Grant Dice</span>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={() => handleDevGrantDice(10)}>+10</button>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={() => handleDevGrantDice(50)}>+50</button>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={() => handleDevGrantDice(100)}>+100</button>
+              </div>
+              <div className="island-run-prototype__status-row">
+                <span className="island-run-prototype__stat-chip">Grant Essence</span>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={() => handleDevGrantEssence(100)}>+100</button>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={() => handleDevGrantEssence(500)}>+500</button>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={() => handleDevGrantEssence(1000)}>+1000</button>
+              </div>
+            </div>
+          )}
         </div>
           </div>
         )}
@@ -7871,7 +7936,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 </button>
               </>
             )}
-            {!isHudCollapsed && (
+            {isDevModeEnabled && !isHudCollapsed && (
               <button
                 type="button"
                 className="island-run-prototype__dev-toggle"

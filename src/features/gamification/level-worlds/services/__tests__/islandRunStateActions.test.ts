@@ -35,6 +35,8 @@ import {
   applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
   applyCreatureTreatInventory,
+  applyDevGrantDice,
+  applyDevGrantEssence,
   applyHydrationEggReadyTransition,
   applyEggResolution,
   applyEggPlacement,
@@ -260,6 +262,49 @@ export const islandRunStateActionsTests: TestCase[] = [
 
       assertEqual(notifications, 1, 'subscriber should be notified exactly once');
       unsub();
+    },
+  },
+
+  {
+    name: 'applyDevGrantDice grants dice via canonical commit path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 10, dicePool: 20 });
+
+      const result = applyDevGrantDice({
+        session,
+        client: null,
+        amount: 50,
+        triggerSource: 'test_dev_grant_dice',
+      });
+
+      assertEqual(result.applied, 50, 'dev dice grant should apply exact positive amount');
+      assertEqual(result.record.dicePool, 70, 'dicePool should increase by granted amount');
+      assertEqual(result.record.runtimeVersion, 11, 'runtimeVersion should bump once');
+      assertEqual(getIslandRunStateSnapshot(session).dicePool, 70, 'store mirror should reflect granted dice');
+    },
+  },
+
+  {
+    name: 'applyDevGrantEssence grants essence + lifetime earned via canonical commit path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 10, essence: 100, essenceLifetimeEarned: 350 });
+
+      const result = applyDevGrantEssence({
+        session,
+        client: null,
+        amount: 500,
+        triggerSource: 'test_dev_grant_essence',
+      });
+
+      assertEqual(result.applied, 500, 'dev essence grant should apply exact positive amount');
+      assertEqual(result.record.essence, 600, 'essence should increase by granted amount');
+      assertEqual(result.record.essenceLifetimeEarned, 850, 'lifetime earned should track granted essence');
+      assertEqual(result.record.runtimeVersion, 11, 'runtimeVersion should bump once');
+      assertEqual(getIslandRunStateSnapshot(session).essence, 600, 'store mirror should reflect granted essence');
     },
   },
 
