@@ -5288,12 +5288,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const totalEncounterDice = reward.dice + perfectCompanionEncounterBonus.dice;
     const totalEncounterSpinTokens = reward.spinTokens + perfectCompanionEncounterBonus.spinTokens;
 
-    // Award essence to the island run runtime state (not coins — coins are retired)
-    setRuntimeState((prev) => ({
-      ...prev,
-      essence: prev.essence + totalEncounterEssence,
-      essenceLifetimeEarned: prev.essenceLifetimeEarned + totalEncounterEssence,
-    }));
+    if (totalEncounterEssence > 0) {
+      awardContractV2Essence(totalEncounterEssence, 'encounter_reward');
+    }
     if (totalEncounterDice > 0) {
       setDicePool((current) => current + totalEncounterDice);
     }
@@ -5459,11 +5456,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     setBossTrialResolved(true);
     setDicePool((current) => current + bossReward.dice);
-    setRuntimeState((prev) => ({
-      ...prev,
-      essence: prev.essence + bossReward.essence,
-      essenceLifetimeEarned: prev.essenceLifetimeEarned + bossReward.essence,
-    }));
+    if (bossReward.essence > 0) {
+      awardContractV2Essence(bossReward.essence, 'boss_trial_reward');
+    }
     if (bossReward.spinTokens > 0) {
       setSpinTokens((t) => t + bossReward.spinTokens);
     }
@@ -6606,11 +6601,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const rewardSpinTokens = reward.spinTokens ?? 0;
 
       if (rewardEssence > 0) {
-        setRuntimeState((prev) => ({
-          ...prev,
-          essence: prev.essence + rewardEssence,
-          essenceLifetimeEarned: prev.essenceLifetimeEarned + rewardEssence,
-        }));
+        awardContractV2Essence(rewardEssence, 'sanctuary_bond_reward_claim');
       }
       if (rewardDice > 0) {
         setDicePool((current) => current + rewardDice);
@@ -7900,11 +7891,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       className="island-stop-modal__btn island-stop-modal__btn--action"
                       onClick={() => {
                         setDiamonds((d) => d - WISDOM_ESSENCE_BONUS_COST_DIAMONDS);
-                        setRuntimeState((prev) => ({
-                          ...prev,
-                          essence: prev.essence + WISDOM_ESSENCE_BONUS_AMOUNT,
-                          essenceLifetimeEarned: prev.essenceLifetimeEarned + WISDOM_ESSENCE_BONUS_AMOUNT,
-                        }));
+                        awardContractV2Essence(WISDOM_ESSENCE_BONUS_AMOUNT, 'wisdom_essence_bonus');
                         playIslandRunSound('utility_stop_complete');
                         triggerIslandRunHaptic('utility_stop_complete');
                         void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_spend', metadata: { stage: 'wisdom_essence_bonus', island_number: islandNumber, cost_diamonds: WISDOM_ESSENCE_BONUS_COST_DIAMONDS, essence_gained: WISDOM_ESSENCE_BONUS_AMOUNT } });
