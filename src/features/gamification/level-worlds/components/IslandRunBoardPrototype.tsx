@@ -6027,6 +6027,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const handleCompleteActiveStop = () => {
     if (!activeStopId) return;
+    const activeStopIndex = islandStopPlan.findIndex((stop) => stop.stopId === activeStopId);
+    const requiresTicketPayment = doesStopRequireTicketPayment(activeStopId);
+    const requiredTicketCost = requiresTicketPayment && activeStopIndex > 0
+      ? getStopTicketCost({ effectiveIslandNumber, stopIndex: activeStopIndex })
+      : null;
 
     const completionBlockReason = getStopCompletionBlockReason({
       stopId: activeStopId,
@@ -6034,6 +6039,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       hasActiveEgg: Boolean(activeEgg),
       islandEggSlotUsed,
       bossTrialResolved,
+      requiresTicketPayment,
+      ticketCost: requiredTicketCost,
     });
     if (completionBlockReason) {
       setLandingText(completionBlockReason);
