@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CANONICAL_BOARD_SIZE, type TileAnchor } from '../../services/islandBoardLayout';
 import type { IslandBoardTheme } from '../../services/islandBoardThemes';
 import type { IslandTileMapEntry } from '../../services/islandBoardTileMap';
+import { logIslandRunEntryDebug } from '../../services/islandRunEntryDebug';
 import { useBoardCamera } from './useBoardCamera';
 import { useBoardGestures } from './useBoardGestures';
 import { useTokenAnimation } from './useTokenAnimation';
@@ -316,6 +317,12 @@ export function BoardStage(props: BoardStageProps) {
       && pendingHopSequence.length > 0
       && pendingHopSequence !== lastHopSequenceRef.current
     ) {
+      logIslandRunEntryDebug('boardstage_hop_start', {
+        hopCount: pendingHopSequence.length,
+        startTile: pendingHopSequence[0] ?? null,
+        endTile: pendingHopSequence[pendingHopSequence.length - 1] ?? null,
+        tokenIndexProp: tokenIndex,
+      });
       if (preRollTimeoutRef.current !== null) {
         window.clearTimeout(preRollTimeoutRef.current);
         preRollTimeoutRef.current = null;
@@ -343,6 +350,11 @@ export function BoardStage(props: BoardStageProps) {
 
         void tokenAnim.animateHops(anchors, pendingHopSequence, hopDurations).then(() => {
           hopSequenceActiveRef.current = false;
+          logIslandRunEntryDebug('boardstage_hop_complete', {
+            hopCount: pendingHopSequence.length,
+            endTile: pendingHopSequence[pendingHopSequence.length - 1] ?? null,
+            tokenIndexProp: tokenIndex,
+          });
           // NOTE: Do NOT reset `lastHopSequenceRef.current = null` here.
           // Keeping the just-completed sequence reference means that if this
           // effect re-runs before the parent has cleared `pendingHopSequence`
