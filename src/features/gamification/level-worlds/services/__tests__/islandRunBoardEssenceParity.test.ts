@@ -119,6 +119,7 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       );
     },
   },
+<<<<<<< codex/investigate-architecture-inconsistencies-in-game-7cs7f7
   {
     name: 'roll sync guard: passive regen is gated while roll/hop sync is in-flight',
     run: async () => {
@@ -138,4 +139,6 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       );
     },
   },
+=======
+>>>>>>> main
 ];
