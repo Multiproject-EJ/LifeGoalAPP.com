@@ -194,7 +194,7 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
     },
   },
   {
-    name: 'passive regen no-op should not overwrite runtimeState mirror with store snapshot',
+    name: 'passive regen pre-roll no-op should return fresh store dice for immediate roll affordability',
     run: async () => {
       const source = await readBoardSource();
       assert(
@@ -203,8 +203,9 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Passive regen should explicitly short-circuit no-op ticks before full runtime mirror writes.',
       );
       assert(
-        source.includes('return runtimeStateRef.current.dicePool;'),
-        'Passive regen no-op should preserve current runtime mirror instead of reapplying store snapshot.',
+        source.includes('runtimeStateRef.current = nextRuntimeState;') &&
+          source.includes('return nextRuntimeState.dicePool;'),
+        'Passive regen no-op should return fresh store dice so immediate post-purchase roll checks cannot read stale zero dice.',
       );
     },
   },

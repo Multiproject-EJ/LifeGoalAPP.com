@@ -1665,9 +1665,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [runtimeState.tokenIndex, runtimeState.runtimeVersion]);
 
   const applyPassiveDiceRegen = useCallback((reason: 'startup' | 'interval' | 'focus' | 'visibility' | 'pre_roll') => {
-    if (!hasHydratedRuntimeState) return runtimeStateRef.current.dicePool;
+    if (!hasHydratedRuntimeState) return getIslandRunStateSnapshot(session).dicePool;
     if (reason !== 'pre_roll' && (isAnimatingRollRef.current || isRollSyncPendingRef.current)) {
-      return runtimeStateRef.current.dicePool;
+      return getIslandRunStateSnapshot(session).dicePool;
     }
     const nowMs = Date.now();
     const playerLevel = Math.max(1, Math.floor(playerLevelInfo?.currentLevel ?? 1));
@@ -1681,6 +1681,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
     const nextRuntimeState = regenTick.record;
     if (!regenTick.changed) {
+      runtimeStateRef.current = nextRuntimeState;
       logIslandRunEntryDebug('dice_regen_noop_skipped_runtime_sync', {
         userId: session.user.id,
         reason,
@@ -1695,7 +1696,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         applied: false,
         skipReason: 'no_change',
       });
-      return runtimeStateRef.current.dicePool;
+      return nextRuntimeState.dicePool;
     }
     runtimeStateRef.current = nextRuntimeState;
     setRuntimeStateWithTrace('applyPassiveDiceRegen', nextRuntimeState);
