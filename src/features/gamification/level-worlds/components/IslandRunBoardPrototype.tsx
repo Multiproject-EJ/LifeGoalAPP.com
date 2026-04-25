@@ -1722,7 +1722,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // that ultimately causes the pawn to snap back to tile 0 when
     // `pendingHopSequence` clears. The next focus/visibility event after
     // the animation ends will naturally re-trigger reconciliation.
-    if (isAnimatingRollRef.current) {
+    if (isAnimatingRollRef.current || isRollSyncPendingRef.current) {
+      if (isRollSyncPendingRef.current) {
+        logIslandRunEntryDebug('island_run_runtime_reconcile_skipped_roll_sync_pending', {
+          userId: session.user.id,
+          reason,
+          source: 'pre_hydrate',
+          incomingTokenIndex: null,
+          currentTokenIndex: runtimeStateRef.current.tokenIndex,
+          incomingRuntimeVersion: null,
+          currentRuntimeVersion: runtimeStateRef.current.runtimeVersion ?? 0,
+          skipReason: 'roll_sync_pending',
+        });
+      }
       return;
     }
 
@@ -1743,6 +1755,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
       const currentRuntimeVersion = runtimeStateRef.current.runtimeVersion ?? 0;
       const incomingRuntimeVersion = hydrationResult.state.runtimeVersion ?? 0;
+      if (isRollSyncPendingRef.current) {
+        logIslandRunEntryDebug('island_run_runtime_reconcile_skipped_roll_sync_pending', {
+          userId: session.user.id,
+          reason,
+          source: hydrationResult.source,
+          incomingTokenIndex: hydrationResult.state.tokenIndex,
+          currentTokenIndex: runtimeStateRef.current.tokenIndex,
+          incomingRuntimeVersion,
+          currentRuntimeVersion,
+          skipReason: 'roll_sync_pending',
+        });
+        return;
+      }
       if (incomingRuntimeVersion <= currentRuntimeVersion) {
         return;
       }
@@ -2319,10 +2344,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           hydrationResult.source !== 'table' ||
           hydrationResult.state.runtimeVersion > localSnapshotBeforeHydration.runtimeVersion
         ) {
+          if (isRollSyncPendingRef.current) {
+            logIslandRunEntryDebug('island_run_runtime_reconcile_skipped_roll_sync_pending', {
+              userId: session.user.id,
+              reason: 'initial_hydrate',
+              source: hydrationResult.source,
+              incomingTokenIndex: hydrationResult.state.tokenIndex,
+              currentTokenIndex: runtimeStateRef.current.tokenIndex,
+              incomingRuntimeVersion: hydrationResult.state.runtimeVersion ?? 0,
+              currentRuntimeVersion: runtimeStateRef.current.runtimeVersion ?? 0,
+              skipReason: 'roll_sync_pending',
+            });
+          } else {
           setRuntimeState(hydrationResult.state);
           // C1: publish exactly the hydrated record so the visual token source
           // (`useIslandRunState`) cannot lag behind runtimeState on first roll.
           resetIslandRunStateSnapshot(session, hydrationResult.state);
+          }
         }
 
         logIslandRunEntryDebug('island_run_runtime_hydration_result', {
@@ -2440,9 +2478,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     try {
       const hydrationResult = await hydrateIslandRunRuntimeStateWithSource({ session, client, forceRemote: true });
       setRuntimeHydrationSource(hydrationResult.source);
-      setRuntimeState(hydrationResult.state);
-      // Keep store mirror aligned to the hydrated runtime snapshot.
-      resetIslandRunStateSnapshot(session, hydrationResult.state);
+      if (isRollSyncPendingRef.current) {
+        logIslandRunEntryDebug('island_run_runtime_reconcile_skipped_roll_sync_pending', {
+          userId: session.user.id,
+          reason: 'retry_sync',
+          source: hydrationResult.source,
+          incomingTokenIndex: hydrationResult.state.tokenIndex,
+          currentTokenIndex: runtimeStateRef.current.tokenIndex,
+          incomingRuntimeVersion: hydrationResult.state.runtimeVersion ?? 0,
+          currentRuntimeVersion: runtimeStateRef.current.runtimeVersion ?? 0,
+          skipReason: 'roll_sync_pending',
+        });
+      } else {
+        setRuntimeState(hydrationResult.state);
+        // Keep store mirror aligned to the hydrated runtime snapshot.
+        resetIslandRunStateSnapshot(session, hydrationResult.state);
+      }
 
       if (hydrationResult.source === 'table') {
         setLandingText('Island Run synced successfully. You can continue playing.');
