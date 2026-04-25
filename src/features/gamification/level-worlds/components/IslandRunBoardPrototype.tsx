@@ -6654,8 +6654,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setLandingText('DEV MODE: invalid dice grant amount.');
       return;
     }
-    setRuntimeState(result.record);
-    setDicePool(result.record.dicePool);
     setLandingText(`🧪 DEV MODE: +${result.applied} dice granted via canonical action.`);
   }, [client, isDevModeEnabled, session]);
 
@@ -6671,7 +6669,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setLandingText('DEV MODE: invalid essence grant amount.');
       return;
     }
-    setRuntimeState(result.record);
     setLandingText(`🧪 DEV MODE: +${result.applied} essence granted via canonical action.`);
   }, [client, isDevModeEnabled, session]);
 
