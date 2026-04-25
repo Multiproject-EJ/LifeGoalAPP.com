@@ -237,6 +237,11 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Completed-stop sync effect should require an explicit sync request before dispatching.',
       );
       assert(
+        source.includes('const changed = !areStringArraysEqual(current, next);') &&
+          source.includes('if (changed && options?.requestSync !== false) {'),
+        'updateCompletedStops should request sync only when completedStops actually changed.',
+      );
+      assert(
         source.includes('if (completedStopsSyncDispatchKeyRef.current === dispatchKey) {') &&
           source.includes('completedStopsSyncDispatchKeyRef.current = dispatchKey;'),
         'Completed-stop sync effect should suppress repeated dispatch while the same target sync is in flight.',

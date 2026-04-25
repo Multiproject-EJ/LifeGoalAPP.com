@@ -2746,10 +2746,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     updater: SetStateAction<string[]>,
     options?: { requestSync?: boolean },
   ) => {
-    if (options?.requestSync !== false) {
-      completedStopsSyncRequestedRef.current = true;
-    }
-    setCompletedStops(updater);
+    setCompletedStops((current) => {
+      const next = typeof updater === 'function'
+        ? (updater as (value: string[]) => string[])(current)
+        : updater;
+      const changed = !areStringArraysEqual(current, next);
+      if (changed && options?.requestSync !== false) {
+        completedStopsSyncRequestedRef.current = true;
+      }
+      return changed ? next : current;
+    });
   }, []);
 
   const getStoredCompletedStopsForIsland = useCallback((targetIslandNumber: number): string[] => {
