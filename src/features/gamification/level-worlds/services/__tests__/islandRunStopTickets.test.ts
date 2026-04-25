@@ -166,6 +166,40 @@ export const islandRunStopTicketsTests: TestCase[] = [
     },
   },
   {
+    name: 'payStopTicket deducts essence only once for the same stop',
+    run: () => {
+      const cost = getStopTicketCost({ effectiveIslandNumber: 1, stopIndex: 1 });
+      const initialEssence = cost + 40;
+      const first = payStopTicket({
+        effectiveIslandNumber: 1,
+        islandNumber: 1,
+        stopIndex: 1,
+        essence: initialEssence,
+        essenceLifetimeSpent: 5,
+        stopTicketsPaidByIsland: {},
+        stopStatesByIndex: OBJECTIVE_DONE(1),
+      });
+      assertEqual(first.ok, true, 'First ticket payment should succeed');
+      if (!first.ok) return;
+      assertEqual(first.essence, 40, 'First payment should deduct ticket cost exactly once');
+      assertEqual(first.essenceLifetimeSpent, 5 + cost, 'Lifetime spent should include one ticket payment');
+
+      const second = payStopTicket({
+        effectiveIslandNumber: 1,
+        islandNumber: 1,
+        stopIndex: 1,
+        essence: first.essence,
+        essenceLifetimeSpent: first.essenceLifetimeSpent,
+        stopTicketsPaidByIsland: first.stopTicketsPaidByIsland,
+        stopStatesByIndex: OBJECTIVE_DONE(1),
+      });
+      assertEqual(second.ok, false, 'Second payment attempt should be rejected');
+      if (!second.ok) {
+        assertEqual(second.reason, 'already_paid', 'Duplicate payment should report already_paid');
+      }
+    },
+  },
+  {
     name: 'payStopTicket correctly advances through all 4 ticket stops in sequence',
     run: () => {
       let map: Record<string, number[]> = {};

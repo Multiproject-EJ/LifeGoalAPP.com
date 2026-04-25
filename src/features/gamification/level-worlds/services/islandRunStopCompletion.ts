@@ -72,6 +72,8 @@ export function getStopCompletionBlockReason(options: {
   hasActiveEgg: boolean;
   islandEggSlotUsed: boolean;
   bossTrialResolved: boolean;
+  requiresTicketPayment?: boolean;
+  ticketCost?: number | null;
 }): string | null {
   const {
     stopId,
@@ -79,6 +81,8 @@ export function getStopCompletionBlockReason(options: {
     hasActiveEgg,
     islandEggSlotUsed,
     bossTrialResolved,
+    requiresTicketPayment = false,
+    ticketCost = null,
   } = options;
 
   if (!stopId) {
@@ -91,6 +95,13 @@ export function getStopCompletionBlockReason(options: {
 
   if (stopId === 'boss' && !bossTrialResolved) {
     return 'Boss challenge is still pending. Resolve the boss trial before clearing the island.';
+  }
+
+  if (stopId !== 'hatchery' && requiresTicketPayment) {
+    if (typeof ticketCost === 'number' && ticketCost > 0) {
+      return `Pay ${ticketCost} 🟣 ticket first to complete this stop.`;
+    }
+    return 'Pay this stop ticket first to complete this stop.';
   }
 
   // No blocking reason — stop is either already effectively completed (the
