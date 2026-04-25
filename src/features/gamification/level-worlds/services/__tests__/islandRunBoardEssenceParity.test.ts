@@ -232,6 +232,11 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Completed-stop sync effect should build a stable dispatch key for rerender dedupe.',
       );
       assert(
+        source.includes('const completedStopsSyncRequestedRef = useRef(false);') &&
+          source.includes('if (!completedStopsSyncRequestedRef.current) return;'),
+        'Completed-stop sync effect should require an explicit sync request before dispatching.',
+      );
+      assert(
         source.includes('if (completedStopsSyncDispatchKeyRef.current === dispatchKey) {') &&
           source.includes('completedStopsSyncDispatchKeyRef.current = dispatchKey;'),
         'Completed-stop sync effect should suppress repeated dispatch while the same target sync is in flight.',

@@ -2738,8 +2738,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [islandNumber, dayIndex]);
 
   const [completedStops, setCompletedStops] = useState<string[]>([]);
+  const completedStopsSyncRequestedRef = useRef(false);
   const [streakChipAnimationClass, setStreakChipAnimationClass] = useState('');
   const prevIslandsClearedCountRef = useRef(0);
+
+  const updateCompletedStops = useCallback((
+    updater: SetStateAction<string[]>,
+    options?: { requestSync?: boolean },
+  ) => {
+    if (options?.requestSync !== false) {
+      completedStopsSyncRequestedRef.current = true;
+    }
+    setCompletedStops(updater);
+  }, []);
 
   const getStoredCompletedStopsForIsland = useCallback((targetIslandNumber: number): string[] => {
     const persistedStops = runtimeState.completedStopsByIsland?.[String(targetIslandNumber)];
@@ -2755,11 +2766,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (!hasHydratedRuntimeState) return;
     const storedStops = getStoredCompletedStopsForIsland(islandNumber);
     if (storedStops.length > 0) {
-      setCompletedStops((current) => (areStringArraysEqual(current, storedStops) ? current : storedStops));
+      updateCompletedStops((current) => (areStringArraysEqual(current, storedStops) ? current : storedStops));
       return;
     }
-    setCompletedStops((current) => (current.length === 0 ? current : []));
-  }, [getStoredCompletedStopsForIsland, hasHydratedRuntimeState, islandNumber]);
+    updateCompletedStops((current) => (current.length === 0 ? current : []));
+  }, [getStoredCompletedStopsForIsland, hasHydratedRuntimeState, islandNumber, updateCompletedStops]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
@@ -2789,11 +2800,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // Guard: Skip until the initial hydration sync effect has applied server values
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
+    if (!completedStopsSyncRequestedRef.current) return;
     const islandKey = String(islandNumber);
     const persistedStops = normalizeCompletedStopsForSync(runtimeState.completedStopsByIsland?.[islandKey] ?? []);
     const normalizedCompletedStops = normalizeCompletedStopsForSync(completedStops);
     const dispatchKey = `${islandKey}::${normalizedCompletedStops.join('|')}`;
     if (areStringArraysEqual(persistedStops, normalizedCompletedStops)) {
+      completedStopsSyncRequestedRef.current = false;
       if (completedStopsSyncDispatchKeyRef.current === dispatchKey) {
         completedStopsSyncDispatchKeyRef.current = null;
       }
@@ -2802,6 +2815,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (completedStopsSyncDispatchKeyRef.current === dispatchKey) {
       return;
     }
+    completedStopsSyncRequestedRef.current = false;
     completedStopsSyncDispatchKeyRef.current = dispatchKey;
     const nextRuntimeState = syncCompletedStopsForIsland({
       session,
@@ -3199,7 +3213,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
     if (areStringArraysEqual(completedStops, effectiveCompletedStops)) return;
-    setCompletedStops((current) => (areStringArraysEqual(current, effectiveCompletedStops) ? current : effectiveCompletedStops));
+    updateCompletedStops((current) => (areStringArraysEqual(current, effectiveCompletedStops) ? current : effectiveCompletedStops));
   }, [completedStops, effectiveCompletedStops, hasHydratedRuntimeState]);
 
   const mergedStopStatesByIndex = useMemo(() => {
@@ -4906,7 +4920,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         awardShards('stop_complete');
         awardWalletShards(1);
       }
-      setCompletedStops(nextCompletedStops);
+      updateCompletedStops(nextCompletedStops);
       markHatcheryStopCompleteInV2();
       setLandingText(`Egg set! Hatchery stop completed with a ${tier} egg now incubating.`);
       setActiveStopId(null);
@@ -5401,7 +5415,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       completedStops: nextCompletedStops,
       triggerSource: 'island_board_collect_creature',
     });
-    setCompletedStops(nextCompletedStops);
+    updateCompletedStops(nextCompletedStops);
     markHatcheryStopCompleteInV2();
     setRuntimeState(nextRecord);
     if (activeStopId === 'hatchery') {
@@ -5468,7 +5482,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       essenceLifetimeEarned: nextEssenceLifetimeEarned,
       triggerSource: 'island_board_sell_egg_choice',
     });
-    setCompletedStops(nextCompletedStops);
+    updateCompletedStops(nextCompletedStops);
     setRuntimeState(nextRecord);
     if (activeStopId === 'hatchery') {
       setActiveStopId(null);
@@ -6129,7 +6143,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setCurrentEncounterChallenge(null);
     setEncounterStep('challenge');
     setEncounterRewardData(null);
-    setCompletedStops([]);
+    updateCompletedStops([]);
     setBossTrialResolved(false);
     setBossRewardSummary(null);
     // M7-COMPLETE: reset boss trial phase on island travel
@@ -6196,7 +6210,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // B3-2: handleCompleteStopById helper
   const handleCompleteStopById = (stopId: string) => {
-    setCompletedStops((current) => current.includes(stopId) ? current : [...current, stopId]);
+    updateCompletedStops((current) => current.includes(stopId) ? current : [...current, stopId]);
   };
 
   const handleSpendEssenceOnBuild = (stopIndex: number) => {
@@ -6318,7 +6332,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       }
 
       if (activeStopId === 'boss') {
-        setCompletedStops((current) => ensureStopCompleted(current, 'boss'));
+        updateCompletedStops((current) => ensureStopCompleted(current, 'boss'));
         awardShards('boss_defeat');
         awardWalletShards(3);
 
@@ -6373,7 +6387,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         return;
       }
 
-      setCompletedStops((current) => ensureStopCompleted(current, activeStopId));
+      updateCompletedStops((current) => ensureStopCompleted(current, activeStopId));
       setMysteryStopReward(null);
       setLandingText(`${activeStopId.toUpperCase()} stop objective done! Open 🔨 Build to fund this island's buildings.`);
       setActiveStopId(null);
@@ -6383,7 +6397,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (activeStopId === 'boss') {
       const bossReward = getBossReward(islandNumber);
       setLandingText('Boss stop complete! Island clear. Next island unlocked.');
-      setCompletedStops((current) => ensureStopCompleted(current, 'boss'));
+      updateCompletedStops((current) => ensureStopCompleted(current, 'boss'));
       awardShards('boss_defeat');
       awardWalletShards(3);
 
@@ -6434,7 +6448,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       awardShards('stop_complete');
       awardWalletShards(1);
     }
-    setCompletedStops((current) => ensureStopCompleted(current, activeStopId));
+    updateCompletedStops((current) => ensureStopCompleted(current, activeStopId));
     setMysteryStopReward(null);
     setLandingText(`${activeStopId.toUpperCase()} stop completed.`);
     setActiveStopId(null);
