@@ -16,7 +16,7 @@
  *
  * See: docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   CANONICAL_BOARD_SIZE,
@@ -1581,6 +1581,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   } | null>(null);
   const island120PrevActiveStopIdRef = useRef<string | null>(null);
   const island120ToggleHintCounterByPairRef = useRef<Record<string, number>>({});
+  const pendingRuntimeStateTraceSourceRef = useRef<string | null>(null);
   const isIsland120StartupDiagnosticActive = isIsland120StartupDiagnosticTarget(
     runtimeState.currentIslandNumber ?? islandNumber,
   )
@@ -1595,6 +1596,32 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     runtimeStateRef.current = runtimeState;
   }, [runtimeState]);
+
+  const setRuntimeStateWithTrace = useCallback((
+    source: string,
+    updater: SetStateAction<IslandRunRuntimeState>,
+  ) => {
+    pendingRuntimeStateTraceSourceRef.current = source;
+    setRuntimeState((current) => {
+      const next = typeof updater === 'function'
+        ? (updater as (value: IslandRunRuntimeState) => IslandRunRuntimeState)(current)
+        : updater;
+      if (current.tokenIndex !== next.tokenIndex) {
+        logIslandRunEntryDebug('setRuntimeState_tokenIndex_change', {
+          source,
+          tokenIndexBefore: current.tokenIndex,
+          tokenIndexAfter: next.tokenIndex,
+          runtimeVersionBefore: current.runtimeVersion,
+          runtimeVersionAfter: next.runtimeVersion,
+        });
+      }
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    pendingRuntimeStateTraceSourceRef.current = null;
+  }, [runtimeState.tokenIndex, runtimeState.runtimeVersion]);
 
   const applyPassiveDiceRegen = useCallback((reason: 'startup' | 'interval' | 'focus' | 'visibility' | 'pre_roll') => {
     if (!hasHydratedRuntimeState) return runtimeStateRef.current.dicePool;
@@ -1622,10 +1649,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         essenceRef: runtimeStateRef.current.essence,
         essenceStore: nextRuntimeState.essence,
       });
+      logIslandRunEntryDebug('regen_apply_result', {
+        reason,
+        applied: false,
+        skipReason: 'no_change',
+      });
       return runtimeStateRef.current.dicePool;
     }
     runtimeStateRef.current = nextRuntimeState;
-    setRuntimeState(nextRuntimeState);
+    setRuntimeStateWithTrace('applyPassiveDiceRegen', nextRuntimeState);
     logIslandRunEntryDebug('dice_regen_applied', {
       userId: session.user.id,
       reason,
@@ -1641,8 +1673,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       regenRatePerHour: nextRuntimeState.diceRegenState?.regenRatePerHour ?? null,
       changed: regenTick.changed,
     });
+    logIslandRunEntryDebug('regen_apply_result', {
+      reason,
+      applied: true,
+      diceBefore: current.dicePool,
+      diceAfter: nextRuntimeState.dicePool,
+    });
     return nextRuntimeState.dicePool;
-  }, [client, hasHydratedRuntimeState, playerLevelInfo?.currentLevel, session]);
+  }, [client, hasHydratedRuntimeState, playerLevelInfo?.currentLevel, session, setRuntimeStateWithTrace]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
@@ -1734,6 +1772,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           currentRuntimeVersion: runtimeStateRef.current.runtimeVersion ?? 0,
           skipReason: 'roll_sync_pending',
         });
+        logIslandRunEntryDebug('hydration_reconcile_skip', {
+          reason,
+          source: 'pre_hydrate',
+          skipReason: 'roll_sync_pending',
+        });
       }
       return;
     }
@@ -1766,6 +1809,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           currentRuntimeVersion,
           skipReason: 'roll_sync_pending',
         });
+        logIslandRunEntryDebug('hydration_reconcile_skip', {
+          reason,
+          source: hydrationResult.source,
+          skipReason: 'roll_sync_pending',
+        });
         return;
       }
       if (incomingRuntimeVersion <= currentRuntimeVersion) {
@@ -1777,7 +1825,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         after: hydrationResult.state,
         islandNumber: hydrationResult.state.currentIslandNumber,
       });
-      setRuntimeState(hydrationResult.state);
+      setRuntimeStateWithTrace(`reconcileRuntimeState:${reason}`, hydrationResult.state);
       // C1: publish the hydrated record directly to the store mirror. Using
       // `refreshIslandRunStateFromLocal` here can re-apply an older local row
       // and cause token snap-back after reopen.
@@ -1788,6 +1836,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         previousRuntimeVersion: currentRuntimeVersion,
         incomingRuntimeVersion,
         currentIslandNumber: hydrationResult.state.currentIslandNumber,
+      });
+      logIslandRunEntryDebug('hydration_reconcile_apply', {
+        reason,
+        source: hydrationResult.source,
+        previousRuntimeVersion: currentRuntimeVersion,
+        incomingRuntimeVersion,
+        tokenIndexBefore: runtimeStateRef.current.tokenIndex,
+        tokenIndexAfter: hydrationResult.state.tokenIndex,
       });
       if (isIsland120StartupDiagnosticTarget(hydrationResult.state.currentIslandNumber)) {
         logIslandRunEntryDebug('island120_hydration_reconciliation', {
@@ -1811,7 +1867,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     } finally {
       isReconcilingRuntimeStateRef.current = false;
     }
-  }, [client, hasHydratedRuntimeState, session]);
+  }, [client, hasHydratedRuntimeState, session, setRuntimeStateWithTrace]);
 
   const requestActiveStopTransition = useCallback((nextStopId: string | null, source: string) => {
     island120PendingStopTransitionRef.current = {
@@ -2328,7 +2384,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     setHasHydratedRuntimeState(false);
     setRuntimeHydrationSource(null);
-    setRuntimeState(localSnapshotBeforeHydration);
+    setRuntimeStateWithTrace('initial_hydrate_local_snapshot', localSnapshotBeforeHydration);
 
     void hydrateIslandRunRuntimeStateWithSource({ session, client, forceRemote: true })
       .then((hydrationResult) => {
@@ -2355,11 +2411,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               currentRuntimeVersion: runtimeStateRef.current.runtimeVersion ?? 0,
               skipReason: 'roll_sync_pending',
             });
+            logIslandRunEntryDebug('hydration_reconcile_skip', {
+              reason: 'initial_hydrate',
+              source: hydrationResult.source,
+              skipReason: 'roll_sync_pending',
+            });
           } else {
-          setRuntimeState(hydrationResult.state);
-          // C1: publish exactly the hydrated record so the visual token source
-          // (`useIslandRunState`) cannot lag behind runtimeState on first roll.
-          resetIslandRunStateSnapshot(session, hydrationResult.state);
+            setRuntimeStateWithTrace('initial_hydrate_apply', hydrationResult.state);
+            // C1: publish exactly the hydrated record so the visual token source
+            // (`useIslandRunState`) cannot lag behind runtimeState on first roll.
+            resetIslandRunStateSnapshot(session, hydrationResult.state);
+            logIslandRunEntryDebug('hydration_reconcile_apply', {
+              reason: 'initial_hydrate',
+              source: hydrationResult.source,
+              tokenIndexAfter: hydrationResult.state.tokenIndex,
+              runtimeVersionAfter: hydrationResult.state.runtimeVersion ?? 0,
+            });
           }
         }
 
@@ -2453,7 +2520,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return () => {
       isActive = false;
     };
-  }, [client, session.user.id]);
+  }, [client, session.user.id, setRuntimeStateWithTrace]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState || !isIsland120StartupDiagnosticActive) return;
@@ -2489,10 +2556,21 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           currentRuntimeVersion: runtimeStateRef.current.runtimeVersion ?? 0,
           skipReason: 'roll_sync_pending',
         });
+        logIslandRunEntryDebug('hydration_reconcile_skip', {
+          reason: 'retry_sync',
+          source: hydrationResult.source,
+          skipReason: 'roll_sync_pending',
+        });
       } else {
-        setRuntimeState(hydrationResult.state);
+        setRuntimeStateWithTrace('retry_hydrate_apply', hydrationResult.state);
         // Keep store mirror aligned to the hydrated runtime snapshot.
         resetIslandRunStateSnapshot(session, hydrationResult.state);
+        logIslandRunEntryDebug('hydration_reconcile_apply', {
+          reason: 'retry_sync',
+          source: hydrationResult.source,
+          tokenIndexAfter: hydrationResult.state.tokenIndex,
+          runtimeVersionAfter: hydrationResult.state.runtimeVersion ?? 0,
+        });
       }
 
       if (hydrationResult.source === 'table') {
@@ -2516,7 +2594,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         errorMessage: error instanceof Error ? error.message : 'unknown_error',
       });
     }
-  }, [client, session.user.id]);
+  }, [client, session.user.id, setRuntimeStateWithTrace]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState || typeof window === 'undefined' || typeof document === 'undefined') {
@@ -4097,6 +4175,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   };
 
   const handleRoll = async (): Promise<boolean> => {
+    logIslandRunEntryDebug('roll_click_start', {
+      userId: session.user.id,
+      tokenIndex: runtimeStateRef.current.tokenIndex,
+      dicePool: runtimeStateRef.current.dicePool,
+      runtimeVersion: runtimeStateRef.current.runtimeVersion,
+      isAnimatingRoll: isAnimatingRollRef.current,
+      isRollSyncPending: isRollSyncPendingRef.current,
+    });
     const rollDecisionFlags = {
       canRoll,
       showFirstRunCelebration,
@@ -4200,6 +4286,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       client,
       boardProfileId: ACTIVE_BOARD_PROFILE.id,
       diceMultiplier: effectiveMultiplier,
+    });
+    logIslandRunEntryDebug('roll_action_result', {
+      userId: session.user.id,
+      status: rollResult.status,
+      total: rollResult.total ?? null,
+      dieOne: rollResult.dieOne ?? null,
+      dieTwo: rollResult.dieTwo ?? null,
+      newTokenIndex: rollResult.newTokenIndex ?? null,
+      hopCount: Array.isArray(rollResult.hopSequence) ? rollResult.hopSequence.length : null,
+      runtimeVersion: runtimeStateRef.current.runtimeVersion,
+      tokenIndex: runtimeStateRef.current.tokenIndex,
     });
 
     if (
@@ -4320,7 +4417,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     //  - completedStopsByIsland: take the union of stop IDs per island key.
     //  - stopStatesByIndex: once objectiveComplete or buildComplete is true it
     //    stays true regardless of which source has stale false.
-        setRuntimeState((current) => {
+        setRuntimeStateWithTrace('roll_applyRollResult_merge', (current) => {
           const merged = { ...freshRecord };
 
       // Union-merge completedStopsByIsland
