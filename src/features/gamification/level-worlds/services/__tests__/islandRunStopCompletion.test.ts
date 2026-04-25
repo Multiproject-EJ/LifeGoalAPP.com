@@ -139,6 +139,80 @@ export const islandRunStopCompletionTests: TestCase[] = [
     },
   },
   {
+    name: 'getStopCompletionBlockReason blocks ticket-gated stops until ticket is paid',
+    run: () => {
+      const common = {
+        completedStops: ['hatchery'] as string[],
+        hasActiveEgg: true,
+        islandEggSlotUsed: true,
+        bossTrialResolved: true,
+        requiresTicketPayment: true,
+        ticketCost: 70,
+      };
+      assertEqual(
+        getStopCompletionBlockReason({
+          ...common,
+          stopId: 'habit',
+        }),
+        'Pay 70 🟣 ticket first to complete this stop.',
+        'Expected unpaid ticket to block habit completion',
+      );
+      assertEqual(
+        getStopCompletionBlockReason({
+          ...common,
+          stopId: 'mystery',
+        }),
+        'Pay 70 🟣 ticket first to complete this stop.',
+        'Expected unpaid ticket to block mystery completion',
+      );
+      assertEqual(
+        getStopCompletionBlockReason({
+          ...common,
+          stopId: 'wisdom',
+        }),
+        'Pay 70 🟣 ticket first to complete this stop.',
+        'Expected unpaid ticket to block wisdom completion',
+      );
+      assertEqual(
+        getStopCompletionBlockReason({
+          ...common,
+          stopId: 'boss',
+        }),
+        'Pay 70 🟣 ticket first to complete this stop.',
+        'Expected unpaid ticket to block boss completion after boss trial resolves',
+      );
+    },
+  },
+  {
+    name: 'getStopCompletionBlockReason preserves normal completion for non-ticketed stops',
+    run: () => {
+      assertEqual(
+        getStopCompletionBlockReason({
+          stopId: 'hatchery',
+          completedStops: [],
+          hasActiveEgg: true,
+          islandEggSlotUsed: false,
+          bossTrialResolved: false,
+        }),
+        null,
+        'Expected hatchery to remain completable when egg is active (no ticket gate)',
+      );
+      assertEqual(
+        getStopCompletionBlockReason({
+          stopId: 'habit',
+          completedStops: ['hatchery'],
+          hasActiveEgg: true,
+          islandEggSlotUsed: true,
+          bossTrialResolved: true,
+          requiresTicketPayment: false,
+          ticketCost: 30,
+        }),
+        null,
+        'Expected non-ticketed habit completion to remain allowed',
+      );
+    },
+  },
+  {
     name: 'shouldAutoOpenIslandStopOnLoad blocks completed requested stop re-open',
     run: () => {
       assertEqual(
