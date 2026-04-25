@@ -49,6 +49,7 @@ import {
   getIslandRunStateSnapshot,
   refreshIslandRunStateFromLocal,
 } from './islandRunStateStore';
+import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 import { persistIslandRunProfileMetadata } from './islandRunProfile';
 import {
   applyEssenceDrift,
@@ -77,8 +78,26 @@ import { resolveRuntimeDiceRegenUpdate } from './islandRunRuntimeRegen';
 export function applyRollResult(options: {
   session: Session;
 }): IslandRunGameStateRecord {
+  const before = getIslandRunStateSnapshot(options.session);
+  logIslandRunEntryDebug('applyRollResult_before', {
+    userId: options.session.user.id,
+    runtimeVersion: before.runtimeVersion,
+    tokenIndex: before.tokenIndex,
+    dicePool: before.dicePool,
+    spinTokens: before.spinTokens,
+  });
   refreshIslandRunStateFromLocal(options.session);
-  return getIslandRunStateSnapshot(options.session);
+  const after = getIslandRunStateSnapshot(options.session);
+  logIslandRunEntryDebug('applyRollResult_after', {
+    userId: options.session.user.id,
+    runtimeVersion: after.runtimeVersion,
+    tokenIndex: after.tokenIndex,
+    dicePool: after.dicePool,
+    spinTokens: after.spinTokens,
+    tokenIndexChanged: before.tokenIndex !== after.tokenIndex,
+    dicePoolChanged: before.dicePool !== after.dicePool,
+  });
+  return after;
 }
 
 // ── applyTokenHopRewards ─────────────────────────────────────────────────────
@@ -1235,6 +1254,14 @@ export interface SyncCompletedStopsForIslandOptions {
   triggerSource?: string;
 }
 
+function areStringArraysEqual(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) return false;
+  for (let i = 0; i < left.length; i += 1) {
+    if (left[i] !== right[i]) return false;
+  }
+  return true;
+}
+
 /**
  * Commits `completedStopsByIsland[islandNumber]` through the store path.
  *
@@ -1246,6 +1273,10 @@ export function syncCompletedStopsForIsland(options: SyncCompletedStopsForIsland
   const { session, client, islandNumber, completedStops, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
   const islandKey = String(islandNumber);
+  const currentStops = current.completedStopsByIsland?.[islandKey] ?? [];
+  if (areStringArraysEqual(currentStops, completedStops)) {
+    return current;
+  }
   const next: IslandRunGameStateRecord = {
     ...current,
     completedStopsByIsland: {
