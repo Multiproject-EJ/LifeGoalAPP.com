@@ -2779,11 +2779,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       completedStops,
       triggerSource: 'sync_completed_stops_effect',
     });
-    setRuntimeState((current) => ({
-      ...current,
-      completedStopsByIsland: nextRuntimeState.completedStopsByIsland,
-    }));
-  }, [client, completedStops, hasHydratedRuntimeState, islandNumber, runtimeState.completedStopsByIsland, session]);
+    setRuntimeStateWithTrace('sync_completed_stops_effect', (current) => (
+      current.completedStopsByIsland === nextRuntimeState.completedStopsByIsland
+        ? current
+        : {
+          ...current,
+          completedStopsByIsland: nextRuntimeState.completedStopsByIsland,
+        }
+    ));
+  }, [
+    client,
+    completedStops,
+    hasHydratedRuntimeState,
+    islandNumber,
+    runtimeState.completedStopsByIsland,
+    session,
+    setRuntimeStateWithTrace,
+  ]);
 
   // ── C1: dicePool/tokenIndex/spinTokens persist effect REMOVED ────────────
   // The old useEffect at this location watched the three mirrors and called

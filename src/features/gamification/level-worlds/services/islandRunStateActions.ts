@@ -1254,6 +1254,14 @@ export interface SyncCompletedStopsForIslandOptions {
   triggerSource?: string;
 }
 
+function areStringArraysEqual(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) return false;
+  for (let i = 0; i < left.length; i += 1) {
+    if (left[i] !== right[i]) return false;
+  }
+  return true;
+}
+
 /**
  * Commits `completedStopsByIsland[islandNumber]` through the store path.
  *
@@ -1265,6 +1273,10 @@ export function syncCompletedStopsForIsland(options: SyncCompletedStopsForIsland
   const { session, client, islandNumber, completedStops, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
   const islandKey = String(islandNumber);
+  const currentStops = current.completedStopsByIsland?.[islandKey] ?? [];
+  if (areStringArraysEqual(currentStops, completedStops)) {
+    return current;
+  }
   const next: IslandRunGameStateRecord = {
     ...current,
     completedStopsByIsland: {

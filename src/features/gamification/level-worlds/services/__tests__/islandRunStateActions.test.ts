@@ -1639,6 +1639,75 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.runtimeVersion, 11, 'runtimeVersion should bump by one');
     },
   },
+  {
+    name: 'syncCompletedStopsForIsland is no-op when completed stops are unchanged',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 40,
+        currentIslandNumber: 7,
+        tokenIndex: 33,
+        dicePool: 43,
+        essence: 777,
+        completedStopsByIsland: {
+          '7': ['hatchery', 'habit'],
+        },
+      });
+
+      const first = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['hatchery', 'habit'],
+        triggerSource: 'test_sync_completed_stops_noop_first_open',
+      });
+      const second = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['hatchery', 'habit'],
+        triggerSource: 'test_sync_completed_stops_noop_second_open',
+      });
+
+      assertEqual(first.runtimeVersion, 40, 'unchanged completed stops should not bump runtimeVersion');
+      assertEqual(second.runtimeVersion, 40, 'repeated unchanged sync should stay idempotent');
+      assertEqual(first.tokenIndex, 33, 'tokenIndex must remain unchanged');
+      assertEqual(first.dicePool, 43, 'dicePool must remain unchanged');
+      assertEqual(first.essence, 777, 'essence must remain unchanged');
+    },
+  },
+  {
+    name: 'syncCompletedStopsForIsland persists only when completed stops differ',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 50,
+        currentIslandNumber: 7,
+        tokenIndex: 33,
+        dicePool: 43,
+        essence: 888,
+        completedStopsByIsland: {
+          '7': ['hatchery'],
+        },
+      });
+
+      const result = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['hatchery', 'habit'],
+        triggerSource: 'test_sync_completed_stops_diff',
+      });
+
+      assertEqual(result.runtimeVersion, 51, 'changed completed stops should bump runtimeVersion once');
+      assertEqual(result.completedStopsByIsland['7']?.length ?? 0, 2, 'completed stops should update for island');
+      assertEqual(result.tokenIndex, 33, 'tokenIndex must be preserved');
+      assertEqual(result.dicePool, 43, 'dicePool must be preserved');
+      assertEqual(result.essence, 888, 'essence must be preserved');
+    },
+  },
 
   {
     name: 'applyEggPlacement commits egg state + per-island ledger + completed stops atomically',
