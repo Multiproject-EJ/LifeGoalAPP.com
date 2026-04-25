@@ -1249,6 +1249,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [marketOwnedBundles, setMarketOwnedBundles] = useState<Record<'dice_bundle', boolean>>({
     dice_bundle: false,
   });
+  const [hasMarketOwnedBundleHydrationGate, setHasMarketOwnedBundleHydrationGate] = useState(false);
   const [marketMarkerBaselineMs, setMarketMarkerBaselineMs] = useState<number | null>(null);
   const [showFirstRunCelebration, setShowFirstRunCelebration] = useState(false);
   const [runtimeVerificationSnapshot, setRuntimeVerificationSnapshot] = useState<{
@@ -1604,6 +1605,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const island120ToggleHintCounterByPairRef = useRef<Record<string, number>>({});
   const pendingRuntimeStateTraceSourceRef = useRef<string | null>(null);
   const completedStopsSyncDispatchKeyRef = useRef<string | null>(null);
+  const marketOwnedBundleSyncRequestedRef = useRef(false);
+  const marketOwnedBundleSyncDispatchKeyRef = useRef<string | null>(null);
   const isIsland120StartupDiagnosticActive = isIsland120StartupDiagnosticTarget(
     runtimeState.currentIslandNumber ?? islandNumber,
   )
@@ -1618,6 +1621,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     runtimeStateRef.current = runtimeState;
   }, [runtimeState]);
+
+  const updateMarketOwnedBundles = useCallback((
+    updater: SetStateAction<Record<'dice_bundle', boolean>>,
+    options?: { requestSync?: boolean },
+  ) => {
+    setMarketOwnedBundles((current) => {
+      const next = typeof updater === 'function'
+        ? (updater as (value: Record<'dice_bundle', boolean>) => Record<'dice_bundle', boolean>)(current)
+        : updater;
+      const changed = Boolean(current.dice_bundle) !== Boolean(next.dice_bundle);
+      if (changed && options?.requestSync !== false) {
+        marketOwnedBundleSyncRequestedRef.current = true;
+      }
+      return changed ? next : current;
+    });
+  }, []);
 
   const setRuntimeStateWithTrace = useCallback((
     source: string,
@@ -2007,11 +2026,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // M19A: Restore market owned bundles from runtime state map (with one-time local fallback migration)
     const runtimeOwnedBundles = runtimeState.marketOwnedBundlesByIsland?.[islandKey];
     if (runtimeOwnedBundles) {
-      setMarketOwnedBundles({
+      updateMarketOwnedBundles({
         dice_bundle: Boolean(runtimeOwnedBundles.dice_bundle),
-      });
+      }, { requestSync: false });
     } else {
-      setMarketOwnedBundles({ dice_bundle: false });
+      updateMarketOwnedBundles({ dice_bundle: false }, { requestSync: false });
     }
     // M4-COMPLETE: Restore cycleIndex from runtime state
     setCycleIndex(runtimeState.cycleIndex ?? 0);
@@ -2024,7 +2043,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // This prevents the write amplification loop by ensuring local state (essence,
     // dice, etc.) has been synced from runtimeState before persist effects compare them.
     hasCompletedInitialHydrationSyncRef.current = true;
-  }, [hasHydratedRuntimeState, runtimeState.activeCompanionId, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.audioEnabled, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.creatureTreatInventory, runtimeState.marketOwnedBundlesByIsland, session.user.id]);
+  }, [hasHydratedRuntimeState, runtimeState.activeCompanionId, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.audioEnabled, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.creatureTreatInventory, runtimeState.marketOwnedBundlesByIsland, session.user.id, updateMarketOwnedBundles]);
 
   // M16D: Snap fill bar to 0 immediately on island travel reset (no slide-back animation)
   useEffect(() => {
@@ -2373,7 +2392,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const resetMs = Date.parse(resetAt);
 
       setMarketPurchaseFeedback(null);
-      setMarketOwnedBundles({
+      updateMarketOwnedBundles({
         dice_bundle: false,
       });
 
@@ -2895,29 +2914,68 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setRuntimeState(result.record);
   }, [client, diamonds, hasHydratedRuntimeState, runtimeState.diamonds, session]);
 
+  // Hydration gate: suppress market-owned bundle sync requests during initial
+  // runtime hydration/restore so startup renders cannot trigger persistence.
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) {
+      setHasMarketOwnedBundleHydrationGate(false);
+      marketOwnedBundleSyncRequestedRef.current = false;
+      marketOwnedBundleSyncDispatchKeyRef.current = null;
+      return;
+    }
+    marketOwnedBundleSyncRequestedRef.current = false;
+    setHasMarketOwnedBundleHydrationGate(true);
+  }, [hasHydratedRuntimeState]);
+
   // M19A: persist market owned state to runtime state map (and mirror legacy local storage key for compatibility)
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
+    if (!hasMarketOwnedBundleHydrationGate) return;
     // Guard: Skip until the initial hydration sync effect has applied server values
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
+    if (!marketOwnedBundleSyncRequestedRef.current) return;
     const islandKey = String(islandNumber);
-    const persisted = runtimeState.marketOwnedBundlesByIsland?.[islandKey];
-    if (
-      persisted
-      && persisted.dice_bundle === marketOwnedBundles.dice_bundle
-    ) {
+    const persistedOwned = Boolean(runtimeState.marketOwnedBundlesByIsland?.[islandKey]?.dice_bundle);
+    const localOwned = Boolean(marketOwnedBundles.dice_bundle);
+    const dispatchKey = `${islandKey}::dice_bundle:${localOwned ? 1 : 0}`;
+    if (persistedOwned === localOwned) {
+      marketOwnedBundleSyncRequestedRef.current = false;
+      if (marketOwnedBundleSyncDispatchKeyRef.current === dispatchKey) {
+        marketOwnedBundleSyncDispatchKeyRef.current = null;
+      }
       return;
     }
+    if (marketOwnedBundleSyncDispatchKeyRef.current === dispatchKey) {
+      return;
+    }
+    marketOwnedBundleSyncRequestedRef.current = false;
+    marketOwnedBundleSyncDispatchKeyRef.current = dispatchKey;
     const nextRecord = applyMarketOwnedBundleMarker({
       session,
       client,
       islandNumber,
-      diceBundleOwned: marketOwnedBundles.dice_bundle,
+      diceBundleOwned: localOwned,
       triggerSource: 'sync_market_owned_bundle_marker_effect',
     });
-    setRuntimeState(nextRecord);
-  }, [client, hasHydratedRuntimeState, islandNumber, marketOwnedBundles, runtimeState.marketOwnedBundlesByIsland, session]);
+    setRuntimeStateWithTrace('sync_market_owned_bundle_marker_effect', (current) => (
+      current.marketOwnedBundlesByIsland === nextRecord.marketOwnedBundlesByIsland
+        ? current
+        : {
+          ...current,
+          marketOwnedBundlesByIsland: nextRecord.marketOwnedBundlesByIsland,
+        }
+    ));
+  }, [
+    client,
+    hasHydratedRuntimeState,
+    hasMarketOwnedBundleHydrationGate,
+    islandNumber,
+    marketOwnedBundles,
+    runtimeState.marketOwnedBundlesByIsland,
+    session,
+    setRuntimeStateWithTrace,
+  ]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
@@ -5954,7 +6012,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const costCoins = MARKET_DICE_BUNDLE_COST;
     const rewardDice = MARKET_DICE_BUNDLE_REWARD;
 
-    setMarketOwnedBundles((current) => ({
+    updateMarketOwnedBundles((current) => ({
       ...current,
       [bundle]: true,
     }));
@@ -6062,7 +6120,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     playIslandRunSound('market_purchase_success');
     triggerIslandRunHaptic('market_purchase_success');
     const message = `Purchased Dice Bundle: -${MARKET_DICE_BUNDLE_COST} essence, +${MARKET_DICE_BUNDLE_REWARD} dice.`;
-    setMarketOwnedBundles((current) => ({ ...current, dice_bundle: true }));
+    updateMarketOwnedBundles((current) => ({ ...current, dice_bundle: true }));
     setMarketPurchaseFeedback(message);
     setLandingText(message);
     setMarketInteracted(true);
@@ -6179,7 +6237,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setBossAttemptCount(0);
     setSpinTokens(0);
     setMarketInteracted(false);
-    setMarketOwnedBundles({ dice_bundle: false });
+    updateMarketOwnedBundles({ dice_bundle: false });
 
     setTimeLeftSec(startTimer ? Math.ceil(getIslandDurationMs(resolvedIsland) / 1000) : 0);
     setIslandStartedAtMs(next.islandStartedAtMs);

@@ -259,6 +259,33 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
     },
   },
   {
+    name: 'market-owned bundle sync effect pre-dispatch guard prevents no-op action calls',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('const marketOwnedBundleSyncRequestedRef = useRef(false);') &&
+          source.includes('if (!marketOwnedBundleSyncRequestedRef.current) return;'),
+        'Market-owned bundle sync effect should require an explicit sync request before dispatching.',
+      );
+      assert(
+        source.includes('const [hasMarketOwnedBundleHydrationGate, setHasMarketOwnedBundleHydrationGate] = useState(false);') &&
+          source.includes('if (!hasMarketOwnedBundleHydrationGate) return;') &&
+          source.includes('marketOwnedBundleSyncRequestedRef.current = false;'),
+        'Market-owned bundle sync effect should remain blocked until hydration gate opens and should drop hydration-time sync requests.',
+      );
+      assert(
+        source.includes('const dispatchKey = `${islandKey}::dice_bundle:${localOwned ? 1 : 0}`;') &&
+          source.includes('if (marketOwnedBundleSyncDispatchKeyRef.current === dispatchKey) {') &&
+          source.includes('marketOwnedBundleSyncDispatchKeyRef.current = dispatchKey;'),
+        'Market-owned bundle sync effect should suppress repeated dispatch while the same target sync is in flight.',
+      );
+      assert(
+        source.includes('if (persistedOwned === localOwned) {'),
+        'Market-owned bundle sync effect should short-circuit semantic no-op BEFORE dispatch.',
+      );
+    },
+  },
+  {
     name: 'landing burst FX should be anchored to landing tile position (not stale token anim state)',
     run: async () => {
       const stageSource = await readBoardStageSource();
