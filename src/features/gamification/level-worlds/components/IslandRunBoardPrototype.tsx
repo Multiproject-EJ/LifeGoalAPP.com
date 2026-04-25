@@ -1603,6 +1603,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const island120PrevActiveStopIdRef = useRef<string | null>(null);
   const island120ToggleHintCounterByPairRef = useRef<Record<string, number>>({});
   const pendingRuntimeStateTraceSourceRef = useRef<string | null>(null);
+  const completedStopsSyncDispatchKeyRef = useRef<string | null>(null);
   const isIsland120StartupDiagnosticActive = isIsland120StartupDiagnosticTarget(
     runtimeState.currentIslandNumber ?? islandNumber,
   )
@@ -2791,9 +2792,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const islandKey = String(islandNumber);
     const persistedStops = normalizeCompletedStopsForSync(runtimeState.completedStopsByIsland?.[islandKey] ?? []);
     const normalizedCompletedStops = normalizeCompletedStopsForSync(completedStops);
+    const dispatchKey = `${islandKey}::${normalizedCompletedStops.join('|')}`;
     if (areStringArraysEqual(persistedStops, normalizedCompletedStops)) {
+      if (completedStopsSyncDispatchKeyRef.current === dispatchKey) {
+        completedStopsSyncDispatchKeyRef.current = null;
+      }
       return;
     }
+    if (completedStopsSyncDispatchKeyRef.current === dispatchKey) {
+      return;
+    }
+    completedStopsSyncDispatchKeyRef.current = dispatchKey;
     const nextRuntimeState = syncCompletedStopsForIsland({
       session,
       client,

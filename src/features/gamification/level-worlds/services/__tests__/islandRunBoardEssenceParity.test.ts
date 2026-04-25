@@ -219,6 +219,30 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
     },
   },
   {
+    name: 'completed-stop sync effect pre-dispatch guard prevents no-op action calls',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('const normalizedCompletedStops = normalizeCompletedStopsForSync(completedStops);') &&
+          source.includes('if (areStringArraysEqual(persistedStops, normalizedCompletedStops)) {'),
+        'Completed-stop sync effect should short-circuit semantic no-op BEFORE dispatch.',
+      );
+      assert(
+        source.includes('const dispatchKey = `${islandKey}::${normalizedCompletedStops.join(\'|\')}`;'),
+        'Completed-stop sync effect should build a stable dispatch key for rerender dedupe.',
+      );
+      assert(
+        source.includes('if (completedStopsSyncDispatchKeyRef.current === dispatchKey) {') &&
+          source.includes('completedStopsSyncDispatchKeyRef.current = dispatchKey;'),
+        'Completed-stop sync effect should suppress repeated dispatch while the same target sync is in flight.',
+      );
+      assert(
+        source.includes('const nextRuntimeState = syncCompletedStopsForIsland({'),
+        'Completed-stop sync effect should still dispatch once when a semantic difference exists.',
+      );
+    },
+  },
+  {
     name: 'landing burst FX should be anchored to landing tile position (not stale token anim state)',
     run: async () => {
       const stageSource = await readBoardStageSource();
