@@ -148,6 +148,24 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
     },
   },
   {
+    name: 'roll sync guard: hydration/reconcile paths skip token snapshot publish while roll sync is pending',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('if (isAnimatingRollRef.current || isRollSyncPendingRef.current) {'),
+        'Reconcile guard should block while roll animation OR roll-sync pending is active.',
+      );
+      assert(
+        source.includes("logIslandRunEntryDebug('island_run_runtime_reconcile_skipped_roll_sync_pending'"),
+        'Roll-sync reconcile skip should emit diagnostics for token overwrite investigations.',
+      );
+      assert(
+        source.includes("skipReason: 'roll_sync_pending'"),
+        'Roll-sync reconcile skip diagnostics should label the reason as roll_sync_pending.',
+      );
+    },
+  },
+  {
     name: 'tile reward success path updates visible runtimeState essence mirror (not only error path)',
     run: async () => {
       const source = await readBoardSource();
