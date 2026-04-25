@@ -21,6 +21,17 @@ const trackedFiles = execSync("rg --files src scripts docs", { encoding: 'utf8' 
 
 const RULES = [
   {
+    id: 'no_merge_conflict_markers',
+    description: 'Tracked source/docs/scripts files must not contain unresolved git merge conflict markers.',
+    patterns: [
+      /^<<<<<<< .+/gm,
+      /^=======\s*$/gm,
+      /^>>>>>>> .+/gm,
+    ],
+    allowlist: new Set([]),
+    include: () => true,
+  },
+  {
     id: 'no_ui_persist_patch',
     description: 'UI/features should not directly call persistIslandRunRuntimeStatePatch for gameplay writes.',
     patterns: [
