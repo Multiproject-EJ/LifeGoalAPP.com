@@ -4487,43 +4487,71 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     // and wrote a full record, so the second write silently overwrote the
     // first's fields. The mutex also serialises this commit with any in-
     // flight roll, preventing dicePool / runtimeVersion oscillation.
+    const requestedEssenceDelta = tileType === 'hazard' ? -Math.abs(essenceDelta) : essenceDelta;
+    logIslandRunEntryDebug('island_run_tile_reward_dispatch', {
+      userId: session.user.id,
+      islandNumber,
+      landingTileIndex,
+      tileType,
+      requestedEssenceDelta,
+      runtimeVersionBefore: runtimeStateRef.current.runtimeVersion,
+      essenceBefore: runtimeStateRef.current.essence,
+    });
+
     const tileRewardPromise = executeIslandRunTileRewardAction({
       session,
       client,
       islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
-      essenceDelta: tileType === 'hazard' ? -Math.abs(essenceDelta) : essenceDelta,
+      essenceDelta: requestedEssenceDelta,
       rewardBarProgress: ISLAND_RUN_CONTRACT_V2_ENABLED
         ? { source: { kind: 'tile', tileType }, multiplier: mult, nowMs: Date.now() }
         : null,
     });
 
     void tileRewardPromise.then((result) => {
+      logIslandRunEntryDebug('island_run_tile_reward_result', {
+        userId: session.user.id,
+        islandNumber,
+        landingTileIndex,
+        tileType,
+        status: result.status,
+        actualEssenceDelta: result.actualEssenceDelta,
+        essenceAfter: result.essence,
+        essenceLifetimeEarnedAfter: result.essenceLifetimeEarned,
+        essenceLifetimeSpentAfter: result.essenceLifetimeSpent,
+      });
       if (result.status !== 'ok') return;
       // Mirror the authoritative post-landing values into React state + the
       // ref so downstream render-reads observe the committed deltas. Using a
       // functional updater keeps this stable across concurrent setRuntimeState
       // calls (e.g. roll-completion mirror firing in the same microtask).
-      setRuntimeState((current) => ({
-        ...current,
-        essence: result.essence,
-        essenceLifetimeEarned: result.essenceLifetimeEarned,
-        essenceLifetimeSpent: result.essenceLifetimeSpent,
-        ...(result.rewardBarSlice
-          ? {
-              rewardBarProgress: result.rewardBarSlice.rewardBarProgress,
-              rewardBarThreshold: result.rewardBarSlice.rewardBarThreshold,
-              rewardBarClaimCountInEvent: result.rewardBarSlice.rewardBarClaimCountInEvent,
-              rewardBarEscalationTier: result.rewardBarSlice.rewardBarEscalationTier,
-              rewardBarLastClaimAtMs: result.rewardBarSlice.rewardBarLastClaimAtMs,
-              rewardBarBoundEventId: result.rewardBarSlice.rewardBarBoundEventId,
-              rewardBarLadderId: result.rewardBarSlice.rewardBarLadderId,
-              activeTimedEvent: result.rewardBarSlice.activeTimedEvent,
-              activeTimedEventProgress: result.rewardBarSlice.activeTimedEventProgress,
-              stickerProgress: result.rewardBarSlice.stickerProgress,
-              stickerInventory: result.rewardBarSlice.stickerInventory,
-            }
-          : {}),
-      }));
+      setRuntimeState((current) => {
+        const nextRuntimeState = {
+          ...current,
+          essence: result.essence,
+          essenceLifetimeEarned: result.essenceLifetimeEarned,
+          essenceLifetimeSpent: result.essenceLifetimeSpent,
+          ...(result.rewardBarSlice
+            ? {
+                rewardBarProgress: result.rewardBarSlice.rewardBarProgress,
+                rewardBarThreshold: result.rewardBarSlice.rewardBarThreshold,
+                rewardBarClaimCountInEvent: result.rewardBarSlice.rewardBarClaimCountInEvent,
+                rewardBarEscalationTier: result.rewardBarSlice.rewardBarEscalationTier,
+                rewardBarLastClaimAtMs: result.rewardBarSlice.rewardBarLastClaimAtMs,
+                rewardBarBoundEventId: result.rewardBarSlice.rewardBarBoundEventId,
+                rewardBarLadderId: result.rewardBarSlice.rewardBarLadderId,
+                activeTimedEvent: result.rewardBarSlice.activeTimedEvent,
+                activeTimedEventProgress: result.rewardBarSlice.activeTimedEventProgress,
+                stickerProgress: result.rewardBarSlice.stickerProgress,
+                stickerInventory: result.rewardBarSlice.stickerInventory,
+              }
+            : {}),
+        };
+        // Success-path mirror sync: keep the runtime ref aligned immediately so
+        // same-tick/read-after-write code paths cannot observe stale essence.
+        runtimeStateRef.current = nextRuntimeState;
+        return nextRuntimeState;
+      });
 
       // Telemetry — mirrors the events previously emitted by
       // awardContractV2Essence / deductContractV2Essence.
@@ -4557,6 +4585,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         playIslandRunSound('reward_bar_fill');
         setTimeout(() => handleContractV2RewardBarClaim(), 500);
       }
+    }).catch((error: unknown) => {
+      logIslandRunEntryDebug('island_run_tile_reward_error', {
+        userId: session.user.id,
+        islandNumber,
+        landingTileIndex,
+        tileType,
+        errorMessage: error instanceof Error ? error.message : 'unknown_error',
+      });
+      // Smallest safe recovery for the visible HUD: if the reward action throws
+      // after persisting, refresh the local runtime mirror from canonical
+      // storage so essence/reward-bar values don't appear stuck until a later
+      // hydration cycle.
+      setRuntimeState(readIslandRunRuntimeState(session));
     });
   };
 

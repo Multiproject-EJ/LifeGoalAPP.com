@@ -138,4 +138,28 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       );
     },
   },
+  {
+    name: 'tile reward success path updates visible runtimeState essence mirror (not only error path)',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes("if (result.status !== 'ok') return;"),
+        'Tile reward success path guard should exist before runtime mirror sync.',
+      );
+      assert(
+        source.includes('essence: result.essence') &&
+          source.includes('essenceLifetimeEarned: result.essenceLifetimeEarned') &&
+          source.includes('essenceLifetimeSpent: result.essenceLifetimeSpent'),
+        'Tile reward success path should hydrate runtimeState essence fields from result.',
+      );
+      assert(
+        source.includes('runtimeStateRef.current = nextRuntimeState;'),
+        'Tile reward success path should sync runtimeStateRef immediately for read-after-write safety.',
+      );
+      assert(
+        source.includes('setRuntimeState(readIslandRunRuntimeState(session));'),
+        'Error path fallback sync should remain present (separate from success-path mirror sync).',
+      );
+    },
+  },
 ];
