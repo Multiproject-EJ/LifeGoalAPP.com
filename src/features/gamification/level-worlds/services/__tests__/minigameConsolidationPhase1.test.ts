@@ -38,7 +38,7 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
           islandRunTaskTowerMysteryEnabled: true,
           islandRunVisionQuestMysteryEnabled: true,
           islandRunPartnerWheelEnabled: false,
-          todaysOfferSpinEntryEnabled: false,
+          todaysOfferSpinEntryEnabled: true,
         },
         'Default feature flags should reflect released phases without enabling unfinished surfaces',
       );
