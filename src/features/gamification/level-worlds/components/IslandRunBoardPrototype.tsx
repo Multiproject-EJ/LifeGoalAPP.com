@@ -314,6 +314,13 @@ const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_ISLAND = 120;
 const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_WINDOW_MS = 10_000;
 const ISLAND_RUN_120_STOP_PAIR_DELIMITER = '_to_';
 const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;
+const BUILD_HOLD_INITIAL_DELAY_MS = 400;
+
+function resolveBuildHoldRepeatDelayMs(heldMs: number) {
+  if (heldMs >= 3_000) return 95;
+  if (heldMs >= 1_500) return 150;
+  return 250;
+}
 
 function buildHydrationSourceOrder(baseSource: 'local_storage' | 'in_memory', hydrationSource: string) {
   return [baseSource, hydrationSource];
@@ -1627,10 +1634,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const regenIntervalNoopLogSuppressedCountRef = useRef<number>(0);
   const isBuildSpendInFlightRef = useRef(false);
   const holdBuildSpendActiveRef = useRef(false);
+  const holdBuildSpendStartAtMsRef = useRef<number | null>(null);
   const completedStopsSyncDispatchKeyRef = useRef<string | null>(null);
   const marketOwnedBundleSyncRequestedRef = useRef(false);
   const marketOwnedBundleSyncDispatchKeyRef = useRef<string | null>(null);
   const [isBuildSpendInFlight, setIsBuildSpendInFlight] = useState(false);
+  const [isBuildHoldActive, setIsBuildHoldActive] = useState(false);
   const isIsland120StartupDiagnosticActive = isIsland120StartupDiagnosticTarget(
     runtimeState.currentIslandNumber ?? islandNumber,
   )
@@ -1648,6 +1657,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   useEffect(() => () => {
     holdBuildSpendActiveRef.current = false;
+    holdBuildSpendStartAtMsRef.current = null;
   }, []);
 
   const updateMarketOwnedBundles = useCallback((
@@ -6357,57 +6367,62 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     isBuildSpendInFlightRef.current = true;
     setIsBuildSpendInFlight(true);
     try {
-    if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return false;
-    if (stopIndex < 0 || stopIndex >= islandStopPlan.length) return false;
+      if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return false;
+      if (stopIndex < 0 || stopIndex >= islandStopPlan.length) return false;
 
-    const latestRuntimeState = getIslandRunStateSnapshot(session);
-    runtimeStateRef.current = latestRuntimeState;
+      const latestRuntimeState = getIslandRunStateSnapshot(session);
+      runtimeStateRef.current = latestRuntimeState;
 
-    const currentBuildState = latestRuntimeState.stopBuildStateByIndex[stopIndex];
-    if (!currentBuildState || isStopBuildFullyComplete(currentBuildState)) {
-      setLandingText('This building is already fully built!');
-      return false;
-    }
+      const currentBuildState = latestRuntimeState.stopBuildStateByIndex[stopIndex];
+      if (!currentBuildState || isStopBuildFullyComplete(currentBuildState)) {
+        setLandingText('This building is already fully built!');
+        return false;
+      }
 
-    const spendResult = spendIslandRunContractV2EssenceOnStopBuild({
-      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
-      stopIndex,
-      spendAmount: CONTRACT_V2_ESSENCE_SPEND_STEP,
-      essence: latestRuntimeState.essence,
-      essenceLifetimeSpent: latestRuntimeState.essenceLifetimeSpent,
-      stopBuildStateByIndex: latestRuntimeState.stopBuildStateByIndex,
-      stopStatesByIndex: latestRuntimeState.stopStatesByIndex,
-      effectiveIslandNumber,
-    });
+      const spendResult = spendIslandRunContractV2EssenceOnStopBuild({
+        islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+        stopIndex,
+        spendAmount: CONTRACT_V2_ESSENCE_SPEND_STEP,
+        essence: latestRuntimeState.essence,
+        essenceLifetimeSpent: latestRuntimeState.essenceLifetimeSpent,
+        stopBuildStateByIndex: latestRuntimeState.stopBuildStateByIndex,
+        stopStatesByIndex: latestRuntimeState.stopStatesByIndex,
+        effectiveIslandNumber,
+      });
 
-    if (spendResult.spent < 1) {
-      setLandingText('Not enough Essence to build. Earn more by rolling!');
-      return false;
-    }
+      if (spendResult.spent < 1) {
+        setLandingText('Not enough Essence to build. Earn more by rolling!');
+        return false;
+      }
 
-    const nextRuntimeState = await applyStopBuildSpend({
-      session,
-      client,
-      essence: spendResult.essence,
-      essenceLifetimeSpent: spendResult.essenceLifetimeSpent,
-      stopBuildStateByIndex: spendResult.stopBuildStateByIndex,
-      stopStatesByIndex: spendResult.stopStatesByIndex,
-      triggerSource: 'stop_build_spend',
-    });
-    setRuntimeState(nextRuntimeState);
-    runtimeStateRef.current = nextRuntimeState;
+      const nextRuntimeState = await applyStopBuildSpend({
+        session,
+        client,
+        essence: spendResult.essence,
+        essenceLifetimeSpent: spendResult.essenceLifetimeSpent,
+        stopBuildStateByIndex: spendResult.stopBuildStateByIndex,
+        stopStatesByIndex: spendResult.stopStatesByIndex,
+        triggerSource: 'stop_build_spend',
+      });
+      setRuntimeState(nextRuntimeState);
+      runtimeStateRef.current = nextRuntimeState;
 
-    const nextBuildState = spendResult.stopBuildStateByIndex[stopIndex];
-    const stopEntry = islandStopPlan[stopIndex];
-    const stopLabel = stopEntry?.title ?? stopEntry?.stopId ?? `Stop ${stopIndex + 1}`;
+      const nextBuildState = spendResult.stopBuildStateByIndex[stopIndex];
+      const stopEntry = islandStopPlan[stopIndex];
+      const stopLabel = stopEntry?.title ?? stopEntry?.stopId ?? `Stop ${stopIndex + 1}`;
 
-    if (spendResult.leveledUp && nextBuildState.buildLevel >= MAX_BUILD_LEVEL) {
-      setLandingText(`🏰 ${stopLabel} fully built! Level ${MAX_BUILD_LEVEL} complete.`);
-    } else if (spendResult.leveledUp) {
-      setLandingText(`✨ ${stopLabel} upgraded to Level ${nextBuildState.buildLevel}!`);
-    } else {
-      const remaining = Math.max(0, nextBuildState.requiredEssence - nextBuildState.spentEssence);
-      setLandingText(`🔨 ${stopLabel}: ${nextBuildState.spentEssence}/${nextBuildState.requiredEssence} 🟣 (${remaining} left for L${nextBuildState.buildLevel + 1})`);
+      if (spendResult.leveledUp && nextBuildState.buildLevel >= MAX_BUILD_LEVEL) {
+        setLandingText(`🏰 ${stopLabel} fully built! Level ${MAX_BUILD_LEVEL} complete.`);
+      } else if (spendResult.leveledUp) {
+        setLandingText(`✨ ${stopLabel} upgraded to Level ${nextBuildState.buildLevel}!`);
+      } else {
+        const remaining = Math.max(0, nextBuildState.requiredEssence - nextBuildState.spentEssence);
+        setLandingText(`🔨 ${stopLabel}: ${nextBuildState.spentEssence}/${nextBuildState.requiredEssence} 🟣 (${remaining} left for L${nextBuildState.buildLevel + 1})`);
+      }
+      return true;
+    } finally {
+      isBuildSpendInFlightRef.current = false;
+      setIsBuildSpendInFlight(false);
     }
     return true;
     } finally {
@@ -9132,6 +9147,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <p className="island-stop-modal__copy" style={{ marginBottom: '0.6rem' }}>
               <strong>🟣 {runtimeState.essence}</strong> Essence available
             </p>
+            {isBuildHoldActive && (
+              <p className="island-stop-modal__copy" style={{ marginTop: '-0.25rem', marginBottom: '0.6rem', opacity: 0.8 }}>
+                {isBuildSpendInFlight ? '⚒️ Fast build…' : '⚒️ Building…'}
+              </p>
+            )}
 
             <div className="build-panel__buildings">
               {islandStopPlan.map((stopEntry, idx) => {
@@ -9150,8 +9170,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   e.preventDefault();
                   if (isBuildDisabled) return;
                   holdBuildSpendActiveRef.current = true;
+                  holdBuildSpendStartAtMsRef.current = Date.now();
+                  setIsBuildHoldActive(true);
                   const stopHold = () => {
                     holdBuildSpendActiveRef.current = false;
+                    holdBuildSpendStartAtMsRef.current = null;
+                    setIsBuildHoldActive(false);
                     window.removeEventListener('mouseup', stopHold);
                     window.removeEventListener('touchend', stopHold);
                   };
@@ -9163,7 +9187,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       stopHold();
                       return;
                     }
-                    await wait(500);
+                    await wait(BUILD_HOLD_INITIAL_DELAY_MS);
                     while (holdBuildSpendActiveRef.current) {
                       const liveRuntimeState = getIslandRunStateSnapshot(session);
                       const liveBuildState = liveRuntimeState.stopBuildStateByIndex[idx];
@@ -9180,7 +9204,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         stopHold();
                         return;
                       }
-                      await wait(150);
+                      const holdStartedAtMs = holdBuildSpendStartAtMsRef.current ?? Date.now();
+                      const heldMs = Math.max(0, Date.now() - holdStartedAtMs);
+                      await wait(resolveBuildHoldRepeatDelayMs(heldMs));
                     }
                   })();
                 };

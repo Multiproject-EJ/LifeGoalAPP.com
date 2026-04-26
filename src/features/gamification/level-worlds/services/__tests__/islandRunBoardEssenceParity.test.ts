@@ -232,13 +232,23 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       assert(
         source.includes('while (holdBuildSpendActiveRef.current) {') &&
           source.includes('const spendApplied = await handleSpendEssenceOnBuild(idx);') &&
+          source.includes('await wait(BUILD_HOLD_INITIAL_DELAY_MS);') &&
+          source.includes('await wait(resolveBuildHoldRepeatDelayMs(heldMs));') &&
           !source.includes('holdInterval = window.setInterval(() => {'),
         'Hold-to-build should sequence spends by awaiting each spend result rather than firing blind interval commits.',
       );
       assert(
+        source.includes('const BUILD_HOLD_INITIAL_DELAY_MS = 400;') &&
+          source.includes('if (heldMs >= 3_000) return 95;') &&
+          source.includes('if (heldMs >= 1_500) return 150;') &&
+          source.includes('return 250;'),
+        'Hold-to-build should use an accelerating delay curve (250ms → 150ms → 95ms after thresholds).',
+      );
+      assert(
         source.includes('aria-disabled={isBuildDisabled}') &&
-          source.includes('const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;'),
-        'Build button should expose a busy/disabled state while build spend is in-flight.',
+          source.includes('const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;') &&
+          source.includes('⚒️ Fast build…'),
+        'Build button should expose a busy/disabled state while build spend is in-flight and provide hold feedback.',
       );
     },
   },
