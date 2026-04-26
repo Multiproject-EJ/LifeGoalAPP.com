@@ -57,6 +57,7 @@ import {
   deductIslandRunContractV2Essence,
   getRemainingIslandBuildCost,
   initStopBuildStatesForIsland,
+  spendIslandRunContractV2EssenceOnStopBuild,
 } from './islandRunContractV2EssenceBuild';
 import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
 import { resolveRuntimeDiceRegenUpdate } from './islandRunRuntimeRegen';
@@ -1445,6 +1446,21 @@ export interface ApplyStopBuildSpendOptions {
   triggerSource?: string;
 }
 
+export interface ApplyStopBuildSpendBatchOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  stopIndex: number;
+  effectiveIslandNumber: number;
+  maxSteps: number;
+  spendAmount?: number;
+  triggerSource?: string;
+}
+
+export interface ApplyStopBuildSpendBatchResult {
+  record: IslandRunGameStateRecord;
+  stepsApplied: number;
+}
+
 export interface ApplyStopObjectiveProgressOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -1681,6 +1697,77 @@ export async function applyStopBuildSpend(options: ApplyStopBuildSpendOptions): 
     triggerSource: triggerSource ?? 'apply_stop_build_spend',
   });
   return next;
+}
+
+/**
+ * Applies up to `maxSteps` build spends atomically through one canonical commit.
+ *
+ * The per-step build spend math/rules are unchanged: this helper simply repeats
+ * the existing `spendIslandRunContractV2EssenceOnStopBuild` operation in-memory
+ * and commits once with the final valid result.
+ */
+export async function applyStopBuildSpendBatch(
+  options: ApplyStopBuildSpendBatchOptions,
+): Promise<ApplyStopBuildSpendBatchResult> {
+  const {
+    session,
+    client,
+    stopIndex,
+    effectiveIslandNumber,
+    maxSteps,
+    spendAmount = 10,
+    triggerSource,
+  } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (stopIndex < 0 || stopIndex >= current.stopBuildStateByIndex.length) {
+    return { record: current, stepsApplied: 0 };
+  }
+
+  const safeMaxSteps = Math.max(1, Math.floor(maxSteps));
+  let nextEssence = current.essence;
+  let nextEssenceLifetimeSpent = current.essenceLifetimeSpent;
+  let nextStopBuildStateByIndex = current.stopBuildStateByIndex;
+  let nextStopStatesByIndex = current.stopStatesByIndex;
+  let stepsApplied = 0;
+
+  for (let stepIndex = 0; stepIndex < safeMaxSteps; stepIndex += 1) {
+    const spendResult = spendIslandRunContractV2EssenceOnStopBuild({
+      islandRunContractV2Enabled: true,
+      stopIndex,
+      spendAmount,
+      essence: nextEssence,
+      essenceLifetimeSpent: nextEssenceLifetimeSpent,
+      stopBuildStateByIndex: nextStopBuildStateByIndex,
+      stopStatesByIndex: nextStopStatesByIndex,
+      effectiveIslandNumber,
+    });
+    if (spendResult.spent < 1) break;
+    nextEssence = spendResult.essence;
+    nextEssenceLifetimeSpent = spendResult.essenceLifetimeSpent;
+    nextStopBuildStateByIndex = spendResult.stopBuildStateByIndex;
+    nextStopStatesByIndex = spendResult.stopStatesByIndex;
+    stepsApplied += 1;
+  }
+
+  if (stepsApplied < 1) {
+    return { record: current, stepsApplied: 0 };
+  }
+
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    essence: nextEssence,
+    essenceLifetimeSpent: nextEssenceLifetimeSpent,
+    stopBuildStateByIndex: nextStopBuildStateByIndex,
+    stopStatesByIndex: nextStopStatesByIndex,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  await commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_stop_build_spend_batch',
+  });
+  return { record: next, stepsApplied };
 }
 
 // ── C3: Island travel ────────────────────────────────────────────────────────

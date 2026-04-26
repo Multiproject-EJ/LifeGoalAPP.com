@@ -225,13 +225,14 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Build spend should include an in-flight guard to prevent overlapping stop_build_spend commits.',
       );
       assert(
-        source.includes('const nextRuntimeState = await applyStopBuildSpend({') &&
+        source.includes('const batchResult = await applyStopBuildSpendBatch({') &&
           source.includes('const latestRuntimeState = getIslandRunStateSnapshot(session);'),
-        'Build spend should await the canonical action and recompute from latest store snapshot before each spend.',
+        'Build spend should await the canonical batch action and recompute from latest store snapshot before each spend.',
       );
       assert(
         source.includes('while (holdBuildSpendActiveRef.current) {') &&
-          source.includes('const spendApplied = await handleSpendEssenceOnBuild(idx);') &&
+          source.includes('const holdBatchSteps = resolveBuildHoldBatchSteps(heldMs);') &&
+          source.includes('const spendApplied = await handleSpendEssenceOnBuild(idx, holdBatchSteps);') &&
           source.includes('await wait(BUILD_HOLD_INITIAL_DELAY_MS);') &&
           source.includes('await wait(resolveBuildHoldRepeatDelayMs(heldMs));') &&
           !source.includes('holdInterval = window.setInterval(() => {'),
@@ -239,15 +240,17 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       );
       assert(
         source.includes('const BUILD_HOLD_INITIAL_DELAY_MS = 400;') &&
+          source.includes('if (heldMs >= 3_000) return 4;') &&
+          source.includes('if (heldMs >= 1_500) return 2;') &&
           source.includes('if (heldMs >= 3_000) return 95;') &&
           source.includes('if (heldMs >= 1_500) return 150;') &&
           source.includes('return 250;'),
-        'Hold-to-build should use an accelerating delay curve (250ms → 150ms → 95ms after thresholds).',
+        'Hold-to-build should use accelerating batch and delay curves as hold duration increases.',
       );
       assert(
         source.includes('aria-disabled={isBuildDisabled}') &&
           source.includes('const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;') &&
-          source.includes('⚒️ Fast build…'),
+          source.includes('⚒️ Max build…'),
         'Build button should expose a busy/disabled state while build spend is in-flight and provide hold feedback.',
       );
     },

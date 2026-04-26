@@ -106,7 +106,7 @@ import {
   applyQaProgressionSnapshot,
   applyShardClaimProgressMarker,
   applyStoryPrologueSeenMarker,
-  applyStopBuildSpend,
+  applyStopBuildSpendBatch,
   applyStopObjectiveProgress,
   applyStopTicketPayment,
   applyWalletDiamondsSet,
@@ -320,6 +320,18 @@ function resolveBuildHoldRepeatDelayMs(heldMs: number) {
   if (heldMs >= 3_000) return 95;
   if (heldMs >= 1_500) return 150;
   return 250;
+}
+
+function resolveBuildHoldBatchSteps(heldMs: number) {
+  if (heldMs >= 3_000) return 4;
+  if (heldMs >= 1_500) return 2;
+  return 1;
+}
+
+function resolveBuildHoldFeedbackLabel(heldMs: number) {
+  if (heldMs >= 3_000) return '⚒️ Max build…';
+  if (heldMs >= 1_500) return '⚒️ Fast build…';
+  return '⚒️ Building…';
 }
 
 function buildHydrationSourceOrder(baseSource: 'local_storage' | 'in_memory', hydrationSource: string) {
@@ -1640,6 +1652,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const marketOwnedBundleSyncDispatchKeyRef = useRef<string | null>(null);
   const [isBuildSpendInFlight, setIsBuildSpendInFlight] = useState(false);
   const [isBuildHoldActive, setIsBuildHoldActive] = useState(false);
+  const [buildHoldFeedbackLabel, setBuildHoldFeedbackLabel] = useState('⚒️ Building…');
   const isIsland120StartupDiagnosticActive = isIsland120StartupDiagnosticTarget(
     runtimeState.currentIslandNumber ?? islandNumber,
   )
@@ -6362,7 +6375,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     updateCompletedStops((current) => current.includes(stopId) ? current : [...current, stopId]);
   };
 
-  const handleSpendEssenceOnBuild = async (stopIndex: number): Promise<boolean> => {
+  const handleSpendEssenceOnBuild = async (stopIndex: number, maxSteps = 1): Promise<boolean> => {
     if (isBuildSpendInFlightRef.current) return false;
     isBuildSpendInFlightRef.current = true;
     setIsBuildSpendInFlight(true);
@@ -6395,15 +6408,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         return false;
       }
 
-      const nextRuntimeState = await applyStopBuildSpend({
+      const batchResult = await applyStopBuildSpendBatch({
         session,
         client,
-        essence: spendResult.essence,
-        essenceLifetimeSpent: spendResult.essenceLifetimeSpent,
-        stopBuildStateByIndex: spendResult.stopBuildStateByIndex,
-        stopStatesByIndex: spendResult.stopStatesByIndex,
-        triggerSource: 'stop_build_spend',
+        stopIndex,
+        effectiveIslandNumber,
+        maxSteps: Math.max(1, Math.floor(maxSteps)),
+        spendAmount: CONTRACT_V2_ESSENCE_SPEND_STEP,
+        triggerSource: maxSteps > 1 ? 'stop_build_spend_batch' : 'stop_build_spend',
       });
+      if (batchResult.stepsApplied < 1) return false;
+      const nextRuntimeState = batchResult.record;
       setRuntimeState(nextRuntimeState);
       runtimeStateRef.current = nextRuntimeState;
 
@@ -6420,11 +6435,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         setLandingText(`🔨 ${stopLabel}: ${nextBuildState.spentEssence}/${nextBuildState.requiredEssence} 🟣 (${remaining} left for L${nextBuildState.buildLevel + 1})`);
       }
       return true;
-    } finally {
-      isBuildSpendInFlightRef.current = false;
-      setIsBuildSpendInFlight(false);
-    }
-    return true;
     } finally {
       isBuildSpendInFlightRef.current = false;
       setIsBuildSpendInFlight(false);
@@ -9149,7 +9159,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </p>
             {isBuildHoldActive && (
               <p className="island-stop-modal__copy" style={{ marginTop: '-0.25rem', marginBottom: '0.6rem', opacity: 0.8 }}>
-                {isBuildSpendInFlight ? '⚒️ Fast build…' : '⚒️ Building…'}
+                {buildHoldFeedbackLabel}
               </p>
             )}
 
@@ -9172,6 +9182,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   holdBuildSpendActiveRef.current = true;
                   holdBuildSpendStartAtMsRef.current = Date.now();
                   setIsBuildHoldActive(true);
+                  setBuildHoldFeedbackLabel('⚒️ Building…');
                   const stopHold = () => {
                     holdBuildSpendActiveRef.current = false;
                     holdBuildSpendStartAtMsRef.current = null;
@@ -9182,7 +9193,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   window.addEventListener('mouseup', stopHold, { once: true });
                   window.addEventListener('touchend', stopHold, { once: true });
                   void (async () => {
-                    const initialSpendApplied = await handleSpendEssenceOnBuild(idx);
+                    const initialSpendApplied = await handleSpendEssenceOnBuild(idx, 1);
                     if (!initialSpendApplied || !holdBuildSpendActiveRef.current) {
                       stopHold();
                       return;
@@ -9199,13 +9210,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         stopHold();
                         return;
                       }
-                      const spendApplied = await handleSpendEssenceOnBuild(idx);
+                      const holdStartedAtMs = holdBuildSpendStartAtMsRef.current ?? Date.now();
+                      const heldMs = Math.max(0, Date.now() - holdStartedAtMs);
+                      const holdBatchSteps = resolveBuildHoldBatchSteps(heldMs);
+                      setBuildHoldFeedbackLabel(resolveBuildHoldFeedbackLabel(heldMs));
+                      const spendApplied = await handleSpendEssenceOnBuild(idx, holdBatchSteps);
                       if (!spendApplied) {
                         stopHold();
                         return;
                       }
-                      const holdStartedAtMs = holdBuildSpendStartAtMsRef.current ?? Date.now();
-                      const heldMs = Math.max(0, Date.now() - holdStartedAtMs);
                       await wait(resolveBuildHoldRepeatDelayMs(heldMs));
                     }
                   })();

@@ -53,6 +53,7 @@ import {
   applyWalletDiamondsDelta,
   applyWalletDiamondsSet,
   applyStopBuildSpend,
+  applyStopBuildSpendBatch,
   applyStopObjectiveProgress,
   applyStopTicketPayment,
   applyWalletShardsDelta,
@@ -2075,6 +2076,143 @@ export const islandRunStateActionsTests: TestCase[] = [
       assert(snapshot.stopBuildStateByIndex[0]?.buildLevel === 1, 'store snapshot should keep updated stop build level');
 
       unsub();
+    },
+  },
+  {
+    name: 'applyStopBuildSpendBatch cannot overspend essence',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 20,
+        essence: 15,
+        essenceLifetimeSpent: 0,
+        stopBuildStateByIndex: [
+          { requiredEssence: 30, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 70, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 90, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 120, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 200, spentEssence: 0, buildLevel: 0 },
+        ],
+      });
+
+      const result = await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 0,
+        effectiveIslandNumber: 1,
+        maxSteps: 5,
+      });
+
+      assertEqual(result.stepsApplied, 2, 'batch should apply available spend until wallet reaches zero');
+      assertEqual(result.record.essence, 0, 'batch should never overspend essence below zero');
+      assertEqual(result.record.essenceLifetimeSpent, 15, 'batch should only add the essence actually spent');
+      assertEqual(result.record.runtimeVersion, 21, 'batch should commit once when at least one step is applied');
+    },
+  },
+  {
+    name: 'applyStopBuildSpendBatch stops at L3 completion',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 33,
+        essence: 200,
+        essenceLifetimeSpent: 0,
+        stopBuildStateByIndex: [
+          { requiredEssence: 10, spentEssence: 0, buildLevel: 2 },
+          { requiredEssence: 70, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 90, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 120, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 200, spentEssence: 0, buildLevel: 0 },
+        ],
+      });
+
+      const result = await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 0,
+        effectiveIslandNumber: 1,
+        maxSteps: 5,
+      });
+
+      assertEqual(result.stepsApplied, 1, 'batch should stop once the stop reaches max build level');
+      assertEqual(result.record.stopBuildStateByIndex[0]?.buildLevel, 3, 'stop should finish at L3');
+      assertEqual(result.record.stopStatesByIndex[0]?.buildComplete, true, 'buildComplete should be true at L3');
+    },
+  },
+  {
+    name: 'applyStopBuildSpendBatch result matches repeated single-step spends',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      const seededStopBuildState = [
+        { requiredEssence: 50, spentEssence: 0, buildLevel: 0 },
+        { requiredEssence: 70, spentEssence: 0, buildLevel: 0 },
+        { requiredEssence: 90, spentEssence: 0, buildLevel: 0 },
+        { requiredEssence: 120, spentEssence: 0, buildLevel: 0 },
+        { requiredEssence: 200, spentEssence: 0, buildLevel: 0 },
+      ] as IslandRunGameStateRecord['stopBuildStateByIndex'];
+      seedState({
+        runtimeVersion: 40,
+        essence: 500,
+        essenceLifetimeSpent: 0,
+        stopBuildStateByIndex: seededStopBuildState,
+      });
+
+      const batchResult = await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 0,
+        effectiveIslandNumber: 1,
+        maxSteps: 3,
+      });
+
+      resetAll();
+      seedState({
+        runtimeVersion: 40,
+        essence: 500,
+        essenceLifetimeSpent: 0,
+        stopBuildStateByIndex: seededStopBuildState,
+      });
+      await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 0,
+        effectiveIslandNumber: 1,
+        maxSteps: 1,
+      });
+      await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 0,
+        effectiveIslandNumber: 1,
+        maxSteps: 1,
+      });
+      const repeatedSingles = await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 0,
+        effectiveIslandNumber: 1,
+        maxSteps: 1,
+      });
+
+      assertEqual(batchResult.record.essence, repeatedSingles.record.essence, 'batch essence should match repeated singles');
+      assertEqual(
+        batchResult.record.essenceLifetimeSpent,
+        repeatedSingles.record.essenceLifetimeSpent,
+        'batch lifetime spent should match repeated singles',
+      );
+      assertEqual(
+        JSON.stringify(batchResult.record.stopBuildStateByIndex),
+        JSON.stringify(repeatedSingles.record.stopBuildStateByIndex),
+        'batch stop build state should match repeated singles',
+      );
+      assertEqual(
+        JSON.stringify(batchResult.record.stopStatesByIndex),
+        JSON.stringify(repeatedSingles.record.stopStatesByIndex),
+        'batch stop state completion flags should match repeated singles',
+      );
     },
   },
 
