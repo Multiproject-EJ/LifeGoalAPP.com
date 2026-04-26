@@ -726,7 +726,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const goldBalance = gamificationProfile?.total_points ?? 0;
   const goldBreakdown = splitGoldBalance(goldBalance);
-  const { spinAvailable } = useDailySpinStatus(supabaseSession?.user?.id);
+  const { spinAvailable, spinsAvailable } = useDailySpinStatus(supabaseSession?.user?.id);
   const luckyRollStatus = useLuckyRollStatus(supabaseSession?.user?.id);
   // Phase 2 (Minigame & Events Consolidation Plan §2.5): when the
   // `todaysOfferSpinEntryEnabled` flag is on, the Daily Spin Wheel moves
@@ -798,10 +798,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
   // Dynamic daily treats inventory based on collection status
   const dailyTreatsInventory = useMemo(() => {
     return {
-      spinsRemaining: spinAvailable ? 1 : 0,
+      spinsRemaining: Math.max(0, Math.floor(spinsAvailable)),
       hatchesRemaining: 1,
     };
-  }, [spinAvailable]);
+  }, [spinsAvailable]);
   
   const todayDailyTreatsKey = getTodayDateKey();
   const hasOpenedDailyTreatsToday = dailyTreatsFirstVisitDate === todayDailyTreatsKey;

@@ -20,6 +20,7 @@ import { islandRunDiceRegenerationTests } from './islandRunDiceRegeneration.test
 import { islandRunStopTicketsTests } from './islandRunStopTickets.test';
 import { islandRunStopTapRoutingTests } from './islandRunStopTapRouting.test';
 import { islandRunShopAffordabilityTests } from './islandRunShopAffordability.test';
+import { islandRunPlaceholderServiceTests } from './islandRunPlaceholderService.test';
 import { islandRunEggSellAdvisorTests } from './islandRunEggSellAdvisor.test';
 import { islandRunBonusTileTests } from './islandRunBonusTile.test';
 import { islandRunActionMutexTests } from './islandRunActionMutex.test';
@@ -39,6 +40,8 @@ import { islandRunShooterControllerBridgeTests } from './islandRunShooterControl
 import { islandRunShooterControllerTelemetryTests } from './islandRunShooterControllerTelemetry.test';
 import { shooterBlitzLaneLogicTests } from './shooterBlitzLaneLogic.test';
 import { islandRunShooterControllerQaMatrixTests } from './islandRunShooterControllerQaMatrix.test';
+import { outsideRewardGatewayTests } from './outsideRewardGateway.test';
+import { todayRewardsParityTests } from './todayRewardsParity.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -64,6 +67,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunStopTickets', tests: islandRunStopTicketsTests },
   { label: 'islandRunStopTapRouting', tests: islandRunStopTapRoutingTests },
   { label: 'islandRunShopAffordability', tests: islandRunShopAffordabilityTests },
+  { label: 'islandRunPlaceholderService', tests: islandRunPlaceholderServiceTests },
   { label: 'islandRunEggSellAdvisor', tests: islandRunEggSellAdvisorTests },
   { label: 'islandRunBonusTile', tests: islandRunBonusTileTests },
   { label: 'islandRunActionMutex', tests: islandRunActionMutexTests },
@@ -83,6 +87,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunShooterControllerTelemetry', tests: islandRunShooterControllerTelemetryTests },
   { label: 'shooterBlitzLaneLogic', tests: shooterBlitzLaneLogicTests },
   { label: 'islandRunShooterControllerQaMatrix', tests: islandRunShooterControllerQaMatrixTests },
+  { label: 'outsideRewardGateway', tests: outsideRewardGatewayTests },
+  { label: 'todayRewardsParity', tests: todayRewardsParityTests },
 ];
 
 async function main() {
