@@ -5046,6 +5046,7 @@
   max-height: 85vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.1);
   font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
@@ -5105,7 +5106,39 @@
   overflow-y: auto;
   padding: 0.5rem 0.75rem 1rem;
   flex: 1;
+  min-height: 0;
   -webkit-overflow-scrolling: touch;
+}
+
+.island-run-debug-panel__footer {
+  flex-shrink: 0;
+  padding: 0.55rem 0.75rem calc(0.55rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(7, 9, 20, 0.92);
+}
+
+.island-run-debug-panel__footer-close-btn {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 0.52rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .island-run-debug-panel-backdrop {
+    padding-top: max(0.4rem, env(safe-area-inset-top, 0px));
+    padding-bottom: max(0.4rem, env(safe-area-inset-bottom, 0px));
+    align-items: center;
+  }
+
+  .island-run-debug-panel {
+    width: min(96vw, 520px);
+    max-height: 94dvh;
+  }
 }
 
 .island-run-debug-panel__section {

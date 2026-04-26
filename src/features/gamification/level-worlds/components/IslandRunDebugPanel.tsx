@@ -377,6 +377,15 @@ export function IslandRunDebugPanel({
             </details>
           ))}
         </div>
+        <div className="island-run-debug-panel__footer">
+          <button
+            type="button"
+            className="island-run-debug-panel__footer-close-btn"
+            onClick={onClose}
+          >
+            Close Debug Panel
+          </button>
+        </div>
       </div>
     </div>
   );
