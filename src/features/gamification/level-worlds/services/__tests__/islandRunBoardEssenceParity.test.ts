@@ -21,7 +21,45 @@ async function readBoardStageSource(): Promise<string> {
   return fsMod.readFileSync(stagePath, 'utf8');
 }
 
+async function readVisionQuestAdapterSource(): Promise<string> {
+  // @ts-ignore island-run test tsconfig omits node type libs
+  const fsMod = await import('fs');
+  // @ts-ignore island-run test tsconfig omits node type libs
+  const pathMod = await import('path');
+  const adapterPath = pathMod.resolve(process.cwd(), 'src/features/gamification/games/vision-quest/VisionQuestIslandRunAdapter.tsx');
+  return fsMod.readFileSync(adapterPath, 'utf8');
+}
+
+async function readVisionQuestSource(): Promise<string> {
+  // @ts-ignore island-run test tsconfig omits node type libs
+  const fsMod = await import('fs');
+  // @ts-ignore island-run test tsconfig omits node type libs
+  const pathMod = await import('path');
+  const gamePath = pathMod.resolve(process.cwd(), 'src/features/gamification/games/vision-quest/VisionQuest.tsx');
+  return fsMod.readFileSync(gamePath, 'utf8');
+}
+
 export const islandRunBoardEssenceParityTests: TestCase[] = [
+  {
+    name: 'event ticket migration visibility surfaces activeEventTickets vs legacy spinTokens without changing launch economy wiring',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('const activeEventTickets = activeTimedEventId') &&
+          source.includes("(runtimeState.minigameTicketsByEvent?.[activeTimedEventId] ?? 0)") &&
+          source.includes('const hasLegacyEventTicketDivergence = Boolean(activeTimedEventId) && activeEventTickets !== spinTokens;'),
+        'Board should derive activeEventTickets from minigameTicketsByEvent for migration visibility.',
+      );
+      assert(
+        source.includes('dualWriteMinigameTicketsEventId: chainResult.state.activeTimedEvent?.eventId ?? null'),
+        'Reward-bar claim grants should dual-write timed-event tickets using the activeTimedEvent.eventId key.',
+      );
+      assert(
+        source.includes('ticketsAvailable: spinTokens'),
+        'Minigame launch affordability should remain wired to legacy spinTokens in this read-only migration phase.',
+      );
+    },
+  },
   {
     name: 'encounter/boss/sanctuary/wisdom essence awards remain direct runtime-state increments (legacy parity)',
     run: async () => {
@@ -148,6 +186,24 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
     },
   },
   {
+    name: 'roll sync guard: hydration/reconcile paths skip token snapshot publish while roll sync is pending',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('if (isAnimatingRollRef.current || isRollSyncPendingRef.current) {'),
+        'Reconcile guard should block while roll animation OR roll-sync pending is active.',
+      );
+      assert(
+        source.includes("logIslandRunEntryDebug('island_run_runtime_reconcile_skipped_roll_sync_pending'"),
+        'Roll-sync reconcile skip should emit diagnostics for token overwrite investigations.',
+      );
+      assert(
+        source.includes("skipReason: 'roll_sync_pending'"),
+        'Roll-sync reconcile skip diagnostics should label the reason as roll_sync_pending.',
+      );
+    },
+  },
+  {
     name: 'tile reward success path updates visible runtimeState essence mirror (not only error path)',
     run: async () => {
       const source = await readBoardSource();
@@ -176,7 +232,7 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
     },
   },
   {
-    name: 'passive regen no-op should not overwrite runtimeState mirror with store snapshot',
+    name: 'passive regen pre-roll no-op should return fresh store dice for immediate roll affordability',
     run: async () => {
       const source = await readBoardSource();
       assert(
@@ -185,8 +241,55 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Passive regen should explicitly short-circuit no-op ticks before full runtime mirror writes.',
       );
       assert(
-        source.includes('return runtimeStateRef.current.dicePool;'),
-        'Passive regen no-op should preserve current runtime mirror instead of reapplying store snapshot.',
+        source.includes('const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;') &&
+          source.includes('const isIntervalNoop = reason === \'interval\';') &&
+          source.includes('suppressedIntervalNoopLogs'),
+        'Passive regen interval no-op diagnostics should be throttled and report suppressed counts to reduce log spam.',
+      );
+      assert(
+        source.includes('runtimeStateRef.current = nextRuntimeState;') &&
+          source.includes('return nextRuntimeState.dicePool;'),
+        'Passive regen no-op should return fresh store dice so immediate post-purchase roll checks cannot read stale zero dice.',
+      );
+    },
+  },
+  {
+    name: 'build spend UI path serializes taps/hold and uses canonical latest snapshot checks',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('const isBuildSpendInFlightRef = useRef(false);') &&
+          source.includes('if (isBuildSpendInFlightRef.current) return false;'),
+        'Build spend should include an in-flight guard to prevent overlapping stop_build_spend commits.',
+      );
+      assert(
+        source.includes('const batchResult = await applyStopBuildSpendBatch({') &&
+          source.includes('const latestRuntimeState = getIslandRunStateSnapshot(session);'),
+        'Build spend should await the canonical batch action and recompute from latest store snapshot before each spend.',
+      );
+      assert(
+        source.includes('while (holdBuildSpendActiveRef.current) {') &&
+          source.includes('const holdBatchSteps = resolveBuildHoldBatchSteps(heldMs);') &&
+          source.includes('const spendApplied = await handleSpendEssenceOnBuild(idx, holdBatchSteps);') &&
+          source.includes('await wait(BUILD_HOLD_INITIAL_DELAY_MS);') &&
+          source.includes('await wait(resolveBuildHoldRepeatDelayMs(heldMs));') &&
+          !source.includes('holdInterval = window.setInterval(() => {'),
+        'Hold-to-build should sequence spends by awaiting each spend result rather than firing blind interval commits.',
+      );
+      assert(
+        source.includes('const BUILD_HOLD_INITIAL_DELAY_MS = 400;') &&
+          source.includes('if (heldMs >= 3_000) return 4;') &&
+          source.includes('if (heldMs >= 1_500) return 2;') &&
+          source.includes('if (heldMs >= 3_000) return 95;') &&
+          source.includes('if (heldMs >= 1_500) return 150;') &&
+          source.includes('return 250;'),
+        'Hold-to-build should use accelerating batch and delay curves as hold duration increases.',
+      );
+      assert(
+        source.includes('aria-disabled={isBuildDisabled}') &&
+          source.includes('const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;') &&
+          source.includes('⚒️ Max build…'),
+        'Build button should expose a busy/disabled state while build spend is in-flight and provide hold feedback.',
       );
     },
   },
@@ -201,6 +304,73 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
     },
   },
   {
+    name: 'completed-stop sync effect pre-dispatch guard prevents no-op action calls',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('const normalizedCompletedStops = normalizeCompletedStopsForSync(completedStops);') &&
+          source.includes('if (areStringArraysEqual(persistedStops, normalizedCompletedStops)) {'),
+        'Completed-stop sync effect should short-circuit semantic no-op BEFORE dispatch.',
+      );
+      assert(
+        source.includes('const dispatchKey = `${islandKey}::${normalizedCompletedStops.join(\'|\')}`;'),
+        'Completed-stop sync effect should build a stable dispatch key for rerender dedupe.',
+      );
+      assert(
+        source.includes('const completedStopsSyncRequestedRef = useRef(false);') &&
+          source.includes('if (!completedStopsSyncRequestedRef.current) return;'),
+        'Completed-stop sync effect should require an explicit sync request before dispatching.',
+      );
+      assert(
+        source.includes('const changed = !areStringArraysEqual(current, next);') &&
+          source.includes('if (changed && options?.requestSync !== false) {'),
+        'updateCompletedStops should request sync only when completedStops actually changed.',
+      );
+      assert(
+        source.includes('const [hasCompletedStopsHydrationGate, setHasCompletedStopsHydrationGate] = useState(false);') &&
+          source.includes('if (!hasCompletedStopsHydrationGate) return;') &&
+          source.includes('completedStopsSyncRequestedRef.current = false;'),
+        'Completed-stop sync effect should remain blocked until hydration gate opens and should drop hydration-time sync requests.',
+      );
+      assert(
+        source.includes('if (completedStopsSyncDispatchKeyRef.current === dispatchKey) {') &&
+          source.includes('completedStopsSyncDispatchKeyRef.current = dispatchKey;'),
+        'Completed-stop sync effect should suppress repeated dispatch while the same target sync is in flight.',
+      );
+      assert(
+        source.includes('const nextRuntimeState = syncCompletedStopsForIsland({'),
+        'Completed-stop sync effect should still dispatch once when a semantic difference exists.',
+      );
+    },
+  },
+  {
+    name: 'market-owned bundle sync effect pre-dispatch guard prevents no-op action calls',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('const marketOwnedBundleSyncRequestedRef = useRef(false);') &&
+          source.includes('if (!marketOwnedBundleSyncRequestedRef.current) return;'),
+        'Market-owned bundle sync effect should require an explicit sync request before dispatching.',
+      );
+      assert(
+        source.includes('const [hasMarketOwnedBundleHydrationGate, setHasMarketOwnedBundleHydrationGate] = useState(false);') &&
+          source.includes('if (!hasMarketOwnedBundleHydrationGate) return;') &&
+          source.includes('marketOwnedBundleSyncRequestedRef.current = false;'),
+        'Market-owned bundle sync effect should remain blocked until hydration gate opens and should drop hydration-time sync requests.',
+      );
+      assert(
+        source.includes('const dispatchKey = `${islandKey}::dice_bundle:${localOwned ? 1 : 0}`;') &&
+          source.includes('if (marketOwnedBundleSyncDispatchKeyRef.current === dispatchKey) {') &&
+          source.includes('marketOwnedBundleSyncDispatchKeyRef.current = dispatchKey;'),
+        'Market-owned bundle sync effect should suppress repeated dispatch while the same target sync is in flight.',
+      );
+      assert(
+        source.includes('if (persistedOwned === localOwned) {'),
+        'Market-owned bundle sync effect should short-circuit semantic no-op BEFORE dispatch.',
+      );
+    },
+  },
+  {
     name: 'landing burst FX should be anchored to landing tile position (not stale token anim state)',
     run: async () => {
       const stageSource = await readBoardStageSource();
@@ -211,6 +381,64 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       assert(
         !stageSource.includes('setBurstPos({ x: tokenAnim.animState.x, y: tokenAnim.animState.y });'),
         'Landing burst should not read tokenAnim.animState in onLand callback (can be one frame stale).',
+      );
+    },
+  },
+  {
+    name: 'vision quest island-run adapter does not map landmark completion into event tokens',
+    run: async () => {
+      const source = await readVisionQuestAdapterSource();
+      assert(
+        source.includes('rewardContext="island_run_landmark"'),
+        'Vision Quest Island Run adapter should opt into landmark reward context.',
+      );
+      assert(
+        source.includes('dice: rewards.dice') && !source.includes('spinTokens: rewards.tokens'),
+        'Vision Quest Island Run adapter should grant dice only and not map tokens into spinTokens/event tokens.',
+      );
+    },
+  },
+  {
+    name: 'vision quest landmark reward context suppresses coins/tokens and token emoji reward card',
+    run: async () => {
+      const source = await readVisionQuestSource();
+      assert(
+        source.includes("rewardContext?: 'default' | 'island_run_landmark'"),
+        'Vision Quest should expose a landmark reward-context switch for Island Run.',
+      );
+      assert(
+        source.includes("rewardContext === 'island_run_landmark'") &&
+          source.includes('coins: 0') &&
+          source.includes('tokens: 0'),
+        'Landmark reward context should suppress coins/tokens so event-token rewards are not granted by default.',
+      );
+    },
+  },
+  {
+    name: 'timed-event token presentation uses canonical resolver across reward bar, launcher, and reward popups',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('const timedEventTokenPresentation = resolveEventTokenPresentation(activeTimedEvent?.eventType ?? null);') &&
+          source.includes('const timedEventTokenIcon = timedEventTokenPresentation.icon;'),
+        'Board should resolve a canonical timed-event token presentation from active event metadata.',
+      );
+      assert(
+        source.includes("p.rewardKind === 'minigame_tokens' ? timedEventTokenIcon : REWARD_KIND_ICON[p.rewardKind]") &&
+          source.includes("nextRewardKind === 'minigame_tokens' ? timedEventTokenIcon : nextRewardIcon"),
+        'Reward bar should use canonical token icon for minigame-token rewards.',
+      );
+      assert(
+        source.includes('{spinTokens} {timedEventTokenIcon}') &&
+          !source.includes('{spinTokens} 🎫'),
+        'Launcher token badge should use canonical token icon (no hardcoded ticket emoji).',
+      );
+      assert(
+        source.includes('`+${totalMinigameTokens} ${timedEventTokenIcon}`') &&
+          source.includes('{timedEventTokenIcon} {formatIslandRunSpinTokenReward(') &&
+          !source.includes('`+${totalMinigameTokens} 🎫`') &&
+          !source.includes('island-encounter__reward-item">🌀'),
+        'Reward popup/message token copy should use canonical token icon and remove hardcoded token emojis.',
       );
     },
   },
