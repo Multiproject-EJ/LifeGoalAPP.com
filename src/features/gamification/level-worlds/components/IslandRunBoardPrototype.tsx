@@ -1645,6 +1645,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const pendingRuntimeStateTraceSourceRef = useRef<string | null>(null);
   const regenIntervalNoopLogLastAtMsRef = useRef<number>(0);
   const regenIntervalNoopLogSuppressedCountRef = useRef<number>(0);
+  const islandClearCelebrationShownForVisitRef = useRef<string | null>(null);
   const isBuildSpendInFlightRef = useRef(false);
   const holdBuildSpendActiveRef = useRef(false);
   const holdBuildSpendStartAtMsRef = useRef<number | null>(null);
@@ -3979,6 +3980,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         hatcheryEggResolved: islandEggSlotUsed,
       })
     : legacyIsCurrentIslandFullyCleared;
+  const islandClearVisitKey = `${runtimeState.cycleIndex}:${islandNumber}`;
   const islandsClearedCount = useMemo(
     () => resolveIslandClearsCount({
       currentIslandNumber: islandNumber,
@@ -4015,6 +4017,44 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const { nextCheapestIndex: buildPanelNextCheapestIndex } = useMemo(() => (
     resolveNextCheapestIndex({ remainingCosts: buildPanelRemainingToFullByIndex })
   ), [buildPanelRemainingToFullByIndex]);
+  const showIslandClearCelebrationFromAnywhere = useCallback((source: string) => {
+    if (islandClearCelebrationShownForVisitRef.current === islandClearVisitKey) return;
+    islandClearCelebrationShownForVisitRef.current = islandClearVisitKey;
+    const bossReward = getBossReward(islandNumber);
+    logGameSession(session.user.id, {
+      gameId: 'shooter_blitz',
+      action: 'complete',
+      timestamp: new Date().toISOString(),
+      metadata: {
+        stage: 'island_run_boss_island_cleared',
+        island_number: islandNumber,
+        source,
+        rewards_granted: { dice: bossReward.dice, essence: bossReward.essence },
+      },
+    });
+    setShowIslandClearCelebration(true);
+    setIslandClearStats({
+      islandNumber,
+      diceEarned: bossReward.dice,
+      essenceEarned: bossReward.essence,
+      stopsCleared: 5,
+      pendingNextIsland: islandNumber + 1,
+      isCycleCapstone: islandNumber % 120 === 0,
+    });
+  }, [islandClearVisitKey, islandNumber, session.user.id]);
+
+  useEffect(() => {
+    if (!ISLAND_RUN_CONTRACT_V2_ENABLED || !hasHydratedRuntimeState) return;
+    if (showIslandClearCelebration || showTravelOverlay) return;
+    if (!isCurrentIslandFullyCleared) return;
+    showIslandClearCelebrationFromAnywhere('global_full_clear_trigger');
+  }, [
+    hasHydratedRuntimeState,
+    isCurrentIslandFullyCleared,
+    showIslandClearCelebration,
+    showIslandClearCelebrationFromAnywhere,
+    showTravelOverlay,
+  ]);
   const isEnergyDepletedForRoll = isIslandRunRollEnergyDepleted({
     dicePool,
     dicePerRoll: effectiveDiceCost,
@@ -5874,7 +5914,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     const rewardText = `Boss challenge resolved: +${bossReward.dice} dice, +${bossReward.essence} essence${bossReward.spinTokens > 0 ? `, ${formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: bossReward.spinTokens })}` : ''}.`;
     setBossRewardSummary(rewardText);
-    setLandingText(`${rewardText} Claim island clear to travel.`);
+    setLandingText(`${rewardText} Boss defeated. Finish building all landmarks to Level 3 to clear the island.`);
 
     const record = applyBossTrialResolvedMarker({
       session,
@@ -6326,6 +6366,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setIslandIntention('');
     setShowIslandClearCelebration(false);
     setIslandClearStats(null);
+    islandClearCelebrationShownForVisitRef.current = null;
     // M16C: islandShards, shardTierIndex, shardClaimCount, shardMilestoneReached, and
     // pendingClaimTierIndex are NOT reset on island travel — they are lifetime-cumulative
     // and persist across islands per docs/13_COLLECTIBLE_PROGRESS_BAR.md §3.
@@ -6535,32 +6576,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           hatcheryEggResolved: islandEggSlotUsed,
         });
 
-        if (nowFullyCleared) {
-          const bossReward = getBossReward(islandNumber);
-          logGameSession(session.user.id, {
-            gameId: 'shooter_blitz',
-            action: 'complete',
-            timestamp: new Date().toISOString(),
-            metadata: {
-              stage: 'island_run_boss_island_cleared',
-              island_number: islandNumber,
-              rewards_granted: { dice: bossReward.dice, essence: bossReward.essence },
-            },
-          });
-          setShowIslandClearCelebration(true);
-          setIslandClearStats({
-            islandNumber,
-            diceEarned: bossReward.dice,
-            essenceEarned: bossReward.essence,
-            stopsCleared: completedStops.length + 1,
-            pendingNextIsland: islandNumber + 1,
-            isCycleCapstone: islandNumber % 120 === 0,
-          });
-          // Travel is now gated on the celebration CTA; see
-          // handleTravelFromCelebration.
-        } else {
+        if (!nowFullyCleared) {
           setLandingText('👾 Boss defeated, but full rewards are locked. Return to Build and upgrade every landmark to Level 3 to claim island clear.');
           setActiveStopId(null);
+        } else {
+          setLandingText('👾 Boss defeated! Island clear is ready.');
         }
         return;
       }
@@ -8587,7 +8607,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         </p>
                         <p className="island-boss-trial__next-hint">
                           {isCurrentIslandFullyCleared
-                            ? <>Tap <strong>Claim Island Clear</strong> to celebrate and travel.</>
+                            ? <>Island clear is ready. A full-screen travel prompt will appear automatically.</>
                             : <>Boss defeated. <strong>Full island-clear rewards are locked</strong> until every landmark is upgraded to Level {MAX_BUILD_LEVEL}.</>}
                         </p>
                       </div>
@@ -8648,7 +8668,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   onClick={handleCompleteActiveStop}
                   disabled={!bossTrialResolved || bossTrialPhase === 'in_progress'}
                 >
-                  {isCurrentIslandFullyCleared ? '🎉 Claim Island Clear' : '🔒 Full Rewards Locked — Finish Landmark Upgrades'}
+                  {isCurrentIslandFullyCleared ? '✅ Boss Stop Complete' : '🔒 Full Rewards Locked — Finish Landmark Upgrades'}
                 </button>
               ) : null}
               {activeStop.stopId === 'boss' && openedStopIsPlayable && !isCurrentIslandFullyCleared ? (
@@ -9052,15 +9072,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <p className="island-clear-celebration__confetti" aria-hidden="true">
               {islandClearStats.isCycleCapstone ? '🌌✨🏆✨🌌' : '🎉✨🏆✨🎉'}
             </p>
-            <p className="island-clear-celebration__eyebrow">
-              {islandClearStats.isCycleCapstone
-                ? `Cycle ${Math.floor((islandClearStats.islandNumber - 1) / 120) + 1} Complete!`
-                : 'Boss Defeated! Island Cleared!'}
-            </p>
+            <p className="island-clear-celebration__eyebrow">Island Clear Ready</p>
             <p className="island-clear-celebration__title" id="island-clear-celebration-title">
-              {islandClearStats.isCycleCapstone
-                ? `🌠 Chapter Close — Island ${islandClearStats.islandNumber}`
-                : `🏆 Island ${islandClearStats.islandNumber} Complete!`}
+              🎉 Island Cleared!
             </p>
             <div className="island-clear-celebration__rewards">
               <span className="island-clear-celebration__reward-item">🎲 +{islandClearStats.diceEarned}</span>
@@ -9068,9 +9082,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <span className="island-clear-celebration__reward-item">🔷 +3</span>
             </div>
             <p className="island-clear-celebration__stops">
-              {islandClearStats.isCycleCapstone
-                ? `✅ ${islandClearStats.stopsCleared} stops cleared · 🧭 A new cycle awaits on the far horizon.`
-                : `✅ ${islandClearStats.stopsCleared} stops cleared · 🛍️ Market Tier 2 unlocked`}
+              ✅ {islandClearStats.stopsCleared} stops cleared · Island {islandClearStats.islandNumber} complete
             </p>
             <div className="island-clear-celebration__actions">
               <button
@@ -9079,9 +9091,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 onClick={handleTravelFromCelebration}
                 autoFocus
               >
-                {islandClearStats.isCycleCapstone
-                  ? `🌌 Begin Cycle ${Math.floor((islandClearStats.islandNumber - 1) / 120) + 2}`
-                  : `⛵ Travel to Island ${islandClearStats.pendingNextIsland}`}
+                👉 Travel to Next Island
               </button>
             </div>
           </div>
@@ -9292,42 +9302,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 );
               })}
             </div>
-
-            {isCurrentIslandFullyCleared && (
-              <div style={{ marginTop: '1rem' }}>
-                <button
-                  type="button"
-                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                  onClick={() => {
-                    setShowBuildPanel(false);
-                    const bossReward = getBossReward(islandNumber);
-                    logGameSession(session.user.id, {
-                      gameId: 'shooter_blitz',
-                      action: 'complete',
-                      timestamp: new Date().toISOString(),
-                      metadata: {
-                        stage: 'island_run_boss_island_cleared',
-                        island_number: islandNumber,
-                        rewards_granted: { dice: bossReward.dice, essence: bossReward.essence },
-                      },
-                    });
-                    setShowIslandClearCelebration(true);
-                    setIslandClearStats({
-                      islandNumber,
-                      diceEarned: bossReward.dice,
-                      essenceEarned: bossReward.essence,
-                      stopsCleared: 5,
-                      pendingNextIsland: islandNumber + 1,
-                      isCycleCapstone: islandNumber % 120 === 0,
-                    });
-                    // Travel is gated behind the celebration CTA; see
-                    // handleTravelFromCelebration.
-                  }}
-                >
-                  🎉 Claim Island Clear!
-                </button>
-              </div>
-            )}
 
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored" style={{ marginTop: '0.75rem' }}>
               <button
