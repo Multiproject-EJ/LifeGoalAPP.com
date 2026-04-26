@@ -7171,6 +7171,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         <div className="island-run-prototype__always-controls">
             <button
               type="button"
+              className="island-run-prototype__hud-close-btn"
+              onClick={() => setIsHudCollapsed(true)}
+              aria-label="Collapse HUD overlay"
+            >
+              Close HUD ✕
+            </button>
+            <button
+              type="button"
               className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'} ${rollButtonInteractionClass}`.trim()}
               onClick={handleRollButtonClick}
               disabled={Boolean(rollDisabledReason)}
