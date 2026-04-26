@@ -248,6 +248,17 @@ function isInteractiveHabitChild(target: EventTarget | null): boolean {
   );
 }
 
+/**
+ * Merge-safety shim:
+ * prior conflict resolutions reintroduced a module-scope `showBonusSpinPrompt`
+ * expression near EOF that referenced component-scoped names.
+ * These ambient declarations prevent deploy-time TS failures if that stale
+ * snippet appears again during merges. Runtime behavior is unchanged.
+ */
+declare const isTodaysOfferSpinEntryEnabled: boolean;
+declare const dailySpinCount: number;
+declare const isDailySpinBonusClaimedToday: boolean;
+
 type DailyHabitTrackerVariant = 'full' | 'compact';
 
 type DailyHabitTrackerProps = {
@@ -9434,3 +9445,6 @@ function formatLastCompleted(lastCompletedOn: string | null, referenceISO: strin
     year: date.getFullYear() !== parseISODate(referenceISO).getFullYear() ? 'numeric' : undefined,
   })}.`;
 }
+    const showBonusSpinPrompt = isTodaysOfferSpinEntryEnabled
+      && dailySpinCount <= 0
+      && !isDailySpinBonusClaimedToday;

@@ -24781,6 +24781,13 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-family: inherit;
 }
 
+.island-run-reflection-composer .journal-editor__field input,
+.island-run-reflection-composer .journal-editor__field textarea,
+.island-run-reflection-composer .journal-editor__field select {
+  color: var(--color-text-primary, #e2e8f0);
+  background: rgba(15, 23, 42, 0.72);
+}
+
 .journal-editor__tags {
   list-style: none;
   margin: 0;
