@@ -9422,3 +9422,6 @@ function formatLastCompleted(lastCompletedOn: string | null, referenceISO: strin
     year: date.getFullYear() !== parseISODate(referenceISO).getFullYear() ? 'numeric' : undefined,
   })}.`;
 }
+    const showBonusSpinPrompt = isTodaysOfferSpinEntryEnabled
+      && dailySpinCount <= 0
+      && !isDailySpinBonusClaimedToday;
