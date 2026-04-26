@@ -25,11 +25,12 @@ export function IslandRunMinigameLauncher({
   const entry = getMinigame(minigameId);
 
   if (!entry) {
-    // Fallback: unknown minigame, treat as abandoned
+    // Safe fallback: unknown minigame stays in-board and offers explicit close.
     return (
-      <div style={{ color: '#fff', padding: '2rem', textAlign: 'center' }}>
-        <p>Minigame &quot;{minigameId}&quot; not found.</p>
-        <button onClick={() => onComplete({ completed: false })}>Close</button>
+      <div style={{ color: '#fff', padding: '2rem', textAlign: 'center', background: 'rgba(5, 10, 24, 0.92)', minHeight: '100%' }}>
+        <h3 style={{ marginTop: 0 }}>🎮 Minigame Unavailable</h3>
+        <p>Minigame &quot;{minigameId}&quot; is missing. This safe placeholder keeps you inside Island Run.</p>
+        <button onClick={() => onComplete({ completed: false })}>Close and return to board</button>
       </div>
     );
   }

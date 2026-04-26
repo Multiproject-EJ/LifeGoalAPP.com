@@ -678,6 +678,10 @@
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
   position: relative;
   z-index: 20;
+  max-height: calc(100dvh - 12rem - env(safe-area-inset-bottom, 0px));
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .island-run-prototype__header h2 {
@@ -934,6 +938,17 @@
   gap: 0.5rem;
   align-items: center;
   padding: 0.4rem 0.75rem;
+}
+
+.island-run-prototype__hud-close-btn {
+  flex: 0 0 auto;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 200, 200, 0.5);
+  background: rgba(100, 35, 45, 0.7);
+  color: #ffe5e8;
+  font-weight: 700;
+  font-size: 0.7rem;
+  padding: 0.32rem 0.6rem;
 }
 
 .island-run-prototype__status-row {
@@ -2161,9 +2176,17 @@
 }
 
 .island-orbit-stop__state-chip--completed {
-  background: rgba(20, 78, 38, 0.94);
-  border-color: rgba(170, 255, 195, 0.7);
-  color: #d8ffe5;
+  background: linear-gradient(180deg, rgba(34, 146, 70, 0.98), rgba(11, 82, 38, 0.98));
+  border-color: rgba(208, 255, 226, 0.98);
+  color: #f2fff7;
+  box-shadow: 0 0 0 1px rgba(186, 255, 210, 0.52), 0 0 18px rgba(120, 255, 170, 0.52);
+}
+
+.island-orbit-stop__state-chip--build_pending {
+  background: linear-gradient(180deg, rgba(124, 66, 22, 0.96), rgba(96, 42, 15, 0.96));
+  border-color: rgba(255, 183, 128, 0.92);
+  color: #fff5dd;
+  box-shadow: 0 0 0 1px rgba(255, 166, 112, 0.5), 0 0 12px rgba(255, 129, 72, 0.44);
 }
 
 .island-orbit-stop__state-chip--ticket_required {
@@ -2295,8 +2318,53 @@
 }
 
 .island-orbit-stop--completed {
-  border-color: rgba(149, 255, 149, 0.95);
-  background: rgba(18, 56, 26, 0.9);
+  border-color: rgba(166, 255, 178, 0.98);
+  background: linear-gradient(180deg, rgba(21, 112, 48, 0.97), rgba(12, 68, 30, 0.97));
+  box-shadow: 0 0 0 2px rgba(166, 255, 178, 0.64), 0 0 24px rgba(125, 255, 165, 0.58);
+}
+
+.island-orbit-stop--fully-complete {
+  box-shadow: 0 0 0 2px rgba(193, 255, 206, 0.72), 0 0 28px rgba(125, 255, 165, 0.7);
+}
+
+.island-orbit-stop--completed::after {
+  content: '✔';
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 0.62rem;
+  font-weight: 900;
+  color: #093019;
+  background: #9bffc0;
+  border: 1px solid rgba(14, 74, 38, 0.7);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.island-orbit-stop--build_pending {
+  border-color: rgba(255, 205, 130, 0.95);
+  background: linear-gradient(180deg, rgba(108, 58, 20, 0.94), rgba(74, 36, 16, 0.94));
+  box-shadow: 0 0 0 1px rgba(255, 205, 130, 0.54), 0 0 16px rgba(255, 142, 84, 0.42);
+}
+
+.island-orbit-stop--build-return {
+  animation: island-build-return-pulse 1.25s ease-in-out infinite;
+}
+
+@keyframes island-build-return-pulse {
+  0% { box-shadow: 0 0 0 1px rgba(255, 205, 130, 0.54), 0 0 12px rgba(255, 142, 84, 0.34); }
+  60% { box-shadow: 0 0 0 2px rgba(255, 186, 118, 0.7), 0 0 20px rgba(255, 111, 52, 0.56); }
+  100% { box-shadow: 0 0 0 1px rgba(255, 205, 130, 0.54), 0 0 12px rgba(255, 142, 84, 0.34); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-orbit-stop--build-return {
+    animation: none;
+  }
 }
 
 .island-orbit-stop--locked {
@@ -4939,16 +5007,16 @@
 
 .build-panel__level-bar {
   display: flex;
-  gap: 4px;
-  margin-top: 0.15rem;
+  gap: 6px;
+  margin-top: 0.24rem;
 }
 
 .build-panel__level-pip {
-  height: 5px;
+  height: 7px;
   flex: 1;
-  border-radius: 3px;
+  border-radius: 4px;
   background: rgba(197, 172, 255, 0.2);
-  transition: background 0.3s;
+  transition: background 0.3s, transform 0.2s;
 }
 
 .build-panel__level-pip--done {
@@ -4966,8 +5034,9 @@
 }
 
 .build-panel__building-objective {
-  font-size: 0.74rem;
-  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.79rem;
+  font-weight: 700;
+  color: rgba(255, 238, 188, 0.88);
 }
 
 /* ── Debug Panel ────────────────────────────────────────────────────────── */
@@ -4992,6 +5061,7 @@
   max-height: 85vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.1);
   font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
@@ -5051,7 +5121,39 @@
   overflow-y: auto;
   padding: 0.5rem 0.75rem 1rem;
   flex: 1;
+  min-height: 0;
   -webkit-overflow-scrolling: touch;
+}
+
+.island-run-debug-panel__footer {
+  flex-shrink: 0;
+  padding: 0.55rem 0.75rem calc(0.55rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(7, 9, 20, 0.92);
+}
+
+.island-run-debug-panel__footer-close-btn {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 0.52rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .island-run-debug-panel-backdrop {
+    padding-top: max(0.4rem, env(safe-area-inset-top, 0px));
+    padding-bottom: max(0.4rem, env(safe-area-inset-bottom, 0px));
+    align-items: center;
+  }
+
+  .island-run-debug-panel {
+    width: min(96vw, 520px);
+    max-height: 94dvh;
+  }
 }
 
 .island-run-debug-panel__section {
