@@ -39,26 +39,6 @@ function segmentPath(cx: number, cy: number, r: number, startDeg: number, endDeg
 }
 
 /* ------------------------------------------------------------------ */
-/*  Rarity helpers                                                     */
-/* ------------------------------------------------------------------ */
-
-type RarityTier = 'common' | 'uncommon' | 'rare' | 'legendary';
-
-function getRarity(seg: WheelSegment): RarityTier {
-  if (seg.details?.rarity === 'legendary' || seg.type === 'mystery') return 'legendary';
-  if (seg.details?.rarity === 'rare' || seg.type === 'treasure_chest') return 'rare';
-  if (seg.wheelSize === 'large') return 'uncommon';
-  return 'common';
-}
-
-const RARITY_META: Record<RarityTier, { label: string; dot: string }> = {
-  common:    { label: 'Common',    dot: '⚪' },
-  uncommon:  { label: 'Uncommon',  dot: '🟢' },
-  rare:      { label: 'Rare',      dot: '🟡' },
-  legendary: { label: 'Legendary', dot: '🟣' },
-};
-
-/* ------------------------------------------------------------------ */
 /*  SVG Wheel                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -444,6 +424,8 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
       ? 'Chest opened! Essence + Shards + Dice added.'
       : wonPrize.type === 'mystery'
         ? 'Mystery revealed! Bonus reward added.'
+        : wonPrize.type === 'game_tokens'
+          ? 'Game Tokens bonus added (non-event currency).'
         : `${wonPrize.label} added to your account!`
     : '';
 
@@ -623,42 +605,6 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
           </div>
         )}
 
-        {/* Prize legend grouped by rarity */}
-        <div className="new-daily-spin-modal__legend">
-          <h4>Today&apos;s Prizes</h4>
-          {(['legendary', 'rare', 'uncommon', 'common'] as RarityTier[]).map((tier) => {
-            const items = wheelSegments.filter((s) => getRarity(s) === tier);
-            if (items.length === 0) return null;
-            return (
-              <div key={tier} className="new-daily-spin-modal__legend-tier">
-                <span className="new-daily-spin-modal__legend-tier-label">
-                  {RARITY_META[tier].dot} {RARITY_META[tier].label}
-                </span>
-                <div className="new-daily-spin-modal__legend-grid">
-                  {items.map((prize) => (
-                    <div
-                      key={`${prize.type}-${prize.value}-${prize.label}`}
-                      className={`new-daily-spin-modal__legend-item${
-                        wonPrize &&
-                        wonPrize.type === prize.type &&
-                        wonPrize.value === prize.value
-                          ? ' new-daily-spin-modal__legend-item--won'
-                          : ''
-                      }`}
-                    >
-                      <span className="new-daily-spin-modal__legend-icon">
-                        {prize.icon}
-                      </span>
-                      <span className="new-daily-spin-modal__legend-name">
-                        {prize.label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
       </div>
     </div>
   );

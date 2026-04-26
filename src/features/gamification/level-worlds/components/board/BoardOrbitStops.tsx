@@ -1,7 +1,7 @@
 import { memo, useRef } from 'react';
 import type { OrbitStopAnchor, TileAnchor } from '../../services/islandBoardLayout';
 
-export type StopProgressState = 'pending' | 'active' | 'completed' | 'partial' | 'locked' | 'ticket_required' | 'shop';
+export type StopProgressState = 'pending' | 'active' | 'completed' | 'build_pending' | 'partial' | 'locked' | 'ticket_required' | 'shop';
 
 export interface OrbitStopVisualData {
   id: string;
@@ -63,6 +63,8 @@ export const BoardOrbitStops = memo(function BoardOrbitStops(props: BoardOrbitSt
           className={[
             'island-orbit-stop',
             `island-orbit-stop--${stopVisual.state}`,
+            stopVisual.state === 'completed' ? 'island-orbit-stop--fully-complete' : '',
+            stopVisual.state === 'build_pending' ? 'island-orbit-stop--build-return' : '',
             `island-orbit-stop--${sceneClass}`,
             stopVisual.stopId && stopVisual.stopId === activeStopId ? 'island-orbit-stop--selected' : '',
           ].filter(Boolean).join(' ')}
