@@ -228,6 +228,16 @@ function isCanonicalEventId(value: string | null | undefined): value is EventId 
   return Boolean(value) && EVENT_IDS.includes(value as EventId);
 }
 
+function getShowBonusSpinPrompt(params: {
+  isTodaysOfferSpinEntryEnabled: boolean;
+  dailySpinCount: number;
+  isDailySpinBonusClaimedToday: boolean;
+}): boolean {
+  return params.isTodaysOfferSpinEntryEnabled
+    && params.dailySpinCount <= 0
+    && !params.isDailySpinBonusClaimedToday;
+}
+
 function isInteractiveHabitChild(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
     return false;
@@ -592,9 +602,11 @@ export function DailyHabitTracker({
   );
   const todaysOfferSpinBadgeActive = isTodaysOfferSpinEntryEnabled && dailySpinAvailable;
   const [isDailySpinBonusClaimedToday, setIsDailySpinBonusClaimedToday] = useState(false);
-  const showBonusSpinPrompt = isTodaysOfferSpinEntryEnabled
-    && dailySpinCount <= 0
-    && !isDailySpinBonusClaimedToday;
+  const showBonusSpinPrompt = getShowBonusSpinPrompt({
+    isTodaysOfferSpinEntryEnabled,
+    dailySpinCount,
+    isDailySpinBonusClaimedToday,
+  });
   const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
   const [seenOfferTeasers, setSeenOfferTeasers] = useState<Record<string, boolean>>({});
   const progressGradientId = useId();
