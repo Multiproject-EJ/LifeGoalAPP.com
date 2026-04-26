@@ -6424,6 +6424,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       isBuildSpendInFlightRef.current = false;
       setIsBuildSpendInFlight(false);
     }
+    return true;
+    } finally {
+      isBuildSpendInFlightRef.current = false;
+      setIsBuildSpendInFlight(false);
+    }
   };
 
   const handleCompleteActiveStop = () => {
