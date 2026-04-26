@@ -4394,6 +4394,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         dicePool: totalDice,
         essence: totalEssence,
       },
+      dualWriteMinigameTicketsEventId: chainResult.state.activeTimedEvent?.eventId ?? null,
       triggerSource: 'reward_bar_claim',
     });
     setRuntimeState(hopRecord);

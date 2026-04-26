@@ -51,6 +51,10 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Board should derive activeEventTickets from minigameTicketsByEvent for migration visibility.',
       );
       assert(
+        source.includes('dualWriteMinigameTicketsEventId: chainResult.state.activeTimedEvent?.eventId ?? null'),
+        'Reward-bar claim grants should dual-write timed-event tickets using the activeTimedEvent.eventId key.',
+      );
+      assert(
         source.includes('ticketsAvailable: spinTokens'),
         'Minigame launch affordability should remain wired to legacy spinTokens in this read-only migration phase.',
       );

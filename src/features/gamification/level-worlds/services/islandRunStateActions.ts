@@ -176,17 +176,31 @@ export function applyTokenHopRewards(options: {
   session: Session;
   client: SupabaseClient | null;
   deltas: TokenHopRewardsDeltas;
+  dualWriteMinigameTicketsEventId?: string | null;
   triggerSource?: string;
 }): IslandRunGameStateRecord {
-  const { session, client, deltas, triggerSource } = options;
+  const { session, client, deltas, dualWriteMinigameTicketsEventId, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
   const clamp0 = (v: number) => Math.max(0, v);
+  const spinTokenDelta = deltas.spinTokens ?? 0;
+  const shouldDualWriteMinigameTickets = spinTokenDelta > 0
+    && typeof dualWriteMinigameTicketsEventId === 'string'
+    && dualWriteMinigameTicketsEventId.length > 0;
+  const nextMinigameTicketsByEvent = shouldDualWriteMinigameTickets
+    ? {
+        ...current.minigameTicketsByEvent,
+        [dualWriteMinigameTicketsEventId]: clamp0(
+          (current.minigameTicketsByEvent?.[dualWriteMinigameTicketsEventId] ?? 0) + spinTokenDelta,
+        ),
+      }
+    : current.minigameTicketsByEvent;
   const next: IslandRunGameStateRecord = {
     ...current,
     runtimeVersion: current.runtimeVersion + 1,
-    spinTokens: clamp0(current.spinTokens + (deltas.spinTokens ?? 0)),
+    spinTokens: clamp0(current.spinTokens + spinTokenDelta),
     dicePool: clamp0(current.dicePool + (deltas.dicePool ?? 0)),
     essence: clamp0(current.essence + (deltas.essence ?? 0)),
+    minigameTicketsByEvent: nextMinigameTicketsByEvent,
   };
   // Synchronous mirror update + async persist (fire-and-forget).
   void commitIslandRunState({

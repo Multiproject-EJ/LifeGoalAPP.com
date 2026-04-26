@@ -266,6 +266,185 @@ export const islandRunStateActionsTests: TestCase[] = [
       unsub();
     },
   },
+  {
+    name: 'applyTokenHopRewards dual-writes timed-event token grants into minigameTicketsByEvent',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        spinTokens: 5,
+        minigameTicketsByEvent: { 'feeding_frenzy@1': 2 },
+      });
+
+      const result = applyTokenHopRewards({
+        session,
+        client: null,
+        deltas: { spinTokens: 3 },
+        dualWriteMinigameTicketsEventId: 'feeding_frenzy@1',
+        triggerSource: 'test_event_dual_write',
+      });
+
+      assertEqual(result.spinTokens, 8, 'spinTokens should still increase by the same grant amount');
+      assertEqual(
+        result.minigameTicketsByEvent['feeding_frenzy@1'],
+        5,
+        'event ticket ledger should increase for the active timed event id',
+      );
+    },
+  },
+  {
+    name: 'applyTokenHopRewards does not mutate minigameTicketsByEvent for non-timed-event or spend paths',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        spinTokens: 5,
+        minigameTicketsByEvent: { 'feeding_frenzy@1': 4 },
+      });
+
+      const rewardWithoutEventId = applyTokenHopRewards({
+        session,
+        client: null,
+        deltas: { spinTokens: 2 },
+        triggerSource: 'test_non_timed_reward',
+      });
+      assertEqual(
+        rewardWithoutEventId.minigameTicketsByEvent['feeding_frenzy@1'],
+        4,
+        'grants without timed-event context should not write event tickets',
+      );
+
+      const spendResult = applyTokenHopRewards({
+        session,
+        client: null,
+        deltas: { spinTokens: -3 },
+        dualWriteMinigameTicketsEventId: 'feeding_frenzy@1',
+        triggerSource: 'test_timed_event_spend',
+      });
+      assertEqual(
+        spendResult.minigameTicketsByEvent['feeding_frenzy@1'],
+        4,
+        'spend deltas should not decrement event tickets in dual-write phase',
+      );
+    },
+  },
+
+  {
+    name: 'applyDevGrantDice grants dice via canonical commit path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 10, dicePool: 20 });
+
+      const result = applyDevGrantDice({
+        session,
+        client: null,
+        amount: 50,
+        triggerSource: 'test_dev_grant_dice',
+      });
+
+      assertEqual(result.applied, 50, 'dev dice grant should apply exact positive amount');
+      assertEqual(result.record.dicePool, 70, 'dicePool should increase by granted amount');
+      assertEqual(result.record.runtimeVersion, 11, 'runtimeVersion should bump once');
+      assertEqual(getIslandRunStateSnapshot(session).dicePool, 70, 'store mirror should reflect granted dice');
+    },
+  },
+
+  {
+    name: 'applyDevGrantEssence grants essence + lifetime earned via canonical commit path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 10, essence: 100, essenceLifetimeEarned: 350 });
+
+      const result = applyDevGrantEssence({
+        session,
+        client: null,
+        amount: 500,
+        triggerSource: 'test_dev_grant_essence',
+      });
+
+      assertEqual(result.applied, 500, 'dev essence grant should apply exact positive amount');
+      assertEqual(result.record.essence, 600, 'essence should increase by granted amount');
+      assertEqual(result.record.essenceLifetimeEarned, 850, 'lifetime earned should track granted essence');
+      assertEqual(result.record.runtimeVersion, 11, 'runtimeVersion should bump once');
+      assertEqual(getIslandRunStateSnapshot(session).essence, 600, 'store mirror should reflect granted essence');
+    },
+  },
+
+  {
+    name: 'applyDevSpeedHatchEgg marks active island egg as ready via canonical commit path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        currentIslandNumber: 7,
+        activeEggTier: 'rare',
+        activeEggSetAtMs: 1_000,
+        activeEggHatchDurationMs: 86_400_000,
+        perIslandEggs: {
+          '7': {
+            tier: 'rare',
+            setAtMs: 1_000,
+            hatchAtMs: 86_401_000,
+            status: 'incubating',
+            location: 'island',
+          },
+        },
+      });
+
+      const result = applyDevSpeedHatchEgg({
+        session,
+        client: null,
+        islandNumber: 7,
+        nowMs: 5_000,
+        triggerSource: 'test_dev_speed_hatch_egg',
+      });
+
+      assertEqual(result.changed, true, 'speed hatch should commit when incubating egg exists');
+      assertEqual(result.record.runtimeVersion, 11, 'runtimeVersion should bump once');
+      assertEqual(result.record.activeEggHatchDurationMs, 0, 'active egg should become immediately hatchable');
+      assertEqual(result.record.perIslandEggs['7']?.status, 'ready', 'island egg ledger status should be ready');
+      assertEqual(result.record.perIslandEggs['7']?.hatchAtMs, 1_000, 'ledger hatchAt should match setAt for immediate readiness');
+    },
+  },
+
+  {
+    name: 'applyDevSpeedHatchEgg is a no-op when no hatchable active egg exists',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        currentIslandNumber: 3,
+        activeEggTier: null,
+        activeEggSetAtMs: null,
+        activeEggHatchDurationMs: null,
+        perIslandEggs: {
+          '3': {
+            tier: 'common',
+            setAtMs: 100,
+            hatchAtMs: 200,
+            status: 'sold',
+            location: 'island',
+          },
+        },
+      });
+
+      const result = applyDevSpeedHatchEgg({
+        session,
+        client: null,
+        islandNumber: 3,
+        triggerSource: 'test_dev_speed_hatch_egg_noop',
+      });
+
+      assertEqual(result.changed, false, 'no active incubating/ready egg should no-op');
+      assertEqual(result.record.runtimeVersion, 10, 'runtimeVersion should remain unchanged on no-op');
+    },
+  },
 
   {
     name: 'applyDevGrantDice grants dice via canonical commit path',
