@@ -81,7 +81,10 @@ export function IslandRunReflectionComposer({
     [selectedPromptId],
   );
 
-  const canSave = content.trim().length >= 20 && !isSaving;
+  const minimumReflectionLength = 20;
+  const trimmedLength = content.trim().length;
+  const charsRemaining = Math.max(minimumReflectionLength - trimmedLength, 0);
+  const canSave = trimmedLength >= minimumReflectionLength && !isSaving;
 
   const handlePromptChange = (promptId: string) => {
     const prompt = REFLECTION_PROMPTS.find((entry) => entry.id === promptId) ?? REFLECTION_PROMPTS[0];
@@ -91,7 +94,7 @@ export function IslandRunReflectionComposer({
 
   const handleSave = async () => {
     const trimmedContent = content.trim();
-    if (trimmedContent.length < 20) {
+    if (trimmedContent.length < minimumReflectionLength) {
       setError('Write at least 20 characters so this reflection is meaningful in your journal.');
       return;
     }
@@ -131,7 +134,7 @@ export function IslandRunReflectionComposer({
   };
 
   return (
-    <div className="island-hatchery-card">
+    <div className="island-hatchery-card island-run-reflection-composer">
       <p>
         🧭 Save this stop as a real journal entry so the reflection lives in your main journal history instead of a
         temporary mini-game state.
@@ -191,6 +194,12 @@ export function IslandRunReflectionComposer({
 
       <p style={{ marginTop: 8, fontSize: '0.82rem', opacity: 0.72 }}>
         Tags: <code>island-run</code>, <code>dynamic-stop</code>, <code>checkin-reflection</code>
+      </p>
+
+      <p style={{ marginTop: 8, fontSize: '0.82rem', opacity: 0.76 }}>
+        {charsRemaining > 0
+          ? `Add ${charsRemaining} more character${charsRemaining === 1 ? '' : 's'} to enable save.`
+          : 'Ready to save this reflection.'}
       </p>
 
       {error ? (

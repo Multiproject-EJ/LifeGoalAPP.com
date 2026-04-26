@@ -8105,9 +8105,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         const openedStopIsLocked = openedStopState === 'locked';
         const openedStopNeedsBuild = openedStopState === 'build_pending';
         const openedStopIsCompleted = openedStopState === 'completed' || openedStopState === 'partial' || openedStopNeedsBuild;
-        const openedStopIsPlayable = !openedStopIsLocked && !openedStopIsCompleted;
-        const priorStop = openedStopIndex > 0 ? islandStopPlan[openedStopIndex - 1] : null;
         const openedStopNeedsTicket = doesStopRequireTicketPayment(activeStop.stopId);
+        const openedStopIsPlayable = !openedStopIsLocked && !openedStopIsCompleted && !openedStopNeedsTicket;
+        const priorStop = openedStopIndex > 0 ? islandStopPlan[openedStopIndex - 1] : null;
         const openedStopTicketCost =
           openedStopNeedsTicket && openedStopIndex > 0
             ? getStopTicketCost({ effectiveIslandNumber, stopIndex: openedStopIndex })
