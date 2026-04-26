@@ -581,6 +581,9 @@ export function DailyHabitTracker({
   );
   const todaysOfferSpinBadgeActive = isTodaysOfferSpinEntryEnabled && dailySpinAvailable;
   const [isDailySpinBonusClaimedToday, setIsDailySpinBonusClaimedToday] = useState(false);
+  const showBonusSpinPrompt = isTodaysOfferSpinEntryEnabled
+    && dailySpinCount <= 0
+    && !isDailySpinBonusClaimedToday;
   const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
   const [seenOfferTeasers, setSeenOfferTeasers] = useState<Record<string, boolean>>({});
   const progressGradientId = useId();
