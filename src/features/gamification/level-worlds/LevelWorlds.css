@@ -1471,14 +1471,15 @@
   right: 12px;
   top: 10px;
   z-index: 9;
-  display: grid;
-  grid-template-columns: auto 1fr auto auto auto;
+  display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
+  flex-wrap: nowrap;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(230, 216, 172, 0.9);
   border-radius: 14px;
-  padding: 5px 10px;
+  padding: 5px 8px;
+  overflow: hidden;
 }
 
 .island-run-board__topbar-avatar {
@@ -1500,6 +1501,8 @@
 }
 
 .island-run-board__topbar-menu {
+  margin-left: auto;
+  flex: 0 0 auto;
   width: 24px;
   height: 24px;
   display: inline-flex;
@@ -1521,13 +1524,32 @@
 }
 
 .island-run-board__topbar-wallet {
-  justify-self: center;
+  flex: 0 1 auto;
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid rgba(205, 178, 255, 0.6);
   border-radius: 999px;
-  padding: 0.28rem 0.72rem;
+  padding: 0.24rem 0.56rem;
   color: #3f2455;
   font-weight: 800;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.island-run-board__topbar-chip {
+  flex: 0 1 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.24rem 0.56rem;
+  border-radius: 999px;
+  border: 1px solid rgba(179, 151, 92, 0.55);
+  background: rgba(255, 255, 255, 0.82);
+  color: #593d07;
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 /* ── Player-level chip + popover ─────────────────────────────────

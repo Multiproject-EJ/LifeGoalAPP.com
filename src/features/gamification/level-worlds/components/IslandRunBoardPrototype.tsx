@@ -50,7 +50,6 @@ import {
 } from '../services/islandRunStopTickets';
 import { resolveIslandRunStopTapOutcome } from '../services/islandRunStopTapRouting';
 import { isIslandFullyCleared } from '../services/islandRunProgression';
-import { resolveIslandClearsCount } from '../services/islandRunStopStreak';
 import { recordTelemetryEvent } from '../../../../services/telemetry';
 import {
   ISLAND_RUN_RUNTIME_HYDRATION_FAILED_STAGE,
@@ -625,6 +624,15 @@ function formatEventRemaining(remainingMs: number): string {
   return `${minutes}m ${seconds}s`;
 }
 
+const COMPACT_WALLET_NUMBER_FORMATTER = new Intl.NumberFormat('en-US', {
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
+
+function formatCompactWalletValue(value: number): string {
+  return COMPACT_WALLET_NUMBER_FORMATTER.format(Math.max(0, value));
+}
+
 /* ── Reward bar helpers ──────────────────────────────────────── */
 const TIMER_OK_THRESHOLD_MS = 4 * 60 * 60 * 1000;    // > 4 h  → green
 const TIMER_WARN_THRESHOLD_MS = 1 * 60 * 60 * 1000;  // 1–4 h → orange; < 1 h → red
@@ -1071,8 +1079,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   // own refresh via 'gamificationProfileUpdated' events, so any XP award
   // elsewhere in the app will flow into the chip automatically.
   const { levelInfo: playerLevelInfo } = useGamification(session);
-  const [showLevelPopover, setShowLevelPopover] = useState(false);
-  const levelChipContainerRef = useRef<HTMLDivElement>(null);
   const activeTileAnchors = useMemo(
     () => TILE_ANCHORS_40,
     [],
@@ -1386,30 +1392,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
     return () => window.cancelAnimationFrame(frame);
   }, [showTopbarMenu]);
-
-  // Close the player-level popover on outside pointer-down or Escape.
-  useEffect(() => {
-    if (!showLevelPopover) {
-      return;
-    }
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!levelChipContainerRef.current) return;
-      if (levelChipContainerRef.current.contains(event.target as Node)) return;
-      setShowLevelPopover(false);
-    };
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setShowLevelPopover(false);
-    };
-
-    window.addEventListener('pointerdown', handlePointerDown);
-    window.addEventListener('keydown', handleEscape);
-    return () => {
-      window.removeEventListener('pointerdown', handlePointerDown);
-      window.removeEventListener('keydown', handleEscape);
-    };
-  }, [showLevelPopover]);
 
   // B1-3: tile map state — regenerated when islandNumber or dayIndex changes
   const [islandStartedAtMs, setIslandStartedAtMs] = useState<number>(() => Date.now());
@@ -2834,8 +2816,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [completedStops, setCompletedStops] = useState<string[]>([]);
   const completedStopsSyncRequestedRef = useRef(false);
   const [hasCompletedStopsHydrationGate, setHasCompletedStopsHydrationGate] = useState(false);
-  const [streakChipAnimationClass, setStreakChipAnimationClass] = useState('');
-  const prevIslandsClearedCountRef = useRef(0);
+
+  const updateCompletedStops = useCallback((
+    updater: SetStateAction<string[]>,
+    options?: { requestSync?: boolean },
+  ) => {
+    setCompletedStops((current) => {
+      const next = typeof updater === 'function'
+        ? (updater as (value: string[]) => string[])(current)
+        : updater;
+      const changed = !areStringArraysEqual(current, next);
+      if (changed && options?.requestSync !== false) {
+        completedStopsSyncRequestedRef.current = true;
+      }
+      return changed ? next : current;
+    });
+  }, []);
 
   const updateCompletedStops = useCallback((
     updater: SetStateAction<string[]>,
@@ -3982,23 +3978,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       })
     : legacyIsCurrentIslandFullyCleared;
   const islandClearVisitKey = `${runtimeState.cycleIndex}:${islandNumber}`;
-  const islandsClearedCount = useMemo(
-    () => resolveIslandClearsCount({
-      currentIslandNumber: islandNumber,
-      cycleIndex: runtimeState.cycleIndex,
-      isCurrentIslandFullyCleared,
-    }),
-    [isCurrentIslandFullyCleared, islandNumber, runtimeState.cycleIndex],
-  );
-  useEffect(() => {
-    const prev = prevIslandsClearedCountRef.current;
-    prevIslandsClearedCountRef.current = islandsClearedCount;
-    if (islandsClearedCount <= prev) return;
-    const animationClass = 'island-run-board__topbar-streak-chip--increment';
-    setStreakChipAnimationClass(animationClass);
-    const timeoutId = window.setTimeout(() => setStreakChipAnimationClass(''), 950);
-    return () => window.clearTimeout(timeoutId);
-  }, [islandsClearedCount]);
   const buildPanelRemainingToFullByIndex = useMemo(() => {
     return islandStopPlan.map((_, stopIndex) => {
       const buildState = runtimeState.stopBuildStateByIndex[stopIndex];
@@ -7661,79 +7640,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 (session.user.user_metadata?.full_name?.[0] ?? session.user.email?.[0] ?? 'P').toUpperCase()
               )}
             </button>
+            <div className="island-run-board__topbar-wallet" aria-label="Dice wallet">
+              🎲 <strong>{formatCompactWalletValue(dicePool)}</strong>
+            </div>
             <div className="island-run-board__topbar-wallet" aria-label="Essence wallet">
-              🟣 <strong>{runtimeState.essence}</strong>
+              🟣 <strong>{formatCompactWalletValue(runtimeState.essence)}</strong>
             </div>
-            <div
-              ref={levelChipContainerRef}
-              className="island-run-board__topbar-level"
-            >
-              <button
-                type="button"
-                className="island-run-board__topbar-level-chip"
-                aria-label={
-                  playerLevelInfo
-                    ? `Player level ${playerLevelInfo.currentLevel}. Tap to see XP progress.`
-                    : 'Player level loading'
-                }
-                aria-haspopup="dialog"
-                aria-expanded={showLevelPopover}
-                onClick={() => setShowLevelPopover((v) => !v)}
-                disabled={!playerLevelInfo}
-              >
-                <span className="island-run-board__topbar-level-chip-label">Lv</span>
-                <strong className="island-run-board__topbar-level-chip-value">
-                  {playerLevelInfo ? playerLevelInfo.currentLevel : '—'}
-                </strong>
-              </button>
-              {showLevelPopover && playerLevelInfo ? (() => {
-                const xpInLevel = Math.max(0, playerLevelInfo.xpProgress);
-                const xpNeededInLevel = Math.max(
-                  1,
-                  playerLevelInfo.xpForNextLevel - playerLevelInfo.xpForCurrentLevel,
-                );
-                const xpToNext = Math.max(0, playerLevelInfo.xpForNextLevel - playerLevelInfo.currentXP);
-                const pct = Math.max(0, Math.min(100, playerLevelInfo.progressPercentage));
-                return (
-                  <div
-                    className="island-run-board__topbar-level-popover"
-                    role="dialog"
-                    aria-label={`Level ${playerLevelInfo.currentLevel} progress`}
-                  >
-                    <div className="island-run-board__topbar-level-popover-title">
-                      Level {playerLevelInfo.currentLevel}
-                    </div>
-                    <div className="island-run-board__topbar-level-popover-row">
-                      <span>{xpInLevel.toLocaleString()} / {xpNeededInLevel.toLocaleString()} XP</span>
-                    </div>
-                    <div
-                      className="island-run-board__topbar-level-popover-bar"
-                      role="progressbar"
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={Math.round(pct)}
-                    >
-                      <div
-                        className="island-run-board__topbar-level-popover-bar-fill"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <div className="island-run-board__topbar-level-popover-row island-run-board__topbar-level-popover-row--muted">
-                      {xpToNext.toLocaleString()} XP to Lv {playerLevelInfo.currentLevel + 1}
-                    </div>
-                  </div>
-                );
-              })() : null}
+            <div className="island-run-board__topbar-chip" aria-label="Event ticket wallet">
+              {timedEventTokenIcon} {formatCompactWalletValue(activeEventTickets)}
             </div>
-            {islandsClearedCount > 0 && (
-              <div
-                className={`island-run-board__topbar-streak-chip${streakChipAnimationClass ? ` ${streakChipAnimationClass}` : ''}`}
-                aria-label={`${islandsClearedCount} islands cleared`}
-                title="Total islands fully cleared in this run."
-              >
-                🏝️ {islandsClearedCount} cleared
-              </div>
-            )}
+            <div className="island-run-board__topbar-chip" aria-label="Shard wallet">
+              ✨ {formatCompactWalletValue(shards)}
+            </div>
             <button
               type="button"
               className="island-run-board__topbar-menu"
