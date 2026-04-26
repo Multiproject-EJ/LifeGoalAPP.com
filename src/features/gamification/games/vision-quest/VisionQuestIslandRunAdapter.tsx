@@ -15,13 +15,13 @@ export function VisionQuestIslandRunAdapter({ onComplete }: IslandRunMinigamePro
   return (
     <VisionQuest
       session={session}
+      rewardContext="island_run_landmark"
       onClose={() => onComplete({ completed: false })}
       onComplete={(rewards) => {
         onComplete({
           completed: true,
           reward: {
             dice: rewards.dice,
-            spinTokens: rewards.tokens,
           },
         });
       }}

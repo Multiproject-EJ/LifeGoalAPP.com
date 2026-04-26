@@ -82,6 +82,12 @@ export interface EventDisplayMeta {
   displayName: string;
 }
 
+export interface EventTokenPresentation {
+  icon: string;
+  labelSingular: string;
+  labelPlural: string;
+}
+
 export interface EventRotationTemplate {
   eventId: EventId;
   eventType: string;
@@ -250,6 +256,26 @@ export function getEventDisplayMeta(eventType: string | null | undefined): Event
   return {
     icon: '⭐',
     displayName: fallbackLabel,
+  };
+}
+
+/**
+ * Canonical timed-event token presentation. Presentation-only helper: does not
+ * mutate balances or choose reward destinations.
+ */
+export function resolveEventTokenPresentation(eventType: string | null | undefined): EventTokenPresentation {
+  if (!eventType || !(EVENT_IDS as readonly string[]).includes(eventType)) {
+    return {
+      icon: '🎫',
+      labelSingular: 'Event token',
+      labelPlural: 'Event tokens',
+    };
+  }
+  const eventMeta = getEventDisplayMeta(eventType);
+  return {
+    icon: eventMeta.icon,
+    labelSingular: `${eventMeta.displayName} token`,
+    labelPlural: `${eventMeta.displayName} tokens`,
   };
 }
 

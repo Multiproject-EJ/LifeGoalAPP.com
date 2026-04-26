@@ -37,6 +37,36 @@ export const islandRunRuntimeRegenTests: TestCase[] = [
     },
   },
   {
+    name: 'dice above cap: anchor-only regen updates are treated as no-op',
+    run: () => {
+      const regen = buildInitialDiceRegenState(1, 0);
+      const result = resolveRuntimeDiceRegenUpdate({
+        snapshot: {
+          dicePool: 43, // above L1 max (30)
+          diceRegenState: regen,
+        },
+        playerLevel: 1,
+        nowMs: 1_000,
+      });
+      assertEqual(result, null, 'Expected no-op when only lastRegenAtMs would advance above cap');
+    },
+  },
+  {
+    name: 'dice at cap: anchor-only regen updates are treated as no-op',
+    run: () => {
+      const regen = buildInitialDiceRegenState(1, 0);
+      const result = resolveRuntimeDiceRegenUpdate({
+        snapshot: {
+          dicePool: 30, // equals L1 max
+          diceRegenState: regen,
+        },
+        playerLevel: 1,
+        nowMs: 1_000,
+      });
+      assertEqual(result, null, 'Expected no-op at cap when no dice can be added');
+    },
+  },
+  {
     name: 'adds dice when elapsed time has accumulated below floor',
     run: () => {
       const regen = buildInitialDiceRegenState(1, 0);
@@ -68,6 +98,7 @@ export const islandRunRuntimeRegenTests: TestCase[] = [
       assert(result !== null, 'Expected regen-state update when level changes');
       assertEqual(result!.dicePool, 200, 'Expected dice unchanged above floor');
       assertEqual(result!.diceRegenState.maxDice, 125, 'Expected L50 floor');
+      assertEqual(result!.diceAdded, 0, 'Shape migration should not fabricate dice');
     },
   },
 ];
