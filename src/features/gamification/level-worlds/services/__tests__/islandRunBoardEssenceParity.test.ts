@@ -41,6 +41,22 @@ async function readVisionQuestSource(): Promise<string> {
 
 export const islandRunBoardEssenceParityTests: TestCase[] = [
   {
+    name: 'event ticket migration visibility surfaces activeEventTickets vs legacy spinTokens without changing launch economy wiring',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('const activeEventTickets = activeTimedEventId') &&
+          source.includes("(runtimeState.minigameTicketsByEvent?.[activeTimedEventId] ?? 0)") &&
+          source.includes('const hasLegacyEventTicketDivergence = Boolean(activeTimedEventId) && activeEventTickets !== spinTokens;'),
+        'Board should derive activeEventTickets from minigameTicketsByEvent for migration visibility.',
+      );
+      assert(
+        source.includes('ticketsAvailable: spinTokens'),
+        'Minigame launch affordability should remain wired to legacy spinTokens in this read-only migration phase.',
+      );
+    },
+  },
+  {
     name: 'encounter/boss/sanctuary/wisdom essence awards remain direct runtime-state increments (legacy parity)',
     run: async () => {
       const source = await readBoardSource();

@@ -4134,6 +4134,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     : '—';
   const timedEventTokenPresentation = resolveEventTokenPresentation(activeTimedEvent?.eventType ?? null);
   const timedEventTokenIcon = timedEventTokenPresentation.icon;
+  const activeTimedEventId = activeTimedEvent?.eventId ?? null;
+  const activeEventTickets = activeTimedEventId
+    ? (runtimeState.minigameTicketsByEvent?.[activeTimedEventId] ?? 0)
+    : 0;
+  const hasLegacyEventTicketDivergence = Boolean(activeTimedEventId) && activeEventTickets !== spinTokens;
   // B8: detect the bar becoming claimable and play a one-shot "snap" flash.
   useEffect(() => {
     if (canClaimRewardBar && !rewardBarWasClaimableRef.current) {
@@ -7476,6 +7481,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <span className="island-run-prototype__stat-chip">Last roll: <strong>{rollValue ?? '-'}</strong></span>
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">{resolveIslandRunTimerLabel()} <strong>{timerDisplay}</strong></span>
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--spin">{spinTokenWalletLabel}: <strong>{spinTokens}</strong></span>
+              <span className="island-run-prototype__stat-chip">Event ID: <strong>{activeTimedEventId ?? '—'}</strong></span>
+              <span className="island-run-prototype__stat-chip">Event tickets: <strong>{activeEventTickets}</strong></span>
+              <span className="island-run-prototype__stat-chip">
+                Ticket sync: <strong>{hasLegacyEventTicketDivergence ? '⚠️ diverged' : '✅ matched'}</strong>
+              </span>
               {/* M11C: stop progress chip */}
               {(() => {
                 const nonBossStops = islandStopPlan.filter((s) => s.stopId !== 'boss');

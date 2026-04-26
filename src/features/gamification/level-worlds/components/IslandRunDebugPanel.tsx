@@ -119,6 +119,11 @@ export function IslandRunDebugPanel({
   const sections: DebugSection[] = useMemo(() => {
     const rs = runtimeState;
     const ls = localState;
+    const activeTimedEventId = rs.activeTimedEvent?.eventId ?? null;
+    const activeEventTickets = activeTimedEventId
+      ? (rs.minigameTicketsByEvent?.[activeTimedEventId] ?? 0)
+      : 0;
+    const hasLegacyEventTicketDivergence = Boolean(activeTimedEventId) && activeEventTickets !== rs.spinTokens;
 
     const userSection: DebugSection = {
       title: '👤 User & Session',
@@ -255,6 +260,13 @@ export function IslandRunDebugPanel({
             { label: 'Event type', value: rs.activeTimedEvent.eventType },
             { label: 'Started', value: fmtMs(rs.activeTimedEvent.startedAtMs) },
             { label: 'Expires', value: fmtMs(rs.activeTimedEvent.expiresAtMs) },
+            { label: 'Legacy spin tokens', value: String(rs.spinTokens) },
+            { label: 'Active event tickets', value: String(activeEventTickets) },
+            {
+              label: 'Legacy/event divergence',
+              value: hasLegacyEventTicketDivergence ? '⚠️ diverged' : '✅ matched',
+              warn: hasLegacyEventTicketDivergence,
+            },
             { label: 'Feeding actions', value: String(rs.activeTimedEventProgress?.feedingActions ?? 0) },
             { label: 'Tokens earned', value: String(rs.activeTimedEventProgress?.tokensEarned ?? 0) },
             { label: 'Milestones claimed', value: String(rs.activeTimedEventProgress?.milestonesClaimed ?? 0) },
