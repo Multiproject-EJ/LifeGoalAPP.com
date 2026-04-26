@@ -109,6 +109,13 @@ export async function executeIslandRunClaimRewardAction(options: {
     spinTokens: state.spinTokens + payout.minigameTokens,
     dicePool: state.dicePool + payout.dice,
     essence: state.essence + payout.essence,
+    minigameTicketsByEvent: payout.minigameTokens > 0 && nextRewardBarSlice.activeTimedEvent?.eventId
+      ? {
+          ...state.minigameTicketsByEvent,
+          [nextRewardBarSlice.activeTimedEvent.eventId]:
+            (state.minigameTicketsByEvent?.[nextRewardBarSlice.activeTimedEvent.eventId] ?? 0) + payout.minigameTokens,
+        }
+      : state.minigameTicketsByEvent,
   };
 
   await writeIslandRunGameStateRecord({ session, client, record: nextState });
