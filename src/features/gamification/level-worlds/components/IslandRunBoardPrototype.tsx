@@ -1073,7 +1073,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     };
   }, []);
   const { showQaHooks, isMinimalBoardArt, boardTiltXDeg, boardRotateZDeg } = boardRenderTuning;
-  const isDevModeEnabled = useMemo(() => isIslandRunDevModeEnabled(), []);
+  const [isDevModeEnabled, setIsDevModeEnabled] = useState(() => isIslandRunDevModeEnabled());
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
   const [isDevPanelOpen, setIsDevPanelOpen] = useState(false);
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
@@ -6672,6 +6672,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setLandingText(`🧪 DEV MODE: +${result.applied} essence granted via canonical action.`);
   }, [client, isDevModeEnabled, session]);
 
+  const handleUnlockDevMode = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('dev_mode', 'true');
+    }
+    // TODO before launch: move DEV MODE controls to admin-only Settings surface and hide/remove public debug access.
+    setIsDevModeEnabled(true);
+    setIsDevPanelOpen(true);
+    setLandingText('🧪 DEV MODE unlocked for testing on this device.');
+  }, []);
+
   const handleClaimFirstRunRewards = async () => {
     if (firstRunStep === 'celebration') {
       const starterDiceBonus = ISLAND_RUN_DEFAULT_STARTING_DICE * 2;
@@ -10237,6 +10247,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             diceRegenCountdown,
             playerLevel: playerLevelInfo?.currentLevel ?? 1,
           }}
+          isDevModeEnabled={isDevModeEnabled}
+          onEnableDevMode={handleUnlockDevMode}
           onClose={() => setShowDebugPanel(false)}
         />
       )}
