@@ -1,10 +1,9 @@
 /**
- * Strict-1-per-day clamp helper for the Daily Spin Wheel.
+ * Daily cap clamp helper for the Daily Spin Wheel.
  *
  * Phase 2 of the Minigame & Events Consolidation Plan
  * (`docs/gameplay/MINIGAME_EVENTS_CONSOLIDATION_PLAN.md` §2.4) removes the
- * 2-spin "all-habits-done" bonus, the streak-based +1 spin bonus, and in
- * general enforces "one spin per day, max". This module is the single place
+ * legacy streak bonuses and enforces the current daily max policy. This module is the single place
  * that implements that clamp so the rule is easy to audit and unit-test.
  *
  * Lives in its own file (no Supabase or other runtime imports) so the
@@ -15,7 +14,7 @@
  */
 import { isIslandRunFeatureEnabled } from '../config/islandRunFeatureFlags';
 
-export const STRICT_DAILY_SPIN_LIMIT = 1;
+export const STRICT_DAILY_SPIN_LIMIT = 2;
 
 export function clampSpinsForStrictDailyLimit(spins: number): number {
   if (!isIslandRunFeatureEnabled('todaysOfferSpinEntryEnabled')) {

@@ -17,6 +17,52 @@ type ServiceResponse<T> = {
 
 const DEMO_STORAGE_KEY = 'demo_daily_spin_state';
 const DEMO_HISTORY_KEY = 'lifegoal_demo_spin_history';
+const DAILY_FREE_SPINS = 1;
+
+function toDateKey(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString().split('T')[0];
+}
+
+function getStateDayKey(state: DailySpinState): string | null {
+  return toDateKey(state.updatedAt) ?? toDateKey(state.createdAt);
+}
+
+async function persistDailySpinState(options: {
+  userId: string;
+  currentState: DailySpinState;
+  spinsAvailable: number;
+}): Promise<ServiceResponse<DailySpinState>> {
+  const { userId, currentState, spinsAvailable } = options;
+  if (!canUseSupabaseData()) {
+    const updated: DailySpinState = {
+      ...currentState,
+      spinsAvailable,
+      updatedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(updated));
+    return { data: updated, error: null };
+  }
+
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('daily_spin_state' as any)
+    .update({
+      spins_available: spinsAvailable,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if (error) {
+    return { data: null, error };
+  }
+
+  return { data: mapRowToState(data), error: null };
+}
 
 function buildChristmasPrizes(basePrizes: SpinPrize[]): SpinPrize[] {
   const updatedPrizes = [...basePrizes];
@@ -80,11 +126,20 @@ export async function getDailySpinState(userId: string): Promise<ServiceResponse
     return { data: null, error };
   }
 
-  // Strict-1/day mode (Phase 2): skip the streak-bonus branch entirely. The
-  // "base spin" per day is still granted by `updateSpinsAvailable` when a
-  // habit is completed; there is no automatic bonus on top.
+  // Today's Offer Daily Spin mode: seed one free daily spin at day rollover
+  // and skip legacy streak-bonus logic.
   if (isIslandRunFeatureEnabled('todaysOfferSpinEntryEnabled')) {
-    return { data: spinState, error: null };
+    const today = new Date().toISOString().split('T')[0];
+    const stateDayKey = getStateDayKey(spinState);
+    const shouldSeedDailyFreeSpin = stateDayKey !== today || spinState.spinsAvailable < DAILY_FREE_SPINS;
+    if (!shouldSeedDailyFreeSpin) {
+      return { data: spinState, error: null };
+    }
+    return persistDailySpinState({
+      userId,
+      currentState: spinState,
+      spinsAvailable: DAILY_FREE_SPINS,
+    });
   }
 
   // Check for streak bonus
@@ -292,39 +347,16 @@ export async function updateSpinsAvailable(userId: string, spinsEarned: number):
 
   const today = new Date().toISOString().split('T')[0];
 
-  // Reset spins if it's a new day, otherwise add to existing
-  const isNewDay = !currentState.lastSpinDate || currentState.lastSpinDate !== today;
-  const rawNewSpins = isNewDay
-    ? clampedSpinsEarned
-    : Math.max(currentState.spinsAvailable, clampedSpinsEarned);
+  // Reset to the free daily baseline on day rollover, then apply the delta.
+  const isNewDay = getStateDayKey(currentState) !== today;
+  const baseSpins = isNewDay ? DAILY_FREE_SPINS : currentState.spinsAvailable;
+  const rawNewSpins = baseSpins + clampedSpinsEarned;
   const newSpins = clampSpinsForStrictDailyLimit(rawNewSpins);
-
-  if (!canUseSupabaseData()) {
-    const updated: DailySpinState = {
-      ...currentState,
-      spinsAvailable: newSpins,
-      updatedAt: new Date().toISOString(),
-    };
-    localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(updated));
-    return { data: updated, error: null };
-  }
-
-  const supabase = getSupabaseClient();
-  const { data, error } = await supabase
-    .from('daily_spin_state' as any)
-    .update({
-      spins_available: newSpins,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('user_id', userId)
-    .select()
-    .single();
-
-  if (error) {
-    return { data: null, error };
-  }
-
-  return { data: mapRowToState(data), error: null };
+  return persistDailySpinState({
+    userId,
+    currentState,
+    spinsAvailable: newSpins,
+  });
 }
 
 /**

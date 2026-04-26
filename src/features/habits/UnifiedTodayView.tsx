@@ -186,24 +186,20 @@ export function UnifiedTodayView({
     if (!session) return;
 
     try {
-      const totalHabits = completedHabits.length;
       const completedCount = completedHabits.filter(habit =>
         logs.some(log => log.habit_id === habit.id && log.done)
       ).length;
 
-      // Award spins based on completion
-      // 1 spin for completing at least 1 habit
-      // 2 spins for completing all habits
-      let spinsToAward = 0;
       if (completedCount > 0) {
-        spinsToAward = 1;
-      }
-      if (totalHabits > 0 && completedCount === totalHabits) {
-        spinsToAward = 2;
-      }
-
-      if (spinsToAward > 0) {
-        await updateSpinsAvailable(session.user.id, spinsToAward);
+        const todayKey = new Date().toISOString().split('T')[0];
+        const claimKey = `lifegoal:daily-spin-habit-bonus:${session.user.id}:${todayKey}`;
+        const alreadyAwarded = typeof window !== 'undefined' && window.localStorage.getItem(claimKey) === '1';
+        if (!alreadyAwarded) {
+          await updateSpinsAvailable(session.user.id, 1);
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem(claimKey, '1');
+          }
+        }
       }
     } catch (err) {
       // Silently fail - don't interrupt the habit completion flow

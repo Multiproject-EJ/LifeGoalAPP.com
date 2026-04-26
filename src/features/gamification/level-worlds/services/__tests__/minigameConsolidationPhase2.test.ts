@@ -45,9 +45,9 @@ function resetRuntimeStateHarness(): void {
 
 export const minigameConsolidationPhase2Tests: TestCase[] = [
   {
-    name: 'STRICT_DAILY_SPIN_LIMIT is the contract value (1)',
+    name: 'STRICT_DAILY_SPIN_LIMIT is the contract value (2)',
     run: () => {
-      assertEqual(STRICT_DAILY_SPIN_LIMIT, 1, 'plan §2.4 enforces "one spin per day, max"');
+      assertEqual(STRICT_DAILY_SPIN_LIMIT, 2, 'current policy enforces a max of two spins per day');
     },
   },
   {
@@ -63,14 +63,14 @@ export const minigameConsolidationPhase2Tests: TestCase[] = [
     },
   },
   {
-    name: 'clampSpinsForStrictDailyLimit clamps to 1 when the flag is ON',
+    name: 'clampSpinsForStrictDailyLimit clamps to 2 when the flag is ON',
     run: () => {
       __resetIslandRunFeatureFlagsForTests();
       __setIslandRunFeatureFlagsForTests({ todaysOfferSpinEntryEnabled: true });
       assertEqual(clampSpinsForStrictDailyLimit(0), 0, 'flag on: 0 stays 0');
       assertEqual(clampSpinsForStrictDailyLimit(1), 1, 'flag on: 1 stays 1');
-      assertEqual(clampSpinsForStrictDailyLimit(2), 1, 'flag on: 2 clamps to 1 (all-habits bonus retired)');
-      assertEqual(clampSpinsForStrictDailyLimit(3), 1, 'flag on: 3 clamps to 1 (streak bonus retired)');
+      assertEqual(clampSpinsForStrictDailyLimit(2), 2, 'flag on: 2 stays 2');
+      assertEqual(clampSpinsForStrictDailyLimit(3), 2, 'flag on: 3 clamps to 2');
       __resetIslandRunFeatureFlagsForTests();
     },
   },

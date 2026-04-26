@@ -102,7 +102,8 @@ import {
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { fetchXPTransactions } from '../../services/gamification';
 import { fetchZenTokenTransactions } from '../../services/zenGarden';
-import { awardDice, getRewardHistory } from '../../services/gameRewards';
+import { getRewardHistory } from '../../services/gameRewards';
+import { awardDailyTreatDice } from '../../services/dailyTreats';
 import { createDicePackCheckoutSession } from '../../services/billing';
 import {
   initiateMinigameTicketCheckout,
@@ -571,7 +572,7 @@ export function DailyHabitTracker({
   // Phase 2: in-dialog Daily Spin Wheel entry. The badge/button is rendered
   // inside the Today's Offer modal and only when the feature flag is on.
   const isTodaysOfferSpinEntryEnabled = isIslandRunFeatureEnabled('todaysOfferSpinEntryEnabled');
-  const { spinAvailable: dailySpinAvailable } = useDailySpinStatus(
+  const { spinAvailable: dailySpinAvailable, spinsAvailable: dailySpinCount } = useDailySpinStatus(
     isTodaysOfferSpinEntryEnabled ? session?.user?.id : undefined,
   );
   const todaysOfferSpinBadgeActive = isTodaysOfferSpinEntryEnabled && dailySpinAvailable;
@@ -611,6 +612,18 @@ export function DailyHabitTracker({
     gameHeartsEarned: 0,
   });
   const isViewingToday = activeDate === today;
+  const grantDailySpinHabitBonusOncePerDay = useCallback(async () => {
+    if (!session?.user?.id) return;
+    const todayKey = formatISODate(new Date());
+    const claimKey = `lifegoal:daily-spin-habit-bonus:${session.user.id}:${todayKey}`;
+    if (typeof window !== 'undefined' && window.localStorage.getItem(claimKey)) {
+      return;
+    }
+    await updateSpinsAvailable(session.user.id, 1);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(claimKey, '1');
+    }
+  }, [session?.user?.id]);
   const [monthDays, setMonthDays] = useState<string[]>([]);
   const [habitInsights, setHabitInsights] = useState<Record<string, HabitInsights>>({});
   const [expandedHabits, setExpandedHabits] = useState<Record<string, boolean>>({});
@@ -1780,7 +1793,12 @@ export function DailyHabitTracker({
         selection.id,
         isSpecial ? 'Special weekly vision star story' : 'Vision board star boost'
       );
-      awardDice(session.user.id, diceAmount, 'daily_treats', 'Vision Star reward');
+      awardDailyTreatDice({
+        userId: session.user.id,
+        diceAmount,
+        sourceLabel: 'Vision Star reward',
+        islandRunSession: session,
+      });
       await recordActivity();
       const fallbackStoryPanels = buildSpecialVisionStoryPanels({
         habitNames: sortedHabits.map((habit) => habit.name),
@@ -2264,7 +2282,7 @@ export function DailyHabitTracker({
         label: "Today's Offer",
         icon: '🛍️',
         expiresAtMs: null,
-        badgeLabelOverride: todaysOfferSpinBadgeActive ? '1' : 'Open',
+        badgeLabelOverride: todaysOfferSpinBadgeActive ? String(Math.max(1, Math.floor(dailySpinCount))) : 'Open',
         isCollected: false,
         isVisible: true,
         // Phase 2 second-pass: unify red badge logic with in-dialog Daily Spin CTA.
@@ -2299,6 +2317,7 @@ export function DailyHabitTracker({
     isSpecialVisionStarDay,
     hasOpenedTreatCalendarToday,
     todaysOfferSpinBadgeActive,
+    dailySpinCount,
     isTodaysOfferSpinEntryEnabled,
   ]);
 
@@ -2478,7 +2497,7 @@ export function DailyHabitTracker({
                 onClick={launchTodaysOfferDailySpin}
                 aria-label={
                   dailySpinAvailable
-                    ? 'Spin the Daily Spin Wheel (available)'
+                    ? `Spin the Daily Spin Wheel (${Math.max(0, Math.floor(dailySpinCount))} available)`
                     : 'Daily Spin Wheel (already used today)'
                 }
               >
@@ -2489,7 +2508,7 @@ export function DailyHabitTracker({
                     className="habit-day-nav__todays-offer-spin-badge"
                     aria-hidden="true"
                   >
-                    1
+                    {Math.max(1, Math.floor(dailySpinCount))}
                   </span>
                 ) : null}
               </button>
@@ -2497,7 +2516,7 @@ export function DailyHabitTracker({
                 {!onOpenDailySpinWheel
                   ? 'Daily Spin launcher unavailable in this view.'
                   : dailySpinAvailable
-                    ? 'Your daily spin is ready!'
+                    ? `${Math.max(1, Math.floor(dailySpinCount))} spin${Math.floor(dailySpinCount) === 1 ? '' : 's'} available.`
                     : 'Come back tomorrow for your next spin.'}
               </p>
             </div>
@@ -3709,6 +3728,7 @@ export function DailyHabitTracker({
             });
           }, 500);
 
+          await grantDailySpinHabitBonusOncePerDay();
           await earnXP(xpAmount, 'habit_complete', habit.id);
           if (effectivePriceXpAmount) {
             await earnXP(
@@ -3894,6 +3914,7 @@ export function DailyHabitTracker({
           });
         }, 500);
 
+        await grantDailySpinHabitBonusOncePerDay();
         await earnXP(xpAmount, 'habit_complete', habit.id);
         await recordActivity();
         recordChallengeActivity(session.user.id, 'habit_complete');
@@ -4039,6 +4060,7 @@ export function DailyHabitTracker({
           });
         }, 500);
 
+        await grantDailySpinHabitBonusOncePerDay();
         await earnXP(xpAmount, 'habit_complete', habit.id);
         await recordActivity();
         recordChallengeActivity(session.user.id, 'habit_complete');

@@ -41,6 +41,7 @@ import { islandRunShooterControllerTelemetryTests } from './islandRunShooterCont
 import { shooterBlitzLaneLogicTests } from './shooterBlitzLaneLogic.test';
 import { islandRunShooterControllerQaMatrixTests } from './islandRunShooterControllerQaMatrix.test';
 import { outsideRewardGatewayTests } from './outsideRewardGateway.test';
+import { todayRewardsParityTests } from './todayRewardsParity.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -87,6 +88,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'shooterBlitzLaneLogic', tests: shooterBlitzLaneLogicTests },
   { label: 'islandRunShooterControllerQaMatrix', tests: islandRunShooterControllerQaMatrixTests },
   { label: 'outsideRewardGateway', tests: outsideRewardGatewayTests },
+  { label: 'todayRewardsParity', tests: todayRewardsParityTests },
 ];
 
 async function main() {
