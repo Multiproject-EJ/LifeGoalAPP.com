@@ -1655,7 +1655,7 @@ export function applyEggResolution(options: ApplyEggResolutionOptions): IslandRu
  * Replaces renderer-side direct `writeIslandRunGameStateRecord` + paired
  * `setRuntimeState` writes for contract-v2 stop-build progression.
  */
-export function applyStopBuildSpend(options: ApplyStopBuildSpendOptions): IslandRunGameStateRecord {
+export async function applyStopBuildSpend(options: ApplyStopBuildSpendOptions): Promise<IslandRunGameStateRecord> {
   const {
     session,
     client,
@@ -1674,7 +1674,7 @@ export function applyStopBuildSpend(options: ApplyStopBuildSpendOptions): Island
     stopStatesByIndex,
     runtimeVersion: current.runtimeVersion + 1,
   };
-  void commitIslandRunState({
+  await commitIslandRunState({
     session,
     client,
     record: next,

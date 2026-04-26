@@ -216,6 +216,33 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
     },
   },
   {
+    name: 'build spend UI path serializes taps/hold and uses canonical latest snapshot checks',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('const isBuildSpendInFlightRef = useRef(false);') &&
+          source.includes('if (isBuildSpendInFlightRef.current) return false;'),
+        'Build spend should include an in-flight guard to prevent overlapping stop_build_spend commits.',
+      );
+      assert(
+        source.includes('const nextRuntimeState = await applyStopBuildSpend({') &&
+          source.includes('const latestRuntimeState = getIslandRunStateSnapshot(session);'),
+        'Build spend should await the canonical action and recompute from latest store snapshot before each spend.',
+      );
+      assert(
+        source.includes('while (holdBuildSpendActiveRef.current) {') &&
+          source.includes('const spendApplied = await handleSpendEssenceOnBuild(idx);') &&
+          !source.includes('holdInterval = window.setInterval(() => {'),
+        'Hold-to-build should sequence spends by awaiting each spend result rather than firing blind interval commits.',
+      );
+      assert(
+        source.includes('aria-disabled={isBuildDisabled}') &&
+          source.includes('const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;'),
+        'Build button should expose a busy/disabled state while build spend is in-flight.',
+      );
+    },
+  },
+  {
     name: 'hydration/reconcile runtime sync should publish hydrated record to store mirror (no stale local refresh)',
     run: async () => {
       const source = await readBoardSource();

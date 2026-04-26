@@ -1625,9 +1625,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const pendingRuntimeStateTraceSourceRef = useRef<string | null>(null);
   const regenIntervalNoopLogLastAtMsRef = useRef<number>(0);
   const regenIntervalNoopLogSuppressedCountRef = useRef<number>(0);
+  const isBuildSpendInFlightRef = useRef(false);
+  const holdBuildSpendActiveRef = useRef(false);
   const completedStopsSyncDispatchKeyRef = useRef<string | null>(null);
   const marketOwnedBundleSyncRequestedRef = useRef(false);
   const marketOwnedBundleSyncDispatchKeyRef = useRef<string | null>(null);
+  const [isBuildSpendInFlight, setIsBuildSpendInFlight] = useState(false);
   const isIsland120StartupDiagnosticActive = isIsland120StartupDiagnosticTarget(
     runtimeState.currentIslandNumber ?? islandNumber,
   )
@@ -1642,6 +1645,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     runtimeStateRef.current = runtimeState;
   }, [runtimeState]);
+
+  useEffect(() => () => {
+    holdBuildSpendActiveRef.current = false;
+  }, []);
 
   const updateMarketOwnedBundles = useCallback((
     updater: SetStateAction<Record<'dice_bundle', boolean>>,
@@ -4972,7 +4979,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
    *  Build completion for the hatchery is handled separately via the Build Panel.
    *  This keeps stopStatesByIndex objective state in sync with the egg lifecycle. */
   const markHatcheryStopCompleteInV2 = () => {
-    if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return;
+    if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return false;
     const currentStates = runtimeStateRef.current.stopStatesByIndex;
     const entry = currentStates[0];
     if (entry?.objectiveComplete === true) return; // already done
@@ -6345,33 +6352,40 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     updateCompletedStops((current) => current.includes(stopId) ? current : [...current, stopId]);
   };
 
-  const handleSpendEssenceOnBuild = (stopIndex: number) => {
-    if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return;
-    if (stopIndex < 0 || stopIndex >= islandStopPlan.length) return;
+  const handleSpendEssenceOnBuild = async (stopIndex: number): Promise<boolean> => {
+    if (isBuildSpendInFlightRef.current) return false;
+    isBuildSpendInFlightRef.current = true;
+    setIsBuildSpendInFlight(true);
+    try {
+    if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return false;
+    if (stopIndex < 0 || stopIndex >= islandStopPlan.length) return false;
 
-    const currentBuildState = runtimeStateRef.current.stopBuildStateByIndex[stopIndex];
+    const latestRuntimeState = getIslandRunStateSnapshot(session);
+    runtimeStateRef.current = latestRuntimeState;
+
+    const currentBuildState = latestRuntimeState.stopBuildStateByIndex[stopIndex];
     if (!currentBuildState || isStopBuildFullyComplete(currentBuildState)) {
       setLandingText('This building is already fully built!');
-      return;
+      return false;
     }
 
     const spendResult = spendIslandRunContractV2EssenceOnStopBuild({
       islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
       stopIndex,
       spendAmount: CONTRACT_V2_ESSENCE_SPEND_STEP,
-      essence: runtimeStateRef.current.essence,
-      essenceLifetimeSpent: runtimeStateRef.current.essenceLifetimeSpent,
-      stopBuildStateByIndex: runtimeStateRef.current.stopBuildStateByIndex,
-      stopStatesByIndex: runtimeStateRef.current.stopStatesByIndex,
+      essence: latestRuntimeState.essence,
+      essenceLifetimeSpent: latestRuntimeState.essenceLifetimeSpent,
+      stopBuildStateByIndex: latestRuntimeState.stopBuildStateByIndex,
+      stopStatesByIndex: latestRuntimeState.stopStatesByIndex,
       effectiveIslandNumber,
     });
 
     if (spendResult.spent < 1) {
       setLandingText('Not enough Essence to build. Earn more by rolling!');
-      return;
+      return false;
     }
 
-    const nextRuntimeState = applyStopBuildSpend({
+    const nextRuntimeState = await applyStopBuildSpend({
       session,
       client,
       essence: spendResult.essence,
@@ -6381,6 +6395,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       triggerSource: 'stop_build_spend',
     });
     setRuntimeState(nextRuntimeState);
+    runtimeStateRef.current = nextRuntimeState;
 
     const nextBuildState = spendResult.stopBuildStateByIndex[stopIndex];
     const stopEntry = islandStopPlan[stopIndex];
@@ -6393,6 +6408,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     } else {
       const remaining = Math.max(0, nextBuildState.requiredEssence - nextBuildState.spentEssence);
       setLandingText(`🔨 ${stopLabel}: ${nextBuildState.spentEssence}/${nextBuildState.requiredEssence} 🟣 (${remaining} left for L${nextBuildState.buildLevel + 1})`);
+    }
+    return true;
+    } finally {
+      isBuildSpendInFlightRef.current = false;
+      setIsBuildSpendInFlight(false);
     }
   };
 
@@ -9122,53 +9142,63 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 const isFullyBuilt = isStopBuildFullyComplete(buildState);
                 const remaining = isFullyBuilt ? 0 : Math.max(0, buildState.requiredEssence - buildState.spentEssence);
                 const canAfford = runtimeState.essence >= Math.min(CONTRACT_V2_ESSENCE_SPEND_STEP, remaining);
+                const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;
                 const remainingToFull = buildPanelRemainingToFullByIndex[idx] ?? 0;
                 const levelIcon = ['🏗️', '🏠', '🏡', '🏰'][Math.min(buildState.buildLevel, 3)];
 
                 const handleBuildStart = (e: React.MouseEvent | React.TouchEvent) => {
                   e.preventDefault();
-                  if (isFullyBuilt || !canAfford) return;
-                  handleSpendEssenceOnBuild(idx);
-                  // Hold-to-build: fire repeatedly while held
-                  let holdTimer: ReturnType<typeof window.setTimeout> | undefined;
-                  let holdInterval: ReturnType<typeof window.setInterval> | undefined;
+                  if (isBuildDisabled) return;
+                  holdBuildSpendActiveRef.current = true;
                   const stopHold = () => {
-                    if (holdTimer) window.clearTimeout(holdTimer);
-                    if (holdInterval) window.clearInterval(holdInterval);
+                    holdBuildSpendActiveRef.current = false;
                     window.removeEventListener('mouseup', stopHold);
                     window.removeEventListener('touchend', stopHold);
                   };
-                  holdTimer = window.setTimeout(() => {
-                    holdInterval = window.setInterval(() => {
-                      // Re-check on each tick: stop if fully built or out of essence.
-                      const liveBuildState = runtimeStateRef.current.stopBuildStateByIndex[idx];
-                      if (!liveBuildState || isStopBuildFullyComplete(liveBuildState)) {
-                        stopHold();
-                        return;
-                      }
-                      if (runtimeStateRef.current.essence < CONTRACT_V2_ESSENCE_SPEND_STEP) {
-                        stopHold();
-                        return;
-                      }
-                      handleSpendEssenceOnBuild(idx);
-                    }, 150);
-                  }, 500);
                   window.addEventListener('mouseup', stopHold, { once: true });
                   window.addEventListener('touchend', stopHold, { once: true });
+                  void (async () => {
+                    const initialSpendApplied = await handleSpendEssenceOnBuild(idx);
+                    if (!initialSpendApplied || !holdBuildSpendActiveRef.current) {
+                      stopHold();
+                      return;
+                    }
+                    await wait(500);
+                    while (holdBuildSpendActiveRef.current) {
+                      const liveRuntimeState = getIslandRunStateSnapshot(session);
+                      const liveBuildState = liveRuntimeState.stopBuildStateByIndex[idx];
+                      const liveRemaining = liveBuildState
+                        ? Math.max(0, liveBuildState.requiredEssence - liveBuildState.spentEssence)
+                        : 0;
+                      const liveCanAfford = liveRuntimeState.essence >= Math.min(CONTRACT_V2_ESSENCE_SPEND_STEP, liveRemaining);
+                      if (!liveBuildState || isStopBuildFullyComplete(liveBuildState) || !liveCanAfford) {
+                        stopHold();
+                        return;
+                      }
+                      const spendApplied = await handleSpendEssenceOnBuild(idx);
+                      if (!spendApplied) {
+                        stopHold();
+                        return;
+                      }
+                      await wait(150);
+                    }
+                  })();
                 };
 
                 return (
                   <div
                     key={stopEntry.stopId}
                     className={`build-panel__building build-panel__building--level-${buildState.buildLevel}${isFullyBuilt ? ' build-panel__building--complete' : ''}${buildPanelNextCheapestIndex === idx && !isFullyBuilt ? ' build-panel__building--next-cheapest' : ''}`}
-                    onMouseDown={!isFullyBuilt ? handleBuildStart : undefined}
-                    onTouchStart={!isFullyBuilt ? handleBuildStart : undefined}
+                    onMouseDown={!isBuildDisabled ? handleBuildStart : undefined}
+                    onTouchStart={!isBuildDisabled ? handleBuildStart : undefined}
                     role="button"
-                    tabIndex={isFullyBuilt ? -1 : 0}
+                    tabIndex={isBuildDisabled ? -1 : 0}
+                    aria-disabled={isBuildDisabled}
                     aria-label={`${stopEntry.title ?? stopEntry.stopId} — Level ${buildState.buildLevel} of ${MAX_BUILD_LEVEL}`}
                     onKeyDown={(e) => {
-                      if ((e.key === 'Enter' || e.key === ' ') && !isFullyBuilt) {
-                        handleSpendEssenceOnBuild(idx);
+                      if ((e.key === 'Enter' || e.key === ' ') && !isBuildDisabled) {
+                        e.preventDefault();
+                        void handleSpendEssenceOnBuild(idx);
                       }
                     }}
                   >

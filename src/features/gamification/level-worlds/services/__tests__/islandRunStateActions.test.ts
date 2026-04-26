@@ -2020,7 +2020,7 @@ export const islandRunStateActionsTests: TestCase[] = [
 
   {
     name: 'applyStopBuildSpend commits build-progress spend through the store in one publish',
-    run: () => {
+    run: async () => {
       resetAll();
       const session = makeSession();
       seedState({
@@ -2054,7 +2054,7 @@ export const islandRunStateActionsTests: TestCase[] = [
         { objectiveComplete: false, buildComplete: false },
       ];
 
-      const result = applyStopBuildSpend({
+      const result = await applyStopBuildSpend({
         session,
         client: null,
         essence: 450,
