@@ -2833,6 +2833,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
   }, []);
 
+  const updateCompletedStops = useCallback((
+    updater: SetStateAction<string[]>,
+    options?: { requestSync?: boolean },
+  ) => {
+    setCompletedStops((current) => {
+      const next = typeof updater === 'function'
+        ? (updater as (value: string[]) => string[])(current)
+        : updater;
+      const changed = !areStringArraysEqual(current, next);
+      if (changed && options?.requestSync !== false) {
+        completedStopsSyncRequestedRef.current = true;
+      }
+      return changed ? next : current;
+    });
+  }, []);
+
   const getStoredCompletedStopsForIsland = useCallback((targetIslandNumber: number): string[] => {
     const persistedStops = runtimeState.completedStopsByIsland?.[String(targetIslandNumber)];
     if (Array.isArray(persistedStops)) {
