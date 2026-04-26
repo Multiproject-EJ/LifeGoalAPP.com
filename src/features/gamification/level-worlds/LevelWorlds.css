@@ -2933,6 +2933,57 @@
   margin: 0.25rem 0;
 }
 
+.island-run-reflection-composer {
+  color: #eaf8ff;
+}
+
+.island-run-reflection-composer .journal-editor__field > span,
+.island-run-reflection-composer__intro,
+.island-run-reflection-composer__tags,
+.island-run-reflection-composer__requirement {
+  color: #dff3ff;
+}
+
+.island-run-reflection-composer__prompt {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(10, 29, 42, 0.82);
+  border: 1px solid rgba(176, 226, 247, 0.35);
+  color: #f3fbff;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.island-run-reflection-composer .journal-editor__field input,
+.island-run-reflection-composer .journal-editor__field textarea,
+.island-run-reflection-composer .journal-editor__field select {
+  background: rgba(8, 24, 36, 0.92);
+  border-color: rgba(169, 220, 242, 0.42);
+  color: #f2fbff;
+}
+
+.island-run-reflection-composer .journal-editor__field textarea::placeholder {
+  color: rgba(204, 232, 246, 0.82);
+}
+
+.island-run-reflection-composer .island-stop-modal__btn {
+  color: #f6fcff;
+}
+
+.island-run-reflection-composer__tags {
+  margin-top: 8px;
+  font-size: 0.82rem;
+  opacity: 0.88;
+}
+
+.island-run-reflection-composer__requirement {
+  margin-top: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #e8f8ff;
+}
+
 .island-stop-modal__header-row {
   position: relative;
   display: flex;

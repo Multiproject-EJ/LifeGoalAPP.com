@@ -37,6 +37,7 @@ import {
   applyCreatureTreatInventory,
   applyDevGrantDice,
   applyDevGrantEssence,
+  applyDevSpeedHatchEgg,
   applyHydrationEggReadyTransition,
   applyEggResolution,
   applyEggPlacement,
@@ -306,6 +307,78 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.record.essenceLifetimeEarned, 850, 'lifetime earned should track granted essence');
       assertEqual(result.record.runtimeVersion, 11, 'runtimeVersion should bump once');
       assertEqual(getIslandRunStateSnapshot(session).essence, 600, 'store mirror should reflect granted essence');
+    },
+  },
+
+  {
+    name: 'applyDevSpeedHatchEgg marks active island egg as ready via canonical commit path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        currentIslandNumber: 7,
+        activeEggTier: 'rare',
+        activeEggSetAtMs: 1_000,
+        activeEggHatchDurationMs: 86_400_000,
+        perIslandEggs: {
+          '7': {
+            tier: 'rare',
+            setAtMs: 1_000,
+            hatchAtMs: 86_401_000,
+            status: 'incubating',
+            location: 'island',
+          },
+        },
+      });
+
+      const result = applyDevSpeedHatchEgg({
+        session,
+        client: null,
+        islandNumber: 7,
+        nowMs: 5_000,
+        triggerSource: 'test_dev_speed_hatch_egg',
+      });
+
+      assertEqual(result.changed, true, 'speed hatch should commit when incubating egg exists');
+      assertEqual(result.record.runtimeVersion, 11, 'runtimeVersion should bump once');
+      assertEqual(result.record.activeEggHatchDurationMs, 0, 'active egg should become immediately hatchable');
+      assertEqual(result.record.perIslandEggs['7']?.status, 'ready', 'island egg ledger status should be ready');
+      assertEqual(result.record.perIslandEggs['7']?.hatchAtMs, 1_000, 'ledger hatchAt should match setAt for immediate readiness');
+    },
+  },
+
+  {
+    name: 'applyDevSpeedHatchEgg is a no-op when no hatchable active egg exists',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        currentIslandNumber: 3,
+        activeEggTier: null,
+        activeEggSetAtMs: null,
+        activeEggHatchDurationMs: null,
+        perIslandEggs: {
+          '3': {
+            tier: 'common',
+            setAtMs: 100,
+            hatchAtMs: 200,
+            status: 'sold',
+            location: 'island',
+          },
+        },
+      });
+
+      const result = applyDevSpeedHatchEgg({
+        session,
+        client: null,
+        islandNumber: 3,
+        triggerSource: 'test_dev_speed_hatch_egg_noop',
+      });
+
+      assertEqual(result.changed, false, 'no active incubating/ready egg should no-op');
+      assertEqual(result.record.runtimeVersion, 10, 'runtimeVersion should remain unchanged on no-op');
     },
   },
 

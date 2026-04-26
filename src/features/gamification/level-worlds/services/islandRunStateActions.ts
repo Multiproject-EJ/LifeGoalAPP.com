@@ -150,6 +150,19 @@ export interface ApplyDevGrantEssenceResult {
   applied: number;
 }
 
+export interface ApplyDevSpeedHatchEggOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  islandNumber: number;
+  nowMs?: number;
+  triggerSource?: string;
+}
+
+export interface ApplyDevSpeedHatchEggResult {
+  record: IslandRunGameStateRecord;
+  changed: boolean;
+}
+
 /**
  * Applies per-hop or per-claim currency deltas to the authoritative store.
  *
@@ -286,6 +299,55 @@ export function applyDevGrantEssence(options: ApplyDevGrantEssenceOptions): Appl
     triggerSource: triggerSource ?? 'dev_grant_essence',
   });
   return { record: next, applied };
+}
+
+/**
+ * DEV-ONLY helper action: force the active island egg into a hatch-ready state.
+ *
+ * This keeps all mutations on the canonical store commit path and intentionally
+ * avoids any renderer-side runtime mirror writes.
+ */
+export function applyDevSpeedHatchEgg(options: ApplyDevSpeedHatchEggOptions): ApplyDevSpeedHatchEggResult {
+  const { session, client, islandNumber, nowMs, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const islandKey = String(Math.max(1, Math.trunc(islandNumber)));
+  const entry = current.perIslandEggs?.[islandKey];
+  if (!entry || entry.status === 'collected' || entry.status === 'sold') {
+    return { record: current, changed: false };
+  }
+
+  const resolvedNowMs = Number.isFinite(nowMs) ? Math.max(0, Math.trunc(nowMs ?? 0)) : Date.now();
+  const readySetAtMs = Number.isFinite(entry.setAtMs) ? entry.setAtMs : resolvedNowMs;
+  const readyHatchAtMs = readySetAtMs;
+  const hasActiveEgg = current.activeEggTier !== null;
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    activeEggSetAtMs: hasActiveEgg ? readySetAtMs : current.activeEggSetAtMs,
+    activeEggHatchDurationMs: hasActiveEgg ? 0 : current.activeEggHatchDurationMs,
+    perIslandEggs: {
+      ...current.perIslandEggs,
+      [islandKey]: {
+        ...entry,
+        hatchAtMs: readyHatchAtMs,
+        status: 'ready',
+      },
+    },
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  logIslandRunEntryDebug('dev_speed_hatch_egg', {
+    userId: session.user.id,
+    islandNumber: islandKey,
+    hadActiveEgg: hasActiveEgg,
+    runtimeVersionBefore: current.runtimeVersion,
+    runtimeVersionAfter: next.runtimeVersion,
+  });
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'dev_speed_hatch_egg',
+  });
+  return { record: next, changed: true };
 }
 
 // ── C2: Essence award / spend / reward-bar / drift ───────────────────────────

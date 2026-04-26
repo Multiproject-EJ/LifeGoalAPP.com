@@ -91,6 +91,7 @@ import {
   applyCreatureTreatInventory,
   applyDevGrantDice,
   applyDevGrantEssence,
+  applyDevSpeedHatchEgg,
   applyActivateCurrentIslandTimer,
   applyPassiveDiceRegenTick,
   applyEggResolution,
@@ -6740,6 +6741,21 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setLandingText(`🧪 DEV MODE: +${result.applied} essence granted via canonical action.`);
   }, [client, isDevModeEnabled, session]);
 
+  const handleDevSpeedHatchEgg = useCallback(() => {
+    if (!isDevModeEnabled) return;
+    const result = applyDevSpeedHatchEgg({
+      session,
+      client,
+      islandNumber,
+      triggerSource: 'dev_speed_hatch_egg',
+    });
+    if (!result.changed) {
+      setLandingText('🧪 DEV MODE: no active incubating egg to speed hatch.');
+      return;
+    }
+    setLandingText('🧪 DEV MODE: egg marked hatch-ready via canonical action.');
+  }, [client, isDevModeEnabled, islandNumber, session]);
+
   const handleUnlockDevMode = useCallback(() => {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('dev_mode', 'true');
@@ -7576,6 +7592,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 <button type="button" className="island-run-prototype__debug-btn" onClick={() => handleDevGrantEssence(100)}>+100</button>
                 <button type="button" className="island-run-prototype__debug-btn" onClick={() => handleDevGrantEssence(500)}>+500</button>
                 <button type="button" className="island-run-prototype__debug-btn" onClick={() => handleDevGrantEssence(1000)}>+1000</button>
+              </div>
+              <div className="island-run-prototype__status-row">
+                <span className="island-run-prototype__stat-chip">Egg Control</span>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={handleDevSpeedHatchEgg}>🥚 Speed Hatch Egg</button>
               </div>
             </div>
           )}

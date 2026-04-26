@@ -135,7 +135,7 @@ export function IslandRunReflectionComposer({
 
   return (
     <div className="island-hatchery-card island-run-reflection-composer">
-      <p>
+      <p className="island-run-reflection-composer__intro">
         🧭 Save this stop as a real journal entry so the reflection lives in your main journal history instead of a
         temporary mini-game state.
       </p>
@@ -151,17 +151,7 @@ export function IslandRunReflectionComposer({
         </select>
       </label>
 
-      <div
-        style={{
-          marginTop: 12,
-          padding: '12px 14px',
-          borderRadius: 14,
-          background: 'rgba(255,255,255,0.06)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          fontSize: '0.95rem',
-          lineHeight: 1.5,
-        }}
-      >
+      <div className="island-run-reflection-composer__prompt">
         {selectedPrompt.prompt}
       </div>
 
@@ -185,6 +175,7 @@ export function IslandRunReflectionComposer({
       <label className="journal-editor__field" style={{ marginTop: 12 }}>
         <span>Your reflection</span>
         <textarea
+          className="island-run-reflection-composer__textarea"
           rows={6}
           value={content}
           onChange={(event) => setContent(event.target.value)}
@@ -192,13 +183,13 @@ export function IslandRunReflectionComposer({
         />
       </label>
 
-      <p style={{ marginTop: 8, fontSize: '0.82rem', opacity: 0.72 }}>
+      <p className="island-run-reflection-composer__tags">
         Tags: <code>island-run</code>, <code>dynamic-stop</code>, <code>checkin-reflection</code>
       </p>
 
-      <p style={{ marginTop: 8, fontSize: '0.82rem', opacity: 0.76 }}>
+      <p className="island-run-reflection-composer__requirement" aria-live="polite">
         {charsRemaining > 0
-          ? `Add ${charsRemaining} more character${charsRemaining === 1 ? '' : 's'} to enable save.`
+          ? 'Write at least 20 characters to complete this stop.'
           : 'Ready to save this reflection.'}
       </p>
 
