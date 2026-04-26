@@ -444,6 +444,8 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
       ? 'Chest opened! Essence + Shards + Dice added.'
       : wonPrize.type === 'mystery'
         ? 'Mystery revealed! Bonus reward added.'
+        : wonPrize.type === 'game_tokens'
+          ? 'Game Tokens bonus added (non-event currency).'
         : `${wonPrize.label} added to your account!`
     : '';
 

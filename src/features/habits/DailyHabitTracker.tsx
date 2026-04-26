@@ -6444,7 +6444,7 @@ export function DailyHabitTracker({
       { id: 'game-total', icon: '🎮', label: 'Game', value: todayWinsSummary.gameRewardsTotal },
       { id: 'game-gold', icon: '🪙', label: 'Gold', value: todayWinsSummary.gameGoldEarned },
       { id: 'game-dice', icon: '🎲', label: 'Dice', value: todayWinsSummary.gameDiceEarned },
-      { id: 'game-token', icon: '🎟️', label: 'Tokens', value: todayWinsSummary.gameTokensEarned },
+      { id: 'game-token', icon: '🎟️', label: 'Game Tokens', value: todayWinsSummary.gameTokensEarned },
       { id: 'game-hearts', icon: '❤️', label: 'Hearts', value: todayWinsSummary.gameHeartsEarned },
     ].filter((tile) => tile.value > 0);
     const habitCompletionPercent = scheduledTarget ? Math.round((completedCount / scheduledTarget) * 100) : 0;
