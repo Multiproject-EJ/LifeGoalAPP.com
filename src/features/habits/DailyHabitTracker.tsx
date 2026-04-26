@@ -572,10 +572,15 @@ export function DailyHabitTracker({
   // Phase 2: in-dialog Daily Spin Wheel entry. The badge/button is rendered
   // inside the Today's Offer modal and only when the feature flag is on.
   const isTodaysOfferSpinEntryEnabled = isIslandRunFeatureEnabled('todaysOfferSpinEntryEnabled');
-  const { spinAvailable: dailySpinAvailable, spinsAvailable: dailySpinCount } = useDailySpinStatus(
+  const {
+    spinAvailable: dailySpinAvailable,
+    spinsAvailable: dailySpinCount,
+    refresh: refreshDailySpinStatus,
+  } = useDailySpinStatus(
     isTodaysOfferSpinEntryEnabled ? session?.user?.id : undefined,
   );
   const todaysOfferSpinBadgeActive = isTodaysOfferSpinEntryEnabled && dailySpinAvailable;
+  const [isDailySpinBonusClaimedToday, setIsDailySpinBonusClaimedToday] = useState(false);
   const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
   const [seenOfferTeasers, setSeenOfferTeasers] = useState<Record<string, boolean>>({});
   const progressGradientId = useId();
@@ -617,13 +622,27 @@ export function DailyHabitTracker({
     const todayKey = formatISODate(new Date());
     const claimKey = `lifegoal:daily-spin-habit-bonus:${session.user.id}:${todayKey}`;
     if (typeof window !== 'undefined' && window.localStorage.getItem(claimKey)) {
+      setIsDailySpinBonusClaimedToday(true);
       return;
     }
     await updateSpinsAvailable(session.user.id, 1);
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(claimKey, '1');
     }
-  }, [session?.user?.id]);
+    setIsDailySpinBonusClaimedToday(true);
+    await refreshDailySpinStatus();
+  }, [refreshDailySpinStatus, session?.user?.id]);
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setIsDailySpinBonusClaimedToday(false);
+      return;
+    }
+    const todayKey = formatISODate(new Date());
+    const claimKey = `lifegoal:daily-spin-habit-bonus:${session.user.id}:${todayKey}`;
+    setIsDailySpinBonusClaimedToday(
+      typeof window !== 'undefined' && window.localStorage.getItem(claimKey) === '1',
+    );
+  }, [session?.user?.id, today]);
   const [monthDays, setMonthDays] = useState<string[]>([]);
   const [habitInsights, setHabitInsights] = useState<Record<string, HabitInsights>>({});
   const [expandedHabits, setExpandedHabits] = useState<Record<string, boolean>>({});
@@ -2282,7 +2301,11 @@ export function DailyHabitTracker({
         label: "Today's Offer",
         icon: '🛍️',
         expiresAtMs: null,
-        badgeLabelOverride: todaysOfferSpinBadgeActive ? String(Math.max(1, Math.floor(dailySpinCount))) : 'Open',
+        badgeLabelOverride: todaysOfferSpinBadgeActive
+          ? `${Math.max(1, Math.floor(dailySpinCount))} Spin Ready`
+          : showBonusSpinPrompt
+            ? 'Bonus Spin'
+            : 'Open',
         isCollected: false,
         isVisible: true,
         // Phase 2 second-pass: unify red badge logic with in-dialog Daily Spin CTA.
@@ -2318,6 +2341,7 @@ export function DailyHabitTracker({
     hasOpenedTreatCalendarToday,
     todaysOfferSpinBadgeActive,
     dailySpinCount,
+    isDailySpinBonusClaimedToday,
     isTodaysOfferSpinEntryEnabled,
   ]);
 
@@ -2492,13 +2516,15 @@ export function DailyHabitTracker({
             <div className="habit-day-nav__todays-offer-spin">
               <button
                 type="button"
-                className="habit-day-nav__todays-offer-spin-button"
+                className={`habit-day-nav__todays-offer-spin-button${dailySpinAvailable ? ' habit-day-nav__todays-offer-spin-button--ready' : ''}`}
                 disabled={!onOpenDailySpinWheel}
                 onClick={launchTodaysOfferDailySpin}
                 aria-label={
                   dailySpinAvailable
                     ? `Spin the Daily Spin Wheel (${Math.max(0, Math.floor(dailySpinCount))} available)`
-                    : 'Daily Spin Wheel (already used today)'
+                    : isDailySpinBonusClaimedToday
+                      ? 'Daily Spin Wheel (already used today)'
+                      : 'Daily Spin Wheel (complete one habit for bonus spin)'
                 }
               >
                 <span className="habit-day-nav__todays-offer-spin-icon" aria-hidden="true">🎡</span>
@@ -2516,8 +2542,10 @@ export function DailyHabitTracker({
                 {!onOpenDailySpinWheel
                   ? 'Daily Spin launcher unavailable in this view.'
                   : dailySpinAvailable
-                    ? `${Math.max(1, Math.floor(dailySpinCount))} spin${Math.floor(dailySpinCount) === 1 ? '' : 's'} available.`
-                    : 'Come back tomorrow for your next spin.'}
+                    ? `${Math.max(1, Math.floor(dailySpinCount))} Spin Ready`
+                    : isDailySpinBonusClaimedToday
+                      ? 'Come back tomorrow for your next spin.'
+                      : 'Complete 1 habit to earn your bonus spin.'}
               </p>
             </div>
           ) : null}
@@ -9391,3 +9419,6 @@ function formatLastCompleted(lastCompletedOn: string | null, referenceISO: strin
     year: date.getFullYear() !== parseISODate(referenceISO).getFullYear() ? 'numeric' : undefined,
   })}.`;
 }
+    const showBonusSpinPrompt = isTodaysOfferSpinEntryEnabled
+      && dailySpinCount <= 0
+      && !isDailySpinBonusClaimedToday;

@@ -51,9 +51,25 @@ export const todayRewardsParityTests: TestCase[] = [
         'DailyHabitTracker should gate habit bonus spins by a once-per-day marker.',
       );
       assert(
+        dailyTracker.includes('await refreshDailySpinStatus();'),
+        'DailyHabitTracker should refresh daily-spin status after bonus grant so UI alerts return immediately.',
+      );
+      assert(
         unifiedToday.includes('lifegoal:daily-spin-habit-bonus:')
           && unifiedToday.includes('await updateSpinsAvailable(session.user.id, 1);'),
         'UnifiedTodayView should gate habit bonus spins by the same once-per-day marker.',
+      );
+    },
+  },
+  {
+    name: 'Today offer copy guides bonus-spin earn flow and strong available state',
+    run: async () => {
+      const todayTracker = await readSource('src/features/habits/DailyHabitTracker.tsx');
+      assert(
+        todayTracker.includes('Complete 1 habit to earn your bonus spin.')
+          && todayTracker.includes('Spin Ready')
+          && todayTracker.includes('Bonus Spin'),
+        'Today Offer should surface bonus-spin guidance at 0 spins and Spin Ready state when spins are available.',
       );
     },
   },
