@@ -36,14 +36,23 @@ export function resolveRuntimeDiceRegenUpdate(params: {
 
   const prevRegen = snapshot.diceRegenState;
   const nextRegen = regenResult.regenState;
-  const regenChanged = (
+  const regenShapeChanged = (
     prevRegen === null
     || prevRegen.maxDice !== nextRegen.maxDice
     || prevRegen.regenRatePerHour !== nextRegen.regenRatePerHour
-    || prevRegen.lastRegenAtMs !== nextRegen.lastRegenAtMs
   );
+  const regenAnchorChanged = prevRegen !== null && prevRegen.lastRegenAtMs !== nextRegen.lastRegenAtMs;
   const diceChanged = regenResult.dicePool !== snapshot.dicePool;
-  if (!diceChanged && !regenChanged) return null;
+  if (!diceChanged) {
+    if (!regenShapeChanged && !regenAnchorChanged) return null;
+
+    const atOrAboveCap = snapshot.dicePool >= nextRegen.maxDice;
+    if (!regenShapeChanged && regenAnchorChanged && regenResult.diceAdded <= 0 && atOrAboveCap) {
+      // No-op guard: when the wallet is already full/overflowing and only the
+      // regen anchor advanced, skip persistence to avoid 1s runtimeVersion churn.
+      return null;
+    }
+  }
 
   return {
     dicePool: regenResult.dicePool,

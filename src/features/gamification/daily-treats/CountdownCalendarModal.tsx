@@ -167,7 +167,7 @@ export const CountdownCalendarModal = ({
     if (revealResult.symbolReward) {
       // Symbol triple completed — dispatch bonus gold with 'symbol_collection' label
       void awardDailyTreatGold(userId, SYMBOL_BONUS_GOLD, 'symbol_collection');
-      setSymbolBonusNotification(`🎉 Symbol bonus! +${SYMBOL_BONUS_GOLD} 🪙 gold for collecting 3 ${revealResult.symbolReward}s`);
+      setSymbolBonusNotification(`🎉 Symbol bonus! +${SYMBOL_BONUS_GOLD} 🪙 Gold for collecting 3 ${revealResult.symbolReward}s`);
       setTimeout(() => setSymbolBonusNotification(null), 4000);
 
       // Dispatch only the non-symbol portion of the gold reward
