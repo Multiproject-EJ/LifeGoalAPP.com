@@ -203,6 +203,12 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Passive regen should explicitly short-circuit no-op ticks before full runtime mirror writes.',
       );
       assert(
+        source.includes('const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;') &&
+          source.includes('const isIntervalNoop = reason === \'interval\';') &&
+          source.includes('suppressedIntervalNoopLogs'),
+        'Passive regen interval no-op diagnostics should be throttled and report suppressed counts to reduce log spam.',
+      );
+      assert(
         source.includes('runtimeStateRef.current = nextRuntimeState;') &&
           source.includes('return nextRuntimeState.dicePool;'),
         'Passive regen no-op should return fresh store dice so immediate post-purchase roll checks cannot read stale zero dice.',

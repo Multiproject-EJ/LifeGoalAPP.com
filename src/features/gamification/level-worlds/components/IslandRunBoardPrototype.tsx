@@ -313,6 +313,7 @@ const PERFECT_COMPANION_MODEL_VERSION = 'phase3_v1';
 const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_ISLAND = 120;
 const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_WINDOW_MS = 10_000;
 const ISLAND_RUN_120_STOP_PAIR_DELIMITER = '_to_';
+const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;
 
 function buildHydrationSourceOrder(baseSource: 'local_storage' | 'in_memory', hydrationSource: string) {
   return [baseSource, hydrationSource];
@@ -1622,6 +1623,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const island120PrevActiveStopIdRef = useRef<string | null>(null);
   const island120ToggleHintCounterByPairRef = useRef<Record<string, number>>({});
   const pendingRuntimeStateTraceSourceRef = useRef<string | null>(null);
+  const regenIntervalNoopLogLastAtMsRef = useRef<number>(0);
+  const regenIntervalNoopLogSuppressedCountRef = useRef<number>(0);
   const completedStopsSyncDispatchKeyRef = useRef<string | null>(null);
   const marketOwnedBundleSyncRequestedRef = useRef(false);
   const marketOwnedBundleSyncDispatchKeyRef = useRef<string | null>(null);
@@ -1700,22 +1703,42 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const nextRuntimeState = regenTick.record;
     if (!regenTick.changed) {
       runtimeStateRef.current = nextRuntimeState;
-      logIslandRunEntryDebug('dice_regen_noop_skipped_runtime_sync', {
-        userId: session.user.id,
-        reason,
-        playerLevel,
-        runtimeVersionRef: runtimeStateRef.current.runtimeVersion,
-        runtimeVersionStore: nextRuntimeState.runtimeVersion,
-        essenceRef: runtimeStateRef.current.essence,
-        essenceStore: nextRuntimeState.essence,
-      });
-      logIslandRunEntryDebug('regen_apply_result', {
-        reason,
-        applied: false,
-        skipReason: 'no_change',
-      });
+      const isIntervalNoop = reason === 'interval';
+      let shouldEmitNoopLog = !isIntervalNoop;
+      let suppressedNoopLogs = 0;
+      if (isIntervalNoop) {
+        const elapsedSinceLastNoopLog = nowMs - regenIntervalNoopLogLastAtMsRef.current;
+        if (elapsedSinceLastNoopLog >= ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS) {
+          shouldEmitNoopLog = true;
+          suppressedNoopLogs = regenIntervalNoopLogSuppressedCountRef.current;
+          regenIntervalNoopLogSuppressedCountRef.current = 0;
+          regenIntervalNoopLogLastAtMsRef.current = nowMs;
+        } else {
+          regenIntervalNoopLogSuppressedCountRef.current += 1;
+        }
+      }
+      if (shouldEmitNoopLog) {
+        logIslandRunEntryDebug('dice_regen_noop_skipped_runtime_sync', {
+          userId: session.user.id,
+          reason,
+          playerLevel,
+          runtimeVersionRef: runtimeStateRef.current.runtimeVersion,
+          runtimeVersionStore: nextRuntimeState.runtimeVersion,
+          essenceRef: runtimeStateRef.current.essence,
+          essenceStore: nextRuntimeState.essence,
+          ...(suppressedNoopLogs > 0 ? { suppressedIntervalNoopLogs: suppressedNoopLogs } : {}),
+        });
+        logIslandRunEntryDebug('regen_apply_result', {
+          reason,
+          applied: false,
+          skipReason: 'no_change',
+          ...(suppressedNoopLogs > 0 ? { suppressedIntervalNoopLogs: suppressedNoopLogs } : {}),
+        });
+      }
       return nextRuntimeState.dicePool;
     }
+    regenIntervalNoopLogSuppressedCountRef.current = 0;
+    regenIntervalNoopLogLastAtMsRef.current = nowMs;
     runtimeStateRef.current = nextRuntimeState;
     setRuntimeStateWithTrace('applyPassiveDiceRegen', nextRuntimeState);
     logIslandRunEntryDebug('dice_regen_applied', {
