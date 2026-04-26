@@ -131,7 +131,10 @@ export async function getDailySpinState(userId: string): Promise<ServiceResponse
   if (isIslandRunFeatureEnabled('todaysOfferSpinEntryEnabled')) {
     const today = new Date().toISOString().split('T')[0];
     const stateDayKey = getStateDayKey(spinState);
-    const shouldSeedDailyFreeSpin = stateDayKey !== today || spinState.spinsAvailable < DAILY_FREE_SPINS;
+    const shouldSeedFirstEverFreeSpin = spinState.spinsAvailable < DAILY_FREE_SPINS
+      && (spinState.totalSpinsUsed ?? 0) <= 0
+      && !spinState.lastSpinDate;
+    const shouldSeedDailyFreeSpin = stateDayKey !== today || shouldSeedFirstEverFreeSpin;
     if (!shouldSeedDailyFreeSpin) {
       return { data: spinState, error: null };
     }
