@@ -49,6 +49,7 @@ import {
   getIslandRunStateSnapshot,
   refreshIslandRunStateFromLocal,
 } from './islandRunStateStore';
+import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 import { persistIslandRunProfileMetadata } from './islandRunProfile';
 import {
   applyEssenceDrift,
@@ -56,6 +57,7 @@ import {
   deductIslandRunContractV2Essence,
   getRemainingIslandBuildCost,
   initStopBuildStatesForIsland,
+  spendIslandRunContractV2EssenceOnStopBuild,
 } from './islandRunContractV2EssenceBuild';
 import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
 import { resolveRuntimeDiceRegenUpdate } from './islandRunRuntimeRegen';
@@ -77,8 +79,26 @@ import { resolveRuntimeDiceRegenUpdate } from './islandRunRuntimeRegen';
 export function applyRollResult(options: {
   session: Session;
 }): IslandRunGameStateRecord {
+  const before = getIslandRunStateSnapshot(options.session);
+  logIslandRunEntryDebug('applyRollResult_before', {
+    userId: options.session.user.id,
+    runtimeVersion: before.runtimeVersion,
+    tokenIndex: before.tokenIndex,
+    dicePool: before.dicePool,
+    spinTokens: before.spinTokens,
+  });
   refreshIslandRunStateFromLocal(options.session);
-  return getIslandRunStateSnapshot(options.session);
+  const after = getIslandRunStateSnapshot(options.session);
+  logIslandRunEntryDebug('applyRollResult_after', {
+    userId: options.session.user.id,
+    runtimeVersion: after.runtimeVersion,
+    tokenIndex: after.tokenIndex,
+    dicePool: after.dicePool,
+    spinTokens: after.spinTokens,
+    tokenIndexChanged: before.tokenIndex !== after.tokenIndex,
+    dicePoolChanged: before.dicePool !== after.dicePool,
+  });
+  return after;
 }
 
 // ── applyTokenHopRewards ─────────────────────────────────────────────────────
@@ -104,6 +124,30 @@ export interface ApplyPassiveDiceRegenTickResult {
   record: IslandRunGameStateRecord;
   changed: boolean;
   diceAdded: number;
+}
+
+export interface ApplyDevGrantDiceOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  amount: number;
+  triggerSource?: string;
+}
+
+export interface ApplyDevGrantDiceResult {
+  record: IslandRunGameStateRecord;
+  applied: number;
+}
+
+export interface ApplyDevGrantEssenceOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  amount: number;
+  triggerSource?: string;
+}
+
+export interface ApplyDevGrantEssenceResult {
+  record: IslandRunGameStateRecord;
+  applied: number;
 }
 
 /**
@@ -178,6 +222,70 @@ export function applyPassiveDiceRegenTick(
     changed: true,
     diceAdded: regenUpdate.diceAdded,
   };
+}
+
+/**
+ * DEV-ONLY helper action: grant dice through the canonical commit path.
+ *
+ * This intentionally avoids direct renderer state writes so dev testing still
+ * exercises the single-flight coordinator and runtimeVersion bump semantics.
+ */
+export function applyDevGrantDice(options: ApplyDevGrantDiceOptions): ApplyDevGrantDiceResult {
+  const { session, client, amount, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const applied = Number.isFinite(amount) ? Math.max(0, Math.trunc(amount)) : 0;
+  if (applied < 1) return { record: current, applied: 0 };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    dicePool: Math.max(0, current.dicePool + applied),
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  logIslandRunEntryDebug('dev_grant_dice', {
+    userId: session.user.id,
+    applied,
+    beforeDicePool: current.dicePool,
+    afterDicePool: next.dicePool,
+    runtimeVersionBefore: current.runtimeVersion,
+    runtimeVersionAfter: next.runtimeVersion,
+  });
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'dev_grant_dice',
+  });
+  return { record: next, applied };
+}
+
+/**
+ * DEV-ONLY helper action: grant essence through the canonical commit path.
+ */
+export function applyDevGrantEssence(options: ApplyDevGrantEssenceOptions): ApplyDevGrantEssenceResult {
+  const { session, client, amount, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const applied = Number.isFinite(amount) ? Math.max(0, Math.trunc(amount)) : 0;
+  if (applied < 1) return { record: current, applied: 0 };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    essence: Math.max(0, current.essence + applied),
+    essenceLifetimeEarned: Math.max(0, current.essenceLifetimeEarned + applied),
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  logIslandRunEntryDebug('dev_grant_essence', {
+    userId: session.user.id,
+    applied,
+    beforeEssence: current.essence,
+    afterEssence: next.essence,
+    runtimeVersionBefore: current.runtimeVersion,
+    runtimeVersionAfter: next.runtimeVersion,
+  });
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'dev_grant_essence',
+  });
+  return { record: next, applied };
 }
 
 // ── C2: Essence award / spend / reward-bar / drift ───────────────────────────
@@ -1235,6 +1343,35 @@ export interface SyncCompletedStopsForIslandOptions {
   triggerSource?: string;
 }
 
+function areStringArraysEqual(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) return false;
+  for (let i = 0; i < left.length; i += 1) {
+    if (left[i] !== right[i]) return false;
+  }
+  return true;
+}
+
+const COMPLETED_STOP_CANONICAL_ORDER = ['hatchery', 'habit', 'mystery', 'wisdom', 'boss'] as const;
+
+function normalizeCompletedStopsForSync(stops: string[]): string[] {
+  const deduped = Array.from(new Set(
+    stops
+      .filter((value): value is string => typeof value === 'string')
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0),
+  ));
+  return deduped.sort((a, b) => {
+    const aIdx = COMPLETED_STOP_CANONICAL_ORDER.indexOf(a as (typeof COMPLETED_STOP_CANONICAL_ORDER)[number]);
+    const bIdx = COMPLETED_STOP_CANONICAL_ORDER.indexOf(b as (typeof COMPLETED_STOP_CANONICAL_ORDER)[number]);
+    const aKnown = aIdx >= 0;
+    const bKnown = bIdx >= 0;
+    if (aKnown && bKnown) return aIdx - bIdx;
+    if (aKnown) return -1;
+    if (bKnown) return 1;
+    return a.localeCompare(b);
+  });
+}
+
 /**
  * Commits `completedStopsByIsland[islandNumber]` through the store path.
  *
@@ -1246,11 +1383,16 @@ export function syncCompletedStopsForIsland(options: SyncCompletedStopsForIsland
   const { session, client, islandNumber, completedStops, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
   const islandKey = String(islandNumber);
+  const currentStops = normalizeCompletedStopsForSync(current.completedStopsByIsland?.[islandKey] ?? []);
+  const normalizedCompletedStops = normalizeCompletedStopsForSync(completedStops);
+  if (areStringArraysEqual(currentStops, normalizedCompletedStops)) {
+    return current;
+  }
   const next: IslandRunGameStateRecord = {
     ...current,
     completedStopsByIsland: {
       ...current.completedStopsByIsland,
-      [islandKey]: completedStops,
+      [islandKey]: normalizedCompletedStops,
     },
     runtimeVersion: current.runtimeVersion + 1,
   };
@@ -1302,6 +1444,21 @@ export interface ApplyStopBuildSpendOptions {
   stopBuildStateByIndex: IslandRunGameStateRecord['stopBuildStateByIndex'];
   stopStatesByIndex: IslandRunGameStateRecord['stopStatesByIndex'];
   triggerSource?: string;
+}
+
+export interface ApplyStopBuildSpendBatchOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  stopIndex: number;
+  effectiveIslandNumber: number;
+  maxSteps: number;
+  spendAmount?: number;
+  triggerSource?: string;
+}
+
+export interface ApplyStopBuildSpendBatchResult {
+  record: IslandRunGameStateRecord;
+  stepsApplied: number;
 }
 
 export interface ApplyStopObjectiveProgressOptions {
@@ -1514,7 +1671,7 @@ export function applyEggResolution(options: ApplyEggResolutionOptions): IslandRu
  * Replaces renderer-side direct `writeIslandRunGameStateRecord` + paired
  * `setRuntimeState` writes for contract-v2 stop-build progression.
  */
-export function applyStopBuildSpend(options: ApplyStopBuildSpendOptions): IslandRunGameStateRecord {
+export async function applyStopBuildSpend(options: ApplyStopBuildSpendOptions): Promise<IslandRunGameStateRecord> {
   const {
     session,
     client,
@@ -1533,13 +1690,84 @@ export function applyStopBuildSpend(options: ApplyStopBuildSpendOptions): Island
     stopStatesByIndex,
     runtimeVersion: current.runtimeVersion + 1,
   };
-  void commitIslandRunState({
+  await commitIslandRunState({
     session,
     client,
     record: next,
     triggerSource: triggerSource ?? 'apply_stop_build_spend',
   });
   return next;
+}
+
+/**
+ * Applies up to `maxSteps` build spends atomically through one canonical commit.
+ *
+ * The per-step build spend math/rules are unchanged: this helper simply repeats
+ * the existing `spendIslandRunContractV2EssenceOnStopBuild` operation in-memory
+ * and commits once with the final valid result.
+ */
+export async function applyStopBuildSpendBatch(
+  options: ApplyStopBuildSpendBatchOptions,
+): Promise<ApplyStopBuildSpendBatchResult> {
+  const {
+    session,
+    client,
+    stopIndex,
+    effectiveIslandNumber,
+    maxSteps,
+    spendAmount = 10,
+    triggerSource,
+  } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (stopIndex < 0 || stopIndex >= current.stopBuildStateByIndex.length) {
+    return { record: current, stepsApplied: 0 };
+  }
+
+  const safeMaxSteps = Math.max(1, Math.floor(maxSteps));
+  let nextEssence = current.essence;
+  let nextEssenceLifetimeSpent = current.essenceLifetimeSpent;
+  let nextStopBuildStateByIndex = current.stopBuildStateByIndex;
+  let nextStopStatesByIndex = current.stopStatesByIndex;
+  let stepsApplied = 0;
+
+  for (let stepIndex = 0; stepIndex < safeMaxSteps; stepIndex += 1) {
+    const spendResult = spendIslandRunContractV2EssenceOnStopBuild({
+      islandRunContractV2Enabled: true,
+      stopIndex,
+      spendAmount,
+      essence: nextEssence,
+      essenceLifetimeSpent: nextEssenceLifetimeSpent,
+      stopBuildStateByIndex: nextStopBuildStateByIndex,
+      stopStatesByIndex: nextStopStatesByIndex,
+      effectiveIslandNumber,
+    });
+    if (spendResult.spent < 1) break;
+    nextEssence = spendResult.essence;
+    nextEssenceLifetimeSpent = spendResult.essenceLifetimeSpent;
+    nextStopBuildStateByIndex = spendResult.stopBuildStateByIndex;
+    nextStopStatesByIndex = spendResult.stopStatesByIndex;
+    stepsApplied += 1;
+  }
+
+  if (stepsApplied < 1) {
+    return { record: current, stepsApplied: 0 };
+  }
+
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    essence: nextEssence,
+    essenceLifetimeSpent: nextEssenceLifetimeSpent,
+    stopBuildStateByIndex: nextStopBuildStateByIndex,
+    stopStatesByIndex: nextStopStatesByIndex,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  await commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_stop_build_spend_batch',
+  });
+  return { record: next, stepsApplied };
 }
 
 // ── C3: Island travel ────────────────────────────────────────────────────────
