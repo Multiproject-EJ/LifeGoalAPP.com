@@ -251,6 +251,7 @@ import {
   getEventRotationTemplates,
   recordEventMinigameCompletion,
   recordEventProgress,
+  resolveEventTokenPresentation,
   type EventId,
 } from '../services/islandRunEventEngine';
 import {
@@ -4131,6 +4132,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const timedEventRemainingLabel = activeTimedEvent
     ? formatEventRemaining(timedEventRemainingMs)
     : '—';
+  const timedEventTokenPresentation = resolveEventTokenPresentation(activeTimedEvent?.eventType ?? null);
+  const timedEventTokenIcon = timedEventTokenPresentation.icon;
   // B8: detect the bar becoming claimable and play a one-shot "snap" flash.
   useEffect(() => {
     if (canClaimRewardBar && !rewardBarWasClaimableRef.current) {
@@ -4401,7 +4404,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const payoutParts: string[] = [];
     if (totalDice > 0) payoutParts.push(`+${totalDice} 🎲`);
     if (totalEssence > 0) payoutParts.push(`+${totalEssence} 🟣`);
-    if (totalMinigameTokens > 0) payoutParts.push(`+${totalMinigameTokens} 🎫`);
+    if (totalMinigameTokens > 0) payoutParts.push(`+${totalMinigameTokens} ${timedEventTokenIcon}`);
     if (totalStickerFragments > 0) payoutParts.push(`+${totalStickerFragments} 🧩`);
     if (totalStickersGranted > 0) payoutParts.push(`+${totalStickersGranted} 🏆sticker`);
     const cascadeNote = chainResult.payouts.length > 1 ? ` (${chainResult.payouts.length}x cascade!)` : '';
@@ -7817,7 +7820,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   className="island-run-board__rewardbar-cascade-item"
                   style={{ animationDelay: `${i * 0.5}s` }}
                 >
-                  {REWARD_KIND_ICON[p.rewardKind]} {p.rewardKind === 'dice' ? `+${p.dice}` : p.rewardKind === 'essence' ? `+${p.essence}` : p.rewardKind === 'minigame_tokens' ? `+${p.minigameTokens}` : `+${p.stickerFragments}`}
+                  {(p.rewardKind === 'minigame_tokens' ? timedEventTokenIcon : REWARD_KIND_ICON[p.rewardKind])} {p.rewardKind === 'dice' ? `+${p.dice}` : p.rewardKind === 'essence' ? `+${p.essence}` : p.rewardKind === 'minigame_tokens' ? `+${p.minigameTokens}` : `+${p.stickerFragments}`}
                 </span>
               ))}
             </div>
@@ -7848,7 +7851,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <span className="island-run-board__rewardbar-position" style={{ left: `${Math.min(rewardBarPercent, 100)}%` }} aria-hidden="true" />
             </div>
             {/* Single reward endcap — shows what you'll get next */}
-            <span className={`island-run-board__rewardbar-endcap${canClaimRewardBar ? ' island-run-board__rewardbar-endcap--claimable' : ''}`} aria-hidden="true">{nextRewardIcon}</span>
+            <span className={`island-run-board__rewardbar-endcap${canClaimRewardBar ? ' island-run-board__rewardbar-endcap--claimable' : ''}`} aria-hidden="true">
+              {nextRewardKind === 'minigame_tokens' ? timedEventTokenIcon : nextRewardIcon}
+            </span>
           </div>
           {/* Event timer + multiplier row */}
           <div className="island-run-board__rewardbar-timers">
@@ -7870,7 +7875,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <span className="island-run-board__minigame-icon-emoji" aria-hidden="true">
               {getEventDisplayMeta(activeTimedEvent.eventType).icon}
             </span>
-            <span className="island-run-board__minigame-icon-label">{spinTokens} 🎫</span>
+            <span className="island-run-board__minigame-icon-label">{spinTokens} {timedEventTokenIcon}</span>
           </button>
         )}
 
@@ -8773,7 +8778,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   {encounterRewardData.walletShards && <span className="island-encounter__reward-item">✨ +1 shard</span>}
                   {encounterRewardData.dice > 0 && <span className="island-encounter__reward-item">🎲 +{encounterRewardData.dice} dice</span>}
                   {encounterRewardData.spinTokens > 0 && (
-                    <span className="island-encounter__reward-item">🌀 {formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: encounterRewardData.spinTokens })}</span>
+                    <span className="island-encounter__reward-item">{timedEventTokenIcon} {formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: encounterRewardData.spinTokens })}</span>
                   )}
                 </div>
                 <p className="island-encounter__reward-tagline">Keep going — you're on a streak!</p>

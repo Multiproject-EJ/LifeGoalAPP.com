@@ -394,4 +394,32 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       );
     },
   },
+  {
+    name: 'timed-event token presentation uses canonical resolver across reward bar, launcher, and reward popups',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('const timedEventTokenPresentation = resolveEventTokenPresentation(activeTimedEvent?.eventType ?? null);') &&
+          source.includes('const timedEventTokenIcon = timedEventTokenPresentation.icon;'),
+        'Board should resolve a canonical timed-event token presentation from active event metadata.',
+      );
+      assert(
+        source.includes("p.rewardKind === 'minigame_tokens' ? timedEventTokenIcon : REWARD_KIND_ICON[p.rewardKind]") &&
+          source.includes("nextRewardKind === 'minigame_tokens' ? timedEventTokenIcon : nextRewardIcon"),
+        'Reward bar should use canonical token icon for minigame-token rewards.',
+      );
+      assert(
+        source.includes('{spinTokens} {timedEventTokenIcon}') &&
+          !source.includes('{spinTokens} 🎫'),
+        'Launcher token badge should use canonical token icon (no hardcoded ticket emoji).',
+      );
+      assert(
+        source.includes('`+${totalMinigameTokens} ${timedEventTokenIcon}`') &&
+          source.includes('{timedEventTokenIcon} {formatIslandRunSpinTokenReward(') &&
+          !source.includes('`+${totalMinigameTokens} 🎫`') &&
+          !source.includes('island-encounter__reward-item">🌀'),
+        'Reward popup/message token copy should use canonical token icon and remove hardcoded token emojis.',
+      );
+    },
+  },
 ];
