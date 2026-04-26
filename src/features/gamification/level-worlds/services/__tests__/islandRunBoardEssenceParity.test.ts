@@ -21,6 +21,24 @@ async function readBoardStageSource(): Promise<string> {
   return fsMod.readFileSync(stagePath, 'utf8');
 }
 
+async function readVisionQuestAdapterSource(): Promise<string> {
+  // @ts-ignore island-run test tsconfig omits node type libs
+  const fsMod = await import('fs');
+  // @ts-ignore island-run test tsconfig omits node type libs
+  const pathMod = await import('path');
+  const adapterPath = pathMod.resolve(process.cwd(), 'src/features/gamification/games/vision-quest/VisionQuestIslandRunAdapter.tsx');
+  return fsMod.readFileSync(adapterPath, 'utf8');
+}
+
+async function readVisionQuestSource(): Promise<string> {
+  // @ts-ignore island-run test tsconfig omits node type libs
+  const fsMod = await import('fs');
+  // @ts-ignore island-run test tsconfig omits node type libs
+  const pathMod = await import('path');
+  const gamePath = pathMod.resolve(process.cwd(), 'src/features/gamification/games/vision-quest/VisionQuest.tsx');
+  return fsMod.readFileSync(gamePath, 'utf8');
+}
+
 export const islandRunBoardEssenceParityTests: TestCase[] = [
   {
     name: 'encounter/boss/sanctuary/wisdom essence awards remain direct runtime-state increments (legacy parity)',
@@ -343,6 +361,36 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       assert(
         !stageSource.includes('setBurstPos({ x: tokenAnim.animState.x, y: tokenAnim.animState.y });'),
         'Landing burst should not read tokenAnim.animState in onLand callback (can be one frame stale).',
+      );
+    },
+  },
+  {
+    name: 'vision quest island-run adapter does not map landmark completion into event tokens',
+    run: async () => {
+      const source = await readVisionQuestAdapterSource();
+      assert(
+        source.includes('rewardContext="island_run_landmark"'),
+        'Vision Quest Island Run adapter should opt into landmark reward context.',
+      );
+      assert(
+        source.includes('dice: rewards.dice') && !source.includes('spinTokens: rewards.tokens'),
+        'Vision Quest Island Run adapter should grant dice only and not map tokens into spinTokens/event tokens.',
+      );
+    },
+  },
+  {
+    name: 'vision quest landmark reward context suppresses coins/tokens and token emoji reward card',
+    run: async () => {
+      const source = await readVisionQuestSource();
+      assert(
+        source.includes("rewardContext?: 'default' | 'island_run_landmark'"),
+        'Vision Quest should expose a landmark reward-context switch for Island Run.',
+      );
+      assert(
+        source.includes("rewardContext === 'island_run_landmark'") &&
+          source.includes('coins: 0') &&
+          source.includes('tokens: 0'),
+        'Landmark reward context should suppress coins/tokens so event-token rewards are not granted by default.',
       );
     },
   },
