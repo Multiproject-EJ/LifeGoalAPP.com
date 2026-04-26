@@ -421,7 +421,7 @@ export const SPIN_PRIZES: SpinPrize[] = [
   { type: 'shards',         value: 5,   label: '5 Shards',        icon: '🔮', wheelSize: 'large',  wheelWeight: 2 },
   { type: 'dice',           value: 8,   label: '8 Dice',          icon: '🎲', wheelSize: 'medium', wheelWeight: 3 },
   { type: 'dice',           value: 15,  label: '15 Dice',         icon: '🎲', wheelSize: 'large',  wheelWeight: 2 },
-  { type: 'game_tokens',    value: 2,   label: '2 Tokens',        icon: '🎟️', wheelSize: 'medium', wheelWeight: 3 },
+  { type: 'game_tokens',    value: 2,   label: '2 Game Tokens',   icon: '🎟️', wheelSize: 'medium', wheelWeight: 3 },
   { type: 'treasure_chest', value: 1,   label: 'Treasure Chest',  icon: '🧰', wheelSize: 'small',  wheelWeight: 2, details: { rarity: 'rare' } },
   { type: 'mystery',        value: 1,   label: 'Mystery Box',     icon: '🎁', wheelSize: 'small',  wheelWeight: 1, details: { rarity: 'legendary' } },
 ];

@@ -426,7 +426,7 @@ export async function executeSpin(userId: string): Promise<ServiceResponse<SpinR
  * - essence → island_run.essence (via gamification_profiles for now)
  * - shards → island_run.shards
  * - dice → island_run.dice_pool
- * - game_tokens → gamification_profiles.total_points (gold equivalent)
+ * - game_tokens → gamification_profiles.total_points (gold equivalent; not event tickets)
  * - treasure_chest → multi-currency bundle (essence + shards + dice)
  * - mystery → 1.5× random single-currency award
  * - gold (legacy) → gamification_profiles.total_points
@@ -513,7 +513,7 @@ async function awardPrize(userId: string, prize: SpinPrize): Promise<void> {
       break;
 
     case 'game_tokens':
-      // Game tokens are stored as gold-equivalent for now
+      // Game tokens are stored as gold-equivalent for now (not timed-event tickets).
       await addToProfile('total_points', prize.value * 10);
       break;
 

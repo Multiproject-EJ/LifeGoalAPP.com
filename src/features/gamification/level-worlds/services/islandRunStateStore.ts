@@ -47,6 +47,7 @@ import {
   type IslandRunGameStateHydrationSource,
   type IslandRunGameStateRecord,
 } from './islandRunGameStateStore';
+import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 
 // ── per-user mirror + listener registry ──────────────────────────────────────
 
@@ -74,7 +75,16 @@ function getSlot(session: Session): UserSlot {
 
 function publish(slot: UserSlot, next: IslandRunGameStateRecord): void {
   if (slot.snapshot === next) return;
+  const prev = slot.snapshot;
   slot.snapshot = next;
+  if (prev.tokenIndex !== next.tokenIndex) {
+    logIslandRunEntryDebug('island_run_state_store_publish_token_index_change', {
+      tokenIndexBefore: prev.tokenIndex,
+      tokenIndexAfter: next.tokenIndex,
+      runtimeVersionBefore: prev.runtimeVersion,
+      runtimeVersionAfter: next.runtimeVersion,
+    });
+  }
   // Snapshot listeners into an array so a listener that unsubscribes during
   // notification (common with React effects) does not perturb the iteration.
   for (const listener of Array.from(slot.listeners)) {
@@ -211,7 +221,15 @@ export function resetIslandRunStateSnapshot(
   session: Session,
   record: IslandRunGameStateRecord,
 ): void {
-  publish(getSlot(session), record);
+  const slot = getSlot(session);
+  logIslandRunEntryDebug('island_run_state_store_reset_snapshot', {
+    userId: session.user.id,
+    tokenIndexBefore: slot.snapshot.tokenIndex,
+    tokenIndexAfter: record.tokenIndex,
+    runtimeVersionBefore: slot.snapshot.runtimeVersion,
+    runtimeVersionAfter: record.runtimeVersion,
+  });
+  publish(slot, record);
 }
 
 // ── mirror sync helpers (C1) ────────────────────────────────────────────────
@@ -228,6 +246,13 @@ export function resetIslandRunStateSnapshot(
 export function refreshIslandRunStateFromLocal(session: Session): void {
   const slot = getSlot(session);
   const fresh = readIslandRunGameStateRecord(session);
+  logIslandRunEntryDebug('island_run_state_store_refresh_from_local', {
+    userId: session.user.id,
+    tokenIndexBefore: slot.snapshot.tokenIndex,
+    tokenIndexAfter: fresh.tokenIndex,
+    runtimeVersionBefore: slot.snapshot.runtimeVersion,
+    runtimeVersionAfter: fresh.runtimeVersion,
+  });
   publish(slot, fresh);
 }
 
