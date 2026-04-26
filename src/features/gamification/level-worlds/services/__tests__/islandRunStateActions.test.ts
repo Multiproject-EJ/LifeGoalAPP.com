@@ -35,6 +35,9 @@ import {
   applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
   applyCreatureTreatInventory,
+  applyDevGrantDice,
+  applyDevGrantEssence,
+  applyDevSpeedHatchEgg,
   applyHydrationEggReadyTransition,
   applyEggResolution,
   applyEggPlacement,
@@ -51,6 +54,7 @@ import {
   applyWalletDiamondsDelta,
   applyWalletDiamondsSet,
   applyStopBuildSpend,
+  applyStopBuildSpendBatch,
   applyStopObjectiveProgress,
   applyStopTicketPayment,
   applyWalletShardsDelta,
@@ -262,6 +266,185 @@ export const islandRunStateActionsTests: TestCase[] = [
       unsub();
     },
   },
+  {
+    name: 'applyTokenHopRewards dual-writes timed-event token grants into minigameTicketsByEvent',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        spinTokens: 5,
+        minigameTicketsByEvent: { 'feeding_frenzy@1': 2 },
+      });
+
+      const result = applyTokenHopRewards({
+        session,
+        client: null,
+        deltas: { spinTokens: 3 },
+        dualWriteMinigameTicketsEventId: 'feeding_frenzy@1',
+        triggerSource: 'test_event_dual_write',
+      });
+
+      assertEqual(result.spinTokens, 8, 'spinTokens should still increase by the same grant amount');
+      assertEqual(
+        result.minigameTicketsByEvent['feeding_frenzy@1'],
+        5,
+        'event ticket ledger should increase for the active timed event id',
+      );
+    },
+  },
+  {
+    name: 'applyTokenHopRewards does not mutate minigameTicketsByEvent for non-timed-event or spend paths',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        spinTokens: 5,
+        minigameTicketsByEvent: { 'feeding_frenzy@1': 4 },
+      });
+
+      const rewardWithoutEventId = applyTokenHopRewards({
+        session,
+        client: null,
+        deltas: { spinTokens: 2 },
+        triggerSource: 'test_non_timed_reward',
+      });
+      assertEqual(
+        rewardWithoutEventId.minigameTicketsByEvent['feeding_frenzy@1'],
+        4,
+        'grants without timed-event context should not write event tickets',
+      );
+
+      const spendResult = applyTokenHopRewards({
+        session,
+        client: null,
+        deltas: { spinTokens: -3 },
+        dualWriteMinigameTicketsEventId: 'feeding_frenzy@1',
+        triggerSource: 'test_timed_event_spend',
+      });
+      assertEqual(
+        spendResult.minigameTicketsByEvent['feeding_frenzy@1'],
+        4,
+        'spend deltas should not decrement event tickets in dual-write phase',
+      );
+    },
+  },
+
+  {
+    name: 'applyDevGrantDice grants dice via canonical commit path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 10, dicePool: 20 });
+
+      const result = applyDevGrantDice({
+        session,
+        client: null,
+        amount: 50,
+        triggerSource: 'test_dev_grant_dice',
+      });
+
+      assertEqual(result.applied, 50, 'dev dice grant should apply exact positive amount');
+      assertEqual(result.record.dicePool, 70, 'dicePool should increase by granted amount');
+      assertEqual(result.record.runtimeVersion, 11, 'runtimeVersion should bump once');
+      assertEqual(getIslandRunStateSnapshot(session).dicePool, 70, 'store mirror should reflect granted dice');
+    },
+  },
+
+  {
+    name: 'applyDevGrantEssence grants essence + lifetime earned via canonical commit path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 10, essence: 100, essenceLifetimeEarned: 350 });
+
+      const result = applyDevGrantEssence({
+        session,
+        client: null,
+        amount: 500,
+        triggerSource: 'test_dev_grant_essence',
+      });
+
+      assertEqual(result.applied, 500, 'dev essence grant should apply exact positive amount');
+      assertEqual(result.record.essence, 600, 'essence should increase by granted amount');
+      assertEqual(result.record.essenceLifetimeEarned, 850, 'lifetime earned should track granted essence');
+      assertEqual(result.record.runtimeVersion, 11, 'runtimeVersion should bump once');
+      assertEqual(getIslandRunStateSnapshot(session).essence, 600, 'store mirror should reflect granted essence');
+    },
+  },
+
+  {
+    name: 'applyDevSpeedHatchEgg marks active island egg as ready via canonical commit path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        currentIslandNumber: 7,
+        activeEggTier: 'rare',
+        activeEggSetAtMs: 1_000,
+        activeEggHatchDurationMs: 86_400_000,
+        perIslandEggs: {
+          '7': {
+            tier: 'rare',
+            setAtMs: 1_000,
+            hatchAtMs: 86_401_000,
+            status: 'incubating',
+            location: 'island',
+          },
+        },
+      });
+
+      const result = applyDevSpeedHatchEgg({
+        session,
+        client: null,
+        islandNumber: 7,
+        nowMs: 5_000,
+        triggerSource: 'test_dev_speed_hatch_egg',
+      });
+
+      assertEqual(result.changed, true, 'speed hatch should commit when incubating egg exists');
+      assertEqual(result.record.runtimeVersion, 11, 'runtimeVersion should bump once');
+      assertEqual(result.record.activeEggHatchDurationMs, 0, 'active egg should become immediately hatchable');
+      assertEqual(result.record.perIslandEggs['7']?.status, 'ready', 'island egg ledger status should be ready');
+      assertEqual(result.record.perIslandEggs['7']?.hatchAtMs, 1_000, 'ledger hatchAt should match setAt for immediate readiness');
+    },
+  },
+
+  {
+    name: 'applyDevSpeedHatchEgg is a no-op when no hatchable active egg exists',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        currentIslandNumber: 3,
+        activeEggTier: null,
+        activeEggSetAtMs: null,
+        activeEggHatchDurationMs: null,
+        perIslandEggs: {
+          '3': {
+            tier: 'common',
+            setAtMs: 100,
+            hatchAtMs: 200,
+            status: 'sold',
+            location: 'island',
+          },
+        },
+      });
+
+      const result = applyDevSpeedHatchEgg({
+        session,
+        client: null,
+        islandNumber: 3,
+        triggerSource: 'test_dev_speed_hatch_egg_noop',
+      });
+
+      assertEqual(result.changed, false, 'no active incubating/ready egg should no-op');
+      assertEqual(result.record.runtimeVersion, 10, 'runtimeVersion should remain unchanged on no-op');
+    },
+  },
 
   {
     name: 'applyPassiveDiceRegenTick commits dicePool + diceRegenState when regen is due',
@@ -312,6 +495,69 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.changed, false, 'no regen delta should be a no-op');
       assertEqual(result.diceAdded, 0, 'no-op should report zero dice added');
       assertEqual(result.record.runtimeVersion, 10, 'runtimeVersion should not change on no-op');
+    },
+  },
+  {
+    name: 'applyPassiveDiceRegenTick above cap does not churn commits/runtimeVersion',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 22,
+        dicePool: 43, // above L1 cap
+        diceRegenState: buildInitialDiceRegenState(1, 0),
+      });
+
+      const first = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 1_000,
+        triggerSource: 'test_passive_dice_regen_tick_above_cap_first',
+      });
+      const second = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 2_000,
+        triggerSource: 'test_passive_dice_regen_tick_above_cap_second',
+      });
+
+      assertEqual(first.changed, false, 'above-cap tick should be no-op');
+      assertEqual(second.changed, false, 'repeated above-cap tick should remain no-op');
+      assertEqual(first.record.runtimeVersion, 22, 'runtimeVersion should not churn on above-cap no-op');
+      assertEqual(second.record.runtimeVersion, 22, 'runtimeVersion should remain stable on repeated no-op');
+    },
+  },
+  {
+    name: 'applyPassiveDiceRegenTick at cap does not churn commits/runtimeVersion',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 30,
+        dicePool: 30, // equals L1 cap
+        diceRegenState: buildInitialDiceRegenState(1, 0),
+      });
+
+      const first = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 1_000,
+        triggerSource: 'test_passive_dice_regen_tick_at_cap_first',
+      });
+      const second = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: 2_000,
+        triggerSource: 'test_passive_dice_regen_tick_at_cap_second',
+      });
+
+      assertEqual(first.changed, false, 'at-cap tick should be no-op');
+      assertEqual(second.changed, false, 'repeated at-cap tick should remain no-op');
+      assertEqual(second.record.runtimeVersion, 30, 'runtimeVersion should not churn at cap');
     },
   },
 
@@ -1576,6 +1822,144 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.runtimeVersion, 11, 'runtimeVersion should bump by one');
     },
   },
+  {
+    name: 'syncCompletedStopsForIsland is no-op when completed stops are unchanged',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 40,
+        currentIslandNumber: 7,
+        tokenIndex: 33,
+        dicePool: 43,
+        essence: 777,
+        completedStopsByIsland: {
+          '7': ['hatchery', 'habit'],
+        },
+      });
+
+      const first = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['hatchery', 'habit'],
+        triggerSource: 'test_sync_completed_stops_noop_first_open',
+      });
+      const second = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['hatchery', 'habit'],
+        triggerSource: 'test_sync_completed_stops_noop_second_open',
+      });
+
+      assertEqual(first.runtimeVersion, 40, 'unchanged completed stops should not bump runtimeVersion');
+      assertEqual(second.runtimeVersion, 40, 'repeated unchanged sync should stay idempotent');
+      assertEqual(first.tokenIndex, 33, 'tokenIndex must remain unchanged');
+      assertEqual(first.dicePool, 43, 'dicePool must remain unchanged');
+      assertEqual(first.essence, 777, 'essence must remain unchanged');
+    },
+  },
+  {
+    name: 'syncCompletedStopsForIsland is semantic no-op for re-ordered/duplicate stop arrays',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 41,
+        currentIslandNumber: 7,
+        tokenIndex: 33,
+        dicePool: 43,
+        essence: 777,
+        completedStopsByIsland: {
+          '7': ['hatchery', 'habit'],
+        },
+      });
+
+      const result = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['habit', 'hatchery', 'habit'],
+        triggerSource: 'test_sync_completed_stops_semantic_noop',
+      });
+
+      assertEqual(result.runtimeVersion, 41, 'semantic no-op should not bump runtimeVersion');
+      assertEqual(result.tokenIndex, 33, 'semantic no-op must preserve tokenIndex');
+      assertEqual(result.dicePool, 43, 'semantic no-op must preserve dicePool');
+      assertEqual(result.essence, 777, 'semantic no-op must preserve essence');
+    },
+  },
+  {
+    name: 'syncCompletedStopsForIsland persists only when completed stops differ',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 50,
+        currentIslandNumber: 7,
+        tokenIndex: 33,
+        dicePool: 43,
+        essence: 888,
+        completedStopsByIsland: {
+          '7': ['hatchery'],
+        },
+      });
+
+      const result = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['hatchery', 'habit'],
+        triggerSource: 'test_sync_completed_stops_diff',
+      });
+
+      assertEqual(result.runtimeVersion, 51, 'changed completed stops should bump runtimeVersion once');
+      assertEqual(result.completedStopsByIsland['7']?.length ?? 0, 2, 'completed stops should update for island');
+      assertEqual(result.tokenIndex, 33, 'tokenIndex must be preserved');
+      assertEqual(result.dicePool, 43, 'dicePool must be preserved');
+      assertEqual(result.essence, 888, 'essence must be preserved');
+    },
+  },
+  {
+    name: 'syncCompletedStopsForIsland repeated renders only persist once for the same semantic target',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 60,
+        currentIslandNumber: 7,
+        tokenIndex: 33,
+        dicePool: 43,
+        essence: 999,
+        completedStopsByIsland: {
+          '7': ['hatchery'],
+        },
+      });
+
+      const first = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['habit', 'hatchery'],
+        triggerSource: 'test_sync_completed_stops_repeated_first',
+      });
+      const second = syncCompletedStopsForIsland({
+        session,
+        client: null,
+        islandNumber: 7,
+        completedStops: ['hatchery', 'habit', 'habit'],
+        triggerSource: 'test_sync_completed_stops_repeated_second',
+      });
+
+      assertEqual(first.runtimeVersion, 61, 'first semantic change should persist once');
+      assertEqual(second.runtimeVersion, 61, 'second semantic-equivalent render should no-op');
+      assertEqual(second.completedStopsByIsland['7']?.join(','), 'hatchery,habit', 'stored order should be canonical');
+      assertEqual(second.tokenIndex, 33, 'tokenIndex preserved across repeated calls');
+      assertEqual(second.dicePool, 43, 'dicePool preserved across repeated calls');
+      assertEqual(second.essence, 999, 'essence preserved across repeated calls');
+    },
+  },
 
   {
     name: 'applyEggPlacement commits egg state + per-island ledger + completed stops atomically',
@@ -1774,7 +2158,7 @@ export const islandRunStateActionsTests: TestCase[] = [
 
   {
     name: 'applyStopBuildSpend commits build-progress spend through the store in one publish',
-    run: () => {
+    run: async () => {
       resetAll();
       const session = makeSession();
       seedState({
@@ -1808,7 +2192,7 @@ export const islandRunStateActionsTests: TestCase[] = [
         { objectiveComplete: false, buildComplete: false },
       ];
 
-      const result = applyStopBuildSpend({
+      const result = await applyStopBuildSpend({
         session,
         client: null,
         essence: 450,
@@ -1829,6 +2213,143 @@ export const islandRunStateActionsTests: TestCase[] = [
       assert(snapshot.stopBuildStateByIndex[0]?.buildLevel === 1, 'store snapshot should keep updated stop build level');
 
       unsub();
+    },
+  },
+  {
+    name: 'applyStopBuildSpendBatch cannot overspend essence',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 20,
+        essence: 15,
+        essenceLifetimeSpent: 0,
+        stopBuildStateByIndex: [
+          { requiredEssence: 30, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 70, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 90, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 120, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 200, spentEssence: 0, buildLevel: 0 },
+        ],
+      });
+
+      const result = await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 0,
+        effectiveIslandNumber: 1,
+        maxSteps: 5,
+      });
+
+      assertEqual(result.stepsApplied, 2, 'batch should apply available spend until wallet reaches zero');
+      assertEqual(result.record.essence, 0, 'batch should never overspend essence below zero');
+      assertEqual(result.record.essenceLifetimeSpent, 15, 'batch should only add the essence actually spent');
+      assertEqual(result.record.runtimeVersion, 21, 'batch should commit once when at least one step is applied');
+    },
+  },
+  {
+    name: 'applyStopBuildSpendBatch stops at L3 completion',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 33,
+        essence: 200,
+        essenceLifetimeSpent: 0,
+        stopBuildStateByIndex: [
+          { requiredEssence: 10, spentEssence: 0, buildLevel: 2 },
+          { requiredEssence: 70, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 90, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 120, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 200, spentEssence: 0, buildLevel: 0 },
+        ],
+      });
+
+      const result = await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 0,
+        effectiveIslandNumber: 1,
+        maxSteps: 5,
+      });
+
+      assertEqual(result.stepsApplied, 1, 'batch should stop once the stop reaches max build level');
+      assertEqual(result.record.stopBuildStateByIndex[0]?.buildLevel, 3, 'stop should finish at L3');
+      assertEqual(result.record.stopStatesByIndex[0]?.buildComplete, true, 'buildComplete should be true at L3');
+    },
+  },
+  {
+    name: 'applyStopBuildSpendBatch result matches repeated single-step spends',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      const seededStopBuildState = [
+        { requiredEssence: 50, spentEssence: 0, buildLevel: 0 },
+        { requiredEssence: 70, spentEssence: 0, buildLevel: 0 },
+        { requiredEssence: 90, spentEssence: 0, buildLevel: 0 },
+        { requiredEssence: 120, spentEssence: 0, buildLevel: 0 },
+        { requiredEssence: 200, spentEssence: 0, buildLevel: 0 },
+      ] as IslandRunGameStateRecord['stopBuildStateByIndex'];
+      seedState({
+        runtimeVersion: 40,
+        essence: 500,
+        essenceLifetimeSpent: 0,
+        stopBuildStateByIndex: seededStopBuildState,
+      });
+
+      const batchResult = await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 0,
+        effectiveIslandNumber: 1,
+        maxSteps: 3,
+      });
+
+      resetAll();
+      seedState({
+        runtimeVersion: 40,
+        essence: 500,
+        essenceLifetimeSpent: 0,
+        stopBuildStateByIndex: seededStopBuildState,
+      });
+      await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 0,
+        effectiveIslandNumber: 1,
+        maxSteps: 1,
+      });
+      await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 0,
+        effectiveIslandNumber: 1,
+        maxSteps: 1,
+      });
+      const repeatedSingles = await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 0,
+        effectiveIslandNumber: 1,
+        maxSteps: 1,
+      });
+
+      assertEqual(batchResult.record.essence, repeatedSingles.record.essence, 'batch essence should match repeated singles');
+      assertEqual(
+        batchResult.record.essenceLifetimeSpent,
+        repeatedSingles.record.essenceLifetimeSpent,
+        'batch lifetime spent should match repeated singles',
+      );
+      assertEqual(
+        JSON.stringify(batchResult.record.stopBuildStateByIndex),
+        JSON.stringify(repeatedSingles.record.stopBuildStateByIndex),
+        'batch stop build state should match repeated singles',
+      );
+      assertEqual(
+        JSON.stringify(batchResult.record.stopStatesByIndex),
+        JSON.stringify(repeatedSingles.record.stopStatesByIndex),
+        'batch stop state completion flags should match repeated singles',
+      );
     },
   },
 

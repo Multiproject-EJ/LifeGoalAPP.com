@@ -539,6 +539,24 @@
   cursor: pointer;
 }
 
+.habit-day-nav__todays-offer-spin-button--ready {
+  border: 2px solid rgba(220, 38, 38, 0.8);
+  box-shadow:
+    0 0 0 2px rgba(220, 38, 38, 0.35),
+    0 12px 26px rgba(250, 204, 21, 0.28);
+  animation: todays-offer-spin-ready-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes todays-offer-spin-ready-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.015);
+  }
+}
+
 .habit-day-nav__todays-offer-spin-icon {
   font-size: 1.4rem;
 }

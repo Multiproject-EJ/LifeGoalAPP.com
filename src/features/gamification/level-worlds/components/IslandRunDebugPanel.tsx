@@ -17,6 +17,8 @@ interface DebugPanelProps {
   client: SupabaseClient | null;
   runtimeState: IslandRunRuntimeState;
   localState: IslandRunDebugLocalState;
+  isDevModeEnabled: boolean;
+  onEnableDevMode: () => void;
   onClose: () => void;
 }
 
@@ -67,7 +69,15 @@ type DebugSection = {
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-export function IslandRunDebugPanel({ session, client, runtimeState, localState, onClose }: DebugPanelProps) {
+export function IslandRunDebugPanel({
+  session,
+  client,
+  runtimeState,
+  localState,
+  isDevModeEnabled,
+  onEnableDevMode,
+  onClose,
+}: DebugPanelProps) {
   const [supabaseStatus, setSupabaseStatus] = useState<'checking' | 'ok' | 'error'>('checking');
   const [supabaseLatencyMs, setSupabaseLatencyMs] = useState<number | null>(null);
   const [supabaseError, setSupabaseError] = useState<string | null>(null);
@@ -109,6 +119,11 @@ export function IslandRunDebugPanel({ session, client, runtimeState, localState,
   const sections: DebugSection[] = useMemo(() => {
     const rs = runtimeState;
     const ls = localState;
+    const activeTimedEventId = rs.activeTimedEvent?.eventId ?? null;
+    const activeEventTickets = activeTimedEventId
+      ? (rs.minigameTicketsByEvent?.[activeTimedEventId] ?? 0)
+      : 0;
+    const hasLegacyEventTicketDivergence = Boolean(activeTimedEventId) && activeEventTickets !== rs.spinTokens;
 
     const userSection: DebugSection = {
       title: '👤 User & Session',
@@ -245,6 +260,13 @@ export function IslandRunDebugPanel({ session, client, runtimeState, localState,
             { label: 'Event type', value: rs.activeTimedEvent.eventType },
             { label: 'Started', value: fmtMs(rs.activeTimedEvent.startedAtMs) },
             { label: 'Expires', value: fmtMs(rs.activeTimedEvent.expiresAtMs) },
+            { label: 'Legacy spin tokens', value: String(rs.spinTokens) },
+            { label: 'Active event tickets', value: String(activeEventTickets) },
+            {
+              label: 'Legacy/event divergence',
+              value: hasLegacyEventTicketDivergence ? '⚠️ diverged' : '✅ matched',
+              warn: hasLegacyEventTicketDivergence,
+            },
             { label: 'Feeding actions', value: String(rs.activeTimedEventProgress?.feedingActions ?? 0) },
             { label: 'Tokens earned', value: String(rs.activeTimedEventProgress?.tokensEarned ?? 0) },
             { label: 'Milestones claimed', value: String(rs.activeTimedEventProgress?.milestonesClaimed ?? 0) },
@@ -335,6 +357,22 @@ export function IslandRunDebugPanel({ session, client, runtimeState, localState,
           </div>
         </div>
         <div className="island-run-debug-panel__body">
+          <details className="island-run-debug-panel__section" open>
+            <summary className="island-run-debug-panel__section-title">🧪 DEV MODE</summary>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', padding: '0.5rem 0.2rem' }}>
+              <p style={{ margin: 0, fontSize: '0.82rem', opacity: 0.86 }}>
+                Unlock in-game test grants for this browser profile only.
+              </p>
+              <button
+                type="button"
+                className="island-run-debug-panel__copy-btn"
+                onClick={onEnableDevMode}
+                disabled={isDevModeEnabled}
+              >
+                {isDevModeEnabled ? '✅ DEV MODE unlocked' : '🧪 Unlock DEV MODE — testing only'}
+              </button>
+            </div>
+          </details>
           {sections.map((section) => (
             <details key={section.title} className="island-run-debug-panel__section" open>
               <summary className="island-run-debug-panel__section-title">{section.title}</summary>
@@ -350,6 +388,15 @@ export function IslandRunDebugPanel({ session, client, runtimeState, localState,
               </table>
             </details>
           ))}
+        </div>
+        <div className="island-run-debug-panel__footer">
+          <button
+            type="button"
+            className="island-run-debug-panel__footer-close-btn"
+            onClick={onClose}
+          >
+            Close Debug Panel
+          </button>
         </div>
       </div>
     </div>

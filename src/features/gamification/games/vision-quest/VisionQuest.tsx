@@ -32,9 +32,10 @@ interface VisionQuestProps {
   session: Session;
   onClose: () => void;
   onComplete: (rewards: { coins: number; dice: number; tokens: number }) => void;
+  rewardContext?: 'default' | 'island_run_landmark';
 }
 
-export function VisionQuest({ session, onClose, onComplete }: VisionQuestProps) {
+export function VisionQuest({ session, onClose, onComplete, rewardContext = 'default' }: VisionQuestProps) {
   const userId = session.user.id;
   
   const [gameSession, setGameSession] = useState<VisionQuestSession>({
@@ -100,27 +101,35 @@ export function VisionQuest({ session, onClose, onComplete }: VisionQuestProps) 
       state
     );
     
+    const effectiveRewards = rewardContext === 'island_run_landmark'
+      ? {
+          coins: 0,
+          dice: rewards.dice,
+          tokens: 0,
+        }
+      : rewards;
+
     // Award rewards
-    if (rewards.coins > 0) {
+    if (effectiveRewards.coins > 0) {
       awardGold(
         userId,
-        rewards.coins,
+        effectiveRewards.coins,
         'vision_quest',
         `Vision Quest: Reflection on ${gameSession.selectedPrompt.zone}`
       );
     }
-    if (rewards.dice > 0) {
+    if (effectiveRewards.dice > 0) {
       awardDice(
         userId,
-        rewards.dice,
+        effectiveRewards.dice,
         'vision_quest',
         `Vision Quest: Reflection on ${gameSession.selectedPrompt.zone}`
       );
     }
-    if (rewards.tokens > 0) {
+    if (effectiveRewards.tokens > 0) {
       awardGameTokens(
         userId,
-        rewards.tokens,
+        effectiveRewards.tokens,
         'vision_quest',
         `Vision Quest: Reflection on ${gameSession.selectedPrompt.zone}`
       );
@@ -135,7 +144,8 @@ export function VisionQuest({ session, onClose, onComplete }: VisionQuestProps) 
         zone: gameSession.selectedPrompt.zone,
         reflectionLength: gameSession.reflectionText.length,
         streak: newState.currentStreak,
-        rewards,
+        rewards: effectiveRewards,
+        rewardContext,
       },
     });
     
@@ -146,7 +156,7 @@ export function VisionQuest({ session, onClose, onComplete }: VisionQuestProps) 
     setGameSession((prev) => ({
       ...prev,
       isComplete: true,
-      rewards,
+      rewards: effectiveRewards,
     }));
     
     setShowConfirmation(true);
@@ -156,7 +166,7 @@ export function VisionQuest({ session, onClose, onComplete }: VisionQuestProps) 
       triggerCompletionHaptic('medium', { channel: 'gamification', minIntervalMs: 3000 });
       setShowCelebration(true);
     }, 800);
-  }, [gameSession, userId]);
+  }, [gameSession, rewardContext, userId]);
   
   const handleComplete = useCallback(() => {
     playButtonClick();

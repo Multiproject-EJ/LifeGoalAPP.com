@@ -6,6 +6,7 @@ import type { DailySpinState } from '../types/gamification';
 
 interface UseDailySpinStatusResult {
   spinAvailable: boolean;
+  spinsAvailable: number;
   loading: boolean;
   lastSpinDate: string | null;
   refresh: () => Promise<void>;
@@ -83,6 +84,7 @@ export function useDailySpinStatus(userId: string | undefined): UseDailySpinStat
 
   return {
     spinAvailable: (spinState?.spinsAvailable ?? 0) > 0,
+    spinsAvailable: spinState?.spinsAvailable ?? 0,
     loading,
     lastSpinDate: spinState?.lastSpinDate ?? null,
     refresh: checkAvailability,
