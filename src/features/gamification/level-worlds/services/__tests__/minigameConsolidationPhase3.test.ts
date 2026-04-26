@@ -17,6 +17,7 @@ import {
   getEventMilestoneLadder,
   parseEventId,
   recordEventProgress,
+  resolveEventTokenPresentation,
 } from '../islandRunEventEngine';
 import type { IslandRunRewardBarRuntimeSlice } from '../islandRunContractV2RewardBar';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
@@ -207,6 +208,29 @@ export const minigameConsolidationPhase3Tests: TestCase[] = [
         getEventDisplayMeta('future_event_mode'),
         { icon: '⭐', displayName: 'Future Event Mode' },
         'unknown event ids should still render a readable fallback',
+      );
+    },
+  },
+  {
+    name: 'resolveEventTokenPresentation uses event icon and readable token labels with safe fallback',
+    run: () => {
+      assertDeepEqual(
+        resolveEventTokenPresentation('space_excavator'),
+        {
+          icon: '🚀',
+          labelSingular: 'Space Excavator token',
+          labelPlural: 'Space Excavator tokens',
+        },
+        'canonical event token presentation should inherit event icon/display name',
+      );
+      assertDeepEqual(
+        resolveEventTokenPresentation(null),
+        {
+          icon: '🎫',
+          labelSingular: 'Event token',
+          labelPlural: 'Event tokens',
+        },
+        'missing/unknown event should use neutral ticket fallback',
       );
     },
   },
