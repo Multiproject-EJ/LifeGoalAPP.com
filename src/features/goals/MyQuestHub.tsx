@@ -4,7 +4,7 @@ import type { Database, Json } from '../../lib/database.types';
 import { fetchCheckinsForUser } from '../../services/checkins';
 import { fetchGoals } from '../../services/goals';
 import { listHabitsV2, type HabitV2Row } from '../../services/habitsV2';
-import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
+import { LIFE_WHEEL_CATEGORIES, getLifeWheelCategoryLabel, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 import { normalizeGoalStatus } from './goalStatus';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
@@ -40,7 +40,7 @@ function parseLatestScores(scores: Json | null): Record<LifeWheelCategoryKey, nu
 
 function formatCategoryLabel(key: LifeWheelCategoryKey | null): string {
   if (!key) return 'No focus area yet';
-  return LIFE_WHEEL_CATEGORIES.find((category) => category.key === key)?.label ?? key;
+  return getLifeWheelCategoryLabel(key);
 }
 
 export function MyQuestHub({
