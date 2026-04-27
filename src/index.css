@@ -18794,6 +18794,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   padding: 1rem;
 }
 
+.mobile-menu-overlay__hold-modal--my-quest {
+  place-items: stretch;
+  padding: 0;
+  overflow: hidden;
+}
+
 .mobile-menu-overlay__hold-backdrop {
   position: absolute;
   inset: 0;
@@ -18816,6 +18822,20 @@ html.platform-ipad .workspace-shell__menu-edge {
 .mobile-menu-overlay__submenu-sheet {
   max-height: min(78vh, 560px);
   overflow-y: auto;
+}
+
+.mobile-menu-overlay__submenu-sheet--my-quest {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  max-height: 100dvh;
+  height: 100dvh;
+  border-radius: 0;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 1rem);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  box-shadow: none;
 }
 
 .mobile-menu-overlay__hold-header {

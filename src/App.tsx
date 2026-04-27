@@ -1037,10 +1037,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const isGameNearNextLevel = Math.round(levelInfo?.progressPercentage ?? 0) >= 95;
   const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
+  const shouldForceFooterCollapseForDirectionFlows =
+    isMobileExperience &&
+    (isMyQuestSubmenuOpen || isStarterQuestSheetOpen || mobileActiveNavId === 'support' || mobileActiveNavId === 'rituals');
   const shouldAutoCollapseOnIdle =
     isMobileExperience &&
     mobileActiveNavId !== null &&
-    (MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId) ||
+    (shouldForceFooterCollapseForDirectionFlows ||
+      MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId) ||
       (mobileActiveNavId === 'actions' && actionsTabView === 'tasks'));
   const shouldAllowFooterCollapse = isMobileExperience && (isMobileMenuImageActive || shouldAutoCollapseOnIdle);
   const shouldHideFooterInJournal =
@@ -3680,14 +3684,19 @@ export default function App({ forceAuthOnMount }: AppProps) {
               </ul>
             </div>
             {isMyQuestSubmenuOpen ? (
-              <div className="mobile-menu-overlay__hold-modal" role="dialog" aria-modal="true" aria-label="My Quest menu">
+              <div
+                className="mobile-menu-overlay__hold-modal mobile-menu-overlay__hold-modal--my-quest"
+                role="dialog"
+                aria-modal="true"
+                aria-label="My Quest menu"
+              >
                 <button
                   type="button"
                   className="mobile-menu-overlay__hold-backdrop"
                   aria-label="Close My Quest menu"
                   onClick={() => setIsMyQuestSubmenuOpen(false)}
                 />
-                <div className="mobile-menu-overlay__hold-panel mobile-menu-overlay__submenu-sheet">
+                <div className="mobile-menu-overlay__hold-panel mobile-menu-overlay__submenu-sheet mobile-menu-overlay__submenu-sheet--my-quest">
                   <div className="mobile-menu-overlay__hold-header">
                     <div>
                       <p className="mobile-menu-overlay__hold-eyebrow">Quest menu</p>
