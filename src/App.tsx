@@ -1045,7 +1045,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const shouldAutoCollapseOnIdle =
     isMobileExperience &&
     mobileActiveNavId !== null &&
-    (MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId) ||
+    (shouldForceFooterCollapseForDirectionFlows ||
+      MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId) ||
       (mobileActiveNavId === 'actions' && actionsTabView === 'tasks'));
   const shouldAllowFooterCollapse =
     isMobileExperience && (isMobileMenuImageActive || shouldAutoCollapseOnIdle || shouldForceFooterCollapseForDirectionFlows);
