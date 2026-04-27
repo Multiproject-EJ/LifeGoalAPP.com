@@ -33,3 +33,9 @@
   .workspace-content { padding: var(--workspace-padding-sm); }
   .workspace-content > * { padding: 0; max-width: 100%; }
 }
+
+@media (max-width: 720px), (max-height: 720px) and (pointer: coarse) {
+  .app--mobile-frame .workspace-stage__body > .workspace-content {
+    padding-top: max(3rem, calc(env(safe-area-inset-top, 0px) + 1.5rem));
+  }
+}
