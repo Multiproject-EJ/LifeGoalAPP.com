@@ -12234,8 +12234,23 @@ html.platform-ipad .workspace-shell__menu-edge {
   cursor: pointer;
 }
 
+.starter-quest-picker__card-link {
+  justify-self: flex-start;
+  border: none;
+  background: transparent;
+  color: #0369a1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
 .starter-quest-picker__card-action:disabled {
   opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.starter-quest-picker__card-link:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
@@ -12274,6 +12289,105 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: #ffffff;
   font-weight: 600;
   padding: 0.45rem 0.95rem;
+}
+
+.starter-quest-detail-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.starter-quest-detail-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.starter-quest-detail-sheet__panel {
+  position: relative;
+  width: min(100%, 560px);
+  max-height: 90vh;
+  overflow: auto;
+  background: #ffffff;
+  border-radius: 18px 18px 0 0;
+  padding: 1.25rem 1rem 1.5rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.starter-quest-detail-sheet__close {
+  border: none;
+  background: rgba(148, 163, 184, 0.2);
+  color: #0f172a;
+  border-radius: 999px;
+  width: 2rem;
+  height: 2rem;
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.starter-quest-detail-sheet__eyebrow {
+  margin: 0 0 0.3rem;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.starter-quest-detail-sheet__header h3,
+.starter-quest-detail-sheet__header p,
+.starter-quest-detail-sheet__section h4,
+.starter-quest-detail-sheet__section p {
+  margin: 0;
+}
+
+.starter-quest-detail-sheet__section {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.starter-quest-detail-sheet__section h4 {
+  font-size: 0.92rem;
+  color: #0f172a;
+}
+
+.starter-quest-detail-sheet__section p {
+  color: #334155;
+  font-size: 0.92rem;
+}
+
+.starter-quest-detail-sheet__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.starter-quest-detail-sheet__add {
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.starter-quest-detail-sheet__later {
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .supabase-auth__toggle {

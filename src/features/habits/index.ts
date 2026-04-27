@@ -5,5 +5,6 @@ export { MobileHabitHome } from './MobileHabitHome';
 export { HabitsInsights } from './HabitsInsights';
 export { UnifiedTodayView } from './UnifiedTodayView';
 export { StarterHabitPicker } from './StarterHabitPicker';
+export { StarterHabitDetailSheet } from './StarterHabitDetailSheet';
 
 export { evaluateHabitLifecycle } from './habitLifecycle';

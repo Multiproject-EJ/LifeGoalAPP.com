@@ -6,6 +6,7 @@ import {
   STARTER_HABIT_CATALOG,
   type StarterHabit,
 } from './starterHabitCatalog';
+import { StarterHabitDetailSheet } from './StarterHabitDetailSheet';
 
 type StarterHabitPickerProps = {
   userId: string;
@@ -31,6 +32,7 @@ export function StarterHabitPicker({
   const [creatingTitle, setCreatingTitle] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [exploringStarter, setExploringStarter] = useState<StarterHabit | null>(null);
 
   // Catalog may contain more than 3 habits per domain; Phase 1 picker displays
   // the first 3 to keep mobile UI compact.
@@ -55,6 +57,7 @@ export function StarterHabitPicker({
       if (error) throw error;
       if (!data) throw new Error('Starter quest could not be created.');
       setStatusMessage(`Started: ${starter.title}`);
+      setExploringStarter(null);
       onCreated?.();
       onClose?.();
     } catch (error) {
@@ -107,7 +110,16 @@ export function StarterHabitPicker({
                 disabled={Boolean(creatingTitle)}
                 aria-label={`Start starter quest: ${starter.title}`}
               >
-                {isCreating ? 'Starting…' : 'Start quest'}
+                {isCreating ? 'Adding…' : 'Add to My Quest'}
+              </button>
+              <button
+                type="button"
+                className="starter-quest-picker__card-link"
+                onClick={() => setExploringStarter(starter)}
+                disabled={Boolean(creatingTitle)}
+                aria-label={`Explore starter quest: ${starter.title}`}
+              >
+                Explore
               </button>
             </article>
           );
@@ -116,6 +128,15 @@ export function StarterHabitPicker({
 
       {statusMessage ? <p className="starter-quest-picker__status starter-quest-picker__status--success">{statusMessage}</p> : null}
       {errorMessage ? <p className="starter-quest-picker__status starter-quest-picker__status--error">{errorMessage}</p> : null}
+
+      {exploringStarter ? (
+        <StarterHabitDetailSheet
+          habit={exploringStarter}
+          isAdding={creatingTitle === exploringStarter.title}
+          onAdd={() => void createStarterHabit(exploringStarter)}
+          onClose={() => setExploringStarter(null)}
+        />
+      ) : null}
     </section>
   );
 }
