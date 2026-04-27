@@ -20,19 +20,35 @@ type LifeWheelInsightsPanelProps = {
 };
 
 export const LIFE_WHEEL_CATEGORIES = [
-  { key: 'spirituality_community', label: 'Spirituality & Community' },
-  { key: 'finance_wealth', label: 'Finance & Wealth' },
-  { key: 'love_relations', label: 'Love & Relations' },
-  { key: 'fun_creativity', label: 'Fun & Creativity' },
-  { key: 'career_development', label: 'Career & Self Development' },
-  { key: 'health_fitness', label: 'Health & Fitness' },
-  { key: 'family_friends', label: 'Family & Friends' },
-  { key: 'living_spaces', label: 'Living Spaces' },
+  { key: 'spirituality_community', label: 'Mind, Meaning & Awareness', shortLabel: 'Mind & Meaning' },
+  { key: 'finance_wealth', label: 'Money & Admin', shortLabel: 'Money' },
+  { key: 'love_relations', label: 'Love & Relationships', shortLabel: 'Love' },
+  { key: 'fun_creativity', label: 'Joy, Play & Creativity', shortLabel: 'Joy & Play' },
+  { key: 'career_development', label: 'Work, Growth & Productivity', shortLabel: 'Work & Growth' },
+  { key: 'health_fitness', label: 'Body & Energy', shortLabel: 'Body & Energy' },
+  { key: 'family_friends', label: 'Family, Friends & Connection', shortLabel: 'Connections' },
+  { key: 'living_spaces', label: 'Home & Environment', shortLabel: 'Home' },
 ] as const;
 
 type LifeWheelCategory = (typeof LIFE_WHEEL_CATEGORIES)[number];
 
 export type LifeWheelCategoryKey = LifeWheelCategory['key'];
+
+const LIFE_WHEEL_CATEGORY_BY_KEY: Record<LifeWheelCategoryKey, LifeWheelCategory> = LIFE_WHEEL_CATEGORIES.reduce(
+  (acc, category) => {
+    acc[category.key] = category;
+    return acc;
+  },
+  {} as Record<LifeWheelCategoryKey, LifeWheelCategory>,
+);
+
+export function getLifeWheelCategoryLabel(categoryKey: LifeWheelCategoryKey): string {
+  return LIFE_WHEEL_CATEGORY_BY_KEY[categoryKey].label;
+}
+
+export function getLifeWheelCategoryShortLabel(categoryKey: LifeWheelCategoryKey): string {
+  return LIFE_WHEEL_CATEGORY_BY_KEY[categoryKey].shortLabel;
+}
 
 type CheckinScores = Record<LifeWheelCategoryKey, number>;
 
@@ -290,7 +306,7 @@ function buildRadarGeometry(scores: CheckinScores): RadarGeometry {
       baseline = 'middle';
     }
 
-    return { key: category.key, text: category.label, x, y, anchor, baseline };
+    return { key: category.key, text: category.shortLabel, x, y, anchor, baseline };
   });
 
   return { polygonPoints, levelPolygons, axes, labels };
