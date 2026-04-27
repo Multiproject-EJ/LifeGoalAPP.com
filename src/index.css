@@ -14203,6 +14203,30 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-shadow: 0 16px 28px rgba(79, 70, 229, 0.18);
 }
 
+.life-wheel__chooser-more {
+  display: grid;
+  gap: 0.6rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 14px;
+  background: rgba(241, 245, 249, 0.8);
+  padding: 1rem;
+}
+
+.life-wheel__chooser-more h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.life-wheel__chooser-more p {
+  margin: 0;
+  color: #475569;
+}
+
+.life-wheel__mobile-back-row {
+  margin-top: 0.9rem;
+}
+
 .life-wheel__area-panel {
   display: grid;
   gap: 1rem;
