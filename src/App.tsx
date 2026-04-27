@@ -602,6 +602,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [isMyQuestSubmenuOpen, setIsMyQuestSubmenuOpen] = useState(false);
   const [isStarterQuestSheetOpen, setIsStarterQuestSheetOpen] = useState(false);
   const [starterQuestSheetOrigin, setStarterQuestSheetOrigin] = useState<'my-quest' | 'today' | null>(null);
+  const [checkinsEntryOrigin, setCheckinsEntryOrigin] = useState<'my-quest' | 'direct'>('direct');
   const [isMyIkigaiModalOpen, setIsMyIkigaiModalOpen] = useState(false);
   const [isFeedbackSupportSubmenuOpen, setIsFeedbackSupportSubmenuOpen] = useState(false);
   const [activeProfileStrengthHold, setActiveProfileStrengthHold] = useState<{
@@ -1982,7 +1983,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   };
 
-  const handleMobileNavSelect = (navId: string, options?: { preserveBreatheTab?: boolean }) => {
+  const handleMobileNavSelect = (
+    navId: string,
+    options?: { preserveBreatheTab?: boolean; checkinsOrigin?: 'my-quest' | 'direct' },
+  ) => {
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
@@ -2044,6 +2048,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
       setActionsLauncherResetSignal((prev) => prev + 1);
     }
 
+    if (navId === 'rituals') {
+      setCheckinsEntryOrigin(options?.checkinsOrigin ?? 'direct');
+    } else {
+      setCheckinsEntryOrigin('direct');
+    }
+
     setActiveWorkspaceNav(navId);
     setShowMobileHome(false);
   };
@@ -2096,8 +2106,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, [closeGameBoardOverlayIfOpen]);
 
   const openCheckinsFromMyQuest = useCallback(() => {
-    handleMobileNavSelect('rituals');
+    handleMobileNavSelect('rituals', { checkinsOrigin: 'my-quest' });
   }, [handleMobileNavSelect]);
+
+  const handleBackToMyQuestFromCheckins = useCallback(() => {
+    setIsMobileProfileDialogOpen(false);
+    setIsEnergyMenuOpen(false);
+    setIsFeedbackSupportSubmenuOpen(false);
+    setIsStarterQuestSheetOpen(false);
+    setIsMobileMenuOpen(true);
+    setIsMyQuestSubmenuOpen(true);
+  }, []);
 
   const openGoalsFromMyQuest = useCallback(() => {
     handleMobileNavSelect('support');
@@ -3246,7 +3265,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
       case 'rituals':
         return (
           <div className="workspace-content">
-            <LifeWheelCheckins session={activeSession} />
+            <LifeWheelCheckins
+              session={activeSession}
+              entryOrigin={checkinsEntryOrigin}
+              onBackToMyQuest={handleBackToMyQuestFromCheckins}
+            />
           </div>
         );
       case 'body':

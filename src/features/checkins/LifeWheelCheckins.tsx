@@ -13,6 +13,8 @@ type CheckinRow = Database['public']['Tables']['checkins']['Row'];
 
 type LifeWheelCheckinsProps = {
   session: Session;
+  entryOrigin?: 'my-quest' | 'direct';
+  onBackToMyQuest?: () => void;
 };
 
 type LifeWheelInsightsPanelProps = {
@@ -313,7 +315,7 @@ function buildRadarGeometry(scores: CheckinScores): RadarGeometry {
   return { polygonPoints, levelPolygons, axes, labels };
 }
 
-export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
+export function LifeWheelCheckins({ session, entryOrigin = 'direct', onBackToMyQuest }: LifeWheelCheckinsProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
   const { earnXP, recordActivity } = useGamification(session);
@@ -761,7 +763,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
     const progress = ((currentQuestionIndex + 1) / questionCount) * 100;
     
     return (
-      <section className="life-wheel life-wheel--questionnaire">
+      <section className={`life-wheel life-wheel--questionnaire${isMobileCheckinsLayout ? ' life-wheel--mobile-safe-top' : ''}`}>
         <div className="questionnaire-container">
           <button type="button" className="questionnaire-back" onClick={exitQuestionnaire}>
             Back to check-ins
@@ -879,7 +881,14 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   }
 
   return (
-    <section className="life-wheel">
+    <section className={`life-wheel${isMobileCheckinsLayout ? ' life-wheel--mobile-safe-top' : ''}`}>
+      {entryOrigin === 'my-quest' && onBackToMyQuest ? (
+        <div className="life-wheel__mobile-back-row life-wheel__mobile-back-row--origin">
+          <button type="button" className="life-wheel__secondary" onClick={onBackToMyQuest}>
+            ← Back to My Quest
+          </button>
+        </div>
+      ) : null}
       {showChooser ? (
       <div className="life-wheel__chooser">
         <div className="life-wheel__chooser-header">

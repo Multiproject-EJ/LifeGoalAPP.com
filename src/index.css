@@ -14120,6 +14120,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   gap: clamp(1.25rem, 2.5vw, 2rem);
 }
 
+@media (max-width: 768px) {
+  .life-wheel--mobile-safe-top {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+  }
+}
+
 .life-wheel__status {
   margin: 0;
   padding: 0.85rem 1rem;
@@ -14225,6 +14231,10 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .life-wheel__mobile-back-row {
   margin-top: 0.9rem;
+}
+
+.life-wheel__mobile-back-row--origin {
+  margin-top: 0;
 }
 
 .life-wheel__area-panel {
