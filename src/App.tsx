@@ -1037,9 +1037,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const isGameNearNextLevel = Math.round(levelInfo?.progressPercentage ?? 0) >= 95;
   const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
+  const shouldCollapseFooterForGoalsAndCheckins =
+    isMobileExperience && (mobileActiveNavId === 'support' || mobileActiveNavId === 'rituals');
   const shouldForceFooterCollapseForDirectionFlows =
-    isMobileExperience &&
-    (isMyQuestSubmenuOpen || isStarterQuestSheetOpen || mobileActiveNavId === 'support' || mobileActiveNavId === 'rituals');
+    isMobileExperience && (isMyQuestSubmenuOpen || isStarterQuestSheetOpen || shouldCollapseFooterForGoalsAndCheckins);
   const shouldAutoCollapseOnIdle =
     isMobileExperience &&
     mobileActiveNavId !== null &&
