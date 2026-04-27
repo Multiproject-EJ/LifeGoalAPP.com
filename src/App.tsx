@@ -1039,7 +1039,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
   const shouldCollapseFooterForGoalsAndCheckins =
     isMobileExperience && (mobileActiveNavId === 'support' || mobileActiveNavId === 'rituals');
-  const shouldForceFooterCollapseForDirectionFlows =
+  const shouldLockFooterCollapsedForQuestFlow =
     isMobileExperience && (isMyQuestSubmenuOpen || isStarterQuestSheetOpen || shouldCollapseFooterForGoalsAndCheckins);
   const shouldAutoCollapseOnIdle =
     isMobileExperience &&
@@ -1047,7 +1047,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     (shouldForceFooterCollapseForDirectionFlows ||
       MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId) ||
       (mobileActiveNavId === 'actions' && actionsTabView === 'tasks'));
-  const shouldAllowFooterCollapse = isMobileExperience && (isMobileMenuImageActive || shouldAutoCollapseOnIdle);
+  const shouldAllowFooterCollapse =
+    isMobileExperience && (isMobileMenuImageActive || shouldAutoCollapseOnIdle || shouldLockFooterCollapsedForQuestFlow);
   const shouldHideFooterInJournal =
     isMobileExperience && isMobileMenuImageActive && activeWorkspaceNav === 'journal';
 
@@ -1080,11 +1081,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
         }, MOBILE_FOOTER_SNAP_RESET_MS);
       }
       setIsMobileFooterCollapsed(false);
-      if (shouldAutoCollapseOnIdle) {
+      if (shouldAutoCollapseOnIdle && !shouldLockFooterCollapsedForQuestFlow) {
         scheduleMobileFooterCollapse();
       }
     },
-    [scheduleMobileFooterCollapse, shouldAllowFooterCollapse, shouldAutoCollapseOnIdle],
+    [scheduleMobileFooterCollapse, shouldAllowFooterCollapse, shouldAutoCollapseOnIdle, shouldLockFooterCollapsedForQuestFlow],
   );
 
   const handleMobileFooterCollapse = useCallback(() => {
@@ -1112,11 +1113,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
         window.clearTimeout(mobileFooterCollapseTimeoutRef.current);
         mobileFooterCollapseTimeoutRef.current = null;
       }
+      if (shouldLockFooterCollapsedForQuestFlow) {
+        setIsMobileFooterCollapsed(true);
+      }
       return;
     }
     setIsMobileFooterCollapsed(true);
-    scheduleMobileFooterCollapse();
-  }, [scheduleMobileFooterCollapse, shouldAllowFooterCollapse, shouldAutoCollapseOnIdle]);
+    if (!shouldLockFooterCollapsedForQuestFlow) {
+      scheduleMobileFooterCollapse();
+    }
+  }, [scheduleMobileFooterCollapse, shouldAllowFooterCollapse, shouldAutoCollapseOnIdle, shouldLockFooterCollapsedForQuestFlow]);
 
   useEffect(() => {
     if (!shouldHideFooterInJournal) {
@@ -1140,7 +1146,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
       if (delta > threshold) {
         setIsMobileFooterCollapsed(true);
-      } else if (delta < -threshold) {
+      } else if (delta < -threshold && !shouldLockFooterCollapsedForQuestFlow) {
         handleMobileFooterExpand(false);
       }
 
@@ -1149,7 +1155,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleMobileFooterExpand, isMobileMenuImageActive, isMobileExperience]);
+  }, [handleMobileFooterExpand, isMobileMenuImageActive, isMobileExperience, shouldLockFooterCollapsedForQuestFlow]);
 
   useEffect(() => {
     if (!isVisionRewardOpen || !isMobileExperience || !isMobileMenuImageActive) {
