@@ -8772,6 +8772,24 @@ html.platform-ipad .workspace-shell__menu-edge {
   gap: 0.35rem;
 }
 
+.habit-quick-journal__dream-tone {
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: rgba(14, 165, 233, 0.08);
+}
+
+.habit-quick-journal__tone-detail-toggle {
+  border: 1px dashed rgba(14, 165, 233, 0.5);
+  background: rgba(255, 255, 255, 0.8);
+  color: #0f172a;
+  border-radius: 10px;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  justify-self: start;
+}
+
 .habit-quick-journal__field--morning {
   background: rgba(251, 191, 36, 0.08);
   padding: 0.75rem;
