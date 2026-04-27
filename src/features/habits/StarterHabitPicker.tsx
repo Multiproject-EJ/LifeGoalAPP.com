@@ -32,7 +32,9 @@ export function StarterHabitPicker({
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const starterHabits = STARTER_HABIT_CATALOG[selectedDomainKey] ?? [];
+  // Catalog may contain more than 3 habits per domain; Phase 1 picker displays
+  // the first 3 to keep mobile UI compact.
+  const starterHabits = (STARTER_HABIT_CATALOG[selectedDomainKey] ?? []).slice(0, 3);
 
   const createStarterHabit = async (starter: StarterHabit) => {
     if (creatingTitle) return;
