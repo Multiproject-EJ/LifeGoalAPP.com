@@ -15,7 +15,6 @@ type MyQuestHubProps = {
   onOpenStarterQuest: () => void;
   onOpenCheckins: () => void;
   onOpenGoals: () => void;
-  onOpenToday: () => void;
 };
 
 function formatDateLabel(dateIso: string | null | undefined): string | null {
@@ -49,7 +48,6 @@ export function MyQuestHub({
   onOpenStarterQuest,
   onOpenCheckins,
   onOpenGoals,
-  onOpenToday,
 }: MyQuestHubProps) {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -255,7 +253,6 @@ export function MyQuestHub({
           <button type="button" className="my-quest-hub__button" onClick={onOpenStarterQuest}>Starter Quest</button>
           <button type="button" className="my-quest-hub__button" onClick={onOpenCheckins}>Check-in</button>
           <button type="button" className="my-quest-hub__button" onClick={onOpenGoals}>Goals</button>
-          <button type="button" className="my-quest-hub__button" onClick={onOpenToday}>Today</button>
         </div>
       </article>
     </section>

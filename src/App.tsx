@@ -601,6 +601,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [showMobileSupportModal, setShowMobileSupportModal] = useState(false);
   const [isMyQuestSubmenuOpen, setIsMyQuestSubmenuOpen] = useState(false);
   const [isStarterQuestSheetOpen, setIsStarterQuestSheetOpen] = useState(false);
+  const [starterQuestSheetOrigin, setStarterQuestSheetOrigin] = useState<'my-quest' | 'today' | null>(null);
   const [isMyIkigaiModalOpen, setIsMyIkigaiModalOpen] = useState(false);
   const [isFeedbackSupportSubmenuOpen, setIsFeedbackSupportSubmenuOpen] = useState(false);
   const [activeProfileStrengthHold, setActiveProfileStrengthHold] = useState<{
@@ -2062,13 +2063,23 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsMyIkigaiModalOpen(true);
   }, [closeGameBoardOverlayIfOpen]);
 
-  const openStarterQuestSheet = useCallback(() => {
+  const openStarterQuestSheetFromToday = useCallback(() => {
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
     setIsMyQuestSubmenuOpen(false);
     setIsFeedbackSupportSubmenuOpen(false);
     closeGameBoardOverlayIfOpen();
+    setStarterQuestSheetOrigin('today');
+    setIsStarterQuestSheetOpen(true);
+  }, [closeGameBoardOverlayIfOpen]);
+
+  const openStarterQuestSheetFromMyQuest = useCallback(() => {
+    setIsMobileProfileDialogOpen(false);
+    setIsEnergyMenuOpen(false);
+    setIsFeedbackSupportSubmenuOpen(false);
+    closeGameBoardOverlayIfOpen();
+    setStarterQuestSheetOrigin('my-quest');
     setIsStarterQuestSheetOpen(true);
   }, [closeGameBoardOverlayIfOpen]);
 
@@ -2080,23 +2091,20 @@ export default function App({ forceAuthOnMount }: AppProps) {
     handleMobileNavSelect('support');
   }, [handleMobileNavSelect]);
 
-  const openTodayFromMyQuest = useCallback(() => {
-    setIsMobileProfileDialogOpen(false);
-    setIsMobileMenuOpen(false);
-    setIsEnergyMenuOpen(false);
-    setIsMyQuestSubmenuOpen(false);
-    setIsFeedbackSupportSubmenuOpen(false);
-    setIsStarterQuestSheetOpen(false);
-    closeGameBoardOverlayIfOpen();
-    openTodayHome();
-  }, [closeGameBoardOverlayIfOpen, openTodayHome]);
-
   const closeStarterQuestSheet = useCallback(() => {
     setIsStarterQuestSheetOpen(false);
-  }, []);
+    if (starterQuestSheetOrigin === 'my-quest') {
+      setIsMobileMenuOpen(true);
+      setIsMyQuestSubmenuOpen(true);
+      setIsEnergyMenuOpen(false);
+      setIsFeedbackSupportSubmenuOpen(false);
+    }
+    setStarterQuestSheetOrigin(null);
+  }, [starterQuestSheetOrigin]);
 
   const handleStarterQuestCreated = useCallback(() => {
     setIsStarterQuestSheetOpen(false);
+    setStarterQuestSheetOrigin(null);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(HABITS_CREATED_EVENT));
     }
@@ -2134,7 +2142,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const myQuestSubmenuActions: LauncherSubmenuAction[] = useMemo(
     () => [
       { id: 'ikigai', label: 'My Ikigai', icon: '✨', onSelect: openMyIkigaiFromMobileMenu },
-      { id: 'starter-quest', label: 'Starter Quest', icon: '🧭', onSelect: openStarterQuestSheet },
+      { id: 'starter-quest', label: 'Starter Quest', icon: '🧭', onSelect: openStarterQuestSheetFromMyQuest },
       { id: 'body', label: 'Health Goals', icon: '💪', onSelect: () => handleMobileNavSelect('body') },
       { id: 'habits', label: 'Habits', icon: '🔄', onSelect: () => handleMobileNavSelect('habits') },
       { id: 'routines', label: 'Routines', icon: '🧩', onSelect: () => handleMobileNavSelect('routines') },
@@ -2142,7 +2150,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       { id: 'planning', label: 'Check-ins', icon: '✅', onSelect: () => handleMobileNavSelect('planning') },
       { id: 'contracts', label: 'Contracts', icon: '🤝', onSelect: () => handleMobileNavSelect('contracts') },
     ],
-    [handleMobileNavSelect, openMyIkigaiFromMobileMenu, openStarterQuestSheet],
+    [handleMobileNavSelect, openMyIkigaiFromMobileMenu, openStarterQuestSheetFromMyQuest],
   );
 
   const feedbackSupportSubmenuActions: LauncherSubmenuAction[] = useMemo(
@@ -3697,10 +3705,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   {activeSession ? (
                     <MyQuestHub
                       session={activeSession}
-                      onOpenStarterQuest={openStarterQuestSheet}
+                      onOpenStarterQuest={openStarterQuestSheetFromMyQuest}
                       onOpenCheckins={openCheckinsFromMyQuest}
                       onOpenGoals={openGoalsFromMyQuest}
-                      onOpenToday={openTodayFromMyQuest}
                     />
                   ) : null}
                   <p className="mobile-menu-overlay__hold-eyebrow">More tools</p>
@@ -4620,7 +4627,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             preferredCompactView={!isGameModeActive}
               hideTimeBoundOffers={!isGameModeActive}
               hiddenHabitIds={[]}
-              onOpenStarterQuest={openStarterQuestSheet}
+              onOpenStarterQuest={openStarterQuestSheetFromToday}
             />
         </div>
         {!showZenGardenFullScreen && !isConflictResolverFullscreen && (
