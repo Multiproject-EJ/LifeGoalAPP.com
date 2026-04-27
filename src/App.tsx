@@ -17,7 +17,7 @@ import dailyTreatsHearts from './assets/Daily_treats_hearts.webp';
 import dailyTreatsCalendarOpen from './assets/daily_treats_calendaropen.webp';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
-import { GoalWorkspace, LifeGoalsSection } from './features/goals';
+import { GoalWorkspace, LifeGoalsSection, MyQuestHub } from './features/goals';
 import { BodyHaircutWidget, DailyHabitTracker, HabitsModule, MobileHabitHome, StarterHabitPicker } from './features/habits';
 import type { TimeBoundOfferId } from './features/habits/TimeBoundOfferRow';
 import { ProgressDashboard } from './features/dashboard';
@@ -2072,6 +2072,25 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsStarterQuestSheetOpen(true);
   }, [closeGameBoardOverlayIfOpen]);
 
+  const openCheckinsFromMyQuest = useCallback(() => {
+    handleMobileNavSelect('rituals');
+  }, [handleMobileNavSelect]);
+
+  const openGoalsFromMyQuest = useCallback(() => {
+    handleMobileNavSelect('support');
+  }, [handleMobileNavSelect]);
+
+  const openTodayFromMyQuest = useCallback(() => {
+    setIsMobileProfileDialogOpen(false);
+    setIsMobileMenuOpen(false);
+    setIsEnergyMenuOpen(false);
+    setIsMyQuestSubmenuOpen(false);
+    setIsFeedbackSupportSubmenuOpen(false);
+    setIsStarterQuestSheetOpen(false);
+    closeGameBoardOverlayIfOpen();
+    openTodayHome();
+  }, [closeGameBoardOverlayIfOpen, openTodayHome]);
+
   const closeStarterQuestSheet = useCallback(() => {
     setIsStarterQuestSheetOpen(false);
   }, []);
@@ -3675,6 +3694,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       ✕
                     </button>
                   </div>
+                  {activeSession ? (
+                    <MyQuestHub
+                      session={activeSession}
+                      onOpenStarterQuest={openStarterQuestSheet}
+                      onOpenCheckins={openCheckinsFromMyQuest}
+                      onOpenGoals={openGoalsFromMyQuest}
+                      onOpenToday={openTodayFromMyQuest}
+                    />
+                  ) : null}
+                  <p className="mobile-menu-overlay__hold-eyebrow">More tools</p>
                   <div className="mobile-menu-overlay__submenu mobile-menu-overlay__submenu--open">
                     {myQuestSubmenuActions.map((action) => (
                       <button key={action.id} type="button" className="mobile-menu-overlay__submenu-button" onClick={action.onSelect}>

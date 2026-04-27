@@ -12291,6 +12291,80 @@ html.platform-ipad .workspace-shell__menu-edge {
   padding: 0.45rem 0.95rem;
 }
 
+.my-quest-hub {
+  display: grid;
+  gap: 0.7rem;
+  margin-bottom: 0.8rem;
+}
+
+.my-quest-hub__header h3,
+.my-quest-hub__header p {
+  margin: 0;
+}
+
+.my-quest-hub__header p {
+  color: #475569;
+  font-size: 0.88rem;
+}
+
+.my-quest-hub__status {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.my-quest-hub__status--warning {
+  color: #b45309;
+}
+
+.my-quest-hub__card {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 14px;
+  padding: 0.75rem;
+  background: #f8fafc;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.my-quest-hub__card h4,
+.my-quest-hub__card p {
+  margin: 0;
+}
+
+.my-quest-hub__goal-title {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.my-quest-hub__habit-list {
+  margin: 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.my-quest-hub__button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  color: #fff;
+  font-weight: 600;
+}
+
+.my-quest-hub__button--secondary {
+  background: rgba(14, 165, 233, 0.14);
+  color: #0f172a;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+}
+
+.my-quest-hub__row-actions,
+.my-quest-hub__grid-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
 .starter-quest-detail-sheet {
   position: fixed;
   inset: 0;
