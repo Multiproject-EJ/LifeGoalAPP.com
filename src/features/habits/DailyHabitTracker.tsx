@@ -107,6 +107,14 @@ import {
   isHourInDreamReminderWindow,
   setDreamJournalReminderLastShownCycle,
 } from '../../services/dreamJournalReminderPrefs';
+import {
+  getTodaysWinsReminderCycleKey,
+  getTodaysWinsReminderEnabled,
+  getTodaysWinsReminderLastShownCycle,
+  getTodaysWinsReminderWindow,
+  isTimeInTodaysWinsReminderWindow,
+  setTodaysWinsReminderLastShownCycle,
+} from '../../services/todaysWinsReminderPrefs';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { fetchXPTransactions } from '../../services/gamification';
 import { fetchZenTokenTransactions } from '../../services/zenGarden';
@@ -1799,6 +1807,50 @@ export function DailyHabitTracker({
     setDreamJournalReminderLastShownCycle(session.user.id, cycleKey);
     setShowDreamJournalReminderModal(true);
   }, [isViewingToday, session?.user?.id]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !session?.user?.id || !isViewingToday) {
+      return;
+    }
+
+    if (!getTodaysWinsReminderEnabled(session.user.id)) {
+      return;
+    }
+
+    const habitWinsCount = Object.values(completions).filter((state) => state.completed).length;
+    const totalWinsCount = habitWinsCount
+      + completedActionsCount
+      + todayWinsSummary.journalCount
+      + todayWinsSummary.lotusEarned
+      + todayWinsSummary.xpEarned
+      + todayWinsSummary.gameRewardsTotal;
+    if (totalWinsCount <= 0) {
+      return;
+    }
+
+    const now = new Date();
+    const reminderWindow = getTodaysWinsReminderWindow(session.user.id);
+    if (!isTimeInTodaysWinsReminderWindow(now, reminderWindow)) {
+      return;
+    }
+
+    const cycleKey = getTodaysWinsReminderCycleKey(now, reminderWindow);
+    if (getTodaysWinsReminderLastShownCycle(session.user.id) === cycleKey) {
+      return;
+    }
+
+    setTodaysWinsReminderLastShownCycle(session.user.id, cycleKey);
+    setIsTodayWinsOpen(true);
+  }, [
+    completedActionsCount,
+    completions,
+    isViewingToday,
+    session?.user?.id,
+    todayWinsSummary.gameRewardsTotal,
+    todayWinsSummary.journalCount,
+    todayWinsSummary.lotusEarned,
+    todayWinsSummary.xpEarned,
+  ]);
 
   useEffect(() => {
     const draftKey = quickJournalDraftKey(session.user.id, activeDate);
