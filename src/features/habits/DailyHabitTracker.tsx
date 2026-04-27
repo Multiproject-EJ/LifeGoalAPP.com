@@ -289,6 +289,7 @@ type DailyHabitTrackerProps = {
   pendingOfferToOpen?: TimeBoundOfferId | null;
   onPendingOfferHandled?: () => void;
   hiddenHabitIds?: string[];
+  onOpenStarterQuest?: () => void;
 };
 
 type HabitCompletionState = {
@@ -462,6 +463,7 @@ const LIFE_WHEEL_COLORS: Record<string, string> = {
 
 const OFFLINE_SYNC_MESSAGE = 'You\u2019re offline. Updates will sync automatically once you reconnect.';
 const QUEUE_RETRY_MESSAGE = 'Offline updates are still queued and will retry shortly.';
+const HABITS_CREATED_EVENT = 'habitgame:habits-created';
 
 type HabitOfflineQueueStatus = {
   pending: number;
@@ -629,6 +631,7 @@ export function DailyHabitTracker({
   pendingOfferToOpen,
   onPendingOfferHandled,
   hiddenHabitIds = [],
+  onOpenStarterQuest,
 }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
@@ -3842,6 +3845,17 @@ export function DailyHabitTracker({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [queueStatus.pending, queueStatus.failed]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleHabitsCreated = () => {
+      void refreshHabits();
+    };
+    window.addEventListener(HABITS_CREATED_EVENT, handleHabitsCreated);
+    return () => {
+      window.removeEventListener(HABITS_CREATED_EVENT, handleHabitsCreated);
+    };
+  }, [refreshHabits]);
+
   const toggleHabitForDate = async (habit: HabitWithGoal, dateISO: string) => {
     if (!isConfigured && !isDemoExperience) {
       setErrorMessage('Supabase credentials are not configured yet.');
@@ -5802,6 +5816,16 @@ export function DailyHabitTracker({
         ) : null}
         <div className="habit-checklist-card__title">
           <h2>My Habits</h2>
+          {onOpenStarterQuest ? (
+            <button
+              type="button"
+              className="habit-checklist-card__starter-launcher"
+              onClick={onOpenStarterQuest}
+              aria-label="Open Starter Quest picker"
+            >
+              + Starter quest
+            </button>
+          ) : null}
         </div>
         {visibleHabits.length === 0 && completedHabits.length > 0 ? (
           <p className="habit-checklist__empty">All habits checked off for today.</p>
@@ -7447,6 +7471,16 @@ export function DailyHabitTracker({
               <div className="habit-checklist-card__empty">
                 <p>No habits scheduled for this day.</p>
                 <p>Add a ritual to any goal and it will show up here for quick check-ins.</p>
+                {onOpenStarterQuest ? (
+                  <button
+                    type="button"
+                    className="habit-checklist-card__starter-empty-launcher"
+                    onClick={onOpenStarterQuest}
+                    aria-label="Choose a starter quest"
+                  >
+                    Choose starter quest
+                  </button>
+                ) : null}
               </div>
             ) : (
               renderCompactList()

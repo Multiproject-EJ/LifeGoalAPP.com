@@ -63,7 +63,7 @@ function buildSliceGeometry(): SliceGeometry[] {
 
     return {
       categoryKey: category.key,
-      label: category.label,
+      label: category.shortLabel,
       path,
       labelX,
       labelY,
