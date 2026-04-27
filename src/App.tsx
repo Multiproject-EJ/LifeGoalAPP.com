@@ -1041,6 +1041,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     isMobileExperience && (mobileActiveNavId === 'support' || mobileActiveNavId === 'rituals');
   const shouldLockFooterCollapsedForQuestFlow =
     isMobileExperience && (isMyQuestSubmenuOpen || isStarterQuestSheetOpen || shouldCollapseFooterForGoalsAndCheckins);
+  const shouldForceFooterCollapseForDirectionFlows = shouldLockFooterCollapsedForQuestFlow;
   const shouldAutoCollapseOnIdle =
     isMobileExperience &&
     mobileActiveNavId !== null &&
@@ -1048,7 +1049,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId) ||
       (mobileActiveNavId === 'actions' && actionsTabView === 'tasks'));
   const shouldAllowFooterCollapse =
-    isMobileExperience && (isMobileMenuImageActive || shouldAutoCollapseOnIdle || shouldLockFooterCollapsedForQuestFlow);
+    isMobileExperience && (isMobileMenuImageActive || shouldAutoCollapseOnIdle || shouldForceFooterCollapseForDirectionFlows);
   const shouldHideFooterInJournal =
     isMobileExperience && isMobileMenuImageActive && activeWorkspaceNav === 'journal';
 
