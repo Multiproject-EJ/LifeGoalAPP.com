@@ -354,6 +354,7 @@ type QuickJournalDraft = {
   evening: string;
   interactions: string;
   freeform: string;
+  pleasantMoments?: string;
   energy: number;
   mood: number;
   focus: number;
@@ -732,6 +733,7 @@ export function DailyHabitTracker({
   const [quickJournalEvening, setQuickJournalEvening] = useState('');
   const [quickJournalInteractions, setQuickJournalInteractions] = useState('');
   const [quickJournalFreeform, setQuickJournalFreeform] = useState('');
+  const [quickJournalPleasantMoments, setQuickJournalPleasantMoments] = useState('');
   const [quickJournalMode, setQuickJournalMode] = useState<QuickJournalMode>('written');
   const [quickJournalEnergy, setQuickJournalEnergy] = useState(QUICK_JOURNAL_PULSE_DEFAULTS.energy);
   const [quickJournalMood, setQuickJournalMood] = useState(QUICK_JOURNAL_PULSE_DEFAULTS.mood);
@@ -1737,6 +1739,7 @@ export function DailyHabitTracker({
       setQuickJournalEvening(draft.evening ?? '');
       setQuickJournalInteractions(draft.interactions ?? '');
       setQuickJournalFreeform(draft.freeform ?? '');
+      setQuickJournalPleasantMoments(draft.pleasantMoments ?? '');
       setQuickJournalEnergy(draft.energy ?? QUICK_JOURNAL_PULSE_DEFAULTS.energy);
       setQuickJournalMood(draft.mood ?? QUICK_JOURNAL_PULSE_DEFAULTS.mood);
       setQuickJournalFocus(draft.focus ?? QUICK_JOURNAL_PULSE_DEFAULTS.focus);
@@ -1757,6 +1760,7 @@ export function DailyHabitTracker({
           draft.evening ||
           draft.interactions ||
           draft.freeform ||
+          draft.pleasantMoments ||
           draft.dreamTitle ||
           draft.dreamSymbols ||
           draft.dreamEmotions ||
@@ -1772,6 +1776,7 @@ export function DailyHabitTracker({
       setQuickJournalEvening('');
       setQuickJournalInteractions('');
       setQuickJournalFreeform('');
+      setQuickJournalPleasantMoments('');
       setQuickJournalEnergy(QUICK_JOURNAL_PULSE_DEFAULTS.energy);
       setQuickJournalMood(QUICK_JOURNAL_PULSE_DEFAULTS.mood);
       setQuickJournalFocus(QUICK_JOURNAL_PULSE_DEFAULTS.focus);
@@ -3117,6 +3122,7 @@ export function DailyHabitTracker({
         quickJournalEvening ||
         quickJournalInteractions ||
         quickJournalFreeform ||
+        quickJournalPleasantMoments ||
         quickDreamTitle ||
         quickDreamSymbols ||
         quickDreamEmotions ||
@@ -3138,6 +3144,7 @@ export function DailyHabitTracker({
       evening: quickJournalEvening,
       interactions: quickJournalInteractions,
       freeform: quickJournalFreeform,
+      pleasantMoments: quickJournalPleasantMoments,
       energy: quickJournalEnergy,
       mood: quickJournalMood,
       focus: quickJournalFocus,
@@ -3160,6 +3167,7 @@ export function DailyHabitTracker({
     quickJournalEvening,
     quickJournalInteractions,
     quickJournalFreeform,
+    quickJournalPleasantMoments,
     quickJournalEnergy,
     quickJournalMood,
     quickJournalFocus,
@@ -6658,7 +6666,8 @@ export function DailyHabitTracker({
             quickJournalDay.trim() ||
             quickJournalEvening.trim() ||
             quickJournalInteractions.trim() ||
-            quickJournalFreeform.trim()
+            quickJournalFreeform.trim() ||
+            quickJournalPleasantMoments.trim()
         );
 
         if (!hasContent) {
@@ -6690,6 +6699,7 @@ export function DailyHabitTracker({
         evening: quickJournalEvening,
         interactions: quickJournalInteractions,
         freeform: quickJournalFreeform,
+        pleasantMoments: quickJournalPleasantMoments,
         energy: quickJournalEnergy,
         mood: quickJournalMood,
         focus: quickJournalFocus,
@@ -6728,6 +6738,9 @@ export function DailyHabitTracker({
         }
         if (quickJournalFreeform.trim()) {
           parts.push(`📝 Notes:\n${quickJournalFreeform.trim()}`);
+        }
+        if (quickJournalPleasantMoments.trim()) {
+          parts.push(`🌱 Today's gratitude / pleasant moment(s):\n${quickJournalPleasantMoments.trim()}`);
         }
       } else {
         const selectedDreamToneDetail = quickDreamToneDetail
@@ -6775,6 +6788,8 @@ export function DailyHabitTracker({
         ? ['nonverbal', 'pulse-check-in']
         : quickJournalMode === 'dream'
           ? ['dream', 'sleep', 'quick-entry', ...(dreamToneMeta ? [dreamToneMeta.tag] : [])]
+          : quickJournalPleasantMoments.trim()
+            ? ['gratitude-moment', 'pleasant-moments']
           : null;
       const payloadAttachments: Json | null = quickJournalMode === 'dream' && (quickDreamTone || selectedDreamToneDetail)
         ? ({
@@ -6824,6 +6839,7 @@ export function DailyHabitTracker({
         setQuickJournalEvening('');
         setQuickJournalInteractions('');
         setQuickJournalFreeform('');
+        setQuickJournalPleasantMoments('');
         setQuickJournalEnergy(QUICK_JOURNAL_PULSE_DEFAULTS.energy);
         setQuickJournalMood(QUICK_JOURNAL_PULSE_DEFAULTS.mood);
         setQuickJournalFocus(QUICK_JOURNAL_PULSE_DEFAULTS.focus);
@@ -7651,6 +7667,16 @@ export function DailyHabitTracker({
                           placeholder="What stood out about this day?"
                         />
                       </label>
+
+                      <label className="habit-quick-journal__field">
+                        <span className="habit-quick-journal__field-label">🌱 Today's gratitude / pleasant moment(s)</span>
+                        <textarea
+                          rows={3}
+                          value={quickJournalPleasantMoments}
+                          onChange={(event) => setQuickJournalPleasantMoments(event.target.value)}
+                          placeholder="What felt good, meaningful, or worth appreciating today?"
+                        />
+                      </label>
                     </>
                   ) : (
                     <>
@@ -7782,6 +7808,7 @@ export function DailyHabitTracker({
                         setQuickJournalEvening('');
                         setQuickJournalInteractions('');
                         setQuickJournalFreeform('');
+                        setQuickJournalPleasantMoments('');
                         setQuickJournalEnergy(QUICK_JOURNAL_PULSE_DEFAULTS.energy);
                         setQuickJournalMood(QUICK_JOURNAL_PULSE_DEFAULTS.mood);
                         setQuickJournalFocus(QUICK_JOURNAL_PULSE_DEFAULTS.focus);
