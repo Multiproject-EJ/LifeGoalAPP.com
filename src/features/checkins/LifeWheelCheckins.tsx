@@ -13,6 +13,8 @@ type CheckinRow = Database['public']['Tables']['checkins']['Row'];
 
 type LifeWheelCheckinsProps = {
   session: Session;
+  entryOrigin?: 'my-quest' | 'direct';
+  onBackToMyQuest?: () => void;
 };
 
 type LifeWheelInsightsPanelProps = {
@@ -20,19 +22,35 @@ type LifeWheelInsightsPanelProps = {
 };
 
 export const LIFE_WHEEL_CATEGORIES = [
-  { key: 'spirituality_community', label: 'Spirituality & Community' },
-  { key: 'finance_wealth', label: 'Finance & Wealth' },
-  { key: 'love_relations', label: 'Love & Relations' },
-  { key: 'fun_creativity', label: 'Fun & Creativity' },
-  { key: 'career_development', label: 'Career & Self Development' },
-  { key: 'health_fitness', label: 'Health & Fitness' },
-  { key: 'family_friends', label: 'Family & Friends' },
-  { key: 'living_spaces', label: 'Living Spaces' },
+  { key: 'spirituality_community', label: 'Mind, Meaning & Awareness', shortLabel: 'Mind & Meaning' },
+  { key: 'finance_wealth', label: 'Money & Admin', shortLabel: 'Money' },
+  { key: 'love_relations', label: 'Love & Relationships', shortLabel: 'Love' },
+  { key: 'fun_creativity', label: 'Joy, Play & Creativity', shortLabel: 'Joy & Play' },
+  { key: 'career_development', label: 'Work, Growth & Productivity', shortLabel: 'Work & Growth' },
+  { key: 'health_fitness', label: 'Body & Energy', shortLabel: 'Body & Energy' },
+  { key: 'family_friends', label: 'Family, Friends & Connection', shortLabel: 'Connections' },
+  { key: 'living_spaces', label: 'Home & Environment', shortLabel: 'Home' },
 ] as const;
 
 type LifeWheelCategory = (typeof LIFE_WHEEL_CATEGORIES)[number];
 
 export type LifeWheelCategoryKey = LifeWheelCategory['key'];
+
+const LIFE_WHEEL_CATEGORY_BY_KEY: Record<LifeWheelCategoryKey, LifeWheelCategory> = LIFE_WHEEL_CATEGORIES.reduce(
+  (acc, category) => {
+    acc[category.key] = category;
+    return acc;
+  },
+  {} as Record<LifeWheelCategoryKey, LifeWheelCategory>,
+);
+
+export function getLifeWheelCategoryLabel(categoryKey: LifeWheelCategoryKey): string {
+  return LIFE_WHEEL_CATEGORY_BY_KEY[categoryKey].label;
+}
+
+export function getLifeWheelCategoryShortLabel(categoryKey: LifeWheelCategoryKey): string {
+  return LIFE_WHEEL_CATEGORY_BY_KEY[categoryKey].shortLabel;
+}
 
 type CheckinScores = Record<LifeWheelCategoryKey, number>;
 
@@ -109,6 +127,7 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
 });
 
 type CheckinView = 'full' | 'annual' | 'area';
+type MobileCheckinScreen = 'chooser' | 'full' | 'area' | 'annual';
 
 function formatISODate(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -290,17 +309,22 @@ function buildRadarGeometry(scores: CheckinScores): RadarGeometry {
       baseline = 'middle';
     }
 
-    return { key: category.key, text: category.label, x, y, anchor, baseline };
+    return { key: category.key, text: category.shortLabel, x, y, anchor, baseline };
   });
 
   return { polygonPoints, levelPolygons, axes, labels };
 }
 
-export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
+export function LifeWheelCheckins({ session, entryOrigin = 'direct', onBackToMyQuest }: LifeWheelCheckinsProps) {
   const { isConfigured } = useSupabaseAuth();
   const isDemoExperience = isDemoSession(session);
   const { earnXP, recordActivity } = useGamification(session);
   const [activeCheckinView, setActiveCheckinView] = useState<CheckinView>('full');
+  const [mobileCheckinScreen, setMobileCheckinScreen] = useState<MobileCheckinScreen>('chooser');
+  const [isMobileCheckinsLayout, setIsMobileCheckinsLayout] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(max-width: 768px)').matches;
+  });
   const [checkins, setCheckins] = useState<CheckinRow[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -364,6 +388,15 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
       setSelectedCheckinId(null);
     }
   }, [isConfigured, isDemoExperience]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const applyMatch = () => setIsMobileCheckinsLayout(mediaQuery.matches);
+    applyMatch();
+    mediaQuery.addEventListener('change', applyMatch);
+    return () => mediaQuery.removeEventListener('change', applyMatch);
+  }, []);
 
   useEffect(() => {
     if (checkins.length === 0) {
@@ -695,8 +728,16 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
 
   const handleSelectCheckinView = (view: CheckinView) => {
     setActiveCheckinView(view);
+    if (isMobileCheckinsLayout) {
+      setMobileCheckinScreen(view);
+    }
     setSuccessMessage(null);
     setErrorMessage(null);
+    setIsQuickCheckinOpen(false);
+  };
+
+  const handleBackToChooser = () => {
+    setMobileCheckinScreen('chooser');
     setIsQuickCheckinOpen(false);
   };
 
@@ -712,6 +753,8 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   };
 
   const showCheckinStatus = activeCheckinView !== 'annual';
+  const showChooser = !isMobileCheckinsLayout || mobileCheckinScreen === 'chooser';
+  const showFocusedCheckinView = !isMobileCheckinsLayout || mobileCheckinScreen !== 'chooser';
 
   // Render questionnaire mode
   if (isInQuestionnaireMode) {
@@ -720,7 +763,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
     const progress = ((currentQuestionIndex + 1) / questionCount) * 100;
     
     return (
-      <section className="life-wheel life-wheel--questionnaire">
+      <section className={`life-wheel life-wheel--questionnaire${isMobileCheckinsLayout ? ' life-wheel--mobile-safe-top' : ''}`}>
         <div className="questionnaire-container">
           <button type="button" className="questionnaire-back" onClick={exitQuestionnaire}>
             Back to check-ins
@@ -838,7 +881,15 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
   }
 
   return (
-    <section className="life-wheel">
+    <section className={`life-wheel${isMobileCheckinsLayout ? ' life-wheel--mobile-safe-top' : ''}`}>
+      {entryOrigin === 'my-quest' && onBackToMyQuest ? (
+        <div className="life-wheel__mobile-back-row life-wheel__mobile-back-row--origin">
+          <button type="button" className="life-wheel__secondary" onClick={onBackToMyQuest}>
+            ← Back to My Quest
+          </button>
+        </div>
+      ) : null}
+      {showChooser ? (
       <div className="life-wheel__chooser">
         <div className="life-wheel__chooser-header">
           <h2>Check-ins</h2>
@@ -852,16 +903,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
             aria-pressed={activeCheckinView === 'full'}
           >
             <h3>Full Check-in</h3>
-            <p>Use the full wellbeing wheel and track your overall balance.</p>
-          </button>
-          <button
-            type="button"
-            className={`life-wheel__chooser-card ${activeCheckinView === 'annual' ? 'life-wheel__chooser-card--active' : ''}`}
-            onClick={() => handleSelectCheckinView('annual')}
-            aria-pressed={activeCheckinView === 'annual'}
-          >
-            <h3>Annual Review &amp; Manifestation</h3>
-            <p>Reflect on the year and set intentions for what comes next.</p>
+            <p>Review your whole life balance.</p>
           </button>
           <button
             type="button"
@@ -870,12 +912,41 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
             aria-pressed={activeCheckinView === 'area'}
           >
             <h3>Area Check-in</h3>
-            <p>Zoom in on one life wheel area for a focused refresh.</p>
+            <p>Focus on one life area.</p>
+          </button>
+          {!isMobileCheckinsLayout ? (
+            <button
+              type="button"
+              className={`life-wheel__chooser-card ${activeCheckinView === 'annual' ? 'life-wheel__chooser-card--active' : ''}`}
+              onClick={() => handleSelectCheckinView('annual')}
+              aria-pressed={activeCheckinView === 'annual'}
+            >
+              <h3>Annual Review &amp; Manifestation</h3>
+              <p>Reflect on the year and set intentions for what comes next.</p>
+            </button>
+          ) : null}
+        </div>
+        {isMobileCheckinsLayout ? (
+          <div className="life-wheel__chooser-more">
+            <h3>More / Seasonal Reflection</h3>
+            <p>Open annual review and manifestation when you want a deeper reflection.</p>
+            <button type="button" className="life-wheel__secondary" onClick={() => handleSelectCheckinView('annual')}>
+              Annual Review &amp; Manifestation
+            </button>
+          </div>
+        ) : null}
+      </div>
+      ) : null}
+
+      {showFocusedCheckinView && isMobileCheckinsLayout ? (
+        <div className="life-wheel__mobile-back-row">
+          <button type="button" className="life-wheel__secondary" onClick={handleBackToChooser}>
+            ← Back to Check-ins
           </button>
         </div>
-      </div>
+      ) : null}
 
-      {showCheckinStatus ? (
+      {showFocusedCheckinView && showCheckinStatus ? (
         <>
           {isDemoExperience ? (
             <p className="life-wheel__status life-wheel__status--info">
@@ -893,11 +964,11 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
         </>
       ) : null}
 
-      {activeCheckinView === 'annual' ? (
+      {showFocusedCheckinView && activeCheckinView === 'annual' ? (
         <div className="life-wheel__annual-review">
-          <ReviewWizard onComplete={() => handleSelectCheckinView('full')} />
+          <ReviewWizard onComplete={() => (isMobileCheckinsLayout ? handleBackToChooser() : handleSelectCheckinView('full'))} />
         </div>
-      ) : (
+      ) : showFocusedCheckinView ? (
         <>
           {activeCheckinView === 'area' ? (
             <div className="life-wheel__area-panel">
@@ -1181,7 +1252,7 @@ export function LifeWheelCheckins({ session }: LifeWheelCheckinsProps) {
 
       </div>
         </>
-      )}
+      ) : null}
 
       {activeCheckinView !== 'annual' ? (
         <dialog className="modal life-wheel__quick-checkin-modal" open={isQuickCheckinOpen}>

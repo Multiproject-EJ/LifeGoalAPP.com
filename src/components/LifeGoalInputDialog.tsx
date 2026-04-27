@@ -1,6 +1,6 @@
 import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import type { LifeWheelCategoryKey } from '../features/checkins/LifeWheelCheckins';
+import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../features/checkins/LifeWheelCheckins';
 import type { GoalStatusTag } from '../features/goals/goalStatus';
 import { DEFAULT_GOAL_STATUS, GOAL_STATUS_OPTIONS } from '../features/goals/goalStatus';
 import {
@@ -1037,14 +1037,11 @@ export function LifeGoalInputDialog({
               <label className="life-goal-dialog__field">
                 <span>Life Area</span>
                 <select value={formData.lifeWheelCategory} onChange={handleFieldChange('lifeWheelCategory')}>
-                  <option value="spirituality_community">Spirituality & Community</option>
-                  <option value="finance_wealth">Finance & Wealth</option>
-                  <option value="love_relations">Love & Relations</option>
-                  <option value="fun_creativity">Fun & Creativity</option>
-                  <option value="career_development">Career & Self Development</option>
-                  <option value="health_fitness">Health & Fitness</option>
-                  <option value="family_friends">Family & Friends</option>
-                  <option value="living_spaces">Living Spaces</option>
+                  {LIFE_WHEEL_CATEGORIES.map((category) => (
+                    <option key={category.key} value={category.key}>
+                      {category.label}
+                    </option>
+                  ))}
                 </select>
               </label>
 
