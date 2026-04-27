@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 import { quickAddDailyHabit } from '../../services/habitsV2';
 import {
@@ -33,6 +33,7 @@ export function StarterHabitPicker({
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [exploringStarter, setExploringStarter] = useState<StarterHabit | null>(null);
+  const isCreatingRef = useRef(false);
 
   // Catalog may contain more than 3 habits per domain; Phase 1 picker displays
   // the first 3 to keep mobile UI compact.
@@ -40,6 +41,8 @@ export function StarterHabitPicker({
 
   const createStarterHabit = async (starter: StarterHabit) => {
     if (creatingTitle) return;
+    if (isCreatingRef.current) return;
+    isCreatingRef.current = true;
     setCreatingTitle(starter.title);
     setStatusMessage(null);
     setErrorMessage(null);
@@ -63,6 +66,7 @@ export function StarterHabitPicker({
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to create starter quest right now.');
     } finally {
+      isCreatingRef.current = false;
       setCreatingTitle(null);
     }
   };
