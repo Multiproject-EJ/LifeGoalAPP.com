@@ -7,6 +7,8 @@ import { AiSettingsSection } from './AiSettingsSection';
 import { ExperimentalFeaturesSection } from './ExperimentalFeaturesSection';
 import { GameDebugLogSection } from './GameDebugLogSection';
 import { YesterdayRecapSettings } from './YesterdayRecapSettings';
+import { DreamJournalReminderSettings } from './DreamJournalReminderSettings';
+import { TodaysWinsReminderSettings } from './TodaysWinsReminderSettings';
 import { GamificationSettings } from '../gamification/GamificationSettings';
 import { TelemetrySettingsSection } from './TelemetrySettingsSection';
 import { SettingsFolderButton } from '../../components/SettingsFolderButton';
@@ -614,6 +616,10 @@ export function MyAccountPanel({
         session={session}
         onLaunchDailyCatchUpPrompt={onLaunchDailyCatchUpPrompt}
       />
+
+      <DreamJournalReminderSettings session={session} />
+
+      <TodaysWinsReminderSettings session={session} />
 
       <section className="account-panel__card" aria-labelledby="feedback-support-tools">
         <p className="account-panel__eyebrow">Support</p>
