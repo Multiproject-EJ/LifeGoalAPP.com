@@ -99,6 +99,14 @@ import {
   setYesterdayRecapLastCollected,
   setYesterdayRecapLastShown,
 } from '../../services/yesterdayRecapPrefs';
+import {
+  getDreamJournalReminderEnabled,
+  getDreamJournalReminderLastShownCycle,
+  getDreamJournalReminderWindow,
+  getDreamReminderCycleKey,
+  isHourInDreamReminderWindow,
+  setDreamJournalReminderLastShownCycle,
+} from '../../services/dreamJournalReminderPrefs';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { fetchXPTransactions } from '../../services/gamification';
 import { fetchZenTokenTransactions } from '../../services/zenGarden';
@@ -524,6 +532,8 @@ const weeklyHabitReviewLaunchKey = (userId: string) =>
   `lifegoal.weekly-habit-review-launch:${userId}`;
 const dailyCatchUpLaunchKey = (userId: string) =>
   `lifegoal.daily-catchup-launch:${userId}`;
+const dreamJournalLaunchKey = (userId: string) =>
+  `lifegoal.dream-journal-launch:${userId}`;
 const timeLimitedOfferScheduleKey = (userId: string, dateISO: string) =>
   `lifegoal.time-limited-offer-schedule:${userId}:${dateISO}`;
 
@@ -846,6 +856,7 @@ export function DailyHabitTracker({
   const [visionVisualizationSeconds, setVisionVisualizationSeconds] = useState(120);
   const [isVisionVisualizationRunning, setIsVisionVisualizationRunning] = useState(false);
   const [showYesterdayRecap, setShowYesterdayRecap] = useState(false);
+  const [showDreamJournalReminderModal, setShowDreamJournalReminderModal] = useState(false);
   const [dayStatusMap, setDayStatusMap] = useState<Record<string, DayStatus>>({});
   const [yesterdayHabits, setYesterdayHabits] = useState<HabitWithGoal[]>([]);
   const [yesterdaySelections, setYesterdaySelections] = useState<Record<string, boolean>>({});
@@ -1728,6 +1739,66 @@ export function DailyHabitTracker({
     () => formatISODate(addDays(parseISODate(today), -1)),
     [today],
   );
+
+  const openDreamJournalQuickEntry = useCallback(() => {
+    setIsQuickJournalOpen(true);
+    setQuickJournalMode('dream');
+    setQuickJournalError(null);
+    setQuickJournalStatus(null);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !session?.user?.id) {
+      return;
+    }
+
+    const launchKey = dreamJournalLaunchKey(session.user.id);
+    const tryOpenDreamJournal = () => {
+      openDreamJournalQuickEntry();
+      setShowDreamJournalReminderModal(false);
+      return true;
+    };
+
+    if (loadDraft<boolean>(launchKey) && tryOpenDreamJournal()) {
+      removeDraft(launchKey);
+    }
+
+    const launchHandler = () => {
+      if (isViewingToday && !loading) {
+        tryOpenDreamJournal();
+        removeDraft(launchKey);
+      } else {
+        saveDraft(launchKey, true);
+      }
+    };
+
+    window.addEventListener('lifegoal:launch-dream-journal', launchHandler);
+    return () => window.removeEventListener('lifegoal:launch-dream-journal', launchHandler);
+  }, [isViewingToday, loading, openDreamJournalQuickEntry, session?.user?.id]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !session?.user?.id || !isViewingToday) {
+      return;
+    }
+
+    if (!getDreamJournalReminderEnabled(session.user.id)) {
+      return;
+    }
+
+    const now = new Date();
+    const reminderWindow = getDreamJournalReminderWindow(session.user.id);
+    if (!isHourInDreamReminderWindow(now.getHours(), reminderWindow)) {
+      return;
+    }
+
+    const cycleKey = getDreamReminderCycleKey(now, reminderWindow);
+    if (getDreamJournalReminderLastShownCycle(session.user.id) === cycleKey) {
+      return;
+    }
+
+    setDreamJournalReminderLastShownCycle(session.user.id, cycleKey);
+    setShowDreamJournalReminderModal(true);
+  }, [isViewingToday, session?.user?.id]);
 
   useEffect(() => {
     const draftKey = quickJournalDraftKey(session.user.id, activeDate);
@@ -8835,6 +8906,35 @@ export function DailyHabitTracker({
                 {yesterdaySaving ? 'Saving…' : yesterdayMarkLabel}
               </button>
             </footer>
+          </div>
+        </div>
+      )}
+
+      {showDreamJournalReminderModal && (
+        <div className="dream-journal-reminder-overlay" onClick={() => setShowDreamJournalReminderModal(false)}>
+          <div className="dream-journal-reminder-modal" onClick={(event) => event.stopPropagation()}>
+            <button
+              type="button"
+              className="dream-journal-reminder-modal__close"
+              onClick={() => setShowDreamJournalReminderModal(false)}
+              aria-label="Close dream journal reminder"
+            >
+              ×
+            </button>
+            <div className="dream-journal-reminder-modal__content">
+              <p className="dream-journal-reminder-modal__eyebrow">Dream Journal Reminder</p>
+              <h3>Had an interesting Dream last night?</h3>
+              <button
+                type="button"
+                className="btn btn--primary dream-journal-reminder-modal__cta"
+                onClick={() => {
+                  setShowDreamJournalReminderModal(false);
+                  openDreamJournalQuickEntry();
+                }}
+              >
+                Yes
+              </button>
+            </div>
           </div>
         </div>
       )}
