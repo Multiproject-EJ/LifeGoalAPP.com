@@ -17,8 +17,8 @@ import dailyTreatsHearts from './assets/Daily_treats_hearts.webp';
 import dailyTreatsCalendarOpen from './assets/daily_treats_calendaropen.webp';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
-import { GoalWorkspace, LifeGoalsSection } from './features/goals';
-import { BodyHaircutWidget, DailyHabitTracker, HabitsModule, MobileHabitHome } from './features/habits';
+import { GoalWorkspace, LifeGoalsSection, MyQuestHub } from './features/goals';
+import { BodyHaircutWidget, DailyHabitTracker, HabitsModule, MobileHabitHome, StarterHabitPicker } from './features/habits';
 import type { TimeBoundOfferId } from './features/habits/TimeBoundOfferRow';
 import { ProgressDashboard } from './features/dashboard';
 import { VisionBoard } from './features/vision-board';
@@ -203,6 +203,7 @@ const PROFILE_STRENGTH_HOLD_DURATION_MS = 520;
 const PROFILE_STRENGTH_HOLD_SLOP_PX = 8;
 const DAILY_TREATS_SEEN_KEY = 'lifegoal_daily_treats_seen';
 const DAILY_TREATS_DAILY_VISIT_KEY = 'lifegoal_daily_treats_daily_visit';
+const HABITS_CREATED_EVENT = 'habitgame:habits-created';
 
 function formatTimerSeconds(seconds: number): string {
   const safe = Math.max(0, Math.floor(seconds));
@@ -599,6 +600,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [showMobileFeedbackModal, setShowMobileFeedbackModal] = useState(false);
   const [showMobileSupportModal, setShowMobileSupportModal] = useState(false);
   const [isMyQuestSubmenuOpen, setIsMyQuestSubmenuOpen] = useState(false);
+  const [isStarterQuestSheetOpen, setIsStarterQuestSheetOpen] = useState(false);
+  const [starterQuestSheetOrigin, setStarterQuestSheetOrigin] = useState<'my-quest' | 'today' | null>(null);
   const [isMyIkigaiModalOpen, setIsMyIkigaiModalOpen] = useState(false);
   const [isFeedbackSupportSubmenuOpen, setIsFeedbackSupportSubmenuOpen] = useState(false);
   const [activeProfileStrengthHold, setActiveProfileStrengthHold] = useState<{
@@ -1034,12 +1037,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const isGameNearNextLevel = Math.round(levelInfo?.progressPercentage ?? 0) >= 95;
   const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
+  const shouldCollapseFooterForGoalsAndCheckins =
+    isMobileExperience && (mobileActiveNavId === 'support' || mobileActiveNavId === 'rituals');
+  const shouldLockFooterCollapsedForQuestFlow =
+    isMobileExperience && (isMyQuestSubmenuOpen || isStarterQuestSheetOpen || shouldCollapseFooterForGoalsAndCheckins);
   const shouldAutoCollapseOnIdle =
     isMobileExperience &&
     mobileActiveNavId !== null &&
     (MOBILE_FOOTER_AUTO_COLLAPSE_IDS.has(mobileActiveNavId) ||
       (mobileActiveNavId === 'actions' && actionsTabView === 'tasks'));
-  const shouldAllowFooterCollapse = isMobileExperience && (isMobileMenuImageActive || shouldAutoCollapseOnIdle);
+  const shouldAllowFooterCollapse =
+    isMobileExperience && (isMobileMenuImageActive || shouldAutoCollapseOnIdle || shouldLockFooterCollapsedForQuestFlow);
   const shouldHideFooterInJournal =
     isMobileExperience && isMobileMenuImageActive && activeWorkspaceNav === 'journal';
 
@@ -1072,11 +1080,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
         }, MOBILE_FOOTER_SNAP_RESET_MS);
       }
       setIsMobileFooterCollapsed(false);
-      if (shouldAutoCollapseOnIdle) {
+      if (shouldAutoCollapseOnIdle && !shouldLockFooterCollapsedForQuestFlow) {
         scheduleMobileFooterCollapse();
       }
     },
-    [scheduleMobileFooterCollapse, shouldAllowFooterCollapse, shouldAutoCollapseOnIdle],
+    [scheduleMobileFooterCollapse, shouldAllowFooterCollapse, shouldAutoCollapseOnIdle, shouldLockFooterCollapsedForQuestFlow],
   );
 
   const handleMobileFooterCollapse = useCallback(() => {
@@ -1104,11 +1112,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
         window.clearTimeout(mobileFooterCollapseTimeoutRef.current);
         mobileFooterCollapseTimeoutRef.current = null;
       }
+      if (shouldLockFooterCollapsedForQuestFlow) {
+        setIsMobileFooterCollapsed(true);
+      }
       return;
     }
     setIsMobileFooterCollapsed(true);
-    scheduleMobileFooterCollapse();
-  }, [scheduleMobileFooterCollapse, shouldAllowFooterCollapse, shouldAutoCollapseOnIdle]);
+    if (!shouldLockFooterCollapsedForQuestFlow) {
+      scheduleMobileFooterCollapse();
+    }
+  }, [scheduleMobileFooterCollapse, shouldAllowFooterCollapse, shouldAutoCollapseOnIdle, shouldLockFooterCollapsedForQuestFlow]);
 
   useEffect(() => {
     if (!shouldHideFooterInJournal) {
@@ -1132,7 +1145,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
       if (delta > threshold) {
         setIsMobileFooterCollapsed(true);
-      } else if (delta < -threshold) {
+      } else if (delta < -threshold && !shouldLockFooterCollapsedForQuestFlow) {
         handleMobileFooterExpand(false);
       }
 
@@ -1141,7 +1154,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleMobileFooterExpand, isMobileMenuImageActive, isMobileExperience]);
+  }, [handleMobileFooterExpand, isMobileMenuImageActive, isMobileExperience, shouldLockFooterCollapsedForQuestFlow]);
 
   useEffect(() => {
     if (!isVisionRewardOpen || !isMobileExperience || !isMobileMenuImageActive) {
@@ -1973,6 +1986,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsEnergyMenuOpen(false);
     setIsMyQuestSubmenuOpen(false);
     setIsFeedbackSupportSubmenuOpen(false);
+    setIsStarterQuestSheetOpen(false);
     closeGameBoardOverlayIfOpen();
     
     const preserveBreatheTab = options?.preserveBreatheTab ?? false;
@@ -2038,6 +2052,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsEnergyMenuOpen(false);
     setIsMyQuestSubmenuOpen(false);
     setIsFeedbackSupportSubmenuOpen(false);
+    setIsStarterQuestSheetOpen(false);
     closeGameBoardOverlayIfOpen();
 
     if (mode === 'feedback') {
@@ -2053,9 +2068,57 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsEnergyMenuOpen(false);
     setIsMyQuestSubmenuOpen(false);
     setIsFeedbackSupportSubmenuOpen(false);
+    setIsStarterQuestSheetOpen(false);
     closeGameBoardOverlayIfOpen();
     setIsMyIkigaiModalOpen(true);
   }, [closeGameBoardOverlayIfOpen]);
+
+  const openStarterQuestSheetFromToday = useCallback(() => {
+    setIsMobileProfileDialogOpen(false);
+    setIsMobileMenuOpen(false);
+    setIsEnergyMenuOpen(false);
+    setIsMyQuestSubmenuOpen(false);
+    setIsFeedbackSupportSubmenuOpen(false);
+    closeGameBoardOverlayIfOpen();
+    setStarterQuestSheetOrigin('today');
+    setIsStarterQuestSheetOpen(true);
+  }, [closeGameBoardOverlayIfOpen]);
+
+  const openStarterQuestSheetFromMyQuest = useCallback(() => {
+    setIsMobileProfileDialogOpen(false);
+    setIsEnergyMenuOpen(false);
+    setIsFeedbackSupportSubmenuOpen(false);
+    closeGameBoardOverlayIfOpen();
+    setStarterQuestSheetOrigin('my-quest');
+    setIsStarterQuestSheetOpen(true);
+  }, [closeGameBoardOverlayIfOpen]);
+
+  const openCheckinsFromMyQuest = useCallback(() => {
+    handleMobileNavSelect('rituals');
+  }, [handleMobileNavSelect]);
+
+  const openGoalsFromMyQuest = useCallback(() => {
+    handleMobileNavSelect('support');
+  }, [handleMobileNavSelect]);
+
+  const closeStarterQuestSheet = useCallback(() => {
+    setIsStarterQuestSheetOpen(false);
+    if (starterQuestSheetOrigin === 'my-quest') {
+      setIsMobileMenuOpen(true);
+      setIsMyQuestSubmenuOpen(true);
+      setIsEnergyMenuOpen(false);
+      setIsFeedbackSupportSubmenuOpen(false);
+    }
+    setStarterQuestSheetOrigin(null);
+  }, [starterQuestSheetOrigin]);
+
+  const handleStarterQuestCreated = useCallback(() => {
+    setIsStarterQuestSheetOpen(false);
+    setStarterQuestSheetOrigin(null);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(HABITS_CREATED_EVENT));
+    }
+  }, []);
 
   const openIkigaiCoachPrompt = useCallback(() => {
     setAiCoachStarterQuestion(
@@ -2089,6 +2152,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const myQuestSubmenuActions: LauncherSubmenuAction[] = useMemo(
     () => [
       { id: 'ikigai', label: 'My Ikigai', icon: '✨', onSelect: openMyIkigaiFromMobileMenu },
+      { id: 'starter-quest', label: 'Starter Quest', icon: '🧭', onSelect: openStarterQuestSheetFromMyQuest },
       { id: 'body', label: 'Health Goals', icon: '💪', onSelect: () => handleMobileNavSelect('body') },
       { id: 'habits', label: 'Habits', icon: '🔄', onSelect: () => handleMobileNavSelect('habits') },
       { id: 'routines', label: 'Routines', icon: '🧩', onSelect: () => handleMobileNavSelect('routines') },
@@ -2096,7 +2160,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       { id: 'planning', label: 'Check-ins', icon: '✅', onSelect: () => handleMobileNavSelect('planning') },
       { id: 'contracts', label: 'Contracts', icon: '🤝', onSelect: () => handleMobileNavSelect('contracts') },
     ],
-    [handleMobileNavSelect, openMyIkigaiFromMobileMenu],
+    [handleMobileNavSelect, openMyIkigaiFromMobileMenu, openStarterQuestSheetFromMyQuest],
   );
 
   const feedbackSupportSubmenuActions: LauncherSubmenuAction[] = useMemo(
@@ -3626,14 +3690,19 @@ export default function App({ forceAuthOnMount }: AppProps) {
               </ul>
             </div>
             {isMyQuestSubmenuOpen ? (
-              <div className="mobile-menu-overlay__hold-modal" role="dialog" aria-modal="true" aria-label="My Quest menu">
+              <div
+                className="mobile-menu-overlay__hold-modal mobile-menu-overlay__hold-modal--my-quest"
+                role="dialog"
+                aria-modal="true"
+                aria-label="My Quest menu"
+              >
                 <button
                   type="button"
                   className="mobile-menu-overlay__hold-backdrop"
                   aria-label="Close My Quest menu"
                   onClick={() => setIsMyQuestSubmenuOpen(false)}
                 />
-                <div className="mobile-menu-overlay__hold-panel mobile-menu-overlay__submenu-sheet">
+                <div className="mobile-menu-overlay__hold-panel mobile-menu-overlay__submenu-sheet mobile-menu-overlay__submenu-sheet--my-quest">
                   <div className="mobile-menu-overlay__hold-header">
                     <div>
                       <p className="mobile-menu-overlay__hold-eyebrow">Quest menu</p>
@@ -3648,6 +3717,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       ✕
                     </button>
                   </div>
+                  {activeSession ? (
+                    <MyQuestHub
+                      session={activeSession}
+                      onOpenStarterQuest={openStarterQuestSheetFromMyQuest}
+                      onOpenCheckins={openCheckinsFromMyQuest}
+                      onOpenGoals={openGoalsFromMyQuest}
+                    />
+                  ) : null}
+                  <p className="mobile-menu-overlay__hold-eyebrow">More tools</p>
                   <div className="mobile-menu-overlay__submenu mobile-menu-overlay__submenu--open">
                     {myQuestSubmenuActions.map((action) => (
                       <button key={action.id} type="button" className="mobile-menu-overlay__submenu-button" onClick={action.onSelect}>
@@ -4511,6 +4589,32 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const isIslandFullscreenActive = showGameBoardOverlay || showLevelWorldsFromEntry;
   const islandFullscreenClassName = isIslandFullscreenActive ? ' app--island-fullscreen' : '';
+  const starterQuestSheet =
+    isMobileExperience && isStarterQuestSheetOpen && activeSession ? (
+      <div className="starter-quest-sheet" role="dialog" aria-modal="true" aria-label="Starter Quest picker">
+        <button
+          type="button"
+          className="starter-quest-sheet__backdrop"
+          aria-label="Close Starter Quest picker"
+          onClick={closeStarterQuestSheet}
+        />
+        <div className="starter-quest-sheet__panel" role="document">
+          <button
+            type="button"
+            className="starter-quest-sheet__close"
+            aria-label="Close Starter Quest picker"
+            onClick={closeStarterQuestSheet}
+          >
+            ✕
+          </button>
+          <StarterHabitPicker
+            userId={activeSession.user.id}
+            onCreated={handleStarterQuestCreated}
+            onClose={closeStarterQuestSheet}
+          />
+        </div>
+      </div>
+    ) : null;
 
   if (isMobileExperience && showMobileHome) {
     const mobileHomeAppClassName = `app app--workspace app--mobile-frame app--mobile-home-frame${
@@ -4519,8 +4623,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     return (
       <div className={mobileHomeAppClassName}>
         <div className="workspace-shell">
-          <MobileHabitHome
-            session={activeSession}
+            <MobileHabitHome
+              session={activeSession}
             showPointsBadges={shouldShowPointsBadges}
             onVisionRewardOpenChange={setIsVisionRewardOpen}
             profileStrengthSnapshot={profileStrengthSnapshot}
@@ -4536,9 +4640,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
             onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
             forceCompactView={!isGameModeActive}
             preferredCompactView={!isGameModeActive}
-            hideTimeBoundOffers={!isGameModeActive}
-            hiddenHabitIds={[]}
-          />
+              hideTimeBoundOffers={!isGameModeActive}
+              hiddenHabitIds={[]}
+              onOpenStarterQuest={openStarterQuestSheetFromToday}
+            />
         </div>
         {!showZenGardenFullScreen && !isConflictResolverFullscreen && (
           <MobileFooterNav
@@ -4576,6 +4681,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             pointsBalance={goldBalance}
           />
         )}
+        {starterQuestSheet}
         {mobileMenuOverlay}
         {mobileGamificationOverlay}
         {levelWorldsEntryModal}
@@ -5004,6 +5110,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       {dailyTreatsModal}
       {luckyRollModal}
       {countdownCalendarModal}
+      {starterQuestSheet}
 
       {/* Quick Actions FAB - visible app-wide */}
       {!shouldRequireAuthentication && (

@@ -18,6 +18,7 @@ type MobileHabitHomeProps = {
   hideTimeBoundOffers?: boolean;
   hiddenHabitIds?: string[];
   onHideStandaloneHabitsChange?: (habitIds: string[]) => void;
+  onOpenStarterQuest?: () => void;
 };
 
 export function MobileHabitHome({
@@ -35,6 +36,7 @@ export function MobileHabitHome({
   hideTimeBoundOffers = false,
   hiddenHabitIds = [],
   onHideStandaloneHabitsChange,
+  onOpenStarterQuest,
 }: MobileHabitHomeProps) {
   void onHideStandaloneHabitsChange;
   return (
@@ -54,6 +56,7 @@ export function MobileHabitHome({
         preferredCompactView={preferredCompactView}
         hideTimeBoundOffers={hideTimeBoundOffers}
         hiddenHabitIds={hiddenHabitIds}
+        onOpenStarterQuest={onOpenStarterQuest}
       />
     </div>
   );
