@@ -158,6 +158,8 @@ import {
   selectCreatureForEgg,
   type ShipZone,
 } from '../services/creatureCatalog';
+import { resolveCreatureArtManifest } from '../services/creatureImageManifest';
+import { CreatureGridCard } from './CreatureGridCard';
 import {
   rankCreatureFitsForPlayer,
   selectPerfectCompanions,
@@ -9801,87 +9803,31 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               </div>
             ) : (
               <div className="island-run-sanctuary-panel__grid">
-                {visibleSanctuaryCreatures.map((creature) => (
-                  <article key={creature.creatureId} className="island-run-sanctuary-card">
-                    <img
-                      className="island-run-sanctuary-card__art"
-                      src={getEggStageArtSrc(creature.creature.tier, 4)}
-                      alt={`${creature.creature.name} collected creature`}
+                {visibleSanctuaryCreatures.map((creature) => {
+                  const art = resolveCreatureArtManifest(creature.creature);
+                  return (
+                    <CreatureGridCard
+                      key={creature.creatureId}
+                      imageSrc={art.cutoutSrc}
+                      fallbackEmoji={art.emojiFallback}
+                      rarity={creature.creature.tier}
+                      active={activeCompanionId === creature.creatureId}
+                      selected={selectedSanctuaryCreatureId === creature.creatureId}
+                      locked={false}
+                      name={creature.creature.name}
+                      onClick={() => sanctuaryHandlers.openCreature(creature.creatureId)}
                     />
-                    <div className="island-run-sanctuary-card__body">
-                      <p className="island-run-sanctuary-card__eyebrow">
-                        Island {creature.lastCollectedIslandNumber} · {creature.creature.tier}
-                      </p>
-                      <h4 className="island-run-sanctuary-card__title">{creature.creature.name}</h4>
-                      {perfectCompanionIdSet.has(creature.creatureId) ? (
-                        <p className="island-run-sanctuary-card__meta"><strong>⭐ Perfect for your hand</strong></p>
-                      ) : null}
-                      <p className="island-run-sanctuary-card__meta">Habitat: <strong>{creature.creature.habitat}</strong></p>
-                      <p className="island-run-sanctuary-card__meta">Affinity: <strong>{creature.creature.affinity}</strong></p>
-                      <p className="island-run-sanctuary-card__meta">Copies: <strong>x{creature.copies}</strong></p>
-                      <p className="island-run-sanctuary-card__meta">Bond level: <strong>{creature.bondLevel}</strong> · Progress <strong>{creature.bondXp % CREATURE_BOND_XP_PER_LEVEL}/{CREATURE_BOND_XP_PER_LEVEL}</strong></p>
-                      <p className="island-run-sanctuary-card__meta">
-                        Companion bonus: <strong>{getCompanionBonusForCreature(creature.creature, creature.bondLevel).label}</strong>
-                      </p>
-                      <p className="island-run-sanctuary-card__meta">{getCompanionBonusForCreature(creature.creature, creature.bondLevel).description}</p>
-                      <p className="island-run-sanctuary-card__meta">
-                        Specialty: <strong>{getCreatureSpecialtyForCompanion(creature.creature, creature.bondLevel).label}</strong>
-                      </p>
-                      <p className="island-run-sanctuary-card__meta">{getCreatureSpecialtyForCompanion(creature.creature, creature.bondLevel).description}</p>
-                      <p className="island-run-sanctuary-card__meta">
-                        Next boost at bond level <strong>{getCompanionBonusForCreature(creature.creature, creature.bondLevel).nextBondMilestoneLevel}</strong>
-                      </p>
-                      {getUnclaimedBondMilestones(creature).length > 0 ? (
-                        <div className="island-run-sanctuary-reward">
-                          <p className="island-run-sanctuary-reward__title">Reward ready</p>
-                          <p className="island-run-sanctuary-card__meta">
-                            Bond level {getUnclaimedBondMilestones(creature)[0]} · {getBondMilestoneReward(getUnclaimedBondMilestones(creature)[0])?.summary}
-                          </p>
-                        </div>
-                      ) : null}
-                      <div className="island-run-sanctuary-card__progress" aria-hidden="true">
-                        <span
-                          className="island-run-sanctuary-card__progress-fill"
-                          style={{ width: `${((creature.bondXp % CREATURE_BOND_XP_PER_LEVEL) / CREATURE_BOND_XP_PER_LEVEL) * 100}%` }}
-                        />
-                      </div>
-                      <div className="island-hatchery-card__actions">
-                        <button
-                          type="button"
-                          className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                          onClick={() => sanctuaryHandlers.openCreature(creature.creatureId)}
-                        >
-                          View Details
-                        </button>
-                        {getUnclaimedBondMilestones(creature).length > 0 ? (
-                          <button
-                            type="button"
-                            className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                            onClick={() => sanctuaryHandlers.claimBondReward(creature.creatureId, getUnclaimedBondMilestones(creature)[0])}
-                          >
-                            Claim Reward
-                          </button>
-                        ) : null}
-                        {activeCompanionId === creature.creatureId ? (
-                          <button
-                            type="button"
-                            className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                            onClick={() => sanctuaryHandlers.setActiveCompanion(null)}
-                          >
-                            Remove Active
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                            onClick={() => sanctuaryHandlers.setActiveCompanion(creature.creatureId)}
-                          >
-                            Set Active Companion
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </article>
+                  );
+                })}
+                {Array.from({ length: Math.max(0, CREATURE_CATALOG.length - collectedCreatures.length) }).map((_, index) => (
+                  <CreatureGridCard
+                    key={`locked-${index}`}
+                    imageSrc="/assets/creature-placeholders/silhouette.webp"
+                    fallbackEmoji="❔"
+                    rarity="common"
+                    active={false}
+                    locked
+                  />
                 ))}
               </div>
             )}
