@@ -1,5 +1,13 @@
 export type CreatureTreatType = 'basic' | 'favorite' | 'rare';
 
+/**
+ * ARCHITECTURE NOTE (PR1 guardrail):
+ * This localStorage inventory is non-authoritative for economy state.
+ * Runtime/Supabase-backed Island Run state is the source of truth for
+ * reward-impacting treat balances; this module is retained for migration and
+ * fallback UI compatibility only.
+ */
+
 export interface CreatureTreatInventory {
   basic: number;
   favorite: number;

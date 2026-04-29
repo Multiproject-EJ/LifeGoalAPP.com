@@ -93,7 +93,7 @@ import {
   applyDevSpeedHatchEgg,
   applyActivateCurrentIslandTimer,
   applyPassiveDiceRegenTick,
-  applyEggResolution,
+  resolveReadyEggTerminalTransition,
   applyHydrationEggReadyTransition,
   applyEggPlacement,
   applyFirstRunClaimed,
@@ -5515,7 +5515,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const nowTs = Date.now();
     const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg);
     const islandKey = String(islandNumber);
-    const existingEntry = runtimeState.perIslandEggs?.[islandKey];
     const hasCollectedPerfectCompanionBeforeCollect = creatureCollection.some((entry) =>
       (runtimeState.perfectCompanionIds ?? []).includes(entry.creatureId),
     );
@@ -5524,16 +5523,20 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       !hasCollectedPerfectCompanionBeforeCollect
       && islandNumber >= perfectCompanionRuntimeConfig.gameplay.pityIslandThreshold;
     const nextCompletedStops = ensureStopCompleted(completedStops, 'hatchery');
-    const collectedEntry: PerIslandEggEntry = existingEntry
-      ? { ...existingEntry, status: 'collected', openedAt: nowTs, location: 'island' }
-      : {
-          tier: resolvedEgg.tier,
-          setAtMs: resolvedEgg.setAtMs,
-          hatchAtMs: resolvedEgg.hatchAtMs,
-          status: 'collected',
-          openedAt: nowTs,
-          location: 'island',
-        };
+    const transitionResult = resolveReadyEggTerminalTransition({
+      session,
+      client,
+      islandNumber,
+      terminalStatus: 'collected',
+      openedAtMs: nowTs,
+      completedStops: nextCompletedStops,
+      triggerSource: 'island_board_collect_creature',
+    });
+    if (!transitionResult.changed) {
+      collectingCreatureRef.current = false;
+      setIsCollectingCreature(false);
+      return;
+    }
 
     setActiveEgg(null);
     setCreatureCollection(collectCreatureForUser({
@@ -5582,14 +5585,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         });
       }
     }
-    const nextRecord = applyEggResolution({
-      session,
-      client,
-      islandNumber,
-      perIslandEggEntry: collectedEntry,
-      completedStops: nextCompletedStops,
-      triggerSource: 'island_board_collect_creature',
-    });
+    const nextRecord = transitionResult.record;
     updateCompletedStops(nextCompletedStops);
     markHatcheryStopCompleteInV2();
     setRuntimeState(nextRecord);
@@ -5615,28 +5611,31 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const picked = options.find((o) => o.choice === choice) ?? options[0];
     const nowTs = Date.now();
     const islandKey = String(islandNumber);
-    const existingEntry = runtimeState.perIslandEggs?.[islandKey];
     const nextCompletedStops = ensureStopCompleted(completedStops, 'hatchery');
-    const soldEntry: PerIslandEggEntry = existingEntry
-      ? { ...existingEntry, status: 'sold', openedAt: nowTs, location: 'island' }
-      : { tier: resolvedEgg.tier, setAtMs: resolvedEgg.setAtMs, hatchAtMs: resolvedEgg.hatchAtMs, status: 'sold', openedAt: nowTs, location: 'island' };
 
-    // Apply chosen reward
-    if (choice === 'shards') {
-      awardWalletShards(picked.amount);
-    } else {
-      setDicePool((d) => d + picked.amount);
-    }
     // Also give essence from bundle (always)
     const specialtySellBonusEssence = activeCompanionSpecialty?.effect === 'sell_bonus_essence'
       ? Math.max(0, Math.floor((bundle.essenceDelta * activeCompanionSpecialty.amount) / 100))
       : 0;
     const totalSellEssence = bundle.essenceDelta + specialtySellBonusEssence;
-    const nextEssence = runtimeStateRef.current.essence + totalSellEssence;
-    const nextEssenceLifetimeEarned = runtimeStateRef.current.essenceLifetimeEarned + totalSellEssence;
-    if (bundle.spinTokensDelta > 0) setSpinTokens((t) => t + bundle.spinTokensDelta);
-    if (bundle.diamondsDelta > 0) setDiamonds((d) => d + bundle.diamondsDelta);
-    awardShards('egg_open');
+    const transitionResult = resolveReadyEggTerminalTransition({
+      session,
+      client,
+      islandNumber,
+      terminalStatus: 'sold',
+      openedAtMs: nowTs,
+      completedStops: nextCompletedStops,
+      rewardDeltas: {
+        essence: totalSellEssence,
+        essenceLifetimeEarned: totalSellEssence,
+        spinTokens: bundle.spinTokensDelta,
+        diamonds: bundle.diamondsDelta,
+        shards: choice === 'shards' ? picked.amount : 0,
+        dicePool: choice === 'dice' ? picked.amount : 0,
+      },
+      triggerSource: 'island_board_sell_egg_choice',
+    });
+    if (!transitionResult.changed) return;
 
     setActiveEgg(null);
     playIslandRunSound('market_purchase_success');
@@ -5647,16 +5646,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       eventType: 'economy_earn',
       metadata: { stage: 'island_creature_sold', island_number: islandNumber, tier: resolvedEgg.tier, creature_id: creature.id, sell_choice: choice, sell_amount: picked.amount },
     });
-    const nextRecord = applyEggResolution({
-      session,
-      client,
-      islandNumber,
-      perIslandEggEntry: soldEntry,
-      completedStops: nextCompletedStops,
-      essence: nextEssence,
-      essenceLifetimeEarned: nextEssenceLifetimeEarned,
-      triggerSource: 'island_board_sell_egg_choice',
-    });
+    const nextRecord = transitionResult.record;
     updateCompletedStops(nextCompletedStops);
     setRuntimeState(nextRecord);
     if (activeStopId === 'hatchery') {
