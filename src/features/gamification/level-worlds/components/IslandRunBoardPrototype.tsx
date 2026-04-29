@@ -160,6 +160,7 @@ import {
 } from '../services/creatureCatalog';
 import { resolveCreatureArtManifest } from '../services/creatureImageManifest';
 import { CreatureGridCard } from './CreatureGridCard';
+import { CreatureHatchRevealModal } from './CreatureHatchRevealModal';
 import {
   rankCreatureFitsForPlayer,
   selectPerfectCompanions,
@@ -1483,6 +1484,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [isStartingMinigameTicketCheckout, setIsStartingMinigameTicketCheckout] = useState(false);
   const [minigameTicketCheckoutError, setMinigameTicketCheckoutError] = useState<string | null>(null);
   const [showSanctuaryPanel, setShowSanctuaryPanel] = useState(false);
+  const [hatchReveal, setHatchReveal] = useState<null | { creatureId: string; creatureName: string; rarity: 'common' | 'rare' | 'mythic' }>(null);
 
   // ── Dice multiplier (dice-pool-gated, Monopoly GO style) ────────────────────
   const [diceMultiplier, setDiceMultiplier] = useState(1);
@@ -5547,6 +5549,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       islandNumber,
       collectedAtMs: nowTs,
     }));
+    setHatchReveal({ creatureId: creature.id, creatureName: creature.name, rarity: creature.tier });
     playIslandRunSound('egg_open');
     triggerIslandRunHaptic('egg_open');
     const isFirstCreatureCollected = collectedCreatures.length === 0;
@@ -9918,6 +9921,21 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           </section>
         </div>
       )}
+
+      {hatchReveal ? (
+        <CreatureHatchRevealModal
+          open={Boolean(hatchReveal)}
+          creatureName={hatchReveal.creatureName}
+          rarity={hatchReveal.rarity}
+          imageSrc={(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId) && resolveCreatureArtManifest(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId)!).cutoutSrc) || '/assets/creature-placeholders/silhouette.webp'}
+          fallbackEmoji={(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId) && resolveCreatureArtManifest(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId)!).emojiFallback) || '🐣'}
+          onClose={() => setHatchReveal(null)}
+          onSetCompanion={() => {
+            sanctuaryHandlers.setActiveCompanion(hatchReveal.creatureId);
+            setHatchReveal(null);
+          }}
+        />
+      ) : null}
 
       {activeLaunchedMinigameId && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9000, overflow: 'hidden' }}>
