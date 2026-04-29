@@ -9586,6 +9586,58 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 </div>
                 <div className="island-run-sanctuary-detail-sheet">
               <section className="island-run-sanctuary-detail" role="dialog" aria-modal="true" aria-label="Creature details">
+                {(() => {
+                  const creatureArt = resolveCreatureArtManifest(selectedSanctuaryCreature.creature);
+                  return (
+                    <div className={`island-run-sanctuary-fullcard island-run-sanctuary-fullcard--${selectedSanctuaryCreature.creature.tier}`}>
+                      <button
+                        type="button"
+                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary island-run-sanctuary-fullcard__close"
+                        onClick={() => {
+                          setSelectedSanctuaryCreatureId(null);
+                          setShowPerfectCompanionReason(false);
+                        }}
+                      >
+                        ✕ Close
+                      </button>
+                      <div className="island-run-sanctuary-fullcard__hero">
+                        <img
+                          className="island-run-sanctuary-fullcard__art"
+                          src={creatureArt.cutoutSrc}
+                          alt={`${selectedSanctuaryCreature.creature.name} creature card art`}
+                          onError={(event) => {
+                            const target = event.currentTarget;
+                            if (target.dataset.fallbackApplied === '1') return;
+                            target.dataset.fallbackApplied = '1';
+                            target.style.display = 'none';
+                            const fallback = target.nextElementSibling as HTMLElement | null;
+                            if (fallback) fallback.style.display = 'grid';
+                          }}
+                        />
+                        <span className="island-run-sanctuary-fullcard__emoji-fallback" style={{ display: 'none' }} aria-hidden="true">{creatureArt.emojiFallback}</span>
+                      </div>
+                      <p className="island-run-sanctuary-card__eyebrow">{selectedSanctuaryCreature.creature.tier.toUpperCase()} · {resolveShipZoneForCreature(selectedSanctuaryCreature.creature).toUpperCase()}</p>
+                      <h4 className="island-run-sanctuary-detail__title">{selectedSanctuaryCreature.creature.name}</h4>
+                      <p className="island-run-sanctuary-card__meta">★★★★★</p>
+                      <p className="island-run-sanctuary-card__meta">
+                        Found near island {selectedSanctuaryCreature.lastCollectedIslandNumber} in {selectedSanctuaryCreature.creature.habitat}.
+                      </p>
+                      {activeCompanionId === selectedSanctuaryCreature.creatureId ? (
+                        <p className="island-run-sanctuary-panel__pill"><strong>Active Companion</strong></p>
+                      ) : (
+                        <button
+                          type="button"
+                          className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                          onClick={() => sanctuaryHandlers.setActiveCompanion(selectedSanctuaryCreature.creatureId)}
+                        >
+                          Set as Companion
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
+                <details className="island-run-sanctuary-fullcard__more">
+                  <summary>More details & actions</summary>
                 <div className="island-run-sanctuary-detail__header">
                   <img
                     className="island-run-sanctuary-detail__art"
@@ -9809,6 +9861,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     </button>
                   )}
                 </div>
+                </details>
               </section>
                 </div>
               </>
