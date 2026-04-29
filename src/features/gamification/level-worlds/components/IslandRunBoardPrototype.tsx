@@ -9426,17 +9426,25 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 </button>
               </div>
             </div>
-            <div className="island-run-sanctuary-menu-bar">
+            <div className="island-run-sanctuary-header">
+              <div>
+                <p className="island-run-sanctuary-header__title">Spaceship Sanctuary</p>
+                <p className="island-run-sanctuary-header__status">
+                  {`${collectedCreatures.length} / ${CREATURE_CATALOG.length} discovered`} · Active: {activeCompanion?.creature.name ?? 'None'}
+                </p>
+              </div>
               <button
                 type="button"
                 className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
                 onClick={() => setShowSanctuaryMenu((current) => !current)}
               >
-                {showSanctuaryMenu ? 'Hide Menu' : 'Menu'}
+                {showSanctuaryMenu ? 'Close Menu' : 'Menu'}
               </button>
             </div>
             {showSanctuaryMenu ? (
+            <section className="island-run-sanctuary-menu-sheet" aria-label="Sanctuary Menu">
             <>
+            <p className="island-run-sanctuary-menu-sheet__label">Ship Upgrades</p>
             <div className="island-hatchery-card__actions" style={{ marginBottom: '0.75rem' }}>
               <button
                 type="button"
@@ -9466,6 +9474,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
             {!selectedSanctuaryCreature && collectedCreatures.length > 0 ? (
               <div className="island-run-sanctuary-toolbar">
+                <p className="island-run-sanctuary-menu-sheet__label">Companion Quest</p>
                 <section className="island-run-sanctuary-quest">
                   <div>
                     <p className="island-run-sanctuary-quest__title">{companionQuestCopy.title}</p>
@@ -9504,6 +9513,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     </div>
                   </div>
                 ) : null}
+                <p className="island-run-sanctuary-menu-sheet__label">Ship Zones</p>
                 <div className="island-run-sanctuary-zone-tabs" role="tablist" aria-label="Ship sanctuary zones">
                   <button
                     type="button"
@@ -9549,6 +9559,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 <p className="island-run-sanctuary-zone-capacity__progress-note">
                   Progression unlock: <strong>{sanctuaryTierRevealLabel}</strong>. Deeper slots reveal as your island tier advances.
                 </p>
+                <p className="island-run-sanctuary-menu-sheet__label">Filters & Sort</p>
                 <div className="island-run-sanctuary-toolbar__filters" role="group" aria-label="Sanctuary filters">
                   {[
                     ['all', 'All'],
@@ -9580,6 +9591,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               </div>
             ) : null}
             </>
+            </section>
             ) : null}
 
             {sanctuaryFeedback ? <p className="island-run-sanctuary-panel__feedback">{sanctuaryFeedback}</p> : null}
