@@ -4378,6 +4378,12 @@
   font-size: 0.86rem;
 }
 
+.island-run-sanctuary-menu-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.55rem;
+}
+
 .island-run-sanctuary-panel__starter-note {
   margin: 0 0 0.8rem;
   padding: 0.55rem 0.7rem;

@@ -1484,6 +1484,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [isStartingMinigameTicketCheckout, setIsStartingMinigameTicketCheckout] = useState(false);
   const [minigameTicketCheckoutError, setMinigameTicketCheckoutError] = useState<string | null>(null);
   const [showSanctuaryPanel, setShowSanctuaryPanel] = useState(false);
+  const [showSanctuaryMenu, setShowSanctuaryMenu] = useState(false);
   const [hatchReveal, setHatchReveal] = useState<null | { creatureId: string; creatureName: string; rarity: 'common' | 'rare' | 'mythic' }>(null);
 
   // ── Dice multiplier (dice-pool-gated, Monopoly GO style) ────────────────────
@@ -6916,6 +6917,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setSanctuaryClockMs(Date.now());
     setSanctuaryFilterMode('all');
     setSanctuarySortMode('recent');
+    setShowSanctuaryMenu(false);
     void recordTelemetryEvent({
       userId: session.user.id,
       eventType: 'economy_earn',
@@ -6938,6 +6940,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setSelectedSanctuaryCreatureId(null);
       setShowPerfectCompanionReason(false);
       setSanctuaryFeedback(null);
+      setShowSanctuaryMenu(false);
     },
     setActiveCompanion: (creatureId: string | null) => {
       setActiveCompanionId(creatureId);
@@ -9423,6 +9426,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 </button>
               </div>
             </div>
+            <div className="island-run-sanctuary-menu-bar">
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => setShowSanctuaryMenu((current) => !current)}
+              >
+                {showSanctuaryMenu ? 'Hide Menu' : 'Menu'}
+              </button>
+            </div>
+            {showSanctuaryMenu ? (
+            <>
             <div className="island-hatchery-card__actions" style={{ marginBottom: '0.75rem' }}>
               <button
                 type="button"
@@ -9564,6 +9578,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   </select>
                 </label>
               </div>
+            ) : null}
+            </>
             ) : null}
 
             {sanctuaryFeedback ? <p className="island-run-sanctuary-panel__feedback">{sanctuaryFeedback}</p> : null}
