@@ -9566,7 +9566,26 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             {sanctuaryFeedback ? <p className="island-run-sanctuary-panel__feedback">{sanctuaryFeedback}</p> : null}
 
             {selectedSanctuaryCreature ? (
-              <section className="island-run-sanctuary-detail">
+              <>
+                <div className="island-run-sanctuary-panel__grid" aria-hidden="true">
+                  {visibleSanctuaryCreatures.map((creature) => {
+                    const art = resolveCreatureArtManifest(creature.creature);
+                    return (
+                      <CreatureGridCard
+                        key={creature.creatureId}
+                        imageSrc={art.cutoutSrc}
+                        fallbackEmoji={art.emojiFallback}
+                        rarity={creature.creature.tier}
+                        active={activeCompanionId === creature.creatureId}
+                        selected={selectedSanctuaryCreatureId === creature.creatureId}
+                        locked={false}
+                        name={creature.creature.name}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="island-run-sanctuary-detail-sheet">
+              <section className="island-run-sanctuary-detail" role="dialog" aria-modal="true" aria-label="Creature details">
                 <div className="island-run-sanctuary-detail__header">
                   <img
                     className="island-run-sanctuary-detail__art"
@@ -9791,6 +9810,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   )}
                 </div>
               </section>
+                </div>
+              </>
             ) : collectedCreatures.length === 0 ? (
               <div className="island-hatchery-card">
                 <div className="island-hatchery-card__state island-hatchery-card__state--empty">
