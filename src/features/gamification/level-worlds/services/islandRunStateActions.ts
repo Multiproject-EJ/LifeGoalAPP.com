@@ -1613,6 +1613,31 @@ export interface ApplyEggResolutionOptions {
   triggerSource?: string;
 }
 
+export interface ResolveReadyEggTerminalTransitionOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  islandNumber: number;
+  terminalStatus: 'collected' | 'sold';
+  openedAtMs: number;
+  location?: PerIslandEggEntry['location'];
+  completedStops: string[];
+  rewardDeltas?: {
+    essence?: number;
+    essenceLifetimeEarned?: number;
+    dicePool?: number;
+    spinTokens?: number;
+    shards?: number;
+    diamonds?: number;
+  };
+  triggerSource?: string;
+}
+
+export interface ResolveReadyEggTerminalTransitionResult {
+  record: IslandRunGameStateRecord;
+  changed: boolean;
+  reason: 'resolved' | 'already_terminal' | 'not_ready' | 'missing_ledger_entry';
+}
+
 /**
  * Commits hatchery egg placement + completed-stop sync through the store path.
  *
@@ -1739,6 +1764,75 @@ export function applyEggResolution(options: ApplyEggResolutionOptions): IslandRu
     triggerSource: triggerSource ?? 'apply_egg_resolution',
   });
   return next;
+}
+
+/**
+ * Canonical, idempotent hatchery terminal transition.
+ *
+ * Enforces `ready -> collected|sold` as the only reward-bearing path.
+ * Any repeated call on a terminal egg is a no-op (`changed: false`).
+ */
+export function resolveReadyEggTerminalTransition(
+  options: ResolveReadyEggTerminalTransitionOptions,
+): ResolveReadyEggTerminalTransitionResult {
+  const {
+    session,
+    client,
+    islandNumber,
+    terminalStatus,
+    openedAtMs,
+    location = 'island',
+    completedStops,
+    rewardDeltas,
+    triggerSource,
+  } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const islandKey = String(islandNumber);
+  const currentEntry = current.perIslandEggs?.[islandKey];
+  if (!currentEntry) {
+    return { record: current, changed: false, reason: 'missing_ledger_entry' };
+  }
+  if (currentEntry.status === 'collected' || currentEntry.status === 'sold') {
+    return { record: current, changed: false, reason: 'already_terminal' };
+  }
+  if (currentEntry.status !== 'ready') {
+    return { record: current, changed: false, reason: 'not_ready' };
+  }
+
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    activeEggTier: null,
+    activeEggSetAtMs: null,
+    activeEggHatchDurationMs: null,
+    activeEggIsDormant: false,
+    perIslandEggs: {
+      ...current.perIslandEggs,
+      [islandKey]: {
+        ...currentEntry,
+        status: terminalStatus,
+        openedAt: openedAtMs,
+        location,
+      },
+    },
+    completedStopsByIsland: {
+      ...current.completedStopsByIsland,
+      [islandKey]: completedStops,
+    },
+    essence: Math.max(0, current.essence + (rewardDeltas?.essence ?? 0)),
+    essenceLifetimeEarned: Math.max(0, current.essenceLifetimeEarned + (rewardDeltas?.essenceLifetimeEarned ?? 0)),
+    dicePool: Math.max(0, current.dicePool + (rewardDeltas?.dicePool ?? 0)),
+    spinTokens: Math.max(0, current.spinTokens + (rewardDeltas?.spinTokens ?? 0)),
+    shards: Math.max(0, current.shards + (rewardDeltas?.shards ?? 0)),
+    diamonds: Math.max(0, current.diamonds + (rewardDeltas?.diamonds ?? 0)),
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'resolve_ready_egg_terminal_transition',
+  });
+  return { record: next, changed: true, reason: 'resolved' };
 }
 
 /**

@@ -40,6 +40,7 @@ import {
   applyDevSpeedHatchEgg,
   applyHydrationEggReadyTransition,
   applyEggResolution,
+  resolveReadyEggTerminalTransition,
   applyEggPlacement,
   applyFirstRunClaimed,
   applyFirstRunStarterRewards,
@@ -2404,6 +2405,144 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.runtimeVersion, 9, 'runtimeVersion should bump by one');
 
       unsub();
+    },
+  },
+  {
+    name: 'resolveReadyEggTerminalTransition: collect is idempotent and terminal',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 12,
+        currentIslandNumber: 7,
+        activeEggTier: 'rare',
+        activeEggSetAtMs: 1000,
+        activeEggHatchDurationMs: 100,
+        perIslandEggs: {
+          '7': { tier: 'rare', setAtMs: 1000, hatchAtMs: 1100, status: 'ready', location: 'dormant' },
+        },
+        completedStopsByIsland: {},
+      });
+
+      const first = resolveReadyEggTerminalTransition({
+        session,
+        client: null,
+        islandNumber: 7,
+        terminalStatus: 'collected',
+        openedAtMs: 1200,
+        completedStops: ['hatchery'],
+      });
+      const second = resolveReadyEggTerminalTransition({
+        session,
+        client: null,
+        islandNumber: 7,
+        terminalStatus: 'collected',
+        openedAtMs: 1300,
+        completedStops: ['hatchery'],
+      });
+
+      assertEqual(first.changed, true, 'first collect resolves ready egg');
+      assertEqual(second.changed, false, 'second collect is no-op');
+      assertEqual(second.reason, 'already_terminal', 'second collect reports terminal status');
+      assertEqual(first.record.perIslandEggs['7']?.status, 'collected', 'status becomes collected');
+    },
+  },
+  {
+    name: 'resolveReadyEggTerminalTransition: sell is idempotent and reward deltas apply once',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 20,
+        currentIslandNumber: 3,
+        activeEggTier: 'common',
+        activeEggSetAtMs: 100,
+        activeEggHatchDurationMs: 100,
+        perIslandEggs: {
+          '3': { tier: 'common', setAtMs: 100, hatchAtMs: 200, status: 'ready', location: 'island' },
+        },
+        essence: 10,
+        essenceLifetimeEarned: 20,
+        dicePool: 5,
+      });
+
+      const first = resolveReadyEggTerminalTransition({
+        session,
+        client: null,
+        islandNumber: 3,
+        terminalStatus: 'sold',
+        openedAtMs: 250,
+        completedStops: ['hatchery'],
+        rewardDeltas: { essence: 7, essenceLifetimeEarned: 7, dicePool: 10 },
+      });
+      const second = resolveReadyEggTerminalTransition({
+        session,
+        client: null,
+        islandNumber: 3,
+        terminalStatus: 'sold',
+        openedAtMs: 260,
+        completedStops: ['hatchery'],
+        rewardDeltas: { essence: 7, essenceLifetimeEarned: 7, dicePool: 10 },
+      });
+
+      assertEqual(first.changed, true, 'first sell resolves ready egg');
+      assertEqual(second.changed, false, 'second sell is no-op');
+      assertEqual(first.record.essence, 17, 'essence delta applied once');
+      assertEqual(first.record.dicePool, 15, 'dice delta applied once');
+    },
+  },
+  {
+    name: 'resolveReadyEggTerminalTransition: collect then sell does not grant sell rewards',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 9,
+        currentIslandNumber: 4,
+        activeEggTier: 'mythic',
+        activeEggSetAtMs: 100,
+        activeEggHatchDurationMs: 100,
+        perIslandEggs: {
+          '4': { tier: 'mythic', setAtMs: 100, hatchAtMs: 200, status: 'ready', location: 'island' },
+        },
+        essence: 30,
+      });
+      const collect = resolveReadyEggTerminalTransition({
+        session, client: null, islandNumber: 4, terminalStatus: 'collected', openedAtMs: 220, completedStops: ['hatchery'],
+      });
+      const sellAfter = resolveReadyEggTerminalTransition({
+        session, client: null, islandNumber: 4, terminalStatus: 'sold', openedAtMs: 230, completedStops: ['hatchery'], rewardDeltas: { essence: 99 },
+      });
+      assertEqual(collect.changed, true, 'collect resolves');
+      assertEqual(sellAfter.changed, false, 'sell after collect is blocked');
+      assertEqual(sellAfter.reason, 'already_terminal', 'sell after collect sees terminal state');
+      assertEqual(sellAfter.record.essence, 30, 'no extra rewards granted');
+    },
+  },
+  {
+    name: 'resolveReadyEggTerminalTransition: sell then collect does not grant collect transition',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 9,
+        currentIslandNumber: 5,
+        activeEggTier: 'mythic',
+        activeEggSetAtMs: 100,
+        activeEggHatchDurationMs: 100,
+        perIslandEggs: {
+          '5': { tier: 'mythic', setAtMs: 100, hatchAtMs: 200, status: 'ready', location: 'island' },
+        },
+      });
+      const sell = resolveReadyEggTerminalTransition({
+        session, client: null, islandNumber: 5, terminalStatus: 'sold', openedAtMs: 220, completedStops: ['hatchery'],
+      });
+      const collectAfter = resolveReadyEggTerminalTransition({
+        session, client: null, islandNumber: 5, terminalStatus: 'collected', openedAtMs: 230, completedStops: ['hatchery'],
+      });
+      assertEqual(sell.changed, true, 'sell resolves');
+      assertEqual(collectAfter.changed, false, 'collect after sell is blocked');
+      assertEqual(collectAfter.record.perIslandEggs['5']?.status, 'sold', 'ledger remains terminal sold');
     },
   },
 
