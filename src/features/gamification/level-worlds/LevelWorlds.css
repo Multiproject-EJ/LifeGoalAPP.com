@@ -4222,8 +4222,14 @@
 
 .island-run-sanctuary-panel__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
+}
+
+@media (min-width: 720px) {
+  .island-run-sanctuary-panel__grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
 }
 
 .island-run-sanctuary-card {
@@ -4269,6 +4275,98 @@
   color: rgba(212, 236, 245, 0.84);
 }
 
+.island-run-sanctuary-card--minimal {
+  padding: 0.45rem;
+  gap: 0.35rem;
+}
+
+.island-run-sanctuary-card__minimal-hit {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  width: 100%;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0;
+}
+
+.island-run-sanctuary-card__minimal-frame {
+  position: relative;
+  border-radius: 14px;
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+}
+
+.island-run-sanctuary-card__minimal-frame--common {
+  background: radial-gradient(circle at 22% 18%, rgba(123, 189, 255, 0.34), rgba(14, 36, 64, 0.86));
+}
+
+.island-run-sanctuary-card__minimal-frame--rare {
+  background: radial-gradient(circle at 22% 18%, rgba(166, 147, 255, 0.4), rgba(30, 24, 72, 0.9));
+}
+
+.island-run-sanctuary-card__minimal-frame--mythic {
+  background: radial-gradient(circle at 22% 18%, rgba(255, 213, 140, 0.45), rgba(66, 34, 10, 0.9));
+}
+
+.island-run-sanctuary-card__minimal-art {
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
+}
+
+.island-run-sanctuary-card__minimal-emoji {
+  width: 88%;
+  height: 88%;
+  font-size: 2rem;
+  border-radius: 12px;
+  place-items: center;
+  background: rgba(5, 12, 24, 0.56);
+}
+
+.island-run-sanctuary-card__minimal-stars {
+  margin: 0;
+  font-size: 0.68rem;
+  text-align: center;
+  letter-spacing: 0.08em;
+  color: rgba(255, 232, 173, 0.92);
+}
+
+.island-run-sanctuary-card--selected {
+  outline: 2px solid rgba(120, 210, 255, 0.58);
+}
+
+.island-run-sanctuary-card__active-marker {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 0.65rem;
+  background: rgba(255, 221, 132, 0.95);
+  color: #301400;
+}
+
+.island-run-sanctuary-card__locked-label {
+  position: absolute;
+  bottom: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(3, 10, 20, 0.7);
+  color: rgba(219, 237, 255, 0.8);
+}
+
 
 .island-run-sanctuary-panel__feedback {
   margin: 0 0 0.9rem;
@@ -4278,6 +4376,49 @@
   border: 1px solid rgba(120, 210, 255, 0.2);
   color: rgba(232, 247, 255, 0.92);
   font-size: 0.86rem;
+}
+
+.island-run-sanctuary-menu-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.55rem;
+}
+
+.island-run-sanctuary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.island-run-sanctuary-header__title {
+  margin: 0;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.island-run-sanctuary-header__status {
+  margin: 0.1rem 0 0;
+  font-size: 0.76rem;
+  opacity: 0.82;
+}
+
+.island-run-sanctuary-menu-sheet {
+  margin-bottom: 0.7rem;
+  padding: 0.6rem;
+  border-radius: 12px;
+  border: 1px solid rgba(120, 200, 255, 0.18);
+  background: rgba(5, 13, 24, 0.56);
+}
+
+.island-run-sanctuary-menu-sheet__label {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(189, 230, 255, 0.86);
 }
 
 .island-run-sanctuary-panel__starter-note {
@@ -4336,6 +4477,136 @@
   gap: 0.9rem;
   align-items: center;
 }
+
+.island-run-sanctuary-detail-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  background: rgba(5, 10, 18, 0.74);
+  display: grid;
+  place-items: end center;
+  padding: 0.75rem;
+  animation: sanctuary-detail-fade 180ms ease-out;
+}
+
+.island-run-sanctuary-detail-sheet .island-run-sanctuary-detail {
+  width: min(720px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  animation: sanctuary-detail-lift 220ms ease-out;
+}
+
+.island-run-sanctuary-fullcard {
+  border-radius: 16px;
+  padding: 0.8rem;
+  margin-bottom: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: radial-gradient(circle at 20% 20%, rgba(134, 214, 255, 0.2), rgba(6, 16, 30, 0.9));
+}
+
+.island-run-sanctuary-fullcard--rare {
+  background: radial-gradient(circle at 20% 20%, rgba(178, 154, 255, 0.24), rgba(22, 20, 56, 0.92));
+}
+
+.island-run-sanctuary-fullcard--mythic {
+  background: radial-gradient(circle at 20% 20%, rgba(255, 216, 133, 0.26), rgba(56, 34, 8, 0.94));
+}
+
+.island-run-sanctuary-fullcard__hero {
+  width: 100%;
+  aspect-ratio: 1.2 / 1;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: rgba(4, 10, 20, 0.38);
+  margin-bottom: 0.5rem;
+}
+
+.island-run-sanctuary-fullcard__art {
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
+}
+
+.island-run-sanctuary-fullcard__emoji-fallback {
+  width: 88%;
+  height: 88%;
+  font-size: 2.4rem;
+  place-items: center;
+}
+
+.island-run-sanctuary-fullcard__close {
+  justify-self: end;
+  margin-bottom: 0.45rem;
+}
+
+.island-run-sanctuary-fullcard__more summary {
+  cursor: pointer;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+@keyframes sanctuary-detail-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sanctuary-detail-lift {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-run-sanctuary-detail-sheet,
+  .island-run-sanctuary-detail-sheet .island-run-sanctuary-detail,
+  .island-run-hatch-reveal,
+  .island-run-hatch-reveal__card {
+    animation: none;
+  }
+}
+
+.island-run-hatch-reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 9800;
+  display: grid;
+  place-items: center;
+  background: rgba(6, 12, 22, 0.72);
+  padding: 0.9rem;
+  animation: sanctuary-detail-fade 180ms ease-out;
+}
+
+.island-run-hatch-reveal__card {
+  width: min(440px, 100%);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 1rem;
+  background: radial-gradient(circle at 24% 18%, rgba(142, 208, 255, 0.24), rgba(8, 18, 36, 0.95));
+  display: grid;
+  gap: 0.55rem;
+  text-align: center;
+  animation: sanctuary-detail-lift 220ms ease-out;
+}
+
+.island-run-hatch-reveal__card--rare {
+  background: radial-gradient(circle at 24% 18%, rgba(188, 165, 255, 0.28), rgba(20, 18, 52, 0.96));
+}
+.island-run-hatch-reveal__card--mythic {
+  background: radial-gradient(circle at 24% 18%, rgba(255, 219, 142, 0.3), rgba(56, 34, 8, 0.96));
+}
+.island-run-hatch-reveal__hero {
+  border-radius: 14px;
+  background: rgba(4, 10, 20, 0.4);
+  aspect-ratio: 1.2 / 1;
+  display: grid;
+  place-items: center;
+}
+.island-run-hatch-reveal__art { width: 88%; height: 88%; object-fit: contain; }
+.island-run-hatch-reveal__emoji { width: 88%; height: 88%; font-size: 2.4rem; place-items: center; }
+.island-run-hatch-reveal__title { margin: 0; font-size: 0.88rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.island-run-hatch-reveal__name { margin: 0; font-size: 1.3rem; }
+.island-run-hatch-reveal__rarity, .island-run-hatch-reveal__confirm { margin: 0; }
+.island-run-hatch-reveal__actions { display: grid; gap: 0.5rem; }
 
 .island-run-sanctuary-detail__art {
   width: 110px;
