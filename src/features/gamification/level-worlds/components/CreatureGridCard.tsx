@@ -1,7 +1,10 @@
 import React from 'react';
+import { applyCreatureArtFallback } from './creatureArtFallback';
 
 export interface CreatureGridCardProps {
   imageSrc: string;
+  pngFallbackSrc?: string;
+  silhouetteSrc?: string;
   fallbackEmoji: string;
   rarity: 'common' | 'rare' | 'mythic';
   active: boolean;
@@ -20,6 +23,8 @@ function rarityStars(rarity: CreatureGridCardProps['rarity']): string {
 export function CreatureGridCard(props: CreatureGridCardProps): React.JSX.Element {
   const {
     imageSrc,
+    pngFallbackSrc,
+    silhouetteSrc,
     fallbackEmoji,
     rarity,
     active,
@@ -45,12 +50,7 @@ export function CreatureGridCard(props: CreatureGridCardProps): React.JSX.Elemen
             alt={locked ? 'Locked creature silhouette' : `${name ?? 'Creature'} portrait`}
             loading="lazy"
             onError={(event) => {
-              const target = event.currentTarget;
-              if (target.dataset.fallbackApplied === '1') return;
-              target.dataset.fallbackApplied = '1';
-              target.style.display = 'none';
-              const fallback = target.nextElementSibling as HTMLElement | null;
-              if (fallback) fallback.style.display = 'grid';
+              applyCreatureArtFallback(event, { pngSrc: pngFallbackSrc, silhouetteSrc });
             }}
           />
           <span className="island-run-sanctuary-card__minimal-emoji" style={{ display: 'none' }} aria-hidden="true">{fallbackEmoji}</span>

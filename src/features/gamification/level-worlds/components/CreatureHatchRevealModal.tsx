@@ -1,10 +1,13 @@
 import React from 'react';
+import { applyCreatureArtFallback } from './creatureArtFallback';
 
 export interface CreatureHatchRevealModalProps {
   open: boolean;
   creatureName: string;
   rarity: 'common' | 'rare' | 'mythic';
   imageSrc: string;
+  pngFallbackSrc?: string;
+  silhouetteSrc?: string;
   fallbackEmoji: string;
   onClose: () => void;
   onSetCompanion?: () => void;
@@ -29,12 +32,7 @@ export function CreatureHatchRevealModal(props: CreatureHatchRevealModalProps): 
             src={props.imageSrc}
             alt={`${props.creatureName} revealed creature`}
             onError={(event) => {
-              const target = event.currentTarget;
-              if (target.dataset.fallbackApplied === '1') return;
-              target.dataset.fallbackApplied = '1';
-              target.style.display = 'none';
-              const fallback = target.nextElementSibling as HTMLElement | null;
-              if (fallback) fallback.style.display = 'grid';
+              applyCreatureArtFallback(event, { pngSrc: props.pngFallbackSrc, silhouetteSrc: props.silhouetteSrc });
             }}
           />
           <span className="island-run-hatch-reveal__emoji" style={{ display: 'none' }} aria-hidden="true">{props.fallbackEmoji}</span>

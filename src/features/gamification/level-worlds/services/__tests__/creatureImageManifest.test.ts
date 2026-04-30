@@ -1,5 +1,7 @@
 import { CREATURE_CATALOG } from '../creatureCatalog';
 import {
+  buildCreatureCutoutPngPath,
+  buildCreatureCutoutWebpPath,
   CREATURE_SILHOUETTE_PLACEHOLDER_PATH,
   resolveCreatureArtManifest,
   resolveCreatureBackgroundPath,
@@ -22,15 +24,25 @@ export const creatureImageManifestTests: TestCase[] = [
     },
   },
   {
-    name: 'resolveCreatureArtManifest returns expected layered paths',
+    name: 'resolveCreatureArtManifest returns expected layered paths and cutout candidates',
     run: () => {
       const creature = CREATURE_CATALOG[0];
       const manifest = resolveCreatureArtManifest(creature);
       assertEqual(manifest.cutoutSrc, `/assets/creatures/${creature.imageKey}.webp`, 'cutout path should follow convention');
+      assertEqual(manifest.cutoutWebpSrc, `/assets/creatures/${creature.imageKey}.webp`, 'webp cutout path should follow convention');
+      assertEqual(manifest.cutoutPngSrc, `/assets/creatures/${creature.imageKey}.png`, 'png fallback path should follow convention');
       assertEqual(manifest.frameSrc, `/assets/creature-frames/${creature.tier}.webp`, 'frame path should follow convention');
       assertEqual(manifest.silhouetteSrc, CREATURE_SILHOUETTE_PLACEHOLDER_PATH, 'silhouette path should be stable');
       assert(typeof manifest.backgroundSrc === 'string' && manifest.backgroundSrc.includes('/assets/creature-backgrounds/'), 'background path should resolve');
       assert(typeof manifest.emojiFallback === 'string' && manifest.emojiFallback.length > 0, 'emoji fallback should exist');
+    },
+  },
+  {
+    name: 'cutout path builders resolve deterministic webp and png candidates',
+    run: () => {
+      const creature = CREATURE_CATALOG[0];
+      assertEqual(buildCreatureCutoutWebpPath(creature.imageKey), `/assets/creatures/${creature.imageKey}.webp`, 'webp builder should be deterministic');
+      assertEqual(buildCreatureCutoutPngPath(creature.imageKey), `/assets/creatures/${creature.imageKey}.png`, 'png builder should be deterministic');
     },
   },
   {

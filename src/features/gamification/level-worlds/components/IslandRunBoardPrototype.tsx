@@ -161,6 +161,7 @@ import {
 import { resolveCreatureArtManifest } from '../services/creatureImageManifest';
 import { CreatureGridCard } from './CreatureGridCard';
 import { CreatureHatchRevealModal } from './CreatureHatchRevealModal';
+import { applyCreatureArtFallback } from './creatureArtFallback';
 import {
   rankCreatureFitsForPlayer,
   selectPerfectCompanions,
@@ -9664,6 +9665,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       <CreatureGridCard
                         key={creature.creatureId}
                         imageSrc={art.cutoutSrc}
+                        pngFallbackSrc={art.cutoutPngSrc}
+                        silhouetteSrc={art.silhouetteSrc}
                         fallbackEmoji={art.emojiFallback}
                         rarity={creature.creature.tier}
                         active={activeCompanionId === creature.creatureId}
@@ -9696,12 +9699,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                           src={creatureArt.cutoutSrc}
                           alt={`${selectedSanctuaryCreature.creature.name} creature card art`}
                           onError={(event) => {
-                            const target = event.currentTarget;
-                            if (target.dataset.fallbackApplied === '1') return;
-                            target.dataset.fallbackApplied = '1';
-                            target.style.display = 'none';
-                            const fallback = target.nextElementSibling as HTMLElement | null;
-                            if (fallback) fallback.style.display = 'grid';
+                            applyCreatureArtFallback(event, {
+                              pngSrc: creatureArt.cutoutPngSrc,
+                              silhouetteSrc: creatureArt.silhouetteSrc,
+                            });
                           }}
                         />
                         <span className="island-run-sanctuary-fullcard__emoji-fallback" style={{ display: 'none' }} aria-hidden="true">{creatureArt.emojiFallback}</span>
@@ -9973,6 +9974,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     <CreatureGridCard
                       key={creature.creatureId}
                       imageSrc={art.cutoutSrc}
+                      pngFallbackSrc={art.cutoutPngSrc}
+                      silhouetteSrc={art.silhouetteSrc}
                       fallbackEmoji={art.emojiFallback}
                       rarity={creature.creature.tier}
                       active={activeCompanionId === creature.creatureId}
@@ -10015,6 +10018,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           creatureName={hatchReveal.creatureName}
           rarity={hatchReveal.rarity}
           imageSrc={(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId) && resolveCreatureArtManifest(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId)!).cutoutSrc) || '/assets/creature-placeholders/silhouette.webp'}
+          pngFallbackSrc={(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId) && resolveCreatureArtManifest(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId)!).cutoutPngSrc) || '/assets/creature-placeholders/silhouette.webp'}
+          silhouetteSrc={(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId) && resolveCreatureArtManifest(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId)!).silhouetteSrc) || '/assets/creature-placeholders/silhouette.webp'}
           fallbackEmoji={(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId) && resolveCreatureArtManifest(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId)!).emojiFallback) || '🐣'}
           onClose={() => setHatchReveal(null)}
           onSetCompanion={() => {

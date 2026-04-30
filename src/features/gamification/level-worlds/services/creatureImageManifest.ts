@@ -33,8 +33,17 @@ const AFFINITY_TO_BACKGROUND_KEY: Record<string, string> = {
 };
 
 export function buildCreatureCutoutPath(imageKey: string): string {
+  return buildCreatureCutoutWebpPath(imageKey);
+}
+
+export function buildCreatureCutoutWebpPath(imageKey: string): string {
   const key = imageKey.trim();
   return `${CREATURE_IMAGE_BASE_PATH}/${key}.webp`;
+}
+
+export function buildCreatureCutoutPngPath(imageKey: string): string {
+  const key = imageKey.trim();
+  return `${CREATURE_IMAGE_BASE_PATH}/${key}.png`;
 }
 
 export function resolveCreatureFramePath(tier: EggTier): string {
@@ -56,6 +65,8 @@ export function resolveCreatureEmojiFallback(creature: Pick<CreatureDefinition, 
 export interface CreatureArtResolution {
   imageKey: string;
   cutoutSrc: string;
+  cutoutWebpSrc: string;
+  cutoutPngSrc: string;
   frameSrc: string;
   backgroundSrc: string;
   silhouetteSrc: string;
@@ -66,7 +77,9 @@ export function resolveCreatureArtManifest(creature: CreatureDefinition): Creatu
   const imageKey = (creature.imageKey || creature.id).trim();
   return {
     imageKey,
-    cutoutSrc: buildCreatureCutoutPath(imageKey),
+    cutoutSrc: buildCreatureCutoutWebpPath(imageKey),
+    cutoutWebpSrc: buildCreatureCutoutWebpPath(imageKey),
+    cutoutPngSrc: buildCreatureCutoutPngPath(imageKey),
     frameSrc: resolveCreatureFramePath(creature.tier),
     backgroundSrc: resolveCreatureBackgroundPath({ affinity: creature.affinity, shipZone: creature.shipZone }),
     silhouetteSrc: CREATURE_SILHOUETTE_PLACEHOLDER_PATH,
