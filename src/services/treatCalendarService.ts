@@ -452,6 +452,17 @@ const ADVENT_META: AdventMeta[] = [
   },
 ];
 
+const EID_GREETING_WINDOWS_BY_YEAR: Record<number, MonthDayWindow[]> = {
+  // TODO(holiday-engine): Expand movable holiday windows into a full multi-year source.
+  // 2026 approximate windows:
+  // - Eid al-Fitr: Mar 20 → Mar 22
+  // - Eid al-Adha: May 27 → May 29
+  2026: [
+    { start: { month: 2, day: 20 }, end: { month: 2, day: 22 } },
+    { start: { month: 4, day: 27 }, end: { month: 4, day: 29 } },
+  ],
+};
+
 /**
  * Check whether a given month/day falls within a countdown window.
  * Uses a fixed leap year (2000) as the reference so comparisons are
