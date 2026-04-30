@@ -9325,19 +9325,28 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 <p className="island-run-sanctuary-header__status">
                   {`${collectedCreatures.length} / ${CREATURE_CATALOG.length} discovered`} · Active: {activeCompanion?.creature.name ?? 'None'}
                 </p>
+                <button
+                  type="button"
+                  aria-label={showSanctuaryMenu ? 'Close Sanctuary menu' : 'Open Sanctuary menu'}
+                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                  onClick={() => {
+                    setShowSanctuaryMenu((current) => {
+                      const next = !current;
+                      if (!next) setSanctuaryMenuModule(null);
+                      return next;
+                    });
+                  }}
+                >
+                  {showSanctuaryMenu ? 'Hide Menu' : 'Menu'}
+                </button>
               </div>
               <button
                 type="button"
+                aria-label="Close Creature Sanctuary"
                 className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                onClick={() => {
-                  setShowSanctuaryMenu((current) => {
-                    const next = !current;
-                    if (!next) setSanctuaryMenuModule(null);
-                    return next;
-                  });
-                }}
+                onClick={sanctuaryHandlers.closePanel}
               >
-                {showSanctuaryMenu ? 'Close Menu' : 'Menu'}
+                ✕
               </button>
             </div>
 
