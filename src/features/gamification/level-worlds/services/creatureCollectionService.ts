@@ -1,6 +1,14 @@
 import type { PerIslandEggsLedger } from './islandRunGameStateStore';
 import { getCreatureById, selectCreatureForEgg, type CreatureDefinition } from './creatureCatalog';
 
+/**
+ * ARCHITECTURE NOTE (PR1 guardrail):
+ * This localStorage service is non-authoritative for economy state.
+ * Runtime/Supabase-backed Island Run state owns creature ownership, bond XP,
+ * and reward-impacting transitions. This module remains for legacy fallback
+ * reads/migration and UI convenience only during migration.
+ */
+
 export interface CreatureCollectionEntry {
   creatureId: string;
   copies: number;
