@@ -1,4 +1,7 @@
 import { canUseSupabaseDataAsync, getSupabaseClient, getSupabaseUrl } from '../lib/supabaseClient';
+import {
+  getEidGreetingLabelForDate,
+} from './holidayDateRules';
 
 // ---------------------------------------------------------------------------
 // Holiday keys — must match the ids in HolidayPreferencesSection.HOLIDAY_OPTIONS
@@ -356,10 +359,6 @@ export type ActiveAdventMetaResult = {
   cycleKey: string;
 };
 
-type MonthDayWindow = {
-  start: { month: number; day: number };
-  end: { month: number; day: number };
-};
 
 const ADVENT_META: AdventMeta[] = [
   {
@@ -574,21 +573,7 @@ export function getHolidayGreetingLabel(
   if (options?.isPreview) return meta.displayName;
 
   if (meta.holiday_key === 'eid_mubarak') {
-    const year = referenceDate.getFullYear();
-    const windows = EID_GREETING_WINDOWS_BY_YEAR[year] ?? [];
-    const todayMonth = referenceDate.getMonth();
-    const todayDay = referenceDate.getDate();
-    const isGreetingActive = windows.some((window) =>
-      isInCountdownWindow(
-        todayMonth,
-        todayDay,
-        window.start.month,
-        window.start.day,
-        window.end.month,
-        window.end.day,
-      ),
-    );
-    return isGreetingActive ? 'Eid Mubarak' : 'Crescent & Lantern Theme';
+    return getEidGreetingLabelForDate(referenceDate);
   }
 
   return meta.displayName;

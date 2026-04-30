@@ -17,6 +17,7 @@
     "check:timer-regression": "node scripts/timer-regression-smoke.mjs",
     "check:routines-regression": "node scripts/routines-regression-smoke.mjs",
     "check:routines-migration": "node scripts/routines-migration-smoke.mjs",
+    "test:holiday-dates": "node scripts/run-holiday-date-tests.mjs",
     "test:island-run": "node scripts/run-island-run-service-tests.mjs",
     "check:island-run-architecture-guards": "node scripts/check-island-run-architecture-guards.mjs"
   },
