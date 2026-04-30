@@ -356,6 +356,11 @@ export type ActiveAdventMetaResult = {
   cycleKey: string;
 };
 
+type MonthDayWindow = {
+  start: { month: number; day: number };
+  end: { month: number; day: number };
+};
+
 const ADVENT_META: AdventMeta[] = [
   {
     // Christmas: 25 doors, Dec 1 → Dec 25 — the gold standard
@@ -447,6 +452,17 @@ const ADVENT_META: AdventMeta[] = [
     emojis: ['☘️', '🍀', '🌈', '🟢', '🎩', '🪙', '🍺', '✨', '🌿', '⭐'],
   },
 ];
+
+const EID_GREETING_WINDOWS_BY_YEAR: Record<number, MonthDayWindow[]> = {
+  // TODO(holiday-engine): Expand movable holiday windows into a full multi-year source.
+  // 2026 approximate windows:
+  // - Eid al-Fitr: Mar 20 → Mar 22
+  // - Eid al-Adha: May 27 → May 29
+  2026: [
+    { start: { month: 2, day: 20 }, end: { month: 2, day: 22 } },
+    { start: { month: 4, day: 27 }, end: { month: 4, day: 29 } },
+  ],
+};
 
 /**
  * Check whether a given month/day falls within a countdown window.
@@ -548,6 +564,34 @@ export function buildPreviewAdventMeta(
     daysRemaining: 0,
     cycleKey: `preview:${getAdventCycleKey(meta, referenceDate)}`,
   };
+}
+
+export function getHolidayGreetingLabel(
+  meta: AdventMeta,
+  referenceDate: Date = new Date(),
+  options?: { isPreview?: boolean },
+): string {
+  if (options?.isPreview) return meta.displayName;
+
+  if (meta.holiday_key === 'eid_mubarak') {
+    const year = referenceDate.getFullYear();
+    const windows = EID_GREETING_WINDOWS_BY_YEAR[year] ?? [];
+    const todayMonth = referenceDate.getMonth();
+    const todayDay = referenceDate.getDate();
+    const isGreetingActive = windows.some((window) =>
+      isInCountdownWindow(
+        todayMonth,
+        todayDay,
+        window.start.month,
+        window.start.day,
+        window.end.month,
+        window.end.day,
+      ),
+    );
+    return isGreetingActive ? 'Eid Mubarak' : 'Crescent & Lantern Theme';
+  }
+
+  return meta.displayName;
 }
 
 /**
