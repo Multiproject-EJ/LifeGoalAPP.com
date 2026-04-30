@@ -1,4 +1,7 @@
 import { canUseSupabaseDataAsync, getSupabaseClient, getSupabaseUrl } from '../lib/supabaseClient';
+import {
+  getEidGreetingLabelForDate,
+} from './holidayDateRules';
 
 // ---------------------------------------------------------------------------
 // Holiday keys — must match the ids in HolidayPreferencesSection.HOLIDAY_OPTIONS
@@ -356,6 +359,7 @@ export type ActiveAdventMetaResult = {
   cycleKey: string;
 };
 
+
 const ADVENT_META: AdventMeta[] = [
   {
     // Christmas: 25 doors, Dec 1 → Dec 25 — the gold standard
@@ -548,6 +552,20 @@ export function buildPreviewAdventMeta(
     daysRemaining: 0,
     cycleKey: `preview:${getAdventCycleKey(meta, referenceDate)}`,
   };
+}
+
+export function getHolidayGreetingLabel(
+  meta: AdventMeta,
+  referenceDate: Date = new Date(),
+  options?: { isPreview?: boolean },
+): string {
+  if (options?.isPreview) return meta.displayName;
+
+  if (meta.holiday_key === 'eid_mubarak') {
+    return getEidGreetingLabelForDate(referenceDate);
+  }
+
+  return meta.displayName;
 }
 
 /**

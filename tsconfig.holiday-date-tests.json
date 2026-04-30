@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": ".tmp-holiday-date-tests",
+    "noEmit": false
+  },
+  "include": [
+    "src/services/holidayDateRules.ts",
+    "src/services/__tests__/holidayDateRules.test.ts"
+  ]
+}
+

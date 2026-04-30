@@ -18,6 +18,7 @@ import {
   fetchCurrentSeason,
   getActiveAdventMeta,
   getAdventDoorCount,
+  getHolidayGreetingLabel,
   getPersonalQuestSeason,
   isHabitCompletedToday,
   openTodayHatch,
@@ -372,7 +373,7 @@ export const CountdownCalendarModal = ({
   const countdownLabel = isPersonalQuest
     ? `Day ${todayIndex} of ${totalDoors}`
     : daysRemaining === 0
-      ? `🎉 Today is ${activeAdvent?.meta.displayName ?? themeName}!`
+      ? `🎉 Today is ${activeAdvent ? getHolidayGreetingLabel(activeAdvent.meta) : themeName}!`
       : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} to go`;
 
   // Check if today's free door is already opened
