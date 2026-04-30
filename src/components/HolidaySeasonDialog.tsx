@@ -1,4 +1,5 @@
 import type { ActiveAdventMetaResult } from '../services/treatCalendarService';
+import { getHolidayGreetingLabel } from '../services/treatCalendarService';
 import { getHolidayThemeAssets } from '../services/holidayThemeAssets';
 
 type HolidaySeasonDialogProps = {
@@ -19,14 +20,15 @@ export function HolidaySeasonDialog({
   if (!isOpen || !activeHoliday) return null;
 
   const { meta, daysRemaining } = activeHoliday;
+  const greetingLabel = getHolidayGreetingLabel(meta, new Date(), { isPreview });
   const { introBackgroundUrl } = getHolidayThemeAssets(meta.holiday_key);
 
   const countdownLabel =
     isPreview
       ? `Developer preview for ${meta.displayName}.`
       : daysRemaining === 0
-      ? `Today is ${meta.displayName}!`
-      : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} until ${meta.displayName}.`;
+      ? `Today is ${greetingLabel}!`
+      : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} until ${greetingLabel}.`;
 
   return (
     <div className="holiday-season-dialog" role="dialog" aria-modal="true" aria-label={`${meta.displayName} holiday season`}>
