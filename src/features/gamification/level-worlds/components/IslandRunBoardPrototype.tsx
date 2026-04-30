@@ -1485,6 +1485,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [minigameTicketCheckoutError, setMinigameTicketCheckoutError] = useState<string | null>(null);
   const [showSanctuaryPanel, setShowSanctuaryPanel] = useState(false);
   const [showSanctuaryMenu, setShowSanctuaryMenu] = useState(false);
+  const [sanctuaryMenuModule, setSanctuaryMenuModule] = useState<'collection' | 'inventory' | 'quest' | 'rooms' | 'filters' | null>(null);
   const [hatchReveal, setHatchReveal] = useState<null | { creatureId: string; creatureName: string; rarity: 'common' | 'rare' | 'mythic' }>(null);
 
   // ── Dice multiplier (dice-pool-gated, Monopoly GO style) ────────────────────
@@ -6918,6 +6919,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setSanctuaryFilterMode('all');
     setSanctuarySortMode('recent');
     setShowSanctuaryMenu(false);
+    setSanctuaryMenuModule(null);
     void recordTelemetryEvent({
       userId: session.user.id,
       eventType: 'economy_earn',
@@ -6941,6 +6943,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setShowPerfectCompanionReason(false);
       setSanctuaryFeedback(null);
       setShowSanctuaryMenu(false);
+      setSanctuaryMenuModule(null);
     },
     setActiveCompanion: (creatureId: string | null) => {
       setActiveCompanionId(creatureId);
@@ -9316,12 +9319,31 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             aria-modal="true"
             aria-label="Creature Sanctuary"
           >
-            <p className="island-stop-modal__eyebrow">Spaceship Sanctuary</p>
-            <h3 className="island-stop-modal__title">🐾 Creature Manifest</h3>
-            <p className="island-stop-modal__copy">
-              The ship now serves as home base for every creature you keep. Check their bond progress, open a detail card, and feed them to deepen the relationship over time.
-            </p>
+            <div className="island-run-sanctuary-header">
+              <div>
+                <p className="island-run-sanctuary-header__title">SPACESHIP SANCTUARY</p>
+                <p className="island-run-sanctuary-header__status">
+                  {`${collectedCreatures.length} / ${CREATURE_CATALOG.length} discovered`} · Active: {activeCompanion?.creature.name ?? 'None'}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => {
+                  setShowSanctuaryMenu((current) => {
+                    const next = !current;
+                    if (!next) setSanctuaryMenuModule(null);
+                    return next;
+                  });
+                }}
+              >
+                {showSanctuaryMenu ? 'Close Menu' : 'Menu'}
+              </button>
+            </div>
 
+            {showSanctuaryMenu && sanctuaryMenuModule === 'collection' ? (
+            <>
+            <p className="island-stop-modal__copy">Your creatures live here. Hatch eggs, collect companions, and grow bonds over time.</p>
             <div className="island-run-sanctuary-panel__summary">
               <span className="island-run-sanctuary-panel__pill">Species: <strong>{collectedCreatures.length}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Copies: <strong>{collectedCreatures.reduce((sum, creature) => sum + creature.copies, 0)}</strong></span>
@@ -9330,13 +9352,21 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               </span>
               <span className="island-run-sanctuary-panel__pill">Current island: <strong>{islandNumber}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Rewards ready: <strong>{sanctuaryRewardReadyCount}</strong></span>
+            </div>
+            </>
+            ) : null}
+
+            {showSanctuaryMenu && sanctuaryMenuModule === 'inventory' ? (
+            <div className="island-run-sanctuary-panel__summary">
               <span className="island-run-sanctuary-panel__pill">🔮 Shards: <strong>{runtimeState.shards}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Basic treats: <strong>{creatureTreatInventory.basic}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Favorite snacks: <strong>{creatureTreatInventory.favorite}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Rare feasts: <strong>{creatureTreatInventory.rare}</strong></span>
             </div>
+            ) : null}
 
             {/* ── Shard Shop: buy treats & creature items with egg shards ── */}
+            {showSanctuaryMenu && sanctuaryMenuModule === 'inventory' ? (
             <div className="island-hatchery-card" style={{ marginBottom: '0.75rem' }}>
               <p><strong>🔮 Shard Shop</strong> — Spend egg shards on your creatures</p>
               <p style={{ fontSize: '0.82rem', opacity: 0.7, marginBottom: '0.5rem' }}>
@@ -9426,25 +9456,32 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 </button>
               </div>
             </div>
-            <div className="island-run-sanctuary-header">
-              <div>
-                <p className="island-run-sanctuary-header__title">Spaceship Sanctuary</p>
-                <p className="island-run-sanctuary-header__status">
-                  {`${collectedCreatures.length} / ${CREATURE_CATALOG.length} discovered`} · Active: {activeCompanion?.creature.name ?? 'None'}
-                </p>
-              </div>
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                onClick={() => setShowSanctuaryMenu((current) => !current)}
-              >
-                {showSanctuaryMenu ? 'Close Menu' : 'Menu'}
-              </button>
-            </div>
+            ) : null}
             {showSanctuaryMenu ? (
             <section className="island-run-sanctuary-menu-sheet" aria-label="Sanctuary Menu">
             <>
+            <div className="island-run-sanctuary-toolbar__filters" role="group" aria-label="Sanctuary menu modules">
+              {[
+                ['collection', 'Collection Info'],
+                ['inventory', 'Inventory & Shop'],
+                ['quest', 'Companion Quest'],
+                ['rooms', 'Ship Rooms'],
+                ['filters', 'Filters & Sort'],
+              ].map(([mode, label]) => (
+                <button
+                  key={mode}
+                  type="button"
+                  className={`island-run-sanctuary-filter ${sanctuaryMenuModule === mode ? 'island-run-sanctuary-filter--active' : ''}`}
+                  onClick={() => setSanctuaryMenuModule(mode as 'collection' | 'inventory' | 'quest' | 'rooms' | 'filters')}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {showSanctuaryMenu && sanctuaryMenuModule === 'rooms' ? (
             <p className="island-run-sanctuary-menu-sheet__label">Ship Upgrades</p>
+            ) : null}
+            {showSanctuaryMenu && sanctuaryMenuModule === 'rooms' ? (
             <div className="island-hatchery-card__actions" style={{ marginBottom: '0.75rem' }}>
               <button
                 type="button"
@@ -9466,6 +9503,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 Open Ship Upgrades (Garage)
               </button>
             </div>
+            ) : null}
             {isUsingStarterProfileForPerfectCompanion ? (
               <p className="island-run-sanctuary-panel__starter-note">
                 ⭐ Using starter profile until your archetype hand is set.
@@ -9474,7 +9512,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
             {!selectedSanctuaryCreature && collectedCreatures.length > 0 ? (
               <div className="island-run-sanctuary-toolbar">
-                <p className="island-run-sanctuary-menu-sheet__label">Companion Quest</p>
+                {sanctuaryMenuModule === 'quest' ? <p className="island-run-sanctuary-menu-sheet__label">Companion Quest</p> : null}
+                {sanctuaryMenuModule === 'quest' ? (
                 <section className="island-run-sanctuary-quest">
                   <div>
                     <p className="island-run-sanctuary-quest__title">{companionQuestCopy.title}</p>
@@ -9496,7 +9535,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         : companionQuestCopy.cta}
                   </button>
                 </section>
-                {topPerfectCompanionEntries.length > 0 ? (
+                ) : null}
+                {sanctuaryMenuModule === 'quest' && topPerfectCompanionEntries.length > 0 ? (
                   <div className="island-run-sanctuary-top3" role="group" aria-label="Your best companions">
                     <p className="island-run-sanctuary-top3__title">Your Best Companions</p>
                     <div className="island-run-sanctuary-top3__chips">
@@ -9513,7 +9553,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     </div>
                   </div>
                 ) : null}
-                <p className="island-run-sanctuary-menu-sheet__label">Ship Zones</p>
+                {sanctuaryMenuModule === 'rooms' ? <p className="island-run-sanctuary-menu-sheet__label">Ship Rooms</p> : null}
+                {sanctuaryMenuModule === 'rooms' ? (
                 <div className="island-run-sanctuary-zone-tabs" role="tablist" aria-label="Ship sanctuary zones">
                   <button
                     type="button"
@@ -9537,6 +9578,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     </button>
                   ))}
                 </div>
+                ) : null}
+                {sanctuaryMenuModule === 'rooms' ? (
                 <div className="island-run-sanctuary-zone-capacity" aria-label="Zone slot capacity">
                   {sanctuaryZoneSummaries.map((summary) => (
                     <article key={summary.zone} className="island-run-sanctuary-zone-capacity__card">
@@ -9556,10 +9599,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     </article>
                   ))}
                 </div>
+                ) : null}
+                {sanctuaryMenuModule === 'rooms' ? (
                 <p className="island-run-sanctuary-zone-capacity__progress-note">
                   Progression unlock: <strong>{sanctuaryTierRevealLabel}</strong>. Deeper slots reveal as your island tier advances.
                 </p>
-                <p className="island-run-sanctuary-menu-sheet__label">Filters & Sort</p>
+                ) : null}
+                {sanctuaryMenuModule === 'filters' ? <p className="island-run-sanctuary-menu-sheet__label">Filters & Sort</p> : null}
+                {sanctuaryMenuModule === 'filters' ? (
                 <div className="island-run-sanctuary-toolbar__filters" role="group" aria-label="Sanctuary filters">
                   {[
                     ['all', 'All'],
@@ -9579,6 +9626,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     </button>
                   ))}
                 </div>
+                ) : null}
+                {sanctuaryMenuModule === 'filters' ? (
                 <label className="island-run-sanctuary-toolbar__sort">
                   <span>Sort</span>
                   <select value={sanctuarySortMode} onChange={(e) => setSanctuarySortMode(e.target.value as SanctuarySortMode)}>
@@ -9588,6 +9637,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     <option value="active">Active first</option>
                   </select>
                 </label>
+                ) : null}
               </div>
             ) : null}
             </>
