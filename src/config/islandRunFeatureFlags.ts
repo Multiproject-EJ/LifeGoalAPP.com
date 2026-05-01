@@ -51,6 +51,13 @@ export interface IslandRunFeatureFlags {
    * from the Game Board Overlay.
    */
   todaysOfferSpinEntryEnabled: boolean;
+
+  /**
+   * PR9 — biases hatch species selection on islands 1–5 toward the first
+   * production-art creature set. Tier constraints remain strict; this only
+   * steers species choice after egg tier is known.
+   */
+  islandRunEarlyFeaturedCreaturePoolEnabled: boolean;
 }
 
 const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
@@ -60,6 +67,7 @@ const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
   islandRunVisionQuestMysteryEnabled: true,
   islandRunPartnerWheelEnabled: false,
   todaysOfferSpinEntryEnabled: true,
+  islandRunEarlyFeaturedCreaturePoolEnabled: false,
 });
 
 let currentFlags: IslandRunFeatureFlags = { ...DEFAULT_FLAGS };

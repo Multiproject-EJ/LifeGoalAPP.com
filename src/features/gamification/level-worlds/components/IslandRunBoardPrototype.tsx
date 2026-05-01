@@ -283,6 +283,7 @@ import {
   resolveMinigameTicketSku,
 } from '../../../../services/minigameTicketStore';
 import { scheduleEggHatchNotification } from '../../../../services/habitAlertNotifications';
+import { isIslandRunFeatureEnabled } from '../../../../config/islandRunFeatureFlags';
 import {
   DICE_REGEN_NEXT_DICE_LABEL,
   resolveNextRollEtaMs,
@@ -319,7 +320,7 @@ const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_ISLAND = 120;
 const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_WINDOW_MS = 10_000;
 const ISLAND_RUN_120_STOP_PAIR_DELIMITER = '_to_';
 const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;
-const ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_ENABLED = true;
+const ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_WEIGHT_PERCENT = 70;
 const BUILD_HOLD_INITIAL_DELAY_MS = 400;
 
 function resolveBuildHoldRepeatDelayMs(heldMs: number) {
@@ -5479,8 +5480,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       seed: resolvedEgg.setAtMs,
       islandNumber,
       earlyFeaturedPool: {
-        enabled: ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_ENABLED,
-        featuredWeightPercent: 70,
+        enabled: isIslandRunFeatureEnabled('islandRunEarlyFeaturedCreaturePoolEnabled'),
+        featuredWeightPercent: ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_WEIGHT_PERCENT,
       },
     });
     const perfectCreaturePool = (runtimeState.perfectCompanionIds ?? [])
