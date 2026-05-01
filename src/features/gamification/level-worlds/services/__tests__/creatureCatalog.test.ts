@@ -5,6 +5,7 @@ import {
   resolveShipZoneForCreature,
   resolveShipZoneFromHabitat,
   selectCreatureForEgg,
+  selectCreatureForEggWithEarlyFeaturedPool,
 } from '../creatureCatalog';
 import { assert, assertEqual, type TestCase } from './testHarness';
 
@@ -15,6 +16,99 @@ export const creatureCatalogTests: TestCase[] = [
       const first = selectCreatureForEgg({ eggTier: 'rare', seed: 12345, islandNumber: 8 });
       const second = selectCreatureForEgg({ eggTier: 'rare', seed: 12345, islandNumber: 8 });
       assertEqual(first.id, second.id, 'Expected deterministic creature selection');
+    },
+  },
+  {
+    name: 'early featured pool resolver returns baseline when feature flag is off',
+    run: () => {
+      const baseline = selectCreatureForEgg({ eggTier: 'rare', seed: 44444, islandNumber: 3 });
+      const flaggedOff = selectCreatureForEggWithEarlyFeaturedPool({
+        eggTier: 'rare',
+        seed: 44444,
+        islandNumber: 3,
+        earlyFeaturedPool: { enabled: false },
+      });
+      assertEqual(flaggedOff.id, baseline.id, 'Expected exact baseline creature when flag is off');
+    },
+  },
+  {
+    name: 'early featured pool can return sproutling for common eggs on islands 1-5',
+    run: () => {
+      const creature = selectCreatureForEggWithEarlyFeaturedPool({
+        eggTier: 'common',
+        seed: 12345,
+        islandNumber: 1,
+        earlyFeaturedPool: { enabled: true, featuredWeightPercent: 100 },
+      });
+      assertEqual(creature.id, 'common-sproutling', 'Expected featured common creature for island 1');
+    },
+  },
+  {
+    name: 'early featured pool returns only featured rare creatures for islands 1-5',
+    run: () => {
+      const allowed = new Set(['rare-aurora-finch', 'rare-nebula-wisp', 'rare-ember-sprout']);
+      const creature = selectCreatureForEggWithEarlyFeaturedPool({
+        eggTier: 'rare',
+        seed: 98765,
+        islandNumber: 5,
+        earlyFeaturedPool: { enabled: true, featuredWeightPercent: 100 },
+      });
+      assert(allowed.has(creature.id), `Expected rare featured creature, got ${creature.id}`);
+    },
+  },
+  {
+    name: 'early featured pool keeps mythic tier constrained to starhorn on early islands',
+    run: () => {
+      const creature = selectCreatureForEggWithEarlyFeaturedPool({
+        eggTier: 'mythic',
+        seed: 24680,
+        islandNumber: 4,
+        earlyFeaturedPool: { enabled: true, featuredWeightPercent: 100 },
+      });
+      assertEqual(creature.id, 'mythic-starhorn-seraph', 'Expected mythic early featured creature');
+    },
+  },
+  {
+    name: 'early featured pool falls back to baseline on island 6+',
+    run: () => {
+      const baseline = selectCreatureForEgg({ eggTier: 'rare', seed: 24680, islandNumber: 6 });
+      const featured = selectCreatureForEggWithEarlyFeaturedPool({
+        eggTier: 'rare',
+        seed: 24680,
+        islandNumber: 6,
+        earlyFeaturedPool: { enabled: true, featuredWeightPercent: 100 },
+      });
+      assertEqual(featured.id, baseline.id, 'Expected baseline behavior on islands after early window');
+    },
+  },
+  {
+    name: 'early featured pool resolver remains deterministic for same inputs',
+    run: () => {
+      const first = selectCreatureForEggWithEarlyFeaturedPool({
+        eggTier: 'rare',
+        seed: 314159,
+        islandNumber: 2,
+        earlyFeaturedPool: { enabled: true, featuredWeightPercent: 70 },
+      });
+      const second = selectCreatureForEggWithEarlyFeaturedPool({
+        eggTier: 'rare',
+        seed: 314159,
+        islandNumber: 2,
+        earlyFeaturedPool: { enabled: true, featuredWeightPercent: 70 },
+      });
+      assertEqual(first.id, second.id, 'Expected deterministic featured resolver');
+    },
+  },
+  {
+    name: 'early featured pool never leaks across tiers',
+    run: () => {
+      const creature = selectCreatureForEggWithEarlyFeaturedPool({
+        eggTier: 'common',
+        seed: 54321,
+        islandNumber: 3,
+        earlyFeaturedPool: { enabled: true, featuredWeightPercent: 100 },
+      });
+      assertEqual(creature.tier, 'common', 'Expected common egg to stay in common tier');
     },
   },
   {

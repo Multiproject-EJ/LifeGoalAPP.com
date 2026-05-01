@@ -150,6 +150,84 @@ export function selectCreatureForEgg(options: {
   return pool[index] ?? pool[0];
 }
 
+export interface EarlyFeaturedCreaturePoolOptions {
+  enabled: boolean;
+  featuredWeightPercent?: number;
+}
+
+const EARLY_FEATURED_ISLAND_MAX = 5;
+const DEFAULT_FEATURED_WEIGHT_PERCENT = 70;
+
+const EARLY_FEATURED_CREATURES_BY_ISLAND: Record<number, Record<EggTier, string[]>> = {
+  1: {
+    common: ['common-sproutling'],
+    rare: ['rare-ember-sprout', 'rare-aurora-finch'],
+    mythic: ['mythic-starhorn-seraph'],
+  },
+  2: {
+    common: ['common-sproutling'],
+    rare: ['rare-aurora-finch', 'rare-ember-sprout'],
+    mythic: ['mythic-starhorn-seraph'],
+  },
+  3: {
+    common: ['common-sproutling'],
+    rare: ['rare-nebula-wisp', 'rare-aurora-finch'],
+    mythic: ['mythic-starhorn-seraph'],
+  },
+  4: {
+    common: ['common-sproutling'],
+    rare: ['rare-ember-sprout', 'rare-nebula-wisp'],
+    mythic: ['mythic-starhorn-seraph'],
+  },
+  5: {
+    common: ['common-sproutling'],
+    rare: ['rare-aurora-finch', 'rare-nebula-wisp', 'rare-ember-sprout'],
+    mythic: ['mythic-starhorn-seraph'],
+  },
+};
+
+function normalizeFeaturedWeightPercent(weightPercent: number | undefined): number {
+  if (!Number.isFinite(weightPercent)) return DEFAULT_FEATURED_WEIGHT_PERCENT;
+  return Math.max(0, Math.min(100, Math.floor(weightPercent as number)));
+}
+
+function getFeaturedCreaturePoolForIsland(options: { islandNumber: number; eggTier: EggTier }): CreatureDefinition[] {
+  const { islandNumber, eggTier } = options;
+  if (islandNumber < 1 || islandNumber > EARLY_FEATURED_ISLAND_MAX) return [];
+  const ids = EARLY_FEATURED_CREATURES_BY_ISLAND[islandNumber]?.[eggTier] ?? [];
+  if (ids.length === 0) return [];
+  return ids
+    .map((id) => getCreatureById(id))
+    .filter((creature): creature is CreatureDefinition => Boolean(creature && creature.tier === eggTier));
+}
+
+/**
+ * Feature-flagged resolver used to bias early-island hatch species toward
+ * production-art creatures while preserving tier constraints and deterministic
+ * behavior from `eggTier + seed + islandNumber`.
+ */
+export function selectCreatureForEggWithEarlyFeaturedPool(options: {
+  eggTier: EggTier;
+  seed: number;
+  islandNumber: number;
+  earlyFeaturedPool: EarlyFeaturedCreaturePoolOptions;
+}): CreatureDefinition {
+  const { eggTier, seed, islandNumber, earlyFeaturedPool } = options;
+  const baseline = selectCreatureForEgg({ eggTier, seed, islandNumber });
+  if (!earlyFeaturedPool.enabled) return baseline;
+  if (islandNumber < 1 || islandNumber > EARLY_FEATURED_ISLAND_MAX) return baseline;
+
+  const featuredPool = getFeaturedCreaturePoolForIsland({ islandNumber, eggTier });
+  if (featuredPool.length === 0) return baseline;
+
+  const featuredWeightPercent = normalizeFeaturedWeightPercent(earlyFeaturedPool.featuredWeightPercent);
+  const shouldUseFeaturedPool = Math.abs((seed * 29) + (islandNumber * 13) + (eggTier.length * 7)) % 100 < featuredWeightPercent;
+  if (!shouldUseFeaturedPool) return baseline;
+
+  const featuredIndex = Math.abs((seed * 19) + (islandNumber * 37) + (eggTier.length * 11)) % featuredPool.length;
+  return featuredPool[featuredIndex] ?? baseline;
+}
+
 export function getCompanionBonusForCreature(creature: CreatureDefinition, bondLevel = 1): CreatureCompanionBonus {
   if (['Guardian', 'Caregiver', 'Mentor', 'Peacemaker'].includes(creature.affinity)) {
     const amount = getScaledBonusAmount(1, bondLevel, 5);
