@@ -155,7 +155,7 @@ import {
   getCompanionBonusForCreature,
   getCreatureSpecialtyForCompanion,
   resolveShipZoneForCreature,
-  selectCreatureForEgg,
+  selectCreatureForEggWithEarlyFeaturedPool,
   type ShipZone,
 } from '../services/creatureCatalog';
 import { resolveCreatureArtManifest } from '../services/creatureImageManifest';
@@ -319,6 +319,7 @@ const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_ISLAND = 120;
 const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_WINDOW_MS = 10_000;
 const ISLAND_RUN_120_STOP_PAIR_DELIMITER = '_to_';
 const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;
+const ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_ENABLED = true;
 const BUILD_HOLD_INITIAL_DELAY_MS = 400;
 
 function resolveBuildHoldRepeatDelayMs(heldMs: number) {
@@ -5473,10 +5474,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   ]);
 
   const resolveHatchedCreatureWithPerfectCompanionBias = (resolvedEgg: ActiveEgg) => {
-    const baselineCreature = selectCreatureForEgg({
+    const baselineCreature = selectCreatureForEggWithEarlyFeaturedPool({
       eggTier: resolvedEgg.tier,
       seed: resolvedEgg.setAtMs,
       islandNumber,
+      earlyFeaturedPool: {
+        enabled: ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_ENABLED,
+        featuredWeightPercent: 70,
+      },
     });
     const perfectCreaturePool = (runtimeState.perfectCompanionIds ?? [])
       .map((creatureId) => CREATURE_CATALOG.find((entry) => entry.id === creatureId) ?? null)
