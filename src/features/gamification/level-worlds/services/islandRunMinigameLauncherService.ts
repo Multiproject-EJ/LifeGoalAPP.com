@@ -49,7 +49,7 @@ export interface BossMinigameLaunchDescriptor {
 }
 
 export interface MysteryMinigameLaunchDescriptor {
-  minigameId: 'task_tower' | 'vision_quest';
+  minigameId: 'vision_quest';
   config: {
     source: 'mystery_stop';
   };
@@ -63,7 +63,7 @@ export interface EventMinigameLaunchContext {
 }
 
 export interface EventMinigameLaunchDescriptor {
-  minigameId: 'task_tower' | 'lucky_spin' | 'shooter_blitz' | 'partner_wheel';
+  minigameId: 'lucky_spin' | 'shooter_blitz' | 'partner_wheel';
   ticketCost: number;
   ticketsSpent: number;
   config:
@@ -160,14 +160,6 @@ export function resolveMysteryStopMinigame(
 ): MysteryMinigameLaunchDescriptor | null {
   const flags = getIslandRunFeatureFlags();
 
-  if (ctx.mysteryContentKind === 'task_tower') {
-    if (!flags.islandRunTaskTowerMysteryEnabled) return null;
-    return {
-      minigameId: 'task_tower',
-      config: { source: 'mystery_stop' },
-    };
-  }
-
   if (ctx.mysteryContentKind === 'vision_quest') {
     if (!flags.islandRunVisionQuestMysteryEnabled) return null;
     return {
@@ -185,7 +177,7 @@ export function shouldResolveMysteryStopOnMinigameComplete(options: {
   completed: boolean;
 }): boolean {
   if (!options.completed || options.launchSource !== 'mystery_stop') return false;
-  return options.minigameId === 'task_tower' || options.minigameId === 'vision_quest';
+  return options.minigameId === 'vision_quest';
 }
 
 export type MinigameLaunchSource =
@@ -205,7 +197,6 @@ export function resolveEventMinigameCompletionId(options: {
   completed: boolean;
 }): EventMinigameId | null {
   if (!options.completed || options.launchSource !== 'timed_event') return null;
-  if (options.minigameId === 'task_tower') return 'task_tower';
   if (options.minigameId === 'lucky_spin') return 'lucky_spin';
   if (options.minigameId === 'shooter_blitz') return 'shooter_blitz';
   if (options.minigameId === 'partner_wheel') return 'partner_wheel';
@@ -213,33 +204,15 @@ export function resolveEventMinigameCompletionId(options: {
 }
 
 /**
- * Phase 6 step 1: Feeding Frenzy uses Task Tower as its canonical event
- * surface. This resolver intentionally only supports Feeding Frenzy for now;
- * other events will be added in subsequent Phase 6 PRs.
+ * Feeding Frenzy currently has no dedicated Island Run minigame surface.
+ * This resolver intentionally returns `null` so callers show their safe
+ * unavailable placeholder/fallback UI while keeping players in Island Run.
  */
 export function resolveFeedingFrenzyEventMinigame(
   ctx: EventMinigameLaunchContext,
 ): EventMinigameLaunchDescriptor | null {
   if (ctx.eventId !== 'feeding_frenzy') return null;
-  const launch = openEventMinigame({
-    eventId: ctx.eventId,
-    ticketsAvailable: ctx.ticketsAvailable,
-    ticketsToSpend: ctx.ticketsToSpend,
-  });
-  if (!launch || launch.minigameId !== 'task_tower') return null;
-
-  return {
-    minigameId: 'task_tower',
-    ticketCost: launch.ticketCost,
-    ticketsSpent: launch.ticketsSpent,
-    config: {
-      source: 'timed_event',
-      eventId: 'feeding_frenzy',
-      mode: 'feeding_frenzy',
-      sessionDurationSec: 120,
-      targetRowsCleared: 10,
-    },
-  };
+  return null;
 }
 
 /**

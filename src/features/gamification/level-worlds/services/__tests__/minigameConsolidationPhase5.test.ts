@@ -15,36 +15,17 @@ import { assertEqual, type TestCase } from './testHarness';
 
 export const minigameConsolidationPhase5Tests: TestCase[] = [
   {
-    name: 'resolveMysteryStopMinigame keeps task_tower and vision_quest gated while flags are off',
+    name: 'resolveMysteryStopMinigame keeps vision_quest gated while flags are off',
     run: () => {
       __resetIslandRunFeatureFlagsForTests();
       __setIslandRunFeatureFlagsForTests({
-        islandRunTaskTowerMysteryEnabled: false,
         islandRunVisionQuestMysteryEnabled: false,
       });
-      assertEqual(
-        resolveMysteryStopMinigame({ kind: 'fixed_mystery', mysteryContentKind: 'task_tower' }),
-        null,
-        'task_tower must not launch while its flag is off',
-      );
       assertEqual(
         resolveMysteryStopMinigame({ kind: 'fixed_mystery', mysteryContentKind: 'vision_quest' }),
         null,
         'vision_quest must not launch while its flag is off',
       );
-    },
-  },
-  {
-    name: 'resolveMysteryStopMinigame launches task_tower when the Task Tower mystery flag is enabled',
-    run: () => {
-      __resetIslandRunFeatureFlagsForTests();
-      __setIslandRunFeatureFlagsForTests({ islandRunTaskTowerMysteryEnabled: true });
-      const descriptor = resolveMysteryStopMinigame({
-        kind: 'fixed_mystery',
-        mysteryContentKind: 'task_tower',
-      });
-      __resetIslandRunFeatureFlagsForTests();
-      assertEqual(descriptor?.minigameId, 'task_tower', 'task_tower mystery routes to task_tower minigame');
     },
   },
   {
@@ -69,7 +50,6 @@ export const minigameConsolidationPhase5Tests: TestCase[] = [
     run: () => {
       __resetIslandRunFeatureFlagsForTests();
       __setIslandRunFeatureFlagsForTests({
-        islandRunTaskTowerMysteryEnabled: true,
         islandRunVisionQuestMysteryEnabled: true,
       });
       assertEqual(
@@ -86,11 +66,10 @@ export const minigameConsolidationPhase5Tests: TestCase[] = [
     },
   },
   {
-    name: 'phase-5 rollout matrix: first 10 islands include both task_tower and vision_quest mystery variants when both flags are enabled',
+    name: 'phase-5 rollout matrix: first 10 islands include vision_quest mystery variant when flag is enabled',
     run: () => {
       __resetIslandRunFeatureFlagsForTests();
       __setIslandRunFeatureFlagsForTests({
-        islandRunTaskTowerMysteryEnabled: true,
         islandRunVisionQuestMysteryEnabled: true,
       });
 
@@ -102,22 +81,12 @@ export const minigameConsolidationPhase5Tests: TestCase[] = [
       }
       __resetIslandRunFeatureFlagsForTests();
 
-      assertEqual(seen.has('task_tower'), true, 'first 10 islands should include task_tower in mystery rotation');
       assertEqual(seen.has('vision_quest'), true, 'first 10 islands should include vision_quest in mystery rotation');
     },
   },
   {
-    name: 'shouldResolveMysteryStopOnMinigameComplete only resolves stop for completed mystery task_tower / vision_quest runs',
+    name: 'shouldResolveMysteryStopOnMinigameComplete only resolves stop for completed mystery vision_quest runs',
     run: () => {
-      assertEqual(
-        shouldResolveMysteryStopOnMinigameComplete({
-          launchSource: 'mystery_stop',
-          minigameId: 'task_tower',
-          completed: true,
-        }),
-        true,
-        'completed task_tower mystery run should resolve stop',
-      );
       assertEqual(
         shouldResolveMysteryStopOnMinigameComplete({
           launchSource: 'mystery_stop',
@@ -130,7 +99,7 @@ export const minigameConsolidationPhase5Tests: TestCase[] = [
       assertEqual(
         shouldResolveMysteryStopOnMinigameComplete({
           launchSource: 'mystery_stop',
-          minigameId: 'task_tower',
+          minigameId: 'vision_quest',
           completed: false,
         }),
         false,
@@ -139,7 +108,7 @@ export const minigameConsolidationPhase5Tests: TestCase[] = [
       assertEqual(
         shouldResolveMysteryStopOnMinigameComplete({
           launchSource: 'boss_trial',
-          minigameId: 'task_tower',
+          minigameId: 'vision_quest',
           completed: true,
         }),
         false,
