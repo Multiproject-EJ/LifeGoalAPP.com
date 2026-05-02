@@ -47,6 +47,11 @@ export function DreamJournalReminderSettings({ session }: DreamJournalReminderSe
     window.setTimeout(() => setSaving(false), 250);
   };
 
+  const handleLaunchDreamJournal = () => {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new CustomEvent('lifegoal:launch-dream-journal'));
+  };
+
   return (
     <section className="account-panel__card" aria-labelledby="dream-journal-reminder">
       <p className="account-panel__eyebrow">Dream Journal</p>
@@ -101,6 +106,15 @@ export function DreamJournalReminderSettings({ session }: DreamJournalReminderSe
       <p className="account-panel__hint" style={{ marginTop: '0.5rem' }}>
         Current window: {formatHourLabel(startHour)} → {formatHourLabel(endHour)}
       </p>
+      <div className="account-panel__actions-row" style={{ marginTop: '0.5rem' }}>
+        <button
+          type="button"
+          className="btn btn--secondary"
+          onClick={handleLaunchDreamJournal}
+        >
+          Launch Dream Journal Modal
+        </button>
+      </div>
     </section>
   );
 }
