@@ -14,7 +14,6 @@ export type MysteryStopContentKind =
   | 'habit_action'
   | 'checkin_reflection'
   | 'breathing'
-  | 'task_tower'
   | 'vision_quest';
 
 export interface IslandStopPlanEntry {
@@ -66,16 +65,6 @@ const MYSTERY_STOP_CONTENT_POOL_BASE: Array<{
   },
 ];
 
-const MYSTERY_STOP_CONTENT_TASK_TOWER: {
-  kind: MysteryStopContentKind;
-  title: string;
-  description: string;
-} = {
-  kind: 'task_tower',
-  title: '🗼 Task Tower',
-  description: 'Tap blocks to clear the tower and score multipliers for landing combos.',
-};
-
 const MYSTERY_STOP_CONTENT_VISION_QUEST: {
   kind: MysteryStopContentKind;
   title: string;
@@ -94,9 +83,6 @@ function buildMysteryStopContentPool(): Array<{
 }> {
   const flags = getIslandRunFeatureFlags();
   const pool = [...MYSTERY_STOP_CONTENT_POOL_BASE];
-  if (flags.islandRunTaskTowerMysteryEnabled) {
-    pool.push(MYSTERY_STOP_CONTENT_TASK_TOWER);
-  }
   if (flags.islandRunVisionQuestMysteryEnabled) {
     pool.push(MYSTERY_STOP_CONTENT_VISION_QUEST);
   }
