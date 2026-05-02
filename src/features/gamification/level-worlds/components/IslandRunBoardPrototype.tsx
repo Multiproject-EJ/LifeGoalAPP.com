@@ -90,6 +90,7 @@ import {
   applyCreatureTreatInventory,
   applyDevGrantDice,
   applyDevGrantEssence,
+  applyDevBuildAllToL3,
   applyDevSpeedHatchEgg,
   applyActivateCurrentIslandTimer,
   applyPassiveDiceRegenTick,
@@ -6727,6 +6728,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setLandingText('🧪 DEV MODE: egg marked hatch-ready via canonical action.');
   }, [client, isDevModeEnabled, islandNumber, session]);
 
+  const handleDevBuildAllToL3 = useCallback(async () => {
+    if (!isDevModeEnabled) return;
+    const result = await applyDevBuildAllToL3({
+      session,
+      client,
+      effectiveIslandNumber,
+      triggerSource: 'dev_build_all_to_l3',
+    });
+    if (!result.changed) {
+      setLandingText('🧪 DEV MODE: all landmarks already at Level 3.');
+      return;
+    }
+    setRuntimeState(result.record);
+    runtimeStateRef.current = result.record;
+    setLandingText(`🧪 DEV MODE: built ${result.stopsCompleted}/5 landmarks to L3 via canonical action.`);
+  }, [client, effectiveIslandNumber, isDevModeEnabled, session]);
+
   const handleUnlockDevMode = useCallback(() => {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('dev_mode', 'true');
@@ -7576,6 +7594,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <div className="island-run-prototype__status-row">
                 <span className="island-run-prototype__stat-chip">Egg Control</span>
                 <button type="button" className="island-run-prototype__debug-btn" onClick={handleDevSpeedHatchEgg}>🥚 Speed Hatch Egg</button>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={handleDevBuildAllToL3}>🏗️ Build All to L3</button>
               </div>
             </div>
           )}
