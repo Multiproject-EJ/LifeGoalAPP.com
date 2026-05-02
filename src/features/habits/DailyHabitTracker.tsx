@@ -2319,7 +2319,7 @@ export function DailyHabitTracker({
     ? `Claim ${visionReward.xpAwarded} XP + ${visionReward.diceAwarded} Dice`
     : 'Preparing reward';
   const shouldShowVisionLoading =
-    isVisionRewardSelecting || (visionReward?.imageUrl && !isVisionImageLoaded);
+    isVisionRewardSelecting || !visionReward?.imageUrl || (visionReward?.imageUrl && !isVisionImageLoaded);
   const visionVisualizationTimeLabel = `${Math.floor(visionVisualizationSeconds / 60)}:${String(
     visionVisualizationSeconds % 60,
   ).padStart(2, '0')}`;
@@ -2902,7 +2902,7 @@ export function DailyHabitTracker({
         onClick={closeVisionReward}
       >
         <div
-          className="habit-day-nav__vision-modal"
+          className="habit-day-nav__vision-modal habit-day-nav__vision-modal--reward"
           onClick={(event) => event.stopPropagation()}
         >
           <button

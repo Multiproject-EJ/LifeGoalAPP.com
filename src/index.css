@@ -6349,6 +6349,15 @@ html.platform-ipad .workspace-shell__menu-edge {
   padding: 0;
 }
 
+.habit-day-nav__vision-modal-backdrop:has(.habit-day-nav__vision-modal--reward) {
+  align-items: flex-start;
+  padding: 0;
+}
+
+.habit-day-nav__vision-modal--reward {
+  overflow: hidden;
+}
+
 .habit-day-nav__vision-modal {
   position: relative;
   width: min(420px, 100%);
@@ -7181,6 +7190,19 @@ html.platform-ipad .workspace-shell__menu-edge {
 
   .habit-day-nav__vision-modal-title {
     font-size: 1.4rem;
+  }
+
+  .habit-day-nav__vision-modal--reward {
+    width: 100vw;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    padding: calc(env(safe-area-inset-top) + 1.2rem) 1rem calc(env(safe-area-inset-bottom) + 1.2rem);
+  }
+
+  .habit-day-nav__vision-modal--reward .habit-day-nav__vision-modal-frame {
+    width: min(320px, 100%);
+    max-height: min(42dvh, 320px);
   }
 
   .habit-day-nav__weekly-snapshot-modal {
