@@ -14,7 +14,6 @@
 
 import { partnerWheelManifest } from '../../games/partner-wheel';
 import { shooterBlitzManifest } from '../../games/shooter-blitz';
-import { taskTowerManifest } from '../../games/task-tower';
 import { visionQuestManifest } from '../../games/vision-quest';
 import type { IslandRunMinigameProps, MinigameManifest } from './islandRunMinigameTypes';
 import { registerMinigame } from './islandRunMinigameRegistry';
@@ -23,7 +22,6 @@ import type { ComponentType } from 'react';
 /** Ordered list of every manifest the game can launch. */
 export const ALL_MINIGAME_MANIFESTS: readonly MinigameManifest[] = Object.freeze([
   shooterBlitzManifest,
-  taskTowerManifest,
   visionQuestManifest,
   partnerWheelManifest,
 ]);

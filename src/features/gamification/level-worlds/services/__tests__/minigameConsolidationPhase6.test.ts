@@ -17,7 +17,7 @@ import { assertEqual, type TestCase } from './testHarness';
 
 function runTimedEventCompletionIntegration(options: {
   descriptor: EventMinigameLaunchDescriptor | null;
-  expectedMinigameId: 'task_tower' | 'lucky_spin' | 'shooter_blitz' | 'partner_wheel';
+  expectedMinigameId: 'lucky_spin' | 'shooter_blitz' | 'partner_wheel';
 }) {
   assertEqual(options.descriptor?.minigameId, options.expectedMinigameId, 'event resolver should return the canonical minigame id');
   const completionId = resolveEventMinigameCompletionId({
@@ -60,7 +60,7 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       assertEqual(
         openEventMinigame({ eventId: 'feeding_frenzy', ticketsAvailable: 5 })?.minigameId,
         'task_tower',
-        'feeding_frenzy should launch task_tower',
+        'event engine mapping stays task_tower for feeding_frenzy (launcher resolver may opt out)',
       );
       assertEqual(
         openEventMinigame({ eventId: 'lucky_spin', ticketsAvailable: 5 })?.minigameId,
@@ -124,7 +124,7 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       assertEqual(resolveTimedEventLaunchTicketDelta(null), 0, 'null descriptor should not produce a spend delta');
       assertEqual(
         resolveTimedEventLaunchTicketDelta({
-          minigameId: 'task_tower',
+          minigameId: 'lucky_spin',
           ticketCost: 1,
           ticketsSpent: 0,
           config: {
@@ -143,15 +143,6 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
   {
     name: 'resolveEventMinigameCompletionId only accepts completed timed_event launches for canonical event minigames',
     run: () => {
-      assertEqual(
-        resolveEventMinigameCompletionId({
-          launchSource: 'timed_event',
-          minigameId: 'task_tower',
-          completed: true,
-        }),
-        'task_tower',
-        'timed_event completion should accept task_tower',
-      );
       assertEqual(
         resolveEventMinigameCompletionId({
           launchSource: 'timed_event',
@@ -209,21 +200,14 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
     },
   },
   {
-    name: 'resolveFeedingFrenzyEventMinigame returns a Task Tower event config and preserved spend metadata',
+    name: 'resolveFeedingFrenzyEventMinigame is intentionally unavailable',
     run: () => {
-      const descriptor = resolveFeedingFrenzyEventMinigame({
+      assertEqual(resolveFeedingFrenzyEventMinigame({
         kind: 'timed_event',
         eventId: 'feeding_frenzy',
         ticketsAvailable: 3,
         ticketsToSpend: 2,
-      });
-      assertEqual(descriptor?.minigameId, 'task_tower', 'feeding_frenzy event routes to task_tower');
-      assertEqual(descriptor?.ticketsSpent, 2, 'resolver should preserve caller spend request');
-      assertEqual(
-        descriptor?.config.mode,
-        'feeding_frenzy',
-        'resolver should tag task_tower with feeding_frenzy event mode',
-      );
+      }), null, 'feeding_frenzy should not launch an Island Run minigame');
     },
   },
   {
@@ -420,7 +404,7 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       });
       const next = recordEventMinigameCompletion({
         state: seeded,
-        minigameId: 'task_tower',
+        minigameId: 'lucky_spin',
         nowMs: 1_000_000,
       });
       assertEqual(next.rewardBarProgress, 4, 'event minigame completion should add canonical progress delta');
@@ -458,7 +442,7 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       });
       const completionApplied = recordEventMinigameCompletion({
         state: seeded,
-        minigameId: 'task_tower',
+        minigameId: 'lucky_spin',
         nowMs,
         multiplier: 3,
       });
@@ -472,16 +456,13 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
     },
   },
   {
-    name: 'integration: Feeding Frenzy launcher path resolves completion and claim handoff end-to-end',
+    name: 'integration: Feeding Frenzy launcher path is safely unavailable',
     run: () => {
-      runTimedEventCompletionIntegration({
-        descriptor: resolveFeedingFrenzyEventMinigame({
-          kind: 'timed_event',
-          eventId: 'feeding_frenzy',
-          ticketsAvailable: 3,
-        }),
-        expectedMinigameId: 'task_tower',
-      });
+      assertEqual(resolveFeedingFrenzyEventMinigame({
+        kind: 'timed_event',
+        eventId: 'feeding_frenzy',
+        ticketsAvailable: 3,
+      }), null, 'feeding_frenzy should surface unavailable fallback path');
     },
   },
   {

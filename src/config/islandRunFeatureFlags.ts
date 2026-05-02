@@ -26,13 +26,6 @@ export interface IslandRunFeatureFlags {
   islandRunShooterBlitzBossEnabled: boolean;
 
   /**
-   * Phase 5 — adds `task_tower` as a Mystery-stop content variant (alongside
-   * breathing / habit_action / checkin_reflection). While off, the rotating
-   * Mystery pool is unchanged.
-   */
-  islandRunTaskTowerMysteryEnabled: boolean;
-
-  /**
    * Phase 5 — adds `vision_quest` as a Mystery-stop content variant. While
    * off, the rotating Mystery pool is unchanged.
    */
@@ -63,7 +56,6 @@ export interface IslandRunFeatureFlags {
 const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
   islandRunEventEngineEnabled: false,
   islandRunShooterBlitzBossEnabled: true,
-  islandRunTaskTowerMysteryEnabled: true,
   islandRunVisionQuestMysteryEnabled: true,
   islandRunPartnerWheelEnabled: false,
   todaysOfferSpinEntryEnabled: true,
