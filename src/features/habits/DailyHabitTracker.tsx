@@ -439,10 +439,10 @@ const getTodayWinsTier = (score: number): TodayWinsTier => {
 };
 
 // Vision star slot machine animation constants
-const SLOT_MACHINE_ANIMATION_DURATION_MS = 2500;
-const SLOT_MACHINE_LANDING_DURATION_MS = 500;
-const SLOT_MACHINE_TOTAL_ITEMS = 15;
-const SLOT_MACHINE_SELECTED_INDEX = 12;
+const SLOT_MACHINE_ANIMATION_DURATION_MS = 950;
+const SLOT_MACHINE_LANDING_DURATION_MS = 250;
+const SLOT_MACHINE_TOTAL_ITEMS = 7;
+const SLOT_MACHINE_SELECTED_INDEX = 4;
 
 const LIFE_WHEEL_COLORS: Record<string, string> = {
   health: '#22c55e',
@@ -2038,6 +2038,16 @@ export function DailyHabitTracker({
     }
 
     const selection = visionImages[Math.floor(Math.random() * visionImages.length)];
+    const preloadSelectionImage = async (url: string) => {
+      await new Promise<void>((resolve) => {
+        const image = new Image();
+        image.decoding = 'async';
+        image.onload = () => resolve();
+        image.onerror = () => resolve();
+        image.src = url;
+      });
+    };
+    const preloadPromise = preloadSelectionImage(selection.publicUrl);
     const nextCount = visionStarCount + 1;
     const isSpecial = activeVisionStarWindow.isSpecial;
     const isSuperBoost = !isSpecial && nextCount % 20 === 0;
@@ -2045,7 +2055,10 @@ export function DailyHabitTracker({
     const diceAmount = 25;
 
     // Wait for slot machine spin animation to complete, then fade out
-    await new Promise(resolve => setTimeout(resolve, SLOT_MACHINE_ANIMATION_DURATION_MS));
+    await Promise.all([
+      preloadPromise,
+      new Promise(resolve => setTimeout(resolve, SLOT_MACHINE_ANIMATION_DURATION_MS)),
+    ]);
     setIsSlotLanding(true);
     await new Promise(resolve => setTimeout(resolve, SLOT_MACHINE_LANDING_DURATION_MS));
     setIsVisionRewardSelecting(false);
@@ -2319,7 +2332,7 @@ export function DailyHabitTracker({
     ? `Claim ${visionReward.xpAwarded} XP + ${visionReward.diceAwarded} Dice`
     : 'Preparing reward';
   const shouldShowVisionLoading =
-    isVisionRewardSelecting || (visionReward?.imageUrl && !isVisionImageLoaded);
+    isVisionRewardSelecting || !visionReward?.imageUrl || (visionReward?.imageUrl && !isVisionImageLoaded);
   const visionVisualizationTimeLabel = `${Math.floor(visionVisualizationSeconds / 60)}:${String(
     visionVisualizationSeconds % 60,
   ).padStart(2, '0')}`;
@@ -2902,7 +2915,7 @@ export function DailyHabitTracker({
         onClick={closeVisionReward}
       >
         <div
-          className="habit-day-nav__vision-modal"
+          className="habit-day-nav__vision-modal habit-day-nav__vision-modal--reward"
           onClick={(event) => event.stopPropagation()}
         >
           <button
