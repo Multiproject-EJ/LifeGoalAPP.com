@@ -7109,7 +7109,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   flex-direction: column;
   gap: 8px;
   align-items: center;
-  animation: slot-reel-spin 2.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+  animation: slot-reel-spin 0.95s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 .habit-day-nav__vision-modal-slot-item {
@@ -7120,7 +7120,6 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
   border: 2px solid rgba(255, 255, 255, 0.5);
   flex-shrink: 0;
-  filter: blur(3px);
   opacity: 0.6;
   transition: all 0.3s ease;
 }
@@ -7134,7 +7133,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4), 0 0 0 3px rgba(251, 191, 36, 0.3);
 }
 
-/* Slot reel animation: Duration 2.5s matches SLOT_MACHINE_ANIMATION_DURATION_MS
+/* Slot reel animation: Duration 0.95s matches SLOT_MACHINE_ANIMATION_DURATION_MS
    Keyframe positions create a slot machine effect:
    - 0-45%: Fast initial scroll (rapid acceleration)
    - 45-75%: Steady speed (building anticipation)
@@ -7142,39 +7141,27 @@ html.platform-ipad .workspace-shell__menu-edge {
    
    Transform values are calculated based on:
    - Item height: 80px + gap: 8px = 88px per item
-   - Final position of -1000px aligns the 12th item (SLOT_MACHINE_SELECTED_INDEX)
+   - Final position of -328px aligns the 4th item (SLOT_MACHINE_SELECTED_INDEX)
      to the center of the viewport after animation completes
 */
 @keyframes slot-reel-spin {
   0% {
     transform: translateY(0);
   }
-  15% {
-    transform: translateY(-150px);
+  25% {
+    transform: translateY(-120px);
   }
-  30% {
-    transform: translateY(-300px);
-  }
-  45% {
-    transform: translateY(-450px);
-  }
-  60% {
-    transform: translateY(-600px);
+  50% {
+    transform: translateY(-220px);
   }
   75% {
-    transform: translateY(-750px);
+    transform: translateY(-285px);
   }
-  85% {
-    transform: translateY(-850px);
-  }
-  92% {
-    transform: translateY(-920px);
-  }
-  96% {
-    transform: translateY(-960px);
+  90% {
+    transform: translateY(-310px);
   }
   100% {
-    transform: translateY(-1000px);
+    transform: translateY(-328px);
   }
 }
 
