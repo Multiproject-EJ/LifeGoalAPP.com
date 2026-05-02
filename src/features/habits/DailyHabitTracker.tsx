@@ -1786,7 +1786,7 @@ export function DailyHabitTracker({
 
     window.addEventListener('lifegoal:launch-dream-journal', launchHandler);
     return () => window.removeEventListener('lifegoal:launch-dream-journal', launchHandler);
-  }, [isViewingToday, loading, openDreamJournalQuickEntry, session?.user?.id]);
+  }, [isViewingToday, loading, session?.user?.id]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !session?.user?.id) {

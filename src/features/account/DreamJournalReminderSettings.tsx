@@ -49,6 +49,7 @@ export function DreamJournalReminderSettings({ session }: DreamJournalReminderSe
 
   const handleLaunchDreamJournal = () => {
     if (typeof window === 'undefined') return;
+    window.localStorage.setItem(`lifegoal.dream-journal-launch:${userId}`, 'true');
     window.dispatchEvent(new CustomEvent('lifegoal:launch-dream-journal'));
   };
 
