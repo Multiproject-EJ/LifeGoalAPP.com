@@ -36,6 +36,7 @@ import {
   applyCreatureCollection,
   applyCreatureTreatInventory,
   applyDevGrantDice,
+  applyDevBuildAllToL3,
   applyDevGrantEssence,
   applyDevSpeedHatchEgg,
   applyHydrationEggReadyTransition,
@@ -372,6 +373,63 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.record.essenceLifetimeEarned, 850, 'lifetime earned should track granted essence');
       assertEqual(result.record.runtimeVersion, 11, 'runtimeVersion should bump once');
       assertEqual(getIslandRunStateSnapshot(session).essence, 600, 'store mirror should reflect granted essence');
+    },
+  },
+
+  {
+    name: 'applyDevBuildAllToL3 upgrades every stop to L3 via canonical action batches',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        essence: 100_000,
+        stopBuildStateByIndex: [
+          { requiredEssence: 10, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 10, spentEssence: 0, buildLevel: 1 },
+          { requiredEssence: 10, spentEssence: 0, buildLevel: 2 },
+          { requiredEssence: 10, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 10, spentEssence: 0, buildLevel: 1 },
+        ],
+      });
+      const result = await applyDevBuildAllToL3({
+        session,
+        client: null,
+        effectiveIslandNumber: 1,
+        triggerSource: 'test_dev_build_all_to_l3',
+      });
+      assertEqual(result.changed, true, 'at least one stop below L3 should trigger changes');
+      assertEqual(result.stopsCompleted, 5, 'all five stops should end at L3');
+      assert(result.totalStepsApplied > 0, 'should apply one or more build spend steps');
+      assert(result.record.stopBuildStateByIndex.every((entry) => (entry?.buildLevel ?? 0) >= 3), 'every stop should reach L3');
+    },
+  },
+
+  {
+    name: 'applyDevBuildAllToL3 is no-op when all stops are already at L3',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 12,
+        essence: 250,
+        stopBuildStateByIndex: [
+          { requiredEssence: 10, spentEssence: 10, buildLevel: 3 },
+          { requiredEssence: 10, spentEssence: 10, buildLevel: 3 },
+          { requiredEssence: 10, spentEssence: 10, buildLevel: 3 },
+          { requiredEssence: 10, spentEssence: 10, buildLevel: 3 },
+          { requiredEssence: 10, spentEssence: 10, buildLevel: 3 },
+        ],
+      });
+      const result = await applyDevBuildAllToL3({
+        session,
+        client: null,
+        effectiveIslandNumber: 1,
+        triggerSource: 'test_dev_build_all_to_l3_noop',
+      });
+      assertEqual(result.changed, false, 'already L3 stops should produce no changes');
+      assertEqual(result.totalStepsApplied, 0, 'no-op should apply no steps');
+      assertEqual(result.record.runtimeVersion, 12, 'runtimeVersion should stay unchanged on no-op');
     },
   },
 

@@ -163,6 +163,20 @@ export interface ApplyDevSpeedHatchEggResult {
   changed: boolean;
 }
 
+export interface ApplyDevBuildAllToL3Options {
+  session: Session;
+  client: SupabaseClient | null;
+  effectiveIslandNumber: number;
+  triggerSource?: string;
+}
+
+export interface ApplyDevBuildAllToL3Result {
+  record: IslandRunGameStateRecord;
+  changed: boolean;
+  stopsCompleted: number;
+  totalStepsApplied: number;
+}
+
 /**
  * Applies per-hop or per-claim currency deltas to the authoritative store.
  *
@@ -362,6 +376,51 @@ export function applyDevSpeedHatchEgg(options: ApplyDevSpeedHatchEggOptions): Ap
     triggerSource: triggerSource ?? 'dev_speed_hatch_egg',
   });
   return { record: next, changed: true };
+}
+
+/**
+ * DEV-ONLY helper action: fully build every landmark to L3 through canonical
+ * build spend semantics and one atomic commit.
+ */
+export async function applyDevBuildAllToL3(
+  options: ApplyDevBuildAllToL3Options,
+): Promise<ApplyDevBuildAllToL3Result> {
+  const { session, client, effectiveIslandNumber, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  let workingRecord = current;
+  let totalStepsApplied = 0;
+  let stopsCompleted = 0;
+
+  for (let stopIndex = 0; stopIndex < workingRecord.stopBuildStateByIndex.length; stopIndex += 1) {
+    const buildState = workingRecord.stopBuildStateByIndex[stopIndex];
+    if (!buildState) continue;
+    if (buildState.buildLevel >= 3) {
+      stopsCompleted += 1;
+      continue;
+    }
+    const maxStepsToL3 = 1000;
+    const batchResult = await applyStopBuildSpendBatch({
+      session,
+      client,
+      stopIndex,
+      effectiveIslandNumber,
+      maxSteps: maxStepsToL3,
+      triggerSource: triggerSource ?? 'dev_build_all_to_l3',
+    });
+    workingRecord = batchResult.record;
+    totalStepsApplied += batchResult.stepsApplied;
+    const nextBuild = workingRecord.stopBuildStateByIndex[stopIndex];
+    if (nextBuild && nextBuild.buildLevel >= 3) {
+      stopsCompleted += 1;
+    }
+  }
+
+  return {
+    record: workingRecord,
+    changed: totalStepsApplied > 0,
+    stopsCompleted,
+    totalStepsApplied,
+  };
 }
 
 // ── C2: Essence award / spend / reward-bar / drift ───────────────────────────
