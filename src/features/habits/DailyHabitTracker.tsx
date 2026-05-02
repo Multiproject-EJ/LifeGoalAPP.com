@@ -1766,19 +1766,18 @@ export function DailyHabitTracker({
     }
 
     const launchKey = dreamJournalLaunchKey(session.user.id);
-    const tryOpenDreamJournal = () => {
-      openDreamJournalQuickEntry();
-      setShowDreamJournalReminderModal(false);
+    const tryOpenDreamJournalReminder = () => {
+      setShowDreamJournalReminderModal(true);
       return true;
     };
 
-    if (loadDraft<boolean>(launchKey) && tryOpenDreamJournal()) {
+    if (loadDraft<boolean>(launchKey) && isViewingToday && !loading && tryOpenDreamJournalReminder()) {
       removeDraft(launchKey);
     }
 
     const launchHandler = () => {
       if (isViewingToday && !loading) {
-        tryOpenDreamJournal();
+        tryOpenDreamJournalReminder();
         removeDraft(launchKey);
       } else {
         saveDraft(launchKey, true);
@@ -1787,7 +1786,7 @@ export function DailyHabitTracker({
 
     window.addEventListener('lifegoal:launch-dream-journal', launchHandler);
     return () => window.removeEventListener('lifegoal:launch-dream-journal', launchHandler);
-  }, [isViewingToday, loading, openDreamJournalQuickEntry, session?.user?.id]);
+  }, [isViewingToday, loading, session?.user?.id]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !session?.user?.id) {
