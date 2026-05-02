@@ -91,6 +91,22 @@ import { useDailySpinStatus } from './hooks/useDailySpinStatus';
 import { useLuckyRollStatus } from './hooks/useLuckyRollStatus';
 import { isIslandRunFeatureEnabled } from './config/islandRunFeatureFlags';
 import { generateInitials } from './utils/initials';
+import {
+  getDreamJournalReminderEnabled,
+  getDreamJournalReminderLastShownCycle,
+  getDreamJournalReminderWindow,
+  getDreamReminderCycleKey,
+  isHourInDreamReminderWindow,
+  setDreamJournalReminderLastShownCycle,
+} from './services/dreamJournalReminderPrefs';
+import {
+  getTodaysWinsReminderCycleKey,
+  getTodaysWinsReminderEnabled,
+  getTodaysWinsReminderLastShownCycle,
+  getTodaysWinsReminderWindow,
+  isTimeInTodaysWinsReminderWindow,
+  setTodaysWinsReminderLastShownCycle,
+} from './services/todaysWinsReminderPrefs';
 import { DayZeroOnboarding } from './features/onboarding/DayZeroOnboarding';
 import { GameOfLifeOnboarding } from './features/onboarding/GameOfLifeOnboarding';
 import {
@@ -1193,6 +1209,53 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, []);
 
   const activeSession = useMemo(() => supabaseSession as Session, [supabaseSession]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !activeSession?.user?.id) {
+      return;
+    }
+
+    const userId = activeSession.user.id;
+    const runReminderChecks = () => {
+      const now = new Date();
+
+      if (getDreamJournalReminderEnabled(userId)) {
+        const dreamWindow = getDreamJournalReminderWindow(userId);
+        if (isHourInDreamReminderWindow(now.getHours(), dreamWindow)) {
+          const cycleKey = getDreamReminderCycleKey(now, dreamWindow);
+          if (getDreamJournalReminderLastShownCycle(userId) !== cycleKey) {
+            setDreamJournalReminderLastShownCycle(userId, cycleKey);
+            window.dispatchEvent(new CustomEvent('lifegoal:launch-dream-journal'));
+          }
+        }
+      }
+
+      if (getTodaysWinsReminderEnabled(userId)) {
+        const winsWindow = getTodaysWinsReminderWindow(userId);
+        if (isTimeInTodaysWinsReminderWindow(now, winsWindow)) {
+          const cycleKey = getTodaysWinsReminderCycleKey(now, winsWindow);
+          if (getTodaysWinsReminderLastShownCycle(userId) !== cycleKey) {
+            setTodaysWinsReminderLastShownCycle(userId, cycleKey);
+            window.dispatchEvent(new CustomEvent('lifegoal:launch-todays-wins'));
+          }
+        }
+      }
+    };
+
+    const handleVisible = () => {
+      if (document.visibilityState === 'visible') {
+        runReminderChecks();
+      }
+    };
+
+    runReminderChecks();
+    window.addEventListener('focus', runReminderChecks);
+    document.addEventListener('visibilitychange', handleVisible);
+    return () => {
+      window.removeEventListener('focus', runReminderChecks);
+      document.removeEventListener('visibilitychange', handleVisible);
+    };
+  }, [activeSession]);
 
   const handleGameModePreferenceChange = useCallback(async (nextIsActive: boolean) => {
     setIsMobileMenuImageActive(nextIsActive);

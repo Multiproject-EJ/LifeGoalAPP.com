@@ -544,6 +544,8 @@ const dailyCatchUpLaunchKey = (userId: string) =>
   `lifegoal.daily-catchup-launch:${userId}`;
 const dreamJournalLaunchKey = (userId: string) =>
   `lifegoal.dream-journal-launch:${userId}`;
+const todaysWinsLaunchKey = (userId: string) =>
+  `lifegoal.todays-wins-launch:${userId}`;
 const timeLimitedOfferScheduleKey = (userId: string, dateISO: string) =>
   `lifegoal.time-limited-offer-schedule:${userId}:${dateISO}`;
 
@@ -1786,6 +1788,54 @@ export function DailyHabitTracker({
     window.addEventListener('lifegoal:launch-dream-journal', launchHandler);
     return () => window.removeEventListener('lifegoal:launch-dream-journal', launchHandler);
   }, [isViewingToday, loading, openDreamJournalQuickEntry, session?.user?.id]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !session?.user?.id) {
+      return;
+    }
+
+    const launchKey = todaysWinsLaunchKey(session.user.id);
+    const canOpenTodayWins = () => {
+      const habitWinsCount = Object.values(completions).filter((state) => state.completed).length;
+      const totalWinsCount = habitWinsCount
+        + completedActionsCount
+        + todayWinsSummary.journalCount
+        + todayWinsSummary.lotusEarned
+        + todayWinsSummary.xpEarned
+        + todayWinsSummary.gameRewardsTotal;
+      return totalWinsCount > 0;
+    };
+
+    const tryOpenTodaysWins = () => {
+      if (!canOpenTodayWins()) return false;
+      setIsTodayWinsOpen(true);
+      return true;
+    };
+
+    if (loadDraft<boolean>(launchKey) && isViewingToday && tryOpenTodaysWins()) {
+      removeDraft(launchKey);
+    }
+
+    const launchHandler = () => {
+      if (isViewingToday && tryOpenTodaysWins()) {
+        removeDraft(launchKey);
+      } else {
+        saveDraft(launchKey, true);
+      }
+    };
+
+    window.addEventListener('lifegoal:launch-todays-wins', launchHandler);
+    return () => window.removeEventListener('lifegoal:launch-todays-wins', launchHandler);
+  }, [
+    completedActionsCount,
+    completions,
+    isViewingToday,
+    session?.user?.id,
+    todayWinsSummary.gameRewardsTotal,
+    todayWinsSummary.journalCount,
+    todayWinsSummary.lotusEarned,
+    todayWinsSummary.xpEarned,
+  ]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !session?.user?.id || !isViewingToday) {
