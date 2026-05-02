@@ -304,42 +304,34 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
     },
   },
   {
-    name: 'completed-stop sync effect pre-dispatch guard prevents no-op action calls',
+    name: 'completed-stop helper sync uses no-op and dedupe guards',
     run: async () => {
       const source = await readBoardSource();
       assert(
-        source.includes('const normalizedCompletedStops = normalizeCompletedStopsForSync(completedStops);') &&
-          source.includes('if (areStringArraysEqual(persistedStops, normalizedCompletedStops)) {'),
-        'Completed-stop sync effect should short-circuit semantic no-op BEFORE dispatch.',
+        source.includes('const updateCompletedStopsWithSync = useCallback((') &&
+          source.includes('const persistedStops = normalizeCompletedStopsForSync(runtimeStateRef.current.completedStopsByIsland?.[islandKey] ?? []);') &&
+          source.includes('if (areStringArraysEqual(persistedStops, normalizedForSync)) {'),
+        'Completed-stop helper should short-circuit semantic no-op BEFORE dispatch.',
       );
       assert(
-        source.includes('const dispatchKey = `${islandKey}::${normalizedCompletedStops.join(\'|\')}`;'),
-        'Completed-stop sync effect should build a stable dispatch key for rerender dedupe.',
+        source.includes('const dispatchKey = `${islandKey}::${normalizedForSync.join(\'|\')}`;') &&
+          source.includes('if (completedStopsSyncDispatchKeyRef.current === dispatchKey) return;'),
+        'Completed-stop helper should build a stable dispatch key for rerender dedupe.',
       );
       assert(
-        source.includes('const completedStopsSyncRequestedRef = useRef(false);') &&
-          source.includes('if (!completedStopsSyncRequestedRef.current) return;'),
-        'Completed-stop sync effect should require an explicit sync request before dispatching.',
+        source.includes('const requestSync = options?.requestSync !== false;') &&
+          source.includes('if (changed && requestSync) {'),
+        'Completed-stop helper should require an explicit sync request before dispatching.',
       );
       assert(
-        source.includes('const changed = !areStringArraysEqual(current, next);') &&
-          source.includes('if (changed && options?.requestSync !== false) {'),
-        'updateCompletedStops should request sync only when completedStops actually changed.',
+        source.includes('updateCompletedStops((current) => {') &&
+          source.includes('if (!shouldSync || !normalizedForSync) return;'),
+        'Completed-stop helper should update local state first and only dispatch when sync is explicitly requested.',
       );
       assert(
-        source.includes('const [hasCompletedStopsHydrationGate, setHasCompletedStopsHydrationGate] = useState(false);') &&
-          source.includes('if (!hasCompletedStopsHydrationGate) return;') &&
-          source.includes('completedStopsSyncRequestedRef.current = false;'),
-        'Completed-stop sync effect should remain blocked until hydration gate opens and should drop hydration-time sync requests.',
-      );
-      assert(
-        source.includes('if (completedStopsSyncDispatchKeyRef.current === dispatchKey) {') &&
-          source.includes('completedStopsSyncDispatchKeyRef.current = dispatchKey;'),
-        'Completed-stop sync effect should suppress repeated dispatch while the same target sync is in flight.',
-      );
-      assert(
-        source.includes('const nextRuntimeState = syncCompletedStopsForIsland({'),
-        'Completed-stop sync effect should still dispatch once when a semantic difference exists.',
+        source.includes('updateCompletedStopsWithSync((current) => (areStringArraysEqual(current, storedStops) ? current : storedStops), { requestSync: false });') &&
+          source.includes('updateCompletedStopsWithSync((current) => (areStringArraysEqual(current, effectiveCompletedStops) ? current : effectiveCompletedStops), { requestSync: false });'),
+        'Hydration and derived effective-stop paths should opt out of persistence writes.',
       );
     },
   },

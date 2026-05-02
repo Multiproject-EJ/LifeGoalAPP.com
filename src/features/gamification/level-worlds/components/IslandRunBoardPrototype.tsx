@@ -2823,24 +2823,61 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [islandNumber, dayIndex]);
 
   const [completedStops, setCompletedStops] = useState<string[]>([]);
-  const completedStopsSyncRequestedRef = useRef(false);
-  const [hasCompletedStopsHydrationGate, setHasCompletedStopsHydrationGate] = useState(false);
 
-  const updateCompletedStops = useCallback((
-    updater: SetStateAction<string[]>,
-    options?: { requestSync?: boolean },
-  ) => {
+  const updateCompletedStops = useCallback((updater: SetStateAction<string[]>) => {
     setCompletedStops((current) => {
       const next = typeof updater === 'function'
         ? (updater as (value: string[]) => string[])(current)
         : updater;
       const changed = !areStringArraysEqual(current, next);
-      if (changed && options?.requestSync !== false) {
-        completedStopsSyncRequestedRef.current = true;
-      }
       return changed ? next : current;
     });
   }, []);
+  const updateCompletedStopsWithSync = useCallback((
+    updater: SetStateAction<string[]>,
+    options?: { requestSync?: boolean; triggerSource?: string },
+  ) => {
+    const requestSync = options?.requestSync !== false;
+    const triggerSource = options?.triggerSource ?? 'sync_completed_stops_helper';
+    let normalizedForSync: string[] = [];
+    let shouldSync = false;
+    updateCompletedStops((current) => {
+      const next = typeof updater === 'function'
+        ? (updater as (value: string[]) => string[])(current)
+        : updater;
+      const changed = !areStringArraysEqual(current, next);
+      if (changed && requestSync) {
+        normalizedForSync = normalizeCompletedStopsForSync(next);
+        shouldSync = true;
+      }
+      return changed ? next : current;
+    });
+    if (!shouldSync) return;
+    const islandKey = String(islandNumber);
+    const dispatchKey = `${islandKey}::${normalizedForSync.join('|')}`;
+    if (completedStopsSyncDispatchKeyRef.current === dispatchKey) return;
+    const persistedStops = normalizeCompletedStopsForSync(runtimeStateRef.current.completedStopsByIsland?.[islandKey] ?? []);
+    if (areStringArraysEqual(persistedStops, normalizedForSync)) {
+      completedStopsSyncDispatchKeyRef.current = null;
+      return;
+    }
+    completedStopsSyncDispatchKeyRef.current = dispatchKey;
+    const nextRuntimeState = syncCompletedStopsForIsland({
+      session,
+      client,
+      islandNumber,
+      completedStops: normalizedForSync,
+      triggerSource,
+    });
+    setRuntimeStateWithTrace('sync_completed_stops_helper', (current) => (
+      current.completedStopsByIsland === nextRuntimeState.completedStopsByIsland
+        ? current
+        : {
+          ...current,
+          completedStopsByIsland: nextRuntimeState.completedStopsByIsland,
+        }
+    ));
+  }, [client, islandNumber, session, setRuntimeStateWithTrace, updateCompletedStops]);
 
   const getStoredCompletedStopsForIsland = useCallback((targetIslandNumber: number): string[] => {
     const persistedStops = runtimeState.completedStopsByIsland?.[String(targetIslandNumber)];
@@ -2856,11 +2893,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (!hasHydratedRuntimeState) return;
     const storedStops = getStoredCompletedStopsForIsland(islandNumber);
     if (storedStops.length > 0) {
-      updateCompletedStops((current) => (areStringArraysEqual(current, storedStops) ? current : storedStops));
+      updateCompletedStopsWithSync((current) => (areStringArraysEqual(current, storedStops) ? current : storedStops), { requestSync: false });
       return;
     }
-    updateCompletedStops((current) => (current.length === 0 ? current : []));
-  }, [getStoredCompletedStopsForIsland, hasHydratedRuntimeState, islandNumber, updateCompletedStops]);
+    updateCompletedStopsWithSync((current) => (current.length === 0 ? current : []), { requestSync: false });
+  }, [getStoredCompletedStopsForIsland, hasHydratedRuntimeState, islandNumber, updateCompletedStopsWithSync]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
@@ -2883,73 +2920,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setLandingText(`Focused on ${nextActiveStop.title}.`);
   }, [completedStops, islandStopPlan]);
 
-  // Hydration gate: suppress completed-stop sync requests during the initial
-  // hydration pass. Startup hydration can legitimately call updateCompletedStops
-  // to restore/derive local state, but those no-op or hydration-driven updates
-  // must not issue persistence writes.
+  // Clear completed-stop dedupe key on hydration reset/login transitions.
   useEffect(() => {
     if (!hasHydratedRuntimeState) {
-      setHasCompletedStopsHydrationGate(false);
-      completedStopsSyncRequestedRef.current = false;
       completedStopsSyncDispatchKeyRef.current = null;
-      return;
     }
-    // Clear any sync requests queued by hydration-side effects before opening
-    // the completed-stop persistence gate.
-    completedStopsSyncRequestedRef.current = false;
-    setHasCompletedStopsHydrationGate(true);
   }, [hasHydratedRuntimeState]);
-
-  // M11D: persist completedStops to Supabase runtime state (the localStorage
-  // mirror was removed once runtime migration completed).
-  useEffect(() => {
-    if (!hasHydratedRuntimeState) return;
-    if (!hasCompletedStopsHydrationGate) return;
-    // Guard: Skip until the initial hydration sync effect has applied server values
-    // to local state. This prevents the write amplification loop.
-    if (!hasCompletedInitialHydrationSyncRef.current) return;
-    if (!completedStopsSyncRequestedRef.current) return;
-    const islandKey = String(islandNumber);
-    const persistedStops = normalizeCompletedStopsForSync(runtimeState.completedStopsByIsland?.[islandKey] ?? []);
-    const normalizedCompletedStops = normalizeCompletedStopsForSync(completedStops);
-    const dispatchKey = `${islandKey}::${normalizedCompletedStops.join('|')}`;
-    if (areStringArraysEqual(persistedStops, normalizedCompletedStops)) {
-      completedStopsSyncRequestedRef.current = false;
-      if (completedStopsSyncDispatchKeyRef.current === dispatchKey) {
-        completedStopsSyncDispatchKeyRef.current = null;
-      }
-      return;
-    }
-    if (completedStopsSyncDispatchKeyRef.current === dispatchKey) {
-      return;
-    }
-    completedStopsSyncRequestedRef.current = false;
-    completedStopsSyncDispatchKeyRef.current = dispatchKey;
-    const nextRuntimeState = syncCompletedStopsForIsland({
-      session,
-      client,
-      islandNumber,
-      completedStops: normalizedCompletedStops,
-      triggerSource: 'sync_completed_stops_effect',
-    });
-    setRuntimeStateWithTrace('sync_completed_stops_effect', (current) => (
-      current.completedStopsByIsland === nextRuntimeState.completedStopsByIsland
-        ? current
-        : {
-          ...current,
-          completedStopsByIsland: nextRuntimeState.completedStopsByIsland,
-        }
-    ));
-  }, [
-    client,
-    completedStops,
-    hasCompletedStopsHydrationGate,
-    hasHydratedRuntimeState,
-    islandNumber,
-    runtimeState.completedStopsByIsland,
-    session,
-    setRuntimeStateWithTrace,
-  ]);
 
   // ── C1: dicePool/tokenIndex/spinTokens persist effect REMOVED ────────────
   // The old useEffect at this location watched the three mirrors and called
@@ -3361,7 +3337,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
     if (areStringArraysEqual(completedStops, effectiveCompletedStops)) return;
-    updateCompletedStops((current) => (areStringArraysEqual(current, effectiveCompletedStops) ? current : effectiveCompletedStops));
+    updateCompletedStopsWithSync((current) => (areStringArraysEqual(current, effectiveCompletedStops) ? current : effectiveCompletedStops), { requestSync: false });
   }, [completedStops, effectiveCompletedStops, hasHydratedRuntimeState]);
 
   const mergedStopStatesByIndex = useMemo(() => {
@@ -5104,7 +5080,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         awardShards('stop_complete');
         awardWalletShards(1);
       }
-      updateCompletedStops(nextCompletedStops);
+      updateCompletedStopsWithSync(nextCompletedStops, { triggerSource: 'island_run_set_egg' });
       markHatcheryStopCompleteInV2();
       setLandingText(`Egg set! Hatchery stop completed with a ${tier} egg now incubating.`);
       setActiveStopId(null);
@@ -5600,7 +5576,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       }
     }
     const nextRecord = transitionResult.record;
-    updateCompletedStops(nextCompletedStops);
+    updateCompletedStopsWithSync(nextCompletedStops, { triggerSource: 'island_board_collect_creature' });
     markHatcheryStopCompleteInV2();
     setRuntimeState(nextRecord);
     if (activeStopId === 'hatchery') {
@@ -5661,7 +5637,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       metadata: { stage: 'island_creature_sold', island_number: islandNumber, tier: resolvedEgg.tier, creature_id: creature.id, sell_choice: choice, sell_amount: picked.amount },
     });
     const nextRecord = transitionResult.record;
-    updateCompletedStops(nextCompletedStops);
+    updateCompletedStopsWithSync(nextCompletedStops, { triggerSource: 'island_board_sell_egg_choice' });
     setRuntimeState(nextRecord);
     if (activeStopId === 'hatchery') {
       setActiveStopId(null);
@@ -6322,7 +6298,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setCurrentEncounterChallenge(null);
     setEncounterStep('challenge');
     setEncounterRewardData(null);
-    updateCompletedStops([]);
+    updateCompletedStopsWithSync([], { triggerSource: 'perform_island_travel' });
     setBossTrialResolved(false);
     setBossRewardSummary(null);
     // M7-COMPLETE: reset boss trial phase on island travel
@@ -6390,7 +6366,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   // B3-2: handleCompleteStopById helper
   const handleCompleteStopById = (stopId: string) => {
-    updateCompletedStops((current) => current.includes(stopId) ? current : [...current, stopId]);
+    updateCompletedStopsWithSync((current) => current.includes(stopId) ? current : [...current, stopId], { triggerSource: 'handle_complete_stop_by_id' });
   };
 
   const handleSpendEssenceOnBuild = async (stopIndex: number, maxSteps = 1): Promise<boolean> => {
@@ -6527,7 +6503,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       }
 
       if (activeStopId === 'boss') {
-        updateCompletedStops((current) => ensureStopCompleted(current, 'boss'));
+        updateCompletedStopsWithSync((current) => ensureStopCompleted(current, 'boss'), { triggerSource: 'stop_objective_complete' });
         awardShards('boss_defeat');
         awardWalletShards(3);
 
@@ -6561,7 +6537,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         return;
       }
 
-      updateCompletedStops((current) => ensureStopCompleted(current, activeStopId));
+      updateCompletedStopsWithSync((current) => ensureStopCompleted(current, activeStopId), { triggerSource: 'stop_objective_complete' });
       setMysteryStopReward(null);
       setLandingText(`${activeStopId.toUpperCase()} stop objective done! Open 🔨 Build to fund this island's buildings.`);
       setActiveStopId(null);
@@ -6571,7 +6547,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (activeStopId === 'boss') {
       const bossReward = getBossReward(islandNumber);
       setLandingText('Boss stop complete! Island clear. Next island unlocked.');
-      updateCompletedStops((current) => ensureStopCompleted(current, 'boss'));
+      updateCompletedStopsWithSync((current) => ensureStopCompleted(current, 'boss'), { triggerSource: 'stop_objective_complete' });
       awardShards('boss_defeat');
       awardWalletShards(3);
 
@@ -6622,7 +6598,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       awardShards('stop_complete');
       awardWalletShards(1);
     }
-    updateCompletedStops((current) => ensureStopCompleted(current, activeStopId));
+    updateCompletedStopsWithSync((current) => ensureStopCompleted(current, activeStopId), { triggerSource: 'stop_objective_complete' });
     setMysteryStopReward(null);
     setLandingText(`${activeStopId.toUpperCase()} stop completed.`);
     setActiveStopId(null);
