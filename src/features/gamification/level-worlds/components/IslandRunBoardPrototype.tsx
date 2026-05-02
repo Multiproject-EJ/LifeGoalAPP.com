@@ -2852,12 +2852,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       }
       return changed ? next : current;
     });
-    if (!shouldSync) return;
+    if (!shouldSync || !normalizedForSync) return;
+    const normalizedStopsForSync: string[] = normalizedForSync;
     const islandKey = String(islandNumber);
-    const dispatchKey = `${islandKey}::${normalizedForSync.join('|')}`;
+    const dispatchKey = `${islandKey}::${normalizedStopsForSync.join('|')}`;
     if (completedStopsSyncDispatchKeyRef.current === dispatchKey) return;
     const persistedStops = normalizeCompletedStopsForSync(runtimeStateRef.current.completedStopsByIsland?.[islandKey] ?? []);
-    if (areStringArraysEqual(persistedStops, normalizedForSync)) {
+    if (areStringArraysEqual(persistedStops, normalizedStopsForSync)) {
       completedStopsSyncDispatchKeyRef.current = null;
       return;
     }
@@ -2866,7 +2867,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       session,
       client,
       islandNumber,
-      completedStops: normalizedForSync,
+      completedStops: normalizedStopsForSync,
       triggerSource,
     });
     setRuntimeStateWithTrace('sync_completed_stops_helper', (current) => (
