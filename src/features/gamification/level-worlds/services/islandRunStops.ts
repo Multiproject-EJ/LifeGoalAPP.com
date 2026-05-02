@@ -5,10 +5,10 @@ import { getIslandRunFeatureFlags } from '../../../../config/islandRunFeatureFla
  * Mystery stop content kinds — the rotating content that fills the Mystery (Stop 3) slot.
  * Mystery = "big upgrade" stop; currently breathing/guided meditation, expanding over time.
  *
- * `task_tower` and `vision_quest` are gated behind their respective feature
- * flags in `islandRunFeatureFlags.ts` (Phase 5 of the Minigame & Events
- * Consolidation Plan). While the flags are off, those variants are never
- * emitted by `generateIslandStopPlan` — the type is a compile-time union only.
+ * `vision_quest` is gated behind its feature flag in
+ * `islandRunFeatureFlags.ts` (Phase 5 of the Minigame & Events Consolidation
+ * Plan). While the flag is off, that variant is never emitted by
+ * `generateIslandStopPlan`.
  */
 export type MysteryStopContentKind =
   | 'habit_action'
@@ -40,8 +40,8 @@ export interface IslandStopPlanEntry {
 /**
  * Content pool for the Mystery stop (Stop 3).
  * Base entries: breathing exercise, habit action, or check-in reflection.
- * Feature-flagged entries (Task Tower, Vision Quest) are appended when their
- * flags are on — see `buildMysteryStopContentPool()`.
+ * Feature-flagged entries (Vision Quest) are appended when the flag is on —
+ * see `buildMysteryStopContentPool()`.
  */
 const MYSTERY_STOP_CONTENT_POOL_BASE: Array<{
   kind: MysteryStopContentKind;
