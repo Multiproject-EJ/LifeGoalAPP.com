@@ -1019,8 +1019,6 @@ function getStopIcon(stop: Pick<IslandStopPlanEntry, 'stopId' | 'mysteryContentK
         return '🧭';
       case 'breathing':
         return '🧘';
-      case 'task_tower':
-        return '🗼';
       case 'vision_quest':
         return '🔮';
       default:
@@ -5941,7 +5939,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
   };
 
-  const handleLaunchMysteryMinigame = (mysteryContentKind: 'task_tower' | 'vision_quest') => {
+  const handleLaunchMysteryMinigame = (mysteryContentKind: 'vision_quest') => {
     if (!canOpenIslandRunOverlayWhileRollingState({
       isRolling,
       isAnimatingRoll: isAnimatingRollRef.current,
@@ -8310,20 +8308,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       handleCompleteActiveStop();
                     }}
                   />
-                ) : activeStop.mysteryContentKind === 'task_tower' ? (
-                  <div>
-                    <p className="island-stop-modal__copy">🗼 <strong>Task Tower Challenge</strong></p>
-                    <p>Clear your active tasks inside Task Tower. Complete the run to resolve this mystery stop.</p>
-                    <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
-                      <button
-                        type="button"
-                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                        onClick={() => handleLaunchMysteryMinigame('task_tower')}
-                      >
-                        🗼 Launch Task Tower
-                      </button>
-                    </div>
-                  </div>
                 ) : activeStop.mysteryContentKind === 'vision_quest' ? (
                   <div>
                     <p className="island-stop-modal__copy">🔮 <strong>Vision Quest Reflection</strong></p>
@@ -10060,11 +10044,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   completed: result.completed,
                 })
               ) {
-                setLandingText(
-                  activeLaunchedMinigameId === 'vision_quest'
-                    ? '🔮 Vision Quest complete! Mystery stop resolved.'
-                    : '🗼 Task Tower complete! Mystery stop resolved.',
-                );
+                setLandingText('🔮 Vision Quest complete! Mystery stop resolved.');
                 handleCompleteActiveStop();
               } else if (result.completed && result.reward) {
                 const { dice: rewardDice = 0, spinTokens: rewardSpinTokens = 0 } = result.reward;

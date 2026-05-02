@@ -5,16 +5,15 @@ import { getIslandRunFeatureFlags } from '../../../../config/islandRunFeatureFla
  * Mystery stop content kinds — the rotating content that fills the Mystery (Stop 3) slot.
  * Mystery = "big upgrade" stop; currently breathing/guided meditation, expanding over time.
  *
- * `task_tower` and `vision_quest` are gated behind their respective feature
- * flags in `islandRunFeatureFlags.ts` (Phase 5 of the Minigame & Events
- * Consolidation Plan). While the flags are off, those variants are never
- * emitted by `generateIslandStopPlan` — the type is a compile-time union only.
+ * `vision_quest` is gated behind its feature flag in
+ * `islandRunFeatureFlags.ts` (Phase 5 of the Minigame & Events Consolidation
+ * Plan). While the flag is off, that variant is never emitted by
+ * `generateIslandStopPlan`.
  */
 export type MysteryStopContentKind =
   | 'habit_action'
   | 'checkin_reflection'
   | 'breathing'
-  | 'task_tower'
   | 'vision_quest';
 
 export interface IslandStopPlanEntry {
@@ -41,8 +40,8 @@ export interface IslandStopPlanEntry {
 /**
  * Content pool for the Mystery stop (Stop 3).
  * Base entries: breathing exercise, habit action, or check-in reflection.
- * Feature-flagged entries (Task Tower, Vision Quest) are appended when their
- * flags are on — see `buildMysteryStopContentPool()`.
+ * Feature-flagged entries (Vision Quest) are appended when the flag is on —
+ * see `buildMysteryStopContentPool()`.
  */
 const MYSTERY_STOP_CONTENT_POOL_BASE: Array<{
   kind: MysteryStopContentKind;
@@ -66,16 +65,6 @@ const MYSTERY_STOP_CONTENT_POOL_BASE: Array<{
   },
 ];
 
-const MYSTERY_STOP_CONTENT_TASK_TOWER: {
-  kind: MysteryStopContentKind;
-  title: string;
-  description: string;
-} = {
-  kind: 'task_tower',
-  title: '🗼 Task Tower',
-  description: 'Tap blocks to clear the tower and score multipliers for landing combos.',
-};
-
 const MYSTERY_STOP_CONTENT_VISION_QUEST: {
   kind: MysteryStopContentKind;
   title: string;
@@ -94,9 +83,6 @@ function buildMysteryStopContentPool(): Array<{
 }> {
   const flags = getIslandRunFeatureFlags();
   const pool = [...MYSTERY_STOP_CONTENT_POOL_BASE];
-  if (flags.islandRunTaskTowerMysteryEnabled) {
-    pool.push(MYSTERY_STOP_CONTENT_TASK_TOWER);
-  }
   if (flags.islandRunVisionQuestMysteryEnabled) {
     pool.push(MYSTERY_STOP_CONTENT_VISION_QUEST);
   }

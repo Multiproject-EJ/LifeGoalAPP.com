@@ -160,6 +160,14 @@
   transform: scale(0.97);
 }
 
+.actions-tab__task-tower-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  background: rgba(5, 10, 24, 0.82);
+  overflow: auto;
+}
+
 /* Quick add section */
 .actions-tab__quick-add {
   background: transparent;

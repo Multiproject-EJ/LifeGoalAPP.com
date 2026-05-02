@@ -35,7 +35,6 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
         {
           islandRunEventEngineEnabled: false,
           islandRunShooterBlitzBossEnabled: true,
-          islandRunTaskTowerMysteryEnabled: true,
           islandRunVisionQuestMysteryEnabled: true,
           islandRunPartnerWheelEnabled: false,
           todaysOfferSpinEntryEnabled: true,
@@ -49,11 +48,11 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
     name: 'isIslandRunFeatureEnabled reflects overlay merges',
     run: () => {
       __resetIslandRunFeatureFlagsForTests();
-      assertEqual(isIslandRunFeatureEnabled('islandRunTaskTowerMysteryEnabled'), true, 'default on');
-      __setIslandRunFeatureFlagsForTests({ islandRunTaskTowerMysteryEnabled: false });
-      assertEqual(isIslandRunFeatureEnabled('islandRunTaskTowerMysteryEnabled'), false, 'flipped off by overlay');
-      __setIslandRunFeatureFlagsForTests({ islandRunTaskTowerMysteryEnabled: true });
-      assertEqual(isIslandRunFeatureEnabled('islandRunTaskTowerMysteryEnabled'), true, 'flipped on by overlay');
+      assertEqual(isIslandRunFeatureEnabled('islandRunVisionQuestMysteryEnabled'), true, 'default on');
+      __setIslandRunFeatureFlagsForTests({ islandRunVisionQuestMysteryEnabled: false });
+      assertEqual(isIslandRunFeatureEnabled('islandRunVisionQuestMysteryEnabled'), false, 'flipped off by overlay');
+      __setIslandRunFeatureFlagsForTests({ islandRunVisionQuestMysteryEnabled: true });
+      assertEqual(isIslandRunFeatureEnabled('islandRunVisionQuestMysteryEnabled'), true, 'flipped on by overlay');
       assertEqual(
         isIslandRunFeatureEnabled('islandRunVisionQuestMysteryEnabled'),
         true,
@@ -69,7 +68,6 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
       const uniqueIds = new Set(manifestIds);
       assertEqual(uniqueIds.size, manifestIds.length, 'Every manifest id should be unique');
       assert(manifestIds.includes('shooter_blitz'), 'Shooter Blitz manifest should be registered');
-      assert(manifestIds.includes('task_tower'), 'Task Tower manifest should be registered');
       assert(manifestIds.includes('vision_quest'), 'Vision Quest manifest should be registered');
     },
   },
@@ -91,7 +89,6 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
         'Second registration pass should be a no-op',
       );
       assert(getMinigame('shooter_blitz'), 'Shooter Blitz should be present in registry');
-      assert(getMinigame('task_tower'), 'Task Tower should be present in registry');
       assert(getMinigame('vision_quest'), 'Vision Quest should be present in registry');
     },
   },
@@ -136,11 +133,10 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
     },
   },
   {
-    name: 'mystery pool ignores task_tower / vision_quest while their flags are off',
+    name: 'mystery pool ignores vision_quest while flag is off',
     run: () => {
       __resetIslandRunFeatureFlagsForTests();
       __setIslandRunFeatureFlagsForTests({
-        islandRunTaskTowerMysteryEnabled: false,
         islandRunVisionQuestMysteryEnabled: false,
       });
       // Walk the first 200 islands — the seeded PRNG should cover the whole pool.
@@ -158,21 +154,6 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
     },
   },
   {
-    name: 'enabling the task_tower flag admits task_tower into the mystery pool',
-    run: () => {
-      __resetIslandRunFeatureFlagsForTests();
-      __setIslandRunFeatureFlagsForTests({ islandRunTaskTowerMysteryEnabled: true });
-      let sawTaskTower = false;
-      for (let island = 1; island <= 400 && !sawTaskTower; island += 1) {
-        const plan = generateIslandStopPlan(island);
-        const mystery = plan.find((stop) => stop.stopId === 'mystery');
-        if (mystery?.mysteryContentKind === 'task_tower') sawTaskTower = true;
-      }
-      assert(sawTaskTower, 'task_tower should appear at least once across 400 islands when its flag is on');
-      __resetIslandRunFeatureFlagsForTests();
-    },
-  },
-  {
     name: 'enabling the vision_quest flag admits vision_quest into the mystery pool',
     run: () => {
       __resetIslandRunFeatureFlagsForTests();
@@ -184,6 +165,20 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
         if (mystery?.mysteryContentKind === 'vision_quest') sawVisionQuest = true;
       }
       assert(sawVisionQuest, 'vision_quest should appear at least once across 400 islands when its flag is on');
+      __resetIslandRunFeatureFlagsForTests();
+    },
+  },
+  {
+    name: 'task_tower is never emitted by mystery stop generation',
+    run: () => {
+      __resetIslandRunFeatureFlagsForTests();
+      __setIslandRunFeatureFlagsForTests({ islandRunVisionQuestMysteryEnabled: true });
+      for (let island = 1; island <= 400; island += 1) {
+        const plan = generateIslandStopPlan(island);
+        const mystery = plan.find((stop) => stop.stopId === 'mystery');
+        assert(mystery, `island ${island}: mystery stop missing`);
+        assert(String(mystery?.mysteryContentKind) !== 'task_tower', `island ${island}: task_tower should never be emitted`);
+      }
       __resetIslandRunFeatureFlagsForTests();
     },
   },

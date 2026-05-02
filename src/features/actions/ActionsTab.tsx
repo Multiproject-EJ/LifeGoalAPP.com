@@ -19,11 +19,13 @@ import { DEMO_USER_ID } from '../../services/demoData';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import type { TimerLaunchContext } from '../timer/timerSession';
+import { TaskTower } from '../gamification/games/task-tower/TaskTower';
 import './ActionsTab.css';
 
 const projectsIcon = '/icons/Actions/actions_projects.webp';
 const timerIcon = '/icons/Actions/actions_timer.webp';
 const taskIcon = '/icons/Actions/actions_tasks.webp';
+const taskTowerIcon = '/icons/Actions/actions_tasks.webp';
 const journalIcon = '/icons/Actions/actions_journal.webp';
 const visionBoardIcon = '/icons/Actions/actions_visonboard.webp';
 
@@ -91,6 +93,7 @@ export function ActionsTab({
   const [lastDeletedAction, setLastDeletedAction] = useState<Action | null>(null);
   const [lastCompletedAction, setLastCompletedAction] = useState<Action | null>(null);
   const [activeView, setActiveView] = useState<'launcher' | 'tasks'>(isMobileView ? 'launcher' : 'tasks');
+  const [showTaskTower, setShowTaskTower] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Watch for level-up events
@@ -552,8 +555,40 @@ export function ActionsTab({
                 <span className="actions-tab__launcher-label">Tasks</span>
               </button>
             </div>
+            <div className="actions-tab__launcher-row actions-tab__launcher-row--single">
+              <button
+                type="button"
+                className="actions-tab__launcher-button actions-tab__launcher-button--full-width"
+                onClick={() => setShowTaskTower(true)}
+                aria-label="Open Task Tower"
+              >
+                <span className="actions-tab__launcher-icon" aria-hidden="true">
+                  <img
+                    className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
+                    src={taskTowerIcon}
+                    alt=""
+                  />
+                </span>
+                <span className="actions-tab__launcher-label">Task Tower</span>
+              </button>
+            </div>
           </div>
         </div>
+        {showTaskTower && (
+          <div className="actions-tab__task-tower-overlay" role="dialog" aria-modal="true" aria-label="Task Tower">
+            <TaskTower
+              session={session}
+              onClose={() => setShowTaskTower(false)}
+              onComplete={(rewards) => {
+                setShowTaskTower(false);
+                setStatus({
+                  kind: 'success',
+                  message: `Task Tower complete! +${rewards.dice} dice • +${rewards.tokens} tokens`,
+                });
+              }}
+            />
+          </div>
+        )}
       </div>
     );
   }
@@ -590,6 +625,15 @@ export function ActionsTab({
               ⏱️
             </button>
           )}
+          <button
+            className="actions-tab__header-icon"
+            onClick={() => setShowTaskTower(true)}
+            type="button"
+            aria-label="Open Task Tower"
+            title="Open Task Tower"
+          >
+            🗼
+          </button>
           {isDemoExperience && (
             <span className="actions-tab__demo-badge">Demo Mode</span>
           )}
@@ -706,6 +750,22 @@ export function ActionsTab({
           >
             Undo
           </button>
+        </div>
+      )}
+
+      {showTaskTower && (
+        <div className="actions-tab__task-tower-overlay" role="dialog" aria-modal="true" aria-label="Task Tower">
+          <TaskTower
+            session={session}
+            onClose={() => setShowTaskTower(false)}
+            onComplete={(rewards) => {
+              setShowTaskTower(false);
+              setStatus({
+                kind: 'success',
+                message: `Task Tower complete! +${rewards.dice} dice • +${rewards.tokens} tokens`,
+              });
+            }}
+          />
         </div>
       )}
     </div>

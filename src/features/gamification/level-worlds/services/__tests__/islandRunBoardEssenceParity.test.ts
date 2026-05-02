@@ -39,6 +39,7 @@ async function readVisionQuestSource(): Promise<string> {
   return fsMod.readFileSync(gamePath, 'utf8');
 }
 
+
 export const islandRunBoardEssenceParityTests: TestCase[] = [
   {
     name: 'event ticket migration visibility surfaces activeEventTickets vs legacy spinTokens without changing launch economy wiring',
@@ -310,11 +311,11 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       assert(
         source.includes('const updateCompletedStopsWithSync = useCallback((') &&
           source.includes('const persistedStops = normalizeCompletedStopsForSync(runtimeStateRef.current.completedStopsByIsland?.[islandKey] ?? []);') &&
-          source.includes('if (areStringArraysEqual(persistedStops, normalizedForSync)) {'),
+          source.includes('if (areStringArraysEqual(persistedStops, normalizedStopsForSync)) {'),
         'Completed-stop helper should short-circuit semantic no-op BEFORE dispatch.',
       );
       assert(
-        source.includes('const dispatchKey = `${islandKey}::${normalizedForSync.join(\'|\')}`;') &&
+        source.includes('const dispatchKey = `${islandKey}::${normalizedStopsForSync.join(\'|\')}`;') &&
           source.includes('if (completedStopsSyncDispatchKeyRef.current === dispatchKey) return;'),
         'Completed-stop helper should build a stable dispatch key for rerender dedupe.',
       );
