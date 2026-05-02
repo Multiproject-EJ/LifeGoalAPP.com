@@ -2839,7 +2839,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   ) => {
     const requestSync = options?.requestSync !== false;
     const triggerSource = options?.triggerSource ?? 'sync_completed_stops_helper';
-    let normalizedForSync: string[] | null = null;
+    let normalizedForSync: string[] = [];
     let shouldSync = false;
     updateCompletedStops((current) => {
       const next = typeof updater === 'function'
