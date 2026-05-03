@@ -636,9 +636,14 @@ const COMPACT_WALLET_NUMBER_FORMATTER = new Intl.NumberFormat('en-US', {
   notation: 'compact',
   maximumFractionDigits: 1,
 });
+const FULL_WALLET_NUMBER_FORMATTER = new Intl.NumberFormat('en-US');
 
 function formatCompactWalletValue(value: number): string {
   return COMPACT_WALLET_NUMBER_FORMATTER.format(Math.max(0, value));
+}
+
+function formatFullWalletValue(value: number): string {
+  return FULL_WALLET_NUMBER_FORMATTER.format(Math.max(0, Math.floor(value)));
 }
 
 /* ── Reward bar helpers ──────────────────────────────────────── */
@@ -7635,10 +7640,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               )}
             </button>
             <div className="island-run-board__topbar-wallet" aria-label="Essence wallet">
-              🟣 <strong>{formatCompactWalletValue(runtimeState.essence)}</strong>
+              🟣 <strong>{formatFullWalletValue(runtimeState.essence)}</strong>
             </div>
-            <div className="island-run-board__topbar-chip" aria-label="Shard wallet">
-              ✨ {formatCompactWalletValue(shards)}
+            <div className="island-run-board__topbar-chip island-run-board__topbar-chip--shards" aria-label="Shard wallet">
+              ✨ {formatFullWalletValue(shards)}
             </div>
             <button
               type="button"

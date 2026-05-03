@@ -1501,7 +1501,7 @@
 }
 
 .island-run-board__topbar-menu {
-  margin-left: auto;
+  margin-left: 0;
   flex: 0 0 auto;
   width: 24px;
   height: 24px;
@@ -1550,6 +1550,10 @@
   font-weight: 800;
   line-height: 1;
   white-space: nowrap;
+}
+
+.island-run-board__topbar-chip--shards {
+  margin-left: auto;
 }
 
 /* ── Player-level chip + popover ─────────────────────────────────
