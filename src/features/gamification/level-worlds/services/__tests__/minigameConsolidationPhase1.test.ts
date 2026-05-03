@@ -69,6 +69,7 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
       assertEqual(uniqueIds.size, manifestIds.length, 'Every manifest id should be unique');
       assert(manifestIds.includes('shooter_blitz'), 'Shooter Blitz manifest should be registered');
       assert(manifestIds.includes('vision_quest'), 'Vision Quest manifest should be registered');
+      assert(manifestIds.includes('space_excavator'), 'Space Excavator manifest should be registered');
     },
   },
   {
@@ -90,6 +91,7 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
       );
       assert(getMinigame('shooter_blitz'), 'Shooter Blitz should be present in registry');
       assert(getMinigame('vision_quest'), 'Vision Quest should be present in registry');
+      assert(getMinigame('space_excavator'), 'Space Excavator should be present in registry');
     },
   },
   {
