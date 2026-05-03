@@ -68,6 +68,7 @@ import {
   applyRewardBarState,
   applyRollResult,
   applyPassiveDiceRegenTick,
+  applyTimedEventTicketSpend,
   syncCompletedStopsForIsland,
   applyTokenHopRewards,
   travelToNextIsland,
@@ -330,6 +331,54 @@ export const islandRunStateActionsTests: TestCase[] = [
         4,
         'spend deltas should not decrement event tickets in dual-write phase',
       );
+    },
+  },
+  {
+    name: 'applyTimedEventTicketSpend decrements only the active event ticket bucket',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        spinTokens: 9,
+        minigameTicketsByEvent: { 'lucky_spin@1': 4, 'space_excavator@1': 7 },
+      });
+
+      const { record, spent } = applyTimedEventTicketSpend({
+        session,
+        client: null,
+        eventId: 'lucky_spin@1',
+        ticketsToSpend: 2,
+        triggerSource: 'test_event_ticket_spend',
+      });
+      assertEqual(spent, 2, 'expected spend to succeed for active event bucket');
+      assertEqual(record.minigameTicketsByEvent['lucky_spin@1'], 2, 'active event bucket should decrement');
+      assertEqual(record.minigameTicketsByEvent['space_excavator@1'], 7, 'unrelated event bucket should remain unchanged');
+      assertEqual(record.spinTokens, 9, 'legacy spinTokens should remain unchanged in phase-3 spend action');
+    },
+  },
+  {
+    name: 'applyTimedEventTicketSpend blocks when active bucket has insufficient tickets even if another bucket has tickets',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        spinTokens: 12,
+        minigameTicketsByEvent: { 'lucky_spin@1': 0, 'space_excavator@1': 5 },
+      });
+
+      const { record, spent } = applyTimedEventTicketSpend({
+        session,
+        client: null,
+        eventId: 'lucky_spin@1',
+        ticketsToSpend: 1,
+        triggerSource: 'test_event_ticket_block',
+      });
+      assertEqual(spent, 0, 'insufficient active event bucket should block spend');
+      assertEqual(record.minigameTicketsByEvent['lucky_spin@1'] ?? 0, 0, 'active bucket remains unchanged on blocked spend');
+      assertEqual(record.minigameTicketsByEvent['space_excavator@1'] ?? 0, 5, 'unrelated bucket must not be consumed');
+      assertEqual(record.spinTokens, 12, 'legacy spinTokens should not be consumed by event-scoped block path');
     },
   },
 

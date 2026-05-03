@@ -342,7 +342,7 @@ export function emitEventTransitionTelemetry(payload: EventTransitionTelemetryPa
   });
 }
 
-export type EventMinigameId = 'task_tower' | 'lucky_spin' | 'shooter_blitz' | 'partner_wheel';
+export type EventMinigameId = 'lucky_spin' | 'shooter_blitz' | 'partner_wheel';
 
 export interface EventMinigameLaunchDescriptor {
   eventId: EventId;
@@ -353,8 +353,6 @@ export interface EventMinigameLaunchDescriptor {
 
 function resolveEventMinigameId(eventId: EventId): EventMinigameId {
   switch (eventId) {
-    case 'feeding_frenzy':
-      return 'task_tower';
     case 'lucky_spin':
       return 'lucky_spin';
     case 'space_excavator':
@@ -362,7 +360,7 @@ function resolveEventMinigameId(eventId: EventId): EventMinigameId {
     case 'companion_feast':
       return 'partner_wheel';
     default:
-      return 'task_tower';
+      return 'lucky_spin';
   }
 }
 

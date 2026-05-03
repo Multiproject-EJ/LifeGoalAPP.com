@@ -42,7 +42,7 @@ async function readVisionQuestSource(): Promise<string> {
 
 export const islandRunBoardEssenceParityTests: TestCase[] = [
   {
-    name: 'event ticket migration visibility surfaces activeEventTickets vs legacy spinTokens without changing launch economy wiring',
+    name: 'event ticket migration visibility keeps event-scoped tickets as launch authority',
     run: async () => {
       const source = await readBoardSource();
       assert(
@@ -56,8 +56,13 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Reward-bar claim grants should dual-write timed-event tickets using the activeTimedEvent.eventId key.',
       );
       assert(
-        source.includes('ticketsAvailable: spinTokens'),
-        'Minigame launch affordability should remain wired to legacy spinTokens in this read-only migration phase.',
+        source.includes('ticketsAvailable: activeEventTickets'),
+        'Minigame launch affordability should read activeEventTickets (event-scoped wallet).',
+      );
+      assert(
+        source.includes('eventId: activeTimedEvent.eventId') &&
+          source.includes('const spendResult = applyTimedEventTicketSpend({'),
+        'Timed-event launches should spend via canonical event-scoped ticket action.',
       );
     },
   },
@@ -422,8 +427,8 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Reward bar should use canonical token icon for minigame-token rewards.',
       );
       assert(
-        source.includes('{spinTokens} {timedEventTokenIcon}') &&
-          !source.includes('{spinTokens} 🎫'),
+        source.includes('{activeEventTickets} {timedEventTokenIcon}') &&
+          !source.includes('{activeEventTickets} 🎫'),
         'Launcher token badge should use canonical token icon (no hardcoded ticket emoji).',
       );
       assert(
