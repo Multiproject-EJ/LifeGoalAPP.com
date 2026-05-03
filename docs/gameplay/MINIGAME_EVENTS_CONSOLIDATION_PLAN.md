@@ -1,8 +1,21 @@
 # Minigame & Events Consolidation Plan
 
 **Written:** 2026-04-21
-**Status:** Plan approved, ready to ship in phases.
+**Status:** Historical planning doc. Portions are superseded by current product truth (see note below).
 **Related docs:** `CANONICAL_GAMEPLAY_CONTRACT.md`, `STAGE_C_STATE_ARCHITECTURE_MIGRATION.md`, `ISLAND_RUN_OPEN_ISSUES.md`, `NEXT_TODO_PR_LIST.md`, `QA_WORKFLOW.md`
+
+---
+
+## Current product truth override (2026-05)
+
+Task Tower is **standalone in Tasks / Actions** and is **not currently part of Island Run**.
+
+- Not part of 120 Island landmark stops.
+- Not part of Island Run timed-event minigame rotation.
+- Not part of Feeding Frenzy mapping/surface.
+- Not part of Island Run mystery-stop rotation.
+
+References below that mention Task Tower inside Island Run are historical planning notes only.
 
 ---
 

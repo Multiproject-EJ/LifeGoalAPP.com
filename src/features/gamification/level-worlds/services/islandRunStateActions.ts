@@ -112,6 +112,19 @@ export interface TokenHopRewardsDeltas {
   essence?: number;
 }
 
+export interface ApplyTimedEventTicketSpendOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  eventId: string;
+  ticketsToSpend: number;
+  triggerSource?: string;
+}
+
+export interface ApplyTimedEventTicketSpendResult {
+  record: IslandRunGameStateRecord;
+  spent: number;
+}
+
 export interface ApplyPassiveDiceRegenTickOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -224,6 +237,42 @@ export function applyTokenHopRewards(options: {
     triggerSource: triggerSource ?? 'apply_token_hop_rewards',
   });
   return next;
+}
+
+/**
+ * Deducts event-scoped minigame tickets through the canonical commit path.
+ *
+ * Phase-3 event-ticket migration:
+ * - Spend authority for timed-event launches now lives on
+ *   `minigameTicketsByEvent[eventId]`.
+ * - Legacy `spinTokens` is intentionally left unchanged by this action.
+ */
+export function applyTimedEventTicketSpend(
+  options: ApplyTimedEventTicketSpendOptions,
+): ApplyTimedEventTicketSpendResult {
+  const { session, client, eventId, ticketsToSpend, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const canonicalEventId = typeof eventId === 'string' ? eventId.trim() : '';
+  const requested = Number.isFinite(ticketsToSpend) ? Math.max(0, Math.floor(ticketsToSpend)) : 0;
+  if (!canonicalEventId || requested < 1) return { record: current, spent: 0 };
+  const available = Math.max(0, Math.floor(current.minigameTicketsByEvent?.[canonicalEventId] ?? 0));
+  if (available < requested) return { record: current, spent: 0 };
+
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    minigameTicketsByEvent: {
+      ...current.minigameTicketsByEvent,
+      [canonicalEventId]: Math.max(0, available - requested),
+    },
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_timed_event_ticket_spend',
+  });
+  return { record: next, spent: requested };
 }
 
 /**

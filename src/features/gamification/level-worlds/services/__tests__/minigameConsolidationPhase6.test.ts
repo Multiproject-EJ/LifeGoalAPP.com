@@ -55,12 +55,12 @@ function runTimedEventCompletionIntegration(options: {
 
 export const minigameConsolidationPhase6Tests: TestCase[] = [
   {
-    name: 'openEventMinigame maps each canonical event to the expected minigame surface',
+    name: 'openEventMinigame maps Island Run timed events without Task Tower',
     run: () => {
       assertEqual(
-        openEventMinigame({ eventId: 'feeding_frenzy', ticketsAvailable: 5 })?.minigameId,
-        'task_tower',
-        'event engine mapping stays task_tower for feeding_frenzy (launcher resolver may opt out)',
+        String(openEventMinigame({ eventId: 'feeding_frenzy', ticketsAvailable: 5 })?.minigameId) === 'task_tower',
+        false,
+        'feeding_frenzy must not map to task_tower in Island Run event engine',
       );
       assertEqual(
         openEventMinigame({ eventId: 'lucky_spin', ticketsAvailable: 5 })?.minigameId,
