@@ -6,6 +6,7 @@ import {
   setDreamJournalReminderEnabled,
   setDreamJournalReminderWindow,
 } from '../../services/dreamJournalReminderPrefs';
+import '../habits/HabitRecapPrompt.css';
 
 type DreamJournalReminderSettingsProps = {
   session: Session;
@@ -21,6 +22,7 @@ export function DreamJournalReminderSettings({ session }: DreamJournalReminderSe
   const [startHour, setStartHour] = useState(4);
   const [endHour, setEndHour] = useState(12);
   const [saving, setSaving] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   useEffect(() => {
     setEnabled(getDreamJournalReminderEnabled(userId));
@@ -48,9 +50,7 @@ export function DreamJournalReminderSettings({ session }: DreamJournalReminderSe
   };
 
   const handleLaunchDreamJournal = () => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(`lifegoal.dream-journal-launch:${userId}`, 'true');
-    window.dispatchEvent(new CustomEvent('lifegoal:launch-dream-journal'));
+    setShowPreviewModal(true);
   };
 
   return (
@@ -116,6 +116,32 @@ export function DreamJournalReminderSettings({ session }: DreamJournalReminderSe
           Launch Dream Journal Modal
         </button>
       </div>
+
+      {showPreviewModal && (
+        <div className="dream-journal-reminder-overlay" onClick={() => setShowPreviewModal(false)}>
+          <div className="dream-journal-reminder-modal" onClick={(event) => event.stopPropagation()}>
+            <button
+              type="button"
+              className="dream-journal-reminder-modal__close"
+              onClick={() => setShowPreviewModal(false)}
+              aria-label="Close dream journal reminder preview"
+            >
+              ×
+            </button>
+            <div className="dream-journal-reminder-modal__content">
+              <p className="dream-journal-reminder-modal__eyebrow">Dream Journal Reminder</p>
+              <h3>Had an interesting Dream last night?</h3>
+              <button
+                type="button"
+                className="btn btn--primary dream-journal-reminder-modal__cta"
+                onClick={() => setShowPreviewModal(false)}
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
