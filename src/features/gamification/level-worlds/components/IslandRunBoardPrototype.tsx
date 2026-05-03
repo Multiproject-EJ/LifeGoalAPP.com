@@ -119,6 +119,7 @@ import {
   applyRollResult,
   syncCompletedStopsForIsland,
   applyTokenHopRewards,
+  applyTimedEventTicketSpend,
   travelToNextIsland,
 } from '../services/islandRunStateActions';
 import {
@@ -5983,7 +5984,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const baseContext = {
       kind: 'timed_event' as const,
       eventId: activeTimedEvent.eventType,
-      ticketsAvailable: spinTokens,
+      ticketsAvailable: activeEventTickets,
     };
 
     const descriptor = (() => {
@@ -5993,7 +5994,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         case 'lucky_spin':
           return resolveLuckySpinEventMinigame({
             ...baseContext,
-            freeDailySpinRemaining: spinTokens > 0 ? 1 : 0,
+            freeDailySpinRemaining: activeEventTickets > 0 ? 1 : 0,
           });
         case 'space_excavator':
           return resolveSpaceExcavatorEventMinigame(baseContext);
@@ -6012,13 +6013,20 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     registerAllMinigameManifests();
     const ticketDelta = resolveTimedEventLaunchTicketDelta(descriptor);
-    if (ticketDelta !== 0) {
-      applyTokenHopRewards({
+    const ticketsToSpend = ticketDelta < 0 ? Math.abs(ticketDelta) : 0;
+    if (ticketsToSpend > 0) {
+      const spendResult = applyTimedEventTicketSpend({
         session,
         client,
-        deltas: { spinTokens: ticketDelta },
+        eventId: activeTimedEvent.eventId,
+        ticketsToSpend,
         triggerSource: 'timed_event_launch',
       });
+      if (spendResult.spent < ticketsToSpend) {
+        setActivePlaceholder(resolveIslandRunPlaceholderDescriptor('timed_event_unavailable'));
+        playIslandRunSound('minigame_open');
+        return;
+      }
     }
     setActiveLaunchedMinigameId(descriptor.minigameId);
     setActiveLaunchedMinigameSource('timed_event');
@@ -7626,14 +7634,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 (session.user.user_metadata?.full_name?.[0] ?? session.user.email?.[0] ?? 'P').toUpperCase()
               )}
             </button>
-            <div className="island-run-board__topbar-wallet" aria-label="Dice wallet">
-              🎲 <strong>{formatCompactWalletValue(dicePool)}</strong>
-            </div>
             <div className="island-run-board__topbar-wallet" aria-label="Essence wallet">
               🟣 <strong>{formatCompactWalletValue(runtimeState.essence)}</strong>
-            </div>
-            <div className="island-run-board__topbar-chip" aria-label="Event ticket wallet">
-              {timedEventTokenIcon} {formatCompactWalletValue(activeEventTickets)}
             </div>
             <div className="island-run-board__topbar-chip" aria-label="Shard wallet">
               ✨ {formatCompactWalletValue(shards)}
@@ -7790,7 +7792,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <span className="island-run-board__minigame-icon-emoji" aria-hidden="true">
               {getEventDisplayMeta(activeTimedEvent.eventType).icon}
             </span>
-            <span className="island-run-board__minigame-icon-label">{spinTokens} {timedEventTokenIcon}</span>
+            <span className="island-run-board__minigame-icon-label">{activeEventTickets} {timedEventTokenIcon}</span>
           </button>
         )}
 

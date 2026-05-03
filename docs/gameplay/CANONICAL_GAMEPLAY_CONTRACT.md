@@ -434,6 +434,8 @@ Fractional positions mean the encounter placement works on any `tileCount` witho
 | Space Excavator | 2 days | 🚀 | Excavation/resource gathering event |
 | Companion Feast | 4 days | 🐾 | Extended companion bonding event |
 
+**Task Tower scope clarification (current product truth):** Task Tower remains available as a standalone game in the Tasks / Actions area. It is **not** currently part of Island Run, not a 120-island landmark stop, not a timed-event minigame, not used for Feeding Frenzy, and not part of mystery-stop rotation.
+
 ---
 
 ## 7) Island completion rules
