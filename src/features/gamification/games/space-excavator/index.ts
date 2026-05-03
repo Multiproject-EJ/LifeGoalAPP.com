@@ -1,0 +1,1 @@
+export { SpaceExcavatorMinigame } from './SpaceExcavatorMinigame';
