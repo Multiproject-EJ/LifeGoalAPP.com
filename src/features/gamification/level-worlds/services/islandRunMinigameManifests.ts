@@ -38,8 +38,7 @@ export function registerAllMinigameManifests(): void {
   if (registered) return;
   for (const manifest of ALL_MINIGAME_MANIFESTS) {
     // The registry's `IslandRunMinigameEntry.component` expects
-    // `ComponentType<IslandRunMinigameProps>`, but the existing Task Tower /
-    // Vision Quest / Shooter Blitz components still use bespoke props
+    // `ComponentType<IslandRunMinigameProps>`, but the existing Vision Quest / Shooter Blitz / Partner Wheel components still use bespoke props
     // (`{ session, onClose, onComplete }`). Phase 5 introduces per-game
     // adapters that translate registry props → bespoke props and THEN match
     // the type exactly. Until then we narrow through a single explicit cast

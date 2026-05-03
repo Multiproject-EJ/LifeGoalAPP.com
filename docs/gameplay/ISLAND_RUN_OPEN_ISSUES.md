@@ -1,7 +1,7 @@
 # Island Run — Open Issues & Feature Backlog
 
 Status: Living document
-Last updated: 2026-04-23 (session 16 — Phase 5 mystery rotation revalidation + flag flip)
+Last updated: 2026-05-03 (Task Tower scope correction note)
 Owner: Gameplay System
 
 This document tracks every unresolved issue, bug, inconsistency, or scoped
@@ -14,19 +14,20 @@ for traceability.
 
 ---
 
-## Phase 5 mystery rotation QA log (second pass, 2026-04-23)
+## Task Tower scope correction note (2026-05-03)
 
-Scope: validate 8–10 island mystery rotation behavior before enabling compile-time
-Phase 5 flags (`islandRunTaskTowerMysteryEnabled`, `islandRunVisionQuestMysteryEnabled`).
+Current product truth: Task Tower remains in the app as a standalone Tasks / Actions game.
 
-Result: **PASS** via deterministic rotation matrix coverage (`minigameConsolidationPhase5.test.ts`)
-across islands **1–10** with both flags enabled. Observed variants include both
-`task_tower` and `vision_quest`, satisfying rollout gate for mystery-minigame
-surface availability.
+For Island Run / 120 Island, Task Tower is out of scope:
+- not a landmark stop
+- not a mystery-stop variant
+- not a timed-event minigame
+- not a Feeding Frenzy implementation
+- not part of event-ticket spend/read flow
 
-Follow-up manual device sweep (mobile + desktop click-through) remains recommended
-as part of broader SP2 visual UX verification, but no code-path blocker remains
-for Phase 5 flag-on runtime behavior.
+Historical note: older Phase 5 mystery-rotation QA logs mentioned `task_tower` as a candidate/observed variant. Those notes are now superseded and must not be treated as authoritative for current Island Run behavior.
+
+Current Island Run mystery/timed-event work should proceed without Task Tower. Vision Quest and future dedicated minigames/events should use their own contracts and manifests.
 
 ---
 
