@@ -1,0 +1,20 @@
+.space-excavator {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  color: #f8fafc;
+  background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  border: 1px solid #334155;
+  border-radius: 12px;
+}
+.space-excavator__hud { display:flex; justify-content:space-between; gap:8px; font-size:14px; }
+.space-excavator__board { display:grid; gap:6px; justify-content:center; }
+.space-excavator__tile {
+  width: 44px; height:44px; border-radius:8px; border:1px solid #475569;
+  background:#1e293b; color:#e2e8f0; cursor:pointer;
+}
+.space-excavator__tile:disabled { opacity:.5; cursor:not-allowed; }
+.space-excavator__tile--dug { background:#0ea5e9; color:#082f49; }
+.space-excavator__tile--treasure { background:#facc15; color:#422006; }
+.space-excavator__actions { display:flex; gap:8px; }
+.space-excavator__button { padding:8px 10px; border-radius:8px; border:1px solid #64748b; background:#0b1220; color:#e2e8f0; }
