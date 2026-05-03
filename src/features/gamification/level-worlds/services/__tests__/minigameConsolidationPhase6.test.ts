@@ -17,7 +17,7 @@ import { assertEqual, type TestCase } from './testHarness';
 
 function runTimedEventCompletionIntegration(options: {
   descriptor: EventMinigameLaunchDescriptor | null;
-  expectedMinigameId: 'lucky_spin' | 'shooter_blitz' | 'partner_wheel';
+  expectedMinigameId: 'lucky_spin' | 'space_excavator' | 'partner_wheel';
 }) {
   assertEqual(options.descriptor?.minigameId, options.expectedMinigameId, 'event resolver should return the canonical minigame id');
   const completionId = resolveEventMinigameCompletionId({
@@ -69,8 +69,8 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       );
       assertEqual(
         openEventMinigame({ eventId: 'space_excavator', ticketsAvailable: 5 })?.minigameId,
-        'shooter_blitz',
-        'space_excavator should launch shooter_blitz',
+        'space_excavator',
+        'space_excavator should launch space_excavator',
       );
       assertEqual(
         openEventMinigame({ eventId: 'companion_feast', ticketsAvailable: 5 })?.minigameId,
@@ -155,11 +155,11 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       assertEqual(
         resolveEventMinigameCompletionId({
           launchSource: 'timed_event',
-          minigameId: 'shooter_blitz',
+          minigameId: 'space_excavator',
           completed: true,
         }),
-        'shooter_blitz',
-        'timed_event completion should accept shooter_blitz',
+        'space_excavator',
+        'timed_event completion should accept space_excavator',
       );
       assertEqual(
         resolveEventMinigameCompletionId({
@@ -290,7 +290,7 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
     },
   },
   {
-    name: 'resolveSpaceExcavatorEventMinigame routes to Shooter Blitz event mode with preserved ticket spend metadata',
+    name: 'resolveSpaceExcavatorEventMinigame routes to Space Excavator event mode with preserved ticket spend metadata',
     run: () => {
       const descriptor = resolveSpaceExcavatorEventMinigame({
         kind: 'timed_event',
@@ -300,14 +300,14 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       });
       assertEqual(
         descriptor?.minigameId,
-        'shooter_blitz',
-        'space_excavator should route to shooter_blitz event surface',
+        'space_excavator',
+        'space_excavator should route to space_excavator event surface',
       );
       assertEqual(descriptor?.ticketsSpent, 2, 'resolver should preserve explicit ticket spend request');
       assertEqual(
         descriptor?.config.mode,
         'space_excavator',
-        'resolver should tag shooter blitz event mode as space_excavator',
+        'resolver should tag space excavator event mode as space_excavator',
       );
       assertEqual(
         descriptor?.config.mode === 'space_excavator' ? descriptor.config.ticketCost : null,
@@ -425,7 +425,7 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       });
       const next = recordEventMinigameCompletion({
         state: seeded,
-        minigameId: 'shooter_blitz',
+        minigameId: 'space_excavator',
         nowMs: 2_000_000,
         multiplier: 2,
       });
@@ -488,7 +488,7 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
           eventId: 'space_excavator',
           ticketsAvailable: 3,
         }),
-        expectedMinigameId: 'shooter_blitz',
+        expectedMinigameId: 'space_excavator',
       });
     },
   },
