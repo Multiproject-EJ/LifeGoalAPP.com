@@ -14,7 +14,7 @@ Lucky Roll becomes a:
 - **finite reward board**
 - **bonus experience attached to Island Run**
 - **session that appears only when active/unlocked**
-- **non-routing reward board** (it does **not** launch Task Tower / Shooter Blitz / Vision Quest / Wheel of Wins)
+- **non-routing reward board** (it does **not** launch Island Run minigames from this surface (Task Tower remains standalone in Tasks / Actions))
 
 This keeps Island Run as the canonical main game loop while preserving Lucky Roll as a burst-reward surface.
 

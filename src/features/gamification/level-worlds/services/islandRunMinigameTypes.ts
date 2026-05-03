@@ -54,7 +54,7 @@ export interface IslandRunControllerInputProvider {
  * engine.
  *
  * The `Component` field is typed with a wide `any`-prop shape because existing
- * games (Task Tower, Vision Quest, Shooter Blitz) still use bespoke prop
+ * games (Vision Quest, Shooter Blitz, Partner Wheel) still use bespoke prop
  * signatures (e.g. `{ session, onClose, onComplete }`). A later phase will
  * migrate them to `IslandRunMinigameProps` via adapters; until then the type
  * stays permissive so the manifest can point at the real component without a

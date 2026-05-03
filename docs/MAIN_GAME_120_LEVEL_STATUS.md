@@ -45,6 +45,7 @@
 - [x] Reward service — node rewards + board completion rewards, `awardNodeReward` / `awardBoardCompletionReward` wired  
   → [`src/features/gamification/level-worlds/services/levelWorldsRewards.ts`](../src/features/gamification/level-worlds/services/levelWorldsRewards.ts)
 - [x] Mini-game launching from node objectives (`TaskTower`, `ShooterBlitz`, `VisionQuest`, `WheelOfWins`)  
+  - Scope clarification (current truth): `TaskTower` is standalone in Tasks / Actions and is not part of Island Run landmark stops/timed events/mystery rotation.  
   → [`src/features/gamification/level-worlds/LevelWorldsHub.tsx`](../src/features/gamification/level-worlds/LevelWorldsHub.tsx)
 
 ### 2b. What Is Missing / Not Wired
