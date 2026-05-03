@@ -62,6 +62,10 @@ function fmtJson(v: unknown): string {
   }
 }
 
+function resolveBuildMarkerValue(value: unknown): string {
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : 'unknown';
+}
+
 type DebugSection = {
   title: string;
   rows: Array<{ label: string; value: string; warn?: boolean }>;
@@ -78,6 +82,12 @@ export function IslandRunDebugPanel({
   onEnableDevMode,
   onClose,
 }: DebugPanelProps) {
+  const appVersion = resolveBuildMarkerValue(import.meta.env.VITE_APP_VERSION);
+  const buildShaRaw = resolveBuildMarkerValue(import.meta.env.VITE_GIT_SHA);
+  const buildShaShort = buildShaRaw === 'unknown' ? 'unknown' : buildShaRaw.slice(0, 7);
+  const buildTimeRaw = resolveBuildMarkerValue(import.meta.env.VITE_BUILD_TIME);
+  const buildMode = resolveBuildMarkerValue(import.meta.env.MODE);
+
   const [supabaseStatus, setSupabaseStatus] = useState<'checking' | 'ok' | 'error'>('checking');
   const [supabaseLatencyMs, setSupabaseLatencyMs] = useState<number | null>(null);
   const [supabaseError, setSupabaseError] = useState<string | null>(null);
@@ -131,6 +141,10 @@ export function IslandRunDebugPanel({
         { label: 'User ID', value: session.user.id },
         { label: 'Email', value: session.user.email ?? '—' },
         { label: 'Display name', value: session.user.user_metadata?.full_name ?? '—' },
+        { label: 'App version', value: appVersion },
+        { label: 'Build SHA', value: buildShaShort },
+        { label: 'Build time', value: buildTimeRaw },
+        { label: 'Build mode', value: buildMode },
         { label: 'Session expires', value: fmtMs((session.expires_at ?? 0) * 1000) },
         { label: 'Supabase status', value: supabaseStatus === 'checking' ? '⏳ checking…' : supabaseStatus === 'ok' ? `✅ connected (${supabaseLatencyMs}ms)` : `❌ error`, warn: supabaseStatus === 'error' },
         ...(supabaseError ? [{ label: 'Supabase error', value: supabaseError, warn: true }] : []),

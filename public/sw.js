@@ -221,6 +221,7 @@ function shouldQueueSupabaseWrite(request) {
 self.addEventListener('install', (event) => {
   event.waitUntil(
     (async () => {
+      console.info('[sw] install', { cacheVersion: CACHE_VERSION, shellCache: SHELL_CACHE, dataCache: DATA_CACHE });
       const cache = await caches.open(SHELL_CACHE);
       const cacheBuster = `?v=${CACHE_VERSION}-${Date.now()}`;
       const documentRequest = new Request(`/index.html${cacheBuster}`, { cache: 'reload' });
@@ -253,6 +254,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
+      console.info('[sw] activate', { cacheVersion: CACHE_VERSION, shellCache: SHELL_CACHE, dataCache: DATA_CACHE });
       const keys = await caches.keys();
       await Promise.all(
         keys.map((key) => {
@@ -278,23 +280,21 @@ self.addEventListener('message', (event) => {
   }
 });
 
-function cacheAppShell(event) {
+function networkFirstSameOriginRequest(event) {
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
+    (async () => {
+      try {
+        return await fetch(event.request, { cache: 'no-store' });
+      } catch (error) {
+        const cache = await caches.open(SHELL_CACHE);
+        const cachedResponse =
+          (await cache.match(event.request)) ||
+          (await cache.match('/index.html')) ||
+          (await cache.match('/'));
+        if (cachedResponse) return cachedResponse;
+        throw error;
       }
-
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
-        }
-
-        const responseClone = networkResponse.clone();
-        caches.open(SHELL_CACHE).then((cache) => cache.put(event.request, responseClone));
-        return networkResponse;
-      });
-    })
+    })()
   );
 }
 
@@ -401,7 +401,7 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
-    cacheAppShell(event);
+    networkFirstSameOriginRequest(event);
     return;
   }
 });

@@ -105,6 +105,8 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 - Diamonds
 - Spin tokens
 
+Timed-event ticket authority is `minigameTicketsByEvent[eventId]`. `spinTokens` is legacy compatibility only and must not be used for timed-event launcher affordability or spend.
+
 ### Dice
 - Dice is the **only board energy**.
 - Dice is required for movement and core board interactions.
@@ -433,6 +435,8 @@ Fractional positions mean the encounter placement works on any `tileCount` witho
 | Lucky Spin | 24 hours | 🎰 | Spin for prizes |
 | Space Excavator | 2 days | 🚀 | Excavation/resource gathering event |
 | Companion Feast | 4 days | 🐾 | Extended companion bonding event |
+
+**Task Tower scope clarification (current product truth):** Task Tower remains available as a standalone game in the Tasks / Actions area. It is **not** currently part of Island Run, not a 120-island landmark stop, not a timed-event minigame, not used for Feeding Frenzy, and not part of mystery-stop rotation.
 
 ---
 

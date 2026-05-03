@@ -71,6 +71,7 @@ export interface IslandRunGameStateRecord {
   islandExpiresAtMs: number;
   islandShards: number;
   tokenIndex: number;
+  /** Legacy wallet. Do not use as timed-event ticket authority. Timed-event tickets are minigameTicketsByEvent[eventId]. */
   spinTokens: number;
   dicePool: number;
   shardTierIndex: number;
