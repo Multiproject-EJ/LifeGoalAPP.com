@@ -7634,14 +7634,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 (session.user.user_metadata?.full_name?.[0] ?? session.user.email?.[0] ?? 'P').toUpperCase()
               )}
             </button>
-            <div className="island-run-board__topbar-wallet" aria-label="Dice wallet">
-              🎲 <strong>{formatCompactWalletValue(dicePool)}</strong>
-            </div>
             <div className="island-run-board__topbar-wallet" aria-label="Essence wallet">
               🟣 <strong>{formatCompactWalletValue(runtimeState.essence)}</strong>
-            </div>
-            <div className="island-run-board__topbar-chip" aria-label="Event ticket wallet">
-              {timedEventTokenIcon} {formatCompactWalletValue(activeEventTickets)}
             </div>
             <div className="island-run-board__topbar-chip" aria-label="Shard wallet">
               ✨ {formatCompactWalletValue(shards)}
