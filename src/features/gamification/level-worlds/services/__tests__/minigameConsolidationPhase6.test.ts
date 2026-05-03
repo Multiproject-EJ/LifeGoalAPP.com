@@ -120,13 +120,14 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
         ticketsAvailable: 5,
         ticketsToSpend: 2,
       });
-      assertEqual(resolveTimedEventLaunchTicketDelta(descriptor), -2, 'ticket delta should be negative spend');
+      assertEqual(resolveTimedEventLaunchTicketDelta(descriptor), 0, 'space_excavator uses per_action spend (no entry delta)');
       assertEqual(resolveTimedEventLaunchTicketDelta(null), 0, 'null descriptor should not produce a spend delta');
       assertEqual(
         resolveTimedEventLaunchTicketDelta({
           minigameId: 'lucky_spin',
           ticketCost: 1,
           ticketsSpent: 0,
+          spendMode: 'entry',
           config: {
             source: 'timed_event',
             eventId: 'feeding_frenzy',

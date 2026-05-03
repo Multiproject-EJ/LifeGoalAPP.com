@@ -66,6 +66,7 @@ export interface EventMinigameLaunchDescriptor {
   minigameId: 'lucky_spin' | 'space_excavator' | 'partner_wheel';
   ticketCost: number;
   ticketsSpent: number;
+  spendMode: 'entry' | 'per_action';
   config:
     | {
         source: 'timed_event';
@@ -112,7 +113,8 @@ export type AnyMinigameLaunchDescriptor =
 export function resolveTimedEventLaunchTicketDelta(
   descriptor: EventMinigameLaunchDescriptor | null | undefined,
 ): number {
-  const spend = Math.floor(descriptor?.ticketsSpent ?? 0);
+  if (!descriptor || descriptor.spendMode === 'per_action') return 0;
+  const spend = Math.floor(descriptor.ticketsSpent ?? 0);
   if (!Number.isFinite(spend) || spend <= 0) return 0;
   return -spend;
 }
@@ -234,6 +236,7 @@ export function resolveLuckySpinEventMinigame(
 
   return {
     minigameId: 'lucky_spin',
+    spendMode: 'entry',
     ticketCost: launch.ticketCost,
     ticketsSpent: launch.ticketsSpent,
     config: {
@@ -262,6 +265,7 @@ export function resolveSpaceExcavatorEventMinigame(
 
   return {
     minigameId: 'space_excavator',
+    spendMode: 'per_action',
     ticketCost: launch.ticketCost,
     ticketsSpent: launch.ticketsSpent,
     config: {
@@ -295,6 +299,7 @@ export function resolveCompanionFeastEventMinigame(
 
   return {
     minigameId: 'partner_wheel',
+    spendMode: 'entry',
     ticketCost: launch.ticketCost,
     ticketsSpent: launch.ticketsSpent,
     config: {
