@@ -60,6 +60,10 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Minigame launch affordability should read activeEventTickets (event-scoped wallet).',
       );
       assert(
+        !source.includes('ticketsAvailable: spinTokens'),
+        'Timed-event launcher must not use legacy spinTokens as affordability authority.',
+      );
+      assert(
         source.includes('eventId: activeTimedEvent.eventId') &&
           source.includes('const spendResult = applyTimedEventTicketSpend({'),
         'Timed-event launches should spend via canonical event-scoped ticket action.',

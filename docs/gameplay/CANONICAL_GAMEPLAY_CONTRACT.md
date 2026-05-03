@@ -105,6 +105,8 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 - Diamonds
 - Spin tokens
 
+Timed-event ticket authority is `minigameTicketsByEvent[eventId]`. `spinTokens` is legacy compatibility only and must not be used for timed-event launcher affordability or spend.
+
 ### Dice
 - Dice is the **only board energy**.
 - Dice is required for movement and core board interactions.
