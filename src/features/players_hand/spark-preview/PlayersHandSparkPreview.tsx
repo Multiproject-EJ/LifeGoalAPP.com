@@ -23,6 +23,7 @@ export function PlayersHandSparkPreview({
   );
   const [activeIndex, setActiveIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
+  const [viewMode, setViewMode] = useState<'hand' | 'grid'>('hand');
   const [isFocusedCardFlipped, setIsFocusedCardFlipped] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
@@ -60,7 +61,10 @@ export function PlayersHandSparkPreview({
         type="button"
         className="players-hand-spark-preview__mini"
         aria-label="Open SPARK hand preview"
-        onClick={() => setExpanded(true)}
+        onClick={() => {
+          setExpanded(true);
+          setViewMode('hand');
+        }}
       >
         {cards.map((card, index) => {
           const center = (cards.length - 1) / 2;
@@ -86,6 +90,28 @@ export function PlayersHandSparkPreview({
               <button type="button" className="players-hand-spark-overlay__close" onClick={() => setExpanded(false)} aria-label="Close hand preview">✕</button>
             </header>
 
+            <div className="players-hand-spark-overlay__view-mode" role="tablist" aria-label="Hand display mode">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={viewMode === 'hand'}
+                className={`players-hand-spark-overlay__view-tab${viewMode === 'hand' ? ' is-active' : ''}`}
+                onClick={() => setViewMode('hand')}
+              >
+                Hand
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={viewMode === 'grid'}
+                className={`players-hand-spark-overlay__view-tab${viewMode === 'grid' ? ' is-active' : ''}`}
+                onClick={() => setViewMode('grid')}
+              >
+                All Cards
+              </button>
+            </div>
+
+            {viewMode === 'hand' ? (
             <div className="players-hand-spark-overlay__fan" aria-label="Select a card from your hand">
               {cards.map((card, index) => {
                 const relative = index - activeIndex;
@@ -116,8 +142,36 @@ export function PlayersHandSparkPreview({
                 );
               })}
             </div>
+            ) : (
+              <div className="players-hand-spark-overlay__grid" aria-label="Browse all cards in your hand">
+                {cards.map((card, index) => {
+                  const selected = index === activeIndex;
+                  return (
+                    <button
+                      key={`grid-${card.id}`}
+                      type="button"
+                      className={`players-hand-spark-overlay__grid-card${selected ? ' is-selected' : ''}`}
+                      aria-label={`View ${card.title} in hand mode`}
+                      style={{ '--card-color': card.color } as CSSProperties}
+                      onClick={() => {
+                        setActiveIndex(index);
+                        setIsFocusedCardFlipped(false);
+                        setViewMode('hand');
+                      }}
+                    >
+                      <span className="players-hand-spark-overlay__grid-meta">
+                        <span className="players-hand-spark-preview__badge">{card.role}</span>
+                        <span className="players-hand-spark-preview__badge">Lv {card.level}</span>
+                      </span>
+                      <span className="players-hand-spark-overlay__grid-title">{card.icon} {card.title}</span>
+                      <span className="players-hand-spark-preview__rarity">{card.rarity}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
-            {activeCard && (
+            {activeCard && viewMode === 'hand' && (
               <article className="players-hand-spark-overlay__detail" style={{ '--card-color': activeCard.color } as CSSProperties}>
                 <div className="players-hand-spark-overlay__detail-controls">
                   <span className="players-hand-spark-overlay__detail-affordance">Tap card for details</span>

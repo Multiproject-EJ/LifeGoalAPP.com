@@ -74,3 +74,14 @@
   width: 58px;
   height: 76px;
 }
+.players-hand-spark-overlay__view-mode { display:flex; gap:8px; margin:10px 0 8px; }
+.players-hand-spark-overlay__view-tab { flex:1; min-height:38px; border-radius:999px; border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.08); color:#fff; font-weight:600; }
+.players-hand-spark-overlay__view-tab.is-active { background:rgba(126,92,255,.35); border-color:rgba(202,188,255,.7); }
+.players-hand-spark-overlay__grid { flex:1; min-height:280px; overflow:auto; display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:10px; padding-bottom:8px; }
+.players-hand-spark-overlay__grid-card { min-height:154px; border-radius:14px; border:1px solid color-mix(in srgb, var(--card-color) 70%, white 8%); background:linear-gradient(180deg, color-mix(in srgb, var(--card-color) 20%, #171a36), rgba(9,11,27,.94)); color:#fff; padding:10px; text-align:left; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 9px 20px rgba(0,0,0,.34); }
+.players-hand-spark-overlay__grid-card.is-selected { box-shadow:0 0 0 2px color-mix(in srgb, var(--card-color) 70%, white 30%), 0 10px 22px rgba(0,0,0,.45); }
+.players-hand-spark-overlay__grid-meta { display:flex; justify-content:space-between; gap:6px; font-size:11px; }
+.players-hand-spark-overlay__grid-title { font-size:14px; font-weight:700; line-height:1.2; }
+@media (max-width: 360px) {
+  .players-hand-spark-overlay__grid { grid-template-columns: 1fr; }
+}
