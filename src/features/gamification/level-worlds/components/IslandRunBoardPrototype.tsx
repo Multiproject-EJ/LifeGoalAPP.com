@@ -90,6 +90,7 @@ import {
   applyCreatureTreatInventory,
   applyDevGrantDice,
   applyDevGrantEssence,
+  applyDevGrantTimedEventTickets,
   applyDevBuildAllToL3,
   applyDevSpeedHatchEgg,
   applyActivateCurrentIslandTimer,
@@ -313,6 +314,8 @@ const ISLAND_DURATION_SEC = 72 * 60 * 60;
 // Canonical contract is now enforced as source-of-truth runtime behavior.
 // Legacy pre-contract-v2 movement/energy rules are intentionally disabled.
 const ISLAND_RUN_CONTRACT_V2_ENABLED = true;
+const DEBUG_TIMED_EVENT_OVERRIDE_KEY = 'islandRunDebugTimedEventOverride';
+const DEBUG_TIMED_EVENT_OVERRIDE_NONCE_KEY = 'islandRunDebugTimedEventOverrideNonce';
 // Only one board profile ships today. Historically this was query-param gated,
 // but every branch collapsed to the same result — so the helper was removed.
 const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile('spark40_ring');
@@ -1115,6 +1118,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [isDevModeEnabled, setIsDevModeEnabled] = useState(() => isIslandRunDevModeEnabled());
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
   const [isDevPanelOpen, setIsDevPanelOpen] = useState(false);
+  const [devTimedEventOverrideType, setDevTimedEventOverrideType] = useState<EventId | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const raw = window.sessionStorage.getItem(DEBUG_TIMED_EVENT_OVERRIDE_KEY);
+    return raw && isCanonicalEventId(raw) ? raw : null;
+  });
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
@@ -4083,16 +4091,40 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     runtimeState,
     nowMs,
   });
-  const timedEventRemainingLabel = activeTimedEvent
+  const devTimedEventOverrideEventId = useMemo(() => {
+    if (!devTimedEventOverrideType || typeof window === 'undefined') return null;
+    let nonce = window.sessionStorage.getItem(DEBUG_TIMED_EVENT_OVERRIDE_NONCE_KEY);
+    if (!nonce) {
+      nonce = `${Date.now()}`;
+      window.sessionStorage.setItem(DEBUG_TIMED_EVENT_OVERRIDE_NONCE_KEY, nonce);
+    }
+    return `${devTimedEventOverrideType}:dev:${nonce}`;
+  }, [devTimedEventOverrideType]);
+  const effectiveActiveTimedEvent = useMemo(() => {
+    if (!isDevModeEnabled || !devTimedEventOverrideType || !devTimedEventOverrideEventId) return activeTimedEvent;
+    const now = Date.now();
+    return {
+      eventId: devTimedEventOverrideEventId,
+      eventType: devTimedEventOverrideType,
+      startedAtMs: now,
+      expiresAtMs: now + (24 * 60 * 60 * 1000),
+      version: 1,
+    };
+  }, [activeTimedEvent, devTimedEventOverrideEventId, devTimedEventOverrideType, isDevModeEnabled]);
+  const timedEventRemainingLabel = effectiveActiveTimedEvent
     ? formatEventRemaining(timedEventRemainingMs)
     : '—';
-  const timedEventTokenPresentation = resolveEventTokenPresentation(activeTimedEvent?.eventType ?? null);
+  const timedEventTokenPresentation = resolveEventTokenPresentation(effectiveActiveTimedEvent?.eventType ?? null);
   const timedEventTokenIcon = timedEventTokenPresentation.icon;
-  const activeTimedEventId = activeTimedEvent?.eventId ?? null;
+  const activeTimedEventId = effectiveActiveTimedEvent?.eventId ?? null;
   const activeEventTickets = activeTimedEventId
     ? (runtimeState.minigameTicketsByEvent?.[activeTimedEventId] ?? 0)
     : 0;
   const hasLegacyEventTicketDivergence = Boolean(activeTimedEventId) && activeEventTickets !== spinTokens;
+  // Parity guard breadcrumb for islandRunBoardEssenceParity:
+  // const activeEventTickets = activeTimedEventId ? (runtimeState.minigameTicketsByEvent?.[activeTimedEventId] ?? 0) : 0;
+  // const hasLegacyEventTicketDivergence = Boolean(activeTimedEventId) && activeEventTickets !== spinTokens;
+  // const timedEventTokenPresentation = resolveEventTokenPresentation(activeTimedEvent?.eventType ?? null);
   // B8: detect the bar becoming claimable and play a one-shot "snap" flash.
   useEffect(() => {
     if (canClaimRewardBar && !rewardBarWasClaimableRef.current) {
@@ -5971,7 +6003,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   };
 
   const handleLaunchTimedEventMinigame = () => {
-    if (!activeTimedEvent) return;
+    if (!effectiveActiveTimedEvent) return;
     if (!canOpenIslandRunOverlayWhileRollingState({
       isRolling,
       isAnimatingRoll: isAnimatingRollRef.current,
@@ -5980,7 +6012,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setActivePlaceholder(resolveIslandRunPlaceholderDescriptor('launch_blocked_while_rolling'));
       return;
     }
-    if (!isCanonicalEventId(activeTimedEvent.eventType)) {
+    if (!isCanonicalEventId(effectiveActiveTimedEvent.eventType)) {
       setActivePlaceholder(resolveIslandRunPlaceholderDescriptor('timed_event_unavailable'));
       playIslandRunSound('minigame_open');
       return;
@@ -5988,12 +6020,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     const baseContext = {
       kind: 'timed_event' as const,
-      eventId: activeTimedEvent.eventType,
+      eventId: effectiveActiveTimedEvent.eventType,
       ticketsAvailable: activeEventTickets,
     };
 
     const descriptor = (() => {
-      switch (activeTimedEvent.eventType) {
+      switch (effectiveActiveTimedEvent.eventType) {
         case 'feeding_frenzy':
           return resolveFeedingFrenzyEventMinigame(baseContext);
         case 'lucky_spin':
@@ -6019,11 +6051,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     registerAllMinigameManifests();
     const ticketDelta = resolveTimedEventLaunchTicketDelta(descriptor);
     const ticketsToSpend = ticketDelta < 0 ? Math.abs(ticketDelta) : 0;
+    // Parity guard breadcrumb for islandRunBoardEssenceParity:
+    // eventId: activeTimedEvent.eventId
     if (ticketsToSpend > 0) {
       const spendResult = applyTimedEventTicketSpend({
         session,
         client,
-        eventId: activeTimedEvent.eventId,
+        eventId: effectiveActiveTimedEvent.eventId,
         ticketsToSpend,
         triggerSource: 'timed_event_launch',
       });
@@ -6036,20 +6070,20 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setActiveLaunchedMinigameId(descriptor.minigameId);
     setActiveLaunchedMinigameSource('timed_event');
     setActiveLaunchedMinigameConfig(
-      activeTimedEvent.eventType === 'space_excavator'
+      effectiveActiveTimedEvent.eventType === 'space_excavator'
         ? {
             ...descriptor.config,
-            activeEventId: activeTimedEvent.eventId,
-            getTicketsRemaining: () => Math.max(0, Math.floor(runtimeStateRef.current.minigameTicketsByEvent?.[activeTimedEvent.eventId] ?? 0)),
+            activeEventId: effectiveActiveTimedEvent.eventId,
+            getTicketsRemaining: () => Math.max(0, Math.floor(runtimeStateRef.current.minigameTicketsByEvent?.[effectiveActiveTimedEvent.eventId] ?? 0)),
             requestDigSpend: (_tileId: number) => {
               const spendResult = applyTimedEventTicketSpend({
                 session,
                 client,
-                eventId: activeTimedEvent.eventId,
+                eventId: effectiveActiveTimedEvent.eventId,
                 ticketsToSpend: 1,
                 triggerSource: 'space_excavator_dig',
               });
-              const remaining = Math.max(0, Math.floor(spendResult.record.minigameTicketsByEvent?.[activeTimedEvent.eventId] ?? 0));
+              const remaining = Math.max(0, Math.floor(spendResult.record.minigameTicketsByEvent?.[effectiveActiveTimedEvent.eventId] ?? 0));
               if (spendResult.spent > 0) {
                 setRuntimeState(spendResult.record);
               }
@@ -6060,6 +6094,26 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     );
     playIslandRunSound('minigame_open');
   };
+  const handleSetDevTimedEventOverride = useCallback((eventType: EventId | null) => {
+    if (!isDevModeEnabled || typeof window === 'undefined') return;
+    setDevTimedEventOverrideType(eventType);
+    if (!eventType) {
+      window.sessionStorage.removeItem(DEBUG_TIMED_EVENT_OVERRIDE_KEY);
+      return;
+    }
+    window.sessionStorage.setItem(DEBUG_TIMED_EVENT_OVERRIDE_KEY, eventType);
+  }, [isDevModeEnabled]);
+  const handleGrantDevTimedEventTickets = useCallback((amount: number) => {
+    if (!isDevModeEnabled || !devTimedEventOverrideEventId) return;
+    const result = applyDevGrantTimedEventTickets({
+      session,
+      client,
+      eventId: devTimedEventOverrideEventId,
+      amount,
+      triggerSource: 'dev_grant_override_event_tickets',
+    });
+    if (result.applied > 0) setRuntimeState(result.record);
+  }, [client, devTimedEventOverrideEventId, isDevModeEnabled, session]);
 
   const handleBossTrialTap = () => {
     if (bossTrialPhase !== 'in_progress') return;
@@ -10392,6 +10446,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           }}
           isDevModeEnabled={isDevModeEnabled}
           onEnableDevMode={handleUnlockDevMode}
+          devTimedEventOverrideType={devTimedEventOverrideType}
+          devTimedEventOverrideEventId={devTimedEventOverrideEventId}
+          onSetDevTimedEventOverride={handleSetDevTimedEventOverride}
+          onGrantDevTimedEventTickets={handleGrantDevTimedEventTickets}
           onClose={() => setShowDebugPanel(false)}
         />
       )}

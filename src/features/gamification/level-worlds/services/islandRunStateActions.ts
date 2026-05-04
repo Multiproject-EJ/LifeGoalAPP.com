@@ -162,6 +162,18 @@ export interface ApplyDevGrantEssenceResult {
   record: IslandRunGameStateRecord;
   applied: number;
 }
+export interface ApplyDevGrantTimedEventTicketsOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  eventId: string;
+  amount: number;
+  triggerSource?: string;
+}
+export interface ApplyDevGrantTimedEventTicketsResult {
+  record: IslandRunGameStateRecord;
+  applied: number;
+  eventId: string;
+}
 
 export interface ApplyDevSpeedHatchEggOptions {
   session: Session;
@@ -376,6 +388,38 @@ export function applyDevGrantEssence(options: ApplyDevGrantEssenceOptions): Appl
     triggerSource: triggerSource ?? 'dev_grant_essence',
   });
   return { record: next, applied };
+}
+
+/**
+ * DEV-ONLY helper action: grant event-scoped minigame tickets to a specific
+ * timed-event bucket through the canonical commit path.
+ */
+export function applyDevGrantTimedEventTickets(
+  options: ApplyDevGrantTimedEventTicketsOptions,
+): ApplyDevGrantTimedEventTicketsResult {
+  const { session, client, eventId, amount, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const canonicalEventId = typeof eventId === 'string' ? eventId.trim() : '';
+  const applied = Number.isFinite(amount) ? Math.max(0, Math.trunc(amount)) : 0;
+  if (!canonicalEventId || applied < 1) {
+    return { record: current, applied: 0, eventId: canonicalEventId };
+  }
+  const currentBucket = Math.max(0, Math.floor(current.minigameTicketsByEvent?.[canonicalEventId] ?? 0));
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    minigameTicketsByEvent: {
+      ...current.minigameTicketsByEvent,
+      [canonicalEventId]: Math.max(0, currentBucket + applied),
+    },
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'dev_grant_timed_event_tickets',
+  });
+  return { record: next, applied, eventId: canonicalEventId };
 }
 
 /**

@@ -19,6 +19,10 @@ interface DebugPanelProps {
   localState: IslandRunDebugLocalState;
   isDevModeEnabled: boolean;
   onEnableDevMode: () => void;
+  devTimedEventOverrideType: 'feeding_frenzy' | 'lucky_spin' | 'space_excavator' | 'companion_feast' | null;
+  devTimedEventOverrideEventId: string | null;
+  onSetDevTimedEventOverride: (eventType: 'feeding_frenzy' | 'lucky_spin' | 'space_excavator' | 'companion_feast' | null) => void;
+  onGrantDevTimedEventTickets: (amount: number) => void;
   onClose: () => void;
 }
 
@@ -80,6 +84,10 @@ export function IslandRunDebugPanel({
   localState,
   isDevModeEnabled,
   onEnableDevMode,
+  devTimedEventOverrideType,
+  devTimedEventOverrideEventId,
+  onSetDevTimedEventOverride,
+  onGrantDevTimedEventTickets,
   onClose,
 }: DebugPanelProps) {
   const appVersion = resolveBuildMarkerValue(import.meta.env.VITE_APP_VERSION);
@@ -386,6 +394,46 @@ export function IslandRunDebugPanel({
                 {isDevModeEnabled ? '✅ DEV MODE unlocked' : '🧪 Unlock DEV MODE — testing only'}
               </button>
             </div>
+            {isDevModeEnabled && (
+              <div style={{ display: 'grid', gap: '0.6rem', padding: '0.5rem 0.2rem' }}>
+                <label style={{ fontSize: '0.82rem', opacity: 0.9 }}>
+                  Timed event override (local/session only)
+                </label>
+                <select
+                  value={devTimedEventOverrideType ?? ''}
+                  onChange={(e) => onSetDevTimedEventOverride((e.target.value || null) as DebugPanelProps['devTimedEventOverrideType'])}
+                >
+                  <option value="">(none)</option>
+                  <option value="feeding_frenzy">feeding_frenzy</option>
+                  <option value="lucky_spin">lucky_spin</option>
+                  <option value="space_excavator">space_excavator</option>
+                  <option value="companion_feast">companion_feast</option>
+                </select>
+                <div style={{ fontSize: '0.76rem', opacity: 0.88 }}>
+                  {devTimedEventOverrideType
+                    ? `DEV OVERRIDE ACTIVE — local only: ${devTimedEventOverrideEventId ?? 'pending'}`
+                    : 'DEV override inactive.'}
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    className="island-run-debug-panel__copy-btn"
+                    onClick={() => onGrantDevTimedEventTickets(20)}
+                    disabled={!devTimedEventOverrideType}
+                  >
+                    Grant 20 test tickets
+                  </button>
+                  <button
+                    type="button"
+                    className="island-run-debug-panel__copy-btn"
+                    onClick={() => onSetDevTimedEventOverride(null)}
+                    disabled={!devTimedEventOverrideType}
+                  >
+                    Clear override
+                  </button>
+                </div>
+              </div>
+            )}
           </details>
           {sections.map((section) => (
             <details key={section.title} className="island-run-debug-panel__section" open>
