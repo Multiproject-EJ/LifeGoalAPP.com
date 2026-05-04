@@ -6041,7 +6041,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             ...descriptor.config,
             activeEventId: activeTimedEvent.eventId,
             getTicketsRemaining: () => Math.max(0, Math.floor(runtimeStateRef.current.minigameTicketsByEvent?.[activeTimedEvent.eventId] ?? 0)),
-            requestDigSpend: () => {
+            requestDigSpend: (_tileId: number) => {
               const spendResult = applyTimedEventTicketSpend({
                 session,
                 client,

@@ -7,7 +7,7 @@ type Tile = { dug: boolean; treasure: boolean };
 type DigSpendResult = { ok: boolean; ticketsRemaining: number };
 
 type SpaceExcavatorLaunchConfig = {
-  requestDigSpend?: () => DigSpendResult;
+  requestDigSpend?: (tileId: number) => DigSpendResult;
   getTicketsRemaining?: () => number;
 };
 
@@ -46,7 +46,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
     if (finished || won) return;
     if (tiles[index]?.dug) return;
 
-    const spend = config.requestDigSpend?.() ?? { ok: false, ticketsRemaining };
+    const spend = config.requestDigSpend?.(index) ?? { ok: false, ticketsRemaining };
     setTicketsRemaining(spend.ticketsRemaining);
 
     if (!spend.ok) {
