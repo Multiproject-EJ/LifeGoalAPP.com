@@ -44,6 +44,11 @@ import { scoreArchetypes, rankArchetypes } from './archetypes/archetypeScoring';
 import { buildHand, type ArchetypeHand } from './archetypes/archetypeHandBuilder';
 import { DeckSummary } from './deck/DeckSummary';
 import { PlayerDeck } from './deck/PlayerDeck';
+import { PlayersHandRevealCeremony, PlayersHandSparkPreview } from '../players_hand/spark-preview';
+import {
+  isPlayersHandSparkComparisonEnabled,
+  isPlayersHandSparkResultEnabled,
+} from '../players_hand/playersHandFeatureFlags';
 import './deck/deck.css';
 
 type TestStep = 'intro' | 'quiz' | 'results';
@@ -63,6 +68,9 @@ const ANSWER_OPTIONS: AnswerOption[] = [
 
 const REFRESH_MESSAGE_SHORT_TIMEOUT = 3000;
 const REFRESH_MESSAGE_LONG_TIMEOUT = 4000;
+
+const playersHandSparkResultEnabled = isPlayersHandSparkResultEnabled();
+const playersHandSparkComparisonEnabled = isPlayersHandSparkComparisonEnabled();
 
 const AXIS_LABELS: Record<keyof PersonalityScores['axes'], string> = {
   regulation_style: 'Regulation Style',
@@ -523,7 +531,7 @@ export default function PersonalityTest() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const savedResultRef = useRef<string | null>(null);
-  const refreshMessageTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const refreshMessageTimeoutRef = useRef<number | null>(null);
   const [supabaseRecommendations, setSupabaseRecommendations] = useState<Recommendation[]>([]);
   const [history, setHistory] = useState<PersonalityTestRecord[]>([]);
   const [aiNarrativeEnabled, setAiNarrativeEnabled] = useState(false);
@@ -534,6 +542,7 @@ export default function PersonalityTest() {
   const [refreshMessage, setRefreshMessage] = useState<string | null>(null);
   const [queuePending, setQueuePending] = useState(0);
   const [queueFailed, setQueueFailed] = useState(0);
+  const [showSparkReveal, setShowSparkReveal] = useState(true);
 
   const activeSession = useMemo(() => {
     if (session) {
@@ -669,6 +678,7 @@ export default function PersonalityTest() {
     setCurrentIndex(0);
     setAnswers({});
     savedResultRef.current = null;
+    setShowSparkReveal(true);
   };
 
   const handleViewLatest = () => {
@@ -1135,9 +1145,26 @@ export default function PersonalityTest() {
               <div className="identity-hub__section">
                 <DeckSummary hand={archetypeHand} microTestCount={0} />
               </div>
-              <div className="identity-hub__section">
-                <PlayerDeck hand={archetypeHand} />
-              </div>
+              {playersHandSparkResultEnabled ? (
+                <div className="identity-hub__section">
+                  {showSparkReveal ? (
+                    <PlayersHandRevealCeremony hand={archetypeHand} onComplete={() => setShowSparkReveal(false)} />
+                  ) : (
+                    <PlayersHandSparkPreview hand={archetypeHand} title="Players Hand (SPARK style)" />
+                  )}
+                </div>
+              ) : (
+                <div className="identity-hub__section">
+                  <PlayerDeck hand={archetypeHand} />
+                </div>
+              )}
+              {playersHandSparkComparisonEnabled && (
+                <div className="identity-hub__section">
+                  <h4 className="identity-hub__results-title">DEV comparison: canonical deck + SPARK preview</h4>
+                  <PlayerDeck hand={archetypeHand} />
+                  <PlayersHandSparkPreview hand={archetypeHand} title="SPARK hand preview (DEV compare)" />
+                </div>
+              )}
             </>
           )}
           <div className="identity-hub__section identity-hub__narrative">
