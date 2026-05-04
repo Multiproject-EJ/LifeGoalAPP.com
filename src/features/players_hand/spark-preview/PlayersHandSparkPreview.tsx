@@ -73,21 +73,26 @@ export function PlayersHandSparkPreview({
             <div className="players-hand-spark-overlay__fan" aria-label="Select a card from your hand">
               {cards.map((card, index) => {
                 const relative = index - activeIndex;
+                const selected = relative === 0;
                 return (
                   <button
                     key={card.id}
                     type="button"
-                    className="players-hand-spark-preview__card"
+                    className={`players-hand-spark-preview__card${selected ? ' is-selected' : ''}`}
                     aria-label={`Focus ${card.title}`}
                     style={{
                       '--card-color': card.color,
                       zIndex: cards.length - Math.abs(relative),
-                      transform: `translate(${relative * 62}px, ${Math.abs(relative) * 18}px) rotate(${relative * 9}deg) scale(${relative === 0 ? 1.04 : 0.9})`,
+                      transform: `translate(${relative * 62}px, ${Math.abs(relative) * 18}px) rotate(${relative * 9}deg) scale(${selected ? 1.06 : 0.9})`,
                     } as CSSProperties}
                     onClick={() => setActiveIndex(index)}
                   >
-                    <div className="players-hand-spark-preview__meta"><span>{card.role}</span><span>Lv {card.level}</span></div>
+                    <div className="players-hand-spark-preview__meta">
+                      <span className="players-hand-spark-preview__badge">{card.role}</span>
+                      <span className="players-hand-spark-preview__badge">Lv {card.level}</span>
+                    </div>
                     <div className="players-hand-spark-preview__title">{card.icon} {card.title}</div>
+                    <div className="players-hand-spark-preview__rarity">{card.rarity}</div>
                   </button>
                 );
               })}
@@ -95,8 +100,12 @@ export function PlayersHandSparkPreview({
 
             {activeCard && (
               <article className="players-hand-spark-overlay__detail" style={{ '--card-color': activeCard.color } as CSSProperties}>
+                <div className="players-hand-spark-overlay__detail-row">
+                  <span className="players-hand-spark-overlay__rarity-chip">{activeCard.rarity}</span>
+                  <span className="players-hand-spark-overlay__role-chip">{activeCard.role}</span>
+                </div>
                 <div className="players-hand-spark-overlay__detail-title">{activeCard.icon} {activeCard.title}</div>
-                <p className="players-hand-spark-overlay__detail-meta">{activeCard.role} · Lv {activeCard.level} · {activeCard.rarity}</p>
+                <p className="players-hand-spark-overlay__detail-meta">Level {activeCard.level}</p>
                 <p className="players-hand-spark-overlay__detail-description">{activeCard.description}</p>
               </article>
             )}
