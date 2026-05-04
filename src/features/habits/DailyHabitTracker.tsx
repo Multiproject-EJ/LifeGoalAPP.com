@@ -870,6 +870,17 @@ export function DailyHabitTracker({
   const [isVisionVisualizationRunning, setIsVisionVisualizationRunning] = useState(false);
   const [showYesterdayRecap, setShowYesterdayRecap] = useState(false);
   const [showDreamJournalReminderModal, setShowDreamJournalReminderModal] = useState(false);
+  useEffect(() => {
+    if (typeof document === 'undefined' || !showDreamJournalReminderModal) {
+      return;
+    }
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showDreamJournalReminderModal]);
+
   const [dayStatusMap, setDayStatusMap] = useState<Record<string, DayStatus>>({});
   const [yesterdayHabits, setYesterdayHabits] = useState<HabitWithGoal[]>([]);
   const [yesterdaySelections, setYesterdaySelections] = useState<Record<string, boolean>>({});
@@ -9059,7 +9070,7 @@ export function DailyHabitTracker({
       )}
 
       {showDreamJournalReminderModal && (
-        <div className="dream-journal-reminder-overlay" onClick={() => setShowDreamJournalReminderModal(false)}>
+        <div className="dream-journal-reminder-overlay">
           <div className="dream-journal-reminder-modal" onClick={(event) => event.stopPropagation()}>
             <button
               type="button"
