@@ -22,6 +22,23 @@
 .players-hand-spark-preview__title { font-size:15px; font-weight:700; margin-top:10px; }
 .players-hand-spark-preview__rarity { margin-top:10px; display:inline-block; padding:4px 8px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; border:1px solid color-mix(in srgb, var(--card-color) 55%, white 12%); border-radius:999px; }
 .players-hand-spark-overlay__detail { border:1px solid color-mix(in srgb, var(--card-color) 60%, transparent); border-radius:14px; padding:12px; background:linear-gradient(165deg, color-mix(in srgb, var(--card-color) 16%, #0b1028), rgba(8,10,26,.9)); }
+.players-hand-spark-overlay__detail-controls { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.players-hand-spark-overlay__detail-affordance { font-size:12px; opacity:.82; }
+.players-hand-spark-overlay__flip-button { border:1px solid rgba(255,255,255,.3); border-radius:999px; background:rgba(255,255,255,.1); color:#fff; padding:6px 10px; font-size:12px; }
+.players-hand-spark-overlay__focus-card { position:relative; width:100%; min-height:188px; border-radius:14px; border:1px solid color-mix(in srgb, var(--card-color) 70%, white 10%); background:transparent; text-align:left; transform-style:preserve-3d; transition:transform .56s cubic-bezier(.2,.8,.2,1); }
+.players-hand-spark-overlay__focus-card.is-flipped { transform:rotateY(180deg); }
+.players-hand-spark-overlay__focus-card.reduced-motion { transition:none; }
+.players-hand-spark-overlay__focus-card.reduced-motion.is-flipped { transform:none; }
+.players-hand-spark-overlay__focus-face { position:absolute; inset:0; display:flex; flex-direction:column; border-radius:14px; padding:12px; gap:8px; background:linear-gradient(165deg, color-mix(in srgb, var(--card-color) 30%, #0c1130), rgba(9,11,28,.95)); backface-visibility:hidden; box-shadow:0 12px 28px rgba(0,0,0,.42), 0 0 22px color-mix(in srgb, var(--card-color) 30%, transparent); }
+.players-hand-spark-overlay__focus-face--back { transform:rotateY(180deg); }
+.players-hand-spark-overlay__focus-card.reduced-motion .players-hand-spark-overlay__focus-face--front { display:flex; }
+.players-hand-spark-overlay__focus-card.reduced-motion .players-hand-spark-overlay__focus-face--back { display:none; transform:none; }
+.players-hand-spark-overlay__focus-card.reduced-motion.is-flipped .players-hand-spark-overlay__focus-face--front { display:none; }
+.players-hand-spark-overlay__focus-card.reduced-motion.is-flipped .players-hand-spark-overlay__focus-face--back { display:flex; }
+.players-hand-spark-overlay__focus-row { display:flex; gap:8px; }
+.players-hand-spark-overlay__focus-title { font-size:18px; font-weight:700; }
+.players-hand-spark-overlay__focus-level { font-size:13px; opacity:.9; }
+.players-hand-spark-overlay__focus-description { font-size:14px; line-height:1.4; opacity:.98; }
 .players-hand-spark-overlay__detail-row { display:flex; gap:8px; margin-bottom:8px; }
 .players-hand-spark-overlay__rarity-chip,.players-hand-spark-overlay__role-chip { font-size:11px; text-transform:uppercase; letter-spacing:.06em; padding:3px 8px; border-radius:999px; border:1px solid color-mix(in srgb, var(--card-color) 60%, white 8%); }
 .players-hand-spark-overlay__detail-title { font-size:18px; font-weight:700; }
@@ -29,6 +46,7 @@
 .players-hand-spark-overlay__detail-description { font-size:14px; line-height:1.45; }
 @media (prefers-reduced-motion: reduce) {
   .players-hand-spark-preview__card { transition: none; }
+  .players-hand-spark-overlay__focus-card { transition: none; }
 }
 
 
