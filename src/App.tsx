@@ -3216,6 +3216,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               profileStrengthSnapshot={profileStrengthSnapshot}
               profileStrengthSignals={profileStrengthSignals}
               personalitySummary={personalitySummary}
+              archetypeHand={archetypeHand}
               onOpenDailyTreat={() => setShowCalendarPlaceholder(true)}
               onOpenIslandRunStop={(stopId) => {
                 setIslandRunOpenStopParam(stopId);
