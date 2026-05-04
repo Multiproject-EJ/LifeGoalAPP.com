@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import type { ProfileStrengthSignalSnapshot } from '../profile-strength/profileStrengthData';
 import type { ProfileStrengthResult } from '../profile-strength/profileStrengthTypes';
 import { DailyHabitTracker } from './DailyHabitTracker';
+import type { ArchetypeHand } from '../identity/archetypes/archetypeHandBuilder';
 
 type MobileHabitHomeProps = {
   session: Session;
@@ -19,6 +20,7 @@ type MobileHabitHomeProps = {
   hiddenHabitIds?: string[];
   onHideStandaloneHabitsChange?: (habitIds: string[]) => void;
   onOpenStarterQuest?: () => void;
+  archetypeHand?: ArchetypeHand | null;
 };
 
 export function MobileHabitHome({
@@ -37,6 +39,7 @@ export function MobileHabitHome({
   hiddenHabitIds = [],
   onHideStandaloneHabitsChange,
   onOpenStarterQuest,
+  archetypeHand,
 }: MobileHabitHomeProps) {
   void onHideStandaloneHabitsChange;
   return (
@@ -57,6 +60,7 @@ export function MobileHabitHome({
         hideTimeBoundOffers={hideTimeBoundOffers}
         hiddenHabitIds={hiddenHabitIds}
         onOpenStarterQuest={onOpenStarterQuest}
+        archetypeHand={archetypeHand}
       />
     </div>
   );

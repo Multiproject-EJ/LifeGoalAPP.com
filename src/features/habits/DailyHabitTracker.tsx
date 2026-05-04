@@ -153,6 +153,9 @@ import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
 import { HabitPauseDialog } from './HabitPauseDialog';
 import { RoutinesTodayLane } from '../routines';
+import type { ArchetypeHand } from '../identity/archetypes/archetypeHandBuilder';
+import { isPlayersHandSparkResultEnabled } from '../players_hand/playersHandFeatureFlags';
+import { MyPlayerHandPanel } from '../players_hand/components/MyPlayerHandPanel';
 import {
   getQuestHabit,
   setQuestHabit,
@@ -290,6 +293,7 @@ type DailyHabitTrackerProps = {
   onPendingOfferHandled?: () => void;
   hiddenHabitIds?: string[];
   onOpenStarterQuest?: () => void;
+  archetypeHand?: ArchetypeHand | null;
 };
 
 type HabitCompletionState = {
@@ -634,8 +638,10 @@ export function DailyHabitTracker({
   onPendingOfferHandled,
   hiddenHabitIds = [],
   onOpenStarterQuest,
+  archetypeHand,
 }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
+  const sparkHandEnabled = isPlayersHandSparkResultEnabled();
   const isDemoExperience = isDemoSession(session);
   const isCompact = variant === 'compact';
   const [activeOfferTeaser, setActiveOfferTeaser] = useState<TimeBoundOfferId | null>(null);
@@ -7569,6 +7575,9 @@ export function DailyHabitTracker({
               />
             ) : null}
 
+            {sparkHandEnabled && archetypeHand ? (
+              <MyPlayerHandPanel hand={archetypeHand} compact />
+            ) : null}
             {identitySignalsUnlocked ? (
               <div className="identity-signals-card" aria-live="polite">
                 <div className="identity-signals-card__header">

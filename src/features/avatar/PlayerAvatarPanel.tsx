@@ -15,6 +15,8 @@ import {
 } from '../identity/archetypes/archetypeDeck';
 import type { ArchetypeHand, HandCard } from '../identity/archetypes/archetypeHandBuilder';
 import type { PersonalityScores } from '../identity/personalityScoring';
+import { isPlayersHandSparkResultEnabled } from '../players_hand/playersHandFeatureFlags';
+import { MyPlayerHandPanel } from '../players_hand/components/MyPlayerHandPanel';
 import '../../styles/player-avatar.css';
 
 type PlayerAvatarPanelProps = {
@@ -32,6 +34,7 @@ export function PlayerAvatarPanel({
 }: PlayerAvatarPanelProps) {
   // Determine if user has personality data
   const hasPersonalityData = Boolean(personalityScores && archetypeHand);
+  const sparkHandEnabled = isPlayersHandSparkResultEnabled();
 
   // Default to dominant archetype or first archetype
   const defaultArchetype = archetypeHand?.dominant.card.id ?? ARCHETYPE_DECK[0].id;
@@ -255,6 +258,11 @@ export function PlayerAvatarPanel({
             </div>
           </div>
         </section>
+      )}
+
+
+      {sparkHandEnabled && (
+        <MyPlayerHandPanel hand={archetypeHand} />
       )}
 
       {/* Avatar Preview Section */}
