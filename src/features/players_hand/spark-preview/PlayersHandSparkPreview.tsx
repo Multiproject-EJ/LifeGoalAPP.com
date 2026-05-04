@@ -9,11 +9,13 @@ import './PlayersHandSparkPreview.css';
 type PlayersHandSparkPreviewProps = {
   hand?: ArchetypeHand | null;
   title?: string;
+  compact?: boolean;
 };
 
 export function PlayersHandSparkPreview({
   hand,
   title = 'Players Hand SPARK Preview (Dev-only)',
+  compact = false,
 }: PlayersHandSparkPreviewProps) {
   const cards = useMemo(
     () => (hand ? adaptArchetypeHandToSparkPreview(hand) : buildDevOnlyFallbackSparkPreviewCards()),
@@ -34,10 +36,13 @@ export function PlayersHandSparkPreview({
   }, [expanded]);
 
   return (
-    <section className="players-hand-spark-preview" aria-label="Players hand SPARK preview">
+    <section
+      className={`players-hand-spark-preview${compact ? ' players-hand-spark-preview--compact' : ''}`}
+      aria-label="Players hand SPARK preview"
+    >
       <header className="players-hand-spark-preview__header">
         <h3>{title}</h3>
-        <p>Tap to open full-screen hand view.</p>
+        <p>{compact ? 'Tap to open your full hand.' : 'Tap to open full-screen hand view.'}</p>
       </header>
 
       <button

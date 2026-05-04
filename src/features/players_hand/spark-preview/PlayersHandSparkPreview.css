@@ -30,3 +30,29 @@
 @media (prefers-reduced-motion: reduce) {
   .players-hand-spark-preview__card { transition: none; }
 }
+
+
+.players-hand-spark-preview--compact {
+  padding: 12px;
+  border-radius: 14px;
+}
+.players-hand-spark-preview--compact .players-hand-spark-preview__header {
+  margin-bottom: 8px;
+  text-align: left;
+}
+.players-hand-spark-preview--compact .players-hand-spark-preview__header h3 {
+  font-size: 1rem;
+  margin: 0;
+}
+.players-hand-spark-preview--compact .players-hand-spark-preview__header p {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  opacity: 0.92;
+}
+.players-hand-spark-preview--compact .players-hand-spark-preview__mini {
+  height: 92px;
+}
+.players-hand-spark-preview--compact .players-hand-spark-preview__mini-card {
+  width: 58px;
+  height: 76px;
+}

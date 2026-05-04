@@ -3,12 +3,16 @@ import { PlayersHandSparkPreview } from '../spark-preview';
 
 type MyPlayerHandPanelProps = {
   hand?: ArchetypeHand | null;
+  compact?: boolean;
 };
 
-export function MyPlayerHandPanel({ hand }: MyPlayerHandPanelProps) {
+export function MyPlayerHandPanel({ hand, compact = false }: MyPlayerHandPanelProps) {
   if (!hand) {
     return (
-      <section className="player-avatar-panel__section" aria-label="My player hand locked">
+      <section
+        className={compact ? "player-avatar-panel__section player-avatar-panel__section--compact-hand" : "player-avatar-panel__section"}
+        aria-label="My player hand locked"
+      >
         <h2 className="player-avatar-panel__section-title">My Player Hand</h2>
         <p className="player-avatar-panel__section-subtitle">Take the personality test to unlock your hand.</p>
       </section>
@@ -16,10 +20,13 @@ export function MyPlayerHandPanel({ hand }: MyPlayerHandPanelProps) {
   }
 
   return (
-    <section className="player-avatar-panel__section" aria-label="My player hand">
+    <section
+      className={compact ? "player-avatar-panel__section player-avatar-panel__section--compact-hand" : "player-avatar-panel__section"}
+      aria-label="My player hand"
+    >
       <h2 className="player-avatar-panel__section-title">My Player Hand</h2>
       <p className="player-avatar-panel__section-subtitle">Open your hand anytime from your profile.</p>
-      <PlayersHandSparkPreview hand={hand} title="My Player Hand" />
+      <PlayersHandSparkPreview hand={hand} title="My Player Hand" compact={compact} />
     </section>
   );
 }

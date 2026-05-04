@@ -7576,7 +7576,7 @@ export function DailyHabitTracker({
             ) : null}
 
             {sparkHandEnabled && archetypeHand ? (
-              <MyPlayerHandPanel hand={archetypeHand} />
+              <MyPlayerHandPanel hand={archetypeHand} compact />
             ) : null}
             {identitySignalsUnlocked ? (
               <div className="identity-signals-card" aria-live="polite">
