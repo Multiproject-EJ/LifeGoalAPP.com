@@ -44,6 +44,7 @@ import { scoreArchetypes, rankArchetypes } from './archetypes/archetypeScoring';
 import { buildHand, type ArchetypeHand } from './archetypes/archetypeHandBuilder';
 import { DeckSummary } from './deck/DeckSummary';
 import { PlayerDeck } from './deck/PlayerDeck';
+import { PlayersHandSparkPreview } from '../players_hand/spark-preview';
 import './deck/deck.css';
 
 type TestStep = 'intro' | 'quiz' | 'results';
@@ -523,7 +524,7 @@ export default function PersonalityTest() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const savedResultRef = useRef<string | null>(null);
-  const refreshMessageTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const refreshMessageTimeoutRef = useRef<number | null>(null);
   const [supabaseRecommendations, setSupabaseRecommendations] = useState<Recommendation[]>([]);
   const [history, setHistory] = useState<PersonalityTestRecord[]>([]);
   const [aiNarrativeEnabled, setAiNarrativeEnabled] = useState(false);
@@ -1138,6 +1139,11 @@ export default function PersonalityTest() {
               <div className="identity-hub__section">
                 <PlayerDeck hand={archetypeHand} />
               </div>
+              {import.meta.env.DEV && (
+                <div className="identity-hub__section">
+                  <PlayersHandSparkPreview hand={archetypeHand} title="SPARK hand preview (DEV only)" />
+                </div>
+              )}
             </>
           )}
           <div className="identity-hub__section identity-hub__narrative">
