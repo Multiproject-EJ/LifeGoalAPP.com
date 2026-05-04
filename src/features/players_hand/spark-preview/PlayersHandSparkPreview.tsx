@@ -23,6 +23,8 @@ export function PlayersHandSparkPreview({
   );
   const [activeIndex, setActiveIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
+  const [isFocusedCardFlipped, setIsFocusedCardFlipped] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   const activeCard = cards[activeIndex] ?? cards[0];
 
@@ -34,6 +36,15 @@ export function PlayersHandSparkPreview({
     window.addEventListener('keydown', onEsc);
     return () => window.removeEventListener('keydown', onEsc);
   }, [expanded]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateMotionPreference = () => setPrefersReducedMotion(media.matches);
+    updateMotionPreference();
+    media.addEventListener('change', updateMotionPreference);
+    return () => media.removeEventListener('change', updateMotionPreference);
+  }, []);
 
   return (
     <section
@@ -90,7 +101,10 @@ export function PlayersHandSparkPreview({
                       zIndex: cards.length - Math.abs(relative),
                       transform: `translate(${relative * 62}px, ${Math.abs(relative) * 18}px) rotate(${relative * 9}deg) scale(${selected ? 1.06 : 0.9})`,
                     } as CSSProperties}
-                    onClick={() => setActiveIndex(index)}
+                    onClick={() => {
+                      setActiveIndex(index);
+                      setIsFocusedCardFlipped(false);
+                    }}
                   >
                     <div className="players-hand-spark-preview__meta">
                       <span className="players-hand-spark-preview__badge">{card.role}</span>
@@ -105,13 +119,43 @@ export function PlayersHandSparkPreview({
 
             {activeCard && (
               <article className="players-hand-spark-overlay__detail" style={{ '--card-color': activeCard.color } as CSSProperties}>
-                <div className="players-hand-spark-overlay__detail-row">
-                  <span className="players-hand-spark-overlay__rarity-chip">{activeCard.rarity}</span>
-                  <span className="players-hand-spark-overlay__role-chip">{activeCard.role}</span>
+                <div className="players-hand-spark-overlay__detail-controls">
+                  <span className="players-hand-spark-overlay__detail-affordance">Tap card for details</span>
+                  <button
+                    type="button"
+                    className="players-hand-spark-overlay__flip-button"
+                    aria-label={isFocusedCardFlipped ? `Show front of ${activeCard.title}` : `Show details for ${activeCard.title}`}
+                    onClick={() => setIsFocusedCardFlipped((prev) => !prev)}
+                  >
+                    {isFocusedCardFlipped ? 'Show front' : 'Flip for details'}
+                  </button>
                 </div>
-                <div className="players-hand-spark-overlay__detail-title">{activeCard.icon} {activeCard.title}</div>
-                <p className="players-hand-spark-overlay__detail-meta">Level {activeCard.level}</p>
-                <p className="players-hand-spark-overlay__detail-description">{activeCard.description}</p>
+
+                <button
+                  type="button"
+                  className={`players-hand-spark-overlay__focus-card${isFocusedCardFlipped ? ' is-flipped' : ''}${prefersReducedMotion ? ' reduced-motion' : ''}`}
+                  style={{ '--card-color': activeCard.color } as CSSProperties}
+                  aria-label={isFocusedCardFlipped ? `Card back for ${activeCard.title}` : `Card front for ${activeCard.title}`}
+                  onClick={() => setIsFocusedCardFlipped((prev) => !prev)}
+                >
+                  <span className="players-hand-spark-overlay__focus-face players-hand-spark-overlay__focus-face--front">
+                    <span className="players-hand-spark-overlay__focus-row">
+                      <span className="players-hand-spark-overlay__rarity-chip">{activeCard.rarity}</span>
+                      <span className="players-hand-spark-overlay__role-chip">{activeCard.role}</span>
+                    </span>
+                    <span className="players-hand-spark-overlay__focus-title">{activeCard.icon} {activeCard.title}</span>
+                    <span className="players-hand-spark-overlay__focus-level">Level {activeCard.level}</span>
+                  </span>
+
+                  <span className="players-hand-spark-overlay__focus-face players-hand-spark-overlay__focus-face--back">
+                    <span className="players-hand-spark-overlay__focus-row">
+                      <span className="players-hand-spark-overlay__rarity-chip">{activeCard.rarity}</span>
+                      <span className="players-hand-spark-overlay__role-chip">{activeCard.role}</span>
+                    </span>
+                    <span className="players-hand-spark-overlay__focus-title">{activeCard.title}</span>
+                    <span className="players-hand-spark-overlay__focus-description">{activeCard.description}</span>
+                  </span>
+                </button>
               </article>
             )}
           </div>
