@@ -4,11 +4,13 @@ import './spaceExcavator.css';
 
 type Tile = { dug: boolean; treasure: boolean };
 
-type DigSpendResult = { ok: boolean; ticketsRemaining: number };
+type SpaceExcavatorProgress = { boardSize:number; treasureCount:number; treasureTileIds:number[]; dugTileIds:number[]; foundTreasureTileIds:number[] };
+type DigSpendResult = { ok: boolean; ticketsRemaining: number; progress?: SpaceExcavatorProgress | null };
 
 type SpaceExcavatorLaunchConfig = {
   requestDigSpend?: (tileId: number) => DigSpendResult;
   getTicketsRemaining?: () => number;
+  initialProgress?: SpaceExcavatorProgress | null;
 };
 
 function makeBoard(size: number, treasureCount: number): Tile[] {
@@ -23,10 +25,14 @@ function makeBoard(size: number, treasureCount: number): Tile[] {
 
 export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig }: IslandRunMinigameProps) {
   const config = (launchConfig ?? {}) as SpaceExcavatorLaunchConfig;
-  const size = 5;
-  const treasureCount = Math.max(3, Math.min(8, 3 + Math.floor(islandNumber / 8)));
+  const initial = config.initialProgress;
+  const size = Math.max(1, Math.floor(initial?.boardSize ?? 5));
+  const treasureCount = Math.max(1, Math.floor(initial?.treasureCount ?? Math.max(3, Math.min(8, 3 + Math.floor(islandNumber / 8)))));
 
-  const [tiles, setTiles] = useState<Tile[]>(() => makeBoard(size, treasureCount));
+  const [tiles, setTiles] = useState<Tile[]>(() => {
+    if (!initial) return makeBoard(size, treasureCount);
+    return Array.from({ length: size * size }, (_, i) => ({ dug: initial.dugTileIds.includes(i), treasure: initial.treasureTileIds.includes(i) }));
+  });
   const [ticketsRemaining, setTicketsRemaining] = useState<number>(() => Math.max(0, Math.floor(config.getTicketsRemaining?.() ?? 0)));
   const [finished, setFinished] = useState(false);
   const [sentResult, setSentResult] = useState(false);
@@ -49,6 +55,10 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
     const spend = config.requestDigSpend?.(index) ?? { ok: false, ticketsRemaining };
     setTicketsRemaining(spend.ticketsRemaining);
 
+    if (spend.ok && spend.progress) {
+      setTiles(Array.from({ length: spend.progress.boardSize * spend.progress.boardSize }, (_, i) => ({ dug: spend.progress!.dugTileIds.includes(i), treasure: spend.progress!.treasureTileIds.includes(i) })));
+      return;
+    }
     if (!spend.ok) {
       setShowOutOfTickets(true);
       return;

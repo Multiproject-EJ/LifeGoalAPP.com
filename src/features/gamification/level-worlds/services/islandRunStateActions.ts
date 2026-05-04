@@ -43,6 +43,7 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import type {
   IslandRunGameStateRecord,
   PerIslandEggEntry,
+  SpaceExcavatorProgressEntry,
 } from './islandRunGameStateStore';
 import {
   commitIslandRunState,
@@ -62,6 +63,57 @@ import {
 import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
 import { resolveRuntimeDiceRegenUpdate } from './islandRunRuntimeRegen';
 
+
+export interface ApplySpaceExcavatorDigResult {
+  record: IslandRunGameStateRecord;
+  ok: boolean;
+  ticketsRemaining: number;
+  progress: SpaceExcavatorProgressEntry | null;
+}
+
+function buildSpaceExcavatorProgress(eventId: string, boardIndex: number, nowMs: number): SpaceExcavatorProgressEntry {
+  const boardSize = 5;
+  const tileCount = boardSize * boardSize;
+  const treasureCount = 5;
+  let seed = Array.from(`${eventId}:${boardIndex}`).reduce((a,c)=>a + c.charCodeAt(0), 0) || 1;
+  const tiles = new Set<number>();
+  while (tiles.size < treasureCount) {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    tiles.add(seed % tileCount);
+  }
+  return { eventId, boardIndex, boardSize, treasureCount, treasureTileIds: Array.from(tiles).sort((a,b)=>a-b), dugTileIds: [], foundTreasureTileIds: [], completedBoardCount: boardIndex, status: 'active', updatedAtMs: nowMs };
+}
+
+export function initSpaceExcavatorProgressForEvent(options: { session: Session; client: SupabaseClient | null; eventId: string; triggerSource?: string; }): IslandRunGameStateRecord {
+  const { session, client, eventId, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (!eventId) return current;
+  if (current.spaceExcavatorProgressByEvent?.[eventId]) return current;
+  const next = { ...current, runtimeVersion: current.runtimeVersion + 1, spaceExcavatorProgressByEvent: { ...current.spaceExcavatorProgressByEvent, [eventId]: buildSpaceExcavatorProgress(eventId, 0, Date.now()) } };
+  void commitIslandRunState({ session, client, record: next, triggerSource: triggerSource ?? 'init_space_excavator_progress' });
+  return next;
+}
+
+export function applySpaceExcavatorDig(options: { session: Session; client: SupabaseClient | null; eventId: string; tileId: number; triggerSource?: string; }): ApplySpaceExcavatorDigResult {
+  const { session, client, eventId, tileId, triggerSource } = options;
+  const current = initSpaceExcavatorProgressForEvent({ session, client: null, eventId, triggerSource });
+  const progress = current.spaceExcavatorProgressByEvent?.[eventId] ?? null;
+  const available = Math.max(0, Math.floor(current.minigameTicketsByEvent?.[eventId] ?? 0));
+  if (!progress || available < 1) return { record: current, ok: false, ticketsRemaining: available, progress };
+  const normalizedTile = Math.max(0, Math.floor(tileId));
+  if (progress.dugTileIds.includes(normalizedTile)) return { record: current, ok: false, ticketsRemaining: available, progress };
+  const dugTileIds = Array.from(new Set([...progress.dugTileIds, normalizedTile])).sort((a,b)=>a-b);
+  const foundTreasureTileIds = progress.treasureTileIds.includes(normalizedTile) ? Array.from(new Set([...progress.foundTreasureTileIds, normalizedTile])).sort((a,b)=>a-b) : progress.foundTreasureTileIds;
+  const boardComplete = dugTileIds.length >= progress.boardSize * progress.boardSize;
+  let nextProgress: SpaceExcavatorProgressEntry = { ...progress, dugTileIds, foundTreasureTileIds, updatedAtMs: Date.now() };
+  if (boardComplete && progress.status !== 'won') {
+    const nextIndex = progress.boardIndex + 1;
+    nextProgress = progress.completedBoardCount + 1 >= 3 ? { ...nextProgress, completedBoardCount: progress.completedBoardCount + 1, status: 'won' } : buildSpaceExcavatorProgress(eventId, nextIndex, Date.now());
+  }
+  const next = { ...current, runtimeVersion: current.runtimeVersion + 1, minigameTicketsByEvent: { ...current.minigameTicketsByEvent, [eventId]: available - 1 }, spaceExcavatorProgressByEvent: { ...current.spaceExcavatorProgressByEvent, [eventId]: nextProgress } };
+  void commitIslandRunState({ session, client, record: next, triggerSource: triggerSource ?? 'apply_space_excavator_dig' });
+  return { record: next, ok: true, ticketsRemaining: available - 1, progress: nextProgress };
+}
 // ── applyRollResult ──────────────────────────────────────────────────────────
 
 /**
