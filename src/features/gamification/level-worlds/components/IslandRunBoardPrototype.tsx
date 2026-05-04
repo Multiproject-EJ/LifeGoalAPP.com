@@ -121,6 +121,8 @@ import {
   syncCompletedStopsForIsland,
   applyTokenHopRewards,
   applyTimedEventTicketSpend,
+  applySpaceExcavatorDig,
+  initSpaceExcavatorProgressForEvent,
   travelToNextIsland,
 } from '../services/islandRunStateActions';
 import {
