@@ -44,7 +44,7 @@ import { scoreArchetypes, rankArchetypes } from './archetypes/archetypeScoring';
 import { buildHand, type ArchetypeHand } from './archetypes/archetypeHandBuilder';
 import { DeckSummary } from './deck/DeckSummary';
 import { PlayerDeck } from './deck/PlayerDeck';
-import { PlayersHandSparkPreview } from '../players_hand/spark-preview';
+import { PlayersHandRevealCeremony, PlayersHandSparkPreview } from '../players_hand/spark-preview';
 import {
   isPlayersHandSparkComparisonEnabled,
   isPlayersHandSparkResultEnabled,
@@ -542,6 +542,7 @@ export default function PersonalityTest() {
   const [refreshMessage, setRefreshMessage] = useState<string | null>(null);
   const [queuePending, setQueuePending] = useState(0);
   const [queueFailed, setQueueFailed] = useState(0);
+  const [showSparkReveal, setShowSparkReveal] = useState(true);
 
   const activeSession = useMemo(() => {
     if (session) {
@@ -677,6 +678,7 @@ export default function PersonalityTest() {
     setCurrentIndex(0);
     setAnswers({});
     savedResultRef.current = null;
+    setShowSparkReveal(true);
   };
 
   const handleViewLatest = () => {
@@ -1145,7 +1147,11 @@ export default function PersonalityTest() {
               </div>
               {playersHandSparkResultEnabled ? (
                 <div className="identity-hub__section">
-                  <PlayersHandSparkPreview hand={archetypeHand} title="Players Hand (SPARK style)" />
+                  {showSparkReveal ? (
+                    <PlayersHandRevealCeremony hand={archetypeHand} onComplete={() => setShowSparkReveal(false)} />
+                  ) : (
+                    <PlayersHandSparkPreview hand={archetypeHand} title="Players Hand (SPARK style)" />
+                  )}
                 </div>
               ) : (
                 <div className="identity-hub__section">
