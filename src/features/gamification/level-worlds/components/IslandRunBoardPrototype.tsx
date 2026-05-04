@@ -6035,7 +6035,29 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
     setActiveLaunchedMinigameId(descriptor.minigameId);
     setActiveLaunchedMinigameSource('timed_event');
-    setActiveLaunchedMinigameConfig(descriptor.config);
+    setActiveLaunchedMinigameConfig(
+      activeTimedEvent.eventType === 'space_excavator'
+        ? {
+            ...descriptor.config,
+            activeEventId: activeTimedEvent.eventId,
+            getTicketsRemaining: () => Math.max(0, Math.floor(runtimeStateRef.current.minigameTicketsByEvent?.[activeTimedEvent.eventId] ?? 0)),
+            requestDigSpend: (_tileId: number) => {
+              const spendResult = applyTimedEventTicketSpend({
+                session,
+                client,
+                eventId: activeTimedEvent.eventId,
+                ticketsToSpend: 1,
+                triggerSource: 'space_excavator_dig',
+              });
+              const remaining = Math.max(0, Math.floor(spendResult.record.minigameTicketsByEvent?.[activeTimedEvent.eventId] ?? 0));
+              if (spendResult.spent > 0) {
+                setRuntimeState(spendResult.record);
+              }
+              return { ok: spendResult.spent > 0, ticketsRemaining: remaining };
+            },
+          }
+        : descriptor.config,
+    );
     playIslandRunSound('minigame_open');
   };
 

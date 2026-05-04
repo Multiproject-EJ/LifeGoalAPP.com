@@ -63,9 +63,10 @@ export interface EventMinigameLaunchContext {
 }
 
 export interface EventMinigameLaunchDescriptor {
-  minigameId: 'lucky_spin' | 'shooter_blitz' | 'partner_wheel';
+  minigameId: 'lucky_spin' | 'space_excavator' | 'partner_wheel';
   ticketCost: number;
   ticketsSpent: number;
+  spendMode: 'entry' | 'per_action';
   config:
     | {
         source: 'timed_event';
@@ -112,7 +113,8 @@ export type AnyMinigameLaunchDescriptor =
 export function resolveTimedEventLaunchTicketDelta(
   descriptor: EventMinigameLaunchDescriptor | null | undefined,
 ): number {
-  const spend = Math.floor(descriptor?.ticketsSpent ?? 0);
+  if (!descriptor || descriptor.spendMode === 'per_action') return 0;
+  const spend = Math.floor(descriptor.ticketsSpent ?? 0);
   if (!Number.isFinite(spend) || spend <= 0) return 0;
   return -spend;
 }
@@ -198,7 +200,7 @@ export function resolveEventMinigameCompletionId(options: {
 }): EventMinigameId | null {
   if (!options.completed || options.launchSource !== 'timed_event') return null;
   if (options.minigameId === 'lucky_spin') return 'lucky_spin';
-  if (options.minigameId === 'shooter_blitz') return 'shooter_blitz';
+  if (options.minigameId === 'space_excavator') return 'space_excavator';
   if (options.minigameId === 'partner_wheel') return 'partner_wheel';
   return null;
 }
@@ -234,6 +236,7 @@ export function resolveLuckySpinEventMinigame(
 
   return {
     minigameId: 'lucky_spin',
+    spendMode: 'entry',
     ticketCost: launch.ticketCost,
     ticketsSpent: launch.ticketsSpent,
     config: {
@@ -258,10 +261,11 @@ export function resolveSpaceExcavatorEventMinigame(
     ticketsAvailable: ctx.ticketsAvailable,
     ticketsToSpend: ctx.ticketsToSpend,
   });
-  if (!launch || launch.minigameId !== 'shooter_blitz') return null;
+  if (!launch || launch.minigameId !== 'space_excavator') return null;
 
   return {
-    minigameId: 'shooter_blitz',
+    minigameId: 'space_excavator',
+    spendMode: 'per_action',
     ticketCost: launch.ticketCost,
     ticketsSpent: launch.ticketsSpent,
     config: {
@@ -295,6 +299,7 @@ export function resolveCompanionFeastEventMinigame(
 
   return {
     minigameId: 'partner_wheel',
+    spendMode: 'entry',
     ticketCost: launch.ticketCost,
     ticketsSpent: launch.ticketsSpent,
     config: {
