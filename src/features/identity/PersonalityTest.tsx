@@ -523,7 +523,7 @@ export default function PersonalityTest() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const savedResultRef = useRef<string | null>(null);
-  const refreshMessageTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const refreshMessageTimeoutRef = useRef<number | null>(null);
   const [supabaseRecommendations, setSupabaseRecommendations] = useState<Recommendation[]>([]);
   const [history, setHistory] = useState<PersonalityTestRecord[]>([]);
   const [aiNarrativeEnabled, setAiNarrativeEnabled] = useState(false);
