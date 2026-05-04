@@ -25,6 +25,17 @@ export function DreamJournalReminderSettings({ session }: DreamJournalReminderSe
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   useEffect(() => {
+    if (typeof document === 'undefined' || !showPreviewModal) {
+      return;
+    }
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showPreviewModal]);
+
+  useEffect(() => {
     setEnabled(getDreamJournalReminderEnabled(userId));
     const reminderWindow = getDreamJournalReminderWindow(userId);
     setStartHour(reminderWindow.startHour);
@@ -118,7 +129,7 @@ export function DreamJournalReminderSettings({ session }: DreamJournalReminderSe
       </div>
 
       {showPreviewModal && (
-        <div className="dream-journal-reminder-overlay" onClick={() => setShowPreviewModal(false)}>
+        <div className="dream-journal-reminder-overlay">
           <div className="dream-journal-reminder-modal" onClick={(event) => event.stopPropagation()}>
             <button
               type="button"
