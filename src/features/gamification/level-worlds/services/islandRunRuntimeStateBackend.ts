@@ -600,6 +600,7 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
               return merged;
             })()
           : current.minigameTicketsByEvent,
+      spaceExcavatorProgressByEvent: current.spaceExcavatorProgressByEvent,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({

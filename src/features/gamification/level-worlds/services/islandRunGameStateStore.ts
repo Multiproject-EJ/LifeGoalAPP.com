@@ -52,6 +52,21 @@ export interface CreatureCollectionRuntimeEntry {
   claimedBondMilestones: number[];
 }
 
+
+
+export interface SpaceExcavatorProgressEntry {
+  eventId: string;
+  boardIndex: number;
+  boardSize: number;
+  treasureCount: number;
+  treasureTileIds: number[];
+  dugTileIds: number[];
+  foundTreasureTileIds: number[];
+  completedBoardCount: number;
+  status: 'active' | 'won';
+  updatedAtMs: number;
+}
+
 export interface IslandRunGameStateRecord {
   runtimeVersion: number;
   firstRunClaimed: boolean;
@@ -173,6 +188,7 @@ export interface IslandRunGameStateRecord {
    * Minigame & Events Consolidation Plan).
    */
   minigameTicketsByEvent: Record<string, number>;
+  spaceExcavatorProgressByEvent: Record<string, SpaceExcavatorProgressEntry>;
 }
 
 const ISLAND_RUN_RUNTIME_STATE_TABLE = 'island_run_runtime_state';
@@ -528,6 +544,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     stickerInventory: {},
     lastEssenceDriftLost: 0,
     minigameTicketsByEvent: {},
+    spaceExcavatorProgressByEvent: {},
   };
 }
 
@@ -948,6 +965,10 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
       value.minigameTicketsByEvent,
       fallback.minigameTicketsByEvent,
     ),
+    spaceExcavatorProgressByEvent: sanitizeSpaceExcavatorProgressByEvent(
+      value.spaceExcavatorProgressByEvent,
+      fallback.spaceExcavatorProgressByEvent,
+    ),
   };
 }
 
@@ -972,6 +993,28 @@ function sanitizeMinigameTicketsByEvent(
     }
   }
   return result;
+}
+
+function sanitizeSpaceExcavatorProgressByEvent(value: unknown, fallback: Record<string, SpaceExcavatorProgressEntry>): Record<string, SpaceExcavatorProgressEntry> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...fallback };
+  const out: Record<string, SpaceExcavatorProgressEntry> = {};
+  for (const [eventId, raw] of Object.entries(value as Record<string, any>)) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) continue;
+    if (!Array.isArray(raw.treasureTileIds) || !Array.isArray(raw.dugTileIds) || !Array.isArray(raw.foundTreasureTileIds)) continue;
+    out[eventId] = {
+      eventId,
+      boardIndex: Math.max(0, Math.floor(raw.boardIndex ?? 0)),
+      boardSize: Math.max(1, Math.floor(raw.boardSize ?? 5)),
+      treasureCount: Math.max(0, Math.floor(raw.treasureCount ?? 0)),
+      treasureTileIds: raw.treasureTileIds.filter((n:any)=>Number.isFinite(n)).map((n:any)=>Math.max(0,Math.floor(n))),
+      dugTileIds: raw.dugTileIds.filter((n:any)=>Number.isFinite(n)).map((n:any)=>Math.max(0,Math.floor(n))),
+      foundTreasureTileIds: raw.foundTreasureTileIds.filter((n:any)=>Number.isFinite(n)).map((n:any)=>Math.max(0,Math.floor(n))),
+      completedBoardCount: Math.max(0, Math.floor(raw.completedBoardCount ?? 0)),
+      status: raw.status === 'won' ? 'won' : 'active',
+      updatedAtMs: Number.isFinite(raw.updatedAtMs) ? Math.max(0, Math.floor(raw.updatedAtMs)) : Date.now(),
+    };
+  }
+  return out;
 }
 
 function mergeStringArrayByUnion(left: string[] = [], right: string[] = []): string[] {
@@ -1195,6 +1238,7 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     sticker_inventory: record.stickerInventory,
     last_essence_drift_lost: record.lastEssenceDriftLost,
     minigame_tickets_by_event: record.minigameTicketsByEvent,
+    space_excavator_progress_by_event: record.spaceExcavatorProgressByEvent,
     last_writer_device_session_id: deviceSessionId,
     updated_at: new Date().toISOString(),
   };
@@ -1341,6 +1385,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
               (legacyData as Record<string, unknown>).minigame_tickets_by_event,
               fallback.minigameTicketsByEvent,
             ),
+            spaceExcavatorProgressByEvent: sanitizeSpaceExcavatorProgressByEvent(
+              (legacyData as Record<string, unknown>).space_excavator_progress_by_event,
+              fallback.spaceExcavatorProgressByEvent,
+            ),
           },
           fallback,
         );
@@ -1460,6 +1508,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       minigameTicketsByEvent: sanitizeMinigameTicketsByEvent(
         (data as Record<string, unknown>).minigame_tickets_by_event,
         fallback.minigameTicketsByEvent,
+      ),
+      spaceExcavatorProgressByEvent: sanitizeSpaceExcavatorProgressByEvent(
+        (data as Record<string, unknown>).space_excavator_progress_by_event,
+        fallback.spaceExcavatorProgressByEvent,
       ),
     },
     fallback,

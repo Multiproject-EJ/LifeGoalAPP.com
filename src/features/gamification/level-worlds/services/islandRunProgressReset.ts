@@ -127,6 +127,7 @@ export function buildFreshIslandRunRecord(
     stickerInventory: {},
     lastEssenceDriftLost: 0,
     minigameTicketsByEvent: {},
+    spaceExcavatorProgressByEvent: {},
   };
 }
 
