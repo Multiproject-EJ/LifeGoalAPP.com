@@ -10,12 +10,16 @@ type PlayersHandSparkPreviewProps = {
   hand?: ArchetypeHand | null;
   title?: string;
   compact?: boolean;
+  openOnMount?: boolean;
+  onOverlayClose?: () => void;
 };
 
 export function PlayersHandSparkPreview({
   hand,
   title = 'Players Hand SPARK Preview (Dev-only)',
   compact = false,
+  openOnMount = false,
+  onOverlayClose,
 }: PlayersHandSparkPreviewProps) {
   const cards = useMemo(
     () => (hand ? adaptArchetypeHandToSparkPreview(hand) : buildDevOnlyFallbackSparkPreviewCards()),
@@ -54,6 +58,17 @@ export function PlayersHandSparkPreview({
     return () => media.removeEventListener('change', updateMotionPreference);
   }, []);
 
+  useEffect(() => {
+    if (!openOnMount) return;
+    setExpanded(true);
+    setViewMode('hand');
+  }, [openOnMount]);
+
+  const closeOverlay = () => {
+    setExpanded(false);
+    onOverlayClose?.();
+  };
+
   return (
     <section
       className={`players-hand-spark-preview${compact ? ' players-hand-spark-preview--compact' : ''}`}
@@ -90,11 +105,11 @@ export function PlayersHandSparkPreview({
 
       {expanded && (
         <div className="players-hand-spark-overlay" role="dialog" aria-modal="true" aria-label="Players hand details">
-          <button className="players-hand-spark-overlay__backdrop" aria-label="Close hand preview" onClick={() => setExpanded(false)} />
+          <button className="players-hand-spark-overlay__backdrop" aria-label="Close hand preview" onClick={closeOverlay} />
           <div className="players-hand-spark-overlay__panel">
             <header className="players-hand-spark-overlay__header">
               <h4>{title}</h4>
-              <button type="button" className="players-hand-spark-overlay__close" onClick={() => setExpanded(false)} aria-label="Close hand preview">✕</button>
+              <button type="button" className="players-hand-spark-overlay__close" onClick={closeOverlay} aria-label="Close hand preview">✕</button>
             </header>
 
             <div className="players-hand-spark-overlay__view-mode" role="tablist" aria-label="Hand display mode">
