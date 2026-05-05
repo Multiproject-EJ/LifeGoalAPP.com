@@ -12,6 +12,7 @@ import { BoardToken } from './BoardToken';
 import { BoardParticles } from './BoardParticles';
 import { BoardOrbitStops, type OrbitStopVisualData, type StopProgressState } from './BoardOrbitStops';
 import { BoardDice3D } from './BoardDice3D';
+import { IslandArtLayers } from './IslandArtLayers';
 import {
   computeDirectionalLead,
   computeHopDurations,
@@ -33,6 +34,14 @@ export interface BoardStageProps {
   anchors: TileAnchor[];
   /** Current theme */
   theme: IslandBoardTheme;
+  /** Current island number for board-attached v2 art lookup */
+  islandNumber: number;
+  /** Current stop build levels used by v2 landmark art; read-only visual input. */
+  landmarkBuildLevels?: number[];
+  /** Whether the current island boss has already been resolved/defeated. */
+  isBossDefeated?: boolean;
+  /** Notifies the parent when v2 art is available so legacy background can stay as exact fallback. */
+  onIslandArtAvailabilityChange?: (isAvailable: boolean) => void;
   /** Board background image source */
   backgroundSrc: string;
   isBackgroundAvailable: boolean;
@@ -100,6 +109,10 @@ export function BoardStage(props: BoardStageProps) {
   const {
     anchors,
     theme,
+    islandNumber,
+    landmarkBuildLevels = [],
+    isBossDefeated = false,
+    onIslandArtAvailabilityChange,
     backgroundSrc,
     isBackgroundAvailable,
     onBackgroundError,
@@ -426,6 +439,17 @@ export function BoardStage(props: BoardStageProps) {
         className="island-run-board__camera-stage"
         style={{ transform: cameraStageTransform, willChange: 'transform' }}
       >
+        <IslandArtLayers
+          islandNumber={islandNumber}
+          landmarkBuildLevels={landmarkBuildLevels}
+          isBossDefeated={isBossDefeated}
+          boardWidth={boardSize.width}
+          boardHeight={boardSize.height}
+          uniformScale={uniformScale}
+          toScreen={toScreen}
+          onAvailabilityChange={onIslandArtAvailabilityChange}
+        />
+
         {/* Path overlay image */}
         {theme.pathOverlayImage && !isMinimalBoardArt && (
           <img

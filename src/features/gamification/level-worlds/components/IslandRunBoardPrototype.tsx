@@ -1264,6 +1264,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const activeTheme = useMemo(() => getIslandBoardThemeForIslandNumber(islandNumber), [islandNumber]);
   const islandBackgroundSrc = useMemo(() => getIslandBackgroundImageSrc(islandNumber), [islandNumber]);
   const [isIslandBackgroundAvailable, setIsIslandBackgroundAvailable] = useState(true);
+  const [isIslandArtV2Available, setIsIslandArtV2Available] = useState(false);
   const [isBackgroundHidden, setIsBackgroundHidden] = useState(false);
   const [timeLeftSec, setTimeLeftSec] = useState(ISLAND_DURATION_SEC);
   const [showTravelOverlay, setShowTravelOverlay] = useState(false);
@@ -1373,6 +1374,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   useEffect(() => {
     setIsIslandBackgroundAvailable(true);
+    setIsIslandArtV2Available(false);
   }, [islandBackgroundSrc]);
 
   useEffect(() => {
@@ -7294,6 +7296,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setRuntimeState(next);
   };
 
+  const shouldShowLegacyIslandBackground = !isIslandArtV2Available && isIslandBackgroundAvailable && !isBackgroundHidden;
+  const shouldUseNoBackgroundFallback = !isIslandArtV2Available && (!isIslandBackgroundAvailable || isBackgroundHidden);
+  const islandArtLandmarkBuildLevels = runtimeState.stopBuildStateByIndex.map((buildState) => buildState.buildLevel);
+  const isCurrentIslandBossDefeated = bossTrialResolved || runtimeState.bossTrialResolvedIslandNumber === islandNumber;
+
   if (isRuntimeSyncBlocked || isOwnershipBlocked) {
     return (
       <section className="island-run-prototype">
@@ -7688,8 +7695,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         </header>
       ) : null}
 
-      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${(!isIslandBackgroundAvailable || isBackgroundHidden) ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark40BoardProfile ? 'island-run-board--spark40' : ''}`}>
-        {isIslandBackgroundAvailable && !isBackgroundHidden && (
+      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${shouldUseNoBackgroundFallback ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark40BoardProfile ? 'island-run-board--spark40' : ''}`}>
+        {shouldShowLegacyIslandBackground && (
           <img
             key={islandBackgroundSrc}
             className="island-run-board__bg"
@@ -7884,6 +7891,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         <BoardStage
           anchors={activeTileAnchors}
           theme={activeTheme}
+          islandNumber={islandNumber}
+          landmarkBuildLevels={islandArtLandmarkBuildLevels}
+          isBossDefeated={isCurrentIslandBossDefeated}
+          onIslandArtAvailabilityChange={setIsIslandArtV2Available}
           backgroundSrc={islandBackgroundSrc}
           isBackgroundAvailable={isIslandBackgroundAvailable}
           onBackgroundError={() => setIsIslandBackgroundAvailable(false)}
