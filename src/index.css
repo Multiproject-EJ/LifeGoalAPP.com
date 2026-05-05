@@ -17678,6 +17678,21 @@ html.platform-ipad .workspace-shell__menu-edge {
   flex-direction: column;
 }
 
+.mobile-menu-overlay__panel--default {
+  min-height: min(72dvh, 760px);
+  max-height: 85vh;
+}
+
+.mobile-menu-overlay__panel--tall {
+  min-height: min(78dvh, 880px);
+  max-height: 92dvh;
+}
+
+.mobile-menu-overlay__panel--immersive {
+  min-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 0.75rem);
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+}
+
 .mobile-menu-overlay__panel::before,
 .mobile-menu-overlay__panel::after {
   content: '';
