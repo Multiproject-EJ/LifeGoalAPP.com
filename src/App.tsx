@@ -4715,6 +4715,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
       openOnMount
       overlayOnly
       onOverlayClose={() => setIsLauncherHandOverlayOpen(false)}
+      onOpenProfile={() => {
+        setIsMobileMenuOpen(true);
+        setIsMobileProfileDialogOpen(true);
+      }}
     />
   ) : null;
   const starterQuestSheet =

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { ArchetypeHand } from '../../identity/archetypes/archetypeHandBuilder';
 import {
   adaptArchetypeHandToSparkPreview,
@@ -13,6 +13,7 @@ type PlayersHandSparkPreviewProps = {
   openOnMount?: boolean;
   onOverlayClose?: () => void;
   overlayOnly?: boolean;
+  onOpenProfile?: () => void;
 };
 
 export function PlayersHandSparkPreview({
@@ -22,6 +23,7 @@ export function PlayersHandSparkPreview({
   openOnMount = false,
   onOverlayClose,
   overlayOnly = false,
+  onOpenProfile,
 }: PlayersHandSparkPreviewProps) {
   const cards = useMemo(
     () => (hand ? adaptArchetypeHandToSparkPreview(hand) : buildDevOnlyFallbackSparkPreviewCards()),
@@ -32,6 +34,7 @@ export function PlayersHandSparkPreview({
   const [viewMode, setViewMode] = useState<'hand' | 'grid' | 'story'>('hand');
   const [isFocusedCardFlipped, setIsFocusedCardFlipped] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const swipeGestureRef = useRef<{ startX: number; startY: number; isTracking: boolean } | null>(null);
 
   const activeCard = cards[activeIndex] ?? cards[0];
   const dominantCard = cards.find((card) => card.role === 'dominant') ?? cards[0];
@@ -106,6 +109,30 @@ export function PlayersHandSparkPreview({
     onOverlayClose?.();
   };
 
+  const swipeThresholdPx = 42;
+  const startSwipeGesture = (x: number, y: number) => {
+    swipeGestureRef.current = { startX: x, startY: y, isTracking: true };
+  };
+  const finishSwipeGesture = (x: number, y: number) => {
+    const gesture = swipeGestureRef.current;
+    swipeGestureRef.current = null;
+    if (!gesture?.isTracking || cards.length < 2) return;
+    const deltaX = x - gesture.startX;
+    const deltaY = y - gesture.startY;
+    const isHorizontalIntent = Math.abs(deltaX) > Math.abs(deltaY) * 1.2;
+    if (!isHorizontalIntent || Math.abs(deltaX) < swipeThresholdPx) return;
+
+    if (deltaX < 0 && activeIndex < cards.length - 1) {
+      setActiveIndex(activeIndex + 1);
+      setIsFocusedCardFlipped(false);
+      return;
+    }
+    if (deltaX > 0 && activeIndex > 0) {
+      setActiveIndex(activeIndex - 1);
+      setIsFocusedCardFlipped(false);
+    }
+  };
+
   return (
     <section
       className={`players-hand-spark-preview${compact ? ' players-hand-spark-preview--compact' : ''}${overlayOnly ? ' players-hand-spark-preview--overlay-only' : ''}`}
@@ -150,7 +177,22 @@ export function PlayersHandSparkPreview({
           <div className="players-hand-spark-overlay__panel">
             <header className="players-hand-spark-overlay__header">
               <h4>{title}</h4>
-              <button type="button" className="players-hand-spark-overlay__close" onClick={closeOverlay} aria-label="Close hand preview">✕</button>
+              <div className="players-hand-spark-overlay__header-actions">
+                {onOpenProfile ? (
+                  <button
+                    type="button"
+                    className="players-hand-spark-overlay__profile"
+                    aria-label="Open profile"
+                    onClick={() => {
+                      closeOverlay();
+                      onOpenProfile();
+                    }}
+                  >
+                    Profile
+                  </button>
+                ) : null}
+                <button type="button" className="players-hand-spark-overlay__close" onClick={closeOverlay} aria-label="Close hand preview">✕</button>
+              </div>
             </header>
 
             <div className="players-hand-spark-overlay__view-mode" role="tablist" aria-label="Hand display mode">
@@ -184,7 +226,28 @@ export function PlayersHandSparkPreview({
             </div>
 
             {viewMode === 'hand' ? (
-            <div className="players-hand-spark-overlay__fan" aria-label="Select a card from your hand">
+            <div
+              className="players-hand-spark-overlay__fan"
+              aria-label="Select a card from your hand"
+              onTouchStart={(event) => {
+                const touch = event.touches[0];
+                if (!touch) return;
+                startSwipeGesture(touch.clientX, touch.clientY);
+              }}
+              onTouchEnd={(event) => {
+                const touch = event.changedTouches[0];
+                if (!touch) return;
+                finishSwipeGesture(touch.clientX, touch.clientY);
+              }}
+              onPointerDown={(event) => {
+                if (event.pointerType === 'mouse') return;
+                startSwipeGesture(event.clientX, event.clientY);
+              }}
+              onPointerUp={(event) => {
+                if (event.pointerType === 'mouse') return;
+                finishSwipeGesture(event.clientX, event.clientY);
+              }}
+            >
               {cards.map((card, index) => {
                 const relative = index - activeIndex;
                 const selected = relative === 0;
@@ -213,6 +276,7 @@ export function PlayersHandSparkPreview({
                   </button>
                 );
               })}
+              <p className="players-hand-spark-overlay__swipe-hint">Swipe or tap cards</p>
             </div>
             ) : viewMode === 'grid' ? (
               <div className="players-hand-spark-overlay__grid" aria-label="Browse all cards in your hand">
