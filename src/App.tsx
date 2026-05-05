@@ -4703,6 +4703,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       hand={archetypeHand}
       title="My Player Hand"
       openOnMount
+      overlayOnly
       onOverlayClose={() => setIsLauncherHandOverlayOpen(false)}
     />
   ) : null;

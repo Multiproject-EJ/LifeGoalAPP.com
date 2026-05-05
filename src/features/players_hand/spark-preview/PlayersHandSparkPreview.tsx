@@ -12,6 +12,7 @@ type PlayersHandSparkPreviewProps = {
   compact?: boolean;
   openOnMount?: boolean;
   onOverlayClose?: () => void;
+  overlayOnly?: boolean;
 };
 
 export function PlayersHandSparkPreview({
@@ -20,6 +21,7 @@ export function PlayersHandSparkPreview({
   compact = false,
   openOnMount = false,
   onOverlayClose,
+  overlayOnly = false,
 }: PlayersHandSparkPreviewProps) {
   const cards = useMemo(
     () => (hand ? adaptArchetypeHandToSparkPreview(hand) : buildDevOnlyFallbackSparkPreviewCards()),
@@ -71,37 +73,41 @@ export function PlayersHandSparkPreview({
 
   return (
     <section
-      className={`players-hand-spark-preview${compact ? ' players-hand-spark-preview--compact' : ''}`}
+      className={`players-hand-spark-preview${compact ? ' players-hand-spark-preview--compact' : ''}${overlayOnly ? ' players-hand-spark-preview--overlay-only' : ''}`}
       aria-label="Players hand SPARK preview"
     >
-      <header className="players-hand-spark-preview__header">
-        <h3>{title}</h3>
-        <p>{compact ? 'Tap to open your full hand.' : 'Tap to open full-screen hand view.'}</p>
-      </header>
+      {!overlayOnly && (
+        <>
+          <header className="players-hand-spark-preview__header">
+            <h3>{title}</h3>
+            <p>{compact ? 'Tap to open your full hand.' : 'Tap to open full-screen hand view.'}</p>
+          </header>
 
-      <button
-        type="button"
-        className="players-hand-spark-preview__mini"
-        aria-label="Open SPARK hand preview"
-        onClick={() => {
-          setExpanded(true);
-          setViewMode('hand');
-        }}
-      >
-        {cards.map((card, index) => {
-          const center = (cards.length - 1) / 2;
-          const offset = index - center;
-          return (
-            <span
-              key={`mini-${card.id}`}
-              className="players-hand-spark-preview__mini-card"
-              style={{ '--card-color': card.color, transform: `translateX(${offset * 26}px) rotate(${offset * 7}deg)` } as CSSProperties}
-            >
-              {card.icon}
-            </span>
-          );
-        })}
-      </button>
+          <button
+            type="button"
+            className="players-hand-spark-preview__mini"
+            aria-label="Open SPARK hand preview"
+            onClick={() => {
+              setExpanded(true);
+              setViewMode('hand');
+            }}
+          >
+            {cards.map((card, index) => {
+              const center = (cards.length - 1) / 2;
+              const offset = index - center;
+              return (
+                <span
+                  key={`mini-${card.id}`}
+                  className="players-hand-spark-preview__mini-card"
+                  style={{ '--card-color': card.color, transform: `translateX(${offset * 26}px) rotate(${offset * 7}deg)` } as CSSProperties}
+                >
+                  {card.icon}
+                </span>
+              );
+            })}
+          </button>
+        </>
+      )}
 
       {expanded && (
         <div className="players-hand-spark-overlay" role="dialog" aria-modal="true" aria-label="Players hand details">
