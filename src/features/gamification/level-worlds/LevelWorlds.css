@@ -1447,6 +1447,49 @@
   display: none;
 }
 
+
+/* ─── Island Art v2 board-attached layers ─────────────────────────────────── */
+.island-art-layers {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: visible;
+  contain: layout style paint;
+}
+
+.island-art-layers__image {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  z-index: var(--island-art-layer-z, 0);
+}
+
+.island-art-layers__base {
+  object-fit: cover;
+  z-index: 0;
+}
+
+.island-art-layers__board-circle {
+  z-index: 1;
+}
+
+.island-art-layers__scenery {
+  z-index: var(--island-art-layer-z, 3);
+}
+
+.island-art-layers__landmark {
+  z-index: var(--island-art-layer-z, 4);
+}
+
+.island-art-layers__boss {
+  z-index: var(--island-art-layer-z, 5);
+}
+
 .island-run-board__path {
   z-index: 3;
   opacity: 0;
