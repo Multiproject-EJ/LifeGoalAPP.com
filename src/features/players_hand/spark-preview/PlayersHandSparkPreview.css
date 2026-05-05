@@ -82,6 +82,17 @@
 .players-hand-spark-overlay__grid-card.is-selected { box-shadow:0 0 0 2px color-mix(in srgb, var(--card-color) 70%, white 30%), 0 10px 22px rgba(0,0,0,.45); }
 .players-hand-spark-overlay__grid-meta { display:flex; justify-content:space-between; gap:6px; font-size:11px; }
 .players-hand-spark-overlay__grid-title { font-size:14px; font-weight:700; line-height:1.2; }
+.players-hand-spark-overlay__story { flex:1; min-height:280px; overflow:auto; display:flex; flex-direction:column; gap:10px; padding-bottom:8px; }
+.players-hand-spark-overlay__story-core { border:1px solid color-mix(in srgb, var(--card-color) 68%, white 10%); border-radius:14px; background:linear-gradient(165deg, color-mix(in srgb, var(--card-color) 24%, #151936), rgba(11,14,34,.96)); color:#fff; padding:12px; text-align:left; display:flex; flex-direction:column; gap:6px; }
+.players-hand-spark-overlay__story-label { font-size:11px; letter-spacing:.08em; text-transform:uppercase; opacity:.85; }
+.players-hand-spark-overlay__story-title { font-size:18px; font-weight:700; }
+.players-hand-spark-overlay__story-copy { font-size:14px; line-height:1.4; }
+.players-hand-spark-overlay__story-panel { border:1px solid rgba(255,255,255,.16); border-radius:12px; background:rgba(8,11,28,.72); padding:10px; }
+.players-hand-spark-overlay__story-panel h5 { margin:0 0 8px; font-size:14px; }
+.players-hand-spark-overlay__story-panel p { margin:0; font-size:13px; line-height:1.4; opacity:.95; }
+.players-hand-spark-overlay__story-panel p + p { margin-top:8px; }
+.players-hand-spark-overlay__story-list { display:flex; flex-wrap:wrap; gap:8px; }
+.players-hand-spark-overlay__story-chip { border:1px solid color-mix(in srgb, var(--card-color, #7e5cff) 64%, white 10%); border-radius:999px; background:rgba(126,92,255,.12); color:#fff; padding:6px 10px; font-size:12px; }
 @media (max-width: 360px) {
   .players-hand-spark-overlay__grid { grid-template-columns: 1fr; }
 }

@@ -23,11 +23,18 @@ export function PlayersHandSparkPreview({
   );
   const [activeIndex, setActiveIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
-  const [viewMode, setViewMode] = useState<'hand' | 'grid'>('hand');
+  const [viewMode, setViewMode] = useState<'hand' | 'grid' | 'story'>('hand');
   const [isFocusedCardFlipped, setIsFocusedCardFlipped] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   const activeCard = cards[activeIndex] ?? cards[0];
+  const dominantCard = cards.find((card) => card.role === 'dominant') ?? cards[0];
+  const secondaryCard = cards.find((card) => card.role === 'secondary') ?? null;
+  const supportCards = cards.filter((card) => card.role === 'support');
+  const shadowCard = cards.find((card) => card.role === 'shadow') ?? null;
+  const identitySummary = [dominantCard?.title, secondaryCard?.title, supportCards[0]?.title]
+    .filter(Boolean)
+    .join(' • ');
 
   useEffect(() => {
     if (!expanded) return;
@@ -109,6 +116,15 @@ export function PlayersHandSparkPreview({
               >
                 All Cards
               </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={viewMode === 'story'}
+                className={`players-hand-spark-overlay__view-tab${viewMode === 'story' ? ' is-active' : ''}`}
+                onClick={() => setViewMode('story')}
+              >
+                Identity
+              </button>
             </div>
 
             {viewMode === 'hand' ? (
@@ -142,7 +158,7 @@ export function PlayersHandSparkPreview({
                 );
               })}
             </div>
-            ) : (
+            ) : viewMode === 'grid' ? (
               <div className="players-hand-spark-overlay__grid" aria-label="Browse all cards in your hand">
                 {cards.map((card, index) => {
                   const selected = index === activeIndex;
@@ -169,6 +185,75 @@ export function PlayersHandSparkPreview({
                   );
                 })}
               </div>
+            ) : (
+              <section className="players-hand-spark-overlay__story" aria-label="Identity story summary">
+                {dominantCard && (
+                  <button
+                    type="button"
+                    className="players-hand-spark-overlay__story-core"
+                    style={{ '--card-color': dominantCard.color } as CSSProperties}
+                    aria-label={`Focus core identity card ${dominantCard.title}`}
+                    onClick={() => {
+                      setActiveIndex(cards.findIndex((card) => card.id === dominantCard.id));
+                      setIsFocusedCardFlipped(false);
+                      setViewMode('hand');
+                    }}
+                  >
+                    <span className="players-hand-spark-overlay__story-label">Core Identity</span>
+                    <span className="players-hand-spark-overlay__story-title">{dominantCard.icon} {dominantCard.title}</span>
+                    <span className="players-hand-spark-overlay__story-copy">{dominantCard.description}</span>
+                  </button>
+                )}
+
+                <article className="players-hand-spark-overlay__story-panel">
+                  <h5>Your strengths</h5>
+                  <div className="players-hand-spark-overlay__story-list">
+                    {[secondaryCard, ...supportCards].filter(Boolean).map((card) => (
+                      <button
+                        key={`story-strength-${card!.id}`}
+                        type="button"
+                        className="players-hand-spark-overlay__story-chip"
+                        style={{ '--card-color': card!.color } as CSSProperties}
+                        aria-label={`Focus strength card ${card!.title}`}
+                        onClick={() => {
+                          setActiveIndex(cards.findIndex((entry) => entry.id === card!.id));
+                          setIsFocusedCardFlipped(false);
+                          setViewMode('hand');
+                        }}
+                      >
+                        {card!.icon} {card!.title}
+                      </button>
+                    ))}
+                  </div>
+                </article>
+
+                {shadowCard && (
+                  <article className="players-hand-spark-overlay__story-panel" style={{ '--card-color': shadowCard.color } as CSSProperties}>
+                    <h5>Growth edge</h5>
+                    <button
+                      type="button"
+                      className="players-hand-spark-overlay__story-chip"
+                      aria-label={`Focus growth edge card ${shadowCard.title}`}
+                      onClick={() => {
+                        setActiveIndex(cards.findIndex((entry) => entry.id === shadowCard.id));
+                        setIsFocusedCardFlipped(false);
+                        setViewMode('hand');
+                      }}
+                    >
+                      {shadowCard.icon} {shadowCard.title}
+                    </button>
+                    <p>{shadowCard.description}</p>
+                  </article>
+                )}
+
+                <article className="players-hand-spark-overlay__story-panel">
+                  <h5>Identity summary</h5>
+                  <p>{identitySummary ? `Your hand blends ${identitySummary}.` : 'Your hand is forming your identity style.'}</p>
+                  <p>
+                    Your hand is made of {cards.length} cards across {Array.from(new Set(cards.map((card) => card.role))).join(', ')} roles.
+                  </p>
+                </article>
+              </section>
             )}
 
             {activeCard && viewMode === 'hand' && (
