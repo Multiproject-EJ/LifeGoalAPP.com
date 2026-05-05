@@ -3524,7 +3524,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         <div
           className={`mobile-menu-overlay__panel${
             isMobileMenuImageActive ? ' mobile-menu-overlay__panel--image' : ''
-          }`}
+          } mobile-menu-overlay__panel--tall`}
         >
           <>
             <div className="mobile-menu-overlay__header">
