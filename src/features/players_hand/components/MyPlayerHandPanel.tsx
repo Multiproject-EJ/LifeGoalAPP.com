@@ -25,7 +25,7 @@ export function MyPlayerHandPanel({ hand, compact = false }: MyPlayerHandPanelPr
       aria-label="My player hand"
     >
       <h2 className="player-avatar-panel__section-title">My Player Hand</h2>
-      <p className="player-avatar-panel__section-subtitle">Open your hand anytime from your profile.</p>
+      <p className="player-avatar-panel__section-subtitle">{compact ? 'Tap to revisit your hand details.' : 'Open your hand anytime from your profile.'}</p>
       <PlayersHandSparkPreview hand={hand} title="My Player Hand" compact={compact} />
     </section>
   );

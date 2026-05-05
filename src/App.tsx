@@ -142,6 +142,8 @@ import { buildHand, type ArchetypeHand } from './features/identity/archetypes/ar
 import { ARCHETYPE_DECK, SUIT_LABELS } from './features/identity/archetypes/archetypeDeck';
 import { useMicroTestBadge } from './features/identity/microTests/useMicroTestBadge';
 import type { PlayerState } from './features/identity/microTests/microTestTriggers';
+import { isPlayersHandSparkResultEnabled } from './features/players_hand/playersHandFeatureFlags';
+import { PlayersHandSparkPreview } from './features/players_hand/spark-preview';
 import {
   EXPERIMENTAL_FEATURES_UPDATED_EVENT,
   getExperimentalFeatures,
@@ -457,6 +459,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [workspaceSetupDismissed, setWorkspaceSetupDismissed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileProfileDialogOpen, setIsMobileProfileDialogOpen] = useState(false);
+  const [isLauncherHandOverlayOpen, setIsLauncherHandOverlayOpen] = useState(false);
   const [breathingSpaceMobileTab, setBreathingSpaceMobileTab] = useState<
     'breathing' | 'meditation' | 'conflict' | 'yoga' | 'food' | 'exercise' | null
   >(null);
@@ -2137,6 +2140,33 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   };
 
+  const openPlayersHandFromLauncher = useCallback(() => {
+    setIsMobileProfileDialogOpen(false);
+    setIsMobileMenuOpen(false);
+    setIsEnergyMenuOpen(false);
+    setIsMyQuestSubmenuOpen(false);
+    setIsFeedbackSupportSubmenuOpen(false);
+    setIsStarterQuestSheetOpen(false);
+    closeGameBoardOverlayIfOpen();
+
+    const sparkHandEnabled = isPlayersHandSparkResultEnabled();
+    const hasArchetypeHand = Boolean(archetypeHand);
+    if (import.meta.env.DEV) {
+      console.debug('[players-hand][launcher]', {
+        sparkHandEnabled,
+        hasArchetypeHand,
+        branch: sparkHandEnabled && hasArchetypeHand ? 'direct-overlay' : 'fallback-identity',
+      });
+    }
+
+    if (sparkHandEnabled && hasArchetypeHand) {
+      setIsLauncherHandOverlayOpen(true);
+      return;
+    }
+
+    handleMobileNavSelect('identity');
+  }, [archetypeHand, handleMobileNavSelect]);
+
   const openMyIkigaiFromMobileMenu = useCallback(() => {
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
@@ -3504,7 +3534,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         <div
           className={`mobile-menu-overlay__panel${
             isMobileMenuImageActive ? ' mobile-menu-overlay__panel--image' : ''
-          }`}
+          } mobile-menu-overlay__panel--tall`}
         >
           <>
             <div className="mobile-menu-overlay__header">
@@ -3550,8 +3580,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 <button
                   type="button"
                   className="mobile-menu-overlay__profile-launch"
-                  onClick={() => setIsMobileProfileDialogOpen(true)}
-                  aria-label="Open player profile details"
+                  onClick={openPlayersHandFromLauncher}
+                  aria-label="Open player's hand"
                 >
                   <div
                     className="mobile-menu-overlay__profile-picture mobile-menu-overlay__profile-picture--large"
@@ -3631,7 +3661,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                     <button
                       type="button"
                       className="mobile-menu-overlay__quick-action-btn"
-                      onClick={() => handleMobileNavSelect('identity')}
+                      onClick={openPlayersHandFromLauncher}
                       aria-label="Open player's hand"
                     >
                       <span className="mobile-menu-overlay__quick-action-icon">🪪</span>
@@ -4678,6 +4708,20 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const isIslandFullscreenActive = showGameBoardOverlay || showLevelWorldsFromEntry;
   const islandFullscreenClassName = isIslandFullscreenActive ? ' app--island-fullscreen' : '';
+  const launcherPlayersHandOverlay = isLauncherHandOverlayOpen && archetypeHand ? (
+    <PlayersHandSparkPreview
+      hand={archetypeHand}
+      title="My Player Hand"
+      openOnMount
+      overlayOnly
+      overlayVariant="fullscreen"
+      onOverlayClose={() => setIsLauncherHandOverlayOpen(false)}
+      onOpenProfile={() => {
+        setIsMobileMenuOpen(true);
+        setIsMobileProfileDialogOpen(true);
+      }}
+    />
+  ) : null;
   const starterQuestSheet =
     isMobileExperience && isStarterQuestSheetOpen && activeSession ? (
       <div className="starter-quest-sheet" role="dialog" aria-modal="true" aria-label="Starter Quest picker">
@@ -4772,6 +4816,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         )}
         {starterQuestSheet}
         {mobileMenuOverlay}
+        {launcherPlayersHandOverlay}
         {mobileGamificationOverlay}
         {levelWorldsEntryModal}
         <GameBoardOverlay
@@ -5075,6 +5120,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       ) : null}
 
       {mobileMenuOverlay}
+      {launcherPlayersHandOverlay}
       {mobileGamificationOverlay}
       {levelWorldsEntryModal}
       <HolidaySeasonDialog
