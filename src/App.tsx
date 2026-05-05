@@ -3580,8 +3580,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 <button
                   type="button"
                   className="mobile-menu-overlay__profile-launch"
-                  onClick={() => setIsMobileProfileDialogOpen(true)}
-                  aria-label="Open player profile details"
+                  onClick={openPlayersHandFromLauncher}
+                  aria-label="Open player's hand"
                 >
                   <div
                     className="mobile-menu-overlay__profile-picture mobile-menu-overlay__profile-picture--large"
