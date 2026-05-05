@@ -14,6 +14,7 @@ type PlayersHandSparkPreviewProps = {
   onOverlayClose?: () => void;
   overlayOnly?: boolean;
   onOpenProfile?: () => void;
+  overlayVariant?: 'default' | 'fullscreen';
 };
 
 export function PlayersHandSparkPreview({
@@ -24,6 +25,7 @@ export function PlayersHandSparkPreview({
   onOverlayClose,
   overlayOnly = false,
   onOpenProfile,
+  overlayVariant = 'default',
 }: PlayersHandSparkPreviewProps) {
   const cards = useMemo(
     () => (hand ? adaptArchetypeHandToSparkPreview(hand) : buildDevOnlyFallbackSparkPreviewCards()),
@@ -172,7 +174,14 @@ export function PlayersHandSparkPreview({
       )}
 
       {expanded && (
-        <div className="players-hand-spark-overlay" role="dialog" aria-modal="true" aria-label="Players hand details">
+        <div
+          className={`players-hand-spark-overlay${
+            overlayVariant === 'fullscreen' ? ' players-hand-spark-overlay--fullscreen' : ''
+          }`}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Players hand details"
+        >
           <button className="players-hand-spark-overlay__backdrop" aria-label="Close hand preview" onClick={closeOverlay} />
           <div className="players-hand-spark-overlay__panel">
             <header className="players-hand-spark-overlay__header">

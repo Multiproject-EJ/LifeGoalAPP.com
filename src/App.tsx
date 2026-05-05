@@ -4714,6 +4714,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       title="My Player Hand"
       openOnMount
       overlayOnly
+      overlayVariant="fullscreen"
       onOverlayClose={() => setIsLauncherHandOverlayOpen(false)}
       onOpenProfile={() => {
         setIsMobileMenuOpen(true);
