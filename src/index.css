@@ -22093,7 +22093,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 /* Identity Hub placeholder styles */
 .identity-hub {
-  padding: 1.5rem;
+  padding: calc(1.5rem + env(safe-area-inset-top, 0px)) 1.5rem 1.5rem;
 }
 
 .identity-hub__header {

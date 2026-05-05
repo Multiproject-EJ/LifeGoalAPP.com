@@ -2149,7 +2149,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsStarterQuestSheetOpen(false);
     closeGameBoardOverlayIfOpen();
 
-    if (isPlayersHandSparkResultEnabled() && archetypeHand) {
+    const sparkHandEnabled = isPlayersHandSparkResultEnabled();
+    const hasArchetypeHand = Boolean(archetypeHand);
+    if (import.meta.env.DEV) {
+      console.debug('[players-hand][launcher]', {
+        sparkHandEnabled,
+        hasArchetypeHand,
+        branch: sparkHandEnabled && hasArchetypeHand ? 'direct-overlay' : 'fallback-identity',
+      });
+    }
+
+    if (sparkHandEnabled && hasArchetypeHand) {
       setIsLauncherHandOverlayOpen(true);
       return;
     }
