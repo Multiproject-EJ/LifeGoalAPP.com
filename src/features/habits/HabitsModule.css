@@ -447,7 +447,11 @@
   max-height: 95vh;
   border-radius: 18px;
   border: none;
-  background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  background-color: #0f172a;
+  background-image: url("/assets/today'soffer/TodaysOffer1.webp");
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 100% auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -478,6 +482,17 @@
   background: linear-gradient(135deg, #16a34a, #22c55e);
   box-shadow: 0 16px 30px rgba(22, 163, 74, 0.35);
   cursor: pointer;
+  position: absolute;
+  left: 50%;
+  bottom: 20%;
+  z-index: 2;
+  min-width: 170px;
+  transform: translateX(-50%);
+}
+
+.habit-day-nav__todays-offer-buy:disabled {
+  cursor: wait;
+  opacity: 0.78;
 }
 
 /* ──────────────────────────────────────────────────────────────────────
