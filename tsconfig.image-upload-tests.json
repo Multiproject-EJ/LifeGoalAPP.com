@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "ES2022"],
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": ".tmp-image-upload-tests",
+    "rootDir": "src"
+  },
+  "include": [
+    "src/utils/imageUploadOptimizer.ts",
+    "src/utils/__tests__/imageUploadOptimizer.test.ts",
+    "src/utils/__tests__/runImageUploadOptimizerTests.ts"
+  ]
+}

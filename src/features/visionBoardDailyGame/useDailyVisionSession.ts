@@ -4,7 +4,7 @@ import { canUseSupabaseData, getSupabaseClient } from '../../lib/supabaseClient'
 import type { Database } from '../../lib/database.types';
 import { LIFE_WHEEL_CATEGORIES } from '../checkins/LifeWheelCheckins';
 import { evaluateBalance } from './scoring';
-import { convertImageToWebp } from './imageWebp';
+import { optimizeImageFileForUpload } from '../../utils/imageUploadOptimizer';
 import { getSignedImageUrl, uploadDailyGameImage } from './storage';
 
 type DailySessionRow = Database['public']['Tables']['vision_board_daily_sessions']['Row'];
@@ -187,7 +187,7 @@ export function useDailyVisionSession(session: Session | null): UseDailyVisionSe
       if (!target) return;
 
       try {
-        const webp = await convertImageToWebp(payload.file, { maxSize: 1024, quality: 0.82 });
+        const webp = await optimizeImageFileForUpload(payload.file, { kind: 'daily-game' });
         const { path, error: uploadError } = await uploadDailyGameImage(session.user.id, webp, sessionDate);
         if (uploadError || !path) {
           throw uploadError || new Error('Unable to upload image');

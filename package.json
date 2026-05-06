@@ -21,7 +21,8 @@
     "test:island-run": "node scripts/run-island-run-service-tests.mjs",
     "check:island-run-architecture-guards": "node scripts/check-island-run-architecture-guards.mjs",
     "check:island-art-assets": "node scripts/validate-island-art-assets.mjs",
-    "check:island-art-render-wiring": "node scripts/check-island-art-render-wiring.mjs"
+    "check:island-art-render-wiring": "node scripts/check-island-art-render-wiring.mjs",
+    "test:image-upload-optimizer": "node scripts/run-image-upload-optimizer-tests.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
