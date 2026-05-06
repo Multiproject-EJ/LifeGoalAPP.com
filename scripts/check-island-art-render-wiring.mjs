@@ -2,10 +2,12 @@
 import { readFileSync } from 'node:fs';
 
 const boardStagePath = 'src/features/gamification/level-worlds/components/board/BoardStage.tsx';
+const islandArtLayersPath = 'src/features/gamification/level-worlds/components/board/IslandArtLayers.tsx';
 const prototypePath = 'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx';
 const levelWorldsCssPath = 'src/features/gamification/level-worlds/LevelWorlds.css';
 
 const boardStage = readFileSync(boardStagePath, 'utf8');
+const islandArtLayers = readFileSync(islandArtLayersPath, 'utf8');
 const prototype = readFileSync(prototypePath, 'utf8');
 const levelWorldsCss = readFileSync(levelWorldsCssPath, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 const failures = [];
@@ -73,6 +75,16 @@ if (!/manifest=\{islandArtManifest\}/.test(islandArtLayerCall)) {
 }
 if (/islandNumber=|onAvailabilityChange=/.test(islandArtLayerCall)) {
   failures.push('BoardStage IslandArtLayers must not use legacy islandNumber/onAvailabilityChange props.');
+}
+
+if (!islandArtLayers.includes('getIslandArtBoardPlateImageSrc')) {
+  failures.push('IslandArtLayers must resolve board-attached scene art through getIslandArtBoardPlateImageSrc for boardPlate -> boardCircle fallback.');
+}
+if (/manifest\??\.scene\??\.boardCircle|manifest\.scene\.boardCircle/.test(islandArtLayers)) {
+  failures.push('IslandArtLayers must not read manifest.scene.boardCircle directly; use getIslandArtBoardPlateImageSrc instead.');
+}
+if (/boardPlate[^?]*&&[^?]*boardCircle|boardCircle[^?]*\?\?[^?]*boardPlate/.test(islandArtLayers)) {
+  failures.push('IslandArtLayers must not implement local boardPlate/boardCircle fallback logic; keep fallback in islandArtManifest service.');
 }
 
 const artStageMatch = boardStage.match(/className="island-run-board__art-camera-stage"[\s\S]*?style=\{\{ transform: ([^,}]+)/);
