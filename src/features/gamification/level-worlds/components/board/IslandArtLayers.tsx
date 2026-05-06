@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import {
+  getIslandArtBoardPlateImageSrc,
   getIslandArtBossImageSrc,
   getIslandArtLandmarkImageSrc,
   type IslandArtManifest,
@@ -87,7 +88,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
     });
   };
 
-  const boardCircleSrc = manifest?.scene?.boardCircle;
+  const boardPlateSrc = getIslandArtBoardPlateImageSrc(manifest);
 
   if (!manifest) return null;
 
@@ -110,15 +111,15 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
       style={{ width: boardWidth, height: boardHeight }}
       aria-hidden="true"
     >
-      {boardCircleSrc && !hiddenSources.has(boardCircleSrc) ? (
+      {boardPlateSrc && !hiddenSources.has(boardPlateSrc) ? (
         <img
-          key={`board-circle-${boardCircleSrc}`}
-          className="island-art-layers__image island-art-layers__board-circle"
-          src={boardCircleSrc}
+          key={`board-plate-${boardPlateSrc}`}
+          className="island-art-layers__image island-art-layers__board-circle island-art-layers__board-plate"
+          src={boardPlateSrc}
           alt=""
           draggable={false}
           style={{ ...boardSceneLayerStyle, '--island-art-layer-z': 1 } as BoardArtLayerStyle}
-          onError={() => hideSource(boardCircleSrc)}
+          onError={() => hideSource(boardPlateSrc)}
         />
       ) : null}
 
