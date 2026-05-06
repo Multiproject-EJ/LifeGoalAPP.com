@@ -3706,17 +3706,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 onClick={() => setIsMyQuestSubmenuOpen(true)}
                 aria-label="Open My Quest"
               >
-                <span className="mobile-menu-overlay__quest-orbit" aria-hidden="true">
-                  <span className="mobile-menu-overlay__quest-orbit-ring" />
-                  <span className="mobile-menu-overlay__quest-node mobile-menu-overlay__quest-node--one" />
-                  <span className="mobile-menu-overlay__quest-node mobile-menu-overlay__quest-node--two" />
-                  <span className="mobile-menu-overlay__quest-node mobile-menu-overlay__quest-node--three" />
-                  <span className="mobile-menu-overlay__quest-compass">⌁</span>
-                </span>
-                <span className="mobile-menu-overlay__quest-badge" aria-hidden="true">Quest Log</span>
-                <span className="mobile-menu-overlay__hero-copy mobile-menu-overlay__hero-copy--center">
-                  <span className="mobile-menu-overlay__hero-title">My Quest</span>
-                  <span className="mobile-menu-overlay__hero-subtitle">Track your journey, goals and next steps</span>
+                <span className="mobile-menu-overlay__quest-art" aria-hidden="true">
+                  <img src="/assets/players_menu/questimg.webp" alt="" loading="lazy" decoding="async" />
                 </span>
                 <span className="mobile-menu-overlay__quest-cta" aria-hidden="true">›</span>
               </button>
