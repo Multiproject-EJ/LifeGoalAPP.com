@@ -2,6 +2,7 @@ import {
   clampIslandArtBuildLevel,
   getIslandArtAmbientBackgroundSrc,
   getIslandArtBoardCircleImageSrc,
+  getIslandArtBoardPlateImageSrc,
   getIslandArtBossImageSrc,
   getIslandArtFolderName,
   getIslandArtLandmarkImageSrc,
@@ -87,6 +88,57 @@ export const islandArtManifestTests: TestCase[] = [
         getIslandArtBoardCircleImageSrc(manifest),
         '/assets/islands/island-001/scene/board-circle.webp',
         'Expected board-circle art to stay as the board-attached scene asset',
+      );
+    },
+  },
+
+  {
+    name: 'normalizes scene.boardPlate as preferred board-attached art',
+    run: () => {
+      const manifest = normalizeIslandArtManifest({
+        version: 2,
+        scene: {
+          boardPlate: 'scene/board-plate.webp',
+        },
+      }, 5);
+      if (!manifest) throw new Error('Expected boardPlate-only manifest to normalize');
+      assertEqual(
+        manifest.scene?.boardPlate,
+        '/assets/islands/island-005/scene/board-plate.webp',
+        'Expected scene.boardPlate to normalize as the preferred board-attached static plate',
+      );
+      assertEqual(
+        getIslandArtBoardPlateImageSrc(manifest),
+        '/assets/islands/island-005/scene/board-plate.webp',
+        'Expected boardPlate helper to resolve the preferred plate image',
+      );
+    },
+  },
+  {
+    name: 'prefers scene.boardPlate over scene.boardCircle when both exist',
+    run: () => {
+      const manifest = normalizeIslandArtManifest({
+        version: 2,
+        scene: {
+          boardPlate: 'scene/board-plate.webp',
+          boardCircle: 'scene/board-circle.webp',
+        },
+      }, 6);
+      if (!manifest) throw new Error('Expected dual board art manifest to normalize');
+      assertEqual(
+        getIslandArtBoardPlateImageSrc(manifest),
+        '/assets/islands/island-006/scene/board-plate.webp',
+        'Expected boardPlate to be preferred over boardCircle for board-attached art',
+      );
+      assertEqual(
+        getIslandArtBoardCircleImageSrc(manifest),
+        '/assets/islands/island-006/scene/board-plate.webp',
+        'Expected legacy boardCircle helper to follow the preferred boardPlate helper',
+      );
+      assertEqual(
+        manifest.scene?.boardCircle,
+        '/assets/islands/island-006/scene/board-circle.webp',
+        'Expected boardCircle to remain normalized as fallback metadata',
       );
     },
   },

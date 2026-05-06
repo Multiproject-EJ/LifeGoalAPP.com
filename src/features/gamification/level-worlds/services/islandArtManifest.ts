@@ -6,6 +6,9 @@ export interface IslandArtSceneManifest {
   ambientBackground?: string;
   /** @deprecated Use ambientBackground. Kept as a migration alias for older pilot manifests. */
   base?: string;
+  /** Preferred v2.1 pre-composed board-attached static scene plate. */
+  boardPlate?: string;
+  /** Legacy/simple board-attached scene art fallback. */
   boardCircle?: string;
 }
 
@@ -115,7 +118,12 @@ export function resolveIslandArtAssetPath(basePath: string, assetPath?: string):
 
 function hasRenderableAsset(raw: Record<string, unknown>): boolean {
   const scene = isRecord(raw.scene) ? raw.scene : {};
-  if (optionalString(scene.ambientBackground) || optionalString(scene.base) || optionalString(scene.boardCircle)) return true;
+  if (
+    optionalString(scene.ambientBackground)
+    || optionalString(scene.base)
+    || optionalString(scene.boardPlate)
+    || optionalString(scene.boardCircle)
+  ) return true;
 
   if (Array.isArray(raw.landmarks)) {
     for (const entry of raw.landmarks) {
@@ -156,9 +164,11 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
   const ambientBackground = resolveIslandArtAssetPath(basePath, optionalString(rawScene.ambientBackground))
     ?? resolveIslandArtAssetPath(basePath, optionalString(rawScene.base));
   const sceneBase = resolveIslandArtAssetPath(basePath, optionalString(rawScene.base));
+  const boardPlate = resolveIslandArtAssetPath(basePath, optionalString(rawScene.boardPlate));
   const boardCircle = resolveIslandArtAssetPath(basePath, optionalString(rawScene.boardCircle));
   if (ambientBackground) scene.ambientBackground = ambientBackground;
   if (sceneBase) scene.base = sceneBase;
+  if (boardPlate) scene.boardPlate = boardPlate;
   if (boardCircle) scene.boardCircle = boardCircle;
 
   const landmarks = Array.isArray(raw.landmarks)
@@ -261,8 +271,12 @@ export function getIslandArtAmbientBackgroundSrc(manifest: IslandArtManifest | n
   return manifest?.scene?.ambientBackground ?? manifest?.scene?.base ?? null;
 }
 
+export function getIslandArtBoardPlateImageSrc(manifest: IslandArtManifest | null | undefined): string | null {
+  return manifest?.scene?.boardPlate ?? manifest?.scene?.boardCircle ?? null;
+}
+
 export function getIslandArtBoardCircleImageSrc(manifest: IslandArtManifest | null | undefined): string | null {
-  return manifest?.scene?.boardCircle ?? null;
+  return getIslandArtBoardPlateImageSrc(manifest);
 }
 
 export async function loadIslandArtManifest(
