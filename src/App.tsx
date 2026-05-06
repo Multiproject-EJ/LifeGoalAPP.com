@@ -3673,6 +3673,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 onClick={openPlayersHandFromLauncher}
                 aria-label="Open Player's Hand"
               >
+                <span className="mobile-menu-overlay__status-dot" aria-hidden="true" />
                 <span className="mobile-menu-overlay__visual-slot mobile-menu-overlay__visual-slot--hand" aria-hidden="true">
                   <span className="mobile-menu-overlay__hand-stack">
                     <span className="mobile-menu-overlay__hand-card mobile-menu-overlay__hand-card--back" />
@@ -3693,7 +3694,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
                     <span className="mobile-menu-overlay__hero-meta">{microTestBadge.count} micro-tests ready</span>
                   ) : null}
                 </span>
-                <span className="mobile-menu-overlay__hero-cta" aria-hidden="true">›</span>
+                <span className="mobile-menu-overlay__hero-cta" aria-hidden="true">
+                  View All Traits
+                  <span>›</span>
+                </span>
               </button>
 
               <button
@@ -3709,6 +3713,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <span className="mobile-menu-overlay__quest-node mobile-menu-overlay__quest-node--three" />
                   <span className="mobile-menu-overlay__quest-compass">⌁</span>
                 </span>
+                <span className="mobile-menu-overlay__quest-badge" aria-hidden="true">Quest Log</span>
                 <span className="mobile-menu-overlay__hero-copy mobile-menu-overlay__hero-copy--center">
                   <span className="mobile-menu-overlay__hero-title">My Quest</span>
                   <span className="mobile-menu-overlay__hero-subtitle">Track your journey, goals and next steps</span>
@@ -3723,11 +3728,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   onClick={() => handleMobileNavSelect('coach')}
                   aria-label="AI Coach - Get a guided next step"
                 >
+                  <span className="mobile-menu-overlay__online-pill" aria-hidden="true">ONLINE</span>
+                  <span className="mobile-menu-overlay__menu-dots" aria-hidden="true">•••</span>
                   <span className="mobile-menu-overlay__mini-visual" aria-hidden="true">
                     <img src="/icons/ai_coach/Aicoach_large.webp" alt="" loading="lazy" decoding="async" />
                   </span>
-                  <span className="mobile-menu-overlay__mini-title">Coach</span>
-                  <span className="mobile-menu-overlay__mini-subtitle">Guided next step</span>
+                  <span className="mobile-menu-overlay__mini-copy">
+                    <span className="mobile-menu-overlay__mini-title">Coach</span>
+                    <span className="mobile-menu-overlay__mini-subtitle">Guided next step</span>
+                  </span>
                 </button>
 
                 <button
@@ -3736,11 +3745,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   onClick={() => setIsProfileStrengthOpen(true)}
                   aria-label="Open Profile Strength"
                 >
+                  <span className="mobile-menu-overlay__mini-title">Profile Strength</span>
                   <span className="mobile-menu-overlay__profile-ring" style={profileStrengthRingStyle} aria-hidden="true">
                     <span className="mobile-menu-overlay__profile-ring-value">{profileStrengthPercentLabel}</span>
                     <span className="mobile-menu-overlay__profile-ring-label">Power</span>
                   </span>
-                  <span className="mobile-menu-overlay__mini-title">Profile Strength</span>
                   <span className="mobile-menu-overlay__mini-subtitle">{profileStrengthSubtitle}</span>
                 </button>
               </div>
@@ -3753,8 +3762,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   aria-label="Settings and profile"
                 >
                   <span className="mobile-menu-overlay__utility-icon" aria-hidden="true">⚙️</span>
-                  <span className="mobile-menu-overlay__mini-title">Settings</span>
-                  <span className="mobile-menu-overlay__mini-subtitle">Profile & preferences</span>
+                  <span className="mobile-menu-overlay__utility-copy">
+                    <span className="mobile-menu-overlay__mini-title">Settings</span>
+                    <span className="mobile-menu-overlay__mini-subtitle">Profile & preferences</span>
+                  </span>
+                  <span className="mobile-menu-overlay__utility-chevron" aria-hidden="true">›</span>
                 </button>
 
                 <button
@@ -3764,8 +3776,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   aria-label="Open feedback and support options"
                 >
                   <span className="mobile-menu-overlay__utility-icon" aria-hidden="true">🫶</span>
-                  <span className="mobile-menu-overlay__mini-title">Feedback &amp; Support</span>
-                  <span className="mobile-menu-overlay__mini-subtitle">Help us improve</span>
+                  <span className="mobile-menu-overlay__utility-copy">
+                    <span className="mobile-menu-overlay__mini-title">Feedback &amp; Support</span>
+                    <span className="mobile-menu-overlay__mini-subtitle">Help us improve</span>
+                  </span>
+                  <span className="mobile-menu-overlay__utility-chevron" aria-hidden="true">›</span>
                 </button>
               </div>
             </div>
