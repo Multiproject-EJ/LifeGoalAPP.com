@@ -20,7 +20,7 @@ import { isDemoSession } from '../../services/demoSession';
 import { fetchGoals } from '../../services/goals';
 import { listHabitsV2 } from '../../services/habitsV2';
 import { getDemoHabitsForUser } from '../../services/demoData';
-import { convertToWebP, isWebPSupported, getFileFormat } from '../../utils/imageConverter';
+import { validateImageUploadFile } from '../../utils/imageUploadOptimizer';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
@@ -64,7 +64,6 @@ const BOARD_VIEW_OPTIONS: { value: BoardView; label: string }[] = [
   { value: 'visionaries', label: 'The Four Visionaries' },
 ];
 
-const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
 const DEFAULT_VISION_TYPE = 'goal';
 const DEFAULT_REVIEW_INTERVAL = 30;
 
@@ -145,7 +144,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   const [isAddEditOpen, setIsAddEditOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [convertingImage, setConvertingImage] = useState(false);
   const [showDailyGame, setShowDailyGame] = useState(false);
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [habits, setHabits] = useState<HabitRow[]>([]);
@@ -462,8 +460,21 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
+    if (file) {
+      try {
+        validateImageUploadFile(file);
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Please choose a valid image file.');
+        event.target.value = '';
+        setFileDraft(null);
+        setPreviewUrl(null);
+        return;
+      }
+    }
+
+    setErrorMessage(null);
     setFileDraft(file);
-    
+
     // Generate preview for file upload
     if (file) {
       const reader = new FileReader();
@@ -502,19 +513,15 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     const file = event.dataTransfer.files[0];
     if (!file) return;
 
-    // Check if it's an image
-    if (!file.type.startsWith('image/')) {
-      setErrorMessage('Please drop an image file (PNG, JPG, or WEBP).');
-      return;
-    }
-
-    // Check file size
-    if (file.size > MAX_UPLOAD_SIZE) {
-      setErrorMessage('Images must be 5MB or smaller.');
+    try {
+      validateImageUploadFile(file);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Please drop a JPG, PNG, or WebP image.');
       return;
     }
 
     // Set file and generate preview
+    setErrorMessage(null);
     setFileDraft(file);
     setUploadMode('file');
     setIsAddEditOpen(true);
@@ -659,8 +666,10 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
         return;
       }
 
-      if (fileDraft.size > MAX_UPLOAD_SIZE) {
-        setErrorMessage('Images must be 5MB or smaller.');
+      try {
+        validateImageUploadFile(fileDraft);
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Please choose a valid image file.');
         return;
       }
     } else {
@@ -685,42 +694,11 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
       let data, error;
 
       if (uploadMode === 'file' && fileDraft) {
-        // Convert to WebP if supported and not already WebP
-        let fileToUpload: File | Blob = fileDraft;
-        let fileNameToUpload = fileDraft.name;
-        let originalFormat = getFileFormat(fileDraft);
-
-        if (isWebPSupported() && fileDraft.type !== 'image/webp') {
-          try {
-            setConvertingImage(true);
-            const converted = await convertToWebP(fileDraft, 0.85);
-            fileToUpload = converted.blob;
-            fileNameToUpload = converted.fileName;
-            originalFormat = converted.originalFormat;
-          } catch (conversionError) {
-            // Log WebP conversion failure with details
-            console.group('[Vision Board] WebP conversion failed');
-            console.error('Timestamp:', new Date().toISOString());
-            console.error('File details:', {
-              name: fileDraft.name,
-              size: fileDraft.size,
-              type: fileDraft.type,
-            });
-            console.error('Conversion error:', conversionError);
-            console.groupEnd();
-            console.warn('Continuing with original file format');
-            // Continue with original file if conversion fails
-          } finally {
-            setConvertingImage(false);
-          }
-        }
-
         ({ data, error } = await uploadVisionImage({
           userId: session.user.id,
-          file: fileToUpload,
-          fileName: fileNameToUpload,
+          file: fileDraft,
+          fileName: fileDraft.name,
           caption: captionDraft,
-          originalFormat,
           visionType: addVisionType,
           reviewIntervalDays: addReviewInterval,
           linkedGoalIds: addLinkedGoals,
@@ -1022,7 +1000,7 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
                     <input
                       id="vision-board-file"
                       type="file"
-                      accept="image/png, image/jpeg, image/webp, image/gif"
+                      accept="image/png, image/jpeg, image/webp"
                       onChange={handleFileChange}
                       disabled={(!isConfigured && !isDemoExperience) || uploading}
                       style={{ display: 'none' }}
@@ -1036,7 +1014,7 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
                   )}
                 </div>
                 <span className="vision-board__hint">
-                  PNG, JPG, WEBP, or GIF up to 5MB. Images will be converted to WebP format for optimal performance.
+                  PNG, JPG, or WEBP up to 5MB. Images are optimized to WebP before upload.
                 </span>
               </>
             ) : (
@@ -1157,9 +1135,9 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
             <button
               type="submit"
               className="vision-board__submit"
-              disabled={uploading || convertingImage || (!isConfigured && !isDemoExperience)}
+              disabled={uploading || (!isConfigured && !isDemoExperience)}
             >
-              {convertingImage ? 'Converting to WebP…' : uploading ? 'Uploading…' : 'Add to board'}
+              {uploading ? 'Optimizing & uploading…' : 'Add to board'}
             </button>
           </form>
         )}

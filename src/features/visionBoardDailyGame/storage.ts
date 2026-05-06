@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '../../lib/supabaseClient';
+import { IMAGE_UPLOAD_WEBP_MIME_TYPE } from '../../utils/imageUploadOptimizer';
 import { VISION_BOARD_BUCKET } from '../../services/visionBoard';
 
 const DAILY_PREFIX = 'daily-game';
@@ -11,7 +12,7 @@ export function buildDailyImagePath(userId: string, sessionDate: string): string
 
 export async function uploadDailyGameImage(
   userId: string,
-  file: Blob,
+  file: File,
   sessionDate: string,
 ): Promise<{ path: string | null; error: Error | null }> {
   try {
@@ -20,7 +21,7 @@ export async function uploadDailyGameImage(
     const { error } = await supabase.storage.from(VISION_BOARD_BUCKET).upload(path, file, {
       cacheControl: '3600',
       upsert: false,
-      contentType: 'image/webp',
+      contentType: IMAGE_UPLOAD_WEBP_MIME_TYPE,
     });
 
     if (error) {

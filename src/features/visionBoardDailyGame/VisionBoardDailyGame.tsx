@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { LIFE_WHEEL_CATEGORIES } from '../checkins/LifeWheelCheckins';
+import { validateImageUploadFile } from '../../utils/imageUploadOptimizer';
 import { useDailyVisionSession } from './useDailyVisionSession';
 import './visionBoardDailyGame.css';
 
@@ -73,10 +74,13 @@ export function VisionBoardDailyGame({ session, onClose, isConfigured }: VisionB
 
   const handleFileChange = (itemId: string, file: File | null) => {
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      setLocalError('Daily game cards only accept image files.');
+    try {
+      validateImageUploadFile(file);
+    } catch (error) {
+      setLocalError(error instanceof Error ? error.message : 'Daily game cards only accept JPG, PNG, or WebP images.');
       return;
     }
+    setLocalError(null);
     updateDraft(itemId, { file });
   };
 
@@ -161,7 +165,7 @@ export function VisionBoardDailyGame({ session, onClose, isConfigured }: VisionB
                     <span>Attach image</span>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/png, image/jpeg, image/webp"
                       onChange={(event) => handleFileChange(item.id, event.target.files?.[0] ?? null)}
                       disabled={!isConfigured || isCompleted}
                     />
