@@ -18,6 +18,11 @@ import {
   fileToDataUrl,
 } from './demoData';
 import { recordOfflineSyncEvent } from './offlineSyncTelemetry';
+import {
+  IMAGE_UPLOAD_WEBP_MIME_TYPE,
+  optimizeImageFileForUpload,
+  replaceFileExtensionWithWebp,
+} from '../utils/imageUploadOptimizer';
 
 export const VISION_BOARD_BUCKET = 'vision-board';
 
@@ -117,7 +122,6 @@ async function queueLocalVisionFileCreate({
   file,
   fileName,
   caption,
-  originalFormat,
   visionType,
   reviewIntervalDays,
   linkedGoalIds,
@@ -135,7 +139,7 @@ async function queueLocalVisionFileCreate({
     caption: caption?.trim() ? caption.trim() : null,
     created_at: nowIso,
     file_path: null,
-    file_format: originalFormat || null,
+    file_format: 'webp',
     vision_type: visionType ?? null,
     review_interval_days: reviewIntervalDays ?? null,
     last_reviewed_at: null,
@@ -162,14 +166,14 @@ async function queueLocalVisionFileCreate({
       user_id: userId,
       image_source: 'file',
       caption: caption?.trim() ? caption.trim() : null,
-      file_format: originalFormat || null,
+      file_format: 'webp',
       vision_type: visionType ?? null,
       review_interval_days: reviewIntervalDays ?? null,
       linked_goal_ids: linkedGoalIds ?? [],
       linked_habit_ids: linkedHabitIds ?? [],
       staged_file_data_url: stagedDataUrl,
       staged_file_name: fileName,
-      staged_content_type: file instanceof File ? file.type : 'image/webp',
+      staged_content_type: IMAGE_UPLOAD_WEBP_MIME_TYPE,
     },
     status: 'pending',
     attempt_count: 0,
@@ -188,10 +192,9 @@ async function queueLocalVisionFileCreate({
 
 type UploadPayload = {
   userId: string;
-  file: File | Blob;
+  file: File;
   fileName: string;
   caption?: string | null;
-  originalFormat?: string | null;
   visionType?: string | null;
   reviewIntervalDays?: number | null;
   linkedGoalIds?: string[] | null;
@@ -203,7 +206,6 @@ export async function uploadVisionImage({
   file,
   fileName,
   caption,
-  originalFormat,
   visionType,
   reviewIntervalDays,
   linkedGoalIds,
@@ -213,19 +215,26 @@ export async function uploadVisionImage({
     return { data: null, error: authRequiredError('Authentication required.') };
   }
 
+  let optimizedFile: File;
+  try {
+    optimizedFile = await optimizeImageFileForUpload(file, { kind: visionType === 'annual-review' ? 'annual-review' : 'vision-board' });
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error : new Error('Unable to optimize image before upload.') };
+  }
+
   const supabase = getSupabaseClient();
 
-  const fileExtension = fileName.split('.').pop()?.toLowerCase() ?? 'webp';
+  const webpFileName = replaceFileExtensionWithWebp(fileName || optimizedFile.name);
   const randomId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}`;
-  const sanitizedBaseName = fileName.replace(/\.[^/.]+$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
-  const storagePath = `${userId}/${randomId}-${sanitizedBaseName || 'vision-image'}.${fileExtension}`;
+  const sanitizedBaseName = webpFileName.replace(/\.[^/.]+$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
+  const storagePath = `${userId}/${randomId}-${sanitizedBaseName || 'vision-image'}.webp`;
 
   const { data: storageData, error: storageError } = await supabase.storage
     .from(VISION_BOARD_BUCKET)
-    .upload(storagePath, file, {
+    .upload(storagePath, optimizedFile, {
       cacheControl: '3600',
       upsert: false,
-      contentType: file instanceof File ? file.type : 'image/webp',
+      contentType: IMAGE_UPLOAD_WEBP_MIME_TYPE,
     });
 
   if (storageError) {
@@ -236,8 +245,8 @@ export async function uploadVisionImage({
       bucket: VISION_BOARD_BUCKET,
       filePath: storagePath,
       fileName,
-      fileSize: file instanceof File ? file.size : (file as Blob).size,
-      fileType: file instanceof File ? file.type : 'image/webp',
+      fileSize: optimizedFile.size,
+      fileType: IMAGE_UPLOAD_WEBP_MIME_TYPE,
       userId,
       error: storageError,
     });
@@ -255,10 +264,9 @@ export async function uploadVisionImage({
       try {
         const localRecord = await queueLocalVisionFileCreate({
           userId,
-          file,
-          fileName,
+          file: optimizedFile,
+          fileName: webpFileName,
           caption,
-          originalFormat,
           visionType,
           reviewIntervalDays,
           linkedGoalIds,
@@ -284,7 +292,7 @@ export async function uploadVisionImage({
     image_source: 'file',
     caption: caption?.trim() ? caption.trim() : null,
     file_path: storageData?.path ?? storagePath,
-    file_format: originalFormat || fileExtension,
+    file_format: 'webp',
     vision_type: visionType ?? null,
     review_interval_days: reviewIntervalDays ?? null,
     linked_goal_ids: linkedGoalIds ?? [],
@@ -303,10 +311,9 @@ export async function uploadVisionImage({
       try {
         const localRecord = await queueLocalVisionFileCreate({
           userId,
-          file,
-          fileName,
+          file: optimizedFile,
+          fileName: webpFileName,
           caption,
-          originalFormat,
           visionType,
           reviewIntervalDays,
           linkedGoalIds,
@@ -477,16 +484,22 @@ export async function syncQueuedVisionImageMutations(userId: string): Promise<vo
         if (!stagedDataUrl) throw new Error('Missing staged file data for queued vision image.');
         const blob = await blobFromDataUrl(stagedDataUrl);
         const fileName = mutation.payload.staged_file_name ?? `queued-${mutation.image_id}.webp`;
-        const fileExtension = fileName.split('.').pop()?.toLowerCase() ?? 'webp';
+        const stagedFile = new File([blob], fileName, {
+          type: mutation.payload.staged_content_type ?? blob.type ?? IMAGE_UPLOAD_WEBP_MIME_TYPE,
+        });
+        const optimizedFile = await optimizeImageFileForUpload(stagedFile, {
+          kind: mutation.payload.vision_type === 'annual-review' ? 'annual-review' : 'vision-board',
+        });
         const randomId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}`;
-        const sanitizedBaseName = fileName.replace(/\.[^/.]+$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
-        const storagePath = `${userId}/${randomId}-${sanitizedBaseName || 'vision-image'}.${fileExtension}`;
+        const webpFileName = replaceFileExtensionWithWebp(optimizedFile.name);
+        const sanitizedBaseName = webpFileName.replace(/\.[^/.]+$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
+        const storagePath = `${userId}/${randomId}-${sanitizedBaseName || 'vision-image'}.webp`;
         const { data: storageData, error: storageError } = await supabase.storage
           .from(VISION_BOARD_BUCKET)
-          .upload(storagePath, blob, {
+          .upload(storagePath, optimizedFile, {
             cacheControl: '3600',
             upsert: false,
-            contentType: mutation.payload.staged_content_type ?? 'image/webp',
+            contentType: IMAGE_UPLOAD_WEBP_MIME_TYPE,
           });
         if (storageError) throw storageError;
         const queuedPayload: VisionImageInsert = {
@@ -495,7 +508,7 @@ export async function syncQueuedVisionImageMutations(userId: string): Promise<vo
           image_source: 'file',
           caption: mutation.payload.caption ?? null,
           file_path: storageData?.path ?? storagePath,
-          file_format: mutation.payload.file_format ?? fileExtension,
+          file_format: 'webp',
           vision_type: mutation.payload.vision_type ?? null,
           review_interval_days: mutation.payload.review_interval_days ?? null,
           linked_goal_ids: mutation.payload.linked_goal_ids ?? [],

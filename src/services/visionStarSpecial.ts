@@ -1,4 +1,5 @@
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import { optimizeImageFileForUpload, IMAGE_UPLOAD_WEBP_MIME_TYPE } from '../utils/imageUploadOptimizer';
 import { VISION_BOARD_BUCKET } from './visionBoard';
 
 export type VisionStarSpecialRequest = {
@@ -58,7 +59,7 @@ export async function generateSpecialVisionStar(
   }
 }
 
-function dataUrlToBlob(dataUrl: string): Blob {
+function dataUrlToFile(dataUrl: string, fileName: string): File {
   const [header, base64Data] = dataUrl.split(',');
   if (!header || !base64Data || !header.startsWith('data:')) {
     throw new Error('Invalid image data URL returned from special vision star generation.');
@@ -72,7 +73,7 @@ function dataUrlToBlob(dataUrl: string): Blob {
     bytes[idx] = binaryString.charCodeAt(idx);
   }
 
-  return new Blob([bytes], { type: mimeType });
+  return new File([bytes], fileName, { type: mimeType });
 }
 
 export async function persistSpecialVisionStarImage(
@@ -84,15 +85,16 @@ export async function persistSpecialVisionStarImage(
   }
 
   try {
-    const imageBlob = dataUrlToBlob(imageDataUrl);
+    const sourceFile = dataUrlToFile(imageDataUrl, 'special-vision-star.png');
+    const optimizedFile = await optimizeImageFileForUpload(sourceFile, { kind: 'special-vision-star' });
     const supabase = getSupabaseClient();
     const randomId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}`;
-    const storagePath = `${userId}/special-vision-star/${randomId}.png`;
+    const storagePath = `${userId}/special-vision-star/${randomId}.webp`;
 
-    const { error: uploadError } = await supabase.storage.from(VISION_BOARD_BUCKET).upload(storagePath, imageBlob, {
+    const { error: uploadError } = await supabase.storage.from(VISION_BOARD_BUCKET).upload(storagePath, optimizedFile, {
       cacheControl: '3600',
       upsert: false,
-      contentType: 'image/png',
+      contentType: IMAGE_UPLOAD_WEBP_MIME_TYPE,
     });
 
     if (uploadError) {

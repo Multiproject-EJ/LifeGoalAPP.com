@@ -3,6 +3,7 @@ import { LIFE_WHEEL_CATEGORIES, LifeWheelCategoryKey } from '../../checkins/Life
 import { uploadVisionImage, VISION_BOARD_BUCKET } from '../../../services/visionBoard';
 import { createAnnualGoal, fetchAnnualGoalsByReview } from '../../../services/annualReviews';
 import { getSupabaseClient } from '../../../lib/supabaseClient';
+import { validateImageUploadFile } from '../../../utils/imageUploadOptimizer';
 
 type VisionBoardManifestProps = {
   onNext: () => void;
@@ -74,9 +75,18 @@ export const VisionBoardManifest: React.FC<VisionBoardManifestProps> = ({
   };
 
   const handleImageSelect = async (category: LifeWheelCategoryKey, file: File) => {
+    try {
+      validateImageUploadFile(file);
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'Please choose a JPG, PNG, or WebP image.');
+      return;
+    }
+
+    setSaveError(null);
+
     // Create a preview URL for the image
     const previewUrl = URL.createObjectURL(file);
-    
+
     setGoals(prev => ({
       ...prev,
       [category]: {
@@ -262,7 +272,7 @@ export const VisionBoardManifest: React.FC<VisionBoardManifestProps> = ({
                 <input
                   id="goal-image"
                   type="file"
-                  accept="image/*"
+                  accept="image/png, image/jpeg, image/webp"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
