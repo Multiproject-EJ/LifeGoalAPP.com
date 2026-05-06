@@ -3,6 +3,7 @@ import {
   MAX_COMPRESSED_IMAGE_BYTES,
   MAX_ORIGINAL_IMAGE_BYTES,
   ImageUploadOptimizationError,
+  getImageUploadCompressionAttempts,
   optimizeImageFileForUpload,
   replaceFileExtensionWithWebp,
 } from '../imageUploadOptimizer.js';
@@ -55,6 +56,20 @@ export async function runImageUploadOptimizerTests(): Promise<void> {
   });
   assertEqual(png.type, IMAGE_UPLOAD_WEBP_MIME_TYPE, 'PNG should convert to WebP MIME type');
   assertEqual(png.name, 'transparent.webp', 'PNG extension should be replaced with .webp');
+
+
+  const dailyAttempts = getImageUploadCompressionAttempts('daily-game');
+  assertEqual(dailyAttempts[0]?.maxWidth, 1024, 'Daily Game should start at 1024px max width');
+  assertEqual(dailyAttempts[0]?.quality, 0.78, 'Daily Game should start at default quality');
+
+  await expectRejectsWithCode(
+    () => optimizeImageFileForUpload(makeImageFile('wrong-encoder.jpg', 'image/jpeg'), {
+      kind: 'vision-board',
+      encodeImageToWebp: async () => new Blob([new Uint8Array(128 * 1024)], { type: 'image/png' }),
+    }),
+    'compression_failed',
+    'non-WebP encoder output should fail instead of uploading mislabeled bytes',
+  );
 
   await expectRejectsWithCode(
     () => optimizeImageFileForUpload(makeImageFile('too-big.jpg', 'image/jpeg', MAX_ORIGINAL_IMAGE_BYTES + 1), {

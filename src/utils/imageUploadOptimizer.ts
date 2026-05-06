@@ -27,6 +27,8 @@ type LoadedImage = {
   close?: () => void;
 };
 
+export type ImageUploadCompressionAttempt = CompressionAttempt;
+
 type EncodeImageToWebp = (file: File, attempt: CompressionAttempt) => Promise<Blob>;
 
 export type OptimizeImageUploadOptions = {
@@ -76,7 +78,7 @@ export function validateImageUploadFile(file: File): void {
   }
 }
 
-function getCompressionAttempts(kind: ImageUploadKind): CompressionAttempt[] {
+export function getImageUploadCompressionAttempts(kind: ImageUploadKind): CompressionAttempt[] {
   const startingWidth = getImageUploadMaxWidth(kind);
   if (kind === 'daily-game') {
     return [
@@ -156,7 +158,7 @@ async function defaultEncodeImageToWebp(file: File, attempt: CompressionAttempt)
       canvas.toBlob(
         (blob) => {
           if (!blob) {
-            reject(new Error('Unable to encode image as WebP.'));
+            reject(new Error('This browser could not encode the image as WebP. Please try a modern browser.'));
             return;
           }
           resolve(blob);
@@ -177,12 +179,15 @@ export async function optimizeImageFileForUpload(
   validateImageUploadFile(file);
 
   const encodeImageToWebp = options.encodeImageToWebp ?? defaultEncodeImageToWebp;
-  const attempts = getCompressionAttempts(options.kind);
+  const attempts = getImageUploadCompressionAttempts(options.kind);
   let lastBlob: Blob | null = null;
 
   try {
     for (const attempt of attempts) {
       const blob = await encodeImageToWebp(file, attempt);
+      if (blob.type !== IMAGE_UPLOAD_WEBP_MIME_TYPE) {
+        throw new Error('This browser could not encode the image as WebP. Please try a modern browser.');
+      }
       lastBlob = blob;
       if (blob.size <= MAX_COMPRESSED_IMAGE_BYTES) {
         return new File([blob], replaceFileExtensionWithWebp(file.name), {
