@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "islandNumber": 1,
+  "coordinateSpace": {
+    "width": 1000,
+    "height": 1000
+  },
+  "scene": {
+    "boardCircle": "/assets/islands/landmarks/center_inner1.webp",
+    "ambientBackground": "/assets/islands/backgrounds/level-bg-01.webp"
+  },
+  "landmarks": [
+    {
+      "stopIndex": 0,
+      "anchorId": "hatchery",
+      "x": 180,
+      "y": 220,
+      "width": 160,
+      "height": 180,
+      "levels": [
+        "/assets/islands/landmarks/isladn1.webp",
+        "/assets/islands/landmarks/isladn1.webp",
+        "/assets/islands/landmarks/isladn1.webp"
+      ],
+      "zBand": "mid"
+    },
+    {
+      "stopIndex": 1,
+      "anchorId": "habit",
+      "x": 820,
+      "y": 220,
+      "width": 160,
+      "height": 180,
+      "levels": [
+        "/assets/islands/landmarks/isladn1.webp",
+        "/assets/islands/landmarks/isladn1.webp",
+        "/assets/islands/landmarks/isladn1.webp"
+      ],
+      "zBand": "mid"
+    },
+    {
+      "stopIndex": 2,
+      "anchorId": "mystery",
+      "x": 820,
+      "y": 800,
+      "width": 160,
+      "height": 180,
+      "levels": [
+        "/assets/islands/landmarks/isladn1.webp",
+        "/assets/islands/landmarks/isladn1.webp",
+        "/assets/islands/landmarks/isladn1.webp"
+      ],
+      "zBand": "front"
+    },
+    {
+      "stopIndex": 3,
+      "anchorId": "wisdom",
+      "x": 180,
+      "y": 800,
+      "width": 160,
+      "height": 180,
+      "levels": [
+        "/assets/islands/landmarks/isladn1.webp",
+        "/assets/islands/landmarks/isladn1.webp",
+        "/assets/islands/landmarks/isladn1.webp"
+      ],
+      "zBand": "front"
+    }
+  ],
+  "boss": {
+    "id": "boss-01",
+    "x": 500,
+    "y": 500,
+    "width": 520,
+    "height": 420,
+    "zBand": "mid",
+    "defaultState": "idle",
+    "images": {
+      "idle": "/assets/islands/landmarks/boss1.webp",
+      "defeated": "/assets/islands/landmarks/boss1.webp"
+    }
+  },
+  "scenery": [
+    {
+      "id": "battle-center",
+      "src": "/assets/islands/landmarks/battle11.webp",
+      "x": 500,
+      "y": 650,
+      "width": 260,
+      "height": 220,
+      "zBand": "front"
+    }
+  ]
+}

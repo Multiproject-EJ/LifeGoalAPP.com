@@ -6,6 +6,7 @@ import { creatureImageManifestTests } from './creatureImageManifest.test';
 import { encounterServiceTests } from './encounterService.test';
 import { islandBoardTopologyTests } from './islandBoardTopology.test';
 import { islandRunFoundationTests } from './islandRunFoundations.test';
+import { islandArtManifestTests } from './islandArtManifest.test';
 import { islandRunContractV2EnergyTests } from './islandRunContractV2Energy.test';
 import { islandRunContractV2SemanticsTests } from './islandRunContractV2Semantics.test';
 import { islandRunContractV2StopResolverTests } from './islandRunContractV2StopResolver.test';
@@ -54,6 +55,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'encounterService', tests: encounterServiceTests },
   { label: 'islandBoardTopology', tests: islandBoardTopologyTests },
   { label: 'islandRunFoundations', tests: islandRunFoundationTests },
+  { label: 'islandArtManifest', tests: islandArtManifestTests },
   { label: 'islandRunContractV2Energy', tests: islandRunContractV2EnergyTests },
   { label: 'islandRunContractV2Semantics', tests: islandRunContractV2SemanticsTests },
   { label: 'islandRunContractV2StopResolver', tests: islandRunContractV2StopResolverTests },
