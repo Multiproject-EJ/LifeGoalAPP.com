@@ -40,41 +40,13 @@ export function readTopChromeOverride(): TopDisplayChromeOverride | null {
   }
 }
 
-function isIosLike(): boolean {
-  if (typeof navigator === 'undefined') return false;
-
-  const ua = navigator.userAgent;
-  return (
-    /iphone|ipad|ipod/i.test(ua) ||
-    (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1)
-  );
-}
-
-function isAndroidLike(): boolean {
-  return typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent);
-}
-
-function isLikelyDynamicIslandViewport(): boolean {
-  if (typeof window === 'undefined') return false;
-
-  const shortSide = Math.min(window.innerWidth, window.innerHeight);
-  const longSide = Math.max(window.innerWidth, window.innerHeight);
-
-  // Broad visual classification only: modern larger/tall iPhone viewports tend to
-  // need center clearance, while smaller iOS viewports can use the notch shape.
-  // This intentionally does not try to identify exact phone models.
-  return shortSide >= 390 && longSide >= 800;
-}
-
 export function getTopDisplayClass(): TopDisplayClass | null {
   const override = readTopChromeOverride();
   if (override === 'off') return null;
   if (override) return override;
 
-  if (isAndroidLike()) return 'android-generic';
-  if (isIosLike()) {
-    return isLikelyDynamicIslandViewport() ? 'iphone-dynamic-island' : 'iphone-notch';
-  }
-
+  // Production default is intentionally generic. The real OS/browser status
+  // icons live outside app-controlled content, so rough phone heuristics should
+  // not select strong notch/dynamic-island pill shapes by default.
   return 'generic';
 }

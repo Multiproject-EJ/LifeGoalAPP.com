@@ -13,10 +13,7 @@ export function MobileTopChrome({ deviceClass: providedDeviceClass }: MobileTopC
 
   return (
     <div className={`mobile-top-chrome mobile-top-chrome--${deviceClass}`} aria-hidden="true">
-      <span className="mobile-top-chrome__glow" />
-      <span className="mobile-top-chrome__pill mobile-top-chrome__pill--left" />
-      <span className="mobile-top-chrome__pill mobile-top-chrome__pill--center" />
-      <span className="mobile-top-chrome__pill mobile-top-chrome__pill--right" />
+      <span className="mobile-top-chrome__wash" />
     </div>
   );
 }
