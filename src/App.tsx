@@ -1,4 +1,5 @@
 import {
+  type CSSProperties,
   FormEvent,
   PointerEvent,
   ReactNode,
@@ -2717,6 +2718,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
     profileStrengthPercent !== null && profileStrengthPercent !== undefined
       ? `${profileStrengthPercent}%`
       : '—';
+  const profileStrengthRingPercent = Math.max(0, Math.min(100, profileStrengthPercent ?? 73));
+  const profileStrengthRingStyle = {
+    '--profile-strength-percent': `${profileStrengthRingPercent}%`,
+  } as CSSProperties;
   const profileStrengthTitle =
     profileStrengthPercent !== null && profileStrengthPercent !== undefined
       ? `${profileStrengthPercent}% charged`
@@ -3577,38 +3582,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                     ×
                   </button>
                 </div>
-                <button
-                  type="button"
-                  className="mobile-menu-overlay__profile-launch"
-                  onClick={openPlayersHandFromLauncher}
-                  aria-label="Open player's hand"
-                >
-                  <div
-                    className="mobile-menu-overlay__profile-picture mobile-menu-overlay__profile-picture--large"
-                    aria-hidden="true"
-                  >
-                    {playstyleIcon ? (
-                      <span className="mobile-menu-overlay__profile-playstyle" role="img" aria-hidden="true">
-                        {playstyleIcon}
-                      </span>
-                    ) : (
-                      <span className="mobile-menu-overlay__profile-initials">
-                        {(normalizedDisplayName || userDisplay || 'Guest').charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div className="mobile-menu-overlay__profile-launch-spacer" aria-hidden="true" />
-                  <div className="mobile-menu-overlay__profile-hand" aria-hidden="true">
-                    <span className="mobile-menu-overlay__profile-hand-icon">🪪</span>
-                    <span className="mobile-menu-overlay__profile-hand-label">Player's Hand</span>
-                    {microTestBadge.showBadge && (
-                      <span
-                        className="mobile-menu-overlay__profile-hand-alert"
-                        aria-label={`${microTestBadge.count} micro-tests available`}
-                      />
-                    )}
-                  </div>
-                </button>
               </div>
             </div>
             {isMobileProfileDialogOpen ? (
@@ -3693,120 +3666,108 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 </div>
               </div>
             ) : null}
-            <div className="mobile-menu-overlay__content">
-              <ul className="mobile-menu-overlay__list">
-                {popupLauncherItems.map((item) => {
-                    const isBreathingItem = item.id === 'breathing-space';
-                    const profileStrengthArea = PROFILE_STRENGTH_MENU_AREAS[item.id];
-                    const profileStrengthScore =
-                      profileStrengthArea ? profileStrengthSnapshot?.areaScores[profileStrengthArea] ?? null : null;
-                    const profileStrengthBadgeValue =
-                      profileStrengthScore === null || profileStrengthScore === undefined
-                        ? '–'
-                        : String(profileStrengthScore);
-                    const profileStrengthBadgeClassName =
-                      profileStrengthScore === null || profileStrengthScore === undefined
-                        ? 'mobile-menu-overlay__icon-badge mobile-menu-overlay__icon-badge--neutral'
-                        : 'mobile-menu-overlay__icon-badge';
-                    const isHelperHoldTarget = !profileStrengthArea;
-                    const handleItemClick = () => {
-                      if (item.id === 'my-quest') {
-                        setIsMyQuestSubmenuOpen(true);
-                        return;
-                      }
-                      if (item.id === 'feedback-support') {
-                        setIsFeedbackSupportSubmenuOpen(true);
-                        return;
-                      }
-                      // Modal-key items (if configured) must always open the
-                      // modal regardless of hold state.
-                      if (item.modalKey) {
-                        menuHelperHoldTriggeredRef.current = false;
-                        profileStrengthHoldTriggeredRef.current = false;
-                        openFeedbackSupportFromMobileMenu(item.modalKey);
-                        return;
-                      }
-                      if (profileStrengthArea && profileStrengthHoldTriggeredRef.current) {
-                        profileStrengthHoldTriggeredRef.current = false;
-                        return;
-                      }
-                      if (isHelperHoldTarget && menuHelperHoldTriggeredRef.current) {
-                        menuHelperHoldTriggeredRef.current = false;
-                        return;
-                      }
-                      if (isBreathingItem) {
-                        handleMobileNavSelect('breathing-space');
-                        return;
-                      }
-                      handleMobileNavSelect(item.id);
-                    };
+            <div className="mobile-menu-overlay__dashboard" aria-label="Game Mode dashboard menu">
+              <button
+                type="button"
+                className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--hand"
+                onClick={openPlayersHandFromLauncher}
+                aria-label="Open Player's Hand"
+              >
+                <span className="mobile-menu-overlay__visual-slot mobile-menu-overlay__visual-slot--hand" aria-hidden="true">
+                  <span className="mobile-menu-overlay__hand-stack">
+                    <span className="mobile-menu-overlay__hand-card mobile-menu-overlay__hand-card--back" />
+                    <span className="mobile-menu-overlay__hand-card mobile-menu-overlay__hand-card--mid" />
+                    <span className="mobile-menu-overlay__hand-card mobile-menu-overlay__hand-card--front">
+                      {playstyleIcon ? (
+                        <span className="mobile-menu-overlay__hand-symbol">{playstyleIcon}</span>
+                      ) : (
+                        <span className="mobile-menu-overlay__hand-symbol">🪪</span>
+                      )}
+                    </span>
+                  </span>
+                </span>
+                <span className="mobile-menu-overlay__hero-copy">
+                  <span className="mobile-menu-overlay__hero-title">Player&apos;s Hand</span>
+                  <span className="mobile-menu-overlay__hero-subtitle">Your personality drives your progress</span>
+                  {microTestBadge.showBadge ? (
+                    <span className="mobile-menu-overlay__hero-meta">{microTestBadge.count} micro-tests ready</span>
+                  ) : null}
+                </span>
+                <span className="mobile-menu-overlay__hero-cta" aria-hidden="true">›</span>
+              </button>
 
-                    return (
-                      <li
-                        key={item.id}
-                        className={`mobile-menu-overlay__item${
-                          item.id === 'my-quest' ? ' mobile-menu-overlay__item--large' : ''
-                        }`}
-                      >
-                        <button
-                          type="button"
-                          onClick={handleItemClick}
-                          aria-label={item.ariaLabel}
-                          onPointerDown={(event) => {
-                            // Skip hold timer for modal-key items (feedback /
-                            // support) – they navigate to a modal, not a
-                            // tooltip, so the hold gesture is not useful.
-                            if (item.modalKey) {
-                              return;
-                            }
-                            if (profileStrengthArea) {
-                              handleProfileStrengthHoldStart(event, profileStrengthArea);
-                              return;
-                            }
-                            handleMenuHelperHoldStart(event, item);
-                          }}
-                          onPointerMove={(event) => {
-                            if (profileStrengthArea) {
-                              handleProfileStrengthHoldMove(event, profileStrengthArea);
-                              return;
-                            }
-                            handleMenuHelperHoldMove(event, item);
-                          }}
-                          onPointerUp={handleMobileMenuHoldEnd}
-                          onPointerCancel={handleMobileMenuHoldEnd}
-                          onPointerLeave={handleMobileMenuHoldEnd}
-                          onContextMenu={(event) => {
-                            if ((profileStrengthArea || isHelperHoldTarget) && isMobileExperience) {
-                              event.preventDefault();
-                            }
-                          }}
-                          className={
-                            item.id === 'game' && isGameNearNextLevel
-                              ? 'mobile-menu-overlay__game-button mobile-menu-overlay__game-button--charged'
-                              : undefined
-                          }
-                        >
-                          <span aria-hidden="true" className="mobile-menu-overlay__icon">
-                            {item.icon}
-                            {profileStrengthArea ? (
-                              <span className={profileStrengthBadgeClassName}>{profileStrengthBadgeValue}</span>
-                            ) : null}
-                          </span>
-                          <span className="mobile-menu-overlay__texts">
-                            <span
-                              className={`mobile-menu-overlay__label${
-                                item.id === 'game' && isGameNearNextLevel ? ' mobile-menu-overlay__label--charged' : ''
-                              }`}
-                            >
-                              {item.label}
-                            </span>
-                            <span className="mobile-menu-overlay__summary">{item.summary}</span>
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-              </ul>
+              <button
+                type="button"
+                className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--quest"
+                onClick={() => setIsMyQuestSubmenuOpen(true)}
+                aria-label="Open My Quest"
+              >
+                <span className="mobile-menu-overlay__quest-orbit" aria-hidden="true">
+                  <span className="mobile-menu-overlay__quest-orbit-ring" />
+                  <span className="mobile-menu-overlay__quest-node mobile-menu-overlay__quest-node--one" />
+                  <span className="mobile-menu-overlay__quest-node mobile-menu-overlay__quest-node--two" />
+                  <span className="mobile-menu-overlay__quest-node mobile-menu-overlay__quest-node--three" />
+                  <span className="mobile-menu-overlay__quest-compass">⌁</span>
+                </span>
+                <span className="mobile-menu-overlay__hero-copy mobile-menu-overlay__hero-copy--center">
+                  <span className="mobile-menu-overlay__hero-title">My Quest</span>
+                  <span className="mobile-menu-overlay__hero-subtitle">Track your journey, goals and next steps</span>
+                </span>
+                <span className="mobile-menu-overlay__quest-cta" aria-hidden="true">›</span>
+              </button>
+
+              <div className="mobile-menu-overlay__quick-grid mobile-menu-overlay__quick-grid--featured">
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__mini-card mobile-menu-overlay__mini-card--coach"
+                  onClick={() => handleMobileNavSelect('coach')}
+                  aria-label="AI Coach - Get a guided next step"
+                >
+                  <span className="mobile-menu-overlay__mini-visual" aria-hidden="true">
+                    <img src="/icons/ai_coach/Aicoach_large.webp" alt="" loading="lazy" decoding="async" />
+                  </span>
+                  <span className="mobile-menu-overlay__mini-title">Coach</span>
+                  <span className="mobile-menu-overlay__mini-subtitle">Guided next step</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__mini-card mobile-menu-overlay__mini-card--strength"
+                  onClick={() => setIsProfileStrengthOpen(true)}
+                  aria-label="Open Profile Strength"
+                >
+                  <span className="mobile-menu-overlay__profile-ring" style={profileStrengthRingStyle} aria-hidden="true">
+                    <span className="mobile-menu-overlay__profile-ring-value">{profileStrengthPercentLabel}</span>
+                    <span className="mobile-menu-overlay__profile-ring-label">Power</span>
+                  </span>
+                  <span className="mobile-menu-overlay__mini-title">Profile Strength</span>
+                  <span className="mobile-menu-overlay__mini-subtitle">{profileStrengthSubtitle}</span>
+                </button>
+              </div>
+
+              <div className="mobile-menu-overlay__quick-grid mobile-menu-overlay__quick-grid--bottom">
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__mini-card mobile-menu-overlay__mini-card--utility"
+                  onClick={() => handleMobileNavSelect('account')}
+                  aria-label="Settings and profile"
+                >
+                  <span className="mobile-menu-overlay__utility-icon" aria-hidden="true">⚙️</span>
+                  <span className="mobile-menu-overlay__mini-title">Settings</span>
+                  <span className="mobile-menu-overlay__mini-subtitle">Profile & preferences</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__mini-card mobile-menu-overlay__mini-card--utility"
+                  onClick={() => setIsFeedbackSupportSubmenuOpen(true)}
+                  aria-label="Open feedback and support options"
+                >
+                  <span className="mobile-menu-overlay__utility-icon" aria-hidden="true">🫶</span>
+                  <span className="mobile-menu-overlay__mini-title">Feedback &amp; Support</span>
+                  <span className="mobile-menu-overlay__mini-subtitle">Help us improve</span>
+                </button>
+              </div>
             </div>
             {isMyQuestSubmenuOpen ? (
               <div
@@ -3952,23 +3913,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 </div>
               </div>
             ) : null}
-            <div className="mobile-menu-overlay__settings">
-              <button
-                type="button"
-                className="mobile-menu-overlay__profile-summary"
-                onClick={() => setIsProfileStrengthOpen(true)}
-              >
-                <div>
-                  <span className="mobile-menu-overlay__profile-eyebrow">Profile strength</span>
-                  <p className="mobile-menu-overlay__profile-title">{profileStrengthTitle}</p>
-                  <p className="mobile-menu-overlay__profile-subtitle">{profileStrengthSubtitle}</p>
-                </div>
-                <div className="mobile-menu-overlay__profile-ring" aria-hidden="true">
-                  <span className="mobile-menu-overlay__profile-ring-value">{profileStrengthPercentLabel}</span>
-                  <span className="mobile-menu-overlay__profile-ring-label">Power</span>
-                </div>
-              </button>
-            </div>
             {isProfileStrengthOpen ? (
               <div className="mobile-menu-overlay__strength-modal" role="dialog" aria-modal="true">
                 <div
@@ -3997,7 +3941,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                         <p className="mobile-menu-overlay__profile-title">{profileStrengthTitle}</p>
                         <p className="mobile-menu-overlay__profile-subtitle">{profileStrengthDetailSubtitle}</p>
                       </div>
-                      <div className="mobile-menu-overlay__profile-ring" aria-hidden="true">
+                      <div className="mobile-menu-overlay__profile-ring" style={profileStrengthRingStyle} aria-hidden="true">
                         <span className="mobile-menu-overlay__profile-ring-value">{profileStrengthPercentLabel}</span>
                         <span className="mobile-menu-overlay__profile-ring-label">Power</span>
                       </div>
