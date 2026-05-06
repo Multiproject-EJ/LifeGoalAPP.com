@@ -1,21 +1,19 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import {
   getIslandArtBossImageSrc,
   getIslandArtLandmarkImageSrc,
-  loadIslandArtManifest,
   type IslandArtManifest,
 } from '../../services/islandArtManifest';
 import { CANONICAL_BOARD_SIZE, type TileAnchor, type ZBand } from '../../services/islandBoardLayout';
 
 interface IslandArtLayersProps {
-  islandNumber: number;
+  manifest: IslandArtManifest | null;
   landmarkBuildLevels: number[];
   isBossDefeated: boolean;
   boardWidth: number;
   boardHeight: number;
   uniformScale: number;
   toScreen: (anchor: TileAnchor) => { x: number; y: number };
-  onAvailabilityChange?: (isAvailable: boolean) => void;
 }
 
 type BoardArtLayerStyle = CSSProperties & {
@@ -64,40 +62,16 @@ function makeLayerStyle(options: {
   };
 }
 
-function useIslandArtManifest(islandNumber: number, onAvailabilityChange?: (isAvailable: boolean) => void) {
-  const [manifest, setManifest] = useState<IslandArtManifest | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setManifest(null);
-    onAvailabilityChange?.(false);
-
-    void loadIslandArtManifest(islandNumber).then((nextManifest) => {
-      if (cancelled) return;
-      setManifest(nextManifest);
-      onAvailabilityChange?.(nextManifest !== null);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [islandNumber, onAvailabilityChange]);
-
-  return manifest;
-}
-
 export function IslandArtLayers(props: IslandArtLayersProps) {
   const {
-    islandNumber,
+    manifest,
     landmarkBuildLevels,
     isBossDefeated,
     boardWidth,
     boardHeight,
     uniformScale,
     toScreen,
-    onAvailabilityChange,
   } = props;
-  const manifest = useIslandArtManifest(islandNumber, onAvailabilityChange);
   const [hiddenSources, setHiddenSources] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
@@ -113,27 +87,11 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
     });
   };
 
-  const sceneLayers = useMemo(() => {
-    if (!manifest?.scene) return [];
-    return [
-      manifest.scene.base ? {
-        key: 'base',
-        src: manifest.scene.base,
-        className: 'island-art-layers__base',
-        zIndex: 0,
-      } : null,
-      manifest.scene.boardCircle ? {
-        key: 'board-circle',
-        src: manifest.scene.boardCircle,
-        className: 'island-art-layers__board-circle',
-        zIndex: 1,
-      } : null,
-    ].filter((entry): entry is { key: string; src: string; className: string; zIndex: number } => Boolean(entry));
-  }, [manifest]);
+  const boardCircleSrc = manifest?.scene?.boardCircle;
 
   if (!manifest) return null;
 
-  const baseLayerStyle = makeLayerStyle({
+  const boardSceneLayerStyle = makeLayerStyle({
     manifest,
     x: manifest.coordinateSpace.width / 2,
     y: manifest.coordinateSpace.height / 2,
@@ -152,17 +110,17 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
       style={{ width: boardWidth, height: boardHeight }}
       aria-hidden="true"
     >
-      {sceneLayers.map((layer) => hiddenSources.has(layer.src) ? null : (
+      {boardCircleSrc && !hiddenSources.has(boardCircleSrc) ? (
         <img
-          key={layer.key}
-          className={`island-art-layers__image ${layer.className}`}
-          src={layer.src}
+          key={`board-circle-${boardCircleSrc}`}
+          className="island-art-layers__image island-art-layers__board-circle"
+          src={boardCircleSrc}
           alt=""
           draggable={false}
-          style={{ ...baseLayerStyle, '--island-art-layer-z': layer.zIndex } as BoardArtLayerStyle}
-          onError={() => hideSource(layer.src)}
+          style={{ ...boardSceneLayerStyle, '--island-art-layer-z': 1 } as BoardArtLayerStyle}
+          onError={() => hideSource(boardCircleSrc)}
         />
-      ))}
+      ) : null}
 
       {manifest.scenery.map((scenery) => hiddenSources.has(scenery.src) ? null : (
         <img

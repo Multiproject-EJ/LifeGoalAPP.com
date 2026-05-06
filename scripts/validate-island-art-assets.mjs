@@ -104,7 +104,17 @@ function validateScene(manifestPath, scene) {
     addError(manifestPath, 'scene', 'must be an object when present');
     return;
   }
-  validateAssetReference(manifestPath, 'scene.base', scene.base, { required: false, kind: 'image' });
+  validateAssetReference(manifestPath, 'scene.ambientBackground', scene.ambientBackground, { required: false, kind: 'image' });
+  if (scene.base !== undefined) {
+    addWarning(
+      manifestPath,
+      'scene.base',
+      scene.ambientBackground !== undefined
+        ? 'is deprecated and ignored while scene.ambientBackground is present'
+        : 'is deprecated; use scene.ambientBackground for full-container art',
+    );
+    validateAssetReference(manifestPath, 'scene.base', scene.base, { required: false, kind: 'image' });
+  }
   validateAssetReference(manifestPath, 'scene.boardCircle', scene.boardCircle, { required: false, kind: 'image' });
 }
 

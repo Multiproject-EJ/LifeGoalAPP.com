@@ -1,5 +1,7 @@
 import {
   clampIslandArtBuildLevel,
+  getIslandArtAmbientBackgroundSrc,
+  getIslandArtBoardCircleImageSrc,
   getIslandArtBossImageSrc,
   getIslandArtFolderName,
   getIslandArtLandmarkImageSrc,
@@ -15,7 +17,7 @@ const sampleManifest = {
   islandNumber: 1,
   coordinateSpace: { width: 1000, height: 1000 },
   scene: {
-    base: 'scene/base.webp',
+    ambientBackground: 'scene/ambient-background.webp',
     boardCircle: 'scene/board-circle.webp',
   },
   landmarks: [
@@ -69,6 +71,70 @@ export const islandArtManifestTests: TestCase[] = [
       assertEqual(getIslandArtFolderName(12), 'island-012', 'Expected island 12 to use the island-012 folder');
       assertEqual(getIslandArtManifestUrl(1), '/assets/islands/island-001/island-art.json', 'Expected island 1 manifest URL');
       assertEqual(getIslandArtManifestUrl(Number.NaN), '/assets/islands/island-001/island-art.json', 'Expected invalid island to fall back to island 1');
+    },
+  },
+  {
+    name: 'normalizes ambientBackground separately from board-circle art',
+    run: () => {
+      const manifest = normalizeIslandArtManifest(sampleManifest, 1);
+      if (!manifest) throw new Error('Expected sample manifest to normalize');
+      assertEqual(
+        getIslandArtAmbientBackgroundSrc(manifest),
+        '/assets/islands/island-001/scene/ambient-background.webp',
+        'Expected ambient background to normalize as the full-container scene asset',
+      );
+      assertEqual(
+        getIslandArtBoardCircleImageSrc(manifest),
+        '/assets/islands/island-001/scene/board-circle.webp',
+        'Expected board-circle art to stay as the board-attached scene asset',
+      );
+    },
+  },
+  {
+    name: 'supports deprecated scene.base as ambient background alias',
+    run: () => {
+      const manifest = normalizeIslandArtManifest({
+        version: 2,
+        scene: {
+          base: 'scene/base.webp',
+          boardCircle: 'scene/board-circle.webp',
+        },
+      }, 2);
+      if (!manifest) throw new Error('Expected base-alias manifest to normalize');
+      assertEqual(
+        getIslandArtAmbientBackgroundSrc(manifest),
+        '/assets/islands/island-002/scene/base.webp',
+        'Expected deprecated scene.base to act as ambient background alias',
+      );
+      assertEqual(
+        getIslandArtBoardCircleImageSrc(manifest),
+        '/assets/islands/island-002/scene/board-circle.webp',
+        'Expected boardCircle to remain separate from ambient alias',
+      );
+    },
+  },
+
+  {
+    name: 'prefers scene.ambientBackground over deprecated scene.base when both exist',
+    run: () => {
+      const manifest = normalizeIslandArtManifest({
+        version: 2,
+        scene: {
+          ambientBackground: 'scene/ambient-v2.webp',
+          base: 'scene/base-legacy.webp',
+        },
+      }, 3);
+      if (!manifest) throw new Error('Expected dual-background manifest to normalize');
+      assertEqual(
+        getIslandArtAmbientBackgroundSrc(manifest),
+        '/assets/islands/island-003/scene/ambient-v2.webp',
+        'Expected scene.ambientBackground to be the canonical full-container background',
+      );
+      assertEqual(
+        manifest.scene?.base,
+        '/assets/islands/island-003/scene/base-legacy.webp',
+        'Expected deprecated base to remain available only as migration metadata',
+      );
     },
   },
   {

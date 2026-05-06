@@ -6,8 +6,8 @@
     "height": 1000
   },
   "scene": {
-    "base": "/assets/islands/backgrounds/level-bg-01.webp",
-    "boardCircle": "/assets/islands/landmarks/center_inner1.webp"
+    "boardCircle": "/assets/islands/landmarks/center_inner1.webp",
+    "ambientBackground": "/assets/islands/backgrounds/level-bg-01.webp"
   },
   "landmarks": [
     {
@@ -71,8 +71,8 @@
     "id": "boss-01",
     "x": 500,
     "y": 500,
-    "width": 220,
-    "height": 180,
+    "width": 520,
+    "height": 420,
     "zBand": "mid",
     "defaultState": "idle",
     "images": {

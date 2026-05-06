@@ -3,6 +3,8 @@ import type { ZBand } from './islandBoardLayout';
 export type IslandArtBossState = 'idle' | 'active' | 'attack' | 'defeated' | 'reward';
 
 export interface IslandArtSceneManifest {
+  ambientBackground?: string;
+  /** @deprecated Use ambientBackground. Kept as a migration alias for older pilot manifests. */
   base?: string;
   boardCircle?: string;
 }
@@ -113,7 +115,7 @@ export function resolveIslandArtAssetPath(basePath: string, assetPath?: string):
 
 function hasRenderableAsset(raw: Record<string, unknown>): boolean {
   const scene = isRecord(raw.scene) ? raw.scene : {};
-  if (optionalString(scene.base) || optionalString(scene.boardCircle)) return true;
+  if (optionalString(scene.ambientBackground) || optionalString(scene.base) || optionalString(scene.boardCircle)) return true;
 
   if (Array.isArray(raw.landmarks)) {
     for (const entry of raw.landmarks) {
@@ -151,8 +153,11 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
 
   const rawScene = isRecord(raw.scene) ? raw.scene : {};
   const scene: IslandArtSceneManifest = {};
+  const ambientBackground = resolveIslandArtAssetPath(basePath, optionalString(rawScene.ambientBackground))
+    ?? resolveIslandArtAssetPath(basePath, optionalString(rawScene.base));
   const sceneBase = resolveIslandArtAssetPath(basePath, optionalString(rawScene.base));
   const boardCircle = resolveIslandArtAssetPath(basePath, optionalString(rawScene.boardCircle));
+  if (ambientBackground) scene.ambientBackground = ambientBackground;
   if (sceneBase) scene.base = sceneBase;
   if (boardCircle) scene.boardCircle = boardCircle;
 
@@ -250,6 +255,14 @@ export function getIslandArtBossImageSrc(boss: IslandArtBossManifest | undefined
   if (isDefeated && boss.images.defeated) return boss.images.defeated;
   const defaultState = boss.defaultState ?? 'idle';
   return boss.images[defaultState] ?? boss.images.idle ?? Object.values(boss.images).find(Boolean) ?? null;
+}
+
+export function getIslandArtAmbientBackgroundSrc(manifest: IslandArtManifest | null | undefined): string | null {
+  return manifest?.scene?.ambientBackground ?? manifest?.scene?.base ?? null;
+}
+
+export function getIslandArtBoardCircleImageSrc(manifest: IslandArtManifest | null | undefined): string | null {
+  return manifest?.scene?.boardCircle ?? null;
 }
 
 export async function loadIslandArtManifest(
