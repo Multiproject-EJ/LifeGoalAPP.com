@@ -447,17 +447,6 @@ export function BoardStage(props: BoardStageProps) {
         className="island-run-board__camera-stage"
         style={{ transform: cameraStageTransform, willChange: 'transform' }}
       >
-        <IslandArtLayers
-          islandNumber={islandNumber}
-          landmarkBuildLevels={landmarkBuildLevels}
-          isBossDefeated={isBossDefeated}
-          boardWidth={boardSize.width}
-          boardHeight={boardSize.height}
-          uniformScale={uniformScale}
-          toScreen={toScreen}
-          onAvailabilityChange={onIslandArtAvailabilityChange}
-        />
-
         {/* Path overlay image */}
         {theme.pathOverlayImage && !isMinimalBoardArt && (
           <img
