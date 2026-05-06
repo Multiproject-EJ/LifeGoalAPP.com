@@ -3764,7 +3764,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <span className="mobile-menu-overlay__utility-icon" aria-hidden="true">⚙️</span>
                   <span className="mobile-menu-overlay__utility-copy">
                     <span className="mobile-menu-overlay__mini-title">Settings</span>
-                    <span className="mobile-menu-overlay__mini-subtitle">Profile & preferences</span>
                   </span>
                   <span className="mobile-menu-overlay__utility-chevron" aria-hidden="true">›</span>
                 </button>
@@ -3777,8 +3776,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 >
                   <span className="mobile-menu-overlay__utility-icon" aria-hidden="true">🫶</span>
                   <span className="mobile-menu-overlay__utility-copy">
-                    <span className="mobile-menu-overlay__mini-title">Feedback &amp; Support</span>
-                    <span className="mobile-menu-overlay__mini-subtitle">Help us improve</span>
+                    <span className="mobile-menu-overlay__mini-title">Feedback</span>
                   </span>
                   <span className="mobile-menu-overlay__utility-chevron" aria-hidden="true">›</span>
                 </button>

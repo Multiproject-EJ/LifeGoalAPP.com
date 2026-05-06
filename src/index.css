@@ -18984,9 +18984,9 @@ html.platform-ipad .workspace-shell__menu-edge {
 .mobile-menu-overlay__utility-icon {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 15px;
+  width: 36px;
+  height: 36px;
+  border-radius: 14px;
   background: linear-gradient(145deg, rgba(239, 246, 255, 0.95), rgba(219, 234, 254, 0.9));
   font-size: 1.35rem;
 }
@@ -19242,19 +19242,26 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__quick-grid--bottom {
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.62rem;
 }
 
 .mobile-menu-overlay__mini-card--utility {
-  min-height: 68px;
+  min-height: 58px;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   justify-items: stretch;
-  gap: 0.7rem;
-  padding: 0.72rem 0.82rem;
+  gap: 0.45rem;
+  padding: 0.62rem 0.58rem;
   text-align: left;
-  border-radius: 20px;
+  border-radius: 18px;
+}
+
+.mobile-menu-overlay__mini-card--utility .mobile-menu-overlay__mini-title {
+  overflow: hidden;
+  font-size: clamp(0.72rem, 3vw, 0.86rem);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mobile-menu-overlay__utility-copy {
@@ -19266,8 +19273,8 @@ html.platform-ipad .workspace-shell__menu-edge {
 .mobile-menu-overlay__utility-chevron {
   display: grid;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
+  width: 1.65rem;
+  height: 1.65rem;
   border-radius: 999px;
   background: rgba(219, 234, 254, 0.62);
   color: #2563eb;
@@ -19284,8 +19291,26 @@ html.platform-ipad .workspace-shell__menu-edge {
     transform: scale(0.88);
   }
 
-  .mobile-menu-overlay__quick-grid--featured {
-    gap: 0.6rem;
+  .mobile-menu-overlay__quick-grid--featured,
+  .mobile-menu-overlay__quick-grid--bottom {
+    gap: 0.5rem;
+  }
+
+  .mobile-menu-overlay__mini-card--utility {
+    gap: 0.35rem;
+    padding-inline: 0.48rem;
+  }
+
+  .mobile-menu-overlay__utility-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 1.08rem;
+  }
+
+  .mobile-menu-overlay__utility-chevron {
+    width: 1.45rem;
+    height: 1.45rem;
+    font-size: 1.15rem;
   }
 }
 
