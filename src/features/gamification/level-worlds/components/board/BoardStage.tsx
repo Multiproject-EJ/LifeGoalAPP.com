@@ -12,6 +12,8 @@ import { BoardToken } from './BoardToken';
 import { BoardParticles } from './BoardParticles';
 import { BoardOrbitStops, type OrbitStopVisualData, type StopProgressState } from './BoardOrbitStops';
 import { BoardDice3D } from './BoardDice3D';
+import { IslandArtLayers } from './IslandArtLayers';
+import type { IslandArtManifest } from '../../services/islandArtManifest';
 import {
   computeDirectionalLead,
   computeHopDurations,
@@ -33,10 +35,12 @@ export interface BoardStageProps {
   anchors: TileAnchor[];
   /** Current theme */
   theme: IslandBoardTheme;
-  /** Board background image source */
-  backgroundSrc: string;
-  isBackgroundAvailable: boolean;
-  onBackgroundError: () => void;
+  /** Normalized v2 island art manifest loaded by the board container. */
+  islandArtManifest: IslandArtManifest | null;
+  /** Current stop build levels used by v2 landmark art; read-only visual input. */
+  landmarkBuildLevels?: number[];
+  /** Whether the current island boss has already been resolved/defeated. */
+  isBossDefeated?: boolean;
   /** Spark60 ring gradient CSS value */
   spark40RingGradient: string;
   /** Whether this is a spark40 board */
@@ -100,9 +104,9 @@ export function BoardStage(props: BoardStageProps) {
   const {
     anchors,
     theme,
-    backgroundSrc,
-    isBackgroundAvailable,
-    onBackgroundError,
+    islandArtManifest,
+    landmarkBuildLevels = [],
+    isBossDefeated = false,
     spark40RingGradient,
     isSpark40,
     showDebug,
@@ -406,6 +410,7 @@ export function BoardStage(props: BoardStageProps) {
 
   // ── Debug overlay ────────────────────────────────────────────────────────
   const ZBAND_COLORS: Record<string, string> = { back: '#50a5ff', mid: '#ffe066', front: '#ff4ff5' };
+  const artCameraTransform = camera.cameraTransform;
   const cameraStageTransform = `${camera.cameraTransform} rotateX(${boardTiltXDeg}deg) rotateZ(${boardRotateZDeg}deg)`;
 
   return (
@@ -421,7 +426,23 @@ export function BoardStage(props: BoardStageProps) {
         style={{ position: 'absolute', inset: 0, zIndex: 10, touchAction: 'none' }}
       />
 
-      {/* Camera stage — everything inside moves with the camera */}
+      {/* Art camera stage — follows camera pan/zoom but does not inherit gameplay rotateX/rotateZ. */}
+      <div
+        className="island-run-board__art-camera-stage"
+        style={{ transform: artCameraTransform, willChange: 'transform' }}
+      >
+        <IslandArtLayers
+          manifest={islandArtManifest}
+          landmarkBuildLevels={landmarkBuildLevels}
+          isBossDefeated={isBossDefeated}
+          boardWidth={boardSize.width}
+          boardHeight={boardSize.height}
+          uniformScale={uniformScale}
+          toScreen={toScreen}
+        />
+      </div>
+
+      {/* Gameplay camera stage — tile UI/token/dice keep the board tilt/rotation. */}
       <div
         className="island-run-board__camera-stage"
         style={{ transform: cameraStageTransform, willChange: 'transform' }}
