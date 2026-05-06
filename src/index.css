@@ -1,5 +1,6 @@
 :root {
   color-scheme: light dark;
+  --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-left: env(safe-area-inset-left, 0px);
   --safe-area-right: env(safe-area-inset-right, 0px);
   --workspace-safe-inline: max(var(--safe-area-left), var(--safe-area-right));
@@ -443,6 +444,102 @@ body {
     radial-gradient(circle at 85% 10%, rgba(129, 140, 248, 0.25), transparent 60%),
     linear-gradient(140deg, #0b1120 0%, #111827 55%, #0f172a 100%);
   overflow-x: hidden;
+}
+
+.app--mobile-top-chrome {
+  --mobile-top-chrome-height: clamp(14px, 4vw, 22px);
+  --mobile-top-chrome-gap: clamp(4px, 1.4vw, 7px);
+  --mobile-top-content-offset: calc(
+    var(--safe-area-top) + var(--mobile-top-chrome-height) + var(--mobile-top-chrome-gap)
+  );
+}
+
+.mobile-top-chrome {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--safe-area-top) + var(--mobile-top-chrome-height) + var(--mobile-top-chrome-gap));
+  z-index: 12;
+  pointer-events: none;
+  overflow: hidden;
+  contain: layout paint;
+}
+
+.app--mobile-frame .mobile-top-chrome {
+  left: max(calc((100vw - var(--mobile-frame-width)) / 2), 0px);
+  right: max(calc((100vw - var(--mobile-frame-width)) / 2), 0px);
+}
+
+.app--island-fullscreen .mobile-top-chrome {
+  display: none;
+}
+
+.mobile-top-chrome__wash {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(59, 130, 246, 0.14), transparent 68%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.16) 58%, transparent 100%);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  opacity: 0.72;
+}
+
+.mobile-top-chrome--iphone-dynamic-island .mobile-top-chrome__wash,
+.mobile-top-chrome--iphone-notch .mobile-top-chrome__wash {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.14), transparent 66%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.44), rgba(255, 255, 255, 0.15) 60%, transparent 100%);
+}
+
+.mobile-top-chrome--android-generic .mobile-top-chrome__wash {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(14, 165, 233, 0.12), transparent 68%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.13) 58%, transparent 100%);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-top-chrome__wash {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(129, 140, 248, 0.24), transparent 70%),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.78), rgba(15, 23, 42, 0.34) 62%, transparent 100%);
+  border-bottom-color: rgba(129, 140, 248, 0.13);
+  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.32), 0 0 22px rgba(99, 102, 241, 0.08);
+  opacity: 0.82;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-top-chrome--android-generic .mobile-top-chrome__wash {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(56, 189, 248, 0.2), transparent 70%),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.76), rgba(15, 23, 42, 0.32) 62%, transparent 100%);
+}
+
+.app--mobile-top-chrome .workspace-stage:not(.workspace-stage--vision-board):not(.workspace-stage--account) .workspace-stage__body > .workspace-content {
+  padding-top: max(
+    var(--workspace-padding),
+    calc(var(--mobile-top-content-offset) + 0.75rem)
+  );
+}
+
+.app--mobile-top-chrome .mobile-habit-home {
+  padding-top: calc(var(--mobile-top-content-offset) + clamp(0.25rem, 1.4vw, 0.6rem));
+}
+
+@media (max-width: 720px) {
+  .app--mobile-frame .mobile-top-chrome {
+    left: 0;
+    right: 0;
+  }
 }
 
 .app--island-fullscreen.app--workspace {
