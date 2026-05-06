@@ -52,6 +52,7 @@ import { ContractsTab } from './features/gamification/ContractsTab';
 import { ZenGarden } from './features/zen-garden/ZenGarden';
 import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
+import { MobileTopChrome } from './components/MobileTopChrome';
 import { GameBoardOverlay } from './components/GameBoardOverlay';
 import { HolidaySeasonDialog } from './components/HolidaySeasonDialog';
 import { QuickActionsFAB } from './components/QuickActionsFAB';
@@ -78,6 +79,7 @@ import {
 } from './features/gamification/level-worlds/services/islandRunEntryDebug';
 import { SPIN_PRIZES } from './types/gamification';
 import { splitGoldBalance } from './constants/economy';
+import { getTopDisplayClass } from './utils/topDisplayClass';
 import {
   fetchWorkspaceProfile,
   upsertWorkspaceProfile,
@@ -4655,7 +4657,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
   );
 
   const isIslandFullscreenActive = showGameBoardOverlay || showLevelWorldsFromEntry;
+  const mobileTopChromeDeviceClass =
+    isMobileExperience && isMobileViewport && !isIslandFullscreenActive ? getTopDisplayClass() : null;
+  const shouldShowMobileTopChrome = mobileTopChromeDeviceClass !== null;
   const islandFullscreenClassName = isIslandFullscreenActive ? ' app--island-fullscreen' : '';
+  const mobileTopChromeClassName = shouldShowMobileTopChrome ? ' app--mobile-top-chrome' : '';
   const launcherPlayersHandOverlay = isLauncherHandOverlayOpen && archetypeHand ? (
     <PlayersHandSparkPreview
       hand={archetypeHand}
@@ -4700,9 +4706,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
   if (isMobileExperience && showMobileHome) {
     const mobileHomeAppClassName = `app app--workspace app--mobile-frame app--mobile-home-frame${
       isAnyModalVisible ? ' app--auth-overlay' : ''
-    }${islandFullscreenClassName}`;
+    }${islandFullscreenClassName}${mobileTopChromeClassName}`;
     return (
       <div className={mobileHomeAppClassName}>
+        {shouldShowMobileTopChrome ? <MobileTopChrome deviceClass={mobileTopChromeDeviceClass} /> : null}
         <div className="workspace-shell">
             <MobileHabitHome
               session={activeSession}
@@ -4864,7 +4871,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     isAnyModalVisible ? ' app--auth-overlay' : ''
   }${isMobileFrameLocked ? ' app--mobile-frame' : ''}${isDesktopExperience ? ' app--desktop-preview' : ''}${
     isConflictResolverFullscreen ? ' app--conflict-resolver' : ''
-  }${islandFullscreenClassName}`;
+  }${islandFullscreenClassName}${mobileTopChromeClassName}`;
   const workspaceShellClassName = `workspace-shell ${
     isAnyModalVisible ? 'workspace-shell--blurred' : ''
   }${!isMobileExperience && !isDesktopMenuOpen ? ' workspace-shell--menu-collapsed' : ''}`;
@@ -4873,6 +4880,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   return (
     <div className={appClassName}>
+      {shouldShowMobileTopChrome ? <MobileTopChrome deviceClass={mobileTopChromeDeviceClass} /> : null}
       <div className={workspaceShellClassName}>
         {!isMobileExperience && !isDesktopMenuOpen && (
             <button
