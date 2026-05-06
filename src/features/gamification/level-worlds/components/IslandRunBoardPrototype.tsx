@@ -1376,6 +1376,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   useEffect(() => {
     setIsIslandBackgroundAvailable(true);
+    setIsIslandArtV2Available(false);
   }, [islandBackgroundSrc]);
 
   useEffect(() => {

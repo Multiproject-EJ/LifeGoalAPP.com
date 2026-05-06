@@ -449,9 +449,9 @@
   border: none;
   background-color: #0f172a;
   background-image: url("/assets/today'soffer/TodaysOffer1.webp");
-  background-position: center;
+  background-position: center center;
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size: 100% auto;
   display: flex;
   align-items: center;
   justify-content: center;
