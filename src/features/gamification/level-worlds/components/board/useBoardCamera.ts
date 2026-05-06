@@ -34,9 +34,9 @@ interface CameraSprings {
 
 const OVERVIEW_ZOOM = CAMERA_ZOOM.overview;
 const FOCUS_ZOOM = CAMERA_ZOOM.travelMedium;
-const DEFAULT_ZOOM = CAMERA_ZOOM.boardWide;
+const DEFAULT_ZOOM = CAMERA_ZOOM.overview;
 const FOLLOW_ZOOM = CAMERA_ZOOM.travelMedium;
-const MIN_ZOOM = 0.4;
+const MIN_ZOOM = CAMERA_ZOOM.overview;
 const MAX_ZOOM = 3.0;
 
 export function useBoardCamera(options: UseBoardCameraOptions) {
@@ -176,7 +176,7 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     ensureAnimating();
   }, [boardWidth, boardHeight, ensureAnimating, applyPresetSpring]);
 
-  /** Smoothly return to default camera (no offset, zoom 1). */
+  /** Smoothly return to the minimum manual zoom-out camera framing. */
   const goDefault = useCallback(() => {
     // Asymmetric spring: use smooth config for the return
     restoreDefaultSpring();
