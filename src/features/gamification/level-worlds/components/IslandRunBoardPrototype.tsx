@@ -25,7 +25,7 @@ import {
   OUTER_STOP_ANCHORS,
   type TileAnchor,
 } from '../services/islandBoardLayout';
-import { BoardStage, type BoardStageCameraControls } from './board';
+import { BoardStage, CAMERA_ZOOM, type BoardStageCameraControls } from './board';
 import { ConfettiBurst } from './ConfettiBurst';
 import { StatDriftNumbers } from './StatDriftNumbers';
 import { OutOfDiceRegenStatus } from './OutOfDiceRegenStatus';
@@ -809,6 +809,8 @@ function getBossReward(islandNumber: number): { dice: number; essence: number; s
 type StopProgressState = 'pending' | 'active' | 'completed' | 'build_pending' | 'partial' | 'locked' | 'ticket_required';
 type IslandRunCameraMode = 'board_follow' | 'stop_focus' | 'overview_manual';
 
+const MENU_RESET_ZOOM = CAMERA_ZOOM.overview * 0.8;
+
 
 
 type IslandRunMarketPurchaseStatus = 'attempt' | 'insufficient_coins' | 'success' | 'already_owned';
@@ -1128,6 +1130,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   });
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
+  const [isTopbarMenuPrimed, setIsTopbarMenuPrimed] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [cameraMode, setCameraMode] = useState<IslandRunCameraMode>('board_follow');
   const [focusedStopId, setFocusedStopId] = useState<string | null>(null);
@@ -1215,6 +1218,29 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
    * passive regen) from committing stale pre-roll snapshots during this window.
    */
   const isRollSyncPendingRef = useRef(false);
+
+  const resetCameraFromTopbarMenu = useCallback(() => {
+    if (isRolling || pendingHopSequence !== null || isAnimatingRollRef.current) {
+      setIsTopbarMenuPrimed(false);
+      setShowTopbarMenu(false);
+      return;
+    }
+
+    setCameraMode('board_follow');
+    setFocusedStopId(null);
+    boardCameraRef.current?.goDefault({ zoom: MENU_RESET_ZOOM });
+    setShowTopbarMenu(false);
+    setIsTopbarMenuPrimed(true);
+  }, [isRolling, pendingHopSequence]);
+
+  const handleTopbarMenuButtonClick = useCallback(() => {
+    if (!isTopbarMenuPrimed) {
+      resetCameraFromTopbarMenu();
+      return;
+    }
+
+    setShowTopbarMenu((current) => !current);
+  }, [isTopbarMenuPrimed, resetCameraFromTopbarMenu]);
   const autoRollHoldTimeoutRef = useRef<number | null>(null);
   const autoRollLoopAbortRef = useRef(false);
   const autoRollHoldTriggeredRef = useRef(false);
@@ -1431,6 +1457,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
     return () => window.cancelAnimationFrame(frame);
   }, [showTopbarMenu]);
+
+  useEffect(() => {
+    if (isRolling || pendingHopSequence !== null) {
+      setIsTopbarMenuPrimed(false);
+    }
+  }, [isRolling, pendingHopSequence]);
 
   // B1-3: tile map state — regenerated when islandNumber or dayIndex changes
   const [islandStartedAtMs, setIslandStartedAtMs] = useState<number>(() => Date.now());
@@ -2949,6 +2981,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const focusNextAvailableStop = useCallback(() => {
     const nextActiveStop = islandStopPlan.find((stop) => !completedStops.includes(stop.stopId));
     if (!nextActiveStop) return;
+    setIsTopbarMenuPrimed(false);
     setFocusedStopId(nextActiveStop.stopId);
     setCameraMode('stop_focus');
     setLandingText(`Focused on ${nextActiveStop.title}.`);
@@ -3537,6 +3570,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setLockedStopInfoStopId(null);
     setTicketPromptStopId(null);
     requestActiveStopTransition(stopId, 'orbit_stop_click');
+    setIsTopbarMenuPrimed(false);
     setFocusedStopId(stopId);
     setCameraMode('stop_focus');
   }, [requestActiveStopTransition]);
@@ -3593,6 +3627,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         // Ticket already paid (race with another action) — open the stop.
         setTicketPromptStopId(null);
         requestActiveStopTransition(stopId, 'ticket_already_paid');
+        setIsTopbarMenuPrimed(false);
         setFocusedStopId(stopId);
         setCameraMode('stop_focus');
       } else {
@@ -3636,6 +3671,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
     setTicketPromptStopId(null);
     requestActiveStopTransition(stopId, 'ticket_paid_open');
+    setIsTopbarMenuPrimed(false);
     setFocusedStopId(stopId);
     setCameraMode('stop_focus');
   }, [client, effectiveIslandNumber, islandNumber, islandStopPlan, requestActiveStopTransition, session, stopIndexByStopId]);
@@ -7759,12 +7795,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </div>
             <button
               type="button"
-              className="island-run-board__topbar-menu"
-              aria-label="Toggle HUD details"
+              className={`island-run-board__topbar-menu${isTopbarMenuPrimed ? ' island-run-board__topbar-menu--primed' : ''}${showTopbarMenu ? ' island-run-board__topbar-menu--open' : ''}`}
+              aria-label="Board menu and camera reset"
               aria-expanded={showTopbarMenu}
               aria-haspopup="menu"
               aria-controls="island-run-topbar-menu"
-              onClick={() => setShowTopbarMenu((current) => !current)}
+              onClick={handleTopbarMenuButtonClick}
             >
               ☰
             </button>
@@ -7787,6 +7823,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 type="button"
                 className="island-run-board__topbar-menu-item"
                 onClick={() => {
+                  setIsTopbarMenuPrimed(false);
                   if (cameraMode === 'overview_manual') {
                     setCameraMode('board_follow');
                     boardCameraRef.current?.goDefault();
@@ -7803,10 +7840,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 type="button"
                 className="island-run-board__topbar-menu-item"
                 onClick={() => {
-                  setCameraMode('board_follow');
-                  setFocusedStopId(null);
-                  boardCameraRef.current?.goDefault();
-                  setShowTopbarMenu(false);
+                  resetCameraFromTopbarMenu();
                 }}
               >
                 Reset camera
@@ -7962,6 +7996,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             hopSequenceResolverRef.current = null;
           }}
           onCameraReady={(controls) => { boardCameraRef.current = controls; }}
+          onCameraGesture={() => setIsTopbarMenuPrimed(false)}
           onTokenHop={(tileIndex) => {
             playIslandRunSound('token_move');
           }}

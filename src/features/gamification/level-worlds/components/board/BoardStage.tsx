@@ -3,7 +3,7 @@ import { CANONICAL_BOARD_SIZE, type TileAnchor } from '../../services/islandBoar
 import type { IslandBoardTheme } from '../../services/islandBoardThemes';
 import type { IslandTileMapEntry } from '../../services/islandBoardTileMap';
 import { logIslandRunEntryDebug } from '../../services/islandRunEntryDebug';
-import { useBoardCamera } from './useBoardCamera';
+import { useBoardCamera, type BoardCameraDefaultOptions } from './useBoardCamera';
 import { useBoardGestures } from './useBoardGestures';
 import { useTokenAnimation } from './useTokenAnimation';
 import { BoardPathCanvas } from './BoardPathCanvas';
@@ -81,6 +81,8 @@ export interface BoardStageProps {
   onStopClick: (stopId: string) => void;
   /** Expose camera controls to parent */
   onCameraReady?: (controls: BoardStageCameraControls) => void;
+  /** Called when the user manually manipulates the board camera. */
+  onCameraGesture?: () => void;
   /** Sound/haptic callbacks */
   onTokenHop?: (tileIndex: number) => void;
   onTokenLand?: (tileIndex: number) => void;
@@ -93,7 +95,7 @@ export interface BoardStageProps {
 
 export interface BoardStageCameraControls {
   goOverview: () => void;
-  goDefault: () => void;
+  goDefault: (options?: BoardCameraDefaultOptions) => void;
   goFocusPoint: (screenX: number, screenY: number, zoom?: number) => void;
   goFollowToken: (screenX: number, screenY: number, leadX?: number, leadY?: number) => void;
   goPreRoll: (screenX: number, screenY: number) => void;
@@ -122,6 +124,7 @@ export function BoardStage(props: BoardStageProps) {
     getOrbitStopDisplayIcon,
     onStopClick,
     onCameraReady,
+    onCameraGesture,
     onTokenHop,
     onTokenLand,
     pendingHopSequence = null,
@@ -195,10 +198,12 @@ export function BoardStage(props: BoardStageProps) {
   // ── Gestures ─────────────────────────────────────────────────────────────
   const gestureCallbacks = useMemo(() => ({
     onPan: (dx: number, dy: number) => {
+      onCameraGesture?.();
       const c = camera.camera;
       camera.setGestureCamera(c.x + dx, c.y + dy, c.zoom);
     },
     onPinchZoom: (scaleFactor: number, focalX: number, focalY: number) => {
+      onCameraGesture?.();
       const c = camera.camera;
       const newZoom = Math.max(camera.MIN_ZOOM, Math.min(camera.MAX_ZOOM, c.zoom * scaleFactor));
       // Focal-point zoom: adjust x/y so the point under fingers stays fixed
@@ -218,6 +223,7 @@ export function BoardStage(props: BoardStageProps) {
       camera.releaseGesture(vx, vy);
     },
     onDoubleTap: (_x: number, _y: number) => {
+      onCameraGesture?.();
       if (camera.camera.zoom > 1.2) {
         camera.goOverview();
       } else {
@@ -225,6 +231,7 @@ export function BoardStage(props: BoardStageProps) {
       }
     },
     onWheelZoom: (delta: number, focalX: number, focalY: number) => {
+      onCameraGesture?.();
       const c = camera.camera;
       const newZoom = Math.max(camera.MIN_ZOOM, Math.min(camera.MAX_ZOOM, c.zoom + delta));
       const zoomRatio = newZoom / c.zoom;
@@ -237,7 +244,7 @@ export function BoardStage(props: BoardStageProps) {
         camera.setGestureCamera(newX, newY, newZoom);
       }
     },
-  }), [camera]);
+  }), [camera, onCameraGesture]);
 
   useBoardGestures(gestureLayerRef, gestureCallbacks);
 
