@@ -25,8 +25,8 @@ type BoardArtLayerStyle = CSSProperties & {
 // they scale with the board without changing tile, stop, or gameplay math.
 const BOARD_PLATE_DOWNWARD_OFFSET_RATIO = 0.04;
 const BATTLE_CENTER_SCENERY_ID = 'battle-center';
-const BATTLE_CENTER_SIZE_SCALE = 2.72;
-const BATTLE_CENTER_UPWARD_OFFSET_RATIO = 0.1;
+const BATTLE_CENTER_SIZE_SCALE = 2.584;
+const BATTLE_CENTER_UPWARD_OFFSET_RATIO = 0.125;
 const BOSS_LANDMARK_SIZE_SCALE = 1.7;
 const BOSS_LANDMARK_UPWARD_OFFSET_RATIO = 0.1;
 const BOSS_LANDMARK_Z_INDEX = 7;
