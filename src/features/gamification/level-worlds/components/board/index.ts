@@ -12,6 +12,7 @@ export { useTokenAnimation, type TokenAnimState, type UseTokenAnimationOptions }
 export { createSpring, stepSpring, stepSprings, SPRING_PRESETS, type SpringConfig, type SpringState } from './springEngine';
 export {
   CAMERA_ZOOM,
+  FITTED_ART_ZOOM,
   getShotPreset,
   landingEventForTile,
   computeDirectionalLead,

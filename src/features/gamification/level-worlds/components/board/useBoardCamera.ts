@@ -6,7 +6,7 @@ import {
   type SpringConfig,
   type SpringState,
 } from './springEngine';
-import { CAMERA_ZOOM, type ShotPreset } from './cameraDirector';
+import { CAMERA_ZOOM, FITTED_ART_ZOOM, type ShotPreset } from './cameraDirector';
 
 // ─── Camera state ────────────────────────────────────────────────────────────
 
@@ -38,10 +38,36 @@ interface CameraSprings {
 
 const OVERVIEW_ZOOM = CAMERA_ZOOM.overview;
 const FOCUS_ZOOM = CAMERA_ZOOM.travelMedium;
-const DEFAULT_ZOOM = CAMERA_ZOOM.overview;
+const DEFAULT_ZOOM = FITTED_ART_ZOOM;
 const FOLLOW_ZOOM = CAMERA_ZOOM.travelMedium;
-const MIN_ZOOM = CAMERA_ZOOM.overview;
+const MIN_ZOOM = FITTED_ART_ZOOM;
 const MAX_ZOOM = 3.0;
+
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+/**
+ * Keep manual pan inside the visual stage bounds.
+ *
+ * The camera transform is centered on the board stage, so at or below 1× zoom
+ * the stage already fits inside the viewport and manual panning is locked. Once
+ * users zoom in, the pan range grows only by the extra scaled content outside
+ * the viewport; this prevents dragging the board/art layer completely away.
+ */
+export function clampCameraPan(
+  x: number,
+  y: number,
+  zoom: number,
+  boardWidth: number,
+  boardHeight: number,
+): Pick<CameraState, 'x' | 'y'> {
+  const halfExtraWidth = Math.max(0, (boardWidth * zoom - boardWidth) / 2);
+  const halfExtraHeight = Math.max(0, (boardHeight * zoom - boardHeight) / 2);
+
+  return {
+    x: clamp(x, -halfExtraWidth, halfExtraWidth),
+    y: clamp(y, -halfExtraHeight, halfExtraHeight),
+  };
+}
 
 export function useBoardCamera(options: UseBoardCameraOptions) {
   const { boardWidth, boardHeight, springPreset = SPRING_PRESETS.smooth } = options;
@@ -238,29 +264,36 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
 
   /** Direct gesture input: immediately set camera position (no spring). */
   const setGestureCamera = useCallback((x: number, y: number, zoom: number) => {
-    const clampedZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom));
+    const clampedZoom = clamp(zoom, MIN_ZOOM, MAX_ZOOM);
+    const clampedPan = clampCameraPan(x, y, clampedZoom, boardWidth, boardHeight);
     const s = springsRef.current;
     // Snap springs to gesture values (no animation)
-    s.x.value = x;   s.x.target = x;   s.x.velocity = 0; s.x.atRest = true;
-    s.y.value = y;   s.y.target = y;   s.y.velocity = 0; s.y.atRest = true;
+    s.x.value = clampedPan.x;   s.x.target = clampedPan.x;   s.x.velocity = 0; s.x.atRest = true;
+    s.y.value = clampedPan.y;   s.y.target = clampedPan.y;   s.y.velocity = 0; s.y.atRest = true;
     s.zoom.value = clampedZoom; s.zoom.target = clampedZoom; s.zoom.velocity = 0; s.zoom.atRest = true;
-    setCamera({ x, y, zoom: clampedZoom });
+    setCamera({ x: clampedPan.x, y: clampedPan.y, zoom: clampedZoom });
     setMode('gesture');
-  }, []);
+  }, [boardWidth, boardHeight]);
 
   /** Release gesture with momentum — set targets offset by velocity, let spring settle. */
   const releaseGesture = useCallback((velocityX: number, velocityY: number) => {
     const s = springsRef.current;
     const momentumScale = 0.15; // tuning: how far momentum carries
-    s.x.target = s.x.value + velocityX * momentumScale;
-    s.y.target = s.y.value + velocityY * momentumScale;
-    s.x.velocity = velocityX;
-    s.y.velocity = velocityY;
+    const rawTargetX = s.x.value + velocityX * momentumScale;
+    const rawTargetY = s.y.value + velocityY * momentumScale;
+    const clampedPan = clampCameraPan(rawTargetX, rawTargetY, s.zoom.value, boardWidth, boardHeight);
+    const hitHorizontalBound = clampedPan.x !== rawTargetX;
+    const hitVerticalBound = clampedPan.y !== rawTargetY;
+
+    s.x.target = clampedPan.x;
+    s.y.target = clampedPan.y;
+    s.x.velocity = hitHorizontalBound ? 0 : velocityX;
+    s.y.velocity = hitVerticalBound ? 0 : velocityY;
     // zoom spring stays at current value (no zoom momentum)
     s.zoom.target = s.zoom.value;
     setMode('gesture');
     ensureAnimating();
-  }, [ensureAnimating]);
+  }, [boardWidth, boardHeight, ensureAnimating]);
 
   /** The CSS transform string the camera-stage element should use. */
   const cameraTransform = `translate(${camera.x.toFixed(2)}px, ${camera.y.toFixed(2)}px) scale(${camera.zoom.toFixed(4)})`;

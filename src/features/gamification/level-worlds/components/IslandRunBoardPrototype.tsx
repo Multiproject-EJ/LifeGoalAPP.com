@@ -25,7 +25,7 @@ import {
   OUTER_STOP_ANCHORS,
   type TileAnchor,
 } from '../services/islandBoardLayout';
-import { BoardStage, CAMERA_ZOOM, type BoardStageCameraControls } from './board';
+import { BoardStage, type BoardStageCameraControls } from './board';
 import { ConfettiBurst } from './ConfettiBurst';
 import { StatDriftNumbers } from './StatDriftNumbers';
 import { OutOfDiceRegenStatus } from './OutOfDiceRegenStatus';
@@ -809,10 +809,6 @@ function getBossReward(islandNumber: number): { dice: number; essence: number; s
 type StopProgressState = 'pending' | 'active' | 'completed' | 'build_pending' | 'partial' | 'locked' | 'ticket_required';
 type IslandRunCameraMode = 'board_follow' | 'stop_focus' | 'overview_manual';
 
-const MENU_RESET_ZOOM = CAMERA_ZOOM.overview * 0.8;
-
-
-
 type IslandRunMarketPurchaseStatus = 'attempt' | 'insufficient_coins' | 'success' | 'already_owned';
 
 type IslandRunMarketStatusCoverageReport = {
@@ -1228,7 +1224,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     setCameraMode('board_follow');
     setFocusedStopId(null);
-    boardCameraRef.current?.goDefault({ zoom: MENU_RESET_ZOOM });
+    boardCameraRef.current?.goDefault();
     setShowTopbarMenu(false);
     setIsTopbarMenuPrimed(true);
   }, [isRolling, pendingHopSequence]);
