@@ -1139,12 +1139,16 @@ html.platform-ipad .workspace-shell__menu-edge {
   right: max(calc((100vw - var(--mobile-frame-width)) / 2), 0px);
 }
 
+.level-worlds-entry-modal--mobile-exit .level-worlds-island-run-shell__back-button--top {
+  display: none !important;
+}
+
 .level-worlds-mobile-exit-overlay {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 4px;
-  z-index: 10000;
+  bottom: calc(4px - env(safe-area-inset-bottom, 0px));
+  z-index: 10001;
   display: flex;
   justify-content: center;
   pointer-events: none;

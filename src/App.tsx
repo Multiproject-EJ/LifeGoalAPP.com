@@ -4611,9 +4611,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   };
 
+  const shouldShowLevelWorldsMobileExitOverlay = Boolean(
+    showLevelWorldsFromEntry && activeSession && isMobileViewport,
+  );
+
   const levelWorldsEntryModal = showLevelWorldsFromEntry && activeSession ? (
     <div
-      className="level-worlds-entry-modal"
+      className={`level-worlds-entry-modal${shouldShowLevelWorldsMobileExitOverlay ? ' level-worlds-entry-modal--mobile-exit' : ''}`}
     >
       <RecoverableErrorBoundary
         fallback={null}
@@ -4638,10 +4642,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
       </RecoverableErrorBoundary>
     </div>
   ) : null;
-
-  const shouldShowLevelWorldsMobileExitOverlay = Boolean(
-    showLevelWorldsFromEntry && activeSession && isMobileViewport,
-  );
 
   const levelWorldsMobileExitOverlay = shouldShowLevelWorldsMobileExitOverlay ? (
     <div className="level-worlds-mobile-exit-overlay">
