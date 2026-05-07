@@ -1139,6 +1139,37 @@ html.platform-ipad .workspace-shell__menu-edge {
   right: max(calc((100vw - var(--mobile-frame-width)) / 2), 0px);
 }
 
+.level-worlds-entry-modal--mobile-exit .level-worlds-island-run-shell__back-button--top {
+  display: none !important;
+}
+
+.level-worlds-mobile-exit-overlay {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(4px - env(safe-area-inset-bottom, 0px));
+  z-index: 10001;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.level-worlds-mobile-exit-overlay__button {
+  min-height: 34px;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(210, 235, 255, 0.28);
+  background: rgba(5, 13, 24, 0.58);
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.26);
+  font-size: 0.82rem;
+  font-weight: 700;
+  opacity: 0.82;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  pointer-events: auto;
+}
+
 @media (max-width: 720px) {
   .app--mobile-frame {
     padding: 0;

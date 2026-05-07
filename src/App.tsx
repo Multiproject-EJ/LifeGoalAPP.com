@@ -4602,9 +4602,22 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   };
 
+  const handleCloseLevelWorldsEntry = () => {
+    setShowLevelWorldsFromEntry(false);
+    setLevelWorldsEntryPanel('default');
+    if (reopenGameBoardOverlayOnLevelWorldsClose) {
+      setShowGameBoardOverlay(true);
+      setReopenGameBoardOverlayOnLevelWorldsClose(false);
+    }
+  };
+
+  const shouldShowLevelWorldsMobileExitOverlay = Boolean(
+    showLevelWorldsFromEntry && activeSession && isMobileViewport,
+  );
+
   const levelWorldsEntryModal = showLevelWorldsFromEntry && activeSession ? (
     <div
-      className="level-worlds-entry-modal"
+      className={`level-worlds-entry-modal${shouldShowLevelWorldsMobileExitOverlay ? ' level-worlds-entry-modal--mobile-exit' : ''}`}
     >
       <RecoverableErrorBoundary
         fallback={null}
@@ -4623,16 +4636,23 @@ export default function App({ forceAuthOnMount }: AppProps) {
         <LevelWorldsHub
           session={activeSession}
           initialPanel={levelWorldsEntryPanel}
-          onClose={() => {
-            setShowLevelWorldsFromEntry(false);
-            setLevelWorldsEntryPanel('default');
-            if (reopenGameBoardOverlayOnLevelWorldsClose) {
-              setShowGameBoardOverlay(true);
-              setReopenGameBoardOverlayOnLevelWorldsClose(false);
-            }
-          }}
+          onClose={handleCloseLevelWorldsEntry}
+          showTopBackButton={!isMobileViewport}
         />
       </RecoverableErrorBoundary>
+    </div>
+  ) : null;
+
+  const levelWorldsMobileExitOverlay = shouldShowLevelWorldsMobileExitOverlay ? (
+    <div className="level-worlds-mobile-exit-overlay">
+      <button
+        type="button"
+        className="level-worlds-mobile-exit-overlay__button"
+        onClick={handleCloseLevelWorldsEntry}
+        aria-label="Back to main app"
+      >
+        ← Back
+      </button>
     </div>
   ) : null;
 
@@ -4774,6 +4794,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         {launcherPlayersHandOverlay}
         {mobileGamificationOverlay}
         {levelWorldsEntryModal}
+        {levelWorldsMobileExitOverlay}
         <GameBoardOverlay
           isOpen={showGameBoardOverlay}
           onClose={() => setShowGameBoardOverlay(false)}
@@ -5079,6 +5100,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       {launcherPlayersHandOverlay}
       {mobileGamificationOverlay}
       {levelWorldsEntryModal}
+      {levelWorldsMobileExitOverlay}
       <HolidaySeasonDialog
         activeHoliday={activeHolidaySeason}
         isOpen={showHolidaySeasonDialog}
