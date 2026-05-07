@@ -23,8 +23,11 @@ type BoardArtLayerStyle = CSSProperties & {
 
 // Visual-only art tuning. These offsets stay in manifest coordinate space so
 // they scale with the board without changing tile, stop, or gameplay math.
-const BOARD_PLATE_DOWNWARD_OFFSET_RATIO = 0.1;
-const BOSS_LANDMARK_SIZE_SCALE = 4;
+const BOARD_PLATE_UPWARD_OFFSET_RATIO = 0.03;
+const BATTLE_CENTER_SCENERY_ID = 'battle-center';
+const BATTLE_CENTER_SIZE_SCALE = 4;
+const BATTLE_CENTER_UPWARD_OFFSET_RATIO = 0.1;
+const BOSS_LANDMARK_SIZE_SCALE = 2;
 const BOSS_LANDMARK_UPWARD_OFFSET_RATIO = 0.1;
 
 function zIndexForBand(zBand: ZBand | undefined, fallback: number): number {
@@ -101,7 +104,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
   const boardSceneLayerStyle = makeLayerStyle({
     manifest,
     x: manifest.coordinateSpace.width / 2,
-    y: manifest.coordinateSpace.height * (0.5 + BOARD_PLATE_DOWNWARD_OFFSET_RATIO),
+    y: manifest.coordinateSpace.height * (0.5 - BOARD_PLATE_UPWARD_OFFSET_RATIO),
     width: manifest.coordinateSpace.width,
     height: manifest.coordinateSpace.height,
     uniformScale,
@@ -129,26 +132,34 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
         />
       ) : null}
 
-      {manifest.scenery.map((scenery) => hiddenSources.has(scenery.src) ? null : (
-        <img
-          key={scenery.id}
-          className={`island-art-layers__image island-art-layers__scenery island-art-layers__scenery--${scenery.zBand ?? 'mid'}`}
-          src={scenery.src}
-          alt=""
-          draggable={false}
-          style={makeLayerStyle({
-            manifest,
-            x: scenery.x,
-            y: scenery.y,
-            width: scenery.width,
-            height: scenery.height,
-            uniformScale,
-            toScreen,
-            zIndex: zIndexForBand(scenery.zBand, 3),
-          })}
-          onError={() => hideSource(scenery.src)}
-        />
-      ))}
+      {manifest.scenery.map((scenery) => {
+        if (hiddenSources.has(scenery.src)) return null;
+        const isBattleCenterScenery = scenery.id === BATTLE_CENTER_SCENERY_ID;
+        const scenerySizeScale = isBattleCenterScenery ? BATTLE_CENTER_SIZE_SCALE : 1;
+        const sceneryUpwardOffset = isBattleCenterScenery
+          ? manifest.coordinateSpace.height * BATTLE_CENTER_UPWARD_OFFSET_RATIO
+          : 0;
+        return (
+          <img
+            key={scenery.id}
+            className={`island-art-layers__image island-art-layers__scenery island-art-layers__scenery--${scenery.zBand ?? 'mid'}`}
+            src={scenery.src}
+            alt=""
+            draggable={false}
+            style={makeLayerStyle({
+              manifest,
+              x: scenery.x,
+              y: scenery.y - sceneryUpwardOffset,
+              width: scenery.width * scenerySizeScale,
+              height: scenery.height * scenerySizeScale,
+              uniformScale,
+              toScreen,
+              zIndex: zIndexForBand(scenery.zBand, 3),
+            })}
+            onError={() => hideSource(scenery.src)}
+          />
+        );
+      })}
 
       {manifest.landmarks.map((landmark) => {
         const src = getIslandArtLandmarkImageSrc(landmark, landmarkBuildLevels[landmark.stopIndex] ?? 0);
