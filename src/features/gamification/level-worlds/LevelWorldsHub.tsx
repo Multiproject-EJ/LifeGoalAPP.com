@@ -33,9 +33,10 @@ export function LevelWorldsHub({ session, onClose, initialPanel = 'default' }: L
   return (
     <div className="level-worlds-island-run-shell">
       <button
+        type="button"
         onClick={onClose}
         aria-label="Back to main app"
-        className="level-worlds-island-run-shell__back-button"
+        className="level-worlds-island-run-shell__back-button level-worlds-island-run-shell__back-button--top"
       >
         ← Back
       </button>
