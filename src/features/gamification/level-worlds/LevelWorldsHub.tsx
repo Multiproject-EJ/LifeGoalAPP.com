@@ -41,6 +41,16 @@ export function LevelWorldsHub({ session, onClose, initialPanel = 'default' }: L
         ← Back
       </button>
       <IslandRunBoardPrototype session={session} initialPanel={initialPanel} />
+      <div className="level-worlds-island-run-shell__mobile-bottom-exit-layer">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Back to main app"
+          className="level-worlds-island-run-shell__back-button level-worlds-island-run-shell__back-button--bottom"
+        >
+          ← Back
+        </button>
+      </div>
     </div>
   );
 }
