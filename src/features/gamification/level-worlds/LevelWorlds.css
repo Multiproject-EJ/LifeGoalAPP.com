@@ -48,40 +48,9 @@
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
 }
 
-.level-worlds-island-run-shell__mobile-bottom-exit-layer {
-  display: none;
-}
-
 @media (max-width: 767px) {
   .level-worlds-island-run-shell__back-button--top {
     display: none;
-  }
-
-  .level-worlds-island-run-shell__mobile-bottom-exit-layer {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 4px;
-    z-index: 120;
-    display: flex;
-    justify-content: center;
-    pointer-events: none;
-  }
-
-  .level-worlds-island-run-shell__back-button--bottom {
-    position: static;
-    min-height: 34px;
-    padding: 0.35rem 0.9rem;
-    border-radius: 999px;
-    border-color: rgba(210, 235, 255, 0.28);
-    background: rgba(5, 13, 24, 0.58);
-    color: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.26);
-    font-size: 0.82rem;
-    opacity: 0.82;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    pointer-events: auto;
   }
 }
 
