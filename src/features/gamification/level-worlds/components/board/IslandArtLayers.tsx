@@ -23,11 +23,11 @@ type BoardArtLayerStyle = CSSProperties & {
 
 // Visual-only art tuning. These offsets stay in manifest coordinate space so
 // they scale with the board without changing tile, stop, or gameplay math.
-const BOARD_PLATE_UPWARD_OFFSET_RATIO = 0.01;
+const BOARD_PLATE_DOWNWARD_OFFSET_RATIO = 0.015;
 const BATTLE_CENTER_SCENERY_ID = 'battle-center';
-const BATTLE_CENTER_SIZE_SCALE = 3.2;
+const BATTLE_CENTER_SIZE_SCALE = 2.72;
 const BATTLE_CENTER_UPWARD_OFFSET_RATIO = 0.1;
-const BOSS_LANDMARK_SIZE_SCALE = 2;
+const BOSS_LANDMARK_SIZE_SCALE = 1.7;
 const BOSS_LANDMARK_UPWARD_OFFSET_RATIO = 0.1;
 const BOSS_LANDMARK_Z_INDEX = 7;
 
@@ -105,7 +105,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
   const boardSceneLayerStyle = makeLayerStyle({
     manifest,
     x: manifest.coordinateSpace.width / 2,
-    y: manifest.coordinateSpace.height * (0.5 - BOARD_PLATE_UPWARD_OFFSET_RATIO),
+    y: manifest.coordinateSpace.height * (0.5 + BOARD_PLATE_DOWNWARD_OFFSET_RATIO),
     width: manifest.coordinateSpace.width,
     height: manifest.coordinateSpace.height,
     uniformScale,
