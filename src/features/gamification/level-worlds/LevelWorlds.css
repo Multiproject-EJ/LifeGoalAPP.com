@@ -1426,7 +1426,8 @@
   transform-origin: center center;
   pointer-events: none;
   will-change: transform;
-  contain: layout style paint;
+  overflow: visible;
+  contain: layout style;
   transition: none;
   backface-visibility: hidden;
   transform-style: preserve-3d;
@@ -1480,7 +1481,7 @@
   z-index: 0;
   pointer-events: none;
   overflow: visible;
-  contain: layout style paint;
+  contain: layout style;
   transition: none;
 }
 
@@ -4961,7 +4962,7 @@
   height: 100%;
   margin: 0 auto;
   z-index: 2;
-  overflow: hidden;
+  overflow: visible;
   flex: 1 1 auto;
   perspective: 1400px;
   perspective-origin: 50% 35%;
