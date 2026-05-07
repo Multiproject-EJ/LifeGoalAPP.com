@@ -4633,12 +4633,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
           session={activeSession}
           initialPanel={levelWorldsEntryPanel}
           onClose={handleCloseLevelWorldsEntry}
+          showTopBackButton={!isMobileViewport}
         />
       </RecoverableErrorBoundary>
     </div>
   ) : null;
 
-  const levelWorldsMobileExitOverlay = showLevelWorldsFromEntry ? (
+  const shouldShowLevelWorldsMobileExitOverlay = Boolean(
+    showLevelWorldsFromEntry && activeSession && isMobileViewport,
+  );
+
+  const levelWorldsMobileExitOverlay = shouldShowLevelWorldsMobileExitOverlay ? (
     <div className="level-worlds-mobile-exit-overlay">
       <button
         type="button"
@@ -4789,6 +4794,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         {launcherPlayersHandOverlay}
         {mobileGamificationOverlay}
         {levelWorldsEntryModal}
+        {levelWorldsMobileExitOverlay}
         <GameBoardOverlay
           isOpen={showGameBoardOverlay}
           onClose={() => setShowGameBoardOverlay(false)}
