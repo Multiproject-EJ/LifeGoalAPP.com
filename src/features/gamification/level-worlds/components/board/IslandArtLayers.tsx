@@ -23,7 +23,7 @@ type BoardArtLayerStyle = CSSProperties & {
 
 // Visual-only art tuning. These offsets stay in manifest coordinate space so
 // they scale with the board without changing tile, stop, or gameplay math.
-const BOARD_PLATE_DOWNWARD_OFFSET_RATIO = 0.015;
+const BOARD_PLATE_DOWNWARD_OFFSET_RATIO = 0.04;
 const BATTLE_CENTER_SCENERY_ID = 'battle-center';
 const BATTLE_CENTER_SIZE_SCALE = 2.72;
 const BATTLE_CENTER_UPWARD_OFFSET_RATIO = 0.1;
