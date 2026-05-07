@@ -23,12 +23,13 @@ type BoardArtLayerStyle = CSSProperties & {
 
 // Visual-only art tuning. These offsets stay in manifest coordinate space so
 // they scale with the board without changing tile, stop, or gameplay math.
-const BOARD_PLATE_UPWARD_OFFSET_RATIO = 0.03;
+const BOARD_PLATE_UPWARD_OFFSET_RATIO = 0.01;
 const BATTLE_CENTER_SCENERY_ID = 'battle-center';
-const BATTLE_CENTER_SIZE_SCALE = 4;
+const BATTLE_CENTER_SIZE_SCALE = 3.2;
 const BATTLE_CENTER_UPWARD_OFFSET_RATIO = 0.1;
 const BOSS_LANDMARK_SIZE_SCALE = 2;
 const BOSS_LANDMARK_UPWARD_OFFSET_RATIO = 0.1;
+const BOSS_LANDMARK_Z_INDEX = 7;
 
 function zIndexForBand(zBand: ZBand | undefined, fallback: number): number {
   switch (zBand) {
@@ -203,7 +204,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
             height: manifest.boss.height * BOSS_LANDMARK_SIZE_SCALE,
             uniformScale,
             toScreen,
-            zIndex: zIndexForBand(manifest.boss.zBand, 5),
+            zIndex: BOSS_LANDMARK_Z_INDEX,
           })}
           onError={() => hideSource(bossSrc)}
         />
