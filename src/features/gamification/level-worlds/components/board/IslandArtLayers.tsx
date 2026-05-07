@@ -21,6 +21,12 @@ type BoardArtLayerStyle = CSSProperties & {
   '--island-art-layer-z'?: number;
 };
 
+// Visual-only art tuning. These offsets stay in manifest coordinate space so
+// they scale with the board without changing tile, stop, or gameplay math.
+const BOARD_PLATE_DOWNWARD_OFFSET_RATIO = 0.1;
+const BOSS_LANDMARK_SIZE_SCALE = 4;
+const BOSS_LANDMARK_UPWARD_OFFSET_RATIO = 0.1;
+
 function zIndexForBand(zBand: ZBand | undefined, fallback: number): number {
   switch (zBand) {
     case 'back':
@@ -95,7 +101,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
   const boardSceneLayerStyle = makeLayerStyle({
     manifest,
     x: manifest.coordinateSpace.width / 2,
-    y: manifest.coordinateSpace.height / 2,
+    y: manifest.coordinateSpace.height * (0.5 + BOARD_PLATE_DOWNWARD_OFFSET_RATIO),
     width: manifest.coordinateSpace.width,
     height: manifest.coordinateSpace.height,
     uniformScale,
@@ -179,9 +185,11 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
           style={makeLayerStyle({
             manifest,
             x: manifest.boss.x,
-            y: manifest.boss.y,
-            width: manifest.boss.width,
-            height: manifest.boss.height,
+            y: manifest.boss.y - (
+              manifest.coordinateSpace.height * BOSS_LANDMARK_UPWARD_OFFSET_RATIO
+            ),
+            width: manifest.boss.width * BOSS_LANDMARK_SIZE_SCALE,
+            height: manifest.boss.height * BOSS_LANDMARK_SIZE_SCALE,
             uniformScale,
             toScreen,
             zIndex: zIndexForBand(manifest.boss.zBand, 5),
