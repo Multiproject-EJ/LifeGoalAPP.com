@@ -18,6 +18,10 @@ export interface CameraState {
 
 export type CameraMode = 'board_follow' | 'stop_focus' | 'overview_manual' | 'gesture';
 
+export interface BoardCameraDefaultOptions {
+  zoom?: number;
+}
+
 export interface UseBoardCameraOptions {
   /** Board container dimensions (px) */
   boardWidth: number;
@@ -177,13 +181,13 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
   }, [boardWidth, boardHeight, ensureAnimating, applyPresetSpring]);
 
   /** Smoothly return to the minimum manual zoom-out camera framing. */
-  const goDefault = useCallback(() => {
+  const goDefault = useCallback((options?: BoardCameraDefaultOptions) => {
     // Asymmetric spring: use smooth config for the return
     restoreDefaultSpring();
     const s = springsRef.current;
     s.x.target = 0;
     s.y.target = 0;
-    s.zoom.target = DEFAULT_ZOOM;
+    s.zoom.target = options?.zoom ?? DEFAULT_ZOOM;
     setMode('board_follow');
     ensureAnimating();
   }, [ensureAnimating, restoreDefaultSpring]);
