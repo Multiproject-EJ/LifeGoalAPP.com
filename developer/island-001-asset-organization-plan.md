@@ -6,6 +6,14 @@ Codex PRs should not include binary `.webp` files. The image copies must be done
 
 This scaffold prepares the target text-only folder structure for Island 001 without adding, moving, copying, renaming, deleting, or modifying any image assets.
 
+## Current PR scope
+
+This PR is text-only. It should contain only this Markdown plan and `.gitkeep` files for the future Island 001 folders.
+
+Do not change `public/assets/islands/island-001/island-art.json` in this PR. It must keep pointing at the current old asset paths until the `.webp` files have been copied manually outside Codex.
+
+Do not run the manual copy commands in Codex. They are included below only for the later local/manual asset migration.
+
 ## Current old files
 
 - `public/assets/islands/landmarks/center_inner1.webp`
