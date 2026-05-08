@@ -185,6 +185,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
   });
 
   const artSpaceHeight = sceneLayout?.sceneSpace.height ?? manifest.coordinateSpace.height;
+
   const resolvedBossCreatureArtState = bossCreatureArtState ?? (isBossDefeated ? 'defeated' : 'alive');
   const bossSrc = resolvedBossCreatureArtState === 'hidden'
     ? null

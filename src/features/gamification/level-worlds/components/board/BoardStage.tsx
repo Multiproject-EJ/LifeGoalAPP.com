@@ -3,7 +3,7 @@ import { CANONICAL_BOARD_SIZE, type TileAnchor } from '../../services/islandBoar
 import type { IslandBoardTheme } from '../../services/islandBoardThemes';
 import type { IslandTileMapEntry } from '../../services/islandBoardTileMap';
 import { logIslandRunEntryDebug } from '../../services/islandRunEntryDebug';
-import { useBoardCamera, type BoardCameraDefaultOptions } from './useBoardCamera';
+import { useBoardCamera, type BoardCameraDefaultOptions, type CameraVisualBounds } from './useBoardCamera';
 import { useBoardGestures } from './useBoardGestures';
 import { useTokenAnimation } from './useTokenAnimation';
 import { BoardPathCanvas } from './BoardPathCanvas';
@@ -206,10 +206,23 @@ export function BoardStage(props: BoardStageProps) {
     };
   }, [islandArtManifest?.playableBoardRect, islandArtManifest?.sceneSpace, offsetX, offsetY, uniformScale]);
 
+  const sceneVisualBounds = useMemo<CameraVisualBounds | null>(() => {
+    if (!sceneLayout) return null;
+    const topLeft = sceneLayout.toScreenPoint(0, 0);
+    const bottomRight = sceneLayout.toScreenPoint(sceneLayout.sceneSpace.width, sceneLayout.sceneSpace.height);
+    return {
+      left: Math.min(topLeft.x, bottomRight.x),
+      top: Math.min(topLeft.y, bottomRight.y),
+      right: Math.max(topLeft.x, bottomRight.x),
+      bottom: Math.max(topLeft.y, bottomRight.y),
+    };
+  }, [sceneLayout]);
+
   // ── Camera ───────────────────────────────────────────────────────────────
   const camera = useBoardCamera({
     boardWidth: boardSize.width,
     boardHeight: boardSize.height,
+    visualBounds: sceneVisualBounds,
   });
 
   // Expose camera controls to parent

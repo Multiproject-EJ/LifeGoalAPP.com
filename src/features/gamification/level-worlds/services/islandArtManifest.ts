@@ -50,11 +50,9 @@ export interface IslandArtSpace {
   height: number;
 }
 
-export interface IslandArtRect {
+export interface IslandArtRect extends IslandArtSpace {
   x: number;
   y: number;
-  width: number;
-  height: number;
 }
 
 export interface IslandArtManifest {
@@ -62,7 +60,7 @@ export interface IslandArtManifest {
   islandNumber: number;
   basePath: string;
   coordinateSpace: IslandArtSpace;
-  /** Optional larger visual scene/art coordinate space for camera-attached art. */
+  /** Optional full visual scene coordinate space for art beyond the playable board. */
   sceneSpace?: IslandArtSpace;
   /** Optional placement of the existing 1000×1000 playable board inside sceneSpace. */
   playableBoardRect?: IslandArtRect;
@@ -196,6 +194,9 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
       height: Math.max(1, finiteNumber(raw.coordinateSpace.height, DEFAULT_COORDINATE_SPACE.height)),
     }
     : { ...DEFAULT_COORDINATE_SPACE };
+  const sceneSpace = normalizeOptionalArtSpace(raw.sceneSpace);
+  const playableBoardRect = normalizeOptionalArtRect(raw.playableBoardRect);
+
   const sceneSpace = normalizeOptionalArtSpace(raw.sceneSpace);
   const playableBoardRect = normalizeOptionalArtRect(raw.playableBoardRect);
 
