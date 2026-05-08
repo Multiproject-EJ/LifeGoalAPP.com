@@ -25,8 +25,9 @@ export const CAMERA_ZOOM = {
   preRoll:      1.5,
 } as const;
 
-/** Reset/manual zoom floor: use overview directly, with no extra shrink. */
-export const RESET_CAMERA_ZOOM = CAMERA_ZOOM.overview;
+/** Reset/manual zoom floor: back the overview framing out by ~20% for a wider board view. */
+const RESET_CAMERA_ZOOM_OUT_FACTOR = 0.8;
+export const RESET_CAMERA_ZOOM = CAMERA_ZOOM.overview * RESET_CAMERA_ZOOM_OUT_FACTOR;
 
 // ─── Event priorities (higher number = higher priority) ──────────────────────
 

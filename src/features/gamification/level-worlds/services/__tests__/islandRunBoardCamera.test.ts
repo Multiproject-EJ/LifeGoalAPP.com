@@ -10,13 +10,14 @@ function assertClose(actual: number, expected: number, message: string): void {
 
 export const islandRunBoardCameraTests: TestCase[] = [
   {
-    name: 'reset/default camera zoom uses non-shrunk overview value',
+    name: 'reset/default camera zoom uses wider-than-overview framing',
     run: () => {
-      assertClose(RESET_CAMERA_ZOOM, CAMERA_ZOOM.overview, 'Expected reset camera zoom to match overview');
-      assertClose(DEFAULT_CAMERA_ZOOM, CAMERA_ZOOM.overview, 'Expected default camera zoom to match overview');
+      const expectedWideResetZoom = CAMERA_ZOOM.overview * 0.8;
+      assertClose(RESET_CAMERA_ZOOM, expectedWideResetZoom, 'Expected reset camera zoom to be 20% wider than overview');
+      assertClose(DEFAULT_CAMERA_ZOOM, expectedWideResetZoom, 'Expected default camera zoom to be 20% wider than overview');
       assert(
-        DEFAULT_CAMERA_ZOOM > CAMERA_ZOOM.overview * 0.8,
-        'Expected default camera zoom to remove the former overview × 0.8 shrink',
+        DEFAULT_CAMERA_ZOOM < CAMERA_ZOOM.overview,
+        'Expected default camera zoom to sit below overview for a wider reset framing',
       );
     },
   },
