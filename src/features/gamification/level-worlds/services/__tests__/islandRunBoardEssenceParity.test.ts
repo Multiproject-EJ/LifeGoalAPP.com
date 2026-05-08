@@ -288,18 +288,25 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       );
       assert(
         source.includes('const BUILD_HOLD_INITIAL_DELAY_MS = 400;') &&
-          source.includes('if (heldMs >= 3_000) return 4;') &&
+          source.includes('if (heldMs >= 3_000) return MAX_REPEATED_BUILD_BATCH_STEPS;') &&
           source.includes('if (heldMs >= 1_500) return 2;') &&
           source.includes('if (heldMs >= 3_000) return 95;') &&
           source.includes('if (heldMs >= 1_500) return 150;') &&
           source.includes('return 250;'),
-        'Hold-to-build should use accelerating batch and delay curves as hold duration increases.',
+        'Hold-to-build should use accelerating batch and delay curves as hold duration increases, with max batch delegated to the repeated-build speed cap.',
       );
       assert(
         source.includes('aria-disabled={isBuildDisabled}') &&
           source.includes('const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;') &&
           source.includes('⚒️ Max build…'),
         'Build button should expose a busy/disabled state while build spend is in-flight and provide hold feedback.',
+      );
+      assert(
+        source.includes('const handleRepeatedBuildActivation = async (stopIndex: number): Promise<boolean> => {') &&
+          source.includes('const repeatedBuildBatchSteps = resolveRepeatedBuildBatchSteps(nextStreak.count);') &&
+          source.includes('const spendApplied = await handleSpendEssenceOnBuild(stopIndex, repeatedBuildBatchSteps);') &&
+          source.includes('buildRepeatStreakRef.current = nextStreak;'),
+        'Repeated build activation should resolve UI-local streak speed and only persist the streak after a successful canonical spend.',
       );
     },
   },

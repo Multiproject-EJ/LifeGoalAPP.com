@@ -249,6 +249,13 @@ import {
   resolveBossCreatureArtState,
 } from '../services/islandRunBossEncounter';
 import {
+  getInitialBuildRepeatStreakState,
+  MAX_REPEATED_BUILD_BATCH_STEPS,
+  resolveNextBuildRepeatStreak,
+  resolveRepeatedBuildBatchSteps,
+  type BuildRepeatStreakState,
+} from '../services/islandRunBuildAcceleration';
+import {
   BASE_DICE_PER_ROLL,
   claimIslandRunContractV2RewardBar,
   resolveChainedRewardBarClaims,
@@ -343,7 +350,7 @@ function resolveBuildHoldRepeatDelayMs(heldMs: number) {
 }
 
 function resolveBuildHoldBatchSteps(heldMs: number) {
-  if (heldMs >= 3_000) return 4;
+  if (heldMs >= 3_000) return MAX_REPEATED_BUILD_BATCH_STEPS;
   if (heldMs >= 1_500) return 2;
   return 1;
 }
@@ -1707,12 +1714,26 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const isBuildSpendInFlightRef = useRef(false);
   const holdBuildSpendActiveRef = useRef(false);
   const holdBuildSpendStartAtMsRef = useRef<number | null>(null);
+  const buildRepeatStreakRef = useRef<BuildRepeatStreakState>(getInitialBuildRepeatStreakState());
   const completedStopsSyncDispatchKeyRef = useRef<string | null>(null);
   const marketOwnedBundleSyncRequestedRef = useRef(false);
   const marketOwnedBundleSyncDispatchKeyRef = useRef<string | null>(null);
   const [isBuildSpendInFlight, setIsBuildSpendInFlight] = useState(false);
   const [isBuildHoldActive, setIsBuildHoldActive] = useState(false);
   const [buildHoldFeedbackLabel, setBuildHoldFeedbackLabel] = useState('⚒️ Building…');
+  const resetBuildRepeatStreak = useCallback(() => {
+    buildRepeatStreakRef.current = getInitialBuildRepeatStreakState();
+  }, []);
+
+  useEffect(() => {
+    resetBuildRepeatStreak();
+  }, [islandNumber, resetBuildRepeatStreak]);
+
+  useEffect(() => {
+    if (!showBuildPanel) {
+      resetBuildRepeatStreak();
+    }
+  }, [resetBuildRepeatStreak, showBuildPanel]);
   const isIsland120StartupDiagnosticActive = isIsland120StartupDiagnosticTarget(
     runtimeState.currentIslandNumber ?? islandNumber,
   )
@@ -6563,13 +6584,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setRuntimeState(nextRuntimeState);
       runtimeStateRef.current = nextRuntimeState;
 
-      const nextBuildState = spendResult.stopBuildStateByIndex[stopIndex];
+      const nextBuildState = nextRuntimeState.stopBuildStateByIndex[stopIndex];
+      if (!nextBuildState) return true;
       const stopEntry = islandStopPlan[stopIndex];
       const stopLabel = stopEntry?.title ?? stopEntry?.stopId ?? `Stop ${stopIndex + 1}`;
+      const leveledUp = nextBuildState.buildLevel > currentBuildState.buildLevel;
 
-      if (spendResult.leveledUp && nextBuildState.buildLevel >= MAX_BUILD_LEVEL) {
+      if (leveledUp && nextBuildState.buildLevel >= MAX_BUILD_LEVEL) {
         setLandingText(`🏰 ${stopLabel} fully built! Level ${MAX_BUILD_LEVEL} complete.`);
-      } else if (spendResult.leveledUp) {
+      } else if (leveledUp) {
         setLandingText(`✨ ${stopLabel} upgraded to Level ${nextBuildState.buildLevel}!`);
       } else {
         const remaining = Math.max(0, nextBuildState.requiredEssence - nextBuildState.spentEssence);
@@ -6580,6 +6603,34 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       isBuildSpendInFlightRef.current = false;
       setIsBuildSpendInFlight(false);
     }
+  };
+
+  const handleRepeatedBuildActivation = async (stopIndex: number): Promise<boolean> => {
+    const nextStreak = resolveNextBuildRepeatStreak({
+      current: buildRepeatStreakRef.current,
+      stopIndex,
+      nowMs: Date.now(),
+    });
+    const repeatedBuildBatchSteps = resolveRepeatedBuildBatchSteps(nextStreak.count);
+    const spendApplied = await handleSpendEssenceOnBuild(stopIndex, repeatedBuildBatchSteps);
+    if (!spendApplied) {
+      resetBuildRepeatStreak();
+      return false;
+    }
+
+    buildRepeatStreakRef.current = nextStreak;
+    const latestBuildState = runtimeStateRef.current.stopBuildStateByIndex[stopIndex];
+    const remaining = latestBuildState
+      ? Math.max(0, latestBuildState.requiredEssence - latestBuildState.spentEssence)
+      : 0;
+    if (
+      !latestBuildState
+      || isStopBuildFullyComplete(latestBuildState)
+      || runtimeStateRef.current.essence < Math.min(CONTRACT_V2_ESSENCE_SPEND_STEP, remaining)
+    ) {
+      resetBuildRepeatStreak();
+    }
+    return true;
   };
 
   const handleCompleteActiveStop = () => {
@@ -9315,7 +9366,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   window.addEventListener('mouseup', stopHold, { once: true });
                   window.addEventListener('touchend', stopHold, { once: true });
                   void (async () => {
-                    const initialSpendApplied = await handleSpendEssenceOnBuild(idx, 1);
+                    const initialSpendApplied = await handleRepeatedBuildActivation(idx);
                     if (!initialSpendApplied || !holdBuildSpendActiveRef.current) {
                       stopHold();
                       return;
@@ -9329,6 +9380,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         : 0;
                       const liveCanAfford = liveRuntimeState.essence >= Math.min(CONTRACT_V2_ESSENCE_SPEND_STEP, liveRemaining);
                       if (!liveBuildState || isStopBuildFullyComplete(liveBuildState) || !liveCanAfford) {
+                        resetBuildRepeatStreak();
                         stopHold();
                         return;
                       }
@@ -9338,6 +9390,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       setBuildHoldFeedbackLabel(resolveBuildHoldFeedbackLabel(heldMs));
                       const spendApplied = await handleSpendEssenceOnBuild(idx, holdBatchSteps);
                       if (!spendApplied) {
+                        resetBuildRepeatStreak();
                         stopHold();
                         return;
                       }
@@ -9359,7 +9412,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     onKeyDown={(e) => {
                       if ((e.key === 'Enter' || e.key === ' ') && !isBuildDisabled) {
                         e.preventDefault();
-                        void handleSpendEssenceOnBuild(idx);
+                        void handleRepeatedBuildActivation(idx);
                       }
                     }}
                   >

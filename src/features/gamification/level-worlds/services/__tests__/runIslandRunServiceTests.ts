@@ -26,6 +26,7 @@ import { islandRunPlaceholderServiceTests } from './islandRunPlaceholderService.
 import { islandRunEggSellAdvisorTests } from './islandRunEggSellAdvisor.test';
 import { islandRunBonusTileTests } from './islandRunBonusTile.test';
 import { islandRunBossEncounterTests } from './islandRunBossEncounter.test';
+import { islandRunBuildAccelerationTests } from './islandRunBuildAcceleration.test';
 import { islandRunActionMutexTests } from './islandRunActionMutex.test';
 import { islandRunRollActionTests } from './islandRunRollAction.test';
 import { islandRunTileRewardActionTests } from './islandRunTileRewardAction.test';
@@ -76,6 +77,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunEggSellAdvisor', tests: islandRunEggSellAdvisorTests },
   { label: 'islandRunBonusTile', tests: islandRunBonusTileTests },
   { label: 'islandRunBossEncounter', tests: islandRunBossEncounterTests },
+  { label: 'islandRunBuildAcceleration', tests: islandRunBuildAccelerationTests },
   { label: 'islandRunActionMutex', tests: islandRunActionMutexTests },
   { label: 'islandRunRollAction', tests: islandRunRollActionTests },
   { label: 'islandRunTileRewardAction', tests: islandRunTileRewardActionTests },
