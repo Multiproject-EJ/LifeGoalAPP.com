@@ -5,6 +5,16 @@
     "width": 1000,
     "height": 1000
   },
+  "sceneSpace": {
+    "width": 1000,
+    "height": 1600
+  },
+  "playableBoardRect": {
+    "x": 0,
+    "y": 300,
+    "width": 1000,
+    "height": 1000
+  },
   "scene": {
     "boardCircle": "board/board-circle-inner.webp",
     "ambientBackground": "/assets/islands/backgrounds/level-bg-01.webp"
@@ -13,10 +23,10 @@
     {
       "stopIndex": 0,
       "anchorId": "hatchery",
-      "x": 180,
-      "y": 220,
-      "width": 900,
-      "height": 900,
+      "x": 340,
+      "y": 340,
+      "width": 675,
+      "height": 675,
       "levels": [
         "landmarks/hatchery-l3.webp",
         "landmarks/hatchery-l3.webp",
@@ -27,10 +37,10 @@
     {
       "stopIndex": 1,
       "anchorId": "habit",
-      "x": 820,
-      "y": 220,
-      "width": 160,
-      "height": 180,
+      "x": 660,
+      "y": 340,
+      "width": 675,
+      "height": 675,
       "levels": [
         "landmarks/hatchery-l3.webp",
         "landmarks/hatchery-l3.webp",
@@ -41,10 +51,10 @@
     {
       "stopIndex": 2,
       "anchorId": "mystery",
-      "x": 820,
-      "y": 800,
-      "width": 160,
-      "height": 180,
+      "x": 660,
+      "y": 1260,
+      "width": 675,
+      "height": 675,
       "levels": [
         "landmarks/hatchery-l3.webp",
         "landmarks/hatchery-l3.webp",
@@ -55,10 +65,10 @@
     {
       "stopIndex": 3,
       "anchorId": "wisdom",
-      "x": 180,
-      "y": 800,
-      "width": 160,
-      "height": 180,
+      "x": 340,
+      "y": 1260,
+      "width": 675,
+      "height": 675,
       "levels": [
         "landmarks/hatchery-l3.webp",
         "landmarks/hatchery-l3.webp",
@@ -70,7 +80,7 @@
   "boss": {
     "id": "boss-01",
     "x": 500,
-    "y": 500,
+    "y": 800,
     "width": 520,
     "height": 420,
     "zBand": "mid",
@@ -85,7 +95,7 @@
       "id": "battle-center",
       "src": "scenery/battle-arena-crystal.webp",
       "x": 500,
-      "y": 650,
+      "y": 950,
       "width": 260,
       "height": 220,
       "zBand": "front"

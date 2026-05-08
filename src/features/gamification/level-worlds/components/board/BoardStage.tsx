@@ -12,7 +12,7 @@ import { BoardToken } from './BoardToken';
 import { BoardParticles } from './BoardParticles';
 import { BoardOrbitStops, type OrbitStopVisualData, type StopProgressState } from './BoardOrbitStops';
 import { BoardDice3D } from './BoardDice3D';
-import { IslandArtLayers } from './IslandArtLayers';
+import { IslandArtLayers, type IslandArtSceneLayout } from './IslandArtLayers';
 import type { IslandArtManifest } from '../../services/islandArtManifest';
 import type { BossCreatureArtState } from '../../services/islandRunBossEncounter';
 import {
@@ -180,6 +180,31 @@ export function BoardStage(props: BoardStageProps) {
     }),
     [uniformScale, offsetX, offsetY],
   );
+
+  const sceneLayout = useMemo<IslandArtSceneLayout | null>(() => {
+    const sceneSpace = islandArtManifest?.sceneSpace;
+    if (!sceneSpace) return null;
+
+    const playableBoardRect = islandArtManifest.playableBoardRect ?? {
+      x: 0,
+      y: 0,
+      width: CANONICAL_BOARD_SIZE.width,
+      height: CANONICAL_BOARD_SIZE.height,
+    };
+    const scaleX = (CANONICAL_BOARD_SIZE.width * uniformScale) / playableBoardRect.width;
+    const scaleY = (CANONICAL_BOARD_SIZE.height * uniformScale) / playableBoardRect.height;
+
+    return {
+      sceneSpace,
+      playableBoardRect,
+      toScreenPoint: (x: number, y: number) => ({
+        x: offsetX + (x - playableBoardRect.x) * scaleX,
+        y: offsetY + (y - playableBoardRect.y) * scaleY,
+      }),
+      scaleWidth: (width: number) => width * scaleX,
+      scaleHeight: (height: number) => height * scaleY,
+    };
+  }, [islandArtManifest?.playableBoardRect, islandArtManifest?.sceneSpace, offsetX, offsetY, uniformScale]);
 
   // ── Camera ───────────────────────────────────────────────────────────────
   const camera = useBoardCamera({
@@ -451,6 +476,7 @@ export function BoardStage(props: BoardStageProps) {
           boardHeight={boardSize.height}
           uniformScale={uniformScale}
           toScreen={toScreen}
+          sceneLayout={sceneLayout}
         />
       </div>
 
