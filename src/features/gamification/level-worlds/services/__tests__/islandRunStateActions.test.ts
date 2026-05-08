@@ -2387,6 +2387,43 @@ export const islandRunStateActionsTests: TestCase[] = [
     },
   },
   {
+    name: 'applyStopBuildSpendBatch safely handles repeated-click max batch size',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 37,
+        essence: 1_000,
+        essenceLifetimeSpent: 0,
+        stopBuildStateByIndex: [
+          { requiredEssence: 50, spentEssence: 40, buildLevel: 2 },
+          { requiredEssence: 70, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 90, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 120, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 200, spentEssence: 0, buildLevel: 0 },
+        ],
+      });
+
+      let notifications = 0;
+      const unsub = subscribeIslandRunState(session, () => { notifications += 1; });
+      const result = await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 0,
+        effectiveIslandNumber: 1,
+        maxSteps: 28,
+      });
+
+      assertEqual(result.stepsApplied, 1, 'large repeated-click batch should stop as soon as the stop is fully built');
+      assertEqual(result.record.essence, 990, 'large repeated-click batch should only spend the final required step');
+      assertEqual(result.record.essenceLifetimeSpent, 10, 'large repeated-click batch should only count actual spend');
+      assertEqual(result.record.stopBuildStateByIndex[0]?.buildLevel, 3, 'large repeated-click batch should complete at L3 only');
+      assertEqual(result.record.stopStatesByIndex[0]?.buildComplete, true, 'large repeated-click batch should mark the build complete');
+      assertEqual(notifications, 1, 'large repeated-click batch should commit once');
+      unsub();
+    },
+  },
+  {
     name: 'applyStopBuildSpendBatch result matches repeated single-step spends',
     run: async () => {
       resetAll();

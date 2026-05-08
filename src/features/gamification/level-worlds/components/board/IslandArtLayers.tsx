@@ -5,12 +5,14 @@ import {
   getIslandArtLandmarkImageSrc,
   type IslandArtManifest,
 } from '../../services/islandArtManifest';
+import type { BossCreatureArtState } from '../../services/islandRunBossEncounter';
 import { CANONICAL_BOARD_SIZE, type TileAnchor, type ZBand } from '../../services/islandBoardLayout';
 
 interface IslandArtLayersProps {
   manifest: IslandArtManifest | null;
   landmarkBuildLevels: number[];
   isBossDefeated: boolean;
+  bossCreatureArtState?: BossCreatureArtState;
   boardWidth: number;
   boardHeight: number;
   uniformScale: number;
@@ -78,6 +80,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
     manifest,
     landmarkBuildLevels,
     isBossDefeated,
+    bossCreatureArtState,
     boardWidth,
     boardHeight,
     uniformScale,
@@ -113,7 +116,10 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
     zIndex: 0,
   });
 
-  const bossSrc = getIslandArtBossImageSrc(manifest.boss, isBossDefeated);
+  const resolvedBossCreatureArtState = bossCreatureArtState ?? (isBossDefeated ? 'defeated' : 'alive');
+  const bossSrc = resolvedBossCreatureArtState === 'hidden'
+    ? null
+    : getIslandArtBossImageSrc(manifest.boss, resolvedBossCreatureArtState === 'defeated');
 
   return (
     <div
