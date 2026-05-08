@@ -4,9 +4,19 @@ import {
   getIslandArtBossImageSrc,
   getIslandArtLandmarkImageSrc,
   type IslandArtManifest,
+  type IslandArtRect,
+  type IslandArtSpace,
 } from '../../services/islandArtManifest';
 import type { BossCreatureArtState } from '../../services/islandRunBossEncounter';
 import { CANONICAL_BOARD_SIZE, type TileAnchor, type ZBand } from '../../services/islandBoardLayout';
+
+export interface IslandArtSceneLayout {
+  sceneSpace: IslandArtSpace;
+  playableBoardRect: IslandArtRect;
+  toScreenPoint: (x: number, y: number) => { x: number; y: number };
+  scaleWidth: (width: number) => number;
+  scaleHeight: (height: number) => number;
+}
 
 interface IslandArtLayersProps {
   manifest: IslandArtManifest | null;
@@ -17,6 +27,7 @@ interface IslandArtLayersProps {
   boardHeight: number;
   uniformScale: number;
   toScreen: (anchor: TileAnchor) => { x: number; y: number };
+  sceneLayout?: IslandArtSceneLayout | null;
 }
 
 type BoardArtLayerStyle = CSSProperties & {
@@ -75,6 +86,58 @@ function makeLayerStyle(options: {
   };
 }
 
+function makeSceneLayerStyle(options: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  sceneLayout: IslandArtSceneLayout;
+  zIndex: number;
+}): BoardArtLayerStyle {
+  const position = options.sceneLayout.toScreenPoint(options.x, options.y);
+  return {
+    left: position.x,
+    top: position.y,
+    width: options.sceneLayout.scaleWidth(options.width),
+    height: options.sceneLayout.scaleHeight(options.height),
+    '--island-art-layer-z': options.zIndex,
+  };
+}
+
+function makeArtLayerStyle(options: {
+  manifest: IslandArtManifest;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  uniformScale: number;
+  toScreen: IslandArtLayersProps['toScreen'];
+  sceneLayout?: IslandArtSceneLayout | null;
+  zIndex: number;
+}): BoardArtLayerStyle {
+  if (options.sceneLayout) {
+    return makeSceneLayerStyle({
+      x: options.x,
+      y: options.y,
+      width: options.width,
+      height: options.height,
+      sceneLayout: options.sceneLayout,
+      zIndex: options.zIndex,
+    });
+  }
+
+  return makeLayerStyle({
+    manifest: options.manifest,
+    x: options.x,
+    y: options.y,
+    width: options.width,
+    height: options.height,
+    uniformScale: options.uniformScale,
+    toScreen: options.toScreen,
+    zIndex: options.zIndex,
+  });
+}
+
 export function IslandArtLayers(props: IslandArtLayersProps) {
   const {
     manifest,
@@ -85,6 +148,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
     boardHeight,
     uniformScale,
     toScreen,
+    sceneLayout = null,
   } = props;
   const [hiddenSources, setHiddenSources] = useState<Set<string>>(() => new Set());
 
@@ -105,16 +169,22 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
 
   if (!manifest) return null;
 
-  const boardSceneLayerStyle = makeLayerStyle({
+  const boardPlateRect = sceneLayout?.playableBoardRect;
+  const boardSceneLayerStyle = makeArtLayerStyle({
     manifest,
-    x: manifest.coordinateSpace.width / 2,
-    y: manifest.coordinateSpace.height * (0.5 + BOARD_PLATE_DOWNWARD_OFFSET_RATIO),
-    width: manifest.coordinateSpace.width,
-    height: manifest.coordinateSpace.height,
+    x: boardPlateRect ? boardPlateRect.x + boardPlateRect.width / 2 : manifest.coordinateSpace.width / 2,
+    y: boardPlateRect
+      ? boardPlateRect.y + boardPlateRect.height * (0.5 + BOARD_PLATE_DOWNWARD_OFFSET_RATIO)
+      : manifest.coordinateSpace.height * (0.5 + BOARD_PLATE_DOWNWARD_OFFSET_RATIO),
+    width: boardPlateRect?.width ?? manifest.coordinateSpace.width,
+    height: boardPlateRect?.height ?? manifest.coordinateSpace.height,
     uniformScale,
     toScreen,
+    sceneLayout,
     zIndex: 0,
   });
+
+  const artSpaceHeight = sceneLayout?.sceneSpace.height ?? manifest.coordinateSpace.height;
 
   const resolvedBossCreatureArtState = bossCreatureArtState ?? (isBossDefeated ? 'defeated' : 'alive');
   const bossSrc = resolvedBossCreatureArtState === 'hidden'
@@ -144,7 +214,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
         const isBattleCenterScenery = scenery.id === BATTLE_CENTER_SCENERY_ID;
         const scenerySizeScale = isBattleCenterScenery ? BATTLE_CENTER_SIZE_SCALE : 1;
         const sceneryUpwardOffset = isBattleCenterScenery
-          ? manifest.coordinateSpace.height * BATTLE_CENTER_UPWARD_OFFSET_RATIO
+          ? artSpaceHeight * BATTLE_CENTER_UPWARD_OFFSET_RATIO
           : 0;
         return (
           <img
@@ -153,7 +223,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
             src={scenery.src}
             alt=""
             draggable={false}
-            style={makeLayerStyle({
+            style={makeArtLayerStyle({
               manifest,
               x: scenery.x,
               y: scenery.y - sceneryUpwardOffset,
@@ -161,6 +231,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
               height: scenery.height * scenerySizeScale,
               uniformScale,
               toScreen,
+              sceneLayout,
               zIndex: zIndexForBand(scenery.zBand, 3),
             })}
             onError={() => hideSource(scenery.src)}
@@ -178,7 +249,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
             src={src}
             alt=""
             draggable={false}
-            style={makeLayerStyle({
+            style={makeArtLayerStyle({
               manifest,
               x: landmark.x,
               y: landmark.y,
@@ -186,6 +257,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
               height: landmark.height,
               uniformScale,
               toScreen,
+              sceneLayout,
               zIndex: zIndexForBand(landmark.zBand, 4),
             })}
             onError={() => hideSource(src)}
@@ -200,16 +272,17 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
           src={bossSrc}
           alt=""
           draggable={false}
-          style={makeLayerStyle({
+          style={makeArtLayerStyle({
             manifest,
             x: manifest.boss.x,
             y: manifest.boss.y - (
-              manifest.coordinateSpace.height * BOSS_LANDMARK_UPWARD_OFFSET_RATIO
+              artSpaceHeight * BOSS_LANDMARK_UPWARD_OFFSET_RATIO
             ),
             width: manifest.boss.width * BOSS_LANDMARK_SIZE_SCALE,
             height: manifest.boss.height * BOSS_LANDMARK_SIZE_SCALE,
             uniformScale,
             toScreen,
+            sceneLayout,
             zIndex: BOSS_LANDMARK_Z_INDEX,
           })}
           onError={() => hideSource(bossSrc)}
