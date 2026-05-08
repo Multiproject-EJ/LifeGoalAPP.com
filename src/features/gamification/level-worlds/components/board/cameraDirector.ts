@@ -25,8 +25,8 @@ export const CAMERA_ZOOM = {
   preRoll:      1.5,
 } as const;
 
-/** Fully zoomed-out art framing used by Reset Camera and manual zoom floor. */
-export const FITTED_ART_ZOOM = CAMERA_ZOOM.overview * 0.8;
+/** Reset/manual zoom floor: use overview directly, with no extra shrink. */
+export const RESET_CAMERA_ZOOM = CAMERA_ZOOM.overview;
 
 // ─── Event priorities (higher number = higher priority) ──────────────────────
 
