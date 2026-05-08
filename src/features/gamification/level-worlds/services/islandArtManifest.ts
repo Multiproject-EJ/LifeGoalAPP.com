@@ -45,14 +45,25 @@ export interface IslandArtBossManifest {
   animations?: Partial<Record<IslandArtBossState, string>>;
 }
 
+export interface IslandArtSpace {
+  width: number;
+  height: number;
+}
+
+export interface IslandArtRect extends IslandArtSpace {
+  x: number;
+  y: number;
+}
+
 export interface IslandArtManifest {
   version: 2;
   islandNumber: number;
   basePath: string;
-  coordinateSpace: {
-    width: number;
-    height: number;
-  };
+  coordinateSpace: IslandArtSpace;
+  /** Optional full visual scene coordinate space for art beyond the playable board. */
+  sceneSpace?: IslandArtSpace;
+  /** Optional placement of the existing 1000×1000 playable board inside sceneSpace. */
+  playableBoardRect?: IslandArtRect;
   scene?: IslandArtSceneManifest;
   landmarks: IslandArtLandmarkManifest[];
   scenery: IslandArtSceneryManifest[];
@@ -78,6 +89,31 @@ function optionalString(value: unknown): string | undefined {
 
 function finiteNumber(value: unknown, fallback: number): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+function positiveFiniteNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function normalizeOptionalArtSpace(value: unknown): IslandArtSpace | undefined {
+  if (!isRecord(value)) return undefined;
+  const width = positiveFiniteNumber(value.width);
+  const height = positiveFiniteNumber(value.height);
+  if (width === null || height === null) return undefined;
+  return { width, height };
+}
+
+function normalizeOptionalArtRect(value: unknown): IslandArtRect | undefined {
+  if (!isRecord(value)) return undefined;
+  const width = positiveFiniteNumber(value.width);
+  const height = positiveFiniteNumber(value.height);
+  if (width === null || height === null) return undefined;
+  return {
+    x: finiteNumber(value.x, 0),
+    y: finiteNumber(value.y, 0),
+    width,
+    height,
+  };
 }
 
 function normalizeZBand(value: unknown): ZBand | undefined {
@@ -158,6 +194,9 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
       height: Math.max(1, finiteNumber(raw.coordinateSpace.height, DEFAULT_COORDINATE_SPACE.height)),
     }
     : { ...DEFAULT_COORDINATE_SPACE };
+
+  const sceneSpace = normalizeOptionalArtSpace(raw.sceneSpace);
+  const playableBoardRect = normalizeOptionalArtRect(raw.playableBoardRect);
 
   const rawScene = isRecord(raw.scene) ? raw.scene : {};
   const scene: IslandArtSceneManifest = {};
@@ -247,6 +286,8 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
     islandNumber: safeIsland,
     basePath,
     coordinateSpace,
+    ...(sceneSpace ? { sceneSpace } : {}),
+    ...(playableBoardRect ? { playableBoardRect } : {}),
     ...(Object.keys(scene).length > 0 ? { scene } : {}),
     landmarks,
     scenery,
