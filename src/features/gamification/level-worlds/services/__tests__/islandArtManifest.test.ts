@@ -268,4 +268,34 @@ export const islandArtManifestTests: TestCase[] = [
       );
     },
   },
+  {
+    name: 'normalizes optional sceneSpace and playableBoardRect for scene-aware art',
+    run: () => {
+      const manifest = normalizeIslandArtManifest({
+        ...sampleManifest,
+        sceneSpace: { width: 1400, height: 1600 },
+        playableBoardRect: { x: 200, y: 300, width: 1000, height: 1000 },
+      }, 1);
+      if (!manifest) throw new Error('Expected scene-space manifest to normalize');
+      assertEqual(manifest.sceneSpace?.width, 1400, 'Expected sceneSpace width to be preserved');
+      assertEqual(manifest.sceneSpace?.height, 1600, 'Expected sceneSpace height to be preserved');
+      assertEqual(manifest.playableBoardRect?.x, 200, 'Expected playableBoardRect x to be preserved');
+      assertEqual(manifest.playableBoardRect?.y, 300, 'Expected playableBoardRect y to be preserved');
+      assertEqual(manifest.playableBoardRect?.width, 1000, 'Expected playableBoardRect width to be preserved');
+      assertEqual(manifest.playableBoardRect?.height, 1000, 'Expected playableBoardRect height to be preserved');
+    },
+  },
+  {
+    name: 'ignores invalid optional scene rects without breaking legacy manifests',
+    run: () => {
+      const manifest = normalizeIslandArtManifest({
+        ...sampleManifest,
+        sceneSpace: { width: 0, height: 1600 },
+        playableBoardRect: { x: 200, y: 300, width: -1000, height: 1000 },
+      }, 1);
+      if (!manifest) throw new Error('Expected invalid scene-space manifest to normalize via legacy fallback');
+      assertEqual(manifest.sceneSpace, undefined, 'Expected invalid sceneSpace to be ignored');
+      assertEqual(manifest.playableBoardRect, undefined, 'Expected invalid playableBoardRect to be ignored');
+    },
+  },
 ];

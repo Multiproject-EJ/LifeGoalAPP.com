@@ -3,7 +3,7 @@ import { CANONICAL_BOARD_SIZE, type TileAnchor } from '../../services/islandBoar
 import type { IslandBoardTheme } from '../../services/islandBoardThemes';
 import type { IslandTileMapEntry } from '../../services/islandBoardTileMap';
 import { logIslandRunEntryDebug } from '../../services/islandRunEntryDebug';
-import { useBoardCamera, type BoardCameraDefaultOptions } from './useBoardCamera';
+import { useBoardCamera, type BoardCameraDefaultOptions, type CameraVisualBounds } from './useBoardCamera';
 import { useBoardGestures } from './useBoardGestures';
 import { useTokenAnimation } from './useTokenAnimation';
 import { BoardPathCanvas } from './BoardPathCanvas';
@@ -12,7 +12,7 @@ import { BoardToken } from './BoardToken';
 import { BoardParticles } from './BoardParticles';
 import { BoardOrbitStops, type OrbitStopVisualData, type StopProgressState } from './BoardOrbitStops';
 import { BoardDice3D } from './BoardDice3D';
-import { IslandArtLayers } from './IslandArtLayers';
+import { IslandArtLayers, type IslandArtSceneLayout } from './IslandArtLayers';
 import type { IslandArtManifest } from '../../services/islandArtManifest';
 import type { BossCreatureArtState } from '../../services/islandRunBossEncounter';
 import {
@@ -181,10 +181,48 @@ export function BoardStage(props: BoardStageProps) {
     [uniformScale, offsetX, offsetY],
   );
 
+  const sceneLayout = useMemo<IslandArtSceneLayout | null>(() => {
+    const sceneSpace = islandArtManifest?.sceneSpace;
+    if (!sceneSpace) return null;
+
+    const playableBoardRect = islandArtManifest.playableBoardRect ?? {
+      x: 0,
+      y: 0,
+      width: CANONICAL_BOARD_SIZE.width,
+      height: CANONICAL_BOARD_SIZE.height,
+    };
+    const scaleX = (CANONICAL_BOARD_SIZE.width * uniformScale) / playableBoardRect.width;
+    const scaleY = (CANONICAL_BOARD_SIZE.height * uniformScale) / playableBoardRect.height;
+
+    return {
+      sceneSpace,
+      playableBoardRect,
+      toScreenPoint: (x: number, y: number) => ({
+        x: offsetX + (x - playableBoardRect.x) * scaleX,
+        y: offsetY + (y - playableBoardRect.y) * scaleY,
+      }),
+      scaleWidth: (width: number) => width * scaleX,
+      scaleHeight: (height: number) => height * scaleY,
+    };
+  }, [islandArtManifest?.playableBoardRect, islandArtManifest?.sceneSpace, offsetX, offsetY, uniformScale]);
+
+  const sceneVisualBounds = useMemo<CameraVisualBounds | null>(() => {
+    if (!sceneLayout) return null;
+    const topLeft = sceneLayout.toScreenPoint(0, 0);
+    const bottomRight = sceneLayout.toScreenPoint(sceneLayout.sceneSpace.width, sceneLayout.sceneSpace.height);
+    return {
+      left: Math.min(topLeft.x, bottomRight.x),
+      top: Math.min(topLeft.y, bottomRight.y),
+      right: Math.max(topLeft.x, bottomRight.x),
+      bottom: Math.max(topLeft.y, bottomRight.y),
+    };
+  }, [sceneLayout]);
+
   // ── Camera ───────────────────────────────────────────────────────────────
   const camera = useBoardCamera({
     boardWidth: boardSize.width,
     boardHeight: boardSize.height,
+    visualBounds: sceneVisualBounds,
   });
 
   // Expose camera controls to parent
@@ -451,6 +489,7 @@ export function BoardStage(props: BoardStageProps) {
           boardHeight={boardSize.height}
           uniformScale={uniformScale}
           toScreen={toScreen}
+          sceneLayout={sceneLayout}
         />
       </div>
 
