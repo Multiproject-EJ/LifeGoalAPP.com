@@ -244,6 +244,11 @@ import {
   spendIslandRunContractV2EssenceOnStopBuild,
 } from '../services/islandRunContractV2EssenceBuild';
 import {
+  canChallengeBoss,
+  getBossChallengeLockReason,
+  resolveBossCreatureArtState,
+} from '../services/islandRunBossEncounter';
+import {
   BASE_DICE_PER_ROLL,
   claimIslandRunContractV2RewardBar,
   resolveChainedRewardBarClaims,
@@ -6001,6 +6006,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [bossTrialPhase, bossTrialTimeLeft, bossTrialScore, bossAttemptCount, islandNumber, session.user.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleStartBossTrial = () => {
+    const bossChallengeLockReason = getBossChallengeLockReason({
+      stopBuildStateByIndex: runtimeStateRef.current.stopBuildStateByIndex,
+      isBossDefeated: bossTrialResolved || runtimeStateRef.current.bossTrialResolvedIslandNumber === islandNumber,
+    });
+    if (bossChallengeLockReason) {
+      setLandingText(bossChallengeLockReason);
+      return;
+    }
+
     if (islandNumber === 1) {
       const bossMinigame = resolveBossStopMinigame({
         kind: 'fixed_boss',
@@ -7350,6 +7364,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const shouldUseNoBackgroundFallback = !shouldShowIslandArtAmbientBackground && (!isIslandBackgroundAvailable || isBackgroundHidden);
   const islandArtLandmarkBuildLevels = runtimeState.stopBuildStateByIndex.map((buildState) => buildState.buildLevel);
   const isCurrentIslandBossDefeated = bossTrialResolved || runtimeState.bossTrialResolvedIslandNumber === islandNumber;
+  const bossCreatureArtState = resolveBossCreatureArtState({
+    stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
+    isBossDefeated: isCurrentIslandBossDefeated,
+  });
+  const canChallengeCurrentBoss = canChallengeBoss({
+    stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
+    isBossDefeated: isCurrentIslandBossDefeated,
+  });
+  const currentBossChallengeLockReason = getBossChallengeLockReason({
+    stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
+    isBossDefeated: isCurrentIslandBossDefeated,
+  });
 
   if (isRuntimeSyncBlocked || isOwnershipBlocked) {
     return (
@@ -7959,6 +7985,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           islandArtManifest={islandArtManifest}
           landmarkBuildLevels={islandArtLandmarkBuildLevels}
           isBossDefeated={isCurrentIslandBossDefeated}
+          bossCreatureArtState={bossCreatureArtState}
           spark40RingGradient={spark40RingSegmentsGradient}
           isSpark40={isSpark40BoardProfile}
           showDebug={showDebug}
@@ -8591,33 +8618,42 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     {/* Idle phase: pre-trial info */}
                     {bossTrialPhase === 'idle' && (
                       <div className="island-boss-trial__phase island-boss-trial__phase--idle">
-                        <p className="island-boss-trial__challenge-label">
-                          <strong>Challenge:</strong>{' '}
-                          {bossConfig.type === 'fight'
-                            ? `Reach ${bossConfig.scoreTarget} hits before time runs out.`
-                            : `Complete ${bossConfig.scoreTarget} actions in ${bossConfig.trialDurationSec}s.`}
-                        </p>
-                        <p className="island-boss-trial__reward-preview">
-                          🎁 Reward on win:{' '}
-                          <strong>+{bossReward.dice} 🎲</strong>,{' '}
-                          <strong>+{bossReward.essence} 🟣</strong>
-                          {bossReward.spinTokens > 0
-                            ? <>, <strong>{formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: bossReward.spinTokens })}</strong></>
-                            : null}
-                          , <strong>+3 🔷 shards</strong>
-                        </p>
-                        <p className="island-boss-trial__lives-note">
-                          💡 Failed attempts have no penalty. Keep trying!
-                        </p>
-                        <div className="island-boss-trial__cta">
-                          <button
-                            type="button"
-                            className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary island-boss-trial__begin-btn"
-                            onClick={handleStartBossTrial}
-                          >
-                            ⚡ Begin Boss Trial
-                          </button>
-                        </div>
+                        {canChallengeCurrentBoss ? (
+                          <>
+                            <p className="island-boss-trial__challenge-label">
+                              <strong>Challenge:</strong>{' '}
+                              {bossConfig.type === 'fight'
+                                ? `Reach ${bossConfig.scoreTarget} hits before time runs out.`
+                                : `Complete ${bossConfig.scoreTarget} actions in ${bossConfig.trialDurationSec}s.`}
+                            </p>
+                            <p className="island-boss-trial__reward-preview">
+                              🎁 Reward on win:{' '}
+                              <strong>+{bossReward.dice} 🎲</strong>,{' '}
+                              <strong>+{bossReward.essence} 🟣</strong>
+                              {bossReward.spinTokens > 0
+                                ? <>, <strong>{formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: bossReward.spinTokens })}</strong></>
+                                : null}
+                              , <strong>+3 🔷 shards</strong>
+                            </p>
+                            <p className="island-boss-trial__lives-note">
+                              💡 Failed attempts have no penalty. Keep trying!
+                            </p>
+                            <div className="island-boss-trial__cta">
+                              <button
+                                type="button"
+                                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary island-boss-trial__begin-btn"
+                                onClick={handleStartBossTrial}
+                              >
+                                ⚡ Begin Boss Trial
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="island-stop-modal__locked-notice" role="status">
+                            <span aria-hidden="true">🔒</span>{' '}
+                            {currentBossChallengeLockReason ?? 'Build the Boss Arena to awaken the boss.'}
+                          </div>
+                        )}
                       </div>
                     )}
 

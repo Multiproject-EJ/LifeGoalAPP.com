@@ -14,6 +14,7 @@ import { BoardOrbitStops, type OrbitStopVisualData, type StopProgressState } fro
 import { BoardDice3D } from './BoardDice3D';
 import { IslandArtLayers } from './IslandArtLayers';
 import type { IslandArtManifest } from '../../services/islandArtManifest';
+import type { BossCreatureArtState } from '../../services/islandRunBossEncounter';
 import {
   computeDirectionalLead,
   computeHopDurations,
@@ -41,6 +42,8 @@ export interface BoardStageProps {
   landmarkBuildLevels?: number[];
   /** Whether the current island boss has already been resolved/defeated. */
   isBossDefeated?: boolean;
+  /** Visual state for the separate boss creature layer; arena/scenery remains independent. */
+  bossCreatureArtState?: BossCreatureArtState;
   /** Spark60 ring gradient CSS value */
   spark40RingGradient: string;
   /** Whether this is a spark40 board */
@@ -109,6 +112,7 @@ export function BoardStage(props: BoardStageProps) {
     islandArtManifest,
     landmarkBuildLevels = [],
     isBossDefeated = false,
+    bossCreatureArtState,
     spark40RingGradient,
     isSpark40,
     showDebug,
@@ -442,6 +446,7 @@ export function BoardStage(props: BoardStageProps) {
           manifest={islandArtManifest}
           landmarkBuildLevels={landmarkBuildLevels}
           isBossDefeated={isBossDefeated}
+          bossCreatureArtState={bossCreatureArtState}
           boardWidth={boardSize.width}
           boardHeight={boardSize.height}
           uniformScale={uniformScale}
