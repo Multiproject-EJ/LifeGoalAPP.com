@@ -6,7 +6,7 @@
     "height": 1000
   },
   "scene": {
-    "boardCircle": "/assets/islands/landmarks/center_inner1.webp",
+    "boardCircle": "board/board-circle-inner.webp",
     "ambientBackground": "/assets/islands/backgrounds/level-bg-01.webp"
   },
   "landmarks": [
@@ -18,9 +18,9 @@
       "width": 900,
       "height": 900,
       "levels": [
-        "/assets/islands/landmarks/landmark_hatcheryL3.webp",
-        "/assets/islands/landmarks/landmark_hatcheryL3.webp",
-        "/assets/islands/landmarks/landmark_hatcheryL3.webp"
+        "landmarks/hatchery-l3.webp",
+        "landmarks/hatchery-l3.webp",
+        "landmarks/hatchery-l3.webp"
       ],
       "zBand": "mid"
     },
@@ -32,9 +32,9 @@
       "width": 160,
       "height": 180,
       "levels": [
-        "/assets/islands/landmarks/landmark_hatcheryL3.webp",
-        "/assets/islands/landmarks/landmark_hatcheryL3.webp",
-        "/assets/islands/landmarks/landmark_hatcheryL3.webp"
+        "landmarks/hatchery-l3.webp",
+        "landmarks/hatchery-l3.webp",
+        "landmarks/hatchery-l3.webp"
       ],
       "zBand": "mid"
     },
@@ -46,9 +46,9 @@
       "width": 160,
       "height": 180,
       "levels": [
-        "/assets/islands/landmarks/landmark_hatcheryL3.webp",
-        "/assets/islands/landmarks/landmark_hatcheryL3.webp",
-        "/assets/islands/landmarks/landmark_hatcheryL3.webp"
+        "landmarks/hatchery-l3.webp",
+        "landmarks/hatchery-l3.webp",
+        "landmarks/hatchery-l3.webp"
       ],
       "zBand": "front"
     },
@@ -60,9 +60,9 @@
       "width": 160,
       "height": 180,
       "levels": [
-        "/assets/islands/landmarks/landmark_hatcheryL3.webp",
-        "/assets/islands/landmarks/landmark_hatcheryL3.webp",
-        "/assets/islands/landmarks/landmark_hatcheryL3.webp"
+        "landmarks/hatchery-l3.webp",
+        "landmarks/hatchery-l3.webp",
+        "landmarks/hatchery-l3.webp"
       ],
       "zBand": "front"
     }
@@ -76,14 +76,14 @@
     "zBand": "mid",
     "defaultState": "idle",
     "images": {
-      "idle": "/assets/islands/landmarks/boss1.webp",
-      "defeated": "/assets/islands/landmarks/boss1.webp"
+      "idle": "bosses/black-crystal-dragon-idle.webp",
+      "defeated": "bosses/black-crystal-dragon-defeated.webp"
     }
   },
   "scenery": [
     {
       "id": "battle-center",
-      "src": "/assets/islands/landmarks/battle11.webp",
+      "src": "scenery/battle-arena-crystal.webp",
       "x": 500,
       "y": 650,
       "width": 260,
