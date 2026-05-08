@@ -1,6 +1,7 @@
 import {
   clampCameraPan,
   computeSceneCameraFrame,
+  MANUAL_MIN_CAMERA_ZOOM,
   type CameraVisualBounds,
 } from '../../components/board/useBoardCamera';
 import { assert, assertEqual, type TestCase } from './testHarness';
@@ -67,7 +68,7 @@ export const useBoardCameraTests: TestCase[] = [
       const frame = computeSceneCameraFrame(boardWidth, boardHeight, null);
       assertEqual(frame.x, 0, 'Expected legacy default x to remain centered');
       assertEqual(frame.y, 0, 'Expected legacy default y to remain centered');
-      assertEqual(frame.zoom, 0.7040000000000001, 'Expected legacy default zoom to remain fitted-art zoom');
+      assertEqual(frame.zoom, MANUAL_MIN_CAMERA_ZOOM, 'Expected legacy default zoom to remain at the exported manual minimum');
     },
   },
 ];

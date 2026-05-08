@@ -206,6 +206,9 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
   const normalizedIslandArtSceneSpace = normalizeOptionalArtSpace(raw.sceneSpace);
   const normalizedIslandArtPlayableBoardRect = normalizeOptionalArtRect(raw.playableBoardRect);
 
+  const normalizedIslandArtSceneSpace = normalizeOptionalArtSpace(raw.sceneSpace);
+  const normalizedIslandArtPlayableBoardRect = normalizeOptionalArtRect(raw.playableBoardRect);
+
   const rawScene = isRecord(raw.scene) ? raw.scene : {};
   const scene: IslandArtSceneManifest = {};
   const ambientBackground = resolveIslandArtAssetPath(basePath, optionalString(rawScene.ambientBackground))

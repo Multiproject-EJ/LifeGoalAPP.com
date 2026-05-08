@@ -6,7 +6,7 @@ export { BoardDice3D, type BoardDice3DProps } from './BoardDice3D';
 export { BoardPathCanvas, type BoardPathCanvasProps } from './BoardPathCanvas';
 export { BoardParticles, type BoardParticlesProps } from './BoardParticles';
 export { BoardOrbitStops, type BoardOrbitStopsProps, type OrbitStopVisualData, type StopProgressState } from './BoardOrbitStops';
-export { useBoardCamera, DEFAULT_CAMERA_ZOOM, type CameraState, type CameraMode, type UseBoardCameraOptions } from './useBoardCamera';
+export { useBoardCamera, DEFAULT_CAMERA_ZOOM, MANUAL_MIN_CAMERA_ZOOM, type CameraState, type CameraMode, type UseBoardCameraOptions } from './useBoardCamera';
 export { useBoardGestures, type GestureCallbacks } from './useBoardGestures';
 export { useTokenAnimation, type TokenAnimState, type UseTokenAnimationOptions } from './useTokenAnimation';
 export { createSpring, stepSpring, stepSprings, SPRING_PRESETS, type SpringConfig, type SpringState } from './springEngine';

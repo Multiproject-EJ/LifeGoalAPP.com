@@ -48,8 +48,9 @@ interface CameraSprings {
 const OVERVIEW_ZOOM = CAMERA_ZOOM.overview;
 const FOCUS_ZOOM = CAMERA_ZOOM.travelMedium;
 export const DEFAULT_CAMERA_ZOOM = CAMERA_ZOOM.overview * 0.8;
+export const MANUAL_MIN_CAMERA_ZOOM = DEFAULT_CAMERA_ZOOM;
 const FOLLOW_ZOOM = CAMERA_ZOOM.travelMedium;
-const MIN_ZOOM = DEFAULT_CAMERA_ZOOM;
+const MIN_ZOOM = MANUAL_MIN_CAMERA_ZOOM;
 const MAX_ZOOM = 3.0;
 const SCENE_FIT_SAFE_MARGIN = 0.96;
 
