@@ -13,10 +13,10 @@
     {
       "stopIndex": 0,
       "anchorId": "hatchery",
-      "x": 180,
-      "y": 220,
-      "width": 900,
-      "height": 900,
+      "x": 145,
+      "y": 135,
+      "width": 675,
+      "height": 675,
       "levels": [
         "landmarks/hatchery-l3.webp",
         "landmarks/hatchery-l3.webp",
@@ -27,10 +27,10 @@
     {
       "stopIndex": 1,
       "anchorId": "habit",
-      "x": 820,
-      "y": 220,
-      "width": 160,
-      "height": 180,
+      "x": 855,
+      "y": 135,
+      "width": 675,
+      "height": 675,
       "levels": [
         "landmarks/hatchery-l3.webp",
         "landmarks/hatchery-l3.webp",
@@ -41,10 +41,10 @@
     {
       "stopIndex": 2,
       "anchorId": "mystery",
-      "x": 820,
-      "y": 800,
-      "width": 160,
-      "height": 180,
+      "x": 855,
+      "y": 865,
+      "width": 675,
+      "height": 675,
       "levels": [
         "landmarks/hatchery-l3.webp",
         "landmarks/hatchery-l3.webp",
@@ -55,10 +55,10 @@
     {
       "stopIndex": 3,
       "anchorId": "wisdom",
-      "x": 180,
-      "y": 800,
-      "width": 160,
-      "height": 180,
+      "x": 145,
+      "y": 865,
+      "width": 675,
+      "height": 675,
       "levels": [
         "landmarks/hatchery-l3.webp",
         "landmarks/hatchery-l3.webp",

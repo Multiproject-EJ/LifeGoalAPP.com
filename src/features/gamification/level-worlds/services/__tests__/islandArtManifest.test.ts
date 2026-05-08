@@ -92,6 +92,51 @@ export const islandArtManifestTests: TestCase[] = [
     },
   },
 
+
+  {
+    name: 'normalizes optional sceneSpace and playableBoardRect',
+    run: () => {
+      const manifest = normalizeIslandArtManifest({
+        ...sampleManifest,
+        sceneSpace: { width: 1000, height: 1800 },
+        playableBoardRect: { x: 0, y: 400, width: 1000, height: 1000 },
+      }, 1);
+      if (!manifest) throw new Error('Expected scene-space manifest to normalize');
+      assertEqual(manifest.sceneSpace?.width, 1000, 'Expected sceneSpace width to normalize');
+      assertEqual(manifest.sceneSpace?.height, 1800, 'Expected sceneSpace height to normalize');
+      assertEqual(manifest.playableBoardRect?.x, 0, 'Expected playableBoardRect x to normalize');
+      assertEqual(manifest.playableBoardRect?.y, 400, 'Expected playableBoardRect y to normalize');
+      assertEqual(manifest.playableBoardRect?.width, 1000, 'Expected playableBoardRect width to normalize');
+      assertEqual(manifest.playableBoardRect?.height, 1000, 'Expected playableBoardRect height to normalize');
+    },
+  },
+  {
+    name: 'missing sceneSpace and playableBoardRect preserves legacy manifest shape',
+    run: () => {
+      const manifest = normalizeIslandArtManifest(sampleManifest, 1);
+      if (!manifest) throw new Error('Expected legacy sample manifest to normalize');
+      assert(!manifest.sceneSpace, 'Expected missing sceneSpace to remain undefined');
+      assert(!manifest.playableBoardRect, 'Expected missing playableBoardRect to remain undefined');
+      assertEqual(manifest.coordinateSpace.width, 1000, 'Expected legacy coordinateSpace width to remain unchanged');
+      assertEqual(manifest.coordinateSpace.height, 1000, 'Expected legacy coordinateSpace height to remain unchanged');
+    },
+  },
+  {
+    name: 'invalid sceneSpace and playableBoardRect are ignored safely',
+    run: () => {
+      const manifest = normalizeIslandArtManifest({
+        ...sampleManifest,
+        sceneSpace: { width: 1000, height: 0 },
+        playableBoardRect: { x: 25, y: 50, width: -100, height: 1000 },
+      }, 1);
+      if (!manifest) throw new Error('Expected invalid scene-space manifest to normalize via fallback');
+      assert(!manifest.sceneSpace, 'Expected invalid sceneSpace to be omitted');
+      assert(!manifest.playableBoardRect, 'Expected invalid playableBoardRect to be omitted');
+      assertEqual(manifest.coordinateSpace.width, 1000, 'Expected coordinateSpace fallback to remain available');
+      assertEqual(manifest.coordinateSpace.height, 1000, 'Expected coordinateSpace fallback to remain available');
+    },
+  },
+
   {
     name: 'normalizes scene.boardPlate as preferred board-attached art',
     run: () => {
