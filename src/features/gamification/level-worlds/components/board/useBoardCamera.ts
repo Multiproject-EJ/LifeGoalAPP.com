@@ -6,7 +6,7 @@ import {
   type SpringConfig,
   type SpringState,
 } from './springEngine';
-import { CAMERA_ZOOM, FITTED_ART_ZOOM, type ShotPreset } from './cameraDirector';
+import { CAMERA_ZOOM, RESET_CAMERA_ZOOM, type ShotPreset } from './cameraDirector';
 
 // ─── Camera state ────────────────────────────────────────────────────────────
 
@@ -48,7 +48,7 @@ interface CameraSprings {
 const OVERVIEW_ZOOM = CAMERA_ZOOM.overview;
 const FOCUS_ZOOM = CAMERA_ZOOM.travelMedium;
 const FOLLOW_ZOOM = CAMERA_ZOOM.travelMedium;
-const MIN_ZOOM = FITTED_ART_ZOOM;
+export const MANUAL_MIN_CAMERA_ZOOM = RESET_CAMERA_ZOOM;
 const MAX_ZOOM = 3.0;
 const SCENE_FIT_SAFE_MARGIN = 0.96;
 
