@@ -6,11 +6,11 @@
     "height": 1000
   },
   "sceneSpace": {
-    "width": 1000,
+    "width": 1400,
     "height": 1600
   },
   "playableBoardRect": {
-    "x": 0,
+    "x": 200,
     "y": 300,
     "width": 1000,
     "height": 1000
@@ -37,7 +37,7 @@
     {
       "stopIndex": 1,
       "anchorId": "habit",
-      "x": 660,
+      "x": 1060,
       "y": 340,
       "width": 675,
       "height": 675,
@@ -51,7 +51,7 @@
     {
       "stopIndex": 2,
       "anchorId": "mystery",
-      "x": 660,
+      "x": 1060,
       "y": 1260,
       "width": 675,
       "height": 675,
@@ -79,7 +79,7 @@
   ],
   "boss": {
     "id": "boss-01",
-    "x": 500,
+    "x": 700,
     "y": 800,
     "width": 520,
     "height": 420,
@@ -94,7 +94,7 @@
     {
       "id": "battle-center",
       "src": "scenery/battle-arena-crystal.webp",
-      "x": 500,
+      "x": 700,
       "y": 950,
       "width": 260,
       "height": 220,
