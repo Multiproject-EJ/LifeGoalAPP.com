@@ -6,7 +6,7 @@ import {
   type SpringConfig,
   type SpringState,
 } from './springEngine';
-import { CAMERA_ZOOM, FITTED_ART_ZOOM, type ShotPreset } from './cameraDirector';
+import { CAMERA_ZOOM, RESET_CAMERA_ZOOM, type ShotPreset } from './cameraDirector';
 
 // ─── Camera state ────────────────────────────────────────────────────────────
 
@@ -38,9 +38,9 @@ interface CameraSprings {
 
 const OVERVIEW_ZOOM = CAMERA_ZOOM.overview;
 const FOCUS_ZOOM = CAMERA_ZOOM.travelMedium;
-const DEFAULT_ZOOM = FITTED_ART_ZOOM;
+export const DEFAULT_CAMERA_ZOOM = RESET_CAMERA_ZOOM;
 const FOLLOW_ZOOM = CAMERA_ZOOM.travelMedium;
-const MIN_ZOOM = FITTED_ART_ZOOM;
+export const MANUAL_MIN_CAMERA_ZOOM = RESET_CAMERA_ZOOM;
 const MAX_ZOOM = 3.0;
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
@@ -213,7 +213,7 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     const s = springsRef.current;
     s.x.target = 0;
     s.y.target = 0;
-    s.zoom.target = options?.zoom ?? DEFAULT_ZOOM;
+    s.zoom.target = options?.zoom ?? DEFAULT_CAMERA_ZOOM;
     setMode('board_follow');
     ensureAnimating();
   }, [ensureAnimating, restoreDefaultSpring]);
@@ -264,7 +264,7 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
 
   /** Direct gesture input: immediately set camera position (no spring). */
   const setGestureCamera = useCallback((x: number, y: number, zoom: number) => {
-    const clampedZoom = clamp(zoom, MIN_ZOOM, MAX_ZOOM);
+    const clampedZoom = clamp(zoom, MANUAL_MIN_CAMERA_ZOOM, MAX_ZOOM);
     const clampedPan = clampCameraPan(x, y, clampedZoom, boardWidth, boardHeight);
     const s = springsRef.current;
     // Snap springs to gesture values (no animation)
@@ -312,7 +312,7 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     shake,
     setGestureCamera,
     releaseGesture,
-    MIN_ZOOM,
+    MIN_ZOOM: MANUAL_MIN_CAMERA_ZOOM,
     MAX_ZOOM,
   };
 }
