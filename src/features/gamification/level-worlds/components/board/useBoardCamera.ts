@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   createSpring,
   stepSprings,
@@ -22,10 +22,19 @@ export interface BoardCameraDefaultOptions {
   zoom?: number;
 }
 
+export interface CameraVisualBounds {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
 export interface UseBoardCameraOptions {
   /** Board container dimensions (px) */
   boardWidth: number;
   boardHeight: number;
+  /** Optional full rendered scene bounds, in untransformed stage pixels. */
+  visualBounds?: CameraVisualBounds | null;
   /** Spring preset for programmatic camera moves */
   springPreset?: SpringConfig;
 }
@@ -38,10 +47,10 @@ interface CameraSprings {
 
 const OVERVIEW_ZOOM = CAMERA_ZOOM.overview;
 const FOCUS_ZOOM = CAMERA_ZOOM.travelMedium;
-const DEFAULT_ZOOM = FITTED_ART_ZOOM;
 const FOLLOW_ZOOM = CAMERA_ZOOM.travelMedium;
 const MIN_ZOOM = FITTED_ART_ZOOM;
 const MAX_ZOOM = 3.0;
+const SCENE_FIT_SAFE_MARGIN = 0.96;
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
@@ -59,7 +68,12 @@ export function clampCameraPan(
   zoom: number,
   boardWidth: number,
   boardHeight: number,
+  visualBounds?: CameraVisualBounds | null,
 ): Pick<CameraState, 'x' | 'y'> {
+  if (visualBounds) {
+    return clampCameraPanToVisualBounds(x, y, zoom, boardWidth, boardHeight, visualBounds);
+  }
+
   const halfExtraWidth = Math.max(0, (boardWidth * zoom - boardWidth) / 2);
   const halfExtraHeight = Math.max(0, (boardHeight * zoom - boardHeight) / 2);
 
@@ -69,26 +83,106 @@ export function clampCameraPan(
   };
 }
 
+export function computeSceneCameraFrame(
+  boardWidth: number,
+  boardHeight: number,
+  visualBounds?: CameraVisualBounds | null,
+  safeMargin = SCENE_FIT_SAFE_MARGIN,
+): CameraState {
+  if (!visualBounds) return { x: 0, y: 0, zoom: FITTED_ART_ZOOM };
+
+  const contentWidth = Math.max(1, visualBounds.right - visualBounds.left);
+  const contentHeight = Math.max(1, visualBounds.bottom - visualBounds.top);
+  const fitZoom = Math.min(boardWidth / contentWidth, boardHeight / contentHeight) * safeMargin;
+  const zoom = Math.min(FITTED_ART_ZOOM, clamp(fitZoom, 0.1, MAX_ZOOM));
+  return {
+    x: centerScenePanForZoom(boardWidth, visualBounds.left, visualBounds.right, zoom),
+    y: centerScenePanForZoom(boardHeight, visualBounds.top, visualBounds.bottom, zoom),
+    zoom,
+  };
+}
+
+function centerScenePanForZoom(viewportSize: number, start: number, end: number, zoom: number): number {
+  const viewportCenter = viewportSize / 2;
+  const contentCenter = (start + end) / 2;
+  return zoom * (viewportCenter - contentCenter);
+}
+
+export function clampCameraPanToVisualBounds(
+  x: number,
+  y: number,
+  zoom: number,
+  boardWidth: number,
+  boardHeight: number,
+  visualBounds: CameraVisualBounds,
+): Pick<CameraState, 'x' | 'y'> {
+  const centerX = boardWidth / 2;
+  const centerY = boardHeight / 2;
+  const transformedLeftWithoutPan = zoom * visualBounds.left + (1 - zoom) * centerX;
+  const transformedRightWithoutPan = zoom * visualBounds.right + (1 - zoom) * centerX;
+  const transformedTopWithoutPan = zoom * visualBounds.top + (1 - zoom) * centerY;
+  const transformedBottomWithoutPan = zoom * visualBounds.bottom + (1 - zoom) * centerY;
+
+  const minX = boardWidth - transformedRightWithoutPan;
+  const maxX = -transformedLeftWithoutPan;
+  const minY = boardHeight - transformedBottomWithoutPan;
+  const maxY = -transformedTopWithoutPan;
+
+  return {
+    x: minX <= maxX ? clamp(x, minX, maxX) : centerScenePanForZoom(boardWidth, visualBounds.left, visualBounds.right, zoom),
+    y: minY <= maxY ? clamp(y, minY, maxY) : centerScenePanForZoom(boardHeight, visualBounds.top, visualBounds.bottom, zoom),
+  };
+}
+
 export function useBoardCamera(options: UseBoardCameraOptions) {
-  const { boardWidth, boardHeight, springPreset = SPRING_PRESETS.smooth } = options;
+  const { boardWidth, boardHeight, visualBounds = null, springPreset = SPRING_PRESETS.smooth } = options;
+  const defaultFrame = useMemo(
+    () => computeSceneCameraFrame(boardWidth, boardHeight, visualBounds),
+    [boardHeight, boardWidth, visualBounds],
+  );
+  const defaultFrameKey = useMemo(() => JSON.stringify({ boardWidth, boardHeight, visualBounds }), [boardHeight, boardWidth, visualBounds]);
+  const minZoom = defaultFrame.zoom;
 
   // The "committed" camera state that the renderer reads each frame.
-  const [camera, setCamera] = useState<CameraState>({ x: 0, y: 0, zoom: 1 });
+  const [camera, setCamera] = useState<CameraState>(() => defaultFrame);
   const [mode, setMode] = useState<CameraMode>('board_follow');
 
   // Spring state lives in a ref to avoid re-renders per tick.
   const springsRef = useRef<CameraSprings>({
-    x: createSpring(0),
-    y: createSpring(0),
-    zoom: createSpring(1),
+    x: createSpring(defaultFrame.x),
+    y: createSpring(defaultFrame.y),
+    zoom: createSpring(defaultFrame.zoom),
   });
   const configRef = useRef<SpringConfig>(springPreset);
+  const defaultFrameKeyRef = useRef(defaultFrameKey);
   const rafRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
   const activeRef = useRef(false);
 
   // Keep config ref in sync.
   configRef.current = springPreset;
+
+  useEffect(() => {
+    if (defaultFrameKeyRef.current === defaultFrameKey) return;
+    defaultFrameKeyRef.current = defaultFrameKey;
+
+    const s = springsRef.current;
+    if (mode !== 'board_follow' || s.zoom.target > FITTED_ART_ZOOM + 0.001) return;
+
+    s.x.value = defaultFrame.x;
+    s.x.target = defaultFrame.x;
+    s.x.velocity = 0;
+    s.x.atRest = true;
+    s.y.value = defaultFrame.y;
+    s.y.target = defaultFrame.y;
+    s.y.velocity = 0;
+    s.y.atRest = true;
+    s.zoom.value = defaultFrame.zoom;
+    s.zoom.target = defaultFrame.zoom;
+    s.zoom.velocity = 0;
+    s.zoom.atRest = true;
+    setCamera(defaultFrame);
+  }, [defaultFrame, defaultFrameKey, mode]);
 
   // ── Core animation loop ────────────────────────────────────────────────────
   const tick = useCallback((now: number) => {
@@ -147,12 +241,13 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
   const goOverview = useCallback(() => {
     restoreDefaultSpring();
     const s = springsRef.current;
-    s.x.target = 0;
-    s.y.target = 0;
-    s.zoom.target = OVERVIEW_ZOOM;
+    const overviewFrame = visualBounds ? defaultFrame : { x: 0, y: 0, zoom: OVERVIEW_ZOOM };
+    s.x.target = overviewFrame.x;
+    s.y.target = overviewFrame.y;
+    s.zoom.target = overviewFrame.zoom;
     setMode('overview_manual');
     ensureAnimating();
-  }, [ensureAnimating, restoreDefaultSpring]);
+  }, [defaultFrame, ensureAnimating, restoreDefaultSpring, visualBounds]);
 
   /** Smoothly animate to focus on a screen-space point (px). */
   const goFocusPoint = useCallback((screenX: number, screenY: number, zoom: number = FOCUS_ZOOM) => {
@@ -211,12 +306,13 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     // Asymmetric spring: use smooth config for the return
     restoreDefaultSpring();
     const s = springsRef.current;
-    s.x.target = 0;
-    s.y.target = 0;
-    s.zoom.target = options?.zoom ?? DEFAULT_ZOOM;
+    const targetZoom = options?.zoom ?? defaultFrame.zoom;
+    s.x.target = defaultFrame.x;
+    s.y.target = defaultFrame.y;
+    s.zoom.target = targetZoom;
     setMode('board_follow');
     ensureAnimating();
-  }, [ensureAnimating, restoreDefaultSpring]);
+  }, [defaultFrame.x, defaultFrame.y, defaultFrame.zoom, ensureAnimating, restoreDefaultSpring]);
 
   /**
    * Pre-roll anticipation beat — micro push-in before the dice even roll.
@@ -264,8 +360,8 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
 
   /** Direct gesture input: immediately set camera position (no spring). */
   const setGestureCamera = useCallback((x: number, y: number, zoom: number) => {
-    const clampedZoom = clamp(zoom, MIN_ZOOM, MAX_ZOOM);
-    const clampedPan = clampCameraPan(x, y, clampedZoom, boardWidth, boardHeight);
+    const clampedZoom = clamp(zoom, minZoom, MAX_ZOOM);
+    const clampedPan = clampCameraPan(x, y, clampedZoom, boardWidth, boardHeight, visualBounds);
     const s = springsRef.current;
     // Snap springs to gesture values (no animation)
     s.x.value = clampedPan.x;   s.x.target = clampedPan.x;   s.x.velocity = 0; s.x.atRest = true;
@@ -273,7 +369,7 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     s.zoom.value = clampedZoom; s.zoom.target = clampedZoom; s.zoom.velocity = 0; s.zoom.atRest = true;
     setCamera({ x: clampedPan.x, y: clampedPan.y, zoom: clampedZoom });
     setMode('gesture');
-  }, [boardWidth, boardHeight]);
+  }, [boardWidth, boardHeight, minZoom, visualBounds]);
 
   /** Release gesture with momentum — set targets offset by velocity, let spring settle. */
   const releaseGesture = useCallback((velocityX: number, velocityY: number) => {
@@ -281,7 +377,7 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     const momentumScale = 0.15; // tuning: how far momentum carries
     const rawTargetX = s.x.value + velocityX * momentumScale;
     const rawTargetY = s.y.value + velocityY * momentumScale;
-    const clampedPan = clampCameraPan(rawTargetX, rawTargetY, s.zoom.value, boardWidth, boardHeight);
+    const clampedPan = clampCameraPan(rawTargetX, rawTargetY, s.zoom.value, boardWidth, boardHeight, visualBounds);
     const hitHorizontalBound = clampedPan.x !== rawTargetX;
     const hitVerticalBound = clampedPan.y !== rawTargetY;
 
@@ -293,7 +389,7 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     s.zoom.target = s.zoom.value;
     setMode('gesture');
     ensureAnimating();
-  }, [boardWidth, boardHeight, ensureAnimating]);
+  }, [boardWidth, boardHeight, ensureAnimating, visualBounds]);
 
   /** The CSS transform string the camera-stage element should use. */
   const cameraTransform = `translate(${camera.x.toFixed(2)}px, ${camera.y.toFixed(2)}px) scale(${camera.zoom.toFixed(4)})`;
@@ -312,7 +408,7 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     shake,
     setGestureCamera,
     releaseGesture,
-    MIN_ZOOM,
+    MIN_ZOOM: minZoom,
     MAX_ZOOM,
   };
 }
