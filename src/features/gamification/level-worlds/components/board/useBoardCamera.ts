@@ -47,7 +47,6 @@ interface CameraSprings {
 
 const OVERVIEW_ZOOM = CAMERA_ZOOM.overview;
 const FOCUS_ZOOM = CAMERA_ZOOM.travelMedium;
-export const DEFAULT_CAMERA_ZOOM = RESET_CAMERA_ZOOM;
 const FOLLOW_ZOOM = CAMERA_ZOOM.travelMedium;
 export const MANUAL_MIN_CAMERA_ZOOM = RESET_CAMERA_ZOOM;
 const MAX_ZOOM = 3.0;
@@ -90,12 +89,12 @@ export function computeSceneCameraFrame(
   visualBounds?: CameraVisualBounds | null,
   safeMargin = SCENE_FIT_SAFE_MARGIN,
 ): CameraState {
-  if (!visualBounds) return { x: 0, y: 0, zoom: DEFAULT_ZOOM };
+  if (!visualBounds) return { x: 0, y: 0, zoom: FITTED_ART_ZOOM };
 
   const contentWidth = Math.max(1, visualBounds.right - visualBounds.left);
   const contentHeight = Math.max(1, visualBounds.bottom - visualBounds.top);
   const fitZoom = Math.min(boardWidth / contentWidth, boardHeight / contentHeight) * safeMargin;
-  const zoom = Math.min(DEFAULT_ZOOM, clamp(fitZoom, 0.1, MAX_ZOOM));
+  const zoom = Math.min(FITTED_ART_ZOOM, clamp(fitZoom, 0.1, MAX_ZOOM));
   return {
     x: centerScenePanForZoom(boardWidth, visualBounds.left, visualBounds.right, zoom),
     y: centerScenePanForZoom(boardHeight, visualBounds.top, visualBounds.bottom, zoom),
@@ -168,7 +167,7 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     defaultFrameKeyRef.current = defaultFrameKey;
 
     const s = springsRef.current;
-    if (mode !== 'board_follow' || s.zoom.target > DEFAULT_ZOOM + 0.001) return;
+    if (mode !== 'board_follow' || s.zoom.target > FITTED_ART_ZOOM + 0.001) return;
 
     s.x.value = defaultFrame.x;
     s.x.target = defaultFrame.x;

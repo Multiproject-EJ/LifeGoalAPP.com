@@ -200,6 +200,9 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
   const sceneSpace = normalizeOptionalArtSpace(raw.sceneSpace);
   const playableBoardRect = normalizeOptionalArtRect(raw.playableBoardRect);
 
+  const normalizedSceneSpace = normalizeOptionalArtSpace(raw.sceneSpace);
+  const normalizedPlayableBoardRect = normalizeOptionalArtRect(raw.playableBoardRect);
+
   const rawScene = isRecord(raw.scene) ? raw.scene : {};
   const scene: IslandArtSceneManifest = {};
   const ambientBackground = resolveIslandArtAssetPath(basePath, optionalString(rawScene.ambientBackground))
@@ -288,8 +291,8 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
     islandNumber: safeIsland,
     basePath,
     coordinateSpace,
-    ...(sceneSpace ? { sceneSpace } : {}),
-    ...(playableBoardRect ? { playableBoardRect } : {}),
+    ...(normalizedSceneSpace ? { sceneSpace: normalizedSceneSpace } : {}),
+    ...(normalizedPlayableBoardRect ? { playableBoardRect: normalizedPlayableBoardRect } : {}),
     ...(Object.keys(scene).length > 0 ? { scene } : {}),
     landmarks,
     scenery,
