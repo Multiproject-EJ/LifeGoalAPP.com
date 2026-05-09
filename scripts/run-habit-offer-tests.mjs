@@ -12,14 +12,14 @@ try {
   });
   writeFileSync(path.join(outDir, 'package.json'), JSON.stringify({ type: 'commonjs' }));
   const require = createRequire(import.meta.url);
-  const { runTimeBoundOfferSortTests } = require(
+  const { runAllTimeBoundOfferSortTests } = require(
     path.join(outDir, 'features/habits/__tests__/timeBoundOfferSort.test.js'),
   );
-  const { runDailyOfferClaimTests } = require(
+  const { runAllDailyOfferClaimTests } = require(
     path.join(outDir, 'features/habits/__tests__/dailyOfferClaim.test.js'),
   );
-  runTimeBoundOfferSortTests();
-  await runDailyOfferClaimTests();
+  runAllTimeBoundOfferSortTests();
+  await runAllDailyOfferClaimTests();
   console.log('habit-offer-tests: all assertions passed');
 } finally {
   rmSync(outDir, { recursive: true, force: true });

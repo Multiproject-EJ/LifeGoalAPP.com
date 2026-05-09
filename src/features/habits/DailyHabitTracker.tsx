@@ -243,6 +243,14 @@ function getNextUtcMidnightMs(): number {
   return next.getTime();
 }
 
+function getNextLocalMidnightMs(): number {
+  const now = new Date();
+  const next = new Date(now);
+  next.setDate(now.getDate() + 1);
+  next.setHours(0, 0, 0, 0);
+  return next.getTime();
+}
+
 function getTodayUtcDateKey(): string {
   return new Date().toISOString().split('T')[0];
 }
@@ -2537,6 +2545,7 @@ export function DailyHabitTracker({
 
   const timeBoundOffers = useMemo<TimeBoundOfferItem[]>(() => {
     const nextUtcMidnight = getNextUtcMidnightMs();
+    const nextLocalMidnight = getNextLocalMidnightMs();
     const holidayCalendarLabel = activeHolidaySeason
       ? `${activeHolidaySeason.meta.displayName} Calendar`
       : 'Holiday Calendar';
@@ -2624,7 +2633,7 @@ export function DailyHabitTracker({
         id: 'zen_tree_water',
         label: 'Water Zen Tree',
         icon: '🌳',
-        expiresAtMs: getNextUtcMidnightMs(),
+        expiresAtMs: nextLocalMidnight,
         badgeLabelOverride: hasClaimedZenTreeToday ? '✓ Done' : 'Claim',
         isCollected: hasClaimedZenTreeToday,
         isVisible: true,
@@ -2636,7 +2645,7 @@ export function DailyHabitTracker({
         id: 'feed_creatures',
         label: 'Feed Creatures',
         icon: '🐾',
-        expiresAtMs: getNextUtcMidnightMs(),
+        expiresAtMs: nextLocalMidnight,
         badgeLabelOverride: hasClaimedFeedCreaturesToday ? '✓ Done' : 'Claim',
         isCollected: hasClaimedFeedCreaturesToday,
         isVisible: true,

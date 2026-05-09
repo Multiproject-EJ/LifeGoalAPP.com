@@ -16,7 +16,7 @@ function assertArrayEqual<T>(actual: T[], expected: T[], message: string): void 
   }
 }
 
-export async function runDailyOfferClaimTests(): Promise<void> {
+export async function runAllDailyOfferClaimTests(): Promise<void> {
   {
     const key = buildDailyOfferClaimStorageKey('zen_tree_water_claimed', 'user-1', '2026-05-09');
     assertEqual(

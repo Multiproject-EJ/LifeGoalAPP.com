@@ -17,7 +17,7 @@ function make(overrides: Partial<TimeBoundOfferSortable> = {}): TimeBoundOfferSo
   };
 }
 
-export function runTimeBoundOfferSortTests(): void {
+export function runAllTimeBoundOfferSortTests(): void {
   // ------------------------------------------------------------------
   // sortByStateAndPriority
   // ------------------------------------------------------------------
