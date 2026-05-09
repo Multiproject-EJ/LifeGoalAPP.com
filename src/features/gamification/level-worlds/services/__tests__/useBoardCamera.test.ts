@@ -1,5 +1,6 @@
 import {
   clampCameraPan,
+  computeManualMinCameraZoom,
   computeSceneCameraFrame,
   MANUAL_MIN_CAMERA_ZOOM,
   type CameraVisualBounds,
@@ -39,6 +40,16 @@ export const useBoardCameraTests: TestCase[] = [
       assert(transformedRight <= boardWidth, 'Expected scene right edge to remain visible at reset framing');
       assert(transformedTop >= 0, 'Expected scene top edge to remain visible at reset framing');
       assert(transformedBottom <= boardHeight, 'Expected scene bottom edge to remain visible at reset framing');
+    },
+  },
+
+  {
+    name: 'uses scene-fit reset zoom as the manual minimum zoom-out floor',
+    run: () => {
+      const frame = computeSceneCameraFrame(boardWidth, boardHeight, sceneBounds);
+      const manualMinZoom = computeManualMinCameraZoom(boardWidth, boardHeight, sceneBounds);
+      nearlyEqual(manualMinZoom, frame.zoom, 'Expected manual min zoom to match scene-fit reset zoom');
+      assert(manualMinZoom < MANUAL_MIN_CAMERA_ZOOM, 'Expected wider scene to lower the manual zoom-out floor');
     },
   },
   {

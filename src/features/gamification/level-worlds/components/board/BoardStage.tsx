@@ -3,7 +3,7 @@ import { CANONICAL_BOARD_SIZE, type TileAnchor } from '../../services/islandBoar
 import type { IslandBoardTheme } from '../../services/islandBoardThemes';
 import type { IslandTileMapEntry } from '../../services/islandBoardTileMap';
 import { logIslandRunEntryDebug } from '../../services/islandRunEntryDebug';
-import { useBoardCamera, type BoardCameraDefaultOptions, type CameraVisualBounds } from './useBoardCamera';
+import { useBoardCamera, type CameraVisualBounds } from './useBoardCamera';
 import { useBoardGestures } from './useBoardGestures';
 import { useTokenAnimation } from './useTokenAnimation';
 import { BoardPathCanvas } from './BoardPathCanvas';
@@ -98,7 +98,7 @@ export interface BoardStageProps {
 
 export interface BoardStageCameraControls {
   goOverview: () => void;
-  goDefault: (options?: BoardCameraDefaultOptions) => void;
+  goDefault: () => void;
   goFocusPoint: (screenX: number, screenY: number, zoom?: number) => void;
   goFollowToken: (screenX: number, screenY: number, leadX?: number, leadY?: number) => void;
   goPreRoll: (screenX: number, screenY: number) => void;
