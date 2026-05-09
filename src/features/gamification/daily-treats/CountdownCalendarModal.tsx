@@ -46,6 +46,7 @@ type CountdownCalendarModalProps = {
   userId?: string;
   islandRunSession?: Session | null;
   previewHolidayKey?: HolidayKey | null;
+  mode?: 'auto' | 'holiday' | 'personal_quest';
 };
 
 const fallbackState: ScratchCardState = {
@@ -88,6 +89,7 @@ export const CountdownCalendarModal = ({
   userId,
   islandRunSession,
   previewHolidayKey,
+  mode = 'auto',
 }: CountdownCalendarModalProps) => {
   const [scratchState, setScratchState] = useState<ScratchCardState | null>(null);
   const [revealResult, setRevealResult] = useState<RevealCardResult | null>(null);
@@ -104,6 +106,8 @@ export const CountdownCalendarModal = ({
     if (!isOpen) return;
     setRevealResult(null);
     setRevealState(null);
+    setSeasonData(null);
+    setActiveAdvent(undefined);
     setScratchState(loadScratchCardState(userId));
 
     const loadData = async () => {
@@ -124,7 +128,7 @@ export const CountdownCalendarModal = ({
         }
       }
       
-      const advent = getActiveAdventMeta(enabledHolidays);
+      const advent = mode === 'personal_quest' ? null : getActiveAdventMeta(enabledHolidays);
       setActiveAdvent(advent);
 
       // Load season data from service (uses demo mode when not authenticated)
@@ -137,7 +141,7 @@ export const CountdownCalendarModal = ({
           } else if (season) {
             setSeasonData(season);
           }
-        } else {
+        } else if (mode !== 'holiday') {
           // No active holiday — load Personal Quest Calendar as always-on fallback
           const { data: questSeason, error: questError } = await getPersonalQuestSeason(userId);
           if (questError) {
@@ -145,6 +149,8 @@ export const CountdownCalendarModal = ({
           } else if (questSeason) {
             setSeasonData(questSeason);
           }
+        } else {
+          setSeasonData(null);
         }
         // Load the user's designated quest habit (if any) then check completion
         const qh = getQuestHabit(userId);
@@ -155,7 +161,7 @@ export const CountdownCalendarModal = ({
     };
 
     void loadData();
-  }, [isOpen, previewHolidayKey, userId]);
+  }, [isOpen, mode, previewHolidayKey, userId]);
 
   // Handle gold rewards from legacy scratch card system.
   // Symbol triples (symbolReward !== null) get a separate 'symbol_collection' dispatch
@@ -316,6 +322,39 @@ export const CountdownCalendarModal = ({
   // No season data available — show minimal fallback if Personal Quest also failed to load
   // (only reached if userId is missing or all season fetches failed)
   if (activeAdvent === null && !seasonData) {
+    if (mode === 'holiday') {
+      return (
+        <div
+          className="daily-treats-calendar daily-treats-calendar--personal-quest"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Holiday Calendar unavailable"
+        >
+          <div className="daily-treats-modal__backdrop" onClick={onClose} role="presentation" />
+          <div className="daily-treats-modal__dialog daily-treats-calendar__dialog">
+            <button
+              type="button"
+              className="daily-treats-modal__close"
+              aria-label="Close"
+              onClick={onClose}
+            >
+              ×
+            </button>
+            <div className="daily-treats-calendar__content">
+              <p className="daily-treats-modal__eyebrow">Holiday Calendar</p>
+              <h3 className="daily-treats-calendar__title">No active holiday season</h3>
+              <p className="daily-treats-calendar__subtitle">
+                Check back during an enabled holiday countdown to open doors here.
+              </p>
+              <button type="button" className="daily-treats-calendar__button" onClick={onClose}>
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div
         className="daily-treats-calendar daily-treats-calendar--personal-quest"

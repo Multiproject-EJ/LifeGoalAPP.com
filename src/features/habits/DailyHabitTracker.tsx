@@ -18,7 +18,7 @@ import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
 import { recordTelemetryEvent } from '../../services/telemetry';
-import { fetchCurrentSeason, getActiveAdventMeta, getPersonalQuestSeason } from '../../services/treatCalendarService';
+import type { ActiveAdventMetaResult } from '../../services/treatCalendarService';
 import { XP_TO_GOLD_RATIO, convertXpToGold } from '../../constants/economy';
 import { PointsBadge } from '../../components/PointsBadge';
 import {
@@ -278,6 +278,7 @@ type DailyHabitTrackerProps = {
   profileStrengthSignals?: ProfileStrengthSignalSnapshot | null;
   personalitySummary?: string | null;
   onOpenDailyTreat?: () => void;
+  onOpenHolidayCalendar?: () => void;
   onOpenIslandRunStop?: (stopId: 'boss' | 'hatchery' | 'dynamic') => void;
   /**
    * Phase 2 (Minigame & Events Consolidation Plan §2.4): when provided, the
@@ -291,6 +292,9 @@ type DailyHabitTrackerProps = {
   hideTimeBoundOffers?: boolean;
   pendingOfferToOpen?: TimeBoundOfferId | null;
   onPendingOfferHandled?: () => void;
+  activeHolidaySeason?: ActiveAdventMetaResult | null;
+  hasOpenedDailyTreatsToday?: boolean;
+  hasOpenedHolidayCalendarToday?: boolean;
   hiddenHabitIds?: string[];
   collapseCheckboxUntilExpanded?: boolean;
   onOpenStarterQuest?: () => void;
@@ -630,6 +634,7 @@ export function DailyHabitTracker({
   profileStrengthSignals,
   personalitySummary,
   onOpenDailyTreat,
+  onOpenHolidayCalendar,
   onOpenIslandRunStop,
   onOpenDailySpinWheel,
   forceCompactView = false,
@@ -637,6 +642,9 @@ export function DailyHabitTracker({
   hideTimeBoundOffers = false,
   pendingOfferToOpen,
   onPendingOfferHandled,
+  activeHolidaySeason = null,
+  hasOpenedDailyTreatsToday = false,
+  hasOpenedHolidayCalendarToday = false,
   hiddenHabitIds = [],
   collapseCheckboxUntilExpanded = false,
   onOpenStarterQuest,
@@ -863,7 +871,6 @@ export function DailyHabitTracker({
   const [isStarBursting, setIsStarBursting] = useState(false);
   const [isVisionImageLoaded, setIsVisionImageLoaded] = useState(false);
   const [hasClaimedVisionStar, setHasClaimedVisionStar] = useState(false);
-  const [hasOpenedTreatCalendarToday, setHasOpenedTreatCalendarToday] = useState(false);
   const [visionStarCount, setVisionStarCount] = useState(0);
   const [isVisionVisualizationOpen, setIsVisionVisualizationOpen] = useState(false);
   const [visionVisualizationStep, setVisionVisualizationStep] = useState<1 | 2 | 3>(1);
@@ -2492,55 +2499,11 @@ export function DailyHabitTracker({
   const islandRunOfferLabel = isIslandRunReadyToStart ? `Island ${activeIsland}` : `Island ${activeIsland}`;
   const islandRunOfferBadge = isIslandRunReadyToStart ? 'Open' : undefined;
 
-  const refreshTreatCalendarCollectedState = useCallback(async () => {
-    if (!session?.user?.id || !isViewingToday) {
-      setHasOpenedTreatCalendarToday(false);
-      return;
-    }
-
-    const adventMeta = getActiveAdventMeta();
-    const seasonResult = adventMeta
-      ? await fetchCurrentSeason(session.user.id, adventMeta.meta.holiday_key)
-      : await getPersonalQuestSeason(session.user.id);
-    const season = seasonResult.data;
-
-    if (!season) {
-      setHasOpenedTreatCalendarToday(false);
-      return;
-    }
-
-    const todayIndex = season.today_day_index;
-    const freeOpened = season.progress?.opened_days.includes(todayIndex) ?? false;
-    const bonusOpened = season.progress?.opened_bonus_days?.includes(todayIndex) ?? false;
-    setHasOpenedTreatCalendarToday(freeOpened || bonusOpened);
-  }, [isViewingToday, session?.user?.id]);
-
-  useEffect(() => {
-    void refreshTreatCalendarCollectedState();
-  }, [refreshTreatCalendarCollectedState]);
-
-  useEffect(() => {
-    const handleVisibilityOrFocus = () => {
-      void refreshTreatCalendarCollectedState();
-    };
-    // Also refresh when a calendar door is opened inside the CountdownCalendarModal
-    // so the Today-tab "daily_treat" circle flips to ✓ Done immediately, rather
-    // than waiting for the user to blur and refocus the window.
-    window.addEventListener('focus', handleVisibilityOrFocus);
-    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
-    window.addEventListener('lifegoal:treat-calendar-opened', handleVisibilityOrFocus);
-    return () => {
-      window.removeEventListener('focus', handleVisibilityOrFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
-      window.removeEventListener('lifegoal:treat-calendar-opened', handleVisibilityOrFocus);
-    };
-  }, [refreshTreatCalendarCollectedState]);
-
   const timeBoundOffers = useMemo<TimeBoundOfferItem[]>(() => {
     const nextUtcMidnight = getNextUtcMidnightMs();
-    const adventMeta = getActiveAdventMeta();
-    const calendarLabel = adventMeta ? `${adventMeta.meta.displayName} Calendar` : 'Treat Calendar';
-    const hasCollectedDailyTreat = hasOpenedTreatCalendarToday;
+    const holidayCalendarLabel = activeHolidaySeason
+      ? `${activeHolidaySeason.meta.displayName} Calendar`
+      : 'Holiday Calendar';
 
     return [
       {
@@ -2553,6 +2516,7 @@ export function DailyHabitTracker({
         isVisible: isIslandRunOfferVisible,
         isActionable: isIslandRunOfferVisible,
         sortPriority: 0,
+        slotRole: 'core',
       },
       {
         id: 'vision_star',
@@ -2564,16 +2528,29 @@ export function DailyHabitTracker({
         isVisible: true,
         isActionable: !hasClaimedVisionStar,
         sortPriority: 1,
+        slotRole: 'core',
       },
       {
-        id: 'daily_treat',
-        label: calendarLabel,
+        id: 'daily_treats',
+        label: 'Daily Treats',
+        icon: '🍬',
+        expiresAtMs: nextUtcMidnight,
+        isCollected: hasOpenedDailyTreatsToday,
+        isVisible: true,
+        isActionable: !hasOpenedDailyTreatsToday,
+        sortPriority: 2,
+        slotRole: 'core',
+      },
+      {
+        id: 'holiday_calendar',
+        label: holidayCalendarLabel,
         icon: '🎁',
         expiresAtMs: nextUtcMidnight,
-        isCollected: hasCollectedDailyTreat,
-        isVisible: true,
-        isActionable: !hasCollectedDailyTreat,
-        sortPriority: 2,
+        isCollected: hasOpenedHolidayCalendarToday,
+        isVisible: Boolean(activeHolidaySeason),
+        isActionable: !hasOpenedHolidayCalendarToday,
+        sortPriority: 4,
+        slotRole: 'filler',
       },
       {
         id: 'todays_offer',
@@ -2592,6 +2569,7 @@ export function DailyHabitTracker({
         // tappable either way so users can still access the offer modal.
         isActionable: isTodaysOfferSpinEntryEnabled ? todaysOfferSpinBadgeActive : true,
         sortPriority: 3,
+        slotRole: 'core',
       },
       {
         id: 'egg_hatch',
@@ -2604,11 +2582,14 @@ export function DailyHabitTracker({
         isVisible: isEggReadyToCollectOnActiveIsland,
         isActionable: isEggReadyToCollectOnActiveIsland && !hasSeenEggHatch,
         sortPriority: hasSeenEggHatch ? 5 : 2.5,
+        slotRole: 'core',
       },
     ];
   }, [
-    activeIsland,
+    activeHolidaySeason,
     hasClaimedVisionStar,
+    hasOpenedDailyTreatsToday,
+    hasOpenedHolidayCalendarToday,
     hasSeenEggHatch,
     islandRunCountdownExpiresAtMs,
     islandRunOfferBadge,
@@ -2617,7 +2598,6 @@ export function DailyHabitTracker({
     isIslandRunReadyToStart,
     isEggReadyToCollectOnActiveIsland,
     isSpecialVisionStarDay,
-    hasOpenedTreatCalendarToday,
     todaysOfferSpinBadgeActive,
     dailySpinCount,
     isDailySpinBonusClaimedToday,
@@ -2692,11 +2672,20 @@ export function DailyHabitTracker({
       return;
     }
 
-    if (offerId === 'daily_treat') {
+    if (offerId === 'daily_treats') {
       if (onOpenDailyTreat) {
         onOpenDailyTreat();
       } else {
-        setVisionRewardError('Treat Calendar launcher is unavailable in this view.');
+        setVisionRewardError('Daily Treats launcher is unavailable in this view.');
+      }
+      return;
+    }
+
+    if (offerId === 'holiday_calendar') {
+      if (onOpenHolidayCalendar) {
+        onOpenHolidayCalendar();
+      } else {
+        setVisionRewardError('Holiday Calendar launcher is unavailable in this view.');
       }
       return;
     }
@@ -2717,11 +2706,11 @@ export function DailyHabitTracker({
         setVisionRewardError('Egg hatch launcher is unavailable in this view.');
       }
     }
-  }, [eggHatchViewedStorageKey, handleVisionRewardClick, onOpenDailyTreat, onOpenIslandRunStop, startTodaysOfferCheckout]);
+  }, [eggHatchViewedStorageKey, handleVisionRewardClick, onOpenDailyTreat, onOpenHolidayCalendar, onOpenIslandRunStop, startTodaysOfferCheckout]);
 
   const handleTimeBoundOfferClick = useCallback((offerId: TimeBoundOfferId) => {
     // UX: some offers should open directly (no intermediate teaser modal)
-    if (offerId === 'egg_hatch' || offerId === 'vision_star' || offerId === 'island_run' || offerId === 'daily_treat') {
+    if (offerId === 'egg_hatch' || offerId === 'vision_star' || offerId === 'island_run' || offerId === 'daily_treats' || offerId === 'holiday_calendar') {
       openOfferContent(offerId);
       return;
     }
