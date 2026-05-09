@@ -271,6 +271,16 @@ function isInteractiveHabitChild(target: EventTarget | null): boolean {
   );
 }
 
+const DIRECT_OPEN_TIME_BOUND_OFFERS: ReadonlySet<TimeBoundOfferId> = new Set([
+  'egg_hatch',
+  'vision_star',
+  'island_run',
+  'daily_treats',
+  'holiday_calendar',
+  'zen_tree_water',
+  'feed_creatures',
+]);
+
 type DailyHabitTrackerVariant = 'full' | 'compact';
 
 type DailyHabitTrackerProps = {
@@ -2505,7 +2515,7 @@ export function DailyHabitTracker({
     ? localStorage.getItem(eggHatchViewedStorageKey) === '1'
     : false;
 
-  const todayLocalDateKey = useMemo(() => formatLocalYmd(new Date()), [today]);
+  const todayLocalDateKey = useMemo(() => formatLocalYmd(parseISODate(today)), [today]);
 
   // Claim keys reset automatically each local day (the date string is part of the key).
   const zenTreeClaimedStorageKey = useMemo(
@@ -2822,7 +2832,7 @@ export function DailyHabitTracker({
 
   const handleTimeBoundOfferClick = useCallback((offerId: TimeBoundOfferId) => {
     // UX: some offers should open directly (no intermediate teaser modal)
-    if (offerId === 'egg_hatch' || offerId === 'vision_star' || offerId === 'island_run' || offerId === 'daily_treats' || offerId === 'holiday_calendar' || offerId === 'zen_tree_water' || offerId === 'feed_creatures') {
+    if (DIRECT_OPEN_TIME_BOUND_OFFERS.has(offerId)) {
       openOfferContent(offerId);
       return;
     }

@@ -1,5 +1,4 @@
 import { sortByStateAndPriority, selectOffersForDisplay, type TimeBoundOfferSortable } from '../timeBoundOfferSort';
-import { runDailyOfferClaimTests } from './dailyOfferClaim.test';
 
 function assertEqual<T>(actual: T, expected: T, message: string): void {
   if (actual !== expected) {
@@ -146,9 +145,4 @@ export function runTimeBoundOfferSortTests(): void {
     const result = selectOffersForDisplay([noRole, filler]);
     assertEqual(result.includes(noRole), true, 'offer with no slotRole should be treated as core');
   }
-}
-
-export async function runHabitOfferTests(): Promise<void> {
-  runTimeBoundOfferSortTests();
-  await runDailyOfferClaimTests();
 }
