@@ -194,18 +194,6 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
       height: Math.max(1, finiteNumber(raw.coordinateSpace.height, DEFAULT_COORDINATE_SPACE.height)),
     }
     : { ...DEFAULT_COORDINATE_SPACE };
-  const sceneSpace = normalizeOptionalArtSpace(raw.sceneSpace);
-  const playableBoardRect = normalizeOptionalArtRect(raw.playableBoardRect);
-
-  const sceneSpace = normalizeOptionalArtSpace(raw.sceneSpace);
-  const playableBoardRect = normalizeOptionalArtRect(raw.playableBoardRect);
-
-  const normalizedSceneSpace = normalizeOptionalArtSpace(raw.sceneSpace);
-  const normalizedPlayableBoardRect = normalizeOptionalArtRect(raw.playableBoardRect);
-
-  const normalizedIslandArtSceneSpace = normalizeOptionalArtSpace(raw.sceneSpace);
-  const normalizedIslandArtPlayableBoardRect = normalizeOptionalArtRect(raw.playableBoardRect);
-
   const normalizedIslandArtSceneSpace = normalizeOptionalArtSpace(raw.sceneSpace);
   const normalizedIslandArtPlayableBoardRect = normalizeOptionalArtRect(raw.playableBoardRect);
 
