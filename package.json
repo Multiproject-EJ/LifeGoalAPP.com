@@ -19,6 +19,7 @@
     "check:routines-migration": "node scripts/routines-migration-smoke.mjs",
     "test:holiday-dates": "node scripts/run-holiday-date-tests.mjs",
     "test:island-run": "node scripts/run-island-run-service-tests.mjs",
+    "test:habit-offer-sort": "node scripts/run-habit-offer-tests.mjs",
     "check:island-run-architecture-guards": "node scripts/check-island-run-architecture-guards.mjs",
     "check:island-art-assets": "node scripts/validate-island-art-assets.mjs",
     "check:island-art-render-wiring": "node scripts/check-island-art-render-wiring.mjs",

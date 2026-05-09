@@ -871,6 +871,14 @@ export function DailyHabitTracker({
   const [isStarBursting, setIsStarBursting] = useState(false);
   const [isVisionImageLoaded, setIsVisionImageLoaded] = useState(false);
   const [hasClaimedVisionStar, setHasClaimedVisionStar] = useState(false);
+  const [hasClaimedZenTreeToday, setHasClaimedZenTreeToday] = useState(false);
+  const [hasClaimedFeedCreaturesToday, setHasClaimedFeedCreaturesToday] = useState(false);
+  const [isZenTreeModalOpen, setIsZenTreeModalOpen] = useState(false);
+  const [isFeedCreaturesModalOpen, setIsFeedCreaturesModalOpen] = useState(false);
+  const [isZenTreeClaiming, setIsZenTreeClaiming] = useState(false);
+  const [isFeedCreaturesClaiming, setIsFeedCreaturesClaiming] = useState(false);
+  const [zenTreeClaimError, setZenTreeClaimError] = useState<string | null>(null);
+  const [feedCreaturesClaimError, setFeedCreaturesClaimError] = useState<string | null>(null);
   const [visionStarCount, setVisionStarCount] = useState(0);
   const [isVisionVisualizationOpen, setIsVisionVisualizationOpen] = useState(false);
   const [visionVisualizationStep, setVisionVisualizationStep] = useState<1 | 2 | 3>(1);
@@ -2491,6 +2499,18 @@ export function DailyHabitTracker({
     ? localStorage.getItem(eggHatchViewedStorageKey) === '1'
     : false;
 
+  // Claim keys reset automatically each UTC day (the date string is part of the key).
+  const zenTreeClaimedStorageKey = useMemo(
+    () => `lifegoal:zen_tree_water_claimed:${session.user.id}:${getTodayUtcDateKey()}`,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [session.user.id, today],
+  );
+  const feedCreaturesClaimedStorageKey = useMemo(
+    () => `lifegoal:feed_creatures_claimed:${session.user.id}:${getTodayUtcDateKey()}`,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [session.user.id, today],
+  );
+
   const islandRunCountdownExpiresAtMs = islandRunState.islandExpiresAtMs > islandOfferNowMs
     ? islandRunState.islandExpiresAtMs
     : null;
@@ -2584,10 +2604,36 @@ export function DailyHabitTracker({
         sortPriority: hasSeenEggHatch ? 5 : 2.5,
         slotRole: 'core',
       },
+      {
+        id: 'zen_tree_water',
+        label: 'Water Zen Tree',
+        icon: '🌳',
+        expiresAtMs: getNextUtcMidnightMs(),
+        badgeLabelOverride: hasClaimedZenTreeToday ? '✓ Done' : 'Claim',
+        isCollected: hasClaimedZenTreeToday,
+        isVisible: true,
+        isActionable: !hasClaimedZenTreeToday,
+        sortPriority: 5,
+        slotRole: 'core',
+      },
+      {
+        id: 'feed_creatures',
+        label: 'Feed Creatures',
+        icon: '🐾',
+        expiresAtMs: getNextUtcMidnightMs(),
+        badgeLabelOverride: hasClaimedFeedCreaturesToday ? '✓ Done' : 'Claim',
+        isCollected: hasClaimedFeedCreaturesToday,
+        isVisible: true,
+        isActionable: !hasClaimedFeedCreaturesToday,
+        sortPriority: 6,
+        slotRole: 'core',
+      },
     ];
   }, [
     activeHolidaySeason,
     hasClaimedVisionStar,
+    hasClaimedZenTreeToday,
+    hasClaimedFeedCreaturesToday,
     hasOpenedDailyTreatsToday,
     hasOpenedHolidayCalendarToday,
     hasSeenEggHatch,
@@ -2612,6 +2658,42 @@ export function DailyHabitTracker({
     setTodaysOfferModalError(null);
     setTodaysOfferCheckoutPending(false);
   }, []);
+
+  const handleClaimZenTree = useCallback(() => {
+    if (hasClaimedZenTreeToday || isZenTreeClaiming) return;
+    setIsZenTreeClaiming(true);
+    setZenTreeClaimError(null);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(zenTreeClaimedStorageKey, '1');
+    }
+    setHasClaimedZenTreeToday(true);
+    awardDailyTreatDice({
+      userId: session.user.id,
+      diceAmount: 15,
+      sourceLabel: 'Water the Zen Tree',
+      islandRunSession: session,
+    });
+    setIsZenTreeClaiming(false);
+    setIsZenTreeModalOpen(false);
+  }, [hasClaimedZenTreeToday, isZenTreeClaiming, zenTreeClaimedStorageKey, session]);
+
+  const handleClaimFeedCreatures = useCallback(() => {
+    if (hasClaimedFeedCreaturesToday || isFeedCreaturesClaiming) return;
+    setIsFeedCreaturesClaiming(true);
+    setFeedCreaturesClaimError(null);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(feedCreaturesClaimedStorageKey, '1');
+    }
+    setHasClaimedFeedCreaturesToday(true);
+    awardDailyTreatDice({
+      userId: session.user.id,
+      diceAmount: 15,
+      sourceLabel: 'Feed the Creatures',
+      islandRunSession: session,
+    });
+    setIsFeedCreaturesClaiming(false);
+    setIsFeedCreaturesModalOpen(false);
+  }, [hasClaimedFeedCreaturesToday, isFeedCreaturesClaiming, feedCreaturesClaimedStorageKey, session]);
 
   const startTodaysOfferCheckout = useCallback(async () => {
     if (todaysOfferCheckoutPending) {
@@ -2705,12 +2787,24 @@ export function DailyHabitTracker({
       } else {
         setVisionRewardError('Egg hatch launcher is unavailable in this view.');
       }
+      return;
+    }
+
+    if (offerId === 'zen_tree_water') {
+      setZenTreeClaimError(null);
+      setIsZenTreeModalOpen(true);
+      return;
+    }
+
+    if (offerId === 'feed_creatures') {
+      setFeedCreaturesClaimError(null);
+      setIsFeedCreaturesModalOpen(true);
     }
   }, [eggHatchViewedStorageKey, handleVisionRewardClick, onOpenDailyTreat, onOpenHolidayCalendar, onOpenIslandRunStop, startTodaysOfferCheckout]);
 
   const handleTimeBoundOfferClick = useCallback((offerId: TimeBoundOfferId) => {
     // UX: some offers should open directly (no intermediate teaser modal)
-    if (offerId === 'egg_hatch' || offerId === 'vision_star' || offerId === 'island_run' || offerId === 'daily_treats' || offerId === 'holiday_calendar') {
+    if (offerId === 'egg_hatch' || offerId === 'vision_star' || offerId === 'island_run' || offerId === 'daily_treats' || offerId === 'holiday_calendar' || offerId === 'zen_tree_water' || offerId === 'feed_creatures') {
       openOfferContent(offerId);
       return;
     }
@@ -2820,6 +2914,90 @@ export function DailyHabitTracker({
           {todaysOfferModalError ? (
             <p className="habit-day-nav__bonus-error" role="status" aria-live="polite">
               {todaysOfferModalError}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  const zenTreeModal = isZenTreeModalOpen ? (
+    <div
+      className="habit-day-nav__vision-modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Water the Zen Tree"
+      onClick={() => setIsZenTreeModalOpen(false)}
+    >
+      <div
+        className="habit-day-nav__vision-modal habit-day-nav__zen-tree-modal"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="habit-day-nav__vision-modal-close"
+          onClick={() => setIsZenTreeModalOpen(false)}
+          aria-label="Close zen tree"
+        >
+          ×
+        </button>
+        <div className="habit-day-nav__todays-offer-body">
+          <p className="habit-day-nav__todays-offer-icon" aria-hidden="true">🌳</p>
+          <p className="habit-day-nav__todays-offer-title">Water the Zen Tree</p>
+          <p className="habit-day-nav__todays-offer-subtitle">A moment of care. +15 🎲 dice reward.</p>
+          <button
+            type="button"
+            className="habit-day-nav__todays-offer-buy"
+            disabled={isZenTreeClaiming || hasClaimedZenTreeToday}
+            onClick={handleClaimZenTree}
+          >
+            {isZenTreeClaiming ? 'Watering…' : hasClaimedZenTreeToday ? '✓ Watered today' : 'Water Now'}
+          </button>
+          {zenTreeClaimError ? (
+            <p className="habit-day-nav__bonus-error" role="status" aria-live="polite">
+              {zenTreeClaimError}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  const feedCreaturesModal = isFeedCreaturesModalOpen ? (
+    <div
+      className="habit-day-nav__vision-modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Feed the Creatures"
+      onClick={() => setIsFeedCreaturesModalOpen(false)}
+    >
+      <div
+        className="habit-day-nav__vision-modal habit-day-nav__feed-creatures-modal"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="habit-day-nav__vision-modal-close"
+          onClick={() => setIsFeedCreaturesModalOpen(false)}
+          aria-label="Close feed creatures"
+        >
+          ×
+        </button>
+        <div className="habit-day-nav__todays-offer-body">
+          <p className="habit-day-nav__todays-offer-icon" aria-hidden="true">🐾</p>
+          <p className="habit-day-nav__todays-offer-title">Feed the Creatures</p>
+          <p className="habit-day-nav__todays-offer-subtitle">Keep your sanctuary thriving. +15 🎲 dice reward.</p>
+          <button
+            type="button"
+            className="habit-day-nav__todays-offer-buy"
+            disabled={isFeedCreaturesClaiming || hasClaimedFeedCreaturesToday}
+            onClick={handleClaimFeedCreatures}
+          >
+            {isFeedCreaturesClaiming ? 'Feeding…' : hasClaimedFeedCreaturesToday ? '✓ Fed today' : 'Feed Now'}
+          </button>
+          {feedCreaturesClaimError ? (
+            <p className="habit-day-nav__bonus-error" role="status" aria-live="polite">
+              {feedCreaturesClaimError}
             </p>
           ) : null}
         </div>
@@ -3274,6 +3452,16 @@ export function DailyHabitTracker({
     const stored = loadDraft<boolean>(visionStarStorageKey(session.user.id, activeDate));
     setHasClaimedVisionStar(Boolean(stored));
   }, [activeDate, session.user.id]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setHasClaimedZenTreeToday(localStorage.getItem(zenTreeClaimedStorageKey) === '1');
+  }, [zenTreeClaimedStorageKey]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setHasClaimedFeedCreaturesToday(localStorage.getItem(feedCreaturesClaimedStorageKey) === '1');
+  }, [feedCreaturesClaimedStorageKey]);
 
   useEffect(() => {
     const storedReward = loadDraft<VisionReward>(visionStarRewardKey(session.user.id, activeDate));
@@ -8775,12 +8963,26 @@ export function DailyHabitTracker({
       : todaysOfferModal
     : null;
 
+  const zenTreePortal = zenTreeModal
+    ? modalRoot
+      ? createPortal(zenTreeModal, modalRoot)
+      : zenTreeModal
+    : null;
+
+  const feedCreaturesPortal = feedCreaturesModal
+    ? modalRoot
+      ? createPortal(feedCreaturesModal, modalRoot)
+      : feedCreaturesModal
+    : null;
+
   if (isCompact) {
     return (
       <section className="habit-tracker habit-tracker--compact">
         {renderCompactExperience()}
         {offerTeaserPortal}
         {todaysOfferPortal}
+        {zenTreePortal}
+        {feedCreaturesPortal}
         {weeklyHabitReviewModal}
         {visionRewardModal}
         {visionVisualizationModal}
@@ -8977,6 +9179,8 @@ export function DailyHabitTracker({
       )}
       {offerTeaserPortal}
       {todaysOfferPortal}
+      {zenTreePortal}
+      {feedCreaturesPortal}
       {weeklyHabitReviewModal}
       {visionRewardModal}
       {visionVisualizationModal}
