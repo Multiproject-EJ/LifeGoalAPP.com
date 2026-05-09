@@ -3,6 +3,7 @@ import type { ProfileStrengthSignalSnapshot } from '../profile-strength/profileS
 import type { ProfileStrengthResult } from '../profile-strength/profileStrengthTypes';
 import { DailyHabitTracker } from './DailyHabitTracker';
 import type { ArchetypeHand } from '../identity/archetypes/archetypeHandBuilder';
+import type { ActiveAdventMetaResult } from '../../services/treatCalendarService';
 
 type MobileHabitHomeProps = {
   session: Session;
@@ -12,11 +13,15 @@ type MobileHabitHomeProps = {
   profileStrengthSignals?: ProfileStrengthSignalSnapshot | null;
   personalitySummary?: string | null;
   onOpenDailyTreat?: () => void;
+  onOpenHolidayCalendar?: () => void;
   onOpenIslandRunStop?: (stopId: 'boss' | 'hatchery' | 'dynamic') => void;
   onOpenDailySpinWheel?: () => void;
   forceCompactView?: boolean;
   preferredCompactView?: boolean;
   hideTimeBoundOffers?: boolean;
+  activeHolidaySeason?: ActiveAdventMetaResult | null;
+  hasOpenedDailyTreatsToday?: boolean;
+  hasOpenedHolidayCalendarToday?: boolean;
   hiddenHabitIds?: string[];
   onHideStandaloneHabitsChange?: (habitIds: string[]) => void;
   onOpenStarterQuest?: () => void;
@@ -31,11 +36,15 @@ export function MobileHabitHome({
   profileStrengthSignals,
   personalitySummary,
   onOpenDailyTreat,
+  onOpenHolidayCalendar,
   onOpenIslandRunStop,
   onOpenDailySpinWheel,
   forceCompactView = false,
   preferredCompactView,
   hideTimeBoundOffers = false,
+  activeHolidaySeason = null,
+  hasOpenedDailyTreatsToday = false,
+  hasOpenedHolidayCalendarToday = false,
   hiddenHabitIds = [],
   onHideStandaloneHabitsChange,
   onOpenStarterQuest,
@@ -53,11 +62,15 @@ export function MobileHabitHome({
         profileStrengthSignals={profileStrengthSignals}
         personalitySummary={personalitySummary}
         onOpenDailyTreat={onOpenDailyTreat}
+        onOpenHolidayCalendar={onOpenHolidayCalendar}
         onOpenIslandRunStop={onOpenIslandRunStop}
         onOpenDailySpinWheel={onOpenDailySpinWheel}
         forceCompactView={forceCompactView}
         preferredCompactView={preferredCompactView}
         hideTimeBoundOffers={hideTimeBoundOffers}
+        activeHolidaySeason={activeHolidaySeason}
+        hasOpenedDailyTreatsToday={hasOpenedDailyTreatsToday}
+        hasOpenedHolidayCalendarToday={hasOpenedHolidayCalendarToday}
         hiddenHabitIds={hiddenHabitIds}
         collapseCheckboxUntilExpanded
         onOpenStarterQuest={onOpenStarterQuest}

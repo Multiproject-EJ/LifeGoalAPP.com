@@ -71,7 +71,7 @@ import { LuckyRollBoard } from './features/gamification/daily-treats/LuckyRollBo
 import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorldsHub';
 import { getIslandBackgroundImageSrc } from './features/gamification/level-worlds/services/islandBackgrounds';
 import { fetchHolidayPreferences } from './services/holidayPreferences';
-import { buildPreviewAdventMeta, getActiveAdventMeta, type ActiveAdventMetaResult, type HolidayKey } from './services/treatCalendarService';
+import { buildPreviewAdventMeta, fetchCurrentSeason, getActiveAdventMeta, type ActiveAdventMetaResult, type HolidayKey } from './services/treatCalendarService';
 import { HOLIDAY_PREVIEW_LAUNCH_EVENT, type HolidayPreviewLaunchDetail } from './services/holidayPreviewEvents';
 import {
   isIslandRunEntryDebugEnabled,
@@ -603,6 +603,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     );
   });
   const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
+  const [calendarLaunchMode, setCalendarLaunchMode] = useState<'auto' | 'holiday' | 'personal_quest'>('auto');
   const [pendingTodayOfferOpen, setPendingTodayOfferOpen] = useState<TimeBoundOfferId | null>(null);
   const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
   const [activeHolidaySeason, setActiveHolidaySeason] = useState<ActiveAdventMetaResult | null>(null);
@@ -612,6 +613,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [reopenGameOverlayOnRewardClose, setReopenGameOverlayOnRewardClose] = useState(false);
   const [hasSeenDailyTreats, setHasSeenDailyTreats] = useState(false);
   const [dailyTreatsFirstVisitDate, setDailyTreatsFirstVisitDate] = useState<string | null>(null);
+  const [hasOpenedHolidayCalendarToday, setHasOpenedHolidayCalendarToday] = useState(false);
   const [isMobileFooterCollapsed, setIsMobileFooterCollapsed] = useState(false);
   const [isMobileFooterSnapActive, setIsMobileFooterSnapActive] = useState(false);
   const [isVisionRewardOpen, setIsVisionRewardOpen] = useState(false);
@@ -731,6 +733,36 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   }, [getTodayDateKey]);
 
+  const launchDailyTreatsMenu = useCallback(() => {
+    markDailyTreatsSeen();
+    const todayKey = getTodayDateKey();
+    const isFirstDailyTreatVisitToday = dailyTreatsFirstVisitDate !== todayKey;
+    if (isFirstDailyTreatVisitToday) {
+      markDailyTreatsDailyVisit();
+    }
+
+    if (isMobileMenuImageActive && isFirstDailyTreatVisitToday) {
+      setPendingDailyTreatsOpen(true);
+      setShowDailyTreatsCongrats(true);
+      return;
+    }
+
+    setPendingDailyTreatsOpen(false);
+    setShowDailyTreatsMenu(true);
+  }, [
+    dailyTreatsFirstVisitDate,
+    getTodayDateKey,
+    isMobileMenuImageActive,
+    markDailyTreatsDailyVisit,
+    markDailyTreatsSeen,
+  ]);
+
+  const launchHolidayCalendar = useCallback(() => {
+    setHolidayPreviewKey(null);
+    setCalendarLaunchMode('holiday');
+    setShowCalendarPlaceholder(true);
+  }, []);
+
   const handleDailyTreatsCongratsClose = useCallback(() => {
     setShowDailyTreatsCongrats(false);
     if (pendingDailyTreatsOpen) {
@@ -831,6 +863,44 @@ export default function App({ forceAuthOnMount }: AppProps) {
   
   const todayDailyTreatsKey = getTodayDateKey();
   const hasOpenedDailyTreatsToday = dailyTreatsFirstVisitDate === todayDailyTreatsKey;
+  const refreshHolidayCalendarOpenedState = useCallback(async () => {
+    const userId = supabaseSession?.user?.id;
+    const holidayKey = activeHolidaySeason?.meta.holiday_key;
+    if (!userId || !holidayKey) {
+      setHasOpenedHolidayCalendarToday(false);
+      return;
+    }
+
+    const { data: season } = await fetchCurrentSeason(userId, holidayKey);
+    if (!season) {
+      setHasOpenedHolidayCalendarToday(false);
+      return;
+    }
+
+    const todayIndex = season.today_day_index;
+    const freeOpened = season.progress?.opened_days.includes(todayIndex) ?? false;
+    const bonusOpened = season.progress?.opened_bonus_days?.includes(todayIndex) ?? false;
+    setHasOpenedHolidayCalendarToday(freeOpened || bonusOpened);
+  }, [activeHolidaySeason?.meta.holiday_key, supabaseSession?.user?.id]);
+
+  useEffect(() => {
+    void refreshHolidayCalendarOpenedState();
+  }, [refreshHolidayCalendarOpenedState]);
+
+  useEffect(() => {
+    const handleVisibilityOrFocus = () => {
+      void refreshHolidayCalendarOpenedState();
+    };
+
+    window.addEventListener('focus', handleVisibilityOrFocus);
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    window.addEventListener('lifegoal:treat-calendar-opened', handleVisibilityOrFocus);
+    return () => {
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      window.removeEventListener('lifegoal:treat-calendar-opened', handleVisibilityOrFocus);
+    };
+  }, [refreshHolidayCalendarOpenedState]);
   const isProfileStrengthDebugActive = useMemo(() => isProfileStrengthDebugEnabled(), []);
 
   const workspaceNavItems = useMemo(() => {
@@ -1332,8 +1402,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       }
 
       window.localStorage.setItem(introStorageKey, '1');
-      // Bug #8: Bypass HolidaySeasonDialog — open calendar directly
-      setShowCalendarPlaceholder(true);
+      setShowHolidaySeasonDialog(true);
     };
 
     void loadHolidaySeason();
@@ -1355,17 +1424,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
       setActiveHolidaySeason(previewHoliday);
 
       if (mode === 'intro') {
-        // Bug #8: Bypass HolidaySeasonDialog — open calendar directly for preview too
         setHolidayPreviewKey(previewHoliday.meta.holiday_key);
         setIsHolidaySeasonDialogPreview(false);
-        setShowHolidaySeasonDialog(false);
-        setShowCalendarPlaceholder(true);
+        setShowHolidaySeasonDialog(true);
         return;
       }
 
       setIsHolidaySeasonDialogPreview(false);
       setShowHolidaySeasonDialog(false);
       setHolidayPreviewKey(holidayKey);
+      setCalendarLaunchMode('holiday');
       setShowCalendarPlaceholder(true);
     };
 
@@ -3198,7 +3266,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
             onProfileUpdate={setWorkspaceProfile}
             onLaunchWeeklyHabitReview={() => setActiveWorkspaceNav('planning')}
             onLaunchDailyCatchUpPrompt={() => setActiveWorkspaceNav('planning')}
-            onLaunchDailyTreatCalendar={() => setShowCalendarPlaceholder(true)}
+            onLaunchDailyTreatCalendar={() => {
+              setCalendarLaunchMode('auto');
+              setShowCalendarPlaceholder(true);
+            }}
             billingReturnBanner={billingReturnBanner}
           />
         </div>
@@ -3254,7 +3325,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
               profileStrengthSignals={profileStrengthSignals}
               personalitySummary={personalitySummary}
               archetypeHand={archetypeHand}
-              onOpenDailyTreat={() => setShowCalendarPlaceholder(true)}
+              onOpenDailyTreat={launchDailyTreatsMenu}
+              onOpenHolidayCalendar={launchHolidayCalendar}
               onOpenIslandRunStop={(stopId) => {
                 setIslandRunOpenStopParam(stopId);
                 setShowMobileHome(false);
@@ -3264,6 +3336,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
               onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
               pendingOfferToOpen={pendingTodayOfferOpen}
               onPendingOfferHandled={() => setPendingTodayOfferOpen(null)}
+              activeHolidaySeason={activeHolidaySeason}
+              hasOpenedDailyTreatsToday={hasOpenedDailyTreatsToday}
+              hasOpenedHolidayCalendarToday={hasOpenedHolidayCalendarToday}
               hiddenHabitIds={[]}
             />
             <HabitsModule
@@ -4223,20 +4298,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               className={`mobile-gamification-overlay__stat mobile-gamification-overlay__stat--cta mobile-gamification-overlay__stat--daily-treats mobile-gamification-overlay__stat-button${
                 hasSeenDailyTreats ? '' : ' mobile-gamification-overlay__stat--pulse'
               }`}
-              onClick={() => {
-                markDailyTreatsSeen();
-                const todayKey = getTodayDateKey();
-                const shouldShowCongrats =
-                  isMobileMenuImageActive && dailyTreatsFirstVisitDate !== todayKey;
-                if (shouldShowCongrats) {
-                  markDailyTreatsDailyVisit();
-                  setPendingDailyTreatsOpen(true);
-                  setShowDailyTreatsCongrats(true);
-                  return;
-                }
-                setPendingDailyTreatsOpen(false);
-                setShowDailyTreatsMenu(true);
-              }}
+              onClick={launchDailyTreatsMenu}
               role="listitem"
             >
               <div
@@ -4246,7 +4308,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 🍬
               </div>
               <div className="mobile-gamification-overlay__stat-content">
-                <p className="mobile-gamification-overlay__stat-label">{activeHolidaySeason ? `${activeHolidaySeason.meta.displayName} Calendar` : 'Treat Calendar'}</p>
+                <p className="mobile-gamification-overlay__stat-label">Daily Treats</p>
                 <p className="mobile-gamification-overlay__stat-hint">
                   Open your treats menu for spins, leagues, and countdown secrets.
                 </p>
@@ -4328,7 +4390,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             src={lifespinIcon}
             alt="Life Spin icon"
           />
-          <p className="daily-treats-congrats__eyebrow">{activeHolidaySeason ? `${activeHolidaySeason.meta.displayName} Calendar` : 'Treat Calendar'}</p>
+          <p className="daily-treats-congrats__eyebrow">Daily Treats</p>
           <h3 className="daily-treats-congrats__title">Congrats on your first visit today!</h3>
           <p className="daily-treats-congrats__subtitle">
             Your controller is powered up with fresh rewards.
@@ -4480,6 +4542,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 onClick={() => {
                   setShowDailyTreatsMenu(false);
                   setReopenGameOverlayOnRewardClose(false);
+                  setCalendarLaunchMode('auto');
                   setShowCalendarPlaceholder(true);
                 }}
               >
@@ -4497,6 +4560,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 onClick={() => {
                   setShowDailyTreatsMenu(false);
                   setReopenGameOverlayOnRewardClose(false);
+                  setCalendarLaunchMode('auto');
                   setShowCalendarPlaceholder(true);
                 }}
               >
@@ -4509,15 +4573,26 @@ export default function App({ forceAuthOnMount }: AppProps) {
     </div>
   ) : null;
 
-  const quickGainsOptionalItems = !hasSeenDailyTreats
-    ? [
-        {
-          id: 'daily-treats',
-          title: 'Unclaimed holiday calendar',
-          description: "Open the holiday calendar to reveal today's treat.",
-        },
-      ]
-    : [];
+  const quickGainsOptionalItems = [
+    ...(!hasSeenDailyTreats
+      ? [
+          {
+            id: 'daily-treats',
+            title: 'Open Daily Treats',
+            description: 'Open your Daily Treats menu and claim your daily rewards.',
+          },
+        ]
+      : []),
+    ...(activeHolidaySeason && !hasOpenedHolidayCalendarToday
+      ? [
+          {
+            id: 'holiday-calendar',
+            title: `Open ${activeHolidaySeason.meta.displayName} Calendar`,
+            description: "Open today's holiday calendar door for a seasonal bonus.",
+          },
+        ]
+      : []),
+  ];
   const quickGainsFallbackItem =
     quickGainsOptionalItems.length === 0
       ? {
@@ -4669,10 +4744,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
       onClose={() => handleRewardModalClose(() => {
         setShowCalendarPlaceholder(false);
         setHolidayPreviewKey(null);
+        setCalendarLaunchMode('auto');
       })}
       userId={activeSession?.user?.id}
       islandRunSession={activeSession}
       previewHolidayKey={holidayPreviewKey}
+      mode={calendarLaunchMode}
     />
   );
 
@@ -4728,31 +4805,35 @@ export default function App({ forceAuthOnMount }: AppProps) {
       isAnyModalVisible ? ' app--auth-overlay' : ''
     }${islandFullscreenClassName}${mobileTopChromeClassName}`;
     return (
-      <div className={mobileHomeAppClassName}>
-        {shouldShowMobileTopChrome ? <MobileTopChrome deviceClass={mobileTopChromeDeviceClass} /> : null}
-        <div className="workspace-shell">
+        <div className={mobileHomeAppClassName}>
+          {shouldShowMobileTopChrome ? <MobileTopChrome deviceClass={mobileTopChromeDeviceClass} /> : null}
+          <div className="workspace-shell">
             <MobileHabitHome
               session={activeSession}
-            showPointsBadges={shouldShowPointsBadges}
-            onVisionRewardOpenChange={setIsVisionRewardOpen}
-            profileStrengthSnapshot={profileStrengthSnapshot}
-            profileStrengthSignals={profileStrengthSignals}
-            personalitySummary={personalitySummary}
-            onOpenDailyTreat={() => setShowCalendarPlaceholder(true)}
-            onOpenIslandRunStop={(stopId) => {
-              setIslandRunOpenStopParam(stopId);
-              setReopenGameBoardOverlayOnLevelWorldsClose(false);
-              setLevelWorldsEntryPanel('default');
-              setShowLevelWorldsFromEntry(true);
-            }}
-            onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
-            forceCompactView={!isGameModeActive}
-            preferredCompactView={!isGameModeActive}
+              showPointsBadges={shouldShowPointsBadges}
+              onVisionRewardOpenChange={setIsVisionRewardOpen}
+              profileStrengthSnapshot={profileStrengthSnapshot}
+              profileStrengthSignals={profileStrengthSignals}
+              personalitySummary={personalitySummary}
+              onOpenDailyTreat={launchDailyTreatsMenu}
+              onOpenHolidayCalendar={launchHolidayCalendar}
+              onOpenIslandRunStop={(stopId) => {
+                setIslandRunOpenStopParam(stopId);
+                setReopenGameBoardOverlayOnLevelWorldsClose(false);
+                setLevelWorldsEntryPanel('default');
+                setShowLevelWorldsFromEntry(true);
+              }}
+              onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
+              forceCompactView={!isGameModeActive}
+              preferredCompactView={!isGameModeActive}
               hideTimeBoundOffers={!isGameModeActive}
+              activeHolidaySeason={activeHolidaySeason}
+              hasOpenedDailyTreatsToday={hasOpenedDailyTreatsToday}
+              hasOpenedHolidayCalendarToday={hasOpenedHolidayCalendarToday}
               hiddenHabitIds={[]}
               onOpenStarterQuest={openStarterQuestSheetFromToday}
             />
-        </div>
+          </div>
         {!showZenGardenFullScreen && !isConflictResolverFullscreen && (
           <MobileFooterNav
             items={mobileFooterNavItems}
@@ -5113,6 +5194,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           setShowHolidaySeasonDialog(false);
           setHolidayPreviewKey(isHolidaySeasonDialogPreview ? activeHolidaySeason?.meta.holiday_key ?? null : null);
           setIsHolidaySeasonDialogPreview(false);
+          setCalendarLaunchMode('holiday');
           setShowCalendarPlaceholder(true);
         }}
       />

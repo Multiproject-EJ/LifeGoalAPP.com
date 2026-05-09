@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 
 export type TimeBoundOfferId =
   | 'vision_star'
-  | 'daily_treat'
+  | 'daily_treats'
+  | 'holiday_calendar'
   | 'todays_offer'
   | 'egg_hatch'
   | 'island_run';
@@ -20,6 +21,7 @@ export type TimeBoundOfferItem = {
   isActionable?: boolean;
   isPlaceholder?: boolean;
   sortPriority?: number;
+  slotRole?: 'core' | 'filler';
 };
 
 type TimeBoundOfferRowProps = {
@@ -55,7 +57,8 @@ export function TimeBoundOfferRow({ offers, onOfferClick }: TimeBoundOfferRowPro
   const visibleOffers = useMemo(() => offers.filter((offer) => offer.isVisible), [offers]);
 
   const sorted = useMemo(() => {
-    const active = visibleOffers
+    const sortByStateAndPriority = (source: TimeBoundOfferItem[]) => {
+      const active = source
       .filter((offer) => !offer.isCollected)
       .sort((a, b) => {
         const aExpiry = a.expiresAtMs ?? Number.MAX_SAFE_INTEGER;
@@ -64,7 +67,7 @@ export function TimeBoundOfferRow({ offers, onOfferClick }: TimeBoundOfferRowPro
         return (a.sortPriority ?? 999) - (b.sortPriority ?? 999);
       });
 
-    const collected = visibleOffers
+      const collected = source
       .filter((offer) => offer.isCollected)
       .sort((a, b) => {
         const aExpiry = a.expiresAtMs ?? Number.MAX_SAFE_INTEGER;
@@ -73,8 +76,20 @@ export function TimeBoundOfferRow({ offers, onOfferClick }: TimeBoundOfferRowPro
         return (a.sortPriority ?? 999) - (b.sortPriority ?? 999);
       });
 
-    const merged = [...active, ...collected];
-    return merged.slice(0, 4);
+      return [...active, ...collected];
+    };
+
+    const coreOffers = visibleOffers.filter((offer) => (offer.slotRole ?? 'core') === 'core');
+    const fillerOffers = visibleOffers.filter((offer) => offer.slotRole === 'filler');
+
+    const sortedCore = sortByStateAndPriority(coreOffers).slice(0, 4);
+    if (sortedCore.length >= 4) {
+      return sortedCore;
+    }
+
+    const remainingSlots = 4 - sortedCore.length;
+    const sortedFiller = sortByStateAndPriority(fillerOffers).slice(0, remainingSlots);
+    return [...sortedCore, ...sortedFiller];
   }, [visibleOffers]);
 
   const padded = useMemo(() => {
