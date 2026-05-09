@@ -4985,9 +4985,16 @@
   transform-origin: center center;
   transform-style: preserve-3d;
   will-change: transform;
-  contain: layout style paint;
   backface-visibility: hidden;
   transition: none; /* camera springs/gesture state drive transforms directly */
+}
+
+.island-run-board__stage-wrapper .island-run-board__art-camera-stage {
+  contain: layout style;
+}
+
+.island-run-board__stage-wrapper .island-run-board__camera-stage {
+  contain: layout style paint;
 }
 
 .island-run-board__stage-wrapper--minimal-art .island-tile__shine,

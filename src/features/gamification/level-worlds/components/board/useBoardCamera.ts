@@ -18,10 +18,6 @@ export interface CameraState {
 
 export type CameraMode = 'board_follow' | 'stop_focus' | 'overview_manual' | 'gesture';
 
-export interface BoardCameraDefaultOptions {
-  zoom?: number;
-}
-
 export interface CameraVisualBounds {
   left: number;
   top: number;
@@ -85,6 +81,20 @@ export function clampCameraPan(
   };
 }
 
+export function computeManualMinCameraZoom(
+  boardWidth: number,
+  boardHeight: number,
+  visualBounds?: CameraVisualBounds | null,
+  safeMargin = SCENE_FIT_SAFE_MARGIN,
+): number {
+  if (!visualBounds) return MANUAL_MIN_CAMERA_ZOOM;
+
+  const contentWidth = Math.max(1, visualBounds.right - visualBounds.left);
+  const contentHeight = Math.max(1, visualBounds.bottom - visualBounds.top);
+  const fitZoom = Math.min(boardWidth / contentWidth, boardHeight / contentHeight) * safeMargin;
+  return Math.min(MANUAL_MIN_CAMERA_ZOOM, clamp(fitZoom, 0.1, MAX_ZOOM));
+}
+
 export function computeSceneCameraFrame(
   boardWidth: number,
   boardHeight: number,
@@ -93,10 +103,7 @@ export function computeSceneCameraFrame(
 ): CameraState {
   if (!visualBounds) return { x: 0, y: 0, zoom: DEFAULT_CAMERA_ZOOM };
 
-  const contentWidth = Math.max(1, visualBounds.right - visualBounds.left);
-  const contentHeight = Math.max(1, visualBounds.bottom - visualBounds.top);
-  const fitZoom = Math.min(boardWidth / contentWidth, boardHeight / contentHeight) * safeMargin;
-  const zoom = Math.min(DEFAULT_CAMERA_ZOOM, clamp(fitZoom, 0.1, MAX_ZOOM));
+  const zoom = computeManualMinCameraZoom(boardWidth, boardHeight, visualBounds, safeMargin);
   return {
     x: centerScenePanForZoom(boardWidth, visualBounds.left, visualBounds.right, zoom),
     y: centerScenePanForZoom(boardHeight, visualBounds.top, visualBounds.bottom, zoom),
@@ -143,7 +150,10 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     [boardHeight, boardWidth, visualBounds],
   );
   const defaultFrameKey = useMemo(() => JSON.stringify({ boardWidth, boardHeight, visualBounds }), [boardHeight, boardWidth, visualBounds]);
-  const minZoom = defaultFrame.zoom;
+  const minZoom = useMemo(
+    () => computeManualMinCameraZoom(boardWidth, boardHeight, visualBounds),
+    [boardHeight, boardWidth, visualBounds],
+  );
 
   // The "committed" camera state that the renderer reads each frame.
   const [camera, setCamera] = useState<CameraState>(() => defaultFrame);
@@ -304,14 +314,13 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
   }, [boardWidth, boardHeight, ensureAnimating, applyPresetSpring]);
 
   /** Smoothly return to the minimum manual zoom-out camera framing. */
-  const goDefault = useCallback((options?: BoardCameraDefaultOptions) => {
+  const goDefault = useCallback(() => {
     // Asymmetric spring: use smooth config for the return
     restoreDefaultSpring();
     const s = springsRef.current;
-    const targetZoom = options?.zoom ?? defaultFrame.zoom;
     s.x.target = defaultFrame.x;
     s.y.target = defaultFrame.y;
-    s.zoom.target = targetZoom;
+    s.zoom.target = defaultFrame.zoom;
     setMode('board_follow');
     ensureAnimating();
   }, [defaultFrame.x, defaultFrame.y, defaultFrame.zoom, ensureAnimating, restoreDefaultSpring]);
