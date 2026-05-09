@@ -101,13 +101,21 @@ export const CountdownCalendarModal = ({
   const [symbolBonusNotification, setSymbolBonusNotification] = useState<string | null>(null);
   const [trackerExpanded, setTrackerExpanded] = useState(false);
 
-  // Load holiday preferences then derive the active advent window and season data
   useEffect(() => {
+    if (isOpen) return;
     setRevealResult(null);
     setRevealState(null);
     setSeasonData(null);
     setActiveAdvent(undefined);
+  }, [isOpen]);
+
+  // Load holiday preferences then derive the active advent window and season data
+  useEffect(() => {
     if (!isOpen) return;
+    setRevealResult(null);
+    setRevealState(null);
+    setSeasonData(null);
+    setActiveAdvent(undefined);
     setScratchState(loadScratchCardState(userId));
 
     const loadData = async () => {
