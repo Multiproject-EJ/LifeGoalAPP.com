@@ -173,10 +173,11 @@ export function resolveNextRewardKind(claimCount: number): RewardBarRewardKind {
  *
  * Tier gates are tuned for fast-session agency:
  *  - ×1 is always available (0 dice).
- *  - Early game: ×2 through ×20 unlock as soon as the player can afford one roll.
- *  - Mid game: ×50 requires a 250-dice stash (about five ×50 rolls).
- *  - High game: ×100 and ×200 both unlock at 1,000 dice; there are no
- *    additional dice-pool gates above that in the current ladder.
+ *  - Early game: ×2/×3/×5 unlock as soon as the player can afford one roll.
+ *  - Momentum tier: ×10 opens at 20 dice so players get at least two big rolls.
+ *  - Burst tiers: ×20/×50 require about five rolls of runway.
+ *  - High game: ×100 opens at 1,000 dice and ×200 at 2,000 dice so
+ *    premium multipliers feel powerful without creating one-tap burnout.
  */
 export type MultiplierTier = {
   multiplier: number;
@@ -189,11 +190,11 @@ export const MULTIPLIER_TIERS: readonly MultiplierTier[] = [
   { multiplier: 2,   minDice: 2 },
   { multiplier: 3,   minDice: 3 },
   { multiplier: 5,   minDice: 5 },
-  { multiplier: 10,  minDice: 10 },
-  { multiplier: 20,  minDice: 20 },
+  { multiplier: 10,  minDice: 20 },
+  { multiplier: 20,  minDice: 100 },
   { multiplier: 50,  minDice: 250 },
   { multiplier: 100, minDice: 1_000 },
-  { multiplier: 200, minDice: 1_000 },
+  { multiplier: 200, minDice: 2_000 },
 ] as const;
 
 /**

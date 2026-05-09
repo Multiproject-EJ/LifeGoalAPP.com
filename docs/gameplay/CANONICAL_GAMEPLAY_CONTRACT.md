@@ -58,11 +58,11 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 | ×2 | 2 | 2 |
 | ×3 | 3 | 3 |
 | ×5 | 5 | 5 |
-| ×10 | 10 | 10 |
-| ×20 | 20 | 20 |
+| ×10 | 20 | 10 |
+| ×20 | 100 | 20 |
 | ×50 | 250 | 50 |
 | ×100 | 1 000 | 100 |
-| ×200 | 1 000 | 200 |
+| ×200 | 2 000 | 200 |
 
 - The multiplier scales positive essence tile rewards **and** reward-bar progress from tile landings. Hazard deductions are also scaled by the multiplier (high multiplier = high risk too).
 - The multiplier auto-downgrades if the player's pool drops below the current tier's unlock threshold, so the dice button can never become un-rollable silently. See `clampMultiplierToPool`.

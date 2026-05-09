@@ -335,7 +335,7 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
       assert(x2, 'Expected ×2 tier to exist');
       assertEqual(x2!.unlocked, true, 'Expected ×2 unlocked at 10 dice');
       assertEqual(x5!.unlocked, true, 'Expected ×5 unlocked at 10 dice');
-      assertEqual(x10!.unlocked, true, 'Expected ×10 unlocked at 10 dice');
+      assertEqual(x10!.unlocked, false, 'Expected ×10 locked at 10 dice to preserve two-roll runway');
       assertEqual(x20!.unlocked, false, 'Expected ×20 locked at 10 dice');
     },
   },
@@ -343,21 +343,27 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
     name: 'multiplier: tiers unlock progressively with dice stash',
     run: () => {
       const tiers50 = resolveAvailableMultiplierTiers(50);
+      const tiers100 = resolveAvailableMultiplierTiers(100);
       const tiers250 = resolveAvailableMultiplierTiers(250);
       const tiers1000 = resolveAvailableMultiplierTiers(1_000);
+      const tiers2000 = resolveAvailableMultiplierTiers(2_000);
       const unlocked50 = tiers50.filter((t) => t.unlocked).map((t) => t.multiplier);
+      const unlocked100 = tiers100.filter((t) => t.unlocked).map((t) => t.multiplier);
       const unlocked250 = tiers250.filter((t) => t.unlocked).map((t) => t.multiplier);
       const unlocked1000 = tiers1000.filter((t) => t.unlocked).map((t) => t.multiplier);
+      const unlocked2000 = tiers2000.filter((t) => t.unlocked).map((t) => t.multiplier);
       assert(unlocked50.includes(1), 'Expected ×1 unlocked at 50 dice');
       assert(unlocked50.includes(2), 'Expected ×2 unlocked at 50 dice');
       assert(unlocked50.includes(3), 'Expected ×3 unlocked at 50 dice');
       assert(unlocked50.includes(10), 'Expected ×10 unlocked at 50 dice');
-      assert(unlocked50.includes(20), 'Expected ×20 unlocked at 50 dice');
-      assert(!unlocked50.includes(50), 'Expected ×50 locked until 250 dice');
+      assert(!unlocked50.includes(20), 'Expected ×20 locked until 100 dice');
+      assert(unlocked100.includes(20), 'Expected ×20 unlocked at 100 dice');
+      assert(!unlocked100.includes(50), 'Expected ×50 locked until 250 dice');
       assert(unlocked250.includes(50), 'Expected ×50 unlocked at 250 dice');
       assert(!unlocked250.includes(100), 'Expected ×100 locked until 1000 dice');
       assert(unlocked1000.includes(100), 'Expected ×100 unlocked at 1000 dice');
-      assert(unlocked1000.includes(200), 'Expected ×200 unlocked at 1000 dice');
+      assert(!unlocked1000.includes(200), 'Expected ×200 locked until 2000 dice');
+      assert(unlocked2000.includes(200), 'Expected ×200 unlocked at 2000 dice');
     },
   },
   {
@@ -365,10 +371,14 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
     run: () => {
       assertEqual(resolveMaxMultiplierForPool(0), 1, 'Expected max ×1 at 0 dice');
       assertEqual(resolveMaxMultiplierForPool(2), 2, 'Expected max ×2 at 2 dice');
-      assertEqual(resolveMaxMultiplierForPool(10), 10, 'Expected max ×10 at 10 dice');
+      assertEqual(resolveMaxMultiplierForPool(10), 5, 'Expected max ×5 before ×10 runway opens');
+      assertEqual(resolveMaxMultiplierForPool(20), 10, 'Expected max ×10 at 20 dice');
+      assertEqual(resolveMaxMultiplierForPool(99), 10, 'Expected max ×10 before ×20 opens');
+      assertEqual(resolveMaxMultiplierForPool(100), 20, 'Expected max ×20 at 100 dice');
       assertEqual(resolveMaxMultiplierForPool(249), 20, 'Expected max ×20 before ×50 opens');
       assertEqual(resolveMaxMultiplierForPool(250), 50, 'Expected max ×50 at 250 dice');
-      assertEqual(resolveMaxMultiplierForPool(1000), 200, 'Expected max ×200 at 1000 dice');
+      assertEqual(resolveMaxMultiplierForPool(1000), 100, 'Expected max ×100 at 1000 dice');
+      assertEqual(resolveMaxMultiplierForPool(2000), 200, 'Expected max ×200 at 2000 dice');
     },
   },
   {
@@ -384,7 +394,7 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
     name: 'multiplier: clampMultiplierToPool downgrades when pool drops',
     run: () => {
       // Player selected ×20 but only has 15 dice now — clamp to the highest affordable open tier.
-      assertEqual(clampMultiplierToPool(20, 15), 10, 'Expected clamp to ×10 at 15 dice');
+      assertEqual(clampMultiplierToPool(20, 15), 5, 'Expected clamp to ×5 at 15 dice');
       // Player selected ×5 with 5 dice — OK, they can afford it.
       assertEqual(clampMultiplierToPool(5, 5), 5, 'Expected ×5 stays at 5 dice');
       // Player selected ×50 but only has 200 dice — max they can use is ×20 until ×50 opens at 250.
