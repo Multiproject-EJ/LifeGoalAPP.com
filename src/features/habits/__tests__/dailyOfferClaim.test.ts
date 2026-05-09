@@ -18,11 +18,22 @@ function assertArrayEqual<T>(actual: T[], expected: T[], message: string): void 
 
 export async function runAllDailyOfferClaimTests(): Promise<void> {
   {
-    const key = buildDailyOfferClaimStorageKey('zen_tree_water_claimed', 'user-1', '2026-05-09');
+    const todayRowDayKey = '2026-05-09';
+    const key = buildDailyOfferClaimStorageKey('zen_tree_water_claimed', 'user-1', todayRowDayKey);
     assertEqual(
       key,
       'lifegoal:zen_tree_water_claimed:user-1:2026-05-09',
-      'claim storage key should use the supplied local day key',
+      'claim storage key should use the supplied Today row day key',
+    );
+  }
+
+  {
+    const firstDayKey = buildDailyOfferClaimStorageKey('feed_creatures_claimed', 'user-1', '2026-05-09');
+    const nextDayKey = buildDailyOfferClaimStorageKey('feed_creatures_claimed', 'user-1', '2026-05-10');
+    assertEqual(
+      firstDayKey === nextDayKey,
+      false,
+      'claim storage key should change when the central Today row day changes',
     );
   }
 

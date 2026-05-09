@@ -18,7 +18,7 @@ import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
 import { recordTelemetryEvent } from '../../services/telemetry';
-import { formatLocalYmd, type ActiveAdventMetaResult } from '../../services/treatCalendarService';
+import type { ActiveAdventMetaResult } from '../../services/treatCalendarService';
 import { XP_TO_GOLD_RATIO, convertXpToGold } from '../../constants/economy';
 import { PointsBadge } from '../../components/PointsBadge';
 import {
@@ -240,14 +240,6 @@ function getNextUtcMidnightMs(): number {
   const next = new Date(now);
   next.setUTCDate(now.getUTCDate() + 1);
   next.setUTCHours(0, 0, 0, 0);
-  return next.getTime();
-}
-
-function getNextLocalMidnightMs(): number {
-  const now = new Date();
-  const next = new Date(now);
-  next.setDate(now.getDate() + 1);
-  next.setHours(0, 0, 0, 0);
   return next.getTime();
 }
 
@@ -2523,16 +2515,14 @@ export function DailyHabitTracker({
     ? localStorage.getItem(eggHatchViewedStorageKey) === '1'
     : false;
 
-  const todayLocalDateKey = useMemo(() => formatLocalYmd(parseISODate(today)), [today]);
-
-  // Claim keys reset automatically each local day (the date string is part of the key).
+  // Claim keys use DailyHabitTracker's shared `today` key so they reset with the Today row.
   const zenTreeClaimedStorageKey = useMemo(
-    () => buildDailyOfferClaimStorageKey('zen_tree_water_claimed', session.user.id, todayLocalDateKey),
-    [session.user.id, todayLocalDateKey],
+    () => buildDailyOfferClaimStorageKey('zen_tree_water_claimed', session.user.id, today),
+    [session.user.id, today],
   );
   const feedCreaturesClaimedStorageKey = useMemo(
-    () => buildDailyOfferClaimStorageKey('feed_creatures_claimed', session.user.id, todayLocalDateKey),
-    [session.user.id, todayLocalDateKey],
+    () => buildDailyOfferClaimStorageKey('feed_creatures_claimed', session.user.id, today),
+    [session.user.id, today],
   );
 
   const islandRunCountdownExpiresAtMs = islandRunState.islandExpiresAtMs > islandOfferNowMs
@@ -2545,7 +2535,6 @@ export function DailyHabitTracker({
 
   const timeBoundOffers = useMemo<TimeBoundOfferItem[]>(() => {
     const nextUtcMidnight = getNextUtcMidnightMs();
-    const nextLocalMidnight = getNextLocalMidnightMs();
     const holidayCalendarLabel = activeHolidaySeason
       ? `${activeHolidaySeason.meta.displayName} Calendar`
       : 'Holiday Calendar';
@@ -2633,7 +2622,7 @@ export function DailyHabitTracker({
         id: 'zen_tree_water',
         label: 'Water Zen Tree',
         icon: '🌳',
-        expiresAtMs: nextLocalMidnight,
+        expiresAtMs: nextUtcMidnight,
         badgeLabelOverride: hasClaimedZenTreeToday ? '✓ Done' : 'Claim',
         isCollected: hasClaimedZenTreeToday,
         isVisible: true,
@@ -2645,7 +2634,7 @@ export function DailyHabitTracker({
         id: 'feed_creatures',
         label: 'Feed Creatures',
         icon: '🐾',
-        expiresAtMs: nextLocalMidnight,
+        expiresAtMs: nextUtcMidnight,
         badgeLabelOverride: hasClaimedFeedCreaturesToday ? '✓ Done' : 'Claim',
         isCollected: hasClaimedFeedCreaturesToday,
         isVisible: true,

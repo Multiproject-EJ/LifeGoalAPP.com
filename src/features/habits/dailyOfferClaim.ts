@@ -19,9 +19,9 @@ export interface RunDailyOfferClaimOptions {
 export function buildDailyOfferClaimStorageKey(
   offerKey: 'zen_tree_water_claimed' | 'feed_creatures_claimed',
   userId: string,
-  localDateKey: string,
+  dayKey: string,
 ): string {
-  return `lifegoal:${offerKey}:${userId}:${localDateKey}`;
+  return `lifegoal:${offerKey}:${userId}:${dayKey}`;
 }
 
 export async function runDailyOfferClaim(options: RunDailyOfferClaimOptions): Promise<boolean> {
