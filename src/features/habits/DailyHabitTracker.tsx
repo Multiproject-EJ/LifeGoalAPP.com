@@ -292,6 +292,7 @@ type DailyHabitTrackerProps = {
   pendingOfferToOpen?: TimeBoundOfferId | null;
   onPendingOfferHandled?: () => void;
   hiddenHabitIds?: string[];
+  collapseCheckboxUntilExpanded?: boolean;
   onOpenStarterQuest?: () => void;
   archetypeHand?: ArchetypeHand | null;
 };
@@ -637,6 +638,7 @@ export function DailyHabitTracker({
   pendingOfferToOpen,
   onPendingOfferHandled,
   hiddenHabitIds = [],
+  collapseCheckboxUntilExpanded = false,
   onOpenStarterQuest,
   archetypeHand,
 }: DailyHabitTrackerProps) {
@@ -5924,6 +5926,7 @@ export function DailyHabitTracker({
             const checkboxId = `habit-checkbox-${habit.id}`;
             const detailPanelId = `habit-details-${habit.id}`;
             const isExpanded = Boolean(expandedHabits[habit.id]);
+            const shouldCollapseCheckbox = collapseCheckboxUntilExpanded && !isExpanded;
             const isJustCompleted = justCompletedHabitId === habit.id;
             const feedbackClassName = isJustCompleted ? getHabitFeedbackClassName(habitFeedbackById[habit.id] ?? 'quick-win') : '';
             const linkedVisionImage = visionImagesByHabit.get(habit.id);
@@ -6213,7 +6216,7 @@ export function DailyHabitTracker({
                     }}
                   >
                     <div
-                      className={`habit-checklist__row ${isExpanded ? 'habit-checklist__row--expanded' : ''}`}
+                      className={`habit-checklist__row ${isExpanded ? 'habit-checklist__row--expanded' : ''} ${collapseCheckboxUntilExpanded ? 'habit-checklist__row--collapsible-checkbox' : ''}`}
                       role="button"
                       tabIndex={0}
                       aria-expanded={isExpanded}
@@ -6235,19 +6238,25 @@ export function DailyHabitTracker({
                         }
                       }}
                     >
-                      <input
-                        id={checkboxId}
-                        type="checkbox"
-                        className="habit-checklist__checkbox"
-                        checked={isCompleted}
-                        aria-label={`Mark ${habit.name} as ${isCompleted ? 'incomplete' : 'complete'}`}
-                        onClick={(event) => event.stopPropagation()}
-                        onChange={(event) => {
-                          event.stopPropagation();
-                          void toggleHabit(habit, event.currentTarget);
-                        }}
-                        disabled={isSaving || (!scheduledToday && !isCompleted)}
-                      />
+                      <span
+                        className="habit-checklist__checkbox-shell"
+                        aria-hidden={shouldCollapseCheckbox ? 'true' : undefined}
+                      >
+                        <input
+                          id={checkboxId}
+                          type="checkbox"
+                          className="habit-checklist__checkbox"
+                          checked={isCompleted}
+                          aria-label={`Mark ${habit.name} as ${isCompleted ? 'incomplete' : 'complete'}`}
+                          tabIndex={shouldCollapseCheckbox ? -1 : undefined}
+                          onClick={(event) => event.stopPropagation()}
+                          onChange={(event) => {
+                            event.stopPropagation();
+                            void toggleHabit(habit, event.currentTarget);
+                          }}
+                          disabled={shouldCollapseCheckbox || isSaving || (!scheduledToday && !isCompleted)}
+                        />
+                      </span>
                       <div className="habit-checklist__main">
                         <span className="habit-checklist__name">
                           {!isCompactView && habit.emoji ? (

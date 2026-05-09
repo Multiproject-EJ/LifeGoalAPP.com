@@ -59,6 +59,7 @@ export function MobileHabitHome({
         preferredCompactView={preferredCompactView}
         hideTimeBoundOffers={hideTimeBoundOffers}
         hiddenHabitIds={hiddenHabitIds}
+        collapseCheckboxUntilExpanded
         onOpenStarterQuest={onOpenStarterQuest}
         archetypeHand={archetypeHand}
       />

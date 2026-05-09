@@ -7799,6 +7799,47 @@ html.platform-ipad .workspace-shell__menu-edge {
   outline-offset: 2px;
 }
 
+.habit-checklist__checkbox-shell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.habit-checklist__row--collapsible-checkbox {
+  column-gap: 0;
+  row-gap: 0.65rem;
+}
+
+.habit-checklist__row--collapsible-checkbox .habit-checklist__checkbox-shell {
+  width: 0;
+  min-width: 0;
+  height: 2rem;
+  margin-right: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform: translateX(-0.25rem) scale(0.85);
+  transition:
+    width 0.2s ease,
+    min-width 0.2s ease,
+    margin-right 0.2s ease,
+    opacity 0.18s ease,
+    transform 0.2s ease;
+}
+
+.habit-checklist__row--collapsible-checkbox.habit-checklist__row--expanded .habit-checklist__checkbox-shell {
+  width: 2rem;
+  min-width: 2rem;
+  margin-right: 0.65rem;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0) scale(1);
+}
+
+.habit-checklist__row--collapsible-checkbox .habit-checklist__quest-btn {
+  margin-left: 0.65rem;
+}
+
 .habit-checklist__checkbox {
   width: 2rem;
   height: 2rem;
