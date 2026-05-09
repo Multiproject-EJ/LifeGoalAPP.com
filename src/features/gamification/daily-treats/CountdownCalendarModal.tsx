@@ -103,11 +103,11 @@ export const CountdownCalendarModal = ({
 
   // Load holiday preferences then derive the active advent window and season data
   useEffect(() => {
-    if (!isOpen) return;
     setRevealResult(null);
     setRevealState(null);
     setSeasonData(null);
     setActiveAdvent(undefined);
+    if (!isOpen) return;
     setScratchState(loadScratchCardState(userId));
 
     const loadData = async () => {

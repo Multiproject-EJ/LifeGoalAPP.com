@@ -4805,35 +4805,35 @@ export default function App({ forceAuthOnMount }: AppProps) {
       isAnyModalVisible ? ' app--auth-overlay' : ''
     }${islandFullscreenClassName}${mobileTopChromeClassName}`;
     return (
-      <div className={mobileHomeAppClassName}>
-        {shouldShowMobileTopChrome ? <MobileTopChrome deviceClass={mobileTopChromeDeviceClass} /> : null}
-        <div className="workspace-shell">
+        <div className={mobileHomeAppClassName}>
+          {shouldShowMobileTopChrome ? <MobileTopChrome deviceClass={mobileTopChromeDeviceClass} /> : null}
+          <div className="workspace-shell">
             <MobileHabitHome
               session={activeSession}
-            showPointsBadges={shouldShowPointsBadges}
+              showPointsBadges={shouldShowPointsBadges}
               onVisionRewardOpenChange={setIsVisionRewardOpen}
               profileStrengthSnapshot={profileStrengthSnapshot}
               profileStrengthSignals={profileStrengthSignals}
               personalitySummary={personalitySummary}
-             onOpenDailyTreat={launchDailyTreatsMenu}
-             onOpenHolidayCalendar={launchHolidayCalendar}
-             onOpenIslandRunStop={(stopId) => {
-               setIslandRunOpenStopParam(stopId);
-               setReopenGameBoardOverlayOnLevelWorldsClose(false);
-               setLevelWorldsEntryPanel('default');
-               setShowLevelWorldsFromEntry(true);
-             }}
-             onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
-             forceCompactView={!isGameModeActive}
-             preferredCompactView={!isGameModeActive}
-               hideTimeBoundOffers={!isGameModeActive}
-               activeHolidaySeason={activeHolidaySeason}
-               hasOpenedDailyTreatsToday={hasOpenedDailyTreatsToday}
-               hasOpenedHolidayCalendarToday={hasOpenedHolidayCalendarToday}
-               hiddenHabitIds={[]}
-               onOpenStarterQuest={openStarterQuestSheetFromToday}
-             />
-        </div>
+              onOpenDailyTreat={launchDailyTreatsMenu}
+              onOpenHolidayCalendar={launchHolidayCalendar}
+              onOpenIslandRunStop={(stopId) => {
+                setIslandRunOpenStopParam(stopId);
+                setReopenGameBoardOverlayOnLevelWorldsClose(false);
+                setLevelWorldsEntryPanel('default');
+                setShowLevelWorldsFromEntry(true);
+              }}
+              onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
+              forceCompactView={!isGameModeActive}
+              preferredCompactView={!isGameModeActive}
+              hideTimeBoundOffers={!isGameModeActive}
+              activeHolidaySeason={activeHolidaySeason}
+              hasOpenedDailyTreatsToday={hasOpenedDailyTreatsToday}
+              hasOpenedHolidayCalendarToday={hasOpenedHolidayCalendarToday}
+              hiddenHabitIds={[]}
+              onOpenStarterQuest={openStarterQuestSheetFromToday}
+            />
+          </div>
         {!showZenGardenFullScreen && !isConflictResolverFullscreen && (
           <MobileFooterNav
             items={mobileFooterNavItems}
