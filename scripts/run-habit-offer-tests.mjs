@@ -12,10 +12,10 @@ try {
   });
   writeFileSync(path.join(outDir, 'package.json'), JSON.stringify({ type: 'commonjs' }));
   const require = createRequire(import.meta.url);
-  const { runTimeBoundOfferSortTests } = require(
+  const { runHabitOfferTests } = require(
     path.join(outDir, 'features/habits/__tests__/timeBoundOfferSort.test.js'),
   );
-  runTimeBoundOfferSortTests();
+  await runHabitOfferTests();
   console.log('habit-offer-tests: all assertions passed');
 } finally {
   rmSync(outDir, { recursive: true, force: true });

@@ -12,6 +12,8 @@
     "noEmit": false
   },
   "include": [
+    "src/features/habits/dailyOfferClaim.ts",
+    "src/features/habits/__tests__/dailyOfferClaim.test.ts",
     "src/features/habits/timeBoundOfferSort.ts",
     "src/features/habits/__tests__/timeBoundOfferSort.test.ts"
   ]

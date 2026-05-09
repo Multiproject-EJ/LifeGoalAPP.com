@@ -18,7 +18,7 @@ import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
 import { recordTelemetryEvent } from '../../services/telemetry';
-import type { ActiveAdventMetaResult } from '../../services/treatCalendarService';
+import { formatLocalYmd, type ActiveAdventMetaResult } from '../../services/treatCalendarService';
 import { XP_TO_GOLD_RATIO, convertXpToGold } from '../../constants/economy';
 import { PointsBadge } from '../../components/PointsBadge';
 import {
@@ -126,6 +126,10 @@ import {
   resolveMinigameTicketSku,
 } from '../../services/minigameTicketStore';
 import { TimeBoundOfferRow, type TimeBoundOfferItem, type TimeBoundOfferId } from './TimeBoundOfferRow';
+import {
+  buildDailyOfferClaimStorageKey,
+  runDailyOfferClaim,
+} from './dailyOfferClaim';
 import { EVENT_IDS, type EventId } from '../gamification/level-worlds/services/islandRunEventEngine';
 import { generateIslandStopPlan } from '../gamification/level-worlds/services/islandRunStops';
 import { useIslandRunState } from '../gamification/level-worlds/hooks/useIslandRunState';
@@ -879,6 +883,8 @@ export function DailyHabitTracker({
   const [isFeedCreaturesClaiming, setIsFeedCreaturesClaiming] = useState(false);
   const [zenTreeClaimError, setZenTreeClaimError] = useState<string | null>(null);
   const [feedCreaturesClaimError, setFeedCreaturesClaimError] = useState<string | null>(null);
+  const zenTreeClaimInFlightRef = useRef(false);
+  const feedCreaturesClaimInFlightRef = useRef(false);
   const [visionStarCount, setVisionStarCount] = useState(0);
   const [isVisionVisualizationOpen, setIsVisionVisualizationOpen] = useState(false);
   const [visionVisualizationStep, setVisionVisualizationStep] = useState<1 | 2 | 3>(1);
@@ -2499,16 +2505,16 @@ export function DailyHabitTracker({
     ? localStorage.getItem(eggHatchViewedStorageKey) === '1'
     : false;
 
-  // Claim keys reset automatically each UTC day (the date string is part of the key).
+  const todayLocalDateKey = useMemo(() => formatLocalYmd(new Date()), [today]);
+
+  // Claim keys reset automatically each local day (the date string is part of the key).
   const zenTreeClaimedStorageKey = useMemo(
-    () => `lifegoal:zen_tree_water_claimed:${session.user.id}:${getTodayUtcDateKey()}`,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [session.user.id, today],
+    () => buildDailyOfferClaimStorageKey('zen_tree_water_claimed', session.user.id, todayLocalDateKey),
+    [session.user.id, todayLocalDateKey],
   );
   const feedCreaturesClaimedStorageKey = useMemo(
-    () => `lifegoal:feed_creatures_claimed:${session.user.id}:${getTodayUtcDateKey()}`,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [session.user.id, today],
+    () => buildDailyOfferClaimStorageKey('feed_creatures_claimed', session.user.id, todayLocalDateKey),
+    [session.user.id, todayLocalDateKey],
   );
 
   const islandRunCountdownExpiresAtMs = islandRunState.islandExpiresAtMs > islandOfferNowMs
@@ -2659,40 +2665,52 @@ export function DailyHabitTracker({
     setTodaysOfferCheckoutPending(false);
   }, []);
 
-  const handleClaimZenTree = useCallback(() => {
-    if (hasClaimedZenTreeToday || isZenTreeClaiming) return;
-    setIsZenTreeClaiming(true);
-    setZenTreeClaimError(null);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(zenTreeClaimedStorageKey, '1');
-    }
-    setHasClaimedZenTreeToday(true);
-    awardDailyTreatDice({
-      userId: session.user.id,
-      diceAmount: 15,
-      sourceLabel: 'Water the Zen Tree',
-      islandRunSession: session,
+  const handleClaimZenTree = useCallback(async () => {
+    await runDailyOfferClaim({
+      isClaimed: hasClaimedZenTreeToday,
+      isClaiming: isZenTreeClaiming,
+      inFlightRef: zenTreeClaimInFlightRef,
+      award: () => awardDailyTreatDice({
+        userId: session.user.id,
+        diceAmount: 15,
+        sourceLabel: 'Water the Zen Tree',
+        islandRunSession: session,
+      }),
+      markClaimed: () => {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(zenTreeClaimedStorageKey, '1');
+        }
+        setHasClaimedZenTreeToday(true);
+      },
+      closeModal: () => setIsZenTreeModalOpen(false),
+      setClaiming: setIsZenTreeClaiming,
+      setError: setZenTreeClaimError,
+      errorMessage: 'Unable to water the Zen Tree. Please try again.',
     });
-    setIsZenTreeClaiming(false);
-    setIsZenTreeModalOpen(false);
   }, [hasClaimedZenTreeToday, isZenTreeClaiming, zenTreeClaimedStorageKey, session]);
 
-  const handleClaimFeedCreatures = useCallback(() => {
-    if (hasClaimedFeedCreaturesToday || isFeedCreaturesClaiming) return;
-    setIsFeedCreaturesClaiming(true);
-    setFeedCreaturesClaimError(null);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(feedCreaturesClaimedStorageKey, '1');
-    }
-    setHasClaimedFeedCreaturesToday(true);
-    awardDailyTreatDice({
-      userId: session.user.id,
-      diceAmount: 15,
-      sourceLabel: 'Feed the Creatures',
-      islandRunSession: session,
+  const handleClaimFeedCreatures = useCallback(async () => {
+    await runDailyOfferClaim({
+      isClaimed: hasClaimedFeedCreaturesToday,
+      isClaiming: isFeedCreaturesClaiming,
+      inFlightRef: feedCreaturesClaimInFlightRef,
+      award: () => awardDailyTreatDice({
+        userId: session.user.id,
+        diceAmount: 15,
+        sourceLabel: 'Feed the Creatures',
+        islandRunSession: session,
+      }),
+      markClaimed: () => {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(feedCreaturesClaimedStorageKey, '1');
+        }
+        setHasClaimedFeedCreaturesToday(true);
+      },
+      closeModal: () => setIsFeedCreaturesModalOpen(false),
+      setClaiming: setIsFeedCreaturesClaiming,
+      setError: setFeedCreaturesClaimError,
+      errorMessage: 'Unable to feed the creatures. Please try again.',
     });
-    setIsFeedCreaturesClaiming(false);
-    setIsFeedCreaturesModalOpen(false);
   }, [hasClaimedFeedCreaturesToday, isFeedCreaturesClaiming, feedCreaturesClaimedStorageKey, session]);
 
   const startTodaysOfferCheckout = useCallback(async () => {
