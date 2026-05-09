@@ -864,7 +864,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const todayDailyTreatsKey = getTodayDateKey();
   const hasOpenedDailyTreatsToday = dailyTreatsFirstVisitDate === todayDailyTreatsKey;
   const refreshHolidayCalendarOpenedState = useCallback(async () => {
-    const userId = activeSession?.user?.id;
+    const userId = supabaseSession?.user?.id;
     const holidayKey = activeHolidaySeason?.meta.holiday_key;
     if (!userId || !holidayKey) {
       setHasOpenedHolidayCalendarToday(false);
@@ -881,7 +881,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     const freeOpened = season.progress?.opened_days.includes(todayIndex) ?? false;
     const bonusOpened = season.progress?.opened_bonus_days?.includes(todayIndex) ?? false;
     setHasOpenedHolidayCalendarToday(freeOpened || bonusOpened);
-  }, [activeHolidaySeason?.meta.holiday_key, activeSession?.user?.id]);
+  }, [activeHolidaySeason?.meta.holiday_key, supabaseSession?.user?.id]);
 
   useEffect(() => {
     void refreshHolidayCalendarOpenedState();
