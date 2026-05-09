@@ -171,11 +171,13 @@ export function resolveNextRewardKind(claimCount: number): RewardBarRewardKind {
  * Each tier defines a multiplier and the minimum dice pool required to unlock it.
  * The base cost per roll is DICE_PER_ROLL (1). At multiplier ×N, cost = 1×N.
  *
- * Tier gates are tuned for a prototype with regen ceiling ~30–160 dice:
+ * Tier gates are tuned for fast-session agency:
  *  - ×1 is always available (0 dice).
- *  - Early game: ×2, ×3, ×5 unlock at modest thresholds.
- *  - Mid game: ×10, ×20, ×50 for players who have been hoarding.
- *  - Late / whale: ×100, ×200 for very large stashes.
+ *  - Early game: ×2/×3/×5 unlock as soon as the player can afford one roll.
+ *  - Momentum tier: ×10 opens at 20 dice so players get at least two big rolls.
+ *  - Burst tiers: ×20/×50 require about five rolls of runway.
+ *  - High game: ×100 opens at 1,000 dice and ×200 at 2,000 dice so
+ *    premium multipliers feel powerful without creating one-tap burnout.
  */
 export type MultiplierTier = {
   multiplier: number;
@@ -185,14 +187,14 @@ export type MultiplierTier = {
 
 export const MULTIPLIER_TIERS: readonly MultiplierTier[] = [
   { multiplier: 1,   minDice: 0 },
-  { multiplier: 2,   minDice: 20 },
-  { multiplier: 3,   minDice: 50 },
-  { multiplier: 5,   minDice: 100 },
-  { multiplier: 10,  minDice: 200 },
-  { multiplier: 20,  minDice: 500 },
-  { multiplier: 50,  minDice: 1_000 },
-  { multiplier: 100, minDice: 2_000 },
-  { multiplier: 200, minDice: 5_000 },
+  { multiplier: 2,   minDice: 2 },
+  { multiplier: 3,   minDice: 3 },
+  { multiplier: 5,   minDice: 5 },
+  { multiplier: 10,  minDice: 20 },
+  { multiplier: 20,  minDice: 100 },
+  { multiplier: 50,  minDice: 250 },
+  { multiplier: 100, minDice: 1_000 },
+  { multiplier: 200, minDice: 2_000 },
 ] as const;
 
 /**

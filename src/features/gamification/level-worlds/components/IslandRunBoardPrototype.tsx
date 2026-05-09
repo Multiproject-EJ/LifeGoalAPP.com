@@ -9039,7 +9039,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               </p>
             )}
             <p className="island-stop-modal__copy" style={{ opacity: 0.7, fontSize: '0.85em' }}>
-              The bar escalates: threshold grows each fill. Higher multipliers unlock with more dice (×2 at 20, ×5 at 100, ×10 at 200, ×50 at 1k, ×100 at 2k). Higher multipliers cost more dice per roll but fill the bar faster!
+              The bar escalates: threshold grows each fill. Higher multipliers unlock quickly for small boosts (×2 at 2, ×3 at 3, ×5 at 5), then add runway for bigger bursts (×10 at 20, ×20 at 100, ×50 at 250, ×100 at 1k, ×200 at 2k). Higher multipliers cost more dice per roll but fill the bar faster!
             </p>
             {minigameTicketCheckoutError ? (
               <p className="island-run-prototype__error">{minigameTicketCheckoutError}</p>
