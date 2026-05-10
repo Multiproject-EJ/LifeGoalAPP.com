@@ -11,11 +11,6 @@ import {
 } from 'react';
 import bioDayChartIcon from './assets/theme-icons/bio-day-chart.svg';
 import bioDayCheckIcon from './assets/theme-icons/bio-day-check.svg';
-import lifespinIcon from './assets/Lifespinicon.webp';
-import dailyTreatsContainerMain from './assets/Daily_treat_containermain.webp';
-import dailyTreatsSpinWheel from './assets/Daily_treats_spinnwheel.webp';
-import dailyTreatsHearts from './assets/Daily_treats_hearts.webp';
-import dailyTreatsCalendarOpen from './assets/daily_treats_calendaropen.webp';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
 import { GoalWorkspace, LifeGoalsSection, MyQuestHub } from './features/goals';
@@ -71,7 +66,7 @@ import { LuckyRollBoard } from './features/gamification/daily-treats/LuckyRollBo
 import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorldsHub';
 import { getIslandBackgroundImageSrc } from './features/gamification/level-worlds/services/islandBackgrounds';
 import { fetchHolidayPreferences } from './services/holidayPreferences';
-import { buildPreviewAdventMeta, fetchCurrentSeason, getActiveAdventMeta, type ActiveAdventMetaResult, type HolidayKey } from './services/treatCalendarService';
+import { buildPreviewAdventMeta, fetchCurrentSeason, getActiveAdventMeta, getPersonalQuestSeason, type ActiveAdventMetaResult, type HolidayKey } from './services/treatCalendarService';
 import { HOLIDAY_PREVIEW_LAUNCH_EVENT, type HolidayPreviewLaunchDetail } from './services/holidayPreviewEvents';
 import {
   isIslandRunEntryDebugEnabled,
@@ -223,7 +218,6 @@ const PROFILE_STRENGTH_MENU_AREAS: Partial<Record<MobileMenuNavItem['id'], AreaK
 const PROFILE_STRENGTH_HOLD_DURATION_MS = 520;
 const PROFILE_STRENGTH_HOLD_SLOP_PX = 8;
 const DAILY_TREATS_SEEN_KEY = 'lifegoal_daily_treats_seen';
-const DAILY_TREATS_DAILY_VISIT_KEY = 'lifegoal_daily_treats_daily_visit';
 const HABITS_CREATED_EVENT = 'habitgame:habits-created';
 
 function formatTimerSeconds(seconds: number): string {
@@ -585,11 +579,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [aiCoachStarterQuestion, setAiCoachStarterQuestion] = useState<string | undefined>(undefined);
   const [journalLaunchRequest, setJournalLaunchRequest] = useState<{ type: JournalType; openComposer?: boolean; requestId: number } | null>(null);
   const [showDailySpinWheel, setShowDailySpinWheel] = useState(false);
-  const [showDailyTreatsMenu, setShowDailyTreatsMenu] = useState(false);
-  const [showDailyTreatsCongrats, setShowDailyTreatsCongrats] = useState(false);
   const [showQuickGainsMenu, setShowQuickGainsMenu] = useState(false);
   const [quickGainsHabitText, setQuickGainsHabitText] = useState('');
-  const [pendingDailyTreatsOpen, setPendingDailyTreatsOpen] = useState(false);
   const [showLuckyRoll, setShowLuckyRoll] = useState(false);
   const [showLevelWorldsFromEntry, setShowLevelWorldsFromEntry] = useState(false);
   const [levelWorldsEntryPanel, setLevelWorldsEntryPanel] = useState<'default' | 'sanctuary'>('default');
@@ -612,7 +603,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [isHolidaySeasonDialogPreview, setIsHolidaySeasonDialogPreview] = useState(false);
   const [reopenGameOverlayOnRewardClose, setReopenGameOverlayOnRewardClose] = useState(false);
   const [hasSeenDailyTreats, setHasSeenDailyTreats] = useState(false);
-  const [dailyTreatsFirstVisitDate, setDailyTreatsFirstVisitDate] = useState<string | null>(null);
+  const [hasOpenedDailyTreatsToday, setHasOpenedDailyTreatsToday] = useState(false);
   const [hasOpenedHolidayCalendarToday, setHasOpenedHolidayCalendarToday] = useState(false);
   const [isMobileFooterCollapsed, setIsMobileFooterCollapsed] = useState(false);
   const [isMobileFooterSnapActive, setIsMobileFooterSnapActive] = useState(false);
@@ -656,7 +647,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     setHasSeenDailyTreats(window.localStorage.getItem(DAILY_TREATS_SEEN_KEY) === 'true');
-    setDailyTreatsFirstVisitDate(window.localStorage.getItem(DAILY_TREATS_DAILY_VISIT_KEY));
   }, []);
 
   useEffect(() => {
@@ -682,8 +672,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
       window.removeEventListener('storage', syncTimerSession);
     };
   }, []);
-
-  const getTodayDateKey = useCallback(() => new Date().toISOString().split('T')[0], []);
 
   const markDailyTreatsSeen = useCallback(() => {
     setHasSeenDailyTreats(true);
@@ -725,14 +713,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     window.history.replaceState(window.history.state, '', `${url.pathname}${nextSearch}${url.hash}`);
   }, []);
 
-  const markDailyTreatsDailyVisit = useCallback(() => {
-    const todayKey = getTodayDateKey();
-    setDailyTreatsFirstVisitDate(todayKey);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(DAILY_TREATS_DAILY_VISIT_KEY, todayKey);
-    }
-  }, [getTodayDateKey]);
-
   const openPersonalQuestDailyTreatsCalendar = useCallback(() => {
     setHolidayPreviewKey(null);
     setCalendarLaunchMode('personal_quest');
@@ -741,42 +721,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const launchDailyTreatsMenu = useCallback(() => {
     markDailyTreatsSeen();
-    const todayKey = getTodayDateKey();
-    const isFirstDailyTreatVisitToday = dailyTreatsFirstVisitDate !== todayKey;
-    if (isFirstDailyTreatVisitToday) {
-      markDailyTreatsDailyVisit();
-    }
-
-    if (isMobileMenuImageActive && isFirstDailyTreatVisitToday) {
-      setPendingDailyTreatsOpen(true);
-      setShowDailyTreatsCongrats(true);
-      return;
-    }
-
-    setPendingDailyTreatsOpen(false);
     openPersonalQuestDailyTreatsCalendar();
-  }, [
-    dailyTreatsFirstVisitDate,
-    getTodayDateKey,
-    isMobileMenuImageActive,
-    markDailyTreatsDailyVisit,
-    markDailyTreatsSeen,
-    openPersonalQuestDailyTreatsCalendar,
-  ]);
+  }, [markDailyTreatsSeen, openPersonalQuestDailyTreatsCalendar]);
 
   const launchHolidayCalendar = useCallback(() => {
     setHolidayPreviewKey(null);
     setCalendarLaunchMode('holiday');
     setShowCalendarPlaceholder(true);
   }, []);
-
-  const handleDailyTreatsCongratsClose = useCallback(() => {
-    setShowDailyTreatsCongrats(false);
-    if (pendingDailyTreatsOpen) {
-      setPendingDailyTreatsOpen(false);
-      openPersonalQuestDailyTreatsCalendar();
-    }
-  }, [openPersonalQuestDailyTreatsCalendar, pendingDailyTreatsOpen]);
 
   const {
     earnXP,
@@ -860,16 +812,32 @@ export default function App({ forceAuthOnMount }: AppProps) {
     return formatGoldRange(minEssence, maxEssence);
   }, []);
   
-  // Dynamic daily treats inventory based on collection status
-  const dailyTreatsInventory = useMemo(() => {
-    return {
-      spinsRemaining: Math.max(0, Math.floor(spinsAvailable)),
-      hatchesRemaining: 1,
-    };
-  }, [spinsAvailable]);
-  
-  const todayDailyTreatsKey = getTodayDateKey();
-  const hasOpenedDailyTreatsToday = dailyTreatsFirstVisitDate === todayDailyTreatsKey;
+  const overlaySpinsRemaining = Math.max(0, Math.floor(spinsAvailable));
+
+  const refreshDailyTreatsOpenedState = useCallback(async () => {
+    const userId = supabaseSession?.user?.id;
+    if (!userId) {
+      setHasOpenedDailyTreatsToday(false);
+      return;
+    }
+
+    try {
+      const { data: season } = await getPersonalQuestSeason(userId);
+      if (!season || season.season.season_type !== 'personal_quest') {
+        setHasOpenedDailyTreatsToday(false);
+        return;
+      }
+
+      const todayIndex = season.today_day_index;
+      const openedDays = Array.isArray(season.progress?.opened_days)
+        ? season.progress.opened_days
+        : [];
+      setHasOpenedDailyTreatsToday(openedDays.includes(todayIndex));
+    } catch {
+      setHasOpenedDailyTreatsToday(false);
+    }
+  }, [supabaseSession?.user?.id]);
+
   const refreshHolidayCalendarOpenedState = useCallback(async () => {
     const userId = supabaseSession?.user?.id;
     const holidayKey = activeHolidaySeason?.meta.holiday_key;
@@ -891,11 +859,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, [activeHolidaySeason?.meta.holiday_key, supabaseSession?.user?.id]);
 
   useEffect(() => {
+    void refreshDailyTreatsOpenedState();
     void refreshHolidayCalendarOpenedState();
-  }, [refreshHolidayCalendarOpenedState]);
+  }, [refreshDailyTreatsOpenedState, refreshHolidayCalendarOpenedState]);
 
   useEffect(() => {
     const handleVisibilityOrFocus = () => {
+      void refreshDailyTreatsOpenedState();
       void refreshHolidayCalendarOpenedState();
     };
 
@@ -907,7 +877,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
       window.removeEventListener('lifegoal:treat-calendar-opened', handleVisibilityOrFocus);
     };
-  }, [refreshHolidayCalendarOpenedState]);
+  }, [refreshDailyTreatsOpenedState, refreshHolidayCalendarOpenedState]);
   const isProfileStrengthDebugActive = useMemo(() => isProfileStrengthDebugEnabled(), []);
 
   const workspaceNavItems = useMemo(() => {
@@ -4317,7 +4287,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               <div className="mobile-gamification-overlay__stat-content">
                 <p className="mobile-gamification-overlay__stat-label">Daily Treats</p>
                 <p className="mobile-gamification-overlay__stat-hint">
-                  Open your treats menu for spins, leagues, and countdown secrets.
+                  Open your Personal Quest calendar for today's treat.
                 </p>
               </div>
             </button>
@@ -4370,223 +4340,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
       </div>
     ) : null;
 
-  const dailyTreatsCongratsModal = showDailyTreatsCongrats ? (
-    <div
-      className="daily-treats-congrats"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Holiday calendar bonus unlock"
-    >
-      <div
-        className="daily-treats-congrats__backdrop"
-        onClick={handleDailyTreatsCongratsClose}
-        role="presentation"
-      />
-      <div className="daily-treats-congrats__dialog">
-        <button
-          type="button"
-          className="daily-treats-congrats__close"
-          aria-label="Close holiday calendar bonus"
-          onClick={handleDailyTreatsCongratsClose}
-        >
-          ×
-        </button>
-        <div className="daily-treats-congrats__content">
-          <img
-            className="daily-treats-congrats__hero-icon"
-            src={lifespinIcon}
-            alt="Life Spin icon"
-          />
-          <p className="daily-treats-congrats__eyebrow">Daily Treats</p>
-          <h3 className="daily-treats-congrats__title">Congrats on your first visit today!</h3>
-          <p className="daily-treats-congrats__subtitle">
-            Your controller is powered up with fresh rewards.
-          </p>
-          <div className="daily-treats-congrats__rewards">
-            <div className="daily-treats-congrats__reward">
-              <span className="daily-treats-congrats__reward-icon" aria-hidden="true">
-                🎟️
-              </span>
-              <div>
-                <p className="daily-treats-congrats__reward-title">2 Free Spin Tickets</p>
-                <p className="daily-treats-congrats__reward-detail">Jump into Life Spin with bonus turns.</p>
-              </div>
-            </div>
-            <div className="daily-treats-congrats__reward">
-              <span className="daily-treats-congrats__reward-icon" aria-hidden="true">
-                🎲
-              </span>
-              <div>
-                <p className="daily-treats-congrats__reward-title">25 Bonus Dice</p>
-                <p className="daily-treats-congrats__reward-detail">Fuel your daily game runs and boosts.</p>
-              </div>
-            </div>
-            <div className="daily-treats-congrats__reward">
-              <span className="daily-treats-congrats__reward-icon" aria-hidden="true">
-                🥚
-              </span>
-              <div>
-                <p className="daily-treats-congrats__reward-title">New Daily Hatch</p>
-                <p className="daily-treats-congrats__reward-detail">
-                  Day 25 countdown stays ready for the next reveal.
-                </p>
-              </div>
-            </div>
-          </div>
-          <button
-            type="button"
-            className="daily-treats-congrats__button"
-            onClick={handleDailyTreatsCongratsClose}
-          >
-            Claim today’s treats
-          </button>
-        </div>
-      </div>
-    </div>
-  ) : null;
-
-  const dailyTreatsModal = showDailyTreatsMenu ? (
-    <div className="daily-treats-modal" role="dialog" aria-modal="true" aria-label="Holiday calendar treats">
-      <div
-        className="daily-treats-modal__backdrop"
-        onClick={() => setShowDailyTreatsMenu(false)}
-        role="presentation"
-      />
-      <div
-        className="daily-treats-modal__dialog"
-        style={{ backgroundImage: `url(${dailyTreatsContainerMain})` }}
-      >
-        <button
-          type="button"
-          className="daily-treats-modal__close"
-          aria-label="Close holiday calendar menu"
-          onClick={() => setShowDailyTreatsMenu(false)}
-        >
-          ×
-        </button>
-        <div className="daily-treats-modal__content">
-          <div className="daily-treats-modal__cards">
-            <div className="daily-treats-modal__card-stack">
-              <button
-                type="button"
-                className={`daily-treats-modal__card${
-                  dailyTreatsInventory.spinsRemaining === 0
-                    ? ' daily-treats-modal__card--spent'
-                    : hasOpenedDailyTreatsToday
-                      ? ' daily-treats-modal__card--opened'
-                      : ' daily-treats-modal__card--active'
-                }`}
-                disabled={dailyTreatsInventory.spinsRemaining === 0}
-                onClick={() => {
-                  setShowDailyTreatsMenu(false);
-                  setReopenGameOverlayOnRewardClose(false);
-                  setShowDailySpinWheel(true);
-                }}
-              >
-                <span className="daily-treats-modal__card-image" aria-hidden="true">
-                  <img src={dailyTreatsSpinWheel} alt="" />
-                </span>
-                {dailyTreatsInventory.spinsRemaining > 0 ? (
-                  <span className="daily-treats-modal__card-indicator" aria-label="Available spins">
-                    {dailyTreatsInventory.spinsRemaining}
-                  </span>
-                ) : null}
-              </button>
-              <button
-                type="button"
-                className="daily-treats-modal__card-action daily-treats-modal__card-action--spin"
-                disabled={dailyTreatsInventory.spinsRemaining === 0}
-                onClick={() => {
-                  setShowDailyTreatsMenu(false);
-                  setReopenGameOverlayOnRewardClose(false);
-                  setShowDailySpinWheel(true);
-                }}
-              >
-                SPIN
-              </button>
-            </div>
-            <div className="daily-treats-modal__card-stack">
-              <button
-                type="button"
-                className={`daily-treats-modal__card${
-                  hasOpenedDailyTreatsToday
-                    ? ' daily-treats-modal__card--opened'
-                    : ' daily-treats-modal__card--active'
-                }`}
-                onClick={() => {
-                  setShowDailyTreatsMenu(false);
-                  setReopenGameOverlayOnRewardClose(false);
-                  setShowLuckyRoll(true);
-                }}
-              >
-                <span className="daily-treats-modal__card-image" aria-hidden="true">
-                  <img src={dailyTreatsHearts} alt="" />
-                </span>
-              </button>
-              <button
-                type="button"
-                className="daily-treats-modal__card-action"
-                onClick={() => {
-                  setShowDailyTreatsMenu(false);
-                  setReopenGameOverlayOnRewardClose(false);
-                  setShowLuckyRoll(true);
-                }}
-              >
-                PLAY
-              </button>
-            </div>
-            <div className="daily-treats-modal__card-stack">
-              <button
-                type="button"
-                className={`daily-treats-modal__card${
-                  dailyTreatsInventory.hatchesRemaining === 0
-                    ? ' daily-treats-modal__card--spent'
-                    : hasOpenedDailyTreatsToday
-                      ? ' daily-treats-modal__card--opened'
-                      : ' daily-treats-modal__card--active'
-                }`}
-                disabled={dailyTreatsInventory.hatchesRemaining === 0}
-                onClick={() => {
-                  setShowDailyTreatsMenu(false);
-                  setReopenGameOverlayOnRewardClose(false);
-                  setCalendarLaunchMode('auto');
-                  setShowCalendarPlaceholder(true);
-                }}
-              >
-                <span className="daily-treats-modal__card-image" aria-hidden="true">
-                  <img src={dailyTreatsCalendarOpen} alt="" />
-                </span>
-                {dailyTreatsInventory.hatchesRemaining > 0 ? (
-                  <span className="daily-treats-modal__card-indicator" aria-label="Today's treat ready" />
-                ) : null}
-              </button>
-              <button
-                type="button"
-                className="daily-treats-modal__card-action"
-                disabled={dailyTreatsInventory.hatchesRemaining === 0}
-                onClick={() => {
-                  setShowDailyTreatsMenu(false);
-                  setReopenGameOverlayOnRewardClose(false);
-                  setCalendarLaunchMode('auto');
-                  setShowCalendarPlaceholder(true);
-                }}
-              >
-                REVEAL
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  ) : null;
-
   const quickGainsOptionalItems = [
     ...(!hasSeenDailyTreats
       ? [
           {
             id: 'daily-treats',
             title: 'Open Daily Treats',
-            description: 'Open your Daily Treats menu and claim your daily rewards.',
+            description: 'Open your Personal Quest calendar and claim today’s treat.',
           },
         ]
       : []),
@@ -4925,7 +4685,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           activeTimedEventExpiresAtMs={overlayActiveTimedEventExpiresAtMs}
           islandNumber={overlayIslandNumber}
           islandDisplayName={overlayIslandDisplayName}
-          spinsRemaining={dailyTreatsInventory.spinsRemaining}
+          spinsRemaining={overlaySpinsRemaining}
           islandSceneSrc={currentIslandBackgroundSrc}
           islandTimeLabel={islandTimeLabelForOverlay}
           spinWinResetAtMs={spinWinResetAtMs}
@@ -4951,8 +4711,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
           <NewDailySpinWheel session={activeSession} onClose={() => handleRewardModalClose(() => setShowDailySpinWheel(false))} />
         )}
         {quickGainsModal}
-        {dailyTreatsCongratsModal}
-        {dailyTreatsModal}
         {luckyRollModal}
         {countdownCalendarModal}
         {showMobileFeedbackModal ? (
@@ -5247,7 +5005,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         activeTimedEventExpiresAtMs={overlayActiveTimedEventExpiresAtMs}
         islandNumber={overlayIslandNumber}
         islandDisplayName={overlayIslandDisplayName}
-        spinsRemaining={dailyTreatsInventory.spinsRemaining}
+        spinsRemaining={overlaySpinsRemaining}
         islandSceneSrc={currentIslandBackgroundSrc}
         islandTimeLabel={islandTimeLabelForOverlay}
         spinWinResetAtMs={spinWinResetAtMs}
@@ -5309,7 +5067,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
         <NewDailySpinWheel session={activeSession} onClose={() => handleRewardModalClose(() => setShowDailySpinWheel(false))} />
       )}
       {quickGainsModal}
-      {dailyTreatsModal}
       {luckyRollModal}
       {countdownCalendarModal}
       {starterQuestSheet}
