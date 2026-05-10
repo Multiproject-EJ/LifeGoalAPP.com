@@ -338,18 +338,18 @@ export const CountdownCalendarModal = ({
           aria-modal="true"
           aria-label="Holiday Calendar unavailable"
         >
-          <div className="daily-treats-modal__backdrop" onClick={onClose} role="presentation" />
-          <div className="daily-treats-modal__dialog daily-treats-calendar__dialog">
+          <div className="daily-treats-calendar__backdrop" onClick={onClose} role="presentation" />
+          <div className="daily-treats-calendar__dialog">
             <button
               type="button"
-              className="daily-treats-modal__close"
+              className="daily-treats-calendar__close"
               aria-label="Close"
               onClick={onClose}
             >
               ×
             </button>
             <div className="daily-treats-calendar__content">
-              <p className="daily-treats-modal__eyebrow">Holiday Calendar</p>
+              <p className="daily-treats-calendar__eyebrow">Holiday Calendar</p>
               <h3 className="daily-treats-calendar__title">No active holiday season</h3>
               <p className="daily-treats-calendar__subtitle">
                 Check back during an enabled holiday countdown to open doors here.
@@ -370,18 +370,18 @@ export const CountdownCalendarModal = ({
         aria-modal="true"
         aria-label="Personal Quest Calendar"
       >
-        <div className="daily-treats-modal__backdrop" onClick={onClose} role="presentation" />
-        <div className="daily-treats-modal__dialog daily-treats-calendar__dialog">
+        <div className="daily-treats-calendar__backdrop" onClick={onClose} role="presentation" />
+        <div className="daily-treats-calendar__dialog">
           <button
             type="button"
-            className="daily-treats-modal__close"
+            className="daily-treats-calendar__close"
             aria-label="Close"
             onClick={onClose}
           >
             ×
           </button>
           <div className="daily-treats-calendar__content">
-            <p className="daily-treats-modal__eyebrow">Personal Quest</p>
+            <p className="daily-treats-calendar__eyebrow">Personal Quest</p>
             <h3 className="daily-treats-calendar__title">🧭 Weekly Sprint</h3>
             <p className="daily-treats-calendar__subtitle">
               Sign in to access your Personal Quest Calendar and earn rewards every day!
@@ -449,10 +449,10 @@ export const CountdownCalendarModal = ({
         aria-modal="true"
         aria-label={`Revealing Day ${dayIndex} ${doorType} door`}
       >
-        <div className="daily-treats-modal__backdrop" role="presentation" />
-        <div className="daily-treats-modal__dialog daily-treats-calendar__dialog">
+        <div className="daily-treats-calendar__backdrop" role="presentation" />
+        <div className="daily-treats-calendar__dialog">
           <div className="daily-treats-calendar__content">
-            <p className="daily-treats-modal__eyebrow">
+            <p className="daily-treats-calendar__eyebrow">
               {doorType === 'bonus' ? '🎁 Bonus Door' : 'Daily Door'}
             </p>
             <h3 className="daily-treats-calendar__title">Day {dayIndex}</h3>
@@ -507,9 +507,9 @@ export const CountdownCalendarModal = ({
       aria-modal="true"
       aria-label={`${themeName} calendar`}
     >
-      <div className="daily-treats-modal__backdrop" onClick={onClose} role="presentation" />
+      <div className="daily-treats-calendar__backdrop" onClick={onClose} role="presentation" />
       <div
-        className={`daily-treats-modal__dialog daily-treats-calendar__dialog${
+        className={`daily-treats-calendar__dialog${
           calendarBackgroundUrl ? ' daily-treats-calendar__dialog--image' : ''
         }`}
         style={
@@ -525,7 +525,7 @@ export const CountdownCalendarModal = ({
       >
         <button
           type="button"
-          className="daily-treats-modal__close"
+          className="daily-treats-calendar__close"
           aria-label="Close calendar"
           onClick={onClose}
         >
@@ -542,7 +542,7 @@ export const CountdownCalendarModal = ({
               {doorError}
             </div>
           )}
-          <p className="daily-treats-modal__eyebrow">
+          <p className="daily-treats-calendar__eyebrow">
             {isPersonalQuest ? 'Personal Quest' : (activeAdvent ? `${activeAdvent.meta.displayName} Calendar` : 'Treat Calendar')}
           </p>
           {isPersonalQuest ? (

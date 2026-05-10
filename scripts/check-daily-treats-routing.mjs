@@ -4,7 +4,9 @@ import { dirname, resolve } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const appPath = resolve(__dirname, '../src/App.tsx');
+const stylesPath = resolve(__dirname, '../src/index.css');
 const source = readFileSync(appPath, 'utf8');
+const styles = readFileSync(stylesPath, 'utf8');
 
 function assert(condition, message) {
   if (!condition) {
@@ -116,6 +118,14 @@ assert(
 assert(
   !source.includes('dailyTreatsModal'),
   'Old Daily Treats 3-card hub modal should be removed.',
+);
+assert(
+  !styles.includes('daily-treats-modal'),
+  'Old Daily Treats 3-card hub modal CSS should be removed.',
+);
+assert(
+  !styles.includes('daily-treats-placeholder'),
+  'Old Daily Treats placeholder hub CSS should be removed.',
 );
 
 console.log('daily-treats-routing: all assertions passed');
