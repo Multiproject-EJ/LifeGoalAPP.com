@@ -1,20 +1,27 @@
 import type { Session } from '@supabase/supabase-js';
 
-const ISLAND_RUN_INTERNAL_TESTER_EMAILS = new Set([
-  'josefsen.eivind@gmail.com',
-]);
-
 function normalizeEmail(email: string | null | undefined): string {
   return typeof email === 'string' ? email.trim().toLowerCase() : '';
 }
 
+function readAllowedInternalTesterEmails(): Set<string> {
+  return new Set(
+    (import.meta.env.VITE_ISLAND_RUN_INTERNAL_TESTER_EMAILS ?? '')
+      .split(',')
+      .map(normalizeEmail)
+      .filter(Boolean),
+  );
+}
+
 export function isAllowedIslandRunInternalTester(session: Session | null | undefined): boolean {
-  return ISLAND_RUN_INTERNAL_TESTER_EMAILS.has(normalizeEmail(session?.user?.email));
+  return readAllowedInternalTesterEmails().has(normalizeEmail(session?.user?.email));
 }
 
 export function isIslandRunInternalDevToolsBuildEnabled(): boolean {
-  return Boolean(import.meta.env.DEV)
-    || import.meta.env.VITE_ENABLE_ISLAND_RUN_INTERNAL_DEV_TOOLS === 'true';
+  return Boolean(
+    import.meta.env.DEV
+      || import.meta.env.VITE_ENABLE_ISLAND_RUN_INTERNAL_DEV_TOOLS === 'true',
+  );
 }
 
 export function isIslandRunInternalDevToolsEnabled(

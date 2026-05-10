@@ -25,6 +25,7 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_ANON_KEY?: string;
   readonly VITE_SUPABASE_REDIRECT_URL?: string;
   readonly VITE_ENABLE_ISLAND_RUN_INTERNAL_DEV_TOOLS?: string;
+  readonly VITE_ISLAND_RUN_INTERNAL_TESTER_EMAILS?: string;
 }
 
 interface ImportMeta {

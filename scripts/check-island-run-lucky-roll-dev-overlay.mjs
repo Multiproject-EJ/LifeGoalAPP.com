@@ -30,8 +30,9 @@ requireIncludes('board', board, 'showDevLuckyRollOverlay && isLuckyRollInternalD
 requireIncludes('board', board, 'onOpenLuckyRollDevOverlay={handleOpenDevLuckyRollOverlay}');
 requireIncludes('debug panel', debugPanel, 'Open Lucky Roll overlay');
 requireIncludes('internal dev tools', internalDevTools, 'VITE_ENABLE_ISLAND_RUN_INTERNAL_DEV_TOOLS');
+requireIncludes('internal dev tools', internalDevTools, 'VITE_ISLAND_RUN_INTERNAL_TESTER_EMAILS');
 requireIncludes('internal dev tools', internalDevTools, 'import.meta.env.DEV');
-requireIncludes('internal dev tools', internalDevTools, 'josefsen.eivind@gmail.com');
+requireIncludes('internal dev tools', internalDevTools, 'readAllowedInternalTesterEmails().has');
 requireIncludes('internal dev tools', internalDevTools, 'isAllowedIslandRunInternalTester(session)');
 
 const forbiddenOverlayPatterns = [
