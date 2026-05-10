@@ -1060,7 +1060,7 @@ function sanitizeLuckyRollRewardEntries(value: unknown): IslandRunLuckyRollRewar
       rewardId: entry.rewardId.trim(),
       tileId: Math.max(0, Math.floor(entry.tileId)),
       rewardType,
-      amount: Math.floor(entry.amount),
+      amount: Math.max(0, Math.floor(entry.amount)),
       ...(typeof entry.eventId === 'string' && entry.eventId.trim().length > 0 ? { eventId: entry.eventId.trim() } : {}),
       ...(metadata ? { metadata } : {}),
     });
@@ -1136,7 +1136,7 @@ function mergeLuckyRollSessionsByMilestone(
   const merged: IslandRunLuckyRollSessionsByMilestone = { ...remote };
   for (const [key, localSession] of Object.entries(local)) {
     const remoteSession = merged[key];
-    if (!remoteSession || localSession.updatedAtMs >= remoteSession.updatedAtMs) {
+    if (!remoteSession || localSession.updatedAtMs > remoteSession.updatedAtMs) {
       merged[key] = localSession;
     }
   }

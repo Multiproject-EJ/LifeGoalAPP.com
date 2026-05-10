@@ -1035,7 +1035,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
         rollsUsed: 3,
         claimedTileIds: [0, 2, 4],
         pendingRewards: [{ rewardId: 'reward-1', tileId: 4, rewardType: 'dice', amount: 2, eventId: 'event-1', metadata: { source: 'test' } }],
-        bankedRewards: [{ rewardId: 'banked-1', tileId: 8, rewardType: 'unknown', amount: -3 }],
+        bankedRewards: [{ rewardId: 'banked-1', tileId: 8, rewardType: 'unknown', amount: 0 }],
         startedAtMs: 0,
         bankedAtMs: null,
         updatedAtMs: 12,
