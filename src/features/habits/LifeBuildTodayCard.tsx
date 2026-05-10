@@ -13,6 +13,13 @@ function buildLifeBuildSnoozeKey(userId: string, dateISO: string): string {
   return `lifegoal:life-build-today-card:${userId}:${dateISO}`;
 }
 
+function readLifeBuildSnoozeState(userId: string, dateISO: string): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  return window.localStorage.getItem(buildLifeBuildSnoozeKey(userId, dateISO)) === '1';
+}
+
 export function LifeBuildTodayCard({
   userId,
   dateISO,
@@ -21,15 +28,11 @@ export function LifeBuildTodayCard({
 }: LifeBuildTodayCardProps) {
   const suggestion = useMemo(() => getLifeBuildSuggestion(habits), [habits]);
   const snoozeKey = useMemo(() => buildLifeBuildSnoozeKey(userId, dateISO), [dateISO, userId]);
-  const [isSnoozed, setIsSnoozed] = useState(false);
+  const [isSnoozed, setIsSnoozed] = useState(() => readLifeBuildSnoozeState(userId, dateISO));
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      setIsSnoozed(false);
-      return;
-    }
-    setIsSnoozed(window.localStorage.getItem(snoozeKey) === '1');
-  }, [snoozeKey]);
+    setIsSnoozed(readLifeBuildSnoozeState(userId, dateISO));
+  }, [dateISO, userId]);
 
   if (!suggestion || isSnoozed) {
     return null;

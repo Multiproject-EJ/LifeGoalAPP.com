@@ -13,14 +13,14 @@ export type LifeBuildSuggestion = {
   shortLabel: string;
 };
 
-const starterDomainKeys = new Set<LifeWheelCategoryKey>(
+const starterDomainKeyValues = new Set<string>(
   LIFE_WHEEL_CATEGORIES
     .filter((category) => (STARTER_HABIT_CATALOG[category.key]?.length ?? 0) > 0)
     .map((category) => category.key),
 );
 
 function isStarterDomainKey(value: string | null | undefined): value is LifeWheelCategoryKey {
-  return Boolean(value && starterDomainKeys.has(value as LifeWheelCategoryKey));
+  return typeof value === 'string' && starterDomainKeyValues.has(value);
 }
 
 export function getLifeBuildSuggestion(habits: LifeBuildHabitInput[]): LifeBuildSuggestion | null {
@@ -31,12 +31,13 @@ export function getLifeBuildSuggestion(habits: LifeBuildHabitInput[]): LifeBuild
       .filter(isStarterDomainKey),
   );
 
+  // If existing active habits lack usable domain data, avoid a noisy generic setup prompt.
   if (activeHabits.length > 0 && activeDomainKeys.size === 0) {
     return null;
   }
 
   const suggestedCategory = LIFE_WHEEL_CATEGORIES.find(
-    (category) => starterDomainKeys.has(category.key) && !activeDomainKeys.has(category.key),
+    (category) => starterDomainKeyValues.has(category.key) && !activeDomainKeys.has(category.key),
   );
 
   if (!suggestedCategory) {
