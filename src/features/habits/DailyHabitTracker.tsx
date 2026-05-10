@@ -6105,7 +6105,7 @@ export function DailyHabitTracker({
             <button
               type="button"
               className="habit-checklist-card__starter-launcher"
-              onClick={onOpenStarterQuest}
+              onClick={() => onOpenStarterQuest()}
               aria-label="Open Starter Quest picker"
             >
               + Starter quest
@@ -7767,7 +7767,7 @@ export function DailyHabitTracker({
                   <button
                     type="button"
                     className="habit-checklist-card__starter-empty-launcher"
-                    onClick={onOpenStarterQuest}
+                    onClick={() => onOpenStarterQuest()}
                     aria-label="Choose a starter quest"
                   >
                     Choose starter quest
