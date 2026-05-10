@@ -213,6 +213,67 @@ export const islandRunLuckyRollActionTests: TestCase[] = [
     },
   },
   {
+    name: 'landing on a no-reward tile marks it claimed and blocks a later reward retry',
+    run: async () => {
+      resetEnvironment();
+      seedState({ runtimeVersion: 0, luckyRollSessionsByMilestone: {} });
+      await startIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        nowMs: 1000,
+        runId: 'no-reward-tile-run',
+      });
+
+      const noRewardAdvance = await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: 2,
+        reward: null,
+        nowMs: 1100,
+      });
+
+      assertEqual(noRewardAdvance.rewardAdded, false, 'No reward input should not add a pending reward');
+      const afterNoReward = readIslandRunGameStateRecord(makeSession());
+      const sessionAfterNoReward = afterNoReward.luckyRollSessionsByMilestone[SESSION_KEY];
+      assertEqual(sessionAfterNoReward.claimedTileIds.includes(2), true, 'No-reward landing should still mark tile 2 claimed');
+      assertEqual(sessionAfterNoReward.pendingRewards.length, 0, 'No pending reward should be stored for no-reward landing');
+
+      void writeIslandRunGameStateRecord({
+        session: makeSession(),
+        client: null,
+        record: {
+          ...afterNoReward,
+          luckyRollSessionsByMilestone: {
+            ...afterNoReward.luckyRollSessionsByMilestone,
+            [SESSION_KEY]: {
+              ...sessionAfterNoReward,
+              position: 0,
+            },
+          },
+        },
+      });
+      refreshIslandRunStateFromLocal(makeSession());
+
+      const retry = await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: 2,
+        reward: { rewardType: 'dice', amount: 4, rewardId: 'late-tile-2-dice' },
+        nowMs: 1200,
+      });
+
+      assertEqual(retry.rewardAdded, false, 'Retry on previously claimed no-reward tile should not add a reward');
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(persisted.luckyRollSessionsByMilestone[SESSION_KEY].pendingRewards.length, 0, 'No reward should be added after retry');
+    },
+  },
+  {
     name: 'bank applies dice and essence once and moves pending rewards to banked',
     run: async () => {
       resetEnvironment();

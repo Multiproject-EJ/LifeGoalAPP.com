@@ -273,7 +273,7 @@ export function advanceIslandRunLuckyRoll(
       status: nextStatus,
       position: landedTileId,
       rollsUsed: luckyRollSession.rollsUsed + 1,
-      claimedTileIds: pendingReward
+      claimedTileIds: !alreadyClaimedTile
         ? sortUniqueTileIds([...luckyRollSession.claimedTileIds, landedTileId])
         : luckyRollSession.claimedTileIds,
       pendingRewards: rewardAdded
