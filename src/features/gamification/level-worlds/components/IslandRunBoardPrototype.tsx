@@ -346,6 +346,7 @@ const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_WINDOW_MS = 10_000;
 const ISLAND_RUN_120_STOP_PAIR_DELIMITER = '_to_';
 const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;
 const ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_WEIGHT_PERCENT = 70;
+const DEV_LUCKY_ROLL_TEST_ROLL = 3;
 const BUILD_HOLD_INITIAL_DELAY_MS = 400;
 
 function resolveBuildHoldRepeatDelayMs(heldMs: number) {
@@ -6983,7 +6984,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       client,
       cycleIndex: runtimeStateRef.current.cycleIndex,
       targetIslandNumber: normalizedTargetIslandNumber,
-      roll: 3,
+      roll: DEV_LUCKY_ROLL_TEST_ROLL,
       reward: {
         rewardType,
         amount: rewardAmount,
