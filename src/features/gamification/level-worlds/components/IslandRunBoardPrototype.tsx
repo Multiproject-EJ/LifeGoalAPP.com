@@ -69,7 +69,7 @@ import {
 } from '../services/islandRunRuntimeState';
 import { ShardClaimModal } from './ShardClaimModal';
 import { IslandRunReflectionComposer } from './IslandRunReflectionComposer';
-import { readIslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
+import { readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { useIslandRunState } from '../hooks/useIslandRunState';
 import {
   commitIslandRunState,
@@ -313,6 +313,7 @@ import {
   type DiceRegenState,
 } from '../services/islandRunDiceRegeneration';
 import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
+import { IslandRunLuckyRollDevOverlay } from './lucky-roll/IslandRunLuckyRollDevOverlay';
 import { resolveNextCheapestIndex } from '../services/islandRunShopAffordability';
 import { adviseEggSellChoice } from '../services/islandRunEggSellAdvisor';
 import {
@@ -1146,6 +1147,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
   const [isTopbarMenuPrimed, setIsTopbarMenuPrimed] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
+  const [showDevLuckyRollOverlay, setShowDevLuckyRollOverlay] = useState(false);
+  const [devLuckyRollTargetIsland, setDevLuckyRollTargetIsland] = useState<number | null>(null);
   const [cameraMode, setCameraMode] = useState<IslandRunCameraMode>('board_follow');
   const [focusedStopId, setFocusedStopId] = useState<string | null>(null);
   /**
@@ -7021,6 +7024,21 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return message;
   }, [client, isDevModeEnabled, session]);
 
+  const handleOpenDevLuckyRollOverlay = useCallback((targetIslandNumber: number) => {
+    if (!isDevModeEnabled || !import.meta.env.DEV) return;
+    const normalizedTargetIslandNumber = Number.isFinite(targetIslandNumber)
+      ? Math.max(1, Math.floor(targetIslandNumber))
+      : runtimeStateRef.current.currentIslandNumber;
+    setDevLuckyRollTargetIsland(normalizedTargetIslandNumber);
+    setShowDevLuckyRollOverlay(true);
+    setLandingText(`🍀 DEV Lucky Roll overlay opened for island ${normalizedTargetIslandNumber}.`);
+  }, [isDevModeEnabled]);
+
+  const handleLuckyRollOverlayRuntimeStateChange = useCallback((record: IslandRunGameStateRecord) => {
+    setRuntimeState(record);
+    runtimeStateRef.current = record;
+  }, []);
+
   const handleUnlockDevMode = useCallback(() => {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('dev_mode', 'true');
@@ -8363,6 +8381,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </p>
           </div>
         </div>
+      )}
+
+      {showDevLuckyRollOverlay && isDevModeEnabled && import.meta.env.DEV && (
+        <IslandRunLuckyRollDevOverlay
+          session={session}
+          client={client}
+          runtimeState={runtimeState}
+          targetIslandNumber={devLuckyRollTargetIsland ?? runtimeState.currentIslandNumber}
+          isDevModeEnabled={isDevModeEnabled}
+          onRuntimeStateChange={handleLuckyRollOverlayRuntimeStateChange}
+          onClose={() => setShowDevLuckyRollOverlay(false)}
+        />
       )}
 
       {activeStop && (() => {
@@ -10685,6 +10715,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           onSetDevTimedEventOverride={handleSetDevTimedEventOverride}
           onGrantDevTimedEventTickets={handleGrantDevTimedEventTickets}
           showLuckyRollDevLauncher={isDevModeEnabled && import.meta.env.DEV}
+          onOpenLuckyRollDevOverlay={handleOpenDevLuckyRollOverlay}
           onStartLuckyRollDevSession={handleDevStartLuckyRollSession}
           onAdvanceLuckyRollDevSession={handleDevAdvanceLuckyRollSession}
           onBankLuckyRollDevSession={handleDevBankLuckyRollSession}
