@@ -10,10 +10,11 @@
 // The 40 board tiles exist purely to earn essence and feed the reward bar.
 
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
+import { getIslandRunRarity, type IslandRunIslandRarity } from './islandRunIslandMetadata';
 
 export type IslandTileType = 'currency' | 'chest' | 'hazard' | 'micro' | 'encounter';
 
-export type IslandRarity = 'normal' | 'seasonal' | 'rare';
+export type IslandRarity = IslandRunIslandRarity;
 
 export type IslandTileMapEntry = {
   index: number;
@@ -71,10 +72,6 @@ function seededRandom(seed: number): number {
   return ((s >>> 0) % 100000) / 100000;
 }
 
-const CANONICAL_SPECIAL_ISLAND_NUMBERS = new Set([
-  5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90, 96, 102, 108, 114, 120,
-]);
-
 /**
  * Returns the rarity for a given island number.
  *
@@ -87,9 +84,7 @@ const CANONICAL_SPECIAL_ISLAND_NUMBERS = new Set([
  * - Any island outside the canonical list is `normal`.
  */
 export function getIslandRarity(islandNumber: number): IslandRarity {
-  if (!CANONICAL_SPECIAL_ISLAND_NUMBERS.has(islandNumber)) return 'normal';
-  if (islandNumber % 10 === 0) return 'rare';
-  return 'seasonal';
+  return getIslandRunRarity(islandNumber);
 }
 
 function computeEncounterIndicesForProfile(rarity: IslandRarity, tileCount: number): Set<number> {
