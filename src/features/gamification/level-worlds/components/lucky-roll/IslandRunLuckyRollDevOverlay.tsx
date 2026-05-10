@@ -29,7 +29,7 @@ interface IslandRunLuckyRollDevOverlayProps {
   onClose: () => void;
 }
 
-function normalizeTargetIslandNumber(targetIslandNumber: number): number {
+function normalizeIslandNumber(targetIslandNumber: number): number {
   return Number.isFinite(targetIslandNumber) ? Math.max(1, Math.floor(targetIslandNumber)) : 1;
 }
 
@@ -42,6 +42,11 @@ function sumRewards(rewards: IslandRunLuckyRollRewardEntry[], rewardType: 'dice'
 function formatReward(entry: IslandRunLuckyRollRewardEntry): string {
   const icon = entry.rewardType === 'dice' ? '🎲' : entry.rewardType === 'essence' ? '✨' : '🎁';
   return `${icon} +${entry.amount} ${entry.rewardType} · tile ${entry.tileId}`;
+}
+
+function getTileRewardDescription(tileId: number, rewardType: 'dice' | 'essence', isFinish: boolean): string {
+  if (isFinish) return `Tile ${tileId} · finish`;
+  return `Tile ${tileId} · ${rewardType} test reward`;
 }
 
 function resolveDevRewardInput(luckyRollSession: IslandRunLuckyRollSession | null): {
@@ -69,7 +74,7 @@ export function IslandRunLuckyRollDevOverlay({
 }: IslandRunLuckyRollDevOverlayProps) {
   const [actionStatus, setActionStatus] = useState<DevLuckyRollActionStatus>('idle');
   const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const normalizedTargetIslandNumber = normalizeTargetIslandNumber(targetIslandNumber || runtimeState.currentIslandNumber);
+  const normalizedTargetIslandNumber = normalizeIslandNumber(targetIslandNumber || runtimeState.currentIslandNumber);
   const sessionKey = getIslandRunLuckyRollSessionKey(runtimeState.cycleIndex, normalizedTargetIslandNumber);
   const luckyRollSession = runtimeState.luckyRollSessionsByMilestone[sessionKey] ?? null;
   const isActionPending = actionStatus === 'pending';
@@ -226,7 +231,7 @@ export function IslandRunLuckyRollDevOverlay({
                   isClaimed ? 'island-run-lucky-roll-dev-overlay__tile--claimed' : '',
                   isFinish ? 'island-run-lucky-roll-dev-overlay__tile--finish' : '',
                 ].filter(Boolean).join(' ')}
-                title={`Tile ${tileId}${isFinish ? ' · finish' : rewardType === 'dice' ? ' · dice test reward' : ' · essence test reward'}`}
+                title={getTileRewardDescription(tileId, rewardType, isFinish)}
               >
                 <span>{isFinish ? '🏁' : rewardType === 'dice' ? '🎲' : '✨'}</span>
                 <small>{tileId}</small>
