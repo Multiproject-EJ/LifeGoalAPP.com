@@ -37,13 +37,13 @@ function getCategorySuggestion(domainKey: LifeWheelCategoryKey): LifeBuildSugges
 }
 
 function getFallbackSuggestion(): LifeBuildSuggestion | null {
-  return (
-    getCategorySuggestion(DEFAULT_STARTER_DOMAIN_KEY) ??
-    getCategorySuggestion(
-      LIFE_WHEEL_CATEGORIES.find((category) => starterDomainKeyValues.has(category.key))?.key ??
-        DEFAULT_STARTER_DOMAIN_KEY,
-    )
-  );
+  const defaultSuggestion = getCategorySuggestion(DEFAULT_STARTER_DOMAIN_KEY);
+  if (defaultSuggestion) {
+    return defaultSuggestion;
+  }
+
+  const fallbackCategory = LIFE_WHEEL_CATEGORIES.find((category) => starterDomainKeyValues.has(category.key));
+  return fallbackCategory ? getCategorySuggestion(fallbackCategory.key) : null;
 }
 
 export function getLifeBuildSuggestion(habits: LifeBuildHabitInput[]): LifeBuildSuggestion | null {
