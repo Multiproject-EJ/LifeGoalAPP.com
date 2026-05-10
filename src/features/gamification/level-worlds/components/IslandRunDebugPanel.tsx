@@ -488,7 +488,7 @@ export function IslandRunDebugPanel({
                   <div style={{ display: 'grid', gap: '0.55rem', borderTop: '1px solid rgba(255,255,255,0.16)', paddingTop: '0.65rem' }}>
                     <strong style={{ fontSize: '0.84rem' }}>🍀 Lucky Roll canonical test launcher</strong>
                     <div style={{ fontSize: '0.76rem', opacity: 0.86 }}>
-                      Internal tester only. Uses canonical Island Run Lucky Roll services and banks rewards into canonical dice/essence.
+                      Dev mode only. Uses canonical Island Run Lucky Roll services and banks rewards into canonical dice/essence.
                     </div>
                     <label style={{ display: 'grid', gap: '0.25rem', fontSize: '0.78rem' }}>
                       Target island

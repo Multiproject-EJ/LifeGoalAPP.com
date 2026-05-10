@@ -6,12 +6,10 @@ const root = process.cwd();
 const overlayPath = resolve(root, 'src/features/gamification/level-worlds/components/lucky-roll/IslandRunLuckyRollDevOverlay.tsx');
 const boardPath = resolve(root, 'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx');
 const debugPanelPath = resolve(root, 'src/features/gamification/level-worlds/components/IslandRunDebugPanel.tsx');
-const internalDevToolsPath = resolve(root, 'src/features/gamification/level-worlds/services/islandRunInternalDevTools.ts');
 
 const overlay = readFileSync(overlayPath, 'utf8');
 const board = readFileSync(boardPath, 'utf8');
 const debugPanel = readFileSync(debugPanelPath, 'utf8');
-const internalDevTools = readFileSync(internalDevToolsPath, 'utf8');
 
 const failures = [];
 
@@ -25,15 +23,11 @@ requireIncludes('overlay', overlay, 'startIslandRunLuckyRoll');
 requireIncludes('overlay', overlay, 'advanceIslandRunLuckyRoll');
 requireIncludes('overlay', overlay, 'bankIslandRunLuckyRollRewards');
 requireIncludes('overlay', overlay, "source: 'dev_lucky_roll_overlay'");
-requireIncludes('overlay', overlay, 'isIslandRunInternalDevToolsEnabled(session, isDevModeEnabled)');
-requireIncludes('board', board, 'showDevLuckyRollOverlay && isLuckyRollInternalDevToolsEnabled');
+requireIncludes('overlay', overlay, 'if (!isDevModeEnabled)');
+requireIncludes('board', board, 'showDevLuckyRollOverlay && isDevModeEnabled');
 requireIncludes('board', board, 'onOpenLuckyRollDevOverlay={handleOpenDevLuckyRollOverlay}');
+requireIncludes('board', board, 'showLuckyRollDevLauncher={isDevModeEnabled}');
 requireIncludes('debug panel', debugPanel, 'Open Lucky Roll overlay');
-requireIncludes('internal dev tools', internalDevTools, 'VITE_ENABLE_ISLAND_RUN_INTERNAL_DEV_TOOLS');
-requireIncludes('internal dev tools', internalDevTools, 'VITE_ISLAND_RUN_INTERNAL_TESTER_EMAILS');
-requireIncludes('internal dev tools', internalDevTools, 'import.meta.env.DEV');
-requireIncludes('internal dev tools', internalDevTools, 'readAllowedInternalTesterEmails().has');
-requireIncludes('internal dev tools', internalDevTools, 'isAllowedIslandRunInternalTester(session)');
 
 const forbiddenOverlayPatterns = [
   'daily-treats/LuckyRollBoard',
@@ -43,6 +37,7 @@ const forbiddenOverlayPatterns = [
   'gol_lucky_roll_state',
   'localStorage',
   'persistIslandRunRuntimeStatePatch',
+  'isIslandRunInternalDevToolsEnabled',
 ];
 
 for (const pattern of forbiddenOverlayPatterns) {
