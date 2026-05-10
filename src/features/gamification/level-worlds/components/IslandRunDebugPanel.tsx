@@ -9,6 +9,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import type { IslandRunRuntimeState } from '../services/islandRunRuntimeState';
+import { getIslandRunLuckyRollSessionKey } from '../services/islandRunGameStateStore';
+import { resolveIslandRunPreIslandLuckyRollGate } from '../services/islandRunPreIslandLuckyRollGate';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -23,6 +25,10 @@ interface DebugPanelProps {
   devTimedEventOverrideEventId: string | null;
   onSetDevTimedEventOverride: (eventType: 'feeding_frenzy' | 'lucky_spin' | 'space_excavator' | 'companion_feast' | null) => void;
   onGrantDevTimedEventTickets: (amount: number) => void;
+  showLuckyRollDevLauncher?: boolean;
+  onStartLuckyRollDevSession?: (targetIslandNumber: number) => Promise<string>;
+  onAdvanceLuckyRollDevSession?: (targetIslandNumber: number, rewardType: 'dice' | 'essence') => Promise<string>;
+  onBankLuckyRollDevSession?: (targetIslandNumber: number) => Promise<string>;
   onClose: () => void;
 }
 
@@ -88,6 +94,10 @@ export function IslandRunDebugPanel({
   devTimedEventOverrideEventId,
   onSetDevTimedEventOverride,
   onGrantDevTimedEventTickets,
+  showLuckyRollDevLauncher = false,
+  onStartLuckyRollDevSession,
+  onAdvanceLuckyRollDevSession,
+  onBankLuckyRollDevSession,
   onClose,
 }: DebugPanelProps) {
   const appVersion = resolveBuildMarkerValue(import.meta.env.VITE_APP_VERSION);
@@ -100,6 +110,9 @@ export function IslandRunDebugPanel({
   const [supabaseLatencyMs, setSupabaseLatencyMs] = useState<number | null>(null);
   const [supabaseError, setSupabaseError] = useState<string | null>(null);
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
+  const [luckyRollTargetIslandInput, setLuckyRollTargetIslandInput] = useState(() => String(runtimeState.currentIslandNumber));
+  const [luckyRollActionPending, setLuckyRollActionPending] = useState(false);
+  const [luckyRollActionMessage, setLuckyRollActionMessage] = useState<string | null>(null);
 
   // Ping Supabase to check connectivity
   useEffect(() => {
@@ -133,6 +146,43 @@ export function IslandRunDebugPanel({
   }, [client, session.user.id]);
 
   const now = Date.now();
+  const luckyRollTargetIslandNumber = useMemo(() => {
+    const parsed = Number(luckyRollTargetIslandInput);
+    return Number.isFinite(parsed) ? Math.max(1, Math.floor(parsed)) : runtimeState.currentIslandNumber;
+  }, [luckyRollTargetIslandInput, runtimeState.currentIslandNumber]);
+  const luckyRollSessionKey = getIslandRunLuckyRollSessionKey(runtimeState.cycleIndex, luckyRollTargetIslandNumber);
+  const luckyRollGate = resolveIslandRunPreIslandLuckyRollGate({
+    featureEnabled: true,
+    islandNumber: luckyRollTargetIslandNumber,
+    cycleIndex: runtimeState.cycleIndex,
+    luckyRollSessionsByMilestone: runtimeState.luckyRollSessionsByMilestone,
+  });
+  const luckyRollSession = runtimeState.luckyRollSessionsByMilestone[luckyRollSessionKey] ?? null;
+  const luckyRollPendingDice = luckyRollSession?.pendingRewards
+    .filter((entry) => entry.rewardType === 'dice')
+    .reduce((total, entry) => total + entry.amount, 0) ?? 0;
+  const luckyRollPendingEssence = luckyRollSession?.pendingRewards
+    .filter((entry) => entry.rewardType === 'essence')
+    .reduce((total, entry) => total + entry.amount, 0) ?? 0;
+  const luckyRollBankedDice = luckyRollSession?.bankedRewards
+    .filter((entry) => entry.rewardType === 'dice')
+    .reduce((total, entry) => total + entry.amount, 0) ?? 0;
+  const luckyRollBankedEssence = luckyRollSession?.bankedRewards
+    .filter((entry) => entry.rewardType === 'essence')
+    .reduce((total, entry) => total + entry.amount, 0) ?? 0;
+
+  const runLuckyRollDevAction = async (action: () => Promise<string>) => {
+    if (luckyRollActionPending) return;
+    setLuckyRollActionPending(true);
+    setLuckyRollActionMessage(null);
+    try {
+      setLuckyRollActionMessage(await action());
+    } catch (err) {
+      setLuckyRollActionMessage(`Lucky Roll dev action failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setLuckyRollActionPending(false);
+    }
+  };
 
   const sections: DebugSection[] = useMemo(() => {
     const rs = runtimeState;
@@ -432,6 +482,105 @@ export function IslandRunDebugPanel({
                     Clear override
                   </button>
                 </div>
+                {showLuckyRollDevLauncher && (
+                  <div style={{ display: 'grid', gap: '0.55rem', borderTop: '1px solid rgba(255,255,255,0.16)', paddingTop: '0.65rem' }}>
+                    <strong style={{ fontSize: '0.84rem' }}>🍀 Lucky Roll canonical test launcher</strong>
+                    <div style={{ fontSize: '0.76rem', opacity: 0.86 }}>
+                      DEV build only. Uses canonical Island Run Lucky Roll services and banks rewards into canonical dice/essence.
+                    </div>
+                    <label style={{ display: 'grid', gap: '0.25rem', fontSize: '0.78rem' }}>
+                      Target island
+                      <input
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={luckyRollTargetIslandInput}
+                        onChange={(e) => setLuckyRollTargetIslandInput(e.target.value)}
+                      />
+                    </label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <button
+                        type="button"
+                        className="island-run-debug-panel__copy-btn"
+                        disabled={luckyRollActionPending || !onStartLuckyRollDevSession}
+                        onClick={() => runLuckyRollDevAction(() => onStartLuckyRollDevSession?.(runtimeState.currentIslandNumber) ?? Promise.resolve('Lucky Roll launcher unavailable.'))}
+                      >
+                        Start current island
+                      </button>
+                      <button
+                        type="button"
+                        className="island-run-debug-panel__copy-btn"
+                        disabled={luckyRollActionPending || !onStartLuckyRollDevSession}
+                        onClick={() => runLuckyRollDevAction(() => onStartLuckyRollDevSession?.(luckyRollTargetIslandNumber) ?? Promise.resolve('Lucky Roll launcher unavailable.'))}
+                      >
+                        Start selected
+                      </button>
+                      <button
+                        type="button"
+                        className="island-run-debug-panel__copy-btn"
+                        disabled={luckyRollActionPending || !onAdvanceLuckyRollDevSession}
+                        onClick={() => runLuckyRollDevAction(() => onAdvanceLuckyRollDevSession?.(luckyRollTargetIslandNumber, 'dice') ?? Promise.resolve('Lucky Roll launcher unavailable.'))}
+                      >
+                        Advance +2 dice
+                      </button>
+                      <button
+                        type="button"
+                        className="island-run-debug-panel__copy-btn"
+                        disabled={luckyRollActionPending || !onAdvanceLuckyRollDevSession}
+                        onClick={() => runLuckyRollDevAction(() => onAdvanceLuckyRollDevSession?.(luckyRollTargetIslandNumber, 'essence') ?? Promise.resolve('Lucky Roll launcher unavailable.'))}
+                      >
+                        Advance +25 essence
+                      </button>
+                      <button
+                        type="button"
+                        className="island-run-debug-panel__copy-btn"
+                        disabled={luckyRollActionPending || !onBankLuckyRollDevSession}
+                        onClick={() => runLuckyRollDevAction(() => onBankLuckyRollDevSession?.(luckyRollTargetIslandNumber) ?? Promise.resolve('Lucky Roll launcher unavailable.'))}
+                      >
+                        Bank rewards
+                      </button>
+                    </div>
+                    {luckyRollActionMessage && (
+                      <div style={{ fontSize: '0.78rem', opacity: 0.9 }}>{luckyRollActionMessage}</div>
+                    )}
+                    <table className="island-run-debug-panel__table">
+                      <tbody>
+                        <tr>
+                          <td className="island-run-debug-panel__label">Gate status</td>
+                          <td className="island-run-debug-panel__value">{luckyRollGate.status}</td>
+                        </tr>
+                        <tr>
+                          <td className="island-run-debug-panel__label">Blocks island start</td>
+                          <td className="island-run-debug-panel__value">{fmtBool(luckyRollGate.blocksIslandStart)}</td>
+                        </tr>
+                        <tr>
+                          <td className="island-run-debug-panel__label">Session key</td>
+                          <td className="island-run-debug-panel__value">{luckyRollSessionKey}</td>
+                        </tr>
+                        <tr>
+                          <td className="island-run-debug-panel__label">Session status</td>
+                          <td className="island-run-debug-panel__value">{luckyRollSession?.status ?? 'none'}</td>
+                        </tr>
+                        <tr>
+                          <td className="island-run-debug-panel__label">Position / rolls</td>
+                          <td className="island-run-debug-panel__value">{luckyRollSession ? `${luckyRollSession.position} / ${luckyRollSession.rollsUsed}` : '—'}</td>
+                        </tr>
+                        <tr>
+                          <td className="island-run-debug-panel__label">Pending rewards</td>
+                          <td className="island-run-debug-panel__value">+{luckyRollPendingDice} dice, +{luckyRollPendingEssence} essence</td>
+                        </tr>
+                        <tr>
+                          <td className="island-run-debug-panel__label">Banked rewards</td>
+                          <td className="island-run-debug-panel__value">+{luckyRollBankedDice} dice, +{luckyRollBankedEssence} essence</td>
+                        </tr>
+                        <tr>
+                          <td className="island-run-debug-panel__label">Canonical dice / essence</td>
+                          <td className="island-run-debug-panel__value">{runtimeState.dicePool} dice, {runtimeState.essence} essence</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
           </details>
