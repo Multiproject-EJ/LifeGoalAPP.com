@@ -26,6 +26,7 @@ interface DebugPanelProps {
   onSetDevTimedEventOverride: (eventType: 'feeding_frenzy' | 'lucky_spin' | 'space_excavator' | 'companion_feast' | null) => void;
   onGrantDevTimedEventTickets: (amount: number) => void;
   showLuckyRollDevLauncher?: boolean;
+  onOpenLuckyRollDevOverlay?: (targetIslandNumber: number) => void;
   onStartLuckyRollDevSession?: (targetIslandNumber: number) => Promise<string>;
   onAdvanceLuckyRollDevSession?: (targetIslandNumber: number, rewardType: 'dice' | 'essence') => Promise<string>;
   onBankLuckyRollDevSession?: (targetIslandNumber: number) => Promise<string>;
@@ -95,6 +96,7 @@ export function IslandRunDebugPanel({
   onSetDevTimedEventOverride,
   onGrantDevTimedEventTickets,
   showLuckyRollDevLauncher = false,
+  onOpenLuckyRollDevOverlay,
   onStartLuckyRollDevSession,
   onAdvanceLuckyRollDevSession,
   onBankLuckyRollDevSession,
@@ -499,6 +501,14 @@ export function IslandRunDebugPanel({
                       />
                     </label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <button
+                        type="button"
+                        className="island-run-debug-panel__copy-btn"
+                        disabled={!onOpenLuckyRollDevOverlay}
+                        onClick={() => onOpenLuckyRollDevOverlay?.(luckyRollTargetIslandNumber)}
+                      >
+                        Open Lucky Roll overlay
+                      </button>
                       <button
                         type="button"
                         className="island-run-debug-panel__copy-btn"

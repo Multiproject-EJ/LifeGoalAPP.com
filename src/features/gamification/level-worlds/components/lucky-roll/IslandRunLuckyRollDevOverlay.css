@@ -1,0 +1,217 @@
+.island-run-lucky-roll-dev-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10020;
+  display: grid;
+  place-items: center;
+  padding: max(1rem, env(safe-area-inset-top, 0px)) 1rem max(1rem, env(safe-area-inset-bottom, 0px));
+  background:
+    radial-gradient(circle at 15% 12%, rgba(255, 220, 120, 0.22), transparent 28%),
+    radial-gradient(circle at 82% 18%, rgba(72, 211, 255, 0.18), transparent 30%),
+    rgba(3, 8, 18, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.island-run-lucky-roll-dev-overlay__card {
+  width: min(940px, 100%);
+  max-height: min(92dvh, 780px);
+  overflow-y: auto;
+  border: 1px solid rgba(255, 224, 135, 0.58);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(23, 31, 48, 0.98), rgba(8, 17, 31, 0.98));
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.56);
+  color: #f7fbff;
+  padding: 1rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.island-run-lucky-roll-dev-overlay__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.island-run-lucky-roll-dev-overlay__eyebrow,
+.island-run-lucky-roll-dev-overlay__session-key {
+  margin: 0;
+  color: rgba(255, 228, 156, 0.82);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.island-run-lucky-roll-dev-overlay__title {
+  margin: 0.16rem 0 0;
+  font-size: clamp(1.35rem, 3vw, 2.35rem);
+  line-height: 1.1;
+}
+
+.island-run-lucky-roll-dev-overlay__subtitle {
+  margin: 0.4rem 0 0;
+  max-width: 64ch;
+  color: rgba(224, 239, 255, 0.84);
+  line-height: 1.45;
+}
+
+.island-run-lucky-roll-dev-overlay__close {
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.island-run-lucky-roll-dev-overlay__summary-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.island-run-lucky-roll-dev-overlay__stat {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 0.62rem;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.island-run-lucky-roll-dev-overlay__stat span {
+  display: block;
+  color: rgba(219, 235, 255, 0.68);
+  font-size: 0.72rem;
+}
+
+.island-run-lucky-roll-dev-overlay__stat strong {
+  display: block;
+  margin-top: 0.2rem;
+  color: #ffe38c;
+  font-size: 1rem;
+}
+
+.island-run-lucky-roll-dev-overlay__path {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 0.45rem;
+  padding: 0.75rem;
+  border-radius: 18px;
+  background: rgba(4, 12, 25, 0.46);
+  border: 1px solid rgba(126, 201, 255, 0.18);
+}
+
+.island-run-lucky-roll-dev-overlay__tile {
+  min-height: 4rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+  display: grid;
+  place-items: center;
+  gap: 0.1rem;
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.island-run-lucky-roll-dev-overlay__tile span {
+  font-size: 1.25rem;
+}
+
+.island-run-lucky-roll-dev-overlay__tile small {
+  color: rgba(231, 240, 255, 0.72);
+  font-weight: 700;
+}
+
+.island-run-lucky-roll-dev-overlay__tile--claimed {
+  border-color: rgba(89, 255, 174, 0.46);
+  background: linear-gradient(180deg, rgba(70, 209, 138, 0.24), rgba(30, 96, 73, 0.2));
+}
+
+.island-run-lucky-roll-dev-overlay__tile--current {
+  transform: translateY(-3px);
+  border-color: rgba(255, 225, 94, 0.92);
+  box-shadow: 0 0 0 3px rgba(255, 225, 94, 0.18), 0 12px 28px rgba(0, 0, 0, 0.34);
+}
+
+.island-run-lucky-roll-dev-overlay__tile--finish {
+  background: linear-gradient(180deg, rgba(255, 215, 96, 0.26), rgba(105, 73, 18, 0.22));
+}
+
+.island-run-lucky-roll-dev-overlay__banks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.island-run-lucky-roll-dev-overlay__banks section {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.055);
+  padding: 0.75rem;
+}
+
+.island-run-lucky-roll-dev-overlay__banks h3,
+.island-run-lucky-roll-dev-overlay__banks p,
+.island-run-lucky-roll-dev-overlay__banks ul {
+  margin: 0;
+}
+
+.island-run-lucky-roll-dev-overlay__banks h3 {
+  font-size: 0.92rem;
+}
+
+.island-run-lucky-roll-dev-overlay__banks p {
+  margin-top: 0.3rem;
+  color: #dff6ff;
+}
+
+.island-run-lucky-roll-dev-overlay__banks ul {
+  margin-top: 0.5rem;
+  padding-left: 1.1rem;
+  color: rgba(230, 241, 255, 0.82);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.island-run-lucky-roll-dev-overlay__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.island-run-lucky-roll-dev-overlay__controls button {
+  border: 1px solid rgba(255, 226, 133, 0.46);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 204, 92, 0.24), rgba(255, 204, 92, 0.12));
+  color: #fff6d6;
+  font-weight: 800;
+  min-height: 42px;
+  padding: 0.55rem 0.95rem;
+}
+
+.island-run-lucky-roll-dev-overlay__controls button:disabled {
+  opacity: 0.48;
+}
+
+.island-run-lucky-roll-dev-overlay__message {
+  border: 1px solid rgba(134, 226, 255, 0.34);
+  border-radius: 14px;
+  background: rgba(68, 184, 255, 0.11);
+  color: #dff7ff;
+  padding: 0.65rem 0.75rem;
+}
+
+@media (max-width: 760px) {
+  .island-run-lucky-roll-dev-overlay__summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .island-run-lucky-roll-dev-overlay__path {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .island-run-lucky-roll-dev-overlay__banks {
+    grid-template-columns: 1fr;
+  }
+}
