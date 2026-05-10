@@ -111,7 +111,8 @@ function normalizeTargetIslandNumber(targetIslandNumber: number): number {
 }
 
 function normalizeNowMs(nowMs: number | undefined): number {
-  return Number.isFinite(nowMs) ? Math.max(0, Math.floor(nowMs ?? 0)) : Date.now();
+  if (!Number.isFinite(nowMs)) return Date.now();
+  return Math.max(0, Math.floor(nowMs as number));
 }
 
 function normalizeRoll(roll: number): number {
@@ -119,7 +120,8 @@ function normalizeRoll(roll: number): number {
 }
 
 function normalizeBoardSize(boardSize: number | undefined): number {
-  return Number.isFinite(boardSize) ? Math.max(2, Math.floor(boardSize ?? DEFAULT_LUCKY_ROLL_BOARD_SIZE)) : DEFAULT_LUCKY_ROLL_BOARD_SIZE;
+  if (!Number.isFinite(boardSize)) return DEFAULT_LUCKY_ROLL_BOARD_SIZE;
+  return Math.max(2, Math.floor(boardSize as number));
 }
 
 function buildRunId(sessionKey: string, nowMs: number): string {
