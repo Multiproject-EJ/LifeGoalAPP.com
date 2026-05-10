@@ -59,23 +59,18 @@ assert(
   !todayDailyTreatsPath.includes("setCalendarLaunchMode('auto')"),
   'Today Daily Treats path must not use auto mode.',
 );
-
-const congratsClosePath = sectionBetween(
-  'const handleDailyTreatsCongratsClose = useCallback(() => {',
-  'const {',
+assert(
+  !source.includes('handleDailyTreatsCongratsClose'),
+  'Daily Treats should not use legacy visit/congrats routing.',
 );
 assert(
-  congratsClosePath.includes('openPersonalQuestDailyTreatsCalendar();'),
-  'Daily Treats congrats close must route to the Personal Quest calendar.',
-);
-assert(
-  !congratsClosePath.includes('setShowDailyTreatsMenu(true)'),
-  'Daily Treats congrats close must not open the old Daily Treats menu.',
+  !source.includes('DAILY_TREATS_DAILY_VISIT_KEY'),
+  'Daily Treats done state must not use the legacy daily visit key.',
 );
 
 const holidayLauncher = sectionBetween(
   'const launchHolidayCalendar = useCallback(() => {',
-  'const handleDailyTreatsCongratsClose = useCallback(() => {',
+  'const {',
 );
 assert(
   holidayLauncher.includes("setCalendarLaunchMode('holiday')"),
@@ -84,6 +79,31 @@ assert(
 assert(
   holidayLauncher.includes('setShowCalendarPlaceholder(true)'),
   'Holiday Calendar launcher must open CountdownCalendarModal.',
+);
+
+const dailyTreatsDoneState = sectionBetween(
+  'const refreshDailyTreatsOpenedState = useCallback(async () => {',
+  'const refreshHolidayCalendarOpenedState = useCallback(async () => {',
+);
+assert(
+  source.includes('getPersonalQuestSeason'),
+  'App must fetch Personal Quest calendar progress for Daily Treats done state.',
+);
+assert(
+  dailyTreatsDoneState.includes('getPersonalQuestSeason(userId)'),
+  'Daily Treats done state must load the Personal Quest season.',
+);
+assert(
+  dailyTreatsDoneState.includes('season.progress?.opened_days.includes(todayIndex)'),
+  'Daily Treats done state must be based on today Personal Quest door progress.',
+);
+assert(
+  !source.includes('showDailyTreatsMenu'),
+  'Old Daily Treats 3-card hub state should be removed.',
+);
+assert(
+  !source.includes('dailyTreatsModal'),
+  'Old Daily Treats 3-card hub modal should be removed.',
 );
 
 console.log('daily-treats-routing: all assertions passed');
