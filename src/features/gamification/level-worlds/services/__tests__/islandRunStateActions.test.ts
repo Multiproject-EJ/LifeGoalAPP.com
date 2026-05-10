@@ -14,10 +14,12 @@
  */
 
 import {
+  getIslandRunLuckyRollSessionKey,
   readIslandRunGameStateRecord,
   resetIslandRunRuntimeCommitCoordinatorForTests,
   writeIslandRunGameStateRecord,
   type IslandRunGameStateRecord,
+  type IslandRunLuckyRollSession,
 } from '../islandRunGameStateStore';
 import {
   __resetIslandRunStateStoreForTests,
@@ -75,6 +77,10 @@ import {
 } from '../islandRunStateActions';
 import { buildInitialDiceRegenState } from '../islandRunDiceRegeneration';
 import {
+  __resetIslandRunFeatureFlagsForTests,
+  __setIslandRunFeatureFlagsForTests,
+} from '../../../../../config/islandRunFeatureFlags';
+import {
   assert,
   assertEqual,
   createMemoryStorage,
@@ -100,6 +106,7 @@ function makeSession() {
 function resetAll(): void {
   resetIslandRunRuntimeCommitCoordinatorForTests();
   __resetIslandRunStateStoreForTests();
+  __resetIslandRunFeatureFlagsForTests();
   installWindowWithStorage(createMemoryStorage());
 }
 
@@ -113,6 +120,27 @@ function seedState(overrides: Partial<IslandRunGameStateRecord>): void {
   });
   // Also update the store mirror so snapshot is consistent.
   refreshIslandRunStateFromLocal(session);
+}
+
+function makeLuckyRollSession(
+  status: IslandRunLuckyRollSession['status'],
+  overrides: Partial<IslandRunLuckyRollSession> = {},
+): IslandRunLuckyRollSession {
+  return {
+    status,
+    runId: `travel-test-${status}`,
+    targetIslandNumber: 60,
+    cycleIndex: 0,
+    position: status === 'completed' || status === 'banked' ? 29 : 0,
+    rollsUsed: status === 'completed' || status === 'banked' ? 5 : 0,
+    claimedTileIds: [],
+    pendingRewards: [],
+    bankedRewards: [],
+    startedAtMs: 1_000,
+    bankedAtMs: status === 'banked' ? 2_000 : null,
+    updatedAtMs: 2_000,
+    ...overrides,
+  };
 }
 
 export const islandRunStateActionsTests: TestCase[] = [
@@ -2898,6 +2926,182 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(snapshot.islandStartedAtMs, 0, 'startedAtMs = 0 when startTimer is false');
       assertEqual(snapshot.islandExpiresAtMs, 0, 'expiresAtMs = 0 when startTimer is false');
       assertEqual(snapshot.currentIslandNumber, 2, 'island still advances');
+    },
+  },
+
+  {
+    name: 'travelToNextIsland: pre-island Lucky Roll flag off leaves rare-island travel unchanged',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 1, currentIslandNumber: 59, cycleIndex: 0, luckyRollSessionsByMilestone: {} });
+
+      await travelToNextIsland({
+        session,
+        client: null,
+        nextIsland: 60,
+        startTimer: true,
+        nowMs: 10_000,
+        getIslandDurationMs: () => 30_000,
+        islandRunContractV2Enabled: false,
+      });
+
+      const snapshot = getIslandRunStateSnapshot(session);
+      assertEqual(snapshot.currentIslandNumber, 60, 'travel should still advance to rare island');
+      assertEqual(snapshot.islandStartedAtMs, 10_000, 'flag-off travel should start timer as requested');
+      assertEqual(snapshot.islandExpiresAtMs, 40_000, 'flag-off travel should keep existing expiry behavior');
+      assertEqual(Object.keys(snapshot.luckyRollSessionsByMilestone).length, 0, 'flag-off travel should not create Lucky Roll session');
+    },
+  },
+
+  {
+    name: 'travelToNextIsland: flag on + non-pre-island target leaves travel unchanged',
+    run: async () => {
+      resetAll();
+      __setIslandRunFeatureFlagsForTests({ islandRunPreIslandLuckyRollEnabled: true });
+      const session = makeSession();
+      seedState({ runtimeVersion: 1, currentIslandNumber: 11, cycleIndex: 0, luckyRollSessionsByMilestone: {} });
+
+      await travelToNextIsland({
+        session,
+        client: null,
+        nextIsland: 12,
+        startTimer: true,
+        nowMs: 10_000,
+        getIslandDurationMs: () => 30_000,
+        islandRunContractV2Enabled: false,
+      });
+
+      const snapshot = getIslandRunStateSnapshot(session);
+      assertEqual(snapshot.currentIslandNumber, 12, 'travel should advance to seasonal island');
+      assertEqual(snapshot.islandStartedAtMs, 10_000, 'non-pre-island travel should start timer as requested');
+      assertEqual(snapshot.islandExpiresAtMs, 40_000, 'non-pre-island travel should keep existing expiry behavior');
+      assertEqual(Object.keys(snapshot.luckyRollSessionsByMilestone).length, 0, 'non-pre-island travel should not create Lucky Roll session');
+    },
+  },
+
+  {
+    name: 'travelToNextIsland: flag on + pre-island target creates session and keeps timer pending',
+    run: async () => {
+      resetAll();
+      __setIslandRunFeatureFlagsForTests({ islandRunPreIslandLuckyRollEnabled: true });
+      const session = makeSession();
+      seedState({ runtimeVersion: 1, currentIslandNumber: 59, cycleIndex: 0, luckyRollSessionsByMilestone: {} });
+
+      await travelToNextIsland({
+        session,
+        client: null,
+        nextIsland: 60,
+        startTimer: true,
+        nowMs: 10_000,
+        getIslandDurationMs: () => 30_000,
+        islandRunContractV2Enabled: false,
+      });
+
+      const snapshot = getIslandRunStateSnapshot(session);
+      const sessionKey = getIslandRunLuckyRollSessionKey(0, 60);
+      const luckyRollSession = snapshot.luckyRollSessionsByMilestone[sessionKey];
+      assertEqual(snapshot.currentIslandNumber, 60, 'travel should advance to pre-island target');
+      assertEqual(snapshot.islandStartedAtMs, 0, 'required Lucky Roll should keep timer pending');
+      assertEqual(snapshot.islandExpiresAtMs, 0, 'required Lucky Roll should keep expiry pending');
+      assertEqual(luckyRollSession?.status, 'active', 'travel should create active Lucky Roll session');
+      assertEqual(luckyRollSession?.targetIslandNumber, 60, 'session should target resolved island');
+      assertEqual(luckyRollSession?.cycleIndex, 0, 'session should use target cycle index');
+    },
+  },
+
+  {
+    name: 'travelToNextIsland: existing banked pre-island Lucky Roll session is respected',
+    run: async () => {
+      resetAll();
+      __setIslandRunFeatureFlagsForTests({ islandRunPreIslandLuckyRollEnabled: true });
+      const session = makeSession();
+      const sessionKey = getIslandRunLuckyRollSessionKey(0, 60);
+      const bankedSession = makeLuckyRollSession('banked');
+      seedState({
+        runtimeVersion: 1,
+        currentIslandNumber: 59,
+        cycleIndex: 0,
+        luckyRollSessionsByMilestone: { [sessionKey]: bankedSession },
+      });
+
+      await travelToNextIsland({
+        session,
+        client: null,
+        nextIsland: 60,
+        startTimer: true,
+        nowMs: 10_000,
+        getIslandDurationMs: () => 30_000,
+        islandRunContractV2Enabled: false,
+      });
+
+      const snapshot = getIslandRunStateSnapshot(session);
+      assertEqual(snapshot.islandStartedAtMs, 10_000, 'banked session should allow timer to start');
+      assertEqual(snapshot.islandExpiresAtMs, 40_000, 'banked session should preserve requested timer behavior');
+      assertEqual(snapshot.luckyRollSessionsByMilestone[sessionKey]?.status, 'banked', 'banked session should not be overwritten');
+      assertEqual(snapshot.luckyRollSessionsByMilestone[sessionKey]?.runId, bankedSession.runId, 'existing banked run id should be preserved');
+    },
+  },
+
+  {
+    name: 'travelToNextIsland: existing active/completed pre-island Lucky Roll sessions are resumed',
+    run: async () => {
+      for (const status of ['active', 'completed'] as const) {
+        resetAll();
+        __setIslandRunFeatureFlagsForTests({ islandRunPreIslandLuckyRollEnabled: true });
+        const session = makeSession();
+        const sessionKey = getIslandRunLuckyRollSessionKey(0, 60);
+        const existingSession = makeLuckyRollSession(status);
+        seedState({
+          runtimeVersion: 1,
+          currentIslandNumber: 59,
+          cycleIndex: 0,
+          luckyRollSessionsByMilestone: { [sessionKey]: existingSession },
+        });
+
+        await travelToNextIsland({
+          session,
+          client: null,
+          nextIsland: 60,
+          startTimer: true,
+          nowMs: 10_000,
+          getIslandDurationMs: () => 30_000,
+          islandRunContractV2Enabled: false,
+        });
+
+        const snapshot = getIslandRunStateSnapshot(session);
+        assertEqual(snapshot.islandStartedAtMs, 0, `${status} session should keep timer pending`);
+        assertEqual(snapshot.islandExpiresAtMs, 0, `${status} session should keep expiry pending`);
+        assertEqual(snapshot.luckyRollSessionsByMilestone[sessionKey]?.status, status, `${status} session should not be overwritten`);
+        assertEqual(snapshot.luckyRollSessionsByMilestone[sessionKey]?.runId, existingSession.runId, `${status} run id should be preserved`);
+      }
+    },
+  },
+
+  {
+    name: 'travelToNextIsland: pre-island Lucky Roll session key uses resolved island and wrapped cycle',
+    run: async () => {
+      resetAll();
+      __setIslandRunFeatureFlagsForTests({ islandRunPreIslandLuckyRollEnabled: true });
+      const session = makeSession();
+      seedState({ runtimeVersion: 1, currentIslandNumber: 120, cycleIndex: 4, luckyRollSessionsByMilestone: {} });
+
+      const result = await travelToNextIsland({
+        session,
+        client: null,
+        nextIsland: 180,
+        startTimer: true,
+        nowMs: 10_000,
+        getIslandDurationMs: () => 30_000,
+        islandRunContractV2Enabled: false,
+      });
+
+      const snapshot = getIslandRunStateSnapshot(session);
+      const wrappedSessionKey = getIslandRunLuckyRollSessionKey(5, 60);
+      assertEqual(result.resolvedIsland, 60, 'raw target should resolve to island 60');
+      assertEqual(result.nextCycleIndex, 5, 'wrapped target should increment cycle index');
+      assertEqual(snapshot.luckyRollSessionsByMilestone[wrappedSessionKey]?.status, 'active', 'session should key by wrapped cycle and resolved island');
+      assertEqual(snapshot.islandStartedAtMs, 0, 'new required wrapped session should keep timer pending');
     },
   },
 
