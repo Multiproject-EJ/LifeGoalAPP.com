@@ -31,6 +31,7 @@ import { islandRunBuildAccelerationTests } from './islandRunBuildAcceleration.te
 import { islandRunActionMutexTests } from './islandRunActionMutex.test';
 import { islandRunRollActionTests } from './islandRunRollAction.test';
 import { islandRunTileRewardActionTests } from './islandRunTileRewardAction.test';
+import { islandRunLuckyRollActionTests } from './islandRunLuckyRollAction.test';
 import { islandRunProgressResetTests } from './islandRunProgressReset.test';
 import { islandRunStateStoreTests } from './islandRunStateStore.test';
 import { islandRunStateActionsTests } from './islandRunStateActions.test';
@@ -84,6 +85,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunActionMutex', tests: islandRunActionMutexTests },
   { label: 'islandRunRollAction', tests: islandRunRollActionTests },
   { label: 'islandRunTileRewardAction', tests: islandRunTileRewardActionTests },
+  { label: 'islandRunLuckyRollAction', tests: islandRunLuckyRollActionTests },
   { label: 'islandRunProgressReset', tests: islandRunProgressResetTests },
   { label: 'islandRunStateStore', tests: islandRunStateStoreTests },
   { label: 'islandRunStateActions', tests: islandRunStateActionsTests },
