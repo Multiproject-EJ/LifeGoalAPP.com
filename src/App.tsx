@@ -821,14 +821,21 @@ export default function App({ forceAuthOnMount }: AppProps) {
       return;
     }
 
-    const { data: season } = await getPersonalQuestSeason(userId);
-    if (!season || season.season.season_type !== 'personal_quest') {
-      setHasOpenedDailyTreatsToday(false);
-      return;
-    }
+    try {
+      const { data: season } = await getPersonalQuestSeason(userId);
+      if (!season || season.season.season_type !== 'personal_quest') {
+        setHasOpenedDailyTreatsToday(false);
+        return;
+      }
 
-    const todayIndex = season.today_day_index;
-    setHasOpenedDailyTreatsToday(season.progress?.opened_days.includes(todayIndex) ?? false);
+      const todayIndex = season.today_day_index;
+      const openedDays = Array.isArray(season.progress?.opened_days)
+        ? season.progress.opened_days
+        : [];
+      setHasOpenedDailyTreatsToday(openedDays.includes(todayIndex));
+    } catch {
+      setHasOpenedDailyTreatsToday(false);
+    }
   }, [supabaseSession?.user?.id]);
 
   const refreshHolidayCalendarOpenedState = useCallback(async () => {

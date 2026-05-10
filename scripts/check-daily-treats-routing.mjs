@@ -94,8 +94,20 @@ assert(
   'Daily Treats done state must load the Personal Quest season.',
 );
 assert(
-  dailyTreatsDoneState.includes('season.progress?.opened_days.includes(todayIndex)'),
+  dailyTreatsDoneState.includes('try {') && dailyTreatsDoneState.includes('} catch {'),
+  'Daily Treats done-state refresh must handle Personal Quest service failures.',
+);
+assert(
+  dailyTreatsDoneState.includes('Array.isArray(season.progress?.opened_days)'),
+  'Daily Treats done state must guard malformed Personal Quest opened_days.',
+);
+assert(
+  dailyTreatsDoneState.includes('openedDays.includes(todayIndex)'),
   'Daily Treats done state must be based on today Personal Quest door progress.',
+);
+assert(
+  !dailyTreatsDoneState.includes('season.progress?.opened_days.includes(todayIndex)'),
+  'Daily Treats done state must not call includes on possibly missing opened_days.',
 );
 assert(
   !source.includes('showDailyTreatsMenu'),
