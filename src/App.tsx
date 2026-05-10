@@ -733,6 +733,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   }, [getTodayDateKey]);
 
+  const openPersonalQuestDailyTreatsCalendar = useCallback(() => {
+    setHolidayPreviewKey(null);
+    setCalendarLaunchMode('personal_quest');
+    setShowCalendarPlaceholder(true);
+  }, []);
+
   const launchDailyTreatsMenu = useCallback(() => {
     markDailyTreatsSeen();
     const todayKey = getTodayDateKey();
@@ -748,13 +754,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
 
     setPendingDailyTreatsOpen(false);
-    setShowDailyTreatsMenu(true);
+    openPersonalQuestDailyTreatsCalendar();
   }, [
     dailyTreatsFirstVisitDate,
     getTodayDateKey,
     isMobileMenuImageActive,
     markDailyTreatsDailyVisit,
     markDailyTreatsSeen,
+    openPersonalQuestDailyTreatsCalendar,
   ]);
 
   const launchHolidayCalendar = useCallback(() => {
@@ -766,10 +773,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const handleDailyTreatsCongratsClose = useCallback(() => {
     setShowDailyTreatsCongrats(false);
     if (pendingDailyTreatsOpen) {
-      setShowDailyTreatsMenu(true);
       setPendingDailyTreatsOpen(false);
+      openPersonalQuestDailyTreatsCalendar();
     }
-  }, [pendingDailyTreatsOpen]);
+  }, [openPersonalQuestDailyTreatsCalendar, pendingDailyTreatsOpen]);
 
   const {
     earnXP,
