@@ -74,7 +74,7 @@ export function IslandRunLuckyRollDevOverlay({
 }: IslandRunLuckyRollDevOverlayProps) {
   const [actionStatus, setActionStatus] = useState<DevLuckyRollActionStatus>('idle');
   const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const normalizedTargetIslandNumber = normalizeIslandNumber(targetIslandNumber || runtimeState.currentIslandNumber);
+  const normalizedTargetIslandNumber = normalizeIslandNumber(targetIslandNumber ?? runtimeState.currentIslandNumber);
   const sessionKey = getIslandRunLuckyRollSessionKey(runtimeState.cycleIndex, normalizedTargetIslandNumber);
   const luckyRollSession = runtimeState.luckyRollSessionsByMilestone[sessionKey] ?? null;
   const isActionPending = actionStatus === 'pending';
