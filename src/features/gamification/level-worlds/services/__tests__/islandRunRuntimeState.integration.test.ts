@@ -1,9 +1,12 @@
 import {
   getIslandRunRuntimeCommitSyncStateForTests,
+  getIslandRunLuckyRollSessionKey,
   hydrateIslandRunGameStateRecordWithSource,
   readIslandRunGameStateRecord,
   resetIslandRunRuntimeCommitCoordinatorForTests,
+  sanitizeIslandRunLuckyRollSessionsByMilestone,
   writeIslandRunGameStateRecord,
+  type IslandRunLuckyRollSession,
 } from '../islandRunGameStateStore';
 import { persistIslandRunRuntimeStatePatch, readIslandRunRuntimeState } from '../islandRunRuntimeState';
 import { assert, assertDeepEqual, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
@@ -87,6 +90,113 @@ function createConflictRuntimeClient() {
     client,
     getCommitCalls: () => commitCalls,
   };
+}
+
+
+function makeLuckyRollSession(overrides: Partial<IslandRunLuckyRollSession> = {}): IslandRunLuckyRollSession {
+  return {
+    status: 'active',
+    runId: 'run-30',
+    targetIslandNumber: 30,
+    cycleIndex: 0,
+    position: 0,
+    rollsUsed: 0,
+    claimedTileIds: [],
+    pendingRewards: [],
+    bankedRewards: [],
+    startedAtMs: 1000,
+    bankedAtMs: null,
+    updatedAtMs: 1000,
+    ...overrides,
+  };
+}
+
+function createRemoteHydrationClient(row: Record<string, unknown> | null) {
+  let selectedColumns = '';
+  const client = {
+    from() {
+      return {
+        select(columns: string) {
+          selectedColumns = columns;
+          return {
+            eq() {
+              return {
+                maybeSingle() {
+                  return Promise.resolve({ data: row, error: null });
+                },
+              };
+            },
+          };
+        },
+      };
+    },
+  } as unknown as import('@supabase/supabase-js').SupabaseClient;
+
+  return {
+    client,
+    getSelectedColumns: () => selectedColumns,
+  };
+}
+
+function createCapturePayloadRuntimeClient() {
+  const payloads: Array<Record<string, unknown>> = [];
+  const client = {
+    rpc(_name: string, args: { p_action_payload?: Record<string, unknown>; p_expected_runtime_version?: number }) {
+      payloads.push(args.p_action_payload ?? {});
+      const expected = Math.max(0, Math.floor(args.p_expected_runtime_version ?? 0));
+      return Promise.resolve({
+        data: [{ status: 'applied', runtime_version: expected + 1 }],
+        error: null,
+      });
+    },
+  } as unknown as import('@supabase/supabase-js').SupabaseClient;
+
+  return {
+    client,
+    getLastPayload: () => payloads[payloads.length - 1],
+  };
+}
+
+function createLuckyRollConflictMergeClient(remoteSession: IslandRunLuckyRollSession) {
+  let commitCalls = 0;
+  const remoteKey = getIslandRunLuckyRollSessionKey(remoteSession.cycleIndex, remoteSession.targetIslandNumber);
+  const client = {
+    rpc(_name: string, args: { p_expected_runtime_version?: number }) {
+      commitCalls += 1;
+      if (commitCalls === 1) {
+        return Promise.resolve({ data: [{ status: 'conflict' }], error: null });
+      }
+      const expected = Math.max(0, Math.floor(args.p_expected_runtime_version ?? 0));
+      return Promise.resolve({ data: [{ status: 'applied', runtime_version: expected + 1 }], error: null });
+    },
+    from() {
+      return {
+        select() {
+          return {
+            eq() {
+              return {
+                maybeSingle() {
+                  return Promise.resolve({
+                    data: {
+                      runtime_version: 4,
+                      current_island_number: 1,
+                      dice_pool: 30,
+                      lucky_roll_sessions_by_milestone: {
+                        [remoteKey]: remoteSession,
+                      },
+                    },
+                    error: null,
+                  });
+                },
+              };
+            },
+          };
+        },
+      };
+    },
+  } as unknown as import('@supabase/supabase-js').SupabaseClient;
+
+  return { client, getCommitCalls: () => commitCalls };
 }
 
 function createDeferredSingleFlightClient() {
@@ -873,6 +983,165 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       );
       const parsed = JSON.parse(pendingRaw!) as { dicePool?: number };
       assertEqual(parsed.dicePool, baseline.dicePool + 9, 'Expected queued record to carry the would-be-lost delta');
+    },
+  },
+
+  {
+    name: 'Lucky Roll session key helper normalizes cycle and island numbers',
+    run: () => {
+      assertEqual(getIslandRunLuckyRollSessionKey(2.8, 30.9), '2:30', 'Expected key helper to floor numeric parts');
+      assertEqual(getIslandRunLuckyRollSessionKey(-1, Number.NaN), '0:1', 'Expected key helper to clamp invalid parts');
+    },
+  },
+  {
+    name: 'Lucky Roll sessions default to an empty canonical ledger',
+    run: () => {
+      resetStorage();
+      const state = readIslandRunGameStateRecord(makeSession());
+      assertDeepEqual(state.luckyRollSessionsByMilestone, {}, 'Expected fresh state to have no Lucky Roll sessions');
+    },
+  },
+  {
+    name: 'Lucky Roll session sanitizer drops malformed sessions and normalizes values',
+    run: () => {
+      const sanitized = sanitizeIslandRunLuckyRollSessionsByMilestone({
+        bad: 'not-a-session',
+        mismatch: {
+          status: 'not-real',
+          runId: ' run-30 ',
+          targetIslandNumber: 30.9,
+          cycleIndex: 2.4,
+          position: -7,
+          rollsUsed: 3.8,
+          claimedTileIds: [4, 4, 2.9, -1, 'bad'],
+          pendingRewards: [
+            { rewardId: ' reward-1 ', tileId: 4.7, rewardType: 'dice', amount: 2.9, eventId: ' event-1 ', metadata: { source: 'test' } },
+            { rewardId: '', tileId: 1, rewardType: 'dice', amount: 1 },
+          ],
+          bankedRewards: [{ rewardId: 'banked-1', tileId: 8, rewardType: 'surprise', amount: -2.4 }],
+          startedAtMs: -5,
+          bankedAtMs: Number.POSITIVE_INFINITY,
+          updatedAtMs: 12.8,
+        },
+      });
+
+      assertDeepEqual(Object.keys(sanitized), ['2:30'], 'Expected sanitizer to key by normalized cycle/island');
+      assertDeepEqual(sanitized['2:30'], {
+        status: 'active',
+        runId: 'run-30',
+        targetIslandNumber: 30,
+        cycleIndex: 2,
+        position: 0,
+        rollsUsed: 3,
+        claimedTileIds: [0, 2, 4],
+        pendingRewards: [{ rewardId: 'reward-1', tileId: 4, rewardType: 'dice', amount: 2, eventId: 'event-1', metadata: { source: 'test' } }],
+        bankedRewards: [{ rewardId: 'banked-1', tileId: 8, rewardType: 'unknown', amount: 0 }],
+        startedAtMs: 0,
+        bankedAtMs: null,
+        updatedAtMs: 12,
+      }, 'Expected Lucky Roll session to be fully sanitized');
+    },
+  },
+  {
+    name: 'local hydration sanitizes luckyRollSessionsByMilestone from localStorage',
+    run: () => {
+      const session = makeLuckyRollSession({ position: 5.8, claimedTileIds: [2, 2, 9] });
+      resetStorage({
+        [`island_run_runtime_state_${USER_ID}`]: JSON.stringify({
+          luckyRollSessionsByMilestone: {
+            'wrong-key': session,
+          },
+        }),
+      });
+
+      const state = readIslandRunGameStateRecord(makeSession());
+      assertDeepEqual(Object.keys(state.luckyRollSessionsByMilestone), ['0:30'], 'Expected local hydration to normalize session key');
+      assertEqual(state.luckyRollSessionsByMilestone['0:30'].position, 5, 'Expected local hydration to sanitize position');
+      assertDeepEqual(state.luckyRollSessionsByMilestone['0:30'].claimedTileIds, [2, 9], 'Expected local hydration to dedupe claimed tiles');
+    },
+  },
+  {
+    name: 'remote hydration selects and maps lucky_roll_sessions_by_milestone',
+    run: async () => {
+      resetStorage();
+      const remoteSession = makeLuckyRollSession({ runId: 'remote-run', updatedAtMs: 2222 });
+      const { client, getSelectedColumns } = createRemoteHydrationClient({
+        runtime_version: 3,
+        current_island_number: 1,
+        dice_pool: 30,
+        lucky_roll_sessions_by_milestone: {
+          '0:30': remoteSession,
+        },
+      });
+
+      const result = await hydrateIslandRunGameStateRecordWithSource({
+        session: makeSession(),
+        client,
+        forceRemote: true,
+      });
+
+      assert(getSelectedColumns().includes('lucky_roll_sessions_by_milestone'), 'Expected explicit select list to include Lucky Roll sessions column');
+      assertEqual(result.source, 'table', 'Expected remote hydration to use table source');
+      assertEqual(result.record.luckyRollSessionsByMilestone['0:30'].runId, 'remote-run', 'Expected remote Lucky Roll session to hydrate');
+    },
+  },
+  {
+    name: 'remote write payload maps luckyRollSessionsByMilestone to lucky_roll_sessions_by_milestone',
+    run: async () => {
+      resetStorage();
+      const session = makeSession();
+      const baseline = readIslandRunGameStateRecord(session);
+      const luckyRollSession = makeLuckyRollSession({ runId: 'write-run', updatedAtMs: 3333 });
+      const { client, getLastPayload } = createCapturePayloadRuntimeClient();
+
+      const result = await writeIslandRunGameStateRecord({
+        session,
+        client,
+        record: {
+          ...baseline,
+          luckyRollSessionsByMilestone: {
+            '0:30': luckyRollSession,
+          },
+        },
+      });
+
+      assertDeepEqual(result, { ok: true }, 'Expected write to succeed');
+      const payload = getLastPayload();
+      assert(payload && typeof payload === 'object', 'Expected captured payload');
+      assertDeepEqual(
+        payload.lucky_roll_sessions_by_milestone,
+        { '0:30': luckyRollSession },
+        'Expected remote payload to include snake_case Lucky Roll session ledger',
+      );
+    },
+  },
+  {
+    name: 'conflict merge preserves newer Lucky Roll session by updatedAtMs',
+    run: async () => {
+      resetStorage();
+      const session = makeSession();
+      const baseline = readIslandRunGameStateRecord(session);
+      const remoteSession = makeLuckyRollSession({ runId: 'remote-newer', updatedAtMs: 5000, position: 9 });
+      const localSession = makeLuckyRollSession({ runId: 'local-older', updatedAtMs: 3000, position: 4 });
+      const { client, getCommitCalls } = createLuckyRollConflictMergeClient(remoteSession);
+
+      const result = await writeIslandRunGameStateRecord({
+        session,
+        client,
+        record: {
+          ...baseline,
+          runtimeVersion: 1,
+          luckyRollSessionsByMilestone: {
+            '0:30': localSession,
+          },
+        },
+      });
+
+      assertDeepEqual(result, { ok: true }, 'Expected conflict recovery write to succeed');
+      assertEqual(getCommitCalls(), 2, 'Expected conflict then retry commit');
+      const state = readIslandRunGameStateRecord(session);
+      assertEqual(state.luckyRollSessionsByMilestone['0:30'].runId, 'remote-newer', 'Expected newer remote session to win conflict merge');
+      assertEqual(state.luckyRollSessionsByMilestone['0:30'].position, 9, 'Expected merged session fields from newer remote session');
     },
   },
   {
