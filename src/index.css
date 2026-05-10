@@ -12469,6 +12469,77 @@ html.platform-ipad .workspace-shell__menu-edge {
   padding: 0.45rem 0.95rem;
 }
 
+.life-build-today-card {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 0.85rem;
+  padding: 0.95rem;
+  border: 1px solid rgba(14, 165, 233, 0.22);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top left, rgba(14, 165, 233, 0.16), transparent 42%),
+    linear-gradient(135deg, rgba(240, 249, 255, 0.96), rgba(248, 250, 252, 0.96));
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+}
+
+.life-build-today-card__copy {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.life-build-today-card__copy h3,
+.life-build-today-card__copy p {
+  margin: 0;
+}
+
+.life-build-today-card__copy h3 {
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.life-build-today-card__copy p {
+  color: #475569;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.life-build-today-card__eyebrow {
+  color: #0284c7 !important;
+  font-size: 0.72rem !important;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.life-build-today-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.life-build-today-card__primary,
+.life-build-today-card__secondary {
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.life-build-today-card__primary {
+  border: none;
+  padding: 0.55rem 1rem;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  box-shadow: 0 10px 20px rgba(14, 165, 233, 0.2);
+}
+
+.life-build-today-card__secondary {
+  border: 1px solid rgba(100, 116, 139, 0.28);
+  padding: 0.5rem 0.9rem;
+  color: #475569;
+  background: rgba(255, 255, 255, 0.72);
+}
+
 .my-quest-hub {
   display: grid;
   gap: 0.7rem;
