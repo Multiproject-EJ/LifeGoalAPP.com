@@ -58,6 +58,13 @@ export interface IslandRunFeatureFlags {
    * during travel and keep island start pending until that session is banked.
    */
   islandRunPreIslandLuckyRollEnabled: boolean;
+
+  /**
+   * Lucky Roll post-rare foundation — when enabled by a future slice, completing
+   * a runtime-rare island can offer a Lucky Roll bonus before continuing to the
+   * next island. This PR only defines the default-off flag and metadata rule.
+   */
+  islandRunPostRareLuckyRollEnabled: boolean;
 }
 
 const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
@@ -68,6 +75,7 @@ const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
   todaysOfferSpinEntryEnabled: true,
   islandRunEarlyFeaturedCreaturePoolEnabled: false,
   islandRunPreIslandLuckyRollEnabled: false,
+  islandRunPostRareLuckyRollEnabled: false,
 });
 
 let currentFlags: IslandRunFeatureFlags = { ...DEFAULT_FLAGS };

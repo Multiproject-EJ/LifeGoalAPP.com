@@ -1,10 +1,10 @@
 /**
  * Central Island Run island classification metadata.
  *
- * Lucky Roll will use `luckyRollTrigger` during a later island-travel slice to
- * decide whether a pre-island reward board should launch. This service is
- * metadata-only: it does not launch Lucky Roll, persist Lucky Roll sessions, or
- * change travel behavior.
+ * Lucky Roll uses metadata-only trigger rules so product slices can decide
+ * when to create/resume canonical sessions without coupling rule definition to
+ * UI, travel, persistence, or reward-board logic. This service does not launch
+ * Lucky Roll, persist Lucky Roll sessions, or change travel behavior.
  *
  * Compatibility note: the gameplay contract describes rare islands as every
  * 10th island, while the current board-tile implementation only treats the
@@ -15,14 +15,33 @@
 
 export type IslandRunIslandRarity = 'normal' | 'seasonal' | 'rare';
 export type IslandRunLuckyRollTrigger = 'none' | 'pre_island';
+export type IslandRunPostRareLuckyRollTrigger = 'none' | 'post_rare_completion';
 
 export interface IslandRunIslandMetadata {
   islandNumber: number;
   rarity: IslandRunIslandRarity;
   isSpecial: boolean;
   isMilestone: boolean;
+  /**
+   * Legacy dormant pre-island trigger metadata. This remains available for the
+   * disabled pre-island foundation and is intentionally separate from the
+   * production post-rare rule.
+   */
   luckyRollTrigger: IslandRunLuckyRollTrigger;
   luckyRollConfigId?: string;
+  /**
+   * Production-direction rule foundation: after completing a rare island, the
+   * player may receive a Lucky Roll bonus before continuing.
+   */
+  postRareLuckyRollTrigger: IslandRunPostRareLuckyRollTrigger;
+  postRareLuckyRollConfigId?: string;
+}
+
+export interface IslandRunPostRareLuckyRollMetadata {
+  islandNumber: number;
+  rarity: 'rare';
+  trigger: 'post_rare_completion';
+  configId: string;
 }
 
 export const ISLAND_RUN_CANONICAL_SPECIAL_ISLAND_NUMBERS = [
@@ -32,6 +51,7 @@ export const ISLAND_RUN_CANONICAL_SPECIAL_ISLAND_NUMBERS = [
 const SPECIAL_ISLAND_NUMBERS = new Set<number>(ISLAND_RUN_CANONICAL_SPECIAL_ISLAND_NUMBERS);
 const ISLAND_RUN_MILESTONE_INTERVAL = 10;
 const LUCKY_ROLL_RARE_CONFIG_ID = 'rare_island_pre_island_v1';
+const POST_RARE_LUCKY_ROLL_CONFIG_ID = 'rare_island_post_rare_completion_v1';
 
 function normalizeIslandNumber(islandNumber: number): number {
   if (!Number.isFinite(islandNumber)) return 1;
@@ -51,6 +71,9 @@ export function getIslandRunIslandMetadata(islandNumber: number): IslandRunIslan
   const isSpecial = rarity !== 'normal';
   const isMilestone = normalizedIslandNumber % ISLAND_RUN_MILESTONE_INTERVAL === 0;
   const luckyRollTrigger: IslandRunLuckyRollTrigger = rarity === 'rare' ? 'pre_island' : 'none';
+  const postRareLuckyRollTrigger: IslandRunPostRareLuckyRollTrigger = rarity === 'rare'
+    ? 'post_rare_completion'
+    : 'none';
 
   return {
     islandNumber: normalizedIslandNumber,
@@ -58,10 +81,29 @@ export function getIslandRunIslandMetadata(islandNumber: number): IslandRunIslan
     isSpecial,
     isMilestone,
     luckyRollTrigger,
+    postRareLuckyRollTrigger,
     ...(luckyRollTrigger === 'pre_island' ? { luckyRollConfigId: LUCKY_ROLL_RARE_CONFIG_ID } : {}),
+    ...(postRareLuckyRollTrigger === 'post_rare_completion'
+      ? { postRareLuckyRollConfigId: POST_RARE_LUCKY_ROLL_CONFIG_ID }
+      : {}),
   };
 }
 
 export function isLuckyRollIsland(islandNumber: number): boolean {
   return getIslandRunIslandMetadata(islandNumber).luckyRollTrigger === 'pre_island';
+}
+
+export function isPostRareLuckyRollIsland(islandNumber: number): boolean {
+  return getIslandRunIslandMetadata(islandNumber).postRareLuckyRollTrigger === 'post_rare_completion';
+}
+
+export function getPostRareLuckyRollMetadata(islandNumber: number): IslandRunPostRareLuckyRollMetadata | null {
+  const metadata = getIslandRunIslandMetadata(islandNumber);
+  if (metadata.postRareLuckyRollTrigger !== 'post_rare_completion' || metadata.rarity !== 'rare') return null;
+  return {
+    islandNumber: metadata.islandNumber,
+    rarity: metadata.rarity,
+    trigger: metadata.postRareLuckyRollTrigger,
+    configId: metadata.postRareLuckyRollConfigId ?? POST_RARE_LUCKY_ROLL_CONFIG_ID,
+  };
 }
