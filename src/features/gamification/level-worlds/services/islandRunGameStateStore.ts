@@ -1955,6 +1955,7 @@ export async function writeIslandRunGameStateRecord(options: {
   };
 
   try {
+    let persistedRecord = localRecord;
     let writeResult = await tryConditionalWrite(localRecord);
 
     if (writeResult.status === 'conflict') {
@@ -1965,6 +1966,9 @@ export async function writeIslandRunGameStateRecord(options: {
           local: localRecord,
         });
         writeResult = await tryConditionalWrite(merged);
+        if (writeResult.status === 'ok') {
+          persistedRecord = merged;
+        }
       } else {
         writeResult = {
           status: 'error',
@@ -2045,7 +2049,7 @@ export async function writeIslandRunGameStateRecord(options: {
     if (typeof window !== 'undefined') {
       try {
         const persisted = {
-          ...localRecord,
+          ...persistedRecord,
           runtimeVersion: writeResult.nextVersion,
         };
         window.localStorage.setItem(getStorageKey(session.user.id), JSON.stringify(persisted));
@@ -2065,7 +2069,7 @@ export async function writeIslandRunGameStateRecord(options: {
       syncState: coordinator.syncState,
       isPersistBlocked: false,
       triggerSource,
-      ...getRuntimeStateDebugFields(localRecord),
+      ...getRuntimeStateDebugFields(persistedRecord),
       runtimeVersion: writeResult.nextVersion,
     });
 
