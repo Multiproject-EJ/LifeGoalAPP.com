@@ -18,6 +18,7 @@ import { BodyHaircutWidget, DailyHabitTracker, HabitsModule, MobileHabitHome, St
 import type { TimeBoundOfferId } from './features/habits/TimeBoundOfferRow';
 import { ProgressDashboard } from './features/dashboard';
 import { VisionBoard } from './features/vision-board';
+import type { LifeWheelCategoryKey } from './features/checkins/LifeWheelCheckins';
 import { LifeWheelCheckins } from './features/checkins';
 import { NotificationPreferences } from './features/notifications';
 import { MyAccountPanel } from './features/account/MyAccountPanel';
@@ -617,6 +618,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [isMyQuestSubmenuOpen, setIsMyQuestSubmenuOpen] = useState(false);
   const [isStarterQuestSheetOpen, setIsStarterQuestSheetOpen] = useState(false);
   const [starterQuestSheetOrigin, setStarterQuestSheetOrigin] = useState<'my-quest' | 'today' | null>(null);
+  const [starterQuestInitialDomainKey, setStarterQuestInitialDomainKey] = useState<LifeWheelCategoryKey | null>(null);
   const [checkinsEntryOrigin, setCheckinsEntryOrigin] = useState<'my-quest' | 'direct'>('direct');
   const [isMyIkigaiModalOpen, setIsMyIkigaiModalOpen] = useState(false);
   const [isFeedbackSupportSubmenuOpen, setIsFeedbackSupportSubmenuOpen] = useState(false);
@@ -2226,7 +2228,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsMyIkigaiModalOpen(true);
   }, [closeGameBoardOverlayIfOpen]);
 
-  const openStarterQuestSheetFromToday = useCallback(() => {
+  const openStarterQuestSheetFromToday = useCallback((initialDomainKey?: LifeWheelCategoryKey) => {
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
@@ -2234,6 +2236,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsFeedbackSupportSubmenuOpen(false);
     closeGameBoardOverlayIfOpen();
     setStarterQuestSheetOrigin('today');
+    setStarterQuestInitialDomainKey(initialDomainKey ?? null);
     setIsStarterQuestSheetOpen(true);
   }, [closeGameBoardOverlayIfOpen]);
 
@@ -2243,6 +2246,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsFeedbackSupportSubmenuOpen(false);
     closeGameBoardOverlayIfOpen();
     setStarterQuestSheetOrigin('my-quest');
+    setStarterQuestInitialDomainKey(null);
     setIsStarterQuestSheetOpen(true);
   }, [closeGameBoardOverlayIfOpen]);
 
@@ -2272,11 +2276,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
       setIsFeedbackSupportSubmenuOpen(false);
     }
     setStarterQuestSheetOrigin(null);
+    setStarterQuestInitialDomainKey(null);
   }, [starterQuestSheetOrigin]);
 
   const handleStarterQuestCreated = useCallback(() => {
     setIsStarterQuestSheetOpen(false);
     setStarterQuestSheetOrigin(null);
+    setStarterQuestInitialDomainKey(null);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(HABITS_CREATED_EVENT));
     }
@@ -4560,6 +4566,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           </button>
           <StarterHabitPicker
             userId={activeSession.user.id}
+            initialDomainKey={starterQuestInitialDomainKey ?? undefined}
             onCreated={handleStarterQuestCreated}
             onClose={closeStarterQuestSheet}
           />

@@ -4,6 +4,7 @@ import type { ProfileStrengthResult } from '../profile-strength/profileStrengthT
 import { DailyHabitTracker } from './DailyHabitTracker';
 import type { ArchetypeHand } from '../identity/archetypes/archetypeHandBuilder';
 import type { ActiveAdventMetaResult } from '../../services/treatCalendarService';
+import type { LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 
 type MobileHabitHomeProps = {
   session: Session;
@@ -24,7 +25,7 @@ type MobileHabitHomeProps = {
   hasOpenedHolidayCalendarToday?: boolean;
   hiddenHabitIds?: string[];
   onHideStandaloneHabitsChange?: (habitIds: string[]) => void;
-  onOpenStarterQuest?: () => void;
+  onOpenStarterQuest?: (initialDomainKey?: LifeWheelCategoryKey) => void;
   archetypeHand?: ArchetypeHand | null;
 };
 

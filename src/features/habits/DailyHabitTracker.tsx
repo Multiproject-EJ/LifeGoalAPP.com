@@ -166,6 +166,7 @@ import {
   clearQuestHabit,
   type QuestHabit,
 } from '../../services/questHabit';
+import { LifeBuildTodayCard } from './LifeBuildTodayCard';
 
 // Constants
 const DONE_ISH_DEFAULT_PERCENTAGE = 85;
@@ -311,7 +312,7 @@ type DailyHabitTrackerProps = {
   hasOpenedHolidayCalendarToday?: boolean;
   hiddenHabitIds?: string[];
   collapseCheckboxUntilExpanded?: boolean;
-  onOpenStarterQuest?: () => void;
+  onOpenStarterQuest?: (initialDomainKey?: LifeWheelCategoryKey) => void;
   archetypeHand?: ArchetypeHand | null;
 };
 
@@ -7776,6 +7777,14 @@ export function DailyHabitTracker({
             ) : (
               renderCompactList()
             )}
+            {isViewingToday && isCompactView && onOpenStarterQuest ? (
+              <LifeBuildTodayCard
+                userId={session.user.id}
+                dateISO={today}
+                habits={habits}
+                onPickOne={onOpenStarterQuest}
+              />
+            ) : null}
 
             {analysisHabitId ? (
               <HabitImprovementAnalysisModal

@@ -58,6 +58,9 @@ export type LegacyHabitWithGoal = LegacyHabitRow & {
   type?: Database['public']['Enums']['habit_type'];
   target_num?: number | null;
   target_unit?: string | null;
+  domain_key?: string | null;
+  status?: Database['public']['Enums']['habit_lifecycle_status'] | null;
+  archived?: boolean | null;
   autoprog?: Json | null;
   habit_environment?: string | null;
   goal: {
@@ -213,6 +216,9 @@ function toLegacyHabitWithGoal(v2Habit: HabitV2Row): LegacyHabitWithGoal {
     type: v2Habit.type,
     target_num: v2Habit.target_num ?? null,
     target_unit: v2Habit.target_unit ?? null,
+    domain_key: v2Habit.domain_key ?? null,
+    status: v2Habit.status ?? null,
+    archived: v2Habit.archived ?? null,
     autoprog: v2Habit.autoprog ?? null,
     habit_environment: v2Habit.habit_environment ?? null,
     goal: v2Habit.goal_id ? {
