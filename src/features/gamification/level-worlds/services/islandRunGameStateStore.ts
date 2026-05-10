@@ -54,6 +54,42 @@ export interface CreatureCollectionRuntimeEntry {
 
 
 
+export type IslandRunLuckyRollSessionStatus = 'active' | 'completed' | 'banked' | 'expired';
+
+export type IslandRunLuckyRollRewardType = 'dice' | 'essence' | 'shards' | 'diamonds' | 'sticker' | 'minigame_ticket' | 'gold' | 'game_tokens' | 'unknown';
+
+export interface IslandRunLuckyRollRewardEntry {
+  rewardId: string;
+  tileId: number;
+  rewardType: IslandRunLuckyRollRewardType;
+  amount: number;
+  eventId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface IslandRunLuckyRollSession {
+  status: IslandRunLuckyRollSessionStatus;
+  runId: string;
+  targetIslandNumber: number;
+  cycleIndex: number;
+  position: number;
+  rollsUsed: number;
+  claimedTileIds: number[];
+  pendingRewards: IslandRunLuckyRollRewardEntry[];
+  bankedRewards: IslandRunLuckyRollRewardEntry[];
+  startedAtMs: number;
+  bankedAtMs: number | null;
+  updatedAtMs: number;
+}
+
+export type IslandRunLuckyRollSessionsByMilestone = Record<string, IslandRunLuckyRollSession>;
+
+export function getIslandRunLuckyRollSessionKey(cycleIndex: number, targetIslandNumber: number): string {
+  const safeCycleIndex = Number.isFinite(cycleIndex) ? Math.max(0, Math.floor(cycleIndex)) : 0;
+  const safeTargetIslandNumber = Number.isFinite(targetIslandNumber) ? Math.max(1, Math.floor(targetIslandNumber)) : 1;
+  return `${safeCycleIndex}:${safeTargetIslandNumber}`;
+}
+
 export interface SpaceExcavatorProgressEntry {
   eventId: string;
   boardIndex: number;
@@ -188,6 +224,7 @@ export interface IslandRunGameStateRecord {
    * Minigame & Events Consolidation Plan).
    */
   minigameTicketsByEvent: Record<string, number>;
+  luckyRollSessionsByMilestone: IslandRunLuckyRollSessionsByMilestone;
   spaceExcavatorProgressByEvent: Record<string, SpaceExcavatorProgressEntry>;
 }
 
@@ -544,6 +581,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     stickerInventory: {},
     lastEssenceDriftLost: 0,
     minigameTicketsByEvent: {},
+    luckyRollSessionsByMilestone: {},
     spaceExcavatorProgressByEvent: {},
   };
 }
@@ -965,6 +1003,10 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
       value.minigameTicketsByEvent,
       fallback.minigameTicketsByEvent,
     ),
+    luckyRollSessionsByMilestone: sanitizeIslandRunLuckyRollSessionsByMilestone(
+      value.luckyRollSessionsByMilestone,
+      fallback.luckyRollSessionsByMilestone,
+    ),
     spaceExcavatorProgressByEvent: sanitizeSpaceExcavatorProgressByEvent(
       value.spaceExcavatorProgressByEvent,
       fallback.spaceExcavatorProgressByEvent,
@@ -993,6 +1035,112 @@ function sanitizeMinigameTicketsByEvent(
     }
   }
   return result;
+}
+
+const LUCKY_ROLL_SESSION_STATUSES = new Set<IslandRunLuckyRollSessionStatus>(['active', 'completed', 'banked', 'expired']);
+const LUCKY_ROLL_REWARD_TYPES = new Set<IslandRunLuckyRollRewardType>(['dice', 'essence', 'shards', 'diamonds', 'sticker', 'minigame_ticket', 'gold', 'game_tokens', 'unknown']);
+
+function sanitizeLuckyRollRewardEntries(value: unknown): IslandRunLuckyRollRewardEntry[] {
+  if (!Array.isArray(value)) return [];
+
+  const rewards: IslandRunLuckyRollRewardEntry[] = [];
+  for (const rawEntry of value) {
+    if (!rawEntry || typeof rawEntry !== 'object' || Array.isArray(rawEntry)) continue;
+    const entry = rawEntry as Record<string, unknown>;
+    if (typeof entry.rewardId !== 'string' || entry.rewardId.trim().length === 0) continue;
+    if (typeof entry.tileId !== 'number' || !Number.isFinite(entry.tileId)) continue;
+    if (typeof entry.amount !== 'number' || !Number.isFinite(entry.amount)) continue;
+    const rewardType = typeof entry.rewardType === 'string' && LUCKY_ROLL_REWARD_TYPES.has(entry.rewardType as IslandRunLuckyRollRewardType)
+      ? entry.rewardType as IslandRunLuckyRollRewardType
+      : 'unknown';
+    const metadata = entry.metadata !== null && typeof entry.metadata === 'object' && !Array.isArray(entry.metadata)
+      ? entry.metadata as Record<string, unknown>
+      : undefined;
+    rewards.push({
+      rewardId: entry.rewardId.trim(),
+      tileId: Math.max(0, Math.floor(entry.tileId)),
+      rewardType,
+      amount: Math.floor(entry.amount),
+      ...(typeof entry.eventId === 'string' && entry.eventId.trim().length > 0 ? { eventId: entry.eventId.trim() } : {}),
+      ...(metadata ? { metadata } : {}),
+    });
+  }
+  return rewards;
+}
+
+function sanitizeClaimedTileIds(value: unknown): number[] {
+  if (!Array.isArray(value)) return [];
+  return Array.from(new Set(
+    value
+      .filter((tileId): tileId is number => typeof tileId === 'number' && Number.isFinite(tileId))
+      .map((tileId) => Math.max(0, Math.floor(tileId))),
+  )).sort((a, b) => a - b);
+}
+
+export function sanitizeIslandRunLuckyRollSessionsByMilestone(
+  value: unknown,
+  fallback: IslandRunLuckyRollSessionsByMilestone = {},
+): IslandRunLuckyRollSessionsByMilestone {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return { ...fallback };
+  }
+
+  const result: IslandRunLuckyRollSessionsByMilestone = {};
+  for (const rawSession of Object.values(value as Record<string, unknown>)) {
+    if (!rawSession || typeof rawSession !== 'object' || Array.isArray(rawSession)) continue;
+    const session = rawSession as Record<string, unknown>;
+    if (typeof session.runId !== 'string' || session.runId.trim().length === 0) continue;
+    if (typeof session.targetIslandNumber !== 'number' || !Number.isFinite(session.targetIslandNumber)) continue;
+    if (typeof session.cycleIndex !== 'number' || !Number.isFinite(session.cycleIndex)) continue;
+
+    const targetIslandNumber = Math.max(1, Math.floor(session.targetIslandNumber));
+    const cycleIndex = Math.max(0, Math.floor(session.cycleIndex));
+    const key = getIslandRunLuckyRollSessionKey(cycleIndex, targetIslandNumber);
+    const status = typeof session.status === 'string' && LUCKY_ROLL_SESSION_STATUSES.has(session.status as IslandRunLuckyRollSessionStatus)
+      ? session.status as IslandRunLuckyRollSessionStatus
+      : 'active';
+    const startedAtMs = typeof session.startedAtMs === 'number' && Number.isFinite(session.startedAtMs)
+      ? Math.max(0, Math.floor(session.startedAtMs))
+      : 0;
+    const updatedAtMs = typeof session.updatedAtMs === 'number' && Number.isFinite(session.updatedAtMs)
+      ? Math.max(0, Math.floor(session.updatedAtMs))
+      : startedAtMs;
+    const sanitized: IslandRunLuckyRollSession = {
+      status,
+      runId: session.runId.trim(),
+      targetIslandNumber,
+      cycleIndex,
+      position: typeof session.position === 'number' && Number.isFinite(session.position) ? Math.max(0, Math.floor(session.position)) : 0,
+      rollsUsed: typeof session.rollsUsed === 'number' && Number.isFinite(session.rollsUsed) ? Math.max(0, Math.floor(session.rollsUsed)) : 0,
+      claimedTileIds: sanitizeClaimedTileIds(session.claimedTileIds),
+      pendingRewards: sanitizeLuckyRollRewardEntries(session.pendingRewards),
+      bankedRewards: sanitizeLuckyRollRewardEntries(session.bankedRewards),
+      startedAtMs,
+      bankedAtMs: typeof session.bankedAtMs === 'number' && Number.isFinite(session.bankedAtMs) ? Math.max(0, Math.floor(session.bankedAtMs)) : null,
+      updatedAtMs,
+    };
+
+    const existing = result[key];
+    if (!existing || sanitized.updatedAtMs >= existing.updatedAtMs) {
+      result[key] = sanitized;
+    }
+  }
+
+  return result;
+}
+
+function mergeLuckyRollSessionsByMilestone(
+  remote: IslandRunLuckyRollSessionsByMilestone,
+  local: IslandRunLuckyRollSessionsByMilestone,
+): IslandRunLuckyRollSessionsByMilestone {
+  const merged: IslandRunLuckyRollSessionsByMilestone = { ...remote };
+  for (const [key, localSession] of Object.entries(local)) {
+    const remoteSession = merged[key];
+    if (!remoteSession || localSession.updatedAtMs >= remoteSession.updatedAtMs) {
+      merged[key] = localSession;
+    }
+  }
+  return merged;
 }
 
 function sanitizeSpaceExcavatorProgressByEvent(value: unknown, fallback: Record<string, SpaceExcavatorProgressEntry>): Record<string, SpaceExcavatorProgressEntry> {
@@ -1159,6 +1307,10 @@ function mergeRecordForConflict(options: {
       remote.minigameTicketsByEvent,
       local.minigameTicketsByEvent,
     ),
+    luckyRollSessionsByMilestone: mergeLuckyRollSessionsByMilestone(
+      remote.luckyRollSessionsByMilestone,
+      local.luckyRollSessionsByMilestone,
+    ),
   };
 }
 
@@ -1238,6 +1390,7 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     sticker_inventory: record.stickerInventory,
     last_essence_drift_lost: record.lastEssenceDriftLost,
     minigame_tickets_by_event: record.minigameTicketsByEvent,
+    lucky_roll_sessions_by_milestone: record.luckyRollSessionsByMilestone,
     space_excavator_progress_by_event: record.spaceExcavatorProgressByEvent,
     last_writer_device_session_id: deviceSessionId,
     updated_at: new Date().toISOString(),
@@ -1303,7 +1456,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event')
+    .select('runtime_version,first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,lucky_roll_sessions_by_milestone')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -1384,6 +1537,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             minigameTicketsByEvent: sanitizeMinigameTicketsByEvent(
               (legacyData as Record<string, unknown>).minigame_tickets_by_event,
               fallback.minigameTicketsByEvent,
+            ),
+            luckyRollSessionsByMilestone: sanitizeIslandRunLuckyRollSessionsByMilestone(
+              (legacyData as Record<string, unknown>).lucky_roll_sessions_by_milestone,
+              fallback.luckyRollSessionsByMilestone,
             ),
             spaceExcavatorProgressByEvent: sanitizeSpaceExcavatorProgressByEvent(
               (legacyData as Record<string, unknown>).space_excavator_progress_by_event,
@@ -1508,6 +1665,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       minigameTicketsByEvent: sanitizeMinigameTicketsByEvent(
         (data as Record<string, unknown>).minigame_tickets_by_event,
         fallback.minigameTicketsByEvent,
+      ),
+      luckyRollSessionsByMilestone: sanitizeIslandRunLuckyRollSessionsByMilestone(
+        (data as Record<string, unknown>).lucky_roll_sessions_by_milestone,
+        fallback.luckyRollSessionsByMilestone,
       ),
       spaceExcavatorProgressByEvent: sanitizeSpaceExcavatorProgressByEvent(
         (data as Record<string, unknown>).space_excavator_progress_by_event,
