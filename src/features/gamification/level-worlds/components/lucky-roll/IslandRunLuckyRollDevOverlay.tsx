@@ -12,6 +12,7 @@ import {
   bankIslandRunLuckyRollRewards,
   startIslandRunLuckyRoll,
 } from '../../services/islandRunLuckyRollAction';
+import { isIslandRunInternalDevToolsEnabled } from '../../services/islandRunInternalDevTools';
 import './IslandRunLuckyRollDevOverlay.css';
 
 const DEV_LUCKY_ROLL_BOARD_SIZE = 30;
@@ -92,7 +93,7 @@ export function IslandRunLuckyRollDevOverlay({
       && (luckyRollSession.pendingRewards.length > 0 || luckyRollSession.status === 'completed'),
   );
 
-  if (!import.meta.env.DEV || !isDevModeEnabled) {
+  if (!isIslandRunInternalDevToolsEnabled(session, isDevModeEnabled)) {
     return null;
   }
 

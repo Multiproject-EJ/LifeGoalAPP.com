@@ -312,6 +312,7 @@ import {
   resolveNextRollEtaMs,
   type DiceRegenState,
 } from '../services/islandRunDiceRegeneration';
+import { isIslandRunInternalDevToolsEnabled } from '../services/islandRunInternalDevTools';
 import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
 import { IslandRunLuckyRollDevOverlay } from './lucky-roll/IslandRunLuckyRollDevOverlay';
 import { resolveNextCheapestIndex } from '../services/islandRunShopAffordability';
@@ -1136,6 +1137,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, []);
   const { showQaHooks, isMinimalBoardArt, boardTiltXDeg, boardRotateZDeg } = boardRenderTuning;
   const [isDevModeEnabled, setIsDevModeEnabled] = useState(() => isIslandRunDevModeEnabled());
+  const isLuckyRollInternalDevToolsEnabled = isIslandRunInternalDevToolsEnabled(session, isDevModeEnabled);
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
   const [isDevPanelOpen, setIsDevPanelOpen] = useState(false);
   const [devTimedEventOverrideType, setDevTimedEventOverrideType] = useState<EventId | null>(() => {
@@ -6953,7 +6955,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [client, effectiveIslandNumber, isDevModeEnabled, session]);
 
   const handleDevStartLuckyRollSession = useCallback(async (targetIslandNumber: number) => {
-    if (!isDevModeEnabled || !import.meta.env.DEV) return 'Lucky Roll dev launcher is only available in DEV builds.';
+    if (!isLuckyRollInternalDevToolsEnabled) return 'Lucky Roll dev launcher is only available to internal testers in enabled builds.';
     const normalizedTargetIslandNumber = Number.isFinite(targetIslandNumber)
       ? Math.max(1, Math.floor(targetIslandNumber))
       : runtimeStateRef.current.currentIslandNumber;
@@ -6971,13 +6973,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       : `🍀 DEV Lucky Roll already exists for island ${normalizedTargetIslandNumber}.`;
     setLandingText(message);
     return message;
-  }, [client, isDevModeEnabled, session]);
+  }, [client, isLuckyRollInternalDevToolsEnabled, session]);
 
   const handleDevAdvanceLuckyRollSession = useCallback(async (
     targetIslandNumber: number,
     rewardType: 'dice' | 'essence',
   ) => {
-    if (!isDevModeEnabled || !import.meta.env.DEV) return 'Lucky Roll dev launcher is only available in DEV builds.';
+    if (!isLuckyRollInternalDevToolsEnabled) return 'Lucky Roll dev launcher is only available to internal testers in enabled builds.';
     const normalizedTargetIslandNumber = Number.isFinite(targetIslandNumber)
       ? Math.max(1, Math.floor(targetIslandNumber))
       : runtimeStateRef.current.currentIslandNumber;
@@ -7003,10 +7005,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       : `🍀 DEV Lucky Roll advance skipped: ${result.status}.`;
     setLandingText(message);
     return message;
-  }, [client, isDevModeEnabled, session]);
+  }, [client, isLuckyRollInternalDevToolsEnabled, session]);
 
   const handleDevBankLuckyRollSession = useCallback(async (targetIslandNumber: number) => {
-    if (!isDevModeEnabled || !import.meta.env.DEV) return 'Lucky Roll dev launcher is only available in DEV builds.';
+    if (!isLuckyRollInternalDevToolsEnabled) return 'Lucky Roll dev launcher is only available to internal testers in enabled builds.';
     const normalizedTargetIslandNumber = Number.isFinite(targetIslandNumber)
       ? Math.max(1, Math.floor(targetIslandNumber))
       : runtimeStateRef.current.currentIslandNumber;
@@ -7022,17 +7024,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const message = `🍀 DEV Lucky Roll bank ${result.status}: +${result.diceAwarded} dice, +${result.essenceAwarded} essence.`;
     setLandingText(message);
     return message;
-  }, [client, isDevModeEnabled, session]);
+  }, [client, isLuckyRollInternalDevToolsEnabled, session]);
 
   const handleOpenDevLuckyRollOverlay = useCallback((targetIslandNumber: number) => {
-    if (!isDevModeEnabled || !import.meta.env.DEV) return;
+    if (!isLuckyRollInternalDevToolsEnabled) return;
     const normalizedTargetIslandNumber = Number.isFinite(targetIslandNumber)
       ? Math.max(1, Math.floor(targetIslandNumber))
       : runtimeStateRef.current.currentIslandNumber;
     setDevLuckyRollTargetIsland(normalizedTargetIslandNumber);
     setShowDevLuckyRollOverlay(true);
     setLandingText(`🍀 DEV Lucky Roll overlay opened for island ${normalizedTargetIslandNumber}.`);
-  }, [isDevModeEnabled]);
+  }, [isLuckyRollInternalDevToolsEnabled]);
 
   const handleLuckyRollOverlayRuntimeStateChange = useCallback((record: IslandRunGameStateRecord) => {
     setRuntimeState(record);
@@ -8383,7 +8385,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         </div>
       )}
 
-      {showDevLuckyRollOverlay && isDevModeEnabled && import.meta.env.DEV && (
+      {showDevLuckyRollOverlay && isLuckyRollInternalDevToolsEnabled && (
         <IslandRunLuckyRollDevOverlay
           session={session}
           client={client}
@@ -10714,7 +10716,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           devTimedEventOverrideEventId={devTimedEventOverrideEventId}
           onSetDevTimedEventOverride={handleSetDevTimedEventOverride}
           onGrantDevTimedEventTickets={handleGrantDevTimedEventTickets}
-          showLuckyRollDevLauncher={isDevModeEnabled && import.meta.env.DEV}
+          showLuckyRollDevLauncher={isLuckyRollInternalDevToolsEnabled}
           onOpenLuckyRollDevOverlay={handleOpenDevLuckyRollOverlay}
           onStartLuckyRollDevSession={handleDevStartLuckyRollSession}
           onAdvanceLuckyRollDevSession={handleDevAdvanceLuckyRollSession}
