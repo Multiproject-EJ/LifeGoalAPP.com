@@ -42,14 +42,17 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import type {
   IslandRunGameStateRecord,
+  IslandRunLuckyRollSession,
   PerIslandEggEntry,
   SpaceExcavatorProgressEntry,
 } from './islandRunGameStateStore';
+import { getIslandRunLuckyRollSessionKey } from './islandRunGameStateStore';
 import {
   commitIslandRunState,
   getIslandRunStateSnapshot,
   refreshIslandRunStateFromLocal,
 } from './islandRunStateStore';
+import { isIslandRunFeatureEnabled } from '../../../../config/islandRunFeatureFlags';
 import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 import { persistIslandRunProfileMetadata } from './islandRunProfile';
 import {
@@ -62,6 +65,7 @@ import {
 } from './islandRunContractV2EssenceBuild';
 import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
 import { resolveRuntimeDiceRegenUpdate } from './islandRunRuntimeRegen';
+import { resolveIslandRunPreIslandLuckyRollGate } from './islandRunPreIslandLuckyRollGate';
 
 
 export interface ApplySpaceExcavatorDigResult {
@@ -2158,6 +2162,13 @@ function effectiveIslandNumber(resolvedIsland: number, cycleIndex: number): numb
   return resolvedIsland + cycleIndex * ISLAND_RUN_MAX_ISLAND;
 }
 
+function buildTravelLuckyRollRunId(sessionKey: string, nowMs: number): string {
+  const randomSuffix = globalThis.crypto?.randomUUID
+    ? globalThis.crypto.randomUUID()
+    : Math.random().toString(36).slice(2);
+  return `island-run-lucky-roll:${sessionKey}:${nowMs}:${randomSuffix}`;
+}
+
 export interface TravelToNextIslandOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -2387,9 +2398,38 @@ export async function travelToNextIsland(options: TravelToNextIslandOptions): Pr
   }
 
   // ── Timer ─────────────────────────────────────────────────────────────
+  const preIslandLuckyRollGate = resolveIslandRunPreIslandLuckyRollGate({
+    featureEnabled: isIslandRunFeatureEnabled('islandRunPreIslandLuckyRollEnabled'),
+    islandNumber: resolvedIsland,
+    cycleIndex: nextCycleIndex,
+    luckyRollSessionsByMilestone: current.luckyRollSessionsByMilestone,
+  });
+  const shouldCreatePreIslandLuckyRollSession = preIslandLuckyRollGate.status === 'required_missing_session'
+    && preIslandLuckyRollGate.sessionKey !== null;
+  const nextLuckyRollSessionsByMilestone = shouldCreatePreIslandLuckyRollSession
+    ? {
+        ...current.luckyRollSessionsByMilestone,
+        [preIslandLuckyRollGate.sessionKey as string]: {
+          status: 'active',
+          runId: buildTravelLuckyRollRunId(preIslandLuckyRollGate.sessionKey as string, nowMs),
+          targetIslandNumber: resolvedIsland,
+          cycleIndex: nextCycleIndex,
+          position: 0,
+          rollsUsed: 0,
+          claimedTileIds: [],
+          pendingRewards: [],
+          bankedRewards: [],
+          startedAtMs: nowMs,
+          bankedAtMs: null,
+          updatedAtMs: nowMs,
+        } satisfies IslandRunLuckyRollSession,
+      }
+    : current.luckyRollSessionsByMilestone;
+  const shouldKeepTimerPendingForPreIslandLuckyRoll = preIslandLuckyRollGate.blocksIslandStart;
+  const effectiveStartTimer = startTimer && !shouldKeepTimerPendingForPreIslandLuckyRoll;
   const durationMs = getIslandDurationMs(resolvedIsland);
-  const islandStartedAtMs = startTimer ? nowMs : 0;
-  const islandExpiresAtMs = startTimer ? nowMs + durationMs : 0;
+  const islandStartedAtMs = effectiveStartTimer ? nowMs : 0;
+  const islandExpiresAtMs = effectiveStartTimer ? nowMs + durationMs : 0;
 
   // ── Single atomic commit ──────────────────────────────────────────────
   // Shallow-overlay the three per-island Record maps so the old island's
@@ -2419,6 +2459,7 @@ export async function travelToNextIsland(options: TravelToNextIslandOptions): Pr
     stopBuildStateByIndex: nextStopBuildStateByIndex,
     activeStopIndex: nextActiveStopIndex,
     activeStopType: nextActiveStopType,
+    luckyRollSessionsByMilestone: nextLuckyRollSessionsByMilestone,
     currentIslandNumber: resolvedIsland,
     cycleIndex: nextCycleIndex,
     bossTrialResolvedIslandNumber: null,

@@ -51,6 +51,13 @@ export interface IslandRunFeatureFlags {
    * steers species choice after egg tier is known.
    */
   islandRunEarlyFeaturedCreaturePoolEnabled: boolean;
+
+  /**
+   * Lucky Roll travel foundation — when enabled, rare/milestone islands whose
+   * metadata declares a pre-island Lucky Roll create/resume a canonical session
+   * during travel and keep island start pending until that session is banked.
+   */
+  islandRunPreIslandLuckyRollEnabled: boolean;
 }
 
 const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
@@ -60,6 +67,7 @@ const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
   islandRunPartnerWheelEnabled: false,
   todaysOfferSpinEntryEnabled: true,
   islandRunEarlyFeaturedCreaturePoolEnabled: false,
+  islandRunPreIslandLuckyRollEnabled: false,
 });
 
 let currentFlags: IslandRunFeatureFlags = { ...DEFAULT_FLAGS };
