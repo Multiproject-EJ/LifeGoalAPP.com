@@ -174,6 +174,81 @@ Together they cover:
 - uncertainty exploration
 - mythic wisdom
 
+## Full Dex Expansion Plan
+
+The First 8 table should become the template for all 45 production creatures, but the expansion should stay grounded in the current code-truth:
+
+1. Start from `creatureCatalog.ts` for each creature’s `id`, `name`, `tier`, `habitat`, `shipZone`, and existing `affinity`.
+2. Use `creatureArchetypeBridge.ts` for the allowed weakness support tags associated with that affinity.
+3. Assign one primary personality-support role per creature using existing Big Five/custom trait language from the Player’s Hand system.
+4. Write one simple emotional-role sentence for every creature: “This creature helps the player with ______.”
+5. Add identity risk notes before art/card production so creatures with similar habitats or affinities do not collapse into the same role.
+6. Review the full 45-creature table as content/design planning before adding optional config fields or gameplay bonuses.
+
+The goal is not to create a new personality framework. The goal is to make every existing creature more legible as a supportive companion within the current affinity, weakness-support, and Player’s Hand model.
+
+## Remaining 37 creature mapping backlog
+
+These are placeholders for the 37 creatures not finalized in the First 8 table. Weakness tags below are selected from the current affinity bridge and should be reviewed during the full Dex pass.
+
+| id | name | tier | existing affinity | proposed personality role placeholder | likely trait strengthened | likely weakness balanced | identity risk note |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `common-drift-pup` | Drift Pup | common | Explorer | Gentle route-tester | Openness | `low_momentum` / `decision_confusion` | Keep softer and more playful than Nebula Wisp or Crown Drifter. |
+| `common-bloom-mite` | Bloom Mite | common | Caregiver | Tiny nurture nudge | Agreeableness | `low_confidence` / `stress_fragility` | Avoid overlap with Mossling; make it active micro-encouragement, not recovery. |
+| `common-stone-hopper` | Stone Hopper | common | Builder | Sturdy follow-through buddy | Conscientiousness | `low_consistency` / `overwhelm` | Keep physical, repeatable progress distinct from Sproutling’s beginner habit identity. |
+| `common-fern-fox` | Fern Fox | common | Mentor | Clever path mentor | Cognitive Entry / Agreeableness | `decision_confusion` / `low_confidence` | Should feel wise and nimble, not mystical like Oracle creatures. |
+| `common-dewling` | Dewling | common | Peacemaker | Emotional soft-reset companion | Stress Response / Agreeableness | `stress_fragility` / `overwhelm` | Owns softening and reset; avoid making it a generic water creature. |
+| `common-root-whisp` | Root Whisp | common | Steady | Values-return anchor | Regulation Style | `low_consistency` / `decision_confusion` | Distinguish from Pebble Spirit by focusing on returning to what matters, not pausing. |
+| `common-garden-puff` | Garden Puff | common | Nurturer | Light comfort companion | Agreeableness / self-kindness | `low_confidence` / `stress_fragility` | Keep buoyant and comforting; do not duplicate Mossling’s quiet recovery lane. |
+| `common-lichen-kit` | Lichen Kit | common | Grounded | Resilient grounding learner | Emotional Stability / Stress Response | `stress_fragility` / `overwhelm` | Should feel adaptive and durable, not another Pebble Spirit. |
+| `common-twilight-seed` | Twilight Seed | common | Dreamer | Quiet possibility keeper | Openness | `low_momentum` / `low_confidence` | Keep dreamy and future-oriented; do not become Sproutling’s practical habit role. |
+| `common-river-bud` | River Bud | common | Caregiver | Emotional replenishment sprout | Agreeableness / Stress Response | `low_confidence` / `stress_fragility` | Make it replenishing flow, not Dewling’s reset or Mossling’s recovery. |
+| `common-petal-scout` | Petal Scout | common | Explorer | Tiny discovery scout | Openness | `low_momentum` / `decision_confusion` | Keep scout-like curiosity distinct from Drift Pup’s route testing. |
+| `rare-luma-hatchling` | Luma Hatchling | rare | Visionary | First-light vision starter | Openness / Visionary expression | `low_momentum` / `decision_confusion` | Should feel like emerging inspiration, not Aurora Finch’s outward communication. |
+| `rare-dewleaf-sprite` | Dewleaf Sprite | rare | Guardian | Protective daily steadier | Emotional Stability / Conscientiousness | `stress_fragility` / `low_consistency` | Keep guardian role gentle; avoid making it a defensive power fantasy. |
+| `rare-solar-pika` | Solar Pika | rare | Champion | Confidence charge companion | Extraversion / action energy | `low_confidence` / `low_momentum` | Should spark courage without implying confidence is permanently fixed. |
+| `rare-comet-cub` | Comet Cub | rare | Strategist | Fast planner | Cognitive Entry | `decision_confusion` / `overwhelm` | Keep planning compact and playful; avoid becoming a cold analytics mascot. |
+| `rare-bloom-seraph` | Bloom Seraph | rare | Mentor | Compassionate guidance companion | Cognitive Entry / Agreeableness | `decision_confusion` / `low_confidence` | Distinguish from Starhorn Seraph by making it nurturing guidance, not oracle wisdom. |
+| `rare-shard-marten` | Shard Marten | rare | Architect | Precision builder | Conscientiousness / Cognitive Entry | `low_consistency` / `decision_confusion` | Avoid harsh perfectionism; frame precision as supportive clarity. |
+| `rare-cinder-mouse` | Cinder Mouse | rare | Challenger | Tiny courage spark | Extraversion / action energy | `low_confidence` / `low_momentum` | Keep courage warm and small-scale, not aggressive or reckless. |
+| `rare-tide-lantern` | Tide Lantern | rare | Peacemaker | Calm conflict lantern | Stress Response / Agreeableness | `stress_fragility` / `overwhelm` | Owns harmony and pressure relief; keep separate from Glowtail’s next-step rhythm. |
+| `rare-halo-staglet` | Halo Staglet | rare | Guardian | Protective confidence guide | Emotional Stability / Conscientiousness | `stress_fragility` / `low_consistency` | Avoid divine certainty; make it gentle protection and steadiness. |
+| `rare-gear-wing` | Gear Wing | rare | Builder | Mechanical routine helper | Conscientiousness / Regulation Style | `low_consistency` / `overwhelm` | Keep systems-oriented; do not duplicate Stone Hopper’s physical persistence. |
+| `rare-mirage-pup` | Mirage Pup | rare | Creator | Playful reframing companion | Openness | `low_momentum` / `overwhelm` | Make it creative perspective, not decision-clarity like Nebula Wisp. |
+| `rare-crown-drifter` | Crown Drifter | rare | Explorer | Brave horizon drifter | Openness | `low_momentum` / `decision_confusion` | Keep bold exploration distinct from Drift Pup’s gentle test and Nebula Wisp’s uncertainty safety. |
+| `mythic-voidlight-familiar` | Voidlight Familiar | mythic | Visionary | Shadow-light vision familiar | Openness / Visionary expression | `low_momentum` / `decision_confusion` | Mythic should deepen meaning, not grant stronger pay-to-win outcomes. |
+| `mythic-sunflare-kirin` | Sunflare Kirin | mythic | Radiant | Radiant resolve guardian | Extraversion / Agreeableness | `low_confidence` / `stress_fragility` | Keep warmth and courage balanced; avoid pure power fantasy. |
+| `mythic-dreamroot-ancient` | Dreamroot Ancient | mythic | Sage | Deep reflection elder | Cognitive Entry | `decision_confusion` / `overwhelm` | Should be patient wisdom, not prophecy or deterministic advice. |
+| `mythic-celest-pup` | Celest Pup | mythic | Cosmic | Cosmic comfort companion | Openness / Stress Response | `overwhelm` / `stress_fragility` | Keep emotionally safe and approachable despite cosmic scale. |
+| `mythic-lux-leviathan` | Lux Leviathan | mythic | Commander | Steady command companion | Extraversion / Conscientiousness | `low_confidence` / `low_consistency` | Avoid dominance language; frame command as calm leadership support. |
+| `mythic-orbit-vulpine` | Orbit Vulpine | mythic | Explorer | Patterned exploration guide | Openness | `low_momentum` / `decision_confusion` | Differentiate from Nebula Wisp by emphasizing orbit/pattern, not uncertainty safety. |
+| `mythic-astral-titanet` | Astral Titanet | mythic | Architect | Cosmic structure builder | Conscientiousness / Cognitive Entry | `low_consistency` / `decision_confusion` | Avoid making mythic structure feel like unavoidable optimization. |
+| `mythic-solstice-sylph` | Solstice Sylph | mythic | Creator | Seasonal renewal muse | Openness | `low_momentum` / `overwhelm` | Keep creative renewal distinct from Mirage Pup’s playful reframing. |
+| `mythic-echo-phoenix` | Echo Phoenix | mythic | Champion | Resilient comeback spark | Extraversion / action energy | `low_confidence` / `low_momentum` | Frame comeback as encouragement, not guaranteed victory. |
+| `mythic-nightbloom-drake` | Nightbloom Drake | mythic | Rebel | Courageous boundary companion | Openness / action energy | `low_momentum` / `low_confidence` | Avoid rebelliousness as harm or defiance; make it healthy boundary energy. |
+| `mythic-prism-warden` | Prism Warden | mythic | Guardian | Many-angle protector | Emotional Stability / Conscientiousness | `stress_fragility` / `low_consistency` | Keep protection reflective and supportive, not invulnerability. |
+| `mythic-aurora-maned-cat` | Aurora Maned Cat | mythic | Visionary | Poised inspiration companion | Openness / Visionary expression | `low_momentum` / `decision_confusion` | Distinguish from Aurora Finch by making it quiet poise, not communication. |
+| `mythic-cosmos-songbird` | Cosmos Songbird | mythic | Sage | Cosmic meaning singer | Cognitive Entry / Openness | `decision_confusion` / `overwhelm` | Keep meaning-making lyrical; avoid overlap with Aurora Finch’s horizon call. |
+| `mythic-infinity-sprite` | Infinity Sprite | mythic | Oracle | Infinite perspective sprite | Cognitive Entry | `decision_confusion` / `stress_fragility` | Avoid fatalism or “knows your destiny”; frame as perspective and kindness. |
+
+## Card UI / copy guardrails
+
+- Creature cards should show only simple personality-support copy at first glance.
+- The primary card copy should answer: “This creature helps the player with ______.”
+- Detail panels, modals, or “Why this helps you” views can reveal deeper Player’s Hand synergy.
+- Avoid clinical language, diagnostic claims, therapy-style promises, or fixed labels.
+- Avoid permanent trait-change language such as “your score increased” or “your personality changed.”
+- Avoid making mythics feel pay-to-win; mythic cards can feel more iconic, but their support should be framed as rarer flavor, deeper reflection, or stronger narrative identity rather than objectively superior self-development.
+- Keep card copy emotionally useful, short, and game-like.
+
+## Next implementation candidates
+
+1. Keep `docs/CREATURE_PERSONALITY_DEX_V1.md` as planning only for now.
+2. Review and finalize the full 45-creature mapping table with product/design before adding data fields.
+3. After review, consider optional static config fields for `speciesIdentity`, `personalityTraitStrengthened`, `weaknessBalanced`, `emotionalRole`, and card copy.
+4. Do not implement gameplay bonuses directly from this document yet.
+5. If gameplay effects are added later, route them through approved creature/Perfect Companion systems and keep them temporary, explainable, and non-deterministic about personality.
+
 ## Open product notes
 
 - `Catalyst` and `Oracle` are creature affinities, not canonical archetype cards; current code bridges them to archetype families.
