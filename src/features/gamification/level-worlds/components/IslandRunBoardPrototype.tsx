@@ -234,6 +234,11 @@ import {
 import { executeIslandRunRollAction } from '../services/islandRunRollAction';
 import { executeIslandRunTileRewardAction } from '../services/islandRunTileRewardAction';
 import {
+  advanceIslandRunLuckyRoll,
+  bankIslandRunLuckyRollRewards,
+  startIslandRunLuckyRoll,
+} from '../services/islandRunLuckyRollAction';
+import {
   getEffectiveIslandNumber,
   getIslandTotalEssenceCost,
   getStopUpgradeCost,
@@ -341,6 +346,7 @@ const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_WINDOW_MS = 10_000;
 const ISLAND_RUN_120_STOP_PAIR_DELIMITER = '_to_';
 const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;
 const ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_WEIGHT_PERCENT = 70;
+const DEV_LUCKY_ROLL_TEST_ROLL = 3;
 const BUILD_HOLD_INITIAL_DELAY_MS = 400;
 
 function resolveBuildHoldRepeatDelayMs(heldMs: number) {
@@ -6943,6 +6949,78 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setLandingText(`🧪 DEV MODE: built ${result.stopsCompleted}/5 landmarks to L3 via canonical action.`);
   }, [client, effectiveIslandNumber, isDevModeEnabled, session]);
 
+  const handleDevStartLuckyRollSession = useCallback(async (targetIslandNumber: number) => {
+    if (!isDevModeEnabled || !import.meta.env.DEV) return 'Lucky Roll dev launcher is only available in DEV builds.';
+    const normalizedTargetIslandNumber = Number.isFinite(targetIslandNumber)
+      ? Math.max(1, Math.floor(targetIslandNumber))
+      : runtimeStateRef.current.currentIslandNumber;
+    const result = await startIslandRunLuckyRoll({
+      session,
+      client,
+      cycleIndex: runtimeStateRef.current.cycleIndex,
+      targetIslandNumber: normalizedTargetIslandNumber,
+      triggerSource: 'dev_lucky_roll_launcher_start',
+    });
+    setRuntimeState(result.record);
+    runtimeStateRef.current = result.record;
+    const message = result.status === 'started'
+      ? `🍀 DEV Lucky Roll started for island ${normalizedTargetIslandNumber}.`
+      : `🍀 DEV Lucky Roll already exists for island ${normalizedTargetIslandNumber}.`;
+    setLandingText(message);
+    return message;
+  }, [client, isDevModeEnabled, session]);
+
+  const handleDevAdvanceLuckyRollSession = useCallback(async (
+    targetIslandNumber: number,
+    rewardType: 'dice' | 'essence',
+  ) => {
+    if (!isDevModeEnabled || !import.meta.env.DEV) return 'Lucky Roll dev launcher is only available in DEV builds.';
+    const normalizedTargetIslandNumber = Number.isFinite(targetIslandNumber)
+      ? Math.max(1, Math.floor(targetIslandNumber))
+      : runtimeStateRef.current.currentIslandNumber;
+    const rewardAmount = rewardType === 'dice' ? 2 : 25;
+    const result = await advanceIslandRunLuckyRoll({
+      session,
+      client,
+      cycleIndex: runtimeStateRef.current.cycleIndex,
+      targetIslandNumber: normalizedTargetIslandNumber,
+      roll: DEV_LUCKY_ROLL_TEST_ROLL,
+      reward: {
+        rewardType,
+        amount: rewardAmount,
+        metadata: { source: 'dev_lucky_roll_launcher' },
+      },
+      triggerSource: 'dev_lucky_roll_launcher_advance',
+    });
+    setRuntimeState(result.record);
+    runtimeStateRef.current = result.record;
+    const rewardLabel = result.rewardAdded ? `, pending +${rewardAmount} ${rewardType}` : '';
+    const message = result.luckyRollSession
+      ? `🍀 DEV Lucky Roll ${result.status} to tile ${result.landedTileId ?? '—'}${rewardLabel}.`
+      : `🍀 DEV Lucky Roll advance skipped: ${result.status}.`;
+    setLandingText(message);
+    return message;
+  }, [client, isDevModeEnabled, session]);
+
+  const handleDevBankLuckyRollSession = useCallback(async (targetIslandNumber: number) => {
+    if (!isDevModeEnabled || !import.meta.env.DEV) return 'Lucky Roll dev launcher is only available in DEV builds.';
+    const normalizedTargetIslandNumber = Number.isFinite(targetIslandNumber)
+      ? Math.max(1, Math.floor(targetIslandNumber))
+      : runtimeStateRef.current.currentIslandNumber;
+    const result = await bankIslandRunLuckyRollRewards({
+      session,
+      client,
+      cycleIndex: runtimeStateRef.current.cycleIndex,
+      targetIslandNumber: normalizedTargetIslandNumber,
+      triggerSource: 'dev_lucky_roll_launcher_bank',
+    });
+    setRuntimeState(result.record);
+    runtimeStateRef.current = result.record;
+    const message = `🍀 DEV Lucky Roll bank ${result.status}: +${result.diceAwarded} dice, +${result.essenceAwarded} essence.`;
+    setLandingText(message);
+    return message;
+  }, [client, isDevModeEnabled, session]);
+
   const handleUnlockDevMode = useCallback(() => {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('dev_mode', 'true');
@@ -10606,6 +10684,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           devTimedEventOverrideEventId={devTimedEventOverrideEventId}
           onSetDevTimedEventOverride={handleSetDevTimedEventOverride}
           onGrantDevTimedEventTickets={handleGrantDevTimedEventTickets}
+          showLuckyRollDevLauncher={isDevModeEnabled && import.meta.env.DEV}
+          onStartLuckyRollDevSession={handleDevStartLuckyRollSession}
+          onAdvanceLuckyRollDevSession={handleDevAdvanceLuckyRollSession}
+          onBankLuckyRollDevSession={handleDevBankLuckyRollSession}
           onClose={() => setShowDebugPanel(false)}
         />
       )}
