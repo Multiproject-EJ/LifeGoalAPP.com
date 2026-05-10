@@ -20626,8 +20626,6 @@ html.platform-ipad .workspace-shell__menu-edge {
   width: min(150px, 45vw);
 }
 
-.daily-treats-modal,
-.daily-treats-placeholder,
 .daily-treats-calendar {
   position: fixed;
   inset: 0;
@@ -20827,16 +20825,14 @@ html.platform-ipad .workspace-shell__menu-edge {
   background-size: cover;
 }
 
-.daily-treats-modal__backdrop,
-.daily-treats-placeholder__backdrop {
+.daily-treats-calendar__backdrop {
   position: absolute;
   inset: 0;
   background: rgba(15, 23, 42, 0.82);
   backdrop-filter: blur(1px);
 }
 
-.daily-treats-modal__dialog,
-.daily-treats-placeholder__dialog {
+.daily-treats-calendar__dialog {
   position: relative;
   z-index: 1;
   width: min(99vw, 520px);
@@ -20845,14 +20841,6 @@ html.platform-ipad .workspace-shell__menu-edge {
   padding: 1.35rem;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
   border: 1px solid rgba(148, 163, 184, 0.35);
-}
-
-.daily-treats-modal__dialog {
-  background: transparent;
-}
-
-.daily-treats-placeholder__dialog {
-  background: rgba(255, 255, 255, 0.94);
 }
 
 .daily-treats-calendar__dialog {
@@ -21200,16 +21188,6 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 @media (max-width: 640px) {
-  .daily-treats-modal,
-  .daily-treats-placeholder {
-    padding: 1rem;
-  }
-
-  .daily-treats-modal__dialog {
-    width: 100vw;
-  }
-
-
   .daily-treats-calendar {
     padding: 0;
     align-items: stretch;
@@ -22049,8 +22027,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   text-align: center;
 }
 
-.daily-treats-modal__close,
-.daily-treats-placeholder__close {
+.daily-treats-calendar__close {
   position: absolute;
   top: calc(env(safe-area-inset-top, 16px) + 48px);
   right: 0.85rem;
@@ -22067,8 +22044,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   pointer-events: auto;
 }
 
-.daily-treats-modal__eyebrow,
-.daily-treats-placeholder__eyebrow {
+.daily-treats-calendar__eyebrow {
   margin: 0;
   text-transform: uppercase;
   font-size: 0.7rem;
@@ -22077,55 +22053,17 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: #64748b;
 }
 
-.daily-treats-placeholder__title {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.daily-treats-placeholder__text {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #475569;
-}
-
-.daily-treats-modal__dialog {
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-.daily-treats-placeholder__content {
-  display: grid;
-  gap: 0.6rem;
-}
-
-.daily-treats-placeholder__button {
-  margin-top: 0.5rem;
-  border: none;
-  border-radius: 999px;
-  padding: 0.65rem 1.2rem;
-  background: #2563eb;
-  color: #fff;
-  font-weight: 700;
-  cursor: pointer;
-  width: fit-content;
-}
-
 /* ── Dark-theme hardening for Holiday/Treat Calendar ─────────────────────── */
 :is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__dialog {
   background: rgba(10, 15, 28, 0.97) !important;
 }
 
-:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-modal__close,
-:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-placeholder__close {
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__close {
   color: #f1f5f9;
   background: rgba(255, 255, 255, 0.12);
 }
 
-:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-modal__eyebrow,
-:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-placeholder__eyebrow {
+:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__eyebrow {
   color: rgba(148, 163, 184, 0.75);
 }
 
