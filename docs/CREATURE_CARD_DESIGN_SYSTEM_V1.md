@@ -4,7 +4,7 @@
 
 Creature Card Design System v1 locks the visual/card structure before more creature card art is produced.
 
-Creature card image generation has already shown style drift across frames, top bars, badge positions, and overall presentation. This contract gives future Copilot, Codex, and image-generation work a stable reference so the Creature Dex can grow without each card becoming a one-off design.
+Creature card image generation has already shown style drift across frames, top bars, badge positions, and overall presentation. This contract gives future Copilot, Codex, and image generation work a stable reference so the Creature Dex can grow without each card becoming a one-off design.
 
 This is a planning and art-direction document. It does not require code changes.
 
@@ -134,7 +134,6 @@ Every creature art brief should include:
 Creature art should:
 
 - Have unique species identity.
-- Avoid generic dog/fox/cat/plant repetition.
 - Use a big readable face.
 - Create an iconic silhouette.
 - Work as a transparent cutout outside the card.
