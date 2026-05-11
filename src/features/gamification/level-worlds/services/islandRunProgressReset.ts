@@ -6,7 +6,7 @@
  * **What is reset:**
  * - Island position → island 1, tile 0
  * - Currencies → starting dice (30), 0 essence, 3 diamonds, 0 shards
- * - Stops, boss, reward bar, eggs, creatures → default/empty
+ * - Stops, boss, reward bar, eggs, egg reward inventory, creatures → default/empty
  * - Onboarding flags (firstRunClaimed, storyPrologueSeen) → false
  * - Persisted creature collection + active companion (localStorage:
  *   `island_run_creature_collection_*`, `island_run_active_companion_*`)
@@ -60,6 +60,7 @@ export function buildFreshIslandRunRecord(
     activeEggHatchDurationMs: null,
     activeEggIsDormant: false,
     perIslandEggs: {},
+    eggRewardInventory: [],
     islandStartedAtMs: nowMs,
     islandExpiresAtMs: nowMs + 48 * 60 * 60 * 1000,
     islandShards: 0,

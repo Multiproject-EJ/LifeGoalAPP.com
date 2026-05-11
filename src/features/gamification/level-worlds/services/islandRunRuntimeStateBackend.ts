@@ -192,6 +192,7 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
       perIslandEggs: patch.perIslandEggs
         ? { ...current.perIslandEggs, ...patch.perIslandEggs }
         : current.perIslandEggs,
+      eggRewardInventory: current.eggRewardInventory,
       islandStartedAtMs:
         typeof patch.islandStartedAtMs === 'number' && Number.isFinite(patch.islandStartedAtMs)
           ? patch.islandStartedAtMs

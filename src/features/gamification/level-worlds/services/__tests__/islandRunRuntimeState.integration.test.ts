@@ -4,8 +4,10 @@ import {
   hydrateIslandRunGameStateRecordWithSource,
   readIslandRunGameStateRecord,
   resetIslandRunRuntimeCommitCoordinatorForTests,
+  sanitizeEggRewardInventory,
   sanitizeIslandRunLuckyRollSessionsByMilestone,
   writeIslandRunGameStateRecord,
+  type EggRewardInventoryEntry,
   type IslandRunLuckyRollSession,
 } from '../islandRunGameStateStore';
 import { persistIslandRunRuntimeStatePatch, readIslandRunRuntimeState } from '../islandRunRuntimeState';
@@ -111,6 +113,29 @@ function makeLuckyRollSession(overrides: Partial<IslandRunLuckyRollSession> = {}
   };
 }
 
+function makeEggRewardInventoryEntry(overrides: Partial<EggRewardInventoryEntry> = {}): EggRewardInventoryEntry {
+  return {
+    eggRewardId: 'egg-reward-1',
+    source: 'treasure_path',
+    sourceSessionKey: '0:30',
+    sourceRunId: 'run-30',
+    sourceRewardId: 'reward-1',
+    tileId: 4,
+    cycleIndex: 0,
+    targetIslandNumber: 30,
+    eggTier: 'common',
+    eggSeed: 12345,
+    rarityRoll: 42,
+    rarityRollDenominator: 500,
+    rarityThreshold: 5,
+    resolverVersion: 'treasure_path_egg_v1',
+    status: 'unopened',
+    grantedAtMs: 1000,
+    openedAtMs: null,
+    ...overrides,
+  };
+}
+
 function createRemoteHydrationClient(row: Record<string, unknown> | null) {
   let selectedColumns = '';
   const client = {
@@ -197,6 +222,51 @@ function createLuckyRollConflictMergeClient(remoteSession: IslandRunLuckyRollSes
   } as unknown as import('@supabase/supabase-js').SupabaseClient;
 
   return { client, getCommitCalls: () => commitCalls };
+}
+
+function createEggRewardInventoryConflictMergeClient(remoteInventory: EggRewardInventoryEntry[]) {
+  let commitCalls = 0;
+  const payloads: Array<Record<string, unknown>> = [];
+  const client = {
+    rpc(_name: string, args: { p_action_payload?: Record<string, unknown>; p_expected_runtime_version?: number }) {
+      commitCalls += 1;
+      payloads.push(args.p_action_payload ?? {});
+      if (commitCalls === 1) {
+        return Promise.resolve({ data: [{ status: 'conflict' }], error: null });
+      }
+      const expected = Math.max(0, Math.floor(args.p_expected_runtime_version ?? 0));
+      return Promise.resolve({ data: [{ status: 'applied', runtime_version: expected + 1 }], error: null });
+    },
+    from() {
+      return {
+        select() {
+          return {
+            eq() {
+              return {
+                maybeSingle() {
+                  return Promise.resolve({
+                    data: {
+                      runtime_version: 4,
+                      current_island_number: 1,
+                      dice_pool: 30,
+                      egg_reward_inventory: remoteInventory,
+                    },
+                    error: null,
+                  });
+                },
+              };
+            },
+          };
+        },
+      };
+    },
+  } as unknown as import('@supabase/supabase-js').SupabaseClient;
+
+  return {
+    client,
+    getCommitCalls: () => commitCalls,
+    getLastPayload: () => payloads[payloads.length - 1],
+  };
 }
 
 function createDeferredSingleFlightClient() {
@@ -983,6 +1053,185 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       );
       const parsed = JSON.parse(pendingRaw!) as { dicePool?: number };
       assertEqual(parsed.dicePool, baseline.dicePool + 9, 'Expected queued record to carry the would-be-lost delta');
+    },
+  },
+
+  {
+    name: 'eggRewardInventory defaults to an empty canonical inventory',
+    run: () => {
+      resetStorage();
+      const state = readIslandRunGameStateRecord(makeSession());
+      assertDeepEqual(state.eggRewardInventory, [], 'Expected fresh state to have no egg reward vouchers');
+    },
+  },
+  {
+    name: 'eggRewardInventory sanitizer drops malformed entries',
+    run: () => {
+      const valid = makeEggRewardInventoryEntry();
+      const sanitized = sanitizeEggRewardInventory([
+        valid,
+        null,
+        'bad',
+        { ...valid, eggRewardId: '' },
+        { ...valid, source: 'marketplace' },
+        { ...valid, eggTier: 'mythic' },
+        { ...valid, rarityRollDenominator: 100 },
+        { ...valid, resolverVersion: 'future' },
+        { ...valid, status: 'sold' },
+        { ...valid, openedAtMs: 'never' },
+      ]);
+
+      assertDeepEqual(sanitized, [valid], 'Expected sanitizer to retain only valid egg reward entries');
+    },
+  },
+  {
+    name: 'eggRewardInventory sanitizer preserves valid entries and normalizes numeric fields',
+    run: () => {
+      const sanitized = sanitizeEggRewardInventory([
+        makeEggRewardInventoryEntry({
+          eggRewardId: ' egg-reward-2 ',
+          sourceSessionKey: ' 0:60 ',
+          sourceRunId: ' run-60 ',
+          sourceRewardId: ' reward-2 ',
+          tileId: 7.9,
+          cycleIndex: 2.8,
+          targetIslandNumber: 60.5,
+          eggSeed: 123.9,
+          rarityRoll: 4.8,
+          grantedAtMs: 9999.9,
+          openedAtMs: 12000.8,
+          openedCreatureId: ' rare-nebula-wisp ',
+          status: 'opened',
+          eggTier: 'rare',
+        }),
+      ]);
+
+      assertDeepEqual(sanitized, [
+        {
+          eggRewardId: 'egg-reward-2',
+          source: 'treasure_path',
+          sourceSessionKey: '0:60',
+          sourceRunId: 'run-60',
+          sourceRewardId: 'reward-2',
+          tileId: 7,
+          cycleIndex: 2,
+          targetIslandNumber: 60,
+          eggTier: 'rare',
+          eggSeed: 123,
+          rarityRoll: 4,
+          rarityRollDenominator: 500,
+          rarityThreshold: 5,
+          resolverVersion: 'treasure_path_egg_v1',
+          status: 'opened',
+          grantedAtMs: 9999,
+          openedAtMs: 12000,
+          openedCreatureId: 'rare-nebula-wisp',
+        },
+      ], 'Expected sanitizer to preserve and normalize valid egg reward entries');
+    },
+  },
+  {
+    name: 'remote hydration selects and maps egg_reward_inventory',
+    run: async () => {
+      resetStorage();
+      const remoteEntry = makeEggRewardInventoryEntry({ eggRewardId: 'remote-egg', grantedAtMs: 2222 });
+      const { client, getSelectedColumns } = createRemoteHydrationClient({
+        runtime_version: 3,
+        current_island_number: 1,
+        dice_pool: 30,
+        egg_reward_inventory: [remoteEntry],
+      });
+
+      const result = await hydrateIslandRunGameStateRecordWithSource({
+        session: makeSession(),
+        client,
+        forceRemote: true,
+      });
+
+      assert(getSelectedColumns().includes('egg_reward_inventory'), 'Expected explicit select list to include egg reward inventory column');
+      assertEqual(result.source, 'table', 'Expected remote hydration to use table source');
+      assertDeepEqual(result.record.eggRewardInventory, [remoteEntry], 'Expected remote egg reward inventory to hydrate');
+    },
+  },
+  {
+    name: 'remote write payload maps eggRewardInventory to egg_reward_inventory',
+    run: async () => {
+      resetStorage();
+      const session = makeSession();
+      const baseline = readIslandRunGameStateRecord(session);
+      const eggReward = makeEggRewardInventoryEntry({ eggRewardId: 'write-egg', grantedAtMs: 3333 });
+      const { client, getLastPayload } = createCapturePayloadRuntimeClient();
+
+      const result = await writeIslandRunGameStateRecord({
+        session,
+        client,
+        record: {
+          ...baseline,
+          eggRewardInventory: [eggReward],
+        },
+      });
+
+      assertDeepEqual(result, { ok: true }, 'Expected write to succeed');
+      const payload = getLastPayload();
+      assert(payload && typeof payload === 'object', 'Expected captured payload');
+      assertDeepEqual(
+        payload.egg_reward_inventory,
+        [eggReward],
+        'Expected remote payload to include snake_case egg reward inventory',
+      );
+    },
+  },
+  {
+    name: 'conflict merge preserves unique eggRewardInventory entries by eggRewardId',
+    run: async () => {
+      resetStorage();
+      const session = makeSession();
+      const baseline = readIslandRunGameStateRecord(session);
+      const remoteEntry = makeEggRewardInventoryEntry({ eggRewardId: 'remote-egg', grantedAtMs: 1000 });
+      const localEntry = makeEggRewardInventoryEntry({ eggRewardId: 'local-egg', grantedAtMs: 2000 });
+      const { client, getCommitCalls, getLastPayload } = createEggRewardInventoryConflictMergeClient([remoteEntry]);
+
+      const result = await writeIslandRunGameStateRecord({
+        session,
+        client,
+        record: {
+          ...baseline,
+          runtimeVersion: 1,
+          eggRewardInventory: [localEntry],
+        },
+      });
+
+      assertDeepEqual(result, { ok: true }, 'Expected conflict recovery write to succeed');
+      assertEqual(getCommitCalls(), 2, 'Expected conflict then retry commit');
+      assertDeepEqual(
+        getLastPayload()?.egg_reward_inventory,
+        [remoteEntry, localEntry],
+        'Expected conflict merge to preserve unique remote and local egg vouchers',
+      );
+    },
+  },
+  {
+    name: 'duplicate eggRewardId resolves deterministically',
+    run: () => {
+      const unopened = makeEggRewardInventoryEntry({
+        eggRewardId: 'duplicate-egg',
+        grantedAtMs: 1000,
+        status: 'unopened',
+        openedAtMs: null,
+      });
+      const opened = makeEggRewardInventoryEntry({
+        eggRewardId: 'duplicate-egg',
+        grantedAtMs: 1000,
+        status: 'opened',
+        openedAtMs: 2000,
+        openedCreatureId: 'common-sun-sprout',
+      });
+
+      const forward = sanitizeEggRewardInventory([unopened, opened]);
+      const reverse = sanitizeEggRewardInventory([opened, unopened]);
+
+      assertDeepEqual(forward, [opened], 'Expected opened duplicate to win over unopened duplicate');
+      assertDeepEqual(reverse, [opened], 'Expected duplicate resolution to be order independent');
     },
   },
 

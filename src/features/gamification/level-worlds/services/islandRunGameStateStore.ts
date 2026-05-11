@@ -33,6 +33,33 @@ export interface PerIslandEggEntry {
 /** Key = island number (as string), value = egg entry */
 export type PerIslandEggsLedger = Record<string, PerIslandEggEntry>;
 
+export type EggRewardInventorySource = 'treasure_path';
+export type EggRewardInventoryTier = 'common' | 'rare';
+export type EggRewardInventoryStatus = 'unopened' | 'opened';
+export type EggRewardInventoryResolverVersion = 'treasure_path_egg_v1';
+export const EGG_REWARD_RARITY_ROLL_DENOMINATOR = 500 as const;
+export const EGG_REWARD_RARITY_THRESHOLD = 5 as const;
+
+export interface EggRewardInventoryEntry {
+  eggRewardId: string;
+  source: EggRewardInventorySource;
+  sourceSessionKey: string;
+  sourceRunId: string;
+  sourceRewardId: string;
+  tileId: number;
+  cycleIndex: number;
+  targetIslandNumber: number;
+  eggTier: EggRewardInventoryTier;
+  eggSeed: number;
+  rarityRoll: number;
+  rarityRollDenominator: typeof EGG_REWARD_RARITY_ROLL_DENOMINATOR;
+  rarityThreshold: typeof EGG_REWARD_RARITY_THRESHOLD;
+  resolverVersion: EggRewardInventoryResolverVersion;
+  status: EggRewardInventoryStatus;
+  grantedAtMs: number;
+  openedAtMs: number | null;
+  openedCreatureId?: string;
+}
 
 export interface PerfectCompanionReason {
   strength: string[];
@@ -118,6 +145,7 @@ export interface IslandRunGameStateRecord {
   activeEggHatchDurationMs: number | null;
   activeEggIsDormant: boolean;
   perIslandEggs: PerIslandEggsLedger;
+  eggRewardInventory: EggRewardInventoryEntry[];
   islandStartedAtMs: number;
   islandExpiresAtMs: number;
   islandShards: number;
@@ -521,6 +549,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     activeEggHatchDurationMs: null,
     activeEggIsDormant: false,
     perIslandEggs: {},
+    eggRewardInventory: [],
     islandStartedAtMs: nowMs,
     islandExpiresAtMs: nowMs + 48 * 60 * 60 * 1000,
     islandShards: 0,
@@ -629,6 +658,142 @@ function toCreatureCollectionEntry(value: unknown): CreatureCollectionRuntimeEnt
   };
 }
 
+function stableEggRewardInventoryStringify(value: unknown): string {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => stableEggRewardInventoryStringify(entry)).join(',')}]`;
+  }
+  return `{${Object.entries(value as Record<string, unknown>)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, entryValue]) => `${JSON.stringify(key)}:${stableEggRewardInventoryStringify(entryValue)}`)
+    .join(',')}}`;
+}
+
+function resolveDuplicateEggRewardInventoryEntry(
+  existing: EggRewardInventoryEntry,
+  candidate: EggRewardInventoryEntry,
+): EggRewardInventoryEntry {
+  const existingStatusRank = existing.status === 'opened' ? 1 : 0;
+  const candidateStatusRank = candidate.status === 'opened' ? 1 : 0;
+  if (candidateStatusRank !== existingStatusRank) {
+    return candidateStatusRank > existingStatusRank ? candidate : existing;
+  }
+
+  const existingOpenedAtMs = existing.openedAtMs ?? 0;
+  const candidateOpenedAtMs = candidate.openedAtMs ?? 0;
+  if (candidateOpenedAtMs !== existingOpenedAtMs) {
+    return candidateOpenedAtMs > existingOpenedAtMs ? candidate : existing;
+  }
+
+  if (candidate.grantedAtMs !== existing.grantedAtMs) {
+    return candidate.grantedAtMs > existing.grantedAtMs ? candidate : existing;
+  }
+
+  const candidateStable = stableEggRewardInventoryStringify(candidate);
+  const existingStable = stableEggRewardInventoryStringify(existing);
+  return candidateStable > existingStable
+    ? candidate
+    : existing;
+}
+
+function toEggRewardInventoryEntry(value: unknown): EggRewardInventoryEntry | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const candidate = value as Record<string, unknown>;
+  const eggRewardId = typeof candidate.eggRewardId === 'string' ? candidate.eggRewardId.trim() : '';
+  const sourceSessionKey = typeof candidate.sourceSessionKey === 'string' ? candidate.sourceSessionKey.trim() : '';
+  const sourceRunId = typeof candidate.sourceRunId === 'string' ? candidate.sourceRunId.trim() : '';
+  const sourceRewardId = typeof candidate.sourceRewardId === 'string' ? candidate.sourceRewardId.trim() : '';
+  if (!eggRewardId || !sourceSessionKey || !sourceRunId || !sourceRewardId) return null;
+  if (candidate.source !== 'treasure_path') return null;
+  if (candidate.eggTier !== 'common' && candidate.eggTier !== 'rare') return null;
+  if (candidate.resolverVersion !== 'treasure_path_egg_v1') return null;
+  if (candidate.status !== 'unopened' && candidate.status !== 'opened') return null;
+  if (
+    candidate.rarityRollDenominator !== EGG_REWARD_RARITY_ROLL_DENOMINATOR
+    || candidate.rarityThreshold !== EGG_REWARD_RARITY_THRESHOLD
+  ) {
+    return null;
+  }
+  if (
+    typeof candidate.tileId !== 'number'
+    || !Number.isFinite(candidate.tileId)
+    || typeof candidate.cycleIndex !== 'number'
+    || !Number.isFinite(candidate.cycleIndex)
+    || typeof candidate.targetIslandNumber !== 'number'
+    || !Number.isFinite(candidate.targetIslandNumber)
+    || typeof candidate.eggSeed !== 'number'
+    || !Number.isFinite(candidate.eggSeed)
+    || typeof candidate.rarityRoll !== 'number'
+    || !Number.isFinite(candidate.rarityRoll)
+    || typeof candidate.grantedAtMs !== 'number'
+    || !Number.isFinite(candidate.grantedAtMs)
+  ) {
+    return null;
+  }
+  const openedAtMs = typeof candidate.openedAtMs === 'number' && Number.isFinite(candidate.openedAtMs)
+    ? Math.max(0, Math.floor(candidate.openedAtMs))
+    : candidate.openedAtMs === null
+      ? null
+      : undefined;
+  if (typeof openedAtMs === 'undefined') return null;
+  const openedCreatureId = typeof candidate.openedCreatureId === 'string' && candidate.openedCreatureId.trim().length > 0
+    ? candidate.openedCreatureId.trim()
+    : undefined;
+
+  return {
+    eggRewardId,
+    source: 'treasure_path',
+    sourceSessionKey,
+    sourceRunId,
+    sourceRewardId,
+    tileId: Math.max(0, Math.floor(candidate.tileId)),
+    cycleIndex: Math.max(0, Math.floor(candidate.cycleIndex)),
+    targetIslandNumber: Math.max(1, Math.floor(candidate.targetIslandNumber)),
+    eggTier: candidate.eggTier,
+    eggSeed: Math.max(0, Math.floor(candidate.eggSeed)),
+    rarityRoll: Math.max(0, Math.floor(candidate.rarityRoll)),
+    rarityRollDenominator: EGG_REWARD_RARITY_ROLL_DENOMINATOR,
+    rarityThreshold: EGG_REWARD_RARITY_THRESHOLD,
+    resolverVersion: 'treasure_path_egg_v1',
+    status: candidate.status,
+    grantedAtMs: Math.max(0, Math.floor(candidate.grantedAtMs)),
+    openedAtMs,
+    ...(openedCreatureId ? { openedCreatureId } : {}),
+  };
+}
+
+export function sanitizeEggRewardInventory(
+  value: unknown,
+  fallback: EggRewardInventoryEntry[] = [],
+): EggRewardInventoryEntry[] {
+  if (!Array.isArray(value)) return [...fallback];
+
+  const byEggRewardId = new Map<string, EggRewardInventoryEntry>();
+  for (const rawEntry of value) {
+    const entry = toEggRewardInventoryEntry(rawEntry);
+    if (!entry) continue;
+    const existing = byEggRewardId.get(entry.eggRewardId);
+    byEggRewardId.set(
+      entry.eggRewardId,
+      existing ? resolveDuplicateEggRewardInventoryEntry(existing, entry) : entry,
+    );
+  }
+
+  return Array.from(byEggRewardId.values())
+    .sort((a, b) => {
+      if (a.grantedAtMs !== b.grantedAtMs) return a.grantedAtMs - b.grantedAtMs;
+      if (a.eggRewardId === b.eggRewardId) return 0;
+      return a.eggRewardId < b.eggRewardId ? -1 : 1;
+    });
+}
+
+function mergeEggRewardInventory(
+  remote: EggRewardInventoryEntry[],
+  local: EggRewardInventoryEntry[],
+): EggRewardInventoryEntry[] {
+  return sanitizeEggRewardInventory([...remote, ...local]);
+}
+
 function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunGameStateRecord): IslandRunGameStateRecord {
   const eggTierRaw = value.activeEggTier;
   const activeEggTier: 'common' | 'rare' | 'mythic' | null =
@@ -696,6 +861,10 @@ function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunG
     perIslandEggs: value.perIslandEggs !== null && typeof value.perIslandEggs === 'object' && !Array.isArray(value.perIslandEggs)
       ? (value.perIslandEggs as PerIslandEggsLedger)
       : fallback.perIslandEggs,
+    eggRewardInventory: sanitizeEggRewardInventory(
+      value.eggRewardInventory,
+      fallback.eggRewardInventory,
+    ),
     islandStartedAtMs:
       typeof value.islandStartedAtMs === 'number' && Number.isFinite(value.islandStartedAtMs)
         ? value.islandStartedAtMs
@@ -1278,6 +1447,7 @@ function mergeRecordForConflict(options: {
     ...local,
     runtimeVersion: remote.runtimeVersion,
     perIslandEggs: { ...remote.perIslandEggs, ...local.perIslandEggs },
+    eggRewardInventory: mergeEggRewardInventory(remote.eggRewardInventory, local.eggRewardInventory),
     creatureTreatInventory: {
       basic: Math.max(remote.creatureTreatInventory.basic, local.creatureTreatInventory.basic),
       favorite: Math.max(remote.creatureTreatInventory.favorite, local.creatureTreatInventory.favorite),
@@ -1344,6 +1514,7 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     active_egg_hatch_duration_ms: record.activeEggHatchDurationMs,
     active_egg_is_dormant: record.activeEggIsDormant,
     per_island_eggs: record.perIslandEggs,
+    egg_reward_inventory: record.eggRewardInventory,
     island_started_at_ms: record.islandStartedAtMs,
     island_expires_at_ms: record.islandExpiresAtMs,
     island_shards: record.islandShards,
@@ -1456,7 +1627,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,lucky_roll_sessions_by_milestone')
+    .select('runtime_version,first_run_claimed,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,lucky_roll_sessions_by_milestone')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -1485,6 +1656,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             activeEggHatchDurationMs: legacyData.active_egg_hatch_duration_ms,
             activeEggIsDormant: legacyData.active_egg_is_dormant,
             perIslandEggs: legacyData.per_island_eggs ?? {},
+            eggRewardInventory: sanitizeEggRewardInventory(
+              (legacyData as Record<string, unknown>).egg_reward_inventory,
+              fallback.eggRewardInventory,
+            ),
             islandStartedAtMs: legacyData.island_started_at_ms,
             islandExpiresAtMs: legacyData.island_expires_at_ms,
             islandShards: legacyData.island_shards ?? 0,
@@ -1613,6 +1788,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       activeEggHatchDurationMs: data.active_egg_hatch_duration_ms,
       activeEggIsDormant: data.active_egg_is_dormant,
       perIslandEggs: data.per_island_eggs ?? {},
+      eggRewardInventory: sanitizeEggRewardInventory(
+        (data as Record<string, unknown>).egg_reward_inventory,
+        fallback.eggRewardInventory,
+      ),
       islandStartedAtMs: data.island_started_at_ms,
       islandExpiresAtMs: data.island_expires_at_ms,
       islandShards: data.island_shards ?? 0,
