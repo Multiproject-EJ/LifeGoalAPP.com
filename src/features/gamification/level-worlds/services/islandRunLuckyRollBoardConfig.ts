@@ -228,7 +228,6 @@ export function resolveIslandRunLuckyRollTileReward(
           type: reward.type,
           amount: resolveRewardAmount(reward, context),
           bankingStatus,
-          ...(bankingStatus === 'requires_service_update' ? { bankingNote: 'Reward banking requires a follow-up action-service update.' } : {}),
         };
       })
       .filter((reward) => reward.amount > 0),
