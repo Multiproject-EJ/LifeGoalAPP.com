@@ -18,6 +18,7 @@ import { islandRunProgressionTests } from './islandRunProgression.test';
 import { islandRunRuntimeStateIntegrationTests } from './islandRunRuntimeState.integration.test';
 import { islandRunRuntimeRegenTests } from './islandRunRuntimeRegen.test';
 import { islandRunTimerProgressionTests } from './islandRunTimerProgression.test';
+import { islandRunTreasurePathEggRewardTests } from './islandRunTreasurePathEggReward.test';
 import { islandRunStopCompletionTests } from './islandRunStopCompletion.test';
 import { islandRunStopStreakTests } from './islandRunStopStreak.test';
 import { islandRunDiceRegenerationTests } from './islandRunDiceRegeneration.test';
@@ -74,6 +75,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunRuntimeStateIntegration', tests: islandRunRuntimeStateIntegrationTests },
   { label: 'islandRunRuntimeRegen', tests: islandRunRuntimeRegenTests },
   { label: 'islandRunTimerProgression', tests: islandRunTimerProgressionTests },
+  { label: 'islandRunTreasurePathEggReward', tests: islandRunTreasurePathEggRewardTests },
   { label: 'islandRunStopCompletion', tests: islandRunStopCompletionTests },
   { label: 'islandRunStopStreak', tests: islandRunStopStreakTests },
   { label: 'islandRunDiceRegeneration', tests: islandRunDiceRegenerationTests },
