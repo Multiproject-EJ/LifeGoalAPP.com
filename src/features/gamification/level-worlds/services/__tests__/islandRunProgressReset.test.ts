@@ -50,6 +50,7 @@ export const islandRunProgressResetTests: TestCase[] = [
       assertDeepEqual(record.stopTicketsPaidByIsland, {}, 'Expected empty stopTicketsPaidByIsland');
       assertDeepEqual(record.marketOwnedBundlesByIsland, {}, 'Expected empty marketOwnedBundlesByIsland');
       assertDeepEqual(record.perIslandEggs, {}, 'Expected empty perIslandEggs');
+      assertDeepEqual(record.eggRewardInventory, [], 'Expected empty eggRewardInventory');
       assertDeepEqual(record.creatureCollection, [], 'Expected empty creatureCollection');
       assertEqual(record.activeCompanionId, null, 'Expected null activeCompanionId');
       assertEqual(record.activeEggTier, null, 'Expected null activeEggTier');
