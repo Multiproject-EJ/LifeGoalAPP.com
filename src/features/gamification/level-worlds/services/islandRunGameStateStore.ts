@@ -37,6 +37,8 @@ export type EggRewardInventorySource = 'treasure_path';
 export type EggRewardInventoryTier = 'common' | 'rare';
 export type EggRewardInventoryStatus = 'unopened' | 'opened';
 export type EggRewardInventoryResolverVersion = 'treasure_path_egg_v1';
+export const EGG_REWARD_RARITY_ROLL_DENOMINATOR = 500 as const;
+export const EGG_REWARD_RARITY_THRESHOLD = 5 as const;
 
 export interface EggRewardInventoryEntry {
   eggRewardId: string;
@@ -50,8 +52,8 @@ export interface EggRewardInventoryEntry {
   eggTier: EggRewardInventoryTier;
   eggSeed: number;
   rarityRoll: number;
-  rarityRollDenominator: 500;
-  rarityThreshold: 5;
+  rarityRollDenominator: typeof EGG_REWARD_RARITY_ROLL_DENOMINATOR;
+  rarityThreshold: typeof EGG_REWARD_RARITY_THRESHOLD;
   resolverVersion: EggRewardInventoryResolverVersion;
   status: EggRewardInventoryStatus;
   grantedAtMs: number;
@@ -704,7 +706,12 @@ function toEggRewardInventoryEntry(value: unknown): EggRewardInventoryEntry | nu
   if (candidate.eggTier !== 'common' && candidate.eggTier !== 'rare') return null;
   if (candidate.resolverVersion !== 'treasure_path_egg_v1') return null;
   if (candidate.status !== 'unopened' && candidate.status !== 'opened') return null;
-  if (candidate.rarityRollDenominator !== 500 || candidate.rarityThreshold !== 5) return null;
+  if (
+    candidate.rarityRollDenominator !== EGG_REWARD_RARITY_ROLL_DENOMINATOR
+    || candidate.rarityThreshold !== EGG_REWARD_RARITY_THRESHOLD
+  ) {
+    return null;
+  }
   if (
     typeof candidate.tileId !== 'number'
     || !Number.isFinite(candidate.tileId)
@@ -743,8 +750,8 @@ function toEggRewardInventoryEntry(value: unknown): EggRewardInventoryEntry | nu
     eggTier: candidate.eggTier,
     eggSeed: Math.max(0, Math.floor(candidate.eggSeed)),
     rarityRoll: Math.max(0, Math.floor(candidate.rarityRoll)),
-    rarityRollDenominator: 500,
-    rarityThreshold: 5,
+    rarityRollDenominator: EGG_REWARD_RARITY_ROLL_DENOMINATOR,
+    rarityThreshold: EGG_REWARD_RARITY_THRESHOLD,
     resolverVersion: 'treasure_path_egg_v1',
     status: candidate.status,
     grantedAtMs: Math.max(0, Math.floor(candidate.grantedAtMs)),
