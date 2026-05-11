@@ -30,6 +30,7 @@ interface DebugPanelProps {
   onStartLuckyRollDevSession?: (targetIslandNumber: number) => Promise<string>;
   onAdvanceLuckyRollDevSession?: (targetIslandNumber: number, rewardType: 'dice' | 'essence') => Promise<string>;
   onBankLuckyRollDevSession?: (targetIslandNumber: number) => Promise<string>;
+  onOpenEggRewardInventoryEntry?: (eggRewardId: string) => Promise<string>;
   onClose: () => void;
 }
 
@@ -100,6 +101,7 @@ export function IslandRunDebugPanel({
   onStartLuckyRollDevSession,
   onAdvanceLuckyRollDevSession,
   onBankLuckyRollDevSession,
+  onOpenEggRewardInventoryEntry,
   onClose,
 }: DebugPanelProps) {
   const appVersion = resolveBuildMarkerValue(import.meta.env.VITE_APP_VERSION);
@@ -115,6 +117,8 @@ export function IslandRunDebugPanel({
   const [luckyRollTargetIslandInput, setLuckyRollTargetIslandInput] = useState(() => String(runtimeState.currentIslandNumber));
   const [luckyRollActionPending, setLuckyRollActionPending] = useState(false);
   const [luckyRollActionMessage, setLuckyRollActionMessage] = useState<string | null>(null);
+  const [openingEggRewardId, setOpeningEggRewardId] = useState<string | null>(null);
+  const [eggRewardActionMessage, setEggRewardActionMessage] = useState<string | null>(null);
 
   // Ping Supabase to check connectivity
   useEffect(() => {
@@ -183,6 +187,19 @@ export function IslandRunDebugPanel({
       setLuckyRollActionMessage(`Lucky Roll dev action failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setLuckyRollActionPending(false);
+    }
+  };
+
+  const runOpenEggRewardInventoryEntry = async (eggRewardId: string) => {
+    if (openingEggRewardId) return;
+    setOpeningEggRewardId(eggRewardId);
+    setEggRewardActionMessage(null);
+    try {
+      setEggRewardActionMessage(await (onOpenEggRewardInventoryEntry?.(eggRewardId) ?? Promise.resolve('Treasure Egg opener unavailable.')));
+    } catch (err) {
+      setEggRewardActionMessage(`Treasure Egg open failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setOpeningEggRewardId(null);
     }
   };
 
@@ -591,6 +608,59 @@ export function IslandRunDebugPanel({
                     </table>
                   </div>
                 )}
+                <div style={{ display: 'grid', gap: '0.55rem', borderTop: '1px solid rgba(255,255,255,0.16)', paddingTop: '0.65rem' }}>
+                  <strong style={{ fontSize: '0.84rem' }}>🥚 Treasure Eggs</strong>
+                  <div style={{ fontSize: '0.76rem', opacity: 0.86 }}>
+                    Dev mode only. Opens canonical eggRewardInventory vouchers through openEggRewardInventoryEntry.
+                  </div>
+                  {eggRewardActionMessage && (
+                    <div style={{ fontSize: '0.78rem', opacity: 0.9 }}>{eggRewardActionMessage}</div>
+                  )}
+                  <table className="island-run-debug-panel__table">
+                    <thead>
+                      <tr>
+                        <th className="island-run-debug-panel__label">Voucher</th>
+                        <th className="island-run-debug-panel__label">Tier</th>
+                        <th className="island-run-debug-panel__label">Island</th>
+                        <th className="island-run-debug-panel__label">Rarity roll</th>
+                        <th className="island-run-debug-panel__label">Status</th>
+                        <th className="island-run-debug-panel__label">Opened creature</th>
+                        <th className="island-run-debug-panel__label">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {runtimeState.eggRewardInventory.length === 0 ? (
+                        <tr>
+                          <td className="island-run-debug-panel__value" colSpan={7}>No Treasure Egg vouchers in eggRewardInventory.</td>
+                        </tr>
+                      ) : runtimeState.eggRewardInventory.map((entry) => {
+                        const isOpening = openingEggRewardId === entry.eggRewardId;
+                        return (
+                          <tr key={entry.eggRewardId}>
+                            <td className="island-run-debug-panel__value">{entry.eggRewardId}</td>
+                            <td className="island-run-debug-panel__value">{entry.eggTier}</td>
+                            <td className="island-run-debug-panel__value">{entry.targetIslandNumber}</td>
+                            <td className="island-run-debug-panel__value">
+                              {entry.rarityRoll}/{entry.rarityRollDenominator} (≤{entry.rarityThreshold})
+                            </td>
+                            <td className="island-run-debug-panel__value">{entry.status}</td>
+                            <td className="island-run-debug-panel__value">{entry.openedCreatureId ?? '—'}</td>
+                            <td className="island-run-debug-panel__value">
+                              <button
+                                type="button"
+                                className="island-run-debug-panel__copy-btn"
+                                disabled={entry.status !== 'unopened' || Boolean(openingEggRewardId) || !onOpenEggRewardInventoryEntry}
+                                onClick={() => void runOpenEggRewardInventoryEntry(entry.eggRewardId)}
+                              >
+                                {isOpening ? 'Opening…' : entry.status === 'unopened' ? 'Open Egg' : 'Opened'}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </details>

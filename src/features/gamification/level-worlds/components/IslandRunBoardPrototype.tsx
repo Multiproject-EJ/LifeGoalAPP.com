@@ -312,6 +312,7 @@ import {
   resolveNextRollEtaMs,
   type DiceRegenState,
 } from '../services/islandRunDiceRegeneration';
+import { openEggRewardInventoryEntry } from '../services/islandRunEggRewardInventoryAction';
 import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
 import { IslandRunLuckyRollDevOverlay } from './lucky-roll/IslandRunLuckyRollDevOverlay';
 import { resolveNextCheapestIndex } from '../services/islandRunShopAffordability';
@@ -7039,6 +7040,25 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     runtimeStateRef.current = record;
   }, []);
 
+  const handleDevOpenEggRewardInventoryEntry = useCallback(async (eggRewardId: string) => {
+    if (!isDevModeEnabled) return 'Treasure Egg opener is only available in Island Run dev mode.';
+    const result = await openEggRewardInventoryEntry({
+      session,
+      client,
+      eggRewardId,
+      triggerSource: 'dev_treasure_eggs_debug_panel_open',
+    });
+    setRuntimeState(result.record);
+    runtimeStateRef.current = result.record;
+    const message = result.status === 'opened'
+      ? `🥚 DEV Treasure Egg opened: ${result.openedCreatureId ?? 'unknown creature'}.`
+      : result.status === 'already_opened'
+        ? `🥚 DEV Treasure Egg already opened: ${result.openedCreatureId ?? 'unknown creature'}.`
+        : `🥚 DEV Treasure Egg not found: ${result.eggRewardId}.`;
+    setLandingText(message);
+    return message;
+  }, [client, isDevModeEnabled, session]);
+
   const handleUnlockDevMode = useCallback(() => {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('dev_mode', 'true');
@@ -10719,6 +10739,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           onStartLuckyRollDevSession={handleDevStartLuckyRollSession}
           onAdvanceLuckyRollDevSession={handleDevAdvanceLuckyRollSession}
           onBankLuckyRollDevSession={handleDevBankLuckyRollSession}
+          onOpenEggRewardInventoryEntry={handleDevOpenEggRewardInventoryEntry}
           onClose={() => setShowDebugPanel(false)}
         />
       )}
