@@ -10,6 +10,7 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import {
   getIslandRunLuckyRollSessionKey,
   readIslandRunGameStateRecord,
+  type EggRewardInventoryEntry,
   type IslandRunGameStateRecord,
   type IslandRunLuckyRollRewardEntry,
   type IslandRunLuckyRollSession,
@@ -21,10 +22,11 @@ import {
 } from './islandRunLuckyRollBoardConfig';
 import { commitIslandRunState } from './islandRunStateStore';
 import { withIslandRunActionLock } from './islandRunActionMutex';
+import { resolveTreasurePathEggRewardOutcome } from './islandRunTreasurePathEggReward';
 
 const DEFAULT_LUCKY_ROLL_BOARD_SIZE = 30;
 
-export type IslandRunLuckyRollV1RewardType = 'dice' | 'essence' | 'shards';
+export type IslandRunLuckyRollV1RewardType = 'dice' | 'essence' | 'shards' | 'egg';
 
 export interface IslandRunLuckyRollRewardInput {
   rewardType: IslandRunLuckyRollV1RewardType;
@@ -146,7 +148,7 @@ function buildRewardEntry(
   if (!reward) return null;
   const amount = Number.isFinite(reward.amount) ? Math.max(0, Math.floor(reward.amount)) : 0;
   if (amount < 1) return null;
-  const rewardType = reward.rewardType === 'dice' || reward.rewardType === 'essence' || reward.rewardType === 'shards' ? reward.rewardType : null;
+  const rewardType = reward.rewardType === 'dice' || reward.rewardType === 'essence' || reward.rewardType === 'shards' || reward.rewardType === 'egg' ? reward.rewardType : null;
   if (!rewardType) return null;
   const normalizedRewardId = typeof reward.rewardId === 'string' && reward.rewardId.trim().length > 0
     ? reward.rewardId.trim()
@@ -162,21 +164,45 @@ function buildRewardEntry(
 
 function buildBoardRewardEntries(
   sessionKey: string,
+  runId: string,
   tileId: number,
   context: { islandNumber: number; cycleIndex: number },
 ): IslandRunLuckyRollRewardEntry[] {
   const resolved = resolveIslandRunLuckyRollTileReward(tileId, context);
-  return (resolved?.rewards ?? []).map((reward, index) => ({
-    rewardId: `${sessionKey}:${tileId}:${reward.type}:${index}`,
-    tileId,
-    rewardType: reward.type,
-    amount: reward.amount,
-    metadata: {
-      source: 'production_board_config',
-      bankingStatus: reward.bankingStatus,
-      ...(reward.bankingNote ? { bankingNote: reward.bankingNote } : {}),
-    },
-  }));
+  return (resolved?.rewards ?? []).map((reward, index) => {
+    const rewardId = `${sessionKey}:${tileId}:${reward.type}:${index}`;
+    const eggOutcome = reward.type === 'egg'
+      ? resolveTreasurePathEggRewardOutcome({
+          sessionKey,
+          runId,
+          tileId,
+          rewardId,
+          cycleIndex: context.cycleIndex,
+          targetIslandNumber: context.islandNumber,
+        })
+      : null;
+    return {
+      rewardId,
+      tileId,
+      rewardType: reward.type,
+      amount: reward.amount,
+      metadata: {
+        source: 'production_board_config',
+        bankingStatus: reward.bankingStatus,
+        ...(reward.bankingNote ? { bankingNote: reward.bankingNote } : {}),
+        ...(eggOutcome
+          ? {
+              eggTier: eggOutcome.eggTier,
+              eggSeed: eggOutcome.eggSeed,
+              rarityRoll: eggOutcome.rarityRoll,
+              rarityRollDenominator: eggOutcome.rarityRollDenominator,
+              rarityThreshold: eggOutcome.rarityThreshold,
+              resolverVersion: 'treasure_path_egg_v1',
+            }
+          : {}),
+      },
+    };
+  });
 }
 
 function resolveLuckyRollAdvanceFromBoardConfig(options: {
@@ -210,7 +236,7 @@ function resolveLuckyRollAdvanceFromBoardConfig(options: {
     : landedTileId;
   const rewardEntries = alreadyClaimedTile
     ? []
-    : buildBoardRewardEntries(options.sessionKey, landedTileId, {
+    : buildBoardRewardEntries(options.sessionKey, options.luckyRollSession.runId, landedTileId, {
         islandNumber: options.targetIslandNumber,
         cycleIndex: options.cycleIndex,
       });
@@ -220,6 +246,69 @@ function resolveLuckyRollAdvanceFromBoardConfig(options: {
     nextPosition,
     completed: reachedFinish || landedTileId >= finishTileId,
     rewardEntries,
+  };
+}
+
+function buildEggRewardInventoryId(options: {
+  sessionKey: string;
+  runId: string;
+  tileId: number;
+  sourceRewardId: string;
+}): string {
+  return [
+    'treasure_path_egg',
+    options.sessionKey,
+    options.runId,
+    Math.max(0, Math.floor(options.tileId)),
+    options.sourceRewardId,
+  ].join(':');
+}
+
+function buildEggRewardInventoryEntry(options: {
+  sessionKey: string;
+  runId: string;
+  reward: IslandRunLuckyRollRewardEntry;
+  cycleIndex: number;
+  targetIslandNumber: number;
+  grantedAtMs: number;
+}): EggRewardInventoryEntry | null {
+  if (options.reward.rewardType !== 'egg') return null;
+  const metadata = options.reward.metadata ?? {};
+  const eggTier = metadata.eggTier === 'common' || metadata.eggTier === 'rare' ? metadata.eggTier : null;
+  const resolverVersion = metadata.resolverVersion === 'treasure_path_egg_v1' ? metadata.resolverVersion : null;
+  if (!eggTier || !resolverVersion) return null;
+  const eggSeed = typeof metadata.eggSeed === 'number' && Number.isFinite(metadata.eggSeed)
+    ? Math.max(0, Math.floor(metadata.eggSeed))
+    : null;
+  const rarityRoll = typeof metadata.rarityRoll === 'number' && Number.isFinite(metadata.rarityRoll)
+    ? Math.max(0, Math.floor(metadata.rarityRoll))
+    : null;
+  if (eggSeed === null || rarityRoll === null) return null;
+  if (metadata.rarityRollDenominator !== 500 || metadata.rarityThreshold !== 5) return null;
+
+  return {
+    eggRewardId: buildEggRewardInventoryId({
+      sessionKey: options.sessionKey,
+      runId: options.runId,
+      tileId: options.reward.tileId,
+      sourceRewardId: options.reward.rewardId,
+    }),
+    source: 'treasure_path',
+    sourceSessionKey: options.sessionKey,
+    sourceRunId: options.runId,
+    sourceRewardId: options.reward.rewardId,
+    tileId: Math.max(0, Math.floor(options.reward.tileId)),
+    cycleIndex: options.cycleIndex,
+    targetIslandNumber: options.targetIslandNumber,
+    eggTier,
+    eggSeed,
+    rarityRoll,
+    rarityRollDenominator: 500,
+    rarityThreshold: 5,
+    resolverVersion,
+    status: 'unopened',
+    grantedAtMs: options.grantedAtMs,
+    openedAtMs: null,
   };
 }
 
@@ -397,7 +486,7 @@ export function bankIslandRunLuckyRollRewards(
   return withIslandRunActionLock(options.session.user.id, async () => {
     const { session, client, triggerSource } = options;
     const nowMs = normalizeNowMs(options.nowMs);
-    const { sessionKey } = getSessionContext(options.cycleIndex, options.targetIslandNumber);
+    const { cycleIndex, targetIslandNumber, sessionKey } = getSessionContext(options.cycleIndex, options.targetIslandNumber);
     const current = readIslandRunGameStateRecord(session);
     const luckyRollSession = current.luckyRollSessionsByMilestone[sessionKey] ?? null;
     if (!luckyRollSession) {
@@ -421,6 +510,18 @@ export function bankIslandRunLuckyRollRewards(
     const shardsAwarded = rewardsToBank
       .filter((entry) => entry.rewardType === 'shards')
       .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
+    const existingEggRewardIds = new Set(current.eggRewardInventory.map((entry) => entry.eggRewardId));
+    const eggRewardsToInventory = rewardsToBank
+      .map((reward) => buildEggRewardInventoryEntry({
+        sessionKey,
+        runId: luckyRollSession.runId,
+        reward,
+        cycleIndex,
+        targetIslandNumber,
+        grantedAtMs: nowMs,
+      }))
+      .filter((entry): entry is EggRewardInventoryEntry => Boolean(entry))
+      .filter((entry) => !existingEggRewardIds.has(entry.eggRewardId));
     const nextLuckyRollSession: IslandRunLuckyRollSession = {
       ...luckyRollSession,
       status: 'banked',
@@ -435,6 +536,9 @@ export function bankIslandRunLuckyRollRewards(
       essence: current.essence + essenceAwarded,
       essenceLifetimeEarned: current.essenceLifetimeEarned + essenceAwarded,
       shards: current.shards + shardsAwarded,
+      eggRewardInventory: eggRewardsToInventory.length > 0
+        ? [...current.eggRewardInventory, ...eggRewardsToInventory]
+        : current.eggRewardInventory,
       luckyRollSessionsByMilestone: {
         ...current.luckyRollSessionsByMilestone,
         [sessionKey]: nextLuckyRollSession,

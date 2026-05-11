@@ -9,10 +9,10 @@ export const ISLAND_RUN_LUCKY_ROLL_FINISH_TILE = 29;
 export const ISLAND_RUN_LUCKY_ROLL_ESSENCE_PAYOUT_RATIO = 0.1;
 export const ISLAND_RUN_LUCKY_ROLL_MAX_DICE_REWARD = 5;
 
-export type IslandRunLuckyRollTileKind = 'essence' | 'dice' | 'shards' | 'empty' | 'finish' | 'bonus_detour';
-export type IslandRunLuckyRollRewardType = 'essence' | 'dice' | 'shards';
+export type IslandRunLuckyRollTileKind = 'essence' | 'dice' | 'shards' | 'egg' | 'empty' | 'finish' | 'bonus_detour';
+export type IslandRunLuckyRollRewardType = 'essence' | 'dice' | 'shards' | 'egg';
 export type IslandRunLuckyRollRewardBankingStatus = 'bankable_now' | 'requires_service_update';
-export type IslandRunLuckyRollRewardCategory = 'essence' | 'dice' | 'shards' | 'empty';
+export type IslandRunLuckyRollRewardCategory = 'essence' | 'dice' | 'shards' | 'egg' | 'empty';
 
 export interface IslandRunLuckyRollBoardConfigOptions {
   islandNumber?: number;
@@ -77,7 +77,7 @@ const STATIC_TILE_CONFIGS: readonly IslandRunLuckyRollTileConfig[] = [
   cozy(0, 'Warm welcome', 'sparkles', 'A cozy sparkle spot to start the celebration.'),
   essence(1, 'Essence glow', 'essence', 'A bright burst of island-building Essence.', 1),
   shards(2, 'Sanctuary sparkle', 'shards', 'A little sanctuary progress for future creature care.', 4),
-  cozy(3, 'Happy pause', 'cozy', 'A soft celebration moment on the reward path.'),
+  egg(3, 'Treasure Egg', 'egg', 'You found an egg on an egg field.'),
   dice(4, 'Free dice boost', 'dice', 'A few bonus dice for more future adventures.', 2),
   essence(5, 'Essence bloom', 'essence', 'A cheerful Essence bloom for the next build.', 1),
   detour(6, -2, 'Bonus detour', 'detour', 'A joyful loop that makes the reward journey last longer.'),
@@ -92,13 +92,13 @@ const STATIC_TILE_CONFIGS: readonly IslandRunLuckyRollTileConfig[] = [
   essence(15, 'Island shine', 'essence', 'Island shine becomes useful Essence.', 1),
   essence(16, 'Build boost', 'essence', 'A friendly build boost for the next landmark.', 1),
   dice(17, 'Lucky dice', 'dice', 'A small free dice lift keeps momentum feeling bright.', 2),
-  cozy(18, 'Sparkle tile', 'sparkles', 'A cozy sparkle tile with only good vibes.'),
+  egg(18, 'Treasure Egg', 'egg', 'A treasure field glows: you found an egg.'),
   essence(19, 'Essence ribbon', 'essence', 'A ribbon of Essence wraps the reward path.', 1),
   shards(20, 'Sanctuary ribbon', 'shards', 'Shards sparkle for future creature treats.', 6),
   essence(21, 'Happy harvest', 'essence', 'A happy Essence harvest for island progress.', 1),
   essence(22, 'Glow harvest', 'essence', 'Another glow of Essence for the next build.', 1),
   dice(23, 'Dice delight', 'dice', 'A meaningful but bounded free dice delight.', 4),
-  cozy(24, 'Cozy campfire', 'cozy', 'A cozy campfire moment on the celebration route.'),
+  egg(24, 'Treasure Egg', 'egg', 'This egg field sparkles because you found an egg.'),
   shards(25, 'Creature keepsake', 'shards', 'A small keepsake of shards for the sanctuary.', 7),
   essence(26, 'Essence shower', 'essence', 'A shower of Essence lands with a smile.', 1),
   essence(27, 'Big glow', 'essence', 'A bigger glow helps carry island progress forward.', 1),
@@ -116,6 +116,10 @@ function dice(tileId: number, label: string, iconHint: string, copy: string, amo
 
 function shards(tileId: number, label: string, iconHint: string, copy: string, amount: number): IslandRunLuckyRollTileConfig {
   return { tileId, kind: 'shards', rewardCategory: 'shards', rewards: [{ type: 'shards', amount }], label, iconHint, copy };
+}
+
+function egg(tileId: number, label: string, iconHint: string, copy: string): IslandRunLuckyRollTileConfig {
+  return { tileId, kind: 'egg', rewardCategory: 'egg', rewards: [{ type: 'egg', amount: 1 }], label, iconHint, copy };
 }
 
 function cozy(tileId: number, label: string, iconHint: string, copy: string): IslandRunLuckyRollTileConfig {

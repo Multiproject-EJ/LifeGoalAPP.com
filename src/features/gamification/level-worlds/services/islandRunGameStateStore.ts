@@ -83,7 +83,7 @@ export interface CreatureCollectionRuntimeEntry {
 
 export type IslandRunLuckyRollSessionStatus = 'active' | 'completed' | 'banked' | 'expired';
 
-export type IslandRunLuckyRollRewardType = 'dice' | 'essence' | 'shards' | 'diamonds' | 'sticker' | 'minigame_ticket' | 'gold' | 'game_tokens' | 'unknown';
+export type IslandRunLuckyRollRewardType = 'dice' | 'essence' | 'shards' | 'egg' | 'diamonds' | 'sticker' | 'minigame_ticket' | 'gold' | 'game_tokens' | 'unknown';
 
 export interface IslandRunLuckyRollRewardEntry {
   rewardId: string;
@@ -1207,7 +1207,7 @@ function sanitizeMinigameTicketsByEvent(
 }
 
 const LUCKY_ROLL_SESSION_STATUSES = new Set<IslandRunLuckyRollSessionStatus>(['active', 'completed', 'banked', 'expired']);
-const LUCKY_ROLL_REWARD_TYPES = new Set<IslandRunLuckyRollRewardType>(['dice', 'essence', 'shards', 'diamonds', 'sticker', 'minigame_ticket', 'gold', 'game_tokens', 'unknown']);
+const LUCKY_ROLL_REWARD_TYPES = new Set<IslandRunLuckyRollRewardType>(['dice', 'essence', 'shards', 'egg', 'diamonds', 'sticker', 'minigame_ticket', 'gold', 'game_tokens', 'unknown']);
 
 function sanitizeLuckyRollRewardEntries(value: unknown): IslandRunLuckyRollRewardEntry[] {
   if (!Array.isArray(value)) return [];
