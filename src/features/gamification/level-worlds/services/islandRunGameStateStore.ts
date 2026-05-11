@@ -689,7 +689,9 @@ function resolveDuplicateEggRewardInventoryEntry(
     return candidate.grantedAtMs > existing.grantedAtMs ? candidate : existing;
   }
 
-  return stableEggRewardInventoryStringify(candidate) > stableEggRewardInventoryStringify(existing)
+  const candidateStable = stableEggRewardInventoryStringify(candidate);
+  const existingStable = stableEggRewardInventoryStringify(existing);
+  return candidateStable > existingStable
     ? candidate
     : existing;
 }
@@ -780,7 +782,8 @@ export function sanitizeEggRewardInventory(
   return Array.from(byEggRewardId.values())
     .sort((a, b) => {
       if (a.grantedAtMs !== b.grantedAtMs) return a.grantedAtMs - b.grantedAtMs;
-      return a.eggRewardId.localeCompare(b.eggRewardId);
+      if (a.eggRewardId === b.eggRewardId) return 0;
+      return a.eggRewardId < b.eggRewardId ? -1 : 1;
     });
 }
 
