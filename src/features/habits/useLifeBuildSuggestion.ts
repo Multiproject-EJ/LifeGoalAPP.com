@@ -1,5 +1,5 @@
 import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
-import { STARTER_HABIT_CATALOG } from './starterHabitCatalog';
+import { DEFAULT_STARTER_DOMAIN_KEY, STARTER_HABIT_CATALOG } from './starterHabitCatalog';
 
 export type LifeBuildHabitInput = {
   domain_key?: string | null;
@@ -23,6 +23,29 @@ function isStarterDomainKey(value: string | null | undefined): value is LifeWhee
   return typeof value === 'string' && starterDomainKeyValues.has(value);
 }
 
+function getCategorySuggestion(domainKey: LifeWheelCategoryKey): LifeBuildSuggestion | null {
+  const category = LIFE_WHEEL_CATEGORIES.find((entry) => entry.key === domainKey);
+  if (!category || !starterDomainKeyValues.has(category.key)) {
+    return null;
+  }
+
+  return {
+    domainKey: category.key,
+    label: category.label,
+    shortLabel: category.shortLabel,
+  };
+}
+
+function getFallbackSuggestion(): LifeBuildSuggestion | null {
+  const defaultSuggestion = getCategorySuggestion(DEFAULT_STARTER_DOMAIN_KEY);
+  if (defaultSuggestion) {
+    return defaultSuggestion;
+  }
+
+  const fallbackCategory = LIFE_WHEEL_CATEGORIES.find((category) => starterDomainKeyValues.has(category.key));
+  return fallbackCategory ? getCategorySuggestion(fallbackCategory.key) : null;
+}
+
 export function getLifeBuildSuggestion(habits: LifeBuildHabitInput[]): LifeBuildSuggestion | null {
   const activeHabits = habits.filter((habit) => !habit.archived && (!habit.status || habit.status === 'active'));
   const activeDomainKeys = new Set(
@@ -31,9 +54,8 @@ export function getLifeBuildSuggestion(habits: LifeBuildHabitInput[]): LifeBuild
       .filter(isStarterDomainKey),
   );
 
-  // If existing active habits lack usable domain data, avoid a noisy generic setup prompt.
   if (activeHabits.length > 0 && activeDomainKeys.size === 0) {
-    return null;
+    return getFallbackSuggestion();
   }
 
   const suggestedCategory = LIFE_WHEEL_CATEGORIES.find(
