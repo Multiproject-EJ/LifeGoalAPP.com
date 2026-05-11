@@ -20,7 +20,14 @@ import {
   getIslandRunLuckyRollBoardConfig,
   resolveIslandRunLuckyRollTileReward,
 } from '../islandRunLuckyRollBoardConfig';
-import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
+import {
+  TREASURE_PATH_EGG_RARITY_ROLL_DENOMINATOR,
+  TREASURE_PATH_RARE_EGG_THRESHOLD,
+  resolveTreasurePathEggRewardOutcome,
+} from '../islandRunTreasurePathEggReward';
+import { assert, assertDeepEqual, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
+
+declare const process: { cwd: () => string };
 
 const USER_ID = 'lucky-roll-action-test-user';
 const CYCLE_INDEX = 2;
@@ -83,6 +90,12 @@ function resolvedRewardAmount(tileId: number, rewardType: 'dice' | 'essence' | '
     islandNumber: TARGET_ISLAND_NUMBER,
     cycleIndex: CYCLE_INDEX,
   })?.rewards.find((reward) => reward.type === rewardType)?.amount ?? 0;
+}
+
+function firstEggTileId(): number {
+  const eggTile = getIslandRunLuckyRollBoardConfig().tiles.find((tile) => tile.kind === 'egg');
+  if (!eggTile) throw new Error('Expected production board to include an egg field');
+  return eggTile.tileId;
 }
 
 export const islandRunLuckyRollActionTests: TestCase[] = [
@@ -381,7 +394,7 @@ export const islandRunLuckyRollActionTests: TestCase[] = [
     },
   },
   {
-    name: 'production board empty and bonus-detour fields are claimed without reward duplication',
+    name: 'production board bonus-detour fields are claimed without reward duplication',
     run: async () => {
       resetEnvironment();
       seedState({ runtimeVersion: 0, luckyRollSessionsByMilestone: {} });
@@ -391,29 +404,9 @@ export const islandRunLuckyRollActionTests: TestCase[] = [
         cycleIndex: CYCLE_INDEX,
         targetIslandNumber: TARGET_ISLAND_NUMBER,
         nowMs: 1000,
-        runId: 'production-empty-detour-run',
+        runId: 'production-detour-run',
       });
 
-      const emptyAdvance = await advanceIslandRunLuckyRoll({
-        session: makeSession(),
-        client: null,
-        cycleIndex: CYCLE_INDEX,
-        targetIslandNumber: TARGET_ISLAND_NUMBER,
-        roll: 3,
-        mode: 'production_board',
-        nowMs: 1100,
-      });
-      setLuckyRollPosition(0);
-      const emptyRetry = await advanceIslandRunLuckyRoll({
-        session: makeSession(),
-        client: null,
-        cycleIndex: CYCLE_INDEX,
-        targetIslandNumber: TARGET_ISLAND_NUMBER,
-        roll: 3,
-        mode: 'production_board',
-        nowMs: 1200,
-      });
-      setLuckyRollPosition(0);
       const detourAdvance = await advanceIslandRunLuckyRoll({
         session: makeSession(),
         client: null,
@@ -421,18 +414,27 @@ export const islandRunLuckyRollActionTests: TestCase[] = [
         targetIslandNumber: TARGET_ISLAND_NUMBER,
         roll: 6,
         mode: 'production_board',
-        nowMs: 1300,
+        nowMs: 1100,
+      });
+      setLuckyRollPosition(0);
+      const detourRetry = await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: 6,
+        mode: 'production_board',
+        nowMs: 1200,
       });
 
       const persisted = readIslandRunGameStateRecord(makeSession());
       const luckyRollSession = persisted.luckyRollSessionsByMilestone[SESSION_KEY];
-      assertEqual(emptyAdvance.rewardAdded, false, 'Empty/cozy field should not add a reward');
-      assertEqual(emptyRetry.rewardAdded, false, 'Repeated empty field landing should not add a reward');
       assertEqual(detourAdvance.landedTileId, 6, 'Detour roll should land on bonus-detour field 6');
+      assertEqual(detourAdvance.rewardAdded, false, 'Bonus-detour field should not add a reward');
+      assertEqual(detourRetry.rewardAdded, false, 'Repeated bonus-detour field landing should not add a reward');
       assertEqual(luckyRollSession.position, 4, 'Bonus detour should move backward positively to extend the run');
-      assertEqual(luckyRollSession.claimedTileIds.includes(3), true, 'Empty field should be marked claimed');
       assertEqual(luckyRollSession.claimedTileIds.includes(6), true, 'Detour field should be marked claimed');
-      assertEqual(luckyRollSession.pendingRewards.length, 0, 'Empty and detour fields should not add pending rewards');
+      assertEqual(luckyRollSession.pendingRewards.length, 0, 'Detour fields should not add pending rewards');
     },
   },
   {
@@ -472,6 +474,97 @@ export const islandRunLuckyRollActionTests: TestCase[] = [
       const persisted = readIslandRunGameStateRecord(makeSession());
       assertEqual(duplicate.rewardAdded, false, 'Already claimed reward field should not add a duplicate reward');
       assertEqual(persisted.luckyRollSessionsByMilestone[SESSION_KEY].pendingRewards.length, 1, 'Only original reward should remain pending');
+    },
+  },
+  {
+    name: 'production board egg field creates deterministic pending egg reward metadata',
+    run: async () => {
+      resetEnvironment();
+      seedState({ runtimeVersion: 0, luckyRollSessionsByMilestone: {} });
+      const eggTileId = firstEggTileId();
+      const runId = 'production-egg-run';
+      await startIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        nowMs: 1000,
+        runId,
+      });
+
+      const advance = await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: eggTileId,
+        mode: 'production_board',
+        nowMs: 1100,
+      });
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      const pendingReward = persisted.luckyRollSessionsByMilestone[SESSION_KEY].pendingRewards[0];
+      const expectedRewardId = `${SESSION_KEY}:${eggTileId}:egg:0`;
+      const expectedOutcome = resolveTreasurePathEggRewardOutcome({
+        sessionKey: SESSION_KEY,
+        runId,
+        tileId: eggTileId,
+        rewardId: expectedRewardId,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+      });
+      assertEqual(advance.landedTileId, eggTileId, 'Roll should land on the egg field');
+      assertEqual(advance.rewardAdded, true, 'Egg field should add a pending reward');
+      assertEqual(pendingReward.rewardType, 'egg', 'Pending reward should be an egg voucher');
+      assertEqual(pendingReward.amount, 1, 'Egg voucher amount should be one');
+      assertEqual(pendingReward.rewardId, expectedRewardId, 'Egg pending reward id should be stable');
+      assertEqual(pendingReward.metadata?.eggTier, expectedOutcome.eggTier, 'Egg tier metadata should be deterministic');
+      assertEqual(pendingReward.metadata?.eggSeed, expectedOutcome.eggSeed, 'Egg seed metadata should be deterministic');
+      assertEqual(pendingReward.metadata?.rarityRoll, expectedOutcome.rarityRoll, 'Rarity roll metadata should be deterministic');
+      assertEqual(pendingReward.metadata?.rarityRollDenominator, TREASURE_PATH_EGG_RARITY_ROLL_DENOMINATOR, 'Rare chance denominator should be preserved');
+      assertEqual(pendingReward.metadata?.rarityThreshold, TREASURE_PATH_RARE_EGG_THRESHOLD, 'Rare chance threshold should be preserved');
+      assertEqual(pendingReward.metadata?.resolverVersion, 'treasure_path_egg_v1', 'Resolver version should be preserved');
+    },
+  },
+  {
+    name: 'production board egg field retry does not duplicate pending egg reward',
+    run: async () => {
+      resetEnvironment();
+      seedState({ runtimeVersion: 0, luckyRollSessionsByMilestone: {} });
+      const eggTileId = firstEggTileId();
+      await startIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        nowMs: 1000,
+        runId: 'production-egg-retry-run',
+      });
+      await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: eggTileId,
+        mode: 'production_board',
+        nowMs: 1100,
+      });
+      setLuckyRollPosition(0);
+
+      const retry = await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: eggTileId,
+        mode: 'production_board',
+        nowMs: 1200,
+      });
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      const eggRewards = persisted.luckyRollSessionsByMilestone[SESSION_KEY].pendingRewards.filter((reward) => reward.rewardType === 'egg');
+      assertEqual(retry.rewardAdded, false, 'Retry on a claimed egg field should not add a duplicate reward');
+      assertEqual(eggRewards.length, 1, 'Only one pending egg reward should remain');
     },
   },
   {
@@ -647,6 +740,129 @@ export const islandRunLuckyRollActionTests: TestCase[] = [
       assertEqual(persisted.essenceLifetimeEarned, 30 + expectedEssence, 'Lifetime essence should include production bank');
       assertEqual(persisted.shards, 2 + expectedShards, 'Production shard wallet should bank exactly once');
       assertEqual(persisted.dicePool, 10 + expectedDice, 'Production dice should bank exactly once');
+    },
+  },
+  {
+    name: 'bank moves egg rewards into eggRewardInventory once without hatchery or creature mutation',
+    run: async () => {
+      resetEnvironment();
+      const eggTileId = firstEggTileId();
+      const perIslandEggs = {
+        '60': {
+          tier: 'rare' as const,
+          setAtMs: 111,
+          hatchAtMs: 222,
+          status: 'incubating' as const,
+          location: 'island' as const,
+        },
+      };
+      const creatureCollection = [{
+        creatureId: 'sproutling',
+        copies: 1,
+        firstCollectedAtMs: 10,
+        lastCollectedAtMs: 10,
+        lastCollectedIslandNumber: 1,
+        bondXp: 0,
+        bondLevel: 1,
+        lastFedAtMs: null,
+        claimedBondMilestones: [],
+      }];
+      seedState({
+        runtimeVersion: 0,
+        activeEggTier: 'common',
+        activeEggSetAtMs: 100,
+        activeEggHatchDurationMs: 200,
+        activeEggIsDormant: true,
+        perIslandEggs,
+        creatureCollection,
+        eggRewardInventory: [],
+        luckyRollSessionsByMilestone: {},
+      });
+      await startIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        nowMs: 1000,
+        runId: 'production-egg-bank-run',
+      });
+      await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: eggTileId,
+        mode: 'production_board',
+        nowMs: 1100,
+      });
+
+      const beforeBank = readIslandRunGameStateRecord(makeSession());
+      const pendingEgg = beforeBank.luckyRollSessionsByMilestone[SESSION_KEY].pendingRewards.find((reward) => reward.rewardType === 'egg');
+      if (!pendingEgg) throw new Error('Expected pending egg reward before bank');
+      const banked = await bankIslandRunLuckyRollRewards({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        nowMs: 1200,
+      });
+      const repeated = await bankIslandRunLuckyRollRewards({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        nowMs: 1300,
+      });
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      const luckyRollSession = persisted.luckyRollSessionsByMilestone[SESSION_KEY];
+      const inventoryEntry = persisted.eggRewardInventory[0];
+      assertEqual(banked.status, 'banked', 'Egg bank should succeed');
+      assertEqual(repeated.status, 'already_banked', 'Repeated egg bank should no-op');
+      assertEqual(persisted.eggRewardInventory.length, 1, 'Egg inventory should receive exactly one voucher');
+      assertEqual(inventoryEntry.eggRewardId, `treasure_path_egg:${SESSION_KEY}:production-egg-bank-run:${eggTileId}:${pendingEgg.rewardId}`, 'Egg inventory id should be stable');
+      assertEqual(inventoryEntry.source, 'treasure_path', 'Egg inventory source should be Treasure Path');
+      assertEqual(inventoryEntry.sourceSessionKey, SESSION_KEY, 'Egg inventory should retain source session key');
+      assertEqual(inventoryEntry.sourceRunId, 'production-egg-bank-run', 'Egg inventory should retain source run id');
+      assertEqual(inventoryEntry.sourceRewardId, pendingEgg.rewardId, 'Egg inventory should retain source reward id');
+      assertEqual(inventoryEntry.tileId, eggTileId, 'Egg inventory should retain source tile id');
+      assertEqual(inventoryEntry.status, 'unopened', 'Banking should not open the egg');
+      assertEqual(inventoryEntry.openedAtMs, null, 'Banking should not set openedAtMs');
+      assertEqual(inventoryEntry.openedCreatureId, undefined, 'Banking should not grant a creature');
+      assertEqual(inventoryEntry.eggTier, pendingEgg.metadata?.eggTier, 'Egg tier metadata should carry into inventory');
+      assertEqual(inventoryEntry.eggSeed, pendingEgg.metadata?.eggSeed, 'Egg seed metadata should carry into inventory');
+      assertEqual(inventoryEntry.rarityRoll, pendingEgg.metadata?.rarityRoll, 'Rarity roll metadata should carry into inventory');
+      assertEqual(inventoryEntry.rarityRollDenominator, TREASURE_PATH_EGG_RARITY_ROLL_DENOMINATOR, 'Rare chance denominator should carry into inventory');
+      assertEqual(inventoryEntry.rarityThreshold, TREASURE_PATH_RARE_EGG_THRESHOLD, 'Rare chance threshold should carry into inventory');
+      assertEqual(inventoryEntry.resolverVersion, 'treasure_path_egg_v1', 'Resolver version should carry into inventory');
+      assertEqual(luckyRollSession.pendingRewards.length, 0, 'Egg pending reward should be cleared after bank');
+      assert(luckyRollSession.bankedRewards.some((reward) => reward.rewardType === 'egg'), 'Egg reward should be marked banked in the session');
+      assertEqual(persisted.activeEggTier, 'common', 'Banking should not mutate activeEggTier');
+      assertEqual(persisted.activeEggSetAtMs, 100, 'Banking should not mutate activeEggSetAtMs');
+      assertEqual(persisted.activeEggHatchDurationMs, 200, 'Banking should not mutate activeEggHatchDurationMs');
+      assertEqual(persisted.activeEggIsDormant, true, 'Banking should not mutate activeEggIsDormant');
+      assertDeepEqual(persisted.perIslandEggs, perIslandEggs, 'Banking should not mutate perIslandEggs');
+      assertDeepEqual(persisted.creatureCollection, creatureCollection, 'Banking should not mutate creatureCollection');
+    },
+  },
+  {
+    name: 'Lucky Roll egg voucher logic does not use direct localStorage APIs',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const pathMod = await import('path');
+      const actionSource = fsMod.readFileSync(
+        pathMod.resolve(process.cwd(), 'src/features/gamification/level-worlds/services/islandRunLuckyRollAction.ts'),
+        'utf8',
+      );
+      const boardConfigSource = fsMod.readFileSync(
+        pathMod.resolve(process.cwd(), 'src/features/gamification/level-worlds/services/islandRunLuckyRollBoardConfig.ts'),
+        'utf8',
+      );
+      const directLocalStoragePattern = /\b(?:window\.)?localStorage\s*\./;
+      assert(!directLocalStoragePattern.test(actionSource), 'Lucky Roll action should not directly use localStorage');
+      assert(!directLocalStoragePattern.test(boardConfigSource), 'Lucky Roll board config should not directly use localStorage');
     },
   },
   {

@@ -18,6 +18,7 @@ function getRewardCategoryCounts(): Record<IslandRunLuckyRollRewardCategory, num
     essence: 0,
     shards: 0,
     dice: 0,
+    egg: 0,
     empty: 0,
   };
   for (const tile of getIslandRunLuckyRollBoardConfig().tiles) {
@@ -72,7 +73,21 @@ export const islandRunLuckyRollBoardConfigTests: TestCase[] = [
       assertPercentInRange(counts.essence, total, 0.45, 0.55, 'Essence');
       assertPercentInRange(counts.shards, total, 0.15, 0.20, 'Shard');
       assertPercentInRange(counts.dice, total, 0.10, 0.15, 'Dice');
-      assertPercentInRange(counts.empty, total, 0.20, 0.25, 'Empty/cozy');
+      assertPercentInRange(counts.egg, total, 0.10, 0.10, 'Egg');
+      assertPercentInRange(counts.empty, total, 0.10, 0.10, 'Empty/cozy');
+    },
+  },
+  {
+    name: 'production board has exactly 3 Treasure Egg fields',
+    run: () => {
+      const eggTiles = getIslandRunLuckyRollBoardConfig().tiles.filter((tile) => tile.kind === 'egg');
+      assertEqual(eggTiles.length, 3, 'Board should expose exactly 3 egg fields');
+      for (const tile of eggTiles) {
+        assertEqual(tile.rewardCategory, 'egg', `Tile ${tile.tileId} should be categorized as egg`);
+        assertEqual(tile.label, 'Treasure Egg', `Tile ${tile.tileId} should use Treasure Egg copy`);
+        assert(tile.copy.includes('egg field') || tile.copy.includes('treasure field'), `Tile ${tile.tileId} should use egg field or treasure field copy`);
+        assert(tile.copy.includes('found an egg'), `Tile ${tile.tileId} should say the player found an egg`);
+      }
     },
   },
   {
