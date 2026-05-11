@@ -8,7 +8,6 @@ export const ISLAND_RUN_LUCKY_ROLL_BOARD_SIZE = 30;
 export const ISLAND_RUN_LUCKY_ROLL_FINISH_TILE = 29;
 export const ISLAND_RUN_LUCKY_ROLL_ESSENCE_PAYOUT_RATIO = 0.1;
 export const ISLAND_RUN_LUCKY_ROLL_MAX_DICE_REWARD = 5;
-export const ISLAND_RUN_LUCKY_ROLL_SHARD_BANKING_NOTE = 'Shard Lucky Roll banking requires a follow-up action-service update.';
 
 export type IslandRunLuckyRollTileKind = 'essence' | 'dice' | 'shards' | 'empty' | 'finish' | 'bonus_detour';
 export type IslandRunLuckyRollRewardType = 'essence' | 'dice' | 'shards';
@@ -182,7 +181,8 @@ function resolveRewardAmount(
 }
 
 function resolveBankingStatus(type: IslandRunLuckyRollRewardType): IslandRunLuckyRollRewardBankingStatus {
-  return type === 'shards' ? 'requires_service_update' : 'bankable_now';
+  void type;
+  return 'bankable_now';
 }
 
 export function getIslandRunLuckyRollBoardSize(): number {
@@ -229,7 +229,7 @@ export function resolveIslandRunLuckyRollTileReward(
           type: reward.type,
           amount: resolveRewardAmount(reward, context),
           bankingStatus,
-          ...(bankingStatus === 'requires_service_update' ? { bankingNote: ISLAND_RUN_LUCKY_ROLL_SHARD_BANKING_NOTE } : {}),
+          ...(bankingStatus === 'requires_service_update' ? { bankingNote: 'Reward banking requires a follow-up action-service update.' } : {}),
         };
       })
       .filter((reward) => reward.amount > 0),
