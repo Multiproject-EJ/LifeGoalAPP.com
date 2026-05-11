@@ -58,6 +58,7 @@ export interface IslandRunFeatureFlags {
    * during travel and keep island start pending until that session is banked.
    */
   islandRunPreIslandLuckyRollEnabled: boolean;
+
 }
 
 const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
