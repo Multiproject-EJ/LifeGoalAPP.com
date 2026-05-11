@@ -180,8 +180,7 @@ function resolveRewardAmount(
   return Math.max(0, Math.floor(reward.amount ?? 0));
 }
 
-function resolveBankingStatus(type: IslandRunLuckyRollRewardType): IslandRunLuckyRollRewardBankingStatus {
-  void type;
+function resolveBankingStatus(): IslandRunLuckyRollRewardBankingStatus {
   return 'bankable_now';
 }
 
@@ -224,7 +223,7 @@ export function resolveIslandRunLuckyRollTileReward(
     tileId: tile.tileId,
     rewards: tile.rewards
       .map((reward): IslandRunLuckyRollResolvedReward => {
-        const bankingStatus = resolveBankingStatus(reward.type);
+          const bankingStatus = resolveBankingStatus();
         return {
           type: reward.type,
           amount: resolveRewardAmount(reward, context),

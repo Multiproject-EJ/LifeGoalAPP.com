@@ -57,7 +57,6 @@ export interface AdvanceIslandRunLuckyRollOptions {
   targetIslandNumber: number;
   roll: number;
   mode?: 'manual_reward' | 'production_board';
-  useProductionBoardConfig?: boolean;
   reward?: IslandRunLuckyRollRewardInput | null;
   boardSize?: number;
   nowMs?: number;
@@ -318,7 +317,7 @@ export function advanceIslandRunLuckyRoll(
     const { session, client, triggerSource } = options;
     const nowMs = normalizeNowMs(options.nowMs);
     const roll = normalizeRoll(options.roll);
-    const useProductionBoardConfig = options.mode === 'production_board' || options.useProductionBoardConfig === true;
+    const useProductionBoardConfig = options.mode === 'production_board';
     const { cycleIndex, targetIslandNumber, sessionKey } = getSessionContext(options.cycleIndex, options.targetIslandNumber);
     const current = readIslandRunGameStateRecord(session);
     const luckyRollSession = current.luckyRollSessionsByMilestone[sessionKey] ?? null;
