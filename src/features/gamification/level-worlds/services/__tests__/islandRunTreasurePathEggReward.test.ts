@@ -70,7 +70,6 @@ export const islandRunTreasurePathEggRewardTests: TestCase[] = [
       assert(['common', 'rare'].includes(common), 'Common branch should use an existing egg tier');
       assert(['common', 'rare'].includes(rare), 'Rare branch should use an existing egg tier');
       assert(['common', 'rare'].includes(resolved.eggTier), 'Resolved tier should be safe for existing egg tier consumers');
-      assertEqual(resolved.eggRarity, resolved.eggTier, 'eggRarity alias should match eggTier for v1');
     },
   },
   {

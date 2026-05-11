@@ -16,7 +16,6 @@ export interface TreasurePathEggRewardInput {
 
 export interface TreasurePathEggRewardOutcome {
   eggTier: TreasurePathEggTier;
-  eggRarity: TreasurePathEggTier;
   rarityRoll: number;
   rarityRollDenominator: typeof TREASURE_PATH_EGG_RARITY_ROLL_DENOMINATOR;
   rarityThreshold: typeof TREASURE_PATH_RARE_EGG_THRESHOLD;
@@ -67,7 +66,6 @@ export function resolveTreasurePathEggRewardOutcome(
 
   return {
     eggTier,
-    eggRarity: eggTier,
     rarityRoll,
     rarityRollDenominator: TREASURE_PATH_EGG_RARITY_ROLL_DENOMINATOR,
     rarityThreshold: TREASURE_PATH_RARE_EGG_THRESHOLD,
