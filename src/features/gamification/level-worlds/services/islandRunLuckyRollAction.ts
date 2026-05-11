@@ -22,7 +22,11 @@ import {
 } from './islandRunLuckyRollBoardConfig';
 import { commitIslandRunState } from './islandRunStateStore';
 import { withIslandRunActionLock } from './islandRunActionMutex';
-import { resolveTreasurePathEggRewardOutcome } from './islandRunTreasurePathEggReward';
+import {
+  TREASURE_PATH_EGG_RARITY_ROLL_DENOMINATOR,
+  TREASURE_PATH_RARE_EGG_THRESHOLD,
+  resolveTreasurePathEggRewardOutcome,
+} from './islandRunTreasurePathEggReward';
 
 const DEFAULT_LUCKY_ROLL_BOARD_SIZE = 30;
 
@@ -284,7 +288,12 @@ function buildEggRewardInventoryEntry(options: {
     ? Math.max(0, Math.floor(metadata.rarityRoll))
     : null;
   if (eggSeed === null || rarityRoll === null) return null;
-  if (metadata.rarityRollDenominator !== 500 || metadata.rarityThreshold !== 5) return null;
+  if (
+    metadata.rarityRollDenominator !== TREASURE_PATH_EGG_RARITY_ROLL_DENOMINATOR
+    || metadata.rarityThreshold !== TREASURE_PATH_RARE_EGG_THRESHOLD
+  ) {
+    return null;
+  }
 
   return {
     eggRewardId: buildEggRewardInventoryId({
@@ -303,8 +312,8 @@ function buildEggRewardInventoryEntry(options: {
     eggTier,
     eggSeed,
     rarityRoll,
-    rarityRollDenominator: 500,
-    rarityThreshold: 5,
+    rarityRollDenominator: TREASURE_PATH_EGG_RARITY_ROLL_DENOMINATOR,
+    rarityThreshold: TREASURE_PATH_RARE_EGG_THRESHOLD,
     resolverVersion,
     status: 'unopened',
     grantedAtMs: options.grantedAtMs,

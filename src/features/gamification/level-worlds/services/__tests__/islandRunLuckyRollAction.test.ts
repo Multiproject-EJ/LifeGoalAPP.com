@@ -20,7 +20,11 @@ import {
   getIslandRunLuckyRollBoardConfig,
   resolveIslandRunLuckyRollTileReward,
 } from '../islandRunLuckyRollBoardConfig';
-import { resolveTreasurePathEggRewardOutcome } from '../islandRunTreasurePathEggReward';
+import {
+  TREASURE_PATH_EGG_RARITY_ROLL_DENOMINATOR,
+  TREASURE_PATH_RARE_EGG_THRESHOLD,
+  resolveTreasurePathEggRewardOutcome,
+} from '../islandRunTreasurePathEggReward';
 import { assert, assertDeepEqual, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
 declare const process: { cwd: () => string };
@@ -517,8 +521,8 @@ export const islandRunLuckyRollActionTests: TestCase[] = [
       assertEqual(pendingReward.metadata?.eggTier, expectedOutcome.eggTier, 'Egg tier metadata should be deterministic');
       assertEqual(pendingReward.metadata?.eggSeed, expectedOutcome.eggSeed, 'Egg seed metadata should be deterministic');
       assertEqual(pendingReward.metadata?.rarityRoll, expectedOutcome.rarityRoll, 'Rarity roll metadata should be deterministic');
-      assertEqual(pendingReward.metadata?.rarityRollDenominator, 500, 'Rare chance denominator should be preserved');
-      assertEqual(pendingReward.metadata?.rarityThreshold, 5, 'Rare chance threshold should be preserved');
+      assertEqual(pendingReward.metadata?.rarityRollDenominator, TREASURE_PATH_EGG_RARITY_ROLL_DENOMINATOR, 'Rare chance denominator should be preserved');
+      assertEqual(pendingReward.metadata?.rarityThreshold, TREASURE_PATH_RARE_EGG_THRESHOLD, 'Rare chance threshold should be preserved');
       assertEqual(pendingReward.metadata?.resolverVersion, 'treasure_path_egg_v1', 'Resolver version should be preserved');
     },
   },
@@ -828,8 +832,8 @@ export const islandRunLuckyRollActionTests: TestCase[] = [
       assertEqual(inventoryEntry.eggTier, pendingEgg.metadata?.eggTier, 'Egg tier metadata should carry into inventory');
       assertEqual(inventoryEntry.eggSeed, pendingEgg.metadata?.eggSeed, 'Egg seed metadata should carry into inventory');
       assertEqual(inventoryEntry.rarityRoll, pendingEgg.metadata?.rarityRoll, 'Rarity roll metadata should carry into inventory');
-      assertEqual(inventoryEntry.rarityRollDenominator, 500, 'Rare chance denominator should carry into inventory');
-      assertEqual(inventoryEntry.rarityThreshold, 5, 'Rare chance threshold should carry into inventory');
+      assertEqual(inventoryEntry.rarityRollDenominator, TREASURE_PATH_EGG_RARITY_ROLL_DENOMINATOR, 'Rare chance denominator should carry into inventory');
+      assertEqual(inventoryEntry.rarityThreshold, TREASURE_PATH_RARE_EGG_THRESHOLD, 'Rare chance threshold should carry into inventory');
       assertEqual(inventoryEntry.resolverVersion, 'treasure_path_egg_v1', 'Resolver version should carry into inventory');
       assertEqual(luckyRollSession.pendingRewards.length, 0, 'Egg pending reward should be cleared after bank');
       assert(luckyRollSession.bankedRewards.some((reward) => reward.rewardType === 'egg'), 'Egg reward should be marked banked in the session');
