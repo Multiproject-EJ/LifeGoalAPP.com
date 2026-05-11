@@ -16,7 +16,11 @@ import {
   __resetIslandRunStateStoreForTests,
   refreshIslandRunStateFromLocal,
 } from '../islandRunStateStore';
-import { assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
+import {
+  getIslandRunLuckyRollBoardConfig,
+  resolveIslandRunLuckyRollTileReward,
+} from '../islandRunLuckyRollBoardConfig';
+import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
 const USER_ID = 'lucky-roll-action-test-user';
 const CYCLE_INDEX = 2;
@@ -52,6 +56,33 @@ function seedState(overrides: Partial<IslandRunGameStateRecord>): void {
     record: { ...base, ...overrides },
   });
   refreshIslandRunStateFromLocal(session);
+}
+
+function setLuckyRollPosition(position: number): void {
+  const current = readIslandRunGameStateRecord(makeSession());
+  const luckyRollSession = current.luckyRollSessionsByMilestone[SESSION_KEY];
+  void writeIslandRunGameStateRecord({
+    session: makeSession(),
+    client: null,
+    record: {
+      ...current,
+      luckyRollSessionsByMilestone: {
+        ...current.luckyRollSessionsByMilestone,
+        [SESSION_KEY]: {
+          ...luckyRollSession,
+          position,
+        },
+      },
+    },
+  });
+  refreshIslandRunStateFromLocal(makeSession());
+}
+
+function resolvedRewardAmount(tileId: number, rewardType: 'dice' | 'essence' | 'shards'): number {
+  return resolveIslandRunLuckyRollTileReward(tileId, {
+    islandNumber: TARGET_ISLAND_NUMBER,
+    cycleIndex: CYCLE_INDEX,
+  })?.rewards.find((reward) => reward.type === rewardType)?.amount ?? 0;
 }
 
 export const islandRunLuckyRollActionTests: TestCase[] = [
@@ -274,6 +305,213 @@ export const islandRunLuckyRollActionTests: TestCase[] = [
     },
   },
   {
+    name: 'production board advance is free and adds config-derived essence rewards',
+    run: async () => {
+      resetEnvironment();
+      seedState({ runtimeVersion: 0, dicePool: 10, essence: 20, luckyRollSessionsByMilestone: {} });
+      await startIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        nowMs: 1000,
+        runId: 'production-essence-run',
+      });
+
+      const advance = await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: 1,
+        mode: 'production_board',
+        nowMs: 1100,
+      });
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      const pendingReward = persisted.luckyRollSessionsByMilestone[SESSION_KEY].pendingRewards[0];
+      assertEqual(advance.status, 'advanced', 'Production board advance should remain active before finish');
+      assertEqual(advance.landedTileId, 1, 'Roll should land on production field 1');
+      assertEqual(persisted.dicePool, 10, 'Production board rolls should not deduct normal dicePool');
+      assertEqual(pendingReward.rewardType, 'essence', 'Field 1 should add pending essence from config');
+      assertEqual(pendingReward.amount, resolvedRewardAmount(1, 'essence'), 'Pending essence should match board config resolution');
+      assertEqual(persisted.essence, 20, 'Essence should remain pending until bank');
+    },
+  },
+  {
+    name: 'production board adds pending dice and shard rewards from field config',
+    run: async () => {
+      resetEnvironment();
+      seedState({ runtimeVersion: 0, dicePool: 10, shards: 2, luckyRollSessionsByMilestone: {} });
+      await startIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        nowMs: 1000,
+        runId: 'production-dice-shard-run',
+      });
+
+      const shardAdvance = await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: 2,
+        mode: 'production_board',
+        nowMs: 1100,
+      });
+      const diceAdvance = await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: 2,
+        mode: 'production_board',
+        nowMs: 1200,
+      });
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      const rewards = persisted.luckyRollSessionsByMilestone[SESSION_KEY].pendingRewards;
+      assertEqual(shardAdvance.landedTileId, 2, 'First production advance should land on shard field 2');
+      assertEqual(diceAdvance.landedTileId, 4, 'Second production advance should land on dice field 4');
+      assert(rewards.some((reward) => reward.rewardType === 'shards' && reward.amount === resolvedRewardAmount(2, 'shards')), 'Shard field should add pending shard reward');
+      assert(rewards.some((reward) => reward.rewardType === 'dice' && reward.amount === resolvedRewardAmount(4, 'dice')), 'Dice field should add pending dice reward');
+      assertEqual(persisted.shards, 2, 'Shard rewards should remain pending until bank');
+    },
+  },
+  {
+    name: 'production board empty and bonus-detour fields are claimed without reward duplication',
+    run: async () => {
+      resetEnvironment();
+      seedState({ runtimeVersion: 0, luckyRollSessionsByMilestone: {} });
+      await startIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        nowMs: 1000,
+        runId: 'production-empty-detour-run',
+      });
+
+      const emptyAdvance = await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: 3,
+        mode: 'production_board',
+        nowMs: 1100,
+      });
+      setLuckyRollPosition(0);
+      const emptyRetry = await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: 3,
+        mode: 'production_board',
+        nowMs: 1200,
+      });
+      setLuckyRollPosition(0);
+      const detourAdvance = await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: 6,
+        mode: 'production_board',
+        nowMs: 1300,
+      });
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      const luckyRollSession = persisted.luckyRollSessionsByMilestone[SESSION_KEY];
+      assertEqual(emptyAdvance.rewardAdded, false, 'Empty/cozy field should not add a reward');
+      assertEqual(emptyRetry.rewardAdded, false, 'Repeated empty field landing should not add a reward');
+      assertEqual(detourAdvance.landedTileId, 6, 'Detour roll should land on bonus-detour field 6');
+      assertEqual(luckyRollSession.position, 4, 'Bonus detour should move backward positively to extend the run');
+      assertEqual(luckyRollSession.claimedTileIds.includes(3), true, 'Empty field should be marked claimed');
+      assertEqual(luckyRollSession.claimedTileIds.includes(6), true, 'Detour field should be marked claimed');
+      assertEqual(luckyRollSession.pendingRewards.length, 0, 'Empty and detour fields should not add pending rewards');
+    },
+  },
+  {
+    name: 'production board duplicate claimed reward fields do not add duplicate pending rewards',
+    run: async () => {
+      resetEnvironment();
+      seedState({ runtimeVersion: 0, luckyRollSessionsByMilestone: {} });
+      await startIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        nowMs: 1000,
+        runId: 'production-duplicate-run',
+      });
+      await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: 1,
+        mode: 'production_board',
+        nowMs: 1100,
+      });
+      setLuckyRollPosition(0);
+
+      const duplicate = await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: 1,
+        mode: 'production_board',
+        nowMs: 1200,
+      });
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(duplicate.rewardAdded, false, 'Already claimed reward field should not add a duplicate reward');
+      assertEqual(persisted.luckyRollSessionsByMilestone[SESSION_KEY].pendingRewards.length, 1, 'Only original reward should remain pending');
+    },
+  },
+  {
+    name: 'production board reaching or passing finish completes and adds guaranteed bundle',
+    run: async () => {
+      resetEnvironment();
+      seedState({ runtimeVersion: 0, luckyRollSessionsByMilestone: {} });
+      await startIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        nowMs: 1000,
+        runId: 'production-finish-run',
+      });
+      setLuckyRollPosition(28);
+
+      const finished = await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: 6,
+        mode: 'production_board',
+        nowMs: 1100,
+      });
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      const luckyRollSession = persisted.luckyRollSessionsByMilestone[SESSION_KEY];
+      assertEqual(finished.status, 'completed', 'Passing finish should complete the session');
+      assertEqual(finished.landedTileId, 29, 'Passing finish should resolve to finish tile 29');
+      assertEqual(luckyRollSession.position, 29, 'Completed session should stop on the treasure gate');
+      assertEqual(luckyRollSession.claimedTileIds.includes(29), true, 'Finish field should be marked claimed');
+      assertEqual(luckyRollSession.pendingRewards.length, 3, 'Finish should add guaranteed essence/dice/shard bundle');
+      assert(luckyRollSession.pendingRewards.some((reward) => reward.rewardType === 'essence'), 'Finish bundle should include essence');
+      assert(luckyRollSession.pendingRewards.some((reward) => reward.rewardType === 'dice'), 'Finish bundle should include dice');
+      assert(luckyRollSession.pendingRewards.some((reward) => reward.rewardType === 'shards'), 'Finish bundle should include shards');
+    },
+  },
+  {
     name: 'bank applies dice and essence once and moves pending rewards to banked',
     run: async () => {
       resetEnvironment();
@@ -335,6 +573,80 @@ export const islandRunLuckyRollActionTests: TestCase[] = [
       assertEqual(luckyRollSession.pendingRewards.length, 0, 'Pending rewards should be cleared');
       assertEqual(luckyRollSession.bankedRewards.length, 2, 'Banked rewards should be retained for audit/idempotency');
       assertEqual(luckyRollSession.status, 'banked', 'Session should be marked banked');
+    },
+  },
+  {
+    name: 'bank applies production board dice essence and shard rewards exactly once',
+    run: async () => {
+      resetEnvironment();
+      seedState({ runtimeVersion: 0, dicePool: 10, essence: 20, essenceLifetimeEarned: 30, shards: 2, luckyRollSessionsByMilestone: {} });
+      await startIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        nowMs: 1000,
+        runId: 'production-bank-run',
+      });
+      await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: 1,
+        mode: 'production_board',
+        nowMs: 1100,
+      });
+      await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: 1,
+        mode: 'production_board',
+        nowMs: 1200,
+      });
+      await advanceIslandRunLuckyRoll({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        roll: 2,
+        mode: 'production_board',
+        nowMs: 1300,
+      });
+
+      const banked = await bankIslandRunLuckyRollRewards({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        nowMs: 1400,
+      });
+      const repeated = await bankIslandRunLuckyRollRewards({
+        session: makeSession(),
+        client: null,
+        cycleIndex: CYCLE_INDEX,
+        targetIslandNumber: TARGET_ISLAND_NUMBER,
+        nowMs: 1500,
+      });
+
+      const expectedEssence = resolvedRewardAmount(1, 'essence');
+      const expectedShards = resolvedRewardAmount(2, 'shards');
+      const expectedDice = resolvedRewardAmount(4, 'dice');
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(banked.status, 'banked', 'Initial production bank should succeed');
+      assertEqual(banked.essenceAwarded, expectedEssence, 'Bank should report production essence reward');
+      assertEqual(banked.shardsAwarded, expectedShards, 'Bank should report production shard reward');
+      assertEqual(banked.diceAwarded, expectedDice, 'Bank should report production dice reward');
+      assertEqual(repeated.status, 'already_banked', 'Repeated production bank should no-op');
+      assertEqual(repeated.diceAwarded, 0, 'Repeated bank should not award dice');
+      assertEqual(repeated.essenceAwarded, 0, 'Repeated bank should not award essence');
+      assertEqual(repeated.shardsAwarded, 0, 'Repeated bank should not award shards');
+      assertEqual(persisted.essence, 20 + expectedEssence, 'Production essence should bank exactly once');
+      assertEqual(persisted.essenceLifetimeEarned, 30 + expectedEssence, 'Lifetime essence should include production bank');
+      assertEqual(persisted.shards, 2 + expectedShards, 'Production shard wallet should bank exactly once');
+      assertEqual(persisted.dicePool, 10 + expectedDice, 'Production dice should bank exactly once');
     },
   },
   {

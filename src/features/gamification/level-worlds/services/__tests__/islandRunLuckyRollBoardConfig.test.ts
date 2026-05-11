@@ -119,14 +119,13 @@ export const islandRunLuckyRollBoardConfigTests: TestCase[] = [
     },
   },
   {
-    name: 'shard rewards exist but are marked for a follow-up banking service update',
+    name: 'shard rewards exist and are bankable through the action service',
     run: () => {
       const shardRewards = getIslandRunLuckyRollBoardConfig().tiles.flatMap((tile) => resolveIslandRunLuckyRollTileReward(tile.tileId, { islandNumber: 60 })?.rewards ?? [])
         .filter((reward) => reward.type === 'shards');
       assert(shardRewards.length > 0, 'Expected shard rewards in config');
       for (const reward of shardRewards) {
-        assertEqual(reward.bankingStatus, 'requires_service_update', 'Shard reward banking should not be treated as supported yet');
-        assert(Boolean(reward.bankingNote), 'Shard rewards should carry the service update note');
+        assertEqual(reward.bankingStatus, 'bankable_now', 'Shard reward banking should be supported by the action service');
       }
     },
   },

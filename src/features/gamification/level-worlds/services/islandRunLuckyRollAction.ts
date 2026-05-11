@@ -14,12 +14,17 @@ import {
   type IslandRunLuckyRollRewardEntry,
   type IslandRunLuckyRollSession,
 } from './islandRunGameStateStore';
+import {
+  getIslandRunLuckyRollBoardConfig,
+  resolveIslandRunLuckyRollMove,
+  resolveIslandRunLuckyRollTileReward,
+} from './islandRunLuckyRollBoardConfig';
 import { commitIslandRunState } from './islandRunStateStore';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 
 const DEFAULT_LUCKY_ROLL_BOARD_SIZE = 30;
 
-export type IslandRunLuckyRollV1RewardType = 'dice' | 'essence';
+export type IslandRunLuckyRollV1RewardType = 'dice' | 'essence' | 'shards';
 
 export interface IslandRunLuckyRollRewardInput {
   rewardType: IslandRunLuckyRollV1RewardType;
@@ -51,6 +56,7 @@ export interface AdvanceIslandRunLuckyRollOptions {
   cycleIndex: number;
   targetIslandNumber: number;
   roll: number;
+  mode?: 'manual_reward' | 'production_board';
   reward?: IslandRunLuckyRollRewardInput | null;
   boardSize?: number;
   nowMs?: number;
@@ -84,6 +90,7 @@ export interface BankIslandRunLuckyRollRewardsResult {
   rewardsBanked: IslandRunLuckyRollRewardEntry[];
   diceAwarded: number;
   essenceAwarded: number;
+  shardsAwarded: number;
 }
 
 export interface ExpireIslandRunLuckyRollOptions {
@@ -139,7 +146,7 @@ function buildRewardEntry(
   if (!reward) return null;
   const amount = Number.isFinite(reward.amount) ? Math.max(0, Math.floor(reward.amount)) : 0;
   if (amount < 1) return null;
-  const rewardType = reward.rewardType === 'dice' || reward.rewardType === 'essence' ? reward.rewardType : null;
+  const rewardType = reward.rewardType === 'dice' || reward.rewardType === 'essence' || reward.rewardType === 'shards' ? reward.rewardType : null;
   if (!rewardType) return null;
   const normalizedRewardId = typeof reward.rewardId === 'string' && reward.rewardId.trim().length > 0
     ? reward.rewardId.trim()
@@ -150,6 +157,69 @@ function buildRewardEntry(
     rewardType,
     amount,
     ...(reward.metadata ? { metadata: reward.metadata } : {}),
+  };
+}
+
+function buildBoardRewardEntries(
+  sessionKey: string,
+  tileId: number,
+  context: { islandNumber: number; cycleIndex: number },
+): IslandRunLuckyRollRewardEntry[] {
+  const resolved = resolveIslandRunLuckyRollTileReward(tileId, context);
+  return (resolved?.rewards ?? []).map((reward, index) => ({
+    rewardId: `${sessionKey}:${tileId}:${reward.type}:${index}`,
+    tileId,
+    rewardType: reward.type,
+    amount: reward.amount,
+    metadata: {
+      source: 'production_board_config',
+      bankingStatus: reward.bankingStatus,
+      ...(reward.bankingNote ? { bankingNote: reward.bankingNote } : {}),
+    },
+  }));
+}
+
+function resolveLuckyRollAdvanceFromBoardConfig(options: {
+  sessionKey: string;
+  luckyRollSession: IslandRunLuckyRollSession;
+  roll: number;
+  cycleIndex: number;
+  targetIslandNumber: number;
+}): {
+  landedTileId: number;
+  nextPosition: number;
+  completed: boolean;
+  rewardEntries: IslandRunLuckyRollRewardEntry[];
+} {
+  const config = getIslandRunLuckyRollBoardConfig({
+    islandNumber: options.targetIslandNumber,
+    cycleIndex: options.cycleIndex,
+  });
+  const finishTileId = config.endsWhenPositionAtOrBeyondTileId;
+  const rawLandedTileId = options.luckyRollSession.position + options.roll;
+  const reachedFinish = rawLandedTileId >= finishTileId;
+  const landedTileId = reachedFinish
+    ? config.finishTileId
+    : Math.max(0, Math.min(config.finishTileId, rawLandedTileId));
+  const alreadyClaimedTile = options.luckyRollSession.claimedTileIds.includes(landedTileId);
+  const resolvedMove = reachedFinish
+    ? null
+    : resolveIslandRunLuckyRollMove(landedTileId, { currentPosition: landedTileId });
+  const nextPosition = resolvedMove?.isBonusDetour && resolvedMove.destinationTileId !== null
+    ? resolvedMove.destinationTileId
+    : landedTileId;
+  const rewardEntries = alreadyClaimedTile
+    ? []
+    : buildBoardRewardEntries(options.sessionKey, landedTileId, {
+        islandNumber: options.targetIslandNumber,
+        cycleIndex: options.cycleIndex,
+      });
+
+  return {
+    landedTileId,
+    nextPosition,
+    completed: reachedFinish || landedTileId >= finishTileId,
+    rewardEntries,
   };
 }
 
@@ -247,9 +317,8 @@ export function advanceIslandRunLuckyRoll(
     const { session, client, triggerSource } = options;
     const nowMs = normalizeNowMs(options.nowMs);
     const roll = normalizeRoll(options.roll);
-    const boardSize = normalizeBoardSize(options.boardSize);
-    const finishTileId = boardSize - 1;
-    const { sessionKey } = getSessionContext(options.cycleIndex, options.targetIslandNumber);
+    const useProductionBoardConfig = options.mode === 'production_board';
+    const { cycleIndex, targetIslandNumber, sessionKey } = getSessionContext(options.cycleIndex, options.targetIslandNumber);
     const current = readIslandRunGameStateRecord(session);
     const luckyRollSession = current.luckyRollSessionsByMilestone[sessionKey] ?? null;
     if (!luckyRollSession) {
@@ -259,25 +328,38 @@ export function advanceIslandRunLuckyRoll(
       return { status: 'not_active', record: current, sessionKey, luckyRollSession, roll, landedTileId: null, rewardAdded: false };
     }
 
-    const landedTileId = Math.min(finishTileId, Math.max(0, luckyRollSession.position + roll));
+    const boardSize = normalizeBoardSize(options.boardSize);
+    const finishTileId = boardSize - 1;
+    const boardResolution = useProductionBoardConfig
+      ? resolveLuckyRollAdvanceFromBoardConfig({
+          sessionKey,
+          luckyRollSession,
+          roll,
+          cycleIndex,
+          targetIslandNumber,
+        })
+      : null;
+    const landedTileId = boardResolution?.landedTileId ?? Math.min(finishTileId, Math.max(0, luckyRollSession.position + roll));
     const alreadyClaimedTile = luckyRollSession.claimedTileIds.includes(landedTileId);
     const pendingReward = alreadyClaimedTile ? null : buildRewardEntry(sessionKey, landedTileId, options.reward);
+    const candidatePendingRewards = boardResolution?.rewardEntries ?? (pendingReward ? [pendingReward] : []);
     const existingRewardIds = new Set([
       ...luckyRollSession.pendingRewards.map((entry) => entry.rewardId),
       ...luckyRollSession.bankedRewards.map((entry) => entry.rewardId),
     ]);
-    const rewardAdded = Boolean(pendingReward && !existingRewardIds.has(pendingReward.rewardId));
-    const nextStatus = landedTileId >= finishTileId ? 'completed' : 'active';
+    const pendingRewardsToAdd = candidatePendingRewards.filter((entry) => !existingRewardIds.has(entry.rewardId));
+    const rewardAdded = pendingRewardsToAdd.length > 0;
+    const nextStatus = boardResolution?.completed || landedTileId >= finishTileId ? 'completed' : 'active';
     const nextLuckyRollSession: IslandRunLuckyRollSession = {
       ...luckyRollSession,
       status: nextStatus,
-      position: landedTileId,
+      position: boardResolution?.nextPosition ?? landedTileId,
       rollsUsed: luckyRollSession.rollsUsed + 1,
       claimedTileIds: !alreadyClaimedTile
         ? sortUniqueTileIds([...luckyRollSession.claimedTileIds, landedTileId])
         : luckyRollSession.claimedTileIds,
       pendingRewards: rewardAdded
-        ? [...luckyRollSession.pendingRewards, pendingReward as IslandRunLuckyRollRewardEntry]
+        ? [...luckyRollSession.pendingRewards, ...pendingRewardsToAdd]
         : luckyRollSession.pendingRewards,
       updatedAtMs: nowMs,
     };
@@ -319,13 +401,13 @@ export function bankIslandRunLuckyRollRewards(
     const current = readIslandRunGameStateRecord(session);
     const luckyRollSession = current.luckyRollSessionsByMilestone[sessionKey] ?? null;
     if (!luckyRollSession) {
-      return { status: 'not_found', record: current, sessionKey, luckyRollSession: null, rewardsBanked: [], diceAwarded: 0, essenceAwarded: 0 };
+      return { status: 'not_found', record: current, sessionKey, luckyRollSession: null, rewardsBanked: [], diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
     }
     if (luckyRollSession.status === 'banked') {
-      return { status: 'already_banked', record: current, sessionKey, luckyRollSession, rewardsBanked: [], diceAwarded: 0, essenceAwarded: 0 };
+      return { status: 'already_banked', record: current, sessionKey, luckyRollSession, rewardsBanked: [], diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
     }
     if (luckyRollSession.status === 'expired') {
-      return { status: 'expired', record: current, sessionKey, luckyRollSession, rewardsBanked: [], diceAwarded: 0, essenceAwarded: 0 };
+      return { status: 'expired', record: current, sessionKey, luckyRollSession, rewardsBanked: [], diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
     }
 
     const bankedRewardIds = new Set(luckyRollSession.bankedRewards.map((entry) => entry.rewardId));
@@ -335,6 +417,9 @@ export function bankIslandRunLuckyRollRewards(
       .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
     const essenceAwarded = rewardsToBank
       .filter((entry) => entry.rewardType === 'essence')
+      .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
+    const shardsAwarded = rewardsToBank
+      .filter((entry) => entry.rewardType === 'shards')
       .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
     const nextLuckyRollSession: IslandRunLuckyRollSession = {
       ...luckyRollSession,
@@ -349,6 +434,7 @@ export function bankIslandRunLuckyRollRewards(
       dicePool: current.dicePool + diceAwarded,
       essence: current.essence + essenceAwarded,
       essenceLifetimeEarned: current.essenceLifetimeEarned + essenceAwarded,
+      shards: current.shards + shardsAwarded,
       luckyRollSessionsByMilestone: {
         ...current.luckyRollSessionsByMilestone,
         [sessionKey]: nextLuckyRollSession,
@@ -371,6 +457,7 @@ export function bankIslandRunLuckyRollRewards(
       rewardsBanked: rewardsToBank,
       diceAwarded,
       essenceAwarded,
+      shardsAwarded,
     };
   });
 }
