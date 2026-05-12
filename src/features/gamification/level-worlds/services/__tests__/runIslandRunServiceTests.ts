@@ -34,6 +34,7 @@ import { islandRunActionMutexTests } from './islandRunActionMutex.test';
 import { islandRunRollActionTests } from './islandRunRollAction.test';
 import { islandRunTileRewardActionTests } from './islandRunTileRewardAction.test';
 import { islandRunLuckyRollActionTests } from './islandRunLuckyRollAction.test';
+import { islandRunPostRareTreasurePathActionTests } from './islandRunPostRareTreasurePathAction.test';
 import { islandRunEggRewardInventoryActionTests } from './islandRunEggRewardInventoryAction.test';
 import { islandRunLuckyRollBoardConfigTests } from './islandRunLuckyRollBoardConfig.test';
 import { islandRunProgressResetTests } from './islandRunProgressReset.test';
@@ -92,6 +93,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunRollAction', tests: islandRunRollActionTests },
   { label: 'islandRunTileRewardAction', tests: islandRunTileRewardActionTests },
   { label: 'islandRunLuckyRollAction', tests: islandRunLuckyRollActionTests },
+  { label: 'islandRunPostRareTreasurePathAction', tests: islandRunPostRareTreasurePathActionTests },
   { label: 'islandRunEggRewardInventoryAction', tests: islandRunEggRewardInventoryActionTests },
   { label: 'islandRunLuckyRollBoardConfig', tests: islandRunLuckyRollBoardConfigTests },
   { label: 'islandRunProgressReset', tests: islandRunProgressResetTests },

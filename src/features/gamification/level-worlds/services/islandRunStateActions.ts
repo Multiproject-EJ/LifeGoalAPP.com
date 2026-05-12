@@ -2228,6 +2228,15 @@ export interface TravelToNextIslandResult {
     | null;
 }
 
+export interface ResolveIslandRunTravelStateOptions {
+  current: IslandRunGameStateRecord;
+  nextIsland: number;
+  startTimer: boolean;
+  nowMs: number;
+  getIslandDurationMs: (islandNumber: number) => number;
+  islandRunContractV2Enabled: boolean;
+}
+
 /**
  * Commits "start current island timer" through the canonical store path.
  *
@@ -2316,6 +2325,34 @@ export async function travelToNextIsland(options: TravelToNextIslandOptions): Pr
   } = options;
 
   const current = getIslandRunStateSnapshot(session);
+  const travelState = resolveIslandRunTravelState({
+    current,
+    nextIsland,
+    startTimer,
+    nowMs,
+    getIslandDurationMs,
+    islandRunContractV2Enabled,
+  });
+
+  await commitIslandRunState({
+    session,
+    client,
+    record: travelState.record,
+    triggerSource: triggerSource ?? 'travel_to_next_island',
+  });
+
+  return travelState;
+}
+
+export function resolveIslandRunTravelState(options: ResolveIslandRunTravelStateOptions): TravelToNextIslandResult {
+  const {
+    current,
+    nextIsland,
+    startTimer,
+    nowMs,
+    getIslandDurationMs,
+    islandRunContractV2Enabled,
+  } = options;
 
   // Cycle-wrap resolution (120 → 1 bumps cycleIndex).
   const wraps = nextIsland > ISLAND_RUN_MAX_ISLAND;
@@ -2467,13 +2504,6 @@ export async function travelToNextIsland(options: TravelToNextIslandOptions): Pr
     islandExpiresAtMs,
     runtimeVersion: current.runtimeVersion + 1,
   };
-
-  await commitIslandRunState({
-    session,
-    client,
-    record: next,
-    triggerSource: triggerSource ?? 'travel_to_next_island',
-  });
 
   return {
     record: next,
