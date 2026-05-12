@@ -15,6 +15,7 @@ import {
 } from '../services/islandRunGameStateStore';
 import { resolveIslandRunPreIslandLuckyRollGate } from '../services/islandRunPreIslandLuckyRollGate';
 import { resolvePostRareTreasurePathState } from '../services/islandRunPostRareTreasurePathAction';
+import { isTreasurePathMilestoneIsland } from '../services/islandRunIslandMetadata';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -90,8 +91,7 @@ type DebugSection = {
   rows: Array<{ label: string; value: string; warn?: boolean }>;
 };
 
-const POST_RARE_TREASURE_PATH_ISLANDS = [30, 60, 90, 120] as const;
-type PostRareTreasurePathIsland = typeof POST_RARE_TREASURE_PATH_ISLANDS[number];
+const TREASURE_PATH_MILESTONE_ISLANDS = [5, 20, 30, 60, 90, 120] as const;
 
 type TreasurePathRewardSummary = Record<'dice' | 'essence' | 'shards' | 'egg', number>;
 
@@ -108,10 +108,6 @@ function summarizeTreasurePathRewards(rewards: IslandRunLuckyRollRewardEntry[]):
     }
   }
   return summary;
-}
-
-function isPostRareTreasurePathIsland(islandNumber: number): islandNumber is PostRareTreasurePathIsland {
-  return POST_RARE_TREASURE_PATH_ISLANDS.includes(islandNumber as PostRareTreasurePathIsland);
 }
 
 function formatTreasurePathRewardSummary(summary: TreasurePathRewardSummary): string {
@@ -154,9 +150,9 @@ export function IslandRunDebugPanel({
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
   const [luckyRollTargetIslandInput, setLuckyRollTargetIslandInput] = useState(() => String(runtimeState.currentIslandNumber));
   const [postRareCompletedIslandInput, setPostRareCompletedIslandInput] = useState(() => (
-    isPostRareTreasurePathIsland(runtimeState.currentIslandNumber)
+    isTreasurePathMilestoneIsland(runtimeState.currentIslandNumber)
       ? String(runtimeState.currentIslandNumber)
-      : '30'
+      : '5'
   ));
   const [postRareCycleInput, setPostRareCycleInput] = useState(() => String(runtimeState.cycleIndex));
   const [luckyRollActionPending, setLuckyRollActionPending] = useState(false);
@@ -265,7 +261,7 @@ export function IslandRunDebugPanel({
     try {
       setPostRareActionMessage(await action());
     } catch (err) {
-      setPostRareActionMessage(`Post-rare Treasure Path action failed: ${err instanceof Error ? err.message : String(err)}`);
+      setPostRareActionMessage(`Milestone Treasure Path action failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setPostRareActionPending(false);
     }
@@ -690,18 +686,18 @@ export function IslandRunDebugPanel({
                   </div>
                 )}
                 <div style={{ display: 'grid', gap: '0.55rem', borderTop: '1px solid rgba(255,255,255,0.16)', paddingTop: '0.65rem' }}>
-                  <strong style={{ fontSize: '0.84rem' }}>🧭 Post-Rare Treasure Path Flow</strong>
+                  <strong style={{ fontSize: '0.84rem' }}>🧭 Post-Island Milestone Treasure Path Flow</strong>
                   <div style={{ fontSize: '0.76rem', opacity: 0.86 }}>
-                    Dev mode only. Simulates rare-island completion and uses post-rare orchestration services for start/resume and collect+travel.
+                    Dev mode only. Simulates completed milestone islands and uses canonical orchestration services for start/resume and collect+travel.
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(6rem, 0.45fr)', gap: '0.5rem' }}>
                     <label style={{ display: 'grid', gap: '0.25rem', fontSize: '0.78rem' }}>
-                      Completed rare island
+                      Completed milestone island
                       <select
                         value={postRareCompletedIslandInput}
                         onChange={(e) => setPostRareCompletedIslandInput(e.target.value)}
                       >
-                        {POST_RARE_TREASURE_PATH_ISLANDS.map((island) => (
+                        {TREASURE_PATH_MILESTONE_ISLANDS.map((island) => (
                           <option key={island} value={island}>
                             {island === runtimeState.currentIslandNumber ? `Current island ${island}` : `Island ${island}`}
                           </option>
@@ -727,9 +723,9 @@ export function IslandRunDebugPanel({
                       onClick={() => runPostRareTreasurePathAction(() => onStartPostRareTreasurePath?.(
                         postRareCompletedIslandNumber,
                         postRareCycleIndex,
-                      ) ?? Promise.resolve('Post-rare Treasure Path launcher unavailable.'))}
+                      ) ?? Promise.resolve('Milestone Treasure Path launcher unavailable.'))}
                     >
-                      Start Post-Rare Treasure Path
+                      Start Milestone Treasure Path
                     </button>
                     <button
                       type="button"
@@ -746,7 +742,7 @@ export function IslandRunDebugPanel({
                       onClick={() => runPostRareTreasurePathAction(() => onCollectPostRareTreasurePathAndTravel?.(
                         postRareCompletedIslandNumber,
                         postRareCycleIndex,
-                      ) ?? Promise.resolve('Post-rare collect+travel unavailable.'))}
+                      ) ?? Promise.resolve('Milestone collect+travel unavailable.'))}
                     >
                       Collect + Travel
                     </button>
@@ -757,7 +753,7 @@ export function IslandRunDebugPanel({
                   <table className="island-run-debug-panel__table">
                     <tbody>
                       <tr>
-                        <td className="island-run-debug-panel__label">Post-rare state</td>
+                        <td className="island-run-debug-panel__label">Milestone state</td>
                         <td className="island-run-debug-panel__value">{postRareState.status}</td>
                       </tr>
                       <tr>

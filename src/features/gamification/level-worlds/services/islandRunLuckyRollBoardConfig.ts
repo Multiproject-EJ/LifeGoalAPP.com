@@ -2,7 +2,7 @@ import {
   getEffectiveIslandNumber,
   getIslandTotalEssenceCost,
 } from './islandRunContractV2EssenceBuild';
-import { getPostRareLuckyRollMetadata } from './islandRunIslandMetadata';
+import { getTreasurePathMilestoneMetadata } from './islandRunIslandMetadata';
 
 export const ISLAND_RUN_LUCKY_ROLL_BOARD_SIZE = 30;
 export const ISLAND_RUN_LUCKY_ROLL_FINISH_TILE = 29;
@@ -257,5 +257,5 @@ export function resolveIslandRunLuckyRollMove(
 }
 
 export function canResolveIslandRunLuckyRollBoardForPostRareIsland(islandNumber: number): boolean {
-  return Boolean(getPostRareLuckyRollMetadata(islandNumber) && getIslandRunLuckyRollBoardConfig({ islandNumber }).tiles.length === ISLAND_RUN_LUCKY_ROLL_BOARD_SIZE);
+  return Boolean(getTreasurePathMilestoneMetadata(islandNumber) && getIslandRunLuckyRollBoardConfig({ islandNumber }).tiles.length === ISLAND_RUN_LUCKY_ROLL_BOARD_SIZE);
 }

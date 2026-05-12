@@ -10,7 +10,12 @@ import {
   resolveIslandRunLuckyRollTileReward,
   type IslandRunLuckyRollRewardCategory,
 } from '../islandRunLuckyRollBoardConfig';
-import { getPostRareLuckyRollMetadata, isPostRareLuckyRollIsland } from '../islandRunIslandMetadata';
+import {
+  getPostRareLuckyRollMetadata,
+  getTreasurePathMilestoneMetadata,
+  isPostRareLuckyRollIsland,
+  isTreasurePathMilestoneIsland,
+} from '../islandRunIslandMetadata';
 import { assert, assertEqual, type TestCase } from './testHarness';
 
 function getRewardCategoryCounts(): Record<IslandRunLuckyRollRewardCategory, number> {
@@ -164,14 +169,19 @@ export const islandRunLuckyRollBoardConfigTests: TestCase[] = [
     },
   },
   {
-    name: 'post-rare island examples can resolve board config',
+    name: 'Treasure Path milestone island examples can resolve board config',
     run: () => {
-      for (const islandNumber of [30, 60, 90, 120]) {
-        assertEqual(isPostRareLuckyRollIsland(islandNumber), true, `Island ${islandNumber} should be post-rare Lucky Roll eligible`);
-        assert(getPostRareLuckyRollMetadata(islandNumber), `Island ${islandNumber} should have post-rare metadata`);
+      for (const islandNumber of [5, 20, 30, 60, 90, 120]) {
+        assertEqual(isTreasurePathMilestoneIsland(islandNumber), true, `Island ${islandNumber} should be Treasure Path eligible`);
+        assert(getTreasurePathMilestoneMetadata(islandNumber), `Island ${islandNumber} should have Treasure Path metadata`);
         assertEqual(canResolveIslandRunLuckyRollBoardForPostRareIsland(islandNumber), true, `Island ${islandNumber} should resolve Lucky Roll board config`);
       }
-      assertEqual(canResolveIslandRunLuckyRollBoardForPostRareIsland(12), false, 'Seasonal island 12 should not resolve as post-rare Lucky Roll');
+      for (const islandNumber of [30, 60, 90, 120]) {
+        assertEqual(isPostRareLuckyRollIsland(islandNumber), true, `Island ${islandNumber} should remain post-rare Lucky Roll eligible`);
+        assert(getPostRareLuckyRollMetadata(islandNumber), `Island ${islandNumber} should preserve post-rare metadata`);
+      }
+      assertEqual(canResolveIslandRunLuckyRollBoardForPostRareIsland(10), false, 'Island 10 should not resolve as Treasure Path eligible');
+      assertEqual(canResolveIslandRunLuckyRollBoardForPostRareIsland(12), false, 'Seasonal island 12 should not resolve as Treasure Path eligible');
     },
   },
 ];
