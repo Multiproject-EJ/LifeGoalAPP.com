@@ -49,6 +49,12 @@ export interface ResolvePendingTreasurePathResumeOptions {
 
 export type ResolvePendingTreasurePathResumeResult = ResolvePostRareTreasurePathStateResult | null;
 
+const RESUMABLE_TREASURE_PATH_STATUSES = new Set<PostRareTreasurePathStateStatus>([
+  'active',
+  'completed_ready_to_collect',
+  'collected_banked',
+]);
+
 export interface StartPostRareTreasurePathOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -198,7 +204,7 @@ export function resolvePendingTreasurePathResume(
     })
     .filter((state): state is ResolvePostRareTreasurePathStateResult => {
       if (!state) return false;
-      if (state.status !== 'active' && state.status !== 'completed_ready_to_collect' && state.status !== 'collected_banked') return false;
+      if (!RESUMABLE_TREASURE_PATH_STATUSES.has(state.status)) return false;
       return isRecordAtIsland(options.record, state.completedIslandNumber, state.cycleIndex);
     });
 

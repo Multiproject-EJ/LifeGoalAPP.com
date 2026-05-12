@@ -1705,6 +1705,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     () => resolvePendingTreasurePathResume({ record: runtimeState }),
     [runtimeState],
   );
+  const pendingTreasurePathResumeCtaLabel = pendingTreasurePathResume?.status === 'active'
+    ? 'Continue Treasure Path'
+    : pendingTreasurePathResume?.status === 'completed_ready_to_collect'
+      ? 'Collect Treasure'
+      : pendingTreasurePathResume?.status === 'collected_banked'
+        ? 'Collect Treasure'
+        : 'Continue Treasure Path';
   const activeSessionStatusMessage = null;
   const isRetryingSync = false;
   const [perfectCompanionRuntimeConfig, setPerfectCompanionRuntimeConfig] = useState(() => readPerfectCompanionRuntimeConfig(session.user.id));
@@ -8562,7 +8569,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             onClick={handleResumePendingTreasurePath}
             style={{ padding: '0.55rem 0.9rem', minHeight: 'auto' }}
           >
-            {pendingTreasurePathResume.status === 'active' ? 'Continue Treasure Path' : 'Collect Treasure'}
+            {pendingTreasurePathResumeCtaLabel}
           </button>
         </div>
       )}

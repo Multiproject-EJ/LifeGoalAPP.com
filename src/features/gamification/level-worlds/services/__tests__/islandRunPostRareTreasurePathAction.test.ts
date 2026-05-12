@@ -668,8 +668,16 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
         'Milestone Treasure Path overlay should collect through collect+travel orchestration',
       );
       assert(
-        /resolvePendingTreasurePathResume/.test(boardSource) && /Continue Treasure Path/.test(boardSource) && /Collect Treasure/.test(boardSource),
-        'Island Run board should expose a small resume/collect prompt for pending Treasure Path sessions',
+        /resolvePendingTreasurePathResume/.test(boardSource),
+        'Island Run board should resolve pending Treasure Path resume state',
+      );
+      assert(
+        /Continue Treasure Path/.test(boardSource),
+        'Island Run board should expose a Continue Treasure Path prompt',
+      );
+      assert(
+        /Collect Treasure/.test(boardSource),
+        'Island Run board should expose a Collect Treasure prompt',
       );
       assert(
         !/LuckyRollBoard/.test(boardSource),
