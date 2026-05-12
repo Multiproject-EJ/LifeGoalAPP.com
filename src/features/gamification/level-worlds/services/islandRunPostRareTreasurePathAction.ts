@@ -168,6 +168,9 @@ export async function startPostRareTreasurePath(
   if (initialState.status === 'not_applicable') {
     return { status: 'not_applicable', state: initialState, record: getIslandRunStateSnapshot(options.session) };
   }
+  if (initialState.status !== 'available_to_start' && !initialState.luckyRollSession) {
+    return { status: 'not_applicable', state: initialState, record: getIslandRunStateSnapshot(options.session) };
+  }
   if (initialState.luckyRollSession) {
     return { status: 'resumed', state: initialState, record: getIslandRunStateSnapshot(options.session) };
   }
@@ -203,6 +206,9 @@ export function collectPostRareTreasurePathAndTravel(
       completedIslandNumber: options.completedIslandNumber,
       cycleIndex: options.cycleIndex,
     });
+    if (state.luckyRollSession?.status === 'expired') {
+      return { status: 'expired', record: current, state, diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
+    }
     if (state.status === 'not_applicable') {
       return { status: 'not_applicable', record: current, state, diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
     }
@@ -211,9 +217,6 @@ export function collectPostRareTreasurePathAndTravel(
     }
     if (!state.luckyRollSession) {
       return { status: 'not_found', record: current, state, diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
-    }
-    if (state.luckyRollSession.status === 'expired') {
-      return { status: 'expired', record: current, state, diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
     }
     if (state.luckyRollSession.status === 'active') {
       return { status: 'not_completed', record: current, state, diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
