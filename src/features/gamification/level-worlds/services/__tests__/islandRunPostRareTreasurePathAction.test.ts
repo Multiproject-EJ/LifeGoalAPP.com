@@ -97,6 +97,22 @@ function makeCompletedTreasurePathSession(options: {
   };
 }
 
+function makeBankedTreasurePathSession(options: {
+  cycleIndex: number;
+  targetIslandNumber: number;
+  runId?: string;
+}): IslandRunLuckyRollSession {
+  const completed = makeCompletedTreasurePathSession(options);
+  return {
+    ...completed,
+    status: 'banked',
+    pendingRewards: [],
+    bankedRewards: completed.pendingRewards,
+    bankedAtMs: 3_000,
+    updatedAtMs: 3_000,
+  };
+}
+
 function seedCompletedTreasurePath(options: {
   cycleIndex: number;
   targetIslandNumber: number;
@@ -320,11 +336,56 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
     },
   },
   {
+    name: 'already banked post-rare Treasure Path still travels from completed rare island without rebanking',
+    run: async () => {
+      resetEnvironment();
+      const sessionKey = getIslandRunLuckyRollSessionKey(0, 30);
+      seedState({
+        runtimeVersion: 10,
+        currentIslandNumber: 30,
+        cycleIndex: 0,
+        dicePool: 20,
+        essence: 30,
+        essenceLifetimeEarned: 40,
+        shards: 50,
+        eggRewardInventory: [],
+        luckyRollSessionsByMilestone: {
+          [sessionKey]: makeBankedTreasurePathSession({ cycleIndex: 0, targetIslandNumber: 30 }),
+        },
+      });
+
+      const collected = await collectPostRareTreasurePathAndTravel({
+        session: makeSession(),
+        client: null,
+        completedIslandNumber: 30,
+        cycleIndex: 0,
+        startTimer: true,
+        nowMs: 5_000,
+        getIslandDurationMs: () => 60_000,
+        islandRunContractV2Enabled: false,
+      });
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(collected.status, 'banked_and_traveled', 'Already-banked session should still travel when still on completed rare island');
+      assertEqual(collected.diceAwarded, 0, 'Already-banked travel should not report new dice');
+      assertEqual(collected.essenceAwarded, 0, 'Already-banked travel should not report new essence');
+      assertEqual(collected.shardsAwarded, 0, 'Already-banked travel should not report new shards');
+      assertEqual(persisted.currentIslandNumber, 31, 'Already-banked collect should travel to next island');
+      assertEqual(persisted.runtimeVersion, 11, 'Already-banked collect should commit travel exactly once');
+      assertEqual(persisted.dicePool, 20, 'Already-banked collect should not duplicate dice');
+      assertEqual(persisted.essence, 30, 'Already-banked collect should not duplicate essence');
+      assertEqual(persisted.essenceLifetimeEarned, 40, 'Already-banked collect should not duplicate lifetime essence');
+      assertEqual(persisted.shards, 50, 'Already-banked collect should not duplicate shards');
+      assertEqual(persisted.eggRewardInventory.length, 0, 'Already-banked collect should not duplicate egg vouchers');
+      assertEqual(persisted.luckyRollSessionsByMilestone[sessionKey].status, 'banked', 'Session should remain banked');
+    },
+  },
+  {
     name: 'repeated collect does not duplicate rewards or travel incorrectly',
     run: async () => {
       resetEnvironment();
       seedCompletedTreasurePath({ cycleIndex: 0, targetIslandNumber: 30 });
-      await collectPostRareTreasurePathAndTravel({
+      const first = await collectPostRareTreasurePathAndTravel({
         session: makeSession(),
         client: null,
         completedIslandNumber: 30,
@@ -334,6 +395,7 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
         getIslandDurationMs: () => 60_000,
         islandRunContractV2Enabled: false,
       });
+      const afterFirstCollect = readIslandRunGameStateRecord(makeSession());
       const repeated = await collectPostRareTreasurePathAndTravel({
         session: makeSession(),
         client: null,
@@ -346,8 +408,11 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
       });
 
       const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(first.status, 'banked_and_traveled', 'First collect should bank and travel');
       assertEqual(repeated.status, 'already_traveled', 'Repeated collect should identify completed travel');
+      assertEqual(repeated.record.runtimeVersion, afterFirstCollect.runtimeVersion, 'Repeated collect result should preserve runtimeVersion');
       assertEqual(persisted.currentIslandNumber, 31, 'Repeated collect should remain on the next island');
+      assertEqual(persisted.runtimeVersion, afterFirstCollect.runtimeVersion, 'Repeated collect should not commit travel or bump runtimeVersion again');
       assertEqual(persisted.dicePool, 25, 'Repeated collect should not duplicate dice');
       assertEqual(persisted.eggRewardInventory.length, 1, 'Repeated collect should not duplicate egg vouchers');
     },
