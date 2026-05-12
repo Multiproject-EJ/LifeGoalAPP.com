@@ -235,6 +235,7 @@ export function collectPostRareTreasurePathAndTravel(
           cycleIndex: state.cycleIndex,
           targetIslandNumber: state.completedIslandNumber,
           nowMs: options.nowMs,
+          bumpRuntimeVersion: false,
         });
     if (banking.status === 'not_found') {
       return { status: 'not_found', record: current, state, diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
@@ -243,9 +244,8 @@ export function collectPostRareTreasurePathAndTravel(
       return { status: 'expired', record: current, state, diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
     }
 
-    const bankedRecord = banking.status === 'banked'
-      ? { ...banking.record, runtimeVersion: current.runtimeVersion }
-      : banking.record;
+    const didBankRewards = banking.status === 'banked';
+    const bankedRecord = banking.record;
     const travel = resolveIslandRunTravelState({
       current: bankedRecord,
       nextIsland: state.completedIslandNumber + 1,
@@ -269,9 +269,9 @@ export function collectPostRareTreasurePathAndTravel(
       status: 'banked_and_traveled',
       record: travel.record,
       state: nextState,
-      diceAwarded: banking.status === 'banked' ? banking.diceAwarded : 0,
-      essenceAwarded: banking.status === 'banked' ? banking.essenceAwarded : 0,
-      shardsAwarded: banking.status === 'banked' ? banking.shardsAwarded : 0,
+      diceAwarded: didBankRewards ? banking.diceAwarded : 0,
+      essenceAwarded: didBankRewards ? banking.essenceAwarded : 0,
+      shardsAwarded: didBankRewards ? banking.shardsAwarded : 0,
     };
   });
 }

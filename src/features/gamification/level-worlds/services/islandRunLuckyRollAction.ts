@@ -104,6 +104,7 @@ export interface ResolveIslandRunLuckyRollRewardBankingOptions {
   cycleIndex: number;
   targetIslandNumber: number;
   nowMs?: number;
+  bumpRuntimeVersion?: boolean;
 }
 
 export type ResolveIslandRunLuckyRollRewardBankingResult = BankIslandRunLuckyRollRewardsResult;
@@ -361,6 +362,7 @@ export function resolveIslandRunLuckyRollRewardBanking(
   options: ResolveIslandRunLuckyRollRewardBankingOptions,
 ): ResolveIslandRunLuckyRollRewardBankingResult {
   const nowMs = normalizeNowMs(options.nowMs);
+  const bumpRuntimeVersion = options.bumpRuntimeVersion !== false;
   const { cycleIndex, targetIslandNumber, sessionKey } = getSessionContext(options.cycleIndex, options.targetIslandNumber);
   const current = options.record;
   const luckyRollSession = current.luckyRollSessionsByMilestone[sessionKey] ?? null;
@@ -418,7 +420,7 @@ export function resolveIslandRunLuckyRollRewardBanking(
       ...current.luckyRollSessionsByMilestone,
       [sessionKey]: nextLuckyRollSession,
     },
-    runtimeVersion: current.runtimeVersion + 1,
+    runtimeVersion: bumpRuntimeVersion ? current.runtimeVersion + 1 : current.runtimeVersion,
   };
 
   return {
