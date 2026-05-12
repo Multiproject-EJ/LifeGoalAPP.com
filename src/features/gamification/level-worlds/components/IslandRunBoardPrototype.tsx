@@ -184,6 +184,10 @@ import {
   triggerIslandRunHaptic,
   setIslandRunAudioEnabled,
 } from '../services/islandRunAudio';
+import {
+  playIslandRunLuxuryRewardMusic,
+  stopIslandRunLuxuryRewardMusic,
+} from '../services/islandRunMusic';
 import { SHARD_EARN, computeShardEarn, getShardTierThreshold, type ShardEarnSource } from '../services/shardMilestoneEngine';
 import {
   drawEncounterChallenge,
@@ -2382,11 +2386,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         e.preventDefault();
         setShowShopPanel(false);
         setMarketPurchaseFeedback(null);
+        stopIslandRunLuxuryRewardMusic();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showShopPanel]);
+
+  useEffect(() => {
+    if (!showShopPanel || !audioEnabled) {
+      stopIslandRunLuxuryRewardMusic();
+    }
+
+    return () => {
+      stopIslandRunLuxuryRewardMusic();
+    };
+  }, [audioEnabled, showShopPanel]);
 
   useEffect(() => {
     if (!showSanctuaryPanel) return;
@@ -7179,6 +7194,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setMarketPurchaseFeedback(null);
     setMarketInteracted(false);
     playIslandRunSound('shop_open');
+    if (audioEnabled) {
+      playIslandRunLuxuryRewardMusic();
+    }
     void recordTelemetryEvent({
       userId: session.user.id,
       eventType: 'economy_earn',
@@ -7670,6 +7688,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               const next = !audioEnabled;
               setAudioEnabled(next);
               setIslandRunAudioEnabled(next);
+              if (next && showShopPanel) {
+                playIslandRunLuxuryRewardMusic();
+              } else {
+                stopIslandRunLuxuryRewardMusic();
+              }
             }}
           >
             {audioEnabled ? '🔊' : '🔇'}
@@ -9500,6 +9523,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 onClick={() => {
                   setShowShopPanel(false);
                   setMarketPurchaseFeedback(null);
+                  stopIslandRunLuxuryRewardMusic();
                   void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_earn', metadata: { stage: 'shop_close', island_number: islandNumber } });
                 }}
               >
