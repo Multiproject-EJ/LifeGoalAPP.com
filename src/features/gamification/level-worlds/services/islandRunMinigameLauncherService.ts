@@ -249,8 +249,8 @@ export function resolveLuckySpinEventMinigame(
 }
 
 /**
- * Phase 6 step 3: Space Excavator event surface routes through Shooter Blitz
- * using an event-mode config tuned for longer campaign-style sessions.
+ * Phase 6 step 3: Space Excavator event surface opens for free; event tickets
+ * are spent per dig through the Space Excavator action service.
  */
 export function resolveSpaceExcavatorEventMinigame(
   ctx: EventMinigameLaunchContext,
