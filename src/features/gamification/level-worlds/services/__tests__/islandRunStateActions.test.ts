@@ -250,7 +250,7 @@ export const islandRunStateActionsTests: TestCase[] = [
   },
 
   {
-    name: 'Space Excavator failed dig at zero tickets does not reveal or touch unrelated event progress',
+    name: 'Space Excavator failed dig at zero tickets does not reveal tiles or affect other event buckets',
     run: () => {
       resetAll();
       const session = makeSession();
@@ -308,8 +308,20 @@ export const islandRunStateActionsTests: TestCase[] = [
         client: null,
         eventId: 'space_excavator:event-complete',
       });
-      let record = initialized;
-      for (const tileId of initialized.spaceExcavatorProgressByEvent['space_excavator:event-complete'].treasureTileIds) {
+      const treasureTileIds = initialized.spaceExcavatorProgressByEvent['space_excavator:event-complete'].treasureTileIds;
+      let record = applySpaceExcavatorDig({
+        session,
+        client: null,
+        eventId: 'space_excavator:event-complete',
+        tileId: treasureTileIds[0],
+      }).record;
+      assertEqual(
+        record.spaceExcavatorProgressByEvent['space_excavator:event-complete'].status,
+        'active',
+        'Space Excavator board should remain active before all treasures are found',
+      );
+
+      for (const tileId of treasureTileIds.slice(1)) {
         record = applySpaceExcavatorDig({
           session,
           client: null,
