@@ -99,6 +99,15 @@ export interface BankIslandRunLuckyRollRewardsResult {
   shardsAwarded: number;
 }
 
+export interface ResolveIslandRunLuckyRollRewardBankingOptions {
+  record: IslandRunGameStateRecord;
+  cycleIndex: number;
+  targetIslandNumber: number;
+  nowMs?: number;
+}
+
+export type ResolveIslandRunLuckyRollRewardBankingResult = BankIslandRunLuckyRollRewardsResult;
+
 export interface ExpireIslandRunLuckyRollOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -348,6 +357,82 @@ async function commitLuckyRollRecord(options: {
   await commitIslandRunState(options);
 }
 
+export function resolveIslandRunLuckyRollRewardBanking(
+  options: ResolveIslandRunLuckyRollRewardBankingOptions,
+): ResolveIslandRunLuckyRollRewardBankingResult {
+  const nowMs = normalizeNowMs(options.nowMs);
+  const { cycleIndex, targetIslandNumber, sessionKey } = getSessionContext(options.cycleIndex, options.targetIslandNumber);
+  const current = options.record;
+  const luckyRollSession = current.luckyRollSessionsByMilestone[sessionKey] ?? null;
+  if (!luckyRollSession) {
+    return { status: 'not_found', record: current, sessionKey, luckyRollSession: null, rewardsBanked: [], diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
+  }
+  if (luckyRollSession.status === 'banked') {
+    return { status: 'already_banked', record: current, sessionKey, luckyRollSession, rewardsBanked: [], diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
+  }
+  if (luckyRollSession.status === 'expired') {
+    return { status: 'expired', record: current, sessionKey, luckyRollSession, rewardsBanked: [], diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
+  }
+
+  const bankedRewardIds = new Set(luckyRollSession.bankedRewards.map((entry) => entry.rewardId));
+  const rewardsToBank = luckyRollSession.pendingRewards.filter((entry) => !bankedRewardIds.has(entry.rewardId));
+  const diceAwarded = rewardsToBank
+    .filter((entry) => entry.rewardType === 'dice')
+    .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
+  const essenceAwarded = rewardsToBank
+    .filter((entry) => entry.rewardType === 'essence')
+    .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
+  const shardsAwarded = rewardsToBank
+    .filter((entry) => entry.rewardType === 'shards')
+    .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
+  const existingEggRewardIds = new Set(current.eggRewardInventory.map((entry) => entry.eggRewardId));
+  const eggRewardsToInventory = rewardsToBank
+    .map((reward) => buildEggRewardInventoryEntry({
+      sessionKey,
+      runId: luckyRollSession.runId,
+      reward,
+      cycleIndex,
+      targetIslandNumber,
+      grantedAtMs: nowMs,
+    }))
+    .filter((entry): entry is EggRewardInventoryEntry => Boolean(entry))
+    .filter((entry) => !existingEggRewardIds.has(entry.eggRewardId));
+  const nextLuckyRollSession: IslandRunLuckyRollSession = {
+    ...luckyRollSession,
+    status: 'banked',
+    pendingRewards: [],
+    bankedRewards: [...luckyRollSession.bankedRewards, ...rewardsToBank],
+    bankedAtMs: luckyRollSession.bankedAtMs ?? nowMs,
+    updatedAtMs: nowMs,
+  };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    dicePool: current.dicePool + diceAwarded,
+    essence: current.essence + essenceAwarded,
+    essenceLifetimeEarned: current.essenceLifetimeEarned + essenceAwarded,
+    shards: current.shards + shardsAwarded,
+    eggRewardInventory: eggRewardsToInventory.length > 0
+      ? [...current.eggRewardInventory, ...eggRewardsToInventory]
+      : current.eggRewardInventory,
+    luckyRollSessionsByMilestone: {
+      ...current.luckyRollSessionsByMilestone,
+      [sessionKey]: nextLuckyRollSession,
+    },
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+
+  return {
+    status: 'banked',
+    record: next,
+    sessionKey,
+    luckyRollSession: nextLuckyRollSession,
+    rewardsBanked: rewardsToBank,
+    diceAwarded,
+    essenceAwarded,
+    shardsAwarded,
+  };
+}
+
 export function startIslandRunLuckyRoll(
   options: StartIslandRunLuckyRollOptions,
 ): Promise<StartIslandRunLuckyRollResult> {
@@ -494,84 +579,23 @@ export function bankIslandRunLuckyRollRewards(
 ): Promise<BankIslandRunLuckyRollRewardsResult> {
   return withIslandRunActionLock(options.session.user.id, async () => {
     const { session, client, triggerSource } = options;
-    const nowMs = normalizeNowMs(options.nowMs);
-    const { cycleIndex, targetIslandNumber, sessionKey } = getSessionContext(options.cycleIndex, options.targetIslandNumber);
     const current = readIslandRunGameStateRecord(session);
-    const luckyRollSession = current.luckyRollSessionsByMilestone[sessionKey] ?? null;
-    if (!luckyRollSession) {
-      return { status: 'not_found', record: current, sessionKey, luckyRollSession: null, rewardsBanked: [], diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
-    }
-    if (luckyRollSession.status === 'banked') {
-      return { status: 'already_banked', record: current, sessionKey, luckyRollSession, rewardsBanked: [], diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
-    }
-    if (luckyRollSession.status === 'expired') {
-      return { status: 'expired', record: current, sessionKey, luckyRollSession, rewardsBanked: [], diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
-    }
-
-    const bankedRewardIds = new Set(luckyRollSession.bankedRewards.map((entry) => entry.rewardId));
-    const rewardsToBank = luckyRollSession.pendingRewards.filter((entry) => !bankedRewardIds.has(entry.rewardId));
-    const diceAwarded = rewardsToBank
-      .filter((entry) => entry.rewardType === 'dice')
-      .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
-    const essenceAwarded = rewardsToBank
-      .filter((entry) => entry.rewardType === 'essence')
-      .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
-    const shardsAwarded = rewardsToBank
-      .filter((entry) => entry.rewardType === 'shards')
-      .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
-    const existingEggRewardIds = new Set(current.eggRewardInventory.map((entry) => entry.eggRewardId));
-    const eggRewardsToInventory = rewardsToBank
-      .map((reward) => buildEggRewardInventoryEntry({
-        sessionKey,
-        runId: luckyRollSession.runId,
-        reward,
-        cycleIndex,
-        targetIslandNumber,
-        grantedAtMs: nowMs,
-      }))
-      .filter((entry): entry is EggRewardInventoryEntry => Boolean(entry))
-      .filter((entry) => !existingEggRewardIds.has(entry.eggRewardId));
-    const nextLuckyRollSession: IslandRunLuckyRollSession = {
-      ...luckyRollSession,
-      status: 'banked',
-      pendingRewards: [],
-      bankedRewards: [...luckyRollSession.bankedRewards, ...rewardsToBank],
-      bankedAtMs: luckyRollSession.bankedAtMs ?? nowMs,
-      updatedAtMs: nowMs,
-    };
-    const next: IslandRunGameStateRecord = {
-      ...current,
-      dicePool: current.dicePool + diceAwarded,
-      essence: current.essence + essenceAwarded,
-      essenceLifetimeEarned: current.essenceLifetimeEarned + essenceAwarded,
-      shards: current.shards + shardsAwarded,
-      eggRewardInventory: eggRewardsToInventory.length > 0
-        ? [...current.eggRewardInventory, ...eggRewardsToInventory]
-        : current.eggRewardInventory,
-      luckyRollSessionsByMilestone: {
-        ...current.luckyRollSessionsByMilestone,
-        [sessionKey]: nextLuckyRollSession,
-      },
-      runtimeVersion: current.runtimeVersion + 1,
-    };
+    const result = resolveIslandRunLuckyRollRewardBanking({
+      record: current,
+      cycleIndex: options.cycleIndex,
+      targetIslandNumber: options.targetIslandNumber,
+      nowMs: options.nowMs,
+    });
+    if (result.status !== 'banked') return result;
 
     await commitLuckyRollRecord({
       session,
       client,
-      record: next,
+      record: result.record,
       triggerSource: triggerSource ?? 'bank_island_run_lucky_roll_rewards',
     });
 
-    return {
-      status: 'banked',
-      record: next,
-      sessionKey,
-      luckyRollSession: nextLuckyRollSession,
-      rewardsBanked: rewardsToBank,
-      diceAwarded,
-      essenceAwarded,
-      shardsAwarded,
-    };
+    return result;
   });
 }
 
