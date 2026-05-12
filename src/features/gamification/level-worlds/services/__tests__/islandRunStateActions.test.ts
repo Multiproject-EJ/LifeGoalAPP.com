@@ -211,6 +211,14 @@ export const islandRunStateActionsTests: TestCase[] = [
       assert(initialProgress, 'init should create progress for the Space Excavator event');
       assertEqual(initialProgress.boardIndex, 0, 'Space Excavator should start on zero-based board index 0');
       assertEqual(initialProgress.completedBoardCount, 0, 'Space Excavator should start with no completed boards');
+      assert(initialProgress.objectId.length > 0, 'init should create hidden object metadata');
+      assert(initialProgress.objectName.length > 0, 'init should create hidden object display name');
+      assert(initialProgress.objectTileIds.length >= 2, 'init should create object tile layout');
+      assertDeepEqual(initialProgress.revealedObjectTileIds, [], 'init should start with no revealed object pieces');
+      assert(
+        initialProgress.objectTileIds.every((tileId) => tileId >= 0 && tileId < initialProgress.boardSize * initialProgress.boardSize),
+        'object layout should fit within the board',
+      );
 
       const secondInit = initSpaceExcavatorProgressForEvent({
         session,
@@ -218,16 +226,16 @@ export const islandRunStateActionsTests: TestCase[] = [
         eventId: 'space_excavator:event-a',
       });
       assertDeepEqual(
-        secondInit.spaceExcavatorProgressByEvent['space_excavator:event-a'].treasureTileIds,
-        initialProgress.treasureTileIds,
-        'init should keep stable treasure placement for an event id',
+        secondInit.spaceExcavatorProgressByEvent['space_excavator:event-a'].objectTileIds,
+        initialProgress.objectTileIds,
+        'init should keep stable object placement for an event id',
       );
 
       const dig = applySpaceExcavatorDig({
         session,
         client: null,
         eventId: 'space_excavator:event-a',
-        tileId: initialProgress.treasureTileIds[0],
+        tileId: initialProgress.objectTileIds[0],
       });
       assertEqual(dig.ok, true, 'first dig with tickets should succeed');
       assertEqual(dig.ticketsRemaining, 1, 'successful dig should spend exactly one event ticket');
@@ -235,16 +243,21 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(dig.record.minigameTicketsByEvent['lucky_spin:event-b'], 9, 'unrelated event bucket should be untouched');
       assertEqual(dig.record.spinTokens, 7, 'spinTokens should remain unchanged');
       assertEqual(
-        dig.record.spaceExcavatorProgressByEvent['space_excavator:event-a'].dugTileIds.includes(initialProgress.treasureTileIds[0]),
+        dig.record.spaceExcavatorProgressByEvent['space_excavator:event-a'].dugTileIds.includes(initialProgress.objectTileIds[0]),
         true,
         'successful dig should persist revealed tile progress',
+      );
+      assertDeepEqual(
+        dig.record.spaceExcavatorProgressByEvent['space_excavator:event-a'].revealedObjectTileIds,
+        [initialProgress.objectTileIds[0]],
+        'successful dig on object tile should record revealed object piece',
       );
 
       const duplicateDig = applySpaceExcavatorDig({
         session,
         client: null,
         eventId: 'space_excavator:event-a',
-        tileId: initialProgress.treasureTileIds[0],
+        tileId: initialProgress.objectTileIds[0],
       });
       assertEqual(duplicateDig.ok, false, 'duplicate tile dig should be rejected');
       assertEqual(duplicateDig.ticketsRemaining, 1, 'duplicate tile dig should not spend another ticket');
@@ -258,8 +271,13 @@ export const islandRunStateActionsTests: TestCase[] = [
       });
       assertDeepEqual(
         reopened.spaceExcavatorProgressByEvent['space_excavator:event-a'].dugTileIds,
-        [initialProgress.treasureTileIds[0]],
+        [initialProgress.objectTileIds[0]],
         'partial board progress should persist and resume on reopen',
+      );
+      assertDeepEqual(
+        reopened.spaceExcavatorProgressByEvent['space_excavator:event-a'].revealedObjectTileIds,
+        [initialProgress.objectTileIds[0]],
+        'partial object reveal progress should persist and resume on reopen',
       );
     },
   },
@@ -289,7 +307,7 @@ export const islandRunStateActionsTests: TestCase[] = [
         session,
         client: null,
         eventId: 'space_excavator:event-zero',
-        tileId: initialProgress.treasureTileIds[0],
+        tileId: initialProgress.objectTileIds[0],
       });
 
       assertEqual(failedDig.ok, false, 'dig at zero tickets should be blocked');
@@ -306,7 +324,57 @@ export const islandRunStateActionsTests: TestCase[] = [
   },
 
   {
-    name: 'Space Excavator completion marks board complete when all treasures are found',
+    name: 'Space Excavator empty digs persist dug tile without revealing object piece',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      const eventId = 'space_excavator:event-empty';
+      seedState({
+        runtimeVersion: 10,
+        spinTokens: 8,
+        minigameTicketsByEvent: {
+          [eventId]: 3,
+        },
+        spaceExcavatorProgressByEvent: {},
+      });
+
+      const initialized = initSpaceExcavatorProgressForEvent({
+        session,
+        client: null,
+        eventId,
+      });
+      const initialProgress = initialized.spaceExcavatorProgressByEvent[eventId];
+      const emptyTileId = Array.from(
+        { length: initialProgress.boardSize * initialProgress.boardSize },
+        (_, tileId) => tileId,
+      ).find((tileId) => !initialProgress.objectTileIds.includes(tileId));
+      assertEqual(typeof emptyTileId, 'number', 'test board should include at least one empty tile');
+
+      const dig = applySpaceExcavatorDig({
+        session,
+        client: null,
+        eventId,
+        tileId: emptyTileId as number,
+      });
+
+      assertEqual(dig.ok, true, 'empty tile dig should succeed when tickets are available');
+      assertEqual(dig.record.minigameTicketsByEvent[eventId], 2, 'empty tile dig should spend one event ticket');
+      assert(
+        dig.record.spaceExcavatorProgressByEvent[eventId].dugTileIds.includes(emptyTileId as number),
+        'empty tile dig should persist dug tile progress',
+      );
+      assertDeepEqual(
+        dig.record.spaceExcavatorProgressByEvent[eventId].revealedObjectTileIds,
+        [],
+        'empty tile dig should not reveal an object piece',
+      );
+      assertEqual(dig.record.spaceExcavatorProgressByEvent[eventId].status, 'active', 'empty tile dig should not complete board');
+      assertEqual(dig.record.spinTokens, 8, 'empty tile dig should not touch spinTokens');
+    },
+  },
+
+  {
+    name: 'Space Excavator completion marks board complete when all object pieces are found',
     run: () => {
       resetAll();
       const session = makeSession();
@@ -323,20 +391,20 @@ export const islandRunStateActionsTests: TestCase[] = [
         client: null,
         eventId: 'space_excavator:event-complete',
       });
-      const treasureTileIds = initialized.spaceExcavatorProgressByEvent['space_excavator:event-complete'].treasureTileIds;
+      const objectTileIds = initialized.spaceExcavatorProgressByEvent['space_excavator:event-complete'].objectTileIds;
       let record = applySpaceExcavatorDig({
         session,
         client: null,
         eventId: 'space_excavator:event-complete',
-        tileId: treasureTileIds[0],
+        tileId: objectTileIds[0],
       }).record;
       assertEqual(
         record.spaceExcavatorProgressByEvent['space_excavator:event-complete'].status,
         'active',
-        'Space Excavator board should remain active before all treasures are found',
+        'Space Excavator board should remain active before all object pieces are found',
       );
 
-      for (const tileId of treasureTileIds.slice(1)) {
+      for (const tileId of objectTileIds.slice(1)) {
         record = applySpaceExcavatorDig({
           session,
           client: null,
@@ -346,9 +414,10 @@ export const islandRunStateActionsTests: TestCase[] = [
       }
 
       const progress = record.spaceExcavatorProgressByEvent['space_excavator:event-complete'];
-      assertEqual(progress.status, 'board_complete', 'Space Excavator board should complete when all treasures are found');
+      assertEqual(progress.status, 'board_complete', 'Space Excavator board should complete when all object pieces are found');
       assertEqual(progress.completedBoardCount, 1, 'completion should mark one completed board');
       assertEqual(progress.boardIndex, 0, 'completed board should remain visible until the player advances');
+      assertDeepEqual(progress.revealedObjectTileIds, objectTileIds, 'completion should reveal every object tile');
     },
   },
 
@@ -374,7 +443,7 @@ export const islandRunStateActionsTests: TestCase[] = [
       });
       const initialProgress = initialized.spaceExcavatorProgressByEvent['space_excavator:event-advance'];
       let record = initialized;
-      for (const tileId of initialProgress.treasureTileIds) {
+      for (const tileId of initialProgress.objectTileIds) {
         record = applySpaceExcavatorDig({
           session,
           client: null,
@@ -384,8 +453,9 @@ export const islandRunStateActionsTests: TestCase[] = [
       }
 
       const completedProgress = record.spaceExcavatorProgressByEvent['space_excavator:event-advance'];
-      assertEqual(completedProgress.status, 'board_complete', 'finding all treasures should mark board complete before advancing');
-      assertEqual(record.minigameTicketsByEvent['space_excavator:event-advance'], 5, 'treasure digs should spend one ticket each');
+      const expectedTicketsAfterDigs = 10 - initialProgress.objectTileIds.length;
+      assertEqual(completedProgress.status, 'board_complete', 'finding all object pieces should mark board complete before advancing');
+      assertEqual(record.minigameTicketsByEvent['space_excavator:event-advance'], expectedTicketsAfterDigs, 'object digs should spend one ticket each');
 
       const advanced = advanceSpaceExcavatorBoard({
         session,
@@ -394,8 +464,8 @@ export const islandRunStateActionsTests: TestCase[] = [
       });
 
       assertEqual(advanced.ok, true, 'advance should succeed from a board-complete state');
-      assertEqual(advanced.ticketsRemaining, 5, 'advancing should not spend event tickets');
-      assertEqual(advanced.record.minigameTicketsByEvent['space_excavator:event-advance'], 5, 'ticket bucket should remain unchanged on advance');
+      assertEqual(advanced.ticketsRemaining, expectedTicketsAfterDigs, 'advancing should not spend event tickets');
+      assertEqual(advanced.record.minigameTicketsByEvent['space_excavator:event-advance'], expectedTicketsAfterDigs, 'ticket bucket should remain unchanged on advance');
       assertEqual(advanced.record.minigameTicketsByEvent['space_excavator:event-other'], 4, 'unrelated event tickets should remain untouched');
       assertEqual(advanced.record.spinTokens, 11, 'advancing should not touch spinTokens');
 
@@ -404,10 +474,10 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(nextProgress.completedBoardCount, 1, 'advance should preserve completed board count');
       assertEqual(nextProgress.status, 'active', 'next board should be active');
       assertDeepEqual(nextProgress.dugTileIds, [], 'next board should reset dug tiles');
-      assertDeepEqual(nextProgress.foundTreasureTileIds, [], 'next board should reset found treasures');
+      assertDeepEqual(nextProgress.revealedObjectTileIds, [], 'next board should reset revealed object pieces');
       assert(
-        nextProgress.treasureTileIds.join(',') !== initialProgress.treasureTileIds.join(','),
-        'next board should have a new treasure layout',
+        nextProgress.objectId !== initialProgress.objectId || nextProgress.objectTileIds.join(',') !== initialProgress.objectTileIds.join(','),
+        'next board should have a new object or layout',
       );
 
       const reopened = initSpaceExcavatorProgressForEvent({
@@ -447,6 +517,12 @@ export const islandRunStateActionsTests: TestCase[] = [
             boardSize: 5,
             treasureCount: 5,
             treasureTileIds: [1, 2, 3, 4, 5],
+            objectId: 'moon_key',
+            objectName: 'Moon Key',
+            objectTier: 'epic',
+            objectIcon: '🗝️',
+            objectTileIds: [1, 2, 3, 4, 5],
+            revealedObjectTileIds: [1, 2, 3, 4, 5],
             dugTileIds: [1, 2, 3, 4, 5],
             foundTreasureTileIds: [1, 2, 3, 4, 5],
             completedBoardCount: SPACE_EXCAVATOR_TOTAL_BOARDS,
@@ -482,6 +558,12 @@ export const islandRunStateActionsTests: TestCase[] = [
           boardSize: 5,
           treasureCount: 5,
           treasureTileIds: [1, 2, 3, 4, 5],
+          objectId: 'lost_compass',
+          objectName: 'Lost Compass',
+          objectTier: 'uncommon',
+          objectIcon: '🧭',
+          objectTileIds: [1, 2, 3],
+          revealedObjectTileIds: [1],
           dugTileIds: [1, 8],
           foundTreasureTileIds: [1],
           completedBoardCount: 0,
@@ -532,9 +614,14 @@ export const islandRunStateActionsTests: TestCase[] = [
         'remote Space Excavator progress should hydrate into camelCase runtime state',
       );
       assertEqual(
-        hydrated.record.spaceExcavatorProgressByEvent['space_excavator:event-remote'].foundTreasureTileIds.length,
+        hydrated.record.spaceExcavatorProgressByEvent['space_excavator:event-remote'].revealedObjectTileIds.length,
         1,
-        'hydration should preserve found treasure progress',
+        'hydration should preserve revealed object progress',
+      );
+      assertEqual(
+        hydrated.record.spaceExcavatorProgressByEvent['space_excavator:event-remote'].objectName,
+        'Lost Compass',
+        'hydration should preserve object metadata',
       );
     },
   },

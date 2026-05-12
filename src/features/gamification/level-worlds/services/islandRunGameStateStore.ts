@@ -123,6 +123,12 @@ export interface SpaceExcavatorProgressEntry {
   boardSize: number;
   treasureCount: number;
   treasureTileIds: number[];
+  objectId: string;
+  objectName: string;
+  objectTier?: string;
+  objectIcon?: string;
+  objectTileIds: number[];
+  revealedObjectTileIds: number[];
   dugTileIds: number[];
   foundTreasureTileIds: number[];
   completedBoardCount: number;
@@ -1312,20 +1318,40 @@ function mergeLuckyRollSessionsByMilestone(
   return merged;
 }
 
+function sanitizeSpaceExcavatorTileIds(value: unknown): number[] {
+  if (!Array.isArray(value)) return [];
+  return Array.from(new Set(value.filter((n: any) => Number.isFinite(n)).map((n: any) => Math.max(0, Math.floor(n))))).sort((a, b) => a - b);
+}
+
 function sanitizeSpaceExcavatorProgressByEvent(value: unknown, fallback: Record<string, SpaceExcavatorProgressEntry>): Record<string, SpaceExcavatorProgressEntry> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...fallback };
   const out: Record<string, SpaceExcavatorProgressEntry> = {};
   for (const [eventId, raw] of Object.entries(value as Record<string, any>)) {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) continue;
     if (!Array.isArray(raw.treasureTileIds) || !Array.isArray(raw.dugTileIds) || !Array.isArray(raw.foundTreasureTileIds)) continue;
+    const treasureTileIds = sanitizeSpaceExcavatorTileIds(raw.treasureTileIds);
+    const dugTileIds = sanitizeSpaceExcavatorTileIds(raw.dugTileIds);
+    const foundTreasureTileIds = sanitizeSpaceExcavatorTileIds(raw.foundTreasureTileIds);
+    const objectTileIds = sanitizeSpaceExcavatorTileIds(raw.objectTileIds).length > 0
+      ? sanitizeSpaceExcavatorTileIds(raw.objectTileIds)
+      : treasureTileIds;
+    const revealedObjectTileIds = sanitizeSpaceExcavatorTileIds(raw.revealedObjectTileIds).length > 0
+      ? sanitizeSpaceExcavatorTileIds(raw.revealedObjectTileIds)
+      : dugTileIds.filter((tileId) => objectTileIds.includes(tileId));
     out[eventId] = {
       eventId,
       boardIndex: Math.max(0, Math.floor(raw.boardIndex ?? 0)),
       boardSize: Math.max(1, Math.floor(raw.boardSize ?? 5)),
-      treasureCount: Math.max(0, Math.floor(raw.treasureCount ?? 0)),
-      treasureTileIds: raw.treasureTileIds.filter((n:any)=>Number.isFinite(n)).map((n:any)=>Math.max(0,Math.floor(n))),
-      dugTileIds: raw.dugTileIds.filter((n:any)=>Number.isFinite(n)).map((n:any)=>Math.max(0,Math.floor(n))),
-      foundTreasureTileIds: raw.foundTreasureTileIds.filter((n:any)=>Number.isFinite(n)).map((n:any)=>Math.max(0,Math.floor(n))),
+      treasureCount: Math.max(0, Math.floor(raw.treasureCount ?? objectTileIds.length)),
+      treasureTileIds,
+      objectId: typeof raw.objectId === 'string' && raw.objectId ? raw.objectId : 'legacy_relic',
+      objectName: typeof raw.objectName === 'string' && raw.objectName ? raw.objectName : 'Hidden Relic',
+      objectTier: typeof raw.objectTier === 'string' ? raw.objectTier : undefined,
+      objectIcon: typeof raw.objectIcon === 'string' ? raw.objectIcon : undefined,
+      objectTileIds,
+      revealedObjectTileIds,
+      dugTileIds,
+      foundTreasureTileIds,
       completedBoardCount: Math.max(0, Math.floor(raw.completedBoardCount ?? 0)),
       status: raw.status === 'completed' ? 'completed' : raw.status === 'board_complete' || raw.status === 'won' ? 'board_complete' : 'active',
       updatedAtMs: Number.isFinite(raw.updatedAtMs) ? Math.max(0, Math.floor(raw.updatedAtMs)) : Date.now(),
