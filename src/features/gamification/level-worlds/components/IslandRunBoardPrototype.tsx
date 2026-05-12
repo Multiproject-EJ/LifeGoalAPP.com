@@ -185,6 +185,10 @@ import {
   triggerIslandRunHaptic,
   setIslandRunAudioEnabled,
 } from '../services/islandRunAudio';
+import {
+  playIslandRunLuxuryRewardMusic,
+  stopIslandRunLuxuryRewardMusic,
+} from '../services/islandRunMusic';
 import { SHARD_EARN, computeShardEarn, getShardTierThreshold, type ShardEarnSource } from '../services/shardMilestoneEngine';
 import {
   drawEncounterChallenge,
@@ -2389,6 +2393,21 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showShopPanel]);
+
+  useEffect(() => {
+    if (!showShopPanel || !audioEnabled) {
+      stopIslandRunLuxuryRewardMusic();
+      return;
+    }
+
+    playIslandRunLuxuryRewardMusic();
+  }, [audioEnabled, showShopPanel]);
+
+  useEffect(() => {
+    return () => {
+      stopIslandRunLuxuryRewardMusic();
+    };
+  }, []);
 
   useEffect(() => {
     if (!showSanctuaryPanel) return;
