@@ -29,6 +29,7 @@ interface IslandRunLuckyRollDevOverlayProps {
   runtimeState: IslandRunRuntimeState;
   targetIslandNumber: number;
   isDevModeEnabled: boolean;
+  collectMode?: 'bank_only' | 'post_rare_collect_travel';
   onRuntimeStateChange: (record: IslandRunGameStateRecord) => void;
   onClose: () => void;
 }
@@ -108,6 +109,7 @@ export function IslandRunLuckyRollDevOverlay({
   runtimeState,
   targetIslandNumber,
   isDevModeEnabled,
+  collectMode = 'bank_only',
   onRuntimeStateChange,
   onClose,
 }: IslandRunLuckyRollDevOverlayProps) {
@@ -140,8 +142,10 @@ export function IslandRunLuckyRollDevOverlay({
   const claimedTileIds = useMemo(() => new Set(luckyRollSession?.claimedTileIds ?? []), [luckyRollSession?.claimedTileIds]);
   const nextDevRoll = resolveDevRoll(luckyRollSession);
   const canAdvance = luckyRollSession?.status === 'active';
+  const usesPostRareCollectTravel = collectMode === 'post_rare_collect_travel';
   const canBank = Boolean(
     luckyRollSession
+      && !usesPostRareCollectTravel
       && luckyRollSession.status !== 'banked'
       && luckyRollSession.status !== 'expired'
       && (luckyRollSession.pendingRewards.length > 0 || luckyRollSession.status === 'completed'),
@@ -234,7 +238,9 @@ export function IslandRunLuckyRollDevOverlay({
     ? 'Start Treasure Path'
     : canAdvance
       ? 'Roll'
-      : canBank
+      : usesPostRareCollectTravel && luckyRollSession.status === 'completed'
+        ? 'Use Collect + Travel in debug panel'
+        : canBank
         ? 'Collect treasure'
         : luckyRollSession.status === 'banked'
           ? 'Treasure collected'
@@ -309,6 +315,12 @@ export function IslandRunLuckyRollDevOverlay({
           <span>💎 Shards <strong>{pendingShards}</strong></span>
           <span>🥚 Treasure Eggs <strong>{pendingEggs}</strong></span>
         </div>
+
+        {usesPostRareCollectTravel && luckyRollSession?.status === 'completed' && (
+          <div className="island-run-lucky-roll-dev-overlay__message" role="status">
+            Post-rare flow is complete. Use Collect + Travel in the Island Run debug panel to bank rewards and move islands atomically.
+          </div>
+        )}
 
         <footer className="island-run-lucky-roll-dev-overlay__controls">
           <button
