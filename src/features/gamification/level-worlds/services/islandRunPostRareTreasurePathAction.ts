@@ -4,7 +4,7 @@ import {
   type IslandRunGameStateRecord,
   type IslandRunLuckyRollSession,
 } from './islandRunGameStateStore';
-import { getPostRareLuckyRollMetadata } from './islandRunIslandMetadata';
+import { getTreasurePathMilestoneMetadata } from './islandRunIslandMetadata';
 import {
   resolveIslandRunLuckyRollRewardBanking,
   startIslandRunLuckyRoll,
@@ -116,7 +116,7 @@ export function resolvePostRareTreasurePathState(
 ): ResolvePostRareTreasurePathStateResult {
   const completedIslandNumber = normalizeIslandNumber(options.completedIslandNumber);
   const cycleIndex = normalizeCycleIndex(options.cycleIndex);
-  const metadata = getPostRareLuckyRollMetadata(completedIslandNumber);
+  const metadata = getTreasurePathMilestoneMetadata(completedIslandNumber);
   if (!metadata) {
     return {
       status: 'not_applicable',

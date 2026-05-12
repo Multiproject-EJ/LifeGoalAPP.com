@@ -146,7 +146,7 @@ function seedCompletedTreasurePath(options: {
 
 export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
   {
-    name: 'post-rare Treasure Path resolver returns not_applicable for non-rare islands',
+    name: 'Treasure Path resolver returns not_applicable for non-milestone islands',
     run: () => {
       resetEnvironment();
       seedState({ currentIslandNumber: 1, cycleIndex: 0, luckyRollSessionsByMilestone: {} });
@@ -155,8 +155,48 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
         completedIslandNumber: 1,
         cycleIndex: 0,
       });
-      assertEqual(state.status, 'not_applicable', 'Normal islands should not expose Treasure Path orchestration');
+      assertEqual(state.status, 'not_applicable', 'Non-milestone islands should not expose Treasure Path orchestration');
       assertEqual(state.sessionKey, null, 'Non-applicable islands should not produce a session key');
+    },
+  },
+  {
+    name: 'intro island 5 can start milestone Treasure Path',
+    run: async () => {
+      resetEnvironment();
+      seedState({ runtimeVersion: 3, currentIslandNumber: 5, cycleIndex: 0, luckyRollSessionsByMilestone: {} });
+
+      const started = await startPostRareTreasurePath({
+        session: makeSession(),
+        client: null,
+        completedIslandNumber: 5,
+        cycleIndex: 0,
+        nowMs: 1_000,
+        runId: 'intro-5-run',
+      });
+
+      assertEqual(started.status, 'started', 'Island 5 should create a Treasure Path session');
+      assertEqual(started.state.status, 'active', 'Island 5 started session should resolve active');
+      assertEqual(started.state.sessionKey, getIslandRunLuckyRollSessionKey(0, 5), 'Island 5 should use its milestone session key');
+    },
+  },
+  {
+    name: 'early island 20 can start milestone Treasure Path',
+    run: async () => {
+      resetEnvironment();
+      seedState({ runtimeVersion: 3, currentIslandNumber: 20, cycleIndex: 0, luckyRollSessionsByMilestone: {} });
+
+      const started = await startPostRareTreasurePath({
+        session: makeSession(),
+        client: null,
+        completedIslandNumber: 20,
+        cycleIndex: 0,
+        nowMs: 1_000,
+        runId: 'early-20-run',
+      });
+
+      assertEqual(started.status, 'started', 'Island 20 should create a Treasure Path session');
+      assertEqual(started.state.status, 'active', 'Island 20 started session should resolve active');
+      assertEqual(started.state.sessionKey, getIslandRunLuckyRollSessionKey(0, 20), 'Island 20 should use its milestone session key');
     },
   },
   {
@@ -189,10 +229,10 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
     },
   },
   {
-    name: 'rare islands 60 90 and 120 are recognized as post-rare Treasure Path islands',
+    name: 'rare islands 30 60 90 and 120 are recognized as milestone Treasure Path islands',
     run: () => {
       resetEnvironment();
-      for (const islandNumber of [60, 90, 120]) {
+      for (const islandNumber of [30, 60, 90, 120]) {
         seedState({ currentIslandNumber: islandNumber, cycleIndex: 0, luckyRollSessionsByMilestone: {} });
         const state = resolvePostRareTreasurePathState({
           record: readIslandRunGameStateRecord(makeSession()),
@@ -205,7 +245,7 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
     },
   },
   {
-    name: 'island 10 is not a post-rare Treasure Path island under current runtime logic',
+    name: 'island 10 is not a Treasure Path milestone island under current runtime logic',
     run: () => {
       resetEnvironment();
       seedState({ currentIslandNumber: 10, cycleIndex: 0, luckyRollSessionsByMilestone: {} });
@@ -214,7 +254,22 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
         completedIslandNumber: 10,
         cycleIndex: 0,
       });
-      assertEqual(state.status, 'not_applicable', 'Island 10 should not be post-rare Treasure Path eligible');
+      assertEqual(state.status, 'not_applicable', 'Island 10 should not be Treasure Path eligible');
+    },
+  },
+  {
+    name: 'normal non-milestone islands are not Treasure Path eligible',
+    run: () => {
+      resetEnvironment();
+      for (const islandNumber of [1, 11, 31, 61]) {
+        seedState({ currentIslandNumber: islandNumber, cycleIndex: 0, luckyRollSessionsByMilestone: {} });
+        const state = resolvePostRareTreasurePathState({
+          record: readIslandRunGameStateRecord(makeSession()),
+          completedIslandNumber: islandNumber,
+          cycleIndex: 0,
+        });
+        assertEqual(state.status, 'not_applicable', `Island ${islandNumber} should not be Treasure Path eligible`);
+      }
     },
   },
   {
@@ -441,7 +496,7 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
     },
   },
   {
-    name: 'post-rare Treasure Path orchestration does not add UI entry points',
+    name: 'milestone Treasure Path orchestration does not add UI entry points',
     run: async () => {
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
@@ -458,19 +513,19 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
         process.cwd(),
         'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx',
       ), 'utf8');
-      assert(!serviceImportPattern.test(appSource), 'App.tsx should not import post-rare Treasure Path orchestration');
-      assert(!serviceImportPattern.test(overlaySource), 'GameBoardOverlay should not import post-rare Treasure Path orchestration');
+      assert(!serviceImportPattern.test(appSource), 'App.tsx should not import milestone Treasure Path orchestration');
+      assert(!serviceImportPattern.test(overlaySource), 'GameBoardOverlay should not import milestone Treasure Path orchestration');
       assert(
         /resolvePostRareTreasurePathState/.test(debugPanelSource),
-        'Island Run debug panel should show post-rare Treasure Path orchestration state',
+        'Island Run debug panel should show milestone Treasure Path orchestration state',
       );
       assert(
         /startPostRareTreasurePath/.test(boardSource) && /collectPostRareTreasurePathAndTravel/.test(boardSource),
-        'Island Run debug wiring should call post-rare Treasure Path orchestration services',
+        'Island Run debug wiring should call milestone Treasure Path orchestration services',
       );
       assert(
         !/bankIslandRunLuckyRollRewards/.test(debugPanelSource) && !/resolveIslandRunTravelState/.test(debugPanelSource),
-        'Debug panel must not compose post-rare banking and travel directly',
+        'Debug panel must not compose milestone banking and travel directly',
       );
     },
   },

@@ -39,7 +39,7 @@ requireIncludes('board', board, 'showLuckyRollDevLauncher={isDevModeEnabled}');
 requireIncludes('board', board, 'startPostRareTreasurePath');
 requireIncludes('board', board, 'collectPostRareTreasurePathAndTravel');
 requireIncludes('debug panel', debugPanel, 'Open Treasure Path overlay');
-requireIncludes('debug panel', debugPanel, 'Post-Rare Treasure Path Flow');
+requireIncludes('debug panel', debugPanel, 'Post-Island Milestone Treasure Path Flow');
 requireIncludes('debug panel', debugPanel, 'resolvePostRareTreasurePathState');
 requireIncludes('debug panel', debugPanel, 'Collect + Travel');
 

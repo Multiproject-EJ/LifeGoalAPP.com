@@ -16,6 +16,8 @@
 export type IslandRunIslandRarity = 'normal' | 'seasonal' | 'rare';
 export type IslandRunLuckyRollTrigger = 'none' | 'pre_island';
 export type IslandRunPostRareLuckyRollTrigger = 'none' | 'post_rare_completion';
+export type IslandRunTreasurePathMilestoneTier = 'intro' | 'early' | 'rare';
+export type IslandRunTreasurePathMilestoneTrigger = 'none' | 'post_island_milestone_completion';
 
 export interface IslandRunIslandMetadata {
   islandNumber: number;
@@ -35,12 +37,23 @@ export interface IslandRunIslandMetadata {
    */
   postRareLuckyRollTrigger: IslandRunPostRareLuckyRollTrigger;
   postRareLuckyRollConfigId?: string;
+  treasurePathMilestoneTrigger: IslandRunTreasurePathMilestoneTrigger;
+  treasurePathMilestoneTier?: IslandRunTreasurePathMilestoneTier;
+  treasurePathMilestoneConfigId?: string;
 }
 
 export interface IslandRunPostRareLuckyRollMetadata {
   islandNumber: number;
   rarity: 'rare';
   trigger: 'post_rare_completion';
+  configId: string;
+}
+
+export interface IslandRunTreasurePathMilestoneMetadata {
+  islandNumber: number;
+  tier: IslandRunTreasurePathMilestoneTier;
+  rarity: IslandRunIslandRarity;
+  trigger: 'post_island_milestone_completion';
   configId: string;
 }
 
@@ -52,6 +65,15 @@ const SPECIAL_ISLAND_NUMBERS = new Set<number>(ISLAND_RUN_CANONICAL_SPECIAL_ISLA
 const ISLAND_RUN_MILESTONE_INTERVAL = 10;
 const LUCKY_ROLL_RARE_CONFIG_ID = 'rare_island_pre_island_v1';
 const POST_RARE_LUCKY_ROLL_CONFIG_ID = 'rare_island_post_rare_completion_v1';
+const TREASURE_PATH_MILESTONE_CONFIG_ID = 'treasure_path_post_island_milestone_v1';
+const TREASURE_PATH_MILESTONE_TIERS_BY_ISLAND = new Map<number, IslandRunTreasurePathMilestoneTier>([
+  [5, 'intro'],
+  [20, 'early'],
+  [30, 'rare'],
+  [60, 'rare'],
+  [90, 'rare'],
+  [120, 'rare'],
+]);
 
 function normalizeIslandNumber(islandNumber: number): number {
   if (!Number.isFinite(islandNumber)) return 1;
@@ -74,6 +96,10 @@ export function getIslandRunIslandMetadata(islandNumber: number): IslandRunIslan
   const postRareLuckyRollTrigger: IslandRunPostRareLuckyRollTrigger = rarity === 'rare'
     ? 'post_rare_completion'
     : 'none';
+  const treasurePathMilestoneTier = TREASURE_PATH_MILESTONE_TIERS_BY_ISLAND.get(normalizedIslandNumber);
+  const treasurePathMilestoneTrigger: IslandRunTreasurePathMilestoneTrigger = treasurePathMilestoneTier
+    ? 'post_island_milestone_completion'
+    : 'none';
 
   return {
     islandNumber: normalizedIslandNumber,
@@ -82,9 +108,14 @@ export function getIslandRunIslandMetadata(islandNumber: number): IslandRunIslan
     isMilestone,
     luckyRollTrigger,
     postRareLuckyRollTrigger,
+    treasurePathMilestoneTrigger,
+    ...(treasurePathMilestoneTier ? { treasurePathMilestoneTier } : {}),
     ...(luckyRollTrigger === 'pre_island' ? { luckyRollConfigId: LUCKY_ROLL_RARE_CONFIG_ID } : {}),
     ...(postRareLuckyRollTrigger === 'post_rare_completion'
       ? { postRareLuckyRollConfigId: POST_RARE_LUCKY_ROLL_CONFIG_ID }
+      : {}),
+    ...(treasurePathMilestoneTrigger === 'post_island_milestone_completion'
+      ? { treasurePathMilestoneConfigId: TREASURE_PATH_MILESTONE_CONFIG_ID }
       : {}),
   };
 }
@@ -105,5 +136,28 @@ export function getPostRareLuckyRollMetadata(islandNumber: number): IslandRunPos
     rarity: metadata.rarity,
     trigger: metadata.postRareLuckyRollTrigger,
     configId: metadata.postRareLuckyRollConfigId ?? POST_RARE_LUCKY_ROLL_CONFIG_ID,
+  };
+}
+
+export function isTreasurePathMilestoneIsland(islandNumber: number): boolean {
+  return getIslandRunIslandMetadata(islandNumber).treasurePathMilestoneTrigger === 'post_island_milestone_completion';
+}
+
+export function getTreasurePathMilestoneMetadata(
+  islandNumber: number,
+): IslandRunTreasurePathMilestoneMetadata | null {
+  const metadata = getIslandRunIslandMetadata(islandNumber);
+  if (
+    metadata.treasurePathMilestoneTrigger !== 'post_island_milestone_completion'
+    || !metadata.treasurePathMilestoneTier
+  ) {
+    return null;
+  }
+  return {
+    islandNumber: metadata.islandNumber,
+    tier: metadata.treasurePathMilestoneTier,
+    rarity: metadata.rarity,
+    trigger: metadata.treasurePathMilestoneTrigger,
+    configId: metadata.treasurePathMilestoneConfigId ?? TREASURE_PATH_MILESTONE_CONFIG_ID,
   };
 }
