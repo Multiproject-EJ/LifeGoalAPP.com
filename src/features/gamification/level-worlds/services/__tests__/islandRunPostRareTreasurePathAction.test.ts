@@ -524,6 +524,24 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
         'Island Run debug wiring should call milestone Treasure Path orchestration services',
       );
       assert(
+        /getTreasurePathMilestoneMetadata\(stats\.islandNumber\)/.test(boardSource)
+          && /island_clear_celebration_treasure_path_start/.test(boardSource)
+          && /handleOpenPostRareTreasurePathOverlay\(stats\.islandNumber\)/.test(boardSource),
+        'Island clear CTA should route eligible milestone islands through Treasure Path before travel',
+      );
+      assert(
+        /performIslandTravel\(nextIsland, \{ startTimer: true \}\)/.test(boardSource),
+        'Island clear CTA should preserve normal travel for non-milestone islands',
+      );
+      assert(
+        /onCollectPostRareTreasurePathAndTravel=\{handlePostRareTreasurePathCollectAndTravel\}/.test(boardSource),
+        'Milestone Treasure Path overlay should collect through collect+travel orchestration',
+      );
+      assert(
+        !/LuckyRollBoard/.test(boardSource),
+        'Island Run board milestone flow must not use legacy LuckyRollBoard',
+      );
+      assert(
         !/bankIslandRunLuckyRollRewards/.test(debugPanelSource) && !/resolveIslandRunTravelState/.test(debugPanelSource),
         'Debug panel must not compose milestone banking and travel directly',
       );
