@@ -242,6 +242,7 @@ import {
   collectPostRareTreasurePathAndTravel,
   startPostRareTreasurePath,
 } from '../services/islandRunPostRareTreasurePathAction';
+import { getTreasurePathMilestoneMetadata } from '../services/islandRunIslandMetadata';
 import {
   getEffectiveIslandNumber,
   getIslandTotalEssenceCost,
@@ -6531,7 +6532,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
    * case, which keeps us resilient if the CTA fires during a race (e.g.
    * double-tap right as performIslandTravel clears the stats).
    */
-  const handleTravelFromCelebration = () => {
+  const handleTravelFromCelebration = async () => {
     const stats = islandClearStats;
     if (!stats) return;
     if (isAnimatingRollRef.current) {
@@ -6539,6 +6540,31 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
     const nextIsland = stats.pendingNextIsland;
+    const treasurePathMetadata = getTreasurePathMilestoneMetadata(stats.islandNumber);
+    if (treasurePathMetadata) {
+      const result = await startPostRareTreasurePath({
+        session,
+        client,
+        completedIslandNumber: stats.islandNumber,
+        cycleIndex,
+        nowMs: Date.now(),
+        triggerSource: 'island_clear_celebration_treasure_path_start',
+      });
+      setRuntimeState(result.record);
+      runtimeStateRef.current = result.record;
+      if (result.state.status === 'already_traveled') {
+        applyPostRareTreasurePathCollectTravelRecord(result.record);
+        setLandingText(`Treasure Path already complete. Current island/cycle: ${result.record.currentIslandNumber}/${result.record.cycleIndex}.`);
+        return;
+      }
+      if (result.status !== 'not_applicable') {
+        setShowIslandClearCelebration(false);
+        handleOpenPostRareTreasurePathOverlay(stats.islandNumber);
+        return;
+      }
+    }
+    setTravelOverlayDestinationIsland(nextIsland > 120 ? 1 : nextIsland);
+    setTravelOverlayMode('advance');
     setShowIslandClearCelebration(false);
     setShowTravelOverlay(true);
     window.setTimeout(() => {
@@ -7034,14 +7060,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     targetIslandNumber: number,
     collectMode: 'bank_only' | 'post_rare_collect_travel' = 'bank_only',
   ) => {
-    if (!isDevModeEnabled) return;
+    if (!isDevModeEnabled && collectMode !== 'post_rare_collect_travel') return;
     const normalizedTargetIslandNumber = Number.isFinite(targetIslandNumber)
       ? Math.max(1, Math.floor(targetIslandNumber))
       : runtimeStateRef.current.currentIslandNumber;
     setDevLuckyRollTargetIsland(normalizedTargetIslandNumber);
     setDevLuckyRollCollectMode(collectMode);
     setShowDevLuckyRollOverlay(true);
-    setLandingText(`🍀 DEV Lucky Roll overlay opened for island ${normalizedTargetIslandNumber}.`);
+    setLandingText(collectMode === 'post_rare_collect_travel'
+      ? `Treasure Path opened for Island ${normalizedTargetIslandNumber}.`
+      : `🍀 DEV Lucky Roll overlay opened for island ${normalizedTargetIslandNumber}.`);
   }, [isDevModeEnabled]);
 
   const handleOpenPostRareTreasurePathOverlay = useCallback((completedIslandNumber: number) => {
@@ -7071,8 +7099,25 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return message;
   }, [client, isDevModeEnabled, session]);
 
-  const handleDevCollectPostRareTreasurePathAndTravel = useCallback(async (completedIslandNumber: number, completedCycleIndex: number) => {
-    if (!isDevModeEnabled) return 'Post-rare Treasure Path flow is only available in Island Run dev mode.';
+  const applyPostRareTreasurePathCollectTravelRecord = useCallback((record: IslandRunGameStateRecord) => {
+    setRuntimeState(record);
+    runtimeStateRef.current = record;
+    setIslandNumber(record.currentIslandNumber);
+    setCycleIndex(record.cycleIndex);
+    setTimeLeftSec(Math.max(0, Math.ceil(Math.max(0, record.islandExpiresAtMs - Date.now()) / 1000)));
+    setIslandStartedAtMs(record.islandStartedAtMs);
+    setIslandExpiresAtMs(record.islandExpiresAtMs);
+    setIsIslandTimerPendingStart(!(record.islandStartedAtMs > 0 && record.islandExpiresAtMs > 0));
+    setShowIslandClearCelebration(false);
+    setIslandClearStats(null);
+    setShowTravelOverlay(false);
+    setShowDevLuckyRollOverlay(false);
+    setDevLuckyRollCollectMode('bank_only');
+    setDevLuckyRollTargetIsland(null);
+    islandClearCelebrationShownForVisitRef.current = null;
+  }, []);
+
+  const handlePostRareTreasurePathCollectAndTravel = useCallback(async (completedIslandNumber: number, completedCycleIndex: number) => {
     const result = await collectPostRareTreasurePathAndTravel({
       session,
       client,
@@ -7082,22 +7127,20 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       nowMs: Date.now(),
       getIslandDurationMs,
       islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
-      triggerSource: 'dev_post_rare_treasure_path_collect_and_travel',
+      triggerSource: 'post_rare_treasure_path_collect_and_travel',
     });
-    setRuntimeState(result.record);
-    runtimeStateRef.current = result.record;
-    setIslandNumber(result.record.currentIslandNumber);
-    setCycleIndex(result.record.cycleIndex);
-    setTimeLeftSec(Math.max(0, Math.ceil(Math.max(0, result.record.islandExpiresAtMs - Date.now()) / 1000)));
-    setIslandStartedAtMs(result.record.islandStartedAtMs);
-    setIslandExpiresAtMs(result.record.islandExpiresAtMs);
-    setIsIslandTimerPendingStart(false);
+    applyPostRareTreasurePathCollectTravelRecord(result.record);
     const rewardSummary = `+${result.diceAwarded} dice, +${result.essenceAwarded} essence, +${result.shardsAwarded} shards`;
     const destinationSummary = `Current island/cycle: ${result.record.currentIslandNumber}/${result.record.cycleIndex}.`;
-    const message = `🧭 Post-rare collect+travel ${result.status}: ${rewardSummary}. ${destinationSummary}`;
+    const message = `Treasure Path collect ${result.status}: ${rewardSummary}. ${destinationSummary}`;
     setLandingText(message);
     return message;
-  }, [client, isDevModeEnabled, session]);
+  }, [applyPostRareTreasurePathCollectTravelRecord, client, session]);
+
+  const handleDevCollectPostRareTreasurePathAndTravel = useCallback(async (completedIslandNumber: number, completedCycleIndex: number) => {
+    if (!isDevModeEnabled) return 'Post-rare Treasure Path flow is only available in Island Run dev mode.';
+    return handlePostRareTreasurePathCollectAndTravel(completedIslandNumber, completedCycleIndex);
+  }, [handlePostRareTreasurePathCollectAndTravel, isDevModeEnabled]);
 
   const handleDevOpenEggRewardInventoryEntry = useCallback(async (eggRewardId: string) => {
     if (!isDevModeEnabled) return 'Treasure Egg opener is only available in Island Run dev mode.';
@@ -8462,7 +8505,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         </div>
       )}
 
-      {showDevLuckyRollOverlay && isDevModeEnabled && (
+      {showDevLuckyRollOverlay && (isDevModeEnabled || devLuckyRollCollectMode === 'post_rare_collect_travel') && (
         <IslandRunLuckyRollDevOverlay
           session={session}
           client={client}
@@ -8471,6 +8514,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           isDevModeEnabled={isDevModeEnabled}
           collectMode={devLuckyRollCollectMode}
           onRuntimeStateChange={handleLuckyRollOverlayRuntimeStateChange}
+          onCollectPostRareTreasurePathAndTravel={handlePostRareTreasurePathCollectAndTravel}
           onClose={() => setShowDevLuckyRollOverlay(false)}
         />
       )}
@@ -9422,7 +9466,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 onClick={handleTravelFromCelebration}
                 autoFocus
               >
-                👉 Travel to Next Island
+                {getTreasurePathMilestoneMetadata(islandClearStats.islandNumber)
+                  ? '✨ Start Treasure Path'
+                  : '👉 Travel to Next Island'}
               </button>
             </div>
           </div>

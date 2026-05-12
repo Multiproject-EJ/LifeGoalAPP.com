@@ -31,6 +31,7 @@ interface IslandRunLuckyRollDevOverlayProps {
   isDevModeEnabled: boolean;
   collectMode?: 'bank_only' | 'post_rare_collect_travel';
   onRuntimeStateChange: (record: IslandRunGameStateRecord) => void;
+  onCollectPostRareTreasurePathAndTravel?: (completedIslandNumber: number, completedCycleIndex: number) => Promise<string>;
   onClose: () => void;
 }
 
@@ -111,6 +112,7 @@ export function IslandRunLuckyRollDevOverlay({
   isDevModeEnabled,
   collectMode = 'bank_only',
   onRuntimeStateChange,
+  onCollectPostRareTreasurePathAndTravel,
   onClose,
 }: IslandRunLuckyRollDevOverlayProps) {
   const [actionStatus, setActionStatus] = useState<DevLuckyRollActionStatus>('idle');
@@ -143,6 +145,12 @@ export function IslandRunLuckyRollDevOverlay({
   const nextDevRoll = resolveDevRoll(luckyRollSession);
   const canAdvance = luckyRollSession?.status === 'active';
   const usesPostRareCollectTravel = collectMode === 'post_rare_collect_travel';
+  const isOverlayEnabled = isDevModeEnabled || usesPostRareCollectTravel;
+  const canCollectAndTravel = Boolean(
+    luckyRollSession
+      && usesPostRareCollectTravel
+      && (luckyRollSession.status === 'completed' || luckyRollSession.status === 'banked'),
+  );
   const canBank = Boolean(
     luckyRollSession
       && !usesPostRareCollectTravel
@@ -151,7 +159,7 @@ export function IslandRunLuckyRollDevOverlay({
       && (luckyRollSession.pendingRewards.length > 0 || luckyRollSession.status === 'completed'),
   );
 
-  if (!isDevModeEnabled) {
+  if (!isOverlayEnabled) {
     return null;
   }
 
@@ -220,13 +228,25 @@ export function IslandRunLuckyRollDevOverlay({
     return `Treasure collected (${result.status}): 🎲 +${result.diceAwarded}, ✨ +${result.essenceAwarded}, 💎 +${result.shardsAwarded}, 🥚 +${eggsAwarded}.`;
   });
 
+  const handleCollectAndTravel = () => runAction(async () => {
+    if (!onCollectPostRareTreasurePathAndTravel) {
+      return 'Treasure Path collect + travel is not available.';
+    }
+    return onCollectPostRareTreasurePathAndTravel(normalizedTargetIslandNumber, runtimeState.cycleIndex);
+  });
+
   const handlePrimaryAction = () => {
     if (!luckyRollSession) {
+      if (usesPostRareCollectTravel) return;
       handleStartOrResume();
       return;
     }
     if (canAdvance) {
       handleAdvance();
+      return;
+    }
+    if (canCollectAndTravel) {
+      handleCollectAndTravel();
       return;
     }
     if (canBank) {
@@ -235,17 +255,21 @@ export function IslandRunLuckyRollDevOverlay({
   };
 
   const primaryActionLabel = !luckyRollSession
-    ? 'Start Treasure Path'
+    ? (usesPostRareCollectTravel ? 'Treasure Path preparing…' : 'Start Treasure Path')
     : canAdvance
       ? 'Roll'
-      : usesPostRareCollectTravel && luckyRollSession.status === 'completed'
-        ? 'Use Collect + Travel in debug panel'
-        : canBank
+      : canCollectAndTravel && luckyRollSession.status === 'banked'
+        ? 'Travel to next island'
+      : canCollectAndTravel
+        ? 'Collect'
+      : canBank
         ? 'Collect treasure'
         : luckyRollSession.status === 'banked'
           ? 'Treasure collected'
           : 'Treasure Path paused';
-  const isPrimaryActionDisabled = isActionPending || (!canAdvance && !canBank && Boolean(luckyRollSession));
+  const isPrimaryActionDisabled = isActionPending
+    || (usesPostRareCollectTravel && !luckyRollSession)
+    || (!canAdvance && !canBank && !canCollectAndTravel && Boolean(luckyRollSession));
 
   return (
     <div className="island-run-lucky-roll-dev-overlay" role="presentation">
@@ -253,11 +277,13 @@ export function IslandRunLuckyRollDevOverlay({
         className="island-run-lucky-roll-dev-overlay__card"
         role="dialog"
         aria-modal="true"
-        aria-label="Dev Treasure Path overlay"
+          aria-label={usesPostRareCollectTravel ? 'Treasure Path overlay' : 'Dev Treasure Path overlay'}
       >
         <header className="island-run-lucky-roll-dev-overlay__header">
           <div>
-            <p className="island-run-lucky-roll-dev-overlay__eyebrow">DEV ONLY</p>
+            <p className="island-run-lucky-roll-dev-overlay__eyebrow">
+              {usesPostRareCollectTravel ? 'Milestone reward' : 'DEV ONLY'}
+            </p>
             <h2 className="island-run-lucky-roll-dev-overlay__title">✨ Treasure Path</h2>
             <p className="island-run-lucky-roll-dev-overlay__subtitle">
               Roll for free across glowing treasure fields.
@@ -318,7 +344,7 @@ export function IslandRunLuckyRollDevOverlay({
 
         {usesPostRareCollectTravel && luckyRollSession?.status === 'completed' && (
           <div className="island-run-lucky-roll-dev-overlay__message" role="status">
-            Post-rare flow is complete. Use Collect + Travel in the Island Run debug panel to bank rewards and move islands atomically.
+            Treasure Path complete. Collect to bank your rewards and travel to the next island.
           </div>
         )}
 
