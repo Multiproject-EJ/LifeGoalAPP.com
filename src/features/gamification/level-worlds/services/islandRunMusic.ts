@@ -22,9 +22,6 @@ export function playIslandRunLuxuryRewardMusic(): void {
   const audio = getLuxuryRewardMusicAudio();
   if (!audio) return;
 
-  audio.loop = true;
-  audio.volume = ISLAND_RUN_LUXURY_REWARD_MUSIC_VOLUME;
-
   void audio.play().catch(() => {
     // Browser autoplay policy can reject playback even after some interactions.
   });

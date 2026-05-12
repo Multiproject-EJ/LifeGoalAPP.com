@@ -2396,7 +2396,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     if (!showShopPanel || !audioEnabled) {
       stopIslandRunLuxuryRewardMusic();
+      return;
     }
+
+    playIslandRunLuxuryRewardMusic();
   }, [audioEnabled, showShopPanel]);
 
   useEffect(() => {
