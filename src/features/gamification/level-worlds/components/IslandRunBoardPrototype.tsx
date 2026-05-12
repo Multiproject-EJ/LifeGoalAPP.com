@@ -6564,7 +6564,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         return;
       }
     }
-    setTravelOverlayDestinationIsland(nextIsland > 120 ? 1 : nextIsland);
+    setTravelOverlayDestinationIsland(nextIsland > ISLAND_RUN_MAX_ISLAND ? 1 : nextIsland);
     setTravelOverlayMode('advance');
     setShowIslandClearCelebration(false);
     setShowTravelOverlay(true);
@@ -7069,7 +7069,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setDevLuckyRollCollectMode(collectMode);
     setShowDevLuckyRollOverlay(true);
     setLandingText(collectMode === 'post_rare_collect_travel'
-      ? `Treasure Path opened for Island ${normalizedTargetIslandNumber}.`
+      ? `Treasure Path opened for island ${normalizedTargetIslandNumber}.`
       : `🍀 DEV Lucky Roll overlay opened for island ${normalizedTargetIslandNumber}.`);
   }, [isDevModeEnabled]);
 
