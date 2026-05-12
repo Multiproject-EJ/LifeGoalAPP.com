@@ -39,7 +39,6 @@ requireIncludes('board', board, 'showLuckyRollDevLauncher={isDevModeEnabled}');
 requireIncludes('debug panel', debugPanel, 'Open Treasure Path overlay');
 
 const forbiddenOverlayPatterns = [
-  'daily-treats/LuckyRollBoard',
   'gameRewards',
   'luckyRollAccess',
   'gol_lucky_roll_state',
@@ -54,12 +53,16 @@ for (const pattern of forbiddenOverlayPatterns) {
   }
 }
 
-requireNotMatches(
-  'overlay',
-  overlay,
-  /\bLuckyRollBoard\b/,
-  'forbidden legacy LuckyRollBoard component reference found',
-);
+const forbiddenOverlayRegexes = [
+  {
+    pattern: /\bLuckyRollBoard\b/,
+    message: 'forbidden legacy LuckyRollBoard component reference found',
+  },
+];
+
+for (const { pattern, message } of forbiddenOverlayRegexes) {
+  requireNotMatches('overlay', overlay, pattern, message);
+}
 
 if (failures.length > 0) {
   console.error('Island Run Lucky Roll dev overlay checks failed:');

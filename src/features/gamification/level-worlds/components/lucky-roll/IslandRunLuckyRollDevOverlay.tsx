@@ -10,7 +10,6 @@ import type { IslandRunRuntimeState } from '../../services/islandRunRuntimeState
 import {
   getIslandRunLuckyRollBoardConfig,
   getIslandRunLuckyRollTileConfig,
-  type IslandRunLuckyRollTileConfig,
   type IslandRunLuckyRollTileKind,
 } from '../../services/islandRunLuckyRollBoardConfig';
 import {
@@ -133,13 +132,11 @@ export function IslandRunLuckyRollDevOverlay({
     islandNumber: normalizedTargetIslandNumber,
     cycleIndex: runtimeState.cycleIndex,
   }), [normalizedTargetIslandNumber, runtimeState.cycleIndex]);
-  const boardFields: readonly IslandRunLuckyRollTileConfig[] = useMemo(() => boardConfig.tiles.flatMap((field) => {
-    const configField = getIslandRunLuckyRollTileConfig(field.tileId, {
-      islandNumber: normalizedTargetIslandNumber,
-      cycleIndex: runtimeState.cycleIndex,
-    });
-    return configField ? [configField] : [];
-  }), [boardConfig.tiles, normalizedTargetIslandNumber, runtimeState.cycleIndex]);
+  const finishFieldConfig = useMemo(() => getIslandRunLuckyRollTileConfig(boardConfig.finishTileId, {
+    islandNumber: normalizedTargetIslandNumber,
+    cycleIndex: runtimeState.cycleIndex,
+  }), [boardConfig.finishTileId, normalizedTargetIslandNumber, runtimeState.cycleIndex]);
+  const finishFieldId = finishFieldConfig?.tileId ?? boardConfig.finishTileId;
   const claimedTileIds = useMemo(() => new Set(luckyRollSession?.claimedTileIds ?? []), [luckyRollSession?.claimedTileIds]);
   const nextDevRoll = resolveDevRoll(luckyRollSession);
   const canAdvance = luckyRollSession?.status === 'active';
@@ -282,10 +279,10 @@ export function IslandRunLuckyRollDevOverlay({
         </header>
 
         <div className="island-run-lucky-roll-dev-overlay__path" aria-label="Treasure Path field board">
-          {boardFields.map((field) => {
+          {boardConfig.tiles.map((field) => {
             const isCurrent = luckyRollSession?.position === field.tileId;
             const isClaimed = claimedTileIds.has(field.tileId);
-            const isFinish = field.tileId === boardConfig.finishTileId || field.kind === 'finish';
+            const isFinish = field.tileId === finishFieldId || field.kind === 'finish';
             const fieldLabel = getTreasurePathFieldLabel(field.kind);
             return (
               <div
