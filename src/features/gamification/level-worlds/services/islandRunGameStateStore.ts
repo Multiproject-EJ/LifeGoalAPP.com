@@ -1335,9 +1335,10 @@ function sanitizeSpaceExcavatorProgressByEvent(value: unknown, fallback: Record<
     const objectTileIds = sanitizeSpaceExcavatorTileIds(raw.objectTileIds).length > 0
       ? sanitizeSpaceExcavatorTileIds(raw.objectTileIds)
       : treasureTileIds;
+    const objectTileIdSet = new Set(objectTileIds);
     const revealedObjectTileIds = sanitizeSpaceExcavatorTileIds(raw.revealedObjectTileIds).length > 0
       ? sanitizeSpaceExcavatorTileIds(raw.revealedObjectTileIds)
-      : dugTileIds.filter((tileId) => objectTileIds.includes(tileId));
+      : dugTileIds.filter((tileId) => objectTileIdSet.has(tileId));
     out[eventId] = {
       eventId,
       boardIndex: Math.max(0, Math.floor(raw.boardIndex ?? 0)),

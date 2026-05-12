@@ -44,7 +44,7 @@ export function getSpaceExcavatorObjectShape(objectId: string | null | undefined
 }
 
 export function chooseSpaceExcavatorObjectShape(eventId: string, boardIndex: number): SpaceExcavatorObjectShape {
-  const seed = Array.from(`${eventId}:${boardIndex}:object`).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const seed = Array.from(`${eventId}:${boardIndex}:object`).reduce((sum, char) => sum + char.charCodeAt(0), 1);
   return SPACE_EXCAVATOR_OBJECT_SHAPES[Math.abs(seed + boardIndex) % SPACE_EXCAVATOR_OBJECT_SHAPES.length];
 }
 

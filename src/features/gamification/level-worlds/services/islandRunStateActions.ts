@@ -143,7 +143,8 @@ export function applySpaceExcavatorDig(options: { session: Session; client: Supa
   const revealedObjectTileIds = objectTileIds.includes(normalizedTile) ? Array.from(new Set([...progress.revealedObjectTileIds, normalizedTile])).sort((a,b)=>a-b) : progress.revealedObjectTileIds;
   const foundTreasureTileIds = objectTileIds.includes(normalizedTile) ? Array.from(new Set([...progress.foundTreasureTileIds, normalizedTile])).sort((a,b)=>a-b) : progress.foundTreasureTileIds;
   let nextProgress: SpaceExcavatorProgressEntry = { ...progress, dugTileIds, revealedObjectTileIds, foundTreasureTileIds, updatedAtMs: Date.now() };
-  const boardComplete = objectTileIds.length > 0 && objectTileIds.every((objectTileId) => revealedObjectTileIds.includes(objectTileId));
+  const revealedObjectTileIdSet = new Set(revealedObjectTileIds);
+  const boardComplete = objectTileIds.length > 0 && objectTileIds.every((objectTileId) => revealedObjectTileIdSet.has(objectTileId));
   if (boardComplete && progress.status !== 'board_complete') {
     nextProgress = {
       ...nextProgress,

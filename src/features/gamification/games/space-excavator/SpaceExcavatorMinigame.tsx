@@ -41,18 +41,33 @@ function makeBoard(size: number, treasureCount: number): Tile[] {
   return tiles;
 }
 
+function getProgressObjectTileIds(progress: SpaceExcavatorProgress | null | undefined): number[] {
+  return progress?.objectTileIds?.length ? progress.objectTileIds : progress?.treasureTileIds ?? [];
+}
+
+function getObjectPieceCount(options: {
+  progress: SpaceExcavatorProgress | null;
+  initial: SpaceExcavatorProgress | null | undefined;
+  islandNumber: number;
+}): number {
+  const { progress, initial, islandNumber } = options;
+  const objectTileIds = getProgressObjectTileIds(progress).length > 0
+    ? getProgressObjectTileIds(progress)
+    : getProgressObjectTileIds(initial);
+  return Math.max(1, Math.floor(objectTileIds.length || progress?.treasureCount || initial?.treasureCount || Math.max(3, Math.min(8, 3 + Math.floor(islandNumber / 8)))));
+}
+
 export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig }: IslandRunMinigameProps) {
   const config = (launchConfig ?? {}) as SpaceExcavatorLaunchConfig;
   const initial = config.initialProgress;
   const totalBoards = Math.max(1, Math.floor(config.totalBoards ?? 10));
   const [progress, setProgress] = useState<SpaceExcavatorProgress | null>(initial ?? null);
   const size = Math.max(1, Math.floor(progress?.boardSize ?? initial?.boardSize ?? 5));
-  const objectTileIds = progress?.objectTileIds ?? initial?.objectTileIds ?? progress?.treasureTileIds ?? initial?.treasureTileIds ?? [];
-  const objectPieceCount = Math.max(1, Math.floor(objectTileIds.length || progress?.treasureCount || initial?.treasureCount || Math.max(3, Math.min(8, 3 + Math.floor(islandNumber / 8)))));
+  const objectPieceCount = getObjectPieceCount({ progress, initial, islandNumber });
 
   const [tiles, setTiles] = useState<Tile[]>(() => {
     if (!initial) return makeBoard(size, objectPieceCount);
-    const initialObjectTileIds = initial.objectTileIds ?? initial.treasureTileIds;
+    const initialObjectTileIds = getProgressObjectTileIds(initial);
     return Array.from({ length: size * size }, (_, i) => ({ dug: initial.dugTileIds.includes(i), objectPiece: initialObjectTileIds.includes(i) }));
   });
   const [ticketsRemaining, setTicketsRemaining] = useState<number>(() => Math.max(0, Math.floor(config.getTicketsRemaining?.() ?? 0)));
@@ -62,7 +77,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
 
   const syncProgress = (nextProgress: SpaceExcavatorProgress) => {
     setProgress(nextProgress);
-    const nextObjectTileIds = nextProgress.objectTileIds ?? nextProgress.treasureTileIds;
+    const nextObjectTileIds = getProgressObjectTileIds(nextProgress);
     setTiles(Array.from({ length: nextProgress.boardSize * nextProgress.boardSize }, (_, i) => ({ dug: nextProgress.dugTileIds.includes(i), objectPiece: nextObjectTileIds.includes(i) })));
   };
 
