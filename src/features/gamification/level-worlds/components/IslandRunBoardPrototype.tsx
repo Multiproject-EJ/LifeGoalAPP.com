@@ -1707,11 +1707,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   );
   const pendingTreasurePathResumeCtaLabel = pendingTreasurePathResume?.status === 'active'
     ? 'Continue Treasure Path'
-    : pendingTreasurePathResume?.status === 'completed_ready_to_collect'
-      ? 'Collect Treasure'
-      : pendingTreasurePathResume?.status === 'collected_banked'
-        ? 'Collect Treasure'
-        : 'Continue Treasure Path';
+    : 'Collect Treasure';
   const activeSessionStatusMessage = null;
   const isRetryingSync = false;
   const [perfectCompanionRuntimeConfig, setPerfectCompanionRuntimeConfig] = useState(() => readPerfectCompanionRuntimeConfig(session.user.id));

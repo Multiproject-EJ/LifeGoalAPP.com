@@ -55,6 +55,12 @@ const RESUMABLE_TREASURE_PATH_STATUSES = new Set<PostRareTreasurePathStateStatus
   'collected_banked',
 ]);
 
+const RESUMABLE_TREASURE_PATH_SESSION_STATUSES = new Set<IslandRunLuckyRollSession['status']>([
+  'active',
+  'completed',
+  'banked',
+]);
+
 export interface StartPostRareTreasurePathOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -194,6 +200,10 @@ export function resolvePendingTreasurePathResume(
   options: ResolvePendingTreasurePathResumeOptions,
 ): ResolvePendingTreasurePathResumeResult {
   const candidates = Object.entries(options.record.luckyRollSessionsByMilestone)
+    .filter(([, luckyRollSession]) => (
+      RESUMABLE_TREASURE_PATH_SESSION_STATUSES.has(luckyRollSession.status)
+      && isRecordAtIsland(options.record, normalizeIslandNumber(luckyRollSession.targetIslandNumber), normalizeCycleIndex(luckyRollSession.cycleIndex))
+    ))
     .map(([sessionKey, luckyRollSession]) => {
       const state = resolvePostRareTreasurePathState({
         record: options.record,
@@ -204,8 +214,7 @@ export function resolvePendingTreasurePathResume(
     })
     .filter((state): state is ResolvePostRareTreasurePathStateResult => {
       if (!state) return false;
-      if (!RESUMABLE_TREASURE_PATH_STATUSES.has(state.status)) return false;
-      return isRecordAtIsland(options.record, state.completedIslandNumber, state.cycleIndex);
+      return RESUMABLE_TREASURE_PATH_STATUSES.has(state.status);
     });
 
   if (candidates.length < 1) return null;
