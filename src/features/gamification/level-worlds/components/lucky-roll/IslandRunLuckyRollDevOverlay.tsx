@@ -56,9 +56,9 @@ function getTreasurePathFieldIcon(kind: IslandRunLuckyRollTileKind): string {
     case 'egg':
       return '🥚';
     case 'bonus_detour':
-      return '↩️';
+      return '🌈';
     case 'finish':
-      return '🏆';
+      return '🏰';
     case 'empty':
     default:
       return '🌿';
@@ -76,7 +76,7 @@ function getTreasurePathFieldLabel(kind: IslandRunLuckyRollTileKind): string {
     case 'egg':
       return 'Treasure Egg field';
     case 'bonus_detour':
-      return 'Bonus path field';
+      return 'Golden detour field';
     case 'finish':
       return 'Treasure gate';
     case 'empty':
@@ -229,7 +229,7 @@ export function IslandRunLuckyRollDevOverlay({
     const rewardLabel = result.rewardAdded
       ? ' New reward added.'
       : ' This field was already collected.';
-    return `Rolled ${result.roll} to field ${result.landedTileId ?? '—'} (${result.status}).${rewardLabel}`;
+    return `Rolled ${result.roll} to glowing field ${result.landedTileId ?? '—'}.${rewardLabel}`;
   });
 
   const handleBank = () => runAction(async () => {
@@ -306,8 +306,8 @@ export function IslandRunLuckyRollDevOverlay({
             </p>
             <h2 className="island-run-lucky-roll-dev-overlay__title">✨ Treasure Path</h2>
             <p className="island-run-lucky-roll-dev-overlay__subtitle">
-              Roll for free across glowing fields.
-              Reach the treasure gate to collect everything you found.
+              A golden detour of glowing fields is open.
+              Roll for free, gather rewards, and reach the treasure gate.
             </p>
           </div>
           <div className="island-run-lucky-roll-dev-overlay__header-actions">
@@ -333,7 +333,7 @@ export function IslandRunLuckyRollDevOverlay({
         {usesPostRareCollectTravel && (
           <section className="island-run-lucky-roll-dev-overlay__intro" aria-label="Treasure Path unlocked">
             <strong>Treasure Path unlocked!</strong>
-            <span>You found a hidden reward path.</span>
+            <span>You found a cozy bonus detour.</span>
             <span>Roll for free across glowing fields and collect everything at the treasure gate.</span>
           </section>
         )}
@@ -348,19 +348,20 @@ export function IslandRunLuckyRollDevOverlay({
               <div
                 key={field.tileId}
                 className={[
-                  'island-run-lucky-roll-dev-overlay__tile',
-                  `island-run-lucky-roll-dev-overlay__tile--${field.kind}`,
-                  isCurrent ? 'island-run-lucky-roll-dev-overlay__tile--current' : '',
-                  isClaimed ? 'island-run-lucky-roll-dev-overlay__tile--claimed' : '',
-                  isFinish ? 'island-run-lucky-roll-dev-overlay__tile--finish' : '',
-                ].filter(Boolean).join(' ')}
-                title={`Field ${field.tileId} · ${fieldLabel}`}
-              >
-                <span>{getTreasurePathFieldIcon(field.kind)}</span>
-                <small>{field.tileId}</small>
-              </div>
-            );
-          })}
+                   'island-run-lucky-roll-dev-overlay__field',
+                   `island-run-lucky-roll-dev-overlay__field--${field.kind}`,
+                   isCurrent ? 'island-run-lucky-roll-dev-overlay__field--current' : '',
+                   isClaimed ? 'island-run-lucky-roll-dev-overlay__field--claimed' : '',
+                   isFinish ? 'island-run-lucky-roll-dev-overlay__field--finish' : '',
+                 ].filter(Boolean).join(' ')}
+                 title={`Field ${field.tileId} · ${fieldLabel}`}
+                 aria-label={`Field ${field.tileId}: ${fieldLabel}${isCurrent ? ', current position' : ''}${isClaimed ? ', collected' : ''}`}
+               >
+                 <span className="island-run-lucky-roll-dev-overlay__field-icon">{getTreasurePathFieldIcon(field.kind)}</span>
+                 <small>{isFinish ? 'Gate' : field.tileId}</small>
+               </div>
+             );
+           })}
         </div>
 
         <div className="island-run-lucky-roll-dev-overlay__pending-row" aria-label="Pending Treasure Path rewards">
@@ -398,6 +399,11 @@ export function IslandRunLuckyRollDevOverlay({
           >
             {isActionPending ? 'Working…' : primaryActionLabel}
           </button>
+          {actionMessage && (
+            <div className="island-run-lucky-roll-dev-overlay__message" role="status">
+              {actionMessage}
+            </div>
+          )}
         </footer>
 
         {showDetails && (
@@ -487,11 +493,6 @@ export function IslandRunLuckyRollDevOverlay({
                   {bankedRewards.length === 0 && <li>No stored rewards yet.</li>}
                 </ul>
               </section>
-              {actionMessage && (
-                <div className="island-run-lucky-roll-dev-overlay__message" role="status">
-                  {actionMessage}
-                </div>
-              )}
                 </>
               )}
             </div>
