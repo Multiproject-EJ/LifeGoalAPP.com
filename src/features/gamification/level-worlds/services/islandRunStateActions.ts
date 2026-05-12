@@ -108,11 +108,12 @@ export function applySpaceExcavatorDig(options: { session: Session; client: Supa
   if (progress.dugTileIds.includes(normalizedTile)) return { record: current, ok: false, ticketsRemaining: available, progress };
   const dugTileIds = Array.from(new Set([...progress.dugTileIds, normalizedTile])).sort((a,b)=>a-b);
   const foundTreasureTileIds = progress.treasureTileIds.includes(normalizedTile) ? Array.from(new Set([...progress.foundTreasureTileIds, normalizedTile])).sort((a,b)=>a-b) : progress.foundTreasureTileIds;
-  const boardComplete = dugTileIds.length >= progress.boardSize * progress.boardSize;
   let nextProgress: SpaceExcavatorProgressEntry = { ...progress, dugTileIds, foundTreasureTileIds, updatedAtMs: Date.now() };
+  const boardComplete = foundTreasureTileIds.length >= progress.treasureCount;
   if (boardComplete && progress.status !== 'won') {
-    const nextIndex = progress.boardIndex + 1;
-    nextProgress = progress.completedBoardCount + 1 >= 3 ? { ...nextProgress, completedBoardCount: progress.completedBoardCount + 1, status: 'won' } : buildSpaceExcavatorProgress(eventId, nextIndex, Date.now());
+    // Full multi-board progression UX is deferred; the current UI completes a
+    // board when all treasures are found, so the service uses the same semantic.
+    nextProgress = { ...nextProgress, completedBoardCount: progress.completedBoardCount + 1, status: 'won' };
   }
   const next = { ...current, runtimeVersion: current.runtimeVersion + 1, minigameTicketsByEvent: { ...current.minigameTicketsByEvent, [eventId]: available - 1 }, spaceExcavatorProgressByEvent: { ...current.spaceExcavatorProgressByEvent, [eventId]: nextProgress } };
   void commitIslandRunState({ session, client, record: next, triggerSource: triggerSource ?? 'apply_space_excavator_dig' });

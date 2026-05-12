@@ -68,9 +68,9 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
         'lucky_spin should launch lucky_spin',
       );
       assertEqual(
-        openEventMinigame({ eventId: 'space_excavator', ticketsAvailable: 5 })?.minigameId,
+        openEventMinigame({ eventId: 'space_excavator', ticketsAvailable: 0 })?.minigameId,
         'space_excavator',
-        'space_excavator should launch space_excavator',
+        'space_excavator should launch space_excavator even with zero tickets because digs spend per action',
       );
       assertEqual(
         openEventMinigame({ eventId: 'companion_feast', ticketsAvailable: 5 })?.minigameId,
@@ -100,10 +100,10 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
     },
   },
   {
-    name: 'openEventMinigame uses explicit spend amount when affordable',
+    name: 'openEventMinigame uses explicit entry spend amount when affordable',
     run: () => {
       const descriptor = openEventMinigame({
-        eventId: 'space_excavator',
+        eventId: 'lucky_spin',
         ticketsAvailable: 4,
         ticketsToSpend: 2,
       });
@@ -296,15 +296,14 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       const descriptor = resolveSpaceExcavatorEventMinigame({
         kind: 'timed_event',
         eventId: 'space_excavator',
-        ticketsAvailable: 4,
-        ticketsToSpend: 2,
+        ticketsAvailable: 0,
       });
       assertEqual(
         descriptor?.minigameId,
         'space_excavator',
         'space_excavator should route to space_excavator event surface',
       );
-      assertEqual(descriptor?.ticketsSpent, 2, 'resolver should preserve explicit ticket spend request');
+      assertEqual(descriptor?.ticketsSpent, 0, 'resolver should not spend tickets on open');
       assertEqual(
         descriptor?.config.mode,
         'space_excavator',
@@ -317,13 +316,13 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       );
       assertEqual(
         descriptor?.config.mode === 'space_excavator' ? descriptor.config.ticketsSpent : null,
-        2,
-        'resolver should include ticketsSpent in space_excavator launch config',
+        0,
+        'resolver should include zero launch ticketsSpent in space_excavator launch config',
       );
     },
   },
   {
-    name: 'resolveSpaceExcavatorEventMinigame is non-launching for non-space events and insufficient tickets',
+    name: 'resolveSpaceExcavatorEventMinigame is non-launching for non-space events but opens with zero tickets',
     run: () => {
       assertEqual(
         resolveSpaceExcavatorEventMinigame({
@@ -339,9 +338,9 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
           kind: 'timed_event',
           eventId: 'space_excavator',
           ticketsAvailable: 0,
-        }),
-        null,
-        'insufficient tickets should block space_excavator event launch',
+        })?.minigameId,
+        'space_excavator',
+        'zero tickets should not block space_excavator event launch',
       );
     },
   },
