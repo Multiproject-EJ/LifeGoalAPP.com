@@ -69,6 +69,7 @@ import { resolveIslandRunPreIslandLuckyRollGate } from './islandRunPreIslandLuck
 import {
   chooseSpaceExcavatorObjectShape,
   placeSpaceExcavatorObjectShape,
+  resolveSpaceExcavatorObjectTileIds,
 } from './spaceExcavatorObjects';
 
 
@@ -139,7 +140,7 @@ export function applySpaceExcavatorDig(options: { session: Session; client: Supa
   const tileCount = progress.boardSize * progress.boardSize;
   if (normalizedTile >= tileCount || progress.dugTileIds.includes(normalizedTile)) return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete: false, canAdvanceBoard: false };
   const dugTileIds = Array.from(new Set([...progress.dugTileIds, normalizedTile])).sort((a,b)=>a-b);
-  const objectTileIds = progress.objectTileIds.length > 0 ? progress.objectTileIds : progress.treasureTileIds;
+  const objectTileIds = resolveSpaceExcavatorObjectTileIds(progress);
   const revealedObjectTileIds = objectTileIds.includes(normalizedTile) ? Array.from(new Set([...progress.revealedObjectTileIds, normalizedTile])).sort((a,b)=>a-b) : progress.revealedObjectTileIds;
   const foundTreasureTileIds = objectTileIds.includes(normalizedTile) ? Array.from(new Set([...progress.foundTreasureTileIds, normalizedTile])).sort((a,b)=>a-b) : progress.foundTreasureTileIds;
   let nextProgress: SpaceExcavatorProgressEntry = { ...progress, dugTileIds, revealedObjectTileIds, foundTreasureTileIds, updatedAtMs: Date.now() };

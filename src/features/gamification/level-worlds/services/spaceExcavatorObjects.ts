@@ -68,3 +68,10 @@ export function placeSpaceExcavatorObjectShape(options: {
     .map(([x, y]) => (originY + y) * boardSize + originX + x)
     .sort((a, b) => a - b);
 }
+
+export function resolveSpaceExcavatorObjectTileIds(progress: {
+  objectTileIds?: number[];
+  treasureTileIds: number[];
+}): number[] {
+  return progress.objectTileIds?.length ? progress.objectTileIds : progress.treasureTileIds;
+}

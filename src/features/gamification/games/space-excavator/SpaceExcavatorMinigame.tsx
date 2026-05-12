@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { IslandRunMinigameProps } from '../../level-worlds/services/islandRunMinigameTypes';
+import { resolveSpaceExcavatorObjectTileIds } from '../../level-worlds/services/spaceExcavatorObjects';
 import './spaceExcavator.css';
 
 type Tile = { dug: boolean; objectPiece: boolean };
@@ -31,18 +32,8 @@ type SpaceExcavatorLaunchConfig = {
   totalBoards?: number;
 };
 
-function makeBoard(size: number, treasureCount: number): Tile[] {
-  const tiles = Array.from({ length: size * size }, () => ({ dug: false, objectPiece: false }));
-  const placed = new Set<number>();
-  while (placed.size < treasureCount && placed.size < tiles.length) {
-    placed.add(Math.floor(Math.random() * tiles.length));
-  }
-  for (const i of placed) tiles[i].objectPiece = true;
-  return tiles;
-}
-
 function getProgressObjectTileIds(progress: SpaceExcavatorProgress | null | undefined): number[] {
-  return progress?.objectTileIds?.length ? progress.objectTileIds : progress?.treasureTileIds ?? [];
+  return progress ? resolveSpaceExcavatorObjectTileIds(progress) : [];
 }
 
 function getObjectPieceCount(options: {
@@ -65,11 +56,12 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const size = Math.max(1, Math.floor(progress?.boardSize ?? initial?.boardSize ?? 5));
   const objectPieceCount = getObjectPieceCount({ progress, initial, islandNumber });
 
-  const [tiles, setTiles] = useState<Tile[]>(() => {
-    if (!initial) return makeBoard(size, objectPieceCount);
-    const initialObjectTileIds = getProgressObjectTileIds(initial);
-    return Array.from({ length: size * size }, (_, i) => ({ dug: initial.dugTileIds.includes(i), objectPiece: initialObjectTileIds.includes(i) }));
-  });
+  const activeProgress = progress ?? initial ?? null;
+  const tiles = useMemo<Tile[]>(() => {
+    const activeObjectTileIds = getProgressObjectTileIds(activeProgress);
+    const activeDugTileIds = activeProgress?.dugTileIds ?? [];
+    return Array.from({ length: size * size }, (_, i) => ({ dug: activeDugTileIds.includes(i), objectPiece: activeObjectTileIds.includes(i) }));
+  }, [activeProgress, size]);
   const [ticketsRemaining, setTicketsRemaining] = useState<number>(() => Math.max(0, Math.floor(config.getTicketsRemaining?.() ?? 0)));
   const [finished, setFinished] = useState(false);
   const [sentResult, setSentResult] = useState(false);
@@ -77,8 +69,6 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
 
   const syncProgress = (nextProgress: SpaceExcavatorProgress) => {
     setProgress(nextProgress);
-    const nextObjectTileIds = getProgressObjectTileIds(nextProgress);
-    setTiles(Array.from({ length: nextProgress.boardSize * nextProgress.boardSize }, (_, i) => ({ dug: nextProgress.dugTileIds.includes(i), objectPiece: nextObjectTileIds.includes(i) })));
   };
 
   const found = useMemo(() => tiles.filter((t) => t.dug && t.objectPiece).length, [tiles]);
@@ -109,12 +99,6 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       setShowOutOfTickets(true);
       return;
     }
-
-    setTiles((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], dug: true };
-      return next;
-    });
   };
 
   const onAdvanceBoard = () => {
