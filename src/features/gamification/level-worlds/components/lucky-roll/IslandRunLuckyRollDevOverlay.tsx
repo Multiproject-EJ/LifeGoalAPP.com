@@ -146,10 +146,11 @@ export function IslandRunLuckyRollDevOverlay({
   const bankedEssence = sumRewards(luckyRollSession?.bankedRewards ?? [], 'essence');
   const bankedShards = sumRewards(bankedRewards, 'shards');
   const bankedEggs = sumRewards(bankedRewards, 'egg');
-  const completedRewardDice = luckyRollSession?.status === 'banked' ? bankedDice : pendingDice;
-  const completedRewardEssence = luckyRollSession?.status === 'banked' ? bankedEssence : pendingEssence;
-  const completedRewardShards = luckyRollSession?.status === 'banked' ? bankedShards : pendingShards;
-  const completedRewardEggs = luckyRollSession?.status === 'banked' ? bankedEggs : pendingEggs;
+  const isTreasureAlreadyCollected = luckyRollSession?.status === 'banked';
+  const completedRewardDice = isTreasureAlreadyCollected ? bankedDice : pendingDice;
+  const completedRewardEssence = isTreasureAlreadyCollected ? bankedEssence : pendingEssence;
+  const completedRewardShards = isTreasureAlreadyCollected ? bankedShards : pendingShards;
+  const completedRewardEggs = isTreasureAlreadyCollected ? bankedEggs : pendingEggs;
   const boardConfig = useMemo(() => getIslandRunLuckyRollBoardConfig({
     islandNumber: normalizedTargetIslandNumber,
     cycleIndex: runtimeState.cycleIndex,
