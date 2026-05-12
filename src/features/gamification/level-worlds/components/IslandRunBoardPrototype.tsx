@@ -2397,11 +2397,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (!showShopPanel || !audioEnabled) {
       stopIslandRunLuxuryRewardMusic();
     }
+  }, [audioEnabled, showShopPanel]);
 
+  useEffect(() => {
     return () => {
       stopIslandRunLuxuryRewardMusic();
     };
-  }, [audioEnabled, showShopPanel]);
+  }, []);
 
   useEffect(() => {
     if (!showSanctuaryPanel) return;
