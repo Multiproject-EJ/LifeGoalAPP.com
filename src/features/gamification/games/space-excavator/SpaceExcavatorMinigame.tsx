@@ -50,7 +50,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   };
 
   const found = useMemo(() => tiles.filter((t) => t.dug && t.treasure).length, [tiles]);
-  const progressStatus = progress?.status ?? (found >= treasureCount ? 'board_complete' : 'active');
+  const progressStatus = progress?.status ?? 'active';
   const boardComplete = progressStatus === 'board_complete' || progressStatus === 'completed';
   const canAdvanceBoard = progressStatus === 'board_complete';
   const boardLabel = `Board ${Math.max(1, Math.floor((progress?.boardIndex ?? 0) + 1))}${totalBoards > 1 ? ` / ${totalBoards}` : ''}`;

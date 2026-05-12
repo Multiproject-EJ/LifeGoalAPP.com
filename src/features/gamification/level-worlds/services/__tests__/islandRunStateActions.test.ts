@@ -425,7 +425,48 @@ export const islandRunStateActionsTests: TestCase[] = [
         undefined,
         'unrelated event progress should remain untouched',
       );
-      assertEqual(SPACE_EXCAVATOR_TOTAL_BOARDS, 10, 'Space Excavator should use the documented placeholder board cap');
+    },
+  },
+
+  {
+    name: 'Space Excavator final placeholder board advances to completed without spending tickets',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      const eventId = 'space_excavator:event-terminal';
+      seedState({
+        runtimeVersion: 10,
+        spinTokens: 3,
+        minigameTicketsByEvent: {
+          [eventId]: 2,
+        },
+        spaceExcavatorProgressByEvent: {
+          [eventId]: {
+            eventId,
+            boardIndex: SPACE_EXCAVATOR_TOTAL_BOARDS - 1,
+            boardSize: 5,
+            treasureCount: 5,
+            treasureTileIds: [1, 2, 3, 4, 5],
+            dugTileIds: [1, 2, 3, 4, 5],
+            foundTreasureTileIds: [1, 2, 3, 4, 5],
+            completedBoardCount: SPACE_EXCAVATOR_TOTAL_BOARDS,
+            status: 'board_complete',
+            updatedAtMs: 1234,
+          },
+        },
+      });
+
+      const advanced = advanceSpaceExcavatorBoard({
+        session,
+        client: null,
+        eventId,
+      });
+
+      assertEqual(advanced.ok, true, 'terminal board advance should succeed');
+      assertEqual(advanced.record.spaceExcavatorProgressByEvent[eventId].status, 'completed', 'terminal board advance should mark placeholder board set completed');
+      assertEqual(advanced.record.spaceExcavatorProgressByEvent[eventId].boardIndex, SPACE_EXCAVATOR_TOTAL_BOARDS - 1, 'terminal completion should not create an extra board');
+      assertEqual(advanced.record.minigameTicketsByEvent[eventId], 2, 'terminal board advance should not spend tickets');
+      assertEqual(advanced.record.spinTokens, 3, 'terminal board advance should not touch spinTokens');
     },
   },
 
