@@ -19,19 +19,26 @@ function requireIncludes(label, content, needle) {
   }
 }
 
+function requireNotMatches(label, content, pattern, message) {
+  if (pattern.test(content)) {
+    failures.push(`${label}: ${message}`);
+  }
+}
+
 requireIncludes('overlay', overlay, 'startIslandRunLuckyRoll');
 requireIncludes('overlay', overlay, 'advanceIslandRunLuckyRoll');
 requireIncludes('overlay', overlay, 'bankIslandRunLuckyRollRewards');
-requireIncludes('overlay', overlay, "source: 'dev_lucky_roll_overlay'");
+requireIncludes('overlay', overlay, 'getIslandRunLuckyRollBoardConfig');
+requireIncludes('overlay', overlay, 'getIslandRunLuckyRollTileConfig');
+requireIncludes('overlay', overlay, "mode: 'production_board'");
+requireIncludes('overlay', overlay, 'Treasure Path');
 requireIncludes('overlay', overlay, 'if (!isDevModeEnabled)');
 requireIncludes('board', board, 'showDevLuckyRollOverlay && isDevModeEnabled');
 requireIncludes('board', board, 'onOpenLuckyRollDevOverlay={handleOpenDevLuckyRollOverlay}');
 requireIncludes('board', board, 'showLuckyRollDevLauncher={isDevModeEnabled}');
-requireIncludes('debug panel', debugPanel, 'Open Lucky Roll overlay');
+requireIncludes('debug panel', debugPanel, 'Open Treasure Path overlay');
 
 const forbiddenOverlayPatterns = [
-  'daily-treats/LuckyRollBoard',
-  'LuckyRollBoard',
   'gameRewards',
   'luckyRollAccess',
   'gol_lucky_roll_state',
@@ -44,6 +51,17 @@ for (const pattern of forbiddenOverlayPatterns) {
   if (overlay.includes(pattern)) {
     failures.push(`overlay: forbidden legacy Lucky Roll/state pattern found: ${pattern}`);
   }
+}
+
+const forbiddenOverlayRegexes = [
+  {
+    pattern: /\bLuckyRollBoard\b/,
+    message: 'forbidden legacy LuckyRollBoard component reference found',
+  },
+];
+
+for (const { pattern, message } of forbiddenOverlayRegexes) {
+  requireNotMatches('overlay', overlay, pattern, message);
 }
 
 if (failures.length > 0) {
