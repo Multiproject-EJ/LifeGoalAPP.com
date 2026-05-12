@@ -7,6 +7,7 @@ import {
   getIslandRunLuckyRollBoardConfig,
   getIslandRunLuckyRollBoardSize,
   getIslandRunLuckyRollFinishTile,
+  getTreasurePathRewardTierForIsland,
   resolveIslandRunLuckyRollMove,
   resolveIslandRunLuckyRollTileReward,
   type IslandRunLuckyRollRewardCategory,
@@ -45,6 +46,12 @@ function sumResolvedRewards(type: 'essence' | 'dice' | 'shards', islandNumber: n
       .filter((reward) => reward.type === type)
       .reduce((rewardTotal, reward) => rewardTotal + reward.amount, 0);
   }, 0);
+}
+
+function getResolvedEggRewards(islandNumber: number): number[] {
+  return getIslandRunLuckyRollBoardConfig({ islandNumber }).tiles.flatMap((tile) => (
+    resolveIslandRunLuckyRollTileReward(tile.tileId, { islandNumber, cycleIndex: 0 })?.rewards ?? []
+  ).filter((reward) => reward.type === 'egg').map((reward) => reward.amount));
 }
 
 export const islandRunLuckyRollBoardConfigTests: TestCase[] = [
@@ -200,6 +207,78 @@ export const islandRunLuckyRollBoardConfigTests: TestCase[] = [
         true,
         'Compatibility helper should still resolve rare Treasure Path island 30',
       );
+    },
+  },
+  {
+    name: 'Treasure Path reward tier resolves from milestone metadata',
+    run: () => {
+      assertEqual(getTreasurePathRewardTierForIsland(5), 'intro', 'Island 5 should resolve intro rewards');
+      assertEqual(getIslandRunLuckyRollBoardConfig({ islandNumber: 5 }).rewardTier, 'intro', 'Island 5 config should expose intro reward tier');
+      assertEqual(getIslandRunLuckyRollBoardConfig({ islandNumber: 5 }).milestoneTier, 'intro', 'Island 5 config should expose intro milestone tier');
+
+      assertEqual(getTreasurePathRewardTierForIsland(20), 'early', 'Island 20 should resolve early rewards');
+      assertEqual(getIslandRunLuckyRollBoardConfig({ islandNumber: 20 }).rewardTier, 'early', 'Island 20 config should expose early reward tier');
+      assertEqual(getIslandRunLuckyRollBoardConfig({ islandNumber: 20 }).milestoneTier, 'early', 'Island 20 config should expose early milestone tier');
+
+      for (const islandNumber of [30, 60, 90, 120]) {
+        assertEqual(getTreasurePathRewardTierForIsland(islandNumber), 'rare', `Island ${islandNumber} should resolve rare rewards`);
+        assertEqual(getIslandRunLuckyRollBoardConfig({ islandNumber }).rewardTier, 'rare', `Island ${islandNumber} config should expose rare reward tier`);
+        assertEqual(getIslandRunLuckyRollBoardConfig({ islandNumber }).milestoneTier, 'rare', `Island ${islandNumber} config should expose rare milestone tier`);
+      }
+    },
+  },
+  {
+    name: 'Treasure Path tier scaling increases essence from intro to early to rare',
+    run: () => {
+      const introTotal = sumResolvedRewards('essence', 5);
+      const earlyTotal = sumResolvedRewards('essence', 20);
+      const rareTotal = sumResolvedRewards('essence', 30);
+
+      assert(introTotal < earlyTotal, `Expected intro essence ${introTotal} to be less than early ${earlyTotal}`);
+      assert(earlyTotal < rareTotal, `Expected early essence ${earlyTotal} to be less than rare ${rareTotal}`);
+    },
+  },
+  {
+    name: 'Treasure Path tier scaling increases dice totals from intro to early to rare',
+    run: () => {
+      const introTotal = sumResolvedRewards('dice', 5);
+      const earlyTotal = sumResolvedRewards('dice', 20);
+      const rareTotal = sumResolvedRewards('dice', 30);
+
+      assert(introTotal <= earlyTotal, `Expected intro dice ${introTotal} to be no more than early ${earlyTotal}`);
+      assert(earlyTotal <= rareTotal, `Expected early dice ${earlyTotal} to be no more than rare ${rareTotal}`);
+    },
+  },
+  {
+    name: 'Treasure Path tier scaling increases shard totals from intro to early to rare',
+    run: () => {
+      const introTotal = sumResolvedRewards('shards', 5);
+      const earlyTotal = sumResolvedRewards('shards', 20);
+      const rareTotal = sumResolvedRewards('shards', 30);
+
+      assert(introTotal <= earlyTotal, `Expected intro shards ${introTotal} to be no more than early ${earlyTotal}`);
+      assert(earlyTotal <= rareTotal, `Expected early shards ${earlyTotal} to be no more than rare ${rareTotal}`);
+    },
+  },
+  {
+    name: 'rare Treasure Path keeps full Treasure Egg behavior',
+    run: () => {
+      const rareEggRewards = getResolvedEggRewards(30);
+
+      assertEqual(rareEggRewards.length, 3, 'Rare Treasure Path should keep all 3 egg fields');
+      for (const amount of rareEggRewards) {
+        assertEqual(amount, 1, 'Rare Treasure Path egg fields should each grant one Treasure Egg voucher');
+      }
+    },
+  },
+  {
+    name: 'non-milestone islands default to rare/base reward tier without milestone metadata',
+    run: () => {
+      const config = getIslandRunLuckyRollBoardConfig({ islandNumber: 10 });
+
+      assertEqual(getTreasurePathRewardTierForIsland(10), 'rare', 'Non-milestone island should use safe rare/base reward tier fallback');
+      assertEqual(config.rewardTier, 'rare', 'Non-milestone config should expose rare/base reward tier fallback');
+      assertEqual(config.milestoneTier, undefined, 'Non-milestone config should not expose a milestone tier');
     },
   },
 ];

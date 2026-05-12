@@ -2,11 +2,18 @@ import {
   getEffectiveIslandNumber,
   getIslandTotalEssenceCost,
 } from './islandRunContractV2EssenceBuild';
-import { getTreasurePathMilestoneMetadata } from './islandRunIslandMetadata';
+import {
+  getTreasurePathMilestoneMetadata,
+  type IslandRunTreasurePathMilestoneTier,
+} from './islandRunIslandMetadata';
 
 export const ISLAND_RUN_LUCKY_ROLL_BOARD_SIZE = 30;
 export const ISLAND_RUN_LUCKY_ROLL_FINISH_TILE = 29;
-export const ISLAND_RUN_LUCKY_ROLL_ESSENCE_PAYOUT_RATIO = 0.1;
+export const ISLAND_RUN_LUCKY_ROLL_ESSENCE_PAYOUT_RATIOS_BY_TIER: Record<IslandRunTreasurePathMilestoneTier, number> = {
+  intro: 0.04,
+  early: 0.07,
+  rare: 0.1,
+};
 export const ISLAND_RUN_LUCKY_ROLL_MAX_DICE_REWARD = 5;
 
 export type IslandRunLuckyRollTileKind = 'essence' | 'dice' | 'shards' | 'egg' | 'empty' | 'finish' | 'bonus_detour';
@@ -39,6 +46,8 @@ export interface IslandRunLuckyRollTileConfig {
 export interface IslandRunLuckyRollBoardConfig {
   boardSize: number;
   finishTileId: number;
+  rewardTier: IslandRunTreasurePathMilestoneTier;
+  milestoneTier?: IslandRunTreasurePathMilestoneTier;
   rollCostDice: 0;
   consumesNormalDicePool: false;
   endsWhenPositionAtOrBeyondTileId: number;
@@ -106,6 +115,12 @@ const STATIC_TILE_CONFIGS: readonly IslandRunLuckyRollTileConfig[] = [
   finish(29),
 ];
 
+const REWARD_AMOUNT_SCALE_BY_TIER: Record<IslandRunTreasurePathMilestoneTier, number> = {
+  intro: 0.5,
+  early: 0.75,
+  rare: 1,
+};
+
 function essence(tileId: number, label: string, iconHint: string, copy: string, essenceWeight: number): IslandRunLuckyRollTileConfig {
   return { tileId, kind: 'essence', rewardCategory: 'essence', rewards: [{ type: 'essence', essenceWeight }], label, iconHint, copy };
 }
@@ -161,12 +176,25 @@ function getTotalEssenceWeight(): number {
   }, 0), 0);
 }
 
+export function getTreasurePathRewardTierForIsland(islandNumber: number | undefined): IslandRunTreasurePathMilestoneTier {
+  return getTreasurePathMilestoneMetadata(normalizeIslandNumber(islandNumber))?.tier ?? 'rare';
+}
+
+function getTreasurePathMilestoneTierForIsland(islandNumber: number | undefined): IslandRunTreasurePathMilestoneTier | undefined {
+  return getTreasurePathMilestoneMetadata(normalizeIslandNumber(islandNumber))?.tier;
+}
+
 function resolveEssenceBudget(context: IslandRunLuckyRollRewardResolutionContext): number {
   const islandNumber = normalizeIslandNumber(context.islandNumber);
   const cycleIndex = normalizeCycleIndex(context.cycleIndex);
   const effectiveIslandNumber = getEffectiveIslandNumber(islandNumber, cycleIndex);
   const nextIslandTotalCost = getIslandTotalEssenceCost(effectiveIslandNumber + 1);
-  return Math.max(1, Math.floor(nextIslandTotalCost * ISLAND_RUN_LUCKY_ROLL_ESSENCE_PAYOUT_RATIO));
+  const rewardTier = getTreasurePathRewardTierForIsland(islandNumber);
+  return Math.max(1, Math.floor(nextIslandTotalCost * ISLAND_RUN_LUCKY_ROLL_ESSENCE_PAYOUT_RATIOS_BY_TIER[rewardTier]));
+}
+
+function scaleRewardAmountForTier(amount: number, rewardTier: IslandRunTreasurePathMilestoneTier): number {
+  return Math.max(0, Math.floor(amount * REWARD_AMOUNT_SCALE_BY_TIER[rewardTier]));
 }
 
 function resolveRewardAmount(
@@ -179,7 +207,12 @@ function resolveRewardAmount(
     return Math.max(1, Math.floor((resolveEssenceBudget(context) * weight) / totalWeight));
   }
   if (reward.type === 'dice') {
-    return Math.min(ISLAND_RUN_LUCKY_ROLL_MAX_DICE_REWARD, Math.max(0, Math.floor(reward.amount ?? 0)));
+    const rewardTier = getTreasurePathRewardTierForIsland(context.islandNumber);
+    return Math.min(ISLAND_RUN_LUCKY_ROLL_MAX_DICE_REWARD, scaleRewardAmountForTier(reward.amount ?? 0, rewardTier));
+  }
+  if (reward.type === 'shards') {
+    const rewardTier = getTreasurePathRewardTierForIsland(context.islandNumber);
+    return scaleRewardAmountForTier(reward.amount ?? 0, rewardTier);
   }
   return Math.max(0, Math.floor(reward.amount ?? 0));
 }
@@ -197,11 +230,14 @@ export function getIslandRunLuckyRollFinishTile(): number {
 }
 
 export function getIslandRunLuckyRollBoardConfig(
-  _options: IslandRunLuckyRollBoardConfigOptions = {},
+  options: IslandRunLuckyRollBoardConfigOptions = {},
 ): IslandRunLuckyRollBoardConfig {
+  const milestoneTier = getTreasurePathMilestoneTierForIsland(options.islandNumber);
   return {
     boardSize: ISLAND_RUN_LUCKY_ROLL_BOARD_SIZE,
     finishTileId: ISLAND_RUN_LUCKY_ROLL_FINISH_TILE,
+    rewardTier: milestoneTier ?? getTreasurePathRewardTierForIsland(options.islandNumber),
+    ...(milestoneTier ? { milestoneTier } : {}),
     rollCostDice: 0,
     consumesNormalDicePool: false,
     endsWhenPositionAtOrBeyondTileId: ISLAND_RUN_LUCKY_ROLL_FINISH_TILE,
