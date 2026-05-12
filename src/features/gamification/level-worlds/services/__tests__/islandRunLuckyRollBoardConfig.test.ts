@@ -49,9 +49,11 @@ function sumResolvedRewards(type: 'essence' | 'dice' | 'shards', islandNumber: n
 }
 
 function getResolvedEggRewards(islandNumber: number): number[] {
-  return getIslandRunLuckyRollBoardConfig({ islandNumber }).tiles.flatMap((tile) => (
-    resolveIslandRunLuckyRollTileReward(tile.tileId, { islandNumber, cycleIndex: 0 })?.rewards ?? []
-  ).filter((reward) => reward.type === 'egg').map((reward) => reward.amount));
+  return getIslandRunLuckyRollBoardConfig({ islandNumber }).tiles.flatMap((tile) => {
+    const rewards = resolveIslandRunLuckyRollTileReward(tile.tileId, { islandNumber, cycleIndex: 0 })?.rewards ?? [];
+    const eggRewards = rewards.filter((reward) => reward.type === 'egg');
+    return eggRewards.map((reward) => reward.amount);
+  });
 }
 
 export const islandRunLuckyRollBoardConfigTests: TestCase[] = [

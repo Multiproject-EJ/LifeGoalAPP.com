@@ -46,7 +46,9 @@ export interface IslandRunLuckyRollTileConfig {
 export interface IslandRunLuckyRollBoardConfig {
   boardSize: number;
   finishTileId: number;
+  /** Resolved tier used for reward scaling. Non-milestone callers fall back to the safe rare/base tier. */
   rewardTier: IslandRunTreasurePathMilestoneTier;
+  /** Present only when the target island has Treasure Path milestone metadata. */
   milestoneTier?: IslandRunTreasurePathMilestoneTier;
   rollCostDice: 0;
   consumesNormalDicePool: false;
