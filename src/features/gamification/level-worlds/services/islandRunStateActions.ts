@@ -73,9 +73,20 @@ export interface ApplySpaceExcavatorDigResult {
   ok: boolean;
   ticketsRemaining: number;
   progress: SpaceExcavatorProgressEntry | null;
+  boardComplete: boolean;
+  canAdvanceBoard: boolean;
 }
 
-function buildSpaceExcavatorProgress(eventId: string, boardIndex: number, nowMs: number): SpaceExcavatorProgressEntry {
+export interface AdvanceSpaceExcavatorBoardResult {
+  record: IslandRunGameStateRecord;
+  ok: boolean;
+  ticketsRemaining: number;
+  progress: SpaceExcavatorProgressEntry | null;
+}
+
+export const SPACE_EXCAVATOR_TOTAL_BOARDS = 10; // Tuning placeholder until rewards/finale UX is added.
+
+function buildSpaceExcavatorProgress(eventId: string, boardIndex: number, nowMs: number, completedBoardCount = boardIndex): SpaceExcavatorProgressEntry {
   const boardSize = 5;
   const tileCount = boardSize * boardSize;
   const treasureCount = 5;
@@ -85,7 +96,7 @@ function buildSpaceExcavatorProgress(eventId: string, boardIndex: number, nowMs:
     seed = (seed * 1664525 + 1013904223) >>> 0;
     tiles.add(seed % tileCount);
   }
-  return { eventId, boardIndex, boardSize, treasureCount, treasureTileIds: Array.from(tiles).sort((a,b)=>a-b), dugTileIds: [], foundTreasureTileIds: [], completedBoardCount: boardIndex, status: 'active', updatedAtMs: nowMs };
+  return { eventId, boardIndex, boardSize, treasureCount, treasureTileIds: Array.from(tiles).sort((a,b)=>a-b), dugTileIds: [], foundTreasureTileIds: [], completedBoardCount, status: 'active', updatedAtMs: nowMs };
 }
 
 export function initSpaceExcavatorProgressForEvent(options: { session: Session; client: SupabaseClient | null; eventId: string; triggerSource?: string; }): IslandRunGameStateRecord {
@@ -103,21 +114,48 @@ export function applySpaceExcavatorDig(options: { session: Session; client: Supa
   const current = initSpaceExcavatorProgressForEvent({ session, client: null, eventId, triggerSource });
   const progress = current.spaceExcavatorProgressByEvent?.[eventId] ?? null;
   const available = Math.max(0, Math.floor(current.minigameTicketsByEvent?.[eventId] ?? 0));
-  if (!progress || available < 1) return { record: current, ok: false, ticketsRemaining: available, progress };
+  const alreadyComplete = progress?.status === 'board_complete' || progress?.status === 'completed';
+  if (!progress || available < 1 || alreadyComplete) {
+    const boardComplete = progress?.status === 'board_complete';
+    const canAdvanceBoard = boardComplete && progress.boardIndex + 1 < SPACE_EXCAVATOR_TOTAL_BOARDS;
+    return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete, canAdvanceBoard };
+  }
   const normalizedTile = Math.max(0, Math.floor(tileId));
-  if (progress.dugTileIds.includes(normalizedTile)) return { record: current, ok: false, ticketsRemaining: available, progress };
+  const tileCount = progress.boardSize * progress.boardSize;
+  if (normalizedTile >= tileCount || progress.dugTileIds.includes(normalizedTile)) return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete: false, canAdvanceBoard: false };
   const dugTileIds = Array.from(new Set([...progress.dugTileIds, normalizedTile])).sort((a,b)=>a-b);
   const foundTreasureTileIds = progress.treasureTileIds.includes(normalizedTile) ? Array.from(new Set([...progress.foundTreasureTileIds, normalizedTile])).sort((a,b)=>a-b) : progress.foundTreasureTileIds;
   let nextProgress: SpaceExcavatorProgressEntry = { ...progress, dugTileIds, foundTreasureTileIds, updatedAtMs: Date.now() };
   const boardComplete = foundTreasureTileIds.length >= progress.treasureCount;
-  if (boardComplete && progress.status !== 'won') {
-    // Full multi-board progression UX is deferred; the current UI completes a
-    // board when all treasures are found, so the service uses the same semantic.
-    nextProgress = { ...nextProgress, completedBoardCount: progress.completedBoardCount + 1, status: 'won' };
+  if (boardComplete && progress.status !== 'board_complete') {
+    nextProgress = {
+      ...nextProgress,
+      completedBoardCount: Math.max(progress.completedBoardCount, progress.boardIndex + 1),
+      status: progress.boardIndex + 1 >= SPACE_EXCAVATOR_TOTAL_BOARDS ? 'completed' : 'board_complete',
+    };
   }
   const next = { ...current, runtimeVersion: current.runtimeVersion + 1, minigameTicketsByEvent: { ...current.minigameTicketsByEvent, [eventId]: available - 1 }, spaceExcavatorProgressByEvent: { ...current.spaceExcavatorProgressByEvent, [eventId]: nextProgress } };
   void commitIslandRunState({ session, client, record: next, triggerSource: triggerSource ?? 'apply_space_excavator_dig' });
-  return { record: next, ok: true, ticketsRemaining: available - 1, progress: nextProgress };
+  return { record: next, ok: true, ticketsRemaining: available - 1, progress: nextProgress, boardComplete: nextProgress.status === 'board_complete' || nextProgress.status === 'completed', canAdvanceBoard: nextProgress.status === 'board_complete' };
+}
+
+export function advanceSpaceExcavatorBoard(options: { session: Session; client: SupabaseClient | null; eventId: string; triggerSource?: string; }): AdvanceSpaceExcavatorBoardResult {
+  const { session, client, eventId, triggerSource } = options;
+  const current = initSpaceExcavatorProgressForEvent({ session, client: null, eventId, triggerSource });
+  const progress = current.spaceExcavatorProgressByEvent?.[eventId] ?? null;
+  const available = Math.max(0, Math.floor(current.minigameTicketsByEvent?.[eventId] ?? 0));
+  if (!progress || progress.status !== 'board_complete') return { record: current, ok: false, ticketsRemaining: available, progress };
+  const nextCompletedBoardCount = Math.max(progress.completedBoardCount, progress.boardIndex + 1);
+  if (progress.boardIndex + 1 >= SPACE_EXCAVATOR_TOTAL_BOARDS) {
+    const completedProgress = { ...progress, completedBoardCount: nextCompletedBoardCount, status: 'completed' as const, updatedAtMs: Date.now() };
+    const next = { ...current, runtimeVersion: current.runtimeVersion + 1, spaceExcavatorProgressByEvent: { ...current.spaceExcavatorProgressByEvent, [eventId]: completedProgress } };
+    void commitIslandRunState({ session, client, record: next, triggerSource: triggerSource ?? 'advance_space_excavator_board' });
+    return { record: next, ok: true, ticketsRemaining: available, progress: completedProgress };
+  }
+  const nextProgress = buildSpaceExcavatorProgress(eventId, progress.boardIndex + 1, Date.now(), nextCompletedBoardCount);
+  const next = { ...current, runtimeVersion: current.runtimeVersion + 1, spaceExcavatorProgressByEvent: { ...current.spaceExcavatorProgressByEvent, [eventId]: nextProgress } };
+  void commitIslandRunState({ session, client, record: next, triggerSource: triggerSource ?? 'advance_space_excavator_board' });
+  return { record: next, ok: true, ticketsRemaining: available, progress: nextProgress };
 }
 // ── applyRollResult ──────────────────────────────────────────────────────────
 

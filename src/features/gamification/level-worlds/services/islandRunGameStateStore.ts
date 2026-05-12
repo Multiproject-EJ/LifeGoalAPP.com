@@ -126,7 +126,7 @@ export interface SpaceExcavatorProgressEntry {
   dugTileIds: number[];
   foundTreasureTileIds: number[];
   completedBoardCount: number;
-  status: 'active' | 'won';
+  status: 'active' | 'board_complete' | 'completed';
   updatedAtMs: number;
 }
 
@@ -1327,7 +1327,7 @@ function sanitizeSpaceExcavatorProgressByEvent(value: unknown, fallback: Record<
       dugTileIds: raw.dugTileIds.filter((n:any)=>Number.isFinite(n)).map((n:any)=>Math.max(0,Math.floor(n))),
       foundTreasureTileIds: raw.foundTreasureTileIds.filter((n:any)=>Number.isFinite(n)).map((n:any)=>Math.max(0,Math.floor(n))),
       completedBoardCount: Math.max(0, Math.floor(raw.completedBoardCount ?? 0)),
-      status: raw.status === 'won' ? 'won' : 'active',
+      status: raw.status === 'completed' ? 'completed' : raw.status === 'board_complete' || raw.status === 'won' ? 'board_complete' : 'active',
       updatedAtMs: Number.isFinite(raw.updatedAtMs) ? Math.max(0, Math.floor(raw.updatedAtMs)) : Date.now(),
     };
   }

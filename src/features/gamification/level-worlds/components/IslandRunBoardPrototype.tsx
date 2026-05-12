@@ -123,7 +123,9 @@ import {
   applyTokenHopRewards,
   applyTimedEventTicketSpend,
   applySpaceExcavatorDig,
+  advanceSpaceExcavatorBoard,
   initSpaceExcavatorProgressForEvent,
+  SPACE_EXCAVATOR_TOTAL_BOARDS,
   ISLAND_RUN_MAX_ISLAND,
   travelToNextIsland,
 } from '../services/islandRunStateActions';
@@ -6205,12 +6207,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         ? {
             ...descriptor.config,
             activeEventId: effectiveActiveTimedEvent.eventId,
+            totalBoards: SPACE_EXCAVATOR_TOTAL_BOARDS,
             initialProgress: initSpaceExcavatorProgressForEvent({ session, client: null, eventId: effectiveActiveTimedEvent.eventId }).spaceExcavatorProgressByEvent?.[effectiveActiveTimedEvent.eventId] ?? null,
             getTicketsRemaining: () => Math.max(0, Math.floor(runtimeStateRef.current.minigameTicketsByEvent?.[effectiveActiveTimedEvent.eventId] ?? 0)),
             requestDigSpend: (tileId: number) => {
               const dig = applySpaceExcavatorDig({ session, client, eventId: effectiveActiveTimedEvent.eventId, tileId, triggerSource: 'space_excavator_dig' });
               if (dig.ok) setRuntimeState(dig.record);
               return { ok: dig.ok, ticketsRemaining: dig.ticketsRemaining, progress: dig.progress };
+            },
+            requestAdvanceBoard: () => {
+              const advance = advanceSpaceExcavatorBoard({ session, client, eventId: effectiveActiveTimedEvent.eventId, triggerSource: 'space_excavator_advance_board' });
+              if (advance.ok) setRuntimeState(advance.record);
+              return { ok: advance.ok, ticketsRemaining: advance.ticketsRemaining, progress: advance.progress };
             },
           }
         : descriptor.config,

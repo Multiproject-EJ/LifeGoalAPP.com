@@ -63,3 +63,8 @@
   border-radius: 10px;
   padding: 10px;
 }
+
+.space-excavator__notice--success {
+  border-color: #22c55e;
+  background: rgba(20, 83, 45, 0.35);
+}
