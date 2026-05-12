@@ -71,9 +71,11 @@ import {
   applyRewardBarState,
   applyRollResult,
   applyPassiveDiceRegenTick,
+  advanceSpaceExcavatorBoard,
   applySpaceExcavatorDig,
   applyTimedEventTicketSpend,
   initSpaceExcavatorProgressForEvent,
+  SPACE_EXCAVATOR_TOTAL_BOARDS,
   syncCompletedStopsForIsland,
   applyTokenHopRewards,
   travelToNextIsland,
@@ -207,6 +209,8 @@ export const islandRunStateActionsTests: TestCase[] = [
       });
       const initialProgress = initialized.spaceExcavatorProgressByEvent['space_excavator:event-a'];
       assert(initialProgress, 'init should create progress for the Space Excavator event');
+      assertEqual(initialProgress.boardIndex, 0, 'Space Excavator should start on zero-based board index 0');
+      assertEqual(initialProgress.completedBoardCount, 0, 'Space Excavator should start with no completed boards');
 
       const secondInit = initSpaceExcavatorProgressForEvent({
         session,
@@ -246,6 +250,17 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(duplicateDig.ticketsRemaining, 1, 'duplicate tile dig should not spend another ticket');
       assertEqual(duplicateDig.record.minigameTicketsByEvent['space_excavator:event-a'], 1, 'duplicate dig should preserve ticket bucket');
       assertEqual(duplicateDig.record.spinTokens, 7, 'duplicate dig should not touch spinTokens');
+
+      const reopened = initSpaceExcavatorProgressForEvent({
+        session,
+        client: null,
+        eventId: 'space_excavator:event-a',
+      });
+      assertDeepEqual(
+        reopened.spaceExcavatorProgressByEvent['space_excavator:event-a'].dugTileIds,
+        [initialProgress.treasureTileIds[0]],
+        'partial board progress should persist and resume on reopen',
+      );
     },
   },
 
@@ -291,7 +306,7 @@ export const islandRunStateActionsTests: TestCase[] = [
   },
 
   {
-    name: 'Space Excavator completion semantic matches UI: board completes when all treasures are found',
+    name: 'Space Excavator completion marks board complete when all treasures are found',
     run: () => {
       resetAll();
       const session = makeSession();
@@ -331,8 +346,86 @@ export const islandRunStateActionsTests: TestCase[] = [
       }
 
       const progress = record.spaceExcavatorProgressByEvent['space_excavator:event-complete'];
-      assertEqual(progress.status, 'won', 'Space Excavator board should complete when all treasures are found');
+      assertEqual(progress.status, 'board_complete', 'Space Excavator board should complete when all treasures are found');
       assertEqual(progress.completedBoardCount, 1, 'completion should mark one completed board');
+      assertEqual(progress.boardIndex, 0, 'completed board should remain visible until the player advances');
+    },
+  },
+
+  {
+    name: 'Space Excavator board advancement persists next board without spending tickets',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        spinTokens: 11,
+        minigameTicketsByEvent: {
+          'space_excavator:event-advance': 10,
+          'space_excavator:event-other': 4,
+        },
+        spaceExcavatorProgressByEvent: {},
+      });
+
+      const initialized = initSpaceExcavatorProgressForEvent({
+        session,
+        client: null,
+        eventId: 'space_excavator:event-advance',
+      });
+      const initialProgress = initialized.spaceExcavatorProgressByEvent['space_excavator:event-advance'];
+      let record = initialized;
+      for (const tileId of initialProgress.treasureTileIds) {
+        record = applySpaceExcavatorDig({
+          session,
+          client: null,
+          eventId: 'space_excavator:event-advance',
+          tileId,
+        }).record;
+      }
+
+      const completedProgress = record.spaceExcavatorProgressByEvent['space_excavator:event-advance'];
+      assertEqual(completedProgress.status, 'board_complete', 'finding all treasures should mark board complete before advancing');
+      assertEqual(record.minigameTicketsByEvent['space_excavator:event-advance'], 5, 'treasure digs should spend one ticket each');
+
+      const advanced = advanceSpaceExcavatorBoard({
+        session,
+        client: null,
+        eventId: 'space_excavator:event-advance',
+      });
+
+      assertEqual(advanced.ok, true, 'advance should succeed from a board-complete state');
+      assertEqual(advanced.ticketsRemaining, 5, 'advancing should not spend event tickets');
+      assertEqual(advanced.record.minigameTicketsByEvent['space_excavator:event-advance'], 5, 'ticket bucket should remain unchanged on advance');
+      assertEqual(advanced.record.minigameTicketsByEvent['space_excavator:event-other'], 4, 'unrelated event tickets should remain untouched');
+      assertEqual(advanced.record.spinTokens, 11, 'advancing should not touch spinTokens');
+
+      const nextProgress = advanced.record.spaceExcavatorProgressByEvent['space_excavator:event-advance'];
+      assertEqual(nextProgress.boardIndex, 1, 'advance should move to board index 1');
+      assertEqual(nextProgress.completedBoardCount, 1, 'advance should preserve completed board count');
+      assertEqual(nextProgress.status, 'active', 'next board should be active');
+      assertDeepEqual(nextProgress.dugTileIds, [], 'next board should reset dug tiles');
+      assertDeepEqual(nextProgress.foundTreasureTileIds, [], 'next board should reset found treasures');
+      assert(
+        nextProgress.treasureTileIds.join(',') !== initialProgress.treasureTileIds.join(','),
+        'next board should have a new treasure layout',
+      );
+
+      const reopened = initSpaceExcavatorProgressForEvent({
+        session,
+        client: null,
+        eventId: 'space_excavator:event-advance',
+      });
+      assertEqual(
+        reopened.spaceExcavatorProgressByEvent['space_excavator:event-advance'].boardIndex,
+        1,
+        'reopen after board advancement should resume the advanced board',
+      );
+      assertEqual(
+        reopened.spaceExcavatorProgressByEvent['space_excavator:event-other'],
+        undefined,
+        'unrelated event progress should remain untouched',
+      );
+      assertEqual(SPACE_EXCAVATOR_TOTAL_BOARDS, 10, 'Space Excavator should use the documented placeholder board cap');
     },
   },
 
