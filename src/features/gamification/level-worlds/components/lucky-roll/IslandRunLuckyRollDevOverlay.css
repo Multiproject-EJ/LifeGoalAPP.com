@@ -55,6 +55,27 @@
   line-height: 1.45;
 }
 
+.island-run-lucky-roll-dev-overlay__intro,
+.island-run-lucky-roll-dev-overlay__completion {
+  border: 1px solid rgba(255, 226, 133, 0.28);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(255, 220, 120, 0.2), transparent 35%),
+    rgba(255, 255, 255, 0.07);
+  padding: 0.8rem 0.9rem;
+}
+
+.island-run-lucky-roll-dev-overlay__intro {
+  display: grid;
+  gap: 0.2rem;
+  color: rgba(236, 246, 255, 0.9);
+}
+
+.island-run-lucky-roll-dev-overlay__intro strong {
+  color: #ffe38c;
+  font-size: 1rem;
+}
+
 .island-run-lucky-roll-dev-overlay__header-actions {
   display: flex;
   gap: 0.5rem;
@@ -163,6 +184,55 @@
 
 .island-run-lucky-roll-dev-overlay__pending-row strong {
   color: #ffe38c;
+}
+
+.island-run-lucky-roll-dev-overlay__completion {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.island-run-lucky-roll-dev-overlay__completion h3,
+.island-run-lucky-roll-dev-overlay__completion p {
+  margin: 0;
+}
+
+.island-run-lucky-roll-dev-overlay__completion h3 {
+  font-size: 1.25rem;
+}
+
+.island-run-lucky-roll-dev-overlay__completion p {
+  color: rgba(230, 242, 255, 0.86);
+  line-height: 1.45;
+}
+
+.island-run-lucky-roll-dev-overlay__completion-eyebrow {
+  color: rgba(255, 228, 156, 0.82) !important;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.island-run-lucky-roll-dev-overlay__reward-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.island-run-lucky-roll-dev-overlay__reward-summary span {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(4, 12, 25, 0.3);
+  padding: 0.55rem;
+  color: rgba(232, 244, 255, 0.84);
+  font-size: 0.82rem;
+}
+
+.island-run-lucky-roll-dev-overlay__reward-summary strong {
+  display: block;
+  color: #ffe38c;
+  font-size: 1.05rem;
+  margin-top: 0.12rem;
 }
 
 .island-run-lucky-roll-dev-overlay__controls {
@@ -294,5 +364,9 @@
 
   .island-run-lucky-roll-dev-overlay__details-grid {
     grid-template-columns: 1fr;
+  }
+
+  .island-run-lucky-roll-dev-overlay__reward-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
