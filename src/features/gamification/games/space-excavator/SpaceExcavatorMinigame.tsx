@@ -50,8 +50,9 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   };
 
   const found = useMemo(() => tiles.filter((t) => t.dug && t.treasure).length, [tiles]);
-  const boardComplete = progress?.status === 'board_complete' || progress?.status === 'completed' || found >= treasureCount;
-  const canAdvanceBoard = progress?.status === 'board_complete';
+  const progressStatus = progress?.status ?? (found >= treasureCount ? 'board_complete' : 'active');
+  const boardComplete = progressStatus === 'board_complete' || progressStatus === 'completed';
+  const canAdvanceBoard = progressStatus === 'board_complete';
   const boardLabel = `Board ${Math.max(1, Math.floor((progress?.boardIndex ?? 0) + 1))}${totalBoards > 1 ? ` / ${totalBoards}` : ''}`;
 
   const sendOnce = (completed: boolean) => {
@@ -129,7 +130,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
 
       {boardComplete && (
         <div className="space-excavator__notice space-excavator__notice--success" role="status" aria-live="polite">
-          <p><strong>{progress?.status === 'completed' ? 'Excavation campaign cleared' : 'Board cleared'}</strong></p>
+          <p><strong>{progressStatus === 'completed' ? 'All boards cleared' : 'Board cleared'}</strong></p>
           <p>Treasures found {found}/{treasureCount}.</p>
           {canAdvanceBoard && (
             <div className="space-excavator__actions">

@@ -84,7 +84,7 @@ export interface AdvanceSpaceExcavatorBoardResult {
   progress: SpaceExcavatorProgressEntry | null;
 }
 
-export const SPACE_EXCAVATOR_TOTAL_BOARDS = 10; // Tuning placeholder while full event progression UX is deferred.
+export const SPACE_EXCAVATOR_TOTAL_BOARDS = 10; // Tuning placeholder until rewards/finale UX is added.
 
 function buildSpaceExcavatorProgress(eventId: string, boardIndex: number, nowMs: number, completedBoardCount = boardIndex): SpaceExcavatorProgressEntry {
   const boardSize = 5;
@@ -115,7 +115,11 @@ export function applySpaceExcavatorDig(options: { session: Session; client: Supa
   const progress = current.spaceExcavatorProgressByEvent?.[eventId] ?? null;
   const available = Math.max(0, Math.floor(current.minigameTicketsByEvent?.[eventId] ?? 0));
   const alreadyComplete = progress?.status === 'board_complete' || progress?.status === 'completed';
-  if (!progress || available < 1 || alreadyComplete) return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete: progress?.status === 'board_complete' || false, canAdvanceBoard: progress?.status === 'board_complete' && progress.boardIndex + 1 < SPACE_EXCAVATOR_TOTAL_BOARDS };
+  if (!progress || available < 1 || alreadyComplete) {
+    const boardComplete = progress?.status === 'board_complete';
+    const canAdvanceBoard = boardComplete && progress.boardIndex + 1 < SPACE_EXCAVATOR_TOTAL_BOARDS;
+    return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete, canAdvanceBoard };
+  }
   const normalizedTile = Math.max(0, Math.floor(tileId));
   const tileCount = progress.boardSize * progress.boardSize;
   if (normalizedTile >= tileCount || progress.dugTileIds.includes(normalizedTile)) return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete: false, canAdvanceBoard: false };
