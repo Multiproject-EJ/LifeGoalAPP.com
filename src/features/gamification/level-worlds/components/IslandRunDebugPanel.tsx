@@ -92,13 +92,21 @@ type DebugSection = {
 
 const POST_RARE_TREASURE_PATH_ISLANDS = [30, 60, 90, 120] as const;
 
-function sumLuckyRollRewards(
-  rewards: IslandRunLuckyRollRewardEntry[],
-  rewardType: IslandRunLuckyRollRewardEntry['rewardType'],
-): number {
-  return rewards
-    .filter((entry) => entry.rewardType === rewardType)
-    .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
+type TreasurePathRewardSummary = Record<'dice' | 'essence' | 'shards' | 'egg', number>;
+
+function summarizeTreasurePathRewards(rewards: IslandRunLuckyRollRewardEntry[]): TreasurePathRewardSummary {
+  const summary: TreasurePathRewardSummary = {
+    dice: 0,
+    essence: 0,
+    shards: 0,
+    egg: 0,
+  };
+  for (const entry of rewards) {
+    if (entry.rewardType === 'dice' || entry.rewardType === 'essence' || entry.rewardType === 'shards' || entry.rewardType === 'egg') {
+      summary[entry.rewardType] += Math.max(0, Math.floor(entry.amount));
+    }
+  }
+  return summary;
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -219,14 +227,8 @@ export function IslandRunDebugPanel({
     cycleIndex: postRareCycleIndex,
   }), [postRareCompletedIslandNumber, postRareCycleIndex, runtimeState]);
   const postRareSession = postRareState.luckyRollSession;
-  const postRarePendingDice = sumLuckyRollRewards(postRareSession?.pendingRewards ?? [], 'dice');
-  const postRarePendingEssence = sumLuckyRollRewards(postRareSession?.pendingRewards ?? [], 'essence');
-  const postRarePendingShards = sumLuckyRollRewards(postRareSession?.pendingRewards ?? [], 'shards');
-  const postRarePendingEggs = sumLuckyRollRewards(postRareSession?.pendingRewards ?? [], 'egg');
-  const postRareBankedDice = sumLuckyRollRewards(postRareSession?.bankedRewards ?? [], 'dice');
-  const postRareBankedEssence = sumLuckyRollRewards(postRareSession?.bankedRewards ?? [], 'essence');
-  const postRareBankedShards = sumLuckyRollRewards(postRareSession?.bankedRewards ?? [], 'shards');
-  const postRareBankedEggs = sumLuckyRollRewards(postRareSession?.bankedRewards ?? [], 'egg');
+  const postRarePendingRewards = summarizeTreasurePathRewards(postRareSession?.pendingRewards ?? []);
+  const postRareBankedRewards = summarizeTreasurePathRewards(postRareSession?.bankedRewards ?? []);
   const canStartPostRareTreasurePath = postRareState.status === 'available_to_start'
     || postRareState.status === 'active'
     || postRareState.status === 'completed_ready_to_collect'
@@ -764,13 +766,13 @@ export function IslandRunDebugPanel({
                       <tr>
                         <td className="island-run-debug-panel__label">Pending rewards</td>
                         <td className="island-run-debug-panel__value">
-                          +{postRarePendingDice} dice, +{postRarePendingEssence} essence, +{postRarePendingShards} shards, +{postRarePendingEggs} eggs
+                          +{postRarePendingRewards.dice} dice, +{postRarePendingRewards.essence} essence, +{postRarePendingRewards.shards} shards, +{postRarePendingRewards.egg} eggs
                         </td>
                       </tr>
                       <tr>
                         <td className="island-run-debug-panel__label">Banked rewards</td>
                         <td className="island-run-debug-panel__value">
-                          +{postRareBankedDice} dice, +{postRareBankedEssence} essence, +{postRareBankedShards} shards, +{postRareBankedEggs} eggs
+                          +{postRareBankedRewards.dice} dice, +{postRareBankedRewards.essence} essence, +{postRareBankedRewards.shards} shards, +{postRareBankedRewards.egg} eggs
                         </td>
                       </tr>
                       <tr>
