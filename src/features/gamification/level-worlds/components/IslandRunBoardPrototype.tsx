@@ -124,6 +124,7 @@ import {
   applyTimedEventTicketSpend,
   applySpaceExcavatorDig,
   initSpaceExcavatorProgressForEvent,
+  ISLAND_RUN_MAX_ISLAND,
   travelToNextIsland,
 } from '../services/islandRunStateActions';
 import {
@@ -4012,7 +4013,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
 
     const nextIsland = islandNumber + 1;
-    setTravelOverlayDestinationIsland(nextIsland > 120 ? 1 : nextIsland);
+    setTravelOverlayDestinationIsland(nextIsland > ISLAND_RUN_MAX_ISLAND ? 1 : nextIsland);
     setTravelOverlayMode('advance');
     setShowTravelOverlay(true);
     setLandingText('Island expired. Next island unlocked — start it when you are ready.');

@@ -237,7 +237,10 @@ export function IslandRunLuckyRollDevOverlay({
 
   const handlePrimaryAction = () => {
     if (!luckyRollSession) {
-      if (usesPostRareCollectTravel) return;
+      if (usesPostRareCollectTravel) {
+        setActionMessage('Treasure Path is preparing. Please try again in a moment.');
+        return;
+      }
       handleStartOrResume();
       return;
     }
