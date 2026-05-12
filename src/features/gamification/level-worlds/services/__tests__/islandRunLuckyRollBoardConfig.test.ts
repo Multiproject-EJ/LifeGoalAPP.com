@@ -3,6 +3,7 @@ import {
   ISLAND_RUN_LUCKY_ROLL_FINISH_TILE,
   ISLAND_RUN_LUCKY_ROLL_MAX_DICE_REWARD,
   canResolveIslandRunLuckyRollBoardForPostRareIsland,
+  canResolveIslandRunLuckyRollBoardForTreasurePathMilestoneIsland,
   getIslandRunLuckyRollBoardConfig,
   getIslandRunLuckyRollBoardSize,
   getIslandRunLuckyRollFinishTile,
@@ -174,14 +175,31 @@ export const islandRunLuckyRollBoardConfigTests: TestCase[] = [
       for (const islandNumber of [5, 20, 30, 60, 90, 120]) {
         assertEqual(isTreasurePathMilestoneIsland(islandNumber), true, `Island ${islandNumber} should be Treasure Path eligible`);
         assert(getTreasurePathMilestoneMetadata(islandNumber), `Island ${islandNumber} should have Treasure Path metadata`);
-        assertEqual(canResolveIslandRunLuckyRollBoardForPostRareIsland(islandNumber), true, `Island ${islandNumber} should resolve Lucky Roll board config`);
+        assertEqual(
+          canResolveIslandRunLuckyRollBoardForTreasurePathMilestoneIsland(islandNumber),
+          true,
+          `Island ${islandNumber} should resolve Lucky Roll board config`,
+        );
       }
       for (const islandNumber of [30, 60, 90, 120]) {
         assertEqual(isPostRareLuckyRollIsland(islandNumber), true, `Island ${islandNumber} should remain post-rare Lucky Roll eligible`);
         assert(getPostRareLuckyRollMetadata(islandNumber), `Island ${islandNumber} should preserve post-rare metadata`);
       }
-      assertEqual(canResolveIslandRunLuckyRollBoardForPostRareIsland(10), false, 'Island 10 should not resolve as Treasure Path eligible');
-      assertEqual(canResolveIslandRunLuckyRollBoardForPostRareIsland(12), false, 'Seasonal island 12 should not resolve as Treasure Path eligible');
+      assertEqual(
+        canResolveIslandRunLuckyRollBoardForTreasurePathMilestoneIsland(10),
+        false,
+        'Island 10 should not resolve as Treasure Path eligible',
+      );
+      assertEqual(
+        canResolveIslandRunLuckyRollBoardForTreasurePathMilestoneIsland(12),
+        false,
+        'Seasonal island 12 should not resolve as Treasure Path eligible',
+      );
+      assertEqual(
+        canResolveIslandRunLuckyRollBoardForPostRareIsland(30),
+        true,
+        'Compatibility helper should still resolve rare Treasure Path island 30',
+      );
     },
   },
 ];

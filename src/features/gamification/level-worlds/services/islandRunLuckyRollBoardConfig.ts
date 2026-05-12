@@ -256,6 +256,10 @@ export function resolveIslandRunLuckyRollMove(
   };
 }
 
-export function canResolveIslandRunLuckyRollBoardForPostRareIsland(islandNumber: number): boolean {
+export function canResolveIslandRunLuckyRollBoardForTreasurePathMilestoneIsland(islandNumber: number): boolean {
   return Boolean(getTreasurePathMilestoneMetadata(islandNumber) && getIslandRunLuckyRollBoardConfig({ islandNumber }).tiles.length === ISLAND_RUN_LUCKY_ROLL_BOARD_SIZE);
+}
+
+export function canResolveIslandRunLuckyRollBoardForPostRareIsland(islandNumber: number): boolean {
+  return canResolveIslandRunLuckyRollBoardForTreasurePathMilestoneIsland(islandNumber);
 }
