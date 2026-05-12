@@ -19,6 +19,12 @@ function requireIncludes(label, content, needle) {
   }
 }
 
+function requireNotMatches(label, content, pattern, message) {
+  if (pattern.test(content)) {
+    failures.push(`${label}: ${message}`);
+  }
+}
+
 requireIncludes('overlay', overlay, 'startIslandRunLuckyRoll');
 requireIncludes('overlay', overlay, 'advanceIslandRunLuckyRoll');
 requireIncludes('overlay', overlay, 'bankIslandRunLuckyRollRewards');
@@ -47,6 +53,13 @@ for (const pattern of forbiddenOverlayPatterns) {
     failures.push(`overlay: forbidden legacy Lucky Roll/state pattern found: ${pattern}`);
   }
 }
+
+requireNotMatches(
+  'overlay',
+  overlay,
+  /\bLuckyRollBoard\b/,
+  'forbidden legacy LuckyRollBoard component reference found',
+);
 
 if (failures.length > 0) {
   console.error('Island Run Lucky Roll dev overlay checks failed:');

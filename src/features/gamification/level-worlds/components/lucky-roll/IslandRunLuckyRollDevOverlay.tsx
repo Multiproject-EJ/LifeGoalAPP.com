@@ -38,13 +38,7 @@ function normalizeIslandNumber(targetIslandNumber: number): number {
   return Number.isFinite(targetIslandNumber) ? Math.max(1, Math.floor(targetIslandNumber)) : 1;
 }
 
-function sumRewards(rewards: IslandRunLuckyRollRewardEntry[], rewardType: 'dice' | 'essence'): number {
-  return rewards
-    .filter((entry) => entry.rewardType === rewardType)
-    .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
-}
-
-function sumRewardTotal(rewards: IslandRunLuckyRollRewardEntry[], rewardType: IslandRunLuckyRollRewardEntry['rewardType']): number {
+function sumRewards(rewards: IslandRunLuckyRollRewardEntry[], rewardType: IslandRunLuckyRollRewardEntry['rewardType']): number {
   return rewards
     .filter((entry) => entry.rewardType === rewardType)
     .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
@@ -129,22 +123,23 @@ export function IslandRunLuckyRollDevOverlay({
   const bankedRewards = luckyRollSession?.bankedRewards ?? [];
   const pendingDice = sumRewards(pendingRewards, 'dice');
   const pendingEssence = sumRewards(pendingRewards, 'essence');
-  const pendingShards = sumRewardTotal(pendingRewards, 'shards');
-  const pendingEggs = sumRewardTotal(pendingRewards, 'egg');
+  const pendingShards = sumRewards(pendingRewards, 'shards');
+  const pendingEggs = sumRewards(pendingRewards, 'egg');
   const bankedDice = sumRewards(luckyRollSession?.bankedRewards ?? [], 'dice');
   const bankedEssence = sumRewards(luckyRollSession?.bankedRewards ?? [], 'essence');
-  const bankedShards = sumRewardTotal(bankedRewards, 'shards');
-  const bankedEggs = sumRewardTotal(bankedRewards, 'egg');
+  const bankedShards = sumRewards(bankedRewards, 'shards');
+  const bankedEggs = sumRewards(bankedRewards, 'egg');
   const boardConfig = useMemo(() => getIslandRunLuckyRollBoardConfig({
     islandNumber: normalizedTargetIslandNumber,
     cycleIndex: runtimeState.cycleIndex,
   }), [normalizedTargetIslandNumber, runtimeState.cycleIndex]);
-  const boardFields: readonly IslandRunLuckyRollTileConfig[] = useMemo(() => boardConfig.tiles.map((field) => (
-    getIslandRunLuckyRollTileConfig(field.tileId, {
+  const boardFields: readonly IslandRunLuckyRollTileConfig[] = useMemo(() => boardConfig.tiles.flatMap((field) => {
+    const configField = getIslandRunLuckyRollTileConfig(field.tileId, {
       islandNumber: normalizedTargetIslandNumber,
       cycleIndex: runtimeState.cycleIndex,
-    }) ?? field
-  )), [boardConfig.tiles, normalizedTargetIslandNumber, runtimeState.cycleIndex]);
+    });
+    return configField ? [configField] : [];
+  }), [boardConfig.tiles, normalizedTargetIslandNumber, runtimeState.cycleIndex]);
   const claimedTileIds = useMemo(() => new Set(luckyRollSession?.claimedTileIds ?? []), [luckyRollSession?.claimedTileIds]);
   const nextDevRoll = resolveDevRoll(luckyRollSession);
   const canAdvance = luckyRollSession?.status === 'active';
