@@ -7170,7 +7170,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const rewardSummary = `+${result.diceAwarded} dice, +${result.essenceAwarded} essence, +${result.shardsAwarded} shards`;
     const message = result.status === 'banked_and_traveled'
       ? `Treasure collected: ${rewardSummary}. Your journey continues.`
-      : `Treasure Path is ${result.status.replaceAll('_', ' ')}.`;
+      : `Treasure Path is ${result.status.replace(/_/g, ' ')}.`;
     setLandingText(message);
     return message;
   }, [applyPostRareTreasurePathCollectTravelRecord, client, session]);
