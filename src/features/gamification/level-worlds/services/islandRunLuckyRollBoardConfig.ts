@@ -182,7 +182,7 @@ export function getTreasurePathRewardTierForIsland(islandNumber: number | undefi
   return getTreasurePathMilestoneMetadata(normalizeIslandNumber(islandNumber))?.tier ?? 'rare';
 }
 
-function getTreasurePathMilestoneTierForIsland(islandNumber: number | undefined): IslandRunTreasurePathMilestoneTier | undefined {
+function getOptionalTreasurePathMilestoneTier(islandNumber: number | undefined): IslandRunTreasurePathMilestoneTier | undefined {
   return getTreasurePathMilestoneMetadata(normalizeIslandNumber(islandNumber))?.tier;
 }
 
@@ -234,7 +234,7 @@ export function getIslandRunLuckyRollFinishTile(): number {
 export function getIslandRunLuckyRollBoardConfig(
   options: IslandRunLuckyRollBoardConfigOptions = {},
 ): IslandRunLuckyRollBoardConfig {
-  const milestoneTier = getTreasurePathMilestoneTierForIsland(options.islandNumber);
+  const milestoneTier = getOptionalTreasurePathMilestoneTier(options.islandNumber);
   return {
     boardSize: ISLAND_RUN_LUCKY_ROLL_BOARD_SIZE,
     finishTileId: ISLAND_RUN_LUCKY_ROLL_FINISH_TILE,
