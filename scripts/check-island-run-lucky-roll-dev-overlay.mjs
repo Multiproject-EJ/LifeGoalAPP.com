@@ -22,16 +22,18 @@ function requireIncludes(label, content, needle) {
 requireIncludes('overlay', overlay, 'startIslandRunLuckyRoll');
 requireIncludes('overlay', overlay, 'advanceIslandRunLuckyRoll');
 requireIncludes('overlay', overlay, 'bankIslandRunLuckyRollRewards');
-requireIncludes('overlay', overlay, "source: 'dev_lucky_roll_overlay'");
+requireIncludes('overlay', overlay, 'getIslandRunLuckyRollBoardConfig');
+requireIncludes('overlay', overlay, 'getIslandRunLuckyRollTileConfig');
+requireIncludes('overlay', overlay, "mode: 'production_board'");
+requireIncludes('overlay', overlay, 'Treasure Path');
 requireIncludes('overlay', overlay, 'if (!isDevModeEnabled)');
 requireIncludes('board', board, 'showDevLuckyRollOverlay && isDevModeEnabled');
 requireIncludes('board', board, 'onOpenLuckyRollDevOverlay={handleOpenDevLuckyRollOverlay}');
 requireIncludes('board', board, 'showLuckyRollDevLauncher={isDevModeEnabled}');
-requireIncludes('debug panel', debugPanel, 'Open Lucky Roll overlay');
+requireIncludes('debug panel', debugPanel, 'Open Treasure Path overlay');
 
 const forbiddenOverlayPatterns = [
   'daily-treats/LuckyRollBoard',
-  'LuckyRollBoard',
   'gameRewards',
   'luckyRollAccess',
   'gol_lucky_roll_state',

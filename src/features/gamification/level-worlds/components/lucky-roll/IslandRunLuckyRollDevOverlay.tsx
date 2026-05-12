@@ -8,14 +8,19 @@ import {
 } from '../../services/islandRunGameStateStore';
 import type { IslandRunRuntimeState } from '../../services/islandRunRuntimeState';
 import {
+  getIslandRunLuckyRollBoardConfig,
+  getIslandRunLuckyRollTileConfig,
+  type IslandRunLuckyRollTileConfig,
+  type IslandRunLuckyRollTileKind,
+} from '../../services/islandRunLuckyRollBoardConfig';
+import {
   advanceIslandRunLuckyRoll,
   bankIslandRunLuckyRollRewards,
   startIslandRunLuckyRoll,
 } from '../../services/islandRunLuckyRollAction';
 import './IslandRunLuckyRollDevOverlay.css';
 
-const DEV_LUCKY_ROLL_BOARD_SIZE = 30;
-const DEV_LUCKY_ROLL_ROLL_SEQUENCE = [3, 4, 2, 5, 1, 6] as const;
+const DEV_TREASURE_PATH_ROLL_SEQUENCE = [3, 4, 2, 5, 1, 6] as const;
 
 type DevLuckyRollActionStatus = 'idle' | 'pending';
 
@@ -39,28 +44,69 @@ function sumRewards(rewards: IslandRunLuckyRollRewardEntry[], rewardType: 'dice'
     .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
 }
 
+function sumRewardTotal(rewards: IslandRunLuckyRollRewardEntry[], rewardType: IslandRunLuckyRollRewardEntry['rewardType']): number {
+  return rewards
+    .filter((entry) => entry.rewardType === rewardType)
+    .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
+}
+
+function getTreasurePathFieldIcon(kind: IslandRunLuckyRollTileKind): string {
+  switch (kind) {
+    case 'essence':
+      return '✨';
+    case 'dice':
+      return '🎲';
+    case 'shards':
+      return '💎';
+    case 'egg':
+      return '🥚';
+    case 'bonus_detour':
+      return '↩️';
+    case 'finish':
+      return '🏆';
+    case 'empty':
+    default:
+      return '🌿';
+  }
+}
+
+function getTreasurePathFieldLabel(kind: IslandRunLuckyRollTileKind): string {
+  switch (kind) {
+    case 'essence':
+      return 'Essence field';
+    case 'dice':
+      return 'Dice field';
+    case 'shards':
+      return 'Shard field';
+    case 'egg':
+      return 'Treasure Egg field';
+    case 'bonus_detour':
+      return 'Bonus path field';
+    case 'finish':
+      return 'Treasure gate';
+    case 'empty':
+    default:
+      return 'Cozy field';
+  }
+}
+
 function formatReward(entry: IslandRunLuckyRollRewardEntry): string {
-  const icon = entry.rewardType === 'dice' ? '🎲' : entry.rewardType === 'essence' ? '✨' : '🎁';
-  return `${icon} +${entry.amount} ${entry.rewardType} · tile ${entry.tileId}`;
+  const icon = entry.rewardType === 'dice'
+    ? '🎲'
+    : entry.rewardType === 'essence'
+      ? '✨'
+      : entry.rewardType === 'shards'
+        ? '💎'
+        : entry.rewardType === 'egg'
+          ? '🥚'
+          : '🎁';
+  const label = entry.rewardType === 'egg' ? 'Treasure Egg' : entry.rewardType;
+  return `${icon} +${entry.amount} ${label} · field ${entry.tileId}`;
 }
 
-function getTileRewardDescription(tileId: number, rewardType: 'dice' | 'essence', isFinish: boolean): string {
-  if (isFinish) return `Tile ${tileId} · finish`;
-  return `Tile ${tileId} · ${rewardType} test reward`;
-}
-
-function resolveDevRewardInput(luckyRollSession: IslandRunLuckyRollSession | null): {
-  roll: number;
-  rewardType: 'dice' | 'essence';
-  amount: number;
-} {
+function resolveDevRoll(luckyRollSession: IslandRunLuckyRollSession | null): number {
   const rewardIndex = luckyRollSession?.rollsUsed ?? 0;
-  const rewardType = rewardIndex % 2 === 0 ? 'dice' : 'essence';
-  return {
-    roll: DEV_LUCKY_ROLL_ROLL_SEQUENCE[rewardIndex % DEV_LUCKY_ROLL_ROLL_SEQUENCE.length],
-    rewardType,
-    amount: rewardType === 'dice' ? 2 : 25,
-  };
+  return DEV_TREASURE_PATH_ROLL_SEQUENCE[rewardIndex % DEV_TREASURE_PATH_ROLL_SEQUENCE.length];
 }
 
 export function IslandRunLuckyRollDevOverlay({
@@ -74,16 +120,33 @@ export function IslandRunLuckyRollDevOverlay({
 }: IslandRunLuckyRollDevOverlayProps) {
   const [actionStatus, setActionStatus] = useState<DevLuckyRollActionStatus>('idle');
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
   const normalizedTargetIslandNumber = normalizeIslandNumber(targetIslandNumber ?? runtimeState.currentIslandNumber);
   const sessionKey = getIslandRunLuckyRollSessionKey(runtimeState.cycleIndex, normalizedTargetIslandNumber);
   const luckyRollSession = runtimeState.luckyRollSessionsByMilestone[sessionKey] ?? null;
   const isActionPending = actionStatus === 'pending';
-  const pendingDice = sumRewards(luckyRollSession?.pendingRewards ?? [], 'dice');
-  const pendingEssence = sumRewards(luckyRollSession?.pendingRewards ?? [], 'essence');
+  const pendingRewards = luckyRollSession?.pendingRewards ?? [];
+  const bankedRewards = luckyRollSession?.bankedRewards ?? [];
+  const pendingDice = sumRewards(pendingRewards, 'dice');
+  const pendingEssence = sumRewards(pendingRewards, 'essence');
+  const pendingShards = sumRewardTotal(pendingRewards, 'shards');
+  const pendingEggs = sumRewardTotal(pendingRewards, 'egg');
   const bankedDice = sumRewards(luckyRollSession?.bankedRewards ?? [], 'dice');
   const bankedEssence = sumRewards(luckyRollSession?.bankedRewards ?? [], 'essence');
+  const bankedShards = sumRewardTotal(bankedRewards, 'shards');
+  const bankedEggs = sumRewardTotal(bankedRewards, 'egg');
+  const boardConfig = useMemo(() => getIslandRunLuckyRollBoardConfig({
+    islandNumber: normalizedTargetIslandNumber,
+    cycleIndex: runtimeState.cycleIndex,
+  }), [normalizedTargetIslandNumber, runtimeState.cycleIndex]);
+  const boardFields: readonly IslandRunLuckyRollTileConfig[] = useMemo(() => boardConfig.tiles.map((field) => (
+    getIslandRunLuckyRollTileConfig(field.tileId, {
+      islandNumber: normalizedTargetIslandNumber,
+      cycleIndex: runtimeState.cycleIndex,
+    }) ?? field
+  )), [boardConfig.tiles, normalizedTargetIslandNumber, runtimeState.cycleIndex]);
   const claimedTileIds = useMemo(() => new Set(luckyRollSession?.claimedTileIds ?? []), [luckyRollSession?.claimedTileIds]);
-  const nextDevReward = resolveDevRewardInput(luckyRollSession);
+  const nextDevRoll = resolveDevRoll(luckyRollSession);
   const canAdvance = luckyRollSession?.status === 'active';
   const canBank = Boolean(
     luckyRollSession
@@ -103,7 +166,7 @@ export function IslandRunLuckyRollDevOverlay({
     try {
       setActionMessage(await action());
     } catch (err) {
-      setActionMessage(`Lucky Roll overlay action failed: ${err instanceof Error ? err.message : String(err)}`);
+      setActionMessage(`Treasure Path action failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setActionStatus('idle');
     }
@@ -111,7 +174,7 @@ export function IslandRunLuckyRollDevOverlay({
 
   const handleStartOrResume = () => runAction(async () => {
     if (luckyRollSession) {
-      return `Resuming canonical Lucky Roll session ${sessionKey}.`;
+      return `Treasure Path is ready for this session.`;
     }
     const result = await startIslandRunLuckyRoll({
       session,
@@ -122,8 +185,8 @@ export function IslandRunLuckyRollDevOverlay({
     });
     onRuntimeStateChange(result.record);
     return result.status === 'started'
-      ? `Started canonical Lucky Roll for island ${normalizedTargetIslandNumber}.`
-      : `Resumed existing Lucky Roll for island ${normalizedTargetIslandNumber}.`;
+      ? `Treasure Path is ready.`
+      : `Treasure Path is already ready.`;
   });
 
   const handleAdvance = () => runAction(async () => {
@@ -132,23 +195,18 @@ export function IslandRunLuckyRollDevOverlay({
       client,
       cycleIndex: runtimeState.cycleIndex,
       targetIslandNumber: normalizedTargetIslandNumber,
-      roll: nextDevReward.roll,
-      boardSize: DEV_LUCKY_ROLL_BOARD_SIZE,
-      reward: {
-        rewardType: nextDevReward.rewardType,
-        amount: nextDevReward.amount,
-        metadata: { source: 'dev_lucky_roll_overlay' },
-      },
+      roll: nextDevRoll,
+      mode: 'production_board',
       triggerSource: 'dev_lucky_roll_overlay_advance',
     });
     onRuntimeStateChange(result.record);
     if (!result.luckyRollSession) {
-      return `Advance skipped: ${result.status}. Start a session first.`;
+      return `Roll skipped: ${result.status}. Start Treasure Path first.`;
     }
     const rewardLabel = result.rewardAdded
-      ? ` Pending +${nextDevReward.amount} ${nextDevReward.rewardType}.`
-      : ' Tile was already claimed; no duplicate reward added.';
-    return `Rolled ${result.roll} to tile ${result.landedTileId ?? '—'} (${result.status}).${rewardLabel}`;
+      ? ' New reward added.'
+      : ' This field was already collected.';
+    return `Rolled ${result.roll} to field ${result.landedTileId ?? '—'} (${result.status}).${rewardLabel}`;
   });
 
   const handleBank = () => runAction(async () => {
@@ -160,8 +218,36 @@ export function IslandRunLuckyRollDevOverlay({
       triggerSource: 'dev_lucky_roll_overlay_bank',
     });
     onRuntimeStateChange(result.record);
-    return `Bank ${result.status}: +${result.diceAwarded} dice, +${result.essenceAwarded} essence.`;
+    const eggsAwarded = result.rewardsBanked
+      .filter((entry) => entry.rewardType === 'egg')
+      .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
+    return `Treasure collected (${result.status}): 🎲 +${result.diceAwarded}, ✨ +${result.essenceAwarded}, 💎 +${result.shardsAwarded}, 🥚 +${eggsAwarded}.`;
   });
+
+  const handlePrimaryAction = () => {
+    if (!luckyRollSession) {
+      handleStartOrResume();
+      return;
+    }
+    if (canAdvance) {
+      handleAdvance();
+      return;
+    }
+    if (canBank) {
+      handleBank();
+    }
+  };
+
+  const primaryActionLabel = !luckyRollSession
+    ? 'Start Treasure Path'
+    : canAdvance
+      ? 'Roll'
+      : canBank
+        ? 'Collect treasure'
+        : luckyRollSession.status === 'banked'
+          ? 'Treasure collected'
+          : 'Treasure Path paused';
+  const isPrimaryActionDisabled = isActionPending || (!canAdvance && !canBank && Boolean(luckyRollSession));
 
   return (
     <div className="island-run-lucky-roll-dev-overlay" role="presentation">
@@ -169,121 +255,155 @@ export function IslandRunLuckyRollDevOverlay({
         className="island-run-lucky-roll-dev-overlay__card"
         role="dialog"
         aria-modal="true"
-        aria-label="Dev Lucky Roll overlay"
+        aria-label="Dev Treasure Path overlay"
       >
         <header className="island-run-lucky-roll-dev-overlay__header">
           <div>
-            <p className="island-run-lucky-roll-dev-overlay__eyebrow">DEV ONLY · Canonical Island Run</p>
-            <h2 className="island-run-lucky-roll-dev-overlay__title">🍀 Lucky Roll reward path</h2>
+            <p className="island-run-lucky-roll-dev-overlay__eyebrow">DEV ONLY</p>
+            <h2 className="island-run-lucky-roll-dev-overlay__title">✨ Treasure Path</h2>
             <p className="island-run-lucky-roll-dev-overlay__subtitle">
-              Start or resume a test session for Island {normalizedTargetIslandNumber}. Rewards bank into canonical dice and essence only.
+              Roll for free across glowing treasure fields.
+              Reach the treasure gate to collect everything you found.
             </p>
           </div>
-          <button
-            type="button"
-            className="island-run-lucky-roll-dev-overlay__close"
-            onClick={onClose}
-            aria-label="Close Lucky Roll dev overlay"
-          >
-            ×
-          </button>
+          <div className="island-run-lucky-roll-dev-overlay__header-actions">
+            <button
+              type="button"
+              className="island-run-lucky-roll-dev-overlay__info-button"
+              onClick={() => setShowDetails(true)}
+              aria-label="Open Treasure Path details"
+            >
+              ?
+            </button>
+            <button
+              type="button"
+              className="island-run-lucky-roll-dev-overlay__close"
+              onClick={onClose}
+              aria-label="Close Treasure Path dev overlay"
+            >
+              ×
+            </button>
+          </div>
         </header>
 
-        <div className="island-run-lucky-roll-dev-overlay__summary-grid">
-          <div className="island-run-lucky-roll-dev-overlay__stat">
-            <span>Status</span>
-            <strong>{luckyRollSession?.status ?? 'none'}</strong>
-          </div>
-          <div className="island-run-lucky-roll-dev-overlay__stat">
-            <span>Position</span>
-            <strong>{luckyRollSession ? `${luckyRollSession.position}/${DEV_LUCKY_ROLL_BOARD_SIZE - 1}` : '—'}</strong>
-          </div>
-          <div className="island-run-lucky-roll-dev-overlay__stat">
-            <span>Rolls used</span>
-            <strong>{luckyRollSession?.rollsUsed ?? 0}</strong>
-          </div>
-          <div className="island-run-lucky-roll-dev-overlay__stat">
-            <span>Claimed tiles</span>
-            <strong>{luckyRollSession?.claimedTileIds.length ?? 0}</strong>
-          </div>
-          <div className="island-run-lucky-roll-dev-overlay__stat">
-            <span>Canonical dice</span>
-            <strong>{runtimeState.dicePool}</strong>
-          </div>
-          <div className="island-run-lucky-roll-dev-overlay__stat">
-            <span>Canonical essence</span>
-            <strong>{runtimeState.essence}</strong>
-          </div>
-        </div>
-
-        <div className="island-run-lucky-roll-dev-overlay__path" aria-label="Lucky Roll reward path">
-          {Array.from({ length: DEV_LUCKY_ROLL_BOARD_SIZE }, (_, tileId) => {
-            const isCurrent = luckyRollSession?.position === tileId;
-            const isClaimed = claimedTileIds.has(tileId);
-            const isFinish = tileId === DEV_LUCKY_ROLL_BOARD_SIZE - 1;
-            const rewardType = tileId % 2 === 0 ? 'dice' : 'essence';
+        <div className="island-run-lucky-roll-dev-overlay__path" aria-label="Treasure Path field board">
+          {boardFields.map((field) => {
+            const isCurrent = luckyRollSession?.position === field.tileId;
+            const isClaimed = claimedTileIds.has(field.tileId);
+            const isFinish = field.tileId === boardConfig.finishTileId || field.kind === 'finish';
+            const fieldLabel = getTreasurePathFieldLabel(field.kind);
             return (
               <div
-                key={tileId}
+                key={field.tileId}
                 className={[
                   'island-run-lucky-roll-dev-overlay__tile',
+                  `island-run-lucky-roll-dev-overlay__tile--${field.kind}`,
                   isCurrent ? 'island-run-lucky-roll-dev-overlay__tile--current' : '',
                   isClaimed ? 'island-run-lucky-roll-dev-overlay__tile--claimed' : '',
                   isFinish ? 'island-run-lucky-roll-dev-overlay__tile--finish' : '',
                 ].filter(Boolean).join(' ')}
-                title={getTileRewardDescription(tileId, rewardType, isFinish)}
+                title={`Field ${field.tileId} · ${fieldLabel}`}
               >
-                <span>{isFinish ? '🏁' : rewardType === 'dice' ? '🎲' : '✨'}</span>
-                <small>{tileId}</small>
+                <span>{getTreasurePathFieldIcon(field.kind)}</span>
+                <small>{field.tileId}</small>
               </div>
             );
           })}
         </div>
 
-        <div className="island-run-lucky-roll-dev-overlay__banks">
-          <section>
-            <h3>Pending rewards</h3>
-            <p>🎲 +{pendingDice} dice · ✨ +{pendingEssence} essence</p>
-            <ul>
-              {(luckyRollSession?.pendingRewards ?? []).map((entry) => (
-                <li key={entry.rewardId}>{formatReward(entry)}</li>
-              ))}
-              {(!luckyRollSession || luckyRollSession.pendingRewards.length === 0) && <li>No pending rewards yet.</li>}
-            </ul>
-          </section>
-          <section>
-            <h3>Banked rewards</h3>
-            <p>🎲 +{bankedDice} dice · ✨ +{bankedEssence} essence</p>
-            <ul>
-              {(luckyRollSession?.bankedRewards ?? []).map((entry) => (
-                <li key={entry.rewardId}>{formatReward(entry)}</li>
-              ))}
-              {(!luckyRollSession || luckyRollSession.bankedRewards.length === 0) && <li>No banked rewards yet.</li>}
-            </ul>
-          </section>
+        <div className="island-run-lucky-roll-dev-overlay__pending-row" aria-label="Pending Treasure Path rewards">
+          <span>🎲 Dice <strong>{pendingDice}</strong></span>
+          <span>✨ Essence <strong>{pendingEssence}</strong></span>
+          <span>💎 Shards <strong>{pendingShards}</strong></span>
+          <span>🥚 Treasure Eggs <strong>{pendingEggs}</strong></span>
         </div>
 
         <footer className="island-run-lucky-roll-dev-overlay__controls">
-          <button type="button" onClick={handleStartOrResume} disabled={isActionPending}>
-            {luckyRollSession ? 'Resume session' : 'Start session'}
-          </button>
-          <button type="button" onClick={handleAdvance} disabled={isActionPending || !canAdvance}>
-            Roll / advance · next {nextDevReward.roll}
-          </button>
-          <button type="button" onClick={handleBank} disabled={isActionPending || !canBank}>
-            Bank rewards
-          </button>
-          <button type="button" onClick={onClose} disabled={isActionPending}>
-            Close
+          <button
+            type="button"
+            className="island-run-lucky-roll-dev-overlay__primary-button"
+            onClick={handlePrimaryAction}
+            disabled={isPrimaryActionDisabled}
+          >
+            {isActionPending ? 'Working…' : primaryActionLabel}
           </button>
         </footer>
 
-        {actionMessage && (
-          <div className="island-run-lucky-roll-dev-overlay__message" role="status">
-            {actionMessage}
+        {showDetails && (
+          <div className="island-run-lucky-roll-dev-overlay__details-backdrop" role="presentation">
+            <div
+              className="island-run-lucky-roll-dev-overlay__details"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Treasure Path details"
+            >
+              <header>
+                <div>
+                  <p className="island-run-lucky-roll-dev-overlay__eyebrow">DEV DETAILS</p>
+                  <h3>Treasure Path details</h3>
+                </div>
+                <button type="button" onClick={() => setShowDetails(false)} aria-label="Close Treasure Path details">×</button>
+              </header>
+              <dl className="island-run-lucky-roll-dev-overlay__details-grid">
+                <div>
+                  <dt>Session key</dt>
+                  <dd>{sessionKey}</dd>
+                </div>
+                <div>
+                  <dt>Status</dt>
+                  <dd>{luckyRollSession?.status ?? 'none'}</dd>
+                </div>
+                <div>
+                  <dt>Run id</dt>
+                  <dd>{luckyRollSession?.runId ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt>Current field</dt>
+                  <dd>{luckyRollSession ? `${luckyRollSession.position}/${boardConfig.finishTileId}` : '—'}</dd>
+                </div>
+                <div>
+                  <dt>Rolls used</dt>
+                  <dd>{luckyRollSession?.rollsUsed ?? 0}</dd>
+                </div>
+                <div>
+                  <dt>Next dev roll</dt>
+                  <dd>{nextDevRoll}</dd>
+                </div>
+                <div>
+                  <dt>Claimed field ids</dt>
+                  <dd>{luckyRollSession?.claimedTileIds.join(', ') || '—'}</dd>
+                </div>
+                <div>
+                  <dt>Canonical dice / essence / shards</dt>
+                  <dd>{runtimeState.dicePool} / {runtimeState.essence} / {runtimeState.shards}</dd>
+                </div>
+                <div>
+                  <dt>Stored rewards</dt>
+                  <dd>🎲 {bankedDice} · ✨ {bankedEssence} · 💎 {bankedShards} · 🥚 {bankedEggs}</dd>
+                </div>
+              </dl>
+              <section className="island-run-lucky-roll-dev-overlay__details-section">
+                <h4>Pending rewards</h4>
+                <ul>
+                  {pendingRewards.map((entry) => <li key={entry.rewardId}>{formatReward(entry)}</li>)}
+                  {pendingRewards.length === 0 && <li>No pending rewards yet.</li>}
+                </ul>
+              </section>
+              <section className="island-run-lucky-roll-dev-overlay__details-section">
+                <h4>Stored reward entries</h4>
+                <ul>
+                  {bankedRewards.map((entry) => <li key={entry.rewardId}>{formatReward(entry)}</li>)}
+                  {bankedRewards.length === 0 && <li>No stored rewards yet.</li>}
+                </ul>
+              </section>
+              {actionMessage && (
+                <div className="island-run-lucky-roll-dev-overlay__message" role="status">
+                  {actionMessage}
+                </div>
+              )}
+            </div>
           </div>
         )}
-        <p className="island-run-lucky-roll-dev-overlay__session-key">Session key: {sessionKey}</p>
       </section>
     </div>
   );
