@@ -19,6 +19,59 @@
   font-size: 14px;
 }
 
+.space-excavator__preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.space-excavator__silhouette {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: #020617;
+  color: #cbd5e1;
+  font-size: 28px;
+  filter: grayscale(1);
+}
+
+.space-excavator__preview-title,
+.space-excavator__preview-progress {
+  margin: 0;
+}
+
+.space-excavator__preview-title {
+  font-weight: 700;
+}
+
+.space-excavator__preview-progress {
+  color: #cbd5e1;
+  font-size: 13px;
+}
+
+.space-excavator__progress-bar {
+  width: 180px;
+  max-width: 42vw;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: #334155;
+  overflow: hidden;
+}
+
+.space-excavator__progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #38bdf8;
+}
+
 .space-excavator__board {
   flex: 1;
   display: grid;
@@ -40,7 +93,7 @@
 
 .space-excavator__tile:disabled { opacity: .5; cursor: not-allowed; }
 .space-excavator__tile--dug { background: #0ea5e9; color: #082f49; }
-.space-excavator__tile--treasure { background: #facc15; color: #422006; }
+.space-excavator__tile--object { background: #facc15; color: #422006; }
 
 .space-excavator__actions {
   display: flex;

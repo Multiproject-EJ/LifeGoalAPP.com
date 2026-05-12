@@ -1,11 +1,26 @@
 import { useMemo, useState } from 'react';
 import type { IslandRunMinigameProps } from '../../level-worlds/services/islandRunMinigameTypes';
+import { resolveSpaceExcavatorObjectTileIds } from '../../level-worlds/services/spaceExcavatorObjects';
 import './spaceExcavator.css';
 
-type Tile = { dug: boolean; treasure: boolean };
+type Tile = { dug: boolean; objectPiece: boolean };
 
 type SpaceExcavatorProgressStatus = 'active' | 'board_complete' | 'completed';
-type SpaceExcavatorProgress = { boardIndex:number; completedBoardCount:number; boardSize:number; treasureCount:number; treasureTileIds:number[]; dugTileIds:number[]; foundTreasureTileIds:number[]; status:SpaceExcavatorProgressStatus };
+type SpaceExcavatorProgress = {
+  boardIndex: number;
+  completedBoardCount: number;
+  boardSize: number;
+  treasureCount: number;
+  treasureTileIds: number[];
+  objectId?: string;
+  objectName?: string;
+  objectIcon?: string;
+  objectTileIds?: number[];
+  revealedObjectTileIds?: number[];
+  dugTileIds: number[];
+  foundTreasureTileIds: number[];
+  status: SpaceExcavatorProgressStatus;
+};
 type DigSpendResult = { ok: boolean; ticketsRemaining: number; progress?: SpaceExcavatorProgress | null; boardComplete?: boolean; canAdvanceBoard?: boolean };
 type AdvanceBoardResult = { ok: boolean; ticketsRemaining: number; progress?: SpaceExcavatorProgress | null };
 
@@ -17,14 +32,20 @@ type SpaceExcavatorLaunchConfig = {
   totalBoards?: number;
 };
 
-function makeBoard(size: number, treasureCount: number): Tile[] {
-  const tiles = Array.from({ length: size * size }, () => ({ dug: false, treasure: false }));
-  const placed = new Set<number>();
-  while (placed.size < treasureCount && placed.size < tiles.length) {
-    placed.add(Math.floor(Math.random() * tiles.length));
-  }
-  for (const i of placed) tiles[i].treasure = true;
-  return tiles;
+function getProgressObjectTileIds(progress: SpaceExcavatorProgress | null | undefined): number[] {
+  return progress ? resolveSpaceExcavatorObjectTileIds(progress) : [];
+}
+
+function getObjectPieceCount(options: {
+  progress: SpaceExcavatorProgress | null;
+  initial: SpaceExcavatorProgress | null | undefined;
+  islandNumber: number;
+}): number {
+  const { progress, initial, islandNumber } = options;
+  const objectTileIds = getProgressObjectTileIds(progress).length > 0
+    ? getProgressObjectTileIds(progress)
+    : getProgressObjectTileIds(initial);
+  return Math.max(1, Math.floor(objectTileIds.length || progress?.treasureCount || initial?.treasureCount || Math.max(3, Math.min(8, 3 + Math.floor(islandNumber / 8)))));
 }
 
 export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig }: IslandRunMinigameProps) {
@@ -33,12 +54,14 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const totalBoards = Math.max(1, Math.floor(config.totalBoards ?? 10));
   const [progress, setProgress] = useState<SpaceExcavatorProgress | null>(initial ?? null);
   const size = Math.max(1, Math.floor(progress?.boardSize ?? initial?.boardSize ?? 5));
-  const treasureCount = Math.max(1, Math.floor(progress?.treasureCount ?? initial?.treasureCount ?? Math.max(3, Math.min(8, 3 + Math.floor(islandNumber / 8)))));
+  const objectPieceCount = getObjectPieceCount({ progress, initial, islandNumber });
 
-  const [tiles, setTiles] = useState<Tile[]>(() => {
-    if (!initial) return makeBoard(size, treasureCount);
-    return Array.from({ length: size * size }, (_, i) => ({ dug: initial.dugTileIds.includes(i), treasure: initial.treasureTileIds.includes(i) }));
-  });
+  const activeProgress = progress ?? initial ?? null;
+  const tiles = useMemo<Tile[]>(() => {
+    const activeObjectTileIds = getProgressObjectTileIds(activeProgress);
+    const activeDugTileIds = activeProgress?.dugTileIds ?? [];
+    return Array.from({ length: size * size }, (_, i) => ({ dug: activeDugTileIds.includes(i), objectPiece: activeObjectTileIds.includes(i) }));
+  }, [activeProgress, size]);
   const [ticketsRemaining, setTicketsRemaining] = useState<number>(() => Math.max(0, Math.floor(config.getTicketsRemaining?.() ?? 0)));
   const [finished, setFinished] = useState(false);
   const [sentResult, setSentResult] = useState(false);
@@ -46,10 +69,9 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
 
   const syncProgress = (nextProgress: SpaceExcavatorProgress) => {
     setProgress(nextProgress);
-    setTiles(Array.from({ length: nextProgress.boardSize * nextProgress.boardSize }, (_, i) => ({ dug: nextProgress.dugTileIds.includes(i), treasure: nextProgress.treasureTileIds.includes(i) })));
   };
 
-  const found = useMemo(() => tiles.filter((t) => t.dug && t.treasure).length, [tiles]);
+  const found = useMemo(() => tiles.filter((t) => t.dug && t.objectPiece).length, [tiles]);
   const progressStatus = progress?.status ?? 'active';
   const boardComplete = progressStatus === 'board_complete' || progressStatus === 'completed';
   const canAdvanceBoard = progressStatus === 'board_complete';
@@ -77,12 +99,6 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       setShowOutOfTickets(true);
       return;
     }
-
-    setTiles((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], dug: true };
-      return next;
-    });
   };
 
   const onAdvanceBoard = () => {
@@ -99,7 +115,20 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
         <span>Island {islandNumber}</span>
         <span>{boardLabel}</span>
         <span>Tickets: {ticketsRemaining}</span>
-        <span>Treasures found: {found}/{treasureCount}</span>
+        <span>Pieces found: {found}/{objectPieceCount}</span>
+      </div>
+
+      <div className="space-excavator__preview" aria-label="Hidden object preview">
+        <div className="space-excavator__silhouette" aria-hidden="true">
+          {progress?.objectIcon ?? initial?.objectIcon ?? '❔'}
+        </div>
+        <div>
+          <p className="space-excavator__preview-title">Find: {progress?.objectName ?? initial?.objectName ?? 'Hidden Relic'}</p>
+          <p className="space-excavator__preview-progress">{found} / {objectPieceCount} pieces found</p>
+          <div className="space-excavator__progress-bar" aria-hidden="true">
+            <span style={{ width: `${Math.min(100, Math.round((found / objectPieceCount) * 100))}%` }} />
+          </div>
+        </div>
       </div>
 
       <div className="space-excavator__board" style={{ gridTemplateColumns: `repeat(${size}, 44px)` }}>
@@ -107,12 +136,12 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
           <button
             key={i}
             type="button"
-            className={`space-excavator__tile ${tile.dug ? (tile.treasure ? 'space-excavator__tile--treasure' : 'space-excavator__tile--dug') : ''}`}
+            className={`space-excavator__tile ${tile.dug ? (tile.objectPiece ? 'space-excavator__tile--object' : 'space-excavator__tile--dug') : ''}`}
             onClick={() => onDig(i)}
             disabled={finished || boardComplete || tile.dug}
             aria-label={`Tile ${i + 1}`}
           >
-            {tile.dug ? (tile.treasure ? '💎' : '·') : '⬛'}
+            {tile.dug ? (tile.objectPiece ? (progress?.objectIcon ?? initial?.objectIcon ?? '✦') : '·') : '⬛'}
           </button>
         ))}
       </div>
@@ -131,7 +160,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       {boardComplete && (
         <div className="space-excavator__notice space-excavator__notice--success" role="status" aria-live="polite">
           <p><strong>{progressStatus === 'completed' ? 'All boards cleared' : 'Board cleared'}</strong></p>
-          <p>Treasures found {found}/{treasureCount}.</p>
+          <p>{progress?.objectName ?? initial?.objectName ?? 'Hidden Relic'} found {found}/{objectPieceCount}.</p>
           {canAdvanceBoard && (
             <div className="space-excavator__actions">
               <button type="button" className="space-excavator__button" onClick={onAdvanceBoard}>Continue to next board</button>

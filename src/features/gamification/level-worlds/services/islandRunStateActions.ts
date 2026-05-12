@@ -66,6 +66,11 @@ import {
 import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
 import { resolveRuntimeDiceRegenUpdate } from './islandRunRuntimeRegen';
 import { resolveIslandRunPreIslandLuckyRollGate } from './islandRunPreIslandLuckyRollGate';
+import {
+  chooseSpaceExcavatorObjectShape,
+  placeSpaceExcavatorObjectShape,
+  resolveSpaceExcavatorObjectTileIds,
+} from './spaceExcavatorObjects';
 
 
 export interface ApplySpaceExcavatorDigResult {
@@ -88,15 +93,26 @@ export const SPACE_EXCAVATOR_TOTAL_BOARDS = 10; // Tuning placeholder until rewa
 
 function buildSpaceExcavatorProgress(eventId: string, boardIndex: number, nowMs: number, completedBoardCount = boardIndex): SpaceExcavatorProgressEntry {
   const boardSize = 5;
-  const tileCount = boardSize * boardSize;
-  const treasureCount = 5;
-  let seed = Array.from(`${eventId}:${boardIndex}`).reduce((a,c)=>a + c.charCodeAt(0), 0) || 1;
-  const tiles = new Set<number>();
-  while (tiles.size < treasureCount) {
-    seed = (seed * 1664525 + 1013904223) >>> 0;
-    tiles.add(seed % tileCount);
-  }
-  return { eventId, boardIndex, boardSize, treasureCount, treasureTileIds: Array.from(tiles).sort((a,b)=>a-b), dugTileIds: [], foundTreasureTileIds: [], completedBoardCount, status: 'active', updatedAtMs: nowMs };
+  const objectShape = chooseSpaceExcavatorObjectShape(eventId, boardIndex);
+  const objectTileIds = placeSpaceExcavatorObjectShape({ eventId, boardIndex, boardSize, shape: objectShape });
+  return {
+    eventId,
+    boardIndex,
+    boardSize,
+    treasureCount: objectTileIds.length,
+    treasureTileIds: objectTileIds,
+    objectId: objectShape.objectId,
+    objectName: objectShape.name,
+    objectTier: objectShape.tier,
+    objectIcon: objectShape.icon,
+    objectTileIds,
+    revealedObjectTileIds: [],
+    dugTileIds: [],
+    foundTreasureTileIds: [],
+    completedBoardCount,
+    status: 'active',
+    updatedAtMs: nowMs,
+  };
 }
 
 export function initSpaceExcavatorProgressForEvent(options: { session: Session; client: SupabaseClient | null; eventId: string; triggerSource?: string; }): IslandRunGameStateRecord {
@@ -124,9 +140,12 @@ export function applySpaceExcavatorDig(options: { session: Session; client: Supa
   const tileCount = progress.boardSize * progress.boardSize;
   if (normalizedTile >= tileCount || progress.dugTileIds.includes(normalizedTile)) return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete: false, canAdvanceBoard: false };
   const dugTileIds = Array.from(new Set([...progress.dugTileIds, normalizedTile])).sort((a,b)=>a-b);
-  const foundTreasureTileIds = progress.treasureTileIds.includes(normalizedTile) ? Array.from(new Set([...progress.foundTreasureTileIds, normalizedTile])).sort((a,b)=>a-b) : progress.foundTreasureTileIds;
-  let nextProgress: SpaceExcavatorProgressEntry = { ...progress, dugTileIds, foundTreasureTileIds, updatedAtMs: Date.now() };
-  const boardComplete = foundTreasureTileIds.length >= progress.treasureCount;
+  const objectTileIds = resolveSpaceExcavatorObjectTileIds(progress);
+  const revealedObjectTileIds = objectTileIds.includes(normalizedTile) ? Array.from(new Set([...progress.revealedObjectTileIds, normalizedTile])).sort((a,b)=>a-b) : progress.revealedObjectTileIds;
+  const foundTreasureTileIds = objectTileIds.includes(normalizedTile) ? Array.from(new Set([...progress.foundTreasureTileIds, normalizedTile])).sort((a,b)=>a-b) : progress.foundTreasureTileIds;
+  let nextProgress: SpaceExcavatorProgressEntry = { ...progress, dugTileIds, revealedObjectTileIds, foundTreasureTileIds, updatedAtMs: Date.now() };
+  const revealedObjectTileIdSet = new Set(revealedObjectTileIds);
+  const boardComplete = objectTileIds.length > 0 && objectTileIds.every((objectTileId) => revealedObjectTileIdSet.has(objectTileId));
   if (boardComplete && progress.status !== 'board_complete') {
     nextProgress = {
       ...nextProgress,
