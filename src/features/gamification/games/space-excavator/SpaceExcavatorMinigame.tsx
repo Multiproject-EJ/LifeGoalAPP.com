@@ -84,7 +84,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const canAdvanceBoard = progressStatus === 'board_complete';
   const boardLabel = `Board ${Math.max(1, Math.floor((progress?.boardIndex ?? 0) + 1))}${totalBoards > 1 ? ` / ${totalBoards}` : ''}`;
   const eventProgressPoints = Math.max(0, Math.floor(activeProgress?.eventProgressPoints ?? activeProgress?.completedBoardCount ?? 0));
-  const eventProgressTotal = Math.max(SPACE_EXCAVATOR_CAMPAIGN_TOTAL_POINTS, totalBoards);
+  const eventProgressTotal = SPACE_EXCAVATOR_CAMPAIGN_TOTAL_POINTS;
   const eventProgressPercent = Math.min(100, Math.round((eventProgressPoints / eventProgressTotal) * 100));
   const nextMilestone = getNextSpaceExcavatorCampaignMilestone({ eventProgressPoints });
   const claimedMilestoneIds = activeProgress?.claimedMilestoneIds ?? [];

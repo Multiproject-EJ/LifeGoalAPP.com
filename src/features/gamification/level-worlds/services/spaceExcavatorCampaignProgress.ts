@@ -17,7 +17,10 @@ export const SPACE_EXCAVATOR_CAMPAIGN_MILESTONES: SpaceExcavatorCampaignMileston
   { id: 'clear_10', pointsRequired: 10, rewardKind: 'event_completion_placeholder', rewardLabel: 'Event completion reward placeholder' },
 ];
 
-export const SPACE_EXCAVATOR_CAMPAIGN_TOTAL_POINTS = SPACE_EXCAVATOR_CAMPAIGN_MILESTONES[SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.length - 1]?.pointsRequired ?? 10;
+export const SPACE_EXCAVATOR_DEFAULT_CAMPAIGN_TOTAL_POINTS = 10;
+export const SPACE_EXCAVATOR_CAMPAIGN_TOTAL_POINTS =
+  SPACE_EXCAVATOR_CAMPAIGN_MILESTONES[SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.length - 1]?.pointsRequired
+  ?? SPACE_EXCAVATOR_DEFAULT_CAMPAIGN_TOTAL_POINTS;
 
 export function resolveSpaceExcavatorClaimedMilestoneIds(options: {
   eventProgressPoints: number;
