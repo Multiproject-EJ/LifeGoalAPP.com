@@ -11,6 +11,7 @@ import {
   sanitizeBonusTileChargeByIsland,
   type BonusTileChargeByIsland,
 } from './islandRunBonusTile';
+import { resolveSpaceExcavatorClaimedMilestoneIds } from './spaceExcavatorCampaignProgress';
 
 export type PerIslandEggStatus = 'incubating' | 'ready' | 'collected' | 'sold';
 
@@ -132,6 +133,8 @@ export interface SpaceExcavatorProgressEntry {
   dugTileIds: number[];
   foundTreasureTileIds: number[];
   completedBoardCount: number;
+  eventProgressPoints: number;
+  claimedMilestoneIds: string[];
   status: 'active' | 'board_complete' | 'completed';
   updatedAtMs: number;
 }
@@ -1323,6 +1326,11 @@ function sanitizeSpaceExcavatorTileIds(value: unknown): number[] {
   return Array.from(new Set(value.filter((n: any) => Number.isFinite(n)).map((n: any) => Math.max(0, Math.floor(n))))).sort((a, b) => a - b);
 }
 
+function sanitizeSpaceExcavatorClaimedMilestoneIds(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return Array.from(new Set(value.filter((id): id is string => typeof id === 'string' && id.trim().length > 0)));
+}
+
 function sanitizeSpaceExcavatorProgressByEvent(value: unknown, fallback: Record<string, SpaceExcavatorProgressEntry>): Record<string, SpaceExcavatorProgressEntry> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...fallback };
   const out: Record<string, SpaceExcavatorProgressEntry> = {};
@@ -1339,6 +1347,12 @@ function sanitizeSpaceExcavatorProgressByEvent(value: unknown, fallback: Record<
     const revealedObjectTileIds = sanitizeSpaceExcavatorTileIds(raw.revealedObjectTileIds).length > 0
       ? sanitizeSpaceExcavatorTileIds(raw.revealedObjectTileIds)
       : dugTileIds.filter((tileId) => objectTileIdSet.has(tileId));
+    const completedBoardCount = Math.max(0, Math.floor(raw.completedBoardCount ?? 0));
+    const eventProgressPoints = Math.max(0, Math.floor(raw.eventProgressPoints ?? completedBoardCount));
+    const claimedMilestoneIds = resolveSpaceExcavatorClaimedMilestoneIds({
+      eventProgressPoints,
+      claimedMilestoneIds: sanitizeSpaceExcavatorClaimedMilestoneIds(raw.claimedMilestoneIds),
+    });
     out[eventId] = {
       eventId,
       boardIndex: Math.max(0, Math.floor(raw.boardIndex ?? 0)),
@@ -1353,12 +1367,42 @@ function sanitizeSpaceExcavatorProgressByEvent(value: unknown, fallback: Record<
       revealedObjectTileIds,
       dugTileIds,
       foundTreasureTileIds,
-      completedBoardCount: Math.max(0, Math.floor(raw.completedBoardCount ?? 0)),
+      completedBoardCount,
+      eventProgressPoints,
+      claimedMilestoneIds,
       status: raw.status === 'completed' ? 'completed' : raw.status === 'board_complete' || raw.status === 'won' ? 'board_complete' : 'active',
       updatedAtMs: Number.isFinite(raw.updatedAtMs) ? Math.max(0, Math.floor(raw.updatedAtMs)) : Date.now(),
     };
   }
   return out;
+}
+
+function mergeSpaceExcavatorProgressByEvent(
+  remote: Record<string, SpaceExcavatorProgressEntry>,
+  local: Record<string, SpaceExcavatorProgressEntry>,
+): Record<string, SpaceExcavatorProgressEntry> {
+  const keys = new Set([...Object.keys(remote), ...Object.keys(local)]);
+  const merged: Record<string, SpaceExcavatorProgressEntry> = {};
+  keys.forEach((eventId) => {
+    const remoteProgress = remote[eventId];
+    const localProgress = local[eventId];
+    if (!remoteProgress || !localProgress) {
+      merged[eventId] = localProgress ?? remoteProgress;
+      return;
+    }
+    const base = localProgress.updatedAtMs >= remoteProgress.updatedAtMs ? localProgress : remoteProgress;
+    const eventProgressPoints = Math.max(remoteProgress.eventProgressPoints, localProgress.eventProgressPoints);
+    merged[eventId] = {
+      ...base,
+      completedBoardCount: Math.max(remoteProgress.completedBoardCount, localProgress.completedBoardCount),
+      eventProgressPoints,
+      claimedMilestoneIds: resolveSpaceExcavatorClaimedMilestoneIds({
+        eventProgressPoints,
+        claimedMilestoneIds: [...remoteProgress.claimedMilestoneIds, ...localProgress.claimedMilestoneIds],
+      }),
+    };
+  });
+  return merged;
 }
 
 function mergeStringArrayByUnion(left: string[] = [], right: string[] = []): string[] {
@@ -1507,6 +1551,10 @@ function mergeRecordForConflict(options: {
     luckyRollSessionsByMilestone: mergeLuckyRollSessionsByMilestone(
       remote.luckyRollSessionsByMilestone,
       local.luckyRollSessionsByMilestone,
+    ),
+    spaceExcavatorProgressByEvent: mergeSpaceExcavatorProgressByEvent(
+      remote.spaceExcavatorProgressByEvent,
+      local.spaceExcavatorProgressByEvent,
     ),
   };
 }
