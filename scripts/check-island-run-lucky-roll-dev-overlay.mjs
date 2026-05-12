@@ -32,6 +32,14 @@ requireIncludes('overlay', overlay, 'getIslandRunLuckyRollBoardConfig');
 requireIncludes('overlay', overlay, 'getIslandRunLuckyRollTileConfig');
 requireIncludes('overlay', overlay, "mode: 'production_board'");
 requireIncludes('overlay', overlay, 'Treasure Path');
+requireIncludes('overlay', overlay, 'Treasure Path unlocked!');
+requireIncludes('overlay', overlay, 'You found a hidden reward path.');
+requireIncludes('overlay', overlay, 'Roll for free across glowing fields and collect everything at the treasure gate.');
+requireIncludes('overlay', overlay, 'Collect Treasure');
+requireIncludes('overlay', overlay, 'Dice total');
+requireIncludes('overlay', overlay, 'Essence total');
+requireIncludes('overlay', overlay, 'Shards total');
+requireIncludes('overlay', overlay, 'Treasure Eggs');
 requireIncludes('overlay', overlay, 'isDevModeEnabled || usesPostRareCollectTravel');
 requireIncludes('overlay', overlay, 'if (!isOverlayEnabled)');
 requireIncludes('board', board, "showDevLuckyRollOverlay && (isDevModeEnabled || devLuckyRollCollectMode === 'post_rare_collect_travel')");
@@ -72,6 +80,14 @@ const forbiddenOverlayRegexes = [
   {
     pattern: /\bLuckyRollBoard\b/,
     message: 'forbidden legacy LuckyRollBoard component reference found',
+  },
+  {
+    pattern: /\bLucky Roll\b/,
+    message: 'visible Treasure Path overlay copy must not use Lucky Roll wording',
+  },
+  {
+    pattern: /bank your rewards|Collect to bank|Travel to next island/,
+    message: 'production Treasure Path collect copy must use collect treasure language, not bank/travel debug wording',
   },
 ];
 

@@ -7096,8 +7096,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setDevLuckyRollCollectMode(collectMode);
     setShowDevLuckyRollOverlay(true);
     setLandingText(collectMode === 'post_rare_collect_travel'
-      ? `Treasure Path opened for island ${normalizedTargetIslandNumber}.`
-      : `🍀 DEV Lucky Roll overlay opened for island ${normalizedTargetIslandNumber}.`);
+      ? 'Treasure Path unlocked! You found a hidden reward path.'
+      : `🍀 DEV Treasure Path overlay opened for island ${normalizedTargetIslandNumber}.`);
   }, [isDevModeEnabled]);
 
   const handleOpenPostRareTreasurePathOverlay = useCallback((completedIslandNumber: number) => {
@@ -7168,8 +7168,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
     applyPostRareTreasurePathCollectTravelRecord(result.record);
     const rewardSummary = `+${result.diceAwarded} dice, +${result.essenceAwarded} essence, +${result.shardsAwarded} shards`;
-    const destinationSummary = `Current island/cycle: ${result.record.currentIslandNumber}/${result.record.cycleIndex}.`;
-    const message = `Treasure Path collect ${result.status}: ${rewardSummary}. ${destinationSummary}`;
+    const message = result.status === 'banked_and_traveled'
+      ? `Treasure collected: ${rewardSummary}. Your journey continues.`
+      : `Treasure Path is ${result.status.replaceAll('_', ' ')}.`;
     setLandingText(message);
     return message;
   }, [applyPostRareTreasurePathCollectTravelRecord, client, session]);
