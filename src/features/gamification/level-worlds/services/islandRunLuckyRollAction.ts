@@ -104,6 +104,7 @@ export interface ResolveIslandRunLuckyRollRewardBankingOptions {
   cycleIndex: number;
   targetIslandNumber: number;
   nowMs?: number;
+  /** Defaults to true. Set false when composing banking into a larger single-commit action. */
   bumpRuntimeVersion?: boolean;
 }
 

@@ -103,6 +103,14 @@ function isRecordAtIsland(record: IslandRunGameStateRecord, islandNumber: number
   return record.currentIslandNumber === islandNumber && record.cycleIndex === cycleIndex;
 }
 
+function createNoRewardCollectResult(
+  status: Exclude<CollectPostRareTreasurePathAndTravelResult['status'], 'banked_and_traveled'>,
+  record: IslandRunGameStateRecord,
+  state: ResolvePostRareTreasurePathStateResult,
+): CollectPostRareTreasurePathAndTravelResult {
+  return { status, record, state, diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
+}
+
 export function resolvePostRareTreasurePathState(
   options: ResolvePostRareTreasurePathStateOptions,
 ): ResolvePostRareTreasurePathStateResult {
@@ -207,19 +215,19 @@ export function collectPostRareTreasurePathAndTravel(
       cycleIndex: options.cycleIndex,
     });
     if (state.luckyRollSession?.status === 'expired') {
-      return { status: 'expired', record: current, state, diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
+      return createNoRewardCollectResult('expired', current, state);
     }
     if (state.status === 'not_applicable') {
-      return { status: 'not_applicable', record: current, state, diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
+      return createNoRewardCollectResult('not_applicable', current, state);
     }
     if (state.status === 'already_traveled') {
-      return { status: 'already_traveled', record: current, state, diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
+      return createNoRewardCollectResult('already_traveled', current, state);
     }
     if (!state.luckyRollSession) {
-      return { status: 'not_found', record: current, state, diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
+      return createNoRewardCollectResult('not_found', current, state);
     }
     if (state.luckyRollSession.status === 'active') {
-      return { status: 'not_completed', record: current, state, diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
+      return createNoRewardCollectResult('not_completed', current, state);
     }
 
     const banking = state.luckyRollSession.status === 'banked'
@@ -238,13 +246,13 @@ export function collectPostRareTreasurePathAndTravel(
           bumpRuntimeVersion: false,
         });
     if (banking.status === 'not_found') {
-      return { status: 'not_found', record: current, state, diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
+      return createNoRewardCollectResult('not_found', current, state);
     }
     if (banking.status === 'expired') {
-      return { status: 'expired', record: current, state, diceAwarded: 0, essenceAwarded: 0, shardsAwarded: 0 };
+      return createNoRewardCollectResult('expired', current, state);
     }
 
-    const didBankRewards = banking.status === 'banked';
+    const justBanked = banking.status === 'banked';
     const bankedRecord = banking.record;
     const travel = resolveIslandRunTravelState({
       current: bankedRecord,
@@ -269,9 +277,9 @@ export function collectPostRareTreasurePathAndTravel(
       status: 'banked_and_traveled',
       record: travel.record,
       state: nextState,
-      diceAwarded: didBankRewards ? banking.diceAwarded : 0,
-      essenceAwarded: didBankRewards ? banking.essenceAwarded : 0,
-      shardsAwarded: didBankRewards ? banking.shardsAwarded : 0,
+      diceAwarded: justBanked ? banking.diceAwarded : 0,
+      essenceAwarded: justBanked ? banking.essenceAwarded : 0,
+      shardsAwarded: justBanked ? banking.shardsAwarded : 0,
     };
   });
 }
