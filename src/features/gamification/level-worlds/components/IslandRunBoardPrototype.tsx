@@ -7092,7 +7092,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setIslandStartedAtMs(result.record.islandStartedAtMs);
     setIslandExpiresAtMs(result.record.islandExpiresAtMs);
     setIsIslandTimerPendingStart(false);
-    const message = `🧭 Post-rare collect+travel ${result.status}: +${result.diceAwarded} dice, +${result.essenceAwarded} essence, +${result.shardsAwarded} shards. Current island/cycle: ${result.record.currentIslandNumber}/${result.record.cycleIndex}.`;
+    const rewardSummary = `+${result.diceAwarded} dice, +${result.essenceAwarded} essence, +${result.shardsAwarded} shards`;
+    const destinationSummary = `Current island/cycle: ${result.record.currentIslandNumber}/${result.record.cycleIndex}.`;
+    const message = `🧭 Post-rare collect+travel ${result.status}: ${rewardSummary}. ${destinationSummary}`;
     setLandingText(message);
     return message;
   }, [client, isDevModeEnabled, session]);

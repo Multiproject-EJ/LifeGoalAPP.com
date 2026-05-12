@@ -91,6 +91,7 @@ type DebugSection = {
 };
 
 const POST_RARE_TREASURE_PATH_ISLANDS = [30, 60, 90, 120] as const;
+type PostRareTreasurePathIsland = typeof POST_RARE_TREASURE_PATH_ISLANDS[number];
 
 type TreasurePathRewardSummary = Record<'dice' | 'essence' | 'shards' | 'egg', number>;
 
@@ -107,6 +108,14 @@ function summarizeTreasurePathRewards(rewards: IslandRunLuckyRollRewardEntry[]):
     }
   }
   return summary;
+}
+
+function isPostRareTreasurePathIsland(islandNumber: number): islandNumber is PostRareTreasurePathIsland {
+  return POST_RARE_TREASURE_PATH_ISLANDS.includes(islandNumber as PostRareTreasurePathIsland);
+}
+
+function formatTreasurePathRewardSummary(summary: TreasurePathRewardSummary): string {
+  return `+${summary.dice} dice, +${summary.essence} essence, +${summary.shards} shards, +${summary.egg} eggs`;
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -145,7 +154,7 @@ export function IslandRunDebugPanel({
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
   const [luckyRollTargetIslandInput, setLuckyRollTargetIslandInput] = useState(() => String(runtimeState.currentIslandNumber));
   const [postRareCompletedIslandInput, setPostRareCompletedIslandInput] = useState(() => (
-    POST_RARE_TREASURE_PATH_ISLANDS.includes(runtimeState.currentIslandNumber as typeof POST_RARE_TREASURE_PATH_ISLANDS[number])
+    isPostRareTreasurePathIsland(runtimeState.currentIslandNumber)
       ? String(runtimeState.currentIslandNumber)
       : '30'
   ));
@@ -766,13 +775,13 @@ export function IslandRunDebugPanel({
                       <tr>
                         <td className="island-run-debug-panel__label">Pending rewards</td>
                         <td className="island-run-debug-panel__value">
-                          +{postRarePendingRewards.dice} dice, +{postRarePendingRewards.essence} essence, +{postRarePendingRewards.shards} shards, +{postRarePendingRewards.egg} eggs
+                          {formatTreasurePathRewardSummary(postRarePendingRewards)}
                         </td>
                       </tr>
                       <tr>
                         <td className="island-run-debug-panel__label">Banked rewards</td>
                         <td className="island-run-debug-panel__value">
-                          +{postRareBankedRewards.dice} dice, +{postRareBankedRewards.essence} essence, +{postRareBankedRewards.shards} shards, +{postRareBankedRewards.egg} eggs
+                          {formatTreasurePathRewardSummary(postRareBankedRewards)}
                         </td>
                       </tr>
                       <tr>
