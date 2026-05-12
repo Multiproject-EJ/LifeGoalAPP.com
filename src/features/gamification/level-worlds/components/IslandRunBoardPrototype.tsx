@@ -245,6 +245,7 @@ import {
 } from '../services/islandRunLuckyRollAction';
 import {
   collectPostRareTreasurePathAndTravel,
+  resolvePendingTreasurePathResume,
   startPostRareTreasurePath,
 } from '../services/islandRunPostRareTreasurePathAction';
 import { getTreasurePathMilestoneMetadata } from '../services/islandRunIslandMetadata';
@@ -1700,6 +1701,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
   const [runtimeHydrationSource, setRuntimeHydrationSource] = useState<IslandRunRuntimeHydrationSource | null>(null);
+  const pendingTreasurePathResume = useMemo(
+    () => resolvePendingTreasurePathResume({ record: runtimeState }),
+    [runtimeState],
+  );
   const activeSessionStatusMessage = null;
   const isRetryingSync = false;
   const [perfectCompanionRuntimeConfig, setPerfectCompanionRuntimeConfig] = useState(() => readPerfectCompanionRuntimeConfig(session.user.id));
@@ -7096,6 +7101,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     handleOpenDevLuckyRollOverlay(completedIslandNumber, 'post_rare_collect_travel');
   }, [handleOpenDevLuckyRollOverlay]);
 
+  const handleResumePendingTreasurePath = useCallback(() => {
+    const pending = resolvePendingTreasurePathResume({ record: runtimeStateRef.current });
+    if (!pending) {
+      setLandingText('No pending Treasure Path session found.');
+      return;
+    }
+    handleOpenPostRareTreasurePathOverlay(pending.completedIslandNumber);
+  }, [handleOpenPostRareTreasurePathOverlay]);
+
   const handleLuckyRollOverlayRuntimeStateChange = useCallback((record: IslandRunGameStateRecord) => {
     setRuntimeState(record);
     runtimeStateRef.current = record;
@@ -8522,6 +8536,34 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 : 'Preparing route, rewards, and stop plan.'}
             </p>
           </div>
+        </div>
+      )}
+
+      {pendingTreasurePathResume && !showDevLuckyRollOverlay && !showTravelOverlay && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position: 'fixed',
+            left: '50%',
+            bottom: '5.25rem',
+            transform: 'translateX(-50%)',
+            zIndex: 8500,
+            padding: '0.45rem 0.6rem',
+            borderRadius: '999px',
+            background: 'rgba(24, 18, 45, 0.92)',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
+            boxShadow: '0 10px 24px rgba(0, 0, 0, 0.22)',
+          }}
+        >
+          <button
+            type="button"
+            className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+            onClick={handleResumePendingTreasurePath}
+            style={{ padding: '0.55rem 0.9rem', minHeight: 'auto' }}
+          >
+            {pendingTreasurePathResume.status === 'active' ? 'Continue Treasure Path' : 'Collect Treasure'}
+          </button>
         </div>
       )}
 

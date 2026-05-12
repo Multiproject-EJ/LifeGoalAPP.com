@@ -43,6 +43,12 @@ export interface ResolvePostRareTreasurePathStateResult {
   nextCycleIndex: number | null;
 }
 
+export interface ResolvePendingTreasurePathResumeOptions {
+  record: IslandRunGameStateRecord;
+}
+
+export type ResolvePendingTreasurePathResumeResult = ResolvePostRareTreasurePathStateResult | null;
+
 export interface StartPostRareTreasurePathOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -163,6 +169,48 @@ export function resolvePostRareTreasurePathState(
     nextIslandNumber,
     nextCycleIndex,
   };
+}
+
+function getResumeStatusPriority(status: PostRareTreasurePathStateStatus): number {
+  switch (status) {
+    case 'completed_ready_to_collect':
+      return 3;
+    case 'collected_banked':
+      return 2;
+    case 'active':
+      return 1;
+    default:
+      return 0;
+  }
+}
+
+export function resolvePendingTreasurePathResume(
+  options: ResolvePendingTreasurePathResumeOptions,
+): ResolvePendingTreasurePathResumeResult {
+  const candidates = Object.entries(options.record.luckyRollSessionsByMilestone)
+    .map(([sessionKey, luckyRollSession]) => {
+      const state = resolvePostRareTreasurePathState({
+        record: options.record,
+        completedIslandNumber: luckyRollSession.targetIslandNumber,
+        cycleIndex: luckyRollSession.cycleIndex,
+      });
+      return state.sessionKey === sessionKey ? state : null;
+    })
+    .filter((state): state is ResolvePostRareTreasurePathStateResult => {
+      if (!state) return false;
+      if (state.status !== 'active' && state.status !== 'completed_ready_to_collect' && state.status !== 'collected_banked') return false;
+      return isRecordAtIsland(options.record, state.completedIslandNumber, state.cycleIndex);
+    });
+
+  if (candidates.length < 1) return null;
+
+  return candidates.sort((a, b) => {
+    const priorityDelta = getResumeStatusPriority(b.status) - getResumeStatusPriority(a.status);
+    if (priorityDelta !== 0) return priorityDelta;
+    const updatedDelta = (b.luckyRollSession?.updatedAtMs ?? 0) - (a.luckyRollSession?.updatedAtMs ?? 0);
+    if (updatedDelta !== 0) return updatedDelta;
+    return b.completedIslandNumber - a.completedIslandNumber;
+  })[0];
 }
 
 export async function startPostRareTreasurePath(
