@@ -450,8 +450,28 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
       const serviceImportPattern = /islandRunPostRareTreasurePathAction/;
       const appSource = fsMod.readFileSync(pathMod.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
       const overlaySource = fsMod.readFileSync(pathMod.resolve(process.cwd(), 'src/components/GameBoardOverlay.tsx'), 'utf8');
+      const debugPanelSource = fsMod.readFileSync(pathMod.resolve(
+        process.cwd(),
+        'src/features/gamification/level-worlds/components/IslandRunDebugPanel.tsx',
+      ), 'utf8');
+      const boardSource = fsMod.readFileSync(pathMod.resolve(
+        process.cwd(),
+        'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx',
+      ), 'utf8');
       assert(!serviceImportPattern.test(appSource), 'App.tsx should not import post-rare Treasure Path orchestration');
       assert(!serviceImportPattern.test(overlaySource), 'GameBoardOverlay should not import post-rare Treasure Path orchestration');
+      assert(
+        /resolvePostRareTreasurePathState/.test(debugPanelSource),
+        'Island Run debug panel should show post-rare Treasure Path orchestration state',
+      );
+      assert(
+        /startPostRareTreasurePath/.test(boardSource) && /collectPostRareTreasurePathAndTravel/.test(boardSource),
+        'Island Run debug wiring should call post-rare Treasure Path orchestration services',
+      );
+      assert(
+        !/bankIslandRunLuckyRollRewards/.test(debugPanelSource) && !/resolveIslandRunTravelState/.test(debugPanelSource),
+        'Debug panel must not compose post-rare banking and travel directly',
+      );
     },
   },
 ];

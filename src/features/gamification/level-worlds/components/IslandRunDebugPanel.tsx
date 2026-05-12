@@ -9,8 +9,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import type { IslandRunRuntimeState } from '../services/islandRunRuntimeState';
-import { getIslandRunLuckyRollSessionKey } from '../services/islandRunGameStateStore';
+import {
+  getIslandRunLuckyRollSessionKey,
+  type IslandRunLuckyRollRewardEntry,
+} from '../services/islandRunGameStateStore';
 import { resolveIslandRunPreIslandLuckyRollGate } from '../services/islandRunPreIslandLuckyRollGate';
+import { resolvePostRareTreasurePathState } from '../services/islandRunPostRareTreasurePathAction';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,6 +34,9 @@ interface DebugPanelProps {
   onStartLuckyRollDevSession?: (targetIslandNumber: number) => Promise<string>;
   onAdvanceLuckyRollDevSession?: (targetIslandNumber: number, rewardType: 'dice' | 'essence') => Promise<string>;
   onBankLuckyRollDevSession?: (targetIslandNumber: number) => Promise<string>;
+  onOpenPostRareTreasurePathOverlay?: (completedIslandNumber: number) => void;
+  onStartPostRareTreasurePath?: (completedIslandNumber: number, cycleIndex: number) => Promise<string>;
+  onCollectPostRareTreasurePathAndTravel?: (completedIslandNumber: number, cycleIndex: number) => Promise<string>;
   onOpenEggRewardInventoryEntry?: (eggRewardId: string) => Promise<string>;
   onClose: () => void;
 }
@@ -83,6 +90,17 @@ type DebugSection = {
   rows: Array<{ label: string; value: string; warn?: boolean }>;
 };
 
+const POST_RARE_TREASURE_PATH_ISLANDS = [30, 60, 90, 120] as const;
+
+function sumLuckyRollRewards(
+  rewards: IslandRunLuckyRollRewardEntry[],
+  rewardType: IslandRunLuckyRollRewardEntry['rewardType'],
+): number {
+  return rewards
+    .filter((entry) => entry.rewardType === rewardType)
+    .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function IslandRunDebugPanel({
@@ -101,6 +119,9 @@ export function IslandRunDebugPanel({
   onStartLuckyRollDevSession,
   onAdvanceLuckyRollDevSession,
   onBankLuckyRollDevSession,
+  onOpenPostRareTreasurePathOverlay,
+  onStartPostRareTreasurePath,
+  onCollectPostRareTreasurePathAndTravel,
   onOpenEggRewardInventoryEntry,
   onClose,
 }: DebugPanelProps) {
@@ -115,8 +136,16 @@ export function IslandRunDebugPanel({
   const [supabaseError, setSupabaseError] = useState<string | null>(null);
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
   const [luckyRollTargetIslandInput, setLuckyRollTargetIslandInput] = useState(() => String(runtimeState.currentIslandNumber));
+  const [postRareCompletedIslandInput, setPostRareCompletedIslandInput] = useState(() => (
+    POST_RARE_TREASURE_PATH_ISLANDS.includes(runtimeState.currentIslandNumber as typeof POST_RARE_TREASURE_PATH_ISLANDS[number])
+      ? String(runtimeState.currentIslandNumber)
+      : '30'
+  ));
+  const [postRareCycleInput, setPostRareCycleInput] = useState(() => String(runtimeState.cycleIndex));
   const [luckyRollActionPending, setLuckyRollActionPending] = useState(false);
   const [luckyRollActionMessage, setLuckyRollActionMessage] = useState<string | null>(null);
+  const [postRareActionPending, setPostRareActionPending] = useState(false);
+  const [postRareActionMessage, setPostRareActionMessage] = useState<string | null>(null);
   const [openingEggRewardId, setOpeningEggRewardId] = useState<string | null>(null);
   const [eggRewardActionMessage, setEggRewardActionMessage] = useState<string | null>(null);
 
@@ -176,6 +205,34 @@ export function IslandRunDebugPanel({
   const luckyRollBankedEssence = luckyRollSession?.bankedRewards
     .filter((entry) => entry.rewardType === 'essence')
     .reduce((total, entry) => total + entry.amount, 0) ?? 0;
+  const postRareCompletedIslandNumber = useMemo(() => {
+    const parsed = Number(postRareCompletedIslandInput);
+    return Number.isFinite(parsed) ? Math.max(1, Math.floor(parsed)) : runtimeState.currentIslandNumber;
+  }, [postRareCompletedIslandInput, runtimeState.currentIslandNumber]);
+  const postRareCycleIndex = useMemo(() => {
+    const parsed = Number(postRareCycleInput);
+    return Number.isFinite(parsed) ? Math.max(0, Math.floor(parsed)) : runtimeState.cycleIndex;
+  }, [postRareCycleInput, runtimeState.cycleIndex]);
+  const postRareState = useMemo(() => resolvePostRareTreasurePathState({
+    record: runtimeState,
+    completedIslandNumber: postRareCompletedIslandNumber,
+    cycleIndex: postRareCycleIndex,
+  }), [postRareCompletedIslandNumber, postRareCycleIndex, runtimeState]);
+  const postRareSession = postRareState.luckyRollSession;
+  const postRarePendingDice = sumLuckyRollRewards(postRareSession?.pendingRewards ?? [], 'dice');
+  const postRarePendingEssence = sumLuckyRollRewards(postRareSession?.pendingRewards ?? [], 'essence');
+  const postRarePendingShards = sumLuckyRollRewards(postRareSession?.pendingRewards ?? [], 'shards');
+  const postRarePendingEggs = sumLuckyRollRewards(postRareSession?.pendingRewards ?? [], 'egg');
+  const postRareBankedDice = sumLuckyRollRewards(postRareSession?.bankedRewards ?? [], 'dice');
+  const postRareBankedEssence = sumLuckyRollRewards(postRareSession?.bankedRewards ?? [], 'essence');
+  const postRareBankedShards = sumLuckyRollRewards(postRareSession?.bankedRewards ?? [], 'shards');
+  const postRareBankedEggs = sumLuckyRollRewards(postRareSession?.bankedRewards ?? [], 'egg');
+  const canStartPostRareTreasurePath = postRareState.status === 'available_to_start'
+    || postRareState.status === 'active'
+    || postRareState.status === 'completed_ready_to_collect'
+    || postRareState.status === 'collected_banked';
+  const canCollectPostRareTreasurePath = postRareState.status === 'completed_ready_to_collect'
+    || postRareState.status === 'collected_banked';
 
   const runLuckyRollDevAction = async (action: () => Promise<string>) => {
     if (luckyRollActionPending) return;
@@ -187,6 +244,19 @@ export function IslandRunDebugPanel({
       setLuckyRollActionMessage(`Lucky Roll dev action failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setLuckyRollActionPending(false);
+    }
+  };
+
+  const runPostRareTreasurePathAction = async (action: () => Promise<string>) => {
+    if (postRareActionPending) return;
+    setPostRareActionPending(true);
+    setPostRareActionMessage(null);
+    try {
+      setPostRareActionMessage(await action());
+    } catch (err) {
+      setPostRareActionMessage(`Post-rare Treasure Path action failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setPostRareActionPending(false);
     }
   };
 
@@ -608,6 +678,114 @@ export function IslandRunDebugPanel({
                     </table>
                   </div>
                 )}
+                <div style={{ display: 'grid', gap: '0.55rem', borderTop: '1px solid rgba(255,255,255,0.16)', paddingTop: '0.65rem' }}>
+                  <strong style={{ fontSize: '0.84rem' }}>🧭 Post-Rare Treasure Path Flow</strong>
+                  <div style={{ fontSize: '0.76rem', opacity: 0.86 }}>
+                    Dev mode only. Simulates rare-island completion and uses post-rare orchestration services for start/resume and collect+travel.
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(6rem, 0.45fr)', gap: '0.5rem' }}>
+                    <label style={{ display: 'grid', gap: '0.25rem', fontSize: '0.78rem' }}>
+                      Completed rare island
+                      <select
+                        value={postRareCompletedIslandInput}
+                        onChange={(e) => setPostRareCompletedIslandInput(e.target.value)}
+                      >
+                        {POST_RARE_TREASURE_PATH_ISLANDS.map((island) => (
+                          <option key={island} value={island}>
+                            {island === runtimeState.currentIslandNumber ? `Current island ${island}` : `Island ${island}`}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label style={{ display: 'grid', gap: '0.25rem', fontSize: '0.78rem' }}>
+                      Completed cycle
+                      <input
+                        type="number"
+                        min={0}
+                        step={1}
+                        value={postRareCycleInput}
+                        onChange={(e) => setPostRareCycleInput(e.target.value)}
+                      />
+                    </label>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <button
+                      type="button"
+                      className="island-run-debug-panel__copy-btn"
+                      disabled={postRareActionPending || !onStartPostRareTreasurePath || !canStartPostRareTreasurePath}
+                      onClick={() => runPostRareTreasurePathAction(() => onStartPostRareTreasurePath?.(
+                        postRareCompletedIslandNumber,
+                        postRareCycleIndex,
+                      ) ?? Promise.resolve('Post-rare Treasure Path launcher unavailable.'))}
+                    >
+                      Start Post-Rare Treasure Path
+                    </button>
+                    <button
+                      type="button"
+                      className="island-run-debug-panel__copy-btn"
+                      disabled={!onOpenPostRareTreasurePathOverlay || postRareState.status === 'not_applicable' || postRareState.status === 'already_traveled'}
+                      onClick={() => onOpenPostRareTreasurePathOverlay?.(postRareCompletedIslandNumber)}
+                    >
+                      Open Treasure Path overlay
+                    </button>
+                    <button
+                      type="button"
+                      className="island-run-debug-panel__copy-btn"
+                      disabled={postRareActionPending || !onCollectPostRareTreasurePathAndTravel || !canCollectPostRareTreasurePath}
+                      onClick={() => runPostRareTreasurePathAction(() => onCollectPostRareTreasurePathAndTravel?.(
+                        postRareCompletedIslandNumber,
+                        postRareCycleIndex,
+                      ) ?? Promise.resolve('Post-rare collect+travel unavailable.'))}
+                    >
+                      Collect + Travel
+                    </button>
+                  </div>
+                  {postRareActionMessage && (
+                    <div style={{ fontSize: '0.78rem', opacity: 0.9 }}>{postRareActionMessage}</div>
+                  )}
+                  <table className="island-run-debug-panel__table">
+                    <tbody>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Post-rare state</td>
+                        <td className="island-run-debug-panel__value">{postRareState.status}</td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Session key</td>
+                        <td className="island-run-debug-panel__value">{postRareState.sessionKey ?? '—'}</td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Session status</td>
+                        <td className="island-run-debug-panel__value">{postRareSession?.status ?? 'none'}</td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Position / rolls</td>
+                        <td className="island-run-debug-panel__value">{postRareSession ? `${postRareSession.position} / ${postRareSession.rollsUsed}` : '—'}</td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Pending rewards</td>
+                        <td className="island-run-debug-panel__value">
+                          +{postRarePendingDice} dice, +{postRarePendingEssence} essence, +{postRarePendingShards} shards, +{postRarePendingEggs} eggs
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Banked rewards</td>
+                        <td className="island-run-debug-panel__value">
+                          +{postRareBankedDice} dice, +{postRareBankedEssence} essence, +{postRareBankedShards} shards, +{postRareBankedEggs} eggs
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Next island/cycle</td>
+                        <td className="island-run-debug-panel__value">
+                          {postRareState.nextIslandNumber ?? '—'} / {postRareState.nextCycleIndex ?? '—'}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Current island/cycle</td>
+                        <td className="island-run-debug-panel__value">{runtimeState.currentIslandNumber} / {runtimeState.cycleIndex}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
                 <div style={{ display: 'grid', gap: '0.55rem', borderTop: '1px solid rgba(255,255,255,0.16)', paddingTop: '0.65rem' }}>
                   <strong style={{ fontSize: '0.84rem' }}>🥚 Treasure Eggs</strong>
                   <div style={{ fontSize: '0.76rem', opacity: 0.86 }}>

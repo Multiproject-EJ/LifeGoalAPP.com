@@ -36,7 +36,20 @@ requireIncludes('overlay', overlay, 'if (!isDevModeEnabled)');
 requireIncludes('board', board, 'showDevLuckyRollOverlay && isDevModeEnabled');
 requireIncludes('board', board, 'onOpenLuckyRollDevOverlay={handleOpenDevLuckyRollOverlay}');
 requireIncludes('board', board, 'showLuckyRollDevLauncher={isDevModeEnabled}');
+requireIncludes('board', board, 'startPostRareTreasurePath');
+requireIncludes('board', board, 'collectPostRareTreasurePathAndTravel');
 requireIncludes('debug panel', debugPanel, 'Open Treasure Path overlay');
+requireIncludes('debug panel', debugPanel, 'Post-Rare Treasure Path Flow');
+requireIncludes('debug panel', debugPanel, 'resolvePostRareTreasurePathState');
+requireIncludes('debug panel', debugPanel, 'Collect + Travel');
+
+if (
+  debugPanel.includes('bankIslandRunLuckyRollRewards')
+  || debugPanel.includes('resolveIslandRunTravelState')
+  || debugPanel.includes('performIslandTravel')
+) {
+  failures.push('debug panel: post-rare flow must not compose bank+travel directly in React');
+}
 
 const forbiddenOverlayPatterns = [
   'gameRewards',

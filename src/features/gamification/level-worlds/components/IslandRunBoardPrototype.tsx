@@ -239,6 +239,10 @@ import {
   startIslandRunLuckyRoll,
 } from '../services/islandRunLuckyRollAction';
 import {
+  collectPostRareTreasurePathAndTravel,
+  startPostRareTreasurePath,
+} from '../services/islandRunPostRareTreasurePathAction';
+import {
   getEffectiveIslandNumber,
   getIslandTotalEssenceCost,
   getStopUpgradeCost,
@@ -1150,6 +1154,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [showDevLuckyRollOverlay, setShowDevLuckyRollOverlay] = useState(false);
   const [devLuckyRollTargetIsland, setDevLuckyRollTargetIsland] = useState<number | null>(null);
+  const [devLuckyRollCollectMode, setDevLuckyRollCollectMode] = useState<'bank_only' | 'post_rare_collect_travel'>('bank_only');
   const [cameraMode, setCameraMode] = useState<IslandRunCameraMode>('board_follow');
   const [focusedStopId, setFocusedStopId] = useState<string | null>(null);
   /**
@@ -7025,20 +7030,72 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return message;
   }, [client, isDevModeEnabled, session]);
 
-  const handleOpenDevLuckyRollOverlay = useCallback((targetIslandNumber: number) => {
+  const handleOpenDevLuckyRollOverlay = useCallback((
+    targetIslandNumber: number,
+    collectMode: 'bank_only' | 'post_rare_collect_travel' = 'bank_only',
+  ) => {
     if (!isDevModeEnabled) return;
     const normalizedTargetIslandNumber = Number.isFinite(targetIslandNumber)
       ? Math.max(1, Math.floor(targetIslandNumber))
       : runtimeStateRef.current.currentIslandNumber;
     setDevLuckyRollTargetIsland(normalizedTargetIslandNumber);
+    setDevLuckyRollCollectMode(collectMode);
     setShowDevLuckyRollOverlay(true);
     setLandingText(`🍀 DEV Lucky Roll overlay opened for island ${normalizedTargetIslandNumber}.`);
   }, [isDevModeEnabled]);
+
+  const handleOpenPostRareTreasurePathOverlay = useCallback((completedIslandNumber: number) => {
+    handleOpenDevLuckyRollOverlay(completedIslandNumber, 'post_rare_collect_travel');
+  }, [handleOpenDevLuckyRollOverlay]);
 
   const handleLuckyRollOverlayRuntimeStateChange = useCallback((record: IslandRunGameStateRecord) => {
     setRuntimeState(record);
     runtimeStateRef.current = record;
   }, []);
+
+  const handleDevStartPostRareTreasurePath = useCallback(async (completedIslandNumber: number, completedCycleIndex: number) => {
+    if (!isDevModeEnabled) return 'Post-rare Treasure Path flow is only available in Island Run dev mode.';
+    const result = await startPostRareTreasurePath({
+      session,
+      client,
+      completedIslandNumber,
+      cycleIndex: completedCycleIndex,
+      triggerSource: 'dev_post_rare_treasure_path_start',
+    });
+    setRuntimeState(result.record);
+    runtimeStateRef.current = result.record;
+    const message = result.status === 'not_applicable'
+      ? `🧭 Post-rare Treasure Path is not applicable for island ${completedIslandNumber}.`
+      : `🧭 Post-rare Treasure Path ${result.status} for island ${completedIslandNumber} (state: ${result.state.status}).`;
+    setLandingText(message);
+    return message;
+  }, [client, isDevModeEnabled, session]);
+
+  const handleDevCollectPostRareTreasurePathAndTravel = useCallback(async (completedIslandNumber: number, completedCycleIndex: number) => {
+    if (!isDevModeEnabled) return 'Post-rare Treasure Path flow is only available in Island Run dev mode.';
+    const result = await collectPostRareTreasurePathAndTravel({
+      session,
+      client,
+      completedIslandNumber,
+      cycleIndex: completedCycleIndex,
+      startTimer: true,
+      nowMs: Date.now(),
+      getIslandDurationMs,
+      islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+      triggerSource: 'dev_post_rare_treasure_path_collect_and_travel',
+    });
+    setRuntimeState(result.record);
+    runtimeStateRef.current = result.record;
+    setIslandNumber(result.record.currentIslandNumber);
+    setCycleIndex(result.record.cycleIndex);
+    setTimeLeftSec(Math.max(0, Math.ceil(Math.max(0, result.record.islandExpiresAtMs - Date.now()) / 1000)));
+    setIslandStartedAtMs(result.record.islandStartedAtMs);
+    setIslandExpiresAtMs(result.record.islandExpiresAtMs);
+    setIsIslandTimerPendingStart(false);
+    const message = `🧭 Post-rare collect+travel ${result.status}: +${result.diceAwarded} dice, +${result.essenceAwarded} essence, +${result.shardsAwarded} shards. Current island/cycle: ${result.record.currentIslandNumber}/${result.record.cycleIndex}.`;
+    setLandingText(message);
+    return message;
+  }, [client, isDevModeEnabled, session]);
 
   const handleDevOpenEggRewardInventoryEntry = useCallback(async (eggRewardId: string) => {
     if (!isDevModeEnabled) return 'Treasure Egg opener is only available in Island Run dev mode.';
@@ -8410,6 +8467,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           runtimeState={runtimeState}
           targetIslandNumber={devLuckyRollTargetIsland ?? runtimeState.currentIslandNumber}
           isDevModeEnabled={isDevModeEnabled}
+          collectMode={devLuckyRollCollectMode}
           onRuntimeStateChange={handleLuckyRollOverlayRuntimeStateChange}
           onClose={() => setShowDevLuckyRollOverlay(false)}
         />
@@ -10739,6 +10797,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           onStartLuckyRollDevSession={handleDevStartLuckyRollSession}
           onAdvanceLuckyRollDevSession={handleDevAdvanceLuckyRollSession}
           onBankLuckyRollDevSession={handleDevBankLuckyRollSession}
+          onOpenPostRareTreasurePathOverlay={handleOpenPostRareTreasurePathOverlay}
+          onStartPostRareTreasurePath={handleDevStartPostRareTreasurePath}
+          onCollectPostRareTreasurePathAndTravel={handleDevCollectPostRareTreasurePathAndTravel}
           onOpenEggRewardInventoryEntry={handleDevOpenEggRewardInventoryEntry}
           onClose={() => setShowDebugPanel(false)}
         />
