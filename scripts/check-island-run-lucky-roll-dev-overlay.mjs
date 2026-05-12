@@ -33,7 +33,7 @@ requireIncludes('overlay', overlay, 'getIslandRunLuckyRollTileConfig');
 requireIncludes('overlay', overlay, "mode: 'production_board'");
 requireIncludes('overlay', overlay, 'Treasure Path');
 requireIncludes('overlay', overlay, 'Treasure Path unlocked!');
-requireIncludes('overlay', overlay, 'You found a hidden reward path.');
+requireIncludes('overlay', overlay, 'You found a cozy bonus detour.');
 requireIncludes('overlay', overlay, 'Roll for free across glowing fields and collect everything at the treasure gate.');
 requireIncludes('overlay', overlay, 'Collect Treasure');
 requireIncludes('overlay', overlay, 'Dice total');
