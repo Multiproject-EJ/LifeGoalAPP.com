@@ -1,5 +1,6 @@
 import {
   collectPostRareTreasurePathAndTravel,
+  resolvePendingTreasurePathResume,
   resolvePostRareTreasurePathState,
   startPostRareTreasurePath,
 } from '../islandRunPostRareTreasurePathAction';
@@ -94,6 +95,30 @@ function makeCompletedTreasurePathSession(options: {
     startedAtMs: 1_000,
     bankedAtMs: null,
     updatedAtMs: 2_000,
+  };
+}
+
+function makeActiveTreasurePathSession(options: {
+  cycleIndex: number;
+  targetIslandNumber: number;
+  runId?: string;
+}): IslandRunLuckyRollSession {
+  const sessionKey = getIslandRunLuckyRollSessionKey(options.cycleIndex, options.targetIslandNumber);
+  return {
+    status: 'active',
+    runId: options.runId ?? `post-rare-treasure-path:${sessionKey}`,
+    targetIslandNumber: options.targetIslandNumber,
+    cycleIndex: options.cycleIndex,
+    position: 12,
+    rollsUsed: 3,
+    claimedTileIds: [3, 7, 12],
+    pendingRewards: [
+      { rewardId: `${sessionKey}:dice`, tileId: 3, rewardType: 'dice', amount: 5 },
+    ],
+    bankedRewards: [],
+    startedAtMs: 1_000,
+    bankedAtMs: null,
+    updatedAtMs: 2_500,
   };
 }
 
@@ -273,6 +298,81 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
     },
   },
   {
+    name: 'pending resume resolver detects active Treasure Path session after refresh',
+    run: () => {
+      resetEnvironment();
+      const sessionKey = getIslandRunLuckyRollSessionKey(0, 30);
+      seedState({
+        currentIslandNumber: 30,
+        cycleIndex: 0,
+        luckyRollSessionsByMilestone: {
+          [sessionKey]: makeActiveTreasurePathSession({ cycleIndex: 0, targetIslandNumber: 30 }),
+        },
+      });
+
+      const resume = resolvePendingTreasurePathResume({ record: readIslandRunGameStateRecord(makeSession()) });
+
+      assert(resume, 'Active milestone Treasure Path should resolve a resume prompt');
+      if (!resume) return;
+      assertEqual(resume.status, 'active', 'Active session should resolve as active');
+      assertEqual(resume.sessionKey, sessionKey, 'Resume should target the active milestone session');
+    },
+  },
+  {
+    name: 'pending resume resolver detects completed Treasure Path session ready to collect after refresh',
+    run: () => {
+      resetEnvironment();
+      const sessionKey = seedCompletedTreasurePath({ cycleIndex: 0, targetIslandNumber: 30 });
+
+      const resume = resolvePendingTreasurePathResume({ record: readIslandRunGameStateRecord(makeSession()) });
+
+      assert(resume, 'Completed milestone Treasure Path should resolve a collect prompt');
+      if (!resume) return;
+      assertEqual(resume.status, 'completed_ready_to_collect', 'Completed session should resolve ready to collect');
+      assertEqual(resume.sessionKey, sessionKey, 'Resume should target the completed milestone session');
+    },
+  },
+  {
+    name: 'pending resume resolver detects banked but not traveled Treasure Path session',
+    run: () => {
+      resetEnvironment();
+      const sessionKey = getIslandRunLuckyRollSessionKey(0, 30);
+      seedState({
+        currentIslandNumber: 30,
+        cycleIndex: 0,
+        luckyRollSessionsByMilestone: {
+          [sessionKey]: makeBankedTreasurePathSession({ cycleIndex: 0, targetIslandNumber: 30 }),
+        },
+      });
+
+      const resume = resolvePendingTreasurePathResume({ record: readIslandRunGameStateRecord(makeSession()) });
+
+      assert(resume, 'Banked milestone Treasure Path should still resolve until travel completes');
+      if (!resume) return;
+      assertEqual(resume.status, 'collected_banked', 'Banked session should resolve as collected_banked');
+    },
+  },
+  {
+    name: 'pending resume resolver ignores already traveled and non-milestone sessions',
+    run: () => {
+      resetEnvironment();
+      const traveledSessionKey = getIslandRunLuckyRollSessionKey(0, 30);
+      const nonMilestoneSessionKey = getIslandRunLuckyRollSessionKey(0, 31);
+      seedState({
+        currentIslandNumber: 31,
+        cycleIndex: 0,
+        luckyRollSessionsByMilestone: {
+          [traveledSessionKey]: makeBankedTreasurePathSession({ cycleIndex: 0, targetIslandNumber: 30 }),
+          [nonMilestoneSessionKey]: makeActiveTreasurePathSession({ cycleIndex: 0, targetIslandNumber: 31 }),
+        },
+      });
+
+      const resume = resolvePendingTreasurePathResume({ record: readIslandRunGameStateRecord(makeSession()) });
+
+      assertEqual(resume, null, 'Already traveled and non-milestone sessions should not show resume prompts');
+    },
+  },
+  {
     name: 'start resume is idempotent and does not mutate hatchery egg state',
     run: async () => {
       resetEnvironment();
@@ -345,6 +445,32 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
       assertEqual(collected.record.currentIslandNumber, 31, 'Collect should travel to the next island');
       assertEqual(collected.record.cycleIndex, 0, 'Cycle should not change before island 120');
       assertEqual(collected.record.islandStartedAtMs, 5_000, 'Travel should start timer when requested');
+    },
+  },
+  {
+    name: 'collect after completed resume detection travels correctly',
+    run: async () => {
+      resetEnvironment();
+      seedCompletedTreasurePath({ cycleIndex: 0, targetIslandNumber: 30 });
+      const resume = resolvePendingTreasurePathResume({ record: readIslandRunGameStateRecord(makeSession()) });
+      assert(resume, 'Completed Treasure Path should be resumable before collect');
+      if (!resume) return;
+
+      const collected = await collectPostRareTreasurePathAndTravel({
+        session: makeSession(),
+        client: null,
+        completedIslandNumber: resume.completedIslandNumber,
+        cycleIndex: resume.cycleIndex,
+        startTimer: true,
+        nowMs: 5_000,
+        getIslandDurationMs: () => 60_000,
+        islandRunContractV2Enabled: false,
+      });
+
+      const afterCollectResume = resolvePendingTreasurePathResume({ record: readIslandRunGameStateRecord(makeSession()) });
+      assertEqual(collected.status, 'banked_and_traveled', 'Collect from resumed state should bank and travel');
+      assertEqual(collected.record.currentIslandNumber, 31, 'Collect from resumed state should travel to next island');
+      assertEqual(afterCollectResume, null, 'Resume prompt should disappear after collect and travel');
     },
   },
   {
@@ -496,7 +622,7 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
     },
   },
   {
-    name: 'milestone Treasure Path orchestration does not add UI entry points',
+    name: 'milestone Treasure Path orchestration keeps resume UI canonical and guarded',
     run: async () => {
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
@@ -512,6 +638,10 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
       const boardSource = fsMod.readFileSync(pathMod.resolve(
         process.cwd(),
         'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx',
+      ), 'utf8');
+      const postRareServiceSource = fsMod.readFileSync(pathMod.resolve(
+        process.cwd(),
+        'src/features/gamification/level-worlds/services/islandRunPostRareTreasurePathAction.ts',
       ), 'utf8');
       assert(!serviceImportPattern.test(appSource), 'App.tsx should not import milestone Treasure Path orchestration');
       assert(!serviceImportPattern.test(overlaySource), 'GameBoardOverlay should not import milestone Treasure Path orchestration');
@@ -538,8 +668,28 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
         'Milestone Treasure Path overlay should collect through collect+travel orchestration',
       );
       assert(
+        /resolvePendingTreasurePathResume/.test(boardSource),
+        'Island Run board should resolve pending Treasure Path resume state',
+      );
+      assert(
+        /Continue Treasure Path/.test(boardSource),
+        'Island Run board should expose a Continue Treasure Path prompt',
+      );
+      assert(
+        /Collect Treasure/.test(boardSource),
+        'Island Run board should expose a Collect Treasure prompt',
+      );
+      assert(
         !/LuckyRollBoard/.test(boardSource),
         'Island Run board milestone flow must not use legacy LuckyRollBoard',
+      );
+      assert(
+        !/localStorage|sessionStorage/.test(postRareServiceSource),
+        'Milestone Treasure Path recovery must use canonical state, not browser storage',
+      );
+      assert(
+        !/resolveIslandRunLuckyRollRewardBanking/.test(boardSource) && !/resolveIslandRunTravelState/.test(boardSource),
+        'Island Run board must not duplicate milestone Treasure Path bank/travel composition in React',
       );
       assert(
         !/bankIslandRunLuckyRollRewards/.test(debugPanelSource) && !/resolveIslandRunTravelState/.test(debugPanelSource),

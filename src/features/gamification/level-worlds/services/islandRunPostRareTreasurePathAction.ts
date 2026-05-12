@@ -43,6 +43,24 @@ export interface ResolvePostRareTreasurePathStateResult {
   nextCycleIndex: number | null;
 }
 
+export interface ResolvePendingTreasurePathResumeOptions {
+  record: IslandRunGameStateRecord;
+}
+
+export type ResolvePendingTreasurePathResumeResult = ResolvePostRareTreasurePathStateResult | null;
+
+const RESUMABLE_TREASURE_PATH_STATUSES = new Set<PostRareTreasurePathStateStatus>([
+  'active',
+  'completed_ready_to_collect',
+  'collected_banked',
+]);
+
+const RESUMABLE_TREASURE_PATH_SESSION_STATUSES = new Set<IslandRunLuckyRollSession['status']>([
+  'active',
+  'completed',
+  'banked',
+]);
+
 export interface StartPostRareTreasurePathOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -163,6 +181,51 @@ export function resolvePostRareTreasurePathState(
     nextIslandNumber,
     nextCycleIndex,
   };
+}
+
+function getResumeStatusPriority(status: PostRareTreasurePathStateStatus): number {
+  switch (status) {
+    case 'completed_ready_to_collect':
+      return 3;
+    case 'collected_banked':
+      return 2;
+    case 'active':
+      return 1;
+    default:
+      return 0;
+  }
+}
+
+export function resolvePendingTreasurePathResume(
+  options: ResolvePendingTreasurePathResumeOptions,
+): ResolvePendingTreasurePathResumeResult {
+  const candidates = Object.entries(options.record.luckyRollSessionsByMilestone)
+    .filter(([, luckyRollSession]) => (
+      RESUMABLE_TREASURE_PATH_SESSION_STATUSES.has(luckyRollSession.status)
+      && isRecordAtIsland(options.record, normalizeIslandNumber(luckyRollSession.targetIslandNumber), normalizeCycleIndex(luckyRollSession.cycleIndex))
+    ))
+    .map(([sessionKey, luckyRollSession]) => {
+      const state = resolvePostRareTreasurePathState({
+        record: options.record,
+        completedIslandNumber: luckyRollSession.targetIslandNumber,
+        cycleIndex: luckyRollSession.cycleIndex,
+      });
+      return state.sessionKey === sessionKey ? state : null;
+    })
+    .filter((state): state is ResolvePostRareTreasurePathStateResult => {
+      if (!state) return false;
+      return RESUMABLE_TREASURE_PATH_STATUSES.has(state.status);
+    });
+
+  if (candidates.length < 1) return null;
+
+  return candidates.sort((a, b) => {
+    const priorityDelta = getResumeStatusPriority(b.status) - getResumeStatusPriority(a.status);
+    if (priorityDelta !== 0) return priorityDelta;
+    const updatedDelta = (b.luckyRollSession?.updatedAtMs ?? 0) - (a.luckyRollSession?.updatedAtMs ?? 0);
+    if (updatedDelta !== 0) return updatedDelta;
+    return b.completedIslandNumber - a.completedIslandNumber;
+  })[0];
 }
 
 export async function startPostRareTreasurePath(
