@@ -313,6 +313,7 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
       const resume = resolvePendingTreasurePathResume({ record: readIslandRunGameStateRecord(makeSession()) });
 
       assert(resume, 'Active milestone Treasure Path should resolve a resume prompt');
+      if (!resume) return;
       assertEqual(resume.status, 'active', 'Active session should resolve as active');
       assertEqual(resume.sessionKey, sessionKey, 'Resume should target the active milestone session');
     },
@@ -326,6 +327,7 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
       const resume = resolvePendingTreasurePathResume({ record: readIslandRunGameStateRecord(makeSession()) });
 
       assert(resume, 'Completed milestone Treasure Path should resolve a collect prompt');
+      if (!resume) return;
       assertEqual(resume.status, 'completed_ready_to_collect', 'Completed session should resolve ready to collect');
       assertEqual(resume.sessionKey, sessionKey, 'Resume should target the completed milestone session');
     },
@@ -346,6 +348,7 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
       const resume = resolvePendingTreasurePathResume({ record: readIslandRunGameStateRecord(makeSession()) });
 
       assert(resume, 'Banked milestone Treasure Path should still resolve until travel completes');
+      if (!resume) return;
       assertEqual(resume.status, 'collected_banked', 'Banked session should resolve as collected_banked');
     },
   },
@@ -451,6 +454,7 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
       seedCompletedTreasurePath({ cycleIndex: 0, targetIslandNumber: 30 });
       const resume = resolvePendingTreasurePathResume({ record: readIslandRunGameStateRecord(makeSession()) });
       assert(resume, 'Completed Treasure Path should be resumable before collect');
+      if (!resume) return;
 
       const collected = await collectPostRareTreasurePathAndTravel({
         session: makeSession(),
