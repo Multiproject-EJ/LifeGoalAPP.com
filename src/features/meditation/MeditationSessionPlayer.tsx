@@ -21,6 +21,8 @@ const PHASE_INDEX_BY_PHASE = {
   exhale: 2,
 } as const;
 
+const PHASE_LABELS: Array<keyof typeof PHASE_INDEX_BY_PHASE> = ['inhale', 'hold', 'exhale'];
+
 export function MeditationSessionPlayer({
   isOpen,
   onClose,
@@ -36,6 +38,7 @@ export function MeditationSessionPlayer({
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [gongIntervalSeconds, setGongIntervalSeconds] = useState<number | null>(60);
   const [missingPhaseAssets, setMissingPhaseAssets] = useState<Record<string, true>>({});
+  const [mobileBgMissing, setMobileBgMissing] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const lastIntervalRef = useRef<number | null>(gongIntervalSeconds);
 
@@ -269,6 +272,17 @@ export function MeditationSessionPlayer({
   return (
     <div className="meditation-modal-overlay" onClick={handleClose}>
       <div className="meditation-modal" onClick={(e) => e.stopPropagation()}>
+        {!mobileBgMissing && (
+          <img
+            className="meditation-modal__bg-image"
+            src="/icons/Energy/breathing-space-bg-mobile.webp"
+            alt=""
+            aria-hidden="true"
+            loading="eager"
+            decoding="async"
+            onError={() => setMobileBgMissing(true)}
+          />
+        )}
         <button className="meditation-modal__close" onClick={handleClose} aria-label="Close">
           ×
         </button>
@@ -303,14 +317,16 @@ export function MeditationSessionPlayer({
             </div>
           </div>
           <div className="meditation-phase-indicator" role="presentation" aria-hidden="true">
-            {['Inhale', 'Hold', 'Exhale'].map((phaseLabel, index) => (
+            {PHASE_LABELS.map((phase) => (
               <span
-                key={phaseLabel}
+                key={phase}
                 className={`meditation-phase-indicator__chip ${
-                  currentPhaseIndex === index ? 'meditation-phase-indicator__chip--active' : ''
+                  currentPhaseIndex === PHASE_INDEX_BY_PHASE[phase]
+                    ? 'meditation-phase-indicator__chip--active'
+                    : ''
                 }`}
               >
-                {phaseLabel}
+                {phase.charAt(0).toUpperCase() + phase.slice(1)}
               </span>
             ))}
           </div>

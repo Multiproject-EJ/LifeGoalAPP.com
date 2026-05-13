@@ -60,6 +60,21 @@
   }
 }
 
+/* Optional mobile background image — softened via opacity so it never overpowers text. */
+/* Falls back to CSS sky/glass treatment gracefully when the asset is absent.           */
+.meditation-modal__bg-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  z-index: 0;
+  opacity: 0.34;
+  pointer-events: none;
+  user-select: none;
+}
+
 .meditation-modal__close {
   position: absolute;
   top: var(--space-4);
