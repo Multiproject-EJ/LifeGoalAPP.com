@@ -141,7 +141,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       syncProgress(claim.progress);
     }
     if (claim.ok) {
-      setClaimMessage(claim.rewardLabel ? `Reward claimed: ${claim.rewardLabel}` : 'Reward claimed.');
+      setClaimMessage(claim.rewardLabel ? `Reward claimed: ${claim.rewardLabel}` : 'Reward claimed');
     } else if (claim.failureReason === 'already_claimed') {
       setClaimMessage('Reward already claimed.');
     } else if (claim.failureReason === 'not_achieved') {
@@ -266,7 +266,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
                 New reward available: {firstClaimableMilestone.rewardLabel}
               </span>
             ) : (
-              <span>No new milestone claimable yet</span>
+              <span>No new reward available yet</span>
             )}
           </div>
           {canAdvanceBoard && (
