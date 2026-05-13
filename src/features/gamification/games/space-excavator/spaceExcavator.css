@@ -258,6 +258,61 @@
   box-shadow: 0 0 14px var(--space-excavator-glow);
 }
 
+.space-excavator__clue {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.38);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 18px rgba(2, 6, 23, 0.16);
+}
+
+.space-excavator__clue-label {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.space-excavator__clue-message {
+  min-width: 0;
+  overflow: hidden;
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.space-excavator__clue--relic {
+  border-color: rgba(250, 204, 21, 0.78);
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.26), rgba(15, 23, 42, 0.72));
+  color: #fde68a;
+  box-shadow: 0 0 20px rgba(250, 204, 21, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.space-excavator__clue--hot {
+  border-color: rgba(248, 113, 113, 0.78);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.24), rgba(15, 23, 42, 0.72));
+  color: #fecaca;
+}
+
+.space-excavator__clue--warm {
+  border-color: rgba(251, 191, 36, 0.7);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(15, 23, 42, 0.72));
+  color: #fde68a;
+}
+
+.space-excavator__clue--cold {
+  border-color: rgba(147, 197, 253, 0.48);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(15, 23, 42, 0.72));
+  color: #bfdbfe;
+}
+
 .space-excavator__board-shell {
   flex: 1 1 auto;
   display: grid;
@@ -304,6 +359,44 @@
   border-color: var(--space-excavator-panel-border);
   background: linear-gradient(145deg, var(--space-excavator-tile-highlight), var(--space-excavator-accent-strong));
   color: var(--space-excavator-accent-contrast);
+}
+
+.space-excavator__tile-marker {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: currentColor;
+  vertical-align: middle;
+}
+
+.space-excavator__tile--hot {
+  border-color: rgba(248, 113, 113, 0.82);
+  background: linear-gradient(145deg, rgba(239, 68, 68, 0.92), rgba(124, 45, 18, 0.92));
+  color: #fee2e2;
+  box-shadow: 0 0 16px rgba(248, 113, 113, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.space-excavator__tile--warm {
+  border-color: rgba(251, 191, 36, 0.78);
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.9), rgba(146, 64, 14, 0.9));
+  color: #fef3c7;
+}
+
+.space-excavator__tile--warm .space-excavator__tile-marker {
+  background: transparent;
+  border: 2px solid currentColor;
+}
+
+.space-excavator__tile--cold {
+  border-color: rgba(148, 163, 184, 0.46);
+  background: linear-gradient(145deg, rgba(71, 85, 105, 0.82), rgba(30, 41, 59, 0.92));
+  color: #bfdbfe;
+}
+
+.space-excavator__tile--cold .space-excavator__tile-marker {
+  width: 8px;
+  height: 8px;
 }
 
 .space-excavator__tile--object {

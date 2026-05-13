@@ -48,6 +48,7 @@ import { minigameConsolidationPhase3Tests } from './minigameConsolidationPhase3.
 import { minigameConsolidationPhase4Tests } from './minigameConsolidationPhase4.test';
 import { minigameConsolidationPhase5Tests } from './minigameConsolidationPhase5.test';
 import { minigameConsolidationPhase6Tests } from './minigameConsolidationPhase6.test';
+import { spaceExcavatorCluesTests } from './spaceExcavatorClues.test';
 import { spaceExcavatorDepthsTests } from './spaceExcavatorDepths.test';
 import { islandRunShooterControllerBridgeTests } from './islandRunShooterControllerBridge.test';
 import { islandRunShooterControllerTelemetryTests } from './islandRunShooterControllerTelemetry.test';
@@ -108,6 +109,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'minigameConsolidationPhase4', tests: minigameConsolidationPhase4Tests },
   { label: 'minigameConsolidationPhase5', tests: minigameConsolidationPhase5Tests },
   { label: 'minigameConsolidationPhase6', tests: minigameConsolidationPhase6Tests },
+  { label: 'spaceExcavatorClues', tests: spaceExcavatorCluesTests },
   { label: 'spaceExcavatorDepths', tests: spaceExcavatorDepthsTests },
   { label: 'islandRunShooterControllerBridge', tests: islandRunShooterControllerBridgeTests },
   { label: 'islandRunShooterControllerTelemetry', tests: islandRunShooterControllerTelemetryTests },
