@@ -174,22 +174,51 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   return (
     <section className="space-excavator" aria-label="Space Excavator">
       <div className="space-excavator__hud">
-        <span>Island {islandNumber}</span>
-        <span>{boardLabel}</span>
-        <span>Tickets: {ticketsRemaining}</span>
-        <span>Pieces found: {found}/{objectPieceCount}</span>
+        <span className="space-excavator__hud-chip">
+          <small>Island</small>
+          <strong>{islandNumber}</strong>
+        </span>
+        <span className="space-excavator__hud-chip">
+          <small>Site</small>
+          <strong>{boardLabel}</strong>
+        </span>
+        <span className="space-excavator__hud-chip space-excavator__hud-chip--accent">
+          <small>Tickets</small>
+          <strong>{ticketsRemaining}</strong>
+        </span>
+        <span className="space-excavator__hud-chip">
+          <small>Pieces</small>
+          <strong>{found}/{objectPieceCount}</strong>
+        </span>
       </div>
 
       <div className="space-excavator__preview" aria-label="Hidden object preview">
         <div className="space-excavator__silhouette" aria-hidden="true">
           {relicIcon}
         </div>
-        <div>
+        <div className="space-excavator__preview-copy">
           <p className="space-excavator__preview-title">Find: {relicName}</p>
           <p className="space-excavator__preview-progress">{found} / {objectPieceCount} pieces found</p>
           <div className="space-excavator__progress-bar" aria-hidden="true">
             <span style={{ width: `${Math.min(100, Math.round((found / objectPieceCount) * 100))}%` }} />
           </div>
+        </div>
+      </div>
+
+      <div className="space-excavator__board-shell">
+        <div className="space-excavator__board" style={{ gridTemplateColumns: `repeat(${size}, minmax(42px, clamp(48px, 15vmin, 68px)))` }}>
+          {tiles.map((tile, i) => (
+            <button
+              key={i}
+              type="button"
+              className={`space-excavator__tile ${tile.dug ? (tile.objectPiece ? 'space-excavator__tile--object' : 'space-excavator__tile--dug') : ''}`}
+              onClick={() => onDig(i)}
+              disabled={finished || boardComplete || tile.dug}
+              aria-label={`Tile ${i + 1}`}
+            >
+              {tile.dug ? (tile.objectPiece ? (progress?.objectIcon ?? initial?.objectIcon ?? '✦') : '·') : '⬛'}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -236,21 +265,6 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
         <p className="space-excavator__next-reward">
           {nextMilestone ? `Next: ${nextMilestone.rewardLabel}` : 'All event milestones reached'}
         </p>
-      </div>
-
-      <div className="space-excavator__board" style={{ gridTemplateColumns: `repeat(${size}, minmax(36px, 44px))` }}>
-        {tiles.map((tile, i) => (
-          <button
-            key={i}
-            type="button"
-            className={`space-excavator__tile ${tile.dug ? (tile.objectPiece ? 'space-excavator__tile--object' : 'space-excavator__tile--dug') : ''}`}
-            onClick={() => onDig(i)}
-            disabled={finished || boardComplete || tile.dug}
-            aria-label={`Tile ${i + 1}`}
-          >
-            {tile.dug ? (tile.objectPiece ? (progress?.objectIcon ?? initial?.objectIcon ?? '✦') : '·') : '⬛'}
-          </button>
-        ))}
       </div>
 
       {showOutOfTickets && (
