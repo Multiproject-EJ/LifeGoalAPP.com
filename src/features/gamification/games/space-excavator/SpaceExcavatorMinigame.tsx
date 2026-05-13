@@ -139,20 +139,22 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
     setClaimPendingId(milestoneId);
     setClaimMessage(null);
     const claim = config.requestClaimMilestoneReward?.(milestoneId) ?? { ok: false };
-    if (claim.progress) {
-      syncProgress(claim.progress);
-    }
     if (claim.ok) {
+      syncProgress(claim.progress);
       setClaimMessage(`Reward claimed: ${claim.rewardLabel}`);
     } else if (claim.failureReason === 'already_claimed') {
+      if (claim.progress) syncProgress(claim.progress);
       setClaimMessage('Reward already claimed.');
     } else if (claim.failureReason === 'not_achieved') {
+      if (claim.progress) syncProgress(claim.progress);
       setClaimMessage('Clear more boards to unlock this reward.');
     } else if (claim.failureReason === 'missing_event' || claim.failureReason === 'progress_not_found') {
-      setClaimMessage('Space Excavator progress was not ready. Reopen the event and try again.');
+      setClaimMessage('Progress data is temporarily unavailable. Please close and reopen Space Excavator.');
     } else if (claim.failureReason === 'missing_milestone') {
+      if (claim.progress) syncProgress(claim.progress);
       setClaimMessage('This reward is unavailable.');
     } else {
+      if (claim.progress) syncProgress(claim.progress);
       setClaimMessage('Could not claim this reward right now. Please try again.');
     }
     setClaimPendingId(null);
