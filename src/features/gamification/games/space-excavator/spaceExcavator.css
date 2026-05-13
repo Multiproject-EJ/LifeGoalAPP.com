@@ -9,11 +9,13 @@
   padding: calc(env(safe-area-inset-top, 0px) + 12px) 12px calc(env(safe-area-inset-bottom, 0px) + 12px);
   color: #f8fafc;
   background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .space-excavator__hud {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 8px;
   font-size: 14px;
@@ -103,7 +105,7 @@
 
 .space-excavator__milestones {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   gap: 6px;
   margin-top: 8px;
 }
@@ -111,7 +113,7 @@
 .space-excavator__milestone {
   display: flex;
   min-width: 0;
-  min-height: 76px;
+  min-height: 92px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -119,6 +121,7 @@
   padding: 6px 4px;
   border: 1px solid #64748b;
   border-radius: 10px;
+  background: rgba(15, 23, 42, 0.45);
   color: #cbd5e1;
   font-size: 11px;
   text-align: center;
@@ -146,19 +149,20 @@
 
 .space-excavator__milestone--claimable {
   border-color: #38bdf8;
-  background: rgba(14, 165, 233, 0.18);
+  background: linear-gradient(180deg, rgba(14, 165, 233, 0.34), rgba(14, 165, 233, 0.16));
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.22), 0 8px 20px rgba(14, 165, 233, 0.16);
   color: #bae6fd;
 }
 
 .space-excavator__milestone--claimed {
   border-color: #facc15;
-  background: rgba(250, 204, 21, 0.2);
+  background: rgba(250, 204, 21, 0.18);
   color: #fde68a;
 }
 
 .space-excavator__claim-button {
   width: 100%;
-  min-height: 28px;
+  min-height: 36px;
   border: 1px solid #38bdf8;
   border-radius: 8px;
   background: #0ea5e9;
@@ -192,8 +196,9 @@
 }
 
 .space-excavator__tile {
-  width: 44px;
-  height: 44px;
+  width: 100%;
+  aspect-ratio: 1;
+  min-height: 36px;
   border-radius: 8px;
   border: 1px solid #475569;
   background: #1e293b;
@@ -207,12 +212,15 @@
 
 .space-excavator__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   padding-bottom: max(0px, env(safe-area-inset-bottom, 0px));
 }
 
 .space-excavator__button {
   flex: 1;
+  min-width: 144px;
+  min-height: 44px;
   padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid #64748b;
@@ -227,7 +235,75 @@
   padding: 10px;
 }
 
+.space-excavator__notice p {
+  margin: 0;
+}
+
+.space-excavator__notice-title {
+  font-size: 18px;
+  font-weight: 900;
+}
+
 .space-excavator__notice--success {
   border-color: #22c55e;
-  background: rgba(20, 83, 45, 0.35);
+  background: linear-gradient(180deg, rgba(20, 83, 45, 0.55), rgba(15, 23, 42, 0.72));
+  box-shadow: 0 12px 26px rgba(34, 197, 94, 0.12);
+}
+
+.space-excavator__relic-found {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.space-excavator__relic-found-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border-radius: 14px;
+  background: rgba(250, 204, 21, 0.16);
+  color: #fde68a;
+  font-size: 28px;
+}
+
+.space-excavator__clear-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.space-excavator__clear-summary span {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.5);
+  color: #e2e8f0;
+  font-size: 12px;
+}
+
+.space-excavator__clear-summary-claimable {
+  border-color: rgba(56, 189, 248, 0.6) !important;
+  background: rgba(14, 165, 233, 0.22) !important;
+  color: #bae6fd !important;
+  font-weight: 800;
+}
+
+@media (max-width: 420px) {
+  .space-excavator {
+    gap: 10px;
+    padding-inline: 10px;
+  }
+
+  .space-excavator__preview {
+    align-items: flex-start;
+  }
+
+  .space-excavator__milestones {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
 }

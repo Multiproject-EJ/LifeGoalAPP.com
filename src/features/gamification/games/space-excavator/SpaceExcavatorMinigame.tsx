@@ -92,6 +92,12 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const eventProgressPercent = Math.min(100, Math.round((eventProgressPoints / eventProgressTotal) * 100));
   const nextMilestone = getNextSpaceExcavatorCampaignMilestone({ eventProgressPoints });
   const claimedMilestoneIds = activeProgress?.claimedMilestoneIds ?? [];
+  const claimableMilestones = SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.filter(
+    (milestone) => eventProgressPoints >= milestone.pointsRequired && !claimedMilestoneIds.includes(milestone.id),
+  );
+  const firstClaimableMilestone = claimableMilestones[0] ?? null;
+  const relicIcon = progress?.objectIcon ?? initial?.objectIcon ?? '❔';
+  const relicName = progress?.objectName ?? initial?.objectName ?? 'Hidden Relic';
 
   const sendOnce = (completed: boolean) => {
     if (sentResult) return;
@@ -134,11 +140,13 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       syncProgress(claim.progress);
     }
     if (claim.ok) {
-      setClaimMessage(`Claimed ${claim.rewardLabel ?? 'reward'}!`);
+      setClaimMessage(`Reward claimed: ${claim.rewardLabel ?? 'Reward'}`);
     } else if (claim.failureReason === 'already_claimed') {
       setClaimMessage('Reward already claimed.');
     } else if (claim.failureReason === 'not_achieved') {
       setClaimMessage('Clear more boards to unlock this reward.');
+    } else {
+      setClaimMessage('Could not claim reward. Please try again.');
     }
     setClaimPendingId(null);
   };
@@ -154,10 +162,10 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
 
       <div className="space-excavator__preview" aria-label="Hidden object preview">
         <div className="space-excavator__silhouette" aria-hidden="true">
-          {progress?.objectIcon ?? initial?.objectIcon ?? '❔'}
+          {relicIcon}
         </div>
         <div>
-          <p className="space-excavator__preview-title">Find: {progress?.objectName ?? initial?.objectName ?? 'Hidden Relic'}</p>
+          <p className="space-excavator__preview-title">Find: {relicName}</p>
           <p className="space-excavator__preview-progress">{found} / {objectPieceCount} pieces found</p>
           <div className="space-excavator__progress-bar" aria-hidden="true">
             <span style={{ width: `${Math.min(100, Math.round((found / objectPieceCount) * 100))}%` }} />
@@ -168,7 +176,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       <div className="space-excavator__event-progress" aria-label="Event progress">
         <div className="space-excavator__event-progress-header">
           <strong>Event progress</strong>
-          <span>{eventProgressPoints} / {eventProgressTotal}</span>
+          <span>{eventProgressPoints} / {eventProgressTotal} boards cleared</span>
         </div>
         <div className="space-excavator__event-progress-bar" aria-hidden="true">
           <span style={{ width: `${eventProgressPercent}%` }} />
@@ -183,9 +191,9 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
               <div
                 key={milestone.id}
                 className={`space-excavator__milestone space-excavator__milestone--${claimed ? 'claimed' : claimable ? 'claimable' : 'locked'}`}
-                title={`${milestone.pointsRequired}: ${milestone.rewardLabel}`}
+                title={`${milestone.pointsRequired} board${milestone.pointsRequired === 1 ? '' : 's'} cleared: ${milestone.rewardLabel}`}
               >
-                <span>{milestone.pointsRequired}</span>
+                <span>{milestone.pointsRequired} board{milestone.pointsRequired === 1 ? '' : 's'}</span>
                 <small>{stateLabel}</small>
                 <strong>{milestone.rewardLabel}</strong>
                 {claimable && (
@@ -210,7 +218,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
         </p>
       </div>
 
-      <div className="space-excavator__board" style={{ gridTemplateColumns: `repeat(${size}, 44px)` }}>
+      <div className="space-excavator__board" style={{ gridTemplateColumns: `repeat(${size}, minmax(36px, 44px))` }}>
         {tiles.map((tile, i) => (
           <button
             key={i}
@@ -238,8 +246,24 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
 
       {boardComplete && (
         <div className="space-excavator__notice space-excavator__notice--success" role="status" aria-live="polite">
-          <p><strong>{progressStatus === 'completed' ? 'All boards cleared' : 'Board cleared'}</strong></p>
-          <p>{progress?.objectName ?? initial?.objectName ?? 'Hidden Relic'} found {found}/{objectPieceCount}.</p>
+          <div className="space-excavator__relic-found">
+            <div className="space-excavator__relic-found-icon" aria-hidden="true">{relicIcon}</div>
+            <div>
+              <p className="space-excavator__notice-title">Relic Found!</p>
+              <p>{relicName}</p>
+            </div>
+          </div>
+          <div className="space-excavator__clear-summary" aria-label="Board clear summary">
+            <span>{progressStatus === 'completed' ? 'All boards cleared' : `Board ${Math.max(1, Math.floor((progress?.boardIndex ?? 0) + 1))} cleared`}</span>
+            <span>Event progress +1</span>
+            {firstClaimableMilestone ? (
+              <span className="space-excavator__clear-summary-claimable">
+                Milestone claimable: {firstClaimableMilestone.rewardLabel}
+              </span>
+            ) : (
+              <span>No new milestone claimable yet</span>
+            )}
+          </div>
           {canAdvanceBoard && (
             <div className="space-excavator__actions">
               <button type="button" className="space-excavator__button" onClick={onAdvanceBoard}>Continue to next board</button>
