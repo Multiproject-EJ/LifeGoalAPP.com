@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, useId, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useId, type CSSProperties, type TouchEvent } from 'react';
 import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
@@ -174,6 +174,11 @@ const HABIT_SWIPE_MAX_PX = 132;
 const HABIT_SWIPE_ARM_THRESHOLD_PX = 84;
 const HABIT_SWIPE_SUPPRESS_CLICK_MS = 260;
 const HABIT_SFX_ENABLED_STORAGE_KEY = 'lifegoal.habits.sfx.enabled';
+const COMPACT_PULL_REFRESH_THRESHOLD_PX = 72;
+const COMPACT_PULL_REFRESH_MAX_PX = 118;
+const COMPACT_PULL_REFRESH_RESISTANCE = 0.45;
+const COMPACT_PULL_INTENT_THRESHOLD_PX = 10;
+const COMPACT_REFRESH_SUCCESS_FEEDBACK_MS = 2200;
 
 function isHabitSfxEnabled(): boolean {
   if (typeof window === 'undefined') {
@@ -828,6 +833,17 @@ export function DailyHabitTracker({
   const swipeSuppressClickUntilByHabitIdRef = useRef<Record<string, number>>({});
   const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
   const [isCompactView, setIsCompactView] = useState(preferredCompactView ?? forceCompactView);
+  const [compactPullDistance, setCompactPullDistance] = useState(0);
+  const [showCompactRefreshSuccess, setShowCompactRefreshSuccess] = useState(false);
+  const compactPullDistanceRef = useRef(0);
+  const compactPullGestureRef = useRef<{
+    touchId: number;
+    startX: number;
+    startY: number;
+    intent: 'pending' | 'vertical' | 'horizontal';
+  } | null>(null);
+  const compactPullRefreshInFlightRef = useRef(false);
+  const compactRefreshSuccessTimeoutRef = useRef<number | null>(null);
 
   // Quest Habit — the single habit designated to unlock the bonus door in the Personal Quest calendar
   const [questHabit, setQuestHabitState] = useState<QuestHabit | null>(() =>
@@ -914,6 +930,19 @@ export function DailyHabitTracker({
   const [isVisionVisualizationRunning, setIsVisionVisualizationRunning] = useState(false);
   const [showYesterdayRecap, setShowYesterdayRecap] = useState(false);
   const [showDreamJournalReminderModal, setShowDreamJournalReminderModal] = useState(false);
+  const setCompactPullDistanceState = useCallback((nextDistance: number) => {
+    compactPullDistanceRef.current = nextDistance;
+    setCompactPullDistance(nextDistance);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (compactRefreshSuccessTimeoutRef.current !== null) {
+        window.clearTimeout(compactRefreshSuccessTimeoutRef.current);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (typeof document === 'undefined' || !showDreamJournalReminderModal) {
       return;
@@ -3823,11 +3852,12 @@ export function DailyHabitTracker({
       setHabitInsights({});
       setHistoricalLogs([]);
       setMonthDays([]);
-      return;
+      return false;
     }
 
     setLoading(true);
     setErrorMessage(null);
+    let refreshSucceeded = true;
 
     const currentDate = new Date();
     const todayISO = formatISODate(currentDate);
@@ -3926,12 +3956,14 @@ export function DailyHabitTracker({
       setHistoricalLogs(logRows);
       setHabitInsights(calculateHabitInsights(nextHabits, logRows, trackingDateISO));
     } catch (error) {
+      refreshSucceeded = false;
       setErrorMessage(
         error instanceof Error ? error.message : 'Unable to load habits right now. Try refreshing shortly.',
       );
     } finally {
       setLoading(false);
     }
+    return refreshSucceeded;
   }, [session, isConfigured, isDemoExperience, selectedMonth, selectedYear, activeDate, variant]);
 
   useEffect(() => {
@@ -7031,7 +7063,7 @@ export function DailyHabitTracker({
         ? 'Habit progress is stored locally in demo mode. Connect Supabase to sync across devices.'
         : !isConfigured
           ? 'Connect Supabase to sync your rituals and keep streaks backed up.'
-          : 'Tap refresh if you updated habits elsewhere to pull in the latest list.';
+          : null;
 
     const statusVariant = errorMessage
       ? 'error'
@@ -7039,7 +7071,158 @@ export function DailyHabitTracker({
         ? 'info'
         : !isConfigured
           ? 'warning'
-          : 'muted';
+          : null;
+    const canUseCompactPullRefresh = isViewingToday && (isConfigured || isDemoExperience);
+    const pullProgress = Math.min(1, compactPullDistance / COMPACT_PULL_REFRESH_THRESHOLD_PX);
+    const isPullArmed = canUseCompactPullRefresh && pullProgress >= 1;
+    const shouldShowPullIndicator =
+      canUseCompactPullRefresh && (loading || compactPullDistance > 0 || showCompactRefreshSuccess);
+    const pullIndicatorText = loading
+      ? 'Updating…'
+      : showCompactRefreshSuccess
+        ? 'Updated just now'
+        : isPullArmed
+          ? 'Release to update'
+          : 'Pull to update';
+
+    const clearCompactRefreshSuccess = () => {
+      setShowCompactRefreshSuccess(false);
+      if (compactRefreshSuccessTimeoutRef.current !== null) {
+        window.clearTimeout(compactRefreshSuccessTimeoutRef.current);
+        compactRefreshSuccessTimeoutRef.current = null;
+      }
+    };
+
+    const handleTriggerCompactPullRefresh = async () => {
+      if (
+        !canUseCompactPullRefresh
+        || compactPullRefreshInFlightRef.current
+        || loading
+        || (typeof window !== 'undefined' && window.scrollY > 0)
+      ) {
+        setCompactPullDistanceState(0);
+        return;
+      }
+      compactPullRefreshInFlightRef.current = true;
+      setCompactPullDistanceState(0);
+      clearCompactRefreshSuccess();
+
+      try {
+        const refreshSucceeded = await refreshHabits();
+        if (refreshSucceeded) {
+          setShowCompactRefreshSuccess(true);
+          if (compactRefreshSuccessTimeoutRef.current !== null) {
+            window.clearTimeout(compactRefreshSuccessTimeoutRef.current);
+          }
+          compactRefreshSuccessTimeoutRef.current = window.setTimeout(() => {
+            setShowCompactRefreshSuccess(false);
+            compactRefreshSuccessTimeoutRef.current = null;
+          }, COMPACT_REFRESH_SUCCESS_FEEDBACK_MS);
+        }
+      } finally {
+        compactPullRefreshInFlightRef.current = false;
+      }
+    };
+
+    const handleCompactPullTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+      if (
+        !canUseCompactPullRefresh
+        || loading
+        || compactPullRefreshInFlightRef.current
+        || (typeof window !== 'undefined' && window.scrollY > 0)
+      ) {
+        return;
+      }
+      const touch = event.touches[0];
+      if (!touch) {
+        return;
+      }
+      clearCompactRefreshSuccess();
+      compactPullGestureRef.current = {
+        touchId: touch.identifier,
+        startX: touch.clientX,
+        startY: touch.clientY,
+        intent: 'pending',
+      };
+    };
+
+    const handleCompactPullTouchMove = (event: TouchEvent<HTMLDivElement>) => {
+      const gesture = compactPullGestureRef.current;
+      if (!gesture) {
+        return;
+      }
+      if (typeof window !== 'undefined' && window.scrollY > 0) {
+        compactPullGestureRef.current = null;
+        setCompactPullDistanceState(0);
+        return;
+      }
+      const touch = Array.from(event.touches).find((entry) => entry.identifier === gesture.touchId);
+      if (!touch) {
+        return;
+      }
+
+      const deltaX = touch.clientX - gesture.startX;
+      const deltaY = touch.clientY - gesture.startY;
+      if (gesture.intent === 'pending') {
+        if (
+          Math.abs(deltaX) < COMPACT_PULL_INTENT_THRESHOLD_PX
+          && Math.abs(deltaY) < COMPACT_PULL_INTENT_THRESHOLD_PX
+        ) {
+          return;
+        }
+        gesture.intent = Math.abs(deltaY) >= Math.abs(deltaX) ? 'vertical' : 'horizontal';
+      }
+      if (gesture.intent === 'horizontal') {
+        if (compactPullDistanceRef.current !== 0) {
+          setCompactPullDistanceState(0);
+        }
+        return;
+      }
+      if (deltaY <= 0) {
+        if (compactPullDistanceRef.current !== 0) {
+          setCompactPullDistanceState(0);
+        }
+        return;
+      }
+
+      const nextDistance = Math.min(
+        COMPACT_PULL_REFRESH_MAX_PX,
+        Math.round(deltaY * COMPACT_PULL_REFRESH_RESISTANCE),
+      );
+      setCompactPullDistanceState(nextDistance);
+      if (event.cancelable) {
+        event.preventDefault();
+      }
+    };
+
+    const handleCompactPullTouchEnd = () => {
+      const gesture = compactPullGestureRef.current;
+      if (!gesture) {
+        return;
+      }
+      compactPullGestureRef.current = null;
+      if (
+        gesture.intent !== 'horizontal'
+        && compactPullDistanceRef.current >= COMPACT_PULL_REFRESH_THRESHOLD_PX
+      ) {
+        void handleTriggerCompactPullRefresh().catch((error) => {
+          console.error('Compact pull-to-refresh failed:', error);
+        });
+        return;
+      }
+      setCompactPullDistanceState(0);
+    };
+
+    const checklistCardClassName = `habit-checklist-card${isCompactView ? '' : ' habit-checklist-card--glass'}${
+      canUseCompactPullRefresh ? ' habit-checklist-card--pull-enabled' : ''
+    }${compactPullDistance > 0 ? ' habit-checklist-card--pulling' : ''}${
+      isPullArmed ? ' habit-checklist-card--pull-armed' : ''
+    }`;
+    const checklistCardStyle = canUseCompactPullRefresh
+      ? ({
+          '--habit-compact-pull-offset': `${compactPullDistance}px`,
+        } as CSSProperties)
+      : undefined;
 
     const todayWinsTiles = [
       { id: 'habits', icon: '✅', label: 'Habits', value: completedCount },
@@ -7428,7 +7611,6 @@ export function DailyHabitTracker({
       }
     };
 
-    const checklistCardClassName = `habit-checklist-card${isCompactView ? '' : ' habit-checklist-card--glass'}`;
   const intentionsNoticeKey = intentionsNoticeStorageKey(session.user.id, today);
   const handleOpenIntentionsNotice = () => {
     setIsIntentionsNoticeOpen(true);
@@ -7614,7 +7796,33 @@ export function DailyHabitTracker({
       : null;
 
     return (
-      <div className={checklistCardClassName} role="region" aria-label={ariaLabel}>
+      <div
+        className={checklistCardClassName}
+        style={checklistCardStyle}
+        role="region"
+        aria-label={ariaLabel}
+        onTouchStart={canUseCompactPullRefresh ? handleCompactPullTouchStart : undefined}
+        onTouchMove={canUseCompactPullRefresh ? handleCompactPullTouchMove : undefined}
+        onTouchEnd={canUseCompactPullRefresh ? handleCompactPullTouchEnd : undefined}
+        onTouchCancel={canUseCompactPullRefresh ? handleCompactPullTouchEnd : undefined}
+      >
+        {shouldShowPullIndicator ? (
+          <div
+            className={`habit-checklist-card__pull-indicator${
+              loading
+                ? ' habit-checklist-card__pull-indicator--loading'
+                : showCompactRefreshSuccess
+                  ? ' habit-checklist-card__pull-indicator--success'
+                  : isPullArmed
+                    ? ' habit-checklist-card__pull-indicator--armed'
+                    : ''
+            }`}
+            aria-live="polite"
+          >
+            <span className="habit-checklist-card__pull-dot" aria-hidden="true" />
+            <span className="habit-checklist-card__pull-text">{pullIndicatorText}</span>
+          </div>
+        ) : null}
         {yesterdayIntentionsEntry && isIntentionsNoticeOpen ? (
           <div className="habit-intentions-modal" role="dialog" aria-modal="true">
             <button
@@ -8477,17 +8685,11 @@ export function DailyHabitTracker({
           </div>
         </div>
 
-        <div className={`habit-checklist-card__status habit-checklist-card__status--${statusVariant}`}>
-          <span className="habit-checklist-card__status-text">{statusText}</span>
-          <button
-            type="button"
-            className="habit-checklist-card__refresh-inline"
-            onClick={() => void refreshHabits()}
-            disabled={loading || (!isConfigured && !isDemoExperience)}
-          >
-            {loading ? 'Refreshing…' : 'Refresh'}
-          </button>
-        </div>
+        {statusText && statusVariant ? (
+          <div className={`habit-checklist-card__status habit-checklist-card__status--${statusVariant}`}>
+            <span className="habit-checklist-card__status-text">{statusText}</span>
+          </div>
+        ) : null}
         {identitySignalsUnlocked && isIdentitySignalsOpen ? (
           <div className="identity-signals-sheet" role="dialog" aria-modal="true" aria-label="Identity signals details">
             <div
