@@ -2091,8 +2091,13 @@ export function DailyHabitTracker({
     }
 
     const collageCount = Math.min(visionImages.length, 3 + Math.floor(Math.random() * 3)); // 3, 4, or 5
-    const shuffled = [...visionImages].sort(() => Math.random() - 0.5);
-    const selections = shuffled.slice(0, collageCount);
+    // Fisher-Yates shuffle for unbiased random selection
+    const pool = [...visionImages];
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    const selections = pool.slice(0, collageCount);
     const selection = selections[0];
     const preloadSelectionImage = async (url: string) => {
       await new Promise<void>((resolve) => {
@@ -2389,9 +2394,11 @@ export function DailyHabitTracker({
   const visionRewardClaimLabel = visionReward
     ? `Claim ${visionReward.xpAwarded} XP + ${visionReward.diceAwarded} Dice`
     : 'Preparing reward';
-  const shouldShowVisionLoading =
-    isVisionRewardSelecting || !visionReward?.imageUrl ||
-    (!(visionReward?.imageUrls && visionReward.imageUrls.length > 1) && !isVisionImageLoaded);
+  const isRewardImageReady =
+    !isVisionRewardSelecting &&
+    Boolean(visionReward?.imageUrl) &&
+    ((visionReward?.imageUrls && visionReward.imageUrls.length > 1) || isVisionImageLoaded);
+  const shouldShowVisionLoading = !isRewardImageReady;
   const visionVisualizationTimeLabel = `${Math.floor(visionVisualizationSeconds / 60)}:${String(
     visionVisualizationSeconds % 60,
   ).padStart(2, '0')}`;
