@@ -17,11 +17,11 @@ export interface SpaceExcavatorCampaignMilestone {
 }
 
 export const SPACE_EXCAVATOR_CAMPAIGN_MILESTONES: SpaceExcavatorCampaignMilestone[] = [
-  { id: 'clear_1', pointsRequired: 1, rewardKind: 'essence', rewardLabel: '+25 essence', reward: { essence: 25 } },
-  { id: 'clear_2', pointsRequired: 2, rewardKind: 'dice', rewardLabel: '+5 dice', reward: { dicePool: 5 } },
-  { id: 'clear_3', pointsRequired: 3, rewardKind: 'shards', rewardLabel: '+1 shard', reward: { shards: 1 } },
-  { id: 'clear_5', pointsRequired: 5, rewardKind: 'essence', rewardLabel: '+75 essence', reward: { essence: 75 } },
-  { id: 'clear_10', pointsRequired: 10, rewardKind: 'bundle', rewardLabel: '+25 dice and +3 shards', reward: { dicePool: 25, shards: 3 } },
+  { id: 'clear_1', pointsRequired: 1, rewardKind: 'essence', rewardLabel: '+25 Essence', reward: { essence: 25 } },
+  { id: 'clear_2', pointsRequired: 2, rewardKind: 'dice', rewardLabel: '+5 Dice', reward: { dicePool: 5 } },
+  { id: 'clear_3', pointsRequired: 3, rewardKind: 'shards', rewardLabel: '+1 Shard', reward: { shards: 1 } },
+  { id: 'clear_5', pointsRequired: 5, rewardKind: 'essence', rewardLabel: '+75 Essence', reward: { essence: 75 } },
+  { id: 'clear_10', pointsRequired: 10, rewardKind: 'bundle', rewardLabel: '+25 Dice +3 Shards', reward: { dicePool: 25, shards: 3 } },
 ];
 
 export const SPACE_EXCAVATOR_DEFAULT_CAMPAIGN_TOTAL_POINTS = 10;

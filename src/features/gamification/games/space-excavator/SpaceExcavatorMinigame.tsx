@@ -30,7 +30,9 @@ type SpaceExcavatorProgress = {
 };
 type DigSpendResult = { ok: boolean; ticketsRemaining: number; progress?: SpaceExcavatorProgress | null; boardComplete?: boolean; canAdvanceBoard?: boolean };
 type AdvanceBoardResult = { ok: boolean; ticketsRemaining: number; progress?: SpaceExcavatorProgress | null };
-type ClaimMilestoneRewardResult = { ok: boolean; progress?: SpaceExcavatorProgress | null; rewardLabel?: string | null; failureReason?: string };
+type ClaimMilestoneRewardResult =
+  | { ok: true; progress: SpaceExcavatorProgress; rewardLabel: string; failureReason?: never }
+  | { ok: false; progress?: SpaceExcavatorProgress | null; rewardLabel?: string | null; failureReason?: string };
 
 type SpaceExcavatorLaunchConfig = {
   requestDigSpend?: (tileId: number) => DigSpendResult;
@@ -86,12 +88,19 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const progressStatus = progress?.status ?? 'active';
   const boardComplete = progressStatus === 'board_complete' || progressStatus === 'completed';
   const canAdvanceBoard = progressStatus === 'board_complete';
-  const boardLabel = `Board ${Math.max(1, Math.floor((progress?.boardIndex ?? 0) + 1))}${totalBoards > 1 ? ` / ${totalBoards}` : ''}`;
+  const currentBoard = (progress?.boardIndex ?? 0) + 1;
+  const boardLabel = `Board ${currentBoard}${totalBoards > 1 ? ` / ${totalBoards}` : ''}`;
   const eventProgressPoints = Math.max(0, Math.floor(activeProgress?.eventProgressPoints ?? activeProgress?.completedBoardCount ?? 0));
   const eventProgressTotal = SPACE_EXCAVATOR_CAMPAIGN_TOTAL_POINTS;
   const eventProgressPercent = Math.min(100, Math.round((eventProgressPoints / eventProgressTotal) * 100));
   const nextMilestone = getNextSpaceExcavatorCampaignMilestone({ eventProgressPoints });
   const claimedMilestoneIds = activeProgress?.claimedMilestoneIds ?? [];
+  const claimableMilestones = SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.filter(
+    (milestone) => eventProgressPoints >= milestone.pointsRequired && !claimedMilestoneIds.includes(milestone.id),
+  );
+  const firstClaimableMilestone = claimableMilestones[0] ?? null;
+  const relicIcon = progress?.objectIcon ?? initial?.objectIcon ?? '❔';
+  const relicName = progress?.objectName ?? initial?.objectName ?? 'Hidden Relic';
 
   const sendOnce = (completed: boolean) => {
     if (sentResult) return;
@@ -130,15 +139,23 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
     setClaimPendingId(milestoneId);
     setClaimMessage(null);
     const claim = config.requestClaimMilestoneReward?.(milestoneId) ?? { ok: false };
-    if (claim.progress) {
-      syncProgress(claim.progress);
-    }
     if (claim.ok) {
-      setClaimMessage(`Claimed ${claim.rewardLabel ?? 'reward'}!`);
+      syncProgress(claim.progress);
+      setClaimMessage(`Reward claimed: ${claim.rewardLabel}`);
     } else if (claim.failureReason === 'already_claimed') {
+      if (claim.progress) syncProgress(claim.progress);
       setClaimMessage('Reward already claimed.');
     } else if (claim.failureReason === 'not_achieved') {
+      if (claim.progress) syncProgress(claim.progress);
       setClaimMessage('Clear more boards to unlock this reward.');
+    } else if (claim.failureReason === 'missing_event' || claim.failureReason === 'progress_not_found') {
+      setClaimMessage('Progress data is temporarily unavailable. Please close and reopen Space Excavator.');
+    } else if (claim.failureReason === 'missing_milestone') {
+      if (claim.progress) syncProgress(claim.progress);
+      setClaimMessage('This reward is unavailable.');
+    } else {
+      if (claim.progress) syncProgress(claim.progress);
+      setClaimMessage('Could not claim this reward right now. Please try again.');
     }
     setClaimPendingId(null);
   };
@@ -154,10 +171,10 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
 
       <div className="space-excavator__preview" aria-label="Hidden object preview">
         <div className="space-excavator__silhouette" aria-hidden="true">
-          {progress?.objectIcon ?? initial?.objectIcon ?? '❔'}
+          {relicIcon}
         </div>
         <div>
-          <p className="space-excavator__preview-title">Find: {progress?.objectName ?? initial?.objectName ?? 'Hidden Relic'}</p>
+          <p className="space-excavator__preview-title">Find: {relicName}</p>
           <p className="space-excavator__preview-progress">{found} / {objectPieceCount} pieces found</p>
           <div className="space-excavator__progress-bar" aria-hidden="true">
             <span style={{ width: `${Math.min(100, Math.round((found / objectPieceCount) * 100))}%` }} />
@@ -168,7 +185,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       <div className="space-excavator__event-progress" aria-label="Event progress">
         <div className="space-excavator__event-progress-header">
           <strong>Event progress</strong>
-          <span>{eventProgressPoints} / {eventProgressTotal}</span>
+          <span>{eventProgressPoints} / {eventProgressTotal} boards cleared</span>
         </div>
         <div className="space-excavator__event-progress-bar" aria-hidden="true">
           <span style={{ width: `${eventProgressPercent}%` }} />
@@ -183,9 +200,9 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
               <div
                 key={milestone.id}
                 className={`space-excavator__milestone space-excavator__milestone--${claimed ? 'claimed' : claimable ? 'claimable' : 'locked'}`}
-                title={`${milestone.pointsRequired}: ${milestone.rewardLabel}`}
+                title={`${milestone.pointsRequired} board${milestone.pointsRequired === 1 ? '' : 's'} cleared: ${milestone.rewardLabel}`}
               >
-                <span>{milestone.pointsRequired}</span>
+                <span>{milestone.pointsRequired} board{milestone.pointsRequired === 1 ? '' : 's'}</span>
                 <small>{stateLabel}</small>
                 <strong>{milestone.rewardLabel}</strong>
                 {claimable && (
@@ -210,7 +227,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
         </p>
       </div>
 
-      <div className="space-excavator__board" style={{ gridTemplateColumns: `repeat(${size}, 44px)` }}>
+      <div className="space-excavator__board" style={{ gridTemplateColumns: `repeat(${size}, minmax(36px, 44px))` }}>
         {tiles.map((tile, i) => (
           <button
             key={i}
@@ -238,8 +255,24 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
 
       {boardComplete && (
         <div className="space-excavator__notice space-excavator__notice--success" role="status" aria-live="polite">
-          <p><strong>{progressStatus === 'completed' ? 'All boards cleared' : 'Board cleared'}</strong></p>
-          <p>{progress?.objectName ?? initial?.objectName ?? 'Hidden Relic'} found {found}/{objectPieceCount}.</p>
+          <div className="space-excavator__relic-found">
+            <div className="space-excavator__relic-found-icon" aria-hidden="true">{relicIcon}</div>
+            <div>
+              <p className="space-excavator__notice-title">Relic Found!</p>
+              <p>{relicName}</p>
+            </div>
+          </div>
+          <div className="space-excavator__clear-summary" aria-label="Board clear summary">
+            <span>{progressStatus === 'completed' ? 'All boards cleared' : `Board ${currentBoard} cleared`}</span>
+            <span>Event progress +1</span>
+            {firstClaimableMilestone ? (
+              <span className="space-excavator__clear-summary-claimable">
+                New reward available: {firstClaimableMilestone.rewardLabel}
+              </span>
+            ) : (
+              <span>No new reward available yet</span>
+            )}
+          </div>
           {canAdvanceBoard && (
             <div className="space-excavator__actions">
               <button type="button" className="space-excavator__button" onClick={onAdvanceBoard}>Continue to next board</button>
