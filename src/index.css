@@ -6559,6 +6559,47 @@ html.platform-ipad .workspace-shell__menu-edge {
   opacity: 1;
 }
 
+/* Collage grid for daily Vision Star (3–5 images) */
+.habit-day-nav__vision-modal-collage {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  width: 100%;
+  align-self: stretch;
+  justify-self: stretch;
+}
+
+.habit-day-nav__vision-modal-collage-tile {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 8px;
+  border: none;
+  padding: 0;
+  cursor: zoom-in;
+  background: rgba(241, 245, 249, 0.6);
+  display: block;
+}
+
+/* Odd last tile spans both columns (for 3 or 5 images) */
+.habit-day-nav__vision-modal-collage-tile:last-child:nth-child(odd) {
+  grid-column: span 2;
+  aspect-ratio: 2 / 1;
+}
+
+.habit-day-nav__vision-modal-collage-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.habit-day-nav__vision-modal-collage-tile:hover img,
+.habit-day-nav__vision-modal-collage-tile:focus-visible img {
+  transform: scale(1.05);
+}
+
 .habit-day-nav__vision-modal-frame {
   width: min(320px, 100%);
   min-height: 180px;

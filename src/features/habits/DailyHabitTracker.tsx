@@ -432,6 +432,8 @@ type VisionReward = {
   isSuperBoost: boolean;
   isSpecial?: boolean;
   specialStoryPanels?: string[];
+  /** 3–5 images for the daily non-special collage grid. Absent for special AI star. */
+  imageUrls?: string[];
 };
 
 type HabitReviewAction = 'pause' | 'redesign' | 'replace' | 'archive';
@@ -467,6 +469,8 @@ const SLOT_MACHINE_ANIMATION_DURATION_MS = 950;
 const SLOT_MACHINE_LANDING_DURATION_MS = 250;
 const SLOT_MACHINE_TOTAL_ITEMS = 7;
 const SLOT_MACHINE_SELECTED_INDEX = 4;
+const VISION_STAR_COLLAGE_MIN = 3;
+const VISION_STAR_COLLAGE_MAX = 5;
 
 const LIFE_WHEEL_COLORS: Record<string, string> = {
   health: '#22c55e',
@@ -2088,7 +2092,17 @@ export function DailyHabitTracker({
       return;
     }
 
-    const selection = visionImages[Math.floor(Math.random() * visionImages.length)];
+    const randomCountInRange =
+      VISION_STAR_COLLAGE_MIN + Math.floor(Math.random() * (VISION_STAR_COLLAGE_MAX - VISION_STAR_COLLAGE_MIN + 1));
+    const collageCount = Math.min(visionImages.length, randomCountInRange);
+    // Fisher-Yates shuffle for unbiased random selection
+    const pool = [...visionImages];
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    const selections = pool.slice(0, collageCount);
+    const selection = selections[0];
     const preloadSelectionImage = async (url: string) => {
       await new Promise<void>((resolve) => {
         const image = new Image();
@@ -2178,6 +2192,7 @@ export function DailyHabitTracker({
         isSuperBoost,
         isSpecial,
         specialStoryPanels,
+        imageUrls: isSpecial ? undefined : selections.map((s) => s.publicUrl),
       });
       setVisionRewardDate(activeDate);
       setHasClaimedVisionStar(true);
@@ -2196,6 +2211,7 @@ export function DailyHabitTracker({
         isSuperBoost,
         isSpecial,
         specialStoryPanels,
+        imageUrls: isSpecial ? undefined : selections.map((s) => s.publicUrl),
       } satisfies VisionReward);
       saveDraft(visionStarCountKey(session.user.id), nextCount);
       setVisionStarCount(nextCount);
@@ -2382,8 +2398,12 @@ export function DailyHabitTracker({
   const visionRewardClaimLabel = visionReward
     ? `Claim ${visionReward.xpAwarded} XP + ${visionReward.diceAwarded} Dice`
     : 'Preparing reward';
-  const shouldShowVisionLoading =
-    isVisionRewardSelecting || !visionReward?.imageUrl || (visionReward?.imageUrl && !isVisionImageLoaded);
+  const isCollageReward = Boolean(visionReward?.imageUrls && visionReward.imageUrls.length > 1);
+  const isRewardImageReady =
+    !isVisionRewardSelecting &&
+    Boolean(visionReward) &&
+    (isCollageReward || isVisionImageLoaded);
+  const shouldShowVisionLoading = !isRewardImageReady;
   const visionVisualizationTimeLabel = `${Math.floor(visionVisualizationSeconds / 60)}:${String(
     visionVisualizationSeconds % 60,
   ).padStart(2, '0')}`;
@@ -3183,7 +3203,21 @@ export function DailyHabitTracker({
                 </span>
               </div>
             )}
-            {visionReward?.imageUrl ? (
+            {isCollageReward && visionReward?.imageUrls ? (
+              <div className="habit-day-nav__vision-modal-collage">
+                {visionReward.imageUrls.map((url, idx) => (
+                  <button
+                    key={url}
+                    type="button"
+                    className="habit-day-nav__vision-modal-collage-tile"
+                    onClick={() => setVisionPreviewImage({ id: `vision-star-collage-${idx}`, publicUrl: url, caption: null } as VisionImage)}
+                    aria-label={`Open image ${idx + 1} fullscreen`}
+                  >
+                    <img src={url} alt="" aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
+            ) : visionReward?.imageUrl ? (
               <img
                 className={`habit-day-nav__vision-modal-image ${
                   isVisionImageLoaded ? 'habit-day-nav__vision-modal-image--loaded' : ''
