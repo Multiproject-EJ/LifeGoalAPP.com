@@ -285,10 +285,10 @@
   font-size: 12px;
 }
 
-.space-excavator__clear-summary-claimable {
-  border-color: rgba(56, 189, 248, 0.6) !important;
-  background: rgba(14, 165, 233, 0.22) !important;
-  color: #bae6fd !important;
+.space-excavator__clear-summary .space-excavator__clear-summary-claimable {
+  border-color: rgba(56, 189, 248, 0.6);
+  background: rgba(14, 165, 233, 0.22);
+  color: #bae6fd;
   font-weight: 800;
 }
 

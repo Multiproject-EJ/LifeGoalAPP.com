@@ -86,8 +86,8 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const progressStatus = progress?.status ?? 'active';
   const boardComplete = progressStatus === 'board_complete' || progressStatus === 'completed';
   const canAdvanceBoard = progressStatus === 'board_complete';
-  const currentBoardNumber = (progress?.boardIndex ?? 0) + 1;
-  const boardLabel = `Board ${currentBoardNumber}${totalBoards > 1 ? ` / ${totalBoards}` : ''}`;
+  const currentBoard = (progress?.boardIndex ?? 0) + 1;
+  const boardLabel = `Board ${currentBoard}${totalBoards > 1 ? ` / ${totalBoards}` : ''}`;
   const eventProgressPoints = Math.max(0, Math.floor(activeProgress?.eventProgressPoints ?? activeProgress?.completedBoardCount ?? 0));
   const eventProgressTotal = SPACE_EXCAVATOR_CAMPAIGN_TOTAL_POINTS;
   const eventProgressPercent = Math.min(100, Math.round((eventProgressPoints / eventProgressTotal) * 100));
@@ -146,8 +146,12 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       setClaimMessage('Reward already claimed.');
     } else if (claim.failureReason === 'not_achieved') {
       setClaimMessage('Clear more boards to unlock this reward.');
+    } else if (claim.failureReason === 'missing_event' || claim.failureReason === 'progress_not_found') {
+      setClaimMessage('Space Excavator progress was not ready. Reopen the event and try again.');
+    } else if (claim.failureReason === 'missing_milestone') {
+      setClaimMessage('This reward is unavailable.');
     } else {
-      setClaimMessage('Could not claim reward. Please try again.');
+      setClaimMessage('Could not claim this reward right now. Please try again.');
     }
     setClaimPendingId(null);
   };
@@ -255,7 +259,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
             </div>
           </div>
           <div className="space-excavator__clear-summary" aria-label="Board clear summary">
-            <span>{progressStatus === 'completed' ? 'All boards cleared' : `Board ${currentBoardNumber} cleared`}</span>
+            <span>{progressStatus === 'completed' ? 'All boards cleared' : `Board ${currentBoard} cleared`}</span>
             <span>Event progress +1</span>
             {firstClaimableMilestone ? (
               <span className="space-excavator__clear-summary-claimable">
