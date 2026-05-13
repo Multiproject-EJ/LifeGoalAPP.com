@@ -54,5 +54,5 @@ export function resolveSpaceExcavatorDepthForBoard(boardNumber: number): SpaceEx
   const normalizedBoardNumber = Number.isFinite(boardNumber) ? Math.max(1, Math.floor(boardNumber)) : 1;
   return SPACE_EXCAVATOR_DEPTH_LEVELS.find(
     (depth) => normalizedBoardNumber >= depth.minBoardNumber && normalizedBoardNumber <= depth.maxBoardNumber,
-  ) ?? SPACE_EXCAVATOR_DEPTH_LEVELS[SPACE_EXCAVATOR_DEPTH_LEVELS.length - 1];
+  ) ?? SPACE_EXCAVATOR_DEPTH_LEVELS[SPACE_EXCAVATOR_DEPTH_LEVELS.length - 1]; // Future boards stay in the final depth until new metadata is added.
 }

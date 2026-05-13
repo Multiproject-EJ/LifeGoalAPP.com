@@ -25,4 +25,25 @@ export const spaceExcavatorDepthsTests: TestCase[] = [
       }
     },
   },
+  {
+    name: 'resolveSpaceExcavatorDepthForBoard normalizes edge board numbers',
+    run: () => {
+      const expectedDepthByBoard: Array<[number, string]> = [
+        [0, 'Surface Ruins'],
+        [-3, 'Surface Ruins'],
+        [3.7, 'Moon Chamber'],
+        [11, 'Ancient Core'],
+        [100, 'Ancient Core'],
+        [Number.NaN, 'Surface Ruins'],
+      ];
+
+      for (const [boardNumber, expectedName] of expectedDepthByBoard) {
+        assertEqual(
+          resolveSpaceExcavatorDepthForBoard(boardNumber).name,
+          expectedName,
+          `board ${String(boardNumber)} should resolve to ${expectedName}`,
+        );
+      }
+    },
+  },
 ];
