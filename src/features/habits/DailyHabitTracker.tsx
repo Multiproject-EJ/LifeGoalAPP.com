@@ -432,6 +432,8 @@ type VisionReward = {
   isSuperBoost: boolean;
   isSpecial?: boolean;
   specialStoryPanels?: string[];
+  /** 3–5 images for the daily non-special collage grid. Absent for special AI star. */
+  imageUrls?: string[];
 };
 
 type HabitReviewAction = 'pause' | 'redesign' | 'replace' | 'archive';
@@ -2088,7 +2090,10 @@ export function DailyHabitTracker({
       return;
     }
 
-    const selection = visionImages[Math.floor(Math.random() * visionImages.length)];
+    const collageCount = Math.min(visionImages.length, 3 + Math.floor(Math.random() * 3)); // 3, 4, or 5
+    const shuffled = [...visionImages].sort(() => Math.random() - 0.5);
+    const selections = shuffled.slice(0, collageCount);
+    const selection = selections[0];
     const preloadSelectionImage = async (url: string) => {
       await new Promise<void>((resolve) => {
         const image = new Image();
@@ -2178,6 +2183,7 @@ export function DailyHabitTracker({
         isSuperBoost,
         isSpecial,
         specialStoryPanels,
+        imageUrls: isSpecial ? undefined : selections.map((s) => s.publicUrl),
       });
       setVisionRewardDate(activeDate);
       setHasClaimedVisionStar(true);
@@ -2196,6 +2202,7 @@ export function DailyHabitTracker({
         isSuperBoost,
         isSpecial,
         specialStoryPanels,
+        imageUrls: isSpecial ? undefined : selections.map((s) => s.publicUrl),
       } satisfies VisionReward);
       saveDraft(visionStarCountKey(session.user.id), nextCount);
       setVisionStarCount(nextCount);
@@ -2383,7 +2390,8 @@ export function DailyHabitTracker({
     ? `Claim ${visionReward.xpAwarded} XP + ${visionReward.diceAwarded} Dice`
     : 'Preparing reward';
   const shouldShowVisionLoading =
-    isVisionRewardSelecting || !visionReward?.imageUrl || (visionReward?.imageUrl && !isVisionImageLoaded);
+    isVisionRewardSelecting || !visionReward?.imageUrl ||
+    (!(visionReward?.imageUrls && visionReward.imageUrls.length > 1) && !isVisionImageLoaded);
   const visionVisualizationTimeLabel = `${Math.floor(visionVisualizationSeconds / 60)}:${String(
     visionVisualizationSeconds % 60,
   ).padStart(2, '0')}`;
@@ -3183,7 +3191,21 @@ export function DailyHabitTracker({
                 </span>
               </div>
             )}
-            {visionReward?.imageUrl ? (
+            {visionReward?.imageUrls && visionReward.imageUrls.length > 1 ? (
+              <div className="habit-day-nav__vision-modal-collage">
+                {visionReward.imageUrls.map((url, idx) => (
+                  <button
+                    key={url}
+                    type="button"
+                    className="habit-day-nav__vision-modal-collage-tile"
+                    onClick={() => setVisionPreviewImage({ id: `vision-star-collage-${idx}`, publicUrl: url, caption: null } as VisionImage)}
+                    aria-label={`Open image ${idx + 1} fullscreen`}
+                  >
+                    <img src={url} alt="" aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
+            ) : visionReward?.imageUrl ? (
               <img
                 className={`habit-day-nav__vision-modal-image ${
                   isVisionImageLoaded ? 'habit-day-nav__vision-modal-image--loaded' : ''
