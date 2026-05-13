@@ -85,6 +85,9 @@ type ApplySpaceExcavatorDigResultBase = {
   progress: SpaceExcavatorProgressEntry | null;
   boardComplete: boolean;
   canAdvanceBoard: boolean;
+  triggeredBomb: boolean;
+  revealedTileIds: number[];
+  bonusRevealCount: number;
 };
 
 export type ApplySpaceExcavatorDigResult =
@@ -114,6 +117,44 @@ export interface ClaimSpaceExcavatorMilestoneRewardResult {
 }
 
 export const SPACE_EXCAVATOR_TOTAL_BOARDS = 10; // Tuning placeholder until rewards/finale UX is added.
+const SPACE_EXCAVATOR_HASH_OFFSET_BASIS = 2166136261;
+
+function getSpaceExcavatorSeed(input: string): number {
+  return Array.from(input).reduce((sum, char) => ((sum * 31) + char.charCodeAt(0)) >>> 0, SPACE_EXCAVATOR_HASH_OFFSET_BASIS);
+}
+
+function chooseSpaceExcavatorBonusBombTileId(options: {
+  eventId: string;
+  boardIndex: number;
+  boardSize: number;
+  objectTileIds: readonly number[];
+}): number {
+  const { eventId, boardIndex, boardSize, objectTileIds } = options;
+  const tileCount = Math.max(1, Math.floor(boardSize) * Math.floor(boardSize));
+  const objectTileIdSet = new Set(objectTileIds);
+  const candidates = Array.from({ length: tileCount }, (_, tileId) => tileId)
+    .filter((tileId) => !objectTileIdSet.has(tileId));
+  const pool = candidates.length > 0 ? candidates : Array.from({ length: tileCount }, (_, tileId) => tileId);
+  const seed = getSpaceExcavatorSeed(`${eventId}:${boardIndex}:bonus_bomb`);
+  return pool[seed % pool.length];
+}
+
+function getSpaceExcavatorAdjacentTileIds(tileId: number, boardSize: number): number[] {
+  const size = Math.max(1, Math.floor(boardSize));
+  const x = tileId % size;
+  const y = Math.floor(tileId / size);
+  const tileIds: number[] = [];
+  for (let dy = -1; dy <= 1; dy += 1) {
+    for (let dx = -1; dx <= 1; dx += 1) {
+      if (dx === 0 && dy === 0) continue;
+      const nextX = x + dx;
+      const nextY = y + dy;
+      if (nextX < 0 || nextX >= size || nextY < 0 || nextY >= size) continue;
+      tileIds.push(nextY * size + nextX);
+    }
+  }
+  return tileIds.sort((a, b) => a - b);
+}
 
 function buildSpaceExcavatorProgress(
   eventId: string,
@@ -125,6 +166,7 @@ function buildSpaceExcavatorProgress(
   const boardSize = 5;
   const objectShape = chooseSpaceExcavatorObjectShape(eventId, boardIndex);
   const objectTileIds = placeSpaceExcavatorObjectShape({ eventId, boardIndex, boardSize, shape: objectShape });
+  const bonusBombTileIds = [chooseSpaceExcavatorBonusBombTileId({ eventId, boardIndex, boardSize, objectTileIds })];
   return {
     eventId,
     boardIndex,
@@ -136,6 +178,8 @@ function buildSpaceExcavatorProgress(
     objectTier: objectShape.tier,
     objectIcon: objectShape.icon,
     objectTileIds,
+    bonusBombTileIds,
+    triggeredBonusBombTileIds: [],
     revealedObjectTileIds: [],
     dugTileIds: [],
     foundTreasureTileIds: [],
@@ -181,27 +225,37 @@ export function applySpaceExcavatorDig(options: { session: Session; client: Supa
   const available = Math.max(0, Math.floor(current.minigameTicketsByEvent?.[eventId] ?? 0));
   const alreadyComplete = progress?.status === 'board_complete' || progress?.status === 'completed';
   if (!progress) {
-    return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete: false, canAdvanceBoard: false, failureReason: 'missing_progress' };
+    return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete: false, canAdvanceBoard: false, triggeredBomb: false, revealedTileIds: [], bonusRevealCount: 0, failureReason: 'missing_progress' };
   }
   if (available < 1) {
     const boardComplete = progress.status === 'board_complete';
     const canAdvanceBoard = boardComplete && progress.boardIndex + 1 < SPACE_EXCAVATOR_TOTAL_BOARDS;
-    return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete, canAdvanceBoard, failureReason: 'insufficient_tickets' };
+    return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete, canAdvanceBoard, triggeredBomb: false, revealedTileIds: [], bonusRevealCount: 0, failureReason: 'insufficient_tickets' };
   }
   if (alreadyComplete) {
     const boardComplete = progress?.status === 'board_complete';
     const canAdvanceBoard = boardComplete && progress.boardIndex + 1 < SPACE_EXCAVATOR_TOTAL_BOARDS;
-    return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete, canAdvanceBoard, failureReason: 'board_complete' };
+    return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete, canAdvanceBoard, triggeredBomb: false, revealedTileIds: [], bonusRevealCount: 0, failureReason: 'board_complete' };
   }
   const normalizedTile = Math.max(0, Math.floor(tileId));
   const tileCount = progress.boardSize * progress.boardSize;
-  if (normalizedTile >= tileCount) return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete: false, canAdvanceBoard: false, failureReason: 'invalid_tile' };
-  if (progress.dugTileIds.includes(normalizedTile)) return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete: false, canAdvanceBoard: false, failureReason: 'already_dug' };
-  const dugTileIds = Array.from(new Set([...progress.dugTileIds, normalizedTile])).sort((a,b)=>a-b);
+  if (normalizedTile >= tileCount) return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete: false, canAdvanceBoard: false, triggeredBomb: false, revealedTileIds: [], bonusRevealCount: 0, failureReason: 'invalid_tile' };
+  if (progress.dugTileIds.includes(normalizedTile)) return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete: false, canAdvanceBoard: false, triggeredBomb: false, revealedTileIds: [], bonusRevealCount: 0, failureReason: 'already_dug' };
+  const isBonusBomb = progress.bonusBombTileIds.includes(normalizedTile);
+  const triggeredBomb = isBonusBomb && !progress.triggeredBonusBombTileIds.includes(normalizedTile);
+  const bombRevealTileIds = triggeredBomb
+    ? getSpaceExcavatorAdjacentTileIds(normalizedTile, progress.boardSize).filter((adjacentTileId) => !progress.dugTileIds.includes(adjacentTileId))
+    : [];
+  const revealedTileIds = Array.from(new Set([normalizedTile, ...bombRevealTileIds])).sort((a,b)=>a-b);
+  const dugTileIds = Array.from(new Set([...progress.dugTileIds, ...revealedTileIds])).sort((a,b)=>a-b);
   const objectTileIds = resolveSpaceExcavatorObjectTileIds(progress);
-  const revealedObjectTileIds = objectTileIds.includes(normalizedTile) ? Array.from(new Set([...progress.revealedObjectTileIds, normalizedTile])).sort((a,b)=>a-b) : progress.revealedObjectTileIds;
-  const foundTreasureTileIds = objectTileIds.includes(normalizedTile) ? Array.from(new Set([...progress.foundTreasureTileIds, normalizedTile])).sort((a,b)=>a-b) : progress.foundTreasureTileIds;
-  let nextProgress: SpaceExcavatorProgressEntry = { ...progress, dugTileIds, revealedObjectTileIds, foundTreasureTileIds, updatedAtMs: Date.now() };
+  const newlyRevealedObjectTileIds = revealedTileIds.filter((revealedTileId) => objectTileIds.includes(revealedTileId));
+  const revealedObjectTileIds = Array.from(new Set([...progress.revealedObjectTileIds, ...newlyRevealedObjectTileIds])).sort((a,b)=>a-b);
+  const foundTreasureTileIds = Array.from(new Set([...progress.foundTreasureTileIds, ...newlyRevealedObjectTileIds])).sort((a,b)=>a-b);
+  const triggeredBonusBombTileIds = triggeredBomb
+    ? Array.from(new Set([...progress.triggeredBonusBombTileIds, normalizedTile])).sort((a,b)=>a-b)
+    : progress.triggeredBonusBombTileIds;
+  let nextProgress: SpaceExcavatorProgressEntry = { ...progress, dugTileIds, revealedObjectTileIds, foundTreasureTileIds, triggeredBonusBombTileIds, updatedAtMs: Date.now() };
   const revealedObjectTileIdSet = new Set(revealedObjectTileIds);
   const boardComplete = objectTileIds.length > 0 && objectTileIds.every((objectTileId) => revealedObjectTileIdSet.has(objectTileId));
   if (boardComplete && progress.status !== 'board_complete') {
@@ -212,7 +266,7 @@ export function applySpaceExcavatorDig(options: { session: Session; client: Supa
   }
   const next = { ...current, runtimeVersion: current.runtimeVersion + 1, minigameTicketsByEvent: { ...current.minigameTicketsByEvent, [eventId]: available - 1 }, spaceExcavatorProgressByEvent: { ...current.spaceExcavatorProgressByEvent, [eventId]: nextProgress } };
   void commitIslandRunState({ session, client, record: next, triggerSource: triggerSource ?? 'apply_space_excavator_dig' });
-  return { record: next, ok: true, ticketsRemaining: available - 1, progress: nextProgress, boardComplete: nextProgress.status === 'board_complete' || nextProgress.status === 'completed', canAdvanceBoard: nextProgress.status === 'board_complete' };
+  return { record: next, ok: true, ticketsRemaining: available - 1, progress: nextProgress, boardComplete: nextProgress.status === 'board_complete' || nextProgress.status === 'completed', canAdvanceBoard: nextProgress.status === 'board_complete', triggeredBomb, revealedTileIds, bonusRevealCount: Math.max(0, revealedTileIds.length - 1) };
 }
 
 export function advanceSpaceExcavatorBoard(options: { session: Session; client: SupabaseClient | null; eventId: string; triggerSource?: string; }): AdvanceSpaceExcavatorBoardResult {
