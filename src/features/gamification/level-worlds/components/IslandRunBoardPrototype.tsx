@@ -4245,6 +4245,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const activeEventTickets = activeTimedEventId
     ? (runtimeState.minigameTicketsByEvent?.[activeTimedEventId] ?? 0)
     : 0;
+  const effectiveTimedEventMeta = effectiveActiveTimedEvent ? getEventDisplayMeta(effectiveActiveTimedEvent.eventType) : null;
+  const isSpaceExcavatorEffectiveEvent = effectiveActiveTimedEvent?.eventType === 'space_excavator';
+  const isDevTimedEventOverrideActive = isDevModeEnabled && Boolean(devTimedEventOverrideType && devTimedEventOverrideEventId);
   const hasLegacyEventTicketDivergence = Boolean(activeTimedEventId) && activeEventTickets !== spinTokens;
   // Parity guard breadcrumb for islandRunBoardEssenceParity:
   // const activeEventTickets = activeTimedEventId ? (runtimeState.minigameTicketsByEvent?.[activeTimedEventId] ?? 0) : 0;
@@ -7852,14 +7855,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             − {driftNotice} 🟣 essence drift
           </p>
         )}
-        {ISLAND_RUN_CONTRACT_V2_ENABLED && activeTimedEvent ? (
+        {ISLAND_RUN_CONTRACT_V2_ENABLED && effectiveActiveTimedEvent ? (
           <div className="island-run-prototype__shard-pill" aria-label="Contract-v2 timed event reward bar">
             <div className="island-run-prototype__shard-pill-fill" style={{ width: `${rewardBarPercent}%` }} />
             <span className="island-run-prototype__shard-pill-content">
-              <span>{nextRewardIcon} {activeTimedEvent.eventType} · Next: {nextRewardKind}</span>
+              <span>{nextRewardIcon} {effectiveActiveTimedEvent.eventType} · Next: {nextRewardKind}</span>
               <span className="island-run-prototype__shard-pill-count">
                 {timedEventRemainingLabel} · {rewardBarProgress}/{rewardBarThreshold} · Tier {runtimeState.rewardBarEscalationTier}{effectiveMultiplier > 1 ? ` · ×${effectiveMultiplier} (−${effectiveDiceCost}/roll)` : ''}
               </span>
+              {isSpaceExcavatorEffectiveEvent && (
+                <span className="island-run-prototype__shard-pill-count">
+                  Fill the reward bar to earn more dig tickets{isDevTimedEventOverrideActive ? ' (DEV override tickets)' : ''}.
+                </span>
+              )}
             </span>
             <button
               type="button"
@@ -8237,10 +8245,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </div>
           )}
           {/* Decorative themed event banner — only shown when an event is active */}
-          {activeTimedEvent ? (() => {
-            const meta = getEventDisplayMeta(activeTimedEvent.eventType);
+          {effectiveActiveTimedEvent && effectiveTimedEventMeta ? (() => {
+            const meta = effectiveTimedEventMeta;
             return (
-              <div className={`island-run-board__rewardbar-banner island-run-board__rewardbar-banner--${activeTimedEvent.eventType}`}>
+              <div className={`island-run-board__rewardbar-banner island-run-board__rewardbar-banner--${effectiveActiveTimedEvent.eventType}`}>
                 <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{meta.icon}</i>
                 <span>{meta.displayName}</span>
                 <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{meta.icon}</i>
@@ -8254,7 +8262,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           {/* Track row: event feed icon → track → single reward endcap (no milestones) */}
           <div className="island-run-board__rewardbar-track-row">
             <span className="island-run-board__rewardbar-avatar-indicator" aria-hidden="true">
-              {getEventDisplayMeta(activeTimedEvent?.eventType ?? '').icon}
+              {effectiveTimedEventMeta?.icon ?? getEventDisplayMeta('').icon}
             </span>
             <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
               <span className={`island-run-board__rewardbar-track-fill${rewardBarSnapActive ? ' island-run-board__rewardbar-track-fill--snap' : ''}`} style={{ width: `${rewardBarPercent}%` }} />
@@ -8272,21 +8280,38 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             {effectiveMultiplier > 1 && (
               <span className="island-run-board__rewardbar-multiplier-badge">×{effectiveMultiplier}</span>
             )}
+            {isSpaceExcavatorEffectiveEvent && (
+              <span className="island-run-board__rewardbar-ticket-hint">
+                Reward bar can award Space Excavator tickets
+              </span>
+            )}
           </div>
         </button>
 
         {/* Mini-game icon button — positioned near top-right of board */}
-        {activeTimedEvent && (
+        {effectiveActiveTimedEvent && effectiveTimedEventMeta && (
           <button
             type="button"
             className="island-run-board__minigame-icon-btn"
-            aria-label="Open mini-game"
+            aria-label={`Open ${effectiveTimedEventMeta.displayName}`}
             onClick={handleLaunchTimedEventMinigame}
           >
             <span className="island-run-board__minigame-icon-emoji" aria-hidden="true">
-              {getEventDisplayMeta(activeTimedEvent.eventType).icon}
+              {effectiveTimedEventMeta.icon}
             </span>
             <span className="island-run-board__minigame-icon-label">{activeEventTickets} {timedEventTokenIcon}</span>
+            {isSpaceExcavatorEffectiveEvent && (
+              <>
+                <span className="island-run-board__minigame-icon-helper">Use tickets to dig</span>
+                <span className="island-run-board__minigame-icon-helper">Progress saved</span>
+                <span className="island-run-board__minigame-icon-helper">Earn from reward bar</span>
+              </>
+            )}
+            {isSpaceExcavatorEffectiveEvent && isDevTimedEventOverrideActive && (
+              <span className="island-run-board__minigame-icon-helper island-run-board__minigame-icon-helper--dev">
+                DEV override tickets
+              </span>
+            )}
           </button>
         )}
 
@@ -9334,10 +9359,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               Next reward: <strong>{nextRewardIcon} {nextRewardKind.replace(/_/g, ' ')}</strong>
             </p>
             <p className="island-stop-modal__copy">
-              {activeTimedEvent?.eventType
-                ? `Active event: ${getEventDisplayMeta(activeTimedEvent.eventType).displayName}`
+              {effectiveActiveTimedEvent?.eventType && effectiveTimedEventMeta
+                ? `${isDevTimedEventOverrideActive ? 'DEV override event' : 'Active event'}: ${effectiveTimedEventMeta.displayName}`
                 : 'No active timed event right now.'}
             </p>
+            {isSpaceExcavatorEffectiveEvent && (
+              <p className="island-stop-modal__copy">
+                Fill the reward bar to earn more dig tickets.
+              </p>
+            )}
             <p className="island-stop-modal__copy">
               Claims this event: {runtimeState.rewardBarClaimCountInEvent} · 🧩 Sticker fragments: {runtimeState.stickerProgress.fragments}/5
             </p>
