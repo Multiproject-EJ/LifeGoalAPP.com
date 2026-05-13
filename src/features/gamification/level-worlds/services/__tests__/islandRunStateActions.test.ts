@@ -167,6 +167,8 @@ function makeSpaceExcavatorProgress(
     objectTier: 'common',
     objectIcon: '🧪',
     objectTileIds: [1, 2, 3],
+    bonusBombTileIds: [12],
+    triggeredBonusBombTileIds: [],
     revealedObjectTileIds: [],
     dugTileIds: [],
     foundTreasureTileIds: [],
@@ -177,6 +179,22 @@ function makeSpaceExcavatorProgress(
     updatedAtMs: 1_000,
     ...overrides,
   };
+}
+
+function getAdjacentTileIdsForTest(tileId: number, boardSize: number): number[] {
+  const x = tileId % boardSize;
+  const y = Math.floor(tileId / boardSize);
+  const tileIds: number[] = [];
+  for (let dy = -1; dy <= 1; dy += 1) {
+    for (let dx = -1; dx <= 1; dx += 1) {
+      if (dx === 0 && dy === 0) continue;
+      const nextX = x + dx;
+      const nextY = y + dy;
+      if (nextX < 0 || nextX >= boardSize || nextY < 0 || nextY >= boardSize) continue;
+      tileIds.push(nextY * boardSize + nextX);
+    }
+  }
+  return tileIds.sort((a, b) => a - b);
 }
 
 export const islandRunStateActionsTests: TestCase[] = [
@@ -246,10 +264,20 @@ export const islandRunStateActionsTests: TestCase[] = [
       assert(initialProgress.objectId.length > 0, 'init should create hidden object metadata');
       assert(initialProgress.objectName.length > 0, 'init should create hidden object display name');
       assert(initialProgress.objectTileIds.length >= 2, 'init should create object tile layout');
+      assertEqual(initialProgress.bonusBombTileIds.length, 1, 'init should create one bonus bomb tile for the board');
+      assertDeepEqual(initialProgress.triggeredBonusBombTileIds, [], 'init should start with no triggered bonus bombs');
       assertDeepEqual(initialProgress.revealedObjectTileIds, [], 'init should start with no revealed object pieces');
       assert(
         initialProgress.objectTileIds.every((tileId) => tileId >= 0 && tileId < initialProgress.boardSize * initialProgress.boardSize),
         'object layout should fit within the board',
+      );
+      assert(
+        initialProgress.bonusBombTileIds.every((tileId) => tileId >= 0 && tileId < initialProgress.boardSize * initialProgress.boardSize),
+        'bonus bomb layout should fit within the board',
+      );
+      assert(
+        initialProgress.bonusBombTileIds.every((tileId) => !initialProgress.objectTileIds.includes(tileId)),
+        'bonus bomb layout should not overlap relic object tiles',
       );
 
       const secondInit = initSpaceExcavatorProgressForEvent({
@@ -270,6 +298,8 @@ export const islandRunStateActionsTests: TestCase[] = [
         tileId: initialProgress.objectTileIds[0],
       });
       assertEqual(dig.ok, true, 'first dig with tickets should succeed');
+      assertEqual(dig.triggeredBomb, false, 'digging a relic piece should not trigger bomb feedback');
+      assertDeepEqual(dig.revealedTileIds, [initialProgress.objectTileIds[0]], 'normal dig should report only the dug tile as revealed');
       assertEqual(dig.ticketsRemaining, 1, 'successful dig should spend exactly one event ticket');
       assertEqual(dig.record.minigameTicketsByEvent['space_excavator:event-a'], 1, 'space excavator event bucket should decrement');
       assertEqual(dig.record.minigameTicketsByEvent['lucky_spin:event-b'], 9, 'unrelated event bucket should be untouched');
@@ -293,6 +323,8 @@ export const islandRunStateActionsTests: TestCase[] = [
       });
       assertEqual(duplicateDig.ok, false, 'duplicate tile dig should be rejected');
       assertEqual(duplicateDig.failureReason, 'already_dug', 'duplicate tile dig should not be treated as an out-of-ticket failure');
+      assertEqual(duplicateDig.triggeredBomb, false, 'duplicate tile dig should not trigger bomb feedback');
+      assertDeepEqual(duplicateDig.revealedTileIds, [], 'duplicate tile dig should not report new reveals');
       assertEqual(duplicateDig.ticketsRemaining, 1, 'duplicate tile dig should not spend another ticket');
       assertEqual(duplicateDig.record.minigameTicketsByEvent['space_excavator:event-a'], 1, 'duplicate dig should preserve ticket bucket');
       assertEqual(duplicateDig.record.spinTokens, 7, 'duplicate dig should not touch spinTokens');
@@ -498,6 +530,129 @@ export const islandRunStateActionsTests: TestCase[] = [
         reopened.spaceExcavatorProgressByEvent['space_excavator:event-complete'].claimedMilestoneIds,
         [],
         'unclaimed milestone reward state should persist on reopen',
+      );
+    },
+  },
+
+  {
+    name: 'Space Excavator bonus bomb spends one ticket and reveals nearby tiles for free',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      const eventId = 'space_excavator:event-bomb';
+      const bombTileId = 12;
+      const initialProgress = makeSpaceExcavatorProgress(eventId, {
+        objectTileIds: [7, 8, 24],
+        treasureTileIds: [7, 8, 24],
+        treasureCount: 3,
+        bonusBombTileIds: [bombTileId],
+      });
+      seedState({
+        runtimeVersion: 10,
+        spinTokens: 6,
+        minigameTicketsByEvent: {
+          [eventId]: 2,
+          'space_excavator:event-bomb-other': 5,
+        },
+        spaceExcavatorProgressByEvent: {
+          [eventId]: initialProgress,
+        },
+      });
+
+      const dig = applySpaceExcavatorDig({
+        session,
+        client: null,
+        eventId,
+        tileId: bombTileId,
+      });
+
+      const expectedRevealedTileIds = [bombTileId, ...getAdjacentTileIdsForTest(bombTileId, 5)].sort((a, b) => a - b);
+      const progress = dig.record.spaceExcavatorProgressByEvent[eventId];
+      assertEqual(dig.ok, true, 'bomb tile dig should succeed');
+      assertEqual(dig.triggeredBomb, true, 'bomb tile dig should report triggered bomb metadata');
+      assertDeepEqual(dig.revealedTileIds, expectedRevealedTileIds, 'bomb tile dig should reveal the bomb and adjacent tiles');
+      assertEqual(dig.bonusRevealCount, expectedRevealedTileIds.length - 1, 'bonus reveal count should exclude the paid bomb tile');
+      assertEqual(dig.ticketsRemaining, 1, 'bomb tile dig should spend exactly one event ticket');
+      assertEqual(dig.record.minigameTicketsByEvent[eventId], 1, 'bomb tile dig should decrement only the active event ticket bucket');
+      assertEqual(dig.record.minigameTicketsByEvent['space_excavator:event-bomb-other'], 5, 'bomb tile dig should not touch unrelated event tickets');
+      assertEqual(dig.record.spinTokens, 6, 'bomb tile dig should not touch spinTokens');
+      assertDeepEqual(progress.dugTileIds, expectedRevealedTileIds, 'bomb reveal should persist all newly cleared tiles');
+      assertDeepEqual(progress.revealedObjectTileIds, [7, 8], 'bomb-revealed relic pieces should count toward object progress');
+      assertDeepEqual(progress.foundTreasureTileIds, [7, 8], 'bomb-revealed relic pieces should count toward found treasure progress');
+      assertDeepEqual(progress.triggeredBonusBombTileIds, [bombTileId], 'triggered bomb should persist under progress');
+      assertEqual(progress.status, 'active', 'board should stay active until all relic pieces are found');
+
+      const duplicateDig = applySpaceExcavatorDig({
+        session,
+        client: null,
+        eventId,
+        tileId: bombTileId,
+      });
+      assertEqual(duplicateDig.ok, false, 'duplicate bomb tile dig should be rejected');
+      assertEqual(duplicateDig.failureReason, 'already_dug', 'duplicate bomb tile dig should report already dug');
+      assertEqual(duplicateDig.ticketsRemaining, 1, 'duplicate bomb tile dig should not spend another ticket');
+      assertEqual(duplicateDig.triggeredBomb, false, 'duplicate bomb tile dig should not trigger bomb effects again');
+      assertDeepEqual(duplicateDig.revealedTileIds, [], 'duplicate bomb tile dig should not reveal new tiles');
+      assertDeepEqual(
+        duplicateDig.record.spaceExcavatorProgressByEvent[eventId].triggeredBonusBombTileIds,
+        [bombTileId],
+        'duplicate bomb tile dig should preserve triggered bomb state',
+      );
+    },
+  },
+
+  {
+    name: 'Space Excavator bonus bomb can complete a board by revealing final relic pieces',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      const eventId = 'space_excavator:event-bomb-complete';
+      const bombTileId = 12;
+      const initialProgress = makeSpaceExcavatorProgress(eventId, {
+        objectTileIds: [6, 7, 8],
+        treasureTileIds: [6, 7, 8],
+        treasureCount: 3,
+        bonusBombTileIds: [bombTileId],
+      });
+      seedState({
+        runtimeVersion: 10,
+        spinTokens: 10,
+        minigameTicketsByEvent: {
+          [eventId]: 1,
+        },
+        spaceExcavatorProgressByEvent: {
+          [eventId]: initialProgress,
+        },
+      });
+
+      const dig = applySpaceExcavatorDig({
+        session,
+        client: null,
+        eventId,
+        tileId: bombTileId,
+      });
+
+      const progress = dig.record.spaceExcavatorProgressByEvent[eventId];
+      assertEqual(dig.ok, true, 'bomb completion dig should succeed');
+      assertEqual(dig.triggeredBomb, true, 'completion dig should trigger the bomb');
+      assertEqual(dig.ticketsRemaining, 0, 'completion bomb dig should spend only the paid bomb tile ticket');
+      assertEqual(progress.status, 'board_complete', 'bomb reveal should complete the board when it reveals all remaining relic pieces');
+      assertEqual(progress.completedBoardCount, 1, 'bomb-completed board should award one completed board');
+      assertEqual(progress.eventProgressPoints, 1, 'bomb-completed board should award one event progress point');
+      assertDeepEqual(progress.revealedObjectTileIds, [6, 7, 8], 'bomb completion should reveal every object tile');
+      assertDeepEqual(progress.claimedMilestoneIds, [], 'bomb completion should not auto-claim milestone rewards');
+      assertEqual(dig.record.spinTokens, 10, 'bomb completion should not touch spinTokens');
+
+      const reopened = initSpaceExcavatorProgressForEvent({ session, client: null, eventId });
+      assertEqual(
+        reopened.spaceExcavatorProgressByEvent[eventId].eventProgressPoints,
+        1,
+        'reopening a bomb-completed board should not double-award event progress',
+      );
+      assertDeepEqual(
+        reopened.spaceExcavatorProgressByEvent[eventId].triggeredBonusBombTileIds,
+        [bombTileId],
+        'triggered bomb state should persist across reopen',
       );
     },
   },
@@ -743,9 +898,23 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(nextProgress.status, 'active', 'next board should be active');
       assertDeepEqual(nextProgress.dugTileIds, [], 'next board should reset dug tiles');
       assertDeepEqual(nextProgress.revealedObjectTileIds, [], 'next board should reset revealed object pieces');
+      assertEqual(nextProgress.bonusBombTileIds.length, 1, 'next board should create a fresh bonus bomb layout');
+      assertDeepEqual(nextProgress.triggeredBonusBombTileIds, [], 'next board should reset triggered bonus bombs');
+      assert(
+        nextProgress.bonusBombTileIds.every((tileId) => tileId >= 0 && tileId < nextProgress.boardSize * nextProgress.boardSize),
+        'next board bonus bomb should fit within the board',
+      );
+      assert(
+        nextProgress.bonusBombTileIds.every((tileId) => !nextProgress.objectTileIds.includes(tileId)),
+        'next board bonus bomb should not overlap relic object tiles',
+      );
       assert(
         nextProgress.objectId !== initialProgress.objectId || nextProgress.objectTileIds.join(',') !== initialProgress.objectTileIds.join(','),
         'next board should have a new object or layout',
+      );
+      assert(
+        nextProgress.bonusBombTileIds.join(',') !== initialProgress.bonusBombTileIds.join(',') || nextProgress.objectTileIds.join(',') !== initialProgress.objectTileIds.join(','),
+        'next board should have a fresh bomb or relic layout',
       );
 
       const reopened = initSpaceExcavatorProgressForEvent({
@@ -795,6 +964,8 @@ export const islandRunStateActionsTests: TestCase[] = [
             objectTier: 'epic',
             objectIcon: '🗝️',
             objectTileIds: [1, 2, 3, 4, 5],
+            bonusBombTileIds: [12],
+            triggeredBonusBombTileIds: [],
             revealedObjectTileIds: [1, 2, 3, 4, 5],
             dugTileIds: [1, 2, 3, 4, 5],
             foundTreasureTileIds: [1, 2, 3, 4, 5],

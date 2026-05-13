@@ -313,6 +313,13 @@
   color: #bfdbfe;
 }
 
+.space-excavator__clue--bomb {
+  border-color: rgba(250, 204, 21, 0.82);
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.3), rgba(124, 45, 18, 0.58));
+  color: #fef3c7;
+  box-shadow: 0 0 22px rgba(250, 204, 21, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
 .space-excavator__board-shell {
   flex: 1 1 auto;
   display: grid;
@@ -397,6 +404,13 @@
 .space-excavator__tile--cold .space-excavator__tile-marker {
   width: 8px;
   height: 8px;
+}
+
+.space-excavator__tile--bomb {
+  border-color: rgba(250, 204, 21, 0.86);
+  background: radial-gradient(circle at 46% 34%, #fef08a, #f59e0b 58%, #7c2d12);
+  color: #1c1917;
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 .space-excavator__tile--object {

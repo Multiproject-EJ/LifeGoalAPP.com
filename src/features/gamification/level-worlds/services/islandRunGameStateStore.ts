@@ -129,6 +129,8 @@ export interface SpaceExcavatorProgressEntry {
   objectTier?: string;
   objectIcon?: string;
   objectTileIds: number[];
+  bonusBombTileIds: number[];
+  triggeredBonusBombTileIds: number[];
   revealedObjectTileIds: number[];
   dugTileIds: number[];
   foundTreasureTileIds: number[];
@@ -1343,7 +1345,12 @@ function sanitizeSpaceExcavatorProgressByEvent(value: unknown, fallback: Record<
     const objectTileIds = sanitizeSpaceExcavatorTileIds(raw.objectTileIds).length > 0
       ? sanitizeSpaceExcavatorTileIds(raw.objectTileIds)
       : treasureTileIds;
+    const bonusBombTileIds = sanitizeSpaceExcavatorTileIds(raw.bonusBombTileIds)
+      .filter((tileId) => tileId < Math.max(1, Math.floor(raw.boardSize ?? 5)) ** 2);
+    const bonusBombTileIdSet = new Set(bonusBombTileIds);
     const objectTileIdSet = new Set(objectTileIds);
+    const triggeredBonusBombTileIds = sanitizeSpaceExcavatorTileIds(raw.triggeredBonusBombTileIds)
+      .filter((tileId) => bonusBombTileIdSet.has(tileId));
     const revealedObjectTileIds = sanitizeSpaceExcavatorTileIds(raw.revealedObjectTileIds).length > 0
       ? sanitizeSpaceExcavatorTileIds(raw.revealedObjectTileIds)
       : dugTileIds.filter((tileId) => objectTileIdSet.has(tileId));
@@ -1364,6 +1371,8 @@ function sanitizeSpaceExcavatorProgressByEvent(value: unknown, fallback: Record<
       objectTier: typeof raw.objectTier === 'string' ? raw.objectTier : undefined,
       objectIcon: typeof raw.objectIcon === 'string' ? raw.objectIcon : undefined,
       objectTileIds,
+      bonusBombTileIds,
+      triggeredBonusBombTileIds,
       revealedObjectTileIds,
       dugTileIds,
       foundTreasureTileIds,
@@ -1394,6 +1403,10 @@ function mergeSpaceExcavatorProgressByEvent(
     const eventProgressPoints = Math.max(remoteProgress.eventProgressPoints, localProgress.eventProgressPoints);
     merged[eventId] = {
       ...base,
+      triggeredBonusBombTileIds: Array.from(new Set([
+        ...remoteProgress.triggeredBonusBombTileIds,
+        ...localProgress.triggeredBonusBombTileIds,
+      ])).sort((a, b) => a - b),
       completedBoardCount: Math.max(remoteProgress.completedBoardCount, localProgress.completedBoardCount),
       eventProgressPoints,
       claimedMilestoneIds: resolveSpaceExcavatorClaimedMilestoneIds({

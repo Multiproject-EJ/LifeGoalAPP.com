@@ -10,7 +10,7 @@ import { resolveSpaceExcavatorDepthForBoard } from '../../level-worlds/services/
 import { resolveSpaceExcavatorObjectTileIds } from '../../level-worlds/services/spaceExcavatorObjects';
 import './spaceExcavator.css';
 
-type Tile = { dug: boolean; objectPiece: boolean; clueType: SpaceExcavatorClueResult['type'] };
+type Tile = { dug: boolean; objectPiece: boolean; bonusBomb: boolean; clueType: SpaceExcavatorClueResult['type'] };
 
 type SpaceExcavatorProgressStatus = 'active' | 'board_complete' | 'completed';
 type SpaceExcavatorProgress = {
@@ -23,6 +23,8 @@ type SpaceExcavatorProgress = {
   objectName?: string;
   objectIcon?: string;
   objectTileIds?: number[];
+  bonusBombTileIds?: number[];
+  triggeredBonusBombTileIds?: number[];
   revealedObjectTileIds?: number[];
   dugTileIds: number[];
   foundTreasureTileIds: number[];
@@ -36,6 +38,9 @@ type DigSpendResult = {
   progress?: SpaceExcavatorProgress | null;
   boardComplete?: boolean;
   canAdvanceBoard?: boolean;
+  triggeredBomb?: boolean;
+  revealedTileIds?: number[];
+  bonusRevealCount?: number;
   failureReason?: 'missing_progress' | 'insufficient_tickets' | 'board_complete' | 'invalid_tile' | 'already_dug';
 };
 type AdvanceBoardResult = { ok: boolean; ticketsRemaining: number; progress?: SpaceExcavatorProgress | null };
@@ -54,6 +59,10 @@ type SpaceExcavatorLaunchConfig = {
 
 function getProgressObjectTileIds(progress: SpaceExcavatorProgress | null | undefined): number[] {
   return progress ? resolveSpaceExcavatorObjectTileIds(progress) : [];
+}
+
+function getProgressBonusBombTileIds(progress: SpaceExcavatorProgress | null | undefined): number[] {
+  return progress?.bonusBombTileIds ?? [];
 }
 
 function getObjectPieceCount(options: {
@@ -78,18 +87,21 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
 
   const activeProgress = progress ?? initial ?? null;
   const activeObjectTileIds = useMemo(() => getProgressObjectTileIds(activeProgress), [activeProgress]);
+  const activeBonusBombTileIds = useMemo(() => getProgressBonusBombTileIds(activeProgress), [activeProgress]);
   const tiles = useMemo<Tile[]>(() => {
     const activeDugTileIds = activeProgress?.dugTileIds ?? [];
     return Array.from({ length: size * size }, (_, i) => {
       const dug = activeDugTileIds.includes(i);
       const objectPiece = activeObjectTileIds.includes(i);
+      const bonusBomb = activeBonusBombTileIds.includes(i);
       return {
         dug,
         objectPiece,
+        bonusBomb,
         clueType: dug ? resolveSpaceExcavatorClue({ tileId: i, boardSize: size, objectTileIds: activeObjectTileIds }).type : 'cold',
       };
     });
-  }, [activeObjectTileIds, activeProgress, size]);
+  }, [activeBonusBombTileIds, activeObjectTileIds, activeProgress, size]);
   const [ticketsRemaining, setTicketsRemaining] = useState<number>(() => Math.max(0, Math.floor(config.getTicketsRemaining?.() ?? 0)));
   const [finished, setFinished] = useState(false);
   const [sentResult, setSentResult] = useState(false);
@@ -97,6 +109,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const [claimPendingId, setClaimPendingId] = useState<string | null>(null);
   const [claimMessage, setClaimMessage] = useState<string | null>(null);
   const [latestClue, setLatestClue] = useState<SpaceExcavatorClueResult | null>(null);
+  const [latestBombFeedback, setLatestBombFeedback] = useState<string | null>(null);
 
   const syncProgress = (nextProgress: SpaceExcavatorProgress) => {
     setProgress(nextProgress);
@@ -136,11 +149,18 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
     setTicketsRemaining(spend.ticketsRemaining);
 
     if (spend.ok && spend.progress) {
-      setLatestClue(resolveSpaceExcavatorClue({
-        tileId: index,
-        boardSize: spend.progress.boardSize,
-        objectTileIds: getProgressObjectTileIds(spend.progress),
-      }));
+      if (spend.triggeredBomb) {
+        const bonusRevealCount = Math.max(0, Math.floor(spend.bonusRevealCount ?? 0));
+        setLatestBombFeedback(`Bonus Bomb! ${bonusRevealCount} nearby tile${bonusRevealCount === 1 ? '' : 's'} cleared.`);
+        setLatestClue(null);
+      } else {
+        setLatestBombFeedback(null);
+        setLatestClue(resolveSpaceExcavatorClue({
+          tileId: index,
+          boardSize: spend.progress.boardSize,
+          objectTileIds: getProgressObjectTileIds(spend.progress),
+        }));
+      }
       syncProgress(spend.progress);
       return;
     }
@@ -159,6 +179,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
     setTicketsRemaining(advance.ticketsRemaining);
     if (advance.ok && advance.progress) {
       setLatestClue(null);
+      setLatestBombFeedback(null);
       syncProgress(advance.progress);
     }
   };
@@ -228,7 +249,16 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
         </div>
       </div>
 
-      {latestClue && (
+      {latestBombFeedback ? (
+        <div
+          className="space-excavator__clue space-excavator__clue--bomb"
+          role="status"
+          aria-live="polite"
+        >
+          <span className="space-excavator__clue-label">Bonus Bomb!</span>
+          <span className="space-excavator__clue-message">{latestBombFeedback}</span>
+        </div>
+      ) : latestClue && (
         <div
           className={`space-excavator__clue space-excavator__clue--${latestClue.tone}`}
           role="status"
@@ -245,12 +275,12 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
             <button
               key={i}
               type="button"
-              className={`space-excavator__tile ${tile.dug ? (tile.objectPiece ? 'space-excavator__tile--object' : `space-excavator__tile--dug space-excavator__tile--${tile.clueType}`) : ''}`}
+              className={`space-excavator__tile ${tile.dug ? (tile.objectPiece ? 'space-excavator__tile--object' : tile.bonusBomb ? 'space-excavator__tile--bomb' : `space-excavator__tile--dug space-excavator__tile--${tile.clueType}`) : ''}`}
               onClick={() => onDig(i)}
               disabled={finished || boardComplete || tile.dug}
               aria-label={`Tile ${i + 1}`}
             >
-              {tile.dug ? (tile.objectPiece ? (progress?.objectIcon ?? initial?.objectIcon ?? '✦') : <span className="space-excavator__tile-marker" aria-hidden="true" />) : '⬛'}
+              {tile.dug ? (tile.objectPiece ? (progress?.objectIcon ?? initial?.objectIcon ?? '✦') : tile.bonusBomb ? '💣' : <span className="space-excavator__tile-marker" aria-hidden="true" />) : '⬛'}
             </button>
           ))}
         </div>
