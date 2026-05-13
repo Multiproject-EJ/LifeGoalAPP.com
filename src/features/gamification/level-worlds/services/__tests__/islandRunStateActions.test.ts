@@ -292,6 +292,7 @@ export const islandRunStateActionsTests: TestCase[] = [
         tileId: initialProgress.objectTileIds[0],
       });
       assertEqual(duplicateDig.ok, false, 'duplicate tile dig should be rejected');
+      assertEqual(duplicateDig.failureReason, 'already_dug', 'duplicate tile dig should not be treated as an out-of-ticket failure');
       assertEqual(duplicateDig.ticketsRemaining, 1, 'duplicate tile dig should not spend another ticket');
       assertEqual(duplicateDig.record.minigameTicketsByEvent['space_excavator:event-a'], 1, 'duplicate dig should preserve ticket bucket');
       assertEqual(duplicateDig.record.spinTokens, 7, 'duplicate dig should not touch spinTokens');
@@ -343,11 +344,28 @@ export const islandRunStateActionsTests: TestCase[] = [
       });
 
       assertEqual(failedDig.ok, false, 'dig at zero tickets should be blocked');
+      assertEqual(failedDig.failureReason, 'insufficient_tickets', 'dig at zero tickets should report insufficient tickets');
       assertEqual(failedDig.ticketsRemaining, 0, 'blocked dig should report zero tickets');
+      assertEqual(failedDig.record.runtimeVersion, initialized.runtimeVersion, 'blocked dig should not commit a runtime mutation');
+      assertDeepEqual(
+        failedDig.record.spaceExcavatorProgressByEvent['space_excavator:event-zero'],
+        initialProgress,
+        'blocked dig should preserve saved board progress exactly',
+      );
       assertEqual(
         failedDig.record.spaceExcavatorProgressByEvent['space_excavator:event-zero'].dugTileIds.length,
         0,
         'blocked dig should not reveal any tile',
+      );
+      assertEqual(
+        failedDig.record.spaceExcavatorProgressByEvent['space_excavator:event-zero'].eventProgressPoints,
+        0,
+        'blocked dig should not mutate event progress',
+      );
+      assertDeepEqual(
+        failedDig.record.spaceExcavatorProgressByEvent['space_excavator:event-zero'].claimedMilestoneIds,
+        [],
+        'blocked dig should not mutate claimed milestones',
       );
       assertEqual(failedDig.record.minigameTicketsByEvent['companion_feast:event-c'], 6, 'unrelated event bucket should remain untouched');
       assertEqual(failedDig.record.spaceExcavatorProgressByEvent['companion_feast:event-c'], undefined, 'unrelated event progress should remain absent');

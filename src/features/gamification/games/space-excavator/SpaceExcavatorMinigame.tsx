@@ -28,7 +28,14 @@ type SpaceExcavatorProgress = {
   eventProgressPoints?: number;
   claimedMilestoneIds?: string[];
 };
-type DigSpendResult = { ok: boolean; ticketsRemaining: number; progress?: SpaceExcavatorProgress | null; boardComplete?: boolean; canAdvanceBoard?: boolean };
+type DigSpendResult = {
+  ok: boolean;
+  ticketsRemaining: number;
+  progress?: SpaceExcavatorProgress | null;
+  boardComplete?: boolean;
+  canAdvanceBoard?: boolean;
+  failureReason?: 'missing_progress' | 'insufficient_tickets' | 'board_complete' | 'invalid_tile' | 'already_dug';
+};
 type AdvanceBoardResult = { ok: boolean; ticketsRemaining: number; progress?: SpaceExcavatorProgress | null };
 type ClaimMilestoneRewardResult =
   | { ok: true; progress: SpaceExcavatorProgress; rewardLabel: string; failureReason?: never }
@@ -113,14 +120,14 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
     if (finished || boardComplete) return;
     if (tiles[index]?.dug) return;
 
-    const spend = config.requestDigSpend?.(index) ?? { ok: false, ticketsRemaining };
+    const spend = config.requestDigSpend?.(index) ?? { ok: false, ticketsRemaining, failureReason: ticketsRemaining < 1 ? 'insufficient_tickets' : undefined };
     setTicketsRemaining(spend.ticketsRemaining);
 
     if (spend.ok && spend.progress) {
       syncProgress(spend.progress);
       return;
     }
-    if (!spend.ok) {
+    if (!spend.ok && (spend.failureReason === 'insufficient_tickets' || spend.ticketsRemaining < 1)) {
       setShowOutOfTickets(true);
       return;
     }
@@ -243,12 +250,28 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       </div>
 
       {showOutOfTickets && (
-        <div className="space-excavator__notice" role="status" aria-live="polite">
-          <p><strong>Out of Space Excavator tickets</strong></p>
-          <p>Earn more from the Island Run reward bar, then come back and keep digging.</p>
-          <div className="space-excavator__actions">
-            <button type="button" className="space-excavator__button" onClick={() => sendOnce(false)}>Back to Island Run</button>
-            <button type="button" className="space-excavator__button" onClick={() => setShowOutOfTickets(false)}>Keep looking</button>
+        <div className="space-excavator__modal-backdrop" role="presentation">
+          <div
+            className="space-excavator__ticket-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="space-excavator-out-of-tickets-title"
+          >
+            <p id="space-excavator-out-of-tickets-title" className="space-excavator__ticket-sheet-title">
+              Out of Dig Tickets
+            </p>
+            <p className="space-excavator__ticket-sheet-body">
+              You’ve used all your Space Excavator tickets. Your dig site is saved — earn more tickets from Island Run and come back to continue.
+            </p>
+            <p className="space-excavator__ticket-sheet-note">Every ticket gives you one dig.</p>
+            <div className="space-excavator__ticket-sheet-actions">
+              <button type="button" className="space-excavator__button space-excavator__button--primary" onClick={() => sendOnce(false)}>
+                Back to Island Run
+              </button>
+              <button type="button" className="space-excavator__button" onClick={() => setShowOutOfTickets(false)}>
+                Keep looking
+              </button>
+            </div>
           </div>
         </div>
       )}

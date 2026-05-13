@@ -228,6 +228,13 @@
   color: #e2e8f0;
 }
 
+.space-excavator__button--primary {
+  border-color: #38bdf8;
+  background: #0ea5e9;
+  color: #082f49;
+  font-weight: 900;
+}
+
 .space-excavator__notice {
   border: 1px solid #92400e;
   background: rgba(120, 53, 15, 0.35);
@@ -242,6 +249,63 @@
 .space-excavator__notice-title {
   font-size: 18px;
   font-weight: 900;
+}
+
+.space-excavator__modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
+  background: rgba(2, 6, 23, 0.62);
+}
+
+.space-excavator__ticket-sheet {
+  box-sizing: border-box;
+  width: min(100%, 440px);
+  max-height: calc(100dvh - max(24px, env(safe-area-inset-top, 0px)) - max(24px, env(safe-area-inset-bottom, 0px)));
+  overflow-y: auto;
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  border-radius: 18px;
+  padding: 18px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(8, 47, 73, 0.98));
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.45);
+}
+
+.space-excavator__ticket-sheet-title,
+.space-excavator__ticket-sheet-body,
+.space-excavator__ticket-sheet-note {
+  margin: 0;
+}
+
+.space-excavator__ticket-sheet-title {
+  color: #f8fafc;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.space-excavator__ticket-sheet-body {
+  margin-top: 10px;
+  color: #dbeafe;
+  line-height: 1.45;
+}
+
+.space-excavator__ticket-sheet-note {
+  margin-top: 10px;
+  color: #bae6fd;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.space-excavator__ticket-sheet-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 16px;
 }
 
 .space-excavator__notice--success {
