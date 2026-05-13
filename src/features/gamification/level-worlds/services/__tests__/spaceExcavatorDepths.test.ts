@@ -1,7 +1,24 @@
-import { resolveSpaceExcavatorDepthForBoard } from '../spaceExcavatorDepths';
+import { SPACE_EXCAVATOR_DEPTH_LEVELS, resolveSpaceExcavatorDepthForBoard } from '../spaceExcavatorDepths';
 import { assertEqual, type TestCase } from './testHarness';
 
 export const spaceExcavatorDepthsTests: TestCase[] = [
+  {
+    name: 'SPACE_EXCAVATOR_DEPTH_LEVELS covers boards 1-10 without range gaps',
+    run: () => {
+      let expectedMinBoardNumber = 1;
+
+      for (const depth of SPACE_EXCAVATOR_DEPTH_LEVELS) {
+        assertEqual(
+          depth.minBoardNumber,
+          expectedMinBoardNumber,
+          `${depth.name} should start at board ${expectedMinBoardNumber}`,
+        );
+        expectedMinBoardNumber = depth.maxBoardNumber + 1;
+      }
+
+      assertEqual(expectedMinBoardNumber, 11, 'depth metadata should cover through board 10');
+    },
+  },
   {
     name: 'resolveSpaceExcavatorDepthForBoard maps displayed board numbers to themed depths',
     run: () => {

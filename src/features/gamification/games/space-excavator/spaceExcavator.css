@@ -6,6 +6,8 @@
   --space-excavator-accent: #38bdf8;
   --space-excavator-accent-strong: #0ea5e9;
   --space-excavator-accent-contrast: #082f49;
+  --space-excavator-accent-wash: rgba(56, 189, 248, 0.18);
+  --space-excavator-accent-glass: rgba(56, 189, 248, 0.28);
   --space-excavator-glow: rgba(56, 189, 248, 0.32);
   --space-excavator-panel-border: rgba(125, 211, 252, 0.36);
   --space-excavator-panel-bg: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(8, 47, 73, 0.68));
@@ -35,6 +37,8 @@
   --space-excavator-accent: #fbbf24;
   --space-excavator-accent-strong: #d97706;
   --space-excavator-accent-contrast: #422006;
+  --space-excavator-accent-wash: rgba(251, 191, 36, 0.18);
+  --space-excavator-accent-glass: rgba(251, 191, 36, 0.28);
   --space-excavator-glow: rgba(251, 191, 36, 0.34);
   --space-excavator-panel-border: rgba(251, 191, 36, 0.42);
   --space-excavator-panel-bg: linear-gradient(135deg, rgba(41, 30, 15, 0.92), rgba(120, 53, 15, 0.58));
@@ -52,6 +56,8 @@
   --space-excavator-accent: #818cf8;
   --space-excavator-accent-strong: #7c3aed;
   --space-excavator-accent-contrast: #eef2ff;
+  --space-excavator-accent-wash: rgba(129, 140, 248, 0.18);
+  --space-excavator-accent-glass: rgba(129, 140, 248, 0.28);
   --space-excavator-glow: rgba(129, 140, 248, 0.36);
   --space-excavator-panel-border: rgba(167, 139, 250, 0.42);
   --space-excavator-panel-bg: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(49, 46, 129, 0.66));
@@ -69,6 +75,8 @@
   --space-excavator-accent: #22d3ee;
   --space-excavator-accent-strong: #a855f7;
   --space-excavator-accent-contrast: #083344;
+  --space-excavator-accent-wash: rgba(34, 211, 238, 0.18);
+  --space-excavator-accent-glass: rgba(34, 211, 238, 0.28);
   --space-excavator-glow: rgba(34, 211, 238, 0.4);
   --space-excavator-panel-border: rgba(34, 211, 238, 0.48);
   --space-excavator-panel-bg: linear-gradient(135deg, rgba(8, 47, 73, 0.9), rgba(88, 28, 135, 0.56));
@@ -86,6 +94,8 @@
   --space-excavator-accent: #f59e0b;
   --space-excavator-accent-strong: #facc15;
   --space-excavator-accent-contrast: #1c1917;
+  --space-excavator-accent-wash: rgba(245, 158, 11, 0.18);
+  --space-excavator-accent-glass: rgba(245, 158, 11, 0.28);
   --space-excavator-glow: rgba(245, 158, 11, 0.42);
   --space-excavator-panel-border: rgba(250, 204, 21, 0.48);
   --space-excavator-panel-bg: linear-gradient(135deg, rgba(12, 10, 9, 0.94), rgba(120, 53, 15, 0.58));
@@ -139,7 +149,7 @@
 
 .space-excavator__hud-chip--accent {
   border-color: var(--space-excavator-panel-border);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--space-excavator-accent) 28%, transparent), rgba(15, 23, 42, 0.76));
+  background: linear-gradient(135deg, var(--space-excavator-accent-glass), rgba(15, 23, 42, 0.76));
 }
 
 .space-excavator__depth-banner {
@@ -151,7 +161,7 @@
   border: 1px solid var(--space-excavator-panel-border);
   border-radius: 999px;
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--space-excavator-accent) 18%, transparent), rgba(15, 23, 42, 0.58)),
+    linear-gradient(135deg, var(--space-excavator-accent-wash), rgba(15, 23, 42, 0.58)),
     rgba(15, 23, 42, 0.52);
   box-shadow: 0 8px 20px rgba(2, 6, 23, 0.18), 0 0 18px var(--space-excavator-glow);
 }
@@ -196,7 +206,7 @@
   border: 1px solid var(--space-excavator-panel-border);
   border-radius: 16px;
   background:
-    radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--space-excavator-accent) 24%, transparent), transparent 58%),
+    radial-gradient(circle at 50% 35%, var(--space-excavator-accent-wash), transparent 58%),
     #020617;
   color: #dbeafe;
   font-size: clamp(24px, 7vw, 31px);
@@ -403,7 +413,7 @@
 
 .space-excavator__milestone--claimable {
   border-color: var(--space-excavator-accent);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--space-excavator-accent) 34%, transparent), rgba(15, 23, 42, 0.58));
+  background: linear-gradient(135deg, var(--space-excavator-accent-glass), rgba(15, 23, 42, 0.58));
   box-shadow: 0 0 0 1px var(--space-excavator-glow), 0 8px 20px rgba(2, 6, 23, 0.16);
   color: var(--space-excavator-copy-accent);
 }
@@ -597,7 +607,7 @@
 
 .space-excavator__clear-summary .space-excavator__clear-summary-claimable {
   border-color: var(--space-excavator-panel-border);
-  background: color-mix(in srgb, var(--space-excavator-accent) 22%, transparent);
+  background: var(--space-excavator-accent-wash);
   color: var(--space-excavator-copy-accent);
   font-weight: 800;
 }
