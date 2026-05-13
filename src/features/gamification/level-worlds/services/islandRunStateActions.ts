@@ -77,15 +77,19 @@ import {
 } from './spaceExcavatorCampaignProgress';
 
 
-export interface ApplySpaceExcavatorDigResult {
+export type SpaceExcavatorDigFailureReason = 'missing_progress' | 'insufficient_tickets' | 'board_complete' | 'invalid_tile' | 'already_dug';
+
+type ApplySpaceExcavatorDigResultBase = {
   record: IslandRunGameStateRecord;
-  ok: boolean;
   ticketsRemaining: number;
   progress: SpaceExcavatorProgressEntry | null;
   boardComplete: boolean;
   canAdvanceBoard: boolean;
-  failureReason?: 'missing_progress' | 'insufficient_tickets' | 'board_complete' | 'invalid_tile' | 'already_dug';
-}
+};
+
+export type ApplySpaceExcavatorDigResult =
+  | (ApplySpaceExcavatorDigResultBase & { ok: true; failureReason?: never })
+  | (ApplySpaceExcavatorDigResultBase & { ok: false; failureReason: SpaceExcavatorDigFailureReason });
 
 export interface AdvanceSpaceExcavatorBoardResult {
   record: IslandRunGameStateRecord;

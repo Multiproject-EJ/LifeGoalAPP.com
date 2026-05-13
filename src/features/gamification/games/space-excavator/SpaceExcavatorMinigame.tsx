@@ -133,6 +133,10 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
     }
   };
 
+  const dismissOutOfTickets = () => {
+    setShowOutOfTickets(false);
+  };
+
   const onAdvanceBoard = () => {
     const advance = config.requestAdvanceBoard?.() ?? { ok: false, ticketsRemaining };
     setTicketsRemaining(advance.ticketsRemaining);
@@ -250,7 +254,16 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       </div>
 
       {showOutOfTickets && (
-        <div className="space-excavator__modal-backdrop" role="presentation">
+        <div
+          className="space-excavator__modal-backdrop"
+          role="presentation"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) dismissOutOfTickets();
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') dismissOutOfTickets();
+          }}
+        >
           <div
             className="space-excavator__ticket-sheet"
             role="dialog"
@@ -268,7 +281,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
               <button type="button" className="space-excavator__button space-excavator__button--primary" onClick={() => sendOnce(false)}>
                 Back to Island Run
               </button>
-              <button type="button" className="space-excavator__button" onClick={() => setShowOutOfTickets(false)}>
+              <button type="button" className="space-excavator__button" onClick={dismissOutOfTickets}>
                 Keep looking
               </button>
             </div>
