@@ -2092,10 +2092,9 @@ export function DailyHabitTracker({
       return;
     }
 
-    const collageCount = Math.min(
-      visionImages.length,
-      VISION_STAR_COLLAGE_MIN + Math.floor(Math.random() * (VISION_STAR_COLLAGE_MAX - VISION_STAR_COLLAGE_MIN + 1)),
-    );
+    const randomCountInRange =
+      VISION_STAR_COLLAGE_MIN + Math.floor(Math.random() * (VISION_STAR_COLLAGE_MAX - VISION_STAR_COLLAGE_MIN + 1));
+    const collageCount = Math.min(visionImages.length, randomCountInRange);
     // Fisher-Yates shuffle for unbiased random selection
     const pool = [...visionImages];
     for (let i = pool.length - 1; i > 0; i--) {
