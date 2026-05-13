@@ -364,7 +364,8 @@ const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;
 const ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_WEIGHT_PERCENT = 70;
 const DEV_LUCKY_ROLL_TEST_ROLL = 3;
 const BUILD_HOLD_INITIAL_DELAY_MS = 400;
-const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT = 'Fill the reward bar to earn more dig tickets';
+const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT = 'Fill the reward bar to earn more dig tickets.';
+const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT_DEV = 'Fill the reward bar to earn more dig tickets (DEV override tickets).';
 
 function resolveBuildHoldRepeatDelayMs(heldMs: number) {
   if (heldMs >= 3_000) return 95;
@@ -4251,7 +4252,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const isDevTimedEventOverrideActive = isDevModeEnabled && Boolean(devTimedEventOverrideType && devTimedEventOverrideEventId);
   const rewardBarAvatarIcon = activeEventMeta?.icon ?? timedEventTokenIcon;
   const spaceExcavatorRewardBarHint = isSpaceExcavatorEffectiveEvent
-    ? `${SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT}${isDevTimedEventOverrideActive ? ' (DEV override tickets)' : ''}.`
+    ? (isDevTimedEventOverrideActive ? SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT_DEV : SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT)
     : null;
   const hasLegacyEventTicketDivergence = Boolean(activeTimedEventId) && activeEventTickets !== spinTokens;
   // Parity guard breadcrumb for islandRunBoardEssenceParity:
@@ -8250,16 +8251,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </div>
           )}
           {/* Decorative themed event banner — only shown when an event is active */}
-          {effectiveActiveTimedEvent && activeEventMeta ? (() => {
-            const meta = activeEventMeta;
-            return (
-              <div className={`island-run-board__rewardbar-banner island-run-board__rewardbar-banner--${effectiveActiveTimedEvent.eventType}`}>
-                <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{meta.icon}</i>
-                <span>{meta.displayName}</span>
-                <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{meta.icon}</i>
-              </div>
-            );
-          })() : null}
+          {effectiveActiveTimedEvent && activeEventMeta ? (
+            <div className={`island-run-board__rewardbar-banner island-run-board__rewardbar-banner--${effectiveActiveTimedEvent.eventType}`}>
+              <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{activeEventMeta.icon}</i>
+              <span>{activeEventMeta.displayName}</span>
+              <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{activeEventMeta.icon}</i>
+            </div>
+          ) : null}
           <div className="island-run-board__rewardbar-header">
             <span>{Math.floor(rewardBarProgress)}/{Math.floor(rewardBarThreshold)}</span>
             <span>{`Tier ${runtimeState.rewardBarEscalationTier}`}</span>
@@ -9370,7 +9368,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </p>
             {isSpaceExcavatorEffectiveEvent && (
               <p className="island-stop-modal__copy">
-                {SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT}.
+                {SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT}
               </p>
             )}
             <p className="island-stop-modal__copy">
