@@ -9,6 +9,18 @@ type MeditationSessionPlayerProps = {
   onComplete: () => void;
 };
 
+const PHASE_ASSET_SRC_BY_PHASE = {
+  inhale: '/icons/Energy/breath-cloud-in.webp',
+  hold: '/icons/Energy/breath-cloud-hold.webp',
+  exhale: '/icons/Energy/breath-cloud-out.webp',
+} as const;
+
+const PHASE_INDEX_BY_PHASE = {
+  inhale: 0,
+  hold: 1,
+  exhale: 2,
+} as const;
+
 export function MeditationSessionPlayer({
   isOpen,
   onClose,
@@ -241,15 +253,10 @@ export function MeditationSessionPlayer({
     hold: 'Hold',
     exhale: 'Breathe Out',
   };
-  const phaseAssetSrcByPhase = {
-    inhale: '/icons/Energy/breath-cloud-in.webp',
-    hold: '/icons/Energy/breath-cloud-hold.webp',
-    exhale: '/icons/Energy/breath-cloud-out.webp',
-  } as const;
-  const phaseAssetSrc = phaseAssetSrcByPhase[breathPhase];
+  const phaseAssetSrc = PHASE_ASSET_SRC_BY_PHASE[breathPhase];
   const phaseAssetMissing = Boolean(missingPhaseAssets[phaseAssetSrc]);
   const startButtonLabel = timeRemaining === durationSeconds ? 'Begin Breathing' : 'Resume';
-  const currentPhaseIndex = breathPhase === 'inhale' ? 0 : breathPhase === 'hold' ? 1 : 2;
+  const currentPhaseIndex = PHASE_INDEX_BY_PHASE[breathPhase];
   const handlePhaseAssetError = (assetSrc: string) => {
     setMissingPhaseAssets((current) => {
       if (current[assetSrc]) return current;
@@ -259,8 +266,6 @@ export function MeditationSessionPlayer({
       };
     });
   };
-  void sessionTitle;
-
   return (
     <div className="meditation-modal-overlay" onClick={handleClose}>
       <div className="meditation-modal" onClick={(e) => e.stopPropagation()}>
@@ -271,7 +276,8 @@ export function MeditationSessionPlayer({
         <div className="meditation-modal__content">
           <header className="meditation-modal__header">
             <h2 className="meditation-modal__title">Breathing Space</h2>
-            <p className="meditation-modal__subtitle">Take a moment. You&apos;ve got this.</p>
+            <p className="meditation-modal__subtitle">Take a moment. You’ve got this.</p>
+            <span className="meditation-modal__sr-only">{sessionTitle}</span>
           </header>
 
           <div className="meditation-breathing-circle">
