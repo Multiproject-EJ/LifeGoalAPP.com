@@ -274,15 +274,16 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
               Out of Dig Tickets
             </p>
             <p className="space-excavator__ticket-sheet-body">
-              You’ve used all your Space Excavator tickets. Your dig site is saved — earn more tickets from Island Run and come back to continue.
+              Your dig site is saved. Return to Island Run, fill the reward bar, and earn more Space Excavator tickets to keep digging.
             </p>
-            <p className="space-excavator__ticket-sheet-note">Every ticket gives you one dig.</p>
+            <p className="space-excavator__ticket-sheet-note">Every event ticket gives you one dig.</p>
+            <p className="space-excavator__ticket-sheet-hint">Tip: Event tickets come from the Island Run reward bar.</p>
             <div className="space-excavator__ticket-sheet-actions">
               <button type="button" className="space-excavator__button space-excavator__button--primary" onClick={() => sendOnce(false)}>
                 Back to Island Run
               </button>
               <button type="button" className="space-excavator__button" onClick={dismissOutOfTickets}>
-                Keep looking
+                Stay here
               </button>
             </div>
           </div>

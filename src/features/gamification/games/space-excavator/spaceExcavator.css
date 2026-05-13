@@ -278,7 +278,8 @@
 
 .space-excavator__ticket-sheet-title,
 .space-excavator__ticket-sheet-body,
-.space-excavator__ticket-sheet-note {
+.space-excavator__ticket-sheet-note,
+.space-excavator__ticket-sheet-hint {
   margin: 0;
 }
 
@@ -299,6 +300,12 @@
   color: #bae6fd;
   font-size: 14px;
   font-weight: 800;
+}
+
+.space-excavator__ticket-sheet-hint {
+  margin-top: 6px;
+  color: #cbd5e1;
+  font-size: 13px;
 }
 
 .space-excavator__ticket-sheet-actions {

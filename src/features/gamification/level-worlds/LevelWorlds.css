@@ -2025,6 +2025,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  /* Allows Space Excavator's reward-bar ticket hint to fit beneath the timer on narrow boards. */
+  flex-wrap: wrap;
   gap: 14px;
   margin: 4px -10px -7px;
   padding: 4px 12px;
@@ -2035,6 +2037,13 @@
   font-weight: 700;
   color: #5a3d12;
   letter-spacing: 0.02em;
+}
+
+.island-run-board__rewardbar-ticket-hint {
+  flex-basis: 100%;
+  text-align: center;
+  font-size: 0.62rem;
+  line-height: 1.2;
 }
 
 .island-run-board__rewardbar-timers-sep {
@@ -2164,6 +2173,19 @@
 .island-run-board__minigame-icon-label {
   font-size: 0.6rem;
   opacity: 0.9;
+}
+
+.island-run-board__minigame-icon-helper {
+  max-width: 84px;
+  font-size: 0.53rem;
+  line-height: 1.05;
+  opacity: 0.82;
+  text-align: center;
+}
+
+.island-run-board__minigame-icon-helper--dev {
+  color: #fde68a;
+  font-weight: 800;
 }
 
 /* ── Sticker album button ──────────────────────────────────────────── */
