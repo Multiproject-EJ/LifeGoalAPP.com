@@ -1,4 +1,20 @@
 .space-excavator {
+  --space-excavator-background:
+    radial-gradient(circle at 18% 8%, rgba(56, 189, 248, 0.22), transparent 28%),
+    radial-gradient(circle at 82% 18%, rgba(250, 204, 21, 0.14), transparent 26%),
+    linear-gradient(180deg, #07111f 0%, #0f172a 44%, #111827 100%);
+  --space-excavator-accent: #38bdf8;
+  --space-excavator-accent-strong: #0ea5e9;
+  --space-excavator-accent-contrast: #082f49;
+  --space-excavator-accent-wash: rgba(56, 189, 248, 0.18);
+  --space-excavator-accent-glass: rgba(56, 189, 248, 0.28);
+  --space-excavator-glow: rgba(56, 189, 248, 0.32);
+  --space-excavator-panel-border: rgba(125, 211, 252, 0.36);
+  --space-excavator-panel-bg: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(8, 47, 73, 0.68));
+  --space-excavator-board-glow: rgba(56, 189, 248, 0.13);
+  --space-excavator-tile-highlight: #38bdf8;
+  --space-excavator-progress-accent: #facc15;
+  --space-excavator-copy-accent: #bae6fd;
   box-sizing: border-box;
   width: 100%;
   height: 100%;
@@ -8,12 +24,85 @@
   gap: 10px;
   padding: calc(env(safe-area-inset-top, 0px) + 10px) clamp(10px, 3vw, 18px) calc(env(safe-area-inset-bottom, 0px) + 10px);
   color: #f8fafc;
-  background:
-    radial-gradient(circle at 18% 8%, rgba(56, 189, 248, 0.22), transparent 28%),
-    radial-gradient(circle at 82% 18%, rgba(250, 204, 21, 0.14), transparent 26%),
-    linear-gradient(180deg, #07111f 0%, #0f172a 44%, #111827 100%);
+  background: var(--space-excavator-background);
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+.space-excavator--surface {
+  --space-excavator-background:
+    radial-gradient(circle at 18% 8%, rgba(251, 191, 36, 0.28), transparent 28%),
+    radial-gradient(circle at 82% 18%, rgba(180, 83, 9, 0.18), transparent 26%),
+    linear-gradient(180deg, #1c150a 0%, #2a1f12 48%, #111827 100%);
+  --space-excavator-accent: #fbbf24;
+  --space-excavator-accent-strong: #d97706;
+  --space-excavator-accent-contrast: #422006;
+  --space-excavator-accent-wash: rgba(251, 191, 36, 0.18);
+  --space-excavator-accent-glass: rgba(251, 191, 36, 0.28);
+  --space-excavator-glow: rgba(251, 191, 36, 0.34);
+  --space-excavator-panel-border: rgba(251, 191, 36, 0.42);
+  --space-excavator-panel-bg: linear-gradient(135deg, rgba(41, 30, 15, 0.92), rgba(120, 53, 15, 0.58));
+  --space-excavator-board-glow: rgba(251, 191, 36, 0.15);
+  --space-excavator-tile-highlight: #f59e0b;
+  --space-excavator-progress-accent: #fde68a;
+  --space-excavator-copy-accent: #fde68a;
+}
+
+.space-excavator--moon {
+  --space-excavator-background:
+    radial-gradient(circle at 20% 10%, rgba(129, 140, 248, 0.26), transparent 30%),
+    radial-gradient(circle at 82% 16%, rgba(96, 165, 250, 0.16), transparent 28%),
+    linear-gradient(180deg, #090f2a 0%, #11143a 48%, #111827 100%);
+  --space-excavator-accent: #818cf8;
+  --space-excavator-accent-strong: #7c3aed;
+  --space-excavator-accent-contrast: #eef2ff;
+  --space-excavator-accent-wash: rgba(129, 140, 248, 0.18);
+  --space-excavator-accent-glass: rgba(129, 140, 248, 0.28);
+  --space-excavator-glow: rgba(129, 140, 248, 0.36);
+  --space-excavator-panel-border: rgba(167, 139, 250, 0.42);
+  --space-excavator-panel-bg: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(49, 46, 129, 0.66));
+  --space-excavator-board-glow: rgba(129, 140, 248, 0.16);
+  --space-excavator-tile-highlight: #818cf8;
+  --space-excavator-progress-accent: #60a5fa;
+  --space-excavator-copy-accent: #c4b5fd;
+}
+
+.space-excavator--crystal {
+  --space-excavator-background:
+    radial-gradient(circle at 18% 8%, rgba(34, 211, 238, 0.3), transparent 30%),
+    radial-gradient(circle at 84% 18%, rgba(192, 132, 252, 0.2), transparent 28%),
+    linear-gradient(180deg, #041a25 0%, #10233d 48%, #111827 100%);
+  --space-excavator-accent: #22d3ee;
+  --space-excavator-accent-strong: #a855f7;
+  --space-excavator-accent-contrast: #083344;
+  --space-excavator-accent-wash: rgba(34, 211, 238, 0.18);
+  --space-excavator-accent-glass: rgba(34, 211, 238, 0.28);
+  --space-excavator-glow: rgba(34, 211, 238, 0.4);
+  --space-excavator-panel-border: rgba(34, 211, 238, 0.48);
+  --space-excavator-panel-bg: linear-gradient(135deg, rgba(8, 47, 73, 0.9), rgba(88, 28, 135, 0.56));
+  --space-excavator-board-glow: rgba(34, 211, 238, 0.19);
+  --space-excavator-tile-highlight: #22d3ee;
+  --space-excavator-progress-accent: #c084fc;
+  --space-excavator-copy-accent: #a5f3fc;
+}
+
+.space-excavator--core {
+  --space-excavator-background:
+    radial-gradient(circle at 18% 8%, rgba(245, 158, 11, 0.26), transparent 30%),
+    radial-gradient(circle at 82% 18%, rgba(251, 191, 36, 0.18), transparent 28%),
+    linear-gradient(180deg, #070707 0%, #1f1308 46%, #111827 100%);
+  --space-excavator-accent: #f59e0b;
+  --space-excavator-accent-strong: #facc15;
+  --space-excavator-accent-contrast: #1c1917;
+  --space-excavator-accent-wash: rgba(245, 158, 11, 0.18);
+  --space-excavator-accent-glass: rgba(245, 158, 11, 0.28);
+  --space-excavator-glow: rgba(245, 158, 11, 0.42);
+  --space-excavator-panel-border: rgba(250, 204, 21, 0.48);
+  --space-excavator-panel-bg: linear-gradient(135deg, rgba(12, 10, 9, 0.94), rgba(120, 53, 15, 0.58));
+  --space-excavator-board-glow: rgba(245, 158, 11, 0.18);
+  --space-excavator-tile-highlight: #f59e0b;
+  --space-excavator-progress-accent: #fef3c7;
+  --space-excavator-copy-accent: #fde68a;
 }
 
 .space-excavator__hud {
@@ -44,7 +133,7 @@
 }
 
 .space-excavator__hud-chip small {
-  color: #93c5fd;
+  color: var(--space-excavator-copy-accent);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -59,21 +148,53 @@
 }
 
 .space-excavator__hud-chip--accent {
-  border-color: rgba(56, 189, 248, 0.55);
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.28), rgba(15, 23, 42, 0.76));
+  border-color: var(--space-excavator-panel-border);
+  background: linear-gradient(135deg, var(--space-excavator-accent-glass), rgba(15, 23, 42, 0.76));
+}
+
+.space-excavator__depth-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--space-excavator-panel-border);
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, var(--space-excavator-accent-wash), rgba(15, 23, 42, 0.58)),
+    rgba(15, 23, 42, 0.52);
+  box-shadow: 0 8px 20px rgba(2, 6, 23, 0.18), 0 0 18px var(--space-excavator-glow);
+}
+
+.space-excavator__depth-label {
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.space-excavator__depth-subtitle {
+  overflow: hidden;
+  color: var(--space-excavator-copy-accent);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .space-excavator__preview {
   display: flex;
   align-items: center;
   gap: 10px;
-  border: 1px solid rgba(125, 211, 252, 0.36);
+  border: 1px solid var(--space-excavator-panel-border);
   border-radius: 18px;
   padding: 9px 11px;
   background:
-    linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(8, 47, 73, 0.68)),
+    var(--space-excavator-panel-bg),
     rgba(15, 23, 42, 0.7);
-  box-shadow: 0 12px 26px rgba(2, 6, 23, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 26px rgba(2, 6, 23, 0.24), 0 0 22px var(--space-excavator-glow), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .space-excavator__silhouette {
@@ -82,15 +203,15 @@
   width: clamp(44px, 12vw, 54px);
   height: clamp(44px, 12vw, 54px);
   flex: 0 0 auto;
-  border: 1px solid rgba(56, 189, 248, 0.28);
+  border: 1px solid var(--space-excavator-panel-border);
   border-radius: 16px;
   background:
-    radial-gradient(circle at 50% 35%, rgba(125, 211, 252, 0.18), transparent 58%),
+    radial-gradient(circle at 50% 35%, var(--space-excavator-accent-wash), transparent 58%),
     #020617;
   color: #dbeafe;
   font-size: clamp(24px, 7vw, 31px);
   filter: grayscale(.45);
-  box-shadow: inset 0 0 18px rgba(56, 189, 248, 0.13);
+  box-shadow: inset 0 0 18px var(--space-excavator-glow);
 }
 
 .space-excavator__preview-copy {
@@ -114,7 +235,7 @@
 
 .space-excavator__preview-progress {
   margin-top: 2px;
-  color: #bae6fd;
+  color: var(--space-excavator-copy-accent);
   font-size: 12px;
   font-weight: 700;
 }
@@ -133,8 +254,8 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #38bdf8, #facc15);
-  box-shadow: 0 0 14px rgba(56, 189, 248, 0.45);
+  background: linear-gradient(90deg, var(--space-excavator-accent), var(--space-excavator-progress-accent));
+  box-shadow: 0 0 14px var(--space-excavator-glow);
 }
 
 .space-excavator__board-shell {
@@ -143,13 +264,13 @@
   place-items: center;
   min-height: clamp(260px, 48dvh, 520px);
   padding: clamp(8px, 2dvh, 18px) 4px;
-  border: 1px solid rgba(56, 189, 248, 0.18);
+  border: 1px solid var(--space-excavator-panel-border);
   border-radius: 24px;
   background:
-    radial-gradient(circle at 50% 42%, rgba(56, 189, 248, 0.13), transparent 50%),
+    radial-gradient(circle at 50% 42%, var(--space-excavator-board-glow), transparent 50%),
     radial-gradient(circle at 50% 50%, rgba(250, 204, 21, 0.08), transparent 42%),
     rgba(2, 6, 23, 0.24);
-  box-shadow: inset 0 0 44px rgba(15, 23, 42, 0.42), 0 16px 34px rgba(2, 6, 23, 0.25);
+  box-shadow: inset 0 0 44px rgba(15, 23, 42, 0.42), 0 16px 34px rgba(2, 6, 23, 0.25), 0 0 26px var(--space-excavator-board-glow);
 }
 
 .space-excavator__board {
@@ -180,20 +301,20 @@
 }
 
 .space-excavator__tile--dug {
-  border-color: rgba(56, 189, 248, 0.72);
-  background: linear-gradient(145deg, #38bdf8, #0ea5e9);
-  color: #082f49;
+  border-color: var(--space-excavator-panel-border);
+  background: linear-gradient(145deg, var(--space-excavator-tile-highlight), var(--space-excavator-accent-strong));
+  color: var(--space-excavator-accent-contrast);
 }
 
 .space-excavator__tile--object {
-  border-color: rgba(253, 230, 138, 0.9);
-  background: radial-gradient(circle at 45% 35%, #fef3c7, #facc15 58%, #f59e0b);
+  border-color: var(--space-excavator-progress-accent);
+  background: radial-gradient(circle at 45% 35%, #fef3c7, var(--space-excavator-progress-accent) 58%, var(--space-excavator-accent-strong));
   color: #422006;
-  box-shadow: 0 0 18px rgba(250, 204, 21, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 18px var(--space-excavator-glow), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .space-excavator__event-progress {
-  border: 1px solid rgba(56, 189, 248, 0.28);
+  border: 1px solid var(--space-excavator-panel-border);
   border-radius: 16px;
   padding: 8px 10px;
   background: rgba(8, 47, 73, 0.36);
@@ -205,7 +326,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  color: #e0f2fe;
+  color: var(--space-excavator-copy-accent);
   font-size: 12px;
 }
 
@@ -216,7 +337,7 @@
 }
 
 .space-excavator__event-progress-header span {
-  color: #bae6fd;
+  color: var(--space-excavator-copy-accent);
   text-align: right;
 }
 
@@ -232,7 +353,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #38bdf8, #facc15);
+  background: linear-gradient(90deg, var(--space-excavator-accent), var(--space-excavator-progress-accent));
 }
 
 .space-excavator__milestones {
@@ -268,7 +389,7 @@
 
 .space-excavator__milestone small {
   justify-self: end;
-  color: #93c5fd;
+  color: var(--space-excavator-copy-accent);
   font-size: 9px;
   font-weight: 900;
   letter-spacing: 0.06em;
@@ -291,10 +412,10 @@
 }
 
 .space-excavator__milestone--claimable {
-  border-color: #38bdf8;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.34), rgba(15, 23, 42, 0.58));
-  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.22), 0 8px 20px rgba(14, 165, 233, 0.16);
-  color: #bae6fd;
+  border-color: var(--space-excavator-accent);
+  background: linear-gradient(135deg, var(--space-excavator-accent-glass), rgba(15, 23, 42, 0.58));
+  box-shadow: 0 0 0 1px var(--space-excavator-glow), 0 8px 20px rgba(2, 6, 23, 0.16);
+  color: var(--space-excavator-copy-accent);
 }
 
 .space-excavator__milestone--claimed {
@@ -306,10 +427,10 @@
 .space-excavator__claim-button {
   grid-column: 1 / -1;
   min-height: 32px;
-  border: 1px solid #7dd3fc;
+  border: 1px solid var(--space-excavator-copy-accent);
   border-radius: 999px;
-  background: linear-gradient(180deg, #7dd3fc, #0ea5e9);
-  color: #082f49;
+  background: linear-gradient(180deg, var(--space-excavator-copy-accent), var(--space-excavator-accent-strong));
+  color: var(--space-excavator-accent-contrast);
   font-size: 11px;
   font-weight: 900;
 }
@@ -353,9 +474,9 @@
 }
 
 .space-excavator__button--primary {
-  border-color: #38bdf8;
-  background: linear-gradient(180deg, #38bdf8, #0ea5e9);
-  color: #082f49;
+  border-color: var(--space-excavator-accent);
+  background: linear-gradient(180deg, var(--space-excavator-accent), var(--space-excavator-accent-strong));
+  color: var(--space-excavator-accent-contrast);
   font-weight: 900;
 }
 
@@ -393,10 +514,10 @@
   width: min(100%, 440px);
   max-height: calc(100dvh - max(24px, env(safe-area-inset-top, 0px)) - max(24px, env(safe-area-inset-bottom, 0px)));
   overflow-y: auto;
-  border: 1px solid rgba(56, 189, 248, 0.5);
+  border: 1px solid var(--space-excavator-panel-border);
   border-radius: 18px;
   padding: 18px;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(8, 47, 73, 0.98));
+  background: var(--space-excavator-panel-bg);
   box-shadow: 0 20px 54px rgba(0, 0, 0, 0.45);
 }
 
@@ -421,7 +542,7 @@
 
 .space-excavator__ticket-sheet-note {
   margin-top: 10px;
-  color: #bae6fd;
+  color: var(--space-excavator-copy-accent);
   font-size: 14px;
   font-weight: 800;
 }
@@ -485,9 +606,9 @@
 }
 
 .space-excavator__clear-summary .space-excavator__clear-summary-claimable {
-  border-color: rgba(56, 189, 248, 0.6);
-  background: rgba(14, 165, 233, 0.22);
-  color: #bae6fd;
+  border-color: var(--space-excavator-panel-border);
+  background: var(--space-excavator-accent-wash);
+  color: var(--space-excavator-copy-accent);
   font-weight: 800;
 }
 

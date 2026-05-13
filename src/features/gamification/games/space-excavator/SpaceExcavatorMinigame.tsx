@@ -5,6 +5,7 @@ import {
   SPACE_EXCAVATOR_CAMPAIGN_MILESTONES,
   SPACE_EXCAVATOR_CAMPAIGN_TOTAL_POINTS,
 } from '../../level-worlds/services/spaceExcavatorCampaignProgress';
+import { resolveSpaceExcavatorDepthForBoard } from '../../level-worlds/services/spaceExcavatorDepths';
 import { resolveSpaceExcavatorObjectTileIds } from '../../level-worlds/services/spaceExcavatorObjects';
 import './spaceExcavator.css';
 
@@ -96,6 +97,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const boardComplete = progressStatus === 'board_complete' || progressStatus === 'completed';
   const canAdvanceBoard = progressStatus === 'board_complete';
   const currentBoard = (progress?.boardIndex ?? 0) + 1;
+  const depth = resolveSpaceExcavatorDepthForBoard(currentBoard);
   const boardLabel = `Board ${currentBoard}${totalBoards > 1 ? ` / ${totalBoards}` : ''}`;
   const eventProgressPoints = Math.max(0, Math.floor(activeProgress?.eventProgressPoints ?? activeProgress?.completedBoardCount ?? 0));
   const eventProgressTotal = SPACE_EXCAVATOR_CAMPAIGN_TOTAL_POINTS;
@@ -172,7 +174,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   };
 
   return (
-    <section className="space-excavator" aria-label="Space Excavator">
+    <section className={`space-excavator space-excavator--${depth.theme}`} aria-label="Space Excavator">
       <div className="space-excavator__hud">
         <span className="space-excavator__hud-chip">
           <small>Island</small>
@@ -190,6 +192,11 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
           <small>Pieces</small>
           <strong>{found}/{objectPieceCount}</strong>
         </span>
+      </div>
+
+      <div className="space-excavator__depth-banner" aria-label={`Depth ${depth.depthNumber}: ${depth.name}`}>
+        <span className="space-excavator__depth-label">Depth {depth.depthNumber}: {depth.name}</span>
+        <span className="space-excavator__depth-subtitle">{depth.subtitle}</span>
       </div>
 
       <div className="space-excavator__preview" aria-label="Hidden object preview">
