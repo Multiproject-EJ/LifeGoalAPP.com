@@ -7205,7 +7205,9 @@ export function DailyHabitTracker({
         gesture.intent !== 'horizontal'
         && compactPullDistanceRef.current >= COMPACT_PULL_REFRESH_THRESHOLD_PX
       ) {
-        void handleTriggerCompactPullRefresh().catch(() => undefined);
+        void handleTriggerCompactPullRefresh().catch((error) => {
+          console.error('Compact pull-to-refresh failed:', error);
+        });
         return;
       }
       setCompactPullDistanceState(0);
