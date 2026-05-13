@@ -236,7 +236,7 @@ export function claimSpaceExcavatorMilestoneReward(options: {
 }): ClaimSpaceExcavatorMilestoneRewardResult {
   const { session, client, eventId, milestoneId, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
-  const canonicalEventId = typeof eventId === 'string' ? eventId.trim() : '';
+  const canonicalEventId = eventId.trim();
   if (!canonicalEventId) {
     return { record: current, ok: false, progress: null, rewardLabel: null, failureReason: 'missing_event' };
   }

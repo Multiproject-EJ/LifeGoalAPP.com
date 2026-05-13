@@ -128,6 +128,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const onClaimMilestone = (milestoneId: string) => {
     if (claimPendingId) return;
     setClaimPendingId(milestoneId);
+    setClaimMessage(null);
     const claim = config.requestClaimMilestoneReward?.(milestoneId) ?? { ok: false };
     if (claim.progress) {
       syncProgress(claim.progress);
