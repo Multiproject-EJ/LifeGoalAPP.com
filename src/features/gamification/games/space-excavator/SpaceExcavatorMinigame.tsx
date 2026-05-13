@@ -30,7 +30,9 @@ type SpaceExcavatorProgress = {
 };
 type DigSpendResult = { ok: boolean; ticketsRemaining: number; progress?: SpaceExcavatorProgress | null; boardComplete?: boolean; canAdvanceBoard?: boolean };
 type AdvanceBoardResult = { ok: boolean; ticketsRemaining: number; progress?: SpaceExcavatorProgress | null };
-type ClaimMilestoneRewardResult = { ok: boolean; progress?: SpaceExcavatorProgress | null; rewardLabel?: string | null; failureReason?: string };
+type ClaimMilestoneRewardResult =
+  | { ok: true; progress: SpaceExcavatorProgress; rewardLabel: string; failureReason?: never }
+  | { ok: false; progress?: SpaceExcavatorProgress | null; rewardLabel?: string | null; failureReason?: string };
 
 type SpaceExcavatorLaunchConfig = {
   requestDigSpend?: (tileId: number) => DigSpendResult;
@@ -141,7 +143,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       syncProgress(claim.progress);
     }
     if (claim.ok) {
-      setClaimMessage(claim.rewardLabel ? `Reward claimed: ${claim.rewardLabel}` : 'Reward claimed');
+      setClaimMessage(`Reward claimed: ${claim.rewardLabel}`);
     } else if (claim.failureReason === 'already_claimed') {
       setClaimMessage('Reward already claimed.');
     } else if (claim.failureReason === 'not_achieved') {
