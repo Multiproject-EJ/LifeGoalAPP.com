@@ -7205,7 +7205,7 @@ export function DailyHabitTracker({
         gesture.intent !== 'horizontal'
         && compactPullDistanceRef.current >= COMPACT_PULL_REFRESH_THRESHOLD_PX
       ) {
-        void handleTriggerCompactPullRefresh();
+        void handleTriggerCompactPullRefresh().catch(() => undefined);
         return;
       }
       setCompactPullDistanceState(0);
