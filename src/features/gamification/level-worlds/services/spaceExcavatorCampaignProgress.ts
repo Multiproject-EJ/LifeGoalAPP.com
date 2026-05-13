@@ -2,19 +2,26 @@ import type { SpaceExcavatorProgressEntry } from './islandRunGameStateStore';
 
 export type SpaceExcavatorCampaignRewardKind = 'dice_placeholder' | 'essence_placeholder' | 'shards_placeholder' | 'event_completion_placeholder';
 
+export interface SpaceExcavatorCampaignReward {
+  essence?: number;
+  dicePool?: number;
+  shards?: number;
+}
+
 export interface SpaceExcavatorCampaignMilestone {
   id: string;
   pointsRequired: number;
-  rewardKind: SpaceExcavatorCampaignRewardKind;
+  rewardKind: SpaceExcavatorCampaignRewardKind | 'essence' | 'dice' | 'shards' | 'bundle';
   rewardLabel: string;
+  reward: SpaceExcavatorCampaignReward;
 }
 
 export const SPACE_EXCAVATOR_CAMPAIGN_MILESTONES: SpaceExcavatorCampaignMilestone[] = [
-  { id: 'clear_1', pointsRequired: 1, rewardKind: 'dice_placeholder', rewardLabel: '25 dice placeholder' },
-  { id: 'clear_2', pointsRequired: 2, rewardKind: 'essence_placeholder', rewardLabel: '50 essence placeholder' },
-  { id: 'clear_3', pointsRequired: 3, rewardKind: 'shards_placeholder', rewardLabel: '10 shards placeholder' },
-  { id: 'clear_5', pointsRequired: 5, rewardKind: 'essence_placeholder', rewardLabel: '150 essence placeholder' },
-  { id: 'clear_10', pointsRequired: 10, rewardKind: 'event_completion_placeholder', rewardLabel: 'Event completion reward placeholder' },
+  { id: 'clear_1', pointsRequired: 1, rewardKind: 'essence', rewardLabel: '+25 essence', reward: { essence: 25 } },
+  { id: 'clear_2', pointsRequired: 2, rewardKind: 'dice', rewardLabel: '+5 dice', reward: { dicePool: 5 } },
+  { id: 'clear_3', pointsRequired: 3, rewardKind: 'shards', rewardLabel: '+1 shard', reward: { shards: 1 } },
+  { id: 'clear_5', pointsRequired: 5, rewardKind: 'essence', rewardLabel: '+75 essence', reward: { essence: 75 } },
+  { id: 'clear_10', pointsRequired: 10, rewardKind: 'bundle', rewardLabel: '+25 dice and +3 shards', reward: { dicePool: 25, shards: 3 } },
 ];
 
 export const SPACE_EXCAVATOR_DEFAULT_CAMPAIGN_TOTAL_POINTS = 10;
@@ -31,15 +38,15 @@ export function resolveSpaceExcavatorClaimedMilestoneIds(options: {
       SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.some((milestone) => milestone.id === id),
     ),
   );
-  const points = Math.max(0, Math.floor(options.eventProgressPoints));
-  SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.forEach((milestone) => {
-    if (points >= milestone.pointsRequired) claimed.add(milestone.id);
-  });
   return Array.from(claimed).sort((left, right) => {
     const leftIndex = SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.findIndex((milestone) => milestone.id === left);
     const rightIndex = SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.findIndex((milestone) => milestone.id === right);
     return leftIndex - rightIndex;
   });
+}
+
+export function getSpaceExcavatorCampaignMilestone(milestoneId: string): SpaceExcavatorCampaignMilestone | null {
+  return SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.find((milestone) => milestone.id === milestoneId) ?? null;
 }
 
 export function getNextSpaceExcavatorCampaignMilestone(
