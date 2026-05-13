@@ -469,6 +469,8 @@ const SLOT_MACHINE_ANIMATION_DURATION_MS = 950;
 const SLOT_MACHINE_LANDING_DURATION_MS = 250;
 const SLOT_MACHINE_TOTAL_ITEMS = 7;
 const SLOT_MACHINE_SELECTED_INDEX = 4;
+const VISION_STAR_COLLAGE_MIN = 3;
+const VISION_STAR_COLLAGE_MAX = 5;
 
 const LIFE_WHEEL_COLORS: Record<string, string> = {
   health: '#22c55e',
@@ -2090,7 +2092,10 @@ export function DailyHabitTracker({
       return;
     }
 
-    const collageCount = Math.min(visionImages.length, 3 + Math.floor(Math.random() * 3)); // 3, 4, or 5
+    const collageCount = Math.min(
+      visionImages.length,
+      VISION_STAR_COLLAGE_MIN + Math.floor(Math.random() * (VISION_STAR_COLLAGE_MAX - VISION_STAR_COLLAGE_MIN + 1)),
+    );
     // Fisher-Yates shuffle for unbiased random selection
     const pool = [...visionImages];
     for (let i = pool.length - 1; i > 0; i--) {
@@ -2394,10 +2399,11 @@ export function DailyHabitTracker({
   const visionRewardClaimLabel = visionReward
     ? `Claim ${visionReward.xpAwarded} XP + ${visionReward.diceAwarded} Dice`
     : 'Preparing reward';
+  const isCollageReward = Boolean(visionReward?.imageUrls && visionReward.imageUrls.length > 1);
   const isRewardImageReady =
     !isVisionRewardSelecting &&
-    Boolean(visionReward?.imageUrl) &&
-    ((visionReward?.imageUrls && visionReward.imageUrls.length > 1) || isVisionImageLoaded);
+    Boolean(visionReward) &&
+    (isCollageReward || isVisionImageLoaded);
   const shouldShowVisionLoading = !isRewardImageReady;
   const visionVisualizationTimeLabel = `${Math.floor(visionVisualizationSeconds / 60)}:${String(
     visionVisualizationSeconds % 60,
@@ -3198,7 +3204,7 @@ export function DailyHabitTracker({
                 </span>
               </div>
             )}
-            {visionReward?.imageUrls && visionReward.imageUrls.length > 1 ? (
+            {isCollageReward && visionReward?.imageUrls ? (
               <div className="habit-day-nav__vision-modal-collage">
                 {visionReward.imageUrls.map((url, idx) => (
                   <button
