@@ -1,5 +1,10 @@
 import { useMemo, useState } from 'react';
 import type { IslandRunMinigameProps } from '../../level-worlds/services/islandRunMinigameTypes';
+import {
+  getNextSpaceExcavatorCampaignMilestone,
+  SPACE_EXCAVATOR_CAMPAIGN_MILESTONES,
+  SPACE_EXCAVATOR_CAMPAIGN_TOTAL_POINTS,
+} from '../../level-worlds/services/spaceExcavatorCampaignProgress';
 import { resolveSpaceExcavatorObjectTileIds } from '../../level-worlds/services/spaceExcavatorObjects';
 import './spaceExcavator.css';
 
@@ -20,6 +25,8 @@ type SpaceExcavatorProgress = {
   dugTileIds: number[];
   foundTreasureTileIds: number[];
   status: SpaceExcavatorProgressStatus;
+  eventProgressPoints?: number;
+  claimedMilestoneIds?: string[];
 };
 type DigSpendResult = { ok: boolean; ticketsRemaining: number; progress?: SpaceExcavatorProgress | null; boardComplete?: boolean; canAdvanceBoard?: boolean };
 type AdvanceBoardResult = { ok: boolean; ticketsRemaining: number; progress?: SpaceExcavatorProgress | null };
@@ -76,6 +83,11 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const boardComplete = progressStatus === 'board_complete' || progressStatus === 'completed';
   const canAdvanceBoard = progressStatus === 'board_complete';
   const boardLabel = `Board ${Math.max(1, Math.floor((progress?.boardIndex ?? 0) + 1))}${totalBoards > 1 ? ` / ${totalBoards}` : ''}`;
+  const eventProgressPoints = Math.max(0, Math.floor(activeProgress?.eventProgressPoints ?? activeProgress?.completedBoardCount ?? 0));
+  const eventProgressTotal = SPACE_EXCAVATOR_CAMPAIGN_TOTAL_POINTS;
+  const eventProgressPercent = Math.min(100, Math.round((eventProgressPoints / eventProgressTotal) * 100));
+  const nextMilestone = getNextSpaceExcavatorCampaignMilestone({ eventProgressPoints });
+  const claimedMilestoneIds = activeProgress?.claimedMilestoneIds ?? [];
 
   const sendOnce = (completed: boolean) => {
     if (sentResult) return;
@@ -129,6 +141,30 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
             <span style={{ width: `${Math.min(100, Math.round((found / objectPieceCount) * 100))}%` }} />
           </div>
         </div>
+      </div>
+
+      <div className="space-excavator__event-progress" aria-label="Event progress">
+        <div className="space-excavator__event-progress-header">
+          <strong>Event progress</strong>
+          <span>{eventProgressPoints} / {eventProgressTotal}</span>
+        </div>
+        <div className="space-excavator__event-progress-bar" aria-hidden="true">
+          <span style={{ width: `${eventProgressPercent}%` }} />
+        </div>
+        <div className="space-excavator__milestones" aria-label="Milestones">
+          {SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.map((milestone) => (
+            <span
+              key={milestone.id}
+              className={`space-excavator__milestone ${claimedMilestoneIds.includes(milestone.id) ? 'space-excavator__milestone--claimed' : ''}`}
+              title={`${milestone.pointsRequired}: ${milestone.rewardLabel}`}
+            >
+              {milestone.pointsRequired}
+            </span>
+          ))}
+        </div>
+        <p className="space-excavator__next-reward">
+          {nextMilestone ? `Next: ${nextMilestone.rewardLabel}` : 'All event milestones marked complete'}
+        </p>
       </div>
 
       <div className="space-excavator__board" style={{ gridTemplateColumns: `repeat(${size}, 44px)` }}>

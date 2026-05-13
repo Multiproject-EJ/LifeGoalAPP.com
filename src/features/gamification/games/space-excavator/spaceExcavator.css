@@ -72,6 +72,65 @@
   background: #38bdf8;
 }
 
+.space-excavator__event-progress {
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(8, 47, 73, 0.45);
+}
+
+.space-excavator__event-progress-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.space-excavator__event-progress-bar {
+  height: 8px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: #1e293b;
+  overflow: hidden;
+}
+
+.space-excavator__event-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #38bdf8, #facc15);
+}
+
+.space-excavator__milestones {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.space-excavator__milestone {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  border: 1px solid #64748b;
+  border-radius: 999px;
+  color: #cbd5e1;
+  font-size: 12px;
+}
+
+.space-excavator__milestone--claimed {
+  border-color: #facc15;
+  background: rgba(250, 204, 21, 0.2);
+  color: #fde68a;
+}
+
+.space-excavator__next-reward {
+  margin: 8px 0 0;
+  color: #cbd5e1;
+  font-size: 13px;
+}
+
 .space-excavator__board {
   flex: 1;
   display: grid;

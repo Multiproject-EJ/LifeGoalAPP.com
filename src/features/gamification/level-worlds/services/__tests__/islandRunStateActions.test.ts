@@ -81,6 +81,7 @@ import {
   travelToNextIsland,
 } from '../islandRunStateActions';
 import { buildInitialDiceRegenState } from '../islandRunDiceRegeneration';
+import { SPACE_EXCAVATOR_CAMPAIGN_MILESTONES } from '../spaceExcavatorCampaignProgress';
 import {
   __resetIslandRunFeatureFlagsForTests,
   __setIslandRunFeatureFlagsForTests,
@@ -211,6 +212,8 @@ export const islandRunStateActionsTests: TestCase[] = [
       assert(initialProgress, 'init should create progress for the Space Excavator event');
       assertEqual(initialProgress.boardIndex, 0, 'Space Excavator should start on zero-based board index 0');
       assertEqual(initialProgress.completedBoardCount, 0, 'Space Excavator should start with no completed boards');
+      assertEqual(initialProgress.eventProgressPoints, 0, 'Space Excavator event campaign should start with no progress points');
+      assertDeepEqual(initialProgress.claimedMilestoneIds, [], 'Space Excavator event campaign should start with no claimed milestones');
       assert(initialProgress.objectId.length > 0, 'init should create hidden object metadata');
       assert(initialProgress.objectName.length > 0, 'init should create hidden object display name');
       assert(initialProgress.objectTileIds.length >= 2, 'init should create object tile layout');
@@ -380,8 +383,10 @@ export const islandRunStateActionsTests: TestCase[] = [
       const session = makeSession();
       seedState({
         runtimeVersion: 10,
+        spinTokens: 12,
         minigameTicketsByEvent: {
           'space_excavator:event-complete': 10,
+          'space_excavator:event-complete-other': 6,
         },
         spaceExcavatorProgressByEvent: {},
       });
@@ -416,8 +421,37 @@ export const islandRunStateActionsTests: TestCase[] = [
       const progress = record.spaceExcavatorProgressByEvent['space_excavator:event-complete'];
       assertEqual(progress.status, 'board_complete', 'Space Excavator board should complete when all object pieces are found');
       assertEqual(progress.completedBoardCount, 1, 'completion should mark one completed board');
+      assertEqual(progress.eventProgressPoints, 1, 'completion should award one event progress point');
+      assertDeepEqual(progress.claimedMilestoneIds, ['clear_1'], 'completion should auto-mark the first milestone claimed as placeholder metadata');
       assertEqual(progress.boardIndex, 0, 'completed board should remain visible until the player advances');
       assertDeepEqual(progress.revealedObjectTileIds, objectTileIds, 'completion should reveal every object tile');
+      assertEqual(record.spinTokens, 12, 'board completion progress should not touch spinTokens');
+      assertEqual(
+        record.minigameTicketsByEvent['space_excavator:event-complete-other'],
+        6,
+        'board completion progress should not touch unrelated ticket buckets',
+      );
+      assertEqual(
+        record.spaceExcavatorProgressByEvent['space_excavator:event-complete-other'],
+        undefined,
+        'board completion progress should not create unrelated event progress',
+      );
+
+      const reopened = initSpaceExcavatorProgressForEvent({
+        session,
+        client: null,
+        eventId: 'space_excavator:event-complete',
+      });
+      assertEqual(
+        reopened.spaceExcavatorProgressByEvent['space_excavator:event-complete'].eventProgressPoints,
+        1,
+        'reopening a completed board should not double-award event progress',
+      );
+      assertDeepEqual(
+        reopened.spaceExcavatorProgressByEvent['space_excavator:event-complete'].claimedMilestoneIds,
+        ['clear_1'],
+        'milestone placeholder claimed state should persist on reopen',
+      );
     },
   },
 
@@ -472,6 +506,8 @@ export const islandRunStateActionsTests: TestCase[] = [
       const nextProgress = advanced.record.spaceExcavatorProgressByEvent['space_excavator:event-advance'];
       assertEqual(nextProgress.boardIndex, 1, 'advance should move to board index 1');
       assertEqual(nextProgress.completedBoardCount, 1, 'advance should preserve completed board count');
+      assertEqual(nextProgress.eventProgressPoints, 1, 'advance should preserve campaign progress without double-awarding');
+      assertDeepEqual(nextProgress.claimedMilestoneIds, ['clear_1'], 'advance should preserve milestone placeholder state');
       assertEqual(nextProgress.status, 'active', 'next board should be active');
       assertDeepEqual(nextProgress.dugTileIds, [], 'next board should reset dug tiles');
       assertDeepEqual(nextProgress.revealedObjectTileIds, [], 'next board should reset revealed object pieces');
@@ -489,6 +525,11 @@ export const islandRunStateActionsTests: TestCase[] = [
         reopened.spaceExcavatorProgressByEvent['space_excavator:event-advance'].boardIndex,
         1,
         'reopen after board advancement should resume the advanced board',
+      );
+      assertEqual(
+        reopened.spaceExcavatorProgressByEvent['space_excavator:event-advance'].eventProgressPoints,
+        1,
+        'reopen after board advancement should preserve campaign progress',
       );
       assertEqual(
         reopened.spaceExcavatorProgressByEvent['space_excavator:event-other'],
@@ -526,6 +567,8 @@ export const islandRunStateActionsTests: TestCase[] = [
             dugTileIds: [1, 2, 3, 4, 5],
             foundTreasureTileIds: [1, 2, 3, 4, 5],
             completedBoardCount: SPACE_EXCAVATOR_TOTAL_BOARDS,
+            eventProgressPoints: SPACE_EXCAVATOR_TOTAL_BOARDS,
+            claimedMilestoneIds: SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.map((milestone) => milestone.id),
             status: 'board_complete',
             updatedAtMs: 1234,
           },
@@ -541,6 +584,7 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(advanced.ok, true, 'terminal board advance should succeed');
       assertEqual(advanced.record.spaceExcavatorProgressByEvent[eventId].status, 'completed', 'terminal board advance should mark placeholder board set completed');
       assertEqual(advanced.record.spaceExcavatorProgressByEvent[eventId].boardIndex, SPACE_EXCAVATOR_TOTAL_BOARDS - 1, 'terminal completion should not create an extra board');
+      assertEqual(advanced.record.spaceExcavatorProgressByEvent[eventId].eventProgressPoints, SPACE_EXCAVATOR_TOTAL_BOARDS, 'terminal advance should not double-award campaign progress');
       assertEqual(advanced.record.minigameTicketsByEvent[eventId], 2, 'terminal board advance should not spend tickets');
       assertEqual(advanced.record.spinTokens, 3, 'terminal board advance should not touch spinTokens');
     },
@@ -567,6 +611,8 @@ export const islandRunStateActionsTests: TestCase[] = [
           dugTileIds: [1, 8],
           foundTreasureTileIds: [1],
           completedBoardCount: 0,
+          eventProgressPoints: 2,
+          claimedMilestoneIds: ['clear_1', 'clear_2'],
           status: 'active',
           updatedAtMs: 1234,
         },
@@ -622,6 +668,16 @@ export const islandRunStateActionsTests: TestCase[] = [
         hydrated.record.spaceExcavatorProgressByEvent['space_excavator:event-remote'].objectName,
         'Lost Compass',
         'hydration should preserve object metadata',
+      );
+      assertEqual(
+        hydrated.record.spaceExcavatorProgressByEvent['space_excavator:event-remote'].eventProgressPoints,
+        2,
+        'hydration should preserve event campaign progress points',
+      );
+      assertDeepEqual(
+        hydrated.record.spaceExcavatorProgressByEvent['space_excavator:event-remote'].claimedMilestoneIds,
+        ['clear_1', 'clear_2'],
+        'hydration should preserve milestone placeholder claimed state',
       );
     },
   },
