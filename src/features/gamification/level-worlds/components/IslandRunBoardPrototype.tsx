@@ -6214,7 +6214,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             requestDigSpend: (tileId: number) => {
               const dig = applySpaceExcavatorDig({ session, client, eventId: effectiveActiveTimedEvent.eventId, tileId, triggerSource: 'space_excavator_dig' });
               if (dig.ok) setRuntimeState(dig.record);
-              return { ok: dig.ok, ticketsRemaining: dig.ticketsRemaining, progress: dig.progress };
+              return { ok: dig.ok, ticketsRemaining: dig.ticketsRemaining, progress: dig.progress, failureReason: dig.failureReason };
             },
             requestAdvanceBoard: () => {
               const advance = advanceSpaceExcavatorBoard({ session, client, eventId: effectiveActiveTimedEvent.eventId, triggerSource: 'space_excavator_advance_board' });

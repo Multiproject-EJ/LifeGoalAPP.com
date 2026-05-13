@@ -77,14 +77,19 @@ import {
 } from './spaceExcavatorCampaignProgress';
 
 
-export interface ApplySpaceExcavatorDigResult {
+export type SpaceExcavatorDigFailureReason = 'missing_progress' | 'insufficient_tickets' | 'board_complete' | 'invalid_tile' | 'already_dug';
+
+type ApplySpaceExcavatorDigResultBase = {
   record: IslandRunGameStateRecord;
-  ok: boolean;
   ticketsRemaining: number;
   progress: SpaceExcavatorProgressEntry | null;
   boardComplete: boolean;
   canAdvanceBoard: boolean;
-}
+};
+
+export type ApplySpaceExcavatorDigResult =
+  | (ApplySpaceExcavatorDigResultBase & { ok: true; failureReason?: never })
+  | (ApplySpaceExcavatorDigResultBase & { ok: false; failureReason: SpaceExcavatorDigFailureReason });
 
 export interface AdvanceSpaceExcavatorBoardResult {
   record: IslandRunGameStateRecord;
@@ -175,14 +180,23 @@ export function applySpaceExcavatorDig(options: { session: Session; client: Supa
   const progress = current.spaceExcavatorProgressByEvent?.[eventId] ?? null;
   const available = Math.max(0, Math.floor(current.minigameTicketsByEvent?.[eventId] ?? 0));
   const alreadyComplete = progress?.status === 'board_complete' || progress?.status === 'completed';
-  if (!progress || available < 1 || alreadyComplete) {
+  if (!progress) {
+    return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete: false, canAdvanceBoard: false, failureReason: 'missing_progress' };
+  }
+  if (available < 1) {
+    const boardComplete = progress.status === 'board_complete';
+    const canAdvanceBoard = boardComplete && progress.boardIndex + 1 < SPACE_EXCAVATOR_TOTAL_BOARDS;
+    return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete, canAdvanceBoard, failureReason: 'insufficient_tickets' };
+  }
+  if (alreadyComplete) {
     const boardComplete = progress?.status === 'board_complete';
     const canAdvanceBoard = boardComplete && progress.boardIndex + 1 < SPACE_EXCAVATOR_TOTAL_BOARDS;
-    return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete, canAdvanceBoard };
+    return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete, canAdvanceBoard, failureReason: 'board_complete' };
   }
   const normalizedTile = Math.max(0, Math.floor(tileId));
   const tileCount = progress.boardSize * progress.boardSize;
-  if (normalizedTile >= tileCount || progress.dugTileIds.includes(normalizedTile)) return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete: false, canAdvanceBoard: false };
+  if (normalizedTile >= tileCount) return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete: false, canAdvanceBoard: false, failureReason: 'invalid_tile' };
+  if (progress.dugTileIds.includes(normalizedTile)) return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete: false, canAdvanceBoard: false, failureReason: 'already_dug' };
   const dugTileIds = Array.from(new Set([...progress.dugTileIds, normalizedTile])).sort((a,b)=>a-b);
   const objectTileIds = resolveSpaceExcavatorObjectTileIds(progress);
   const revealedObjectTileIds = objectTileIds.includes(normalizedTile) ? Array.from(new Set([...progress.revealedObjectTileIds, normalizedTile])).sort((a,b)=>a-b) : progress.revealedObjectTileIds;
