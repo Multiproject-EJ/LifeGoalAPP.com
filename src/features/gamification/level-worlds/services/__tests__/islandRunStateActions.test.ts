@@ -21,6 +21,7 @@ import {
   writeIslandRunGameStateRecord,
   type IslandRunGameStateRecord,
   type IslandRunLuckyRollSession,
+  type SpaceExcavatorProgressEntry,
 } from '../islandRunGameStateStore';
 import {
   __resetIslandRunStateStoreForTests,
@@ -74,6 +75,7 @@ import {
   advanceSpaceExcavatorBoard,
   applySpaceExcavatorDig,
   applyTimedEventTicketSpend,
+  claimSpaceExcavatorMilestoneReward,
   initSpaceExcavatorProgressForEvent,
   SPACE_EXCAVATOR_TOTAL_BOARDS,
   syncCompletedStopsForIsland,
@@ -146,6 +148,33 @@ function makeLuckyRollSession(
     startedAtMs: 1_000,
     bankedAtMs: status === 'banked' ? 2_000 : null,
     updatedAtMs: 2_000,
+    ...overrides,
+  };
+}
+
+function makeSpaceExcavatorProgress(
+  eventId: string,
+  overrides: Partial<SpaceExcavatorProgressEntry> = {},
+): SpaceExcavatorProgressEntry {
+  return {
+    eventId,
+    boardIndex: 0,
+    boardSize: 5,
+    treasureCount: 3,
+    treasureTileIds: [1, 2, 3],
+    objectId: 'test_relic',
+    objectName: 'Test Relic',
+    objectTier: 'common',
+    objectIcon: '🧪',
+    objectTileIds: [1, 2, 3],
+    revealedObjectTileIds: [],
+    dugTileIds: [],
+    foundTreasureTileIds: [],
+    completedBoardCount: 0,
+    eventProgressPoints: 0,
+    claimedMilestoneIds: [],
+    status: 'active',
+    updatedAtMs: 1_000,
     ...overrides,
   };
 }
@@ -422,7 +451,7 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(progress.status, 'board_complete', 'Space Excavator board should complete when all object pieces are found');
       assertEqual(progress.completedBoardCount, 1, 'completion should mark one completed board');
       assertEqual(progress.eventProgressPoints, 1, 'completion should award one event progress point');
-      assertDeepEqual(progress.claimedMilestoneIds, ['clear_1'], 'completion should auto-mark the first milestone claimed as placeholder metadata');
+      assertDeepEqual(progress.claimedMilestoneIds, [], 'completion should make the first milestone claimable without auto-claiming it');
       assertEqual(progress.boardIndex, 0, 'completed board should remain visible until the player advances');
       assertDeepEqual(progress.revealedObjectTileIds, objectTileIds, 'completion should reveal every object tile');
       assertEqual(record.spinTokens, 12, 'board completion progress should not touch spinTokens');
@@ -449,9 +478,194 @@ export const islandRunStateActionsTests: TestCase[] = [
       );
       assertDeepEqual(
         reopened.spaceExcavatorProgressByEvent['space_excavator:event-complete'].claimedMilestoneIds,
-        ['clear_1'],
-        'milestone placeholder claimed state should persist on reopen',
+        [],
+        'unclaimed milestone reward state should persist on reopen',
       );
+    },
+  },
+
+  {
+    name: 'Space Excavator milestone claim grants reward, persists claimed id, and is double-claim safe',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      const eventId = 'space_excavator:event-claim';
+      const otherEventId = 'space_excavator:event-claim-other';
+      const otherProgress = makeSpaceExcavatorProgress(otherEventId, {
+        eventProgressPoints: 4,
+        completedBoardCount: 4,
+      });
+      seedState({
+        runtimeVersion: 20,
+        spinTokens: 9,
+        dicePool: 10,
+        essence: 100,
+        essenceLifetimeEarned: 1_000,
+        shards: 2,
+        minigameTicketsByEvent: {
+          [eventId]: 7,
+          [otherEventId]: 3,
+        },
+        spaceExcavatorProgressByEvent: {
+          [eventId]: makeSpaceExcavatorProgress(eventId, {
+            completedBoardCount: 1,
+            eventProgressPoints: 1,
+            status: 'board_complete',
+          }),
+          [otherEventId]: otherProgress,
+        },
+      });
+
+      const claimed = claimSpaceExcavatorMilestoneReward({
+        session,
+        client: null,
+        eventId,
+        milestoneId: 'clear_1',
+      });
+
+      assertEqual(claimed.ok, true, 'achieved milestone should be claimable');
+      assertEqual(claimed.record.essence, 125, 'clear_1 should grant +25 essence');
+      assertEqual(claimed.record.essenceLifetimeEarned, 1_025, 'essence rewards should update lifetime earned');
+      assertEqual(claimed.record.dicePool, 10, 'clear_1 should not grant dice');
+      assertEqual(claimed.record.shards, 2, 'clear_1 should not grant shards');
+      assertEqual(claimed.record.spinTokens, 9, 'milestone claim should not touch spinTokens');
+      assertDeepEqual(claimed.record.spaceExcavatorProgressByEvent[eventId].claimedMilestoneIds, ['clear_1'], 'claim should persist milestone id');
+      assertEqual(claimed.record.minigameTicketsByEvent[eventId], 7, 'claim should not touch event ticket bucket');
+      assertEqual(claimed.record.minigameTicketsByEvent[otherEventId], 3, 'claim should not touch unrelated ticket bucket');
+      assertDeepEqual(
+        claimed.record.spaceExcavatorProgressByEvent[otherEventId],
+        otherProgress,
+        'claim should not touch unrelated event progress',
+      );
+
+      const doubleClaim = claimSpaceExcavatorMilestoneReward({
+        session,
+        client: null,
+        eventId,
+        milestoneId: 'clear_1',
+      });
+      assertEqual(doubleClaim.ok, false, 'double claim should be rejected');
+      assertEqual(doubleClaim.failureReason, 'already_claimed', 'double claim should report already claimed');
+      assertEqual(doubleClaim.record.essence, 125, 'double claim should not grant essence again');
+      assertEqual(doubleClaim.record.spinTokens, 9, 'double claim should still leave spinTokens unchanged');
+
+      const reopened = initSpaceExcavatorProgressForEvent({ session, client: null, eventId });
+      assertDeepEqual(
+        reopened.spaceExcavatorProgressByEvent[eventId].claimedMilestoneIds,
+        ['clear_1'],
+        'claimed milestone should persist across reopen/hard-refresh hydration path',
+      );
+    },
+  },
+
+  {
+    name: 'Space Excavator milestone claim is blocked before threshold and supports DEV override event ids',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      const lockedEventId = 'space_excavator:event-locked';
+      const devEventId = 'space_excavator:dev_override';
+      seedState({
+        runtimeVersion: 30,
+        spinTokens: 5,
+        dicePool: 20,
+        essence: 50,
+        shards: 1,
+        minigameTicketsByEvent: {
+          [lockedEventId]: 4,
+          [devEventId]: 6,
+        },
+        spaceExcavatorProgressByEvent: {
+          [lockedEventId]: makeSpaceExcavatorProgress(lockedEventId, {
+            completedBoardCount: 0,
+            eventProgressPoints: 0,
+          }),
+          [devEventId]: makeSpaceExcavatorProgress(devEventId, {
+            completedBoardCount: 2,
+            eventProgressPoints: 2,
+          }),
+        },
+      });
+
+      const blocked = claimSpaceExcavatorMilestoneReward({
+        session,
+        client: null,
+        eventId: lockedEventId,
+        milestoneId: 'clear_1',
+      });
+      assertEqual(blocked.ok, false, 'unachieved milestone should not be claimable');
+      assertEqual(blocked.failureReason, 'not_achieved', 'blocked claim should report not achieved');
+      assertEqual(blocked.record.essence, 50, 'blocked claim should not grant essence');
+      assertDeepEqual(blocked.record.spaceExcavatorProgressByEvent[lockedEventId].claimedMilestoneIds, [], 'blocked claim should not persist claimed id');
+
+      const devClaim = claimSpaceExcavatorMilestoneReward({
+        session,
+        client: null,
+        eventId: devEventId,
+        milestoneId: 'clear_2',
+      });
+      assertEqual(devClaim.ok, true, 'DEV override event id should claim through the same event-scoped path');
+      assertEqual(devClaim.record.dicePool, 25, 'clear_2 should grant +5 dice');
+      assertEqual(devClaim.record.essence, 50, 'clear_2 should not grant essence');
+      assertEqual(devClaim.record.shards, 1, 'clear_2 should not grant shards');
+      assertEqual(devClaim.record.spinTokens, 5, 'DEV override claim should not touch spinTokens');
+      assertEqual(devClaim.record.minigameTicketsByEvent[devEventId], 6, 'DEV override claim should not touch event tickets');
+    },
+  },
+
+  {
+    name: 'Space Excavator final milestone grants bundle reward and old placeholder claimed ids are not re-granted',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      const eventId = 'space_excavator:event-final-claim';
+      const legacyEventId = 'space_excavator:event-legacy-placeholder';
+      seedState({
+        runtimeVersion: 40,
+        spinTokens: 13,
+        dicePool: 100,
+        shards: 10,
+        minigameTicketsByEvent: {
+          [eventId]: 2,
+          [legacyEventId]: 2,
+        },
+        spaceExcavatorProgressByEvent: {
+          [eventId]: makeSpaceExcavatorProgress(eventId, {
+            completedBoardCount: 10,
+            eventProgressPoints: 10,
+            status: 'completed',
+          }),
+          [legacyEventId]: makeSpaceExcavatorProgress(legacyEventId, {
+            completedBoardCount: 10,
+            eventProgressPoints: 10,
+            claimedMilestoneIds: ['clear_10'],
+            status: 'completed',
+          }),
+        },
+      });
+
+      const finalClaim = claimSpaceExcavatorMilestoneReward({
+        session,
+        client: null,
+        eventId,
+        milestoneId: 'clear_10',
+      });
+      assertEqual(finalClaim.ok, true, 'final milestone should be claimable at ten clears');
+      assertEqual(finalClaim.record.dicePool, 125, 'clear_10 should grant +25 dice');
+      assertEqual(finalClaim.record.shards, 13, 'clear_10 should grant +3 shards');
+      assertEqual(finalClaim.record.spinTokens, 13, 'final milestone should not touch spinTokens');
+      assertDeepEqual(finalClaim.record.spaceExcavatorProgressByEvent[eventId].claimedMilestoneIds, ['clear_10'], 'final claim should persist claimed id');
+
+      const legacyClaim = claimSpaceExcavatorMilestoneReward({
+        session,
+        client: null,
+        eventId: legacyEventId,
+        milestoneId: 'clear_10',
+      });
+      assertEqual(legacyClaim.ok, false, 'old placeholder claimed milestone should not be re-granted');
+      assertEqual(legacyClaim.failureReason, 'already_claimed', 'old placeholder claimed milestone should remain claimed');
+      assertEqual(legacyClaim.record.dicePool, 125, 'legacy already-claimed milestone should not grant dice');
+      assertEqual(legacyClaim.record.shards, 13, 'legacy already-claimed milestone should not grant shards');
     },
   },
 
@@ -507,7 +721,7 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(nextProgress.boardIndex, 1, 'advance should move to board index 1');
       assertEqual(nextProgress.completedBoardCount, 1, 'advance should preserve completed board count');
       assertEqual(nextProgress.eventProgressPoints, 1, 'advance should preserve campaign progress without double-awarding');
-      assertDeepEqual(nextProgress.claimedMilestoneIds, ['clear_1'], 'advance should preserve milestone placeholder state');
+      assertDeepEqual(nextProgress.claimedMilestoneIds, [], 'advance should preserve unclaimed milestone reward state');
       assertEqual(nextProgress.status, 'active', 'next board should be active');
       assertDeepEqual(nextProgress.dugTileIds, [], 'next board should reset dug tiles');
       assertDeepEqual(nextProgress.revealedObjectTileIds, [], 'next board should reset revealed object pieces');

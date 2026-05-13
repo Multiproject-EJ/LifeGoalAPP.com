@@ -102,27 +102,78 @@
 }
 
 .space-excavator__milestones {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
   margin-top: 8px;
 }
 
 .space-excavator__milestone {
-  display: grid;
-  place-items: center;
-  min-width: 24px;
-  height: 24px;
+  display: flex;
+  min-width: 0;
+  min-height: 76px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 4px;
   border: 1px solid #64748b;
-  border-radius: 999px;
+  border-radius: 10px;
   color: #cbd5e1;
-  font-size: 12px;
+  font-size: 11px;
+  text-align: center;
+}
+
+.space-excavator__milestone span {
+  font-weight: 800;
+}
+
+.space-excavator__milestone small,
+.space-excavator__milestone strong {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.space-excavator__milestone strong {
+  color: #e2e8f0;
+  font-size: 10px;
+  line-height: 1.1;
+}
+
+.space-excavator__milestone--locked {
+  opacity: .72;
+}
+
+.space-excavator__milestone--claimable {
+  border-color: #38bdf8;
+  background: rgba(14, 165, 233, 0.18);
+  color: #bae6fd;
 }
 
 .space-excavator__milestone--claimed {
   border-color: #facc15;
   background: rgba(250, 204, 21, 0.2);
   color: #fde68a;
+}
+
+.space-excavator__claim-button {
+  width: 100%;
+  min-height: 28px;
+  border: 1px solid #38bdf8;
+  border-radius: 8px;
+  background: #0ea5e9;
+  color: #082f49;
+  font-weight: 800;
+}
+
+.space-excavator__claim-button:disabled {
+  opacity: .65;
+}
+
+.space-excavator__claim-message {
+  margin: 8px 0 0;
+  color: #bbf7d0;
+  font-size: 13px;
 }
 
 .space-excavator__next-reward {

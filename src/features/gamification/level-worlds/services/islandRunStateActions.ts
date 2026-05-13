@@ -71,7 +71,10 @@ import {
   placeSpaceExcavatorObjectShape,
   resolveSpaceExcavatorObjectTileIds,
 } from './spaceExcavatorObjects';
-import { resolveSpaceExcavatorClaimedMilestoneIds } from './spaceExcavatorCampaignProgress';
+import {
+  getSpaceExcavatorCampaignMilestone,
+  resolveSpaceExcavatorClaimedMilestoneIds,
+} from './spaceExcavatorCampaignProgress';
 
 
 export interface ApplySpaceExcavatorDigResult {
@@ -90,9 +93,30 @@ export interface AdvanceSpaceExcavatorBoardResult {
   progress: SpaceExcavatorProgressEntry | null;
 }
 
+export type ClaimSpaceExcavatorMilestoneRewardFailureReason =
+  | 'missing_event'
+  | 'missing_milestone'
+  | 'progress_not_found'
+  | 'not_achieved'
+  | 'already_claimed';
+
+export interface ClaimSpaceExcavatorMilestoneRewardResult {
+  record: IslandRunGameStateRecord;
+  ok: boolean;
+  progress: SpaceExcavatorProgressEntry | null;
+  rewardLabel: string | null;
+  failureReason?: ClaimSpaceExcavatorMilestoneRewardFailureReason;
+}
+
 export const SPACE_EXCAVATOR_TOTAL_BOARDS = 10; // Tuning placeholder until rewards/finale UX is added.
 
-function buildSpaceExcavatorProgress(eventId: string, boardIndex: number, nowMs: number, completedBoardCount = boardIndex): SpaceExcavatorProgressEntry {
+function buildSpaceExcavatorProgress(
+  eventId: string,
+  boardIndex: number,
+  nowMs: number,
+  completedBoardCount = boardIndex,
+  claimedMilestoneIds: string[] = [],
+): SpaceExcavatorProgressEntry {
   const boardSize = 5;
   const objectShape = chooseSpaceExcavatorObjectShape(eventId, boardIndex);
   const objectTileIds = placeSpaceExcavatorObjectShape({ eventId, boardIndex, boardSize, shape: objectShape });
@@ -114,6 +138,7 @@ function buildSpaceExcavatorProgress(eventId: string, boardIndex: number, nowMs:
     eventProgressPoints: completedBoardCount,
     claimedMilestoneIds: resolveSpaceExcavatorClaimedMilestoneIds({
       eventProgressPoints: completedBoardCount,
+      claimedMilestoneIds,
     }),
     status: 'active',
     updatedAtMs: nowMs,
@@ -190,10 +215,78 @@ export function advanceSpaceExcavatorBoard(options: { session: Session; client: 
     void commitIslandRunState({ session, client, record: next, triggerSource: triggerSource ?? 'advance_space_excavator_board' });
     return { record: next, ok: true, ticketsRemaining: available, progress: completedProgress };
   }
-  const nextProgress = buildSpaceExcavatorProgress(eventId, progress.boardIndex + 1, Date.now(), nextCompletedBoardCount);
+  const nextProgress = buildSpaceExcavatorProgress(
+    eventId,
+    progress.boardIndex + 1,
+    Date.now(),
+    nextCompletedBoardCount,
+    awardedProgress.claimedMilestoneIds,
+  );
   const next = { ...current, runtimeVersion: current.runtimeVersion + 1, spaceExcavatorProgressByEvent: { ...current.spaceExcavatorProgressByEvent, [eventId]: nextProgress } };
   void commitIslandRunState({ session, client, record: next, triggerSource: triggerSource ?? 'advance_space_excavator_board' });
   return { record: next, ok: true, ticketsRemaining: available, progress: nextProgress };
+}
+
+export function claimSpaceExcavatorMilestoneReward(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  eventId: string;
+  milestoneId: string;
+  triggerSource?: string;
+}): ClaimSpaceExcavatorMilestoneRewardResult {
+  const { session, client, eventId, milestoneId, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const canonicalEventId = eventId.trim();
+  if (!canonicalEventId) {
+    return { record: current, ok: false, progress: null, rewardLabel: null, failureReason: 'missing_event' };
+  }
+  const progress = current.spaceExcavatorProgressByEvent?.[canonicalEventId] ?? null;
+  if (!progress) {
+    return { record: current, ok: false, progress: null, rewardLabel: null, failureReason: 'progress_not_found' };
+  }
+  const milestone = getSpaceExcavatorCampaignMilestone(milestoneId);
+  if (!milestone) {
+    return { record: current, ok: false, progress, rewardLabel: null, failureReason: 'missing_milestone' };
+  }
+  const points = Math.max(0, Math.floor(progress.eventProgressPoints ?? progress.completedBoardCount ?? 0));
+  if (points < milestone.pointsRequired) {
+    return { record: current, ok: false, progress, rewardLabel: milestone.rewardLabel, failureReason: 'not_achieved' };
+  }
+  if (progress.claimedMilestoneIds.includes(milestone.id)) {
+    return { record: current, ok: false, progress, rewardLabel: milestone.rewardLabel, failureReason: 'already_claimed' };
+  }
+
+  const nextClaimedMilestoneIds = resolveSpaceExcavatorClaimedMilestoneIds({
+    eventProgressPoints: points,
+    claimedMilestoneIds: [...progress.claimedMilestoneIds, milestone.id],
+  });
+  const nextProgress: SpaceExcavatorProgressEntry = {
+    ...progress,
+    claimedMilestoneIds: nextClaimedMilestoneIds,
+    updatedAtMs: Date.now(),
+  };
+  const essenceAward = Math.max(0, Math.floor(milestone.reward.essence ?? 0));
+  const diceAward = Math.max(0, Math.floor(milestone.reward.dicePool ?? 0));
+  const shardAward = Math.max(0, Math.floor(milestone.reward.shards ?? 0));
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    dicePool: Math.max(0, current.dicePool + diceAward),
+    essence: Math.max(0, current.essence + essenceAward),
+    essenceLifetimeEarned: Math.max(0, current.essenceLifetimeEarned + essenceAward),
+    shards: Math.max(0, current.shards + shardAward),
+    spaceExcavatorProgressByEvent: {
+      ...current.spaceExcavatorProgressByEvent,
+      [canonicalEventId]: nextProgress,
+    },
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'claim_space_excavator_milestone_reward',
+  });
+  return { record: next, ok: true, progress: nextProgress, rewardLabel: milestone.rewardLabel };
 }
 // ── applyRollResult ──────────────────────────────────────────────────────────
 

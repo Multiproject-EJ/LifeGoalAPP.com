@@ -124,6 +124,7 @@ import {
   applyTimedEventTicketSpend,
   applySpaceExcavatorDig,
   advanceSpaceExcavatorBoard,
+  claimSpaceExcavatorMilestoneReward,
   initSpaceExcavatorProgressForEvent,
   SPACE_EXCAVATOR_TOTAL_BOARDS,
   ISLAND_RUN_MAX_ISLAND,
@@ -6219,6 +6220,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               const advance = advanceSpaceExcavatorBoard({ session, client, eventId: effectiveActiveTimedEvent.eventId, triggerSource: 'space_excavator_advance_board' });
               if (advance.ok) setRuntimeState(advance.record);
               return { ok: advance.ok, ticketsRemaining: advance.ticketsRemaining, progress: advance.progress };
+            },
+            requestClaimMilestoneReward: (milestoneId: string) => {
+              const claim = claimSpaceExcavatorMilestoneReward({ session, client, eventId: effectiveActiveTimedEvent.eventId, milestoneId, triggerSource: 'space_excavator_claim_milestone' });
+              if (claim.ok) setRuntimeState(claim.record);
+              return { ok: claim.ok, progress: claim.progress, rewardLabel: claim.rewardLabel, failureReason: claim.failureReason };
             },
           }
         : descriptor.config,

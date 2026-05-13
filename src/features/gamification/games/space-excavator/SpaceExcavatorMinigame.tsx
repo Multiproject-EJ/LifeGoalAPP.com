@@ -30,10 +30,12 @@ type SpaceExcavatorProgress = {
 };
 type DigSpendResult = { ok: boolean; ticketsRemaining: number; progress?: SpaceExcavatorProgress | null; boardComplete?: boolean; canAdvanceBoard?: boolean };
 type AdvanceBoardResult = { ok: boolean; ticketsRemaining: number; progress?: SpaceExcavatorProgress | null };
+type ClaimMilestoneRewardResult = { ok: boolean; progress?: SpaceExcavatorProgress | null; rewardLabel?: string | null; failureReason?: string };
 
 type SpaceExcavatorLaunchConfig = {
   requestDigSpend?: (tileId: number) => DigSpendResult;
   requestAdvanceBoard?: () => AdvanceBoardResult;
+  requestClaimMilestoneReward?: (milestoneId: string) => ClaimMilestoneRewardResult;
   getTicketsRemaining?: () => number;
   initialProgress?: SpaceExcavatorProgress | null;
   totalBoards?: number;
@@ -73,6 +75,8 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const [finished, setFinished] = useState(false);
   const [sentResult, setSentResult] = useState(false);
   const [showOutOfTickets, setShowOutOfTickets] = useState(false);
+  const [claimPendingId, setClaimPendingId] = useState<string | null>(null);
+  const [claimMessage, setClaimMessage] = useState<string | null>(null);
 
   const syncProgress = (nextProgress: SpaceExcavatorProgress) => {
     setProgress(nextProgress);
@@ -121,6 +125,24 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
     }
   };
 
+  const onClaimMilestone = (milestoneId: string) => {
+    if (claimPendingId) return;
+    setClaimPendingId(milestoneId);
+    setClaimMessage(null);
+    const claim = config.requestClaimMilestoneReward?.(milestoneId) ?? { ok: false };
+    if (claim.progress) {
+      syncProgress(claim.progress);
+    }
+    if (claim.ok) {
+      setClaimMessage(`Claimed ${claim.rewardLabel ?? 'reward'}!`);
+    } else if (claim.failureReason === 'already_claimed') {
+      setClaimMessage('Reward already claimed.');
+    } else if (claim.failureReason === 'not_achieved') {
+      setClaimMessage('Clear more boards to unlock this reward.');
+    }
+    setClaimPendingId(null);
+  };
+
   return (
     <section className="space-excavator" aria-label="Space Excavator">
       <div className="space-excavator__hud">
@@ -152,18 +174,39 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
           <span style={{ width: `${eventProgressPercent}%` }} />
         </div>
         <div className="space-excavator__milestones" aria-label="Milestones">
-          {SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.map((milestone) => (
-            <span
-              key={milestone.id}
-              className={`space-excavator__milestone ${claimedMilestoneIds.includes(milestone.id) ? 'space-excavator__milestone--claimed' : ''}`}
-              title={`${milestone.pointsRequired}: ${milestone.rewardLabel}`}
-            >
-              {milestone.pointsRequired}
-            </span>
-          ))}
+          {SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.map((milestone) => {
+            const achieved = eventProgressPoints >= milestone.pointsRequired;
+            const claimed = claimedMilestoneIds.includes(milestone.id);
+            const claimable = achieved && !claimed;
+            const stateLabel = claimed ? 'Claimed' : claimable ? 'Claimable' : 'Locked';
+            return (
+              <div
+                key={milestone.id}
+                className={`space-excavator__milestone space-excavator__milestone--${claimed ? 'claimed' : claimable ? 'claimable' : 'locked'}`}
+                title={`${milestone.pointsRequired}: ${milestone.rewardLabel}`}
+              >
+                <span>{milestone.pointsRequired}</span>
+                <small>{stateLabel}</small>
+                <strong>{milestone.rewardLabel}</strong>
+                {claimable && (
+                  <button
+                    type="button"
+                    className="space-excavator__claim-button"
+                    onClick={() => onClaimMilestone(milestone.id)}
+                    disabled={claimPendingId === milestone.id}
+                  >
+                    Claim
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
+        {claimMessage && (
+          <p className="space-excavator__claim-message" role="status" aria-live="polite">{claimMessage}</p>
+        )}
         <p className="space-excavator__next-reward">
-          {nextMilestone ? `Next: ${nextMilestone.rewardLabel}` : 'All event milestones marked complete'}
+          {nextMilestone ? `Next: ${nextMilestone.rewardLabel}` : 'All event milestones reached'}
         </p>
       </div>
 
