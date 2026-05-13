@@ -126,6 +126,11 @@ body {
 .app--auth-gate {
   padding: clamp(1.5rem, 5vw, 3.5rem) clamp(1.25rem, 4vw, 2.5rem);
   gap: clamp(2rem, 6vw, 4rem);
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse 100% 60% at 25% -5%, rgba(147, 197, 253, 0.38) 0%, transparent 65%),
+    radial-gradient(ellipse 75% 55% at 85% 15%, rgba(199, 210, 254, 0.32) 0%, transparent 62%),
+    linear-gradient(175deg, #eef5ff 0%, #f4f7ff 50%, #eff2ff 100%);
 }
 
 .auth-gate__masthead {
@@ -225,54 +230,66 @@ body {
 
 .auth-card {
   width: min(440px, 100%);
-  background: rgba(255, 255, 255, 0.98);
-  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 28px;
   padding: clamp(1.75rem, 4vw, 2.5rem);
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  box-shadow: none;
+  padding-bottom: max(clamp(1.75rem, 4vw, 2.5rem), env(safe-area-inset-bottom, 0px));
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.04),
+    0 12px 32px -4px rgba(59, 130, 246, 0.1),
+    0 32px 64px -16px rgba(15, 23, 42, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
   display: grid;
   gap: 1.5rem;
 }
 
 .auth-card__header h2 {
   margin: 0;
-  font-size: clamp(1.45rem, 3vw, 1.75rem);
+  font-size: clamp(1.5rem, 3vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
 .auth-card__header p {
   margin: 0.5rem 0 0;
   color: #475569;
+  font-size: 0.94rem;
+  line-height: 1.55;
 }
 
 .auth-card__body {
   display: grid;
-  gap: 1.25rem;
+  gap: 1.35rem;
 }
 
 .auth-card__tabs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.35rem;
-  padding: 0.35rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.3rem;
+  padding: 0.3rem;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.25);
+  background: rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 .auth-tab {
   border: none;
   background: transparent;
   font-weight: 600;
+  font-size: 0.92rem;
   border-radius: 999px;
-  padding: 0.55rem 1rem;
+  padding: 0.58rem 1rem;
   cursor: pointer;
-  color: rgba(15, 23, 42, 0.65);
-  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  color: rgba(15, 23, 42, 0.5);
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .auth-tab--active {
   background: #fff;
   color: #0f172a;
-  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 10px rgba(15, 23, 42, 0.07);
 }
 
 .auth-tab-panel {
@@ -283,32 +300,45 @@ body {
 .auth-card__providers {
   display: grid;
   gap: 0.75rem;
+  margin-top: 0.125rem;
 }
 
 .auth-provider {
   width: 100%;
-  border-radius: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(241, 245, 249, 0.8);
-  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1.5px solid rgba(148, 163, 184, 0.38);
+  background: rgba(248, 250, 252, 0.9);
+  padding: 0.78rem 1rem;
   font-weight: 600;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
 .auth-provider:disabled {
   cursor: not-allowed;
-  opacity: 0.65;
+  opacity: 0.55;
 }
 
 .auth-provider:not(:disabled):hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
 }
 
 .auth-provider--google {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(16, 185, 129, 0.12));
+  background: #ffffff;
+  border-color: rgba(148, 163, 184, 0.45);
+  color: #1e293b;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.auth-provider--google:not(:disabled):hover {
   border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.1);
 }
 
 .auth-demo-list {
@@ -2799,35 +2829,49 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .supabase-auth__field {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.4rem;
   color: #0f172a;
   font-weight: 500;
+  font-size: 0.9rem;
 }
 
 .supabase-auth__field input {
   border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.55);
-  padding: 0.65rem 0.85rem;
+  border: 1.5px solid rgba(148, 163, 184, 0.45);
+  padding: 0.72rem 0.9rem;
   font-size: 1rem;
-  background: #ffffff;
+  background: rgba(248, 250, 252, 0.95);
   color: #0f172a;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .supabase-auth__field input:focus-visible {
   outline: none;
-  border-color: rgba(59, 130, 246, 0.65);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.6);
+  box-shadow: 0 0 0 3.5px rgba(59, 130, 246, 0.13);
+}
+
+/* Kill browser autofill yellow highlight */
+.supabase-auth__field input:-webkit-autofill,
+.supabase-auth__field input:-webkit-autofill:hover,
+.supabase-auth__field input:-webkit-autofill:focus,
+.supabase-auth__field input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 60px rgba(248, 250, 252, 0.95) inset !important;
+  -webkit-text-fill-color: #0f172a !important;
+  caret-color: #0f172a;
+  transition: background-color 9999s ease 0s;
 }
 
 .supabase-auth__field input::placeholder {
-  color: rgba(100, 116, 139, 0.75);
+  color: rgba(100, 116, 139, 0.65);
 }
 
 .supabase-auth__actions {
   display: flex;
+  flex-direction: column;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  margin-top: 0.25rem;
 }
 
 .supabase-auth__social {
@@ -2837,18 +2881,20 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .supabase-auth__action {
   border: none;
-  border-radius: 999px;
-  padding: 0.65rem 1.25rem;
+  border-radius: 14px;
+  padding: 0.8rem 1.5rem;
   background: linear-gradient(135deg, #2563eb, #7c3aed);
   color: #f8fafc;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
 }
 
 .supabase-auth__action:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.28);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
 }
 
 .supabase-auth__secondary {
@@ -12411,13 +12457,13 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .supabase-auth__action:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .supabase-auth__action:not(:disabled):hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(34, 211, 238, 0.35);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.32);
 }
 
 .starter-quest-sheet {
@@ -12878,6 +12924,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 .supabase-auth__status--hidden {
   opacity: 0;
   transform: translateY(-6px);
+  pointer-events: none;
 }
 
 .supabase-auth__status--success {
@@ -12890,6 +12937,32 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .supabase-auth__status--info {
   color: #60a5fa;
+}
+
+/* Glass chip status inside the auth card (light surface) */
+.auth-card__body .supabase-auth__status {
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+}
+
+.auth-card__body .supabase-auth__status--success {
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  color: #166534;
+}
+
+.auth-card__body .supabase-auth__status--error {
+  background: rgba(248, 113, 113, 0.09);
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  color: #991b1b;
+}
+
+.auth-card__body .supabase-auth__status--info {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  color: #1e40af;
 }
 
 .supabase-auth__demo {
