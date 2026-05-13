@@ -6,7 +6,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: calc(env(safe-area-inset-top, 0) + 12px) 12px calc(env(safe-area-inset-bottom, 0) + 12px);
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 12px calc(env(safe-area-inset-bottom, 0px) + 12px);
   color: #f8fafc;
   background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
   overflow-x: hidden;
@@ -214,7 +214,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding-bottom: max(0px, env(safe-area-inset-bottom, 0));
+  padding-bottom: max(0px, env(safe-area-inset-bottom, 0px));
 }
 
 .space-excavator__button {
@@ -260,14 +260,14 @@
   justify-content: center;
   box-sizing: border-box;
   width: 100%;
-  padding: max(12px, env(safe-area-inset-top, 0)) 12px max(12px, env(safe-area-inset-bottom, 0));
+  padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
   background: rgba(2, 6, 23, 0.62);
 }
 
 .space-excavator__ticket-sheet {
   box-sizing: border-box;
   width: min(100%, 440px);
-  max-height: calc(100dvh - max(24px, env(safe-area-inset-top, 0)) - max(24px, env(safe-area-inset-bottom, 0)));
+  max-height: calc(100dvh - max(24px, env(safe-area-inset-top, 0px)) - max(24px, env(safe-area-inset-bottom, 0px)));
   overflow-y: auto;
   border: 1px solid rgba(56, 189, 248, 0.5);
   border-radius: 18px;
