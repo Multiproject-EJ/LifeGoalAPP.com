@@ -117,10 +117,10 @@ export interface ClaimSpaceExcavatorMilestoneRewardResult {
 }
 
 export const SPACE_EXCAVATOR_TOTAL_BOARDS = 10; // Tuning placeholder until rewards/finale UX is added.
-const SPACE_EXCAVATOR_FNV_OFFSET_BASIS = 2166136261;
+const SPACE_EXCAVATOR_HASH_OFFSET_BASIS = 2166136261;
 
 function getSpaceExcavatorSeed(input: string): number {
-  return Array.from(input).reduce((sum, char) => ((sum * 31) + char.charCodeAt(0)) >>> 0, SPACE_EXCAVATOR_FNV_OFFSET_BASIS);
+  return Array.from(input).reduce((sum, char) => ((sum * 31) + char.charCodeAt(0)) >>> 0, SPACE_EXCAVATOR_HASH_OFFSET_BASIS);
 }
 
 function chooseSpaceExcavatorBonusBombTileId(options: {

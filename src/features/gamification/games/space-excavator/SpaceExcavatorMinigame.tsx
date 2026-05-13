@@ -151,7 +151,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
     if (spend.ok && spend.progress) {
       if (spend.triggeredBomb) {
         const bonusRevealCount = Math.max(0, Math.floor(spend.bonusRevealCount ?? 0));
-        setLatestBombFeedback(`Bonus Bomb! ${bonusRevealCount} nearby tile${bonusRevealCount === 1 ? '' : 's'} cleared.`);
+        setLatestBombFeedback(`${bonusRevealCount} nearby tile${bonusRevealCount === 1 ? '' : 's'} cleared.`);
         setLatestClue(null);
       } else {
         setLatestBombFeedback(null);
