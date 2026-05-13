@@ -4818,6 +4818,79 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-sizing: border-box;
 }
 
+.habit-checklist-card--pull-enabled {
+  --habit-compact-pull-offset: 0px;
+  touch-action: pan-y;
+}
+
+.habit-checklist-card--pull-enabled .habit-checklist-card__board {
+  transform: translateY(var(--habit-compact-pull-offset));
+  transition: transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
+}
+
+.habit-checklist-card--pulling .habit-checklist-card__board {
+  transition: none;
+}
+
+.habit-checklist-card__pull-indicator {
+  margin: 0 auto;
+  min-height: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  color: rgba(15, 23, 42, 0.62);
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 5px 14px rgba(15, 23, 42, 0.08);
+  transform: translateY(calc(var(--habit-compact-pull-offset, 0px) * 0.22));
+}
+
+.habit-checklist-card__pull-dot {
+  width: 0.44rem;
+  height: 0.44rem;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.72;
+}
+
+.habit-checklist-card__pull-text {
+  font-size: 0.73rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.habit-checklist-card__pull-indicator--armed {
+  color: #0f766e;
+}
+
+.habit-checklist-card__pull-indicator--loading {
+  color: #0ea5e9;
+}
+
+.habit-checklist-card__pull-indicator--loading .habit-checklist-card__pull-dot {
+  animation: habit-pull-dot-pulse 0.9s ease-in-out infinite;
+}
+
+.habit-checklist-card__pull-indicator--success {
+  color: #15803d;
+}
+
+@keyframes habit-pull-dot-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .habit-checklist-card--glass {
   --habit-glass-layer-outer: rgba(255, 255, 255, 0.35);
   --habit-glass-layer-inner: rgba(255, 255, 255, 0.6);
@@ -4865,6 +4938,18 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: linear-gradient(160deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.4));
   border-color: rgba(148, 163, 184, 0.2);
   box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.25), 0 18px 40px rgba(5, 10, 20, 0.55);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .habit-checklist-card__pull-indicator {
+  color: rgba(226, 232, 240, 0.75);
+  background: rgba(15, 23, 42, 0.62);
+  border-color: rgba(148, 163, 184, 0.22);
+  box-shadow: 0 6px 16px rgba(2, 6, 23, 0.28);
 }
 
 .habit-checklist-card__board-head {
