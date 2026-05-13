@@ -86,7 +86,8 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const progressStatus = progress?.status ?? 'active';
   const boardComplete = progressStatus === 'board_complete' || progressStatus === 'completed';
   const canAdvanceBoard = progressStatus === 'board_complete';
-  const boardLabel = `Board ${Math.max(1, Math.floor((progress?.boardIndex ?? 0) + 1))}${totalBoards > 1 ? ` / ${totalBoards}` : ''}`;
+  const currentBoardNumber = (progress?.boardIndex ?? 0) + 1;
+  const boardLabel = `Board ${currentBoardNumber}${totalBoards > 1 ? ` / ${totalBoards}` : ''}`;
   const eventProgressPoints = Math.max(0, Math.floor(activeProgress?.eventProgressPoints ?? activeProgress?.completedBoardCount ?? 0));
   const eventProgressTotal = SPACE_EXCAVATOR_CAMPAIGN_TOTAL_POINTS;
   const eventProgressPercent = Math.min(100, Math.round((eventProgressPoints / eventProgressTotal) * 100));
@@ -254,7 +255,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
             </div>
           </div>
           <div className="space-excavator__clear-summary" aria-label="Board clear summary">
-            <span>{progressStatus === 'completed' ? 'All boards cleared' : `Board ${Math.max(1, Math.floor((progress?.boardIndex ?? 0) + 1))} cleared`}</span>
+            <span>{progressStatus === 'completed' ? 'All boards cleared' : `Board ${currentBoardNumber} cleared`}</span>
             <span>Event progress +1</span>
             {firstClaimableMilestone ? (
               <span className="space-excavator__clear-summary-claimable">
