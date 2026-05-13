@@ -1,6 +1,6 @@
 import type { SpaceExcavatorProgressEntry } from './islandRunGameStateStore';
 
-export type SpaceExcavatorCampaignRewardKind = 'dice_placeholder' | 'essence_placeholder' | 'shards_placeholder' | 'event_completion_placeholder';
+export type SpaceExcavatorCampaignRewardKind = 'essence' | 'dice' | 'shards' | 'bundle';
 
 export interface SpaceExcavatorCampaignReward {
   essence?: number;
@@ -11,7 +11,7 @@ export interface SpaceExcavatorCampaignReward {
 export interface SpaceExcavatorCampaignMilestone {
   id: string;
   pointsRequired: number;
-  rewardKind: SpaceExcavatorCampaignRewardKind | 'essence' | 'dice' | 'shards' | 'bundle';
+  rewardKind: SpaceExcavatorCampaignRewardKind;
   rewardLabel: string;
   reward: SpaceExcavatorCampaignReward;
 }

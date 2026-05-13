@@ -265,9 +265,9 @@ export function claimSpaceExcavatorMilestoneReward(options: {
     claimedMilestoneIds: nextClaimedMilestoneIds,
     updatedAtMs: Date.now(),
   };
-  const essenceAward = Math.max(0, Math.trunc(milestone.reward.essence ?? 0));
-  const diceAward = Math.max(0, Math.trunc(milestone.reward.dicePool ?? 0));
-  const shardAward = Math.max(0, Math.trunc(milestone.reward.shards ?? 0));
+  const essenceAward = Math.max(0, Math.floor(milestone.reward.essence ?? 0));
+  const diceAward = Math.max(0, Math.floor(milestone.reward.dicePool ?? 0));
+  const shardAward = Math.max(0, Math.floor(milestone.reward.shards ?? 0));
   const next: IslandRunGameStateRecord = {
     ...current,
     runtimeVersion: current.runtimeVersion + 1,
