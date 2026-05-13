@@ -9,6 +9,20 @@ type MeditationSessionPlayerProps = {
   onComplete: () => void;
 };
 
+const PHASE_ASSET_SRC_BY_PHASE = {
+  inhale: '/icons/Energy/breath-cloud-in.webp',
+  hold: '/icons/Energy/breath-cloud-hold.webp',
+  exhale: '/icons/Energy/breath-cloud-out.webp',
+} as const;
+
+const PHASE_INDEX_BY_PHASE = {
+  inhale: 0,
+  hold: 1,
+  exhale: 2,
+} as const;
+
+const PHASE_LABELS: Array<keyof typeof PHASE_INDEX_BY_PHASE> = ['inhale', 'hold', 'exhale'];
+
 export function MeditationSessionPlayer({
   isOpen,
   onClose,
@@ -23,6 +37,8 @@ export function MeditationSessionPlayer({
   const [nextGongAt, setNextGongAt] = useState(60);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [gongIntervalSeconds, setGongIntervalSeconds] = useState<number | null>(60);
+  const [missingPhaseAssets, setMissingPhaseAssets] = useState<Record<string, true>>({});
+  const [mobileBgMissing, setMobileBgMissing] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const lastIntervalRef = useRef<number | null>(gongIntervalSeconds);
 
@@ -240,16 +256,43 @@ export function MeditationSessionPlayer({
     hold: 'Hold',
     exhale: 'Breathe Out',
   };
-
+  const phaseAssetSrc = PHASE_ASSET_SRC_BY_PHASE[breathPhase];
+  const phaseAssetMissing = Boolean(missingPhaseAssets[phaseAssetSrc]);
+  const startButtonLabel = timeRemaining === durationSeconds ? 'Begin Breathing' : 'Resume';
+  const currentPhaseIndex = PHASE_INDEX_BY_PHASE[breathPhase];
+  const handlePhaseAssetError = (assetSrc: string) => {
+    setMissingPhaseAssets((current) => {
+      if (current[assetSrc]) return current;
+      return {
+        ...current,
+        [assetSrc]: true,
+      };
+    });
+  };
   return (
     <div className="meditation-modal-overlay" onClick={handleClose}>
       <div className="meditation-modal" onClick={(e) => e.stopPropagation()}>
+        {!mobileBgMissing && (
+          <img
+            className="meditation-modal__bg-image"
+            src="/icons/Energy/breathing-space-bg-mobile.webp"
+            alt=""
+            aria-hidden="true"
+            loading="eager"
+            decoding="async"
+            onError={() => setMobileBgMissing(true)}
+          />
+        )}
         <button className="meditation-modal__close" onClick={handleClose} aria-label="Close">
           ×
         </button>
 
         <div className="meditation-modal__content">
-          <h2 className="meditation-modal__title">{sessionTitle}</h2>
+          <header className="meditation-modal__header">
+            <h2 className="meditation-modal__title">Breathing Space</h2>
+            <p className="meditation-modal__subtitle">Take a moment. You’ve got this.</p>
+            <span className="meditation-modal__sr-only">{sessionTitle}</span>
+          </header>
 
           <div className="meditation-breathing-circle">
             <div
@@ -257,8 +300,35 @@ export function MeditationSessionPlayer({
               aria-live="polite"
               aria-atomic="true"
             >
-              <span className="meditation-breathing-circle__text">{breathPhaseText[breathPhase]}</span>
+              {!phaseAssetMissing && (
+                <img
+                  className="meditation-breathing-circle__phase-image"
+                  src={phaseAssetSrc}
+                  alt=""
+                  aria-hidden="true"
+                  loading="eager"
+                  decoding="async"
+                  onError={() => handlePhaseAssetError(phaseAssetSrc)}
+                />
+              )}
+              {phaseAssetMissing && (
+                <span className="meditation-breathing-circle__text">{breathPhaseText[breathPhase]}</span>
+              )}
             </div>
+          </div>
+          <div className="meditation-phase-indicator" role="presentation" aria-hidden="true">
+            {PHASE_LABELS.map((phase) => (
+              <span
+                key={phase}
+                className={`meditation-phase-indicator__chip ${
+                  currentPhaseIndex === PHASE_INDEX_BY_PHASE[phase]
+                    ? 'meditation-phase-indicator__chip--active'
+                    : ''
+                }`}
+              >
+                {phase.charAt(0).toUpperCase() + phase.slice(1)}
+              </span>
+            ))}
           </div>
 
           <div className="meditation-timer">
@@ -274,17 +344,19 @@ export function MeditationSessionPlayer({
           </div>
 
           <div className="meditation-audio-settings">
-            <label className="meditation-audio-settings__toggle">
-              <input
-                type="checkbox"
-                checked={soundEnabled}
-                onChange={(event) => setSoundEnabled(event.target.checked)}
-              />
-              Sound on
-            </label>
+            <div className="meditation-audio-settings__item">
+              <label className="meditation-audio-settings__toggle">
+                <input
+                  type="checkbox"
+                  checked={soundEnabled}
+                  onChange={(event) => setSoundEnabled(event.target.checked)}
+                />
+                <span>Sound</span>
+              </label>
+            </div>
             <div className="meditation-audio-settings__interval">
               <label htmlFor="gong-interval" className="meditation-audio-settings__label">
-                Gong interval
+                Gong
               </label>
               <select
                 id="gong-interval"
@@ -305,7 +377,7 @@ export function MeditationSessionPlayer({
           <div className="meditation-controls">
             {!isRunning && timeRemaining > 0 && (
               <button className="btn btn--primary meditation-controls__button" onClick={handleStart}>
-                {timeRemaining === durationSeconds ? 'Start' : 'Resume'}
+                {startButtonLabel}
               </button>
             )}
             {isRunning && (

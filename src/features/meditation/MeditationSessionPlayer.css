@@ -3,14 +3,15 @@
 .meditation-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(5, 11, 24, 0.62);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: var(--space-4);
   z-index: 1000;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  animation: meditation-fade-in 0.3s ease-out;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: meditation-fade-in 0.24s ease-out;
 }
 
 @keyframes meditation-fade-in {
@@ -23,23 +24,35 @@
 }
 
 .meditation-modal {
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6);
-  max-width: 500px;
-  width: 90%;
+  --meditation-modal-sky-bg: url('/icons/Energy/peace_skybg.webp');
   position: relative;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), var(--shadow-glow);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(24px) saturate(150%);
-  -webkit-backdrop-filter: blur(24px) saturate(150%);
-  animation: meditation-slide-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  width: min(100%, 470px);
+  border-radius: 26px;
+  padding: var(--space-6) var(--space-5);
+  /* Optional sky asset; layered gradients keep UI safe if image is unavailable. */
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.78) 0%, rgba(230, 243, 255, 0.56) 100%),
+    var(--meditation-modal-sky-bg) center / cover no-repeat;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 20px 44px rgba(11, 37, 70, 0.24);
+  backdrop-filter: blur(9px) saturate(108%);
+  -webkit-backdrop-filter: blur(9px) saturate(108%);
+  overflow: hidden;
+  animation: meditation-slide-up 0.3s ease-out;
+}
+
+.meditation-modal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.06) 44%, rgba(255, 255, 255, 0.22) 100%);
+  pointer-events: none;
 }
 
 @keyframes meditation-slide-up {
   from {
     opacity: 0;
-    transform: translateY(30px) scale(0.95);
+    transform: translateY(18px) scale(0.985);
   }
   to {
     opacity: 1;
@@ -47,311 +60,376 @@
   }
 }
 
+/* Optional mobile background image — softened via opacity so it never overpowers text. */
+/* Falls back to CSS sky/glass treatment gracefully when the asset is absent.           */
+.meditation-modal__bg-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  z-index: 0;
+  opacity: 0.34;
+  pointer-events: none;
+  user-select: none;
+}
+
 .meditation-modal__close {
   position: absolute;
   top: var(--space-4);
   right: var(--space-4);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: var(--text-muted);
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.54);
+  color: rgba(34, 62, 88, 0.85);
+  font-size: 1.55rem;
   line-height: 1;
-  padding: var(--space-2);
-  width: 36px;
-  height: 36px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  z-index: 2;
 }
 
 .meditation-modal__close:hover {
-  color: var(--text);
-  background: var(--surface-strong);
-  transform: scale(1.1);
-  border-color: var(--accent);
+  transform: translateY(-1px);
+  border-color: rgba(110, 199, 255, 0.9);
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .meditation-modal__close:active {
-  transform: scale(0.95);
-}
-
-@media (max-width: 768px) {
-  .meditation-modal__close {
-    width: 44px;
-    height: 44px;
-    font-size: 1.6rem;
-  }
+  transform: translateY(0);
 }
 
 .meditation-modal__content {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-6);
+  gap: var(--space-4);
+}
+
+.meditation-modal__header {
+  text-align: center;
+  margin-top: var(--space-2);
 }
 
 .meditation-modal__title {
   margin: 0;
-  font-size: var(--fs-xl);
-  text-align: center;
-  color: var(--text);
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-size: clamp(1.4rem, 2.8vw, 1.66rem);
+  color: #0d3354;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.meditation-modal__subtitle {
+  margin: var(--space-1) 0 0;
+  color: rgba(16, 69, 107, 0.74);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+.meditation-modal__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .meditation-breathing-circle {
-  width: 220px;
-  height: 220px;
+  width: 232px;
+  height: 232px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+}
+
+.meditation-breathing-circle::before {
+  content: '';
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(108, 215, 255, 0.28) 0%, rgba(108, 215, 255, 0) 72%);
+  pointer-events: none;
 }
 
 .meditation-breathing-circle__inner {
-  width: 130px;
-  height: 130px;
+  width: 126px;
+  height: 126px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 
-    0 8px 32px rgba(6, 182, 212, 0.5),
-    0 4px 16px rgba(6, 182, 212, 0.3),
-    0 0 60px rgba(6, 182, 212, 0.2);
   position: relative;
+  overflow: hidden;
+  background: radial-gradient(circle at 30% 28%, #9cecff 0%, #47d6ff 44%, #17b7ea 100%);
+  box-shadow:
+    0 12px 28px rgba(30, 176, 228, 0.35),
+    inset 0 2px 12px rgba(255, 255, 255, 0.45);
+  transition-property: transform, opacity, box-shadow;
+  transition-timing-function: ease-in-out;
 }
 
-[data-theme='bright-sky'] .meditation-breathing-circle__inner {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-  box-shadow: 
-    0 8px 32px rgba(14, 165, 233, 0.5),
-    0 4px 16px rgba(14, 165, 233, 0.3),
-    0 0 60px rgba(14, 165, 233, 0.2);
-}
-
-/* Breathing circle animations with glow effects */
 .meditation-breathing-circle__inner--inhale {
-  transform: scale(1.6);
+  transform: scale(1.58);
   opacity: 1;
-  box-shadow: 
-    0 12px 48px rgba(6, 182, 212, 0.6),
-    0 6px 24px rgba(6, 182, 212, 0.4),
-    0 0 80px rgba(6, 182, 212, 0.3);
-}
-
-[data-theme='bright-sky'] .meditation-breathing-circle__inner--inhale {
-  box-shadow: 
-    0 12px 48px rgba(14, 165, 233, 0.6),
-    0 6px 24px rgba(14, 165, 233, 0.4),
-    0 0 80px rgba(14, 165, 233, 0.3);
+  transition-duration: 3.8s;
 }
 
 .meditation-breathing-circle__inner--hold {
-  transform: scale(1.6);
+  transform: scale(1.58);
   opacity: 0.95;
+  transition-duration: 1.8s;
 }
 
 .meditation-breathing-circle__inner--exhale {
-  transform: scale(1);
-  opacity: 0.75;
-  box-shadow: 
-    0 4px 16px rgba(6, 182, 212, 0.4),
-    0 2px 8px rgba(6, 182, 212, 0.2),
-    0 0 40px rgba(6, 182, 212, 0.15);
+  transform: scale(1.02);
+  opacity: 0.78;
+  transition-duration: 5.8s;
 }
 
-[data-theme='bright-sky'] .meditation-breathing-circle__inner--exhale {
-  box-shadow: 
-    0 4px 16px rgba(14, 165, 233, 0.4),
-    0 2px 8px rgba(14, 165, 233, 0.2),
-    0 0 40px rgba(14, 165, 233, 0.15);
+.meditation-breathing-circle__phase-image {
+  width: 76%;
+  height: 76%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(34, 96, 132, 0.3));
 }
 
 .meditation-breathing-circle__text {
-  color: white;
-  font-weight: 600;
-  font-size: var(--fs-md);
+  color: rgba(255, 255, 255, 0.96);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 7px rgba(6, 37, 53, 0.44);
+}
+
+.meditation-phase-indicator {
+  width: 100%;
+  max-width: 320px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.meditation-phase-indicator__chip {
+  border-radius: 999px;
+  padding: 7px var(--space-2);
   text-align: center;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  z-index: 1;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(22, 74, 107, 0.65);
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.meditation-phase-indicator__chip--active {
+  color: rgba(11, 70, 106, 0.96);
+  background: rgba(176, 232, 255, 0.72);
+  border-color: rgba(125, 206, 240, 0.92);
 }
 
 .meditation-timer {
   width: 100%;
+  max-width: 332px;
 }
 
 .meditation-timer__display {
-  font-size: 3.5rem;
-  font-weight: 300;
+  font-size: clamp(2.5rem, 10vw, 3.1rem);
+  font-weight: 320;
+  line-height: 1;
   text-align: center;
-  color: var(--text);
+  color: #114f7f;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.05em;
-  margin-bottom: var(--space-4);
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-3);
+  text-shadow: 0 2px 8px rgba(182, 231, 255, 0.42);
 }
 
 .meditation-timer__progress {
   width: 100%;
-  height: 10px;
-  background: var(--surface);
-  border-radius: var(--radius-pill);
+  height: 8px;
+  border-radius: 999px;
   overflow: hidden;
-  border: 1px solid var(--border);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.56);
 }
 
 .meditation-timer__progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #06b6d4 0%, #0891b2 100%);
+  border-radius: inherit;
+  background: linear-gradient(90deg, #63dbff 0%, #11b9ec 100%);
+  box-shadow: 0 0 10px rgba(99, 219, 255, 0.5);
   transition: width 1s linear;
-  border-radius: var(--radius-pill);
-  box-shadow: 0 0 12px rgba(6, 182, 212, 0.6);
-}
-
-[data-theme='bright-sky'] .meditation-timer__progress-bar {
-  background: linear-gradient(90deg, #0ea5e9 0%, #0284c7 100%);
-  box-shadow: 0 0 12px rgba(14, 165, 233, 0.6);
-}
-
-.meditation-controls {
-  display: flex;
-  gap: var(--space-4);
-  justify-content: center;
 }
 
 .meditation-audio-settings {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--surface);
+  max-width: 350px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(132px, auto);
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-3);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  box-shadow: inset 0 1px 8px rgba(255, 255, 255, 0.3);
+}
+
+.meditation-audio-settings__item {
+  min-width: 0;
 }
 
 .meditation-audio-settings__toggle {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-3);
-  color: var(--text);
-  font-weight: 500;
+  gap: var(--space-2);
+  color: rgba(16, 68, 104, 0.94);
+  font-weight: 600;
+  min-height: 40px;
 }
 
 .meditation-audio-settings__toggle input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--accent);
+  width: 20px;
+  height: 20px;
+  accent-color: #0ba9d8;
+  cursor: pointer;
 }
 
 .meditation-audio-settings__interval {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  display: grid;
+  gap: 4px;
 }
 
 .meditation-audio-settings__label {
-  font-size: var(--fs-sm);
-  color: var(--text-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(22, 75, 107, 0.72);
+  font-weight: 700;
 }
 
 .meditation-audio-settings__select {
-  padding: var(--space-3);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--surface-strong);
-  color: var(--text);
-  font-size: var(--fs-sm);
+  min-height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.76);
+  color: #104c77;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0 var(--space-2);
+}
+
+.meditation-audio-settings__select:disabled {
+  opacity: 0.55;
+}
+
+.meditation-controls {
+  width: 100%;
+  max-width: 350px;
+  display: flex;
+  justify-content: center;
 }
 
 .meditation-controls__button {
-  min-width: 140px;
-  padding: var(--space-4) var(--space-5);
-  font-size: var(--fs-md);
+  width: 100%;
+  min-height: 48px;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
-/* Mobile responsive design */
+.meditation-controls__button.btn--primary {
+  border: none;
+  color: #f6fcff;
+  background: linear-gradient(135deg, #5fd9ff 0%, #14b8ea 56%, #1e95ea 100%);
+  box-shadow: 0 10px 22px rgba(20, 184, 234, 0.33);
+}
+
+.meditation-controls__button.btn--primary:hover {
+  transform: translateY(-1px);
+  filter: saturate(1.04);
+}
+
+.meditation-controls__button.btn--primary:active {
+  transform: translateY(0);
+}
+
+.meditation-controls__button.btn--secondary {
+  background: rgba(255, 255, 255, 0.68);
+  border-color: rgba(255, 255, 255, 0.74);
+  color: rgba(12, 63, 95, 0.95);
+}
+
 @media (max-width: 480px) {
-  .meditation-modal {
-    width: 95%;
-    padding: var(--space-5);
+  .meditation-modal-overlay {
+    padding: var(--space-3);
   }
 
-  .meditation-modal__content {
-    gap: var(--space-5);
+  .meditation-modal {
+    padding: var(--space-5) var(--space-4);
+    border-radius: 22px;
+  }
+
+  .meditation-modal__close {
+    top: var(--space-3);
+    right: var(--space-3);
   }
 
   .meditation-breathing-circle {
-    width: 180px;
-    height: 180px;
+    width: 206px;
+    height: 206px;
   }
 
   .meditation-breathing-circle__inner {
-    width: 110px;
-    height: 110px;
+    width: 114px;
+    height: 114px;
   }
 
-  .meditation-breathing-circle__inner--inhale,
-  .meditation-breathing-circle__inner--hold {
-    transform: scale(1.5);
+  .meditation-phase-indicator__chip {
+    font-size: 0.64rem;
+    padding: 7px 6px;
   }
 
-  .meditation-timer__display {
-    font-size: 2.5rem;
+  .meditation-audio-settings {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
   }
 
-  .meditation-controls {
-    flex-direction: column;
+  .meditation-audio-settings__select {
     width: 100%;
-  }
-
-  .meditation-controls__button {
-    width: 100%;
-    min-width: unset;
   }
 }
 
-/* Tablet adjustments */
-@media (min-width: 481px) and (max-width: 768px) {
-  .meditation-modal {
-    max-width: 450px;
-  }
-
-  .meditation-breathing-circle {
-    width: 200px;
-    height: 200px;
-  }
-
-  .meditation-breathing-circle__inner {
-    width: 120px;
-    height: 120px;
-  }
-
-  .meditation-timer__display {
-    font-size: 3rem;
-  }
-}
-
-/* Accessibility - reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .meditation-modal-overlay,
   .meditation-modal {
     animation: none;
   }
 
-  .meditation-breathing-circle__inner {
-    transition: transform 1.2s ease-in-out, opacity 0.6s ease;
+  .meditation-modal__close,
+  .meditation-controls__button.btn--primary {
+    transition: none;
   }
 
-  .meditation-modal__close:hover {
-    transform: none;
+  .meditation-breathing-circle__inner,
+  .meditation-timer__progress-bar {
+    transition-duration: 0.2s;
   }
 }
