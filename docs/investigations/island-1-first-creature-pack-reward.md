@@ -166,7 +166,7 @@ Suggested eligibility gates:
 - `cycleIndex === 0`
 - tutorial state indicates the player is in the first-session Island 1 onboarding flow
 - first creature pack has not been granted/opened/claimed
-- first guided Hatchery L1 build is complete
+- first guided hatchery L1 build is complete
 - player has reached low dice, e.g. `dicePool <= 3`
 - player is not currently rolling or in another blocking modal/reward reveal
 - current state is read from the canonical Island Run store, not a stale component mirror
