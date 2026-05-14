@@ -24,7 +24,9 @@ import type {
   ZenTokenTransaction,
 } from '../../types/gamification';
 import { GamificationHeader } from '../../components/GamificationHeader';
+import { FeatureStatusBadge } from '../../components/FeatureStatusBadge';
 import { XP_TO_GOLD_RATIO, splitGoldBalance } from '../../constants/economy';
+import { getFeatureAvailability } from '../../config/featureAvailability';
 import { fetchXPTransactions } from '../../services/gamification';
 import { fetchZenTokenTransactions } from '../../services/zenGarden';
 import { ZEN_TRANSACTIONS_DISPLAY_LIMIT } from '../../constants/zenGarden';
@@ -659,7 +661,10 @@ export function ScoreTab({
             <span className="score-tab__hub-visual" aria-hidden="true">
               <img className="score-tab__hub-image" src={scoreShop} alt="" />
             </span>
-            <span className="score-tab__hub-title">Player Shop</span>
+            <span className="score-tab__hub-title">
+              Player Shop
+              <FeatureStatusBadge status={getFeatureAvailability('score.playerShop').status} />
+            </span>
           </button>
           <button
             type="button"
@@ -672,7 +677,10 @@ export function ScoreTab({
             <span className="score-tab__hub-visual" aria-hidden="true">
               <img className="score-tab__hub-image" src="/icons/Scoreshop_garage.webp" alt="" />
             </span>
-            <span className="score-tab__hub-title">Garage</span>
+            <span className="score-tab__hub-title">
+              Garage
+              <FeatureStatusBadge status={getFeatureAvailability('score.garage').status} />
+            </span>
           </button>
           <button
             type="button"
@@ -684,13 +692,19 @@ export function ScoreTab({
             <span className="score-tab__hub-visual" aria-hidden="true">
               <img className="score-tab__hub-image" src="/icons/score_collection.webp" alt="" />
             </span>
-            <span className="score-tab__hub-title">Collections</span>
+            <span className="score-tab__hub-title">
+              Collections
+              <FeatureStatusBadge status={getFeatureAvailability('score.collections').status} />
+            </span>
           </button>
           <button type="button" className="score-tab__hub-card" onClick={onNavigateToAchievements}>
             <span className="score-tab__hub-visual" aria-hidden="true">
               <img className="score-tab__hub-image" src={scoreAchievements} alt="" />
             </span>
-            <span className="score-tab__hub-title">Achievements</span>
+            <span className="score-tab__hub-title">
+              Achievements
+              <FeatureStatusBadge status={getFeatureAvailability('score.achievements').status} />
+            </span>
           </button>
           <button
             type="button"
@@ -715,7 +729,10 @@ export function ScoreTab({
             <span className="score-tab__hub-visual" aria-hidden="true">
               <img className="score-tab__hub-image" src={scoreLeaderboard} alt="" onError={(event) => { event.currentTarget.src = scoreAchievements; }} />
             </span>
-            <span className="score-tab__hub-title">Leaderboard</span>
+            <span className="score-tab__hub-title">
+              Leaderboard
+              <FeatureStatusBadge status={getFeatureAvailability('score.leaderboard').status} />
+            </span>
           </button>
           <button
             type="button"
@@ -728,7 +745,10 @@ export function ScoreTab({
             <span className="score-tab__hub-visual" aria-hidden="true">
               <img className="score-tab__hub-image" src={scoreBank} alt="" />
             </span>
-            <span className="score-tab__hub-title">Bank</span>
+            <span className="score-tab__hub-title">
+              Bank
+              <FeatureStatusBadge status={getFeatureAvailability('score.bank').status} />
+            </span>
           </button>
         </div>
       )}
