@@ -703,6 +703,11 @@ const COMPACT_WALLET_NUMBER_FORMATTER = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 1,
 });
 const FULL_WALLET_NUMBER_FORMATTER = new Intl.NumberFormat('en-US');
+const REWARD_MARKER_COMPACT_NUMBER_FORMATTER = new Intl.NumberFormat('en-US', {
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
+const REWARD_MARKER_FULL_NUMBER_FORMATTER = new Intl.NumberFormat('en-US');
 
 function formatCompactWalletValue(value: number): string {
   return COMPACT_WALLET_NUMBER_FORMATTER.format(Math.max(0, value));
@@ -710,6 +715,13 @@ function formatCompactWalletValue(value: number): string {
 
 function formatFullWalletValue(value: number): string {
   return FULL_WALLET_NUMBER_FORMATTER.format(Math.max(0, Math.floor(value)));
+}
+
+function formatRewardMarkerAmount(value: number): string {
+  const safeValue = Math.max(0, Math.floor(value));
+  return safeValue >= 10_000
+    ? REWARD_MARKER_COMPACT_NUMBER_FORMATTER.format(safeValue)
+    : REWARD_MARKER_FULL_NUMBER_FORMATTER.format(safeValue);
 }
 
 /* ── Reward bar helpers ──────────────────────────────────────── */
@@ -4306,6 +4318,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     timedEventRemainingMs,
     nextRewardKind,
     nextRewardIcon,
+    nextRewardAmount,
   } = resolveIslandRunContractV2RewardHudState({
     islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
     runtimeState,
@@ -4336,6 +4349,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     : '—';
   const timedEventTokenPresentation = resolveEventTokenPresentation(effectiveActiveTimedEvent?.eventType ?? null);
   const timedEventTokenIcon = timedEventTokenPresentation.icon;
+  const nextRewardAmountLabel = formatRewardMarkerAmount(nextRewardAmount);
+  const nextRewardUnitLabel = (() => {
+    switch (nextRewardKind) {
+      case 'dice':
+        return 'dice';
+      case 'essence':
+        return 'essence';
+      case 'minigame_tokens':
+        return nextRewardAmount === 1
+          ? timedEventTokenPresentation.labelSingular
+          : timedEventTokenPresentation.labelPlural;
+      case 'sticker_fragments':
+        return nextRewardAmount === 1 ? 'shard' : 'shards';
+    }
+  })();
+  const nextRewardAccessibleLabel = `${nextRewardAmountLabel} ${nextRewardUnitLabel}`;
   const activeTimedEventId = effectiveActiveTimedEvent?.eventId ?? null;
   const activeEventTickets = activeTimedEventId
     ? (runtimeState.minigameTicketsByEvent?.[activeTimedEventId] ?? 0)
@@ -8454,7 +8483,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         <button
           type="button"
           className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}${rewardBarBurstAnimating ? ' island-run-board__rewardbar--burst' : ''}${rewardBarTierClass}`}
-          aria-label="Reward progress"
+          aria-label={`Reward progress. Next reward: ${nextRewardAccessibleLabel}`}
           onClick={canClaimRewardBar ? handleContractV2RewardBarClaim : openRewardDetailsModal}
         >
           {/* Flying feed particle animation */}
@@ -8498,8 +8527,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               <span className="island-run-board__rewardbar-position" style={{ left: `${Math.min(rewardBarPercent, 100)}%` }} aria-hidden="true" />
             </div>
             {/* Single reward endcap — shows what you'll get next */}
-            <span className={`island-run-board__rewardbar-endcap${canClaimRewardBar ? ' island-run-board__rewardbar-endcap--claimable' : ''}`} aria-hidden="true">
-              {nextRewardKind === 'minigame_tokens' ? timedEventTokenIcon : nextRewardIcon}
+            <span
+              className={`island-run-board__rewardbar-endcap${canClaimRewardBar ? ' island-run-board__rewardbar-endcap--claimable' : ''}`}
+              aria-hidden="true"
+              title={`Next reward: ${nextRewardAccessibleLabel}`}
+            >
+              <span className="island-run-board__rewardbar-endcap-icon">
+                {nextRewardKind === 'minigame_tokens' ? timedEventTokenIcon : nextRewardIcon}
+              </span>
+              <span className="island-run-board__rewardbar-endcap-amount">{nextRewardAmountLabel}</span>
             </span>
           </div>
           {/* Event timer + multiplier row */}

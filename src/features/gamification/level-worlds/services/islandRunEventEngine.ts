@@ -274,8 +274,8 @@ export function resolveEventTokenPresentation(eventType: string | null | undefin
   const eventMeta = getEventDisplayMeta(eventType);
   return {
     icon: eventMeta.icon,
-    labelSingular: `${eventMeta.displayName} token`,
-    labelPlural: `${eventMeta.displayName} tokens`,
+    labelSingular: `${eventMeta.displayName} ticket`,
+    labelPlural: `${eventMeta.displayName} tickets`,
   };
 }
 

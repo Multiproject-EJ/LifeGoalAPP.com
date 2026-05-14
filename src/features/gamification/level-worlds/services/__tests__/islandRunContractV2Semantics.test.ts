@@ -50,6 +50,32 @@ export const islandRunContractV2SemanticsTests: TestCase[] = [
       assertEqual(state.rewardBarPercent, 100, 'Expected reward bar percent to clamp to 100');
       assertEqual(state.nextRewardKind, 'dice', 'Expected first reward kind to be dice');
       assertEqual(state.nextRewardIcon, '🎲', 'Expected dice reward icon');
+      assertEqual(state.nextRewardAmount, 5, 'Expected first reward amount to preview the dice payout');
+    },
+  },
+  {
+    name: 'reward HUD state previews rotated reward amounts for marker labels',
+    run: () => {
+      const state = resolveIslandRunContractV2RewardHudState({
+        islandRunContractV2Enabled: true,
+        runtimeState: {
+          activeTimedEvent: {
+            eventId: 'space_excavator:preview',
+            eventType: 'space_excavator',
+            startedAtMs: 100,
+            expiresAtMs: 1000,
+            version: 1,
+          },
+          rewardBarProgress: 0,
+          rewardBarThreshold: 8,
+          rewardBarEscalationTier: 2,
+          rewardBarClaimCountInEvent: 2,
+        },
+        nowMs: 300,
+      });
+
+      assertEqual(state.nextRewardKind, 'minigame_tokens', 'Expected third reward marker to preview event tickets');
+      assertEqual(state.nextRewardAmount, 4, 'Expected event ticket amount to come from the reward bar payout preview');
     },
   },
 ];
