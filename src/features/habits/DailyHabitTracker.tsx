@@ -160,6 +160,7 @@ import { RoutinesTodayLane } from '../routines';
 import type { ArchetypeHand } from '../identity/archetypes/archetypeHandBuilder';
 import { isPlayersHandSparkResultEnabled } from '../players_hand/playersHandFeatureFlags';
 import { MyPlayerHandPanel } from '../players_hand/components/MyPlayerHandPanel';
+import { TodayExpandableActionSection } from './TodayExpandableActionSection';
 import {
   getQuestHabit,
   setQuestHabit,
@@ -288,6 +289,55 @@ const DIRECT_OPEN_TIME_BOUND_OFFERS: ReadonlySet<TimeBoundOfferId> = new Set([
 ]);
 
 type DailyHabitTrackerVariant = 'full' | 'compact';
+type TodayExpandableSectionKey = 'contracts' | 'quickJournal' | 'intentions';
+
+function hasQuickJournalDraftState(params: {
+  isQuickJournalOpen: boolean;
+  quickJournalMorning: string;
+  quickJournalDay: string;
+  quickJournalEvening: string;
+  quickJournalInteractions: string;
+  quickJournalFreeform: string;
+  quickJournalPleasantMoments: string;
+  quickDreamTitle: string;
+  quickDreamSymbols: string;
+  quickDreamEmotions: string;
+  quickDreamReflection: string;
+  quickDreamTone: QuickDreamTone | null;
+  quickDreamToneDetail: QuickDreamToneDetail | null;
+}): boolean {
+  return Boolean(
+    params.isQuickJournalOpen
+    || params.quickJournalMorning.trim()
+    || params.quickJournalDay.trim()
+    || params.quickJournalEvening.trim()
+    || params.quickJournalInteractions.trim()
+    || params.quickJournalFreeform.trim()
+    || params.quickJournalPleasantMoments.trim()
+    || params.quickDreamTitle.trim()
+    || params.quickDreamSymbols.trim()
+    || params.quickDreamEmotions.trim()
+    || params.quickDreamReflection.trim()
+    || params.quickDreamTone
+    || params.quickDreamToneDetail
+  );
+}
+
+function getIntentionsSummaryLabel(
+  todayEntry: JournalEntry | null,
+  nextDayEntry: JournalEntry | null,
+): string {
+  if (todayEntry && nextDayEntry) {
+    return 'Today + tomorrow saved';
+  }
+  if (todayEntry) {
+    return 'Today saved';
+  }
+  if (nextDayEntry) {
+    return 'Tomorrow saved';
+  }
+  return 'No plan yet';
+}
 
 type DailyHabitTrackerProps = {
   session: Session;
@@ -893,6 +943,7 @@ export function DailyHabitTracker({
   const [contractsLoading, setContractsLoading] = useState(false);
   const [contractsError, setContractsError] = useState<string | null>(null);
   const [contractActionId, setContractActionId] = useState<string | null>(null);
+  const [openTodayExpandableSection, setOpenTodayExpandableSection] = useState<TodayExpandableSectionKey | null>(null);
   const [visionImages, setVisionImages] = useState<VisionImage[]>([]);
   const [visionReward, setVisionReward] = useState<VisionReward | null>(null);
   const [visionRewardDate, setVisionRewardDate] = useState<string | null>(null);
@@ -4777,6 +4828,10 @@ export function DailyHabitTracker({
     }
   }, [session.user.id]);
 
+  const toggleTodayExpandableSection = useCallback((section: TodayExpandableSectionKey) => {
+    setOpenTodayExpandableSection((current) => current === section ? null : section);
+  }, []);
+
   /**
    * Toggle habit completion for the monthly grid using the new habit_completions table.
    * This function is specifically for monthly view interactions with habits_v2.
@@ -7732,6 +7787,49 @@ export function DailyHabitTracker({
     const intentionsButtonClassName = `habit-checklist-card__intentions-button ${
       isIntentionsNoticeViewed ? 'habit-checklist-card__intentions-button--seen habit-checklist-card__intentions-button--compact' : ''
     }`;
+    const contractsStatusChip = contractsError
+      ? { label: 'Error', tone: 'error' as const }
+      : contractsLoading
+        ? { label: 'Loading…', tone: 'loading' as const }
+        : { label: activeContracts.length === 1 ? '1 active' : `${activeContracts.length} active`, tone: 'accent' as const };
+    const hasQuickJournalDraft = hasQuickJournalDraftState({
+      isQuickJournalOpen,
+      quickJournalMorning,
+      quickJournalDay,
+      quickJournalEvening,
+      quickJournalInteractions,
+      quickJournalFreeform,
+      quickJournalPleasantMoments,
+      quickDreamTitle,
+      quickDreamSymbols,
+      quickDreamEmotions,
+      quickDreamReflection,
+      quickDreamTone,
+      quickDreamToneDetail,
+    });
+    const quickJournalStatusChip = quickJournalError
+      ? { label: 'Error', tone: 'error' as const }
+      : quickJournalStatus
+        ? {
+            label: quickJournalStatus === 'Draft saved for later.'
+              ? 'Draft saved'
+              : quickJournalStatus === 'Submitted to your journal.'
+                ? 'Saved'
+                : quickJournalStatus,
+            tone: quickJournalStatus === 'Draft saved for later.' ? 'accent' as const : 'success' as const,
+          }
+        : hasQuickJournalDraft
+          ? { label: 'Draft', tone: 'accent' as const }
+          : null;
+    const intentionsSummaryLabel = getIntentionsSummaryLabel(todayIntentionsEntry, nextDayIntentionsEntry);
+    const intentionsStatusChip = intentionsJournalError
+      ? { label: 'Error', tone: 'error' as const }
+      : intentionsJournalStatus
+        ? { label: 'Saved', tone: 'success' as const }
+        : {
+            label: intentionsSummaryLabel,
+            tone: (todayIntentionsEntry || nextDayIntentionsEntry) ? 'accent' as const : 'neutral' as const,
+          };
     const todayWinsModalContent = isTodayWinsOpen ? (
       <div className="today-wins-modal" role="dialog" aria-modal="true" aria-label="Today's Wins">
         <button
@@ -8071,567 +8169,597 @@ export function DailyHabitTracker({
               onHideStandaloneHabitsChange={(habitIds) => setRoutineHiddenHabitIds(habitIds)}
             />
 
-            <div className="habit-contracts-card" aria-live="polite">
-              <div className="habit-contracts-card__header">
-                <div>
-                  <p className="habit-contracts-card__eyebrow">Keep commitments visible</p>
-                  <h3 className="habit-contracts-card__title">Active contracts</h3>
+            <TodayExpandableActionSection
+              id="today-contracts"
+              icon="🤝"
+              title="Contracts"
+              subtitle="Keep commitments visible"
+              statusChip={contractsStatusChip}
+              expanded={openTodayExpandableSection === 'contracts'}
+              onToggle={() => toggleTodayExpandableSection('contracts')}
+            >
+              <div className="habit-contracts-card" aria-live="polite">
+                <div className="habit-contracts-card__header">
+                  <div>
+                    <p className="habit-contracts-card__eyebrow">Keep commitments visible</p>
+                    <h3 className="habit-contracts-card__title">Active contracts</h3>
+                  </div>
+                  <button
+                    type="button"
+                    className="habit-contracts-card__refresh"
+                    onClick={() => void loadActiveContracts()}
+                    disabled={contractsLoading || contractActionId !== null}
+                  >
+                    {contractsLoading ? 'Refreshing…' : 'Refresh'}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  className="habit-contracts-card__refresh"
-                  onClick={() => void loadActiveContracts()}
-                  disabled={contractsLoading || contractActionId !== null}
-                >
-                  {contractsLoading ? 'Refreshing…' : 'Refresh'}
-                </button>
-              </div>
 
-              {contractsLoading && activeContracts.length === 0 ? (
-                <p className="habit-contracts-card__hint">Loading your active contracts…</p>
-              ) : activeContracts.length === 0 ? (
-                <p className="habit-contracts-card__hint">
-                  No active contracts right now. Start one from the Contracts tab and it will appear here.
-                </p>
-              ) : (
-                <div className="habit-contracts-card__list">
-                  {activeContracts.map((contract) => {
-                    const progressPercent = Math.min(100, (contract.currentProgress / contract.targetCount) * 100);
-                    const isBusy = contractActionId === contract.id;
-                    const stakeLabel = `${contract.stakeAmount} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'} staked`;
-                    const contractEndDate = contract.endAt ? new Date(contract.endAt) : null;
-                    const contractStartMs = new Date(contract.startAt).getTime();
-                    const contractEndMs = contractEndDate?.getTime() ?? null;
-                    const hasTimeline =
-                      contractEndMs !== null
-                      && !Number.isNaN(contractStartMs)
-                      && !Number.isNaN(contractEndMs)
-                      && contractEndMs > contractStartMs;
-                    const timelinePercent = hasTimeline
-                      ? Math.max(0, Math.min(100, ((Date.now() - contractStartMs) / (contractEndMs - contractStartMs)) * 100))
-                      : null;
+                {contractsLoading && activeContracts.length === 0 ? (
+                  <p className="habit-contracts-card__hint">Loading your active contracts…</p>
+                ) : activeContracts.length === 0 ? (
+                  <p className="habit-contracts-card__hint">
+                    No active contracts right now. Start one from the Contracts tab and it will appear here.
+                  </p>
+                ) : (
+                  <div className="habit-contracts-card__list">
+                    {activeContracts.map((contract) => {
+                      const progressPercent = Math.min(100, (contract.currentProgress / contract.targetCount) * 100);
+                      const isBusy = contractActionId === contract.id;
+                      const stakeLabel = `${contract.stakeAmount} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'} staked`;
+                      const contractEndDate = contract.endAt ? new Date(contract.endAt) : null;
+                      const contractStartMs = new Date(contract.startAt).getTime();
+                      const contractEndMs = contractEndDate?.getTime() ?? null;
+                      const hasTimeline =
+                        contractEndMs !== null
+                        && !Number.isNaN(contractStartMs)
+                        && !Number.isNaN(contractEndMs)
+                        && contractEndMs > contractStartMs;
+                      const timelinePercent = hasTimeline
+                        ? Math.max(0, Math.min(100, ((Date.now() - contractStartMs) / (contractEndMs - contractStartMs)) * 100))
+                        : null;
 
-                    return (
-                      <article key={contract.id} className="habit-contracts-card__item">
-                        <div className="habit-contracts-card__item-head">
-                          <h4 className="habit-contracts-card__item-title">{contract.isSacred ? `🔱 ${contract.title}` : contract.title}</h4>
-                          <span className={`habit-contracts-card__status habit-contracts-card__status--${contract.status}`}>
-                            {contract.status}
-                          </span>
-                        </div>
-                        <p className="habit-contracts-card__item-copy">
-                          {contract.currentProgress} / {contract.targetCount} this {contract.cadence}
-                        </p>
-                        <p className="habit-contracts-card__stake">{stakeLabel}</p>
-                        <div className="habit-contracts-card__meter" role="presentation">
-                          <span className="habit-contracts-card__meter-fill" style={{ width: `${progressPercent}%` }} />
-                        </div>
-                        {hasTimeline && timelinePercent !== null && contractEndDate ? (
-                          <div className="habit-contracts-card__timeline" role="status" aria-live="polite">
-                            <div className="habit-contracts-card__timeline-head">
-                              <span>Timeline</span>
-                              <span>{Math.round(timelinePercent)}%</span>
-                            </div>
-                            <div className="habit-contracts-card__meter" role="presentation">
-                              <span className="habit-contracts-card__meter-fill habit-contracts-card__meter-fill--timeline" style={{ width: `${timelinePercent}%` }} />
-                            </div>
-                            <p className="habit-contracts-card__timeline-copy">
-                              Ends {contractEndDate.toLocaleDateString()}
-                            </p>
+                      return (
+                        <article key={contract.id} className="habit-contracts-card__item">
+                          <div className="habit-contracts-card__item-head">
+                            <h4 className="habit-contracts-card__item-title">{contract.isSacred ? `🔱 ${contract.title}` : contract.title}</h4>
+                            <span className={`habit-contracts-card__status habit-contracts-card__status--${contract.status}`}>
+                              {contract.status}
+                            </span>
                           </div>
-                        ) : null}
-                        <div className="habit-contracts-card__actions">
-                          <button
-                            type="button"
-                            className="habit-contracts-card__button habit-contracts-card__button--primary"
-                            onClick={() =>
-                              void handleContractAction(
-                                contract.id,
-                                contract.status === 'paused' ? resumeContract : recordContractProgress,
-                                'Unable to update contract progress.',
-                              )
-                            }
-                            disabled={isBusy}
-                          >
-                            {contract.status === 'paused' ? 'Resume' : 'Mark progress'}
-                          </button>
-                          {contract.status === 'active' ? (
+                          <p className="habit-contracts-card__item-copy">
+                            {contract.currentProgress} / {contract.targetCount} this {contract.cadence}
+                          </p>
+                          <p className="habit-contracts-card__stake">{stakeLabel}</p>
+                          <div className="habit-contracts-card__meter" role="presentation">
+                            <span className="habit-contracts-card__meter-fill" style={{ width: `${progressPercent}%` }} />
+                          </div>
+                          {hasTimeline && timelinePercent !== null && contractEndDate ? (
+                            <div className="habit-contracts-card__timeline" role="status" aria-live="polite">
+                              <div className="habit-contracts-card__timeline-head">
+                                <span>Timeline</span>
+                                <span>{Math.round(timelinePercent)}%</span>
+                              </div>
+                              <div className="habit-contracts-card__meter" role="presentation">
+                                <span className="habit-contracts-card__meter-fill habit-contracts-card__meter-fill--timeline" style={{ width: `${timelinePercent}%` }} />
+                              </div>
+                              <p className="habit-contracts-card__timeline-copy">
+                                Ends {contractEndDate.toLocaleDateString()}
+                              </p>
+                            </div>
+                          ) : null}
+                          <div className="habit-contracts-card__actions">
+                            <button
+                              type="button"
+                              className="habit-contracts-card__button habit-contracts-card__button--primary"
+                              onClick={() =>
+                                void handleContractAction(
+                                  contract.id,
+                                  contract.status === 'paused' ? resumeContract : recordContractProgress,
+                                  'Unable to update contract progress.',
+                                )
+                              }
+                              disabled={isBusy}
+                            >
+                              {contract.status === 'paused' ? 'Resume' : 'Mark progress'}
+                            </button>
+                            {contract.status === 'active' ? (
+                              <button
+                                type="button"
+                                className="habit-contracts-card__button"
+                                onClick={() => void handleContractAction(contract.id, pauseContract, 'Unable to pause contract.')}
+                                disabled={isBusy}
+                              >
+                                Pause
+                              </button>
+                            ) : null}
                             <button
                               type="button"
                               className="habit-contracts-card__button"
-                              onClick={() => void handleContractAction(contract.id, pauseContract, 'Unable to pause contract.')}
+                              onClick={() => void handleContractAction(contract.id, cancelContract, 'Unable to cancel contract.')}
                               disabled={isBusy}
                             >
-                              Pause
+                              Cancel
                             </button>
-                          ) : null}
-                          <button
-                            type="button"
-                            className="habit-contracts-card__button"
-                            onClick={() => void handleContractAction(contract.id, cancelContract, 'Unable to cancel contract.')}
-                            disabled={isBusy}
-                          >
-                            Cancel
-                          </button>
-                          {contract.accountabilityMode === 'witness' && contract.witnessLabel ? (
-                            <button
-                              type="button"
-                              className="habit-contracts-card__button"
-                              onClick={() => void handlePingWitness(contract)}
-                              disabled={isBusy}
-                            >
-                              Ping witness
-                            </button>
-                          ) : null}
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              )}
+                            {contract.accountabilityMode === 'witness' && contract.witnessLabel ? (
+                              <button
+                                type="button"
+                                className="habit-contracts-card__button"
+                                onClick={() => void handlePingWitness(contract)}
+                                disabled={isBusy}
+                              >
+                                Ping witness
+                              </button>
+                            ) : null}
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
 
-              {contractsError ? <p className="habit-contracts-card__error">{contractsError}</p> : null}
-            </div>
-
-            <div className="habit-quick-journal" aria-live="polite">
-              <div className="habit-quick-journal__header">
-                <div>
-                  <p className="habit-quick-journal__eyebrow">Reflect for this day</p>
-                  <h3 className="habit-quick-journal__title">Quick journal</h3>
-                </div>
-                <div className="habit-quick-journal__meta">
-                  <span className="habit-quick-journal__badge">{quickJournalDateLabel}</span>
-                  {isViewingToday && circadianEmoji ? (
-                    <span className="habit-quick-journal__icon" aria-hidden="true">
-                      {circadianEmoji}
-                    </span>
-                  ) : null}
-                  {isViewingToday && circadianLabel ? (
-                    <span className="sr-only">{circadianLabel}</span>
-                  ) : null}
-                </div>
+                {contractsError ? <p className="habit-contracts-card__error">{contractsError}</p> : null}
               </div>
-              <p className="habit-quick-journal__hint">
-                {quickJournalMode === 'pulse'
-                  ? 'Tap the sliders to capture your day without writing.'
-                  : quickJournalMode === 'dream'
-                    ? 'Capture your dream while it is still fresh.'
-                    : 'Capture a few thoughts tied to the same date you are tracking above.'}
-              </p>
-              <div className="habit-quick-journal__type-toggle" role="tablist" aria-label="Journal type">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={quickJournalMode === 'written'}
-                  className={`habit-quick-journal__type-button ${
-                    quickJournalMode === 'written' ? 'habit-quick-journal__type-button--active' : ''
-                  }`}
-                  onClick={() => setQuickJournalMode('written')}
-                >
-                  ✍️ Written
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={quickJournalMode === 'pulse'}
-                  className={`habit-quick-journal__type-button ${
-                    quickJournalMode === 'pulse' ? 'habit-quick-journal__type-button--active' : ''
-                  }`}
-                  onClick={() => setQuickJournalMode('pulse')}
-                >
-                  🎛️ Pulse check-in
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={quickJournalMode === 'dream'}
-                  className={`habit-quick-journal__type-button ${
-                    quickJournalMode === 'dream' ? 'habit-quick-journal__type-button--active' : ''
-                  }`}
-                  onClick={() => setQuickJournalMode('dream')}
-                >
-                  🌙 Dream journal
-                </button>
-              </div>
-              {!isQuickJournalOpen ? (
-                <button
-                  type="button"
-                  className="habit-quick-journal__button"
-                  onClick={handleOpenQuickJournal}
-                >
-                  + Add journal entry
-                </button>
-              ) : (
-                <div className="habit-quick-journal__sheet">
-                  {quickJournalMode === 'pulse' ? (
-                    <div className="habit-quick-journal__pulse">
-                      <label className="habit-quick-journal__pulse-field">
-                        <span className="habit-quick-journal__field-label">⚡️ Energy</span>
-                        <div className="habit-quick-journal__pulse-row">
-                          <input
-                            type="range"
-                            min={1}
-                            max={10}
-                            value={quickJournalEnergy}
-                            onChange={(event) => setQuickJournalEnergy(Number(event.target.value))}
+            </TodayExpandableActionSection>
+
+            <TodayExpandableActionSection
+              id="today-quick-journal"
+              icon="📝"
+              title="Quick journal"
+              subtitle={quickJournalDateLabel}
+              statusChip={quickJournalStatusChip}
+              expanded={openTodayExpandableSection === 'quickJournal'}
+              onToggle={() => toggleTodayExpandableSection('quickJournal')}
+            >
+              <div className="habit-quick-journal" aria-live="polite">
+                <div className="habit-quick-journal__header">
+                  <div>
+                    <p className="habit-quick-journal__eyebrow">Reflect for this day</p>
+                    <h3 className="habit-quick-journal__title">Quick journal</h3>
+                  </div>
+                  <div className="habit-quick-journal__meta">
+                    <span className="habit-quick-journal__badge">{quickJournalDateLabel}</span>
+                    {isViewingToday && circadianEmoji ? (
+                      <span className="habit-quick-journal__icon" aria-hidden="true">
+                        {circadianEmoji}
+                      </span>
+                    ) : null}
+                    {isViewingToday && circadianLabel ? (
+                      <span className="sr-only">{circadianLabel}</span>
+                    ) : null}
+                  </div>
+                </div>
+                <p className="habit-quick-journal__hint">
+                  {quickJournalMode === 'pulse'
+                    ? 'Tap the sliders to capture your day without writing.'
+                    : quickJournalMode === 'dream'
+                      ? 'Capture your dream while it is still fresh.'
+                      : 'Capture a few thoughts tied to the same date you are tracking above.'}
+                </p>
+                <div className="habit-quick-journal__type-toggle" role="tablist" aria-label="Journal type">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={quickJournalMode === 'written'}
+                    className={`habit-quick-journal__type-button ${
+                      quickJournalMode === 'written' ? 'habit-quick-journal__type-button--active' : ''
+                    }`}
+                    onClick={() => setQuickJournalMode('written')}
+                  >
+                    ✍️ Written
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={quickJournalMode === 'pulse'}
+                    className={`habit-quick-journal__type-button ${
+                      quickJournalMode === 'pulse' ? 'habit-quick-journal__type-button--active' : ''
+                    }`}
+                    onClick={() => setQuickJournalMode('pulse')}
+                  >
+                    🎛️ Pulse check-in
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={quickJournalMode === 'dream'}
+                    className={`habit-quick-journal__type-button ${
+                      quickJournalMode === 'dream' ? 'habit-quick-journal__type-button--active' : ''
+                    }`}
+                    onClick={() => setQuickJournalMode('dream')}
+                  >
+                    🌙 Dream journal
+                  </button>
+                </div>
+                {!isQuickJournalOpen ? (
+                  <button
+                    type="button"
+                    className="habit-quick-journal__button"
+                    onClick={handleOpenQuickJournal}
+                  >
+                    + Add journal entry
+                  </button>
+                ) : (
+                  <div className="habit-quick-journal__sheet">
+                    {quickJournalMode === 'pulse' ? (
+                      <div className="habit-quick-journal__pulse">
+                        <label className="habit-quick-journal__pulse-field">
+                          <span className="habit-quick-journal__field-label">⚡️ Energy</span>
+                          <div className="habit-quick-journal__pulse-row">
+                            <input
+                              type="range"
+                              min={1}
+                              max={10}
+                              value={quickJournalEnergy}
+                              onChange={(event) => setQuickJournalEnergy(Number(event.target.value))}
+                            />
+                            <span className="habit-quick-journal__pulse-value">{quickJournalEnergy}/10</span>
+                          </div>
+                        </label>
+                        <label className="habit-quick-journal__pulse-field">
+                          <span className="habit-quick-journal__field-label">😊 Mood</span>
+                          <div className="habit-quick-journal__pulse-row">
+                            <input
+                              type="range"
+                              min={1}
+                              max={10}
+                              value={quickJournalMood}
+                              onChange={(event) => setQuickJournalMood(Number(event.target.value))}
+                            />
+                            <span className="habit-quick-journal__pulse-value">{quickJournalMood}/10</span>
+                          </div>
+                        </label>
+                        <label className="habit-quick-journal__pulse-field">
+                          <span className="habit-quick-journal__field-label">🎯 Focus</span>
+                          <div className="habit-quick-journal__pulse-row">
+                            <input
+                              type="range"
+                              min={1}
+                              max={10}
+                              value={quickJournalFocus}
+                              onChange={(event) => setQuickJournalFocus(Number(event.target.value))}
+                            />
+                            <span className="habit-quick-journal__pulse-value">{quickJournalFocus}/10</span>
+                          </div>
+                        </label>
+                        <label className="habit-quick-journal__pulse-field">
+                          <span className="habit-quick-journal__field-label">🧘 Stress</span>
+                          <div className="habit-quick-journal__pulse-row">
+                            <input
+                              type="range"
+                              min={1}
+                              max={10}
+                              value={quickJournalStress}
+                              onChange={(event) => setQuickJournalStress(Number(event.target.value))}
+                            />
+                            <span className="habit-quick-journal__pulse-value">{quickJournalStress}/10</span>
+                          </div>
+                        </label>
+                      </div>
+                    ) : quickJournalMode === 'written' ? (
+                      <>
+                        <label className="habit-quick-journal__field habit-quick-journal__field--morning">
+                          <span className="habit-quick-journal__field-label">🌅 Morning</span>
+                          <textarea
+                            rows={3}
+                            value={quickJournalMorning}
+                            onChange={(event) => setQuickJournalMorning(event.target.value)}
+                            placeholder="How did you start your day?"
                           />
-                          <span className="habit-quick-journal__pulse-value">{quickJournalEnergy}/10</span>
-                        </div>
-                      </label>
-                      <label className="habit-quick-journal__pulse-field">
-                        <span className="habit-quick-journal__field-label">😊 Mood</span>
-                        <div className="habit-quick-journal__pulse-row">
-                          <input
-                            type="range"
-                            min={1}
-                            max={10}
-                            value={quickJournalMood}
-                            onChange={(event) => setQuickJournalMood(Number(event.target.value))}
+                        </label>
+
+                        <label className="habit-quick-journal__field habit-quick-journal__field--day">
+                          <span className="habit-quick-journal__field-label">☀️ Day</span>
+                          <textarea
+                            rows={3}
+                            value={quickJournalDay}
+                            onChange={(event) => setQuickJournalDay(event.target.value)}
+                            placeholder="What happened during the day?"
                           />
-                          <span className="habit-quick-journal__pulse-value">{quickJournalMood}/10</span>
-                        </div>
-                      </label>
-                      <label className="habit-quick-journal__pulse-field">
-                        <span className="habit-quick-journal__field-label">🎯 Focus</span>
-                        <div className="habit-quick-journal__pulse-row">
-                          <input
-                            type="range"
-                            min={1}
-                            max={10}
-                            value={quickJournalFocus}
-                            onChange={(event) => setQuickJournalFocus(Number(event.target.value))}
+                        </label>
+
+                        <label className="habit-quick-journal__field habit-quick-journal__field--evening">
+                          <span className="habit-quick-journal__field-label">🌙 Evening</span>
+                          <textarea
+                            rows={3}
+                            value={quickJournalEvening}
+                            onChange={(event) => setQuickJournalEvening(event.target.value)}
+                            placeholder="How did you wind down?"
                           />
-                          <span className="habit-quick-journal__pulse-value">{quickJournalFocus}/10</span>
-                        </div>
-                      </label>
-                      <label className="habit-quick-journal__pulse-field">
-                        <span className="habit-quick-journal__field-label">🧘 Stress</span>
-                        <div className="habit-quick-journal__pulse-row">
-                          <input
-                            type="range"
-                            min={1}
-                            max={10}
-                            value={quickJournalStress}
-                            onChange={(event) => setQuickJournalStress(Number(event.target.value))}
+                        </label>
+
+                        <label className="habit-quick-journal__field">
+                          <span className="habit-quick-journal__field-label">👥 Who did I interact with?</span>
+                          <textarea
+                            rows={2}
+                            value={quickJournalInteractions}
+                            onChange={(event) => setQuickJournalInteractions(event.target.value)}
+                            placeholder="People you spent time with or talked to..."
                           />
-                          <span className="habit-quick-journal__pulse-value">{quickJournalStress}/10</span>
-                        </div>
-                      </label>
-                    </div>
-                  ) : quickJournalMode === 'written' ? (
-                    <>
-                      <label className="habit-quick-journal__field habit-quick-journal__field--morning">
-                        <span className="habit-quick-journal__field-label">🌅 Morning</span>
-                        <textarea
-                          rows={3}
-                          value={quickJournalMorning}
-                          onChange={(event) => setQuickJournalMorning(event.target.value)}
-                          placeholder="How did you start your day?"
-                        />
-                      </label>
+                        </label>
 
-                      <label className="habit-quick-journal__field habit-quick-journal__field--day">
-                        <span className="habit-quick-journal__field-label">☀️ Day</span>
-                        <textarea
-                          rows={3}
-                          value={quickJournalDay}
-                          onChange={(event) => setQuickJournalDay(event.target.value)}
-                          placeholder="What happened during the day?"
-                        />
-                      </label>
+                        <label className="habit-quick-journal__field">
+                          <span className="habit-quick-journal__field-label">📝 Additional notes</span>
+                          <textarea
+                            rows={3}
+                            value={quickJournalFreeform}
+                            onChange={(event) => setQuickJournalFreeform(event.target.value)}
+                            placeholder="What stood out about this day?"
+                          />
+                        </label>
 
-                      <label className="habit-quick-journal__field habit-quick-journal__field--evening">
-                        <span className="habit-quick-journal__field-label">🌙 Evening</span>
-                        <textarea
-                          rows={3}
-                          value={quickJournalEvening}
-                          onChange={(event) => setQuickJournalEvening(event.target.value)}
-                          placeholder="How did you wind down?"
-                        />
-                      </label>
+                        <label className="habit-quick-journal__field">
+                          <span className="habit-quick-journal__field-label">🌱 Today's gratitude / pleasant moment(s)</span>
+                          <textarea
+                            rows={3}
+                            value={quickJournalPleasantMoments}
+                            onChange={(event) => setQuickJournalPleasantMoments(event.target.value)}
+                            placeholder="What felt good, meaningful, or worth appreciating today?"
+                          />
+                        </label>
+                      </>
+                    ) : (
+                      <>
+                        <label className="habit-quick-journal__field">
+                          <span className="habit-quick-journal__field-label">🌙 Dream title</span>
+                          <textarea
+                            rows={2}
+                            value={quickDreamTitle}
+                            onChange={(event) => setQuickDreamTitle(event.target.value)}
+                            placeholder="Give this dream a short title..."
+                          />
+                        </label>
 
-                      <label className="habit-quick-journal__field">
-                        <span className="habit-quick-journal__field-label">👥 Who did I interact with?</span>
-                        <textarea
-                          rows={2}
-                          value={quickJournalInteractions}
-                          onChange={(event) => setQuickJournalInteractions(event.target.value)}
-                          placeholder="People you spent time with or talked to..."
-                        />
-                      </label>
+                        <label className="habit-quick-journal__field">
+                          <span className="habit-quick-journal__field-label">🔮 Symbols or scenes</span>
+                          <textarea
+                            rows={3}
+                            value={quickDreamSymbols}
+                            onChange={(event) => setQuickDreamSymbols(event.target.value)}
+                            placeholder="What images, places, or moments stood out?"
+                          />
+                        </label>
 
-                      <label className="habit-quick-journal__field">
-                        <span className="habit-quick-journal__field-label">📝 Additional notes</span>
-                        <textarea
-                          rows={3}
-                          value={quickJournalFreeform}
-                          onChange={(event) => setQuickJournalFreeform(event.target.value)}
-                          placeholder="What stood out about this day?"
-                        />
-                      </label>
+                        <label className="habit-quick-journal__field">
+                          <span className="habit-quick-journal__field-label">💭 Emotions</span>
+                          <textarea
+                            rows={2}
+                            value={quickDreamEmotions}
+                            onChange={(event) => setQuickDreamEmotions(event.target.value)}
+                            placeholder="How did the dream feel?"
+                          />
+                        </label>
 
-                      <label className="habit-quick-journal__field">
-                        <span className="habit-quick-journal__field-label">🌱 Today's gratitude / pleasant moment(s)</span>
-                        <textarea
-                          rows={3}
-                          value={quickJournalPleasantMoments}
-                          onChange={(event) => setQuickJournalPleasantMoments(event.target.value)}
-                          placeholder="What felt good, meaningful, or worth appreciating today?"
-                        />
-                      </label>
-                    </>
-                  ) : (
-                    <>
-                      <label className="habit-quick-journal__field">
-                        <span className="habit-quick-journal__field-label">🌙 Dream title</span>
-                        <textarea
-                          rows={2}
-                          value={quickDreamTitle}
-                          onChange={(event) => setQuickDreamTitle(event.target.value)}
-                          placeholder="Give this dream a short title..."
-                        />
-                      </label>
-
-                      <label className="habit-quick-journal__field">
-                        <span className="habit-quick-journal__field-label">🔮 Symbols or scenes</span>
-                        <textarea
-                          rows={3}
-                          value={quickDreamSymbols}
-                          onChange={(event) => setQuickDreamSymbols(event.target.value)}
-                          placeholder="What images, places, or moments stood out?"
-                        />
-                      </label>
-
-                      <label className="habit-quick-journal__field">
-                        <span className="habit-quick-journal__field-label">💭 Emotions</span>
-                        <textarea
-                          rows={2}
-                          value={quickDreamEmotions}
-                          onChange={(event) => setQuickDreamEmotions(event.target.value)}
-                          placeholder="How did the dream feel?"
-                        />
-                      </label>
-
-                      <div className="habit-quick-journal__field habit-quick-journal__dream-tone">
-                        <span className="habit-quick-journal__field-label">🧭 Dream tone</span>
-                        <div className="habit-quick-journal__type-toggle" role="group" aria-label="Dream tone">
-                          {QUICK_DREAM_PRIMARY_TONE_OPTIONS.map((option) => (
-                            <button
-                              key={option.value}
-                              type="button"
-                              className={`habit-quick-journal__type-button ${
-                                quickDreamTone === option.value ? 'habit-quick-journal__type-button--active' : ''
-                              }`}
-                              onClick={() => {
-                                setQuickDreamTone(option.value);
-                                if (
-                                  !quickDreamToneDetail
-                                  || QUICK_DREAM_DETAIL_TO_PRIMARY[quickDreamToneDetail] !== option.value
-                                ) {
-                                  setQuickDreamToneDetail(QUICK_DREAM_PRIMARY_TO_DETAIL[option.value]);
-                                }
-                              }}
-                            >
-                              {option.icon} {option.label}
-                            </button>
-                          ))}
-                        </div>
-                        <button
-                          type="button"
-                          className="habit-quick-journal__tone-detail-toggle"
-                          onClick={() => setIsQuickDreamToneDetailOpen((current) => !current)}
-                        >
-                          {isQuickDreamToneDetailOpen ? 'Hide detail options' : 'More detail (5-level scale)'}
-                        </button>
-                        {isQuickDreamToneDetailOpen ? (
-                          <div className="habit-quick-journal__type-toggle" role="group" aria-label="Dream tone detail">
-                            {QUICK_DREAM_DETAIL_OPTIONS.map((option) => (
+                        <div className="habit-quick-journal__field habit-quick-journal__dream-tone">
+                          <span className="habit-quick-journal__field-label">🧭 Dream tone</span>
+                          <div className="habit-quick-journal__type-toggle" role="group" aria-label="Dream tone">
+                            {QUICK_DREAM_PRIMARY_TONE_OPTIONS.map((option) => (
                               <button
                                 key={option.value}
                                 type="button"
                                 className={`habit-quick-journal__type-button ${
-                                  quickDreamToneDetail === option.value ? 'habit-quick-journal__type-button--active' : ''
+                                  quickDreamTone === option.value ? 'habit-quick-journal__type-button--active' : ''
                                 }`}
                                 onClick={() => {
-                                  setQuickDreamToneDetail(option.value);
-                                  setQuickDreamTone(QUICK_DREAM_DETAIL_TO_PRIMARY[option.value]);
+                                  setQuickDreamTone(option.value);
+                                  if (
+                                    !quickDreamToneDetail
+                                    || QUICK_DREAM_DETAIL_TO_PRIMARY[quickDreamToneDetail] !== option.value
+                                  ) {
+                                    setQuickDreamToneDetail(QUICK_DREAM_PRIMARY_TO_DETAIL[option.value]);
+                                  }
                                 }}
                               >
                                 {option.icon} {option.label}
                               </button>
                             ))}
                           </div>
-                        ) : null}
-                      </div>
+                          <button
+                            type="button"
+                            className="habit-quick-journal__tone-detail-toggle"
+                            onClick={() => setIsQuickDreamToneDetailOpen((current) => !current)}
+                          >
+                            {isQuickDreamToneDetailOpen ? 'Hide detail options' : 'More detail (5-level scale)'}
+                          </button>
+                          {isQuickDreamToneDetailOpen ? (
+                            <div className="habit-quick-journal__type-toggle" role="group" aria-label="Dream tone detail">
+                              {QUICK_DREAM_DETAIL_OPTIONS.map((option) => (
+                                <button
+                                  key={option.value}
+                                  type="button"
+                                  className={`habit-quick-journal__type-button ${
+                                    quickDreamToneDetail === option.value ? 'habit-quick-journal__type-button--active' : ''
+                                  }`}
+                                  onClick={() => {
+                                    setQuickDreamToneDetail(option.value);
+                                    setQuickDreamTone(QUICK_DREAM_DETAIL_TO_PRIMARY[option.value]);
+                                  }}
+                                >
+                                  {option.icon} {option.label}
+                                </button>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
 
-                      <label className="habit-quick-journal__field">
-                        <span className="habit-quick-journal__field-label">🧠 Reflection</span>
-                        <textarea
-                          rows={3}
-                          value={quickDreamReflection}
-                          onChange={(event) => setQuickDreamReflection(event.target.value)}
-                          placeholder="Any meaning, patterns, or insights to remember?"
-                        />
-                      </label>
-                    </>
-                  )}
-                  
-                  {quickJournalError ? (
-                    <p className="habit-quick-journal__status habit-quick-journal__status--error">
-                      {quickJournalError}
-                    </p>
-                  ) : null}
-                  <div className="habit-quick-journal__actions">
-                    <button
-                      type="button"
-                      className="habit-quick-journal__save"
-                      onClick={handleSaveQuickJournalDraft}
-                      disabled={quickJournalSaving}
-                    >
-                      Save draft
-                    </button>
-                    <button
-                      type="button"
-                      className="habit-quick-journal__save"
-                      onClick={() => void handleSubmitQuickJournal()}
-                      disabled={quickJournalSaving}
-                    >
-                      {quickJournalSaving ? 'Submitting…' : 'Submit journal'}
-                    </button>
-                    <button
-                      type="button"
-                      className="habit-quick-journal__cancel"
-                      onClick={() => {
-                        removeDraft(quickJournalDraftKey(session.user.id, activeDate));
-                        setIsQuickJournalOpen(false);
-                        setQuickJournalMode('written');
-                        setQuickJournalMorning('');
-                        setQuickJournalDay('');
-                        setQuickJournalEvening('');
-                        setQuickJournalInteractions('');
-                        setQuickJournalFreeform('');
-                        setQuickJournalPleasantMoments('');
-                        setQuickJournalEnergy(QUICK_JOURNAL_PULSE_DEFAULTS.energy);
-                        setQuickJournalMood(QUICK_JOURNAL_PULSE_DEFAULTS.mood);
-                        setQuickJournalFocus(QUICK_JOURNAL_PULSE_DEFAULTS.focus);
-                        setQuickJournalStress(QUICK_JOURNAL_PULSE_DEFAULTS.stress);
-                        setQuickDreamTitle(QUICK_JOURNAL_DREAM_DEFAULTS.title);
-                        setQuickDreamSymbols(QUICK_JOURNAL_DREAM_DEFAULTS.symbols);
-                        setQuickDreamEmotions(QUICK_JOURNAL_DREAM_DEFAULTS.emotions);
-                        setQuickDreamReflection(QUICK_JOURNAL_DREAM_DEFAULTS.reflection);
-                        setQuickDreamTone(null);
-                        setQuickDreamToneDetail(null);
-                        setIsQuickDreamToneDetailOpen(false);
-                        setQuickJournalError(null);
-                      }}
-                      disabled={quickJournalSaving}
-                    >
-                      Cancel
-                    </button>
+                        <label className="habit-quick-journal__field">
+                          <span className="habit-quick-journal__field-label">🧠 Reflection</span>
+                          <textarea
+                            rows={3}
+                            value={quickDreamReflection}
+                            onChange={(event) => setQuickDreamReflection(event.target.value)}
+                            placeholder="Any meaning, patterns, or insights to remember?"
+                          />
+                        </label>
+                      </>
+                    )}
+
+                    {quickJournalError ? (
+                      <p className="habit-quick-journal__status habit-quick-journal__status--error">
+                        {quickJournalError}
+                      </p>
+                    ) : null}
+                    <div className="habit-quick-journal__actions">
+                      <button
+                        type="button"
+                        className="habit-quick-journal__save"
+                        onClick={handleSaveQuickJournalDraft}
+                        disabled={quickJournalSaving}
+                      >
+                        Save draft
+                      </button>
+                      <button
+                        type="button"
+                        className="habit-quick-journal__save"
+                        onClick={() => void handleSubmitQuickJournal()}
+                        disabled={quickJournalSaving}
+                      >
+                        {quickJournalSaving ? 'Submitting…' : 'Submit journal'}
+                      </button>
+                      <button
+                        type="button"
+                        className="habit-quick-journal__cancel"
+                        onClick={() => {
+                          removeDraft(quickJournalDraftKey(session.user.id, activeDate));
+                          setIsQuickJournalOpen(false);
+                          setQuickJournalMode('written');
+                          setQuickJournalMorning('');
+                          setQuickJournalDay('');
+                          setQuickJournalEvening('');
+                          setQuickJournalInteractions('');
+                          setQuickJournalFreeform('');
+                          setQuickJournalPleasantMoments('');
+                          setQuickJournalEnergy(QUICK_JOURNAL_PULSE_DEFAULTS.energy);
+                          setQuickJournalMood(QUICK_JOURNAL_PULSE_DEFAULTS.mood);
+                          setQuickJournalFocus(QUICK_JOURNAL_PULSE_DEFAULTS.focus);
+                          setQuickJournalStress(QUICK_JOURNAL_PULSE_DEFAULTS.stress);
+                          setQuickDreamTitle(QUICK_JOURNAL_DREAM_DEFAULTS.title);
+                          setQuickDreamSymbols(QUICK_JOURNAL_DREAM_DEFAULTS.symbols);
+                          setQuickDreamEmotions(QUICK_JOURNAL_DREAM_DEFAULTS.emotions);
+                          setQuickDreamReflection(QUICK_JOURNAL_DREAM_DEFAULTS.reflection);
+                          setQuickDreamTone(null);
+                          setQuickDreamToneDetail(null);
+                          setIsQuickDreamToneDetailOpen(false);
+                          setQuickJournalError(null);
+                        }}
+                        disabled={quickJournalSaving}
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {quickJournalStatus ? (
-                <p className="habit-quick-journal__status habit-quick-journal__status--success">
-                  {quickJournalStatus}
-                </p>
-              ) : null}
-            </div>
+                {quickJournalStatus ? (
+                  <p className="habit-quick-journal__status habit-quick-journal__status--success">
+                    {quickJournalStatus}
+                  </p>
+                ) : null}
+              </div>
+            </TodayExpandableActionSection>
 
             {!isCompactView ? (
               <>
-                <div className="habit-quick-journal habit-quick-journal--intentions" aria-live="polite">
-                  <div className="habit-quick-journal__header">
-                    <div>
-                      <p className="habit-quick-journal__eyebrow">Plan for this day</p>
-                      <h3 className="habit-quick-journal__title">Intentions & Todos</h3>
-                    </div>
-                    <div className="habit-quick-journal__meta">
-                      <span className="habit-quick-journal__badge">{quickJournalDateLabel}</span>
-                      {isViewingToday && clockEmoji ? (
-                        <span className="habit-quick-journal__icon" aria-hidden="true">
-                          {clockEmoji}
-                        </span>
-                      ) : null}
-                      {isViewingToday && timeLabel ? (
-                        <span className="sr-only">{timeLabel}</span>
-                      ) : null}
-                    </div>
-                  </div>
-                  <p className="habit-quick-journal__hint">
-                    Set your intentions and list your key todos for the day ahead.
-                  </p>
-                  {!isIntentionsJournalOpen ? (
-                    <div className="habit-quick-journal__button-group">
-                      <button
-                        type="button"
-                        className="habit-quick-journal__button habit-quick-journal__button--half"
-                        onClick={() => handleOpenIntentionsJournal('today')}
-                      >
-                        + Today's intentions
-                      </button>
-                      <button
-                        type="button"
-                        className="habit-quick-journal__button habit-quick-journal__button--half"
-                        onClick={() => handleOpenIntentionsJournal('tomorrow')}
-                      >
-                        + Tomorrow's intentions
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="habit-quick-journal__sheet">
-                      <label className="habit-quick-journal__field">
-                        <span className="habit-quick-journal__field-label">
-                          {intentionsJournalType === 'tomorrow' ? "Tomorrow's Intentions" : "Today's Intentions"} ({intentionsJournalType === 'tomorrow' ? formatDateLabel(formatISODate(addDays(parseISODate(activeDate), 1))) : quickJournalDateLabel})
-                        </span>
-                        <textarea
-                          rows={4}
-                          value={intentionsJournalContent}
-                          onChange={(event) => setIntentionsJournalContent(event.target.value)}
-                          placeholder={intentionsJournalType === 'tomorrow' ? "What do you intend to accomplish tomorrow? What's most important?" : "What do you intend to accomplish today? What's most important?"}
-                        />
-                      </label>
-                      {intentionsJournalError ? (
-                        <p className="habit-quick-journal__status habit-quick-journal__status--error">
-                          {intentionsJournalError}
-                        </p>
-                      ) : null}
-                      <div className="habit-quick-journal__actions">
-                        <button
-                          type="button"
-                          className="habit-quick-journal__save"
-                          onClick={() => void handleSaveIntentionsJournal()}
-                          disabled={intentionsJournalSaving}
-                        >
-                          {intentionsJournalSaving ? 'Saving…' : 'Save entry'}
-                        </button>
-                        <button
-                          type="button"
-                      className="habit-quick-journal__cancel"
-                      onClick={() => {
-                        removeDraft(
-                          intentionsJournalDraftKey(session.user.id, activeDate, intentionsJournalType),
-                        );
-                        removeDraft(legacyIntentionsJournalDraftKey(session.user.id, activeDate));
-                        setIsIntentionsJournalOpen(false);
-                        setIntentionsJournalContent('');
-                        setIntentionsJournalError(null);
-                          }}
-                          disabled={intentionsJournalSaving}
-                        >
-                          Cancel
-                        </button>
+                <TodayExpandableActionSection
+                  id="today-intentions"
+                  icon="🎯"
+                  title="Intentions & Todos"
+                  subtitle="Plan for this day"
+                  statusChip={intentionsStatusChip}
+                  expanded={openTodayExpandableSection === 'intentions'}
+                  onToggle={() => toggleTodayExpandableSection('intentions')}
+                >
+                  <div className="habit-quick-journal habit-quick-journal--intentions" aria-live="polite">
+                    <div className="habit-quick-journal__header">
+                      <div>
+                        <p className="habit-quick-journal__eyebrow">Plan for this day</p>
+                        <h3 className="habit-quick-journal__title">Intentions & Todos</h3>
+                      </div>
+                      <div className="habit-quick-journal__meta">
+                        <span className="habit-quick-journal__badge">{quickJournalDateLabel}</span>
+                        {isViewingToday && clockEmoji ? (
+                          <span className="habit-quick-journal__icon" aria-hidden="true">
+                            {clockEmoji}
+                          </span>
+                        ) : null}
+                        {isViewingToday && timeLabel ? (
+                          <span className="sr-only">{timeLabel}</span>
+                        ) : null}
                       </div>
                     </div>
-                  )}
-
-                  {intentionsJournalStatus ? (
-                    <p className="habit-quick-journal__status habit-quick-journal__status--success">
-                      {intentionsJournalStatus}
+                    <p className="habit-quick-journal__hint">
+                      Set your intentions and list your key todos for the day ahead.
                     </p>
-                  ) : null}
-                </div>
+                    {!isIntentionsJournalOpen ? (
+                      <div className="habit-quick-journal__button-group">
+                        <button
+                          type="button"
+                          className="habit-quick-journal__button habit-quick-journal__button--half"
+                          onClick={() => handleOpenIntentionsJournal('today')}
+                        >
+                          + Today's intentions
+                        </button>
+                        <button
+                          type="button"
+                          className="habit-quick-journal__button habit-quick-journal__button--half"
+                          onClick={() => handleOpenIntentionsJournal('tomorrow')}
+                        >
+                          + Tomorrow's intentions
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="habit-quick-journal__sheet">
+                        <label className="habit-quick-journal__field">
+                          <span className="habit-quick-journal__field-label">
+                            {intentionsJournalType === 'tomorrow' ? "Tomorrow's Intentions" : "Today's Intentions"} ({intentionsJournalType === 'tomorrow' ? formatDateLabel(formatISODate(addDays(parseISODate(activeDate), 1))) : quickJournalDateLabel})
+                          </span>
+                          <textarea
+                            rows={4}
+                            value={intentionsJournalContent}
+                            onChange={(event) => setIntentionsJournalContent(event.target.value)}
+                            placeholder={intentionsJournalType === 'tomorrow' ? "What do you intend to accomplish tomorrow? What's most important?" : "What do you intend to accomplish today? What's most important?"}
+                          />
+                        </label>
+                        {intentionsJournalError ? (
+                          <p className="habit-quick-journal__status habit-quick-journal__status--error">
+                            {intentionsJournalError}
+                          </p>
+                        ) : null}
+                        <div className="habit-quick-journal__actions">
+                          <button
+                            type="button"
+                            className="habit-quick-journal__save"
+                            onClick={() => void handleSaveIntentionsJournal()}
+                            disabled={intentionsJournalSaving}
+                          >
+                            {intentionsJournalSaving ? 'Saving…' : 'Save entry'}
+                          </button>
+                          <button
+                            type="button"
+                            className="habit-quick-journal__cancel"
+                            onClick={() => {
+                              removeDraft(
+                                intentionsJournalDraftKey(session.user.id, activeDate, intentionsJournalType),
+                              );
+                              removeDraft(legacyIntentionsJournalDraftKey(session.user.id, activeDate));
+                              setIsIntentionsJournalOpen(false);
+                              setIntentionsJournalContent('');
+                              setIntentionsJournalError(null);
+                            }}
+                            disabled={intentionsJournalSaving}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {intentionsJournalStatus ? (
+                      <p className="habit-quick-journal__status habit-quick-journal__status--success">
+                        {intentionsJournalStatus}
+                      </p>
+                    ) : null}
+                  </div>
+                </TodayExpandableActionSection>
 
                 <div className="habit-day-status" aria-live="polite">
                   <div className="habit-day-status__header">
