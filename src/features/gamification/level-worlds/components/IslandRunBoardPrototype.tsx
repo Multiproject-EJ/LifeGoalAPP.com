@@ -9563,7 +9563,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             className={`island-clear-celebration${islandClearStats.isCycleCapstone ? ' island-clear-celebration--capstone' : ''}`}
             role="dialog"
             aria-modal="true"
-            aria-label="Island complete celebration"
+            aria-label="New island unlocked celebration"
           >
             <div
               className={`island-clear-celebration__card island-clear-celebration__card--boss${islandClearStats.isCycleCapstone ? ' island-clear-celebration__card--capstone' : ''}`}
