@@ -96,6 +96,7 @@ Recommended transition summary:
 | `first_pack_opening` | `first_pack_revealed` | canonical pack action commits and reveal UI starts |
 | `first_pack_revealed` | `first_pack_claimed` | player continues from reveal |
 | `first_pack_claimed` | `completed` | tutorial has no remaining first-session steps |
+| any pre-`completed` state | `skipped` | player is not eligible, already progressed beyond safe tutorial assumptions, feature is disabled before flow start, or recovery cannot safely continue without retroactive grants |
 
 ### 3.2 Recovery states
 
@@ -109,7 +110,7 @@ Include recovery semantics instead of relying on UI assumptions:
 
 ## 4. Persisted fields needed
 
-Add one persisted runtime field later, preferably a JSON object on the Island Run runtime record:
+Add one persisted runtime field in PR 1 of the implementation sequence, preferably a JSON object on the Island Run runtime record:
 
 - `tutorialState`
 
@@ -157,10 +158,11 @@ Suggested shape:
   - `revealedAtMs`
   - `claimedAtMs`
 - `tutorialState.featureFlagsSnapshot`
-  - `firstSessionOnboarding`
-  - `deterministicFirstRoll`
-  - `guidedHatcheryBuild`
-  - `firstCreaturePack`
+  - `islandRunFirstSessionOnboardingEnabled`
+  - `islandRunDeterministicFirstRollEnabled`
+  - `islandRunGuidedHatcheryBuildEnabled`
+  - `islandRunFirstCreaturePackEnabled`
+  - `islandRunFirstPackLowDiceRescueEnabled`
 
 Persist the field alongside existing Island Run runtime state so the same canonical commit can update dice, essence, stop/build state, creature collection, and tutorial milestones atomically when needed.
 
@@ -578,4 +580,3 @@ Implementation PRs:
 - `npm run build`
 
 Add narrower tests per PR as listed above before broad validation.
-
