@@ -108,7 +108,7 @@ const FEEDING_TILE_PROGRESS: Readonly<Record<string, number>> = {
 };
 
 // ── Escalating threshold ladder (Monopoly GO style) ──────────────────────────
-// Fast start → slowing progression → big rewards near top → reset cycle.
+// Fast start → slowing progression → high-tier pressure.
 // Tier 0 starts very low (easy first fill) and escalates.
 
 const ESCALATING_THRESHOLDS: readonly number[] = [
@@ -121,17 +121,34 @@ const ESCALATING_THRESHOLDS: readonly number[] = [
   32,   // tier 6: big commitment
   48,   // tier 7: retention push
   64,   // tier 8: near-top
-  80,   // tier 9: hard cap before event reset
+  80,   // tier 9: final easy-event hook before formula scaling
 ];
+
+const ESCALATING_THRESHOLD_TAIL_LINEAR_STEP = 24;
+const ESCALATING_THRESHOLD_TAIL_QUADRATIC_STEP = 6;
+// Defensive math bound only: real timed events reset long before this many
+// claims, but capping the input prevents accidental huge-number arithmetic.
+const MAX_ESCALATION_TIER_FOR_THRESHOLD_MATH = 10_000;
 
 /**
  * Resolve threshold for the given escalation tier.
- * After the ladder is exhausted, the last value repeats.
+ * The first tiers stay intentionally easy for onboarding. After the hand-tuned
+ * hook ladder, thresholds continue on a bounded quadratic curve instead of
+ * repeating 80, so high multipliers cannot cheaply farm endless cascades.
  */
 export function resolveEscalatingThreshold(tier: number): number {
-  const safeTier = Math.max(0, Math.floor(tier));
+  const safeTier = Math.min(
+    MAX_ESCALATION_TIER_FOR_THRESHOLD_MATH,
+    Math.max(0, Math.floor(tier)),
+  );
   if (safeTier < ESCALATING_THRESHOLDS.length) return ESCALATING_THRESHOLDS[safeTier]!;
-  return ESCALATING_THRESHOLDS[ESCALATING_THRESHOLDS.length - 1]!;
+  const tailTier = safeTier - (ESCALATING_THRESHOLDS.length - 1);
+  const finalHookThreshold = ESCALATING_THRESHOLDS[ESCALATING_THRESHOLDS.length - 1]!;
+  return Math.floor(
+    finalHookThreshold
+      + tailTier * ESCALATING_THRESHOLD_TAIL_LINEAR_STEP
+      + tailTier * tailTier * ESCALATING_THRESHOLD_TAIL_QUADRATIC_STEP,
+  );
 }
 
 // ── Reward rotation (single reward per bar fill) ─────────────────────────────

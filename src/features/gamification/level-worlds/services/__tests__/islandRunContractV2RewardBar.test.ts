@@ -38,6 +38,53 @@ function makeBaseState(): IslandRunRewardBarRuntimeSlice {
   };
 }
 
+function simulateProgressTileRolls(options: {
+  startingDice: number;
+  multiplier: number;
+  rolls: number;
+  tileType?: string;
+}): {
+  dicePool: number;
+  diceSpent: number;
+  diceAwarded: number;
+  rollsTaken: number;
+  totalClaims: number;
+  state: IslandRunRewardBarRuntimeSlice;
+} {
+  const multiplier = options.multiplier;
+  const diceCost = resolveDiceCostForMultiplier(multiplier);
+  let dicePool = options.startingDice;
+  let diceSpent = 0;
+  let diceAwarded = 0;
+  let rollsTaken = 0;
+  let totalClaims = 0;
+  let state = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
+
+  for (let i = 0; i < options.rolls; i += 1) {
+    if (dicePool < diceCost) break;
+    dicePool -= diceCost;
+    diceSpent += diceCost;
+    rollsTaken += 1;
+
+    state = applyIslandRunContractV2RewardBarProgress({
+      state,
+      source: { kind: 'tile', tileType: options.tileType ?? 'chest' },
+      nowMs: 1_100 + i,
+      multiplier,
+    });
+
+    const chainResult = resolveChainedRewardBarClaims({ state, nowMs: 2_000 + i });
+    state = chainResult.state;
+    totalClaims += chainResult.payouts.length;
+    for (const payout of chainResult.payouts) {
+      dicePool += payout.dice;
+      diceAwarded += payout.dice;
+    }
+  }
+
+  return { dicePool, diceSpent, diceAwarded, rollsTaken, totalClaims, state };
+}
+
 export const islandRunContractV2RewardBarTests: TestCase[] = [
   {
     name: 'v2 on: exactly one active timed event is assigned when missing',
@@ -147,19 +194,23 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
     },
   },
   {
-    name: 'v2 on: escalating thresholds increase with tier',
+    name: 'v2 on: escalating thresholds keep early hook tiers and continue beyond old cap',
     run: () => {
       const t0 = resolveEscalatingThreshold(0);
       const t1 = resolveEscalatingThreshold(1);
       const t5 = resolveEscalatingThreshold(5);
       const t9 = resolveEscalatingThreshold(9);
+      const t10 = resolveEscalatingThreshold(10);
+      const t20 = resolveEscalatingThreshold(20);
+      const t50 = resolveEscalatingThreshold(50);
       assertEqual(t0, 4, 'Expected tier 0 threshold of 4');
       assertEqual(t1, 6, 'Expected tier 1 threshold of 6');
+      assertEqual(t9, 80, 'Expected tier 9 to preserve the previous final hook value');
       assert(t5 > t1, 'Expected tier 5 threshold higher than tier 1');
       assert(t9 > t5, 'Expected tier 9 threshold higher than tier 5');
-      // Beyond ladder length should clamp to last
-      const t99 = resolveEscalatingThreshold(99);
-      assertEqual(t99, t9, 'Expected tier beyond ladder to clamp to last value');
+      assert(t10 > t9, 'Expected tier 10 to continue escalating instead of repeating 80');
+      assert(t20 > t10, 'Expected later post-hook tiers to keep increasing');
+      assert(t50 > t20, 'Expected deep post-hook tiers to remain progressively harder');
     },
   },
   {
@@ -201,6 +252,29 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
       });
       assertEqual(x1.rewardBarProgress, 2, 'Expected x1 multiplier progress of 2 (chest=2)');
       assertEqual(x3.rewardBarProgress, 6, 'Expected x3 multiplier progress of 6 (chest=2×3)');
+    },
+  },
+  {
+    name: 'v2 on: low multipliers preserve usable early reward-bar progression',
+    run: () => {
+      const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
+      const x1 = applyIslandRunContractV2RewardBarProgress({
+        state: withEvent,
+        source: { kind: 'tile', tileType: 'chest' },
+        nowMs: 1_100,
+        multiplier: 1,
+      });
+      const x2 = applyIslandRunContractV2RewardBarProgress({
+        state: withEvent,
+        source: { kind: 'tile', tileType: 'chest' },
+        nowMs: 1_100,
+        multiplier: 2,
+      });
+
+      assertEqual(resolveEscalatingThreshold(0), 4, 'Expected first fill to remain easy');
+      assertEqual(resolveEscalatingThreshold(1), 6, 'Expected second fill to remain an onboarding tier');
+      assertEqual(x1.rewardBarProgress, 2, 'Expected ×1 chest progress to remain 2');
+      assertEqual(x2.rewardBarProgress, 4, 'Expected ×2 chest progress to fill the first tier');
     },
   },
   {
@@ -265,6 +339,45 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
       assert(result.payouts.length >= 2, `Expected at least 2 chained claims, got ${result.payouts.length}`);
       assertEqual(result.payouts[0]!.rewardKind, 'dice', 'Expected first chain reward to be dice');
       assertEqual(result.payouts[1]!.rewardKind, 'essence', 'Expected second chain reward to be essence');
+    },
+  },
+  {
+    name: 'v2 on: high-tier overflow can carry but no longer cheaply chains forever',
+    run: () => {
+      const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
+      const highTierOverflow = {
+        ...withEvent,
+        rewardBarProgress: 2_000,
+        rewardBarClaimCountInEvent: 20,
+        rewardBarEscalationTier: 20,
+        rewardBarThreshold: resolveEscalatingThreshold(20),
+      };
+
+      const result = resolveChainedRewardBarClaims({ state: highTierOverflow, nowMs: 2_000, maxChain: 10 });
+
+      assertEqual(result.payouts.length, 1, 'Expected high-tier overflow to claim once, not cascade through capped 80 thresholds');
+      assertEqual(result.state.rewardBarEscalationTier, 21, 'Expected exactly one escalation step');
+      assert(
+        result.state.rewardBarProgress < resolveEscalatingThreshold(result.state.rewardBarEscalationTier),
+        'Expected carried overflow to remain below the next high-tier threshold',
+      );
+    },
+  },
+  {
+    name: 'economy: x200 progress-tile farming from 2500 dice burns dice overall',
+    run: () => {
+      const result = simulateProgressTileRolls({
+        startingDice: 2_500,
+        multiplier: 200,
+        rolls: 30,
+        tileType: 'chest',
+      });
+
+      assert(result.rollsTaken > 0, 'Expected simulation to take at least one ×200 roll');
+      assert(result.dicePool < 2_500, `Expected final dice (${result.dicePool}) below starting pool`);
+      assert(result.diceAwarded < result.diceSpent, `Expected dice awarded (${result.diceAwarded}) below spent (${result.diceSpent})`);
+      assert(result.totalClaims < result.rollsTaken * 5, 'Expected escalating thresholds to prevent max-chain claims every roll');
+      assert(result.state.rewardBarEscalationTier >= 20, 'Expected simulation to exercise post-cap tiers');
     },
   },
   {
@@ -388,6 +501,7 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
       assertEqual(resolveDiceCostForMultiplier(5), 5, 'Expected cost 5 at ×5');
       assertEqual(resolveDiceCostForMultiplier(10), 10, 'Expected cost 10 at ×10');
       assertEqual(resolveDiceCostForMultiplier(100), 100, 'Expected cost 100 at ×100');
+      assertEqual(resolveDiceCostForMultiplier(200), 200, 'Expected cost 200 at ×200');
     },
   },
   {

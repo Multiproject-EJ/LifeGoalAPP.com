@@ -87,6 +87,23 @@ export const islandRunRollActionTests: TestCase[] = [
     },
   },
   {
+    name: '×200 roll: cost remains multiplier-based (1 × 200 = 200)',
+    run: async () => {
+      resetEnvironment();
+      seedState({ runtimeVersion: 0, dicePool: 2_500, tokenIndex: 0 });
+
+      const result = await executeIslandRunRollAction({
+        session: makeSession(),
+        client: null,
+        diceMultiplier: 200,
+      });
+
+      assertEqual(result.status, 'ok', 'Should succeed with 2500 dice at ×200');
+      assertEqual(result.diceCost, 200, '×200 cost = 1 × 200 = 200');
+      assertEqual(result.newDicePool, 2_300, 'Pool should be 2500 - 200 = 2300');
+    },
+  },
+  {
     name: 'insufficient_dice: roll blocked when pool < effective cost (×5 on 4 dice)',
     run: async () => {
       resetEnvironment();
