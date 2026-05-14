@@ -14,6 +14,7 @@ type TodayExpandableActionSectionProps = {
   } | null;
   expanded: boolean;
   onToggle: () => void;
+  keepMounted?: boolean;
   children: ReactNode;
 };
 
@@ -25,10 +26,12 @@ export function TodayExpandableActionSection({
   statusChip = null,
   expanded,
   onToggle,
+  keepMounted = false,
   children,
 }: TodayExpandableActionSectionProps) {
   const panelId = `${id}-panel`;
   const titleId = `${id}-title`;
+  const shouldRenderPanel = expanded || keepMounted;
 
   return (
     <section className={`today-expandable-action-section${expanded ? ' today-expandable-action-section--expanded' : ''}`}>
@@ -55,12 +58,13 @@ export function TodayExpandableActionSection({
           {expanded ? '▾' : '▸'}
         </span>
       </button>
-      {expanded ? (
+      {shouldRenderPanel ? (
         <div
           id={panelId}
           className="today-expandable-action-section__panel"
           role="region"
           aria-labelledby={titleId}
+          hidden={!expanded}
         >
           {children}
         </div>
