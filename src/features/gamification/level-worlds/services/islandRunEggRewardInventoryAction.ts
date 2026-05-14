@@ -1,11 +1,11 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import {
   readIslandRunGameStateRecord,
-  type CreatureCollectionRuntimeEntry,
   type IslandRunGameStateRecord,
 } from './islandRunGameStateStore';
 import { selectCreatureForEgg } from './creatureCatalog';
 import { withIslandRunActionLock } from './islandRunActionMutex';
+import { addCreatureToRuntimeCollection } from './islandRunCreatureCollectionLedger';
 import { commitIslandRunState } from './islandRunStateStore';
 
 export interface OpenEggRewardInventoryEntryOptions {
@@ -27,41 +27,6 @@ function normalizeNowMs(nowMs: number | undefined): number {
   return typeof nowMs === 'number' && Number.isFinite(nowMs)
     ? Math.max(0, Math.floor(nowMs))
     : Date.now();
-}
-
-function addCreatureToCollection(options: {
-  collection: CreatureCollectionRuntimeEntry[];
-  creatureId: string;
-  islandNumber: number;
-  collectedAtMs: number;
-}): CreatureCollectionRuntimeEntry[] {
-  const { collection, creatureId, islandNumber, collectedAtMs } = options;
-  const existing = collection.find((entry) => entry.creatureId === creatureId);
-  if (existing) {
-    return collection.map((entry) => entry.creatureId === creatureId
-      ? {
-          ...entry,
-          copies: entry.copies + 1,
-          lastCollectedAtMs: collectedAtMs,
-          lastCollectedIslandNumber: islandNumber,
-        }
-      : entry);
-  }
-
-  return [
-    {
-      creatureId,
-      copies: 1,
-      firstCollectedAtMs: collectedAtMs,
-      lastCollectedAtMs: collectedAtMs,
-      lastCollectedIslandNumber: islandNumber,
-      bondXp: 0,
-      bondLevel: 1,
-      lastFedAtMs: null,
-      claimedBondMilestones: [],
-    },
-    ...collection,
-  ];
 }
 
 export function openEggRewardInventoryEntry(
@@ -105,7 +70,7 @@ export function openEggRewardInventoryEntry(
           openedCreatureId: creature.id,
         }
       : entry);
-    const nextCreatureCollection = addCreatureToCollection({
+    const nextCreatureCollection = addCreatureToRuntimeCollection({
       collection: current.creatureCollection,
       creatureId: creature.id,
       islandNumber: inventoryEntry.targetIslandNumber,
