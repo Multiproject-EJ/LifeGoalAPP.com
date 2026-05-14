@@ -56,6 +56,8 @@ function resolveTutorialEssenceOverride(
   shouldSuppressRewardBarProgress: boolean;
   nextFirstSessionTutorialState: 'first_essence_reward_claimed' | null;
 } {
+  // The onboarding override only applies to positive essence landings. Hazards
+  // and neutral tiles keep their normal semantics, including in tutorial state.
   if (state.currentIslandNumber !== 1 || state.cycleIndex !== 0 || requestedEssenceDelta <= 0) {
     return {
       essenceDelta: requestedEssenceDelta,
@@ -80,6 +82,10 @@ function resolveTutorialEssenceOverride(
     state.firstSessionTutorialState === 'first_essence_reward_claimed'
     || state.firstSessionTutorialState === 'build_prompt_visible'
   ) {
+    // firstSessionTutorialState is the idempotency marker for this one-time
+    // tutorial reward. While the flow is parked on the immediate post-claim /
+    // build-prompt states, repeated stale landing resolves no-op instead of
+    // falling through to a normal tile reward and double-crediting the player.
     return {
       essenceDelta: 0,
       shouldSuppressRewardBarProgress: true,
