@@ -51,9 +51,9 @@ function simulateProgressTileRolls(options: {
   totalClaims: number;
   state: IslandRunRewardBarRuntimeSlice;
 } {
-  const multiplier = Math.max(1, Math.floor(options.multiplier));
+  const multiplier = options.multiplier;
   const diceCost = resolveDiceCostForMultiplier(multiplier);
-  let dicePool = Math.max(0, Math.floor(options.startingDice));
+  let dicePool = options.startingDice;
   let diceSpent = 0;
   let diceAwarded = 0;
   let rollsTaken = 0;

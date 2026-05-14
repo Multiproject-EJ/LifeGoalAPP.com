@@ -126,6 +126,8 @@ const ESCALATING_THRESHOLDS: readonly number[] = [
 
 const ESCALATING_THRESHOLD_TAIL_LINEAR_STEP = 24;
 const ESCALATING_THRESHOLD_TAIL_QUADRATIC_STEP = 6;
+// Defensive math bound only: real timed events reset long before this many
+// claims, but capping the input prevents accidental huge-number arithmetic.
 const MAX_ESCALATION_TIER_FOR_THRESHOLD_MATH = 10_000;
 
 /**
