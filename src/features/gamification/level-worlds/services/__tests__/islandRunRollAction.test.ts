@@ -8,6 +8,8 @@ import {
   writeIslandRunGameStateRecord,
   type IslandRunGameStateRecord,
 } from '../islandRunGameStateStore';
+import { generateTileMap, getIslandRarity } from '../islandBoardTileMap';
+import { resolveIslandRunContractV2EssenceEarnForTile } from '../islandRunContractV2EssenceBuild';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
 const USER_ID = 'roll-action-test-user';
@@ -40,6 +42,21 @@ function seedState(overrides: Partial<IslandRunGameStateRecord>): void {
     client: null,
     record: { ...base, ...overrides },
   });
+}
+
+async function withMockedRandom<T>(values: number[], run: () => Promise<T>): Promise<T> {
+  const originalRandom = Math.random;
+  let index = 0;
+  Math.random = () => {
+    const value = values[Math.min(index, values.length - 1)] ?? 0;
+    index += 1;
+    return value;
+  };
+  try {
+    return await run();
+  } finally {
+    Math.random = originalRandom;
+  }
 }
 
 export const islandRunRollActionTests: TestCase[] = [
@@ -190,6 +207,127 @@ export const islandRunRollActionTests: TestCase[] = [
       const persisted = readIslandRunGameStateRecord(makeSession());
       assertEqual(persisted.dicePool, 100 - 5 * 1, 'Pool decremented by exactly 5 × 1 = 5 dice');
       assertEqual(persisted.runtimeVersion, 5, 'Final runtimeVersion = 5');
+    },
+  },
+  {
+    name: 'first-session tutorial roll: awaiting first roll lands deterministically on positive Island 1 essence tile',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 2,
+        dicePool: 30,
+        tokenIndex: 2,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'awaiting_first_roll',
+      });
+
+      const result = await withMockedRandom([0, 0], () =>
+        executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }),
+      );
+
+      assertEqual(result.status, 'ok', 'Tutorial roll should succeed');
+      assertEqual(result.total, 3, 'Token index 2 should target first reachable positive essence tile at +3');
+      assertEqual(result.dieOne, 1, 'Deterministic total still returns a normal die face');
+      assertEqual(result.dieTwo, 2, 'Deterministic total still returns a normal die face');
+      assertEqual(result.newTokenIndex, 5, 'Roll lands on generated Island 1 tile index 5');
+      assertEqual(result.hopSequence?.length, 3, 'Movement still uses normal hop pipeline');
+
+      const tileMap = generateTileMap(1, getIslandRarity(1), 'forest', 0);
+      const landedTile = tileMap[result.newTokenIndex!];
+      assert(landedTile !== undefined, 'Landing tile should exist in generated map');
+      assert(
+        resolveIslandRunContractV2EssenceEarnForTile(landedTile.tileType, { islandNumber: 1, seed: 1 }) > 0,
+        'Landing tile should award positive essence',
+      );
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(
+        persisted.firstSessionTutorialState,
+        'first_roll_consumed',
+        'Deterministic tutorial roll should advance tutorial state',
+      );
+    },
+  },
+  {
+    name: 'first-session tutorial roll: consumed state cannot replay deterministic override',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: 2,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'awaiting_first_roll',
+      });
+
+      const first = await executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 });
+      assertEqual(first.status, 'ok', 'Initial tutorial roll should succeed');
+      assertEqual(first.total, 3, 'Initial tutorial roll uses deterministic total');
+
+      const second = await withMockedRandom([0, 0], () =>
+        executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }),
+      );
+      assertEqual(second.status, 'ok', 'Follow-up roll should succeed');
+      assertEqual(second.total, 2, 'Consumed tutorial state should use normal random dice');
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(
+        persisted.firstSessionTutorialState,
+        'first_roll_consumed',
+        'Follow-up roll should not regress or replay tutorial state',
+      );
+    },
+  },
+  {
+    name: 'first-session tutorial roll: non-tutorial players use normal random dice',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: 2,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'not_started',
+      });
+
+      const result = await withMockedRandom([0, 0], () =>
+        executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }),
+      );
+
+      assertEqual(result.status, 'ok', 'Roll should succeed');
+      assertEqual(result.total, 2, 'Non-tutorial roll should use normal random dice');
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(persisted.firstSessionTutorialState, 'not_started', 'Non-tutorial state should not advance');
+    },
+  },
+  {
+    name: 'first-session tutorial roll: players outside Island 1 use normal random dice',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: 2,
+        currentIslandNumber: 2,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'awaiting_first_roll',
+      });
+
+      const result = await withMockedRandom([0, 0], () =>
+        executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }),
+      );
+
+      assertEqual(result.status, 'ok', 'Roll should succeed');
+      assertEqual(result.total, 2, 'Non-Island 1 roll should use normal random dice');
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(
+        persisted.firstSessionTutorialState,
+        'awaiting_first_roll',
+        'Non-Island 1 roll should not consume first-roll tutorial state',
+      );
     },
   },
 ];

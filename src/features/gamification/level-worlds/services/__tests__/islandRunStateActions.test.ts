@@ -2244,6 +2244,11 @@ export const islandRunStateActionsTests: TestCase[] = [
       });
 
       assertEqual(result.firstRunClaimed, true, 'firstRunClaimed should be true');
+      assertEqual(
+        result.firstSessionTutorialState,
+        'awaiting_first_roll',
+        'brand-new Island 1 onboarding should arm the first-roll tutorial gate',
+      );
       assertEqual(result.runtimeVersion, 6, 'runtimeVersion should bump once');
     },
   },

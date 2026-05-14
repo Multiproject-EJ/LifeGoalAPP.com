@@ -64,6 +64,8 @@ import {
 } from './islandRunGameStateStore';
 import { resolveWrappedTokenIndex } from './islandBoardTopology';
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
+import { generateTileMap, getIslandRarity, type IslandTileType } from './islandBoardTileMap';
+import { resolveIslandRunContractV2EssenceEarnForTile } from './islandRunContractV2EssenceBuild';
 import {
   __resetIslandRunActionMutexesForTests,
   withIslandRunActionLock,
@@ -82,6 +84,50 @@ const DICE_PER_ROLL = 1;
 /** Returns a single die face in [ROLL_MIN, ROLL_MAX]. Random source stays in PWA. */
 function rollDie(): number {
   return Math.floor(Math.random() * (ROLL_MAX - ROLL_MIN + 1)) + ROLL_MIN;
+}
+
+function resolveDiceFacesForTotal(total: number): { dieOne: number; dieTwo: number } {
+  const safeTotal = Math.min(ROLL_MAX * 2, Math.max(ROLL_MIN * 2, Math.floor(total)));
+  const dieOne = Math.min(ROLL_MAX, Math.max(ROLL_MIN, Math.floor(safeTotal / 2)));
+  return { dieOne, dieTwo: safeTotal - dieOne };
+}
+
+function isPositiveEssenceTile(tileType: IslandTileType, islandNumber: number): boolean {
+  return resolveIslandRunContractV2EssenceEarnForTile(tileType, {
+    islandNumber,
+    seed: islandNumber,
+  }) > 0;
+}
+
+function resolveFirstSessionTutorialRollTotal(options: {
+  currentIslandNumber: number;
+  cycleIndex: number;
+  firstSessionTutorialState: string;
+  tokenIndex: number;
+  boardProfileId?: IslandBoardProfileId;
+}): number | null {
+  if (
+    options.firstSessionTutorialState !== 'awaiting_first_roll'
+    || options.currentIslandNumber !== 1
+    || options.cycleIndex !== 0
+  ) {
+    return null;
+  }
+
+  const boardProfile = resolveIslandBoardProfile(options.boardProfileId ?? 'spark40_ring');
+  const tileMap = generateTileMap(1, getIslandRarity(1), 'forest', 0, { profileId: boardProfile.id });
+  for (let total = ROLL_MIN * 2; total <= ROLL_MAX * 2; total += 1) {
+    const targetIndex = resolveWrappedTokenIndex(options.tokenIndex, total, boardProfile.tileCount);
+    const targetTile = tileMap[targetIndex];
+    if (targetTile && isPositiveEssenceTile(targetTile.tileType, 1)) {
+      return total;
+    }
+  }
+
+  // Edge-case safety: if a future Island 1 tile-map profile has no reachable
+  // positive essence tile in 2–12, preserve normal roll behavior instead of
+  // blocking gameplay or forcing a hazard/neutral landing.
+  return null;
 }
 
 // ── result types ──────────────────────────────────────────────────────────────
@@ -189,8 +235,16 @@ async function performRollAction(options: {
 
   // 4. Generate dice outcomes — randomness stays here in the PWA.
   //    The renderer only emits the intent; it never generates the values.
-  const dieOne = rollDie();
-  const dieTwo = rollDie();
+  const tutorialRollTotal = resolveFirstSessionTutorialRollTotal({
+    currentIslandNumber: state.currentIslandNumber,
+    cycleIndex: state.cycleIndex,
+    firstSessionTutorialState: state.firstSessionTutorialState,
+    tokenIndex: state.tokenIndex,
+    boardProfileId: options.boardProfileId,
+  });
+  const { dieOne, dieTwo } = tutorialRollTotal === null
+    ? { dieOne: rollDie(), dieTwo: rollDie() }
+    : resolveDiceFacesForTotal(tutorialRollTotal);
   const total = dieOne + dieTwo;
 
   // 5. Move the token step-by-step using the canonical topology helper so that
@@ -222,6 +276,9 @@ async function performRollAction(options: {
     runtimeVersion: newRuntimeVersion,
     tokenIndex: newTokenIndex,
     dicePool: newDicePool,
+    firstSessionTutorialState: tutorialRollTotal === null
+      ? state.firstSessionTutorialState
+      : 'first_roll_consumed',
   };
 
   // Await the write inside the mutex. Local-storage persistence is synchronous;
