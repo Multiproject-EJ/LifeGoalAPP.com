@@ -46,7 +46,7 @@ import { withIslandRunActionLock } from './islandRunActionMutex';
 import { persistIslandRunRuntimeStatePatch } from './islandRunRuntimeState';
 
 const TUTORIAL_HATCHERY_STOP_INDEX = 0;
-const TUTORIAL_HATCHERY_L1_CURRENT_BUILD_LEVEL = 0;
+const TUTORIAL_HATCHERY_PRE_UPGRADE_LEVEL = 0;
 
 function resolveTutorialEssenceOverride(
   state: ReturnType<typeof readIslandRunGameStateRecord>,
@@ -71,7 +71,7 @@ function resolveTutorialEssenceOverride(
       essenceDelta: getStopUpgradeCost({
         islandNumber: 1,
         stopIndex: TUTORIAL_HATCHERY_STOP_INDEX,
-        currentBuildLevel: TUTORIAL_HATCHERY_L1_CURRENT_BUILD_LEVEL,
+        currentBuildLevel: TUTORIAL_HATCHERY_PRE_UPGRADE_LEVEL,
       }),
       shouldSuppressRewardBarProgress: true,
       nextFirstSessionTutorialState: 'first_essence_reward_claimed',
@@ -234,11 +234,11 @@ async function performTileRewardAction(
       rewardBarFull: false,
     };
   }
-  if (
+  const isNoOpAction =
     actualEssenceDelta === 0
     && nextRewardBarSlice === null
-    && tutorialEssenceOverride.nextFirstSessionTutorialState === null
-  ) {
+    && tutorialEssenceOverride.nextFirstSessionTutorialState === null;
+  if (isNoOpAction) {
     return {
       status: 'no_op',
       actualEssenceDelta: 0,
