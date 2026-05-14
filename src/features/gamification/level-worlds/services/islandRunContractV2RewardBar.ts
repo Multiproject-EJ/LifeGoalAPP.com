@@ -526,6 +526,15 @@ function resolveProgressivePayout(options: {
   return payout;
 }
 
+export function resolveRewardBarClaimPayoutPreview(options: {
+  state: Pick<IslandRunRewardBarRuntimeSlice, 'activeTimedEvent' | 'rewardBarEscalationTier' | 'rewardBarClaimCountInEvent'>;
+}): RewardBarClaimPayout {
+  const nextClaimNumber = Math.max(0, Math.floor(options.state.rewardBarClaimCountInEvent)) + 1;
+  const tier = Math.max(0, Math.floor(options.state.rewardBarEscalationTier));
+  const template = getTemplateForEvent(options.state.activeTimedEvent);
+  return resolveProgressivePayout({ tier, claimNumber: nextClaimNumber, template });
+}
+
 export function claimIslandRunContractV2RewardBar(options: {
   state: IslandRunRewardBarRuntimeSlice;
   nowMs: number;

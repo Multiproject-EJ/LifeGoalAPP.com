@@ -441,6 +441,12 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Reward bar should use canonical token icon for minigame-token rewards.',
       );
       assert(
+        source.includes('nextRewardAmountLabel') &&
+          source.includes('timedEventTokenPresentation.labelPlural') &&
+          source.includes('island-run-board__rewardbar-endcap-amount'),
+        'Reward bar marker should render a compact amount label using canonical event-ticket presentation.',
+      );
+      assert(
         source.includes('{activeEventTickets} {timedEventTokenIcon}') &&
           !source.includes('{activeEventTickets} 🎫'),
         'Launcher token badge should use canonical token icon (no hardcoded ticket emoji).',

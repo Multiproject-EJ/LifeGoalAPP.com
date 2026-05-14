@@ -2,6 +2,7 @@ import type { IslandRunRuntimeState } from './islandRunRuntimeState';
 import {
   resolveEscalatingThreshold,
   resolveNextRewardKind,
+  resolveRewardBarClaimPayoutPreview,
   REWARD_KIND_ICON,
   type RewardBarRewardKind,
 } from './islandRunContractV2RewardBar';
@@ -32,6 +33,7 @@ export function resolveIslandRunContractV2RewardHudState(params: {
   timedEventRemainingMs: number;
   nextRewardKind: RewardBarRewardKind;
   nextRewardIcon: string;
+  nextRewardAmount: number;
 } {
   const tier = Math.max(0, Math.floor(params.runtimeState.rewardBarEscalationTier));
   const rewardBarThreshold = resolveEscalatingThreshold(tier);
@@ -43,6 +45,19 @@ export function resolveIslandRunContractV2RewardHudState(params: {
   const claimCount = Math.max(0, Math.floor(params.runtimeState.rewardBarClaimCountInEvent));
   const nextRewardKind = resolveNextRewardKind(claimCount);
   const nextRewardIcon = REWARD_KIND_ICON[nextRewardKind];
+  const nextRewardPayout = resolveRewardBarClaimPayoutPreview({ state: params.runtimeState });
+  const nextRewardAmount = (() => {
+    switch (nextRewardPayout.rewardKind) {
+      case 'dice':
+        return nextRewardPayout.dice;
+      case 'essence':
+        return nextRewardPayout.essence;
+      case 'minigame_tokens':
+        return nextRewardPayout.minigameTokens;
+      case 'sticker_fragments':
+        return nextRewardPayout.stickerFragments;
+    }
+  })();
 
   return {
     activeTimedEvent,
@@ -53,6 +68,6 @@ export function resolveIslandRunContractV2RewardHudState(params: {
     timedEventRemainingMs,
     nextRewardKind,
     nextRewardIcon,
+    nextRewardAmount,
   };
 }
-

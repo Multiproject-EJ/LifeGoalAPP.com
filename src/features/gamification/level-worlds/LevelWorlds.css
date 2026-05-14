@@ -1936,12 +1936,36 @@
   border-radius: 999px;
   border: 2px solid rgba(179, 151, 92, 0.5);
   background: linear-gradient(180deg, #fff8e7 0%, #f5e4b3 100%);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0;
+  line-height: 1;
   flex-shrink: 0;
   transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.island-run-board__rewardbar-endcap-icon {
+  line-height: 0.95;
+  transform: translateY(1px);
+}
+
+.island-run-board__rewardbar-endcap-amount {
+  max-width: 28px;
+  margin-top: -1px;
+  padding: 0 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #4d3509;
+  font-size: 0.48rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .island-run-board__rewardbar-endcap--claimable {

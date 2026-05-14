@@ -218,8 +218,8 @@ export const minigameConsolidationPhase3Tests: TestCase[] = [
         resolveEventTokenPresentation('space_excavator'),
         {
           icon: '🚀',
-          labelSingular: 'Space Excavator token',
-          labelPlural: 'Space Excavator tokens',
+          labelSingular: 'Space Excavator ticket',
+          labelPlural: 'Space Excavator tickets',
         },
         'canonical event token presentation should inherit event icon/display name',
       );
