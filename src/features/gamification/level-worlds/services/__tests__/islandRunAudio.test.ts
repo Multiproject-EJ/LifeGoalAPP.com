@@ -78,10 +78,16 @@ function installMockAudio(): () => void {
   };
 }
 
-function withMockNow(now: number): (nextNow: number) => void {
+function installMockNow(now: number): { setNow: (nextNow: number) => void; restore: () => void } {
+  const originalNow = Date.now;
   Date.now = () => now;
-  return (nextNow: number) => {
-    now = nextNow;
+  return {
+    setNow: (nextNow: number) => {
+      now = nextNow;
+    },
+    restore: () => {
+      Date.now = originalNow;
+    },
   };
 }
 
@@ -95,10 +101,9 @@ export const islandRunAudioTests: TestCase[] = [
     name: 'playIslandRunSound lazily creates and plays mapped SFX audio',
     run: async () => {
       const restoreAudio = installMockAudio();
-      const originalNow = Date.now;
+      const mockNow = installMockNow(10_000);
       try {
         resetMockAudio();
-        withMockNow(10_000);
 
         playIslandRunSound('roll');
         await Promise.resolve();
@@ -111,7 +116,7 @@ export const islandRunAudioTests: TestCase[] = [
         );
         assertEqual(MockAudioElement.created[0].playCount, 1, 'expected SFX playback');
       } finally {
-        Date.now = originalNow;
+        mockNow.restore();
         restoreAudio();
       }
     },
@@ -120,10 +125,9 @@ export const islandRunAudioTests: TestCase[] = [
     name: 'playIslandRunSound respects the Island Run audio toggle',
     run: () => {
       const restoreAudio = installMockAudio();
-      const originalNow = Date.now;
+      const mockNow = installMockNow(20_000);
       try {
         resetMockAudio();
-        withMockNow(20_000);
         setIslandRunAudioEnabled(false);
 
         playIslandRunSound('egg_set');
@@ -131,7 +135,7 @@ export const islandRunAudioTests: TestCase[] = [
         assertEqual(MockAudioElement.created.length, 0, 'audio disabled should not create SFX audio');
       } finally {
         setIslandRunAudioEnabled(true);
-        Date.now = originalNow;
+        mockNow.restore();
         restoreAudio();
       }
     },
@@ -140,21 +144,24 @@ export const islandRunAudioTests: TestCase[] = [
     name: 'playIslandRunSound throttles rapid token movement SFX',
     run: () => {
       const restoreAudio = installMockAudio();
-      const originalNow = Date.now;
+      const mockNow = installMockNow(30_000);
       try {
         resetMockAudio();
-        const setNow = withMockNow(30_000);
 
         playIslandRunSound('token_move');
         playIslandRunSound('token_move');
-        setNow(30_091);
+        mockNow.setNow(30_091);
         playIslandRunSound('token_move');
 
-        assertEqual(MockAudioElement.created.length, 2, 'expected base audio plus one clone after throttle expires');
+        assertEqual(
+          MockAudioElement.created.length,
+          2,
+          'expected the immediate repeat to be throttled, then one clone after throttle expires',
+        );
         assertEqual(MockAudioElement.created[0].playCount, 1, 'expected first token move playback');
         assertEqual(MockAudioElement.created[1].playCount, 1, 'expected post-throttle clone playback');
       } finally {
-        Date.now = originalNow;
+        mockNow.restore();
         restoreAudio();
       }
     },
@@ -163,22 +170,21 @@ export const islandRunAudioTests: TestCase[] = [
     name: 'playIslandRunSound treats missing assets and rejected playback as safe no-ops',
     run: async () => {
       const restoreAudio = installMockAudio();
-      const originalNow = Date.now;
+      const mockNow = installMockNow(40_000);
       try {
         resetMockAudio();
-        const setNow = withMockNow(40_000);
 
         playIslandRunSound('egg_ready');
         MockAudioElement.created[0].rejectPlay = true;
         MockAudioElement.created[0].emit('error');
         await Promise.resolve();
-        setNow(40_100);
+        mockNow.setNow(40_100);
 
         playIslandRunSound('egg_ready');
 
         assertEqual(MockAudioElement.created.length, 1, 'failed SFX assets should not be recreated');
       } finally {
-        Date.now = originalNow;
+        mockNow.restore();
         restoreAudio();
       }
     },
