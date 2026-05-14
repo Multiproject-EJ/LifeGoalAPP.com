@@ -1,8 +1,11 @@
 import {
   getIslandRunBuildPromptInitialTransitionTarget,
+  isIslandRunHatcheryBuildGuidanceActive,
   isIslandRunBuildPromptOverlayActive,
   resolveIslandRunBuildPromptClickTransitionTargets,
+  resolveIslandRunBuildModalTutorialRowState,
   shouldIslandRunBuildPromptBlockControl,
+  shouldAdvanceFirstSessionTutorialAfterHatcheryBuild,
 } from '../islandRunFirstSessionTutorialUi';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
@@ -75,6 +78,87 @@ export const islandRunFirstSessionTutorialUiTests: TestCase[] = [
         resolveIslandRunBuildPromptClickTransitionTargets('not_started'),
         [],
         'Non-tutorial states do not advance on Build click',
+      );
+    },
+  },
+  {
+    name: 'Build modal tutorial guidance highlights only Hatchery and blocks other rows',
+    run: () => {
+      assert(
+        isIslandRunHatcheryBuildGuidanceActive('build_modal_opened'),
+        'build_modal_opened should activate Hatchery row guidance',
+      );
+      assert(
+        !isIslandRunHatcheryBuildGuidanceActive('build_prompt_visible'),
+        'pre-modal prompt should not activate row guidance',
+      );
+      assertDeepEqual(
+        resolveIslandRunBuildModalTutorialRowState({
+          firstSessionTutorialState: 'build_modal_opened',
+          stopIndex: 0,
+        }),
+        { guidanceActive: true, isHighlighted: true, isUnavailable: false },
+        'Hatchery row should be highlighted and available during guidance',
+      );
+      assertDeepEqual(
+        resolveIslandRunBuildModalTutorialRowState({
+          firstSessionTutorialState: 'build_modal_opened',
+          stopIndex: 1,
+        }),
+        { guidanceActive: true, isHighlighted: false, isUnavailable: true },
+        'Non-Hatchery rows should be unavailable during guidance',
+      );
+      assertDeepEqual(
+        resolveIslandRunBuildModalTutorialRowState({
+          firstSessionTutorialState: 'not_started',
+          stopIndex: 1,
+        }),
+        { guidanceActive: false, isHighlighted: false, isUnavailable: false },
+        'Non-tutorial rows should remain unchanged',
+      );
+    },
+  },
+  {
+    name: 'Hatchery L1 tutorial advancement requires build_modal_opened and Hatchery level 0 to 1',
+    run: () => {
+      assert(
+        shouldAdvanceFirstSessionTutorialAfterHatcheryBuild({
+          firstSessionTutorialState: 'build_modal_opened',
+          stopIndex: 0,
+          previousBuildLevel: 0,
+          nextBuildLevel: 1,
+        }),
+        'Hatchery level 0 to 1 should advance the tutorial',
+      );
+      assertEqual(
+        shouldAdvanceFirstSessionTutorialAfterHatcheryBuild({
+          firstSessionTutorialState: 'build_modal_opened',
+          stopIndex: 1,
+          previousBuildLevel: 0,
+          nextBuildLevel: 1,
+        }),
+        false,
+        'Other stops should not advance the Hatchery tutorial',
+      );
+      assertEqual(
+        shouldAdvanceFirstSessionTutorialAfterHatcheryBuild({
+          firstSessionTutorialState: 'not_started',
+          stopIndex: 0,
+          previousBuildLevel: 0,
+          nextBuildLevel: 1,
+        }),
+        false,
+        'Non-tutorial states should not advance',
+      );
+      assertEqual(
+        shouldAdvanceFirstSessionTutorialAfterHatcheryBuild({
+          firstSessionTutorialState: 'build_modal_opened',
+          stopIndex: 0,
+          previousBuildLevel: 1,
+          nextBuildLevel: 2,
+        }),
+        false,
+        'Later Hatchery levels should not advance this tutorial slice',
       );
     },
   },

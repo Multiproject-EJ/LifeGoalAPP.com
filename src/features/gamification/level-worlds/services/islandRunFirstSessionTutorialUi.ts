@@ -2,6 +2,8 @@ import type { IslandRunFirstSessionTutorialState } from './islandRunGameStateSto
 
 export type IslandRunBuildPromptControl = 'build' | 'gameplay';
 
+export const ISLAND_RUN_TUTORIAL_HATCHERY_STOP_INDEX = 0;
+
 export function isIslandRunBuildPromptOverlayActive(
   firstSessionTutorialState: IslandRunFirstSessionTutorialState,
 ): boolean {
@@ -34,4 +36,39 @@ export function resolveIslandRunBuildPromptClickTransitionTargets(
     return ['build_modal_opened'];
   }
   return [];
+}
+
+export function isIslandRunHatcheryBuildGuidanceActive(
+  firstSessionTutorialState: IslandRunFirstSessionTutorialState,
+): boolean {
+  return firstSessionTutorialState === 'build_modal_opened';
+}
+
+export function resolveIslandRunBuildModalTutorialRowState(options: {
+  firstSessionTutorialState: IslandRunFirstSessionTutorialState;
+  stopIndex: number;
+}): {
+  guidanceActive: boolean;
+  isHighlighted: boolean;
+  isUnavailable: boolean;
+} {
+  const guidanceActive = isIslandRunHatcheryBuildGuidanceActive(options.firstSessionTutorialState);
+  const isHatcheryRow = options.stopIndex === ISLAND_RUN_TUTORIAL_HATCHERY_STOP_INDEX;
+  return {
+    guidanceActive,
+    isHighlighted: guidanceActive && isHatcheryRow,
+    isUnavailable: guidanceActive && !isHatcheryRow,
+  };
+}
+
+export function shouldAdvanceFirstSessionTutorialAfterHatcheryBuild(options: {
+  firstSessionTutorialState: IslandRunFirstSessionTutorialState;
+  stopIndex: number;
+  previousBuildLevel: number;
+  nextBuildLevel: number;
+}): boolean {
+  return options.firstSessionTutorialState === 'build_modal_opened'
+    && options.stopIndex === ISLAND_RUN_TUTORIAL_HATCHERY_STOP_INDEX
+    && options.previousBuildLevel === 0
+    && options.nextBuildLevel >= 1;
 }

@@ -5511,6 +5511,12 @@
   margin-top: 0.4rem;
 }
 
+.build-panel__tutorial-guidance {
+  margin-top: -0.25rem;
+  margin-bottom: 0.65rem;
+  color: rgba(255, 238, 188, 0.95);
+}
+
 .build-panel__building {
   display: flex;
   align-items: center;
@@ -5540,6 +5546,18 @@
 .build-panel__building--next-cheapest {
   border-color: rgba(255, 220, 120, 0.8);
   box-shadow: 0 0 0 2px rgba(255, 220, 120, 0.2), 0 0 22px rgba(255, 220, 120, 0.22);
+}
+
+.build-panel__building--tutorial-target {
+  border-color: rgba(255, 220, 120, 0.95);
+  background: rgba(120, 92, 28, 0.34);
+  box-shadow: 0 0 0 3px rgba(255, 220, 120, 0.2), 0 0 28px rgba(255, 220, 120, 0.36);
+}
+
+.build-panel__building--tutorial-muted {
+  opacity: 0.42;
+  cursor: not-allowed;
+  filter: grayscale(0.35);
 }
 
 /* Icon grows with level — level-0 is smallest, level-3 largest */
