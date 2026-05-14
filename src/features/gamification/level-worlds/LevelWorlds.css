@@ -873,6 +873,12 @@
   box-shadow: 0 0 8px rgba(255, 100, 50, 0.4);
 }
 
+.island-run-prototype__footer-multiplier-btn--max {
+  border-color: rgba(255, 214, 102, 0.95);
+  background: linear-gradient(135deg, rgba(255, 176, 45, 0.9), rgba(255, 103, 45, 0.9));
+  box-shadow: 0 0 10px rgba(255, 214, 102, 0.48);
+}
+
 /* ── Dice regen timer ──────────────────────────────────────────────────────── */
 .island-run-prototype__dice-regen-timer {
   text-align: center;
