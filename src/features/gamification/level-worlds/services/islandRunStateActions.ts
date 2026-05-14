@@ -71,6 +71,7 @@ import {
 import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
 import { resolveRuntimeDiceRegenUpdate } from './islandRunRuntimeRegen';
 import { resolveIslandRunPreIslandLuckyRollGate } from './islandRunPreIslandLuckyRollGate';
+import { shouldAdvanceFirstSessionTutorialAfterHatcheryBuild } from './islandRunFirstSessionTutorialUi';
 import {
   chooseSpaceExcavatorObjectShape,
   placeSpaceExcavatorObjectShape,
@@ -2424,6 +2425,7 @@ export async function applyStopBuildSpendBatch(
   }
 
   const safeMaxSteps = Math.max(1, Math.floor(maxSteps));
+  const initialBuildState = current.stopBuildStateByIndex[stopIndex];
   let nextEssence = current.essence;
   let nextEssenceLifetimeSpent = current.essenceLifetimeSpent;
   let nextStopBuildStateByIndex = current.stopBuildStateByIndex;
@@ -2459,6 +2461,14 @@ export async function applyStopBuildSpendBatch(
     essenceLifetimeSpent: nextEssenceLifetimeSpent,
     stopBuildStateByIndex: nextStopBuildStateByIndex,
     stopStatesByIndex: nextStopStatesByIndex,
+    firstSessionTutorialState: shouldAdvanceFirstSessionTutorialAfterHatcheryBuild({
+      firstSessionTutorialState: current.firstSessionTutorialState,
+      stopIndex,
+      previousBuildLevel: initialBuildState?.buildLevel ?? 0,
+      nextBuildLevel: nextStopBuildStateByIndex[stopIndex]?.buildLevel ?? 0,
+    })
+      ? 'hatchery_l1_built'
+      : current.firstSessionTutorialState,
     runtimeVersion: current.runtimeVersion + 1,
   };
   await commitIslandRunState({

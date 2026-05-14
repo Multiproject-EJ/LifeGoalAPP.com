@@ -3359,6 +3359,81 @@ export const islandRunStateActionsTests: TestCase[] = [
     },
   },
   {
+    name: 'applyStopBuildSpendBatch advances tutorial after successful Hatchery L1 build',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 24,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'build_modal_opened',
+        essence: 10,
+        essenceLifetimeSpent: 0,
+        stopBuildStateByIndex: [
+          { requiredEssence: 10, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 70, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 90, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 120, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 200, spentEssence: 0, buildLevel: 0 },
+        ],
+      });
+
+      const result = await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 0,
+        effectiveIslandNumber: 1,
+        maxSteps: 1,
+      });
+
+      assertEqual(result.stepsApplied, 1, 'Hatchery L1 spend should apply');
+      assertEqual(result.record.stopBuildStateByIndex[0]?.buildLevel, 1, 'Hatchery should advance to L1');
+      assertEqual(
+        result.record.firstSessionTutorialState,
+        'hatchery_l1_built',
+        'Successful Hatchery L1 build should advance first-session tutorial state',
+      );
+      assertEqual(result.record.runtimeVersion, 25, 'build and tutorial state should commit atomically once');
+    },
+  },
+  {
+    name: 'applyStopBuildSpendBatch leaves tutorial state unchanged outside Hatchery L1 tutorial gate',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 25,
+        firstSessionTutorialState: 'not_started',
+        essence: 10,
+        essenceLifetimeSpent: 0,
+        stopBuildStateByIndex: [
+          { requiredEssence: 10, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 70, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 90, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 120, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 200, spentEssence: 0, buildLevel: 0 },
+        ],
+      });
+
+      const result = await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 0,
+        effectiveIslandNumber: 1,
+        maxSteps: 1,
+      });
+
+      assertEqual(result.stepsApplied, 1, 'Non-tutorial Hatchery L1 spend should still apply normally');
+      assertEqual(result.record.stopBuildStateByIndex[0]?.buildLevel, 1, 'Hatchery should still advance to L1');
+      assertEqual(
+        result.record.firstSessionTutorialState,
+        'not_started',
+        'Non-tutorial build behavior should not advance tutorial state',
+      );
+    },
+  },
+  {
     name: 'applyStopBuildSpendBatch stops at L3 completion',
     run: async () => {
       resetAll();

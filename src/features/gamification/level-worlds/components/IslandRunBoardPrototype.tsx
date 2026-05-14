@@ -73,8 +73,10 @@ import { readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIs
 import { useIslandRunState } from '../hooks/useIslandRunState';
 import {
   getIslandRunBuildPromptInitialTransitionTarget,
+  isIslandRunHatcheryBuildGuidanceActive,
   isIslandRunBuildPromptOverlayActive,
   resolveIslandRunBuildPromptClickTransitionTargets,
+  resolveIslandRunBuildModalTutorialRowState,
   shouldIslandRunBuildPromptBlockControl,
 } from '../services/islandRunFirstSessionTutorialUi';
 import {
@@ -1204,6 +1206,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const tokenIndex = __storeState.tokenIndex;
   const firstSessionTutorialState = __storeState.firstSessionTutorialState;
   const isBuildTutorialPromptActive = isIslandRunBuildPromptOverlayActive(firstSessionTutorialState);
+  const isBuildModalHatcheryGuidanceActive = isIslandRunHatcheryBuildGuidanceActive(firstSessionTutorialState);
   const isBuildTutorialGameplayBlocked = shouldIslandRunBuildPromptBlockControl(firstSessionTutorialState, 'gameplay');
 
   // C1 shim: setDicePool — commits through the store for unmigrated paths.
@@ -6751,11 +6754,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       stopIndex,
       nowMs: Date.now(),
     });
-    const repeatedBuildBatchSteps = resolveRepeatedBuildBatchSteps(nextStreak.count);
+    let repeatedBuildBatchSteps = resolveRepeatedBuildBatchSteps(nextStreak.count);
+    if (isBuildModalHatcheryGuidanceActive) {
+      repeatedBuildBatchSteps = 1;
+    }
     const spendApplied = await handleSpendEssenceOnBuild(stopIndex, repeatedBuildBatchSteps);
     if (!spendApplied) {
       resetBuildRepeatStreak();
       return false;
+    }
+
+    if (runtimeStateRef.current.firstSessionTutorialState === 'hatchery_l1_built') {
+      resetBuildRepeatStreak();
+      return true;
     }
 
     buildRepeatStreakRef.current = nextStreak;
@@ -9757,6 +9768,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <p className="island-stop-modal__copy" style={{ marginBottom: '0.6rem' }}>
               <strong>🟣 {runtimeState.essence}</strong> Essence available
             </p>
+            {isBuildModalHatcheryGuidanceActive && (
+              <p className="island-stop-modal__copy build-panel__tutorial-guidance">
+                Build Hatchery to Level 1 with your tutorial Essence. Other buildings unlock after this step.
+              </p>
+            )}
             {isBuildHoldActive && (
               <p className="island-stop-modal__copy" style={{ marginTop: '-0.25rem', marginBottom: '0.6rem', opacity: 0.8 }}>
                 {buildHoldFeedbackLabel}
@@ -9769,16 +9785,21 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 const stopState = runtimeState.stopStatesByIndex[idx];
                 if (!stopEntry || !buildState) return null;
 
+                const tutorialRowState = resolveIslandRunBuildModalTutorialRowState({
+                  firstSessionTutorialState,
+                  stopIndex: idx,
+                });
                 const isFullyBuilt = isStopBuildFullyComplete(buildState);
                 const remaining = isFullyBuilt ? 0 : Math.max(0, buildState.requiredEssence - buildState.spentEssence);
                 const canAfford = runtimeState.essence >= Math.min(CONTRACT_V2_ESSENCE_SPEND_STEP, remaining);
                 const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;
+                const isBuildInteractionDisabled = tutorialRowState.isUnavailable || isBuildDisabled;
                 const remainingToFull = buildPanelRemainingToFullByIndex[idx] ?? 0;
                 const levelIcon = ['🏗️', '🏠', '🏡', '🏰'][Math.min(buildState.buildLevel, 3)];
 
                 const handleBuildStart = (e: React.MouseEvent | React.TouchEvent) => {
                   e.preventDefault();
-                  if (isBuildDisabled) return;
+                  if (isBuildInteractionDisabled) return;
                   holdBuildSpendActiveRef.current = true;
                   holdBuildSpendStartAtMsRef.current = Date.now();
                   setIsBuildHoldActive(true);
@@ -9801,6 +9822,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     await wait(BUILD_HOLD_INITIAL_DELAY_MS);
                     while (holdBuildSpendActiveRef.current) {
                       const liveRuntimeState = getIslandRunStateSnapshot(session);
+                      if (liveRuntimeState.firstSessionTutorialState === 'hatchery_l1_built') {
+                        resetBuildRepeatStreak();
+                        stopHold();
+                        return;
+                      }
                       const liveBuildState = liveRuntimeState.stopBuildStateByIndex[idx];
                       const liveRemaining = liveBuildState
                         ? Math.max(0, liveBuildState.requiredEssence - liveBuildState.spentEssence)
@@ -9813,10 +9839,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       }
                       const holdStartedAtMs = holdBuildSpendStartAtMsRef.current ?? Date.now();
                       const heldMs = Math.max(0, Date.now() - holdStartedAtMs);
-                      const holdBatchSteps = resolveBuildHoldBatchSteps(heldMs);
+                      let holdBatchSteps = resolveBuildHoldBatchSteps(heldMs);
+                      if (isBuildModalHatcheryGuidanceActive) {
+                        holdBatchSteps = 1;
+                      }
                       setBuildHoldFeedbackLabel(resolveBuildHoldFeedbackLabel(heldMs));
                       const spendApplied = await handleSpendEssenceOnBuild(idx, holdBatchSteps);
                       if (!spendApplied) {
+                        resetBuildRepeatStreak();
+                        stopHold();
+                        return;
+                      }
+                      if (runtimeStateRef.current.firstSessionTutorialState === 'hatchery_l1_built') {
                         resetBuildRepeatStreak();
                         stopHold();
                         return;
@@ -9829,15 +9863,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 return (
                   <div
                     key={stopEntry.stopId}
-                    className={`build-panel__building build-panel__building--level-${buildState.buildLevel}${isFullyBuilt ? ' build-panel__building--complete' : ''}${buildPanelNextCheapestIndex === idx && !isFullyBuilt ? ' build-panel__building--next-cheapest' : ''}`}
-                    onMouseDown={!isBuildDisabled ? handleBuildStart : undefined}
-                    onTouchStart={!isBuildDisabled ? handleBuildStart : undefined}
+                    className={`build-panel__building build-panel__building--level-${buildState.buildLevel}${isFullyBuilt ? ' build-panel__building--complete' : ''}${buildPanelNextCheapestIndex === idx && !isFullyBuilt && !tutorialRowState.guidanceActive ? ' build-panel__building--next-cheapest' : ''}${tutorialRowState.isHighlighted ? ' build-panel__building--tutorial-target' : ''}${tutorialRowState.isUnavailable ? ' build-panel__building--tutorial-muted' : ''}`}
+                    onMouseDown={!isBuildInteractionDisabled ? handleBuildStart : undefined}
+                    onTouchStart={!isBuildInteractionDisabled ? handleBuildStart : undefined}
                     role="button"
-                    tabIndex={isBuildDisabled ? -1 : 0}
-                    aria-disabled={isBuildDisabled}
-                    aria-label={`${stopEntry.title ?? stopEntry.stopId} — Level ${buildState.buildLevel} of ${MAX_BUILD_LEVEL}`}
+                    tabIndex={isBuildInteractionDisabled ? -1 : 0}
+                    aria-disabled={isBuildInteractionDisabled}
+                    aria-label={`${stopEntry.title ?? stopEntry.stopId} — Level ${buildState.buildLevel} of ${MAX_BUILD_LEVEL}${tutorialRowState.isHighlighted ? ' — tutorial target' : ''}${tutorialRowState.isUnavailable ? ' — unavailable during tutorial' : ''}`}
                     onKeyDown={(e) => {
-                      if ((e.key === 'Enter' || e.key === ' ') && !isBuildDisabled) {
+                      if ((e.key === 'Enter' || e.key === ' ') && !isBuildInteractionDisabled) {
                         e.preventDefault();
                         void handleRepeatedBuildActivation(idx);
                       }
