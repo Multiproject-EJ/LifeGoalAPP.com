@@ -1,0 +1,37 @@
+.feature-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.18rem 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.feature-status-badge--demo {
+  border: 1px solid rgba(217, 119, 6, 0.24);
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.feature-status-badge--comingSoon {
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.feature-status-badge--locked {
+  border: 1px solid rgba(100, 116, 139, 0.24);
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.feature-status-badge--hidden {
+  border: 1px solid rgba(107, 114, 128, 0.24);
+  background: #f3f4f6;
+  color: #4b5563;
+}
