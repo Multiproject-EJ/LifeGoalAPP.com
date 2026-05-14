@@ -90,6 +90,8 @@ export async function executeIslandRunClaimRewardAction(options: {
   // 4. Merge the updated reward-bar slice and resource adjustments back into
   //    the full record, then persist via the same write path used by
   //    IslandRunBoardPrototype.
+  const activeEventId = nextRewardBarSlice.activeTimedEvent?.eventId ?? null;
+  const shouldGrantEventTickets = payout.minigameTokens > 0 && Boolean(activeEventId);
   const nextState = {
     ...state,
     runtimeVersion: state.runtimeVersion + 1,
@@ -106,14 +108,14 @@ export async function executeIslandRunClaimRewardAction(options: {
     stickerProgress: nextRewardBarSlice.stickerProgress,
     stickerInventory: nextRewardBarSlice.stickerInventory,
     // Resource pool adjustments:
-    spinTokens: state.spinTokens + payout.minigameTokens,
+    spinTokens: shouldGrantEventTickets ? state.spinTokens : state.spinTokens + payout.minigameTokens,
     dicePool: state.dicePool + payout.dice,
     essence: state.essence + payout.essence,
-    minigameTicketsByEvent: payout.minigameTokens > 0 && nextRewardBarSlice.activeTimedEvent?.eventId
+    minigameTicketsByEvent: shouldGrantEventTickets
       ? {
           ...state.minigameTicketsByEvent,
-          [nextRewardBarSlice.activeTimedEvent.eventId]:
-            (state.minigameTicketsByEvent?.[nextRewardBarSlice.activeTimedEvent.eventId] ?? 0) + payout.minigameTokens,
+          [activeEventId!]:
+            (state.minigameTicketsByEvent?.[activeEventId!] ?? 0) + payout.minigameTokens,
         }
       : state.minigameTicketsByEvent,
   };

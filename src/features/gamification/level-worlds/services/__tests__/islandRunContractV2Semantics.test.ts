@@ -75,7 +75,7 @@ export const islandRunContractV2SemanticsTests: TestCase[] = [
       });
 
       assertEqual(state.nextRewardKind, 'minigame_tokens', 'Expected third reward marker to preview event tickets');
-      assertEqual(state.nextRewardAmount, 4, 'Expected event ticket amount to come from the reward bar payout preview');
+      assertEqual(state.nextRewardAmount, 8, 'Expected event ticket amount to come from the tuned reward bar payout preview');
     },
   },
 ];
