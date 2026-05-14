@@ -6,8 +6,8 @@
  * (defaults to `true`) and gracefully no-op when the relevant browser API is
  * unavailable.
  *
- * Audio: placeholder wiring only — no audio files required yet. Calls will be
- * no-ops until real assets are wired in a future slice.
+ * Audio: lazy HTMLAudioElement playback for mapped SFX assets. Missing files
+ * and browser autoplay failures are treated as safe no-ops.
  *
  * Haptics: short mobile-friendly patterns via the Vibration API. In addition
  * to the audio-enabled flag, haptic dispatch additionally honors:
@@ -93,6 +93,67 @@ export function setIslandRunAudioEnabled(enabled: boolean): void {
   islandRunAudioEnabled = enabled;
 }
 
+// ─── SFX playback helpers ─────────────────────────────────────────────────────
+
+const ISLAND_RUN_SFX_VOLUME = 0.42;
+const DEFAULT_SFX_MIN_INTERVAL_MS = 40;
+
+const SFX_MIN_INTERVAL_BY_EVENT: Partial<Record<IslandRunSoundEvent, number>> = {
+  token_move: 90,
+  reward_bar_fill: 70,
+};
+
+const islandRunSfxAudioByEvent = new Map<IslandRunSoundEvent, HTMLAudioElement>();
+const failedIslandRunSfxAssetPaths = new Set<string>();
+const lastSfxFiredAtByEvent: Partial<Record<IslandRunSoundEvent, number>> = {};
+
+function getIslandRunSfxAudio(eventId: IslandRunSoundEvent): HTMLAudioElement | null {
+  if (typeof window === 'undefined' || typeof Audio === 'undefined') {
+    return null;
+  }
+
+  const assetPath = SOUND_ASSET_MAP[eventId];
+  if (failedIslandRunSfxAssetPaths.has(assetPath)) {
+    return null;
+  }
+
+  const existingAudio = islandRunSfxAudioByEvent.get(eventId);
+  if (existingAudio) {
+    return existingAudio;
+  }
+
+  const audio = new Audio(assetPath);
+  audio.preload = 'auto';
+  audio.volume = ISLAND_RUN_SFX_VOLUME;
+  audio.addEventListener('error', () => {
+    failedIslandRunSfxAssetPaths.add(assetPath);
+  }, { once: true });
+  islandRunSfxAudioByEvent.set(eventId, audio);
+
+  return audio;
+}
+
+function shouldThrottleIslandRunSfx(eventId: IslandRunSoundEvent): boolean {
+  const now = Date.now();
+  const lastFiredAt = lastSfxFiredAtByEvent[eventId];
+  const minIntervalMs = SFX_MIN_INTERVAL_BY_EVENT[eventId] ?? DEFAULT_SFX_MIN_INTERVAL_MS;
+
+  if (typeof lastFiredAt === 'number' && now - lastFiredAt < minIntervalMs) {
+    return true;
+  }
+
+  lastSfxFiredAtByEvent[eventId] = now;
+  return false;
+}
+
+function rewindIslandRunSfxAudio(audio: HTMLAudioElement): void {
+  try {
+    audio.currentTime = 0;
+  } catch {
+    // Some mobile browsers can reject currentTime before metadata is available.
+  }
+}
+
 // ─── Haptic patterns (ms) ─────────────────────────────────────────────────────
 
 const HAPTIC_PATTERNS: Record<IslandRunHapticEvent, number | number[]> = {
@@ -160,19 +221,28 @@ const SOUND_ASSET_MAP: Record<IslandRunSoundEvent, string> = {
 
 /**
  * Plays an Island Run sound effect.
- * Currently a no-op placeholder — asset paths are mapped but files do not yet
- * exist. This function is a safe stub that will activate once real audio
- * assets are added.
+ * Lazily plays the mapped file-based SFX asset for the provided event.
+ * Missing files and autoplay rejections are safe no-ops.
  */
 export function playIslandRunSound(eventId: IslandRunSoundEvent): void {
   if (!getIslandRunAudioEnabled()) return;
+  if (shouldThrottleIslandRunSfx(eventId)) return;
 
-  // Guard: no-op if Web Audio API is unavailable
-  if (typeof window === 'undefined' || !window.AudioContext) return;
+  const audio = getIslandRunSfxAudio(eventId);
+  if (!audio) return;
 
-  // Placeholder: asset path is mapped for future use; no audio file wired yet
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _assetPath = SOUND_ASSET_MAP[eventId];
+  const playableAudio = audio.paused || audio.ended
+    ? audio
+    : audio.cloneNode(true) as HTMLAudioElement;
+  playableAudio.volume = ISLAND_RUN_SFX_VOLUME;
+  playableAudio.addEventListener('error', () => {
+    failedIslandRunSfxAssetPaths.add(SOUND_ASSET_MAP[eventId]);
+  }, { once: true });
+  rewindIslandRunSfxAudio(playableAudio);
+
+  void playableAudio.play().catch(() => {
+    // Browser autoplay policy, missing files, and decode failures are non-fatal.
+  });
 }
 
 /**
