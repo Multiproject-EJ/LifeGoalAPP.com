@@ -565,7 +565,9 @@ export function applyTokenHopRewards(options: {
   const next: IslandRunGameStateRecord = {
     ...current,
     runtimeVersion: current.runtimeVersion + 1,
-    spinTokens: clamp0(current.spinTokens + spinTokenDelta),
+    spinTokens: shouldDualWriteMinigameTickets
+      ? current.spinTokens
+      : clamp0(current.spinTokens + spinTokenDelta),
     dicePool: clamp0(current.dicePool + (deltas.dicePool ?? 0)),
     essence: clamp0(current.essence + (deltas.essence ?? 0)),
     minigameTicketsByEvent: nextMinigameTicketsByEvent,

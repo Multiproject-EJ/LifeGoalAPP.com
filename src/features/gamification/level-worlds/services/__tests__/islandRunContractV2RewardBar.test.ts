@@ -6,6 +6,7 @@ import {
   resolveEscalatingThreshold,
   resolveNextRewardKind,
   resolveChainedRewardBarClaims,
+  resolveRewardBarClaimPayoutPreview,
   resolveAvailableMultiplierTiers,
   resolveMaxMultiplierForPool,
   resolveDiceCostForMultiplier,
@@ -14,6 +15,7 @@ import {
   BASE_DICE_PER_ROLL,
 } from '../islandRunContractV2RewardBar';
 import type { IslandRunRewardBarRuntimeSlice } from '../islandRunContractV2RewardBar';
+import { resolveIslandRunContractV2RewardHudState } from '../islandRunContractV2Semantics';
 import { assert, assertEqual, type TestCase } from './testHarness';
 
 function makeBaseState(): IslandRunRewardBarRuntimeSlice {
@@ -232,6 +234,77 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
       assert(claimed.payout, 'Expected payout');
       assertEqual(claimed.payout!.rewardKind, 'dice', 'Expected first claim reward kind to be dice');
       assert(claimed.payout!.dice > 0, 'Expected dice payout > 0 for dice reward kind');
+    },
+  },
+  {
+    name: 'v2 on: Space Excavator event-ticket payouts use tuned 8/12/16/20 ladder',
+    run: () => {
+      const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
+      const minigamePayouts = [2, 6, 10, 14].map((tier) => {
+        const claimable = {
+          ...withEvent,
+          activeTimedEvent: {
+            eventId: 'space_excavator:1000',
+            eventType: 'space_excavator',
+            startedAtMs: 1_000,
+            expiresAtMs: 10_000,
+            version: 1,
+          },
+          rewardBarBoundEventId: 'space_excavator:1000',
+          rewardBarLadderId: 'space_excavator_ladder_v1',
+          rewardBarProgress: resolveEscalatingThreshold(tier),
+          rewardBarThreshold: resolveEscalatingThreshold(tier),
+          rewardBarClaimCountInEvent: tier,
+          rewardBarEscalationTier: tier,
+        };
+        const claimed = claimIslandRunContractV2RewardBar({ state: claimable, nowMs: 2_000 + tier });
+        assert(claimed.payout, `Expected minigame-ticket payout at tier ${tier}`);
+        assertEqual(claimed.payout!.rewardKind, 'minigame_tokens', `Expected tier ${tier} payout to be event tickets`);
+        return claimed.payout!;
+      });
+
+      assertEqual(minigamePayouts[0]!.minigameTokens, 8, 'First event-ticket payout should grant 8 tickets');
+      assertEqual(minigamePayouts[1]!.minigameTokens, 12, 'Second event-ticket payout should grant 12 tickets');
+      assertEqual(minigamePayouts[2]!.minigameTokens, 16, 'Third event-ticket payout should grant 16 tickets');
+      assertEqual(minigamePayouts[3]!.minigameTokens, 20, 'Later event-ticket payout should grant 20 tickets');
+      assertEqual(minigamePayouts[0]!.dice, 2, 'Ticket payout side dice should keep existing tier-2 value');
+      assertEqual(minigamePayouts[0]!.essence, 0, 'Ticket payout should not add essence');
+      assertEqual(minigamePayouts[0]!.stickerFragments, 0, 'Ticket payout should not add sticker fragments');
+    },
+  },
+  {
+    name: 'v2 on: reward marker preview amount matches actual event-ticket award',
+    run: () => {
+      const state = {
+        ...ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state,
+        activeTimedEvent: {
+          eventId: 'space_excavator:1000',
+          eventType: 'space_excavator',
+          startedAtMs: 1_000,
+          expiresAtMs: 10_000,
+          version: 1,
+        },
+        rewardBarBoundEventId: 'space_excavator:1000',
+        rewardBarLadderId: 'space_excavator_ladder_v1',
+        rewardBarProgress: resolveEscalatingThreshold(2),
+        rewardBarThreshold: resolveEscalatingThreshold(2),
+        rewardBarClaimCountInEvent: 2,
+        rewardBarEscalationTier: 2,
+      };
+
+      const preview = resolveRewardBarClaimPayoutPreview({ state });
+      const hud = resolveIslandRunContractV2RewardHudState({
+        islandRunContractV2Enabled: true,
+        runtimeState: state,
+        nowMs: 2_000,
+      });
+      const claimed = claimIslandRunContractV2RewardBar({ state, nowMs: 2_001 });
+
+      assertEqual(preview.rewardKind, 'minigame_tokens', 'Preview should resolve event-ticket reward kind');
+      assertEqual(preview.minigameTokens, 8, 'Preview should show tuned first event-ticket amount');
+      assertEqual(hud.nextRewardKind, 'minigame_tokens', 'HUD should advertise event tickets as the next reward');
+      assertEqual(hud.nextRewardAmount, preview.minigameTokens, 'Reward marker amount should match payout preview');
+      assertEqual(claimed.payout?.minigameTokens, hud.nextRewardAmount, 'Reward marker amount should match actual claimed tickets');
     },
   },
   {

@@ -1478,7 +1478,7 @@ export const islandRunStateActionsTests: TestCase[] = [
     },
   },
   {
-    name: 'applyTokenHopRewards dual-writes timed-event token grants into minigameTicketsByEvent',
+    name: 'applyTokenHopRewards grants timed-event tickets into minigameTicketsByEvent without changing spinTokens',
     run: () => {
       resetAll();
       const session = makeSession();
@@ -1496,7 +1496,7 @@ export const islandRunStateActionsTests: TestCase[] = [
         triggerSource: 'test_event_dual_write',
       });
 
-      assertEqual(result.spinTokens, 8, 'spinTokens should still increase by the same grant amount');
+      assertEqual(result.spinTokens, 5, 'event ticket grant should not change legacy spinTokens');
       assertEqual(
         result.minigameTicketsByEvent['feeding_frenzy@1'],
         5,
