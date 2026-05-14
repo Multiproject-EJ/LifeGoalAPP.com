@@ -156,15 +156,6 @@ import './styles/settings-folders.css';
 import './styles/gamification.css';
 import './features/ai-coach/AiCoach.css';
 
-/**
- * Guard rail: App-level rendering of routines lane caused duplicate Today cards.
- * The real lane must live inside DailyHabitTracker (between habits and contracts).
- */
-const RoutinesTodayLane = (_props: {
-  session: Session;
-  onHideStandaloneHabitsChange?: (habitIds: string[]) => void;
-}): null => null;
-
 type AuthMode = 'password' | 'signup';
 
 type AuthTab = 'login' | 'signup';
@@ -597,7 +588,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
   const [calendarLaunchMode, setCalendarLaunchMode] = useState<'auto' | 'holiday' | 'personal_quest'>('auto');
   const [pendingTodayOfferOpen, setPendingTodayOfferOpen] = useState<TimeBoundOfferId | null>(null);
-  const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
   const [activeHolidaySeason, setActiveHolidaySeason] = useState<ActiveAdventMetaResult | null>(null);
   const [showHolidaySeasonDialog, setShowHolidaySeasonDialog] = useState(false);
   const [holidayPreviewKey, setHolidayPreviewKey] = useState<HolidayKey | null>(null);
@@ -3310,10 +3300,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 </button>
               </div>
             ) : null}
-            <RoutinesTodayLane
-              session={activeSession}
-              onHideStandaloneHabitsChange={(habitIds) => setRoutineHiddenHabitIds(habitIds)}
-            />
             <DailyHabitTracker
               session={activeSession}
               showPointsBadges={shouldShowPointsBadges}

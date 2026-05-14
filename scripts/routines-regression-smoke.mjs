@@ -48,7 +48,7 @@ const checks = [
   {
     name: 'Routines lane is mounted from DailyHabitTracker near contracts flow',
     file: 'src/features/habits/DailyHabitTracker.tsx',
-    pattern: /<RoutinesTodayLane[\s\S]*onHideStandaloneHabitsChange=\{\(habitIds\)\s*=>\s*setRoutineHiddenHabitIds\(habitIds\)\}/m,
+    pattern: /<TodayExpandableActionSection[\s\S]*title="Routines"[\s\S]*expanded=\{openTodayExpandableSection === 'routines'\}[\s\S]*<RoutinesTodayLane[\s\S]*onHideStandaloneHabitsChange=\{handleRoutineHiddenHabitIdsChange\}[\s\S]*variant="panel"/m,
   },
 ];
 
