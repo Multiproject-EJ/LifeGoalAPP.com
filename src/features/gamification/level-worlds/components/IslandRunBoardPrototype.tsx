@@ -387,6 +387,7 @@ const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;
 const ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_WEIGHT_PERCENT = 70;
 const DEV_LUCKY_ROLL_TEST_ROLL = 3;
 const BUILD_HOLD_INITIAL_DELAY_MS = 400;
+const FIRST_CREATURE_PACK_REVEAL_DELAY_MS = 650;
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT = 'Fill the reward bar to earn more dig tickets.';
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT_DEV = 'Fill the reward bar to earn more dig tickets (DEV override tickets).';
 
@@ -7394,7 +7395,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           ? window.setTimeout(() => {
             showFirstCreaturePackReveal(nextCards, nextDiceGranted);
             firstCreaturePackRevealTimerRef.current = null;
-          }, 650)
+          }, FIRST_CREATURE_PACK_REVEAL_DELAY_MS)
           : null;
         if (typeof window === 'undefined') {
           showFirstCreaturePackReveal(nextCards, nextDiceGranted);

@@ -350,6 +350,21 @@ export const islandRunFirstSessionTutorialUiTests: TestCase[] = [
         '+100 dice added',
         'Missing reveal payload bonus should fall back to safe copy without regranting',
       );
+      assertEqual(
+        formatIslandRunFirstCreaturePackBonusCopy(-5),
+        '+0 dice added',
+        'Negative bonus values should clamp to zero for display',
+      );
+      assertEqual(
+        formatIslandRunFirstCreaturePackBonusCopy(100.75),
+        '+100 dice added',
+        'Fractional bonus values should be floored for display',
+      );
+      assertEqual(
+        formatIslandRunFirstCreaturePackBonusCopy(Number.NaN),
+        '+100 dice added',
+        'Non-finite bonus values should fall back to the guaranteed pack bonus',
+      );
     },
   },
   {
