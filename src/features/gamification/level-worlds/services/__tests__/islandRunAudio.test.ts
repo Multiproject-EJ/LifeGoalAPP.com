@@ -5,6 +5,10 @@ import {
 import { assertEqual, type TestCase } from './testHarness';
 
 type AudioListener = () => void;
+type AudioListenerEntry = {
+  listener: AudioListener;
+  once: boolean;
+};
 
 class MockAudioElement {
   static created: MockAudioElement[] = [];
@@ -17,16 +21,17 @@ class MockAudioElement {
   ended = false;
   playCount = 0;
   rejectPlay = false;
-  private readonly listeners = new Map<string, AudioListener[]>();
+  private readonly listeners = new Map<string, AudioListenerEntry[]>();
 
   constructor(src: string) {
     this.src = src;
     MockAudioElement.created.push(this);
   }
 
-  addEventListener(type: string, listener: AudioListener): void {
+  addEventListener(type: string, listener: AudioListener, options?: AddEventListenerOptions | boolean): void {
     const existing = this.listeners.get(type) ?? [];
-    existing.push(listener);
+    const once = typeof options === 'object' ? options.once === true : false;
+    existing.push({ listener, once });
     this.listeners.set(type, existing);
   }
 
@@ -44,9 +49,11 @@ class MockAudioElement {
   }
 
   emit(type: string): void {
-    for (const listener of this.listeners.get(type) ?? []) {
+    const entries = this.listeners.get(type) ?? [];
+    for (const { listener } of entries) {
       listener();
     }
+    this.listeners.set(type, entries.filter((entry) => !entry.once));
   }
 }
 
