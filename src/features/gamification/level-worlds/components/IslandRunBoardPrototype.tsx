@@ -73,7 +73,9 @@ import { readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIs
 import { useIslandRunState } from '../hooks/useIslandRunState';
 import {
   getIslandRunBuildPromptInitialTransitionTarget,
+  getIslandRunHatcheryL1CelebrationContinueTarget,
   isIslandRunHatcheryBuildGuidanceActive,
+  isIslandRunHatcheryL1CelebrationActive,
   isIslandRunBuildPromptOverlayActive,
   resolveIslandRunBuildPromptClickTransitionTargets,
   resolveIslandRunBuildModalTutorialRowState,
@@ -1207,6 +1209,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const firstSessionTutorialState = __storeState.firstSessionTutorialState;
   const isBuildTutorialPromptActive = isIslandRunBuildPromptOverlayActive(firstSessionTutorialState);
   const isBuildModalHatcheryGuidanceActive = isIslandRunHatcheryBuildGuidanceActive(firstSessionTutorialState);
+  const showHatcheryL1Celebration = isIslandRunHatcheryL1CelebrationActive(firstSessionTutorialState);
   const isBuildTutorialGameplayBlocked = shouldIslandRunBuildPromptBlockControl(firstSessionTutorialState, 'gameplay');
 
   // C1 shim: setDicePool — commits through the store for unmigrated paths.
@@ -1420,6 +1423,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   } | null>(null);
   const [firstRunStep, setFirstRunStep] = useState<'celebration' | 'launch'>('celebration');
   const [isPersistingFirstRunCompletion, setIsPersistingFirstRunCompletion] = useState(false);
+  const isOnboardingCelebrationVisible = showFirstRunCelebration || showHatcheryL1Celebration;
   const [hasHydratedRuntimeState, setHasHydratedRuntimeState] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
   // M4-COMPLETE: cycleIndex tracks full laps through 120 islands (island 120 → 1 increments this)
@@ -4215,8 +4219,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     : rollButtonMode === 'roll'
       ? 'Roll'
       : 'Need dice';
-  const rollBlockedReason = showFirstRunCelebration
-    ? 'first_run_celebration'
+  const rollBlockedReason = isOnboardingCelebrationVisible
+    ? 'onboarding_celebration'
     : isRolling
       ? 'already_rolling'
       : showTravelOverlay
@@ -4224,14 +4228,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         : isEnergyDepletedForRoll
           ? 'insufficient_dice'
           : null;
-  const rollDisabledReason = showFirstRunCelebration
-    ? 'first_run_celebration'
+  const rollDisabledReason = isOnboardingCelebrationVisible
+    ? 'onboarding_celebration'
     : isRolling
       ? 'already_rolling'
       : showTravelOverlay
         ? 'travel_overlay'
         : null;
-  const canRoll = !showFirstRunCelebration && !isRolling && !showTravelOverlay && dicePool >= effectiveDiceCost;
+  const canRoll = !isOnboardingCelebrationVisible && !isRolling && !showTravelOverlay && dicePool >= effectiveDiceCost;
   const canHoldForAutoRoll = canRoll && !isIslandTimerPendingStart;
   const rollButtonInteractionClass = isAutoRolling
     ? 'island-run-prototype__roll-btn--auto-active'
@@ -4242,8 +4246,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
    * button is disabled. Keys mirror the internal `rollDisabledReason` codes. */
   const rollDisabledMessage = (() => {
     switch (rollDisabledReason) {
-      case 'first_run_celebration':
-        return 'Roll is paused while the welcome celebration is playing.';
+      case 'onboarding_celebration':
+        return 'Roll is paused while the onboarding celebration is showing.';
       case 'already_rolling':
         return 'A roll is already in progress — please wait.';
       case 'travel_overlay':
@@ -4371,7 +4375,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       roll: {
         canRoll,
         isRolling,
-        isBusy: isRolling || showFirstRunCelebration || showTravelOverlay,
+        isBusy: isRolling || isOnboardingCelebrationVisible || showTravelOverlay,
         buttonDisabled: Boolean(rollDisabledReason),
         disabledReason: rollBlockedReason,
         mode: rollButtonMode,
@@ -4399,7 +4403,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     runtimeState.currentIslandNumber,
     runtimeState.stopStatesByIndex,
     session.user.id,
-    showFirstRunCelebration,
+    isOnboardingCelebrationVisible,
     showTravelOverlay,
     step1Complete,
   ]);
@@ -4625,7 +4629,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
     const rollDecisionFlags = {
       canRoll,
-      showFirstRunCelebration,
+      isOnboardingCelebrationVisible,
       showTravelOverlay,
       step1Complete,
       isRolling,
@@ -4646,12 +4650,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       });
     }
 
-    if (showFirstRunCelebration) {
+    if (isOnboardingCelebrationVisible) {
       if (isIsland120StartupDiagnosticActive) {
         logIslandRunEntryDebug('island120_roll_interaction', {
           userId: session.user.id,
           action: 'blocked',
-          blockReason: 'first_run_celebration',
+          blockReason: 'onboarding_celebration',
           ...rollDecisionFlags,
         });
       }
@@ -4932,7 +4936,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, []);
 
   const beginAutoRollHold = useCallback(() => {
-    if (showFirstRunCelebration || showTravelOverlay || isRolling || isAnimatingRollRef.current || dicePool < effectiveDiceCost) {
+    if (isOnboardingCelebrationVisible || showTravelOverlay || isRolling || isAnimatingRollRef.current || dicePool < effectiveDiceCost) {
       return;
     }
     if (autoRollHoldTimeoutRef.current !== null) {
@@ -4948,7 +4952,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setIsAutoRolling(true);
       setLandingText('Auto-roll engaged. Release to stop.');
     }, AUTO_ROLL_HOLD_DELAY_MS);
-  }, [dicePool, effectiveDiceCost, isRolling, showFirstRunCelebration, showTravelOverlay]);
+  }, [dicePool, effectiveDiceCost, isOnboardingCelebrationVisible, isRolling, showTravelOverlay]);
 
   const endAutoRollHold = useCallback(() => {
     if (autoRollHoldTimeoutRef.current !== null) {
@@ -7291,6 +7295,20 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setLandingText('🧪 DEV MODE unlocked for testing on this device.');
   }, []);
 
+  const handleContinueHatcheryL1Celebration = useCallback(() => {
+    const targetState = getIslandRunHatcheryL1CelebrationContinueTarget(firstSessionTutorialState);
+    if (!targetState) return;
+    const result = applyFirstSessionTutorialState({
+      session,
+      client,
+      targetState,
+      triggerSource: 'hatchery_l1_celebration_continue',
+    });
+    if (result.ok) {
+      setLandingText('Hatchery Level 1 built. Keep rolling to discover more rewards.');
+    }
+  }, [client, firstSessionTutorialState, session]);
+
   const handleClaimFirstRunRewards = async () => {
     if (firstRunStep === 'celebration') {
       const starterDiceBonus = ISLAND_RUN_DEFAULT_STARTING_DICE * 2;
@@ -8644,6 +8662,30 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 </div>
               </>
             )}
+          </section>
+        </div>
+      )}
+
+      {showHatcheryL1Celebration && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--onboarding" role="dialog" aria-modal="true" aria-label="Hatchery Level 1 celebration">
+            <div className="island-stop-modal__context">
+              <p className="island-stop-modal__eyebrow">First island upgrade</p>
+              <h3 className="island-stop-modal__title">Hatchery Level 1 Built!</h3>
+              <p className="island-stop-modal__copy">Your first island upgrade is alive.</p>
+              <p>✅ Hatchery unlocked</p>
+              <p>✅ Island progress started</p>
+              <p>🎲 Keep rolling to discover more rewards</p>
+            </div>
+            <div className="island-stop-modal__cta island-stop-modal__cta--balanced island-stop-modal__cta--anchored">
+              <button
+                type="button"
+                className="supabase-auth__action island-stop-modal__cta-btn island-stop-modal__btn--action"
+                onClick={handleContinueHatcheryL1Celebration}
+              >
+                Continue
+              </button>
+            </div>
           </section>
         </div>
       )}

@@ -1,6 +1,8 @@
 import {
   getIslandRunBuildPromptInitialTransitionTarget,
+  getIslandRunHatcheryL1CelebrationContinueTarget,
   isIslandRunHatcheryBuildGuidanceActive,
+  isIslandRunHatcheryL1CelebrationActive,
   isIslandRunBuildPromptOverlayActive,
   resolveIslandRunBuildPromptClickTransitionTargets,
   resolveIslandRunBuildModalTutorialRowState,
@@ -115,6 +117,50 @@ export const islandRunFirstSessionTutorialUiTests: TestCase[] = [
         }),
         { guidanceActive: false, isHighlighted: false, isUnavailable: false },
         'Non-tutorial rows should remain unchanged',
+      );
+    },
+  },
+  {
+    name: 'Hatchery L1 built state shows only the tutorial celebration',
+    run: () => {
+      assert(
+        isIslandRunHatcheryL1CelebrationActive('hatchery_l1_built'),
+        'hatchery_l1_built should show the Hatchery L1 celebration',
+      );
+      assertEqual(
+        isIslandRunHatcheryL1CelebrationActive('hatchery_l1_celebrated'),
+        false,
+        'Already-celebrated tutorial state should not keep showing the celebration',
+      );
+      assertEqual(
+        isIslandRunHatcheryL1CelebrationActive('not_started'),
+        false,
+        'Non-tutorial players should not see the Hatchery L1 celebration',
+      );
+      assertEqual(
+        isIslandRunHatcheryL1CelebrationActive('complete'),
+        false,
+        'Completed tutorial players should not see the Hatchery L1 celebration',
+      );
+    },
+  },
+  {
+    name: 'Hatchery L1 celebration Continue advances to the next canonical tutorial state',
+    run: () => {
+      assertEqual(
+        getIslandRunHatcheryL1CelebrationContinueTarget('hatchery_l1_built'),
+        'hatchery_l1_celebrated',
+        'Continue should target the next sequential tutorial state',
+      );
+      assertEqual(
+        getIslandRunHatcheryL1CelebrationContinueTarget('hatchery_l1_celebrated'),
+        null,
+        'Continue should not advance outside the celebration state',
+      );
+      assertEqual(
+        getIslandRunHatcheryL1CelebrationContinueTarget('not_started'),
+        null,
+        'Non-tutorial states should not get a celebration Continue target',
       );
     },
   },
