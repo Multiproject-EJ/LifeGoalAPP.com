@@ -731,6 +731,10 @@
   padding: 0;
 }
 
+.island-run-prototype__footer--build-tutorial-active {
+  z-index: 1090;
+}
+
 .island-run-prototype__footer-main {
   display: grid;
   gap: 0.55rem;
@@ -821,6 +825,48 @@
   font-size: 0.76rem;
 }
 
+.island-run-prototype__footer-nav-btn:disabled,
+.island-run-prototype__footer-multiplier-btn:disabled,
+.island-run-prototype__roll-btn--footer:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.45);
+  opacity: 0.62;
+}
+
+.island-run-prototype__footer-nav-btn--build-tutorial-target {
+  position: relative;
+  z-index: 1092;
+  color: #201007;
+  background: linear-gradient(135deg, #ffe66d, #ffb44d);
+  border-color: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 0 0 4px rgba(255, 230, 109, 0.24),
+    0 0 28px rgba(255, 201, 74, 0.88),
+    0 12px 26px rgba(0, 0, 0, 0.38);
+  transform: translateY(-2px) scale(1.05);
+}
+
+.island-run-prototype__footer-nav-btn--build-tutorial-target::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 18px;
+  border: 2px solid rgba(255, 244, 171, 0.92);
+  animation: islandRunBuildTutorialPulse 1.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes islandRunBuildTutorialPulse {
+  0%, 100% {
+    opacity: 0.38;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
 .island-run-prototype__footer-nav-btn--active-mult {
   background: linear-gradient(135deg, rgba(255, 100, 50, 0.85), rgba(255, 50, 100, 0.85));
   border-color: rgba(255, 150, 50, 0.7);
@@ -836,6 +882,45 @@
   opacity: 0.8;
   line-height: 1;
   margin-top: 1px;
+}
+
+.island-run-build-tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1080;
+  display: grid;
+  align-items: end;
+  justify-items: center;
+  padding: 1rem 1rem 9.2rem;
+  background:
+    radial-gradient(circle at 80% 86%, rgba(255, 224, 112, 0.18), transparent 0 12rem),
+    rgba(2, 8, 18, 0.62);
+  backdrop-filter: blur(2px);
+  pointer-events: auto;
+}
+
+.island-run-build-tutorial-overlay__coachmark {
+  width: min(24rem, calc(100vw - 2rem));
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.82rem 0.95rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 230, 109, 0.72);
+  background: linear-gradient(160deg, rgba(36, 24, 7, 0.96), rgba(11, 21, 35, 0.96));
+  color: #fff7d1;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+  text-align: center;
+  pointer-events: none;
+}
+
+.island-run-build-tutorial-overlay__coachmark strong {
+  color: #ffe66d;
+  font-size: 0.98rem;
+}
+
+.island-run-build-tutorial-overlay__coachmark span {
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 /* Dice group: multiplier above dice roll button */

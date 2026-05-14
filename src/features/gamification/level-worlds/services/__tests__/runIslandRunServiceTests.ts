@@ -40,6 +40,7 @@ import { islandRunLuckyRollBoardConfigTests } from './islandRunLuckyRollBoardCon
 import { islandRunProgressResetTests } from './islandRunProgressReset.test';
 import { islandRunStateStoreTests } from './islandRunStateStore.test';
 import { islandRunStateActionsTests } from './islandRunStateActions.test';
+import { islandRunFirstSessionTutorialUiTests } from './islandRunFirstSessionTutorialUi.test';
 import { islandRunBoardEssenceParityTests } from './islandRunBoardEssenceParity.test';
 import { useBoardCameraTests } from './useBoardCamera.test';
 import { minigameConsolidationPhase1Tests } from './minigameConsolidationPhase1.test';
@@ -101,6 +102,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunProgressReset', tests: islandRunProgressResetTests },
   { label: 'islandRunStateStore', tests: islandRunStateStoreTests },
   { label: 'islandRunStateActions', tests: islandRunStateActionsTests },
+  { label: 'islandRunFirstSessionTutorialUi', tests: islandRunFirstSessionTutorialUiTests },
   { label: 'islandRunBoardEssenceParity', tests: islandRunBoardEssenceParityTests },
   { label: 'useBoardCamera', tests: useBoardCameraTests },
   { label: 'minigameConsolidationPhase1', tests: minigameConsolidationPhase1Tests },
