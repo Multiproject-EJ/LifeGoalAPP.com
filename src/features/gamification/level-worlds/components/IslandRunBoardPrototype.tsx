@@ -73,10 +73,14 @@ import { readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIs
 import { useIslandRunState } from '../hooks/useIslandRunState';
 import {
   getIslandRunBuildPromptInitialTransitionTarget,
+  getIslandRunFirstCreaturePackContinueTarget,
   getIslandRunHatcheryL1CelebrationContinueTarget,
+  isIslandRunFirstCreaturePackModalActive,
   isIslandRunHatcheryBuildGuidanceActive,
   isIslandRunHatcheryL1CelebrationActive,
   isIslandRunBuildPromptOverlayActive,
+  formatIslandRunFirstCreaturePackBonusCopy,
+  resolveIslandRunFirstCreaturePackOpenAttempt,
   resolveIslandRunBuildPromptClickTransitionTargets,
   resolveIslandRunBuildModalTutorialRowState,
   shouldIslandRunBuildPromptBlockControl,
@@ -167,6 +171,10 @@ import {
   type CreatureCollectionEntry,
 } from '../services/creatureCollectionService';
 import {
+  claimFirstSessionCreaturePackReward,
+  type FirstSessionCreaturePackCardReveal,
+} from '../services/islandRunFirstSessionCreaturePackAction';
+import {
   earnCreatureTreatsForUser,
   fetchCreatureTreatInventory,
   type CreatureTreatType,
@@ -182,6 +190,10 @@ import {
 import { resolveCreatureArtManifest } from '../services/creatureImageManifest';
 import { CreatureGridCard } from './CreatureGridCard';
 import { CreatureHatchRevealModal } from './CreatureHatchRevealModal';
+import {
+  FirstSessionCreaturePackModal,
+  type FirstSessionCreaturePackModalPhase,
+} from './FirstSessionCreaturePackModal';
 import { applyCreatureArtFallback } from './creatureArtFallback';
 import {
   rankCreatureFitsForPlayer,
@@ -1607,6 +1619,31 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [showSanctuaryMenu, setShowSanctuaryMenu] = useState(false);
   const [sanctuaryMenuModule, setSanctuaryMenuModule] = useState<'collection' | 'inventory' | 'quest' | 'rooms' | 'filters' | null>(null);
   const [hatchReveal, setHatchReveal] = useState<null | { creatureId: string; creatureName: string; rarity: 'common' | 'rare' | 'mythic' }>(null);
+  const [firstCreaturePackFlow, setFirstCreaturePackFlow] = useState<{
+    phase: FirstSessionCreaturePackModalPhase;
+    cards: FirstSessionCreaturePackCardReveal[];
+    diceGranted: number;
+    errorMessage: string | null;
+  }>({
+    phase: 'intro',
+    cards: [],
+    diceGranted: 100,
+    errorMessage: null,
+  });
+  const [isFirstCreaturePackClaiming, setIsFirstCreaturePackClaiming] = useState(false);
+  const firstCreaturePackClaimInFlightRef = useRef(false);
+  const firstCreaturePackRevealTimerRef = useRef<number | null>(null);
+  const showFirstCreaturePackModal = isIslandRunFirstCreaturePackModalActive(firstSessionTutorialState)
+    || firstCreaturePackFlow.phase === 'opening'
+    || firstCreaturePackFlow.phase === 'revealed'
+    || firstCreaturePackFlow.phase === 'already_claimed'
+    || firstCreaturePackFlow.phase === 'error';
+
+  useEffect(() => () => {
+    if (firstCreaturePackRevealTimerRef.current !== null && typeof window !== 'undefined') {
+      window.clearTimeout(firstCreaturePackRevealTimerRef.current);
+    }
+  }, []);
 
   useEffect(() => {
     const targetState = getIslandRunBuildPromptInitialTransitionTarget(firstSessionTutorialState);
@@ -7309,6 +7346,117 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
   }, [client, firstSessionTutorialState, session]);
 
+  const handleOpenFirstCreaturePack = useCallback(async () => {
+    const attempt = resolveIslandRunFirstCreaturePackOpenAttempt({
+      firstSessionTutorialState,
+      isClaimInFlight: firstCreaturePackClaimInFlightRef.current,
+    });
+    if (!attempt.shouldCallClaim) return;
+
+    firstCreaturePackClaimInFlightRef.current = attempt.nextClaimInFlight;
+    setIsFirstCreaturePackClaiming(true);
+    setFirstCreaturePackFlow({
+      phase: 'opening',
+      cards: [],
+      diceGranted: 100,
+      errorMessage: null,
+    });
+
+    try {
+      const result = await claimFirstSessionCreaturePackReward({
+        session,
+        client,
+        triggerSource: 'first_creature_pack_modal_open',
+      });
+
+      if (result.status === 'claimed' && result.revealPayload) {
+        const nextCards = result.revealPayload.cards;
+        const nextDiceGranted = result.revealPayload.diceGranted;
+        setFirstCreaturePackFlow({
+          phase: 'opening',
+          cards: nextCards,
+          diceGranted: nextDiceGranted,
+          errorMessage: null,
+        });
+        if (firstCreaturePackRevealTimerRef.current !== null && typeof window !== 'undefined') {
+          window.clearTimeout(firstCreaturePackRevealTimerRef.current);
+        }
+        firstCreaturePackRevealTimerRef.current = typeof window !== 'undefined'
+          ? window.setTimeout(() => {
+            setFirstCreaturePackFlow({
+              phase: 'revealed',
+              cards: nextCards,
+              diceGranted: nextDiceGranted,
+              errorMessage: null,
+            });
+            firstCreaturePackRevealTimerRef.current = null;
+          }, 650)
+          : null;
+        if (typeof window === 'undefined') {
+          setFirstCreaturePackFlow({
+            phase: 'revealed',
+            cards: nextCards,
+            diceGranted: nextDiceGranted,
+            errorMessage: null,
+          });
+        }
+        setLandingText(formatIslandRunFirstCreaturePackBonusCopy(nextDiceGranted));
+        return;
+      }
+
+      if (result.status === 'already_claimed') {
+        setFirstCreaturePackFlow({
+          phase: 'already_claimed',
+          cards: [],
+          diceGranted: 100,
+          errorMessage: null,
+        });
+        setLandingText('First Creature Pack already claimed.');
+        return;
+      }
+
+      setFirstCreaturePackFlow({
+        phase: 'error',
+        cards: [],
+        diceGranted: 100,
+        errorMessage: 'This Creature Pack is not available for the current island run.',
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Creature Pack claim failed.';
+      setFirstCreaturePackFlow({
+        phase: 'error',
+        cards: [],
+        diceGranted: 100,
+        errorMessage: message,
+      });
+    } finally {
+      firstCreaturePackClaimInFlightRef.current = false;
+      setIsFirstCreaturePackClaiming(false);
+    }
+  }, [client, firstSessionTutorialState, session]);
+
+  const handleContinueFirstCreaturePack = useCallback(() => {
+    const snapshot = getIslandRunStateSnapshot(session);
+    const targetState = getIslandRunFirstCreaturePackContinueTarget(snapshot.firstSessionTutorialState);
+    if (targetState) {
+      const result = applyFirstSessionTutorialState({
+        session,
+        client,
+        targetState,
+        triggerSource: 'first_creature_pack_reveal_continue',
+      });
+      if (result.ok) {
+        setLandingText('Your first companions joined the Sanctuary. Keep rolling!');
+      }
+    }
+    setFirstCreaturePackFlow({
+      phase: 'intro',
+      cards: [],
+      diceGranted: 100,
+      errorMessage: null,
+    });
+  }, [client, session]);
+
   const handleClaimFirstRunRewards = async () => {
     if (firstRunStep === 'celebration') {
       const starterDiceBonus = ISLAND_RUN_DEFAULT_STARTING_DICE * 2;
@@ -10739,6 +10887,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           </section>
         </div>
       )}
+
+      {showFirstCreaturePackModal ? (
+        <FirstSessionCreaturePackModal
+          phase={firstCreaturePackFlow.phase}
+          cards={firstCreaturePackFlow.cards}
+          diceGranted={firstCreaturePackFlow.diceGranted}
+          isClaiming={isFirstCreaturePackClaiming}
+          errorMessage={firstCreaturePackFlow.errorMessage}
+          onOpenPack={handleOpenFirstCreaturePack}
+          onContinue={handleContinueFirstCreaturePack}
+        />
+      ) : null}
 
       {hatchReveal ? (
         <CreatureHatchRevealModal
