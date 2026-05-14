@@ -3,6 +3,7 @@ import type { IslandRunFirstSessionTutorialState } from './islandRunGameStateSto
 export type IslandRunBuildPromptControl = 'build' | 'gameplay';
 
 export const ISLAND_RUN_TUTORIAL_HATCHERY_STOP_INDEX = 0;
+export const ISLAND_RUN_FIRST_CREATURE_PACK_LOW_DICE_THRESHOLD = 5;
 
 export function isIslandRunBuildPromptOverlayActive(
   firstSessionTutorialState: IslandRunFirstSessionTutorialState,
@@ -84,5 +85,21 @@ export function getIslandRunHatcheryL1CelebrationContinueTarget(
 ): IslandRunFirstSessionTutorialState | null {
   return isIslandRunHatcheryL1CelebrationActive(firstSessionTutorialState)
     ? 'hatchery_l1_celebrated'
+    : null;
+}
+
+export function getIslandRunFirstCreaturePackLowDiceTriggerTarget(options: {
+  firstSessionTutorialState: IslandRunFirstSessionTutorialState;
+  currentIslandNumber: number;
+  cycleIndex: number;
+  dicePool: number;
+}): IslandRunFirstSessionTutorialState | null {
+  const isEligibleTutorialState = options.firstSessionTutorialState === 'hatchery_l1_celebrated'
+    || options.firstSessionTutorialState === 'normal_play_until_low_dice';
+  return isEligibleTutorialState
+    && options.currentIslandNumber === 1
+    && options.cycleIndex === 0
+    && options.dicePool <= ISLAND_RUN_FIRST_CREATURE_PACK_LOW_DICE_THRESHOLD
+    ? 'first_creature_pack_available'
     : null;
 }

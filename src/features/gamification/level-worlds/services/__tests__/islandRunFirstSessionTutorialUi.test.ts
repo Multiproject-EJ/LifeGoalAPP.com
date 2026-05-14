@@ -1,6 +1,8 @@
 import {
   getIslandRunBuildPromptInitialTransitionTarget,
+  getIslandRunFirstCreaturePackLowDiceTriggerTarget,
   getIslandRunHatcheryL1CelebrationContinueTarget,
+  ISLAND_RUN_FIRST_CREATURE_PACK_LOW_DICE_THRESHOLD,
   isIslandRunHatcheryBuildGuidanceActive,
   isIslandRunHatcheryL1CelebrationActive,
   isIslandRunBuildPromptOverlayActive,
@@ -205,6 +207,81 @@ export const islandRunFirstSessionTutorialUiTests: TestCase[] = [
         }),
         false,
         'Later Hatchery levels should not advance this tutorial slice',
+      );
+    },
+  },
+  {
+    name: 'First Creature Pack low-dice trigger is gated to post-Hatchery Island 1 tutorial play',
+    run: () => {
+      assertEqual(
+        getIslandRunFirstCreaturePackLowDiceTriggerTarget({
+          firstSessionTutorialState: 'hatchery_l1_celebrated',
+          currentIslandNumber: 1,
+          cycleIndex: 0,
+          dicePool: ISLAND_RUN_FIRST_CREATURE_PACK_LOW_DICE_THRESHOLD,
+        }),
+        'first_creature_pack_available',
+        'Hatchery-celebrated tutorial state should trigger at the low-dice threshold on Island 1',
+      );
+      assertEqual(
+        getIslandRunFirstCreaturePackLowDiceTriggerTarget({
+          firstSessionTutorialState: 'normal_play_until_low_dice',
+          currentIslandNumber: 1,
+          cycleIndex: 0,
+          dicePool: 0,
+        }),
+        'first_creature_pack_available',
+        'normal early tutorial play should trigger below the low-dice threshold on Island 1',
+      );
+      assertEqual(
+        getIslandRunFirstCreaturePackLowDiceTriggerTarget({
+          firstSessionTutorialState: 'hatchery_l1_built',
+          currentIslandNumber: 1,
+          cycleIndex: 0,
+          dicePool: 0,
+        }),
+        null,
+        'Trigger should not fire before Hatchery L1 is celebrated',
+      );
+      assertEqual(
+        getIslandRunFirstCreaturePackLowDiceTriggerTarget({
+          firstSessionTutorialState: 'not_started',
+          currentIslandNumber: 1,
+          cycleIndex: 0,
+          dicePool: 0,
+        }),
+        null,
+        'Trigger should not fire for non-tutorial players',
+      );
+      assertEqual(
+        getIslandRunFirstCreaturePackLowDiceTriggerTarget({
+          firstSessionTutorialState: 'hatchery_l1_celebrated',
+          currentIslandNumber: 2,
+          cycleIndex: 0,
+          dicePool: 0,
+        }),
+        null,
+        'Trigger should not fire outside Island 1',
+      );
+      assertEqual(
+        getIslandRunFirstCreaturePackLowDiceTriggerTarget({
+          firstSessionTutorialState: 'hatchery_l1_celebrated',
+          currentIslandNumber: 1,
+          cycleIndex: 1,
+          dicePool: 0,
+        }),
+        null,
+        'Trigger should not fire outside cycle 0',
+      );
+      assertEqual(
+        getIslandRunFirstCreaturePackLowDiceTriggerTarget({
+          firstSessionTutorialState: 'hatchery_l1_celebrated',
+          currentIslandNumber: 1,
+          cycleIndex: 0,
+          dicePool: ISLAND_RUN_FIRST_CREATURE_PACK_LOW_DICE_THRESHOLD + 1,
+        }),
+        null,
+        'Trigger should not fire above the low-dice threshold',
       );
     },
   },
