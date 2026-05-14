@@ -64,6 +64,7 @@ import {
 } from './islandRunGameStateStore';
 import { resolveWrappedTokenIndex } from './islandBoardTopology';
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
+import { getIslandBoardThemeForIslandNumber } from './islandBoardThemes';
 import { generateTileMap, getIslandRarity, type IslandTileType } from './islandBoardTileMap';
 import { resolveIslandRunContractV2EssenceEarnForTile } from './islandRunContractV2EssenceBuild';
 import {
@@ -88,8 +89,9 @@ function rollDie(): number {
 
 function resolveDiceFacesForTotal(total: number): { dieOne: number; dieTwo: number } {
   const safeTotal = Math.min(ROLL_MAX * 2, Math.max(ROLL_MIN * 2, Math.floor(total)));
-  const dieOne = Math.min(ROLL_MAX, Math.max(ROLL_MIN, Math.floor(safeTotal / 2)));
-  return { dieOne, dieTwo: safeTotal - dieOne };
+  const dieOne = Math.min(ROLL_MAX, Math.max(ROLL_MIN, safeTotal - ROLL_MAX));
+  const dieTwo = Math.min(ROLL_MAX, Math.max(ROLL_MIN, safeTotal - dieOne));
+  return { dieOne, dieTwo };
 }
 
 function isPositiveEssenceTile(tileType: IslandTileType, islandNumber: number): boolean {
@@ -115,7 +117,8 @@ function resolveFirstSessionTutorialRollTotal(options: {
   }
 
   const boardProfile = resolveIslandBoardProfile(options.boardProfileId ?? 'spark40_ring');
-  const tileMap = generateTileMap(1, getIslandRarity(1), 'forest', 0, { profileId: boardProfile.id });
+  const islandOneTheme = getIslandBoardThemeForIslandNumber(1);
+  const tileMap = generateTileMap(1, getIslandRarity(1), islandOneTheme.tileThemeId, 0, { profileId: boardProfile.id });
   for (let total = ROLL_MIN * 2; total <= ROLL_MAX * 2; total += 1) {
     const targetIndex = resolveWrappedTokenIndex(options.tokenIndex, total, boardProfile.tileCount);
     const targetTile = tileMap[targetIndex];
