@@ -48,6 +48,7 @@ import {
   resolveReadyEggTerminalTransition,
   applyEggPlacement,
   applyFirstRunClaimed,
+  applyFirstSessionTutorialState,
   applyFirstRunStarterRewards,
   applyIslandShardsSet,
   applyMarketOwnedBundleMarker,
@@ -344,6 +345,71 @@ export const islandRunStateActionsTests: TestCase[] = [
         [initialProgress.objectTileIds[0]],
         'partial object reveal progress should persist and resume on reopen',
       );
+    },
+  },
+
+  {
+    name: 'applyFirstSessionTutorialState advances once and treats repeated transition as idempotent',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 2,
+        firstSessionTutorialState: 'not_started',
+      });
+
+      const advanced = applyFirstSessionTutorialState({
+        session,
+        client: null,
+        targetState: 'awaiting_first_roll',
+      });
+
+      assertEqual(advanced.ok, true, 'valid tutorial transition should succeed');
+      assertEqual(advanced.changed, true, 'valid tutorial transition should change state');
+      assertEqual(advanced.record.firstSessionTutorialState, 'awaiting_first_roll', 'state should advance');
+      assertEqual(advanced.record.runtimeVersion, 3, 'state change should increment runtimeVersion');
+
+      const repeated = applyFirstSessionTutorialState({
+        session,
+        client: null,
+        targetState: 'awaiting_first_roll',
+      });
+
+      assertEqual(repeated.ok, true, 'repeated same-state transition should be ok');
+      assertEqual(repeated.changed, false, 'repeated same-state transition should be idempotent');
+      assertEqual(repeated.record.runtimeVersion, 3, 'idempotent transition should not increment runtimeVersion');
+    },
+  },
+
+  {
+    name: 'applyFirstSessionTutorialState rejects skipped or regressive tutorial transitions',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 5,
+        firstSessionTutorialState: 'awaiting_first_roll',
+      });
+
+      const skipped = applyFirstSessionTutorialState({
+        session,
+        client: null,
+        targetState: 'build_prompt_visible',
+      });
+
+      assertEqual(skipped.ok, false, 'skipped tutorial transition should fail');
+      assertEqual(skipped.changed, false, 'skipped tutorial transition should not change state');
+      assertEqual(skipped.record.firstSessionTutorialState, 'awaiting_first_roll', 'state should remain unchanged');
+      assertEqual(skipped.record.runtimeVersion, 5, 'invalid transition should not increment runtimeVersion');
+
+      const regressed = applyFirstSessionTutorialState({
+        session,
+        client: null,
+        targetState: 'not_started',
+      });
+
+      assertEqual(regressed.ok, false, 'regressive tutorial transition should fail');
+      assertEqual(regressed.record.firstSessionTutorialState, 'awaiting_first_roll', 'state should remain unchanged');
     },
   },
 
