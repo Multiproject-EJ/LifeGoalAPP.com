@@ -2417,8 +2417,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [audioEnabled, showShopPanel]);
 
   useEffect(() => {
+    if (!showIslandClearCelebration || !audioEnabled) {
+      stopIslandRunMusic('new-island-celebration');
+      return;
+    }
+
+    playIslandRunMusic('new-island-celebration');
+    return () => stopIslandRunMusic('new-island-celebration');
+  }, [audioEnabled, showIslandClearCelebration]);
+
+  useEffect(() => {
     return () => {
       stopIslandRunMusic('market-lounge');
+      stopIslandRunMusic('new-island-celebration');
     };
   }, []);
 
@@ -9549,43 +9560,53 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             variant={islandClearStats.isCycleCapstone ? 'capstone' : 'standard'}
           />
           <div
-          className={`island-clear-celebration${islandClearStats.isCycleCapstone ? ' island-clear-celebration--capstone' : ''}`}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="island-clear-celebration-title"
-        >
-          <div
-            className={`island-clear-celebration__card island-clear-celebration__card--boss${islandClearStats.isCycleCapstone ? ' island-clear-celebration__card--capstone' : ''}`}
+            className={`island-clear-celebration${islandClearStats.isCycleCapstone ? ' island-clear-celebration--capstone' : ''}`}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Island completion celebration"
           >
-            <p className="island-clear-celebration__confetti" aria-hidden="true">
-              {islandClearStats.isCycleCapstone ? '🌌✨🏆✨🌌' : '🎉✨🏆✨🎉'}
-            </p>
-            <p className="island-clear-celebration__eyebrow">Island Clear Ready</p>
-            <p className="island-clear-celebration__title" id="island-clear-celebration-title">
-              🎉 Island Cleared!
-            </p>
-            <div className="island-clear-celebration__rewards">
-              <span className="island-clear-celebration__reward-item">🎲 +{islandClearStats.diceEarned}</span>
-              <span className="island-clear-celebration__reward-item">🟣 +{islandClearStats.essenceEarned}</span>
-              <span className="island-clear-celebration__reward-item">🔷 +3</span>
-            </div>
-            <p className="island-clear-celebration__stops">
-              ✅ {islandClearStats.stopsCleared} stops cleared · Island {islandClearStats.islandNumber} complete
-            </p>
-            <div className="island-clear-celebration__actions">
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary island-clear-celebration__cta"
-                onClick={handleTravelFromCelebration}
-                autoFocus
-              >
-                {getTreasurePathMilestoneMetadata(islandClearStats.islandNumber)
-                  ? '✨ Start Treasure Path'
-                  : '👉 Travel to Next Island'}
-              </button>
+            <div
+              className={`island-clear-celebration__card island-clear-celebration__card--boss${islandClearStats.isCycleCapstone ? ' island-clear-celebration__card--capstone' : ''}`}
+            >
+              <img
+                className="island-clear-celebration__hero"
+                src="/assets/islands/celebrations/newisland/backgroundceleb.webp"
+                alt=""
+                aria-hidden="true"
+              />
+              <div className="island-clear-celebration__content">
+                <p className="island-clear-celebration__confetti" aria-hidden="true">
+                  {islandClearStats.isCycleCapstone ? '🌌✨🏆✨🌌' : '🎉✨🏆✨🎉'}
+                </p>
+                <p className="island-clear-celebration__eyebrow">New Island Unlocked</p>
+                <img
+                  className="island-clear-celebration__title-image"
+                  src="/assets/islands/celebrations/newisland/islandcompletetext.webp"
+                  alt="Island Complete"
+                />
+                <div className="island-clear-celebration__rewards">
+                  <span className="island-clear-celebration__reward-item">🎲 +{islandClearStats.diceEarned}</span>
+                  <span className="island-clear-celebration__reward-item">🟣 +{islandClearStats.essenceEarned}</span>
+                  <span className="island-clear-celebration__reward-item">🔷 +3</span>
+                </div>
+                <p className="island-clear-celebration__stops">
+                  ✅ {islandClearStats.stopsCleared} stops cleared · Island {islandClearStats.islandNumber} complete
+                </p>
+                <div className="island-clear-celebration__actions">
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary island-clear-celebration__cta"
+                    onClick={handleTravelFromCelebration}
+                    autoFocus
+                  >
+                    {getTreasurePathMilestoneMetadata(islandClearStats.islandNumber)
+                      ? '✨ Start Treasure Path'
+                      : '👉 Travel to Next Island'}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
         </>
       )}
 
