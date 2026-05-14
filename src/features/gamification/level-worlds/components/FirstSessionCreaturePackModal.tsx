@@ -97,7 +97,7 @@ export function FirstSessionCreaturePackModal(props: FirstSessionCreaturePackMod
                           applyCreatureArtFallback(event, { pngSrc: art.cutoutPngSrc, silhouetteSrc: art.silhouetteSrc });
                         }}
                       />
-                      <span className="island-run-first-creature-pack__creature-emoji" style={{ display: 'none' }} aria-hidden="true">
+                      <span className="island-run-first-creature-pack__creature-emoji" aria-hidden="true">
                         {art.emojiFallback}
                       </span>
                     </div>

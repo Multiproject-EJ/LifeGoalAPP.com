@@ -7346,6 +7346,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
   }, [client, firstSessionTutorialState, session]);
 
+  const showFirstCreaturePackReveal = useCallback((cards: FirstSessionCreaturePackCardReveal[], diceGranted: number) => {
+    setFirstCreaturePackFlow({
+      phase: 'revealed',
+      cards,
+      diceGranted,
+      errorMessage: null,
+    });
+  }, []);
+
   const handleOpenFirstCreaturePack = useCallback(async () => {
     const attempt = resolveIslandRunFirstCreaturePackOpenAttempt({
       firstSessionTutorialState,
@@ -7383,22 +7392,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         }
         firstCreaturePackRevealTimerRef.current = typeof window !== 'undefined'
           ? window.setTimeout(() => {
-            setFirstCreaturePackFlow({
-              phase: 'revealed',
-              cards: nextCards,
-              diceGranted: nextDiceGranted,
-              errorMessage: null,
-            });
+            showFirstCreaturePackReveal(nextCards, nextDiceGranted);
             firstCreaturePackRevealTimerRef.current = null;
           }, 650)
           : null;
         if (typeof window === 'undefined') {
-          setFirstCreaturePackFlow({
-            phase: 'revealed',
-            cards: nextCards,
-            diceGranted: nextDiceGranted,
-            errorMessage: null,
-          });
+          showFirstCreaturePackReveal(nextCards, nextDiceGranted);
         }
         setLandingText(formatIslandRunFirstCreaturePackBonusCopy(nextDiceGranted));
         return;
@@ -7433,7 +7432,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       firstCreaturePackClaimInFlightRef.current = false;
       setIsFirstCreaturePackClaiming(false);
     }
-  }, [client, firstSessionTutorialState, session]);
+  }, [client, firstSessionTutorialState, session, showFirstCreaturePackReveal]);
 
   const handleContinueFirstCreaturePack = useCallback(() => {
     const snapshot = getIslandRunStateSnapshot(session);

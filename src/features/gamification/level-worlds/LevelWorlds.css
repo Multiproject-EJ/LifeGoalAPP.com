@@ -4980,6 +4980,7 @@
 }
 
 .island-run-first-creature-pack__creature-emoji {
+  display: none;
   font-size: 2rem;
 }
 
