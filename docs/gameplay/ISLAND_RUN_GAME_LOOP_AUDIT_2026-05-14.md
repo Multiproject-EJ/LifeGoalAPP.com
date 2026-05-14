@@ -72,7 +72,7 @@ Events/minigames
 
 | Flow | Current implementation | Notes / audit finding |
 |---|---|---|
-| Starting dice | `ISLAND_RUN_DEFAULT_STARTING_DICE = 30` in `islandRunEconomy.ts`. | Matches level-1 starting floor concept, though regen implementation uses banded floors. |
+| Starting dice | `ISLAND_RUN_DEFAULT_STARTING_DICE = 30` in `islandRunEconomy.ts`. | Starts at the same 30-dice baseline as both the contract's level-1 formula and the implementation's first regen band; later-level regen tuning is where the contract/implementation diverge. |
 | Roll cost | `executeIslandRunRollAction` uses `DICE_PER_ROLL = 1` and `diceCost = multiplier`; movement remains 2–12 tiles. | Good sink; high multipliers burn linearly. |
 | Multiplier ladder | `MULTIPLIER_TIERS`: ×1, ×2, ×3, ×5, ×10, ×20, ×50, ×100, ×200 gated by dice pool. | High multipliers are gated but can amplify reward-bar progress heavily. |
 | Reward bar dice | Rotation starts with dice; dice base is `5 + tier * 3`, plus small dice side-payouts on other reward kinds. | Primary legal short-loop dice source. |
@@ -82,8 +82,8 @@ Events/minigames
 | Shop/market | Island Run market spends 30 essence for +6 dice once per island; legacy Lucky Roll dice shop uses retired hearts/legacy balances. | Island Run market is canonical-ish via `setDicePool` shim, but shop surface remains split. |
 | Lucky Roll / Treasure Path | Pre-island Lucky Roll has zero normal dice cost and can bank bounded dice rewards; finish bundle includes +5 dice. | Contract allows lucky spin; this is a controlled source, not a board roll sink. |
 | Space Excavator | Milestones include +5 dice at clear 2 and +25 dice at clear 10. | Event source is canonical. |
-| Encounter tiles | `rollEncounterReward` can award 2/4/6/8 dice, and UI applies it through `setDicePool`. | **Contract contradiction:** tiles should not award dice directly. |
-| Bonus tile service | `BONUS_BASE_RELEASE_PAYOUT.dice = 4`. | **Contract contradiction in docs/service**, but production tile map currently excludes `bonus`. |
+| Encounter tiles | `rollEncounterReward` can award 2/4/6/8 dice, and UI applies it through `setDicePool`. | **Contract contradiction:** tiles should not award dice directly; see Risk #1. |
+| Bonus tile service | `BONUS_BASE_RELEASE_PAYOUT.dice = 4`. | **Contract contradiction in docs/service**, but production tile map currently excludes `bonus`; see Risk #1. |
 | Legacy minigames | Task Tower, Shooter Blitz, Vision Quest use `gameRewards.awardDice`, not Island Run `dicePool`. | User-facing dice may diverge from Island Run dice. |
 
 ## Essence inflow/outflow table
@@ -124,7 +124,7 @@ Events/minigames
 4. **Legacy game rewards create a parallel dice economy.** Task Tower, Shooter Blitz, Vision Quest, Lucky Roll standalone, and dice packs use `gameRewards` localStorage dice/tokens instead of canonical Island Run dice.
 5. **Reward-bar sticker completion can create large dice spikes.** +100 dice per sticker can dominate ordinary dice burn if sticker fragments become too available.
 6. **High-multiplier tuning is guarded for ×200 chest farming but not fully telemetry-backed.** Unit test covers one scenario; live tile mix, encounters, market, sticker, events, and auto-roll need dashboard tracking.
-7. **Market and shop messaging may confuse currency roles.** Island Run market uses essence for dice; legacy Lucky Roll shop still displays hearts despite retired-heart contract.
+7. **Market and shop messaging may confuse currency roles.** Island Run market uses essence for dice; legacy Lucky Roll shop still displays hearts even though the canonical gameplay contract says hearts are fully retired from the island game economy.
 8. **Island clear can feel like a hidden checklist.** Boss defeat may not clear island if egg/builds remain; current copy helps, but users can still ask “what next?” across hatchery/build/boss states.
 9. **Event loop feels uneven.** Feeding Frenzy intentionally has no minigame, Space Excavator spends per action, and launchers rely on registry/fallback behavior.
 10. **Build loop is central but modal-heavy.** Tap/hold is thumb-friendly once discovered, but it competes with roll/stop/market panels for the primary next action.
@@ -178,4 +178,3 @@ Events/minigames
 ## Notes on “critical contradiction” status
 
 The audit found contract contradictions around direct dice from tile-adjacent rewards, especially encounters and the bonus-tile service. Because the requested task is investigation-only and explicitly says not to alter economy values yet, this document records those contradictions as immediate audit items rather than changing behavior.
-
