@@ -4246,8 +4246,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
    * button is disabled. Keys mirror the internal `rollDisabledReason` codes. */
   const rollDisabledMessage = (() => {
     switch (rollDisabledReason) {
-      case 'first_run_celebration':
-        return 'Roll is paused while the welcome celebration is playing.';
+      case 'onboarding_celebration':
+        return 'Roll is paused while the onboarding celebration is showing.';
       case 'already_rolling':
         return 'A roll is already in progress — please wait.';
       case 'travel_overlay':
