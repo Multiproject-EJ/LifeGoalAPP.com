@@ -8456,11 +8456,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     className={`island-run-prototype__footer-multiplier-btn${effectiveMultiplier > 1 ? ' island-run-prototype__footer-multiplier-btn--active' : ''}${isAtMaxAvailableMultiplier ? ' island-run-prototype__footer-multiplier-btn--max' : ''}`}
                     data-max-multiplier={isAtMaxAvailableMultiplier ? 'true' : undefined}
                     onClick={() => {
-                      const unlocked = unlockedMultipliers;
-                      if (unlocked.length <= 1) return;
-                      const currentIdx = unlocked.indexOf(effectiveMultiplier);
-                      const nextIdx = (currentIdx + 1) % unlocked.length;
-                      setDiceMultiplier(unlocked[nextIdx]!);
+                      if (unlockedMultipliers.length <= 1) return;
+                      const currentIdx = unlockedMultipliers.indexOf(effectiveMultiplier);
+                      const nextIdx = (currentIdx + 1) % unlockedMultipliers.length;
+                      setDiceMultiplier(unlockedMultipliers[nextIdx]!);
                     }}
                     title={`Cost: ${effectiveDiceCost} dice/roll · Max: ×${maxAvailableMultiplier}`}
                   >
