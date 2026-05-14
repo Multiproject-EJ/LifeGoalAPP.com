@@ -3630,7 +3630,7 @@
   align-items: flex-end;
   justify-content: center;
   overflow: hidden;
-  min-height: min(92dvh, 760px);
+  height: min(92dvh, 760px);
   max-width: 440px;
   width: min(100%, 440px);
   border: 1px solid rgba(255, 230, 156, 0.55);
