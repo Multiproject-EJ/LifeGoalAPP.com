@@ -11,7 +11,8 @@ const ISLAND_RUN_MUSIC_TRACKS = {
 export type IslandRunMusicTrackId = keyof typeof ISLAND_RUN_MUSIC_TRACKS;
 
 const islandRunMusicAudioByTrack = new Map<IslandRunMusicTrackId, HTMLAudioElement>();
-let activeIslandRunMusicTrackId: IslandRunMusicTrackId | null = null;
+let ownedIslandRunMusicTrackId: IslandRunMusicTrackId | null = null;
+let playingIslandRunMusicTrackId: IslandRunMusicTrackId | null = null;
 
 function getIslandRunMusicAudio(trackId: IslandRunMusicTrackId): HTMLAudioElement | null {
   if (typeof window === 'undefined') {
@@ -32,47 +33,59 @@ function getIslandRunMusicAudio(trackId: IslandRunMusicTrackId): HTMLAudioElemen
   return audio;
 }
 
-function stopIslandRunActiveMusic(): void {
-  if (!activeIslandRunMusicTrackId) return;
+function resetIslandRunMusicAudio(trackId: IslandRunMusicTrackId): void {
+  const audio = islandRunMusicAudioByTrack.get(trackId);
+  if (!audio) return;
 
-  const activeAudio = islandRunMusicAudioByTrack.get(activeIslandRunMusicTrackId);
-  if (!activeAudio) {
-    activeIslandRunMusicTrackId = null;
-    return;
-  }
+  audio.pause();
+  audio.currentTime = 0;
+}
 
-  activeAudio.pause();
-  activeAudio.currentTime = 0;
-  activeIslandRunMusicTrackId = null;
+function stopOwnedIslandRunMusic(): void {
+  const trackId = ownedIslandRunMusicTrackId ?? playingIslandRunMusicTrackId;
+  if (!trackId) return;
+
+  resetIslandRunMusicAudio(trackId);
+  if (ownedIslandRunMusicTrackId === trackId) ownedIslandRunMusicTrackId = null;
+  if (playingIslandRunMusicTrackId === trackId) playingIslandRunMusicTrackId = null;
 }
 
 export function playIslandRunMusic(trackId: IslandRunMusicTrackId): void {
   const audio = getIslandRunMusicAudio(trackId);
   if (!audio) return;
 
-  if (activeIslandRunMusicTrackId && activeIslandRunMusicTrackId !== trackId) {
-    stopIslandRunActiveMusic();
+  if (ownedIslandRunMusicTrackId && ownedIslandRunMusicTrackId !== trackId) {
+    stopOwnedIslandRunMusic();
   }
 
-  activeIslandRunMusicTrackId = trackId;
+  ownedIslandRunMusicTrackId = trackId;
 
-  void audio.play().catch(() => {
-    // Browser autoplay policy can reject playback even after some interactions.
-  });
+  void audio
+    .play()
+    .then(() => {
+      if (ownedIslandRunMusicTrackId !== trackId) {
+        resetIslandRunMusicAudio(trackId);
+        return;
+      }
+
+      playingIslandRunMusicTrackId = trackId;
+    })
+    .catch(() => {
+      // Browser autoplay policy can reject playback even after some interactions.
+      if (ownedIslandRunMusicTrackId === trackId) ownedIslandRunMusicTrackId = null;
+      if (playingIslandRunMusicTrackId === trackId) playingIslandRunMusicTrackId = null;
+    });
 }
 
 export function stopIslandRunMusic(trackId?: IslandRunMusicTrackId): void {
   if (!trackId) {
-    stopIslandRunActiveMusic();
+    stopOwnedIslandRunMusic();
     return;
   }
 
-  if (activeIslandRunMusicTrackId !== trackId) return;
+  if (ownedIslandRunMusicTrackId !== trackId && playingIslandRunMusicTrackId !== trackId) return;
 
-  const audio = islandRunMusicAudioByTrack.get(trackId);
-  if (!audio) return;
-
-  audio.pause();
-  audio.currentTime = 0;
-  activeIslandRunMusicTrackId = null;
+  resetIslandRunMusicAudio(trackId);
+  if (ownedIslandRunMusicTrackId === trackId) ownedIslandRunMusicTrackId = null;
+  if (playingIslandRunMusicTrackId === trackId) playingIslandRunMusicTrackId = null;
 }
