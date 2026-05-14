@@ -28,6 +28,7 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { ISLAND_RUN_DEFAULT_STARTING_DICE } from './islandRunEconomy';
 import {
+  ISLAND_RUN_FIRST_SESSION_TUTORIAL_INITIAL_STATE,
   readIslandRunGameStateRecord,
   writeIslandRunGameStateRecord,
 } from './islandRunGameStateStore';
@@ -48,6 +49,7 @@ export function buildFreshIslandRunRecord(
   return {
     runtimeVersion: 0,
     firstRunClaimed: false,
+    firstSessionTutorialState: ISLAND_RUN_FIRST_SESSION_TUTORIAL_INITIAL_STATE,
     dailyHeartsClaimedDayKey: null,
     onboardingDisplayNameLoopCompleted: current.onboardingDisplayNameLoopCompleted,
     storyPrologueSeen: false,

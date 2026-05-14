@@ -139,6 +139,7 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
     const nextState: IslandRunRuntimeState = {
       runtimeVersion: current.runtimeVersion,
       firstRunClaimed: typeof patch.firstRunClaimed === 'boolean' ? patch.firstRunClaimed : current.firstRunClaimed,
+      firstSessionTutorialState: current.firstSessionTutorialState,
       dailyHeartsClaimedDayKey:
         typeof patch.dailyHeartsClaimedDayKey === 'string' || patch.dailyHeartsClaimedDayKey === null
           ? patch.dailyHeartsClaimedDayKey

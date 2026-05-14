@@ -851,7 +851,11 @@ function mergeEggRewardInventory(
   return sanitizeEggRewardInventory([...remote, ...local]);
 }
 
-function toRecord(value: Partial<IslandRunGameStateRecord>, fallback: IslandRunGameStateRecord): IslandRunGameStateRecord {
+type RawIslandRunGameStateRecord = Omit<Partial<IslandRunGameStateRecord>, 'firstSessionTutorialState'> & {
+  firstSessionTutorialState?: unknown;
+};
+
+function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameStateRecord): IslandRunGameStateRecord {
   const eggTierRaw = value.activeEggTier;
   const activeEggTier: 'common' | 'rare' | 'mythic' | null =
     eggTierRaw === 'common' || eggTierRaw === 'rare' || eggTierRaw === 'mythic' ? eggTierRaw : fallback.activeEggTier;
