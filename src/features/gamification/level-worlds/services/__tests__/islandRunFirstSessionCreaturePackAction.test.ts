@@ -5,6 +5,7 @@ import {
   FIRST_SESSION_CREATURE_PACK_RESOLVER_VERSION,
 } from '../islandRunFirstSessionCreaturePackAction';
 import { __resetIslandRunActionMutexesForTests } from '../islandRunActionMutex';
+import { CREATURE_CATALOG } from '../creatureCatalog';
 import {
   readIslandRunGameStateRecord,
   resetIslandRunRuntimeCommitCoordinatorForTests,
@@ -55,6 +56,8 @@ function totalCreatureCopies(record: Pick<IslandRunGameStateRecord, 'creatureCol
   return record.creatureCollection.reduce((sum, entry) => sum + entry.copies, 0);
 }
 
+const SUPPORTED_CREATURE_TIERS = new Set(CREATURE_CATALOG.map((creature) => creature.tier));
+
 export const islandRunFirstSessionCreaturePackActionTests: TestCase[] = [
   {
     name: 'claimFirstSessionCreaturePackReward grants five cards, +100 dice, and advances tutorial state',
@@ -87,6 +90,12 @@ export const islandRunFirstSessionCreaturePackActionTests: TestCase[] = [
       assertEqual(result.revealPayload?.diceGranted, FIRST_SESSION_CREATURE_PACK_DICE_REWARD, 'Reveal payload should report +100 dice');
       assertEqual(result.revealPayload?.cards.length, FIRST_SESSION_CREATURE_PACK_CARD_COUNT, 'Claim should return exactly five creature card results');
       assertEqual(result.revealPayload?.cards[0]?.tier, 'common', 'Slot 1 should guarantee a common starter-friendly creature');
+      for (const card of result.revealPayload?.cards ?? []) {
+        const catalogCreature = CREATURE_CATALOG.find((creature) => creature.id === card.creatureId);
+        assert(catalogCreature, `Reveal card ${card.creatureId} should come from the creature catalog`);
+        assert(SUPPORTED_CREATURE_TIERS.has(card.tier), `Reveal card ${card.creatureId} should use a supported catalog tier`);
+        assertEqual(card.tier, catalogCreature?.tier, `Reveal card ${card.creatureId} tier should match the catalog`);
+      }
       assertEqual(persisted.dicePool, 104, 'Claim should grant exactly +100 dice');
       assertEqual(persisted.firstSessionTutorialState, 'first_creature_pack_claimed', 'Claim should advance tutorial state to claimed');
       assertEqual(persisted.runtimeVersion, 8, 'Claim should commit one atomic runtime update');

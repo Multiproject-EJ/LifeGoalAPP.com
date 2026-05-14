@@ -59,10 +59,10 @@ interface WeightedTier {
 
 const FIRST_SESSION_CREATURE_PACK_SLOT_WEIGHTS: WeightedTier[][] = [
   [{ tier: 'common', weight: 1 }],
+  [{ tier: 'common', weight: 95 }, { tier: 'rare', weight: 5 }],
+  [{ tier: 'common', weight: 90 }, { tier: 'rare', weight: 10 }],
   [{ tier: 'common', weight: 85 }, { tier: 'rare', weight: 15 }],
-  [{ tier: 'common', weight: 75 }, { tier: 'rare', weight: 25 }],
-  [{ tier: 'common', weight: 70 }, { tier: 'rare', weight: 30 }],
-  [{ tier: 'common', weight: 65 }, { tier: 'rare', weight: 35 }],
+  [{ tier: 'common', weight: 80 }, { tier: 'rare', weight: 20 }],
 ];
 
 function normalizeNowMs(nowMs: number | undefined): number {
