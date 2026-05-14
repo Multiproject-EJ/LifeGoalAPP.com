@@ -189,8 +189,8 @@ import {
   setIslandRunAudioEnabled,
 } from '../services/islandRunAudio';
 import {
-  playIslandRunLuxuryRewardMusic,
-  stopIslandRunLuxuryRewardMusic,
+  playIslandRunMusic,
+  stopIslandRunMusic,
 } from '../services/islandRunMusic';
 import { SHARD_EARN, computeShardEarn, getShardTierThreshold, type ShardEarnSource } from '../services/shardMilestoneEngine';
 import {
@@ -2409,16 +2409,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   useEffect(() => {
     if (!showShopPanel || !audioEnabled) {
-      stopIslandRunLuxuryRewardMusic();
+      stopIslandRunMusic('market-lounge');
       return;
     }
 
-    playIslandRunLuxuryRewardMusic();
+    playIslandRunMusic('market-lounge');
   }, [audioEnabled, showShopPanel]);
 
   useEffect(() => {
     return () => {
-      stopIslandRunLuxuryRewardMusic();
+      stopIslandRunMusic('market-lounge');
     };
   }, []);
 
