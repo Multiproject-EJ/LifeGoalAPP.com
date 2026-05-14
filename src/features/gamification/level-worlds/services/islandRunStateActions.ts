@@ -1481,9 +1481,16 @@ export function applyFirstRunClaimed(options: {
   const { session, client, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
   if (current.firstRunClaimed) return current;
+  const shouldArmFirstSessionTutorialRoll =
+    current.currentIslandNumber === 1
+    && current.cycleIndex === 0
+    && current.firstSessionTutorialState === 'not_started';
   const next: IslandRunGameStateRecord = {
     ...current,
     firstRunClaimed: true,
+    firstSessionTutorialState: shouldArmFirstSessionTutorialRoll
+      ? 'awaiting_first_roll'
+      : current.firstSessionTutorialState,
     runtimeVersion: current.runtimeVersion + 1,
   };
   void commitIslandRunState({
