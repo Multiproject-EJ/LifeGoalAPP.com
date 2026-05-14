@@ -7,6 +7,10 @@
   gap: 0.75rem;
 }
 
+.routines-today-lane--panel {
+  margin: 0;
+}
+
 .routines-today-lane__header h3 {
   margin: 0;
 }

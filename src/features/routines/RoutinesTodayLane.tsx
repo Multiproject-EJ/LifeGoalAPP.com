@@ -15,9 +15,17 @@ import './RoutinesTodayLane.css';
 type RoutinesTodayLaneProps = {
   session: Session;
   onHideStandaloneHabitsChange?: (habitIds: string[]) => void;
+  onSummaryChange?: (summary: RoutinesTodayLaneSummary) => void;
+  variant?: 'standalone' | 'panel';
 };
 
 type StepsByRoutine = Record<string, RoutineStep[]>;
+
+export type RoutinesTodayLaneSummary = {
+  status: 'loading' | 'error' | 'ready';
+  dueCount: number;
+  error: string | null;
+};
 
 function getIsoWeekBounds(date: Date): { monday: string; sunday: string } {
   const current = new Date(date);
@@ -70,7 +78,12 @@ function isRoutineDueToday(
   return true;
 }
 
-export function RoutinesTodayLane({ session, onHideStandaloneHabitsChange }: RoutinesTodayLaneProps) {
+export function RoutinesTodayLane({
+  session,
+  onHideStandaloneHabitsChange,
+  onSummaryChange,
+  variant = 'standalone',
+}: RoutinesTodayLaneProps) {
   const [loading, setLoading] = useState(false);
   const [savingStepId, setSavingStepId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -218,6 +231,15 @@ export function RoutinesTodayLane({ session, onHideStandaloneHabitsChange }: Rou
     onHideStandaloneHabitsChange(Array.from(hidden));
   }, [dueRoutines, onHideStandaloneHabitsChange, stepsByRoutine]);
 
+  useEffect(() => {
+    if (!onSummaryChange) return;
+    onSummaryChange({
+      status: loading ? 'loading' : error ? 'error' : 'ready',
+      dueCount: dueRoutines.length,
+      error,
+    });
+  }, [dueRoutines.length, error, loading, onSummaryChange]);
+
   const completedHabitIds = useMemo(() => {
     const doneIds = new Set<string>();
     for (const log of todayLogs) {
@@ -325,28 +347,42 @@ export function RoutinesTodayLane({ session, onHideStandaloneHabitsChange }: Rou
     setActiveRunStepIndex((value) => value + 1);
   }, [activeRun, handleRunClose]);
 
+  const laneClassName = `routines-today-lane${variant === 'panel' ? ' routines-today-lane--panel' : ''}`;
+
   if (loading) {
-    return <section className="routines-today-lane"><p>Loading routines…</p></section>;
+    return <section className={laneClassName}><p>Loading routines…</p></section>;
   }
 
   if (error) {
     return (
-      <section className="routines-today-lane routines-today-lane--error">
+      <section className={`${laneClassName} routines-today-lane--error`}>
         <p>{error}</p>
       </section>
     );
   }
 
   if (dueRoutines.length === 0) {
+    if (variant === 'panel') {
+      return (
+        <section className={laneClassName} aria-label="Routines due today">
+          <p className="routines-today-lane__empty">No routines due today.</p>
+        </section>
+      );
+    }
     return null;
   }
 
   return (
-    <section className="routines-today-lane" aria-label="Routines due today">
-      <header className="routines-today-lane__header">
-        <p className="routines-today-lane__eyebrow">Today</p>
-        <h3>Routines due today</h3>
-      </header>
+    <section
+      className={laneClassName}
+      aria-label="Routines due today"
+    >
+      {variant === 'standalone' ? (
+        <header className="routines-today-lane__header">
+          <p className="routines-today-lane__eyebrow">Today</p>
+          <h3>Routines due today</h3>
+        </header>
+      ) : null}
       <div className="routines-today-lane__list">
         {dueRoutines.map((routine) => {
           const steps = stepsByRoutine[routine.id] ?? [];

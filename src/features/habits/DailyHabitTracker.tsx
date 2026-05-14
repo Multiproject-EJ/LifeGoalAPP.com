@@ -156,7 +156,7 @@ import {
 import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
 import { HabitPauseDialog } from './HabitPauseDialog';
-import { RoutinesTodayLane } from '../routines';
+import { RoutinesTodayLane, type RoutinesTodayLaneSummary } from '../routines';
 import type { ArchetypeHand } from '../identity/archetypes/archetypeHandBuilder';
 import { isPlayersHandSparkResultEnabled } from '../players_hand/playersHandFeatureFlags';
 import { MyPlayerHandPanel } from '../players_hand/components/MyPlayerHandPanel';
@@ -289,7 +289,7 @@ const DIRECT_OPEN_TIME_BOUND_OFFERS: ReadonlySet<TimeBoundOfferId> = new Set([
 ]);
 
 type DailyHabitTrackerVariant = 'full' | 'compact';
-type TodayExpandableSectionKey = 'contracts' | 'quickJournal' | 'intentions';
+type TodayExpandableSectionKey = 'routines' | 'contracts' | 'quickJournal' | 'intentions';
 
 function hasQuickJournalDraftState(params: {
   isQuickJournalOpen: boolean;
@@ -750,6 +750,19 @@ export function DailyHabitTracker({
     isDailySpinBonusClaimedToday,
   });
   const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
+  const [routinesTodaySummary, setRoutinesTodaySummary] = useState<RoutinesTodayLaneSummary>({
+    status: 'loading',
+    dueCount: 0,
+    error: null,
+  });
+  const handleRoutineHiddenHabitIdsChange = useCallback((habitIds: string[]) => {
+    setRoutineHiddenHabitIds((current) => {
+      if (current.length === habitIds.length && current.every((habitId, index) => habitId === habitIds[index])) {
+        return current;
+      }
+      return habitIds;
+    });
+  }, []);
   const [seenOfferTeasers, setSeenOfferTeasers] = useState<Record<string, boolean>>({});
   const progressGradientId = useId();
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
@@ -7792,6 +7805,16 @@ export function DailyHabitTracker({
       : contractsLoading
         ? { label: 'Loading…', tone: 'loading' as const }
         : { label: activeContracts.length === 1 ? '1 active' : `${activeContracts.length} active`, tone: 'accent' as const };
+    const routinesStatusChip = routinesTodaySummary.status === 'error'
+      ? { label: 'Error', tone: 'error' as const }
+      : routinesTodaySummary.status === 'loading'
+        ? { label: 'Loading…', tone: 'loading' as const }
+        : routinesTodaySummary.dueCount === 0
+          ? { label: 'No routines', tone: 'neutral' as const }
+          : {
+              label: routinesTodaySummary.dueCount === 1 ? '1 due' : `${routinesTodaySummary.dueCount} due`,
+              tone: 'accent' as const,
+            };
     const hasQuickJournalDraft = hasQuickJournalDraftState({
       isQuickJournalOpen,
       quickJournalMorning,
@@ -8164,10 +8187,23 @@ export function DailyHabitTracker({
               </div>
             ) : null}
 
-            <RoutinesTodayLane
-              session={session}
-              onHideStandaloneHabitsChange={(habitIds) => setRoutineHiddenHabitIds(habitIds)}
-            />
+            <TodayExpandableActionSection
+              id="today-routines"
+              icon="🔁"
+              title="Routines"
+              subtitle="Run your grouped habits"
+              statusChip={routinesStatusChip}
+              expanded={openTodayExpandableSection === 'routines'}
+              onToggle={() => toggleTodayExpandableSection('routines')}
+              keepMounted
+            >
+              <RoutinesTodayLane
+                session={session}
+                onHideStandaloneHabitsChange={handleRoutineHiddenHabitIdsChange}
+                onSummaryChange={setRoutinesTodaySummary}
+                variant="panel"
+              />
+            </TodayExpandableActionSection>
 
             <TodayExpandableActionSection
               id="today-contracts"
