@@ -167,11 +167,13 @@ Suggested eligibility gates:
 - tutorial state indicates the player is in the first-session Island 1 onboarding flow
 - first creature pack has not been granted/opened/claimed
 - first guided hatchery L1 build is complete
-- player has reached low dice, e.g. `dicePool <= 3`
+- player has reached low dice, e.g. `dicePool <= 3` while still above the current roll cost
 - player is not currently rolling or in another blocking modal/reward reveal
 - current state is read from the canonical Island Run store, not a stale component mirror
 
-The trigger should not be based only on low dice. It should require tutorial milestones, especially first essence reward and first Hatchery L1 build, to avoid showing creature collection too early or to returning players.
+The `dicePool <= 3` threshold assumes the onboarding player is still at the normal `×1` multiplier, where the next roll costs 1 die. The trigger should run before the existing out-of-dice prompt by checking both the low threshold and `dicePool >= effectiveDiceCost`; if a future tutorial allows higher multipliers, the threshold should be expressed as a small number of remaining affordable rolls rather than a fixed dice count.
+
+The trigger should not be based only on low dice. It should require tutorial milestones, especially first essence reward and first hatchery L1 build, to avoid showing creature collection too early or to returning players.
 
 ## 9. Recommended pack composition
 
