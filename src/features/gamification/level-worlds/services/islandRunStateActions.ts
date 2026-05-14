@@ -42,11 +42,16 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import type {
   IslandRunGameStateRecord,
+  IslandRunFirstSessionTutorialState,
   IslandRunLuckyRollSession,
   PerIslandEggEntry,
   SpaceExcavatorProgressEntry,
 } from './islandRunGameStateStore';
-import { getIslandRunLuckyRollSessionKey } from './islandRunGameStateStore';
+import {
+  compareIslandRunFirstSessionTutorialStates,
+  getIslandRunLuckyRollSessionKey,
+  ISLAND_RUN_FIRST_SESSION_TUTORIAL_STATES,
+} from './islandRunGameStateStore';
 import {
   commitIslandRunState,
   getIslandRunStateSnapshot,
@@ -78,6 +83,32 @@ import {
 
 
 export type SpaceExcavatorDigFailureReason = 'missing_progress' | 'insufficient_tickets' | 'board_complete' | 'invalid_tile' | 'already_dug';
+
+export type ApplyFirstSessionTutorialStateFailureReason = 'invalid_transition';
+
+export interface ApplyFirstSessionTutorialStateResult {
+  record: IslandRunGameStateRecord;
+  changed: boolean;
+  ok: boolean;
+  failureReason?: ApplyFirstSessionTutorialStateFailureReason;
+}
+
+const ISLAND_RUN_FIRST_SESSION_TUTORIAL_ALLOWED_NEXT: Record<
+  IslandRunFirstSessionTutorialState,
+  IslandRunFirstSessionTutorialState[]
+> = ISLAND_RUN_FIRST_SESSION_TUTORIAL_STATES.reduce((acc, state, index, states) => {
+  acc[state] = states[index + 1] ? [states[index + 1]] : [];
+  return acc;
+}, {} as Record<IslandRunFirstSessionTutorialState, IslandRunFirstSessionTutorialState[]>);
+
+function canApplyFirstSessionTutorialTransition(
+  current: IslandRunFirstSessionTutorialState,
+  target: IslandRunFirstSessionTutorialState,
+): boolean {
+  if (current === target) return true;
+  if (compareIslandRunFirstSessionTutorialStates(target, current) < 0) return false;
+  return ISLAND_RUN_FIRST_SESSION_TUTORIAL_ALLOWED_NEXT[current].includes(target);
+}
 
 type ApplySpaceExcavatorDigResultBase = {
   record: IslandRunGameStateRecord;
@@ -1462,6 +1493,52 @@ export function applyFirstRunClaimed(options: {
     triggerSource: triggerSource ?? 'apply_first_run_claimed',
   });
   return next;
+}
+
+/**
+ * Advances the first-session Island Run tutorial marker through the canonical
+ * store path. Repeated calls for the current state are no-ops, and regressions
+ * are rejected so one-time reward states cannot be replayed by stale callers.
+ */
+export function applyFirstSessionTutorialState(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  targetState: IslandRunFirstSessionTutorialState;
+  triggerSource?: string;
+}): ApplyFirstSessionTutorialStateResult {
+  const { session, client, targetState, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (!canApplyFirstSessionTutorialTransition(current.firstSessionTutorialState, targetState)) {
+    return {
+      record: current,
+      changed: false,
+      ok: false,
+      failureReason: 'invalid_transition',
+    };
+  }
+  if (current.firstSessionTutorialState === targetState) {
+    return {
+      record: current,
+      changed: false,
+      ok: true,
+    };
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    firstSessionTutorialState: targetState,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_first_session_tutorial_state',
+  });
+  return {
+    record: next,
+    changed: true,
+    ok: true,
+  };
 }
 
 /**

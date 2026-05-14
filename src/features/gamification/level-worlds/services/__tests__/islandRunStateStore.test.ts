@@ -1,5 +1,8 @@
 import {
+  ISLAND_RUN_FIRST_SESSION_TUTORIAL_INITIAL_STATE,
+  readIslandRunGameStateRecord,
   resetIslandRunRuntimeCommitCoordinatorForTests,
+  writeIslandRunGameStateRecord,
 } from '../islandRunGameStateStore';
 import {
   __getIslandRunStateSubscriberCountForTests,
@@ -59,8 +62,81 @@ export const islandRunStateStoreTests: TestCase[] = [
       resetAll();
       const snapshot = getIslandRunStateSnapshot(makeSession());
       assert(snapshot.runtimeVersion === 0, 'expected default runtimeVersion 0');
+      assertEqual(
+        snapshot.firstSessionTutorialState,
+        ISLAND_RUN_FIRST_SESSION_TUTORIAL_INITIAL_STATE,
+        'new players should start with the tutorial initial state',
+      );
       assert(typeof snapshot.dicePool === 'number', 'dicePool should be a number');
       assert(Array.isArray(snapshot.stopStatesByIndex), 'stopStatesByIndex should be array');
+    },
+  },
+  {
+    name: 'readIslandRunGameStateRecord hydrates existing local records without tutorial state safely',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      window.localStorage.setItem(
+        `island_run_runtime_state_${USER_ID}`,
+        JSON.stringify({ runtimeVersion: 3, dicePool: 12 }),
+      );
+
+      const record = readIslandRunGameStateRecord(session);
+
+      assertEqual(record.runtimeVersion, 3, 'existing runtimeVersion should hydrate');
+      assertEqual(record.dicePool, 12, 'existing dicePool should hydrate');
+      assertEqual(
+        record.firstSessionTutorialState,
+        ISLAND_RUN_FIRST_SESSION_TUTORIAL_INITIAL_STATE,
+        'missing tutorial state should fall back safely',
+      );
+    },
+  },
+  {
+    name: 'firstSessionTutorialState persists through local store serialization',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      const base = readIslandRunGameStateRecord(session);
+
+      await writeIslandRunGameStateRecord({
+        session,
+        client: null,
+        record: {
+          ...base,
+          firstSessionTutorialState: 'awaiting_first_roll',
+          runtimeVersion: base.runtimeVersion + 1,
+        },
+      });
+
+      const record = readIslandRunGameStateRecord(session);
+      assertEqual(
+        record.firstSessionTutorialState,
+        'awaiting_first_roll',
+        'tutorial state should round-trip through localStorage',
+      );
+    },
+  },
+  {
+    name: 'readIslandRunGameStateRecord falls back safely for invalid tutorial state values',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      window.localStorage.setItem(
+        `island_run_runtime_state_${USER_ID}`,
+        JSON.stringify({
+          runtimeVersion: 4,
+          firstSessionTutorialState: 'future_unknown_state',
+        }),
+      );
+
+      const record = readIslandRunGameStateRecord(session);
+
+      assertEqual(
+        record.firstSessionTutorialState,
+        ISLAND_RUN_FIRST_SESSION_TUTORIAL_INITIAL_STATE,
+        'unknown tutorial state should fall back safely',
+      );
     },
   },
   {
