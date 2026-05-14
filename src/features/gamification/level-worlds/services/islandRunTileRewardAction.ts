@@ -34,6 +34,7 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import {
   awardIslandRunContractV2Essence,
   deductIslandRunContractV2Essence,
+  getStopUpgradeCost,
 } from './islandRunContractV2EssenceBuild';
 import {
   type IslandRunRewardBarRuntimeSlice,
@@ -43,6 +44,55 @@ import { recordEventProgress } from './islandRunEventEngine';
 import { readIslandRunGameStateRecord } from './islandRunGameStateStore';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import { persistIslandRunRuntimeStatePatch } from './islandRunRuntimeState';
+
+const TUTORIAL_HATCHERY_STOP_INDEX = 0;
+const TUTORIAL_HATCHERY_L1_CURRENT_BUILD_LEVEL = 0;
+
+function resolveTutorialEssenceOverride(
+  state: ReturnType<typeof readIslandRunGameStateRecord>,
+  requestedEssenceDelta: number,
+): {
+  essenceDelta: number;
+  shouldSuppressRewardBarProgress: boolean;
+  nextFirstSessionTutorialState: 'first_essence_reward_claimed' | null;
+} {
+  if (state.currentIslandNumber !== 1 || state.cycleIndex !== 0 || requestedEssenceDelta <= 0) {
+    return {
+      essenceDelta: requestedEssenceDelta,
+      shouldSuppressRewardBarProgress: false,
+      nextFirstSessionTutorialState: null,
+    };
+  }
+
+  if (state.firstSessionTutorialState === 'first_roll_consumed') {
+    return {
+      essenceDelta: getStopUpgradeCost({
+        islandNumber: 1,
+        stopIndex: TUTORIAL_HATCHERY_STOP_INDEX,
+        currentBuildLevel: TUTORIAL_HATCHERY_L1_CURRENT_BUILD_LEVEL,
+      }),
+      shouldSuppressRewardBarProgress: true,
+      nextFirstSessionTutorialState: 'first_essence_reward_claimed',
+    };
+  }
+
+  if (
+    state.firstSessionTutorialState === 'first_essence_reward_claimed'
+    || state.firstSessionTutorialState === 'build_prompt_visible'
+  ) {
+    return {
+      essenceDelta: 0,
+      shouldSuppressRewardBarProgress: true,
+      nextFirstSessionTutorialState: null,
+    };
+  }
+
+  return {
+    essenceDelta: requestedEssenceDelta,
+    shouldSuppressRewardBarProgress: false,
+    nextFirstSessionTutorialState: null,
+  };
+}
 
 export interface IslandRunTileRewardActionOptions {
   session: Session;
@@ -106,10 +156,15 @@ export function executeIslandRunTileRewardAction(
 async function performTileRewardAction(
   options: IslandRunTileRewardActionOptions,
 ): Promise<IslandRunTileRewardActionResult> {
-  const { session, client, essenceDelta, rewardBarProgress, islandRunContractV2Enabled } = options;
+  const { session, client, rewardBarProgress, islandRunContractV2Enabled } = options;
 
   // 1. Hydrate under the mutex — observes the prior queued action's commit.
   const state = readIslandRunGameStateRecord(session);
+  const tutorialEssenceOverride = resolveTutorialEssenceOverride(state, options.essenceDelta);
+  const essenceDelta = tutorialEssenceOverride.essenceDelta;
+  const effectiveRewardBarProgress = tutorialEssenceOverride.shouldSuppressRewardBarProgress
+    ? null
+    : rewardBarProgress;
 
   // 2. Essence step: positive → award, negative → deduct, zero → no-op.
   let nextEssence = state.essence;
@@ -140,7 +195,7 @@ async function performTileRewardAction(
 
   // 3. Reward-bar step: when supplied, advance off the same hydrate.
   let nextRewardBarSlice: IslandRunRewardBarRuntimeSlice | null = null;
-  if (rewardBarProgress && islandRunContractV2Enabled) {
+  if (effectiveRewardBarProgress && islandRunContractV2Enabled) {
     nextRewardBarSlice = recordEventProgress({
       state: {
         rewardBarProgress: state.rewardBarProgress,
@@ -155,9 +210,9 @@ async function performTileRewardAction(
         stickerProgress: state.stickerProgress,
         stickerInventory: state.stickerInventory,
       },
-      source: rewardBarProgress.source,
-      nowMs: rewardBarProgress.nowMs ?? Date.now(),
-      multiplier: rewardBarProgress.multiplier ?? 1,
+      source: effectiveRewardBarProgress.source,
+      nowMs: effectiveRewardBarProgress.nowMs ?? Date.now(),
+      multiplier: effectiveRewardBarProgress.multiplier ?? 1,
     });
   }
 
@@ -173,7 +228,11 @@ async function performTileRewardAction(
       rewardBarFull: false,
     };
   }
-  if (actualEssenceDelta === 0 && nextRewardBarSlice === null) {
+  if (
+    actualEssenceDelta === 0
+    && nextRewardBarSlice === null
+    && tutorialEssenceOverride.nextFirstSessionTutorialState === null
+  ) {
     return {
       status: 'no_op',
       actualEssenceDelta: 0,
@@ -210,6 +269,11 @@ async function performTileRewardAction(
             activeTimedEventProgress: nextRewardBarSlice.activeTimedEventProgress,
             stickerProgress: nextRewardBarSlice.stickerProgress,
             stickerInventory: nextRewardBarSlice.stickerInventory,
+          }
+        : {}),
+      ...(tutorialEssenceOverride.nextFirstSessionTutorialState
+        ? {
+            firstSessionTutorialState: tutorialEssenceOverride.nextFirstSessionTutorialState,
           }
         : {}),
     },
