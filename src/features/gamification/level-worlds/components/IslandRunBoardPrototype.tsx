@@ -1598,6 +1598,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const multiplierTiers = resolveAvailableMultiplierTiers(dicePool);
   const effectiveMultiplier = clampMultiplierToPool(diceMultiplier, dicePool);
   const effectiveDiceCost = resolveDiceCostForMultiplier(effectiveMultiplier);
+  const unlockedMultipliers = multiplierTiers.filter((t) => t.unlocked).map((t) => t.multiplier);
+  const maxAvailableMultiplier = unlockedMultipliers[unlockedMultipliers.length - 1] ?? 1;
+  const isAtMaxAvailableMultiplier = maxAvailableMultiplier > 1 && effectiveMultiplier === maxAvailableMultiplier;
 
   // Auto-downgrade multiplier when pool drops below current tier's gate
   // (e.g. after a roll drains dice below the ×10 threshold)
@@ -8461,15 +8464,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   {/* Multiplier selector — placed above dice for symmetry */}
                   <button
                     type="button"
-                    className={`island-run-prototype__footer-multiplier-btn${effectiveMultiplier > 1 ? ' island-run-prototype__footer-multiplier-btn--active' : ''}`}
+                    className={`island-run-prototype__footer-multiplier-btn${effectiveMultiplier > 1 ? ' island-run-prototype__footer-multiplier-btn--active' : ''}${isAtMaxAvailableMultiplier ? ' island-run-prototype__footer-multiplier-btn--max' : ''}`}
+                    data-max-multiplier={isAtMaxAvailableMultiplier ? 'true' : undefined}
                     onClick={() => {
-                      const unlocked = multiplierTiers.filter((t) => t.unlocked).map((t) => t.multiplier);
-                      if (unlocked.length <= 1) return;
-                      const currentIdx = unlocked.indexOf(effectiveMultiplier);
-                      const nextIdx = (currentIdx + 1) % unlocked.length;
-                      setDiceMultiplier(unlocked[nextIdx]!);
+                      if (unlockedMultipliers.length <= 1) return;
+                      const currentIdx = unlockedMultipliers.indexOf(effectiveMultiplier);
+                      const nextIdx = (currentIdx + 1) % unlockedMultipliers.length;
+                      setDiceMultiplier(unlockedMultipliers[nextIdx]!);
                     }}
-                    title={`Cost: ${effectiveDiceCost} dice/roll · Max: ×${multiplierTiers.filter((t) => t.unlocked).pop()?.multiplier ?? 1}`}
+                    title={`Cost: ${effectiveDiceCost} dice/roll · Max: ×${maxAvailableMultiplier}`}
                   >
                     ×{effectiveMultiplier}
                     {effectiveMultiplier > 1 && <span className="island-run-prototype__footer-nav-btn-cost"> (-{effectiveDiceCost})</span>}
