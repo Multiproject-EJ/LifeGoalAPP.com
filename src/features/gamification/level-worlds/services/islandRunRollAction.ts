@@ -60,6 +60,7 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import {
   readIslandRunGameStateRecord,
+  type IslandRunFirstSessionTutorialState,
   writeIslandRunGameStateRecord,
 } from './islandRunGameStateStore';
 import { resolveWrappedTokenIndex } from './islandBoardTopology';
@@ -89,9 +90,13 @@ function rollDie(): number {
 
 function resolveDiceFacesForTotal(total: number): { dieOne: number; dieTwo: number } {
   const safeTotal = Math.min(ROLL_MAX * 2, Math.max(ROLL_MIN * 2, Math.floor(total)));
-  const dieOne = Math.min(ROLL_MAX, Math.max(ROLL_MIN, safeTotal - ROLL_MAX));
-  const dieTwo = Math.min(ROLL_MAX, Math.max(ROLL_MIN, safeTotal - dieOne));
-  return { dieOne, dieTwo };
+  for (let dieOne = ROLL_MIN; dieOne <= ROLL_MAX; dieOne += 1) {
+    const dieTwo = safeTotal - dieOne;
+    if (dieTwo >= ROLL_MIN && dieTwo <= ROLL_MAX) {
+      return { dieOne, dieTwo };
+    }
+  }
+  return { dieOne: ROLL_MIN, dieTwo: ROLL_MIN };
 }
 
 function isPositiveEssenceTile(tileType: IslandTileType, islandNumber: number): boolean {
@@ -104,7 +109,7 @@ function isPositiveEssenceTile(tileType: IslandTileType, islandNumber: number): 
 function resolveFirstSessionTutorialRollTotal(options: {
   currentIslandNumber: number;
   cycleIndex: number;
-  firstSessionTutorialState: string;
+  firstSessionTutorialState: IslandRunFirstSessionTutorialState;
   tokenIndex: number;
   boardProfileId?: IslandBoardProfileId;
 }): number | null {
