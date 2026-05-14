@@ -6754,9 +6754,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       stopIndex,
       nowMs: Date.now(),
     });
-    const repeatedBuildBatchSteps = isBuildModalHatcheryGuidanceActive
-      ? 1
-      : resolveRepeatedBuildBatchSteps(nextStreak.count);
+    let repeatedBuildBatchSteps = resolveRepeatedBuildBatchSteps(nextStreak.count);
+    if (isBuildModalHatcheryGuidanceActive) {
+      repeatedBuildBatchSteps = 1;
+    }
     const spendApplied = await handleSpendEssenceOnBuild(stopIndex, repeatedBuildBatchSteps);
     if (!spendApplied) {
       resetBuildRepeatStreak();
@@ -9791,13 +9792,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 const isFullyBuilt = isStopBuildFullyComplete(buildState);
                 const remaining = isFullyBuilt ? 0 : Math.max(0, buildState.requiredEssence - buildState.spentEssence);
                 const canAfford = runtimeState.essence >= Math.min(CONTRACT_V2_ESSENCE_SPEND_STEP, remaining);
-                const isBuildDisabled = tutorialRowState.isUnavailable || isFullyBuilt || !canAfford || isBuildSpendInFlight;
+                const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;
+                const isBuildInteractionDisabled = tutorialRowState.isUnavailable || isBuildDisabled;
                 const remainingToFull = buildPanelRemainingToFullByIndex[idx] ?? 0;
                 const levelIcon = ['🏗️', '🏠', '🏡', '🏰'][Math.min(buildState.buildLevel, 3)];
 
                 const handleBuildStart = (e: React.MouseEvent | React.TouchEvent) => {
                   e.preventDefault();
-                  if (isBuildDisabled) return;
+                  if (isBuildInteractionDisabled) return;
                   holdBuildSpendActiveRef.current = true;
                   holdBuildSpendStartAtMsRef.current = Date.now();
                   setIsBuildHoldActive(true);
@@ -9837,9 +9839,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       }
                       const holdStartedAtMs = holdBuildSpendStartAtMsRef.current ?? Date.now();
                       const heldMs = Math.max(0, Date.now() - holdStartedAtMs);
-                      const holdBatchSteps = isBuildModalHatcheryGuidanceActive
-                        ? 1
-                        : resolveBuildHoldBatchSteps(heldMs);
+                      let holdBatchSteps = resolveBuildHoldBatchSteps(heldMs);
+                      if (isBuildModalHatcheryGuidanceActive) {
+                        holdBatchSteps = 1;
+                      }
                       setBuildHoldFeedbackLabel(resolveBuildHoldFeedbackLabel(heldMs));
                       const spendApplied = await handleSpendEssenceOnBuild(idx, holdBatchSteps);
                       if (!spendApplied) {
@@ -9861,14 +9864,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   <div
                     key={stopEntry.stopId}
                     className={`build-panel__building build-panel__building--level-${buildState.buildLevel}${isFullyBuilt ? ' build-panel__building--complete' : ''}${buildPanelNextCheapestIndex === idx && !isFullyBuilt && !tutorialRowState.guidanceActive ? ' build-panel__building--next-cheapest' : ''}${tutorialRowState.isHighlighted ? ' build-panel__building--tutorial-target' : ''}${tutorialRowState.isUnavailable ? ' build-panel__building--tutorial-muted' : ''}`}
-                    onMouseDown={!isBuildDisabled ? handleBuildStart : undefined}
-                    onTouchStart={!isBuildDisabled ? handleBuildStart : undefined}
+                    onMouseDown={!isBuildInteractionDisabled ? handleBuildStart : undefined}
+                    onTouchStart={!isBuildInteractionDisabled ? handleBuildStart : undefined}
                     role="button"
-                    tabIndex={isBuildDisabled ? -1 : 0}
-                    aria-disabled={isBuildDisabled}
+                    tabIndex={isBuildInteractionDisabled ? -1 : 0}
+                    aria-disabled={isBuildInteractionDisabled}
                     aria-label={`${stopEntry.title ?? stopEntry.stopId} — Level ${buildState.buildLevel} of ${MAX_BUILD_LEVEL}${tutorialRowState.isHighlighted ? ' — tutorial target' : ''}${tutorialRowState.isUnavailable ? ' — unavailable during tutorial' : ''}`}
                     onKeyDown={(e) => {
-                      if ((e.key === 'Enter' || e.key === ' ') && !isBuildDisabled) {
+                      if ((e.key === 'Enter' || e.key === ' ') && !isBuildInteractionDisabled) {
                         e.preventDefault();
                         void handleRepeatedBuildActivation(idx);
                       }
