@@ -71,7 +71,10 @@ import {
 import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
 import { resolveRuntimeDiceRegenUpdate } from './islandRunRuntimeRegen';
 import { resolveIslandRunPreIslandLuckyRollGate } from './islandRunPreIslandLuckyRollGate';
-import { shouldAdvanceFirstSessionTutorialAfterHatcheryBuild } from './islandRunFirstSessionTutorialUi';
+import {
+  getIslandRunFirstCreaturePackLowDiceTriggerTarget,
+  shouldAdvanceFirstSessionTutorialAfterHatcheryBuild,
+} from './islandRunFirstSessionTutorialUi';
 import {
   chooseSpaceExcavatorObjectShape,
   placeSpaceExcavatorObjectShape,
@@ -1541,6 +1544,52 @@ export function applyFirstSessionTutorialState(options: {
     client,
     record: next,
     triggerSource: triggerSource ?? 'apply_first_session_tutorial_state',
+  });
+  return {
+    record: next,
+    changed: true,
+    ok: true,
+  };
+}
+
+export function applyFirstCreaturePackLowDiceTrigger(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  triggerSource?: string;
+}): ApplyFirstSessionTutorialStateResult {
+  const { session, client, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (current.firstSessionTutorialState === 'first_creature_pack_available') {
+    return {
+      record: current,
+      changed: false,
+      ok: true,
+    };
+  }
+  const targetState = getIslandRunFirstCreaturePackLowDiceTriggerTarget({
+    firstSessionTutorialState: current.firstSessionTutorialState,
+    currentIslandNumber: current.currentIslandNumber,
+    cycleIndex: current.cycleIndex,
+    dicePool: current.dicePool,
+  });
+  if (!targetState) {
+    return {
+      record: current,
+      changed: false,
+      ok: false,
+      failureReason: 'invalid_transition',
+    };
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    firstSessionTutorialState: targetState,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'first_creature_pack_low_dice_trigger',
   });
   return {
     record: next,

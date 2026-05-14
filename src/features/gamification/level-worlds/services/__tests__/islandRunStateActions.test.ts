@@ -47,6 +47,7 @@ import {
   applyEggResolution,
   resolveReadyEggTerminalTransition,
   applyEggPlacement,
+  applyFirstCreaturePackLowDiceTrigger,
   applyFirstRunClaimed,
   applyFirstSessionTutorialState,
   applyFirstRunStarterRewards,
@@ -454,6 +455,171 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(celebrated.record.islandShards, 8, 'celebration should not grant island shards');
       assertEqual(celebrated.record.rewardBarProgress, 11, 'celebration should not grant reward-bar progress');
       assertEqual(celebrated.record.rewardBarClaimCountInEvent, 1, 'celebration should not claim reward-bar payouts');
+    },
+  },
+
+  {
+    name: 'applyFirstCreaturePackLowDiceTrigger advances eligible Island 1 tutorial states without granting rewards',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 12,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'hatchery_l1_celebrated',
+        dicePool: 5,
+        essence: 125,
+        essenceLifetimeEarned: 300,
+        essenceLifetimeSpent: 175,
+        shards: 4,
+        diamonds: 2,
+        spinTokens: 6,
+        islandShards: 8,
+        rewardBarProgress: 11,
+        rewardBarClaimCountInEvent: 1,
+        creatureCollection: [],
+      });
+
+      const available = applyFirstCreaturePackLowDiceTrigger({
+        session,
+        client: null,
+        triggerSource: 'first_creature_pack_low_dice_test',
+      });
+
+      assertEqual(available.ok, true, 'Eligible low-dice trigger should succeed');
+      assertEqual(available.changed, true, 'Eligible low-dice trigger should advance tutorial state');
+      assertEqual(
+        available.record.firstSessionTutorialState,
+        'first_creature_pack_available',
+        'Low-dice trigger should make the first Creature Pack available',
+      );
+      assertEqual(available.record.runtimeVersion, 13, 'tutorial-only trigger should increment runtimeVersion once');
+      assertEqual(available.record.dicePool, 5, 'low-dice trigger should not grant dice');
+      assertEqual(available.record.essence, 125, 'low-dice trigger should not grant essence');
+      assertEqual(available.record.essenceLifetimeEarned, 300, 'low-dice trigger should not affect earned essence');
+      assertEqual(available.record.essenceLifetimeSpent, 175, 'low-dice trigger should not affect spent essence');
+      assertEqual(available.record.shards, 4, 'low-dice trigger should not grant shards');
+      assertEqual(available.record.diamonds, 2, 'low-dice trigger should not grant diamonds');
+      assertEqual(available.record.spinTokens, 6, 'low-dice trigger should not grant spin tokens');
+      assertEqual(available.record.islandShards, 8, 'low-dice trigger should not grant island shards');
+      assertEqual(available.record.rewardBarProgress, 11, 'low-dice trigger should not grant reward-bar progress');
+      assertEqual(available.record.rewardBarClaimCountInEvent, 1, 'low-dice trigger should not claim reward-bar payouts');
+      assertEqual(available.record.creatureCollection.length, 0, 'low-dice trigger should not grant creature cards');
+    },
+  },
+
+  {
+    name: 'applyFirstCreaturePackLowDiceTrigger also accepts normal early tutorial play',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 14,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'normal_play_until_low_dice',
+        dicePool: 4,
+      });
+
+      const available = applyFirstCreaturePackLowDiceTrigger({
+        session,
+        client: null,
+      });
+
+      assertEqual(available.ok, true, 'normal_play_until_low_dice should be eligible when dice are low');
+      assertEqual(available.changed, true, 'normal_play_until_low_dice should advance');
+      assertEqual(available.record.firstSessionTutorialState, 'first_creature_pack_available', 'first pack should become available');
+    },
+  },
+
+  {
+    name: 'applyFirstCreaturePackLowDiceTrigger rejects ineligible states, locations, and dice pools',
+    run: () => {
+      const cases = [
+        {
+          name: 'before Hatchery celebration',
+          firstSessionTutorialState: 'hatchery_l1_built' as const,
+          currentIslandNumber: 1,
+          cycleIndex: 0,
+          dicePool: 5,
+        },
+        {
+          name: 'non-tutorial player',
+          firstSessionTutorialState: 'not_started' as const,
+          currentIslandNumber: 1,
+          cycleIndex: 0,
+          dicePool: 5,
+        },
+        {
+          name: 'outside Island 1',
+          firstSessionTutorialState: 'hatchery_l1_celebrated' as const,
+          currentIslandNumber: 2,
+          cycleIndex: 0,
+          dicePool: 5,
+        },
+        {
+          name: 'outside cycle 0',
+          firstSessionTutorialState: 'hatchery_l1_celebrated' as const,
+          currentIslandNumber: 1,
+          cycleIndex: 1,
+          dicePool: 5,
+        },
+        {
+          name: 'above low-dice threshold',
+          firstSessionTutorialState: 'hatchery_l1_celebrated' as const,
+          currentIslandNumber: 1,
+          cycleIndex: 0,
+          dicePool: 6,
+        },
+      ];
+
+      for (const testCase of cases) {
+        resetAll();
+        const session = makeSession();
+        seedState({
+          runtimeVersion: 20,
+          firstSessionTutorialState: testCase.firstSessionTutorialState,
+          currentIslandNumber: testCase.currentIslandNumber,
+          cycleIndex: testCase.cycleIndex,
+          dicePool: testCase.dicePool,
+        });
+
+        const result = applyFirstCreaturePackLowDiceTrigger({
+          session,
+          client: null,
+        });
+
+        assertEqual(result.ok, false, `${testCase.name}: trigger should be rejected`);
+        assertEqual(result.changed, false, `${testCase.name}: trigger should not change state`);
+        assertEqual(result.record.firstSessionTutorialState, testCase.firstSessionTutorialState, `${testCase.name}: tutorial state should remain unchanged`);
+        assertEqual(result.record.runtimeVersion, 20, `${testCase.name}: runtimeVersion should remain unchanged`);
+      }
+    },
+  },
+
+  {
+    name: 'applyFirstCreaturePackLowDiceTrigger is idempotent after the first pack is available',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 30,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'first_creature_pack_available',
+        dicePool: 3,
+      });
+
+      const repeated = applyFirstCreaturePackLowDiceTrigger({
+        session,
+        client: null,
+      });
+
+      assertEqual(repeated.ok, true, 'Already-available first pack state should be accepted as idempotent');
+      assertEqual(repeated.changed, false, 'Repeated first pack trigger should not rewrite state');
+      assertEqual(repeated.record.firstSessionTutorialState, 'first_creature_pack_available', 'Repeated trigger should preserve state');
+      assertEqual(repeated.record.runtimeVersion, 30, 'Repeated trigger should not increment runtimeVersion');
     },
   },
 

@@ -99,6 +99,7 @@ import {
   applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
   applyCreatureTreatInventory,
+  applyFirstCreaturePackLowDiceTrigger,
   applyDevGrantDice,
   applyDevGrantEssence,
   applyDevGrantTimedEventTickets,
@@ -4890,6 +4891,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
           return merged;
         });
+        const creaturePackTriggerResult = applyFirstCreaturePackLowDiceTrigger({
+          session,
+          client,
+          triggerSource: 'post_roll_low_dice_creature_pack_trigger',
+        });
+        if (creaturePackTriggerResult.changed) {
+          setRuntimeStateWithTrace('first_creature_pack_low_dice_trigger', (current) => {
+            const nextRuntimeState = {
+              ...current,
+              firstSessionTutorialState: creaturePackTriggerResult.record.firstSessionTutorialState,
+              runtimeVersion: creaturePackTriggerResult.record.runtimeVersion,
+            };
+            runtimeStateRef.current = nextRuntimeState;
+            return nextRuntimeState;
+          });
+        }
 
     // Now safe to clear the hop sequence — the BoardStage's
     // `onHopSequenceComplete` no longer does this for us (see the
