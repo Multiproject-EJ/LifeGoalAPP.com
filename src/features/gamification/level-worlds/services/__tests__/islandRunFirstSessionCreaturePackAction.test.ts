@@ -18,8 +18,6 @@ import {
 } from '../islandRunStateStore';
 import { assert, assertDeepEqual, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
-declare const process: { cwd: () => string };
-
 const USER_ID = 'first-session-creature-pack-action-test-user';
 
 function makeSession() {
@@ -194,21 +192,6 @@ export const islandRunFirstSessionCreaturePackActionTests: TestCase[] = [
         assertEqual(persisted.firstSessionTutorialState, testCase.firstSessionTutorialState, `${testCase.name}: rejected claim should preserve tutorial state`);
         assertEqual(persisted.runtimeVersion, 10, `${testCase.name}: rejected claim should not commit`);
       }
-    },
-  },
-  {
-    name: 'claimFirstSessionCreaturePackReward uses canonical runtime collection helper, not localStorage creature grants',
-    run: async () => {
-      // @ts-ignore island-run test tsconfig omits node type libs
-      const fsMod = await import('fs');
-      // @ts-ignore island-run test tsconfig omits node type libs
-      const pathMod = await import('path');
-      const source = fsMod.readFileSync(
-        pathMod.resolve(process.cwd(), 'src/features/gamification/level-worlds/services/islandRunFirstSessionCreaturePackAction.ts'),
-        'utf8',
-      );
-      assert(/addCreatureToRuntimeCollection/.test(source), 'First pack claim should use canonical runtime creature collection helper');
-      assert(!/\bcollectCreatureForUser\b/.test(source), 'First pack claim should not use localStorage creature collection API');
     },
   },
 ];

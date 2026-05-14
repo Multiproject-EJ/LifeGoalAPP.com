@@ -128,7 +128,7 @@ function buildFirstSessionCreaturePackCards(options: {
     openedAtMs,
   ].join(':');
   const usedCreatureIds = new Set<string>();
-  const workingCollection = [...current.creatureCollection];
+  let workingCollection = [...current.creatureCollection];
 
   return Array.from({ length: FIRST_SESSION_CREATURE_PACK_CARD_COUNT }, (_, slotIndex) => {
     const tier = chooseTierForSlot(slotIndex, seed);
@@ -141,9 +141,9 @@ function buildFirstSessionCreaturePackCards(options: {
       islandNumber: current.currentIslandNumber,
       collectedAtMs: openedAtMs,
     });
-    workingCollection.splice(0, workingCollection.length, ...nextCollection);
+    workingCollection = nextCollection;
     return {
-      slotIndex: slotIndex + 1,
+      slotIndex,
       creatureId: creature.id,
       name: creature.name,
       tier: creature.tier,
