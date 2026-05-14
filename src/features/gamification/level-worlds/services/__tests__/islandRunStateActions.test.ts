@@ -414,6 +414,50 @@ export const islandRunStateActionsTests: TestCase[] = [
   },
 
   {
+    name: 'applyFirstSessionTutorialState celebrates Hatchery L1 without granting rewards',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 9,
+        firstSessionTutorialState: 'hatchery_l1_built',
+        dicePool: 17,
+        essence: 125,
+        essenceLifetimeEarned: 300,
+        essenceLifetimeSpent: 175,
+        shards: 4,
+        diamonds: 2,
+        spinTokens: 6,
+        islandShards: 8,
+        rewardBarProgress: 11,
+        rewardBarClaimCountInEvent: 1,
+      });
+
+      const celebrated = applyFirstSessionTutorialState({
+        session,
+        client: null,
+        targetState: 'hatchery_l1_celebrated',
+        triggerSource: 'hatchery_l1_celebration_continue_test',
+      });
+
+      assertEqual(celebrated.ok, true, 'Hatchery celebration Continue transition should succeed');
+      assertEqual(celebrated.changed, true, 'Hatchery celebration Continue should advance tutorial state');
+      assertEqual(celebrated.record.firstSessionTutorialState, 'hatchery_l1_celebrated', 'Continue should mark Hatchery L1 celebrated');
+      assertEqual(celebrated.record.runtimeVersion, 10, 'tutorial-only transition should increment runtimeVersion once');
+      assertEqual(celebrated.record.dicePool, 17, 'celebration should not grant dice');
+      assertEqual(celebrated.record.essence, 125, 'celebration should not grant essence');
+      assertEqual(celebrated.record.essenceLifetimeEarned, 300, 'celebration should not affect lifetime earned essence');
+      assertEqual(celebrated.record.essenceLifetimeSpent, 175, 'celebration should not affect lifetime spent essence');
+      assertEqual(celebrated.record.shards, 4, 'celebration should not grant shards');
+      assertEqual(celebrated.record.diamonds, 2, 'celebration should not grant diamonds');
+      assertEqual(celebrated.record.spinTokens, 6, 'celebration should not grant spin tokens');
+      assertEqual(celebrated.record.islandShards, 8, 'celebration should not grant island shards');
+      assertEqual(celebrated.record.rewardBarProgress, 11, 'celebration should not grant reward-bar progress');
+      assertEqual(celebrated.record.rewardBarClaimCountInEvent, 1, 'celebration should not claim reward-bar payouts');
+    },
+  },
+
+  {
     name: 'Space Excavator failed dig at zero tickets does not reveal tiles or affect other event buckets',
     run: () => {
       resetAll();

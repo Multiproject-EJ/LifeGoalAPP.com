@@ -72,3 +72,17 @@ export function shouldAdvanceFirstSessionTutorialAfterHatcheryBuild(options: {
     && options.previousBuildLevel === 0
     && options.nextBuildLevel >= 1;
 }
+
+export function isIslandRunHatcheryL1CelebrationActive(
+  firstSessionTutorialState: IslandRunFirstSessionTutorialState,
+): boolean {
+  return firstSessionTutorialState === 'hatchery_l1_built';
+}
+
+export function getIslandRunHatcheryL1CelebrationContinueTarget(
+  firstSessionTutorialState: IslandRunFirstSessionTutorialState,
+): IslandRunFirstSessionTutorialState | null {
+  return isIslandRunHatcheryL1CelebrationActive(firstSessionTutorialState)
+    ? 'hatchery_l1_celebrated'
+    : null;
+}
