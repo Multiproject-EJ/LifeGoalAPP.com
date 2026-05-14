@@ -85,6 +85,7 @@
       (() => {
         const FALLBACK_STYLE = '/preview-bundle/style.css';
         const FALLBACK_SCRIPT = '/preview-bundle/app.js';
+        const PRELOAD_RELOAD_FLAG_KEY = 'lifegoalapp_preload_reloaded_once';
         let fallbackLoaded = false;
 
         const attachFallbackNotice = (text) => {
@@ -138,8 +139,30 @@
           loadFallbackBundle();
         });
 
-        window.addEventListener('vite:preloadError', () => {
-          loadFallbackBundle();
+        window.addEventListener('vite:preloadError', (event) => {
+          event.preventDefault();
+
+          let shouldReload = false;
+          try {
+            shouldReload = sessionStorage.getItem(PRELOAD_RELOAD_FLAG_KEY) !== '1';
+            if (shouldReload) {
+              sessionStorage.setItem(PRELOAD_RELOAD_FLAG_KEY, '1');
+            }
+          } catch {
+            shouldReload = false;
+          }
+
+          const status = attachFallbackNotice(
+            shouldReload
+              ? 'Updating app bundle…'
+              : 'A game bundle failed to load. Refresh the page after the deployment finishes.',
+          );
+
+          if (shouldReload) {
+            window.location.reload();
+          } else {
+            status.setAttribute('role', 'alert');
+          }
         });
       })();
     </script>
