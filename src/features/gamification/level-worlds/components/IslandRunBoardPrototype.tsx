@@ -4353,7 +4353,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const nextRewardUnitLabel = (() => {
     switch (nextRewardKind) {
       case 'dice':
-        return 'dice';
+        return nextRewardAmount === 1 ? 'die' : 'dice';
       case 'essence':
         return 'essence';
       case 'minigame_tokens':
