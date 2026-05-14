@@ -94,7 +94,7 @@ These are stored in the Island Run runtime record:
 - `src/features/gamification/level-worlds/services/islandRunGameStateStore.ts:1592-1597`
 - `src/features/gamification/level-worlds/services/islandRunGameStateStore.ts:1718-1739`
 
-The current state shape is not granular enough for multi-step tutorial sequencing. The first creature pack should not overload `firstRunClaimed`; it should be modeled as part of a dedicated persisted tutorial state field.
+The current state shape is not granular enough for multi-step tutorial sequencing. The first creature pack should not overload `firstRunClaimed`, because that would couple an unrelated reward claim to a broad first-run marker and make it harder to reason about refresh, replay, partial tutorial completion, and future onboarding milestones. It should be modeled as part of a dedicated persisted tutorial state field.
 
 ## 5. Current creature collection grant path
 
@@ -339,4 +339,3 @@ Guardrails:
 - normal creature pack economy should remain separate and reusable later
 - do not touch Stripe, purchases, or unrelated shop systems
 - do not modify egg terminal transition logic unless later implementation proves this is the correct reusable boundary
-
