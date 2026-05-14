@@ -72,6 +72,12 @@ import { IslandRunReflectionComposer } from './IslandRunReflectionComposer';
 import { readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { useIslandRunState } from '../hooks/useIslandRunState';
 import {
+  getIslandRunBuildPromptInitialTransitionTarget,
+  isIslandRunBuildPromptOverlayActive,
+  resolveIslandRunBuildPromptClickTransitionTargets,
+  shouldIslandRunBuildPromptBlockControl,
+} from '../services/islandRunFirstSessionTutorialUi';
+import {
   commitIslandRunState,
   getIslandRunStateSnapshot,
   refreshIslandRunStateFromLocal,
@@ -101,6 +107,7 @@ import {
   applyEggPlacement,
   applyFirstRunClaimed,
   applyFirstRunStarterRewards,
+  applyFirstSessionTutorialState,
   applyIslandShardsSet,
   applyMarketOwnedBundleMarker,
   applyOnboardingDisplayNameLoopMarker,
@@ -1195,6 +1202,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const { state: __storeState } = useIslandRunState(session, client);
   const dicePool = __storeState.dicePool;
   const tokenIndex = __storeState.tokenIndex;
+  const firstSessionTutorialState = __storeState.firstSessionTutorialState;
+  const isBuildTutorialPromptActive = isIslandRunBuildPromptOverlayActive(firstSessionTutorialState);
+  const isBuildTutorialGameplayBlocked = shouldIslandRunBuildPromptBlockControl(firstSessionTutorialState, 'gameplay');
 
   // C1 shim: setDicePool — commits through the store for unmigrated paths.
   const setDicePool = useCallback((updater: number | ((current: number) => number)) => {
@@ -1590,6 +1600,30 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [showSanctuaryMenu, setShowSanctuaryMenu] = useState(false);
   const [sanctuaryMenuModule, setSanctuaryMenuModule] = useState<'collection' | 'inventory' | 'quest' | 'rooms' | 'filters' | null>(null);
   const [hatchReveal, setHatchReveal] = useState<null | { creatureId: string; creatureName: string; rarity: 'common' | 'rare' | 'mythic' }>(null);
+
+  useEffect(() => {
+    const targetState = getIslandRunBuildPromptInitialTransitionTarget(firstSessionTutorialState);
+    if (!targetState) return;
+    applyFirstSessionTutorialState({
+      session,
+      client,
+      targetState,
+      triggerSource: 'build_prompt_overlay_visible',
+    });
+  }, [client, firstSessionTutorialState, session]);
+
+  const openBuildPanelFromFooter = useCallback(() => {
+    setShowBuildPanel(true);
+    const targetStates = resolveIslandRunBuildPromptClickTransitionTargets(firstSessionTutorialState);
+    for (const targetState of targetStates) {
+      applyFirstSessionTutorialState({
+        session,
+        client,
+        targetState,
+        triggerSource: 'build_prompt_build_button_click',
+      });
+    }
+  }, [client, firstSessionTutorialState, session]);
 
   // ── Dice multiplier (dice-pool-gated, Monopoly GO style) ────────────────────
   const [diceMultiplier, setDiceMultiplier] = useState(1);
@@ -8437,7 +8471,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         </div>
       )}
 
-      <div className="island-run-prototype__footer" aria-label="Island Run footer controls">
+      <div
+        className={`island-run-prototype__footer${isBuildTutorialPromptActive ? ' island-run-prototype__footer--build-tutorial-active' : ''}`}
+        aria-label="Island Run footer controls"
+      >
         <div className="island-run-prototype__footer-main">
           {/* Footer stats row removed: essence icon (duplicate of top bar) and 🎯 roll chip removed per UI cleanup */}
 
@@ -8450,6 +8487,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   type="button"
                   className="island-run-prototype__footer-nav-btn"
                   onClick={openSanctuaryPanel}
+                  disabled={isBuildTutorialGameplayBlocked}
                 >
                   🐾 Creatures
                 </button>
@@ -8457,6 +8495,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   type="button"
                   className="island-run-prototype__footer-nav-btn"
                   onClick={() => setShowStoryReader(true)}
+                  disabled={isBuildTutorialGameplayBlocked}
                 >
                   📖 Story
                 </button>
@@ -8466,6 +8505,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     type="button"
                     className={`island-run-prototype__footer-multiplier-btn${effectiveMultiplier > 1 ? ' island-run-prototype__footer-multiplier-btn--active' : ''}${isAtMaxAvailableMultiplier ? ' island-run-prototype__footer-multiplier-btn--max' : ''}`}
                     data-max-multiplier={isAtMaxAvailableMultiplier ? 'true' : undefined}
+                    disabled={isBuildTutorialGameplayBlocked}
                     onClick={() => {
                       if (unlockedMultipliers.length <= 1) return;
                       const currentIdx = unlockedMultipliers.indexOf(effectiveMultiplier);
@@ -8481,8 +8521,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     type="button"
                     className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'} ${rollButtonInteractionClass}`.trim()}
                     onClick={isIslandTimerPendingStart ? activateCurrentIsland : handleRollButtonClick}
-                    disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
-                    aria-disabled={!isIslandTimerPendingStart && Boolean(rollDisabledReason)}
+                    disabled={isBuildTutorialGameplayBlocked || (!isIslandTimerPendingStart && Boolean(rollDisabledReason))}
+                    aria-disabled={isBuildTutorialGameplayBlocked || (!isIslandTimerPendingStart && Boolean(rollDisabledReason))}
                     title={!isIslandTimerPendingStart ? (rollDisabledMessage ?? undefined) : undefined}
                     {...rollHoldHandlers}
                   >
@@ -8507,13 +8547,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   type="button"
                   className="island-run-prototype__footer-nav-btn"
                   onClick={openShopPanel}
+                  disabled={isBuildTutorialGameplayBlocked}
                 >
                   🛍️ Market
                 </button>
                 <button
                   type="button"
-                  className="island-run-prototype__footer-nav-btn"
-                  onClick={() => setShowBuildPanel(true)}
+                  className={`island-run-prototype__footer-nav-btn${isBuildTutorialPromptActive ? ' island-run-prototype__footer-nav-btn--build-tutorial-target' : ''}`}
+                  onClick={openBuildPanelFromFooter}
+                  aria-describedby={isBuildTutorialPromptActive ? 'island-run-build-tutorial-prompt' : undefined}
                 >
                   🔨 Build
                 </button>
@@ -8533,6 +8575,20 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           </div>
         </div>
       </div>
+
+      {isBuildTutorialPromptActive && !showBuildPanel && (
+        <div className="island-run-build-tutorial-overlay" role="presentation">
+          <aside
+            id="island-run-build-tutorial-prompt"
+            className="island-run-build-tutorial-overlay__coachmark"
+            role="note"
+            aria-live="polite"
+          >
+            <strong>Build the Hatchery</strong>
+            <span>Tap the highlighted Build button to fund your first island building.</span>
+          </aside>
+        </div>
+      )}
 
       {showFirstRunCelebration && (
         <div className="island-stop-modal-backdrop" role="presentation">

@@ -3,6 +3,7 @@ import { getIslandRunRuntimeStateBackend } from './islandRunRuntimeStateBackend'
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
 import type {
   CreatureCollectionRuntimeEntry,
+  IslandRunFirstSessionTutorialState,
   IslandRunGameStateRecord,
   PerIslandEggsLedger,
   PerfectCompanionReason,
@@ -86,6 +87,7 @@ export async function persistIslandRunRuntimeStatePatch(options: {
   client: SupabaseClient | null;
   patch: {
     firstRunClaimed?: boolean;
+    firstSessionTutorialState?: IslandRunFirstSessionTutorialState;
     dailyHeartsClaimedDayKey?: string | null;
     onboardingDisplayNameLoopCompleted?: boolean;
     storyPrologueSeen?: boolean;

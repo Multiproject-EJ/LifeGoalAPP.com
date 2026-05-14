@@ -1,4 +1,5 @@
 import { executeIslandRunTileRewardAction } from '../islandRunTileRewardAction';
+import { getStopUpgradeCost } from '../islandRunContractV2EssenceBuild';
 import {
   __resetIslandRunRollActionMutexesForTests,
   executeIslandRunRollAction,
@@ -43,6 +44,162 @@ function seedState(overrides: Partial<IslandRunGameStateRecord>): void {
 }
 
 export const islandRunTileRewardActionTests: TestCase[] = [
+  {
+    name: 'tutorial first roll reward: replaces landed essence with Hatchery L1 cost and advances tutorial state',
+    run: async () => {
+      resetEnvironment();
+      const hatcheryL1Cost = getStopUpgradeCost({ islandNumber: 1, stopIndex: 0, currentBuildLevel: 0 });
+      seedState({
+        runtimeVersion: 0,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'first_roll_consumed',
+        essence: 0,
+        essenceLifetimeEarned: 0,
+        essenceLifetimeSpent: 0,
+        rewardBarProgress: 0,
+        rewardBarThreshold: 20,
+      });
+
+      const result = await executeIslandRunTileRewardAction({
+        session: makeSession(),
+        client: null,
+        islandRunContractV2Enabled: true,
+        essenceDelta: 12,
+        rewardBarProgress: { source: { kind: 'tile', tileType: 'currency' }, multiplier: 1 },
+      });
+
+      assertEqual(result.status, 'ok', 'Tutorial reward should succeed');
+      assertEqual(result.actualEssenceDelta, hatcheryL1Cost, 'Tutorial reward grants exactly Hatchery L1 cost');
+      assertEqual(result.essence, hatcheryL1Cost, 'Wallet is funded to Hatchery L1 cost');
+      assertEqual(result.essenceLifetimeEarned, hatcheryL1Cost, 'Lifetime earned reflects the tutorial grant');
+      assertEqual(result.rewardBarSlice, null, 'Tutorial replacement suppresses normal tile reward-bar progress');
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(persisted.essence, hatcheryL1Cost, 'Persisted wallet mirrors tutorial reward');
+      assertEqual(
+        persisted.firstSessionTutorialState,
+        'first_essence_reward_claimed',
+        'Tutorial state advances after the essence reward is claimed',
+      );
+      assertEqual(persisted.rewardBarProgress, 0, 'Persisted reward-bar progress remains unchanged for tutorial replacement');
+    },
+  },
+  {
+    name: 'tutorial first roll reward: cannot be claimed twice',
+    run: async () => {
+      resetEnvironment();
+      const hatcheryL1Cost = getStopUpgradeCost({ islandNumber: 1, stopIndex: 0, currentBuildLevel: 0 });
+      seedState({
+        runtimeVersion: 0,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'first_roll_consumed',
+        essence: 0,
+        essenceLifetimeEarned: 0,
+        rewardBarProgress: 0,
+        rewardBarThreshold: 20,
+      });
+
+      const first = await executeIslandRunTileRewardAction({
+        session: makeSession(),
+        client: null,
+        islandRunContractV2Enabled: true,
+        essenceDelta: 12,
+        rewardBarProgress: { source: { kind: 'tile', tileType: 'currency' }, multiplier: 1 },
+      });
+      const second = await executeIslandRunTileRewardAction({
+        session: makeSession(),
+        client: null,
+        islandRunContractV2Enabled: true,
+        essenceDelta: 12,
+        rewardBarProgress: { source: { kind: 'tile', tileType: 'currency' }, multiplier: 1 },
+      });
+
+      assertEqual(first.status, 'ok', 'Initial tutorial reward should succeed');
+      assertEqual(second.status, 'no_op', 'Duplicate tutorial reward is ignored');
+      assertEqual(second.actualEssenceDelta, 0, 'Duplicate tutorial reward applies no essence');
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(persisted.essence, hatcheryL1Cost, 'Tutorial reward is only applied once');
+      assertEqual(persisted.essenceLifetimeEarned, hatcheryL1Cost, 'Lifetime earned is only applied once');
+      assertEqual(
+        persisted.firstSessionTutorialState,
+        'first_essence_reward_claimed',
+        'Tutorial state remains on the claimed marker after duplicate attempts',
+      );
+    },
+  },
+  {
+    name: 'non-tutorial players receive the normal tile reward on Island 1',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'not_started',
+        essence: 0,
+        essenceLifetimeEarned: 0,
+        rewardBarProgress: 0,
+        rewardBarThreshold: 20,
+      });
+
+      const result = await executeIslandRunTileRewardAction({
+        session: makeSession(),
+        client: null,
+        islandRunContractV2Enabled: true,
+        essenceDelta: 12,
+        rewardBarProgress: { source: { kind: 'tile', tileType: 'currency' }, multiplier: 1 },
+      });
+
+      assertEqual(result.status, 'ok', 'Normal tile reward should succeed');
+      assertEqual(result.actualEssenceDelta, 12, 'Non-tutorial player receives requested tile reward');
+      assert(result.rewardBarSlice !== null, 'Non-tutorial tile reward still advances reward bar');
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(persisted.essence, 12, 'Persisted essence reflects normal reward');
+      assertEqual(persisted.firstSessionTutorialState, 'not_started', 'Non-tutorial state is unchanged');
+      assert(persisted.rewardBarProgress > 0, 'Persisted reward bar advances normally');
+    },
+  },
+  {
+    name: 'tutorial state outside Island 1 receives the normal tile reward',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0,
+        currentIslandNumber: 2,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'first_roll_consumed',
+        essence: 0,
+        essenceLifetimeEarned: 0,
+        rewardBarProgress: 0,
+        rewardBarThreshold: 20,
+      });
+
+      const result = await executeIslandRunTileRewardAction({
+        session: makeSession(),
+        client: null,
+        islandRunContractV2Enabled: true,
+        essenceDelta: 12,
+        rewardBarProgress: { source: { kind: 'tile', tileType: 'currency' }, multiplier: 1 },
+      });
+
+      assertEqual(result.status, 'ok', 'Non-Island-1 tile reward should succeed');
+      assertEqual(result.actualEssenceDelta, 12, 'Non-Island-1 reward is not overridden');
+      assert(result.rewardBarSlice !== null, 'Non-Island-1 tile reward still advances reward bar');
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(persisted.essence, 12, 'Persisted essence reflects normal reward');
+      assertEqual(
+        persisted.firstSessionTutorialState,
+        'first_roll_consumed',
+        'Non-Island-1 state is not advanced by tutorial reward logic',
+      );
+      assert(persisted.rewardBarProgress > 0, 'Persisted reward bar advances normally');
+    },
+  },
   {
     name: 'award path: commits essence + reward-bar progress in a single patch',
     run: async () => {
