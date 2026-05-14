@@ -4,6 +4,7 @@ export type IslandRunBuildPromptControl = 'build' | 'gameplay';
 
 export const ISLAND_RUN_TUTORIAL_HATCHERY_STOP_INDEX = 0;
 export const ISLAND_RUN_FIRST_CREATURE_PACK_LOW_DICE_THRESHOLD = 5;
+export const ISLAND_RUN_FIRST_CREATURE_PACK_BONUS_DICE = 100;
 
 export function isIslandRunBuildPromptOverlayActive(
   firstSessionTutorialState: IslandRunFirstSessionTutorialState,
@@ -101,5 +102,47 @@ export function getIslandRunFirstCreaturePackLowDiceTriggerTarget(options: {
     && options.cycleIndex === 0
     && options.dicePool <= ISLAND_RUN_FIRST_CREATURE_PACK_LOW_DICE_THRESHOLD
     ? 'first_creature_pack_available'
+    : null;
+}
+
+export function isIslandRunFirstCreaturePackModalActive(
+  firstSessionTutorialState: IslandRunFirstSessionTutorialState,
+): boolean {
+  return firstSessionTutorialState === 'first_creature_pack_available';
+}
+
+export function resolveIslandRunFirstCreaturePackOpenAttempt(options: {
+  firstSessionTutorialState: IslandRunFirstSessionTutorialState;
+  isClaimInFlight: boolean;
+}): {
+  shouldCallClaim: boolean;
+  nextClaimInFlight: boolean;
+} {
+  if (options.isClaimInFlight || !isIslandRunFirstCreaturePackModalActive(options.firstSessionTutorialState)) {
+    return {
+      shouldCallClaim: false,
+      nextClaimInFlight: options.isClaimInFlight,
+    };
+  }
+  return {
+    shouldCallClaim: true,
+    nextClaimInFlight: true,
+  };
+}
+
+export function formatIslandRunFirstCreaturePackBonusCopy(
+  diceGranted: number | null | undefined,
+): string {
+  const safeDiceGranted = typeof diceGranted === 'number' && Number.isFinite(diceGranted)
+    ? Math.max(0, Math.floor(diceGranted))
+    : ISLAND_RUN_FIRST_CREATURE_PACK_BONUS_DICE;
+  return `+${safeDiceGranted} dice added`;
+}
+
+export function getIslandRunFirstCreaturePackContinueTarget(
+  firstSessionTutorialState: IslandRunFirstSessionTutorialState,
+): IslandRunFirstSessionTutorialState | null {
+  return firstSessionTutorialState === 'first_creature_pack_claimed'
+    ? 'complete'
     : null;
 }

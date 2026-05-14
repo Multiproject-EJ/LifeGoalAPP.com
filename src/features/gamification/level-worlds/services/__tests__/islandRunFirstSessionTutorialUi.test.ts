@@ -1,11 +1,15 @@
 import {
+  formatIslandRunFirstCreaturePackBonusCopy,
   getIslandRunBuildPromptInitialTransitionTarget,
+  getIslandRunFirstCreaturePackContinueTarget,
   getIslandRunFirstCreaturePackLowDiceTriggerTarget,
   getIslandRunHatcheryL1CelebrationContinueTarget,
   ISLAND_RUN_FIRST_CREATURE_PACK_LOW_DICE_THRESHOLD,
+  isIslandRunFirstCreaturePackModalActive,
   isIslandRunHatcheryBuildGuidanceActive,
   isIslandRunHatcheryL1CelebrationActive,
   isIslandRunBuildPromptOverlayActive,
+  resolveIslandRunFirstCreaturePackOpenAttempt,
   resolveIslandRunBuildPromptClickTransitionTargets,
   resolveIslandRunBuildModalTutorialRowState,
   shouldIslandRunBuildPromptBlockControl,
@@ -282,6 +286,99 @@ export const islandRunFirstSessionTutorialUiTests: TestCase[] = [
         }),
         null,
         'Trigger should not fire above the low-dice threshold',
+      );
+    },
+  },
+  {
+    name: 'First Creature Pack modal opens only for available tutorial state',
+    run: () => {
+      assert(
+        isIslandRunFirstCreaturePackModalActive('first_creature_pack_available'),
+        'first_creature_pack_available should show the Creature Pack modal',
+      );
+      assertEqual(
+        isIslandRunFirstCreaturePackModalActive('complete'),
+        false,
+        'Non-tutorial players should not see the Creature Pack modal',
+      );
+      assertEqual(
+        isIslandRunFirstCreaturePackModalActive('first_creature_pack_claimed'),
+        false,
+        'Claimed state should not reopen the intro modal after refresh',
+      );
+    },
+  },
+  {
+    name: 'First Creature Pack open attempt calls claim once and blocks spam while in flight',
+    run: () => {
+      assertDeepEqual(
+        resolveIslandRunFirstCreaturePackOpenAttempt({
+          firstSessionTutorialState: 'first_creature_pack_available',
+          isClaimInFlight: false,
+        }),
+        { shouldCallClaim: true, nextClaimInFlight: true },
+        'Available state should allow one claim call and mark it in flight',
+      );
+      assertDeepEqual(
+        resolveIslandRunFirstCreaturePackOpenAttempt({
+          firstSessionTutorialState: 'first_creature_pack_available',
+          isClaimInFlight: true,
+        }),
+        { shouldCallClaim: false, nextClaimInFlight: true },
+        'Repeated open taps while in flight should not call claim again',
+      );
+      assertDeepEqual(
+        resolveIslandRunFirstCreaturePackOpenAttempt({
+          firstSessionTutorialState: 'complete',
+          isClaimInFlight: false,
+        }),
+        { shouldCallClaim: false, nextClaimInFlight: false },
+        'Non-tutorial state should not call the claim action',
+      );
+    },
+  },
+  {
+    name: 'First Creature Pack reveal copy reports the guaranteed dice bonus',
+    run: () => {
+      assertEqual(
+        formatIslandRunFirstCreaturePackBonusCopy(100),
+        '+100 dice added',
+        'Reveal should show the guaranteed +100 dice bonus',
+      );
+      assertEqual(
+        formatIslandRunFirstCreaturePackBonusCopy(null),
+        '+100 dice added',
+        'Missing reveal payload bonus should fall back to safe copy without regranting',
+      );
+      assertEqual(
+        formatIslandRunFirstCreaturePackBonusCopy(-5),
+        '+0 dice added',
+        'Negative bonus values should clamp to zero for display',
+      );
+      assertEqual(
+        formatIslandRunFirstCreaturePackBonusCopy(100.75),
+        '+100 dice added',
+        'Fractional bonus values should be floored for display',
+      );
+      assertEqual(
+        formatIslandRunFirstCreaturePackBonusCopy(Number.NaN),
+        '+100 dice added',
+        'Non-finite bonus values should fall back to the guaranteed pack bonus',
+      );
+    },
+  },
+  {
+    name: 'First Creature Pack Continue completes the tutorial after claimed state',
+    run: () => {
+      assertEqual(
+        getIslandRunFirstCreaturePackContinueTarget('first_creature_pack_claimed'),
+        'complete',
+        'Continue should advance claimed tutorial state to complete',
+      );
+      assertEqual(
+        getIslandRunFirstCreaturePackContinueTarget('first_creature_pack_available'),
+        null,
+        'Continue should not skip claim from the available state',
       );
     },
   },
