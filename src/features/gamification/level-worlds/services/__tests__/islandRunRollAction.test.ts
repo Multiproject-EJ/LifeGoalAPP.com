@@ -330,4 +330,56 @@ export const islandRunRollActionTests: TestCase[] = [
       );
     },
   },
+  {
+    name: 'first Creature Pack trigger: post-roll low dice advances eligible tutorial state',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 4,
+        dicePool: 6,
+        tokenIndex: 2,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'hatchery_l1_celebrated',
+      });
+
+      const result = await executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 });
+
+      assertEqual(result.status, 'ok', 'Roll should succeed');
+      assertEqual(result.newDicePool, 5, 'Roll should bring dice to the low-dice threshold');
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(
+        persisted.firstSessionTutorialState,
+        'first_creature_pack_available',
+        'Post-roll low dice should make the first Creature Pack available',
+      );
+      assertEqual(persisted.dicePool, 5, 'Creature Pack trigger should not grant dice during the roll commit');
+      assertEqual(persisted.runtimeVersion, 5, 'Roll and tutorial trigger should commit once');
+    },
+  },
+  {
+    name: 'first Creature Pack trigger: post-roll low dice does not fire outside tutorial gate',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 4,
+        dicePool: 6,
+        tokenIndex: 2,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'not_started',
+      });
+
+      const result = await executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 });
+
+      assertEqual(result.status, 'ok', 'Roll should succeed');
+      assertEqual(result.newDicePool, 5, 'Roll should bring dice to the low-dice threshold');
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(
+        persisted.firstSessionTutorialState,
+        'not_started',
+        'Non-tutorial players should not trigger the first Creature Pack',
+      );
+    },
+  },
 ];

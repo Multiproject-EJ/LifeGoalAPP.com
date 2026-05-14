@@ -72,6 +72,7 @@ import {
   __resetIslandRunActionMutexesForTests,
   withIslandRunActionLock,
 } from './islandRunActionMutex';
+import { getIslandRunFirstCreaturePackLowDiceTriggerTarget } from './islandRunFirstSessionTutorialUi';
 
 // ── roll constants (must match IslandRunBoardPrototype) ───────────────────────
 
@@ -278,6 +279,14 @@ async function performRollAction(options: {
   //    top of its body, so the client remains authoritative even if the remote
   //    write later fails or is skipped (demo session / no client).
   const newDicePool = state.dicePool - diceCost;
+  const lowDiceTutorialTarget = tutorialRollTotal === null
+    ? getIslandRunFirstCreaturePackLowDiceTriggerTarget({
+        firstSessionTutorialState: state.firstSessionTutorialState,
+        currentIslandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        dicePool: newDicePool,
+      })
+    : null;
   const newRuntimeVersion = state.runtimeVersion + 1;
   const nextState = {
     ...state,
@@ -285,7 +294,7 @@ async function performRollAction(options: {
     tokenIndex: newTokenIndex,
     dicePool: newDicePool,
     firstSessionTutorialState: tutorialRollTotal === null
-      ? state.firstSessionTutorialState
+      ? lowDiceTutorialTarget ?? state.firstSessionTutorialState
       : 'first_roll_consumed',
   };
 
