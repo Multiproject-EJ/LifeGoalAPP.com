@@ -10,8 +10,9 @@ import {
   resolveMysteryStopMinigame,
   shouldResolveMysteryStopOnMinigameComplete,
 } from '../islandRunMinigameLauncherService';
+import { resolveVisionQuestRewardRouting } from '../../../games/vision-quest/visionQuestRewardRouting';
 import { generateIslandStopPlan } from '../islandRunStops';
-import { assertEqual, type TestCase } from './testHarness';
+import { assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const minigameConsolidationPhase5Tests: TestCase[] = [
   {
@@ -122,6 +123,41 @@ export const minigameConsolidationPhase5Tests: TestCase[] = [
         }),
         false,
         'unknown mystery minigame id should not auto-resolve stop',
+      );
+    },
+  },
+  {
+    name: 'vision_quest reward routing suppresses legacy dice awards in island_run_landmark context',
+    run: () => {
+      const baseRewards = { coins: 20, dice: 4, tokens: 2 };
+      const standaloneRouting = resolveVisionQuestRewardRouting({
+        rewards: baseRewards,
+        rewardContext: 'default',
+      });
+      assertDeepEqual(
+        standaloneRouting.completionRewards,
+        baseRewards,
+        'standalone Vision Quest should keep canonical completion rewards unchanged',
+      );
+      assertDeepEqual(
+        standaloneRouting.legacyRewards,
+        baseRewards,
+        'standalone Vision Quest should keep legacy reward writes enabled',
+      );
+
+      const islandRunRouting = resolveVisionQuestRewardRouting({
+        rewards: baseRewards,
+        rewardContext: 'island_run_landmark',
+      });
+      assertDeepEqual(
+        islandRunRouting.completionRewards,
+        { coins: 0, dice: 4, tokens: 0 },
+        'Island Run Vision Quest should still return only canonical completion dice once',
+      );
+      assertDeepEqual(
+        islandRunRouting.legacyRewards,
+        { coins: 0, dice: 0, tokens: 0 },
+        'Island Run Vision Quest should not also write legacy gameRewards dice',
       );
     },
   },

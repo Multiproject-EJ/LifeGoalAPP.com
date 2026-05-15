@@ -12,6 +12,10 @@ import {
   type ReflectionPrompt,
   type VisionQuestSession,
 } from './visionQuestTypes';
+import {
+  resolveVisionQuestRewardRouting,
+  type VisionQuestRewardContext,
+} from './visionQuestRewardRouting';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 import { awardDice, awardGameTokens, logGameSession } from '../../../../services/gameRewards';
 import { LuckyRollCelebration } from '../../daily-treats/LuckyRollCelebration';
@@ -32,7 +36,7 @@ interface VisionQuestProps {
   session: Session;
   onClose: () => void;
   onComplete: (rewards: { coins: number; dice: number; tokens: number }) => void;
-  rewardContext?: 'default' | 'island_run_landmark';
+  rewardContext?: VisionQuestRewardContext;
 }
 
 export function VisionQuest({ session, onClose, onComplete, rewardContext = 'default' }: VisionQuestProps) {
@@ -101,35 +105,33 @@ export function VisionQuest({ session, onClose, onComplete, rewardContext = 'def
       state
     );
     
-    const effectiveRewards = rewardContext === 'island_run_landmark'
-      ? {
-          coins: 0,
-          dice: rewards.dice,
-          tokens: 0,
-        }
-      : rewards;
+    const rewardRouting = resolveVisionQuestRewardRouting({
+      rewards,
+      rewardContext,
+    });
+    const { completionRewards, legacyRewards } = rewardRouting;
 
     // Award rewards
-    if (effectiveRewards.coins > 0) {
+    if (legacyRewards.coins > 0) {
       awardGold(
         userId,
-        effectiveRewards.coins,
+        legacyRewards.coins,
         'vision_quest',
         `Vision Quest: Reflection on ${gameSession.selectedPrompt.zone}`
       );
     }
-    if (effectiveRewards.dice > 0) {
+    if (legacyRewards.dice > 0) {
       awardDice(
         userId,
-        effectiveRewards.dice,
+        legacyRewards.dice,
         'vision_quest',
         `Vision Quest: Reflection on ${gameSession.selectedPrompt.zone}`
       );
     }
-    if (effectiveRewards.tokens > 0) {
+    if (legacyRewards.tokens > 0) {
       awardGameTokens(
         userId,
-        effectiveRewards.tokens,
+        legacyRewards.tokens,
         'vision_quest',
         `Vision Quest: Reflection on ${gameSession.selectedPrompt.zone}`
       );
@@ -144,7 +146,7 @@ export function VisionQuest({ session, onClose, onComplete, rewardContext = 'def
         zone: gameSession.selectedPrompt.zone,
         reflectionLength: gameSession.reflectionText.length,
         streak: newState.currentStreak,
-        rewards: effectiveRewards,
+        rewards: completionRewards,
         rewardContext,
       },
     });
@@ -156,7 +158,7 @@ export function VisionQuest({ session, onClose, onComplete, rewardContext = 'def
     setGameSession((prev) => ({
       ...prev,
       isComplete: true,
-      rewards: effectiveRewards,
+      rewards: completionRewards,
     }));
     
     setShowConfirmation(true);
