@@ -54,6 +54,7 @@ import { minigameConsolidationPhase5Tests } from './minigameConsolidationPhase5.
 import { minigameConsolidationPhase6Tests } from './minigameConsolidationPhase6.test';
 import { spaceExcavatorCluesTests } from './spaceExcavatorClues.test';
 import { spaceExcavatorDepthsTests } from './spaceExcavatorDepths.test';
+import { spaceExcavatorRewardUxTests } from './spaceExcavatorRewardUx.test';
 import { islandRunShooterControllerBridgeTests } from './islandRunShooterControllerBridge.test';
 import { islandRunShooterControllerTelemetryTests } from './islandRunShooterControllerTelemetry.test';
 import { shooterBlitzLaneLogicTests } from './shooterBlitzLaneLogic.test';
@@ -119,6 +120,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'minigameConsolidationPhase6', tests: minigameConsolidationPhase6Tests },
   { label: 'spaceExcavatorClues', tests: spaceExcavatorCluesTests },
   { label: 'spaceExcavatorDepths', tests: spaceExcavatorDepthsTests },
+  { label: 'spaceExcavatorRewardUx', tests: spaceExcavatorRewardUxTests },
   { label: 'islandRunShooterControllerBridge', tests: islandRunShooterControllerBridgeTests },
   { label: 'islandRunShooterControllerTelemetry', tests: islandRunShooterControllerTelemetryTests },
   { label: 'shooterBlitzLaneLogic', tests: shooterBlitzLaneLogicTests },
