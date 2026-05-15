@@ -328,6 +328,7 @@ import {
   resolveIslandRunFullClearForProgression,
   isIslandRunFullyClearedV2,
 } from '../services/islandRunContractV2StopResolver';
+import { resolveIslandRunBestNextAction } from '../services/islandRunBestNextActionAdvisor';
 import {
   formatIslandRunSpinTokenReward,
   resolveIslandRunContractV2RewardHudState,
@@ -4242,12 +4243,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     if (!ISLAND_RUN_CONTRACT_V2_ENABLED || !hasHydratedRuntimeState) return;
     if (showIslandClearCelebration || showTravelOverlay) return;
     if (!isCurrentIslandFullyCleared) return;
-    showIslandClearCelebrationFromAnywhere('global_full_clear_trigger');
+    setLandingText('Island clear is ready. Claim when you are ready.');
   }, [
     hasHydratedRuntimeState,
     isCurrentIslandFullyCleared,
     showIslandClearCelebration,
-    showIslandClearCelebrationFromAnywhere,
     showTravelOverlay,
   ]);
   const isEnergyDepletedForRoll = isIslandRunRollEnergyDepleted({
@@ -7951,6 +7951,56 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
     isBossDefeated: isCurrentIslandBossDefeated,
   });
+  const bestNextAction = useMemo(() => resolveIslandRunBestNextAction({
+    record: runtimeState,
+    nowMs: Date.now(),
+    playerLevel: Math.max(1, Math.floor(playerLevelInfo?.currentLevel ?? 1)),
+  }), [nowMs, playerLevelInfo?.currentLevel, runtimeState]);
+  const isRewardBarClaiming = rewardBarBurstAnimating || rewardBarCascadePayouts.length > 0;
+  const doesModalOwnAttention = Boolean(
+    activeStopId ||
+      activePlaceholder ||
+      hatchReveal ||
+      ticketPromptStopId ||
+      lockedStopInfoStopId ||
+      showBuildPanel ||
+      showClaimModal ||
+      showEggReadyBanner ||
+      showEncounterModal ||
+      showFirstCreaturePackModal ||
+      showFirstRunCelebration ||
+      showHatcheryHelp ||
+      showHatcheryL1Celebration ||
+      showIslandClearCelebration ||
+      showMarketPanel ||
+      showOnboardingBooster ||
+      showOutOfDicePurchasePrompt ||
+      showPerfectCompanionOnboardingHint ||
+      showRewardDetailsModal ||
+      showSanctuaryPanel ||
+      showShopPanel ||
+      showStickerAlbumDialog ||
+      showStoryReader ||
+      showTravelOverlay,
+  );
+  const shouldShowBestNextActionChip = Boolean(
+    bestNextAction &&
+      bestNextAction.urgency === 'critical' &&
+      !doesModalOwnAttention &&
+      !isRolling &&
+      pendingHopSequence === null &&
+      !isRewardBarClaiming,
+  );
+  const handleBestNextActionChipClick = () => {
+    if (!bestNextAction || !shouldShowBestNextActionChip) return;
+    if (bestNextAction.action === 'claim_reward_bar') {
+      handleContractV2RewardBarClaim();
+      return;
+    }
+    if (bestNextAction.action === 'claim_island_clear') {
+      showIslandClearCelebrationFromAnywhere('best_next_action_chip');
+    }
+  };
 
   if (isRuntimeSyncBlocked || isOwnershipBlocked) {
     return (
@@ -8777,6 +8827,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               </button>
             )}
           </div>
+          {shouldShowBestNextActionChip && bestNextAction && (
+            <button
+              type="button"
+              className="island-run-prototype__best-next-action-chip"
+              onClick={handleBestNextActionChipClick}
+              aria-label={bestNextAction.ctaLabel}
+            >
+              ✨ {bestNextAction.ctaLabel}
+            </button>
+          )}
         </div>
       </div>
 
