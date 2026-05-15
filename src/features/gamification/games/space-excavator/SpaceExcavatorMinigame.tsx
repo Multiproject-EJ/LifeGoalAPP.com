@@ -1,13 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { IslandRunMinigameProps } from '../../level-worlds/services/islandRunMinigameTypes';
-import {
-  getNextSpaceExcavatorCampaignMilestone,
-  SPACE_EXCAVATOR_CAMPAIGN_MILESTONES,
-  SPACE_EXCAVATOR_CAMPAIGN_TOTAL_POINTS,
-} from '../../level-worlds/services/spaceExcavatorCampaignProgress';
+import { SPACE_EXCAVATOR_CAMPAIGN_MILESTONES } from '../../level-worlds/services/spaceExcavatorCampaignProgress';
 import { resolveSpaceExcavatorClue, type SpaceExcavatorClueResult } from '../../level-worlds/services/spaceExcavatorClues';
 import { resolveSpaceExcavatorDepthForBoard } from '../../level-worlds/services/spaceExcavatorDepths';
 import { resolveSpaceExcavatorObjectTileIds } from '../../level-worlds/services/spaceExcavatorObjects';
+import {
+  resolveSpaceExcavatorRewardUxState,
+  SPACE_EXCAVATOR_BOARD_CLEAR_AUTO_ADVANCE_DELAY_MS,
+} from '../../level-worlds/services/spaceExcavatorRewardUx';
 import './spaceExcavator.css';
 
 type Tile = { dug: boolean; objectPiece: boolean; bonusBomb: boolean; clueType: SpaceExcavatorClueResult['type'] };
@@ -47,6 +47,8 @@ type AdvanceBoardResult = { ok: boolean; ticketsRemaining: number; progress?: Sp
 type ClaimMilestoneRewardResult =
   | { ok: true; progress: SpaceExcavatorProgress; rewardLabel: string; failureReason?: never }
   | { ok: false; progress?: SpaceExcavatorProgress | null; rewardLabel?: string | null; failureReason?: string };
+type ClaimModalPhase = 'unlocked' | 'claiming' | 'claimed' | 'failed';
+const BOARD_CLEAR_AUTO_ADVANCE_DELAY_SECONDS = SPACE_EXCAVATOR_BOARD_CLEAR_AUTO_ADVANCE_DELAY_MS / 1000;
 
 type SpaceExcavatorLaunchConfig = {
   requestDigSpend?: (tileId: number) => DigSpendResult;
@@ -106,10 +108,12 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const [finished, setFinished] = useState(false);
   const [sentResult, setSentResult] = useState(false);
   const [showOutOfTickets, setShowOutOfTickets] = useState(false);
-  const [claimPendingId, setClaimPendingId] = useState<string | null>(null);
-  const [claimMessage, setClaimMessage] = useState<string | null>(null);
+  const [activeClaimModalMilestoneId, setActiveClaimModalMilestoneId] = useState<string | null>(null);
+  const [claimModalPhase, setClaimModalPhase] = useState<ClaimModalPhase>('unlocked');
+  const [claimModalMessage, setClaimModalMessage] = useState<string | null>(null);
   const [latestClue, setLatestClue] = useState<SpaceExcavatorClueResult | null>(null);
   const [latestBombFeedback, setLatestBombFeedback] = useState<string | null>(null);
+  const advancingBoardKeyRef = useRef<string | null>(null);
 
   const syncProgress = (nextProgress: SpaceExcavatorProgress) => {
     setProgress(nextProgress);
@@ -123,14 +127,20 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const depth = resolveSpaceExcavatorDepthForBoard(currentBoard);
   const boardLabel = `Board ${currentBoard}${totalBoards > 1 ? ` / ${totalBoards}` : ''}`;
   const eventProgressPoints = Math.max(0, Math.floor(activeProgress?.eventProgressPoints ?? activeProgress?.completedBoardCount ?? 0));
-  const eventProgressTotal = SPACE_EXCAVATOR_CAMPAIGN_TOTAL_POINTS;
-  const eventProgressPercent = Math.min(100, Math.round((eventProgressPoints / eventProgressTotal) * 100));
-  const nextMilestone = getNextSpaceExcavatorCampaignMilestone({ eventProgressPoints });
   const claimedMilestoneIds = activeProgress?.claimedMilestoneIds ?? [];
-  const claimableMilestones = SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.filter(
-    (milestone) => eventProgressPoints >= milestone.pointsRequired && !claimedMilestoneIds.includes(milestone.id),
+  const rewardUxState = useMemo(() => resolveSpaceExcavatorRewardUxState({
+    eventProgressPoints,
+    completedBoardCount: activeProgress?.completedBoardCount,
+    claimedMilestoneIds,
+    status: progressStatus,
+    boardIndex: activeProgress?.boardIndex,
+    totalBoards,
+  }), [activeProgress?.boardIndex, activeProgress?.completedBoardCount, claimedMilestoneIds, eventProgressPoints, progressStatus, totalBoards]);
+  const firstClaimableMilestone = rewardUxState.activeClaimableMilestone;
+  const activeClaimModalMilestone = useMemo(
+    () => SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.find((milestone) => milestone.id === activeClaimModalMilestoneId) ?? null,
+    [activeClaimModalMilestoneId],
   );
-  const firstClaimableMilestone = claimableMilestones[0] ?? null;
   const relicIcon = progress?.objectIcon ?? initial?.objectIcon ?? '❔';
   const relicName = progress?.objectName ?? initial?.objectName ?? 'Hidden Relic';
 
@@ -174,41 +184,79 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
     setShowOutOfTickets(false);
   };
 
-  const onAdvanceBoard = () => {
+  const onAdvanceBoard = useCallback(() => {
+    if ((progress?.status ?? 'active') !== 'board_complete') return;
+    const boardAdvanceKey = `${progress?.boardIndex ?? -1}:board_complete`;
+    if (advancingBoardKeyRef.current === boardAdvanceKey) return;
+    advancingBoardKeyRef.current = boardAdvanceKey;
     const advance = config.requestAdvanceBoard?.() ?? { ok: false, ticketsRemaining };
     setTicketsRemaining(advance.ticketsRemaining);
     if (advance.ok && advance.progress) {
       setLatestClue(null);
       setLatestBombFeedback(null);
       syncProgress(advance.progress);
+      return;
     }
-  };
+    advancingBoardKeyRef.current = null;
+  }, [config, progress?.boardIndex, progress?.status, ticketsRemaining]);
 
   const onClaimMilestone = (milestoneId: string) => {
-    if (claimPendingId) return;
-    setClaimPendingId(milestoneId);
-    setClaimMessage(null);
+    if (claimModalPhase === 'claiming') return;
+    setClaimModalPhase('claiming');
+    setClaimModalMessage(null);
     const claim = config.requestClaimMilestoneReward?.(milestoneId) ?? { ok: false };
     if (claim.ok) {
       syncProgress(claim.progress);
-      setClaimMessage(`Reward claimed: ${claim.rewardLabel}`);
+      setClaimModalMessage(`${claim.rewardLabel} added`);
+      setClaimModalPhase('claimed');
     } else if (claim.failureReason === 'already_claimed') {
       if (claim.progress) syncProgress(claim.progress);
-      setClaimMessage('Reward already claimed.');
+      setClaimModalMessage('Reward already claimed.');
+      setClaimModalPhase('failed');
     } else if (claim.failureReason === 'not_achieved') {
       if (claim.progress) syncProgress(claim.progress);
-      setClaimMessage('Clear more boards to unlock this reward.');
+      setClaimModalMessage('Clear more boards to unlock this reward.');
+      setClaimModalPhase('failed');
     } else if (claim.failureReason === 'missing_event' || claim.failureReason === 'progress_not_found') {
-      setClaimMessage('Progress data is temporarily unavailable. Please close and reopen Space Excavator.');
+      setClaimModalMessage('Progress data is temporarily unavailable. Please close and reopen Space Excavator.');
+      setClaimModalPhase('failed');
     } else if (claim.failureReason === 'missing_milestone') {
       if (claim.progress) syncProgress(claim.progress);
-      setClaimMessage('This reward is unavailable.');
+      setClaimModalMessage('This reward is unavailable.');
+      setClaimModalPhase('failed');
     } else {
       if (claim.progress) syncProgress(claim.progress);
-      setClaimMessage('Could not claim this reward right now. Please try again.');
+      setClaimModalMessage('Could not claim this reward right now. Please try again.');
+      setClaimModalPhase('failed');
     }
-    setClaimPendingId(null);
   };
+
+  const dismissClaimModal = () => {
+    setActiveClaimModalMilestoneId(null);
+    setClaimModalPhase('unlocked');
+    setClaimModalMessage(null);
+  };
+
+  useEffect(() => {
+    if (activeClaimModalMilestoneId || !firstClaimableMilestone) return;
+    setActiveClaimModalMilestoneId(firstClaimableMilestone.id);
+    setClaimModalPhase('unlocked');
+    setClaimModalMessage(null);
+  }, [activeClaimModalMilestoneId, firstClaimableMilestone]);
+
+  useEffect(() => {
+    if (progressStatus !== 'board_complete') {
+      advancingBoardKeyRef.current = null;
+    }
+  }, [progressStatus]);
+
+  useEffect(() => {
+    if (finished || activeClaimModalMilestone || !rewardUxState.canAutoAdvanceBoard) return undefined;
+    const timeoutId = window.setTimeout(() => {
+      onAdvanceBoard();
+    }, SPACE_EXCAVATOR_BOARD_CLEAR_AUTO_ADVANCE_DELAY_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [activeClaimModalMilestone, finished, onAdvanceBoard, rewardUxState.canAutoAdvanceBoard]);
 
   return (
     <section className={`space-excavator space-excavator--${depth.theme}`} aria-label="Space Excavator">
@@ -286,49 +334,29 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
         </div>
       </div>
 
-      <div className="space-excavator__event-progress" aria-label="Event progress">
+      <div className={`space-excavator__event-progress ${rewardUxState.rewardReady ? 'space-excavator__event-progress--ready' : ''}`} aria-label="Event progress">
         <div className="space-excavator__event-progress-header">
-          <strong>Event progress</strong>
-          <span>{eventProgressPoints} / {eventProgressTotal} boards cleared</span>
+          <strong>Event Progress</strong>
+          <span>{rewardUxState.boardsCleared} / {rewardUxState.totalBoards}</span>
         </div>
         <div className="space-excavator__event-progress-bar" aria-hidden="true">
-          <span style={{ width: `${eventProgressPercent}%` }} />
+          <span style={{ width: `${rewardUxState.progressPercent}%` }} />
         </div>
-        <div className="space-excavator__milestones" aria-label="Milestones">
-          {SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.map((milestone) => {
-            const achieved = eventProgressPoints >= milestone.pointsRequired;
-            const claimed = claimedMilestoneIds.includes(milestone.id);
-            const claimable = achieved && !claimed;
-            const stateLabel = claimed ? 'Claimed' : claimable ? 'Claimable' : 'Locked';
-            return (
-              <div
-                key={milestone.id}
-                className={`space-excavator__milestone space-excavator__milestone--${claimed ? 'claimed' : claimable ? 'claimable' : 'locked'}`}
-                title={`${milestone.pointsRequired} board${milestone.pointsRequired === 1 ? '' : 's'} cleared: ${milestone.rewardLabel}`}
-              >
-                <span>{milestone.pointsRequired} board{milestone.pointsRequired === 1 ? '' : 's'}</span>
-                <small>{stateLabel}</small>
-                <strong>{milestone.rewardLabel}</strong>
-                {claimable && (
-                  <button
-                    type="button"
-                    className="space-excavator__claim-button"
-                    onClick={() => onClaimMilestone(milestone.id)}
-                    disabled={claimPendingId === milestone.id}
-                  >
-                    Claim
-                  </button>
-                )}
-              </div>
-            );
-          })}
+        <div className="space-excavator__event-progress-footer">
+          <div className="space-excavator__milestone-dots" aria-label="Event milestone status">
+            {rewardUxState.milestoneDots.map((dot) => (
+              <span
+                key={dot.id}
+                className={`space-excavator__milestone-dot ${dot.claimed ? 'space-excavator__milestone-dot--claimed' : dot.claimable ? 'space-excavator__milestone-dot--ready' : dot.achieved ? 'space-excavator__milestone-dot--achieved' : ''}`}
+                title={`${dot.label} board${dot.label === '1' ? '' : 's'}`}
+              />
+            ))}
+          </div>
+          <span className="space-excavator__next-reward">{rewardUxState.nextRewardLabel}</span>
+          {rewardUxState.rewardReady && (
+            <span className="space-excavator__reward-ready" role="status" aria-live="polite">Reward ready</span>
+          )}
         </div>
-        {claimMessage && (
-          <p className="space-excavator__claim-message" role="status" aria-live="polite">{claimMessage}</p>
-        )}
-        <p className="space-excavator__next-reward">
-          {nextMilestone ? `Next: ${nextMilestone.rewardLabel}` : 'All event milestones reached'}
-        </p>
       </div>
 
       {showOutOfTickets && (
@@ -390,9 +418,74 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
           </div>
           {canAdvanceBoard && (
             <div className="space-excavator__actions">
-              <button type="button" className="space-excavator__button" onClick={onAdvanceBoard}>Continue to next board</button>
+              {!rewardUxState.isTerminalBoardClear && !activeClaimModalMilestone ? (
+                <span className="space-excavator__auto-advance-note">
+                  Auto-advancing in {BOARD_CLEAR_AUTO_ADVANCE_DELAY_SECONDS.toFixed(1)}s
+                </span>
+              ) : null}
+              {activeClaimModalMilestone ? (
+                <span id="space-excavator-continue-disabled-reason" className="sr-only">
+                  Claim the unlocked milestone reward before continuing to the next board.
+                </span>
+              ) : null}
+              <button
+                type="button"
+                className="space-excavator__button space-excavator__button--primary"
+                onClick={onAdvanceBoard}
+                disabled={activeClaimModalMilestone !== null}
+                aria-describedby={activeClaimModalMilestone ? 'space-excavator-continue-disabled-reason' : undefined}
+              >
+                {rewardUxState.isTerminalBoardClear ? 'Finish event' : 'Continue now'}
+              </button>
             </div>
           )}
+        </div>
+      )}
+
+      {activeClaimModalMilestone && (
+        <div className="space-excavator__modal-backdrop space-excavator__modal-backdrop--claim" role="presentation">
+          <div
+            className="space-excavator__reward-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="space-excavator-reward-title"
+          >
+            <div className="space-excavator__reward-burst" aria-hidden="true">✦</div>
+            <p id="space-excavator-reward-title" className="space-excavator__reward-sheet-title">
+              {claimModalPhase === 'claimed' ? 'Reward Claimed!' : claimModalPhase === 'failed' ? 'Claim Failed' : 'Reward Unlocked!'}
+            </p>
+            <p className="space-excavator__reward-sheet-prize">
+              {claimModalPhase === 'claimed' ? claimModalMessage ?? `${activeClaimModalMilestone.rewardLabel} added` : activeClaimModalMilestone.rewardLabel}
+            </p>
+            <p className="space-excavator__reward-sheet-body">
+              {claimModalPhase === 'claimed'
+                ? 'Keep digging to uncover the next relic.'
+                : claimModalPhase === 'failed'
+                  ? claimModalMessage ?? 'Could not claim this reward right now. Please try again.'
+                  : `${rewardUxState.boardsCleared} boards cleared. Claim this milestone reward to continue.`}
+            </p>
+            <div className="space-excavator__ticket-sheet-actions">
+              {claimModalPhase === 'claimed' ? (
+                <button type="button" className="space-excavator__button space-excavator__button--primary" onClick={dismissClaimModal}>
+                  Continue Digging
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="space-excavator__button space-excavator__button--primary"
+                  onClick={() => onClaimMilestone(activeClaimModalMilestone.id)}
+                  disabled={claimModalPhase === 'claiming'}
+                >
+                  {claimModalPhase === 'claiming' ? 'Claiming…' : claimModalPhase === 'failed' ? 'Try Again' : 'Claim Reward'}
+                </button>
+              )}
+              {claimModalPhase === 'failed' ? (
+                <button type="button" className="space-excavator__button" onClick={() => sendOnce(false)}>
+                  Back to Island Run
+                </button>
+              ) : null}
+            </div>
+          </div>
         </div>
       )}
 
