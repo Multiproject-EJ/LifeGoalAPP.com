@@ -4239,17 +4239,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
   }, [islandClearVisitKey, islandNumber, session.user.id]);
 
-  useEffect(() => {
-    if (!ISLAND_RUN_CONTRACT_V2_ENABLED || !hasHydratedRuntimeState) return;
-    if (showIslandClearCelebration || showTravelOverlay) return;
-    if (!isCurrentIslandFullyCleared) return;
-    setLandingText('Island clear is ready. Claim when you are ready.');
-  }, [
-    hasHydratedRuntimeState,
-    isCurrentIslandFullyCleared,
-    showIslandClearCelebration,
-    showTravelOverlay,
-  ]);
   const isEnergyDepletedForRoll = isIslandRunRollEnergyDepleted({
     dicePool,
     dicePerRoll: effectiveDiceCost,
@@ -7951,11 +7940,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
     isBossDefeated: isCurrentIslandBossDefeated,
   });
-  const bestNextAction = useMemo(() => resolveIslandRunBestNextAction({
-    record: runtimeState,
-    nowMs: Date.now(),
-    playerLevel: Math.max(1, Math.floor(playerLevelInfo?.currentLevel ?? 1)),
-  }), [nowMs, playerLevelInfo?.currentLevel, runtimeState]);
+  const bestNextAction = useMemo(() => {
+    const playerLevel = Math.max(1, Math.floor(playerLevelInfo?.currentLevel ?? 1));
+    return resolveIslandRunBestNextAction({
+      record: runtimeState,
+      nowMs: Date.now(),
+      playerLevel,
+    });
+  }, [playerLevelInfo?.currentLevel, runtimeState]);
   const isRewardBarClaiming = rewardBarBurstAnimating || rewardBarCascadePayouts.length > 0;
   const doesModalOwnAttention = Boolean(
     activeStopId ||
