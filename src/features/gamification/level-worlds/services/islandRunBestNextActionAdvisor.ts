@@ -54,8 +54,22 @@ export interface IslandRunBestNextActionInput {
   playerLevel: number;
 }
 
+const ACTIVE_FIRST_SESSION_TUTORIAL_STATES = new Set<unknown>([
+  'awaiting_first_roll',
+  'first_roll_consumed',
+  'first_essence_reward_claimed',
+  'build_prompt_visible',
+  'build_modal_opened',
+  'hatchery_l1_built',
+  'hatchery_l1_celebrated',
+  'normal_play_until_low_dice',
+  'first_creature_pack_available',
+  'first_creature_pack_opened',
+  'first_creature_pack_claimed',
+]);
+
 function isFirstSessionTutorialActive(record: IslandRunGameStateRecord): boolean {
-  return record.firstSessionTutorialState !== 'complete';
+  return ACTIVE_FIRST_SESSION_TUTORIAL_STATES.has(record.firstSessionTutorialState);
 }
 
 function getCurrentIslandKey(record: IslandRunGameStateRecord): string {

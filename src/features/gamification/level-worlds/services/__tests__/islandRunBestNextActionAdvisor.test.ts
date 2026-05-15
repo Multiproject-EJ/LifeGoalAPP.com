@@ -257,10 +257,32 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
     },
   },
   {
-    name: 'tutorial active returns null',
+    name: 'known active tutorial state returns null',
     run: () => {
       const result = resolveAction(makeRecord({ firstSessionTutorialState: 'awaiting_first_roll', dicePool: 5 }));
       assertEqual(result, null, 'tutorial state should suppress advisor output');
+    },
+  },
+  {
+    name: 'non-active tutorial fallback states do not suppress normal actions',
+    run: () => {
+      const cases = [
+        { label: 'complete', firstSessionTutorialState: 'complete' },
+        { label: 'not_started default', firstSessionTutorialState: 'not_started' },
+        { label: 'null', firstSessionTutorialState: null },
+        { label: 'undefined', firstSessionTutorialState: undefined },
+        { label: 'unknown', firstSessionTutorialState: 'legacy_unknown_state' },
+      ] as const;
+
+      for (const testCase of cases) {
+        expectAction(
+          makeRecord({
+            firstSessionTutorialState: testCase.firstSessionTutorialState,
+            dicePool: 5,
+          } as Partial<IslandRunGameStateRecord>),
+          'roll',
+        );
+      }
     },
   },
 ];
