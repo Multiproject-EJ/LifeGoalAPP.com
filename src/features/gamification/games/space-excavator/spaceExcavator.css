@@ -422,10 +422,15 @@
 
 .space-excavator__event-progress {
   border: 1px solid var(--space-excavator-panel-border);
-  border-radius: 16px;
-  padding: 8px 10px;
+  border-radius: 999px;
+  padding: 7px 10px;
   background: rgba(8, 47, 73, 0.36);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.space-excavator__event-progress--ready {
+  background: linear-gradient(135deg, var(--space-excavator-accent-wash), rgba(15, 23, 42, 0.62));
+  box-shadow: 0 0 18px var(--space-excavator-glow), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .space-excavator__event-progress-header {
@@ -463,100 +468,68 @@
   background: linear-gradient(90deg, var(--space-excavator-accent), var(--space-excavator-progress-accent));
 }
 
-.space-excavator__milestones {
+.space-excavator__event-progress-footer {
   display: flex;
-  gap: 6px;
-  margin: 7px -2px 0;
-  padding: 0 2px 2px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-
-.space-excavator__milestone {
-  display: grid;
-  flex: 0 0 min(136px, 42vw);
-  min-width: 112px;
-  min-height: 58px;
-  grid-template-columns: 1fr auto;
   align-items: center;
-  gap: 2px 7px;
-  padding: 7px 8px;
-  border: 1px solid rgba(100, 116, 139, 0.62);
-  border-radius: 13px;
-  background: rgba(15, 23, 42, 0.5);
-  color: #cbd5e1;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 5px;
+  min-width: 0;
+}
+
+.space-excavator__milestone-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.space-excavator__milestone-dot {
+  width: 8px;
+  height: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.space-excavator__milestone-dot--achieved {
+  border-color: var(--space-excavator-accent);
+  background: var(--space-excavator-accent);
+}
+
+.space-excavator__milestone-dot--ready {
+  border-color: #fef3c7;
+  background: #facc15;
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.7);
+}
+
+.space-excavator__milestone-dot--claimed {
+  border-color: rgba(187, 247, 208, 0.82);
+  background: #22c55e;
+}
+
+.space-excavator__reward-ready {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(250, 204, 21, 0.18);
+  color: #fef3c7;
   font-size: 10px;
-  text-align: left;
-}
-
-.space-excavator__milestone span {
   font-weight: 900;
-  white-space: nowrap;
-}
-
-.space-excavator__milestone small {
-  justify-self: end;
-  color: var(--space-excavator-copy-accent);
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
-.space-excavator__milestone strong {
-  grid-column: 1 / -1;
-  max-width: 100%;
+.space-excavator__next-reward {
+  min-width: 0;
   overflow: hidden;
-  color: #e2e8f0;
-  font-size: 10px;
-  line-height: 1.15;
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.space-excavator__milestone--locked {
-  opacity: .68;
-}
-
-.space-excavator__milestone--claimable {
-  border-color: var(--space-excavator-accent);
-  background: linear-gradient(135deg, var(--space-excavator-accent-glass), rgba(15, 23, 42, 0.58));
-  box-shadow: 0 0 0 1px var(--space-excavator-glow), 0 8px 20px rgba(2, 6, 23, 0.16);
-  color: var(--space-excavator-copy-accent);
-}
-
-.space-excavator__milestone--claimed {
-  border-color: rgba(250, 204, 21, 0.72);
-  background: linear-gradient(135deg, rgba(250, 204, 21, 0.2), rgba(15, 23, 42, 0.58));
-  color: #fde68a;
-}
-
-.space-excavator__claim-button {
-  grid-column: 1 / -1;
-  min-height: 32px;
-  border: 1px solid var(--space-excavator-copy-accent);
-  border-radius: 999px;
-  background: linear-gradient(180deg, var(--space-excavator-copy-accent), var(--space-excavator-accent-strong));
-  color: var(--space-excavator-accent-contrast);
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.space-excavator__claim-button:disabled {
-  opacity: .65;
-}
-
-.space-excavator__claim-message {
-  margin: 6px 0 0;
-  color: #bbf7d0;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.space-excavator__next-reward {
-  margin: 5px 0 0;
-  color: #cbd5e1;
-  font-size: 12px;
 }
 
 .space-excavator__actions {
@@ -616,6 +589,15 @@
   background: rgba(2, 6, 23, 0.62);
 }
 
+.space-excavator__modal-backdrop--claim {
+  z-index: 34;
+  align-items: center;
+  background:
+    radial-gradient(circle at 50% 38%, var(--space-excavator-accent-wash), transparent 38%),
+    rgba(2, 6, 23, 0.78);
+  backdrop-filter: blur(8px);
+}
+
 .space-excavator__ticket-sheet {
   box-sizing: border-box;
   width: min(100%, 440px);
@@ -671,6 +653,62 @@
   width: 100%;
 }
 
+.space-excavator__reward-sheet {
+  box-sizing: border-box;
+  width: min(100%, 520px);
+  max-height: calc(100dvh - max(28px, env(safe-area-inset-top, 0px)) - max(28px, env(safe-area-inset-bottom, 0px)));
+  overflow-y: auto;
+  border: 1px solid var(--space-excavator-panel-border);
+  border-radius: 28px;
+  padding: clamp(22px, 7vw, 34px);
+  background:
+    radial-gradient(circle at 50% 0%, var(--space-excavator-accent-wash), transparent 42%),
+    var(--space-excavator-panel-bg);
+  text-align: center;
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.55), 0 0 40px var(--space-excavator-glow);
+}
+
+.space-excavator__reward-burst {
+  display: grid;
+  place-items: center;
+  width: clamp(72px, 22vw, 104px);
+  height: clamp(72px, 22vw, 104px);
+  margin: 0 auto 14px;
+  border-radius: 999px;
+  background: radial-gradient(circle, #fef3c7, var(--space-excavator-progress-accent) 48%, var(--space-excavator-accent-strong));
+  color: var(--space-excavator-accent-contrast);
+  font-size: clamp(34px, 10vw, 54px);
+  font-weight: 900;
+  box-shadow: 0 0 34px var(--space-excavator-glow);
+}
+
+.space-excavator__reward-sheet-title,
+.space-excavator__reward-sheet-prize,
+.space-excavator__reward-sheet-body {
+  margin: 0;
+}
+
+.space-excavator__reward-sheet-title {
+  color: #f8fafc;
+  font-size: clamp(26px, 8vw, 38px);
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+
+.space-excavator__reward-sheet-prize {
+  margin-top: 12px;
+  color: #fef3c7;
+  font-size: clamp(24px, 7vw, 34px);
+  font-weight: 950;
+}
+
+.space-excavator__reward-sheet-body {
+  margin-top: 10px;
+  color: #dbeafe;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
 .space-excavator__notice--success {
   border-color: #22c55e;
   background: linear-gradient(180deg, rgba(20, 83, 45, 0.55), rgba(15, 23, 42, 0.72));
@@ -719,6 +757,13 @@
   font-weight: 800;
 }
 
+.space-excavator__auto-advance-note {
+  align-self: center;
+  color: var(--space-excavator-copy-accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
 @media (max-width: 420px) {
   .space-excavator {
     gap: 8px;
@@ -738,8 +783,12 @@
     padding-inline: 2px;
   }
 
-  .space-excavator__milestone {
-    flex-basis: 128px;
+  .space-excavator__event-progress-footer {
+    gap: 6px;
+  }
+
+  .space-excavator__reward-ready {
+    padding-inline: 6px;
   }
 }
 
