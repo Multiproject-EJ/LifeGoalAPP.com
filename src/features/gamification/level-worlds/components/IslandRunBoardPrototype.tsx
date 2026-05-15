@@ -7944,13 +7944,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const playerLevel = Math.max(1, Math.floor(playerLevelInfo?.currentLevel ?? 1));
     return resolveIslandRunBestNextAction({
       record: runtimeState,
-      nowMs: Date.now(),
+      nowMs,
       playerLevel,
     });
-  }, [playerLevelInfo?.currentLevel, runtimeState]);
+  }, [nowMs, playerLevelInfo?.currentLevel, runtimeState]);
   const isRewardBarClaiming = rewardBarBurstAnimating || rewardBarCascadePayouts.length > 0;
   const doesModalOwnAttention = Boolean(
     activeStopId ||
+      activeLaunchedMinigameId ||
       activePlaceholder ||
       hatchReveal ||
       ticketPromptStopId ||
@@ -7983,16 +7984,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       pendingHopSequence === null &&
       !isRewardBarClaiming,
   );
-  const handleBestNextActionChipClick = () => {
-    if (!bestNextAction || !shouldShowBestNextActionChip) return;
-    if (bestNextAction.action === 'claim_reward_bar') {
-      handleContractV2RewardBarClaim();
-      return;
-    }
-    if (bestNextAction.action === 'claim_island_clear') {
-      showIslandClearCelebrationFromAnywhere('best_next_action_chip');
-    }
-  };
 
   if (isRuntimeSyncBlocked || isOwnershipBlocked) {
     return (
@@ -8823,7 +8814,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             <button
               type="button"
               className="island-run-prototype__best-next-action-chip"
-              onClick={handleBestNextActionChipClick}
+              onClick={() => {
+                if (bestNextAction.action === 'claim_reward_bar') {
+                  handleContractV2RewardBarClaim();
+                  return;
+                }
+                if (bestNextAction.action === 'claim_island_clear') {
+                  showIslandClearCelebrationFromAnywhere('best_next_action_chip');
+                }
+              }}
               aria-label={bestNextAction.ctaLabel}
             >
               ✨ {bestNextAction.ctaLabel}
