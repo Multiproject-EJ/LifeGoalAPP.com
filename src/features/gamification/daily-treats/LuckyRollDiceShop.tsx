@@ -64,13 +64,13 @@ export function LuckyRollDiceShop({ session, onBack }: LuckyRollDiceShopProps) {
   }, [currencyBalance.hearts]);
   
   return (
-    <div className="lucky-roll-dice-shop" role="dialog" aria-modal="true" aria-label="Dice Shop">
+    <div className="lucky-roll-dice-shop" role="dialog" aria-modal="true" aria-label="Lucky Roll Dice Shop">
       <div className="lucky-roll-dice-shop__backdrop" onClick={onBack} role="presentation" />
       
       <div className="lucky-roll-dice-shop__container">
         {/* Header */}
         <div className="lucky-roll-dice-shop__header">
-          <h2 className="lucky-roll-dice-shop__title">🛒 Dice Shop</h2>
+          <h2 className="lucky-roll-dice-shop__title">🛒 Lucky Roll Dice Shop</h2>
           <div className="lucky-roll-dice-shop__hearts">
             ❤️ {currencyBalance.hearts}
           </div>
@@ -78,7 +78,7 @@ export function LuckyRollDiceShop({ session, onBack }: LuckyRollDiceShopProps) {
             type="button"
             className="lucky-roll-dice-shop__close"
             onClick={onBack}
-            aria-label="Close Dice Shop"
+            aria-label="Close Lucky Roll Dice Shop"
           >
             ×
           </button>
@@ -98,11 +98,11 @@ export function LuckyRollDiceShop({ session, onBack }: LuckyRollDiceShopProps) {
               <div className="lucky-roll-pack-card__contents">
                 {pack.diceCount > 0 ? (
                   <div className="lucky-roll-pack-card__item">
-                    {pack.diceCount} dice
+                    {pack.diceCount} Lucky Roll Dice
                   </div>
                 ) : (
                   <div className="lucky-roll-pack-card__item lucky-roll-pack-card__item--mystery">
-                    5–750 dice
+                    5–750 Lucky Roll Dice
                   </div>
                 )}
                 {pack.tokenCount > 0 ? (
@@ -145,7 +145,7 @@ export function LuckyRollDiceShop({ session, onBack }: LuckyRollDiceShopProps) {
               </h3>
               <div className="lucky-roll-mystery-reveal__prizes">
                 <div className="lucky-roll-mystery-reveal__prize">
-                  🎲 {mysteryReveal.dice}
+                  🎲 {mysteryReveal.dice} Lucky Roll Dice
                 </div>
                 <div className="lucky-roll-mystery-reveal__prize">
                   🎟️ {mysteryReveal.tokens}

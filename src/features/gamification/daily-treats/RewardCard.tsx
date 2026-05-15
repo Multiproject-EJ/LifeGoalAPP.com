@@ -287,6 +287,7 @@ type RewardCardProps = {
   holidayKey: HolidayKey | null;
   onClaim?: () => void;
   isPersonalQuest?: boolean;
+  diceLabel?: string;
 };
 
 /**
@@ -300,6 +301,7 @@ export const RewardCard = ({
   holidayKey,
   onClaim,
   isPersonalQuest = false,
+  diceLabel = 'Dice',
 }: RewardCardProps) => {
   const tierInfo = REWARD_TIER_INFO[tier];
   const isEmpty = tier === 1;
@@ -313,7 +315,7 @@ export const RewardCard = ({
   const getRewardLabel = (): string => {
     if (isEmpty) return 'Nothing today';
     if (currency === 'dice') {
-      return `${amount} Dice`;
+      return `${amount} ${diceLabel}`;
     }
     return `${amount} Gold`;
   };

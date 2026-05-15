@@ -12,6 +12,7 @@ type CalendarDoorFlipProps = {
   onRevealComplete?: () => void;
   onClaim?: () => void;
   isPersonalQuest?: boolean;
+  diceLabel?: string;
 };
 
 /**
@@ -28,6 +29,7 @@ export const CalendarDoorFlip = ({
   onRevealComplete,
   onClaim,
   isPersonalQuest = false,
+  diceLabel,
 }: CalendarDoorFlipProps) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [hasFlipped, setHasFlipped] = useState(false);
@@ -74,6 +76,7 @@ export const CalendarDoorFlip = ({
             holidayKey={holidayKey}
             onClaim={onClaim}
             isPersonalQuest={isPersonalQuest}
+            diceLabel={diceLabel}
           />
         </div>
       </div>

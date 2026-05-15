@@ -58,7 +58,7 @@ export function TaskTowerRewards({
             
             {dice > 0 && (
               <div className="task-tower-rewards__stat" style={{ animationDelay: '600ms' }}>
-                <span className="task-tower-rewards__stat-label">Dice Earned</span>
+                <span className="task-tower-rewards__stat-label">Game Dice Earned</span>
                 <span className="task-tower-rewards__stat-value">{dice} 🎲</span>
               </div>
             )}

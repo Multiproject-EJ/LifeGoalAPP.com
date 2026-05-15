@@ -12,6 +12,7 @@ type CalendarDoorUnwrapProps = {
   onRevealComplete?: () => void;
   onClaim?: () => void;
   isPersonalQuest?: boolean;
+  diceLabel?: string;
   /** Visual variant: 'gift' for wrapped present, 'envelope' for sealed envelope */
   variant?: 'gift' | 'envelope';
 };
@@ -30,6 +31,7 @@ export const CalendarDoorUnwrap = ({
   onRevealComplete,
   onClaim,
   isPersonalQuest = false,
+  diceLabel,
   variant = 'gift',
 }: CalendarDoorUnwrapProps) => {
   const [isUnwrapping, setIsUnwrapping] = useState(false);
@@ -90,6 +92,7 @@ export const CalendarDoorUnwrap = ({
             holidayKey={holidayKey}
             onClaim={onClaim}
             isPersonalQuest={isPersonalQuest}
+            diceLabel={diceLabel}
           />
         </div>
       )}
