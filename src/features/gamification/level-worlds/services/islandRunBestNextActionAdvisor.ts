@@ -110,7 +110,7 @@ function areAllBuildingsFullyComplete(record: IslandRunGameStateRecord): boolean
 
 function getAffordableBuildIndex(record: IslandRunGameStateRecord): number | null {
   const wallet = Math.max(0, Math.floor(record.essence));
-  // Match the investigation priority: boss-arena funding unblocks island clear, then earliest landmark wins.
+  // Match the investigation priority: boss-arena (4) first, then landmarks in order (0-3).
   const candidateIndices = [4, 0, 1, 2, 3];
 
   for (const stopIndex of candidateIndices) {
@@ -260,15 +260,15 @@ export function resolveIslandRunBestNextAction(input: IslandRunBestNextActionInp
 
   const activeEvent = getActiveEvent(record, nowMs);
   if (activeEvent) {
-    const canonicalEventId = activeEvent.eventId;
-    const tickets = Math.max(0, Math.floor(record.minigameTicketsByEvent[canonicalEventId] ?? 0));
+    const canonicalTemplateId = activeEvent.eventId;
+    const tickets = Math.max(0, Math.floor(record.minigameTicketsByEvent[canonicalTemplateId] ?? 0));
     if (tickets > 0) {
       return {
         action: 'play_event_minigame',
         urgency: 'low',
         ctaLabel: 'Play event',
         reason: 'Timed-event minigame tickets are available.',
-        meta: { eventId: canonicalEventId },
+        meta: { eventId: canonicalTemplateId },
       };
     }
   }

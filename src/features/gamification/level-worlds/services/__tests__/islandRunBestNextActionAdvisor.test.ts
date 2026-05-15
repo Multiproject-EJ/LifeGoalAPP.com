@@ -217,6 +217,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
         expiresAtMs: NOW_MS + 10_000,
         version: 1,
       };
+      // Ticket authority is keyed by getActiveEvent's canonical template id, not the timestamped record id.
 
       expectAction(
         makeRecord({
