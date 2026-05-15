@@ -388,12 +388,12 @@ export function ShooterBlitz({
               <strong>{playerName}</strong>, destroy {trial.scoreTarget} hostiles before the timer expires.
             </p>
             <p className="shooter-blitz__reward-copy">
-              Mission reward: +{SHOOTER_REWARDS.coins} coins, +{SHOOTER_REWARDS.dice} Mini-game Dice, +{SHOOTER_REWARDS.tokens}{' '}
+              Mission reward: +{SHOOTER_REWARDS.coins} coins, +{SHOOTER_REWARDS.dice} Game Dice, +{SHOOTER_REWARDS.tokens}{' '}
               token
             </p>
             <div className="shooter-blitz__reward-row" aria-label="Mission rewards">
               <span>🪙 {SHOOTER_REWARDS.coins}</span>
-              <span>🎲 {SHOOTER_REWARDS.dice} Mini-game Dice</span>
+              <span>+{SHOOTER_REWARDS.dice} Game Dice 🎲</span>
               <span>🧿 {SHOOTER_REWARDS.tokens}</span>
             </div>
             <div className="shooter-blitz__reward-row" aria-label="Trial configuration">

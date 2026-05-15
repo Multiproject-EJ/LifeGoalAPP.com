@@ -125,7 +125,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
       // Show floating reward
       const rewardParts = [];
       if (blockRewards.coins > 0) rewardParts.push(`+${blockRewards.coins} 🪙`);
-      if (blockRewards.dice > 0) rewardParts.push(`+${blockRewards.dice} 🎲 Mini-game Dice`);
+      if (blockRewards.dice > 0) rewardParts.push(`+${blockRewards.dice} Game Dice 🎲`);
       showFloatingReward(rewardParts.join(' '));
       
       // Mark block as animating
@@ -177,7 +177,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
           // Show floating reward for line clears
           const lineClearRewardText = [];
           if (lineClearRewards.coins > 0) lineClearRewardText.push(`+${lineClearRewards.coins} 🪙`);
-          if (lineClearRewards.dice > 0) lineClearRewardText.push(`+${lineClearRewards.dice} 🎲 Mini-game Dice`);
+          if (lineClearRewards.dice > 0) lineClearRewardText.push(`+${lineClearRewards.dice} Game Dice 🎲`);
           if (lineClearRewardText.length > 0) {
             showFloatingReward(`Line Clear! ${lineClearRewardText.join(' ')}`);
           }

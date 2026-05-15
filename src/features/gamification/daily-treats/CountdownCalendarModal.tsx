@@ -422,7 +422,7 @@ export const CountdownCalendarModal = ({
     : daysRemaining === 0
       ? `🎉 Today is ${activeAdvent ? getHolidayGreetingLabel(activeAdvent.meta) : themeName}!`
       : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} to go`;
-  const dailyTreatDiceLabel = islandRunSession ? 'Board Dice' : 'Game Dice';
+  const dailyTreatDiceLabel = islandRunSession ? 'Island Dice' : 'Game Dice';
 
   // Check if today's free door is already opened
   const todayFreeOpened = progress?.opened_days.includes(todayIndex) ?? false;

@@ -196,7 +196,7 @@ export function VisionQuest({ session, onClose, onComplete, rewardContext = 'def
   
   const characterCount = gameSession.reflectionText.length;
   const canSubmit = characterCount >= MIN_REFLECTION_LENGTH;
-  const diceRewardLabel = rewardContext === 'island_run_landmark' ? 'Board Dice' : 'Mini-game Dice';
+  const diceRewardLabel = rewardContext === 'island_run_landmark' ? 'Island Dice' : 'Game Dice';
   
   return (
     <div className="vision-quest">
