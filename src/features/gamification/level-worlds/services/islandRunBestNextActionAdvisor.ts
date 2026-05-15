@@ -54,7 +54,7 @@ export interface IslandRunBestNextActionInput {
   playerLevel: number;
 }
 
-const ACTIVE_FIRST_SESSION_TUTORIAL_STATES = new Set<unknown>([
+const ACTIVE_FIRST_SESSION_TUTORIAL_STATES = new Set<string>([
   'awaiting_first_roll',
   'first_roll_consumed',
   'first_essence_reward_claimed',
@@ -124,7 +124,7 @@ function areAllBuildingsFullyComplete(record: IslandRunGameStateRecord): boolean
 
 function getAffordableBuildIndex(record: IslandRunGameStateRecord): number | null {
   const wallet = Math.max(0, Math.floor(record.essence));
-  // Match the investigation priority: boss-arena (4) first, then landmarks in order (0-3).
+  // Boss-arena (4) is prioritized first because it unlocks island completion; landmarks (0-3) follow in order.
   const candidateIndices = [4, 0, 1, 2, 3];
 
   for (const stopIndex of candidateIndices) {

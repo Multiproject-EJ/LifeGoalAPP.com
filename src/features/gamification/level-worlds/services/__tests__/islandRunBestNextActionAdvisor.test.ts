@@ -198,7 +198,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
 
       const result = requireResult(record, 'expected fund_building result');
       assertEqual(result.action, 'fund_building', 'affordable build should win');
-      assertEqual(result.meta?.stopIndex, 0, 'earliest affordable non-boss build should be selected');
+      assertEqual(result.meta?.stopIndex, 0, 'first affordable build in priority order should be selected');
     },
   },
   {
@@ -271,7 +271,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
         { label: 'not_started default', firstSessionTutorialState: 'not_started' },
         { label: 'null', firstSessionTutorialState: null },
         { label: 'undefined', firstSessionTutorialState: undefined },
-        { label: 'unknown', firstSessionTutorialState: 'legacy_unknown_state' },
+        { label: 'unknown', firstSessionTutorialState: 'unknown_state' },
       ] as const;
 
       for (const testCase of cases) {
