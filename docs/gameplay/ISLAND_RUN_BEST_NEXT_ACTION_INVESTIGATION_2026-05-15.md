@@ -1,6 +1,6 @@
 # Island Run — Best Next Action Investigation
 **Date:** 2026-05-15  
-**Status:** Investigation only — no code changes  
+**Status:** PR A implemented pure resolver only — UI rollout remains separate  
 **Scope:** Service design, priority table, UI placement, risks, and first-PR recommendation
 
 ---
@@ -13,6 +13,10 @@ product goal is UX/retention:
 
 > Island Run should always make the **next best action obvious and thumb-friendly**, so the
 > player never wonders what to do next.
+
+PR A adds `islandRunBestNextActionAdvisor.ts` as a pure snapshot resolver with
+focused service tests. It does not add UI, runtime writes, economy changes,
+telemetry, or feature-flag rollout.
 
 ---
 

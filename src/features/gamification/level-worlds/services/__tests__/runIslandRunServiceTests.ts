@@ -43,6 +43,7 @@ import { islandRunStateStoreTests } from './islandRunStateStore.test';
 import { islandRunStateActionsTests } from './islandRunStateActions.test';
 import { islandRunAudioTests } from './islandRunAudio.test';
 import { islandRunFirstSessionTutorialUiTests } from './islandRunFirstSessionTutorialUi.test';
+import { islandRunBestNextActionAdvisorTests } from './islandRunBestNextActionAdvisor.test';
 import { islandRunBoardEssenceParityTests } from './islandRunBoardEssenceParity.test';
 import { useBoardCameraTests } from './useBoardCamera.test';
 import { minigameConsolidationPhase1Tests } from './minigameConsolidationPhase1.test';
@@ -107,6 +108,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunStateActions', tests: islandRunStateActionsTests },
   { label: 'islandRunAudio', tests: islandRunAudioTests },
   { label: 'islandRunFirstSessionTutorialUi', tests: islandRunFirstSessionTutorialUiTests },
+  { label: 'islandRunBestNextActionAdvisor', tests: islandRunBestNextActionAdvisorTests },
   { label: 'islandRunBoardEssenceParity', tests: islandRunBoardEssenceParityTests },
   { label: 'useBoardCamera', tests: useBoardCameraTests },
   { label: 'minigameConsolidationPhase1', tests: minigameConsolidationPhase1Tests },
