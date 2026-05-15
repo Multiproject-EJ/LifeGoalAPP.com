@@ -4239,6 +4239,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
   }, [islandClearVisitKey, islandNumber, session.user.id]);
 
+  // Island clear is intentionally surfaced through the critical Best Next Action
+  // chip instead of auto-opening this modal, so full clears do not interrupt play.
   const isEnergyDepletedForRoll = isIslandRunRollEnergyDepleted({
     dicePool,
     dicePerRoll: effectiveDiceCost,
