@@ -39,6 +39,15 @@ async function readVisionQuestSource(): Promise<string> {
   return fsMod.readFileSync(gamePath, 'utf8');
 }
 
+async function readVisionQuestRewardRoutingSource(): Promise<string> {
+  // @ts-ignore island-run test tsconfig omits node type libs
+  const fsMod = await import('fs');
+  // @ts-ignore island-run test tsconfig omits node type libs
+  const pathMod = await import('path');
+  const routingPath = pathMod.resolve(process.cwd(), 'src/features/gamification/games/vision-quest/visionQuestRewardRouting.ts');
+  return fsMod.readFileSync(routingPath, 'utf8');
+}
+
 
 export const islandRunBoardEssenceParityTests: TestCase[] = [
   {
@@ -414,14 +423,18 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
     name: 'vision quest landmark reward context suppresses coins/tokens and token emoji reward card',
     run: async () => {
       const source = await readVisionQuestSource();
+      const routingSource = await readVisionQuestRewardRoutingSource();
       assert(
-        source.includes("rewardContext?: 'default' | 'island_run_landmark'"),
+        source.includes('resolveVisionQuestRewardRouting'),
         'Vision Quest should expose a landmark reward-context switch for Island Run.',
       );
       assert(
-        source.includes("rewardContext === 'island_run_landmark'") &&
-          source.includes('coins: 0') &&
-          source.includes('tokens: 0'),
+        source.includes('const { completionRewards, legacyRewards } = rewardRouting;') &&
+          source.includes('if (legacyRewards.dice > 0)') &&
+          routingSource.includes("options.rewardContext === 'island_run_landmark'") &&
+          routingSource.includes('coins: 0') &&
+          routingSource.includes('tokens: 0') &&
+          routingSource.includes('dice: 0'),
         'Landmark reward context should suppress coins/tokens so event-token rewards are not granted by default.',
       );
     },
