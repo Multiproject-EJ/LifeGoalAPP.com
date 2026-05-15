@@ -178,3 +178,9 @@ Events/minigames
 ## Notes on “critical contradiction” status
 
 The audit found contract contradictions around direct dice from tile-adjacent rewards, especially encounters and the bonus-tile service. Because the requested task is investigation-only and explicitly says not to alter economy values yet, this document records those contradictions as immediate audit items rather than changing behavior.
+
+### Follow-up status (2026-05-15 docs alignment)
+
+- Canonical docs now explicitly preserve the no-direct-tile-dice rule for both encounter and bonus semantics.
+- Encounter direct dice remains a known **live** implementation contradiction and requires a dedicated behavior cleanup PR.
+- Bonus tile direct dice remains **dormant** (bonus tiles are not active in the production tile map), and the canonical payout no longer treats direct dice as allowed before go-live.
