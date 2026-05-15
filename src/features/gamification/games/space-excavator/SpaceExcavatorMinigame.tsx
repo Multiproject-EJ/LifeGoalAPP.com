@@ -48,6 +48,7 @@ type ClaimMilestoneRewardResult =
   | { ok: true; progress: SpaceExcavatorProgress; rewardLabel: string; failureReason?: never }
   | { ok: false; progress?: SpaceExcavatorProgress | null; rewardLabel?: string | null; failureReason?: string };
 type ClaimModalPhase = 'unlocked' | 'claiming' | 'claimed' | 'failed';
+const BOARD_CLEAR_AUTO_ADVANCE_DELAY_SECONDS = SPACE_EXCAVATOR_BOARD_CLEAR_AUTO_ADVANCE_DELAY_MS / 1000;
 
 type SpaceExcavatorLaunchConfig = {
   requestDigSpend?: (tileId: number) => DigSpendResult;
@@ -112,7 +113,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const [claimModalMessage, setClaimModalMessage] = useState<string | null>(null);
   const [latestClue, setLatestClue] = useState<SpaceExcavatorClueResult | null>(null);
   const [latestBombFeedback, setLatestBombFeedback] = useState<string | null>(null);
-  const advancingBoardRef = useRef(false);
+  const isAdvancingBoardRef = useRef(false);
 
   const syncProgress = (nextProgress: SpaceExcavatorProgress) => {
     setProgress(nextProgress);
@@ -184,9 +185,9 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   };
 
   const onAdvanceBoard = useCallback(() => {
-    if (advancingBoardRef.current) return;
+    if (isAdvancingBoardRef.current) return;
     if ((progress?.status ?? 'active') !== 'board_complete') return;
-    advancingBoardRef.current = true;
+    isAdvancingBoardRef.current = true;
     const advance = config.requestAdvanceBoard?.() ?? { ok: false, ticketsRemaining };
     setTicketsRemaining(advance.ticketsRemaining);
     if (advance.ok && advance.progress) {
@@ -195,7 +196,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       syncProgress(advance.progress);
       return;
     }
-    advancingBoardRef.current = false;
+    isAdvancingBoardRef.current = false;
   }, [config, progress?.status, ticketsRemaining]);
 
   const onClaimMilestone = (milestoneId: string) => {
@@ -244,7 +245,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
 
   useEffect(() => {
     if (progressStatus !== 'board_complete') {
-      advancingBoardRef.current = false;
+      isAdvancingBoardRef.current = false;
     }
   }, [progressStatus]);
 
@@ -418,7 +419,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
             <div className="space-excavator__actions">
               {!rewardUxState.isTerminalBoardClear && !activeClaimModalMilestone ? (
                 <span className="space-excavator__auto-advance-note">
-                  Auto-advancing in {Math.round(SPACE_EXCAVATOR_BOARD_CLEAR_AUTO_ADVANCE_DELAY_MS / 100) / 10}s
+                  Auto-advancing in {BOARD_CLEAR_AUTO_ADVANCE_DELAY_SECONDS.toFixed(1)}s
                 </span>
               ) : null}
               <button type="button" className="space-excavator__button space-excavator__button--primary" onClick={onAdvanceBoard} disabled={activeClaimModalMilestone !== null}>
