@@ -110,6 +110,7 @@ function areAllBuildingsFullyComplete(record: IslandRunGameStateRecord): boolean
 
 function getAffordableBuildIndex(record: IslandRunGameStateRecord): number | null {
   const wallet = Math.max(0, Math.floor(record.essence));
+  // Match the investigation priority: boss-arena funding unblocks island clear, then earliest landmark wins.
   const candidateIndices = [4, 0, 1, 2, 3];
 
   for (const stopIndex of candidateIndices) {
@@ -224,6 +225,7 @@ export function resolveIslandRunBestNextAction(input: IslandRunBestNextActionInp
     }
     const stopId = stopPlan[stopIndex]?.stopId ?? null;
     if (isStopEffectivelyCompleteByIndex({ record, stopId, completedStops: effectiveCompletedStops })) continue;
+    // Objective-incomplete paid stops are actionable; Hatchery's egg-slot completion is filtered above.
     if (record.stopStatesByIndex[stopIndex]?.objectiveComplete === false) {
       return {
         action: 'complete_active_stop',
@@ -258,14 +260,15 @@ export function resolveIslandRunBestNextAction(input: IslandRunBestNextActionInp
 
   const activeEvent = getActiveEvent(record, nowMs);
   if (activeEvent) {
-    const tickets = Math.max(0, Math.floor(record.minigameTicketsByEvent[activeEvent.eventId] ?? 0));
+    const canonicalEventId = activeEvent.eventId;
+    const tickets = Math.max(0, Math.floor(record.minigameTicketsByEvent[canonicalEventId] ?? 0));
     if (tickets > 0) {
       return {
         action: 'play_event_minigame',
         urgency: 'low',
         ctaLabel: 'Play event',
         reason: 'Timed-event minigame tickets are available.',
-        meta: { eventId: activeEvent.eventId },
+        meta: { eventId: canonicalEventId },
       };
     }
   }
