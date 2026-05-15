@@ -25,8 +25,8 @@
       "anchorId": "hatchery",
       "x": 340,
       "y": 340,
-      "width": 675,
-      "height": 675,
+      "width": 472,
+      "height": 472,
       "levels": [
         "landmarks/hatchery-l3.webp",
         "landmarks/hatchery-l3.webp",
@@ -39,8 +39,8 @@
       "anchorId": "habit",
       "x": 1060,
       "y": 340,
-      "width": 675,
-      "height": 675,
+      "width": 472,
+      "height": 472,
       "levels": [
         "landmarks/hatchery-l3.webp",
         "landmarks/hatchery-l3.webp",
@@ -53,8 +53,8 @@
       "anchorId": "mystery",
       "x": 1060,
       "y": 1260,
-      "width": 675,
-      "height": 675,
+      "width": 472,
+      "height": 472,
       "levels": [
         "landmarks/hatchery-l3.webp",
         "landmarks/hatchery-l3.webp",
@@ -67,8 +67,8 @@
       "anchorId": "wisdom",
       "x": 340,
       "y": 1260,
-      "width": 675,
-      "height": 675,
+      "width": 472,
+      "height": 472,
       "levels": [
         "landmarks/hatchery-l3.webp",
         "landmarks/hatchery-l3.webp",
