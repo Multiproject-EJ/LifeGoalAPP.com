@@ -214,7 +214,6 @@ export interface EncounterReward {
   /** Essence earned (replaces retired coins). */
   essence: number;
   walletShards: boolean;
-  dice: number;
   spinTokens: number;
 }
 
@@ -244,21 +243,18 @@ export function rollEncounterReward(options?: {
   const essence = baseEssence + Math.floor(random() * essenceSpread);
 
   const shardChance = rarity !== 'normal' ? 0.45 : challengeType === 'gratitude' ? 0.35 : 0.25;
-  const diceChance = challengeType === 'quiz' ? 0.5 : 0.25;
   const spinChance = rarity !== 'normal' ? 0.22 : challengeType === 'quiz' ? 0.12 : 0.08;
 
   const walletShards = random() < shardChance;
-  const dice = random() < diceChance ? 2 + tier * 2 : 0;
   const spinTokens = random() < spinChance ? 1 : 0;
 
-  return { essence, walletShards, dice, spinTokens };
+  return { essence, walletShards, spinTokens };
 }
 
 export function formatEncounterRewardSummary(reward: EncounterReward): string {
   const parts: string[] = [];
   if (reward.essence > 0) parts.push(`+${reward.essence} essence`);
   if (reward.walletShards) parts.push('+1 shard');
-  if (reward.dice > 0) parts.push(`+${reward.dice} dice`);
   if (reward.spinTokens > 0) parts.push(`+${reward.spinTokens} spin`);
   return parts.join(' · ');
 }

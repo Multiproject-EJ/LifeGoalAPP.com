@@ -5961,15 +5961,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const perfectCompanionEncounterBonus = isPerfectCompanionActive
       ? {
           essence: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.essence, 5),
-          dice: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.dice, reward.dice > 0 ? 1 : 0),
           spinTokens: Math.min(perfectCompanionRuntimeConfig.gameplay.encounterBonusCaps.spinTokens, reward.spinTokens > 0 ? 0 : 1),
         }
-      : { essence: 0, dice: 0, spinTokens: 0 };
+      : { essence: 0, spinTokens: 0 };
     const challengeType = currentEncounterChallenge?.type ?? null;
     const challengeId = currentEncounterChallenge?.id ?? null;
 
     const totalEncounterEssence = reward.essence + specialtyEncounterBonusEssence + perfectCompanionEncounterBonus.essence;
-    const totalEncounterDice = reward.dice + perfectCompanionEncounterBonus.dice;
     const totalEncounterSpinTokens = reward.spinTokens + perfectCompanionEncounterBonus.spinTokens;
 
     if (totalEncounterEssence > 0) {
@@ -5978,9 +5976,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         essence: prev.essence + totalEncounterEssence,
         essenceLifetimeEarned: prev.essenceLifetimeEarned + totalEncounterEssence,
       }));
-    }
-    if (totalEncounterDice > 0) {
-      setDicePool((current) => current + totalEncounterDice);
     }
     if (totalEncounterSpinTokens > 0) {
       setSpinTokens((current) => current + totalEncounterSpinTokens);
@@ -6036,7 +6031,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const specialtySummaryParts: string[] = [];
     if (specialtyEncounterBonusEssence > 0) specialtySummaryParts.push(`+${specialtyEncounterBonusEssence} essence`);
     if (perfectCompanionEncounterBonus.essence > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.essence} perfect essence`);
-    if (perfectCompanionEncounterBonus.dice > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.dice} perfect dice`);
     if (perfectCompanionEncounterBonus.spinTokens > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.spinTokens} perfect spin`);
     const specialtySuffix = specialtySummaryParts.length > 0 && activeCompanion
       ? ` ${activeCompanion.creature.name} specialty added ${specialtySummaryParts.join(', ')}.`
@@ -6053,11 +6047,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         challenge_id: challengeId,
         reward_essence: reward.essence,
         reward_wallet_shards: reward.walletShards,
-        reward_dice: reward.dice,
         reward_spin_tokens: reward.spinTokens,
         specialty_bonus_essence: specialtyEncounterBonusEssence,
         perfect_bonus_essence: perfectCompanionEncounterBonus.essence,
-        perfect_bonus_dice: perfectCompanionEncounterBonus.dice,
         perfect_bonus_spin_tokens: perfectCompanionEncounterBonus.spinTokens,
         specialty_effect: activeCompanionSpecialty?.effect,
       },
@@ -6073,7 +6065,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           creature_id: activeCompanion?.creature.id ?? null,
           creature_name: activeCompanion?.creature.name ?? null,
           bonus_essence: perfectCompanionEncounterBonus.essence,
-          bonus_dice: perfectCompanionEncounterBonus.dice,
           bonus_spin_tokens: perfectCompanionEncounterBonus.spinTokens,
         },
       });
@@ -9561,7 +9552,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 <div className="island-encounter__reward-reveal">
                   <span className="island-encounter__reward-item">🟣 +{encounterRewardData.essence} essence</span>
                   {encounterRewardData.walletShards && <span className="island-encounter__reward-item">✨ +1 shard</span>}
-                  {encounterRewardData.dice > 0 && <span className="island-encounter__reward-item">🎲 +{encounterRewardData.dice} dice</span>}
                   {encounterRewardData.spinTokens > 0 && (
                     <span className="island-encounter__reward-item">{timedEventTokenIcon} {formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: encounterRewardData.spinTokens })}</span>
                   )}
