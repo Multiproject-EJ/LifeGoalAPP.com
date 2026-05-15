@@ -3,6 +3,7 @@ import { readIslandRunGameStateRecord, type IslandRunGameStateRecord } from '../
 import {
   resolveIslandRunBestNextAction,
   type IslandRunBestNextActionKind,
+  type IslandRunBestNextActionResult,
 } from '../islandRunBestNextActionAdvisor';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
@@ -49,9 +50,14 @@ function resolveAction(record: IslandRunGameStateRecord) {
   return resolveIslandRunBestNextAction({ record, nowMs: NOW_MS, playerLevel: 1 });
 }
 
-function expectAction(record: IslandRunGameStateRecord, expected: IslandRunBestNextActionKind): void {
+function requireResult(record: IslandRunGameStateRecord, message: string): IslandRunBestNextActionResult {
   const result = resolveAction(record);
-  assert(result !== null, `expected ${expected}, received null`);
+  if (result === null) throw new Error(message);
+  return result;
+}
+
+function expectAction(record: IslandRunGameStateRecord, expected: IslandRunBestNextActionKind): void {
+  const result = requireResult(record, `expected ${expected}, received null`);
   assertEqual(result.action, expected, `expected best next action ${expected}`);
 }
 
@@ -130,8 +136,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
     run: () => {
       const record = makeRecord({ essence: 30, dicePool: 5 });
 
-      const result = resolveAction(record);
-      assert(result !== null, 'expected pay_stop_ticket result');
+      const result = requireResult(record, 'expected pay_stop_ticket result');
       assertEqual(result.action, 'pay_stop_ticket', 'affordable ticket should win');
       assertEqual(result.meta?.stopIndex, 1, 'habit stop ticket should be next');
     },
@@ -168,8 +173,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
         })),
       });
 
-      const result = resolveAction(record);
-      assert(result !== null, 'expected complete_active_stop result');
+      const result = requireResult(record, 'expected complete_active_stop result');
       assertEqual(result.action, 'complete_active_stop', 'paid incomplete stop should win');
       assertEqual(result.meta?.stopIndex, 1, 'habit stop should be active incomplete stop');
     },
@@ -192,8 +196,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
         })),
       });
 
-      const result = resolveAction(record);
-      assert(result !== null, 'expected fund_building result');
+      const result = requireResult(record, 'expected fund_building result');
       assertEqual(result.action, 'fund_building', 'affordable build should win');
       assertEqual(result.meta?.stopIndex, 0, 'earliest affordable non-boss build should be selected');
     },
@@ -241,8 +244,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
         diceRegenState: buildInitialDiceRegenState(1, NOW_MS),
       });
 
-      const result = resolveAction(record);
-      assert(result !== null, 'expected wait_for_dice_regen result');
+      const result = requireResult(record, 'expected wait_for_dice_regen result');
       assertEqual(result.action, 'wait_for_dice_regen', 'finite regen ETA should win');
       assertEqual(typeof result.meta?.regenEtaMs, 'number', 'regen ETA should be included');
     },
