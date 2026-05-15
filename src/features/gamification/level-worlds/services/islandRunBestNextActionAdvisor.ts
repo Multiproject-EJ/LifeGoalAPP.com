@@ -1,4 +1,4 @@
-import { canChallengeBoss } from './islandRunBossEncounter';
+import { BOSS_STOP_INDEX, canChallengeBoss } from './islandRunBossEncounter';
 import {
   getEffectiveIslandNumber,
   isStopBuildFullyComplete,
@@ -54,6 +54,11 @@ export interface IslandRunBestNextActionInput {
   playerLevel: number;
 }
 
+/**
+ * Suppress generic best-next-action hints only while a known first-session tutorial
+ * flow owns player guidance. Safe fallback values (`complete`, `not_started`,
+ * null/undefined, or unknown legacy strings) are intentionally not suppressive.
+ */
 const ACTIVE_FIRST_SESSION_TUTORIAL_STATES = new Set<string>([
   'awaiting_first_roll',
   'first_roll_consumed',
@@ -69,7 +74,8 @@ const ACTIVE_FIRST_SESSION_TUTORIAL_STATES = new Set<string>([
 ]);
 
 function isFirstSessionTutorialActive(record: IslandRunGameStateRecord): boolean {
-  return ACTIVE_FIRST_SESSION_TUTORIAL_STATES.has(record.firstSessionTutorialState);
+  return record.firstSessionTutorialState != null
+    && ACTIVE_FIRST_SESSION_TUTORIAL_STATES.has(record.firstSessionTutorialState);
 }
 
 function getCurrentIslandKey(record: IslandRunGameStateRecord): string {
@@ -124,8 +130,13 @@ function areAllBuildingsFullyComplete(record: IslandRunGameStateRecord): boolean
 
 function getAffordableBuildIndex(record: IslandRunGameStateRecord): number | null {
   const wallet = Math.max(0, Math.floor(record.essence));
-  // Boss-arena (4) is prioritized first because it unlocks island completion; landmarks (0-3) follow in order.
-  const candidateIndices = [4, 0, 1, 2, 3];
+  // Boss arena is prioritized first because it unlocks island completion; other landmarks follow in order.
+  const candidateIndices = [
+    BOSS_STOP_INDEX,
+    ...Array.from({ length: STOP_COUNT }, (_, stopIndex) => stopIndex).filter(
+      (stopIndex) => stopIndex !== BOSS_STOP_INDEX,
+    ),
+  ];
 
   for (const stopIndex of candidateIndices) {
     const buildState = record.stopBuildStateByIndex[stopIndex];

@@ -56,9 +56,10 @@ function requireResult(record: IslandRunGameStateRecord, message: string): Islan
   return result;
 }
 
-function expectAction(record: IslandRunGameStateRecord, expected: IslandRunBestNextActionKind): void {
-  const result = requireResult(record, `expected ${expected}, received null`);
-  assertEqual(result.action, expected, `expected best next action ${expected}`);
+function expectAction(record: IslandRunGameStateRecord, expected: IslandRunBestNextActionKind, context = ''): void {
+  const suffix = context ? ` (${context})` : '';
+  const result = requireResult(record, `expected ${expected}, received null${suffix}`);
+  assertEqual(result.action, expected, `expected best next action ${expected}${suffix}`);
 }
 
 export const islandRunBestNextActionAdvisorTests: TestCase[] = [
@@ -281,6 +282,7 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
             dicePool: 5,
           } as Partial<IslandRunGameStateRecord>),
           'roll',
+          testCase.label,
         );
       }
     },
