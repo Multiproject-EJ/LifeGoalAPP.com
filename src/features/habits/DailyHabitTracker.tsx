@@ -2530,6 +2530,13 @@ export function DailyHabitTracker({
     },
     [habits, offerPriceByHabitId, timeLimitedOffer.badHabitId, timeLimitedOffer.nextHabitId],
   );
+  const shouldShowTimeLimitedOfferToggle = isTimeLimitedOfferActive && offerHabitIds.size > 0;
+  const [isTimeLimitedOfferDetailsOpen, setIsTimeLimitedOfferDetailsOpen] = useState(false);
+  useEffect(() => {
+    if (!shouldShowTimeLimitedOfferToggle) {
+      setIsTimeLimitedOfferDetailsOpen(false);
+    }
+  }, [shouldShowTimeLimitedOfferToggle]);
   const shouldShowOfferBonus = hasClaimedVisionStar && isTimeLimitedOfferActive;
   const bonusPlaceholderText = hasClaimedVisionStar && !shouldFadeTrackingMeta
     ? 'Vision star claimed today.'
@@ -5520,16 +5527,7 @@ export function DailyHabitTracker({
             )}
             <div className={bonusClasses.join(' ')}>
               {shouldShowOfferBonus ? (
-                <div className="habit-day-nav__bonus-offer">
-                  <span className="habit-day-nav__bonus-offer-title">{timeLimitedOfferCopy.eyebrow}</span>
-                  <span className="habit-day-nav__bonus-offer-line">{timeLimitedOfferCopy.nextUp}</span>
-                  <span className="habit-day-nav__bonus-offer-line">{timeLimitedOfferCopy.badBoost}</span>
-                  {timeLimitedCountdownLabel ? (
-                    <span className="habit-day-nav__bonus-offer-timer">
-                      Ends in {timeLimitedCountdownLabel}
-                    </span>
-                  ) : null}
-                </div>
+                null
               ) : null}
             </div>
             {visionRewardError && <p className="habit-day-nav__bonus-error">{visionRewardError}</p>}
@@ -6220,32 +6218,40 @@ export function DailyHabitTracker({
         {!hideTimeBoundOffers ? (
           <TimeBoundOfferRow offers={timeBoundOffers} onOfferClick={handleTimeBoundOfferClick} />
         ) : null}
-        {isTimeLimitedOfferActive && offerHabitIds.size > 0 ? (
-          <div className="habit-checklist__offer">
-            <div>
-              <p className="habit-checklist__offer-eyebrow">{timeLimitedOfferCopy.eyebrow}</p>
-              <h3 className="habit-checklist__offer-title">{timeLimitedOfferCopy.nextUp}</h3>
-              <p className="habit-checklist__offer-subtitle">{timeLimitedOfferCopy.badBoost}</p>
-            </div>
-            <span className="habit-checklist__offer-pill">
-              {timeLimitedOfferCopy.limited}
-              {timeLimitedCountdownLabel ? ` • ${timeLimitedCountdownLabel}` : ''}
-            </span>
-          </div>
-        ) : null}
         <div className="habit-checklist-card__title">
           <h2>My Habits</h2>
-          {onOpenStarterQuest ? (
-            <button
-              type="button"
-              className="habit-checklist-card__starter-launcher"
-              onClick={() => onOpenStarterQuest()}
-              aria-label="Open Starter Quest picker"
-            >
-              + Starter quest
-            </button>
-          ) : null}
+          <div className="habit-checklist-card__title-actions">
+            {shouldShowTimeLimitedOfferToggle ? (
+              <button
+                type="button"
+                className="habit-checklist-card__offer-toggle"
+                onClick={() => setIsTimeLimitedOfferDetailsOpen((current) => !current)}
+                aria-expanded={isTimeLimitedOfferDetailsOpen}
+                aria-label="Toggle time-limited offer details"
+              >
+                ⏳ Offer
+                {timeLimitedCountdownLabel ? ` • ${timeLimitedCountdownLabel}` : ''}
+              </button>
+            ) : null}
+            {onOpenStarterQuest ? (
+              <button
+                type="button"
+                className="habit-checklist-card__starter-launcher"
+                onClick={() => onOpenStarterQuest()}
+                aria-label="Open Starter Quest picker"
+              >
+                + Starter quest
+              </button>
+            ) : null}
+          </div>
         </div>
+        {shouldShowTimeLimitedOfferToggle && isTimeLimitedOfferDetailsOpen ? (
+          <div className="habit-checklist-card__offer-details">
+            <p className="habit-checklist-card__offer-eyebrow">{timeLimitedOfferCopy.eyebrow}</p>
+            <p className="habit-checklist-card__offer-line">{timeLimitedOfferCopy.nextUp}</p>
+            <p className="habit-checklist-card__offer-line">{timeLimitedOfferCopy.badBoost}</p>
+          </div>
+        ) : null}
         {visibleHabits.length === 0 && completedHabits.length > 0 ? (
           <p className="habit-checklist__empty">All habits checked off for today.</p>
         ) : null}

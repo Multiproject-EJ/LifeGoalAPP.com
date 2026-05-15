@@ -7506,6 +7506,14 @@ html.platform-ipad .workspace-shell__menu-edge {
   gap: 0.6rem;
 }
 
+.habit-checklist-card__title-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .habit-checklist-card__title h2 {
   margin: 0;
   font-size: 1.35rem;
@@ -12629,6 +12637,44 @@ html.platform-ipad .workspace-shell__menu-edge {
   border-radius: 999px;
   padding: 0.25rem 0.65rem;
   font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.habit-checklist-card__offer-toggle {
+  border: 1px solid rgba(15, 118, 110, 0.35);
+  background: rgba(45, 212, 191, 0.12);
+  color: #0f172a;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.habit-checklist-card__offer-details {
+  margin-top: 0.45rem;
+  display: grid;
+  gap: 0.24rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  background: rgba(240, 253, 250, 0.8);
+}
+
+.habit-checklist-card__offer-eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #0f766e;
+}
+
+.habit-checklist-card__offer-line {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.35;
+  color: #0f172a;
   font-weight: 600;
 }
 
