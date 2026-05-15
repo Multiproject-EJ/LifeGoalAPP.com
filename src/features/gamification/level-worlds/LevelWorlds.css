@@ -1953,6 +1953,7 @@
 }
 
 .island-run-board__rewardbar-endcap {
+  position: relative;
   width: 30px;
   height: 30px;
   border-radius: 999px;
@@ -1966,25 +1967,36 @@
   gap: 0;
   line-height: 1;
   flex-shrink: 0;
+  overflow: visible;
   transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 .island-run-board__rewardbar-endcap-icon {
+  position: relative;
+  z-index: 1;
   line-height: 0.95;
-  transform: translateY(1px);
+  transform: translateY(-4px);
 }
 
 .island-run-board__rewardbar-endcap-amount {
-  max-width: 28px;
-  margin-top: -1px;
-  padding: 0 2px;
+  position: absolute;
+  left: 50%;
+  bottom: -0.15rem;
+  z-index: 2;
+  min-width: 20px;
+  max-width: 32px;
+  padding: 1px 5px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(102, 73, 17, 0.16);
+  background: rgba(255, 250, 240, 0.96);
   color: #4d3509;
-  font-size: 0.48rem;
+  font-size: 0.52rem;
   font-weight: 900;
   letter-spacing: 0.02em;
-  line-height: 1.05;
+  line-height: 1.1;
+  text-align: center;
+  transform: translateX(-50%);
+  box-shadow: 0 1px 4px rgba(43, 24, 0, 0.18);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
