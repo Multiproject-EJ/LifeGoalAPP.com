@@ -130,7 +130,7 @@ function resolveMysteryOutcome(userId: string): TileEffectResult {
       type: 'mystery',
       amount,
       currency: 'dice',
-      message: `🎲 +${amount} bonus roll${amount === 1 ? '' : 's'}!`,
+      message: `🎲 +${amount} Lucky Roll Dice!`,
       celebrationType: 'medium',
     };
   }
@@ -226,7 +226,7 @@ export function resolveTileEffect(tile: BoardTile, userId: string): TileEffectRe
         type: 'bonus_dice',
         amount,
         currency: 'dice',
-        message: `🎲 +${amount} bonus roll${amount === 1 ? '' : 's'}!`,
+        message: `🎲 +${amount} Lucky Roll Dice!`,
         celebrationType: 'medium',
       };
     }

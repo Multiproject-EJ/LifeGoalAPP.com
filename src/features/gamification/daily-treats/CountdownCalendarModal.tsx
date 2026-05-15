@@ -422,6 +422,7 @@ export const CountdownCalendarModal = ({
     : daysRemaining === 0
       ? `🎉 Today is ${activeAdvent ? getHolidayGreetingLabel(activeAdvent.meta) : themeName}!`
       : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} to go`;
+  const dailyTreatDiceLabel = islandRunSession ? 'Board Dice' : 'Game Dice';
 
   // Check if today's free door is already opened
   const todayFreeOpened = progress?.opened_days.includes(todayIndex) ?? false;
@@ -467,6 +468,7 @@ export const CountdownCalendarModal = ({
                 holidayKey={holidayKey}
                 onClaim={handleClaimReward}
                 isPersonalQuest={isPersonalQuest}
+                diceLabel={dailyTreatDiceLabel}
               />
             )}
             {mechanic === 'unwrap' && (
@@ -479,6 +481,7 @@ export const CountdownCalendarModal = ({
                 holidayKey={holidayKey}
                 onClaim={handleClaimReward}
                 isPersonalQuest={isPersonalQuest}
+                diceLabel={dailyTreatDiceLabel}
                 variant={doorType === 'bonus' ? 'gift' : 'envelope'}
               />
             )}
@@ -492,6 +495,7 @@ export const CountdownCalendarModal = ({
                 holidayKey={holidayKey}
                 onClaim={handleClaimReward}
                 isPersonalQuest={isPersonalQuest}
+                diceLabel={dailyTreatDiceLabel}
               />
             )}
           </div>
@@ -645,7 +649,7 @@ export const CountdownCalendarModal = ({
                     </span>
                   )}
                   {diceAmount != null && !(freeOpened || isOpenedLegacy) && (
-                    <span className="daily-treats-calendar__hatch-dice">🎲 {diceAmount}</span>
+                    <span className="daily-treats-calendar__hatch-dice">🎲 {diceAmount} {dailyTreatDiceLabel}</span>
                   )}
                 </>
               );
@@ -762,7 +766,7 @@ export const CountdownCalendarModal = ({
                   {streak.currentStreak === 0
                     ? 'Open a door to start your streak!'
                     : `🔥 ${streak.currentStreak}-day streak${streak.multiplierLabel ? ` ${streak.multiplierLabel}` : ''}`}
-                  {streak.streakBonusDice > 0 && ` · +${streak.streakBonusDice} 🎲 bonus`}
+                  {streak.streakBonusDice > 0 && ` · +${streak.streakBonusDice} 🎲 ${dailyTreatDiceLabel} bonus`}
                 </p>
                 {streak.currentStreak > 0 && streak.currentStreak < 7 && (
                   <p className="daily-treats-calendar__streak-hint">

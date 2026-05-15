@@ -284,7 +284,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
         </div>
 
         <div className="lucky-roll-board__status">
-          <div className="lucky-roll-board__stat">Rolls: {gameState.availableDice} 🎲</div>
+          <div className="lucky-roll-board__stat">Lucky Roll Dice: {gameState.availableDice} 🎲</div>
           <div className="lucky-roll-board__stat">Coins: {goldBalance} 🪙</div>
           <div className="lucky-roll-board__stat">Tokens: {currencyBalance.gameTokens} 🎟️</div>
         </div>
@@ -333,7 +333,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
             {gameState.sessionComplete
               ? 'FINISH CLAIMED'
               : gameState.availableDice === 0
-                ? 'No Rolls - Visit Shop!'
+                ? 'No Lucky Roll Dice - Visit Shop!'
                 : isRolling
                   ? 'Rolling...'
                   : isMoving
@@ -346,7 +346,7 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
             className="lucky-roll-board__shop-button"
             onClick={() => setShowDiceShop(true)}
           >
-            🛒 Dice Shop
+            🛒 Lucky Roll Dice Shop
           </button>
         </div>
       </div>

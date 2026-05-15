@@ -12,6 +12,7 @@ type CalendarDoorScratchProps = {
   onRevealComplete?: () => void;
   onClaim?: () => void;
   isPersonalQuest?: boolean;
+  diceLabel?: string;
 };
 
 /** Number of scratch actions needed before auto-revealing the card */
@@ -85,6 +86,7 @@ export const CalendarDoorScratch = ({
   onRevealComplete,
   onClaim,
   isPersonalQuest = false,
+  diceLabel,
 }: CalendarDoorScratchProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
@@ -214,6 +216,7 @@ export const CalendarDoorScratch = ({
             holidayKey={holidayKey}
             onClaim={onClaim}
             isPersonalQuest={isPersonalQuest}
+            diceLabel={diceLabel}
           />
         </div>
 
