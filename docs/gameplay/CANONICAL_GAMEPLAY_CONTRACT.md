@@ -352,7 +352,7 @@ The 40-tile ring uses the following tile types. **Tile-type `'stop'` is fully re
 | `micro` | Awards reward bar progress + small essence | **Most common tile** on the ring; light feed. |
 | `hazard` | **Deducts essence** (never zero) | Intentionally negative outcome. Deduction is capped by the wallet (never goes below 0). Scaled by the dice multiplier. |
 | `encounter` | Opens encounter modal | Once-per-visit; completed tiles become inert. See glossary below. |
-| `bonus` | Glowing 9-hit accumulator — see §5E | Logic layer shipped; renderer wiring follows in a later PR. |
+| `bonus` | Glowing 9-hit accumulator — see §5E | Dormant in the current production tile map; renderer/tile wiring follows in a later PR. |
 
 Weighting on the production profile (`spark40_ring`) is `currency:3, chest:2, micro:4, hazard:1` drawn deterministically per-island from the pool in `islandBoardTileMap.ts`. Encounter tiles are injected at fixed fractional positions (§5F).
 
@@ -360,7 +360,9 @@ Tile topology is **feature-gated via the board profile** — the active profile 
 
 ### Glossary — encounter modal
 
-> **Encounter modal.** A one-shot side-quest popup that opens when the player lands on an `encounter` tile. Content is drawn from `encounterService.ts` (Quiz / Breathing / Gratitude prompts — intentionally easy, near-guaranteed completion). Rewards: essence + reward-bar progress + optional sticker chance. Once completed the encounter tile goes inert for the rest of that island visit.
+> **Encounter modal.** A one-shot side-quest popup that opens when the player lands on an `encounter` tile. Content is drawn from `encounterService.ts` (Quiz / Breathing / Gratitude prompts — intentionally easy, near-guaranteed completion). Canonical rewards are essence + reward-bar progress + optional sticker chance (no direct dice per §Dice). Once completed the encounter tile goes inert for the rest of that island visit.
+>
+> **Known live contradiction (scheduled cleanup):** current runtime still has a legacy encounter direct-dice grant path in `encounterService.ts` / `IslandRunBoardPrototype.tsx`; this behavior is tracked for a dedicated cleanup PR and is not canonical.
 
 ## 5E) Bonus tile — 9-hit accumulator
 
@@ -370,15 +372,18 @@ The `bonus` tile is a charging accumulator. Each landing lights one more dot on 
 2. At 8/8 the entire tile glows ("primed").
 3. The **next** (9th) landing releases the accumulated payout and resets the counter to 0.
 
-**Per-release payout (island-1 base values, scale by `getIslandEssenceMultiplier(effectiveIslandNumber)` before awarding):**
+**Per-release payout (island-1 canonical base values, scale by `getIslandEssenceMultiplier(effectiveIslandNumber)` before awarding):**
 
 | Component | Value |
 |---|---|
 | Essence burst | 80 |
-| Dice kicker | 4 |
 | Reward-bar progress | 5 |
 
-Source of truth: `BONUS_BASE_RELEASE_PAYOUT` in `islandRunBonusTile.ts`.
+Per §Dice, bonus tiles do **not** grant direct dice in canonical gameplay.
+
+**Live status:** bonus tiles are currently dormant in production (`islandBoardTileMap.ts` excludes `bonus` from the active tile-type union/pool, and there is no live `applyBonusTileCharge` landing call-site yet).
+
+**Implementation note:** `BONUS_BASE_RELEASE_PAYOUT` in `islandRunBonusTile.ts` still contains a legacy dormant dice field from pre-alignment drafts; this is tracked for cleanup before bonus tiles are wired live.
 
 **State shape (persisted):**
 ```ts

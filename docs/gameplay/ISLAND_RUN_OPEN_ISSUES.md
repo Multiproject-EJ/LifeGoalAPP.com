@@ -327,6 +327,12 @@ This is the most visible outstanding gap in the P1-3 follow-up PR. Priority
 elevated: the renderer integration must ship alongside the HUD work, not after
 it.
 
+**2026-05-15 contract-alignment note.** Canonical docs now preserve a strict
+"tiles never award dice directly" rule for both encounter and bonus semantics.
+Before any bonus go-live wiring, remove the dormant bonus direct-dice field from
+the release payout path (or otherwise align implementation so bonus releases stay
+essence/reward-bar only).
+
 ---
 
 ### P1-4. Reward-bar payout set vs. contract — ✅ Closed (session 3)
