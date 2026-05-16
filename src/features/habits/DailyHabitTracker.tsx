@@ -4836,7 +4836,7 @@ export function DailyHabitTracker({
   );
 
   const handlePingWitness = useCallback(async (contract: CommitmentContract) => {
-    const message = `Hey ${contract.witnessLabel ?? 'my accountability witness'} — quick contract check-in: I'm committing to ${contract.targetCount} ${contract.targetType.toLowerCase()} completions ${contract.cadence === 'daily' ? 'today' : 'this week'} for "${contract.title}". A quick encouragement message from you would help me stay on track 💛`;
+    const message = `Hey ${contract.witnessLabel ?? 'my accountability buddy'} — quick promise check-in: I'm aiming for ${contract.targetCount} ${contract.targetType.toLowerCase()} completions ${contract.cadence === 'daily' ? 'today' : 'this week'} for "${contract.title}". This is just a reminder message, and a little encouragement from you would help 💛`;
 
     try {
       if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
@@ -4844,7 +4844,7 @@ export function DailyHabitTracker({
       }
       await recordWitnessPing(session.user.id, contract, 'clipboard');
     } catch (error) {
-      setContractsError(error instanceof Error ? error.message : 'Unable to copy witness ping message.');
+      setContractsError(error instanceof Error ? error.message : 'Unable to copy accountability buddy reminder.');
     }
   }, [session.user.id]);
 
@@ -8214,8 +8214,8 @@ export function DailyHabitTracker({
             <TodayExpandableActionSection
               id="today-contracts"
               icon="🤝"
-              title="Contracts"
-              subtitle="Keep commitments visible"
+              title="Promises"
+              subtitle="Keep promises visible"
               statusChip={contractsStatusChip}
               expanded={openTodayExpandableSection === 'contracts'}
               onToggle={() => toggleTodayExpandableSection('contracts')}
@@ -8223,8 +8223,8 @@ export function DailyHabitTracker({
               <div className="habit-contracts-card" aria-live="polite">
                 <div className="habit-contracts-card__header">
                   <div>
-                    <p className="habit-contracts-card__eyebrow">Keep commitments visible</p>
-                    <h3 className="habit-contracts-card__title">Active contracts</h3>
+                    <p className="habit-contracts-card__eyebrow">Keep promises visible</p>
+                    <h3 className="habit-contracts-card__title">Active promises</h3>
                   </div>
                   <button
                     type="button"
@@ -8237,10 +8237,10 @@ export function DailyHabitTracker({
                 </div>
 
                 {contractsLoading && activeContracts.length === 0 ? (
-                  <p className="habit-contracts-card__hint">Loading your active contracts…</p>
+                  <p className="habit-contracts-card__hint">Loading your active promises…</p>
                 ) : activeContracts.length === 0 ? (
                   <p className="habit-contracts-card__hint">
-                    No active contracts right now. Start one from the Contracts tab and it will appear here.
+                    No active promises right now. Start one from the Promises tab and it will appear here.
                   </p>
                 ) : (
                   <div className="habit-contracts-card__list">
@@ -8329,7 +8329,7 @@ export function DailyHabitTracker({
                                 onClick={() => void handlePingWitness(contract)}
                                 disabled={isBusy}
                               >
-                                Ping witness
+                                Copy reminder
                               </button>
                             ) : null}
                           </div>
