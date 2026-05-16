@@ -1103,7 +1103,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const shouldCollapseFooterForGoalsAndCheckins =
     isMobileExperience && (mobileActiveNavId === 'support' || mobileActiveNavId === 'rituals');
   const shouldLockFooterCollapsedForQuestFlow =
-    isMobileExperience && (isMyQuestSubmenuOpen || isStarterQuestSheetOpen || isContractWizardOpen || shouldCollapseFooterForGoalsAndCheckins);
+    isMobileExperience && (
+      isMyQuestSubmenuOpen ||
+      isStarterQuestSheetOpen ||
+      isContractWizardOpen ||
+      mobileActiveNavId === 'contracts' ||
+      shouldCollapseFooterForGoalsAndCheckins
+    );
   const shouldForceFooterCollapseForDirectionFlows = shouldLockFooterCollapsedForQuestFlow;
   const shouldAutoCollapseOnIdle =
     isMobileExperience &&
