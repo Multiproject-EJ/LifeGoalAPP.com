@@ -713,4 +713,39 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
       );
     },
   },
+  {
+    name: 'Treasure Path implementation files do not import deleted legacy standalone Lucky Roll files',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const pathMod = await import('path');
+
+      const treasurePathFiles = [
+        pathMod.resolve(process.cwd(), 'src/features/gamification/level-worlds/services/islandRunPostRareTreasurePathAction.ts'),
+        pathMod.resolve(process.cwd(), 'src/features/gamification/level-worlds/services/islandRunLuckyRollAction.ts'),
+        pathMod.resolve(process.cwd(), 'src/features/gamification/level-worlds/services/islandRunLuckyRollBoardConfig.ts'),
+        pathMod.resolve(process.cwd(), 'src/features/gamification/level-worlds/components/lucky-roll/IslandRunLuckyRollDevOverlay.tsx'),
+        pathMod.resolve(process.cwd(), 'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx'),
+      ];
+
+      const legacyPatterns: Array<{ pattern: RegExp; label: string }> = [
+        { pattern: /\bLuckyRollBoard\b(?!Config)/, label: 'LuckyRollBoard (standalone component)' },
+        { pattern: /\bLuckyRollDiceShop\b/, label: 'LuckyRollDiceShop' },
+        { pattern: /\bluckyRollState\b/, label: 'luckyRollState' },
+        { pattern: /\bluckyRollSounds\b/, label: 'luckyRollSounds' },
+      ];
+
+      for (const filePath of treasurePathFiles) {
+        const fileLabel = pathMod.relative(process.cwd(), filePath);
+        const source = fsMod.readFileSync(filePath, 'utf8');
+        for (const { pattern, label } of legacyPatterns) {
+          assert(
+            !pattern.test(source),
+            `Treasure Path file ${fileLabel} must not import or reference deleted legacy standalone file ${label}`,
+          );
+        }
+      }
+    },
+  },
 ];
