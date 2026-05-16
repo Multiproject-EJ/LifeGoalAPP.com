@@ -7128,6 +7128,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setLandingText('🧪 DEV MODE: no active incubating egg to speed hatch.');
       return;
     }
+    setRuntimeState(result.record);
+    runtimeStateRef.current = result.record;
     setLandingText('🧪 DEV MODE: egg marked hatch-ready via canonical action.');
   }, [client, isDevModeEnabled, islandNumber, session]);
 
