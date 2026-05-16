@@ -77,6 +77,22 @@ function pickPrimaryContract(contracts: CommitmentContract[]): CommitmentContrac
   return paused[0] ?? null;
 }
 
+function pickSelectedContractId(
+  contracts: CommitmentContract[],
+  previousSelectionId: string | null,
+): string | null {
+  if (contracts.length === 0) return null;
+  if (previousSelectionId && contracts.some((contract) => contract.id === previousSelectionId)) {
+    return previousSelectionId;
+  }
+  return pickPrimaryContract(contracts)?.id ?? null;
+}
+
+function getContractProgressPercent(contract: CommitmentContract): number {
+  const safeTarget = Math.max(contract.targetCount, 1);
+  return Math.min(100, Math.round((contract.currentProgress / safeTarget) * 100));
+}
+
 function buildCascadingChains(contracts: CommitmentContract[]): CommitmentContract[][] {
   const byId = new Map(contracts.map((contract) => [contract.id, contract]));
   const chainedIds = new Set<string>();
@@ -354,16 +370,7 @@ export function ContractsTab({
   }, [userId]);
 
   useEffect(() => {
-    if (activeContracts.length === 0) {
-      setSelectedContractId(null);
-      return;
-    }
-    setSelectedContractId((prev) => {
-      if (prev && activeContracts.some((contract) => contract.id === prev)) {
-        return prev;
-      }
-      return pickPrimaryContract(activeContracts)?.id ?? activeContracts[0]?.id ?? null;
-    });
+    setSelectedContractId((prev) => pickSelectedContractId(activeContracts, prev));
   }, [activeContracts]);
 
   useEffect(() => {
@@ -747,7 +754,7 @@ export function ContractsTab({
                   aria-label="How promise evaluation works"
                   onClick={() => setShowEvaluationInfoModal(true)}
                 >
-                  ✓
+                  ⏱
                 </button>
                 <button
                   type="button"
@@ -792,8 +799,7 @@ export function ContractsTab({
               <section className="score-tab__contracts-list-wrap" aria-label="Active promises">
                 <ul className="score-tab__contracts-list">
                   {activeContracts.map((contract) => {
-                    const safeTarget = Math.max(contract.targetCount, 1);
-                    const progressPercent = Math.min(100, Math.round((contract.currentProgress / safeTarget) * 100));
+                    const progressPercent = getContractProgressPercent(contract);
                     const cadenceLabel = contract.cadence === 'daily' ? 'day' : 'week';
                     return (
                       <li key={contract.id}>
