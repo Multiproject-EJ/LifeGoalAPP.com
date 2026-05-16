@@ -76,6 +76,36 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
         })),
         rewardBarProgress: 999,
         dicePool: 5,
+        activeEggTier: null,
+        activeEggSetAtMs: null,
+        activeEggHatchDurationMs: null,
+        perIslandEggs: {
+          [ISLAND_KEY]: {
+            tier: 'common',
+            setAtMs: NOW_MS - 10_000,
+            hatchAtMs: NOW_MS - 1,
+            status: 'collected',
+          },
+        },
+      });
+
+      expectAction(record, 'claim_island_clear');
+    },
+  },
+  {
+    name: 'egg ready (not collected) does not trigger claim island clear even if all stops and builds done',
+    run: () => {
+      // Regression: BNA must not return claim_island_clear before egg is collected/sold.
+      // isIslandRunFullyClearedV2 requires hatcheryEggResolved (collected or sold).
+      const record = makeRecord({
+        completedStopsByIsland: { [ISLAND_KEY]: STOP_IDS },
+        stopStatesByIndex: Array.from({ length: 5 }, () => ({ objectiveComplete: true, buildComplete: true })),
+        stopBuildStateByIndex: Array.from({ length: 5 }, () => ({
+          requiredEssence: 100,
+          spentEssence: 100,
+          buildLevel: 3,
+        })),
+        dicePool: 5,
         activeEggTier: 'common',
         activeEggSetAtMs: NOW_MS - 10_000,
         activeEggHatchDurationMs: 1,
@@ -89,7 +119,36 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
         },
       });
 
-      expectAction(record, 'claim_island_clear');
+      // Egg is ready but not yet collected — should NOT claim island clear; should surface collect_egg instead.
+      expectAction(record, 'collect_egg', 'egg ready but not collected');
+    },
+  },
+  {
+    name: 'egg sold counts as hatchery resolved for island clear',
+    run: () => {
+      const record = makeRecord({
+        completedStopsByIsland: { [ISLAND_KEY]: STOP_IDS },
+        stopStatesByIndex: Array.from({ length: 5 }, () => ({ objectiveComplete: true, buildComplete: true })),
+        stopBuildStateByIndex: Array.from({ length: 5 }, () => ({
+          requiredEssence: 100,
+          spentEssence: 100,
+          buildLevel: 3,
+        })),
+        dicePool: 5,
+        activeEggTier: null,
+        activeEggSetAtMs: null,
+        activeEggHatchDurationMs: null,
+        perIslandEggs: {
+          [ISLAND_KEY]: {
+            tier: 'common',
+            setAtMs: NOW_MS - 10_000,
+            hatchAtMs: NOW_MS - 1,
+            status: 'sold',
+          },
+        },
+      });
+
+      expectAction(record, 'claim_island_clear', 'sold egg should satisfy hatchery resolved check');
     },
   },
   {

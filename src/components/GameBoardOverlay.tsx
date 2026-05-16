@@ -289,7 +289,7 @@ export function GameBoardOverlay({
                   type="button"
                   className="game-board-overlay__icon-button"
                   onClick={onLuckyRollClick}
-                  aria-label="Open Lucky Roll reward"
+                  aria-label="Open Treasure Path"
                 >
                   <div className="game-board-overlay__icon-placeholder game-board-overlay__icon-placeholder--asset">
                     <img

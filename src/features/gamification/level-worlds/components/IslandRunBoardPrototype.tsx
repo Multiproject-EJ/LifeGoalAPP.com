@@ -6934,7 +6934,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           setLandingText('👾 Boss defeated, but full rewards are locked. Return to Build and upgrade every landmark to Level 3 to claim island clear.');
           setActiveStopId(null);
         } else {
-          setLandingText('👾 Boss defeated! Island clear is ready.');
+          setActiveStopId(null);
+          showIslandClearCelebrationFromAnywhere('v2_boss_complete');
         }
         return;
       }
