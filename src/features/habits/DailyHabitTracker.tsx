@@ -8211,13 +8211,6 @@ export function DailyHabitTracker({
               onToggle={() => toggleTodayExpandableSection('contracts')}
             >
               <div className="habit-contracts-card" aria-live="polite">
-                <div className="habit-contracts-card__header">
-                  <div>
-                    <p className="habit-contracts-card__eyebrow">Attention now</p>
-                    <h3 className="habit-contracts-card__title">Promises needing attention now</h3>
-                  </div>
-                </div>
-
                 {contractsLoading && todayActionableContracts.length === 0 ? (
                   <p className="habit-contracts-card__hint">Loading promises that need attention…</p>
                 ) : todayActionableContracts.length === 0 ? (
@@ -8235,19 +8228,27 @@ export function DailyHabitTracker({
                       const primaryActionLabel = promiseVariant === 'reverse' ? 'Log slip' : 'Check in';
                       const stakeLabel = `${contract.stakeAmount} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'} staked`;
                       const contractEndDate = contract.endAt ? new Date(contract.endAt) : null;
-                      const contractStartMs = new Date(contract.startAt).getTime();
-                      const contractEndMs = contractEndDate?.getTime() ?? null;
-                      const hasTimeline =
-                        contractEndMs !== null
-                        && !Number.isNaN(contractStartMs)
-                        && !Number.isNaN(contractEndMs)
-                        && contractEndMs > contractStartMs;
-                      const timelinePercent = hasTimeline
-                        ? Math.max(0, Math.min(100, ((Date.now() - contractStartMs) / (contractEndMs - contractStartMs)) * 100))
+                      const msLeft = contractEndDate ? contractEndDate.getTime() - Date.now() : null;
+                      const daysLeft = msLeft !== null && msLeft > 0 ? Math.ceil(msLeft / (1000 * 60 * 60 * 24)) : 0;
+                      const endDateLabel = contractEndDate
+                        ? contractEndDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                        : null;
+                      const endInfo = endDateLabel
+                        ? daysLeft > 0
+                          ? `${daysLeft} day${daysLeft === 1 ? '' : 's'} left · Ends ${endDateLabel}`
+                          : `Ended ${endDateLabel}`
                         : null;
 
                       return (
-                        <article key={contract.id} className="habit-contracts-card__item">
+                        <article
+                          key={contract.id}
+                          className={`habit-contracts-card__item${onNavigateToContracts ? ' habit-contracts-card__item--tappable' : ''}`}
+                          onClick={onNavigateToContracts}
+                          tabIndex={onNavigateToContracts ? 0 : undefined}
+                          onKeyDown={onNavigateToContracts ? (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigateToContracts(); }
+                          } : undefined}
+                        >
                           <div className="habit-contracts-card__item-head">
                             <h4 className="habit-contracts-card__item-title">{contract.isSacred ? `🔱 ${contract.title}` : contract.title}</h4>
                             <span className={`habit-contracts-card__status habit-contracts-card__status--${contract.status}`}>
@@ -8258,50 +8259,33 @@ export function DailyHabitTracker({
                             {contract.currentProgress} / {contract.targetCount} this {contract.cadence}
                           </p>
                           <p className="habit-contracts-card__stake">{stakeLabel}</p>
-                          <div className="habit-contracts-card__meter" role="presentation">
+                          <div className="habit-contracts-card__meter" role="presentation" aria-label="Progress">
                             <span className="habit-contracts-card__meter-fill" style={{ width: `${progressPercent}%` }} />
                           </div>
-                          {hasTimeline && timelinePercent !== null && contractEndDate ? (
-                            <div className="habit-contracts-card__timeline" role="status" aria-live="polite">
-                              <div className="habit-contracts-card__timeline-head">
-                                <span>Timeline</span>
-                                <span>{Math.round(timelinePercent)}%</span>
-                              </div>
-                              <div className="habit-contracts-card__meter" role="presentation">
-                                <span className="habit-contracts-card__meter-fill habit-contracts-card__meter-fill--timeline" style={{ width: `${timelinePercent}%` }} />
-                              </div>
-                              <p className="habit-contracts-card__timeline-copy">
-                                Ends {contractEndDate.toLocaleDateString()}
-                              </p>
-                            </div>
-                          ) : null}
-                          <div className="habit-contracts-card__actions">
-                            {canShowPrimaryAction ? (
+                          {endInfo !== null ? (
+                            <p className="habit-contracts-card__end-info">{endInfo}</p>
+                          ) : (
+                            <p className="habit-contracts-card__end-info habit-contracts-card__end-info--ongoing">Ongoing promise</p>
+                          )}
+                          {canShowPrimaryAction ? (
+                            <div className="habit-contracts-card__actions">
                               <button
                                 type="button"
                                 className="habit-contracts-card__button habit-contracts-card__button--primary"
-                                onClick={() =>
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   void handleContractAction(
                                     contract.id,
                                     recordContractProgress,
                                     'Unable to update contract progress.',
-                                  )
-                                }
+                                  );
+                                }}
                                 disabled={isBusy}
                               >
                                 {primaryActionLabel}
                               </button>
-                            ) : null}
-                          </div>
-                          {onNavigateToContracts && (
-                            <button
-                              type="button"
-                              className="habit-contracts-card__view-link"
-                              onClick={onNavigateToContracts}
-                            >
-                              View →
-                            </button>
-                          )}
+                            </div>
+                          ) : null}
                         </article>
                       );
                     })}
