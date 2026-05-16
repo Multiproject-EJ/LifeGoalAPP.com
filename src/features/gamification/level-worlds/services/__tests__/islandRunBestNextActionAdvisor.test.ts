@@ -124,6 +124,35 @@ export const islandRunBestNextActionAdvisorTests: TestCase[] = [
     },
   },
   {
+    name: 'egg incubating (not collected) never triggers claim island clear',
+    run: () => {
+      const record = makeRecord({
+        completedStopsByIsland: { [ISLAND_KEY]: STOP_IDS },
+        stopStatesByIndex: Array.from({ length: 5 }, () => ({ objectiveComplete: true, buildComplete: true })),
+        stopBuildStateByIndex: Array.from({ length: 5 }, () => ({
+          requiredEssence: 100,
+          spentEssence: 100,
+          buildLevel: 3,
+        })),
+        dicePool: 5,
+        activeEggTier: 'common',
+        activeEggSetAtMs: NOW_MS - 1_000,
+        activeEggHatchDurationMs: 60_000,
+        perIslandEggs: {
+          [ISLAND_KEY]: {
+            tier: 'common',
+            setAtMs: NOW_MS - 1_000,
+            hatchAtMs: NOW_MS + 59_000,
+            status: 'incubating',
+          },
+        },
+      });
+
+      const result = requireResult(record, 'expected non-null action while egg is pending');
+      assert(result.action !== 'claim_island_clear', 'incubating egg must block island clear claim');
+    },
+  },
+  {
     name: 'egg sold counts as hatchery resolved for island clear',
     run: () => {
       const record = makeRecord({
