@@ -492,7 +492,7 @@ export function ContractsTab({
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
-          title: 'LifeGoal Contract Check-In',
+            title: 'LifeGoal Promise Check-In',
           text: reminderMessage,
         });
         await recordWitnessPing(userId, activeContract, 'share');
@@ -567,20 +567,20 @@ export function ContractsTab({
           <span className="score-tab__badge" aria-hidden="true">🤝</span>
           <div>
             <p className="score-tab__eyebrow">Accountability</p>
-            <h2 className="score-tab__headline">Commitment Contracts</h2>
+            <h2 className="score-tab__headline">Promise System</h2>
           </div>
         </div>
       </header>
 
       {loading && (
         <div className="score-tab__status" role="status">
-          Loading your contracts...
+          Loading your promises...
         </div>
       )}
 
       {!loading && !enabled && (
         <div className="score-tab__status">
-          Gamification is currently disabled. Enable it in settings to use contracts.
+          Gamification is currently disabled. Enable it in settings to use promises.
         </div>
       )}
 
@@ -591,7 +591,7 @@ export function ContractsTab({
               Stake Gold or Tokens to stay accountable to your goals.
             </p>
             <p className="score-tab__meta">
-              Due-window checks run while this Contracts screen is open, with server-backed sweeps for durability while the app is closed.
+              Due-window checks run while this Promises screen is open, with server-backed sweeps for durability while the app is closed.
               Sweep runs are audit-logged for reliability monitoring.
             </p>
             <p className="score-tab__meta">{getSweepHealthCopy()}</p>
@@ -602,14 +602,14 @@ export function ContractsTab({
           {activeContracts.length === 0 && !showContractWizard && (
             <div className="score-tab__contracts-empty">
               <p className="score-tab__contracts-empty-text">
-                No active contract yet. Ready to commit?
+                No active promise yet. Ready to make one?
               </p>
               <button
                 type="button"
                 className="score-tab__contracts-create-button"
                 onClick={() => setShowContractWizard(true)}
               >
-                Create Contract
+                Create Promise
               </button>
             </div>
           )}
@@ -631,7 +631,7 @@ export function ContractsTab({
 
               {cascadingChains.length > 0 && (
                 <section className="score-tab__chain-viz" aria-live="polite">
-                  <h3 className="score-tab__chain-viz-title">Cascading contract chain</h3>
+                  <h3 className="score-tab__chain-viz-title">Cascading promise chain</h3>
                   {cascadingChains.map((chain) => (
                     <p key={chain.map((contract) => contract.id).join('>')} className="score-tab__chain-viz-item">
                       {chain.map((contract) => contract.title).join(' → ')}
@@ -654,7 +654,7 @@ export function ContractsTab({
                     className="score-tab__contracts-create-button"
                     onClick={() => setShowContractWizard(true)}
                   >
-                    + Add Contract ({activeContractCount}/{MAX_ACTIVE_CONTRACTS})
+                    + Add Promise ({activeContractCount}/{MAX_ACTIVE_CONTRACTS})
                   </button>
                 </div>
               )}

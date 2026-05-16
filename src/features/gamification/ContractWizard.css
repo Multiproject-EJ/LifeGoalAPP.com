@@ -120,6 +120,17 @@
   box-shadow: 0 0 0 2px var(--primary-color, #667eea);
 }
 
+.contract-wizard__type-card--unavailable {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.contract-wizard__type-card--unavailable:hover {
+  border-color: var(--border-color, #e0e0e0);
+  background: var(--card-background, #f9f9f9);
+  box-shadow: none;
+}
+
 .contract-wizard__type-icon {
   font-size: 1.75rem;
   line-height: 1;
@@ -143,6 +154,19 @@
   font-size: 0.66rem;
   color: #475569;
   line-height: 1.25;
+}
+
+.contract-wizard__availability-badge {
+  margin-top: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  background: #fff7ed;
+  color: #c2410c;
+  font-size: 0.66rem;
+  font-weight: 700;
 }
 
 .contract-wizard__picker-mode {

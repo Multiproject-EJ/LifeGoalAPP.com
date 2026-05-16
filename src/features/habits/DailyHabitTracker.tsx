@@ -8214,8 +8214,8 @@ export function DailyHabitTracker({
             <TodayExpandableActionSection
               id="today-contracts"
               icon="🤝"
-              title="Contracts"
-              subtitle="Keep commitments visible"
+              title="Promises"
+              subtitle="Keep promises visible"
               statusChip={contractsStatusChip}
               expanded={openTodayExpandableSection === 'contracts'}
               onToggle={() => toggleTodayExpandableSection('contracts')}
@@ -8223,8 +8223,8 @@ export function DailyHabitTracker({
               <div className="habit-contracts-card" aria-live="polite">
                 <div className="habit-contracts-card__header">
                   <div>
-                    <p className="habit-contracts-card__eyebrow">Keep commitments visible</p>
-                    <h3 className="habit-contracts-card__title">Active contracts</h3>
+                    <p className="habit-contracts-card__eyebrow">Keep promises visible</p>
+                    <h3 className="habit-contracts-card__title">Active promises</h3>
                   </div>
                   <button
                     type="button"
@@ -8237,10 +8237,10 @@ export function DailyHabitTracker({
                 </div>
 
                 {contractsLoading && activeContracts.length === 0 ? (
-                  <p className="habit-contracts-card__hint">Loading your active contracts…</p>
+                  <p className="habit-contracts-card__hint">Loading your active promises…</p>
                 ) : activeContracts.length === 0 ? (
                   <p className="habit-contracts-card__hint">
-                    No active contracts right now. Start one from the Contracts tab and it will appear here.
+                    No active promises right now. Start one from the Promises tab and it will appear here.
                   </p>
                 ) : (
                   <div className="habit-contracts-card__list">
