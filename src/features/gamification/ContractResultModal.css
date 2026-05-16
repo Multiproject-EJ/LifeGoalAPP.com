@@ -40,6 +40,42 @@
   box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.2);
 }
 
+.contract-result-modal__content--classic.contract-result-modal__content--success {
+  background: linear-gradient(180deg, #ffffff 0%, #f5f9ff 100%);
+}
+
+.contract-result-modal__content--classic.contract-result-modal__content--miss {
+  background: linear-gradient(180deg, #ffffff 0%, #fff8f8 100%);
+}
+
+.contract-result-modal__content--reverse.contract-result-modal__content--success {
+  background: linear-gradient(180deg, #ffffff 0%, #fff9f3 100%);
+}
+
+.contract-result-modal__content--reverse.contract-result-modal__content--miss {
+  background: linear-gradient(180deg, #fff9f3 0%, #fff0eb 100%);
+}
+
+.contract-result-modal__content--sacred.contract-result-modal__content--success {
+  background: linear-gradient(180deg, #fff9ea 0%, #fff3d1 100%);
+  border: 1px solid #f5d17d;
+}
+
+.contract-result-modal__content--sacred.contract-result-modal__content--miss {
+  background: linear-gradient(180deg, #fff7ec 0%, #ffe8dc 100%);
+  border: 1px solid #f5c6a7;
+}
+
+.contract-result-modal__ceremony-label {
+  margin: 0 0 0.75rem;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #a16207;
+}
+
 @media (min-width: 480px) {
   .contract-result-modal__content {
     border-radius: 20px;
@@ -62,6 +98,19 @@
 
 .contract-result-modal__title--miss {
   color: var(--text-primary, #333);
+}
+
+.contract-result-modal__content--reverse .contract-result-modal__title--miss {
+  color: #9a3412;
+}
+
+.contract-result-modal__content--sacred .contract-result-modal__title--success,
+.contract-result-modal__content--sacred .contract-result-modal__title--completed {
+  color: #a16207;
+}
+
+.contract-result-modal__content--sacred .contract-result-modal__title--miss {
+  color: #b45309;
 }
 
 .contract-result-modal__title--completed {
@@ -164,6 +213,11 @@
   border-radius: 10px;
   padding: 0.875rem 1rem;
   margin-bottom: 1.25rem;
+}
+
+.contract-result-modal__content--sacred .contract-result-modal__stake-forfeited {
+  background: #fff0dc;
+  border-color: #f5c698;
 }
 
 .contract-result-modal__stake-icon {

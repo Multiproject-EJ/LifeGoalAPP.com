@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { CommitmentContract } from '../../types/gamification';
 import { getContractPaceForecast } from '../../lib/contractForecast';
+import { getOutcomePrimaryActionLabel, getPromiseLabel, getPromiseVariant } from './promisePresentation';
 import './ContractStatusCard.css';
 
 interface ContractStatusCardProps {
@@ -24,6 +25,9 @@ export function ContractStatusCard({
   onCancel,
   onWitnessPing,
 }: ContractStatusCardProps) {
+  const promiseVariant = getPromiseVariant(contract);
+  const promiseLabel = getPromiseLabel(promiseVariant);
+
   // Calculate progress percentage
   const progressPercentage = useMemo(() => {
     return Math.min(100, (contract.currentProgress / contract.targetCount) * 100);
@@ -89,13 +93,21 @@ export function ContractStatusCard({
     return Math.max(0, Math.min(100, ratio));
   }, [contract.startAt, endDateMs]);
   const tier = contract.contractTier ?? 'common';
+  const primaryActionLabel = (() => {
+    if (contract.status === 'paused') return 'Resume Promise';
+    if (isOutcomeOnly) return getOutcomePrimaryActionLabel(promiseVariant);
+    return isAtRisk ? 'Rescue Progress' : 'Mark Progress';
+  })();
 
   return (
-    <div className={`contract-status-card contract-status-card--${tier}`}>
+    <div className={`contract-status-card contract-status-card--${tier} contract-status-card--promise-${promiseVariant}`}>
       <div className="contract-status-card__header">
-        <h3 className="contract-status-card__title">
-          {contract.isSacred && '🔱 '}{contract.title}
-        </h3>
+        <div className="contract-status-card__title-wrap">
+          <p className="contract-status-card__promise-label">{promiseLabel}</p>
+          <h3 className="contract-status-card__title">
+            {contract.isSacred && '🔱 '}{contract.title}
+          </h3>
+        </div>
         <span className={`contract-status-card__tier-badge contract-status-card__tier-badge--${tier}`}>
           {tier}
         </span>
@@ -153,7 +165,7 @@ export function ContractStatusCard({
         <p className="contract-status-card__progress-text">
           {isOutcomeOnly
             ? 'Outcome-only contract: no daily check-ins required.'
-            : `${contract.currentProgress} of ${contract.targetCount} completions this ${contract.cadence}`}
+            : `${contract.currentProgress} of ${contract.targetCount} completions kept this ${contract.cadence}`}
         </p>
       </div>
 
@@ -213,13 +225,7 @@ export function ContractStatusCard({
           className="contract-status-card__primary-button"
           onClick={contract.status === 'paused' ? onResume : isOutcomeOnly ? onLogFailure : onMarkProgress}
         >
-          {contract.status === 'paused'
-            ? 'Resume Contract'
-            : isOutcomeOnly
-              ? 'Log Failure'
-            : isAtRisk
-              ? 'Rescue Progress'
-              : 'Mark Progress'}
+          {primaryActionLabel}
         </button>
         {isOutcomeOnly && (
           <button
@@ -229,7 +235,7 @@ export function ContractStatusCard({
             disabled={!canFinalizeOutcome}
             title={!canFinalizeOutcome ? 'Finalize on or after the contract end date.' : undefined}
           >
-            Finalize Success
+            Finalize Promise Kept
           </button>
         )}
         <div className="contract-status-card__secondary-actions">
@@ -256,7 +262,7 @@ export function ContractStatusCard({
       </div>
       {!isCancelAllowed && (
         <p className="contract-status-card__cooling-off-note" role="status" aria-live="polite">
-          Cooling-off ended. Pause to keep this contract recoverable without cancellation.
+          Cooling-off ended. Pause to keep this promise recoverable without cancellation.
         </p>
       )}
     </div>

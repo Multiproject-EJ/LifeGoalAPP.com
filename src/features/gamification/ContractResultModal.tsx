@@ -5,6 +5,7 @@ import type {
   ResetContractEligibility,
 } from '../../services/commitmentContracts';
 import { FutureMessageReveal } from './FutureMessageReveal';
+import { getPromiseVariant } from './promisePresentation';
 import './ContractResultModal.css';
 
 interface ContractResultModalProps {
@@ -65,6 +66,8 @@ export function ContractResultModal({
   claimingLinkedReward = false,
 }: ContractResultModalProps) {
   const isSuccess = evaluation.result === 'success';
+  const promiseVariant = getPromiseVariant(contract);
+  const isSacredPromise = promiseVariant === 'sacred';
   const canResetContract = Boolean(resetEligibility?.eligible);
   const canReduceStake = Boolean(reduceStakeEligibility?.eligible);
   const canActivateGentleRecovery = Boolean(gentleRecoveryEligibility?.eligible);
@@ -74,32 +77,53 @@ export function ContractResultModal({
   const baseBonus = Math.max(1, Math.floor(contract.stakeAmount * 0.1));
   const rewardMultiplier = baseBonus > 0 ? evaluation.bonusAwarded / baseBonus : 1;
   const isContractCompleted = contract.status === 'completed';
+  const successTitle = isSacredPromise
+    ? '🔱 Sacred Promise Kept'
+    : promiseVariant === 'reverse'
+      ? '🛡️ Reverse Promise Kept'
+      : '✨ Promise Kept';
+  const successBody = promiseVariant === 'reverse'
+    ? `You stayed within your guardrail this ${contract.cadence}: ${evaluation.actualCount} of ${evaluation.targetCount}.`
+    : `You completed ${evaluation.actualCount} of ${evaluation.targetCount} this ${contract.cadence}.`;
+  const missTitle = isSacredPromise
+    ? 'Sacred promise missed'
+    : promiseVariant === 'reverse'
+      ? 'Reverse promise slipped'
+      : 'Promise missed this window';
+  const missBody = isSacredPromise
+    ? 'This sacred window was missed and the 3x sacred consequence applies. Choose a recovery action now to reset footing for your next window.'
+    : 'This window was missed. Choose your next recovery step and keep momentum moving.';
 
   if (isSuccess) {
     return (
       <div className="contract-result-modal" role="dialog" aria-modal="true">
         <div className="contract-result-modal__backdrop" onClick={onClose} />
-        <div className="contract-result-modal__content">
+        <div className={`contract-result-modal__content contract-result-modal__content--${promiseVariant} contract-result-modal__content--success`}>
+          {isSacredPromise && (
+            <p className="contract-result-modal__ceremony-label">Ceremonial result</p>
+          )}
           {isContractCompleted ? (
             <>
               <div className="contract-result-modal__completed-celebration">
-                <span className="contract-result-modal__completed-emoji">🎉</span>
-                <span className="contract-result-modal__completed-label">Contract Completed!</span>
+                <span className="contract-result-modal__completed-emoji">{isSacredPromise ? '🔱' : '🎉'}</span>
+                <span className="contract-result-modal__completed-label">{isSacredPromise ? 'Sacred Promise Fulfilled' : 'Promise Fulfilled'}</span>
               </div>
               <h3 className="contract-result-modal__title contract-result-modal__title--completed">
-                You did it!
+                {isSacredPromise ? 'Ceremony complete.' : 'You kept your promise.'}
               </h3>
               <p className="contract-result-modal__body">
-                You fulfilled every commitment for "{contract.title}". This contract is now complete.
+                {isSacredPromise
+                  ? `You fulfilled every sacred window for "${contract.title}". This vow is now complete.`
+                  : `You fulfilled every promise window for "${contract.title}". This promise is now complete.`}
               </p>
             </>
           ) : (
             <h3 className="contract-result-modal__title contract-result-modal__title--success">
-              ✨ Contract Kept!
+              {successTitle}
             </h3>
           )}
           <p className="contract-result-modal__body">
-            You completed {evaluation.actualCount} of {evaluation.targetCount} this {contract.cadence}.
+            {successBody}
           </p>
           {contract.futureMessage && (
             <FutureMessageReveal
@@ -152,18 +176,21 @@ export function ContractResultModal({
   return (
     <div className="contract-result-modal" role="dialog" aria-modal="true">
       <div className="contract-result-modal__backdrop" onClick={onClose} />
-      <div className="contract-result-modal__content">
+      <div className={`contract-result-modal__content contract-result-modal__content--${promiseVariant} contract-result-modal__content--miss`}>
+        {isSacredPromise && (
+          <p className="contract-result-modal__ceremony-label">Ceremonial result</p>
+        )}
         <h3 className="contract-result-modal__title contract-result-modal__title--miss">
-          You didn't meet this one
+          {missTitle}
         </h3>
         <p className="contract-result-modal__body">
-          That doesn't erase your progress. What would you like to do?
+          {missBody}
         </p>
         {evaluation.stakeForfeited > 0 && (
           <div className="contract-result-modal__stake-forfeited">
             <span className="contract-result-modal__stake-icon">💸</span>
             <span className="contract-result-modal__stake-text">
-              {evaluation.stakeForfeited} {contract.stakeType === 'gold' ? 'Gold' : 'Tokens'} sent to commitment pool
+              {evaluation.stakeForfeited} {contract.stakeType === 'gold' ? 'Gold' : 'Tokens'} forfeited to the commitment pool
             </span>
           </div>
         )}
@@ -174,7 +201,7 @@ export function ContractResultModal({
             onClick={onResetContract}
             disabled={!canResetContract}
           >
-            Reset contract (same settings)
+            Reset promise (same settings)
             {!canResetContract && resetAvailability && (
               <span className="contract-result-modal__availability-chip">{resetAvailability}</span>
             )}
@@ -226,7 +253,7 @@ export function ContractResultModal({
           className="contract-result-modal__cancel-button"
           onClick={onCancelContract}
         >
-          Cancel contract
+          Cancel promise
         </button>
       </div>
     </div>
