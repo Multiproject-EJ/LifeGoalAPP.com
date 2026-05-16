@@ -869,7 +869,7 @@ export function ContractWizard({
             </p>
 
             <p className="contract-wizard__helper-text">
-              Each {cadence === 'daily' ? 'day' : 'week'} window ends at midnight. If you keep it, you earn back your stake plus the standard bonus for this promise type. If you miss, your stake is forfeited.
+              This promise checks at the end of each {cadence === 'daily' ? 'day' : 'week'}. It evaluates automatically even if the app is closed. If you kept it, you get your stake back plus bonus. If not, your stake is forfeited.
             </p>
           </article>
         </section>

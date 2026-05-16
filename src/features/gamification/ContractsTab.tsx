@@ -128,6 +128,7 @@ export function ContractsTab({
   const [sweepHealth, setSweepHealth] = useState<ContractSweepHealth | null>(null);
   const [resultLinkedReward, setResultLinkedReward] = useState<ContractRewardLink | null>(null);
   const [claimingLinkedReward, setClaimingLinkedReward] = useState(false);
+  const [pastContracts, setPastContracts] = useState<CommitmentContract[]>([]);
 
   // For single-contract actions, use the primary (first active) contract
   const activeContract = activeContracts[0] ?? null;
@@ -160,6 +161,7 @@ export function ContractsTab({
   const loadContract = async () => {
     if (!userId) {
       setActiveContracts([]);
+      setPastContracts([]);
       setHistoryEvaluationsByContractId({});
       return;
     }
@@ -170,6 +172,12 @@ export function ContractsTab({
 
     const { data: contracts, error } = await fetchContracts(userId);
     if (error || !contracts) return;
+
+    const endedContracts = contracts
+      .filter((contract) => contract.status === 'completed' || contract.status === 'cancelled')
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 5);
+    setPastContracts(endedContracts);
 
     if (dueEvaluations && dueEvaluations.length > 0) {
       if (dueEvaluations.length > 1) {
@@ -203,12 +211,6 @@ export function ContractsTab({
       (c) => c.status === 'active' || c.status === 'paused'
     );
 
-    if (displayContracts.length === 0) {
-      setActiveContracts([]);
-      setHistoryEvaluationsByContractId({});
-      return;
-    }
-
     const hydratedContracts: CommitmentContract[] = [];
 
     for (const contract of displayContracts) {
@@ -238,8 +240,18 @@ export function ContractsTab({
     }
 
     setActiveContracts(hydratedContracts);
+    const contractsNeedingHistory = [
+      ...hydratedContracts,
+      ...endedContracts.filter((pastContract) => !hydratedContracts.some((active) => active.id === pastContract.id)),
+    ];
+
+    if (contractsNeedingHistory.length === 0) {
+      setHistoryEvaluationsByContractId({});
+      return;
+    }
+
     const evaluationsByContract = await Promise.all(
-      hydratedContracts.map(async (contract) => ({
+      contractsNeedingHistory.map(async (contract) => ({
         contractId: contract.id,
         evaluations: await fetchEvaluationsForContract(contract.id),
       })),
@@ -432,12 +444,7 @@ export function ContractsTab({
     setActionError(null);
 
     if (data) {
-      setActiveContracts((prev) => prev.filter((c) => c.id !== target.id));
-      setHistoryEvaluationsByContractId((prev) => {
-        const next = { ...prev };
-        delete next[target.id];
-        return next;
-      });
+      await loadContract();
     }
   };
 
@@ -596,6 +603,13 @@ export function ContractsTab({
     return `Latest server sweep failed at ${relativeLabel}. Reliability fallbacks remain active in-app.`;
   };
 
+  const formatArchiveDate = (iso: string): string =>
+    new Date(iso).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+
   return (
     <section className="score-tab">
       <header className="score-tab__header">
@@ -660,6 +674,13 @@ export function ContractsTab({
               </div>
             )}
           </div>
+          <details className="score-tab__evaluation-explainer">
+            <summary className="score-tab__evaluation-explainer-summary">How evaluation works</summary>
+            <p className="score-tab__evaluation-explainer-body">
+              Promises check at the end of each day or week. Evaluation runs automatically when you open this screen,
+              and a server fallback also checks windows if you were away.
+            </p>
+          </details>
           {recoveryMessage && <p className="score-tab__status">{recoveryMessage}</p>}
           {actionError && <p className="score-tab__status">{actionError}</p>}
           {overdueCatchUpMessage && <p className="score-tab__status">{overdueCatchUpMessage}</p>}
@@ -720,6 +741,49 @@ export function ContractsTab({
                 </div>
               )}
             </>
+          )}
+          {!showContractWizard && (
+            <details className="score-tab__past-promises">
+              <summary className="score-tab__past-promises-summary">
+                Past Promises ({pastContracts.length})
+              </summary>
+              {pastContracts.length === 0 ? (
+                <p className="score-tab__past-promises-empty">No completed or broken promises yet.</p>
+              ) : (
+                <ul className="score-tab__past-promises-list">
+                  {pastContracts.map((contract) => {
+                    const evaluations = historyEvaluationsByContractId[contract.id] ?? [];
+                    const latestEvaluation = evaluations
+                      .slice()
+                      .sort((a, b) => new Date(b.evaluatedAt).getTime() - new Date(a.evaluatedAt).getTime())[0];
+                    const resultLabel = latestEvaluation
+                      ? latestEvaluation.result === 'success'
+                        ? 'Kept'
+                        : 'Broken'
+                      : contract.status === 'cancelled'
+                        ? 'Broken'
+                        : 'Completed';
+                    const resultDate = latestEvaluation?.evaluatedAt ?? contract.updatedAt;
+                    const impactText = latestEvaluation
+                      ? latestEvaluation.result === 'success'
+                        ? `+${latestEvaluation.bonusAwarded} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'}`
+                        : `-${latestEvaluation.stakeForfeited} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'}`
+                      : 'Impact unavailable';
+
+                    return (
+                      <li key={contract.id} className="score-tab__past-promises-item">
+                        <p className="score-tab__past-promises-title">{contract.title}</p>
+                        <div className="score-tab__past-promises-meta">
+                          <span>{resultLabel}</span>
+                          <span>{formatArchiveDate(resultDate)}</span>
+                          <span>{impactText}</span>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </details>
           )}
           {showContractWizard && (
             <ContractWizard

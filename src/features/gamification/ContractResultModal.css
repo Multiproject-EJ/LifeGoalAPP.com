@@ -126,6 +126,14 @@
   line-height: 1.5;
 }
 
+.contract-result-modal__what-happened {
+  font-size: 0.82rem;
+  color: #334155;
+  text-align: center;
+  margin: -0.65rem 0 1rem;
+  line-height: 1.45;
+}
+
 /* ---- Bonus display ---- */
 .contract-result-modal__bonus {
   display: flex;
