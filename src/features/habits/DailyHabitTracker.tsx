@@ -8247,7 +8247,7 @@ export function DailyHabitTracker({
                   <p className="habit-contracts-card__hint">Loading your actionable promises…</p>
                 ) : todayActionableContracts.length === 0 ? (
                   <p className="habit-contracts-card__hint">
-                    No promises need attention right now. Start one from the Promises tab and it will appear here when it can still be acted on.
+                    No promises need attention right now. Start a promise from the Promises tab and it will appear here when it can still be acted on.
                   </p>
                 ) : (
                   <div className="habit-contracts-card__list">
