@@ -34,7 +34,7 @@ export function ContractHistoryCard({ contract, evaluations }: ContractHistoryCa
     return (
       <section className="contract-history-card" aria-live="polite">
         <header className="contract-history-card__header">
-          <h3 className="contract-history-card__title">Contract History</h3>
+          <h3 className="contract-history-card__title">Promise History</h3>
           <p className="contract-history-card__subtitle">No completed windows yet.</p>
         </header>
       </section>
@@ -51,7 +51,7 @@ export function ContractHistoryCard({ contract, evaluations }: ContractHistoryCa
   return (
     <section className="contract-history-card" aria-live="polite">
       <header className="contract-history-card__header">
-        <h3 className="contract-history-card__title">Contract History</h3>
+        <h3 className="contract-history-card__title">Promise History</h3>
         <p className="contract-history-card__subtitle">{contract.title}</p>
       </header>
 
@@ -81,8 +81,8 @@ export function ContractHistoryCard({ contract, evaluations }: ContractHistoryCa
 
       {contract.accountabilityMode === 'witness' && contract.witnessLabel && (
         <div className="contract-history-card__social-proof" aria-live="polite">
-          <span className="contract-history-card__social-chip">🤝 Witness: {contract.witnessLabel}</span>
-          <span className="contract-history-card__social-chip">✅ Kept with witness: {witnessSuccessCount}/{summary.totalWindows}</span>
+          <span className="contract-history-card__social-chip">🤝 Accountability buddy: {contract.witnessLabel}</span>
+          <span className="contract-history-card__social-chip">✅ Successful windows with buddy support on: {witnessSuccessCount}/{summary.totalWindows}</span>
         </div>
       )}
 

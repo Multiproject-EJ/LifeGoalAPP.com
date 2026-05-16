@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type {
   GamificationProfile,
@@ -37,10 +37,10 @@ import { ContractHistoryCard } from './ContractHistoryCard';
 import { ReputationCard } from './ReputationCard';
 import { claimContractLinkedReward, fetchLinkedRewardForContract, type ContractRewardLink } from '../../services/contractRewards';
 
-function buildWitnessReminder(contract: CommitmentContract): string {
-  const witnessName = contract.witnessLabel ?? 'my accountability witness';
+function buildAccountabilityBuddyReminder(contract: CommitmentContract): string {
+  const witnessName = contract.witnessLabel ?? 'my accountability buddy';
   const cadenceLabel = contract.cadence === 'daily' ? 'today' : 'this week';
-  return `Hey ${witnessName} — quick contract check-in: I'm committing to ${contract.targetCount} ${contract.targetType.toLowerCase()} completions ${cadenceLabel} for "${contract.title}". A quick encouragement message from you would help me stay on track 💛`;
+  return `Hey ${witnessName} — quick promise check-in: I'm aiming for ${contract.targetCount} ${contract.targetType.toLowerCase()} completions ${cadenceLabel} for "${contract.title}". This is just a reminder message, and a little encouragement from you would help 💛`;
 }
 
 interface ContractsTabProps {
@@ -118,7 +118,7 @@ export function ContractsTab({
   const [resetEligibility, setResetEligibility] = useState<ResetContractEligibility | null>(null);
   const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [historyEvaluations, setHistoryEvaluations] = useState<ContractEvaluation[]>([]);
+  const [historyEvaluationsByContractId, setHistoryEvaluationsByContractId] = useState<Record<string, ContractEvaluation[]>>({});
   const [overdueCatchUpMessage, setOverdueCatchUpMessage] = useState<string | null>(null);
   const [sweepHealth, setSweepHealth] = useState<ContractSweepHealth | null>(null);
   const [resultLinkedReward, setResultLinkedReward] = useState<ContractRewardLink | null>(null);
@@ -136,8 +136,28 @@ export function ContractsTab({
     }
   }, [profile?.total_points]);
 
+  const fetchEvaluationsForContract = async (contractId: string) => {
+    if (!userId) return [];
+
+    const { data: evaluations } = await fetchContractEvaluations(userId, contractId);
+    return evaluations ?? [];
+  };
+
+  const refreshContractEvaluations = async (contractId: string) => {
+    const safeEvaluations = await fetchEvaluationsForContract(contractId);
+    setHistoryEvaluationsByContractId((prev) => ({
+      ...prev,
+      [contractId]: safeEvaluations,
+    }));
+    return safeEvaluations;
+  };
+
   const loadContract = async () => {
-    if (!userId) return;
+    if (!userId) {
+      setActiveContracts([]);
+      setHistoryEvaluationsByContractId({});
+      return;
+    }
 
     const { data: dueEvaluations } = await evaluateDueContracts();
     const { data: latestSweepHealth } = await fetchContractSweepHealth();
@@ -180,14 +200,9 @@ export function ContractsTab({
 
     if (displayContracts.length === 0) {
       setActiveContracts([]);
-      setHistoryEvaluations([]);
+      setHistoryEvaluationsByContractId({});
       return;
     }
-
-    // Hydrate the first active contract with progress sync
-    const primaryContract = displayContracts[0];
-    const { data: contractEvaluations } = await fetchContractEvaluations(userId, primaryContract.id);
-    setHistoryEvaluations(contractEvaluations ?? []);
 
     const hydratedContracts: CommitmentContract[] = [];
 
@@ -218,6 +233,18 @@ export function ContractsTab({
     }
 
     setActiveContracts(hydratedContracts);
+    const evaluationsByContract = await Promise.all(
+      hydratedContracts.map(async (contract) => ({
+        contractId: contract.id,
+        evaluations: await fetchEvaluationsForContract(contract.id),
+      })),
+    );
+    setHistoryEvaluationsByContractId(
+      evaluationsByContract.reduce<Record<string, ContractEvaluation[]>>((acc, entry) => {
+        acc[entry.contractId] = entry.evaluations;
+        return acc;
+      }, {}),
+    );
   };
 
   useEffect(() => {
@@ -279,14 +306,10 @@ export function ContractsTab({
 
     if (data) {
       refreshContractInList(data);
-      const { data: refreshedEvaluations } = await fetchContractEvaluations(userId, data.id);
-      if (data.id === activeContract?.id) {
-        setHistoryEvaluations(refreshedEvaluations ?? []);
-      }
+      const refreshedEvaluations = await refreshContractEvaluations(data.id);
 
       if (data.lastEvaluatedAt && data.lastEvaluatedAt !== previousEvaluatedAt) {
-        const { data: evaluations } = await fetchContractEvaluations(userId, data.id);
-        const latestEvaluation = evaluations?.[evaluations.length - 1] ?? null;
+        const latestEvaluation = refreshedEvaluations[refreshedEvaluations.length - 1] ?? null;
         if (latestEvaluation) {
           setContractResult(latestEvaluation);
           setResultContract(data);
@@ -394,6 +417,11 @@ export function ContractsTab({
 
     if (data) {
       setActiveContracts((prev) => prev.filter((c) => c.id !== target.id));
+      setHistoryEvaluationsByContractId((prev) => {
+        const next = { ...prev };
+        delete next[target.id];
+        return next;
+      });
     }
   };
 
@@ -430,10 +458,7 @@ export function ContractsTab({
     }
 
     refreshContractInList(data);
-    const { data: refreshedEvaluations } = await fetchContractEvaluations(userId, data.id);
-    if (data.id === activeContract?.id) {
-      setHistoryEvaluations(refreshedEvaluations ?? []);
-    }
+    await refreshContractEvaluations(data.id);
     setRecoveryMessage('Contract reset. Fresh window, same commitment.');
     setContractResult(null);
     setResultContract(null);
@@ -450,10 +475,7 @@ export function ContractsTab({
     }
 
     refreshContractInList(data);
-    const { data: refreshedEvaluations } = await fetchContractEvaluations(userId, data.id);
-    if (data.id === activeContract?.id) {
-      setHistoryEvaluations(refreshedEvaluations ?? []);
-    }
+    await refreshContractEvaluations(data.id);
     setRecoveryMessage(`Stake reduced to ${data.stakeAmount} ${data.stakeType === 'gold' ? 'Gold' : 'Tokens'}.`);
     setContractResult(null);
     setResultContract(null);
@@ -471,10 +493,7 @@ export function ContractsTab({
     }
 
     refreshContractInList(data);
-    const { data: refreshedEvaluations } = await fetchContractEvaluations(userId, data.id);
-    if (data.id === activeContract?.id) {
-      setHistoryEvaluations(refreshedEvaluations ?? []);
-    }
+    await refreshContractEvaluations(data.id);
     setRecoveryMessage(`Gentle ramp started. Target temporarily adjusted to ${data.targetCount} this ${data.cadence}.`);
     setContractResult(null);
     setResultContract(null);
@@ -484,19 +503,20 @@ export function ContractsTab({
   };
 
 
-  const handleWitnessPing = async () => {
-    if (!activeContract || !userId || activeContract.accountabilityMode !== 'witness') return;
+  const handleAccountabilityBuddyReminder = async (contractId?: string) => {
+    const target = contractId ? activeContracts.find((contract) => contract.id === contractId) : activeContract;
+    if (!target || !userId || target.accountabilityMode !== 'witness') return;
 
-    const reminderMessage = buildWitnessReminder(activeContract);
+    const reminderMessage = buildAccountabilityBuddyReminder(target);
 
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
-            title: 'LifeGoal Promise Check-In',
+          title: 'LifeGoal Promise Buddy Reminder',
           text: reminderMessage,
         });
-        await recordWitnessPing(userId, activeContract, 'share');
-        setRecoveryMessage("Witness check-in shared. You're not doing this alone.");
+        await recordWitnessPing(userId, target, 'share');
+        setRecoveryMessage('Buddy reminder shared. This is a support nudge, not a formal witness workflow.');
         return;
       } catch (error) {
         console.warn('Share sheet unavailable, falling back to copy.', error);
@@ -506,15 +526,15 @@ export function ContractsTab({
     if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
       try {
         await navigator.clipboard.writeText(reminderMessage);
-        await recordWitnessPing(userId, activeContract, 'clipboard');
-        setRecoveryMessage("Witness reminder copied. Send it when you're ready.");
+        await recordWitnessPing(userId, target, 'clipboard');
+        setRecoveryMessage('Buddy reminder copied. Send it whenever you want support.');
         return;
       } catch (error) {
         console.warn('Clipboard write failed.', error);
       }
     }
 
-    setRecoveryMessage('Could not open share/copy in this browser. You can still message your witness manually.');
+    setRecoveryMessage('Could not open share/copy in this browser. You can still message your accountability buddy manually.');
   };
 
   const handlePauseWeek = async () => {
@@ -616,17 +636,22 @@ export function ContractsTab({
           {activeContracts.length > 0 && !showContractWizard && (
             <>
               {activeContracts.map((contract) => (
-                <ContractStatusCard
-                  key={contract.id}
-                  contract={contract}
-                  onMarkProgress={() => void handleMarkProgress(contract.id)}
-                  onLogFailure={() => void handleLogOutcomeFailure(contract.id)}
-                  onFinalizeSuccess={() => void handleFinalizeOutcomeSuccess(contract.id)}
-                  onPause={() => void handlePauseContract(contract.id)}
-                  onResume={() => void handleResumeContract(contract.id)}
-                  onCancel={() => void handleCancelContract(contract.id)}
-                  onWitnessPing={handleWitnessPing}
-                />
+                <Fragment key={contract.id}>
+                  <ContractStatusCard
+                    contract={contract}
+                    onMarkProgress={() => void handleMarkProgress(contract.id)}
+                    onLogFailure={() => void handleLogOutcomeFailure(contract.id)}
+                    onFinalizeSuccess={() => void handleFinalizeOutcomeSuccess(contract.id)}
+                    onPause={() => void handlePauseContract(contract.id)}
+                    onResume={() => void handleResumeContract(contract.id)}
+                    onCancel={() => void handleCancelContract(contract.id)}
+                    onWitnessPing={() => void handleAccountabilityBuddyReminder(contract.id)}
+                  />
+                  <ContractHistoryCard
+                    contract={contract}
+                    evaluations={historyEvaluationsByContractId[contract.id] ?? []}
+                  />
+                </Fragment>
               ))}
 
               {cascadingChains.length > 0 && (
@@ -639,14 +664,6 @@ export function ContractsTab({
                   ))}
                 </section>
               )}
-
-              {activeContracts[0] && (
-                <ContractHistoryCard
-                  contract={activeContracts[0]}
-                  evaluations={historyEvaluations}
-                />
-              )}
-
               {canCreateMore && (
                 <div className="score-tab__contracts-add">
                   <button

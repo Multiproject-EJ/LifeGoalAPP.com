@@ -131,13 +131,14 @@ export function ContractStatusCard({
 
       {contract.accountabilityMode === 'witness' && contract.witnessLabel && (
         <div className="contract-status-card__witness" role="status" aria-live="polite">
-          <p className="contract-status-card__witness-text">🤝 Witness mode on with {contract.witnessLabel}</p>
+          <p className="contract-status-card__witness-text">🤝 Accountability buddy: {contract.witnessLabel}</p>
           <button
             type="button"
             className="contract-status-card__witness-button"
             onClick={onWitnessPing}
+            title="Share or copy a reminder message only — this is not a two-way witness flow."
           >
-            Ping witness
+            Share reminder
           </button>
         </div>
       )}

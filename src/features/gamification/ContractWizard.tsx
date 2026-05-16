@@ -270,7 +270,9 @@ export function ContractWizard({
       CONTRACT_TYPES.some((option) => option.type === type && option.available === true),
     );
 
-    const fallbackRecommendations: ContractType[] = ['classic', 'reverse', 'sacred'];
+    const fallbackRecommendations = (['classic', 'reverse', 'sacred'] as const).filter((type) =>
+      CONTRACT_TYPES.some((option) => option.type === type && option.available === true),
+    );
 
     return Array.from(new Set([...availableRecommendations, ...fallbackRecommendations]))
       .slice(0, 2)
@@ -310,7 +312,7 @@ export function ContractWizard({
       return;
     }
     if (currentStep === 3 && accountabilityMode === 'witness' && !witnessLabel.trim()) {
-      setError('Add a witness name so this mode stays intentional.');
+      setError('Add an accountability buddy name so this support option stays intentional.');
       return;
     }
     if (currentStep === 3 && selectedContractType === 'sacred' && !sacredConfirmed) {
@@ -1066,7 +1068,7 @@ export function ContractWizard({
 
 
           <div className="contract-wizard__field-group">
-            <label className="contract-wizard__label">Accountability mode</label>
+            <label className="contract-wizard__label">Accountability support</label>
             <div className="contract-wizard__chip-group">
               <button
                 type="button"
@@ -1080,18 +1082,18 @@ export function ContractWizard({
                 className={`contract-wizard__chip${accountabilityMode === 'witness' ? ' contract-wizard__chip--selected' : ''}`}
                 onClick={() => setAccountabilityMode('witness')}
               >
-                Witness
+                Accountability buddy
               </button>
             </div>
             <p className="contract-wizard__helper-text">
-              Witness mode adds a support partner label to this promise card.
+              Add a trusted person for share/copy reminder messages only. This does not create a two-sided witness workflow.
             </p>
           </div>
 
           {accountabilityMode === 'witness' && (
             <div className="contract-wizard__field-group">
               <label className="contract-wizard__label" htmlFor="witness-label">
-                Witness name
+                Accountability buddy name
               </label>
               <input
                 id="witness-label"
@@ -1102,6 +1104,9 @@ export function ContractWizard({
                 value={witnessLabel}
                 onChange={(e) => setWitnessLabel(e.target.value)}
               />
+              <p className="contract-wizard__helper-text">
+                We will only help you share or copy a reminder message to this person.
+              </p>
             </div>
           )}
 
@@ -1110,7 +1115,7 @@ export function ContractWizard({
               <div className="contract-wizard__warning" role="alert" style={{ background: '#fee2e2', borderColor: '#dc2626' }}>
                 <strong>🔱 Sacred Promise Warning</strong>
                 <p style={{ marginTop: '0.5rem', fontSize: '0.85rem' }}>
-                   Sacred promises are limited to 2 per year. Breaking one forfeits <strong>3x</strong> your stake and damages your reliability score permanently. Keeping it earns <strong>3x</strong> bonus and a Diamond achievement.
+                  Sacred promises are limited to 2 per year. Breaking one forfeits <strong>3x</strong> your stake and damages your reliability score permanently. Keeping it earns <strong>3x</strong> bonus and a Diamond achievement.
                 </p>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}>
                   <input
@@ -1188,7 +1193,7 @@ export function ContractWizard({
             </div>
             <div className="contract-wizard__summary-row">
               <strong>Accountability:</strong>
-              <span>{accountabilityMode === 'witness' ? `Witness · ${witnessLabel.trim()}` : 'Solo mode'}</span>
+              <span>{accountabilityMode === 'witness' ? `Accountability buddy · ${witnessLabel.trim()}` : 'Solo mode'}</span>
             </div>
             <div className="contract-wizard__summary-row">
               <strong>Cooling-off:</strong>

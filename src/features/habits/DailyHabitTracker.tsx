@@ -4836,7 +4836,7 @@ export function DailyHabitTracker({
   );
 
   const handlePingWitness = useCallback(async (contract: CommitmentContract) => {
-    const message = `Hey ${contract.witnessLabel ?? 'my accountability witness'} — quick contract check-in: I'm committing to ${contract.targetCount} ${contract.targetType.toLowerCase()} completions ${contract.cadence === 'daily' ? 'today' : 'this week'} for "${contract.title}". A quick encouragement message from you would help me stay on track 💛`;
+    const message = `Hey ${contract.witnessLabel ?? 'my accountability buddy'} — quick promise check-in: I'm aiming for ${contract.targetCount} ${contract.targetType.toLowerCase()} completions ${contract.cadence === 'daily' ? 'today' : 'this week'} for "${contract.title}". This is just a reminder message, and a little encouragement from you would help 💛`;
 
     try {
       if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
@@ -4844,7 +4844,7 @@ export function DailyHabitTracker({
       }
       await recordWitnessPing(session.user.id, contract, 'clipboard');
     } catch (error) {
-      setContractsError(error instanceof Error ? error.message : 'Unable to copy witness ping message.');
+      setContractsError(error instanceof Error ? error.message : 'Unable to copy accountability buddy reminder.');
     }
   }, [session.user.id]);
 
@@ -8329,7 +8329,7 @@ export function DailyHabitTracker({
                                 onClick={() => void handlePingWitness(contract)}
                                 disabled={isBusy}
                               >
-                                Ping witness
+                                Copy reminder
                               </button>
                             ) : null}
                           </div>
