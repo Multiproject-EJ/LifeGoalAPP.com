@@ -653,17 +653,17 @@ export function ContractWizard({
                     setQuickCreateSubmitting(true);
                     setError(null);
                     try {
-                       if (quickCreateType === 'Habit') {
-                         const { data: habit, error: createError } = await quickAddDailyHabit({ title }, userId);
-                         if (createError || !habit) {
-                           throw createError || new Error('Failed to create habit');
-                         }
+                      if (quickCreateType === 'Habit') {
+                        const { data: habit, error: createError } = await quickAddDailyHabit({ title }, userId);
+                        if (createError || !habit) {
+                          throw createError || new Error('Failed to create habit');
+                        }
 
-                          const option: TargetOption = { id: habit.id, title: habit.title, type: 'Habit' };
-                          setTargetOptions((prev) => [option, ...prev]);
-                          setTargetLinkMode('Habit');
-                          setSelectedTarget(option);
-                        } else {
+                        const option: TargetOption = { id: habit.id, title: habit.title, type: 'Habit' };
+                        setTargetOptions((prev) => [option, ...prev]);
+                        setTargetLinkMode('Habit');
+                        setSelectedTarget(option);
+                      } else {
                         const payload: GoalInsert = {
                           title,
                           description: null,
@@ -678,11 +678,11 @@ export function ContractWizard({
                           throw createError || new Error('Failed to create goal');
                         }
 
-                          const option: TargetOption = { id: goal.id, title: goal.title, type: 'Goal' };
-                          setTargetOptions((prev) => [option, ...prev]);
-                          setTargetLinkMode('Goal');
-                          setSelectedTarget(option);
-                        }
+                        const option: TargetOption = { id: goal.id, title: goal.title, type: 'Goal' };
+                        setTargetOptions((prev) => [option, ...prev]);
+                        setTargetLinkMode('Goal');
+                        setSelectedTarget(option);
+                      }
 
                       setQuickCreateTitle('');
                       setQuickCreateTargetDate('');
