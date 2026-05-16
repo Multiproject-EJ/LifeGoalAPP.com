@@ -369,6 +369,7 @@ type DailyHabitTrackerProps = {
   collapseCheckboxUntilExpanded?: boolean;
   onOpenStarterQuest?: (initialDomainKey?: LifeWheelCategoryKey) => void;
   archetypeHand?: ArchetypeHand | null;
+  onNavigateToContracts?: () => void;
 };
 
 type HabitCompletionState = {
@@ -723,6 +724,7 @@ export function DailyHabitTracker({
   collapseCheckboxUntilExpanded = false,
   onOpenStarterQuest,
   archetypeHand,
+  onNavigateToContracts,
 }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
   const sparkHandEnabled = isPlayersHandSparkResultEnabled();
@@ -8333,6 +8335,15 @@ export function DailyHabitTracker({
                               </button>
                             ) : null}
                           </div>
+                          {onNavigateToContracts && (
+                            <button
+                              type="button"
+                              className="habit-contracts-card__view-link"
+                              onClick={onNavigateToContracts}
+                            >
+                              View →
+                            </button>
+                          )}
                         </article>
                       );
                     })}

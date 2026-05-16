@@ -378,7 +378,7 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
   'placeholder',
 ] as const;
 
-const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'account', 'projects', 'timer', 'journal']);
+const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'account', 'projects', 'timer', 'journal', 'contracts']);
 const MOBILE_FOOTER_AUTO_COLLAPSE_DELAY_MS = 3800;
 const MOBILE_FOOTER_SNAP_RESET_MS = 160;
 const ONBOARDING_NUDGE_KEY = 'gol_onboarding_nudge_at';
@@ -607,6 +607,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [showMobileSupportModal, setShowMobileSupportModal] = useState(false);
   const [isMyQuestSubmenuOpen, setIsMyQuestSubmenuOpen] = useState(false);
   const [isStarterQuestSheetOpen, setIsStarterQuestSheetOpen] = useState(false);
+  const [isContractWizardOpen, setIsContractWizardOpen] = useState(false);
   const [starterQuestSheetOrigin, setStarterQuestSheetOrigin] = useState<'my-quest' | 'today' | null>(null);
   const [starterQuestInitialDomainKey, setStarterQuestInitialDomainKey] = useState<LifeWheelCategoryKey | null>(null);
   const [checkinsEntryOrigin, setCheckinsEntryOrigin] = useState<'my-quest' | 'direct'>('direct');
@@ -1102,7 +1103,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const shouldCollapseFooterForGoalsAndCheckins =
     isMobileExperience && (mobileActiveNavId === 'support' || mobileActiveNavId === 'rituals');
   const shouldLockFooterCollapsedForQuestFlow =
-    isMobileExperience && (isMyQuestSubmenuOpen || isStarterQuestSheetOpen || shouldCollapseFooterForGoalsAndCheckins);
+    isMobileExperience && (isMyQuestSubmenuOpen || isStarterQuestSheetOpen || isContractWizardOpen || shouldCollapseFooterForGoalsAndCheckins);
   const shouldForceFooterCollapseForDirectionFlows = shouldLockFooterCollapsedForQuestFlow;
   const shouldAutoCollapseOnIdle =
     isMobileExperience &&
@@ -3323,6 +3324,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
               hasOpenedDailyTreatsToday={hasOpenedDailyTreatsToday}
               hasOpenedHolidayCalendarToday={hasOpenedHolidayCalendarToday}
               hiddenHabitIds={[]}
+              onNavigateToContracts={() => {
+                setShowMobileHome(false);
+                setActiveWorkspaceNav('contracts');
+              }}
             />
             <HabitsModule
               session={activeSession}
@@ -3403,6 +3408,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
               profile={gamificationProfile}
               enabled={gamificationEnabled}
               loading={gamificationLoading}
+              onWizardOpen={() => setIsContractWizardOpen(true)}
+              onWizardClose={() => setIsContractWizardOpen(false)}
             />
           </div>
         );

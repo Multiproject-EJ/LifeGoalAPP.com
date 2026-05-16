@@ -48,6 +48,8 @@ interface ContractsTabProps {
   profile: GamificationProfile | null;
   enabled: boolean;
   loading: boolean;
+  onWizardOpen?: () => void;
+  onWizardClose?: () => void;
 }
 
 function getWindowEnd(contract: CommitmentContract): Date {
@@ -105,12 +107,15 @@ export function ContractsTab({
   profile,
   enabled,
   loading,
+  onWizardOpen,
+  onWizardClose,
 }: ContractsTabProps) {
   const userId = session?.user?.id ?? profile?.user_id ?? '';
   const zenTokens = profile?.zen_tokens ?? 0;
   const [goldBalance, setGoldBalance] = useState(profile?.total_points ?? 0);
   const [activeContracts, setActiveContracts] = useState<CommitmentContract[]>([]);
   const [showContractWizard, setShowContractWizard] = useState(false);
+  const [showSystemInfoModal, setShowSystemInfoModal] = useState(false);
   const [contractResult, setContractResult] = useState<ContractEvaluation | null>(null);
   const [resultContract, setResultContract] = useState<CommitmentContract | null>(null);
   const [reduceStakeEligibility, setReduceStakeEligibility] = useState<ReduceStakeEligibility | null>(null);
@@ -281,7 +286,18 @@ export function ContractsTab({
 
   const handleContractWizardComplete = async () => {
     setShowContractWizard(false);
+    onWizardClose?.();
     await loadContract();
+  };
+
+  const handleOpenWizard = () => {
+    setShowContractWizard(true);
+    onWizardOpen?.();
+  };
+
+  const handleCancelWizard = () => {
+    setShowContractWizard(false);
+    onWizardClose?.();
   };
 
   const refreshContractInList = (updated: CommitmentContract) => {
@@ -610,11 +626,39 @@ export function ContractsTab({
             <p className="score-tab__subtitle">
               Stake Gold or Tokens to stay accountable to your goals.
             </p>
-            <p className="score-tab__meta">
-              Due-window checks run while this Promises screen is open, with server-backed sweeps for durability while the app is closed.
-              Sweep runs are audit-logged for reliability monitoring.
-            </p>
-            <p className="score-tab__meta">{getSweepHealthCopy()}</p>
+            <button
+              type="button"
+              className="score-tab__info-button"
+              aria-label="How the Promise System works"
+              onClick={() => setShowSystemInfoModal(true)}
+            >
+              ⓘ How it works
+            </button>
+            {showSystemInfoModal && (
+              <div
+                className="score-tab__info-modal-overlay"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Promise System info"
+                onClick={(e) => { if (e.target === e.currentTarget) setShowSystemInfoModal(false); }}
+              >
+                <div className="score-tab__info-modal">
+                  <h3 className="score-tab__info-modal-title">How the Promise System works</h3>
+                  <p className="score-tab__info-modal-body">
+                    Due-window checks run while this Promises screen is open, with server-backed sweeps
+                    for durability while the app is closed. Sweep runs are audit-logged for reliability monitoring.
+                  </p>
+                  <p className="score-tab__info-modal-body">{getSweepHealthCopy()}</p>
+                  <button
+                    type="button"
+                    className="score-tab__info-modal-close"
+                    onClick={() => setShowSystemInfoModal(false)}
+                  >
+                    Got it
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           {recoveryMessage && <p className="score-tab__status">{recoveryMessage}</p>}
           {actionError && <p className="score-tab__status">{actionError}</p>}
@@ -627,7 +671,7 @@ export function ContractsTab({
               <button
                 type="button"
                 className="score-tab__contracts-create-button"
-                onClick={() => setShowContractWizard(true)}
+                onClick={handleOpenWizard}
               >
                 Create Promise
               </button>
@@ -669,7 +713,7 @@ export function ContractsTab({
                   <button
                     type="button"
                     className="score-tab__contracts-create-button"
-                    onClick={() => setShowContractWizard(true)}
+                    onClick={handleOpenWizard}
                   >
                     + Add Promise ({activeContractCount}/{MAX_ACTIVE_CONTRACTS})
                   </button>
@@ -683,7 +727,7 @@ export function ContractsTab({
               currentGoldBalance={goldBalance}
               currentTokenBalance={zenTokens}
               onComplete={handleContractWizardComplete}
-              onCancel={() => setShowContractWizard(false)}
+              onCancel={handleCancelWizard}
               onRewardLinked={async (contractId) => {
                 const { data: linkedReward } = await fetchLinkedRewardForContract(userId, contractId);
                 if (resultContract?.id === contractId) {

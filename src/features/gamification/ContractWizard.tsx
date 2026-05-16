@@ -807,7 +807,7 @@ export function ContractWizard({
           )}
 
           <div className="contract-wizard__field-group">
-            <label className="contract-wizard__label">Cadence</label>
+            <label className="contract-wizard__label">How often?</label>
             <div className="contract-wizard__chip-group">
               <button
                 type="button"
@@ -895,7 +895,7 @@ export function ContractWizard({
           <h3 className="contract-wizard__prompt">What are you willing to stake on this promise?</h3>
           
           <div className="contract-wizard__field-group">
-            <label className="contract-wizard__label">Stake type</label>
+            <label className="contract-wizard__label">What do you stake?</label>
             <div className="contract-wizard__chip-group">
               <button
                 type="button"
@@ -935,7 +935,7 @@ export function ContractWizard({
           </div>
 
           <div className="contract-wizard__field-group">
-            <label className="contract-wizard__label">Grace days</label>
+            <label className="contract-wizard__label">Buffer days</label>
             <div className="contract-wizard__chip-group">
               <button
                 type="button"
@@ -965,7 +965,7 @@ export function ContractWizard({
           </div>
 
           <div className="contract-wizard__field-group">
-            <label className="contract-wizard__label">How do you want to track this promise?</label>
+            <label className="contract-wizard__label">How do you check in?</label>
             <div className="contract-wizard__chip-group">
               <button
                 type="button"
@@ -1042,14 +1042,16 @@ export function ContractWizard({
                     <option key={category} value={category}>{category}</option>
                   ))}
                 </select>
+                <label className="contract-wizard__label contract-wizard__label--spaced">How soon can you claim this again?</label>
                 <select
                   className="contract-wizard__input"
                   value={newRewardCooldown}
                   onChange={(event) => setNewRewardCooldown(event.target.value as RewardCooldownType)}
+                  aria-label="How soon can you claim this again?"
                 >
-                  <option value="none">No cooldown</option>
-                  <option value="daily">Daily (24h)</option>
-                  <option value="custom">Custom hours</option>
+                  <option value="none">No wait — claim anytime</option>
+                  <option value="daily">Once a day (24h)</option>
+                  <option value="custom">Custom wait time</option>
                 </select>
                 {newRewardCooldown === 'custom' && (
                   <input
@@ -1057,7 +1059,7 @@ export function ContractWizard({
                     type="number"
                     min={1}
                     max={168}
-                    placeholder="Cooldown hours"
+                    placeholder="Hours before claiming again"
                     value={newRewardCooldownHours}
                     onChange={(event) => setNewRewardCooldownHours(event.target.value)}
                   />
@@ -1170,7 +1172,7 @@ export function ContractWizard({
               </div>
             )}
             <div className="contract-wizard__summary-row">
-              <strong>Cadence:</strong>
+              <strong>How often:</strong>
               <span>{selectedContractType === 'reverse' ? `Max ${targetCount} violations per ${cadence}` : `Complete ${targetCount} times per ${cadence}`}</span>
             </div>
             <div className="contract-wizard__summary-row">
@@ -1184,19 +1186,19 @@ export function ContractWizard({
               </div>
             )}
             <div className="contract-wizard__summary-row">
-              <strong>Grace days:</strong>
+              <strong>Buffer days:</strong>
               <span>{graceDays}</span>
             </div>
             <div className="contract-wizard__summary-row">
-              <strong>Tracking:</strong>
-              <span>{trackingMode === 'outcome_only' ? 'Outcome only' : 'Progress check-ins'}</span>
+              <strong>Check-in:</strong>
+              <span>{trackingMode === 'outcome_only' ? 'No daily check-ins' : 'Mark each session'}</span>
             </div>
             <div className="contract-wizard__summary-row">
               <strong>Accountability:</strong>
               <span>{accountabilityMode === 'witness' ? `Accountability buddy · ${witnessLabel.trim()}` : 'Solo mode'}</span>
             </div>
             <div className="contract-wizard__summary-row">
-              <strong>Cooling-off:</strong>
+              <strong>Cancel protection:</strong>
               <span>You can cancel within 24 hours without penalty</span>
             </div>
             <div className="contract-wizard__summary-row">

@@ -9424,6 +9424,20 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: #fff;
 }
 
+.habit-contracts-card__view-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary-color, #667eea);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .habit-contracts-card__error {
   margin: 0;
   color: #b91c1c;
