@@ -107,6 +107,7 @@ import {
   applyDevGrantEssence,
   applyDevGrantTimedEventTickets,
   applyDevBuildAllToL3,
+  applyDevClearCurrentIslandForTravel,
   applyDevSpeedHatchEgg,
   applyActivateCurrentIslandTimer,
   applyPassiveDiceRegenTick,
@@ -7150,6 +7151,34 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setLandingText(`🧪 DEV MODE: built ${result.stopsCompleted}/5 landmarks to L3 via canonical action.`);
   }, [client, effectiveIslandNumber, isDevModeEnabled, session]);
 
+  const handleDevClearCurrentIslandForTravel = useCallback(() => {
+    if (!isDevModeEnabled) return;
+    const result = applyDevClearCurrentIslandForTravel({
+      session,
+      client,
+      islandNumber,
+      effectiveIslandNumber,
+      triggerSource: 'dev_clear_island',
+    });
+    setRuntimeState(result.record);
+    runtimeStateRef.current = result.record;
+    if (!result.clearGateSatisfied) {
+      setLandingText('🧪 DEV MODE: unable to satisfy Island Clear gate. Check stop/egg state.');
+      return;
+    }
+    showIslandClearCelebrationFromAnywhere('dev_clear_island');
+    setLandingText(result.changed
+      ? '🧪 DEV MODE: island prepared for clear celebration/travel path.'
+      : '🧪 DEV MODE: island already clear-ready. Opening celebration flow.');
+  }, [
+    client,
+    effectiveIslandNumber,
+    islandNumber,
+    isDevModeEnabled,
+    session,
+    showIslandClearCelebrationFromAnywhere,
+  ]);
+
   const handleDevStartLuckyRollSession = useCallback(async (targetIslandNumber: number) => {
     if (!isDevModeEnabled) return 'Lucky Roll dev launcher is only available in Island Run dev mode.';
     const normalizedTargetIslandNumber = Number.isFinite(targetIslandNumber)
@@ -8379,6 +8408,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 <span className="island-run-prototype__stat-chip">Egg Control</span>
                 <button type="button" className="island-run-prototype__debug-btn" onClick={handleDevSpeedHatchEgg}>🥚 Speed Hatch Egg</button>
                 <button type="button" className="island-run-prototype__debug-btn" onClick={handleDevBuildAllToL3}>🏗️ Build All to L3</button>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={handleDevClearCurrentIslandForTravel}>🧹 Clear Island (Dev)</button>
               </div>
             </div>
           )}
