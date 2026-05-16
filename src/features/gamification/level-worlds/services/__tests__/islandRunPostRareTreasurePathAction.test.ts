@@ -713,4 +713,42 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
       );
     },
   },
+  {
+    name: 'Treasure Path implementation files do not import deleted legacy standalone Lucky Roll files',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const pathMod = await import('path');
+
+      const treasurePathFiles = [
+        pathMod.resolve(process.cwd(), 'src/features/gamification/level-worlds/services/islandRunPostRareTreasurePathAction.ts'),
+        pathMod.resolve(process.cwd(), 'src/features/gamification/level-worlds/services/islandRunLuckyRollAction.ts'),
+        pathMod.resolve(process.cwd(), 'src/features/gamification/level-worlds/services/islandRunLuckyRollBoardConfig.ts'),
+        pathMod.resolve(process.cwd(), 'src/features/gamification/level-worlds/components/lucky-roll/IslandRunLuckyRollDevOverlay.tsx'),
+        pathMod.resolve(process.cwd(), 'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx'),
+      ];
+
+      // Check import-path patterns — these match the module specifier in import statements,
+      // not symbol names, so canonical Island Run service names like
+      // `getIslandRunLuckyRollBoardConfig` are never falsely flagged.
+      const legacyImportPatterns: Array<{ pattern: RegExp; label: string }> = [
+        { pattern: /from ['"][^'"]*\/LuckyRollBoard['"]/, label: 'LuckyRollBoard (standalone component)' },
+        { pattern: /from ['"][^'"]*\/LuckyRollDiceShop['"]/, label: 'LuckyRollDiceShop' },
+        { pattern: /from ['"][^'"]*\/luckyRollState['"]/, label: 'luckyRollState' },
+        { pattern: /from ['"][^'"]*\/luckyRollSounds['"]/, label: 'luckyRollSounds' },
+      ];
+
+      for (const filePath of treasurePathFiles) {
+        const fileLabel = pathMod.relative(process.cwd(), filePath);
+        const source = fsMod.readFileSync(filePath, 'utf8');
+        for (const { pattern, label } of legacyImportPatterns) {
+          assert(
+            !pattern.test(source),
+            `Treasure Path file ${fileLabel} must not import deleted legacy standalone module ${label}`,
+          );
+        }
+      }
+    },
+  },
 ];
