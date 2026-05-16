@@ -41,6 +41,7 @@ import {
   applyCreatureTreatInventory,
   applyDevGrantDice,
   applyDevBuildAllToL3,
+  applyDevClearCurrentIslandForTravel,
   applyDevGrantEssence,
   applyDevSpeedHatchEgg,
   applyHydrationEggReadyTransition,
@@ -84,6 +85,7 @@ import {
   applyTokenHopRewards,
   travelToNextIsland,
 } from '../islandRunStateActions';
+import { isIslandRunFullyClearedV2 } from '../islandRunContractV2StopResolver';
 import { buildInitialDiceRegenState } from '../islandRunDiceRegeneration';
 import { SPACE_EXCAVATOR_CAMPAIGN_MILESTONES } from '../spaceExcavatorCampaignProgress';
 import {
@@ -1759,6 +1761,159 @@ export const islandRunStateActionsTests: TestCase[] = [
 
       assertEqual(result.changed, false, 'no active incubating/ready egg should no-op');
       assertEqual(result.record.runtimeVersion, 10, 'runtimeVersion should remain unchanged on no-op');
+    },
+  },
+
+  {
+    name: 'applyDevClearCurrentIslandForTravel satisfies island clear V2 gate through canonical state action path',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 30,
+        currentIslandNumber: 9,
+        bossTrialResolvedIslandNumber: null,
+        activeEggTier: 'rare',
+        activeEggSetAtMs: 2_000,
+        activeEggHatchDurationMs: 9_000,
+        stopStatesByIndex: [
+          { objectiveComplete: true, buildComplete: false, completedAtMs: 100 },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+        stopBuildStateByIndex: [
+          { requiredEssence: 10, spentEssence: 10, buildLevel: 3 },
+          { requiredEssence: 10, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 10, spentEssence: 5, buildLevel: 1 },
+          { requiredEssence: 10, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 10, spentEssence: 8, buildLevel: 2 },
+        ],
+        perIslandEggs: {
+          '9': {
+            tier: 'rare',
+            setAtMs: 2_000,
+            hatchAtMs: 12_000,
+            status: 'incubating',
+            location: 'island',
+          },
+        },
+      });
+
+      const result = applyDevClearCurrentIslandForTravel({
+        session,
+        client: null,
+        islandNumber: 9,
+        effectiveIslandNumber: 9,
+        nowMs: 7_000,
+        triggerSource: 'test_dev_clear_island',
+      });
+
+      assertEqual(result.changed, true, 'partial island state should be promoted to clear-ready');
+      assertEqual(result.clearGateSatisfied, true, 'dev clear action should satisfy V2 island clear gate');
+      assert(result.record.stopBuildStateByIndex.every((entry) => (entry?.buildLevel ?? 0) >= 3), 'all stop builds should be L3');
+      assert(result.record.stopStatesByIndex.every((entry) => entry?.objectiveComplete === true), 'all stop objectives should be complete');
+      assertEqual(result.record.bossTrialResolvedIslandNumber, 9, 'boss marker should resolve for current island');
+      const islandEgg = result.record.perIslandEggs['9'];
+      assert(islandEgg?.status === 'collected' || islandEgg?.status === 'sold', 'hatchery egg should be terminally resolved');
+      assertEqual(isIslandRunFullyClearedV2({
+        stopStatesByIndex: result.record.stopStatesByIndex,
+        stopBuildStateByIndex: result.record.stopBuildStateByIndex,
+        hatcheryEggResolved: islandEgg?.status === 'collected' || islandEgg?.status === 'sold',
+      }), true, 'V2 clear gate should report true after dev clear action');
+    },
+  },
+
+  {
+    name: 'applyDevClearCurrentIslandForTravel is idempotent across repeated invocations',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 45,
+        currentIslandNumber: 5,
+        bossTrialResolvedIslandNumber: null,
+        stopStatesByIndex: [
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+        stopBuildStateByIndex: [
+          { requiredEssence: 10, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 10, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 10, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 10, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 10, spentEssence: 0, buildLevel: 0 },
+        ],
+        perIslandEggs: {},
+      });
+
+      const first = applyDevClearCurrentIslandForTravel({
+        session,
+        client: null,
+        islandNumber: 5,
+        effectiveIslandNumber: 5,
+        nowMs: 10_000,
+        triggerSource: 'test_dev_clear_island_first',
+      });
+      const second = applyDevClearCurrentIslandForTravel({
+        session,
+        client: null,
+        islandNumber: 5,
+        effectiveIslandNumber: 5,
+        nowMs: 11_000,
+        triggerSource: 'test_dev_clear_island_second',
+      });
+
+      assertEqual(first.clearGateSatisfied, true, 'first invocation should satisfy clear gate');
+      assertEqual(second.clearGateSatisfied, true, 'second invocation should keep clear gate satisfied');
+      assertEqual(first.changed, true, 'first invocation should mutate uncleared state');
+      assertEqual(second.changed, false, 'second invocation should be an idempotent no-op');
+      assertEqual(second.record.runtimeVersion, first.record.runtimeVersion, 'idempotent repeat should not churn runtimeVersion');
+    },
+  },
+
+  {
+    name: 'dev clear island wiring remains dev-gated and routes through celebration CTA path',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const pathMod = await import('path');
+      const boardSource = fsMod.readFileSync(pathMod.resolve(
+        process.cwd(),
+        'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx',
+      ), 'utf8');
+      const actionSource = fsMod.readFileSync(pathMod.resolve(
+        process.cwd(),
+        'src/features/gamification/level-worlds/services/islandRunStateActions.ts',
+      ), 'utf8');
+
+      assert(
+        /\{isDevModeEnabled && \([\s\S]*🧹 Clear Island \(Dev\)/.test(boardSource),
+        'clear-island dev button must stay behind the isDevModeEnabled UI gate',
+      );
+      assert(
+        /showIslandClearCelebrationFromAnywhere\('dev_clear_island'\)/.test(boardSource),
+        'dev clear button must trigger existing island-clear celebration flow',
+      );
+      const devHandlerMatch = boardSource.match(/const handleDevClearCurrentIslandForTravel = useCallback\(\(\) => \{([\s\S]*?)\n  \}, \[/);
+      assert(devHandlerMatch !== null, 'dev clear handler should exist in board prototype');
+      const devHandlerSource = devHandlerMatch?.[1] ?? '';
+      assert(
+        !/performIslandTravel|handleTravelFromCelebration/.test(devHandlerSource),
+        'dev clear handler must not bypass travel through direct travel calls',
+      );
+      const devActionMatch = actionSource.match(/export function applyDevClearCurrentIslandForTravel\([\s\S]*?\n\}/);
+      assert(devActionMatch !== null, 'dev clear canonical action should exist');
+      const devActionSource = devActionMatch?.[0] ?? '';
+      assert(
+        !/showIslandClearCelebrationFromAnywhere|handleTravelFromCelebration|performIslandTravel/.test(devActionSource),
+        'dev clear canonical action must not depend on production UI/travel-only paths',
+      );
     },
   },
 

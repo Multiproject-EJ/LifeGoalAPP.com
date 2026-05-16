@@ -531,6 +531,21 @@ export interface ApplyDevBuildAllToL3Result {
   totalStepsApplied: number;
 }
 
+export interface ApplyDevClearCurrentIslandForTravelOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  islandNumber: number;
+  effectiveIslandNumber: number;
+  nowMs?: number;
+  triggerSource?: string;
+}
+
+export interface ApplyDevClearCurrentIslandForTravelResult {
+  record: IslandRunGameStateRecord;
+  changed: boolean;
+  clearGateSatisfied: boolean;
+}
+
 /**
  * Applies per-hop or per-claim currency deltas to the authoritative store.
  *
@@ -844,6 +859,173 @@ export async function applyDevBuildAllToL3(
     changed: totalStepsApplied > 0,
     stopsCompleted,
     totalStepsApplied,
+  };
+}
+
+/**
+ * DEV-ONLY helper action: prepares the current island so normal island-clear
+ * celebration + travel CTA flow can run without bypassing canonical gates.
+ */
+export function applyDevClearCurrentIslandForTravel(
+  options: ApplyDevClearCurrentIslandForTravelOptions,
+): ApplyDevClearCurrentIslandForTravelResult {
+  const {
+    session,
+    client,
+    islandNumber,
+    effectiveIslandNumber,
+    nowMs,
+    triggerSource,
+  } = options;
+  const completedStops: Array<'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss'> = [
+    'hatchery',
+    'habit',
+    'mystery',
+    'wisdom',
+    'boss',
+  ];
+  const resolvedNowMs = Number.isFinite(nowMs) ? Math.max(0, Math.trunc(nowMs ?? 0)) : Date.now();
+  const normalizedIslandNumber = Number.isFinite(islandNumber) ? Math.max(1, Math.floor(islandNumber)) : 1;
+  const islandKey = String(normalizedIslandNumber);
+  const initial = getIslandRunStateSnapshot(session);
+  let workingRecord = initial;
+  let changed = false;
+
+  const needsObjectiveOrBuildSync = completedStops.some((_, stopIndex) => {
+    const stopState = workingRecord.stopStatesByIndex[stopIndex];
+    const buildState = workingRecord.stopBuildStateByIndex[stopIndex];
+    return stopState?.objectiveComplete !== true
+      || stopState?.buildComplete !== true
+      || (buildState?.buildLevel ?? 0) < MAX_BUILD_LEVEL;
+  });
+  const currentCompletedStops = workingRecord.completedStopsByIsland?.[islandKey] ?? [];
+  const needsCompletedStopsSync = completedStops.some((stopId) => !currentCompletedStops.includes(stopId))
+    || currentCompletedStops.length !== completedStops.length;
+  const needsBossMarkerSync = workingRecord.currentIslandNumber !== normalizedIslandNumber
+    || workingRecord.bossTrialResolvedIslandNumber !== normalizedIslandNumber;
+
+  if (needsObjectiveOrBuildSync || needsCompletedStopsSync || needsBossMarkerSync) {
+    const nextStopStatesByIndex = [...workingRecord.stopStatesByIndex];
+    const nextStopBuildStateByIndex = [...workingRecord.stopBuildStateByIndex];
+    for (let stopIndex = 0; stopIndex < completedStops.length; stopIndex += 1) {
+      const currentStopState = workingRecord.stopStatesByIndex[stopIndex];
+      const currentBuildState = workingRecord.stopBuildStateByIndex[stopIndex];
+      const requiredEssence = Math.max(0, currentBuildState?.requiredEssence ?? 10);
+      nextStopStatesByIndex[stopIndex] = {
+        objectiveComplete: true,
+        buildComplete: true,
+        completedAtMs: currentStopState?.completedAtMs ?? resolvedNowMs,
+      };
+      nextStopBuildStateByIndex[stopIndex] = {
+        requiredEssence,
+        spentEssence: Math.max(requiredEssence, currentBuildState?.spentEssence ?? requiredEssence),
+        buildLevel: MAX_BUILD_LEVEL,
+      };
+    }
+    const next: IslandRunGameStateRecord = {
+      ...workingRecord,
+      currentIslandNumber: normalizedIslandNumber,
+      bossTrialResolvedIslandNumber: normalizedIslandNumber,
+      stopStatesByIndex: nextStopStatesByIndex,
+      stopBuildStateByIndex: nextStopBuildStateByIndex,
+      activeStopIndex: completedStops.length - 1,
+      activeStopType: 'boss',
+      completedStopsByIsland: {
+        ...workingRecord.completedStopsByIsland,
+        [islandKey]: [...completedStops],
+      },
+      runtimeVersion: workingRecord.runtimeVersion + 1,
+    };
+    void commitIslandRunState({
+      session,
+      client,
+      record: next,
+      triggerSource: triggerSource ?? 'dev_clear_island_prepare',
+    });
+    workingRecord = next;
+    changed = true;
+  }
+
+  const speedHatchResult = applyDevSpeedHatchEgg({
+    session,
+    client,
+    islandNumber: normalizedIslandNumber,
+    nowMs: resolvedNowMs,
+    triggerSource: triggerSource ?? 'dev_clear_island_speed_hatch',
+  });
+  if (speedHatchResult.changed) {
+    workingRecord = speedHatchResult.record;
+    changed = true;
+  }
+
+  const eggEntry = workingRecord.perIslandEggs?.[islandKey];
+  if (eggEntry?.status === 'ready') {
+    const eggTransition = resolveReadyEggTerminalTransition({
+      session,
+      client,
+      islandNumber: normalizedIslandNumber,
+      terminalStatus: 'collected',
+      openedAtMs: resolvedNowMs,
+      completedStops,
+      rewardDeltas: { essence: 0, essenceLifetimeEarned: 0, dicePool: 0, spinTokens: 0, shards: 0, diamonds: 0 },
+      triggerSource: triggerSource ?? 'dev_clear_island_terminal_egg',
+    });
+    if (eggTransition.changed) {
+      workingRecord = eggTransition.record;
+      changed = true;
+    }
+  } else if (
+    !eggEntry
+    || (eggEntry.status !== 'collected' && eggEntry.status !== 'sold')
+  ) {
+    const terminalEntry: PerIslandEggEntry = {
+      tier: eggEntry?.tier ?? workingRecord.activeEggTier ?? 'common',
+      setAtMs: eggEntry?.setAtMs ?? workingRecord.activeEggSetAtMs ?? resolvedNowMs,
+      hatchAtMs: eggEntry?.hatchAtMs ?? workingRecord.activeEggSetAtMs ?? resolvedNowMs,
+      status: 'sold',
+      location: eggEntry?.location ?? (workingRecord.activeEggIsDormant ? 'dormant' : 'island'),
+      openedAt: resolvedNowMs,
+    };
+    const terminalRecord = applyEggResolution({
+      session,
+      client,
+      islandNumber: normalizedIslandNumber,
+      perIslandEggEntry: terminalEntry,
+      completedStops,
+      triggerSource: triggerSource ?? 'dev_clear_island_apply_terminal_egg',
+    });
+    if (terminalRecord.runtimeVersion !== workingRecord.runtimeVersion) {
+      changed = true;
+    }
+    workingRecord = terminalRecord;
+  }
+
+  const finalRecord = getIslandRunStateSnapshot(session);
+  const hatcheryEggResolved = (() => {
+    const entry = finalRecord.perIslandEggs?.[islandKey];
+    return entry?.status === 'collected' || entry?.status === 'sold';
+  })();
+  const clearGateSatisfied = isIslandRunFullyClearedV2({
+    stopStatesByIndex: finalRecord.stopStatesByIndex,
+    stopBuildStateByIndex: finalRecord.stopBuildStateByIndex,
+    hatcheryEggResolved,
+  });
+
+  if (!clearGateSatisfied) {
+    logIslandRunEntryDebug('dev_clear_island_incomplete_gate', {
+      userId: session.user.id,
+      islandNumber: normalizedIslandNumber,
+      effectiveIslandNumber,
+      hatcheryEggResolved,
+      runtimeVersion: finalRecord.runtimeVersion,
+      triggerSource: triggerSource ?? 'dev_clear_island',
+    });
+  }
+
+  return {
+    record: finalRecord,
+    changed,
+    clearGateSatisfied,
   };
 }
 
