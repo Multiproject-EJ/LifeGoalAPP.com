@@ -158,26 +158,27 @@ export function ContractsTab({
     return safeEvaluations;
   };
 
-  const loadContract = async () => {
-    if (!userId) {
-      setActiveContracts([]);
-      setPastContracts([]);
-      setHistoryEvaluationsByContractId({});
+  // Deferred non-critical work: server sweep + sweep health.
+  // Runs after initial contracts are rendered so it never blocks first paint.
+  // State updates here are intentionally separate renders (stale-while-revalidate).
+  const runBackgroundEvaluation = async () => {
+    if (!userId) return;
+
+    let dueEvaluations: ContractEvaluation[] | null = null;
+    let latestSweepHealth: ContractSweepHealth | null = null;
+    try {
+      const [dueResult, sweepResult] = await Promise.all([
+        evaluateDueContracts(),
+        fetchContractSweepHealth(),
+      ]);
+      dueEvaluations = dueResult.data;
+      latestSweepHealth = sweepResult.data;
+    } catch (err) {
+      console.warn('Background evaluation encountered an error:', err);
       return;
     }
 
-    const { data: dueEvaluations } = await evaluateDueContracts();
-    const { data: latestSweepHealth } = await fetchContractSweepHealth();
-    setSweepHealth(latestSweepHealth);
-
-    const { data: contracts, error } = await fetchContracts(userId);
-    if (error || !contracts) return;
-
-    const endedContracts = contracts
-      .filter((contract) => contract.status === 'completed' || contract.status === 'cancelled')
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-      .slice(0, 5);
-    setPastContracts(endedContracts);
+    setSweepHealth(latestSweepHealth ?? null);
 
     if (dueEvaluations && dueEvaluations.length > 0) {
       if (dueEvaluations.length > 1) {
@@ -194,23 +195,57 @@ export function ContractsTab({
         [dueEvaluations.length - 1];
 
       if (latestEvaluation) {
-        const evaluatedContract = contracts.find((contract) => contract.id === latestEvaluation.contractId) ?? null;
+        const { data: freshContracts } = await fetchContracts(userId);
+        const evaluatedContract = freshContracts?.find((c) => c.id === latestEvaluation.contractId) ?? null;
         if (evaluatedContract) {
+          const freshEnded = (freshContracts ?? [])
+            .filter((c) => c.status === 'completed' || c.status === 'cancelled')
+            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+            .slice(0, 5);
+          setPastContracts(freshEnded);
+
+          const freshDisplay = (freshContracts ?? []).filter(
+            (c) => c.status === 'active' || c.status === 'paused'
+          );
+          setActiveContracts(freshDisplay);
+
           setContractResult(latestEvaluation);
           setResultContract(evaluatedContract);
           const { data: linkedReward } = await fetchLinkedRewardForContract(userId, evaluatedContract.id);
-          setResultLinkedReward(linkedReward);
+          setResultLinkedReward(linkedReward ?? null);
         }
       }
     } else {
       setOverdueCatchUpMessage(null);
     }
+  };
 
-    // Load all active/paused contracts (multi-contract support)
+  const loadContract = async () => {
+    if (!userId) {
+      setActiveContracts([]);
+      setPastContracts([]);
+      setHistoryEvaluationsByContractId({});
+      return;
+    }
+
+    // === PHASE 1: Fetch and immediately display current contracts (stale-while-revalidate) ===
+    const { data: contracts, error } = await fetchContracts(userId);
+    if (error || !contracts) return;
+
+    const endedContracts = contracts
+      .filter((contract) => contract.status === 'completed' || contract.status === 'cancelled')
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 5);
+    setPastContracts(endedContracts);
+
     const displayContracts = contracts.filter(
       (c) => c.status === 'active' || c.status === 'paused'
     );
 
+    // Render current contracts immediately so the tab is not blank while syncing
+    setActiveContracts(displayContracts);
+
+    // === PHASE 2: Sync progress for each active contract (serial — write-safe for all backends) ===
     const hydratedContracts: CommitmentContract[] = [];
 
     for (const contract of displayContracts) {
@@ -223,46 +258,76 @@ export function ContractsTab({
         }
       }
 
-      if (hydratedContract.status === 'active' && new Date() > getWindowEnd(hydratedContract)) {
-        const { data: evaluation } = await evaluateContract(userId, contract.id);
-          if (evaluation) {
-            const { data: refreshedContracts } = await fetchContracts(userId);
-            const refreshed = refreshedContracts?.find((c) => c.id === hydratedContract.id) ?? null;
-            setContractResult(evaluation);
-            setResultContract(refreshed ?? hydratedContract);
-            const { data: linkedReward } = await fetchLinkedRewardForContract(userId, hydratedContract.id);
-            setResultLinkedReward(linkedReward);
-            if (refreshed) hydratedContract = refreshed;
-          }
-        }
-
       hydratedContracts.push(hydratedContract);
     }
 
     setActiveContracts(hydratedContracts);
-    const hydratedContractIds = new Set(hydratedContracts.map((contract) => contract.id));
+
+    // === PHASE 3: Evaluate any expired windows; single re-fetch after all evaluations ===
+    let lastEvalResult: { evaluation: ContractEvaluation; contractId: string } | null = null;
+
+    for (const contract of hydratedContracts) {
+      if (contract.status === 'active' && new Date() > getWindowEnd(contract)) {
+        const { data: evaluation } = await evaluateContract(userId, contract.id);
+        if (evaluation) {
+          lastEvalResult = { evaluation, contractId: contract.id };
+        }
+      }
+    }
+
+    let finalContracts = hydratedContracts;
+
+    if (lastEvalResult !== null) {
+      // Single re-fetch after ALL evaluations (replaces one fetchContracts per evaluation)
+      const { data: refreshedContracts } = await fetchContracts(userId);
+      if (refreshedContracts) {
+        const refreshedEnded = refreshedContracts
+          .filter((c) => c.status === 'completed' || c.status === 'cancelled')
+          .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+          .slice(0, 5);
+        setPastContracts(refreshedEnded);
+
+        finalContracts = hydratedContracts.map((c) => {
+          const refreshed = refreshedContracts.find((r) => r.id === c.id);
+          return refreshed ?? c;
+        });
+        setActiveContracts(finalContracts);
+      }
+
+      const { contractId, evaluation } = lastEvalResult;
+      const resultContractData = finalContracts.find((c) => c.id === contractId) ?? null;
+      setContractResult(evaluation);
+      setResultContract(resultContractData);
+      const { data: linkedReward } = await fetchLinkedRewardForContract(userId, contractId);
+      setResultLinkedReward(linkedReward ?? null);
+    }
+
+    // === PHASE 4: Load evaluation history in parallel ===
+    const hydratedIds = new Set(finalContracts.map((c) => c.id));
     const contractsNeedingHistory = [
-      ...hydratedContracts,
-      ...endedContracts.filter((pastContract) => !hydratedContractIds.has(pastContract.id)),
+      ...finalContracts,
+      ...endedContracts.filter((pastContract) => !hydratedIds.has(pastContract.id)),
     ];
 
     if (contractsNeedingHistory.length === 0) {
       setHistoryEvaluationsByContractId({});
-      return;
+    } else {
+      const evaluationsByContract = await Promise.all(
+        contractsNeedingHistory.map(async (contract) => ({
+          contractId: contract.id,
+          evaluations: await fetchEvaluationsForContract(contract.id),
+        })),
+      );
+      setHistoryEvaluationsByContractId(
+        evaluationsByContract.reduce<Record<string, ContractEvaluation[]>>((acc, entry) => {
+          acc[entry.contractId] = entry.evaluations;
+          return acc;
+        }, {}),
+      );
     }
 
-    const evaluationsByContract = await Promise.all(
-      contractsNeedingHistory.map(async (contract) => ({
-        contractId: contract.id,
-        evaluations: await fetchEvaluationsForContract(contract.id),
-      })),
-    );
-    setHistoryEvaluationsByContractId(
-      evaluationsByContract.reduce<Record<string, ContractEvaluation[]>>((acc, entry) => {
-        acc[entry.contractId] = entry.evaluations;
-        return acc;
-      }, {}),
-    );
+    // === PHASE 5: Deferred non-critical background work (non-blocking) ===
+    void runBackgroundEvaluation();
   };
 
   useEffect(() => {
