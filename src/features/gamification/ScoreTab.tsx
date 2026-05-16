@@ -26,7 +26,8 @@ import type {
 import { GamificationHeader } from '../../components/GamificationHeader';
 import { FeatureStatusBadge } from '../../components/FeatureStatusBadge';
 import { XP_TO_GOLD_RATIO, splitGoldBalance } from '../../constants/economy';
-import { getFeatureAvailability } from '../../config/featureAvailability';
+import { getFeatureAvailability, type FeatureAvailabilityId } from '../../config/featureAvailability';
+import { isPubliclyGated } from '../../services/featureAccess';
 import { fetchXPTransactions } from '../../services/gamification';
 import { fetchZenTokenTransactions } from '../../services/zenGarden';
 import { ZEN_TRANSACTIONS_DISPLAY_LIMIT } from '../../constants/zenGarden';
@@ -156,6 +157,25 @@ export function ScoreTab({
   const [garageShipTab, setGarageShipTab] = useState<'companions' | 'upgrades' | 'cosmetics'>('companions');
   const [perfectCompanionOps, setPerfectCompanionOps] = useState<PerfectCompanionRuntimeConfig>(() =>
     DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG,
+  );
+
+  // Preview overlay: shown when a public user taps a demo/previewOnly hub card.
+  const [previewFeature, setPreviewFeature] = useState<{ id: FeatureAvailabilityId; label: string } | null>(null);
+
+  /**
+   * Gate-aware hub card click handler.
+   * If the feature is publicly gated (publicAccess: previewOnly), show the
+   * preview overlay instead of navigating into unfinished content.
+   */
+  const handleHubCardClick = useCallback(
+    (featureId: FeatureAvailabilityId, label: string, action: () => void) => {
+      if (isPubliclyGated(featureId)) {
+        setPreviewFeature({ id: featureId, label });
+        return;
+      }
+      action();
+    },
+    [],
   );
 
   const rewardRisk = useMemo(() => {
@@ -653,10 +673,10 @@ export function ScoreTab({
           <button
             type="button"
             className="score-tab__hub-card"
-            onClick={() => {
+            onClick={() => handleHubCardClick('score.playerShop', 'Player Shop', () => {
               handleTabChange('shop');
               onNavigateToShop?.();
-            }}
+            })}
           >
             <span className="score-tab__hub-visual" aria-hidden="true">
               <img className="score-tab__hub-image" src={scoreShop} alt="" />
@@ -669,10 +689,10 @@ export function ScoreTab({
           <button
             type="button"
             className="score-tab__hub-card"
-            onClick={() => {
+            onClick={() => handleHubCardClick('score.garage', 'Garage', () => {
               handleTabChange('garage');
               onNavigateToGarage?.();
-            }}
+            })}
           >
             <span className="score-tab__hub-visual" aria-hidden="true">
               <img className="score-tab__hub-image" src="/icons/Scoreshop_garage.webp" alt="" />
@@ -685,9 +705,9 @@ export function ScoreTab({
           <button
             type="button"
             className="score-tab__hub-card score-tab__hub-card--full"
-            onClick={() => {
+            onClick={() => handleHubCardClick('score.collections', 'Collections', () => {
               handleTabChange('collections');
-            }}
+            })}
           >
             <span className="score-tab__hub-visual" aria-hidden="true">
               <img className="score-tab__hub-image" src="/icons/score_collection.webp" alt="" />
@@ -697,7 +717,11 @@ export function ScoreTab({
               <FeatureStatusBadge status={getFeatureAvailability('score.collections').status} />
             </span>
           </button>
-          <button type="button" className="score-tab__hub-card" onClick={onNavigateToAchievements}>
+          <button
+            type="button"
+            className="score-tab__hub-card"
+            onClick={() => handleHubCardClick('score.achievements', 'Achievements', onNavigateToAchievements)}
+          >
             <span className="score-tab__hub-visual" aria-hidden="true">
               <img className="score-tab__hub-image" src={scoreAchievements} alt="" />
             </span>
@@ -722,9 +746,9 @@ export function ScoreTab({
           <button
             type="button"
             className="score-tab__hub-card"
-            onClick={() => {
+            onClick={() => handleHubCardClick('score.leaderboard', 'Leaderboard', () => {
               handleTabChange('leaderboard');
-            }}
+            })}
           >
             <span className="score-tab__hub-visual" aria-hidden="true">
               <img className="score-tab__hub-image" src={scoreLeaderboard} alt="" onError={(event) => { event.currentTarget.src = scoreAchievements; }} />
@@ -737,10 +761,10 @@ export function ScoreTab({
           <button
             type="button"
             className="score-tab__hub-card"
-            onClick={() => {
+            onClick={() => handleHubCardClick('score.bank', 'Bank', () => {
               handleTabChange('bank');
               onNavigateToBank?.();
-            }}
+            })}
           >
             <span className="score-tab__hub-visual" aria-hidden="true">
               <img className="score-tab__hub-image" src={scoreBank} alt="" />
@@ -1553,6 +1577,42 @@ export function ScoreTab({
           <div className="score-tab__bank-intro">
             <h2 className="score-tab__headline">Collections</h2>
             <p className="score-tab__subtitle">This is a placeholder for your Collections tab content.</p>
+          </div>
+        </div>
+      )}
+
+      {previewFeature && (
+        <div
+          className="score-hub-preview"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${previewFeature.label} preview`}
+        >
+          <div
+            className="score-hub-preview__backdrop"
+            onClick={() => setPreviewFeature(null)}
+          />
+          <div className="score-hub-preview__panel">
+            <div className="score-hub-preview__icon" aria-hidden="true">✨</div>
+            <div className="score-hub-preview__badge-row">
+              <span
+                className="feature-status-badge feature-status-badge--preview"
+                aria-label="Feature status: Preview"
+              >
+                Preview
+              </span>
+            </div>
+            <h2 className="score-hub-preview__title">{previewFeature.label}</h2>
+            <p className="score-hub-preview__body">
+              This area is being shaped and tested. It will unlock when the feature is ready.
+            </p>
+            <button
+              type="button"
+              className="score-hub-preview__back-btn"
+              onClick={() => setPreviewFeature(null)}
+            >
+              ← Back to Score Hub
+            </button>
           </div>
         </div>
       )}

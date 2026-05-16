@@ -3013,3 +3013,110 @@
   border-color: rgba(59, 130, 246, 0.55);
   background: linear-gradient(135deg, rgba(219, 234, 254, 0.85), rgba(191, 219, 254, 0.5));
 }
+
+/* =====================================================
+   SCORE HUB — PREVIEW OVERLAY
+   Shown when a public user taps a demo/previewOnly hub card.
+   ===================================================== */
+
+.score-hub-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+@media (min-width: 480px) {
+  .score-hub-preview {
+    align-items: center;
+  }
+}
+
+.score-hub-preview__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 10, 20, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.score-hub-preview__panel {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(160deg, #1e1b4b 0%, #0f172a 100%);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 24px 24px 0 0;
+  padding: 2rem 1.5rem;
+  padding-bottom: max(2rem, env(safe-area-inset-bottom));
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  box-shadow: 0 -12px 40px rgba(124, 58, 237, 0.25);
+  text-align: center;
+}
+
+@media (min-width: 480px) {
+  .score-hub-preview__panel {
+    border-radius: 24px;
+    margin: 1rem;
+    padding: 2.5rem 2rem;
+    width: auto;
+    min-width: 340px;
+  }
+}
+
+.score-hub-preview__icon {
+  font-size: 2.75rem;
+  line-height: 1;
+}
+
+.score-hub-preview__badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-hub-preview__title {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  line-height: 1.2;
+}
+
+.score-hub-preview__body {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(203, 213, 225, 0.85);
+  line-height: 1.55;
+  max-width: 30ch;
+}
+
+.score-hub-preview__back-btn {
+  margin-top: 0.5rem;
+  background: rgba(167, 139, 250, 0.18);
+  border: 1px solid rgba(167, 139, 250, 0.45);
+  color: #c4b5fd;
+  border-radius: 14px;
+  padding: 0.75rem 1.75rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+  width: 100%;
+  max-width: 280px;
+}
+
+.score-hub-preview__back-btn:hover {
+  background: rgba(167, 139, 250, 0.28);
+  border-color: rgba(167, 139, 250, 0.65);
+}
+
+.score-hub-preview__back-btn:active {
+  background: rgba(167, 139, 250, 0.38);
+}

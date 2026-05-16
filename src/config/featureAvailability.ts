@@ -1,5 +1,8 @@
 export type FeatureStatus = 'live' | 'demo' | 'comingSoon' | 'locked' | 'hidden';
 
+/** Controls what a public (non-admin) user can do with the feature. */
+export type FeatureAccessLevel = 'open' | 'previewOnly' | 'hidden';
+
 export type FeatureAvailabilityId =
   | 'score.playerShop'
   | 'score.garage'
@@ -16,6 +19,10 @@ export interface FeatureAvailability {
   label: string;
   description: string;
   status: FeatureStatus;
+  /** Access level for regular (non-admin) users. */
+  publicAccess: FeatureAccessLevel;
+  /** Access level for admin / creator / dev users (reserved for a future PR). */
+  adminAccess: FeatureAccessLevel;
   surface?: string;
   category?: string;
 }
@@ -26,6 +33,8 @@ export const featureAvailabilityRegistry = {
     label: 'Player Shop',
     description: 'Reward creation and redemption experience in the Score hub.',
     status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
   },
@@ -34,6 +43,8 @@ export const featureAvailabilityRegistry = {
     label: 'Garage',
     description: 'Ship systems shell for companions, upgrades, and cosmetics.',
     status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
   },
@@ -42,6 +53,8 @@ export const featureAvailabilityRegistry = {
     label: 'Achievements',
     description: 'Achievements entry point from the Score hub.',
     status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
   },
@@ -50,6 +63,8 @@ export const featureAvailabilityRegistry = {
     label: 'Leaderboard',
     description: 'Leaderboard snapshot and ranking experience.',
     status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
   },
@@ -58,6 +73,8 @@ export const featureAvailabilityRegistry = {
     label: 'Bank',
     description: 'Score, XP, and currency balance details.',
     status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
   },
@@ -66,6 +83,8 @@ export const featureAvailabilityRegistry = {
     label: 'Collections',
     description: 'Collections tab placeholder in the Score hub.',
     status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
   },
@@ -74,6 +93,8 @@ export const featureAvailabilityRegistry = {
     label: 'Creature Sanctuary',
     description: 'Future Score hub entry point for creature care.',
     status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
   },
@@ -82,6 +103,8 @@ export const featureAvailabilityRegistry = {
     label: 'Stickers Gallery',
     description: 'Future Score hub entry point for sticker collections.',
     status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
   },
@@ -90,6 +113,8 @@ export const featureAvailabilityRegistry = {
     label: 'Zen Garden',
     description: 'Zen Garden entry point from the Score hub.',
     status: 'live',
+    publicAccess: 'open',
+    adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
   },
