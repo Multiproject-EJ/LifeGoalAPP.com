@@ -160,7 +160,8 @@
 
 .contract-wizard__quick-create-types,
 .contract-wizard__choice-row,
-.contract-wizard__quick-stake-row {
+.contract-wizard__quick-stake-row,
+.contract-wizard__icon-row {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
@@ -173,6 +174,12 @@
 }
 
 .contract-wizard__field-group {
+  margin-bottom: 1rem;
+}
+
+.contract-wizard__compact-selector {
+  display: grid;
+  gap: 0.5rem;
   margin-bottom: 1rem;
 }
 

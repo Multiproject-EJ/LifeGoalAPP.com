@@ -248,7 +248,7 @@ export function ContractResultModal({
             className="contract-result-modal__option-button"
             onClick={onPauseWeek}
           >
-            Pause for a week
+            Pause this promise for a week
           </button>
         </div>
         {shouldSuggestSupportOnly && (
@@ -262,7 +262,7 @@ export function ContractResultModal({
           className="contract-result-modal__cancel-button"
           onClick={onCancelContract}
         >
-          Cancel promise
+          Cancel this promise
         </button>
       </div>
     </div>
