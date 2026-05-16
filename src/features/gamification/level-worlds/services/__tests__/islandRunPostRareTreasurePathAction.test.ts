@@ -646,6 +646,22 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
       assert(!serviceImportPattern.test(appSource), 'App.tsx should not import milestone Treasure Path orchestration');
       assert(!serviceImportPattern.test(overlaySource), 'GameBoardOverlay should not import milestone Treasure Path orchestration');
       assert(
+        !/LuckyRollBoard/.test(appSource),
+        'App.tsx should not import or render legacy LuckyRollBoard as a standalone overlay game',
+      );
+      assert(
+        !/setShowLuckyRoll\(/.test(appSource),
+        'App.tsx should not wire standalone Lucky Roll modal state toggles',
+      );
+      assert(
+        !/onLuckyRollClick=\{/.test(appSource),
+        'GameBoardOverlay should not receive a standalone Lucky Roll click handler from App',
+      );
+      assert(
+        /showLuckyRoll=\{false\}/.test(appSource),
+        'GameBoardOverlay should explicitly keep standalone Lucky Roll entry disabled',
+      );
+      assert(
         /resolvePostRareTreasurePathState/.test(debugPanelSource),
         'Island Run debug panel should show milestone Treasure Path orchestration state',
       );

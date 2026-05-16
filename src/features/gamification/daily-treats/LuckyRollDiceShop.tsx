@@ -64,13 +64,13 @@ export function LuckyRollDiceShop({ session, onBack }: LuckyRollDiceShopProps) {
   }, [currencyBalance.hearts]);
   
   return (
-    <div className="lucky-roll-dice-shop" role="dialog" aria-modal="true" aria-label="Lucky Roll Dice Shop">
+    <div className="lucky-roll-dice-shop" role="dialog" aria-modal="true" aria-label="Treasure Path Dice Shop">
       <div className="lucky-roll-dice-shop__backdrop" onClick={onBack} role="presentation" />
       
       <div className="lucky-roll-dice-shop__container">
         {/* Header */}
         <div className="lucky-roll-dice-shop__header">
-          <h2 className="lucky-roll-dice-shop__title">🛒 Lucky Roll Dice Shop</h2>
+          <h2 className="lucky-roll-dice-shop__title">🛒 Treasure Path Dice Shop</h2>
           <div className="lucky-roll-dice-shop__hearts">
             ❤️ {currencyBalance.hearts}
           </div>
@@ -78,7 +78,7 @@ export function LuckyRollDiceShop({ session, onBack }: LuckyRollDiceShopProps) {
             type="button"
             className="lucky-roll-dice-shop__close"
             onClick={onBack}
-            aria-label="Close Lucky Roll Dice Shop"
+            aria-label="Close Treasure Path Dice Shop"
           >
             ×
           </button>

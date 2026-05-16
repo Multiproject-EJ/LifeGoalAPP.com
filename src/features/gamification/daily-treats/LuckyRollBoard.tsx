@@ -271,14 +271,14 @@ export function LuckyRollBoard({ session, onClose }: LuckyRollBoardProps) {
   }
 
   return (
-    <div className="lucky-roll-board" role="dialog" aria-modal="true" aria-label="Lucky Roll Reward Board">
+    <div className="lucky-roll-board" role="dialog" aria-modal="true" aria-label="Treasure Path Reward Board">
       <div className="lucky-roll-board__backdrop" onClick={onClose} role="presentation" />
 
       <div className="lucky-roll-board__container">
         <div className="lucky-roll-board__header">
-          <h2 className="lucky-roll-board__title">🎲 Lucky Roll Reward Run</h2>
+          <h2 className="lucky-roll-board__title">🗺️ Treasure Path</h2>
           <div className="lucky-roll-board__lap">{finishStateLabel}</div>
-          <button type="button" className="lucky-roll-board__close" onClick={onClose} aria-label="Close Lucky Roll">
+          <button type="button" className="lucky-roll-board__close" onClick={onClose} aria-label="Close Treasure Path">
             ×
           </button>
         </div>

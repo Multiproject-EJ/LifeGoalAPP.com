@@ -39,7 +39,7 @@ export const HABIT_GAME_META: Record<HabitGameId, {
   colorAccent: string;
 }> = {
   lucky_roll: {
-    label: 'Lucky Roll',
+    label: 'Treasure Path',
     emoji: '🎲',
     emotion: 'Anticipation',
     description: 'Roll the dice and move through your life map.',

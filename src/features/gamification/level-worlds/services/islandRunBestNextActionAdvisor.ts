@@ -14,7 +14,7 @@ import {
   getEffectiveCompletedStops,
   isIslandStopEffectivelyCompleted,
 } from './islandRunStopCompletion';
-import { isIslandFullyCleared } from './islandRunProgression';
+import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
 import { generateIslandStopPlan } from './islandRunStops';
 import { getStopTicketCost, getStopTicketsPaidForIsland, isStopTicketPaid, STOP_COUNT } from './islandRunStopTickets';
 
@@ -91,7 +91,8 @@ function getCurrentIslandEgg(record: IslandRunGameStateRecord): PerIslandEggEntr
 }
 
 function isEggSlotUsed(record: IslandRunGameStateRecord): boolean {
-  return getCurrentIslandEgg(record) !== null;
+  const egg = getCurrentIslandEgg(record);
+  return egg?.status === 'collected' || egg?.status === 'sold';
 }
 
 function isCollectableEggReady(record: IslandRunGameStateRecord, nowMs: number): boolean {
@@ -120,12 +121,6 @@ function isStopEffectivelyCompleteByIndex(options: {
     hasActiveEgg: hasActiveEgg(options.record),
     islandEggSlotUsed: isEggSlotUsed(options.record),
   });
-}
-
-function areAllBuildingsFullyComplete(record: IslandRunGameStateRecord): boolean {
-  return Array.from({ length: STOP_COUNT }, (_, stopIndex) => record.stopBuildStateByIndex[stopIndex]).every(
-    (buildState) => buildState != null && isStopBuildFullyComplete(buildState),
-  );
 }
 
 function getAffordableBuildIndex(record: IslandRunGameStateRecord): number | null {
@@ -168,7 +163,11 @@ export function resolveIslandRunBestNextAction(input: IslandRunBestNextActionInp
     islandEggSlotUsed: isEggSlotUsed(record),
   });
 
-  if (isIslandFullyCleared(islandNumber, effectiveCompletedStops) && areAllBuildingsFullyComplete(record)) {
+  if (isIslandRunFullyClearedV2({
+    stopStatesByIndex: record.stopStatesByIndex,
+    stopBuildStateByIndex: record.stopBuildStateByIndex,
+    hatcheryEggResolved: isEggSlotUsed(record),
+  })) {
     return {
       action: 'claim_island_clear',
       urgency: 'critical',
