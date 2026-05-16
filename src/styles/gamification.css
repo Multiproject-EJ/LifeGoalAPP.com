@@ -1868,6 +1868,38 @@
   margin-bottom: 1.5rem;
 }
 
+.score-tab__contracts-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.score-tab__contracts-toolbar-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.score-tab__contracts-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.score-tab__icon-button {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .score-tab__contracts-empty {
   text-align: center;
   padding: 3rem 1.5rem;
@@ -1895,10 +1927,94 @@
   min-height: 44px;
 }
 
+.score-tab__contracts-create-button--toolbar {
+  padding: 0.6rem 1rem;
+  font-size: 0.84rem;
+  min-height: 36px;
+}
+
+.score-tab__contracts-create-button--toolbar:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .score-tab__contracts-create-button:hover {
   background: var(--primary-color-dark, #5568d3);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.score-tab__contracts-list-wrap {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.6rem;
+}
+
+.score-tab__contracts-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.score-tab__contract-row {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #0f172a;
+  text-align: left;
+  padding: 0.7rem 0.8rem;
+  cursor: pointer;
+}
+
+.score-tab__contract-row--active {
+  border-color: #6366f1;
+  background: #eef2ff;
+}
+
+.score-tab__contract-row-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.score-tab__contract-row-status {
+  border-radius: 999px;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.45rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.score-tab__contract-row-status--active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.score-tab__contract-row-status--paused {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.score-tab__contract-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.65rem;
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+.score-tab__contract-detail {
+  margin-top: 0.5rem;
 }
 
 .score-tab__chain-viz {
@@ -2096,6 +2212,20 @@
   max-width: 360px;
   width: 100%;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+.score-tab__archive-modal {
+  max-width: 560px;
+}
+
+.score-tab__archive-modal .score-tab__past-promises-list {
+  max-height: min(42vh, 320px);
+  overflow: auto;
+  padding: 0.2rem;
+}
+
+.score-tab__archive-modal .score-tab__past-promises-empty {
+  margin: 0.6rem 0;
 }
 .score-tab__info-modal-title {
   margin: 0 0 0.75rem;

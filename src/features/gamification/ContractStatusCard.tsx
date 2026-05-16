@@ -13,6 +13,8 @@ interface ContractStatusCardProps {
   onResume: () => void;
   onCancel: () => void;
   onWitnessPing: () => void;
+  isCancelPending?: boolean;
+  isEndPending?: boolean;
 }
 
 export function ContractStatusCard({
@@ -24,6 +26,8 @@ export function ContractStatusCard({
   onResume,
   onCancel,
   onWitnessPing,
+  isCancelPending = false,
+  isEndPending = false,
 }: ContractStatusCardProps) {
   const promiseVariant = getPromiseVariant(contract);
   const promiseLabel = getPromiseLabel(promiseVariant);
@@ -259,10 +263,10 @@ export function ContractStatusCard({
             type="button"
             className="contract-status-card__secondary-button"
             onClick={onFinalizeSuccess}
-            disabled={!canFinalizeOutcome}
+            disabled={!canFinalizeOutcome || isEndPending || isCancelPending}
             title={!canFinalizeOutcome ? 'Finalize on or after the contract end date.' : undefined}
           >
-            Finalize Promise Kept
+            {isEndPending ? 'Ending…' : 'Finalize Promise Kept'}
           </button>
         )}
         <div className="contract-status-card__secondary-actions">
@@ -279,11 +283,11 @@ export function ContractStatusCard({
             type="button"
             className="contract-status-card__secondary-button"
             onClick={onCancel}
-            disabled={!isCancelAllowed}
-            aria-disabled={!isCancelAllowed}
+            disabled={!isCancelAllowed || isCancelPending || isEndPending}
+            aria-disabled={!isCancelAllowed || isCancelPending || isEndPending}
             title={!isCancelAllowed ? 'Cancellation is only available during the cancel-protection window. Pause instead.' : undefined}
           >
-            Cancel
+            {isCancelPending ? 'Cancelling…' : 'Cancel'}
           </button>
         </div>
       </div>

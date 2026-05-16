@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type {
   GamificationProfile,
@@ -77,6 +77,22 @@ function pickPrimaryContract(contracts: CommitmentContract[]): CommitmentContrac
   return paused[0] ?? null;
 }
 
+function pickSelectedContractId(
+  contracts: CommitmentContract[],
+  previousSelectionId: string | null,
+): string | null {
+  if (contracts.length === 0) return null;
+  if (previousSelectionId && contracts.some((contract) => contract.id === previousSelectionId)) {
+    return previousSelectionId;
+  }
+  return pickPrimaryContract(contracts)?.id ?? null;
+}
+
+function getContractProgressPercent(contract: CommitmentContract): number {
+  const safeTarget = Math.max(contract.targetCount, 1);
+  return Math.min(100, Math.round((contract.currentProgress / safeTarget) * 100));
+}
+
 function buildCascadingChains(contracts: CommitmentContract[]): CommitmentContract[][] {
   const byId = new Map(contracts.map((contract) => [contract.id, contract]));
   const chainedIds = new Set<string>();
@@ -116,6 +132,8 @@ export function ContractsTab({
   const [activeContracts, setActiveContracts] = useState<CommitmentContract[]>([]);
   const [showContractWizard, setShowContractWizard] = useState(false);
   const [showSystemInfoModal, setShowSystemInfoModal] = useState(false);
+  const [showEvaluationInfoModal, setShowEvaluationInfoModal] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [contractResult, setContractResult] = useState<ContractEvaluation | null>(null);
   const [resultContract, setResultContract] = useState<CommitmentContract | null>(null);
   const [reduceStakeEligibility, setReduceStakeEligibility] = useState<ReduceStakeEligibility | null>(null);
@@ -128,9 +146,11 @@ export function ContractsTab({
   const [sweepHealth, setSweepHealth] = useState<ContractSweepHealth | null>(null);
   const [resultLinkedReward, setResultLinkedReward] = useState<ContractRewardLink | null>(null);
   const [claimingLinkedReward, setClaimingLinkedReward] = useState(false);
+  const [pendingCancelContractId, setPendingCancelContractId] = useState<string | null>(null);
+  const [pendingEndContractId, setPendingEndContractId] = useState<string | null>(null);
   const [pastContracts, setPastContracts] = useState<CommitmentContract[]>([]);
-  const [showPastPromises, setShowPastPromises] = useState(false);
   const [hiddenPastPromiseIds, setHiddenPastPromiseIds] = useState<string[]>([]);
+  const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
 
   // For single-contract actions, use the primary (first active) contract
   const activeContract = activeContracts[0] ?? null;
@@ -139,6 +159,9 @@ export function ContractsTab({
   const cascadingChains = buildCascadingChains(activeContracts);
   const visiblePastContracts = pastContracts.filter((contract) => !hiddenPastPromiseIds.includes(contract.id));
   const hiddenPastPromiseCount = pastContracts.length - visiblePastContracts.length;
+  const selectedContract = selectedContractId
+    ? activeContracts.find((contract) => contract.id === selectedContractId) ?? null
+    : null;
 
   useEffect(() => {
     if (profile?.total_points !== undefined) {
@@ -349,10 +372,8 @@ export function ContractsTab({
   }, [userId]);
 
   useEffect(() => {
-    if (activeContracts.length === 0 && pastContracts.length > 0) {
-      setShowPastPromises(true);
-    }
-  }, [activeContracts.length, pastContracts.length]);
+    setSelectedContractId((prev) => pickSelectedContractId(activeContracts, prev));
+  }, [activeContracts]);
 
   useEffect(() => {
     if (!userId || !resultContract || !contractResult || contractResult.result !== 'miss') {
@@ -450,24 +471,31 @@ export function ContractsTab({
   const handleFinalizeOutcomeSuccess = async (contractId?: string) => {
     const target = contractId ? activeContracts.find((c) => c.id === contractId) : activeContract;
     if (!target || !userId) return;
+    // Ignore duplicate taps while the first request is in flight; the card already shows pending UI.
+    if (pendingEndContractId === target.id) return;
 
-    const { data: evaluation, error } = await evaluateContract(userId, target.id, { forceResult: 'success' });
-    if (error || !evaluation) {
-      setActionError(error?.message ?? 'Unable to finalize this promise right now.');
-      return;
-    }
+    setPendingEndContractId(target.id);
+    try {
+      const { data: evaluation, error } = await evaluateContract(userId, target.id, { forceResult: 'success' });
+      if (error || !evaluation) {
+        setActionError(error?.message ?? 'Unable to finalize this promise right now.');
+        return;
+      }
 
-    setActionError(null);
-    const { data: refreshedContracts } = await fetchContracts(userId);
-    const refreshed = refreshedContracts?.find((contract) => contract.id === target.id) ?? null;
-    if (refreshed) {
-      refreshContractInList(refreshed);
-      setResultContract(refreshed);
+      setActionError(null);
+      const { data: refreshedContracts } = await fetchContracts(userId);
+      const refreshed = refreshedContracts?.find((contract) => contract.id === target.id) ?? null;
+      if (refreshed) {
+        refreshContractInList(refreshed);
+        setResultContract(refreshed);
+      }
+      setContractResult(evaluation);
+      const { data: linkedReward } = await fetchLinkedRewardForContract(userId, target.id);
+      setResultLinkedReward(linkedReward);
+      await loadContract();
+    } finally {
+      setPendingEndContractId((current) => (current === target.id ? null : current));
     }
-    setContractResult(evaluation);
-    const { data: linkedReward } = await fetchLinkedRewardForContract(userId, target.id);
-    setResultLinkedReward(linkedReward);
-    await loadContract();
   };
 
   const handlePauseContract = async (contractId?: string) => {
@@ -509,18 +537,25 @@ export function ContractsTab({
   const handleCancelContract = async (contractId?: string) => {
     const target = contractId ? activeContracts.find((c) => c.id === contractId) : activeContract;
     if (!target || !userId) return;
+    // Ignore duplicate taps while the first request is in flight; the card already shows pending UI.
+    if (pendingCancelContractId === target.id) return;
 
-    const { data, error } = await cancelContract(userId, target.id);
-    if (error) {
-      console.error('Failed to cancel contract:', error);
-      setActionError(error.message);
-      return;
-    }
+    setPendingCancelContractId(target.id);
+    try {
+      const { data, error } = await cancelContract(userId, target.id);
+      if (error) {
+        console.error('Failed to cancel contract:', error);
+        setActionError(error.message);
+        return;
+      }
 
-    setActionError(null);
+      setActionError(null);
 
-    if (data) {
-      await loadContract();
+      if (data) {
+        await loadContract();
+      }
+    } finally {
+      setPendingCancelContractId((current) => (current === target.id ? null : current));
     }
   };
 
@@ -692,21 +727,11 @@ export function ContractsTab({
 
   const handleShowHiddenPastPromises = () => {
     setHiddenPastPromiseIds([]);
-    setShowPastPromises(true);
+    setShowArchiveModal(true);
   };
 
   return (
     <section className="score-tab">
-      <header className="score-tab__header">
-        <div className="score-tab__title">
-          <span className="score-tab__badge" aria-hidden="true">🤝</span>
-          <div>
-            <p className="score-tab__eyebrow">Accountability</p>
-            <h2 className="score-tab__headline">Promise System</h2>
-          </div>
-        </div>
-      </header>
-
       {loading && (
         <div className="score-tab__status" role="status">
           Loading your promises...
@@ -721,137 +746,56 @@ export function ContractsTab({
 
       {!loading && enabled && (
         <div className="score-tab__content">
-          <div className="score-tab__contracts-header">
-            <p className="score-tab__subtitle">
-              Stake Gold or Tokens to stay accountable to your goals.
-            </p>
-            <button
-              type="button"
-              className="score-tab__info-button"
-              aria-label="How the Promise System works"
-              onClick={() => setShowSystemInfoModal(true)}
-            >
-              ⓘ How it works
-            </button>
-            {showSystemInfoModal && (
-              <div
-                className="score-tab__info-modal-overlay"
-                role="dialog"
-                aria-modal="true"
-                aria-label="Promise System info"
-                onClick={(e) => { if (e.target === e.currentTarget) setShowSystemInfoModal(false); }}
-              >
-                <div className="score-tab__info-modal">
-                  <h3 className="score-tab__info-modal-title">How the Promise System works</h3>
-                  <p className="score-tab__info-modal-body">
-                    Due-window checks run while this Promises screen is open, with server-backed sweeps
-                    for durability while the app is closed. Sweep runs are audit-logged for reliability monitoring.
-                  </p>
-                  <p className="score-tab__info-modal-body">{getSweepHealthCopy()}</p>
-                  <button
-                    type="button"
-                    className="score-tab__info-modal-close"
-                    onClick={() => setShowSystemInfoModal(false)}
-                  >
-                    Got it
-                  </button>
-                </div>
+          <section className="score-tab__contracts-toolbar" aria-label="Promise dashboard toolbar">
+            <div className="score-tab__contracts-toolbar-title">
+              <span className="score-tab__badge" aria-hidden="true">🤝</span>
+              <div>
+                <p className="score-tab__eyebrow">Accountability</p>
+                <h2 className="score-tab__headline">Promises</h2>
               </div>
-            )}
-          </div>
-          <details className="score-tab__evaluation-explainer">
-            <summary className="score-tab__evaluation-explainer-summary">How evaluation works</summary>
-            <p className="score-tab__evaluation-explainer-body">
-              Promises check at the end of each day or week. Evaluation runs automatically when you open this screen,
-              and a server fallback also checks windows if you were away.
-            </p>
-          </details>
-          {recoveryMessage && <p className="score-tab__status">{recoveryMessage}</p>}
-          {actionError && <p className="score-tab__status">{actionError}</p>}
-          {overdueCatchUpMessage && <p className="score-tab__status">{overdueCatchUpMessage}</p>}
-          {!showContractWizard && (
-            <section className="score-tab__archive-card" aria-label="Archive and past promises">
-              <div className="score-tab__archive-card-header">
-                <div>
-                  <p className="score-tab__archive-card-eyebrow">Archive</p>
-                  <h3 className="score-tab__archive-card-title">Past Promises ({visiblePastContracts.length})</h3>
-                </div>
+            </div>
+            {!showContractWizard && (
+              <div className="score-tab__contracts-toolbar-actions">
+                <button
+                  type="button"
+                  className="score-tab__icon-button"
+                  aria-label="How the Promise System works"
+                  onClick={() => setShowSystemInfoModal(true)}
+                >
+                  ⓘ
+                </button>
+                <button
+                  type="button"
+                  className="score-tab__icon-button"
+                  aria-label="How promise evaluation works"
+                  onClick={() => setShowEvaluationInfoModal(true)}
+                >
+                  ⏱
+                </button>
                 <button
                   type="button"
                   className="score-tab__archive-toggle"
-                  onClick={() => setShowPastPromises((prev) => !prev)}
+                  onClick={() => setShowArchiveModal(true)}
                 >
-                  {showPastPromises ? 'Hide archive' : 'Open archive'}
+                  Archive ({visiblePastContracts.length})
                 </button>
-              </div>
-              <p className="score-tab__archive-card-copy">
-                Completed, broken, and cancelled promises live here. Active promises still use Pause or Cancel.
-              </p>
-              {hiddenPastPromiseCount > 0 && (
                 <button
                   type="button"
-                  className="score-tab__archive-link"
-                  onClick={handleShowHiddenPastPromises}
+                  className="score-tab__contracts-create-button score-tab__contracts-create-button--toolbar"
+                  onClick={handleOpenWizard}
+                  disabled={!canCreateMore}
                 >
-                  Show hidden archive items ({hiddenPastPromiseCount})
+                  {canCreateMore
+                    ? `+ Add Promise (${activeContractCount}/${MAX_ACTIVE_CONTRACTS})`
+                    : `Promise limit reached (${MAX_ACTIVE_CONTRACTS})`}
                 </button>
-              )}
-              {showPastPromises && (
-                visiblePastContracts.length === 0 ? (
-                  <p className="score-tab__past-promises-empty">No completed or broken promises yet.</p>
-                ) : (
-                  <ul className="score-tab__past-promises-list">
-                    {visiblePastContracts.map((contract) => {
-                      const evaluations = historyEvaluationsByContractId[contract.id] ?? [];
-                      const latestEvaluation = evaluations.reduce<ContractEvaluation | null>((latest, current) => {
-                        if (!latest) return current;
-                        return new Date(current.evaluatedAt).getTime() > new Date(latest.evaluatedAt).getTime()
-                          ? current
-                          : latest;
-                      }, null);
-                      const resultLabel = latestEvaluation
-                        ? latestEvaluation.result === 'success'
-                          ? 'Kept'
-                          : 'Broken'
-                        : contract.status === 'cancelled'
-                          ? 'Cancelled'
-                          : contract.status === 'completed'
-                            ? 'Completed'
-                            : 'Ended';
-                      const resultDate = latestEvaluation?.evaluatedAt ?? contract.updatedAt;
-                      const impactText = latestEvaluation
-                        ? latestEvaluation.result === 'success'
-                          ? `+${latestEvaluation.bonusAwarded} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'}`
-                          : `-${latestEvaluation.stakeForfeited} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'}`
-                        : 'Impact unavailable';
+              </div>
+            )}
+          </section>
+          {recoveryMessage && <p className="score-tab__status">{recoveryMessage}</p>}
+          {actionError && <p className="score-tab__status">{actionError}</p>}
+          {overdueCatchUpMessage && <p className="score-tab__status">{overdueCatchUpMessage}</p>}
 
-                      return (
-                        <li key={contract.id} className="score-tab__past-promises-item">
-                          <div className="score-tab__past-promises-row">
-                            <div>
-                              <p className="score-tab__past-promises-title">{contract.title}</p>
-                              <div className="score-tab__past-promises-meta">
-                                <span>{resultLabel}</span>
-                                <span>{formatArchiveDate(resultDate)}</span>
-                                <span>{impactText}</span>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              className="score-tab__archive-item-button"
-                              onClick={() => handleHidePastPromise(contract.id)}
-                            >
-                              Hide from archive
-                            </button>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )
-              )}
-            </section>
-          )}
           {activeContracts.length === 0 && !showContractWizard && (
             <div className="score-tab__contracts-empty">
               <p className="score-tab__contracts-empty-text">
@@ -868,24 +812,61 @@ export function ContractsTab({
           )}
           {activeContracts.length > 0 && !showContractWizard && (
             <>
-              {activeContracts.map((contract) => (
-                <Fragment key={contract.id}>
+              <section className="score-tab__contracts-list-wrap" aria-label="Active promises">
+                <ul className="score-tab__contracts-list">
+                  {activeContracts.map((contract) => {
+                    const progressPercent = getContractProgressPercent(contract);
+                    const cadenceLabel = contract.cadence === 'daily' ? 'day' : 'week';
+                    return (
+                      <li key={contract.id}>
+                        <button
+                          type="button"
+                          className={`score-tab__contract-row ${
+                            selectedContractId === contract.id ? 'score-tab__contract-row--active' : ''
+                          }`}
+                          onClick={() => setSelectedContractId(contract.id)}
+                          aria-pressed={selectedContractId === contract.id}
+                        >
+                          <div className="score-tab__contract-row-title">
+                            <span>{contract.title}</span>
+                            <span className={`score-tab__contract-row-status score-tab__contract-row-status--${contract.status}`}>
+                              {contract.status === 'paused' ? 'Paused' : 'Active'}
+                            </span>
+                          </div>
+                          <div className="score-tab__contract-row-meta">
+                            <span>
+                              {contract.currentProgress}/{contract.targetCount} this {cadenceLabel}
+                            </span>
+                            <span>{progressPercent}%</span>
+                            <span>{contract.stakeAmount} {contract.stakeType === 'gold' ? 'Gold' : 'Tokens'}</span>
+                          </div>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+
+              {selectedContract && (
+                <section className="score-tab__contract-detail" aria-label={`Promise details for ${selectedContract.title}`}>
                   <ContractStatusCard
-                    contract={contract}
-                    onMarkProgress={() => void handleMarkProgress(contract.id)}
-                    onLogFailure={() => void handleLogOutcomeFailure(contract.id)}
-                    onFinalizeSuccess={() => void handleFinalizeOutcomeSuccess(contract.id)}
-                    onPause={() => void handlePauseContract(contract.id)}
-                    onResume={() => void handleResumeContract(contract.id)}
-                    onCancel={() => void handleCancelContract(contract.id)}
-                    onWitnessPing={() => void handleAccountabilityBuddyReminder(contract.id)}
+                    contract={selectedContract}
+                    onMarkProgress={() => void handleMarkProgress(selectedContract.id)}
+                    onLogFailure={() => void handleLogOutcomeFailure(selectedContract.id)}
+                    onFinalizeSuccess={() => void handleFinalizeOutcomeSuccess(selectedContract.id)}
+                    onPause={() => void handlePauseContract(selectedContract.id)}
+                    onResume={() => void handleResumeContract(selectedContract.id)}
+                    onCancel={() => void handleCancelContract(selectedContract.id)}
+                    onWitnessPing={() => void handleAccountabilityBuddyReminder(selectedContract.id)}
+                    isCancelPending={pendingCancelContractId === selectedContract.id}
+                    isEndPending={pendingEndContractId === selectedContract.id}
                   />
                   <ContractHistoryCard
-                    contract={contract}
-                    evaluations={historyEvaluationsByContractId[contract.id] ?? []}
+                    contract={selectedContract}
+                    evaluations={historyEvaluationsByContractId[selectedContract.id] ?? []}
                   />
-                </Fragment>
-              ))}
+                </section>
+              )}
 
               {cascadingChains.length > 0 && (
                 <section className="score-tab__chain-viz" aria-live="polite">
@@ -896,17 +877,6 @@ export function ContractsTab({
                     </p>
                   ))}
                 </section>
-              )}
-              {canCreateMore && (
-                <div className="score-tab__contracts-add">
-                  <button
-                    type="button"
-                    className="score-tab__contracts-create-button"
-                    onClick={handleOpenWizard}
-                  >
-                    + Add Promise ({activeContractCount}/{MAX_ACTIVE_CONTRACTS})
-                  </button>
-                </div>
               )}
             </>
           )}
@@ -929,6 +899,143 @@ export function ContractsTab({
           {userId && !showContractWizard && (
             <ReputationCard userId={userId} />
           )}
+        </div>
+      )}
+
+      {showSystemInfoModal && (
+        <div
+          className="score-tab__info-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Promise System info"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowSystemInfoModal(false); }}
+        >
+          <div className="score-tab__info-modal">
+            <h3 className="score-tab__info-modal-title">How the Promise System works</h3>
+            <p className="score-tab__info-modal-body">
+              Stake Gold or Tokens on an active promise and track progress in this dashboard.
+            </p>
+            <p className="score-tab__info-modal-body">{getSweepHealthCopy()}</p>
+            <button
+              type="button"
+              className="score-tab__info-modal-close"
+              onClick={() => setShowSystemInfoModal(false)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showEvaluationInfoModal && (
+        <div
+          className="score-tab__info-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Promise evaluation info"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowEvaluationInfoModal(false); }}
+        >
+          <div className="score-tab__info-modal">
+            <h3 className="score-tab__info-modal-title">How evaluation works</h3>
+            <p className="score-tab__info-modal-body">
+              Promises evaluate at the end of each day or week. This screen runs checks when opened.
+            </p>
+            <p className="score-tab__info-modal-body">
+              If you are away, the server sweep catches up and applies results automatically.
+            </p>
+            <button
+              type="button"
+              className="score-tab__info-modal-close"
+              onClick={() => setShowEvaluationInfoModal(false)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showArchiveModal && (
+        <div
+          className="score-tab__info-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Archived promises"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowArchiveModal(false); }}
+        >
+          <div className="score-tab__info-modal score-tab__archive-modal">
+            <h3 className="score-tab__info-modal-title">Past Promises ({visiblePastContracts.length})</h3>
+            <p className="score-tab__info-modal-body">
+              Completed, broken, and cancelled promises are kept here.
+            </p>
+            {hiddenPastPromiseCount > 0 && (
+              <button
+                type="button"
+                className="score-tab__archive-link"
+                onClick={handleShowHiddenPastPromises}
+              >
+                Show hidden archive items ({hiddenPastPromiseCount})
+              </button>
+            )}
+            {visiblePastContracts.length === 0 ? (
+              <p className="score-tab__past-promises-empty">No completed or broken promises yet.</p>
+            ) : (
+              <ul className="score-tab__past-promises-list">
+                {visiblePastContracts.map((contract) => {
+                  const evaluations = historyEvaluationsByContractId[contract.id] ?? [];
+                  const latestEvaluation = evaluations.reduce<ContractEvaluation | null>((latest, current) => {
+                    if (!latest) return current;
+                    return new Date(current.evaluatedAt).getTime() > new Date(latest.evaluatedAt).getTime()
+                      ? current
+                      : latest;
+                  }, null);
+                  const resultLabel = latestEvaluation
+                    ? latestEvaluation.result === 'success'
+                      ? 'Kept'
+                      : 'Broken'
+                    : contract.status === 'cancelled'
+                      ? 'Cancelled'
+                      : contract.status === 'completed'
+                        ? 'Completed'
+                        : 'Ended';
+                  const resultDate = latestEvaluation?.evaluatedAt ?? contract.updatedAt;
+                  const impactText = latestEvaluation
+                    ? latestEvaluation.result === 'success'
+                      ? `+${latestEvaluation.bonusAwarded} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'}`
+                      : `-${latestEvaluation.stakeForfeited} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'}`
+                    : 'Impact unavailable';
+
+                  return (
+                    <li key={contract.id} className="score-tab__past-promises-item">
+                      <div className="score-tab__past-promises-row">
+                        <div>
+                          <p className="score-tab__past-promises-title">{contract.title}</p>
+                          <div className="score-tab__past-promises-meta">
+                            <span>{resultLabel}</span>
+                            <span>{formatArchiveDate(resultDate)}</span>
+                            <span>{impactText}</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="score-tab__archive-item-button"
+                          onClick={() => handleHidePastPromise(contract.id)}
+                        >
+                          Hide from archive
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <button
+              type="button"
+              className="score-tab__info-modal-close"
+              onClick={() => setShowArchiveModal(false)}
+            >
+              Close archive
+            </button>
+          </div>
         </div>
       )}
 
