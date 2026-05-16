@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { CommitmentContract } from '../../types/gamification';
 import { getContractPaceForecast } from '../../lib/contractForecast';
+import { getOutcomePrimaryActionLabel, getPromiseLabel, getPromiseVariant } from './promisePresentation';
 import './ContractStatusCard.css';
 
 interface ContractStatusCardProps {
@@ -24,16 +25,8 @@ export function ContractStatusCard({
   onCancel,
   onWitnessPing,
 }: ContractStatusCardProps) {
-  const promiseVariant = contract.isSacred
-    ? 'sacred'
-    : contract.contractType === 'reverse'
-      ? 'reverse'
-      : 'classic';
-  const promiseLabel = promiseVariant === 'sacred'
-    ? 'Sacred Promise'
-    : promiseVariant === 'reverse'
-      ? 'Reverse Promise'
-      : 'Classic Promise';
+  const promiseVariant = getPromiseVariant(contract);
+  const promiseLabel = getPromiseLabel(promiseVariant);
 
   // Calculate progress percentage
   const progressPercentage = useMemo(() => {
@@ -100,6 +93,11 @@ export function ContractStatusCard({
     return Math.max(0, Math.min(100, ratio));
   }, [contract.startAt, endDateMs]);
   const tier = contract.contractTier ?? 'common';
+  const primaryActionLabel = (() => {
+    if (contract.status === 'paused') return 'Resume Promise';
+    if (isOutcomeOnly) return getOutcomePrimaryActionLabel(promiseVariant);
+    return isAtRisk ? 'Rescue Progress' : 'Mark Progress';
+  })();
 
   return (
     <div className={`contract-status-card contract-status-card--${tier} contract-status-card--promise-${promiseVariant}`}>
@@ -227,13 +225,7 @@ export function ContractStatusCard({
           className="contract-status-card__primary-button"
           onClick={contract.status === 'paused' ? onResume : isOutcomeOnly ? onLogFailure : onMarkProgress}
         >
-          {contract.status === 'paused'
-            ? 'Resume Promise'
-            : isOutcomeOnly
-              ? promiseVariant === 'reverse' ? 'Log Slip' : 'Log Miss'
-            : isAtRisk
-              ? 'Rescue Progress'
-              : 'Mark Progress'}
+          {primaryActionLabel}
         </button>
         {isOutcomeOnly && (
           <button
