@@ -1,7 +1,7 @@
 # Promise Creation Failure — Reverse Promises
 
 **Investigation date:** 2025-07-11
-**Status:** Root cause confirmed, no code changed (investigation only)
+**Status:** Root cause confirmed; UI fix implemented in `ContractWizard.tsx` (see Fix Strategy / Smallest Safe Implementation Slice)
 
 ---
 
