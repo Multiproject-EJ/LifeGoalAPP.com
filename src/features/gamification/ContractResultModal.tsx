@@ -77,6 +77,13 @@ export function ContractResultModal({
   const baseBonus = Math.max(1, Math.floor(contract.stakeAmount * 0.1));
   const rewardMultiplier = baseBonus > 0 ? evaluation.bonusAwarded / baseBonus : 1;
   const isContractCompleted = contract.status === 'completed';
+  const stakeLabel = contract.stakeType === 'gold' ? 'Gold' : 'Tokens';
+  const successWhatHappened = evaluation.bonusAwarded > 0
+    ? `What happened? Your stake stayed safe, and +${evaluation.bonusAwarded} ${stakeLabel} was applied as your success bonus.`
+    : 'What happened? Your stake stayed safe for this window, and no bonus was applied this time.';
+  const missWhatHappened = evaluation.stakeForfeited > 0
+    ? `What happened? ${evaluation.stakeForfeited} ${stakeLabel} was forfeited for this missed window, and no bonus was applied.`
+    : 'What happened? This window was marked as missed, and no bonus was applied.';
   const successTitle = isSacredPromise
     ? '🔱 Sacred Promise Kept'
     : promiseVariant === 'reverse'
@@ -125,6 +132,7 @@ export function ContractResultModal({
           <p className="contract-result-modal__body">
             {successBody}
           </p>
+          <p className="contract-result-modal__what-happened">{successWhatHappened}</p>
           {contract.futureMessage && (
             <FutureMessageReveal
               message={contract.futureMessage}
@@ -186,6 +194,7 @@ export function ContractResultModal({
         <p className="contract-result-modal__body">
           {missBody}
         </p>
+        <p className="contract-result-modal__what-happened">{missWhatHappened}</p>
         {evaluation.stakeForfeited > 0 && (
           <div className="contract-result-modal__stake-forfeited">
             <span className="contract-result-modal__stake-icon">💸</span>
