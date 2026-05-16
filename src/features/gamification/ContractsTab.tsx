@@ -129,12 +129,16 @@ export function ContractsTab({
   const [resultLinkedReward, setResultLinkedReward] = useState<ContractRewardLink | null>(null);
   const [claimingLinkedReward, setClaimingLinkedReward] = useState(false);
   const [pastContracts, setPastContracts] = useState<CommitmentContract[]>([]);
+  const [showPastPromises, setShowPastPromises] = useState(false);
+  const [hiddenPastPromiseIds, setHiddenPastPromiseIds] = useState<string[]>([]);
 
   // For single-contract actions, use the primary (first active) contract
   const activeContract = activeContracts[0] ?? null;
   const activeContractCount = activeContracts.filter((c) => c.status === 'active').length;
   const canCreateMore = activeContractCount < MAX_ACTIVE_CONTRACTS;
   const cascadingChains = buildCascadingChains(activeContracts);
+  const visiblePastContracts = pastContracts.filter((contract) => !hiddenPastPromiseIds.includes(contract.id));
+  const hiddenPastPromiseCount = pastContracts.length - visiblePastContracts.length;
 
   useEffect(() => {
     if (profile?.total_points !== undefined) {
@@ -183,7 +187,7 @@ export function ContractsTab({
     if (dueEvaluations && dueEvaluations.length > 0) {
       if (dueEvaluations.length > 1) {
         setOverdueCatchUpMessage(
-          `Resolved ${dueEvaluations.length} overdue contract windows while you were away.`
+          `Resolved ${dueEvaluations.length} overdue promise windows while you were away.`
         );
       } else {
         setOverdueCatchUpMessage(null);
@@ -345,6 +349,12 @@ export function ContractsTab({
   }, [userId]);
 
   useEffect(() => {
+    if (activeContracts.length === 0 && pastContracts.length > 0) {
+      setShowPastPromises(true);
+    }
+  }, [activeContracts.length, pastContracts.length]);
+
+  useEffect(() => {
     if (!userId || !resultContract || !contractResult || contractResult.result !== 'miss') {
       setReduceStakeEligibility(null);
       setGentleRecoveryEligibility(null);
@@ -443,7 +453,7 @@ export function ContractsTab({
 
     const { data: evaluation, error } = await evaluateContract(userId, target.id, { forceResult: 'success' });
     if (error || !evaluation) {
-      setActionError(error?.message ?? 'Unable to finalize contract right now.');
+      setActionError(error?.message ?? 'Unable to finalize this promise right now.');
       return;
     }
 
@@ -532,7 +542,7 @@ export function ContractsTab({
       setActionError(error.message);
     } else {
       setActionError(null);
-      setRecoveryMessage(`Claimed contract reward: ${data?.rewardTitle ?? 'Reward'}.`);
+      setRecoveryMessage(`Claimed promise reward: ${data?.rewardTitle ?? 'Reward'}.`);
     }
     setClaimingLinkedReward(false);
   };
@@ -542,13 +552,13 @@ export function ContractsTab({
 
     const { data, error } = await resetContractWithSameSettings(userId, resultContract.id);
     if (error || !data) {
-      setRecoveryMessage(error?.message ?? 'Unable to reset contract right now.');
+      setRecoveryMessage(error?.message ?? 'Unable to reset this promise right now.');
       return;
     }
 
     refreshContractInList(data);
     await refreshContractEvaluations(data.id);
-    setRecoveryMessage('Contract reset. Fresh window, same commitment.');
+    setRecoveryMessage('Promise reset. Fresh window, same commitment.');
     setContractResult(null);
     setResultContract(null);
     setResetEligibility(null);
@@ -559,7 +569,7 @@ export function ContractsTab({
 
     const { data, error } = await reduceContractStake(userId, resultContract.id);
     if (error || !data) {
-      setRecoveryMessage(error?.message ?? 'Unable to reduce stake right now.');
+      setRecoveryMessage(error?.message ?? 'Unable to reduce the promise stake right now.');
       return;
     }
 
@@ -577,7 +587,7 @@ export function ContractsTab({
 
     const { data, error } = await activateGentleRampRecovery(userId, resultContract.id);
     if (error || !data) {
-      setRecoveryMessage(error?.message ?? 'Unable to start gentle ramp recovery right now.');
+      setRecoveryMessage(error?.message ?? 'Unable to start gentle ramp recovery for this promise right now.');
       return;
     }
 
@@ -676,6 +686,15 @@ export function ContractsTab({
       year: 'numeric',
     });
 
+  const handleHidePastPromise = (contractId: string) => {
+    setHiddenPastPromiseIds((prev) => (prev.includes(contractId) ? prev : [...prev, contractId]));
+  };
+
+  const handleShowHiddenPastPromises = () => {
+    setHiddenPastPromiseIds([]);
+    setShowPastPromises(true);
+  };
+
   return (
     <section className="score-tab">
       <header className="score-tab__header">
@@ -750,6 +769,87 @@ export function ContractsTab({
           {recoveryMessage && <p className="score-tab__status">{recoveryMessage}</p>}
           {actionError && <p className="score-tab__status">{actionError}</p>}
           {overdueCatchUpMessage && <p className="score-tab__status">{overdueCatchUpMessage}</p>}
+          {!showContractWizard && (
+            <section className="score-tab__archive-card" aria-label="Archive and past promises">
+              <div className="score-tab__archive-card-header">
+                <div>
+                  <p className="score-tab__archive-card-eyebrow">Archive</p>
+                  <h3 className="score-tab__archive-card-title">Past Promises ({visiblePastContracts.length})</h3>
+                </div>
+                <button
+                  type="button"
+                  className="score-tab__archive-toggle"
+                  onClick={() => setShowPastPromises((prev) => !prev)}
+                >
+                  {showPastPromises ? 'Hide archive' : 'Open archive'}
+                </button>
+              </div>
+              <p className="score-tab__archive-card-copy">
+                Completed, broken, and cancelled promises live here. Active promises still use Pause or Cancel.
+              </p>
+              {hiddenPastPromiseCount > 0 && (
+                <button
+                  type="button"
+                  className="score-tab__archive-link"
+                  onClick={handleShowHiddenPastPromises}
+                >
+                  Show hidden archive items ({hiddenPastPromiseCount})
+                </button>
+              )}
+              {showPastPromises && (
+                visiblePastContracts.length === 0 ? (
+                  <p className="score-tab__past-promises-empty">No completed or broken promises yet.</p>
+                ) : (
+                  <ul className="score-tab__past-promises-list">
+                    {visiblePastContracts.map((contract) => {
+                      const evaluations = historyEvaluationsByContractId[contract.id] ?? [];
+                      const latestEvaluation = evaluations.reduce<ContractEvaluation | null>((latest, current) => {
+                        if (!latest) return current;
+                        return new Date(current.evaluatedAt).getTime() > new Date(latest.evaluatedAt).getTime()
+                          ? current
+                          : latest;
+                      }, null);
+                      const resultLabel = latestEvaluation
+                        ? latestEvaluation.result === 'success'
+                          ? 'Kept'
+                          : 'Broken'
+                        : contract.status === 'cancelled'
+                          ? 'Cancelled'
+                          : 'Completed';
+                      const resultDate = latestEvaluation?.evaluatedAt ?? contract.updatedAt;
+                      const impactText = latestEvaluation
+                        ? latestEvaluation.result === 'success'
+                          ? `+${latestEvaluation.bonusAwarded} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'}`
+                          : `-${latestEvaluation.stakeForfeited} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'}`
+                        : 'Impact unavailable';
+
+                      return (
+                        <li key={contract.id} className="score-tab__past-promises-item">
+                          <div className="score-tab__past-promises-row">
+                            <div>
+                              <p className="score-tab__past-promises-title">{contract.title}</p>
+                              <div className="score-tab__past-promises-meta">
+                                <span>{resultLabel}</span>
+                                <span>{formatArchiveDate(resultDate)}</span>
+                                <span>{impactText}</span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              className="score-tab__archive-item-button"
+                              onClick={() => handleHidePastPromise(contract.id)}
+                            >
+                              Hide from archive
+                            </button>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )
+              )}
+            </section>
+          )}
           {activeContracts.length === 0 && !showContractWizard && (
             <div className="score-tab__contracts-empty">
               <p className="score-tab__contracts-empty-text">
@@ -807,52 +907,6 @@ export function ContractsTab({
                 </div>
               )}
             </>
-          )}
-          {!showContractWizard && (
-            <details className="score-tab__past-promises">
-              <summary className="score-tab__past-promises-summary">
-                Past Promises ({pastContracts.length})
-              </summary>
-              {pastContracts.length === 0 ? (
-                <p className="score-tab__past-promises-empty">No completed or broken promises yet.</p>
-              ) : (
-                <ul className="score-tab__past-promises-list">
-                  {pastContracts.map((contract) => {
-                    const evaluations = historyEvaluationsByContractId[contract.id] ?? [];
-                    const latestEvaluation = evaluations.reduce<ContractEvaluation | null>((latest, current) => {
-                      if (!latest) return current;
-                      return new Date(current.evaluatedAt).getTime() > new Date(latest.evaluatedAt).getTime()
-                        ? current
-                        : latest;
-                    }, null);
-                    const resultLabel = latestEvaluation
-                      ? latestEvaluation.result === 'success'
-                        ? 'Kept'
-                        : 'Broken'
-                      : contract.status === 'cancelled'
-                        ? 'Broken'
-                        : 'Completed';
-                    const resultDate = latestEvaluation?.evaluatedAt ?? contract.updatedAt;
-                    const impactText = latestEvaluation
-                      ? latestEvaluation.result === 'success'
-                        ? `+${latestEvaluation.bonusAwarded} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'}`
-                        : `-${latestEvaluation.stakeForfeited} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'}`
-                      : 'Impact unavailable';
-
-                    return (
-                      <li key={contract.id} className="score-tab__past-promises-item">
-                        <p className="score-tab__past-promises-title">{contract.title}</p>
-                        <div className="score-tab__past-promises-meta">
-                          <span>{resultLabel}</span>
-                          <span>{formatArchiveDate(resultDate)}</span>
-                          <span>{impactText}</span>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </details>
           )}
           {showContractWizard && (
             <ContractWizard

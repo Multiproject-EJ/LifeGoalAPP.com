@@ -27,6 +27,8 @@ interface TargetOption {
   type: ContractTargetType;
 }
 
+type TargetLinkMode = 'Habit' | 'Goal' | 'custom';
+
 type WizardScreen =
   | 'target'
   | 'type'
@@ -65,11 +67,13 @@ const MVP_CONTRACT_TYPES: ContractTypeCard[] = [
   {
     type: 'sacred',
     icon: '🔱',
-    title: 'A once-a-year oath',
+    title: 'Sacred promise',
     subtitle: 'Sacred',
     example: 'High-stakes annual promise',
   },
 ];
+
+const PROMISE_ICON_OPTIONS = ['✨', '🔥', '🌱', '🛡️', '💎', '🎯', '🧠', '💛'];
 
 function toDateInputValue(date: Date): string {
   const y = date.getFullYear();
@@ -87,7 +91,7 @@ function addWeeksToToday(weeks: number): string {
 function getScreenLabel(screen: WizardScreen): string {
   switch (screen) {
     case 'target':
-      return 'Target';
+      return 'About';
     case 'type':
       return 'Promise type';
     case 'sacred_confirm':
@@ -128,6 +132,11 @@ export function ContractWizard({
   const [quickCreateSubmitting, setQuickCreateSubmitting] = useState(false);
 
   const [selectedTarget, setSelectedTarget] = useState<TargetOption | null>(null);
+  const [targetLinkMode, setTargetLinkMode] = useState<TargetLinkMode>('Habit');
+  const [targetSearch, setTargetSearch] = useState('');
+  const [promiseTitle, setPromiseTitle] = useState('');
+  const [promiseTitleTouched, setPromiseTitleTouched] = useState(false);
+  const [selectedPromiseIcon, setSelectedPromiseIcon] = useState('');
   const [selectedContractType, setSelectedContractType] = useState<ContractType>('classic');
   const [sacredConfirmed, setSacredConfirmed] = useState(false);
 
@@ -150,11 +159,15 @@ export function ContractWizard({
   const [newRewardTitle, setNewRewardTitle] = useState('');
 
   const screens = useMemo<WizardScreen[]>(() => {
-    const base: WizardScreen[] = ['target', 'type'];
+    const base: WizardScreen[] = ['type', 'target'];
     if (selectedContractType === 'sacred') {
       base.push('sacred_confirm');
     }
-    base.push('cadence', 'ending', 'stake', 'checkin', 'buffer', 'reward', 'review');
+    base.push('cadence', 'ending', 'stake', 'checkin');
+    if (selectedContractType !== 'reverse') {
+      base.push('buffer');
+    }
+    base.push('reward', 'review');
     return base;
   }, [selectedContractType]);
 
@@ -208,12 +221,61 @@ export function ContractWizard({
   }, [userId]);
 
   useEffect(() => {
+    if (selectedContractType === 'reverse') {
+      setTargetCount(0);
+      setGraceDays(0);
+      return;
+    }
+
     if (cadence === 'daily') {
       setTargetCount(1);
     } else {
       setTargetCount(3);
     }
-  }, [cadence]);
+  }, [cadence, selectedContractType]);
+
+  useEffect(() => {
+    if (targetLinkMode === 'custom') {
+      setSelectedTarget(null);
+      setTargetSearch('');
+      if (!promiseTitleTouched) {
+        setPromiseTitle('');
+      }
+      return;
+    }
+
+    if (selectedTarget?.type !== targetLinkMode) {
+      setSelectedTarget(null);
+    }
+    setTargetSearch('');
+  }, [targetLinkMode]);
+
+  useEffect(() => {
+    if (targetLinkMode === 'custom' || promiseTitleTouched || !selectedTarget) {
+      return;
+    }
+
+    setPromiseTitle(selectedTarget.title);
+  }, [promiseTitleTouched, selectedTarget, targetLinkMode]);
+
+  const filteredHabitOptions = useMemo(() => {
+    const query = targetSearch.trim().toLowerCase();
+    return targetOptions
+      .filter((target) => target.type === 'Habit')
+      .filter((target) => (query ? target.title.toLowerCase().includes(query) : true));
+  }, [targetOptions, targetSearch]);
+
+  const filteredGoalOptions = useMemo(() => {
+    const query = targetSearch.trim().toLowerCase();
+    return targetOptions
+      .filter((target) => target.type === 'Goal')
+      .filter((target) => (query ? target.title.toLowerCase().includes(query) : true));
+  }, [targetOptions, targetSearch]);
+
+  const resolvedPromiseTitle = useMemo(() => {
+    const baseTitle = promiseTitle.trim() || selectedTarget?.title || '';
+    return selectedPromiseIcon ? `${selectedPromiseIcon} ${baseTitle}`.trim() : baseTitle;
+  }, [promiseTitle, selectedPromiseIcon, selectedTarget?.title]);
 
   const maxStake = stakeType === 'gold'
     ? Math.floor(currentGoldBalance * 0.2)
@@ -232,8 +294,13 @@ export function ContractWizard({
   const reviewType = MVP_CONTRACT_TYPES.find((option) => option.type === selectedContractType);
 
   const validateCurrentScreen = (): boolean => {
-    if (currentScreen === 'target' && !selectedTarget) {
-      setError('Choose a habit, goal, or create a new target.');
+    if (currentScreen === 'target' && !promiseTitle.trim()) {
+      setError('Add a promise title.');
+      return false;
+    }
+
+    if (currentScreen === 'target' && targetLinkMode !== 'custom' && !selectedTarget) {
+      setError('Choose a habit, goal, or switch to custom promise only.');
       return false;
     }
 
@@ -242,7 +309,12 @@ export function ContractWizard({
       return false;
     }
 
-    if (currentScreen === 'cadence' && targetCount <= 0) {
+    if (currentScreen === 'cadence' && selectedContractType === 'reverse' && targetCount < 0) {
+      setError('Allowed slips cannot be negative.');
+      return false;
+    }
+
+    if (currentScreen === 'cadence' && selectedContractType !== 'reverse' && targetCount <= 0) {
       setError('Count must be at least 1.');
       return false;
     }
@@ -288,27 +360,35 @@ export function ContractWizard({
   };
 
   const handleConfirm = async () => {
-    if (!selectedTarget) return;
+    const resolvedTarget = targetLinkMode === 'custom'
+      ? {
+          id: `custom-promise-${Date.now()}`,
+          title: promiseTitle.trim(),
+          type: 'FocusSession' as const,
+        }
+      : selectedTarget;
+
+    if (!resolvedTarget) return;
 
     setSubmitting(true);
     setError(null);
 
     try {
       const input: ContractInput = {
-        title: selectedTarget.title,
-        targetType: selectedTarget.type,
-        targetId: selectedTarget.id,
+        title: resolvedPromiseTitle,
+        targetType: resolvedTarget.type,
+        targetId: resolvedTarget.id,
         cadence,
         targetCount,
         stakeType,
         stakeAmount,
-        graceDays,
+        graceDays: selectedContractType === 'reverse' ? 0 : graceDays,
         trackingMode,
         accountabilityMode: 'solo',
         witnessLabel: '',
         endAt: resolvedEndDate ? new Date(resolvedEndDate).toISOString() : null,
         contractType: selectedContractType,
-        identityStatement: null,
+        identityStatement: promiseTitle.trim() || null,
         redemptionQuestTitle: null,
         futureMessage: null,
         narrativeTheme: null,
@@ -318,7 +398,7 @@ export function ContractWizard({
 
       const { data: contract, error: createError } = await createContract(userId, input);
       if (createError || !contract) {
-        throw createError || new Error('Failed to create contract');
+        throw createError || new Error('Failed to create promise');
       }
 
       const { error: activateError } = await activateContract(userId, contract.id);
@@ -355,7 +435,7 @@ export function ContractWizard({
 
       onComplete();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create contract');
+      setError(err instanceof Error ? err.message : 'Failed to create promise');
     } finally {
       setSubmitting(false);
     }
@@ -393,32 +473,135 @@ export function ContractWizard({
         </div>
       )}
 
+      {currentScreen === 'type' && (
+        <section className="contract-wizard__step">
+          <h3 className="contract-wizard__prompt">What kind of promise is this?</h3>
+          <div className="contract-wizard__type-grid">
+            {MVP_CONTRACT_TYPES.map((option) => (
+              <button
+                key={option.type}
+                type="button"
+                className={`contract-wizard__card contract-wizard__card--type${selectedContractType === option.type ? ' contract-wizard__card--selected' : ''}`}
+                onClick={() => setSelectedContractType(option.type)}
+              >
+                <span className="contract-wizard__card-icon">{option.icon}</span>
+                <span className="contract-wizard__card-content">
+                  <strong>{option.title}</strong>
+                  <small>{option.subtitle}</small>
+                  <small>{option.example}</small>
+                </span>
+              </button>
+            ))}
+          </div>
+          <p className="contract-wizard__helper-text">More options coming soon.</p>
+        </section>
+      )}
+
       {currentScreen === 'target' && (
         <section className="contract-wizard__step">
-          <h3 className="contract-wizard__prompt">What do you want to commit to?</h3>
+          <h3 className="contract-wizard__prompt">What is this promise about?</h3>
 
-          {loading ? (
-            <p className="contract-wizard__loading">Loading your habits and goals...</p>
-          ) : targetOptions.length === 0 ? (
-            <div className="contract-wizard__fallback">
-              <p>Create a habit or goal first.</p>
-            </div>
-          ) : (
-            <div className="contract-wizard__target-list">
-              {targetOptions.map((target) => (
+          <div className="contract-wizard__field-group">
+            <label className="contract-wizard__label" htmlFor="promise-title">
+              Promise title
+            </label>
+            <input
+              id="promise-title"
+              type="text"
+              className="contract-wizard__input"
+              placeholder="Name this promise"
+              value={promiseTitle}
+              maxLength={80}
+              onChange={(event) => {
+                setPromiseTitle(event.target.value);
+                setPromiseTitleTouched(true);
+              }}
+            />
+          </div>
+
+          <div className="contract-wizard__field-group">
+            <span className="contract-wizard__label">Optional icon</span>
+            <div className="contract-wizard__icon-row">
+              <button
+                type="button"
+                className={`contract-wizard__pill${selectedPromiseIcon === '' ? ' contract-wizard__pill--selected' : ''}`}
+                onClick={() => setSelectedPromiseIcon('')}
+              >
+                No icon
+              </button>
+              {PROMISE_ICON_OPTIONS.map((icon) => (
                 <button
-                  key={target.id}
+                  key={icon}
                   type="button"
-                  className={`contract-wizard__card${selectedTarget?.id === target.id ? ' contract-wizard__card--selected' : ''}`}
-                  onClick={() => setSelectedTarget(target)}
+                  className={`contract-wizard__pill${selectedPromiseIcon === icon ? ' contract-wizard__pill--selected' : ''}`}
+                  onClick={() => setSelectedPromiseIcon(icon)}
                 >
-                  <span className="contract-wizard__card-icon">{target.type === 'Habit' ? '✓' : '🎯'}</span>
-                  <span className="contract-wizard__card-content">
-                    <strong>{target.title}</strong>
-                    <small>{target.type}</small>
-                  </span>
+                  {icon}
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div className="contract-wizard__field-group">
+            <span className="contract-wizard__label">Link it to</span>
+            <div className="contract-wizard__choice-row">
+              {(['Habit', 'Goal', 'custom'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  className={`contract-wizard__choice${targetLinkMode === mode ? ' contract-wizard__choice--selected' : ''}`}
+                  onClick={() => setTargetLinkMode(mode)}
+                >
+                  {mode === 'custom' ? 'No linked habit/goal' : mode}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {targetLinkMode === 'custom' ? (
+            <p className="contract-wizard__helper-text">
+              This promise will stay custom-only and use manual promise check-ins.
+            </p>
+          ) : (
+            <div className="contract-wizard__compact-selector">
+              <label className="contract-wizard__label" htmlFor="target-search">
+                Search {targetLinkMode.toLowerCase()}s
+              </label>
+              <input
+                id="target-search"
+                type="search"
+                className="contract-wizard__input"
+                placeholder={`Search ${targetLinkMode.toLowerCase()}s`}
+                value={targetSearch}
+                onChange={(event) => setTargetSearch(event.target.value)}
+              />
+              <label className="contract-wizard__label" htmlFor="target-select">
+                Select a {targetLinkMode.toLowerCase()}
+              </label>
+              <select
+                id="target-select"
+                className="contract-wizard__input"
+                value={selectedTarget?.type === targetLinkMode ? selectedTarget.id : ''}
+                onChange={(event) => {
+                  const options = targetLinkMode === 'Habit' ? filteredHabitOptions : filteredGoalOptions;
+                  const nextTarget = options.find((target) => target.id === event.target.value) ?? null;
+                  setSelectedTarget(nextTarget);
+                }}
+              >
+                <option value="">Choose a {targetLinkMode.toLowerCase()}</option>
+                {(targetLinkMode === 'Habit' ? filteredHabitOptions : filteredGoalOptions).map((target) => (
+                  <option key={target.id} value={target.id}>
+                    {target.title}
+                  </option>
+                ))}
+              </select>
+              {loading ? (
+                <p className="contract-wizard__helper-text">Loading your habits and goals...</p>
+              ) : (targetLinkMode === 'Habit' ? filteredHabitOptions : filteredGoalOptions).length === 0 ? (
+                <p className="contract-wizard__helper-text">
+                  No {targetLinkMode.toLowerCase()}s match this search yet.
+                </p>
+              ) : null}
             </div>
           )}
 
@@ -470,16 +653,17 @@ export function ContractWizard({
                     setQuickCreateSubmitting(true);
                     setError(null);
                     try {
-                      if (quickCreateType === 'Habit') {
-                        const { data: habit, error: createError } = await quickAddDailyHabit({ title }, userId);
-                        if (createError || !habit) {
-                          throw createError || new Error('Failed to create habit');
-                        }
+                       if (quickCreateType === 'Habit') {
+                         const { data: habit, error: createError } = await quickAddDailyHabit({ title }, userId);
+                         if (createError || !habit) {
+                           throw createError || new Error('Failed to create habit');
+                         }
 
-                        const option: TargetOption = { id: habit.id, title: habit.title, type: 'Habit' };
-                        setTargetOptions((prev) => [option, ...prev]);
-                        setSelectedTarget(option);
-                      } else {
+                          const option: TargetOption = { id: habit.id, title: habit.title, type: 'Habit' };
+                          setTargetOptions((prev) => [option, ...prev]);
+                          setTargetLinkMode('Habit');
+                          setSelectedTarget(option);
+                        } else {
                         const payload: GoalInsert = {
                           title,
                           description: null,
@@ -494,10 +678,11 @@ export function ContractWizard({
                           throw createError || new Error('Failed to create goal');
                         }
 
-                        const option: TargetOption = { id: goal.id, title: goal.title, type: 'Goal' };
-                        setTargetOptions((prev) => [option, ...prev]);
-                        setSelectedTarget(option);
-                      }
+                          const option: TargetOption = { id: goal.id, title: goal.title, type: 'Goal' };
+                          setTargetOptions((prev) => [option, ...prev]);
+                          setTargetLinkMode('Goal');
+                          setSelectedTarget(option);
+                        }
 
                       setQuickCreateTitle('');
                       setQuickCreateTargetDate('');
@@ -514,30 +699,6 @@ export function ContractWizard({
               </div>
             )}
           </div>
-        </section>
-      )}
-
-      {currentScreen === 'type' && (
-        <section className="contract-wizard__step">
-          <h3 className="contract-wizard__prompt">What kind of promise fits best?</h3>
-          <div className="contract-wizard__type-grid">
-            {MVP_CONTRACT_TYPES.map((option) => (
-              <button
-                key={option.type}
-                type="button"
-                className={`contract-wizard__card contract-wizard__card--type${selectedContractType === option.type ? ' contract-wizard__card--selected' : ''}`}
-                onClick={() => setSelectedContractType(option.type)}
-              >
-                <span className="contract-wizard__card-icon">{option.icon}</span>
-                <span className="contract-wizard__card-content">
-                  <strong>{option.title}</strong>
-                  <small>{option.subtitle}</small>
-                  <small>{option.example}</small>
-                </span>
-              </button>
-            ))}
-          </div>
-          <p className="contract-wizard__helper-text">More options coming soon.</p>
         </section>
       )}
 
@@ -584,17 +745,29 @@ export function ContractWizard({
           <div className="contract-wizard__field-group">
             <label className="contract-wizard__label" htmlFor="target-count">
               {selectedContractType === 'reverse'
-                ? `How many slips do you allow per ${cadence}?`
+                ? `Allowed slips per ${cadence}`
                 : `How many times per ${cadence}?`}
             </label>
             <input
               id="target-count"
               type="number"
-              min="1"
+              min={selectedContractType === 'reverse' ? '0' : '1'}
               className="contract-wizard__input"
               value={targetCount}
-              onChange={(e) => setTargetCount(parseInt(e.target.value, 10) || 1)}
+              onChange={(e) => {
+                const parsed = Number(e.target.value);
+                if (selectedContractType === 'reverse') {
+                  setTargetCount(Number.isNaN(parsed) ? 0 : Math.max(0, parsed));
+                  return;
+                }
+                setTargetCount(Number.isNaN(parsed) ? 1 : Math.max(1, parsed));
+              }}
             />
+            {selectedContractType === 'reverse' && (
+              <p className="contract-wizard__helper-text">
+                0 slips means the promise breaks after the first slip.
+              </p>
+            )}
           </div>
         </section>
       )}
@@ -763,7 +936,7 @@ export function ContractWizard({
               onClick={() => setGraceDays(1)}
             >
               <span className="contract-wizard__card-content">
-                <strong>1 buffer day — I might slip once</strong>
+                <strong>1 buffer day — protect one miss</strong>
               </span>
             </button>
             <button
@@ -776,7 +949,7 @@ export function ContractWizard({
               </span>
             </button>
           </div>
-          <p className="contract-wizard__helper-text">A buffer day means one miss won’t cost your stake.</p>
+          <p className="contract-wizard__helper-text">A buffer day protects one missed completion.</p>
         </section>
       )}
 
@@ -825,19 +998,25 @@ export function ContractWizard({
         </section>
       )}
 
-      {currentScreen === 'review' && selectedTarget && (
+      {currentScreen === 'review' && resolvedPromiseTitle && (
         <section className="contract-wizard__step">
           <h3 className="contract-wizard__prompt">Review promise card</h3>
 
           <article className="contract-wizard__promise-card">
             <header>
               <p className="contract-wizard__promise-type">{reviewType?.icon} {reviewType?.subtitle ?? 'Classic'} promise</p>
-              <h4>{selectedTarget.title}</h4>
+              <h4>{resolvedPromiseTitle}</h4>
             </header>
 
             <p>
+              {targetLinkMode === 'custom'
+                ? 'Linked target: None — custom promise only.'
+                : `Linked ${selectedTarget?.type?.toLowerCase()}: ${selectedTarget?.title ?? 'None selected'}.`}
+            </p>
+
+            <p>
               {selectedContractType === 'reverse'
-                ? `You allow up to ${targetCount} slips per ${cadence}.`
+                ? `Allowed slips: ${targetCount} per ${cadence}.${targetCount === 0 ? ' The promise breaks after the first slip.' : ''}`
                 : `You commit to ${targetCount} ${targetCount === 1 ? 'time' : 'times'} per ${cadence}.`}
             </p>
 
@@ -853,10 +1032,10 @@ export function ContractWizard({
             </p>
 
             <p>
-              Check-in: {trackingMode === 'progress' ? 'I’ll mark each session.' : 'I’ll declare pass/fail at the end.'}
+              Check-in: {trackingMode === 'progress' ? 'I’ll mark each session.' : 'I’ll declare promise kept / promise broken at the end.'}
             </p>
 
-            <p>Buffer days: {graceDays}.</p>
+            {selectedContractType !== 'reverse' && <p>Buffer days: {graceDays}.</p>}
 
             <p>
               Reward: {

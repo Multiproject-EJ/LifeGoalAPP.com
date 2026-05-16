@@ -30,7 +30,8 @@ export function ContractStatusCard({
 
   // Calculate progress percentage
   const progressPercentage = useMemo(() => {
-    return Math.min(100, (contract.currentProgress / contract.targetCount) * 100);
+    const safeTargetCount = Math.max(contract.targetCount, 1);
+    return Math.min(100, (contract.currentProgress / safeTargetCount) * 100);
   }, [contract.currentProgress, contract.targetCount]);
 
   // Calculate cooling-off countdown
@@ -50,6 +51,19 @@ export function ContractStatusCard({
 
   // Get warm copy based on progress
   const statusMessage = useMemo(() => {
+    if (promiseVariant === 'reverse') {
+      if (contract.currentProgress === 0) {
+        return contract.targetCount === 0
+          ? 'Clean window so far — one slip would break this promise'
+          : `Clean window so far — ${contract.targetCount} slip${contract.targetCount === 1 ? '' : 's'} allowed`;
+      }
+
+      const remainingSlips = Math.max(0, contract.targetCount - contract.currentProgress);
+      return remainingSlips > 0
+        ? `${contract.currentProgress} slip${contract.currentProgress === 1 ? '' : 's'} logged — ${remainingSlips} allowed left`
+        : 'No slips left in this window';
+    }
+
     const remaining = contract.targetCount - contract.currentProgress;
 
     if (remaining <= 0) {
@@ -69,7 +83,7 @@ export function ContractStatusCard({
     }
 
     return `Get started — complete ${contract.targetCount} this ${contract.cadence}`;
-  }, [contract.currentProgress, contract.targetCount, contract.cadence, contract.graceDays]);
+  }, [contract.currentProgress, contract.targetCount, contract.cadence, contract.graceDays, promiseVariant]);
 
   const paceForecast = useMemo(
     () => (contract.status === 'active' ? getContractPaceForecast(contract) : null),
@@ -95,6 +109,7 @@ export function ContractStatusCard({
   const tier = contract.contractTier ?? 'common';
   const primaryActionLabel = (() => {
     if (contract.status === 'paused') return 'Resume Promise';
+    if (promiseVariant === 'reverse') return 'Log Slip';
     if (isOutcomeOnly) return getOutcomePrimaryActionLabel(promiseVariant);
     return isAtRisk ? 'Rescue Progress' : 'Mark Progress';
   })();
@@ -164,14 +179,16 @@ export function ContractStatusCard({
         </div>
         <p className="contract-status-card__progress-text">
           {isOutcomeOnly
-            ? 'Outcome-only contract: no daily check-ins required.'
-            : `${contract.currentProgress} of ${contract.targetCount} completions kept this ${contract.cadence}`}
+            ? 'Outcome-only promise: no daily check-ins required.'
+            : promiseVariant === 'reverse'
+              ? `${contract.currentProgress} slip${contract.currentProgress === 1 ? '' : 's'} logged this ${contract.cadence} · ${contract.targetCount} allowed`
+              : `${contract.currentProgress} of ${contract.targetCount} completions kept this ${contract.cadence}`}
         </p>
       </div>
 
       {endDate && timeProgressPercentage !== null && (
         <div className="contract-status-card__time-progress" role="status" aria-live="polite">
-          <p className="contract-status-card__time-progress-label">Contract timeline</p>
+          <p className="contract-status-card__time-progress-label">Promise timeline</p>
           <div className="contract-status-card__progress-bar">
             <div
               className="contract-status-card__time-progress-fill"
@@ -186,9 +203,19 @@ export function ContractStatusCard({
 
       <div className="contract-status-card__info">
         <div className="contract-status-card__info-row">
-          <span className="contract-status-card__info-label">Buffer days available:</span>
-          <span className="contract-status-card__info-value">{contract.graceDays}</span>
+          <span className="contract-status-card__info-label">
+            {promiseVariant === 'reverse' ? 'Allowed slips:' : 'Buffer days available:'}
+          </span>
+          <span className="contract-status-card__info-value">
+            {promiseVariant === 'reverse' ? contract.targetCount : contract.graceDays}
+          </span>
         </div>
+        {promiseVariant === 'reverse' && contract.graceDays > 0 && (
+          <div className="contract-status-card__info-row">
+            <span className="contract-status-card__info-label">Legacy grace buffer:</span>
+            <span className="contract-status-card__info-value">{contract.graceDays}</span>
+          </div>
+        )}
         {coolingOffRemaining !== null && (
           <div className="contract-status-card__info-row contract-status-card__info-row--highlight">
             <span className="contract-status-card__info-label">Cancel without penalty:</span>

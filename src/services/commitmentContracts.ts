@@ -610,7 +610,7 @@ export function getResetContractEligibility(contract: CommitmentContract): Reset
   if (contract.status !== 'active') {
     return {
       eligible: false,
-      reason: 'Reset is only available for active contracts.',
+      reason: 'Reset is only available for active promises.',
     };
   }
 
@@ -657,7 +657,7 @@ export async function createContract(
     if (activeCount >= MAX_ACTIVE_CONTRACTS) {
       return {
         data: null,
-        error: new Error(`You can have at most ${MAX_ACTIVE_CONTRACTS} active contracts at a time.`),
+        error: new Error(`You can have at most ${MAX_ACTIVE_CONTRACTS} active promises at a time.`),
       };
     }
 
@@ -790,7 +790,7 @@ export async function createContract(
   } catch (error) {
     return {
       data: null,
-      error: error instanceof Error ? error : new Error('Failed to create contract'),
+      error: error instanceof Error ? error : new Error('Failed to create promise'),
     };
   }
 }
@@ -816,7 +816,7 @@ export async function fetchContracts(userId: string): Promise<ServiceResponse<Co
   } catch (error) {
     return {
       data: null,
-      error: error instanceof Error ? error : new Error('Failed to load contracts'),
+      error: error instanceof Error ? error : new Error('Failed to load promises'),
     };
   }
 }
@@ -850,7 +850,7 @@ export async function cancelContract(
 
     const contractIndex = contracts.findIndex((c) => c.id === contractId);
     if (contractIndex === -1) {
-      return { data: null, error: new Error('Contract not found') };
+      return { data: null, error: new Error('Promise not found') };
     }
 
     const contract = contracts[contractIndex];
@@ -908,7 +908,7 @@ export async function pauseContract(
 
     const contractIndex = contracts.findIndex((c) => c.id === contractId);
     if (contractIndex === -1) {
-      return { data: null, error: new Error('Contract not found') };
+      return { data: null, error: new Error('Promise not found') };
     }
 
     const contract = contracts[contractIndex];
@@ -916,7 +916,7 @@ export async function pauseContract(
     if (contract.status !== 'active') {
       return {
         data: null,
-        error: new Error('Can only pause active contracts'),
+        error: new Error('Can only pause active promises'),
       };
     }
 
@@ -951,7 +951,7 @@ export async function resumeContract(
 
     const contractIndex = contracts.findIndex((c) => c.id === contractId);
     if (contractIndex === -1) {
-      return { data: null, error: new Error('Contract not found') };
+      return { data: null, error: new Error('Promise not found') };
     }
 
     const contract = contracts[contractIndex];
@@ -1000,7 +1000,7 @@ export async function activateContract(
 
     const contractIndex = contracts.findIndex((c) => c.id === contractId);
     if (contractIndex === -1) {
-      return { data: null, error: new Error('Contract not found') };
+      return { data: null, error: new Error('Promise not found') };
     }
 
     const contract = contracts[contractIndex];
@@ -1019,7 +1019,7 @@ export async function activateContract(
     if (activeCount >= MAX_ACTIVE_CONTRACTS) {
       return {
         data: null,
-        error: new Error(`You can have at most ${MAX_ACTIVE_CONTRACTS} active contracts at a time.`),
+        error: new Error(`You can have at most ${MAX_ACTIVE_CONTRACTS} active promises at a time.`),
       };
     }
 
@@ -1065,7 +1065,7 @@ export async function resetContractWithSameSettings(
 
     const contractIndex = contracts.findIndex((contract) => contract.id === contractId);
     if (contractIndex === -1) {
-      return { data: null, error: new Error('Contract not found') };
+      return { data: null, error: new Error('Promise not found') };
     }
 
     const contract = contracts[contractIndex];
@@ -1135,7 +1135,7 @@ export async function reduceContractStake(
 
     const contractIndex = contracts.findIndex((contract) => contract.id === contractId);
     if (contractIndex === -1) {
-      return { data: null, error: new Error('Contract not found') };
+      return { data: null, error: new Error('Promise not found') };
     }
 
     const contract = contracts[contractIndex];
@@ -1210,7 +1210,7 @@ export async function activateGentleRampRecovery(
 
     const contractIndex = contracts.findIndex((contract) => contract.id === contractId);
     if (contractIndex === -1) {
-      return { data: null, error: new Error('Contract not found') };
+      return { data: null, error: new Error('Promise not found') };
     }
 
     const contract = contracts[contractIndex];
@@ -1297,7 +1297,7 @@ export async function recordContractProgress(
 
     const contractIndex = contracts.findIndex((c) => c.id === contractId);
     if (contractIndex === -1) {
-      return { data: null, error: new Error('Contract not found') };
+      return { data: null, error: new Error('Promise not found') };
     }
 
     const contract = contracts[contractIndex];
@@ -1305,14 +1305,14 @@ export async function recordContractProgress(
     if (contract.status !== 'active') {
       return {
         data: null,
-        error: new Error('Can only record progress for active contracts'),
+        error: new Error('Can only record progress for active promises'),
       };
     }
 
     if (contract.trackingMode === 'outcome_only') {
       return {
         data: null,
-        error: new Error('Outcome-only contracts do not use progress check-ins. Log a failure or finalize at end date.'),
+        error: new Error('Outcome-only promises do not use progress check-ins. Log a failure or finalize at the end date.'),
       };
     }
 
@@ -1365,7 +1365,7 @@ export async function syncContractProgressWithTarget(
 
     const contractIndex = contracts.findIndex((contract) => contract.id === contractId);
     if (contractIndex === -1) {
-      return { data: null, error: new Error('Contract not found') };
+      return { data: null, error: new Error('Promise not found') };
     }
 
     const contract = contracts[contractIndex];
@@ -1418,7 +1418,7 @@ export async function evaluateContract(
 
     const contractIndex = contracts.findIndex((c) => c.id === contractId);
     if (contractIndex === -1) {
-      return { data: null, error: new Error('Contract not found') };
+      return { data: null, error: new Error('Promise not found') };
     }
 
     const contract = contracts[contractIndex];
@@ -1426,7 +1426,7 @@ export async function evaluateContract(
     if (contract.status !== 'active') {
       return {
         data: null,
-        error: new Error('Can only evaluate active contracts'),
+        error: new Error('Can only evaluate active promises'),
       };
     }
 
@@ -1451,7 +1451,7 @@ export async function evaluateContract(
         if (contract.endAt && now < new Date(contract.endAt)) {
           return {
             data: null,
-            error: new Error('This outcome-only contract can be finalized on or after its end date, or you can log a failure now.'),
+            error: new Error('This outcome-only promise can be finalized on or after its end date, or you can log a failure now.'),
           };
         }
         result = 'success';
@@ -1668,7 +1668,7 @@ export async function evaluateContract(
   } catch (error) {
     return {
       data: null,
-      error: error instanceof Error ? error : new Error('Failed to evaluate contract'),
+      error: error instanceof Error ? error : new Error('Couldn’t check this promise yet.'),
     };
   }
 }
@@ -1870,12 +1870,12 @@ export async function logOutcomeOnlyContractFailure(
 
     const contractIndex = contracts.findIndex((contract) => contract.id === contractId);
     if (contractIndex === -1) {
-      return { data: null, error: new Error('Contract not found') };
+      return { data: null, error: new Error('Promise not found') };
     }
 
     const contract = contracts[contractIndex];
     if (contract.status !== 'active') {
-      return { data: null, error: new Error('Only active contracts can log outcome failure') };
+      return { data: null, error: new Error('Only active promises can log outcome failure') };
     }
 
     if (contract.trackingMode !== 'outcome_only') {
@@ -2293,7 +2293,7 @@ export async function generateRedemptionQuest(
 
     const contractIndex = contracts.findIndex((c) => c.id === contractId);
     if (contractIndex === -1) {
-      return { data: null, error: new Error('Contract not found') };
+      return { data: null, error: new Error('Promise not found') };
     }
 
     const contract = contracts[contractIndex];
@@ -2344,7 +2344,7 @@ export async function completeRedemptionQuest(
 
     const contractIndex = contracts.findIndex((c) => c.id === contractId);
     if (contractIndex === -1) {
-      return { data: null, error: new Error('Contract not found') };
+      return { data: null, error: new Error('Promise not found') };
     }
 
     const contract = contracts[contractIndex];
@@ -2391,7 +2391,7 @@ export async function failRedemptionQuest(
 
     const contractIndex = contracts.findIndex((c) => c.id === contractId);
     if (contractIndex === -1) {
-      return { data: null, error: new Error('Contract not found') };
+      return { data: null, error: new Error('Promise not found') };
     }
 
     const contract = contracts[contractIndex];
@@ -2443,7 +2443,7 @@ export async function fetchActiveContracts(
   } catch (error) {
     return {
       data: null,
-      error: error instanceof Error ? error : new Error('Failed to fetch active contracts'),
+      error: error instanceof Error ? error : new Error('Failed to fetch active promises'),
     };
   }
 }
