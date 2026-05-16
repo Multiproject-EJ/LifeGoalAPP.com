@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import type { CSSProperties } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { fetchGamificationProfile } from '../../services/gamificationPrefs';
 import { getImpactTreeLedger } from '../../services/impactTrees';
@@ -239,17 +240,19 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
     if (span <= 0) return 100;
     return Math.min(100, Math.round(((treeScore - treeStage.minScore) / span) * 100));
   }, [nextMilestone, treeScore, treeStage.minScore]);
+  const shopPages = useMemo(() => {
+    const pages: ZenGardenItem[][] = [];
+    for (let index = 0; index < ZEN_GARDEN_ITEMS.length; index += 4) {
+      pages.push(ZEN_GARDEN_ITEMS.slice(index, index + 4));
+    }
+    return pages;
+  }, []);
 
   return (
     <>
       <section 
         className="zen-garden" 
-        style={{ 
-          backgroundImage: `url(${zenShopBg})`,
-          backgroundSize: '100% auto',
-          backgroundPosition: 'center top',
-          backgroundRepeat: 'no-repeat'
-        }}
+        style={{ '--zen-garden-bg-image': `url(${zenShopBg})` } as CSSProperties}
       >
         {onBack && (
           <button
@@ -267,105 +270,121 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
             <span className="zen-garden__balance-value">🪷 {balance}</span>
           </div>
         </header>
-
-      {loading && (
-        <div className="zen-garden__status">Loading Zen Garden...</div>
-      )}
-
-      {!loading && (
-        <>
-          {purchaseError && <div className="zen-garden__message zen-garden__message--error">{purchaseError}</div>}
-          {purchaseSuccess && (
-            <div className="zen-garden__message zen-garden__message--success">{purchaseSuccess}</div>
+        <div className="zen-garden__content">
+          {loading && (
+            <div className="zen-garden__status">Loading Zen Garden...</div>
           )}
 
-          <section className="zen-garden__shop">
-            <div className="zen-garden__shop-header">
-              <div>
-                <h2 className="zen-garden__shop-title">🪷 Zen Garden Unlocks</h2>
-                <p className="zen-garden__shop-subtitle">
-                  Meditation-only rewards • Use Zen Tokens to unlock peaceful garden elements.
-                </p>
-              </div>
-            </div>
-            <div className="zen-garden__shop-grid">
-              {ZEN_GARDEN_ITEMS.map((item) => {
-                const owned = ownedItems.has(item.id);
-                const canAfford = balance >= item.cost;
-                const isPurchasing = purchasingId === item.id;
+          {!loading && (
+            <>
+              {purchaseError && <div className="zen-garden__message zen-garden__message--error">{purchaseError}</div>}
+              {purchaseSuccess && (
+                <div className="zen-garden__message zen-garden__message--success">{purchaseSuccess}</div>
+              )}
 
-                return (
-                  <article key={item.id} className={`zen-garden__item${owned ? ' zen-garden__item--owned' : ''}`}>
-                    <div className="zen-garden__item-icon">{item.emoji}</div>
-                    <h3 className="zen-garden__item-title">{item.name}</h3>
-                    <p className="zen-garden__item-description">{item.description}</p>
-                    <div className="zen-garden__item-footer">
-                      <span className="zen-garden__item-cost">🪷 {item.cost}</span>
-                      <button
-                        type="button"
-                        className="zen-garden__item-button"
-                        disabled={owned || !canAfford || isPurchasing}
-                        onClick={() => handlePurchase(item)}
-                      >
-                        {owned ? 'Unlocked' : isPurchasing ? 'Purchasing...' : 'Unlock'}
-                      </button>
-                    </div>
-                    {!owned && !canAfford && <span className="zen-garden__item-lock">Earn more Zen Tokens</span>}
-                  </article>
-                );
-              })}
-            </div>
-          </section>
-
-          {ZEN_GARDEN_EARNED_ITEMS.some((item) => ownedItems.has(item.id)) && (
-            <section className="zen-garden__earned">
-              <div className="zen-garden__shop-header">
-                <div>
-                  <h2 className="zen-garden__shop-title">🏅 Contract Rewards</h2>
-                  <p className="zen-garden__shop-subtitle">
-                    Earned through commitment milestones — yours to keep forever.
-                  </p>
+              <section className="zen-garden__shop">
+                <div className="zen-garden__shop-header">
+                  <div>
+                    <h2 className="zen-garden__shop-title">🪷 Zen Garden Unlocks</h2>
+                    <p className="zen-garden__shop-subtitle">
+                      Meditation-only rewards • Use Zen Tokens to unlock peaceful garden elements.
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="zen-garden__shop-grid">
-                {ZEN_GARDEN_EARNED_ITEMS.filter((item) => ownedItems.has(item.id)).map((item) => (
-                  <article key={item.id} className="zen-garden__item zen-garden__item--owned zen-garden__item--earned">
-                    <div className="zen-garden__item-icon">{item.emoji}</div>
-                    <h3 className="zen-garden__item-title">{item.name}</h3>
-                    <p className="zen-garden__item-description">{item.description}</p>
-                    <div className="zen-garden__item-footer">
-                      <span className="zen-garden__item-earned-badge">Earned</span>
+                <div className="zen-garden__shop-pages" aria-label="Zen Garden unlock pages">
+                  {shopPages.map((page, pageIndex) => (
+                    <div
+                      key={`zen-page-${pageIndex + 1}`}
+                      className="zen-garden__shop-page"
+                      aria-label={`Unlock products page ${pageIndex + 1} of ${shopPages.length}`}
+                    >
+                      {page.map((item) => {
+                        const owned = ownedItems.has(item.id);
+                        const canAfford = balance >= item.cost;
+                        const isPurchasing = purchasingId === item.id;
+
+                        return (
+                          <article key={item.id} className={`zen-garden__item${owned ? ' zen-garden__item--owned' : ''}`}>
+                            <div className="zen-garden__item-icon">{item.emoji}</div>
+                            <h3 className="zen-garden__item-title">{item.name}</h3>
+                            <p className="zen-garden__item-description">{item.description}</p>
+                            <div className="zen-garden__item-footer">
+                              <span className="zen-garden__item-cost">🪷 {item.cost}</span>
+                              <button
+                                type="button"
+                                className="zen-garden__item-button"
+                                disabled={owned || !canAfford || isPurchasing}
+                                onClick={() => handlePurchase(item)}
+                              >
+                                {owned ? 'Unlocked' : isPurchasing ? 'Purchasing...' : 'Unlock'}
+                              </button>
+                            </div>
+                            {!owned && !canAfford && <span className="zen-garden__item-lock">Earn more Zen Tokens</span>}
+                          </article>
+                        );
+                      })}
                     </div>
-                  </article>
-                ))}
-              </div>
-            </section>
+                  ))}
+                </div>
+                {shopPages.length > 1 && (
+                  <div className="zen-garden__shop-pagination" aria-hidden="true">
+                    {shopPages.map((_, pageIndex) => (
+                      <span key={`zen-page-dot-${pageIndex + 1}`} className="zen-garden__shop-pagination-dot" />
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              {ZEN_GARDEN_EARNED_ITEMS.some((item) => ownedItems.has(item.id)) && (
+                <section className="zen-garden__earned">
+                  <div className="zen-garden__shop-header">
+                    <div>
+                      <h2 className="zen-garden__shop-title">🏅 Contract Rewards</h2>
+                      <p className="zen-garden__shop-subtitle">
+                        Earned through commitment milestones — yours to keep forever.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="zen-garden__shop-grid">
+                    {ZEN_GARDEN_EARNED_ITEMS.filter((item) => ownedItems.has(item.id)).map((item) => (
+                      <article key={item.id} className="zen-garden__item zen-garden__item--owned zen-garden__item--earned">
+                        <div className="zen-garden__item-icon">{item.emoji}</div>
+                        <h3 className="zen-garden__item-title">{item.name}</h3>
+                        <p className="zen-garden__item-description">{item.description}</p>
+                        <div className="zen-garden__item-footer">
+                          <span className="zen-garden__item-earned-badge">Earned</span>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              <section className="zen-garden__tree">
+                <button
+                  type="button"
+                  className="zen-garden__tree-badge"
+                  onClick={() => setShowTreeDetails(true)}
+                  aria-label="Open Tree of Life details"
+                >
+                  <span className="zen-garden__tree-badge-icon" aria-hidden="true">🌲</span>
+                  <span className="zen-garden__tree-badge-text">Tree</span>
+                </button>
+              </section>
+            </>
           )}
+        </div>
 
-          <section className="zen-garden__tree">
-            <button
-              type="button"
-              className="zen-garden__tree-badge"
-              onClick={() => setShowTreeDetails(true)}
-              aria-label="Open Tree of Life details"
-            >
-              <span className="zen-garden__tree-badge-icon" aria-hidden="true">🌲</span>
-              <span className="zen-garden__tree-badge-text">Tree</span>
-            </button>
-          </section>
-        </>
-      )}
-
-      {/* To The Garden Button */}
-      <button
-        type="button"
-        className="zen-garden__to-garden-btn"
-        onClick={() => setShowGardenPlot(true)}
-        aria-label="Open garden plot view"
-      >
-        <img src={toZenGardenImg} alt="To the garden" />
-      </button>
-    </section>
+        {/* To The Garden Button */}
+        <button
+          type="button"
+          className="zen-garden__to-garden-btn"
+          onClick={() => setShowGardenPlot(true)}
+          aria-label="Open garden plot view"
+        >
+          <img src={toZenGardenImg} alt="To the garden" />
+        </button>
+      </section>
 
     {/* Garden Plot Overlay */}
     {showGardenPlot && (
