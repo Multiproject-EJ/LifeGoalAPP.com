@@ -146,6 +146,8 @@ export function ContractsTab({
   const [sweepHealth, setSweepHealth] = useState<ContractSweepHealth | null>(null);
   const [resultLinkedReward, setResultLinkedReward] = useState<ContractRewardLink | null>(null);
   const [claimingLinkedReward, setClaimingLinkedReward] = useState(false);
+  const [pendingCancelContractId, setPendingCancelContractId] = useState<string | null>(null);
+  const [pendingEndContractId, setPendingEndContractId] = useState<string | null>(null);
   const [pastContracts, setPastContracts] = useState<CommitmentContract[]>([]);
   const [hiddenPastPromiseIds, setHiddenPastPromiseIds] = useState<string[]>([]);
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
@@ -469,24 +471,31 @@ export function ContractsTab({
   const handleFinalizeOutcomeSuccess = async (contractId?: string) => {
     const target = contractId ? activeContracts.find((c) => c.id === contractId) : activeContract;
     if (!target || !userId) return;
+    // Ignore duplicate taps while the first request is in flight; the card already shows pending UI.
+    if (pendingEndContractId === target.id) return;
 
-    const { data: evaluation, error } = await evaluateContract(userId, target.id, { forceResult: 'success' });
-    if (error || !evaluation) {
-      setActionError(error?.message ?? 'Unable to finalize this promise right now.');
-      return;
-    }
+    setPendingEndContractId(target.id);
+    try {
+      const { data: evaluation, error } = await evaluateContract(userId, target.id, { forceResult: 'success' });
+      if (error || !evaluation) {
+        setActionError(error?.message ?? 'Unable to finalize this promise right now.');
+        return;
+      }
 
-    setActionError(null);
-    const { data: refreshedContracts } = await fetchContracts(userId);
-    const refreshed = refreshedContracts?.find((contract) => contract.id === target.id) ?? null;
-    if (refreshed) {
-      refreshContractInList(refreshed);
-      setResultContract(refreshed);
+      setActionError(null);
+      const { data: refreshedContracts } = await fetchContracts(userId);
+      const refreshed = refreshedContracts?.find((contract) => contract.id === target.id) ?? null;
+      if (refreshed) {
+        refreshContractInList(refreshed);
+        setResultContract(refreshed);
+      }
+      setContractResult(evaluation);
+      const { data: linkedReward } = await fetchLinkedRewardForContract(userId, target.id);
+      setResultLinkedReward(linkedReward);
+      await loadContract();
+    } finally {
+      setPendingEndContractId((current) => (current === target.id ? null : current));
     }
-    setContractResult(evaluation);
-    const { data: linkedReward } = await fetchLinkedRewardForContract(userId, target.id);
-    setResultLinkedReward(linkedReward);
-    await loadContract();
   };
 
   const handlePauseContract = async (contractId?: string) => {
@@ -528,18 +537,25 @@ export function ContractsTab({
   const handleCancelContract = async (contractId?: string) => {
     const target = contractId ? activeContracts.find((c) => c.id === contractId) : activeContract;
     if (!target || !userId) return;
+    // Ignore duplicate taps while the first request is in flight; the card already shows pending UI.
+    if (pendingCancelContractId === target.id) return;
 
-    const { data, error } = await cancelContract(userId, target.id);
-    if (error) {
-      console.error('Failed to cancel contract:', error);
-      setActionError(error.message);
-      return;
-    }
+    setPendingCancelContractId(target.id);
+    try {
+      const { data, error } = await cancelContract(userId, target.id);
+      if (error) {
+        console.error('Failed to cancel contract:', error);
+        setActionError(error.message);
+        return;
+      }
 
-    setActionError(null);
+      setActionError(null);
 
-    if (data) {
-      await loadContract();
+      if (data) {
+        await loadContract();
+      }
+    } finally {
+      setPendingCancelContractId((current) => (current === target.id ? null : current));
     }
   };
 
@@ -842,6 +858,8 @@ export function ContractsTab({
                     onResume={() => void handleResumeContract(selectedContract.id)}
                     onCancel={() => void handleCancelContract(selectedContract.id)}
                     onWitnessPing={() => void handleAccountabilityBuddyReminder(selectedContract.id)}
+                    isCancelPending={pendingCancelContractId === selectedContract.id}
+                    isEndPending={pendingEndContractId === selectedContract.id}
                   />
                   <ContractHistoryCard
                     contract={selectedContract}
