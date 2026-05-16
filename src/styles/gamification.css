@@ -3026,6 +3026,8 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  /* Reserve the status-bar area so the panel can never slide behind it */
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 @media (min-width: 480px) {
@@ -3048,10 +3050,14 @@
   background: linear-gradient(160deg, #1e1b4b 0%, #0f172a 100%);
   border: 1px solid rgba(167, 139, 250, 0.35);
   border-radius: 24px 24px 0 0;
-  padding: 2rem 1.5rem;
+  /* Extra top padding pushes content lower inside the card */
+  padding: 2.5rem 1.5rem 2rem;
   padding-bottom: max(2rem, env(safe-area-inset-bottom));
   width: 100%;
   max-width: 480px;
+  /* Cap height so the card top never creeps behind the status bar */
+  max-height: calc(88vh - env(safe-area-inset-top, 0px));
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3067,6 +3073,9 @@
     padding: 2.5rem 2rem;
     width: auto;
     min-width: 340px;
+    /* Reset mobile-sheet constraints; centered card can show its full content */
+    max-height: none;
+    overflow-y: visible;
   }
 }
 
@@ -3098,7 +3107,7 @@
 }
 
 .score-hub-preview__back-btn {
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
   background: rgba(167, 139, 250, 0.18);
   border: 1px solid rgba(167, 139, 250, 0.45);
   color: #c4b5fd;
