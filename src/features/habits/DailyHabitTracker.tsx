@@ -134,7 +134,7 @@ import { EVENT_IDS, type EventId } from '../gamification/level-worlds/services/i
 import { generateIslandStopPlan } from '../gamification/level-worlds/services/islandRunStops';
 import { useIslandRunState } from '../gamification/level-worlds/hooks/useIslandRunState';
 import { refreshIslandRunStateFromLocal } from '../gamification/level-worlds/services/islandRunStateStore';
-import { isPromiseActionableToday } from '../gamification/promisePresentation';
+import { getPromiseVariant, isPromiseActionableToday } from '../gamification/promisePresentation';
 import { DEFAULT_GOAL_STATUS } from '../goals/goalStatus';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import {
@@ -146,12 +146,8 @@ import {
 import { playChime } from '../../utils/audioUtils';
 import type { CommitmentContract } from '../../types/gamification';
 import {
-  cancelContract,
   fetchActiveContracts,
-  pauseContract,
   recordContractProgress,
-  recordWitnessPing,
-  resumeContract,
   syncContractProgressWithTarget,
 } from '../../services/commitmentContracts';
 import './HabitAlertConfig.css';
@@ -4838,19 +4834,6 @@ export function DailyHabitTracker({
     [loadActiveContracts, session.user.id],
   );
 
-  const handlePingWitness = useCallback(async (contract: CommitmentContract) => {
-    const message = `Hey ${contract.witnessLabel ?? 'my accountability buddy'} — quick promise check-in: I'm aiming for ${contract.targetCount} ${contract.targetType.toLowerCase()} completions ${contract.cadence === 'daily' ? 'today' : 'this week'} for "${contract.title}". This is just a reminder message, and a little encouragement from you would help 💛`;
-
-    try {
-      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(message);
-      }
-      await recordWitnessPing(session.user.id, contract, 'clipboard');
-    } catch (error) {
-      setContractsError(error instanceof Error ? error.message : 'Unable to copy accountability buddy reminder.');
-    }
-  }, [session.user.id]);
-
   const toggleTodayExpandableSection = useCallback((section: TodayExpandableSectionKey) => {
     setOpenTodayExpandableSection((current) => current === section ? null : section);
   }, []);
@@ -8222,7 +8205,7 @@ export function DailyHabitTracker({
               id="today-contracts"
               icon="🤝"
               title="Promises"
-              subtitle="Keep promises visible"
+              subtitle="Promises needing attention now"
               statusChip={contractsStatusChip}
               expanded={openTodayExpandableSection === 'contracts'}
               onToggle={() => toggleTodayExpandableSection('contracts')}
@@ -8230,30 +8213,26 @@ export function DailyHabitTracker({
               <div className="habit-contracts-card" aria-live="polite">
                 <div className="habit-contracts-card__header">
                   <div>
-                    <p className="habit-contracts-card__eyebrow">Keep promises visible</p>
-                    <h3 className="habit-contracts-card__title">Promises needing attention</h3>
+                    <p className="habit-contracts-card__eyebrow">Attention now</p>
+                    <h3 className="habit-contracts-card__title">Promises needing attention now</h3>
                   </div>
-                  <button
-                    type="button"
-                    className="habit-contracts-card__refresh"
-                    onClick={() => void loadActiveContracts()}
-                    disabled={contractsLoading || contractActionId !== null}
-                  >
-                    {contractsLoading ? 'Refreshing…' : 'Refresh'}
-                  </button>
                 </div>
 
                 {contractsLoading && todayActionableContracts.length === 0 ? (
-                  <p className="habit-contracts-card__hint">Loading your actionable promises…</p>
+                  <p className="habit-contracts-card__hint">Loading promises that need attention…</p>
                 ) : todayActionableContracts.length === 0 ? (
                   <p className="habit-contracts-card__hint">
-                    No promises need attention right now. Start a promise from the Promises tab and it will appear here when it can still be acted on.
+                    No promises need attention right now. Start a promise from the Promises tab and it will appear here when it needs attention.
                   </p>
                 ) : (
                   <div className="habit-contracts-card__list">
                     {todayActionableContracts.map((contract) => {
                       const progressPercent = Math.min(100, (contract.currentProgress / contract.targetCount) * 100);
                       const isBusy = contractActionId === contract.id;
+                      const isOutcomeOnly = contract.trackingMode === 'outcome_only';
+                      const promiseVariant = getPromiseVariant(contract);
+                      const canShowPrimaryAction = contract.status === 'active' && !isOutcomeOnly;
+                      const primaryActionLabel = promiseVariant === 'reverse' ? 'Log slip' : 'Check in';
                       const stakeLabel = `${contract.stakeAmount} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'} staked`;
                       const contractEndDate = contract.endAt ? new Date(contract.endAt) : null;
                       const contractStartMs = new Date(contract.startAt).getTime();
@@ -8297,46 +8276,20 @@ export function DailyHabitTracker({
                             </div>
                           ) : null}
                           <div className="habit-contracts-card__actions">
-                            <button
-                              type="button"
-                              className="habit-contracts-card__button habit-contracts-card__button--primary"
-                              onClick={() =>
-                                void handleContractAction(
-                                  contract.id,
-                                  contract.status === 'paused' ? resumeContract : recordContractProgress,
-                                  'Unable to update contract progress.',
-                                )
-                              }
-                              disabled={isBusy}
-                            >
-                              {contract.status === 'paused' ? 'Resume' : 'Mark progress'}
-                            </button>
-                            {contract.status === 'active' ? (
+                            {canShowPrimaryAction ? (
                               <button
                                 type="button"
-                                className="habit-contracts-card__button"
-                                onClick={() => void handleContractAction(contract.id, pauseContract, 'Unable to pause contract.')}
+                                className="habit-contracts-card__button habit-contracts-card__button--primary"
+                                onClick={() =>
+                                  void handleContractAction(
+                                    contract.id,
+                                    recordContractProgress,
+                                    'Unable to update contract progress.',
+                                  )
+                                }
                                 disabled={isBusy}
                               >
-                                Pause
-                              </button>
-                            ) : null}
-                            <button
-                              type="button"
-                              className="habit-contracts-card__button"
-                              onClick={() => void handleContractAction(contract.id, cancelContract, 'Unable to cancel contract.')}
-                              disabled={isBusy}
-                            >
-                              Cancel
-                            </button>
-                            {contract.accountabilityMode === 'witness' && contract.witnessLabel ? (
-                              <button
-                                type="button"
-                                className="habit-contracts-card__button"
-                                onClick={() => void handlePingWitness(contract)}
-                                disabled={isBusy}
-                              >
-                                Copy reminder
+                                {primaryActionLabel}
                               </button>
                             ) : null}
                           </div>
