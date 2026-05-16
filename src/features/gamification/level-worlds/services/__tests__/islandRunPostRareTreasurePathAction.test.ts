@@ -729,20 +729,23 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
         pathMod.resolve(process.cwd(), 'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx'),
       ];
 
-      const legacyPatterns: Array<{ pattern: RegExp; label: string }> = [
-        { pattern: /\bLuckyRollBoard\b(?!Config)/, label: 'LuckyRollBoard (standalone component)' },
-        { pattern: /\bLuckyRollDiceShop\b/, label: 'LuckyRollDiceShop' },
-        { pattern: /\bluckyRollState\b/, label: 'luckyRollState' },
-        { pattern: /\bluckyRollSounds\b/, label: 'luckyRollSounds' },
+      // Check import-path patterns — these match the module specifier in import statements,
+      // not symbol names, so canonical Island Run service names like
+      // `getIslandRunLuckyRollBoardConfig` are never falsely flagged.
+      const legacyImportPatterns: Array<{ pattern: RegExp; label: string }> = [
+        { pattern: /from ['"][^'"]*\/LuckyRollBoard['"]/, label: 'LuckyRollBoard (standalone component)' },
+        { pattern: /from ['"][^'"]*\/LuckyRollDiceShop['"]/, label: 'LuckyRollDiceShop' },
+        { pattern: /from ['"][^'"]*\/luckyRollState['"]/, label: 'luckyRollState' },
+        { pattern: /from ['"][^'"]*\/luckyRollSounds['"]/, label: 'luckyRollSounds' },
       ];
 
       for (const filePath of treasurePathFiles) {
         const fileLabel = pathMod.relative(process.cwd(), filePath);
         const source = fsMod.readFileSync(filePath, 'utf8');
-        for (const { pattern, label } of legacyPatterns) {
+        for (const { pattern, label } of legacyImportPatterns) {
           assert(
             !pattern.test(source),
-            `Treasure Path file ${fileLabel} must not import or reference deleted legacy standalone file ${label}`,
+            `Treasure Path file ${fileLabel} must not import deleted legacy standalone module ${label}`,
           );
         }
       }
