@@ -266,10 +266,13 @@ export function ContractWizard({
       recommendations.push('reverse');
     }
 
-    recommendations.push('classic', 'reverse', 'sacred');
+    const availableRecommendations = recommendations.filter((type) =>
+      CONTRACT_TYPES.some((option) => option.type === type && option.available !== false),
+    );
 
-    return Array.from(new Set(recommendations))
-      .filter((type) => CONTRACT_TYPES.some((option) => option.type === type && option.available !== false))
+    const fallbackRecommendations: ContractType[] = ['classic', 'reverse', 'sacred'];
+
+    return Array.from(new Set([...availableRecommendations, ...fallbackRecommendations]))
       .slice(0, 2)
       .map((type) => CONTRACT_TYPES.find((option) => option.type === type))
       .filter((option): option is ContractTypeOption => Boolean(option));
