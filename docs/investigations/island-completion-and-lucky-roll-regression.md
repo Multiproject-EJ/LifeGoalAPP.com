@@ -127,52 +127,113 @@ if (isIslandRunFullyClearedV2({
 
 ---
 
-## Part 2 — Lucky Roll Still Appears as "Lucky Roll" (Should Be "Treasure Path")
+## Part 2 — Standalone Lucky Roll vs Island Run Treasure Path Structure
 
 ### Files Inspected
 
 | File | Purpose |
 |------|---------|
-| `src/types/habitGames.ts` | Game registry — `label: 'Lucky Roll'` |
-| `src/features/gamification/daily-treats/LuckyRollBoard.tsx` | Standalone board component — title and aria labels |
-| `src/features/gamification/daily-treats/LuckyRollDiceShop.tsx` | Dice shop sub-component — title and aria labels |
-| `src/components/GameBoardOverlay.tsx` | Game overlay — Lucky Roll button aria label |
-| `src/hooks/useLuckyRollStatus.ts` | Availability hook — already gates on active/earned |
-| `src/App.tsx:4716,5036` | `showLuckyRoll={luckyRollStatus.available}` — already gated |
-| `docs/18_LUCKY_ROLL_ISLAND_RUN_REFACTOR.md` | Product direction: Lucky Roll repurposed as finite bonus |
-| `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx` | Already uses "Treasure Path" for post-rare overlay |
+| `src/App.tsx` | Actual entrypoint wiring for overlay icon click → modal open |
+| `src/components/GameBoardOverlay.tsx` | Overlay icon rail and `showLuckyRoll`/`onLuckyRollClick` contract |
+| `src/features/gamification/daily-treats/LuckyRollBoard.tsx` | Legacy standalone board modal implementation |
+| `src/features/gamification/daily-treats/LuckyRollDiceShop.tsx` | Legacy standalone board sub-modal |
+| `src/hooks/useLuckyRollStatus.ts` | Legacy standalone availability source for overlay icon |
+| `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx` | Canonical Island Run Treasure Path orchestration + overlay |
+| `src/features/gamification/level-worlds/components/lucky-roll/IslandRunLuckyRollDevOverlay.tsx` | Island Run-owned Treasure Path board overlay |
+| `src/features/gamification/level-worlds/services/islandRunPostRareTreasurePathAction.ts` | Canonical Treasure Path start/collect/travel services |
+| `src/features/gamification/level-worlds/services/__tests__/islandRunPostRareTreasurePathAction.test.ts` | Existing architecture guard tests for Treasure Path ownership |
+| `docs/18_LUCKY_ROLL_ISLAND_RUN_REFACTOR.md` | Product direction contract |
 
 ---
 
-### Root Cause
+### Confirmed Structure (Before This Follow-up Fix)
 
-**Product direction** (`docs/18_LUCKY_ROLL_ISLAND_RUN_REFACTOR.md`): Lucky Roll is being repurposed from a permanent hub game into a finite Island Run bonus reward board. The Island Run internal system already consistently uses **"Treasure Path"** (e.g. `IslandRunLuckyRollDevOverlay.tsx`, `islandRunPostRareTreasurePathAction.ts`, `pendingTreasurePathResumeCtaLabel`). 
+There were **two distinct concepts** live at once:
 
-The standalone Lucky Roll board (`LuckyRollBoard.tsx`, `LuckyRollDiceShop.tsx`) and the game overlay entry still carry the old "Lucky Roll" user-facing label. The gating logic (`luckyRollStatus.available` in `App.tsx`) is already correct — Lucky Roll only appears when active. The problem is the **display name**, not the gating.
+1. **Legacy standalone LuckyRollBoard path (outside Island Run):**
+   - `App.tsx` imported `LuckyRollBoard`
+   - `GameBoardOverlay` received `showLuckyRoll={luckyRollStatus.available}`
+   - `onLuckyRollClick` in `App.tsx` called `setShowLuckyRoll(true)`
+   - `const luckyRollModal = showLuckyRoll && activeSession ? <LuckyRollBoard .../> : null`
+   - This made the old board accessible from the global game overlay whenever lucky-roll access was active
 
-**User-facing "Lucky Roll" occurrences (non-internal):**
+2. **Canonical Island Run Treasure Path path (inside Island Run):**
+   - `IslandRunBoardPrototype.tsx` `handleTravelFromCelebration` checks `getTreasurePathMilestoneMetadata(stats.islandNumber)`
+   - Milestone clear calls `startPostRareTreasurePath(...)`
+   - If applicable, opens `IslandRunLuckyRollDevOverlay` via `handleOpenPostRareTreasurePathOverlay(...)`
+   - Overlay resolution uses `onCollectPostRareTreasurePathAndTravel={handlePostRareTreasurePathCollectAndTravel}`
+   - Pending sessions are resumed via `resolvePendingTreasurePathResume` + "Continue Treasure Path" CTA
 
-| File | Line | Text |
-|------|------|------|
-| `src/types/habitGames.ts` | 42 | `label: 'Lucky Roll'` |
-| `src/features/gamification/daily-treats/LuckyRollBoard.tsx` | 274 | `aria-label="Lucky Roll Reward Board"` |
-| `src/features/gamification/daily-treats/LuckyRollBoard.tsx` | 279 | `🎲 Lucky Roll Reward Run` (heading) |
-| `src/features/gamification/daily-treats/LuckyRollBoard.tsx` | 281 | `aria-label="Close Lucky Roll"` |
-| `src/features/gamification/daily-treats/LuckyRollDiceShop.tsx` | 67 | `aria-label="Lucky Roll Dice Shop"` |
-| `src/features/gamification/daily-treats/LuckyRollDiceShop.tsx` | 73 | `🛒 Lucky Roll Dice Shop` (heading) |
-| `src/features/gamification/daily-treats/LuckyRollDiceShop.tsx` | 81 | `aria-label="Close Lucky Roll Dice Shop"` |
-| `src/components/GameBoardOverlay.tsx` | 292 | `aria-label="Open Lucky Roll reward"` |
-
-**Preserved as-is (internal/economy identifiers):**
-- All `'lucky_roll'` string IDs (economy source keys, localStorage keys, event names) — changing these would alter telemetry and schema
-- `"Lucky Roll Dice: ..."` wallet stat line — preserved per dice-label convention
-- CSS class names (`lucky-roll-board`, etc.) — internal, not user-facing
+So yes: **duplicate product surfaces existed** (legacy standalone + Island Run-owned Treasure Path).
 
 ---
 
-### Fix Applied
+### Entrypoints That Could Open `LuckyRollBoard` (Legacy Standalone)
 
-All eight user-facing occurrences renamed from "Lucky Roll" → "Treasure Path". See code changes for exact diffs.
+Before this follow-up fix, all user-reachable `LuckyRollBoard` entrypoints were in `App.tsx`:
+
+1. **Mobile overlay path**
+   - `GameBoardOverlay` prop `onLuckyRollClick={() => setShowLuckyRoll(true)}`
+   - `GameBoardOverlay` prop `showLuckyRoll={luckyRollStatus.available}`
+2. **Desktop overlay path**
+   - Same two props in the desktop `GameBoardOverlay` instance
+3. **Modal mount gate**
+   - `const luckyRollModal = showLuckyRoll && activeSession ? <LuckyRollBoard ... /> : null`
+   - Rendered in both mobile and desktop branches
+
+No Island Run Treasure Path codepath imported or rendered `LuckyRollBoard`.
+
+---
+
+### Classification: Legacy, Reused, or Duplicate?
+
+- `LuckyRollBoard.tsx` is a **legacy standalone implementation**.
+- Island Run Treasure Path is a **separate, canonical Island Run-owned implementation** (`IslandRunLuckyRollDevOverlay` + post-rare services).
+- Therefore this was a **duplicate game surface**, not a single reused path.
+
+---
+
+### Final Decision
+
+Adopt product direction: **Treasure Path is Island Run bonus/event path only**.
+
+- ✅ Keep Island Run Treasure Path flow unchanged
+- ✅ Remove standalone overlay exposure of `LuckyRollBoard`
+- ✅ Preserve internal `lucky_roll` IDs for compatibility where needed
+
+---
+
+### Follow-up Fix Applied (This Change)
+
+`App.tsx`:
+
+- Removed standalone Lucky Roll modal wiring:
+  - removed `LuckyRollBoard` import
+  - removed `useLuckyRollStatus` import/hook usage
+  - removed `showLuckyRoll` state
+  - removed `luckyRollModal` rendering
+  - removed `onLuckyRollClick` handlers
+- Hard-disabled overlay entry in both overlay mounts:
+  - `showLuckyRoll={false}`
+- Updated nearby comment to document that Treasure Path is Island Run-owned and intentionally not exposed as standalone overlay game
+
+This keeps GameBoardOverlay component API intact but prevents accidental user access to legacy standalone board from App.
+
+---
+
+### Regression Guard Tests Added
+
+`src/features/gamification/level-worlds/services/__tests__/islandRunPostRareTreasurePathAction.test.ts`
+(`milestone Treasure Path orchestration keeps resume UI canonical and guarded`)
+
+Added source-guard assertions that:
+
+- `App.tsx` must not import/render `LuckyRollBoard`
+- `App.tsx` must not call `setShowLuckyRoll(...)`
+- `App.tsx` must not pass `onLuckyRollClick` into `GameBoardOverlay`
+- `App.tsx` must keep `showLuckyRoll={false}` in overlay wiring
+
+These guards prevent accidental reintroduction of standalone overlay access.
 
 ---
 
@@ -192,4 +253,4 @@ All eight user-facing occurrences renamed from "Lucky Roll" → "Treasure Path".
 |-|-----------|-------------|
 | **Island clear / travel modal** | V2 boss path missing `showIslandClearCelebrationFromAnywhere` call | `IslandRunBoardPrototype.tsx:6936` |
 | **BNA advisor false positive** | Legacy `isIslandFullyCleared` used instead of V2 gate; `isEggSlotUsed` too permissive | `islandRunBestNextActionAdvisor.ts:93,171` |
-| **Lucky Roll label** | User-facing text never updated from "Lucky Roll" to "Treasure Path" | `LuckyRollBoard.tsx`, `LuckyRollDiceShop.tsx`, `GameBoardOverlay.tsx`, `habitGames.ts` |
+| **Standalone Lucky Roll exposure** | Global overlay still opened legacy `LuckyRollBoard` despite Treasure Path migration | `App.tsx` (remove modal/handler wiring, force `showLuckyRoll={false}`) |

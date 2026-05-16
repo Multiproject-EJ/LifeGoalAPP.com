@@ -63,7 +63,6 @@ import { useGamification } from './hooks/useGamification';
 import { updateGamificationEnabled } from './services/gamificationPrefs';
 import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
 import { CountdownCalendarModal } from './features/gamification/daily-treats/CountdownCalendarModal';
-import { LuckyRollBoard } from './features/gamification/daily-treats/LuckyRollBoard';
 import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorldsHub';
 import { getIslandBackgroundImageSrc } from './features/gamification/level-worlds/services/islandBackgrounds';
 import { fetchHolidayPreferences } from './services/holidayPreferences';
@@ -87,7 +86,6 @@ import { isValidUuid } from './lib/isValidUuid';
 import { useContinuousSave } from './hooks/useContinuousSave';
 import { isStandaloneMode } from './routes/detectStandalone';
 import { useDailySpinStatus } from './hooks/useDailySpinStatus';
-import { useLuckyRollStatus } from './hooks/useLuckyRollStatus';
 import { isIslandRunFeatureEnabled } from './config/islandRunFeatureFlags';
 import { generateInitials } from './utils/initials';
 import {
@@ -573,7 +571,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [showDailySpinWheel, setShowDailySpinWheel] = useState(false);
   const [showQuickGainsMenu, setShowQuickGainsMenu] = useState(false);
   const [quickGainsHabitText, setQuickGainsHabitText] = useState('');
-  const [showLuckyRoll, setShowLuckyRoll] = useState(false);
   const [showLevelWorldsFromEntry, setShowLevelWorldsFromEntry] = useState(false);
   const [levelWorldsEntryPanel, setLevelWorldsEntryPanel] = useState<'default' | 'sanctuary'>('default');
   const [reopenGameBoardOverlayOnLevelWorldsClose, setReopenGameBoardOverlayOnLevelWorldsClose] = useState(false);
@@ -737,11 +734,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const goldBalance = gamificationProfile?.total_points ?? 0;
   const goldBreakdown = splitGoldBalance(goldBalance);
   const { spinAvailable, spinsAvailable } = useDailySpinStatus(supabaseSession?.user?.id);
-  const luckyRollStatus = useLuckyRollStatus(supabaseSession?.user?.id);
   // Phase 2 (Minigame & Events Consolidation Plan §2.5): when the
   // `todaysOfferSpinEntryEnabled` flag is on, the Daily Spin Wheel moves
   // into the Today's Offer dialog and is REMOVED from the board overlay.
-  // The Lucky Roll entry (and its timer) stay on the overlay unchanged.
+  // Treasure Path remains Island Run-owned and is intentionally not exposed
+  // as a standalone game overlay entry.
   const overlayShowSpinWheel =
     spinAvailable && !isIslandRunFeatureEnabled('todaysOfferSpinEntryEnabled');
   const creatureCollectionSummary = useMemo(() => {
@@ -2995,7 +2992,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     };
   }, []);
 
-  const shouldLockAppScroll = showGameBoardOverlay || showLuckyRoll || showDailySpinWheel || showCalendarPlaceholder || showLevelWorldsFromEntry;
+  const shouldLockAppScroll = showGameBoardOverlay || showDailySpinWheel || showCalendarPlaceholder || showLevelWorldsFromEntry;
   const isStandalonePwa = useMemo(
     () => (typeof window !== 'undefined' ? isStandaloneMode() : false),
     [],
@@ -4517,13 +4514,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     </div>
   ) : null;
 
-  const luckyRollModal = showLuckyRoll && activeSession ? (
-    <LuckyRollBoard
-      session={activeSession}
-      onClose={() => handleRewardModalClose(() => setShowLuckyRoll(false))}
-    />
-  ) : null;
-
   const countdownCalendarModal = (
     <CountdownCalendarModal
       isOpen={showCalendarPlaceholder}
@@ -4677,11 +4667,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
             setReopenGameOverlayOnRewardClose(true);
             setShowDailySpinWheel(true);
           }}
-          onLuckyRollClick={() => {
-            setShowGameBoardOverlay(false);
-            setReopenGameOverlayOnRewardClose(true);
-            setShowLuckyRoll(true);
-          }}
           onCreatureCollectionClick={() => {
             setShowGameBoardOverlay(false);
             setReopenGameBoardOverlayOnLevelWorldsClose(true);
@@ -4709,11 +4694,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
           islandSceneSrc={currentIslandBackgroundSrc}
           islandTimeLabel={islandTimeLabelForOverlay}
           spinWinResetAtMs={spinWinResetAtMs}
-          luckyRollResetAtMs={luckyRollStatus.monthlyWindowEndsAtMs ?? undefined}
-          luckyRollRunsRemaining={luckyRollStatus.earnedRuns}
-          luckyRollStatusLabel={luckyRollStatus.activeSource === 'earned' ? `${luckyRollStatus.earnedRuns} earned ${luckyRollStatus.earnedRuns === 1 ? 'run' : 'runs'}` : undefined}
           showSpinWheel={overlayShowSpinWheel}
-          showLuckyRoll={luckyRollStatus.available}
+          showLuckyRoll={false}
           creatureCollectionCount={creatureCollectionSummary.total}
           creatureRewardReadyCount={creatureCollectionSummary.rewardsReady}
         />
@@ -4731,7 +4713,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
           <NewDailySpinWheel session={activeSession} onClose={() => handleRewardModalClose(() => setShowDailySpinWheel(false))} />
         )}
         {quickGainsModal}
-        {luckyRollModal}
         {countdownCalendarModal}
         {showMobileFeedbackModal ? (
           <CaseSubmissionModal
@@ -4999,11 +4980,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
           setReopenGameOverlayOnRewardClose(true);
           setShowDailySpinWheel(true);
         }}
-        onLuckyRollClick={() => {
-          setShowGameBoardOverlay(false);
-          setReopenGameOverlayOnRewardClose(true);
-          setShowLuckyRoll(true);
-        }}
         onCreatureCollectionClick={() => {
           setShowGameBoardOverlay(false);
           setReopenGameBoardOverlayOnLevelWorldsClose(true);
@@ -5029,11 +5005,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
         islandSceneSrc={currentIslandBackgroundSrc}
         islandTimeLabel={islandTimeLabelForOverlay}
         spinWinResetAtMs={spinWinResetAtMs}
-        luckyRollResetAtMs={luckyRollStatus.monthlyWindowEndsAtMs ?? undefined}
-        luckyRollRunsRemaining={luckyRollStatus.earnedRuns}
-        luckyRollStatusLabel={luckyRollStatus.activeSource === 'earned' ? `${luckyRollStatus.earnedRuns} earned ${luckyRollStatus.earnedRuns === 1 ? 'run' : 'runs'}` : undefined}
         showSpinWheel={overlayShowSpinWheel}
-        showLuckyRoll={luckyRollStatus.available}
+        showLuckyRoll={false}
         creatureCollectionCount={creatureCollectionSummary.total}
         creatureRewardReadyCount={creatureCollectionSummary.rewardsReady}
       />
@@ -5087,7 +5060,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
         <NewDailySpinWheel session={activeSession} onClose={() => handleRewardModalClose(() => setShowDailySpinWheel(false))} />
       )}
       {quickGainsModal}
-      {luckyRollModal}
       {countdownCalendarModal}
       {starterQuestSheet}
 
