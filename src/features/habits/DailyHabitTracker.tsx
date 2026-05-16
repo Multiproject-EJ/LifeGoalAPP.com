@@ -134,6 +134,7 @@ import { EVENT_IDS, type EventId } from '../gamification/level-worlds/services/i
 import { generateIslandStopPlan } from '../gamification/level-worlds/services/islandRunStops';
 import { useIslandRunState } from '../gamification/level-worlds/hooks/useIslandRunState';
 import { refreshIslandRunStateFromLocal } from '../gamification/level-worlds/services/islandRunStateStore';
+import { isPromiseActionableToday } from '../gamification/promisePresentation';
 import { DEFAULT_GOAL_STATUS } from '../goals/goalStatus';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import {
@@ -7808,11 +7809,15 @@ export function DailyHabitTracker({
     const intentionsButtonClassName = `habit-checklist-card__intentions-button ${
       isIntentionsNoticeViewed ? 'habit-checklist-card__intentions-button--seen habit-checklist-card__intentions-button--compact' : ''
     }`;
+    const todayActionableContracts = activeContracts.filter((contract) => isPromiseActionableToday(contract));
     const contractsStatusChip = contractsError
       ? { label: 'Error', tone: 'error' as const }
       : contractsLoading
         ? { label: 'Loading…', tone: 'loading' as const }
-        : { label: activeContracts.length === 1 ? '1 active' : `${activeContracts.length} active`, tone: 'accent' as const };
+        : {
+            label: todayActionableContracts.length === 1 ? '1 now' : `${todayActionableContracts.length} now`,
+            tone: 'accent' as const,
+          };
     const routinesStatusChip = routinesTodaySummary.status === 'error'
       ? { label: 'Error', tone: 'error' as const }
       : routinesTodaySummary.status === 'loading'
@@ -8226,7 +8231,7 @@ export function DailyHabitTracker({
                 <div className="habit-contracts-card__header">
                   <div>
                     <p className="habit-contracts-card__eyebrow">Keep promises visible</p>
-                    <h3 className="habit-contracts-card__title">Active promises</h3>
+                    <h3 className="habit-contracts-card__title">Promises needing attention</h3>
                   </div>
                   <button
                     type="button"
@@ -8238,15 +8243,15 @@ export function DailyHabitTracker({
                   </button>
                 </div>
 
-                {contractsLoading && activeContracts.length === 0 ? (
-                  <p className="habit-contracts-card__hint">Loading your active promises…</p>
-                ) : activeContracts.length === 0 ? (
+                {contractsLoading && todayActionableContracts.length === 0 ? (
+                  <p className="habit-contracts-card__hint">Loading your actionable promises…</p>
+                ) : todayActionableContracts.length === 0 ? (
                   <p className="habit-contracts-card__hint">
-                    No active promises right now. Start one from the Promises tab and it will appear here.
+                    No promises need attention right now. Start a promise from the Promises tab and it will appear here when it can still be acted on.
                   </p>
                 ) : (
                   <div className="habit-contracts-card__list">
-                    {activeContracts.map((contract) => {
+                    {todayActionableContracts.map((contract) => {
                       const progressPercent = Math.min(100, (contract.currentProgress / contract.targetCount) * 100);
                       const isBusy = contractActionId === contract.id;
                       const stakeLabel = `${contract.stakeAmount} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'} staked`;
