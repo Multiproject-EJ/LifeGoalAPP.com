@@ -186,7 +186,7 @@ export function ContractStatusCard({
 
       <div className="contract-status-card__info">
         <div className="contract-status-card__info-row">
-          <span className="contract-status-card__info-label">Grace days available:</span>
+          <span className="contract-status-card__info-label">Buffer days available:</span>
           <span className="contract-status-card__info-value">{contract.graceDays}</span>
         </div>
         {coolingOffRemaining !== null && (
@@ -254,7 +254,7 @@ export function ContractStatusCard({
             onClick={onCancel}
             disabled={!isCancelAllowed}
             aria-disabled={!isCancelAllowed}
-            title={!isCancelAllowed ? 'Cancellation is only available during cooling-off. Pause instead.' : undefined}
+            title={!isCancelAllowed ? 'Cancellation is only available during the cancel-protection window. Pause instead.' : undefined}
           >
             Cancel
           </button>
@@ -262,7 +262,7 @@ export function ContractStatusCard({
       </div>
       {!isCancelAllowed && (
         <p className="contract-status-card__cooling-off-note" role="status" aria-live="polite">
-          Cooling-off ended. Pause to keep this promise recoverable without cancellation.
+          Cancel protection ended. Pause to keep this promise recoverable without cancellation.
         </p>
       )}
     </div>

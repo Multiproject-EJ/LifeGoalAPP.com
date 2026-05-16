@@ -315,6 +315,10 @@
   font-size: 0.875rem;
 }
 
+.contract-wizard__label--spaced {
+  margin-top: 0.25rem;
+}
+
 .contract-wizard__chip-group {
   display: flex;
   gap: 0.5rem;
