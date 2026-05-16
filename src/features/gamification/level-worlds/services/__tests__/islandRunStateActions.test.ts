@@ -1881,16 +1881,14 @@ export const islandRunStateActionsTests: TestCase[] = [
     run: async () => {
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
-      // @ts-ignore island-run test tsconfig omits node type libs
-      const pathMod = await import('path');
-      const boardSource = fsMod.readFileSync(pathMod.resolve(
-        process.cwd(),
+      const boardSource = fsMod.readFileSync(
         'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx',
-      ), 'utf8');
-      const actionSource = fsMod.readFileSync(pathMod.resolve(
-        process.cwd(),
+        'utf8',
+      );
+      const actionSource = fsMod.readFileSync(
         'src/features/gamification/level-worlds/services/islandRunStateActions.ts',
-      ), 'utf8');
+        'utf8',
+      );
 
       assert(
         /\{isDevModeEnabled && \([\s\S]*🧹 Clear Island \(Dev\)/.test(boardSource),

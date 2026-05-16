@@ -66,6 +66,7 @@ import {
   deductIslandRunContractV2Essence,
   getRemainingIslandBuildCost,
   initStopBuildStatesForIsland,
+  MAX_BUILD_LEVEL,
   spendIslandRunContractV2EssenceOnStopBuild,
 } from './islandRunContractV2EssenceBuild';
 import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
