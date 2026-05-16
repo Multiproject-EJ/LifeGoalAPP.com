@@ -240,9 +240,10 @@ export function ContractsTab({
     }
 
     setActiveContracts(hydratedContracts);
+    const hydratedContractIds = new Set(hydratedContracts.map((contract) => contract.id));
     const contractsNeedingHistory = [
       ...hydratedContracts,
-      ...endedContracts.filter((pastContract) => !hydratedContracts.some((active) => active.id === pastContract.id)),
+      ...endedContracts.filter((pastContract) => !hydratedContractIds.has(pastContract.id)),
     ];
 
     if (contractsNeedingHistory.length === 0) {
@@ -753,9 +754,12 @@ export function ContractsTab({
                 <ul className="score-tab__past-promises-list">
                   {pastContracts.map((contract) => {
                     const evaluations = historyEvaluationsByContractId[contract.id] ?? [];
-                    const latestEvaluation = evaluations
-                      .slice()
-                      .sort((a, b) => new Date(b.evaluatedAt).getTime() - new Date(a.evaluatedAt).getTime())[0];
+                    const latestEvaluation = evaluations.reduce<ContractEvaluation | null>((latest, current) => {
+                      if (!latest) return current;
+                      return new Date(current.evaluatedAt).getTime() > new Date(latest.evaluatedAt).getTime()
+                        ? current
+                        : latest;
+                    }, null);
                     const resultLabel = latestEvaluation
                       ? latestEvaluation.result === 'success'
                         ? 'Kept'
