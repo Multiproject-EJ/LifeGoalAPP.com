@@ -262,12 +262,12 @@ export function ContractWizard({
 
     if (guidedComplexity === 'simple') {
       recommendations.push('classic');
-    } else if (guidedIntent !== 'reduce_behavior') {
+    } else if (guidedIntent !== 'reduce_behavior' && recentMissCount < 2) {
       recommendations.push('reverse');
     }
 
     const availableRecommendations = recommendations.filter((type) =>
-      CONTRACT_TYPES.some((option) => option.type === type && option.available !== false),
+      CONTRACT_TYPES.some((option) => option.type === type && option.available === true),
     );
 
     const fallbackRecommendations: ContractType[] = ['classic', 'reverse', 'sacred'];
@@ -522,16 +522,16 @@ export function ContractWizard({
                         key={ct.type}
                         type="button"
                         className={`contract-wizard__type-card${
-                          ct.available !== false && selectedContractType === ct.type ? ' contract-wizard__type-card--selected' : ''
+                          ct.available === true && selectedContractType === ct.type ? ' contract-wizard__type-card--selected' : ''
                         }${
-                          ct.available === false ? ' contract-wizard__type-card--unavailable' : ''
+                          ct.available !== true ? ' contract-wizard__type-card--unavailable' : ''
                         }`}
                         onClick={() => {
-                          if (ct.available === false) return;
+                          if (ct.available !== true) return;
                           setSelectedContractType(ct.type);
                         }}
-                        disabled={ct.available === false}
-                        aria-disabled={ct.available === false}
+                        disabled={ct.available !== true}
+                        aria-disabled={ct.available !== true}
                       >
                         <span className="contract-wizard__type-icon">{ct.icon}</span>
                         <span className="contract-wizard__type-name">{ct.label}</span>
@@ -539,7 +539,7 @@ export function ContractWizard({
                         <span className="contract-wizard__type-meta">Best for: {ct.bestFor}</span>
                         <span className="contract-wizard__type-meta">Example: {ct.example}</span>
                         <span className="contract-wizard__type-meta">Setup: {ct.setupEffort}</span>
-                        {ct.available === false && (
+                        {ct.available !== true && (
                           <span className="contract-wizard__availability-badge">
                             {ct.availabilityLabel ?? 'Coming soon'}
                           </span>
