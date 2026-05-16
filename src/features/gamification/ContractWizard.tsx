@@ -6,7 +6,7 @@ import type { Database } from '../../lib/database.types';
 import { createContract, activateContract, type ContractInput } from '../../services/commitmentContracts';
 import { listAvailableRewardsForContracts, linkRewardToContract } from '../../services/contractRewards';
 import { createReward } from '../../services/rewards';
-import type { RewardCategory, RewardItem } from '../../types/gamification';
+import type { RewardItem } from '../../types/gamification';
 import './ContractWizard.css';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
@@ -71,8 +71,6 @@ const MVP_CONTRACT_TYPES: ContractTypeCard[] = [
   },
 ];
 
-const REWARD_CATEGORY_OPTIONS: RewardCategory[] = ['Rest', 'Fun', 'Growth', 'Treat', 'Social', 'Meta'];
-
 function toDateInputValue(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -86,6 +84,33 @@ function addWeeksToToday(weeks: number): string {
   return toDateInputValue(now);
 }
 
+function getScreenLabel(screen: WizardScreen): string {
+  switch (screen) {
+    case 'target':
+      return 'Target';
+    case 'type':
+      return 'Promise type';
+    case 'sacred_confirm':
+      return 'Sacred confirmation';
+    case 'cadence':
+      return 'How often';
+    case 'ending':
+      return 'Ending';
+    case 'stake':
+      return 'Stake';
+    case 'checkin':
+      return 'Check-in';
+    case 'buffer':
+      return 'Buffer days';
+    case 'reward':
+      return 'Reward';
+    case 'review':
+      return 'Review';
+    default:
+      return 'Step';
+  }
+}
+
 export function ContractWizard({
   userId,
   currentGoldBalance,
@@ -94,7 +119,7 @@ export function ContractWizard({
   onCancel,
   onRewardLinked,
 }: ContractWizardProps) {
-  const [screenIndex, setScreenIndex] = useState(0);
+  const [currentScreenIndex, setCurrentScreenIndex] = useState(0);
   const [targetOptions, setTargetOptions] = useState<TargetOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [quickCreateType, setQuickCreateType] = useState<'Habit' | 'Goal' | null>(null);
@@ -116,8 +141,6 @@ export function ContractWizard({
   const [stakeAmount, setStakeAmount] = useState<number>(0);
   const [graceDays, setGraceDays] = useState<number>(1);
   const [trackingMode, setTrackingMode] = useState<'progress' | 'outcome_only'>('progress');
-  const [accountabilityMode] = useState<'solo' | 'witness'>('solo');
-  const [witnessLabel] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -135,10 +158,10 @@ export function ContractWizard({
     return base;
   }, [selectedContractType]);
 
-  const currentScreen = screens[screenIndex] ?? screens[0];
+  const currentScreen = screens[currentScreenIndex] ?? screens[0];
 
   useEffect(() => {
-    setScreenIndex((prev) => Math.min(prev, screens.length - 1));
+    setCurrentScreenIndex((prev) => Math.min(prev, screens.length - 1));
   }, [screens.length]);
 
   useEffect(() => {
@@ -256,12 +279,12 @@ export function ContractWizard({
     if (!validateCurrentScreen()) {
       return;
     }
-    setScreenIndex((prev) => Math.min(prev + 1, screens.length - 1));
+    setCurrentScreenIndex((prev) => Math.min(prev + 1, screens.length - 1));
   };
 
   const handleBack = () => {
     setError(null);
-    setScreenIndex((prev) => Math.max(0, prev - 1));
+    setCurrentScreenIndex((prev) => Math.max(0, prev - 1));
   };
 
   const handleConfirm = async () => {
@@ -281,8 +304,8 @@ export function ContractWizard({
         stakeAmount,
         graceDays,
         trackingMode,
-        accountabilityMode,
-        witnessLabel,
+        accountabilityMode: 'solo',
+        witnessLabel: '',
         endAt: resolvedEndDate ? new Date(resolvedEndDate).toISOString() : null,
         contractType: selectedContractType,
         identityStatement: null,
@@ -342,12 +365,14 @@ export function ContractWizard({
     <div className="contract-wizard">
       <div className="contract-wizard__header">
         <div>
-          <p className="contract-wizard__step-indicator">Step {screenIndex + 1} of {screens.length}</p>
-          <div className="contract-wizard__progress" role="progressbar" aria-valuemin={1} aria-valuemax={screens.length} aria-valuenow={screenIndex + 1}>
+          <p className="contract-wizard__step-indicator">Step {currentScreenIndex + 1} of {screens.length}</p>
+          <div className="contract-wizard__progress" role="progressbar" aria-valuemin={1} aria-valuemax={screens.length} aria-valuenow={currentScreenIndex + 1}>
             {screens.map((screen, idx) => (
               <span
                 key={`${screen}-${idx}`}
-                className={`contract-wizard__dot${idx <= screenIndex ? ' contract-wizard__dot--active' : ''}`}
+                className={`contract-wizard__dot${idx <= currentScreenIndex ? ' contract-wizard__dot--active' : ''}`}
+                aria-label={`Step ${idx + 1}: ${getScreenLabel(screen)}`}
+                title={`Step ${idx + 1}: ${getScreenLabel(screen)}`}
               />
             ))}
           </div>
@@ -559,7 +584,7 @@ export function ContractWizard({
           <div className="contract-wizard__field-group">
             <label className="contract-wizard__label" htmlFor="target-count">
               {selectedContractType === 'reverse'
-                ? `How many slips are you allowing per ${cadence}?`
+                ? `How many slips do you allow per ${cadence}?`
                 : `How many times per ${cadence}?`}
             </label>
             <input
@@ -659,10 +684,11 @@ export function ContractWizard({
               id="stake-amount"
               type="number"
               min="1"
-              max={Math.max(maxStake, 1)}
+              max={maxStake > 0 ? maxStake : 1}
               className="contract-wizard__input"
               value={stakeAmount || ''}
               onChange={(event) => setStakeAmount(parseInt(event.target.value, 10) || 0)}
+              disabled={!hasStakeCapacity}
             />
             <p className="contract-wizard__helper-text">
               {hasStakeCapacity
@@ -792,11 +818,7 @@ export function ContractWizard({
                   onChange={(event) => setNewRewardTitle(event.target.value)}
                   maxLength={40}
                 />
-                <select className="contract-wizard__input" defaultValue="Treat" disabled>
-                  {REWARD_CATEGORY_OPTIONS.map((category) => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
+                <p className="contract-wizard__helper-text">Quick rewards are created in the Treat category.</p>
               </div>
             )}
           </div>
@@ -847,14 +869,14 @@ export function ContractWizard({
             </p>
 
             <p className="contract-wizard__helper-text">
-              This promise ends every {cadence === 'daily' ? 'day' : 'week'} at midnight. If you keep it, you earn back your stake + bonus. If you miss, your stake is forfeited.
+              Each {cadence === 'daily' ? 'day' : 'week'} window ends at midnight. If you keep it, you earn back your stake plus the standard bonus for this promise type. If you miss, your stake is forfeited.
             </p>
           </article>
         </section>
       )}
 
       <div className="contract-wizard__actions">
-        {screenIndex > 0 ? (
+        {currentScreenIndex > 0 ? (
           <button
             type="button"
             className="contract-wizard__button contract-wizard__button--secondary"
