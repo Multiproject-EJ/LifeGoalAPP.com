@@ -141,7 +141,7 @@ export function ContractWizard({
   const [sacredConfirmed, setSacredConfirmed] = useState(false);
 
   const [cadence, setCadence] = useState<ContractCadence>('daily');
-  const [targetCount, setTargetCount] = useState<number>(1);
+  const [targetCount, setTargetCount] = useState<number | ''>(1);
   const [endMode, setEndMode] = useState<'ongoing' | 'date' | 'weeks'>('ongoing');
   const [endDate, setEndDate] = useState<string>('');
   const [durationWeeks, setDurationWeeks] = useState<number>(4);
@@ -309,14 +309,19 @@ export function ContractWizard({
       return false;
     }
 
-    if (currentScreen === 'cadence' && selectedContractType === 'reverse' && targetCount < 0) {
-      setError('Allowed slips cannot be negative.');
-      return false;
-    }
-
-    if (currentScreen === 'cadence' && selectedContractType !== 'reverse' && targetCount <= 0) {
-      setError('Count must be at least 1.');
-      return false;
+    if (currentScreen === 'cadence') {
+      if (targetCount === '') {
+        setError('Enter a whole number.');
+        return false;
+      }
+      if (selectedContractType === 'reverse' && targetCount < 0) {
+        setError('Allowed slips cannot be negative.');
+        return false;
+      }
+      if (selectedContractType !== 'reverse' && targetCount <= 0) {
+        setError('Count must be at least 1.');
+        return false;
+      }
     }
 
     if (currentScreen === 'ending' && endMode === 'date' && !endDate) {
@@ -369,6 +374,7 @@ export function ContractWizard({
       : selectedTarget;
 
     if (!resolvedTarget) return;
+    if (targetCount === '') return;
 
     setSubmitting(true);
     setError(null);
@@ -751,23 +757,43 @@ export function ContractWizard({
             <input
               id="target-count"
               type="number"
+              step="1"
               min={selectedContractType === 'reverse' ? '0' : '1'}
               className="contract-wizard__input"
               value={targetCount}
+              onKeyDown={(e) => {
+                if (e.key === '.' || e.key === ',') e.preventDefault();
+              }}
               onChange={(e) => {
-                const parsed = Number(e.target.value);
-                if (selectedContractType === 'reverse') {
-                  setTargetCount(Number.isNaN(parsed) ? 0 : Math.max(0, parsed));
+                const raw = e.target.value;
+                if (raw === '') {
+                  setTargetCount('');
                   return;
                 }
-                setTargetCount(Number.isNaN(parsed) ? 1 : Math.max(1, parsed));
+                const parsed = Number(raw);
+                if (!Number.isInteger(parsed)) {
+                  return;
+                }
+                if (selectedContractType === 'reverse') {
+                  if (parsed >= 0) setTargetCount(parsed);
+                } else {
+                  if (parsed >= 1) setTargetCount(parsed);
+                }
               }}
             />
-            {selectedContractType === 'reverse' && (
-              <p className="contract-wizard__helper-text">
-                0 slips means the promise breaks after the first slip.
-              </p>
-            )}
+            {(() => {
+              if (targetCount === '') {
+                return <p className="contract-wizard__helper-text">Enter a whole number.</p>;
+              }
+              if (selectedContractType === 'reverse') {
+                return (
+                  <p className="contract-wizard__helper-text">
+                    0 slips means the promise breaks after the first slip.
+                  </p>
+                );
+              }
+              return null;
+            })()}
           </div>
         </section>
       )}
@@ -1089,7 +1115,7 @@ export function ContractWizard({
             type="button"
             className="contract-wizard__button contract-wizard__button--primary"
             onClick={handleNext}
-            disabled={submitting}
+            disabled={submitting || (currentScreen === 'cadence' && targetCount === '')}
           >
             Next
           </button>
