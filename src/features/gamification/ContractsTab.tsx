@@ -815,7 +815,9 @@ export function ContractsTab({
                           : 'Broken'
                         : contract.status === 'cancelled'
                           ? 'Cancelled'
-                          : 'Completed';
+                          : contract.status === 'completed'
+                            ? 'Completed'
+                            : 'Ended';
                       const resultDate = latestEvaluation?.evaluatedAt ?? contract.updatedAt;
                       const impactText = latestEvaluation
                         ? latestEvaluation.result === 'success'

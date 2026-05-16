@@ -248,7 +248,7 @@ export function ContractWizard({
       setSelectedTarget(null);
     }
     setTargetSearch('');
-  }, [targetLinkMode]);
+  }, [promiseTitleTouched, selectedTarget, targetLinkMode]);
 
   useEffect(() => {
     if (targetLinkMode === 'custom' || promiseTitleTouched || !selectedTarget) {
