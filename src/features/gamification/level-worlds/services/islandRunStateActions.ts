@@ -784,7 +784,7 @@ export function applyDevSpeedHatchEgg(options: ApplyDevSpeedHatchEggOptions): Ap
     return { record: current, changed: false };
   }
 
-  const resolvedNowMs = Number.isFinite(nowMs) ? Math.max(0, Math.trunc(nowMs ?? 0)) : Date.now();
+  const resolvedNowMs = Number.isFinite(nowMs) ? Math.max(0, Math.trunc(nowMs as number)) : Date.now();
   const readySetAtMs = Number.isFinite(entry.setAtMs) ? entry.setAtMs : resolvedNowMs;
   const readyHatchAtMs = readySetAtMs;
   const hasActiveEgg = current.activeEggTier !== null;
