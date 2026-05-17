@@ -5874,6 +5874,365 @@
   color: rgba(255, 238, 188, 0.88);
 }
 
+/* ─────────────────────────────────────────────────
+   Build Modal V2 — Monopoly GO-style bottom-tray layout
+   ───────────────────────────────────────────────── */
+
+/* Backdrop reuses existing .island-stop-modal-backdrop;
+   .bm2-backdrop overrides centering to anchor the shell at the bottom. */
+.bm2-backdrop {
+  align-items: flex-end;
+  padding: 0;
+}
+
+/* Shell — grows up from the bottom edge */
+.bm2-shell {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100dvh - 2rem);
+  background: linear-gradient(180deg, rgba(20, 36, 49, 0.99), rgba(9, 18, 27, 0.98));
+  border: 1px solid rgba(163, 231, 255, 0.3);
+  border-bottom: none;
+  border-radius: 18px 18px 0 0;
+  overflow: hidden;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Header ── */
+.bm2-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 0.65rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.bm2-header__title {
+  flex: 1;
+  font-size: 0.97rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bm2-header__essence {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: rgba(197, 172, 255, 0.9);
+  white-space: nowrap;
+}
+
+.bm2-header__close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.25rem 0.4rem;
+  border-radius: 6px;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bm2-header__close:hover,
+.bm2-header__close:focus-visible {
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+}
+
+/* ── Tutorial guidance + hold feedback ── */
+.bm2-tutorial-guidance {
+  margin: 0;
+  padding: 0.4rem 1rem;
+  font-size: 0.82rem;
+  color: rgba(255, 238, 188, 0.95);
+  background: rgba(120, 92, 28, 0.22);
+  border-bottom: 1px solid rgba(255, 220, 120, 0.12);
+}
+
+.bm2-hold-feedback {
+  margin: 0;
+  padding: 0.25rem 1rem;
+  font-size: 0.82rem;
+  color: rgba(197, 172, 255, 0.9);
+  opacity: 0.9;
+}
+
+/* ── Center (artwork + progress meter) ── */
+.bm2-center {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  min-height: 170px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* Artwork area */
+.bm2-artwork {
+  flex: 1;
+  background: linear-gradient(135deg, rgba(84, 63, 130, 0.25), rgba(20, 36, 49, 0.4));
+  overflow: hidden;
+  position: relative;
+}
+
+.bm2-artwork__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bm2-artwork__placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: linear-gradient(135deg, rgba(84, 63, 130, 0.3), rgba(20, 36, 49, 0.5));
+}
+
+.bm2-artwork__placeholder-icon {
+  font-size: 2.2rem;
+  opacity: 0.65;
+}
+
+.bm2-artwork__placeholder-label {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: center;
+  padding: 0 0.5rem;
+}
+
+/* Progress meter — vertical strip on the right of artwork */
+.bm2-progress-meter {
+  width: 64px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem 0;
+  gap: 0;
+  background: rgba(0, 0, 0, 0.18);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Each step: dot + (optional track segment below) + label */
+.bm2-progress-meter__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  gap: 0;
+  position: relative;
+}
+
+.bm2-progress-meter__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(197, 172, 255, 0.22);
+  border: 2px solid rgba(197, 172, 255, 0.4);
+  flex-shrink: 0;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+.bm2-progress-meter__step--reached .bm2-progress-meter__dot {
+  background: rgba(197, 172, 255, 0.9);
+  border-color: rgba(197, 172, 255, 1);
+  box-shadow: 0 0 8px rgba(197, 172, 255, 0.55);
+}
+
+/* Track segment between dots */
+.bm2-progress-meter__track {
+  width: 2px;
+  flex: 1;
+  background: rgba(197, 172, 255, 0.18);
+  margin: 2px 0;
+}
+
+.bm2-progress-meter__step--reached .bm2-progress-meter__track {
+  background: rgba(197, 172, 255, 0.55);
+}
+
+.bm2-progress-meter__label {
+  font-size: 0.56rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  line-height: 1.2;
+  padding: 0 2px;
+  word-break: break-word;
+  max-width: 60px;
+  margin-top: 2px;
+}
+
+.bm2-progress-meter__step--reached .bm2-progress-meter__label {
+  color: rgba(197, 172, 255, 0.9);
+}
+
+/* ── Horizontal tray ── */
+.bm2-tray {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  flex-shrink: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bm2-tray::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Tray card ── */
+.bm2-card {
+  flex: 0 0 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.55rem 0.4rem;
+  border-radius: 12px;
+  background: rgba(84, 63, 130, 0.22);
+  border: 2px solid rgba(197, 172, 255, 0.25);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.2s, transform 0.1s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  text-align: center;
+  min-width: 0;
+}
+
+.bm2-card:active {
+  transform: scale(0.96);
+  background: rgba(84, 63, 130, 0.4);
+  border-color: rgba(197, 172, 255, 0.6);
+}
+
+.bm2-card--complete {
+  background: rgba(50, 130, 80, 0.2);
+  border-color: rgba(80, 220, 130, 0.5);
+  cursor: default;
+}
+
+.bm2-card--next-cheapest {
+  border-color: rgba(255, 220, 120, 0.8);
+  box-shadow: 0 0 0 2px rgba(255, 220, 120, 0.18), 0 0 18px rgba(255, 220, 120, 0.2);
+}
+
+.bm2-card--tutorial-target {
+  border-color: rgba(255, 220, 120, 0.95);
+  background: rgba(120, 92, 28, 0.34);
+  box-shadow: 0 0 0 3px rgba(255, 220, 120, 0.2), 0 0 24px rgba(255, 220, 120, 0.3);
+}
+
+.bm2-card--tutorial-muted {
+  opacity: 0.42;
+  cursor: not-allowed;
+  filter: grayscale(0.35);
+}
+
+/* Card icon — scales with build level */
+.bm2-card__icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.35s;
+}
+
+.bm2-card__icon--level-0 { transform: scale(0.75); filter: grayscale(0.6) opacity(0.7); }
+.bm2-card__icon--level-1 { transform: scale(0.9);  filter: grayscale(0.3) opacity(0.85); }
+.bm2-card__icon--level-2 { transform: scale(1.05); filter: none; }
+.bm2-card__icon--level-3 { transform: scale(1.2);  filter: drop-shadow(0 0 5px rgba(197, 172, 255, 0.9)); }
+
+@keyframes bm2-level-up-pulse {
+  0%   { transform: scale(1.0); }
+  35%  { transform: scale(1.4); filter: drop-shadow(0 0 10px rgba(255, 220, 80, 1)); }
+  70%  { transform: scale(1.15); }
+  100% { transform: scale(1.2); }
+}
+
+.bm2-card__icon--level-3 {
+  animation: bm2-level-up-pulse 0.6s ease-out;
+}
+
+.bm2-card__name {
+  font-size: 0.71rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.93);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 88px;
+}
+
+.bm2-card__status {
+  font-size: 0.66rem;
+  color: rgba(197, 172, 255, 0.85);
+  white-space: nowrap;
+}
+
+.bm2-card--complete .bm2-card__status {
+  color: rgba(80, 220, 130, 0.9);
+}
+
+.bm2-card__full-cost {
+  font-size: 0.63rem;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.bm2-card__level-bar {
+  display: flex;
+  gap: 3px;
+  margin-top: 0.18rem;
+  width: 80%;
+}
+
+.bm2-card__level-pip {
+  height: 5px;
+  flex: 1;
+  border-radius: 3px;
+  background: rgba(197, 172, 255, 0.2);
+  transition: background 0.3s;
+}
+
+.bm2-card__level-pip--done {
+  background: rgba(197, 172, 255, 0.85);
+}
+
+.bm2-card__level-pip--active {
+  background: rgba(255, 220, 80, 0.7);
+  animation: bm2-pip-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes bm2-pip-pulse {
+  0%, 100% { background: rgba(255, 220, 80, 0.5); }
+  50%       { background: rgba(255, 220, 80, 1); }
+}
+
+.bm2-card__objective {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: rgba(255, 238, 188, 0.85);
+}
+
+.bm2-card__disabled-hint {
+  font-size: 0.65rem;
+  opacity: 0.6;
+}
+
 /* ── Debug Panel ────────────────────────────────────────────────────────── */
 
 .island-run-debug-panel-backdrop {

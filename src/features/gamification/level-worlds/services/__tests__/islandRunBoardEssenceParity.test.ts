@@ -48,6 +48,15 @@ async function readVisionQuestRewardRoutingSource(): Promise<string> {
   return fsMod.readFileSync(routingPath, 'utf8');
 }
 
+async function readBuildModalV2Source(): Promise<string> {
+  // @ts-ignore island-run test tsconfig omits node type libs
+  const fsMod = await import('fs');
+  // @ts-ignore island-run test tsconfig omits node type libs
+  const pathMod = await import('path');
+  const v2Path = pathMod.resolve(process.cwd(), 'src/features/gamification/level-worlds/components/BuildModalV2.tsx');
+  return fsMod.readFileSync(v2Path, 'utf8');
+}
+
 
 export const islandRunBoardEssenceParityTests: TestCase[] = [
   {
@@ -304,8 +313,16 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
           source.includes('return 250;'),
         'Hold-to-build should use accelerating batch and delay curves as hold duration increases, with max batch delegated to the repeated-build speed cap.',
       );
+      // aria-disabled lives in BuildModalV2 (v2 tray cards) — verify it is
+      // present in either the board source or the v2 modal component.
+      const buildModalV2Source = await readBuildModalV2Source();
       assert(
-        (source.includes('aria-disabled={isBuildDisabled}') || source.includes('aria-disabled={isBuildInteractionDisabled}')) &&
+        (
+          source.includes('aria-disabled={isBuildDisabled}') ||
+          source.includes('aria-disabled={isBuildInteractionDisabled}') ||
+          buildModalV2Source.includes('aria-disabled={isBuildDisabled}') ||
+          buildModalV2Source.includes('aria-disabled={isBuildInteractionDisabled}')
+        ) &&
           (
             source.includes('const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;') ||
             source.includes('const isBuildInteractionDisabled = tutorialRowState.isUnavailable || isBuildDisabled;')
