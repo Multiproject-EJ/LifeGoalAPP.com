@@ -285,7 +285,7 @@ export function BuildModalV2({
         {/* ── Bottom horizontal tray ── */}
         <div className="bm2-tray" role="list" aria-label="Landmark cards">
           {cards.map((card) => (
-            <BuildModalV2Card key={`${card.stopId}-${card.stopIndex}`} card={card} onBuildTap={onBuildTap} />
+            <BuildModalV2Card key={`${card.stopId}__${card.stopIndex}`} card={card} onBuildTap={onBuildTap} />
           ))}
         </div>
       </section>
