@@ -5882,7 +5882,11 @@
    .bm2-backdrop overrides centering to anchor the shell at the bottom. */
 .bm2-backdrop {
   align-items: flex-end;
-  padding: 0;
+  padding:
+    max(0.4rem, env(safe-area-inset-top, 0px))
+    max(0.4rem, env(safe-area-inset-right, 0px))
+    max(0.4rem, env(safe-area-inset-bottom, 0px))
+    max(0.4rem, env(safe-area-inset-left, 0px));
 }
 
 /* Shell — grows up from the bottom edge */
@@ -6085,7 +6089,7 @@
   flex-direction: row;
   overflow-x: auto;
   gap: 0.5rem;
-  padding: 0.65rem 0.75rem;
+  padding: 0.65rem 0.75rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   overscroll-behavior-x: contain;
   scrollbar-width: none;
