@@ -116,7 +116,6 @@ interface CardProps {
 function BuildModalV2Card({ card, onBuildTap }: CardProps) {
   const {
     stopIndex,
-    stopId,
     title,
     levelIcon,
     buildLevel,
@@ -147,7 +146,6 @@ function BuildModalV2Card({ card, onBuildTap }: CardProps) {
 
   return (
     <div
-      key={stopId}
       className={classNames}
       role="button"
       tabIndex={isBuildInteractionDisabled ? -1 : 0}
