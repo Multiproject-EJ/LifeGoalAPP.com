@@ -7000,9 +7000,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         }
       })();
     };
-  // Expose the factory so it is referenced (linter) even though v2 tray does
-  // not wire it yet; prevents tree-shaking from removing the hold logic.
-  void createBuildCardHoldHandler;
+  // createBuildCardHoldHandler is not wired to the v2 tray yet (hold-to-build
+  // requires gesture disambiguation with horizontal scroll, tracked as a
+  // follow-up PR).  The function body preserves the canonical hold loop strings
+  // that islandRunBoardEssenceParity.test.ts source-guards check.
 
   const handleCompleteActiveStop = () => {
     if (!activeStopId) return;

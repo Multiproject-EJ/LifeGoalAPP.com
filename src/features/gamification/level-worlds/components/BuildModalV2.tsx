@@ -192,9 +192,7 @@ function BuildModalV2Card({ card, onBuildTap }: CardProps) {
         </span>
       )}
       {!isFullyBuilt && isBuildDisabled && (
-        <span className="bm2-card__disabled-hint">
-          {isFullyBuilt ? null : '🔒'}
-        </span>
+        <span className="bm2-card__disabled-hint">🔒</span>
       )}
     </div>
   );
