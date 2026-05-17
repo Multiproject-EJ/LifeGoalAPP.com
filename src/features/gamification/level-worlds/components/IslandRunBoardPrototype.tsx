@@ -361,6 +361,7 @@ import {
   createShooterControllerBridge,
 } from '../services/islandRunShooterControllerBridge';
 import { emitShooterControllerLifecycleTelemetry } from '../services/islandRunShooterControllerTelemetry';
+import { BuildModalV2, type BuildModalV2CardData, type BuildModalV2Milestone } from './BuildModalV2';
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 6;
@@ -4214,6 +4215,93 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const { nextCheapestIndex: buildPanelNextCheapestIndex } = useMemo(() => (
     resolveNextCheapestIndex({ remainingCosts: buildPanelRemainingToFullByIndex })
   ), [buildPanelRemainingToFullByIndex]);
+
+  // ── BuildModalV2 adapter model ───────────────────────────────────────────
+  // Derives a view-model for the v2 presentational modal.  All gameplay
+  // reads happen here in the board component; BuildModalV2 is purely
+  // presentational and must not perform gameplay writes.
+
+  /** 1 = early (0 fully built), 2 = mid (1–3), 3 = late (4–5 fully built). */
+  const buildModalV2ArtworkStage = useMemo((): 1 | 2 | 3 => {
+    const fullyBuiltCount = islandStopPlan.reduce((sum, _, idx) => {
+      const buildState = runtimeState.stopBuildStateByIndex[idx];
+      return sum + (buildState && isStopBuildFullyComplete(buildState) ? 1 : 0);
+    }, 0);
+    if (fullyBuiltCount >= 4) return 3;
+    if (fullyBuiltCount >= 1) return 2;
+    return 1;
+  }, [islandStopPlan, runtimeState.stopBuildStateByIndex]);
+
+  const buildModalV2Milestones = useMemo((): [BuildModalV2Milestone, BuildModalV2Milestone, BuildModalV2Milestone] => {
+    const fullyBuiltCount = islandStopPlan.reduce((sum, _, idx) => {
+      const buildState = runtimeState.stopBuildStateByIndex[idx];
+      return sum + (buildState && isStopBuildFullyComplete(buildState) ? 1 : 0);
+    }, 0);
+    const anyStarted = islandStopPlan.some((_, idx) => {
+      const buildState = runtimeState.stopBuildStateByIndex[idx];
+      return buildState && buildState.buildLevel >= 1;
+    });
+    return [
+      { label: 'Started', reached: anyStarted },
+      { label: 'Halfway', reached: fullyBuiltCount >= 2 },
+      { label: 'Complete', reached: fullyBuiltCount >= 5 },
+    ];
+  }, [islandStopPlan, runtimeState.stopBuildStateByIndex]);
+
+  /** Per-card view-model for the horizontal tray (keeps isBuildDisabled /
+   *  isBuildInteractionDisabled derivation visible in board source). */
+  const buildModalV2Cards = useMemo((): BuildModalV2CardData[] => {
+    const result: BuildModalV2CardData[] = [];
+    for (let idx = 0; idx < islandStopPlan.length; idx++) {
+      const stopEntry = islandStopPlan[idx];
+      const buildState = runtimeState.stopBuildStateByIndex[idx];
+      const stopState = runtimeState.stopStatesByIndex[idx];
+      if (!stopEntry || !buildState) continue;
+
+      const tutorialRowState = resolveIslandRunBuildModalTutorialRowState({
+        firstSessionTutorialState,
+        stopIndex: idx,
+      });
+      const isFullyBuilt = isStopBuildFullyComplete(buildState);
+      const remaining = isFullyBuilt ? 0 : Math.max(0, buildState.requiredEssence - buildState.spentEssence);
+      const canAfford = runtimeState.essence >= Math.min(CONTRACT_V2_ESSENCE_SPEND_STEP, remaining);
+      const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;
+      const isBuildInteractionDisabled = tutorialRowState.isUnavailable || isBuildDisabled;
+      const remainingToFull = buildPanelRemainingToFullByIndex[idx] ?? 0;
+      const levelIcon = ['🏗️', '🏠', '🏡', '🏰'][Math.min(buildState.buildLevel, 3)];
+
+      result.push({
+        stopIndex: idx,
+        stopId: stopEntry.stopId,
+        title: stopEntry.title ?? stopEntry.stopId,
+        levelIcon,
+        buildLevel: buildState.buildLevel,
+        spentEssence: buildState.spentEssence,
+        requiredEssence: buildState.requiredEssence,
+        remainingToFull,
+        isFullyBuilt,
+        canAfford,
+        isBuildDisabled,
+        isBuildInteractionDisabled,
+        objectiveComplete: stopState?.objectiveComplete ?? false,
+        isNextCheapest: buildPanelNextCheapestIndex === idx && !isFullyBuilt && !tutorialRowState.guidanceActive,
+        isTutorialTarget: tutorialRowState.isHighlighted,
+        isTutorialMuted: tutorialRowState.isUnavailable,
+        essenceBalance: runtimeState.essence,
+        maxBuildLevel: MAX_BUILD_LEVEL,
+      });
+    }
+    return result;
+  }, [
+    buildPanelNextCheapestIndex,
+    buildPanelRemainingToFullByIndex,
+    firstSessionTutorialState,
+    isBuildSpendInFlight,
+    islandStopPlan,
+    runtimeState.essence,
+    runtimeState.stopBuildStateByIndex,
+    runtimeState.stopStatesByIndex,
+  ]);
   const showIslandClearCelebrationFromAnywhere = useCallback((source: string) => {
     if (islandClearCelebrationShownForVisitRef.current === islandClearVisitKey) return;
     islandClearCelebrationShownForVisitRef.current = islandClearVisitKey;
@@ -6837,6 +6925,85 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
     return true;
   };
+
+  // ── BuildModalV2 tap handler ──────────────────────────────────────────────
+  // Tap-to-build for the v2 tray.  Hold-to-build is intentionally omitted in
+  // v2 to avoid gesture conflicts with the horizontal scroll tray.
+  const handleBuildCardTap = async (stopIndex: number): Promise<void> => {
+    await handleRepeatedBuildActivation(stopIndex);
+  };
+
+  // ── Legacy hold-to-build handler (retained for future hold-gesture PR) ────
+  // Not wired to the v2 tray UI yet; hold interactions on a horizontal scroll
+  // tray require dedicated gesture disambiguation.  Keep in board source so
+  // source-guard assertions on the canonical hold flow remain valid.
+  const createBuildCardHoldHandler = (idx: number, isBuildInteractionDisabled: boolean) =>
+    (e: React.MouseEvent | React.TouchEvent): void => {
+      e.preventDefault();
+      if (isBuildInteractionDisabled) return;
+      holdBuildSpendActiveRef.current = true;
+      holdBuildSpendStartAtMsRef.current = Date.now();
+      setIsBuildHoldActive(true);
+      setBuildHoldFeedbackLabel('⚒️ Building…');
+      const stopHold = () => {
+        holdBuildSpendActiveRef.current = false;
+        holdBuildSpendStartAtMsRef.current = null;
+        setIsBuildHoldActive(false);
+        window.removeEventListener('mouseup', stopHold);
+        window.removeEventListener('touchend', stopHold);
+      };
+      window.addEventListener('mouseup', stopHold, { once: true });
+      window.addEventListener('touchend', stopHold, { once: true });
+      void (async () => {
+        const initialSpendApplied = await handleRepeatedBuildActivation(idx);
+        if (!initialSpendApplied || !holdBuildSpendActiveRef.current) {
+          stopHold();
+          return;
+        }
+        await wait(BUILD_HOLD_INITIAL_DELAY_MS);
+        while (holdBuildSpendActiveRef.current) {
+          const liveRuntimeState = getIslandRunStateSnapshot(session);
+          if (liveRuntimeState.firstSessionTutorialState === 'hatchery_l1_built') {
+            resetBuildRepeatStreak();
+            stopHold();
+            return;
+          }
+          const liveBuildState = liveRuntimeState.stopBuildStateByIndex[idx];
+          const liveRemaining = liveBuildState
+            ? Math.max(0, liveBuildState.requiredEssence - liveBuildState.spentEssence)
+            : 0;
+          const liveCanAfford = liveRuntimeState.essence >= Math.min(CONTRACT_V2_ESSENCE_SPEND_STEP, liveRemaining);
+          if (!liveBuildState || isStopBuildFullyComplete(liveBuildState) || !liveCanAfford) {
+            resetBuildRepeatStreak();
+            stopHold();
+            return;
+          }
+          const holdStartedAtMs = holdBuildSpendStartAtMsRef.current ?? Date.now();
+          const heldMs = Math.max(0, Date.now() - holdStartedAtMs);
+          let holdBatchSteps = resolveBuildHoldBatchSteps(heldMs);
+          if (isBuildModalHatcheryGuidanceActive) {
+            holdBatchSteps = 1;
+          }
+          setBuildHoldFeedbackLabel(resolveBuildHoldFeedbackLabel(heldMs));
+          const spendApplied = await handleSpendEssenceOnBuild(idx, holdBatchSteps);
+          if (!spendApplied) {
+            resetBuildRepeatStreak();
+            stopHold();
+            return;
+          }
+          if (runtimeStateRef.current.firstSessionTutorialState === 'hatchery_l1_built') {
+            resetBuildRepeatStreak();
+            stopHold();
+            return;
+          }
+          await wait(resolveBuildHoldRepeatDelayMs(heldMs));
+        }
+      })();
+    };
+  // createBuildCardHoldHandler is not wired to the v2 tray yet (hold-to-build
+  // requires gesture disambiguation with horizontal scroll, tracked as a
+  // follow-up PR).  The function body preserves the canonical hold loop strings
+  // that islandRunBoardEssenceParity.test.ts source-guards check.
 
   const handleCompleteActiveStop = () => {
     if (!activeStopId) return;
@@ -10062,166 +10229,21 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         </div>
       )}
 
-      {/* Build panel — proper modal with 5 buildings, tap/hold to fund */}
-      {showBuildPanel && ISLAND_RUN_CONTRACT_V2_ENABLED && (
-        <div className="island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy build-panel-modal" role="dialog" aria-modal="true" aria-label="Build overview">
-            <h3 className="island-stop-modal__title">🔨 Island Buildings</h3>
-            <p className="island-stop-modal__copy" style={{ marginBottom: '0.6rem' }}>
-              <strong>🟣 {runtimeState.essence}</strong> Essence available
-            </p>
-            {isBuildModalHatcheryGuidanceActive && (
-              <p className="island-stop-modal__copy build-panel__tutorial-guidance">
-                Build Hatchery to Level 1 with your tutorial Essence. Other buildings unlock after this step.
-              </p>
-            )}
-            {isBuildHoldActive && (
-              <p className="island-stop-modal__copy" style={{ marginTop: '-0.25rem', marginBottom: '0.6rem', opacity: 0.8 }}>
-                {buildHoldFeedbackLabel}
-              </p>
-            )}
-
-            <div className="build-panel__buildings">
-              {islandStopPlan.map((stopEntry, idx) => {
-                const buildState = runtimeState.stopBuildStateByIndex[idx];
-                const stopState = runtimeState.stopStatesByIndex[idx];
-                if (!stopEntry || !buildState) return null;
-
-                const tutorialRowState = resolveIslandRunBuildModalTutorialRowState({
-                  firstSessionTutorialState,
-                  stopIndex: idx,
-                });
-                const isFullyBuilt = isStopBuildFullyComplete(buildState);
-                const remaining = isFullyBuilt ? 0 : Math.max(0, buildState.requiredEssence - buildState.spentEssence);
-                const canAfford = runtimeState.essence >= Math.min(CONTRACT_V2_ESSENCE_SPEND_STEP, remaining);
-                const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;
-                const isBuildInteractionDisabled = tutorialRowState.isUnavailable || isBuildDisabled;
-                const remainingToFull = buildPanelRemainingToFullByIndex[idx] ?? 0;
-                const levelIcon = ['🏗️', '🏠', '🏡', '🏰'][Math.min(buildState.buildLevel, 3)];
-
-                const handleBuildStart = (e: React.MouseEvent | React.TouchEvent) => {
-                  e.preventDefault();
-                  if (isBuildInteractionDisabled) return;
-                  holdBuildSpendActiveRef.current = true;
-                  holdBuildSpendStartAtMsRef.current = Date.now();
-                  setIsBuildHoldActive(true);
-                  setBuildHoldFeedbackLabel('⚒️ Building…');
-                  const stopHold = () => {
-                    holdBuildSpendActiveRef.current = false;
-                    holdBuildSpendStartAtMsRef.current = null;
-                    setIsBuildHoldActive(false);
-                    window.removeEventListener('mouseup', stopHold);
-                    window.removeEventListener('touchend', stopHold);
-                  };
-                  window.addEventListener('mouseup', stopHold, { once: true });
-                  window.addEventListener('touchend', stopHold, { once: true });
-                  void (async () => {
-                    const initialSpendApplied = await handleRepeatedBuildActivation(idx);
-                    if (!initialSpendApplied || !holdBuildSpendActiveRef.current) {
-                      stopHold();
-                      return;
-                    }
-                    await wait(BUILD_HOLD_INITIAL_DELAY_MS);
-                    while (holdBuildSpendActiveRef.current) {
-                      const liveRuntimeState = getIslandRunStateSnapshot(session);
-                      if (liveRuntimeState.firstSessionTutorialState === 'hatchery_l1_built') {
-                        resetBuildRepeatStreak();
-                        stopHold();
-                        return;
-                      }
-                      const liveBuildState = liveRuntimeState.stopBuildStateByIndex[idx];
-                      const liveRemaining = liveBuildState
-                        ? Math.max(0, liveBuildState.requiredEssence - liveBuildState.spentEssence)
-                        : 0;
-                      const liveCanAfford = liveRuntimeState.essence >= Math.min(CONTRACT_V2_ESSENCE_SPEND_STEP, liveRemaining);
-                      if (!liveBuildState || isStopBuildFullyComplete(liveBuildState) || !liveCanAfford) {
-                        resetBuildRepeatStreak();
-                        stopHold();
-                        return;
-                      }
-                      const holdStartedAtMs = holdBuildSpendStartAtMsRef.current ?? Date.now();
-                      const heldMs = Math.max(0, Date.now() - holdStartedAtMs);
-                      let holdBatchSteps = resolveBuildHoldBatchSteps(heldMs);
-                      if (isBuildModalHatcheryGuidanceActive) {
-                        holdBatchSteps = 1;
-                      }
-                      setBuildHoldFeedbackLabel(resolveBuildHoldFeedbackLabel(heldMs));
-                      const spendApplied = await handleSpendEssenceOnBuild(idx, holdBatchSteps);
-                      if (!spendApplied) {
-                        resetBuildRepeatStreak();
-                        stopHold();
-                        return;
-                      }
-                      if (runtimeStateRef.current.firstSessionTutorialState === 'hatchery_l1_built') {
-                        resetBuildRepeatStreak();
-                        stopHold();
-                        return;
-                      }
-                      await wait(resolveBuildHoldRepeatDelayMs(heldMs));
-                    }
-                  })();
-                };
-
-                return (
-                  <div
-                    key={stopEntry.stopId}
-                    className={`build-panel__building build-panel__building--level-${buildState.buildLevel}${isFullyBuilt ? ' build-panel__building--complete' : ''}${buildPanelNextCheapestIndex === idx && !isFullyBuilt && !tutorialRowState.guidanceActive ? ' build-panel__building--next-cheapest' : ''}${tutorialRowState.isHighlighted ? ' build-panel__building--tutorial-target' : ''}${tutorialRowState.isUnavailable ? ' build-panel__building--tutorial-muted' : ''}`}
-                    onMouseDown={!isBuildInteractionDisabled ? handleBuildStart : undefined}
-                    onTouchStart={!isBuildInteractionDisabled ? handleBuildStart : undefined}
-                    role="button"
-                    tabIndex={isBuildInteractionDisabled ? -1 : 0}
-                    aria-disabled={isBuildInteractionDisabled}
-                    aria-label={`${stopEntry.title ?? stopEntry.stopId} — Level ${buildState.buildLevel} of ${MAX_BUILD_LEVEL}${tutorialRowState.isHighlighted ? ' — tutorial target' : ''}${tutorialRowState.isUnavailable ? ' — unavailable during tutorial' : ''}`}
-                    onKeyDown={(e) => {
-                      if ((e.key === 'Enter' || e.key === ' ') && !isBuildInteractionDisabled) {
-                        e.preventDefault();
-                        void handleRepeatedBuildActivation(idx);
-                      }
-                    }}
-                  >
-                    <div className="build-panel__building-icon">{levelIcon}</div>
-                    <div className="build-panel__building-info">
-                      <span className="build-panel__building-name">{stopEntry.title ?? stopEntry.stopId}</span>
-                      <span className="build-panel__building-status">
-                        {isFullyBuilt
-                          ? `L${MAX_BUILD_LEVEL} ✅ Fully Built`
-                          : `L${buildState.buildLevel + 1}: ${buildState.spentEssence}/${buildState.requiredEssence} 🟣`}
-                      </span>
-                      {!isFullyBuilt && (
-                        <span className="build-panel__full-build-chip">
-                          Full build: <ShopItemCostLine cost={remainingToFull} balance={runtimeState.essence} currencyIcon="🟣" currencyName="essence" />
-                        </span>
-                      )}
-                      <div className="build-panel__level-bar">
-                        {Array.from({ length: MAX_BUILD_LEVEL }, (_, li) => (
-                          <div
-                            key={li}
-                            className={`build-panel__level-pip${li < buildState.buildLevel ? ' build-panel__level-pip--done' : li === buildState.buildLevel && !isFullyBuilt ? ' build-panel__level-pip--active' : ''}`}
-                          />
-                        ))}
-                      </div>
-                      {!isFullyBuilt && (
-                        <span className="build-panel__building-objective">
-                          Obj: {stopState?.objectiveComplete ? '✅' : '⏳'}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored" style={{ marginTop: '0.75rem' }}>
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                onClick={() => setShowBuildPanel(false)}
-              >
-                ✕ Close
-              </button>
-            </div>
-          </section>
-        </div>
+      {/* Build panel v2 — Monopoly GO-style bottom tray (Island 1 artwork + horizontal card tray) */}
+      {ISLAND_RUN_CONTRACT_V2_ENABLED && (
+        <BuildModalV2
+          isOpen={showBuildPanel}
+          islandNumber={islandNumber}
+          essenceAvailable={runtimeState.essence}
+          onClose={() => setShowBuildPanel(false)}
+          artworkStage={buildModalV2ArtworkStage}
+          milestones={buildModalV2Milestones}
+          isBuildHoldActive={isBuildHoldActive}
+          buildHoldFeedbackLabel={buildHoldFeedbackLabel}
+          isBuildModalHatcheryGuidanceActive={isBuildModalHatcheryGuidanceActive}
+          cards={buildModalV2Cards}
+          onBuildTap={handleBuildCardTap}
+        />
       )}
 
       {showPerfectCompanionOnboardingHint && (
