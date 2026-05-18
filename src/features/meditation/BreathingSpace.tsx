@@ -37,6 +37,7 @@ type BreathingSpaceProps = {
 
 type MobileTab = 'breathing' | 'meditation' | 'conflict' | 'yoga' | 'food' | 'exercise';
 type MobileCategory = 'mind' | 'body';
+type BodyTab = Extract<MobileTab, 'yoga' | 'food' | 'exercise'>;
 
 type MeditationStats = {
   totalMinutes: number;
@@ -56,13 +57,44 @@ const getCategoryForTab = (tab: MobileTab): MobileCategory => {
   return 'mind';
 };
 
-const BODY_TAB_FEATURE_IDS = {
+const BODY_TAB_FEATURE_IDS: Record<BodyTab, FeatureAvailabilityId> = {
   yoga: 'body.yoga',
   food: 'body.food',
   exercise: 'body.exercise',
-} as const satisfies Partial<Record<MobileTab, FeatureAvailabilityId>>;
+};
 
-type BodyTab = keyof typeof BODY_TAB_FEATURE_IDS;
+const MOBILE_TAB_OPTIONS: Record<
+  MobileTab,
+  { icon: string; label: string; uppercaseLabel: string; launchTitle?: string; launchSubtitle?: string; iconImageSrc?: string }
+> = {
+  breathing: {
+    icon: '🌬️',
+    label: 'Focus Breathing',
+    uppercaseLabel: 'FOCUS BREATHING',
+    launchTitle: 'FOCUS RESET',
+    launchSubtitle: 'Breathing Space',
+    iconImageSrc: '/icons/Energy/focus_breathe.webp',
+  },
+  meditation: {
+    icon: '🧘',
+    label: 'Meditation',
+    uppercaseLabel: 'MEDITATION',
+    launchTitle: 'MEDITATION',
+    launchSubtitle: 'Upgrade your mind',
+    iconImageSrc: '/icons/Energy/Meditating_blue.webp',
+  },
+  conflict: {
+    icon: '🤝',
+    label: 'Conflict Resolver',
+    uppercaseLabel: 'CONFLICT',
+    launchTitle: 'CONFLICT RESOLVER',
+    launchSubtitle: 'Peace Between',
+    iconImageSrc: '/icons/Energy/peace_between.webp',
+  },
+  yoga: { icon: '🧘‍♀️', label: 'Yoga', uppercaseLabel: 'YOGA' },
+  food: { icon: '🥗', label: 'Food', uppercaseLabel: 'FOOD' },
+  exercise: { icon: '🏋️', label: 'Exercise', uppercaseLabel: 'EXERCISE' },
+};
 
 const isBodyTab = (tab: MobileTab | null): tab is BodyTab => Boolean(tab && tab in BODY_TAB_FEATURE_IDS);
 
@@ -147,7 +179,7 @@ export function BreathingSpace({
         onMobileCategoryChange?.(nextCategory);
       }
       if (isBodyTab(tab)) {
-        setPreviewFeature({ id: BODY_TAB_FEATURE_IDS[tab], label: mobileTabOptions[tab].label });
+        setPreviewFeature({ id: BODY_TAB_FEATURE_IDS[tab], label: MOBILE_TAB_OPTIONS[tab].label });
       }
       return;
     }
@@ -396,46 +428,17 @@ export function BreathingSpace({
     return null;
   }
 
-  const mobileTabOptions: Record<
-    MobileTab,
-    { icon: string; label: string; uppercaseLabel: string; launchTitle?: string; launchSubtitle?: string; iconImageSrc?: string }
-  > = {
-    breathing: {
-      icon: '🌬️',
-      label: 'Focus Breathing',
-      uppercaseLabel: 'FOCUS BREATHING',
-      launchTitle: 'FOCUS RESET',
-      launchSubtitle: 'Breathing Space',
-      iconImageSrc: '/icons/Energy/focus_breathe.webp',
-    },
-    meditation: {
-      icon: '🧘',
-      label: 'Meditation',
-      uppercaseLabel: 'MEDITATION',
-      launchTitle: 'MEDITATION',
-      launchSubtitle: 'Upgrade your mind',
-      iconImageSrc: '/icons/Energy/Meditating_blue.webp',
-    },
-    conflict: {
-      icon: '🤝',
-      label: 'Conflict Resolver',
-      uppercaseLabel: 'CONFLICT',
-      launchTitle: 'CONFLICT RESOLVER',
-      launchSubtitle: 'Peace Between',
-      iconImageSrc: '/icons/Energy/peace_between.webp',
-    },
-    yoga: { icon: '🧘‍♀️', label: 'Yoga', uppercaseLabel: 'YOGA' },
-    food: { icon: '🥗', label: 'Food', uppercaseLabel: 'FOOD' },
-    exercise: { icon: '🏋️', label: 'Exercise', uppercaseLabel: 'EXERCISE' },
-  };
-
   const activeCategoryTabs = MOBILE_CATEGORY_TABS[activeMobileCategory];
-  const isActiveBodyTabBlocked = isBodyTab(activeMobileTab) && getMobileTabAccess(activeMobileTab) !== 'open';
+  const activeBodyTabAccess = isBodyTab(activeMobileTab) ? getMobileTabAccess(activeMobileTab) : 'open';
+  const yogaAccess = getMobileTabAccess('yoga');
+  const foodAccess = getMobileTabAccess('food');
+  const exerciseAccess = getMobileTabAccess('exercise');
+  const isActiveBodyTabBlocked = activeBodyTabAccess !== 'open';
   const activeMobileTabForRender = isActiveBodyTabBlocked ? null : activeMobileTab;
   const isConflictFullscreen = activeMobileTabForRender === 'conflict';
-  const canRenderYoga = getMobileTabAccess('yoga') === 'open';
-  const canRenderFood = getMobileTabAccess('food') === 'open';
-  const canRenderExercise = getMobileTabAccess('exercise') === 'open';
+  const canRenderYoga = yogaAccess === 'open';
+  const canRenderFood = foodAccess === 'open';
+  const canRenderExercise = exerciseAccess === 'open';
 
   return (
     <div
@@ -488,27 +491,27 @@ export function BreathingSpace({
                     alt=""
                     aria-hidden="true"
                   />
-                  {mobileTabOptions[tab].iconImageSrc ? (
-                    <img
-                      className="breathing-space__mobile-launch-icon-image"
-                      src={mobileTabOptions[tab].iconImageSrc}
-                      alt=""
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <span className="breathing-space__mobile-launch-icon" aria-hidden="true">
-                      {mobileTabOptions[tab].icon}
-                    </span>
-                  )}
-                  <span className="breathing-space__mobile-launch-copy">
-                    <span className="breathing-space__mobile-launch-title">
-                      {mobileTabOptions[tab].launchTitle ?? mobileTabOptions[tab].uppercaseLabel}
-                    </span>
-                    {mobileTabOptions[tab].launchSubtitle ? (
-                      <span className="breathing-space__mobile-launch-subtitle">
-                        {mobileTabOptions[tab].launchSubtitle}
+                    {MOBILE_TAB_OPTIONS[tab].iconImageSrc ? (
+                      <img
+                        className="breathing-space__mobile-launch-icon-image"
+                        src={MOBILE_TAB_OPTIONS[tab].iconImageSrc}
+                        alt=""
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <span className="breathing-space__mobile-launch-icon" aria-hidden="true">
+                        {MOBILE_TAB_OPTIONS[tab].icon}
                       </span>
-                    ) : null}
+                    )}
+                    <span className="breathing-space__mobile-launch-copy">
+                      <span className="breathing-space__mobile-launch-title">
+                        {MOBILE_TAB_OPTIONS[tab].launchTitle ?? MOBILE_TAB_OPTIONS[tab].uppercaseLabel}
+                      </span>
+                      {MOBILE_TAB_OPTIONS[tab].launchSubtitle ? (
+                        <span className="breathing-space__mobile-launch-subtitle">
+                          {MOBILE_TAB_OPTIONS[tab].launchSubtitle}
+                        </span>
+                      ) : null}
                   </span>
                 </button>
               ))}
