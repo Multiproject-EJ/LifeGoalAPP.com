@@ -10,18 +10,21 @@ type HabitGameLandingLayoutProps = {
 
 const landingValueCards = [
   {
+    id: 'cozy-rpg',
     icon: '🏝️',
     iconLabel: 'Floating island',
     title: 'Play a cozy RPG',
     description: 'Step into gentle quests, bright islands, and rituals that make progress feel playful.',
   },
   {
+    id: 'life-reflection',
     icon: '🪞',
     iconLabel: 'Reflection mirror',
     title: 'Reflect on your life',
     description: 'Keep goals, habits, and wellbeing in view with calm check-ins woven into your adventure.',
   },
   {
+    id: 'progress-boost',
     icon: '⚡',
     iconLabel: 'Progress boost',
     title: 'Supercharge progress',
@@ -72,7 +75,7 @@ export function HabitGameLandingLayout({ authCard, themeToggle }: HabitGameLandi
               HabitGame benefits
             </h2>
             {landingValueCards.map((card) => (
-              <article className="auth-value-card" key={card.title}>
+              <article className="auth-value-card" key={card.id}>
                 <span className="auth-value-card__icon" role="img" aria-label={card.iconLabel}>
                   {card.icon}
                 </span>
