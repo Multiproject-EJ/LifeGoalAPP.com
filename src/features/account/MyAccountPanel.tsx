@@ -182,6 +182,8 @@ export function MyAccountPanel({
     setFolder1Open(false);
   }, [isAdmin]);
 
+  const showAdminTools = isAdmin === true;
+
   useEffect(() => {
     if (isDemoExperience) {
       setBillingSnapshot(null);
@@ -645,7 +647,7 @@ export function MyAccountPanel({
 
       <MyCasesPanel session={session} />
 
-      {isAdmin === true ? (
+      {showAdminTools ? (
         <section className="account-panel__card" aria-labelledby="admin-tools-access">
           <p className="account-panel__eyebrow">Admin</p>
           <h3 id="admin-tools-access">Admin inbox tools</h3>
@@ -677,23 +679,6 @@ export function MyAccountPanel({
         </div>
       </section>
 
-      <section className="account-panel__card" aria-labelledby="weekly-habit-review-launcher">
-        <p className="account-panel__eyebrow">Habits</p>
-        <h3 id="weekly-habit-review-launcher">Weekly habit review</h3>
-        <p className="account-panel__hint">
-          Open your weekly 30-day stage mix and stalled/on-track habit snapshot at any time.
-        </p>
-        <div className="account-panel__actions-row">
-          <button
-            type="button"
-            className="btn"
-            onClick={handleLaunchWeeklyHabitReview}
-          >
-            Launch weekly habit review
-          </button>
-        </div>
-      </section>
-
       {/* Collapsible Folder: Holiday Themes */}
       <section className="account-panel__card">
         <SettingsFolderButton
@@ -705,7 +690,7 @@ export function MyAccountPanel({
         />
       </section>
 
-      {isAdmin === true ? (
+      {showAdminTools ? (
         <section className="account-panel__card">
           <SettingsFolderButton
             title="Advanced Tools"
@@ -728,7 +713,7 @@ export function MyAccountPanel({
         />
       </section>
 
-      {isAdmin === true ? (
+      {showAdminTools ? (
         <>
           <SettingsFolderPopup
             isOpen={folder1Open}
