@@ -32,45 +32,53 @@ Targeted assets:
 - file-type/hash check for target icons
 
 ## Executive summary
-- **Active PWA icon wiring uses `app-icon-192.svg` + `app-icon-512.svg` only.**
-- `icon-192x192.svg` and `icon-512x512.svg` are byte-identical duplicates of the active SVGs and are **not referenced by active runtime code**.
-- `app-icon-1024.png` exists but is **not referenced anywhere**.
-- The active SVG icons are **true vector SVG markup** (`<rect>`, `<circle>`, `<text>`), not raster wrappers (`<image>` embeds).
+- **Active PWA icon wiring now uses `app-icon-192.png` + `app-icon-512.png`** (migrated from SVG in the implementation PR).
+- `app-icon-1024.png` is present as the master source asset and is **not wired to runtime paths**.
+- `icon-192x192.svg` and `icon-512x512.svg` are byte-identical duplicates of the old active SVGs and remain **not referenced by active runtime code**.
+- Old SVG icons (`app-icon-192.svg`, `app-icon-512.svg`) are retained as legacy files; no deletion in this PR.
 - There is **no explicit splash image generation pipeline** (no `apple-touch-startup-image`, no PWA icon generator plugin).
 - Vite does not use `vite-plugin-pwa`; the app relies on static `public/` assets + manual service worker registration.
 
 ## Exact file reference map
 
-### 1) `public/icons/app-icon-192.svg` (ACTIVE)
+### 1) `public/icons/app-icon-192.png` (ACTIVE — migrated from SVG)
 Referenced by:
-- `index.html:31` (`<link rel="icon" ... href="/icons/app-icon-192.svg">`) → favicon path
-- `index.html:32` (`<link rel="apple-touch-icon" href="/icons/app-icon-192.svg">`) → iOS home icon
+- `index.html:31` (`<link rel="icon" type="image/png" href="/icons/app-icon-192.png">`) → favicon path
+- `index.html:32` (`<link rel="apple-touch-icon" href="/icons/app-icon-192.png">`) → iOS home icon
 - `public/manifest.webmanifest:13` (`icons[].src`) → Android/PWA install icon set
-- `public/manifest.json:13` (duplicate manifest file)
 - `public/sw.js:6` (precache app shell)
 - `public/sw.js:471`, `public/sw.js:472`, `public/sw.js:541`, `public/sw.js:542` (notification icon/badge defaults)
-- `public/service-worker.js:66`, `public/service-worker.js:67` (alternate SW default icon/badge)
-- `src/features/notifications/PushNotificationTestPanel.tsx:11` (test notification icon constant)
-- `app/habits/notifications.js:201`, `app/habits/notifications.js:202` (local notification icon/badge)
-- `supabase/functions/send-reminders/index.ts:598`, `supabase/functions/send-reminders/index.ts:599` (server push payload icon/badge)
-- `scripts/send-push-node.js:136`, `scripts/send-push-node.js:137` (CLI push payload defaults)
 
-### 2) `public/icons/app-icon-512.svg` (ACTIVE for manifest/install, otherwise limited)
+### 2) `public/icons/app-icon-512.png` (ACTIVE — migrated from SVG)
 Referenced by:
 - `public/manifest.webmanifest:19`
-- `public/manifest.json:19`
 - `public/sw.js:7` (precache app shell)
 
-### 3) `public/icons/icon-192x192.svg` (LEGACY/UNUSED at runtime)
+### 3) `public/icons/app-icon-1024.png` (MASTER SOURCE — not wired to runtime)
+- Present as the full-quality source asset for the crest icon family.
+- Not referenced by manifest, index.html, or SW.
+
+### 4) `public/icons/app-icon-192.svg` (LEGACY — retained, no active runtime references)
+Previously referenced by all paths above; now superseded by `app-icon-192.png`.
+Still referenced by:
+- `public/manifest.json` (duplicate manifest, not linked by `index.html`)
+- `public/service-worker.js` (alternate push SW, used only by optional `register-push.js` helper)
+- `src/features/notifications/PushNotificationTestPanel.tsx:11` (dev test panel constant)
+- `app/habits/notifications.js:201`, `:202` (local notification helper)
+- `supabase/functions/send-reminders/index.ts:598`, `:599` (server push payload)
+- `scripts/send-push-node.js:136`, `:137` (CLI push script)
+
+### 5) `public/icons/app-icon-512.svg` (LEGACY — retained)
+- `public/manifest.json` (duplicate manifest, not linked)
+- `public/service-worker.js:66`, `:67` (alternate push SW only)
+
+### 6) `public/icons/icon-192x192.svg` (LEGACY/UNUSED at runtime)
 Referenced by:
-- `docs/WEB_PUSH_REMINDERS.md:390`, `docs/WEB_PUSH_REMINDERS.md:391` (documentation only)
+- `docs/WEB_PUSH_REMINDERS.md:390`, `:391` (documentation only)
 - `examples/notifications-demo.html:221`, `:222`, `:251`, `:252` (example/demo only)
 
-### 4) `public/icons/icon-512x512.svg` (DEAD/UNUSED)
+### 7) `public/icons/icon-512x512.svg` (DEAD/UNUSED)
 - **No references found** in runtime code, config, scripts, docs, or examples.
-
-### 5) `public/icons/app-icon-1024.png` (DEAD/UNUSED)
-- **No references found**.
 
 ## Asset characteristics (vector vs raster)
 - `app-icon-192.svg` and `icon-192x192.svg` are identical (same hash).
@@ -88,21 +96,21 @@ Observed file metadata:
 
 ### iOS home icon
 - Primary source: `index.html:32` (`rel="apple-touch-icon"`)
-- Current icon file: `/icons/app-icon-192.svg`
+- Current icon file: `/icons/app-icon-192.png`
 
 ### Android/PWA install icon
 - Primary source: `public/manifest.webmanifest` `icons[]` entries (linked from `index.html:30`)
 - Current icon files:
-  - `/icons/app-icon-192.svg`
-  - `/icons/app-icon-512.svg`
+  - `/icons/app-icon-192.png`
+  - `/icons/app-icon-512.png`
 - App install prompt flow is triggered in:
   - `src/main.tsx` (`beforeinstallprompt` capture)
   - `src/world/useInstallState.ts`
   - `src/world/WorldHome.tsx`
 
 ### favicon
-- Primary source: `index.html:31` (`rel="icon" type="image/svg+xml"`)
-- Current icon file: `/icons/app-icon-192.svg`
+- Primary source: `index.html:31` (`rel="icon" type="image/png"`)
+- Current icon file: `/icons/app-icon-192.png`
 
 ### splash screens
 - No explicit splash asset tags found (`apple-touch-startup-image` absent).
@@ -110,8 +118,9 @@ Observed file metadata:
 - Effective splash behavior is platform-derived from manifest/theme metadata and OS defaults, not a custom splash image pipeline.
 
 ## 1024 master icon wiring status
-- `public/icons/app-icon-1024.png` is **not wired** anywhere.
-- A separate 1024 PNG pipeline exists:
+- `public/icons/app-icon-1024.png` is the master source asset for the crest icon family.
+- It is **not wired to any runtime paths** (manifest, index.html, SW); retained as generation source only.
+- A separate 1024 PNG pipeline also exists:
   - `scripts/copy-app-icon.mjs` copies `src/assets/V2_app_icon_large_dark.png` (1024x1024) into `public/icons/V2_app_icon_large_dark.png` during `predev`/`prebuild`.
   - This copied file is gitignored (`.gitignore:19`) and also **not wired** by manifest/index/SW.
 
@@ -132,33 +141,29 @@ Observed file metadata:
    - active app SW: `/sw.js` (registered by app)
    - alternate push SW: `/service-worker.js` (used by optional `register-push.js`/`push-subscribe.ts` helpers)
 
-## PASS/FAIL recommendation table
+## PASS/FAIL recommendation table (updated after migration)
 
-| Check | Result | Evidence | Recommendation |
+| Check | Result | Evidence | Status |
 |---|---|---|---|
-| Active app icon references are identifiable | PASS | `index.html`, `manifest.webmanifest`, `sw.js`, notification paths | Keep a single canonical icon set and map all app/runtime references to it |
-| Legacy/dead icon assets can be identified | PASS | No refs for `app-icon-1024.png` and `icon-512x512.svg`; docs/examples-only refs for `icon-192x192.svg` | Mark these as legacy candidates; remove only in a separate cleanup PR |
-| SVGs are true vectors vs raster wrappers | PASS | SVG markup is primitive shapes/text; no bitmap embed | Safe to render at multiple sizes, but emoji glyph can vary by platform |
-| PNG replacement can be introduced safely | PASS (with controlled migration) | Current wiring is centralized and explicit | Replace references in one sweep (index + manifest + SW defaults), then verify install + notification flows |
-| 1024 master icon is currently wired | FAIL | No runtime/config references found | If desired, explicitly wire it as source-of-truth generation input, not direct runtime icon |
-| Splash generation system exists | FAIL | No splash generator plugin/tags found | Decide whether to keep OS-derived splash behavior or introduce explicit generation tooling |
-| Redundant icon systems exist | PASS (redundancy confirmed) | Duplicate icons, duplicate manifest, dual SW paths | Consolidate to one canonical icon naming/system and one documented SW strategy |
+| Active app icon references are identifiable | PASS | `index.html`, `manifest.webmanifest`, `sw.js`, notification paths | ✅ Complete |
+| Legacy/dead icon assets can be identified | PASS | No active runtime refs for SVG icons; docs/examples retain old paths | ✅ Legacy SVGs retained, cleanup deferred |
+| SVGs are true vectors vs raster wrappers | PASS | SVG markup is primitive shapes/text; no bitmap embed | ✅ Informational only |
+| PNG replacement wired safely | PASS | All active runtime paths now point to `.png` files | ✅ Migrated |
+| 1024 master icon status | PASS | Present as source asset; not wired to runtime | ✅ Source-only, as intended |
+| Splash generation system exists | NOTE | No splash generator plugin/tags found | ℹ️ Platform-derived behavior; no action needed |
+| Redundant icon systems exist | NOTE | Duplicate legacy SVGs, duplicate manifest.json, dual SW paths | ℹ️ Cleanup deferred to follow-up PR |
 
-## Safest migration path from SVG to PNG (no changes applied yet)
-1. Establish one canonical icon family in `public/icons` (PNG 192 + PNG 512; optional 1024 master as source only).
-2. Keep current filenames initially (or add parallel PNG files) to reduce blast radius.
-3. Update all active runtime references in one controlled PR:
-   - `index.html` (`rel="icon"`, `apple-touch-icon`)
-   - `public/manifest.webmanifest` (icons + MIME types)
-   - `public/sw.js` notification defaults/precache list
-   - any active client/server notification payload defaults currently pointing to `.svg`
-4. Leave docs/examples updates to same PR or immediate follow-up to avoid drift.
-5. Validate on-device/platform behaviors:
-   - Android install prompt + installed icon
-   - iOS Add to Home Screen icon
-   - favicon in browser tab
-   - push notification icon/badge rendering
-6. After validation window, remove redundant legacy assets/references in cleanup PR.
+## Migration outcome: before / after reference map
+
+| Location | Before | After |
+|---|---|---|
+| `index.html:31` favicon | `image/svg+xml` `/icons/app-icon-192.svg` | `image/png` `/icons/app-icon-192.png` |
+| `index.html:32` apple-touch-icon | `/icons/app-icon-192.svg` | `/icons/app-icon-192.png` |
+| `manifest.webmanifest` icon 192 | `image/svg+xml` `/icons/app-icon-192.svg` | `image/png` `/icons/app-icon-192.png` |
+| `manifest.webmanifest` icon 512 | `image/svg+xml` `/icons/app-icon-512.svg` | `image/png` `/icons/app-icon-512.png` |
+| `sw.js` precache (192) | `/icons/app-icon-192.svg` | `/icons/app-icon-192.png` |
+| `sw.js` precache (512) | `/icons/app-icon-512.svg` | `/icons/app-icon-512.png` |
+| `sw.js` push notification icon/badge defaults | `/icons/app-icon-192.svg` | `/icons/app-icon-192.png` |
 
 ## Direct answers to requested questions
 1. **Which files are actually referenced?**
