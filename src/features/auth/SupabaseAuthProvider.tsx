@@ -6,14 +6,18 @@ import {
   setSupabaseSession,
   type TypedSupabaseClient,
 } from '../../lib/supabaseClient';
+import { AUTH_INITIALIZATION_TIMEOUT_MS, type AuthInitializationStatus } from './authInitialization';
 
 type AuthContextValue = {
   session: Session | null;
   initializing: boolean;
+  initializationStatus: AuthInitializationStatus;
+  initializationError: Error | null;
   isConfigured: boolean;
   isAuthenticated: boolean;
   mode: 'supabase';
   client: TypedSupabaseClient | null;
+  retryAuthInitialization: () => void;
   signInWithPassword: (credentials: SignInWithPasswordCredentials) => Promise<void>;
   signUpWithPassword: (credentials: SignUpWithPasswordCredentials) => Promise<void>;
   signInWithOtp: (email: string) => Promise<void>;
@@ -58,8 +62,15 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   const [session, setSession] = useState<Session | null>(null);
   const [initializing, setInitializing] = useState(true);
+  const [initializationStatus, setInitializationStatus] = useState<AuthInitializationStatus>('loading');
+  const [initializationError, setInitializationError] = useState<Error | null>(null);
+  const [initializationRetryKey, setInitializationRetryKey] = useState(0);
   const [supabaseError, setSupabaseError] = useState<Error | null>(null);
   const [supabase, setSupabase] = useState<TypedSupabaseClient | null>(null);
+
+  const retryAuthInitialization = useCallback(() => {
+    setInitializationRetryKey((current) => current + 1);
+  }, []);
 
   useEffect(() => {
     try {
@@ -69,17 +80,32 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       setSupabase(null);
       setSupabaseError(error instanceof Error ? error : new Error('Failed to initialize Supabase client.'));
     }
-  }, [mode]);
+  }, [initializationRetryKey, mode]);
 
   useEffect(() => {
     let isMounted = true;
+    let hasTimedOut = false;
+    const timeoutId = window.setTimeout(() => {
+      hasTimedOut = true;
+      if (!isMounted) return;
+      setInitializing(false);
+      setInitializationStatus('timeout');
+      setInitializationError(new Error('HabitGame auth initialization timed out.'));
+    }, AUTH_INITIALIZATION_TIMEOUT_MS);
 
     if (!supabase || mode !== 'supabase') {
+      window.clearTimeout(timeoutId);
       setInitializing(false);
+      setInitializationStatus('ready');
+      setInitializationError(null);
       return () => {
         isMounted = false;
       };
     }
+
+    setInitializing(true);
+    setInitializationStatus('loading');
+    setInitializationError(null);
 
     supabase.auth
       .getSession()
@@ -89,9 +115,18 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         setSession(nextSession);
         setSupabaseSession(nextSession);
       })
+      .catch((error) => {
+        if (!isMounted) return;
+        setInitializationStatus('error');
+        setInitializationError(error instanceof Error ? error : new Error('Unable to initialize HabitGame auth.'));
+      })
       .finally(() => {
+        window.clearTimeout(timeoutId);
         if (isMounted) {
           setInitializing(false);
+          if (!hasTimedOut) {
+            setInitializationStatus((current) => (current === 'error' ? 'error' : 'ready'));
+          }
         }
       });
 
@@ -105,9 +140,10 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
     return () => {
       isMounted = false;
+      window.clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
-  }, [mode, supabase]);
+  }, [initializationRetryKey, mode, supabase]);
 
   const signInWithPassword = useCallback(async (credentials: SignInWithPasswordCredentials) => {
     if (!supabase) {
@@ -186,10 +222,13 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     () => ({
       session,
       initializing,
+      initializationStatus,
+      initializationError,
       isConfigured: Boolean(supabase),
       isAuthenticated: Boolean(session),
       mode,
       client: supabase,
+      retryAuthInitialization,
       signInWithPassword,
       signUpWithPassword,
       signInWithOtp,
@@ -200,8 +239,11 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     [
       session,
       initializing,
+      initializationStatus,
+      initializationError,
       mode,
       supabase,
+      retryAuthInitialization,
       signInWithPassword,
       signUpWithPassword,
       signInWithOtp,
