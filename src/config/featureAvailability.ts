@@ -31,7 +31,18 @@ export interface FeatureAvailability {
   adminAccess: FeatureAccessLevel;
   surface?: string;
   category?: string;
+  publicLabel?: string;
+  adminLabel?: string;
+  shortPitch?: string;
+  votingEnabled?: boolean;
+  votingQuestion?: string;
+  voteCategory?: string;
 }
+
+const FUTURE_FEATURE_LABEL = 'Future Feature';
+const ADMIN_DEMO_MODE_LABEL = 'Demo Mode';
+const DEFAULT_FUTURE_FEATURE_QUESTION =
+  'HabitGame grows around what helps players stay motivated in real life. Vote if this is a feature you’d love to see next.';
 
 export const featureAvailabilityRegistry = {
   'app.body': {
@@ -43,6 +54,12 @@ export const featureAvailabilityRegistry = {
     adminAccess: 'open',
     surface: 'App',
     category: 'workspace',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'Body routines and personal care support for healthier real-life momentum.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'body',
   },
   'energy.shell': {
     id: 'energy.shell',
@@ -73,6 +90,12 @@ export const featureAvailabilityRegistry = {
     adminAccess: 'open',
     surface: 'BreathingSpace',
     category: 'body',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'Gentle yoga resets that help your body recharge between real-life quests.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'body',
   },
   'body.food': {
     id: 'body.food',
@@ -83,6 +106,12 @@ export const featureAvailabilityRegistry = {
     adminAccess: 'open',
     surface: 'BreathingSpace',
     category: 'body',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'Mindful food routines that support balanced energy without perfection pressure.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'body',
   },
   'body.exercise': {
     id: 'body.exercise',
@@ -93,6 +122,12 @@ export const featureAvailabilityRegistry = {
     adminAccess: 'open',
     surface: 'BreathingSpace',
     category: 'body',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'Exercise quests that turn movement into gentle progress for real life.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'body',
   },
   'score.playerShop': {
     id: 'score.playerShop',
@@ -103,6 +138,12 @@ export const featureAvailabilityRegistry = {
     adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'A player shop for creating motivating rewards that support healthy habits.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'scoreHub',
   },
   'score.garage': {
     id: 'score.garage',
@@ -113,6 +154,12 @@ export const featureAvailabilityRegistry = {
     adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'A cozy upgrade space for companions, cosmetics, and your growing world.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'scoreHub',
   },
   'score.achievements': {
     id: 'score.achievements',
@@ -123,6 +170,12 @@ export const featureAvailabilityRegistry = {
     adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'Achievement moments that celebrate progress without requiring perfection.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'scoreHub',
   },
   'score.leaderboard': {
     id: 'score.leaderboard',
@@ -133,6 +186,12 @@ export const featureAvailabilityRegistry = {
     adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'A friendly ranking view for motivation while keeping real-life balance first.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'scoreHub',
   },
   'score.bank': {
     id: 'score.bank',
@@ -143,6 +202,12 @@ export const featureAvailabilityRegistry = {
     adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'A clearer home for score, XP, and reward balances as your quest grows.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'scoreHub',
   },
   'score.collections': {
     id: 'score.collections',
@@ -163,6 +228,12 @@ export const featureAvailabilityRegistry = {
     adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'A creature care space for bonding with companions from your island journey.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'scoreHub',
   },
   'score.stickersGallery': {
     id: 'score.stickersGallery',
@@ -173,6 +244,12 @@ export const featureAvailabilityRegistry = {
     adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'A playful gallery for collectible stickers, seasons, and achievement memories.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'scoreHub',
   },
   'score.zenGarden': {
     id: 'score.zenGarden',

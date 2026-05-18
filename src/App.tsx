@@ -4721,12 +4721,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
   );
 
   const appPreviewOverlay = previewOverlayFeature ? (
-    <FeaturePreviewOverlay
-      label={previewOverlayFeature.label}
-      variant={previewOverlayFeature.variant}
-      backLabel="← Back"
-      onClose={closeAppPreviewOverlay}
-    />
+      <FeaturePreviewOverlay
+        label={previewOverlayFeature.label}
+        variant={previewOverlayFeature.variant}
+        backLabel="Back"
+        onClose={closeAppPreviewOverlay}
+      />
   ) : null;
 
   if (isMobileExperience && showMobileHome) {

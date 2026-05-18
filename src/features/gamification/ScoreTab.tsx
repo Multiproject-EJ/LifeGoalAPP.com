@@ -166,6 +166,7 @@ export function ScoreTab({
     id: FeatureAvailabilityId;
     label: string;
     variant?: 'preview' | 'notImplemented';
+    hasVoted?: boolean;
   } | null>(null);
 
   /**
@@ -195,6 +196,12 @@ export function ScoreTab({
     },
     [isAdminOrCreator],
   );
+
+  const handlePreviewVote = useCallback(() => {
+    setPreviewFeature((current) => (
+      current ? { ...current, hasVoted: true } : current
+    ));
+  }, []);
 
   const rewardRisk = useMemo(() => {
     const cost = Number(rewardCost);
@@ -1663,23 +1670,40 @@ export function ScoreTab({
             <div className="score-hub-preview__badge-row">
               <span
                 className="feature-status-badge feature-status-badge--preview"
-                aria-label={previewFeature.variant === 'notImplemented' ? 'Feature status: Not implemented yet' : 'Feature status: Preview'}
+                aria-label={previewFeature.variant === 'notImplemented' ? 'Feature status: Not implemented yet' : 'Feature status: Future Feature'}
               >
-                {previewFeature.variant === 'notImplemented' ? 'Not implemented yet' : 'Preview'}
+                {previewFeature.variant === 'notImplemented' ? 'Not implemented yet' : 'Future Feature'}
               </span>
             </div>
             <h2 className="score-hub-preview__title">{previewFeature.label}</h2>
             <p className="score-hub-preview__body">
               {previewFeature.variant === 'notImplemented'
                 ? 'Admin access is enabled for this feature, but there is no Score Hub action wired yet.'
-                : 'This area is being shaped and tested. It will unlock when the feature is ready.'}
+                : 'HabitGame grows around what helps players stay motivated in real life. Vote if this is a feature you’d love to see next.'}
             </p>
+            {previewFeature.variant !== 'notImplemented' ? (
+              <>
+                <button
+                  type="button"
+                  className="score-hub-preview__vote-btn"
+                  onClick={handlePreviewVote}
+                  disabled={previewFeature.hasVoted === true}
+                >
+                  {previewFeature.hasVoted ? 'Vote noted' : 'Vote for this'}
+                </button>
+                {previewFeature.hasVoted ? (
+                  <p className="score-hub-preview__confirmation" role="status">
+                    Thanks — your interest has been noted for the roadmap.
+                  </p>
+                ) : null}
+              </>
+            ) : null}
             <button
               type="button"
               className="score-hub-preview__back-btn"
               onClick={() => setPreviewFeature(null)}
             >
-              ← Back to Score Hub
+              Back
             </button>
           </div>
         </div>

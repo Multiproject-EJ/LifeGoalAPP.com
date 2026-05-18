@@ -3101,19 +3101,48 @@
   max-width: 30ch;
 }
 
+.score-hub-preview__vote-btn,
 .score-hub-preview__back-btn {
   margin-top: 0.75rem;
-  background: rgba(167, 139, 250, 0.18);
-  border: 1px solid rgba(167, 139, 250, 0.45);
-  color: #c4b5fd;
   border-radius: 14px;
   padding: 0.75rem 1.75rem;
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
   width: 100%;
   max-width: 280px;
+}
+
+.score-hub-preview__vote-btn {
+  background: linear-gradient(135deg, #facc15, #fb923c);
+  border: 1px solid rgba(250, 204, 21, 0.7);
+  color: #451a03;
+  box-shadow: 0 12px 26px rgba(251, 146, 60, 0.28);
+}
+
+.score-hub-preview__vote-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #fde047, #fdba74);
+}
+
+.score-hub-preview__vote-btn:disabled {
+  cursor: default;
+  opacity: 0.86;
+}
+
+.score-hub-preview__confirmation {
+  margin: -0.35rem 0 0;
+  max-width: 30ch;
+  color: rgba(226, 232, 240, 0.9);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.score-hub-preview__back-btn {
+  background: rgba(167, 139, 250, 0.18);
+  border: 1px solid rgba(167, 139, 250, 0.45);
+  color: #c4b5fd;
 }
 
 .score-hub-preview__back-btn:hover {
