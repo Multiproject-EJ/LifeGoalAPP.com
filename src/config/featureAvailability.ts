@@ -81,9 +81,9 @@ export const featureAvailabilityRegistry = {
   'score.collections': {
     id: 'score.collections',
     label: 'Collections',
-    description: 'Collections tab placeholder in the Score hub.',
-    status: 'demo',
-    publicAccess: 'previewOnly',
+    description: 'Collections tab in the Score hub.',
+    status: 'live',
+    publicAccess: 'open',
     adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
