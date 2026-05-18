@@ -16,7 +16,7 @@ export function FeaturePreviewOverlay({
   label,
   variant = 'preview',
   body = 'This area is being shaped and tested. It will unlock when the feature is ready.',
-  notImplementedBody = 'Admin access is enabled for this feature, but no implementation is wired yet.',
+  notImplementedBody = 'Admin access is enabled for this feature, but the implementation is not available yet.',
   backLabel = '← Back',
   onClose,
 }: FeaturePreviewOverlayProps) {

@@ -462,7 +462,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     normalizeTimerSession(readTimerSession()),
   );
   const [scoreTabActiveTab, setScoreTabActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard' | 'collections'>('home');
-  const [isAdminOrCreator, setIsAdminOrCreator] = useState<boolean | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [appPreviewFeature, setAppPreviewFeature] = useState<{
     id: FeatureAvailabilityId;
     label: string;
@@ -1271,21 +1271,21 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   useEffect(() => {
     if (!supabaseSession?.user?.id) {
-      setIsAdminOrCreator(false);
+      setIsAdmin(false);
       return;
     }
 
     let active = true;
-    setIsAdminOrCreator(null);
+    setIsAdmin(null);
     isAdminUser(supabaseSession.user.id)
       .then((value) => {
         if (!active) return;
-        setIsAdminOrCreator(value);
+        setIsAdmin(value);
       })
       .catch((error) => {
         if (!active) return;
-        console.warn('Failed to resolve app feature preview admin access.', error);
-        setIsAdminOrCreator(false);
+        console.warn('Failed to resolve admin status for feature gating; defaulting to public access.', error);
+        setIsAdmin(false);
       });
 
     return () => {
@@ -2127,8 +2127,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   };
 
-  const handleBodyNavigation = useCallback((openBody: () => void) => {
-    const access = resolveFeatureAccess('app.body', { isAdminOrCreator: isAdminOrCreator === true });
+  const openBodyWorkspace = useCallback(() => {
+    const access = resolveFeatureAccess('app.body', { isAdminOrCreator: isAdmin === true });
 
     if (access === 'hidden') {
       return;
@@ -2139,8 +2139,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
       return;
     }
 
-    openBody();
-  }, [isAdminOrCreator]);
+    setActiveWorkspaceNav('body');
+    setShowMobileHome(false);
+  }, [isAdmin]);
 
   const handleMobileNavSelect = (
     navId: string,
@@ -2188,10 +2189,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
 
     if (navId === 'body') {
-      handleBodyNavigation(() => {
-        setActiveWorkspaceNav('body');
-        setShowMobileHome(false);
-      });
+      openBodyWorkspace();
       return;
     }
 
@@ -4886,7 +4884,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       return;
                     }
                     if (item.id === 'body') {
-                      handleBodyNavigation(() => setActiveWorkspaceNav(item.id));
+                      openBodyWorkspace();
                       return;
                     }
                     setActiveWorkspaceNav(item.id);
