@@ -2152,11 +2152,26 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setShowMobileHome(false);
   }, [canOpenBodyWorkspace, openBodyPreviewOverlay]);
 
+  const isBlockedBodyWorkspaceActive = useCallback(
+    () => activeWorkspaceNav === 'body' && !canOpenBodyWorkspace(),
+    [activeWorkspaceNav, canOpenBodyWorkspace],
+  );
+
+  const leaveBlockedBodyWorkspace = useCallback(() => {
+    if (!isBlockedBodyWorkspaceActive()) {
+      return false;
+    }
+
+    setActiveWorkspaceNav('goals');
+    setShowMobileHome(false);
+    return true;
+  }, [isBlockedBodyWorkspaceActive]);
+
   useEffect(() => {
-    if (activeWorkspaceNav === 'body' && !canOpenBodyWorkspace()) {
+    if (leaveBlockedBodyWorkspace()) {
       openBodyPreviewOverlay();
     }
-  }, [activeWorkspaceNav, canOpenBodyWorkspace, openBodyPreviewOverlay]);
+  }, [leaveBlockedBodyWorkspace, openBodyPreviewOverlay]);
 
   const handleMobileNavSelect = (
     navId: string,
@@ -4651,9 +4666,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
       </div>
     ) : null;
   const closeAppPreviewOverlay = () => {
-    if (appPreviewFeature?.id === 'app.body' && activeWorkspaceNav === 'body' && !canOpenBodyWorkspace()) {
-      setActiveWorkspaceNav('goals');
-      setShowMobileHome(false);
+    if (appPreviewFeature?.id === 'app.body') {
+      leaveBlockedBodyWorkspace();
     }
     setAppPreviewFeature(null);
   };
