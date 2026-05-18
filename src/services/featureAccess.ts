@@ -1,8 +1,5 @@
 /**
  * Lightweight feature access resolver.
- *
- * Phase 1 (this PR): evaluates publicAccess only.
- * Phase 2 (next PR): add admin / creator / dev actor context and evaluate adminAccess.
  */
 import {
   getFeatureAvailability,
@@ -10,12 +7,31 @@ import {
   type FeatureAvailabilityId,
 } from '../config/featureAvailability';
 
+export type FeatureAccessActorContext = {
+  /**
+   * True only after the caller has positively resolved the actor as admin /
+   * creator. Omit or pass false while loading to preserve public-safe access.
+   */
+  isAdminOrCreator?: boolean;
+};
+
+/**
+ * Returns the effective access level for the actor.
+ */
+export function resolveFeatureAccess(
+  id: FeatureAvailabilityId,
+  actor: FeatureAccessActorContext = {},
+): FeatureAccessLevel {
+  const availability = getFeatureAvailability(id);
+  return actor.isAdminOrCreator ? availability.adminAccess : availability.publicAccess;
+}
+
 /**
  * Returns the effective access level for a public (non-admin) user.
  * Call this before navigating to a feature from the Score Hub.
  */
 export function getPublicAccessLevel(id: FeatureAvailabilityId): FeatureAccessLevel {
-  return getFeatureAvailability(id).publicAccess;
+  return resolveFeatureAccess(id);
 }
 
 /**
