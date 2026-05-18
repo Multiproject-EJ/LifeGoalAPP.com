@@ -27,7 +27,8 @@ import { GamificationHeader } from '../../components/GamificationHeader';
 import { FeatureStatusBadge } from '../../components/FeatureStatusBadge';
 import { XP_TO_GOLD_RATIO, splitGoldBalance } from '../../constants/economy';
 import { getFeatureAvailability, type FeatureAvailabilityId } from '../../config/featureAvailability';
-import { isPubliclyGated } from '../../services/featureAccess';
+import { resolveFeatureAccess } from '../../services/featureAccess';
+import { isAdminUser } from '../../services/adminRoles';
 import { fetchXPTransactions } from '../../services/gamification';
 import { fetchZenTokenTransactions } from '../../services/zenGarden';
 import { ZEN_TRANSACTIONS_DISPLAY_LIMIT } from '../../constants/zenGarden';
@@ -159,23 +160,40 @@ export function ScoreTab({
     DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG,
   );
 
-  // Preview overlay: shown when a public user taps a demo/previewOnly hub card.
-  const [previewFeature, setPreviewFeature] = useState<{ id: FeatureAvailabilityId; label: string } | null>(null);
+  const [isAdminOrCreator, setIsAdminOrCreator] = useState<boolean | null>(null);
+
+  const [previewFeature, setPreviewFeature] = useState<{
+    id: FeatureAvailabilityId;
+    label: string;
+    variant?: 'preview' | 'notImplemented';
+  } | null>(null);
 
   /**
    * Gate-aware hub card click handler.
-   * If the feature is publicly gated (publicAccess: previewOnly), show the
-   * preview overlay instead of navigating into unfinished content.
+   * Admin status is public-safe until positively resolved, so demo cards never
+   * open for normal users while the role check is still loading.
    */
   const handleHubCardClick = useCallback(
-    (featureId: FeatureAvailabilityId, label: string, action: () => void) => {
-      if (isPubliclyGated(featureId)) {
+    (featureId: FeatureAvailabilityId, label: string, action?: () => void) => {
+      const access = resolveFeatureAccess(featureId, { isAdminOrCreator: isAdminOrCreator === true });
+
+      if (access === 'hidden') {
+        return;
+      }
+
+      if (access === 'previewOnly') {
         setPreviewFeature({ id: featureId, label });
         return;
       }
+
+      if (!action) {
+        setPreviewFeature({ id: featureId, label, variant: 'notImplemented' });
+        return;
+      }
+
       action();
     },
-    [],
+    [isAdminOrCreator],
   );
 
   const rewardRisk = useMemo(() => {
@@ -198,6 +216,28 @@ export function ScoreTab({
       setActiveTab(initialActiveTab);
     }
   }, [initialActiveTab]);
+
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setIsAdminOrCreator(false);
+      return;
+    }
+
+    let active = true;
+    setIsAdminOrCreator(null);
+    isAdminUser(session.user.id)
+      .then((value) => {
+        if (!active) return;
+        setIsAdminOrCreator(value);
+      })
+      .catch(() => {
+        if (!active) return;
+        setIsAdminOrCreator(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [session?.user?.id]);
 
   useEffect(() => {
     if (!session?.user?.id) {
@@ -1582,7 +1622,7 @@ export function ScoreTab({
             <button
               type="button"
               className="score-tab__hub-card score-tab__hub-card--full"
-              onClick={() => handleHubCardClick('score.creatureSanctuary', 'Creature Sanctuary', () => {})}
+              onClick={() => handleHubCardClick('score.creatureSanctuary', 'Creature Sanctuary')}
             >
               <span className="score-tab__hub-visual score-tab__hub-visual--icon" aria-hidden="true">🐾</span>
               <span className="score-tab__hub-title">
@@ -1594,7 +1634,7 @@ export function ScoreTab({
             <button
               type="button"
               className="score-tab__hub-card score-tab__hub-card--full"
-              onClick={() => handleHubCardClick('score.stickersGallery', 'Stickers Gallery', () => {})}
+              onClick={() => handleHubCardClick('score.stickersGallery', 'Stickers Gallery')}
             >
               <span className="score-tab__hub-visual score-tab__hub-visual--icon" aria-hidden="true">🌟</span>
               <span className="score-tab__hub-title">
@@ -1623,14 +1663,16 @@ export function ScoreTab({
             <div className="score-hub-preview__badge-row">
               <span
                 className="feature-status-badge feature-status-badge--preview"
-                aria-label="Feature status: Preview"
+                aria-label={previewFeature.variant === 'notImplemented' ? 'Feature status: Not implemented yet' : 'Feature status: Preview'}
               >
-                Preview
+                {previewFeature.variant === 'notImplemented' ? 'Not implemented yet' : 'Preview'}
               </span>
             </div>
             <h2 className="score-hub-preview__title">{previewFeature.label}</h2>
             <p className="score-hub-preview__body">
-              This area is being shaped and tested. It will unlock when the feature is ready.
+              {previewFeature.variant === 'notImplemented'
+                ? 'Admin access is enabled for this feature, but there is no Score Hub action wired yet.'
+                : 'This area is being shaped and tested. It will unlock when the feature is ready.'}
             </p>
             <button
               type="button"
