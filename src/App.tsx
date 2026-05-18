@@ -3560,11 +3560,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
       case 'body':
         if (!isBodyWorkspaceOpen) {
           return (
-            <div className="workspace-content" aria-live="polite">
+            <section
+              className="workspace-content"
+              role="status"
+              aria-label="Body preview status"
+            >
               <p className="workspace-onboarding-hint">
                 Body is in preview for this account.
               </p>
-            </div>
+            </section>
           );
         }
 
