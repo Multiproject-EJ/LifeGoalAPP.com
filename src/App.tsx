@@ -3562,7 +3562,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           return (
             <div className="workspace-content" aria-live="polite">
               <p className="workspace-onboarding-hint">
-                Body is available as a preview for this account.
+                Body is in preview for this account.
               </p>
             </div>
           );
