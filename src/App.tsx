@@ -51,6 +51,7 @@ import { MobileFooterNav } from './components/MobileFooterNav';
 import { MobileTopChrome } from './components/MobileTopChrome';
 import { GameBoardOverlay } from './components/GameBoardOverlay';
 import { HolidaySeasonDialog } from './components/HolidaySeasonDialog';
+import { FeaturePreviewOverlay } from './components/FeaturePreviewOverlay';
 import { QuickActionsFAB } from './components/QuickActionsFAB';
 import { XPToast } from './components/XPToast';
 import { CaseSubmissionModal } from './features/cases/CaseSubmissionModal';
@@ -149,6 +150,9 @@ import { ConflictResolverEntry } from './features/conflict-resolver/ConflictReso
 import { PeaceBetweenShell } from './surfaces/peacebetween/PeaceBetweenShell';
 import { PeaceBetweenLanding } from './surfaces/peacebetween/PeaceBetweenLanding';
 import { isConflictRoute, resolveSurface } from './surfaces/surfaceContext';
+import type { FeatureAvailabilityId } from './config/featureAvailability';
+import { resolveFeatureAccess } from './services/featureAccess';
+import { isAdminUser } from './services/adminRoles';
 import './styles/workspace.css';
 import './styles/settings-folders.css';
 import './styles/gamification.css';
@@ -458,6 +462,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
     normalizeTimerSession(readTimerSession()),
   );
   const [scoreTabActiveTab, setScoreTabActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard' | 'collections'>('home');
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [appPreviewFeature, setAppPreviewFeature] = useState<{
+    id: FeatureAvailabilityId;
+    label: string;
+    variant?: 'preview' | 'notImplemented';
+  } | null>(null);
   const [isEnergyMenuOpen, setIsEnergyMenuOpen] = useState(false);
   const [showMobileGamification, setShowMobileGamification] = useState(false);
   const [showGameBoardOverlay, setShowGameBoardOverlay] = useState(false);
@@ -1258,6 +1268,30 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, []);
 
   const activeSession = useMemo(() => supabaseSession as Session, [supabaseSession]);
+
+  useEffect(() => {
+    if (!supabaseSession?.user?.id) {
+      setIsAdmin(false);
+      return;
+    }
+
+    let active = true;
+    setIsAdmin(null);
+    isAdminUser(supabaseSession.user.id)
+      .then((value) => {
+        if (!active) return;
+        setIsAdmin(value);
+      })
+      .catch((error) => {
+        if (!active) return;
+        console.warn('Failed to resolve admin status for feature gating; defaulting to public access.', error);
+        setIsAdmin(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [supabaseSession?.user?.id]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !activeSession?.user?.id) {
@@ -2093,6 +2127,22 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   };
 
+  const openBodyWorkspace = useCallback(() => {
+    const access = resolveFeatureAccess('app.body', { isAdminOrCreator: isAdmin === true });
+
+    if (access === 'hidden') {
+      return;
+    }
+
+    if (access === 'previewOnly') {
+      setAppPreviewFeature({ id: 'app.body', label: 'Body' });
+      return;
+    }
+
+    setActiveWorkspaceNav('body');
+    setShowMobileHome(false);
+  }, [isAdmin]);
+
   const handleMobileNavSelect = (
     navId: string,
     options?: { preserveBreatheTab?: boolean; checkinsOrigin?: 'my-quest' | 'direct' },
@@ -2135,6 +2185,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
     if (navId === 'account' && !isAuthenticated) {
       handleAccountClick();
+      return;
+    }
+
+    if (navId === 'body') {
+      openBodyWorkspace();
       return;
     }
 
@@ -4576,6 +4631,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
         </div>
       </div>
     ) : null;
+  const appPreviewOverlay = appPreviewFeature ? (
+    <FeaturePreviewOverlay
+      label={appPreviewFeature.label}
+      variant={appPreviewFeature.variant}
+      backLabel="← Back"
+      onClose={() => setAppPreviewFeature(null)}
+    />
+  ) : null;
 
   if (isMobileExperience && showMobileHome) {
     const mobileHomeAppClassName = `app app--workspace app--mobile-frame app--mobile-home-frame${
@@ -4653,6 +4716,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         {mobileGamificationOverlay}
         {levelWorldsEntryModal}
         {levelWorldsMobileExitOverlay}
+        {appPreviewOverlay}
         <GameBoardOverlay
           isOpen={showGameBoardOverlay}
           onClose={() => setShowGameBoardOverlay(false)}
@@ -4819,6 +4883,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       openAuthOverlay('login');
                       return;
                     }
+                    if (item.id === 'body') {
+                      openBodyWorkspace();
+                      return;
+                    }
                     setActiveWorkspaceNav(item.id);
                   };
                   const navButtonTitle = item.summary ? `${item.label} • ${item.summary}` : item.label;
@@ -4948,6 +5016,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       {mobileGamificationOverlay}
       {levelWorldsEntryModal}
       {levelWorldsMobileExitOverlay}
+      {appPreviewOverlay}
       <HolidaySeasonDialog
         activeHoliday={activeHolidaySeason}
         isOpen={showHolidaySeasonDialog}
