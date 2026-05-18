@@ -1083,6 +1083,15 @@
   margin-top: 0.1rem;
 }
 
+.score-tab__hub-desc {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted, #64748b);
+  line-height: 1.4;
+  text-align: center;
+  padding: 0 0.5rem;
+}
+
 .score-tab__status {
   padding: 1rem;
   border-radius: 14px;
