@@ -387,8 +387,8 @@ The service worker (`public/sw.js`) handles:
 {
   "title": "Time for: 🏃 Morning Run",
   "body": "Mark it complete in LifeGoal App",
-  "icon": "/icons/icon-192x192.svg",
-  "badge": "/icons/icon-192x192.svg",
+  "icon": "/icons/app-icon-192.png",
+  "badge": "/icons/app-icon-192.png",
   "tag": "habit-uuid",
   "data": {
     "habit_id": "uuid",

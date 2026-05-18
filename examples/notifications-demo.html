@@ -217,9 +217,9 @@
     testBtn.addEventListener('click', () => {
       new Notification('🎯 Test Habit Reminder', {
         body: 'This is what your habit reminders will look like!',
-        // Note: Using SVG icons for PWA; for production consider PNG for better browser compatibility
-        icon: '/icons/icon-192x192.svg',
-        badge: '/icons/icon-192x192.svg',
+        // Note: Using PNG icons for PWA compatibility
+        icon: '/icons/app-icon-192.png',
+        badge: '/icons/app-icon-192.png',
         tag: 'test-notification',
         requireInteraction: false,
       });
@@ -247,9 +247,9 @@
       setTimeout(() => {
         new Notification('⏰ Habit Reminder', {
           body: 'Time to complete your habit! Mark it done in LifeGoal App.',
-          // Note: Using SVG icons for PWA; for production consider PNG for better browser compatibility
-          icon: '/icons/icon-192x192.svg',
-          badge: '/icons/icon-192x192.svg',
+          // Note: Using PNG icons for PWA compatibility
+          icon: '/icons/app-icon-192.png',
+          badge: '/icons/app-icon-192.png',
           tag: 'habit-reminder',
           requireInteraction: true,
         });
