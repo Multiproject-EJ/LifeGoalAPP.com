@@ -1282,8 +1282,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
         if (!active) return;
         setIsAdminOrCreator(value);
       })
-      .catch(() => {
+      .catch((error) => {
         if (!active) return;
+        console.warn('Failed to resolve app feature preview admin access.', error);
         setIsAdminOrCreator(false);
       });
 
