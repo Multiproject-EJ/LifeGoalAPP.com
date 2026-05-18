@@ -3634,6 +3634,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               session={activeSession}
               initialMobileTab={breathingSpaceMobileTab}
               initialMobileCategory={breathingSpaceMobileCategory}
+              isAdminOrCreator={isAdmin === true}
               onMobileTabChange={(tab) => setBreathingSpaceMobileTab(tab)}
               onMobileCategoryChange={(category) => setBreathingSpaceMobileCategory(category)}
               onNavigateToTimer={(context) => {

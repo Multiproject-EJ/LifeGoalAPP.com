@@ -5,6 +5,11 @@ export type FeatureAccessLevel = 'open' | 'previewOnly' | 'hidden';
 
 export type FeatureAvailabilityId =
   | 'app.body'
+  | 'energy.shell'
+  | 'mind.breathingSpace'
+  | 'body.yoga'
+  | 'body.food'
+  | 'body.exercise'
   | 'score.playerShop'
   | 'score.garage'
   | 'score.achievements'
@@ -38,6 +43,56 @@ export const featureAvailabilityRegistry = {
     adminAccess: 'open',
     surface: 'App',
     category: 'workspace',
+  },
+  'energy.shell': {
+    id: 'energy.shell',
+    label: 'Energy',
+    description: 'Energy shell and Mind / Body segmented entry point.',
+    status: 'live',
+    publicAccess: 'open',
+    adminAccess: 'open',
+    surface: 'BreathingSpace',
+    category: 'energy',
+  },
+  'mind.breathingSpace': {
+    id: 'mind.breathingSpace',
+    label: 'Breathing Space',
+    description: 'Live breathing and meditation tools in the Energy area.',
+    status: 'live',
+    publicAccess: 'open',
+    adminAccess: 'open',
+    surface: 'BreathingSpace',
+    category: 'mind',
+  },
+  'body.yoga': {
+    id: 'body.yoga',
+    label: 'Yoga',
+    description: 'Yoga reset routines in the Energy Body area.',
+    status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
+    surface: 'BreathingSpace',
+    category: 'body',
+  },
+  'body.food': {
+    id: 'body.food',
+    label: 'Food',
+    description: 'Food and mindful nutrition routines in the Energy Body area.',
+    status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
+    surface: 'BreathingSpace',
+    category: 'body',
+  },
+  'body.exercise': {
+    id: 'body.exercise',
+    label: 'Exercise',
+    description: 'Exercise and training routines in the Energy Body area.',
+    status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
+    surface: 'BreathingSpace',
+    category: 'body',
   },
   'score.playerShop': {
     id: 'score.playerShop',
