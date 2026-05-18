@@ -166,24 +166,25 @@ Observed file metadata:
 | `sw.js` push notification icon/badge defaults | `/icons/app-icon-192.svg` | `/icons/app-icon-192.png` |
 
 ## Direct answers to requested questions
-1. **Which files are actually referenced?**
-   - Active runtime: `app-icon-192.svg`, `app-icon-512.svg`.
-   - Full map listed above.
+1. **Which files are actually referenced (post-migration)?**
+   - Active runtime: `app-icon-192.png`, `app-icon-512.png`.
+   - Full before/after map in the section above.
 2. **Which are dead/unused legacy assets?**
-   - Dead: `app-icon-1024.png`, `icon-512x512.svg`.
+   - Legacy (no active runtime refs, SVG files retained): `app-icon-192.svg`, `app-icon-512.svg`, `icon-512x512.svg`.
    - Legacy/docs-demo only: `icon-192x192.svg`.
+   - Master source asset (not wired to runtime): `app-icon-1024.png`.
 3. **Are the SVG files true vectors or raster wrappers?**
    - True vectors (shape/text SVG), not raster wrappers.
 4. **Can PNG replacements safely be used instead?**
-   - Yes, with a coordinated reference update across index/manifest/SW/notification defaults.
+   - Yes — migration completed in this PR.
 5. **Which exact files determine iOS icon / Android install icon / favicon / splash?**
-   - iOS: `index.html` apple-touch-icon.
-   - Android/PWA install: `public/manifest.webmanifest` (linked by `index.html`).
-   - favicon: `index.html` rel=icon.
+   - iOS: `index.html` apple-touch-icon → `/icons/app-icon-192.png`.
+   - Android/PWA install: `public/manifest.webmanifest` `icons[]` → `app-icon-192.png` + `app-icon-512.png`.
+   - favicon: `index.html` `rel="icon"` → `/icons/app-icon-192.png`.
    - splash: no explicit asset pipeline; OS/platform-derived behavior.
 6. **Is a 1024 master icon currently wired anywhere?**
-   - No.
+   - No runtime wiring. `app-icon-1024.png` is present as the master source asset only.
 7. **What is the safest migration path from SVG to PNG?**
-   - Use one canonical PNG set, update all active runtime references in one PR, validate on iOS/Android/browser, then clean legacy files.
+   - Completed: one coordinated PR updating index/manifest/SW, validating build + tests.
 8. **Are there duplicated or redundant icon systems?**
-   - Yes: duplicate icon files, duplicate manifest files, and two SW tracks.
+   - Yes: duplicate legacy SVG icon files, duplicate `manifest.json` file (not linked), two SW tracks. Cleanup deferred to follow-up PR.
