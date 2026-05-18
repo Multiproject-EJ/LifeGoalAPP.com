@@ -2129,10 +2129,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   };
 
-  const getBodyWorkspaceAccess = useCallback(
+  const bodyWorkspaceAccess = useMemo(
     () => resolveFeatureAccess('app.body', { isAdminOrCreator: isAdmin === true }),
     [isAdmin],
   );
+  const isBodyWorkspaceOpen = bodyWorkspaceAccess === 'open';
 
   const openBodyPreviewOverlay = useCallback(() => {
     setAppPreviewFeature({ id: 'app.body', label: 'Body' });
@@ -2148,13 +2149,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     });
   }, []);
 
-  const canOpenBodyWorkspace = useCallback(
-    () => getBodyWorkspaceAccess() === 'open',
-    [getBodyWorkspaceAccess],
-  );
-
   const openBodyWorkspace = useCallback(() => {
-    if (!canOpenBodyWorkspace()) {
+    if (!isBodyWorkspaceOpen) {
       openBodyPreviewOverlay();
       return;
     }
@@ -2162,15 +2158,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
     clearBodyPreviewOverlay();
     setActiveWorkspaceNav('body');
     setShowMobileHome(false);
-  }, [canOpenBodyWorkspace, clearBodyPreviewOverlay, openBodyPreviewOverlay]);
+  }, [clearBodyPreviewOverlay, isBodyWorkspaceOpen, openBodyPreviewOverlay]);
 
-  const isBlockedBodyWorkspaceActive = useCallback(
-    () => activeWorkspaceNav === 'body' && !canOpenBodyWorkspace(),
-    [activeWorkspaceNav, canOpenBodyWorkspace],
-  );
+  const isBlockedBodyWorkspaceActive = activeWorkspaceNav === 'body' && !isBodyWorkspaceOpen;
 
   const leaveBlockedBodyWorkspace = useCallback(() => {
-    if (!isBlockedBodyWorkspaceActive()) {
+    if (!isBlockedBodyWorkspaceActive) {
       return false;
     }
 
@@ -3539,7 +3532,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           </div>
         );
       case 'body':
-        if (!canOpenBodyWorkspace()) {
+        if (!isBodyWorkspaceOpen) {
           return <div className="workspace-content" />;
         }
 
@@ -4678,16 +4671,22 @@ export default function App({ forceAuthOnMount }: AppProps) {
       </div>
     ) : null;
   const closeAppPreviewOverlay = () => {
-    if (appPreviewFeature?.id === 'app.body') {
+    if (appPreviewFeature?.id === 'app.body' || isBlockedBodyWorkspaceActive) {
       leaveBlockedBodyWorkspace();
     }
     setAppPreviewFeature(null);
   };
 
-  const appPreviewOverlay = appPreviewFeature ? (
+  const previewOverlayFeature = appPreviewFeature ?? (
+    isBlockedBodyWorkspaceActive
+      ? { id: 'app.body' as const, label: 'Body', variant: undefined }
+      : null
+  );
+
+  const appPreviewOverlay = previewOverlayFeature ? (
     <FeaturePreviewOverlay
-      label={appPreviewFeature.label}
-      variant={appPreviewFeature.variant}
+      label={previewOverlayFeature.label}
+      variant={previewOverlayFeature.variant}
       backLabel="← Back"
       onClose={closeAppPreviewOverlay}
     />
