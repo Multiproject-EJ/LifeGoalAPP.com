@@ -225,10 +225,15 @@ export function ScoreTab({
 
     let active = true;
     setIsAdminOrCreator(null);
-    isAdminUser(session.user.id).then((value) => {
-      if (!active) return;
-      setIsAdminOrCreator(value);
-    });
+    isAdminUser(session.user.id)
+      .then((value) => {
+        if (!active) return;
+        setIsAdminOrCreator(value);
+      })
+      .catch(() => {
+        if (!active) return;
+        setIsAdminOrCreator(false);
+      });
     return () => {
       active = false;
     };
