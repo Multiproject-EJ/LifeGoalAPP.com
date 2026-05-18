@@ -18,6 +18,7 @@ export async function fetchAdminUser(userId: string): Promise<{ data: AdminUserR
       .from('admin_users')
       .select('*')
       .eq('user_id', userId)
+      .eq('active', true)
       .maybeSingle();
 
     if (error) throw error;
@@ -32,7 +33,7 @@ export async function fetchAdminUser(userId: string): Promise<{ data: AdminUserR
 
 export async function isAdminUser(userId: string): Promise<boolean> {
   const { data } = await fetchAdminUser(userId);
-  return Boolean(data?.active);
+  return data?.active === true;
 }
 
 export async function listActiveAdminUsers(): Promise<{ data: AdminUserRow[]; error: Error | null }> {

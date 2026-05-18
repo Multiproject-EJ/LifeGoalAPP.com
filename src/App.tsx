@@ -2134,6 +2134,23 @@ export default function App({ forceAuthOnMount }: AppProps) {
     [isAdmin],
   );
   const isBodyWorkspaceOpen = bodyWorkspaceAccess === 'open';
+  const logBodyGateDebug = useCallback(
+    (event: string) => {
+      if (!import.meta.env.DEV) {
+        return;
+      }
+
+      console.debug('[body-gate]', {
+        event,
+        userId: supabaseSession?.user?.id ?? null,
+        userEmail: supabaseSession?.user?.email ?? null,
+        isAdmin,
+        bodyWorkspaceAccess,
+        activeWorkspaceNav,
+      });
+    },
+    [activeWorkspaceNav, bodyWorkspaceAccess, isAdmin, supabaseSession?.user?.email, supabaseSession?.user?.id],
+  );
 
   const openBodyPreviewOverlay = useCallback(() => {
     setAppPreviewFeature({ id: 'app.body', label: 'Body' });
@@ -2150,6 +2167,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, []);
 
   const openBodyWorkspace = useCallback(() => {
+    logBodyGateDebug('open-attempt');
+
     if (!isBodyWorkspaceOpen) {
       openBodyPreviewOverlay();
       return;
@@ -2158,7 +2177,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     clearBodyPreviewOverlay();
     setActiveWorkspaceNav('body');
     setShowMobileHome(false);
-  }, [clearBodyPreviewOverlay, isBodyWorkspaceOpen, openBodyPreviewOverlay]);
+  }, [clearBodyPreviewOverlay, isBodyWorkspaceOpen, logBodyGateDebug, openBodyPreviewOverlay]);
 
   const isBlockedBodyWorkspaceActive = activeWorkspaceNav === 'body' && !isBodyWorkspaceOpen;
 
@@ -2167,16 +2186,23 @@ export default function App({ forceAuthOnMount }: AppProps) {
       return false;
     }
 
+    logBodyGateDebug('blocked-active-nav-reset');
     setActiveWorkspaceNav(DEFAULT_WORKSPACE_NAV_ID);
     setShowMobileHome(false);
     return true;
-  }, [isBlockedBodyWorkspaceActive]);
+  }, [isBlockedBodyWorkspaceActive, logBodyGateDebug]);
 
   useEffect(() => {
     if (leaveBlockedBodyWorkspace()) {
       openBodyPreviewOverlay();
     }
   }, [leaveBlockedBodyWorkspace, openBodyPreviewOverlay]);
+
+  useEffect(() => {
+    if (appPreviewFeature?.id === 'app.body' || activeWorkspaceNav === 'body') {
+      logBodyGateDebug('state');
+    }
+  }, [activeWorkspaceNav, appPreviewFeature?.id, logBodyGateDebug]);
 
   const handleMobileNavSelect = (
     navId: string,
@@ -3533,7 +3559,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
         );
       case 'body':
         if (!isBodyWorkspaceOpen) {
-          return <div className="workspace-content" />;
+          return (
+            <section
+              className="workspace-content"
+              role="status"
+              aria-label="Body preview status"
+            >
+              <p className="workspace-onboarding-hint">
+                Body is in preview for this account.
+              </p>
+            </section>
+          );
         }
 
         return (
