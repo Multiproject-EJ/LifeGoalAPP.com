@@ -2,7 +2,7 @@ import type { FeatureStatus } from '../config/featureAvailability';
 import '../styles/feature-status.css';
 
 const FEATURE_STATUS_LABELS: Record<Exclude<FeatureStatus, 'live'>, string> = {
-  demo: 'Demo',
+  demo: 'Future Feature',
   comingSoon: 'Coming Soon',
   locked: 'Locked',
   hidden: 'Hidden',
