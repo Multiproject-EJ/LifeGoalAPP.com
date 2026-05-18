@@ -84,9 +84,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     let isMounted = true;
-    let hasTimedOut = false;
     const timeoutId = window.setTimeout(() => {
-      hasTimedOut = true;
       if (!isMounted) return;
       setInitializing(false);
       setInitializationStatus('timeout');
@@ -110,6 +108,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     supabase.auth
       .getSession()
       .then(({ data }) => {
+        window.clearTimeout(timeoutId);
         if (!isMounted) return;
         const nextSession = data.session ?? null;
         setSession(nextSession);
@@ -118,6 +117,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         setInitializationError(null);
       })
       .catch((error) => {
+        window.clearTimeout(timeoutId);
         if (!isMounted) return;
         setInitializationStatus('error');
         setInitializationError(
@@ -128,9 +128,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         window.clearTimeout(timeoutId);
         if (isMounted) {
           setInitializing(false);
-          if (!hasTimedOut) {
-            setInitializationStatus((current) => (current === 'error' ? 'error' : 'ready'));
-          }
         }
       });
 
