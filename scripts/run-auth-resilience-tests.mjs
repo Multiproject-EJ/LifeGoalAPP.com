@@ -20,4 +20,3 @@ try {
 } finally {
   rmSync(outDir, { recursive: true, force: true });
 }
-
