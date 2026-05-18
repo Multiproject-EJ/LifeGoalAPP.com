@@ -13,6 +13,7 @@ import bioDayChartIcon from './assets/theme-icons/bio-day-chart.svg';
 import bioDayCheckIcon from './assets/theme-icons/bio-day-check.svg';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
+import { shouldShowAuthConnectionNotice } from './features/auth/authInitialization';
 import { GoalWorkspace, LifeGoalsSection, MyQuestHub } from './features/goals';
 import { BodyHaircutWidget, DailyHabitTracker, HabitsModule, MobileHabitHome, StarterHabitPicker } from './features/habits';
 import type { TimeBoundOfferId } from './features/habits/TimeBoundOfferRow';
@@ -403,10 +404,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const {
     session: supabaseSession,
     initializing,
+    initializationStatus,
     isConfigured,
     isAuthenticated,
     mode,
     client,
+    retryAuthInitialization,
     signInWithPassword,
     signUpWithPassword,
     signInWithGoogle,
@@ -423,6 +426,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [authError, setAuthError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [activeAuthTab, setActiveAuthTab] = useState<AuthTab>('login');
+  const [isAuthGateOnline, setIsAuthGateOnline] = useState(() => (
+    typeof navigator === 'undefined' ? true : navigator.onLine
+  ));
   const [manualProfileSaving, setManualProfileSaving] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [activeWorkspaceNav, setActiveWorkspaceNav] = useState<string>(() => {
@@ -2085,6 +2091,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   };
 
+  const handleAuthInitializationRetry = useCallback(() => {
+    setAuthError(null);
+    setAuthMessage(null);
+    retryAuthInitialization();
+  }, [retryAuthInitialization]);
+
   const handleSignOut = async () => {
     setAuthError(null);
     setAuthMessage(null);
@@ -2605,6 +2617,20 @@ export default function App({ forceAuthOnMount }: AppProps) {
     };
   }, [clearProfileStrengthHoldTimer, clearMenuHelperHoldTimer]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const updateAuthGateOnlineStatus = () => {
+      setIsAuthGateOnline(typeof navigator === 'undefined' ? true : navigator.onLine);
+    };
+    updateAuthGateOnlineStatus();
+    window.addEventListener('online', updateAuthGateOnlineStatus);
+    window.addEventListener('offline', updateAuthGateOnlineStatus);
+    return () => {
+      window.removeEventListener('online', updateAuthGateOnlineStatus);
+      window.removeEventListener('offline', updateAuthGateOnlineStatus);
+    };
+  }, []);
+
   const handleMobileGameOverlayCardClick = () => {
     setActiveWorkspaceNav('game');
     setShowMobileHome(false);
@@ -2824,7 +2850,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     );
 
     const renderTabPanel = () => {
-    if (initializing) {
+    if (initializing && initializationStatus === 'loading' && isAuthGateOnline) {
       return <p className="supabase-auth__status supabase-auth__status--info">Loading session…</p>;
     }
     if (activeAuthTab === 'login') {
@@ -2835,6 +2861,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
     return renderLoginPanel();
   };
+
+    const showAuthConnectionNotice = shouldShowAuthConnectionNotice({
+      initializationStatus,
+      isConfigured,
+      isOnline: isAuthGateOnline,
+    });
 
     return (
     <div className="auth-card">
@@ -2870,6 +2902,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
           <p className="supabase-auth__status supabase-auth__status--error">
             Supabase credentials are not configured. Update your environment variables to enable live authentication.
           </p>
+        ) : null}
+
+        {showAuthConnectionNotice ? (
+          <div className="supabase-auth__status supabase-auth__status--info auth-card__connection-notice" role="status">
+            <p>HabitGame is having trouble connecting.</p>
+            <p>Your progress is safe. Please retry shortly.</p>
+            <button type="button" className="auth-card__retry" onClick={handleAuthInitializationRetry}>
+              Retry
+            </button>
+          </div>
         ) : null}
 
         {statusElements}
