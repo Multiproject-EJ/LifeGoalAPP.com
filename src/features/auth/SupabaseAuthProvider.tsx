@@ -84,15 +84,8 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     let isMounted = true;
-    const timeoutId = window.setTimeout(() => {
-      if (!isMounted) return;
-      setInitializing(false);
-      setInitializationStatus('timeout');
-      setInitializationError(new Error('HabitGame auth initialization timed out. Please check your connection and try again.'));
-    }, AUTH_INITIALIZATION_TIMEOUT_MS);
 
     if (!supabase || mode !== 'supabase') {
-      window.clearTimeout(timeoutId);
       setInitializing(false);
       setInitializationStatus('ready');
       setInitializationError(null);
@@ -101,6 +94,13 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       };
     }
 
+    const timeoutId = window.setTimeout(() => {
+      if (!isMounted) return;
+      setInitializing(false);
+      setInitializationStatus('timeout');
+      setInitializationError(new Error('HabitGame auth initialization timed out. Please check your connection and try again.'));
+    }, AUTH_INITIALIZATION_TIMEOUT_MS);
+
     setInitializing(true);
     setInitializationStatus('loading');
     setInitializationError(null);
@@ -108,7 +108,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     supabase.auth
       .getSession()
       .then(({ data }) => {
-        window.clearTimeout(timeoutId);
         if (!isMounted) return;
         const nextSession = data.session ?? null;
         setSession(nextSession);
@@ -117,7 +116,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         setInitializationError(null);
       })
       .catch((error) => {
-        window.clearTimeout(timeoutId);
         if (!isMounted) return;
         setInitializationStatus('error');
         setInitializationError(
