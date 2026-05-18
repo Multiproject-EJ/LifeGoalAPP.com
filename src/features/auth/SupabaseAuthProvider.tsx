@@ -90,7 +90,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       if (!isMounted) return;
       setInitializing(false);
       setInitializationStatus('timeout');
-      setInitializationError(new Error('HabitGame auth initialization timed out.'));
+      setInitializationError(new Error('HabitGame auth initialization timed out. Please check your connection and try again.'));
     }, AUTH_INITIALIZATION_TIMEOUT_MS);
 
     if (!supabase || mode !== 'supabase') {
@@ -118,7 +118,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       .catch((error) => {
         if (!isMounted) return;
         setInitializationStatus('error');
-        setInitializationError(error instanceof Error ? error : new Error('Unable to initialize HabitGame auth.'));
+        setInitializationError(
+          error instanceof Error ? error : new Error('Unable to initialize HabitGame auth. Please check your connection and try again.'),
+        );
       })
       .finally(() => {
         window.clearTimeout(timeoutId);
