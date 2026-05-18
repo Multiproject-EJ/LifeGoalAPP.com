@@ -74,7 +74,7 @@ export function HabitGameLandingLayout({ authCard, themeToggle }: HabitGameLandi
                   {card.icon}
                 </span>
                 <div>
-                  <h2>{card.title}</h2>
+                  <h3>{card.title}</h3>
                   <p>{card.description}</p>
                 </div>
               </article>
