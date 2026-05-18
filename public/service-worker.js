@@ -43,8 +43,8 @@ self.addEventListener('activate', (event) => {
  * {
  *   "title": "Notification Title",
  *   "body": "Notification body text",
- *   "icon": "/icons/app-icon-192.svg",      // optional
- *   "badge": "/icons/app-icon-192.svg",     // optional
+ *   "icon": "/icons/app-icon-192.png",      // optional
+ *   "badge": "/icons/app-icon-192.png",     // optional
  *   "image": "https://example.com/img.jpg", // optional
  *   "tag": "unique-tag",                    // optional, groups notifications
  *   "url": "/path/to/open",                 // optional, URL to open on click
@@ -63,8 +63,8 @@ self.addEventListener('push', (event) => {
   
   const defaultTitle = 'HabitGame';
   const defaultBody = 'You have a new notification';
-  const defaultIcon = '/icons/app-icon-192.svg';
-  const defaultBadge = '/icons/app-icon-192.svg';
+  const defaultIcon = '/icons/app-icon-192.png';
+  const defaultBadge = '/icons/app-icon-192.png';
   
   let title = defaultTitle;
   let body = defaultBody;

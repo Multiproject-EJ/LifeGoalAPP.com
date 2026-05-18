@@ -198,8 +198,8 @@ function showLocalNotification(habitTitle, habitId) {
   const title = `Time for: ${habitTitle}`;
   const options = {
     body: 'Mark it complete in LifeGoal App',
-    icon: '/icons/app-icon-192.svg',
-    badge: '/icons/app-icon-192.svg',
+    icon: '/icons/app-icon-192.png',
+    badge: '/icons/app-icon-192.png',
     tag: `habit-${habitId}`,
     requireInteraction: false,
     data: {

@@ -35,7 +35,7 @@ Targeted assets:
 - **Active PWA icon wiring now uses `app-icon-192.png` + `app-icon-512.png`** (migrated from SVG in the implementation PR).
 - `app-icon-1024.png` is present as the master source asset and is **not wired to runtime paths**.
 - `icon-192x192.svg` and `icon-512x512.svg` are byte-identical duplicates of the old active SVGs and remain **not referenced by active runtime code**.
-- Old SVG icons (`app-icon-192.svg`, `app-icon-512.svg`) are retained as legacy files; no deletion in this PR.
+- Old SVG icons (`app-icon-192.svg`, `app-icon-512.svg`, `icon-192x192.svg`, `icon-512x512.svg`) have been deleted in the follow-up cleanup PR.
 - There is **no explicit splash image generation pipeline** (no `apple-touch-startup-image`, no PWA icon generator plugin).
 - Vite does not use `vite-plugin-pwa`; the app relies on static `public/` assets + manual service worker registration.
 

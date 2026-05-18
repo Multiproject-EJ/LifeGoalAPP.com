@@ -595,8 +595,8 @@ Deno.serve(async (req) => {
           const notificationPayload: NotificationPayload = {
             title,
             body: 'Mark it complete in LifeGoal App',
-            icon: '/icons/app-icon-192.svg',
-            badge: '/icons/app-icon-192.svg',
+            icon: '/icons/app-icon-192.png',
+            badge: '/icons/app-icon-192.png',
             tag: `habit-${habit.id}`,
             data: {
               habit_id: habit.id,
