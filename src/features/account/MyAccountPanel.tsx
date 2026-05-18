@@ -177,6 +177,12 @@ export function MyAccountPanel({
   }, [session.user.id]);
 
   useEffect(() => {
+    if (isAdmin === true) return;
+    setAdminInboxOpen(false);
+    setFolder1Open(false);
+  }, [isAdmin]);
+
+  useEffect(() => {
     if (isDemoExperience) {
       setBillingSnapshot(null);
       setBillingError(null);
@@ -639,13 +645,7 @@ export function MyAccountPanel({
 
       <MyCasesPanel session={session} />
 
-      {isAdmin === null ? (
-        <section className="account-panel__card" aria-labelledby="admin-tools-access">
-          <p className="account-panel__eyebrow">Admin</p>
-          <h3 id="admin-tools-access">Admin inbox tools</h3>
-          <p className="account-panel__hint">Checking admin access for this account…</p>
-        </section>
-      ) : isAdmin ? (
+      {isAdmin === true ? (
         <section className="account-panel__card" aria-labelledby="admin-tools-access">
           <p className="account-panel__eyebrow">Admin</p>
           <h3 id="admin-tools-access">Admin inbox tools</h3>
@@ -658,15 +658,7 @@ export function MyAccountPanel({
             </button>
           </div>
         </section>
-      ) : (
-        <section className="account-panel__card" aria-labelledby="admin-tools-access">
-          <p className="account-panel__eyebrow">Admin</p>
-          <h3 id="admin-tools-access">Admin inbox tools</h3>
-          <p className="account-panel__hint">
-            Admin inbox is hidden for this account. Ensure your user is listed in <code>admin_users</code> with <code>active = true</code>.
-          </p>
-        </section>
-      )}
+      ) : null}
 
       <section className="account-panel__card" aria-labelledby="weekly-habit-review-launcher">
         <p className="account-panel__eyebrow">Habits</p>
@@ -713,16 +705,17 @@ export function MyAccountPanel({
         />
       </section>
 
-      {/* Collapsible Folder 1: Advanced Tools */}
-      <section className="account-panel__card">
-        <SettingsFolderButton
-          title="Advanced Tools"
-          description="Advanced ship, analytics, and debugging tools"
-          icon="🔧"
-          itemCount={6}
-          onClick={() => setFolder1Open(true)}
-        />
-      </section>
+      {isAdmin === true ? (
+        <section className="account-panel__card">
+          <SettingsFolderButton
+            title="Advanced Tools"
+            description="Advanced ship, analytics, and debugging tools"
+            icon="🔧"
+            itemCount={6}
+            onClick={() => setFolder1Open(true)}
+          />
+        </section>
+      ) : null}
 
       {/* Collapsible Folder 2: Notification Settings */}
       <section className="account-panel__card">
@@ -735,145 +728,148 @@ export function MyAccountPanel({
         />
       </section>
 
-      {/* Folder 1 Popup */}
-      <SettingsFolderPopup
-        isOpen={folder1Open}
-        onClose={() => setFolder1Open(false)}
-        title="Advanced Tools"
-      >
-        <section className="account-panel__card" aria-labelledby="account-data">
-          <p className="account-panel__eyebrow">Data &amp; security</p>
-          <h3 id="account-data">Ship data</h3>
-          <p className="account-panel__hint">
-            View high-level metadata about your profile. Detailed exports are available through Supabase.
-          </p>
-          <dl className="account-panel__details">
-            <div>
-              <dt>Member since</dt>
-              <dd>{memberSince}</dd>
-            </div>
-            <div>
-              <dt>Last sign-in</dt>
-              <dd>{lastSignIn}</dd>
-            </div>
-            <div>
-              <dt>Account ID</dt>
-              <dd className="account-panel__code">{user.id}</dd>
-            </div>
-          </dl>
-        </section>
+      {isAdmin === true ? (
+        <>
+          <SettingsFolderPopup
+            isOpen={folder1Open}
+            onClose={() => setFolder1Open(false)}
+            title="Advanced Tools"
+          >
+            <section className="account-panel__card" aria-labelledby="account-data">
+              <p className="account-panel__eyebrow">Data &amp; security</p>
+              <h3 id="account-data">Ship data</h3>
+              <p className="account-panel__hint">
+                View high-level metadata about your profile. Detailed exports are available through Supabase.
+              </p>
+              <dl className="account-panel__details">
+                <div>
+                  <dt>Member since</dt>
+                  <dd>{memberSince}</dd>
+                </div>
+                <div>
+                  <dt>Last sign-in</dt>
+                  <dd>{lastSignIn}</dd>
+                </div>
+                <div>
+                  <dt>Account ID</dt>
+                  <dd className="account-panel__code">{user.id}</dd>
+                </div>
+              </dl>
+            </section>
 
-        <section className="account-panel__card" aria-labelledby="account-cache">
-          <p className="account-panel__eyebrow">PWA Tools</p>
-          <h3 id="account-cache">Clear app cache</h3>
-          <p className="account-panel__hint">
-            Remove cached assets and unregister the service worker so you can verify a fresh build.
-          </p>
-          <div className="account-panel__actions-row">
-            <button
-              type="button"
-              className="btn btn--primary"
-              onClick={handleClearAppCache}
-              disabled={cacheClearing}
-            >
-              {cacheClearing ? 'Clearing…' : 'Clear cache & refresh'}
-            </button>
-            {cacheStatus ? <span className="account-panel__saving-indicator">{cacheStatus}</span> : null}
-          </div>
-          <p className="account-panel__saving-indicator" style={{ marginTop: '0.5rem' }}>
-            Active mode: {hapticMode === 'off' ? 'Off' : hapticMode === 'subtle' ? 'Subtle' : 'Balanced'}
-          </p>
-          <div className="account-panel__actions-row" style={{ marginTop: '0.5rem' }}>
-            <button
-              type="button"
-              className="btn"
-              onClick={() => triggerCompletionHaptic('light', { channel: 'navigation', minIntervalMs: 0 })}
-            >
-              Test vibration
-            </button>
-          </div>
-        </section>
-
-        <section className="account-panel__card" aria-labelledby="account-legacy-alias-readiness">
-          <p className="account-panel__eyebrow">Migration diagnostics</p>
-          <h3 id="account-legacy-alias-readiness">Legacy alias sunset readiness</h3>
-          <p className="account-panel__hint">
-            Scan local reward/session history for remaining <code>pomodoro_sprint</code> rows before removing legacy aliases.
-          </p>
-          <div className="account-panel__actions-row">
-            <button
-              type="button"
-              className="btn"
-              onClick={handleRunLegacyAliasScan}
-            >
-              Run legacy alias scan
-            </button>
-          </div>
-          {legacyAliasReadiness ? (
-            <dl className="account-panel__details" style={{ marginTop: '0.75rem' }}>
-              <div>
-                <dt>Legacy reward rows</dt>
-                <dd>{legacyAliasReadiness.legacyRewardSourceRows}</dd>
+            <section className="account-panel__card" aria-labelledby="account-cache">
+              <p className="account-panel__eyebrow">PWA Tools</p>
+              <h3 id="account-cache">Clear app cache</h3>
+              <p className="account-panel__hint">
+                Remove cached assets and unregister the service worker so you can verify a fresh build.
+              </p>
+              <div className="account-panel__actions-row">
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  onClick={handleClearAppCache}
+                  disabled={cacheClearing}
+                >
+                  {cacheClearing ? 'Clearing…' : 'Clear cache & refresh'}
+                </button>
+                {cacheStatus ? <span className="account-panel__saving-indicator">{cacheStatus}</span> : null}
               </div>
-              <div>
-                <dt>Legacy session rows</dt>
-                <dd>{legacyAliasReadiness.legacySessionGameIdRows}</dd>
+              <p className="account-panel__saving-indicator" style={{ marginTop: '0.5rem' }}>
+                Active mode: {hapticMode === 'off' ? 'Off' : hapticMode === 'subtle' ? 'Subtle' : 'Balanced'}
+              </p>
+              <div className="account-panel__actions-row" style={{ marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => triggerCompletionHaptic('light', { channel: 'navigation', minIntervalMs: 0 })}
+                >
+                  Test vibration
+                </button>
               </div>
-              <div>
-                <dt>Ready to sunset</dt>
-                <dd>{legacyAliasReadiness.hasLegacyAliases ? 'No' : 'Yes'}</dd>
+            </section>
+
+            <section className="account-panel__card" aria-labelledby="account-legacy-alias-readiness">
+              <p className="account-panel__eyebrow">Migration diagnostics</p>
+              <h3 id="account-legacy-alias-readiness">Legacy alias sunset readiness</h3>
+              <p className="account-panel__hint">
+                Scan local reward/session history for remaining <code>pomodoro_sprint</code> rows before removing legacy aliases.
+              </p>
+              <div className="account-panel__actions-row">
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={handleRunLegacyAliasScan}
+                >
+                  Run legacy alias scan
+                </button>
               </div>
-              <div>
-                <dt>Scanned at</dt>
-                <dd>{formatDate(legacyAliasReadiness.scannedAt, { dateStyle: 'medium', timeStyle: 'short' })}</dd>
-              </div>
-            </dl>
-          ) : null}
-        </section>
+              {legacyAliasReadiness ? (
+                <dl className="account-panel__details" style={{ marginTop: '0.75rem' }}>
+                  <div>
+                    <dt>Legacy reward rows</dt>
+                    <dd>{legacyAliasReadiness.legacyRewardSourceRows}</dd>
+                  </div>
+                  <div>
+                    <dt>Legacy session rows</dt>
+                    <dd>{legacyAliasReadiness.legacySessionGameIdRows}</dd>
+                  </div>
+                  <div>
+                    <dt>Ready to sunset</dt>
+                    <dd>{legacyAliasReadiness.hasLegacyAliases ? 'No' : 'Yes'}</dd>
+                  </div>
+                  <div>
+                    <dt>Scanned at</dt>
+                    <dd>{formatDate(legacyAliasReadiness.scannedAt, { dateStyle: 'medium', timeStyle: 'short' })}</dd>
+                  </div>
+                </dl>
+              ) : null}
+            </section>
 
-        <GameDebugLogSection />
+            <GameDebugLogSection />
 
-        <ReminderAnalyticsDashboard session={session} />
+            <ReminderAnalyticsDashboard session={session} />
 
-        <PushNotificationTestPanel session={session} />
+            <PushNotificationTestPanel session={session} />
 
-        <ReminderActionDebugPanel session={session} />
+            <ReminderActionDebugPanel session={session} />
 
-        <SupabaseConnectionTest 
-          session={session} 
-          isDemoExperience={isDemoExperience} 
-        />
+            <SupabaseConnectionTest
+              session={session}
+              isDemoExperience={isDemoExperience}
+            />
 
-        {onLaunchDailyTreatCalendar && (
-          <section className="account-panel__card" aria-labelledby="dev-daily-treat-calendar">
-            <p className="account-panel__eyebrow">Daily Treats</p>
-            <h3 id="dev-daily-treat-calendar">Daily Treat Calendar</h3>
-            <p className="account-panel__hint">
-              Open the Daily Treat Calendar (Personal Quest) directly for development and preview.
-            </p>
-            <div className="account-panel__actions-row">
-              <button
-                type="button"
-                className="btn"
-                onClick={() => {
-                  setFolder1Open(false);
-                  onLaunchDailyTreatCalendar();
-                }}
-              >
-                Launch Daily Treat Calendar
-              </button>
-            </div>
-          </section>
-        )}
-      </SettingsFolderPopup>
+            {onLaunchDailyTreatCalendar && (
+              <section className="account-panel__card" aria-labelledby="dev-daily-treat-calendar">
+                <p className="account-panel__eyebrow">Daily Treats</p>
+                <h3 id="dev-daily-treat-calendar">Daily Treat Calendar</h3>
+                <p className="account-panel__hint">
+                  Open the Daily Treat Calendar (Personal Quest) directly for development and preview.
+                </p>
+                <div className="account-panel__actions-row">
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => {
+                      setFolder1Open(false);
+                      onLaunchDailyTreatCalendar();
+                    }}
+                  >
+                    Launch Daily Treat Calendar
+                  </button>
+                </div>
+              </section>
+            )}
+          </SettingsFolderPopup>
 
-      <SettingsFolderPopup
-        isOpen={adminInboxOpen}
-        onClose={() => setAdminInboxOpen(false)}
-        title="Admin Inbox"
-      >
-        <AdminInboxPanel session={session} />
-      </SettingsFolderPopup>
+          <SettingsFolderPopup
+            isOpen={adminInboxOpen}
+            onClose={() => setAdminInboxOpen(false)}
+            title="Admin Inbox"
+          >
+            <AdminInboxPanel session={session} />
+          </SettingsFolderPopup>
+        </>
+      ) : null}
 
       {/* Folder 2 Popup */}
       <SettingsFolderPopup
