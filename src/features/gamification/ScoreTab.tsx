@@ -1576,7 +1576,33 @@ export function ScoreTab({
         <div className="score-tab__content">
           <div className="score-tab__bank-intro">
             <h2 className="score-tab__headline">Collections</h2>
-            <p className="score-tab__subtitle">This is a placeholder for your Collections tab content.</p>
+            <p className="score-tab__subtitle">Your growing world of collectibles and companions.</p>
+          </div>
+          <div className="score-tab__hub">
+            <button
+              type="button"
+              className="score-tab__hub-card score-tab__hub-card--full"
+              onClick={() => handleHubCardClick('score.creatureSanctuary', 'Creature Sanctuary', () => {})}
+            >
+              <span className="score-tab__hub-visual score-tab__hub-visual--icon" aria-hidden="true">🐾</span>
+              <span className="score-tab__hub-title">
+                Creature Sanctuary
+                <FeatureStatusBadge status={getFeatureAvailability('score.creatureSanctuary').status} />
+              </span>
+              <p className="score-tab__hub-desc">Collect, hatch, and bond with magical companions from your island journey.</p>
+            </button>
+            <button
+              type="button"
+              className="score-tab__hub-card score-tab__hub-card--full"
+              onClick={() => handleHubCardClick('score.stickersGallery', 'Stickers Gallery', () => {})}
+            >
+              <span className="score-tab__hub-visual score-tab__hub-visual--icon" aria-hidden="true">🌟</span>
+              <span className="score-tab__hub-title">
+                Stickers Gallery
+                <FeatureStatusBadge status={getFeatureAvailability('score.stickersGallery').status} />
+              </span>
+              <p className="score-tab__hub-desc">Build a playful gallery of collectible stickers, seasonal moments, and achievement memories.</p>
+            </button>
           </div>
         </div>
       )}
