@@ -197,6 +197,12 @@ export function ScoreTab({
     [isAdminOrCreator],
   );
 
+  const handlePreviewVote = useCallback(() => {
+    setPreviewFeature((current) => (
+      current ? { ...current, hasVoted: true } : current
+    ));
+  }, []);
+
   const rewardRisk = useMemo(() => {
     const cost = Number(rewardCost);
     if (!rewardTitle.trim() || !cost || cost < 1) {
@@ -1680,9 +1686,7 @@ export function ScoreTab({
                 <button
                   type="button"
                   className="score-hub-preview__vote-btn"
-                  onClick={() => setPreviewFeature((current) => (
-                    current ? { ...current, hasVoted: true } : current
-                  ))}
+                  onClick={handlePreviewVote}
                   disabled={previewFeature.hasVoted === true}
                 >
                   {previewFeature.hasVoted ? 'Vote noted' : 'Vote for this'}
