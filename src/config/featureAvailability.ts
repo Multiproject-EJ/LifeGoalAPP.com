@@ -4,6 +4,7 @@ export type FeatureStatus = 'live' | 'demo' | 'comingSoon' | 'locked' | 'hidden'
 export type FeatureAccessLevel = 'open' | 'previewOnly' | 'hidden';
 
 export type FeatureAvailabilityId =
+  | 'app.body'
   | 'score.playerShop'
   | 'score.garage'
   | 'score.achievements'
@@ -28,6 +29,16 @@ export interface FeatureAvailability {
 }
 
 export const featureAvailabilityRegistry = {
+  'app.body': {
+    id: 'app.body',
+    label: 'Body',
+    description: 'Body routines and personal care section.',
+    status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
+    surface: 'App',
+    category: 'workspace',
+  },
   'score.playerShop': {
     id: 'score.playerShop',
     label: 'Player Shop',
