@@ -146,7 +146,9 @@ export function BreathingSpace({
         setActiveMobileCategory(nextCategory);
         onMobileCategoryChange?.(nextCategory);
       }
-      setPreviewFeature({ id: BODY_TAB_FEATURE_IDS[tab as BodyTab], label: mobileTabOptions[tab].label });
+      if (isBodyTab(tab)) {
+        setPreviewFeature({ id: BODY_TAB_FEATURE_IDS[tab], label: mobileTabOptions[tab].label });
+      }
       return;
     }
 
