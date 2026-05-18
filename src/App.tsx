@@ -252,6 +252,8 @@ function setIslandRunOpenStopParam(stopId: 'boss' | 'hatchery' | 'dynamic') {
 }
 
 
+const DEFAULT_WORKSPACE_NAV_ID = 'goals';
+
 const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
     id: 'goals',
@@ -424,12 +426,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [manualProfileSaving, setManualProfileSaving] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [activeWorkspaceNav, setActiveWorkspaceNav] = useState<string>(() => {
-    if (typeof window === 'undefined') return 'goals';
+    if (typeof window === 'undefined') return DEFAULT_WORKSPACE_NAV_ID;
     const host = window.location.hostname.toLowerCase();
     if (host === 'peacebetween.com' || host === 'www.peacebetween.com') {
       return 'breathing-space';
     }
-    return 'goals';
+    return DEFAULT_WORKSPACE_NAV_ID;
   });
   const [initialSearch, setInitialSearch] = useState(() =>
     typeof window !== 'undefined' ? window.location.search : '',
@@ -2127,21 +2129,61 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   };
 
+  const getBodyWorkspaceAccess = useCallback(
+    () => resolveFeatureAccess('app.body', { isAdminOrCreator: isAdmin === true }),
+    [isAdmin],
+  );
+
+  const openBodyPreviewOverlay = useCallback(() => {
+    setAppPreviewFeature({ id: 'app.body', label: 'Body' });
+  }, []);
+
+  const clearBodyPreviewOverlay = useCallback(() => {
+    setAppPreviewFeature((current) => {
+      if (current?.id !== 'app.body') {
+        return current;
+      }
+
+      return null;
+    });
+  }, []);
+
+  const canOpenBodyWorkspace = useCallback(
+    () => getBodyWorkspaceAccess() === 'open',
+    [getBodyWorkspaceAccess],
+  );
+
   const openBodyWorkspace = useCallback(() => {
-    const access = resolveFeatureAccess('app.body', { isAdminOrCreator: isAdmin === true });
-
-    if (access === 'hidden') {
+    if (!canOpenBodyWorkspace()) {
+      openBodyPreviewOverlay();
       return;
     }
 
-    if (access === 'previewOnly') {
-      setAppPreviewFeature({ id: 'app.body', label: 'Body' });
-      return;
-    }
-
+    clearBodyPreviewOverlay();
     setActiveWorkspaceNav('body');
     setShowMobileHome(false);
-  }, [isAdmin]);
+  }, [canOpenBodyWorkspace, clearBodyPreviewOverlay, openBodyPreviewOverlay]);
+
+  const isBlockedBodyWorkspaceActive = useCallback(
+    () => activeWorkspaceNav === 'body' && !canOpenBodyWorkspace(),
+    [activeWorkspaceNav, canOpenBodyWorkspace],
+  );
+
+  const leaveBlockedBodyWorkspace = useCallback(() => {
+    if (!isBlockedBodyWorkspaceActive()) {
+      return false;
+    }
+
+    setActiveWorkspaceNav(DEFAULT_WORKSPACE_NAV_ID);
+    setShowMobileHome(false);
+    return true;
+  }, [isBlockedBodyWorkspaceActive]);
+
+  useEffect(() => {
+    if (leaveBlockedBodyWorkspace()) {
+      openBodyPreviewOverlay();
+    }
+  }, [leaveBlockedBodyWorkspace, openBodyPreviewOverlay]);
 
   const handleMobileNavSelect = (
     navId: string,
@@ -3497,6 +3539,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
           </div>
         );
       case 'body':
+        if (!canOpenBodyWorkspace()) {
+          return <div className="workspace-content" />;
+        }
+
         return (
           <div className="workspace-content">
             <BodyHaircutWidget />
@@ -4631,12 +4677,19 @@ export default function App({ forceAuthOnMount }: AppProps) {
         </div>
       </div>
     ) : null;
+  const closeAppPreviewOverlay = () => {
+    if (appPreviewFeature?.id === 'app.body') {
+      leaveBlockedBodyWorkspace();
+    }
+    setAppPreviewFeature(null);
+  };
+
   const appPreviewOverlay = appPreviewFeature ? (
     <FeaturePreviewOverlay
       label={appPreviewFeature.label}
       variant={appPreviewFeature.variant}
       backLabel="← Back"
-      onClose={() => setAppPreviewFeature(null)}
+      onClose={closeAppPreviewOverlay}
     />
   ) : null;
 
