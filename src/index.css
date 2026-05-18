@@ -127,7 +127,7 @@ body {
 .app--auth-gate {
   position: relative;
   isolation: isolate;
-  padding: max(1rem, env(safe-area-inset-top, 0px)) clamp(1rem, 4vw, 2.5rem) 0;
+  padding: max(1rem, env(safe-area-inset-top, 0)) clamp(1rem, 4vw, 2.5rem) 0;
   gap: clamp(1.25rem, 5vw, 3rem);
   min-height: 100vh;
   min-height: 100dvh;
@@ -183,7 +183,6 @@ body {
     2.5rem -0.75rem 0 rgba(255, 255, 255, 0.62),
     5rem 0.45rem 0 rgba(255, 255, 255, 0.5),
     0 1.2rem 2.5rem rgba(37, 99, 235, 0.08);
-  filter: blur(0.2px);
 }
 
 .auth-gate__cloud--one {
@@ -239,6 +238,7 @@ body {
   width: 1.8rem;
   height: 1.8rem;
   border-radius: 999px;
+  /* Decorative sun medallion for the HabitGame brand mark. */
   background:
     radial-gradient(circle at 50% 50%, #fff7ad 0 18%, transparent 19%),
     conic-gradient(from 45deg, #fff7ad 0 12.5%, #f59e0b 12.5% 25%, #fff7ad 25% 37.5%, #f59e0b 37.5% 50%, #fff7ad 50% 62.5%, #f59e0b 62.5% 75%, #fff7ad 75% 87.5%, #f59e0b 87.5% 100%);
@@ -405,6 +405,7 @@ body {
   position: absolute;
   inset: -0.75rem 18% auto;
   height: 1.1rem;
+  /* Castle crenellation silhouette for the floating-island placeholder art. */
   clip-path: polygon(0 100%, 0 35%, 18% 35%, 18% 0, 34% 0, 34% 35%, 66% 35%, 66% 0, 82% 0, 82% 35%, 100% 35%, 100% 100%);
   background: #f59e0b;
   border-radius: 0.2rem 0.2rem 0 0;
