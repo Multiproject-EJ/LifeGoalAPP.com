@@ -1666,7 +1666,7 @@ export function ScoreTab({
             <h2 className="score-hub-preview__title">{previewFeature.label}</h2>
             <p className="score-hub-preview__body">
               {previewFeature.variant === 'notImplemented'
-                ? 'Admin access is enabled for this feature, but there is not a Score Hub action wired yet.'
+                ? 'Admin access is enabled for this feature, but there is no Score Hub action wired yet.'
                 : 'This area is being shaped and tested. It will unlock when the feature is ready.'}
             </p>
             <button
