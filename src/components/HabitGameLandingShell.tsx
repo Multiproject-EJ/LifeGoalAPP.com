@@ -64,7 +64,10 @@ export function HabitGameLandingLayout({ authCard, themeToggle }: HabitGameLandi
             <div className="auth-hero__island-shadow" />
           </div>
 
-          <div className="auth-hero__values" aria-label="HabitGame benefits">
+          <section className="auth-hero__values" aria-labelledby="habitgame-benefits-title">
+            <h2 id="habitgame-benefits-title" className="sr-only">
+              HabitGame benefits
+            </h2>
             {landingValueCards.map((card) => (
               <article className="auth-value-card" key={card.title}>
                 <span className="auth-value-card__icon" aria-hidden="true">
@@ -76,7 +79,7 @@ export function HabitGameLandingLayout({ authCard, themeToggle }: HabitGameLandi
                 </div>
               </article>
             ))}
-          </div>
+          </section>
         </section>
 
         <div className="auth-panel auth-gate__panel">{authCard}</div>
