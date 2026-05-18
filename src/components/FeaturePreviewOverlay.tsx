@@ -10,7 +10,7 @@ type FeaturePreviewOverlayProps = {
   body?: string;
   notImplementedBody?: string;
   backLabel?: string;
-  badgeLabel?: string;
+  statusLabelOverride?: string;
   voteLabel?: string;
   voteConfirmation?: string;
   onClose: () => void;
@@ -22,14 +22,14 @@ export function FeaturePreviewOverlay({
   body = 'HabitGame grows around what helps players stay motivated in real life. Vote if this is a feature you’d love to see next.',
   notImplementedBody = 'Admin access is enabled for this feature, but the implementation is not available yet.',
   backLabel = 'Back',
-  badgeLabel = 'Future Feature',
+  statusLabelOverride = 'Future Feature',
   voteLabel = 'Vote for this',
   voteConfirmation = 'Thanks — your interest has been noted for the roadmap.',
   onClose,
 }: FeaturePreviewOverlayProps) {
   const [hasVoted, setHasVoted] = useState(false);
   const isNotImplemented = variant === 'notImplemented';
-  const statusLabel = isNotImplemented ? 'Not implemented yet' : badgeLabel;
+  const statusLabel = isNotImplemented ? 'Not implemented yet' : statusLabelOverride;
 
   return (
     <div
