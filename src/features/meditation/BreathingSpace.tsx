@@ -15,8 +15,11 @@ import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { ZEN_TOKEN_REWARDS } from '../../constants/economy';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
+import { FeaturePreviewOverlay } from '../../components/FeaturePreviewOverlay';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import { awardZenTokens } from '../../services/zenGarden';
+import type { FeatureAvailabilityId } from '../../config/featureAvailability';
+import { resolveFeatureAccess } from '../../services/featureAccess';
 import { TrainingTab } from '../training';
 import { ConflictResolverEntry } from '../conflict-resolver/ConflictResolverEntry';
 import './BreathingSpace.css';
@@ -29,6 +32,7 @@ type BreathingSpaceProps = {
   onMobileTabChange?: (tab: MobileTab | null) => void;
   onMobileCategoryChange?: (category: MobileCategory) => void;
   onNavigateToTimer?: (context?: TimerLaunchContext) => void;
+  isAdminOrCreator?: boolean;
 };
 
 type MobileTab = 'breathing' | 'meditation' | 'conflict' | 'yoga' | 'food' | 'exercise';
@@ -52,6 +56,16 @@ const getCategoryForTab = (tab: MobileTab): MobileCategory => {
   return 'mind';
 };
 
+const BODY_TAB_FEATURE_IDS = {
+  yoga: 'body.yoga',
+  food: 'body.food',
+  exercise: 'body.exercise',
+} as const satisfies Partial<Record<MobileTab, FeatureAvailabilityId>>;
+
+type BodyTab = keyof typeof BODY_TAB_FEATURE_IDS;
+
+const isBodyTab = (tab: MobileTab | null): tab is BodyTab => Boolean(tab && tab in BODY_TAB_FEATURE_IDS);
+
 export function BreathingSpace({
   session,
   initialMobileTab,
@@ -59,6 +73,7 @@ export function BreathingSpace({
   onMobileTabChange,
   onMobileCategoryChange,
   onNavigateToTimer,
+  isAdminOrCreator = false,
 }: BreathingSpaceProps) {
   const [stats, setStats] = useState<MeditationStats>({
     totalMinutes: 0,
@@ -75,6 +90,7 @@ export function BreathingSpace({
   const [saving, setSaving] = useState(false);
   const [reminderOpen, setReminderOpen] = useState(false);
   const [reminderSet, setReminderSet] = useState(false);
+  const [previewFeature, setPreviewFeature] = useState<{ id: FeatureAvailabilityId; label: string } | null>(null);
   const reminderRef = useRef<HTMLDivElement>(null);
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab | null>(initialMobileTab ?? null);
   const [activeMobileCategory, setActiveMobileCategory] = useState<MobileCategory>(
@@ -114,7 +130,26 @@ export function BreathingSpace({
   const [sessionFeedbackClassName, setSessionFeedbackClassName] = useState('');
   const { earnXP, recordActivity, refreshProfile, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
 
+  const getMobileTabAccess = (tab: MobileTab) => {
+    if (!isBodyTab(tab)) {
+      return 'open';
+    }
+
+    return resolveFeatureAccess(BODY_TAB_FEATURE_IDS[tab], { isAdminOrCreator });
+  };
+
   const handleMobileTabChange = (tab: MobileTab) => {
+    const tabAccess = getMobileTabAccess(tab);
+    if (tabAccess !== 'open') {
+      const nextCategory = getCategoryForTab(tab);
+      if (nextCategory !== activeMobileCategory) {
+        setActiveMobileCategory(nextCategory);
+        onMobileCategoryChange?.(nextCategory);
+      }
+      setPreviewFeature({ id: BODY_TAB_FEATURE_IDS[tab as BodyTab], label: mobileTabOptions[tab].label });
+      return;
+    }
+
     setActiveMobileTab(tab);
     const nextCategory = getCategoryForTab(tab);
     if (nextCategory !== activeMobileCategory) {
@@ -393,12 +428,17 @@ export function BreathingSpace({
   };
 
   const activeCategoryTabs = MOBILE_CATEGORY_TABS[activeMobileCategory];
-  const isConflictFullscreen = activeMobileTab === 'conflict';
+  const isActiveBodyTabBlocked = isBodyTab(activeMobileTab) && getMobileTabAccess(activeMobileTab) !== 'open';
+  const activeMobileTabForRender = isActiveBodyTabBlocked ? null : activeMobileTab;
+  const isConflictFullscreen = activeMobileTabForRender === 'conflict';
+  const canRenderYoga = getMobileTabAccess('yoga') === 'open';
+  const canRenderFood = getMobileTabAccess('food') === 'open';
+  const canRenderExercise = getMobileTabAccess('exercise') === 'open';
 
   return (
     <div
       className={`breathing-space${isConflictFullscreen ? ' breathing-space--conflict-fullscreen' : ''} ${justCompletedSession ? `breathing-item--just-completed ${sessionFeedbackClassName}` : ""}`.trim()}
-      data-mobile-tab={activeMobileTab ?? 'none'}
+      data-mobile-tab={activeMobileTabForRender ?? 'none'}
       data-mobile-category={activeMobileCategory}
     >
       {isConflictFullscreen ? (
@@ -431,7 +471,7 @@ export function BreathingSpace({
               Body
             </button>
           </div>
-          {activeMobileTab ? null : (
+          {activeMobileTabForRender ? null : (
             <div className="breathing-space__mobile-launch" role="group" aria-label="Choose an energy focus">
               {activeCategoryTabs.map((tab) => (
                 <button
@@ -527,35 +567,41 @@ export function BreathingSpace({
           </button>
         </div>
 
-        <div className="breathing-space__card breathing-space__section breathing-space__section--yoga">
-          <div className="breathing-space__card-header">
-            <span className="breathing-space__card-icon">🧘‍♀️</span>
-            <h3 className="breathing-space__card-title">Yoga Reset</h3>
+        {canRenderYoga ? (
+          <div className="breathing-space__card breathing-space__section breathing-space__section--yoga">
+            <div className="breathing-space__card-header">
+              <span className="breathing-space__card-icon">🧘‍♀️</span>
+              <h3 className="breathing-space__card-title">Yoga Reset</h3>
+            </div>
+            <p className="breathing-space__card-description">
+              Slow down with a grounding flow designed for calm, stretch, and balance.
+            </p>
+            <button className="btn btn--primary breathing-space__start-button" type="button">
+              Start 8-minute flow
+            </button>
           </div>
-          <p className="breathing-space__card-description">
-            Slow down with a grounding flow designed for calm, stretch, and balance.
-          </p>
-          <button className="btn btn--primary breathing-space__start-button" type="button">
-            Start 8-minute flow
-          </button>
-        </div>
+        ) : null}
 
-        <div className="breathing-space__card breathing-space__section breathing-space__section--food">
-          <div className="breathing-space__card-header">
-            <span className="breathing-space__card-icon">🥗</span>
-            <h3 className="breathing-space__card-title">Food</h3>
+        {canRenderFood ? (
+          <div className="breathing-space__card breathing-space__section breathing-space__section--food">
+            <div className="breathing-space__card-header">
+              <span className="breathing-space__card-icon">🥗</span>
+              <h3 className="breathing-space__card-title">Food</h3>
+            </div>
+            <p className="breathing-space__card-description">
+              Build fueling routines and mindful nutrition habits here soon.
+            </p>
+            <button className="btn btn--primary breathing-space__start-button" type="button">
+              Coming soon
+            </button>
           </div>
-          <p className="breathing-space__card-description">
-            Build fueling routines and mindful nutrition habits here soon.
-          </p>
-          <button className="btn btn--primary breathing-space__start-button" type="button">
-            Coming soon
-          </button>
-        </div>
+        ) : null}
 
-        <div className="breathing-space__section breathing-space__section--exercise">
-          <TrainingTab />
-        </div>
+        {canRenderExercise ? (
+          <div className="breathing-space__section breathing-space__section--exercise">
+            <TrainingTab />
+          </div>
+        ) : null}
 
       </div>
 
@@ -719,26 +765,28 @@ export function BreathingSpace({
           </div>
         </div>
 
-        <div className="breathing-space__library breathing-space__section breathing-space__section--yoga">
-          <div className="breathing-space__library-header">
-            <h3 className="breathing-space__library-title">Yoga Sessions</h3>
+        {canRenderYoga ? (
+          <div className="breathing-space__library breathing-space__section breathing-space__section--yoga">
+            <div className="breathing-space__library-header">
+              <h3 className="breathing-space__library-title">Yoga Sessions</h3>
+            </div>
+            <div className="breathing-space__button-grid">
+              {[
+                { title: 'Morning Mobility', duration: '10 min' },
+                { title: 'Posture Reset', duration: '6 min' },
+                { title: 'Evening Wind Down', duration: '12 min' },
+              ].map((sessionItem) => (
+                <button key={sessionItem.title} type="button" className="breathing-space__exercise-button">
+                  <span className="breathing-space__exercise-button-icon">🧘‍♀️</span>
+                  <span className="breathing-space__exercise-button-text">
+                    <span className="breathing-space__exercise-button-title">{sessionItem.title}</span>
+                    <span className="breathing-space__exercise-button-meta">{sessionItem.duration}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="breathing-space__button-grid">
-            {[
-              { title: 'Morning Mobility', duration: '10 min' },
-              { title: 'Posture Reset', duration: '6 min' },
-              { title: 'Evening Wind Down', duration: '12 min' },
-            ].map((sessionItem) => (
-              <button key={sessionItem.title} type="button" className="breathing-space__exercise-button">
-                <span className="breathing-space__exercise-button-icon">🧘‍♀️</span>
-                <span className="breathing-space__exercise-button-text">
-                  <span className="breathing-space__exercise-button-title">{sessionItem.title}</span>
-                  <span className="breathing-space__exercise-button-meta">{sessionItem.duration}</span>
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+        ) : null}
       </div>
 
       {/* Daily Reminder Toggle */}
@@ -800,6 +848,12 @@ export function BreathingSpace({
           }}
         />
       )}
+      {previewFeature ? (
+        <FeaturePreviewOverlay
+          label={previewFeature.label}
+          onClose={() => setPreviewFeature(null)}
+        />
+      ) : null}
     </div>
   );
 }
