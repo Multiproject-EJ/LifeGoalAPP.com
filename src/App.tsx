@@ -13,7 +13,6 @@ import bioDayChartIcon from './assets/theme-icons/bio-day-chart.svg';
 import bioDayCheckIcon from './assets/theme-icons/bio-day-check.svg';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
-import { shouldShowAuthConnectionNotice } from './features/auth/authInitialization';
 import { GoalWorkspace, LifeGoalsSection, MyQuestHub } from './features/goals';
 import { BodyHaircutWidget, DailyHabitTracker, HabitsModule, MobileHabitHome, StarterHabitPicker } from './features/habits';
 import type { TimeBoundOfferId } from './features/habits/TimeBoundOfferRow';
@@ -51,6 +50,7 @@ import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
 import { MobileTopChrome } from './components/MobileTopChrome';
 import { GameBoardOverlay } from './components/GameBoardOverlay';
+import { HabitGameAuthCard, HabitGameLandingShell, type HabitGameAuthTab } from './components/HabitGameLandingShell';
 import { HolidaySeasonDialog } from './components/HolidaySeasonDialog';
 import { FeaturePreviewOverlay } from './components/FeaturePreviewOverlay';
 import { QuickActionsFAB } from './components/QuickActionsFAB';
@@ -161,7 +161,7 @@ import './features/ai-coach/AiCoach.css';
 
 type AuthMode = 'password' | 'signup';
 
-type AuthTab = 'login' | 'signup';
+type AuthTab = HabitGameAuthTab;
 
 type WorkspaceNavItem = {
   id: string;
@@ -2657,6 +2657,21 @@ export default function App({ forceAuthOnMount }: AppProps) {
     void handleGameModePreferenceChange(nextIsActive);
   };
 
+  const statusElements = (
+    <>
+      {authMessage && (
+        <p
+          className={`supabase-auth__status supabase-auth__status--success ${
+            authMessageVisible ? '' : 'supabase-auth__status--hidden'
+          }`}
+        >
+          {authMessage}
+        </p>
+      )}
+      {authError && <p className="supabase-auth__status supabase-auth__status--error">{authError}</p>}
+    </>
+  );
+
   const handleJournalNavigation = useCallback((navId: string) => {
     setActiveWorkspaceNav(navId);
     setShowMobileHome(false);
@@ -2681,244 +2696,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const handleOpenLifeCoach = useCallback(() => {
     // Life Coach modal is handled within the FAB component
   }, []);
-
-  const statusElements = (
-    <>
-      {authMessage && (
-        <p
-          className={`supabase-auth__status supabase-auth__status--success ${
-            authMessageVisible ? '' : 'supabase-auth__status--hidden'
-          }`}
-        >
-          {authMessage}
-        </p>
-      )}
-      {authError && <p className="supabase-auth__status supabase-auth__status--error">{authError}</p>}
-    </>
-  );
-
-  const renderAuthPanel = () => {
-    const authTabs: { id: AuthTab; label: string }[] = [
-      { id: 'login', label: 'Log in' },
-      { id: 'signup', label: 'Sign up' },
-    ];
-
-    const authTabCopy: Record<AuthTab, { title: string; subtitle: string }> = {
-    login: {
-      title: 'Welcome back',
-      subtitle: 'Log in to sync your rituals, goals, and check-ins across devices.',
-    },
-    signup: {
-      title: 'Create your LifeGoal account',
-      subtitle: 'Sign up with email or Google to unlock your full ship.',
-    },
-    };
-
-    const renderLoginPanel = () => (
-    <div
-      className="auth-tab-panel"
-      role="tabpanel"
-      id="auth-panel-login"
-      aria-labelledby="auth-tab-login"
-    >
-      <form className="supabase-auth__form" onSubmit={handleAuthSubmit}>
-        <label className="supabase-auth__field">
-          <span>Email</span>
-          <input
-            type="email"
-            name="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="you@example.com"
-            autoComplete="email"
-            required
-          />
-        </label>
-
-        <label className="supabase-auth__field">
-          <span>Password</span>
-          <input
-            type="password"
-            name="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="••••••••"
-            autoComplete="current-password"
-            required
-          />
-        </label>
-
-        <div className="supabase-auth__actions">
-          <button type="submit" className="supabase-auth__action auth-card__primary" disabled={submitting}>
-            {submitting ? 'Signing in…' : 'Log in'}
-          </button>
-        </div>
-      </form>
-
-      <div className="auth-card__providers">
-        <div className="supabase-auth__divider">or</div>
-        <button
-          type="button"
-          className="auth-provider auth-provider--google"
-          onClick={handleGoogleSignIn}
-          disabled={submitting || !isConfigured}
-        >
-          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" fill="#4285F4"/>
-            <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z" fill="#34A853"/>
-            <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05"/>
-            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z" fill="#EA4335"/>
-          </svg>
-          Continue with Google
-        </button>
-      </div>
-    </div>
-    );
-
-    const renderSignupPanel = () => (
-    <div
-      className="auth-tab-panel"
-      role="tabpanel"
-      id="auth-panel-signup"
-      aria-labelledby="auth-tab-signup"
-    >
-      <form className="supabase-auth__form" onSubmit={handleAuthSubmit}>
-        <label className="supabase-auth__field">
-          <span>Your name</span>
-          <input
-            type="text"
-            name="fullName"
-            value={fullName}
-            onChange={(event) => setFullName(event.target.value)}
-            placeholder="Jordan Goalsetter"
-            autoComplete="name"
-            required
-          />
-        </label>
-
-        <label className="supabase-auth__field">
-          <span>Email</span>
-          <input
-            type="email"
-            name="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="you@example.com"
-            autoComplete="email"
-            required
-          />
-        </label>
-
-        <label className="supabase-auth__field">
-          <span>Password</span>
-          <input
-            type="password"
-            name="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Create a secure password"
-            autoComplete="new-password"
-            required
-          />
-        </label>
-
-        <div className="supabase-auth__actions">
-          <button type="submit" className="supabase-auth__action auth-card__primary" disabled={submitting}>
-            {submitting ? 'Creating account…' : 'Sign up with email'}
-          </button>
-        </div>
-      </form>
-
-      <div className="auth-card__providers">
-        <div className="supabase-auth__divider">or</div>
-        <button
-          type="button"
-          className="auth-provider auth-provider--google"
-          onClick={handleGoogleSignIn}
-          disabled={submitting || !isConfigured}
-        >
-          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" fill="#4285F4"/>
-            <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z" fill="#34A853"/>
-            <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05"/>
-            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z" fill="#EA4335"/>
-          </svg>
-          Sign up with Google
-        </button>
-      </div>
-    </div>
-    );
-
-    const renderTabPanel = () => {
-    if (initializing && initializationStatus === 'loading' && isAuthGateOnline) {
-      return <p className="supabase-auth__status supabase-auth__status--info">Loading session…</p>;
-    }
-    if (activeAuthTab === 'login') {
-      return renderLoginPanel();
-    }
-    if (activeAuthTab === 'signup') {
-      return renderSignupPanel();
-    }
-    return renderLoginPanel();
-  };
-
-    const showAuthConnectionNotice = shouldShowAuthConnectionNotice({
-      initializationStatus,
-      isConfigured,
-      isOnline: isAuthGateOnline,
-    });
-
-    return (
-    <div className="auth-card">
-      <header className="auth-card__header">
-        <h2>{authTabCopy[activeAuthTab].title}</h2>
-        <p>{authTabCopy[activeAuthTab].subtitle}</p>
-      </header>
-
-      <div className="auth-card__tabs" role="tablist" aria-label="Choose how to access LifeGoal">
-        {authTabs.map((tab) => {
-          const isActive = activeAuthTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              id={`auth-tab-${tab.id}`}
-              aria-controls={`auth-panel-${tab.id}`}
-              aria-selected={isActive}
-              className={`auth-tab ${isActive ? 'auth-tab--active' : ''}`}
-              onClick={() => setActiveAuthTab(tab.id)}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="auth-card__body">
-        {renderTabPanel()}
-
-        {!isConfigured ? (
-          <p className="supabase-auth__status supabase-auth__status--error">
-            Supabase credentials are not configured. Update your environment variables to enable live authentication.
-          </p>
-        ) : null}
-
-        {showAuthConnectionNotice ? (
-          <div className="supabase-auth__status supabase-auth__status--info auth-card__connection-notice" role="status">
-            <p>HabitGame is having trouble connecting.</p>
-            <p>Your progress is safe. Please retry shortly.</p>
-            <button type="button" className="auth-card__retry" onClick={handleAuthInitializationRetry}>
-              Retry
-            </button>
-          </div>
-        ) : null}
-
-        {statusElements}
-      </div>
-    </div>
-    );
-  };
 
   const userDisplay =
     displayName ||
@@ -3274,20 +3051,54 @@ export default function App({ forceAuthOnMount }: AppProps) {
     return <PeaceBetweenLanding />;
   }
 
+  const habitGameAuthCard = (
+    <HabitGameAuthCard
+      activeAuthTab={activeAuthTab}
+      authError={authError}
+      authMessage={authMessage}
+      authMessageVisible={authMessageVisible}
+      email={email}
+      fullName={fullName}
+      initializationStatus={initializationStatus}
+      initializing={initializing}
+      isAuthGateOnline={isAuthGateOnline}
+      isConfigured={isConfigured}
+      password={password}
+      submitting={submitting}
+      onAuthInitializationRetry={handleAuthInitializationRetry}
+      onAuthSubmit={handleAuthSubmit}
+      onEmailChange={setEmail}
+      onFullNameChange={setFullName}
+      onGoogleSignIn={handleGoogleSignIn}
+      onPasswordChange={setPassword}
+      onTabChange={setActiveAuthTab}
+    />
+  );
+
   if (shouldRequireAuthentication && isMobileExperience) {
     return (
-      <div className="app app--auth-gate">
-        <header className="auth-gate__masthead">
-          <a className="auth-gate__brand" href="/" aria-label="HabitGame home">
-            HabitGame
-          </a>
-          <ThemeToggle className="auth-gate__theme-toggle" />
-        </header>
-
-        <main className="auth-layout auth-gate__layout">
-          <div className="auth-panel auth-gate__panel">{renderAuthPanel()}</div>
-        </main>
-      </div>
+      <HabitGameLandingShell
+        activeAuthTab={activeAuthTab}
+        authError={authError}
+        authMessage={authMessage}
+        authMessageVisible={authMessageVisible}
+        email={email}
+        fullName={fullName}
+        initializationStatus={initializationStatus}
+        initializing={initializing}
+        isAuthGateOnline={isAuthGateOnline}
+        isConfigured={isConfigured}
+        password={password}
+        submitting={submitting}
+        themeToggle={<ThemeToggle className="auth-gate__theme-toggle" />}
+        onAuthInitializationRetry={handleAuthInitializationRetry}
+        onAuthSubmit={handleAuthSubmit}
+        onEmailChange={setEmail}
+        onFullNameChange={setFullName}
+        onGoogleSignIn={handleGoogleSignIn}
+        onPasswordChange={setPassword}
+        onTabChange={setActiveAuthTab}
+      />
     );
   }
 
@@ -5225,7 +5036,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 <span className="sr-only">Close sign-in dialog</span>
               </button>
             ) : null}
-            {renderAuthPanel()}
+            {habitGameAuthCard}
           </div>
         </div>
       ) : null}
