@@ -2127,21 +2127,36 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   };
 
+  const getBodyWorkspaceAccess = useCallback(
+    () => resolveFeatureAccess('app.body', { isAdminOrCreator: isAdmin === true }),
+    [isAdmin],
+  );
+
+  const openBodyPreviewOverlay = useCallback(() => {
+    setAppPreviewFeature({ id: 'app.body', label: 'Body' });
+  }, []);
+
+  const canOpenBodyWorkspace = useCallback(
+    () => getBodyWorkspaceAccess() === 'open',
+    [getBodyWorkspaceAccess],
+  );
+
   const openBodyWorkspace = useCallback(() => {
-    const access = resolveFeatureAccess('app.body', { isAdminOrCreator: isAdmin === true });
-
-    if (access === 'hidden') {
+    if (!canOpenBodyWorkspace()) {
+      openBodyPreviewOverlay();
       return;
     }
 
-    if (access === 'previewOnly') {
-      setAppPreviewFeature({ id: 'app.body', label: 'Body' });
-      return;
-    }
-
+    setAppPreviewFeature((current) => (current?.id === 'app.body' ? null : current));
     setActiveWorkspaceNav('body');
     setShowMobileHome(false);
-  }, [isAdmin]);
+  }, [canOpenBodyWorkspace, openBodyPreviewOverlay]);
+
+  useEffect(() => {
+    if (activeWorkspaceNav === 'body' && !canOpenBodyWorkspace()) {
+      openBodyPreviewOverlay();
+    }
+  }, [activeWorkspaceNav, canOpenBodyWorkspace, openBodyPreviewOverlay]);
 
   const handleMobileNavSelect = (
     navId: string,
@@ -3497,6 +3512,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
           </div>
         );
       case 'body':
+        if (!canOpenBodyWorkspace()) {
+          return <div className="workspace-content" />;
+        }
+
         return (
           <div className="workspace-content">
             <BodyHaircutWidget />
@@ -4631,12 +4650,20 @@ export default function App({ forceAuthOnMount }: AppProps) {
         </div>
       </div>
     ) : null;
+  const closeAppPreviewOverlay = () => {
+    if (appPreviewFeature?.id === 'app.body' && activeWorkspaceNav === 'body' && !canOpenBodyWorkspace()) {
+      setActiveWorkspaceNav('goals');
+      setShowMobileHome(false);
+    }
+    setAppPreviewFeature(null);
+  };
+
   const appPreviewOverlay = appPreviewFeature ? (
     <FeaturePreviewOverlay
       label={appPreviewFeature.label}
       variant={appPreviewFeature.variant}
       backLabel="← Back"
-      onClose={() => setAppPreviewFeature(null)}
+      onClose={closeAppPreviewOverlay}
     />
   ) : null;
 
