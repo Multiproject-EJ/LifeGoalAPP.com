@@ -252,6 +252,8 @@ function setIslandRunOpenStopParam(stopId: 'boss' | 'hatchery' | 'dynamic') {
 }
 
 
+const DEFAULT_WORKSPACE_NAV_ID = 'goals';
+
 const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
     id: 'goals',
@@ -424,12 +426,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [manualProfileSaving, setManualProfileSaving] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [activeWorkspaceNav, setActiveWorkspaceNav] = useState<string>(() => {
-    if (typeof window === 'undefined') return 'goals';
+    if (typeof window === 'undefined') return DEFAULT_WORKSPACE_NAV_ID;
     const host = window.location.hostname.toLowerCase();
     if (host === 'peacebetween.com' || host === 'www.peacebetween.com') {
       return 'breathing-space';
     }
-    return 'goals';
+    return DEFAULT_WORKSPACE_NAV_ID;
   });
   const [initialSearch, setInitialSearch] = useState(() =>
     typeof window !== 'undefined' ? window.location.search : '',
@@ -2136,6 +2138,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setAppPreviewFeature({ id: 'app.body', label: 'Body' });
   }, []);
 
+  const clearBodyPreviewOverlay = useCallback(() => {
+    setAppPreviewFeature((current) => {
+      if (current?.id !== 'app.body') {
+        return current;
+      }
+
+      return null;
+    });
+  }, []);
+
   const canOpenBodyWorkspace = useCallback(
     () => getBodyWorkspaceAccess() === 'open',
     [getBodyWorkspaceAccess],
@@ -2147,10 +2159,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
       return;
     }
 
-    setAppPreviewFeature((current) => (current?.id === 'app.body' ? null : current));
+    clearBodyPreviewOverlay();
     setActiveWorkspaceNav('body');
     setShowMobileHome(false);
-  }, [canOpenBodyWorkspace, openBodyPreviewOverlay]);
+  }, [canOpenBodyWorkspace, clearBodyPreviewOverlay, openBodyPreviewOverlay]);
 
   const isBlockedBodyWorkspaceActive = useCallback(
     () => activeWorkspaceNav === 'body' && !canOpenBodyWorkspace(),
@@ -2162,7 +2174,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       return false;
     }
 
-    setActiveWorkspaceNav('goals');
+    setActiveWorkspaceNav(DEFAULT_WORKSPACE_NAV_ID);
     setShowMobileHome(false);
     return true;
   }, [isBlockedBodyWorkspaceActive]);
