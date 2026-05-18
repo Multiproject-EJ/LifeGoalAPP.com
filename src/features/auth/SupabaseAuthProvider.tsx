@@ -114,6 +114,8 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         const nextSession = data.session ?? null;
         setSession(nextSession);
         setSupabaseSession(nextSession);
+        setInitializationStatus('ready');
+        setInitializationError(null);
       })
       .catch((error) => {
         if (!isMounted) return;
