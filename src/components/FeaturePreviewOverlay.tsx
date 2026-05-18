@@ -46,16 +46,16 @@ export function FeaturePreviewOverlay({
         <div className="feature-preview-overlay__icon" aria-hidden="true">✨</div>
         <div className="feature-preview-overlay__badge-row">
           <span
-             className="feature-status-badge feature-status-badge--preview"
-             aria-label={`Feature status: ${statusLabel}`}
-           >
-             {statusLabel}
-           </span>
-         </div>
-         <h2 className="feature-preview-overlay__title">{label}</h2>
-         <p className="feature-preview-overlay__body">
-           {isNotImplemented ? notImplementedBody : body}
-         </p>
+            className="feature-status-badge feature-status-badge--preview"
+            aria-label={`Feature status: ${statusLabel}`}
+          >
+            {statusLabel}
+          </span>
+        </div>
+        <h2 className="feature-preview-overlay__title">{label}</h2>
+        <p className="feature-preview-overlay__body">
+          {isNotImplemented ? notImplementedBody : body}
+        </p>
         {!isNotImplemented ? (
           <>
             <button
