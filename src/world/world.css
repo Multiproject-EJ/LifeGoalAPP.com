@@ -2296,3 +2296,501 @@
     padding: 56px 64px 64px;
   }
 }
+
+/* ============================================================
+   HabitGame public landing visual v1 — premium fantasy RPG
+   Scoped to the true public WorldHome surface.
+   ============================================================ */
+
+.world-home {
+  min-height: 100dvh;
+  color: #f8f1dc;
+  background: #080613;
+}
+
+.world-hero {
+  overflow: visible;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.14), transparent 28%),
+    radial-gradient(circle at 12% 22%, rgba(168, 85, 247, 0.28), transparent 34%),
+    radial-gradient(circle at 90% 16%, rgba(14, 165, 233, 0.16), transparent 30%),
+    linear-gradient(180deg, #090615 0%, #100a24 44%, #180d22 100%);
+}
+
+.world-hero__bg {
+  background:
+    linear-gradient(180deg, rgba(6, 4, 18, 0.24), rgba(6, 4, 18, 0.88)),
+    radial-gradient(circle at 50% 10%, rgba(251, 191, 36, 0.14), transparent 25%),
+    linear-gradient(135deg, #090615 0%, #17113a 52%, #241126 100%);
+}
+
+.world-hero__bg-img {
+  opacity: 0.2;
+  mix-blend-mode: screen;
+}
+
+.world-hero__blur-img.wh-img--loaded {
+  opacity: 0.18;
+}
+
+.world-hero__atmosphere::before {
+  background-image:
+    radial-gradient(1px 1px at 10% 12%, rgba(254, 243, 199, 0.8) 0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 24%, rgba(221, 214, 254, 0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at 78% 12%, rgba(254, 243, 199, 0.7) 0%, transparent 100%),
+    radial-gradient(2px 2px at 60% 34%, rgba(251, 191, 36, 0.45) 0%, transparent 100%),
+    radial-gradient(1px 1px at 18% 68%, rgba(216, 180, 254, 0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at 86% 72%, rgba(254, 240, 138, 0.45) 0%, transparent 100%);
+}
+
+.world-hero__atmosphere::after {
+  background:
+    radial-gradient(420px 420px at 50% 4%, rgba(251, 191, 36, 0.14), transparent 68%),
+    radial-gradient(360px 360px at 6% 38%, rgba(124, 58, 237, 0.2), transparent 68%),
+    radial-gradient(300px 300px at 94% 28%, rgba(56, 189, 248, 0.13), transparent 70%);
+}
+
+.world-hero__glass-panel {
+  inset: 18px max(12px, calc((100vw - 1180px) / 2)) 18px;
+  border-radius: 36px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025)),
+    rgba(20, 12, 40, 0.58);
+  border: 1px solid rgba(250, 204, 21, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 0 80px rgba(124, 58, 237, 0.08),
+    0 32px 120px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(168, 85, 247, 0.12);
+}
+
+.world-hero__bottom-glow {
+  height: 46%;
+  background:
+    radial-gradient(ellipse 72% 54% at 50% 100%, rgba(251, 191, 36, 0.2) 0%, rgba(168, 85, 247, 0.12) 38%, transparent 72%),
+    linear-gradient(180deg, transparent, rgba(7, 4, 20, 0.72));
+}
+
+.world-hero__content {
+  width: 100%;
+  min-height: 100dvh;
+  max-width: none;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 28px 16px 24px;
+}
+
+.world-home__shell {
+  position: relative;
+  width: min(100%, 1120px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 22px;
+  margin: 0 auto;
+}
+
+.world-home__shell::before,
+.world-home__shell::after {
+  content: '';
+  position: fixed;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 999px;
+  filter: blur(18px);
+}
+
+.world-home__shell::before {
+  width: 180px;
+  height: 180px;
+  left: -70px;
+  top: 180px;
+  background: rgba(168, 85, 247, 0.24);
+}
+
+.world-home__shell::after {
+  width: 220px;
+  height: 220px;
+  right: -100px;
+  top: 54px;
+  background: rgba(245, 158, 11, 0.16);
+}
+
+.world-home__hero-panel,
+.journey-preview,
+.archetype-picker,
+.rewards-tease,
+.social-proof {
+  width: 100%;
+  max-width: none;
+  border: 1px solid rgba(250, 204, 21, 0.18);
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.025)),
+    rgba(18, 11, 38, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 18px 60px rgba(0, 0, 0, 0.38),
+    0 0 42px rgba(88, 28, 135, 0.14);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+}
+
+.world-home__hero-panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 22px;
+  padding: 30px 20px 22px;
+  overflow: hidden;
+  border-radius: 30px;
+}
+
+.world-home__hero-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.16), transparent) top / 100% 1px no-repeat,
+    radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.18), transparent 44%);
+}
+
+.world-home__brand {
+  gap: 10px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.world-home__logo {
+  width: 88px;
+  height: 88px;
+  border-radius: 28px;
+  background:
+    linear-gradient(135deg, rgba(252, 211, 77, 0.95), rgba(168, 85, 247, 0.9) 48%, rgba(49, 46, 129, 0.95)),
+    #4c1d95;
+  box-shadow:
+    0 0 0 1px rgba(254, 240, 138, 0.55),
+    0 18px 46px rgba(76, 29, 149, 0.58),
+    0 0 72px rgba(250, 204, 21, 0.24);
+}
+
+.world-home__level-badge,
+.world-home__kicker,
+.journey-preview__eyebrow,
+.archetype-picker__eyebrow,
+.rewards-tease__eyebrow,
+.social-proof__eyebrow {
+  color: #facc15;
+  text-shadow: 0 0 18px rgba(250, 204, 21, 0.24);
+}
+
+.world-home__level-badge {
+  background: rgba(250, 204, 21, 0.09);
+  border-color: rgba(250, 204, 21, 0.28);
+  color: #fde68a;
+}
+
+.world-home__kicker {
+  margin: 4px 0 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.world-home__app-name {
+  font-size: clamp(42px, 12vw, 88px);
+  line-height: 0.9;
+  letter-spacing: 0.08em;
+  background: linear-gradient(180deg, #fff8d9 0%, #facc15 42%, #c084fc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 12px 34px rgba(88, 28, 135, 0.55));
+}
+
+.world-home__tagline {
+  font-size: clamp(20px, 6vw, 42px);
+  font-weight: 800;
+  line-height: 1;
+  color: #fff7ed;
+  text-shadow: 0 0 28px rgba(250, 204, 21, 0.18);
+}
+
+.world-home__hero-copy {
+  max-width: 660px;
+  margin: 2px 0 0;
+  color: #d8c7ff;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.world-home__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: min(100%, 620px);
+  margin: 0 auto;
+}
+
+.world-home__metric {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 12px 8px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(250, 204, 21, 0.16);
+}
+
+.world-home__metric-value {
+  color: #fff8dc;
+  font-size: 18px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.world-home__metric-label {
+  color: #b9a7de;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.world-home__features {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  max-width: none;
+  overflow: visible;
+  padding: 0;
+}
+
+.world-home__feature-card,
+.journey-preview__node-inner,
+.archetype-picker__card,
+.rewards-tease__item,
+.social-proof__stat,
+.social-proof__card {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.025)),
+    rgba(16, 11, 34, 0.86);
+  border: 1px solid rgba(216, 180, 254, 0.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 28px rgba(0, 0, 0, 0.22);
+}
+
+.world-home__feature-card {
+  align-items: flex-start;
+  min-width: 0;
+  padding: 18px;
+  border-radius: 22px;
+  text-align: left;
+}
+
+.world-home__feature-icon {
+  font-size: 30px;
+  filter: drop-shadow(0 0 12px rgba(250, 204, 21, 0.32));
+}
+
+.world-home__feature-title,
+.journey-preview__title,
+.archetype-picker__title,
+.rewards-tease__title,
+.social-proof__title {
+  color: #fff4ca;
+}
+
+.world-home__feature-title {
+  font-size: 15px;
+}
+
+.world-home__feature-desc,
+.journey-preview__subtitle,
+.journey-preview__node-sublabel,
+.archetype-picker__subtitle,
+.archetype-picker__card-tagline,
+.rewards-tease__tagline,
+.social-proof__stat-label,
+.social-proof__card-level {
+  color: #b9a7de;
+}
+
+.world-home__feature-desc {
+  font-size: 13px;
+}
+
+.world-home__journey-path {
+  height: 54px;
+  background: linear-gradient(to bottom, rgba(250, 204, 21, 0.75), rgba(168, 85, 247, 0.35), transparent);
+  box-shadow: 0 0 20px rgba(250, 204, 21, 0.2);
+}
+
+.world-home__cta-zone {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.world-home__btn {
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.world-home__btn--primary {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, #facc15 0%, #f59e0b 42%, #a855f7 100%);
+  color: #170f2f;
+  box-shadow:
+    0 12px 30px rgba(245, 158, 11, 0.28),
+    0 0 42px rgba(168, 85, 247, 0.26);
+}
+
+.world-home__btn--primary::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.36), transparent);
+  transform: translateX(-110%);
+  animation: wh-button-shimmer 4s ease-in-out infinite;
+}
+
+.world-home__btn--secondary {
+  background: rgba(255, 255, 255, 0.055);
+  color: #fde68a;
+  border-color: rgba(250, 204, 21, 0.26);
+}
+
+.world-home__btn--install {
+  color: #d8c7ff;
+}
+
+.world-home__cta-supporting,
+.world-home__copyright,
+.world-home__footer-link {
+  color: #8f7bb9;
+}
+
+.journey-preview,
+.archetype-picker,
+.rewards-tease,
+.social-proof {
+  border-radius: 28px;
+  padding: 26px 18px;
+}
+
+.journey-preview__node--completed .journey-preview__node-inner,
+.journey-preview__node--active .journey-preview__node-inner,
+.archetype-picker__card--selected {
+  border-color: rgba(250, 204, 21, 0.34);
+  background:
+    linear-gradient(145deg, rgba(250, 204, 21, 0.12), rgba(168, 85, 247, 0.08)),
+    rgba(27, 18, 48, 0.88);
+}
+
+.journey-preview__node-icon,
+.archetype-picker__card-icon {
+  background: rgba(250, 204, 21, 0.1);
+  border-color: rgba(250, 204, 21, 0.2);
+}
+
+.journey-preview__node-label,
+.archetype-picker__card-name,
+.rewards-tease__label,
+.social-proof__card-text {
+  color: #f7e7b0;
+}
+
+.rewards-tease__icon,
+.social-proof__stat-emoji,
+.social-proof__card-avatar {
+  filter: drop-shadow(0 0 14px rgba(250, 204, 21, 0.28));
+}
+
+.social-proof__stat-number {
+  background: linear-gradient(180deg, #fff8dc, #facc15 55%, #c084fc);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+@keyframes wh-button-shimmer {
+  0%, 45% { transform: translateX(-110%); }
+  72%, 100% { transform: translateX(110%); }
+}
+
+@media (min-width: 640px) {
+  .world-hero__content {
+    padding: 42px 28px 32px;
+  }
+
+  .world-home__shell {
+    gap: 28px;
+  }
+
+  .world-home__hero-panel {
+    padding: 44px 34px 30px;
+  }
+
+  .world-home__cta-group {
+    flex-direction: row;
+  }
+
+  .world-home__features {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .journey-preview,
+  .archetype-picker,
+  .rewards-tease,
+  .social-proof {
+    padding: 34px 30px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .world-hero__content {
+    padding: 54px 40px 40px;
+  }
+
+  .world-home__shell {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .world-home__hero-panel,
+  .world-home__features,
+  .world-home__journey-path,
+  .journey-preview,
+  .archetype-picker,
+  .rewards-tease,
+  .social-proof,
+  .world-home__footer {
+    grid-column: 1 / -1;
+  }
+
+  .world-home__hero-panel {
+    padding: 58px 56px 42px;
+  }
+
+  .journey-preview,
+  .archetype-picker {
+    grid-column: span 6;
+  }
+
+  .rewards-tease,
+  .social-proof {
+    grid-column: span 6;
+  }
+
+  .world-home__journey-path {
+    justify-self: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world-home__btn--primary::after {
+    animation: none;
+  }
+}

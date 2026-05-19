@@ -9,13 +9,13 @@ interface JourneyNode {
 }
 
 const JOURNEY_NODES: JourneyNode[] = [
-  { id: 'start',   icon: '🌱', label: 'Level 1: Start',     sublabel: 'Your quest begins',     state: 'completed' },
-  { id: 'streak',  icon: '🔥', label: 'Streak ×3',          sublabel: '3 days in a row',        state: 'completed' },
-  { id: 'quest',   icon: '⚔️',  label: 'Quest Complete',     sublabel: 'First habit mastered',   state: 'active'    },
-  { id: 'reward',  icon: '💎', label: 'Reward Unlocked',    sublabel: 'XP milestone reached',   state: 'locked'    },
-  { id: 'levelup', icon: '⭐', label: 'Level Up',           sublabel: 'New powers await',       state: 'locked'    },
-  { id: 'champion',icon: '🏆', label: 'Champion',           sublabel: 'Top 10% of players',    state: 'locked'    },
-  { id: 'legend',  icon: '🌟', label: 'Legend',             sublabel: 'Your legacy lives on',   state: 'locked'    },
+  { id: 'start',   icon: '🌱', label: 'Awaken',            sublabel: 'Choose one tiny quest',   state: 'completed' },
+  { id: 'streak',  icon: '🔥', label: 'Kindle a streak',    sublabel: 'Return for 3 days',       state: 'completed' },
+  { id: 'quest',   icon: '⚔️',  label: 'First quest clear',  sublabel: 'A habit becomes real',    state: 'active'    },
+  { id: 'reward',  icon: '💎', label: 'Open the vault',     sublabel: 'Claim XP and treasure',   state: 'locked'    },
+  { id: 'levelup', icon: '⭐', label: 'Level up',           sublabel: 'Unlock new powers',       state: 'locked'    },
+  { id: 'champion',icon: '🏆', label: 'Join the guild',     sublabel: 'Share your momentum',    state: 'locked'    },
+  { id: 'legend',  icon: '🌟', label: 'Become legend',      sublabel: 'Your identity evolves',   state: 'locked'    },
 ];
 
 export function JourneyPreview() {
@@ -26,8 +26,8 @@ export function JourneyPreview() {
     >
       <div className="journey-preview__header">
         <p className="journey-preview__eyebrow" aria-hidden="true">YOUR PATH</p>
-        <h2 className="journey-preview__title">Every day moves you forward</h2>
-        <p className="journey-preview__subtitle">See where your journey takes you</p>
+        <h2 className="journey-preview__title">Your first questline is already waiting</h2>
+        <p className="journey-preview__subtitle">A premium RPG path for habits, goals, and identity growth.</p>
       </div>
 
       <ol className="journey-preview__track" aria-label="Milestone progression">
@@ -59,7 +59,7 @@ export function JourneyPreview() {
       </ol>
 
       <p className="journey-preview__cta-hint">
-        Start your first habit to unlock the path ✦
+        Complete one real-life action to light the next node ✦
       </p>
     </section>
   );

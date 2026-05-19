@@ -16,6 +16,30 @@ interface WorldHomeProps {
   beforeInstallPromptEvent?: BeforeInstallPromptEvent | null;
 }
 
+const HERO_FEATURES = [
+  {
+    icon: '🗺️',
+    title: 'Quest Board',
+    desc: 'Turn goals into daily missions with streaks, XP, and gentle momentum.',
+  },
+  {
+    icon: '⚔️',
+    title: 'Character Growth',
+    desc: 'Level up the real you through tiny wins, reflections, and class perks.',
+  },
+  {
+    icon: '💎',
+    title: 'Reward Loop',
+    desc: 'Collect coins, achievements, and milestones that make progress visible.',
+  },
+];
+
+const HERO_METRICS = [
+  { label: 'Start', value: 'Lv. 1' },
+  { label: 'Daily XP', value: '+25' },
+  { label: 'Next reward', value: '3 wins' },
+];
+
 export function WorldHome({
   onContinue,
   onLogin,
@@ -70,106 +94,101 @@ export function WorldHome({
   return (
     <div className="world-home">
       <WorldHero>
-      {/* Brand zone */}
-      <div className="world-home__brand">
-        <div className="world-home__logo" aria-hidden="true">🎮</div>
-        <div className="world-home__level-badge" aria-hidden="true">LEVEL 1</div>
-        <h1 className="world-home__app-name">HABITGAME</h1>
-        <p className="world-home__tagline">Level Up Your Life</p>
-      </div>
+        <div className="world-home__shell">
+          <section className="world-home__hero-panel" aria-labelledby="world-home-title">
+            <div className="world-home__brand">
+              <div className="world-home__logo" aria-hidden="true">🎮</div>
+              <div className="world-home__level-badge" aria-hidden="true">LEVEL 1 · NEW ADVENTURE</div>
+              <p className="world-home__kicker">Premium fantasy habit RPG</p>
+              <h1 className="world-home__app-name" id="world-home-title">HABITGAME</h1>
+              <p className="world-home__tagline">Level Up Your Life</p>
+              <p className="world-home__hero-copy">
+                Build habits like quests, grow your hero through everyday wins, and make self-improvement feel like stepping into a luminous RPG world.
+              </p>
+            </div>
 
-      {/* Feature showcase zone */}
-      <div className="world-home__features" role="list" aria-label="App features">
-        <div className="world-home__feature-card" role="listitem">
-          <span className="world-home__feature-icon" aria-hidden="true">🎮</span>
-          <strong className="world-home__feature-title">Your Life, Gamified</strong>
-          <p className="world-home__feature-desc">Every habit earns XP. Every day builds momentum.</p>
-        </div>
-        <div className="world-home__feature-card" role="listitem">
-          <span className="world-home__feature-icon" aria-hidden="true">⚡</span>
-          <strong className="world-home__feature-title">Build Momentum</strong>
-          <p className="world-home__feature-desc">Small actions compound into transformation.</p>
-        </div>
-        <div className="world-home__feature-card" role="listitem">
-          <span className="world-home__feature-icon" aria-hidden="true">🏆</span>
-          <strong className="world-home__feature-title">Earn Rewards</strong>
-          <p className="world-home__feature-desc">Achievements, coins, and milestones celebrate progress.</p>
-        </div>
-      </div>
+            <div className="world-home__metrics" aria-label="Game preview highlights">
+              {HERO_METRICS.map((metric) => (
+                <div className="world-home__metric" key={metric.label}>
+                  <span className="world-home__metric-value">{metric.value}</span>
+                  <span className="world-home__metric-label">{metric.label}</span>
+                </div>
+              ))}
+            </div>
 
-      {/* Journey path connector — visual bridge between cards and CTA */}
-      <div className="world-home__journey-path" aria-hidden="true" />
+            <div className="world-home__cta-zone">
+              <div className="world-home__cta-group">
+                <button
+                  className="world-home__btn world-home__btn--primary"
+                  onClick={handleContinue}
+                  type="button"
+                >
+                  Start Your Game
+                </button>
+                <button
+                  className="world-home__btn world-home__btn--secondary"
+                  onClick={handleLogin}
+                  type="button"
+                >
+                  Log in
+                </button>
+              </div>
 
-      {/* Journey Preview — Slice 5: milestone path */}
-      <JourneyPreview />
+              {showInstallButton && (
+                <div className="world-home__install-section">
+                  <button
+                    className="world-home__btn world-home__btn--install"
+                    onClick={handleInstallClick}
+                    type="button"
+                  >
+                    📱 Install App
+                  </button>
+                </div>
+              )}
 
-      {/* Archetype Picker — Slice 6: identity hook */}
-      <ArchetypePicker />
+              {installState.platform === 'installed' && (
+                <p className="world-home__installed-indicator" aria-live="polite">
+                  ✓ Installed
+                </p>
+              )}
 
-      {/* Rewards Tease Strip — Slice 7: reward loop signal */}
-      <RewardsTease />
+              <p className="world-home__cta-supporting">
+                Free to begin · Mobile-first · No boss fight required
+              </p>
+            </div>
+          </section>
 
-      {/* Social Proof — Slice 9: trust signal */}
-      <SocialProof />
-
-      {/* CTA zone */}
-      <div className="world-home__cta-zone">
-        <div className="world-home__cta-group">
-          <button
-            className="world-home__btn world-home__btn--primary"
-            onClick={handleContinue}
-            type="button"
-          >
-            Start Your Game
-          </button>
-          <button
-            className="world-home__btn world-home__btn--secondary"
-            onClick={handleLogin}
-            type="button"
-          >
-            Log in
-          </button>
-        </div>
-
-        {/* Install section — always below primary CTAs, never blocks them */}
-        {showInstallButton && (
-          <div className="world-home__install-section">
-            <button
-              className="world-home__btn world-home__btn--install"
-              onClick={handleInstallClick}
-              type="button"
-            >
-              📱 Install App
-            </button>
+          <div className="world-home__features" role="list" aria-label="App features">
+            {HERO_FEATURES.map((feature) => (
+              <div className="world-home__feature-card" role="listitem" key={feature.title}>
+                <span className="world-home__feature-icon" aria-hidden="true">{feature.icon}</span>
+                <strong className="world-home__feature-title">{feature.title}</strong>
+                <p className="world-home__feature-desc">{feature.desc}</p>
+              </div>
+            ))}
           </div>
-        )}
 
-        {installState.platform === 'installed' && (
-          <p className="world-home__installed-indicator" aria-live="polite">
-            ✓ Installed
-          </p>
-        )}
+          <div className="world-home__journey-path" aria-hidden="true" />
 
-        <p className="world-home__cta-supporting">
-          Build habits • Earn rewards • Unlock your future
-        </p>
-      </div>
+          <JourneyPreview />
+          <ArchetypePicker />
+          <RewardsTease />
+          <SocialProof />
 
-      {/* Footer */}
-      <footer className="world-home__footer">
-        <p className="world-home__copyright">
-          HabitGame &copy; {new Date().getFullYear()}
-          <span className="world-home__version" aria-hidden="true"> · v1.0</span>
-        </p>
-        <nav className="world-home__footer-links" aria-label="Legal">
-          <a href="/privacy" className="world-home__footer-link">Privacy</a>
-          <a href="/terms" className="world-home__footer-link">Terms</a>
-          <a href="/support" className="world-home__footer-link">Support</a>
-        </nav>
-      </footer>
+          <footer className="world-home__footer">
+            <p className="world-home__copyright">
+              HabitGame &copy; {new Date().getFullYear()}
+              <span className="world-home__version" aria-hidden="true"> · v1.0</span>
+            </p>
+            <nav className="world-home__footer-links" aria-label="Legal">
+              <a href="/privacy" className="world-home__footer-link">Privacy</a>
+              <a href="/terms" className="world-home__footer-link">Terms</a>
+              <a href="/support" className="world-home__footer-link">Support</a>
+            </nav>
+          </footer>
+        </div>
       </WorldHero>
 
-      {/* iOS install coachmark — rendered last so it layers on top */}
       {showIOSGuide && <IOSInstallGuide onDismiss={handleIOSDismiss} />}
     </div>
   );

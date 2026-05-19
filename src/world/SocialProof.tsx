@@ -23,9 +23,9 @@ const STATS: StatItem[] = [
 ];
 
 const TESTIMONIALS: TestimonialItem[] = [
-  { id: 'alex',   avatar: '🧑‍💻', quote: 'Finally a habit app that feels like a game.', name: 'Alex',   level: 12 },
-  { id: 'sam',    avatar: '🎯', quote: "I've never stuck with habits this long before.", name: 'Sam',    level: 8  },
-  { id: 'jordan', avatar: '💪', quote: 'The streaks and rewards keep me coming back.',   name: 'Jordan', level: 15 },
+  { id: 'alex',   avatar: '🧑‍💻', quote: 'It feels like opening a cozy RPG instead of another chore list.', name: 'Alex',   level: 12 },
+  { id: 'sam',    avatar: '🎯', quote: "The quests make tiny habits feel meaningful every morning.", name: 'Sam',    level: 8  },
+  { id: 'jordan', avatar: '💪', quote: 'Rewards and streaks finally made my progress feel visible.',   name: 'Jordan', level: 15 },
 ];
 
 function useCountUp(target: number, active: boolean): number {
@@ -127,7 +127,7 @@ export function SocialProof() {
       <div className="social-proof__header">
         <p className="social-proof__eyebrow" aria-hidden="true">COMMUNITY</p>
         <h2 className="social-proof__title" id="social-proof-heading">
-          Join the movement
+          Join the early guild
         </h2>
       </div>
 
