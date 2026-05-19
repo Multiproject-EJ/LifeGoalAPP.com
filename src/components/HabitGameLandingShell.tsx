@@ -8,39 +8,9 @@ type HabitGameLandingLayoutProps = {
   themeToggle: ReactNode;
 };
 
-const landingValueCards = [
-  {
-    id: 'cozy-rpg',
-    icon: '🏝️',
-    iconLabel: 'Floating island',
-    title: 'Play a cozy RPG',
-    description: 'Step into gentle quests, bright islands, and rituals that make progress feel playful.',
-  },
-  {
-    id: 'life-reflection',
-    icon: '🪞',
-    iconLabel: 'Reflection mirror',
-    title: 'Reflect on your life',
-    description: 'Keep goals, habits, and wellbeing in view with calm check-ins woven into your adventure.',
-  },
-  {
-    id: 'progress-boost',
-    icon: '⚡',
-    iconLabel: 'Progress boost',
-    title: 'Supercharge progress',
-    description: 'Turn small daily wins into momentum, rewards, and a clearer path toward who you are becoming.',
-  },
-];
-
 export function HabitGameLandingLayout({ authCard, themeToggle }: HabitGameLandingLayoutProps) {
   return (
     <div className="app app--auth-gate">
-      <div className="auth-gate__sky" aria-hidden="true">
-        <span className="auth-gate__cloud auth-gate__cloud--one" />
-        <span className="auth-gate__cloud auth-gate__cloud--two" />
-        <span className="auth-gate__cloud auth-gate__cloud--three" />
-      </div>
-
       <header className="auth-gate__masthead">
         <a className="auth-gate__brand" href="/" aria-label="HabitGame home">
           HabitGame
@@ -49,45 +19,6 @@ export function HabitGameLandingLayout({ authCard, themeToggle }: HabitGameLandi
       </header>
 
       <main className="auth-layout auth-gate__layout">
-        <section className="auth-hero" aria-labelledby="habitgame-landing-title">
-          <div className="auth-hero__copy">
-            <p className="auth-hero__badge">Mobile-first fantasy habit quests</p>
-            <h1 id="habitgame-landing-title">HabitGame</h1>
-            <p className="auth-hero__tagline">The self-improvement RPG</p>
-            <p className="auth-hero__lead">
-              A cozy game that gently keeps your goals, habits, and wellbeing present while you play.
-            </p>
-          </div>
-
-          <div className="auth-hero__scene" aria-hidden="true">
-            <div className="auth-hero__sun" />
-            <div className="auth-hero__island">
-              <span className="auth-hero__castle" />
-              <span className="auth-hero__tree auth-hero__tree--one" />
-              <span className="auth-hero__tree auth-hero__tree--two" />
-              <span className="auth-hero__path" />
-            </div>
-            <div className="auth-hero__island-shadow" />
-          </div>
-
-          <section className="auth-hero__values" aria-labelledby="habitgame-benefits-title">
-            <h2 id="habitgame-benefits-title" className="sr-only">
-              HabitGame benefits
-            </h2>
-            {landingValueCards.map((card) => (
-              <article className="auth-value-card" key={card.id}>
-                <span className="auth-value-card__icon" role="img" aria-label={card.iconLabel}>
-                  {card.icon}
-                </span>
-                <div>
-                  <h3>{card.title}</h3>
-                  <p>{card.description}</p>
-                </div>
-              </article>
-            ))}
-          </section>
-        </section>
-
         <div className="auth-panel auth-gate__panel">{authCard}</div>
       </main>
     </div>
