@@ -2438,11 +2438,12 @@
   height: 72px;
   border-radius: 22px;
   background: linear-gradient(145deg, #ffffff 0%, #fff4c7 48%, #f4b63f 100%);
+  --world-home-logo-tracking: -0.08em;
   color: var(--world-home-navy);
   font-size: 23px;
   font-weight: 900;
-  letter-spacing: -0.08em;
-  text-indent: -0.08em;
+  letter-spacing: var(--world-home-logo-tracking);
+  text-indent: var(--world-home-logo-tracking);
   box-shadow: 0 12px 28px rgba(44, 99, 151, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.92), inset 0 -4px 10px rgba(232, 168, 44, 0.22);
 }
 
