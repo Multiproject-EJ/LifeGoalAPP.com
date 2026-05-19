@@ -59,7 +59,8 @@ export async function getMyFeatureVote(
 
     if (error) throw error;
     return { data: (data as FeatureVoteRow | null) ?? null, error: null };
-  } catch {
+  } catch (error) {
+    console.warn('Failed to load feature vote:', error);
     return {
       data: null,
       error: new Error(LOAD_FEEDBACK_ERROR),
@@ -96,7 +97,8 @@ export async function upsertFeatureVote(
 
     if (error) throw error;
     return { data: data as FeatureVoteRow, error: null };
-  } catch {
+  } catch (error) {
+    console.warn('Failed to save feature vote:', error);
     return {
       data: null,
       error: new Error(SAVE_FEEDBACK_ERROR),
