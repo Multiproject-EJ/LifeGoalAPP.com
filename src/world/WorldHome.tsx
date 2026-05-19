@@ -89,25 +89,21 @@ export function WorldHome({
         <div className="world-home__shell">
           <section className="world-home__hero-panel" aria-labelledby="world-home-title">
             <div className="world-home__brand">
-              <div className="world-home__logo" role="img" aria-label="HabitGame logo" />
+              <img
+                className="world-home__logo"
+                src="/icons/logo_landingpage.webp"
+                alt="HabitGame logo"
+                width="359"
+                height="490"
+                loading="eager"
+                decoding="async"
+              />
               <p className="world-home__kicker">A magical habit adventure</p>
               <h1 className="world-home__app-name" id="world-home-title">HabitGame</h1>
               <p className="world-home__tagline">Level Up Your Life</p>
               <p className="world-home__hero-copy">
                 Build better days in a bright fantasy world of floating islands, gentle quests, and rewarding progress.
               </p>
-            </div>
-
-            <div className="world-home__island-stage" aria-hidden="true">
-              <div className="world-home__sun" />
-              <div className="world-home__cloud world-home__cloud--left" />
-              <div className="world-home__cloud world-home__cloud--right" />
-              <div className="world-home__floating-island world-home__floating-island--back" />
-              <div className="world-home__floating-island world-home__floating-island--main">
-                <div className="world-home__castle" />
-                <div className="world-home__tree world-home__tree--one" />
-                <div className="world-home__tree world-home__tree--two" />
-              </div>
             </div>
 
             <div className="world-home__cta-card">
