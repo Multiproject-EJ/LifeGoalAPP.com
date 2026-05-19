@@ -5,8 +5,6 @@ import type { BeforeInstallPromptEvent } from './useInstallState.ts';
 import { IOSInstallGuide } from './IOSInstallGuide.tsx';
 import { WorldHero } from './WorldHero.tsx';
 import { JourneyPreview } from './JourneyPreview.tsx';
-import { ArchetypePicker } from './ArchetypePicker.tsx';
-import { RewardsTease } from './RewardsTease.tsx';
 import { SocialProof } from './SocialProof.tsx';
 import { useWorldAnalytics } from './useWorldAnalytics.ts';
 
@@ -18,26 +16,20 @@ interface WorldHomeProps {
 
 const HERO_FEATURES = [
   {
-    icon: '🗺️',
-    title: 'Quest Board',
-    desc: 'Turn goals into daily missions with streaks, XP, and gentle momentum.',
+    icon: '🌱',
+    title: 'Build Real Habits',
+    desc: 'Turn tiny daily actions into streaks, confidence, and visible momentum.',
   },
   {
-    icon: '⚔️',
-    title: 'Character Growth',
-    desc: 'Level up the real you through tiny wins, reflections, and class perks.',
+    icon: '🏆',
+    title: 'Earn RPG Rewards',
+    desc: 'Collect XP, coins, achievements, and milestones as your real life levels up.',
   },
   {
-    icon: '💎',
-    title: 'Reward Loop',
-    desc: 'Collect coins, achievements, and milestones that make progress visible.',
+    icon: '🏝️',
+    title: 'Explore Your World',
+    desc: 'Follow a bright fantasy map where every habit opens the next step forward.',
   },
-];
-
-const HERO_METRICS = [
-  { label: 'Start', value: 'Lv. 1' },
-  { label: 'Daily XP', value: '+25' },
-  { label: 'Next reward', value: '3 wins' },
 ];
 
 export function WorldHome({
@@ -97,26 +89,29 @@ export function WorldHome({
         <div className="world-home__shell">
           <section className="world-home__hero-panel" aria-labelledby="world-home-title">
             <div className="world-home__brand">
-              <div className="world-home__logo" aria-hidden="true">🎮</div>
-              <div className="world-home__level-badge">LEVEL 1 · NEW ADVENTURE</div>
-              <p className="world-home__kicker">Premium fantasy habit RPG</p>
-              <h1 className="world-home__app-name" id="world-home-title">HABITGAME</h1>
+              <div className="world-home__logo" aria-hidden="true">HG</div>
+              <p className="world-home__kicker">A magical habit adventure</p>
+              <h1 className="world-home__app-name" id="world-home-title">HabitGame</h1>
               <p className="world-home__tagline">Level Up Your Life</p>
               <p className="world-home__hero-copy">
-                Build habits like quests, grow your hero through everyday wins, and make self-improvement feel like entering a luminous RPG world.
+                Build better days in a bright fantasy world of floating islands, gentle quests, and rewarding progress.
               </p>
             </div>
 
-            <div className="world-home__metrics" aria-label="Game preview highlights">
-              {HERO_METRICS.map((metric) => (
-                <div className="world-home__metric" key={metric.label}>
-                  <span className="world-home__metric-value">{metric.value}</span>
-                  <span className="world-home__metric-label">{metric.label}</span>
-                </div>
-              ))}
+            <div className="world-home__island-stage" aria-hidden="true">
+              <div className="world-home__sun" />
+              <div className="world-home__cloud world-home__cloud--left" />
+              <div className="world-home__cloud world-home__cloud--right" />
+              <div className="world-home__floating-island world-home__floating-island--back" />
+              <div className="world-home__floating-island world-home__floating-island--main">
+                <div className="world-home__castle" />
+                <div className="world-home__tree world-home__tree--one" />
+                <div className="world-home__tree world-home__tree--two" />
+              </div>
             </div>
 
-            <div className="world-home__cta-zone">
+            <div className="world-home__cta-card">
+              <p className="world-home__cta-heading">Begin your first quest today</p>
               <div className="world-home__cta-group">
                 <button
                   className="world-home__btn world-home__btn--primary"
@@ -168,11 +163,7 @@ export function WorldHome({
             ))}
           </div>
 
-          <div className="world-home__journey-path" aria-hidden="true" />
-
           <JourneyPreview />
-          <ArchetypePicker />
-          <RewardsTease />
           <SocialProof />
 
           <footer className="world-home__footer">
