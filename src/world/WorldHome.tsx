@@ -103,7 +103,7 @@ export function WorldHome({
               <h1 className="world-home__app-name" id="world-home-title">HABITGAME</h1>
               <p className="world-home__tagline">Level Up Your Life</p>
               <p className="world-home__hero-copy">
-                Build habits like quests, grow your hero through everyday wins, and make self-improvement feel like stepping into a luminous RPG world.
+                Build habits like quests, grow your hero through everyday wins, and make self-improvement feel like entering a luminous RPG world.
               </p>
             </div>
 

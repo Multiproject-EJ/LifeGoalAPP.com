@@ -2303,6 +2303,12 @@
    ============================================================ */
 
 .world-home {
+  --world-home-starfield: radial-gradient(1px 1px at 10% 12%, rgba(254, 243, 199, 0.8) 0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 24%, rgba(221, 214, 254, 0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at 78% 12%, rgba(254, 243, 199, 0.7) 0%, transparent 100%),
+    radial-gradient(2px 2px at 60% 34%, rgba(251, 191, 36, 0.45) 0%, transparent 100%),
+    radial-gradient(1px 1px at 18% 68%, rgba(216, 180, 254, 0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at 86% 72%, rgba(254, 240, 138, 0.45) 0%, transparent 100%);
   min-height: 100dvh;
   color: #f8f1dc;
   background: #080613;
@@ -2334,13 +2340,7 @@
 }
 
 .world-hero__atmosphere::before {
-  background-image:
-    radial-gradient(1px 1px at 10% 12%, rgba(254, 243, 199, 0.8) 0%, transparent 100%),
-    radial-gradient(1px 1px at 30% 24%, rgba(221, 214, 254, 0.55) 0%, transparent 100%),
-    radial-gradient(1px 1px at 78% 12%, rgba(254, 243, 199, 0.7) 0%, transparent 100%),
-    radial-gradient(2px 2px at 60% 34%, rgba(251, 191, 36, 0.45) 0%, transparent 100%),
-    radial-gradient(1px 1px at 18% 68%, rgba(216, 180, 254, 0.55) 0%, transparent 100%),
-    radial-gradient(1px 1px at 86% 72%, rgba(254, 240, 138, 0.45) 0%, transparent 100%);
+  background-image: var(--world-home-starfield);
 }
 
 .world-hero__atmosphere::after {
@@ -2654,7 +2654,7 @@
   border-radius: inherit;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.36), transparent);
   transform: translateX(-110%);
-  animation: wh-button-shimmer 4s ease-in-out infinite;
+  animation: world-home-button-shimmer 4s ease-in-out infinite;
 }
 
 .world-home__btn--secondary {
@@ -2715,7 +2715,7 @@
   background-clip: text;
 }
 
-@keyframes wh-button-shimmer {
+@keyframes world-home-button-shimmer {
   0%, 45% { transform: translateX(-110%); }
   72%, 100% { transform: translateX(110%); }
 }
