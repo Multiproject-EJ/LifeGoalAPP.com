@@ -18,27 +18,32 @@ import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { FeaturePreviewOverlay } from '../../components/FeaturePreviewOverlay';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import { awardZenTokens } from '../../services/zenGarden';
-import { getFeatureAvailability, type FeatureAvailabilityId } from '../../config/featureAvailability';
-import { resolveFeatureAccess } from '../../services/featureAccess';
+import type { FeatureAvailabilityId } from '../../config/featureAvailability';
 import { TrainingTab } from '../training';
 import { ConflictResolverEntry } from '../conflict-resolver/ConflictResolverEntry';
+import {
+  canRenderEnergyMobileTab,
+  ENERGY_MOBILE_CATEGORY_TABS,
+  getEnergyMobileCategoryForTab,
+  getEnergyMobileTabAccess,
+  getEnergyMobileTabFeatureId,
+  getEnergyMobileTabStatusLabel,
+  isGatedEnergyMobileTab,
+  type EnergyMobileCategory,
+  type EnergyMobileTab,
+} from './energyFeatureAccess';
 import './BreathingSpace.css';
 import type { TimerLaunchContext } from '../timer/timerSession';
 
 type BreathingSpaceProps = {
   session: Session;
-  initialMobileTab?: MobileTab | null;
-  initialMobileCategory?: MobileCategory;
-  onMobileTabChange?: (tab: MobileTab | null) => void;
-  onMobileCategoryChange?: (category: MobileCategory) => void;
+  initialMobileTab?: EnergyMobileTab | null;
+  initialMobileCategory?: EnergyMobileCategory;
+  onMobileTabChange?: (tab: EnergyMobileTab | null) => void;
+  onMobileCategoryChange?: (category: EnergyMobileCategory) => void;
   onNavigateToTimer?: (context?: TimerLaunchContext) => void;
   isAdminOrCreator?: boolean;
 };
-
-type MobileTab = 'breathing' | 'meditation' | 'conflict' | 'yoga' | 'food' | 'exercise';
-type MobileCategory = 'mind' | 'body';
-type BodyTab = Extract<MobileTab, 'yoga' | 'food' | 'exercise'>;
-type GatedMobileTab = Extract<MobileTab, 'meditation' | 'conflict' | BodyTab>;
 
 type MeditationStats = {
   totalMinutes: number;
@@ -46,32 +51,8 @@ type MeditationStats = {
   currentStreak: number;
 };
 
-const MOBILE_CATEGORY_TABS: Record<MobileCategory, MobileTab[]> = {
-  mind: ['breathing', 'meditation', 'conflict'],
-  body: ['yoga', 'food', 'exercise'],
-};
-
-const getCategoryForTab = (tab: MobileTab): MobileCategory => {
-  if (MOBILE_CATEGORY_TABS.body.includes(tab)) {
-    return 'body';
-  }
-  return 'mind';
-};
-
-const BODY_TAB_FEATURE_IDS: Record<BodyTab, FeatureAvailabilityId> = {
-  yoga: 'body.yoga',
-  food: 'body.food',
-  exercise: 'body.exercise',
-};
-
-const GATED_MOBILE_TAB_FEATURE_IDS: Record<GatedMobileTab, FeatureAvailabilityId> = {
-  meditation: 'mind.meditation',
-  conflict: 'mind.conflictResolver',
-  ...BODY_TAB_FEATURE_IDS,
-};
-
 const MOBILE_TAB_OPTIONS: Record<
-  MobileTab,
+  EnergyMobileTab,
   { icon: string; label: string; uppercaseLabel: string; launchTitle?: string; launchSubtitle?: string; iconImageSrc?: string }
 > = {
   breathing: {
@@ -103,9 +84,6 @@ const MOBILE_TAB_OPTIONS: Record<
   exercise: { icon: '🏋️', label: 'Exercise', uppercaseLabel: 'EXERCISE' },
 };
 
-const isGatedMobileTab = (tab: MobileTab | null): tab is GatedMobileTab =>
-  Boolean(tab && tab in GATED_MOBILE_TAB_FEATURE_IDS);
-
 export function BreathingSpace({
   session,
   initialMobileTab,
@@ -132,15 +110,15 @@ export function BreathingSpace({
   const [reminderSet, setReminderSet] = useState(false);
   const [previewFeature, setPreviewFeature] = useState<{ id: FeatureAvailabilityId; label: string } | null>(null);
   const reminderRef = useRef<HTMLDivElement>(null);
-  const [activeMobileTab, setActiveMobileTab] = useState<MobileTab | null>(initialMobileTab ?? null);
-  const [activeMobileCategory, setActiveMobileCategory] = useState<MobileCategory>(
-    initialMobileCategory ?? (initialMobileTab ? getCategoryForTab(initialMobileTab) : 'mind'),
+  const [activeMobileTab, setActiveMobileTab] = useState<EnergyMobileTab | null>(initialMobileTab ?? null);
+  const [activeMobileCategory, setActiveMobileCategory] = useState<EnergyMobileCategory>(
+    initialMobileCategory ?? (initialMobileTab ? getEnergyMobileCategoryForTab(initialMobileTab) : 'mind'),
   );
 
   useEffect(() => {
     setActiveMobileTab(initialMobileTab ?? null);
     if (initialMobileTab) {
-      const nextCategory = getCategoryForTab(initialMobileTab);
+      const nextCategory = getEnergyMobileCategoryForTab(initialMobileTab);
       setActiveMobileCategory(nextCategory);
     }
   }, [initialMobileTab]);
@@ -148,7 +126,7 @@ export function BreathingSpace({
   useEffect(() => {
     if (initialMobileCategory) {
       setActiveMobileCategory(initialMobileCategory);
-      if (activeMobileTab && !MOBILE_CATEGORY_TABS[initialMobileCategory].includes(activeMobileTab)) {
+      if (activeMobileTab && !ENERGY_MOBILE_CATEGORY_TABS[initialMobileCategory].includes(activeMobileTab)) {
         setActiveMobileTab(null);
       }
     }
@@ -170,49 +148,25 @@ export function BreathingSpace({
   const [sessionFeedbackClassName, setSessionFeedbackClassName] = useState('');
   const { earnXP, recordActivity, refreshProfile, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
 
-  const getMobileTabAccess = (tab: MobileTab) => {
-    if (!isGatedMobileTab(tab)) {
-      return 'open';
-    }
-
-    return resolveFeatureAccess(GATED_MOBILE_TAB_FEATURE_IDS[tab], { isAdminOrCreator });
-  };
-
-  const getMobileTabStatusLabel = (tab: MobileTab) => {
-    if (!isGatedMobileTab(tab)) {
-      return null;
-    }
-
-    const availability = getFeatureAvailability(GATED_MOBILE_TAB_FEATURE_IDS[tab]);
-    const access = getMobileTabAccess(tab);
-
-    if (access === 'previewOnly') {
-      return availability.publicLabel ?? 'Future Feature';
-    }
-
-    if (isAdminOrCreator && availability.publicAccess !== 'open') {
-      return availability.adminLabel ?? 'Demo Mode';
-    }
-
-    return null;
-  };
-
-  const handleMobileTabChange = (tab: MobileTab) => {
-    const tabAccess = getMobileTabAccess(tab);
+  const handleMobileTabChange = (tab: EnergyMobileTab) => {
+    const tabAccess = getEnergyMobileTabAccess(tab, isAdminOrCreator);
     if (tabAccess !== 'open') {
-      const nextCategory = getCategoryForTab(tab);
+      const nextCategory = getEnergyMobileCategoryForTab(tab);
       if (nextCategory !== activeMobileCategory) {
         setActiveMobileCategory(nextCategory);
         onMobileCategoryChange?.(nextCategory);
       }
-      if (isGatedMobileTab(tab)) {
-        setPreviewFeature({ id: GATED_MOBILE_TAB_FEATURE_IDS[tab], label: MOBILE_TAB_OPTIONS[tab].label });
+      if (isGatedEnergyMobileTab(tab)) {
+        const featureId = getEnergyMobileTabFeatureId(tab);
+        if (featureId) {
+          setPreviewFeature({ id: featureId, label: MOBILE_TAB_OPTIONS[tab].label });
+        }
       }
       return;
     }
 
     setActiveMobileTab(tab);
-    const nextCategory = getCategoryForTab(tab);
+    const nextCategory = getEnergyMobileCategoryForTab(tab);
     if (nextCategory !== activeMobileCategory) {
       setActiveMobileCategory(nextCategory);
       onMobileCategoryChange?.(nextCategory);
@@ -227,7 +181,7 @@ export function BreathingSpace({
     onMobileTabChange?.(null);
   };
 
-  const handleEnergyReset = (category: MobileCategory) => {
+  const handleEnergyReset = (category: EnergyMobileCategory) => {
     setActiveMobileCategory(category);
     onMobileCategoryChange?.(category);
     setActiveMobileTab(null);
@@ -455,21 +409,18 @@ export function BreathingSpace({
     return null;
   }
 
-  const activeCategoryTabs = MOBILE_CATEGORY_TABS[activeMobileCategory];
-  const activeMobileTabAccess = isGatedMobileTab(activeMobileTab) ? getMobileTabAccess(activeMobileTab) : 'open';
-  const meditationAccess = getMobileTabAccess('meditation');
-  const conflictAccess = getMobileTabAccess('conflict');
-  const yogaAccess = getMobileTabAccess('yoga');
-  const foodAccess = getMobileTabAccess('food');
-  const exerciseAccess = getMobileTabAccess('exercise');
+  const activeCategoryTabs = ENERGY_MOBILE_CATEGORY_TABS[activeMobileCategory];
+  const activeMobileTabAccess = activeMobileTab
+    ? getEnergyMobileTabAccess(activeMobileTab, isAdminOrCreator)
+    : 'open';
   const isActiveMobileTabBlocked = activeMobileTabAccess !== 'open';
   const activeMobileTabForRender = isActiveMobileTabBlocked ? null : activeMobileTab;
   const isConflictFullscreen = activeMobileTabForRender === 'conflict';
-  const canRenderMeditation = meditationAccess === 'open';
-  const canRenderConflict = conflictAccess === 'open';
-  const canRenderYoga = yogaAccess === 'open';
-  const canRenderFood = foodAccess === 'open';
-  const canRenderExercise = exerciseAccess === 'open';
+  const canRenderMeditation = canRenderEnergyMobileTab('meditation', isAdminOrCreator);
+  const canRenderConflict = canRenderEnergyMobileTab('conflict', isAdminOrCreator);
+  const canRenderYoga = canRenderEnergyMobileTab('yoga', isAdminOrCreator);
+  const canRenderFood = canRenderEnergyMobileTab('food', isAdminOrCreator);
+  const canRenderExercise = canRenderEnergyMobileTab('exercise', isAdminOrCreator);
 
   return (
     <div
@@ -510,7 +461,7 @@ export function BreathingSpace({
           {activeMobileTabForRender ? null : (
             <div className="breathing-space__mobile-launch" role="group" aria-label="Choose an energy focus">
               {activeCategoryTabs.map((tab) => {
-                const statusLabel = getMobileTabStatusLabel(tab);
+                const statusLabel = getEnergyMobileTabStatusLabel(tab, isAdminOrCreator);
                 return (
                   <button
                     key={tab}
