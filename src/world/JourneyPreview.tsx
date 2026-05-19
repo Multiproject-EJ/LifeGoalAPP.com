@@ -43,7 +43,7 @@ export function JourneyPreview() {
 
             <div className="journey-preview__node-inner">
               <div className="journey-preview__node-icon" aria-hidden="true">
-                {node.icon}
+                {node.state === 'locked' ? '🔒' : node.icon}
               </div>
               <div className="journey-preview__node-content">
                 <strong className="journey-preview__node-label">{node.label}</strong>

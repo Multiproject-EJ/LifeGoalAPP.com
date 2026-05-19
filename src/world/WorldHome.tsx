@@ -89,7 +89,7 @@ export function WorldHome({
         <div className="world-home__shell">
           <section className="world-home__hero-panel" aria-labelledby="world-home-title">
             <div className="world-home__brand">
-              <div className="world-home__logo" role="img" aria-label="HabitGame logo"><span aria-hidden="true">HG</span></div>
+              <div className="world-home__logo" role="img" aria-label="HabitGame logo" />
               <p className="world-home__kicker">A magical habit adventure</p>
               <h1 className="world-home__app-name" id="world-home-title">HabitGame</h1>
               <p className="world-home__tagline">Level Up Your Life</p>

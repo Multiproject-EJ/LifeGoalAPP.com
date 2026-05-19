@@ -2447,30 +2447,16 @@
   box-shadow: 0 12px 28px rgba(44, 99, 151, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.92), inset 0 -4px 10px rgba(232, 168, 44, 0.22);
 }
 
+.world-home__logo::before {
+  content: 'HG';
+}
+
 .world-home__level-badge {
   display: none;
 }
 
-.world-home__kicker {
-  margin: 2px 0 0;
-  color: #2b72b8;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  text-shadow: none;
-}
-
-.journey-preview__eyebrow {
-  margin: 2px 0 0;
-  color: #2b72b8;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  text-shadow: none;
-}
-
+.world-home__kicker,
+.journey-preview__eyebrow,
 .social-proof__eyebrow {
   margin: 2px 0 0;
   color: #2b72b8;
