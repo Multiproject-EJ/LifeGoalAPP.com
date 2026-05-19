@@ -26,6 +26,10 @@ export type UpsertFeatureVoteInput = {
   metadata?: Record<string, unknown>;
 };
 
+const SIGN_IN_TO_SAVE_FEEDBACK = 'Sign in to save your roadmap feedback.';
+const LOAD_FEEDBACK_ERROR = 'Failed to load roadmap feedback. Please try again.';
+const SAVE_FEEDBACK_ERROR = 'Failed to save roadmap feedback. Please try again.';
+
 function getUntypedSupabase() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return getSupabaseClient() as any;
@@ -43,7 +47,7 @@ export async function getMyFeatureVote(
   try {
     const userId = await getCurrentUserId();
     if (!userId) {
-      return { data: null, error: new Error('Sign in to save your roadmap feedback.') };
+      return { data: null, error: new Error(SIGN_IN_TO_SAVE_FEEDBACK) };
     }
 
     const { data, error } = await getUntypedSupabase()
@@ -55,10 +59,10 @@ export async function getMyFeatureVote(
 
     if (error) throw error;
     return { data: (data as FeatureVoteRow | null) ?? null, error: null };
-  } catch (error) {
+  } catch {
     return {
       data: null,
-      error: error instanceof Error ? error : new Error('Failed to load roadmap feedback.'),
+      error: new Error(LOAD_FEEDBACK_ERROR),
     };
   }
 }
@@ -69,7 +73,7 @@ export async function upsertFeatureVote(
   try {
     const userId = await getCurrentUserId();
     if (!userId) {
-      return { data: null, error: new Error('Sign in to save your roadmap feedback.') };
+      return { data: null, error: new Error(SIGN_IN_TO_SAVE_FEEDBACK) };
     }
 
     const { data, error } = await getUntypedSupabase()
@@ -92,10 +96,10 @@ export async function upsertFeatureVote(
 
     if (error) throw error;
     return { data: data as FeatureVoteRow, error: null };
-  } catch (error) {
+  } catch {
     return {
       data: null,
-      error: error instanceof Error ? error : new Error('Failed to save roadmap feedback.'),
+      error: new Error(SAVE_FEEDBACK_ERROR),
     };
   }
 }
