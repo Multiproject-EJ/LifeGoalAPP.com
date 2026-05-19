@@ -1,4 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { getFeatureAvailability, type FeatureAvailabilityId } from '../config/featureAvailability';
+import { upsertFeatureVote, type FeatureVoteState } from '../services/featureVotes';
 import '../styles/feature-status.css';
 import '../styles/feature-preview-overlay.css';
 
@@ -6,6 +8,7 @@ type FeaturePreviewOverlayVariant = 'preview' | 'notImplemented';
 type FeatureFeedbackUsefulness = 'quest' | 'fun' | 'not_for_me';
 
 type FeaturePreviewOverlayProps = {
+  featureId: FeatureAvailabilityId;
   label: string;
   variant?: FeaturePreviewOverlayVariant;
   body?: string;
@@ -23,7 +26,14 @@ const USEFULNESS_OPTIONS: Array<{ value: FeatureFeedbackUsefulness; label: strin
   { value: 'not_for_me', label: 'Not for me' },
 ];
 
+const USEFULNESS_TO_VOTE_STATE: Record<FeatureFeedbackUsefulness, FeatureVoteState> = {
+  quest: 'would_help_my_quest',
+  fun: 'looks_fun',
+  not_for_me: 'not_for_me',
+};
+
 export function FeaturePreviewOverlay({
+  featureId,
   label,
   variant = 'preview',
   body = 'HabitGame grows around what helps players stay motivated in real life. Vote if this is a feature you’d love to see next.',
@@ -38,8 +48,11 @@ export function FeaturePreviewOverlay({
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [usefulness, setUsefulness] = useState<FeatureFeedbackUsefulness>('quest');
   const [suggestion, setSuggestion] = useState('');
+  const [feedbackSaving, setFeedbackSaving] = useState(false);
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const isNotImplemented = variant === 'notImplemented';
   const statusLabel = isNotImplemented ? 'Not implemented yet' : statusLabelOverride;
+  const featureAvailability = getFeatureAvailability(featureId);
 
   useEffect(() => {
     document.body.classList.add('feature-preview-overlay-open');
@@ -49,9 +62,37 @@ export function FeaturePreviewOverlay({
     };
   }, []);
 
-  // Intentionally local-only until structured feature_votes persistence exists.
-  const handleSubmitFeedback = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmitFeedback = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (feedbackSaving) return;
+
+    setFeedbackSaving(true);
+    setFeedbackError(null);
+    const sourceRoute = typeof window !== 'undefined'
+      ? `${window.location.pathname}${window.location.search}`
+      : undefined;
+    const result = await upsertFeatureVote({
+      featureId,
+      voteState: USEFULNESS_TO_VOTE_STATE[usefulness],
+      suggestionText: suggestion,
+      sourceSurface: featureAvailability.surface,
+      sourceRoute,
+      featureCategory: featureAvailability.voteCategory ?? featureAvailability.category,
+      metadata: {
+        featureLabel: featureAvailability.label,
+        status: featureAvailability.status,
+        surface: featureAvailability.surface,
+        category: featureAvailability.category,
+        voteCategory: featureAvailability.voteCategory,
+      },
+    });
+    setFeedbackSaving(false);
+
+    if (result.error) {
+      setFeedbackError(result.error.message || 'Failed to save roadmap feedback. Please try again.');
+      return;
+    }
+
     setFeedbackSubmitted(true);
   };
 
@@ -142,6 +183,11 @@ export function FeaturePreviewOverlay({
                   <p className="feature-preview-overlay__feedback-subtitle">
                     HabitGame grows around what helps players stay motivated in real life.
                   </p>
+                  {feedbackError ? (
+                    <p className="feature-preview-overlay__feedback-error" role="alert">
+                      {feedbackError}
+                    </p>
+                  ) : null}
                 </div>
                 <fieldset className="feature-preview-overlay__feedback-fieldset">
                   <legend>How useful would this be for your real-life quest?</legend>
@@ -153,6 +199,7 @@ export function FeaturePreviewOverlay({
                         value={option.value}
                         checked={usefulness === option.value}
                         onChange={() => setUsefulness(option.value)}
+                        disabled={feedbackSaving}
                       />
                       <span>{option.label}</span>
                     </label>
@@ -163,19 +210,21 @@ export function FeaturePreviewOverlay({
                   <textarea
                     value={suggestion}
                     onChange={(event) => setSuggestion(event.target.value)}
+                    disabled={feedbackSaving}
                     rows={4}
                     maxLength={500}
                     placeholder="Optional — share one idea, wish, or concern."
                   />
                 </label>
                 <div className="feature-preview-overlay__feedback-actions">
-                  <button type="submit" className="feature-preview-overlay__vote-btn">
-                    Send feedback
+                  <button type="submit" className="feature-preview-overlay__vote-btn" disabled={feedbackSaving}>
+                    {feedbackSaving ? 'Saving…' : 'Send feedback'}
                   </button>
                   <button
                     type="button"
                     className="feature-preview-overlay__back-btn"
                     onClick={() => setFeedbackOpen(false)}
+                    disabled={feedbackSaving}
                   >
                     Back
                   </button>

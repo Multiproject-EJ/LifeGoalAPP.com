@@ -847,6 +847,7 @@ export function BreathingSpace({
       )}
       {previewFeature ? (
         <FeaturePreviewOverlay
+          featureId={previewFeature.id}
           label={previewFeature.label}
           onClose={() => setPreviewFeature(null)}
         />

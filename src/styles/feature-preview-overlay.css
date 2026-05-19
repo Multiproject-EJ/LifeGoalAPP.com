@@ -126,6 +126,11 @@ body.feature-preview-overlay-open .mobile-footer-nav {
   border-color: rgba(167, 139, 250, 0.65);
 }
 
+.feature-preview-overlay__back-btn:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
 .feature-preview-overlay__back-btn:active {
   background: rgba(167, 139, 250, 0.38);
 }
@@ -191,6 +196,14 @@ body.feature-preview-overlay-open .mobile-footer-nav {
   color: rgba(226, 232, 240, 0.86);
   font-size: 0.92rem;
   line-height: 1.5;
+}
+
+.feature-preview-overlay__feedback-error {
+  margin: 0.75rem 0 0;
+  color: #fecaca;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 .feature-preview-overlay__feedback-fieldset {
