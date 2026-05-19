@@ -8,11 +8,11 @@ interface RewardItem {
 }
 
 const REWARDS: RewardItem[] = [
-  { id: 'xp',           icon: '⚡', label: 'XP Orbs',       tagline: 'Earn experience'    },
-  { id: 'trait-packs',  icon: '🎴', label: 'Trait Packs',   tagline: 'Discover strengths' },
-  { id: 'zen-seeds',    icon: '🌱', label: 'Zen Seeds',     tagline: 'Grow mindfulness'   },
-  { id: 'achievements', icon: '🏆', label: 'Achievements',  tagline: 'Unlock milestones'  },
-  { id: 'coins',        icon: '🪙', label: 'Coins',         tagline: 'Build your treasury'},
+  { id: 'xp',           icon: '⚡', label: 'XP Orbs',       tagline: 'Power every win'     },
+  { id: 'trait-packs',  icon: '🎴', label: 'Trait Packs',   tagline: 'Reveal strengths'    },
+  { id: 'zen-seeds',    icon: '🌱', label: 'Zen Seeds',     tagline: 'Grow calm rituals'   },
+  { id: 'achievements', icon: '🏆', label: 'Relics',        tagline: 'Mark milestones'     },
+  { id: 'coins',        icon: '🪙', label: 'Gold',          tagline: 'Build your treasury' },
 ];
 
 export function RewardsTease() {
@@ -24,7 +24,7 @@ export function RewardsTease() {
       <div className="rewards-tease__header">
         <p className="rewards-tease__eyebrow" aria-hidden="true">REWARDS</p>
         <h2 className="rewards-tease__title" id="rewards-tease-heading">
-          What you earn
+          Treasure for real progress
         </h2>
       </div>
 

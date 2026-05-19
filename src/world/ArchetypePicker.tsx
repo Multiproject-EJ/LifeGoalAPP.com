@@ -71,10 +71,10 @@ export function ArchetypePicker() {
           CHOOSE YOUR CLASS
         </p>
         <h2 className="archetype-picker__title" id={`${groupId}-heading`}>
-          Who are you in this game?
+          Choose the hero you are becoming
         </h2>
         <p className="archetype-picker__subtitle">
-          Your archetype shapes your quests and rewards.
+          Select a class fantasy that turns personal growth into a role you can play daily.
         </p>
       </div>
 

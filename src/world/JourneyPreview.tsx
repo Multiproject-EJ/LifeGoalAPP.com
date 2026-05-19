@@ -9,35 +9,34 @@ interface JourneyNode {
 }
 
 const JOURNEY_NODES: JourneyNode[] = [
-  { id: 'start',   icon: '🌱', label: 'Level 1: Start',     sublabel: 'Your quest begins',     state: 'completed' },
-  { id: 'streak',  icon: '🔥', label: 'Streak ×3',          sublabel: '3 days in a row',        state: 'completed' },
-  { id: 'quest',   icon: '⚔️',  label: 'Quest Complete',     sublabel: 'First habit mastered',   state: 'active'    },
-  { id: 'reward',  icon: '💎', label: 'Reward Unlocked',    sublabel: 'XP milestone reached',   state: 'locked'    },
-  { id: 'levelup', icon: '⭐', label: 'Level Up',           sublabel: 'New powers await',       state: 'locked'    },
-  { id: 'champion',icon: '🏆', label: 'Champion',           sublabel: 'Top 10% of players',    state: 'locked'    },
-  { id: 'legend',  icon: '🌟', label: 'Legend',             sublabel: 'Your legacy lives on',   state: 'locked'    },
+  { id: 'choose', icon: '✨', label: 'Choose a quest', sublabel: 'Pick one real habit you want to grow.', state: 'completed' },
+  { id: 'play',   icon: '🌱', label: 'Complete tiny wins', sublabel: 'Check in daily and watch the world brighten.', state: 'active' },
+  { id: 'earn',   icon: '🏆', label: 'Earn rewards', sublabel: 'Collect XP, coins, and new milestones.', state: 'locked' },
 ];
 
 export function JourneyPreview() {
   return (
     <section
       className="journey-preview"
-      aria-label="Journey progression preview"
+      aria-labelledby="journey-preview-heading"
     >
       <div className="journey-preview__header">
-        <p className="journey-preview__eyebrow" aria-hidden="true">YOUR PATH</p>
-        <h2 className="journey-preview__title">Every day moves you forward</h2>
-        <p className="journey-preview__subtitle">See where your journey takes you</p>
+        <p className="journey-preview__eyebrow" aria-hidden="true">HOW IT WORKS</p>
+        <h2 className="journey-preview__title" id="journey-preview-heading">
+          Small steps become a magical journey
+        </h2>
+        <p className="journey-preview__subtitle">
+          HabitGame keeps progress simple, visual, and rewarding from the first tap.
+        </p>
       </div>
 
-      <ol className="journey-preview__track" aria-label="Milestone progression">
+      <ol className="journey-preview__track" aria-label="How HabitGame works">
         {JOURNEY_NODES.map((node, index) => (
           <li
             key={node.id}
             className={`journey-preview__node journey-preview__node--${node.state}`}
             aria-current={node.state === 'active' ? 'step' : undefined}
           >
-            {/* Connector line above (skip for first node) */}
             {index > 0 && (
               <div className="journey-preview__connector" aria-hidden="true" />
             )}
@@ -59,7 +58,7 @@ export function JourneyPreview() {
       </ol>
 
       <p className="journey-preview__cta-hint">
-        Start your first habit to unlock the path ✦
+        Designed for fast starts, soft motivation, and steady momentum.
       </p>
     </section>
   );

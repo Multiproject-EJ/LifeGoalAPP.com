@@ -17,15 +17,15 @@ interface TestimonialItem {
 }
 
 const STATS: StatItem[] = [
-  { id: 'players',  emoji: '🎮', target: 10,  suffix: 'K+', label: 'Players'       },
-  { id: 'habits',   emoji: '🔥', target: 50,  suffix: 'K+', label: 'Habits tracked' },
-  { id: 'rating',   emoji: '⭐', target: 4.9, suffix: '',   label: 'Rating'         },
+  { id: 'players',  emoji: '🧭', target: 10,  suffix: 'K+', label: 'Adventurers'    },
+  { id: 'habits',   emoji: '🌱', target: 50,  suffix: 'K+', label: 'Habits grown'   },
+  { id: 'rating',   emoji: '⭐', target: 4.9, suffix: '',   label: 'User Rating' },
 ];
 
 const TESTIMONIALS: TestimonialItem[] = [
-  { id: 'alex',   avatar: '🧑‍💻', quote: 'Finally a habit app that feels like a game.', name: 'Alex',   level: 12 },
-  { id: 'sam',    avatar: '🎯', quote: "I've never stuck with habits this long before.", name: 'Sam',    level: 8  },
-  { id: 'jordan', avatar: '💪', quote: 'The streaks and rewards keep me coming back.',   name: 'Jordan', level: 15 },
+  { id: 'alex',   avatar: '☀️', quote: 'It feels bright, friendly, and easy to return to every morning.', name: 'Alex',   level: 12 },
+  { id: 'sam',    avatar: '🌈', quote: "The rewards make small habits feel surprisingly fun.", name: 'Sam',    level: 8  },
+  { id: 'jordan', avatar: '🏝️', quote: 'I like seeing my progress become a little world I can grow.', name: 'Jordan', level: 15 },
 ];
 
 function useCountUp(target: number, active: boolean): number {
@@ -127,7 +127,7 @@ export function SocialProof() {
       <div className="social-proof__header">
         <p className="social-proof__eyebrow" aria-hidden="true">COMMUNITY</p>
         <h2 className="social-proof__title" id="social-proof-heading">
-          Join the movement
+          Loved by early adventurers
         </h2>
       </div>
 
