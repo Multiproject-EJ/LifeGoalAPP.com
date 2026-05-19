@@ -93,8 +93,8 @@ export function WorldHome({
                 className="world-home__logo"
                 src="/icons/logo_landingpage.webp"
                 alt="HabitGame logo"
-                width="160"
-                height="160"
+                width="359"
+                height="490"
                 loading="eager"
                 decoding="async"
               />
