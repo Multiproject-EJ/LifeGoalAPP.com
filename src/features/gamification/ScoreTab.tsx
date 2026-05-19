@@ -24,6 +24,7 @@ import type {
   ZenTokenTransaction,
 } from '../../types/gamification';
 import { GamificationHeader } from '../../components/GamificationHeader';
+import { FeaturePreviewOverlay } from '../../components/FeaturePreviewOverlay';
 import { FeatureStatusBadge } from '../../components/FeatureStatusBadge';
 import { XP_TO_GOLD_RATIO, splitGoldBalance } from '../../constants/economy';
 import { getFeatureAvailability, type FeatureAvailabilityId } from '../../config/featureAvailability';
@@ -166,7 +167,6 @@ export function ScoreTab({
     id: FeatureAvailabilityId;
     label: string;
     variant?: 'preview' | 'notImplemented';
-    hasVoted?: boolean;
   } | null>(null);
 
   /**
@@ -196,12 +196,6 @@ export function ScoreTab({
     },
     [isAdminOrCreator],
   );
-
-  const handlePreviewVote = useCallback(() => {
-    setPreviewFeature((current) => (
-      current ? { ...current, hasVoted: true } : current
-    ));
-  }, []);
 
   const rewardRisk = useMemo(() => {
     const cost = Number(rewardCost);
@@ -1654,60 +1648,14 @@ export function ScoreTab({
         </div>
       )}
 
-      {previewFeature && (
-        <div
-          className="score-hub-preview"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`${previewFeature.label} preview`}
-        >
-          <div
-            className="score-hub-preview__backdrop"
-            onClick={() => setPreviewFeature(null)}
-          />
-          <div className="score-hub-preview__panel">
-            <div className="score-hub-preview__icon" aria-hidden="true">✨</div>
-            <div className="score-hub-preview__badge-row">
-              <span
-                className="feature-status-badge feature-status-badge--preview"
-                aria-label={previewFeature.variant === 'notImplemented' ? 'Feature status: Not implemented yet' : 'Feature status: Future Feature'}
-              >
-                {previewFeature.variant === 'notImplemented' ? 'Not implemented yet' : 'Future Feature'}
-              </span>
-            </div>
-            <h2 className="score-hub-preview__title">{previewFeature.label}</h2>
-            <p className="score-hub-preview__body">
-              {previewFeature.variant === 'notImplemented'
-                ? 'Admin access is enabled for this feature, but there is no Score Hub action wired yet.'
-                : 'HabitGame grows around what helps players stay motivated in real life. Vote if this is a feature you’d love to see next.'}
-            </p>
-            {previewFeature.variant !== 'notImplemented' ? (
-              <>
-                <button
-                  type="button"
-                  className="score-hub-preview__vote-btn"
-                  onClick={handlePreviewVote}
-                  disabled={previewFeature.hasVoted === true}
-                >
-                  {previewFeature.hasVoted ? 'Vote noted' : 'Vote for this'}
-                </button>
-                {previewFeature.hasVoted ? (
-                  <p className="score-hub-preview__confirmation" role="status">
-                    Thanks — your interest has been noted for the roadmap.
-                  </p>
-                ) : null}
-              </>
-            ) : null}
-            <button
-              type="button"
-              className="score-hub-preview__back-btn"
-              onClick={() => setPreviewFeature(null)}
-            >
-              Back
-            </button>
-          </div>
-        </div>
-      )}
+      {previewFeature ? (
+        <FeaturePreviewOverlay
+          label={previewFeature.label}
+          variant={previewFeature.variant}
+          notImplementedBody="Admin access is enabled for this feature, but there is no Score Hub action wired yet."
+          onClose={() => setPreviewFeature(null)}
+        />
+      ) : null}
     </section>
   );
 }
