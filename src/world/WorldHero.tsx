@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
 /** Static path for the primary hero background asset (eagerly preloaded). */
 const HERO_BG_SRC = '/landing-page-assets/landingpage_top.webp';
@@ -19,7 +19,7 @@ interface WorldHeroProps {
 export function WorldHero({ children }: WorldHeroProps) {
   // Inject a <link rel="preload"> hint for the primary hero background as a
   // runtime fallback for any navigation that bypasses index.html's static hint.
-  useEffect(() => {
+  React.useEffect(() => {
     const existingPreload = document.head.querySelector(
       `link[rel="preload"][href="${HERO_BG_SRC}"]`,
     );
