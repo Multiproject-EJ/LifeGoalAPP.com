@@ -41,6 +41,7 @@ export function FeaturePreviewOverlay({
   const isNotImplemented = variant === 'notImplemented';
   const statusLabel = isNotImplemented ? 'Not implemented yet' : statusLabelOverride;
 
+  // Intentionally local-only until structured feature_votes persistence exists.
   const handleSubmitFeedback = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFeedbackSubmitted(true);
