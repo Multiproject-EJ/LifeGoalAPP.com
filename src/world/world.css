@@ -2451,8 +2451,26 @@
   display: none;
 }
 
-.world-home__kicker,
-.journey-preview__eyebrow,
+.world-home__kicker {
+  margin: 2px 0 0;
+  color: #2b72b8;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-shadow: none;
+}
+
+.journey-preview__eyebrow {
+  margin: 2px 0 0;
+  color: #2b72b8;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-shadow: none;
+}
+
 .social-proof__eyebrow {
   margin: 2px 0 0;
   color: #2b72b8;
@@ -2712,7 +2730,8 @@
   grid-template-columns: 1fr;
   gap: 12px;
   max-width: none;
-  overflow: visible;
+  overflow-x: visible;
+  overflow-y: visible;
   padding: 0;
 }
 
