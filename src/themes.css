@@ -258,14 +258,6 @@ body {
   -webkit-backdrop-filter: blur(28px) saturate(180%);
 }
 
-.auth-hero__list li {
-  background: var(--color-surface-secondary);
-  border: 1px solid var(--color-border-primary);
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-}
-
 .auth-card__header p,
 .auth-card__hint {
   color: var(--color-text-secondary);
@@ -450,7 +442,6 @@ body {
 }
 
 /* Ensure text readability */
-.auth-hero__lead,
 .goal-workspace__header p,
 .habit-tracker__header p {
   color: var(--color-text-secondary);
