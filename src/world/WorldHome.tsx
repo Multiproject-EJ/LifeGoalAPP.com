@@ -98,7 +98,7 @@ export function WorldHome({
           <section className="world-home__hero-panel" aria-labelledby="world-home-title">
             <div className="world-home__brand">
               <div className="world-home__logo" aria-hidden="true">🎮</div>
-              <div className="world-home__level-badge" aria-hidden="true">LEVEL 1 · NEW ADVENTURE</div>
+              <div className="world-home__level-badge">LEVEL 1 · NEW ADVENTURE</div>
               <p className="world-home__kicker">Premium fantasy habit RPG</p>
               <h1 className="world-home__app-name" id="world-home-title">HABITGAME</h1>
               <p className="world-home__tagline">Level Up Your Life</p>
@@ -153,7 +153,7 @@ export function WorldHome({
               )}
 
               <p className="world-home__cta-supporting">
-                Free to begin · Mobile-first · No boss fight required
+                Free to begin · Mobile-first · Easy to start
               </p>
             </div>
           </section>

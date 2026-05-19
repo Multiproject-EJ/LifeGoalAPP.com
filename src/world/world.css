@@ -2491,7 +2491,7 @@
 
 .world-home__kicker {
   margin: 4px 0 0;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -2501,6 +2501,7 @@
   font-size: clamp(42px, 12vw, 88px);
   line-height: 0.9;
   letter-spacing: 0.08em;
+  color: #fff8d9;
   background: linear-gradient(180deg, #fff8d9 0%, #facc15 42%, #c084fc 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -2552,7 +2553,7 @@
 
 .world-home__metric-label {
   color: #b9a7de;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
