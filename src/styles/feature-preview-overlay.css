@@ -9,6 +9,12 @@
   padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
 }
 
+body.feature-preview-overlay-open .mobile-footer-nav {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(120%);
+}
+
 .feature-preview-overlay__backdrop {
   position: absolute;
   inset: 0;
