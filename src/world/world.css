@@ -2490,7 +2490,7 @@
 .world-home__hero-copy {
   max-width: 620px;
   margin: 6px 0 0;
-  color: #315676;
+  color: #244866;
   font-size: 1rem;
   line-height: 1.6;
   text-wrap: balance;
@@ -2667,7 +2667,7 @@
 .world-home__cta-copy {
   max-width: 420px;
   margin: 8px auto 16px;
-  color: #496783;
+  color: #344f6b;
   font-size: 14px;
   line-height: 1.55;
   text-align: center;
@@ -2723,7 +2723,7 @@
 .world-home__cta-supporting,
 .world-home__copyright,
 .world-home__footer-link {
-  color: #5d7591;
+  color: #455f78;
 }
 
 .world-home__features {
@@ -2790,7 +2790,7 @@
 .social-proof__subtitle,
 .social-proof__mission-copy,
 .world-home__restart-copy {
-  color: #5d7591;
+  color: #455f78;
 }
 
 .world-home__feature-desc {
