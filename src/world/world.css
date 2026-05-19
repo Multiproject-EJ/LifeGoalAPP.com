@@ -2482,7 +2482,7 @@
 }
 
 .world-home__app-name {
-  font-size: clamp(44px, 13vw, 88px);
+  font-size: clamp(2.75rem, 6vw + 1rem, 5.5rem);
   line-height: 0.96;
   letter-spacing: -0.055em;
   color: var(--world-home-navy);
@@ -2494,7 +2494,7 @@
 }
 
 .world-home__tagline {
-  font-size: clamp(21px, 6vw, 42px);
+  font-size: clamp(1.3125rem, 3vw + 0.5rem, 2.625rem);
   font-weight: 850;
   line-height: 1;
   color: #18416f;
