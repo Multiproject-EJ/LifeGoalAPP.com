@@ -25,6 +25,7 @@ import {
   canRenderEnergyMobileTab,
   ENERGY_MOBILE_CATEGORY_TABS,
   getEnergyMobileCategoryForTab,
+  getGatedEnergyMobileTabFeatureId,
   getEnergyMobileTabAccess,
   getEnergyMobileTabFeatureId,
   getEnergyMobileTabStatusLabel,
@@ -157,10 +158,7 @@ export function BreathingSpace({
         onMobileCategoryChange?.(nextCategory);
       }
       if (isGatedEnergyMobileTab(tab)) {
-        const featureId = getEnergyMobileTabFeatureId(tab);
-        if (featureId) {
-          setPreviewFeature({ id: featureId, label: MOBILE_TAB_OPTIONS[tab].label });
-        }
+        setPreviewFeature({ id: getGatedEnergyMobileTabFeatureId(tab), label: MOBILE_TAB_OPTIONS[tab].label });
       }
       return;
     }

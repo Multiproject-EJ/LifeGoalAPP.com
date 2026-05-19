@@ -38,6 +38,10 @@ export function getEnergyMobileTabFeatureId(tab: EnergyMobileTab): FeatureAvaila
   return isGatedEnergyMobileTab(tab) ? GATED_ENERGY_MOBILE_TAB_FEATURE_IDS[tab] : null;
 }
 
+export function getGatedEnergyMobileTabFeatureId(tab: GatedEnergyMobileTab): FeatureAvailabilityId {
+  return GATED_ENERGY_MOBILE_TAB_FEATURE_IDS[tab];
+}
+
 export function getEnergyMobileTabAccess(tab: EnergyMobileTab, isAdminOrCreator = false) {
   const featureId = getEnergyMobileTabFeatureId(tab);
   if (!featureId) {
@@ -62,6 +66,10 @@ export function getEnergyMobileTabStatusLabel(tab: EnergyMobileTab, isAdminOrCre
 
   if (access === 'previewOnly') {
     return availability.publicLabel ?? 'Future Feature';
+  }
+
+  if (access === 'open' && !isAdminOrCreator) {
+    return null;
   }
 
   if (isAdminOrCreator && availability.publicAccess !== 'open') {
