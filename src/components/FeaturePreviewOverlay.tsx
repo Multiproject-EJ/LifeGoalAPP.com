@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import '../styles/feature-status.css';
 import '../styles/feature-preview-overlay.css';
 
 type FeaturePreviewOverlayVariant = 'preview' | 'notImplemented';
+type FeatureFeedbackUsefulness = 'quest' | 'fun' | 'not_for_me';
 
 type FeaturePreviewOverlayProps = {
   label: string;
@@ -16,6 +17,12 @@ type FeaturePreviewOverlayProps = {
   onClose: () => void;
 };
 
+const USEFULNESS_OPTIONS: Array<{ value: FeatureFeedbackUsefulness; label: string }> = [
+  { value: 'quest', label: 'Would help my real-life quest' },
+  { value: 'fun', label: 'Looks fun, but not essential' },
+  { value: 'not_for_me', label: 'Not for me' },
+];
+
 export function FeaturePreviewOverlay({
   label,
   variant = 'preview',
@@ -23,13 +30,22 @@ export function FeaturePreviewOverlay({
   notImplementedBody = 'Admin access is enabled for this feature, but the implementation is not available yet.',
   backLabel = 'Back',
   statusLabelOverride = 'Future Feature',
-  voteLabel = 'Vote for this',
-  voteConfirmation = 'Thanks — your interest has been noted for the roadmap.',
+  voteLabel = 'Shape this feature',
+  voteConfirmation = 'Thanks — your feedback helps shape the HabitGame roadmap.',
   onClose,
 }: FeaturePreviewOverlayProps) {
-  const [hasVoted, setHasVoted] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [usefulness, setUsefulness] = useState<FeatureFeedbackUsefulness>('quest');
+  const [suggestion, setSuggestion] = useState('');
   const isNotImplemented = variant === 'notImplemented';
   const statusLabel = isNotImplemented ? 'Not implemented yet' : statusLabelOverride;
+
+  // Intentionally local-only until structured feature_votes persistence exists.
+  const handleSubmitFeedback = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setFeedbackSubmitted(true);
+  };
 
   return (
     <div
@@ -61,12 +77,12 @@ export function FeaturePreviewOverlay({
             <button
               type="button"
               className="feature-preview-overlay__vote-btn"
-              onClick={() => setHasVoted(true)}
-              disabled={hasVoted}
+              onClick={() => setFeedbackOpen(true)}
+              disabled={feedbackSubmitted}
             >
-              {hasVoted ? 'Vote noted' : voteLabel}
+              {feedbackSubmitted ? 'Feedback sent' : voteLabel}
             </button>
-            {hasVoted ? (
+            {feedbackSubmitted ? (
               <p className="feature-preview-overlay__confirmation" role="status">
                 {voteConfirmation}
               </p>
@@ -81,6 +97,86 @@ export function FeaturePreviewOverlay({
           {backLabel}
         </button>
       </div>
+      {feedbackOpen ? (
+        <div
+          className="feature-preview-overlay__feedback-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Help shape ${label}`}
+        >
+          <button
+            type="button"
+            className="feature-preview-overlay__feedback-backdrop"
+            aria-label="Close feature feedback"
+            onClick={() => setFeedbackOpen(false)}
+          />
+          <div className="feature-preview-overlay__feedback-panel">
+            {feedbackSubmitted ? (
+              <>
+                <div className="feature-preview-overlay__icon" aria-hidden="true">💛</div>
+                <h3 className="feature-preview-overlay__feedback-title">Feedback sent</h3>
+                <p className="feature-preview-overlay__feedback-subtitle" role="status">
+                  {voteConfirmation}
+                </p>
+                <button
+                  type="button"
+                  className="feature-preview-overlay__vote-btn"
+                  onClick={() => setFeedbackOpen(false)}
+                >
+                  Done
+                </button>
+              </>
+            ) : (
+              <form className="feature-preview-overlay__feedback-form" onSubmit={handleSubmitFeedback}>
+                <div>
+                  <p className="feature-preview-overlay__feedback-eyebrow">Future Feature</p>
+                  <h3 className="feature-preview-overlay__feedback-title">Help shape this feature</h3>
+                  <p className="feature-preview-overlay__feedback-subtitle">
+                    HabitGame grows around what helps players stay motivated in real life.
+                  </p>
+                </div>
+                <fieldset className="feature-preview-overlay__feedback-fieldset">
+                  <legend>How useful would this be for your real-life quest?</legend>
+                  {USEFULNESS_OPTIONS.map((option) => (
+                    <label key={option.value} className="feature-preview-overlay__feedback-option">
+                      <input
+                        type="radio"
+                        name="feature-usefulness"
+                        value={option.value}
+                        checked={usefulness === option.value}
+                        onChange={() => setUsefulness(option.value)}
+                      />
+                      <span>{option.label}</span>
+                    </label>
+                  ))}
+                </fieldset>
+                <label className="feature-preview-overlay__feedback-textarea">
+                  <span>What would make this feature useful for you?</span>
+                  <textarea
+                    value={suggestion}
+                    onChange={(event) => setSuggestion(event.target.value)}
+                    rows={4}
+                    maxLength={500}
+                    placeholder="Optional — share one idea, wish, or concern."
+                  />
+                </label>
+                <div className="feature-preview-overlay__feedback-actions">
+                  <button type="submit" className="feature-preview-overlay__vote-btn">
+                    Send feedback
+                  </button>
+                  <button
+                    type="button"
+                    className="feature-preview-overlay__back-btn"
+                    onClick={() => setFeedbackOpen(false)}
+                  >
+                    Back
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
