@@ -83,6 +83,11 @@
   filter: saturate(1.04);
 }
 
+.breathing-space__mobile-launch-card--gated {
+  border-color: rgba(250, 204, 21, 0.48);
+  box-shadow: 0 10px 26px rgba(250, 204, 21, 0.16);
+}
+
 .breathing-space__mobile-launch-background {
   position: absolute;
   inset: 0;
@@ -130,6 +135,19 @@
   flex-direction: column;
   min-width: 0;
   gap: 2px;
+}
+
+.breathing-space__mobile-launch-status {
+  align-self: flex-start;
+  border-radius: 999px;
+  background: rgba(69, 26, 3, 0.84);
+  color: #fde68a;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  line-height: 1;
+  padding: 0.32rem 0.5rem;
+  text-transform: uppercase;
 }
 
 .breathing-space__mobile-launch-icon-image {

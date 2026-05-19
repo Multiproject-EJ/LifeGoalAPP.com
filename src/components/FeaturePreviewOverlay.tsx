@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import '../styles/feature-status.css';
 import '../styles/feature-preview-overlay.css';
 
@@ -40,6 +40,14 @@ export function FeaturePreviewOverlay({
   const [suggestion, setSuggestion] = useState('');
   const isNotImplemented = variant === 'notImplemented';
   const statusLabel = isNotImplemented ? 'Not implemented yet' : statusLabelOverride;
+
+  useEffect(() => {
+    document.body.classList.add('feature-preview-overlay-open');
+
+    return () => {
+      document.body.classList.remove('feature-preview-overlay-open');
+    };
+  }, []);
 
   // Intentionally local-only until structured feature_votes persistence exists.
   const handleSubmitFeedback = (event: FormEvent<HTMLFormElement>) => {

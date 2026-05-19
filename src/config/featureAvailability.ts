@@ -7,6 +7,8 @@ export type FeatureAvailabilityId =
   | 'app.body'
   | 'energy.shell'
   | 'mind.breathingSpace'
+  | 'mind.meditation'
+  | 'mind.conflictResolver'
   | 'body.yoga'
   | 'body.food'
   | 'body.exercise'
@@ -80,6 +82,38 @@ export const featureAvailabilityRegistry = {
     adminAccess: 'open',
     surface: 'BreathingSpace',
     category: 'mind',
+  },
+  'mind.meditation': {
+    id: 'mind.meditation',
+    label: 'Meditation',
+    description: 'Guided meditation tools in the Energy Mind area.',
+    status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
+    surface: 'BreathingSpace',
+    category: 'mind',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'Guided meditation support for calmer focus and real-life momentum.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'mind',
+  },
+  'mind.conflictResolver': {
+    id: 'mind.conflictResolver',
+    label: 'Conflict Resolver',
+    description: 'Conflict Resolver tools in the Energy Mind area.',
+    status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
+    surface: 'BreathingSpace',
+    category: 'mind',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'Peace-building prompts for navigating hard conversations with care.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'mind',
   },
   'body.yoga': {
     id: 'body.yoga',

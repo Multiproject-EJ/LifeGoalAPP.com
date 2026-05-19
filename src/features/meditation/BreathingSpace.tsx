@@ -18,7 +18,7 @@ import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { FeaturePreviewOverlay } from '../../components/FeaturePreviewOverlay';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import { awardZenTokens } from '../../services/zenGarden';
-import type { FeatureAvailabilityId } from '../../config/featureAvailability';
+import { getFeatureAvailability, type FeatureAvailabilityId } from '../../config/featureAvailability';
 import { resolveFeatureAccess } from '../../services/featureAccess';
 import { TrainingTab } from '../training';
 import { ConflictResolverEntry } from '../conflict-resolver/ConflictResolverEntry';
@@ -38,6 +38,7 @@ type BreathingSpaceProps = {
 type MobileTab = 'breathing' | 'meditation' | 'conflict' | 'yoga' | 'food' | 'exercise';
 type MobileCategory = 'mind' | 'body';
 type BodyTab = Extract<MobileTab, 'yoga' | 'food' | 'exercise'>;
+type GatedMobileTab = Extract<MobileTab, 'meditation' | 'conflict' | BodyTab>;
 
 type MeditationStats = {
   totalMinutes: number;
@@ -61,6 +62,12 @@ const BODY_TAB_FEATURE_IDS: Record<BodyTab, FeatureAvailabilityId> = {
   yoga: 'body.yoga',
   food: 'body.food',
   exercise: 'body.exercise',
+};
+
+const GATED_MOBILE_TAB_FEATURE_IDS: Record<GatedMobileTab, FeatureAvailabilityId> = {
+  meditation: 'mind.meditation',
+  conflict: 'mind.conflictResolver',
+  ...BODY_TAB_FEATURE_IDS,
 };
 
 const MOBILE_TAB_OPTIONS: Record<
@@ -96,7 +103,8 @@ const MOBILE_TAB_OPTIONS: Record<
   exercise: { icon: '🏋️', label: 'Exercise', uppercaseLabel: 'EXERCISE' },
 };
 
-const isBodyTab = (tab: MobileTab | null): tab is BodyTab => Boolean(tab && tab in BODY_TAB_FEATURE_IDS);
+const isGatedMobileTab = (tab: MobileTab | null): tab is GatedMobileTab =>
+  Boolean(tab && tab in GATED_MOBILE_TAB_FEATURE_IDS);
 
 export function BreathingSpace({
   session,
@@ -163,11 +171,30 @@ export function BreathingSpace({
   const { earnXP, recordActivity, refreshProfile, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
 
   const getMobileTabAccess = (tab: MobileTab) => {
-    if (!isBodyTab(tab)) {
+    if (!isGatedMobileTab(tab)) {
       return 'open';
     }
 
-    return resolveFeatureAccess(BODY_TAB_FEATURE_IDS[tab], { isAdminOrCreator });
+    return resolveFeatureAccess(GATED_MOBILE_TAB_FEATURE_IDS[tab], { isAdminOrCreator });
+  };
+
+  const getMobileTabStatusLabel = (tab: MobileTab) => {
+    if (!isGatedMobileTab(tab)) {
+      return null;
+    }
+
+    const availability = getFeatureAvailability(GATED_MOBILE_TAB_FEATURE_IDS[tab]);
+    const access = getMobileTabAccess(tab);
+
+    if (access === 'previewOnly') {
+      return availability.publicLabel ?? 'Future Feature';
+    }
+
+    if (isAdminOrCreator && availability.publicAccess !== 'open') {
+      return availability.adminLabel ?? 'Demo Mode';
+    }
+
+    return null;
   };
 
   const handleMobileTabChange = (tab: MobileTab) => {
@@ -178,8 +205,8 @@ export function BreathingSpace({
         setActiveMobileCategory(nextCategory);
         onMobileCategoryChange?.(nextCategory);
       }
-      if (isBodyTab(tab)) {
-        setPreviewFeature({ id: BODY_TAB_FEATURE_IDS[tab], label: MOBILE_TAB_OPTIONS[tab].label });
+      if (isGatedMobileTab(tab)) {
+        setPreviewFeature({ id: GATED_MOBILE_TAB_FEATURE_IDS[tab], label: MOBILE_TAB_OPTIONS[tab].label });
       }
       return;
     }
@@ -429,13 +456,17 @@ export function BreathingSpace({
   }
 
   const activeCategoryTabs = MOBILE_CATEGORY_TABS[activeMobileCategory];
-  const activeBodyTabAccess = isBodyTab(activeMobileTab) ? getMobileTabAccess(activeMobileTab) : 'open';
+  const activeMobileTabAccess = isGatedMobileTab(activeMobileTab) ? getMobileTabAccess(activeMobileTab) : 'open';
+  const meditationAccess = getMobileTabAccess('meditation');
+  const conflictAccess = getMobileTabAccess('conflict');
   const yogaAccess = getMobileTabAccess('yoga');
   const foodAccess = getMobileTabAccess('food');
   const exerciseAccess = getMobileTabAccess('exercise');
-  const isActiveBodyTabBlocked = activeBodyTabAccess !== 'open';
-  const activeMobileTabForRender = isActiveBodyTabBlocked ? null : activeMobileTab;
+  const isActiveMobileTabBlocked = activeMobileTabAccess !== 'open';
+  const activeMobileTabForRender = isActiveMobileTabBlocked ? null : activeMobileTab;
   const isConflictFullscreen = activeMobileTabForRender === 'conflict';
+  const canRenderMeditation = meditationAccess === 'open';
+  const canRenderConflict = conflictAccess === 'open';
   const canRenderYoga = yogaAccess === 'open';
   const canRenderFood = foodAccess === 'open';
   const canRenderExercise = exerciseAccess === 'open';
@@ -478,19 +509,23 @@ export function BreathingSpace({
           </div>
           {activeMobileTabForRender ? null : (
             <div className="breathing-space__mobile-launch" role="group" aria-label="Choose an energy focus">
-              {activeCategoryTabs.map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  className="breathing-space__mobile-launch-card"
-                  onClick={() => handleMobileTabChange(tab)}
-                >
-                  <img
-                    className="breathing-space__mobile-launch-background"
-                    src="/icons/Energy/Energy_mind_button.webp"
-                    alt=""
-                    aria-hidden="true"
-                  />
+              {activeCategoryTabs.map((tab) => {
+                const statusLabel = getMobileTabStatusLabel(tab);
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    className={`breathing-space__mobile-launch-card${
+                      statusLabel ? ' breathing-space__mobile-launch-card--gated' : ''
+                    }`}
+                    onClick={() => handleMobileTabChange(tab)}
+                  >
+                    <img
+                      className="breathing-space__mobile-launch-background"
+                      src="/icons/Energy/Energy_mind_button.webp"
+                      alt=""
+                      aria-hidden="true"
+                    />
                     {MOBILE_TAB_OPTIONS[tab].iconImageSrc ? (
                       <img
                         className="breathing-space__mobile-launch-icon-image"
@@ -504,6 +539,9 @@ export function BreathingSpace({
                       </span>
                     )}
                     <span className="breathing-space__mobile-launch-copy">
+                      {statusLabel ? (
+                        <span className="breathing-space__mobile-launch-status">{statusLabel}</span>
+                      ) : null}
                       <span className="breathing-space__mobile-launch-title">
                         {MOBILE_TAB_OPTIONS[tab].launchTitle ?? MOBILE_TAB_OPTIONS[tab].uppercaseLabel}
                       </span>
@@ -512,9 +550,10 @@ export function BreathingSpace({
                           {MOBILE_TAB_OPTIONS[tab].launchSubtitle}
                         </span>
                       ) : null}
-                  </span>
-                </button>
-              ))}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           )}
         </>
@@ -613,18 +652,19 @@ export function BreathingSpace({
       {/* Right Column: Library */}
       <div className="breathing-space__right-column">
         {/* Meditation Library */}
-        <div className="breathing-space__library breathing-space__section breathing-space__section--meditation">
-          <div className="breathing-space__library-header">
-            <h3 className="breathing-space__library-title">Guided Meditations</h3>
-            <button
-              type="button"
-              className="breathing-space__expand-toggle"
-              onClick={() => setGuidedDetailsOpen((prev) => !prev)}
-              aria-expanded={guidedDetailsOpen}
-            >
-              {guidedDetailsOpen ? 'Hide details' : 'Expand details'}
-            </button>
-          </div>
+        {canRenderMeditation ? (
+          <div className="breathing-space__library breathing-space__section breathing-space__section--meditation">
+            <div className="breathing-space__library-header">
+              <h3 className="breathing-space__library-title">Guided Meditations</h3>
+              <button
+                type="button"
+                className="breathing-space__expand-toggle"
+                onClick={() => setGuidedDetailsOpen((prev) => !prev)}
+                aria-expanded={guidedDetailsOpen}
+              >
+                {guidedDetailsOpen ? 'Hide details' : 'Expand details'}
+              </button>
+            </div>
 
           <button
             className="btn btn--primary breathing-space__guided-start-button breathing-space__guided-start-button--standalone"
@@ -717,11 +757,14 @@ export function BreathingSpace({
               </div>
             )}
           </div>
-        </div>
+          </div>
+        ) : null}
 
-        <div className="breathing-space__library breathing-space__section breathing-space__section--conflict">
-          <ConflictResolverEntry surface="habitgame" />
-        </div>
+        {canRenderConflict ? (
+          <div className="breathing-space__library breathing-space__section breathing-space__section--conflict">
+            <ConflictResolverEntry surface="habitgame" />
+          </div>
+        ) : null}
 
         {/* Breathing Exercises Library */}
         <div className="breathing-space__library breathing-space__section breathing-space__section--breathing">
