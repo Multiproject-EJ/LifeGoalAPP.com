@@ -16,19 +16,19 @@ interface WorldHomeProps {
 
 const HERO_FEATURES = [
   {
-    icon: '🌱',
-    title: 'Build Real Habits',
-    desc: 'Turn tiny daily actions into streaks, confidence, and visible momentum.',
+    icon: '🏰',
+    title: 'Play a cozy RPG',
+    desc: 'Enjoy a magical world designed to be easy to return to.',
   },
   {
-    icon: '🏆',
-    title: 'Earn RPG Rewards',
-    desc: 'Collect XP, coins, achievements, and milestones as your real life levels up.',
+    icon: '🌿',
+    title: 'Gentle life nudges',
+    desc: 'Small prompts keep your habits, goals, and wellbeing in view — without pressure.',
   },
   {
-    icon: '🏝️',
-    title: 'Explore Your World',
-    desc: 'Follow a bright fantasy map where every habit opens the next step forward.',
+    icon: '✨',
+    title: 'Supercharge progress',
+    desc: 'Complete real-life actions to earn extra rewards, momentum, and progression.',
   },
 ];
 
@@ -98,16 +98,19 @@ export function WorldHome({
                 loading="eager"
                 decoding="async"
               />
-              <p className="world-home__kicker">A magical habit adventure</p>
+              <p className="world-home__kicker">Cozy life adventure</p>
               <h1 className="world-home__app-name" id="world-home-title">HabitGame</h1>
-              <p className="world-home__tagline">Level Up Your Life</p>
+              <p className="world-home__tagline">The self-improvement RPG</p>
               <p className="world-home__hero-copy">
-                Build better days in a bright fantasy world of floating islands, gentle quests, and rewarding progress.
+                A cozy game that gently keeps your goals, habits, and wellbeing present while you play.
               </p>
             </div>
 
             <div className="world-home__cta-card">
-              <p className="world-home__cta-heading">Begin your first quest today</p>
+              <p className="world-home__cta-heading">Level up your life.</p>
+              <p className="world-home__cta-copy">
+                Play, reflect, earn rewards, and let small real-life actions supercharge your adventure.
+              </p>
               <div className="world-home__cta-group">
                 <button
                   className="world-home__btn world-home__btn--primary"
@@ -160,6 +163,16 @@ export function WorldHome({
           </div>
 
           <JourneyPreview />
+          <section className="world-home__restart-card" aria-labelledby="world-home-restart-title">
+            <p className="world-home__restart-eyebrow" aria-hidden="true">GENTLE BY DESIGN</p>
+            <h2 className="world-home__restart-title" id="world-home-restart-title">
+              No perfect streak required.
+            </h2>
+            <p className="world-home__restart-copy">
+              Life has pauses, setbacks, and restarts. HabitGame is built to welcome you back,
+              help you adjust what didn’t work, and continue your quest gently.
+            </p>
+          </section>
           <SocialProof />
 
           <footer className="world-home__footer">
