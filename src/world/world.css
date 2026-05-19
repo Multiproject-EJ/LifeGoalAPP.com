@@ -2764,7 +2764,8 @@
   width: 46px;
   height: 46px;
   border-radius: 18px;
-  background: linear-gradient(180deg, #fff7d8, #f3fbff);
+  background: linear-gradient(180deg, #ffffff, #fff3c4);
+  border: 1px solid rgba(143, 91, 6, 0.12);
   font-size: 25px;
   box-shadow: 0 8px 18px rgba(70, 137, 187, 0.12);
   filter: none;

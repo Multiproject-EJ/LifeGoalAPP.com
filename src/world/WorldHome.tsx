@@ -98,7 +98,7 @@ export function WorldHome({
                 loading="eager"
                 decoding="async"
               />
-              <p className="world-home__kicker">The self-improvement RPG</p>
+              <p className="world-home__kicker">Cozy life adventure</p>
               <h1 className="world-home__app-name" id="world-home-title">HabitGame</h1>
               <p className="world-home__tagline">The self-improvement RPG</p>
               <p className="world-home__hero-copy">
