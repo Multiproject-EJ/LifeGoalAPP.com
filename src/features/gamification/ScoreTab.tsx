@@ -1650,6 +1650,7 @@ export function ScoreTab({
 
       {previewFeature ? (
         <FeaturePreviewOverlay
+          featureId={previewFeature.id}
           label={previewFeature.label}
           variant={previewFeature.variant}
           notImplementedBody="Admin access is enabled for this feature, but there is no Score Hub action wired yet."

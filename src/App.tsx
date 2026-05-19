@@ -4575,6 +4575,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const appPreviewOverlay = previewOverlayFeature ? (
       <FeaturePreviewOverlay
+        featureId={previewOverlayFeature.id}
         label={previewOverlayFeature.label}
         variant={previewOverlayFeature.variant}
         backLabel="Back"
