@@ -9,9 +9,9 @@ interface JourneyNode {
 }
 
 const JOURNEY_NODES: JourneyNode[] = [
-  { id: 'choose', icon: '✨', label: 'Choose a quest', sublabel: 'Pick one real habit you want to grow.', state: 'completed' },
-  { id: 'play',   icon: '🌱', label: 'Complete tiny wins', sublabel: 'Check in daily and watch the world brighten.', state: 'active' },
-  { id: 'earn',   icon: '🏆', label: 'Earn rewards', sublabel: 'Collect XP, coins, and new milestones.', state: 'locked' },
+  { id: 'play', icon: '🧭', label: 'Play your adventure', sublabel: 'Explore your world, collect rewards, and return when life allows.', state: 'completed' },
+  { id: 'reflect', icon: '💭', label: 'Reflect in small moments', sublabel: 'Answer simple prompts about habits, goals, and wellbeing as you play.', state: 'active' },
+  { id: 'action', icon: '⚡', label: 'Supercharge with real action', sublabel: 'Complete habits or goals in the app to boost your progress.', state: 'locked' },
 ];
 
 export function JourneyPreview() {
@@ -23,10 +23,10 @@ export function JourneyPreview() {
       <div className="journey-preview__header">
         <p className="journey-preview__eyebrow" aria-hidden="true">HOW IT WORKS</p>
         <h2 className="journey-preview__title" id="journey-preview-heading">
-          Small steps become a magical journey
+          A game loop that stays kind to real life
         </h2>
         <p className="journey-preview__subtitle">
-          HabitGame keeps progress simple, visual, and rewarding from the first tap.
+          Play casually, reflect lightly, and let real-life actions add extra magic when you can.
         </p>
       </div>
 
@@ -43,7 +43,7 @@ export function JourneyPreview() {
 
             <div className="journey-preview__node-inner">
               <div className="journey-preview__node-icon" aria-hidden="true">
-                {node.state === 'locked' ? '🔒' : node.icon}
+                {node.icon}
               </div>
               <div className="journey-preview__node-content">
                 <strong className="journey-preview__node-label">{node.label}</strong>
@@ -58,7 +58,7 @@ export function JourneyPreview() {
       </ol>
 
       <p className="journey-preview__cta-hint">
-        Designed for fast starts, soft motivation, and steady momentum.
+        Built for soft motivation, not pressure or perfection.
       </p>
     </section>
   );
