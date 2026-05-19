@@ -19,7 +19,7 @@ interface TestimonialItem {
 const STATS: StatItem[] = [
   { id: 'players',  emoji: '🧭', target: 10,  suffix: 'K+', label: 'Adventurers'    },
   { id: 'habits',   emoji: '🌱', target: 50,  suffix: 'K+', label: 'Habits grown'   },
-  { id: 'rating',   emoji: '⭐', target: 4.9, suffix: '',   label: 'App feel rating' },
+  { id: 'rating',   emoji: '⭐', target: 4.9, suffix: '',   label: 'User Rating' },
 ];
 
 const TESTIMONIALS: TestimonialItem[] = [

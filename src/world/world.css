@@ -2470,7 +2470,7 @@
   background: linear-gradient(180deg, #183e70 0%, #0f2a54 56%, #c48a23 100%);
   -webkit-background-clip: text;
   background-clip: text;
-  filter: drop-shadow(0 8px 0 rgba(255, 255, 255, 0.48));
+  text-shadow: 0 4px 0 rgba(255, 255, 255, 0.54);
   text-transform: none;
 }
 
