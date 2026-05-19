@@ -95,6 +95,7 @@ export function WorldHome({
                 alt="HabitGame logo"
                 width="160"
                 height="160"
+                loading="eager"
                 decoding="async"
               />
               <p className="world-home__kicker">A magical habit adventure</p>
