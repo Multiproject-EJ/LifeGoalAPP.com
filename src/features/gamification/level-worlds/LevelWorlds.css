@@ -4897,6 +4897,10 @@
   color: rgba(220, 242, 252, 0.72);
 }
 
+.island-run-sanctuary-pack__slot-emoji {
+  display: none;
+}
+
 .island-run-sanctuary-pack__slot-title,
 .island-run-sanctuary-pack__slot-meta {
   margin: 0;

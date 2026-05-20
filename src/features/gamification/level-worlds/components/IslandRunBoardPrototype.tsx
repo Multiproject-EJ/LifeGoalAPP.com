@@ -10705,7 +10705,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                                   });
                                 }}
                               />
-                              <span className="island-run-sanctuary-pack__slot-emoji" style={{ display: 'none' }} aria-hidden="true">{suggestedArt.emojiFallback}</span>
+                              <span className="island-run-sanctuary-pack__slot-emoji" aria-hidden="true">{suggestedArt.emojiFallback}</span>
                             </>
                           ) : (
                             <span className="island-run-sanctuary-pack__slot-empty" aria-hidden="true">+</span>
