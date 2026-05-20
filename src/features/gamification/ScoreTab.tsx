@@ -1776,7 +1776,7 @@ function CreatureSanctuaryScoreHubView({
             <div className="score-tab__sanctuary-card-meta">
               <span>{card.shipZone} zone</span>
               {card.discovered ? <span>{card.copies} owned</span> : <span>Locked</span>}
-              {card.bondLevel ? <span>Bond Lv. {card.bondLevel}</span> : null}
+              {card.discovered && card.bondLevel ? <span>Bond Lv. {card.bondLevel}</span> : null}
             </div>
             {card.isActiveCompanion ? (
               <span className="score-tab__sanctuary-active-pill">Active companion</span>

@@ -13,8 +13,11 @@ export interface CreatureSanctuaryCard {
   rarityLabel: string;
   starLabel: string;
   starCount: number;
+  /** Display habitat copied from the catalog definition; never persisted as gallery state. */
   habitat: string;
+  /** Display affinity copied from the catalog definition; used only for read-only sanctuary labels. */
   affinity: string;
+  /** Catalog ship-zone grouping used for sanctuary display filters/labels. */
   shipZone: CreatureDefinition['shipZone'];
   discovered: boolean;
   copies: number;
