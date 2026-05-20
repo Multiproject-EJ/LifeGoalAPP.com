@@ -5,6 +5,9 @@ import { playIslandRunSound, triggerIslandRunHaptic, type IslandRunHapticEvent }
 import { CreatureCard } from './CreatureCard';
 
 const SWIPE_REVEAL_THRESHOLD_PX = 36;
+const RARITY_ORDER: CreatureDefinition['tier'][] = ['common', 'rare', 'mythic'];
+
+type CreaturePackOpeningPrototypePhase = 'intro' | 'revealing' | 'summary';
 
 export interface CreaturePackOpeningPrototypeCard {
   slotIndex: number;
@@ -19,6 +22,7 @@ export interface CreaturePackOpeningPrototypeModalProps {
   grantStatus: 'granted' | 'already_granted';
   grantId: string;
   onClose: () => void;
+  onViewSanctuary?: () => void;
 }
 
 function rarityTone(tier: CreatureDefinition['tier']): string {
@@ -40,10 +44,12 @@ function revealHapticForTier(tier: CreatureDefinition['tier']): IslandRunHapticE
 
 export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningPrototypeModalProps): JSX.Element | null {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [showSummary, setShowSummary] = useState(false);
+  const [phase, setPhase] = useState<CreaturePackOpeningPrototypePhase>('intro');
   const touchStartXRef = useRef<number | null>(null);
   const activeCard = props.cards[activeIndex] ?? null;
   const hasCards = props.cards.length > 0;
+  const isIntro = phase === 'intro';
+  const showSummary = phase === 'summary';
   const revealedCount = showSummary ? props.cards.length : Math.min(props.cards.length, activeIndex + 1);
   const newCardCount = useMemo(
     () => props.grantStatus === 'already_granted'
@@ -53,18 +59,24 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
   );
   const replayCount = props.grantStatus === 'already_granted' ? props.cards.length : 0;
   const grantedDuplicateCount = props.grantStatus === 'granted' ? Math.max(0, props.cards.length - newCardCount) : 0;
+  const rarityBreakdown = useMemo(() => RARITY_ORDER
+    .map((tier) => ({
+      tier,
+      count: props.cards.filter((card) => card.creature.tier === tier).length,
+    }))
+    .filter((entry) => entry.count > 0), [props.cards]);
 
   useEffect(() => {
     if (!props.open) return;
     setActiveIndex(0);
-    setShowSummary(false);
+    setPhase('intro');
   }, [props.open, props.grantId]);
 
   useEffect(() => {
-    if (!props.open || showSummary || !activeCard) return;
+    if (!props.open || phase !== 'revealing' || !activeCard) return;
     playIslandRunSound('egg_open');
     triggerIslandRunHaptic(revealHapticForTier(activeCard.creature.tier));
-  }, [activeCard, props.open, showSummary]);
+  }, [activeCard, phase, props.open]);
 
   const advance = useCallback(() => {
     if (!hasCards) return;
@@ -72,13 +84,18 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
       props.onClose();
       return;
     }
+    if (isIntro) {
+      setPhase('revealing');
+      triggerIslandRunHaptic('egg_set');
+      return;
+    }
     if (activeIndex >= props.cards.length - 1) {
-      setShowSummary(true);
+      setPhase('summary');
       triggerIslandRunHaptic('reward_bar_cascade');
       return;
     }
     setActiveIndex((current) => Math.min(props.cards.length - 1, current + 1));
-  }, [activeIndex, hasCards, props.cards.length, props.onClose, showSummary]);
+  }, [activeIndex, hasCards, isIntro, props.cards.length, props.onClose, showSummary]);
 
   useEffect(() => {
     if (!props.open) return undefined;
@@ -101,7 +118,7 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
   return (
     <div className="creature-pack-opening-prototype" role="dialog" aria-modal="true" aria-labelledby="creature-pack-opening-title">
       <section
-        className={`creature-pack-opening-prototype__shell ${activeCard ? `creature-pack-opening-prototype__shell--${activeCard.creature.tier}` : ''}`}
+        className={`creature-pack-opening-prototype__shell creature-pack-opening-prototype__shell--${phase} ${activeCard ? `creature-pack-opening-prototype__shell--${activeCard.creature.tier}` : ''}`}
         onTouchStart={(event) => {
           touchStartXRef.current = event.touches[0]?.clientX ?? null;
         }}
@@ -117,18 +134,44 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
           <p className="creature-pack-opening-prototype__eyebrow">Dev-only visual prototype · no public purchase</p>
           <h2 id="creature-pack-opening-title">Creature Pack Opening</h2>
           <p>
-            Canonical grant state: {props.grantStatus.replace('_', ' ')} · {revealedCount}/{props.cards.length} revealed
+            Canonical grant state: {props.grantStatus.replace('_', ' ')} · {isIntro ? 'ready to open' : `${revealedCount}/${props.cards.length} revealed`}
           </p>
         </header>
 
-        {showSummary ? (
+        {isIntro ? (
+          <button type="button" className="creature-pack-opening-prototype__stage creature-pack-opening-prototype__stage--intro" onClick={advance} aria-label="Open dev creature pack">
+            <div className="creature-pack-opening-prototype__pack" aria-hidden="true">
+              <span className="creature-pack-opening-prototype__pack-glow" />
+              <span className="creature-pack-opening-prototype__pack-face">✦</span>
+            </div>
+            <p className="creature-pack-opening-prototype__anticipation">Tap to open · swipe or press Enter/Space</p>
+            <p className="creature-pack-opening-prototype__copy-note">
+              Five canonical demo cards are already resolved; this screen only previews the reveal ceremony.
+            </p>
+          </button>
+        ) : showSummary ? (
           <div className="creature-pack-opening-prototype__summary" role="status" aria-live="polite">
             <p className="creature-pack-opening-prototype__summary-kicker">Pack complete</p>
+            <div className="creature-pack-opening-prototype__summary-stats" aria-label="Creature pack result totals">
+              <span>{newCardCount} new</span>
+              <span>{grantedDuplicateCount} duplicates</span>
+              {replayCount > 0 ? <span>{replayCount} replayed</span> : null}
+            </div>
+            <div className="creature-pack-opening-prototype__rarity-breakdown" aria-label="Rarity breakdown">
+              {rarityBreakdown.map((entry) => (
+                <span key={entry.tier} className={`creature-pack-opening-prototype__rarity-chip creature-pack-opening-prototype__rarity-chip--${entry.tier}`}>
+                  {entry.count} {entry.tier}
+                </span>
+              ))}
+            </div>
             <div className="creature-pack-opening-prototype__summary-grid" aria-label="Creature pack summary">
               {props.cards.map((card) => {
                 const metadata = getCreatureCardMetadata(card.creature);
+                const resultClass = props.grantStatus === 'already_granted'
+                  ? 'replay'
+                  : card.copiesBefore > 0 ? 'duplicate' : 'new';
                 return (
-                  <div key={`${card.slotIndex}:${card.creature.id}`} className={`creature-pack-opening-prototype__summary-card creature-pack-opening-prototype__summary-card--${card.creature.tier}`}>
+                  <div key={`${card.slotIndex}:${card.creature.id}`} className={`creature-pack-opening-prototype__summary-card creature-pack-opening-prototype__summary-card--${card.creature.tier} creature-pack-opening-prototype__summary-card--${resultClass}`}>
                     <span>{metadata.displayName}</span>
                     <strong>
                       {props.grantStatus === 'already_granted'
@@ -149,16 +192,24 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
             </p>
           </div>
         ) : activeCard ? (
-          <button type="button" className="creature-pack-opening-prototype__stage" onClick={advance} aria-label="Reveal next creature card">
+          <button type="button" className={`creature-pack-opening-prototype__stage creature-pack-opening-prototype__stage--${activeCard.creature.tier}`} onClick={advance} aria-label="Reveal next creature card">
             <p className="creature-pack-opening-prototype__anticipation">
               Card {activeIndex + 1} · {rarityTone(activeCard.creature.tier)}
             </p>
+            <div className="creature-pack-opening-prototype__progress" aria-label={`${revealedCount} of ${props.cards.length} cards revealed`}>
+              {props.cards.map((card, index) => (
+                <span
+                  key={`${card.slotIndex}:${card.creature.id}:pip`}
+                  className={`creature-pack-opening-prototype__progress-pip ${index <= activeIndex ? 'creature-pack-opening-prototype__progress-pip--revealed' : ''}`}
+                />
+              ))}
+            </div>
             <CreatureCard
               creature={activeCard.creature}
               metadata={getCreatureCardMetadata(activeCard.creature)}
               owned
               shiny={activeCard.creature.tier === 'mythic'}
-              foil={activeCard.creature.tier === 'common' ? 'none' : 'soft'}
+              foil={activeCard.creature.tier === 'mythic' ? 'premium' : activeCard.creature.tier === 'rare' ? 'soft' : 'none'}
               className="creature-pack-opening-prototype__card"
             />
             <p className="creature-pack-opening-prototype__copy-note">
@@ -177,8 +228,13 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
           <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={props.onClose}>
             Close prototype
           </button>
+          {showSummary && props.onViewSanctuary ? (
+            <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={props.onViewSanctuary}>
+              View in Sanctuary
+            </button>
+          ) : null}
           <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={advance}>
-            {showSummary ? 'Done' : activeIndex >= props.cards.length - 1 ? 'Show summary' : 'Reveal next'}
+            {showSummary ? 'Done' : isIntro ? 'Open pack' : activeIndex >= props.cards.length - 1 ? 'Show summary' : 'Reveal next'}
           </button>
         </div>
       </section>
