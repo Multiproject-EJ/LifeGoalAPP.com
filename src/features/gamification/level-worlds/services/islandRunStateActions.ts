@@ -72,6 +72,7 @@ import {
 import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
 import { resolveRuntimeDiceRegenUpdate } from './islandRunRuntimeRegen';
 import { resolveIslandRunPreIslandLuckyRollGate } from './islandRunPreIslandLuckyRollGate';
+import { getCreatureById } from './creatureCatalog';
 import {
   getIslandRunFirstCreaturePackLowDiceTriggerTarget,
   shouldAdvanceFirstSessionTutorialAfterHatcheryBuild,
@@ -1865,10 +1866,31 @@ export function applyCreatureCollection(options: ApplyCreatureCollectionOptions)
 /**
  * Commits active companion selection through the canonical store path.
  */
-export function applyActiveCompanion(options: ApplyActiveCompanionOptions): IslandRunGameStateRecord {
+function isOwnedCatalogCompanion(record: IslandRunGameStateRecord, companionId: string | null): boolean {
+  if (!companionId || getCreatureById(companionId) == null) return false;
+  return (record.creatureCollection ?? []).some(
+    (entry) => entry.creatureId === companionId && Number(entry.copies ?? 0) > 0,
+  );
+}
+
+function resolveActiveCompanionCommitTarget(
+  current: IslandRunGameStateRecord,
+  requestedCompanionId: string | null,
+): string | null {
+  const normalizedRequestedId =
+    typeof requestedCompanionId === 'string' && requestedCompanionId.trim().length > 0
+      ? requestedCompanionId.trim()
+      : null;
+  if (!normalizedRequestedId) return null;
+  if (isOwnedCatalogCompanion(current, normalizedRequestedId)) return normalizedRequestedId;
+  const currentActiveCompanionId = current.activeCompanionId ?? null;
+  return isOwnedCatalogCompanion(current, currentActiveCompanionId) ? currentActiveCompanionId : null;
+}
+
+export function setActiveCompanionId(options: ApplyActiveCompanionOptions): IslandRunGameStateRecord {
   const { session, client, activeCompanionId, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
-  const normalizedActiveCompanionId = activeCompanionId ?? null;
+  const normalizedActiveCompanionId = resolveActiveCompanionCommitTarget(current, activeCompanionId);
   if ((current.activeCompanionId ?? null) === normalizedActiveCompanionId) {
     return current;
   }
@@ -1884,6 +1906,33 @@ export function applyActiveCompanion(options: ApplyActiveCompanionOptions): Isla
     triggerSource: triggerSource ?? 'apply_active_companion',
   });
   return next;
+}
+
+export function clearActiveCompanionId(options: Omit<ApplyActiveCompanionOptions, 'activeCompanionId'>): IslandRunGameStateRecord {
+  const { session, client, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if ((current.activeCompanionId ?? null) === null) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    activeCompanionId: null,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'clear_active_companion',
+  });
+  return next;
+}
+
+export function applyActiveCompanion(options: ApplyActiveCompanionOptions): IslandRunGameStateRecord {
+  if (options.activeCompanionId === null) {
+    return clearActiveCompanionId(options);
+  }
+  return setActiveCompanionId(options);
 }
 
 /**

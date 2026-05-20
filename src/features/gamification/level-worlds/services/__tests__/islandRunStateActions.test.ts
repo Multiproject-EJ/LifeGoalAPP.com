@@ -83,6 +83,8 @@ import {
   SPACE_EXCAVATOR_TOTAL_BOARDS,
   syncCompletedStopsForIsland,
   applyTokenHopRewards,
+  clearActiveCompanionId,
+  setActiveCompanionId,
   travelToNextIsland,
 } from '../islandRunStateActions';
 import { isIslandRunFullyClearedV2 } from '../islandRunContractV2StopResolver';
@@ -2148,7 +2150,7 @@ export const islandRunStateActionsTests: TestCase[] = [
         creatureCollection: [],
       });
       const nextCollection = [{
-        creatureId: 'reef-lantern-ray',
+        creatureId: 'common-sproutling',
         nickname: 'Nova',
       }] as unknown as IslandRunGameStateRecord['creatureCollection'];
 
@@ -2172,17 +2174,100 @@ export const islandRunStateActionsTests: TestCase[] = [
       seedState({
         runtimeVersion: 20,
         activeCompanionId: null,
+        creatureCollection: [{
+          creatureId: 'common-sproutling',
+          copies: 1,
+        }] as unknown as IslandRunGameStateRecord['creatureCollection'],
       });
 
       const result = applyActiveCompanion({
         session,
         client: null,
-        activeCompanionId: 'reef-lantern-ray',
+        activeCompanionId: 'common-sproutling',
         triggerSource: 'test_apply_active_companion',
       });
 
-      assertEqual(result.activeCompanionId, 'reef-lantern-ray', 'active companion id should persist');
+      assertEqual(result.activeCompanionId, 'common-sproutling', 'active companion id should persist');
       assertEqual(result.runtimeVersion, 21, 'runtimeVersion should bump on active companion commit');
+      assertEqual(
+        readIslandRunGameStateRecord(session).activeCompanionId,
+        'common-sproutling',
+        'active companion id should persist through IslandRunGameStateRecord',
+      );
+    },
+  },
+
+  {
+    name: 'setActiveCompanionId rejects an unowned companion without clearing a valid active companion',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 20,
+        activeCompanionId: 'common-sproutling',
+        creatureCollection: [{
+          creatureId: 'common-sproutling',
+          copies: 1,
+        }] as unknown as IslandRunGameStateRecord['creatureCollection'],
+      });
+
+      const result = setActiveCompanionId({
+        session,
+        client: null,
+        activeCompanionId: 'rare-luma-hatchling',
+        triggerSource: 'test_reject_unowned_active_companion',
+      });
+
+      assertEqual(result.activeCompanionId, 'common-sproutling', 'unowned companion selection should be rejected');
+      assertEqual(result.runtimeVersion, 20, 'runtimeVersion should not bump for a rejected selection');
+    },
+  },
+
+  {
+    name: 'setActiveCompanionId clears stale missing active companion safely',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 20,
+        activeCompanionId: 'missing-companion',
+        creatureCollection: [],
+      });
+
+      const result = setActiveCompanionId({
+        session,
+        client: null,
+        activeCompanionId: 'missing-companion',
+        triggerSource: 'test_cleanup_missing_active_companion',
+      });
+
+      assertEqual(result.activeCompanionId, null, 'missing active companion should be cleared');
+      assertEqual(result.runtimeVersion, 21, 'runtimeVersion should bump when stale active companion is cleaned');
+    },
+  },
+
+  {
+    name: 'clearActiveCompanionId allows clearing an active companion',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 20,
+        activeCompanionId: 'common-sproutling',
+        creatureCollection: [{
+          creatureId: 'common-sproutling',
+          copies: 1,
+        }] as unknown as IslandRunGameStateRecord['creatureCollection'],
+      });
+
+      const result = clearActiveCompanionId({
+        session,
+        client: null,
+        triggerSource: 'test_clear_active_companion',
+      });
+
+      assertEqual(result.activeCompanionId, null, 'active companion clear should be allowed');
+      assertEqual(result.runtimeVersion, 21, 'runtimeVersion should bump when active companion is cleared');
     },
   },
 

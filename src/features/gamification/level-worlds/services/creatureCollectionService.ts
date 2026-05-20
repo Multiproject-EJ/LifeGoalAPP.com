@@ -238,6 +238,10 @@ export function migrateLegacyEggLedgerToCollection(options: {
   return { didChange, collection };
 }
 
+/**
+ * Legacy UI fallback only. Reward-bearing companion logic must read canonical
+ * Island Run `activeCompanionId` through islandRunStateActions/state records.
+ */
 export function fetchActiveCompanionId(userId: string): string | null {
   if (typeof window === 'undefined') return null;
   try {
@@ -248,6 +252,10 @@ export function fetchActiveCompanionId(userId: string): string | null {
   }
 }
 
+/**
+ * Legacy UI fallback only. Do not use this as authority for Paired Creature,
+ * regen, dice, rewards, or other gameplay/economy state.
+ */
 export function saveActiveCompanionId(userId: string, creatureId: string | null): void {
   if (typeof window === 'undefined') return;
   try {
