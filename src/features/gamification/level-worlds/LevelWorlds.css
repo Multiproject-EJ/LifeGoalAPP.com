@@ -4804,7 +4804,7 @@
   font-size: 0.86rem;
 }
 
-.island-run-sanctuary-pack {
+.island-run-sanctuary-companion-preview {
   display: grid;
   gap: 0.65rem;
   margin-bottom: 0.9rem;
@@ -4814,14 +4814,14 @@
   background: linear-gradient(160deg, rgba(11, 31, 50, 0.86), rgba(12, 24, 45, 0.78));
 }
 
-.island-run-sanctuary-pack__header {
+.island-run-sanctuary-companion-preview__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.65rem;
 }
 
-.island-run-sanctuary-pack__eyebrow {
+.island-run-sanctuary-companion-preview__eyebrow {
   margin: 0;
   font-size: 0.72rem;
   letter-spacing: 0.08em;
@@ -4829,13 +4829,13 @@
   color: rgba(126, 255, 207, 0.82);
 }
 
-.island-run-sanctuary-pack__title {
+.island-run-sanctuary-companion-preview__title {
   margin: 0.12rem 0 0;
   color: rgba(248, 252, 255, 0.96);
   font-size: 0.98rem;
 }
 
-.island-run-sanctuary-pack__badge {
+.island-run-sanctuary-companion-preview__badge {
   flex: 0 0 auto;
   border-radius: 999px;
   padding: 0.24rem 0.55rem;
@@ -4846,73 +4846,75 @@
   font-weight: 760;
 }
 
-.island-run-sanctuary-pack__copy {
+.island-run-sanctuary-companion-preview__copy {
   margin: 0;
   color: rgba(220, 242, 252, 0.88);
   font-size: 0.84rem;
 }
 
-.island-run-sanctuary-pack__slots {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.55rem;
-}
-
-.island-run-sanctuary-pack__slot {
-  display: grid;
-  gap: 0.3rem;
+.island-run-sanctuary-companion-preview__card {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
   min-width: 0;
-  padding: 0.5rem;
+  padding: 0.6rem;
   border-radius: 14px;
   border: 1px dashed rgba(189, 230, 255, 0.24);
   background: rgba(5, 13, 24, 0.44);
-  text-align: center;
 }
 
-.island-run-sanctuary-pack__slot--suggested {
+.island-run-sanctuary-companion-preview__card--active {
   border-style: solid;
   border-color: rgba(255, 221, 132, 0.34);
   background: rgba(255, 221, 132, 0.1);
 }
 
-.island-run-sanctuary-pack__slot-frame {
+.island-run-sanctuary-companion-preview__frame {
   position: relative;
   display: grid;
+  flex: 0 0 72px;
   place-items: center;
-  aspect-ratio: 1 / 1;
+  width: 72px;
+  height: 72px;
   border-radius: 12px;
   overflow: hidden;
   background: radial-gradient(circle at 30% 20%, rgba(126, 255, 207, 0.2), rgba(9, 18, 34, 0.78));
 }
 
-.island-run-sanctuary-pack__slot-art {
+.island-run-sanctuary-companion-preview__art {
   width: 88%;
   height: 88%;
   object-fit: contain;
 }
 
-.island-run-sanctuary-pack__slot-emoji,
-.island-run-sanctuary-pack__slot-empty {
+.island-run-sanctuary-companion-preview__emoji,
+.island-run-sanctuary-companion-preview__empty {
   font-size: 1.6rem;
   color: rgba(220, 242, 252, 0.72);
 }
 
-.island-run-sanctuary-pack__slot-emoji {
+.island-run-sanctuary-companion-preview__emoji {
   display: none;
 }
 
-.island-run-sanctuary-pack__slot-title,
-.island-run-sanctuary-pack__slot-meta {
+.island-run-sanctuary-companion-preview__body {
+  display: grid;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.island-run-sanctuary-companion-preview__card-title,
+.island-run-sanctuary-companion-preview__card-meta {
   margin: 0;
 }
 
-.island-run-sanctuary-pack__slot-title {
+.island-run-sanctuary-companion-preview__card-title {
   color: rgba(248, 252, 255, 0.94);
-  font-size: 0.78rem;
+  font-size: 0.84rem;
   font-weight: 760;
 }
 
-.island-run-sanctuary-pack__slot-meta {
+.island-run-sanctuary-companion-preview__card-meta {
   color: rgba(206, 232, 246, 0.82);
   font-size: 0.72rem;
 }

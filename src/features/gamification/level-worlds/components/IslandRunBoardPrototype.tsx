@@ -10776,60 +10776,56 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             {sanctuaryFeedback ? <p className="island-run-sanctuary-panel__feedback">{sanctuaryFeedback}</p> : null}
 
             {!selectedSanctuaryCreature ? (
-              <section className="island-run-sanctuary-pack" aria-label="Creature Pack preview">
-                <div className="island-run-sanctuary-pack__header">
+              <section className="island-run-sanctuary-companion-preview" aria-label="Active Companion preview">
+                <div className="island-run-sanctuary-companion-preview__header">
                   <div>
-                    <p className="island-run-sanctuary-pack__eyebrow">Creature Pack</p>
-                    <h4 className="island-run-sanctuary-pack__title">Future dice regen team</h4>
+                    <p className="island-run-sanctuary-companion-preview__eyebrow">Paired Creature</p>
+                    <h4 className="island-run-sanctuary-companion-preview__title">Active Companion</h4>
                   </div>
-                  <span className="island-run-sanctuary-pack__badge">Read-only preview</span>
+                  <span className="island-run-sanctuary-companion-preview__badge">Read-only preview</span>
                 </div>
-                <p className="island-run-sanctuary-pack__copy">
-                  Your Pack will power future dice regen.
+                <p className="island-run-sanctuary-companion-preview__copy">
+                  Your Active Companion is one selected creature, stored through the existing companion path.
                 </p>
-                <p className="island-run-sanctuary-pack__copy">
-                  Sanctuary holds all creatures. Pack creatures are your active team.
+                <p className="island-run-sanctuary-companion-preview__copy">
+                  Creature Packs are card bundles you open or earn; they are not an active team.
                 </p>
-                <div className="island-run-sanctuary-pack__slots">
-                  {Array.from({ length: 3 }).map((_, index) => {
-                    const suggestedCreature = index === 0 ? activeCompanion : null;
-                    const suggestedArt = suggestedCreature ? resolveCreatureArtManifest(suggestedCreature.creature) : null;
-                    return (
-                      <article
-                        key={`pack-slot-${index}`}
-                        className={`island-run-sanctuary-pack__slot ${suggestedCreature ? 'island-run-sanctuary-pack__slot--suggested' : ''}`}
-                      >
-                        <div className="island-run-sanctuary-pack__slot-frame">
-                          {suggestedCreature && suggestedArt ? (
-                            <>
-                              <img
-                                className="island-run-sanctuary-pack__slot-art"
-                                src={suggestedArt.cutoutSrc}
-                                alt={`${suggestedCreature.creature.name} current companion preview`}
-                                loading="lazy"
-                                onError={(event) => {
-                                  applyCreatureArtFallback(event, {
-                                    pngSrc: suggestedArt.cutoutPngSrc,
-                                    silhouetteSrc: suggestedArt.silhouetteSrc,
-                                  });
-                                }}
-                              />
-                              <span className="island-run-sanctuary-pack__slot-emoji" aria-hidden="true">{suggestedArt.emojiFallback}</span>
-                            </>
-                          ) : (
-                            <span className="island-run-sanctuary-pack__slot-empty" aria-hidden="true">+</span>
-                          )}
-                        </div>
-                        <p className="island-run-sanctuary-pack__slot-title">
-                          Slot {index + 1}
+                {(() => {
+                  const companionArt = activeCompanion ? resolveCreatureArtManifest(activeCompanion.creature) : null;
+                  return (
+                    <article className={`island-run-sanctuary-companion-preview__card ${activeCompanion ? 'island-run-sanctuary-companion-preview__card--active' : ''}`}>
+                      <div className="island-run-sanctuary-companion-preview__frame">
+                        {activeCompanion && companionArt ? (
+                          <>
+                            <img
+                              className="island-run-sanctuary-companion-preview__art"
+                              src={companionArt.cutoutSrc}
+                              alt={`${activeCompanion.creature.name} active companion preview`}
+                              loading="lazy"
+                              onError={(event) => {
+                                applyCreatureArtFallback(event, {
+                                  pngSrc: companionArt.cutoutPngSrc,
+                                  silhouetteSrc: companionArt.silhouetteSrc,
+                                });
+                              }}
+                            />
+                            <span className="island-run-sanctuary-companion-preview__emoji" aria-hidden="true">{companionArt.emojiFallback}</span>
+                          </>
+                        ) : (
+                          <span className="island-run-sanctuary-companion-preview__empty" aria-hidden="true">✦</span>
+                        )}
+                      </div>
+                      <div className="island-run-sanctuary-companion-preview__body">
+                        <p className="island-run-sanctuary-companion-preview__card-title">
+                          {activeCompanion ? activeCompanion.creature.name : 'No Active Companion'}
                         </p>
-                        <p className="island-run-sanctuary-pack__slot-meta">
-                          {suggestedCreature ? `Current companion: ${suggestedCreature.creature.name}` : 'Empty Pack slot'}
+                        <p className="island-run-sanctuary-companion-preview__card-meta">
+                          {activeCompanion ? `${activeCompanion.creature.tier} • ${activeCompanion.creature.affinity}` : 'Open a creature detail to pair one companion.'}
                         </p>
-                      </article>
-                    );
-                  })}
-                </div>
+                      </div>
+                    </article>
+                  );
+                })()}
               </section>
             ) : null}
 
