@@ -2,6 +2,7 @@ import { creatureCatalogTests } from './creatureCatalog.test';
 import { creatureCollectionServiceTests } from './creatureCollectionService.test';
 import { creatureTreatInventoryServiceTests } from './creatureTreatInventoryService.test';
 import { creatureFitEngineTests } from './creatureFitEngine.test';
+import { companionRegenModifierTests } from './companionRegenModifier.test';
 import { creatureImageManifestTests } from './creatureImageManifest.test';
 import { creatureSanctuaryAdapterTests } from './creatureSanctuaryAdapter.test';
 import { encounterServiceTests } from './encounterService.test';
@@ -70,6 +71,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'creatureCollectionService', tests: creatureCollectionServiceTests },
   { label: 'creatureTreatInventoryService', tests: creatureTreatInventoryServiceTests },
   { label: 'creatureFitEngine', tests: creatureFitEngineTests },
+  { label: 'companionRegenModifier', tests: companionRegenModifierTests },
   { label: 'creatureImageManifest', tests: creatureImageManifestTests },
   { label: 'creatureSanctuaryAdapter', tests: creatureSanctuaryAdapterTests },
   { label: 'encounterService', tests: encounterServiceTests },

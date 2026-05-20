@@ -71,6 +71,7 @@ import {
 } from './islandRunContractV2EssenceBuild';
 import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
 import { resolveRuntimeDiceRegenUpdate } from './islandRunRuntimeRegen';
+import { resolveCompanionRegenModifier } from './companionRegenModifier';
 import { resolveIslandRunPreIslandLuckyRollGate } from './islandRunPreIslandLuckyRollGate';
 import { getCreatureById } from './creatureCatalog';
 import {
@@ -644,6 +645,7 @@ export function applyPassiveDiceRegenTick(
 ): ApplyPassiveDiceRegenTickResult {
   const { session, client, playerLevel, nowMs, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
+  const companionRegenModifier = resolveCompanionRegenModifier({ record: current });
   const regenUpdate = resolveRuntimeDiceRegenUpdate({
     snapshot: {
       dicePool: current.dicePool,
@@ -651,6 +653,7 @@ export function applyPassiveDiceRegenTick(
     },
     playerLevel,
     nowMs,
+    companionRegenBoostPct: companionRegenModifier.cappedBoostPct,
   });
   if (!regenUpdate) {
     return { record: current, changed: false, diceAdded: 0 };
