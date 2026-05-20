@@ -4820,8 +4820,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
               <div className="workspace-sidebar__nav-list">
                 {workspaceNavItems.map((item) => {
                   const isActive = activeWorkspaceNav === item.id;
-                  const isBodyPreviewNavItem = item.id === 'body' && !isBodyWorkspaceOpen;
-                  const bodyFutureFeatureState = isBodyPreviewNavItem
+                  const shouldShowBodyFeatureState = item.id === 'body' && !isBodyWorkspaceOpen;
+                  const bodyFutureFeatureState = shouldShowBodyFeatureState
                     ? appFutureFeatureCardStates['app.body']
                     : undefined;
                   const handleNavButtonClick = () => {

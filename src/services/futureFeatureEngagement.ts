@@ -4,7 +4,7 @@ export const FUTURE_FEATURE_ENGAGEMENT_EVENT = 'future-feature-engagement-change
 
 const SEEN_FUTURE_FEATURES_STORAGE_KEY = 'seenFutureFeatures';
 
-type FutureFeatureEngagementEventDetail = {
+export type FutureFeatureEngagementEventDetail = {
   featureId: FeatureAvailabilityId;
   seen?: boolean;
   voted?: boolean;
@@ -58,4 +58,3 @@ export function markFutureFeatureSeen(featureId: FeatureAvailabilityId) {
 export function notifyFutureFeatureVoteSaved(featureId: FeatureAvailabilityId) {
   dispatchFutureFeatureEngagementChange({ featureId, voted: true });
 }
-

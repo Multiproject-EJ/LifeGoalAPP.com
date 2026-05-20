@@ -4,6 +4,7 @@ import { getMyFeatureVote } from '../services/featureVotes';
 import {
   FUTURE_FEATURE_ENGAGEMENT_EVENT,
   readSeenFutureFeatures,
+  type FutureFeatureEngagementEventDetail,
 } from '../services/futureFeatureEngagement';
 
 export type FutureFeatureCardState = {
@@ -27,7 +28,7 @@ export function useFutureFeatureCardStates(
   featureIds: readonly FeatureAvailabilityId[],
   options: UseFutureFeatureCardStatesOptions = {},
 ): Record<FeatureAvailabilityId, FutureFeatureCardState> {
-  const featureKey = featureIds.join('|');
+  const featureKey = JSON.stringify(featureIds);
   const normalizedFeatureIds = useMemo(() => [...featureIds], [featureKey]);
   const [seenByFeatureId, setSeenByFeatureId] = useState<Partial<Record<FeatureAvailabilityId, boolean>>>(() =>
     createSeenState(normalizedFeatureIds),
@@ -44,7 +45,7 @@ export function useFutureFeatureCardStates(
     };
 
     const handleEngagementChange = (event: Event) => {
-      const detail = (event as CustomEvent<{ featureId?: FeatureAvailabilityId; voted?: boolean }>).detail;
+      const detail = (event as CustomEvent<FutureFeatureEngagementEventDetail>).detail;
       refreshSeenState();
       if (detail?.featureId && detail.voted) {
         setVotedByFeatureId((current) => ({ ...current, [detail.featureId as FeatureAvailabilityId]: true }));

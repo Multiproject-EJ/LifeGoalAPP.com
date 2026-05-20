@@ -25,6 +25,7 @@ import { ConflictResolverEntry } from '../conflict-resolver/ConflictResolverEntr
 import {
   canRenderEnergyMobileTab,
   ENERGY_MOBILE_CATEGORY_TABS,
+  GATED_ENERGY_MOBILE_TAB_FEATURE_IDS,
   getEnergyMobileCategoryForTab,
   getGatedEnergyMobileTabFeatureId,
   getEnergyMobileTabAccess,
@@ -87,11 +88,7 @@ const MOBILE_TAB_OPTIONS: Record<
 };
 
 const ENERGY_FUTURE_FEATURE_IDS: FeatureAvailabilityId[] = [
-  'mind.meditation',
-  'mind.conflictResolver',
-  'body.yoga',
-  'body.food',
-  'body.exercise',
+  ...Object.values(GATED_ENERGY_MOBILE_TAB_FEATURE_IDS),
 ];
 
 export function BreathingSpace({
