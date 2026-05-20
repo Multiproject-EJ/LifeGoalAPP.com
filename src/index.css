@@ -3150,10 +3150,12 @@ html.platform-ipad .workspace-shell__menu-edge {
     --mobile-frame-stage-width: min(calc(var(--mobile-frame-width) + 100px), calc(100vw - 2rem));
     --mobile-controller-max-width: min(560px, var(--mobile-frame-width));
     position: relative;
+    isolation: isolate;
     overflow: hidden;
   }
 
   .app--workspace.app--mobile-frame:not(.app--vision-board)::before {
+    content: '';
     position: fixed;
     inset: 0;
     background:
@@ -3162,6 +3164,8 @@ html.platform-ipad .workspace-shell__menu-edge {
       radial-gradient(circle at 50% 0%, rgba(147, 197, 253, 0.38), transparent 44%),
       #07111f;
     opacity: 1;
+    pointer-events: none;
+    z-index: 0;
   }
 
   .app--mobile-frame::after {
@@ -3183,7 +3187,7 @@ html.platform-ipad .workspace-shell__menu-edge {
     backdrop-filter: blur(24px) saturate(135%);
     -webkit-backdrop-filter: blur(24px) saturate(135%);
     pointer-events: none;
-    z-index: 0;
+    z-index: 1;
   }
 
   .app--mobile-frame .workspace-shell,
@@ -3192,6 +3196,7 @@ html.platform-ipad .workspace-shell__menu-edge {
     max-width: calc(100vw - 2rem);
     min-height: min(calc(100dvh - (var(--workspace-shell-padding) * 2)), 940px);
     margin-inline: auto;
+    z-index: 2;
     border-radius: clamp(28px, 4vw, 42px);
     overflow: hidden;
     background: rgba(255, 255, 255, 0.16);
