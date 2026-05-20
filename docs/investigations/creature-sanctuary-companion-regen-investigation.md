@@ -14,6 +14,12 @@ High-level finding:
 - **RISK:** Sanctuary UI and some companion bonus effects still have migration-era split authority or placeholder/demo surfaces.
 - **BLOCKER:** Passive creature regen should wait for a canonical action/state design, schema constraints, idempotency, and explicit economy caps before implementation.
 
+## 1A. Terminology used in this report
+
+- **Dice floor / passive floor:** the passive regeneration target represented in code by `diceRegenState.maxDice`. It is not a hard wallet cap; reward sources can push `dicePool` above this floor, and base passive regen stops while the player is at or above it.
+- **Reserve:** a future separate capped bucket that could hold companion-generated dice before transfer/claim into the main dice pool.
+- **Claimable bucket:** a reserve-like model where elapsed passive progress is not automatically applied and instead requires a canonical claim action.
+
 ## 2. Relevant files inspected
 
 Architecture contracts:
@@ -79,6 +85,8 @@ Relevant references:
 ### RISK: Dice regen contract and implementation should be reconciled before creature regen
 
 The contract describes a continuous logarithmic minimum dice threshold with no hard cap. The implementation currently uses discrete level bands with `maxDice` values and interval minutes in `islandRunDiceRegeneration.ts`.
+
+The practical difference: the contract implies a formula-derived floor that can grow smoothly for any player level, while the implementation chooses from fixed bands such as level 1, 5, 10, 20, 40, 75, and 125. That affects future creature regen because a companion bonus could be modeled as a formula modifier, a band modifier, or a separate reserve, and those options have different economy impact.
 
 Relevant references:
 
@@ -301,11 +309,9 @@ Relevant references:
 - `src/features/gamification/level-worlds/services/islandRunGameStateStore.ts:187-248`
 - `src/features/gamification/level-worlds/services/islandRunGameStateStore.ts:264-316`
 
-Terminology for this section: “dice floor” means the current passive regen target represented by `diceRegenState.maxDice`, not a hard wallet cap.
+### RISK: Passive creature regen can inflate dice if it bypasses the existing dice-floor semantics
 
-### RISK: Passive creature regen can inflate dice if it bypasses the existing passive floor semantics
-
-Current dice regen fills only when `dicePool < maxDice`; reward dice may exceed that passive floor and regen stops at/above the floor. Future creature regen must decide whether it:
+Current dice regen fills only when `dicePool < maxDice`; reward dice may exceed that dice floor and regen stops at/above the floor. Future creature regen must decide whether it:
 
 1. raises the existing dice regen floor, meaning active companions increase the `maxDice` target that base passive regen fills toward,
 2. contributes a separate capped reserve, meaning companion dice accumulate in a distinct bucket with its own maximum,
@@ -456,7 +462,7 @@ Relevant references:
 Do not implement passive creature dice regen until these are resolved:
 
 - Canonical state shape for creature regen/reserve is approved.
-- Economy design chooses and documents one of the patterns defined in section 7, “RISK: Passive creature regen can inflate dice if it bypasses the existing passive floor semantics”: floor raise, interval reduction, separate capped reserve, or claimable capped reserve.
+- Economy design chooses and documents one of the patterns defined in section 7, “RISK: Passive creature regen can inflate dice if it bypasses the existing dice-floor semantics”: floor raise, interval reduction, separate capped reserve, or claimable capped reserve.
 - Runtime/Supabase schema constraints and hydration sanitizers are defined.
 - Action service persists resource deltas and claim markers atomically.
 - Duplicate/offline/cross-device claim idempotency is tested.
