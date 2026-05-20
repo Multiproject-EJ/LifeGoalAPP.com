@@ -11283,6 +11283,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           grantId={devPackOpeningPrototype.grantId}
           grantStatus={devPackOpeningPrototype.grantStatus}
           onClose={() => setDevPackOpeningPrototype(null)}
+          onViewSanctuary={() => {
+            setDevPackOpeningPrototype(null);
+            openSanctuaryPanel();
+          }}
         />
       ) : null}
 
