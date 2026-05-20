@@ -255,6 +255,11 @@ function setIslandRunOpenStopParam(stopId: 'boss' | 'hatchery' | 'dynamic') {
 
 
 const DEFAULT_WORKSPACE_NAV_ID = 'goals';
+const APP_WORKSPACE_FEATURE_IDS: Partial<Record<string, FeatureAvailabilityId>> = {
+  body: 'app.body',
+  contracts: 'app.contracts',
+  routines: 'app.routines',
+};
 
 const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
@@ -2197,9 +2202,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setAppPreviewFeature({ id: 'app.routines', label: 'Routines' });
   }, []);
 
-  const clearBodyPreviewOverlay = useCallback(() => {
+  const clearAppPreviewFeatureIfMatches = useCallback((featureId: FeatureAvailabilityId) => {
     setAppPreviewFeature((current) => {
-      if (current?.id !== 'app.body') {
+      if (current?.id !== featureId) {
         return current;
       }
 
@@ -2215,10 +2220,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
       return;
     }
 
-    clearBodyPreviewOverlay();
+    clearAppPreviewFeatureIfMatches('app.body');
     setActiveWorkspaceNav('body');
     setShowMobileHome(false);
-  }, [clearBodyPreviewOverlay, isBodyWorkspaceOpen, logBodyGateDebug, openBodyPreviewOverlay]);
+  }, [clearAppPreviewFeatureIfMatches, isBodyWorkspaceOpen, logBodyGateDebug, openBodyPreviewOverlay]);
 
   const openContractsWorkspace = useCallback(() => {
     if (!isContractsWorkspaceOpen) {
@@ -2226,10 +2231,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
       return;
     }
 
-    setAppPreviewFeature((current) => current?.id === 'app.contracts' ? null : current);
+    clearAppPreviewFeatureIfMatches('app.contracts');
     setActiveWorkspaceNav('contracts');
     setShowMobileHome(false);
-  }, [isContractsWorkspaceOpen, openContractsPreviewOverlay]);
+  }, [clearAppPreviewFeatureIfMatches, isContractsWorkspaceOpen, openContractsPreviewOverlay]);
 
   const openRoutinesWorkspace = useCallback(() => {
     if (!isRoutinesWorkspaceOpen) {
@@ -2237,10 +2242,26 @@ export default function App({ forceAuthOnMount }: AppProps) {
       return;
     }
 
-    setAppPreviewFeature((current) => current?.id === 'app.routines' ? null : current);
+    clearAppPreviewFeatureIfMatches('app.routines');
     setActiveWorkspaceNav('routines');
     setShowMobileHome(false);
-  }, [isRoutinesWorkspaceOpen, openRoutinesPreviewOverlay]);
+  }, [clearAppPreviewFeatureIfMatches, isRoutinesWorkspaceOpen, openRoutinesPreviewOverlay]);
+
+  const isAppWorkspaceFeatureOpen = useCallback(
+    (featureId: FeatureAvailabilityId) => {
+      switch (featureId) {
+        case 'app.body':
+          return isBodyWorkspaceOpen;
+        case 'app.contracts':
+          return isContractsWorkspaceOpen;
+        case 'app.routines':
+          return isRoutinesWorkspaceOpen;
+        default:
+          return true;
+      }
+    },
+    [isBodyWorkspaceOpen, isContractsWorkspaceOpen, isRoutinesWorkspaceOpen],
+  );
 
   const isBlockedBodyWorkspaceActive = activeWorkspaceNav === 'body' && !isBodyWorkspaceOpen;
   const isBlockedContractsWorkspaceActive = activeWorkspaceNav === 'contracts' && !isContractsWorkspaceOpen;
@@ -4919,20 +4940,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
               <div className="workspace-sidebar__nav-list">
                 {workspaceNavItems.map((item) => {
                   const isActive = activeWorkspaceNav === item.id;
-                    const appFeatureId = item.id === 'body'
-                      ? 'app.body'
-                      : item.id === 'contracts'
-                        ? 'app.contracts'
-                        : item.id === 'routines'
-                          ? 'app.routines'
-                          : null;
-                    const isFeatureOpen = appFeatureId === 'app.body'
-                      ? isBodyWorkspaceOpen
-                      : appFeatureId === 'app.contracts'
-                        ? isContractsWorkspaceOpen
-                        : appFeatureId === 'app.routines'
-                          ? isRoutinesWorkspaceOpen
-                          : true;
+                    const appFeatureId = APP_WORKSPACE_FEATURE_IDS[item.id];
+                    const isFeatureOpen = appFeatureId ? isAppWorkspaceFeatureOpen(appFeatureId) : true;
                     const futureFeatureState = appFeatureId && !isFeatureOpen
                       ? appFutureFeatureCardStates[appFeatureId]
                       : undefined;
