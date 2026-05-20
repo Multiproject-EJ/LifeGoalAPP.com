@@ -78,6 +78,7 @@ Phase 1 is feasible as a static, non-AI Wisdom Landmark card encounter that call
 - `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx:9503-9527`
   - Existing caveat: the bonus branch directly adjusts diamonds/essence React/runtime mirrors and completes the stop.
   - Do **not** build Phase 1 on this path.
+  - Phase 1 should replace only the unfinished placeholder unless product explicitly approves retiring this existing bonus branch as a deliberate economy/UX cleanup.
 - `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx:9530-9535`
   - The current placeholder button opens `resolveIslandRunPlaceholderDescriptor('wisdom_stop_unfinished')`.
 
@@ -524,7 +525,7 @@ Run these for the implementation PR:
 5. Diff whitespace check:
    - `git --no-pager diff --check`
 
-If only the documentation map changes, `git --no-pager diff --check` is sufficient locally, plus the standard `parallel_validation` review; CodeQL is expected to skip documentation-only changes as trivial.
+If only the documentation map changes, `git --no-pager diff --check` is sufficient locally, plus the repository's standard automated PR review/security scan; CodeQL is expected to skip documentation-only changes as trivial.
 
 ## Recommended Phase 1 PR
 
