@@ -2596,16 +2596,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     const stillOwned = creatureCollection.some((entry) => entry.creatureId === activeCompanionId);
     if (activeCompanionId && !stillOwned) {
-      const nextRecord = commitActiveCompanionId({
+      if ((runtimeState.activeCompanionId ?? null) !== activeCompanionId) {
+        setActiveCompanionId(runtimeState.activeCompanionId ?? null);
+        return;
+      }
+      const nextRecord = commitClearActiveCompanionId({
         session,
         client,
-        activeCompanionId,
         triggerSource: 'cleanup_unowned_active_companion',
       });
       setActiveCompanionId(nextRecord.activeCompanionId ?? null);
       setRuntimeState((current) => ({ ...current, activeCompanionId: nextRecord.activeCompanionId ?? null }));
     }
-  }, [activeCompanionId, client, creatureCollection, session]);
+  }, [activeCompanionId, client, creatureCollection, runtimeState.activeCompanionId, session]);
 
   useEffect(() => {
     if (!selectedSanctuaryCreatureId) return;

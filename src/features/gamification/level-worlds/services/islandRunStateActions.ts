@@ -1867,7 +1867,7 @@ export function applyCreatureCollection(options: ApplyCreatureCollectionOptions)
  * Commits active companion selection through the canonical store path.
  */
 function isOwnedCatalogCompanion(record: IslandRunGameStateRecord, companionId: string | null): boolean {
-  if (!companionId || !getCreatureById(companionId)) return false;
+  if (!companionId || getCreatureById(companionId) == null) return false;
   return (record.creatureCollection ?? []).some(
     (entry) => entry.creatureId === companionId && Number(entry.copies ?? 0) > 0,
   );
