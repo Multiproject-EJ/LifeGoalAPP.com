@@ -1,4 +1,5 @@
 import type { CreatureCollectionRuntimeEntry } from './islandRunGameStateStore';
+import { appendGrantId } from './islandRunGrantIdUtils';
 
 export function addCreatureToRuntimeCollection(options: {
   collection: CreatureCollectionRuntimeEntry[];
@@ -20,7 +21,7 @@ export function addCreatureToRuntimeCollection(options: {
           lastCollectedAtMs: collectedAtMs,
           lastCollectedIslandNumber: islandNumber,
           ...(normalizedGrantId
-            ? { grantIds: Array.from(new Set([...(entry.grantIds ?? []), normalizedGrantId])).sort((a, b) => a.localeCompare(b)) }
+            ? { grantIds: appendGrantId(entry.grantIds, normalizedGrantId) }
             : {}),
         }
       : entry);

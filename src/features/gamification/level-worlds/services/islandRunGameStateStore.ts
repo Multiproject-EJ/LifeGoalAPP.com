@@ -12,6 +12,7 @@ import {
   type BonusTileChargeByIsland,
 } from './islandRunBonusTile';
 import { resolveSpaceExcavatorClaimedMilestoneIds } from './spaceExcavatorCampaignProgress';
+import { normalizeGrantIds } from './islandRunGrantIdUtils';
 
 export type PerIslandEggStatus = 'incubating' | 'ready' | 'collected' | 'sold';
 
@@ -704,12 +705,7 @@ function toCreatureCollectionEntry(value: unknown): CreatureCollectionRuntimeEnt
       .map((milestone) => Math.max(1, Math.floor(milestone))))
     ).sort((a, b) => a - b)
     : [];
-  const grantIds = Array.isArray(candidate.grantIds)
-    ? Array.from(new Set(candidate.grantIds
-      .filter((grantId): grantId is string => typeof grantId === 'string' && grantId.trim().length > 0)
-      .map((grantId) => grantId.trim())))
-      .sort((a, b) => a.localeCompare(b))
-    : [];
+  const grantIds = normalizeGrantIds(candidate.grantIds);
   return {
     creatureId: candidate.creatureId,
     copies,

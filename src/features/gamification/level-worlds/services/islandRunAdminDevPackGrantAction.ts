@@ -64,6 +64,11 @@ function normalizeBonus(value: number | undefined): number {
   return Math.max(0, Math.min(MAX_BONUS_PER_DEV_GRANT, Math.floor(value)));
 }
 
+/**
+ * Deterministic FNV-1a seed helper for admin/dev egg reward vouchers.
+ * The seed is derived from fixed grant metadata so repeated grants with the
+ * same id would resolve to the same egg voucher data without using randomness.
+ */
 function hashStringToUint32(input: string): number {
   let hash = 2166136261;
   for (let index = 0; index < input.length; index += 1) {

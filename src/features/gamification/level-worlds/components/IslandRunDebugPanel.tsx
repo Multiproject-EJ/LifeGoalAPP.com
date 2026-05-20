@@ -600,7 +600,7 @@ export function IslandRunDebugPanel({
                 <div style={{ display: 'grid', gap: '0.55rem', borderTop: '1px solid rgba(255,255,255,0.16)', paddingTop: '0.65rem' }}>
                   <strong style={{ fontSize: '0.84rem' }}>🐾 Admin/Dev Pack Grants</strong>
                   <div style={{ fontSize: '0.76rem', opacity: 0.86 }}>
-                    Dev mode only. Grants fixed demo packs through canonical runtime state; no Stripe, purchases, random paid rewards, or localStorage inventory writes.
+                    Dev mode only. Grants fixed demo packs through canonical runtime state. Does not involve Stripe, purchases, random rewards, or localStorage writes.
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                     <button
