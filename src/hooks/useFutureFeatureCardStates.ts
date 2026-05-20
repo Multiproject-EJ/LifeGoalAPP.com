@@ -48,7 +48,7 @@ export function useFutureFeatureCardStates(
       const detail = (event as CustomEvent<FutureFeatureEngagementEventDetail>).detail;
       refreshSeenState();
       if (detail?.featureId && detail.voted) {
-        setVotedByFeatureId((current) => ({ ...current, [detail.featureId as FeatureAvailabilityId]: true }));
+        setVotedByFeatureId((current) => ({ ...current, [detail.featureId]: true }));
       }
     };
 
