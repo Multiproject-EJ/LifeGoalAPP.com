@@ -88,6 +88,7 @@ import { isValidUuid } from './lib/isValidUuid';
 import { useContinuousSave } from './hooks/useContinuousSave';
 import { isStandaloneMode } from './routes/detectStandalone';
 import { useDailySpinStatus } from './hooks/useDailySpinStatus';
+import { getFutureFeatureCardClassName, useFutureFeatureCardStates } from './hooks/useFutureFeatureCardStates';
 import { isIslandRunFeatureEnabled } from './config/islandRunFeatureFlags';
 import { generateInitials } from './utils/initials';
 import {
@@ -1276,6 +1277,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, []);
 
   const activeSession = useMemo(() => supabaseSession as Session, [supabaseSession]);
+  const appFutureFeatureCardStates = useFutureFeatureCardStates(['app.body'], {
+    loadVotes: Boolean(activeSession?.user?.id),
+  });
 
   useEffect(() => {
     if (!supabaseSession?.user?.id) {
@@ -4816,6 +4820,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
               <div className="workspace-sidebar__nav-list">
                 {workspaceNavItems.map((item) => {
                   const isActive = activeWorkspaceNav === item.id;
+                  const isBodyPreviewNavItem = item.id === 'body' && !isBodyWorkspaceOpen;
+                  const bodyFutureFeatureState = isBodyPreviewNavItem
+                    ? appFutureFeatureCardStates['app.body']
+                    : undefined;
                   const handleNavButtonClick = () => {
                     scheduleDesktopMenuAutoHide();
                     if (item.id === 'account' && !isAuthenticated) {
@@ -4832,14 +4840,21 @@ export default function App({ forceAuthOnMount }: AppProps) {
                     }
                     setActiveWorkspaceNav(item.id);
                   };
-                  const navButtonTitle = item.summary ? `${item.label} • ${item.summary}` : item.label;
+                  const navButtonTitle = [
+                    item.summary ? `${item.label} • ${item.summary}` : item.label,
+                    bodyFutureFeatureState?.voted ? 'Feedback sent' : '',
+                  ].filter(Boolean).join(' • ');
+                  const navButtonClassName = getFutureFeatureCardClassName(
+                    `workspace-sidebar__nav-button ${
+                      isActive ? 'workspace-sidebar__nav-button--active' : ''
+                    }`,
+                    bodyFutureFeatureState,
+                  );
                   return (
                     <button
                       key={item.id}
                       type="button"
-                      className={`workspace-sidebar__nav-button ${
-                        isActive ? 'workspace-sidebar__nav-button--active' : ''
-                      }`}
+                      className={navButtonClassName}
                       onClick={handleNavButtonClick}
                       aria-pressed={isActive}
                       aria-label={item.label}
@@ -4853,6 +4868,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       </span>
                       <span className="sr-only workspace-sidebar__nav-label">{item.label}</span>
                       <span className="sr-only workspace-sidebar__nav-summary">{item.summary}</span>
+                      {bodyFutureFeatureState?.voted ? (
+                        <span className="future-feature-card__saved-dot" aria-hidden="true">✓</span>
+                      ) : null}
                     </button>
                   );
                 })}

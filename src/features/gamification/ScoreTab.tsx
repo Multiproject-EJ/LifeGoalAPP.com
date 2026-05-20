@@ -40,6 +40,7 @@ import { getEvolutionStateLabel } from '../../lib/rewardEvolution';
 import { analyzeRewardPacing, canShowPrompt, markPromptShown } from '../../lib/rewardPacing';
 import { evaluateRewardRisk } from '../../lib/rewardValidation';
 import { fetchLeaderboardSnapshot, type LeaderboardEntry } from '../../services/leaderboard';
+import { getFutureFeatureCardClassName, useFutureFeatureCardStates } from '../../hooks/useFutureFeatureCardStates';
 import { RewardEvolutionModal } from './RewardEvolutionModal';
 import { PowerUpsStore } from '../power-ups/PowerUpsStore';
 import {
@@ -59,6 +60,16 @@ import scoreShop from '../../assets/Score_shop.webp';
 import scoreZenGarden from '../../assets/Score_zengarden.webp';
 
 const scoreLeaderboard = '/icons/Score_tab_leaderboard.webp';
+
+const SCORE_FUTURE_FEATURE_IDS: FeatureAvailabilityId[] = [
+  'score.playerShop',
+  'score.garage',
+  'score.achievements',
+  'score.leaderboard',
+  'score.bank',
+  'score.creatureSanctuary',
+  'score.stickersGallery',
+];
 
 interface ScoreTabProps {
   session: Session | null;
@@ -168,6 +179,15 @@ export function ScoreTab({
     label: string;
     variant?: 'preview' | 'notImplemented';
   } | null>(null);
+  const futureFeatureCardStates = useFutureFeatureCardStates(SCORE_FUTURE_FEATURE_IDS, {
+    loadVotes: Boolean(session?.user?.id),
+  });
+  const getScoreFutureFeatureCardClassName = (baseClassName: string, featureId: FeatureAvailabilityId) =>
+    getFutureFeatureCardClassName(baseClassName, futureFeatureCardStates[featureId]);
+  const renderFeatureFeedbackSent = (featureId: FeatureAvailabilityId) =>
+    futureFeatureCardStates[featureId]?.voted ? (
+      <span className="future-feature-card__saved-label">Feedback sent</span>
+    ) : null;
 
   /**
    * Gate-aware hub card click handler.
@@ -713,7 +733,7 @@ export function ScoreTab({
         <div className="score-tab__hub">
           <button
             type="button"
-            className="score-tab__hub-card"
+            className={getScoreFutureFeatureCardClassName('score-tab__hub-card', 'score.playerShop')}
             onClick={() => handleHubCardClick('score.playerShop', 'Player Shop', () => {
               handleTabChange('shop');
               onNavigateToShop?.();
@@ -725,11 +745,12 @@ export function ScoreTab({
             <span className="score-tab__hub-title">
               Player Shop
               <FeatureStatusBadge status={getFeatureAvailability('score.playerShop').status} />
+              {renderFeatureFeedbackSent('score.playerShop')}
             </span>
           </button>
           <button
             type="button"
-            className="score-tab__hub-card"
+            className={getScoreFutureFeatureCardClassName('score-tab__hub-card', 'score.garage')}
             onClick={() => handleHubCardClick('score.garage', 'Garage', () => {
               handleTabChange('garage');
               onNavigateToGarage?.();
@@ -741,6 +762,7 @@ export function ScoreTab({
             <span className="score-tab__hub-title">
               Garage
               <FeatureStatusBadge status={getFeatureAvailability('score.garage').status} />
+              {renderFeatureFeedbackSent('score.garage')}
             </span>
           </button>
           <button
@@ -760,7 +782,7 @@ export function ScoreTab({
           </button>
           <button
             type="button"
-            className="score-tab__hub-card"
+            className={getScoreFutureFeatureCardClassName('score-tab__hub-card', 'score.achievements')}
             onClick={() => handleHubCardClick('score.achievements', 'Achievements', onNavigateToAchievements)}
           >
             <span className="score-tab__hub-visual" aria-hidden="true">
@@ -769,6 +791,7 @@ export function ScoreTab({
             <span className="score-tab__hub-title">
               Achievements
               <FeatureStatusBadge status={getFeatureAvailability('score.achievements').status} />
+              {renderFeatureFeedbackSent('score.achievements')}
             </span>
           </button>
           <button
@@ -786,7 +809,7 @@ export function ScoreTab({
           </button>
           <button
             type="button"
-            className="score-tab__hub-card"
+            className={getScoreFutureFeatureCardClassName('score-tab__hub-card', 'score.leaderboard')}
             onClick={() => handleHubCardClick('score.leaderboard', 'Leaderboard', () => {
               handleTabChange('leaderboard');
             })}
@@ -797,11 +820,12 @@ export function ScoreTab({
             <span className="score-tab__hub-title">
               Leaderboard
               <FeatureStatusBadge status={getFeatureAvailability('score.leaderboard').status} />
+              {renderFeatureFeedbackSent('score.leaderboard')}
             </span>
           </button>
           <button
             type="button"
-            className="score-tab__hub-card"
+            className={getScoreFutureFeatureCardClassName('score-tab__hub-card', 'score.bank')}
             onClick={() => handleHubCardClick('score.bank', 'Bank', () => {
               handleTabChange('bank');
               onNavigateToBank?.();
@@ -813,6 +837,7 @@ export function ScoreTab({
             <span className="score-tab__hub-title">
               Bank
               <FeatureStatusBadge status={getFeatureAvailability('score.bank').status} />
+              {renderFeatureFeedbackSent('score.bank')}
             </span>
           </button>
         </div>
@@ -1622,25 +1647,33 @@ export function ScoreTab({
           <div className="score-tab__hub">
             <button
               type="button"
-              className="score-tab__hub-card score-tab__hub-card--full"
+              className={getScoreFutureFeatureCardClassName(
+                'score-tab__hub-card score-tab__hub-card--full',
+                'score.creatureSanctuary',
+              )}
               onClick={() => handleHubCardClick('score.creatureSanctuary', 'Creature Sanctuary')}
             >
               <span className="score-tab__hub-visual score-tab__hub-visual--icon" aria-hidden="true">🐾</span>
               <span className="score-tab__hub-title">
                 Creature Sanctuary
                 <FeatureStatusBadge status={getFeatureAvailability('score.creatureSanctuary').status} />
+                {renderFeatureFeedbackSent('score.creatureSanctuary')}
               </span>
               <p className="score-tab__hub-desc">Collect, hatch, and bond with magical companions from your island journey.</p>
             </button>
             <button
               type="button"
-              className="score-tab__hub-card score-tab__hub-card--full"
+              className={getScoreFutureFeatureCardClassName(
+                'score-tab__hub-card score-tab__hub-card--full',
+                'score.stickersGallery',
+              )}
               onClick={() => handleHubCardClick('score.stickersGallery', 'Stickers Gallery')}
             >
               <span className="score-tab__hub-visual score-tab__hub-visual--icon" aria-hidden="true">🌟</span>
               <span className="score-tab__hub-title">
                 Stickers Gallery
                 <FeatureStatusBadge status={getFeatureAvailability('score.stickersGallery').status} />
+                {renderFeatureFeedbackSent('score.stickersGallery')}
               </span>
               <p className="score-tab__hub-desc">Build a playful gallery of collectible stickers, seasonal moments, and achievement memories.</p>
             </button>
