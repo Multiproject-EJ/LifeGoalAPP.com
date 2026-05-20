@@ -8209,7 +8209,11 @@ export function DailyHabitTracker({
               expanded={openTodayExpandableSection === 'routines'}
               onToggle={() => {
                 if (!isRoutinesFeatureOpen) {
-                  onNavigateToRoutines?.();
+                  if (onNavigateToRoutines) {
+                    onNavigateToRoutines();
+                    return;
+                  }
+                  toggleTodayExpandableSection('routines');
                   return;
                 }
                 toggleTodayExpandableSection('routines');
@@ -8237,7 +8241,11 @@ export function DailyHabitTracker({
               expanded={openTodayExpandableSection === 'contracts'}
               onToggle={() => {
                 if (!isContractsFeatureOpen) {
-                  onNavigateToContracts?.();
+                  if (onNavigateToContracts) {
+                    onNavigateToContracts();
+                    return;
+                  }
+                  toggleTodayExpandableSection('contracts');
                   return;
                 }
                 toggleTodayExpandableSection('contracts');
