@@ -303,12 +303,12 @@ Relevant references:
 
 ### RISK: Passive creature regen can inflate dice if it bypasses the existing floor semantics
 
-Current dice regen fills only when `dicePool < maxDice`; reward dice may exceed the floor and regen stops at/above the floor. Future creature regen must decide whether it:
+Current dice regen fills only when `dicePool < maxDice`; reward dice may exceed that passive floor and regen stops at/above the floor. In this report, “dice floor” means the current passive regen target represented by `diceRegenState.maxDice`, not a hard wallet cap. Future creature regen must decide whether it:
 
-1. raises the existing dice regen floor,
-2. contributes a separate capped reserve,
-3. reduces interval time,
-4. creates a claimable but capped reserve bucket, or
+1. raises the existing dice regen floor, meaning active companions increase the `maxDice` target that base passive regen fills toward,
+2. contributes a separate capped reserve, meaning companion dice accumulate in a distinct bucket with its own maximum,
+3. reduces interval time, meaning companions speed up the existing per-die timer without changing the floor,
+4. creates a claimable but capped reserve bucket, meaning elapsed companion regen becomes an explicit claim action rather than silently changing `dicePool`, or
 5. grants uncapped dice.
 
 Option 5 is the highest inflation risk and should be avoided unless intentionally monetized and tightly capped.
@@ -385,7 +385,7 @@ Recommended home for future service logic:
 
 1. Treat creature regen as a floor/reserve modifier, not unlimited dice printing.
 2. Cap reserve capacity separately if a reserve bucket is introduced.
-3. Do not let passive creature regen fill above the active dice floor unless explicitly using a capped reserve.
+3. Do not let passive creature regen fill above the active dice floor (`diceRegenState.maxDice`) unless explicitly using a capped reserve.
 4. Keep start-of-island companion bonuses and passive regen budgets in the same economy balance table.
 5. Use per-action idempotency and expected runtime version for claim actions.
 6. Require tests for offline catch-up, cap enforcement, duplicate claim, clock rollback, active companion changes, and cross-device conflict.
@@ -454,7 +454,7 @@ Relevant references:
 Do not implement passive creature dice regen until these are resolved:
 
 - Canonical state shape for creature regen/reserve is approved.
-- Economy design chooses floor raise vs interval reduction vs capped reserve vs claimable bucket.
+- Economy design chooses and documents one of the patterns defined in the Island Run economy section: floor raise, interval reduction, separate capped reserve, or claimable capped reserve.
 - Runtime/Supabase schema constraints and hydration sanitizers are defined.
 - Action service persists resource deltas and claim markers atomically.
 - Duplicate/offline/cross-device claim idempotency is tested.
