@@ -744,7 +744,9 @@ function formatRewardMarkerAmount(value: number): string {
     : REWARD_MARKER_FULL_NUMBER_FORMATTER.format(safeValue);
 }
 
-function formatCompanionRegenBoostDecimalAsPct(value: number): string {
+const DEFAULT_COMPANION_BOND_LEVEL = 1;
+
+function formatRegenBoostAsPercent(value: number): string {
   const safePercent = Number.isFinite(value) ? Math.max(0, value) * 100 : 0;
   return `${safePercent.toLocaleString('en-US', { maximumFractionDigits: 1 })}%`;
 }
@@ -5494,15 +5496,23 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     [activeCompanionId, collectedCreatures],
   );
   const activeCompanionForRegen = useMemo(
-    () => resolveActiveCompanionForRegen(__storeState),
-    [__storeState],
+    () => resolveActiveCompanionForRegen({
+      activeCompanionId: __storeState.activeCompanionId,
+      creatureCollection: __storeState.creatureCollection,
+    }),
+    [__storeState.activeCompanionId, __storeState.creatureCollection],
   );
   const activeCompanionRegenModifier = useMemo(
-    () => resolveCompanionRegenModifier({ record: __storeState }),
-    [__storeState],
+    () => resolveCompanionRegenModifier({
+      record: {
+        activeCompanionId: __storeState.activeCompanionId,
+        creatureCollection: __storeState.creatureCollection,
+      },
+    }),
+    [__storeState.activeCompanionId, __storeState.creatureCollection],
   );
   const activeCompanionRegenBonusLabel = useMemo(
-    () => formatCompanionRegenBoostDecimalAsPct(activeCompanionRegenModifier.cappedBoostPct),
+    () => formatRegenBoostAsPercent(activeCompanionRegenModifier.cappedBoostPct),
     [activeCompanionRegenModifier.cappedBoostPct],
   );
   const activeCompanionBonus = useMemo(
@@ -10863,7 +10873,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         </p>
                         <p className="island-run-sanctuary-companion-preview__card-meta">
                           {activeCompanionForRegen
-                            ? `${formatCompanionRarityLabel(activeCompanionForRegen.creature.tier)} • Bond Level ${activeCompanionForRegen.collectionEntry.bondLevel ?? 1}`
+                            ? `${formatCompanionRarityLabel(activeCompanionForRegen.creature.tier)} • Bond Level ${activeCompanionForRegen.collectionEntry.bondLevel ?? DEFAULT_COMPANION_BOND_LEVEL}`
                             : missingActiveCompanion
                               ? 'Missing or unowned companion. Regen bonus is safely off.'
                               : 'Open an owned creature card to pair one companion.'}
@@ -10875,7 +10885,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                             <strong>
                               {activeCompanionRegenModifier.isPersonalityComplete
                                 ? activeCompanionRegenModifier.matchPct > 0
-                                  ? `+${formatCompanionRegenBoostDecimalAsPct(activeCompanionRegenModifier.matchPct)} match bonus`
+                                  ? `+${formatRegenBoostAsPercent(activeCompanionRegenModifier.matchPct)} match bonus`
                                   : 'Profile complete · no match bonus'
                                 : 'Locked · profile incomplete'}
                             </strong>
