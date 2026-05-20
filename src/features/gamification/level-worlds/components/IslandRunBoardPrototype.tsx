@@ -189,6 +189,10 @@ import {
   selectCreatureForEggWithEarlyFeaturedPool,
   type ShipZone,
 } from '../services/creatureCatalog';
+import {
+  resolveActiveCompanionForRegen,
+  resolveCompanionRegenModifier,
+} from '../services/companionRegenModifier';
 import { resolveCreatureArtManifest } from '../services/creatureImageManifest';
 import { getCreatureCardMetadata } from '../services/creatureCardCatalog';
 import { CreatureCard } from './CreatureCard';
@@ -738,6 +742,15 @@ function formatRewardMarkerAmount(value: number): string {
   return safeValue >= 10_000
     ? REWARD_MARKER_COMPACT_NUMBER_FORMATTER.format(safeValue)
     : REWARD_MARKER_FULL_NUMBER_FORMATTER.format(safeValue);
+}
+
+function formatCompanionRegenBoostPct(value: number): string {
+  const safePercent = Number.isFinite(value) ? Math.max(0, value) * 100 : 0;
+  return `${safePercent.toLocaleString('en-US', { maximumFractionDigits: 1 })}%`;
+}
+
+function formatCompanionRarityLabel(tier: string): string {
+  return tier ? `${tier.charAt(0).toUpperCase()}${tier.slice(1)}` : 'Unknown';
 }
 
 /* ── Reward bar helpers ──────────────────────────────────────── */
@@ -5479,6 +5492,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const activeCompanion = useMemo(
     () => collectedCreatures.find((creature) => creature.creatureId === activeCompanionId) ?? null,
     [activeCompanionId, collectedCreatures],
+  );
+  const activeCompanionForRegen = useMemo(
+    () => resolveActiveCompanionForRegen(__storeState),
+    [__storeState],
+  );
+  const activeCompanionRegenModifier = useMemo(
+    () => resolveCompanionRegenModifier({ record: __storeState }),
+    [__storeState],
+  );
+  const activeCompanionRegenBonusLabel = useMemo(
+    () => formatCompanionRegenBoostPct(activeCompanionRegenModifier.cappedBoostPct),
+    [activeCompanionRegenModifier.cappedBoostPct],
   );
   const activeCompanionBonus = useMemo(
     () => (activeCompanion ? getCompanionBonusForCreature(activeCompanion.creature, activeCompanion.bondLevel) : null),
@@ -10784,32 +10809,36 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
             {sanctuaryFeedback ? <p className="island-run-sanctuary-panel__feedback">{sanctuaryFeedback}</p> : null}
 
-            {!selectedSanctuaryCreature ? (
-              <section className="island-run-sanctuary-companion-preview" aria-label="Active Companion preview">
+            <section className="island-run-sanctuary-companion-preview" aria-label="Active Companion regen bonus">
                 <div className="island-run-sanctuary-companion-preview__header">
                   <div>
                     <p className="island-run-sanctuary-companion-preview__eyebrow">Paired Creature</p>
-                    <h4 className="island-run-sanctuary-companion-preview__title">Active Companion</h4>
+                    <h4 className="island-run-sanctuary-companion-preview__title">Active Companion regen bonus</h4>
                   </div>
-                  <span className="island-run-sanctuary-companion-preview__badge">Read-only preview</span>
+                  <span className="island-run-sanctuary-companion-preview__badge">
+                    {activeCompanionForRegen ? `+${activeCompanionRegenBonusLabel} regen speed` : 'No regen bonus'}
+                  </span>
                 </div>
                 <p className="island-run-sanctuary-companion-preview__copy">
-                  Your Active Companion is one selected creature, stored through the existing companion path.
+                  Your Paired Creature gently speeds up roll regeneration.
                 </p>
-                <p className="island-run-sanctuary-companion-preview__copy">
-                  Creature Packs are card bundles you open or earn; they are not an active team.
-                </p>
+                {!activeCompanionRegenModifier.isPersonalityComplete ? (
+                  <p className="island-run-sanctuary-companion-preview__copy">
+                    Complete your personality profile to unlock stronger companion matching.
+                  </p>
+                ) : null}
                 {(() => {
-                  const companionArt = activeCompanion ? resolveCreatureArtManifest(activeCompanion.creature) : null;
+                  const companionArt = activeCompanionForRegen ? resolveCreatureArtManifest(activeCompanionForRegen.creature) : null;
+                  const missingActiveCompanion = Boolean(__storeState.activeCompanionId) && !activeCompanionForRegen;
                   return (
-                    <article className={`island-run-sanctuary-companion-preview__card ${activeCompanion ? 'island-run-sanctuary-companion-preview__card--active' : ''}`}>
+                    <article className={`island-run-sanctuary-companion-preview__card ${activeCompanionForRegen ? 'island-run-sanctuary-companion-preview__card--active' : ''}`}>
                       <div className="island-run-sanctuary-companion-preview__frame">
-                        {activeCompanion && companionArt ? (
+                        {activeCompanionForRegen && companionArt ? (
                           <>
                             <img
                               className="island-run-sanctuary-companion-preview__art"
                               src={companionArt.cutoutSrc}
-                              alt={`${activeCompanion.creature.name} active companion preview`}
+                              alt={`${activeCompanionForRegen.creature.name} active companion regen preview`}
                               loading="lazy"
                               onError={(event) => {
                                 applyCreatureArtFallback(event, {
@@ -10826,17 +10855,37 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       </div>
                       <div className="island-run-sanctuary-companion-preview__body">
                         <p className="island-run-sanctuary-companion-preview__card-title">
-                          {activeCompanion ? activeCompanion.creature.name : 'No Active Companion'}
+                          {activeCompanionForRegen
+                            ? activeCompanionForRegen.creature.name
+                            : missingActiveCompanion
+                              ? 'Paired creature unavailable'
+                              : 'No Paired Creature'}
                         </p>
                         <p className="island-run-sanctuary-companion-preview__card-meta">
-                          {activeCompanion ? `${activeCompanion.creature.tier} • ${activeCompanion.creature.affinity}` : 'Open a creature detail to pair one companion.'}
+                          {activeCompanionForRegen
+                            ? `${formatCompanionRarityLabel(activeCompanionForRegen.creature.tier)} • Bond Lv ${activeCompanionForRegen.collectionEntry.bondLevel ?? 1}`
+                            : missingActiveCompanion
+                              ? 'Missing or unowned companion. Regen bonus is safely off.'
+                              : 'Open an owned creature card to pair one companion.'}
                         </p>
+                        <div className="island-run-sanctuary-companion-preview__stats" aria-label="Current companion regen bonus details">
+                          <span>Regen speed bonus <strong>+{activeCompanionRegenBonusLabel}</strong></span>
+                          <span>
+                            Archetype match{' '}
+                            <strong>
+                              {activeCompanionRegenModifier.isPersonalityComplete
+                                ? activeCompanionRegenModifier.matchPct > 0
+                                  ? `+${formatCompanionRegenBoostPct(activeCompanionRegenModifier.matchPct)} active`
+                                  : 'Profile complete · no match bonus'
+                                : 'Locked · profile incomplete'}
+                            </strong>
+                          </span>
+                        </div>
                       </div>
                     </article>
                   );
                 })()}
               </section>
-            ) : null}
 
             {selectedSanctuaryCreature ? (
               <>
