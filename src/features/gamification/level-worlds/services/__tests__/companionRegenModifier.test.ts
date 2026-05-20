@@ -67,7 +67,7 @@ function completeAnswers(): Record<string, number> {
 
 function completeHand(): ArchetypeHand {
   return {
-    dominant: handCard('builder', 'dominant'),
+    dominant: handCard('architect', 'dominant'),
     secondary: handCard('guardian', 'secondary'),
     supports: [handCard('caregiver', 'support'), handCard('explorer', 'support')],
     shadow: handCard('rebel', 'shadow'),

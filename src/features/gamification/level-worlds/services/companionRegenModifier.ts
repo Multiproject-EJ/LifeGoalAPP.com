@@ -119,7 +119,10 @@ function isCompleteArchetypeHand(hand: ArchetypeHand | null | undefined): hand i
 
 export function isCompanionRegenPersonalityComplete(
   context: CompanionRegenPersonalityContext | null | undefined,
-): context is Required<Pick<CompanionRegenPersonalityContext, 'answers' | 'archetypeHand'>> & CompanionRegenPersonalityContext {
+): context is CompanionRegenPersonalityContext & {
+  answers: Record<string, unknown>;
+  archetypeHand: ArchetypeHand;
+} {
   return Boolean(
     context
     && isCompleteAnswerSet(context.answers)
