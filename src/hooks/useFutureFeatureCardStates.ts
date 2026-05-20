@@ -17,10 +17,10 @@ type UseFutureFeatureCardStatesOptions = {
 
 function createSeenState(featureIds: readonly FeatureAvailabilityId[]) {
   const seenFeatures = readSeenFutureFeatures();
-  return featureIds.reduce<Record<FeatureAvailabilityId, boolean>>((state, featureId) => {
+  return featureIds.reduce<Partial<Record<FeatureAvailabilityId, boolean>>>((state, featureId) => {
     state[featureId] = seenFeatures.has(featureId);
     return state;
-  }, {} as Record<FeatureAvailabilityId, boolean>);
+  }, {});
 }
 
 export function useFutureFeatureCardStates(
@@ -29,10 +29,10 @@ export function useFutureFeatureCardStates(
 ): Record<FeatureAvailabilityId, FutureFeatureCardState> {
   const featureKey = featureIds.join('|');
   const normalizedFeatureIds = useMemo(() => [...featureIds], [featureKey]);
-  const [seenByFeatureId, setSeenByFeatureId] = useState<Record<FeatureAvailabilityId, boolean>>(() =>
+  const [seenByFeatureId, setSeenByFeatureId] = useState<Partial<Record<FeatureAvailabilityId, boolean>>>(() =>
     createSeenState(normalizedFeatureIds),
   );
-  const [votedByFeatureId, setVotedByFeatureId] = useState<Record<FeatureAvailabilityId, boolean>>({});
+  const [votedByFeatureId, setVotedByFeatureId] = useState<Partial<Record<FeatureAvailabilityId, boolean>>>({});
 
   useEffect(() => {
     setSeenByFeatureId(createSeenState(normalizedFeatureIds));
@@ -74,10 +74,10 @@ export function useFutureFeatureCardStates(
     ).then((voteEntries) => {
       if (!active) return;
       setVotedByFeatureId(
-        voteEntries.reduce<Record<FeatureAvailabilityId, boolean>>((state, [featureId, voted]) => {
+        voteEntries.reduce<Partial<Record<FeatureAvailabilityId, boolean>>>((state, [featureId, voted]) => {
           state[featureId] = voted;
           return state;
-        }, {} as Record<FeatureAvailabilityId, boolean>),
+        }, {}),
       );
     });
 
@@ -109,4 +109,3 @@ export function getFutureFeatureCardClassName(
     state?.voted ? 'future-feature-card--voted' : '',
   ].filter(Boolean).join(' ');
 }
-
