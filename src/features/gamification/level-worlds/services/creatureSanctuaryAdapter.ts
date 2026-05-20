@@ -72,6 +72,13 @@ function sanitizePositiveInteger(value: number | undefined | null, fallback = 0)
   return Math.max(0, Math.floor(value));
 }
 
+function sanitizeBondLevel(value: number | undefined | null): number {
+  if (!Number.isFinite(value) || value === null || value === undefined) {
+    return 1;
+  }
+  return Math.max(1, Math.floor(value));
+}
+
 function getRarityStarLabel(tier: CreatureDefinition['tier']): string {
   return '★'.repeat(RARITY_STARS[tier]);
 }
@@ -120,7 +127,7 @@ function indexCollectionEntries(
         sanitizePositiveInteger(entry.lastCollectedIslandNumber),
       ),
       bondXp: Math.max(sanitizePositiveInteger(existing.bondXp), sanitizePositiveInteger(entry.bondXp)),
-      bondLevel: Math.max(sanitizePositiveInteger(existing.bondLevel, 1), sanitizePositiveInteger(entry.bondLevel, 1)),
+      bondLevel: Math.max(sanitizeBondLevel(existing.bondLevel), sanitizeBondLevel(entry.bondLevel)),
       lastFedAtMs: existing.lastFedAtMs ?? entry.lastFedAtMs,
       claimedBondMilestones: Array.from(
         new Set([...existing.claimedBondMilestones, ...entry.claimedBondMilestones]),
@@ -153,7 +160,7 @@ export function buildCreatureSanctuaryGalleryModel(
       shipZone: creature.shipZone,
       discovered,
       copies,
-      bondLevel: discovered ? sanitizePositiveInteger(collectionEntry?.bondLevel, 1) : null,
+      bondLevel: discovered ? sanitizeBondLevel(collectionEntry?.bondLevel) : null,
       bondXp: discovered ? sanitizePositiveInteger(collectionEntry?.bondXp) : 0,
       lastCollectedIslandNumber: discovered
         ? sanitizePositiveInteger(collectionEntry?.lastCollectedIslandNumber, 1)
