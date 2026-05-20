@@ -367,6 +367,9 @@ type DailyHabitTrackerProps = {
   onOpenStarterQuest?: (initialDomainKey?: LifeWheelCategoryKey) => void;
   archetypeHand?: ArchetypeHand | null;
   onNavigateToContracts?: () => void;
+  onNavigateToRoutines?: () => void;
+  isContractsFeatureOpen?: boolean;
+  isRoutinesFeatureOpen?: boolean;
 };
 
 type HabitCompletionState = {
@@ -722,6 +725,9 @@ export function DailyHabitTracker({
   onOpenStarterQuest,
   archetypeHand,
   onNavigateToContracts,
+  onNavigateToRoutines,
+  isContractsFeatureOpen = false,
+  isRoutinesFeatureOpen = false,
 }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
   const sparkHandEnabled = isPlayersHandSparkResultEnabled();
@@ -4778,6 +4784,13 @@ export function DailyHabitTracker({
   const resetToToday = useCallback(() => setActiveDate(today), [today]);
 
   const loadActiveContracts = useCallback(async () => {
+    if (!isContractsFeatureOpen) {
+      setContractsLoading(false);
+      setContractsError(null);
+      setActiveContracts([]);
+      return;
+    }
+
     setContractsLoading(true);
     setContractsError(null);
 
@@ -4803,7 +4816,7 @@ export function DailyHabitTracker({
 
     setActiveContracts(syncedContracts);
     setContractsLoading(false);
-  }, [session.user.id]);
+  }, [isContractsFeatureOpen, session.user.id]);
 
   useEffect(() => {
     void loadActiveContracts();
@@ -7793,7 +7806,9 @@ export function DailyHabitTracker({
       isIntentionsNoticeViewed ? 'habit-checklist-card__intentions-button--seen habit-checklist-card__intentions-button--compact' : ''
     }`;
     const todayActionableContracts = activeContracts.filter((contract) => isPromiseActionableToday(contract));
-    const contractsStatusChip = contractsError
+    const contractsStatusChip = !isContractsFeatureOpen
+      ? { label: 'Future Feature', tone: 'accent' as const }
+      : contractsError
       ? { label: 'Error', tone: 'error' as const }
       : contractsLoading
         ? { label: 'Loading…', tone: 'loading' as const }
@@ -7801,7 +7816,9 @@ export function DailyHabitTracker({
             label: todayActionableContracts.length === 1 ? '1 now' : `${todayActionableContracts.length} now`,
             tone: 'accent' as const,
           };
-    const routinesStatusChip = routinesTodaySummary.status === 'error'
+    const routinesStatusChip = !isRoutinesFeatureOpen
+      ? { label: 'Future Feature', tone: 'accent' as const }
+      : routinesTodaySummary.status === 'error'
       ? { label: 'Error', tone: 'error' as const }
       : routinesTodaySummary.status === 'loading'
         ? { label: 'Loading…', tone: 'loading' as const }
@@ -8190,15 +8207,25 @@ export function DailyHabitTracker({
               subtitle="Run your grouped habits"
               statusChip={routinesStatusChip}
               expanded={openTodayExpandableSection === 'routines'}
-              onToggle={() => toggleTodayExpandableSection('routines')}
-              keepMounted
+              onToggle={() => {
+                if (!isRoutinesFeatureOpen) {
+                  onNavigateToRoutines?.();
+                  return;
+                }
+                toggleTodayExpandableSection('routines');
+              }}
+              keepMounted={isRoutinesFeatureOpen}
             >
-              <RoutinesTodayLane
-                session={session}
-                onHideStandaloneHabitsChange={handleRoutineHiddenHabitIdsChange}
-                onSummaryChange={setRoutinesTodaySummary}
-                variant="panel"
-              />
+              {isRoutinesFeatureOpen ? (
+                <RoutinesTodayLane
+                  session={session}
+                  onHideStandaloneHabitsChange={handleRoutineHiddenHabitIdsChange}
+                  onSummaryChange={setRoutinesTodaySummary}
+                  variant="panel"
+                />
+              ) : (
+                <p className="habit-contracts-card__hint">Routines are a Future Feature for this account.</p>
+              )}
             </TodayExpandableActionSection>
 
             <TodayExpandableActionSection
@@ -8208,7 +8235,13 @@ export function DailyHabitTracker({
               subtitle="Promises needing attention now"
               statusChip={contractsStatusChip}
               expanded={openTodayExpandableSection === 'contracts'}
-              onToggle={() => toggleTodayExpandableSection('contracts')}
+              onToggle={() => {
+                if (!isContractsFeatureOpen) {
+                  onNavigateToContracts?.();
+                  return;
+                }
+                toggleTodayExpandableSection('contracts');
+              }}
             >
               <div className="habit-contracts-card" aria-live="polite">
                 {contractsLoading && todayActionableContracts.length === 0 ? (
