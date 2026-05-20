@@ -385,11 +385,11 @@ export function MyAccountPanel({
     }
   };
 
-  const openSettingsFeatureModule = (featureId: FeatureAvailabilityId, openModule: () => void) => {
+  const handleSettingsModuleClick = (featureId: FeatureAvailabilityId, setModuleOpen: (isOpen: boolean) => void) => {
     const access = resolveFeatureAccess(featureId, { isAdminOrCreator: isAdmin === true });
 
     if (access === 'open') {
-      openModule();
+      setModuleOpen(true);
       return;
     }
 
@@ -399,6 +399,15 @@ export function MyAccountPanel({
     }
 
     // Hidden feature access should remain silent so public users never see internal details.
+  };
+  const handleHolidayThemesClick = () => handleSettingsModuleClick('settings.holidayThemes', setHolidayFolderOpen);
+  const handleNotificationsClick = () => handleSettingsModuleClick('settings.notifications', setFolder2Open);
+  const handleExperimentalFeaturesClick = () =>
+    handleSettingsModuleClick('settings.experimentalFeatures', setExperimentalFolderOpen);
+  const handleAdvancedToolsClick = () => {
+    if (showAdminTools) {
+      setFolder1Open(true);
+    }
   };
 
   return (
@@ -693,7 +702,7 @@ export function MyAccountPanel({
             subtitle="Seasonal moments and themed experiences."
             meta={`${HOLIDAY_OPTIONS.length} seasonal moments`}
             featureId="settings.holidayThemes"
-            onClick={() => openSettingsFeatureModule('settings.holidayThemes', () => setHolidayFolderOpen(true))}
+            onClick={handleHolidayThemesClick}
           />
           <SettingsModuleCard
             icon="🔔"
@@ -701,7 +710,7 @@ export function MyAccountPanel({
             subtitle="Gentle habit and daily reminder preferences."
             meta="3 reminder areas"
             featureId="settings.notifications"
-            onClick={() => openSettingsFeatureModule('settings.notifications', () => setFolder2Open(true))}
+            onClick={handleNotificationsClick}
           />
           {showAdminTools ? (
             <SettingsModuleCard
@@ -709,7 +718,7 @@ export function MyAccountPanel({
               title="Advanced Tools"
               subtitle="Internal diagnostics, admin previews, and debug tools."
               meta="Admin only"
-              onClick={() => setFolder1Open(true)}
+              onClick={handleAdvancedToolsClick}
             />
           ) : null}
           <SettingsModuleCard
@@ -718,7 +727,7 @@ export function MyAccountPanel({
             subtitle="Creator previews for ideas still in development."
             meta="Future Feature"
             featureId="settings.experimentalFeatures"
-            onClick={() => openSettingsFeatureModule('settings.experimentalFeatures', () => setExperimentalFolderOpen(true))}
+            onClick={handleExperimentalFeaturesClick}
           />
         </div>
       </section>
