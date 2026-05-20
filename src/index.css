@@ -3167,7 +3167,7 @@ html.platform-ipad .workspace-shell__menu-edge {
     position: fixed;
     left: 50%;
     top: 50%;
-    width: min(820px, calc(100vw - 2rem));
+    width: min(760px, calc(100vw - 2rem));
     height: min(980px, calc(100dvh - 1.5rem));
     transform: translate(-50%, -50%);
     border-radius: clamp(32px, 5vw, 56px);
@@ -3186,7 +3186,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 
   .app--mobile-frame .workspace-shell {
     width: var(--mobile-frame-width);
-    min-height: min(var(--mobile-frame-height), 940px);
+    min-height: min(calc(100dvh - (var(--workspace-shell-padding) * 2)), 940px);
     border-radius: clamp(28px, 4vw, 42px);
     overflow: hidden;
     background: rgba(255, 255, 255, 0.16);
@@ -18326,7 +18326,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 
   .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__menu-button:hover,
   .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__menu-button:focus-visible {
-    transform: translate(-50%, -52%) scale(1.03);
+    transform: translate(-50%, -50%) scale(1.03);
   }
 
   .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__list--stacked {
