@@ -301,9 +301,11 @@ Relevant references:
 - `src/features/gamification/level-worlds/services/islandRunGameStateStore.ts:187-248`
 - `src/features/gamification/level-worlds/services/islandRunGameStateStore.ts:264-316`
 
-### RISK: Passive creature regen can inflate dice if it bypasses the existing floor semantics
+Terminology for this section: “dice floor” means the current passive regen target represented by `diceRegenState.maxDice`, not a hard wallet cap.
 
-Current dice regen fills only when `dicePool < maxDice`; reward dice may exceed that passive floor and regen stops at/above the floor. In this report, “dice floor” means the current passive regen target represented by `diceRegenState.maxDice`, not a hard wallet cap. Future creature regen must decide whether it:
+### RISK: Passive creature regen can inflate dice if it bypasses the existing passive floor semantics
+
+Current dice regen fills only when `dicePool < maxDice`; reward dice may exceed that passive floor and regen stops at/above the floor. Future creature regen must decide whether it:
 
 1. raises the existing dice regen floor, meaning active companions increase the `maxDice` target that base passive regen fills toward,
 2. contributes a separate capped reserve, meaning companion dice accumulate in a distinct bucket with its own maximum,
@@ -454,7 +456,7 @@ Relevant references:
 Do not implement passive creature dice regen until these are resolved:
 
 - Canonical state shape for creature regen/reserve is approved.
-- Economy design chooses and documents one of the patterns defined in the Island Run economy section: floor raise, interval reduction, separate capped reserve, or claimable capped reserve.
+- Economy design chooses and documents one of the patterns defined in section 7, “RISK: Passive creature regen can inflate dice if it bypasses the existing passive floor semantics”: floor raise, interval reduction, separate capped reserve, or claimable capped reserve.
 - Runtime/Supabase schema constraints and hydration sanitizers are defined.
 - Action service persists resource deltas and claim markers atomically.
 - Duplicate/offline/cross-device claim idempotency is tested.
