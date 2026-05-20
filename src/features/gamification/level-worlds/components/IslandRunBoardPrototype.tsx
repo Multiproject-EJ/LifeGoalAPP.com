@@ -5486,21 +5486,25 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     () => collectedCreatures.find((creature) => creature.creatureId === activeCompanionId) ?? null,
     [activeCompanionId, collectedCreatures],
   );
+  const activeRegenCompanion = useMemo(
+    () => collectedCreatures.find((creature) => creature.creatureId === (__storeState.activeCompanionId ?? null)) ?? null,
+    [__storeState.activeCompanionId, collectedCreatures],
+  );
   const activeCompanionRegenModifier = useMemo(
     () => resolveCompanionRegenModifier({
       record: {
-        activeCompanionId: runtimeState.activeCompanionId ?? null,
-        creatureCollection: runtimeState.creatureCollection ?? [],
+        activeCompanionId: __storeState.activeCompanionId ?? null,
+        creatureCollection: __storeState.creatureCollection ?? [],
       },
     }),
-    [runtimeState.activeCompanionId, runtimeState.creatureCollection],
+    [__storeState.activeCompanionId, __storeState.creatureCollection],
   );
   const activeCompanionRegenBonusLabel = useMemo(
     () => formatCompanionRegenBonusPercent(activeCompanionRegenModifier.cappedBoostPct),
     [activeCompanionRegenModifier.cappedBoostPct],
   );
   const activeCompanionMissingOrUnowned = Boolean(
-    runtimeState.activeCompanionId && !activeCompanionRegenModifier.isOwned,
+    __storeState.activeCompanionId && !activeCompanionRegenModifier.isOwned,
   );
   const activeCompanionBonus = useMemo(
     () => (activeCompanion ? getCompanionBonusForCreature(activeCompanion.creature, activeCompanion.bondLevel) : null),
@@ -10822,16 +10826,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   Complete your personality profile to unlock stronger companion matching.
                 </p>
                 {(() => {
-                  const companionArt = activeCompanion ? resolveCreatureArtManifest(activeCompanion.creature) : null;
+                  const companionArt = activeRegenCompanion ? resolveCreatureArtManifest(activeRegenCompanion.creature) : null;
                   return (
                     <article className={`island-run-sanctuary-companion-preview__card ${activeCompanionRegenModifier.isOwned ? 'island-run-sanctuary-companion-preview__card--active' : ''}`}>
                       <div className="island-run-sanctuary-companion-preview__frame">
-                        {activeCompanion && companionArt ? (
+                        {activeRegenCompanion && companionArt ? (
                           <>
                             <img
                               className="island-run-sanctuary-companion-preview__art"
                               src={companionArt.cutoutSrc}
-                              alt={`${activeCompanion.creature.name} active companion preview`}
+                              alt={`${activeRegenCompanion.creature.name} active companion preview`}
                               loading="lazy"
                               onError={(event) => {
                                 applyCreatureArtFallback(event, {
@@ -10850,15 +10854,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         <p className="island-run-sanctuary-companion-preview__card-title">
                           {activeCompanionMissingOrUnowned
                             ? 'Paired Creature unavailable'
-                            : activeCompanion
-                              ? activeCompanion.creature.name
+                            : activeRegenCompanion
+                              ? activeRegenCompanion.creature.name
                               : 'No Paired Creature'}
                         </p>
                         <p className="island-run-sanctuary-companion-preview__card-meta">
                           {activeCompanionMissingOrUnowned
                             ? 'The saved companion is missing or no longer owned.'
-                            : activeCompanion
-                              ? `${activeCompanion.creature.tier} rarity • Bond Lv ${activeCompanion.bondLevel}`
+                            : activeRegenCompanion
+                              ? `${activeRegenCompanion.creature.tier} rarity • Bond Lv ${activeRegenCompanion.bondLevel}`
                               : 'Open a creature detail to pair one companion.'}
                         </p>
                         <div className="island-run-sanctuary-companion-preview__stats" aria-label="Companion roll regeneration bonus details">
