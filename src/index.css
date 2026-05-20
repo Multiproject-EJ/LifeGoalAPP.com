@@ -3167,7 +3167,7 @@ html.platform-ipad .workspace-shell__menu-edge {
     position: fixed;
     left: 50%;
     top: 50%;
-    width: min(760px, calc(100vw - 2rem));
+    width: min(720px, calc(100vw - 2rem));
     height: min(980px, calc(100dvh - 1.5rem));
     transform: translate(-50%, -50%);
     border-radius: clamp(32px, 5vw, 56px);
@@ -3184,9 +3184,12 @@ html.platform-ipad .workspace-shell__menu-edge {
     z-index: 0;
   }
 
-  .app--mobile-frame .workspace-shell {
+  .app--mobile-frame .workspace-shell,
+  html.platform-ipad .app--mobile-frame .workspace-shell {
     width: var(--mobile-frame-width);
+    max-width: calc(100vw - 2rem);
     min-height: min(calc(100dvh - (var(--workspace-shell-padding) * 2)), 940px);
+    margin-inline: auto;
     border-radius: clamp(28px, 4vw, 42px);
     overflow: hidden;
     background: rgba(255, 255, 255, 0.16);
@@ -3200,8 +3203,11 @@ html.platform-ipad .workspace-shell__menu-edge {
 
   .app--mobile-frame .mobile-footer-nav {
     display: flex;
-    left: max(calc((100vw - var(--mobile-frame-width)) / 2), 0px);
-    right: max(calc((100vw - var(--mobile-frame-width)) / 2), 0px);
+    left: 0;
+    right: 0;
+    width: var(--mobile-frame-width);
+    max-width: calc(100vw - 2rem);
+    margin-inline: auto;
   }
 }
 
@@ -18266,7 +18272,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 @media (min-width: 721px) {
   .app--mobile-frame .mobile-footer-nav {
-    --controller-w: min(100%, clamp(520px, 88vw, 590px));
+    --controller-w: min(100%, var(--mobile-frame-width), 560px);
     --controller-h: clamp(158px, calc(var(--controller-w) * 0.32), 190px);
     padding:
       clamp(0.55rem, 1.2vw, 0.8rem)
