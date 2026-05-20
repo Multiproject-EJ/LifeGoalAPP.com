@@ -4919,6 +4919,32 @@
   font-size: 0.72rem;
 }
 
+.island-run-sanctuary-companion-preview__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+}
+
+.island-run-sanctuary-companion-preview__stats span {
+  border-radius: 999px;
+  padding: 0.18rem 0.45rem;
+  border: 1px solid rgba(126, 255, 207, 0.18);
+  background: rgba(126, 255, 207, 0.08);
+  color: rgba(225, 255, 246, 0.9);
+  font-size: 0.7rem;
+}
+
+.island-run-sanctuary-companion-preview__notice {
+  margin: 0.2rem 0 0;
+  color: rgba(255, 238, 184, 0.9);
+  font-size: 0.72rem;
+}
+
+.island-run-sanctuary-companion-preview__notice--warning {
+  color: rgba(255, 202, 202, 0.92);
+}
+
 .island-run-sanctuary-menu-bar {
   display: flex;
   justify-content: flex-end;
