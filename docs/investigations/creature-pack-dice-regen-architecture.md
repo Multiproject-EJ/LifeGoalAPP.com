@@ -190,7 +190,7 @@ These starting values are intentionally small because Phase 1 should be an inter
 | Common rarity | `+0.01` |
 | Rare rarity | `+0.02` |
 | Mythic rarity | `+0.03` |
-| Bond/level | `min(0.04, floor((bondLevel - 1) / 5) * 0.01)` |
+| Bond/level | `min(0.04, floor(bondLevel / 5) * 0.01)`; levels 1-4 add `0`, levels 5-9 add `+0.01` |
 | Archetype/fit match | `+0.02` for strong fit, `+0.01` for moderate fit, `+0` otherwise |
 
 Pack synergy boost:
@@ -397,7 +397,7 @@ Regression commands:
 - **LocalStorage authority regression:** legacy creature services must not become Pack/dice authority.
 - **Pack swap exploit:** players could wait offline then switch to the strongest Pack before catch-up unless selection applies pending regen or resets anchors.
 - **Cross-device merge risk:** unioning Pack arrays could exceed slot caps.
-- **Contract mismatch:** `docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md:192-208` describes a logarithmic regen floor, while `islandRunDiceRegeneration.ts` uses level bands; resolve by either updating the contract to bless bands or migrating implementation to the contract formula before tuning larger Pack bonuses.
+- **Contract mismatch:** `docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md:192-197` describes a logarithmic regen floor, while `islandRunDiceRegeneration.ts` uses level bands; resolve by either updating the contract to bless bands or migrating implementation to the contract formula before tuning larger Pack bonuses.
 - **Telemetry ambiguity:** without source attribution, base regen and Pack regen inflation would be hard to debug.
 - **Early-game imbalance:** first-session creature pack already grants +100 dice, so early Pack regen must be small and capped.
 - **Archetype privacy/design drift:** archetype matching should use stable derived IDs, not raw sensitive profile text in economy math.
