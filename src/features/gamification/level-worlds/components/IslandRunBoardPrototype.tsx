@@ -765,7 +765,7 @@ function getAvatarImageUrl(user: { user_metadata?: Record<string, unknown> | nul
 }
 
 function formatCompanionRegenBonusPercent(boostPct: number): string {
-  if (!Number.isFinite(boostPct) || boostPct <= 0) return '0%';
+  if (!Number.isFinite(boostPct)) return '0%';
   return `${Math.round(boostPct * 1000) / 10}%`;
 }
 
@@ -5487,7 +5487,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     [activeCompanionId, collectedCreatures],
   );
   const activeRegenCompanion = useMemo(
-    () => collectedCreatures.find((creature) => creature.creatureId === (__storeState.activeCompanionId ?? null)) ?? null,
+    () => collectedCreatures.find((creature) => creature.creatureId === __storeState.activeCompanionId) ?? null,
     [__storeState.activeCompanionId, collectedCreatures],
   );
   const activeCompanionRegenModifier = useMemo(
