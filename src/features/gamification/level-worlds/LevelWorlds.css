@@ -5317,7 +5317,10 @@
   .island-run-hatch-reveal__card,
   .island-run-first-creature-pack,
   .island-run-first-creature-pack__card,
-  .island-run-first-creature-pack__sparkle {
+  .island-run-first-creature-pack__sparkle,
+  .creature-pack-opening-prototype,
+  .creature-pack-opening-prototype__shell,
+  .creature-pack-opening-prototype__card {
     animation: none;
   }
 }
@@ -5526,6 +5529,177 @@
 @keyframes first-creature-pack-sparkle {
   from { transform: translateY(0) scale(0.96) rotate(-4deg); opacity: 0.82; }
   to { transform: translateY(-6px) scale(1.08) rotate(4deg); opacity: 1; }
+}
+
+.creature-pack-opening-prototype {
+  position: fixed;
+  inset: 0;
+  z-index: 9860;
+  display: grid;
+  place-items: center;
+  padding:
+    max(0.75rem, env(safe-area-inset-top, 0px))
+    max(0.75rem, env(safe-area-inset-right, 0px))
+    max(0.75rem, env(safe-area-inset-bottom, 0px))
+    max(0.75rem, env(safe-area-inset-left, 0px));
+  background:
+    radial-gradient(circle at 50% 16%, rgba(255, 220, 142, 0.18), transparent 38%),
+    rgba(4, 8, 18, 0.82);
+  animation: sanctuary-detail-fade 180ms ease-out;
+}
+
+.creature-pack-opening-prototype__shell {
+  --pack-opening-accent: #91e6a9;
+  width: min(480px, 100%);
+  max-height: min(94dvh, 820px);
+  overflow-y: auto;
+  border-radius: 26px;
+  border: 1px solid color-mix(in srgb, var(--pack-opening-accent) 48%, rgba(255, 255, 255, 0.18));
+  box-shadow: 0 28px 76px rgba(0, 0, 0, 0.5), 0 0 34px color-mix(in srgb, var(--pack-opening-accent) 22%, transparent);
+  background:
+    radial-gradient(circle at 24% 14%, color-mix(in srgb, var(--pack-opening-accent) 28%, transparent), transparent 34%),
+    linear-gradient(160deg, rgba(20, 28, 54, 0.98), rgba(7, 12, 28, 0.98));
+  color: #fff;
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  animation: sanctuary-detail-lift 220ms ease-out;
+}
+
+.creature-pack-opening-prototype__shell--rare {
+  --pack-opening-accent: #a992ff;
+}
+
+.creature-pack-opening-prototype__shell--mythic {
+  --pack-opening-accent: #ffd978;
+}
+
+.creature-pack-opening-prototype__header {
+  display: grid;
+  gap: 0.34rem;
+  text-align: center;
+}
+
+.creature-pack-opening-prototype__eyebrow,
+.creature-pack-opening-prototype__header p,
+.creature-pack-opening-prototype__anticipation,
+.creature-pack-opening-prototype__copy-note,
+.creature-pack-opening-prototype__summary-kicker,
+.creature-pack-opening-prototype__summary-note {
+  margin: 0;
+}
+
+.creature-pack-opening-prototype__eyebrow,
+.creature-pack-opening-prototype__anticipation,
+.creature-pack-opening-prototype__summary-kicker {
+  color: #ffe39d;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.creature-pack-opening-prototype__header h2 {
+  margin: 0;
+  font-size: clamp(1.45rem, 7vw, 2.15rem);
+  line-height: 1.02;
+}
+
+.creature-pack-opening-prototype__header p,
+.creature-pack-opening-prototype__copy-note,
+.creature-pack-opening-prototype__summary-note {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.86rem;
+}
+
+.creature-pack-opening-prototype__stage {
+  width: 100%;
+  display: grid;
+  gap: 0.7rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.creature-pack-opening-prototype__stage:focus-visible {
+  outline: 3px solid rgba(255, 227, 157, 0.72);
+  outline-offset: 6px;
+  border-radius: 22px;
+}
+
+.creature-pack-opening-prototype__card {
+  width: min(100%, 360px);
+  animation: pack-opening-card-rise 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.creature-pack-opening-prototype__copy-note {
+  border-radius: 999px;
+  padding: 0.62rem 0.8rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-weight: 800;
+}
+
+.creature-pack-opening-prototype__summary {
+  display: grid;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.creature-pack-opening-prototype__summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.creature-pack-opening-prototype__summary-card {
+  display: grid;
+  gap: 0.18rem;
+  border-radius: 16px;
+  border: 1px solid rgba(145, 230, 169, 0.3);
+  padding: 0.68rem;
+  background: rgba(145, 230, 169, 0.12);
+}
+
+.creature-pack-opening-prototype__summary-card--rare {
+  border-color: rgba(169, 146, 255, 0.4);
+  background: rgba(111, 83, 221, 0.16);
+}
+
+.creature-pack-opening-prototype__summary-card--mythic {
+  border-color: rgba(255, 217, 120, 0.48);
+  background: rgba(234, 169, 58, 0.16);
+}
+
+.creature-pack-opening-prototype__summary-card span {
+  font-weight: 900;
+}
+
+.creature-pack-opening-prototype__summary-card strong {
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 0.74rem;
+}
+
+.creature-pack-opening-prototype__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+@keyframes pack-opening-card-rise {
+  from { opacity: 0; transform: translateY(20px) scale(0.94) rotate(-1deg); }
+  to { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+}
+
+@media (max-width: 420px) {
+  .creature-pack-opening-prototype__actions,
+  .creature-pack-opening-prototype__summary-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .island-run-sanctuary-detail__art {
