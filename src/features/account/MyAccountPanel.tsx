@@ -395,7 +395,10 @@ export function MyAccountPanel({
 
     if (access === 'previewOnly') {
       setActiveFutureFeatureId(featureId);
+      return;
     }
+
+    // Hidden feature access should remain silent so public users never see internal details.
   };
 
   return (
