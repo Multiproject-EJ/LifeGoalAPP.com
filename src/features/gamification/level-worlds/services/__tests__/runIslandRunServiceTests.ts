@@ -3,6 +3,7 @@ import { creatureCollectionServiceTests } from './creatureCollectionService.test
 import { creatureTreatInventoryServiceTests } from './creatureTreatInventoryService.test';
 import { creatureFitEngineTests } from './creatureFitEngine.test';
 import { creatureImageManifestTests } from './creatureImageManifest.test';
+import { creatureSanctuaryAdapterTests } from './creatureSanctuaryAdapter.test';
 import { encounterServiceTests } from './encounterService.test';
 import { islandBoardTopologyTests } from './islandBoardTopology.test';
 import { islandRunFoundationTests } from './islandRunFoundations.test';
@@ -69,6 +70,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'creatureTreatInventoryService', tests: creatureTreatInventoryServiceTests },
   { label: 'creatureFitEngine', tests: creatureFitEngineTests },
   { label: 'creatureImageManifest', tests: creatureImageManifestTests },
+  { label: 'creatureSanctuaryAdapter', tests: creatureSanctuaryAdapterTests },
   { label: 'encounterService', tests: encounterServiceTests },
   { label: 'islandBoardTopology', tests: islandBoardTopologyTests },
   { label: 'islandRunFoundations', tests: islandRunFoundationTests },

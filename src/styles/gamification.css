@@ -1092,6 +1092,112 @@
   padding: 0 0.5rem;
 }
 
+.score-tab__sanctuary {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.score-tab__sanctuary-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.score-tab__sanctuary-summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+
+.score-tab__sanctuary-stat-grid,
+.score-tab__sanctuary-egg-list,
+.score-tab__sanctuary-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.score-tab__sanctuary-stat-grid span,
+.score-tab__sanctuary-egg-list span,
+.score-tab__sanctuary-card-meta span,
+.score-tab__sanctuary-active-pill {
+  border-radius: 999px;
+  background: rgba(14, 165, 233, 0.12);
+  color: #075985;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.35rem 0.55rem;
+}
+
+.score-tab__sanctuary-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+
+.score-tab__sanctuary-card {
+  position: relative;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(240, 253, 250, 0.78));
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.score-tab__sanctuary-card--locked {
+  background: linear-gradient(145deg, rgba(248, 250, 252, 0.9), rgba(226, 232, 240, 0.72));
+  color: #64748b;
+}
+
+.score-tab__sanctuary-card--active {
+  border-color: rgba(14, 165, 233, 0.58);
+  box-shadow: 0 16px 30px rgba(14, 165, 233, 0.16);
+}
+
+.score-tab__sanctuary-card-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.score-tab__sanctuary-rarity {
+  color: #f59e0b;
+  letter-spacing: 0.08em;
+}
+
+.score-tab__sanctuary-avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(14, 165, 233, 0.12);
+  font-size: 1.6rem;
+}
+
+.score-tab__sanctuary-card h3,
+.score-tab__sanctuary-card p {
+  margin: 0;
+}
+
+.score-tab__sanctuary-card h3 {
+  font-size: 1rem;
+}
+
+.score-tab__sanctuary-card p {
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
 .score-tab__status {
   padding: 1rem;
   border-radius: 14px;
@@ -1751,6 +1857,11 @@
 @media (min-width: 720px) {
   .score-tab__hub {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .score-tab__sanctuary-summary,
+  .score-tab__sanctuary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .score-tab__grid {

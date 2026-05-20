@@ -47,6 +47,12 @@ import {
   readIslandRunRuntimeState,
 } from './level-worlds/services/islandRunRuntimeState';
 import { applyWalletShieldsSet } from './level-worlds/services/islandRunStateActions';
+import { useIslandRunState } from './level-worlds/hooks/useIslandRunState';
+import { CREATURE_CATALOG } from './level-worlds/services/creatureCatalog';
+import {
+  buildCreatureSanctuaryGalleryModel,
+  type CreatureSanctuaryGalleryModel,
+} from './level-worlds/services/creatureSanctuaryAdapter';
 import {
   DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG,
   readPerfectCompanionRuntimeConfig,
@@ -168,6 +174,7 @@ export function ScoreTab({
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
   const [leaderboardArchetypeFilter, setLeaderboardArchetypeFilter] = useState<string>('all');
   const [garageShipTab, setGarageShipTab] = useState<'companions' | 'upgrades' | 'cosmetics'>('companions');
+  const [collectionsView, setCollectionsView] = useState<'hub' | 'creatureSanctuary'>('hub');
   const [perfectCompanionOps, setPerfectCompanionOps] = useState<PerfectCompanionRuntimeConfig>(() =>
     DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG,
   );
@@ -270,6 +277,9 @@ export function ScoreTab({
 
   const handleTabChange = (tab: 'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard' | 'collections') => {
     setActiveTab(tab);
+    if (tab !== 'collections') {
+      setCollectionsView('hub');
+    }
     onActiveTabChange?.(tab);
   };
 
@@ -1642,16 +1652,40 @@ export function ScoreTab({
         <div className="score-tab__content">
           <div className="score-tab__bank-intro">
             <h2 className="score-tab__headline">Collections</h2>
-            <p className="score-tab__subtitle">Your growing world of collectibles and companions.</p>
+            <p className="score-tab__subtitle">
+              {collectionsView === 'creatureSanctuary'
+                ? 'A read-only view of your Island Run creature collection.'
+                : 'Your growing world of collectibles and companions.'}
+            </p>
           </div>
-          <div className="score-tab__hub">
+          {collectionsView === 'creatureSanctuary' ? (
+            session ? (
+              <CreatureSanctuaryScoreHubView
+                session={session}
+                onBack={() => setCollectionsView('hub')}
+              />
+            ) : (
+              <section className="score-tab__card">
+                <h3 className="score-tab__card-title">Creature Sanctuary</h3>
+                <p className="score-tab__meta">Sign in to view your Island Run creature collection.</p>
+                <button type="button" className="score-tab__link" onClick={() => setCollectionsView('hub')}>
+                  Back to Collections
+                </button>
+              </section>
+            )
+          ) : (
+            <div className="score-tab__hub">
             <button
               type="button"
               className={getScoreFutureFeatureCardClassName(
                 'score-tab__hub-card score-tab__hub-card--full',
                 'score.creatureSanctuary',
               )}
-              onClick={() => handleHubCardClick('score.creatureSanctuary', 'Creature Sanctuary')}
+              onClick={() =>
+                handleHubCardClick('score.creatureSanctuary', 'Creature Sanctuary', () =>
+                  setCollectionsView('creatureSanctuary'),
+                )
+              }
             >
               <span className="score-tab__hub-visual score-tab__hub-visual--icon" aria-hidden="true">🐾</span>
               <span className="score-tab__hub-title">
@@ -1677,7 +1711,8 @@ export function ScoreTab({
               </span>
               <p className="score-tab__hub-desc">Build a playful gallery of collectible stickers, seasonal moments, and achievement memories.</p>
             </button>
-          </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1691,5 +1726,123 @@ export function ScoreTab({
         />
       ) : null}
     </section>
+  );
+}
+
+function CreatureSanctuaryScoreHubView({
+  session,
+  onBack,
+}: {
+  session: Session;
+  onBack: () => void;
+}) {
+  const { state } = useIslandRunState(session, null);
+  const galleryModel = useMemo(
+    () => buildCreatureSanctuaryGalleryModel(state, CREATURE_CATALOG),
+    [state],
+  );
+
+  return (
+    <div className="score-tab__sanctuary">
+      <div className="score-tab__sanctuary-actions">
+        <button type="button" className="score-tab__link" onClick={onBack}>
+          ← Back to Collections
+        </button>
+      </div>
+      <CreatureSanctuarySummary model={galleryModel} />
+      <div className="score-tab__sanctuary-grid" aria-label="Creature Sanctuary gallery">
+        {galleryModel.cards.map((card) => (
+          <article
+            key={card.creatureId}
+            className={`score-tab__sanctuary-card${
+              card.discovered ? '' : ' score-tab__sanctuary-card--locked'
+            }${card.isActiveCompanion ? ' score-tab__sanctuary-card--active' : ''}`}
+          >
+            <div className="score-tab__sanctuary-card-topline">
+              <span className="score-tab__sanctuary-rarity" aria-label={`${card.rarityLabel} rarity`}>
+                {card.starLabel}
+              </span>
+              <span>{card.rarityLabel}</span>
+            </div>
+            <div className="score-tab__sanctuary-avatar" aria-hidden="true">
+              {card.discovered ? '🐾' : '🔒'}
+            </div>
+            <h3>{card.discovered ? card.name : 'Locked Creature'}</h3>
+            <p>
+              {card.discovered
+                ? `${card.habitat} · ${card.affinity}`
+                : `${card.rarityLabel} companion waiting to be discovered.`}
+            </p>
+            <div className="score-tab__sanctuary-card-meta">
+              <span>{card.shipZone} zone</span>
+              {card.discovered ? <span>{card.copies} owned</span> : <span>Locked</span>}
+              {card.bondLevel ? <span>Bond Lv. {card.bondLevel}</span> : null}
+            </div>
+            {card.isActiveCompanion ? (
+              <span className="score-tab__sanctuary-active-pill">Active companion</span>
+            ) : null}
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CreatureSanctuarySummary({ model }: { model: CreatureSanctuaryGalleryModel }) {
+  const { summary } = model;
+  const eggSummaryItems = [
+    ['Incubating', summary.eggSummary.activeEggs],
+    ['Ready', summary.eggSummary.readyEggs],
+    ['Dormant', summary.eggSummary.dormantEggs],
+    ['Collected', summary.eggSummary.collectedEggs],
+    ['Sold', summary.eggSummary.soldEggs],
+    ['Reward eggs', summary.eggSummary.rewardEggsUnopened],
+    ['Opened rewards', summary.eggSummary.rewardEggsOpened],
+  ] as const;
+
+  return (
+    <div className="score-tab__sanctuary-summary">
+      <section className="score-tab__card">
+        <h3 className="score-tab__card-title">Sanctuary Progress</h3>
+        <div className="score-tab__sanctuary-stat-grid">
+          <span>
+            <strong>{summary.discoveredCreatures}</strong>
+            Discovered
+          </span>
+          <span>
+            <strong>{summary.lockedCreatures}</strong>
+            Locked
+          </span>
+          <span>
+            <strong>{summary.totalCreatures}</strong>
+            Catalog
+          </span>
+        </div>
+        <p className="score-tab__meta">
+          Common {summary.commonDiscovered} · Rare {summary.rareDiscovered} · Mythic {summary.mythicDiscovered}
+        </p>
+      </section>
+      <section className="score-tab__card">
+        <h3 className="score-tab__card-title">Active Companion</h3>
+        {summary.activeCompanion ? (
+          <p className="score-tab__meta">
+            {summary.activeCompanion.name} · {summary.activeCompanion.rarityLabel}{' '}
+            {summary.activeCompanion.starLabel} · Bond Lv. {summary.activeCompanion.bondLevel}
+          </p>
+        ) : (
+          <p className="score-tab__meta">No active companion selected in Island Run.</p>
+        )}
+      </section>
+      <section className="score-tab__card">
+        <h3 className="score-tab__card-title">Egg Summary</h3>
+        <div className="score-tab__sanctuary-egg-list">
+          {eggSummaryItems.map(([label, count]) => (
+            <span key={label}>
+              {label}: <strong>{count}</strong>
+            </span>
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }

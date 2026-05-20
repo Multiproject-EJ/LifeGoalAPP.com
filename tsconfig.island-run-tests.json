@@ -16,6 +16,7 @@
     "src/features/gamification/level-worlds/services/eggService.ts",
     "src/features/gamification/level-worlds/services/creatureCatalog.ts",
     "src/features/gamification/level-worlds/services/creatureCollectionService.ts",
+    "src/features/gamification/level-worlds/services/creatureSanctuaryAdapter.ts",
     "src/features/gamification/level-worlds/services/creatureTreatInventoryService.ts",
     "src/features/gamification/level-worlds/services/islandBoardTileMap.ts",
     "src/features/gamification/level-worlds/services/islandRunStops.ts",
