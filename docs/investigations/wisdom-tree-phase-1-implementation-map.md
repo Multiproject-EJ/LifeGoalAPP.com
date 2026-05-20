@@ -13,7 +13,7 @@
 
 Phase 1 is feasible as a static, non-AI Wisdom Landmark card encounter that calls the existing stop-completion flow after the player chooses a card option.
 
-**Caveat:** the current Wisdom Landmark UI already contains an unfinished diamond-to-essence bonus branch in `IslandRunBoardPrototype.tsx`. A strict “one cozy card encounter / no reward mechanics” implementation must either leave that legacy branch untouched but visually coexist with it, or get explicit approval to remove/retire it. Removing it would be a behavior/economy cleanup and should not be done silently.
+**Caveat and recommendation:** the current Wisdom Landmark UI already contains an unfinished diamond-to-essence bonus branch in `IslandRunBoardPrototype.tsx`. For the Phase 1 implementation PR, the recommended path is to replace only the unfinished Wisdom placeholder with the static card encounter and **not** alter the bonus/economy branch unless the PR explicitly includes product approval to retire it. If product requires Wisdom to show only one card encounter, get that approval first and document the existing bonus removal as a deliberate cleanup, not an incidental UI change.
 
 ## Current Wisdom Landmark flow
 
@@ -524,7 +524,7 @@ Run these for the implementation PR:
 5. Diff whitespace check:
    - `git --no-pager diff --check`
 
-If only the documentation map changes, `git --no-pager diff --check` is sufficient locally, plus final review/security validation.
+If only the documentation map changes, `git --no-pager diff --check` is sufficient locally, plus the standard `parallel_validation` review; CodeQL is expected to skip documentation-only changes as trivial.
 
 ## Recommended Phase 1 PR
 
