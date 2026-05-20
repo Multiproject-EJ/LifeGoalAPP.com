@@ -191,6 +191,8 @@ import {
   type ShipZone,
 } from '../services/creatureCatalog';
 import { resolveCreatureArtManifest } from '../services/creatureImageManifest';
+import { getCreatureCardMetadata } from '../services/creatureCardCatalog';
+import { CreatureCard } from './CreatureCard';
 import { CreatureGridCard } from './CreatureGridCard';
 import { CreatureHatchRevealModal } from './CreatureHatchRevealModal';
 import {
@@ -10748,7 +10750,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 <div className="island-run-sanctuary-detail-sheet">
               <section className="island-run-sanctuary-detail" role="dialog" aria-modal="true" aria-label="Creature details">
                 {(() => {
-                  const creatureArt = resolveCreatureArtManifest(selectedSanctuaryCreature.creature);
+                  const creatureCardMetadata = getCreatureCardMetadata(selectedSanctuaryCreature.creature);
                   return (
                     <div className={`island-run-sanctuary-fullcard island-run-sanctuary-fullcard--${selectedSanctuaryCreature.creature.tier}`}>
                       <button
@@ -10761,23 +10763,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       >
                         ✕ Close
                       </button>
-                      <div className="island-run-sanctuary-fullcard__hero">
-                        <img
-                          className="island-run-sanctuary-fullcard__art"
-                          src={creatureArt.cutoutSrc}
-                          alt={`${selectedSanctuaryCreature.creature.name} creature card art`}
-                          onError={(event) => {
-                            applyCreatureArtFallback(event, {
-                              pngSrc: creatureArt.cutoutPngSrc,
-                              silhouetteSrc: creatureArt.silhouetteSrc,
-                            });
-                          }}
-                        />
-                        <span className="island-run-sanctuary-fullcard__emoji-fallback" style={{ display: 'none' }} aria-hidden="true">{creatureArt.emojiFallback}</span>
-                      </div>
-                      <p className="island-run-sanctuary-card__eyebrow">{selectedSanctuaryCreature.creature.tier.toUpperCase()} · {resolveShipZoneForCreature(selectedSanctuaryCreature.creature).toUpperCase()}</p>
-                      <h4 className="island-run-sanctuary-detail__title">{selectedSanctuaryCreature.creature.name}</h4>
-                      <p className="island-run-sanctuary-card__meta">★★★★★</p>
+                      <CreatureCard
+                        creature={selectedSanctuaryCreature.creature}
+                        metadata={creatureCardMetadata}
+                        owned
+                        active={activeCompanionId === selectedSanctuaryCreature.creatureId}
+                      />
                       <p className="island-run-sanctuary-card__meta">
                         Found near island {selectedSanctuaryCreature.lastCollectedIslandNumber} in {selectedSanctuaryCreature.creature.habitat}.
                       </p>
