@@ -1,4 +1,105 @@
 /* Settings Folder Button */
+.settings-modules {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.settings-modules__header h3 {
+  margin: 0.35rem 0 0;
+  color: var(--text-primary, #111827);
+  font-size: clamp(1.25rem, 3vw, 1.65rem);
+}
+
+.settings-modules__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.9rem;
+}
+
+.settings-module-card {
+  display: grid;
+  align-content: space-between;
+  min-height: 10.5rem;
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 1.4rem;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.92)),
+    var(--card-background, #ffffff);
+  color: var(--text-primary, #111827);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.settings-module-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.4);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 1), rgba(239, 246, 255, 0.9)),
+    var(--card-hover-background, #f9fafb);
+}
+
+.settings-module-card:active {
+  transform: translateY(0);
+}
+
+.settings-module-card:focus-visible {
+  outline: 2px solid var(--focus-ring-color, #3b82f6);
+  outline-offset: 3px;
+}
+
+.settings-module-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.16), rgba(124, 58, 237, 0.16));
+  font-size: 1.7rem;
+}
+
+.settings-module-card__content {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.settings-module-card__title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.settings-module-card__title {
+  color: var(--text-primary, #111827);
+  font-size: 1rem;
+  font-weight: 750;
+  line-height: 1.15;
+}
+
+.settings-module-card__subtitle {
+  color: var(--text-secondary, #64748b);
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.settings-module-card__meta {
+  color: var(--text-tertiary, #94a3b8);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.settings-module-card__badge {
+  font-size: 0.62rem;
+  padding: 0.2rem 0.45rem;
+}
+
 .settings-folder-button {
   display: flex;
   align-items: center;
@@ -118,11 +219,13 @@
 }
 
 .settings-folder-popup__close {
-  width: 2.5rem;
+  min-width: 2.5rem;
   height: 2.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.3rem;
+  padding: 0 0.75rem;
   background: transparent;
   border: none;
   border-radius: 0.375rem;
@@ -226,6 +329,22 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .settings-modules__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .settings-module-card {
+    min-height: 9.75rem;
+    padding: 0.9rem;
+  }
+
+  .settings-module-card__icon {
+    width: 2.65rem;
+    height: 2.65rem;
+    margin-bottom: 0.8rem;
+    font-size: 1.5rem;
+  }
+
   .settings-folder-popup {
     width: 95vw;
     max-height: 90vh;
@@ -250,8 +369,15 @@
   }
 }
 
+@media (max-width: 380px) {
+  .settings-modules__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Dark-glass hardening for settings folders/workspace snapshot (analysis pass 9) */
 [data-theme='dark-glass'] .settings-folder-button,
+[data-theme='dark-glass'] .settings-module-card,
 [data-theme='dark-glass'] .settings-folder-popup,
 [data-theme='dark-glass'] .settings-folder-popup__header,
 [data-theme='dark-glass'] .workspace-snapshot,
@@ -266,7 +392,13 @@
   background: color-mix(in srgb, var(--color-surface-secondary, rgba(15, 23, 42, 0.72)) 88%, transparent);
 }
 
+[data-theme='dark-glass'] .settings-module-card__icon {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.18), rgba(167, 139, 250, 0.18));
+}
+
 [data-theme='dark-glass'] .settings-folder-button__title,
+[data-theme='dark-glass'] .settings-modules__header h3,
+[data-theme='dark-glass'] .settings-module-card__title,
 [data-theme='dark-glass'] .settings-folder-popup__title,
 [data-theme='dark-glass'] .workspace-snapshot__header h3 {
   color: var(--color-text-primary, #f1f5f9);
@@ -275,6 +407,8 @@
 [data-theme='dark-glass'] .settings-folder-button__description,
 [data-theme='dark-glass'] .settings-folder-button__count,
 [data-theme='dark-glass'] .settings-folder-button__arrow,
+[data-theme='dark-glass'] .settings-module-card__subtitle,
+[data-theme='dark-glass'] .settings-module-card__meta,
 [data-theme='dark-glass'] .workspace-snapshot__header p,
 [data-theme='dark-glass'] .workspace-snapshot__stat-label,
 [data-theme='dark-glass'] .workspace-snapshot__hint {
@@ -282,6 +416,7 @@
 }
 
 [data-theme='dark-glass'] .settings-folder-button:hover,
+[data-theme='dark-glass'] .settings-module-card:hover,
 [data-theme='dark-glass'] .settings-folder-popup__close:hover {
   background: color-mix(in srgb, var(--color-surface-secondary, rgba(15, 23, 42, 0.72)) 92%, transparent);
 }
