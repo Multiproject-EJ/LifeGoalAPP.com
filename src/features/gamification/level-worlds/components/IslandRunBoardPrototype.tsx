@@ -99,7 +99,6 @@ import {
   withIslandRunActionLock,
 } from '../services/islandRunActionMutex';
 import {
-  applyActiveCompanion,
   applyAudioEnabledMarker,
   applyBossTrialResolvedMarker,
   applyCompanionBonusLastVisitKeyMarker,
@@ -147,6 +146,8 @@ import {
   SPACE_EXCAVATOR_TOTAL_BOARDS,
   ISLAND_RUN_MAX_ISLAND,
   travelToNextIsland,
+  setActiveCompanionId as commitActiveCompanionId,
+  clearActiveCompanionId as commitClearActiveCompanionId,
 } from '../services/islandRunStateActions';
 import {
   rollEggTierWeighted,
@@ -163,10 +164,8 @@ import {
   fetchCreatureCollection,
   collectCreatureForUser,
   countUnclaimedCreatures,
-  fetchActiveCompanionId,
   getCreatureManifestEntries,
   migrateLegacyEggLedgerToCollection,
-  saveActiveCompanionId,
   feedCreatureForUser,
   claimCreatureBondMilestoneForUser,
   getUnclaimedBondMilestones,
@@ -1746,7 +1745,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [showStickerAlbumDialog, setShowStickerAlbumDialog] = useState(false);
 
   const [creatureCollection, setCreatureCollection] = useState(() => fetchCreatureCollection(session.user.id));
-  const [activeCompanionId, setActiveCompanionId] = useState<string | null>(() => fetchActiveCompanionId(session.user.id));
+  const [activeCompanionId, setActiveCompanionId] = useState<string | null>(null);
   const [selectedSanctuaryCreatureId, setSelectedSanctuaryCreatureId] = useState<string | null>(null);
   const [sanctuaryFeedback, setSanctuaryFeedback] = useState<string | null>(null);
   const [sanctuaryClockMs, setSanctuaryClockMs] = useState(() => Date.now());
@@ -2340,7 +2339,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setCycleIndex(runtimeState.cycleIndex ?? 0);
     setAudioEnabled(runtimeState.audioEnabled ?? true);
     setIslandRunAudioEnabled(runtimeState.audioEnabled ?? true);
-    setActiveCompanionId(runtimeState.activeCompanionId ?? fetchActiveCompanionId(session.user.id));
+    setActiveCompanionId(runtimeState.activeCompanionId ?? null);
     setCreatureTreatInventory(runtimeState.creatureTreatInventory ?? fetchCreatureTreatInventory(session.user.id));
 
     // Mark initial hydration sync as complete so persist effects can now safely write.
@@ -2597,10 +2596,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   useEffect(() => {
     const stillOwned = creatureCollection.some((entry) => entry.creatureId === activeCompanionId);
     if (activeCompanionId && !stillOwned) {
-      setActiveCompanionId(null);
-      saveActiveCompanionId(session.user.id, null);
+      const nextRecord = commitActiveCompanionId({
+        session,
+        client,
+        activeCompanionId,
+        triggerSource: 'cleanup_unowned_active_companion',
+      });
+      setActiveCompanionId(nextRecord.activeCompanionId ?? null);
+      setRuntimeState((current) => ({ ...current, activeCompanionId: nextRecord.activeCompanionId ?? null }));
     }
-  }, [activeCompanionId, creatureCollection, session.user.id]);
+  }, [activeCompanionId, client, creatureCollection, session]);
 
   useEffect(() => {
     if (!selectedSanctuaryCreatureId) return;
@@ -3324,21 +3329,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     });
     setRuntimeState((current) => ({ ...current, creatureCollection: nextRecord.creatureCollection }));
   }, [client, creatureCollection, hasHydratedRuntimeState, runtimeState.creatureCollection, session]);
-
-  useEffect(() => {
-    if (!hasHydratedRuntimeState) return;
-    // Guard: Skip until the initial hydration sync effect has applied server values
-    // to local state. This prevents the write amplification loop.
-    if (!hasCompletedInitialHydrationSyncRef.current) return;
-    if ((runtimeState.activeCompanionId ?? null) === (activeCompanionId ?? null)) return;
-    const nextRecord = applyActiveCompanion({
-      session,
-      client,
-      activeCompanionId,
-      triggerSource: 'sync_active_companion_effect',
-    });
-    setRuntimeState((current) => ({ ...current, activeCompanionId: nextRecord.activeCompanionId ?? null }));
-  }, [activeCompanionId, client, hasHydratedRuntimeState, runtimeState.activeCompanionId, session]);
 
   // M17D: award wallet shards (persistent cross-island balance) by a given amount.
   // This is separate from awardShards (islandShards / Collectible Progress Bar).
@@ -7970,9 +7960,24 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       setSanctuaryMenuModule(null);
     },
     setActiveCompanion: (creatureId: string | null) => {
-      setActiveCompanionId(creatureId);
-      saveActiveCompanionId(session.user.id, creatureId);
-      const selected = creatureId ? collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null : null;
+      const nextRecord = creatureId
+        ? commitActiveCompanionId({
+            session,
+            client,
+            activeCompanionId: creatureId,
+            triggerSource: 'sanctuary_set_active_companion',
+          })
+        : commitClearActiveCompanionId({
+            session,
+            client,
+            triggerSource: 'sanctuary_clear_active_companion',
+          });
+      const committedActiveCompanionId = nextRecord.activeCompanionId ?? null;
+      setActiveCompanionId(committedActiveCompanionId);
+      setRuntimeState((current) => ({ ...current, activeCompanionId: committedActiveCompanionId }));
+      const selected = committedActiveCompanionId
+        ? collectedCreatures.find((entry) => entry.creatureId === committedActiveCompanionId) ?? null
+        : null;
       void recordTelemetryEvent({
         userId: session.user.id,
         eventType: 'economy_earn',
@@ -7991,7 +7996,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         active: Boolean(selected),
       });
       setLandingText(
-        selected
+        creatureId && committedActiveCompanionId !== creatureId
+          ? 'Only owned creatures can be set as your active companion.'
+          : selected
           ? `${selected.creature.name} is now your active companion.`
           : 'Active companion cleared.',
       );
@@ -10378,8 +10385,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
                 onClick={() => {
                   if (perfectCompanionOnboardingCreatureId) {
-                    setActiveCompanionId(perfectCompanionOnboardingCreatureId);
-                    saveActiveCompanionId(session.user.id, perfectCompanionOnboardingCreatureId);
+                    sanctuaryHandlers.setActiveCompanion(perfectCompanionOnboardingCreatureId);
                   }
                   setShowPerfectCompanionOnboardingHint(false);
                   setShowSanctuaryPanel(true);
