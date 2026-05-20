@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type JSX } from 'react';
 import type { CreatureDefinition } from '../services/creatureCatalog';
 import { getCreatureCardMetadata } from '../services/creatureCardCatalog';
-import { playIslandRunSound, triggerIslandRunHaptic } from '../services/islandRunAudio';
+import { playIslandRunSound, triggerIslandRunHaptic, type IslandRunHapticEvent } from '../services/islandRunAudio';
 import { CreatureCard } from './CreatureCard';
+
+const SWIPE_REVEAL_THRESHOLD_PX = 36;
 
 export interface CreaturePackOpeningPrototypeCard {
   slotIndex: number;
@@ -23,6 +25,17 @@ function rarityTone(tier: CreatureDefinition['tier']): string {
   if (tier === 'mythic') return 'Mythic shimmer';
   if (tier === 'rare') return 'Rare glow';
   return 'Cozy common';
+}
+
+function revealHapticForTier(tier: CreatureDefinition['tier']): IslandRunHapticEvent {
+  switch (tier) {
+    case 'rare':
+    case 'mythic':
+      return 'egg_open';
+    case 'common':
+    default:
+      return 'reward_claim';
+  }
 }
 
 export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningPrototypeModalProps): JSX.Element | null {
@@ -50,7 +63,7 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
   useEffect(() => {
     if (!props.open || showSummary || !activeCard) return;
     playIslandRunSound('egg_open');
-    triggerIslandRunHaptic(activeCard.creature.tier === 'common' ? 'reward_claim' : 'egg_open');
+    triggerIslandRunHaptic(revealHapticForTier(activeCard.creature.tier));
   }, [activeCard, props.open, showSummary]);
 
   const advance = useCallback(() => {
@@ -97,7 +110,7 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
           touchStartXRef.current = null;
           const endX = event.changedTouches[0]?.clientX ?? null;
           if (startX === null || endX === null) return;
-          if (Math.abs(endX - startX) > 36) advance();
+          if (Math.abs(endX - startX) > SWIPE_REVEAL_THRESHOLD_PX) advance();
         }}
       >
         <header className="creature-pack-opening-prototype__header">

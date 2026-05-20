@@ -7594,18 +7594,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return message;
     }
 
-    const countCopies = (record: IslandRunGameStateRecord, creatureId: string) => (
-      record.creatureCollection.find((entry) => entry.creatureId === creatureId)?.copies ?? 0
-    );
+    const beforeCopiesByCreatureId = new Map(beforeRecord.creatureCollection.map((entry) => [entry.creatureId, entry.copies]));
+    const afterCopiesByCreatureId = new Map(refreshedRecord.creatureCollection.map((entry) => [entry.creatureId, entry.copies]));
     const cards = DEV_DEMO_CREATURE_PACK_IDS
       .map((creatureId, slotIndex): CreaturePackOpeningPrototypeCard | null => {
         const creature = CREATURE_CATALOG.find((entry) => entry.id === creatureId);
         if (!creature) return null;
-        const copiesAfter = countCopies(refreshedRecord, creatureId);
+        const copiesAfter = afterCopiesByCreatureId.get(creatureId) ?? 0;
         return {
           slotIndex,
           creature,
-          copiesBefore: result.status === 'granted' ? countCopies(beforeRecord, creatureId) : copiesAfter,
+          copiesBefore: result.status === 'granted' ? (beforeCopiesByCreatureId.get(creatureId) ?? 0) : copiesAfter,
           copiesAfter,
         };
       })
