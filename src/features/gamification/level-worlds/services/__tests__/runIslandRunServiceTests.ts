@@ -38,6 +38,7 @@ import { islandRunLuckyRollActionTests } from './islandRunLuckyRollAction.test';
 import { islandRunPostRareTreasurePathActionTests } from './islandRunPostRareTreasurePathAction.test';
 import { islandRunEggRewardInventoryActionTests } from './islandRunEggRewardInventoryAction.test';
 import { islandRunFirstSessionCreaturePackActionTests } from './islandRunFirstSessionCreaturePackAction.test';
+import { islandRunAdminDevPackGrantActionTests } from './islandRunAdminDevPackGrantAction.test';
 import { islandRunLuckyRollBoardConfigTests } from './islandRunLuckyRollBoardConfig.test';
 import { islandRunProgressResetTests } from './islandRunProgressReset.test';
 import { islandRunStateStoreTests } from './islandRunStateStore.test';
@@ -105,6 +106,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunPostRareTreasurePathAction', tests: islandRunPostRareTreasurePathActionTests },
   { label: 'islandRunEggRewardInventoryAction', tests: islandRunEggRewardInventoryActionTests },
   { label: 'islandRunFirstSessionCreaturePackAction', tests: islandRunFirstSessionCreaturePackActionTests },
+  { label: 'islandRunAdminDevPackGrantAction', tests: islandRunAdminDevPackGrantActionTests },
   { label: 'islandRunLuckyRollBoardConfig', tests: islandRunLuckyRollBoardConfigTests },
   { label: 'islandRunProgressReset', tests: islandRunProgressResetTests },
   { label: 'islandRunStateStore', tests: islandRunStateStoreTests },

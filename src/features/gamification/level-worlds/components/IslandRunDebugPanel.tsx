@@ -39,6 +39,8 @@ interface DebugPanelProps {
   onStartPostRareTreasurePath?: (completedIslandNumber: number, cycleIndex: number) => Promise<string>;
   onCollectPostRareTreasurePathAndTravel?: (completedIslandNumber: number, cycleIndex: number) => Promise<string>;
   onOpenEggRewardInventoryEntry?: (eggRewardId: string) => Promise<string>;
+  onGrantDevDemoCreaturePack?: () => Promise<string>;
+  onGrantDevDemoEggRewardPack?: () => Promise<string>;
   onClose: () => void;
 }
 
@@ -136,6 +138,8 @@ export function IslandRunDebugPanel({
   onStartPostRareTreasurePath,
   onCollectPostRareTreasurePathAndTravel,
   onOpenEggRewardInventoryEntry,
+  onGrantDevDemoCreaturePack,
+  onGrantDevDemoEggRewardPack,
   onClose,
 }: DebugPanelProps) {
   const appVersion = resolveBuildMarkerValue(import.meta.env.VITE_APP_VERSION);
@@ -161,6 +165,8 @@ export function IslandRunDebugPanel({
   const [postRareActionMessage, setPostRareActionMessage] = useState<string | null>(null);
   const [openingEggRewardId, setOpeningEggRewardId] = useState<string | null>(null);
   const [eggRewardActionMessage, setEggRewardActionMessage] = useState<string | null>(null);
+  const [packGrantPending, setPackGrantPending] = useState(false);
+  const [packGrantActionMessage, setPackGrantActionMessage] = useState<string | null>(null);
 
   // Ping Supabase to check connectivity
   useEffect(() => {
@@ -277,6 +283,19 @@ export function IslandRunDebugPanel({
       setEggRewardActionMessage(`Treasure Egg open failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setOpeningEggRewardId(null);
+    }
+  };
+
+  const runPackGrantAction = async (action: (() => Promise<string>) | undefined) => {
+    if (packGrantPending) return;
+    setPackGrantPending(true);
+    setPackGrantActionMessage(null);
+    try {
+      setPackGrantActionMessage(await (action?.() ?? Promise.resolve('Pack grant action unavailable.')));
+    } catch (err) {
+      setPackGrantActionMessage(`Pack grant failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setPackGrantPending(false);
     }
   };
 
@@ -577,6 +596,33 @@ export function IslandRunDebugPanel({
                   >
                     Clear override
                   </button>
+                </div>
+                <div style={{ display: 'grid', gap: '0.55rem', borderTop: '1px solid rgba(255,255,255,0.16)', paddingTop: '0.65rem' }}>
+                  <strong style={{ fontSize: '0.84rem' }}>🐾 Admin/Dev Pack Grants</strong>
+                  <div style={{ fontSize: '0.76rem', opacity: 0.86 }}>
+                    Dev mode only. Grants fixed demo packs through canonical runtime state. Does not involve Stripe, purchases, random rewards, or localStorage writes.
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <button
+                      type="button"
+                      className="island-run-debug-panel__copy-btn"
+                      disabled={packGrantPending || !onGrantDevDemoCreaturePack}
+                      onClick={() => void runPackGrantAction(onGrantDevDemoCreaturePack)}
+                    >
+                      Grant demo Creature Pack
+                    </button>
+                    <button
+                      type="button"
+                      className="island-run-debug-panel__copy-btn"
+                      disabled={packGrantPending || !onGrantDevDemoEggRewardPack}
+                      onClick={() => void runPackGrantAction(onGrantDevDemoEggRewardPack)}
+                    >
+                      Grant demo Egg Reward Pack
+                    </button>
+                  </div>
+                  {packGrantActionMessage && (
+                    <div style={{ fontSize: '0.78rem', opacity: 0.9 }}>{packGrantActionMessage}</div>
+                  )}
                 </div>
                 {showLuckyRollDevLauncher && (
                   <div style={{ display: 'grid', gap: '0.55rem', borderTop: '1px solid rgba(255,255,255,0.16)', paddingTop: '0.65rem' }}>
