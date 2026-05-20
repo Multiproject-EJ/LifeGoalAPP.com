@@ -1741,6 +1741,7 @@ function CreatureSanctuaryScoreHubView({
     () => buildCreatureSanctuaryGalleryModel(state, CREATURE_CATALOG),
     [state],
   );
+  const hasDiscoveredCreatures = galleryModel.summary.discoveredCreatures > 0;
 
   return (
     <div className="score-tab__sanctuary">
@@ -1750,19 +1751,39 @@ function CreatureSanctuaryScoreHubView({
         </button>
       </div>
       <CreatureSanctuarySummary model={galleryModel} />
+      {!hasDiscoveredCreatures ? (
+        <section className="score-tab__sanctuary-empty" aria-live="polite">
+          <span className="score-tab__sanctuary-empty-orb" aria-hidden="true">
+            ✨
+          </span>
+          <div>
+            <h3>The sanctuary is quietly waiting</h3>
+            <p>
+              Your first Island Run companion will appear here once discovered. Until then, these
+              cozy habitats stay locked and ready.
+            </p>
+          </div>
+        </section>
+      ) : null}
       <div className="score-tab__sanctuary-grid" aria-label="Creature Sanctuary gallery">
         {galleryModel.cards.map((card) => (
           <article
             key={card.creatureId}
             className={`score-tab__sanctuary-card${
               card.discovered ? '' : ' score-tab__sanctuary-card--locked'
-            }${card.isActiveCompanion ? ' score-tab__sanctuary-card--active' : ''}`}
+            }${card.isActiveCompanion ? ' score-tab__sanctuary-card--active' : ''} score-tab__sanctuary-card--${card.tier}`}
           >
+            {card.isActiveCompanion ? (
+              <span className="score-tab__sanctuary-active-pill">Active companion</span>
+            ) : null}
             <div className="score-tab__sanctuary-card-topline">
-              <span className="score-tab__sanctuary-rarity" aria-label={`${card.rarityLabel} rarity`}>
+              <span
+                className={`score-tab__sanctuary-rarity score-tab__sanctuary-rarity--${card.tier}`}
+                aria-label={`${card.rarityLabel} rarity`}
+              >
                 {card.starLabel}
               </span>
-              <span>{card.rarityLabel}</span>
+              <span className="score-tab__sanctuary-rarity-label">{card.rarityLabel}</span>
             </div>
             <div className="score-tab__sanctuary-avatar" aria-hidden="true">
               {card.discovered ? '🐾' : '🔒'}
@@ -1778,9 +1799,6 @@ function CreatureSanctuaryScoreHubView({
               {card.discovered ? <span>{card.copies} owned</span> : <span>Locked</span>}
               {card.discovered && card.bondLevel !== null ? <span>Bond Lv. {card.bondLevel}</span> : null}
             </div>
-            {card.isActiveCompanion ? (
-              <span className="score-tab__sanctuary-active-pill">Active companion</span>
-            ) : null}
           </article>
         ))}
       </div>
