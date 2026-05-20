@@ -10666,6 +10666,64 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
             {sanctuaryFeedback ? <p className="island-run-sanctuary-panel__feedback">{sanctuaryFeedback}</p> : null}
 
+            {!selectedSanctuaryCreature ? (
+              <section className="island-run-sanctuary-pack" aria-label="Creature Pack preview">
+                <div className="island-run-sanctuary-pack__header">
+                  <div>
+                    <p className="island-run-sanctuary-pack__eyebrow">Creature Pack</p>
+                    <h4 className="island-run-sanctuary-pack__title">Future dice regen team</h4>
+                  </div>
+                  <span className="island-run-sanctuary-pack__badge">Read-only preview</span>
+                </div>
+                <p className="island-run-sanctuary-pack__copy">
+                  Your Pack will power future dice regen.
+                </p>
+                <p className="island-run-sanctuary-pack__copy">
+                  Sanctuary holds all creatures. Pack creatures are your active team.
+                </p>
+                <div className="island-run-sanctuary-pack__slots">
+                  {Array.from({ length: 3 }).map((_, index) => {
+                    const suggestedCreature = index === 0 ? activeCompanion : null;
+                    const suggestedArt = suggestedCreature ? resolveCreatureArtManifest(suggestedCreature.creature) : null;
+                    return (
+                      <article
+                        key={`pack-slot-${index}`}
+                        className={`island-run-sanctuary-pack__slot ${suggestedCreature ? 'island-run-sanctuary-pack__slot--suggested' : ''}`}
+                      >
+                        <div className="island-run-sanctuary-pack__slot-frame">
+                          {suggestedCreature && suggestedArt ? (
+                            <>
+                              <img
+                                className="island-run-sanctuary-pack__slot-art"
+                                src={suggestedArt.cutoutSrc}
+                                alt={`${suggestedCreature.creature.name} current companion preview`}
+                                loading="lazy"
+                                onError={(event) => {
+                                  applyCreatureArtFallback(event, {
+                                    pngSrc: suggestedArt.cutoutPngSrc,
+                                    silhouetteSrc: suggestedArt.silhouetteSrc,
+                                  });
+                                }}
+                              />
+                              <span className="island-run-sanctuary-pack__slot-emoji" aria-hidden="true">{suggestedArt.emojiFallback}</span>
+                            </>
+                          ) : (
+                            <span className="island-run-sanctuary-pack__slot-empty" aria-hidden="true">+</span>
+                          )}
+                        </div>
+                        <p className="island-run-sanctuary-pack__slot-title">
+                          Slot {index + 1}
+                        </p>
+                        <p className="island-run-sanctuary-pack__slot-meta">
+                          {suggestedCreature ? `Current companion: ${suggestedCreature.creature.name}` : 'Empty Pack slot'}
+                        </p>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            ) : null}
+
             {selectedSanctuaryCreature ? (
               <>
                 <div className="island-run-sanctuary-panel__grid" aria-hidden="true">
