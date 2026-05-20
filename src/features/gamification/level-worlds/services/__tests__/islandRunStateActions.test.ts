@@ -89,6 +89,7 @@ import {
 } from '../islandRunStateActions';
 import { isIslandRunFullyClearedV2 } from '../islandRunContractV2StopResolver';
 import { buildInitialDiceRegenState } from '../islandRunDiceRegeneration';
+import { resolveEffectiveRegenIntervalMs } from '../companionRegenModifier';
 import { SPACE_EXCAVATOR_CAMPAIGN_MILESTONES } from '../spaceExcavatorCampaignProgress';
 import {
   __resetIslandRunFeatureFlagsForTests,
@@ -2114,6 +2115,50 @@ export const islandRunStateActionsTests: TestCase[] = [
 
       assertEqual(result.record.dicePool >= 5, true, 'returned record should expose refreshed dicePool for affordability checks');
       assertEqual(result.diceAdded, 7, 'payload should expose the applied regen delta');
+    },
+  },
+
+  {
+    name: 'applyPassiveDiceRegenTick uses canonical owned active companion effective interval',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      const effectiveIntervalMs = resolveEffectiveRegenIntervalMs({
+        baseRegenIntervalMs: 8 * 60 * 1000,
+        companionBoostPct: 0.02,
+      });
+      seedState({
+        runtimeVersion: 12,
+        dicePool: 0,
+        diceRegenState: buildInitialDiceRegenState(1, 0),
+        activeCompanionId: 'common-sproutling',
+        creatureCollection: [
+          {
+            creatureId: 'common-sproutling',
+            copies: 1,
+            firstCollectedAtMs: 0,
+            lastCollectedAtMs: 0,
+            lastCollectedIslandNumber: 1,
+            bondXp: 0,
+            bondLevel: 1,
+            lastFedAtMs: null,
+            claimedBondMilestones: [],
+          },
+        ],
+      });
+
+      const result = applyPassiveDiceRegenTick({
+        session,
+        client: null,
+        playerLevel: 1,
+        nowMs: effectiveIntervalMs * 2,
+        triggerSource: 'test_passive_dice_regen_tick_companion_bonus',
+      });
+
+      assertEqual(result.changed, true, 'companion-boosted regen tick should commit');
+      assertEqual(result.diceAdded, 2, 'owned active common companion should reduce interval enough for two ticks');
+      assertEqual(result.record.dicePool, 2, 'dicePool should include companion-boosted catch-up');
+      assertEqual(result.record.activeCompanionId, 'common-sproutling', 'active companion should remain unchanged');
     },
   },
 

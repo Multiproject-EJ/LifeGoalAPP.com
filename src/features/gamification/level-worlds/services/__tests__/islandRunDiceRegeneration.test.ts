@@ -8,6 +8,7 @@ import {
   resolveNextRollEtaMs,
   resolveFullRefillEtaMs,
 } from '../islandRunDiceRegeneration';
+import { resolveEffectiveRegenIntervalMs } from '../companionRegenModifier';
 import { assert, assertEqual, type TestCase } from './testHarness';
 
 export const islandRunDiceRegenerationTests: TestCase[] = [
@@ -124,6 +125,25 @@ export const islandRunDiceRegenerationTests: TestCase[] = [
       });
       assertEqual(result.diceAdded, 3, 'Expected +3 across three elapsed intervals');
       assertEqual(result.dicePool, 3, 'Expected pool +3 after long elapsed window');
+    },
+  },
+  {
+    name: 'offline/background catch-up uses effective companion regen interval',
+    run: () => {
+      const state = buildInitialDiceRegenState(1, 0);
+      const effectiveIntervalMs = resolveEffectiveRegenIntervalMs({
+        baseRegenIntervalMs: 8 * 60 * 1000,
+        companionBoostPct: 0.02,
+      });
+      const result = applyDiceRegeneration({
+        currentDicePool: 0,
+        regenState: state,
+        playerLevel: 1,
+        nowMs: effectiveIntervalMs * 2,
+        companionRegenBoostPct: 0.02,
+      });
+      assertEqual(result.diceAdded, 2, 'Expected +2 across two effective companion intervals');
+      assertEqual(result.dicePool, 2, 'Expected pool +2 after companion-boosted elapsed window');
     },
   },
   {

@@ -1,3 +1,5 @@
+import { resolveEffectiveRegenIntervalMs } from './companionRegenModifier';
+
 /**
  * islandRunDiceRegeneration — Level-band passive dice regeneration system.
  *
@@ -76,6 +78,7 @@ export function applyDiceRegeneration(params: {
   regenState: DiceRegenState | null;
   playerLevel: number;
   nowMs: number;
+  companionRegenBoostPct?: number;
 }): {
   dicePool: number;
   regenState: DiceRegenState;
@@ -85,8 +88,12 @@ export function applyDiceRegeneration(params: {
   const safePool = Math.max(0, Math.floor(currentDicePool));
   const safeNow = Math.floor(nowMs);
   const config = resolveDiceRegenConfig(playerLevel);
-  const ratePerHour = 60 / config.regenIntervalMinutes;
-  const intervalMs = config.regenIntervalMinutes * 60 * 1000;
+  const baseIntervalMs = config.regenIntervalMinutes * 60 * 1000;
+  const intervalMs = resolveEffectiveRegenIntervalMs({
+    baseRegenIntervalMs: baseIntervalMs,
+    companionBoostPct: params.companionRegenBoostPct,
+  });
+  const ratePerHour = (60 * 60 * 1000) / intervalMs;
 
   if (!params.regenState) {
     return {
