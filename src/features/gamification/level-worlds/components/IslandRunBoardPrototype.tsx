@@ -769,6 +769,14 @@ function formatCompanionRegenBonusPercent(boostPct: number): string {
   return `${Math.round(boostPct * 1000) / 10}%`;
 }
 
+function findSanctuaryCreatureById<T extends { creatureId: string }>(
+  creatures: readonly T[],
+  creatureId: string | null | undefined,
+): T | null {
+  if (!creatureId) return null;
+  return creatures.find((creature) => creature.creatureId === creatureId) ?? null;
+}
+
 type SanctuaryFilterMode = 'all' | 'reward_ready' | 'active' | 'common' | 'rare' | 'mythic';
 type SanctuarySortMode = 'recent' | 'bond' | 'tier' | 'active';
 type SanctuaryZoneFilter = 'all' | ShipZone;
@@ -5483,23 +5491,27 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const collectedCreatures = useMemo(() => getCreatureManifestEntries(session.user.id), [creatureCollection, session.user.id]);
   const activeCompanion = useMemo(
-    () => collectedCreatures.find((creature) => creature.creatureId === activeCompanionId) ?? null,
+    () => findSanctuaryCreatureById(collectedCreatures, activeCompanionId),
     [activeCompanionId, collectedCreatures],
   );
   // Regen transparency intentionally reads the authoritative store id, not the
   // legacy local mirror used by older Sanctuary affordances.
   const activeRegenCompanion = useMemo(
-    () => collectedCreatures.find((creature) => creature.creatureId === __storeState.activeCompanionId) ?? null,
+    () => findSanctuaryCreatureById(collectedCreatures, __storeState.activeCompanionId),
     [__storeState.activeCompanionId, collectedCreatures],
+  );
+  const activeCompanionRegenRecord = useMemo(
+    () => ({
+      activeCompanionId: __storeState.activeCompanionId ?? null,
+      creatureCollection: __storeState.creatureCollection ?? [],
+    }),
+    [__storeState.activeCompanionId, __storeState.creatureCollection],
   );
   const activeCompanionRegenModifier = useMemo(
     () => resolveCompanionRegenModifier({
-      record: {
-        activeCompanionId: __storeState.activeCompanionId ?? null,
-        creatureCollection: __storeState.creatureCollection ?? [],
-      },
+      record: activeCompanionRegenRecord,
     }),
-    [__storeState.activeCompanionId, __storeState.creatureCollection],
+    [activeCompanionRegenRecord],
   );
   const activeCompanionRegenBonusLabel = useMemo(
     () => formatCompanionRegenBonusPercent(activeCompanionRegenModifier.cappedBoostPct),
@@ -10869,7 +10881,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         </p>
                         <div className="island-run-sanctuary-companion-preview__stats" aria-label="Companion roll regeneration bonus details">
                           <span>Regen speed bonus <strong>{activeCompanionRegenBonusLabel}</strong></span>
-                          <span aria-label={`Archetype match status: ${activeCompanionRegenModifier.isPersonalityComplete ? 'unlocked' : 'locked'}`}>
+                          <span>
                             Archetype match <strong>{activeCompanionRegenModifier.isPersonalityComplete ? 'unlocked' : 'locked'}</strong>
                           </span>
                         </div>
