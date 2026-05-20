@@ -2150,7 +2150,7 @@ export const islandRunStateActionsTests: TestCase[] = [
         creatureCollection: [],
       });
       const nextCollection = [{
-        creatureId: 'reef-lantern-ray',
+        creatureId: 'common-sproutling',
         nickname: 'Nova',
       }] as unknown as IslandRunGameStateRecord['creatureCollection'];
 
@@ -2175,7 +2175,7 @@ export const islandRunStateActionsTests: TestCase[] = [
         runtimeVersion: 20,
         activeCompanionId: null,
         creatureCollection: [{
-          creatureId: 'reef-lantern-ray',
+          creatureId: 'common-sproutling',
           copies: 1,
         }] as unknown as IslandRunGameStateRecord['creatureCollection'],
       });
@@ -2183,15 +2183,15 @@ export const islandRunStateActionsTests: TestCase[] = [
       const result = applyActiveCompanion({
         session,
         client: null,
-        activeCompanionId: 'reef-lantern-ray',
+        activeCompanionId: 'common-sproutling',
         triggerSource: 'test_apply_active_companion',
       });
 
-      assertEqual(result.activeCompanionId, 'reef-lantern-ray', 'active companion id should persist');
+      assertEqual(result.activeCompanionId, 'common-sproutling', 'active companion id should persist');
       assertEqual(result.runtimeVersion, 21, 'runtimeVersion should bump on active companion commit');
       assertEqual(
         readIslandRunGameStateRecord(session).activeCompanionId,
-        'reef-lantern-ray',
+        'common-sproutling',
         'active companion id should persist through IslandRunGameStateRecord',
       );
     },
@@ -2204,9 +2204,9 @@ export const islandRunStateActionsTests: TestCase[] = [
       const session = makeSession();
       seedState({
         runtimeVersion: 20,
-        activeCompanionId: 'reef-lantern-ray',
+        activeCompanionId: 'common-sproutling',
         creatureCollection: [{
-          creatureId: 'reef-lantern-ray',
+          creatureId: 'common-sproutling',
           copies: 1,
         }] as unknown as IslandRunGameStateRecord['creatureCollection'],
       });
@@ -2214,11 +2214,11 @@ export const islandRunStateActionsTests: TestCase[] = [
       const result = setActiveCompanionId({
         session,
         client: null,
-        activeCompanionId: 'tidal-moon-turtle',
+        activeCompanionId: 'rare-luma-hatchling',
         triggerSource: 'test_reject_unowned_active_companion',
       });
 
-      assertEqual(result.activeCompanionId, 'reef-lantern-ray', 'unowned companion selection should be rejected');
+      assertEqual(result.activeCompanionId, 'common-sproutling', 'unowned companion selection should be rejected');
       assertEqual(result.runtimeVersion, 20, 'runtimeVersion should not bump for a rejected selection');
     },
   },
@@ -2253,9 +2253,9 @@ export const islandRunStateActionsTests: TestCase[] = [
       const session = makeSession();
       seedState({
         runtimeVersion: 20,
-        activeCompanionId: 'reef-lantern-ray',
+        activeCompanionId: 'common-sproutling',
         creatureCollection: [{
-          creatureId: 'reef-lantern-ray',
+          creatureId: 'common-sproutling',
           copies: 1,
         }] as unknown as IslandRunGameStateRecord['creatureCollection'],
       });
