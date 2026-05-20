@@ -20,7 +20,10 @@ export type FeatureAvailabilityId =
   | 'score.collections'
   | 'score.creatureSanctuary'
   | 'score.stickersGallery'
-  | 'score.zenGarden';
+  | 'score.zenGarden'
+  | 'settings.holidayThemes'
+  | 'settings.notifications'
+  | 'settings.experimentalFeatures';
 
 export interface FeatureAvailability {
   id: FeatureAvailabilityId;
@@ -294,6 +297,54 @@ export const featureAvailabilityRegistry = {
     adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
+  },
+  'settings.holidayThemes': {
+    id: 'settings.holidayThemes',
+    label: 'Holiday Themes',
+    description: 'Seasonal theme settings in My Account.',
+    status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
+    surface: 'MyAccountPanel',
+    category: 'settings',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'Seasonal themes that make the app feel alive around meaningful moments.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'settings',
+  },
+  'settings.notifications': {
+    id: 'settings.notifications',
+    label: 'Notifications',
+    description: 'Notification and reminder settings in My Account.',
+    status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
+    surface: 'MyAccountPanel',
+    category: 'settings',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'Gentle reminders that support your quest without becoming noisy.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'settings',
+  },
+  'settings.experimentalFeatures': {
+    id: 'settings.experimentalFeatures',
+    label: 'Experimental Features',
+    description: 'Experimental feature toggles in My Account.',
+    status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
+    surface: 'MyAccountPanel',
+    category: 'settings',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'Early ideas and creator previews for future HabitGame experiences.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'settings',
   },
 } as const satisfies Record<FeatureAvailabilityId, FeatureAvailability>;
 

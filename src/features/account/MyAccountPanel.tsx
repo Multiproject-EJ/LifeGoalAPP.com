@@ -11,12 +11,15 @@ import { DreamJournalReminderSettings } from './DreamJournalReminderSettings';
 import { TodaysWinsReminderSettings } from './TodaysWinsReminderSettings';
 import { GamificationSettings } from '../gamification/GamificationSettings';
 import { TelemetrySettingsSection } from './TelemetrySettingsSection';
-import { SettingsFolderButton } from '../../components/SettingsFolderButton';
 import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
+import { FeaturePreviewOverlay } from '../../components/FeaturePreviewOverlay';
+import { FeatureStatusBadge } from '../../components/FeatureStatusBadge';
 import { HolidayPreferencesSection, HOLIDAY_OPTIONS } from './HolidayPreferencesSection';
 import { CaseSubmissionModal } from '../cases/CaseSubmissionModal';
 import { MyCasesPanel } from '../cases/MyCasesPanel';
 import { AdminInboxPanel } from '../admin/AdminInboxPanel';
+import { getFeatureAvailability, type FeatureAvailabilityId } from '../../config/featureAvailability';
+import { resolveFeatureAccess } from '../../services/featureAccess';
 import { isAdminUser } from '../../services/adminRoles';
 import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
 import type { WorkspaceStats } from '../../services/workspaceStats';
@@ -53,6 +56,47 @@ type MyAccountPanelProps = {
   } | null;
 };
 
+type SettingsModuleCardProps = {
+  icon: string;
+  title: string;
+  subtitle: string;
+  meta: string;
+  featureId?: FeatureAvailabilityId;
+  onClick: () => void;
+};
+
+function SettingsModuleCard({
+  icon,
+  title,
+  subtitle,
+  meta,
+  featureId,
+  onClick,
+}: SettingsModuleCardProps) {
+  const feature = featureId ? getFeatureAvailability(featureId) : null;
+
+  return (
+    <button
+      type="button"
+      className="settings-module-card"
+      onClick={onClick}
+      aria-label={`Open ${title}`}
+    >
+      <span className="settings-module-card__icon" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="settings-module-card__content">
+        <span className="settings-module-card__title-row">
+          <span className="settings-module-card__title">{title}</span>
+          {feature ? <FeatureStatusBadge status={feature.status} className="settings-module-card__badge" /> : null}
+        </span>
+        <span className="settings-module-card__subtitle">{subtitle}</span>
+        <span className="settings-module-card__meta">{meta}</span>
+      </span>
+    </button>
+  );
+}
+
 function formatDate(value?: string | null, options?: Intl.DateTimeFormatOptions) {
   if (!value) return 'Not available';
   const timestamp = new Date(value);
@@ -82,6 +126,7 @@ export function MyAccountPanel({
   const [folder1Open, setFolder1Open] = useState(false);
   const [folder2Open, setFolder2Open] = useState(false);
   const [holidayFolderOpen, setHolidayFolderOpen] = useState(false);
+  const [experimentalFolderOpen, setExperimentalFolderOpen] = useState(false);
   const [adminInboxOpen, setAdminInboxOpen] = useState(false);
   const [savingPreference, setSavingPreference] = useState(false);
   const [cacheClearing, setCacheClearing] = useState(false);
@@ -97,6 +142,7 @@ export function MyAccountPanel({
   const [billingLoading, setBillingLoading] = useState(false);
   const [billingError, setBillingError] = useState<string | null>(null);
   const [billingActionLoading, setBillingActionLoading] = useState<'upgrade_monthly' | 'upgrade_yearly' | 'manage' | 'buy_rolls' | null>(null);
+  const [activeFutureFeatureId, setActiveFutureFeatureId] = useState<FeatureAvailabilityId | null>(null);
   
   const user = session.user;
   const userInitials = generateInitials(profile?.full_name || '');
@@ -126,6 +172,7 @@ export function MyAccountPanel({
     ? formatDate(new Date(new Date(profile.birthday_gift_last_claimed_at).getTime() + 365 * 24 * 60 * 60 * 1000).toISOString(), { dateStyle: 'medium' })
     : 'Now (if birthday matches today)';
   const showDemoNotice = isDemoExperience;
+  const activeFutureFeature = activeFutureFeatureId ? getFeatureAvailability(activeFutureFeatureId) : null;
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -180,6 +227,9 @@ export function MyAccountPanel({
     if (isAdmin === true) return;
     setAdminInboxOpen(false);
     setFolder1Open(false);
+    setFolder2Open(false);
+    setHolidayFolderOpen(false);
+    setExperimentalFolderOpen(false);
   }, [isAdmin]);
 
   const showAdminTools = isAdmin === true;
@@ -332,6 +382,31 @@ export function MyAccountPanel({
       redirectToUrl(url);
     } finally {
       setBillingActionLoading(null);
+    }
+  };
+
+  const handleSettingsModuleClick = (featureId: FeatureAvailabilityId, setModuleOpen: (isOpen: boolean) => void) => {
+    const access = resolveFeatureAccess(featureId, { isAdminOrCreator: isAdmin === true });
+
+    if (access === 'open') {
+      setModuleOpen(true);
+      return;
+    }
+
+    if (access === 'previewOnly') {
+      setActiveFutureFeatureId(featureId);
+      return;
+    }
+
+    // Hidden feature access should remain silent so public users never see internal details.
+  };
+  const handleHolidayThemesClick = () => handleSettingsModuleClick('settings.holidayThemes', setHolidayFolderOpen);
+  const handleNotificationsClick = () => handleSettingsModuleClick('settings.notifications', setFolder2Open);
+  const handleExperimentalFeaturesClick = () =>
+    handleSettingsModuleClick('settings.experimentalFeatures', setExperimentalFolderOpen);
+  const handleAdvancedToolsClick = () => {
+    if (showAdminTools) {
+      setFolder1Open(true);
     }
   };
 
@@ -612,11 +687,54 @@ export function MyAccountPanel({
         </section>
       </div>
 
+      <section className="account-panel__card settings-modules" aria-labelledby="settings-modules-heading">
+        <div className="settings-modules__header">
+          <p className="account-panel__eyebrow">Settings</p>
+          <h3 id="settings-modules-heading">Personalize your experience</h3>
+          <p className="account-panel__hint">
+            Open focused setting cards when you want to tune reminders, themes, or creator tools.
+          </p>
+        </div>
+        <div className="settings-modules__grid">
+          <SettingsModuleCard
+            icon="🎊"
+            title="Holiday Themes"
+            subtitle="Seasonal moments and themed experiences."
+            meta={`${HOLIDAY_OPTIONS.length} seasonal moments`}
+            featureId="settings.holidayThemes"
+            onClick={handleHolidayThemesClick}
+          />
+          <SettingsModuleCard
+            icon="🔔"
+            title="Notifications"
+            subtitle="Gentle habit and daily reminder preferences."
+            meta="3 reminder areas"
+            featureId="settings.notifications"
+            onClick={handleNotificationsClick}
+          />
+          {showAdminTools ? (
+            <SettingsModuleCard
+              icon="🔧"
+              title="Advanced Tools"
+              subtitle="Internal diagnostics, admin previews, and debug tools."
+              meta="Admin only"
+              onClick={handleAdvancedToolsClick}
+            />
+          ) : null}
+          <SettingsModuleCard
+            icon="⚗️"
+            title="Experimental Features"
+            subtitle="Creator previews for ideas still in development."
+            meta="Future Feature"
+            featureId="settings.experimentalFeatures"
+            onClick={handleExperimentalFeaturesClick}
+          />
+        </div>
+      </section>
+
       <AiSettingsSection session={session} />
 
       <GamificationSettings session={session} />
-
-      <ExperimentalFeaturesSection session={session} />
 
       <TelemetrySettingsSection session={session} isDemoExperience={isDemoExperience} />
 
@@ -677,40 +795,6 @@ export function MyAccountPanel({
             Launch weekly habit review
           </button>
         </div>
-      </section>
-
-      {/* Collapsible Folder: Holiday Themes */}
-      <section className="account-panel__card">
-        <SettingsFolderButton
-          title="Holiday Themes"
-          description="Pick which seasonal moments can trigger themed experiences"
-          icon="🎊"
-          itemCount={HOLIDAY_OPTIONS.length}
-          onClick={() => setHolidayFolderOpen(true)}
-        />
-      </section>
-
-      {showAdminTools ? (
-        <section className="account-panel__card">
-          <SettingsFolderButton
-            title="Advanced Tools"
-            description="Advanced ship, analytics, and debugging tools"
-            icon="🔧"
-            itemCount={6}
-            onClick={() => setFolder1Open(true)}
-          />
-        </section>
-      ) : null}
-
-      {/* Collapsible Folder 2: Notification Settings */}
-      <section className="account-panel__card">
-        <SettingsFolderButton
-          title="Notification Settings"
-          description="Configure habit notifications, daily reminders, and per-habit reminder preferences"
-          icon="🔔"
-          itemCount={3}
-          onClick={() => setFolder2Open(true)}
-        />
       </section>
 
       {showAdminTools ? (
@@ -878,6 +962,14 @@ export function MyAccountPanel({
         <HolidayPreferencesSection session={session} isDemoExperience={isDemoExperience} />
       </SettingsFolderPopup>
 
+      <SettingsFolderPopup
+        isOpen={experimentalFolderOpen}
+        onClose={() => setExperimentalFolderOpen(false)}
+        title="Experimental Features"
+      >
+        <ExperimentalFeaturesSection session={session} />
+      </SettingsFolderPopup>
+
       <div className="account-panel__actions">
         <div>
           <p className="account-panel__eyebrow">Session</p>
@@ -909,6 +1001,16 @@ export function MyAccountPanel({
           caseType="support"
           sourceSurface="account_panel"
           onClose={() => setShowSupportModal(false)}
+        />
+      ) : null}
+
+      {activeFutureFeature ? (
+        <FeaturePreviewOverlay
+          featureId={activeFutureFeature.id}
+          label={activeFutureFeature.label}
+          body={activeFutureFeature.shortPitch}
+          statusLabelOverride={activeFutureFeature.publicLabel}
+          onClose={() => setActiveFutureFeatureId(null)}
         />
       ) : null}
     </div>

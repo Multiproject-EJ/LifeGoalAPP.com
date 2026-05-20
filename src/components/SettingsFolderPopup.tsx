@@ -57,7 +57,7 @@ export function SettingsFolderPopup({ isOpen, onClose, title, children }: Settin
           onClick={onClose}
           aria-label="Close settings folder"
         >
-          ✕
+          Close
         </button>
       </div>
       <div className="settings-folder-popup__content">{children}</div>
