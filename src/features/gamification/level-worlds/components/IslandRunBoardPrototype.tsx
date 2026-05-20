@@ -199,6 +199,10 @@ import {
   FirstSessionCreaturePackModal,
   type FirstSessionCreaturePackModalPhase,
 } from './FirstSessionCreaturePackModal';
+import {
+  CreaturePackOpeningPrototypeModal,
+  type CreaturePackOpeningPrototypeCard,
+} from './CreaturePackOpeningPrototypeModal';
 import { applyCreatureArtFallback } from './creatureArtFallback';
 import {
   rankCreatureFitsForPlayer,
@@ -357,7 +361,9 @@ import {
 } from '../services/islandRunDiceRegeneration';
 import { openEggRewardInventoryEntry } from '../services/islandRunEggRewardInventoryAction';
 import {
+  DEV_DEMO_CREATURE_PACK_IDS,
   grantDevDemoCreaturePack,
+  grantDevDemoCreaturePackOpeningPrototype,
   grantDevDemoEggRewardPack,
 } from '../services/islandRunAdminDevPackGrantAction';
 import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
@@ -1644,6 +1650,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [showSanctuaryMenu, setShowSanctuaryMenu] = useState(false);
   const [sanctuaryMenuModule, setSanctuaryMenuModule] = useState<'collection' | 'inventory' | 'quest' | 'rooms' | 'filters' | null>(null);
   const [hatchReveal, setHatchReveal] = useState<null | { creatureId: string; creatureName: string; rarity: 'common' | 'rare' | 'mythic' }>(null);
+  const [devPackOpeningPrototype, setDevPackOpeningPrototype] = useState<null | {
+    cards: CreaturePackOpeningPrototypeCard[];
+    grantId: string;
+    grantStatus: 'granted' | 'already_granted';
+  }>(null);
   const [firstCreaturePackFlow, setFirstCreaturePackFlow] = useState<{
     phase: FirstSessionCreaturePackModalPhase;
     cards: FirstSessionCreaturePackCardReveal[];
@@ -7563,6 +7574,57 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return message;
   }, [client, isDevModeEnabled, session]);
 
+  const handleDevOpenCreaturePackOpeningPrototype = useCallback(async () => {
+    if (!isDevModeEnabled) return 'Creature Pack opening prototype is only available in Island Run dev mode.';
+    const beforeRecord = getIslandRunStateSnapshot(session);
+    const result = await grantDevDemoCreaturePackOpeningPrototype({
+      session,
+      client,
+      allowGrant: isDevModeEnabled,
+      triggerSource: 'dev_demo_creature_pack_opening_prototype',
+    });
+    refreshIslandRunStateFromLocal(session);
+    const refreshedRecord = getIslandRunStateSnapshot(session);
+    setRuntimeState(refreshedRecord);
+    runtimeStateRef.current = refreshedRecord;
+
+    if (result.status !== 'granted' && result.status !== 'already_granted') {
+      const message = `🧪 DEV Creature Pack opening prototype ${result.status}: ${result.failureReason ?? 'unknown reason'}.`;
+      setLandingText(message);
+      return message;
+    }
+
+    const countCopies = (record: IslandRunGameStateRecord, creatureId: string) => (
+      record.creatureCollection.find((entry) => entry.creatureId === creatureId)?.copies ?? 0
+    );
+    const cards = DEV_DEMO_CREATURE_PACK_IDS
+      .map((creatureId, slotIndex): CreaturePackOpeningPrototypeCard | null => {
+        const creature = CREATURE_CATALOG.find((entry) => entry.id === creatureId);
+        if (!creature) return null;
+        const copiesAfter = countCopies(refreshedRecord, creatureId);
+        return {
+          slotIndex,
+          creature,
+          copiesBefore: result.status === 'granted' ? countCopies(beforeRecord, creatureId) : copiesAfter,
+          copiesAfter,
+        };
+      })
+      .filter((card): card is CreaturePackOpeningPrototypeCard => Boolean(card));
+
+    setDevPackOpeningPrototype({
+      cards,
+      grantId: result.grantId,
+      grantStatus: result.status,
+    });
+    setShowDebugPanel(false);
+
+    const message = result.status === 'granted'
+      ? `✨ DEV Creature Pack opening prototype ready: ${cards.length} cards, no dice or essence granted.`
+      : `✨ DEV Creature Pack opening prototype replaying existing grant ${result.grantId}.`;
+    setLandingText(message);
+    return message;
+  }, [client, isDevModeEnabled, session]);
+
   const handleDevGrantDemoEggRewardPack = useCallback(async () => {
     if (!isDevModeEnabled) return 'Egg Reward Pack grant is only available in Island Run dev mode.';
     const result = await grantDevDemoEggRewardPack({
@@ -11146,6 +11208,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         />
       ) : null}
 
+      {devPackOpeningPrototype ? (
+        <CreaturePackOpeningPrototypeModal
+          open={Boolean(devPackOpeningPrototype)}
+          cards={devPackOpeningPrototype.cards}
+          grantId={devPackOpeningPrototype.grantId}
+          grantStatus={devPackOpeningPrototype.grantStatus}
+          onClose={() => setDevPackOpeningPrototype(null)}
+        />
+      ) : null}
+
       {activeLaunchedMinigameId && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9000, overflow: 'hidden' }}>
           <IslandRunMinigameLauncher
@@ -11508,6 +11580,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           onCollectPostRareTreasurePathAndTravel={handleDevCollectPostRareTreasurePathAndTravel}
           onOpenEggRewardInventoryEntry={handleDevOpenEggRewardInventoryEntry}
           onGrantDevDemoCreaturePack={handleDevGrantDemoCreaturePack}
+          onOpenDevDemoCreaturePackPrototype={handleDevOpenCreaturePackOpeningPrototype}
           onGrantDevDemoEggRewardPack={handleDevGrantDemoEggRewardPack}
           onClose={() => setShowDebugPanel(false)}
         />

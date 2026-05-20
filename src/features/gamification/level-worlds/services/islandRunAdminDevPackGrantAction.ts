@@ -292,6 +292,24 @@ export function grantDevDemoCreaturePack(options: {
   });
 }
 
+export function grantDevDemoCreaturePackOpeningPrototype(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  allowGrant: boolean;
+  triggerSource?: string;
+}): Promise<GrantAdminDevCreaturePackResult> {
+  const current = getIslandRunStateSnapshot(options.session);
+  return grantAdminDevCreaturePack({
+    session: options.session,
+    client: options.client,
+    grantId: `dev_demo_creature_pack_opening_v1:${current.currentIslandNumber}:${current.cycleIndex}`,
+    grantSource: 'dev',
+    allowGrant: options.allowGrant,
+    creatureIds: [...DEV_DEMO_CREATURE_PACK_IDS],
+    triggerSource: options.triggerSource ?? 'dev_demo_creature_pack_opening_prototype',
+  });
+}
+
 export function grantDevDemoEggRewardPack(options: {
   session: Session;
   client: SupabaseClient | null;
