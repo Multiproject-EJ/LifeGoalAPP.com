@@ -38,7 +38,7 @@ export function CreatureCard(props: CreatureCardProps): React.JSX.Element {
     shiny ? 'creature-card--shiny-ready' : '',
     foil !== 'none' ? `creature-card--foil-${foil}` : '',
     className,
-  ].filter(Boolean).join(' ');
+  ].filter((classNamePart) => classNamePart.length > 0).join(' ');
 
   return (
     <article className={classNames} aria-label={`${metadata.displayName} creature card`}>

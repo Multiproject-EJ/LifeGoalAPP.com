@@ -134,7 +134,7 @@ function buildFallbackCardMetadata(creature: CreatureDefinition): CreatureCardMe
     flavorQuote: `${creature.name} supports your journey from the ${creature.habitat}.`,
     passiveName: 'Companion Spark',
     passiveText: `Placeholder card passive for ${creature.affinity.toLowerCase()} support.`,
-    powerLabel: creature.tier === 'mythic' ? 'PWR —' : creature.tier === 'rare' ? 'PWR —' : 'PWR —',
+    powerLabel: 'PWR —',
     statLine: `${creature.affinity} · ${creature.habitat}`,
     theme: {
       tier: creature.tier,
