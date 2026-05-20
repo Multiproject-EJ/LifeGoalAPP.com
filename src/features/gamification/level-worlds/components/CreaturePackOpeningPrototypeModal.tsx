@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type JSX } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type JSX } from 'react';
 import type { CreatureDefinition } from '../services/creatureCatalog';
 import { getCreatureCardMetadata } from '../services/creatureCardCatalog';
 import { playIslandRunSound, triggerIslandRunHaptic } from '../services/islandRunAudio';
@@ -33,10 +33,13 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
   const hasCards = props.cards.length > 0;
   const revealedCount = showSummary ? props.cards.length : Math.min(props.cards.length, activeIndex + 1);
   const newCardCount = useMemo(
-    () => props.cards.filter((card) => card.copiesBefore < 1 && card.copiesAfter > 0).length,
-    [props.cards],
+    () => props.grantStatus === 'already_granted'
+      ? 0
+      : props.cards.filter((card) => card.copiesBefore < 1 && card.copiesAfter > 0).length,
+    [props.cards, props.grantStatus],
   );
-  const duplicateCount = Math.max(0, props.cards.length - newCardCount);
+  const replayCount = props.grantStatus === 'already_granted' ? props.cards.length : 0;
+  const grantedDuplicateCount = props.grantStatus === 'granted' ? Math.max(0, props.cards.length - newCardCount) : 0;
 
   useEffect(() => {
     if (!props.open) return;
@@ -50,7 +53,7 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
     triggerIslandRunHaptic(activeCard.creature.tier === 'common' ? 'reward_claim' : 'egg_open');
   }, [activeCard, props.open, showSummary]);
 
-  const advance = () => {
+  const advance = useCallback(() => {
     if (!hasCards) return;
     if (showSummary) {
       props.onClose();
@@ -62,7 +65,7 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
       return;
     }
     setActiveIndex((current) => Math.min(props.cards.length - 1, current + 1));
-  };
+  }, [activeIndex, hasCards, props.cards.length, props.onClose, showSummary]);
 
   useEffect(() => {
     if (!props.open) return undefined;
@@ -78,7 +81,7 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  });
+  }, [advance, props.open, props.onClose]);
 
   if (!props.open) return null;
 
@@ -114,13 +117,22 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
                 return (
                   <div key={`${card.slotIndex}:${card.creature.id}`} className={`creature-pack-opening-prototype__summary-card creature-pack-opening-prototype__summary-card--${card.creature.tier}`}>
                     <span>{metadata.displayName}</span>
-                    <strong>{card.copiesBefore > 0 ? `Duplicate · ${card.copiesBefore}→${card.copiesAfter}` : 'New companion'}</strong>
+                    <strong>
+                      {props.grantStatus === 'already_granted'
+                        ? `Replay · ${card.copiesAfter} held`
+                        : card.copiesBefore > 0
+                          ? `Duplicate · ${card.copiesBefore}→${card.copiesAfter}`
+                          : 'New companion'}
+                    </strong>
                   </div>
                 );
               })}
             </div>
             <p className="creature-pack-opening-prototype__summary-note">
-              {newCardCount} new · {duplicateCount} duplicate · foil, seasonal, and mythic cinematic hooks can layer onto this reveal queue later.
+              {props.grantStatus === 'already_granted'
+                ? `${replayCount} replayed from current canonical collection state`
+                : `${newCardCount} new · ${grantedDuplicateCount} duplicate`}
+              {' '}· foil, seasonal, and mythic cinematic hooks can layer onto this reveal queue later.
             </p>
           </div>
         ) : activeCard ? (
@@ -138,7 +150,9 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
             />
             <p className="creature-pack-opening-prototype__copy-note">
               {activeCard.copiesBefore > 0
-                ? `Duplicate converted into collection copy ${activeCard.copiesBefore} → ${activeCard.copiesAfter}`
+                ? props.grantStatus === 'already_granted'
+                  ? `Replay view: ${activeCard.copiesAfter} copies currently held in canonical collection state`
+                  : `Duplicate converted into collection copy ${activeCard.copiesBefore} → ${activeCard.copiesAfter}`
                 : 'New creature added to your Sanctuary collection'}
             </p>
           </button>
