@@ -43,6 +43,7 @@ import { resolveIslandBoardProfile } from '../services/islandBoardProfiles';
 // is the single authoritative source of truth for token movement and hop order.
 import { ISLAND_RUN_DEFAULT_STARTING_DICE } from '../services/islandRunEconomy';
 import { generateIslandStopPlan, type IslandStopPlanEntry } from '../services/islandRunStops';
+import { getWisdomTreeCardForIsland } from '../services/wisdomTreeCards';
 import {
   getStopTicketCost,
   getStopTicketsPaidForIsland,
@@ -69,6 +70,7 @@ import {
 } from '../services/islandRunRuntimeState';
 import { ShardClaimModal } from './ShardClaimModal';
 import { IslandRunReflectionComposer } from './IslandRunReflectionComposer';
+import { WisdomTreeCardEncounter } from './WisdomTreeCardEncounter';
 import { readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { useIslandRunState } from '../hooks/useIslandRunState';
 import {
@@ -9495,11 +9497,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               </div>
             )}
 
-            {/* ── Stop 4: Wisdom (story, questionnaire, learning content) ── */}
-            {activeStopId === 'wisdom' && openedStopIsPlayable && (
-              <div className="island-hatchery-card">
-                <p className="island-stop-modal__copy"><strong>📖 Wisdom Stop</strong></p>
-                <p>Gain insight from a short story, reflection, or questionnaire. Wisdom content evolves as you progress.</p>
+            {/* ── Stop 4: Wisdom Tree ── */}
+            {activeStopId === 'wisdom' && openedStopIsPlayable && (() => {
+              const card = getWisdomTreeCardForIsland(islandNumber);
+              return (
+                <div className="island-hatchery-card">
+                  <WisdomTreeCardEncounter
+                    card={card}
+                    islandNumber={islandNumber}
+                    onComplete={(message) => {
+                      setLandingText(message);
+                      handleCompleteActiveStop();
+                    }}
+                  />
                 {ISLAND_RUN_CONTRACT_V2_ENABLED && diamonds >= WISDOM_ESSENCE_BONUS_COST_DIAMONDS ? (
                   <div className="island-hatchery-card__actions" style={{ marginTop: '0.5rem' }}>
                     <button
@@ -9525,17 +9535,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 ) : ISLAND_RUN_CONTRACT_V2_ENABLED ? (
                   <p style={{ fontSize: '0.85rem', opacity: 0.65, marginTop: '0.5rem' }}>🟣 Essence Bonus — needs {WISDOM_ESSENCE_BONUS_COST_DIAMONDS} 💎 (have {diamonds})</p>
                 ) : null}
-                <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored" style={{ marginTop: '0.75rem' }}>
-                  <button
-                    type="button"
-                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                    onClick={() => setActivePlaceholder(resolveIslandRunPlaceholderDescriptor('wisdom_stop_unfinished'))}
-                  >
-                    Open Wisdom Placeholder
-                  </button>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {activeStop.stopId === 'boss' && openedStopIsPlayable ? (
               (() => {
