@@ -1371,6 +1371,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [islandNumber]);
   const activeTheme = useMemo(() => getIslandBoardThemeForIslandNumber(islandNumber), [islandNumber]);
   const islandBackgroundSrc = useMemo(() => getIslandBackgroundImageSrc(islandNumber), [islandNumber]);
+  const wisdomTreeCard = useMemo(() => getWisdomTreeCardForIsland(islandNumber), [islandNumber]);
   const [isIslandBackgroundAvailable, setIsIslandBackgroundAvailable] = useState(true);
   const [isIslandArtAmbientBackgroundLoaded, setIsIslandArtAmbientBackgroundLoaded] = useState(false);
   const [islandArtManifest, setIslandArtManifest] = useState<IslandArtManifest | null>(null);
@@ -9499,7 +9500,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
             {/* ── Stop 4: Wisdom Tree ── */}
             {activeStopId === 'wisdom' && openedStopIsPlayable && (() => {
-              const card = getWisdomTreeCardForIsland(islandNumber);
+              const card = wisdomTreeCard;
               return (
                 <div className="island-hatchery-card">
                   <WisdomTreeCardEncounter
