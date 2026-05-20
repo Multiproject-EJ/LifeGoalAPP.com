@@ -272,6 +272,45 @@ export function grantAdminDevCreaturePack(
   });
 }
 
+export function grantDevDemoCreaturePack(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  allowGrant: boolean;
+  triggerSource?: string;
+}): Promise<GrantAdminDevCreaturePackResult> {
+  const current = getIslandRunStateSnapshot(options.session);
+  return grantAdminDevCreaturePack({
+    session: options.session,
+    client: options.client,
+    grantId: `dev_demo_creature_pack_v1:${current.currentIslandNumber}:${current.cycleIndex}`,
+    grantSource: 'dev',
+    allowGrant: options.allowGrant,
+    creatureIds: [...DEV_DEMO_CREATURE_PACK_IDS],
+    diceBonus: 10,
+    essenceBonus: 25,
+    triggerSource: options.triggerSource ?? 'dev_demo_creature_pack_grant',
+  });
+}
+
+export function grantDevDemoEggRewardPack(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  allowGrant: boolean;
+  triggerSource?: string;
+}): Promise<GrantAdminDevCreaturePackResult> {
+  const current = getIslandRunStateSnapshot(options.session);
+  return grantAdminDevCreaturePack({
+    session: options.session,
+    client: options.client,
+    grantId: `dev_demo_egg_reward_pack_v1:${current.currentIslandNumber}:${current.cycleIndex}`,
+    grantSource: 'dev',
+    allowGrant: options.allowGrant,
+    eggRewards: DEV_DEMO_EGG_REWARD_PACK_TIERS.map((eggTier) => ({ eggTier })),
+    essenceBonus: 10,
+    triggerSource: options.triggerSource ?? 'dev_demo_egg_reward_pack_grant',
+  });
+}
+
 export const DEV_DEMO_CREATURE_PACK_IDS = [
   'common-sproutling',
   'common-pebble-spirit',

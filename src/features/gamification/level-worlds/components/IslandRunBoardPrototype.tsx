@@ -357,9 +357,8 @@ import {
 } from '../services/islandRunDiceRegeneration';
 import { openEggRewardInventoryEntry } from '../services/islandRunEggRewardInventoryAction';
 import {
-  DEV_DEMO_CREATURE_PACK_IDS,
-  DEV_DEMO_EGG_REWARD_PACK_TIERS,
-  grantAdminDevCreaturePack,
+  grantDevDemoCreaturePack,
+  grantDevDemoEggRewardPack,
 } from '../services/islandRunAdminDevPackGrantAction';
 import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
 import { IslandRunLuckyRollDevOverlay } from './lucky-roll/IslandRunLuckyRollDevOverlay';
@@ -7545,20 +7544,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const handleDevGrantDemoCreaturePack = useCallback(async () => {
     if (!isDevModeEnabled) return 'Creature Pack grant is only available in Island Run dev mode.';
-    const grantId = `dev_demo_creature_pack_v1:${runtimeStateRef.current.currentIslandNumber}:${runtimeStateRef.current.cycleIndex}`;
-    const result = await grantAdminDevCreaturePack({
+    const result = await grantDevDemoCreaturePack({
       session,
       client,
-      grantId,
-      grantSource: 'dev',
       allowGrant: isDevModeEnabled,
-      creatureIds: [...DEV_DEMO_CREATURE_PACK_IDS],
-      diceBonus: 10,
-      essenceBonus: 25,
       triggerSource: 'dev_demo_creature_pack_grant',
     });
-    setRuntimeState(result.record);
-    runtimeStateRef.current = result.record;
+    refreshIslandRunStateFromLocal(session);
+    const refreshedRecord = getIslandRunStateSnapshot(session);
+    setRuntimeState(refreshedRecord);
+    runtimeStateRef.current = refreshedRecord;
     const message = result.status === 'granted'
       ? `🧪 DEV Creature Pack granted: +${result.creatureCopiesGranted} creatures, +${result.diceGranted} dice, +${result.essenceGranted} essence.`
       : result.status === 'already_granted'
@@ -7570,19 +7565,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const handleDevGrantDemoEggRewardPack = useCallback(async () => {
     if (!isDevModeEnabled) return 'Egg Reward Pack grant is only available in Island Run dev mode.';
-    const grantId = `dev_demo_egg_reward_pack_v1:${runtimeStateRef.current.currentIslandNumber}:${runtimeStateRef.current.cycleIndex}`;
-    const result = await grantAdminDevCreaturePack({
+    const result = await grantDevDemoEggRewardPack({
       session,
       client,
-      grantId,
-      grantSource: 'dev',
       allowGrant: isDevModeEnabled,
-      eggRewards: DEV_DEMO_EGG_REWARD_PACK_TIERS.map((eggTier) => ({ eggTier })),
-      essenceBonus: 10,
       triggerSource: 'dev_demo_egg_reward_pack_grant',
     });
-    setRuntimeState(result.record);
-    runtimeStateRef.current = result.record;
+    refreshIslandRunStateFromLocal(session);
+    const refreshedRecord = getIslandRunStateSnapshot(session);
+    setRuntimeState(refreshedRecord);
+    runtimeStateRef.current = refreshedRecord;
     const message = result.status === 'granted'
       ? `🧪 DEV Egg Reward Pack granted: +${result.eggRewardsGranted} egg vouchers, +${result.essenceGranted} essence.`
       : result.status === 'already_granted'
