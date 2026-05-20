@@ -190,7 +190,7 @@ These starting values are intentionally small because Phase 1 should be an inter
 | Common rarity | `+0.01` |
 | Rare rarity | `+0.02` |
 | Mythic rarity | `+0.03` |
-| Bond/level | `min(0.04, floor(bondLevel / 5) * 0.01)`; levels 1-4 add `0`, levels 5-9 add `+0.01` |
+| Bond/level | `min(0.04, floor(bondLevel / 5) * 0.01)`; levels 1-4 add `0`, 5-9 add `+0.01`, 10-14 add `+0.02`, 15-19 add `+0.03`, 20+ add `+0.04` |
 | Archetype/fit match | `+0.02` for strong fit, `+0.01` for moderate fit, `+0` otherwise |
 
 Pack synergy boost:
