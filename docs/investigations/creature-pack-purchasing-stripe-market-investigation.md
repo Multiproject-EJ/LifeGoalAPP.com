@@ -7,7 +7,7 @@ Status: Investigation only — no implementation, Stripe changes, Supabase migra
 
 - **Do we already have pricing docs?** Partially, but not for paid creature/egg/card packs. The repo documents in-game economy costs such as the Market dice bundle (`30` essence → `+6` dice), Sanctuary shard-shop treat costs (`3/5/10` shards, plus bond items), egg sell reward ranges, a free first-session creature pack (`5` creature cards + `100` dice), and placeholder minigame-ticket Stripe SKUs. I did **not** find concrete public pricing docs for creature packs, egg packs, or card creature packs.
 - **Do we already have Stripe links/products?** Stripe integration exists for Pro subscriptions, 500-roll dice packs, and minigame ticket packs, but I did **not** find Stripe checkout links, product IDs, price IDs, or webhook fulfillment for creature packs, egg packs, or card creature packs. Existing Stripe code uses env-var price IDs such as `STRIPE_PRICE_DICE_PACK_500`, `STRIPE_PRICE_PRO_MONTHLY`, `STRIPE_PRICE_PRO_YEARLY`, and minigame ticket price env vars.
-- **Do we have dev shortcuts?** Yes for dice, essence, timed-event tickets, speed-hatching eggs, building/clearing islands, Lucky Roll/Treasure Path flows, and dev opening egg reward vouchers. I did **not** find a dev/admin shortcut that directly grants arbitrary creature packs/card packs, active pack slots, shards, or treats as a single admin grant product.
+- **Do we have dev shortcuts?** Yes for dice, essence, timed-event tickets, speed-hatching eggs, building/clearing islands, Lucky Roll/Treasure Path flows, and dev opening egg reward vouchers. I did **not** find a dev/admin shortcut that directly grants arbitrary creature/card pack bundles, Active Companion selection, shards, or treats as a single admin grant product.
 
 ## Scope inspected
 
@@ -184,7 +184,7 @@ Not found:
 
 - No admin panel shortcut that grants arbitrary eggs as inventory vouchers.
 - No admin panel shortcut that grants arbitrary creatures/card packs.
-- No admin panel shortcut that grants creature pack slots.
+- No admin panel shortcut that grants Active Companion selection as a product.
 - No direct dev grant for shards/treats found comparable to dice/essence/tickets.
 - No production admin entitlement grant flow for creature/card packs.
 
