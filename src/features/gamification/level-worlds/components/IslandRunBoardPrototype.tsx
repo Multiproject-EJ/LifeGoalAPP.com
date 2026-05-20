@@ -208,6 +208,7 @@ import {
   selectPerfectCompanions,
   type PlayerHandContext,
 } from '../services/creatureFitEngine';
+import { resolveCompanionRegenModifier } from '../services/companionRegenModifier';
 import { readPerfectCompanionRuntimeConfig } from '../services/perfectCompanionConfig';
 import { getDefaultZonePreferencesForArchetypes } from '../services/creatureArchetypeBridge';
 import { logIslandRunEntryDebug, setIslandRunDebugRuntimeSnapshotProvider } from '../services/islandRunEntryDebug';
@@ -761,6 +762,11 @@ function getAvatarImageUrl(user: { user_metadata?: Record<string, unknown> | nul
   const meta = user.user_metadata ?? {};
   const avatarUrl = meta.avatar_url ?? meta.picture ?? meta.profile_image_url;
   return typeof avatarUrl === 'string' && avatarUrl.trim().length > 0 ? avatarUrl : null;
+}
+
+function formatCompanionRegenBonusPercent(boostPct: number): string {
+  if (!Number.isFinite(boostPct) || boostPct <= 0) return '0%';
+  return `${Math.round(boostPct * 1000) / 10}%`;
 }
 
 type SanctuaryFilterMode = 'all' | 'reward_ready' | 'active' | 'common' | 'rare' | 'mythic';
@@ -5479,6 +5485,22 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const activeCompanion = useMemo(
     () => collectedCreatures.find((creature) => creature.creatureId === activeCompanionId) ?? null,
     [activeCompanionId, collectedCreatures],
+  );
+  const activeCompanionRegenModifier = useMemo(
+    () => resolveCompanionRegenModifier({
+      record: {
+        activeCompanionId: runtimeState.activeCompanionId ?? null,
+        creatureCollection: runtimeState.creatureCollection ?? [],
+      },
+    }),
+    [runtimeState.activeCompanionId, runtimeState.creatureCollection],
+  );
+  const activeCompanionRegenBonusLabel = useMemo(
+    () => formatCompanionRegenBonusPercent(activeCompanionRegenModifier.cappedBoostPct),
+    [activeCompanionRegenModifier.cappedBoostPct],
+  );
+  const activeCompanionMissingOrUnowned = Boolean(
+    runtimeState.activeCompanionId && !activeCompanionRegenModifier.isOwned,
   );
   const activeCompanionBonus = useMemo(
     () => (activeCompanion ? getCompanionBonusForCreature(activeCompanion.creature, activeCompanion.bondLevel) : null),
@@ -10794,15 +10816,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   <span className="island-run-sanctuary-companion-preview__badge">Read-only preview</span>
                 </div>
                 <p className="island-run-sanctuary-companion-preview__copy">
-                  Your Active Companion is one selected creature, stored through the existing companion path.
+                  Your Paired Creature gently speeds up roll regeneration.
                 </p>
                 <p className="island-run-sanctuary-companion-preview__copy">
-                  Creature Packs are card bundles you open or earn; they are not an active team.
+                  Complete your personality profile to unlock stronger companion matching.
                 </p>
                 {(() => {
                   const companionArt = activeCompanion ? resolveCreatureArtManifest(activeCompanion.creature) : null;
                   return (
-                    <article className={`island-run-sanctuary-companion-preview__card ${activeCompanion ? 'island-run-sanctuary-companion-preview__card--active' : ''}`}>
+                    <article className={`island-run-sanctuary-companion-preview__card ${activeCompanionRegenModifier.isOwned ? 'island-run-sanctuary-companion-preview__card--active' : ''}`}>
                       <div className="island-run-sanctuary-companion-preview__frame">
                         {activeCompanion && companionArt ? (
                           <>
@@ -10826,11 +10848,35 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       </div>
                       <div className="island-run-sanctuary-companion-preview__body">
                         <p className="island-run-sanctuary-companion-preview__card-title">
-                          {activeCompanion ? activeCompanion.creature.name : 'No Active Companion'}
+                          {activeCompanionMissingOrUnowned
+                            ? 'Paired Creature unavailable'
+                            : activeCompanion
+                              ? activeCompanion.creature.name
+                              : 'No Paired Creature'}
                         </p>
                         <p className="island-run-sanctuary-companion-preview__card-meta">
-                          {activeCompanion ? `${activeCompanion.creature.tier} • ${activeCompanion.creature.affinity}` : 'Open a creature detail to pair one companion.'}
+                          {activeCompanionMissingOrUnowned
+                            ? 'The saved companion is missing or no longer owned.'
+                            : activeCompanion
+                              ? `${activeCompanion.creature.tier} rarity • Bond Lv ${activeCompanion.bondLevel}`
+                              : 'Open a creature detail to pair one companion.'}
                         </p>
+                        <div className="island-run-sanctuary-companion-preview__stats" aria-label="Companion roll regeneration bonus details">
+                          <span>Regen speed bonus <strong>{activeCompanionRegenBonusLabel}</strong></span>
+                          <span>
+                            Archetype match <strong>{activeCompanionRegenModifier.isPersonalityComplete ? 'unlocked' : 'locked'}</strong>
+                          </span>
+                        </div>
+                        {!activeCompanionRegenModifier.isPersonalityComplete ? (
+                          <p className="island-run-sanctuary-companion-preview__notice">
+                            Profile incomplete: stronger archetype match bonuses stay locked until your personality profile is complete.
+                          </p>
+                        ) : null}
+                        {activeCompanionMissingOrUnowned ? (
+                          <p className="island-run-sanctuary-companion-preview__notice island-run-sanctuary-companion-preview__notice--warning">
+                            Choose an owned creature from your roster to restore the regen bonus.
+                          </p>
+                        ) : null}
                       </div>
                     </article>
                   );
