@@ -47,7 +47,7 @@ Relevant code:
 
 - `src/features/gamification/level-worlds/services/islandRunStateActions.ts:641-674`
 
-The board currently triggers this action on startup, interval, focus, visibility, and pre-roll paths. The UI is still the trigger, but the math and commit are in services.
+The board currently triggers this action on startup, interval, focus, visibility, and pre-roll paths. This is existing migration-era technical debt, not a pattern to expand: the math and commit are in services, but future Pack work should avoid making React components the gameplay authority. A UI shell may request a tick, but the action service must decide whether anything is grantable and persist all gameplay changes.
 
 Relevant code:
 
@@ -182,6 +182,8 @@ Definitions:
 - `boostCap = 0.20`
 
 Per Pack creature boost:
+
+These starting values are intentionally small because Phase 1 should be an interval-speed modifier only, not a new dice faucet. With three Pack slots, normal early Packs produce a visible but modest refill improvement; high-rarity/high-bond/high-fit Packs can approach the global cap, but still cannot fill above the existing passive dice floor.
 
 | Input | Recommendation |
 |---|---:|
@@ -395,7 +397,7 @@ Regression commands:
 - **LocalStorage authority regression:** legacy creature services must not become Pack/dice authority.
 - **Pack swap exploit:** players could wait offline then switch to the strongest Pack before catch-up unless selection applies pending regen or resets anchors.
 - **Cross-device merge risk:** unioning Pack arrays could exceed slot caps.
-- **Contract mismatch:** current gameplay contract describes a logarithmic regen floor, while implementation uses level bands; resolve before tuning large bonuses.
+- **Contract mismatch:** `docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md:192-208` describes a logarithmic regen floor, while `islandRunDiceRegeneration.ts` uses level bands; resolve by either updating the contract to bless bands or migrating implementation to the contract formula before tuning larger Pack bonuses.
 - **Telemetry ambiguity:** without source attribution, base regen and Pack regen inflation would be hard to debug.
 - **Early-game imbalance:** first-session creature pack already grants +100 dice, so early Pack regen must be small and capped.
 - **Archetype privacy/design drift:** archetype matching should use stable derived IDs, not raw sensitive profile text in economy math.
