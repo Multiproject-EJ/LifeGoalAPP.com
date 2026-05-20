@@ -9499,18 +9499,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             )}
 
             {/* ── Stop 4: Wisdom Tree ── */}
-            {activeStopId === 'wisdom' && openedStopIsPlayable && (() => {
-              const card = wisdomTreeCard;
-              return (
-                <div className="island-hatchery-card">
-                  <WisdomTreeCardEncounter
-                    card={card}
-                    islandNumber={islandNumber}
-                    onComplete={(message) => {
-                      setLandingText(message);
-                      handleCompleteActiveStop();
-                    }}
-                  />
+            {activeStopId === 'wisdom' && openedStopIsPlayable && (
+              <div className="island-hatchery-card">
+                <WisdomTreeCardEncounter
+                  card={wisdomTreeCard}
+                  islandNumber={islandNumber}
+                  onComplete={(message) => {
+                    setLandingText(message);
+                    handleCompleteActiveStop();
+                  }}
+                />
                 {ISLAND_RUN_CONTRACT_V2_ENABLED && diamonds >= WISDOM_ESSENCE_BONUS_COST_DIAMONDS ? (
                   <div className="island-hatchery-card__actions" style={{ marginTop: '0.5rem' }}>
                     <button
@@ -9536,9 +9534,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 ) : ISLAND_RUN_CONTRACT_V2_ENABLED ? (
                   <p style={{ fontSize: '0.85rem', opacity: 0.65, marginTop: '0.5rem' }}>🟣 Essence Bonus — needs {WISDOM_ESSENCE_BONUS_COST_DIAMONDS} 💎 (have {diamonds})</p>
                 ) : null}
-                </div>
-              );
-            })()}
+              </div>
+            )}
 
             {activeStop.stopId === 'boss' && openedStopIsPlayable ? (
               (() => {
