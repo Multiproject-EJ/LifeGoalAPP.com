@@ -5486,6 +5486,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     () => collectedCreatures.find((creature) => creature.creatureId === activeCompanionId) ?? null,
     [activeCompanionId, collectedCreatures],
   );
+  // Regen transparency intentionally reads the authoritative store id, not the
+  // legacy local mirror used by older Sanctuary affordances.
   const activeRegenCompanion = useMemo(
     () => collectedCreatures.find((creature) => creature.creatureId === __storeState.activeCompanionId) ?? null,
     [__storeState.activeCompanionId, collectedCreatures],
@@ -10867,7 +10869,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                         </p>
                         <div className="island-run-sanctuary-companion-preview__stats" aria-label="Companion roll regeneration bonus details">
                           <span>Regen speed bonus <strong>{activeCompanionRegenBonusLabel}</strong></span>
-                          <span>
+                          <span aria-label={`Archetype match status: ${activeCompanionRegenModifier.isPersonalityComplete ? 'unlocked' : 'locked'}`}>
                             Archetype match <strong>{activeCompanionRegenModifier.isPersonalityComplete ? 'unlocked' : 'locked'}</strong>
                           </span>
                         </div>
