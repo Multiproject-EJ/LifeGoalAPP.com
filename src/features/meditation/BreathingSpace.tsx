@@ -19,11 +19,13 @@ import { FeaturePreviewOverlay } from '../../components/FeaturePreviewOverlay';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import { awardZenTokens } from '../../services/zenGarden';
 import type { FeatureAvailabilityId } from '../../config/featureAvailability';
+import { getFutureFeatureCardClassName, useFutureFeatureCardStates } from '../../hooks/useFutureFeatureCardStates';
 import { TrainingTab } from '../training';
 import { ConflictResolverEntry } from '../conflict-resolver/ConflictResolverEntry';
 import {
   canRenderEnergyMobileTab,
   ENERGY_MOBILE_CATEGORY_TABS,
+  GATED_ENERGY_MOBILE_TAB_FEATURE_IDS,
   getEnergyMobileCategoryForTab,
   getGatedEnergyMobileTabFeatureId,
   getEnergyMobileTabAccess,
@@ -85,6 +87,10 @@ const MOBILE_TAB_OPTIONS: Record<
   exercise: { icon: '🏋️', label: 'Exercise', uppercaseLabel: 'EXERCISE' },
 };
 
+const ENERGY_FUTURE_FEATURE_IDS: FeatureAvailabilityId[] = [
+  ...Object.values(GATED_ENERGY_MOBILE_TAB_FEATURE_IDS),
+];
+
 export function BreathingSpace({
   session,
   initialMobileTab,
@@ -115,6 +121,9 @@ export function BreathingSpace({
   const [activeMobileCategory, setActiveMobileCategory] = useState<EnergyMobileCategory>(
     initialMobileCategory ?? (initialMobileTab ? getEnergyMobileCategoryForTab(initialMobileTab) : 'mind'),
   );
+  const futureFeatureCardStates = useFutureFeatureCardStates(ENERGY_FUTURE_FEATURE_IDS, {
+    loadVotes: Boolean(session.user.id),
+  });
 
   useEffect(() => {
     setActiveMobileTab(initialMobileTab ?? null);
@@ -460,13 +469,18 @@ export function BreathingSpace({
             <div className="breathing-space__mobile-launch" role="group" aria-label="Choose an energy focus">
               {activeCategoryTabs.map((tab) => {
                 const statusLabel = getEnergyMobileTabStatusLabel(tab, isAdminOrCreator);
+                const featureId = getEnergyMobileTabFeatureId(tab);
+                const futureFeatureState = statusLabel && featureId ? futureFeatureCardStates[featureId] : undefined;
                 return (
                   <button
                     key={tab}
                     type="button"
-                    className={`breathing-space__mobile-launch-card${
-                      statusLabel ? ' breathing-space__mobile-launch-card--gated' : ''
-                    }`}
+                    className={getFutureFeatureCardClassName(
+                      `breathing-space__mobile-launch-card${
+                        statusLabel ? ' breathing-space__mobile-launch-card--gated' : ''
+                      }`,
+                      futureFeatureState,
+                    )}
                     onClick={() => handleMobileTabChange(tab)}
                   >
                     <img
@@ -490,6 +504,9 @@ export function BreathingSpace({
                     <span className="breathing-space__mobile-launch-copy">
                       {statusLabel ? (
                         <span className="breathing-space__mobile-launch-status">{statusLabel}</span>
+                      ) : null}
+                      {futureFeatureState?.voted ? (
+                        <span className="future-feature-card__saved-label">Feedback sent</span>
                       ) : null}
                       <span className="breathing-space__mobile-launch-title">
                         {MOBILE_TAB_OPTIONS[tab].launchTitle ?? MOBILE_TAB_OPTIONS[tab].uppercaseLabel}

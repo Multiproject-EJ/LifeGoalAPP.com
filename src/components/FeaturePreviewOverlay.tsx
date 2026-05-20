@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { getFeatureAvailability, type FeatureAvailabilityId } from '../config/featureAvailability';
 import { upsertFeatureVote, type FeatureVoteState } from '../services/featureVotes';
+import { markFutureFeatureSeen, notifyFutureFeatureVoteSaved } from '../services/futureFeatureEngagement';
 import '../styles/feature-status.css';
 import '../styles/feature-preview-overlay.css';
 
@@ -55,12 +56,13 @@ export function FeaturePreviewOverlay({
   const featureAvailability = getFeatureAvailability(featureId);
 
   useEffect(() => {
+    markFutureFeatureSeen(featureId);
     document.body.classList.add('feature-preview-overlay-open');
 
     return () => {
       document.body.classList.remove('feature-preview-overlay-open');
     };
-  }, []);
+  }, [featureId]);
 
   const handleSubmitFeedback = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -94,6 +96,7 @@ export function FeaturePreviewOverlay({
     }
 
     setFeedbackSubmitted(true);
+    notifyFutureFeatureVoteSaved(featureId);
   };
 
   return (
