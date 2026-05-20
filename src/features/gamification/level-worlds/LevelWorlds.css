@@ -3081,6 +3081,133 @@
   border-color: rgba(175, 221, 240, 0.34);
 }
 
+.wisdom-tree-card {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  gap: 0.72rem;
+  padding: 1rem;
+  overflow: hidden;
+  border: 1px solid rgba(253, 221, 163, 0.34);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(255, 226, 159, 0.26), transparent 34%),
+    linear-gradient(180deg, rgba(48, 58, 44, 0.94), rgba(26, 40, 35, 0.96));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 18px 34px rgba(0, 0, 0, 0.22);
+}
+
+.wisdom-tree-card__glow {
+  position: absolute;
+  top: -3.5rem;
+  right: -2.5rem;
+  z-index: -1;
+  width: 8rem;
+  height: 8rem;
+  border-radius: 999px;
+  background: rgba(255, 214, 133, 0.26);
+  filter: blur(10px);
+  animation: wisdom-tree-card-glow 3.8s ease-in-out infinite alternate;
+}
+
+.wisdom-tree-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.wisdom-tree-card__eyebrow,
+.wisdom-tree-card__category {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 760;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wisdom-tree-card__eyebrow {
+  color: rgba(245, 236, 199, 0.76);
+}
+
+.wisdom-tree-card__category {
+  padding: 0.22rem 0.55rem;
+  border: 1px solid rgba(255, 229, 166, 0.42);
+  border-radius: 999px;
+  color: rgba(255, 239, 195, 0.94);
+  background: rgba(71, 53, 30, 0.44);
+}
+
+.wisdom-tree-card__title {
+  margin: 0;
+  color: #fff2c8;
+  font-size: 1.22rem;
+  line-height: 1.15;
+}
+
+.wisdom-tree-card__story,
+.wisdom-tree-card__hint,
+.wisdom-tree-card__reveal p {
+  margin: 0;
+  color: rgba(246, 239, 216, 0.92);
+}
+
+.wisdom-tree-card__choices {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.wisdom-tree-card__choice {
+  width: 100%;
+  border-color: rgba(255, 226, 170, 0.36);
+  background: rgba(57, 75, 54, 0.84);
+  color: #fff8dd;
+  text-align: left;
+}
+
+.wisdom-tree-card__choice--selected {
+  border-color: rgba(255, 232, 176, 0.82);
+  background: linear-gradient(180deg, rgba(115, 91, 50, 0.94), rgba(72, 89, 58, 0.94));
+  box-shadow: 0 0 0 2px rgba(255, 231, 172, 0.16);
+}
+
+.wisdom-tree-card__reveal {
+  display: grid;
+  gap: 0.68rem;
+  padding: 0.76rem;
+  border: 1px solid rgba(255, 229, 176, 0.3);
+  border-radius: 16px;
+  background: rgba(255, 244, 205, 0.1);
+  animation: wisdom-tree-card-reveal 220ms ease-out;
+}
+
+.wisdom-tree-card__complete {
+  width: 100%;
+}
+
+@keyframes wisdom-tree-card-glow {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.94);
+    opacity: 0.72;
+  }
+
+  to {
+    transform: translate3d(-0.3rem, 0.24rem, 0) scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes wisdom-tree-card-reveal {
+  from {
+    transform: translateY(0.24rem);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 
 .island-stop-modal__cta-btn,
 .island-stop-modal__btn {
