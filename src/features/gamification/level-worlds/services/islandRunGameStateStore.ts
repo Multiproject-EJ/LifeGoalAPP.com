@@ -78,6 +78,8 @@ export interface CreatureCollectionRuntimeEntry {
   bondLevel: number;
   lastFedAtMs: number | null;
   claimedBondMilestones: number[];
+  /** Idempotency/audit markers for canonical admin/dev grant actions. */
+  grantIds?: string[];
 }
 
 
@@ -702,6 +704,12 @@ function toCreatureCollectionEntry(value: unknown): CreatureCollectionRuntimeEnt
       .map((milestone) => Math.max(1, Math.floor(milestone))))
     ).sort((a, b) => a - b)
     : [];
+  const grantIds = Array.isArray(candidate.grantIds)
+    ? Array.from(new Set(candidate.grantIds
+      .filter((grantId): grantId is string => typeof grantId === 'string' && grantId.trim().length > 0)
+      .map((grantId) => grantId.trim())))
+      .sort((a, b) => a.localeCompare(b))
+    : [];
   return {
     creatureId: candidate.creatureId,
     copies,
@@ -712,6 +720,7 @@ function toCreatureCollectionEntry(value: unknown): CreatureCollectionRuntimeEnt
     bondLevel,
     lastFedAtMs,
     claimedBondMilestones,
+    ...(grantIds.length > 0 ? { grantIds } : {}),
   };
 }
 
