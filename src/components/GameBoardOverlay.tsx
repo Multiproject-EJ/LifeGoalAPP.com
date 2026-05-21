@@ -1,34 +1,6 @@
 import { useEffect, useState } from 'react';
-import boardIconsRight1 from '../assets/board_icons_right1.webp';
-import boardIconsRight2 from '../assets/board_icons_right2.webp';
-import spinWheelImg from '../assets/Daily_treats_spinnwheel.webp';
-import heartsImg from '../assets/Daily_treats_hearts.webp';
 import '../styles/game-board-overlay.css';
 import { getIslandBackgroundImageSrc } from '../features/gamification/level-worlds/services/islandBackgrounds';
-import { EVENT_BANNER_META } from '../features/gamification/level-worlds/services/islandRunContractV2RewardBar';
-
-const REWARD_MILESTONES = [
-  { pct: 33, icon: '🎲' },
-  { pct: 66, icon: '💎' },
-  { pct: 100, icon: '🎫' },
-] as const;
-const TIMER_OK_THRESHOLD_MS = 4 * 60 * 60 * 1000;
-const TIMER_WARN_THRESHOLD_MS = 1 * 60 * 60 * 1000;
-
-function formatCountdown(resetAtMs: number | undefined, nowMs: number): string {
-  if (!resetAtMs) return '';
-  const remainingMs = resetAtMs - nowMs;
-  if (remainingMs <= 0) return 'Ready';
-  const totalSeconds = Math.floor(remainingMs / 1000);
-  const days = Math.floor(totalSeconds / 86400);
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  if (minutes > 0) return `${minutes}m ${seconds}s`;
-  return `${seconds}s`;
-}
 
 type GameBoardOverlayProps = {
   isOpen: boolean;
@@ -45,7 +17,6 @@ type GameBoardOverlayProps = {
   essenceBalance?: number;
   rewardBarProgress?: number;
   rewardBarThreshold?: number;
-  /** B8: reward-bar escalation tier (1..5) → rarity-color the fill/endcap. */
   rewardBarTier?: number;
   activeTimedEventType?: string | null;
   activeTimedEventExpiresAtMs?: number | null;
@@ -68,50 +39,14 @@ export function GameBoardOverlay({
   isOpen,
   onClose,
   onPlayClick,
-  onTopbarClick,
-  onSpinWinClick,
-  onLuckyRollClick,
-  onCreatureCollectionClick,
-  onGarageClick,
-  profilePlaystyleIcon,
-  profileAvatarUrl,
-  profilePlaystyleLabel,
-  essenceBalance = 0,
-  rewardBarProgress = 0,
-  rewardBarThreshold = 10,
-  rewardBarTier = 1,
-  activeTimedEventType = null,
-  activeTimedEventExpiresAtMs = null,
-  islandNumber = 1,
-  islandDisplayName = 'Island 1',
-  spinsRemaining = 0,
-  islandTimeLabel = '—',
-  spinWinResetAtMs,
-  luckyRollResetAtMs,
-  luckyRollRunsRemaining = 0,
-  luckyRollStatusLabel,
-  showSpinWheel = false,
-  showLuckyRoll = false,
-  creatureCollectionCount = 0,
-  creatureRewardReadyCount = 0,
   islandSceneSrc = getIslandBackgroundImageSrc(1),
 }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
-  const [nowMs, setNowMs] = useState(Date.now());
-  const activeLeftIconCount = [showSpinWheel, showLuckyRoll].filter(Boolean).length;
-  const luckyRollTimerLabel = luckyRollStatusLabel ?? (formatCountdown(luckyRollResetAtMs, nowMs) || 'Reward active');
-
-  useEffect(() => {
-    if (spinWinResetAtMs === undefined && luckyRollResetAtMs === undefined) return;
-    const interval = setInterval(() => setNowMs(Date.now()), 1000);
-    return () => clearInterval(interval);
-  }, [spinWinResetAtMs, luckyRollResetAtMs]);
 
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
-      // Small delay to trigger animation
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           setIsAnimating(true);
@@ -119,7 +54,6 @@ export function GameBoardOverlay({
       });
     } else {
       setIsAnimating(false);
-      // Wait for animation to complete before unmounting
       const timer = setTimeout(() => {
         setShouldRender(false);
       }, 400);
@@ -137,27 +71,6 @@ export function GameBoardOverlay({
     }
   };
 
-  const topbarAvatar = (profilePlaystyleIcon && profilePlaystyleIcon.trim()) || 'P';
-  const normalizedThreshold = Math.max(1, Math.floor(rewardBarThreshold));
-  const normalizedProgress = Math.max(0, Math.floor(rewardBarProgress));
-  const rewardBarPercent = Math.min(100, (normalizedProgress / normalizedThreshold) * 100);
-  const canClaimRewardBar = normalizedProgress >= normalizedThreshold;
-  const timedEventRemainingMs = activeTimedEventExpiresAtMs
-    ? Math.max(0, activeTimedEventExpiresAtMs - nowMs)
-    : 0;
-  const timedEventLabel = formatCountdown(activeTimedEventExpiresAtMs ?? undefined, nowMs) || '—';
-  const timedEventMeta = activeTimedEventType
-    ? (EVENT_BANNER_META[activeTimedEventType] ?? {
-      icon: '⭐',
-      displayName: activeTimedEventType.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-    })
-    : null;
-  const timerUrgencyClass = timedEventRemainingMs > TIMER_OK_THRESHOLD_MS
-    ? 'island-run-board__rewardbar-timer--ok'
-    : timedEventRemainingMs > TIMER_WARN_THRESHOLD_MS
-      ? 'island-run-board__rewardbar-timer--warn'
-      : 'island-run-board__rewardbar-timer--urgent';
-
   return (
     <div
       className={`game-board-overlay ${isAnimating ? 'game-board-overlay--open' : ''}`}
@@ -165,7 +78,6 @@ export function GameBoardOverlay({
     >
       <div className="game-board-overlay__backdrop" onClick={handleBackdropClick} />
       <div className="game-board-overlay__content">
-        {/* Island background scene */}
         <div className="game-board-overlay__island-scene" aria-hidden="true">
           <img
             src={islandSceneSrc}
@@ -173,80 +85,8 @@ export function GameBoardOverlay({
             className="game-board-overlay__island-scene-img"
           />
         </div>
-        <div className="game-board-overlay__hud">
-          <div
-            className={`island-run-board__topbar ${onTopbarClick ? 'game-board-overlay__topbar--clickable' : ''}`}
-            onClick={onTopbarClick}
-            aria-label="Island Run top bar"
-          >
-            <button
-              type="button"
-              className="island-run-board__topbar-avatar"
-              aria-label={profilePlaystyleLabel ?? 'Player profile'}
-            >
-              {profileAvatarUrl ? (
-                <img src={profileAvatarUrl} alt="" className="island-run-board__topbar-avatar-img" />
-              ) : (
-                topbarAvatar
-              )}
-            </button>
-            <div className="island-run-board__topbar-wallet" aria-label="Essence wallet">
-              🟣 <strong>{essenceBalance}</strong>
-            </div>
-            <button
-              type="button"
-              className="island-run-board__topbar-menu"
-              aria-label="Open gamification"
-            >
-              ☰
-            </button>
-          </div>
 
-          <div
-            className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''} island-run-board__rewardbar--tier-${Math.max(1, Math.min(5, Math.floor(rewardBarTier) || 1))}`}
-            aria-label={`Reward progress ${Math.floor(rewardBarPercent)}%`}
-          >
-            {timedEventMeta ? (
-              <div className={`island-run-board__rewardbar-banner island-run-board__rewardbar-banner--${activeTimedEventType}`}>
-                <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{timedEventMeta.icon}</i>
-                <span>{timedEventMeta.displayName}</span>
-                <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{timedEventMeta.icon}</i>
-              </div>
-            ) : null}
-            <div className="island-run-board__rewardbar-header">
-              <span>{normalizedProgress}/{normalizedThreshold}</span>
-              <span>{`Island ${islandNumber} · ${islandDisplayName}`}</span>
-            </div>
-            <div className="island-run-board__rewardbar-track-row">
-              <span className="island-run-board__rewardbar-avatar-indicator" aria-hidden="true">
-                {profileAvatarUrl ? (
-                  <img src={profileAvatarUrl} alt="" className="island-run-board__rewardbar-avatar-img" />
-                ) : (
-                  topbarAvatar
-                )}
-              </span>
-              <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
-                <span className="island-run-board__rewardbar-track-fill" style={{ width: `${rewardBarPercent}%` }} />
-                {REWARD_MILESTONES.map((milestone) => {
-                  const milestoneClassName = rewardBarPercent >= milestone.pct
-                    ? 'island-run-board__rewardbar-milestone island-run-board__rewardbar-milestone--reached'
-                    : 'island-run-board__rewardbar-milestone';
-                  return (
-                    <span key={milestone.pct} className={milestoneClassName} style={{ left: `${milestone.pct}%` }} aria-hidden="true">{milestone.icon}</span>
-                  );
-                })}
-                <span className="island-run-board__rewardbar-position" style={{ left: `${Math.min(rewardBarPercent, 100)}%` }} aria-hidden="true" />
-              </div>
-              <span className={`island-run-board__rewardbar-endcap${canClaimRewardBar ? ' island-run-board__rewardbar-endcap--claimable' : ''}`} aria-hidden="true">🏆</span>
-            </div>
-            <div className="island-run-board__rewardbar-timers">
-              <span className={timerUrgencyClass}>{timedEventLabel}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Middle Section with Side Icons */}
-        <div className="game-board-overlay__middle">
+        <div className="game-board-overlay__middle game-board-overlay__middle--minimal">
           <button
             type="button"
             className="game-board-overlay__play-button"
@@ -255,102 +95,6 @@ export function GameBoardOverlay({
           >
             PLAY
           </button>
-
-          {/* Left Side Icons - Blue Circle Placeholders */}
-          <div className="game-board-overlay__side-icons game-board-overlay__side-icons--left">
-            {showSpinWheel ? (
-              <div className="game-board-overlay__icon-item">
-                <button
-                  type="button"
-                  className="game-board-overlay__icon-button"
-                  onClick={onSpinWinClick}
-                  aria-label="Open Spin Wheel reward"
-                >
-                  <div className="game-board-overlay__icon-placeholder game-board-overlay__icon-placeholder--asset">
-                    <img
-                      src={spinWheelImg}
-                      alt=""
-                      className="game-board-overlay__icon-asset-img"
-                    />
-                    <span className="game-board-overlay__icon-inner-count" aria-hidden="true">
-                      {Math.max(1, spinsRemaining)}
-                    </span>
-                  </div>
-                </button>
-                <span className="game-board-overlay__icon-timer">
-                  {formatCountdown(spinWinResetAtMs, nowMs) || islandTimeLabel}
-                </span>
-              </div>
-            ) : null}
-
-            {showLuckyRoll ? (
-              <div className="game-board-overlay__icon-item">
-                <button
-                  type="button"
-                  className="game-board-overlay__icon-button"
-                  onClick={onLuckyRollClick}
-                  aria-label="Open Treasure Path"
-                >
-                  <div className="game-board-overlay__icon-placeholder game-board-overlay__icon-placeholder--asset">
-                    <img
-                      src={heartsImg}
-                      alt=""
-                      className="game-board-overlay__icon-asset-img"
-                    />
-                    {luckyRollRunsRemaining > 0 ? (
-                      <span className="game-board-overlay__icon-inner-count" aria-hidden="true">
-                        {luckyRollRunsRemaining}
-                      </span>
-                    ) : null}
-                  </div>
-                </button>
-                <span className="game-board-overlay__icon-timer">
-                  {luckyRollTimerLabel}
-                </span>
-              </div>
-            ) : null}
-
-            {activeLeftIconCount === 0 ? (
-              <div className="game-board-overlay__icon-item">
-                <span className="game-board-overlay__icon-timer">No active reward icons</span>
-              </div>
-            ) : null}
-          </div>
-
-          {/* Right Side Icons */}
-          <div className="game-board-overlay__side-icons game-board-overlay__side-icons--right">
-            <div className="game-board-overlay__right-icon-item">
-              <button
-                type="button"
-                className="game-board-overlay__icon-button game-board-overlay__icon-button--right"
-                onClick={onCreatureCollectionClick}
-                aria-label="Open creature collection"
-              >
-                <img
-                  src={boardIconsRight1}
-                  alt="Creature collection"
-                  className="game-board-overlay__icons-image game-board-overlay__icons-image--bank"
-                />
-                <span className="game-board-overlay__icon-bank-label">CREATURES</span>
-              </button>
-              <span className="game-board-overlay__icon-counter">
-                {creatureRewardReadyCount > 0
-                  ? `${creatureCollectionCount} · ${creatureRewardReadyCount} ready`
-                  : creatureCollectionCount.toLocaleString()}
-              </span>
-            </div>
-            <div className="game-board-overlay__right-icon-item">
-              <button
-                type="button"
-                className="game-board-overlay__icon-button game-board-overlay__icon-button--right"
-                onClick={onGarageClick}
-                aria-label="Open garage tab"
-              >
-                <img src={boardIconsRight2} alt="Garage" className="game-board-overlay__icons-image" />
-              </button>
-              <span className="game-board-overlay__icon-counter">Garage</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
