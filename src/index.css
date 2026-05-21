@@ -3146,7 +3146,11 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 @media (min-width: 721px) {
   .app--mobile-frame {
-    --mobile-frame-width: min(620px, calc(100vw - 2rem));
+    --mobile-frame-width: min(
+      540px,
+      calc((100dvh - (var(--workspace-shell-padding) * 2)) * var(--mobile-frame-aspect-ratio)),
+      calc(100vw - 1rem)
+    );
     --mobile-frame-stage-width: min(calc(var(--mobile-frame-width) + 100px), calc(100vw - 2rem));
     --mobile-controller-max-width: min(560px, var(--mobile-frame-width));
     position: relative;
