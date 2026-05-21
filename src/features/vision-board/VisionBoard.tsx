@@ -970,7 +970,7 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
         </section>
       )}
 
-      {(hasImages || isAddEditOpen) && (
+      {(hasImages || (showPremiumEmptyState && isAddEditOpen)) && (
         <div className="vision-board__add-edit">
           {hasImages && (
             <button
@@ -983,7 +983,7 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
               Add/Edit
             </button>
           )}
-        
+
         {isAddEditOpen && (
           <form className="vision-board__form" onSubmit={handleUpload}>
             <div className="vision-board__field">
