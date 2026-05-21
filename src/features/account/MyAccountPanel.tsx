@@ -18,6 +18,7 @@ import { HolidayPreferencesSection, HOLIDAY_OPTIONS } from './HolidayPreferences
 import { CaseSubmissionModal } from '../cases/CaseSubmissionModal';
 import { MyCasesPanel } from '../cases/MyCasesPanel';
 import { AdminInboxPanel } from '../admin/AdminInboxPanel';
+import { FutureFeatureVotingPanel } from './FutureFeatureVotingPanel';
 import { getFeatureAvailability, type FeatureAvailabilityId } from '../../config/featureAvailability';
 import { resolveFeatureAccess } from '../../services/featureAccess';
 import { isAdminUser } from '../../services/adminRoles';
@@ -753,6 +754,7 @@ export function MyAccountPanel({
         <p className="account-panel__hint">
           Send product feedback or request support. Support requests are reviewed manually.
         </p>
+        <FutureFeatureVotingPanel session={session} isAuthenticated={isAuthenticated} />
         <div className="account-panel__actions-row">
           <button type="button" className="btn" onClick={() => setShowFeedbackModal(true)}>
             Send feedback
