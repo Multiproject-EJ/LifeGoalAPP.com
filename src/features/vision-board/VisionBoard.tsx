@@ -441,7 +441,8 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   }, [sortedImages]);
 
   const hasImages = sortedImages.length > 0;
-  const showPremiumEmptyState = (isConfigured || isDemoExperience) && hasLoadedOnce && !loading && !hasImages;
+  const shouldShowEmptyState = (isConfigured || isDemoExperience) && hasLoadedOnce && !loading && !hasImages;
+  const shouldShowAddEditSection = hasImages || (shouldShowEmptyState && isAddEditOpen);
 
   const toggleSelection = <T extends string>(current: T[], id: T): T[] =>
     current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
@@ -946,9 +947,9 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
         </div>
       )}
 
-      {showPremiumEmptyState && (
+      {shouldShowEmptyState && (
         <section className="vision-board__empty-card" aria-labelledby="vision-board-empty-title">
-          <div className="vision-board__empty-visual" aria-hidden>
+          <div className="vision-board__empty-visual" aria-hidden="true">
             <span>🖼️</span>
           </div>
           <div className="vision-board__empty-copy">
@@ -970,7 +971,7 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
         </section>
       )}
 
-      {(hasImages || (showPremiumEmptyState && isAddEditOpen)) && (
+      {shouldShowAddEditSection && (
         <div className="vision-board__add-edit">
           {hasImages && (
             <button
@@ -1414,7 +1415,7 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
         </section>
       )}
 
-      {!showPremiumEmptyState && (
+      {!shouldShowEmptyState && (
         <div className={`vision-board__grid vision-board__grid--${gridLayout}`} role="list">
         {!isConfigured && !isDemoExperience ? (
           <p className="vision-board__empty">Connect Supabase to sync your gallery.</p>
