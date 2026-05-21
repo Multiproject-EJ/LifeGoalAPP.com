@@ -91,6 +91,7 @@ export function MyAccountPanel({
   const [hapticsFolderOpen, setHapticsFolderOpen] = useState(false);
   const [menuDisplayFolderOpen, setMenuDisplayFolderOpen] = useState(false);
   const [birthdayGiftFolderOpen, setBirthdayGiftFolderOpen] = useState(false);
+  const [onboardingToolsFolderOpen, setOnboardingToolsFolderOpen] = useState(false);
   const [aiPrivacyFolderOpen, setAiPrivacyFolderOpen] = useState(false);
   const [experimentalFolderOpen, setExperimentalFolderOpen] = useState(false);
   const [gameRewardsFolderOpen, setGameRewardsFolderOpen] = useState(false);
@@ -385,72 +386,6 @@ export function MyAccountPanel({
         </p>
       ) : null}
       <div className="account-panel__summary-grid">
-        {onLaunchOnboarding ? (
-          <section className="account-panel__card" aria-labelledby="account-onboarding">
-            <p className="account-panel__eyebrow">Onboarding</p>
-            <h3 id="account-onboarding">Onboarding tools</h3>
-            <p className="account-panel__hint">
-              Launch the 20-step Game of Life onboarding or the Day Zero quick start.
-            </p>
-            <dl className="account-panel__details">
-              <div>
-                <dt>Local progress</dt>
-                <dd>{onboardingSnapshot ?? 'No local progress saved yet.'}</dd>
-              </div>
-              <div>
-                <dt>Day 0 storage</dt>
-                <dd>{dayZeroStored ? 'Saved' : 'Not saved'}</dd>
-              </div>
-              <div>
-                <dt>Storage key</dt>
-                <dd>
-                  <code>{`gol_onboarding_${session.user.id}`}</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Day 0 key</dt>
-                <dd>
-                  <code>{`day_zero_onboarding_${session.user.id}`}</code>
-                </dd>
-              </div>
-            </dl>
-            <div className="account-panel__actions-row">
-              <button
-                type="button"
-                className="btn"
-                onClick={() => onLaunchOnboarding()}
-              >
-                Launch onboarding
-              </button>
-              {onLaunchDayZeroOnboarding ? (
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={() => onLaunchDayZeroOnboarding()}
-                >
-                  Launch Day Zero quick start
-                </button>
-              ) : null}
-              <button
-                type="button"
-                className="btn btn--secondary"
-                onClick={() => onLaunchOnboarding({ reset: true })}
-              >
-                Restart 20-step onboarding
-              </button>
-              {onLaunchDayZeroOnboarding ? (
-                <button
-                  type="button"
-                  className="btn btn--secondary"
-                  onClick={() => onLaunchDayZeroOnboarding({ reset: true })}
-                >
-                  Restart Day Zero
-                </button>
-              ) : null}
-            </div>
-          </section>
-        ) : null}
-
         <section className="account-panel__card" aria-labelledby="account-subscription">
           <p className="account-panel__eyebrow">Subscription</p>
           <h3 id="account-subscription">Plan overview</h3>
@@ -580,6 +515,15 @@ export function MyAccountPanel({
             meta="LIVE • Reward preference"
             onClick={() => setBirthdayGiftFolderOpen(true)}
           />
+          {onLaunchOnboarding ? (
+            <SettingsFeatureCard
+              icon="🧭"
+              title="Onboarding Tools"
+              subtitle="Launch onboarding flows and review local progress."
+              meta="Guided setup tools"
+              onClick={() => setOnboardingToolsFolderOpen(true)}
+            />
+          ) : null}
         </div>
         </div>
         <div className="settings-modules__group" aria-label="Settings feature modules">
@@ -912,6 +856,72 @@ export function MyAccountPanel({
           </div>
           <p className="account-panel__hint" style={{ marginTop: '0.5rem' }}>Last claimed: {lastBirthdayGiftClaimedLabel}</p>
           <p className="account-panel__hint">Next eligible claim window: {nextBirthdayGiftEligibleLabel}</p>
+        </section>
+      </SettingsFolderPopup>
+      <SettingsFolderPopup
+        isOpen={onboardingToolsFolderOpen}
+        onClose={() => setOnboardingToolsFolderOpen(false)}
+        title="Onboarding Tools"
+      >
+        <section className="account-panel__card" aria-labelledby="account-onboarding">
+          <p className="account-panel__eyebrow">Onboarding</p>
+          <h3 id="account-onboarding">Onboarding tools</h3>
+          <p className="account-panel__hint">
+            Launch the 20-step Game of Life onboarding or the Day Zero quick start.
+          </p>
+          <dl className="account-panel__details">
+            <div>
+              <dt>Local progress</dt>
+              <dd>{onboardingSnapshot ?? 'No local progress saved yet.'}</dd>
+            </div>
+            <div>
+              <dt>Day 0 storage</dt>
+              <dd>{dayZeroStored ? 'Saved' : 'Not saved'}</dd>
+            </div>
+            <div>
+              <dt>Storage key</dt>
+              <dd>
+                <code>{`gol_onboarding_${session.user.id}`}</code>
+              </dd>
+            </div>
+            <div>
+              <dt>Day 0 key</dt>
+              <dd>
+                <code>{`day_zero_onboarding_${session.user.id}`}</code>
+              </dd>
+            </div>
+          </dl>
+          <div className="account-panel__actions-row">
+            <button type="button" className="btn" onClick={() => onLaunchOnboarding?.()} disabled={!onLaunchOnboarding}>
+              Launch onboarding
+            </button>
+            {onLaunchDayZeroOnboarding ? (
+              <button
+                type="button"
+                className="btn"
+                onClick={() => onLaunchDayZeroOnboarding()}
+              >
+                Launch Day Zero quick start
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="btn btn--secondary"
+              onClick={() => onLaunchOnboarding?.({ reset: true })}
+              disabled={!onLaunchOnboarding}
+            >
+              Restart 20-step onboarding
+            </button>
+            {onLaunchDayZeroOnboarding ? (
+              <button
+                type="button"
+                className="btn btn--secondary"
+                onClick={() => onLaunchDayZeroOnboarding({ reset: true })}
+              >
+                Restart Day Zero
+              </button>
+            ) : null}
+          </div>
         </section>
       </SettingsFolderPopup>
 
