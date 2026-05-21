@@ -177,6 +177,28 @@ function chooseSpaceExcavatorBonusBombTileId(options: {
   return pool[seed % pool.length];
 }
 
+function chooseSpaceExcavatorHardTileIds(options: {
+  eventId: string;
+  boardIndex: number;
+  boardSize: number;
+  objectTileIds: readonly number[];
+  bonusBombTileIds: readonly number[];
+}): number[] {
+  const { eventId, boardIndex, boardSize, objectTileIds, bonusBombTileIds } = options;
+  const tileCount = Math.max(1, Math.floor(boardSize) * Math.floor(boardSize));
+  const blocked = new Set([...objectTileIds, ...bonusBombTileIds]);
+  const candidates = Array.from({ length: tileCount }, (_, tileId) => tileId).filter((tileId) => !blocked.has(tileId));
+  if (candidates.length === 0) return [];
+  const targetCount = Math.min(4, Math.max(2, Math.floor(tileCount / 8)));
+  const seed = getSpaceExcavatorSeed(`${eventId}:${boardIndex}:hard_tiles`);
+  const sortedCandidates = [...candidates].sort((left, right) => {
+    const leftSeed = getSpaceExcavatorSeed(`${seed}:${left}`);
+    const rightSeed = getSpaceExcavatorSeed(`${seed}:${right}`);
+    return leftSeed - rightSeed;
+  });
+  return sortedCandidates.slice(0, Math.min(targetCount, sortedCandidates.length)).sort((a, b) => a - b);
+}
+
 function getSpaceExcavatorAdjacentTileIds(tileId: number, boardSize: number): number[] {
   const size = Math.max(1, Math.floor(boardSize));
   const x = tileId % size;
@@ -205,6 +227,7 @@ function buildSpaceExcavatorProgress(
   const objectShape = chooseSpaceExcavatorObjectShape(eventId, boardIndex);
   const objectTileIds = placeSpaceExcavatorObjectShape({ eventId, boardIndex, boardSize, shape: objectShape });
   const bonusBombTileIds = [chooseSpaceExcavatorBonusBombTileId({ eventId, boardIndex, boardSize, objectTileIds })];
+  const hardTileIds = chooseSpaceExcavatorHardTileIds({ eventId, boardIndex, boardSize, objectTileIds, bonusBombTileIds });
   return {
     eventId,
     boardIndex,
@@ -217,6 +240,9 @@ function buildSpaceExcavatorProgress(
     objectIcon: objectShape.icon,
     objectTileIds,
     bonusBombTileIds,
+    hardTileIds,
+    crackedTileIds: [],
+    hardTileHitCountByTileId: {},
     triggeredBonusBombTileIds: [],
     revealedObjectTileIds: [],
     dugTileIds: [],
@@ -280,11 +306,41 @@ export function applySpaceExcavatorDig(options: { session: Session; client: Supa
   if (normalizedTile >= tileCount) return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete: false, canAdvanceBoard: false, triggeredBomb: false, revealedTileIds: [], bonusRevealCount: 0, failureReason: 'invalid_tile' };
   if (progress.dugTileIds.includes(normalizedTile)) return { record: current, ok: false, ticketsRemaining: available, progress, boardComplete: false, canAdvanceBoard: false, triggeredBomb: false, revealedTileIds: [], bonusRevealCount: 0, failureReason: 'already_dug' };
   const isBonusBomb = progress.bonusBombTileIds.includes(normalizedTile);
+  const hardTileIds = progress.hardTileIds ?? [];
+  const hardTileSet = new Set(hardTileIds);
+  const priorHardHitByTileId = progress.hardTileHitCountByTileId ?? {};
+  const isTappedHardTile = hardTileSet.has(normalizedTile);
+  const tappedHardHitCount = Math.max(0, Math.floor(priorHardHitByTileId[normalizedTile] ?? 0));
+  const shouldCrackOnlyTappedTile = isTappedHardTile && tappedHardHitCount < 1;
+  const willRevealTappedTile = !isTappedHardTile || tappedHardHitCount >= 1;
   const triggeredBomb = isBonusBomb && !progress.triggeredBonusBombTileIds.includes(normalizedTile);
   const bombRevealTileIds = triggeredBomb
-    ? getSpaceExcavatorAdjacentTileIds(normalizedTile, progress.boardSize).filter((adjacentTileId) => !progress.dugTileIds.includes(adjacentTileId))
+    ? getSpaceExcavatorAdjacentTileIds(normalizedTile, progress.boardSize)
+      .filter((adjacentTileId) => !progress.dugTileIds.includes(adjacentTileId))
+      .filter((adjacentTileId) => {
+        if (!hardTileSet.has(adjacentTileId)) return true;
+        const currentHitCount = Math.max(0, Math.floor(priorHardHitByTileId[adjacentTileId] ?? 0));
+        return currentHitCount >= 1;
+      })
     : [];
-  const revealedTileIds = Array.from(new Set([normalizedTile, ...bombRevealTileIds])).sort((a,b)=>a-b);
+  const revealedTileIds = Array.from(new Set([...(willRevealTappedTile ? [normalizedTile] : []), ...bombRevealTileIds])).sort((a,b)=>a-b);
+  const hardTileHitCountByTileId: Record<number, number> = { ...priorHardHitByTileId };
+  if (isTappedHardTile) {
+    hardTileHitCountByTileId[normalizedTile] = Math.min(2, tappedHardHitCount + 1);
+  }
+  if (triggeredBomb) {
+    for (const adjacentTileId of getSpaceExcavatorAdjacentTileIds(normalizedTile, progress.boardSize)) {
+      if (!hardTileSet.has(adjacentTileId) || progress.dugTileIds.includes(adjacentTileId)) continue;
+      const currentHitCount = Math.max(0, Math.floor(hardTileHitCountByTileId[adjacentTileId] ?? 0));
+      hardTileHitCountByTileId[adjacentTileId] = Math.min(2, currentHitCount + 1);
+    }
+  }
+  const crackedTileIds = hardTileIds
+    .filter((tileId) => !progress.dugTileIds.includes(tileId))
+    .filter((tileId) => {
+      const count = Math.max(0, Math.floor(hardTileHitCountByTileId[tileId] ?? 0));
+      return count > 0 && count < 2;
+    });
   const dugTileIds = Array.from(new Set([...progress.dugTileIds, ...revealedTileIds])).sort((a,b)=>a-b);
   const objectTileIds = resolveSpaceExcavatorObjectTileIds(progress);
   const newlyRevealedObjectTileIds = revealedTileIds.filter((revealedTileId) => objectTileIds.includes(revealedTileId));
@@ -293,7 +349,7 @@ export function applySpaceExcavatorDig(options: { session: Session; client: Supa
   const triggeredBonusBombTileIds = triggeredBomb
     ? Array.from(new Set([...progress.triggeredBonusBombTileIds, normalizedTile])).sort((a,b)=>a-b)
     : progress.triggeredBonusBombTileIds;
-  let nextProgress: SpaceExcavatorProgressEntry = { ...progress, dugTileIds, revealedObjectTileIds, foundTreasureTileIds, triggeredBonusBombTileIds, updatedAtMs: Date.now() };
+  let nextProgress: SpaceExcavatorProgressEntry = { ...progress, dugTileIds, revealedObjectTileIds, foundTreasureTileIds, triggeredBonusBombTileIds, hardTileHitCountByTileId, crackedTileIds, updatedAtMs: Date.now() };
   const revealedObjectTileIdSet = new Set(revealedObjectTileIds);
   const boardComplete = objectTileIds.length > 0 && objectTileIds.every((objectTileId) => revealedObjectTileIdSet.has(objectTileId));
   if (boardComplete && progress.status !== 'board_complete') {
