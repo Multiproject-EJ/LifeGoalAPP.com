@@ -255,6 +255,11 @@ function setIslandRunOpenStopParam(stopId: 'boss' | 'hatchery' | 'dynamic') {
 
 
 const DEFAULT_WORKSPACE_NAV_ID = 'goals';
+const APP_WORKSPACE_FEATURE_IDS: Partial<Record<string, FeatureAvailabilityId>> = {
+  body: 'app.body',
+  contracts: 'app.contracts',
+  routines: 'app.routines',
+};
 
 const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
   {
@@ -312,6 +317,13 @@ const BASE_WORKSPACE_NAV_ITEMS: WorkspaceNavItem[] = [
     summary: 'Design routine flows and keep your sequence polished.',
     icon: '🎬',
     shortLabel: 'ROUTINES',
+  },
+  {
+    id: 'contracts',
+    label: 'Promises',
+    summary: 'Create and track commitment promises.',
+    icon: '🤝',
+    shortLabel: 'PROMISES',
   },
   {
     id: 'rituals',
@@ -1277,7 +1289,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, []);
 
   const activeSession = useMemo(() => supabaseSession as Session, [supabaseSession]);
-  const appFutureFeatureCardStates = useFutureFeatureCardStates(['app.body'], {
+  const appFutureFeatureCardStates = useFutureFeatureCardStates(['app.body', 'app.contracts', 'app.routines'], {
     loadVotes: Boolean(activeSession?.user?.id),
   });
 
@@ -2150,6 +2162,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
     [isAdmin],
   );
   const isBodyWorkspaceOpen = bodyWorkspaceAccess === 'open';
+  const contractsWorkspaceAccess = useMemo(
+    () => resolveFeatureAccess('app.contracts', { isAdminOrCreator: isAdmin === true }),
+    [isAdmin],
+  );
+  const isContractsWorkspaceOpen = contractsWorkspaceAccess === 'open';
+  const routinesWorkspaceAccess = useMemo(
+    () => resolveFeatureAccess('app.routines', { isAdminOrCreator: isAdmin === true }),
+    [isAdmin],
+  );
+  const isRoutinesWorkspaceOpen = routinesWorkspaceAccess === 'open';
   const logBodyGateDebug = useCallback(
     (event: string) => {
       if (!import.meta.env.DEV) {
@@ -2172,9 +2194,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setAppPreviewFeature({ id: 'app.body', label: 'Body' });
   }, []);
 
-  const clearBodyPreviewOverlay = useCallback(() => {
+  const openContractsPreviewOverlay = useCallback(() => {
+    setAppPreviewFeature({ id: 'app.contracts', label: 'Promises' });
+  }, []);
+
+  const openRoutinesPreviewOverlay = useCallback(() => {
+    setAppPreviewFeature({ id: 'app.routines', label: 'Routines' });
+  }, []);
+
+  const clearAppPreviewFeatureIfMatches = useCallback((featureId: FeatureAvailabilityId) => {
     setAppPreviewFeature((current) => {
-      if (current?.id !== 'app.body') {
+      if (current?.id !== featureId) {
         return current;
       }
 
@@ -2190,12 +2220,52 @@ export default function App({ forceAuthOnMount }: AppProps) {
       return;
     }
 
-    clearBodyPreviewOverlay();
+    clearAppPreviewFeatureIfMatches('app.body');
     setActiveWorkspaceNav('body');
     setShowMobileHome(false);
-  }, [clearBodyPreviewOverlay, isBodyWorkspaceOpen, logBodyGateDebug, openBodyPreviewOverlay]);
+  }, [clearAppPreviewFeatureIfMatches, isBodyWorkspaceOpen, logBodyGateDebug, openBodyPreviewOverlay]);
+
+  const openContractsWorkspace = useCallback(() => {
+    if (!isContractsWorkspaceOpen) {
+      openContractsPreviewOverlay();
+      return;
+    }
+
+    clearAppPreviewFeatureIfMatches('app.contracts');
+    setActiveWorkspaceNav('contracts');
+    setShowMobileHome(false);
+  }, [clearAppPreviewFeatureIfMatches, isContractsWorkspaceOpen, openContractsPreviewOverlay]);
+
+  const openRoutinesWorkspace = useCallback(() => {
+    if (!isRoutinesWorkspaceOpen) {
+      openRoutinesPreviewOverlay();
+      return;
+    }
+
+    clearAppPreviewFeatureIfMatches('app.routines');
+    setActiveWorkspaceNav('routines');
+    setShowMobileHome(false);
+  }, [clearAppPreviewFeatureIfMatches, isRoutinesWorkspaceOpen, openRoutinesPreviewOverlay]);
+
+  const isAppWorkspaceFeatureOpen = useCallback(
+    (featureId: FeatureAvailabilityId) => {
+      switch (featureId) {
+        case 'app.body':
+          return isBodyWorkspaceOpen;
+        case 'app.contracts':
+          return isContractsWorkspaceOpen;
+        case 'app.routines':
+          return isRoutinesWorkspaceOpen;
+        default:
+          return true;
+      }
+    },
+    [isBodyWorkspaceOpen, isContractsWorkspaceOpen, isRoutinesWorkspaceOpen],
+  );
 
   const isBlockedBodyWorkspaceActive = activeWorkspaceNav === 'body' && !isBodyWorkspaceOpen;
+  const isBlockedContractsWorkspaceActive = activeWorkspaceNav === 'contracts' && !isContractsWorkspaceOpen;
+  const isBlockedRoutinesWorkspaceActive = activeWorkspaceNav === 'routines' && !isRoutinesWorkspaceOpen;
 
   const leaveBlockedBodyWorkspace = useCallback(() => {
     if (!isBlockedBodyWorkspaceActive) {
@@ -2208,11 +2278,43 @@ export default function App({ forceAuthOnMount }: AppProps) {
     return true;
   }, [isBlockedBodyWorkspaceActive, logBodyGateDebug]);
 
+  const leaveBlockedContractsWorkspace = useCallback(() => {
+    if (!isBlockedContractsWorkspaceActive) {
+      return false;
+    }
+
+    setActiveWorkspaceNav(DEFAULT_WORKSPACE_NAV_ID);
+    setShowMobileHome(false);
+    return true;
+  }, [isBlockedContractsWorkspaceActive]);
+
+  const leaveBlockedRoutinesWorkspace = useCallback(() => {
+    if (!isBlockedRoutinesWorkspaceActive) {
+      return false;
+    }
+
+    setActiveWorkspaceNav(DEFAULT_WORKSPACE_NAV_ID);
+    setShowMobileHome(false);
+    return true;
+  }, [isBlockedRoutinesWorkspaceActive]);
+
   useEffect(() => {
     if (leaveBlockedBodyWorkspace()) {
       openBodyPreviewOverlay();
     }
   }, [leaveBlockedBodyWorkspace, openBodyPreviewOverlay]);
+
+  useEffect(() => {
+    if (leaveBlockedContractsWorkspace()) {
+      openContractsPreviewOverlay();
+    }
+  }, [leaveBlockedContractsWorkspace, openContractsPreviewOverlay]);
+
+  useEffect(() => {
+    if (leaveBlockedRoutinesWorkspace()) {
+      openRoutinesPreviewOverlay();
+    }
+  }, [leaveBlockedRoutinesWorkspace, openRoutinesPreviewOverlay]);
 
   useEffect(() => {
     if (appPreviewFeature?.id === 'app.body' || activeWorkspaceNav === 'body') {
@@ -2239,8 +2341,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
 
     if (navId === 'contracts') {
-      setActiveWorkspaceNav('contracts');
-      setShowMobileHome(false);
+      openContractsWorkspace();
+      return;
+    }
+
+    if (navId === 'routines') {
+      openRoutinesWorkspace();
       return;
     }
 
@@ -2449,12 +2555,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
       { id: 'starter-quest', label: 'Starter Quest', icon: '🧭', onSelect: openStarterQuestSheetFromMyQuest },
       { id: 'body', label: 'Health Goals', icon: '💪', onSelect: () => handleMobileNavSelect('body') },
       { id: 'habits', label: 'Habits', icon: '🔄', onSelect: () => handleMobileNavSelect('habits') },
-      { id: 'routines', label: 'Routines', icon: '🧩', onSelect: () => handleMobileNavSelect('routines') },
+      { id: 'routines', label: 'Routines', icon: '🧩', onSelect: openRoutinesWorkspace },
       { id: 'support', label: 'Goals', icon: '🎯', onSelect: () => handleMobileNavSelect('support') },
       { id: 'planning', label: 'Check-ins', icon: '✅', onSelect: () => handleMobileNavSelect('planning') },
-      { id: 'contracts', label: 'Contracts', icon: '🤝', onSelect: () => handleMobileNavSelect('contracts') },
+      { id: 'contracts', label: 'Contracts', icon: '🤝', onSelect: openContractsWorkspace },
     ],
-    [handleMobileNavSelect, openMyIkigaiFromMobileMenu, openStarterQuestSheetFromMyQuest],
+    [handleMobileNavSelect, openContractsWorkspace, openMyIkigaiFromMobileMenu, openRoutinesWorkspace, openStarterQuestSheetFromMyQuest],
   );
 
   const feedbackSupportSubmenuActions: LauncherSubmenuAction[] = useMemo(
@@ -3300,10 +3406,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
               hasOpenedDailyTreatsToday={hasOpenedDailyTreatsToday}
               hasOpenedHolidayCalendarToday={hasOpenedHolidayCalendarToday}
               hiddenHabitIds={[]}
-              onNavigateToContracts={() => {
-                setShowMobileHome(false);
-                setActiveWorkspaceNav('contracts');
-              }}
+              isContractsFeatureOpen={isContractsWorkspaceOpen}
+              isRoutinesFeatureOpen={isRoutinesWorkspaceOpen}
+              onNavigateToContracts={openContractsWorkspace}
+              onNavigateToRoutines={openRoutinesWorkspace}
             />
             <HabitsModule
               session={activeSession}
@@ -4568,12 +4674,22 @@ export default function App({ forceAuthOnMount }: AppProps) {
     if (appPreviewFeature?.id === 'app.body' || isBlockedBodyWorkspaceActive) {
       leaveBlockedBodyWorkspace();
     }
+    if (appPreviewFeature?.id === 'app.contracts' || isBlockedContractsWorkspaceActive) {
+      leaveBlockedContractsWorkspace();
+    }
+    if (appPreviewFeature?.id === 'app.routines' || isBlockedRoutinesWorkspaceActive) {
+      leaveBlockedRoutinesWorkspace();
+    }
     setAppPreviewFeature(null);
   };
 
   const previewOverlayFeature = appPreviewFeature ?? (
     isBlockedBodyWorkspaceActive
       ? { id: 'app.body' as const, label: 'Body', variant: undefined }
+      : isBlockedContractsWorkspaceActive
+        ? { id: 'app.contracts' as const, label: 'Promises', variant: undefined }
+        : isBlockedRoutinesWorkspaceActive
+          ? { id: 'app.routines' as const, label: 'Routines', variant: undefined }
       : null
   );
 
@@ -4619,6 +4735,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
               hasOpenedHolidayCalendarToday={hasOpenedHolidayCalendarToday}
               hiddenHabitIds={[]}
               onOpenStarterQuest={openStarterQuestSheetFromToday}
+              isContractsFeatureOpen={isContractsWorkspaceOpen}
+              isRoutinesFeatureOpen={isRoutinesWorkspaceOpen}
+              onNavigateToContracts={openContractsWorkspace}
+              onNavigateToRoutines={openRoutinesWorkspace}
             />
           </div>
         {!showZenGardenFullScreen && !isConflictResolverFullscreen && (
@@ -4820,10 +4940,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
               <div className="workspace-sidebar__nav-list">
                 {workspaceNavItems.map((item) => {
                   const isActive = activeWorkspaceNav === item.id;
-                  const shouldShowBodyFeatureState = item.id === 'body' && !isBodyWorkspaceOpen;
-                  const bodyFutureFeatureState = shouldShowBodyFeatureState
-                    ? appFutureFeatureCardStates['app.body']
-                    : undefined;
+                    const appFeatureId = APP_WORKSPACE_FEATURE_IDS[item.id];
+                    const isFeatureOpen = appFeatureId ? isAppWorkspaceFeatureOpen(appFeatureId) : true;
+                    const futureFeatureState = appFeatureId && !isFeatureOpen
+                      ? appFutureFeatureCardStates[appFeatureId]
+                      : undefined;
                   const handleNavButtonClick = () => {
                     scheduleDesktopMenuAutoHide();
                     if (item.id === 'account' && !isAuthenticated) {
@@ -4838,17 +4959,25 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       openBodyWorkspace();
                       return;
                     }
+                    if (item.id === 'contracts') {
+                      openContractsWorkspace();
+                      return;
+                    }
+                    if (item.id === 'routines') {
+                      openRoutinesWorkspace();
+                      return;
+                    }
                     setActiveWorkspaceNav(item.id);
                   };
                   const navButtonTitle = [
                     item.summary ? `${item.label} • ${item.summary}` : item.label,
-                    bodyFutureFeatureState?.voted ? 'Feedback sent' : '',
+                    futureFeatureState?.voted ? 'Feedback sent' : '',
                   ].filter(Boolean).join(' • ');
                   const navButtonClassName = getFutureFeatureCardClassName(
                     `workspace-sidebar__nav-button ${
                       isActive ? 'workspace-sidebar__nav-button--active' : ''
                     }`,
-                    bodyFutureFeatureState,
+                    futureFeatureState,
                   );
                   return (
                     <button
@@ -4868,7 +4997,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       </span>
                       <span className="sr-only workspace-sidebar__nav-label">{item.label}</span>
                       <span className="sr-only workspace-sidebar__nav-summary">{item.summary}</span>
-                      {bodyFutureFeatureState?.voted ? (
+                      {futureFeatureState?.voted ? (
                         <span className="future-feature-card__saved-dot" aria-hidden="true">✓</span>
                       ) : null}
                     </button>

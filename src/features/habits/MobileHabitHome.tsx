@@ -27,6 +27,10 @@ type MobileHabitHomeProps = {
   onHideStandaloneHabitsChange?: (habitIds: string[]) => void;
   onOpenStarterQuest?: (initialDomainKey?: LifeWheelCategoryKey) => void;
   archetypeHand?: ArchetypeHand | null;
+  isContractsFeatureOpen?: boolean;
+  isRoutinesFeatureOpen?: boolean;
+  onNavigateToContracts?: () => void;
+  onNavigateToRoutines?: () => void;
 };
 
 export function MobileHabitHome({
@@ -50,6 +54,10 @@ export function MobileHabitHome({
   onHideStandaloneHabitsChange,
   onOpenStarterQuest,
   archetypeHand,
+  isContractsFeatureOpen = false,
+  isRoutinesFeatureOpen = false,
+  onNavigateToContracts,
+  onNavigateToRoutines,
 }: MobileHabitHomeProps) {
   void onHideStandaloneHabitsChange;
   return (
@@ -76,6 +84,10 @@ export function MobileHabitHome({
         collapseCheckboxUntilExpanded
         onOpenStarterQuest={onOpenStarterQuest}
         archetypeHand={archetypeHand}
+        isContractsFeatureOpen={isContractsFeatureOpen}
+        isRoutinesFeatureOpen={isRoutinesFeatureOpen}
+        onNavigateToContracts={onNavigateToContracts}
+        onNavigateToRoutines={onNavigateToRoutines}
       />
     </div>
   );

@@ -5,6 +5,8 @@ export type FeatureAccessLevel = 'open' | 'previewOnly' | 'hidden';
 
 export type FeatureAvailabilityId =
   | 'app.body'
+  | 'app.contracts'
+  | 'app.routines'
   | 'energy.shell'
   | 'mind.breathingSpace'
   | 'mind.meditation'
@@ -65,6 +67,38 @@ export const featureAvailabilityRegistry = {
     votingEnabled: true,
     votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
     voteCategory: 'body',
+  },
+  'app.contracts': {
+    id: 'app.contracts',
+    label: 'Promises',
+    description: 'Contracts and promises workspace for personal commitments.',
+    status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
+    surface: 'App',
+    category: 'workspace',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'Keep meaningful promises to yourself with gentle accountability and rewards.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'lifeTools',
+  },
+  'app.routines': {
+    id: 'app.routines',
+    label: 'Routines',
+    description: 'Routines workspace for repeatable daily flows.',
+    status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
+    surface: 'App',
+    category: 'workspace',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'Build repeatable daily flows that make your habits easier to start.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'lifeTools',
   },
   'energy.shell': {
     id: 'energy.shell',
