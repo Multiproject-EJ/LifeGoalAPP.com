@@ -10,7 +10,7 @@ import { isDemoSession } from '../../services/demoSession';
 import { listHabitLogsForRangeMultiV2, listHabitsV2, type HabitLogV2Row, type HabitV2Row } from '../../services/habitsV2';
 import { fetchGoals } from '../../services/goals';
 import { goalStatusToCompletionPct } from '../goals/goalStatus';
-import { listJournalEntries, type JournalEntry } from '../../services/journal';
+import { filterJournalEntriesForAiContext, listJournalEntries, type JournalEntry } from '../../services/journal';
 import { getScheduledCountForWindow } from '../habits/scheduleInterpreter';
 import { classifyHabit } from '../habits/performanceClassifier';
 import { recordTelemetryEvent, getTelemetryDifficultyAdjustment } from '../../services/telemetry';
@@ -515,7 +515,8 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
         const fromDate = since.toISOString().slice(0, 10);
         const { data, error } = await listJournalEntries({ fromDate, limit: 12 });
         if (!error && data) {
-          nextInterventions.push(...buildMindsetInterventions(data));
+          const aiContextEntries = filterJournalEntriesForAiContext(data);
+          nextInterventions.push(...buildMindsetInterventions(aiContextEntries));
         }
       }
 

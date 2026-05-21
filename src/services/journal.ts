@@ -59,6 +59,14 @@ const DEFAULT_LIST_LIMIT = 200;
 const LOCAL_ID_PREFIX = 'local-';
 
 /**
+ * Filters journal entries for AI/context usage.
+ * Private entries remain visible in Journal UI but are excluded from AI context.
+ */
+export function filterJournalEntriesForAiContext(entries: JournalEntry[]): JournalEntry[] {
+  return entries.filter((entry) => entry.is_private !== true);
+}
+
+/**
  * Validates that a Supabase session is active before performing database operations.
  * This prevents RLS policy violations due to expired or missing auth tokens.
  * 
