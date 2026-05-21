@@ -133,7 +133,7 @@ export async function awardZenTokens(
   } catch (error) {
     return {
       data: null,
-      error: error instanceof Error ? error : new Error('Failed to award Zen Tokens'),
+      error: error instanceof Error ? error : new Error('Failed to award Lotus Flowers'),
     };
   }
 }
@@ -255,7 +255,7 @@ export async function purchaseZenGardenItem(
 
     const currentBalance = profile.zen_tokens ?? 0;
     if (currentBalance < cost) {
-      return { data: null, error: new Error('Not enough Zen Tokens.') };
+      return { data: null, error: new Error('Not enough Lotus Flowers.') };
     }
 
     const nextBalance = currentBalance - cost;

@@ -18,8 +18,12 @@ try {
   const { runAllDailyOfferClaimTests } = require(
     path.join(outDir, 'features/habits/__tests__/dailyOfferClaim.test.js'),
   );
+  const { runAllWisdomTreeGrowthTests } = require(
+    path.join(outDir, 'features/zen-garden/__tests__/treeGrowth.test.js'),
+  );
   runAllTimeBoundOfferSortTests();
   await runAllDailyOfferClaimTests();
+  runAllWisdomTreeGrowthTests();
   console.log('habit-offer-tests: all assertions passed');
 } finally {
   rmSync(outDir, { recursive: true, force: true });

@@ -4407,7 +4407,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             >
               <div className="mobile-gamification-overlay__stat-content">
                 <p className="mobile-gamification-overlay__stat-label">Quick Gains</p>
-                <p className="mobile-gamification-overlay__stat-hint">Ask for a quick nudge or focus reset.</p>
+                <p className="mobile-gamification-overlay__stat-hint">Ask for a quick nudge or recharge reset.</p>
               </div>
             </button>
             <button
@@ -4462,7 +4462,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <p className="mobile-gamification-overlay__mini-value">{goldValueLabel}</p>
                 </div>
                 <div className="mobile-gamification-overlay__mini-card">
-                  <p className="mobile-gamification-overlay__mini-label">Zen Tokens</p>
+                  <p className="mobile-gamification-overlay__mini-label">Lotus Flowers</p>
                   <p className="mobile-gamification-overlay__mini-value">🪷 {zenTokenBalance.toLocaleString()}</p>
                 </div>
                 <div className="mobile-gamification-overlay__mini-card">

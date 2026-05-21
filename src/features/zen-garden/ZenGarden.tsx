@@ -7,6 +7,7 @@ import type { ZenTokenTransaction } from '../../types/gamification';
 import { fetchZenGardenInventory, fetchZenTokenTransactions, purchaseZenGardenItem } from '../../services/zenGarden';
 import { ZEN_GARDEN_EARNED_ITEMS } from '../../constants/zenGarden';
 import { useTheme } from '../../contexts/ThemeContext';
+import { resolveWisdomTreeProgress } from './treeGrowth';
 import zenShopBg from '../../assets/Zen_shopV2.webp';
 import toZenGardenImg from '../../assets/tozengarden.webp';
 import zenGardenPlotLight from '../../assets/zengardenplotlight.webp';
@@ -235,11 +236,13 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
     return TREE_MILESTONES.find((milestone) => milestone.minScore > treeScore) ?? null;
   }, [treeScore]);
   const treeProgress = useMemo(() => {
-    if (!nextMilestone) return 100;
-    const span = nextMilestone.minScore - treeStage.minScore;
-    if (span <= 0) return 100;
-    return Math.min(100, Math.round(((treeScore - treeStage.minScore) / span) * 100));
-  }, [nextMilestone, treeScore, treeStage.minScore]);
+    return resolveWisdomTreeProgress({
+      treeScore,
+      stageMinScore: treeStage.minScore,
+      nextMilestoneMinScore: nextMilestone?.minScore ?? null,
+      lotusFlowers: balance,
+    });
+  }, [balance, nextMilestone, treeScore, treeStage.minScore]);
   const shopPages = useMemo(() => {
     const pages: ZenGardenItem[][] = [];
     for (let index = 0; index < ZEN_GARDEN_ITEMS.length; index += 4) {
@@ -266,7 +269,7 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
         )}
         <header className="zen-garden__header">
           <div className="zen-garden__balance">
-            <span className="zen-garden__balance-label">Zen</span>
+            <span className="zen-garden__balance-label">Lotus</span>
             <span className="zen-garden__balance-value">🪷 {balance}</span>
           </div>
         </header>
@@ -287,7 +290,7 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
                   <div>
                     <h2 className="zen-garden__shop-title">🪷 Zen Garden Unlocks</h2>
                     <p className="zen-garden__shop-subtitle">
-                      Meditation-only rewards • Use Zen Tokens to unlock peaceful garden elements.
+                      Meditation-only rewards • Use Lotus Flowers to unlock peaceful garden elements.
                     </p>
                   </div>
                 </div>
@@ -319,7 +322,7 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
                                 {owned ? 'Unlocked' : isPurchasing ? 'Purchasing...' : 'Unlock'}
                               </button>
                             </div>
-                            {!owned && !canAfford && <span className="zen-garden__item-lock">Earn more Zen Tokens</span>}
+                            {!owned && !canAfford && <span className="zen-garden__item-lock">Earn more Lotus Flowers</span>}
                           </article>
                         );
                       })}
@@ -449,9 +452,12 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
               <div className="zen-garden__tree-meta">
                 <span>Level {currentLevel}</span>
                 <span>{impactTotal} waterings</span>
-                <span>{treeScore} growth points</span>
+                <span>{balance} lotus flowers</span>
               </div>
             </div>
+            <p className="zen-garden__tree-next">
+              Watering grows the first 75%; lotus flowers unlock the final 25%.
+            </p>
             {nextMilestone ? (
               <p className="zen-garden__tree-next">
                 {nextMilestone.minScore - treeScore} growth points to reach{' '}

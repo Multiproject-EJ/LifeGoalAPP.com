@@ -810,7 +810,7 @@ function pickDemoAdventMeta(year: number): { meta: AdventMeta; startsOn: string;
 
 const PERSONAL_QUEST_THEMES = [
   { theme_name: 'Weekly Sprint', displayName: 'Weekly Sprint', emoji: '🧭' },
-  { theme_name: 'Focus Reset', displayName: 'Focus Reset', emoji: '🎯' },
+  { theme_name: 'Quick Recharge', displayName: 'Quick Recharge', emoji: '🎯' },
   { theme_name: 'Body Builder', displayName: 'Body Builder', emoji: '💪' },
   { theme_name: 'Mind Month', displayName: 'Mind Month', emoji: '🧠' },
   { theme_name: 'Habit Hero', displayName: 'Habit Hero', emoji: '⭐' },

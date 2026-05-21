@@ -74,7 +74,7 @@ export const ECONOMY_MATRIX = {
       earnedFrom: ['xp', 'spin_wheel', 'achievements', 'daily_treats'],
     },
     zen_tokens: {
-      label: 'Zen Tokens',
+      label: 'Lotus Flowers',
       description: 'Meditation-only currency for Zen Garden rewards.',
       earnedFrom: ['meditation'],
     },
@@ -107,7 +107,7 @@ export const ECONOMY_MATRIX = {
     shop_upgrades: 'Store upgrades and boosters',
     cosmetics: 'Cosmetics and visual customizations',
     trophies: 'Trophies, plaques, and medals',
-    zen_garden: 'Zen Garden-only purchases (Zen Tokens)',
+    zen_garden: 'Zen Garden-only purchases (Lotus Flowers)',
     dice_packs: 'Dice packs available via reward bar and events',
     game_entry: 'Game token cost to enter mini-games',
   } satisfies Record<EconomySinkKey, string>,
@@ -140,4 +140,3 @@ export const MYSTERY_BOX_TOKEN_TIERS = [
   { min: 81, max: 200, weight: 4, label: 'Amazing' },
   { min: 201, max: 500, weight: 3, label: 'Jackpot' },
 ] as const;
-
