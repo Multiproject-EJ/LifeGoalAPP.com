@@ -20,6 +20,11 @@ import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import type { TimerLaunchContext } from '../timer/timerSession';
 import { TaskTower } from '../gamification/games/task-tower/TaskTower';
+import type { FeatureAvailabilityId } from '../../config/featureAvailability';
+import { getFeatureAvailability } from '../../config/featureAvailability';
+import { resolveFeatureAccess } from '../../services/featureAccess';
+import { FeatureStatusBadge } from '../../components/FeatureStatusBadge';
+import { getFutureFeatureCardClassName, useFutureFeatureCardStates } from '../../hooks/useFutureFeatureCardStates';
 import './ActionsTab.css';
 
 const projectsIcon = '/icons/Actions/actions_projects.webp';
@@ -31,6 +36,7 @@ const visionBoardIcon = '/icons/Actions/actions_visonboard.webp';
 
 // Constants
 const EXPIRING_SOON_THRESHOLD_HOURS = 24;
+const ACTIONS_FUTURE_FEATURE_IDS = ['actions.taskTower', 'actions.visionBoard'] as const;
 
 // Helper function to check if MUST DO items should always show
 const shouldAlwaysShow = (action: Action): boolean => {
@@ -43,6 +49,8 @@ type ActionsTabProps = {
   onNavigateToTimer?: (context?: TimerLaunchContext) => void;
   onNavigateToJournal?: () => void;
   onNavigateToVisionBoard?: () => void;
+  isAdminOrCreator?: boolean;
+  onOpenFeaturePreview?: (featureId: FeatureAvailabilityId, label: string) => void;
   showPointsBadges?: boolean;
   isMobileView?: boolean;
   resetToLauncherSignal?: number;
@@ -60,12 +68,21 @@ export function ActionsTab({
   onNavigateToTimer,
   onNavigateToJournal,
   onNavigateToVisionBoard,
+  isAdminOrCreator = false,
+  onOpenFeaturePreview,
   showPointsBadges = false,
   isMobileView = false,
   resetToLauncherSignal = 0,
   onViewChange,
 }: ActionsTabProps) {
   const isDemoExperience = isDemoSession(session);
+  const futureFeatureCardStates = useFutureFeatureCardStates(ACTIONS_FUTURE_FEATURE_IDS, {
+    loadVotes: Boolean(session?.user?.id),
+  });
+  const getActionsFutureFeatureCardClassName = (baseClassName: string, featureId: FeatureAvailabilityId) =>
+    getFutureFeatureCardClassName(baseClassName, futureFeatureCardStates[featureId], {
+      isDemo: getFeatureAvailability(featureId).status === 'demo',
+    });
   const {
     actions,
     loading,
@@ -117,6 +134,23 @@ export function ActionsTab({
       sourceName: action.title,
     });
   }, [onNavigateToTimer]);
+
+  const handleActionLauncherClick = useCallback(
+    (featureId: FeatureAvailabilityId, label: string, action?: () => void) => {
+      const access = resolveFeatureAccess(featureId, { isAdminOrCreator });
+      if (access === 'hidden') return;
+      if (access === 'previewOnly') {
+        onOpenFeaturePreview?.(featureId, label);
+        return;
+      }
+      if (!action) {
+        onOpenFeaturePreview?.(featureId, label);
+        return;
+      }
+      action();
+    },
+    [isAdminOrCreator, onOpenFeaturePreview],
+  );
 
   // Run cleanup on load (once per 24 hours) - safety net for Edge Functions
   useActionsCleanupOnLoad(session, {
@@ -489,8 +523,11 @@ export function ActionsTab({
               <div className="actions-tab__launcher-row actions-tab__launcher-row--single">
                 <button
                   type="button"
-                  className="actions-tab__launcher-button actions-tab__launcher-button--full-width"
-                  onClick={onNavigateToVisionBoard}
+                  className={getActionsFutureFeatureCardClassName(
+                    'actions-tab__launcher-button actions-tab__launcher-button--full-width',
+                    'actions.visionBoard',
+                  )}
+                  onClick={() => handleActionLauncherClick('actions.visionBoard', 'Vision Board', onNavigateToVisionBoard)}
                   aria-label="Open vision board"
                 >
                   <span className="actions-tab__launcher-icon" aria-hidden="true">
@@ -500,15 +537,21 @@ export function ActionsTab({
                       alt=""
                     />
                   </span>
-                  <span className="actions-tab__launcher-label">Vision Board</span>
+                  <span className="actions-tab__launcher-content">
+                    <span className="actions-tab__launcher-label">Vision Board</span>
+                    <FeatureStatusBadge status={getFeatureAvailability('actions.visionBoard').status} />
+                  </span>
                 </button>
               </div>
             )}
             <div className="actions-tab__launcher-row actions-tab__launcher-row--single">
               <button
                 type="button"
-                className="actions-tab__launcher-button actions-tab__launcher-button--full-width actions-tab__launcher-button--task-tower"
-                onClick={() => setShowTaskTower(true)}
+                className={getActionsFutureFeatureCardClassName(
+                  'actions-tab__launcher-button actions-tab__launcher-button--full-width actions-tab__launcher-button--task-tower',
+                  'actions.taskTower',
+                )}
+                onClick={() => handleActionLauncherClick('actions.taskTower', 'Task Tower', () => setShowTaskTower(true))}
                 aria-label="Open Task Tower"
               >
                 <span className="actions-tab__launcher-icon" aria-hidden="true">
@@ -518,9 +561,10 @@ export function ActionsTab({
                     alt=""
                   />
                 </span>
-                <span className="actions-tab__launcher-content">
-                  <span className="actions-tab__launcher-label">Task Tower</span>
-                  <span className="actions-tab__launcher-subtools" aria-label="Task Tower includes Projects, Timer, and Tasks">
+                  <span className="actions-tab__launcher-content">
+                    <span className="actions-tab__launcher-label">Task Tower</span>
+                    <FeatureStatusBadge status={getFeatureAvailability('actions.taskTower').status} />
+                    <span className="actions-tab__launcher-subtools" aria-label="Task Tower includes Projects, Timer, and Tasks">
                     {onNavigateToProjects && (
                       <button
                         type="button"

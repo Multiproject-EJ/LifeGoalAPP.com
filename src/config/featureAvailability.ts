@@ -10,6 +10,8 @@ export type FeatureAvailabilityId =
   | 'today.visionStar'
   | 'today.waterZenTree'
   | 'today.feedCreatures'
+  | 'actions.taskTower'
+  | 'actions.visionBoard'
   | 'energy.shell'
   | 'mind.breathingSpace'
   | 'mind.meditation'
@@ -147,6 +149,36 @@ export const featureAvailabilityRegistry = {
     shortPitch: 'Care for your companions with a simple daily action.',
     votingEnabled: true,
     voteCategory: 'today',
+  },
+  'actions.taskTower': {
+    id: 'actions.taskTower',
+    label: 'Task Tower',
+    description: 'Actions launcher entry for Task Tower.',
+    status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
+    surface: 'ActionsTab',
+    category: 'actions',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'Turn your tasks into a focused tower challenge that makes progress feel game-like.',
+    votingEnabled: true,
+    voteCategory: 'actions',
+  },
+  'actions.visionBoard': {
+    id: 'actions.visionBoard',
+    label: 'Vision Board',
+    description: 'Actions launcher entry for Vision Board.',
+    status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
+    surface: 'ActionsTab',
+    category: 'actions',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'Keep your bigger goals visible with a visual board that supports your daily quest.',
+    votingEnabled: true,
+    voteCategory: 'actions',
   },
   'energy.shell': {
     id: 'energy.shell',
