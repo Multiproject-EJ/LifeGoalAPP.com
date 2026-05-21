@@ -23,6 +23,7 @@ const SETTINGS_FEEDBACK_FEATURE_IDS = [
 type FutureFeatureVotingPanelProps = {
   session: Session;
   isAuthenticated: boolean;
+  compact?: boolean;
 };
 
 function formatCategory(feature: FeatureAvailability) {
@@ -38,7 +39,7 @@ function getSourceRoute() {
   return `${window.location.pathname}${window.location.search}`;
 }
 
-export function FutureFeatureVotingPanel({ session, isAuthenticated }: FutureFeatureVotingPanelProps) {
+export function FutureFeatureVotingPanel({ session, isAuthenticated, compact = false }: FutureFeatureVotingPanelProps) {
   const userId = session.user.id;
   const features = useMemo(
     () =>
@@ -116,7 +117,7 @@ export function FutureFeatureVotingPanel({ session, isAuthenticated }: FutureFea
   };
 
   return (
-    <div className="future-feature-voting" aria-labelledby="future-feature-voting-heading">
+    <div className={`future-feature-voting${compact ? ' future-feature-voting--compact' : ''}`} aria-labelledby="future-feature-voting-heading">
       <div className="future-feature-voting__header">
         <p className="account-panel__eyebrow">Future features</p>
         <h4 id="future-feature-voting-heading">Help shape future features</h4>
