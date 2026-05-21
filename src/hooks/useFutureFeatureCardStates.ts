@@ -103,9 +103,11 @@ export function useFutureFeatureCardStates(
 export function getFutureFeatureCardClassName(
   baseClassName: string,
   state?: FutureFeatureCardState,
+  options: { isDemo?: boolean } = {},
 ) {
   return [
     baseClassName,
+    options.isDemo ? 'future-feature-card--demo' : '',
     state?.seen ? 'future-feature-card--seen' : '',
     state?.voted ? 'future-feature-card--voted' : '',
   ].filter(Boolean).join(' ');
