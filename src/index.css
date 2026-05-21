@@ -14101,6 +14101,157 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: rgba(148, 163, 184, 0.1);
 }
 
+.vision-board__empty-card {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  width: min(100%, 520px);
+  margin: 0 auto;
+  padding: clamp(1.5rem, 6vw, 2.5rem);
+  text-align: center;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(191, 219, 254, 0.55), transparent 34%),
+    radial-gradient(circle at 80% 10%, rgba(221, 214, 254, 0.6), transparent 36%),
+    rgba(255, 255, 255, 0.74);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+}
+
+.vision-board__empty-card::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 27px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+}
+
+.vision-board__empty-visual {
+  display: grid;
+  place-items: center;
+  width: clamp(5.5rem, 22vw, 7.25rem);
+  height: clamp(5.5rem, 22vw, 7.25rem);
+  border-radius: 26px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.88), rgba(239, 246, 255, 0.58)),
+    linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(14, 165, 233, 0.16));
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 18px 36px rgba(79, 70, 229, 0.16);
+}
+
+.vision-board__empty-visual span {
+  font-size: clamp(2.8rem, 13vw, 4rem);
+  filter: drop-shadow(0 8px 18px rgba(79, 70, 229, 0.18));
+}
+
+.vision-board__empty-copy {
+  display: grid;
+  gap: 0.45rem;
+  max-width: 32rem;
+}
+
+.vision-board__empty-copy h3 {
+  margin: 0;
+  font-size: clamp(1.55rem, 6vw, 2.25rem);
+  line-height: 1.05;
+  color: #0f172a;
+  letter-spacing: -0.035em;
+}
+
+.vision-board__empty-copy p,
+.vision-board__empty-note {
+  margin: 0;
+  color: #475569;
+}
+
+.vision-board__empty-copy p {
+  font-size: clamp(1rem, 3.5vw, 1.1rem);
+  line-height: 1.55;
+}
+
+.vision-board__empty-cta {
+  border: none;
+  border-radius: 999px;
+  padding: 0.82rem 1.35rem;
+  font-weight: 800;
+  font-size: 0.98rem;
+  color: white;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  cursor: pointer;
+  box-shadow: 0 16px 34px rgba(79, 70, 229, 0.28);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vision-board__empty-cta:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 42px rgba(79, 70, 229, 0.34);
+}
+
+.vision-board__empty-cta:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.vision-board__empty-note {
+  font-size: 0.84rem;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .vision-board__empty-card {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(59, 130, 246, 0.28), transparent 34%),
+    radial-gradient(circle at 80% 10%, rgba(124, 58, 237, 0.26), transparent 36%),
+    rgba(15, 23, 42, 0.64);
+  border-color: rgba(148, 163, 184, 0.28);
+  box-shadow: 0 24px 70px rgba(2, 6, 23, 0.42);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .vision-board__empty-visual {
+  background:
+    linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.58)),
+    linear-gradient(135deg, rgba(129, 140, 248, 0.28), rgba(56, 189, 248, 0.18));
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .vision-board__empty-copy h3 {
+  color: #f8fafc;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .vision-board__empty-copy p,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .vision-board__empty-note {
+  color: #cbd5e1;
+}
+
 .vision-board__card {
   background: white;
   border-radius: 16px;

@@ -440,6 +440,9 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     });
   }, [sortedImages]);
 
+  const hasImages = sortedImages.length > 0;
+  const showPremiumEmptyState = (isConfigured || isDemoExperience) && hasLoadedOnce && !loading && !hasImages;
+
   const toggleSelection = <T extends string>(current: T[], id: T): T[] =>
     current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
 
@@ -860,54 +863,56 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
             whenever you need a boost.
           </p>
         </div>
-        <div className="vision-board__controls">
-          <div className="vision-board__sort">
-            <label htmlFor="vision-board-view">Board view</label>
-            <select
-              id="vision-board-view"
-              value={boardView}
-              onChange={(event) => setBoardView(event.target.value as BoardView)}
+        {hasImages && (
+          <div className="vision-board__controls">
+            <div className="vision-board__sort">
+              <label htmlFor="vision-board-view">Board view</label>
+              <select
+                id="vision-board-view"
+                value={boardView}
+                onChange={(event) => setBoardView(event.target.value as BoardView)}
+              >
+                {BOARD_VIEW_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="vision-board__sort">
+              <label htmlFor="vision-board-sort">Sort by</label>
+              <select
+                id="vision-board-sort"
+                value={sortMode}
+                onChange={(event) => setSortMode(event.target.value as SortMode)}
+              >
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="caption">Caption (A–Z)</option>
+              </select>
+            </div>
+            <div className="vision-board__layout">
+              <label htmlFor="vision-board-layout">Grid layout</label>
+              <select
+                id="vision-board-layout"
+                value={gridLayout}
+                onChange={(event) => setGridLayout(event.target.value as GridLayout)}
+              >
+                <option value="2-column">2 Columns</option>
+                <option value="3-column">3 Columns</option>
+                <option value="masonry">Masonry</option>
+              </select>
+            </div>
+            <button
+              type="button"
+              className="vision-board__daily-game-button"
+              onClick={() => setShowDailyGame(true)}
+              disabled={!isConfigured}
             >
-              {BOARD_VIEW_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              🎮 Daily Vision Game
+            </button>
           </div>
-          <div className="vision-board__sort">
-            <label htmlFor="vision-board-sort">Sort by</label>
-            <select
-              id="vision-board-sort"
-              value={sortMode}
-              onChange={(event) => setSortMode(event.target.value as SortMode)}
-            >
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="caption">Caption (A–Z)</option>
-            </select>
-          </div>
-          <div className="vision-board__layout">
-            <label htmlFor="vision-board-layout">Grid layout</label>
-            <select
-              id="vision-board-layout"
-              value={gridLayout}
-              onChange={(event) => setGridLayout(event.target.value as GridLayout)}
-            >
-              <option value="2-column">2 Columns</option>
-              <option value="3-column">3 Columns</option>
-              <option value="masonry">Masonry</option>
-            </select>
-          </div>
-          <button
-            type="button"
-            className="vision-board__daily-game-button"
-            onClick={() => setShowDailyGame(true)}
-            disabled={!isConfigured}
-          >
-            🎮 Daily Vision Game
-          </button>
-        </div>
+        )}
       </header>
 
       {isDemoExperience ? (
@@ -941,16 +946,43 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
         </div>
       )}
 
-      <div className="vision-board__add-edit">
-        <button
-          type="button"
-          className="vision-board__add-edit-toggle"
-          onClick={() => setIsAddEditOpen(!isAddEditOpen)}
-          aria-expanded={isAddEditOpen}
-        >
-          <span className="vision-board__add-edit-icon">{isAddEditOpen ? '−' : '+'}</span>
-          Add/Edit
-        </button>
+      {showPremiumEmptyState && (
+        <section className="vision-board__empty-card" aria-labelledby="vision-board-empty-title">
+          <div className="vision-board__empty-visual" aria-hidden>
+            <span>🖼️</span>
+          </div>
+          <div className="vision-board__empty-copy">
+            <h3 id="vision-board-empty-title">Start your Vision Board</h3>
+            <p>Upload your first image to make your goals feel real.</p>
+          </div>
+          <button
+            type="button"
+            className="vision-board__empty-cta"
+            onClick={() => {
+              setUploadMode('file');
+              setIsAddEditOpen(true);
+            }}
+            disabled={!isConfigured && !isDemoExperience}
+          >
+            Upload first image
+          </button>
+          <p className="vision-board__empty-note">You can add captions and organize it later.</p>
+        </section>
+      )}
+
+      {(hasImages || isAddEditOpen) && (
+        <div className="vision-board__add-edit">
+          {hasImages && (
+            <button
+              type="button"
+              className="vision-board__add-edit-toggle"
+              onClick={() => setIsAddEditOpen(!isAddEditOpen)}
+              aria-expanded={isAddEditOpen}
+            >
+              <span className="vision-board__add-edit-icon">{isAddEditOpen ? '−' : '+'}</span>
+              Add/Edit
+            </button>
+          )}
         
         {isAddEditOpen && (
           <form className="vision-board__form" onSubmit={handleUpload}>
@@ -1142,8 +1174,9 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
           </form>
         )}
       </div>
+      )}
 
-      {(isConfigured || isDemoExperience) && (
+      {(isConfigured || isDemoExperience) && hasImages && (
         <section className="vision-board__review">
           <div className="vision-board__review-header">
             <div>
@@ -1190,7 +1223,7 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
         </section>
       )}
 
-      {(isConfigured || isDemoExperience) && boardView === 'life_wheel' && (
+      {(isConfigured || isDemoExperience) && hasImages && boardView === 'life_wheel' && (
         <div className="vision-board__tabs" role="tablist" aria-label="Life wheel categories">
           <button
             type="button"
@@ -1228,7 +1261,7 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
         </div>
       )}
 
-      {(isConfigured || isDemoExperience) && boardView === 'visionaries' && (
+      {(isConfigured || isDemoExperience) && hasImages && boardView === 'visionaries' && (
         <div className="vision-board__tabs" role="tablist" aria-label="The Four Visionaries categories">
           <button
             type="button"
@@ -1266,7 +1299,7 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
         </div>
       )}
 
-      {isBodyStyleTab && (
+      {hasImages && isBodyStyleTab && (
         <section className={`vision-board__haircut-widget ${isHaircutExpanded ? 'vision-board__haircut-widget--expanded' : ''}`}>
           <button
             type="button"
@@ -1381,7 +1414,8 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
         </section>
       )}
 
-      <div className={`vision-board__grid vision-board__grid--${gridLayout}`} role="list">
+      {!showPremiumEmptyState && (
+        <div className={`vision-board__grid vision-board__grid--${gridLayout}`} role="list">
         {!isConfigured && !isDemoExperience ? (
           <p className="vision-board__empty">Connect Supabase to sync your gallery.</p>
         ) : loading && !hasLoadedOnce ? (
@@ -1614,9 +1648,10 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
             </article>
           ))
         )}
-      </div>
+        </div>
+      )}
 
-      {showDailyGame && (
+      {showDailyGame && hasImages && (
         <div className="vision-board__modal-backdrop" role="dialog" aria-modal="true">
           <div className="vision-board__modal">
             <VisionBoardDailyGame session={session} onClose={() => setShowDailyGame(false)} isConfigured={isConfigured} />
