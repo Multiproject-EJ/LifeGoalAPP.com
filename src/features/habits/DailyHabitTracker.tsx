@@ -8208,6 +8208,7 @@ export function DailyHabitTracker({
               subtitle="Run your grouped habits"
               statusChip={routinesStatusChip}
               expanded={openTodayExpandableSection === 'routines'}
+              isDemo={!isRoutinesFeatureOpen}
               onToggle={() => {
                 if (!isRoutinesFeatureOpen) {
                   if (onNavigateToRoutines) {
@@ -8240,6 +8241,7 @@ export function DailyHabitTracker({
               subtitle="Promises needing attention now"
               statusChip={contractsStatusChip}
               expanded={openTodayExpandableSection === 'contracts'}
+              isDemo={!isContractsFeatureOpen}
               onToggle={() => {
                 if (!isContractsFeatureOpen) {
                   if (onNavigateToContracts) {

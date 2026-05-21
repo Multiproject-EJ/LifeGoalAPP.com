@@ -78,6 +78,19 @@
   opacity: 0.78;
 }
 
+.future-feature-card--demo :is(
+  .breathing-space__mobile-launch-icon-image,
+  .breathing-space__mobile-launch-icon,
+  .score-tab__hub-image,
+  .score-tab__hub-visual--icon,
+  .settings-module-card__icon,
+  .workspace-sidebar__nav-icon,
+  .today-expandable-action-section__icon
+) {
+  filter: grayscale(0.68) sepia(0.2) hue-rotate(178deg) saturate(0.32) brightness(1.04);
+  opacity: 0.58;
+}
+
 .future-feature-card__saved-label {
   display: inline-flex;
   align-items: center;

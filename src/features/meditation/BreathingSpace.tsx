@@ -18,7 +18,7 @@ import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { FeaturePreviewOverlay } from '../../components/FeaturePreviewOverlay';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import { awardZenTokens } from '../../services/zenGarden';
-import type { FeatureAvailabilityId } from '../../config/featureAvailability';
+import { getFeatureAvailability, type FeatureAvailabilityId } from '../../config/featureAvailability';
 import { getFutureFeatureCardClassName, useFutureFeatureCardStates } from '../../hooks/useFutureFeatureCardStates';
 import { TrainingTab } from '../training';
 import { ConflictResolverEntry } from '../conflict-resolver/ConflictResolverEntry';
@@ -480,6 +480,7 @@ export function BreathingSpace({
                         statusLabel ? ' breathing-space__mobile-launch-card--gated' : ''
                       }`,
                       futureFeatureState,
+                      { isDemo: Boolean(featureId && getFeatureAvailability(featureId).status === 'demo') },
                     )}
                     onClick={() => handleMobileTabChange(tab)}
                   >

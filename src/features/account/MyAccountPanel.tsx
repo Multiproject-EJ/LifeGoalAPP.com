@@ -75,11 +75,12 @@ function SettingsModuleCard({
   onClick,
 }: SettingsModuleCardProps) {
   const feature = featureId ? getFeatureAvailability(featureId) : null;
+  const className = `settings-module-card${feature?.status === 'demo' ? ' future-feature-card--demo' : ''}`;
 
   return (
     <button
       type="button"
-      className="settings-module-card"
+      className={className}
       onClick={onClick}
       aria-label={`Open ${title}`}
     >
