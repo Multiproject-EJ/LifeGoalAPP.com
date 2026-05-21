@@ -138,7 +138,7 @@ import {
 import { buildTopTraitSummary } from './features/identity/personalitySummary';
 import type { PersonalityScores } from './features/identity/personalityScoring';
 import { scoreArchetypes, rankArchetypes } from './features/identity/archetypes/archetypeScoring';
-import { buildHand, type ArchetypeHand } from './features/identity/archetypes/archetypeHandBuilder';
+import { buildHand, type ArchetypeHand, type HandCard } from './features/identity/archetypes/archetypeHandBuilder';
 import { ARCHETYPE_DECK, SUIT_LABELS } from './features/identity/archetypes/archetypeDeck';
 import { useMicroTestBadge } from './features/identity/microTests/useMicroTestBadge';
 import type { PlayerState } from './features/identity/microTests/microTestTriggers';
@@ -1519,13 +1519,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const dominantPlaystyleCard = archetypeHand?.dominant.card ?? null;
   const playstyleIcon = dominantPlaystyleCard?.icon ?? null;
-  const playerHandLauncherTraitCards = archetypeHand
+  const playerHandLauncherTraitCards: HandCard[] = archetypeHand
     ? [
         archetypeHand.secondary,
-        archetypeHand.supports[0],
-        archetypeHand.supports[1],
+        archetypeHand.supports?.[0],
+        archetypeHand.supports?.[1],
         archetypeHand.shadow,
-      ]
+      ].filter((handCard): handCard is HandCard => Boolean(handCard?.card))
     : [];
   const playstyleLabel = dominantPlaystyleCard
     ? `${dominantPlaystyleCard.name} (${SUIT_LABELS[dominantPlaystyleCard.suit]})`
