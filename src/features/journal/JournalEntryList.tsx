@@ -184,6 +184,7 @@ export function JournalEntryList({
                           <strong>
                             {entry.title?.trim() || 'Untitled'}
                             {isPendingSyncEntry(entry) ? ' · Not synced yet' : ''}
+                            {entry.is_private ? ' 🔒 Private' : ''}
                           </strong>
                           {isLocked && entry.unlock_date ? (
                             <p>🔒 Locked until {unlockDateFormatter.format(new Date(entry.unlock_date))}</p>
@@ -226,6 +227,7 @@ export function JournalEntryList({
                     <strong>
                       {entry.title?.trim() || 'Untitled'}
                       {isPendingSyncEntry(entry) ? ' · Not synced yet' : ''}
+                      {entry.is_private ? ' 🔒 Private' : ''}
                     </strong>
                     {isLocked && entry.unlock_date ? (
                       <p>🔒 Locked until {unlockDateFormatter.format(new Date(entry.unlock_date))}</p>

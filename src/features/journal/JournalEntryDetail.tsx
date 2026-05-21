@@ -86,6 +86,7 @@ export function JournalEntryDetail({
         <div>
           <p className="journal-detail__date">{entryDetailDateFormatter.format(new Date(entry.entry_date))}</p>
           <h2>{entry.title?.trim() || 'Untitled entry'}</h2>
+          {entry.is_private ? <p className="journal-detail__date">🔒 Private</p> : null}
           {moodMeta ? (
             <span className="journal-detail__mood">
               {moodMeta.icon} {moodMeta.label}
