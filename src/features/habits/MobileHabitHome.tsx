@@ -5,6 +5,7 @@ import { DailyHabitTracker } from './DailyHabitTracker';
 import type { ArchetypeHand } from '../identity/archetypes/archetypeHandBuilder';
 import type { ActiveAdventMetaResult } from '../../services/treatCalendarService';
 import type { LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
+import type { FeatureAvailabilityId } from '../../config/featureAvailability';
 
 type MobileHabitHomeProps = {
   session: Session;
@@ -31,6 +32,8 @@ type MobileHabitHomeProps = {
   isRoutinesFeatureOpen?: boolean;
   onNavigateToContracts?: () => void;
   onNavigateToRoutines?: () => void;
+  isAdminOrCreator?: boolean;
+  onOpenFeaturePreview?: (featureId: FeatureAvailabilityId, label: string) => void;
 };
 
 export function MobileHabitHome({
@@ -58,6 +61,8 @@ export function MobileHabitHome({
   isRoutinesFeatureOpen = false,
   onNavigateToContracts,
   onNavigateToRoutines,
+  isAdminOrCreator = false,
+  onOpenFeaturePreview,
 }: MobileHabitHomeProps) {
   void onHideStandaloneHabitsChange;
   return (
@@ -88,6 +93,8 @@ export function MobileHabitHome({
         isRoutinesFeatureOpen={isRoutinesFeatureOpen}
         onNavigateToContracts={onNavigateToContracts}
         onNavigateToRoutines={onNavigateToRoutines}
+        isAdminOrCreator={isAdminOrCreator}
+        onOpenFeaturePreview={onOpenFeaturePreview}
       />
     </div>
   );

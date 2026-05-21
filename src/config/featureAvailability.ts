@@ -7,6 +7,9 @@ export type FeatureAvailabilityId =
   | 'app.body'
   | 'app.contracts'
   | 'app.routines'
+  | 'today.visionStar'
+  | 'today.waterZenTree'
+  | 'today.feedCreatures'
   | 'energy.shell'
   | 'mind.breathingSpace'
   | 'mind.meditation'
@@ -99,6 +102,51 @@ export const featureAvailabilityRegistry = {
     votingEnabled: true,
     votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
     voteCategory: 'lifeTools',
+  },
+  'today.visionStar': {
+    id: 'today.visionStar',
+    label: 'Vision Star',
+    description: 'Daily Today action for revealing a vision spark.',
+    status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
+    surface: 'Today',
+    category: 'today',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'Reveal a small spark from your vision board to keep your bigger goals close.',
+    votingEnabled: true,
+    voteCategory: 'today',
+  },
+  'today.waterZenTree': {
+    id: 'today.waterZenTree',
+    label: 'Water the Zen Tree',
+    description: 'Daily Today action for watering the Zen Tree.',
+    status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
+    surface: 'Today',
+    category: 'today',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'A gentle daily ritual for growing your calm Zen Tree.',
+    votingEnabled: true,
+    voteCategory: 'today',
+  },
+  'today.feedCreatures': {
+    id: 'today.feedCreatures',
+    label: 'Feed the Creatures',
+    description: 'Daily Today action for feeding companions.',
+    status: 'demo',
+    publicAccess: 'previewOnly',
+    adminAccess: 'open',
+    surface: 'Today',
+    category: 'today',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'Care for your companions with a simple daily action.',
+    votingEnabled: true,
+    voteCategory: 'today',
   },
   'energy.shell': {
     id: 'energy.shell',
