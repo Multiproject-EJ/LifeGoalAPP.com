@@ -401,12 +401,13 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
         </span>
       </div>
 
-      <div className="space-excavator__depth-banner" aria-label={`Depth ${depth.depthNumber}: ${depth.name}`}>
+      <div className="space-excavator__top-stack">
+        <div className="space-excavator__depth-banner" aria-label={`Depth ${depth.depthNumber}: ${depth.name}`}>
         <span className="space-excavator__depth-label">Depth {depth.depthNumber}: {depth.name}</span>
         <span className="space-excavator__depth-subtitle">{depth.subtitle}</span>
-      </div>
+        </div>
 
-      <div className={`space-excavator__preview ${relicFoundPulse ? 'space-excavator__preview--piece-found' : ''}`} aria-label="Hidden object preview">
+        <div className={`space-excavator__preview ${relicFoundPulse ? 'space-excavator__preview--piece-found' : ''}`} aria-label="Hidden object preview">
         <div className="space-excavator__silhouette" aria-hidden="true" title={`${relicName} target`}>
           {relicIcon}
         </div>
@@ -433,12 +434,13 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
             ))}
           </div>
         </div>
-      </div>
-      <div className="space-excavator__clue-legend" aria-label="Clue guide">
+        </div>
+        <div className="space-excavator__clue-legend" aria-label="Clue guide">
         <span><strong>Hot:</strong> touching distance</span>
         <span><strong>Warm:</strong> within 2 steps</span>
         <span><strong>Cold:</strong> far away</span>
         <span><strong>Relic:</strong> exact piece tile</span>
+        </div>
       </div>
 
       {latestBombFeedback ? (
@@ -639,14 +641,16 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
         </div>
       )}
 
-      <div className="space-excavator__actions">
-        <button type="button" className="space-excavator__button" onClick={() => sendOnce(false)} disabled={finished}>Close</button>
-      </div>
-      <p className="space-excavator__footer-ticket-count" aria-live="polite">
+      <div className="space-excavator__footer-actions">
+        <div className="space-excavator__actions">
+          <button type="button" className="space-excavator__button" onClick={() => sendOnce(false)} disabled={finished}>Close</button>
+        </div>
+        <p className="space-excavator__footer-ticket-count" aria-live="polite">
         <span aria-hidden="true">🎟️</span>
         <span>Event Tickets: </span>
         <strong>{ticketsRemaining}</strong>
-      </p>
+        </p>
+      </div>
     </section>
   );
 }
