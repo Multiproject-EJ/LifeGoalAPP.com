@@ -654,7 +654,7 @@ export function MyAccountPanel({
         </p>
         <div className="account-panel__actions-row">
           <button type="button" className="btn" onClick={() => setFeedbackSupportFolderOpen(true)}>
-            Open feedback &amp; support
+            Open support center
           </button>
         </div>
       </section>
@@ -791,17 +791,6 @@ export function MyAccountPanel({
                 </dl>
               ) : null}
             </section>
-
-            <section className="account-panel__card" aria-labelledby="admin-tools-diagnostics">
-              <p className="account-panel__eyebrow">Diagnostics</p>
-              <h3 id="admin-tools-diagnostics">Diagnostics</h3>
-            </section>
-
-            <section className="account-panel__card" aria-labelledby="admin-tools-debug-tools">
-              <p className="account-panel__eyebrow">Debug tools</p>
-              <h3 id="admin-tools-debug-tools">Debug tools</h3>
-            </section>
-
             <GameDebugLogSection />
 
             <ReminderAnalyticsDashboard session={session} />
@@ -820,15 +809,6 @@ export function MyAccountPanel({
               <h3 id="admin-tools-inbox">Admin inbox / support ops</h3>
               <AdminInboxPanel session={session} />
             </section>
-
-            <section className="account-panel__card" aria-labelledby="admin-tools-dangerous">
-              <p className="account-panel__eyebrow">Dangerous tools</p>
-              <h3 id="admin-tools-dangerous">Dangerous tools</h3>
-              <p className="account-panel__hint">
-                These actions can clear local caches, reset preview state, or otherwise alter local development state.
-              </p>
-            </section>
-
             {onLaunchDailyTreatCalendar && (
               <section className="account-panel__card" aria-labelledby="dev-daily-treat-calendar">
                 <p className="account-panel__eyebrow">Daily Treats</p>
