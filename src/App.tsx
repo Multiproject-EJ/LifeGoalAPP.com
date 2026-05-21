@@ -5008,7 +5008,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       isActive ? 'workspace-sidebar__nav-button--active' : ''
                     }`,
                     futureFeatureState,
-                    { isDemo: Boolean(appFeatureId && getFeatureAvailability(appFeatureId).status === 'demo' && !isFeatureOpen) },
+                    { isDemo: Boolean(appFeatureId && getFeatureAvailability(appFeatureId).status === 'demo') },
                   );
                   return (
                     <button
