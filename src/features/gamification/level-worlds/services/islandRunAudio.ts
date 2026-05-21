@@ -27,6 +27,7 @@ export type IslandRunSoundEvent =
   | 'roll'
   | 'token_move'
   | 'stop_land'
+  | 'build_upgrade'
   | 'island_travel'
   // M10B: hatchery events
   | 'egg_set'
@@ -183,9 +184,10 @@ const HAPTIC_PATTERNS: Record<IslandRunHapticEvent, number | number[]> = {
 
 // Maps event IDs to future asset paths. Currently no-op since files don't exist.
 const SOUND_ASSET_MAP: Record<IslandRunSoundEvent, string> = {
-  roll: '/assets/audio/sfx/sfx_dice_roll.mp3',
-  token_move: '/assets/audio/sfx/sfx_tile_land.mp3',
-  stop_land: '/assets/audio/sfx/sfx_tile_land.mp3',
+  roll: '/assets/audio/sfx/sfx_dice_roll_real.mp3',
+  token_move: '/assets/audio/sfx/sfx_tile_hop_soft_wood.mp3',
+  stop_land: '/assets/audio/sfx/sfx_tile_hop_soft_wood.mp3',
+  build_upgrade: '/assets/audio/sfx/sfx_tile_land.mp3',
   island_travel: '/assets/audio/sfx/sfx_spin.mp3',
   // M10B
   egg_set: '/assets/audio/sfx/sfx_egg_set.mp3',
@@ -207,7 +209,7 @@ const SOUND_ASSET_MAP: Record<IslandRunSoundEvent, string> = {
   shop_open: '/assets/audio/sfx/sfx_shop_open.mp3',
   utility_stop_complete: '/assets/audio/sfx/sfx_utility_complete.mp3',
   // Reward bar
-  reward_bar_fill: '/assets/audio/sfx/sfx_reward_bar_fill.mp3',
+  reward_bar_fill: '/assets/audio/sfx/sfx_dice_roll.mp3',
   reward_bar_claim_burst: '/assets/audio/sfx/sfx_reward_bar_claim_burst.mp3',
   reward_bar_cascade: '/assets/audio/sfx/sfx_reward_bar_cascade.mp3',
   // Minigame

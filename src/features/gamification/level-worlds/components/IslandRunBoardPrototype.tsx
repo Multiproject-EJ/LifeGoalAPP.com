@@ -2538,6 +2538,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [showShopPanel]);
 
   useEffect(() => {
+    if (!audioEnabled || showShopPanel || showIslandClearCelebration) {
+      stopIslandRunMusic('island-board-ambient');
+      return;
+    }
+
+    playIslandRunMusic('island-board-ambient');
+    return () => stopIslandRunMusic('island-board-ambient');
+  }, [audioEnabled, showIslandClearCelebration, showShopPanel]);
+
+  useEffect(() => {
     if (!showShopPanel || !audioEnabled) {
       stopIslandRunMusic('market-lounge');
       return;
@@ -2558,6 +2568,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   useEffect(() => {
     return () => {
+      stopIslandRunMusic('island-board-ambient');
       stopIslandRunMusic('market-lounge');
       stopIslandRunMusic('new-island-celebration');
     };
@@ -6921,6 +6932,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const nextRuntimeState = batchResult.record;
       setRuntimeState(nextRuntimeState);
       runtimeStateRef.current = nextRuntimeState;
+      playIslandRunSound('build_upgrade');
 
       const nextBuildState = nextRuntimeState.stopBuildStateByIndex[stopIndex];
       if (!nextBuildState) return true;

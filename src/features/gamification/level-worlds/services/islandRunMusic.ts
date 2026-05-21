@@ -1,6 +1,7 @@
 const ISLAND_RUN_MUSIC_VOLUME = 0.28;
 
 const ISLAND_RUN_MUSIC_TRACKS = {
+  'island-board-ambient': '/assets/audio/music/Island dreamy relaxing night islands.mp3',
   'market-lounge': '/assets/audio/music/market-lounge-loop-v1.mp3',
   'luxury-reward': '/assets/audio/music/luxury-reward-loop-v1.mp3',
   'new-island-celebration': '/assets/audio/music/new-island-celebration-loop-v1.mp3',
