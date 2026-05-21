@@ -118,9 +118,9 @@ import {
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { fetchXPTransactions } from '../../services/gamification';
 import { fetchZenTokenTransactions } from '../../services/zenGarden';
-import { awardDailyTreeWatering } from '../../services/impactTrees';
 import { getRewardHistory } from '../../services/gameRewards';
 import { awardDailyTreatDice } from '../../services/dailyTreats';
+import { awardDailyWisdomTreeWatering } from '../../services/dailyTreeWatering';
 import { createDicePackCheckoutSession } from '../../services/billing';
 import {
   initiateMinigameTicketCheckout,
@@ -2806,13 +2806,10 @@ export function DailyHabitTracker({
       isClaiming: isZenTreeClaiming,
       inFlightRef: zenTreeClaimInFlightRef,
       award: () => {
-        awardDailyTreatDice({
+        awardDailyWisdomTreeWatering({
           userId: session.user.id,
-          diceAmount: 15,
-          sourceLabel: 'Water the Wisdom Tree',
           islandRunSession: session,
         });
-        awardDailyTreeWatering(session.user.id, new Date());
       },
       markClaimed: () => {
         if (typeof window !== 'undefined') {
