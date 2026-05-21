@@ -86,6 +86,7 @@ export function MyAccountPanel({
   const [folder1Open, setFolder1Open] = useState(false);
   const [folder2Open, setFolder2Open] = useState(false);
   const [holidayFolderOpen, setHolidayFolderOpen] = useState(false);
+  const [remindersFolderOpen, setRemindersFolderOpen] = useState(false);
   const [appearanceFolderOpen, setAppearanceFolderOpen] = useState(false);
   const [hapticsFolderOpen, setHapticsFolderOpen] = useState(false);
   const [menuDisplayFolderOpen, setMenuDisplayFolderOpen] = useState(false);
@@ -366,6 +367,7 @@ export function MyAccountPanel({
   };
   const handleHolidayThemesClick = () => handleSettingsModuleClick('settings.holidayThemes', setHolidayFolderOpen);
   const handleNotificationsClick = () => handleSettingsModuleClick('settings.notifications', setFolder2Open);
+  const handleRemindersClick = () => setRemindersFolderOpen(true);
   const handleExperimentalFeaturesClick = () =>
     handleSettingsModuleClick('settings.experimentalFeatures', setExperimentalFolderOpen);
   const handleAdvancedToolsClick = () => {
@@ -594,6 +596,13 @@ export function MyAccountPanel({
             onClick={handleHolidayThemesClick}
           />
           <SettingsFeatureCard
+            icon="⏰"
+            title="Reminders"
+            subtitle="Daily catch-up and journaling reminder preferences."
+            meta="LIVE • 4 reminder areas"
+            onClick={handleRemindersClick}
+          />
+          <SettingsFeatureCard
             icon="🔔"
             title="Notifications"
             subtitle="Gentle habit and daily reminder preferences."
@@ -628,14 +637,6 @@ export function MyAccountPanel({
 
       <TelemetrySettingsSection session={session} isDemoExperience={isDemoExperience} />
 
-      <YesterdayRecapSettings
-        session={session}
-        onLaunchDailyCatchUpPrompt={onLaunchDailyCatchUpPrompt}
-      />
-
-      <DreamJournalReminderSettings session={session} />
-
-      <TodaysWinsReminderSettings session={session} />
 
       <section className="account-panel__card" aria-labelledby="feedback-support-tools">
         <p className="account-panel__eyebrow">Support</p>
@@ -919,9 +920,25 @@ export function MyAccountPanel({
       >
         <NotificationSettingsSection session={session} />
 
-        <DailyReminderPreferences session={session} />
-
         <PerHabitReminderPrefs session={session} />
+      </SettingsFolderPopup>
+
+
+      <SettingsFolderPopup
+        isOpen={remindersFolderOpen}
+        onClose={() => setRemindersFolderOpen(false)}
+        title="Reminders"
+      >
+        <YesterdayRecapSettings
+          session={session}
+          onLaunchDailyCatchUpPrompt={onLaunchDailyCatchUpPrompt}
+        />
+
+        <DreamJournalReminderSettings session={session} />
+
+        <TodaysWinsReminderSettings session={session} />
+
+        <DailyReminderPreferences session={session} />
       </SettingsFolderPopup>
 
       {/* Holiday Preferences Popup */}
