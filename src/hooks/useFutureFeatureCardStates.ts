@@ -106,6 +106,7 @@ export function getFutureFeatureCardClassName(
 ) {
   return [
     baseClassName,
+    state ? 'future-feature-card--demo' : '',
     state?.seen ? 'future-feature-card--seen' : '',
     state?.voted ? 'future-feature-card--voted' : '',
   ].filter(Boolean).join(' ');
