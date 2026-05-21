@@ -94,7 +94,6 @@ export function MyAccountPanel({
   const [aiPrivacyFolderOpen, setAiPrivacyFolderOpen] = useState(false);
   const [experimentalFolderOpen, setExperimentalFolderOpen] = useState(false);
   const [gameRewardsFolderOpen, setGameRewardsFolderOpen] = useState(false);
-  const [adminInboxOpen, setAdminInboxOpen] = useState(false);
   const [savingPreference, setSavingPreference] = useState(false);
   const [cacheClearing, setCacheClearing] = useState(false);
   const [cacheStatus, setCacheStatus] = useState<string | null>(null);
@@ -193,7 +192,6 @@ export function MyAccountPanel({
 
   useEffect(() => {
     if (isAdmin === true) return;
-    setAdminInboxOpen(false);
     setFolder1Open(false);
     setFolder2Open(false);
     setHolidayFolderOpen(false);
@@ -698,21 +696,6 @@ export function MyAccountPanel({
       </SettingsFolderPopup>
 
       {showAdminTools ? (
-        <section className="account-panel__card" aria-labelledby="admin-tools-access">
-          <p className="account-panel__eyebrow">Admin</p>
-          <h3 id="admin-tools-access">Admin inbox tools</h3>
-          <p className="account-panel__hint">
-            Open the dedicated admin inbox view for feedback and support triage.
-          </p>
-          <div className="account-panel__actions-row">
-            <button type="button" className="btn btn--primary" onClick={() => setAdminInboxOpen(true)}>
-              Open admin inbox
-            </button>
-          </div>
-        </section>
-      ) : null}
-
-      {showAdminTools ? (
         <>
           <SettingsFolderPopup
             isOpen={folder1Open}
@@ -809,6 +792,16 @@ export function MyAccountPanel({
               ) : null}
             </section>
 
+            <section className="account-panel__card" aria-labelledby="admin-tools-diagnostics">
+              <p className="account-panel__eyebrow">Diagnostics</p>
+              <h3 id="admin-tools-diagnostics">Diagnostics</h3>
+            </section>
+
+            <section className="account-panel__card" aria-labelledby="admin-tools-debug-tools">
+              <p className="account-panel__eyebrow">Debug tools</p>
+              <h3 id="admin-tools-debug-tools">Debug tools</h3>
+            </section>
+
             <GameDebugLogSection />
 
             <ReminderAnalyticsDashboard session={session} />
@@ -821,6 +814,20 @@ export function MyAccountPanel({
               session={session}
               isDemoExperience={isDemoExperience}
             />
+
+            <section className="account-panel__card" aria-labelledby="admin-tools-inbox">
+              <p className="account-panel__eyebrow">Admin inbox / support ops</p>
+              <h3 id="admin-tools-inbox">Admin inbox / support ops</h3>
+              <AdminInboxPanel session={session} />
+            </section>
+
+            <section className="account-panel__card" aria-labelledby="admin-tools-dangerous">
+              <p className="account-panel__eyebrow">Dangerous tools</p>
+              <h3 id="admin-tools-dangerous">Dangerous tools</h3>
+              <p className="account-panel__hint">
+                These actions can clear local caches, reset preview state, or otherwise alter local development state.
+              </p>
+            </section>
 
             {onLaunchDailyTreatCalendar && (
               <section className="account-panel__card" aria-labelledby="dev-daily-treat-calendar">
@@ -843,14 +850,6 @@ export function MyAccountPanel({
                 </div>
               </section>
             )}
-          </SettingsFolderPopup>
-
-          <SettingsFolderPopup
-            isOpen={adminInboxOpen}
-            onClose={() => setAdminInboxOpen(false)}
-            title="Admin Inbox"
-          >
-            <AdminInboxPanel session={session} />
           </SettingsFolderPopup>
         </>
       ) : null}
