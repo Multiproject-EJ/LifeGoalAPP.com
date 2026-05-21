@@ -93,6 +93,7 @@ export function MyAccountPanel({
   const [birthdayGiftFolderOpen, setBirthdayGiftFolderOpen] = useState(false);
   const [aiPrivacyFolderOpen, setAiPrivacyFolderOpen] = useState(false);
   const [experimentalFolderOpen, setExperimentalFolderOpen] = useState(false);
+  const [gameRewardsFolderOpen, setGameRewardsFolderOpen] = useState(false);
   const [adminInboxOpen, setAdminInboxOpen] = useState(false);
   const [savingPreference, setSavingPreference] = useState(false);
   const [cacheClearing, setCacheClearing] = useState(false);
@@ -628,6 +629,13 @@ export function MyAccountPanel({
             />
           ) : null}
           <SettingsFeatureCard
+            icon="🎮"
+            title="Game & Rewards"
+            subtitle="Gamification preferences, weekly review launcher, and reward controls."
+            meta="LIVE • Focused gameplay controls"
+            onClick={() => setGameRewardsFolderOpen(true)}
+          />
+          <SettingsFeatureCard
             icon="⚗️"
             title="Experimental Features"
             subtitle="Creator previews for ideas still in development."
@@ -638,9 +646,6 @@ export function MyAccountPanel({
         </div>
         </div>
       </section>
-
-      <GamificationSettings session={session} />
-
 
       <section className="account-panel__card" aria-labelledby="feedback-support-tools">
         <p className="account-panel__eyebrow">Support</p>
@@ -675,23 +680,6 @@ export function MyAccountPanel({
           </div>
         </section>
       ) : null}
-
-      <section className="account-panel__card" aria-labelledby="weekly-habit-review-launcher">
-        <p className="account-panel__eyebrow">Habits</p>
-        <h3 id="weekly-habit-review-launcher">Weekly habit review</h3>
-        <p className="account-panel__hint">
-          Open your weekly 30-day stage mix and stalled/on-track habit snapshot at any time.
-        </p>
-        <div className="account-panel__actions-row">
-          <button
-            type="button"
-            className="btn"
-            onClick={handleLaunchWeeklyHabitReview}
-          >
-            Launch weekly habit review
-          </button>
-        </div>
-      </section>
 
       {showAdminTools ? (
         <>
@@ -914,6 +902,31 @@ export function MyAccountPanel({
           </div>
           <p className="account-panel__hint" style={{ marginTop: '0.5rem' }}>Last claimed: {lastBirthdayGiftClaimedLabel}</p>
           <p className="account-panel__hint">Next eligible claim window: {nextBirthdayGiftEligibleLabel}</p>
+        </section>
+      </SettingsFolderPopup>
+
+      <SettingsFolderPopup
+        isOpen={gameRewardsFolderOpen}
+        onClose={() => setGameRewardsFolderOpen(false)}
+        title="Game & Rewards"
+      >
+        <GamificationSettings session={session} />
+
+        <section className="account-panel__card" aria-labelledby="weekly-habit-review-launcher">
+          <p className="account-panel__eyebrow">Habits</p>
+          <h3 id="weekly-habit-review-launcher">Weekly habit review</h3>
+          <p className="account-panel__hint">
+            Open your weekly 30-day stage mix and stalled/on-track habit snapshot at any time.
+          </p>
+          <div className="account-panel__actions-row">
+            <button
+              type="button"
+              className="btn"
+              onClick={handleLaunchWeeklyHabitReview}
+            >
+              Launch weekly habit review
+            </button>
+          </div>
         </section>
       </SettingsFolderPopup>
 
