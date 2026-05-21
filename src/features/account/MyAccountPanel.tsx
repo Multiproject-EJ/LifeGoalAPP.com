@@ -672,19 +672,30 @@ export function MyAccountPanel({
           <p className="account-panel__hint">
             Send product feedback or request support. Support requests are reviewed manually.
           </p>
-          <FutureFeatureVotingPanel session={session} isAuthenticated={isAuthenticated} compact />
-          <div className="account-panel__actions-row">
-            <button type="button" className="btn" onClick={() => setShowFeedbackModal(true)}>
-              Send feedback
-            </button>
-            <button type="button" className="btn btn--secondary" onClick={() => setShowSupportModal(true)}>
-              Request support
-            </button>
+
+          <div className="account-panel__support-popup-section">
+            <p className="account-panel__support-popup-section-label">Future Feature Voting</p>
+            <FutureFeatureVotingPanel session={session} isAuthenticated={isAuthenticated} compact />
+          </div>
+
+          <div className="account-panel__support-popup-section">
+            <p className="account-panel__support-popup-section-label">New feedback &amp; support request</p>
+            <div className="account-panel__actions-row">
+              <button type="button" className="btn" onClick={() => setShowFeedbackModal(true)}>
+                Send feedback
+              </button>
+              <button type="button" className="btn btn--secondary" onClick={() => setShowSupportModal(true)}>
+                Request support
+              </button>
+            </div>
+          </div>
+
+          <div className="account-panel__support-popup-section">
+            <p className="account-panel__support-popup-section-label">Past feedback &amp; support requests</p>
+            <MyCasesPanel session={session} embeddedInSupportPopup />
           </div>
         </section>
       </SettingsFolderPopup>
-
-      <MyCasesPanel session={session} />
 
       {showAdminTools ? (
         <section className="account-panel__card" aria-labelledby="admin-tools-access">

@@ -302,6 +302,22 @@
   margin-top: 1.5rem;
 }
 
+.account-panel__support-popup-section + .account-panel__support-popup-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color, #e5e7eb);
+}
+
+.account-panel__support-popup-section-label {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.76rem;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-tertiary, #6b7280);
+}
+
 /* Workspace Snapshot in Dashboard */
 .workspace-snapshot {
   margin: 2rem 0;

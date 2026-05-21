@@ -5,6 +5,7 @@ import { listMyCaseThreadReads, markCaseThreadRead } from '../../services/caseTh
 
 type Props = {
   session: Session;
+  embeddedInSupportPopup?: boolean;
 };
 
 const USER_VISIBLE_MESSAGE_TYPES = new Set<CaseMessageRow['message_type']>([
@@ -20,7 +21,7 @@ function formatDateTime(value: string) {
   return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 }
 
-export function MyCasesPanel({ session }: Props) {
+export function MyCasesPanel({ session, embeddedInSupportPopup = false }: Props) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [threads, setThreads] = useState<CaseThreadRow[]>([]);
@@ -108,9 +109,12 @@ export function MyCasesPanel({ session }: Props) {
   };
 
   return (
-    <section className="account-panel__card" aria-labelledby="my-cases-panel">
-      <p className="account-panel__eyebrow">Support timeline</p>
-      <h3 id="my-cases-panel">My feedback &amp; support requests</h3>
+    <section
+      className={embeddedInSupportPopup ? '' : 'account-panel__card'}
+      aria-labelledby={embeddedInSupportPopup ? 'my-cases-panel-embedded' : 'my-cases-panel'}
+    >
+      {embeddedInSupportPopup ? null : <p className="account-panel__eyebrow">Support timeline</p>}
+      <h3 id={embeddedInSupportPopup ? 'my-cases-panel-embedded' : 'my-cases-panel'}>My feedback &amp; support requests</h3>
       <p className="account-panel__hint">
         Track your requests, view replies, and send follow-up details without creating a duplicate case.
       </p>
