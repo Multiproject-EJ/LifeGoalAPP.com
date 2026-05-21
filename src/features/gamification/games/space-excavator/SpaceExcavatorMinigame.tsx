@@ -4,6 +4,7 @@ import { SPACE_EXCAVATOR_CAMPAIGN_MILESTONES } from '../../level-worlds/services
 import { resolveSpaceExcavatorClue, type SpaceExcavatorClueResult } from '../../level-worlds/services/spaceExcavatorClues';
 import { resolveSpaceExcavatorDepthForBoard } from '../../level-worlds/services/spaceExcavatorDepths';
 import { resolveSpaceExcavatorObjectTileIds } from '../../level-worlds/services/spaceExcavatorObjects';
+import { playIslandRunSound, triggerIslandRunHaptic } from '../../level-worlds/services/islandRunAudio';
 import {
   resolveSpaceExcavatorRewardUxState,
   SPACE_EXCAVATOR_BOARD_CLEAR_AUTO_ADVANCE_DELAY_MS,
@@ -113,7 +114,9 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const [claimModalMessage, setClaimModalMessage] = useState<string | null>(null);
   const [latestClue, setLatestClue] = useState<SpaceExcavatorClueResult | null>(null);
   const [latestBombFeedback, setLatestBombFeedback] = useState<string | null>(null);
+  const [lastDugTileId, setLastDugTileId] = useState<number | null>(null);
   const advancingBoardKeyRef = useRef<string | null>(null);
+  const justClearedBoardRef = useRef(false);
 
   useEffect(() => {
     if (!config.getTicketsRemaining) return undefined;
@@ -163,31 +166,53 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
 
   const onDig = (index: number) => {
     if (finished || boardComplete) return;
-    if (tiles[index]?.dug) return;
+    if (tiles[index]?.dug) {
+      playIslandRunSound('market_insufficient_coins');
+      return;
+    }
+    playIslandRunSound('token_move');
+    triggerIslandRunHaptic('roll');
 
     const spend = config.requestDigSpend?.(index) ?? { ok: false, ticketsRemaining, failureReason: ticketsRemaining < 1 ? 'insufficient_tickets' : undefined };
     setTicketsRemaining(spend.ticketsRemaining);
 
     if (spend.ok && spend.progress) {
+      setLastDugTileId(index);
       if (spend.triggeredBomb) {
         const bonusRevealCount = Math.max(0, Math.floor(spend.bonusRevealCount ?? 0));
         setLatestBombFeedback(`${bonusRevealCount} nearby tile${bonusRevealCount === 1 ? '' : 's'} cleared.`);
         setLatestClue(null);
+        playIslandRunSound('boss_trial_resolve');
+        triggerIslandRunHaptic('boss_trial_resolve');
       } else {
         setLatestBombFeedback(null);
-        setLatestClue(resolveSpaceExcavatorClue({
+        const clue = resolveSpaceExcavatorClue({
           tileId: index,
           boardSize: spend.progress.boardSize,
           objectTileIds: getProgressObjectTileIds(spend.progress),
-        }));
+        });
+        setLatestClue(clue);
+        if (clue.type === 'relic_piece') {
+          playIslandRunSound('sticker_complete');
+          triggerIslandRunHaptic('sticker_complete');
+        } else if (clue.type === 'hot') {
+          playIslandRunSound('reward_bar_claim_burst');
+        } else if (clue.type === 'warm') {
+          playIslandRunSound('reward_bar_fill');
+        } else {
+          playIslandRunSound('stop_land');
+        }
       }
       syncProgress(spend.progress);
       return;
     }
     if (!spend.ok && (spend.failureReason === 'insufficient_tickets' || spend.ticketsRemaining < 1)) {
+      playIslandRunSound('market_insufficient_coins');
+      triggerIslandRunHaptic('stop_land');
       setShowOutOfTickets(true);
       return;
     }
+    playIslandRunSound('market_insufficient_coins');
   };
 
   const dismissOutOfTickets = () => {
@@ -219,6 +244,8 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       syncProgress(claim.progress);
       setClaimModalMessage(`${claim.rewardLabel} added`);
       setClaimModalPhase('claimed');
+      playIslandRunSound('reward_bar_cascade');
+      triggerIslandRunHaptic('reward_claim');
     } else if (claim.failureReason === 'already_claimed') {
       if (claim.progress) syncProgress(claim.progress);
       setClaimModalMessage('Reward already claimed.');
@@ -261,6 +288,19 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   }, [progressStatus]);
 
   useEffect(() => {
+    if (!boardComplete || justClearedBoardRef.current) return;
+    justClearedBoardRef.current = true;
+    playIslandRunSound('minigame_complete');
+    triggerIslandRunHaptic('reward_bar_cascade');
+  }, [boardComplete]);
+
+  useEffect(() => {
+    if (!boardComplete) {
+      justClearedBoardRef.current = false;
+    }
+  }, [boardComplete, currentBoard]);
+
+  useEffect(() => {
     if (finished || activeClaimModalMilestone || !rewardUxState.canAutoAdvanceBoard) return undefined;
     const timeoutId = window.setTimeout(() => {
       onAdvanceBoard();
@@ -295,16 +335,22 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       </div>
 
       <div className="space-excavator__preview" aria-label="Hidden object preview">
-        <div className="space-excavator__silhouette" aria-hidden="true">
+        <div className="space-excavator__silhouette" aria-hidden="true" title={`${relicName} target`}>
           {relicIcon}
         </div>
         <div className="space-excavator__preview-copy">
           <p className="space-excavator__preview-title">Find: {relicName}</p>
-          <p className="space-excavator__preview-progress">{found} / {objectPieceCount} pieces found</p>
+          <p className="space-excavator__preview-progress">{found} / {objectPieceCount} pieces found · Complete all pieces to clear the site</p>
           <div className="space-excavator__progress-bar" aria-hidden="true">
             <span style={{ width: `${Math.min(100, Math.round((found / objectPieceCount) * 100))}%` }} />
           </div>
         </div>
+      </div>
+      <div className="space-excavator__clue-legend" aria-label="Clue guide">
+        <span><strong>Hot:</strong> touching distance</span>
+        <span><strong>Warm:</strong> within 2 steps</span>
+        <span><strong>Cold:</strong> far away</span>
+        <span><strong>Relic:</strong> exact piece tile</span>
       </div>
 
       {latestBombFeedback ? (
@@ -337,8 +383,9 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
               onClick={() => onDig(i)}
               disabled={finished || boardComplete || tile.dug}
               aria-label={`Tile ${i + 1}`}
+              data-last-dug={lastDugTileId === i ? 'true' : undefined}
             >
-              {tile.dug ? (tile.objectPiece ? (progress?.objectIcon ?? initial?.objectIcon ?? '✦') : tile.bonusBomb ? '💣' : <span className="space-excavator__tile-marker" aria-hidden="true" />) : '⬛'}
+              {tile.dug ? (tile.objectPiece ? (progress?.objectIcon ?? initial?.objectIcon ?? '✦') : tile.bonusBomb ? '💣' : <span className="space-excavator__tile-marker" aria-hidden="true" />) : <span className="space-excavator__tile-cover" aria-hidden="true" />}
             </button>
           ))}
         </div>
