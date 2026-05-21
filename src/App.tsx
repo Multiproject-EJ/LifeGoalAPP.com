@@ -2211,6 +2211,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const openRoutinesPreviewOverlay = useCallback(() => {
     setAppPreviewFeature({ id: 'app.routines', label: 'Routines' });
   }, []);
+  const openFeaturePreviewOverlay = useCallback((id: FeatureAvailabilityId, label: string) => {
+    setAppPreviewFeature({ id, label });
+  }, []);
 
   const clearAppPreviewFeatureIfMatches = useCallback((featureId: FeatureAvailabilityId) => {
     setAppPreviewFeature((current) => {
@@ -3420,6 +3423,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
               isRoutinesFeatureOpen={isRoutinesWorkspaceOpen}
               onNavigateToContracts={openContractsWorkspace}
               onNavigateToRoutines={openRoutinesWorkspace}
+              isAdminOrCreator={isAdmin === true}
+              onOpenFeaturePreview={openFeaturePreviewOverlay}
             />
             <HabitsModule
               session={activeSession}
@@ -4769,6 +4774,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
               isRoutinesFeatureOpen={isRoutinesWorkspaceOpen}
               onNavigateToContracts={openContractsWorkspace}
               onNavigateToRoutines={openRoutinesWorkspace}
+              isAdminOrCreator={isAdmin === true}
+              onOpenFeaturePreview={openFeaturePreviewOverlay}
             />
           </div>
         {!showZenGardenFullScreen && !isConflictResolverFullscreen && (

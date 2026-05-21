@@ -166,6 +166,8 @@ import {
   type QuestHabit,
 } from '../../services/questHabit';
 import { LifeBuildTodayCard } from './LifeBuildTodayCard';
+import { resolveFeatureAccess } from '../../services/featureAccess';
+import type { FeatureAvailabilityId } from '../../config/featureAvailability';
 
 // Constants
 const DONE_ISH_DEFAULT_PERCENTAGE = 85;
@@ -371,6 +373,8 @@ type DailyHabitTrackerProps = {
   onNavigateToRoutines?: () => void;
   isContractsFeatureOpen?: boolean;
   isRoutinesFeatureOpen?: boolean;
+  isAdminOrCreator?: boolean;
+  onOpenFeaturePreview?: (featureId: FeatureAvailabilityId, label: string) => void;
 };
 
 type HabitCompletionState = {
@@ -730,6 +734,8 @@ export function DailyHabitTracker({
   onNavigateToRoutines,
   isContractsFeatureOpen = false,
   isRoutinesFeatureOpen = false,
+  isAdminOrCreator = false,
+  onOpenFeaturePreview,
 }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
   const sparkHandEnabled = isPlayersHandSparkResultEnabled();
@@ -757,6 +763,9 @@ export function DailyHabitTracker({
     isDailySpinBonusClaimedToday,
   });
   const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
+  const isVisionStarPreviewOnly = resolveFeatureAccess('today.visionStar', { isAdminOrCreator }) !== 'open';
+  const isWaterZenTreePreviewOnly = resolveFeatureAccess('today.waterZenTree', { isAdminOrCreator }) !== 'open';
+  const isFeedCreaturesPreviewOnly = resolveFeatureAccess('today.feedCreatures', { isAdminOrCreator }) !== 'open';
   const [routinesTodaySummary, setRoutinesTodaySummary] = useState<RoutinesTodayLaneSummary>({
     status: 'loading',
     dueCount: 0,
@@ -2688,10 +2697,10 @@ export function DailyHabitTracker({
         label: 'Vision Star',
         icon: isSpecialVisionStarDay ? '🌌' : '🌟',
         expiresAtMs: nextUtcMidnight,
-        badgeLabelOverride: hasClaimedVisionStar ? '✓ Done' : 'Open',
-        isCollected: hasClaimedVisionStar,
+        badgeLabelOverride: isVisionStarPreviewOnly ? 'Future Feature' : (hasClaimedVisionStar ? '✓ Done' : 'Open'),
+        isCollected: isVisionStarPreviewOnly ? false : hasClaimedVisionStar,
         isVisible: true,
-        isActionable: !hasClaimedVisionStar,
+        isActionable: isVisionStarPreviewOnly ? true : !hasClaimedVisionStar,
         sortPriority: 1,
         slotRole: 'core',
       },
@@ -2751,25 +2760,25 @@ export function DailyHabitTracker({
       },
       {
         id: 'zen_tree_water',
-        label: 'Water Wisdom Tree',
+        label: 'Water the Zen Tree',
         icon: '🌳',
         expiresAtMs: nextUtcMidnight,
-        badgeLabelOverride: hasClaimedZenTreeToday ? '✓ Done' : 'Claim',
-        isCollected: hasClaimedZenTreeToday,
+        badgeLabelOverride: isWaterZenTreePreviewOnly ? 'Future Feature' : (hasClaimedZenTreeToday ? '✓ Done' : 'Claim'),
+        isCollected: isWaterZenTreePreviewOnly ? false : hasClaimedZenTreeToday,
         isVisible: true,
-        isActionable: !hasClaimedZenTreeToday,
+        isActionable: isWaterZenTreePreviewOnly ? true : !hasClaimedZenTreeToday,
         sortPriority: 5,
         slotRole: 'core',
       },
       {
         id: 'feed_creatures',
-        label: 'Feed Creatures',
+        label: 'Feed the Creatures',
         icon: '🐾',
         expiresAtMs: nextUtcMidnight,
-        badgeLabelOverride: hasClaimedFeedCreaturesToday ? '✓ Done' : 'Claim',
-        isCollected: hasClaimedFeedCreaturesToday,
+        badgeLabelOverride: isFeedCreaturesPreviewOnly ? 'Future Feature' : (hasClaimedFeedCreaturesToday ? '✓ Done' : 'Claim'),
+        isCollected: isFeedCreaturesPreviewOnly ? false : hasClaimedFeedCreaturesToday,
         isVisible: true,
-        isActionable: !hasClaimedFeedCreaturesToday,
+        isActionable: isFeedCreaturesPreviewOnly ? true : !hasClaimedFeedCreaturesToday,
         sortPriority: 6,
         slotRole: 'core',
       },
@@ -2907,6 +2916,10 @@ export function DailyHabitTracker({
     }
 
     if (offerId === 'vision_star') {
+      if (isVisionStarPreviewOnly) {
+        onOpenFeaturePreview?.('today.visionStar', 'Vision Star');
+        return;
+      }
       void handleVisionRewardClick();
       return;
     }
@@ -2948,16 +2961,24 @@ export function DailyHabitTracker({
     }
 
     if (offerId === 'zen_tree_water') {
+      if (isWaterZenTreePreviewOnly) {
+        onOpenFeaturePreview?.('today.waterZenTree', 'Water the Zen Tree');
+        return;
+      }
       setZenTreeClaimError(null);
       setIsZenTreeModalOpen(true);
       return;
     }
 
     if (offerId === 'feed_creatures') {
+      if (isFeedCreaturesPreviewOnly) {
+        onOpenFeaturePreview?.('today.feedCreatures', 'Feed the Creatures');
+        return;
+      }
       setFeedCreaturesClaimError(null);
       setIsFeedCreaturesModalOpen(true);
     }
-  }, [eggHatchViewedStorageKey, handleVisionRewardClick, onOpenDailyTreat, onOpenHolidayCalendar, onOpenIslandRunStop, startTodaysOfferCheckout]);
+  }, [eggHatchViewedStorageKey, handleVisionRewardClick, isFeedCreaturesPreviewOnly, isVisionStarPreviewOnly, isWaterZenTreePreviewOnly, onOpenDailyTreat, onOpenFeaturePreview, onOpenHolidayCalendar, onOpenIslandRunStop, startTodaysOfferCheckout]);
 
   const handleTimeBoundOfferClick = useCallback((offerId: TimeBoundOfferId) => {
     // UX: some offers should open directly (no intermediate teaser modal)
