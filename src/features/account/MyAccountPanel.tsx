@@ -481,7 +481,7 @@ export function MyAccountPanel({
             Choose a focused module to adjust seasonal experiences, reminders, and creator-only workspace tools.
           </p>
         </div>
-        <div className="settings-modules__group" aria-label="Settings feature modules">
+        <div className="settings-modules__group" aria-label="Personalization settings modules">
           <div className="settings-modules__group-header">
             <p className="settings-modules__group-eyebrow">Personalization</p>
             <p className="settings-modules__group-hint">Live profile and comfort settings you can tune instantly.</p>
@@ -526,7 +526,7 @@ export function MyAccountPanel({
           ) : null}
         </div>
         </div>
-        <div className="settings-modules__group" aria-label="Settings feature modules">
+        <div className="settings-modules__group" aria-label="Quick settings modules">
           <div className="settings-modules__group-header">
             <p className="settings-modules__group-eyebrow">Quick modules</p>
             <p className="settings-modules__group-hint">Open the same trusted settings modules in a calmer layout.</p>
@@ -608,9 +608,7 @@ export function MyAccountPanel({
         onClose={() => setFeedbackSupportFolderOpen(false)}
         title="Feedback & Support"
       >
-        <section className="account-panel__card" aria-labelledby="feedback-support-popup-tools">
-          <p className="account-panel__eyebrow">Support</p>
-          <h3 id="feedback-support-popup-tools">Feedback &amp; Support</h3>
+        <section className="account-panel__card" aria-label="Feedback and support tools">
           <p className="account-panel__hint">
             Send product feedback or request support. Support requests are reviewed manually.
           </p>
