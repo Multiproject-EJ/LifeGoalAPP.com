@@ -3,7 +3,7 @@ import type { IslandRunMinigameProps } from '../../level-worlds/services/islandR
 import { SPACE_EXCAVATOR_CAMPAIGN_MILESTONES } from '../../level-worlds/services/spaceExcavatorCampaignProgress';
 import { resolveSpaceExcavatorClue, type SpaceExcavatorClueResult } from '../../level-worlds/services/spaceExcavatorClues';
 import { resolveSpaceExcavatorDepthForBoard } from '../../level-worlds/services/spaceExcavatorDepths';
-import { resolveSpaceExcavatorObjectTileIds } from '../../level-worlds/services/spaceExcavatorObjects';
+import { getSpaceExcavatorObjectShape, resolveSpaceExcavatorObjectTileIds } from '../../level-worlds/services/spaceExcavatorObjects';
 import { playIslandRunSound, triggerIslandRunHaptic } from '../../level-worlds/services/islandRunAudio';
 import {
   resolveSpaceExcavatorRewardUxState,
@@ -82,6 +82,25 @@ function getObjectPieceCount(options: {
   return Math.max(1, Math.floor(objectTileIds.length || progress?.treasureCount || initial?.treasureCount || Math.max(3, Math.min(8, 3 + Math.floor(islandNumber / 8)))));
 }
 
+
+function getObjectGridTemplate(shapeTileOffsets: ReadonlyArray<readonly [number, number]>, foundCount: number): {
+  cells: Array<{ key: string; x: number; y: number; found: boolean }>;
+  columns: number;
+  rows: number;
+} {
+  if (shapeTileOffsets.length === 0) {
+    return { cells: [], columns: 1, rows: 1 };
+  }
+  const maxX = Math.max(...shapeTileOffsets.map(([x]) => x));
+  const maxY = Math.max(...shapeTileOffsets.map(([, y]) => y));
+  const cells = shapeTileOffsets.map(([x, y], index) => ({
+    key: `${x}:${y}:${index}`,
+    x,
+    y,
+    found: index < foundCount,
+  }));
+  return { cells, columns: maxX + 1, rows: maxY + 1 };
+}
 export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig }: IslandRunMinigameProps) {
   const config = (launchConfig ?? {}) as SpaceExcavatorLaunchConfig;
   const initial = config.initialProgress;
@@ -169,6 +188,11 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   );
   const relicIcon = progress?.objectIcon ?? initial?.objectIcon ?? '❔';
   const relicName = progress?.objectName ?? initial?.objectName ?? 'Hidden Relic';
+  const objectShape = useMemo(() => getSpaceExcavatorObjectShape(progress?.objectId ?? initial?.objectId), [initial?.objectId, progress?.objectId]);
+  const shapeTileOffsets = objectShape?.tileOffsets ?? [];
+  const artifactGrid = useMemo(() => getObjectGridTemplate(shapeTileOffsets, found), [found, shapeTileOffsets]);
+  const foundPercent = Math.min(100, Math.round((found / objectPieceCount) * 100));
+  const relicFoundPulse = latestClue?.type === 'relic_piece';
 
   const sendOnce = (completed: boolean) => {
     if (sentResult) return;
@@ -382,15 +406,31 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
         <span className="space-excavator__depth-subtitle">{depth.subtitle}</span>
       </div>
 
-      <div className="space-excavator__preview" aria-label="Hidden object preview">
+      <div className={`space-excavator__preview ${relicFoundPulse ? 'space-excavator__preview--piece-found' : ''}`} aria-label="Hidden object preview">
         <div className="space-excavator__silhouette" aria-hidden="true" title={`${relicName} target`}>
           {relicIcon}
         </div>
         <div className="space-excavator__preview-copy">
-          <p className="space-excavator__preview-title">Find: {relicName}</p>
-          <p className="space-excavator__preview-progress">{found} / {objectPieceCount} pieces found · Complete all pieces to clear the site</p>
+          <p className="space-excavator__preview-title">Target: {relicName}</p>
+          <p className="space-excavator__preview-progress">{found} / {objectPieceCount} pieces found · {foundPercent}% uncovered</p>
           <div className="space-excavator__progress-bar" aria-hidden="true">
-            <span style={{ width: `${Math.min(100, Math.round((found / objectPieceCount) * 100))}%` }} />
+            <span style={{ width: `${foundPercent}%` }} />
+          </div>
+          <div
+            className="space-excavator__artifact-grid"
+            style={{ gridTemplateColumns: `repeat(${artifactGrid.columns}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${artifactGrid.rows}, minmax(0, 1fr))` }}
+            aria-label={`${relicName} assembly`}
+          >
+            {artifactGrid.cells.map((cell) => (
+              <span
+                key={cell.key}
+                className={`space-excavator__artifact-cell ${cell.found ? 'space-excavator__artifact-cell--found' : 'space-excavator__artifact-cell--hidden'}`}
+                style={{ gridColumn: `${cell.x + 1}`, gridRow: `${cell.y + 1}` }}
+                aria-hidden="true"
+              >
+                {cell.found ? relicIcon : '✦'}
+              </span>
+            ))}
           </div>
         </div>
       </div>
@@ -517,6 +557,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
           <div className="space-excavator__clear-summary" aria-label="Board clear summary">
             <span>{progressStatus === 'completed' ? 'All boards cleared' : `Board ${currentBoard} cleared`}</span>
             <span>Event progress +1</span>
+            <span>Artifact pieces recovered: {found} / {objectPieceCount}</span>
             {firstClaimableMilestone ? (
               <span className="space-excavator__clear-summary-claimable">
                 New reward available: {firstClaimableMilestone.rewardLabel}
