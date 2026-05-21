@@ -19,7 +19,7 @@ export function resolveWisdomTreeProgress(options: {
   );
   const lotusProgress = Math.min(
     LOTUS_TREE_PROGRESS_CAP_PERCENT,
-    Math.max(0, Math.round((lotusFlowers / span) * LOTUS_TREE_PROGRESS_CAP_PERCENT)),
+    Math.max(0, Math.round((lotusFlowers / span) * 100)),
   );
 
   return Math.min(100, wateringProgress + lotusProgress);

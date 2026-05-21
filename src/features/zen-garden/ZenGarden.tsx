@@ -452,11 +452,11 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
               <div className="zen-garden__tree-meta">
                 <span>Level {currentLevel}</span>
                 <span>{impactTotal} waterings</span>
-                <span>{balance} lotus flowers</span>
+                <span>{balance} Lotus Flowers</span>
               </div>
             </div>
             <p className="zen-garden__tree-rule">
-              Watering grows the first 75%; lotus flowers unlock the final 25%.
+              Watering grows the first 75%; Lotus Flowers unlock the final 25%.
             </p>
             {nextMilestone ? (
               <p className="zen-garden__tree-next">
