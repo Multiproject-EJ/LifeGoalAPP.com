@@ -69,5 +69,3 @@ export function SettingsFeatureCard({
     </button>
   );
 }
-
-export const SettingsModuleButton = SettingsFeatureCard;
