@@ -1,6 +1,7 @@
 import { FeatureStatusBadge } from './FeatureStatusBadge';
 import {
   getFeatureAvailability,
+  type FeatureAvailability,
   type FeatureAvailabilityId,
 } from '../config/featureAvailability';
 
@@ -19,12 +20,11 @@ type SettingsFeatureCardProps = {
 };
 
 function getActorAwareStatusLabel(
-  featureId: FeatureAvailabilityId,
+  feature: FeatureAvailability,
   actorContext?: SettingsFeatureCardActorContext,
 ) {
   if (!actorContext) return undefined;
 
-  const feature = getFeatureAvailability(featureId);
   return actorContext.isAdminOrCreator
     ? feature.adminLabel ?? feature.publicLabel
     : feature.publicLabel;
@@ -40,7 +40,7 @@ export function SettingsFeatureCard({
   onClick,
 }: SettingsFeatureCardProps) {
   const feature = featureId ? getFeatureAvailability(featureId) : null;
-  const statusLabelOverride = featureId ? getActorAwareStatusLabel(featureId, actorContext) : undefined;
+  const statusLabelOverride = feature ? getActorAwareStatusLabel(feature, actorContext) : undefined;
 
   return (
     <button
