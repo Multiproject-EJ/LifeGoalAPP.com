@@ -39,6 +39,7 @@ function getSourceRoute() {
 }
 
 export function FutureFeatureVotingPanel({ session, isAuthenticated }: FutureFeatureVotingPanelProps) {
+  const userId = session.user.id;
   const features = useMemo(
     () =>
       SETTINGS_FEEDBACK_FEATURE_IDS
@@ -75,7 +76,7 @@ export function FutureFeatureVotingPanel({ session, isAuthenticated }: FutureFea
     return () => {
       active = false;
     };
-  }, [features, isAuthenticated, session.user.id]);
+  }, [features, isAuthenticated, userId]);
 
   const handleVote = async (feature: FeatureAvailability) => {
     if (votedByFeatureId[feature.id] || savingFeatureId) return;
@@ -128,8 +129,12 @@ export function FutureFeatureVotingPanel({ session, isAuthenticated }: FutureFea
         {features.map((feature) => {
           const isVoted = Boolean(votedByFeatureId[feature.id]);
           const isSaving = savingFeatureId === feature.id;
+          const cardClassName = [
+            'future-feature-voting__card',
+            isVoted ? 'future-feature-voting__card--voted' : '',
+          ].filter(Boolean).join(' ');
           return (
-            <article key={feature.id} className={`future-feature-voting__card${isVoted ? ' future-feature-voting__card--voted' : ''}`}>
+            <article key={feature.id} className={cardClassName}>
               <div className="future-feature-voting__card-header">
                 <div>
                   <h5>{feature.label}</h5>
