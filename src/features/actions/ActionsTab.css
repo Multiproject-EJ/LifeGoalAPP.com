@@ -281,6 +281,11 @@
   font-size: 1rem;
 }
 
+.actions-tab__launcher-icon-image--xl {
+  width: min(20.3rem, 143%);
+  height: min(20.3rem, 143%);
+}
+
 .actions-tab__launcher-button--full-width {
   aspect-ratio: auto;
   min-height: 6.25rem;
@@ -1559,4 +1564,47 @@
     flex-basis: var(--category-width);
     max-width: var(--category-width);
   }
+}
+
+.actions-tab__launcher-button--task-tower {
+  align-items: stretch;
+}
+
+.actions-tab__launcher-content {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.actions-tab__launcher-subtools {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.actions-tab__launcher-subtool {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.92);
+  padding: 0.35rem 0.3rem;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.actions-tab__launcher-subtool--primary {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.16), rgba(52, 211, 153, 0.16));
+}
+
+.actions-tab__launcher-subtool-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
 }

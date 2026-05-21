@@ -472,16 +472,16 @@ export function ActionsTab({
                   type="button"
                   className="actions-tab__launcher-button actions-tab__launcher-button--full-width"
                   onClick={onNavigateToJournal}
-                  aria-label="Open journal"
+                  aria-label="Open Vision Journal"
                 >
                   <span className="actions-tab__launcher-icon" aria-hidden="true">
                     <img
-                      className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
+                      className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large actions-tab__launcher-icon-image--xl"
                       src={journalIcon}
                       alt=""
                     />
                   </span>
-                  <span className="actions-tab__launcher-label">Journal</span>
+                  <span className="actions-tab__launcher-label">Vision Journal</span>
                 </button>
               </div>
             )}
@@ -495,7 +495,7 @@ export function ActionsTab({
                 >
                   <span className="actions-tab__launcher-icon" aria-hidden="true">
                     <img
-                      className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
+                      className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large actions-tab__launcher-icon-image--xl"
                       src={visionBoardIcon}
                       alt=""
                     />
@@ -504,72 +504,65 @@ export function ActionsTab({
                 </button>
               </div>
             )}
-            <div className="actions-tab__launcher-row actions-tab__launcher-row--trio">
-              {onNavigateToProjects && (
-                <button
-                  type="button"
-                  className="actions-tab__launcher-button"
-                  onClick={onNavigateToProjects}
-                  aria-label="Open projects"
-                >
-                  <span className="actions-tab__launcher-icon" aria-hidden="true">
-                    <img
-                      className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
-                      src={projectsIcon}
-                      alt=""
-                    />
-                  </span>
-                  <span className="actions-tab__launcher-label">Projects</span>
-                </button>
-              )}
-              {onNavigateToTimer && (
-                <button
-                  type="button"
-                  className="actions-tab__launcher-button"
-                  onClick={() => onNavigateToTimer({ sourceType: 'general' })}
-                  aria-label="Open timer"
-                >
-                  <span className="actions-tab__launcher-icon" aria-hidden="true">
-                    <img
-                      className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
-                      src={timerIcon}
-                      alt=""
-                    />
-                  </span>
-                  <span className="actions-tab__launcher-label">Timer</span>
-                </button>
-              )}
-              <button
-                type="button"
-                className="actions-tab__launcher-button actions-tab__launcher-button--primary"
-                onClick={() => setActiveView('tasks')}
-                aria-label="Open tasks list"
-              >
-                <span className="actions-tab__launcher-icon" aria-hidden="true">
-                  <img
-                    className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
-                    src={taskIcon}
-                    alt=""
-                  />
-                </span>
-                <span className="actions-tab__launcher-label">Tasks</span>
-              </button>
-            </div>
             <div className="actions-tab__launcher-row actions-tab__launcher-row--single">
               <button
                 type="button"
-                className="actions-tab__launcher-button actions-tab__launcher-button--full-width"
+                className="actions-tab__launcher-button actions-tab__launcher-button--full-width actions-tab__launcher-button--task-tower"
                 onClick={() => setShowTaskTower(true)}
                 aria-label="Open Task Tower"
               >
                 <span className="actions-tab__launcher-icon" aria-hidden="true">
                   <img
-                    className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large"
+                    className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large actions-tab__launcher-icon-image--xl"
                     src={taskTowerIcon}
                     alt=""
                   />
                 </span>
-                <span className="actions-tab__launcher-label">Task Tower</span>
+                <span className="actions-tab__launcher-content">
+                  <span className="actions-tab__launcher-label">Task Tower</span>
+                  <span className="actions-tab__launcher-subtools" aria-label="Task Tower includes Projects, Timer, and Tasks">
+                    {onNavigateToProjects && (
+                      <button
+                        type="button"
+                        className="actions-tab__launcher-subtool"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onNavigateToProjects();
+                        }}
+                        aria-label="Open projects"
+                      >
+                        <img className="actions-tab__launcher-subtool-icon" src={projectsIcon} alt="" />
+                        <span>Projects</span>
+                      </button>
+                    )}
+                    {onNavigateToTimer && (
+                      <button
+                        type="button"
+                        className="actions-tab__launcher-subtool"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onNavigateToTimer({ sourceType: 'general' });
+                        }}
+                        aria-label="Open timer"
+                      >
+                        <img className="actions-tab__launcher-subtool-icon" src={timerIcon} alt="" />
+                        <span>Timer</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="actions-tab__launcher-subtool actions-tab__launcher-subtool--primary"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setActiveView('tasks');
+                      }}
+                      aria-label="Open tasks list"
+                    >
+                      <img className="actions-tab__launcher-subtool-icon" src={taskIcon} alt="" />
+                      <span>Tasks</span>
+                    </button>
+                  </span>
+                </span>
               </button>
             </div>
           </div>
