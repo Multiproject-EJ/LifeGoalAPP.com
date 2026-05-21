@@ -190,7 +190,9 @@ export function ScoreTab({
     loadVotes: Boolean(session?.user?.id),
   });
   const getScoreFutureFeatureCardClassName = (baseClassName: string, featureId: FeatureAvailabilityId) =>
-    getFutureFeatureCardClassName(baseClassName, futureFeatureCardStates[featureId]);
+    getFutureFeatureCardClassName(baseClassName, futureFeatureCardStates[featureId], {
+      isDemo: getFeatureAvailability(featureId).status === 'demo',
+    });
   const renderFeatureFeedbackSent = (featureId: FeatureAvailabilityId) =>
     futureFeatureCardStates[featureId]?.voted ? (
       <span className="future-feature-card__saved-label">Feedback sent</span>

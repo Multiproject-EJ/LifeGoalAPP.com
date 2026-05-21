@@ -152,7 +152,7 @@ import { ConflictResolverEntry } from './features/conflict-resolver/ConflictReso
 import { PeaceBetweenShell } from './surfaces/peacebetween/PeaceBetweenShell';
 import { PeaceBetweenLanding } from './surfaces/peacebetween/PeaceBetweenLanding';
 import { isConflictRoute, resolveSurface } from './surfaces/surfaceContext';
-import type { FeatureAvailabilityId } from './config/featureAvailability';
+import { getFeatureAvailability, type FeatureAvailabilityId } from './config/featureAvailability';
 import { resolveFeatureAccess } from './services/featureAccess';
 import { isAdminUser } from './services/adminRoles';
 import './styles/workspace.css';
@@ -5008,6 +5008,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       isActive ? 'workspace-sidebar__nav-button--active' : ''
                     }`,
                     futureFeatureState,
+                    { isDemo: Boolean(appFeatureId && getFeatureAvailability(appFeatureId).status === 'demo' && !isFeatureOpen) },
                   );
                   return (
                     <button
