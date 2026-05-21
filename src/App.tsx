@@ -1519,7 +1519,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const dominantPlaystyleCard = archetypeHand?.dominant.card ?? null;
   const playstyleIcon = dominantPlaystyleCard?.icon ?? null;
-  const playerHandLauncherTraitCards: HandCard[] = archetypeHand
+  const launcherTraitCards: HandCard[] = archetypeHand
     ? [
         archetypeHand.secondary,
         archetypeHand.supports?.[0],
@@ -3855,7 +3855,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 <span className="mobile-menu-overlay__visual-slot mobile-menu-overlay__visual-slot--hand" aria-hidden="true">
                   <span className="mobile-menu-overlay__hand-fan">
                     <span className="mobile-menu-overlay__hand-side mobile-menu-overlay__hand-side--left">
-                      {playerHandLauncherTraitCards.slice(0, 2).map((handCard) => (
+                      {launcherTraitCards.slice(0, 2).map((handCard) => (
                         <span
                           key={`launcher-left-${handCard.card.id}`}
                           className="mobile-menu-overlay__trait-card"
@@ -3877,7 +3877,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       ) : null}
                     </span>
                     <span className="mobile-menu-overlay__hand-side mobile-menu-overlay__hand-side--right">
-                      {playerHandLauncherTraitCards.slice(2).map((handCard) => (
+                      {launcherTraitCards.slice(2).map((handCard) => (
                         <span
                           key={`launcher-right-${handCard.card.id}`}
                           className="mobile-menu-overlay__trait-card"

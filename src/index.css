@@ -19713,7 +19713,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   align-content: center;
   gap: 0.12rem;
   border-radius: 15px;
-  border: 1px solid color-mix(in srgb, var(--card-color, #3b82f6) 48%, white 36%);
+  border: 1px solid rgba(30, 64, 175, 0.42);
   padding: 0.42rem 0.5rem;
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--card-color, #3b82f6) 16%, rgba(255, 255, 255, 0.9)), rgba(255, 255, 255, 0.72));
@@ -19738,7 +19738,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__trait-card-role {
-  color: color-mix(in srgb, var(--card-color, #2563eb) 82%, #0f172a);
+  color: #1e3a8a;
   font-size: 0.54rem;
   font-weight: 900;
   letter-spacing: 0.08em;
