@@ -164,6 +164,10 @@ type AuthMode = 'password' | 'signup';
 
 type AuthTab = HabitGameAuthTab;
 
+function isRenderableHandCard(handCard: HandCard | null | undefined): handCard is HandCard {
+  return Boolean(handCard?.role && handCard.card?.id && handCard.card.name && handCard.card.icon);
+}
+
 type WorkspaceNavItem = {
   id: string;
   label: string;
@@ -1520,7 +1524,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const dominantPlaystyleCard = archetypeHand?.dominant.card ?? null;
   const playstyleIcon = dominantPlaystyleCard?.icon ?? null;
   const launcherTraitCards: HandCard[] = archetypeHand
-    ? handToArray(archetypeHand).filter((handCard): handCard is HandCard => Boolean(handCard?.card) && handCard.role !== 'dominant')
+    ? handToArray(archetypeHand).filter((handCard): handCard is HandCard => isRenderableHandCard(handCard) && handCard.role !== 'dominant')
     : [];
   const launcherTraitSideCount = Math.ceil(launcherTraitCards.length / 2);
   const leftLauncherTraitCards = launcherTraitCards.slice(0, launcherTraitSideCount);
