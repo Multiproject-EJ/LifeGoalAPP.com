@@ -1519,6 +1519,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const dominantPlaystyleCard = archetypeHand?.dominant.card ?? null;
   const playstyleIcon = dominantPlaystyleCard?.icon ?? null;
+  const playerHandLauncherTraitCards = archetypeHand
+    ? [
+        archetypeHand.secondary,
+        archetypeHand.supports[0],
+        archetypeHand.supports[1],
+        archetypeHand.shadow,
+      ]
+    : [];
   const playstyleLabel = dominantPlaystyleCard
     ? `${dominantPlaystyleCard.name} (${SUIT_LABELS[dominantPlaystyleCard.suit]})`
     : null;
@@ -3838,29 +3846,49 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 aria-label="Open Player's Hand"
               >
                 <span className="mobile-menu-overlay__status-dot" aria-hidden="true" />
+                <span className="mobile-menu-overlay__hero-copy mobile-menu-overlay__hero-copy--hand">
+                  <span className="mobile-menu-overlay__hero-title">Player&apos;s Hand</span>
+                  {microTestBadge.showBadge ? (
+                    <span className="mobile-menu-overlay__hero-meta">{microTestBadge.count} micro-tests ready</span>
+                  ) : null}
+                </span>
                 <span className="mobile-menu-overlay__visual-slot mobile-menu-overlay__visual-slot--hand" aria-hidden="true">
-                  <span className="mobile-menu-overlay__hand-stack">
-                    <span className="mobile-menu-overlay__hand-card mobile-menu-overlay__hand-card--back" />
-                    <span className="mobile-menu-overlay__hand-card mobile-menu-overlay__hand-card--mid" />
-                    <span className="mobile-menu-overlay__hand-card mobile-menu-overlay__hand-card--front">
+                  <span className="mobile-menu-overlay__hand-fan">
+                    <span className="mobile-menu-overlay__hand-side mobile-menu-overlay__hand-side--left">
+                      {playerHandLauncherTraitCards.slice(0, 2).map((handCard) => (
+                        <span
+                          key={`launcher-left-${handCard.card.id}`}
+                          className="mobile-menu-overlay__trait-card"
+                          style={{ '--card-color': handCard.card.color } as CSSProperties}
+                        >
+                          <span className="mobile-menu-overlay__trait-card-role">{handCard.role}</span>
+                          <span className="mobile-menu-overlay__trait-card-name">{handCard.card.icon} {handCard.card.name}</span>
+                        </span>
+                      ))}
+                    </span>
+                    <span className="mobile-menu-overlay__archetype-card">
                       {playstyleIcon ? (
                         <span className="mobile-menu-overlay__hand-symbol">{playstyleIcon}</span>
                       ) : (
                         <span className="mobile-menu-overlay__hand-symbol">🪪</span>
                       )}
+                      {dominantPlaystyleCard ? (
+                        <span className="mobile-menu-overlay__archetype-name">{dominantPlaystyleCard.name}</span>
+                      ) : null}
+                    </span>
+                    <span className="mobile-menu-overlay__hand-side mobile-menu-overlay__hand-side--right">
+                      {playerHandLauncherTraitCards.slice(2).map((handCard) => (
+                        <span
+                          key={`launcher-right-${handCard.card.id}`}
+                          className="mobile-menu-overlay__trait-card"
+                          style={{ '--card-color': handCard.card.color } as CSSProperties}
+                        >
+                          <span className="mobile-menu-overlay__trait-card-role">{handCard.role}</span>
+                          <span className="mobile-menu-overlay__trait-card-name">{handCard.card.icon} {handCard.card.name}</span>
+                        </span>
+                      ))}
                     </span>
                   </span>
-                </span>
-                <span className="mobile-menu-overlay__hero-copy">
-                  <span className="mobile-menu-overlay__hero-title">Player&apos;s Hand</span>
-                  <span className="mobile-menu-overlay__hero-subtitle">Your personality drives your progress</span>
-                  {microTestBadge.showBadge ? (
-                    <span className="mobile-menu-overlay__hero-meta">{microTestBadge.count} micro-tests ready</span>
-                  ) : null}
-                </span>
-                <span className="mobile-menu-overlay__hero-cta" aria-hidden="true">
-                  View All Traits
-                  <span>›</span>
                 </span>
               </button>
 
