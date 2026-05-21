@@ -13,7 +13,7 @@ import { GamificationSettings } from '../gamification/GamificationSettings';
 import { TelemetrySettingsSection } from './TelemetrySettingsSection';
 import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
 import { FeaturePreviewOverlay } from '../../components/FeaturePreviewOverlay';
-import { FeatureStatusBadge } from '../../components/FeatureStatusBadge';
+import { SettingsFeatureCard } from '../../components/SettingsFeatureCard';
 import { HolidayPreferencesSection, HOLIDAY_OPTIONS } from './HolidayPreferencesSection';
 import { CaseSubmissionModal } from '../cases/CaseSubmissionModal';
 import { MyCasesPanel } from '../cases/MyCasesPanel';
@@ -56,48 +56,6 @@ type MyAccountPanelProps = {
     message: string;
   } | null;
 };
-
-type SettingsModuleCardProps = {
-  icon: string;
-  title: string;
-  subtitle: string;
-  meta: string;
-  featureId?: FeatureAvailabilityId;
-  onClick: () => void;
-};
-
-function SettingsModuleCard({
-  icon,
-  title,
-  subtitle,
-  meta,
-  featureId,
-  onClick,
-}: SettingsModuleCardProps) {
-  const feature = featureId ? getFeatureAvailability(featureId) : null;
-  const className = `settings-module-card${feature?.status === 'demo' ? ' future-feature-card--demo' : ''}`;
-
-  return (
-    <button
-      type="button"
-      className={className}
-      onClick={onClick}
-      aria-label={`Open ${title}`}
-    >
-      <span className="settings-module-card__icon" aria-hidden="true">
-        {icon}
-      </span>
-      <span className="settings-module-card__content">
-        <span className="settings-module-card__title-row">
-          <span className="settings-module-card__title">{title}</span>
-          {feature ? <FeatureStatusBadge status={feature.status} className="settings-module-card__badge" /> : null}
-        </span>
-        <span className="settings-module-card__subtitle">{subtitle}</span>
-        <span className="settings-module-card__meta">{meta}</span>
-      </span>
-    </button>
-  );
-}
 
 function formatDate(value?: string | null, options?: Intl.DateTimeFormatOptions) {
   if (!value) return 'Not available';
@@ -698,7 +656,7 @@ export function MyAccountPanel({
           </p>
         </div>
         <div className="settings-modules__grid">
-          <SettingsModuleCard
+          <SettingsFeatureCard
             icon="🎊"
             title="Holiday Themes"
             subtitle="Seasonal moments and themed experiences."
@@ -706,7 +664,7 @@ export function MyAccountPanel({
             featureId="settings.holidayThemes"
             onClick={handleHolidayThemesClick}
           />
-          <SettingsModuleCard
+          <SettingsFeatureCard
             icon="🔔"
             title="Notifications"
             subtitle="Gentle habit and daily reminder preferences."
@@ -715,7 +673,7 @@ export function MyAccountPanel({
             onClick={handleNotificationsClick}
           />
           {showAdminTools ? (
-            <SettingsModuleCard
+            <SettingsFeatureCard
               icon="🔧"
               title="Advanced Tools"
               subtitle="Internal diagnostics, admin previews, and debug tools."
@@ -723,7 +681,7 @@ export function MyAccountPanel({
               onClick={handleAdvancedToolsClick}
             />
           ) : null}
-          <SettingsModuleCard
+          <SettingsFeatureCard
             icon="⚗️"
             title="Experimental Features"
             subtitle="Creator previews for ideas still in development."

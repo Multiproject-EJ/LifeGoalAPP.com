@@ -10,15 +10,16 @@ const FEATURE_STATUS_LABELS: Record<Exclude<FeatureStatus, 'live'>, string> = {
 
 interface FeatureStatusBadgeProps {
   status: FeatureStatus;
+  labelOverride?: string;
   className?: string;
 }
 
-export function FeatureStatusBadge({ status, className }: FeatureStatusBadgeProps) {
+export function FeatureStatusBadge({ status, labelOverride, className }: FeatureStatusBadgeProps) {
   if (status === 'live') {
     return null;
   }
 
-  const label = FEATURE_STATUS_LABELS[status];
+  const label = labelOverride ?? FEATURE_STATUS_LABELS[status];
   const classNames = ['feature-status-badge', `feature-status-badge--${status}`, className]
     .filter(Boolean)
     .join(' ');
