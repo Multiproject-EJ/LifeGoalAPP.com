@@ -147,19 +147,12 @@
 
 .game-board-overlay__middle--minimal {
   justify-content: center;
-  align-items: flex-end;
-  padding: 0.5rem 0.5rem calc(env(safe-area-inset-bottom, 0px) + 6.75rem);
-}
-
-.game-board-overlay__middle--minimal .game-board-overlay__play-button {
-  position: relative;
-  left: auto;
-  top: auto;
-  transform: none;
+  align-items: center;
+  padding: 0.5rem;
 }
 
 .game-board-overlay__middle--minimal .game-board-overlay__play-button:active {
-  transform: scale(0.98);
+  transform: translate(-50%, -50%) scale(0.98);
 }
 /* Side Icons (Left and Right) */
 .game-board-overlay__side-icons {
