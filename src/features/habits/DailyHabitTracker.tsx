@@ -446,6 +446,7 @@ type TodayWinsTier = 'one_star' | 'two_star' | 'three_star';
 
 type QuickJournalDraft = {
   isOpen: boolean;
+  isPrivate?: boolean;
   mode: QuickJournalMode;
   morning: string;
   day: string;
@@ -871,6 +872,7 @@ export function DailyHabitTracker({
   const [quickJournalMood, setQuickJournalMood] = useState(QUICK_JOURNAL_PULSE_DEFAULTS.mood);
   const [quickJournalFocus, setQuickJournalFocus] = useState(QUICK_JOURNAL_PULSE_DEFAULTS.focus);
   const [quickJournalStress, setQuickJournalStress] = useState(QUICK_JOURNAL_PULSE_DEFAULTS.stress);
+  const [quickJournalIsPrivate, setQuickJournalIsPrivate] = useState(true);
   const [quickDreamTitle, setQuickDreamTitle] = useState(QUICK_JOURNAL_DREAM_DEFAULTS.title);
   const [quickDreamSymbols, setQuickDreamSymbols] = useState(QUICK_JOURNAL_DREAM_DEFAULTS.symbols);
   const [quickDreamEmotions, setQuickDreamEmotions] = useState(QUICK_JOURNAL_DREAM_DEFAULTS.emotions);
@@ -2073,6 +2075,7 @@ export function DailyHabitTracker({
       setQuickJournalMood(draft.mood ?? QUICK_JOURNAL_PULSE_DEFAULTS.mood);
       setQuickJournalFocus(draft.focus ?? QUICK_JOURNAL_PULSE_DEFAULTS.focus);
       setQuickJournalStress(draft.stress ?? QUICK_JOURNAL_PULSE_DEFAULTS.stress);
+      setQuickJournalIsPrivate(draft.isPrivate ?? true);
       setQuickDreamTitle(draft.dreamTitle ?? QUICK_JOURNAL_DREAM_DEFAULTS.title);
       setQuickDreamSymbols(draft.dreamSymbols ?? QUICK_JOURNAL_DREAM_DEFAULTS.symbols);
       setQuickDreamEmotions(draft.dreamEmotions ?? QUICK_JOURNAL_DREAM_DEFAULTS.emotions);
@@ -2110,6 +2113,7 @@ export function DailyHabitTracker({
       setQuickJournalMood(QUICK_JOURNAL_PULSE_DEFAULTS.mood);
       setQuickJournalFocus(QUICK_JOURNAL_PULSE_DEFAULTS.focus);
       setQuickJournalStress(QUICK_JOURNAL_PULSE_DEFAULTS.stress);
+      setQuickJournalIsPrivate(true);
       setQuickDreamTitle(QUICK_JOURNAL_DREAM_DEFAULTS.title);
       setQuickDreamSymbols(QUICK_JOURNAL_DREAM_DEFAULTS.symbols);
       setQuickDreamEmotions(QUICK_JOURNAL_DREAM_DEFAULTS.emotions);
@@ -3700,6 +3704,7 @@ export function DailyHabitTracker({
       mood: quickJournalMood,
       focus: quickJournalFocus,
       stress: quickJournalStress,
+      isPrivate: quickJournalIsPrivate,
       dreamTitle: quickDreamTitle,
       dreamSymbols: quickDreamSymbols,
       dreamEmotions: quickDreamEmotions,
@@ -3723,6 +3728,7 @@ export function DailyHabitTracker({
     quickJournalMood,
     quickJournalFocus,
     quickJournalStress,
+    quickJournalIsPrivate,
     quickDreamTitle,
     quickDreamSymbols,
     quickDreamEmotions,
@@ -7438,6 +7444,7 @@ export function DailyHabitTracker({
         mood: quickJournalMood,
         focus: quickJournalFocus,
         stress: quickJournalStress,
+        isPrivate: quickJournalIsPrivate,
         dreamTitle: quickDreamTitle,
         dreamSymbols: quickDreamSymbols,
         dreamEmotions: quickDreamEmotions,
@@ -7543,7 +7550,7 @@ export function DailyHabitTracker({
           mood: quickJournalMode === 'dream' ? dreamToneMeta?.mood ?? null : null,
           linked_goal_ids: null,
           linked_habit_ids: null,
-          is_private: true,
+          is_private: quickJournalIsPrivate,
           attachments: payloadAttachments,
           type: quickJournalMode === 'dream' ? 'dream' : 'quick',
           mood_score: quickJournalMode === 'dream' ? dreamToneMeta?.moodScore ?? null : null,
@@ -8633,6 +8640,19 @@ export function DailyHabitTracker({
                         {quickJournalError}
                       </p>
                     ) : null}
+                    <div className="habit-quick-journal__privacy">
+                      <label className="habit-quick-journal__privacy-toggle">
+                        <input
+                          type="checkbox"
+                          checked={quickJournalIsPrivate}
+                          onChange={(event) => setQuickJournalIsPrivate(event.target.checked)}
+                        />
+                        <span>Private</span>
+                      </label>
+                      <p className="habit-quick-journal__privacy-helper">
+                        Private entries stay in your journal but are excluded from AI Coach.
+                      </p>
+                    </div>
                     <div className="habit-quick-journal__actions">
                       <button
                         type="button"
@@ -8667,6 +8687,7 @@ export function DailyHabitTracker({
                           setQuickJournalMood(QUICK_JOURNAL_PULSE_DEFAULTS.mood);
                           setQuickJournalFocus(QUICK_JOURNAL_PULSE_DEFAULTS.focus);
                           setQuickJournalStress(QUICK_JOURNAL_PULSE_DEFAULTS.stress);
+                          setQuickJournalIsPrivate(true);
                           setQuickDreamTitle(QUICK_JOURNAL_DREAM_DEFAULTS.title);
                           setQuickDreamSymbols(QUICK_JOURNAL_DREAM_DEFAULTS.symbols);
                           setQuickDreamEmotions(QUICK_JOURNAL_DREAM_DEFAULTS.emotions);

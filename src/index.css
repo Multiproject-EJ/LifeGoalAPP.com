@@ -9312,6 +9312,28 @@ html.platform-ipad .workspace-shell__menu-edge {
   text-align: right;
 }
 
+.habit-quick-journal__privacy {
+  margin-top: 0.25rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(14, 116, 144, 0.2);
+  background: rgba(240, 249, 255, 0.65);
+}
+
+.habit-quick-journal__privacy-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.habit-quick-journal__privacy-helper {
+  margin: 0.35rem 0 0;
+  color: #475569;
+  font-size: 0.87rem;
+}
+
 .habit-quick-journal__actions {
   display: flex;
   gap: 0.6rem;
