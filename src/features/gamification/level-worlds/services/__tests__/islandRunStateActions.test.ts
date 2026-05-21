@@ -175,6 +175,9 @@ function makeSpaceExcavatorProgress(
     objectIcon: '🧪',
     objectTileIds: [1, 2, 3],
     bonusBombTileIds: [12],
+    hardTileIds: [],
+    crackedTileIds: [],
+    hardTileHitCountByTileId: {},
     triggeredBonusBombTileIds: [],
     revealedObjectTileIds: [],
     dugTileIds: [],
@@ -816,6 +819,58 @@ export const islandRunStateActionsTests: TestCase[] = [
   },
 
   {
+    name: 'Space Excavator hard tile first hit spends one ticket, cracks, and does not fully reveal',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      const eventId = 'space_excavator:event-hard-first';
+      const hardTileId = 14;
+      seedState({
+        runtimeVersion: 10,
+        minigameTicketsByEvent: { [eventId]: 2 },
+        spaceExcavatorProgressByEvent: {
+          [eventId]: makeSpaceExcavatorProgress(eventId, { hardTileIds: [hardTileId] }),
+        },
+      });
+      const firstHit = applySpaceExcavatorDig({ session, client: null, eventId, tileId: hardTileId });
+      assertEqual(firstHit.ok, true, 'first hard-tile hit should succeed');
+      assertEqual(firstHit.record.minigameTicketsByEvent[eventId], 1, 'first hard-tile hit should spend one ticket');
+      assertDeepEqual(firstHit.revealedTileIds, [], 'first hard-tile hit should not reveal the tile');
+      const progress = firstHit.record.spaceExcavatorProgressByEvent[eventId];
+      assertDeepEqual(progress.dugTileIds, [], 'first hard-tile hit should not mark tile dug yet');
+      assertDeepEqual(progress.crackedTileIds, [hardTileId], 'first hard-tile hit should mark tile cracked');
+      assertEqual(progress.hardTileHitCountByTileId?.[hardTileId], 1, 'first hard-tile hit count should be 1');
+    },
+  },
+
+  {
+    name: 'Space Excavator hard tile second hit spends one ticket and reveals',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      const eventId = 'space_excavator:event-hard-second';
+      const hardTileId = 14;
+      seedState({
+        runtimeVersion: 10,
+        minigameTicketsByEvent: { [eventId]: 3 },
+        spaceExcavatorProgressByEvent: {
+          [eventId]: makeSpaceExcavatorProgress(eventId, { hardTileIds: [hardTileId] }),
+        },
+      });
+      const firstHit = applySpaceExcavatorDig({ session, client: null, eventId, tileId: hardTileId });
+      assertEqual(firstHit.ok, true, 'first hit should succeed');
+      const secondHit = applySpaceExcavatorDig({ session, client: null, eventId, tileId: hardTileId });
+      assertEqual(secondHit.ok, true, 'second hard-tile hit should succeed');
+      assertEqual(secondHit.record.minigameTicketsByEvent[eventId], 1, 'two hard-tile hits should spend two tickets');
+      assertDeepEqual(secondHit.revealedTileIds, [hardTileId], 'second hard-tile hit should reveal tile');
+      const progress = secondHit.record.spaceExcavatorProgressByEvent[eventId];
+      assert(progress.dugTileIds.includes(hardTileId), 'second hard-tile hit should mark tile dug');
+      assertDeepEqual(progress.crackedTileIds, [], 'second hard-tile hit should clear cracked marker');
+      assertEqual(progress.hardTileHitCountByTileId?.[hardTileId], 2, 'second hard-tile hit count should be 2');
+    },
+  },
+
+  {
     name: 'Space Excavator bonus bomb spends one ticket and reveals nearby tiles for free',
     run: () => {
       resetAll();
@@ -827,6 +882,7 @@ export const islandRunStateActionsTests: TestCase[] = [
         treasureTileIds: [7, 8, 24],
         treasureCount: 3,
         bonusBombTileIds: [bombTileId],
+        hardTileIds: [6],
       });
       seedState({
         runtimeVersion: 10,
@@ -847,7 +903,7 @@ export const islandRunStateActionsTests: TestCase[] = [
         tileId: bombTileId,
       });
 
-      const expectedRevealedTileIds = [bombTileId, ...getAdjacentTileIdsForTest(bombTileId, 5)].sort((a, b) => a - b);
+      const expectedRevealedTileIds = [bombTileId, ...getAdjacentTileIdsForTest(bombTileId, 5).filter((tileId) => tileId !== 6)].sort((a, b) => a - b);
       const progress = dig.record.spaceExcavatorProgressByEvent[eventId];
       assertEqual(dig.ok, true, 'bomb tile dig should succeed');
       assertEqual(dig.triggeredBomb, true, 'bomb tile dig should report triggered bomb metadata');
@@ -861,6 +917,9 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertDeepEqual(progress.revealedObjectTileIds, [7, 8], 'bomb-revealed relic pieces should count toward object progress');
       assertDeepEqual(progress.foundTreasureTileIds, [7, 8], 'bomb-revealed relic pieces should count toward found treasure progress');
       assertDeepEqual(progress.triggeredBonusBombTileIds, [bombTileId], 'triggered bomb should persist under progress');
+      assertEqual(progress.hardTileHitCountByTileId?.[6], 1, 'bomb should apply one hit to adjacent hard tiles');
+      assert(progress.crackedTileIds?.includes(6), 'bomb should crack adjacent hard tiles on first hit');
+      assertEqual(progress.dugTileIds.includes(6), false, 'bomb should not fully reveal adjacent hard tile on first hit');
       assertEqual(progress.status, 'active', 'board should stay active until all relic pieces are found');
 
       const duplicateDig = applySpaceExcavatorDig({

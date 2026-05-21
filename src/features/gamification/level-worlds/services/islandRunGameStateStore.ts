@@ -176,6 +176,9 @@ export interface SpaceExcavatorProgressEntry {
   objectIcon?: string;
   objectTileIds: number[];
   bonusBombTileIds: number[];
+  hardTileIds?: number[];
+  crackedTileIds?: number[];
+  hardTileHitCountByTileId?: Record<number, number>;
   triggeredBonusBombTileIds: number[];
   revealedObjectTileIds: number[];
   dugTileIds: number[];
@@ -1406,6 +1409,23 @@ function sanitizeSpaceExcavatorProgressByEvent(value: unknown, fallback: Record<
       : treasureTileIds;
     const bonusBombTileIds = sanitizeSpaceExcavatorTileIds(raw.bonusBombTileIds)
       .filter((tileId) => tileId < Math.max(1, Math.floor(raw.boardSize ?? 5)) ** 2);
+    const hardTileIds = sanitizeSpaceExcavatorTileIds(raw.hardTileIds)
+      .filter((tileId) => tileId < Math.max(1, Math.floor(raw.boardSize ?? 5)) ** 2)
+      .filter((tileId) => !objectTileIds.includes(tileId) && !bonusBombTileIds.includes(tileId));
+    const hardTileSet = new Set(hardTileIds);
+    const rawHardHitByTileId = raw.hardTileHitCountByTileId && typeof raw.hardTileHitCountByTileId === 'object' && !Array.isArray(raw.hardTileHitCountByTileId)
+      ? raw.hardTileHitCountByTileId as Record<string, unknown>
+      : {};
+    const hardTileHitCountByTileId = Object.entries(rawHardHitByTileId).reduce<Record<number, number>>((acc, [tileIdKey, rawHitCount]) => {
+      const tileId = Math.max(0, Math.floor(Number(tileIdKey)));
+      if (!hardTileSet.has(tileId)) return acc;
+      const parsed = Number.isFinite(rawHitCount) ? Math.max(0, Math.min(2, Math.floor(rawHitCount as number))) : 0;
+      if (parsed > 0) acc[tileId] = parsed;
+      return acc;
+    }, {});
+    const crackedTileIds = sanitizeSpaceExcavatorTileIds(raw.crackedTileIds)
+      .filter((tileId) => hardTileSet.has(tileId))
+      .filter((tileId) => (hardTileHitCountByTileId[tileId] ?? 0) > 0 && (hardTileHitCountByTileId[tileId] ?? 0) < 2);
     const bonusBombTileIdSet = new Set(bonusBombTileIds);
     const objectTileIdSet = new Set(objectTileIds);
     const triggeredBonusBombTileIds = sanitizeSpaceExcavatorTileIds(raw.triggeredBonusBombTileIds)
@@ -1431,6 +1451,9 @@ function sanitizeSpaceExcavatorProgressByEvent(value: unknown, fallback: Record<
       objectIcon: typeof raw.objectIcon === 'string' ? raw.objectIcon : undefined,
       objectTileIds,
       bonusBombTileIds,
+      hardTileIds,
+      crackedTileIds,
+      hardTileHitCountByTileId,
       triggeredBonusBombTileIds,
       revealedObjectTileIds,
       dugTileIds,

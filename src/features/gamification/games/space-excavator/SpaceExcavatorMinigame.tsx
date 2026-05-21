@@ -11,7 +11,7 @@ import {
 } from '../../level-worlds/services/spaceExcavatorRewardUx';
 import './spaceExcavator.css';
 
-type Tile = { dug: boolean; objectPiece: boolean; bonusBomb: boolean; clueType: SpaceExcavatorClueResult['type'] };
+type Tile = { dug: boolean; objectPiece: boolean; bonusBomb: boolean; hard: boolean; cracked: boolean; clueType: SpaceExcavatorClueResult['type'] };
 
 type SpaceExcavatorProgressStatus = 'active' | 'board_complete' | 'completed';
 type SpaceExcavatorProgress = {
@@ -25,6 +25,8 @@ type SpaceExcavatorProgress = {
   objectIcon?: string;
   objectTileIds?: number[];
   bonusBombTileIds?: number[];
+  hardTileIds?: number[];
+  crackedTileIds?: number[];
   triggeredBonusBombTileIds?: number[];
   revealedObjectTileIds?: number[];
   dugTileIds: number[];
@@ -91,20 +93,26 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const activeProgress = progress ?? initial ?? null;
   const activeObjectTileIds = useMemo(() => getProgressObjectTileIds(activeProgress), [activeProgress]);
   const activeBonusBombTileIds = useMemo(() => getProgressBonusBombTileIds(activeProgress), [activeProgress]);
+  const activeHardTileIds = useMemo(() => activeProgress?.hardTileIds ?? [], [activeProgress]);
+  const activeCrackedTileIds = useMemo(() => activeProgress?.crackedTileIds ?? [], [activeProgress]);
   const tiles = useMemo<Tile[]>(() => {
     const activeDugTileIds = activeProgress?.dugTileIds ?? [];
     return Array.from({ length: size * size }, (_, i) => {
       const dug = activeDugTileIds.includes(i);
       const objectPiece = activeObjectTileIds.includes(i);
       const bonusBomb = activeBonusBombTileIds.includes(i);
+      const hard = activeHardTileIds.includes(i);
+      const cracked = activeCrackedTileIds.includes(i);
       return {
         dug,
         objectPiece,
         bonusBomb,
+        hard,
+        cracked,
         clueType: dug ? resolveSpaceExcavatorClue({ tileId: i, boardSize: size, objectTileIds: activeObjectTileIds }).type : 'cold',
       };
     });
-  }, [activeBonusBombTileIds, activeObjectTileIds, activeProgress, size]);
+  }, [activeBonusBombTileIds, activeCrackedTileIds, activeHardTileIds, activeObjectTileIds, activeProgress, size]);
   const [ticketsRemaining, setTicketsRemaining] = useState<number>(() => Math.max(0, Math.floor(config.getTicketsRemaining?.() ?? 0)));
   const [finished, setFinished] = useState(false);
   const [sentResult, setSentResult] = useState(false);
@@ -184,6 +192,16 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
         setLatestClue(null);
         playIslandRunSound('boss_trial_resolve');
         triggerIslandRunHaptic('boss_trial_resolve');
+      } else if (spend.revealedTileIds?.length === 0) {
+        setLatestBombFeedback(null);
+        setLatestClue({
+          type: 'cold',
+          tone: 'cold',
+          label: 'Hard Block Cracked',
+          shortMessage: 'One more dig will fully open this tile.',
+        });
+        playIslandRunSound('stop_land');
+        triggerIslandRunHaptic('stop_land');
       } else {
         setLatestBombFeedback(null);
         const clue = resolveSpaceExcavatorClue({
@@ -379,13 +397,13 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
             <button
               key={i}
               type="button"
-              className={`space-excavator__tile ${tile.dug ? (tile.objectPiece ? 'space-excavator__tile--object' : tile.bonusBomb ? 'space-excavator__tile--bomb' : `space-excavator__tile--dug space-excavator__tile--${tile.clueType}`) : ''}`}
+              className={`space-excavator__tile ${tile.hard ? 'space-excavator__tile--hard' : ''} ${tile.cracked ? 'space-excavator__tile--cracked' : ''} ${tile.dug ? (tile.objectPiece ? 'space-excavator__tile--object' : tile.bonusBomb ? 'space-excavator__tile--bomb' : `space-excavator__tile--dug space-excavator__tile--${tile.clueType}`) : ''}`}
               onClick={() => onDig(i)}
               disabled={finished || boardComplete || tile.dug}
               aria-label={`Tile ${i + 1}`}
               data-last-dug={lastDugTileId === i ? 'true' : undefined}
             >
-              {tile.dug ? (tile.objectPiece ? (progress?.objectIcon ?? initial?.objectIcon ?? '✦') : tile.bonusBomb ? '💣' : <span className="space-excavator__tile-marker" aria-hidden="true" />) : <span className="space-excavator__tile-cover" aria-hidden="true" />}
+              {tile.dug ? (tile.objectPiece ? (progress?.objectIcon ?? initial?.objectIcon ?? '✦') : tile.bonusBomb ? '💣' : <span className="space-excavator__tile-marker" aria-hidden="true" />) : tile.cracked ? <span className="space-excavator__tile-crack" aria-hidden="true">✶</span> : <span className="space-excavator__tile-cover" aria-hidden="true" />}
             </button>
           ))}
         </div>
