@@ -23,11 +23,9 @@ function getActorAwareStatusLabel(
   feature: FeatureAvailability,
   actorContext?: SettingsFeatureCardActorContext,
 ) {
-  if (!actorContext) return undefined;
+  if (!actorContext?.isAdminOrCreator) return undefined;
 
-  return actorContext.isAdminOrCreator
-    ? feature.adminLabel ?? feature.publicLabel
-    : feature.publicLabel;
+  return feature.adminLabel ?? feature.publicLabel;
 }
 
 export function SettingsFeatureCard({
