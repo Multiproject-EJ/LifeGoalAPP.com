@@ -52,7 +52,7 @@ export function getConflictSurfaceConfig(surface: AppSurface): ConflictSurfaceCo
 
 function mapPeaceBetweenRecommendation(item: ConflictRecommendationItem): ConflictRecommendationItem {
   const mapping: Record<string, { href: string; ctaLabel: string }> = {
-    '#breathing-space': { href: '/conflict/new?step=grounding', ctaLabel: 'Start Calm Reset' },
+    '#breathing-space': { href: '/conflict/new?step=grounding', ctaLabel: 'Quick 3-minute reset' },
     '#habits': { href: '/conflict/new?step=repair-plan', ctaLabel: 'Choose One Practice' },
     '#goals': { href: '/conflict/new?step=repair-plan', ctaLabel: 'Set One Shared Goal' },
     '#journal': { href: '/conflict/new?step=reflection', ctaLabel: 'Continue Reflection' },
@@ -97,9 +97,9 @@ export function buildFallbackInnerRecommendationsForSurface(
   if (/(anxious|stress|overwhelm|panic|pressure|tired|burnout)/.test(combined)) {
     picks.push({
       id: 'breathing_reset',
-      title: 'Reset your nervous system first',
-      reason: 'Your reflection shows high pressure. A short regulation reset should come before strategy.',
-      ctaLabel: 'Start Breathing Space',
+      title: 'BREATHING SPACE',
+      reason: 'Quick 3-minute reset.',
+      ctaLabel: 'Quick 3-minute reset',
       href: '#breathing-space',
     });
   }

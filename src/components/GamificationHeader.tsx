@@ -115,11 +115,11 @@ export function GamificationHeader({ profile, levelInfo, session, onLevelClick }
             <span className="gamification-stat__label">Gold</span>
           </div>
 
-          {/* Zen Tokens */}
+          {/* Lotus Flowers */}
           <div className="gamification-stat">
             <span className="gamification-stat__icon">🪷</span>
             <span className="gamification-stat__value">{zenTokens}</span>
-            <span className="gamification-stat__label">Zen</span>
+            <span className="gamification-stat__label">Lotus</span>
           </div>
 
           {/* Streak Freezes */}

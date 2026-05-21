@@ -62,8 +62,8 @@ const MOBILE_TAB_OPTIONS: Record<
     icon: '🌬️',
     label: 'Focus Breathing',
     uppercaseLabel: 'FOCUS BREATHING',
-    launchTitle: 'FOCUS RESET',
-    launchSubtitle: 'Breathing Space',
+    launchTitle: 'QUICK RECHARGE',
+    launchSubtitle: '3-minute breathing break',
     iconImageSrc: '/icons/Energy/focus_breathe.webp',
   },
   meditation: {
@@ -82,7 +82,7 @@ const MOBILE_TAB_OPTIONS: Record<
     launchSubtitle: 'Peace Between',
     iconImageSrc: '/icons/Energy/peace_between.webp',
   },
-  yoga: { icon: '🧘‍♀️', label: 'Yoga', uppercaseLabel: 'YOGA' },
+  yoga: { icon: '🧘‍♀️', label: 'Flexibility', uppercaseLabel: 'FLEXIBILITY' },
   food: { icon: '🥗', label: 'Food', uppercaseLabel: 'FOOD' },
   exercise: { icon: '🏋️', label: 'Exercise', uppercaseLabel: 'EXERCISE' },
 };
@@ -313,7 +313,7 @@ export function BreathingSpace({
           'Breathing session reward'
         );
         if (zenAwardResult.error) {
-          console.error('Failed to award zen tokens for breathing session:', zenAwardResult.error);
+          console.error('Failed to award Lotus Flowers for breathing session:', zenAwardResult.error);
         }
         await recordActivity();
         await refreshProfile();
@@ -392,7 +392,7 @@ export function BreathingSpace({
           'Guided meditation reward'
         );
         if (zenAwardResult.error) {
-          console.error('Failed to award zen tokens for meditation session:', zenAwardResult.error);
+          console.error('Failed to award Lotus Flowers for meditation session:', zenAwardResult.error);
         }
         await recordActivity();
         await refreshProfile();
@@ -581,7 +581,7 @@ export function BreathingSpace({
           <div className="breathing-space__card breathing-space__section breathing-space__section--yoga">
             <div className="breathing-space__card-header">
               <span className="breathing-space__card-icon">🧘‍♀️</span>
-              <h3 className="breathing-space__card-title">Yoga Reset</h3>
+              <h3 className="breathing-space__card-title">Flexibility Reset</h3>
             </div>
             <p className="breathing-space__card-description">
               Slow down with a grounding flow designed for calm, stretch, and balance.
@@ -782,7 +782,7 @@ export function BreathingSpace({
         {canRenderYoga ? (
           <div className="breathing-space__library breathing-space__section breathing-space__section--yoga">
             <div className="breathing-space__library-header">
-              <h3 className="breathing-space__library-title">Yoga Sessions</h3>
+                <h3 className="breathing-space__library-title">Flexibility Sessions</h3>
             </div>
             <div className="breathing-space__button-grid">
               {[

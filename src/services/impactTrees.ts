@@ -1,7 +1,13 @@
 import { getBalanceWeekId } from './balanceScore';
 import { recordTelemetryEvent } from './telemetry';
 
-export type ImpactTreeSource = 'weekly_closure' | 'level_up' | 'streak_milestone' | 'seasonal_event' | 'manual';
+export type ImpactTreeSource =
+  | 'weekly_closure'
+  | 'daily_watering'
+  | 'level_up'
+  | 'streak_milestone'
+  | 'seasonal_event'
+  | 'manual';
 
 export type ImpactTreeEntry = {
   id: string;
@@ -258,6 +264,42 @@ export function awardWeeklyClosureTree(
   const summary = getImpactTreeLedger(userId);
 
   return { awarded: true, entry, entries: summary.entries, total: summary.total };
+}
+
+export function awardDailyTreeWatering(
+  userId: string,
+  referenceDate: Date,
+): {
+  entry: ImpactTreeEntry;
+  entries: ImpactTreeEntry[];
+  total: number;
+} {
+  const ledger = readLedger(userId);
+  const entry: ImpactTreeEntry = {
+    id: createId(),
+    date: referenceDate.toISOString(),
+    source: 'daily_watering',
+    amount: 1,
+    notes: 'Daily Wisdom Tree watering completed.',
+    partnerBatchId: null,
+  };
+
+  const nextEntries = [entry, ...ledger];
+  writeLedger(userId, nextEntries);
+  writeCelebration(userId, entry);
+
+  void recordTelemetryEvent({
+    userId,
+    eventType: 'tree_of_life_awarded',
+    metadata: {
+      source: 'daily_watering',
+      entryId: entry.id,
+      amount: entry.amount,
+    },
+  });
+
+  const summary = getImpactTreeLedger(userId);
+  return { entry, entries: summary.entries, total: summary.total };
 }
 
 export function awardLevelUpTreeMilestones(

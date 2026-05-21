@@ -120,6 +120,7 @@ import { fetchXPTransactions } from '../../services/gamification';
 import { fetchZenTokenTransactions } from '../../services/zenGarden';
 import { getRewardHistory } from '../../services/gameRewards';
 import { awardDailyTreatDice } from '../../services/dailyTreats';
+import { awardDailyWisdomTreeWatering } from '../../services/dailyTreeWatering';
 import { createDicePackCheckoutSession } from '../../services/billing';
 import {
   initiateMinigameTicketCheckout,
@@ -2746,7 +2747,7 @@ export function DailyHabitTracker({
       },
       {
         id: 'zen_tree_water',
-        label: 'Water Zen Tree',
+        label: 'Water Wisdom Tree',
         icon: '🌳',
         expiresAtMs: nextUtcMidnight,
         badgeLabelOverride: hasClaimedZenTreeToday ? '✓ Done' : 'Claim',
@@ -2804,12 +2805,12 @@ export function DailyHabitTracker({
       isClaimed: hasClaimedZenTreeToday,
       isClaiming: isZenTreeClaiming,
       inFlightRef: zenTreeClaimInFlightRef,
-      award: () => awardDailyTreatDice({
-        userId: session.user.id,
-        diceAmount: 15,
-        sourceLabel: 'Water the Zen Tree',
-        islandRunSession: session,
-      }),
+      award: () => {
+        awardDailyWisdomTreeWatering({
+          userId: session.user.id,
+          islandRunSession: session,
+        });
+      },
       markClaimed: () => {
         if (typeof window !== 'undefined') {
           localStorage.setItem(zenTreeClaimedStorageKey, '1');
@@ -2819,7 +2820,7 @@ export function DailyHabitTracker({
       closeModal: () => setIsZenTreeModalOpen(false),
       setClaiming: setIsZenTreeClaiming,
       setError: setZenTreeClaimError,
-      errorMessage: 'Unable to water the Zen Tree. Please try again.',
+      errorMessage: 'Unable to water the Wisdom Tree. Please try again.',
     });
   }, [hasClaimedZenTreeToday, isZenTreeClaiming, zenTreeClaimedStorageKey, session]);
 
@@ -3078,7 +3079,7 @@ export function DailyHabitTracker({
       className="habit-day-nav__vision-modal-backdrop"
       role="dialog"
       aria-modal="true"
-      aria-label="Water the Zen Tree"
+      aria-label="Water the Wisdom Tree"
       onClick={() => setIsZenTreeModalOpen(false)}
     >
       <div
@@ -3089,14 +3090,14 @@ export function DailyHabitTracker({
           type="button"
           className="habit-day-nav__vision-modal-close"
           onClick={() => setIsZenTreeModalOpen(false)}
-          aria-label="Close zen tree"
+          aria-label="Close wisdom tree"
         >
           ×
         </button>
         <div className="habit-day-nav__todays-offer-body">
           <p className="habit-day-nav__todays-offer-icon" aria-hidden="true">🌳</p>
-          <p className="habit-day-nav__todays-offer-title">Water the Zen Tree</p>
-          <p className="habit-day-nav__todays-offer-subtitle">A moment of care. +15 🎲 dice reward.</p>
+              <p className="habit-day-nav__todays-offer-title">Water the Wisdom Tree</p>
+              <p className="habit-day-nav__todays-offer-subtitle">A moment of care. +15 🎲 dice and +1 tree growth.</p>
           <button
             type="button"
             className="habit-day-nav__todays-offer-buy"

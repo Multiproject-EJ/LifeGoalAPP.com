@@ -314,12 +314,12 @@ export function TimerTab({ onNavigateToActions, userId, launchContext, onLaunchC
       `Meditation timer completed (${Math.round(session.durationSeconds / 60)} min)`
     ).then(({ error }) => {
       if (error) {
-        setStatusMessage('Timer completed. Could not award lotus tokens right now.');
+        setStatusMessage('Timer completed. Could not award Lotus Flowers right now.');
         return;
       }
 
       setSession((current) => ({ ...current, rewarded: true }));
-      setStatusMessage(`Timer completed. You earned ${rewardAmount} 🪷 lotus tokens.`);
+      setStatusMessage(`Timer completed. You earned ${rewardAmount} 🪷 Lotus Flowers.`);
     });
   }, [session.status, session.rewarded, session.sourceType, session.durationSeconds, session.sourceId, userId]);
 
@@ -838,7 +838,7 @@ export function TimerTab({ onNavigateToActions, userId, launchContext, onLaunchC
         </label>
 
         {session.sourceType === 'meditation' && (
-          <p className="timer-tab__lotus-note">🪷 Meditation timers award lotus currency on completion.</p>
+          <p className="timer-tab__lotus-note">🪷 Meditation timers award Lotus Flowers on completion.</p>
         )}
 
         <div className="timer-tab__field" aria-label="Timer source analytics">

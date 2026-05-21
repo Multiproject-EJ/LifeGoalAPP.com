@@ -8,6 +8,10 @@ export const IMPACT_TREE_SOURCE_CONFIG: Record<
     label: 'Weekly closure watering',
     fallbackDetail: 'Weekly closure ritual completed.',
   },
+  daily_watering: {
+    label: 'Daily Wisdom Tree watering',
+    fallbackDetail: 'Daily water-tree action completed.',
+  },
   level_up: {
     label: 'Level-up milestone',
     fallbackDetail: 'New level reached.',
