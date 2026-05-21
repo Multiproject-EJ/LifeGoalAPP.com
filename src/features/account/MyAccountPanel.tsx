@@ -86,6 +86,10 @@ export function MyAccountPanel({
   const [folder1Open, setFolder1Open] = useState(false);
   const [folder2Open, setFolder2Open] = useState(false);
   const [holidayFolderOpen, setHolidayFolderOpen] = useState(false);
+  const [appearanceFolderOpen, setAppearanceFolderOpen] = useState(false);
+  const [hapticsFolderOpen, setHapticsFolderOpen] = useState(false);
+  const [menuDisplayFolderOpen, setMenuDisplayFolderOpen] = useState(false);
+  const [birthdayGiftFolderOpen, setBirthdayGiftFolderOpen] = useState(false);
   const [experimentalFolderOpen, setExperimentalFolderOpen] = useState(false);
   const [adminInboxOpen, setAdminInboxOpen] = useState(false);
   const [savingPreference, setSavingPreference] = useState(false);
@@ -377,10 +381,6 @@ export function MyAccountPanel({
           You’re exploring demo data. Sign in to sync with your Supabase project.
         </p>
       ) : null}
-      <section className="account-panel__card" aria-labelledby="account-theme">
-        <p className="account-panel__eyebrow">Appearance</p>
-        <ThemeSelector />
-      </section>
       <div className="account-panel__summary-grid">
         {onLaunchOnboarding ? (
           <section className="account-panel__card" aria-labelledby="account-onboarding">
@@ -533,118 +533,6 @@ export function MyAccountPanel({
           </div>
         </section>
 
-        <section className="account-panel__card" aria-labelledby="account-haptics">
-          <p className="account-panel__eyebrow">Haptic feedback</p>
-          <h3 id="account-haptics">Vibration intensity</h3>
-          <p className="account-panel__hint">
-            Tune how much vibration feedback you receive across habits, rewards, and timer/game completions.
-          </p>
-          <p className="account-panel__hint" style={{ marginTop: '0.35rem' }}>
-            Off = no vibration, Subtle = lighter pulses, Balanced = full recommended feedback.
-          </p>
-          <div className="account-panel__actions-row" role="radiogroup" aria-label="Haptic feedback mode">
-            <button
-              type="button"
-              className={`btn ${hapticMode === 'off' ? 'btn--primary' : ''}`}
-              aria-pressed={hapticMode === 'off'}
-              onClick={() => {
-                setHapticMode('off');
-                setHapticModeState('off');
-              }}
-            >
-              Off
-            </button>
-            <button
-              type="button"
-              className={`btn ${hapticMode === 'subtle' ? 'btn--primary' : ''}`}
-              aria-pressed={hapticMode === 'subtle'}
-              onClick={() => {
-                setHapticMode('subtle');
-                setHapticModeState('subtle');
-              }}
-            >
-              Subtle
-            </button>
-            <button
-              type="button"
-              className={`btn ${hapticMode === 'balanced' ? 'btn--primary' : ''}`}
-              aria-pressed={hapticMode === 'balanced'}
-              onClick={() => {
-                setHapticMode('balanced');
-                setHapticModeState('balanced');
-              }}
-            >
-              Balanced
-            </button>
-          </div>
-          <p className="account-panel__saving-indicator" style={{ marginTop: '0.5rem' }}>
-            Active mode: {hapticMode === 'off' ? 'Off' : hapticMode === 'subtle' ? 'Subtle' : 'Balanced'}
-          </p>
-          <div className="account-panel__actions-row" style={{ marginTop: '0.5rem' }}>
-            <button
-              type="button"
-              className="btn"
-              onClick={() => triggerCompletionHaptic('light', { channel: 'navigation', minIntervalMs: 0 })}
-            >
-              Test vibration
-            </button>
-          </div>
-        </section>
-
-        <section className="account-panel__card" aria-labelledby="account-menu-icon">
-          <p className="account-panel__eyebrow">Menu Icon</p>
-          <h3 id="account-menu-icon">Display Preferences</h3>
-          <p className="account-panel__hint">
-            Choose whether to display your initials or the default icon in the main menu when signed in.
-          </p>
-          <div className="account-panel__toggle-row">
-            <label className="account-panel__toggle-label">
-              <input
-                type="checkbox"
-                checked={profile?.show_initials_in_menu ?? false}
-                onChange={(e) => handleToggleInitialsInMenu(e.target.checked)}
-                disabled={savingPreference || !profile?.full_name || isDemoExperience}
-                className="account-panel__toggle-input"
-              />
-              <span className="account-panel__toggle-text">
-                Show my initials ({userInitials || '--'}) in main menu
-              </span>
-            </label>
-            {savingPreference && <span className="account-panel__saving-indicator">Saving...</span>}
-          </div>
-          {!profile?.full_name && !isDemoExperience && (
-            <p className="account-panel__hint" style={{ marginTop: '0.5rem', color: 'var(--color-text-muted)' }}>
-              Set your name in the account details to enable this feature.
-            </p>
-          )}
-        </section>
-
-        <section className="account-panel__card" aria-labelledby="account-birthday-gift">
-          <p className="account-panel__eyebrow">Rewards</p>
-          <h3 id="account-birthday-gift">Birthday gift</h3>
-          <p className="account-panel__hint">
-            Opt in to receive a birthday gift worth 💎 1 diamond. Gifts are limited to one claim every 365 days even if your birthday date changes.
-          </p>
-          <div className="account-panel__toggle-row">
-            <label className="account-panel__toggle-label">
-              <input
-                type="checkbox"
-                checked={isBirthdayGiftEnabled}
-                onChange={(event) => handleToggleBirthdayGift(event.target.checked)}
-                disabled={savingPreference || isDemoExperience}
-                className="account-panel__toggle-input"
-              />
-              <span className="account-panel__toggle-text">Enable optional birthday gift</span>
-            </label>
-            {savingPreference && <span className="account-panel__saving-indicator">Saving...</span>}
-          </div>
-          <p className="account-panel__hint" style={{ marginTop: '0.5rem' }}>
-            Last claimed: {lastBirthdayGiftClaimedLabel}
-          </p>
-          <p className="account-panel__hint">
-            Next eligible claim window: {nextBirthdayGiftEligibleLabel}
-          </p>
-        </section>
       </div>
 
       <section className="account-panel__card settings-modules" aria-labelledby="settings-modules-heading">
@@ -654,6 +542,42 @@ export function MyAccountPanel({
           <p className="account-panel__hint">
             Choose a focused module to adjust seasonal experiences, reminders, and creator-only workspace tools.
           </p>
+        </div>
+        <div className="settings-modules__group" aria-label="Settings feature modules">
+          <div className="settings-modules__group-header">
+            <p className="settings-modules__group-eyebrow">Personalization</p>
+            <p className="settings-modules__group-hint">Live profile and comfort settings you can tune instantly.</p>
+          </div>
+        <div className="settings-modules__grid">
+          <SettingsFeatureCard
+            icon="🎨"
+            title="Appearance / Theme"
+            subtitle="Choose your active app theme and mode."
+            meta="LIVE • Theme controls"
+            onClick={() => setAppearanceFolderOpen(true)}
+          />
+          <SettingsFeatureCard
+            icon="📳"
+            title="Haptic feedback"
+            subtitle="Tune vibration intensity across the app."
+            meta="LIVE • Off / Subtle / Balanced"
+            onClick={() => setHapticsFolderOpen(true)}
+          />
+          <SettingsFeatureCard
+            icon="🪪"
+            title="Menu icon / Display preferences"
+            subtitle="Show initials or keep the default menu icon."
+            meta="LIVE • Profile display"
+            onClick={() => setMenuDisplayFolderOpen(true)}
+          />
+          <SettingsFeatureCard
+            icon="🎁"
+            title="Birthday gift"
+            subtitle="Manage your optional annual birthday reward."
+            meta="LIVE • Reward preference"
+            onClick={() => setBirthdayGiftFolderOpen(true)}
+          />
+        </div>
         </div>
         <div className="settings-modules__group" aria-label="Settings feature modules">
           <div className="settings-modules__group-header">
@@ -908,6 +832,86 @@ export function MyAccountPanel({
       ) : null}
 
       {/* Folder 2 Popup */}
+      <SettingsFolderPopup
+        isOpen={appearanceFolderOpen}
+        onClose={() => setAppearanceFolderOpen(false)}
+        title="Appearance / Theme"
+      >
+        <section className="account-panel__card" aria-labelledby="account-theme">
+          <p className="account-panel__eyebrow">Appearance</p>
+          <ThemeSelector />
+        </section>
+      </SettingsFolderPopup>
+
+      <SettingsFolderPopup
+        isOpen={hapticsFolderOpen}
+        onClose={() => setHapticsFolderOpen(false)}
+        title="Haptic feedback"
+      >
+        <section className="account-panel__card" aria-labelledby="account-haptics">
+          <p className="account-panel__eyebrow">Haptic feedback</p>
+          <h3 id="account-haptics">Vibration intensity</h3>
+          <p className="account-panel__hint">
+            Tune how much vibration feedback you receive across habits, rewards, and timer/game completions.
+          </p>
+          <p className="account-panel__hint" style={{ marginTop: '0.35rem' }}>
+            Off = no vibration, Subtle = lighter pulses, Balanced = full recommended feedback.
+          </p>
+          <div className="account-panel__actions-row" role="radiogroup" aria-label="Haptic feedback mode">
+            <button type="button" className={`btn ${hapticMode === 'off' ? 'btn--primary' : ''}`} aria-pressed={hapticMode === 'off'} onClick={() => { setHapticMode('off'); setHapticModeState('off'); }}>
+              Off
+            </button>
+            <button type="button" className={`btn ${hapticMode === 'subtle' ? 'btn--primary' : ''}`} aria-pressed={hapticMode === 'subtle'} onClick={() => { setHapticMode('subtle'); setHapticModeState('subtle'); }}>
+              Subtle
+            </button>
+            <button type="button" className={`btn ${hapticMode === 'balanced' ? 'btn--primary' : ''}`} aria-pressed={hapticMode === 'balanced'} onClick={() => { setHapticMode('balanced'); setHapticModeState('balanced'); }}>
+              Balanced
+            </button>
+          </div>
+          <p className="account-panel__saving-indicator" style={{ marginTop: '0.5rem' }}>
+            Active mode: {hapticMode === 'off' ? 'Off' : hapticMode === 'subtle' ? 'Subtle' : 'Balanced'}
+          </p>
+          <div className="account-panel__actions-row" style={{ marginTop: '0.5rem' }}>
+            <button type="button" className="btn" onClick={() => triggerCompletionHaptic('light', { channel: 'navigation', minIntervalMs: 0 })}>
+              Test vibration
+            </button>
+          </div>
+        </section>
+      </SettingsFolderPopup>
+
+      <SettingsFolderPopup isOpen={menuDisplayFolderOpen} onClose={() => setMenuDisplayFolderOpen(false)} title="Menu icon / Display preferences">
+        <section className="account-panel__card" aria-labelledby="account-menu-icon">
+          <p className="account-panel__eyebrow">Menu Icon</p>
+          <h3 id="account-menu-icon">Display Preferences</h3>
+          <p className="account-panel__hint">Choose whether to display your initials or the default icon in the main menu when signed in.</p>
+          <div className="account-panel__toggle-row">
+            <label className="account-panel__toggle-label">
+              <input type="checkbox" checked={profile?.show_initials_in_menu ?? false} onChange={(e) => handleToggleInitialsInMenu(e.target.checked)} disabled={savingPreference || !profile?.full_name || isDemoExperience} className="account-panel__toggle-input" />
+              <span className="account-panel__toggle-text">Show my initials ({userInitials || '--'}) in main menu</span>
+            </label>
+            {savingPreference && <span className="account-panel__saving-indicator">Saving...</span>}
+          </div>
+          {!profile?.full_name && !isDemoExperience && <p className="account-panel__hint" style={{ marginTop: '0.5rem', color: 'var(--color-text-muted)' }}>Set your name in the account details to enable this feature.</p>}
+        </section>
+      </SettingsFolderPopup>
+
+      <SettingsFolderPopup isOpen={birthdayGiftFolderOpen} onClose={() => setBirthdayGiftFolderOpen(false)} title="Birthday gift">
+        <section className="account-panel__card" aria-labelledby="account-birthday-gift">
+          <p className="account-panel__eyebrow">Rewards</p>
+          <h3 id="account-birthday-gift">Birthday gift</h3>
+          <p className="account-panel__hint">Opt in to receive a birthday gift worth 💎 1 diamond. Gifts are limited to one claim every 365 days even if your birthday date changes.</p>
+          <div className="account-panel__toggle-row">
+            <label className="account-panel__toggle-label">
+              <input type="checkbox" checked={isBirthdayGiftEnabled} onChange={(event) => handleToggleBirthdayGift(event.target.checked)} disabled={savingPreference || isDemoExperience} className="account-panel__toggle-input" />
+              <span className="account-panel__toggle-text">Enable optional birthday gift</span>
+            </label>
+            {savingPreference && <span className="account-panel__saving-indicator">Saving...</span>}
+          </div>
+          <p className="account-panel__hint" style={{ marginTop: '0.5rem' }}>Last claimed: {lastBirthdayGiftClaimedLabel}</p>
+          <p className="account-panel__hint">Next eligible claim window: {nextBirthdayGiftEligibleLabel}</p>
+        </section>
+      </SettingsFolderPopup>
+
       <SettingsFolderPopup
         isOpen={folder2Open}
         onClose={() => setFolder2Open(false)}
