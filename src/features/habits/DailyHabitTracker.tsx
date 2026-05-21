@@ -7388,6 +7388,10 @@ export function DailyHabitTracker({
       setQuickJournalError(null);
       setQuickJournalStatus(null);
     };
+    const handleLaunchQuickJournalMode = (mode: QuickJournalMode) => {
+      setQuickJournalMode(mode);
+      handleOpenQuickJournal();
+    };
 
     const handleSaveQuickJournalDraft = () => {
       if (quickJournalMode === 'written') {
@@ -8374,50 +8378,42 @@ export function DailyHabitTracker({
                       ? 'Capture your dream while it is still fresh.'
                       : 'Capture a few thoughts tied to the same date you are tracking above.'}
                 </p>
-                <div className="habit-quick-journal__type-toggle" role="tablist" aria-label="Journal type">
+                <div className="habit-quick-journal__launcher" role="group" aria-label="Quick journal launcher">
                   <button
                     type="button"
-                    role="tab"
-                    aria-selected={quickJournalMode === 'written'}
-                    className={`habit-quick-journal__type-button ${
-                      quickJournalMode === 'written' ? 'habit-quick-journal__type-button--active' : ''
+                    aria-pressed={quickJournalMode === 'dream'}
+                    className={`habit-quick-journal__orb habit-quick-journal__orb--top ${
+                      quickJournalMode === 'dream' ? 'habit-quick-journal__orb--active' : ''
                     }`}
-                    onClick={() => setQuickJournalMode('written')}
+                    onClick={() => handleLaunchQuickJournalMode('dream')}
                   >
-                    ✍️ Written
+                    <span className="habit-quick-journal__orb-icon" aria-hidden="true">🌙</span>
+                    <span className="habit-quick-journal__orb-label">Dream Journal</span>
                   </button>
                   <button
                     type="button"
-                    role="tab"
-                    aria-selected={quickJournalMode === 'pulse'}
-                    className={`habit-quick-journal__type-button ${
-                      quickJournalMode === 'pulse' ? 'habit-quick-journal__type-button--active' : ''
+                    aria-pressed={quickJournalMode === 'written'}
+                    className={`habit-quick-journal__orb habit-quick-journal__orb--bottom-left ${
+                      quickJournalMode === 'written' ? 'habit-quick-journal__orb--active' : ''
                     }`}
-                    onClick={() => setQuickJournalMode('pulse')}
+                    onClick={() => handleLaunchQuickJournalMode('written')}
                   >
-                    🎛️ Pulse check-in
+                    <span className="habit-quick-journal__orb-icon" aria-hidden="true">✍️</span>
+                    <span className="habit-quick-journal__orb-label">Written Journal</span>
                   </button>
                   <button
                     type="button"
-                    role="tab"
-                    aria-selected={quickJournalMode === 'dream'}
-                    className={`habit-quick-journal__type-button ${
-                      quickJournalMode === 'dream' ? 'habit-quick-journal__type-button--active' : ''
+                    aria-pressed={quickJournalMode === 'pulse'}
+                    className={`habit-quick-journal__orb habit-quick-journal__orb--bottom-right ${
+                      quickJournalMode === 'pulse' ? 'habit-quick-journal__orb--active' : ''
                     }`}
-                    onClick={() => setQuickJournalMode('dream')}
+                    onClick={() => handleLaunchQuickJournalMode('pulse')}
                   >
-                    🌙 Dream journal
+                    <span className="habit-quick-journal__orb-icon" aria-hidden="true">🎛</span>
+                    <span className="habit-quick-journal__orb-label">Pulse Check-in</span>
                   </button>
                 </div>
-                {!isQuickJournalOpen ? (
-                  <button
-                    type="button"
-                    className="habit-quick-journal__button"
-                    onClick={handleOpenQuickJournal}
-                  >
-                    + Add journal entry
-                  </button>
-                ) : (
+                {isQuickJournalOpen ? (
                   <div className="habit-quick-journal__sheet">
                     {quickJournalMode === 'pulse' ? (
                       <div className="habit-quick-journal__pulse">
@@ -8686,7 +8682,7 @@ export function DailyHabitTracker({
                       </button>
                     </div>
                   </div>
-                )}
+                ) : null}
 
                 {quickJournalStatus ? (
                   <p className="habit-quick-journal__status habit-quick-journal__status--success">
