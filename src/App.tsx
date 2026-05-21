@@ -138,7 +138,7 @@ import {
 import { buildTopTraitSummary } from './features/identity/personalitySummary';
 import type { PersonalityScores } from './features/identity/personalityScoring';
 import { scoreArchetypes, rankArchetypes } from './features/identity/archetypes/archetypeScoring';
-import { buildHand, type ArchetypeHand, type HandCard } from './features/identity/archetypes/archetypeHandBuilder';
+import { buildHand, handToArray, type ArchetypeHand, type HandCard } from './features/identity/archetypes/archetypeHandBuilder';
 import { ARCHETYPE_DECK, SUIT_LABELS } from './features/identity/archetypes/archetypeDeck';
 import { useMicroTestBadge } from './features/identity/microTests/useMicroTestBadge';
 import type { PlayerState } from './features/identity/microTests/microTestTriggers';
@@ -1520,12 +1520,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const dominantPlaystyleCard = archetypeHand?.dominant.card ?? null;
   const playstyleIcon = dominantPlaystyleCard?.icon ?? null;
   const launcherTraitCards: HandCard[] = archetypeHand
-    ? [
-        archetypeHand.secondary,
-        ...(Array.isArray(archetypeHand.supports) ? archetypeHand.supports : []),
-        archetypeHand.shadow,
-      ].filter((handCard): handCard is HandCard => Boolean(handCard?.card))
+    ? (Array.isArray(archetypeHand.supports)
+        ? handToArray(archetypeHand)
+        : [archetypeHand.dominant, archetypeHand.secondary, archetypeHand.shadow]
+      ).filter((handCard): handCard is HandCard => Boolean(handCard?.card) && handCard.role !== 'dominant')
     : [];
+  const launcherTraitSideCount = Math.ceil(launcherTraitCards.length / 2);
+  const leftLauncherTraitCards = launcherTraitCards.slice(0, launcherTraitSideCount);
+  const rightLauncherTraitCards = launcherTraitCards.slice(launcherTraitSideCount);
   const playstyleLabel = dominantPlaystyleCard
     ? `${dominantPlaystyleCard.name} (${SUIT_LABELS[dominantPlaystyleCard.suit]})`
     : null;
@@ -3854,7 +3856,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 <span className="mobile-menu-overlay__visual-slot mobile-menu-overlay__visual-slot--hand" aria-hidden="true">
                   <span className="mobile-menu-overlay__hand-fan">
                     <span className="mobile-menu-overlay__hand-side mobile-menu-overlay__hand-side--left">
-                      {launcherTraitCards.slice(0, 2).map((handCard) => (
+                      {leftLauncherTraitCards.map((handCard) => (
                         <span
                           key={`launcher-left-${handCard.card.id}`}
                           className="mobile-menu-overlay__trait-card"
@@ -3876,7 +3878,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       ) : null}
                     </span>
                     <span className="mobile-menu-overlay__hand-side mobile-menu-overlay__hand-side--right">
-                      {launcherTraitCards.slice(2).map((handCard) => (
+                      {rightLauncherTraitCards.map((handCard) => (
                         <span
                           key={`launcher-right-${handCard.card.id}`}
                           className="mobile-menu-overlay__trait-card"

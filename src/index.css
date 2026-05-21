@@ -19689,6 +19689,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   --hand-fan-inner-tilt: 7deg;
   --hand-fan-outer-offset: 0.28rem;
   --hand-fan-inner-offset: 0.1rem;
+  --hand-trait-accent: #1e3a8a;
+  --hand-archetype-accent: #1d4ed8;
   width: min(100%, 330px);
   min-height: 126px;
   display: grid;
@@ -19742,7 +19744,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__trait-card-role {
-  color: #1e3a8a;
+  color: var(--hand-trait-accent);
   font-size: 0.54rem;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -19777,7 +19779,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 .mobile-menu-overlay__archetype-name {
   max-width: 100%;
   overflow: hidden;
-  color: #1d4ed8;
+  color: var(--hand-archetype-accent);
   font-size: clamp(0.72rem, 2.8vw, 0.88rem);
   font-weight: 950;
   line-height: 1.1;
@@ -29553,17 +29555,17 @@ html.platform-ipad .workspace-shell__menu-edge {
   border-color: var(--color-border-secondary);
 }
 
+[data-theme='dark-glass'] .mobile-menu-overlay__hand-fan {
+  --hand-trait-accent: #93c5fd;
+  --hand-archetype-accent: #93c5fd;
+}
+
 [data-theme='dark-glass'] .mobile-menu-overlay__trait-card,
 [data-theme='dark-glass'] .mobile-menu-overlay__archetype-card {
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--card-color, #3b82f6) 18%, var(--color-surface-secondary)), color-mix(in srgb, var(--color-surface-primary) 90%, transparent));
   border-color: color-mix(in srgb, var(--card-color, #3b82f6) 44%, var(--color-border-primary));
   color: var(--color-text-primary);
-}
-
-[data-theme='dark-glass'] .mobile-menu-overlay__trait-card-role,
-[data-theme='dark-glass'] .mobile-menu-overlay__archetype-name {
-  color: #93c5fd;
 }
 
 [data-theme='dark-glass'] .mobile-menu-overlay__online-pill {
