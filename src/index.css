@@ -19685,6 +19685,10 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__hand-fan {
+  --hand-fan-outer-tilt: 9deg;
+  --hand-fan-inner-tilt: 7deg;
+  --hand-fan-outer-offset: 0.28rem;
+  --hand-fan-inner-offset: 0.1rem;
   width: min(100%, 330px);
   min-height: 126px;
   display: grid;
@@ -19722,19 +19726,19 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__hand-side--left .mobile-menu-overlay__trait-card:first-child {
-  transform: rotate(-9deg) translateX(0.28rem);
+  transform: rotate(calc(-1 * var(--hand-fan-outer-tilt))) translateX(var(--hand-fan-outer-offset));
 }
 
 .mobile-menu-overlay__hand-side--left .mobile-menu-overlay__trait-card:last-child {
-  transform: rotate(7deg) translateX(-0.1rem);
+  transform: rotate(var(--hand-fan-inner-tilt)) translateX(calc(-1 * var(--hand-fan-inner-offset)));
 }
 
 .mobile-menu-overlay__hand-side--right .mobile-menu-overlay__trait-card:first-child {
-  transform: rotate(9deg) translateX(-0.28rem);
+  transform: rotate(var(--hand-fan-outer-tilt)) translateX(calc(-1 * var(--hand-fan-outer-offset)));
 }
 
 .mobile-menu-overlay__hand-side--right .mobile-menu-overlay__trait-card:last-child {
-  transform: rotate(-7deg) translateX(0.1rem);
+  transform: rotate(calc(-1 * var(--hand-fan-inner-tilt))) translateX(var(--hand-fan-inner-offset));
 }
 
 .mobile-menu-overlay__trait-card-role {

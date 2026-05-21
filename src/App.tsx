@@ -1522,8 +1522,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const launcherTraitCards: HandCard[] = archetypeHand
     ? [
         archetypeHand.secondary,
-        archetypeHand.supports?.[0],
-        archetypeHand.supports?.[1],
+        ...(Array.isArray(archetypeHand.supports) ? archetypeHand.supports : []),
         archetypeHand.shadow,
       ].filter((handCard): handCard is HandCard => Boolean(handCard?.card))
     : [];
