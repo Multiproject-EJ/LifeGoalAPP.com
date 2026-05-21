@@ -650,11 +650,16 @@ export function MyAccountPanel({
       <section className="account-panel__card settings-modules" aria-labelledby="settings-modules-heading">
         <div className="settings-modules__header">
           <p className="account-panel__eyebrow">Settings</p>
-          <h3 id="settings-modules-heading">Personalize your experience</h3>
+          <h3 id="settings-modules-heading">Feature Hub</h3>
           <p className="account-panel__hint">
-            Open focused setting cards when you want to tune reminders, themes, or creator tools.
+            Choose a focused module to adjust seasonal experiences, reminders, and creator-only workspace tools.
           </p>
         </div>
+        <div className="settings-modules__group" aria-label="Settings feature modules">
+          <div className="settings-modules__group-header">
+            <p className="settings-modules__group-eyebrow">Quick modules</p>
+            <p className="settings-modules__group-hint">Open the same trusted settings modules in a calmer layout.</p>
+          </div>
         <div className="settings-modules__grid">
           <SettingsFeatureCard
             icon="🎊"
@@ -689,6 +694,7 @@ export function MyAccountPanel({
             featureId="settings.experimentalFeatures"
             onClick={handleExperimentalFeaturesClick}
           />
+        </div>
         </div>
       </section>
 
