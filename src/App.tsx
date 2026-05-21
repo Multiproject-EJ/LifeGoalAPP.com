@@ -3452,6 +3452,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
               }}
               onNavigateToJournal={() => setActiveWorkspaceNav('journal')}
               onNavigateToVisionBoard={() => setActiveWorkspaceNav('insights')}
+              isAdminOrCreator={isAdmin === true}
+              onOpenFeaturePreview={openFeaturePreviewOverlay}
               isMobileView={isMobileExperience}
               resetToLauncherSignal={actionsLauncherResetSignal}
               onViewChange={setActionsTabView}
