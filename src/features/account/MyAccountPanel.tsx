@@ -91,6 +91,7 @@ export function MyAccountPanel({
   const [hapticsFolderOpen, setHapticsFolderOpen] = useState(false);
   const [menuDisplayFolderOpen, setMenuDisplayFolderOpen] = useState(false);
   const [birthdayGiftFolderOpen, setBirthdayGiftFolderOpen] = useState(false);
+  const [aiPrivacyFolderOpen, setAiPrivacyFolderOpen] = useState(false);
   const [experimentalFolderOpen, setExperimentalFolderOpen] = useState(false);
   const [adminInboxOpen, setAdminInboxOpen] = useState(false);
   const [savingPreference, setSavingPreference] = useState(false);
@@ -588,6 +589,13 @@ export function MyAccountPanel({
           </div>
         <div className="settings-modules__grid">
           <SettingsFeatureCard
+            icon="🛡️"
+            title="AI & Privacy"
+            subtitle="AI model controls, coach data access, and adaptive telemetry."
+            meta="Privacy-sensitive • Calm controls"
+            onClick={() => setAiPrivacyFolderOpen(true)}
+          />
+          <SettingsFeatureCard
             icon="🎊"
             title="Holiday Themes"
             subtitle="Seasonal moments and themed experiences."
@@ -631,11 +639,7 @@ export function MyAccountPanel({
         </div>
       </section>
 
-      <AiSettingsSection session={session} />
-
       <GamificationSettings session={session} />
-
-      <TelemetrySettingsSection session={session} isDemoExperience={isDemoExperience} />
 
 
       <section className="account-panel__card" aria-labelledby="feedback-support-tools">
@@ -911,6 +915,27 @@ export function MyAccountPanel({
           <p className="account-panel__hint" style={{ marginTop: '0.5rem' }}>Last claimed: {lastBirthdayGiftClaimedLabel}</p>
           <p className="account-panel__hint">Next eligible claim window: {nextBirthdayGiftEligibleLabel}</p>
         </section>
+      </SettingsFolderPopup>
+
+      <SettingsFolderPopup
+        isOpen={aiPrivacyFolderOpen}
+        onClose={() => setAiPrivacyFolderOpen(false)}
+        title="AI & Privacy"
+      >
+        <section className="account-panel__card" aria-labelledby="account-ai-privacy-overview">
+          <p className="account-panel__eyebrow">Privacy-sensitive</p>
+          <h3 id="account-ai-privacy-overview">AI &amp; Privacy controls</h3>
+          <p className="account-panel__hint">
+            Manage how AI Coach assists you and how adaptive telemetry supports personalized balance tuning.
+          </p>
+          <p className="account-panel__hint" style={{ marginTop: '0.35rem' }}>
+            Review these preferences before changing any toggles. Your selections stay in these dedicated controls.
+          </p>
+        </section>
+
+        <AiSettingsSection session={session} />
+
+        <TelemetrySettingsSection session={session} isDemoExperience={isDemoExperience} />
       </SettingsFolderPopup>
 
       <SettingsFolderPopup
