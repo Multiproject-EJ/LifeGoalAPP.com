@@ -115,6 +115,16 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const [latestBombFeedback, setLatestBombFeedback] = useState<string | null>(null);
   const advancingBoardKeyRef = useRef<string | null>(null);
 
+  useEffect(() => {
+    if (!config.getTicketsRemaining) return undefined;
+    const syncTicketsFromSource = () => {
+      setTicketsRemaining(Math.max(0, Math.floor(config.getTicketsRemaining?.() ?? 0)));
+    };
+    syncTicketsFromSource();
+    const intervalId = window.setInterval(syncTicketsFromSource, 350);
+    return () => window.clearInterval(intervalId);
+  }, [config]);
+
   const syncProgress = (nextProgress: SpaceExcavatorProgress) => {
     setProgress(nextProgress);
   };
@@ -492,6 +502,11 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       <div className="space-excavator__actions">
         <button type="button" className="space-excavator__button" onClick={() => sendOnce(false)} disabled={finished}>Close</button>
       </div>
+      <p className="space-excavator__footer-ticket-count" aria-live="polite">
+        <span aria-hidden="true">🎟️</span>
+        <span>Event Tickets: </span>
+        <strong>{ticketsRemaining}</strong>
+      </p>
     </section>
   );
 }
