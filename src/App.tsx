@@ -1520,10 +1520,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const dominantPlaystyleCard = archetypeHand?.dominant.card ?? null;
   const playstyleIcon = dominantPlaystyleCard?.icon ?? null;
   const launcherTraitCards: HandCard[] = archetypeHand
-    ? (Array.isArray(archetypeHand.supports)
-        ? handToArray(archetypeHand)
-        : [archetypeHand.dominant, archetypeHand.secondary, archetypeHand.shadow]
-      ).filter((handCard): handCard is HandCard => Boolean(handCard?.card) && handCard.role !== 'dominant')
+    ? handToArray(archetypeHand).filter((handCard): handCard is HandCard => Boolean(handCard?.card) && handCard.role !== 'dominant')
     : [];
   const launcherTraitSideCount = Math.ceil(launcherTraitCards.length / 2);
   const leftLauncherTraitCards = launcherTraitCards.slice(0, launcherTraitSideCount);

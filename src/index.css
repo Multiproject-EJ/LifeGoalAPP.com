@@ -19654,7 +19654,8 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__hero-card--hand {
-  min-height: 196px;
+  --launcher-hand-min-height: 196px;
+  min-height: var(--launcher-hand-min-height);
   grid-template-columns: 1fr;
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:
@@ -19689,8 +19690,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   --hand-fan-inner-tilt: 7deg;
   --hand-fan-outer-offset: 0.28rem;
   --hand-fan-inner-offset: 0.1rem;
-  --hand-trait-accent: #1e3a8a;
-  --hand-archetype-accent: #1d4ed8;
+  --hand-trait-accent: var(--color-primary, #1d4ed8);
+  --hand-archetype-accent: var(--color-primary, #1d4ed8);
   width: min(100%, 330px);
   min-height: 126px;
   display: grid;
@@ -29556,8 +29557,8 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 [data-theme='dark-glass'] .mobile-menu-overlay__hand-fan {
-  --hand-trait-accent: #93c5fd;
-  --hand-archetype-accent: #93c5fd;
+  --hand-trait-accent: var(--color-primary, #93c5fd);
+  --hand-archetype-accent: var(--color-primary, #93c5fd);
 }
 
 [data-theme='dark-glass'] .mobile-menu-overlay__trait-card,
