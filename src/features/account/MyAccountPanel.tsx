@@ -104,6 +104,7 @@ export function MyAccountPanel({
   const [legacyAliasReadiness, setLegacyAliasReadiness] = useState<LegacyAliasSunsetReadiness | null>(null);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
+  const [feedbackSupportFolderOpen, setFeedbackSupportFolderOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [billingSnapshot, setBillingSnapshot] = useState<BillingSnapshot | null>(null);
   const [billingLoading, setBillingLoading] = useState(false);
@@ -592,29 +593,29 @@ export function MyAccountPanel({
           <SettingsFeatureCard
             icon="🛡️"
             title="AI & Privacy"
-            subtitle="AI model controls, coach data access, and adaptive telemetry."
-            meta="Privacy-sensitive • Calm controls"
+            subtitle="Privacy, coach, and telemetry controls."
+            meta="Privacy controls"
             onClick={() => setAiPrivacyFolderOpen(true)}
           />
           <SettingsFeatureCard
             icon="🎊"
             title="Holiday Themes"
-            subtitle="Seasonal moments and themed experiences."
-            meta={`${HOLIDAY_OPTIONS.length} seasonal moments`}
+            subtitle="Seasonal app styling."
+            meta={`${HOLIDAY_OPTIONS.length} moments`}
             featureId="settings.holidayThemes"
             onClick={handleHolidayThemesClick}
           />
           <SettingsFeatureCard
             icon="⏰"
             title="Reminders"
-            subtitle="Daily catch-up and journaling reminder preferences."
-            meta="LIVE • 4 reminder areas"
+            subtitle="Daily reminder preferences."
+            meta="4 reminder areas"
             onClick={handleRemindersClick}
           />
           <SettingsFeatureCard
             icon="🔔"
             title="Notifications"
-            subtitle="Gentle habit and daily reminder preferences."
+            subtitle="Notification preferences."
             meta="3 reminder areas"
             featureId="settings.notifications"
             onClick={handleNotificationsClick}
@@ -623,7 +624,7 @@ export function MyAccountPanel({
             <SettingsFeatureCard
               icon="🔧"
               title="Advanced Tools"
-              subtitle="Internal diagnostics, admin previews, and debug tools."
+              subtitle="Diagnostics and previews."
               meta="Admin only"
               onClick={handleAdvancedToolsClick}
             />
@@ -631,14 +632,14 @@ export function MyAccountPanel({
           <SettingsFeatureCard
             icon="🎮"
             title="Game & Rewards"
-            subtitle="Gamification preferences, weekly review launcher, and reward controls."
-            meta="LIVE • Focused gameplay controls"
+            subtitle="Gameplay and reward controls."
+            meta="Gameplay controls"
             onClick={() => setGameRewardsFolderOpen(true)}
           />
           <SettingsFeatureCard
             icon="⚗️"
             title="Experimental Features"
-            subtitle="Creator previews for ideas still in development."
+            subtitle="Creator preview toggles."
             meta="Future Feature"
             featureId="settings.experimentalFeatures"
             onClick={handleExperimentalFeaturesClick}
@@ -653,16 +654,35 @@ export function MyAccountPanel({
         <p className="account-panel__hint">
           Send product feedback or request support. Support requests are reviewed manually.
         </p>
-        <FutureFeatureVotingPanel session={session} isAuthenticated={isAuthenticated} />
         <div className="account-panel__actions-row">
-          <button type="button" className="btn" onClick={() => setShowFeedbackModal(true)}>
-            Send feedback
-          </button>
-          <button type="button" className="btn btn--secondary" onClick={() => setShowSupportModal(true)}>
-            Request support
+          <button type="button" className="btn" onClick={() => setFeedbackSupportFolderOpen(true)}>
+            Open feedback &amp; support
           </button>
         </div>
       </section>
+
+      <SettingsFolderPopup
+        isOpen={feedbackSupportFolderOpen}
+        onClose={() => setFeedbackSupportFolderOpen(false)}
+        title="Feedback & Support"
+      >
+        <section className="account-panel__card" aria-labelledby="feedback-support-popup-tools">
+          <p className="account-panel__eyebrow">Support</p>
+          <h3 id="feedback-support-popup-tools">Feedback &amp; Support</h3>
+          <p className="account-panel__hint">
+            Send product feedback or request support. Support requests are reviewed manually.
+          </p>
+          <FutureFeatureVotingPanel session={session} isAuthenticated={isAuthenticated} compact />
+          <div className="account-panel__actions-row">
+            <button type="button" className="btn" onClick={() => setShowFeedbackModal(true)}>
+              Send feedback
+            </button>
+            <button type="button" className="btn btn--secondary" onClick={() => setShowSupportModal(true)}>
+              Request support
+            </button>
+          </div>
+        </section>
+      </SettingsFolderPopup>
 
       <MyCasesPanel session={session} />
 

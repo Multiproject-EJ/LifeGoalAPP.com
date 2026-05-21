@@ -139,3 +139,23 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.future-feature-voting--compact .future-feature-voting__grid {
+  gap: 0.45rem;
+}
+.future-feature-voting--compact .future-feature-voting__card {
+  gap: 0.45rem;
+  padding: 0.55rem 0.65rem;
+}
+.future-feature-voting--compact .future-feature-voting__card h5 {
+  margin-bottom: 0.2rem;
+  font-size: 0.9rem;
+}
+.future-feature-voting--compact .future-feature-voting__card p {
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+.future-feature-voting--compact .future-feature-voting__button {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.74rem;
+}
