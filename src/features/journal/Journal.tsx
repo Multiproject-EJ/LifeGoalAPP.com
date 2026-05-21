@@ -875,7 +875,7 @@ ${thankYouDraft}`,
         attachments: gratitudeCoachResult
           ? withGratitudeMeta(editingEntry?.attachments ?? null, gratitudeCoachResult)
           : undefined,
-        is_private: true,
+        is_private: draft.isPrivate,
         type: draft.type ?? DEFAULT_JOURNAL_TYPE,
         mood_score: draft.moodScore ?? null,
         category: draft.category ?? null,

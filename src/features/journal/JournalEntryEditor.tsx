@@ -33,6 +33,7 @@ export type JournalEntryDraft = {
   irrationalFears?: string | null;
   trainingSolutions?: string | null;
   concreteSteps?: string | null;
+  isPrivate: boolean;
 };
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
@@ -161,6 +162,7 @@ function createDraft(
     irrationalFears: entry?.irrational_fears ?? null,
     trainingSolutions: entry?.training_solutions ?? null,
     concreteSteps: entry?.concrete_steps ?? null,
+    isPrivate: entry?.is_private ?? true,
   };
 
   if (!entry && seedDraft) {
@@ -171,6 +173,7 @@ function createDraft(
       tags: seedDraft.tags ?? baseDraft.tags,
       linkedGoalIds: seedDraft.linkedGoalIds ?? baseDraft.linkedGoalIds,
       linkedHabitIds: seedDraft.linkedHabitIds ?? baseDraft.linkedHabitIds,
+      isPrivate: seedDraft.isPrivate ?? baseDraft.isPrivate,
     };
   }
 
@@ -423,8 +426,8 @@ export function JournalEntryEditor({
   };
 
   const handleFieldChange = (
-    field: keyof Pick<JournalEntryDraft, 'entryDate' | 'title' | 'content' | 'mood'>,
-    value: string,
+    field: keyof Pick<JournalEntryDraft, 'entryDate' | 'title' | 'content' | 'mood' | 'isPrivate'>,
+    value: string | boolean,
   ) => {
     setDraft((current) => ({ ...current, [field]: value }));
   };
@@ -991,6 +994,21 @@ export function JournalEntryEditor({
           {renderSecretModeNotice()}
 
           {renderSecretModeTimer()}
+
+          {!isSecretMode && (
+          <div className="journal-editor__field">
+            <span>Privacy</span>
+            <label>
+              <input
+                type="checkbox"
+                checked={draft.isPrivate}
+                onChange={(event) => handleFieldChange('isPrivate', event.target.checked)}
+              />
+              {' '}Private
+            </label>
+            <p className="journal-editor__hint">Private entries stay in your journal but are excluded from AI Coach.</p>
+          </div>
+          )}
 
           {!isSecretMode && (
           <div className="journal-editor__grid">
