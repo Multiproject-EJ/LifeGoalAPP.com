@@ -537,7 +537,7 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
-  padding-bottom: max(0px, env(safe-area-inset-bottom, 0px));
+  padding-bottom: 0;
 }
 
 .space-excavator__button {
@@ -551,6 +551,30 @@
   color: #e2e8f0;
   font-weight: 800;
   box-shadow: 0 8px 20px rgba(2, 6, 23, 0.2);
+}
+
+.space-excavator__footer-ticket-count {
+  display: inline-flex;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: -2px auto 0;
+  padding: 6px 12px;
+  border: 1px solid var(--space-excavator-panel-border);
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--space-excavator-accent-wash), rgba(15, 23, 42, 0.76));
+  color: var(--space-excavator-copy-accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 20px rgba(2, 6, 23, 0.2);
+  padding-bottom: calc(6px + max(0px, env(safe-area-inset-bottom, 0px)));
+}
+
+.space-excavator__footer-ticket-count strong {
+  color: #fef3c7;
+  font-size: 13px;
 }
 
 .space-excavator__button--primary {
