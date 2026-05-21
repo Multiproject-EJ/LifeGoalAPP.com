@@ -138,7 +138,7 @@ import {
 import { buildTopTraitSummary } from './features/identity/personalitySummary';
 import type { PersonalityScores } from './features/identity/personalityScoring';
 import { scoreArchetypes, rankArchetypes } from './features/identity/archetypes/archetypeScoring';
-import { buildHand, type ArchetypeHand } from './features/identity/archetypes/archetypeHandBuilder';
+import { buildHand, handToArray, type ArchetypeHand, type HandCard } from './features/identity/archetypes/archetypeHandBuilder';
 import { ARCHETYPE_DECK, SUIT_LABELS } from './features/identity/archetypes/archetypeDeck';
 import { useMicroTestBadge } from './features/identity/microTests/useMicroTestBadge';
 import type { PlayerState } from './features/identity/microTests/microTestTriggers';
@@ -163,6 +163,10 @@ import './features/ai-coach/AiCoach.css';
 type AuthMode = 'password' | 'signup';
 
 type AuthTab = HabitGameAuthTab;
+
+function isRenderableHandCard(handCard: HandCard | null | undefined): handCard is HandCard {
+  return Boolean(handCard?.role && handCard.card?.id && handCard.card.name && handCard.card.icon);
+}
 
 type WorkspaceNavItem = {
   id: string;
@@ -1519,6 +1523,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const dominantPlaystyleCard = archetypeHand?.dominant.card ?? null;
   const playstyleIcon = dominantPlaystyleCard?.icon ?? null;
+  const launcherTraitCards: HandCard[] = archetypeHand
+    ? handToArray(archetypeHand).filter((handCard): handCard is HandCard => isRenderableHandCard(handCard) && handCard.role !== 'dominant')
+    : [];
+  const launcherTraitSideCount = Math.ceil(launcherTraitCards.length / 2);
+  const leftLauncherTraitCards = launcherTraitCards.slice(0, launcherTraitSideCount);
+  const rightLauncherTraitCards = launcherTraitCards.slice(launcherTraitSideCount);
   const playstyleLabel = dominantPlaystyleCard
     ? `${dominantPlaystyleCard.name} (${SUIT_LABELS[dominantPlaystyleCard.suit]})`
     : null;
@@ -3838,29 +3848,49 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 aria-label="Open Player's Hand"
               >
                 <span className="mobile-menu-overlay__status-dot" aria-hidden="true" />
+                <span className="mobile-menu-overlay__hero-copy mobile-menu-overlay__hero-copy--hand">
+                  <span className="mobile-menu-overlay__hero-title">Player&apos;s Hand</span>
+                  {microTestBadge.showBadge ? (
+                    <span className="mobile-menu-overlay__hero-meta">{microTestBadge.count} micro-tests ready</span>
+                  ) : null}
+                </span>
                 <span className="mobile-menu-overlay__visual-slot mobile-menu-overlay__visual-slot--hand" aria-hidden="true">
-                  <span className="mobile-menu-overlay__hand-stack">
-                    <span className="mobile-menu-overlay__hand-card mobile-menu-overlay__hand-card--back" />
-                    <span className="mobile-menu-overlay__hand-card mobile-menu-overlay__hand-card--mid" />
-                    <span className="mobile-menu-overlay__hand-card mobile-menu-overlay__hand-card--front">
+                  <span className="mobile-menu-overlay__hand-fan">
+                    <span className="mobile-menu-overlay__hand-side mobile-menu-overlay__hand-side--left">
+                      {leftLauncherTraitCards.map((handCard) => (
+                        <span
+                          key={`launcher-left-${handCard.card.id}`}
+                          className="mobile-menu-overlay__trait-card"
+                          style={{ '--card-color': handCard.card.color } as CSSProperties}
+                        >
+                          <span className="mobile-menu-overlay__trait-card-role">{handCard.role}</span>
+                          <span className="mobile-menu-overlay__trait-card-name">{handCard.card.icon} {handCard.card.name}</span>
+                        </span>
+                      ))}
+                    </span>
+                    <span className="mobile-menu-overlay__archetype-card">
                       {playstyleIcon ? (
                         <span className="mobile-menu-overlay__hand-symbol">{playstyleIcon}</span>
                       ) : (
                         <span className="mobile-menu-overlay__hand-symbol">🪪</span>
                       )}
+                      {dominantPlaystyleCard ? (
+                        <span className="mobile-menu-overlay__archetype-name">{dominantPlaystyleCard.name}</span>
+                      ) : null}
+                    </span>
+                    <span className="mobile-menu-overlay__hand-side mobile-menu-overlay__hand-side--right">
+                      {rightLauncherTraitCards.map((handCard) => (
+                        <span
+                          key={`launcher-right-${handCard.card.id}`}
+                          className="mobile-menu-overlay__trait-card"
+                          style={{ '--card-color': handCard.card.color } as CSSProperties}
+                        >
+                          <span className="mobile-menu-overlay__trait-card-role">{handCard.role}</span>
+                          <span className="mobile-menu-overlay__trait-card-name">{handCard.card.icon} {handCard.card.name}</span>
+                        </span>
+                      ))}
                     </span>
                   </span>
-                </span>
-                <span className="mobile-menu-overlay__hero-copy">
-                  <span className="mobile-menu-overlay__hero-title">Player&apos;s Hand</span>
-                  <span className="mobile-menu-overlay__hero-subtitle">Your personality drives your progress</span>
-                  {microTestBadge.showBadge ? (
-                    <span className="mobile-menu-overlay__hero-meta">{microTestBadge.count} micro-tests ready</span>
-                  ) : null}
-                </span>
-                <span className="mobile-menu-overlay__hero-cta" aria-hidden="true">
-                  View All Traits
-                  <span>›</span>
                 </span>
               </button>
 
