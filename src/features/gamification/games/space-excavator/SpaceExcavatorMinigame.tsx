@@ -123,6 +123,11 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const [latestClue, setLatestClue] = useState<SpaceExcavatorClueResult | null>(null);
   const [latestBombFeedback, setLatestBombFeedback] = useState<string | null>(null);
   const [lastDugTileId, setLastDugTileId] = useState<number | null>(null);
+  const [bombCenterTileId, setBombCenterTileId] = useState<number | null>(null);
+  const [bombWaveTileIds, setBombWaveTileIds] = useState<number[]>([]);
+  const [bombClearedTileIds, setBombClearedTileIds] = useState<number[]>([]);
+  const [bombCrackedTileIds, setBombCrackedTileIds] = useState<number[]>([]);
+  const bombFxTimeoutRef = useRef<number | null>(null);
   const advancingBoardKeyRef = useRef<string | null>(null);
   const justClearedBoardRef = useRef(false);
 
@@ -185,11 +190,28 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
     setTicketsRemaining(spend.ticketsRemaining);
 
     if (spend.ok && spend.progress) {
+      const previousCrackedTileIds = new Set(activeProgress?.crackedTileIds ?? []);
+      const nextCrackedTileIds = new Set(spend.progress.crackedTileIds ?? []);
       setLastDugTileId(index);
       if (spend.triggeredBomb) {
         const bonusRevealCount = Math.max(0, Math.floor(spend.bonusRevealCount ?? 0));
-        setLatestBombFeedback(`${bonusRevealCount} nearby tile${bonusRevealCount === 1 ? '' : 's'} cleared.`);
+        const revealedTileIds = spend.revealedTileIds ?? [];
+        const crackedByBomb = revealedTileIds.filter((tileId) => nextCrackedTileIds.has(tileId) && !previousCrackedTileIds.has(tileId));
+        const clearedByBomb = revealedTileIds.filter((tileId) => !crackedByBomb.includes(tileId));
+        setLatestBombFeedback(`${clearedByBomb.length} tile${clearedByBomb.length === 1 ? '' : 's'} cleared · ${crackedByBomb.length} hard block${crackedByBomb.length === 1 ? '' : 's'} cracked.`);
         setLatestClue(null);
+        setBombCenterTileId(index);
+        setBombWaveTileIds(revealedTileIds);
+        setBombCrackedTileIds(crackedByBomb);
+        setBombClearedTileIds(clearedByBomb);
+        if (bombFxTimeoutRef.current !== null) window.clearTimeout(bombFxTimeoutRef.current);
+        bombFxTimeoutRef.current = window.setTimeout(() => {
+          setBombCenterTileId(null);
+          setBombWaveTileIds([]);
+          setBombCrackedTileIds([]);
+          setBombClearedTileIds([]);
+          bombFxTimeoutRef.current = null;
+        }, 920);
         playIslandRunSound('boss_trial_resolve');
         triggerIslandRunHaptic('boss_trial_resolve');
       } else if (spend.revealedTileIds?.length === 0) {
@@ -291,6 +313,14 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
     setClaimModalPhase('unlocked');
     setClaimModalMessage(null);
   };
+
+  useEffect(() => {
+    return () => {
+      if (bombFxTimeoutRef.current !== null) {
+        window.clearTimeout(bombFxTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (activeClaimModalMilestoneId || !firstClaimableMilestone) return;
@@ -402,6 +432,10 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
               disabled={finished || boardComplete || tile.dug}
               aria-label={`Tile ${i + 1}`}
               data-last-dug={lastDugTileId === i ? 'true' : undefined}
+              data-bomb-origin={bombCenterTileId === i ? 'true' : undefined}
+              data-bomb-wave={bombWaveTileIds.includes(i) ? 'true' : undefined}
+              data-bomb-cleared={bombClearedTileIds.includes(i) ? 'true' : undefined}
+              data-bomb-cracked={bombCrackedTileIds.includes(i) ? 'true' : undefined}
             >
               {tile.dug ? (tile.objectPiece ? (progress?.objectIcon ?? initial?.objectIcon ?? '✦') : tile.bonusBomb ? '💣' : <span className="space-excavator__tile-marker" aria-hidden="true" />) : tile.cracked ? <span className="space-excavator__tile-crack" aria-hidden="true">✶</span> : <span className="space-excavator__tile-cover" aria-hidden="true" />}
             </button>

@@ -362,6 +362,7 @@
 }
 
 .space-excavator__tile {
+  position: relative;
   width: 100%;
   aspect-ratio: 1;
   min-height: 42px;
@@ -465,6 +466,35 @@
   color: #1c1917;
   box-shadow: 0 0 18px rgba(250, 204, 21, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.28);
   animation: space-excavator-bomb-pop 360ms cubic-bezier(.2, .95, .35, 1);
+}
+
+.space-excavator__tile[data-bomb-origin="true"] {
+  animation: space-excavator-bomb-origin 780ms cubic-bezier(.16, .86, .25, 1);
+  box-shadow: 0 0 0 2px rgba(254, 240, 138, 0.9), 0 0 34px rgba(250, 204, 21, 0.64), 0 0 58px rgba(249, 115, 22, 0.42), inset 0 0 24px rgba(255, 255, 255, 0.3);
+}
+
+.space-excavator__tile[data-bomb-wave="true"]::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 2px solid rgba(250, 204, 21, 0.78);
+  opacity: 0;
+  animation: space-excavator-bomb-wave 740ms ease-out forwards;
+  pointer-events: none;
+}
+
+.space-excavator__tile[data-bomb-cleared="true"] {
+  box-shadow: 0 0 0 2px rgba(148, 250, 255, 0.72), 0 0 24px rgba(34, 211, 238, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.space-excavator__tile[data-bomb-cracked="true"] {
+  border-color: rgba(251, 191, 36, 0.95);
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.5), 0 0 26px rgba(245, 158, 11, 0.5), inset 0 0 20px rgba(180, 83, 9, 0.35);
+}
+
+.space-excavator__tile[data-bomb-cracked="true"] .space-excavator__tile-crack {
+  animation: space-excavator-crack-ping 620ms ease-out;
 }
 
 .space-excavator__tile--object {
@@ -808,6 +838,32 @@
   0% { transform: scale(0.76) rotate(-10deg); filter: brightness(1.2); }
   55% { transform: scale(1.12) rotate(5deg); }
   100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+}
+
+@keyframes space-excavator-bomb-origin {
+  0% { transform: scale(1); filter: brightness(1); }
+  25% { transform: scale(1.08); filter: brightness(1.35); }
+  55% { transform: scale(0.96); filter: brightness(1.12); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes space-excavator-bomb-wave {
+  0% { transform: scale(0.84); opacity: 0.92; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+
+@keyframes space-excavator-crack-ping {
+  0% { transform: scale(1); text-shadow: 0 0 8px rgba(251, 191, 36, 0.3); }
+  45% { transform: scale(1.35); text-shadow: 0 0 18px rgba(251, 191, 36, 0.9); }
+  100% { transform: scale(1); text-shadow: 0 0 10px rgba(251, 191, 36, 0.45); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .space-excavator__tile[data-bomb-origin="true"],
+  .space-excavator__tile[data-bomb-wave="true"]::after,
+  .space-excavator__tile[data-bomb-cracked="true"] .space-excavator__tile-crack {
+    animation: none !important;
+  }
 }
 
 .space-excavator__relic-found {
