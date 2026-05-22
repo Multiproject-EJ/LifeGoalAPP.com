@@ -438,6 +438,11 @@ type HabitEditDraft = {
   goalId: string | null;
 };
 
+type DailyLifeUpgradeAlternativePrefillDraft = {
+  title: string;
+  notes: string;
+};
+
 type TodayWinsSummary = {
   journalCount: number;
   lotusEarned: number;
@@ -1017,6 +1022,7 @@ export function DailyHabitTracker({
   const [dailyLifeUpgradeCandidate, setDailyLifeUpgradeCandidate] = useState<DailyLifeUpgradeCandidate | null>(null);
   const [showDailyLifeUpgradeModal, setShowDailyLifeUpgradeModal] = useState(false);
   const [dailyLifeUpgradeHighlightedHabitId, setDailyLifeUpgradeHighlightedHabitId] = useState<string | null>(null);
+  const [dailyLifeUpgradeAlternativePrefillDraft, setDailyLifeUpgradeAlternativePrefillDraft] = useState<DailyLifeUpgradeAlternativePrefillDraft | null>(null);
   const dailyLifeUpgradeHighlightTimeoutRef = useRef<number | null>(null);
   const habitCardRefs = useRef<Record<string, HTMLLIElement | null>>({});
   const setCompactPullDistanceState = useCallback((nextDistance: number) => {
@@ -3132,10 +3138,16 @@ export function DailyHabitTracker({
           {dailyLifeUpgradeCandidate.alternatives.length > 0 ? (
             <div className="habit-day-nav__daily-life-upgrade-alternatives" aria-label="Supportive alternative options">
               {dailyLifeUpgradeCandidate.alternatives.slice(0, 3).map((alternative) => (
-                <article key={alternative.suggestedHabitId} className="habit-day-nav__daily-life-upgrade-option-card">
+                <button
+                  key={alternative.suggestedHabitId}
+                  type="button"
+                  className="habit-day-nav__daily-life-upgrade-option-card"
+                  onClick={() => handleDailyLifeUpgradeAlternativeAction(alternative)}
+                  aria-label={`Try alternative habit: ${alternative.title}`}
+                >
                   <p className="habit-day-nav__daily-life-upgrade-option-title">{alternative.title}</p>
                   <p className="habit-day-nav__daily-life-upgrade-option-copy">{alternative.supportiveCopy}</p>
-                </article>
+                </button>
               ))}
             </div>
           ) : null}
@@ -4219,6 +4231,25 @@ export function DailyHabitTracker({
     }, 1800);
   }
 
+  function handleDailyLifeUpgradeAlternativeAction(alternative: DailyLifeUpgradeCandidate['alternatives'][number]) {
+    if (!session?.user?.id || !dailyLifeUpgradeCandidate) return;
+
+    markDailyLifeUpgradeShownToday(session.user.id);
+    setShowDailyLifeUpgradeModal(false);
+
+    const targetHabit = sortedHabits.find((habit) => habit.id === dailyLifeUpgradeCandidate.habitId);
+    if (!targetHabit) return;
+
+    // Fallback path: this screen currently has an existing reviewable edit flow, but
+    // no dedicated prefilled "create new habit draft" entry point yet.
+    console.info('[DailyLifeUpgrade] Alternative selected; opening current habit edit flow as fallback because prefilled create flow is unavailable.');
+    setDailyLifeUpgradeAlternativePrefillDraft({
+      title: alternative.title.trim() || targetHabit.name,
+      notes: alternative.supportiveCopy?.trim() || '',
+    });
+    handleOpenEdit(targetHabit);
+  }
+
   useEffect(() => () => {
     if (dailyLifeUpgradeHighlightTimeoutRef.current !== null) {
       window.clearTimeout(dailyLifeUpgradeHighlightTimeoutRef.current);
@@ -4250,12 +4281,16 @@ export function DailyHabitTracker({
       setEditTitle(pendingReviewAiApply.title || editHabit.name);
       setEditNotes(baseNotes ? `${baseNotes}\n\nAI redesign draft: ${pendingReviewAiApply.rationale}` : `AI redesign draft: ${pendingReviewAiApply.rationale}`);
       setPendingReviewAiApply(null);
+    } else if (dailyLifeUpgradeAlternativePrefillDraft) {
+      setEditTitle(dailyLifeUpgradeAlternativePrefillDraft.title || editHabit.name);
+      setEditNotes(baseNotes ? `${baseNotes}\n\n${dailyLifeUpgradeAlternativePrefillDraft.notes}` : dailyLifeUpgradeAlternativePrefillDraft.notes);
+      setDailyLifeUpgradeAlternativePrefillDraft(null);
     } else {
       setEditTitle(editHabit.name);
       setEditNotes(baseNotes);
     }
     setEditError(null);
-  }, [editHabit, pendingReviewAiApply]);
+  }, [dailyLifeUpgradeAlternativePrefillDraft, editHabit, pendingReviewAiApply]);
 
   useEffect(() => {
     if (!editHabit) return;
