@@ -1,6 +1,7 @@
 export type HabitDifficultyState = 'too_easy' | 'healthy' | 'fragile' | 'too_hard' | 'stale';
 
 export type HabitDesignRecommendation =
+  | 'try_alternative_path'
   | 'shrink_to_tiny'
   | 'upgrade_to_normal'
   | 'upgrade_to_stretch'
@@ -12,6 +13,10 @@ export type HabitDesignRecommendation =
   | 'no_change';
 
 export interface HabitDesignSignalInput {
+  habitId?: string;
+  habitTitle?: string;
+  lifeWheelArea?: string;
+  habitIntent?: string[];
   completionRate: number;
   streakConsistency: number;
   missesLast14: number;
@@ -22,6 +27,7 @@ export interface HabitDesignSignalInput {
   timingAdherenceRate?: number;
   environmentRiskTags?: string[];
   linkedGoalId?: string | null;
+  defaultTiming?: string | null;
 }
 
 export interface HabitDesignSignalAnalysis {

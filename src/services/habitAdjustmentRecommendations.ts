@@ -8,6 +8,11 @@ export interface HabitAdjustmentRecommendationResult {
   recommendation: HabitDesignRecommendation;
   reason: string;
   promptPayload: string[];
+  alternatives?: {
+    suggestedHabitId: string;
+    title: string;
+    supportiveCopy: string;
+  }[];
 }
 
 export function getHabitAdjustmentRecommendation(
