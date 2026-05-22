@@ -452,6 +452,7 @@ type DailyLifeUpgradeAlternativeCreateDraft = {
 
 type DailyLifeUpgradeAlternativeCreateSuccess = {
   habitId: string | null;
+  originalHabitId: string | null;
 };
 
 type TodayWinsSummary = {
@@ -1037,6 +1038,9 @@ export function DailyHabitTracker({
   const [dailyLifeUpgradeAlternativeCreateSuccess, setDailyLifeUpgradeAlternativeCreateSuccess] = useState<DailyLifeUpgradeAlternativeCreateSuccess | null>(null);
   const [dailyLifeUpgradeCreateSaving, setDailyLifeUpgradeCreateSaving] = useState(false);
   const [dailyLifeUpgradeCreateError, setDailyLifeUpgradeCreateError] = useState<string | null>(null);
+  const [dailyLifeUpgradePauseConfirmOpen, setDailyLifeUpgradePauseConfirmOpen] = useState(false);
+  const [dailyLifeUpgradePauseSaving, setDailyLifeUpgradePauseSaving] = useState(false);
+  const [dailyLifeUpgradePauseStatus, setDailyLifeUpgradePauseStatus] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
   const dailyLifeUpgradeHighlightTimeoutRef = useRef<number | null>(null);
   const habitCardRefs = useRef<Record<string, HTMLLIElement | null>>({});
   const setCompactPullDistanceState = useCallback((nextDistance: number) => {
@@ -4316,6 +4320,9 @@ export function DailyHabitTracker({
     setDailyLifeUpgradeAlternativeCreateSuccess(null);
     setDailyLifeUpgradeCreateSaving(false);
     setDailyLifeUpgradeCreateError(null);
+    setDailyLifeUpgradePauseConfirmOpen(false);
+    setDailyLifeUpgradePauseSaving(false);
+    setDailyLifeUpgradePauseStatus(null);
   }, []);
 
   const focusHabitCardById = useCallback((habitId: string) => {
@@ -4376,13 +4383,42 @@ export function DailyHabitTracker({
       await refreshHabits();
       setDailyLifeUpgradeAlternativeCreateDraft(null);
       setDailyLifeUpgradeCreateError(null);
-      setDailyLifeUpgradeAlternativeCreateSuccess({ habitId: data?.id ?? null });
+      setDailyLifeUpgradeAlternativeCreateSuccess({
+        habitId: data?.id ?? null,
+        originalHabitId: dailyLifeUpgradeCandidate?.habitId ?? null,
+      });
+      setDailyLifeUpgradePauseConfirmOpen(false);
+      setDailyLifeUpgradePauseStatus(null);
     } catch (error) {
       setDailyLifeUpgradeCreateError(error instanceof Error ? error.message : 'Unable to create this habit right now.');
     } finally {
       setDailyLifeUpgradeCreateSaving(false);
     }
-  }, [dailyLifeUpgradeAlternativeCreateDraft, isConfigured, isDemoExperience, refreshHabits, session.user.id]);
+  }, [dailyLifeUpgradeAlternativeCreateDraft, dailyLifeUpgradeCandidate?.habitId, isConfigured, isDemoExperience, refreshHabits, session.user.id]);
+
+  const handlePauseOriginalHabitFromDailyLifeUpgrade = useCallback(async () => {
+    const originalHabitId = dailyLifeUpgradeAlternativeCreateSuccess?.originalHabitId;
+    if (!originalHabitId || dailyLifeUpgradePauseSaving) return;
+
+    setDailyLifeUpgradePauseSaving(true);
+    setDailyLifeUpgradePauseStatus(null);
+    try {
+      const { error } = await pauseHabitV2(originalHabitId, {
+        reason: 'Trying a lighter alternative from Daily Life Upgrade',
+      });
+      if (error) throw error;
+      await refreshHabits();
+      setDailyLifeUpgradePauseStatus({ tone: 'success', message: 'Original habit paused.' });
+      setDailyLifeUpgradePauseConfirmOpen(false);
+    } catch (error) {
+      setDailyLifeUpgradePauseStatus({
+        tone: 'error',
+        message: error instanceof Error ? error.message : 'Unable to pause the original habit right now.',
+      });
+    } finally {
+      setDailyLifeUpgradePauseSaving(false);
+    }
+  }, [dailyLifeUpgradeAlternativeCreateSuccess?.originalHabitId, dailyLifeUpgradePauseSaving, refreshHabits]);
 
   useEffect(() => {
     if (!editHabit) return;
@@ -9662,6 +9698,14 @@ export function DailyHabitTracker({
       <div className="habit-edit-modal-content" onClick={(event) => event.stopPropagation()}>
         {dailyLifeUpgradeAlternativeCreateSuccess ? (
           <>
+            {(() => {
+              const originalHabit = dailyLifeUpgradeAlternativeCreateSuccess.originalHabitId
+                ? sortedHabits.find((habit) => habit.id === dailyLifeUpgradeAlternativeCreateSuccess.originalHabitId) ?? null
+                : null;
+              const canPauseOriginalHabit = Boolean(originalHabit && !originalHabit.archived && originalHabit.status !== 'paused');
+
+              return (
+                <>
             <div className="habit-edit-modal__header">
               <div>
                 <p className="habit-edit-modal__eyebrow">Alternative habit ready</p>
@@ -9674,6 +9718,50 @@ export function DailyHabitTracker({
             <div className="habit-edit-modal__body">
               <p className="habit-edit-modal__hint">Your original habit is still unchanged.</p>
               <p className="habit-edit-modal__hint">Try this path for a few days, then decide whether to keep, pause, or adjust the old one.</p>
+              {dailyLifeUpgradePauseStatus ? (
+                <p className={dailyLifeUpgradePauseStatus.tone === 'error' ? 'habit-edit-modal__error' : 'habit-edit-modal__hint'}>
+                  {dailyLifeUpgradePauseStatus.message}
+                </p>
+              ) : null}
+              {canPauseOriginalHabit ? (
+                dailyLifeUpgradePauseConfirmOpen ? (
+                  <div className="habit-edit-modal__section">
+                    <p className="habit-edit-modal__label">Pause the original habit for now?</p>
+                    <p className="habit-edit-modal__hint">Your new lighter habit will stay active.</p>
+                    <div className="habit-edit-modal__actions">
+                      <button
+                        type="button"
+                        className="habit-edit-modal__btn habit-edit-modal__btn--ghost"
+                        onClick={() => setDailyLifeUpgradePauseConfirmOpen(false)}
+                        disabled={dailyLifeUpgradePauseSaving}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className="habit-edit-modal__btn habit-edit-modal__btn--secondary"
+                        onClick={() => void handlePauseOriginalHabitFromDailyLifeUpgrade()}
+                        disabled={dailyLifeUpgradePauseSaving}
+                      >
+                        {dailyLifeUpgradePauseSaving ? 'Pausing…' : 'Pause original habit'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="habit-edit-modal__btn habit-edit-modal__btn--secondary"
+                    onClick={() => {
+                      setDailyLifeUpgradePauseStatus(null);
+                      setDailyLifeUpgradePauseConfirmOpen(true);
+                    }}
+                  >
+                    Pause old habit
+                  </button>
+                )
+              ) : (
+                <p className="habit-edit-modal__hint">Pause action unavailable for the original habit right now.</p>
+              )}
             </div>
             <div className="habit-edit-modal__footer">
               <button type="button" className="habit-edit-modal__btn habit-edit-modal__btn--ghost" onClick={handleCloseDailyLifeUpgradeCreateFlow}>
@@ -9695,6 +9783,9 @@ export function DailyHabitTracker({
                 Done
               </button>
             </div>
+                </>
+              );
+            })()}
           </>
         ) : dailyLifeUpgradeAlternativeCreateDraft ? (
           <>
