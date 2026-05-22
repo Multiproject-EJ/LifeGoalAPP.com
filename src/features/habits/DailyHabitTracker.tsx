@@ -445,6 +445,9 @@ type DailyLifeUpgradeAlternativeCreateDraft = {
   notes: string;
   lifeWheelKey: string;
   timing: string | null;
+  linkedGoalId: string | null;
+  linkedDomainKey: string | null;
+  linkedHabitIntent: string | null;
 };
 
 type TodayWinsSummary = {
@@ -4248,6 +4251,10 @@ export function DailyHabitTracker({
 
     const sourceSuggestedHabit = getSuggestedHabitById(alternative.suggestedHabitId);
     const lifeWheelMeta = extractLifeWheelDomain(targetHabit.schedule ?? null);
+    const linkedHabitIntent =
+      typeof (targetHabit as { habit_intent?: unknown }).habit_intent === 'string'
+        ? (targetHabit as { habit_intent?: string | null }).habit_intent ?? null
+        : null;
     const nextLifeWheelKey = lifeWheelMeta?.key ?? LIFE_WHEEL_UNASSIGNED;
     const nextTitle =
       sourceSuggestedHabit?.tinyVersion?.trim()
@@ -4267,6 +4274,9 @@ export function DailyHabitTracker({
       notes: notesSegments.join('\n'),
       lifeWheelKey: nextLifeWheelKey,
       timing: sourceSuggestedHabit?.defaultTiming ?? null,
+      linkedGoalId: targetHabit.goal_id ?? null,
+      linkedDomainKey: targetHabit.domain_key ?? null,
+      linkedHabitIntent,
     });
   }
 
@@ -4346,6 +4356,9 @@ export function DailyHabitTracker({
           target_unit: null,
           archived: false,
           allow_skip: true,
+          goal_id: dailyLifeUpgradeAlternativeCreateDraft.linkedGoalId,
+          domain_key: dailyLifeUpgradeAlternativeCreateDraft.linkedDomainKey,
+          habit_intent: dailyLifeUpgradeAlternativeCreateDraft.linkedHabitIntent,
         },
         session.user.id,
       );
@@ -9645,7 +9658,11 @@ export function DailyHabitTracker({
           </button>
         </div>
         <div className="habit-edit-modal__body">
-          <p className="habit-edit-modal__hint">Same goal, lighter path.</p>
+          <p className="habit-edit-modal__hint">
+            {dailyLifeUpgradeAlternativeCreateDraft.linkedGoalId
+              ? 'This keeps the same goal, just with a lighter method.'
+              : 'You can link this to a goal later.'}
+          </p>
           <p className="habit-edit-modal__hint">Your current habit will stay unchanged.</p>
           <label className="habit-edit-modal__label" htmlFor="daily-life-upgrade-create-title">Habit title</label>
           <input
