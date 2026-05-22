@@ -24,6 +24,12 @@ export interface DailyLifeUpgradeSignalsInput {
   environmentRiskTagsByHabitId?: Record<string, string[] | null | undefined>;
 }
 
+export interface DailyLifeUpgradeCandidateAlternative {
+  suggestedHabitId: string;
+  title: string;
+  supportiveCopy: string;
+}
+
 export interface DailyLifeUpgradeCandidate {
   habitId: string;
   habitTitle: string;
@@ -31,6 +37,7 @@ export interface DailyLifeUpgradeCandidate {
   promptTitle: string;
   promptBody: string;
   suggestedActionLabel: string;
+  alternatives: DailyLifeUpgradeCandidateAlternative[];
   priorityScore: number;
   reason: string;
 }
@@ -39,6 +46,7 @@ type CandidatePriority =
   | 'shrink_to_tiny'
   | 'restart_gently'
   | 'add_environment_cue'
+  | 'try_alternative_path'
   | 'link_to_goal'
   | 'upgrade_to_stretch'
   | 'celebrate_consistency';
@@ -47,6 +55,7 @@ const PRIORITY_BY_RECOMMENDATION: Record<CandidatePriority, number> = {
   shrink_to_tiny: 6,
   restart_gently: 5,
   add_environment_cue: 4,
+  try_alternative_path: 3.5,
   link_to_goal: 3,
   upgrade_to_stretch: 2,
   celebrate_consistency: 1,
@@ -56,6 +65,7 @@ const PRESENTATION_BY_RECOMMENDATION: Record<CandidatePriority, { title: string;
   shrink_to_tiny: { title: 'Scale this habit down', actionLabel: 'Shrink to tiny' },
   restart_gently: { title: 'Restart this habit gently', actionLabel: 'Start small restart' },
   add_environment_cue: { title: 'Add an environment cue', actionLabel: 'Add cue' },
+  try_alternative_path: { title: 'Try a lighter path', actionLabel: 'Focus this habit' },
   link_to_goal: { title: 'Reconnect this habit to a goal', actionLabel: 'Link to goal' },
   upgrade_to_stretch: { title: 'Level this habit up', actionLabel: 'Upgrade to stretch' },
   celebrate_consistency: { title: 'Celebrate your consistency', actionLabel: 'Celebrate progress' },
@@ -139,6 +149,7 @@ export function selectDailyLifeUpgradeCandidate(params: {
       promptTitle: presentation.title,
       promptBody: design.recommendation.promptPayload[0] ?? design.recommendation.reason,
       suggestedActionLabel: presentation.actionLabel,
+      alternatives: (design.recommendation.alternatives ?? []).slice(0, 3),
       priorityScore,
       reason: design.recommendation.reason,
     });
