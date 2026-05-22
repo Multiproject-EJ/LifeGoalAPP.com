@@ -1016,6 +1016,9 @@ export function DailyHabitTracker({
   const [showDreamJournalReminderModal, setShowDreamJournalReminderModal] = useState(false);
   const [dailyLifeUpgradeCandidate, setDailyLifeUpgradeCandidate] = useState<DailyLifeUpgradeCandidate | null>(null);
   const [showDailyLifeUpgradeModal, setShowDailyLifeUpgradeModal] = useState(false);
+  const [dailyLifeUpgradeHighlightedHabitId, setDailyLifeUpgradeHighlightedHabitId] = useState<string | null>(null);
+  const dailyLifeUpgradeHighlightTimeoutRef = useRef<number | null>(null);
+  const habitCardRefs = useRef<Record<string, HTMLLIElement | null>>({});
   const setCompactPullDistanceState = useCallback((nextDistance: number) => {
     compactPullDistanceRef.current = nextDistance;
     setCompactPullDistance(nextDistance);
@@ -3126,7 +3129,7 @@ export function DailyHabitTracker({
           <p id="daily-life-upgrade-title" className="habit-day-nav__daily-life-upgrade-title">{dailyLifeUpgradeCandidate.promptTitle}</p>
           <p className="habit-day-nav__daily-life-upgrade-subtitle">One tiny improvement for today.</p>
           <p className="habit-day-nav__daily-life-upgrade-copy">{dailyLifeUpgradeCandidate.promptBody}</p>
-          <button type="button" className="habit-day-nav__daily-life-upgrade-button" onClick={closeDailyLifeUpgradeModal}>
+          <button type="button" className="habit-day-nav__daily-life-upgrade-button" onClick={handleDailyLifeUpgradePrimaryAction}>
             {dailyLifeUpgradeCandidate.suggestedActionLabel}
           </button>
           <button
@@ -4179,6 +4182,38 @@ export function DailyHabitTracker({
     markDailyLifeUpgradeShownToday(session.user.id);
     setShowDailyLifeUpgradeModal(false);
   }
+
+  function handleDailyLifeUpgradePrimaryAction() {
+    if (!session?.user?.id || !dailyLifeUpgradeCandidate) return;
+
+    markDailyLifeUpgradeShownToday(session.user.id);
+    setShowDailyLifeUpgradeModal(false);
+
+    const targetHabit = sortedHabits.find((habit) => habit.id === dailyLifeUpgradeCandidate.habitId);
+    if (!targetHabit) return;
+
+    handleOpenEdit(targetHabit);
+
+    const targetCard = habitCardRefs.current[targetHabit.id];
+    if (!targetCard) return;
+
+    targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    targetCard.focus({ preventScroll: true });
+    setDailyLifeUpgradeHighlightedHabitId(targetHabit.id);
+    if (dailyLifeUpgradeHighlightTimeoutRef.current !== null) {
+      window.clearTimeout(dailyLifeUpgradeHighlightTimeoutRef.current);
+    }
+    dailyLifeUpgradeHighlightTimeoutRef.current = window.setTimeout(() => {
+      setDailyLifeUpgradeHighlightedHabitId((current) => (current === targetHabit.id ? null : current));
+      dailyLifeUpgradeHighlightTimeoutRef.current = null;
+    }, 1800);
+  }
+
+  useEffect(() => () => {
+    if (dailyLifeUpgradeHighlightTimeoutRef.current !== null) {
+      window.clearTimeout(dailyLifeUpgradeHighlightTimeoutRef.current);
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof document === 'undefined') {
@@ -9652,7 +9687,14 @@ export function DailyHabitTracker({
               const isJustCompleted = justCompletedHabitId === habit.id;
               const feedbackClassName = isJustCompleted ? getHabitFeedbackClassName(habitFeedbackById[habit.id] ?? 'quick-win') : '';
               return (
-                <li key={habit.id} className={`habit-card ${isCompleted ? 'habit-card--completed' : ''} ${isJustCompleted ? `habit-item--just-completed ${feedbackClassName}` : ''}`}>
+                <li
+                  key={habit.id}
+                  ref={(node) => {
+                    habitCardRefs.current[habit.id] = node;
+                  }}
+                  tabIndex={-1}
+                  className={`habit-card ${isCompleted ? 'habit-card--completed' : ''} ${isJustCompleted ? `habit-item--just-completed ${feedbackClassName}` : ''} ${dailyLifeUpgradeHighlightedHabitId === habit.id ? 'habit-card--daily-life-upgrade-target' : ''}`}
+                >
                   {shouldShowHabitPoints ? (
                     <PointsBadge
                       value={habitGoldLabel}
