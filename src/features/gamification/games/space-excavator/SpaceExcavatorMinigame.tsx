@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { IslandRunMinigameProps } from '../../level-worlds/services/islandRunMinigameTypes';
 import { SPACE_EXCAVATOR_CAMPAIGN_MILESTONES } from '../../level-worlds/services/spaceExcavatorCampaignProgress';
 import { resolveSpaceExcavatorClue, type SpaceExcavatorClueResult } from '../../level-worlds/services/spaceExcavatorClues';
@@ -141,6 +141,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const [claimModalMessage, setClaimModalMessage] = useState<string | null>(null);
   const [latestClue, setLatestClue] = useState<SpaceExcavatorClueResult | null>(null);
   const [latestBombFeedback, setLatestBombFeedback] = useState<string | null>(null);
+  const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
   const [lastDugTileId, setLastDugTileId] = useState<number | null>(null);
   const [bombCenterTileId, setBombCenterTileId] = useState<number | null>(null);
   const [bombWaveTileIds, setBombWaveTileIds] = useState<number[]>([]);
@@ -193,6 +194,8 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const artifactGrid = useMemo(() => getObjectGridTemplate(shapeTileOffsets, found), [found, shapeTileOffsets]);
   const foundPercent = Math.min(100, Math.round((found / objectPieceCount) * 100));
   const relicFoundPulse = latestClue?.type === 'relic_piece';
+  const firstDigPending = found === 0 && (activeProgress?.dugTileIds?.length ?? 0) === 0;
+  const helperPanelId = useId();
 
   const sendOnce = (completed: boolean) => {
     if (sentResult) return;
@@ -222,7 +225,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
         const revealedTileIds = spend.revealedTileIds ?? [];
         const crackedByBomb = revealedTileIds.filter((tileId) => nextCrackedTileIds.has(tileId) && !previousCrackedTileIds.has(tileId));
         const clearedByBomb = revealedTileIds.filter((tileId) => !crackedByBomb.includes(tileId));
-        setLatestBombFeedback(`${clearedByBomb.length} tile${clearedByBomb.length === 1 ? '' : 's'} cleared · ${crackedByBomb.length} hard block${crackedByBomb.length === 1 ? '' : 's'} cracked.`);
+        setLatestBombFeedback(`Bomb blast: ${clearedByBomb.length} tile${clearedByBomb.length === 1 ? '' : 's'} revealed, ${crackedByBomb.length} hard block${crackedByBomb.length === 1 ? '' : 's'} cracked.`);
         setLatestClue(null);
         setBombCenterTileId(index);
         setBombWaveTileIds(revealedTileIds);
@@ -443,6 +446,30 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
         </div>
       </div>
 
+
+      <div className="space-excavator__how-row">
+        <button
+          type="button"
+          className={`space-excavator__how-toggle ${isHowItWorksOpen ? 'space-excavator__how-toggle--open' : ''}`}
+          aria-expanded={isHowItWorksOpen}
+          aria-controls={helperPanelId}
+          onClick={() => setIsHowItWorksOpen((open) => !open)}
+        >
+          <span>How it works</span>
+          <span className="space-excavator__how-toggle-icon" aria-hidden="true">{isHowItWorksOpen ? '−' : '+'}</span>
+        </button>
+        <span className="space-excavator__how-inline-note">1 ticket = 1 dig</span>
+      </div>
+
+      {isHowItWorksOpen ? (
+        <div id={helperPanelId} className="space-excavator__how-panel" aria-label="Space Excavator basics">
+          <span><strong>Tickets:</strong> each dig costs exactly 1 event ticket.</span>
+          <span><strong>Clues:</strong> hot = closest, warm = near, cold = farther away.</span>
+          <span><strong>Cracks:</strong> cracked hard blocks need one more dig.</span>
+          <span><strong>Bombs:</strong> blasts reveal nearby tiles and can crack hard blocks.</span>
+        </div>
+      ) : null}
+
       {latestBombFeedback ? (
         <div
           className="space-excavator__clue space-excavator__clue--bomb"
@@ -452,7 +479,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
           <span className="space-excavator__clue-label">Bonus Bomb!</span>
           <span className="space-excavator__clue-message">{latestBombFeedback}</span>
         </div>
-      ) : latestClue && (
+      ) : latestClue ? (
         <div
           className={`space-excavator__clue space-excavator__clue--${latestClue.tone}`}
           role="status"
@@ -461,7 +488,12 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
           <span className="space-excavator__clue-label">{latestClue.label}</span>
           <span className="space-excavator__clue-message">{latestClue.shortMessage}</span>
         </div>
-      )}
+      ) : firstDigPending ? (
+        <div className="space-excavator__clue space-excavator__clue--info" role="status" aria-live="polite">
+          <span className="space-excavator__clue-label">Start digging</span>
+          <span className="space-excavator__clue-message">Tap any tile to spend 1 ticket and get your first hot/warm/cold clue.</span>
+        </div>
+      ) : null}
 
       <div className="space-excavator__board-shell">
         <div className="space-excavator__board" style={{ gridTemplateColumns: `repeat(${size}, minmax(42px, clamp(48px, 15vmin, 68px)))` }}>
