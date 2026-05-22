@@ -450,6 +450,10 @@ type DailyLifeUpgradeAlternativeCreateDraft = {
   linkedHabitIntent: string | null;
 };
 
+type DailyLifeUpgradeAlternativeCreateSuccess = {
+  habitId: string | null;
+};
+
 type TodayWinsSummary = {
   journalCount: number;
   lotusEarned: number;
@@ -1030,6 +1034,7 @@ export function DailyHabitTracker({
   const [showDailyLifeUpgradeModal, setShowDailyLifeUpgradeModal] = useState(false);
   const [dailyLifeUpgradeHighlightedHabitId, setDailyLifeUpgradeHighlightedHabitId] = useState<string | null>(null);
   const [dailyLifeUpgradeAlternativeCreateDraft, setDailyLifeUpgradeAlternativeCreateDraft] = useState<DailyLifeUpgradeAlternativeCreateDraft | null>(null);
+  const [dailyLifeUpgradeAlternativeCreateSuccess, setDailyLifeUpgradeAlternativeCreateSuccess] = useState<DailyLifeUpgradeAlternativeCreateSuccess | null>(null);
   const [dailyLifeUpgradeCreateSaving, setDailyLifeUpgradeCreateSaving] = useState(false);
   const [dailyLifeUpgradeCreateError, setDailyLifeUpgradeCreateError] = useState<string | null>(null);
   const dailyLifeUpgradeHighlightTimeoutRef = useRef<number | null>(null);
@@ -4225,19 +4230,7 @@ export function DailyHabitTracker({
 
     handleOpenEdit(targetHabit);
 
-    const targetCard = habitCardRefs.current[targetHabit.id];
-    if (!targetCard) return;
-
-    targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    targetCard.focus({ preventScroll: true });
-    setDailyLifeUpgradeHighlightedHabitId(targetHabit.id);
-    if (dailyLifeUpgradeHighlightTimeoutRef.current !== null) {
-      window.clearTimeout(dailyLifeUpgradeHighlightTimeoutRef.current);
-    }
-    dailyLifeUpgradeHighlightTimeoutRef.current = window.setTimeout(() => {
-      setDailyLifeUpgradeHighlightedHabitId((current) => (current === targetHabit.id ? null : current));
-      dailyLifeUpgradeHighlightTimeoutRef.current = null;
-    }, 1800);
+    focusHabitCardById(targetHabit.id);
   }
 
   function handleDailyLifeUpgradeAlternativeAction(alternative: DailyLifeUpgradeCandidate['alternatives'][number]) {
@@ -4320,8 +4313,25 @@ export function DailyHabitTracker({
 
   const handleCloseDailyLifeUpgradeCreateFlow = useCallback(() => {
     setDailyLifeUpgradeAlternativeCreateDraft(null);
+    setDailyLifeUpgradeAlternativeCreateSuccess(null);
     setDailyLifeUpgradeCreateSaving(false);
     setDailyLifeUpgradeCreateError(null);
+  }, []);
+
+  const focusHabitCardById = useCallback((habitId: string) => {
+    const targetCard = habitCardRefs.current[habitId];
+    if (!targetCard) return;
+
+    targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    targetCard.focus({ preventScroll: true });
+    setDailyLifeUpgradeHighlightedHabitId(habitId);
+    if (dailyLifeUpgradeHighlightTimeoutRef.current !== null) {
+      window.clearTimeout(dailyLifeUpgradeHighlightTimeoutRef.current);
+    }
+    dailyLifeUpgradeHighlightTimeoutRef.current = window.setTimeout(() => {
+      setDailyLifeUpgradeHighlightedHabitId((current) => (current === habitId ? null : current));
+      dailyLifeUpgradeHighlightTimeoutRef.current = null;
+    }, 1800);
   }, []);
 
   const handleSaveDailyLifeUpgradeCreateFlow = useCallback(async () => {
@@ -4347,7 +4357,7 @@ export function DailyHabitTracker({
       );
       const scheduleWithNotes = buildScheduleWithNotes(scheduleWithLifeWheel, dailyLifeUpgradeAlternativeCreateDraft.notes);
       const scheduleWithTiming = buildScheduleWithDefaultTiming(scheduleWithNotes, dailyLifeUpgradeAlternativeCreateDraft.timing);
-      const { error } = await createHabitV2(
+      const { data, error } = await createHabitV2(
         {
           title: nextTitle,
           type: 'boolean',
@@ -4363,14 +4373,16 @@ export function DailyHabitTracker({
         session.user.id,
       );
       if (error) throw error;
-      handleCloseDailyLifeUpgradeCreateFlow();
       await refreshHabits();
+      setDailyLifeUpgradeAlternativeCreateDraft(null);
+      setDailyLifeUpgradeCreateError(null);
+      setDailyLifeUpgradeAlternativeCreateSuccess({ habitId: data?.id ?? null });
     } catch (error) {
       setDailyLifeUpgradeCreateError(error instanceof Error ? error.message : 'Unable to create this habit right now.');
     } finally {
       setDailyLifeUpgradeCreateSaving(false);
     }
-  }, [dailyLifeUpgradeAlternativeCreateDraft, handleCloseDailyLifeUpgradeCreateFlow, isConfigured, isDemoExperience, refreshHabits, session.user.id]);
+  }, [dailyLifeUpgradeAlternativeCreateDraft, isConfigured, isDemoExperience, refreshHabits, session.user.id]);
 
   useEffect(() => {
     if (!editHabit) return;
@@ -9645,56 +9657,96 @@ export function DailyHabitTracker({
       </div>
     </div>
   ) : null;
-  const dailyLifeUpgradeCreateFlowModalContent = dailyLifeUpgradeAlternativeCreateDraft ? (
+  const dailyLifeUpgradeCreateFlowModalContent = dailyLifeUpgradeAlternativeCreateDraft || dailyLifeUpgradeAlternativeCreateSuccess ? (
     <div className="habit-edit-modal-overlay" onClick={handleCloseDailyLifeUpgradeCreateFlow}>
       <div className="habit-edit-modal-content" onClick={(event) => event.stopPropagation()}>
-        <div className="habit-edit-modal__header">
-          <div>
-            <p className="habit-edit-modal__eyebrow">Create alternative habit</p>
-            <h3>{dailyLifeUpgradeAlternativeCreateDraft.title.trim() || 'New alternative habit'}</h3>
-          </div>
-          <button type="button" className="habit-edit-modal__close" onClick={handleCloseDailyLifeUpgradeCreateFlow} aria-label="Close alternative habit review">
-            ×
-          </button>
-        </div>
-        <div className="habit-edit-modal__body">
-          <p className="habit-edit-modal__hint">
-            {dailyLifeUpgradeAlternativeCreateDraft.linkedGoalId
-              ? 'This keeps the same goal, just with a lighter method.'
-              : 'You can link this to a goal later.'}
-          </p>
-          <p className="habit-edit-modal__hint">Your current habit will stay unchanged.</p>
-          <label className="habit-edit-modal__label" htmlFor="daily-life-upgrade-create-title">Habit title</label>
-          <input
-            id="daily-life-upgrade-create-title"
-            className="habit-edit-modal__input"
-            type="text"
-            value={dailyLifeUpgradeAlternativeCreateDraft.title}
-            onChange={(event) => setDailyLifeUpgradeAlternativeCreateDraft((current) => current ? { ...current, title: event.target.value } : current)}
-          />
-          <label className="habit-edit-modal__label" htmlFor="daily-life-upgrade-create-notes">Notes</label>
-          <textarea
-            id="daily-life-upgrade-create-notes"
-            className="habit-edit-modal__textarea"
-            rows={4}
-            value={dailyLifeUpgradeAlternativeCreateDraft.notes}
-            onChange={(event) => setDailyLifeUpgradeAlternativeCreateDraft((current) => current ? { ...current, notes: event.target.value } : current)}
-          />
-          {dailyLifeUpgradeCreateError ? <p className="habit-edit-modal__error">{dailyLifeUpgradeCreateError}</p> : null}
-        </div>
-        <div className="habit-edit-modal__footer">
-          <button type="button" className="habit-edit-modal__btn habit-edit-modal__btn--ghost" onClick={handleCloseDailyLifeUpgradeCreateFlow}>
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="habit-edit-modal__btn habit-edit-modal__btn--primary"
-            onClick={() => void handleSaveDailyLifeUpgradeCreateFlow()}
-            disabled={dailyLifeUpgradeCreateSaving}
-          >
-            {dailyLifeUpgradeCreateSaving ? 'Creating…' : 'Create habit'}
-          </button>
-        </div>
+        {dailyLifeUpgradeAlternativeCreateSuccess ? (
+          <>
+            <div className="habit-edit-modal__header">
+              <div>
+                <p className="habit-edit-modal__eyebrow">Alternative habit ready</p>
+                <h3>New lighter habit created.</h3>
+              </div>
+              <button type="button" className="habit-edit-modal__close" onClick={handleCloseDailyLifeUpgradeCreateFlow} aria-label="Close alternative habit success">
+                ×
+              </button>
+            </div>
+            <div className="habit-edit-modal__body">
+              <p className="habit-edit-modal__hint">Your original habit is still unchanged.</p>
+              <p className="habit-edit-modal__hint">Try this path for a few days, then decide whether to keep, pause, or adjust the old one.</p>
+            </div>
+            <div className="habit-edit-modal__footer">
+              <button type="button" className="habit-edit-modal__btn habit-edit-modal__btn--ghost" onClick={handleCloseDailyLifeUpgradeCreateFlow}>
+                Keep old habit for now
+              </button>
+              <button
+                type="button"
+                className="habit-edit-modal__btn habit-edit-modal__btn--secondary"
+                onClick={() => {
+                  if (dailyLifeUpgradeAlternativeCreateSuccess.habitId) {
+                    focusHabitCardById(dailyLifeUpgradeAlternativeCreateSuccess.habitId);
+                  }
+                  handleCloseDailyLifeUpgradeCreateFlow();
+                }}
+              >
+                View new habit
+              </button>
+              <button type="button" className="habit-edit-modal__btn habit-edit-modal__btn--primary" onClick={handleCloseDailyLifeUpgradeCreateFlow}>
+                Done
+              </button>
+            </div>
+          </>
+        ) : dailyLifeUpgradeAlternativeCreateDraft ? (
+          <>
+            <div className="habit-edit-modal__header">
+              <div>
+                <p className="habit-edit-modal__eyebrow">Create alternative habit</p>
+                <h3>{dailyLifeUpgradeAlternativeCreateDraft.title.trim() || 'New alternative habit'}</h3>
+              </div>
+              <button type="button" className="habit-edit-modal__close" onClick={handleCloseDailyLifeUpgradeCreateFlow} aria-label="Close alternative habit review">
+                ×
+              </button>
+            </div>
+            <div className="habit-edit-modal__body">
+              <p className="habit-edit-modal__hint">
+                {dailyLifeUpgradeAlternativeCreateDraft.linkedGoalId
+                  ? 'This keeps the same goal, just with a lighter method.'
+                  : 'You can link this to a goal later.'}
+              </p>
+              <p className="habit-edit-modal__hint">Your current habit will stay unchanged.</p>
+              <label className="habit-edit-modal__label" htmlFor="daily-life-upgrade-create-title">Habit title</label>
+              <input
+                id="daily-life-upgrade-create-title"
+                className="habit-edit-modal__input"
+                type="text"
+                value={dailyLifeUpgradeAlternativeCreateDraft.title}
+                onChange={(event) => setDailyLifeUpgradeAlternativeCreateDraft((current) => current ? { ...current, title: event.target.value } : current)}
+              />
+              <label className="habit-edit-modal__label" htmlFor="daily-life-upgrade-create-notes">Notes</label>
+              <textarea
+                id="daily-life-upgrade-create-notes"
+                className="habit-edit-modal__textarea"
+                rows={4}
+                value={dailyLifeUpgradeAlternativeCreateDraft.notes}
+                onChange={(event) => setDailyLifeUpgradeAlternativeCreateDraft((current) => current ? { ...current, notes: event.target.value } : current)}
+              />
+              {dailyLifeUpgradeCreateError ? <p className="habit-edit-modal__error">{dailyLifeUpgradeCreateError}</p> : null}
+            </div>
+            <div className="habit-edit-modal__footer">
+              <button type="button" className="habit-edit-modal__btn habit-edit-modal__btn--ghost" onClick={handleCloseDailyLifeUpgradeCreateFlow}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="habit-edit-modal__btn habit-edit-modal__btn--primary"
+                onClick={() => void handleSaveDailyLifeUpgradeCreateFlow()}
+                disabled={dailyLifeUpgradeCreateSaving}
+              >
+                {dailyLifeUpgradeCreateSaving ? 'Creating…' : 'Create habit'}
+              </button>
+            </div>
+          </>
+        ) : null}
       </div>
     </div>
   ) : null;
