@@ -14,12 +14,12 @@ export type HabitAlternativeReasonTag =
   | 'motivation_unclear'
   | 'restart_relapse_pattern';
 
-export type HabitAlternativeResolverInput = {
+export type HabitAlternativeInput = {
   id: string;
   title: string;
   domain_key?: string | null;
   lifeWheelArea?: string | null;
-  habit_intent?: string[] | null;
+  habit_intent?: string[] | string | null;
   goal_id?: string | null;
   environment_risk_tags?: string[] | null;
   defaultTiming?: SuggestedHabitDefaultTiming | string | null;
@@ -39,124 +39,121 @@ export type HabitAlternativeSuggestion = {
   rankScore: number;
 };
 
-const SHAME_WORD_PATTERN = /\b(fail|failed|failure)\b/i;
+const EASY_TIERS = new Set(['tiny', 'easy']);
 
 function normalizeText(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  return value.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-function resolveArea(input: HabitAlternativeResolverInput): SuggestedHabitLifeWheelArea | null {
-  const value = input.lifeWheelArea ?? input.domain_key;
+function extractLifeWheelArea(input: HabitAlternativeInput): SuggestedHabitLifeWheelArea | null {
+  const value = (input.lifeWheelArea ?? input.domain_key ?? '').trim().toLowerCase();
   if (!value) return null;
-  const normalized = normalizeText(value).replace(/\s+/g, '');
+  const match = getAllSuggestedHabits().find((habit) => habit.lifeWheelArea.toLowerCase() === value);
+  return match?.lifeWheelArea ?? null;
+}
 
-  const map: Record<string, SuggestedHabitLifeWheelArea> = {
-    health: 'Health',
-    mind: 'Mind',
-    work: 'Work',
-    money: 'Money',
-    relationships: 'Relationships',
-    relationship: 'Relationships',
-    home: 'Home',
-    growth: 'Growth',
-    fun: 'Fun',
-  };
-
-  return map[normalized] ?? null;
+function toIntentSet(input: HabitAlternativeInput): Set<string> {
+  const raw = input.habit_intent;
+  if (!raw) return new Set();
+  const arr = Array.isArray(raw) ? raw : [raw];
+  return new Set(arr.map((tag) => String(tag).trim().toLowerCase()).filter(Boolean));
 }
 
 function isNearIdenticalTitle(currentTitle: string, candidateTitle: string): boolean {
-  const left = normalizeText(currentTitle);
-  const right = normalizeText(candidateTitle);
-  if (left === right) return true;
-  return left.includes(right) || right.includes(left);
+  const a = normalizeText(currentTitle);
+  const b = normalizeText(candidateTitle);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  return a.includes(b) || b.includes(a);
 }
 
-function scoreCandidate(
-  candidate: SuggestedHabit,
-  current: HabitAlternativeResolverInput,
-  reasonTag: HabitAlternativeReasonTag,
-): number {
-  const currentIntents = new Set((current.habit_intent ?? []).map((intent) => normalizeText(intent)));
-  const intentOverlap = candidate.goalIntentTags.filter((intent) => currentIntents.has(normalizeText(intent))).length;
+function chooseAngle(list: string[], avoid: Set<string>): string {
+  if (list.length === 0) return '';
+  for (const item of list) {
+    if (!avoid.has(item.toLowerCase())) return item;
+  }
+  return list[0];
+}
 
-  let score = intentOverlap * 100;
+function buildSupportiveCopy(reasonTag: HabitAlternativeReasonTag): string {
+  const byReason: Record<HabitAlternativeReasonTag, string> = {
+    habit_too_hard: 'This quest may not fit your life right now. Your goal still matters. Want a smaller path?',
+    friction_too_high: 'Let’s keep the desire, but test a lighter method. Your goal still matters. Want a smaller path?',
+    environment_mismatch: 'This quest may not fit your life right now. Let’s keep the desire, but test a lighter method.',
+    timing_mismatch: 'This quest may not fit your life right now. Want a smaller path that fits this part of your day?',
+    habit_stale: 'Your goal still matters. Let’s keep the desire, but test a lighter method.',
+    motivation_unclear: 'Your goal still matters. Want a smaller path? Let’s keep the desire, but test a lighter method.',
+    restart_relapse_pattern: 'This quest may not fit your life right now. Your goal still matters. Want a smaller path?',
+  };
+  return byReason[reasonTag];
+}
+
+function computeRankScore(
+  habit: SuggestedHabit,
+  intents: Set<string>,
+  reasonTag: HabitAlternativeReasonTag,
+  input: HabitAlternativeInput,
+): number {
+  let score = 0;
+
+  for (const tag of habit.goalIntentTags) {
+    if (intents.has(tag.toLowerCase())) score += 40;
+  }
 
   if (reasonTag === 'friction_too_high' || reasonTag === 'habit_too_hard' || reasonTag === 'restart_relapse_pattern') {
-    if (candidate.difficultyTier === 'tiny') score += 40;
-    if (candidate.difficultyTier === 'easy') score += 20;
+    score += EASY_TIERS.has(habit.difficultyTier) ? 25 : -10;
+    if (habit.difficultyTier === 'tiny') score += 5;
   }
 
-  if (reasonTag === 'environment_mismatch') {
-    const riskTags = (current.environment_risk_tags ?? []).map((tag) => normalizeText(tag));
-    const blockerMatches = candidate.blockerTags.filter((tag) => riskTags.includes(normalizeText(tag))).length;
-    score += blockerMatches * 15;
+  if (reasonTag === 'timing_mismatch' && input.defaultTiming && habit.defaultTiming === input.defaultTiming) {
+    score -= 8;
   }
 
-  if (reasonTag === 'timing_mismatch' && current.defaultTiming && candidate.defaultTiming !== current.defaultTiming) {
-    score += 12;
-  }
-
-  if (reasonTag === 'habit_stale' || reasonTag === 'motivation_unclear') {
-    if (candidate.difficultyTier === 'tiny') score += 8;
-    if (candidate.difficultyTier === 'easy') score += 6;
+  if (reasonTag === 'habit_stale') {
+    score += habit.difficultyTier === 'easy' ? 6 : 0;
   }
 
   return score;
 }
 
-function buildSupportiveCopy(reasonTag: HabitAlternativeReasonTag): string {
-  const lines: Record<HabitAlternativeReasonTag, string> = {
-    habit_too_hard: 'This quest may not fit your life right now. Your goal still matters. Want a smaller path?',
-    friction_too_high: 'Let’s keep the desire, but test a lighter method. Your goal still matters. Want a smaller path?',
-    environment_mismatch: 'This quest may not fit your life right now. Let’s keep the desire, but test a lighter method.',
-    timing_mismatch: 'This quest may not fit your life right now. Want a smaller path that fits your day better?',
-    habit_stale: 'Your goal still matters. Let’s keep the desire, but test a lighter method.',
-    motivation_unclear: 'This quest may not fit your life right now. Your goal still matters. Want a smaller path?',
-    restart_relapse_pattern: 'Your goal still matters. Let’s keep the desire, but test a lighter method.',
-  };
-  const copy = lines[reasonTag];
-  if (SHAME_WORD_PATTERN.test(copy)) {
-    throw new Error('supportive copy must not contain shame language');
-  }
-  return copy;
-}
-
 export function resolveHabitAlternatives(
-  currentHabit: HabitAlternativeResolverInput,
+  input: HabitAlternativeInput,
   reasonTag: HabitAlternativeReasonTag,
 ): HabitAlternativeSuggestion[] {
-  const area = resolveArea(currentHabit);
+  const area = extractLifeWheelArea(input);
   if (!area) return [];
 
-  const supportiveCopy = buildSupportiveCopy(reasonTag);
-  const currentTitle = currentHabit.title;
+  const intents = toIntentSet(input);
+  const riskTags = new Set((input.environment_risk_tags ?? []).map((tag) => tag.toLowerCase()));
+  const normalizedCurrentTitle = input.title || '';
 
-  return getAllSuggestedHabits()
-    .filter((candidate) => candidate.lifeWheelArea === area)
-    .filter((candidate) => !isNearIdenticalTitle(currentTitle, candidate.title))
-    .map((candidate) => {
-      const rankScore = scoreCandidate(candidate, currentHabit, reasonTag);
-      const cueSuggestion = candidate.cueSuggestions[0] ?? '';
-      const environmentHack = candidate.environmentHacks[0] ?? '';
+  const ranked = getAllSuggestedHabits()
+    .filter((habit) => habit.lifeWheelArea === area)
+    .filter((habit) => !isNearIdenticalTitle(normalizedCurrentTitle, habit.title))
+    .map((habit) => {
+      const rankScore = computeRankScore(habit, intents, reasonTag, input);
+      const cueSuggestion = chooseAngle(habit.cueSuggestions, reasonTag === 'environment_mismatch' ? riskTags : new Set());
+      const environmentHack = chooseAngle(habit.environmentHacks, reasonTag === 'environment_mismatch' ? riskTags : new Set());
       return {
-        suggestedHabitId: candidate.suggestedHabitId,
-        title: candidate.title,
-        lifeWheelArea: candidate.lifeWheelArea,
-        tinyVersion: candidate.tinyVersion,
-        normalVersion: candidate.normalVersion,
-        stretchVersion: candidate.stretchVersion,
+        suggestedHabitId: habit.suggestedHabitId,
+        title: habit.title,
+        lifeWheelArea: habit.lifeWheelArea,
+        tinyVersion: habit.tinyVersion,
+        normalVersion: habit.normalVersion,
+        stretchVersion: habit.stretchVersion,
         cueSuggestion,
         environmentHack,
         reasonTag,
-        supportiveCopy,
+        supportiveCopy: buildSupportiveCopy(reasonTag),
         rankScore,
       };
     })
     .sort((a, b) => {
       if (b.rankScore !== a.rankScore) return b.rankScore - a.rankScore;
-      if (a.title !== b.title) return a.title.localeCompare(b.title);
+      const titleCmp = a.title.localeCompare(b.title);
+      if (titleCmp !== 0) return titleCmp;
       return a.suggestedHabitId.localeCompare(b.suggestedHabitId);
-    })
-    .slice(0, 3);
+    });
+
+  return ranked.slice(0, 3);
 }

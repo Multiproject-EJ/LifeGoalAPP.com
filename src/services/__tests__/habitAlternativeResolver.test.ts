@@ -6,82 +6,102 @@ function assert(condition: boolean, message: string): void {
   }
 }
 
-export function runAllHabitAlternativeResolverTests(): void {
+function assertEqual<T>(actual: T, expected: T, message: string): void {
+  if (actual !== expected) {
+    throw new Error(`${message}: expected ${String(expected)} but received ${String(actual)}`);
+  }
+}
+
+export function runHabitAlternativeResolverTests(): void {
   const sameArea = resolveHabitAlternatives(
     {
-      id: 'current-1',
-      title: 'Drink water daily',
+      id: 'habit-1',
+      title: 'Run for 20 minutes',
       lifeWheelArea: 'Health',
       habit_intent: ['energy'],
     },
     'habit_too_hard',
   );
+  assert(sameArea.length > 0, 'Should return alternatives for resolvable area');
+  assert(sameArea.every((item) => item.lifeWheelArea === 'Health'), 'Alternatives should stay in same life wheel area');
 
-  assert(sameArea.length > 0, 'expected alternatives for resolvable area');
-  assert(sameArea.every((row) => row.lifeWheelArea === 'Health'), 'alternatives must be from same life wheel area');
-
-  const excludesSameTitle = resolveHabitAlternatives(
+  const excludesCurrentTitle = resolveHabitAlternatives(
     {
-      id: 'current-2',
-      title: 'Walk for 5 minutes',
+      id: 'habit-2',
+      title: 'Drink one glass of water',
       lifeWheelArea: 'Health',
     },
     'habit_stale',
   );
-  assert(!excludesSameTitle.some((row) => row.title === 'Walk for 5 minutes'), 'should exclude same title');
+  assert(
+    excludesCurrentTitle.every((item) => item.title !== 'Drink one glass of water'),
+    'Should exclude same or near-identical title',
+  );
 
   const highFriction = resolveHabitAlternatives(
     {
-      id: 'current-3',
-      title: 'Run 30 minutes',
+      id: 'habit-3',
+      title: 'Big morning routine',
       lifeWheelArea: 'Work',
       habit_intent: ['focus'],
     },
     'friction_too_high',
   );
-  assert(highFriction.length > 0, 'expected high friction alternatives');
-  assert(highFriction[0].suggestedHabitId === 'work-2-min-start', 'high friction should prefer tiny/easy first');
+  assertEqual(highFriction[0]?.suggestedHabitId, 'work-2-min-start', 'High friction should prefer tiny/easy options');
 
-  const intentRank = resolveHabitAlternatives(
+  const intentOverlap = resolveHabitAlternatives(
     {
-      id: 'current-4',
-      title: 'Do deep work',
+      id: 'habit-4',
+      title: 'Get things done',
       lifeWheelArea: 'Work',
       habit_intent: ['planning'],
     },
-    'motivation_unclear',
+    'habit_stale',
   );
-  assert(intentRank[0].suggestedHabitId === 'work-end-next-step', 'intent overlap should rank highest');
+  assertEqual(
+    intentOverlap[0]?.suggestedHabitId,
+    'work-end-next-step',
+    'Matching intent tags should rank above non-overlap habits',
+  );
 
-  const stableOrder = resolveHabitAlternatives(
+  const tieStable = resolveHabitAlternatives(
     {
-      id: 'current-5',
-      title: 'Something unrelated',
-      lifeWheelArea: 'Growth',
-      habit_intent: [],
+      id: 'habit-5',
+      title: 'Completely unrelated title',
+      lifeWheelArea: 'Mind',
     },
     'habit_stale',
   );
-  const stableIds = stableOrder.map((row) => row.suggestedHabitId).join(',');
-  assert(stableIds === 'growth-learn-one-note,growth-read-one-page,growth-ask-one-question', 'ties should use stable deterministic ordering');
+  const tiedScores = tieStable.map((item) => item.rankScore);
+  assert(
+    tiedScores.every((value) => value === tiedScores[0]),
+    'Test setup expects tie scores for deterministic order assertion',
+  );
+  const orderedTitles = [...tieStable].map((item) => item.title);
+  const sortedTitles = [...orderedTitles].sort((a, b) => a.localeCompare(b));
+  assertEqual(orderedTitles.join('|'), sortedTitles.join('|'), 'Ties should sort stably by title then id');
 
   const unresolvedArea = resolveHabitAlternatives(
     {
-      id: 'current-6',
+      id: 'habit-6',
       title: 'Unknown area habit',
-      lifeWheelArea: 'Spiritual',
+      lifeWheelArea: 'Spirituality',
     },
-    'habit_stale',
+    'motivation_unclear',
   );
-  assert(unresolvedArea.length === 0, 'unresolved area should return empty array');
+  assertEqual(unresolvedArea.length, 0, 'Unresolvable area should return empty array');
 
-  const supportiveCopy = resolveHabitAlternatives(
+  const supportive = resolveHabitAlternatives(
     {
-      id: 'current-7',
-      title: 'Any habit',
-      lifeWheelArea: 'Mind',
+      id: 'habit-7',
+      title: 'Another habit',
+      lifeWheelArea: 'Fun',
     },
     'restart_relapse_pattern',
   );
-  assert(supportiveCopy.every((row) => !/\b(fail|failed|failure)\b/i.test(row.supportiveCopy)), 'supportive copy should avoid shame language');
+  const shameTerms = ['fail', 'failed', 'failure'];
+  for (const item of supportive) {
+    const copy = item.supportiveCopy.toLowerCase();
+    assert(!shameTerms.some((term) => copy.includes(term)), 'Supportive copy should avoid shame/failure wording');
+  }
 }
