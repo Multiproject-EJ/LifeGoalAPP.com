@@ -115,6 +115,9 @@ import {
   isTimeInTodaysWinsReminderWindow,
   setTodaysWinsReminderLastShownCycle,
 } from '../../services/todaysWinsReminderPrefs';
+import { selectDailyLifeUpgradeCandidate, type DailyLifeUpgradeCandidate } from '../../services/dailyLifeUpgradeCandidate';
+import { getDailyLifeUpgradeEnabled } from '../../services/dailyLifeUpgradePrefs';
+import { hasShownDailyLifeUpgradeToday, markDailyLifeUpgradeShownToday } from '../../services/dailyLifeUpgradeCooldown';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { fetchXPTransactions } from '../../services/gamification';
 import { fetchZenTokenTransactions } from '../../services/zenGarden';
@@ -1011,6 +1014,8 @@ export function DailyHabitTracker({
   const [isVisionVisualizationRunning, setIsVisionVisualizationRunning] = useState(false);
   const [showYesterdayRecap, setShowYesterdayRecap] = useState(false);
   const [showDreamJournalReminderModal, setShowDreamJournalReminderModal] = useState(false);
+  const [dailyLifeUpgradeCandidate, setDailyLifeUpgradeCandidate] = useState<DailyLifeUpgradeCandidate | null>(null);
+  const [showDailyLifeUpgradeModal, setShowDailyLifeUpgradeModal] = useState(false);
   const setCompactPullDistanceState = useCallback((nextDistance: number) => {
     compactPullDistanceRef.current = nextDistance;
     setCompactPullDistance(nextDistance);
@@ -3099,6 +3104,43 @@ export function DailyHabitTracker({
     </div>
   ) : null;
 
+  const dailyLifeUpgradeModal = showDailyLifeUpgradeModal && dailyLifeUpgradeCandidate ? (
+    <div
+      className="habit-day-nav__vision-modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="daily-life-upgrade-title"
+      onClick={closeDailyLifeUpgradeModal}
+    >
+      <div className="habit-day-nav__vision-modal habit-day-nav__daily-life-upgrade-modal" onClick={(event) => event.stopPropagation()}>
+        <button
+          type="button"
+          className="habit-day-nav__vision-modal-close habit-day-nav__todays-offer-close"
+          onClick={closeDailyLifeUpgradeModal}
+          aria-label="Close Daily Life Upgrade"
+        >
+          ×
+        </button>
+        <div className="habit-day-nav__daily-life-upgrade-body">
+          <p className="habit-day-nav__daily-life-upgrade-eyebrow">Daily Life Upgrade</p>
+          <p id="daily-life-upgrade-title" className="habit-day-nav__daily-life-upgrade-title">{dailyLifeUpgradeCandidate.promptTitle}</p>
+          <p className="habit-day-nav__daily-life-upgrade-subtitle">One tiny improvement for today.</p>
+          <p className="habit-day-nav__daily-life-upgrade-copy">{dailyLifeUpgradeCandidate.promptBody}</p>
+          <button type="button" className="habit-day-nav__daily-life-upgrade-button" onClick={closeDailyLifeUpgradeModal}>
+            {dailyLifeUpgradeCandidate.suggestedActionLabel}
+          </button>
+          <button
+            type="button"
+            className="habit-day-nav__daily-life-upgrade-button habit-day-nav__daily-life-upgrade-button--secondary"
+            onClick={closeDailyLifeUpgradeModal}
+          >
+            Later
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   const zenTreeModal = isZenTreeModalOpen ? (
     <div
       className="habit-day-nav__vision-modal-backdrop"
@@ -4106,6 +4148,37 @@ export function DailyHabitTracker({
     setShowYesterdayRecap(true);
     setYesterdayRecapLastShown(session.user.id, todayISO);
   }, [loading, showYesterdayRecap, session?.user?.id, habits, historicalLogs, yesterdayISO]);
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    if (habits.length === 0 || historicalLogs.length === 0) return;
+    if (!getDailyLifeUpgradeEnabled(session.user.id)) return;
+    if (hasShownDailyLifeUpgradeToday(session.user.id)) return;
+
+    const candidate = selectDailyLifeUpgradeCandidate({
+      habits: habits.map((habit) => ({
+        id: habit.id,
+        title: habit.name,
+        status: habit.status,
+        is_archived: habit.archived ?? false,
+        linked_goal_id: habit.goal?.id ?? null,
+      })),
+      recentLogs: historicalLogs.map((log) => ({
+        habit_id: log.habit_id,
+        completed: log.completed,
+      })),
+    });
+
+    if (!candidate) return;
+    setDailyLifeUpgradeCandidate(candidate);
+    setShowDailyLifeUpgradeModal(true);
+  }, [habits, historicalLogs, session?.user?.id]);
+
+  function closeDailyLifeUpgradeModal() {
+    if (!session?.user?.id) return;
+    markDailyLifeUpgradeShownToday(session.user.id);
+    setShowDailyLifeUpgradeModal(false);
+  }
 
   useEffect(() => {
     if (typeof document === 'undefined') {
@@ -9431,6 +9504,12 @@ export function DailyHabitTracker({
       : todaysOfferModal
     : null;
 
+  const dailyLifeUpgradePortal = dailyLifeUpgradeModal
+    ? modalRoot
+      ? createPortal(dailyLifeUpgradeModal, modalRoot)
+      : dailyLifeUpgradeModal
+    : null;
+
   const zenTreePortal = zenTreeModal
     ? modalRoot
       ? createPortal(zenTreeModal, modalRoot)
@@ -9449,6 +9528,7 @@ export function DailyHabitTracker({
         {renderCompactExperience()}
         {offerTeaserPortal}
         {todaysOfferPortal}
+        {dailyLifeUpgradePortal}
         {zenTreePortal}
         {feedCreaturesPortal}
         {weeklyHabitReviewModal}
@@ -9647,6 +9727,7 @@ export function DailyHabitTracker({
       )}
       {offerTeaserPortal}
       {todaysOfferPortal}
+      {dailyLifeUpgradePortal}
       {zenTreePortal}
       {feedCreaturesPortal}
       {weeklyHabitReviewModal}
