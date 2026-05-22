@@ -9,6 +9,7 @@ import { GameDebugLogSection } from './GameDebugLogSection';
 import { YesterdayRecapSettings } from './YesterdayRecapSettings';
 import { DreamJournalReminderSettings } from './DreamJournalReminderSettings';
 import { TodaysWinsReminderSettings } from './TodaysWinsReminderSettings';
+import { DailyLifeUpgradeSettings } from './DailyLifeUpgradeSettings';
 import { GamificationSettings } from '../gamification/GamificationSettings';
 import { TelemetrySettingsSection } from './TelemetrySettingsSection';
 import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
@@ -551,7 +552,7 @@ export function MyAccountPanel({
             icon="⏰"
             title="Reminders"
             subtitle="Daily reminder preferences."
-            meta="4 reminder areas"
+            meta="5 reminder areas"
             onClick={handleRemindersClick}
           />
           <SettingsFeatureCard
@@ -993,6 +994,8 @@ export function MyAccountPanel({
         <DreamJournalReminderSettings session={session} />
 
         <TodaysWinsReminderSettings session={session} />
+
+        <DailyLifeUpgradeSettings session={session} />
 
         <DailyReminderPreferences session={session} />
       </SettingsFolderPopup>
