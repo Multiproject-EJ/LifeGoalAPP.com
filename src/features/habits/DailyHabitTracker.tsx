@@ -3129,6 +3129,16 @@ export function DailyHabitTracker({
           <p id="daily-life-upgrade-title" className="habit-day-nav__daily-life-upgrade-title">{dailyLifeUpgradeCandidate.promptTitle}</p>
           <p className="habit-day-nav__daily-life-upgrade-subtitle">One tiny improvement for today.</p>
           <p className="habit-day-nav__daily-life-upgrade-copy">{dailyLifeUpgradeCandidate.promptBody}</p>
+          {dailyLifeUpgradeCandidate.alternatives.length > 0 ? (
+            <div className="habit-day-nav__daily-life-upgrade-alternatives" aria-label="Supportive alternative options">
+              {dailyLifeUpgradeCandidate.alternatives.slice(0, 3).map((alternative) => (
+                <article key={alternative.suggestedHabitId} className="habit-day-nav__daily-life-upgrade-option-card">
+                  <p className="habit-day-nav__daily-life-upgrade-option-title">{alternative.title}</p>
+                  <p className="habit-day-nav__daily-life-upgrade-option-copy">{alternative.supportiveCopy}</p>
+                </article>
+              ))}
+            </div>
+          ) : null}
           <button type="button" className="habit-day-nav__daily-life-upgrade-button" onClick={handleDailyLifeUpgradePrimaryAction}>
             {dailyLifeUpgradeCandidate.suggestedActionLabel}
           </button>

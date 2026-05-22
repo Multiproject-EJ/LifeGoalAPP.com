@@ -68,4 +68,29 @@ export function runDailyLifeUpgradeCandidateTests(): void {
     'upgrade_to_stretch',
     'High consistency should produce upgrade recommendation',
   );
+
+  const alternativePathCandidate = selectDailyLifeUpgradeCandidate({
+    habits: [{ id: 'friction-heavy', title: 'Commute to gym before work' }],
+    recentLogs: [],
+    signals: {
+      environmentRiskTagsByHabitId: {
+        'friction-heavy': ['commute', 'weather', 'equipment'],
+      },
+    },
+  });
+  assertEqual(
+    alternativePathCandidate?.recommendationType,
+    'try_alternative_path',
+    'High-friction habits should support try_alternative_path recommendations',
+  );
+  assertEqual(
+    alternativePathCandidate?.promptTitle,
+    'Try a lighter path',
+    'Alternative path recommendation should use the supportive prompt title',
+  );
+  assertEqual(
+    alternativePathCandidate?.alternatives.length,
+    3,
+    'Alternative path recommendation should include up to three alternatives',
+  );
 }

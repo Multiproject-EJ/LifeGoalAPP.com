@@ -546,6 +546,32 @@
   background: rgba(148, 163, 184, 0.2);
 }
 
+.habit-day-nav__daily-life-upgrade-alternatives {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.habit-day-nav__daily-life-upgrade-option-card {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.36);
+  background: rgba(30, 41, 59, 0.55);
+  padding: 0.7rem 0.8rem;
+}
+
+.habit-day-nav__daily-life-upgrade-option-title {
+  margin: 0;
+  color: #f1f5f9;
+  font-size: 0.94rem;
+  font-weight: 650;
+}
+
+.habit-day-nav__daily-life-upgrade-option-copy {
+  margin: 0.35rem 0 0;
+  color: #cbd5e1;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
 .habit-card--daily-life-upgrade-target {
   animation: habit-card-daily-life-upgrade-pulse 1.8s ease-out;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5), 0 0 0 8px rgba(99, 102, 241, 0.22);
