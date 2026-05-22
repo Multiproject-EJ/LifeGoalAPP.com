@@ -70,6 +70,7 @@ import {
 } from '../services/islandRunRuntimeState';
 import { ShardClaimModal } from './ShardClaimModal';
 import { IslandRunReflectionComposer } from './IslandRunReflectionComposer';
+import { IslandRunLifePromptCard } from './IslandRunLifePromptCard';
 import { WisdomTreeCardEncounter } from './WisdomTreeCardEncounter';
 import { readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { useIslandRunState } from '../hooks/useIslandRunState';
@@ -9652,21 +9653,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
               </div>
             )}
 
-            {/* ── Stop 2: Habit (placeholder-safe until dedicated content ships) ── */}
+            {/* ── Stop 2: Habit (deterministic no-AI intake MVP) ── */}
             {activeStopId === 'habit' && openedStopIsPlayable && (
-              <div className="island-hatchery-card">
-                <p className="island-stop-modal__copy"><strong>✅ Habit Stop</strong></p>
-                <p>This stop uses a safe in-board placeholder while final content is being built.</p>
-                <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
-                  <button
-                    type="button"
-                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                    onClick={() => setActivePlaceholder(resolveIslandRunPlaceholderDescriptor('habit_stop_unfinished'))}
-                  >
-                    Open Habit Placeholder
-                  </button>
-                </div>
-              </div>
+              <IslandRunLifePromptCard
+                session={session}
+                onComplete={(message) => {
+                  setLandingText(message);
+                  handleCompleteActiveStop();
+                }}
+              />
             )}
 
             {/* ── Stop 4: Wisdom Tree ── */}
