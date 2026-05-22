@@ -546,6 +546,26 @@
   background: rgba(148, 163, 184, 0.2);
 }
 
+.habit-card--daily-life-upgrade-target {
+  animation: habit-card-daily-life-upgrade-pulse 1.8s ease-out;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5), 0 0 0 8px rgba(99, 102, 241, 0.22);
+}
+
+@keyframes habit-card-daily-life-upgrade-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.45);
+  }
+  35% {
+    transform: scale(1.01);
+    box-shadow: 0 0 0 8px rgba(99, 102, 241, 0.15);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5), 0 0 0 8px rgba(99, 102, 241, 0.22);
+  }
+}
+
 /* ──────────────────────────────────────────────────────────────────────
  * Phase 2 (Minigame & Events Consolidation Plan §2.4):
  * scrollable-body variant for the Today's Offer modal so a bottom Daily
