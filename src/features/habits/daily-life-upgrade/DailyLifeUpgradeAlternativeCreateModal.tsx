@@ -1,0 +1,27 @@
+type HabitForPause = { id: string; archived?: boolean | null; status?: string | null };
+import type { DailyLifeUpgradeAlternativeCreateDraft } from './useDailyLifeUpgradeFlow';
+
+export function DailyLifeUpgradeAlternativeCreateModal(props: {
+  draft: DailyLifeUpgradeAlternativeCreateDraft | null;
+  success: { habitId: string | null; originalHabitId: string | null } | null;
+  sortedHabits: HabitForPause[];
+  createError: string | null;
+  createSaving: boolean;
+  pauseConfirmOpen: boolean;
+  setPauseConfirmOpen: (open: boolean) => void;
+  pauseSaving: boolean;
+  pauseStatus: { tone: 'success' | 'error'; message: string } | null;
+  setPauseStatus: (status: { tone: 'success' | 'error'; message: string } | null) => void;
+  setDraft: (updater: (current: DailyLifeUpgradeAlternativeCreateDraft | null) => DailyLifeUpgradeAlternativeCreateDraft | null) => void;
+  onClose: () => void;
+  onSave: () => void;
+  onPauseOriginal: () => void;
+  onViewNewHabit: (habitId: string | null) => void;
+}) {
+  if (!props.draft && !props.success) return null;
+  return <div className="habit-edit-modal-overlay" onClick={props.onClose}><div className="habit-edit-modal-content" onClick={(event) => event.stopPropagation()}>{props.success ? (() => {
+    const originalHabit = props.success.originalHabitId ? props.sortedHabits.find((habit) => habit.id === props.success?.originalHabitId) ?? null : null;
+    const canPauseOriginalHabit = Boolean(originalHabit && !originalHabit.archived && originalHabit.status !== 'paused');
+    return <><div className="habit-edit-modal__header"><div><p className="habit-edit-modal__eyebrow">Alternative habit ready</p><h3>New lighter habit created.</h3></div><button type="button" className="habit-edit-modal__close" onClick={props.onClose} aria-label="Close alternative habit success">×</button></div><div className="habit-edit-modal__body"><p className="habit-edit-modal__hint">Your original habit is still unchanged.</p><p className="habit-edit-modal__hint">Try this path for a few days, then decide whether to keep, pause, or adjust the old one.</p>{props.pauseStatus ? <p className={props.pauseStatus.tone === 'error' ? 'habit-edit-modal__error' : 'habit-edit-modal__hint'}>{props.pauseStatus.message}</p> : null}{canPauseOriginalHabit ? props.pauseConfirmOpen ? <div className="habit-edit-modal__section"><p className="habit-edit-modal__label">Pause the original habit for now?</p><p className="habit-edit-modal__hint">Your new lighter habit will stay active.</p><div className="habit-edit-modal__actions"><button type="button" className="habit-edit-modal__btn habit-edit-modal__btn--ghost" onClick={() => props.setPauseConfirmOpen(false)} disabled={props.pauseSaving}>Cancel</button><button type="button" className="habit-edit-modal__btn habit-edit-modal__btn--secondary" onClick={props.onPauseOriginal} disabled={props.pauseSaving}>{props.pauseSaving ? 'Pausing…' : 'Pause original habit'}</button></div></div> : <button type="button" className="habit-edit-modal__btn habit-edit-modal__btn--secondary" onClick={() => { props.setPauseStatus(null); props.setPauseConfirmOpen(true); }}>Pause old habit</button> : <p className="habit-edit-modal__hint">Pause action unavailable for the original habit right now.</p>}</div><div className="habit-edit-modal__footer"><button type="button" className="habit-edit-modal__btn habit-edit-modal__btn--ghost" onClick={props.onClose}>Keep old habit for now</button><button type="button" className="habit-edit-modal__btn habit-edit-modal__btn--secondary" onClick={() => props.onViewNewHabit(props.success?.habitId ?? null)}>View new habit</button><button type="button" className="habit-edit-modal__btn habit-edit-modal__btn--primary" onClick={props.onClose}>Done</button></div></>;
+  })() : props.draft ? <><div className="habit-edit-modal__header"><div><p className="habit-edit-modal__eyebrow">Create alternative habit</p><h3>{props.draft.title.trim() || 'New alternative habit'}</h3></div><button type="button" className="habit-edit-modal__close" onClick={props.onClose} aria-label="Close alternative habit review">×</button></div><div className="habit-edit-modal__body"><p className="habit-edit-modal__hint">{props.draft.linkedGoalId ? 'This keeps the same goal, just with a lighter method.' : 'You can link this to a goal later.'}</p><p className="habit-edit-modal__hint">Your current habit will stay unchanged.</p><label className="habit-edit-modal__label" htmlFor="daily-life-upgrade-create-title">Habit title</label><input id="daily-life-upgrade-create-title" className="habit-edit-modal__input" type="text" value={props.draft.title} onChange={(event) => props.setDraft((current) => current ? { ...current, title: event.target.value } : current)} /><label className="habit-edit-modal__label" htmlFor="daily-life-upgrade-create-notes">Notes</label><textarea id="daily-life-upgrade-create-notes" className="habit-edit-modal__textarea" rows={4} value={props.draft.notes} onChange={(event) => props.setDraft((current) => current ? { ...current, notes: event.target.value } : current)} />{props.createError ? <p className="habit-edit-modal__error">{props.createError}</p> : null}</div><div className="habit-edit-modal__footer"><button type="button" className="habit-edit-modal__btn habit-edit-modal__btn--ghost" onClick={props.onClose}>Cancel</button><button type="button" className="habit-edit-modal__btn habit-edit-modal__btn--primary" onClick={props.onSave} disabled={props.createSaving}>{props.createSaving ? 'Creating…' : 'Create habit'}</button></div></> : null}</div></div>;
+}

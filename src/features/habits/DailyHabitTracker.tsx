@@ -49,7 +49,6 @@ import { fetchGoals, insertGoal } from '../../services/goals';
 import { getHabitReminderQueueStatus, syncQueuedHabitReminderPrefs } from '../../services/habitReminderPrefs';
 import {
   archiveHabitV2,
-  createHabitV2,
   getHabitsV2QueueStatus,
   pauseHabitV2,
   deactivateHabitV2,
@@ -57,7 +56,6 @@ import {
   updateHabitFullV2,
   type HabitV2Row,
 } from '../../services/habitsV2';
-import { getSuggestedHabitById } from './suggestedHabitLibrary';
 import { autoResumeDueHabits } from '../../services/habitLifecycleAutoResume';
 import { cancelHabitNotifications } from '../../services/habitAlertNotifications';
 import {
@@ -117,9 +115,6 @@ import {
   isTimeInTodaysWinsReminderWindow,
   setTodaysWinsReminderLastShownCycle,
 } from '../../services/todaysWinsReminderPrefs';
-import { selectDailyLifeUpgradeCandidate, type DailyLifeUpgradeCandidate } from '../../services/dailyLifeUpgradeCandidate';
-import { getDailyLifeUpgradeEnabled } from '../../services/dailyLifeUpgradePrefs';
-import { hasShownDailyLifeUpgradeToday, markDailyLifeUpgradeShownToday } from '../../services/dailyLifeUpgradeCooldown';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
 import { fetchXPTransactions } from '../../services/gamification';
 import { fetchZenTokenTransactions } from '../../services/zenGarden';
@@ -173,6 +168,9 @@ import {
 import { LifeBuildTodayCard } from './LifeBuildTodayCard';
 import { resolveFeatureAccess } from '../../services/featureAccess';
 import type { FeatureAvailabilityId } from '../../config/featureAvailability';
+import { DailyLifeUpgradeModal } from './daily-life-upgrade/DailyLifeUpgradeModal';
+import { DailyLifeUpgradeAlternativeCreateModal } from './daily-life-upgrade/DailyLifeUpgradeAlternativeCreateModal';
+import { useDailyLifeUpgradeFlow } from './daily-life-upgrade/useDailyLifeUpgradeFlow';
 
 // Constants
 const DONE_ISH_DEFAULT_PERCENTAGE = 85;
@@ -438,21 +436,6 @@ type HabitEditDraft = {
   name: string;
   schedule: Json | null;
   goalId: string | null;
-};
-
-type DailyLifeUpgradeAlternativeCreateDraft = {
-  title: string;
-  notes: string;
-  lifeWheelKey: string;
-  timing: string | null;
-  linkedGoalId: string | null;
-  linkedDomainKey: string | null;
-  linkedHabitIntent: string | null;
-};
-
-type DailyLifeUpgradeAlternativeCreateSuccess = {
-  habitId: string | null;
-  originalHabitId: string | null;
 };
 
 type TodayWinsSummary = {
@@ -1031,18 +1014,8 @@ export function DailyHabitTracker({
   const [isVisionVisualizationRunning, setIsVisionVisualizationRunning] = useState(false);
   const [showYesterdayRecap, setShowYesterdayRecap] = useState(false);
   const [showDreamJournalReminderModal, setShowDreamJournalReminderModal] = useState(false);
-  const [dailyLifeUpgradeCandidate, setDailyLifeUpgradeCandidate] = useState<DailyLifeUpgradeCandidate | null>(null);
-  const [showDailyLifeUpgradeModal, setShowDailyLifeUpgradeModal] = useState(false);
-  const [dailyLifeUpgradeHighlightedHabitId, setDailyLifeUpgradeHighlightedHabitId] = useState<string | null>(null);
-  const [dailyLifeUpgradeAlternativeCreateDraft, setDailyLifeUpgradeAlternativeCreateDraft] = useState<DailyLifeUpgradeAlternativeCreateDraft | null>(null);
-  const [dailyLifeUpgradeAlternativeCreateSuccess, setDailyLifeUpgradeAlternativeCreateSuccess] = useState<DailyLifeUpgradeAlternativeCreateSuccess | null>(null);
-  const [dailyLifeUpgradeCreateSaving, setDailyLifeUpgradeCreateSaving] = useState(false);
-  const [dailyLifeUpgradeCreateError, setDailyLifeUpgradeCreateError] = useState<string | null>(null);
-  const [dailyLifeUpgradePauseConfirmOpen, setDailyLifeUpgradePauseConfirmOpen] = useState(false);
-  const [dailyLifeUpgradePauseSaving, setDailyLifeUpgradePauseSaving] = useState(false);
-  const [dailyLifeUpgradePauseStatus, setDailyLifeUpgradePauseStatus] = useState<{ tone: 'success' | 'error'; message: string } | null>(null);
-  const dailyLifeUpgradeHighlightTimeoutRef = useRef<number | null>(null);
   const habitCardRefs = useRef<Record<string, HTMLLIElement | null>>({});
+  const dailyLifeUpgradeHighlightTimeoutRef = useRef<number | null>(null);
   const setCompactPullDistanceState = useCallback((nextDistance: number) => {
     compactPullDistanceRef.current = nextDistance;
     setCompactPullDistance(nextDistance);
@@ -1052,6 +1025,9 @@ export function DailyHabitTracker({
     return () => {
       if (compactRefreshSuccessTimeoutRef.current !== null) {
         window.clearTimeout(compactRefreshSuccessTimeoutRef.current);
+      }
+      if (dailyLifeUpgradeHighlightTimeoutRef.current !== null) {
+        window.clearTimeout(dailyLifeUpgradeHighlightTimeoutRef.current);
       }
     };
   }, []);
@@ -3131,59 +3107,6 @@ export function DailyHabitTracker({
     </div>
   ) : null;
 
-  const dailyLifeUpgradeModal = showDailyLifeUpgradeModal && dailyLifeUpgradeCandidate ? (
-    <div
-      className="habit-day-nav__vision-modal-backdrop"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="daily-life-upgrade-title"
-      onClick={closeDailyLifeUpgradeModal}
-    >
-      <div className="habit-day-nav__vision-modal habit-day-nav__daily-life-upgrade-modal" onClick={(event) => event.stopPropagation()}>
-        <button
-          type="button"
-          className="habit-day-nav__vision-modal-close habit-day-nav__todays-offer-close"
-          onClick={closeDailyLifeUpgradeModal}
-          aria-label="Close Daily Life Upgrade"
-        >
-          ×
-        </button>
-        <div className="habit-day-nav__daily-life-upgrade-body">
-          <p className="habit-day-nav__daily-life-upgrade-eyebrow">Daily Life Upgrade</p>
-          <p id="daily-life-upgrade-title" className="habit-day-nav__daily-life-upgrade-title">{dailyLifeUpgradeCandidate.promptTitle}</p>
-          <p className="habit-day-nav__daily-life-upgrade-subtitle">One tiny improvement for today.</p>
-          <p className="habit-day-nav__daily-life-upgrade-copy">{dailyLifeUpgradeCandidate.promptBody}</p>
-          {dailyLifeUpgradeCandidate.alternatives.length > 0 ? (
-            <div className="habit-day-nav__daily-life-upgrade-alternatives" aria-label="Supportive alternative options">
-              {dailyLifeUpgradeCandidate.alternatives.slice(0, 3).map((alternative) => (
-                <button
-                  key={alternative.suggestedHabitId}
-                  type="button"
-                  className="habit-day-nav__daily-life-upgrade-option-card"
-                  onClick={() => handleDailyLifeUpgradeAlternativeAction(alternative)}
-                  aria-label={`Try alternative habit: ${alternative.title}`}
-                >
-                  <p className="habit-day-nav__daily-life-upgrade-option-title">{alternative.title}</p>
-                  <p className="habit-day-nav__daily-life-upgrade-option-copy">{alternative.supportiveCopy}</p>
-                </button>
-              ))}
-            </div>
-          ) : null}
-          <button type="button" className="habit-day-nav__daily-life-upgrade-button" onClick={handleDailyLifeUpgradePrimaryAction}>
-            {dailyLifeUpgradeCandidate.suggestedActionLabel}
-          </button>
-          <button
-            type="button"
-            className="habit-day-nav__daily-life-upgrade-button habit-day-nav__daily-life-upgrade-button--secondary"
-            onClick={closeDailyLifeUpgradeModal}
-          >
-            Later
-          </button>
-        </div>
-      </div>
-    </div>
-  ) : null;
-
   const zenTreeModal = isZenTreeModalOpen ? (
     <div
       className="habit-day-nav__vision-modal-backdrop"
@@ -4191,234 +4114,6 @@ export function DailyHabitTracker({
     setShowYesterdayRecap(true);
     setYesterdayRecapLastShown(session.user.id, todayISO);
   }, [loading, showYesterdayRecap, session?.user?.id, habits, historicalLogs, yesterdayISO]);
-
-  useEffect(() => {
-    if (!session?.user?.id) return;
-    if (habits.length === 0 || historicalLogs.length === 0) return;
-    if (!getDailyLifeUpgradeEnabled(session.user.id)) return;
-    if (hasShownDailyLifeUpgradeToday(session.user.id)) return;
-
-    const candidate = selectDailyLifeUpgradeCandidate({
-      habits: habits.map((habit) => ({
-        id: habit.id,
-        title: habit.name,
-        status: habit.status,
-        is_archived: habit.archived ?? false,
-        linked_goal_id: habit.goal?.id ?? null,
-      })),
-      recentLogs: historicalLogs.map((log) => ({
-        habit_id: log.habit_id,
-        completed: log.completed,
-      })),
-    });
-
-    if (!candidate) return;
-    setDailyLifeUpgradeCandidate(candidate);
-    setShowDailyLifeUpgradeModal(true);
-  }, [habits, historicalLogs, session?.user?.id]);
-
-  function closeDailyLifeUpgradeModal() {
-    if (!session?.user?.id) return;
-    markDailyLifeUpgradeShownToday(session.user.id);
-    setShowDailyLifeUpgradeModal(false);
-  }
-
-  function handleDailyLifeUpgradePrimaryAction() {
-    if (!session?.user?.id || !dailyLifeUpgradeCandidate) return;
-
-    markDailyLifeUpgradeShownToday(session.user.id);
-    setShowDailyLifeUpgradeModal(false);
-
-    const targetHabit = sortedHabits.find((habit) => habit.id === dailyLifeUpgradeCandidate.habitId);
-    if (!targetHabit) return;
-
-    handleOpenEdit(targetHabit);
-
-    focusHabitCardById(targetHabit.id);
-  }
-
-  function handleDailyLifeUpgradeAlternativeAction(alternative: DailyLifeUpgradeCandidate['alternatives'][number]) {
-    if (!session?.user?.id || !dailyLifeUpgradeCandidate) return;
-
-    markDailyLifeUpgradeShownToday(session.user.id);
-    setShowDailyLifeUpgradeModal(false);
-
-    const targetHabit = sortedHabits.find((habit) => habit.id === dailyLifeUpgradeCandidate.habitId);
-    if (!targetHabit) return;
-
-    const sourceSuggestedHabit = getSuggestedHabitById(alternative.suggestedHabitId);
-    const lifeWheelMeta = extractLifeWheelDomain(targetHabit.schedule ?? null);
-    const linkedHabitIntent =
-      typeof (targetHabit as { habit_intent?: unknown }).habit_intent === 'string'
-        ? (targetHabit as { habit_intent?: string | null }).habit_intent ?? null
-        : null;
-    const nextLifeWheelKey = lifeWheelMeta?.key ?? LIFE_WHEEL_UNASSIGNED;
-    const nextTitle =
-      sourceSuggestedHabit?.tinyVersion?.trim()
-      || sourceSuggestedHabit?.title?.trim()
-      || alternative.title.trim()
-      || targetHabit.name;
-
-    const notesSegments = [
-      alternative.supportiveCopy?.trim() ?? '',
-      sourceSuggestedHabit?.cueSuggestions.length ? `Cue: ${sourceSuggestedHabit.cueSuggestions[0]}` : '',
-      sourceSuggestedHabit?.environmentHacks.length ? `Support: ${sourceSuggestedHabit.environmentHacks[0]}` : '',
-    ].filter(Boolean);
-
-    setDailyLifeUpgradeCreateError(null);
-    setDailyLifeUpgradeAlternativeCreateDraft({
-      title: nextTitle,
-      notes: notesSegments.join('\n'),
-      lifeWheelKey: nextLifeWheelKey,
-      timing: sourceSuggestedHabit?.defaultTiming ?? null,
-      linkedGoalId: targetHabit.goal_id ?? null,
-      linkedDomainKey: targetHabit.domain_key ?? null,
-      linkedHabitIntent,
-    });
-  }
-
-  useEffect(() => () => {
-    if (dailyLifeUpgradeHighlightTimeoutRef.current !== null) {
-      window.clearTimeout(dailyLifeUpgradeHighlightTimeoutRef.current);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof document === 'undefined') {
-      return;
-    }
-    setModalRoot(document.body);
-  }, []);
-
-  useEffect(() => {
-    if (!editHabit) {
-      setEditLifeWheelKey(LIFE_WHEEL_UNASSIGNED);
-      setEditGoalId(GOAL_UNASSIGNED);
-      setEditTitle('');
-      setEditNotes('');
-      setEditError(null);
-      return;
-    }
-
-    const domainMeta = extractLifeWheelDomain(editHabit.schedule);
-    setEditLifeWheelKey(domainMeta?.key ?? LIFE_WHEEL_UNASSIGNED);
-    setEditGoalId(editHabit.goalId ?? GOAL_UNASSIGNED);
-    const baseNotes = extractHabitNotes(editHabit.schedule);
-    if (pendingReviewAiApply?.habitId === editHabit.id) {
-      setEditTitle(pendingReviewAiApply.title || editHabit.name);
-      setEditNotes(baseNotes ? `${baseNotes}\n\nAI redesign draft: ${pendingReviewAiApply.rationale}` : `AI redesign draft: ${pendingReviewAiApply.rationale}`);
-      setPendingReviewAiApply(null);
-    } else {
-      setEditTitle(editHabit.name);
-      setEditNotes(baseNotes);
-    }
-    setEditError(null);
-  }, [editHabit, pendingReviewAiApply]);
-
-  const handleCloseDailyLifeUpgradeCreateFlow = useCallback(() => {
-    setDailyLifeUpgradeAlternativeCreateDraft(null);
-    setDailyLifeUpgradeAlternativeCreateSuccess(null);
-    setDailyLifeUpgradeCreateSaving(false);
-    setDailyLifeUpgradeCreateError(null);
-    setDailyLifeUpgradePauseConfirmOpen(false);
-    setDailyLifeUpgradePauseSaving(false);
-    setDailyLifeUpgradePauseStatus(null);
-  }, []);
-
-  const focusHabitCardById = useCallback((habitId: string) => {
-    const targetCard = habitCardRefs.current[habitId];
-    if (!targetCard) return;
-
-    targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    targetCard.focus({ preventScroll: true });
-    setDailyLifeUpgradeHighlightedHabitId(habitId);
-    if (dailyLifeUpgradeHighlightTimeoutRef.current !== null) {
-      window.clearTimeout(dailyLifeUpgradeHighlightTimeoutRef.current);
-    }
-    dailyLifeUpgradeHighlightTimeoutRef.current = window.setTimeout(() => {
-      setDailyLifeUpgradeHighlightedHabitId((current) => (current === habitId ? null : current));
-      dailyLifeUpgradeHighlightTimeoutRef.current = null;
-    }, 1800);
-  }, []);
-
-  const handleSaveDailyLifeUpgradeCreateFlow = useCallback(async () => {
-    if (!dailyLifeUpgradeAlternativeCreateDraft) return;
-    if (!isConfigured && !isDemoExperience) {
-      setDailyLifeUpgradeCreateError('Supabase credentials are not configured. Add them to continue.');
-      return;
-    }
-    const nextTitle = dailyLifeUpgradeAlternativeCreateDraft.title.trim();
-    if (!nextTitle) {
-      setDailyLifeUpgradeCreateError('Please enter a habit title.');
-      return;
-    }
-
-    setDailyLifeUpgradeCreateSaving(true);
-    setDailyLifeUpgradeCreateError(null);
-    try {
-      const scheduleWithLifeWheel = buildScheduleWithLifeWheel(
-        null,
-        dailyLifeUpgradeAlternativeCreateDraft.lifeWheelKey !== LIFE_WHEEL_UNASSIGNED
-          ? dailyLifeUpgradeAlternativeCreateDraft.lifeWheelKey
-          : null,
-      );
-      const scheduleWithNotes = buildScheduleWithNotes(scheduleWithLifeWheel, dailyLifeUpgradeAlternativeCreateDraft.notes);
-      const scheduleWithTiming = buildScheduleWithDefaultTiming(scheduleWithNotes, dailyLifeUpgradeAlternativeCreateDraft.timing);
-      const { data, error } = await createHabitV2(
-        {
-          title: nextTitle,
-          type: 'boolean',
-          schedule: scheduleWithTiming,
-          target_num: null,
-          target_unit: null,
-          archived: false,
-          allow_skip: true,
-          goal_id: dailyLifeUpgradeAlternativeCreateDraft.linkedGoalId,
-          domain_key: dailyLifeUpgradeAlternativeCreateDraft.linkedDomainKey,
-          habit_intent: dailyLifeUpgradeAlternativeCreateDraft.linkedHabitIntent,
-        },
-        session.user.id,
-      );
-      if (error) throw error;
-      await refreshHabits();
-      setDailyLifeUpgradeAlternativeCreateDraft(null);
-      setDailyLifeUpgradeCreateError(null);
-      setDailyLifeUpgradeAlternativeCreateSuccess({
-        habitId: data?.id ?? null,
-        originalHabitId: dailyLifeUpgradeCandidate?.habitId ?? null,
-      });
-      setDailyLifeUpgradePauseConfirmOpen(false);
-      setDailyLifeUpgradePauseStatus(null);
-    } catch (error) {
-      setDailyLifeUpgradeCreateError(error instanceof Error ? error.message : 'Unable to create this habit right now.');
-    } finally {
-      setDailyLifeUpgradeCreateSaving(false);
-    }
-  }, [dailyLifeUpgradeAlternativeCreateDraft, dailyLifeUpgradeCandidate?.habitId, isConfigured, isDemoExperience, refreshHabits, session.user.id]);
-
-  const handlePauseOriginalHabitFromDailyLifeUpgrade = useCallback(async () => {
-    const originalHabitId = dailyLifeUpgradeAlternativeCreateSuccess?.originalHabitId;
-    if (!originalHabitId || dailyLifeUpgradePauseSaving) return;
-
-    setDailyLifeUpgradePauseSaving(true);
-    setDailyLifeUpgradePauseStatus(null);
-    try {
-      const { error } = await pauseHabitV2(originalHabitId, {
-        reason: 'Trying a lighter alternative from Daily Life Upgrade',
-      });
-      if (error) throw error;
-      await refreshHabits();
-      setDailyLifeUpgradePauseStatus({ tone: 'success', message: 'Original habit paused.' });
-      setDailyLifeUpgradePauseConfirmOpen(false);
-    } catch (error) {
-      setDailyLifeUpgradePauseStatus({
-        tone: 'error',
-        message: error instanceof Error ? error.message : 'Unable to pause the original habit right now.',
-      });
-    } finally {
-      setDailyLifeUpgradePauseSaving(false);
-    }
-  }, [dailyLifeUpgradeAlternativeCreateSuccess?.originalHabitId, dailyLifeUpgradePauseSaving, refreshHabits]);
 
   useEffect(() => {
     if (!editHabit) return;
@@ -9693,154 +9388,94 @@ export function DailyHabitTracker({
       </div>
     </div>
   ) : null;
-  const dailyLifeUpgradeCreateFlowModalContent = dailyLifeUpgradeAlternativeCreateDraft || dailyLifeUpgradeAlternativeCreateSuccess ? (
-    <div className="habit-edit-modal-overlay" onClick={handleCloseDailyLifeUpgradeCreateFlow}>
-      <div className="habit-edit-modal-content" onClick={(event) => event.stopPropagation()}>
-        {dailyLifeUpgradeAlternativeCreateSuccess ? (
-          <>
-            {(() => {
-              const originalHabit = dailyLifeUpgradeAlternativeCreateSuccess.originalHabitId
-                ? sortedHabits.find((habit) => habit.id === dailyLifeUpgradeAlternativeCreateSuccess.originalHabitId) ?? null
-                : null;
-              const canPauseOriginalHabit = Boolean(originalHabit && !originalHabit.archived && originalHabit.status !== 'paused');
 
-              return (
-                <>
-            <div className="habit-edit-modal__header">
-              <div>
-                <p className="habit-edit-modal__eyebrow">Alternative habit ready</p>
-                <h3>New lighter habit created.</h3>
-              </div>
-              <button type="button" className="habit-edit-modal__close" onClick={handleCloseDailyLifeUpgradeCreateFlow} aria-label="Close alternative habit success">
-                ×
-              </button>
-            </div>
-            <div className="habit-edit-modal__body">
-              <p className="habit-edit-modal__hint">Your original habit is still unchanged.</p>
-              <p className="habit-edit-modal__hint">Try this path for a few days, then decide whether to keep, pause, or adjust the old one.</p>
-              {dailyLifeUpgradePauseStatus ? (
-                <p className={dailyLifeUpgradePauseStatus.tone === 'error' ? 'habit-edit-modal__error' : 'habit-edit-modal__hint'}>
-                  {dailyLifeUpgradePauseStatus.message}
-                </p>
-              ) : null}
-              {canPauseOriginalHabit ? (
-                dailyLifeUpgradePauseConfirmOpen ? (
-                  <div className="habit-edit-modal__section">
-                    <p className="habit-edit-modal__label">Pause the original habit for now?</p>
-                    <p className="habit-edit-modal__hint">Your new lighter habit will stay active.</p>
-                    <div className="habit-edit-modal__actions">
-                      <button
-                        type="button"
-                        className="habit-edit-modal__btn habit-edit-modal__btn--ghost"
-                        onClick={() => setDailyLifeUpgradePauseConfirmOpen(false)}
-                        disabled={dailyLifeUpgradePauseSaving}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        className="habit-edit-modal__btn habit-edit-modal__btn--secondary"
-                        onClick={() => void handlePauseOriginalHabitFromDailyLifeUpgrade()}
-                        disabled={dailyLifeUpgradePauseSaving}
-                      >
-                        {dailyLifeUpgradePauseSaving ? 'Pausing…' : 'Pause original habit'}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    className="habit-edit-modal__btn habit-edit-modal__btn--secondary"
-                    onClick={() => {
-                      setDailyLifeUpgradePauseStatus(null);
-                      setDailyLifeUpgradePauseConfirmOpen(true);
-                    }}
-                  >
-                    Pause old habit
-                  </button>
-                )
-              ) : (
-                <p className="habit-edit-modal__hint">Pause action unavailable for the original habit right now.</p>
-              )}
-            </div>
-            <div className="habit-edit-modal__footer">
-              <button type="button" className="habit-edit-modal__btn habit-edit-modal__btn--ghost" onClick={handleCloseDailyLifeUpgradeCreateFlow}>
-                Keep old habit for now
-              </button>
-              <button
-                type="button"
-                className="habit-edit-modal__btn habit-edit-modal__btn--secondary"
-                onClick={() => {
-                  if (dailyLifeUpgradeAlternativeCreateSuccess.habitId) {
-                    focusHabitCardById(dailyLifeUpgradeAlternativeCreateSuccess.habitId);
-                  }
-                  handleCloseDailyLifeUpgradeCreateFlow();
-                }}
-              >
-                View new habit
-              </button>
-              <button type="button" className="habit-edit-modal__btn habit-edit-modal__btn--primary" onClick={handleCloseDailyLifeUpgradeCreateFlow}>
-                Done
-              </button>
-            </div>
-                </>
-              );
-            })()}
-          </>
-        ) : dailyLifeUpgradeAlternativeCreateDraft ? (
-          <>
-            <div className="habit-edit-modal__header">
-              <div>
-                <p className="habit-edit-modal__eyebrow">Create alternative habit</p>
-                <h3>{dailyLifeUpgradeAlternativeCreateDraft.title.trim() || 'New alternative habit'}</h3>
-              </div>
-              <button type="button" className="habit-edit-modal__close" onClick={handleCloseDailyLifeUpgradeCreateFlow} aria-label="Close alternative habit review">
-                ×
-              </button>
-            </div>
-            <div className="habit-edit-modal__body">
-              <p className="habit-edit-modal__hint">
-                {dailyLifeUpgradeAlternativeCreateDraft.linkedGoalId
-                  ? 'This keeps the same goal, just with a lighter method.'
-                  : 'You can link this to a goal later.'}
-              </p>
-              <p className="habit-edit-modal__hint">Your current habit will stay unchanged.</p>
-              <label className="habit-edit-modal__label" htmlFor="daily-life-upgrade-create-title">Habit title</label>
-              <input
-                id="daily-life-upgrade-create-title"
-                className="habit-edit-modal__input"
-                type="text"
-                value={dailyLifeUpgradeAlternativeCreateDraft.title}
-                onChange={(event) => setDailyLifeUpgradeAlternativeCreateDraft((current) => current ? { ...current, title: event.target.value } : current)}
-              />
-              <label className="habit-edit-modal__label" htmlFor="daily-life-upgrade-create-notes">Notes</label>
-              <textarea
-                id="daily-life-upgrade-create-notes"
-                className="habit-edit-modal__textarea"
-                rows={4}
-                value={dailyLifeUpgradeAlternativeCreateDraft.notes}
-                onChange={(event) => setDailyLifeUpgradeAlternativeCreateDraft((current) => current ? { ...current, notes: event.target.value } : current)}
-              />
-              {dailyLifeUpgradeCreateError ? <p className="habit-edit-modal__error">{dailyLifeUpgradeCreateError}</p> : null}
-            </div>
-            <div className="habit-edit-modal__footer">
-              <button type="button" className="habit-edit-modal__btn habit-edit-modal__btn--ghost" onClick={handleCloseDailyLifeUpgradeCreateFlow}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="habit-edit-modal__btn habit-edit-modal__btn--primary"
-                onClick={() => void handleSaveDailyLifeUpgradeCreateFlow()}
-                disabled={dailyLifeUpgradeCreateSaving}
-              >
-                {dailyLifeUpgradeCreateSaving ? 'Creating…' : 'Create habit'}
-              </button>
-            </div>
-          </>
-        ) : null}
-      </div>
-    </div>
-  ) : null;
+  const focusHabitCardById = useCallback((habitId: string) => {
+    const targetCard = habitCardRefs.current[habitId];
+    if (!targetCard) return;
+    targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    targetCard.focus({ preventScroll: true });
+    setDailyLifeUpgradeHighlightedHabitId(habitId);
+    if (dailyLifeUpgradeHighlightTimeoutRef.current !== null) {
+      window.clearTimeout(dailyLifeUpgradeHighlightTimeoutRef.current);
+    }
+    dailyLifeUpgradeHighlightTimeoutRef.current = window.setTimeout(() => {
+      setDailyLifeUpgradeHighlightedHabitId((current) => (current === habitId ? null : current));
+      dailyLifeUpgradeHighlightTimeoutRef.current = null;
+    }, 1800);
+  }, []);
+
+  const {
+    dailyLifeUpgradeCandidate,
+    showDailyLifeUpgradeModal,
+    dailyLifeUpgradeAlternativeCreateDraft,
+    setDailyLifeUpgradeAlternativeCreateDraft,
+    dailyLifeUpgradeAlternativeCreateSuccess,
+    dailyLifeUpgradeCreateSaving,
+    dailyLifeUpgradeCreateError,
+    dailyLifeUpgradePauseConfirmOpen,
+    setDailyLifeUpgradePauseConfirmOpen,
+    dailyLifeUpgradePauseSaving,
+    dailyLifeUpgradePauseStatus,
+    setDailyLifeUpgradePauseStatus,
+    dailyLifeUpgradeHighlightedHabitId,
+    setDailyLifeUpgradeHighlightedHabitId,
+    closeDailyLifeUpgradeModal,
+    handleDailyLifeUpgradePrimaryAction,
+    handleDailyLifeUpgradeAlternativeAction,
+    handleCloseDailyLifeUpgradeCreateFlow,
+    handleSaveDailyLifeUpgradeCreateFlow,
+    handlePauseOriginalHabitFromDailyLifeUpgrade,
+  } = useDailyLifeUpgradeFlow({
+    userId: session?.user?.id,
+    habits,
+    historicalLogs: historicalLogs.map((log) => ({ habit_id: log.habit_id, completed: log.completed })),
+    sortedHabits,
+    isConfigured,
+    isDemoExperience,
+    lifeWheelUnassigned: LIFE_WHEEL_UNASSIGNED,
+    extractLifeWheelDomain,
+    buildScheduleWithLifeWheel,
+    buildScheduleWithNotes,
+    buildScheduleWithDefaultTiming,
+    handleOpenEdit,
+    focusHabitCardById,
+    refreshHabits,
+  });
+
+  const dailyLifeUpgradeModal = (
+    <DailyLifeUpgradeModal
+      candidate={dailyLifeUpgradeCandidate}
+      open={showDailyLifeUpgradeModal}
+      onClose={closeDailyLifeUpgradeModal}
+      onPrimary={handleDailyLifeUpgradePrimaryAction}
+      onAlternative={handleDailyLifeUpgradeAlternativeAction}
+    />
+  );
+
+  const dailyLifeUpgradeCreateFlowModalContent = (
+    <DailyLifeUpgradeAlternativeCreateModal
+      draft={dailyLifeUpgradeAlternativeCreateDraft}
+      success={dailyLifeUpgradeAlternativeCreateSuccess}
+      sortedHabits={sortedHabits}
+      createError={dailyLifeUpgradeCreateError}
+      createSaving={dailyLifeUpgradeCreateSaving}
+      pauseConfirmOpen={dailyLifeUpgradePauseConfirmOpen}
+      setPauseConfirmOpen={setDailyLifeUpgradePauseConfirmOpen}
+      pauseSaving={dailyLifeUpgradePauseSaving}
+      pauseStatus={dailyLifeUpgradePauseStatus}
+      setPauseStatus={setDailyLifeUpgradePauseStatus}
+      setDraft={setDailyLifeUpgradeAlternativeCreateDraft}
+      onClose={handleCloseDailyLifeUpgradeCreateFlow}
+      onSave={() => void handleSaveDailyLifeUpgradeCreateFlow()}
+      onPauseOriginal={() => void handlePauseOriginalHabitFromDailyLifeUpgrade()}
+      onViewNewHabit={(habitId) => {
+        if (habitId) {
+          focusHabitCardById(habitId);
+        }
+        handleCloseDailyLifeUpgradeCreateFlow();
+      }}
+    />
+  );
 
   const editHabitModal = editHabitModalContent
     ? modalRoot
