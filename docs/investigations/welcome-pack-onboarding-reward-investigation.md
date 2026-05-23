@@ -272,3 +272,10 @@ Potential reuse candidates:
 - `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx` (targeted search/read segments)
 - `src/features/gamification/level-worlds/LevelWorlds.css` (targeted search/read segments)
 
+
+
+## Slice B implementation note (2026-05-23)
+
+- Added a UI-only Welcome Pack prototype modal surface for visual testing only.
+- The prototype is dev-triggered and does not grant dice, essence, tickets, cards, or mutate canonical gameplay state.
+- No onboarding auto-wiring or migration/state schema changes were introduced in this slice.

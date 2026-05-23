@@ -7450,3 +7450,68 @@
   background: rgba(255, 120, 62, 0.22);
   border-color: rgba(255, 165, 88, 0.65);
 }
+
+
+.welcome-pack-prototype {
+  position: fixed;
+  inset: 0;
+  z-index: 9400;
+  display: grid;
+  place-items: center;
+  padding: clamp(14px, 4vw, 24px);
+  background: radial-gradient(circle at top, rgba(255, 225, 165, 0.2), rgba(12, 16, 32, 0.9));
+}
+
+.welcome-pack-prototype__shell {
+  width: min(100%, 560px);
+  border: 1px solid rgba(255, 226, 148, 0.45);
+  background: linear-gradient(180deg, rgba(36, 30, 66, 0.97), rgba(20, 18, 46, 0.98));
+  box-shadow: 0 22px 56px rgba(0, 0, 0, 0.48), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.welcome-pack-prototype__header { text-align: center; display: grid; gap: 0.45rem; }
+.welcome-pack-prototype__eyebrow { margin: 0; color: #f2dca0; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.welcome-pack-prototype__header h2 { margin: 0; font-size: clamp(1.45rem, 5.6vw, 2rem); color: #fff8dc; }
+.welcome-pack-prototype__header p { margin: 0; color: rgba(239, 237, 255, 0.9); font-size: 0.9rem; }
+
+.welcome-pack-prototype__cards {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.welcome-pack-prototype__card-slot {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 225, 146, 0.36);
+  background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+  padding: 0.55rem 0.35rem;
+  text-align: center;
+  display: grid;
+  gap: 0.2rem;
+}
+.welcome-pack-prototype__card-slot span { font-size: 1rem; color: #ffe6a5; }
+.welcome-pack-prototype__card-slot strong { font-size: 0.67rem; color: #f9f8ff; }
+.welcome-pack-prototype__card-slot small { font-size: 0.62rem; color: rgba(228, 221, 255, 0.78); }
+
+.welcome-pack-prototype__reward-grid {
+  margin-top: 0.9rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.welcome-pack-prototype__reward-grid p {
+  margin: 0;
+  border-radius: 10px;
+  padding: 0.55rem 0.6rem;
+  font-size: 0.8rem;
+  color: #f8f6ff;
+  background: rgba(18, 14, 44, 0.68);
+  border: 1px solid rgba(255, 235, 180, 0.24);
+}
+
+.welcome-pack-prototype__actions { margin-top: 1rem; }
+
+@media (max-width: 560px) {
+  .welcome-pack-prototype__cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

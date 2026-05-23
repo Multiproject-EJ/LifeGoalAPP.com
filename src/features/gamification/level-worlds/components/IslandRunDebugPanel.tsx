@@ -41,6 +41,7 @@ interface DebugPanelProps {
   onOpenEggRewardInventoryEntry?: (eggRewardId: string) => Promise<string>;
   onGrantDevDemoCreaturePack?: () => Promise<string>;
   onOpenDevDemoCreaturePackPrototype?: () => Promise<string>;
+  onOpenDevWelcomePackPrototype?: () => Promise<string>;
   onGrantDevDemoEggRewardPack?: () => Promise<string>;
   onClose: () => void;
 }
@@ -141,6 +142,7 @@ export function IslandRunDebugPanel({
   onOpenEggRewardInventoryEntry,
   onGrantDevDemoCreaturePack,
   onOpenDevDemoCreaturePackPrototype,
+  onOpenDevWelcomePackPrototype,
   onGrantDevDemoEggRewardPack,
   onClose,
 }: DebugPanelProps) {
@@ -620,6 +622,14 @@ export function IslandRunDebugPanel({
                       onClick={() => void runPackGrantAction(onOpenDevDemoCreaturePackPrototype)}
                     >
                       Open Creature Pack prototype
+                    </button>
+                    <button
+                      type="button"
+                      className="island-run-debug-panel__copy-btn"
+                      disabled={packGrantPending || !onOpenDevWelcomePackPrototype}
+                      onClick={() => void runPackGrantAction(onOpenDevWelcomePackPrototype)}
+                    >
+                      Open Welcome Pack prototype
                     </button>
                     <button
                       type="button"
