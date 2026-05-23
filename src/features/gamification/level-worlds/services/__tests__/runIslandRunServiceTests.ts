@@ -45,6 +45,7 @@ import { islandRunLuckyRollBoardConfigTests } from './islandRunLuckyRollBoardCon
 import { islandRunProgressResetTests } from './islandRunProgressReset.test';
 import { islandRunStateStoreTests } from './islandRunStateStore.test';
 import { islandRunWelcomePackEligibilityTests } from './islandRunWelcomePackEligibility.test';
+import { islandRunWelcomePackClaimActionTests } from './islandRunWelcomePackClaimAction.test';
 import { islandRunStateActionsTests } from './islandRunStateActions.test';
 import { islandRunAudioTests } from './islandRunAudio.test';
 import { islandRunFirstSessionTutorialUiTests } from './islandRunFirstSessionTutorialUi.test';
@@ -116,6 +117,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunProgressReset', tests: islandRunProgressResetTests },
   { label: 'islandRunStateStore', tests: islandRunStateStoreTests },
   { label: 'islandRunWelcomePackEligibility', tests: islandRunWelcomePackEligibilityTests },
+  { label: 'islandRunWelcomePackClaimAction', tests: islandRunWelcomePackClaimActionTests },
   { label: 'islandRunStateActions', tests: islandRunStateActionsTests },
   { label: 'islandRunAudio', tests: islandRunAudioTests },
   { label: 'islandRunFirstSessionTutorialUi', tests: islandRunFirstSessionTutorialUiTests },
