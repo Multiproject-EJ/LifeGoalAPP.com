@@ -1,7 +1,6 @@
 import React from 'react';
 import { CREATURE_CATALOG } from '../services/creatureCatalog';
-import type { ClaimWelcomePackStarterCardsResult } from '../services/islandRunWelcomePackClaimAction';
-import type { ClaimWelcomePackRewardBundleResult } from '../services/islandRunWelcomePackRewardBundleAction';
+import type { ClaimFullWelcomePackResult } from '../services/islandRunWelcomePackFullClaimAction';
 
 export interface WelcomePackPrototypeModalProps {
   open: boolean;
@@ -9,7 +8,7 @@ export interface WelcomePackPrototypeModalProps {
   onClaim?: () => Promise<void>;
   claimPending?: boolean;
   claimError?: string | null;
-  claimResult?: { cards: ClaimWelcomePackStarterCardsResult; bundle: ClaimWelcomePackRewardBundleResult } | null;
+  claimResult?: ClaimFullWelcomePackResult | null;
 }
 
 const PLACEHOLDER_CARDS = Array.from({ length: 5 }, (_, index) => ({
