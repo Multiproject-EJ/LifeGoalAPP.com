@@ -178,10 +178,9 @@ import {
   type FirstSessionCreaturePackCardReveal,
 } from '../services/islandRunFirstSessionCreaturePackAction';
 import {
-  claimWelcomePackStarterCards,
-  type ClaimWelcomePackStarterCardsResult,
-} from '../services/islandRunWelcomePackClaimAction';
-import { claimWelcomePackRewardBundle, type ClaimWelcomePackRewardBundleResult } from '../services/islandRunWelcomePackRewardBundleAction';
+  claimFullWelcomePack,
+  type ClaimFullWelcomePackResult,
+} from '../services/islandRunWelcomePackFullClaimAction';
 import {
   earnCreatureTreatsForUser,
   fetchCreatureTreatInventory,
@@ -1676,7 +1675,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     grantStatus: 'granted' | 'already_granted';
   }>(null);
   const [showWelcomePackPrototype, setShowWelcomePackPrototype] = useState(false);
-  const [welcomePackClaimResult, setWelcomePackClaimResult] = useState<{ cards: ClaimWelcomePackStarterCardsResult; bundle: ClaimWelcomePackRewardBundleResult } | null>(null);
+  const [welcomePackClaimResult, setWelcomePackClaimResult] = useState<ClaimFullWelcomePackResult | null>(null);
   const [welcomePackClaimError, setWelcomePackClaimError] = useState<string | null>(null);
   const [welcomePackClaimPending, setWelcomePackClaimPending] = useState(false);
   const welcomePackClaimInFlightRef = useRef(false);
@@ -7698,24 +7697,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setWelcomePackClaimPending(true);
     setWelcomePackClaimError(null);
     try {
-      const cards = await claimWelcomePackStarterCards({
+      const result = await claimFullWelcomePack({
         session,
         client,
-        triggerSource: 'dev_welcome_pack_prototype_claim_cards',
+        triggerSource: 'dev_welcome_pack_prototype_claim_full',
       });
-      const bundle = await claimWelcomePackRewardBundle({
-        session,
-        client,
-        triggerSource: 'dev_welcome_pack_prototype_claim_bundle',
-      });
-      setWelcomePackClaimResult({ cards, bundle });
+      setWelcomePackClaimResult(result);
       refreshIslandRunStateFromLocal(session);
       const refreshedRecord = getIslandRunStateSnapshot(session);
       setRuntimeState(refreshedRecord);
       runtimeStateRef.current = refreshedRecord;
-      const message = cards.status === 'already_claimed' && bundle.status === 'already_claimed'
+      const message = result.status === 'already_claimed'
         ? '✨ DEV Welcome Pack: already claimed in canonical state.'
-        : `✨ DEV Welcome Pack claimed: ${cards.revealPayload?.cards.length ?? 0} cards, +${bundle.granted.dice} dice, +${bundle.granted.essence} essence, +${bundle.granted.eventTickets} tickets.`;
+        : `✨ DEV Welcome Pack ${result.status}: ${result.cards.revealPayload?.cards.length ?? 0} cards, +${result.bundle.granted.dice} dice, +${result.bundle.granted.essence} essence, +${result.bundle.granted.eventTickets} tickets.`;
       setLandingText(message);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to claim Welcome Pack right now.';

@@ -318,3 +318,25 @@ Explicitly **not included** in Slice D:
 - Idempotency strategy: **Option B** (`welcomePackRewardBundleClaimed` persisted marker) to avoid changing Slice D semantics of `welcomePackClaimed` and to keep migration risk low while dev preview can call cards and bundle independently.
 - No-active-event fallback: action returns `claimed_without_active_event`, grants only dice+essence, grants **0 tickets**, and does not fallback to legacy `spinTokens`.
 - Still no automatic first-launch wiring; this remains dev-only preview wiring.
+
+## Slice F1 (2026-05-23): canonical full Welcome Pack orchestration helper (still dev-only)
+
+- Added canonical orchestration helper `claimFullWelcomePack` that sequentially composes:
+  - `claimWelcomePackStarterCards`
+  - `claimWelcomePackRewardBundle`
+- Added combined UI-facing result contract containing:
+  - `cards` sub-result (including reveal payload)
+  - `bundle` sub-result (including granted reward payload)
+  - overall status: `claimed | partially_claimed | already_claimed | error` (error reserved by contract; current implementation throws underlying action failures).
+- Lock strategy: **no outer orchestration lock**. The helper intentionally does not wrap both calls in `withIslandRunActionLock` because underlying actions already lock and nesting the same per-user mutex would self-deadlock. Composition is sequential and relies on each canonical action’s lock boundary.
+- Partial-state handling:
+  - cards already claimed + bundle unclaimed => grants only bundle (`partially_claimed`)
+  - bundle already claimed + cards unclaimed => grants only cards (`partially_claimed`)
+  - both already claimed => `already_claimed`
+- No-active-event behavior is preserved from Slice E2:
+  - bundle returns `claimed_without_active_event`
+  - grants `+150 dice`, `+2000 essence`, and `0` tickets
+  - never uses legacy `spinTokens` fallback.
+- Dev-only modal wiring now uses the orchestrator instead of manually chaining two independent calls in UI.
+- Still **no automatic first-launch/onboarding wiring** and no normal-user exposure.
+- No new migrations were required for this slice.
