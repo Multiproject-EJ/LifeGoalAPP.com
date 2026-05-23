@@ -288,3 +288,17 @@ Potential reuse candidates:
 - Added targeted tests for default eligibility, claimed ineligibility, and legacy-state compatibility.
 - No reward grants, card grants, pack opens, economy mutations, or first-launch/onboarding auto-trigger wiring were introduced in this slice.
 - Added a physical DB column migration for `welcome_pack_claimed` because Island Run runtime persistence is schema-bound to `public.island_run_runtime_state` (RPC + typed row projection), not JSON-only blob storage.
+
+## Slice D implementation note (2026-05-23)
+
+Slice D is now implemented as a dedicated canonical locked action service for Welcome Pack **starter cards only**:
+- Added a canonical action that claims a 5-card Welcome Pack using the existing creature-pack randomization pipeline pattern and commits once under `withIslandRunActionLock`.
+- The action sets `welcomePackClaimed = true` on successful claim and returns an idempotent `already_claimed` result on repeats.
+- The action returns a UI-friendly reveal payload containing the 5 granted cards.
+
+Explicitly **not included** in Slice D:
+- No dice grants.
+- No essence grants.
+- No event ticket grants.
+- No reward bar mutations.
+- No automatic first-launch/onboarding wiring.
