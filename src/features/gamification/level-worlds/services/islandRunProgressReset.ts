@@ -53,6 +53,7 @@ export function buildFreshIslandRunRecord(
     dailyHeartsClaimedDayKey: null,
     onboardingDisplayNameLoopCompleted: current.onboardingDisplayNameLoopCompleted,
     welcomePackClaimed: false,
+    welcomePackRewardBundleClaimed: false,
     storyPrologueSeen: false,
     audioEnabled: current.audioEnabled,
     currentIslandNumber: 1,

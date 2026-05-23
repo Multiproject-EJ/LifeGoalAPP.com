@@ -91,6 +91,7 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     dailyHeartsClaimedDayKey?: string | null;
     onboardingDisplayNameLoopCompleted?: boolean;
     welcomePackClaimed?: boolean;
+    welcomePackRewardBundleClaimed?: boolean;
     storyPrologueSeen?: boolean;
     audioEnabled?: boolean;
     onboardingComplete?: boolean;

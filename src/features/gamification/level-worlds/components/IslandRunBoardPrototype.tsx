@@ -181,6 +181,7 @@ import {
   claimWelcomePackStarterCards,
   type ClaimWelcomePackStarterCardsResult,
 } from '../services/islandRunWelcomePackClaimAction';
+import { claimWelcomePackRewardBundle, type ClaimWelcomePackRewardBundleResult } from '../services/islandRunWelcomePackRewardBundleAction';
 import {
   earnCreatureTreatsForUser,
   fetchCreatureTreatInventory,
@@ -1675,7 +1676,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     grantStatus: 'granted' | 'already_granted';
   }>(null);
   const [showWelcomePackPrototype, setShowWelcomePackPrototype] = useState(false);
-  const [welcomePackClaimResult, setWelcomePackClaimResult] = useState<ClaimWelcomePackStarterCardsResult | null>(null);
+  const [welcomePackClaimResult, setWelcomePackClaimResult] = useState<{ cards: ClaimWelcomePackStarterCardsResult; bundle: ClaimWelcomePackRewardBundleResult } | null>(null);
   const [welcomePackClaimError, setWelcomePackClaimError] = useState<string | null>(null);
   const [welcomePackClaimPending, setWelcomePackClaimPending] = useState(false);
   const welcomePackClaimInFlightRef = useRef(false);
@@ -7697,19 +7698,24 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     setWelcomePackClaimPending(true);
     setWelcomePackClaimError(null);
     try {
-      const result = await claimWelcomePackStarterCards({
+      const cards = await claimWelcomePackStarterCards({
         session,
         client,
-        triggerSource: 'dev_welcome_pack_prototype_claim',
+        triggerSource: 'dev_welcome_pack_prototype_claim_cards',
       });
-      setWelcomePackClaimResult(result);
+      const bundle = await claimWelcomePackRewardBundle({
+        session,
+        client,
+        triggerSource: 'dev_welcome_pack_prototype_claim_bundle',
+      });
+      setWelcomePackClaimResult({ cards, bundle });
       refreshIslandRunStateFromLocal(session);
       const refreshedRecord = getIslandRunStateSnapshot(session);
       setRuntimeState(refreshedRecord);
       runtimeStateRef.current = refreshedRecord;
-      const message = result.status === 'already_claimed'
+      const message = cards.status === 'already_claimed' && bundle.status === 'already_claimed'
         ? '✨ DEV Welcome Pack: already claimed in canonical state.'
-        : `✨ DEV Welcome Pack claimed with ${result.revealPayload?.cards.length ?? 0} cards (no dice, essence, or tickets).`;
+        : `✨ DEV Welcome Pack claimed: ${cards.revealPayload?.cards.length ?? 0} cards, +${bundle.granted.dice} dice, +${bundle.granted.essence} essence, +${bundle.granted.eventTickets} tickets.`;
       setLandingText(message);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to claim Welcome Pack right now.';

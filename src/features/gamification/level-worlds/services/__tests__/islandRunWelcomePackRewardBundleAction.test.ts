@@ -1,0 +1,17 @@
+import { claimWelcomePackRewardBundle, WELCOME_PACK_BUNDLE_DICE, WELCOME_PACK_BUNDLE_ESSENCE, WELCOME_PACK_BUNDLE_EVENT_TICKETS } from '../islandRunWelcomePackRewardBundleAction';
+import { __resetIslandRunActionMutexesForTests } from '../islandRunActionMutex';
+import { readIslandRunGameStateRecord, resetIslandRunRuntimeCommitCoordinatorForTests, writeIslandRunGameStateRecord, type IslandRunGameStateRecord } from '../islandRunGameStateStore';
+import { __resetIslandRunStateStoreForTests, refreshIslandRunStateFromLocal } from '../islandRunStateStore';
+import { assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
+
+const USER_ID = 'welcome-pack-reward-bundle-test-user';
+const makeSession = () => ({ user: { id: USER_ID, user_metadata: {} } } as unknown as import('@supabase/supabase-js').Session);
+const reset = () => { resetIslandRunRuntimeCommitCoordinatorForTests(); __resetIslandRunActionMutexesForTests(); __resetIslandRunStateStoreForTests(); installWindowWithStorage(createMemoryStorage()); };
+const seed = async (overrides: Partial<IslandRunGameStateRecord>) => { const s = makeSession(); const base = readIslandRunGameStateRecord(s); await writeIslandRunGameStateRecord({ session: s, client: null, record: { ...base, ...overrides } }); refreshIslandRunStateFromLocal(s); };
+
+export const islandRunWelcomePackRewardBundleActionTests: TestCase[] = [
+  { name: 'fresh claim grants dice and essence', run: async () => { reset(); await seed({ welcomePackRewardBundleClaimed: false, dicePool: 10, essence: 5 }); const result = await claimWelcomePackRewardBundle({ session: makeSession(), client: null }); const persisted = readIslandRunGameStateRecord(makeSession()); assertEqual(result.granted.dice, WELCOME_PACK_BUNDLE_DICE, 'dice grant'); assertEqual(result.granted.essence, WELCOME_PACK_BUNDLE_ESSENCE, 'essence grant'); assertEqual(persisted.dicePool, 160, 'dice applied'); assertEqual(persisted.essence, 2005, 'essence applied'); } },
+  { name: 'active event claim grants event tickets by event id', run: async () => { reset(); await seed({ welcomePackRewardBundleClaimed: false, activeTimedEvent: { eventId: 'feeding_frenzy:1', eventType: 'feeding_frenzy', startedAtMs: 0, expiresAtMs: Date.now() + 999999, version: 1 }, minigameTicketsByEvent: {} }); const result = await claimWelcomePackRewardBundle({ session: makeSession(), client: null }); assertEqual(result.status, 'claimed', 'status claimed'); assertEqual(result.record.minigameTicketsByEvent['feeding_frenzy:1'], WELCOME_PACK_BUNDLE_EVENT_TICKETS, 'tickets granted to active event bucket'); } },
+  { name: 'repeated claim is idempotent', run: async () => { reset(); await seed({ welcomePackRewardBundleClaimed: false }); const first = await claimWelcomePackRewardBundle({ session: makeSession(), client: null }); const second = await claimWelcomePackRewardBundle({ session: makeSession(), client: null }); assertEqual(first.status === 'already_claimed', false, 'first not already claimed'); assertEqual(second.status, 'already_claimed', 'second should not grant'); } },
+  { name: 'no active event fallback grants no tickets', run: async () => { reset(); await seed({ welcomePackRewardBundleClaimed: false, activeTimedEvent: null, minigameTicketsByEvent: {} }); const result = await claimWelcomePackRewardBundle({ session: makeSession(), client: null }); assertEqual(result.status, 'claimed_without_active_event', 'fallback status'); assertEqual(result.granted.eventTickets, 0, 'no tickets granted'); } },
+];
