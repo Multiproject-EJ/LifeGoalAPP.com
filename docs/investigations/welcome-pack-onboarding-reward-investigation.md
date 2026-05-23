@@ -287,4 +287,4 @@ Potential reuse candidates:
 - Added backward-compatible hydration/serialization behavior for legacy saved records that do not include the new field (defaults to `false` when missing).
 - Added targeted tests for default eligibility, claimed ineligibility, and legacy-state compatibility.
 - No reward grants, card grants, pack opens, economy mutations, or first-launch/onboarding auto-trigger wiring were introduced in this slice.
-- No migrations were added in this slice; existing optional-field hydration pattern covers backward compatibility.
+- Added a physical DB column migration for `welcome_pack_claimed` because Island Run runtime persistence is schema-bound to `public.island_run_runtime_state` (RPC + typed row projection), not JSON-only blob storage.
