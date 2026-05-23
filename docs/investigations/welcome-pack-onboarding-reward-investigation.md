@@ -340,3 +340,15 @@ Explicitly **not included** in Slice D:
 - Dev-only modal wiring now uses the orchestrator instead of manually chaining two independent calls in UI.
 - Still **no automatic first-launch/onboarding wiring** and no normal-user exposure.
 - No new migrations were required for this slice.
+
+## Slice F2 implementation note (2026-05-23)
+
+- Added real Island Run onboarding wiring so eligible players auto-see the Welcome Pack modal on Island Run open.
+- Auto-show uses existing eligibility/claim markers (`getWelcomePackEligibility`, `welcomePackClaimed`, `welcomePackRewardBundleClaimed`) and does **not** claim on open.
+- Claim remains explicit CTA-only (`Collect Welcome Pack`) and still routes through `claimFullWelcomePack`.
+- Modal priority decision: first-session creature pack flow remains higher priority; Welcome Pack waits until that modal is not visible to avoid onboarding modal stacking.
+- Manual close behavior: closing unclaimed Welcome Pack suppresses reopen for the current Island Run session, but it is eligible to auto-show again on a future Island Run open until claimed.
+- No-active-event behavior is surfaced in modal messaging (`claimed_without_active_event`) so users are not promised tickets when no active event exists.
+- No reward bar mutation introduced in F2 wiring.
+- No `spinTokens` fallback introduced in F2 wiring.
+- No migrations required for F2.

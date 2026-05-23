@@ -48,6 +48,7 @@ import { islandRunWelcomePackEligibilityTests } from './islandRunWelcomePackElig
 import { islandRunWelcomePackClaimActionTests } from './islandRunWelcomePackClaimAction.test';
 import { islandRunWelcomePackRewardBundleActionTests } from './islandRunWelcomePackRewardBundleAction.test';
 import { islandRunWelcomePackFullClaimActionTests } from './islandRunWelcomePackFullClaimAction.test';
+import { islandRunWelcomePackOnboardingUiTests } from './islandRunWelcomePackOnboardingUi.test';
 import { islandRunStateActionsTests } from './islandRunStateActions.test';
 import { islandRunAudioTests } from './islandRunAudio.test';
 import { islandRunFirstSessionTutorialUiTests } from './islandRunFirstSessionTutorialUi.test';
@@ -122,6 +123,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunWelcomePackClaimAction', tests: islandRunWelcomePackClaimActionTests },
   { label: 'islandRunWelcomePackRewardBundleAction', tests: islandRunWelcomePackRewardBundleActionTests },
   { label: 'islandRunWelcomePackFullClaimAction', tests: islandRunWelcomePackFullClaimActionTests },
+  { label: 'islandRunWelcomePackOnboardingUi', tests: islandRunWelcomePackOnboardingUiTests },
   { label: 'islandRunStateActions', tests: islandRunStateActionsTests },
   { label: 'islandRunAudio', tests: islandRunAudioTests },
   { label: 'islandRunFirstSessionTutorialUi', tests: islandRunFirstSessionTutorialUiTests },
