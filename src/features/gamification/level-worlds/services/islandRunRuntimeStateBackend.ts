@@ -40,6 +40,7 @@ export interface IslandRunRuntimeStateBackend {
       firstSessionTutorialState?: IslandRunFirstSessionTutorialState;
       dailyHeartsClaimedDayKey?: string | null;
       onboardingDisplayNameLoopCompleted?: boolean;
+    welcomePackClaimed?: boolean;
       storyPrologueSeen?: boolean;
       audioEnabled?: boolean;
       onboardingComplete?: boolean;
@@ -150,6 +151,10 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.onboardingDisplayNameLoopCompleted === 'boolean'
           ? patch.onboardingDisplayNameLoopCompleted
           : current.onboardingDisplayNameLoopCompleted,
+      welcomePackClaimed:
+        typeof patch.welcomePackClaimed === 'boolean'
+          ? patch.welcomePackClaimed
+          : current.welcomePackClaimed,
       storyPrologueSeen:
         typeof patch.storyPrologueSeen === 'boolean'
           ? patch.storyPrologueSeen
