@@ -302,3 +302,12 @@ Explicitly **not included** in Slice D:
 - No event ticket grants.
 - No reward bar mutations.
 - No automatic first-launch/onboarding wiring.
+
+## Slice E1 implementation note (2026-05-23)
+
+- Wired the dev-only Welcome Pack prototype modal path to invoke the canonical `claimWelcomePackStarterCards` action from the Island Run debug flow.
+- The modal now prefers and displays the actual 5-card reveal payload returned by the real claim action, while keeping the static placeholder view as fallback before claim.
+- Added explicit already-claimed handling in the modal and disabled repeat claim attempts there.
+- Added loading/error handling and overlap protection so repeated clicks do not start concurrent claim requests.
+- Still no dice grants, no essence grants, and no event ticket grants in this flow.
+- Still no automatic first-launch/onboarding wiring and no changes to normal user-visible onboarding surfaces.

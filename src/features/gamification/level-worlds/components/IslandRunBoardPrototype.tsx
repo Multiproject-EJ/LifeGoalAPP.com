@@ -178,6 +178,10 @@ import {
   type FirstSessionCreaturePackCardReveal,
 } from '../services/islandRunFirstSessionCreaturePackAction';
 import {
+  claimWelcomePackStarterCards,
+  type ClaimWelcomePackStarterCardsResult,
+} from '../services/islandRunWelcomePackClaimAction';
+import {
   earnCreatureTreatsForUser,
   fetchCreatureTreatInventory,
   type CreatureTreatType,
@@ -1671,6 +1675,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     grantStatus: 'granted' | 'already_granted';
   }>(null);
   const [showWelcomePackPrototype, setShowWelcomePackPrototype] = useState(false);
+  const [welcomePackClaimResult, setWelcomePackClaimResult] = useState<ClaimWelcomePackStarterCardsResult | null>(null);
+  const [welcomePackClaimError, setWelcomePackClaimError] = useState<string | null>(null);
+  const [welcomePackClaimPending, setWelcomePackClaimPending] = useState(false);
+  const welcomePackClaimInFlightRef = useRef(false);
   const [firstCreaturePackFlow, setFirstCreaturePackFlow] = useState<{
     phase: FirstSessionCreaturePackModalPhase;
     cards: FirstSessionCreaturePackCardReveal[];
@@ -7674,12 +7682,44 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
   const handleDevOpenWelcomePackPrototype = useCallback(async () => {
     if (!isDevModeEnabled) return 'Welcome Pack prototype is only available in Island Run dev mode.';
+    setWelcomePackClaimError(null);
+    setWelcomePackClaimResult(null);
     setShowWelcomePackPrototype(true);
     setShowDebugPanel(false);
-    const message = '✨ DEV Welcome Pack prototype opened (UI-only, no reward grants).';
+    const message = '✨ DEV Welcome Pack prototype opened (ready to call canonical 5-card claim action).';
     setLandingText(message);
     return message;
   }, [isDevModeEnabled]);
+
+  const handleDevClaimWelcomePackPrototype = useCallback(async () => {
+    if (!isDevModeEnabled || welcomePackClaimInFlightRef.current) return;
+    welcomePackClaimInFlightRef.current = true;
+    setWelcomePackClaimPending(true);
+    setWelcomePackClaimError(null);
+    try {
+      const result = await claimWelcomePackStarterCards({
+        session,
+        client,
+        triggerSource: 'dev_welcome_pack_prototype_claim',
+      });
+      setWelcomePackClaimResult(result);
+      refreshIslandRunStateFromLocal(session);
+      const refreshedRecord = getIslandRunStateSnapshot(session);
+      setRuntimeState(refreshedRecord);
+      runtimeStateRef.current = refreshedRecord;
+      const message = result.status === 'already_claimed'
+        ? '✨ DEV Welcome Pack: already claimed in canonical state.'
+        : `✨ DEV Welcome Pack claimed with ${result.revealPayload?.cards.length ?? 0} cards (no dice, essence, or tickets).`;
+      setLandingText(message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to claim Welcome Pack right now.';
+      setWelcomePackClaimError(message);
+      setLandingText(`⚠️ DEV Welcome Pack claim failed: ${message}`);
+    } finally {
+      welcomePackClaimInFlightRef.current = false;
+      setWelcomePackClaimPending(false);
+    }
+  }, [client, isDevModeEnabled, session]);
 
   const handleDevGrantDemoEggRewardPack = useCallback(async () => {
     if (!isDevModeEnabled) return 'Egg Reward Pack grant is only available in Island Run dev mode.';
@@ -11312,6 +11352,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         <WelcomePackPrototypeModal
           open={showWelcomePackPrototype}
           onClose={() => setShowWelcomePackPrototype(false)}
+          onClaim={handleDevClaimWelcomePackPrototype}
+          claimPending={welcomePackClaimPending}
+          claimError={welcomePackClaimError}
+          claimResult={welcomePackClaimResult}
         />
       ) : null}
 
