@@ -52,6 +52,7 @@ export function buildFreshIslandRunRecord(
     firstSessionTutorialState: ISLAND_RUN_FIRST_SESSION_TUTORIAL_INITIAL_STATE,
     dailyHeartsClaimedDayKey: null,
     onboardingDisplayNameLoopCompleted: current.onboardingDisplayNameLoopCompleted,
+    welcomePackClaimed: false,
     storyPrologueSeen: false,
     audioEnabled: current.audioEnabled,
     currentIslandNumber: 1,

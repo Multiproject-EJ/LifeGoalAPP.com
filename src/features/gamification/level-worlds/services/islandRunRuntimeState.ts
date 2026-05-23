@@ -90,6 +90,7 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     firstSessionTutorialState?: IslandRunFirstSessionTutorialState;
     dailyHeartsClaimedDayKey?: string | null;
     onboardingDisplayNameLoopCompleted?: boolean;
+    welcomePackClaimed?: boolean;
     storyPrologueSeen?: boolean;
     audioEnabled?: boolean;
     onboardingComplete?: boolean;
