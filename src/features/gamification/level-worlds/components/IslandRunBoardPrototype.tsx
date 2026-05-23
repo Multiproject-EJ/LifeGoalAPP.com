@@ -203,6 +203,7 @@ import {
   CreaturePackOpeningPrototypeModal,
   type CreaturePackOpeningPrototypeCard,
 } from './CreaturePackOpeningPrototypeModal';
+import { WelcomePackPrototypeModal } from './WelcomePackPrototypeModal';
 import { applyCreatureArtFallback } from './creatureArtFallback';
 import {
   rankCreatureFitsForPlayer,
@@ -1669,6 +1670,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     grantId: string;
     grantStatus: 'granted' | 'already_granted';
   }>(null);
+  const [showWelcomePackPrototype, setShowWelcomePackPrototype] = useState(false);
   const [firstCreaturePackFlow, setFirstCreaturePackFlow] = useState<{
     phase: FirstSessionCreaturePackModalPhase;
     cards: FirstSessionCreaturePackCardReveal[];
@@ -7670,6 +7672,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return message;
   }, [client, isDevModeEnabled, session]);
 
+  const handleDevOpenWelcomePackPrototype = useCallback(async () => {
+    if (!isDevModeEnabled) return 'Welcome Pack prototype is only available in Island Run dev mode.';
+    setShowWelcomePackPrototype(true);
+    setShowDebugPanel(false);
+    const message = '✨ DEV Welcome Pack prototype opened (UI-only, no reward grants).';
+    setLandingText(message);
+    return message;
+  }, [isDevModeEnabled]);
+
   const handleDevGrantDemoEggRewardPack = useCallback(async () => {
     if (!isDevModeEnabled) return 'Egg Reward Pack grant is only available in Island Run dev mode.';
     const result = await grantDevDemoEggRewardPack({
@@ -11297,6 +11308,13 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         />
       ) : null}
 
+      {showWelcomePackPrototype ? (
+        <WelcomePackPrototypeModal
+          open={showWelcomePackPrototype}
+          onClose={() => setShowWelcomePackPrototype(false)}
+        />
+      ) : null}
+
       {activeLaunchedMinigameId && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9000, overflow: 'hidden' }}>
           <IslandRunMinigameLauncher
@@ -11660,6 +11678,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           onOpenEggRewardInventoryEntry={handleDevOpenEggRewardInventoryEntry}
           onGrantDevDemoCreaturePack={handleDevGrantDemoCreaturePack}
           onOpenDevDemoCreaturePackPrototype={handleDevOpenCreaturePackOpeningPrototype}
+          onOpenDevWelcomePackPrototype={handleDevOpenWelcomePackPrototype}
           onGrantDevDemoEggRewardPack={handleDevGrantDemoEggRewardPack}
           onClose={() => setShowDebugPanel(false)}
         />
