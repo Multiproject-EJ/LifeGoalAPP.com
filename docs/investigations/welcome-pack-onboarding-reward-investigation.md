@@ -279,3 +279,12 @@ Potential reuse candidates:
 - Added a UI-only Welcome Pack prototype modal surface for visual testing only.
 - The prototype is dev-triggered and does not grant dice, essence, tickets, cards, or mutate canonical gameplay state.
 - No onboarding auto-wiring or migration/state schema changes were introduced in this slice.
+
+## Slice C implementation note (2026-05-23)
+
+- Added canonical one-time claim state plumbing only via `welcomePackClaimed` on `IslandRunGameStateRecord`.
+- Added pure eligibility helpers (`isWelcomePackClaimed`, `getWelcomePackEligibility`) for future locked claim flow wiring.
+- Added backward-compatible hydration/serialization behavior for legacy saved records that do not include the new field (defaults to `false` when missing).
+- Added targeted tests for default eligibility, claimed ineligibility, and legacy-state compatibility.
+- No reward grants, card grants, pack opens, economy mutations, or first-launch/onboarding auto-trigger wiring were introduced in this slice.
+- No migrations were added in this slice; existing optional-field hydration pattern covers backward compatibility.
