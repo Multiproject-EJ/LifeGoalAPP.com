@@ -9,6 +9,7 @@ export interface WelcomePackPrototypeModalProps {
   claimPending?: boolean;
   claimError?: string | null;
   claimResult?: ClaimFullWelcomePackResult | null;
+  isDevPreview?: boolean;
 }
 
 const PLACEHOLDER_CARDS = Array.from({ length: 5 }, (_, index) => ({
@@ -23,19 +24,21 @@ export function WelcomePackPrototypeModal({
   claimPending = false,
   claimError = null,
   claimResult = null,
+  isDevPreview = false,
 }: WelcomePackPrototypeModalProps): React.JSX.Element | null {
   if (!open) return null;
   const resolvedCards = claimResult?.cards.revealPayload?.cards ?? [];
   const isAlreadyClaimed = claimResult?.cards.status === 'already_claimed' && claimResult?.bundle.status === 'already_claimed';
   const hasClaimedCards = claimResult?.cards.status === 'claimed' && resolvedCards.length > 0;
+  const noActiveEventFallback = claimResult?.bundle.status === 'claimed_without_active_event';
 
   return (
     <div className="welcome-pack-prototype" role="dialog" aria-modal="true" aria-labelledby="welcome-pack-prototype-title">
       <section className="welcome-pack-prototype__shell island-stop-modal island-stop-modal--onboarding">
         <header className="welcome-pack-prototype__header">
-          <p className="welcome-pack-prototype__eyebrow">Island Run starter reward · dev prototype</p>
+          <p className="welcome-pack-prototype__eyebrow">Island Run starter reward{isDevPreview ? ' · dev preview enabled' : ''}</p>
           <h2 id="welcome-pack-prototype-title">Welcome Pack</h2>
-          <p>Dev-only preview using canonical actions for cards + reward bundle.</p>
+          <p>Claim uses canonical Welcome Pack actions; opening this modal alone grants nothing.</p>
         </header>
 
         {hasClaimedCards ? (
@@ -67,7 +70,7 @@ export function WelcomePackPrototypeModal({
         <div className="welcome-pack-prototype__reward-grid" aria-label="Welcome Pack included rewards">
           <p><strong>5</strong> random starter cards</p>
           <p><strong>150</strong> dice</p>
-          <p><strong>20</strong> event tickets</p>
+          <p><strong>20</strong> active-event tickets (when an event is running)</p>
           <p><strong>2000</strong> essence</p>
         </div>
         {isAlreadyClaimed ? (
@@ -75,6 +78,9 @@ export function WelcomePackPrototypeModal({
         ) : null}
         {hasClaimedCards ? (
           <p className="welcome-pack-prototype__status" role="status" aria-live="polite">Claimed! Showing canonical 5-card payload from this run.</p>
+        ) : null}
+        {noActiveEventFallback ? (
+          <p className="welcome-pack-prototype__status" role="status" aria-live="polite">No active event was running, so event tickets were not granted on this claim.</p>
         ) : null}
         {claimError ? (
           <p className="welcome-pack-prototype__status welcome-pack-prototype__status--error" role="alert">{claimError}</p>
@@ -87,7 +93,7 @@ export function WelcomePackPrototypeModal({
             onClick={() => { void onClaim?.(); }}
             disabled={claimPending || isAlreadyClaimed || !onClaim}
           >
-            {claimPending ? 'Claiming…' : isAlreadyClaimed ? 'Already claimed' : 'Claim real 5-card pack'}
+            {claimPending ? 'Claiming…' : isAlreadyClaimed ? 'Already claimed' : 'Collect Welcome Pack'}
           </button>
           <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={onClose}>
             Close
