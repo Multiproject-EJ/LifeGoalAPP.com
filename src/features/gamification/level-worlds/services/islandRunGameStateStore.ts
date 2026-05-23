@@ -198,6 +198,7 @@ export interface IslandRunGameStateRecord {
   dailyHeartsClaimedDayKey: string | null;
   onboardingDisplayNameLoopCompleted: boolean;
   welcomePackClaimed: boolean;
+  welcomePackRewardBundleClaimed: boolean;
   storyPrologueSeen: boolean;
   audioEnabled: boolean;
   currentIslandNumber: number;
@@ -604,6 +605,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     dailyHeartsClaimedDayKey: null,
     onboardingDisplayNameLoopCompleted: false,
     welcomePackClaimed: false,
+    welcomePackRewardBundleClaimed: false,
     storyPrologueSeen: false,
     audioEnabled: true,
     currentIslandNumber: 1,
@@ -901,6 +903,10 @@ function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameSta
       typeof value.welcomePackClaimed === 'boolean'
         ? value.welcomePackClaimed
         : fallback.welcomePackClaimed,
+    welcomePackRewardBundleClaimed:
+      typeof value.welcomePackRewardBundleClaimed === 'boolean'
+        ? value.welcomePackRewardBundleClaimed
+        : fallback.welcomePackRewardBundleClaimed,
     storyPrologueSeen:
       typeof value.storyPrologueSeen === 'boolean'
         ? value.storyPrologueSeen
@@ -1619,6 +1625,7 @@ function mergeRecordForConflict(options: {
     ...local,
     runtimeVersion: remote.runtimeVersion,
     welcomePackClaimed: local.welcomePackClaimed || remote.welcomePackClaimed,
+    welcomePackRewardBundleClaimed: local.welcomePackRewardBundleClaimed || remote.welcomePackRewardBundleClaimed,
     firstSessionTutorialState:
       compareIslandRunFirstSessionTutorialStates(local.firstSessionTutorialState, remote.firstSessionTutorialState) >= 0
         ? local.firstSessionTutorialState
@@ -1687,6 +1694,7 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     daily_hearts_claimed_day_key: record.dailyHeartsClaimedDayKey,
     onboarding_display_name_loop_completed: record.onboardingDisplayNameLoopCompleted,
     welcome_pack_claimed: record.welcomePackClaimed,
+    welcome_pack_reward_bundle_claimed: record.welcomePackRewardBundleClaimed,
     story_prologue_seen: record.storyPrologueSeen,
     audio_enabled: record.audioEnabled,
     current_island_number: record.currentIslandNumber,
@@ -1810,7 +1818,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event')
+    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -1831,6 +1839,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             dailyHeartsClaimedDayKey: legacyData.daily_hearts_claimed_day_key,
             onboardingDisplayNameLoopCompleted: legacyData.onboarding_display_name_loop_completed ?? false,
             welcomePackClaimed: legacyData.welcome_pack_claimed ?? false,
+            welcomePackRewardBundleClaimed: legacyData.welcome_pack_reward_bundle_claimed ?? false,
             storyPrologueSeen: legacyData.story_prologue_seen ?? false,
             audioEnabled: legacyData.audio_enabled ?? true,
             currentIslandNumber: legacyData.current_island_number ?? fallback.currentIslandNumber,
@@ -1965,6 +1974,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       dailyHeartsClaimedDayKey: data.daily_hearts_claimed_day_key,
       onboardingDisplayNameLoopCompleted: data.onboarding_display_name_loop_completed ?? false,
       welcomePackClaimed: data.welcome_pack_claimed ?? false,
+      welcomePackRewardBundleClaimed: data.welcome_pack_reward_bundle_claimed ?? false,
       storyPrologueSeen: data.story_prologue_seen ?? false,
       audioEnabled: data.audio_enabled ?? true,
       currentIslandNumber: data.current_island_number ?? fallback.currentIslandNumber,

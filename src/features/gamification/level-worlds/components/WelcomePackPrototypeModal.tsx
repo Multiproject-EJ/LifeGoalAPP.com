@@ -1,6 +1,7 @@
 import React from 'react';
 import { CREATURE_CATALOG } from '../services/creatureCatalog';
 import type { ClaimWelcomePackStarterCardsResult } from '../services/islandRunWelcomePackClaimAction';
+import type { ClaimWelcomePackRewardBundleResult } from '../services/islandRunWelcomePackRewardBundleAction';
 
 export interface WelcomePackPrototypeModalProps {
   open: boolean;
@@ -8,7 +9,7 @@ export interface WelcomePackPrototypeModalProps {
   onClaim?: () => Promise<void>;
   claimPending?: boolean;
   claimError?: string | null;
-  claimResult?: ClaimWelcomePackStarterCardsResult | null;
+  claimResult?: { cards: ClaimWelcomePackStarterCardsResult; bundle: ClaimWelcomePackRewardBundleResult } | null;
 }
 
 const PLACEHOLDER_CARDS = Array.from({ length: 5 }, (_, index) => ({
@@ -25,9 +26,9 @@ export function WelcomePackPrototypeModal({
   claimResult = null,
 }: WelcomePackPrototypeModalProps): React.JSX.Element | null {
   if (!open) return null;
-  const resolvedCards = claimResult?.revealPayload?.cards ?? [];
-  const isAlreadyClaimed = claimResult?.status === 'already_claimed';
-  const hasClaimedCards = claimResult?.status === 'claimed' && resolvedCards.length > 0;
+  const resolvedCards = claimResult?.cards.revealPayload?.cards ?? [];
+  const isAlreadyClaimed = claimResult?.cards.status === 'already_claimed' && claimResult?.bundle.status === 'already_claimed';
+  const hasClaimedCards = claimResult?.cards.status === 'claimed' && resolvedCards.length > 0;
 
   return (
     <div className="welcome-pack-prototype" role="dialog" aria-modal="true" aria-labelledby="welcome-pack-prototype-title">
@@ -35,7 +36,7 @@ export function WelcomePackPrototypeModal({
         <header className="welcome-pack-prototype__header">
           <p className="welcome-pack-prototype__eyebrow">Island Run starter reward · dev prototype</p>
           <h2 id="welcome-pack-prototype-title">Welcome Pack</h2>
-          <p>Dev-only preview using canonical claim action. No dice, essence, or tickets are included.</p>
+          <p>Dev-only preview using canonical actions for cards + reward bundle.</p>
         </header>
 
         {hasClaimedCards ? (
@@ -66,9 +67,9 @@ export function WelcomePackPrototypeModal({
 
         <div className="welcome-pack-prototype__reward-grid" aria-label="Welcome Pack included rewards">
           <p><strong>5</strong> random starter cards</p>
-          <p><strong>0</strong> dice</p>
-          <p><strong>0</strong> event tickets</p>
-          <p><strong>0</strong> essence</p>
+          <p><strong>150</strong> dice</p>
+          <p><strong>20</strong> event tickets</p>
+          <p><strong>2000</strong> essence</p>
         </div>
         {isAlreadyClaimed ? (
           <p className="welcome-pack-prototype__status" role="status" aria-live="polite">Already claimed in canonical state. No additional cards were granted.</p>

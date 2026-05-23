@@ -311,3 +311,10 @@ Explicitly **not included** in Slice D:
 - Added loading/error handling and overlap protection so repeated clicks do not start concurrent claim requests.
 - Still no dice grants, no essence grants, and no event ticket grants in this flow.
 - Still no automatic first-launch/onboarding wiring and no changes to normal user-visible onboarding surfaces.
+
+## Slice E2 (2026-05-23): canonical reward bundle (dev-only wiring)
+
+- Added canonical mutex-locked `claimWelcomePackRewardBundle` action to grant `+150 dice`, `+2000 essence`, and `+20 tickets` to `minigameTicketsByEvent[activeEventId]` when active event resolves.
+- Idempotency strategy: **Option B** (`welcomePackRewardBundleClaimed` persisted marker) to avoid changing Slice D semantics of `welcomePackClaimed` and to keep migration risk low while dev preview can call cards and bundle independently.
+- No-active-event fallback: action returns `claimed_without_active_event`, grants only dice+essence, grants **0 tickets**, and does not fallback to legacy `spinTokens`.
+- Still no automatic first-launch wiring; this remains dev-only preview wiring.
