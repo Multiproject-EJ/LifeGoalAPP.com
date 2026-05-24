@@ -9166,10 +9166,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             {isShooterControllerActive ? (
               <ShooterControllerAdapter onIntent={emitShooterControllerIntent} />
             ) : (
-              <>
+              <div className="island-run-prototype__footer-controller-shell" aria-label="Island Run controller layout">
                 <button
                   type="button"
-                  className="island-run-prototype__footer-nav-btn"
+                  className="island-run-prototype__footer-nav-btn island-run-prototype__footer-nav-btn--slot-story"
+                  onClick={() => setShowStoryReader(true)}
+                  disabled={isBuildTutorialGameplayBlocked}
+                >
+                  📖 Story
+                </button>
+                <button
+                  type="button"
+                  className="island-run-prototype__footer-nav-btn island-run-prototype__footer-nav-btn--slot-creatures"
                   onClick={openSanctuaryPanel}
                   disabled={isBuildTutorialGameplayBlocked}
                 >
@@ -9177,14 +9185,21 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 </button>
                 <button
                   type="button"
-                  className="island-run-prototype__footer-nav-btn"
-                  onClick={() => setShowStoryReader(true)}
+                  className="island-run-prototype__footer-nav-btn island-run-prototype__footer-nav-btn--slot-market"
+                  onClick={openShopPanel}
                   disabled={isBuildTutorialGameplayBlocked}
                 >
-                  📖 Story
+                  🛍️ Market
                 </button>
-                <div className="island-run-prototype__footer-dice-group">
-                  {/* Multiplier selector — placed above dice for symmetry */}
+                <button
+                  type="button"
+                  className={`island-run-prototype__footer-nav-btn island-run-prototype__footer-nav-btn--slot-build${isBuildTutorialPromptActive ? ' island-run-prototype__footer-nav-btn--build-tutorial-target' : ''}`}
+                  onClick={openBuildPanelFromFooter}
+                  aria-describedby={isBuildTutorialPromptActive ? 'island-run-build-tutorial-prompt' : undefined}
+                >
+                  🔨 Build
+                </button>
+                <div className="island-run-prototype__footer-dice-group island-run-prototype__footer-dice-group--slot-center">
                   <button
                     type="button"
                     className={`island-run-prototype__footer-multiplier-btn${effectiveMultiplier > 1 ? ' island-run-prototype__footer-multiplier-btn--active' : ''}${isAtMaxAvailableMultiplier ? ' island-run-prototype__footer-multiplier-btn--max' : ''}`}
@@ -9218,7 +9233,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                       <span className="sr-only"> — {rollDisabledMessage}</span>
                     )}
                   </button>
-                  {/* Dice regen countdown — Monopoly style "Next dice in MM:SS" */}
                   {(diceRegenStatusLabel || diceRegenCountdown) && (
                     <div className="island-run-prototype__dice-regen-timer" aria-live="polite">
                       {diceRegenRollsReady != null ? <><strong>{diceRegenRollsReady}</strong> </> : null}
@@ -9227,23 +9241,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                     </div>
                   )}
                 </div>
-                <button
-                  type="button"
-                  className="island-run-prototype__footer-nav-btn"
-                  onClick={openShopPanel}
-                  disabled={isBuildTutorialGameplayBlocked}
-                >
-                  🛍️ Market
-                </button>
-                <button
-                  type="button"
-                  className={`island-run-prototype__footer-nav-btn${isBuildTutorialPromptActive ? ' island-run-prototype__footer-nav-btn--build-tutorial-target' : ''}`}
-                  onClick={openBuildPanelFromFooter}
-                  aria-describedby={isBuildTutorialPromptActive ? 'island-run-build-tutorial-prompt' : undefined}
-                >
-                  🔨 Build
-                </button>
-              </>
+              </div>
             )}
             {isDevModeEnabled && !isHudCollapsed && (
               <button
