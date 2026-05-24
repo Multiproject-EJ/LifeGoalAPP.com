@@ -799,6 +799,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     ?? (supabaseSession?.user?.user_metadata?.picture as string | undefined)
     ?? undefined;
   const isGameModeActive = gamificationEnabled && isMobileMenuImageActive;
+  const isFooterControllerLayoutActive = isMobileMenuImageActive && showGameBoardOverlay;
   const shouldShowPointsBadges = isGameModeActive && isMobileExperience;
   
   // Micro-test badge state for identity tab
@@ -1372,11 +1373,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsMobileMenuImageActive(nextIsActive);
     triggerMobileMenuFlash();
 
-    setActiveWorkspaceNav('planning');
-    setShowMobileHome(true);
     setIsMobileMenuOpen(false);
-    setShowGameBoardOverlay(false);
     setShowMobileGamification(false);
+    setIsEnergyMenuOpen(false);
+    setShowGameBoardOverlay(nextIsActive);
 
     const userId = activeSession?.user?.id;
     if (!userId) {
@@ -4798,7 +4798,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               handleMobileFooterExpand(true);
             }}
             onEnergySelect={handleEnergySelect}
-            isDiodeActive={isMobileMenuImageActive}
+            isDiodeActive={isFooterControllerLayoutActive}
             pointsBadges={mobileFooterPointsBadges}
             showPointsBadges={shouldShowPointsBadges}
             isFlashActive={isMobileMenuFlashActive}
@@ -5122,7 +5122,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             handleMobileFooterExpand(true);
           }}
           onEnergySelect={handleEnergySelect}
-          isDiodeActive={isMobileMenuImageActive}
+          isDiodeActive={isFooterControllerLayoutActive}
           pointsBadges={mobileFooterPointsBadges}
           showPointsBadges={shouldShowPointsBadges}
           isFlashActive={isMobileMenuFlashActive}
