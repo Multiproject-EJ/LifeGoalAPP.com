@@ -1662,6 +1662,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   const [showMarketPanel, setShowMarketPanel] = useState(false);
   const [showBuildPanel, setShowBuildPanel] = useState(false);
   const [showRewardDetailsModal, setShowRewardDetailsModal] = useState(false);
+  const [isRewardBarDetailsExpanded, setIsRewardBarDetailsExpanded] = useState(false);
+  const [selectedEventInfoEventId, setSelectedEventInfoEventId] = useState<EventId | null>(null);
   const [showOutOfDicePurchasePrompt, setShowOutOfDicePurchasePrompt] = useState(false);
   const [isStartingDiceCheckout, setIsStartingDiceCheckout] = useState(false);
   const [diceCheckoutError, setDiceCheckoutError] = useState<string | null>(null);
@@ -2537,6 +2539,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showRewardDetailsModal]);
+  useEffect(() => {
+    if (!showRewardDetailsModal) {
+      setIsRewardBarDetailsExpanded(false);
+      setSelectedEventInfoEventId(null);
+    }
   }, [showRewardDetailsModal]);
 
   // M6-COMPLETE: Escape key closes encounter modal
@@ -10169,10 +10177,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Reward details">
             <h3 className="island-stop-modal__title">🎁 Reward Bar Details</h3>
             <p className="island-stop-modal__copy">
-              Progress: <strong>{Math.floor(rewardBarProgress)}</strong> / <strong>{Math.floor(rewardBarThreshold)}</strong> · Tier {runtimeState.rewardBarEscalationTier}
-            </p>
-            <p className="island-stop-modal__copy">
-              Next reward: <strong>{nextRewardIcon} {nextRewardKind.replace(/_/g, ' ')}</strong>
+              Next reward: <strong>{nextRewardIcon} {nextRewardKind.replace(/_/g, ' ')}</strong> · Tier {runtimeState.rewardBarEscalationTier}
             </p>
             <p className="island-stop-modal__copy">
               {effectiveActiveTimedEvent?.eventType && activeEventMeta
@@ -10184,13 +10189,64 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 {SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT}
               </p>
             )}
-            <p className="island-stop-modal__copy">
-              Claims this event: {runtimeState.rewardBarClaimCountInEvent} · 🧩 Sticker fragments: {runtimeState.stickerProgress.fragments}/5
-            </p>
-            <p className="island-stop-modal__copy">
-              Stickers collected: {Object.values(runtimeState.stickerInventory).reduce((a, b) => a + b, 0)}
-              {runtimeState.stickerProgress.fragments >= 4 ? ' — 🎉 Almost a complete sticker!' : ''}
-            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8, margin: '0.4rem 0 0.55rem' }}>
+              {Array.from({ length: 16 }).map((_, index) => {
+                const template = getEventRotationTemplates()[index] ?? null;
+                if (!template) {
+                  return <div key={`event-slot-empty-${index}`} style={{ borderRadius: 10, border: '1px dashed rgba(180,205,220,0.38)', minHeight: 54, opacity: 0.4 }} aria-hidden="true" />;
+                }
+                const isActive = effectiveActiveTimedEvent?.eventType === template.eventId;
+                const isSelected = selectedEventInfoEventId === template.eventId;
+                return (
+                  <button
+                    key={template.eventId}
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action"
+                    onClick={() => setSelectedEventInfoEventId(template.eventId)}
+                    style={{
+                      minHeight: 54,
+                      padding: '0.35rem 0.3rem',
+                      borderWidth: isActive ? 2 : 1,
+                      borderColor: isActive ? 'rgba(245,205,95,0.95)' : undefined,
+                      boxShadow: isActive ? '0 0 18px rgba(245,205,95,0.45)' : undefined,
+                      background: isSelected ? 'rgba(62,157,203,0.34)' : undefined,
+                    }}
+                    aria-label={`${template.displayName}${isActive ? ' (active event)' : ''}`}
+                  >
+                    <span aria-hidden="true" style={{ display: 'block', fontSize: '1.05rem', lineHeight: 1.05 }}>{template.icon}</span>
+                    <span style={{ display: 'block', fontSize: '0.6rem', lineHeight: 1.2 }}>{template.displayName}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {selectedEventInfoEventId && (
+              <p className="island-stop-modal__copy">
+                {(() => {
+                  const selected = getEventRotationTemplates().find((template) => template.eventId === selectedEventInfoEventId);
+                  if (!selected) return 'Select an event icon to view details.';
+                  const isActive = effectiveActiveTimedEvent?.eventType === selected.eventId;
+                  return `${selected.icon} ${selected.displayName}${isActive ? ' — currently active now.' : ''}`;
+                })()}
+              </p>
+            )}
+            <button
+              type="button"
+              className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+              onClick={() => setIsRewardBarDetailsExpanded((value) => !value)}
+            >
+              {isRewardBarDetailsExpanded ? 'Hide Reward bar details' : 'Reward bar details'}
+            </button>
+            {isRewardBarDetailsExpanded && (
+              <>
+                <p className="island-stop-modal__copy">
+                  Progress: <strong>{Math.floor(rewardBarProgress)}</strong> / <strong>{Math.floor(rewardBarThreshold)}</strong> · Claims this event: {runtimeState.rewardBarClaimCountInEvent}
+                </p>
+                <p className="island-stop-modal__copy">
+                  🧩 Sticker fragments: {runtimeState.stickerProgress.fragments}/5 · Stickers collected: {Object.values(runtimeState.stickerInventory).reduce((a, b) => a + b, 0)}
+                  {runtimeState.stickerProgress.fragments >= 4 ? ' — 🎉 Almost a complete sticker!' : ''}
+                </p>
+              </>
+            )}
             {effectiveMultiplier > 1 && (
               <p className="island-stop-modal__copy">
                 🔥 Active multiplier: <strong>×{effectiveMultiplier}</strong> (costs {effectiveDiceCost} dice/roll) — rewards and progress are amplified!
