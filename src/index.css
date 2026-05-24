@@ -26,10 +26,12 @@
   box-sizing: border-box;
 }
 
+html,
 body,
 #root {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .lifegoal-fallback-status {
@@ -46,6 +48,10 @@ body,
   font-weight: 600;
   z-index: 9999;
   box-shadow: none;
+}
+
+html {
+  background: #f8fafc;
 }
 
 body {
@@ -81,6 +87,7 @@ body {
 
 .app {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, rgba(226, 232, 240, 0.25) 0%, rgba(255, 255, 255, 0.9) 45%, #ffffff 100%);
