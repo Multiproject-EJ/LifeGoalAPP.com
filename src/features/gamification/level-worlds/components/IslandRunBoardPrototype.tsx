@@ -207,7 +207,7 @@ import {
   CreaturePackOpeningPrototypeModal,
   type CreaturePackOpeningPrototypeCard,
 } from './CreaturePackOpeningPrototypeModal';
-import { WelcomePackPrototypeModal } from './WelcomePackPrototypeModal';
+import { WelcomePackModal } from './WelcomePackModal';
 import { getWelcomePackEligibility } from '../services/islandRunWelcomePackEligibility';
 import { shouldAutoShowWelcomePackModal } from '../services/islandRunWelcomePackOnboardingUi';
 import { applyCreatureArtFallback } from './creatureArtFallback';
@@ -1676,7 +1676,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     grantId: string;
     grantStatus: 'granted' | 'already_granted';
   }>(null);
-  const [showWelcomePackPrototype, setShowWelcomePackPrototype] = useState(false);
+  const [showWelcomePackModal, setShowWelcomePackModal] = useState(false);
   const [welcomePackDismissedThisSession, setWelcomePackDismissedThisSession] = useState(false);
   const [welcomePackClaimResult, setWelcomePackClaimResult] = useState<ClaimFullWelcomePackResult | null>(null);
   const [welcomePackClaimError, setWelcomePackClaimError] = useState<string | null>(null);
@@ -1883,14 +1883,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const shouldShow = shouldAutoShowWelcomePackModal({
       eligibility: welcomePackEligibility,
       hasBeenDismissedThisSession: welcomePackDismissedThisSession,
-      isWelcomePackModalVisible: showWelcomePackPrototype,
+      isWelcomePackModalVisible: showWelcomePackModal,
       isHigherPriorityOnboardingModalVisible: showFirstCreaturePackModal,
     });
     if (!shouldShow) return;
     setWelcomePackClaimError(null);
     setWelcomePackClaimResult(null);
-    setShowWelcomePackPrototype(true);
-  }, [showFirstCreaturePackModal, showWelcomePackPrototype, welcomePackDismissedThisSession, welcomePackEligibility]);
+    setShowWelcomePackModal(true);
+  }, [showFirstCreaturePackModal, showWelcomePackModal, welcomePackDismissedThisSession, welcomePackEligibility]);
 
   const island120StartupDiagnosticSessionStartMsRef = useRef<number | null>(null);
   const island120StartupSnapshotLoggedRef = useRef(false);
@@ -7698,19 +7698,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     return message;
   }, [client, isDevModeEnabled, session]);
 
-  const handleDevOpenWelcomePackPrototype = useCallback(async () => {
-    if (!isDevModeEnabled) return 'Welcome Pack prototype is only available in Island Run dev mode.';
+  const handleOpenWelcomePackModal = useCallback(async () => {
+    if (!isDevModeEnabled) return 'Welcome Pack dev preview is only available in Island Run dev mode.';
     setWelcomePackDismissedThisSession(false);
     setWelcomePackClaimError(null);
     setWelcomePackClaimResult(null);
-    setShowWelcomePackPrototype(true);
+    setShowWelcomePackModal(true);
     setShowDebugPanel(false);
-    const message = '✨ DEV Welcome Pack prototype opened (ready to call canonical 5-card claim action).';
+    const message = '✨ DEV Welcome Pack preview opened (claim uses canonical full claim action).';
     setLandingText(message);
     return message;
   }, [isDevModeEnabled]);
 
-  const handleDevClaimWelcomePackPrototype = useCallback(async () => {
+  const handleClaimWelcomePack = useCallback(async () => {
     if (!isDevModeEnabled || welcomePackClaimInFlightRef.current) return;
     welcomePackClaimInFlightRef.current = true;
     setWelcomePackClaimPending(true);
@@ -7719,7 +7719,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       const result = await claimFullWelcomePack({
         session,
         client,
-        triggerSource: 'dev_welcome_pack_prototype_claim_full',
+        triggerSource: 'welcome_pack_modal_claim_full',
       });
       setWelcomePackClaimResult(result);
       refreshIslandRunStateFromLocal(session);
@@ -11367,16 +11367,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         />
       ) : null}
 
-      {showWelcomePackPrototype ? (
-        <WelcomePackPrototypeModal
-          open={showWelcomePackPrototype}
+      {showWelcomePackModal ? (
+        <WelcomePackModal
+          open={showWelcomePackModal}
           onClose={() => {
-            setShowWelcomePackPrototype(false);
+            setShowWelcomePackModal(false);
             if (!welcomePackClaimResult || welcomePackClaimResult.status === 'already_claimed') {
               setWelcomePackDismissedThisSession(true);
             }
           }}
-          onClaim={handleDevClaimWelcomePackPrototype}
+          onClaim={handleClaimWelcomePack}
           claimPending={welcomePackClaimPending}
           claimError={welcomePackClaimError}
           claimResult={welcomePackClaimResult}
@@ -11747,7 +11747,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           onOpenEggRewardInventoryEntry={handleDevOpenEggRewardInventoryEntry}
           onGrantDevDemoCreaturePack={handleDevGrantDemoCreaturePack}
           onOpenDevDemoCreaturePackPrototype={handleDevOpenCreaturePackOpeningPrototype}
-          onOpenDevWelcomePackPrototype={handleDevOpenWelcomePackPrototype}
+          onOpenDevWelcomePackPrototype={handleOpenWelcomePackModal}
           onGrantDevDemoEggRewardPack={handleDevGrantDemoEggRewardPack}
           onClose={() => setShowDebugPanel(false)}
         />

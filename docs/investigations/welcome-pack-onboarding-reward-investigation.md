@@ -352,3 +352,43 @@ Explicitly **not included** in Slice D:
 - No reward bar mutation introduced in F2 wiring.
 - No `spinTokens` fallback introduced in F2 wiring.
 - No migrations required for F2.
+
+## Slice F3 implementation note (2026-05-23): onboarding polish + safety cleanup
+
+- Production onboarding modal was renamed from `WelcomePackPrototypeModal` to `WelcomePackModal` to remove prototype language from the real user path while keeping Island Run dev-preview entry points available.
+- UX polish focused on clearer player-facing copy and CTA states:
+  - explicit one-time claim positioning,
+  - clearer reward list language (`5 creature cards`, `150 dice`, `2000 essence`, and conditional event tickets copy),
+  - partial-claim CTA state (`Collect remaining rewards`) and partial-result message.
+- Claim CTA hardening:
+  - CTA remains action-only (open does not grant anything),
+  - double-click protection remains via in-flight guard,
+  - error state still resets pending flag in `finally`, so CTA is never permanently disabled after a failure.
+- No-active-event presentation:
+  - if claim result is `claimed_without_active_event`, modal status explains tickets were skipped,
+  - reward list avoids promising ticket grant in that resolved state.
+- Fresh-user flow safety confirmed by unchanged gating logic:
+  - higher-priority first-session creature-pack modal still blocks Welcome Pack auto-show (no modal stacking),
+  - dismiss-before-claim still suppresses same-session reopen and remains eligible next Island Run session,
+  - already-claimed users still never auto-see via existing eligibility marker checks.
+
+### Manual smoke-test checklist (F3)
+
+- [ ] Fresh eligible user opens Island Run and sees Welcome Pack modal.
+- [ ] Opening modal grants nothing until `Collect Welcome Pack` is pressed.
+- [ ] Closing before claim suppresses same-session reopen.
+- [ ] Re-opening Island Run in a new session re-shows modal if still unclaimed.
+- [ ] Claim grants exactly once (idempotent on repeat).
+- [ ] Refresh/re-open after successful claim does not auto-show again.
+- [ ] No-active-event case: claim succeeds with dice/essence/cards, no tickets, and clear fallback message.
+- [ ] Already-claimed account case: modal does not auto-show.
+
+### F3 constraints explicitly unchanged
+
+- Reward amounts unchanged (`5 cards`, `+150 dice`, `+20 event tickets if active event exists`, `+2000 essence`).
+- No new reward types.
+- No eligibility semantic changes.
+- No reward-bar mutation.
+- No `spinTokens` fallback.
+- No migrations.
+- First-session creature pack behavior preserved.
