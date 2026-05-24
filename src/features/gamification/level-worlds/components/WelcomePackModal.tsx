@@ -17,6 +17,16 @@ const PLACEHOLDER_CARDS = Array.from({ length: 5 }, (_, index) => ({
   title: `Starter Card ${index + 1}`,
 }));
 
+const VISUAL_GIFT_SLOTS = [
+  { icon: '🃏', label: 'Starter cards', value: '5' },
+  { icon: '🎲', label: 'Dice', value: '150' },
+  { icon: '⚡', label: 'Essence', value: '2000' },
+  { icon: '🎟️', label: 'Event tickets', value: '20' },
+  { icon: '🎁', label: 'Bonus gift', value: 'Soon' },
+  { icon: '🎁', label: 'Bonus gift', value: 'Soon' },
+  { icon: '🎁', label: 'Bonus gift', value: 'Soon' },
+] as const;
+
 export function WelcomePackModal({
   open,
   onClose,
@@ -44,10 +54,20 @@ export function WelcomePackModal({
     <div className="welcome-pack-modal" role="dialog" aria-modal="true" aria-labelledby="welcome-pack-modal-title">
       <section className="welcome-pack-modal__shell island-stop-modal island-stop-modal--onboarding">
         <header className="welcome-pack-modal__header">
-          <p className="welcome-pack-modal__eyebrow">🎉 Welcome reward{isDevPreview ? ' · dev preview enabled' : ''}</p>
+          <p className="welcome-pack-modal__eyebrow">🎉 Congratulations{isDevPreview ? ' · dev preview enabled' : ''}</p>
           <h2 id="welcome-pack-modal-title">Welcome Pack</h2>
           <p>A one-time starter reward for new Island Run players. Opening this modal does not grant rewards until you press Collect.</p>
         </header>
+
+        <div className="welcome-pack-modal__gift-grid" aria-label="Welcome Pack gift preview">
+          {VISUAL_GIFT_SLOTS.map((gift, index) => (
+            <article key={`${gift.label}-${index}`} className="welcome-pack-modal__gift-item">
+              <span className="welcome-pack-modal__gift-icon" aria-hidden="true">{gift.icon}</span>
+              <strong>{gift.value}</strong>
+              <small>{gift.label}</small>
+            </article>
+          ))}
+        </div>
 
         {hasClaimedCards ? (
           <div className="welcome-pack-modal__cards" aria-label="Welcome Pack revealed cards">
