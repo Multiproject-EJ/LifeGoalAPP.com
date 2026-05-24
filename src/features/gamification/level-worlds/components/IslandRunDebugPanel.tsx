@@ -43,6 +43,7 @@ interface DebugPanelProps {
   onOpenDevDemoCreaturePackPrototype?: () => Promise<string>;
   onOpenDevWelcomePackPrototype?: () => Promise<string>;
   onGrantDevDemoEggRewardPack?: () => Promise<string>;
+  onResetWelcomePackDevFlags?: () => Promise<string>;
   onClose: () => void;
 }
 
@@ -144,6 +145,7 @@ export function IslandRunDebugPanel({
   onOpenDevDemoCreaturePackPrototype,
   onOpenDevWelcomePackPrototype,
   onGrantDevDemoEggRewardPack,
+  onResetWelcomePackDevFlags,
   onClose,
 }: DebugPanelProps) {
   const appVersion = resolveBuildMarkerValue(import.meta.env.VITE_APP_VERSION);
@@ -638,6 +640,14 @@ export function IslandRunDebugPanel({
                       onClick={() => void runPackGrantAction(onGrantDevDemoEggRewardPack)}
                     >
                       Grant demo Egg Reward Pack
+                    </button>
+                    <button
+                      type="button"
+                      className="island-run-debug-panel__copy-btn"
+                      disabled={packGrantPending || !onResetWelcomePackDevFlags}
+                      onClick={() => void runPackGrantAction(onResetWelcomePackDevFlags)}
+                    >
+                      Reset Welcome Pack flags
                     </button>
                   </div>
                   {packGrantActionMessage && (

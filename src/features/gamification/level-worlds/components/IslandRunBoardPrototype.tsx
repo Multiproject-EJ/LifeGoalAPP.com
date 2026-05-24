@@ -7642,7 +7642,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const message = result.status === 'granted'
       ? `🧪 DEV Creature Pack granted: +${result.creatureCopiesGranted} creatures, +${result.diceGranted} dice, +${result.essenceGranted} essence.`
       : result.status === 'already_granted'
-        ? `🧪 DEV Creature Pack already granted for ${result.grantId}.`
+        ? `🧪 DEV Creature Pack already granted for ${result.grantId}; no new rewards are expected for repeat clicks on this island/cycle.`
         : `🧪 DEV Creature Pack grant ${result.status}: ${result.failureReason ?? 'unknown reason'}.`;
     setLandingText(message);
     return message;
@@ -7693,7 +7693,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
 
     const message = result.status === 'granted'
       ? `✨ DEV Creature Pack opening prototype ready: ${cards.length} cards, no dice or essence granted.`
-      : `✨ DEV Creature Pack opening prototype replaying existing grant ${result.grantId}.`;
+      : `✨ DEV Creature Pack opening prototype replaying existing grant ${result.grantId}; cards are previewed but no new rewards are granted.`;
     setLandingText(message);
     return message;
   }, [client, isDevModeEnabled, session]);
@@ -7740,6 +7740,35 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     }
   }, [client, isDevModeEnabled, session]);
 
+
+
+  const handleDevResetWelcomePackFlags = useCallback(async () => {
+    if (!isDevModeEnabled) return 'Welcome Pack reset is only available in Island Run dev mode.';
+    await withIslandRunActionLock(session.user.id, async () => {
+      const current = getIslandRunStateSnapshot(session);
+      const next: IslandRunGameStateRecord = {
+        ...current,
+        welcomePackClaimed: false,
+        welcomePackRewardBundleClaimed: false,
+        runtimeVersion: current.runtimeVersion + 1,
+      };
+      await commitIslandRunState({
+        session,
+        client,
+        record: next,
+        triggerSource: 'dev_reset_welcome_pack_flags',
+      });
+    });
+    setWelcomePackDismissedThisSession(false);
+    refreshIslandRunStateFromLocal(session);
+    const refreshedRecord = getIslandRunStateSnapshot(session);
+    setRuntimeState(refreshedRecord);
+    runtimeStateRef.current = refreshedRecord;
+    const message = '🧪 DEV Welcome Pack flags reset: welcome pack is eligible to auto-show again.';
+    setLandingText(message);
+    return message;
+  }, [client, isDevModeEnabled, session]);
+
   const handleDevGrantDemoEggRewardPack = useCallback(async () => {
     if (!isDevModeEnabled) return 'Egg Reward Pack grant is only available in Island Run dev mode.';
     const result = await grantDevDemoEggRewardPack({
@@ -7755,7 +7784,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
     const message = result.status === 'granted'
       ? `🧪 DEV Egg Reward Pack granted: +${result.eggRewardsGranted} egg vouchers, +${result.essenceGranted} essence.`
       : result.status === 'already_granted'
-        ? `🧪 DEV Egg Reward Pack already granted for ${result.grantId}.`
+        ? `🧪 DEV Egg Reward Pack already granted for ${result.grantId}; no new egg vouchers are expected for repeat clicks on this island/cycle.`
         : `🧪 DEV Egg Reward Pack grant ${result.status}: ${result.failureReason ?? 'unknown reason'}.`;
     setLandingText(message);
     return message;
@@ -11747,6 +11776,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           onOpenDevDemoCreaturePackPrototype={handleDevOpenCreaturePackOpeningPrototype}
           onOpenDevWelcomePackPrototype={handleOpenWelcomePackModal}
           onGrantDevDemoEggRewardPack={handleDevGrantDemoEggRewardPack}
+          onResetWelcomePackDevFlags={handleDevResetWelcomePackFlags}
           onClose={() => setShowDebugPanel(false)}
         />
       )}
