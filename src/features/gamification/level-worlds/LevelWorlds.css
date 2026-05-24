@@ -778,7 +778,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: calc(env(safe-area-inset-bottom, 0px) * -1);
+  bottom: 0;
   z-index: 20;
   padding: 0;
 }
@@ -790,7 +790,7 @@
 .island-run-prototype__footer-main {
   display: grid;
   gap: 0.55rem;
-  padding: 0.55rem 0.75rem;
+  padding: 0.45rem 0.75rem calc(0.45rem + env(safe-area-inset-bottom, 0px));
   border-radius: 18px;
   background: linear-gradient(160deg, rgba(5, 16, 30, 0.94), rgba(10, 26, 45, 0.92));
   border: 1px solid rgba(145, 206, 230, 0.45);
@@ -841,27 +841,27 @@
 
 .island-run-prototype__footer-nav-btn--slot-story {
   left: 16%;
-  top: 62%;
+  top: 54%;
 }
 
 .island-run-prototype__footer-nav-btn--slot-creatures {
   left: 31.5%;
-  top: 84%;
+  top: 74%;
 }
 
 .island-run-prototype__footer-nav-btn--slot-market {
   left: 68.5%;
-  top: 84%;
+  top: 74%;
 }
 
 .island-run-prototype__footer-nav-btn--slot-build {
   left: 84%;
-  top: 62%;
+  top: 54%;
 }
 
 .island-run-prototype__footer-dice-group--slot-center {
   left: 50%;
-  top: 77%;
+  top: 68%;
   width: clamp(140px, 36vw, 220px);
 }
 .island-run-prototype__footer-actions {
@@ -7671,16 +7671,16 @@
 
   .island-run-prototype__footer-nav-btn--slot-story,
   .island-run-prototype__footer-nav-btn--slot-build {
-    top: 60%;
+    top: 53%;
   }
 
   .island-run-prototype__footer-nav-btn--slot-creatures,
   .island-run-prototype__footer-nav-btn--slot-market {
-    top: 82%;
+    top: 72%;
   }
 
   .island-run-prototype__footer-dice-group--slot-center {
-    top: 75%;
+    top: 66%;
   }
 }
 
