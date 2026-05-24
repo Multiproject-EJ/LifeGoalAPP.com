@@ -8526,20 +8526,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 <span className="sr-only"> — {rollDisabledMessage}</span>
               )}
             </button>
-          {/* M10A: audio toggle */}
-          <button
-            type="button"
-            className="island-run-prototype__audio-toggle"
-            aria-label={audioEnabled ? 'Mute audio and haptics' : 'Unmute audio and haptics'}
-            aria-pressed={audioEnabled}
-            onClick={() => {
-              const next = !audioEnabled;
-              setAudioEnabled(next);
-              setIslandRunAudioEnabled(next);
-            }}
-          >
-            {audioEnabled ? '🔊' : '🔇'}
-          </button>
           {/* M14: persistent HUD Market button */}
           <button
             type="button"
@@ -8577,6 +8563,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             📖 Story
           </button>
           </div>
+          {isDevModeEnabled && (
+            <button
+              type="button"
+              className="island-run-prototype__dev-toggle"
+              aria-expanded={isDevPanelOpen}
+              aria-controls="island-run-dev-panel"
+              onClick={() => setIsDevPanelOpen((v) => !v)}
+            >
+              {isDevPanelOpen ? 'Dev ▲' : 'Dev ▼'}
+            </button>
+          )}
         {/* M1B: Production HUD — always visible for all logged-in users */}
         <div className="island-run-prototype__status-row island-run-prototype__status-row--production">
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">🎲 <strong>{dicePool}</strong></span>
@@ -8924,6 +8921,19 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             >
               ☰
             </button>
+            <button
+              type="button"
+              className="island-run-board__topbar-audio-toggle"
+              aria-label={audioEnabled ? 'Mute audio and haptics' : 'Unmute audio and haptics'}
+              aria-pressed={audioEnabled}
+              onClick={() => {
+                const next = !audioEnabled;
+                setAudioEnabled(next);
+                setIslandRunAudioEnabled(next);
+              }}
+            >
+              {audioEnabled ? '🔊' : '🔇'}
+            </button>
           </div>
 
           {showTopbarMenu && (
@@ -9193,6 +9203,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
         </div>
       )}
 
+      <button
+        type="button"
+        className="island-run-prototype__camera-reset-floating"
+        aria-label="Reset camera zoom"
+        onClick={resetCameraFromTopbarMenu}
+      >
+        🔎
+      </button>
+
       <div
         className={`island-run-prototype__footer${isBuildTutorialPromptActive ? ' island-run-prototype__footer--build-tutorial-active' : ''}`}
         aria-label="Island Run footer controls"
@@ -9280,17 +9299,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                   )}
                 </div>
               </div>
-            )}
-            {isDevModeEnabled && !isHudCollapsed && (
-              <button
-                type="button"
-                className="island-run-prototype__dev-toggle"
-                aria-expanded={isDevPanelOpen}
-                aria-controls="island-run-dev-panel"
-                onClick={() => setIsDevPanelOpen((v) => !v)}
-              >
-                {isDevPanelOpen ? 'Dev ▲' : 'Dev ▼'}
-              </button>
             )}
           </div>
           {shouldShowBestNextActionChip && bestNextAction && (
