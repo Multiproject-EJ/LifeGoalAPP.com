@@ -7369,7 +7369,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
       return;
     }
     setLandingText(`🧪 DEV MODE: +${result.applied} dice granted via canonical action.`);
-  }, [client, isDevModeEnabled, session]);
+  }, [client, session]);
 
   const handleDevGrantEssence = useCallback((amount: number) => {
     if (!isDevModeEnabled) return;
@@ -7719,7 +7719,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [isDevModeEnabled]);
 
   const handleClaimWelcomePack = useCallback(async () => {
-    if (!isDevModeEnabled || welcomePackClaimInFlightRef.current) return;
+    if (welcomePackClaimInFlightRef.current) return;
     welcomePackClaimInFlightRef.current = true;
     setWelcomePackClaimPending(true);
     setWelcomePackClaimError(null);
