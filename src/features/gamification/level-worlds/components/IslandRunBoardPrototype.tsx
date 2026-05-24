@@ -7707,13 +7707,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [client, isDevModeEnabled, session]);
 
   const handleOpenWelcomePackModal = useCallback(async () => {
-    if (!isDevModeEnabled) return 'Welcome Pack dev preview is only available in Island Run dev mode.';
     setWelcomePackDismissedThisSession(false);
     setWelcomePackClaimError(null);
     setWelcomePackClaimResult(null);
-    setShowWelcomePackModal(true);
     setShowDebugPanel(false);
-    const message = '✨ DEV Welcome Pack preview opened (claim uses canonical full claim action).';
+    setShowWelcomePackModal(true);
+    const message = isDevModeEnabled
+      ? '✨ DEV Welcome Pack preview opened (claim uses canonical full claim action).'
+      : '✨ Welcome Pack preview opened.';
     setLandingText(message);
     return message;
   }, [isDevModeEnabled]);
