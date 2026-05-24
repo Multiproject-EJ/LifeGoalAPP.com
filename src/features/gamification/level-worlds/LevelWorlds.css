@@ -674,6 +674,19 @@
   position: relative;
 }
 
+/* Mobile immersive pass (Option A):
+   Let decorative board/background paint edge-to-edge while controls keep their
+   own safe-area-aware offsets. Board geometry remains ratio-preserved in
+   BoardStage (no coordinate/tile math changes). */
+@media (max-width: 767px) {
+  .island-run-prototype {
+    margin-top: calc(-1 * (env(safe-area-inset-top, 0px) + 0.9rem));
+    margin-left: calc(-1 * max(0.75rem, env(safe-area-inset-left, 0px)));
+    margin-right: calc(-1 * max(0.75rem, env(safe-area-inset-right, 0px)));
+    padding-top: calc(env(safe-area-inset-top, 0px) + 0.4rem);
+  }
+}
+
 .island-run-prototype__header {
   display: flex;
   flex-direction: column;
@@ -692,6 +705,17 @@
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 767px) and (max-height: 740px) {
+  .island-run-prototype__header {
+    top: max(0.25rem, env(safe-area-inset-top, 0px));
+    left: 0.45rem;
+    right: 0.45rem;
+    max-height: min(34dvh, calc(100dvh - 7.5rem - env(safe-area-inset-bottom, 0px)));
+    padding: 0.72rem 0.82rem 0.68rem;
+    background: linear-gradient(160deg, rgba(10, 24, 34, 0.82), rgba(5, 16, 25, 0.78));
+  }
 }
 
 .island-run-prototype__header h2 {
@@ -7588,6 +7612,30 @@
   }
   .island-run-prototype__footer-dice-group--slot-center {
     width: clamp(140px, 46vw, 220px);
+  }
+}
+
+@media (max-width: 767px) and (max-height: 740px) {
+  .island-run-prototype__footer-main {
+    padding: 0.42rem 0.58rem;
+  }
+
+  .island-run-prototype__footer-controller-shell {
+    min-height: 196px;
+  }
+
+  .island-run-prototype__footer-nav-btn--slot-story,
+  .island-run-prototype__footer-nav-btn--slot-build {
+    top: 60%;
+  }
+
+  .island-run-prototype__footer-nav-btn--slot-creatures,
+  .island-run-prototype__footer-nav-btn--slot-market {
+    top: 82%;
+  }
+
+  .island-run-prototype__footer-dice-group--slot-center {
+    top: 75%;
   }
 }
 
