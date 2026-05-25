@@ -423,6 +423,11 @@
   background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.12) 100%);
   border: 1px solid rgba(102, 126, 234, 0.3);
 }
+.breathing-space__quick-start-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
 
 [data-theme='dark-glass'] .breathing-space__quick-start {
   background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
@@ -443,10 +448,22 @@
 }
 
 .breathing-space__progress-icon-image {
-  width: clamp(190px, 22vw, 300px);
-  height: clamp(190px, 22vw, 300px);
+  width: clamp(380px, 44vw, 600px);
+  height: clamp(380px, 44vw, 600px);
   object-fit: contain;
   filter: drop-shadow(0 8px 24px rgba(41, 186, 255, 0.35));
+}
+.breathing-space__extras-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 1.1rem;
+  cursor: pointer;
 }
 
 .breathing-space__stats {
@@ -795,8 +812,8 @@
   }
 
   .breathing-space__progress-icon-image {
-    width: 220px;
-    height: 220px;
+    width: 440px;
+    height: 440px;
   }
 
   .breathing-space__stats {
