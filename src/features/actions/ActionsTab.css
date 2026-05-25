@@ -282,8 +282,8 @@
 }
 
 .actions-tab__launcher-icon-image--xl {
-  width: min(20.3rem, 143%);
-  height: min(20.3rem, 143%);
+  width: min(22rem, 155%);
+  height: min(22rem, 155%);
 }
 
 .actions-tab__launcher-button--full-width {
@@ -296,13 +296,17 @@
 }
 
 .actions-tab__launcher-button--full-width .actions-tab__launcher-icon {
-  width: 5rem;
-  flex: 0 0 5rem;
+  width: 5.9rem;
+  flex: 0 0 5.9rem;
 }
 
 .actions-tab__launcher-button--full-width .actions-tab__launcher-label {
-  font-size: 1.02rem;
-  text-align: left;
+  font-size: 1rem;
+  text-align: right;
+  line-height: 1.1;
+  white-space: normal;
+  max-width: 8ch;
+  margin-left: auto;
 }
 
 @media (max-width: 420px) {
@@ -1578,32 +1582,36 @@
   gap: 0.45rem;
 }
 
-.actions-tab__launcher-subtools {
+.actions-tab__task-tower-shortcuts {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.4rem;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 0.25rem;
 }
 
-.actions-tab__launcher-subtool {
+.actions-tab__task-tower-shortcut {
   border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 10px;
-  background: rgba(248, 250, 252, 0.92);
-  padding: 0.35rem 0.3rem;
+  background: rgba(248, 250, 252, 0.95);
+  padding: 0.4rem 0.35rem;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.2rem;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: #0f172a;
 }
 
-.actions-tab__launcher-subtool--primary {
+.actions-tab__task-tower-shortcut--primary {
   background: linear-gradient(135deg, rgba(14, 165, 233, 0.16), rgba(52, 211, 153, 0.16));
 }
 
-.actions-tab__launcher-subtool-icon {
+.actions-tab__task-tower-shortcut-icon {
   width: 1.5rem;
   height: 1.5rem;
   object-fit: contain;

@@ -561,51 +561,9 @@ export function ActionsTab({
                     alt=""
                   />
                 </span>
-                  <span className="actions-tab__launcher-content">
-                    <span className="actions-tab__launcher-label">Task Tower</span>
-                    <FeatureStatusBadge status={getFeatureAvailability('actions.taskTower').status} />
-                    <span className="actions-tab__launcher-subtools" aria-label="Task Tower includes Projects, Timer, and Tasks">
-                    {onNavigateToProjects && (
-                      <button
-                        type="button"
-                        className="actions-tab__launcher-subtool"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onNavigateToProjects();
-                        }}
-                        aria-label="Open projects"
-                      >
-                        <img className="actions-tab__launcher-subtool-icon" src={projectsIcon} alt="" />
-                        <span>Projects</span>
-                      </button>
-                    )}
-                    {onNavigateToTimer && (
-                      <button
-                        type="button"
-                        className="actions-tab__launcher-subtool"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onNavigateToTimer({ sourceType: 'general' });
-                        }}
-                        aria-label="Open timer"
-                      >
-                        <img className="actions-tab__launcher-subtool-icon" src={timerIcon} alt="" />
-                        <span>Timer</span>
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="actions-tab__launcher-subtool actions-tab__launcher-subtool--primary"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setActiveView('tasks');
-                      }}
-                      aria-label="Open tasks list"
-                    >
-                      <img className="actions-tab__launcher-subtool-icon" src={taskIcon} alt="" />
-                      <span>Tasks</span>
-                    </button>
-                  </span>
+                <span className="actions-tab__launcher-content">
+                  <span className="actions-tab__launcher-label">Task Tower</span>
+                  <FeatureStatusBadge status={getFeatureAvailability('actions.taskTower').status} />
                 </span>
               </button>
             </div>
@@ -613,6 +571,48 @@ export function ActionsTab({
         </div>
         {showTaskTower && (
           <div className="actions-tab__task-tower-overlay" role="dialog" aria-modal="true" aria-label="Task Tower">
+            <div className="actions-tab__task-tower-shortcuts" aria-label="Task Tower tools">
+              {onNavigateToProjects && (
+                <button
+                  type="button"
+                  className="actions-tab__task-tower-shortcut"
+                  onClick={() => {
+                    setShowTaskTower(false);
+                    onNavigateToProjects();
+                  }}
+                  aria-label="Open projects"
+                >
+                  <img className="actions-tab__task-tower-shortcut-icon" src={projectsIcon} alt="" />
+                  <span>Projects</span>
+                </button>
+              )}
+              {onNavigateToTimer && (
+                <button
+                  type="button"
+                  className="actions-tab__task-tower-shortcut"
+                  onClick={() => {
+                    setShowTaskTower(false);
+                    onNavigateToTimer({ sourceType: 'general' });
+                  }}
+                  aria-label="Open timer"
+                >
+                  <img className="actions-tab__task-tower-shortcut-icon" src={timerIcon} alt="" />
+                  <span>Timer</span>
+                </button>
+              )}
+              <button
+                type="button"
+                className="actions-tab__task-tower-shortcut actions-tab__task-tower-shortcut--primary"
+                onClick={() => {
+                  setShowTaskTower(false);
+                  setActiveView('tasks');
+                }}
+                aria-label="Open tasks list"
+              >
+                <img className="actions-tab__task-tower-shortcut-icon" src={taskIcon} alt="" />
+                <span>Tasks</span>
+              </button>
+            </div>
             <TaskTower
               session={session}
               onClose={() => setShowTaskTower(false)}
