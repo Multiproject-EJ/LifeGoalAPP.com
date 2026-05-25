@@ -1789,6 +1789,13 @@ export function IslandRunBoardPrototype({
   const [winCelebrationSubtitle, setWinCelebrationSubtitle] = useState('You won');
   const rewardBarWasClaimableRef = useRef(false);
 
+  useEffect(() => {
+    if (!showWinCelebrationModal) return;
+    // Fireworks-like celebration burst when the secondary win modal opens.
+    playIslandRunSound('boss_island_clear');
+    triggerIslandRunHaptic('reward_claim');
+  }, [showWinCelebrationModal]);
+
   // ── Safe placeholder dialog ────────────────────────────────────────────────
   const [activePlaceholder, setActivePlaceholder] = useState<IslandRunPlaceholderDescriptor | null>(null);
 
