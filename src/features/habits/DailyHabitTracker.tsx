@@ -984,6 +984,8 @@ export function DailyHabitTracker({
   const [visionImagesLoading, setVisionImagesLoading] = useState(false);
   const [visionRewarding, setVisionRewarding] = useState(false);
   const [visionPreviewImage, setVisionPreviewImage] = useState<VisionImage | null>(null);
+  const [visionPreviewGallery, setVisionPreviewGallery] = useState<VisionImage[] | null>(null);
+  const [visionPreviewIndex, setVisionPreviewIndex] = useState(0);
   const [isVisionRewardOpen, setIsVisionRewardOpen] = useState(false);
   const [isVisionRewardSelecting, setIsVisionRewardSelecting] = useState(false);
   const [isSlotLanding, setIsSlotLanding] = useState(false);
@@ -3349,7 +3351,14 @@ export function DailyHabitTracker({
                     key={url}
                     type="button"
                     className="habit-day-nav__vision-modal-collage-tile"
-                    onClick={() => setVisionPreviewImage({ id: `vision-star-collage-${idx}`, publicUrl: url, caption: null } as VisionImage)}
+                    onClick={() => {
+                      const gallery = visionReward.imageUrls?.map(
+                        (imageUrl, imageIndex) => ({ id: `vision-star-collage-${imageIndex}`, publicUrl: imageUrl, caption: null } as VisionImage),
+                      ) ?? [];
+                      setVisionPreviewGallery(gallery);
+                      setVisionPreviewIndex(idx);
+                      setVisionPreviewImage(gallery[idx] ?? null);
+                    }}
                     aria-label={`Open image ${idx + 1} fullscreen`}
                   >
                     <img src={url} alt="" aria-hidden="true" />
@@ -3592,6 +3601,20 @@ export function DailyHabitTracker({
       </div>
     </div>
   ) : null;
+  const hasVisionPreviewGalleryNav = (visionPreviewGallery?.length ?? 0) > 1;
+  const showPreviousVisionPreviewImage = () => {
+    if (!hasVisionPreviewGalleryNav || !visionPreviewGallery) return;
+    const nextIndex = (visionPreviewIndex - 1 + visionPreviewGallery.length) % visionPreviewGallery.length;
+    setVisionPreviewIndex(nextIndex);
+    setVisionPreviewImage(visionPreviewGallery[nextIndex] ?? null);
+  };
+  const showNextVisionPreviewImage = () => {
+    if (!hasVisionPreviewGalleryNav || !visionPreviewGallery) return;
+    const nextIndex = (visionPreviewIndex + 1) % visionPreviewGallery.length;
+    setVisionPreviewIndex(nextIndex);
+    setVisionPreviewImage(visionPreviewGallery[nextIndex] ?? null);
+  };
+  const [visionPreviewTouchStartX, setVisionPreviewTouchStartX] = useState<number | null>(null);
   const habitVisionPreviewModalContent = visionPreviewImage ? (
     <div className="habit-vision-modal" onClick={() => setVisionPreviewImage(null)}>
       <div className="habit-vision-modal__content" onClick={(event) => event.stopPropagation()}>
@@ -3604,16 +3627,43 @@ export function DailyHabitTracker({
           ×
         </button>
         <div className="habit-vision-modal__image-frame">
+          {hasVisionPreviewGalleryNav ? (
+            <button type="button" className="habit-vision-modal__nav habit-vision-modal__nav--prev" onClick={showPreviousVisionPreviewImage} aria-label="Show previous image">
+              ‹
+            </button>
+          ) : null}
           <img
             className="habit-vision-modal__image"
             src={visionPreviewImage.publicUrl}
             alt={visionPreviewImage.caption ? `Vision board: ${visionPreviewImage.caption}` : 'Vision board inspiration'}
+            onTouchStart={(event) => setVisionPreviewTouchStartX(event.changedTouches[0]?.clientX ?? null)}
+            onTouchEnd={(event) => {
+              if (!hasVisionPreviewGalleryNav || visionPreviewTouchStartX == null) return;
+              const endX = event.changedTouches[0]?.clientX ?? visionPreviewTouchStartX;
+              const deltaX = endX - visionPreviewTouchStartX;
+              if (Math.abs(deltaX) < 40) return;
+              if (deltaX > 0) {
+                showPreviousVisionPreviewImage();
+              } else {
+                showNextVisionPreviewImage();
+              }
+              setVisionPreviewTouchStartX(null);
+            }}
           />
+          {hasVisionPreviewGalleryNav ? (
+            <button type="button" className="habit-vision-modal__nav habit-vision-modal__nav--next" onClick={showNextVisionPreviewImage} aria-label="Show next image">
+              ›
+            </button>
+          ) : null}
         </div>
         {visionPreviewImage.caption ? (
           <p className="habit-vision-modal__caption">{visionPreviewImage.caption}</p>
         ) : null}
-        <p className="habit-vision-modal__hint">Tap outside the card or press × to close.</p>
+        <p className="habit-vision-modal__hint">
+          {hasVisionPreviewGalleryNav
+            ? 'Swipe left or right to browse images. Tap outside the card or press × to close.'
+            : 'Tap outside the card or press × to close.'}
+        </p>
       </div>
     </div>
   ) : null;
