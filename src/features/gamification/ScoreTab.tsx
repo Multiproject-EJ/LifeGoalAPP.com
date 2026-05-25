@@ -49,10 +49,12 @@ import {
 import { applyWalletShieldsSet } from './level-worlds/services/islandRunStateActions';
 import { useIslandRunState } from './level-worlds/hooks/useIslandRunState';
 import { CREATURE_CATALOG } from './level-worlds/services/creatureCatalog';
+import { resolveCreatureArtManifest } from './level-worlds/services/creatureImageManifest';
 import {
   buildCreatureSanctuaryGalleryModel,
   type CreatureSanctuaryGalleryModel,
 } from './level-worlds/services/creatureSanctuaryAdapter';
+import { applyCreatureArtFallback } from './level-worlds/components/creatureArtFallback';
 import {
   DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG,
   readPerfectCompanionRuntimeConfig,
@@ -1743,6 +1745,10 @@ function CreatureSanctuaryScoreHubView({
     () => buildCreatureSanctuaryGalleryModel(state, CREATURE_CATALOG),
     [state],
   );
+  const creatureCatalogById = useMemo(
+    () => new Map(CREATURE_CATALOG.map((creature) => [creature.id, creature])),
+    [],
+  );
   const hasDiscoveredCreatures = galleryModel.summary.discoveredCreatures > 0;
 
   return (
@@ -1769,6 +1775,10 @@ function CreatureSanctuaryScoreHubView({
       ) : null}
       <div className="score-tab__sanctuary-grid" aria-label="Creature Sanctuary gallery">
         {galleryModel.cards.map((card) => (
+          (() => {
+            const creatureDefinition = creatureCatalogById.get(card.creatureId);
+            const creatureArt = creatureDefinition ? resolveCreatureArtManifest(creatureDefinition) : null;
+            return (
           <article
             key={card.creatureId}
             className={`score-tab__sanctuary-card${
@@ -1788,7 +1798,18 @@ function CreatureSanctuaryScoreHubView({
               <span className="score-tab__sanctuary-rarity-label">{card.rarityLabel}</span>
             </div>
             <div className="score-tab__sanctuary-avatar" aria-hidden="true">
-              {card.discovered ? '🐾' : '🔒'}
+              {card.discovered && creatureArt ? (
+                <img
+                  src={creatureArt.cutoutSrc}
+                  alt=""
+                  loading="lazy"
+                  onError={(event) => {
+                    applyCreatureArtFallback(event, { pngSrc: creatureArt.cutoutPngSrc, silhouetteSrc: creatureArt.silhouetteSrc });
+                  }}
+                />
+              ) : (
+                '🔒'
+              )}
             </div>
             <h3>{card.discovered ? card.name : 'Locked Creature'}</h3>
             <p>
@@ -1802,6 +1823,8 @@ function CreatureSanctuaryScoreHubView({
               {card.discovered && card.bondLevel !== null ? <span>Bond Lv. {card.bondLevel}</span> : null}
             </div>
           </article>
+            );
+          })()
         ))}
       </div>
     </div>
