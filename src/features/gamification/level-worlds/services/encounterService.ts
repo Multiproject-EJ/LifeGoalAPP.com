@@ -34,10 +34,23 @@ export interface EncounterGratitudeChallenge extends EncounterChallengeBase {
   prompt: string;
 }
 
+export interface EncounterTapChallenge extends EncounterChallengeBase {
+  type: 'tap';
+  prompt: string;
+  tapsRequired: number;
+}
+
+export interface EncounterFocusChallenge extends EncounterChallengeBase {
+  type: 'focus';
+  instruction: string;
+}
+
 export type EncounterChallenge =
   | EncounterQuizChallenge
   | EncounterBreathingChallenge
-  | EncounterGratitudeChallenge;
+  | EncounterGratitudeChallenge
+  | EncounterTapChallenge
+  | EncounterFocusChallenge;
 
 // ─── Challenge pools ──────────────────────────────────────────────────────────
 
@@ -162,6 +175,16 @@ const GRATITUDE_PROMPTS: Omit<EncounterGratitudeChallenge, 'type'>[] = [
   },
 ];
 
+const TAP_POOL: Omit<EncounterTapChallenge, 'type'>[] = [
+  { id: 'tap-energy', title: 'Energy Burst', completionLabel: 'Tap to charge', prompt: 'Tap the button to charge your momentum.', tapsRequired: 5 },
+  { id: 'tap-focus', title: 'Focus Burst', completionLabel: 'Tap to lock in', prompt: 'Tap quickly to lock in your focus.', tapsRequired: 7 },
+];
+
+const FOCUS_POOL: Omit<EncounterFocusChallenge, 'type'>[] = [
+  { id: 'focus-pause', title: 'Focus Pause', completionLabel: 'Ready when you are', instruction: 'Pause for a second and set one clear intention for your next move.' },
+  { id: 'focus-reset', title: 'Mind Reset', completionLabel: 'Ready when you are', instruction: 'Take one calm second, unclench your shoulders, and reset your posture.' },
+];
+
 const CHALLENGE_ROTATION_BUCKET_MS = 5 * 60 * 1000;
 
 type EncounterChallengeType = EncounterChallenge['type'];
@@ -170,14 +193,18 @@ function resolveEncounterTypeFromSeed(seed: number, rarity: IslandRarity): Encou
   const mod = Math.abs(seed % 100);
 
   if (rarity !== 'normal') {
-    if (mod < 45) return 'quiz';
-    if (mod < 70) return 'breathing';
-    return 'gratitude';
+    if (mod < 30) return 'quiz';
+    if (mod < 50) return 'breathing';
+    if (mod < 70) return 'gratitude';
+    if (mod < 85) return 'tap';
+    return 'focus';
   }
 
-  if (mod < 34) return 'quiz';
-  if (mod < 67) return 'breathing';
-  return 'gratitude';
+  if (mod < 24) return 'quiz';
+  if (mod < 46) return 'breathing';
+  if (mod < 68) return 'gratitude';
+  if (mod < 84) return 'tap';
+  return 'focus';
 }
 
 export function drawEncounterChallengeForBucket(options: {
@@ -199,8 +226,18 @@ export function drawEncounterChallengeForBucket(options: {
     return { type: 'breathing', ...entry };
   }
 
-  const entry = GRATITUDE_PROMPTS[seed % GRATITUDE_PROMPTS.length];
-  return { type: 'gratitude', ...entry };
+  if (challengeType === 'gratitude') {
+    const entry = GRATITUDE_PROMPTS[seed % GRATITUDE_PROMPTS.length];
+    return { type: 'gratitude', ...entry };
+  }
+
+  if (challengeType === 'tap') {
+    const entry = TAP_POOL[seed % TAP_POOL.length];
+    return { type: 'tap', ...entry };
+  }
+
+  const entry = FOCUS_POOL[seed % FOCUS_POOL.length];
+  return { type: 'focus', ...entry };
 }
 
 export function drawEncounterChallenge(islandNumber: number, tileIndex: number): EncounterChallenge {
