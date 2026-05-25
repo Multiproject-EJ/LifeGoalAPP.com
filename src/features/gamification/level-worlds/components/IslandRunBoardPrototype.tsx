@@ -1201,9 +1201,15 @@ interface IslandRunBoardPrototypeProps {
   session: Session;
   initialPanel?: 'default' | 'sanctuary';
   onExitBoard?: () => void;
+  showTopBackButton?: boolean;
 }
 
-export function IslandRunBoardPrototype({ session, initialPanel = 'default', onExitBoard }: IslandRunBoardPrototypeProps) {
+export function IslandRunBoardPrototype({
+  session,
+  initialPanel = 'default',
+  onExitBoard,
+  showTopBackButton: _showTopBackButton = false,
+}: IslandRunBoardPrototypeProps) {
   const { client } = useSupabaseAuth();
   // Player-level chip: pull levelInfo from the gamification hook so the top-bar
   // chip stays in sync with the profile's total_xp. The hook also handles its
@@ -1784,6 +1790,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
   const [sanctuaryFilterMode, setSanctuaryFilterMode] = useState<SanctuaryFilterMode>('all');
   const [sanctuaryZoneFilter, setSanctuaryZoneFilter] = useState<SanctuaryZoneFilter>('all');
   const [sanctuarySortMode, setSanctuarySortMode] = useState<SanctuarySortMode>('recent');
+  const [showSanctuaryCompanionInfo, setShowSanctuaryCompanionInfo] = useState(true);
   const [companionQuestProgress, setCompanionQuestProgress] = useState<CompanionQuestProgress>(() =>
     readCompanionQuestProgress(session.user.id),
   );
@@ -11121,14 +11128,29 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
                     <p className="island-run-sanctuary-companion-preview__eyebrow">Paired Creature</p>
                     <h4 className="island-run-sanctuary-companion-preview__title">Active Companion</h4>
                   </div>
-                  <span className="island-run-sanctuary-companion-preview__badge">Read-only preview</span>
+                  <div className="island-run-sanctuary-companion-preview__header-actions">
+                    <span className="island-run-sanctuary-companion-preview__badge">Read-only preview</span>
+                    <button
+                      type="button"
+                      className="island-run-sanctuary-companion-preview__info-toggle"
+                      aria-label={showSanctuaryCompanionInfo ? 'Hide companion info' : 'Show companion info'}
+                      aria-expanded={showSanctuaryCompanionInfo}
+                      onClick={() => setShowSanctuaryCompanionInfo((current) => !current)}
+                    >
+                      i
+                    </button>
+                  </div>
                 </div>
-                <p className="island-run-sanctuary-companion-preview__copy">
-                  Your Paired Creature gently speeds up roll regeneration.
-                </p>
-                <p className="island-run-sanctuary-companion-preview__copy">
-                  Complete your personality profile to unlock stronger companion matching.
-                </p>
+                {showSanctuaryCompanionInfo ? (
+                  <>
+                    <p className="island-run-sanctuary-companion-preview__copy">
+                      Your Paired Creature gently speeds up roll regeneration.
+                    </p>
+                    <p className="island-run-sanctuary-companion-preview__copy">
+                      Complete your personality profile to unlock stronger companion matching.
+                    </p>
+                  </>
+                ) : null}
                 {(() => {
                   const companionArt = activeRegenCompanion ? resolveCreatureArtManifest(activeRegenCompanion.creature) : null;
                   return (
@@ -11175,7 +11197,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
                             Archetype match <strong>{activeCompanionRegenModifier.isPersonalityComplete ? 'unlocked' : 'locked'}</strong>
                           </span>
                         </div>
-                        {!activeCompanionRegenModifier.isPersonalityComplete ? (
+                        {showSanctuaryCompanionInfo && !activeCompanionRegenModifier.isPersonalityComplete ? (
                           <p className="island-run-sanctuary-companion-preview__notice">
                             Profile incomplete: stronger archetype match bonuses stay locked until your personality profile is complete.
                           </p>
