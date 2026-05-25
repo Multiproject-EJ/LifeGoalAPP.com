@@ -2846,13 +2846,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
       ? `${profileStrengthPercent}% charged`
       : 'Profile strength';
   const profileStrengthTask = profileStrengthSnapshot?.globalNextTask ?? null;
-  const profileStrengthSubtitle = profileStrengthTask
-    ? `Next: ${profileStrengthTask.title}`
-    : profileStrengthPercent !== null && profileStrengthPercent !== undefined
-      ? 'Keep improving your profile for stronger guidance.'
-      : isProfileStrengthLoading
-        ? 'Checking your profile data…'
-        : 'Add more details to unlock your strength score.';
   const profileStrengthDetailSubtitle =
     profileStrengthPercent !== null && profileStrengthPercent !== undefined
       ? 'Based on coverage, quality, and recency across your profile.'
@@ -3927,7 +3920,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   </span>
                   <span className="mobile-menu-overlay__mini-copy">
                     <span className="mobile-menu-overlay__mini-title">Coach</span>
-                    <span className="mobile-menu-overlay__mini-subtitle">Guided next step</span>
                   </span>
                 </button>
 
@@ -3942,7 +3934,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                     <span className="mobile-menu-overlay__profile-ring-value">{profileStrengthPercentLabel}</span>
                     <span className="mobile-menu-overlay__profile-ring-label">Power</span>
                   </span>
-                  <span className="mobile-menu-overlay__mini-subtitle">{profileStrengthSubtitle}</span>
                 </button>
               </div>
 
