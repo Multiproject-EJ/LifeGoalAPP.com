@@ -54,6 +54,8 @@ export function FeaturePreviewOverlay({
   const isNotImplemented = variant === 'notImplemented';
   const statusLabel = isNotImplemented ? 'Not implemented yet' : statusLabelOverride;
   const featureAvailability = getFeatureAvailability(featureId);
+  const previewScreenshots = featureAvailability.previewScreenshots ?? [];
+  const [activeScreenshot, setActiveScreenshot] = useState<number | null>(null);
 
   useEffect(() => {
     markFutureFeatureSeen(featureId);
@@ -124,6 +126,21 @@ export function FeaturePreviewOverlay({
         <p className="feature-preview-overlay__body">
           {isNotImplemented ? notImplementedBody : body}
         </p>
+        {previewScreenshots.length > 0 ? (
+          <div className="feature-preview-overlay__screenshots" aria-label="Feature preview screenshots">
+            {previewScreenshots.map((screenshot, index) => (
+              <button
+                type="button"
+                key={`${screenshot.src}-${index}`}
+                className="feature-preview-overlay__screenshot"
+                onClick={() => setActiveScreenshot(index)}
+                aria-label={`Open screenshot ${index + 1} in full screen`}
+              >
+                <img src={screenshot.src} alt={screenshot.alt} loading="lazy" />
+              </button>
+            ))}
+          </div>
+        ) : null}
         {!isNotImplemented ? (
           <>
             <button
@@ -149,6 +166,34 @@ export function FeaturePreviewOverlay({
           {backLabel}
         </button>
       </div>
+      {activeScreenshot !== null ? (
+        <div
+          className="feature-preview-overlay__lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Feature preview screenshot"
+        >
+          <button
+            type="button"
+            className="feature-preview-overlay__lightbox-backdrop"
+            aria-label="Close screenshot preview"
+            onClick={() => setActiveScreenshot(null)}
+          />
+          <div className="feature-preview-overlay__lightbox-panel">
+            <img
+              src={previewScreenshots[activeScreenshot]?.src}
+              alt={previewScreenshots[activeScreenshot]?.alt ?? 'Feature screenshot'}
+            />
+            <button
+              type="button"
+              className="feature-preview-overlay__back-btn"
+              onClick={() => setActiveScreenshot(null)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      ) : null}
       {feedbackOpen ? (
         <div
           className="feature-preview-overlay__feedback-modal"

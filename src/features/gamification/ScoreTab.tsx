@@ -810,16 +810,20 @@ export function ScoreTab({
           </button>
           <button
             type="button"
-            className="score-tab__hub-card"
-            onClick={() => {
+            className={getScoreFutureFeatureCardClassName('score-tab__hub-card', 'score.zenGarden')}
+            onClick={() => handleHubCardClick('score.zenGarden', 'Zen Garden', () => {
               handleTabChange('zen');
               onNavigateToZenGarden?.();
-            }}
+            })}
           >
             <span className="score-tab__hub-visual" aria-hidden="true">
               <img className="score-tab__hub-image" src={scoreZenGarden} alt="" />
             </span>
-            <span className="score-tab__hub-title">Zen Garden</span>
+            <span className="score-tab__hub-title">
+              Zen Garden
+              <FeatureStatusBadge status={getFeatureAvailability('score.zenGarden').status} />
+              {renderFeatureFeedbackSent('score.zenGarden')}
+            </span>
           </button>
           <button
             type="button"
