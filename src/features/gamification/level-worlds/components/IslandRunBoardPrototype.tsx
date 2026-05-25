@@ -1434,6 +1434,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
   const [encounterRewardData, setEncounterRewardData] = useState<EncounterReward | null>(null);
   const [gratitudeText, setGratitudeText] = useState('');
   const [breathingSecondsLeft, setBreathingSecondsLeft] = useState(0);
+  const [encounterTapCount, setEncounterTapCount] = useState(0);
   const [bossTrialResolved, setBossTrialResolved] = useState(false);
   const [bossRewardSummary, setBossRewardSummary] = useState<string | null>(null);
   // M7-COMPLETE: boss trial flow state machine
@@ -2716,6 +2717,15 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [breathingSecondsLeft, encounterStep, showEncounterModal, currentEncounterChallenge]);
+
+  useEffect(() => {
+    if (!showEncounterModal) return;
+    if (encounterStep !== 'reward') return;
+    const autoCloseTimer = window.setTimeout(() => {
+      setShowEncounterModal(false);
+    }, 1800);
+    return () => window.clearTimeout(autoCloseTimer);
+  }, [showEncounterModal, encounterStep]);
 
   useEffect(() => {
     if (!showDebug && !showQaHooks) {
@@ -5244,6 +5254,12 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
     }
   }, [dicePool, effectiveDiceCost, isAutoRolling, stopAutoRoll]);
 
+  useEffect(() => {
+    if (showEncounterModal && isAutoRolling) {
+      stopAutoRoll();
+    }
+  }, [isAutoRolling, showEncounterModal, stopAutoRoll]);
+
   // Track roll index for deterministic (non-time-based) tile-landing RNG seeding.
   const rollIndexRef = useRef(0);
 
@@ -6261,6 +6277,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
     setEncounterStep('challenge');
     setEncounterRewardData(null);
     setGratitudeText('');
+    setEncounterTapCount(0);
     setBreathingSecondsLeft(challenge.type === 'breathing' ? challenge.durationSeconds : 0);
     setActiveEncounterTileIndex(tileIndex);
     setLandingText(`Encounter tile reached (#${tileIndex}). ${challenge.title} ready.`);
@@ -6276,6 +6293,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
     setEncounterRewardData(reward);
     setEncounterStep('reward');
     applyEncounterReward(reward);
+  };
+
+  const handleEncounterTapProgress = () => {
+    if (encounterStep !== 'challenge') return;
+    if (currentEncounterChallenge?.type !== 'tap') return;
+    setEncounterTapCount((current) => {
+      const next = current + 1;
+      if (next >= currentEncounterChallenge.tapsRequired) {
+        window.setTimeout(() => handleEncounterChallengeComplete(), 0);
+      }
+      return next;
+    });
   };
 
   // M6-COMPLETE: Breathing auto-complete — called from useEffect when countdown hits 0
@@ -10046,6 +10075,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
         <div className="island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--encounter" role="dialog" aria-modal="true" aria-label="Encounter tile challenge">
             <h3 className="island-stop-modal__title">⚔️ Bonus Encounter</h3>
+            {encounterStep === 'challenge' && (
+              <p className="island-encounter__intro">
+                Quick positive check-in — choose what feels best for you. Every choice counts.
+              </p>
+            )}
 
             {encounterStep === 'challenge' && currentEncounterChallenge && (
               <>
@@ -10103,6 +10137,38 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
                       disabled={gratitudeText.trim().length === 0}
                     >
                       {currentEncounterChallenge.completionLabel} ✓
+                    </button>
+                  </div>
+                )}
+
+                {currentEncounterChallenge.type === 'tap' && (
+                  <div className="island-encounter__challenge">
+                    <p className="island-encounter__eyebrow">{currentEncounterChallenge.title}</p>
+                    <p className="island-encounter__question">{currentEncounterChallenge.prompt}</p>
+                    <p className="island-encounter__hint">
+                      {encounterTapCount}/{currentEncounterChallenge.tapsRequired} taps
+                    </p>
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                      onClick={handleEncounterTapProgress}
+                    >
+                      Tap Charge
+                    </button>
+                  </div>
+                )}
+
+                {currentEncounterChallenge.type === 'focus' && (
+                  <div className="island-encounter__challenge">
+                    <p className="island-encounter__eyebrow">{currentEncounterChallenge.title}</p>
+                    <p className="island-encounter__question">{currentEncounterChallenge.instruction}</p>
+                    <p className="island-encounter__hint">{currentEncounterChallenge.completionLabel}</p>
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                      onClick={handleEncounterChallengeComplete}
+                    >
+                      I did it ✓
                     </button>
                   </div>
                 )}
