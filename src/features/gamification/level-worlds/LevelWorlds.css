@@ -792,11 +792,11 @@
   gap: 0.55rem;
   padding: 0.45rem 0.75rem calc(0.45rem + env(safe-area-inset-bottom, 0px));
   border-radius: 18px;
-  background: linear-gradient(160deg, rgba(5, 16, 30, 0.94), rgba(10, 26, 45, 0.92));
-  border: 1px solid rgba(145, 206, 230, 0.45);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.32);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .island-run-prototype__footer-stats {
@@ -841,27 +841,27 @@
 
 .island-run-prototype__footer-nav-btn--slot-story {
   left: 16%;
-  top: 54%;
+  top: 74%;
 }
 
 .island-run-prototype__footer-nav-btn--slot-creatures {
-  left: 31.5%;
-  top: 74%;
+  left: 31%;
+  top: 84%;
 }
 
 .island-run-prototype__footer-nav-btn--slot-market {
-  left: 68.5%;
-  top: 74%;
+  left: 69%;
+  top: 84%;
 }
 
 .island-run-prototype__footer-nav-btn--slot-build {
   left: 84%;
-  top: 54%;
+  top: 74%;
 }
 
 .island-run-prototype__footer-dice-group--slot-center {
   left: 50%;
-  top: 68%;
+  top: 79%;
   width: clamp(140px, 36vw, 220px);
 }
 .island-run-prototype__footer-actions {
@@ -913,10 +913,11 @@
 .island-run-prototype__roll-btn--footer {
   flex: 3 1 18rem;
   min-width: 0;
-  min-height: 8.7rem;
+  min-height: 6rem;
   padding-inline: 1.2rem;
-  font-size: 1.28rem;
+  font-size: 1.22rem;
   font-weight: 800;
+  border-radius: 999px;
 }
 
 .island-run-prototype__footer-roll-btn-content {
@@ -7671,16 +7672,16 @@
 
   .island-run-prototype__footer-nav-btn--slot-story,
   .island-run-prototype__footer-nav-btn--slot-build {
-    top: 53%;
+    top: 73%;
   }
 
   .island-run-prototype__footer-nav-btn--slot-creatures,
   .island-run-prototype__footer-nav-btn--slot-market {
-    top: 72%;
+    top: 83%;
   }
 
   .island-run-prototype__footer-dice-group--slot-center {
-    top: 66%;
+    top: 78%;
   }
 }
 
