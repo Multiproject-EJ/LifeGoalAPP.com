@@ -84,14 +84,14 @@ export type IslandRunHapticEvent =
 
 // ─── Preference helpers ────────────────────────────────────────────────────────
 
-let islandRunAudioEnabled = true;
+let islandRunSfxEnabled = true;
 
 export function getIslandRunAudioEnabled(): boolean {
-  return islandRunAudioEnabled;
+  return islandRunSfxEnabled;
 }
 
 export function setIslandRunAudioEnabled(enabled: boolean): void {
-  islandRunAudioEnabled = enabled;
+  islandRunSfxEnabled = enabled;
 }
 
 // ─── SFX playback helpers ─────────────────────────────────────────────────────
