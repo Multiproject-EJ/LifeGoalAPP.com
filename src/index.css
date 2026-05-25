@@ -17707,7 +17707,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 .mobile-footer-nav__energy-menu {
   position: absolute;
   left: calc(100% + 0.5rem);
-  top: 50%;
+  top: 0;
   display: flex;
   gap: clamp(0.2rem, 2vw, 0.45rem);
   flex-direction: row;
@@ -17715,7 +17715,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   width: auto;
   max-width: calc(100vw - 1rem);
   padding-inline: clamp(0.25rem, 3vw, 0.75rem);
-  transform: translateY(-50%) translateX(-16px);
+  transform: translateY(calc(-100% - 0.25rem)) translateX(-16px);
   transform-origin: left center;
   opacity: 0;
   pointer-events: none;
@@ -17725,17 +17725,17 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .mobile-footer-nav__surface--image .mobile-footer-nav__energy-menu {
   left: calc(100% + 0.5rem);
-  transform: translateY(-50%) translateX(-20px);
+  transform: translateY(calc(-100% - 0.25rem)) translateX(-20px);
 }
 
 .mobile-footer-nav__energy-menu--open {
   opacity: 1;
   pointer-events: auto;
-  transform: translateY(-50%) translateX(0);
+  transform: translateY(calc(-100% - 0.25rem)) translateX(0);
 }
 
 .mobile-footer-nav__surface--image .mobile-footer-nav__energy-menu--open {
-  transform: translateY(-50%) translateX(0);
+  transform: translateY(calc(-100% - 0.25rem)) translateX(0);
 }
 
 .mobile-footer-nav__energy-button {
