@@ -26,6 +26,7 @@ import { islandRunStopStreakTests } from './islandRunStopStreak.test';
 import { islandRunDiceRegenerationTests } from './islandRunDiceRegeneration.test';
 import { islandRunStopTicketsTests } from './islandRunStopTickets.test';
 import { islandRunLifeIntakeServiceTests } from './islandRunLifeIntakeService.test';
+import { islandRunHabitSuggestionEngineTests } from './islandRunHabitSuggestionEngine.test';
 import { islandRunStopTapRoutingTests } from './islandRunStopTapRouting.test';
 import { islandRunShopAffordabilityTests } from './islandRunShopAffordability.test';
 import { islandRunPlaceholderServiceTests } from './islandRunPlaceholderService.test';
@@ -101,6 +102,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunDiceRegeneration', tests: islandRunDiceRegenerationTests },
   { label: 'islandRunStopTickets', tests: islandRunStopTicketsTests },
   { label: 'islandRunLifeIntakeService', tests: islandRunLifeIntakeServiceTests },
+  { label: 'islandRunHabitSuggestionEngine', tests: islandRunHabitSuggestionEngineTests },
   { label: 'islandRunStopTapRouting', tests: islandRunStopTapRoutingTests },
   { label: 'islandRunShopAffordability', tests: islandRunShopAffordabilityTests },
   { label: 'islandRunPlaceholderService', tests: islandRunPlaceholderServiceTests },

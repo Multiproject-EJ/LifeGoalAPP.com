@@ -11,6 +11,12 @@ import {
   type IslandRunLifeWheelArea,
 } from '../services/islandRunLifePromptTemplates';
 import { getSuggestedHabitsByLifeWheelArea, type SuggestedHabit } from '../../../habits/suggestedHabitLibrary';
+import {
+  rankSuggestedHabitsByFeedback,
+  type HabitFeedbackEnergy,
+  type HabitFeedbackStyle,
+  type HabitFeedbackTime,
+} from '../services/islandRunHabitSuggestionEngine';
 
 interface IslandRunLifePromptCardProps {
   session: Session;
@@ -22,13 +28,25 @@ const HABIT_SIZES: readonly IslandRunHabitSize[] = ['Tiny', 'Normal', 'Stretch']
 export function IslandRunLifePromptCard({ session, onComplete }: IslandRunLifePromptCardProps) {
   const [area, setArea] = useState<IslandRunLifeWheelArea | null>(null);
   const [selectedHabit, setSelectedHabit] = useState<SuggestedHabit | null>(null);
+  const [feedbackEnergy, setFeedbackEnergy] = useState<HabitFeedbackEnergy | null>(null);
+  const [feedbackTime, setFeedbackTime] = useState<HabitFeedbackTime | null>(null);
+  const [feedbackStyle, setFeedbackStyle] = useState<HabitFeedbackStyle | null>(null);
   const [selectedSize, setSelectedSize] = useState<IslandRunHabitSize | null>(null);
   const [timing, setTiming] = useState<IslandRunHabitTimingChoice | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [doneMessage, setDoneMessage] = useState<string | null>(null);
 
-  const suggestedHabits = useMemo(() => (area ? getSuggestedHabitsByLifeWheelArea(area).slice(0, 3) : []), [area]);
+  const suggestedHabits = useMemo(() => {
+    if (!area) return [];
+    const habits = getSuggestedHabitsByLifeWheelArea(area);
+    if (!feedbackEnergy || !feedbackTime || !feedbackStyle) return [];
+    return rankSuggestedHabitsByFeedback(habits, {
+      energy: feedbackEnergy,
+      time: feedbackTime,
+      style: feedbackStyle,
+    }).slice(0, 3);
+  }, [area, feedbackEnergy, feedbackTime, feedbackStyle]);
 
   const handleSkip = () => {
     onComplete('Habit stop skipped. You can create your habit later in Habits.');
@@ -74,9 +92,39 @@ export function IslandRunLifePromptCard({ session, onComplete }: IslandRunLifePr
             ))}
           </div>
         </>
+      ) : !feedbackEnergy || !feedbackTime || !feedbackStyle ? (
+        <>
+          <p><strong>{area}</strong>: let us learn what feels easy first.</p>
+          <p style={{ fontSize: 13, opacity: 0.9 }}>Quick feedback first — then suggestions get smarter.</p>
+          {!feedbackEnergy ? (
+            <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem', flexWrap: 'wrap' }}>
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action" onClick={() => setFeedbackEnergy('low')}>Low energy day</button>
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action" onClick={() => setFeedbackEnergy('medium')}>Medium energy</button>
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action" onClick={() => setFeedbackEnergy('high')}>High energy</button>
+            </div>
+          ) : null}
+          {feedbackEnergy && !feedbackTime ? (
+            <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem', flexWrap: 'wrap' }}>
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action" onClick={() => setFeedbackTime('under_2')}>Under 2 min</button>
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action" onClick={() => setFeedbackTime('two_to_five')}>2 to 5 min</button>
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action" onClick={() => setFeedbackTime('over_five')}>Over 5 min</button>
+            </div>
+          ) : null}
+          {feedbackEnergy && feedbackTime && !feedbackStyle ? (
+            <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem', flexWrap: 'wrap' }}>
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action" onClick={() => setFeedbackStyle('physical')}>Body / movement</button>
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action" onClick={() => setFeedbackStyle('mental')}>Calm / focus</button>
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action" onClick={() => setFeedbackStyle('planning')}>Planning / work</button>
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action" onClick={() => setFeedbackStyle('social')}>Connection</button>
+            </div>
+          ) : null}
+          <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={() => (feedbackStyle ? setFeedbackStyle(null) : feedbackTime ? setFeedbackTime(null) : feedbackEnergy ? setFeedbackEnergy(null) : setArea(null))}>
+            Back
+          </button>
+        </>
       ) : !selectedHabit ? (
         <>
-          <p><strong>{area}</strong>: pick one suggested quest habit.</p>
+          <p><strong>{area}</strong>: here are better-fit starter habits based on your feedback.</p>
           <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem', flexDirection: 'column', alignItems: 'stretch' }}>
             {suggestedHabits.map((habit) => (
               <button
