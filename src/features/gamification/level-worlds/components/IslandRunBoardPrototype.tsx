@@ -1201,9 +1201,15 @@ interface IslandRunBoardPrototypeProps {
   session: Session;
   initialPanel?: 'default' | 'sanctuary';
   onExitBoard?: () => void;
+  showTopBackButton?: boolean;
 }
 
-export function IslandRunBoardPrototype({ session, initialPanel = 'default', onExitBoard }: IslandRunBoardPrototypeProps) {
+export function IslandRunBoardPrototype({
+  session,
+  initialPanel = 'default',
+  onExitBoard,
+  showTopBackButton: _showTopBackButton = false,
+}: IslandRunBoardPrototypeProps) {
   const { client } = useSupabaseAuth();
   // Player-level chip: pull levelInfo from the gamification hook so the top-bar
   // chip stays in sync with the profile's total_xp. The hook also handles its

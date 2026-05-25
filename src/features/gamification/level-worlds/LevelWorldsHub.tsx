@@ -19,6 +19,7 @@ export function LevelWorldsHub({
   session,
   onClose,
   initialPanel = 'default',
+  showTopBackButton = false,
 }: LevelWorldsHubProps) {
   const userId = session.user.id;
 
@@ -37,7 +38,12 @@ export function LevelWorldsHub({
 
   return (
     <div className="level-worlds-island-run-shell">
-      <IslandRunBoardPrototype session={session} initialPanel={initialPanel} onExitBoard={onClose} />
+      <IslandRunBoardPrototype
+        session={session}
+        initialPanel={initialPanel}
+        onExitBoard={onClose}
+        showTopBackButton={showTopBackButton}
+      />
     </div>
   );
 }
