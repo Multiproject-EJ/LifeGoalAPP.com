@@ -12,6 +12,7 @@ interface LevelWorldsHubProps {
   session: Session;
   onClose: () => void;
   initialPanel?: 'default' | 'sanctuary';
+  showTopBackButton?: boolean;
 }
 
 export function LevelWorldsHub({
