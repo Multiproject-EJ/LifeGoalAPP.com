@@ -18,7 +18,6 @@ export function LevelWorldsHub({
   session,
   onClose,
   initialPanel = 'default',
-  showTopBackButton: _showTopBackButton = true,
 }: LevelWorldsHubProps) {
   const userId = session.user.id;
 
