@@ -149,6 +149,7 @@ export function BreathingSpace({
   const [revealMode, setRevealMode] = useState<RevealMode>('sentence');
   const [guidedDetailsOpen, setGuidedDetailsOpen] = useState(false);
   const [breathingDetailsOpen, setBreathingDetailsOpen] = useState(false);
+  const [extraBreathingContentOpen, setExtraBreathingContentOpen] = useState(false);
   
   // Celebration and gamification state
   const [showCelebration, setShowCelebration] = useState(false);
@@ -561,21 +562,25 @@ export function BreathingSpace({
           )}
         </div>
 
-        {/* Quick Start Card */}
+        {/* Quick Start Action */}
         <div className="breathing-space__card breathing-space__quick-start">
-          <div className="breathing-space__card-header">
-            <span className="breathing-space__card-icon">🌬️</span>
-            <h3 className="breathing-space__card-title">Quick Start</h3>
+          <div className="breathing-space__quick-start-actions">
+            <button
+              className="btn btn--primary breathing-space__start-button"
+              onClick={() => handleStartSession('3-Minute Breathing', 180)}
+            >
+              Start 3-minute breathing
+            </button>
+            <button
+              type="button"
+              className="breathing-space__extras-toggle"
+              aria-expanded={extraBreathingContentOpen}
+              aria-label={extraBreathingContentOpen ? 'Hide breathing extras' : 'Show breathing extras'}
+              onClick={() => setExtraBreathingContentOpen((prev) => !prev)}
+            >
+              🪄
+            </button>
           </div>
-          <p className="breathing-space__card-description">
-            Take a moment to center yourself with a quick breathing exercise.
-          </p>
-          <button
-            className="btn btn--primary breathing-space__start-button"
-            onClick={() => handleStartSession('3-Minute Breathing', 180)}
-          >
-            Start 3-minute breathing
-          </button>
         </div>
 
         {canRenderYoga ? (
@@ -619,7 +624,7 @@ export function BreathingSpace({
       {/* Right Column: Library */}
       <div className="breathing-space__right-column">
         {/* Meditation Library */}
-        {canRenderMeditation ? (
+        {extraBreathingContentOpen && canRenderMeditation ? (
           <div className="breathing-space__library breathing-space__section breathing-space__section--meditation">
             <div className="breathing-space__library-header">
               <h3 className="breathing-space__library-title">Guided Meditations</h3>
@@ -734,6 +739,7 @@ export function BreathingSpace({
         ) : null}
 
         {/* Breathing Exercises Library */}
+        {extraBreathingContentOpen ? (
         <div className="breathing-space__library breathing-space__section breathing-space__section--breathing">
           <div className="breathing-space__library-header">
             <h3 className="breathing-space__library-title">Breathing Exercises</h3>
@@ -779,6 +785,7 @@ export function BreathingSpace({
             </div>
           </div>
         </div>
+        ) : null}
 
         {canRenderYoga ? (
           <div className="breathing-space__library breathing-space__section breathing-space__section--yoga">
