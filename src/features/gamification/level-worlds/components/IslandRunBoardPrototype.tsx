@@ -1832,6 +1832,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
 
   // B3-5: island clear celebration
   const [showIslandClearCelebration, setShowIslandClearCelebration] = useState(false);
+  const [isIslandClearRewardClaimed, setIsIslandClearRewardClaimed] = useState(false);
+  const [islandClearRewardPulseKey, setIslandClearRewardPulseKey] = useState(0);
   const [islandClearStats, setIslandClearStats] = useState<{
     islandNumber: number;
     diceEarned: number;
@@ -4393,6 +4395,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
         rewards_granted: { dice: bossReward.dice, essence: bossReward.essence },
       },
     });
+    setIsIslandClearRewardClaimed(false);
     setShowIslandClearCelebration(true);
     setIslandClearStats({
       islandNumber,
@@ -6847,6 +6850,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
     setUtilityInteracted(false);
     setIslandIntention('');
     setShowIslandClearCelebration(false);
+    setIsIslandClearRewardClaimed(false);
     setIslandClearStats(null);
     islandClearCelebrationShownForVisitRef.current = null;
     // M16C: islandShards, shardTierIndex, shardClaimCount, shardMilestoneReached, and
@@ -6918,6 +6922,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
       void performIslandTravel(nextIsland, { startTimer: true });
     }, 1400);
   };
+
+  const handleClaimIslandClearCelebrationRewards = useCallback(() => {
+    setIsIslandClearRewardClaimed(true);
+    setIslandClearRewardPulseKey((prev) => prev + 1);
+    triggerIslandRunHaptic('reward_claim');
+    playIslandRunSound('reward_bar_claim_burst');
+    setLandingText('Rewards claimed! Travel to the next island when you are ready.');
+  }, [playIslandRunSound]);
 
   // B3-2: handleCompleteStopById helper
   const handleCompleteStopById = (stopId: string) => {
@@ -10441,7 +10453,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
               once all pieces fall off-screen. Unmounted automatically alongside
               the celebration modal. */}
           <ConfettiBurst
-            active
+            active={!isIslandClearRewardClaimed}
             variant={islandClearStats.isCycleCapstone ? 'capstone' : 'standard'}
           />
           <div
@@ -10469,7 +10481,10 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
                   src="/assets/islands/celebrations/newisland/islandcompletetext.webp"
                   alt="Island Complete"
                 />
-                <div className="island-clear-celebration__rewards">
+                <div
+                  key={islandClearRewardPulseKey}
+                  className={`island-clear-celebration__rewards${isIslandClearRewardClaimed ? ' island-clear-celebration__rewards--claimed' : ''}`}
+                >
                   <span className="island-clear-celebration__reward-item">🎲 +{islandClearStats.diceEarned}</span>
                   <span className="island-clear-celebration__reward-item">🟣 +{islandClearStats.essenceEarned}</span>
                   <span className="island-clear-celebration__reward-item">🔷 +3</span>
@@ -10481,12 +10496,14 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
                   <button
                     type="button"
                     className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary island-clear-celebration__cta"
-                    onClick={handleTravelFromCelebration}
+                    onClick={isIslandClearRewardClaimed ? handleTravelFromCelebration : handleClaimIslandClearCelebrationRewards}
                     autoFocus
                   >
-                    {getTreasurePathMilestoneMetadata(islandClearStats.islandNumber)
-                      ? '✨ Start Treasure Path'
-                      : '👉 Travel to Next Island'}
+                    {isIslandClearRewardClaimed
+                      ? (getTreasurePathMilestoneMetadata(islandClearStats.islandNumber)
+                        ? 'Start Treasure Path'
+                        : 'Travel to Next Island')
+                      : 'Claim Rewards'}
                   </button>
                 </div>
               </div>
