@@ -126,7 +126,7 @@ export function generateIslandStopPlan(
     {
       stopId: 'hatchery',
       title: '🥚 Hatchery Landmark',
-      description: 'Set one egg and track stage progression over time.',
+      description: 'Set one egg, grow it through stages, and unlock your companion momentum boost.',
       kind: 'fixed_hatchery',
       isBehaviorStop: false,
     },

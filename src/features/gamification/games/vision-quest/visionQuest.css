@@ -186,6 +186,29 @@
   color: rgba(245, 230, 211, 0.4);
 }
 
+
+.vision-quest__quick-responses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.vision-quest__quick-response {
+  border: 1px solid rgba(167, 139, 250, 0.5);
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.12);
+  color: #f5e6d3;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+}
+
+.vision-quest__quick-response:hover {
+  background: rgba(167, 139, 250, 0.22);
+}
+
 .vision-quest__character-count {
   display: flex;
   justify-content: space-between;
