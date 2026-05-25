@@ -2000,6 +2000,26 @@
   outline-offset: 2px;
 }
 
+
+.island-run-board__rewardbar-hatchery-pill {
+  position: absolute;
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  border: 1px solid rgba(170, 130, 45, 0.85);
+  background: linear-gradient(180deg, #fff8dc 0%, #f2dfae 100%);
+  color: #5e4109;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 5px 8px;
+  box-shadow: 0 3px 8px rgba(94, 65, 9, 0.22);
+  white-space: nowrap;
+}
+
 /* Decorative event title banner */
 .island-run-board__rewardbar-banner {
   display: flex;

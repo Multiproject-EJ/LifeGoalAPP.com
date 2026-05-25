@@ -5657,6 +5657,12 @@ export function IslandRunBoardPrototype({
     () => countUnclaimedCreatures(runtimeState.perIslandEggs),
     [runtimeState.perIslandEggs],
   );
+  const hatcheryPendingEggCount = useMemo(
+    () => Object.values(runtimeState.perIslandEggs ?? {}).reduce((count, entry) => (
+      entry?.status === 'incubating' || entry?.status === 'ready' ? count + 1 : count
+    ), 0),
+    [runtimeState.perIslandEggs],
+  );
   const openHatcheryQuickAccess = useCallback(() => {
     requestActiveStopTransition('hatchery', 'manifest_quick_access');
   }, [requestActiveStopTransition]);
@@ -9099,9 +9105,18 @@ export function IslandRunBoardPrototype({
         <button
           type="button"
           className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}${rewardBarBurstAnimating ? ' island-run-board__rewardbar--burst' : ''}${rewardBarTierClass}`}
-          aria-label={`Reward progress. Next reward: ${nextRewardAccessibleLabel}`}
+          aria-label={`Reward progress. Next reward: ${nextRewardAccessibleLabel}${hatcheryPendingEggCount > 0 ? `. ${hatcheryPendingEggCount} hatchery egg${hatcheryPendingEggCount === 1 ? '' : 's'} pending.` : ''}`}
           onClick={canClaimRewardBar ? handleContractV2RewardBarClaim : openRewardDetailsModal}
         >
+          {hatcheryPendingEggCount > 0 && (
+            <span
+              className="island-run-board__rewardbar-hatchery-pill"
+              aria-hidden="true"
+              title={`${hatcheryPendingEggCount} hatchery egg${hatcheryPendingEggCount === 1 ? '' : 's'} hatching or uncollected`}
+            >
+              🥚 {hatcheryPendingEggCount}
+            </span>
+          )}
           {/* Flying feed particle animation */}
           {feedParticleActive && (
             <span className="island-run-board__rewardbar-feed-particle" aria-hidden="true">✨</span>
