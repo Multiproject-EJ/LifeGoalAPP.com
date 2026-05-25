@@ -557,6 +557,11 @@ const SPECIAL_ISLAND_NUMBERS = new Set([5, 12, 18, 24, 30, 36, 42, 48, 54, 60, 6
 
 // M16C: Era emoji cycle for shard pill HUD (shard_tier_index % 7)
 const ERA_EMOJIS = ['⚡', '🎳', '🌸', '💡', '🔷', '🌀', '🌈'] as const;
+function getCreatureRevealScore(tier: 'common' | 'rare' | 'mythic'): number {
+  if (tier === 'mythic') return 50;
+  if (tier === 'rare') return 25;
+  return 10;
+}
 function getShardEraEmoji(islandNum: number, tierIndex: number): string {
   if (SPECIAL_ISLAND_NUMBERS.has(islandNum)) return '🌟';
   return ERA_EMOJIS[tierIndex % ERA_EMOJIS.length];
@@ -9557,10 +9562,18 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
                 ) : activeEgg && !islandEggSlotUsed && eggStage >= 4 ? (
                   /* State 4/5: Egg ready to open (or dormant egg ready on revisit) */
                   <div className="island-hatchery-card__state island-hatchery-card__state--ready">
-                    <img
+                    <video
                       className="island-hatchery-card__stage-art"
-                      src={getEggStageArtSrc(activeEgg.tier, 4)}
-                      alt={`${activeEgg.tier} egg ready to open`}
+                      src="/assets/creatures/egg-hatch/egg-hatch-alpha-v1.mp4"
+                      poster={getEggStageArtSrc(activeEgg.tier, 4)}
+                      autoPlay
+                      muted
+                      playsInline
+                      preload="auto"
+                      onEnded={(event) => {
+                        event.currentTarget.pause();
+                      }}
+                      aria-label={`${activeEgg.tier} egg hatching animation`}
                     />
                     {activeEgg.isDormant ? (
                       <>
@@ -11438,6 +11451,7 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
           open={Boolean(hatchReveal)}
           creatureName={hatchReveal.creatureName}
           rarity={hatchReveal.rarity}
+          creatureScore={getCreatureRevealScore(hatchReveal.rarity)}
           imageSrc={(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId) && resolveCreatureArtManifest(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId)!).cutoutSrc) || '/assets/creature-placeholders/silhouette.webp'}
           pngFallbackSrc={(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId) && resolveCreatureArtManifest(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId)!).cutoutPngSrc) || '/assets/creature-placeholders/silhouette.webp'}
           silhouetteSrc={(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId) && resolveCreatureArtManifest(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId)!).silhouetteSrc) || '/assets/creature-placeholders/silhouette.webp'}

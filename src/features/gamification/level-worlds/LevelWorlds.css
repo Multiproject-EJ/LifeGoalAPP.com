@@ -5492,6 +5492,8 @@
   background: rgba(6, 12, 22, 0.72);
   padding: 0.9rem;
   animation: sanctuary-detail-fade 180ms ease-out;
+  align-content: center;
+  gap: 0.75rem;
 }
 
 .island-run-hatch-reveal__card {
@@ -5521,10 +5523,11 @@
 }
 .island-run-hatch-reveal__art { width: 88%; height: 88%; object-fit: contain; }
 .island-run-hatch-reveal__emoji { width: 88%; height: 88%; font-size: 2.4rem; place-items: center; }
-.island-run-hatch-reveal__title { margin: 0; font-size: 0.88rem; letter-spacing: 0.06em; text-transform: uppercase; }
-.island-run-hatch-reveal__name { margin: 0; font-size: 1.3rem; }
+.island-run-hatch-reveal__header { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; }
+.island-run-hatch-reveal__title { margin: 0; font-size: 1.1rem; font-weight: 700; text-align: left; }
+.island-run-hatch-reveal__score { margin: 0; font-size: 0.82rem; opacity: 0.86; }
 .island-run-hatch-reveal__rarity, .island-run-hatch-reveal__confirm { margin: 0; }
-.island-run-hatch-reveal__actions { display: grid; gap: 0.5rem; }
+.island-run-hatch-reveal__actions { width: min(440px, 100%); display: grid; gap: 0.5rem; }
 
 .island-run-first-creature-pack {
   position: fixed;
