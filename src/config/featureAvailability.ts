@@ -32,6 +32,11 @@ export type FeatureAvailabilityId =
   | 'settings.notifications'
   | 'settings.experimentalFeatures';
 
+export interface FeatureAvailabilityScreenshot {
+  src: string;
+  alt: string;
+}
+
 export interface FeatureAvailability {
   id: FeatureAvailabilityId;
   label: string;
@@ -49,6 +54,7 @@ export interface FeatureAvailability {
   votingEnabled?: boolean;
   votingQuestion?: string;
   voteCategory?: string;
+  previewScreenshots?: FeatureAvailabilityScreenshot[];
 }
 
 const FUTURE_FEATURE_LABEL = 'Future Feature';
@@ -405,12 +411,32 @@ export const featureAvailabilityRegistry = {
   'score.zenGarden': {
     id: 'score.zenGarden',
     label: 'Zen Garden',
-    description: 'Zen Garden entry point from the Score hub.',
-    status: 'live',
-    publicAccess: 'open',
+    description: 'Future Score hub entry point for Zen Garden progression.',
+    status: 'demo',
+    publicAccess: 'previewOnly',
     adminAccess: 'open',
     surface: 'ScoreTab',
     category: 'scoreHub',
+    publicLabel: FUTURE_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'A peaceful progression garden where your consistency unlocks calming scenes and rewards.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'scoreHub',
+    previewScreenshots: [
+      {
+        src: '/assets/zen garden/IMG_9482.webp',
+        alt: 'Zen Garden early preview screenshot with calm stone path and water scene.',
+      },
+      {
+        src: '/assets/Score_zengarden.webp',
+        alt: 'Zen Garden Score hub concept card screenshot.',
+      },
+      {
+        src: '/assets/zenshopmain.webp',
+        alt: 'Zen Garden unlock shop concept screenshot.',
+      },
+    ],
   },
   'settings.holidayThemes': {
     id: 'settings.holidayThemes',
