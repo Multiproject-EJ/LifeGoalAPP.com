@@ -384,6 +384,7 @@ import {
 } from '../services/islandRunShooterControllerBridge';
 import { emitShooterControllerLifecycleTelemetry } from '../services/islandRunShooterControllerTelemetry';
 import { BuildModalV2, type BuildModalV2CardData, type BuildModalV2Milestone } from './BuildModalV2';
+import IslandRunWinCelebrationModal, { type WinRewardItem } from './IslandRunWinCelebrationModal';
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 6;
@@ -1775,7 +1776,24 @@ export function IslandRunBoardPrototype({
   const [feedParticleActive, setFeedParticleActive] = useState(false);
   // B8: brief "snap" flash on the fill when the bar first becomes claimable.
   const [rewardBarSnapActive, setRewardBarSnapActive] = useState(false);
+  const [showWinCelebrationModal, setShowWinCelebrationModal] = useState(false);
+  const [winCelebrationRewards, setWinCelebrationRewards] = useState<WinRewardItem[]>([]);
+  const [winCelebrationSubtitle, setWinCelebrationSubtitle] = useState('You won');
   const rewardBarWasClaimableRef = useRef(false);
+
+  useEffect(() => {
+    if (!showWinCelebrationModal) return;
+    // Fireworks-like celebration burst when the secondary win modal opens.
+    playIslandRunSound('boss_island_clear');
+    triggerIslandRunHaptic('reward_claim');
+  }, [showWinCelebrationModal]);
+
+  const openWinCelebrationModal = useCallback((rewards: WinRewardItem[], subtitle = 'You won') => {
+    if (rewards.length === 0) return;
+    setWinCelebrationRewards(rewards);
+    setWinCelebrationSubtitle(subtitle);
+    setShowWinCelebrationModal(true);
+  }, []);
 
   // ── Safe placeholder dialog ────────────────────────────────────────────────
   const [activePlaceholder, setActivePlaceholder] = useState<IslandRunPlaceholderDescriptor | null>(null);
@@ -11684,10 +11702,19 @@ export function IslandRunBoardPrototype({
                 handleCompleteActiveStop();
               } else if (result.completed && result.reward) {
                 const { dice: rewardDice = 0, spinTokens: rewardSpinTokens = 0 } = result.reward;
-                if (rewardDice > 0) setDicePool((d) => d + rewardDice);
-                if (rewardSpinTokens > 0) setSpinTokens((t) => t + rewardSpinTokens);
+                const wonRewards: WinRewardItem[] = [];
+                if (rewardDice > 0) {
+                  setDicePool((d) => d + rewardDice);
+                  wonRewards.push({ icon: '🎲', label: 'Dice', value: `+${rewardDice}` });
+                }
+                if (rewardSpinTokens > 0) {
+                  setSpinTokens((t) => t + rewardSpinTokens);
+                  wonRewards.push({ icon: '🌀', label: 'Spin Tokens', value: `+${rewardSpinTokens}` });
+                }
                 // M17D: award wallet shards on minigame reward
                 awardWalletShards(1);
+                wonRewards.push({ icon: '🔶', label: 'Shards', value: '+1' });
+                openWinCelebrationModal(wonRewards, 'Mini-game rewards');
                 void recordTelemetryEvent({
                   userId: session.user.id,
                   eventType: 'economy_earn',
@@ -11705,6 +11732,17 @@ export function IslandRunBoardPrototype({
           />
         </div>
       )}
+
+      <IslandRunWinCelebrationModal
+        open={showWinCelebrationModal}
+        title="Congratulations!"
+        subtitle={winCelebrationSubtitle}
+        rewards={winCelebrationRewards}
+        onCollect={() => {
+          setShowWinCelebrationModal(false);
+          setWinCelebrationRewards([]);
+        }}
+      />
 
       <IslandStoryReader
         manifestPath="/storyline/episode-001/manifest.json"

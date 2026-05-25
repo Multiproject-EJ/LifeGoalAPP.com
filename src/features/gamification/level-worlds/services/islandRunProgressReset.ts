@@ -56,6 +56,8 @@ export function buildFreshIslandRunRecord(
     welcomePackRewardBundleClaimed: false,
     storyPrologueSeen: false,
     audioEnabled: current.audioEnabled,
+    musicEnabled: true,
+    sfxEnabled: true,
     currentIslandNumber: 1,
     cycleIndex: 0,
     bossTrialResolvedIslandNumber: null,

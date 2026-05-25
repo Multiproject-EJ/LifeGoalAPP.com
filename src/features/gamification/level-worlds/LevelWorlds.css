@@ -7834,3 +7834,35 @@
   font-size: 0.72rem;
   opacity: 0.92;
 }
+
+/* Secondary win celebration modal (reusable rewards collect surface) */
+.island-win-celebration {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(6, 10, 20, 0.72);
+  backdrop-filter: blur(6px) saturate(0.85);
+}
+
+.island-win-celebration__card {
+  width: min(100%, 420px);
+  border-radius: 28px;
+  border: 1px solid rgba(255, 221, 120, 0.55);
+  background: linear-gradient(180deg, rgba(36, 20, 8, 0.97), rgba(15, 10, 8, 0.95));
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.52);
+  padding: 1.4rem 1.1rem 1.2rem;
+  text-align: center;
+}
+
+.island-win-celebration__title { font-size: 1.8rem; font-weight: 900; color: #fff7d7; margin: 0; }
+.island-win-celebration__subtitle { margin: 0.3rem 0 1rem; color: rgba(255,255,255,0.85); font-weight: 700; }
+.island-win-celebration__rewards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; margin-bottom: 1rem; }
+.island-win-celebration__reward-item { border-radius: 14px; border: 1px solid rgba(255, 209, 99, 0.42); background: rgba(255,255,255,0.06); padding: 0.65rem 0.45rem; }
+.island-win-celebration__reward-icon { font-size: 1.2rem; display: block; }
+.island-win-celebration__reward-value { font-size: 1.3rem; font-weight: 900; color: #ffe88f; display: block; }
+.island-win-celebration__reward-label { font-size: 0.78rem; color: rgba(255,255,255,0.82); text-transform: uppercase; letter-spacing: 0.03em; }
+.island-win-celebration__collect { min-width: 220px; }
