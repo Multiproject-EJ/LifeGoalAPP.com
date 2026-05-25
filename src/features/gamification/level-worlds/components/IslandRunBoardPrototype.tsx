@@ -1195,9 +1195,10 @@ const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
 interface IslandRunBoardPrototypeProps {
   session: Session;
   initialPanel?: 'default' | 'sanctuary';
+  onExitBoard?: () => void;
 }
 
-export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: IslandRunBoardPrototypeProps) {
+export function IslandRunBoardPrototype({ session, initialPanel = 'default', onExitBoard }: IslandRunBoardPrototypeProps) {
   const { client } = useSupabaseAuth();
   // Player-level chip: pull levelInfo from the gamification hook so the top-bar
   // chip stays in sync with the profile's total_xp. The hook also handles its
@@ -1348,13 +1349,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
   }, [isRolling, pendingHopSequence]);
 
   const handleTopbarMenuButtonClick = useCallback(() => {
-    if (!isTopbarMenuPrimed) {
-      resetCameraFromTopbarMenu();
-      return;
-    }
-
     setShowTopbarMenu((current) => !current);
-  }, [isTopbarMenuPrimed, resetCameraFromTopbarMenu]);
+  }, []);
   const autoRollHoldTimeoutRef = useRef<number | null>(null);
   const autoRollLoopAbortRef = useRef(false);
   const autoRollHoldTriggeredRef = useRef(false);
@@ -8912,8 +8908,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
             </div>
             <button
               type="button"
+              className="island-run-board__topbar-audio-toggle island-run-board__topbar-camera-reset"
+              aria-label="Reset camera zoom"
+              onClick={resetCameraFromTopbarMenu}
+            >
+              🔎
+            </button>
+            <button
+              type="button"
               className={`island-run-board__topbar-menu${isTopbarMenuPrimed ? ' island-run-board__topbar-menu--primed' : ''}${showTopbarMenu ? ' island-run-board__topbar-menu--open' : ''}`}
-              aria-label="Board menu and camera reset"
+              aria-label="Board menu"
               aria-expanded={showTopbarMenu}
               aria-haspopup="menu"
               aria-controls="island-run-topbar-menu"
@@ -8984,6 +8988,16 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
                 }}
               >
                 {isBackgroundHidden ? 'Show background' : 'Hide background'}
+              </button>
+              <button
+                type="button"
+                className="island-run-board__topbar-menu-item"
+                onClick={() => {
+                  onExitBoard?.();
+                  setShowTopbarMenu(false);
+                }}
+              >
+                ← Back
               </button>
               <button
                 type="button"
@@ -9202,15 +9216,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default' }: I
           {diceRollTotalOverlay}
         </div>
       )}
-
-      <button
-        type="button"
-        className="island-run-prototype__camera-reset-floating"
-        aria-label="Reset camera zoom"
-        onClick={resetCameraFromTopbarMenu}
-      >
-        🔎
-      </button>
 
       <div
         className={`island-run-prototype__footer${isBuildTutorialPromptActive ? ' island-run-prototype__footer--build-tutorial-active' : ''}`}

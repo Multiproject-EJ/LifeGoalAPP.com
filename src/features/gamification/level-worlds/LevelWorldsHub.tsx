@@ -12,14 +12,12 @@ interface LevelWorldsHubProps {
   session: Session;
   onClose: () => void;
   initialPanel?: 'default' | 'sanctuary';
-  showTopBackButton?: boolean;
 }
 
 export function LevelWorldsHub({
   session,
   onClose,
   initialPanel = 'default',
-  showTopBackButton = true,
 }: LevelWorldsHubProps) {
   const userId = session.user.id;
 
@@ -38,27 +36,7 @@ export function LevelWorldsHub({
 
   return (
     <div className="level-worlds-island-run-shell">
-      {showTopBackButton ? (
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Back to main app"
-          className="level-worlds-island-run-shell__back-button level-worlds-island-run-shell__back-button--top"
-        >
-          ← Back
-        </button>
-      ) : null}
-      <IslandRunBoardPrototype session={session} initialPanel={initialPanel} />
-      <div className="level-worlds-island-run-shell__mobile-bottom-exit-layer">
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Back to main app"
-          className="level-worlds-island-run-shell__back-button level-worlds-island-run-shell__back-button--bottom"
-        >
-          ← Back
-        </button>
-      </div>
+      <IslandRunBoardPrototype session={session} initialPanel={initialPanel} onExitBoard={onClose} />
     </div>
   );
 }

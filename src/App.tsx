@@ -4626,7 +4626,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
           session={activeSession}
           initialPanel={levelWorldsEntryPanel}
           onClose={handleCloseLevelWorldsEntry}
-          showTopBackButton={!isMobileViewport}
         />
       </RecoverableErrorBoundary>
     </div>
