@@ -10334,6 +10334,21 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
         <div className="island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense" role="dialog" aria-modal="true" aria-label="Egg ready">
             <h3 className="island-stop-modal__title">🌟🥚 Egg Ready to Open!</h3>
+            {activeEgg ? (
+              <video
+                className="island-hatchery-card__stage-art"
+                src="/assets/creatures/egg-hatch/egg-hatch-alpha-v1.mp4"
+                poster={getEggStageArtSrc(activeEgg.tier, 4)}
+                autoPlay
+                muted
+                playsInline
+                preload="auto"
+                onEnded={(event) => {
+                  event.currentTarget.pause();
+                }}
+                aria-label={`${activeEgg.tier} egg hatching animation`}
+              />
+            ) : null}
             <p className="island-stop-modal__copy">
               Your egg has finished incubating and is ready to open. Head to the Hatchery stop to collect your creature or sell for rewards!
             </p>
