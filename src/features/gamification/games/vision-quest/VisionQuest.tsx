@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   generatePromptSelection,
@@ -11,6 +11,7 @@ import {
   MIN_REFLECTION_LENGTH,
   type ReflectionPrompt,
   type VisionQuestSession,
+  type LifeWheelZone,
 } from './visionQuestTypes';
 import {
   resolveVisionQuestRewardRouting,
@@ -30,6 +31,31 @@ const playButtonClick = () => {
 const playReflectionComplete = () => {
   // Warm, contemplative chime
   playChime([440, 523, 659], 120, 0.3, 0.3);
+};
+
+const QUICK_RESPONSES = [
+  'Yes',
+  'No',
+  'Low',
+  'Medium',
+  'High',
+  'Calm',
+  'Focused',
+  'Grateful',
+];
+
+
+const QUICK_RESPONSES_BY_ZONE: Record<LifeWheelZone, string[]> = {
+  Health: ['Energized', 'Steady', 'Recover', 'None of the above'],
+  Career: ['Focus', 'Ship', 'Learn', 'None of the above'],
+  Relationships: ['Listen', 'Reach out', 'Appreciate', 'None of the above'],
+  'Personal Growth': ['Courage', 'Curiosity', 'Consistency', 'None of the above'],
+  Finance: ['Save', 'Plan', 'Simplify', 'None of the above'],
+  Recreation: ['Calm', 'Playful', 'Social', 'None of the above'],
+  Contribution: ['Help one person', 'Share', 'Volunteer', 'None of the above'],
+  Environment: ['Declutter', 'Cozy', 'Brighten', 'None of the above'],
+  Spirituality: ['Nature', 'Gratitude', 'Stillness', 'None of the above'],
+  Family: ['Connect', 'Support', 'Celebrate', 'None of the above'],
 };
 
 interface VisionQuestProps {
@@ -57,6 +83,7 @@ export function VisionQuest({ session, onClose, onComplete, rewardContext = 'def
   const [showCelebration, setShowCelebration] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [savedTimestamp, setSavedTimestamp] = useState<string>('');
+  const [usedQuickChoice, setUsedQuickChoice] = useState(false);
   
   // Log game session entry
   useEffect(() => {
@@ -76,11 +103,12 @@ export function VisionQuest({ session, onClose, onComplete, rewardContext = 'def
     }));
   }, []);
   
-  const handleReflectionChange = useCallback((text: string) => {
+  const handleReflectionChange = useCallback((text: string, viaQuickChoice = false) => {
     setGameSession((prev) => ({
       ...prev,
       reflectionText: text,
     }));
+    setUsedQuickChoice(viaQuickChoice);
   }, []);
   
   const handleSubmit = useCallback(() => {
@@ -94,7 +122,7 @@ export function VisionQuest({ session, onClose, onComplete, rewardContext = 'def
     const state = loadVisionQuestState(userId);
     
     // Calculate rewards
-    const rewards = calculateRewards(gameSession.reflectionText.length, state);
+    const rewards = calculateRewards(gameSession.reflectionText.length, state, { usedQuickChoice });
     
     // Save journal entry
     const newState = saveJournalEntry(
@@ -148,6 +176,7 @@ export function VisionQuest({ session, onClose, onComplete, rewardContext = 'def
         streak: newState.currentStreak,
         rewards: completionRewards,
         rewardContext,
+        usedQuickChoice,
       },
     });
     
@@ -168,7 +197,7 @@ export function VisionQuest({ session, onClose, onComplete, rewardContext = 'def
       triggerCompletionHaptic('medium', { channel: 'gamification', minIntervalMs: 3000 });
       setShowCelebration(true);
     }, 800);
-  }, [gameSession, rewardContext, userId]);
+  }, [gameSession, rewardContext, usedQuickChoice, userId]);
   
   const handleComplete = useCallback(() => {
     playButtonClick();
@@ -199,6 +228,13 @@ export function VisionQuest({ session, onClose, onComplete, rewardContext = 'def
   const characterCount = gameSession.reflectionText.length;
   const canSubmit = characterCount >= MIN_REFLECTION_LENGTH;
   const diceRewardLabel = rewardContext === 'island_run_landmark' ? 'Island Dice' : 'Game Dice';
+  const completionTitle = rewardContext === 'island_run_landmark' ? 'Landmark Insight Locked In ✨' : 'Reflection Saved 🌟';
+  const completionSubtitle = rewardContext === 'island_run_landmark'
+    ? 'Nice! Your insight boosted this landmark run.'
+    : 'Your thoughts have been captured';
+  const zoneQuickResponses = useMemo(() => (
+    gameSession.selectedPrompt ? QUICK_RESPONSES_BY_ZONE[gameSession.selectedPrompt.zone] : QUICK_RESPONSES
+  ), [gameSession.selectedPrompt]);
   
   return (
     <div className="vision-quest">
@@ -252,10 +288,10 @@ export function VisionQuest({ session, onClose, onComplete, rewardContext = 'def
             <div className="vision-quest__header">
               <h2 className="vision-quest__title">
                 <span>🔮</span>
-                <span>Your Reflection</span>
+                <span>Quick Reflection</span>
               </h2>
               <p className="vision-quest__subtitle">
-                Take a moment to reflect deeply
+                Fast check-in for the island run loop
               </p>
             </div>
             
@@ -271,16 +307,32 @@ export function VisionQuest({ session, onClose, onComplete, rewardContext = 'def
               
               <textarea
                 className="vision-quest__textarea"
-                placeholder="Write your reflection here... (minimum 20 characters)"
+                placeholder="Type a quick answer (for example: Yes, Medium, Calm)"
                 value={gameSession.reflectionText}
                 onChange={(e) => handleReflectionChange(e.target.value)}
                 autoFocus
               />
               
+              <div className="vision-quest__quick-responses">
+                {zoneQuickResponses.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    className="vision-quest__quick-response"
+                    onClick={() => handleReflectionChange(option, true)}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+
               <div className="vision-quest__character-count">
                 <span className={characterCount >= MIN_REFLECTION_LENGTH ? 'vision-quest__character-count--valid' : ''}>
                   {characterCount} / {MIN_REFLECTION_LENGTH} characters
                 </span>
+                {usedQuickChoice && (
+                  <span className="vision-quest__bonus-indicator">✨ Quick choice bonus +10 coins</span>
+                )}
                 {characterCount >= 100 && (
                   <span className="vision-quest__bonus-indicator">✨ Long reflection bonus!</span>
                 )}
@@ -310,9 +362,9 @@ export function VisionQuest({ session, onClose, onComplete, rewardContext = 'def
         {gameSession.isComplete && showConfirmation && (
           <>
             <div className="vision-quest__completion">
-              <h2 className="vision-quest__completion-title">Reflection Saved 🌟</h2>
+              <h2 className="vision-quest__completion-title">{completionTitle}</h2>
               <p className="vision-quest__completion-subtitle">
-                Your thoughts have been captured
+                {completionSubtitle}
               </p>
               
               <div className="vision-quest__saved-info">

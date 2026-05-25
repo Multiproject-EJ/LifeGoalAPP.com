@@ -7,6 +7,7 @@ import {
   STREAK_BONUS,
   LONG_REFLECTION_THRESHOLD,
   MIN_STREAK_DAYS,
+  QUICK_CHOICE_BONUS,
   type ReflectionPrompt,
   type VisionQuestState,
   type JournalEntry,
@@ -108,7 +109,8 @@ function shouldContinueStreak(lastReflectionDate: string | null): boolean {
  */
 export function calculateRewards(
   reflectionLength: number,
-  state: VisionQuestState
+  state: VisionQuestState,
+  options?: { usedQuickChoice?: boolean }
 ): { coins: number; dice: number; tokens: number } {
   let rewards = {
     coins: BASE_REWARDS.coins,
@@ -123,6 +125,12 @@ export function calculateRewards(
     rewards.tokens += LONG_REFLECTION_BONUS.tokens;
   }
   
+  if (options?.usedQuickChoice) {
+    rewards.coins += QUICK_CHOICE_BONUS.coins;
+    rewards.dice += QUICK_CHOICE_BONUS.dice;
+    rewards.tokens += QUICK_CHOICE_BONUS.tokens;
+  }
+
   // First reflection of the day bonus
   if (isNewDay(state.lastReflectionDate)) {
     rewards.coins += DAILY_FIRST_BONUS.coins;

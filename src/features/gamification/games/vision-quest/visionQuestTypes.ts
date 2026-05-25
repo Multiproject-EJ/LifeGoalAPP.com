@@ -74,8 +74,16 @@ export const STREAK_BONUS = {
   tokens: 0,
 } as const;
 
+
+/** Bonus rewards for using a quick-choice response chip */
+export const QUICK_CHOICE_BONUS = {
+  coins: 10,
+  dice: 0,
+  tokens: 0,
+} as const;
+
 /** Minimum character count for submitting a reflection */
-export const MIN_REFLECTION_LENGTH = 20;
+export const MIN_REFLECTION_LENGTH = 3;
 
 /** Character count threshold for long reflection bonus */
 export const LONG_REFLECTION_THRESHOLD = 100;
@@ -115,7 +123,7 @@ export const REFLECTION_PROMPTS: ReflectionPrompt[] = [
   
   // Recreation
   { id: 're1', prompt: 'What activity makes me lose track of time in the best way?', zone: 'Recreation' },
-  { id: 're2', prompt: 'How do I want to feel when I have free time?', zone: 'Recreation' },
+  { id: 're2', prompt: 'Pick one free-time vibe: calm, playful, or social.', zone: 'Recreation' },
   { id: 're3', prompt: 'What joy have I been postponing that I could reclaim this week?', zone: 'Recreation' },
   
   // Contribution
@@ -129,8 +137,8 @@ export const REFLECTION_PROMPTS: ReflectionPrompt[] = [
   { id: 'e3', prompt: 'How can I create more beauty and order in my surroundings?', zone: 'Environment' },
   
   // Spirituality
-  { id: 's1', prompt: 'What brings me a sense of meaning and purpose?', zone: 'Spirituality' },
-  { id: 's2', prompt: 'How do I want to connect with something greater than myself?', zone: 'Spirituality' },
+  { id: 's1', prompt: 'Rate today\'s sense of meaning: low, medium, or high.', zone: 'Spirituality' },
+  { id: 's2', prompt: 'Which fits today: nature, gratitude, prayer, or stillness?', zone: 'Spirituality' },
   { id: 's3', prompt: 'What practice helps me feel most grounded and centered?', zone: 'Spirituality' },
   
   // Family
