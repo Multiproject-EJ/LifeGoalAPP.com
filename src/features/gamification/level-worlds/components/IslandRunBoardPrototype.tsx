@@ -10075,6 +10075,11 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
         <div className="island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--encounter" role="dialog" aria-modal="true" aria-label="Encounter tile challenge">
             <h3 className="island-stop-modal__title">⚔️ Bonus Encounter</h3>
+            {encounterStep === 'challenge' && (
+              <p className="island-encounter__intro">
+                Quick positive check-in — choose what feels best for you. Every choice counts.
+              </p>
+            )}
 
             {encounterStep === 'challenge' && currentEncounterChallenge && (
               <>

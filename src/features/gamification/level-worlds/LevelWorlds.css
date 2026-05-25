@@ -4166,6 +4166,19 @@
 
 .island-stop-modal--encounter {
   width: min(420px, 100%);
+  border: 1px solid rgba(255, 214, 136, 0.32);
+  background:
+    radial-gradient(120% 120% at 12% 0%, rgba(91, 167, 255, 0.24) 0%, rgba(14, 24, 43, 0.92) 45%),
+    linear-gradient(160deg, rgba(18, 35, 59, 0.96), rgba(8, 17, 30, 0.95));
+  box-shadow: 0 18px 42px rgba(6, 12, 24, 0.6), 0 0 0 1px rgba(255, 240, 202, 0.08) inset;
+}
+
+.island-encounter__intro {
+  margin: 0.1rem 0 0.35rem;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: rgba(216, 239, 255, 0.8);
+  text-align: center;
 }
 
 .island-encounter__eyebrow {
@@ -4200,6 +4213,9 @@
   text-align: left;
   white-space: normal;
   line-height: 1.35;
+  border-color: rgba(142, 214, 255, 0.46);
+  background: linear-gradient(140deg, rgba(70, 129, 190, 0.55), rgba(55, 102, 168, 0.5));
+  box-shadow: 0 6px 16px rgba(12, 20, 36, 0.28);
 }
 
 /* Breathing: animated pulsing orb */
