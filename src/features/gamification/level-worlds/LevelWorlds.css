@@ -861,7 +861,7 @@
 
 .island-run-prototype__footer-dice-group--slot-center {
   left: 50%;
-  top: 74%;
+  top: 71%;
   width: clamp(140px, 36vw, 220px);
 }
 .island-run-prototype__footer-actions {
@@ -7797,7 +7797,7 @@
   }
 
   .island-run-prototype__footer-dice-group--slot-center {
-    top: 74%;
+    top: 71%;
   }
 }
 
