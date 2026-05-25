@@ -279,3 +279,10 @@ Suggested immediate production sequence:
 ## Validation
 
 This pass is docs-only and does not propose runtime code, gameplay/economy/hatch/sell/collection/bond-XP, or schema changes.
+
+## 12) Stage metadata sync note (2026-05-25)
+
+- The core Dex remains **45 primary creatures**; staged forms are not new unrelated species IDs.
+- Stage forms are modeled as **family/stage metadata + image/card forms**, preserving existing base creature IDs.
+- Card variants may represent stage snapshots (for example Lv1/Lv2/Lv3) while still belonging to one core creature family.
+- Companion progression may later unlock stage forms, but this change-set does **not** implement gameplay unlock logic.

@@ -1,12 +1,15 @@
 import { CREATURE_CATALOG } from '../creatureCatalog';
+import { getCreatureStageByStageKey, getCreatureStagesForFamily } from '../creatureStageCatalog';
 import {
   buildCreatureCutoutPngPath,
   buildCreatureCutoutWebpPath,
+  buildCreatureStageCutoutWebpPath,
   CREATURE_SILHOUETTE_PLACEHOLDER_PATH,
   resolveCreatureArtManifest,
   resolveCreatureBackgroundPath,
   resolveCreatureFramePath,
   resolveCreatureImageSource,
+  resolveCreatureStageArtManifest,
 } from '../creatureImageManifest';
 import { assert, assertEqual, type TestCase } from './testHarness';
 
@@ -62,6 +65,33 @@ export const creatureImageManifestTests: TestCase[] = [
       assertEqual(resolveCreatureFramePath('common'), '/assets/creature-frames/common.webp', 'common frame path stable');
       const cosmicBackground = resolveCreatureBackgroundPath({ affinity: 'Unknown Affinity', shipZone: 'cosmic' });
       assertEqual(cosmicBackground, '/assets/creature-backgrounds/cosmic.webp', 'unknown affinity should fallback to ship zone');
+    },
+  },
+
+  {
+    name: 'staged cutout path helpers resolve deterministic webp candidates',
+    run: () => {
+      assertEqual(buildCreatureStageCutoutWebpPath('common-pebble-spirit-lv2'), '/assets/creatures/common-pebble-spirit-lv2.webp', 'lv2 staged path should follow convention');
+      assertEqual(buildCreatureStageCutoutWebpPath('common-pebble-spirit-lv3'), '/assets/creatures/common-pebble-spirit-lv3.webp', 'lv3 staged path should follow convention');
+    },
+  },
+  {
+    name: 'stage catalog and staged art manifest resolve Pebble Spirit line in order',
+    run: () => {
+      const stages = getCreatureStagesForFamily('common-pebble-spirit');
+      assertEqual(stages.length, 3, 'Pebble Spirit family should expose three known stages');
+      assertEqual(stages[0]?.stageKey, 'common-pebble-spirit', 'stage one should be base key');
+      assertEqual(stages[1]?.stageKey, 'common-pebble-spirit-lv2', 'stage two should be lv2 key');
+      assertEqual(stages[2]?.stageKey, 'common-pebble-spirit-lv3', 'stage three should be lv3 key');
+
+      const lv2 = getCreatureStageByStageKey('common-pebble-spirit-lv2');
+      const lv3 = getCreatureStageByStageKey('common-pebble-spirit-lv3');
+      if (!lv2 || !lv3) throw new Error('Expected staged metadata for lv2 and lv3');
+
+      const lv2Manifest = resolveCreatureStageArtManifest(lv2);
+      const lv3Manifest = resolveCreatureStageArtManifest(lv3);
+      assertEqual(lv2Manifest.cutoutSrc, '/assets/creatures/common-pebble-spirit-lv2.webp', 'lv2 staged cutout should resolve to staged asset key');
+      assertEqual(lv3Manifest.cutoutSrc, '/assets/creatures/common-pebble-spirit-lv3.webp', 'lv3 staged cutout should resolve to staged asset key');
     },
   },
 ];
