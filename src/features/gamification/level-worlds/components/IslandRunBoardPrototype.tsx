@@ -10015,14 +10015,6 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
               })()
             ) : null}
 
-            {showContractV2BuildPanel && contractV2BuildPanelBuildState && contractV2BuildPanelStopState ? (
-              <div style={{ marginTop: '0.75rem', marginBottom: '0.5rem', padding: '0.5rem 0.65rem', borderRadius: '10px', background: 'rgba(84, 63, 130, 0.15)', border: '1px solid rgba(197, 172, 255, 0.25)' }}>
-                <p className="island-stop-modal__copy" style={{ marginBottom: '0.25rem', fontSize: '0.82rem', opacity: 0.8 }}>
-                  🔨 Buildings are funded from the <strong>Build Panel</strong>. Tap the button below at any time.
-                </p>
-              </div>
-            ) : null}
-
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
               {activeStop.stopId !== 'hatchery'
               && activeStop.stopId !== 'boss'
