@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { DailyLifeUpgradeCandidate } from '../../../services/dailyLifeUpgradeCandidate';
 
 export function DailyLifeUpgradeModal(props: {
@@ -7,6 +8,11 @@ export function DailyLifeUpgradeModal(props: {
   onPrimary: () => void;
   onAlternative: (alternative: DailyLifeUpgradeCandidate['alternatives'][number]) => void;
 }) {
+  useEffect(() => {
+    if (!props.open || !props.candidate) return;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [props.open, props.candidate]);
+
   if (!props.open || !props.candidate) return null;
   return (
     <div className="habit-day-nav__vision-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="daily-life-upgrade-title" onClick={props.onClose}>
@@ -14,6 +20,7 @@ export function DailyLifeUpgradeModal(props: {
         <button type="button" className="habit-day-nav__vision-modal-close habit-day-nav__todays-offer-close" onClick={props.onClose} aria-label="Close Daily Life Upgrade">×</button>
         <div className="habit-day-nav__daily-life-upgrade-body">
           <p className="habit-day-nav__daily-life-upgrade-eyebrow">Daily Life Upgrade</p>
+          <p className="habit-day-nav__daily-life-upgrade-habit">Habit: {props.candidate.habitTitle}</p>
           <p id="daily-life-upgrade-title" className="habit-day-nav__daily-life-upgrade-title">{props.candidate.promptTitle}</p>
           <p className="habit-day-nav__daily-life-upgrade-subtitle">One tiny improvement for today.</p>
           <p className="habit-day-nav__daily-life-upgrade-copy">{props.candidate.promptBody}</p>
