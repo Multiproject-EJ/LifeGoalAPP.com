@@ -1194,7 +1194,7 @@
 
 .score-tab__sanctuary-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 
@@ -1308,6 +1308,14 @@
   border: 1px solid rgba(255, 255, 255, 0.78);
   box-shadow: 0 16px 30px rgba(45, 212, 191, 0.18), inset 0 -8px 18px rgba(15, 23, 42, 0.06);
   font-size: 2.05rem;
+}
+
+.score-tab__sanctuary-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 10px 14px rgba(15, 23, 42, 0.14));
 }
 
 .score-tab__sanctuary-card--locked .score-tab__sanctuary-avatar {
