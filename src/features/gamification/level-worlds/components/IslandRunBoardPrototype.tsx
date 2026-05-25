@@ -9671,23 +9671,25 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
                 ) : activeEgg && eggStage < 4 ? (
                   /* State 3: Egg in progress — show stage name + emoji, NO countdown */
                   <div className="island-hatchery-card__state island-hatchery-card__state--incubating">
-                    <img
-                      className="island-hatchery-card__stage-art"
-                      src={getEggStageArtSrc(activeEgg.tier, eggStage)}
-                      alt={`${activeEgg.tier} egg stage ${eggStage}`}
-                    />
+                    <div className="island-hatchery-card__stage-wrap">
+                      <img
+                        className="island-hatchery-card__stage-art"
+                        src={getEggStageArtSrc(activeEgg.tier, eggStage)}
+                        alt={`${activeEgg.tier} egg stage ${eggStage}`}
+                      />
+                      <div
+                        className="island-hatchery-card__countdown"
+                        role="timer"
+                        aria-live="polite"
+                      >
+                        <span className="island-hatchery-card__countdown-label">Hatches in</span>
+                        <span className="island-hatchery-card__countdown-value">{eggCountdownLabel}</span>
+                      </div>
+                    </div>
                     <p className="island-hatchery-card__headline">Stage {eggStage}: {getEggStageName(eggStage)}</p>
                     <p className="island-hatchery-card__copy">
                       Your <strong>{activeEgg.tier}</strong> egg is incubating. Come back soon to collect your reward!
                     </p>
-                    <div
-                      className="island-hatchery-card__countdown"
-                      role="timer"
-                      aria-live="polite"
-                    >
-                      <span className="island-hatchery-card__countdown-label">Hatches in</span>
-                      <span className="island-hatchery-card__countdown-value">{eggCountdownLabel}</span>
-                    </div>
                     <div className="island-hatchery-card__timeline" aria-label="Egg hatch progress timeline">
                       {HATCHERY_TIMELINE_STEPS.map((step, index) => {
                         const stepNumber = index + 1;
