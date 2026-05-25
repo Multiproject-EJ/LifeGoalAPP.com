@@ -168,6 +168,8 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.audioEnabled === 'boolean'
           ? patch.audioEnabled
           : current.audioEnabled,
+      musicEnabled: current.musicEnabled,
+      sfxEnabled: current.sfxEnabled,
       currentIslandNumber:
         typeof patch.currentIslandNumber === 'number' && Number.isFinite(patch.currentIslandNumber)
           ? Math.max(1, Math.floor(patch.currentIslandNumber))

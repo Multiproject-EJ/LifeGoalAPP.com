@@ -769,14 +769,6 @@ function getTimerUrgencyClass(remainingMs: number): string {
 }
 
 function getAvatarInitial(user: { user_metadata?: { full_name?: string | null } | null; email?: string | null }): string {
-
-  const openWinCelebrationModal = useCallback((rewards: WinRewardItem[], subtitle = 'You won') => {
-    if (rewards.length === 0) return;
-    setWinCelebrationRewards(rewards);
-    setWinCelebrationSubtitle(subtitle);
-    setShowWinCelebrationModal(true);
-  }, []);
-
   return (user.user_metadata?.full_name?.[0] ?? user.email?.[0] ?? 'P').toUpperCase();
 }
 
@@ -1795,6 +1787,13 @@ export function IslandRunBoardPrototype({
     playIslandRunSound('boss_island_clear');
     triggerIslandRunHaptic('reward_claim');
   }, [showWinCelebrationModal]);
+
+  const openWinCelebrationModal = useCallback((rewards: WinRewardItem[], subtitle = 'You won') => {
+    if (rewards.length === 0) return;
+    setWinCelebrationRewards(rewards);
+    setWinCelebrationSubtitle(subtitle);
+    setShowWinCelebrationModal(true);
+  }, []);
 
   // ── Safe placeholder dialog ────────────────────────────────────────────────
   const [activePlaceholder, setActivePlaceholder] = useState<IslandRunPlaceholderDescriptor | null>(null);
