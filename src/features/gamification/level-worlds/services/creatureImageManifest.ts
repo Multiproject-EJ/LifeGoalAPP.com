@@ -1,4 +1,5 @@
 import type { CreatureDefinition, ShipZone } from './creatureCatalog';
+import type { CreatureStageDefinition } from './creatureStageCatalog';
 import type { EggTier } from './eggService';
 
 export const CREATURE_IMAGE_BASE_PATH = '/assets/creatures';
@@ -44,6 +45,36 @@ export function buildCreatureCutoutWebpPath(imageKey: string): string {
 export function buildCreatureCutoutPngPath(imageKey: string): string {
   const key = imageKey.trim();
   return `${CREATURE_IMAGE_BASE_PATH}/${key}.png`;
+}
+
+
+export function buildCreatureStageCutoutWebpPath(stageImageKey: string): string {
+  const key = stageImageKey.trim();
+  return `${CREATURE_IMAGE_BASE_PATH}/${key}.webp`;
+}
+
+export function buildCreatureStageCutoutPngPath(stageImageKey: string): string {
+  const key = stageImageKey.trim();
+  return `${CREATURE_IMAGE_BASE_PATH}/${key}.png`;
+}
+
+export function resolveCreatureStageArtManifest(stageDefinition: CreatureStageDefinition): {
+  stageKey: string;
+  imageKey: string;
+  cutoutSrc: string;
+  cutoutWebpSrc: string;
+  cutoutPngSrc: string;
+  silhouetteSrc: string;
+} {
+  const imageKey = stageDefinition.assetImageKey.trim();
+  return {
+    stageKey: stageDefinition.stageKey,
+    imageKey,
+    cutoutSrc: buildCreatureStageCutoutWebpPath(imageKey),
+    cutoutWebpSrc: buildCreatureStageCutoutWebpPath(imageKey),
+    cutoutPngSrc: buildCreatureStageCutoutPngPath(imageKey),
+    silhouetteSrc: CREATURE_SILHOUETTE_PLACEHOLDER_PATH,
+  };
 }
 
 export function resolveCreatureFramePath(tier: EggTier): string {
