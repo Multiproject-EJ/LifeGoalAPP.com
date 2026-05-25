@@ -201,6 +201,8 @@ export interface IslandRunGameStateRecord {
   welcomePackRewardBundleClaimed: boolean;
   storyPrologueSeen: boolean;
   audioEnabled: boolean;
+  musicEnabled: boolean;
+  sfxEnabled: boolean;
   currentIslandNumber: number;
   cycleIndex: number;
   bossTrialResolvedIslandNumber: number | null;
@@ -608,6 +610,8 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     welcomePackRewardBundleClaimed: false,
     storyPrologueSeen: false,
     audioEnabled: true,
+    musicEnabled: true,
+    sfxEnabled: true,
     currentIslandNumber: 1,
     cycleIndex: 0,
     bossTrialResolvedIslandNumber: null,
@@ -915,6 +919,18 @@ function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameSta
       typeof value.audioEnabled === 'boolean'
         ? value.audioEnabled
         : fallback.audioEnabled,
+    musicEnabled:
+      typeof value.musicEnabled === 'boolean'
+        ? value.musicEnabled
+        : typeof value.audioEnabled === 'boolean'
+          ? value.audioEnabled
+          : fallback.musicEnabled,
+    sfxEnabled:
+      typeof value.sfxEnabled === 'boolean'
+        ? value.sfxEnabled
+        : typeof value.audioEnabled === 'boolean'
+          ? value.audioEnabled
+          : fallback.sfxEnabled,
     currentIslandNumber:
       typeof value.currentIslandNumber === 'number' && Number.isFinite(value.currentIslandNumber)
         ? Math.max(1, Math.floor(value.currentIslandNumber))

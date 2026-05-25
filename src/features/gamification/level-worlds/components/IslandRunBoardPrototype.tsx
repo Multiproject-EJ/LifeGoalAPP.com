@@ -100,7 +100,7 @@ import {
   withIslandRunActionLock,
 } from '../services/islandRunActionMutex';
 import {
-  applyAudioEnabledMarker,
+  applyAudioPreferencesMarker,
   applyBossTrialResolvedMarker,
   applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
@@ -1491,7 +1491,8 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
   const [isPersistingFirstRunCompletion, setIsPersistingFirstRunCompletion] = useState(false);
   const isOnboardingCelebrationVisible = showFirstRunCelebration || showHatcheryL1Celebration;
   const [hasHydratedRuntimeState, setHasHydratedRuntimeState] = useState(false);
-  const [audioEnabled, setAudioEnabled] = useState(true);
+  const [musicEnabled, setMusicEnabled] = useState(true);
+  const [sfxEnabled, setSfxEnabled] = useState(true);
   // M4-COMPLETE: cycleIndex tracks full laps through 120 islands (island 120 → 1 increments this)
   const [cycleIndex, setCycleIndex] = useState<number>(0);
   // Effective island number for all cost/earn scaling: (cycleIndex × 120 + islandNumber).
@@ -2386,8 +2387,9 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
     }
     // M4-COMPLETE: Restore cycleIndex from runtime state
     setCycleIndex(runtimeState.cycleIndex ?? 0);
-    setAudioEnabled(runtimeState.audioEnabled ?? true);
-    setIslandRunAudioEnabled(runtimeState.audioEnabled ?? true);
+    setMusicEnabled(runtimeState.musicEnabled ?? runtimeState.audioEnabled ?? true);
+    setSfxEnabled(runtimeState.sfxEnabled ?? runtimeState.audioEnabled ?? true);
+    setIslandRunAudioEnabled(runtimeState.sfxEnabled ?? runtimeState.audioEnabled ?? true);
     setActiveCompanionId(runtimeState.activeCompanionId ?? null);
     setCreatureTreatInventory(runtimeState.creatureTreatInventory ?? fetchCreatureTreatInventory(session.user.id));
 
@@ -2579,33 +2581,33 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
   }, [showShopPanel]);
 
   useEffect(() => {
-    if (!audioEnabled || showShopPanel || showIslandClearCelebration) {
+    if (!musicEnabled || showShopPanel || showIslandClearCelebration) {
       stopIslandRunMusic('island-board-ambient');
       return;
     }
 
     playIslandRunMusic('island-board-ambient');
     return () => stopIslandRunMusic('island-board-ambient');
-  }, [audioEnabled, showIslandClearCelebration, showShopPanel]);
+  }, [musicEnabled, showIslandClearCelebration, showShopPanel]);
 
   useEffect(() => {
-    if (!showShopPanel || !audioEnabled) {
+    if (!showShopPanel || !musicEnabled) {
       stopIslandRunMusic('market-lounge');
       return;
     }
 
     playIslandRunMusic('market-lounge');
-  }, [audioEnabled, showShopPanel]);
+  }, [musicEnabled, showShopPanel]);
 
   useEffect(() => {
-    if (!showIslandClearCelebration || !audioEnabled) {
+    if (!showIslandClearCelebration || !musicEnabled) {
       stopIslandRunMusic('new-island-celebration');
       return;
     }
 
     playIslandRunMusic('new-island-celebration');
     return () => stopIslandRunMusic('new-island-celebration');
-  }, [audioEnabled, showIslandClearCelebration]);
+  }, [musicEnabled, showIslandClearCelebration]);
 
   useEffect(() => {
     return () => {
@@ -3111,18 +3113,17 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
-    // Guard: Skip until the initial hydration sync effect has applied server values
-    // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
-    if (runtimeState.audioEnabled === audioEnabled) return;
-    const next = applyAudioEnabledMarker({
+    if (runtimeState.musicEnabled === musicEnabled && runtimeState.sfxEnabled === sfxEnabled) return;
+    const next = applyAudioPreferencesMarker({
       session,
       client,
-      audioEnabled,
-      triggerSource: 'sync_audio_enabled_marker_effect',
+      musicEnabled,
+      sfxEnabled,
+      triggerSource: 'sync_audio_preferences_marker_effect',
     });
     setRuntimeState(next);
-  }, [audioEnabled, client, hasHydratedRuntimeState, runtimeState.audioEnabled, session]);
+  }, [client, hasHydratedRuntimeState, musicEnabled, runtimeState.musicEnabled, runtimeState.sfxEnabled, session, sfxEnabled]);
 
   useEffect(() => {
     const ticker = window.setInterval(() => setNowMs(Date.now()), 1000);
@@ -8974,15 +8975,26 @@ export function IslandRunBoardPrototype({ session, initialPanel = 'default', onE
             <button
               type="button"
               className="island-run-board__topbar-audio-toggle"
-              aria-label={audioEnabled ? 'Mute audio and haptics' : 'Unmute audio and haptics'}
-              aria-pressed={audioEnabled}
+              aria-label={musicEnabled ? 'Mute music' : 'Unmute music'}
+              aria-pressed={musicEnabled}
               onClick={() => {
-                const next = !audioEnabled;
-                setAudioEnabled(next);
+                setMusicEnabled((prev) => !prev);
+              }}
+            >
+              {musicEnabled ? '🎵' : '🚫🎵'}
+            </button>
+            <button
+              type="button"
+              className="island-run-board__topbar-audio-toggle"
+              aria-label={sfxEnabled ? 'Mute sound effects' : 'Unmute sound effects'}
+              aria-pressed={sfxEnabled}
+              onClick={() => {
+                const next = !sfxEnabled;
+                setSfxEnabled(next);
                 setIslandRunAudioEnabled(next);
               }}
             >
-              {audioEnabled ? '🔊' : '🔇'}
+              {sfxEnabled ? '🔔' : '🔕'}
             </button>
           </div>
 

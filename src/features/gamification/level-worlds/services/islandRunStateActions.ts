@@ -1335,6 +1335,14 @@ export interface ApplyAudioEnabledMarkerOptions {
   triggerSource?: string;
 }
 
+export interface ApplyAudioPreferencesMarkerOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  musicEnabled: boolean;
+  sfxEnabled: boolean;
+  triggerSource?: string;
+}
+
 export interface ApplyStoryPrologueSeenMarkerOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -2039,6 +2047,28 @@ export function applyAudioEnabledMarker(options: ApplyAudioEnabledMarkerOptions)
     client,
     record: next,
     triggerSource: triggerSource ?? 'apply_audio_enabled_marker',
+  });
+  return next;
+}
+
+export function applyAudioPreferencesMarker(options: ApplyAudioPreferencesMarkerOptions): IslandRunGameStateRecord {
+  const { session, client, musicEnabled, sfxEnabled, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (current.musicEnabled === musicEnabled && current.sfxEnabled === sfxEnabled) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    musicEnabled,
+    sfxEnabled,
+    audioEnabled: musicEnabled || sfxEnabled,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_audio_preferences_marker',
   });
   return next;
 }
