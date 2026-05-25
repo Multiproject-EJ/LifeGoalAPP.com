@@ -517,6 +517,12 @@
   font-size: 0.76rem;
 }
 
+.habit-day-nav__daily-life-upgrade-habit {
+  margin: -0.2rem 0 0;
+  color: #bfdbfe;
+  font-size: 0.82rem;
+}
+
 .habit-day-nav__daily-life-upgrade-title {
   margin: 0;
   color: #f8fafc;
