@@ -11581,7 +11581,7 @@ export function IslandRunBoardPrototype({
                 {Array.from({ length: Math.max(0, CREATURE_CATALOG.length - collectedCreatures.length) }).map((_, index) => (
                   <CreatureGridCard
                     key={`locked-${index}`}
-                    imageSrc="/assets/creature-placeholders/silhouette.webp"
+                    imageSrc="/assets/creatures/Creature_card.webp"
                     fallbackEmoji="❔"
                     rarity="common"
                     active={false}
