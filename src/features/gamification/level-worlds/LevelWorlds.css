@@ -3612,9 +3612,16 @@
   margin: 0.2rem 0;
 }
 
+
+.island-hatchery-card__stage-wrap {
+  position: relative;
+  width: min(100%, clamp(280px, 88vw, 560px));
+  align-self: center;
+}
+
 .island-hatchery-card__stage-art {
   display: block;
-  width: min(100%, clamp(280px, 88vw, 560px));
+  width: 100%;
   height: auto;
   max-height: min(48dvh, 520px);
   object-fit: contain;
@@ -3767,10 +3774,15 @@
 }
 
 .island-hatchery-card__countdown {
+  position: absolute;
+  left: 50%;
+  bottom: 0.35rem;
+  transform: translateX(-50%);
+  z-index: 2;
   display: inline-flex;
   align-items: baseline;
   gap: 0.45rem;
-  margin: 0.15rem auto 0.45rem;
+  margin: 0;
   padding: 0.35rem 0.8rem;
   border-radius: 999px;
   background: linear-gradient(180deg, rgba(18, 48, 74, 0.85), rgba(10, 30, 48, 0.78));
