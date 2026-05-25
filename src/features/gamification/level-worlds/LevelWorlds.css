@@ -814,6 +814,12 @@
 
 
 .island-run-prototype__footer-controller-shell {
+  --controller-surface-tint: linear-gradient(180deg, rgba(158, 218, 242, 0.18), rgba(67, 125, 156, 0.14));
+  --controller-control-border: rgba(198, 234, 250, 0.54);
+  --controller-control-highlight: rgba(229, 248, 255, 0.44);
+  --controller-control-shadow: rgba(2, 17, 34, 0.5);
+  --controller-control-disabled-opacity: 0.56;
+  --controller-control-disabled-shadow: inset 0 1px 0 rgba(233, 248, 255, 0.08), inset 0 -10px 16px rgba(5, 14, 28, 0.34);
   position: relative;
   width: min(100%, 560px);
   min-height: 238px;
@@ -825,6 +831,22 @@
   position: absolute;
   inset: 0;
   background: url('../../../assets/Controller_lightblue.webp') center bottom / 100% auto no-repeat;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.island-run-prototype__footer-controller-shell::after {
+  content: '';
+  position: absolute;
+  inset: clamp(8px, 2.2vw, 12px) clamp(12px, 3vw, 18px) clamp(14px, 3.8vw, 22px);
+  border-radius: 999px;
+  background: var(--controller-surface-tint);
+  box-shadow:
+    inset 0 1px 0 rgba(222, 246, 255, 0.18),
+    inset 0 -16px 22px rgba(7, 23, 40, 0.26),
+    0 8px 18px rgba(3, 14, 27, 0.22);
+  backdrop-filter: blur(1.5px) saturate(115%);
+  -webkit-backdrop-filter: blur(1.5px) saturate(115%);
   z-index: 1;
   pointer-events: none;
 }
@@ -918,6 +940,14 @@
   font-size: 1.22rem;
   font-weight: 800;
   border-radius: 999px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--controller-control-border);
+  box-shadow:
+    inset 0 1px 0 var(--controller-control-highlight),
+    inset 0 -14px 18px rgba(6, 22, 36, 0.24),
+    0 12px 24px var(--controller-control-shadow);
+  transform: translateZ(0);
 }
 
 .island-run-prototype__footer-roll-btn-content {
@@ -941,24 +971,49 @@
 }
 
 .island-run-prototype__footer-nav-btn {
-  box-shadow: none;
+  box-shadow:
+    inset 0 1px 0 var(--controller-control-highlight),
+    inset 0 -10px 14px rgba(8, 20, 34, 0.24),
+    0 8px 16px rgba(4, 15, 28, 0.2);
   flex: 0 1 8.2rem;
   min-width: 0;
   min-height: 2.65rem;
-  border-radius: 12px;
-  border: 1px solid rgba(167, 214, 235, 0.5);
-  background: transparent;
-  color: #d9f5ff;
+  padding-inline: 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--controller-control-border);
+  background:
+    linear-gradient(180deg, rgba(162, 214, 236, 0.24), rgba(86, 146, 179, 0.2) 56%, rgba(23, 67, 96, 0.28));
+  color: #ebf9ff;
+  text-shadow: 0 1px 0 rgba(0, 8, 16, 0.42);
   font-weight: 700;
   font-size: 0.76rem;
+}
+
+.island-run-prototype__footer-nav-btn--slot-story,
+.island-run-prototype__footer-nav-btn--slot-creatures {
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 22px;
+  border-top-right-radius: 18px;
+  border-bottom-right-radius: 15px;
+  transform: translate(-50%, -50%) rotate(-1.9deg);
+}
+
+.island-run-prototype__footer-nav-btn--slot-build,
+.island-run-prototype__footer-nav-btn--slot-market {
+  border-top-left-radius: 18px;
+  border-bottom-left-radius: 15px;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 22px;
+  transform: translate(-50%, -50%) rotate(1.9deg);
 }
 
 .island-run-prototype__footer-nav-btn:disabled,
 .island-run-prototype__footer-multiplier-btn:disabled,
 .island-run-prototype__roll-btn--footer:disabled {
   cursor: not-allowed;
-  filter: grayscale(0.45);
-  opacity: 0.62;
+  filter: saturate(0.65) brightness(0.85);
+  opacity: var(--controller-control-disabled-opacity);
+  box-shadow: var(--controller-control-disabled-shadow);
 }
 
 .island-run-prototype__footer-nav-btn--build-tutorial-target {
@@ -1069,10 +1124,15 @@
 .island-run-prototype__footer-multiplier-btn {
   min-height: 1.6rem;
   padding: 0.15rem 0.7rem;
-  border-radius: 10px;
-  border: 1px solid rgba(167, 214, 235, 0.5);
-  background: transparent;
-  color: #d9f5ff;
+  border-radius: 999px;
+  border: 1px solid var(--controller-control-border);
+  background: linear-gradient(180deg, rgba(154, 210, 235, 0.24), rgba(64, 120, 154, 0.25));
+  color: #eaf8ff;
+  text-shadow: 0 1px 0 rgba(0, 8, 14, 0.44);
+  box-shadow:
+    inset 0 1px 0 var(--controller-control-highlight),
+    inset 0 -8px 10px rgba(6, 16, 31, 0.22),
+    0 6px 12px rgba(3, 16, 30, 0.19);
   font-weight: 700;
   font-size: 0.72rem;
   cursor: pointer;
@@ -1529,14 +1589,17 @@
 
 
 .island-run-prototype__roll-btn--primary {
-  background: linear-gradient(180deg, rgba(63, 152, 193, 0.98), rgba(33, 114, 152, 0.97));
-  border-color: rgba(187, 239, 255, 0.72);
-  box-shadow: 0 0 0 1px rgba(176, 235, 255, 0.45) inset, 0 8px 20px rgba(38, 131, 171, 0.35);
+  background: linear-gradient(180deg, rgba(71, 163, 204, 0.93), rgba(35, 117, 155, 0.9));
+  border-color: rgba(197, 237, 252, 0.66);
+  box-shadow:
+    inset 0 1px 0 rgba(214, 246, 255, 0.52),
+    inset 0 -18px 22px rgba(14, 65, 92, 0.34),
+    0 10px 20px rgba(25, 97, 133, 0.34);
 }
 
 .island-run-prototype__roll-btn--convert {
-  background: linear-gradient(180deg, rgba(103, 93, 169, 0.95), rgba(69, 61, 129, 0.95));
-  border-color: rgba(206, 198, 255, 0.55);
+  background: linear-gradient(180deg, rgba(112, 101, 178, 0.92), rgba(73, 64, 134, 0.9));
+  border-color: rgba(209, 202, 255, 0.58);
 }
 
 .island-run-prototype__roll-btn--auto-pending {
