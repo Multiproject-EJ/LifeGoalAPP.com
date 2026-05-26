@@ -11314,11 +11314,6 @@ export function IslandRunBoardPrototype({
                 <div className="island-run-sanctuary-panel__grid" aria-hidden="true">
                   {visibleSanctuaryCreatures.map((creature) => {
                     const art = resolveCreatureArtManifest(creature.creature);
-                    const simpleView = buildCreatureCardSimpleView(creature.creature, undefined, {
-                      discovered: true,
-                      active: activeCompanionId === creature.creatureId,
-                      ownedCopies: creature.copies,
-                    });
                     return (
                       <CreatureGridCard
                         key={creature.creatureId}
@@ -11331,7 +11326,6 @@ export function IslandRunBoardPrototype({
                         selected={selectedSanctuaryCreatureId === creature.creatureId}
                         locked={false}
                         name={creature.creature.name}
-                        simpleView={simpleView}
                       />
                     );
                   })}
