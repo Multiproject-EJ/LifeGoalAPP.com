@@ -855,8 +855,10 @@ export function DailyHabitTracker({
   }, [activeDate, loadTodayTodos, session.user.id, todayTodoNotes, todayTodoTitle, todayTodos]);
 
   const handleToggleTodayTodo = useCallback(async (todo: TodayTodo) => {
-    await updateTodayTodo(todo.id, { completed: !todo.completed });
-    void loadTodayTodos(activeDate);
+    const { error } = await updateTodayTodo(todo.id, { completed: !todo.completed });
+    if (!error) {
+      void loadTodayTodos(activeDate);
+    }
   }, [activeDate, loadTodayTodos]);
 
   const buildTodayTodoCoachPrompt = useCallback((todo: TodayTodo) => {
@@ -6426,7 +6428,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                     {isExpanded ? (
                       <>
                         {todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes yet — add context when you need it.</p>}
-                        <div className="habit-checklist__todo-actions">
+                        <div className="habit-checklist__todo-actions" onClick={(event) => event.stopPropagation()}>
                           <span className="habit-checklist__todo-actions-label">Quick actions</span>
                           <button type="button" onClick={() => void handleToggleTodayTodo(todo)}>Complete</button>
                           {onNavigateToTimer ? <button type="button" onClick={() => onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title })}>Start 25m focus</button> : null}
@@ -6443,7 +6445,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           {!todayTodoLoadError && activeTodos.length === 0 ? (
             <li className="habit-checklist__empty">No todos for this date yet.</li>
           ) : null}
-          {showCompletedHabits && completedTodos.length > 0 ? (
+          {completedTodos.length > 0 ? (
             <li className="habit-checklist__item habit-checklist__item--todo habit-checklist__item--completed">
               <div className="habit-checklist__main habit-checklist__main--todo">
                 <div className="habit-checklist__todo-header">
@@ -6451,23 +6453,54 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   <h3>{completedTodos.length}</h3>
                 </div>
                 <ul className="habit-checklist" role="list">
-                  {completedTodos.map((todo) => (
+                  {completedTodos.map((todo) => {
+                    const isExpanded = Boolean(expandedTodayTodoById[todo.id]);
+                    return (
                     <li key={todo.id} className="habit-checklist__item habit-checklist__item--todo habit-checklist__item--completed">
-                      <div className="habit-checklist__row">
-                        <button type="button" className="habit-checklist__todo-check" onClick={() => void handleToggleTodayTodo(todo)}>✅</button>
+                      <div
+                        className={`habit-checklist__row ${isExpanded ? 'habit-checklist__row--expanded' : ''}`}
+                        role="button"
+                        tabIndex={0}
+                        aria-expanded={isExpanded}
+                        onClick={() => toggleTodayTodoExpanded(todo.id)}
+                        onKeyDown={(event) => {
+                          if (event.currentTarget !== event.target) return;
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            toggleTodayTodoExpanded(todo.id);
+                          }
+                        }}
+                      >
+                        <button
+                          type="button"
+                          className="habit-checklist__todo-check"
+                          aria-label={`Mark todo ${todo.title} active again`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void handleToggleTodayTodo(todo);
+                          }}
+                        >
+                          ✅
+                        </button>
                         <div className="habit-checklist__main habit-checklist__main--todo">
                           <div className="habit-checklist__todo-header">
                             <span className="habit-checklist__todo-badge">Todo • Done</span>
                             <h3>{todo.title}</h3>
                           </div>
-                          <div className="habit-checklist__todo-actions">
-                            <span className="habit-checklist__todo-actions-label">Quick actions</span>
-                            <button type="button" onClick={() => void handleToggleTodayTodo(todo)}>Mark active again</button>
-                          </div>
+                          {isExpanded ? (
+                            <>
+                              {todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes were saved for this todo.</p>}
+                              <div className="habit-checklist__todo-actions" onClick={(event) => event.stopPropagation()}>
+                                <span className="habit-checklist__todo-actions-label">Quick actions</span>
+                                <button type="button" onClick={() => void handleToggleTodayTodo(todo)}>Mark active again</button>
+                              </div>
+                            </>
+                          ) : null}
                         </div>
                       </div>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               </div>
             </li>
