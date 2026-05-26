@@ -103,6 +103,16 @@ export const minigameConsolidationPhase3Tests: TestCase[] = [
       assertEqual(descriptor!.remainingMs, 8 * 60 * 60 * 1000, '8h duration remaining at start');
     },
   },
+
+  {
+    name: 'rotation templates set Space Excavator to a 24h event window',
+    run: () => {
+      const templates = getEventRotationTemplates();
+      const excavator = templates.find((template) => template.eventId === 'space_excavator');
+      assert(excavator, 'space_excavator template should exist');
+      assertEqual(excavator!.durationMs, 24 * 60 * 60 * 1000, 'space_excavator should run for 24h');
+    },
+  },
   {
     name: 'getActiveEvent returns null when current event has expired',
     run: () => {
