@@ -154,7 +154,7 @@ export interface ClaimSpaceExcavatorMilestoneRewardResult {
   failureReason?: ClaimSpaceExcavatorMilestoneRewardFailureReason;
 }
 
-export const SPACE_EXCAVATOR_TOTAL_BOARDS = 10; // Tuning placeholder until rewards/finale UX is added.
+export const SPACE_EXCAVATOR_TOTAL_BOARDS = 35; // Tuning placeholder until rewards/finale UX is added.
 const SPACE_EXCAVATOR_HASH_OFFSET_BASIS = 2166136261;
 
 function getSpaceExcavatorSeed(input: string): number {
