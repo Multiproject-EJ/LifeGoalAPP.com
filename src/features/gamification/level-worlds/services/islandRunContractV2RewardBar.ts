@@ -75,7 +75,7 @@ export const TIMED_EVENT_SEQUENCE: readonly TimedEventTemplate[] = [
     ladderId: 'space_excavator_ladder_v1',
     stickerId: 'space_excavator_sticker',
     icon: '🚀',
-    durationMs: 2 * 24 * 60 * 60 * 1000, // 2 days
+    durationMs: 24 * 60 * 60 * 1000, // 1 day
   },
   {
     templateId: 'companion_feast',
