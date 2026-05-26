@@ -6419,17 +6419,19 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                     }
                   }}
                 >
-                  <button
-                    type="button"
-                    className="habit-checklist__todo-check"
-                    aria-label={`Mark todo ${todo.title} as complete`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      void handleToggleTodayTodo(todo);
-                    }}
-                  >
-                    ⭕
-                  </button>
+                  {isExpanded ? (
+                    <button
+                      type="button"
+                      className="habit-checklist__todo-check"
+                      aria-label={`Mark todo ${todo.title} as complete`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void handleToggleTodayTodo(todo);
+                      }}
+                    >
+                      ⭕
+                    </button>
+                  ) : null}
                   <div className="habit-checklist__main habit-checklist__main--todo">
                     <div className="habit-checklist__todo-header">
                       <span className="habit-checklist__todo-badge">Todo</span>
@@ -6467,11 +6469,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           {!todayTodoLoadError && activeTodos.length === 0 ? (
             <li className="habit-checklist__empty">No todos for this date yet.</li>
           ) : null}
-          {completedTodos.length > 0 ? (
+          {showCompletedHabits && completedTodos.length > 0 ? (
             <li className="habit-checklist__item habit-checklist__item--todo habit-checklist__item--completed">
               <div className="habit-checklist__main habit-checklist__main--todo">
                 <div className="habit-checklist__todo-header">
-                  <span className="habit-checklist__todo-badge">Completed todos</span>
+                  <span className="habit-checklist__todo-badge">Completed items • todos</span>
                   <h3>{completedTodos.length}</h3>
                 </div>
                 <ul className="habit-checklist" role="list">
