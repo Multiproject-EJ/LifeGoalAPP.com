@@ -757,6 +757,7 @@ export function DailyHabitTracker({
   const [todayTodoNotes, setTodayTodoNotes] = useState('');
   const [todayTodoError, setTodayTodoError] = useState<string | null>(null);
   const [todayTodoLoadError, setTodayTodoLoadError] = useState<string | null>(null);
+  const [justCompletedTodoId, setJustCompletedTodoId] = useState<string | null>(null);
 
   const [isTodaysOfferModalOpen, setIsTodaysOfferModalOpen] = useState(false);
   const [todaysOfferCheckoutPending, setTodaysOfferCheckoutPending] = useState(false);
@@ -855,8 +856,16 @@ export function DailyHabitTracker({
   }, [activeDate, loadTodayTodos, session.user.id, todayTodoNotes, todayTodoTitle, todayTodos]);
 
   const handleToggleTodayTodo = useCallback(async (todo: TodayTodo) => {
-    const { error } = await updateTodayTodo(todo.id, { completed: !todo.completed });
+    const isMarkingComplete = !todo.completed;
+    const { error } = await updateTodayTodo(todo.id, { completed: isMarkingComplete });
     if (!error) {
+      if (isMarkingComplete) {
+        setJustCompletedTodoId(todo.id);
+        triggerCompletionHaptic('light', { channel: 'habit', minIntervalMs: 120 });
+        window.setTimeout(() => {
+          setJustCompletedTodoId((current) => (current === todo.id ? null : current));
+        }, 1150);
+      }
       void loadTodayTodos(activeDate);
     }
   }, [activeDate, loadTodayTodos]);
@@ -6393,8 +6402,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         <ul className="habit-checklist" role="list">
           {activeTodos.map((todo) => {
             const isExpanded = Boolean(expandedTodayTodoById[todo.id]);
+            const isJustCompletedTodo = justCompletedTodoId === todo.id;
             return (
-              <li key={todo.id} className="habit-checklist__item habit-checklist__item--todo">
+              <li key={todo.id} className={`habit-checklist__item habit-checklist__item--todo ${isJustCompletedTodo ? 'habit-checklist__item--todo-completing' : ''}`.trim()}>
                 <div
                   className={`habit-checklist__row ${isExpanded ? 'habit-checklist__row--expanded' : ''}`}
                   role="button"
@@ -6424,15 +6434,27 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                     <div className="habit-checklist__todo-header">
                       <span className="habit-checklist__todo-badge">Todo</span>
                       <h3>{todo.title}</h3>
+                      {onNavigateToTimer ? (
+                        <button
+                          type="button"
+                          className="habit-checklist__todo-start-now"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title });
+                          }}
+                        >
+                          Start now
+                        </button>
+                      ) : null}
                     </div>
                     {isExpanded ? (
                       <>
                         {todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes yet — add context when you need it.</p>}
                         <div className="habit-checklist__todo-actions" onClick={(event) => event.stopPropagation()}>
                           <span className="habit-checklist__todo-actions-label">Quick actions</span>
-                          <button type="button" onClick={() => void handleToggleTodayTodo(todo)}>Complete</button>
-                          {onNavigateToTimer ? <button type="button" onClick={() => onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title })}>Start 25m focus</button> : null}
-                          {onOpenAiCoach ? <button type="button" onClick={() => onOpenAiCoach(buildTodayTodoCoachPrompt(todo))}>Help me figure out next step</button> : null}
+                          <button type="button" className="habit-checklist__todo-action-btn" onClick={() => void handleToggleTodayTodo(todo)}>Complete</button>
+                          {onNavigateToTimer ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--focus" onClick={() => onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title })}>Start 25m focus</button> : null}
+                          {onOpenAiCoach ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--coach" onClick={() => onOpenAiCoach(buildTodayTodoCoachPrompt(todo))}>Help me figure out next step</button> : null}
                         </div>
                       </>
                     ) : null}
@@ -6484,8 +6506,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         </button>
                         <div className="habit-checklist__main habit-checklist__main--todo">
                           <div className="habit-checklist__todo-header">
-                            <span className="habit-checklist__todo-badge">Todo • Done</span>
+                            <span className="habit-checklist__todo-badge habit-checklist__todo-badge--done">Done today</span>
                             <h3>{todo.title}</h3>
+                            {todo.updated_at ? <p className="habit-checklist__todo-completed-at">Completed {formatTimeLabel(new Date(todo.updated_at))}</p> : null}
                           </div>
                           {isExpanded ? (
                             <>
