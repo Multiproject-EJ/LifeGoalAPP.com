@@ -16,7 +16,7 @@ export const islandRunLifeIntakeServiceTests: TestCase[] = [
 
       assertEqual(payload.title, 'Drink 4 sips of water. (morning)', 'Uses tiny variant with timing suffix');
       assertEqual(payload.emoji, '💧', 'Uses selected habit emoji');
-      assert(payload.habit_intent.includes('Health'), 'Habit intent includes area');
+      assertEqual(payload.habit_intent, 'build', 'Uses allowed canonical habit intent');
       assert(payload.habit_environment.includes('Quest size: Tiny'), 'Environment records quest size');
       assert(payload.habit_environment.includes('Timing: Morning'), 'Environment records selected timing');
     },
