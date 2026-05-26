@@ -8,6 +8,7 @@ import { creatureCardCatalogTests } from './creatureCardCatalog.test';
 import { creatureCardAssetManifestTests } from './creatureCardAssetManifest.test';
 import { creatureSanctuaryAdapterTests } from './creatureSanctuaryAdapter.test';
 import { creatureCardV2AdapterTests } from './creatureCardV2Adapter.test';
+import { creatureCardV2ContentSchemaTests } from './creatureCardV2ContentSchema.test';
 import { creatureCollectionProgressTests } from './creatureCollectionProgress.test';
 import { encounterServiceTests } from './encounterService.test';
 import { islandBoardTopologyTests } from './islandBoardTopology.test';
@@ -88,6 +89,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'creatureCardAssetManifest', tests: creatureCardAssetManifestTests },
   { label: 'creatureSanctuaryAdapter', tests: creatureSanctuaryAdapterTests },
   { label: 'creatureCardV2Adapter', tests: creatureCardV2AdapterTests },
+  { label: 'creatureCardV2ContentSchema', tests: creatureCardV2ContentSchemaTests },
   { label: 'creatureCollectionProgress', tests: creatureCollectionProgressTests },
   { label: 'encounterService', tests: encounterServiceTests },
   { label: 'islandBoardTopology', tests: islandBoardTopologyTests },
