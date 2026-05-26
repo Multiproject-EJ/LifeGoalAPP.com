@@ -393,6 +393,7 @@ type HabitCompletionState = {
 
 type HabitSwipeDirection = 'left' | 'right';
 type HabitSwipeAction = 'complete' | 'undo-complete' | 'skip' | 'undo-skip';
+type TodoSwipeAction = 'complete';
 
 /**
  * Monthly completion state for a single habit across all days in the selected month.
@@ -978,6 +979,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [skipError, setSkipError] = useState<string | null>(null);
   const [swipeOffsetByHabitId, setSwipeOffsetByHabitId] = useState<Record<string, number>>({});
   const [swipeArmedByHabitId, setSwipeArmedByHabitId] = useState<Record<string, HabitSwipeDirection | null>>({});
+  const [swipeOffsetByTodoId, setSwipeOffsetByTodoId] = useState<Record<string, number>>({});
+  const [swipeArmedByTodoId, setSwipeArmedByTodoId] = useState<Record<string, HabitSwipeDirection | null>>({});
   const skipMenuRef = useRef<HTMLDivElement | null>(null);
   const swipeGestureRef = useRef<{
     habitId: string;
@@ -989,6 +992,16 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     armedDirection: HabitSwipeDirection | null;
   } | null>(null);
   const swipeSuppressClickUntilByHabitIdRef = useRef<Record<string, number>>({});
+  const todoSwipeGestureRef = useRef<{
+    todoId: string;
+    pointerId: number;
+    startX: number;
+    startY: number;
+    isHorizontal: boolean;
+    hasSwiped: boolean;
+    armedDirection: HabitSwipeDirection | null;
+  } | null>(null);
+  const swipeSuppressClickUntilByTodoIdRef = useRef<Record<string, number>>({});
   const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
   const [isCompactView, setIsCompactView] = useState(preferredCompactView ?? forceCompactView);
   const [compactPullDistance, setCompactPullDistance] = useState(0);
@@ -5362,6 +5375,22 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     setExpandedTodayTodoById((current) => ({ ...current, [todoId]: !current[todoId] }));
   }, []);
 
+  const getSwipeActionIcon = useCallback((action: HabitSwipeAction | TodoSwipeAction | null) => {
+    if (action === 'complete') return '✅';
+    if (action === 'undo-complete') return '↩️';
+    if (action === 'skip') return '⏭️';
+    if (action === 'undo-skip') return '↩️';
+    return '•';
+  }, []);
+
+  const getSwipeActionLabel = useCallback((action: HabitSwipeAction | TodoSwipeAction | null) => {
+    if (action === 'complete') return 'Complete';
+    if (action === 'undo-complete') return 'Undo complete';
+    if (action === 'skip') return 'Skip';
+    if (action === 'undo-skip') return 'Undo skip';
+    return 'No action';
+  }, []);
+
   const handleOpenEdit = (habit: HabitWithGoal) => {
     setEditHabit({
       id: habit.id,
@@ -6403,63 +6432,137 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           {activeTodos.map((todo) => {
             const isExpanded = Boolean(expandedTodayTodoById[todo.id]);
             const isJustCompletedTodo = justCompletedTodoId === todo.id;
+            const todoSwipeOffset = swipeOffsetByTodoId[todo.id] ?? 0;
+            const todoSwipeProgress = Math.min(1, Math.abs(todoSwipeOffset) / HABIT_SWIPE_MAX_PX);
+            const rightTodoSwipeProgress = todoSwipeOffset > 0 ? todoSwipeProgress : 0;
+            const leftTodoSwipeProgress = todoSwipeOffset < 0 ? todoSwipeProgress : 0;
+            const todoSwipeAction: TodoSwipeAction | null = isExpanded ? null : 'complete';
+            const todoSwipeArmedDirection = swipeArmedByTodoId[todo.id] ?? null;
             return (
               <li key={todo.id} className={`habit-checklist__item habit-checklist__item--todo ${isJustCompletedTodo ? 'habit-checklist__item--todo-completing' : ''}`.trim()}>
                 <div
-                  className={`habit-checklist__row ${isExpanded ? 'habit-checklist__row--expanded' : ''}`}
-                  role="button"
-                  tabIndex={0}
-                  aria-expanded={isExpanded}
-                  onClick={() => toggleTodayTodoExpanded(todo.id)}
-                  onKeyDown={(event) => {
-                    if (event.currentTarget !== event.target) return;
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      toggleTodayTodoExpanded(todo.id);
-                    }
-                  }}
+                  className="habit-checklist__swipe-frame"
+                  aria-hidden={isExpanded ? 'true' : undefined}
+                  style={
+                    {
+                      '--habit-swipe-right-progress': rightTodoSwipeProgress,
+                      '--habit-swipe-left-progress': leftTodoSwipeProgress,
+                    } as CSSProperties
+                  }
                 >
-                  {isExpanded ? (
-                    <button
-                      type="button"
-                      className="habit-checklist__todo-check"
-                      aria-label={`Mark todo ${todo.title} as complete`}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        void handleToggleTodayTodo(todo);
+                  <div
+                    className={`habit-checklist__swipe-lane habit-checklist__swipe-lane--right ${
+                      todoSwipeArmedDirection === 'right' ? 'habit-checklist__swipe-lane--armed' : ''
+                    } ${todoSwipeAction ? '' : 'habit-checklist__swipe-lane--disabled'}`}
+                    aria-hidden="true"
+                  >
+                    <span className="habit-checklist__swipe-icon">{getSwipeActionIcon(todoSwipeAction)}</span>
+                    <span className="habit-checklist__swipe-label">{getSwipeActionLabel(todoSwipeAction)}</span>
+                  </div>
+                  <div className="habit-checklist__swipe-lane habit-checklist__swipe-lane--left habit-checklist__swipe-lane--disabled" aria-hidden="true">
+                    <span className="habit-checklist__swipe-icon">•</span>
+                    <span className="habit-checklist__swipe-label">No action</span>
+                  </div>
+                  <div
+                    className={`habit-checklist__swipe-row ${todoSwipeOffset !== 0 ? 'habit-checklist__swipe-row--dragging' : ''}`}
+                    style={{ transform: `translateX(${todoSwipeOffset}px)` }}
+                    onPointerDown={(event) => {
+                      if (todoSwipeGestureRef.current || isExpanded || isInteractiveHabitChild(event.target) || (event.pointerType === 'mouse' && event.button !== 0)) return;
+                      todoSwipeGestureRef.current = { todoId: todo.id, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, isHorizontal: false, hasSwiped: false, armedDirection: todoSwipeArmedDirection };
+                      event.currentTarget.setPointerCapture(event.pointerId);
+                    }}
+                    onPointerMove={(event) => {
+                      const gesture = todoSwipeGestureRef.current;
+                      if (!gesture || gesture.todoId !== todo.id || gesture.pointerId !== event.pointerId || isExpanded) return;
+                      const deltaX = event.clientX - gesture.startX;
+                      const deltaY = event.clientY - gesture.startY;
+                      if (!gesture.isHorizontal) {
+                        if (Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) return;
+                        if (Math.abs(deltaY) > Math.abs(deltaX)) { todoSwipeGestureRef.current = null; return; }
+                        gesture.isHorizontal = true;
+                      }
+                      event.preventDefault();
+                      const clamped = Math.max(-HABIT_SWIPE_MAX_PX, Math.min(HABIT_SWIPE_MAX_PX, deltaX));
+                      if (Math.abs(clamped) > 6) gesture.hasSwiped = true;
+                      setSwipeOffsetByTodoId((current) => ({ ...current, [todo.id]: clamped }));
+                      const armedDirection = clamped >= HABIT_SWIPE_ARM_THRESHOLD_PX && todoSwipeAction ? 'right' : null;
+                      gesture.armedDirection = armedDirection;
+                      setSwipeArmedByTodoId((current) => ({ ...current, [todo.id]: armedDirection }));
+                    }}
+                    onPointerUp={(event) => {
+                      const gesture = todoSwipeGestureRef.current;
+                      if (!gesture || gesture.todoId !== todo.id || gesture.pointerId !== event.pointerId) return;
+                      event.currentTarget.releasePointerCapture(event.pointerId);
+                      todoSwipeGestureRef.current = null;
+                      if (gesture.hasSwiped) swipeSuppressClickUntilByTodoIdRef.current[todo.id] = Date.now() + HABIT_SWIPE_SUPPRESS_CLICK_MS;
+                      const shouldComplete = gesture.armedDirection === 'right' && todoSwipeAction === 'complete';
+                      setSwipeOffsetByTodoId((current) => ({ ...current, [todo.id]: 0 }));
+                      setSwipeArmedByTodoId((current) => ({ ...current, [todo.id]: null }));
+                      if (shouldComplete) void handleToggleTodayTodo(todo);
+                    }}
+                    onPointerCancel={() => { todoSwipeGestureRef.current = null; setSwipeOffsetByTodoId((current) => ({ ...current, [todo.id]: 0 })); setSwipeArmedByTodoId((current) => ({ ...current, [todo.id]: null })); }}
+                  >
+                    <div
+                      className={`habit-checklist__row ${isExpanded ? 'habit-checklist__row--expanded' : ''}`}
+                      role="button"
+                      tabIndex={0}
+                      aria-expanded={isExpanded}
+                      onClick={() => {
+                        const suppressUntil = swipeSuppressClickUntilByTodoIdRef.current[todo.id] ?? 0;
+                        if (Date.now() < suppressUntil) return;
+                        toggleTodayTodoExpanded(todo.id);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.currentTarget !== event.target) return;
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          toggleTodayTodoExpanded(todo.id);
+                        }
                       }}
                     >
-                      ⭕
-                    </button>
-                  ) : null}
-                  <div className="habit-checklist__main habit-checklist__main--todo">
-                    <div className="habit-checklist__todo-header">
-                      <span className="habit-checklist__todo-badge">Todo</span>
-                      <h3>{todo.title}</h3>
-                      {onNavigateToTimer ? (
+                      {isExpanded ? (
                         <button
                           type="button"
-                          className="habit-checklist__todo-start-now"
+                          className="habit-checklist__todo-check"
+                          aria-label={`Mark todo ${todo.title} as complete`}
                           onClick={(event) => {
                             event.stopPropagation();
-                            onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title });
+                            void handleToggleTodayTodo(todo);
                           }}
                         >
-                          Start now
+                          ⭕
                         </button>
                       ) : null}
-                    </div>
-                    {isExpanded ? (
-                      <>
-                        {todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes yet — add context when you need it.</p>}
-                        <div className="habit-checklist__todo-actions" onClick={(event) => event.stopPropagation()}>
-                          <span className="habit-checklist__todo-actions-label">Quick actions</span>
-                          <button type="button" className="habit-checklist__todo-action-btn" onClick={() => void handleToggleTodayTodo(todo)}>Complete</button>
-                          {onNavigateToTimer ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--focus" onClick={() => onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title })}>Start 25m focus</button> : null}
-                          {onOpenAiCoach ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--coach" onClick={() => onOpenAiCoach(buildTodayTodoCoachPrompt(todo))}>Help me figure out next step</button> : null}
+                      <div className="habit-checklist__main habit-checklist__main--todo">
+                        <div className="habit-checklist__todo-header">
+                          <span className="habit-checklist__todo-badge">Todo</span>
+                          <h3>{todo.title}</h3>
+                          {onNavigateToTimer ? (
+                            <button
+                              type="button"
+                              className="habit-checklist__todo-start-now"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title });
+                              }}
+                            >
+                              Start now
+                            </button>
+                          ) : null}
                         </div>
-                      </>
-                    ) : null}
+                        {isExpanded ? (
+                          <>
+                            {todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes yet — add context when you need it.</p>}
+                            <div className="habit-checklist__todo-actions" onClick={(event) => event.stopPropagation()}>
+                              <span className="habit-checklist__todo-actions-label">Quick actions</span>
+                              <button type="button" className="habit-checklist__todo-action-btn" onClick={() => void handleToggleTodayTodo(todo)}>Complete</button>
+                              {onNavigateToTimer ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--focus" onClick={() => onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title })}>Start 25m focus</button> : null}
+                              {onOpenAiCoach ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--coach" onClick={() => onOpenAiCoach(buildTodayTodoCoachPrompt(todo))}>Help me figure out next step</button> : null}
+                            </div>
+                          </>
+                        ) : null}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </li>
@@ -6584,21 +6687,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               isSkipDisabled,
               isSaving,
             });
-            const getSwipeActionIcon = (action: HabitSwipeAction | null) => {
-              if (action === 'complete') return '✅';
-              if (action === 'undo-complete') return '↩️';
-              if (action === 'skip') return '⏭️';
-              if (action === 'undo-skip') return '↩️';
-              return '•';
-            };
-            const getSwipeActionLabel = (action: HabitSwipeAction | null) => {
-              if (action === 'complete') return 'Complete';
-              if (action === 'undo-complete') return 'Undo complete';
-              if (action === 'skip') return 'Skip';
-              if (action === 'undo-skip') return 'Undo skip';
-              return 'No action';
-            };
-
             const isQuestHabit = questHabit?.habitId === habit.id;
 
             return (
