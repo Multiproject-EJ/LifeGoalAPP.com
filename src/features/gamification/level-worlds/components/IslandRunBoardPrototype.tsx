@@ -811,6 +811,18 @@ const SHIP_ZONE_LABELS: Record<ShipZone, string> = {
   cosmic: 'Cosmic Bridge',
 };
 
+const SANCTUARY_ROSTER_RENDER_POLICY_LABEL: Record<SanctuaryRosterRenderMode, string> = {
+  interactiveRoster: 'Interactive roster grid: v2 SimpleView + CreatureCardSimpleFront surface (clickable).',
+  decorativePreview: 'Decorative preview grid: aria-hidden legacy fallback surface (intentionally non-interactive).',
+};
+
+function getSanctuaryRosterRenderPolicy(mode: SanctuaryRosterRenderMode) {
+  return {
+    mode,
+    policy: SANCTUARY_ROSTER_RENDER_POLICY_LABEL[mode],
+  };
+}
+
 function getSanctuaryZoneSlotCap(islandNumber: number, zone: ShipZone): number {
   if (zone === 'zen') {
     if (islandNumber >= 90) return 7;
@@ -5681,10 +5693,8 @@ export function IslandRunBoardPrototype({
     () => (selectedSanctuaryCreature ? getUnclaimedBondMilestones(selectedSanctuaryCreature) : []),
     [selectedSanctuaryCreature],
   );
-  const sanctuaryRosterRenderPolicyLabel: Record<SanctuaryRosterRenderMode, string> = {
-    interactiveRoster: 'Interactive roster grid: v2 SimpleView + CreatureCardSimpleFront surface (clickable).',
-    decorativePreview: 'Decorative preview grid: aria-hidden legacy fallback surface (intentionally non-interactive).',
-  };
+  const interactiveRosterRenderPolicy = getSanctuaryRosterRenderPolicy('interactiveRoster');
+  const decorativePreviewRenderPolicy = getSanctuaryRosterRenderPolicy('decorativePreview');
   const metadataArchetypeIds = useMemo(() => {
     const metadata = session.user.user_metadata as Record<string, unknown> | undefined;
     return extractArchetypeIdsFromMetadata(metadata?.archetype_hand);
@@ -11320,8 +11330,8 @@ export function IslandRunBoardPrototype({
                 <div
                   className="island-run-sanctuary-panel__grid"
                   aria-hidden="true"
-                  data-render-mode="decorativePreview"
-                  data-render-policy={sanctuaryRosterRenderPolicyLabel.decorativePreview}
+                  data-render-mode={decorativePreviewRenderPolicy.mode}
+                  data-render-policy={decorativePreviewRenderPolicy.policy}
                 >
                   {visibleSanctuaryCreatures.map((creature) => {
                     const art = resolveCreatureArtManifest(creature.creature);
@@ -11623,8 +11633,8 @@ export function IslandRunBoardPrototype({
               /* Explicit policy: this is the interactive roster surface (v2 SimpleView via CreatureCardSimpleFront). */
               <div
                 className="island-run-sanctuary-panel__grid"
-                data-render-mode="interactiveRoster"
-                data-render-policy={sanctuaryRosterRenderPolicyLabel.interactiveRoster}
+                data-render-mode={interactiveRosterRenderPolicy.mode}
+                data-render-policy={interactiveRosterRenderPolicy.policy}
               >
                 {visibleSanctuaryCreatures.map((creature) => {
                   const art = resolveCreatureArtManifest(creature.creature);
