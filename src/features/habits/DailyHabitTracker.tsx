@@ -909,6 +909,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [monthDays, setMonthDays] = useState<string[]>([]);
   const [habitInsights, setHabitInsights] = useState<Record<string, HabitInsights>>({});
   const [expandedHabits, setExpandedHabits] = useState<Record<string, boolean>>({});
+  const [expandedTodayTodoById, setExpandedTodayTodoById] = useState<Record<string, boolean>>({});
   const [historicalLogs, setHistoricalLogs] = useState<HabitLogRow[]>([]);
   // State for selected month/year: allows user to navigate between different months
   // selectedMonth: 0-11, where 0 = January
@@ -5346,6 +5347,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     }));
   };
 
+  const toggleTodayTodoExpanded = useCallback((todoId: string) => {
+    setExpandedTodayTodoById((current) => ({ ...current, [todoId]: !current[todoId] }));
+  }, []);
+
   const handleOpenEdit = (habit: HabitWithGoal) => {
     setEditHabit({
       id: habit.id,
@@ -6266,6 +6271,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     const visibleHabits = showCompletedHabits
       ? [...activeHabits, ...completedHabits]
       : activeHabits;
+    const activeTodos = todayTodos.filter((todo) => !todo.completed);
+    const completedTodos = todayTodos.filter((todo) => todo.completed);
 
     return (
       <div className="habit-checklist__group">
@@ -6382,28 +6389,88 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           <p className="habit-checklist__empty">All habits checked off for today.</p>
         ) : null}
         <ul className="habit-checklist" role="list">
-          {todayTodos.filter((todo) => showCompletedHabits || !todo.completed).map((todo) => (
-            <li key={todo.id} className={`habit-checklist__item habit-checklist__item--todo ${todo.completed ? 'habit-checklist__item--completed' : ''}`}>
-              <div className="habit-checklist__row">
-                <button type="button" className="habit-checklist__todo-check" onClick={() => void handleToggleTodayTodo(todo)}>{todo.completed ? '✅' : '⭕'}</button>
-                <div className="habit-checklist__main habit-checklist__main--todo">
-                  <div className="habit-checklist__todo-header">
-                    <span className="habit-checklist__todo-badge">{todo.completed ? 'Todo • Done' : 'Todo'}</span>
-                    <h3>{todo.title}</h3>
-                  </div>
-                  {todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes yet — add context when you need it.</p>}
-                  <div className="habit-checklist__todo-actions">
-                    <span className="habit-checklist__todo-actions-label">Quick actions</span>
-                    {onNavigateToTimer ? <button type="button" onClick={() => onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title })}>Start 25m focus</button> : null}
-                    {onOpenAiCoach ? <button type="button" onClick={() => onOpenAiCoach(buildTodayTodoCoachPrompt(todo))}>Help me figure out next step</button> : null}
+          {activeTodos.map((todo) => {
+            const isExpanded = Boolean(expandedTodayTodoById[todo.id]);
+            return (
+              <li key={todo.id} className="habit-checklist__item habit-checklist__item--todo">
+                <div
+                  className={`habit-checklist__row ${isExpanded ? 'habit-checklist__row--expanded' : ''}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isExpanded}
+                  onClick={() => toggleTodayTodoExpanded(todo.id)}
+                  onKeyDown={(event) => {
+                    if (event.currentTarget !== event.target) return;
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      toggleTodayTodoExpanded(todo.id);
+                    }
+                  }}
+                >
+                  <button
+                    type="button"
+                    className="habit-checklist__todo-check"
+                    aria-label={`Mark todo ${todo.title} as complete`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void handleToggleTodayTodo(todo);
+                    }}
+                  >
+                    ⭕
+                  </button>
+                  <div className="habit-checklist__main habit-checklist__main--todo">
+                    <div className="habit-checklist__todo-header">
+                      <span className="habit-checklist__todo-badge">Todo</span>
+                      <h3>{todo.title}</h3>
+                    </div>
+                    {isExpanded ? (
+                      <>
+                        {todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes yet — add context when you need it.</p>}
+                        <div className="habit-checklist__todo-actions">
+                          <span className="habit-checklist__todo-actions-label">Quick actions</span>
+                          <button type="button" onClick={() => void handleToggleTodayTodo(todo)}>Complete</button>
+                          {onNavigateToTimer ? <button type="button" onClick={() => onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title })}>Start 25m focus</button> : null}
+                          {onOpenAiCoach ? <button type="button" onClick={() => onOpenAiCoach(buildTodayTodoCoachPrompt(todo))}>Help me figure out next step</button> : null}
+                        </div>
+                      </>
+                    ) : null}
                   </div>
                 </div>
+              </li>
+            );
+          })}
+          {todayTodoLoadError ? <li className="habit-checklist__empty">{todayTodoLoadError}</li> : null}
+          {!todayTodoLoadError && activeTodos.length === 0 ? (
+            <li className="habit-checklist__empty">No todos for this date yet.</li>
+          ) : null}
+          {showCompletedHabits && completedTodos.length > 0 ? (
+            <li className="habit-checklist__item habit-checklist__item--todo habit-checklist__item--completed">
+              <div className="habit-checklist__main habit-checklist__main--todo">
+                <div className="habit-checklist__todo-header">
+                  <span className="habit-checklist__todo-badge">Completed todos</span>
+                  <h3>{completedTodos.length}</h3>
+                </div>
+                <ul className="habit-checklist" role="list">
+                  {completedTodos.map((todo) => (
+                    <li key={todo.id} className="habit-checklist__item habit-checklist__item--todo habit-checklist__item--completed">
+                      <div className="habit-checklist__row">
+                        <button type="button" className="habit-checklist__todo-check" onClick={() => void handleToggleTodayTodo(todo)}>✅</button>
+                        <div className="habit-checklist__main habit-checklist__main--todo">
+                          <div className="habit-checklist__todo-header">
+                            <span className="habit-checklist__todo-badge">Todo • Done</span>
+                            <h3>{todo.title}</h3>
+                          </div>
+                          <div className="habit-checklist__todo-actions">
+                            <span className="habit-checklist__todo-actions-label">Quick actions</span>
+                            <button type="button" onClick={() => void handleToggleTodayTodo(todo)}>Mark active again</button>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </li>
-          ))}
-          {todayTodoLoadError ? <li className="habit-checklist__empty">{todayTodoLoadError}</li> : null}
-          {!todayTodoLoadError && todayTodos.filter((todo) => showCompletedHabits || !todo.completed).length === 0 ? (
-            <li className="habit-checklist__empty">No todos for this date yet.</li>
           ) : null}
           {visibleHabits.map((habit) => {
             const state = completions[habit.id];
