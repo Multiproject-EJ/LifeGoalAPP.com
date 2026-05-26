@@ -1012,12 +1012,12 @@ type FooterControllerSlot = {
 const FOOTER_CONTROLLER_SLOT_MAP: Record<FooterControllerSlotId, FooterControllerSlot> = {
   // Match the successful overlay-style controller zoning: side actions on grip
   // cavities and primary roll controls docked in the center bowl.
-  leftUpper: { x: 19, y: 67.5, rotate: -3.5, scale: 0.94, depth: 'raised' },
-  leftLower: { x: 23, y: 82, rotate: -4.2, scale: 0.94, depth: 'raised' },
-  centerCore: { x: 50, y: 75.5, rotate: 0, scale: 0.96, depth: 'inset' },
-  centerBadge: { x: 50, y: 61, rotate: 0, scale: 0.92, depth: 'surface' },
-  rightLower: { x: 77, y: 82, rotate: 4.2, scale: 0.94, depth: 'raised' },
-  rightUpper: { x: 81, y: 67.5, rotate: 3.5, scale: 0.94, depth: 'raised' },
+  leftUpper: { x: 17, y: 68, rotate: -3.5, scale: 0.96, depth: 'raised' },
+  leftLower: { x: 10.5, y: 86.5, rotate: -8, scale: 0.92, depth: 'raised' },
+  centerCore: { x: 50, y: 74.5, rotate: 0, scale: 0.98, depth: 'inset' },
+  centerBadge: { x: 50, y: 60.5, rotate: 0, scale: 0.92, depth: 'surface' },
+  rightLower: { x: 89.5, y: 86.5, rotate: 8, scale: 0.92, depth: 'raised' },
+  rightUpper: { x: 83, y: 68, rotate: 3.5, scale: 0.96, depth: 'raised' },
 };
 
 function getFooterControllerSlotStyle(slot: FooterControllerSlot): React.CSSProperties {
