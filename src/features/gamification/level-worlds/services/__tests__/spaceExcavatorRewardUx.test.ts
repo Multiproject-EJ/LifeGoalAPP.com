@@ -22,7 +22,7 @@ export const spaceExcavatorRewardUxTests: TestCase[] = [
       assertEqual(state.rewardReady, false, 'claimed achieved rewards should not show ready cue');
       assertDeepEqual(
         SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.map((milestone) => milestone.rewardLabel),
-        ['+25 Essence', '+5 Dice', '+1 Shard', '+75 Essence', '+25 Dice +3 Shards'],
+        ['+25 Essence', '+5 Dice', '+1 Shard', '+75 Essence', '+25 Dice +3 Shards', '+150 Essence', '+20 Dice +2 Shards', '+35 Dice', '+5 Shards', '+60 Dice +8 Shards +300 Essence'],
         'reward UX helpers must not change reward amounts',
       );
     },
@@ -99,4 +99,3 @@ export const spaceExcavatorRewardUxTests: TestCase[] = [
     },
   },
 ];
-
