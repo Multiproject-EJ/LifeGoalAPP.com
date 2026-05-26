@@ -42,6 +42,7 @@ import {
   type JournalEntry,
 } from '../../services/journal';
 import { fetchCompletedActionsForDate } from '../../services/actions';
+import { createTodayTodo, fetchTodayTodos, updateTodayTodo, type TodayTodo } from '../../services/todayTodos';
 import { updateSpinsAvailable } from '../../services/dailySpin';
 import { useDailySpinStatus } from '../../hooks/useDailySpinStatus';
 import { isIslandRunFeatureEnabled } from '../../config/islandRunFeatureFlags';
@@ -371,6 +372,8 @@ type DailyHabitTrackerProps = {
   hiddenHabitIds?: string[];
   collapseCheckboxUntilExpanded?: boolean;
   onOpenStarterQuest?: (initialDomainKey?: LifeWheelCategoryKey) => void;
+  onNavigateToTimer?: (context: { sourceType: string; sourceId: string; sourceName: string }) => void;
+  onOpenAiCoach?: (starterQuestion?: string) => void;
   archetypeHand?: ArchetypeHand | null;
   onNavigateToContracts?: () => void;
   onNavigateToRoutines?: () => void;
@@ -732,6 +735,8 @@ export function DailyHabitTracker({
   hiddenHabitIds = [],
   collapseCheckboxUntilExpanded = false,
   onOpenStarterQuest,
+  onNavigateToTimer,
+  onOpenAiCoach,
   archetypeHand,
   onNavigateToContracts,
   onNavigateToRoutines,
@@ -745,6 +750,13 @@ export function DailyHabitTracker({
   const isDemoExperience = isDemoSession(session);
   const isCompact = variant === 'compact';
   const [activeOfferTeaser, setActiveOfferTeaser] = useState<TimeBoundOfferId | null>(null);
+
+  const [todayTodos, setTodayTodos] = useState<TodayTodo[]>([]);
+  const [todayTodoModalOpen, setTodayTodoModalOpen] = useState(false);
+  const [todayTodoTitle, setTodayTodoTitle] = useState('');
+  const [todayTodoNotes, setTodayTodoNotes] = useState('');
+  const [todayTodoError, setTodayTodoError] = useState<string | null>(null);
+
   const [isTodaysOfferModalOpen, setIsTodaysOfferModalOpen] = useState(false);
   const [todaysOfferCheckoutPending, setTodaysOfferCheckoutPending] = useState(false);
   const [todaysOfferModalError, setTodaysOfferModalError] = useState<string | null>(null);
@@ -804,6 +816,51 @@ export function DailyHabitTracker({
   const [autoProgressHabitIds, setAutoProgressHabitIds] = useState<Set<string>>(new Set());
   const [today, setToday] = useState(() => formatISODate(new Date()));
   const [activeDate, setActiveDate] = useState(() => formatISODate(new Date()));
+  const loadTodayTodos = useCallback(async (dateISO: string) => {
+    const { data, error } = await fetchTodayTodos(dateISO);
+    if (!error && data) setTodayTodos(data);
+  }, []);
+
+  useEffect(() => {
+    void loadTodayTodos(activeDate);
+  }, [activeDate, loadTodayTodos]);
+
+  const handleCreateTodayTodo = useCallback(async () => {
+    const title = todayTodoTitle.trim();
+    if (!title) {
+      setTodayTodoError('Title is required.');
+      return;
+    }
+    const { error } = await createTodayTodo(session.user.id, {
+      dateISO: activeDate,
+      title,
+      notes: todayTodoNotes.trim() || null,
+      orderIndex: todayTodos.filter((todo) => !todo.completed).length,
+    });
+    if (error) {
+      setTodayTodoError('Could not save todo right now.');
+      return;
+    }
+    setTodayTodoTitle('');
+    setTodayTodoNotes('');
+    setTodayTodoModalOpen(false);
+    setTodayTodoError(null);
+    void loadTodayTodos(activeDate);
+  }, [activeDate, loadTodayTodos, session.user.id, todayTodoNotes, todayTodoTitle, todayTodos]);
+
+  const handleToggleTodayTodo = useCallback(async (todo: TodayTodo) => {
+    await updateTodayTodo(todo.id, { completed: !todo.completed });
+    void loadTodayTodos(activeDate);
+  }, [activeDate, loadTodayTodos]);
+
+  const buildTodayTodoCoachPrompt = useCallback((todo: TodayTodo) => {
+    return `I need help completing this today task:
+Task: ${todo.title}
+Details: ${todo.notes ?? ''}
+
+Please give me practical, creative, doable next steps. Break it down from A to Z so I know exactly what ‘done’ means. Keep it simple enough to start in the next 5 minutes.`;
+  }, []);
+
   const [completedActionsCount, setCompletedActionsCount] = useState(0);
   const [isTodayWinsOpen, setIsTodayWinsOpen] = useState(false);
   const [todayWinsSummary, setTodayWinsSummary] = useState<TodayWinsSummary>({
@@ -6286,6 +6343,13 @@ export function DailyHabitTracker({
                 {timeLimitedCountdownLabel ? ` • ${timeLimitedCountdownLabel}` : ''}
               </button>
             ) : null}
+            <button
+              type="button"
+              className="habit-checklist-card__starter-launcher habit-checklist-card__todo-launcher"
+              onClick={() => setTodayTodoModalOpen(true)}
+            >
+              Todo
+            </button>
             {onOpenStarterQuest ? (
               <button
                 type="button"
@@ -6293,7 +6357,7 @@ export function DailyHabitTracker({
                 onClick={() => onOpenStarterQuest()}
                 aria-label="Open Starter Quest picker"
               >
-                + Starter quest
+                + My quest
               </button>
             ) : null}
           </div>
@@ -6309,6 +6373,21 @@ export function DailyHabitTracker({
           <p className="habit-checklist__empty">All habits checked off for today.</p>
         ) : null}
         <ul className="habit-checklist" role="list">
+          {todayTodos.filter((todo) => showCompletedHabits || !todo.completed).map((todo) => (
+            <li key={todo.id} className={`habit-checklist__item habit-checklist__item--todo ${todo.completed ? 'habit-checklist__item--completed' : ''}`}>
+              <div className="habit-checklist__row">
+                <button type="button" className="habit-checklist__todo-check" onClick={() => void handleToggleTodayTodo(todo)}>{todo.completed ? '✅' : '⭕'}</button>
+                <div className="habit-checklist__main">
+                  <h3>{todo.title}</h3>
+                  {todo.notes ? <p className="habit-checklist__note">{todo.notes}</p> : null}
+                  <div className="habit-checklist__todo-actions">
+                    {onNavigateToTimer ? <button type="button" onClick={() => onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title })}>Start 25m focus</button> : null}
+                    {onOpenAiCoach ? <button type="button" onClick={() => onOpenAiCoach(buildTodayTodoCoachPrompt(todo))}>Help me figure out next step</button> : null}
+                  </div>
+                </div>
+              </div>
+            </li>
+          ))}
           {visibleHabits.map((habit) => {
             const state = completions[habit.id];
             const isCompleted = Boolean(state?.completed);
@@ -8198,7 +8277,14 @@ export function DailyHabitTracker({
               <div className="habit-checklist-card__empty">
                 <p>No habits scheduled for this day.</p>
                 <p>Add a ritual to any goal and it will show up here for quick check-ins.</p>
-                {onOpenStarterQuest ? (
+                <button
+              type="button"
+              className="habit-checklist-card__starter-launcher habit-checklist-card__todo-launcher"
+              onClick={() => setTodayTodoModalOpen(true)}
+            >
+              Todo
+            </button>
+            {onOpenStarterQuest ? (
                   <button
                     type="button"
                     className="habit-checklist-card__starter-empty-launcher"
@@ -8221,6 +8307,27 @@ export function DailyHabitTracker({
               />
             ) : null}
 
+
+            {todayTodoModalOpen ? createPortal(
+              <div className="habit-edit-modal-overlay" role="presentation" onClick={() => setTodayTodoModalOpen(false)}>
+                <div className="habit-edit-modal-content" role="dialog" aria-modal="true" aria-label="Add today todo" onClick={(event) => event.stopPropagation()}>
+                  <h3>Add today todo</h3>
+                  <label>
+                    Title
+                    <input value={todayTodoTitle} onChange={(event) => setTodayTodoTitle(event.target.value)} maxLength={120} />
+                  </label>
+                  <label>
+                    Details / notes (optional)
+                    <textarea rows={4} value={todayTodoNotes} onChange={(event) => setTodayTodoNotes(event.target.value)} />
+                  </label>
+                  {todayTodoError ? <p className="habit-checklist__skip-error">{todayTodoError}</p> : null}
+                  <div className="habit-edit-modal-actions">
+                    <button type="button" className="habit-edit-cancel-btn" onClick={() => setTodayTodoModalOpen(false)}>Cancel</button>
+                    <button type="button" className="habit-edit-save-btn" onClick={() => void handleCreateTodayTodo()}>Save Todo</button>
+                  </div>
+                </div>
+              </div>, document.body
+            ) : null}
             {analysisHabitId ? (
               <HabitImprovementAnalysisModal
                 isOpen={Boolean(analysisHabitId)}
