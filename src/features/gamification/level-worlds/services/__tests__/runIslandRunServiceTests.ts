@@ -5,6 +5,7 @@ import { creatureFitEngineTests } from './creatureFitEngine.test';
 import { companionRegenModifierTests } from './companionRegenModifier.test';
 import { creatureImageManifestTests } from './creatureImageManifest.test';
 import { creatureCardCatalogTests } from './creatureCardCatalog.test';
+import { creatureCardAssetManifestTests } from './creatureCardAssetManifest.test';
 import { creatureSanctuaryAdapterTests } from './creatureSanctuaryAdapter.test';
 import { creatureCardV2AdapterTests } from './creatureCardV2Adapter.test';
 import { creatureCollectionProgressTests } from './creatureCollectionProgress.test';
@@ -84,6 +85,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'companionRegenModifier', tests: companionRegenModifierTests },
   { label: 'creatureImageManifest', tests: creatureImageManifestTests },
   { label: 'creatureCardCatalog', tests: creatureCardCatalogTests },
+  { label: 'creatureCardAssetManifest', tests: creatureCardAssetManifestTests },
   { label: 'creatureSanctuaryAdapter', tests: creatureSanctuaryAdapterTests },
   { label: 'creatureCardV2Adapter', tests: creatureCardV2AdapterTests },
   { label: 'creatureCollectionProgress', tests: creatureCollectionProgressTests },
