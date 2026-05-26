@@ -172,6 +172,7 @@ import type { FeatureAvailabilityId } from '../../config/featureAvailability';
 import { DailyLifeUpgradeModal } from './daily-life-upgrade/DailyLifeUpgradeModal';
 import { DailyLifeUpgradeAlternativeCreateModal } from './daily-life-upgrade/DailyLifeUpgradeAlternativeCreateModal';
 import { useDailyLifeUpgradeFlow } from './daily-life-upgrade/useDailyLifeUpgradeFlow';
+import { getTodoSwipeAction, getTodoSwipeArmedDirection, type TodoSwipeAction } from './todoSwipeHelpers';
 
 // Constants
 const DONE_ISH_DEFAULT_PERCENTAGE = 85;
@@ -393,7 +394,6 @@ type HabitCompletionState = {
 
 type HabitSwipeDirection = 'left' | 'right';
 type HabitSwipeAction = 'complete' | 'undo-complete' | 'skip' | 'undo-skip';
-type TodoSwipeAction = 'complete';
 
 /**
  * Monthly completion state for a single habit across all days in the selected month.
@@ -6436,7 +6436,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             const todoSwipeProgress = Math.min(1, Math.abs(todoSwipeOffset) / HABIT_SWIPE_MAX_PX);
             const rightTodoSwipeProgress = todoSwipeOffset > 0 ? todoSwipeProgress : 0;
             const leftTodoSwipeProgress = todoSwipeOffset < 0 ? todoSwipeProgress : 0;
-            const todoSwipeAction: TodoSwipeAction | null = isExpanded ? null : 'complete';
+            const todoSwipeAction: TodoSwipeAction | null = getTodoSwipeAction(isExpanded);
             const todoSwipeArmedDirection = swipeArmedByTodoId[todo.id] ?? null;
             return (
               <li key={todo.id} className={`habit-checklist__item habit-checklist__item--todo ${isJustCompletedTodo ? 'habit-checklist__item--todo-completing' : ''}`.trim()}>
@@ -6485,7 +6485,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       const clamped = Math.max(-HABIT_SWIPE_MAX_PX, Math.min(HABIT_SWIPE_MAX_PX, deltaX));
                       if (Math.abs(clamped) > 6) gesture.hasSwiped = true;
                       setSwipeOffsetByTodoId((current) => ({ ...current, [todo.id]: clamped }));
-                      const armedDirection = clamped >= HABIT_SWIPE_ARM_THRESHOLD_PX && todoSwipeAction ? 'right' : null;
+                      const armedDirection = getTodoSwipeArmedDirection({
+                        clampedOffsetPx: clamped,
+                        armThresholdPx: HABIT_SWIPE_ARM_THRESHOLD_PX,
+                        swipeAction: todoSwipeAction,
+                      });
                       gesture.armedDirection = armedDirection;
                       setSwipeArmedByTodoId((current) => ({ ...current, [todo.id]: armedDirection }));
                     }}
