@@ -796,6 +796,7 @@ function findSanctuaryCreatureById<T extends { creatureId: string }>(
 type SanctuaryFilterMode = 'all' | 'reward_ready' | 'active' | 'common' | 'rare' | 'mythic';
 type SanctuarySortMode = 'recent' | 'bond' | 'tier' | 'active';
 type SanctuaryZoneFilter = 'all' | ShipZone;
+type SanctuaryRosterRenderMode = 'interactiveRoster' | 'decorativePreview';
 type CompanionQuestType = 'feed_any' | 'set_perfect_active' | 'open_top3';
 
 type CompanionQuestProgress = {
@@ -5680,6 +5681,10 @@ export function IslandRunBoardPrototype({
     () => (selectedSanctuaryCreature ? getUnclaimedBondMilestones(selectedSanctuaryCreature) : []),
     [selectedSanctuaryCreature],
   );
+  const sanctuaryRosterRenderPolicyLabel: Record<SanctuaryRosterRenderMode, string> = {
+    interactiveRoster: 'Interactive roster grid: v2 SimpleView + CreatureCardSimpleFront surface (clickable).',
+    decorativePreview: 'Decorative preview grid: aria-hidden legacy fallback surface (intentionally non-interactive).',
+  };
   const metadataArchetypeIds = useMemo(() => {
     const metadata = session.user.user_metadata as Record<string, unknown> | undefined;
     return extractArchetypeIdsFromMetadata(metadata?.archetype_hand);
@@ -11311,7 +11316,13 @@ export function IslandRunBoardPrototype({
 
             {selectedSanctuaryCreature ? (
               <>
-                <div className="island-run-sanctuary-panel__grid" aria-hidden="true">
+                {/* Explicit policy: keep this secondary grid decorative-only while detail sheet is open. */}
+                <div
+                  className="island-run-sanctuary-panel__grid"
+                  aria-hidden="true"
+                  data-render-mode="decorativePreview"
+                  data-render-policy={sanctuaryRosterRenderPolicyLabel.decorativePreview}
+                >
                   {visibleSanctuaryCreatures.map((creature) => {
                     const art = resolveCreatureArtManifest(creature.creature);
                     return (
@@ -11609,7 +11620,11 @@ export function IslandRunBoardPrototype({
                 </div>
               </div>
             ) : (
-              <div className="island-run-sanctuary-panel__grid">
+              <div
+                className="island-run-sanctuary-panel__grid"
+                data-render-mode="interactiveRoster"
+                data-render-policy={sanctuaryRosterRenderPolicyLabel.interactiveRoster}
+              >
                 {visibleSanctuaryCreatures.map((creature) => {
                   const art = resolveCreatureArtManifest(creature.creature);
                   const simpleView = buildCreatureCardSimpleView(creature.creature, undefined, {
