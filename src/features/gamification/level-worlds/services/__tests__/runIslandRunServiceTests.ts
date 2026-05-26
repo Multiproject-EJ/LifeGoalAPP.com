@@ -6,6 +6,7 @@ import { companionRegenModifierTests } from './companionRegenModifier.test';
 import { creatureImageManifestTests } from './creatureImageManifest.test';
 import { creatureCardCatalogTests } from './creatureCardCatalog.test';
 import { creatureSanctuaryAdapterTests } from './creatureSanctuaryAdapter.test';
+import { creatureCardV2AdapterTests } from './creatureCardV2Adapter.test';
 import { encounterServiceTests } from './encounterService.test';
 import { islandBoardTopologyTests } from './islandBoardTopology.test';
 import { islandRunFoundationTests } from './islandRunFoundations.test';
@@ -83,6 +84,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'creatureImageManifest', tests: creatureImageManifestTests },
   { label: 'creatureCardCatalog', tests: creatureCardCatalogTests },
   { label: 'creatureSanctuaryAdapter', tests: creatureSanctuaryAdapterTests },
+  { label: 'creatureCardV2Adapter', tests: creatureCardV2AdapterTests },
   { label: 'encounterService', tests: encounterServiceTests },
   { label: 'islandBoardTopology', tests: islandBoardTopologyTests },
   { label: 'islandRunFoundations', tests: islandRunFoundationTests },
