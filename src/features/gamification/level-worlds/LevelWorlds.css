@@ -7842,21 +7842,6 @@
   .island-run-prototype__footer-main {
     padding: 0.42rem 0.58rem;
   }
-
-
-  .island-run-prototype__footer-nav-btn--slot-story,
-  .island-run-prototype__footer-nav-btn--slot-build {
-    top: 73%;
-  }
-
-  .island-run-prototype__footer-nav-btn--slot-creatures,
-  .island-run-prototype__footer-nav-btn--slot-market {
-    top: 83%;
-  }
-
-  .island-run-prototype__footer-dice-group--slot-center {
-    top: 71%;
-  }
 }
 
 
