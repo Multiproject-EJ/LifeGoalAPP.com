@@ -196,6 +196,7 @@ import {
 } from '../services/creatureCatalog';
 import { resolveCreatureArtManifest } from '../services/creatureImageManifest';
 import { getCreatureCardMetadata } from '../services/creatureCardCatalog';
+import { buildCreatureCardSimpleView } from '../services/creatureCardV2Adapter';
 import { CreatureCard } from './CreatureCard';
 import { CreatureGridCard } from './CreatureGridCard';
 import { CreatureHatchRevealModal } from './CreatureHatchRevealModal';
@@ -11313,6 +11314,11 @@ export function IslandRunBoardPrototype({
                 <div className="island-run-sanctuary-panel__grid" aria-hidden="true">
                   {visibleSanctuaryCreatures.map((creature) => {
                     const art = resolveCreatureArtManifest(creature.creature);
+                    const simpleView = buildCreatureCardSimpleView(creature.creature, undefined, {
+                      discovered: true,
+                      active: activeCompanionId === creature.creatureId,
+                      ownedCopies: creature.copies,
+                    });
                     return (
                       <CreatureGridCard
                         key={creature.creatureId}
@@ -11325,6 +11331,7 @@ export function IslandRunBoardPrototype({
                         selected={selectedSanctuaryCreatureId === creature.creatureId}
                         locked={false}
                         name={creature.creature.name}
+                        simpleView={simpleView}
                       />
                     );
                   })}
@@ -11611,6 +11618,11 @@ export function IslandRunBoardPrototype({
               <div className="island-run-sanctuary-panel__grid">
                 {visibleSanctuaryCreatures.map((creature) => {
                   const art = resolveCreatureArtManifest(creature.creature);
+                  const simpleView = buildCreatureCardSimpleView(creature.creature, undefined, {
+                    discovered: true,
+                    active: activeCompanionId === creature.creatureId,
+                    ownedCopies: creature.copies,
+                  });
                   return (
                     <CreatureGridCard
                       key={creature.creatureId}
@@ -11623,6 +11635,7 @@ export function IslandRunBoardPrototype({
                       selected={selectedSanctuaryCreatureId === creature.creatureId}
                       locked={false}
                       name={creature.creature.name}
+                      simpleView={simpleView}
                       onClick={() => sanctuaryHandlers.openCreature(creature.creatureId)}
                     />
                   );
