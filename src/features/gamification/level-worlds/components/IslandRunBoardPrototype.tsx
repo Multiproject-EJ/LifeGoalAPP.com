@@ -9720,18 +9720,10 @@ export function IslandRunBoardPrototype({
                 ) : activeEgg && !islandEggSlotUsed && eggStage >= 4 ? (
                   /* State 4/5: Egg ready to open (or dormant egg ready on revisit) */
                   <div className="island-hatchery-card__state island-hatchery-card__state--ready">
-                    <video
+                    <img
                       className="island-hatchery-card__stage-art"
-                      src="/assets/creatures/egg-hatch/egg-hatch-alpha-v1.mp4"
-                      poster={getEggStageArtSrc(activeEgg.tier, 4)}
-                      autoPlay
-                      muted
-                      playsInline
-                      preload="auto"
-                      onEnded={(event) => {
-                        event.currentTarget.pause();
-                      }}
-                      aria-label={`${activeEgg.tier} egg hatching animation`}
+                      src="/assets/creatures/Creature_card.webp"
+                      alt="Creature card back"
                     />
                     {activeEgg.isDormant ? (
                       <>
