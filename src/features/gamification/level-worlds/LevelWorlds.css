@@ -858,32 +858,12 @@
 .island-run-prototype__footer-dice-group--slot-center {
   position: absolute;
   z-index: 2;
-  transform: translate(-50%, -50%);
-}
-
-.island-run-prototype__footer-nav-btn--slot-story {
-  left: 16%;
-  top: 74%;
-}
-
-.island-run-prototype__footer-nav-btn--slot-creatures {
-  left: 31%;
-  top: 84%;
-}
-
-.island-run-prototype__footer-nav-btn--slot-market {
-  left: 69%;
-  top: 84%;
-}
-
-.island-run-prototype__footer-nav-btn--slot-build {
-  left: 84%;
-  top: 74%;
+  left: var(--slot-x, 50%);
+  top: var(--slot-y, 50%);
+  transform: translate(-50%, -50%) rotate(var(--slot-rotate, 0deg)) scale(var(--slot-scale, 1));
 }
 
 .island-run-prototype__footer-dice-group--slot-center {
-  left: 50%;
-  top: 71%;
   width: clamp(140px, 36vw, 220px);
 }
 .island-run-prototype__footer-actions {
@@ -995,7 +975,6 @@
   border-bottom-left-radius: 22px;
   border-top-right-radius: 18px;
   border-bottom-right-radius: 15px;
-  transform: translate(-50%, -50%) rotate(-1.9deg);
 }
 
 .island-run-prototype__footer-nav-btn--slot-build,
@@ -1004,7 +983,6 @@
   border-bottom-left-radius: 15px;
   border-top-right-radius: 20px;
   border-bottom-right-radius: 22px;
-  transform: translate(-50%, -50%) rotate(1.9deg);
 }
 
 .island-run-prototype__footer-nav-btn:disabled,
