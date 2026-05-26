@@ -3406,6 +3406,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 setShowLevelWorldsFromEntry(true);
               }}
               onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
+              onNavigateToTimer={(context) => {
+                if (context) {
+                  setTimerLaunchContext(context as any);
+                }
+                setActiveWorkspaceNav('timer');
+              }}
+              onOpenAiCoach={(starterQuestion) => {
+                setAiCoachStarterQuestion(starterQuestion ?? undefined);
+                setShowAiCoachModal(true);
+              }}
               pendingOfferToOpen={pendingTodayOfferOpen}
               onPendingOfferHandled={() => setPendingTodayOfferOpen(null)}
               activeHolidaySeason={activeHolidaySeason}
