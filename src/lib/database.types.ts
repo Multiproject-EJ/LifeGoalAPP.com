@@ -1195,6 +1195,45 @@ export interface Database {
         };
         Relationships: [];
       };
+      today_todos: {
+        Row: {
+          id: string;
+          user_id: string;
+          todo_date: string;
+          title: string;
+          notes: string | null;
+          completed: boolean;
+          completed_at: string | null;
+          order_index: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          todo_date: string;
+          title: string;
+          notes?: string | null;
+          completed?: boolean;
+          completed_at?: string | null;
+          order_index?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          todo_date?: string;
+          title?: string;
+          notes?: string | null;
+          completed?: boolean;
+          completed_at?: string | null;
+          order_index?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       telemetry_events: {
         Row: {
           id: string;
