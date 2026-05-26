@@ -1075,6 +1075,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [visionPreviewGallery, setVisionPreviewGallery] = useState<VisionImage[] | null>(null);
   const [visionPreviewIndex, setVisionPreviewIndex] = useState(0);
   const [isVisionRewardOpen, setIsVisionRewardOpen] = useState(false);
+  const [isVisionAlreadyCollectedModalOpen, setIsVisionAlreadyCollectedModalOpen] = useState(false);
   const [isVisionRewardSelecting, setIsVisionRewardSelecting] = useState(false);
   const [isSlotLanding, setIsSlotLanding] = useState(false);
   const [isStarBursting, setIsStarBursting] = useState(false);
@@ -2490,6 +2491,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   }, []);
 
   const handleVisionRewardClick = () => {
+    if (hasClaimedVisionStar && isViewingToday) {
+      setIsVisionAlreadyCollectedModalOpen(true);
+      return;
+    }
+
     if (visionButtonRef.current) {
       const rect = visionButtonRef.current.getBoundingClientRect();
       setCelebrationOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
@@ -2533,6 +2539,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
   const closeVisionReward = () => {
     setIsVisionRewardOpen(false);
+    setIsVisionAlreadyCollectedModalOpen(false);
     setIsVisionRewardSelecting(false);
     setIsSlotLanding(false);
   };
@@ -3504,6 +3511,26 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         </div>
       </div>
     ) : null;
+
+  const visionAlreadyCollectedModal = isVisionAlreadyCollectedModalOpen ? (
+    <div
+      className="habit-day-nav__vision-modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Vision star already collected"
+      onClick={closeVisionReward}
+    >
+      <div
+        className="habit-day-nav__vision-modal habit-day-nav__vision-modal--reward"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <h3 className="habit-day-nav__vision-modal-title">Already collected for today</h3>
+        <button type="button" className="habit-day-nav__vision-modal-claim" onClick={closeVisionReward}>
+          Close
+        </button>
+      </div>
+    </div>
+  ) : null;
   const visionVisualizationModal = isVisionVisualizationOpen ? (
     <div
       className="habit-day-nav__vision-visualize-backdrop"
@@ -9925,6 +9952,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         {feedCreaturesPortal}
         {weeklyHabitReviewModal}
         {visionRewardModal}
+        {visionAlreadyCollectedModal}
         {visionVisualizationModal}
         {habitVisionPreviewModal}
         {alertConfigModal}
@@ -10131,6 +10159,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       {feedCreaturesPortal}
       {weeklyHabitReviewModal}
       {visionRewardModal}
+      {visionAlreadyCollectedModal}
       {visionVisualizationModal}
       {habitVisionPreviewModal}
 
