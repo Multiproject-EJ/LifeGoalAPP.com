@@ -38,7 +38,7 @@ export function buildIslandRunHabitPayload(input: {
     schedule: { mode: 'daily' as const },
     target_num: 1,
     target_unit: 'time' as const,
-    habit_intent: `Island Run Habit stop (${input.selectedHabit.lifeWheelArea})`,
+    habit_intent: 'build',
     habit_environment: [
       'Created from Island Run Habit stop',
       `Area: ${input.selectedHabit.lifeWheelArea}`,
