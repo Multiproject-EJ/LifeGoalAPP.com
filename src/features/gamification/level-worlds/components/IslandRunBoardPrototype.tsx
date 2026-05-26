@@ -11620,6 +11620,7 @@ export function IslandRunBoardPrototype({
                 </div>
               </div>
             ) : (
+              /* Explicit policy: this is the interactive roster surface (v2 SimpleView via CreatureCardSimpleFront). */
               <div
                 className="island-run-sanctuary-panel__grid"
                 data-render-mode="interactiveRoster"
