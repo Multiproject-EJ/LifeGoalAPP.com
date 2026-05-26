@@ -6386,10 +6386,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             <li key={todo.id} className={`habit-checklist__item habit-checklist__item--todo ${todo.completed ? 'habit-checklist__item--completed' : ''}`}>
               <div className="habit-checklist__row">
                 <button type="button" className="habit-checklist__todo-check" onClick={() => void handleToggleTodayTodo(todo)}>{todo.completed ? '✅' : '⭕'}</button>
-                <div className="habit-checklist__main">
-                  <h3>{todo.title}</h3>
-                  {todo.notes ? <p className="habit-checklist__note">{todo.notes}</p> : null}
+                <div className="habit-checklist__main habit-checklist__main--todo">
+                  <div className="habit-checklist__todo-header">
+                    <span className="habit-checklist__todo-badge">{todo.completed ? 'Todo • Done' : 'Todo'}</span>
+                    <h3>{todo.title}</h3>
+                  </div>
+                  {todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes yet — add context when you need it.</p>}
                   <div className="habit-checklist__todo-actions">
+                    <span className="habit-checklist__todo-actions-label">Quick actions</span>
                     {onNavigateToTimer ? <button type="button" onClick={() => onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title })}>Start 25m focus</button> : null}
                     {onOpenAiCoach ? <button type="button" onClick={() => onOpenAiCoach(buildTodayTodoCoachPrompt(todo))}>Help me figure out next step</button> : null}
                   </div>
@@ -8328,13 +8332,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               <div className="habit-edit-modal-overlay" role="presentation" onClick={() => setTodayTodoModalOpen(false)}>
                 <div className="habit-edit-modal-content" role="dialog" aria-modal="true" aria-label="Add today todo" onClick={(event) => event.stopPropagation()}>
                   <h3>Add today todo</h3>
+                  <p className="habit-edit-modal-subcopy">Capture one concrete task for today. Keep it short and specific.</p>
                   <label>
-                    Title
-                    <input value={todayTodoTitle} onChange={(event) => setTodayTodoTitle(event.target.value)} maxLength={120} />
+                    Todo title
+                    <input placeholder="e.g., Outline Q3 onboarding email" value={todayTodoTitle} onChange={(event) => setTodayTodoTitle(event.target.value)} maxLength={120} />
                   </label>
                   <label>
                     Details / notes (optional)
-                    <textarea rows={4} value={todayTodoNotes} onChange={(event) => setTodayTodoNotes(event.target.value)} />
+                    <textarea rows={4} placeholder="Add context, blockers, or first next step." value={todayTodoNotes} onChange={(event) => setTodayTodoNotes(event.target.value)} />
                   </label>
                   {todayTodoError ? <p className="habit-checklist__skip-error">{todayTodoError}</p> : null}
                   <div className="habit-edit-modal-actions">
