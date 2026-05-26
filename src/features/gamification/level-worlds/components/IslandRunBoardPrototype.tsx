@@ -230,6 +230,7 @@ import {
 } from '../services/islandRunAudio';
 import {
   playIslandRunMusic,
+  playIslandRunMusicPlaylist,
   stopIslandRunMusic,
 } from '../services/islandRunMusic';
 import { SHARD_EARN, computeShardEarn, getShardTierThreshold, type ShardEarnSource } from '../services/shardMilestoneEngine';
@@ -2649,12 +2650,12 @@ export function IslandRunBoardPrototype({
 
   useEffect(() => {
     if (!musicEnabled || showShopPanel || showIslandClearCelebration) {
-      stopIslandRunMusic('island-board-ambient');
+      stopIslandRunMusic();
       return;
     }
 
-    playIslandRunMusic('island-board-ambient');
-    return () => stopIslandRunMusic('island-board-ambient');
+    playIslandRunMusicPlaylist(['island-board-ambient', 'luxury-reward', 'boss-rhythm-duel']);
+    return () => stopIslandRunMusic();
   }, [musicEnabled, showIslandClearCelebration, showShopPanel]);
 
   useEffect(() => {
@@ -2678,9 +2679,7 @@ export function IslandRunBoardPrototype({
 
   useEffect(() => {
     return () => {
-      stopIslandRunMusic('island-board-ambient');
-      stopIslandRunMusic('market-lounge');
-      stopIslandRunMusic('new-island-celebration');
+      stopIslandRunMusic();
     };
   }, []);
 
