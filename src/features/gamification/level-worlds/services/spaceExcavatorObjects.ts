@@ -31,6 +31,20 @@ export const SPACE_EXCAVATOR_OBJECT_SHAPES: readonly SpaceExcavatorObjectShape[]
     tileOffsets: Object.freeze([[0, 0], [0, 1], [0, 2], [1, 2]] as const),
   }),
   Object.freeze({
+    objectId: 'micro_satellite_cluster',
+    name: 'Micro Satellite Cluster',
+    tier: 'common',
+    icon: '🛰️',
+    tileOffsets: Object.freeze([[0, 0], [2, 0], [0, 2], [2, 2]] as const),
+  }),
+  Object.freeze({
+    objectId: 'fossil_fragments',
+    name: 'Fossil Fragments',
+    tier: 'uncommon',
+    icon: '🦴',
+    tileOffsets: Object.freeze([[0, 0], [2, 0], [1, 1], [0, 2], [2, 2]] as const),
+  }),
+  Object.freeze({
     objectId: 'moon_key',
     name: 'Moon Key',
     tier: 'epic',
@@ -45,7 +59,14 @@ export function getSpaceExcavatorObjectShape(objectId: string | null | undefined
 
 export function chooseSpaceExcavatorObjectShape(eventId: string, boardIndex: number): SpaceExcavatorObjectShape {
   const seed = Array.from(`${eventId}:${boardIndex}:object`).reduce((sum, char) => sum + char.charCodeAt(0), 1);
-  return SPACE_EXCAVATOR_OBJECT_SHAPES[Math.abs(seed + boardIndex) % SPACE_EXCAVATOR_OBJECT_SHAPES.length];
+  const progressionPool = SPACE_EXCAVATOR_OBJECT_SHAPES.filter((shape) => {
+    if (boardIndex < 8) return shape.tier === 'common';
+    if (boardIndex < 16) return shape.tier === 'common' || shape.tier === 'uncommon';
+    if (boardIndex < 26) return shape.tier !== 'epic';
+    return true;
+  });
+  const pool = progressionPool.length > 0 ? progressionPool : SPACE_EXCAVATOR_OBJECT_SHAPES;
+  return pool[Math.abs(seed + boardIndex) % pool.length];
 }
 
 export function placeSpaceExcavatorObjectShape(options: {

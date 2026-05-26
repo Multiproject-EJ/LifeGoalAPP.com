@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { IslandRunMinigameProps } from '../../level-worlds/services/islandRunMinigameTypes';
-import { SPACE_EXCAVATOR_CAMPAIGN_MILESTONES } from '../../level-worlds/services/spaceExcavatorCampaignProgress';
+import {
+  SPACE_EXCAVATOR_CAMPAIGN_MILESTONES,
+  SPACE_EXCAVATOR_CAMPAIGN_TOTAL_POINTS,
+} from '../../level-worlds/services/spaceExcavatorCampaignProgress';
 import { resolveSpaceExcavatorClue, type SpaceExcavatorClueResult } from '../../level-worlds/services/spaceExcavatorClues';
 import { resolveSpaceExcavatorDepthForBoard } from '../../level-worlds/services/spaceExcavatorDepths';
 import { getSpaceExcavatorObjectShape, resolveSpaceExcavatorObjectTileIds } from '../../level-worlds/services/spaceExcavatorObjects';
@@ -51,6 +54,7 @@ type ClaimMilestoneRewardResult =
   | { ok: true; progress: SpaceExcavatorProgress; rewardLabel: string; failureReason?: never }
   | { ok: false; progress?: SpaceExcavatorProgress | null; rewardLabel?: string | null; failureReason?: string };
 type ClaimModalPhase = 'unlocked' | 'claiming' | 'claimed' | 'failed';
+type ExitCelebrationSummary = { boardsCleared: number; diceWon: number; essenceWon: number; shardsWon: number };
 const BOARD_CLEAR_AUTO_ADVANCE_DELAY_SECONDS = SPACE_EXCAVATOR_BOARD_CLEAR_AUTO_ADVANCE_DELAY_MS / 1000;
 
 type SpaceExcavatorLaunchConfig = {
@@ -104,7 +108,7 @@ function getObjectGridTemplate(shapeTileOffsets: ReadonlyArray<readonly [number,
 export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig }: IslandRunMinigameProps) {
   const config = (launchConfig ?? {}) as SpaceExcavatorLaunchConfig;
   const initial = config.initialProgress;
-  const totalBoards = Math.max(1, Math.floor(config.totalBoards ?? 10));
+  const totalBoards = Math.max(1, Math.floor(config.totalBoards ?? SPACE_EXCAVATOR_CAMPAIGN_TOTAL_POINTS));
   const [progress, setProgress] = useState<SpaceExcavatorProgress | null>(initial ?? null);
   const size = Math.max(1, Math.floor(progress?.boardSize ?? initial?.boardSize ?? 5));
   const objectPieceCount = getObjectPieceCount({ progress, initial, islandNumber });
@@ -142,6 +146,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const [latestClue, setLatestClue] = useState<SpaceExcavatorClueResult | null>(null);
   const [latestBombFeedback, setLatestBombFeedback] = useState<string | null>(null);
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
+  const [exitCelebrationSummary, setExitCelebrationSummary] = useState<ExitCelebrationSummary | null>(null);
   const [lastDugTileId, setLastDugTileId] = useState<number | null>(null);
   const [bombCenterTileId, setBombCenterTileId] = useState<number | null>(null);
   const [bombWaveTileIds, setBombWaveTileIds] = useState<number[]>([]);
@@ -196,12 +201,38 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const relicFoundPulse = latestClue?.type === 'relic_piece';
   const firstDigPending = found === 0 && (activeProgress?.dugTileIds?.length ?? 0) === 0;
   const helperPanelId = useId();
+  const initialClearedBoards = Math.max(0, Math.floor(initial?.completedBoardCount ?? initial?.eventProgressPoints ?? 0));
+  const initialClaimedMilestoneIds = useMemo(() => new Set(initial?.claimedMilestoneIds ?? []), [initial?.claimedMilestoneIds]);
 
   const sendOnce = (completed: boolean) => {
     if (sentResult) return;
     setSentResult(true);
     setFinished(true);
     onComplete({ completed });
+  };
+
+  const dismissExitCelebration = () => {
+    setExitCelebrationSummary(null);
+    sendOnce(false);
+  };
+
+  const onRequestClose = () => {
+    if (finished) return;
+    const currentClearedBoards = Math.max(0, Math.floor(activeProgress?.completedBoardCount ?? activeProgress?.eventProgressPoints ?? 0));
+    const boardsClearedThisSession = Math.max(0, currentClearedBoards - initialClearedBoards);
+    if (boardsClearedThisSession < 1) {
+      sendOnce(false);
+      return;
+    }
+    const claimedIds = new Set(activeProgress?.claimedMilestoneIds ?? []);
+    const newlyClaimedMilestones = SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.filter((milestone) => claimedIds.has(milestone.id) && !initialClaimedMilestoneIds.has(milestone.id));
+    const summary = newlyClaimedMilestones.reduce<ExitCelebrationSummary>((acc, milestone) => ({
+      boardsCleared: boardsClearedThisSession,
+      diceWon: acc.diceWon + Math.max(0, Math.floor(milestone.reward.dicePool ?? 0)),
+      essenceWon: acc.essenceWon + Math.max(0, Math.floor(milestone.reward.essence ?? 0)),
+      shardsWon: acc.shardsWon + Math.max(0, Math.floor(milestone.reward.shards ?? 0)),
+    }), { boardsCleared: boardsClearedThisSession, diceWon: 0, essenceWon: 0, shardsWon: 0 });
+    setExitCelebrationSummary(summary);
   };
 
   const onDig = (index: number) => {
@@ -568,7 +599,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
             <p className="space-excavator__ticket-sheet-note">Every event ticket gives you one dig.</p>
             <p className="space-excavator__ticket-sheet-hint">Tip: Event tickets come from the Island Run reward bar.</p>
             <div className="space-excavator__ticket-sheet-actions">
-              <button type="button" className="space-excavator__button space-excavator__button--primary" onClick={() => sendOnce(false)}>
+              <button type="button" className="space-excavator__button space-excavator__button--primary" onClick={onRequestClose}>
                 Back to Island Run
               </button>
               <button type="button" className="space-excavator__button" onClick={dismissOutOfTickets}>
@@ -664,7 +695,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
                 </button>
               )}
               {claimModalPhase === 'failed' ? (
-                <button type="button" className="space-excavator__button" onClick={() => sendOnce(false)}>
+                <button type="button" className="space-excavator__button" onClick={onRequestClose}>
                   Back to Island Run
                 </button>
               ) : null}
@@ -673,9 +704,23 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
         </div>
       )}
 
+      {exitCelebrationSummary && (
+        <div className="space-excavator__modal-backdrop space-excavator__modal-backdrop--claim" role="presentation">
+          <div className="space-excavator__reward-sheet" role="dialog" aria-modal="true" aria-labelledby="space-excavator-exit-summary-title">
+            <div className="space-excavator__reward-burst" aria-hidden="true">🎉</div>
+            <p id="space-excavator-exit-summary-title" className="space-excavator__reward-sheet-title">Great Excavation Session!</p>
+            <p className="space-excavator__reward-sheet-body">Congratulations — you cleared {exitCelebrationSummary.boardsCleared} board{exitCelebrationSummary.boardsCleared === 1 ? '' : 's'} this run.</p>
+            <p className="space-excavator__reward-sheet-prize">🎲 +{exitCelebrationSummary.diceWon} Dice · 🟣 +{exitCelebrationSummary.essenceWon} Essence · 🧩 +{exitCelebrationSummary.shardsWon} Shards</p>
+            <div className="space-excavator__ticket-sheet-actions">
+              <button type="button" className="space-excavator__button space-excavator__button--primary" onClick={dismissExitCelebration}>Back to Island Run</button>
+              <button type="button" className="space-excavator__button" onClick={() => setExitCelebrationSummary(null)}>Keep Digging</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="space-excavator__footer-actions">
         <div className="space-excavator__actions">
-          <button type="button" className="space-excavator__button" onClick={() => sendOnce(false)} disabled={finished}>Close</button>
+          <button type="button" className="space-excavator__button" onClick={onRequestClose} disabled={finished}>Close</button>
         </div>
         <p className="space-excavator__footer-ticket-count" aria-live="polite">
         <span aria-hidden="true">🎟️</span>
