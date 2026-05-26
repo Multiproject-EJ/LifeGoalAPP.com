@@ -4,6 +4,7 @@ import { creatureTreatInventoryServiceTests } from './creatureTreatInventoryServ
 import { creatureFitEngineTests } from './creatureFitEngine.test';
 import { companionRegenModifierTests } from './companionRegenModifier.test';
 import { creatureImageManifestTests } from './creatureImageManifest.test';
+import { creatureCardCatalogTests } from './creatureCardCatalog.test';
 import { creatureSanctuaryAdapterTests } from './creatureSanctuaryAdapter.test';
 import { encounterServiceTests } from './encounterService.test';
 import { islandBoardTopologyTests } from './islandBoardTopology.test';
@@ -80,6 +81,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'creatureFitEngine', tests: creatureFitEngineTests },
   { label: 'companionRegenModifier', tests: companionRegenModifierTests },
   { label: 'creatureImageManifest', tests: creatureImageManifestTests },
+  { label: 'creatureCardCatalog', tests: creatureCardCatalogTests },
   { label: 'creatureSanctuaryAdapter', tests: creatureSanctuaryAdapterTests },
   { label: 'encounterService', tests: encounterServiceTests },
   { label: 'islandBoardTopology', tests: islandBoardTopologyTests },
