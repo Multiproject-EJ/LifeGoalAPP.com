@@ -250,3 +250,9 @@ Unify with Actions domain once UX/usage is validated:
 - Investigation-only task completed.
 - No application runtime code was modified.
 - Only this investigation document was added.
+
+---
+
+## Follow-up
+
+A dedicated Supabase storage follow-up investigation is now available at `docs/investigations/today-todo-supabase-storage-investigation.md` (2026-05-26).
