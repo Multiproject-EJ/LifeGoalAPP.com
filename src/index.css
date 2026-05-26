@@ -7584,6 +7584,13 @@ html.platform-ipad .workspace-shell__menu-edge {
     font-size: 0.72rem;
     padding: 0.22rem 0.55rem;
   }
+
+  .habit-checklist-card__todo-launcher,
+  .habit-checklist-card__starter-launcher {
+    min-width: 42%;
+    text-align: center;
+    justify-content: center;
+  }
 }
 
 .habit-checklist-card__empty {
@@ -7827,10 +7834,14 @@ html.platform-ipad .workspace-shell__menu-edge {
   animation: questItemGlow 3s ease-in-out infinite;
 }
 .habit-checklist__item--todo {
-  border: 1.5px solid rgba(37, 99, 235, 0.45);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12), 0 10px 24px rgba(15, 23, 42, 0.08);
-  background: linear-gradient(155deg, rgba(239, 246, 255, 0.96), rgba(219, 234, 254, 0.88));
+  border: 1.5px solid rgba(37, 99, 235, 0.58);
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.22), 0 12px 28px rgba(37, 99, 235, 0.14);
+  background: linear-gradient(155deg, rgba(239, 246, 255, 0.99), rgba(219, 234, 254, 0.92));
 }
+
+.habit-checklist__main--todo { gap: 0.5rem; }
+.habit-checklist__todo-header { display: grid; gap: 0.25rem; }
+.habit-checklist__todo-badge { justify-self: start; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #1d4ed8; border: 1px solid rgba(37, 99, 235, 0.26); background: rgba(59, 130, 246, 0.12); border-radius: 999px; padding: 0.12rem 0.45rem; }
 
 .habit-checklist__todo-check {
   border: 0;
@@ -7842,15 +7853,20 @@ html.platform-ipad .workspace-shell__menu-edge {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+  align-items: center;
 }
+.habit-checklist__todo-actions-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #1e3a8a; }
 
 .habit-checklist__todo-actions button {
   border: 1px solid rgba(59, 130, 246, 0.32);
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(59, 130, 246, 0.12);
   border-radius: 999px;
-  padding: 0.25rem 0.55rem;
+  padding: 0.35rem 0.65rem;
   font-size: 0.74rem;
+  font-weight: 600;
 }
+.habit-checklist__todo-note { margin-top: -0.1rem; }
+.habit-checklist__todo-note-placeholder { margin: 0; color: rgba(30, 64, 175, 0.72); font-size: 0.8rem; font-style: italic; }
 
 @keyframes questItemGlow {
   0%, 100% { box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.12), 0 10px 24px rgba(15, 23, 42, 0.08); }
@@ -12807,6 +12823,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   border-color: rgba(37, 99, 235, 0.45);
   background: rgba(59, 130, 246, 0.14);
 }
+.habit-edit-modal-subcopy { margin: 0.35rem 0 0.2rem; color: #475569; font-size: 0.85rem; line-height: 1.4; }
 
 .habit-checklist-card__offer-toggle {
   border: 1px solid rgba(15, 118, 110, 0.35);
