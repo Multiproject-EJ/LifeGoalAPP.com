@@ -1,18 +1,8 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import type { Database } from '../lib/database.types';
 
-export type TodayTodo = {
-  id: string;
-  user_id: string;
-  todo_date: string;
-  title: string;
-  notes: string | null;
-  completed: boolean;
-  completed_at: string | null;
-  order_index: number;
-  created_at: string;
-  updated_at: string;
-};
+export type TodayTodo = Database['public']['Tables']['today_todos']['Row'];
 
 type ServiceResponse<T> = {
   data: T | null;
@@ -32,7 +22,7 @@ function authRequiredError(): PostgrestError {
 export async function fetchTodayTodos(dateISO: string): Promise<ServiceResponse<TodayTodo[]>> {
   if (!canUseSupabaseData()) return { data: [], error: null };
   const supabase = getSupabaseClient();
-  return (supabase as any)
+  return supabase
     .from('today_todos')
     .select('*')
     .eq('todo_date', dateISO)
@@ -47,7 +37,7 @@ export async function createTodayTodo(
 ): Promise<ServiceResponse<TodayTodo>> {
   if (!canUseSupabaseData()) return { data: null, error: authRequiredError() };
   const supabase = getSupabaseClient();
-  return (supabase as any)
+  return supabase
     .from('today_todos')
     .insert({
       user_id: userId,
@@ -69,7 +59,7 @@ export async function updateTodayTodo(
   const payload: Record<string, unknown> = { ...patch };
   if (patch.completed === true) payload.completed_at = new Date().toISOString();
   if (patch.completed === false) payload.completed_at = null;
-  return (supabase as any)
+  return supabase
     .from('today_todos')
     .update(payload)
     .eq('id', id)

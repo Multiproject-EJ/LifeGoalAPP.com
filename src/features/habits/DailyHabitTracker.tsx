@@ -756,6 +756,7 @@ export function DailyHabitTracker({
   const [todayTodoTitle, setTodayTodoTitle] = useState('');
   const [todayTodoNotes, setTodayTodoNotes] = useState('');
   const [todayTodoError, setTodayTodoError] = useState<string | null>(null);
+  const [todayTodoLoadError, setTodayTodoLoadError] = useState<string | null>(null);
 
   const [isTodaysOfferModalOpen, setIsTodaysOfferModalOpen] = useState(false);
   const [todaysOfferCheckoutPending, setTodaysOfferCheckoutPending] = useState(false);
@@ -818,7 +819,12 @@ export function DailyHabitTracker({
   const [activeDate, setActiveDate] = useState(() => formatISODate(new Date()));
   const loadTodayTodos = useCallback(async (dateISO: string) => {
     const { data, error } = await fetchTodayTodos(dateISO);
-    if (!error && data) setTodayTodos(data);
+    if (error) {
+      setTodayTodoLoadError('Could not load todos right now.');
+      return;
+    }
+    setTodayTodoLoadError(null);
+    setTodayTodos(data ?? []);
   }, []);
 
   useEffect(() => {
@@ -838,7 +844,7 @@ export function DailyHabitTracker({
       orderIndex: todayTodos.filter((todo) => !todo.completed).length,
     });
     if (error) {
-      setTodayTodoError('Could not save todo right now.');
+      setTodayTodoError('Could not save todo right now. Please try again.');
       return;
     }
     setTodayTodoTitle('');
@@ -6346,7 +6352,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             <button
               type="button"
               className="habit-checklist-card__starter-launcher habit-checklist-card__todo-launcher"
-              onClick={() => setTodayTodoModalOpen(true)}
+              onClick={() => {
+                setTodayTodoError(null);
+                setTodayTodoModalOpen(true);
+              }}
             >
               Todo
             </button>
@@ -6388,6 +6397,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               </div>
             </li>
           ))}
+          {todayTodoLoadError ? <li className="habit-checklist__empty">{todayTodoLoadError}</li> : null}
+          {!todayTodoLoadError && todayTodos.filter((todo) => showCompletedHabits || !todo.completed).length === 0 ? (
+            <li className="habit-checklist__empty">No todos for this date yet.</li>
+          ) : null}
           {visibleHabits.map((habit) => {
             const state = completions[habit.id];
             const isCompleted = Boolean(state?.completed);
@@ -8280,7 +8293,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 <button
               type="button"
               className="habit-checklist-card__starter-launcher habit-checklist-card__todo-launcher"
-              onClick={() => setTodayTodoModalOpen(true)}
+              onClick={() => {
+                setTodayTodoError(null);
+                setTodayTodoModalOpen(true);
+              }}
             >
               Todo
             </button>
@@ -8322,7 +8338,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   </label>
                   {todayTodoError ? <p className="habit-checklist__skip-error">{todayTodoError}</p> : null}
                   <div className="habit-edit-modal-actions">
-                    <button type="button" className="habit-edit-cancel-btn" onClick={() => setTodayTodoModalOpen(false)}>Cancel</button>
+                    <button type="button" className="habit-edit-cancel-btn" onClick={() => { setTodayTodoError(null); setTodayTodoModalOpen(false); }}>Cancel</button>
                     <button type="button" className="habit-edit-save-btn" onClick={() => void handleCreateTodayTodo()}>Save Todo</button>
                   </div>
                 </div>
