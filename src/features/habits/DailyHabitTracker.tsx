@@ -511,6 +511,7 @@ type HabitReviewAiDraft = {
   suggestion: HabitAiSuggestion;
   rationale: string;
 };
+type WeeklySnapshotTier = 'one_star' | 'two_star' | 'three_star';
 
 const STREAK_LOOKBACK_DAYS = 60;
 const AUTO_PROGRESS_STAGE_LABELS: Record<AutoProgressTier, string> = {
@@ -530,6 +531,16 @@ const TODAY_WINS_IMAGES: Record<TodayWinsTier, string> = {
 const getTodayWinsTier = (score: number): TodayWinsTier => {
   if (score >= 75) return 'three_star';
   if (score >= 40) return 'two_star';
+  return 'one_star';
+};
+const WEEKLY_SNAPSHOT_IMAGES: Record<WeeklySnapshotTier, string> = {
+  one_star: '/icons/todays_win/todays_win1.webp',
+  two_star: '/icons/todays_win/todays_win2.webp',
+  three_star: '/icons/todays_win/todays_win3.webp',
+};
+const getWeeklySnapshotTier = (completionPercent: number): WeeklySnapshotTier => {
+  if (completionPercent >= 75) return 'three_star';
+  if (completionPercent >= 40) return 'two_star';
   return 'one_star';
 };
 
@@ -1288,8 +1299,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     if (weeklyReviewSnapshot.totalHabits <= 0) return 0;
     return Math.round((weeklyReviewSnapshot.onTrack.length / weeklyReviewSnapshot.totalHabits) * 100);
   }, [weeklyReviewSnapshot.onTrack.length, weeklyReviewSnapshot.totalHabits]);
-  const topPositiveHabits = useMemo(
-    () => weeklyReviewSnapshot.onTrack.slice(0, 2).map((habit) => habit.name),
+  const topPositiveHabit = useMemo(
+    () => weeklyReviewSnapshot.onTrack[0]?.name ?? null,
     [weeklyReviewSnapshot.onTrack],
   );
   const strongestStreakHabit = useMemo(() => {
@@ -1304,26 +1315,36 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     }
     return bestHabit ? { name: bestHabit.name, streak: bestStreak } : null;
   }, [habitInsights, habits]);
-  const weeklySnapshotVariant = useMemo(() => {
-    const weekSeed = parseInt(weekStartISO.split('-').join(''), 10);
-    const variants = [
-      {
-        title: 'Consistency sparkle',
-        detail: `You kept ${weeklyReviewSnapshot.onTrack.length} habits flowing this week.`,
-      },
-      {
-        title: 'Momentum unlocked',
-        detail: `${weeklySnapshotCompletionPercent}% completion is building your rhythm.`,
-      },
-      {
-        title: 'Streak spotlight',
-        detail: strongestStreakHabit
-          ? `${strongestStreakHabit.name} is on a ${strongestStreakHabit.streak}-day streak.`
-          : 'Your streak board is warming up this week.',
-      },
-    ] as const;
-    return variants[Math.abs(Number.isNaN(weekSeed) ? 0 : weekSeed) % variants.length];
-  }, [strongestStreakHabit, weekStartISO, weeklyReviewSnapshot.onTrack.length, weeklySnapshotCompletionPercent]);
+  const weeklyConsistencyDays = useMemo(() => {
+    const uniqueDays = new Set<string>();
+    for (const log of historicalLogs) {
+      if (log.date >= weekStartISO && log.date <= activeDate && log.completed) {
+        uniqueDays.add(log.date);
+      }
+    }
+    return uniqueDays.size;
+  }, [activeDate, historicalLogs, weekStartISO]);
+  const weeklyLetterGrade = useMemo(() => {
+    if (weeklySnapshotCompletionPercent >= 95) return 'A+';
+    if (weeklySnapshotCompletionPercent >= 88) return 'A';
+    if (weeklySnapshotCompletionPercent >= 80) return 'A-';
+    if (weeklySnapshotCompletionPercent >= 72) return 'B';
+    if (weeklySnapshotCompletionPercent >= 64) return 'C';
+    return 'D';
+  }, [weeklySnapshotCompletionPercent]);
+  const weeklySnapshotTier = useMemo(
+    () => getWeeklySnapshotTier(weeklySnapshotCompletionPercent),
+    [weeklySnapshotCompletionPercent],
+  );
+  const weeklySnapshotStars = useMemo(
+    () =>
+      weeklySnapshotTier === 'three_star'
+        ? '★★★'
+        : weeklySnapshotTier === 'two_star'
+          ? '★★☆'
+          : '★☆☆',
+    [weeklySnapshotTier],
+  );
   const defaultPriceByHabitId = useCallback((habitId: string) => {
     return getDefaultHabitRewardGold({
       healthState: habitHealthByHabitId[habitId],
@@ -3308,65 +3329,36 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         <div className="habit-day-nav__weekly-snapshot-content">
           <header className="habit-day-nav__weekly-snapshot-header">
             <span className="habit-day-nav__vision-modal-eyebrow">Weekly habit snapshot</span>
-            <h3 className="habit-day-nav__vision-modal-title">✨ Momentum this week</h3>
-            <p className="habit-day-nav__vision-modal-caption">A celebration of your progress.</p>
+            <h3 className="habit-day-nav__vision-modal-title">WEEKLY VICTORY</h3>
+            <p className="habit-day-nav__vision-modal-caption">Simple scorecard for your momentum.</p>
           </header>
+          <section className="habit-day-nav__weekly-snapshot-stars" aria-label={`${weeklySnapshotStars} weekly rating`}>
+            <img src={WEEKLY_SNAPSHOT_IMAGES[weeklySnapshotTier]} alt={`${weeklySnapshotStars} weekly rating`} />
+            <p>{weeklySnapshotStars}</p>
+          </section>
 
-          <section className="habit-day-nav__weekly-snapshot-hero" aria-label="Completion score">
-            <div
-              className="habit-day-nav__weekly-snapshot-ring"
-              style={{ '--weekly-percent': `${weeklySnapshotCompletionPercent}%` } as CSSProperties}
-            >
+          <section className="habit-day-nav__weekly-snapshot-scoreboard" aria-label="Weekly scoreboard">
+            <div className="habit-day-nav__weekly-snapshot-scoreboard-row">
+              <p>Completion</p>
               <strong>{weeklySnapshotCompletionPercent}%</strong>
-              <span>completed</span>
             </div>
-            <p className="habit-day-nav__weekly-snapshot-hero-copy">
-              {weeklyReviewSnapshot.onTrack.length} habits were on track this week.
-            </p>
-          </section>
-
-          <section className="habit-day-nav__weekly-snapshot-reward" aria-label="Weekly reward">
-            <p className="habit-day-nav__weekly-snapshot-reward-title">🎉 Weekly reward unlocked</p>
-            <p className="habit-day-nav__weekly-snapshot-reward-values">+50 XP • +25 Dice</p>
-          </section>
-
-          <section className="habit-day-nav__weekly-snapshot-mix" aria-label="Stage mix">
-            <p className="habit-day-nav__weekly-snapshot-label">Stage mix</p>
-            <div className="habit-day-nav__weekly-snapshot-mix-bar" role="img" aria-label={`Easy ${stageMixSnapshot.seedPercent} percent, medium ${stageMixSnapshot.minimumPercent} percent, hard ${stageMixSnapshot.standardPercent} percent`}>
-              <span style={{ width: `${stageMixSnapshot.seedPercent}%` }} />
-              <span style={{ width: `${stageMixSnapshot.minimumPercent}%` }} />
-              <span style={{ width: `${stageMixSnapshot.standardPercent}%` }} />
+            <div className="habit-day-nav__weekly-snapshot-scoreboard-row">
+              <p>Consistency</p>
+              <strong>{weeklyConsistencyDays}/7 days</strong>
             </div>
-            <p className="habit-day-nav__weekly-snapshot-mix-caption">
-              Easy {stageMixSnapshot.seedPercent}% • Medium {stageMixSnapshot.minimumPercent}% • Hard {stageMixSnapshot.standardPercent}%
-            </p>
+            <div className="habit-day-nav__weekly-snapshot-scoreboard-row">
+              <p>Top habit</p>
+              <strong>{topPositiveHabit ?? 'Building'}</strong>
+            </div>
+            <div className="habit-day-nav__weekly-snapshot-scoreboard-row habit-day-nav__weekly-snapshot-scoreboard-row--final">
+              <p>Final rating</p>
+              <strong>{weeklyLetterGrade}</strong>
+            </div>
           </section>
-
-          <section className="habit-day-nav__weekly-snapshot-highlight" aria-label="Weekly highlight">
-            <p className="habit-day-nav__weekly-snapshot-label">{weeklySnapshotVariant.title}</p>
-            <p className="habit-day-nav__weekly-snapshot-highlight-copy">{weeklySnapshotVariant.detail}</p>
-          </section>
-
-          <details className="habit-day-nav__weekly-snapshot-details">
-            <summary>Optional details</summary>
-            <ul>
-              {topPositiveHabits.length > 0 ? (
-                <li>Top habits: {topPositiveHabits.join(' • ')}</li>
-              ) : (
-                <li>You showed up this week — that consistency matters.</li>
-              )}
-              {strongestStreakHabit ? (
-                <li>{strongestStreakHabit.name} streak: {strongestStreakHabit.streak} days.</li>
-              ) : null}
-            </ul>
-          </details>
 
           <footer className="habit-day-nav__weekly-snapshot-actions">
             <button type="button" className="habit-day-nav__weekly-snapshot-button habit-day-nav__weekly-snapshot-button--primary" onClick={() => setIsWeeklyHabitReviewOpen(false)}>
-              Explore next week ideas
-            </button>
-            <button type="button" className="habit-day-nav__weekly-snapshot-button habit-day-nav__weekly-snapshot-button--ghost" onClick={() => setIsWeeklyHabitReviewOpen(false)}>
-              Maybe later
+              Continue
             </button>
           </footer>
         </div>
