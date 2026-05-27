@@ -6899,6 +6899,27 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: rgba(226, 232, 240, 0.9);
 }
 
+.habit-day-nav__weekly-snapshot-stars {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+}
+
+.habit-day-nav__weekly-snapshot-stars img {
+  width: min(220px, 72%);
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 10px 26px rgba(2, 6, 23, 0.45);
+}
+
+.habit-day-nav__weekly-snapshot-stars p {
+  margin: 0;
+  color: #fde68a;
+  letter-spacing: 0.14em;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
 .habit-day-nav__weekly-snapshot-scoreboard {
   display: grid;
   gap: 0.75rem;

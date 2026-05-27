@@ -511,6 +511,7 @@ type HabitReviewAiDraft = {
   suggestion: HabitAiSuggestion;
   rationale: string;
 };
+type WeeklySnapshotTier = 'one_star' | 'two_star' | 'three_star';
 
 const STREAK_LOOKBACK_DAYS = 60;
 const AUTO_PROGRESS_STAGE_LABELS: Record<AutoProgressTier, string> = {
@@ -530,6 +531,16 @@ const TODAY_WINS_IMAGES: Record<TodayWinsTier, string> = {
 const getTodayWinsTier = (score: number): TodayWinsTier => {
   if (score >= 75) return 'three_star';
   if (score >= 40) return 'two_star';
+  return 'one_star';
+};
+const WEEKLY_SNAPSHOT_IMAGES: Record<WeeklySnapshotTier, string> = {
+  one_star: '/icons/todays_win/todays_win1.webp',
+  two_star: '/icons/todays_win/todays_win2.webp',
+  three_star: '/icons/todays_win/todays_win3.webp',
+};
+const getWeeklySnapshotTier = (completionPercent: number): WeeklySnapshotTier => {
+  if (completionPercent >= 75) return 'three_star';
+  if (completionPercent >= 40) return 'two_star';
   return 'one_star';
 };
 
@@ -1321,6 +1332,19 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     if (weeklySnapshotCompletionPercent >= 64) return 'C';
     return 'D';
   }, [weeklySnapshotCompletionPercent]);
+  const weeklySnapshotTier = useMemo(
+    () => getWeeklySnapshotTier(weeklySnapshotCompletionPercent),
+    [weeklySnapshotCompletionPercent],
+  );
+  const weeklySnapshotStars = useMemo(
+    () =>
+      weeklySnapshotTier === 'three_star'
+        ? '★★★'
+        : weeklySnapshotTier === 'two_star'
+          ? '★★☆'
+          : '★☆☆',
+    [weeklySnapshotTier],
+  );
   const defaultPriceByHabitId = useCallback((habitId: string) => {
     return getDefaultHabitRewardGold({
       healthState: habitHealthByHabitId[habitId],
@@ -3308,6 +3332,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             <h3 className="habit-day-nav__vision-modal-title">WEEKLY VICTORY</h3>
             <p className="habit-day-nav__vision-modal-caption">Simple scorecard for your momentum.</p>
           </header>
+          <section className="habit-day-nav__weekly-snapshot-stars" aria-label={`${weeklySnapshotStars} weekly rating`}>
+            <img src={WEEKLY_SNAPSHOT_IMAGES[weeklySnapshotTier]} alt={`${weeklySnapshotStars} weekly rating`} />
+            <p>{weeklySnapshotStars}</p>
+          </section>
 
           <section className="habit-day-nav__weekly-snapshot-scoreboard" aria-label="Weekly scoreboard">
             <div className="habit-day-nav__weekly-snapshot-scoreboard-row">
