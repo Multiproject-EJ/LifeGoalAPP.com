@@ -7615,6 +7615,20 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
 }
 
+
+.habit-day-status__toggle {
+  border: 1px solid rgba(120, 53, 15, 0.2);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  background: rgba(255, 255, 255, 0.95);
+  color: #7c2d12;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  width: fit-content;
+  cursor: pointer;
+}
+
 .habit-day-status__header {
   display: flex;
   justify-content: space-between;

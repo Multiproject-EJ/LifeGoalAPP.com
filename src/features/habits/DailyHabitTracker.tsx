@@ -1068,6 +1068,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [yesterdayIntentionsEntry, setYesterdayIntentionsEntry] = useState<JournalEntry | null>(null);
   const [isIntentionsNoticeOpen, setIsIntentionsNoticeOpen] = useState(false);
   const [isIntentionsNoticeViewed, setIsIntentionsNoticeViewed] = useState(false);
+  const [isDayStatusExpanded, setIsDayStatusExpanded] = useState(false);
   const [isIntentionsMet, setIsIntentionsMet] = useState(false);
   const [intentionsMeetSaving, setIntentionsMeetSaving] = useState(false);
   const [intentionsMeetError, setIntentionsMeetError] = useState<string | null>(null);
@@ -9221,50 +9222,63 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 </TodayExpandableActionSection>
 
                 <div className="habit-day-status" aria-live="polite">
-                  <div className="habit-day-status__header">
-                    <div>
-                      <p className="habit-day-status__eyebrow">Busy day?</p>
-                      <h3 className="habit-day-status__title">Log a skip, vacation, or sick day</h3>
-                    </div>
-                    <span className="habit-day-status__badge">
-                      {skipStreakCount}/3 skips
-                    </span>
-                  </div>
-                  <p className="habit-day-status__hint">
-                    Use this when today is for travel or rest and you’re skipping habits and journals.
-                  </p>
-                  <div className="habit-day-status__actions">
-                    <button
-                      type="button"
-                      className={`habit-day-status__button ${dayStatus === 'skip' ? 'habit-day-status__button--active' : ''}`}
-                      onClick={() => handleDayStatusUpdate('skip')}
-                      disabled={skipLimitReached}
-                    >
-                      {dayStatus === 'skip' ? 'Skipped today' : 'Skip today'}
-                    </button>
-                    <button
-                      type="button"
-                      className={`habit-day-status__button habit-day-status__button--sick ${
-                        dayStatus === 'sick' ? 'habit-day-status__button--active' : ''
-                      }`}
-                      onClick={() => handleDayStatusUpdate('sick')}
-                    >
-                      {dayStatus === 'sick' ? 'Sick day' : 'Sick'}
-                    </button>
-                    <button
-                      type="button"
-                      className={`habit-day-status__button habit-day-status__button--secondary ${
-                        dayStatus === 'vacation' ? 'habit-day-status__button--active' : ''
-                      }`}
-                      onClick={() => handleDayStatusUpdate('vacation')}
-                    >
-                      {dayStatus === 'vacation' ? 'Vacation day' : 'Vacation'}
-                    </button>
-                  </div>
-                  {skipLimitReached ? (
-                    <p className="habit-day-status__note">Max 3 skips in a row reached.</p>
-                  ) : dayStatus ? (
-                    <p className="habit-day-status__note">Logged: {dayStatus === 'skip' ? 'Skipped' : dayStatus === 'sick' ? 'Sick' : 'Vacation'}.</p>
+                  <button
+                    type="button"
+                    className="habit-day-status__toggle"
+                    onClick={() => setIsDayStatusExpanded((prev) => !prev)}
+                    aria-expanded={isDayStatusExpanded}
+                  >
+                    Skip day
+                  </button>
+
+                  {isDayStatusExpanded ? (
+                    <>
+                      <div className="habit-day-status__header">
+                        <div>
+                          <p className="habit-day-status__eyebrow">Busy day?</p>
+                          <h3 className="habit-day-status__title">Log a skip, vacation, or sick day</h3>
+                        </div>
+                        <span className="habit-day-status__badge">
+                          {skipStreakCount}/3 skips
+                        </span>
+                      </div>
+                      <p className="habit-day-status__hint">
+                        Use this when today is for travel or rest and you’re skipping habits and journals.
+                      </p>
+                      <div className="habit-day-status__actions">
+                        <button
+                          type="button"
+                          className={`habit-day-status__button ${dayStatus === 'skip' ? 'habit-day-status__button--active' : ''}`}
+                          onClick={() => handleDayStatusUpdate('skip')}
+                          disabled={skipLimitReached}
+                        >
+                          {dayStatus === 'skip' ? 'Skipped today' : 'Skip today'}
+                        </button>
+                        <button
+                          type="button"
+                          className={`habit-day-status__button habit-day-status__button--sick ${
+                            dayStatus === 'sick' ? 'habit-day-status__button--active' : ''
+                          }`}
+                          onClick={() => handleDayStatusUpdate('sick')}
+                        >
+                          {dayStatus === 'sick' ? 'Sick day' : 'Sick'}
+                        </button>
+                        <button
+                          type="button"
+                          className={`habit-day-status__button habit-day-status__button--secondary ${
+                            dayStatus === 'vacation' ? 'habit-day-status__button--active' : ''
+                          }`}
+                          onClick={() => handleDayStatusUpdate('vacation')}
+                        >
+                          {dayStatus === 'vacation' ? 'Vacation day' : 'Vacation'}
+                        </button>
+                      </div>
+                      {skipLimitReached ? (
+                        <p className="habit-day-status__note">Max 3 skips in a row reached.</p>
+                      ) : dayStatus ? (
+                        <p className="habit-day-status__note">Logged: {dayStatus === 'skip' ? 'Skipped' : dayStatus === 'sick' ? 'Sick' : 'Vacation'}.</p>
+                      ) : null}
+                    </>
                   ) : null}
                 </div>
               </>
