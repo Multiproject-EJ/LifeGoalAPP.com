@@ -1251,10 +1251,6 @@
   box-shadow: 0 20px 48px rgba(245, 158, 11, 0.2), 0 0 0 3px rgba(253, 224, 71, 0.24);
 }
 
-.score-tab__sanctuary-card--active .score-tab__sanctuary-card-topline {
-  padding-right: 7.25rem;
-}
-
 .score-tab__sanctuary-card-topline {
   display: flex;
   justify-content: space-between;
@@ -1265,6 +1261,35 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+.score-tab__sanctuary-level {
+  color: #475569;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.score-tab__sanctuary-power {
+  min-width: 1.8rem;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #d97706;
+}
+
+.score-tab__sanctuary-power--rare {
+  color: #0284c7;
+}
+
+.score-tab__sanctuary-power--mythic {
+  color: #9333ea;
+}
+
+.score-tab__sanctuary-name {
+  margin-top: 0.1rem;
+  text-align: center;
 }
 
 .score-tab__sanctuary-rarity {
