@@ -18920,9 +18920,12 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .mobile-menu-overlay__top-controls {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  margin-top: -1.35rem;
+  position: relative;
+  z-index: 3;
 }
 
 .mobile-menu-overlay__header-info {
@@ -19457,10 +19460,16 @@ html.platform-ipad .workspace-shell__menu-edge {
   transform: translateY(-1px);
 }
 
+.mobile-menu-overlay__close--enlarged:hover,
+.mobile-menu-overlay__close--enlarged:focus-visible {
+  transform: translateY(calc(-50% - 1px));
+}
+
 .mobile-menu-overlay__close--enlarged {
   font-size: 1.75rem;
   padding: 0.65rem 0.85rem;
   font-weight: 300;
+  transform: translateY(-50%);
 }
 
 .mobile-menu-overlay__game-mode {
@@ -19472,6 +19481,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: rgba(255, 255, 255, 0.72);
   padding: 0.45rem 0.7rem 0.45rem 0.5rem;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78), 0 10px 22px rgba(15, 23, 42, 0.08);
+  transform: translateY(-50%);
 }
 
 .mobile-menu-overlay__game-mode-label {
