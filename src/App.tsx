@@ -3940,9 +3940,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <span className="mobile-menu-overlay__mini-title">Profile Strength</span>
                   <span className="mobile-menu-overlay__profile-ring" style={profileStrengthRingStyle} aria-hidden="true">
                     <span className="mobile-menu-overlay__profile-ring-value">{profileStrengthPercentLabel}</span>
-                    <span className="mobile-menu-overlay__profile-ring-label">Power score</span>
                   </span>
-                  <span className="mobile-menu-overlay__mini-subtitle">Steady growth across your quests</span>
                 </button>
               </div>
 
