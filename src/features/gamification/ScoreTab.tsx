@@ -1793,13 +1793,13 @@ function CreatureSanctuaryScoreHubView({
               <span className="score-tab__sanctuary-active-pill">Active companion</span>
             ) : null}
             <div className="score-tab__sanctuary-card-topline">
+              <span className="score-tab__sanctuary-level">Lv. {card.discovered && card.bondLevel !== null ? card.bondLevel : 1}</span>
               <span
-                className={`score-tab__sanctuary-rarity score-tab__sanctuary-rarity--${card.tier}`}
-                aria-label={`${card.rarityLabel} rarity`}
+                className={`score-tab__sanctuary-power score-tab__sanctuary-power--${card.tier}`}
+                aria-label={`${card.rarityLabel} power ${card.starCount}`}
               >
-                {card.starLabel}
+                {card.starCount}
               </span>
-              <span className="score-tab__sanctuary-rarity-label">{card.rarityLabel}</span>
             </div>
             <div className="score-tab__sanctuary-avatar" aria-hidden="true">
               {card.discovered && creatureArt ? (
@@ -1815,10 +1815,10 @@ function CreatureSanctuaryScoreHubView({
                 '🔒'
               )}
             </div>
-            <h3>{card.discovered ? card.name : 'Locked Creature'}</h3>
+            <h3 className="score-tab__sanctuary-name">{card.discovered ? card.name : 'Locked Creature'}</h3>
             <p>
               {card.discovered
-                ? `${card.habitat} · ${card.affinity}`
+                ? `${card.rarityLabel} · ${card.habitat}`
                 : `${card.rarityLabel} companion waiting to be discovered.`}
             </p>
             <div className="score-tab__sanctuary-card-meta">
