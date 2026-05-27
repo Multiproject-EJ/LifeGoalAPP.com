@@ -20351,30 +20351,56 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .mobile-menu-overlay__mini-card--strength {
   min-height: 176px;
-  align-content: center;
-  padding: 0.9rem 0.72rem;
+  align-content: start;
+  justify-items: center;
+  gap: 0.42rem;
+  padding: 0.9rem 0.72rem 0.84rem;
+  background:
+    radial-gradient(circle at 50% 8%, rgba(199, 210, 254, 0.98), transparent 48%),
+    linear-gradient(155deg, rgba(255, 255, 255, 0.9), rgba(238, 242, 255, 0.9));
 }
 
 .mobile-menu-overlay__mini-card--strength .mobile-menu-overlay__profile-ring {
-  min-width: 88px;
-  min-height: 88px;
-  margin: 0.2rem 0;
-  box-shadow: inset 0 0 0 7px rgba(255, 255, 255, 0.82), 0 14px 26px rgba(79, 70, 229, 0.14);
+  min-width: 92px;
+  min-height: 92px;
+  margin: 0.08rem 0 0.14rem;
+  box-shadow:
+    0 14px 26px rgba(79, 70, 229, 0.24),
+    inset 0 0 0 6px rgba(255, 255, 255, 0.82);
 }
 
 .mobile-menu-overlay__mini-card--strength .mobile-menu-overlay__profile-ring::after {
-  inset: 11px;
+  inset: 10px;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(199, 210, 254, 0.4), transparent 52%),
+    rgba(255, 255, 255, 0.96);
+}
+
+.mobile-menu-overlay__mini-card--strength .mobile-menu-overlay__profile-ring::before {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  border: 1px solid rgba(129, 140, 248, 0.3);
+  box-shadow: 0 0 0 3px rgba(165, 180, 252, 0.16);
 }
 
 .mobile-menu-overlay__mini-card--strength .mobile-menu-overlay__profile-ring-value {
-  font-size: 1.05rem;
+  font-size: 1.24rem;
+  letter-spacing: -0.02em;
+  font-weight: 900;
+  color: #312e81;
 }
 
 .mobile-menu-overlay__mini-card--strength .mobile-menu-overlay__mini-subtitle {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  display: block;
+  max-width: 20ch;
+  color: #4c1d95;
+  font-size: 0.67rem;
+  line-height: 1.35;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: center;
 }
 
 .mobile-menu-overlay__quick-grid--bottom {
@@ -20966,11 +20992,12 @@ html.platform-ipad .workspace-shell__menu-edge {
 .mobile-menu-overlay__profile-ring-label {
   position: relative;
   z-index: 1;
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  margin-top: 0.06rem;
+  font-size: 0.54rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #6366f1;
+  color: #4f46e5;
 }
 
 .mobile-menu-overlay__profile-metrics {
@@ -30025,6 +30052,11 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-shadow: inset 0 0 0 8px rgba(15, 23, 42, 0.72);
 }
 
+[data-theme='dark-glass'] .mobile-menu-overlay__mini-card--strength .mobile-menu-overlay__profile-ring::before {
+  border-color: rgba(129, 140, 248, 0.45);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
 [data-theme='dark-glass'] .mobile-menu-overlay__profile-ring::after {
   background: color-mix(in srgb, var(--color-surface-secondary) 92%, transparent);
   box-shadow: inset 0 1px 4px rgba(2, 6, 23, 0.45);
@@ -30045,6 +30077,10 @@ html.platform-ipad .workspace-shell__menu-edge {
 [data-theme='dark-glass'] .mobile-menu-overlay__profile-metric-label,
 [data-theme='dark-glass'] .mobile-menu-overlay__profile-metric-note {
   color: var(--color-text-secondary);
+}
+
+[data-theme='dark-glass'] .mobile-menu-overlay__mini-card--strength .mobile-menu-overlay__mini-subtitle {
+  color: #c4b5fd;
 }
 
 [data-theme='dark-glass'] .mobile-menu-overlay__profile-button:hover,
