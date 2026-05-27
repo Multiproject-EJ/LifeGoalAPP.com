@@ -2111,6 +2111,7 @@
 
 .island-run-board__rewardbar-header {
   margin-top: 6px;
+  justify-content: flex-end;
 }
 
 /* Track container with end-cap icons */
@@ -2223,6 +2224,26 @@
   position: relative;
   z-index: 1;
   min-width: 0;
+}
+
+.island-run-board__rewardbar-track-counter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  text-shadow:
+    -1px -1px 0 rgba(0, 0, 0, 0.9),
+    1px -1px 0 rgba(0, 0, 0, 0.9),
+    -1px 1px 0 rgba(0, 0, 0, 0.9),
+    1px 1px 0 rgba(0, 0, 0, 0.9),
+    0 1px 4px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  white-space: nowrap;
 }
 
 /* ─── B8: tier-based rarity colors on the reward bar ─────────────────────────
