@@ -18601,7 +18601,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   backdrop-filter: blur(16px);
   animation: slideUpSpring 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   max-height: 85vh;
-  overflow-y: auto;
+  overflow: visible;
   display: flex;
   flex-direction: column;
 }
