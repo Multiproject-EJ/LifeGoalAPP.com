@@ -12808,6 +12808,102 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 .habit-edit-modal-subcopy { margin: 0.35rem 0 0.2rem; color: #475569; font-size: 0.85rem; line-height: 1.4; }
 
+.habit-edit-modal-content h3 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.habit-edit-modal-content label {
+  display: grid;
+  gap: 0.45rem;
+  color: #0f172a;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.habit-edit-modal-content input,
+.habit-edit-modal-content textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 1rem;
+  padding: 0.7rem 0.8rem;
+}
+
+.habit-edit-modal-content input::placeholder,
+.habit-edit-modal-content textarea::placeholder {
+  color: #64748b;
+}
+
+.habit-edit-modal-content input:focus,
+.habit-edit-modal-content textarea:focus {
+  outline: 2px solid rgba(59, 130, 246, 0.35);
+  outline-offset: 1px;
+  border-color: #60a5fa;
+}
+
+.habit-edit-modal-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+
+.habit-edit-cancel-btn,
+.habit-edit-save-btn {
+  border-radius: 999px;
+  padding: 0.5rem 1.15rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.habit-edit-cancel-btn {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+.habit-edit-save-btn {
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .habit-edit-modal-content h3,
+  .habit-edit-modal-content label {
+    color: #e2e8f0;
+  }
+
+  .habit-edit-modal-subcopy {
+    color: #94a3b8;
+  }
+
+  .habit-edit-modal-content input,
+  .habit-edit-modal-content textarea {
+    background: #0f172a;
+    border-color: #334155;
+    color: #e2e8f0;
+  }
+
+  .habit-edit-modal-content input::placeholder,
+  .habit-edit-modal-content textarea::placeholder {
+    color: #94a3b8;
+  }
+
+  .habit-edit-cancel-btn {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+  }
+
+  .habit-edit-save-btn {
+    background: #2563eb;
+    color: #ffffff;
+  }
+}
+
 .habit-checklist-card__offer-toggle {
   border: 1px solid rgba(15, 118, 110, 0.35);
   background: rgba(45, 212, 191, 0.12);
