@@ -1969,6 +1969,12 @@ export function IslandRunBoardPrototype({
   const welcomePackEligibility = useMemo(() => getWelcomePackEligibility(runtimeState), [runtimeState]);
 
   useEffect(() => {
+    // Wait for initial runtime hydration before evaluating welcome-pack auto-show.
+    // Without this gate, the UI can briefly render the modal from a stale pre-
+    // hydration snapshot and then immediately hide it once hydrated state lands,
+    // which causes a startup flicker ("Soon" / "⚡ 2000" gift tiles flashing).
+    if (!hasHydratedRuntimeState) return;
+
     const shouldShow = shouldAutoShowWelcomePackModal({
       eligibility: welcomePackEligibility,
       hasBeenDismissedThisSession: welcomePackDismissedThisSession,
@@ -1979,7 +1985,13 @@ export function IslandRunBoardPrototype({
     setWelcomePackClaimError(null);
     setWelcomePackClaimResult(null);
     setShowWelcomePackModal(true);
-  }, [showFirstCreaturePackModal, showWelcomePackModal, welcomePackDismissedThisSession, welcomePackEligibility]);
+  }, [
+    hasHydratedRuntimeState,
+    showFirstCreaturePackModal,
+    showWelcomePackModal,
+    welcomePackDismissedThisSession,
+    welcomePackEligibility,
+  ]);
 
   const island120StartupDiagnosticSessionStartMsRef = useRef<number | null>(null);
   const island120StartupSnapshotLoggedRef = useRef(false);
