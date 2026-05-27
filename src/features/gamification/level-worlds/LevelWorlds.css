@@ -2072,7 +2072,7 @@
   gap: 6px;
   margin: 0 -10px;
   padding: 5px 12px;
-  border-radius: 14px 14px 0 0;
+  border-radius: 22px 22px 0 0;
   background: linear-gradient(135deg, #c0392b 0%, #a93226 50%, #922b21 100%);
   color: #fff;
   font-size: 0.72rem;
@@ -2123,8 +2123,8 @@
 }
 
 .island-run-board__rewardbar-avatar-indicator {
-  width: 30px;
-  height: 30px;
+  width: 38px;
+  height: 38px;
   overflow: hidden;
   border-radius: 999px;
   border: 2px solid rgba(179, 151, 92, 0.8);
@@ -2146,8 +2146,8 @@
 
 .island-run-board__rewardbar-endcap {
   position: relative;
-  width: 30px;
-  height: 30px;
+  width: 38px;
+  height: 38px;
   border-radius: 999px;
   border: 2px solid rgba(179, 151, 92, 0.5);
   background: linear-gradient(180deg, #fff8e7 0%, #f5e4b3 100%);
@@ -2391,7 +2391,7 @@
   gap: 14px;
   margin: 4px -10px -7px;
   padding: 4px 12px;
-  border-radius: 0 0 14px 14px;
+  border-radius: 0 0 22px 22px;
   background: rgba(245, 235, 215, 0.85);
   border-top: 1px solid rgba(220, 200, 160, 0.5);
   font-size: 0.68rem;

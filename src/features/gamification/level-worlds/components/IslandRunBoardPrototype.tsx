@@ -9212,9 +9212,6 @@ export function IslandRunBoardPrototype({
               <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{activeEventMeta.icon}</i>
             </div>
           ) : null}
-          <div className="island-run-board__rewardbar-header">
-            <span>{`Tier ${runtimeState.rewardBarEscalationTier}`}</span>
-          </div>
           {/* Track row: event feed icon → track → single reward endcap (no milestones) */}
           <div className="island-run-board__rewardbar-track-row">
             <span className="island-run-board__rewardbar-avatar-indicator" aria-hidden="true">
