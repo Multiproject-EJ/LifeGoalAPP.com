@@ -9201,7 +9201,6 @@ export function IslandRunBoardPrototype({
             </div>
           ) : null}
           <div className="island-run-board__rewardbar-header">
-            <span>{Math.floor(rewardBarProgress)}/{Math.floor(rewardBarThreshold)}</span>
             <span>{`Tier ${runtimeState.rewardBarEscalationTier}`}</span>
           </div>
           {/* Track row: event feed icon → track → single reward endcap (no milestones) */}
@@ -9211,6 +9210,7 @@ export function IslandRunBoardPrototype({
             </span>
             <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
               <span className={`island-run-board__rewardbar-track-fill${rewardBarSnapActive ? ' island-run-board__rewardbar-track-fill--snap' : ''}`} style={{ width: `${rewardBarPercent}%` }} />
+              <span className="island-run-board__rewardbar-track-counter">{Math.floor(rewardBarProgress)}/{Math.floor(rewardBarThreshold)}</span>
               {/* Position indicator riding the fill edge */}
               <span className="island-run-board__rewardbar-position" style={{ left: `${Math.min(rewardBarPercent, 100)}%` }} aria-hidden="true" />
             </div>
