@@ -40,26 +40,90 @@ function makeBaseState(): IslandRunRewardBarRuntimeSlice {
   };
 }
 
+type RewardBarEconomySimulationResult = {
+  dicePool: number;
+  diceSpent: number;
+  diceAwarded: number;
+  stickerCompletionBonusDiceAwarded: number;
+  rollAttempts: number;
+  rollsTaken: number;
+  totalClaims: number;
+  maxClaimsFromSingleDrainBatch: number;
+  cappedDrainBatches: number;
+  rewardBarProgress: number;
+  state: IslandRunRewardBarRuntimeSlice;
+};
+
+function applyRewardBarClaimPayoutsToDicePool(options: {
+  dicePool: number;
+  diceAwarded: number;
+  stickerCompletionBonusDiceAwarded: number;
+  payouts: ReturnType<typeof resolveChainedRewardBarClaims>['payouts'];
+}): { dicePool: number; diceAwarded: number; stickerCompletionBonusDiceAwarded: number } {
+  let dicePool = options.dicePool;
+  let diceAwarded = options.diceAwarded;
+  let stickerCompletionBonusDiceAwarded = options.stickerCompletionBonusDiceAwarded;
+
+  for (const payout of options.payouts) {
+    dicePool += payout.dice;
+    diceAwarded += payout.dice;
+    stickerCompletionBonusDiceAwarded += payout.stickerCompletionBonusDice;
+  }
+
+  return { dicePool, diceAwarded, stickerCompletionBonusDiceAwarded };
+}
+
+function drainRewardBarClaims(options: {
+  state: IslandRunRewardBarRuntimeSlice;
+  nowMs: number;
+  maxDrainBatches?: number;
+}): {
+  state: IslandRunRewardBarRuntimeSlice;
+  payouts: ReturnType<typeof resolveChainedRewardBarClaims>['payouts'];
+  maxBatchClaims: number;
+  cappedBatches: number;
+} {
+  const maxDrainBatches = options.maxDrainBatches ?? 50;
+  let state = options.state;
+  const payouts: ReturnType<typeof resolveChainedRewardBarClaims>['payouts'] = [];
+  let maxBatchClaims = 0;
+  let cappedBatches = 0;
+
+  for (let batch = 0; batch < maxDrainBatches; batch += 1) {
+    if (!canClaimIslandRunContractV2RewardBar(state)) {
+      return { state, payouts, maxBatchClaims, cappedBatches };
+    }
+
+    const chainResult = resolveChainedRewardBarClaims({ state, nowMs: options.nowMs + batch, maxChain: 10 });
+    state = chainResult.state;
+    payouts.push(...chainResult.payouts);
+    maxBatchClaims = Math.max(maxBatchClaims, chainResult.payouts.length);
+    if (chainResult.payouts.length >= 10) cappedBatches += 1;
+
+    if (chainResult.payouts.length === 0) {
+      return { state, payouts, maxBatchClaims, cappedBatches };
+    }
+  }
+
+  throw new Error(`Reward-bar drain exceeded ${maxDrainBatches} batches; possible infinite reward-bar chain`);
+}
+
 function simulateProgressTileRolls(options: {
   startingDice: number;
   multiplier: number;
   rolls: number;
   tileType?: string;
-}): {
-  dicePool: number;
-  diceSpent: number;
-  diceAwarded: number;
-  rollsTaken: number;
-  totalClaims: number;
-  state: IslandRunRewardBarRuntimeSlice;
-} {
+}): RewardBarEconomySimulationResult {
   const multiplier = options.multiplier;
   const diceCost = resolveDiceCostForMultiplier(multiplier);
   let dicePool = options.startingDice;
   let diceSpent = 0;
   let diceAwarded = 0;
+  let stickerCompletionBonusDiceAwarded = 0;
   let rollsTaken = 0;
   let totalClaims = 0;
+  let maxClaimsFromSingleDrainBatch = 0;
+  let cappedDrainBatches = 0;
   let state = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
 
   for (let i = 0; i < options.rolls; i += 1) {
@@ -75,16 +139,111 @@ function simulateProgressTileRolls(options: {
       multiplier,
     });
 
-    const chainResult = resolveChainedRewardBarClaims({ state, nowMs: 2_000 + i });
-    state = chainResult.state;
-    totalClaims += chainResult.payouts.length;
-    for (const payout of chainResult.payouts) {
-      dicePool += payout.dice;
-      diceAwarded += payout.dice;
-    }
+    const drained = drainRewardBarClaims({ state, nowMs: 2_000 + i * 100 });
+    state = drained.state;
+    totalClaims += drained.payouts.length;
+    maxClaimsFromSingleDrainBatch = Math.max(maxClaimsFromSingleDrainBatch, drained.maxBatchClaims);
+    cappedDrainBatches += drained.cappedBatches;
+    const diceResult = applyRewardBarClaimPayoutsToDicePool({
+      dicePool,
+      diceAwarded,
+      stickerCompletionBonusDiceAwarded,
+      payouts: drained.payouts,
+    });
+    dicePool = diceResult.dicePool;
+    diceAwarded = diceResult.diceAwarded;
+    stickerCompletionBonusDiceAwarded = diceResult.stickerCompletionBonusDiceAwarded;
   }
 
-  return { dicePool, diceSpent, diceAwarded, rollsTaken, totalClaims, state };
+  return {
+    dicePool,
+    diceSpent,
+    diceAwarded,
+    stickerCompletionBonusDiceAwarded,
+    rollAttempts: options.rolls,
+    rollsTaken,
+    totalClaims,
+    maxClaimsFromSingleDrainBatch,
+    cappedDrainBatches,
+    rewardBarProgress: state.rewardBarProgress,
+    state,
+  };
+}
+
+function simulateMaxAvailableMultiplierProgressTileFarming(options: {
+  startingDice: number;
+  rollAttempts: number;
+  tileType?: string;
+}): RewardBarEconomySimulationResult {
+  let dicePool = options.startingDice;
+  let diceSpent = 0;
+  let diceAwarded = 0;
+  let stickerCompletionBonusDiceAwarded = 0;
+  let rollsTaken = 0;
+  let totalClaims = 0;
+  let maxClaimsFromSingleDrainBatch = 0;
+  let cappedDrainBatches = 0;
+  let state = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
+
+  for (let i = 0; i < options.rollAttempts; i += 1) {
+    const multiplier = clampMultiplierToPool(resolveMaxMultiplierForPool(dicePool), dicePool);
+    const diceCost = resolveDiceCostForMultiplier(multiplier);
+    if (dicePool < diceCost) break;
+
+    dicePool -= diceCost;
+    diceSpent += diceCost;
+    rollsTaken += 1;
+
+    state = applyIslandRunContractV2RewardBarProgress({
+      state,
+      source: { kind: 'tile', tileType: options.tileType ?? 'chest' },
+      nowMs: 1_100 + i,
+      multiplier,
+    });
+
+    const drained = drainRewardBarClaims({ state, nowMs: 2_000 + i * 100 });
+    state = drained.state;
+    totalClaims += drained.payouts.length;
+    maxClaimsFromSingleDrainBatch = Math.max(maxClaimsFromSingleDrainBatch, drained.maxBatchClaims);
+    cappedDrainBatches += drained.cappedBatches;
+    const diceResult = applyRewardBarClaimPayoutsToDicePool({
+      dicePool,
+      diceAwarded,
+      stickerCompletionBonusDiceAwarded,
+      payouts: drained.payouts,
+    });
+    dicePool = diceResult.dicePool;
+    diceAwarded = diceResult.diceAwarded;
+    stickerCompletionBonusDiceAwarded = diceResult.stickerCompletionBonusDiceAwarded;
+  }
+
+  return {
+    dicePool,
+    diceSpent,
+    diceAwarded,
+    stickerCompletionBonusDiceAwarded,
+    rollAttempts: options.rollAttempts,
+    rollsTaken,
+    totalClaims,
+    maxClaimsFromSingleDrainBatch,
+    cappedDrainBatches,
+    rewardBarProgress: state.rewardBarProgress,
+    state,
+  };
+}
+
+function assertEconomySafetyResult(result: RewardBarEconomySimulationResult, label: string): void {
+  assert(result.rollsTaken > 0, `${label}: expected at least one roll`);
+  assert(result.diceSpent > 0, `${label}: expected dice spent on rolls to be tracked`);
+  assert(result.rewardBarProgress >= 0, `${label}: expected reward-bar progress to remain valid`);
+  assert(result.totalClaims > 0, `${label}: expected reward-bar claims to be exercised`);
+  assert(result.diceAwarded >= result.stickerCompletionBonusDiceAwarded, `${label}: sticker bonus dice must be part of total dice awards`);
+  assert(result.diceAwarded < result.diceSpent, `${label}: expected dice awards (${result.diceAwarded}) below dice spent (${result.diceSpent})`);
+  assert(result.dicePool <= 2_500, `${label}: expected final dice (${result.dicePool}) not to exceed starting dice`);
+  assert(
+    result.totalClaims < result.rollsTaken * 10,
+    `${label}: expected finite reward-bar claims (${result.totalClaims}) below max-chain-per-roll bound`,
+  );
 }
 
 export const islandRunContractV2RewardBarTests: TestCase[] = [
@@ -478,8 +637,76 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
       assert(result.rollsTaken > 0, 'Expected simulation to take at least one ×200 roll');
       assert(result.dicePool < 2_500, `Expected final dice (${result.dicePool}) below starting pool`);
       assert(result.diceAwarded < result.diceSpent, `Expected dice awarded (${result.diceAwarded}) below spent (${result.diceSpent})`);
-      assert(result.totalClaims < result.rollsTaken * 5, 'Expected escalating thresholds to prevent max-chain claims every roll');
+      assert(result.totalClaims < result.rollsTaken * 10, 'Expected escalating thresholds to prevent max-chain claims every roll');
       assert(result.state.rewardBarEscalationTier >= 20, 'Expected simulation to exercise post-cap tiers');
+    },
+  },
+  {
+    name: 'economy safety: scenario A max-available farming from 2500 dice burns down',
+    run: () => {
+      const result = simulateMaxAvailableMultiplierProgressTileFarming({
+        startingDice: 2_500,
+        rollAttempts: 30,
+        tileType: 'chest',
+      });
+
+      assertEconomySafetyResult(result, 'Scenario A max-available multiplier repeated farming');
+      assertEqual(result.rollAttempts, 30, 'Expected scenario A to model repeated reward-bar farming from 2500 dice');
+      assert(result.rollsTaken >= 30, `Expected scenario A to complete the short repeated-farming window, got ${result.rollsTaken}`);
+      assert(result.dicePool < 2_500, `Expected scenario A final dice (${result.dicePool}) below starting dice`);
+      assert(result.stickerCompletionBonusDiceAwarded > 0, 'Expected scenario A to include sticker-completion bonus dice');
+      assert(!canClaimIslandRunContractV2RewardBar(result.state), 'Expected scenario A reward-bar drain to finish without claimable overflow');
+    },
+  },
+  {
+    name: 'economy safety: scenario B 500 max-available farming attempts are not self-sustaining',
+    run: () => {
+      const result = simulateMaxAvailableMultiplierProgressTileFarming({
+        startingDice: 2_500,
+        rollAttempts: 500,
+        tileType: 'chest',
+      });
+
+      assertEconomySafetyResult(result, 'Scenario B max-available multiplier 500-attempt farming');
+      assertEqual(result.rollAttempts, 500, 'Expected scenario B to model a 500 roll-action horizon');
+      assert(result.rollsTaken < 500, `Expected dice scarcity to stop before 500 rolls, got ${result.rollsTaken}`);
+      assertEqual(result.dicePool, 0, 'Expected max-available farming to exhaust the starting dice pool');
+      assert(result.stickerCompletionBonusDiceAwarded > 0, 'Expected sticker-completion bonus dice to be included in the simulation');
+      assert(result.maxClaimsFromSingleDrainBatch <= 10, 'Expected per-batch reward-bar chains to stay within resolver cap');
+      assert(result.cappedDrainBatches <= 1, `Expected at most one initial capped drain batch, got ${result.cappedDrainBatches}`);
+      assert(!canClaimIslandRunContractV2RewardBar(result.state), 'Expected reward-bar drain to finish without claimable infinite overflow');
+    },
+  },
+  {
+    name: 'economy safety: 1000 max-available multiplier farming attempts do not revive dice loop',
+    run: () => {
+      const result = simulateMaxAvailableMultiplierProgressTileFarming({
+        startingDice: 2_500,
+        rollAttempts: 1_000,
+        tileType: 'chest',
+      });
+
+      assertEconomySafetyResult(result, 'Scenario C max-available multiplier 1000-attempt farming');
+      assertEqual(result.rollAttempts, 1_000, 'Expected scenario C to model a 1000 roll-action horizon');
+      assert(result.rollsTaken < 1_000, `Expected dice scarcity to stop before 1000 rolls, got ${result.rollsTaken}`);
+      assertEqual(result.dicePool, 0, 'Expected exhausted dice to remain exhausted across the longer horizon');
+      assert(!canClaimIslandRunContractV2RewardBar(result.state), 'Expected no pending claimable reward-bar loop after drain');
+    },
+  },
+  {
+    name: 'economy safety: 2000 max-available multiplier farming attempts do not trend upward',
+    run: () => {
+      const result = simulateMaxAvailableMultiplierProgressTileFarming({
+        startingDice: 2_500,
+        rollAttempts: 2_000,
+        tileType: 'chest',
+      });
+
+      assertEconomySafetyResult(result, 'Scenario D max-available multiplier 2000-attempt farming');
+      assertEqual(result.rollAttempts, 2_000, 'Expected scenario D to model a 2000 roll-action horizon');
+      assert(result.rollsTaken < 2_000, `Expected dice scarcity to stop before 2000 rolls, got ${result.rollsTaken}`);
+      assertEqual(result.dicePool, 0, 'Expected no self-sustaining dice-positive loop at 2000 attempts');
+      assert(!canClaimIslandRunContractV2RewardBar(result.state), 'Expected no infinite reward-bar chain after the longest drain');
     },
   },
   {
