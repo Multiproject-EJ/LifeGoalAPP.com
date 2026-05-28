@@ -509,6 +509,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [workspaceSetupDismissed, setWorkspaceSetupDismissed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [shouldShowSettingsMenuReturn, setShouldShowSettingsMenuReturn] = useState(false);
+  const settingsMenuReturnNavRef = useRef(DEFAULT_WORKSPACE_NAV_ID);
   const [isMobileProfileDialogOpen, setIsMobileProfileDialogOpen] = useState(false);
   const [isLauncherHandOverlayOpen, setIsLauncherHandOverlayOpen] = useState(false);
   const [breathingSpaceMobileTab, setBreathingSpaceMobileTab] = useState<
@@ -2386,6 +2387,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
     navId: string,
     options?: MobileNavSelectOptions,
   ) => {
+    const shouldReturnToMobileMenu = navId === 'account' && options?.launchSource === 'mobile-menu';
+
+    if (shouldReturnToMobileMenu && activeWorkspaceNav !== 'account') {
+      settingsMenuReturnNavRef.current = activeWorkspaceNav;
+    }
+
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
@@ -2393,7 +2400,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsFeedbackSupportSubmenuOpen(false);
     setIsStarterQuestSheetOpen(false);
     closeGameBoardOverlayIfOpen();
-    setShouldShowSettingsMenuReturn(navId === 'account' && options?.launchSource === 'mobile-menu');
+    setShouldShowSettingsMenuReturn(shouldReturnToMobileMenu);
     
     const preserveBreatheTab = options?.preserveBreatheTab ?? false;
 
@@ -3386,6 +3393,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 setIsMyQuestSubmenuOpen(false);
                 setIsFeedbackSupportSubmenuOpen(false);
                 setIsStarterQuestSheetOpen(false);
+                setShouldShowSettingsMenuReturn(false);
+                setActiveWorkspaceNav(settingsMenuReturnNavRef.current);
                 setIsMobileMenuOpen(true);
               }}
               aria-label="Back to pop-up menu"
