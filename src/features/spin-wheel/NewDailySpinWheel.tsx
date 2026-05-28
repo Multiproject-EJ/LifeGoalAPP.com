@@ -538,17 +538,11 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
               {spinning ? '🎡 SPINNING...' : '🎡 SPIN!'}
             </button>
           ) : wonPrize ? (
-            <div className="new-daily-spin-modal__result">
-              <div
-                className={`new-daily-spin-modal__result-icon${
-                  isSpecialPrize ? ' new-daily-spin-modal__result-icon--chest' : ''
-                }`}
-              >
-                {wonPrize.icon}
-              </div>
-              <h3 className="new-daily-spin-modal__result-title">You won!</h3>
-              <p className="new-daily-spin-modal__result-prize">{wonPrize.label}</p>
-              <p className="new-daily-spin-modal__result-subtitle">{rewardSubtitle}</p>
+            <div className="new-daily-spin-modal__result new-daily-spin-modal__result--compact">
+              <h3 className="new-daily-spin-modal__result-title">Reward claimed 🎉</h3>
+              <p className="new-daily-spin-modal__result-subtitle">
+                You already spun today. Come back tomorrow for another spin.
+              </p>
             </div>
           ) : (
             <div className="new-daily-spin-modal__locked">
