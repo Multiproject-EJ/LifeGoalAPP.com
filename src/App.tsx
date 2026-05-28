@@ -3220,7 +3220,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const shouldForceAuthOverlay = shouldRequireAuthentication && !isMobileExperience;
   const isAuthOverlayVisible = shouldForceAuthOverlay || showAuthPanel;
-  const isAnyModalVisible = isAuthOverlayVisible;
+  const isAnyModalVisible = isAuthOverlayVisible && !isMobileExperience;
 
   const renderWorkspaceSection = () => {
     if (activeWorkspaceNav === 'goals') {
