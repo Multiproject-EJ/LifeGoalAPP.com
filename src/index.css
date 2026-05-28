@@ -17946,7 +17946,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .mobile-footer-nav__energy-menu {
   position: absolute;
-  left: calc(100% + 0.5rem);
+  left: 50%;
   top: 0;
   display: flex;
   gap: clamp(0.2rem, 2vw, 0.45rem);
@@ -17955,8 +17955,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   width: auto;
   max-width: calc(100vw - 1rem);
   padding-inline: clamp(0.25rem, 3vw, 0.75rem);
-  transform: translateY(calc(-100% - 0.25rem)) translateX(-16px);
-  transform-origin: left center;
+  transform: translate(-50%, calc(-100% - 0.25rem));
+  transform-origin: center bottom;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease, transform 0.3s ease;
@@ -17964,18 +17964,18 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-footer-nav__surface--image .mobile-footer-nav__energy-menu {
-  left: calc(100% + 0.5rem);
-  transform: translateY(calc(-100% - 0.25rem)) translateX(-20px);
+  left: 50%;
+  transform: translate(-50%, calc(-100% - 0.25rem));
 }
 
 .mobile-footer-nav__energy-menu--open {
   opacity: 1;
   pointer-events: auto;
-  transform: translateY(calc(-100% - 0.25rem)) translateX(0);
+  transform: translate(-50%, calc(-100% - 0.25rem));
 }
 
 .mobile-footer-nav__surface--image .mobile-footer-nav__energy-menu--open {
-  transform: translateY(calc(-100% - 0.25rem)) translateX(0);
+  transform: translate(-50%, calc(-100% - 0.25rem));
 }
 
 .mobile-footer-nav__energy-button {
@@ -17983,7 +17983,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.1rem;
   transition: transform 0.3s ease, opacity 0.3s ease;
   opacity: 0;
   transform: translateX(-14px) scale(0.7);
@@ -18032,10 +18032,10 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-footer-nav__energy-label {
-  font-size: 0.75rem;
+  font-size: 0.62rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 0.5rem 1.25rem;
+  padding: 0.34rem 0.82rem;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.35);
   background: linear-gradient(135deg, 
@@ -18048,7 +18048,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-shadow: 0 8px 16px rgba(15, 23, 42, 0.15), 
     0 0 15px rgba(255, 223, 0, 0.3), 
     0 0 25px rgba(59, 130, 246, 0.25);
-  color: #0f172a;
+  color: #1e293b;
   font-weight: 700;
   white-space: nowrap;
 }
