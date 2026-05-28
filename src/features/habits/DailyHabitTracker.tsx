@@ -2364,19 +2364,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
     setVisionRewarding(true);
     try {
-      const result = await earnXP(
-        xpAmount,
-        isSpecial ? 'vision_board_star_special' : 'vision_board_star',
-        selection.id,
-        isSpecial ? 'Special weekly vision star story' : 'Vision board star boost'
-      );
-      awardDailyTreatDice({
-        userId: session.user.id,
-        diceAmount,
-        sourceLabel: 'Vision Star reward',
-        islandRunSession: session,
-      });
-      await recordActivity();
       const fallbackStoryPanels = buildSpecialVisionStoryPanels({
         habitNames: sortedHabits.map((habit) => habit.name),
         goalTitles: goals.map((goal) => goal.title),
@@ -2420,35 +2407,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       setVisionReward({
         imageUrl: selectedImageUrl,
         caption: selectedCaption,
-        xpAwarded: result?.xpAwarded ?? xpAmount,
+        xpAwarded: xpAmount,
         diceAwarded: diceAmount,
         isSuperBoost,
         isSpecial,
         specialStoryPanels,
         imageUrls: isSpecial ? undefined : selections.map((s) => s.publicUrl),
       });
-      setVisionRewardDate(activeDate);
-      setHasClaimedVisionStar(true);
-      saveDraft(visionStarStorageKey(session.user.id, activeDate), true);
-
-      const persistImageUrl =
-        selectedImageUrl.startsWith('data:image/') && selectedImageUrl.length > 200_000
-          ? selection.publicUrl
-          : selectedImageUrl;
-
-      saveDraft(visionStarRewardKey(session.user.id, activeDate), {
-        imageUrl: persistImageUrl,
-        caption: selectedCaption,
-        xpAwarded: result?.xpAwarded ?? xpAmount,
-        diceAwarded: diceAmount,
-        isSuperBoost,
-        isSpecial,
-        specialStoryPanels,
-        imageUrls: isSpecial ? undefined : selections.map((s) => s.publicUrl),
-      } satisfies VisionReward);
-      saveDraft(visionStarCountKey(session.user.id), nextCount);
-      setVisionStarCount(nextCount);
-      setIsVisionRewardOpen(true);
     } finally {
       setVisionRewarding(false);
       setIsVisionRewardSelecting(false);
@@ -2533,7 +2498,50 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     void handleVisionReward();
   };
 
-  const handleVisionRewardClaim = () => {
+  const handleVisionRewardClaim = async () => {
+    if (!visionReward || hasClaimedVisionStar || !isViewingToday || visionRewarding) {
+      return;
+    }
+
+    setVisionRewarding(true);
+    try {
+      const result = await earnXP(
+        visionReward.xpAwarded,
+        visionReward.isSpecial ? 'vision_board_star_special' : 'vision_board_star',
+        null,
+        visionReward.isSpecial ? 'Special weekly vision star story' : 'Vision board star boost',
+      );
+      awardDailyTreatDice({
+        userId: session.user.id,
+        diceAmount: visionReward.diceAwarded,
+        sourceLabel: 'Vision Star reward',
+        islandRunSession: session,
+      });
+      await recordActivity();
+
+      const nextCount = visionStarCount + 1;
+      const persistImageUrl =
+        visionReward.imageUrl.startsWith('data:image/') && visionReward.imageUrl.length > 200_000
+          ? (visionReward.imageUrls?.[0] ?? visionReward.imageUrl)
+          : visionReward.imageUrl;
+      const claimedReward: VisionReward = {
+        ...visionReward,
+        xpAwarded: result?.xpAwarded ?? visionReward.xpAwarded,
+      };
+      setVisionReward(claimedReward);
+      setVisionRewardDate(activeDate);
+      setHasClaimedVisionStar(true);
+      saveDraft(visionStarStorageKey(session.user.id, activeDate), true);
+      saveDraft(visionStarRewardKey(session.user.id, activeDate), {
+        ...claimedReward,
+        imageUrl: persistImageUrl,
+      } satisfies VisionReward);
+      saveDraft(visionStarCountKey(session.user.id), nextCount);
+      setVisionStarCount(nextCount);
+    } finally {
+      setVisionRewarding(false);
+    }
+
     if (visionClaimButtonRef.current) {
       const rect = visionClaimButtonRef.current.getBoundingClientRect();
       setCelebrationOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
