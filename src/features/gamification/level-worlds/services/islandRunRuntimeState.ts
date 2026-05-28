@@ -94,6 +94,8 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     welcomePackRewardBundleClaimed?: boolean;
     storyPrologueSeen?: boolean;
     audioEnabled?: boolean;
+    musicEnabled?: boolean;
+    sfxEnabled?: boolean;
     onboardingComplete?: boolean;
     currentIslandNumber?: number;
     cycleIndex?: number;

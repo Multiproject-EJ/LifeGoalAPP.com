@@ -1713,6 +1713,8 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     welcome_pack_reward_bundle_claimed: record.welcomePackRewardBundleClaimed,
     story_prologue_seen: record.storyPrologueSeen,
     audio_enabled: record.audioEnabled,
+    music_enabled: record.musicEnabled,
+    sfx_enabled: record.sfxEnabled,
     current_island_number: record.currentIslandNumber,
     cycle_index: record.cycleIndex,
     boss_trial_resolved_island_number: record.bossTrialResolvedIslandNumber,
@@ -1834,7 +1836,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,audio_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event')
+    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -1858,6 +1860,14 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             welcomePackRewardBundleClaimed: legacyData.welcome_pack_reward_bundle_claimed ?? false,
             storyPrologueSeen: legacyData.story_prologue_seen ?? false,
             audioEnabled: legacyData.audio_enabled ?? true,
+            musicEnabled:
+              typeof (legacyData as Record<string, unknown>).music_enabled === 'boolean'
+                ? ((legacyData as Record<string, unknown>).music_enabled as boolean)
+                : undefined,
+            sfxEnabled:
+              typeof (legacyData as Record<string, unknown>).sfx_enabled === 'boolean'
+                ? ((legacyData as Record<string, unknown>).sfx_enabled as boolean)
+                : undefined,
             currentIslandNumber: legacyData.current_island_number ?? fallback.currentIslandNumber,
             cycleIndex: legacyData.cycle_index ?? 0,
             bossTrialResolvedIslandNumber: legacyData.boss_trial_resolved_island_number,
@@ -1993,6 +2003,14 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       welcomePackRewardBundleClaimed: data.welcome_pack_reward_bundle_claimed ?? false,
       storyPrologueSeen: data.story_prologue_seen ?? false,
       audioEnabled: data.audio_enabled ?? true,
+      musicEnabled:
+        typeof (data as Record<string, unknown>).music_enabled === 'boolean'
+          ? ((data as Record<string, unknown>).music_enabled as boolean)
+          : undefined,
+      sfxEnabled:
+        typeof (data as Record<string, unknown>).sfx_enabled === 'boolean'
+          ? ((data as Record<string, unknown>).sfx_enabled as boolean)
+          : undefined,
       currentIslandNumber: data.current_island_number ?? fallback.currentIslandNumber,
       cycleIndex: data.cycle_index ?? 0,
       bossTrialResolvedIslandNumber: data.boss_trial_resolved_island_number,
