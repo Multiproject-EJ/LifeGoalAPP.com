@@ -763,6 +763,8 @@ export const CountdownCalendarModal = ({
           {/* Streak tracker for Personal Quest (replaces old reward tracker) */}
           {isPersonalQuest && seasonData?.progress && (() => {
             const streak = computeStreak(seasonData.progress);
+            if (streak.currentStreak < 2) return null;
+
             return (
               <div className="daily-treats-calendar__streak">
                 <div className="daily-treats-calendar__streak-bar">
