@@ -18991,30 +18991,30 @@ html.platform-ipad .workspace-shell__menu-edge {
   }
 
   .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__item--planning {
-    left: 16%;
-    top: 57%;
+    left: 17%;
+    top: 48%;
   }
 
   .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__status {
     left: 50%;
-    top: 62%;
+    top: 54%;
     width: clamp(84px, calc(var(--controller-w) * 0.18), 112px);
     height: clamp(64px, calc(var(--controller-h) * 0.44), 84px);
   }
 
   .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__item--actions {
-    left: 84%;
-    top: 57%;
+    left: 83%;
+    top: 48%;
   }
 
   .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__item--breathing-space {
-    left: 31.5%;
-    top: 79%;
+    left: 31%;
+    top: 68%;
   }
 
   .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__item--score {
-    left: 68.5%;
-    top: 79%;
+    left: 69%;
+    top: 68%;
   }
 
   .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__button,
