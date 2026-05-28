@@ -192,6 +192,12 @@ type LauncherSubmenuAction = {
   onSelect: () => void;
 };
 
+type MobileNavSelectOptions = {
+  preserveBreatheTab?: boolean;
+  checkinsOrigin?: 'my-quest' | 'direct';
+  launchSource?: 'mobile-menu';
+};
+
 type BillingReturnBanner = {
   kind: 'processing' | 'success' | 'canceled';
   message: string;
@@ -502,6 +508,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [showWorkspaceSetup, setShowWorkspaceSetup] = useState(false);
   const [workspaceSetupDismissed, setWorkspaceSetupDismissed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [shouldShowSettingsMenuReturn, setShouldShowSettingsMenuReturn] = useState(false);
   const [isMobileProfileDialogOpen, setIsMobileProfileDialogOpen] = useState(false);
   const [isLauncherHandOverlayOpen, setIsLauncherHandOverlayOpen] = useState(false);
   const [breathingSpaceMobileTab, setBreathingSpaceMobileTab] = useState<
@@ -2377,7 +2384,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const handleMobileNavSelect = (
     navId: string,
-    options?: { preserveBreatheTab?: boolean; checkinsOrigin?: 'my-quest' | 'direct' },
+    options?: MobileNavSelectOptions,
   ) => {
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
@@ -2386,6 +2393,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsFeedbackSupportSubmenuOpen(false);
     setIsStarterQuestSheetOpen(false);
     closeGameBoardOverlayIfOpen();
+    setShouldShowSettingsMenuReturn(navId === 'account' && options?.launchSource === 'mobile-menu');
     
     const preserveBreatheTab = options?.preserveBreatheTab ?? false;
 
@@ -3368,7 +3376,25 @@ export default function App({ forceAuthOnMount }: AppProps) {
     if (activeWorkspaceNav === 'account') {
       return (
         <div className="workspace-content">
-            <MyAccountPanel
+          {isMobileExperience && shouldShowSettingsMenuReturn ? (
+            <button
+              type="button"
+              className="workspace-settings-menu-return"
+              onClick={() => {
+                setIsMobileProfileDialogOpen(false);
+                setIsEnergyMenuOpen(false);
+                setIsMyQuestSubmenuOpen(false);
+                setIsFeedbackSupportSubmenuOpen(false);
+                setIsStarterQuestSheetOpen(false);
+                setIsMobileMenuOpen(true);
+              }}
+              aria-label="Back to pop-up menu"
+            >
+              <span aria-hidden="true" className="workspace-settings-menu-return__icon">‹</span>
+              <span>Back to menu</span>
+            </button>
+          ) : null}
+          <MyAccountPanel
             session={activeSession}
             isDemoExperience={isDemoExperience}
             isAuthenticated={isAuthenticated}
@@ -3988,7 +4014,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 <button
                   type="button"
                   className="mobile-menu-overlay__mini-card mobile-menu-overlay__mini-card--utility"
-                  onClick={() => handleMobileNavSelect('account')}
+                  onClick={() => handleMobileNavSelect('account', { launchSource: 'mobile-menu' })}
                   aria-label="Settings and profile"
                 >
                   <span className="mobile-menu-overlay__utility-icon" aria-hidden="true">⚙️</span>
