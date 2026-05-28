@@ -13,6 +13,7 @@ import { CalendarDoorFlip } from './CalendarDoorFlip';
 import { CalendarDoorUnwrap } from './CalendarDoorUnwrap';
 import { CalendarDoorScratch } from './CalendarDoorScratch';
 import { awardDailyTreatDice, awardDailyTreatGold } from '../../../services/dailyTreats';
+import { applyEssenceAward } from '../level-worlds/services/islandRunStateActions';
 import {
   buildPreviewAdventMeta,
   fetchCurrentSeason,
@@ -242,9 +243,19 @@ export const CountdownCalendarModal = ({
         setRevealState({ isRevealing: true, dayIndex, doorType, hatch: authoritativeHatch });
       }
 
-      // Award gold if applicable
+      // Award essence in Island Run sessions; award gold elsewhere.
       if (reward?.reward_currency === 'gold' && reward.reward_amount) {
-        void awardDailyTreatGold(userId, reward.reward_amount, `Day ${dayIndex} ${doorType} door`);
+        if (islandRunSession) {
+          applyEssenceAward({
+            session: islandRunSession,
+            client: null,
+            amount: reward.reward_amount,
+            islandRunContractV2Enabled: true,
+            triggerSource: `daily_treat_day_${dayIndex}_${doorType}_door`,
+          });
+        } else {
+          void awardDailyTreatGold(userId, reward.reward_amount, `Day ${dayIndex} ${doorType} door`);
+        }
       }
 
       // Award dice if applicable
@@ -422,7 +433,7 @@ export const CountdownCalendarModal = ({
     : daysRemaining === 0
       ? `🎉 Today is ${activeAdvent ? getHolidayGreetingLabel(activeAdvent.meta) : themeName}!`
       : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} to go`;
-  const dailyTreatDiceLabel = islandRunSession ? 'Island Dice' : 'Game Dice';
+  const dailyTreatDiceLabel = islandRunSession ? '' : 'Game Dice';
 
   // Check if today's free door is already opened
   const todayFreeOpened = progress?.opened_days.includes(todayIndex) ?? false;
@@ -649,7 +660,9 @@ export const CountdownCalendarModal = ({
                     </span>
                   )}
                   {diceAmount != null && !(freeOpened || isOpenedLegacy) && (
-                    <span className="daily-treats-calendar__hatch-dice">🎲 {diceAmount} {dailyTreatDiceLabel}</span>
+                    <span className="daily-treats-calendar__hatch-dice">
+                      🎲 {diceAmount}{dailyTreatDiceLabel ? ` ${dailyTreatDiceLabel}` : ''}
+                    </span>
                   )}
                 </>
               );
