@@ -124,8 +124,8 @@ const ESCALATING_THRESHOLDS: readonly number[] = [
   80,   // tier 9: final easy-event hook before formula scaling
 ];
 
-const ESCALATING_THRESHOLD_TAIL_LINEAR_STEP = 24;
-const ESCALATING_THRESHOLD_TAIL_QUADRATIC_STEP = 6;
+const ESCALATING_THRESHOLD_TAIL_LINEAR_STEP = 10;
+const ESCALATING_THRESHOLD_TAIL_QUADRATIC_STEP = 2;
 // Defensive math bound only: real timed events reset long before this many
 // claims, but capping the input prevents accidental huge-number arithmetic.
 const MAX_ESCALATION_TIER_FOR_THRESHOLD_MATH = 10_000;
@@ -134,7 +134,8 @@ const MAX_ESCALATION_TIER_FOR_THRESHOLD_MATH = 10_000;
  * Resolve threshold for the given escalation tier.
  * The first tiers stay intentionally easy for onboarding. After the hand-tuned
  * hook ladder, thresholds continue on a bounded quadratic curve instead of
- * repeating 80, so high multipliers cannot cheaply farm endless cascades.
+ * repeating 80. The tail is intentionally gentler than pre-2026 tuning so
+ * progression still feels faster while preserving compounding difficulty.
  */
 export function resolveEscalatingThreshold(tier: number): number {
   const safeTier = Math.min(

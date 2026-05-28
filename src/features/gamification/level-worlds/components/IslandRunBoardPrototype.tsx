@@ -730,9 +730,12 @@ function formatCooldownRemaining(remainingMs: number): string {
 function formatEventRemaining(remainingMs: number): string {
   if (remainingMs <= 0) return 'Expired';
   const totalSeconds = Math.ceil(remainingMs / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
+  const totalHours = Math.floor(totalSeconds / 3600);
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
   const minutes = Math.floor((totalSeconds % 3600) / 60);
-  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (days > 0) return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+  if (totalHours > 0) return `${totalHours}h ${minutes}m`;
   const seconds = totalSeconds % 60;
   return `${minutes}m ${seconds}s`;
 }
