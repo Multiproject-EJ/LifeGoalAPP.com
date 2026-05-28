@@ -19647,9 +19647,14 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .mobile-menu-overlay__close {
   border: none;
-  background: rgba(226, 232, 240, 0.7);
-  border-radius: 12px;
-  padding: 0.5rem;
+  background: #e2e8f0;
+  border-radius: 999px;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   line-height: 1;
   transition: background 0.2s ease, transform 0.15s ease;
@@ -19661,7 +19666,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   [data-theme='flow-night'],
   [data-theme='bio-night']
 ) .mobile-menu-overlay__close {
-  background: rgba(30, 41, 59, 0.75);
+  background: #1e293b;
   color: #f8fafc;
 }
 
@@ -19678,8 +19683,9 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__close--enlarged {
+  width: 3.25rem;
+  height: 3.25rem;
   font-size: 1.75rem;
-  padding: 0.65rem 0.85rem;
   font-weight: 300;
   transform: translateY(-50%);
 }
@@ -19688,11 +19694,11 @@ html.platform-ipad .workspace-shell__menu-edge {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  border: 1px solid rgba(148, 163, 184, 0.28);
+  border: 1px solid #cbd5e1;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
+  background: #ffffff;
   padding: 0.45rem 0.7rem 0.45rem 0.5rem;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78), 0 10px 22px rgba(15, 23, 42, 0.08);
+  box-shadow: inset 0 1px 0 #ffffff, 0 10px 22px rgba(15, 23, 42, 0.08);
   transform: translateY(-50%);
 }
 
@@ -30223,7 +30229,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 [data-theme='dark-glass'] .mobile-menu-overlay__game-mode {
-  background: color-mix(in srgb, var(--color-surface-secondary) 82%, transparent);
+  background: var(--color-surface-secondary);
   border-color: var(--color-border-secondary);
 }
 
@@ -30302,6 +30308,10 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: var(--color-text-primary);
 }
 
+[data-theme='dark-glass'] .mobile-menu-overlay__close {
+  background: var(--color-surface-secondary);
+}
+
 [data-theme='dark-glass'] .mobile-menu-overlay__profile-dashboard,
 [data-theme='dark-glass'] .mobile-menu-overlay__profile-metric,
 [data-theme='dark-glass'] .mobile-menu-overlay__profile-highlight {
@@ -30352,6 +30362,11 @@ html.platform-ipad .workspace-shell__menu-edge {
 [data-theme='dark-glass'] .mobile-menu-overlay__strength-close:hover,
 [data-theme='dark-glass'] .mobile-menu-overlay__strength-close:focus-visible {
   background: color-mix(in srgb, var(--color-surface-secondary) 94%, transparent);
+}
+
+[data-theme='dark-glass'] .mobile-menu-overlay__close:hover,
+[data-theme='dark-glass'] .mobile-menu-overlay__close:focus-visible {
+  background: var(--color-surface-secondary);
 }
 
 /* Remaining modal/popover hardening for dark theme (analysis pass 6) */

@@ -3817,7 +3817,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                           : 'mobile-menu-overlay__game-mode-label--off'
                       }`}
                     >
-                      GAME MODE ({isMobileMenuImageActive ? 'ON' : 'OFF'})
+                      GAME MODE
                     </span>
                   </div>
                   <button
