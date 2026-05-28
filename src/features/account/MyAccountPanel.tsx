@@ -388,11 +388,16 @@ export function MyAccountPanel({
       ) : null}
       <div className="account-panel__summary-grid">
         <section className="account-panel__card" aria-labelledby="account-subscription">
-          <p className="account-panel__eyebrow">Subscription</p>
-          <h3 id="account-subscription">Plan overview</h3>
-          <p className="account-panel__hint">
-            Billing status is synced from Stripe webhooks into Supabase and shown here.
-          </p>
+          <div className="account-panel__subscription-header">
+            <div>
+              <p className="account-panel__eyebrow">Subscription</p>
+              <h3 id="account-subscription">Plan overview</h3>
+              <p className="account-panel__hint">Manage your plan, renewal, and dice wallet in one place.</p>
+            </div>
+            <span className={`account-panel__status-chip ${isPro ? 'account-panel__status-chip--pro' : ''}`}>
+              {isPro ? 'Pro active' : 'Free plan'}
+            </span>
+          </div>
           {resolvedBillingBanner ? (
             <p className={`notification-preferences__message ${
               resolvedBillingBanner.kind === 'canceled'
@@ -410,7 +415,7 @@ export function MyAccountPanel({
               {billingError}
             </p>
           ) : null}
-          <dl className="account-panel__details">
+          <dl className="account-panel__details account-panel__details--subscription">
             <div>
               <dt>Plan</dt>
               <dd>{planName}</dd>
@@ -428,45 +433,57 @@ export function MyAccountPanel({
               <dd>{walletRolls}</dd>
             </div>
           </dl>
-          <div className="account-panel__actions-row" style={{ marginTop: '0.75rem' }}>
+          <div className="account-panel__subscription-cta-grid" style={{ marginTop: '0.75rem' }}>
             {!isPro && !isDemoExperience ? (
               <>
                 <button
                   type="button"
-                  className="btn btn--primary"
+                  className="btn btn--primary account-panel__plan-btn"
                   disabled={billingActionLoading !== null}
                   onClick={() => runBillingAction('upgrade_monthly', () => createSubscriptionCheckoutSession('monthly'))}
                 >
-                  {billingActionLoading === 'upgrade_monthly' ? 'Starting…' : 'Upgrade to Pro (Monthly)'}
+                  <span className="account-panel__plan-btn-title">
+                    {billingActionLoading === 'upgrade_monthly' ? 'Starting…' : 'Upgrade Pro Monthly'}
+                  </span>
+                  <span className="account-panel__plan-btn-meta">Flexible month-to-month</span>
                 </button>
                 <button
                   type="button"
-                  className="btn"
+                  className="btn account-panel__plan-btn account-panel__plan-btn--yearly"
                   disabled={billingActionLoading !== null}
                   onClick={() => runBillingAction('upgrade_yearly', () => createSubscriptionCheckoutSession('yearly'))}
                 >
-                  {billingActionLoading === 'upgrade_yearly' ? 'Starting…' : 'Upgrade to Pro (Yearly)'}
+                  <span className="account-panel__plan-btn-title">
+                    {billingActionLoading === 'upgrade_yearly' ? 'Starting…' : 'Upgrade Pro Yearly'}
+                  </span>
+                  <span className="account-panel__plan-btn-meta">Best value for committed builders</span>
                 </button>
               </>
             ) : null}
             {canManageBilling ? (
               <button
                 type="button"
-                className="btn btn--secondary"
+                className="btn btn--secondary account-panel__plan-btn account-panel__plan-btn--manage"
                 disabled={billingActionLoading !== null}
                 onClick={() => runBillingAction('manage', () => createCustomerPortalSession())}
               >
-                {billingActionLoading === 'manage' ? 'Opening…' : 'Manage Billing'}
+                <span className="account-panel__plan-btn-title">
+                  {billingActionLoading === 'manage' ? 'Opening…' : 'Manage Billing'}
+                </span>
+                <span className="account-panel__plan-btn-meta">Open Stripe portal</span>
               </button>
             ) : null}
             {!isDemoExperience ? (
               <button
                 type="button"
-                className="btn"
+                className="btn account-panel__plan-btn account-panel__plan-btn--rolls"
                 disabled={billingActionLoading !== null}
                 onClick={() => runBillingAction('buy_rolls', () => createDicePackCheckoutSession())}
               >
-                {billingActionLoading === 'buy_rolls' ? 'Starting…' : 'Buy 500 Rolls'}
+                <span className="account-panel__plan-btn-title">
+                  {billingActionLoading === 'buy_rolls' ? 'Starting…' : 'Buy 500 Rolls'}
+                </span>
+                <span className="account-panel__plan-btn-meta">Quick dice refill</span>
               </button>
             ) : null}
           </div>
