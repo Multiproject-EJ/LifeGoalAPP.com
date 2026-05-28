@@ -2257,6 +2257,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   gap: 0.65rem;
 }
 
+.account-panel__subscription-cta-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
 .account-panel__plan-btn {
   width: 100%;
   justify-content: flex-start;

@@ -111,6 +111,7 @@ export function MyAccountPanel({
   const [billingLoading, setBillingLoading] = useState(false);
   const [billingError, setBillingError] = useState<string | null>(null);
   const [billingActionLoading, setBillingActionLoading] = useState<'upgrade_monthly' | 'upgrade_yearly' | 'manage' | 'buy_rolls' | null>(null);
+  const [rollsBudgetFolderOpen, setRollsBudgetFolderOpen] = useState(false);
   const [activeFutureFeatureId, setActiveFutureFeatureId] = useState<FeatureAvailabilityId | null>(null);
   
   const user = session.user;
@@ -460,31 +461,33 @@ export function MyAccountPanel({
                 </button>
               </>
             ) : null}
-            {canManageBilling ? (
-              <button
-                type="button"
-                className="btn btn--secondary account-panel__plan-btn account-panel__plan-btn--manage"
-                disabled={billingActionLoading !== null}
-                onClick={() => runBillingAction('manage', () => createCustomerPortalSession())}
-              >
-                <span className="account-panel__plan-btn-title">
-                  {billingActionLoading === 'manage' ? 'Opening…' : 'Manage Billing'}
-                </span>
-                <span className="account-panel__plan-btn-meta">Open Stripe portal</span>
-              </button>
-            ) : null}
-            {!isDemoExperience ? (
-              <button
-                type="button"
-                className="btn account-panel__plan-btn account-panel__plan-btn--rolls"
-                disabled={billingActionLoading !== null}
-                onClick={() => runBillingAction('buy_rolls', () => createDicePackCheckoutSession())}
-              >
-                <span className="account-panel__plan-btn-title">
-                  {billingActionLoading === 'buy_rolls' ? 'Starting…' : 'Buy 500 Rolls'}
-                </span>
-                <span className="account-panel__plan-btn-meta">Quick dice refill</span>
-              </button>
+            {canManageBilling || !isDemoExperience ? (
+              <div className="account-panel__subscription-cta-split">
+                {canManageBilling ? (
+                  <button
+                    type="button"
+                    className="btn btn--secondary account-panel__plan-btn account-panel__plan-btn--manage"
+                    disabled={billingActionLoading !== null}
+                    onClick={() => runBillingAction('manage', () => createCustomerPortalSession())}
+                  >
+                    <span className="account-panel__plan-btn-title">
+                      {billingActionLoading === 'manage' ? 'Opening…' : 'Manage Billing'}
+                    </span>
+                    <span className="account-panel__plan-btn-meta">Open Stripe portal</span>
+                  </button>
+                ) : null}
+                {!isDemoExperience ? (
+                  <button
+                    type="button"
+                    className="btn account-panel__plan-btn account-panel__plan-btn--rolls"
+                    disabled={billingActionLoading !== null}
+                    onClick={() => setRollsBudgetFolderOpen(true)}
+                  >
+                    <span className="account-panel__plan-btn-title">Rolls Budget</span>
+                    <span className="account-panel__plan-btn-meta">Manage dice refill options</span>
+                  </button>
+                ) : null}
+              </div>
             ) : null}
           </div>
         </section>
@@ -795,6 +798,31 @@ export function MyAccountPanel({
       ) : null}
 
       {/* Folder 2 Popup */}
+      <SettingsFolderPopup
+        isOpen={rollsBudgetFolderOpen}
+        onClose={() => setRollsBudgetFolderOpen(false)}
+        title="Rolls Budget"
+      >
+        <section className="account-panel__card" aria-labelledby="rolls-budget-tools">
+          <p className="account-panel__eyebrow">Dice wallet</p>
+          <h3 id="rolls-budget-tools">Rolls budget</h3>
+          <p className="account-panel__hint">Quickly refill your dice wallet with a one-tap purchase.</p>
+          <div className="account-panel__subscription-cta-grid" style={{ marginTop: '0.75rem' }}>
+            <button
+              type="button"
+              className="btn account-panel__plan-btn account-panel__plan-btn--rolls"
+              disabled={billingActionLoading !== null}
+              onClick={() => runBillingAction('buy_rolls', () => createDicePackCheckoutSession())}
+            >
+              <span className="account-panel__plan-btn-title">
+                {billingActionLoading === 'buy_rolls' ? 'Starting…' : 'Buy 500 Rolls'}
+              </span>
+              <span className="account-panel__plan-btn-meta">Quick dice refill</span>
+            </button>
+          </div>
+        </section>
+      </SettingsFolderPopup>
+
       <SettingsFolderPopup
         isOpen={appearanceFolderOpen}
         onClose={() => setAppearanceFolderOpen(false)}
