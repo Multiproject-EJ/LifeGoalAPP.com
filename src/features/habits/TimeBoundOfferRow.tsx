@@ -30,6 +30,7 @@ export type TimeBoundOfferItem = {
 type TimeBoundOfferRowProps = {
   offers: TimeBoundOfferItem[];
   onOfferClick: (offerId: TimeBoundOfferId) => void;
+  daysAgo?: number;
 };
 
 function formatOfferCountdown(expiresAtMs: number | null, nowMs: number): string {
@@ -49,8 +50,9 @@ function formatOfferCountdown(expiresAtMs: number | null, nowMs: number): string
   return `${seconds}s`;
 }
 
-export function TimeBoundOfferRow({ offers, onOfferClick }: TimeBoundOfferRowProps) {
+export function TimeBoundOfferRow({ offers, onOfferClick, daysAgo = 0 }: TimeBoundOfferRowProps) {
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const isBackInTime = daysAgo > 0;
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setNowMs(Date.now()), 1000);
@@ -76,12 +78,14 @@ export function TimeBoundOfferRow({ offers, onOfferClick }: TimeBoundOfferRowPro
   }, [sorted]);
 
   return (
-    <section className="time-bound-offers" aria-label="Time-bound offers">
+    <section className={`time-bound-offers${isBackInTime ? ' time-bound-offers--past' : ''}`} aria-label="Time-bound offers">
       {padded.map((offer) => {
         const isPlaceholder = offer.isPlaceholder === true;
         const isDone = offer.isCollected && !isPlaceholder;
         const isActionable = offer.isActionable ?? (!isDone && !isPlaceholder);
-        const badgeLabel = isPlaceholder
+        const badgeLabel = isBackInTime
+          ? `${daysAgo} day${daysAgo === 1 ? '' : 's'} ago`
+          : isPlaceholder
           ? offer.badgeLabelOverride ?? 'Soon'
           : offer.badgeLabelOverride ?? (isDone ? '✓ Done' : formatOfferCountdown(offer.expiresAtMs, nowMs));
         const itemStateClass = isPlaceholder
@@ -101,11 +105,16 @@ export function TimeBoundOfferRow({ offers, onOfferClick }: TimeBoundOfferRowPro
             disabled={isDone || isPlaceholder}
             aria-label={`${offer.label} ${isPlaceholder ? 'placeholder' : isDone ? 'done' : badgeLabel}`}
           >
-            <span className="time-bound-offers__circle" aria-hidden="true">
-              {isActionable ? <span className="time-bound-offers__notification" /> : null}
-              <span className="time-bound-offers__icon">{offer.icon}</span>
-              <span className="time-bound-offers__badge">{badgeLabel}</span>
-            </span>
+            {isBackInTime ? (
+              <span className="time-bound-offers__poof" aria-hidden="true">💨</span>
+            ) : (
+              <span className="time-bound-offers__circle" aria-hidden="true">
+                {isActionable ? <span className="time-bound-offers__notification" /> : null}
+                <span className="time-bound-offers__icon">{offer.icon}</span>
+                <span className="time-bound-offers__badge">{badgeLabel}</span>
+              </span>
+            )}
+            {isBackInTime ? <span className="time-bound-offers__ago-label">{badgeLabel}</span> : null}
             <span className="time-bound-offers__label">{offer.label}</span>
           </button>
         );

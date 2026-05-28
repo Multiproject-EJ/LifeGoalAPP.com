@@ -311,6 +311,26 @@
   text-align: center;
 }
 
+.time-bound-offers__poof {
+  font-size: clamp(1.5rem, 7.4vw, 2.05rem);
+  line-height: 1;
+  filter: drop-shadow(0 4px 10px rgba(70, 59, 109, 0.24));
+}
+
+.time-bound-offers__ago-label {
+  font-size: 0.62rem;
+  line-height: 1;
+  white-space: nowrap;
+  background: rgba(23, 16, 38, 0.22);
+  color: rgba(243, 234, 255, 0.92);
+  border-radius: 999px;
+  padding: 0.2rem 0.42rem;
+}
+
+.time-bound-offers--past .time-bound-offers__item {
+  gap: 0.2rem;
+}
+
 .time-bound-offers__item--done .time-bound-offers__circle {
   filter: grayscale(0.2);
 }

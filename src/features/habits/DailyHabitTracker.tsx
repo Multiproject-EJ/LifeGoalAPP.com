@@ -186,6 +186,13 @@ const COMPACT_PULL_REFRESH_RESISTANCE = 0.45;
 const COMPACT_PULL_INTENT_THRESHOLD_PX = 10;
 const COMPACT_REFRESH_SUCCESS_FEEDBACK_MS = 2200;
 
+function getUtcDayDifference(fromDateIso: string, toDateIso: string): number {
+  const fromMs = Date.parse(`${fromDateIso}T00:00:00.000Z`);
+  const toMs = Date.parse(`${toDateIso}T00:00:00.000Z`);
+  if (!Number.isFinite(fromMs) || !Number.isFinite(toMs)) return 0;
+  return Math.floor((toMs - fromMs) / 86400000);
+}
+
 function isHabitSfxEnabled(): boolean {
   if (typeof window === 'undefined') {
     return false;
@@ -6407,7 +6414,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           </section>
         ) : null}
         {!hideTimeBoundOffers ? (
-          <TimeBoundOfferRow offers={timeBoundOffers} onOfferClick={handleTimeBoundOfferClick} />
+          <TimeBoundOfferRow
+            offers={timeBoundOffers}
+            onOfferClick={handleTimeBoundOfferClick}
+            daysAgo={isViewingToday ? 0 : Math.max(1, getUtcDayDifference(activeDate, today))}
+          />
         ) : null}
         <div className="habit-checklist-card__title">
           <h2>My Habits</h2>
