@@ -566,7 +566,7 @@ export function MobileFooterNav({
                         revealControllerUI();
                         onEnergySelect?.('mind');
                       }}
-                      aria-label="Open mind energy tools"
+                      aria-label="Open mind shield tools"
                     >
                       <img src={mindIcon} alt="Mind icon" className="mobile-footer-nav__energy-icon" />
                       <span className="mobile-footer-nav__energy-label">Mind</span>
@@ -578,7 +578,7 @@ export function MobileFooterNav({
                         revealControllerUI();
                         onEnergySelect?.('body');
                       }}
-                      aria-label="Open body energy tools"
+                      aria-label="Open body shield tools"
                     >
                       <img src={bodyIcon} alt="Body icon" className="mobile-footer-nav__energy-icon" />
                       <span className="mobile-footer-nav__energy-label">Body</span>

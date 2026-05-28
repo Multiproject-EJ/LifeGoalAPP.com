@@ -986,10 +986,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
       if (navId === 'breathing-space') {
         return {
           id: navId,
-          label: 'Energy',
-          ariaLabel: 'Energy routines and focus tools',
+          label: 'Shield',
+          ariaLabel: 'Shield mind and body launchers',
           icon: '⚡️',
-          summary: 'Boost your energy with mind and body resets.',
+          summary: 'Open shield launchers for mind and body tools.',
         } satisfies MobileMenuNavItem;
       }
 
