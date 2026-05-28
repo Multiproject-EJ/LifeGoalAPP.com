@@ -8,6 +8,8 @@ export const islandRunProgressResetTests: TestCase[] = [
     run: () => {
       const record = buildFreshIslandRunRecord({
         audioEnabled: true,
+        musicEnabled: true,
+        sfxEnabled: true,
         onboardingDisplayNameLoopCompleted: false,
       });
 
@@ -27,14 +29,18 @@ export const islandRunProgressResetTests: TestCase[] = [
     },
   },
   {
-    name: 'buildFreshIslandRunRecord preserves audioEnabled preference',
+    name: 'buildFreshIslandRunRecord preserves split audio preferences',
     run: () => {
       const withAudioOff = buildFreshIslandRunRecord({
-        audioEnabled: false,
+        audioEnabled: true,
+        musicEnabled: true,
+        sfxEnabled: false,
         onboardingDisplayNameLoopCompleted: true,
       });
 
-      assertEqual(withAudioOff.audioEnabled, false, 'Expected audioEnabled = false');
+      assertEqual(withAudioOff.audioEnabled, true, 'Expected audioEnabled = true when music remains on');
+      assertEqual(withAudioOff.musicEnabled, true, 'Expected musicEnabled = true');
+      assertEqual(withAudioOff.sfxEnabled, false, 'Expected sfxEnabled = false');
       assertEqual(withAudioOff.onboardingDisplayNameLoopCompleted, true, 'Expected onboarding completed = true');
     },
   },
@@ -43,6 +49,8 @@ export const islandRunProgressResetTests: TestCase[] = [
     run: () => {
       const record = buildFreshIslandRunRecord({
         audioEnabled: true,
+        musicEnabled: true,
+        sfxEnabled: true,
         onboardingDisplayNameLoopCompleted: false,
       });
 
@@ -64,6 +72,8 @@ export const islandRunProgressResetTests: TestCase[] = [
     run: () => {
       const record = buildFreshIslandRunRecord({
         audioEnabled: true,
+        musicEnabled: true,
+        sfxEnabled: true,
         onboardingDisplayNameLoopCompleted: false,
       });
 
@@ -78,6 +88,8 @@ export const islandRunProgressResetTests: TestCase[] = [
     run: () => {
       const record = buildFreshIslandRunRecord({
         audioEnabled: true,
+        musicEnabled: true,
+        sfxEnabled: true,
         onboardingDisplayNameLoopCompleted: false,
       });
 
@@ -94,6 +106,8 @@ export const islandRunProgressResetTests: TestCase[] = [
       const before = Date.now();
       const record = buildFreshIslandRunRecord({
         audioEnabled: true,
+        musicEnabled: true,
+        sfxEnabled: true,
         onboardingDisplayNameLoopCompleted: false,
       });
       const after = Date.now();

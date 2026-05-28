@@ -16,7 +16,7 @@
  * - XP → 0, Level → 1 (gamification_profiles / demo localStorage)
  *
  * **What is preserved (user preferences):**
- * - audioEnabled (player's sound preference)
+ * - audioEnabled, musicEnabled, sfxEnabled (player's audio preferences)
  * - onboardingDisplayNameLoopCompleted (display name already set)
  *
  * **What is NOT touched (separate systems):**
@@ -43,7 +43,8 @@ import { resetXP } from '../../../../services/gamification';
  * preferences (audio, display name completion) from the current state.
  */
 export function buildFreshIslandRunRecord(
-  current: Pick<IslandRunGameStateRecord, 'audioEnabled' | 'onboardingDisplayNameLoopCompleted'>,
+  current: Pick<IslandRunGameStateRecord, 'audioEnabled' | 'onboardingDisplayNameLoopCompleted'> &
+    Partial<Pick<IslandRunGameStateRecord, 'musicEnabled' | 'sfxEnabled'>>,
 ): IslandRunGameStateRecord {
   const nowMs = Date.now();
   return {
@@ -56,8 +57,8 @@ export function buildFreshIslandRunRecord(
     welcomePackRewardBundleClaimed: false,
     storyPrologueSeen: false,
     audioEnabled: current.audioEnabled,
-    musicEnabled: true,
-    sfxEnabled: true,
+    musicEnabled: current.musicEnabled ?? current.audioEnabled,
+    sfxEnabled: current.sfxEnabled ?? current.audioEnabled,
     currentIslandNumber: 1,
     cycleIndex: 0,
     bossTrialResolvedIslandNumber: null,
@@ -167,6 +168,8 @@ export async function resetIslandRunProgress(options: {
 
   const freshRecord = buildFreshIslandRunRecord({
     audioEnabled: current.audioEnabled,
+    musicEnabled: current.musicEnabled ?? current.audioEnabled,
+    sfxEnabled: current.sfxEnabled ?? current.audioEnabled,
     onboardingDisplayNameLoopCompleted: current.onboardingDisplayNameLoopCompleted,
   });
 

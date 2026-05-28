@@ -44,6 +44,8 @@ export interface IslandRunRuntimeStateBackend {
       welcomePackRewardBundleClaimed?: boolean;
       storyPrologueSeen?: boolean;
       audioEnabled?: boolean;
+      musicEnabled?: boolean;
+      sfxEnabled?: boolean;
       onboardingComplete?: boolean;
       currentIslandNumber?: number;
       cycleIndex?: number;
@@ -140,6 +142,22 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
       typeof patch.activeStopIndex === 'number' && Number.isFinite(patch.activeStopIndex)
         ? Math.max(0, Math.min(4, Math.floor(patch.activeStopIndex)))
         : current.activeStopIndex;
+    const nextMusicEnabled =
+      typeof patch.musicEnabled === 'boolean'
+        ? patch.musicEnabled
+        : typeof patch.audioEnabled === 'boolean'
+          ? patch.audioEnabled
+          : current.musicEnabled;
+    const nextSfxEnabled =
+      typeof patch.sfxEnabled === 'boolean'
+        ? patch.sfxEnabled
+        : typeof patch.audioEnabled === 'boolean'
+          ? patch.audioEnabled
+          : current.sfxEnabled;
+    const nextAudioEnabled =
+      typeof patch.audioEnabled === 'boolean'
+        ? patch.audioEnabled
+        : nextMusicEnabled || nextSfxEnabled;
     const nextState: IslandRunRuntimeState = {
       runtimeVersion: current.runtimeVersion,
       firstRunClaimed: typeof patch.firstRunClaimed === 'boolean' ? patch.firstRunClaimed : current.firstRunClaimed,
@@ -164,12 +182,9 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.storyPrologueSeen === 'boolean'
           ? patch.storyPrologueSeen
           : current.storyPrologueSeen,
-      audioEnabled:
-        typeof patch.audioEnabled === 'boolean'
-          ? patch.audioEnabled
-          : current.audioEnabled,
-      musicEnabled: current.musicEnabled,
-      sfxEnabled: current.sfxEnabled,
+      audioEnabled: nextAudioEnabled,
+      musicEnabled: nextMusicEnabled,
+      sfxEnabled: nextSfxEnabled,
       currentIslandNumber:
         typeof patch.currentIslandNumber === 'number' && Number.isFinite(patch.currentIslandNumber)
           ? Math.max(1, Math.floor(patch.currentIslandNumber))

@@ -35,6 +35,7 @@ import {
   applyActiveCompanion,
   applyActivateCurrentIslandTimer,
   applyAudioEnabledMarker,
+  applyAudioPreferencesMarker,
   applyBossTrialResolvedMarker,
   applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
@@ -3000,6 +3001,32 @@ export const islandRunStateActionsTests: TestCase[] = [
 
       assertEqual(result.audioEnabled, false, 'audio marker should update');
       assertEqual(result.runtimeVersion, 9, 'runtimeVersion should bump once');
+    },
+  },
+
+  {
+    name: 'applyAudioPreferencesMarker persists split music and SFX preferences',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 8, audioEnabled: true, musicEnabled: true, sfxEnabled: true });
+
+      const result = applyAudioPreferencesMarker({
+        session,
+        client: null,
+        musicEnabled: true,
+        sfxEnabled: false,
+        triggerSource: 'test_audio_preferences_marker',
+      });
+
+      assertEqual(result.musicEnabled, true, 'music preference should remain enabled');
+      assertEqual(result.sfxEnabled, false, 'SFX preference should update independently');
+      assertEqual(result.audioEnabled, true, 'legacy aggregate should stay enabled if either channel is enabled');
+      assertEqual(result.runtimeVersion, 9, 'runtimeVersion should bump once');
+
+      const stored = readIslandRunGameStateRecord(session);
+      assertEqual(stored.musicEnabled, true, 'stored music preference should survive reload');
+      assertEqual(stored.sfxEnabled, false, 'stored SFX preference should survive reload');
     },
   },
 
