@@ -808,7 +808,7 @@ export function MyAccountPanel({
       >
         <section className="account-panel__card" aria-labelledby="account-theme">
           <p className="account-panel__eyebrow">Appearance</p>
-          <ThemeSelector />
+          <ThemeSelector isAdminOrCreator={isAdmin === true} />
         </section>
       </SettingsFolderPopup>
 

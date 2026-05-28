@@ -1919,6 +1919,32 @@ a,
   display: block;
 }
 
+
+.theme-selector__card--locked,
+.theme-selector__card--locked:hover,
+.theme-selector__card--locked:focus-visible {
+  filter: grayscale(1);
+  opacity: 0.52;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  border-color: var(--color-border-primary);
+}
+
+.theme-selector__lock-badge {
+  margin-top: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
 .theme-selector__badge {
   position: absolute;
   top: 0.35rem;
