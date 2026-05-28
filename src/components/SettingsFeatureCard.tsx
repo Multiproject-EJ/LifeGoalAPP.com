@@ -12,8 +12,6 @@ type SettingsFeatureCardActorContext = {
 type SettingsFeatureCardProps = {
   icon: string;
   title: string;
-  subtitle: string;
-  meta: string;
   featureId?: FeatureAvailabilityId;
   actorContext?: SettingsFeatureCardActorContext;
   onClick: () => void;
@@ -31,8 +29,6 @@ function getActorAwareStatusLabel(
 export function SettingsFeatureCard({
   icon,
   title,
-  subtitle,
-  meta,
   featureId,
   actorContext,
   onClick,
@@ -61,8 +57,6 @@ export function SettingsFeatureCard({
             />
           ) : null}
         </span>
-        <span className="settings-module-card__subtitle">{subtitle}</span>
-        <span className="settings-module-card__meta">{meta}</span>
       </span>
     </button>
   );

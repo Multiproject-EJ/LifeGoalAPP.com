@@ -498,116 +498,87 @@ export function MyAccountPanel({
         <div className="settings-modules__header">
           <p className="account-panel__eyebrow">Settings</p>
           <h3 id="settings-modules-heading">Feature Hub</h3>
-          <p className="account-panel__hint">
-            Choose a focused module to adjust seasonal experiences, reminders, and creator-only workspace tools.
-          </p>
         </div>
         <div className="settings-modules__group" aria-label="Personalization settings modules">
           <div className="settings-modules__group-header">
             <p className="settings-modules__group-eyebrow">Personalization</p>
-            <p className="settings-modules__group-hint">Live profile and comfort settings you can tune instantly.</p>
           </div>
-        <div className="settings-modules__grid">
-          <SettingsFeatureCard
-            icon="🎨"
-            title="Appearance / Theme"
-            subtitle="Choose your active app theme and mode."
-            meta="LIVE • Theme controls"
-            onClick={() => setAppearanceFolderOpen(true)}
-          />
-          <SettingsFeatureCard
-            icon="📳"
-            title="Haptic feedback"
-            subtitle="Tune vibration intensity across the app."
-            meta="LIVE • Off / Subtle / Balanced"
-            onClick={() => setHapticsFolderOpen(true)}
-          />
-          <SettingsFeatureCard
-            icon="🪪"
-            title="Menu icon / Display preferences"
-            subtitle="Show initials or keep the default menu icon."
-            meta="LIVE • Profile display"
-            onClick={() => setMenuDisplayFolderOpen(true)}
-          />
-          <SettingsFeatureCard
-            icon="🎁"
-            title="Birthday gift"
-            subtitle="Manage your optional annual birthday reward."
-            meta="LIVE • Reward preference"
-            onClick={() => setBirthdayGiftFolderOpen(true)}
-          />
-          {onLaunchOnboarding ? (
+          <div className="settings-modules__grid">
             <SettingsFeatureCard
-              icon="🧭"
-              title="Onboarding Tools"
-              subtitle="Launch onboarding flows and review local progress."
-              meta="Guided setup tools"
-              onClick={() => setOnboardingToolsFolderOpen(true)}
+              icon="🎨"
+              title="Theme"
+              onClick={() => setAppearanceFolderOpen(true)}
             />
-          ) : null}
-        </div>
+            <SettingsFeatureCard
+              icon="📳"
+              title="Vibration"
+              onClick={() => setHapticsFolderOpen(true)}
+            />
+            <SettingsFeatureCard
+              icon="🪪"
+              title="Menu Icon"
+              onClick={() => setMenuDisplayFolderOpen(true)}
+            />
+            <SettingsFeatureCard
+              icon="🎁"
+              title="Birthday Gift"
+              onClick={() => setBirthdayGiftFolderOpen(true)}
+            />
+            {onLaunchOnboarding ? (
+              <SettingsFeatureCard
+                icon="🧭"
+                title="Onboarding"
+                onClick={() => setOnboardingToolsFolderOpen(true)}
+              />
+            ) : null}
+          </div>
         </div>
         <div className="settings-modules__group" aria-label="Quick settings modules">
           <div className="settings-modules__group-header">
             <p className="settings-modules__group-eyebrow">Quick modules</p>
-            <p className="settings-modules__group-hint">Open the same trusted settings modules in a calmer layout.</p>
           </div>
-        <div className="settings-modules__grid">
-          <SettingsFeatureCard
-            icon="🛡️"
-            title="AI & Privacy"
-            subtitle="Privacy, coach, and telemetry controls."
-            meta="Privacy controls"
-            onClick={() => setAiPrivacyFolderOpen(true)}
-          />
-          <SettingsFeatureCard
-            icon="🎊"
-            title="Holiday Themes"
-            subtitle="Seasonal app styling."
-            meta={`${HOLIDAY_OPTIONS.length} moments`}
-            featureId="settings.holidayThemes"
-            onClick={handleHolidayThemesClick}
-          />
-          <SettingsFeatureCard
-            icon="⏰"
-            title="Reminders"
-            subtitle="Daily reminder preferences."
-            meta="5 reminder areas"
-            onClick={handleRemindersClick}
-          />
-          <SettingsFeatureCard
-            icon="🔔"
-            title="Notifications"
-            subtitle="Notification preferences."
-            meta="3 reminder areas"
-            featureId="settings.notifications"
-            onClick={handleNotificationsClick}
-          />
-          {showAdminTools ? (
+          <div className="settings-modules__grid">
             <SettingsFeatureCard
-              icon="🔧"
-              title="Advanced Tools"
-              subtitle="Diagnostics and previews."
-              meta="Admin only"
-              onClick={handleAdvancedToolsClick}
+              icon="🛡️"
+              title="AI & Privacy"
+              onClick={() => setAiPrivacyFolderOpen(true)}
             />
-          ) : null}
-          <SettingsFeatureCard
-            icon="🎮"
-            title="Game & Rewards"
-            subtitle="Gameplay and reward controls."
-            meta="Gameplay controls"
-            onClick={() => setGameRewardsFolderOpen(true)}
-          />
-          <SettingsFeatureCard
-            icon="⚗️"
-            title="Experimental Features"
-            subtitle="Creator preview toggles."
-            meta="Future Feature"
-            featureId="settings.experimentalFeatures"
-            onClick={handleExperimentalFeaturesClick}
-          />
-        </div>
+            <SettingsFeatureCard
+              icon="🎊"
+              title="Holiday"
+              featureId="settings.holidayThemes"
+              onClick={handleHolidayThemesClick}
+            />
+            <SettingsFeatureCard
+              icon="⏰"
+              title="Reminders"
+              onClick={handleRemindersClick}
+            />
+            <SettingsFeatureCard
+              icon="🔔"
+              title="Notifications"
+              featureId="settings.notifications"
+              onClick={handleNotificationsClick}
+            />
+            {showAdminTools ? (
+              <SettingsFeatureCard
+                icon="🔧"
+                title="Advanced"
+                onClick={handleAdvancedToolsClick}
+              />
+            ) : null}
+            <SettingsFeatureCard
+              icon="🎮"
+              title="Rewards"
+              onClick={() => setGameRewardsFolderOpen(true)}
+            />
+            <SettingsFeatureCard
+              icon="⚗️"
+              title="Experiments"
+              featureId="settings.experimentalFeatures"
+              onClick={handleExperimentalFeaturesClick}
+            />
+          </div>
         </div>
       </section>
 
