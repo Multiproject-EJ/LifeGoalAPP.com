@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import type { DailyLifeUpgradeCandidate } from '../../../services/dailyLifeUpgradeCandidate';
 
 export function DailyLifeUpgradeModal(props: {
@@ -8,11 +7,6 @@ export function DailyLifeUpgradeModal(props: {
   onPrimary: () => void;
   onAlternative: (alternative: DailyLifeUpgradeCandidate['alternatives'][number]) => void;
 }) {
-  useEffect(() => {
-    if (!props.open || !props.candidate) return;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [props.open, props.candidate]);
-
   if (!props.open || !props.candidate) return null;
   return (
     <div className="habit-day-nav__vision-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="daily-life-upgrade-title" onClick={props.onClose}>

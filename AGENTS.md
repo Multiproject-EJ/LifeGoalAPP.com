@@ -24,3 +24,10 @@ Before modifying Island Run code, read:
 - Legacy usage may exist during migration.
 - Do not add new legacy gameplay write paths.
 - Prefer small, reversible migration slices.
+
+## Modal UX guardrail (all surfaces)
+
+- Every modal must render in the viewport (use a top-level modal portal/root).
+- Modal overlays must be viewport-anchored (`position: fixed` with full-screen backdrop).
+- Modals should open centered in the currently visible screen area.
+- While a modal is open, background page scrolling must be locked until it closes.

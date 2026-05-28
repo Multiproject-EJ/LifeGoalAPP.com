@@ -1123,6 +1123,22 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [visionVisualizationSeconds, setVisionVisualizationSeconds] = useState(120);
   const [isVisionVisualizationRunning, setIsVisionVisualizationRunning] = useState(false);
   const [showYesterdayRecap, setShowYesterdayRecap] = useState(false);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return undefined;
+    }
+
+    let root = document.getElementById('modal-root');
+    if (!root) {
+      root = document.createElement('div');
+      root.id = 'modal-root';
+      document.body.appendChild(root);
+    }
+
+    setModalRoot(root);
+    return undefined;
+  }, []);
   const [showDreamJournalReminderModal, setShowDreamJournalReminderModal] = useState(false);
   const habitCardRefs = useRef<Record<string, HTMLLIElement | null>>({});
   const dailyLifeUpgradeHighlightTimeoutRef = useRef<number | null>(null);
@@ -8340,6 +8356,65 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         ? createPortal(todayWinsModalContent, modalRoot)
         : todayWinsModalContent
       : null;
+    const intentionsModalContent = yesterdayIntentionsEntry && isIntentionsNoticeOpen ? (
+      <div className="habit-intentions-modal" role="dialog" aria-modal="true">
+        <button
+          type="button"
+          className="habit-intentions-modal__backdrop"
+          onClick={handleCloseIntentionsNotice}
+          aria-label="Close intentions"
+        />
+        <div className="habit-intentions-modal__card" role="document">
+          <div className="habit-intentions-modal__header">
+            <div>
+              <p className="habit-intentions-modal__eyebrow">Yesterday's note for today</p>
+              <h3 className="habit-intentions-modal__title">Intentions</h3>
+            </div>
+            <button
+              type="button"
+              className="habit-intentions-modal__close"
+              onClick={handleCloseIntentionsNotice}
+            >
+              Close
+            </button>
+          </div>
+          <div className="habit-intentions-modal__body">
+            <p>{yesterdayIntentionsEntry.content}</p>
+          </div>
+          <div className="habit-intentions-modal__action">
+            <button
+              type="button"
+              className="habit-intentions-modal__action-button"
+              onClick={() => void handleMeetIntentions()}
+              disabled={intentionsMeetSaving || isIntentionsMet}
+            >
+              <span
+                className={`habit-intentions-modal__action-check ${isIntentionsMet ? 'is-complete' : ''}`}
+                aria-hidden="true"
+              >
+                {isIntentionsMet ? '✓' : ''}
+              </span>
+              <span className="habit-intentions-modal__action-label">
+                {isIntentionsMet ? "Today's intention met" : "Meet today's intention"}
+              </span>
+              <span className="habit-intentions-modal__action-reward">
+                +{XP_REWARDS.INTENTIONS_MET} XP
+              </span>
+            </button>
+            {intentionsMeetError ? (
+              <p className="habit-intentions-modal__error" role="status">
+                {intentionsMeetError}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    ) : null;
+    const intentionsModal = intentionsModalContent
+      ? modalRoot
+        ? createPortal(intentionsModalContent, modalRoot)
+        : intentionsModalContent
+      : null;
 
     return (
       <div
@@ -8369,60 +8444,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             <span className="habit-checklist-card__pull-text">{pullIndicatorText}</span>
           </div>
         ) : null}
-        {yesterdayIntentionsEntry && isIntentionsNoticeOpen ? (
-          <div className="habit-intentions-modal" role="dialog" aria-modal="true">
-            <button
-              type="button"
-              className="habit-intentions-modal__backdrop"
-              onClick={handleCloseIntentionsNotice}
-              aria-label="Close intentions"
-            />
-            <div className="habit-intentions-modal__card" role="document">
-              <div className="habit-intentions-modal__header">
-                <div>
-                  <p className="habit-intentions-modal__eyebrow">Yesterday's note for today</p>
-                  <h3 className="habit-intentions-modal__title">Intentions</h3>
-                </div>
-                <button
-                  type="button"
-                  className="habit-intentions-modal__close"
-                  onClick={handleCloseIntentionsNotice}
-                >
-                  Close
-                </button>
-              </div>
-              <div className="habit-intentions-modal__body">
-                <p>{yesterdayIntentionsEntry.content}</p>
-              </div>
-              <div className="habit-intentions-modal__action">
-                <button
-                  type="button"
-                  className="habit-intentions-modal__action-button"
-                  onClick={() => void handleMeetIntentions()}
-                  disabled={intentionsMeetSaving || isIntentionsMet}
-                >
-                  <span
-                    className={`habit-intentions-modal__action-check ${isIntentionsMet ? 'is-complete' : ''}`}
-                    aria-hidden="true"
-                  >
-                    {isIntentionsMet ? '✓' : ''}
-                  </span>
-                  <span className="habit-intentions-modal__action-label">
-                    {isIntentionsMet ? "Today's intention met" : "Meet today's intention"}
-                  </span>
-                  <span className="habit-intentions-modal__action-reward">
-                    +{XP_REWARDS.INTENTIONS_MET} XP
-                  </span>
-                </button>
-                {intentionsMeetError ? (
-                  <p className="habit-intentions-modal__error" role="status">
-                    {intentionsMeetError}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        ) : null}
+        {intentionsModal}
         {todayWinsModal}
         <div className="habit-checklist-card__board">
           <div className="habit-checklist-card__board-head">
@@ -9889,6 +9911,31 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     focusHabitCardById,
     refreshHabits,
   });
+
+  const hasViewportModalOpen =
+    isTodayWinsOpen ||
+    (Boolean(yesterdayIntentionsEntry) && isIntentionsNoticeOpen) ||
+    showDailyLifeUpgradeModal ||
+    Boolean(dailyLifeUpgradeAlternativeCreateDraft || dailyLifeUpgradeAlternativeCreateSuccess);
+
+  useEffect(() => {
+    if (typeof document === 'undefined' || !hasViewportModalOpen) {
+      return undefined;
+    }
+
+    const body = document.body;
+    const documentElement = document.documentElement;
+    const previousBodyOverflow = body.style.overflow;
+    const previousDocumentOverflow = documentElement.style.overflow;
+
+    body.style.overflow = 'hidden';
+    documentElement.style.overflow = 'hidden';
+
+    return () => {
+      body.style.overflow = previousBodyOverflow;
+      documentElement.style.overflow = previousDocumentOverflow;
+    };
+  }, [hasViewportModalOpen]);
 
   const dailyLifeUpgradeModal = (
     <DailyLifeUpgradeModal
