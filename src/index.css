@@ -2182,6 +2182,10 @@ html.platform-ipad .workspace-shell__menu-edge {
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 }
 
+.account-panel__details--subscription {
+  margin-top: 1.1rem;
+}
+
 .account-panel__details dt {
   margin: 0 0 0.25rem;
   font-size: 0.8rem;
@@ -2220,6 +2224,84 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .account-panel__actions-row {
   margin-top: 1rem;
+}
+
+.account-panel__subscription-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.account-panel__status-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(148, 163, 184, 0.15);
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.65rem;
+  white-space: nowrap;
+}
+
+.account-panel__status-chip--pro {
+  border-color: rgba(45, 212, 191, 0.45);
+  background: rgba(45, 212, 191, 0.18);
+  color: #0f766e;
+}
+
+.account-panel__subscription-cta-grid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.account-panel__plan-btn {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+}
+
+.account-panel__plan-btn-title {
+  font-weight: 700;
+}
+
+.account-panel__plan-btn-meta {
+  font-size: 0.78rem;
+  opacity: 0.85;
+}
+
+.account-panel__plan-btn--yearly {
+  border: 1px solid rgba(14, 165, 233, 0.45);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(99, 102, 241, 0.12));
+}
+
+.account-panel__plan-btn--manage,
+.account-panel__plan-btn--rolls {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+[data-theme='dark-glass'] .account-panel__status-chip {
+  color: #e2e8f0;
+  background: rgba(100, 116, 139, 0.25);
+  border-color: rgba(148, 163, 184, 0.45);
+}
+
+[data-theme='dark-glass'] .account-panel__status-chip--pro {
+  color: #99f6e4;
+  background: rgba(13, 148, 136, 0.25);
+  border-color: rgba(45, 212, 191, 0.45);
+}
+
+[data-theme='dark-glass'] .account-panel__plan-btn--yearly {
+  border-color: rgba(56, 189, 248, 0.55);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.25), rgba(99, 102, 241, 0.2));
 }
 
 [data-theme='dark-glass'] .account-panel__actions {
