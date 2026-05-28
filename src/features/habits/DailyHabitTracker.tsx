@@ -2508,7 +2508,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       const result = await earnXP(
         visionReward.xpAwarded,
         visionReward.isSpecial ? 'vision_board_star_special' : 'vision_board_star',
-        null,
+        undefined,
         visionReward.isSpecial ? 'Special weekly vision star story' : 'Vision board star boost',
       );
       awardDailyTreatDice({
