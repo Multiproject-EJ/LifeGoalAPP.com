@@ -140,6 +140,42 @@ export const islandRunRollActionTests: TestCase[] = [
       assertEqual(persisted.runtimeVersion, 0, 'runtimeVersion unchanged on blocked roll');
     },
   },
+
+  {
+    name: 'roll from regen cap resets regen anchor to prevent instant refill loop',
+    run: async () => {
+      resetEnvironment();
+      const preRollNow = 1_000_000;
+      const oldAnchor = preRollNow - (3 * 60 * 60 * 1000); // 3h of banked elapsed time
+      seedState({
+        runtimeVersion: 1,
+        dicePool: 30,
+        tokenIndex: 0,
+        diceRegenState: {
+          maxDice: 30,
+          regenRatePerHour: 7.5,
+          lastRegenAtMs: oldAnchor,
+        },
+      });
+
+      const originalNow = Date.now;
+      Date.now = () => preRollNow;
+      try {
+        const result = await executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 10 });
+        assertEqual(result.status, 'ok', 'Roll should succeed at ×10 from 30 dice');
+      } finally {
+        Date.now = originalNow;
+      }
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(persisted.dicePool, 20, 'Pool should be 30 - 10 = 20 after roll');
+      assertEqual(
+        persisted.diceRegenState?.lastRegenAtMs,
+        preRollNow,
+        'Regen anchor should reset to roll time when spending down from cap',
+      );
+    },
+  },
   {
     name: 'concurrency: two rolls fired in parallel serialise (final state = sequential application)',
     run: async () => {

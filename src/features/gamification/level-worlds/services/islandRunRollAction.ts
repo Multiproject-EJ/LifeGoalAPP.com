@@ -279,6 +279,12 @@ async function performRollAction(options: {
   //    top of its body, so the client remains authoritative even if the remote
   //    write later fails or is skipped (demo session / no client).
   const newDicePool = state.dicePool - diceCost;
+  const nowMs = Date.now();
+  const shouldResetRegenAnchorAfterSpend = Boolean(
+    state.diceRegenState
+    && state.dicePool >= state.diceRegenState.maxDice
+    && newDicePool < state.diceRegenState.maxDice,
+  );
   const lowDiceTutorialTarget = tutorialRollTotal === null
     ? getIslandRunFirstCreaturePackLowDiceTriggerTarget({
         firstSessionTutorialState: state.firstSessionTutorialState,
@@ -293,6 +299,12 @@ async function performRollAction(options: {
     runtimeVersion: newRuntimeVersion,
     tokenIndex: newTokenIndex,
     dicePool: newDicePool,
+    diceRegenState: state.diceRegenState
+      ? {
+          ...state.diceRegenState,
+          lastRegenAtMs: shouldResetRegenAnchorAfterSpend ? nowMs : state.diceRegenState.lastRegenAtMs,
+        }
+      : null,
     firstSessionTutorialState: tutorialRollTotal === null
       ? lowDiceTutorialTarget ?? state.firstSessionTutorialState
       : 'first_roll_consumed',
