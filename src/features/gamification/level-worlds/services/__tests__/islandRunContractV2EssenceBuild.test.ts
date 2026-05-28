@@ -3,6 +3,7 @@ import {
   awardIslandRunContractV2Essence,
   getEffectiveIslandNumber,
   getIslandEssenceMultiplier,
+  getIslandEssenceEarnBonusMultiplier,
   getIslandTotalEssenceCost,
   getStopUpgradeCost,
   initStopBuildStatesForIsland,
@@ -285,6 +286,16 @@ export const islandRunContractV2EssenceBuildTests: TestCase[] = [
       assertEqual(getIslandEssenceMultiplier(10), 1, 'Island 10 still tier 0');
       assertEqual(getIslandEssenceMultiplier(11), 1.5, 'Island 11 enters tier 1 = 1.5');
       assertEqual(getIslandEssenceMultiplier(21), 1.5 * 1.5, 'Island 21 enters tier 2');
+    },
+  },
+  {
+    name: 'island essence earn bonus multiplier ramps after island 20 and is capped',
+    run: () => {
+      assertEqual(getIslandEssenceEarnBonusMultiplier(1), 1, 'Island 1 should not receive earn acceleration');
+      assertEqual(getIslandEssenceEarnBonusMultiplier(20), 1, 'Island 20 should remain baseline');
+      assertEqual(getIslandEssenceEarnBonusMultiplier(21), 1.03, 'Island 21 should start +3% earn bonus');
+      assertEqual(getIslandEssenceEarnBonusMultiplier(101), 1.27, 'Island 101 should include accumulated tier bonus');
+      assertEqual(getIslandEssenceEarnBonusMultiplier(301), 1.45, 'High tiers should clamp at +45%');
     },
   },
   {

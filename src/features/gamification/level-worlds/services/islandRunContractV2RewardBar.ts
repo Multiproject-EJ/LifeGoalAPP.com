@@ -487,7 +487,9 @@ function resolveProgressivePayout(options: {
 
   // Base amounts that scale with tier (progressive rewards get bigger)
   const diceBase = 5 + tier * 3;           // 5, 8, 11, 14, 17, 20, ...
-  const essenceBase = 3 + tier * 2;        // 3, 5, 7, 9, 11, ...
+  const essenceBase = tier <= 10
+    ? 3 + tier * 3
+    : Math.round(33 + (tier - 10) * 2.5);  // 3,6,9...33 then +2.5/tier
   const minigameTokensBase = 6 + tier;     // Actual event-ticket claims at tiers 2/6/10/14: 8, 12, 16, 20, ...
   // Keep sticker-fragment rewards aligned with album capacity expectations:
   // start at 1 fragment, only ramp to 2/3 at meaningfully higher tiers, and
