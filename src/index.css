@@ -9296,7 +9296,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .habit-quick-journal__orb {
-  width: min(160px, 100%);
+  width: min(72px, 100%);
   aspect-ratio: 1 / 1;
   border-radius: 999px;
   border: 1px solid rgba(15, 23, 42, 0.16);
@@ -9351,7 +9351,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   .habit-quick-journal__orb,
   .habit-quick-journal__orb--top {
     grid-column: auto;
-    width: min(220px, 100%);
+    width: min(99px, 100%);
   }
 }
 
