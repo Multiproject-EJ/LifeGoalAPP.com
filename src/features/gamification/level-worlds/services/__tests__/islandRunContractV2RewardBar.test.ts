@@ -237,6 +237,29 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
     },
   },
   {
+    name: 'v2 on: essence primary payout scales faster at higher tiers',
+    run: () => {
+      const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
+      const pickEssenceAtTier = (tier: number) => {
+        const claimable = {
+          ...withEvent,
+          rewardBarProgress: resolveEscalatingThreshold(tier),
+          rewardBarThreshold: resolveEscalatingThreshold(tier),
+          rewardBarClaimCountInEvent: 1, // next claimNumber=2 => essence
+          rewardBarEscalationTier: tier,
+        };
+        const claimed = claimIslandRunContractV2RewardBar({ state: claimable, nowMs: 2_000 + tier });
+        assert(claimed.payout, `Expected payout at tier ${tier}`);
+        assertEqual(claimed.payout!.rewardKind, 'essence', `Expected tier ${tier} to target essence reward`);
+        return claimed.payout!.essence;
+      };
+
+      assertEqual(pickEssenceAtTier(1), 6, 'Tier 1 essence primary should be 6');
+      assertEqual(pickEssenceAtTier(10), 33, 'Tier 10 essence primary should be 33');
+      assertEqual(pickEssenceAtTier(20), 58, 'Tier 20 essence primary should keep late-tier lift');
+    },
+  },
+  {
     name: 'v2 on: Space Excavator event-ticket payouts use tuned 8/12/16/20 ladder',
     run: () => {
       const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;

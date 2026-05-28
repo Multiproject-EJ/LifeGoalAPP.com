@@ -71,6 +71,23 @@ export function getIslandEssenceMultiplier(islandNumber: number): number {
   return Math.pow(1.5, tier);
 }
 
+const ESSENCE_EARN_ACCELERATION_START_TIER = 2; // starts at island 21+
+const ESSENCE_EARN_ACCELERATION_STEP_PER_TIER = 0.03; // +3% earn per 10-island tier
+const ESSENCE_EARN_ACCELERATION_CAP = 0.45; // cap at +45%
+
+/**
+ * Resolve an additional earn-only multiplier bonus for higher tiers.
+ * Cost scaling remains unchanged; this applies to tile earnings only so
+ * late-game progression feels faster without altering early-game balance.
+ */
+export function getIslandEssenceEarnBonusMultiplier(islandNumber: number): number {
+  const safe = Math.max(1, Math.floor(islandNumber));
+  const tier = Math.floor((safe - 1) / 10);
+  const tiersPastStart = Math.max(0, tier - ESSENCE_EARN_ACCELERATION_START_TIER + 1);
+  const bonus = Math.min(ESSENCE_EARN_ACCELERATION_CAP, tiersPastStart * ESSENCE_EARN_ACCELERATION_STEP_PER_TIER);
+  return 1 + bonus;
+}
+
 /**
  * Resolve the essence earned for a specific tile type on a given island.
  * Returns a deterministic amount based on tile type, island number, and an
@@ -84,7 +101,7 @@ export function resolveIslandRunContractV2EssenceEarnForTile(
   if (!range) return 0;
   const island = options?.islandNumber ?? 1;
   const seed = options?.seed ?? Date.now();
-  const mult = getIslandEssenceMultiplier(island);
+  const mult = getIslandEssenceMultiplier(island) * getIslandEssenceEarnBonusMultiplier(island);
   // Deterministic pick within range using LCG (Linear Congruential Generator)
   const t = ((seed * 9301 + 49297) % 233280) / 233280; // 0–1
   const base = Math.floor(range.min + t * (range.max - range.min + 1));
