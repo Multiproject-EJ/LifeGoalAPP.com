@@ -7962,6 +7962,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
         removeDraft(quickJournalDraftKey(session.user.id, activeDate));
         setIsQuickJournalOpen(false);
+        setOpenTodayExpandableSection((current) => (current === 'quickJournal' ? null : current));
         setQuickJournalMode('written');
         setQuickJournalMorning('');
         setQuickJournalDay('');
