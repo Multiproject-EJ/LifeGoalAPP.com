@@ -1373,6 +1373,7 @@ export function IslandRunBoardPrototype({
   const [isRolling, setIsRolling] = useState(false);
   const [isAutoRolling, setIsAutoRolling] = useState(false);
   const [isAutoRollHoldPending, setIsAutoRollHoldPending] = useState(false);
+  const [isTimedEventLaunchQueued, setIsTimedEventLaunchQueued] = useState(false);
   /** Shown briefly over the dice after the roll animation finishes (e.g. "Rolled 8!") */
   const [diceRollTotalOverlay, setDiceRollTotalOverlay] = useState<string | null>(null);
   /** Full tile-by-tile hop sequence for current roll (Monopoly GO style). */
@@ -5353,6 +5354,7 @@ export function IslandRunBoardPrototype({
     }
   }, [isAutoRolling, showEncounterModal, stopAutoRoll]);
 
+
   // Track roll index for deterministic (non-time-based) tile-landing RNG seeding.
   const rollIndexRef = useRef(0);
 
@@ -6580,7 +6582,9 @@ export function IslandRunBoardPrototype({
       isAnimatingRoll: isAnimatingRollRef.current,
       isRollSyncPending: isRollSyncPendingRef.current,
     })) {
-      setActivePlaceholder(resolveIslandRunPlaceholderDescriptor('launch_blocked_while_rolling'));
+      stopAutoRoll();
+      setIsTimedEventLaunchQueued(true);
+      setLandingText('Event launch queued. Finishing this roll first…');
       return;
     }
     if (!isCanonicalEventId(effectiveActiveTimedEvent.eventType)) {
@@ -6666,8 +6670,25 @@ export function IslandRunBoardPrototype({
           }
         : descriptor.config,
     );
+    setIsTimedEventLaunchQueued(false);
     playIslandRunSound('minigame_open');
   };
+
+
+  useEffect(() => {
+    if (!isTimedEventLaunchQueued) return;
+    if (activeLaunchedMinigameId) {
+      setIsTimedEventLaunchQueued(false);
+      return;
+    }
+    if (canOpenIslandRunOverlayWhileRollingState({
+      isRolling,
+      isAnimatingRoll: isAnimatingRollRef.current,
+      isRollSyncPending: isRollSyncPendingRef.current,
+    })) {
+      handleLaunchTimedEventMinigame();
+    }
+  }, [activeLaunchedMinigameId, handleLaunchTimedEventMinigame, isRolling, isTimedEventLaunchQueued]);
   const handleSetDevTimedEventOverride = useCallback((eventType: EventId | null) => {
     if (!isDevModeEnabled || typeof window === 'undefined') return;
     setDevTimedEventOverrideType(eventType);
@@ -9253,14 +9274,17 @@ export function IslandRunBoardPrototype({
         {effectiveActiveTimedEvent && activeEventMeta && (
           <button
             type="button"
-            className="island-run-board__minigame-icon-btn"
-            aria-label={`Open ${activeEventMeta.displayName}`}
+            className={`island-run-board__minigame-icon-btn${isTimedEventLaunchQueued ? ' island-run-board__minigame-icon-btn--queued' : ''}`}
+            aria-label={isTimedEventLaunchQueued ? `${activeEventMeta.displayName} queued to auto-open` : `Open ${activeEventMeta.displayName}`}
             onClick={handleLaunchTimedEventMinigame}
           >
             <span className="island-run-board__minigame-icon-emoji" aria-hidden="true">
               {activeEventMeta.icon}
             </span>
             <span className="island-run-board__minigame-icon-label">{activeEventTickets} {timedEventTokenIcon}</span>
+            {isTimedEventLaunchQueued && (
+              <span className="island-run-board__minigame-icon-helper island-run-board__minigame-icon-helper--queued">Queued to auto-open</span>
+            )}
             {isSpaceExcavatorEffectiveEvent && (
               <>
                 <span className="island-run-board__minigame-icon-helper">Use tickets to dig</span>
