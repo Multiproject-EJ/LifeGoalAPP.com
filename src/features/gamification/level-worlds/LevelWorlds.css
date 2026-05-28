@@ -836,6 +836,29 @@
   pointer-events: none;
 }
 
+:is(
+  [data-theme='sunset-glow'],
+  [data-theme='desert-sand']
+) .island-run-prototype__footer-controller-shell::before {
+  background-image: url('../../../assets/Gold_controller.webp');
+}
+
+:is(
+  [data-theme='flow-day'],
+  [data-theme='bio-day']
+) .island-run-prototype__footer-controller-shell::before {
+  background-image: url('../../../assets/Blue_darkcontroller.webp');
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .island-run-prototype__footer-controller-shell::before {
+  background-image: url('../../../assets/Dark_controller.webp');
+}
+
 .island-run-prototype__footer-controller-shell::after {
   content: '';
   position: absolute;
