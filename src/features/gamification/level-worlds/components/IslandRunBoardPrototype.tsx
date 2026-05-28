@@ -694,7 +694,13 @@ const HEART_BOOST_BUNDLE_COST = 80;
 // Kept only essence bonus for wisdom stop (diamonds → essence).
 const WISDOM_ESSENCE_BONUS_COST_DIAMONDS = 3;
 const WISDOM_ESSENCE_BONUS_AMOUNT = 15;
-const CONTRACT_V2_ESSENCE_SPEND_STEP = 10;
+const CONTRACT_V2_ESSENCE_SPEND_STEP_FLOOR = 10;
+const TARGET_TAPS_PER_BUILD_LEVEL = 6;
+
+function resolveBuildSpendStepForTier(requiredEssence: number): number {
+  const required = Math.max(1, Math.floor(requiredEssence));
+  return Math.max(CONTRACT_V2_ESSENCE_SPEND_STEP_FLOOR, Math.ceil(required / TARGET_TAPS_PER_BUILD_LEVEL));
+}
 const CREATURE_FEED_COOLDOWN_MS = 8 * 60 * 60 * 1000;
 const CREATURE_TREAT_OPTIONS: Array<{ type: CreatureTreatType; label: string; xpGain: number; summary: string }> = [
   { type: 'basic', label: 'Basic Treat', xpGain: 1, summary: '+1 bond XP' },
@@ -4445,7 +4451,7 @@ export function IslandRunBoardPrototype({
       });
       const isFullyBuilt = isStopBuildFullyComplete(buildState);
       const remaining = isFullyBuilt ? 0 : Math.max(0, buildState.requiredEssence - buildState.spentEssence);
-      const canAfford = runtimeState.essence >= Math.min(CONTRACT_V2_ESSENCE_SPEND_STEP, remaining);
+      const canAfford = runtimeState.essence >= Math.min(resolveBuildSpendStepForTier(buildState.requiredEssence), remaining);
       const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;
       const isBuildInteractionDisabled = tutorialRowState.isUnavailable || isBuildDisabled;
       const remainingToFull = buildPanelRemainingToFullByIndex[idx] ?? 0;
@@ -7086,7 +7092,7 @@ export function IslandRunBoardPrototype({
       const spendResult = spendIslandRunContractV2EssenceOnStopBuild({
         islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
         stopIndex,
-        spendAmount: CONTRACT_V2_ESSENCE_SPEND_STEP,
+        spendAmount: resolveBuildSpendStepForTier(currentBuildState.requiredEssence),
         essence: latestRuntimeState.essence,
         essenceLifetimeSpent: latestRuntimeState.essenceLifetimeSpent,
         stopBuildStateByIndex: latestRuntimeState.stopBuildStateByIndex,
@@ -7105,7 +7111,7 @@ export function IslandRunBoardPrototype({
         stopIndex,
         effectiveIslandNumber,
         maxSteps: Math.max(1, Math.floor(maxSteps)),
-        spendAmount: CONTRACT_V2_ESSENCE_SPEND_STEP,
+        spendAmount: resolveBuildSpendStepForTier(currentBuildState.requiredEssence),
         triggerSource: maxSteps > 1 ? 'stop_build_spend_batch' : 'stop_build_spend',
       });
       if (batchResult.stepsApplied < 1) return false;
@@ -7164,7 +7170,7 @@ export function IslandRunBoardPrototype({
     if (
       !latestBuildState
       || isStopBuildFullyComplete(latestBuildState)
-      || runtimeStateRef.current.essence < Math.min(CONTRACT_V2_ESSENCE_SPEND_STEP, remaining)
+      || runtimeStateRef.current.essence < Math.min(resolveBuildSpendStepForTier(latestBuildState.requiredEssence), remaining)
     ) {
       resetBuildRepeatStreak();
     }
@@ -7217,7 +7223,7 @@ export function IslandRunBoardPrototype({
           const liveRemaining = liveBuildState
             ? Math.max(0, liveBuildState.requiredEssence - liveBuildState.spentEssence)
             : 0;
-          const liveCanAfford = liveRuntimeState.essence >= Math.min(CONTRACT_V2_ESSENCE_SPEND_STEP, liveRemaining);
+          const liveCanAfford = liveRuntimeState.essence >= Math.min(resolveBuildSpendStepForTier(liveBuildState.requiredEssence), liveRemaining);
           if (!liveBuildState || isStopBuildFullyComplete(liveBuildState) || !liveCanAfford) {
             resetBuildRepeatStreak();
             stopHold();
