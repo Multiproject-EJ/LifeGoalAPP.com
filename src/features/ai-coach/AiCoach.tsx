@@ -299,9 +299,13 @@ const buildHabitStruggleIntervention = async (
   return {
     id: `habit-struggle-${candidate.habitId}`,
     type: 'habit-struggle',
-    title: 'Habit ease-up',
-    description: `This looks like friction, not failure. Want to downshift today’s tier for “${candidate.habitTitle}”? We can keep your Game of Life streaks intact.`,
+    title: 'Habit guidance needed',
+    description: `“${candidate.habitTitle}” looks like it needs guidance, not judgment. Pick one tiny landmark action to keep momentum.`,
     options: [
+      `This habit needs guidance: help me diagnose friction for ${candidate.habitTitle}`,
+      `Pause: take a 3-day recovery pause for ${candidate.habitTitle}`,
+      `Deactivate: archive ${candidate.habitTitle} for now`,
+      `Make a change: rename/type/details/effort for ${candidate.habitTitle}`,
       `Seed (1 min): ${candidate.habitTitle}`,
       `Minimum (5 min): ${candidate.habitTitle}`,
       `Standard: keep ${candidate.habitTitle} as-is`,
@@ -606,6 +610,22 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
         return blockedResponse('habit');
       }
       return `This sounds like a habit tweak. Want to pick a tier for today: Seed (1 min), Minimum (5 min), or Standard?`;
+    }
+
+    if (lowerMessage.includes('needs guidance')) {
+      return `Great move. Let’s do this slowly: what feels hardest right now—timing, energy, friction, or unclear next step? Pick one and we’ll adapt from there.`;
+    }
+
+    if (lowerMessage.includes('pause:') || lowerMessage.includes('recovery pause')) {
+      return `Smart pause. A short pause protects momentum. Do you want a 3-day pause with a tiny check-in, or a full pause with zero expectations?`;
+    }
+
+    if (lowerMessage.includes('deactivate:') || lowerMessage.includes('archive')) {
+      return `That can be healthy. Deactivating is not failure. Want to replace it with a lighter bridge habit so your routine still has a pulse?`;
+    }
+
+    if (lowerMessage.includes('make a change:') || lowerMessage.includes('rename/type/details/effort')) {
+      return `Perfect. Which change first: rename it, change type/schedule, simplify details, or reduce effort level? We’ll do one small edit at a time.`;
     }
 
     if (lowerMessage.includes('stress') || lowerMessage.includes('anxiety') || lowerMessage.includes('overwhelm')) {
