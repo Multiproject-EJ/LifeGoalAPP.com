@@ -18498,11 +18498,27 @@ html.platform-ipad .workspace-shell__menu-edge {
   right: 0.4rem;
   top: 0;
   transform: translateY(-46px);
+  overflow: hidden;
+  border-color: rgba(217, 119, 6, 0.22);
+  background:
+    url('/assets/icons/compass-gold-256.webp') center / 78% 78% no-repeat,
+    radial-gradient(circle at 42% 28%, rgba(255, 255, 255, 0.92), rgba(254, 243, 199, 0.62) 38%, rgba(251, 191, 36, 0.28) 68%, rgba(180, 83, 9, 0.22) 100%);
+  box-shadow:
+    0 10px 24px rgba(146, 64, 14, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-icon {
+  font-size: 0;
 }
 
 .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button:hover,
 .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button:focus-visible {
   transform: translateY(-47px);
+  border-color: rgba(217, 119, 6, 0.34);
+  box-shadow:
+    0 14px 28px rgba(146, 64, 14, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
 }
 
 .mobile-footer-nav__menu-button:hover,
