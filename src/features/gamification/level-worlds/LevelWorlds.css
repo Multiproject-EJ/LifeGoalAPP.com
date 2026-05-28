@@ -814,7 +814,6 @@
 
 
 .island-run-prototype__footer-controller-shell {
-  --controller-surface-tint: linear-gradient(180deg, rgba(158, 218, 242, 0.18), rgba(67, 125, 156, 0.14));
   --controller-control-border: rgba(198, 234, 250, 0.54);
   --controller-control-highlight: rgba(229, 248, 255, 0.44);
   --controller-control-shadow: rgba(2, 17, 34, 0.5);
@@ -859,27 +858,13 @@
   background-image: url('../../../assets/Dark_controller.webp');
 }
 
-.island-run-prototype__footer-controller-shell::after {
-  content: '';
-  position: absolute;
-  inset: clamp(8px, 2.2vw, 12px) clamp(12px, 3vw, 18px) clamp(14px, 3.8vw, 22px);
-  border-radius: 999px;
-  background: var(--controller-surface-tint);
-  box-shadow:
-    inset 0 1px 0 rgba(222, 246, 255, 0.18),
-    inset 0 -16px 22px rgba(7, 23, 40, 0.26),
-    0 8px 18px rgba(3, 14, 27, 0.22);
-  backdrop-filter: blur(1.5px) saturate(115%);
-  -webkit-backdrop-filter: blur(1.5px) saturate(115%);
-  z-index: 1;
-  pointer-events: none;
-}
 
 .island-run-prototype__footer-nav-btn--slot-story,
 .island-run-prototype__footer-nav-btn--slot-creatures,
 .island-run-prototype__footer-nav-btn--slot-market,
 .island-run-prototype__footer-nav-btn--slot-build,
-.island-run-prototype__footer-dice-group--slot-center {
+.island-run-prototype__footer-dice-group--slot-center,
+.island-run-prototype__footer-multiplier-btn--slot-badge {
   position: absolute;
   z-index: 2;
   left: var(--slot-x, 50%);
@@ -890,6 +875,10 @@
 .island-run-prototype__footer-dice-group--slot-center {
   width: clamp(132px, 31vw, 188px);
   z-index: 2;
+}
+
+.island-run-prototype__footer-multiplier-btn--slot-badge {
+  z-index: 3;
 }
 .island-run-prototype__footer-actions {
   display: flex;
