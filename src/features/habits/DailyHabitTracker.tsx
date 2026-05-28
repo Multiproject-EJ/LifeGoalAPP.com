@@ -49,6 +49,7 @@ import { isIslandRunFeatureEnabled } from '../../config/islandRunFeatureFlags';
 import { fetchGoals, insertGoal } from '../../services/goals';
 import { getHabitReminderQueueStatus, syncQueuedHabitReminderPrefs } from '../../services/habitReminderPrefs';
 import {
+  createHabitV2,
   archiveHabitV2,
   getHabitsV2QueueStatus,
   pauseHabitV2,
@@ -66,6 +67,7 @@ import {
   getHabitScalePlan,
   getStageCreditMultiplier,
   getAutoProgressState,
+  buildDefaultAutoProgressState,
   getNextDownshiftTier,
   getNextUpgradeTier,
   type AutoProgressShift,
@@ -772,11 +774,16 @@ export function DailyHabitTracker({
 
   const [todayTodos, setTodayTodos] = useState<TodayTodo[]>([]);
   const [todayTodoModalOpen, setTodayTodoModalOpen] = useState(false);
+  const [editingTodayTodo, setEditingTodayTodo] = useState<TodayTodo | null>(null);
   const [todayTodoTitle, setTodayTodoTitle] = useState('');
   const [todayTodoNotes, setTodayTodoNotes] = useState('');
+  const [todayTodoDate, setTodayTodoDate] = useState(() => formatISODate(new Date()));
   const [todayTodoError, setTodayTodoError] = useState<string | null>(null);
+  const [todayTodoStatus, setTodayTodoStatus] = useState<string | null>(null);
+  const [todayTodoSaving, setTodayTodoSaving] = useState(false);
   const [todayTodoLoadError, setTodayTodoLoadError] = useState<string | null>(null);
   const [justCompletedTodoId, setJustCompletedTodoId] = useState<string | null>(null);
+  const [todayTodoActionPendingById, setTodayTodoActionPendingById] = useState<Record<string, boolean>>({});
 
   const [isTodaysOfferModalOpen, setIsTodaysOfferModalOpen] = useState(false);
   const [todaysOfferCheckoutPending, setTodaysOfferCheckoutPending] = useState(false);
@@ -851,28 +858,79 @@ export function DailyHabitTracker({
     void loadTodayTodos(activeDate);
   }, [activeDate, loadTodayTodos]);
 
-  const handleCreateTodayTodo = useCallback(async () => {
+  useEffect(() => {
+    if (!todayTodoModalOpen || typeof document === 'undefined') return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [todayTodoModalOpen]);
+
+  const handleOpenCreateTodayTodo = useCallback(() => {
+    setEditingTodayTodo(null);
+    setTodayTodoTitle('');
+    setTodayTodoNotes('');
+    setTodayTodoDate(activeDate);
+    setTodayTodoError(null);
+    setTodayTodoStatus(null);
+    setTodayTodoModalOpen(true);
+  }, [activeDate]);
+
+  const handleOpenEditTodayTodo = useCallback((todo: TodayTodo) => {
+    setEditingTodayTodo(todo);
+    setTodayTodoTitle(todo.title);
+    setTodayTodoNotes(todo.notes ?? '');
+    setTodayTodoDate(todo.todo_date);
+    setTodayTodoError(null);
+    setTodayTodoStatus(null);
+    setTodayTodoModalOpen(true);
+  }, []);
+
+  const handleCloseTodayTodoModal = useCallback(() => {
+    setTodayTodoModalOpen(false);
+    setTodayTodoError(null);
+    setTodayTodoStatus(null);
+    setEditingTodayTodo(null);
+  }, []);
+
+  const handleSaveTodayTodo = useCallback(async () => {
     const title = todayTodoTitle.trim();
+    const scheduledDate = todayTodoDate || activeDate;
+    if (scheduledDate < activeDate) {
+      setTodayTodoError('Choose today or a future date.');
+      return;
+    }
     if (!title) {
       setTodayTodoError('Title is required.');
       return;
     }
-    const { error } = await createTodayTodo(session.user.id, {
-      dateISO: activeDate,
-      title,
-      notes: todayTodoNotes.trim() || null,
-      orderIndex: todayTodos.filter((todo) => !todo.completed).length,
-    });
+    setTodayTodoSaving(true);
+    setTodayTodoError(null);
+    setTodayTodoStatus(null);
+
+    const notes = todayTodoNotes.trim() || null;
+    const { error } = editingTodayTodo
+      ? await updateTodayTodo(editingTodayTodo.id, {
+        title,
+        notes,
+        todo_date: scheduledDate,
+      })
+      : await createTodayTodo(session.user.id, {
+        dateISO: scheduledDate,
+        title,
+        notes,
+        orderIndex: todayTodos.filter((todo) => !todo.completed).length,
+      });
+
+    setTodayTodoSaving(false);
     if (error) {
       setTodayTodoError('Could not save todo right now. Please try again.');
       return;
     }
-    setTodayTodoTitle('');
-    setTodayTodoNotes('');
-    setTodayTodoModalOpen(false);
-    setTodayTodoError(null);
+    handleCloseTodayTodoModal();
     void loadTodayTodos(activeDate);
-  }, [activeDate, loadTodayTodos, session.user.id, todayTodoNotes, todayTodoTitle, todayTodos]);
+  }, [activeDate, editingTodayTodo, handleCloseTodayTodoModal, loadTodayTodos, session.user.id, todayTodoDate, todayTodoNotes, todayTodoTitle, todayTodos]);
 
   const handleToggleTodayTodo = useCallback(async (todo: TodayTodo) => {
     const isMarkingComplete = !todo.completed;
@@ -888,6 +946,59 @@ export function DailyHabitTracker({
       void loadTodayTodos(activeDate);
     }
   }, [activeDate, loadTodayTodos]);
+
+  const handleRescheduleTodayTodo = useCallback(async (todo: TodayTodo, nextDateISO: string) => {
+    setTodayTodoActionPendingById((current) => ({ ...current, [todo.id]: true }));
+    const { error } = await updateTodayTodo(todo.id, { todo_date: nextDateISO, completed: false });
+    setTodayTodoActionPendingById((current) => {
+      const next = { ...current };
+      delete next[todo.id];
+      return next;
+    });
+    if (error) {
+      setTodayTodoLoadError('Could not reschedule todo right now.');
+      return;
+    }
+    setTodayTodoLoadError(null);
+    void loadTodayTodos(activeDate);
+  }, [activeDate, loadTodayTodos]);
+
+  const handleRescheduleTodayTodoTomorrow = useCallback((todo: TodayTodo) => {
+    const baseDate = new Date(`${todo.todo_date || activeDate}T12:00:00`);
+    const tomorrowISO = formatISODate(addDays(baseDate, 1));
+    void handleRescheduleTodayTodo(todo, tomorrowISO);
+  }, [activeDate, handleRescheduleTodayTodo]);
+
+  const handleConvertTodayTodoToHabit = useCallback(async (todo: TodayTodo) => {
+    setTodayTodoActionPendingById((current) => ({ ...current, [todo.id]: true }));
+    const schedule = { mode: 'daily' } as Json;
+    const { error } = await createHabitV2({
+      title: todo.title,
+      emoji: '✅',
+      type: 'boolean',
+      schedule,
+      start_date: today,
+      habit_intent: todo.notes ?? null,
+      autoprog: buildDefaultAutoProgressState({ schedule, target: null }) as Json,
+      archived: false,
+      status: 'active',
+    }, session.user.id);
+    setTodayTodoActionPendingById((current) => {
+      const next = { ...current };
+      delete next[todo.id];
+      return next;
+    });
+    if (error) {
+      setTodayTodoLoadError('Could not convert todo to a habit right now.');
+      return;
+    }
+    setTodayTodoLoadError(null);
+    setTodayTodoStatus(`Converted “${todo.title}” into a daily habit.`);
+    await updateTodayTodo(todo.id, { completed: true });
+    void loadTodayTodos(activeDate);
+    const { data: habitData } = await fetchHabitsForUser(session.user.id);
+    if (habitData) setHabits(habitData);
+  }, [activeDate, loadTodayTodos, session.user.id, today]);
 
   const buildTodayTodoCoachPrompt = useCallback((todo: TodayTodo) => {
     return `I need help completing this today task:
@@ -6454,10 +6565,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             <button
               type="button"
               className="habit-checklist-card__starter-launcher habit-checklist-card__todo-launcher"
-              onClick={() => {
-                setTodayTodoError(null);
-                setTodayTodoModalOpen(true);
-              }}
+              onClick={handleOpenCreateTodayTodo}
             >
               Todo
             </button>
@@ -6614,7 +6722,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                             {todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes yet — add context when you need it.</p>}
                             <div className="habit-checklist__todo-actions" onClick={(event) => event.stopPropagation()}>
                               <span className="habit-checklist__todo-actions-label">Quick actions</span>
-                              <button type="button" className="habit-checklist__todo-action-btn" onClick={() => void handleToggleTodayTodo(todo)}>Complete</button>
+                              <button type="button" className="habit-checklist__todo-action-btn" onClick={() => void handleToggleTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Complete</button>
+                              <button type="button" className="habit-checklist__todo-action-btn" onClick={() => handleRescheduleTodayTodoTomorrow(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Tomorrow</button>
+                              <button type="button" className="habit-checklist__todo-action-btn" onClick={() => handleOpenEditTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Edit / reschedule</button>
+                              <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--habit" onClick={() => void handleConvertTodayTodoToHabit(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Convert to habit</button>
                               {onNavigateToTimer ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--focus" onClick={() => onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title })}>Start 25m focus</button> : null}
                               {onOpenAiCoach ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--coach" onClick={() => onOpenAiCoach(buildTodayTodoCoachPrompt(todo))}>Help me figure out next step</button> : null}
                             </div>
@@ -6627,6 +6738,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               </li>
             );
           })}
+          {todayTodoStatus ? <li className="habit-checklist__empty habit-checklist__empty--success">{todayTodoStatus}</li> : null}
           {todayTodoLoadError ? <li className="habit-checklist__empty">{todayTodoLoadError}</li> : null}
           {!todayTodoLoadError && activeTodos.length === 0 ? (
             <li className="habit-checklist__empty">No todos for this date yet.</li>
@@ -6679,7 +6791,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                               {todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes were saved for this todo.</p>}
                               <div className="habit-checklist__todo-actions" onClick={(event) => event.stopPropagation()}>
                                 <span className="habit-checklist__todo-actions-label">Quick actions</span>
-                                <button type="button" onClick={() => void handleToggleTodayTodo(todo)}>Mark active again</button>
+                                <button type="button" onClick={() => void handleToggleTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Mark active again</button>
+                                <button type="button" onClick={() => handleOpenEditTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Edit</button>
                               </div>
                             </>
                           ) : null}
@@ -8576,10 +8689,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 <button
               type="button"
               className="habit-checklist-card__starter-launcher habit-checklist-card__todo-launcher"
-              onClick={() => {
-                setTodayTodoError(null);
-                setTodayTodoModalOpen(true);
-              }}
+              onClick={handleOpenCreateTodayTodo}
             >
               Todo
             </button>
@@ -8608,10 +8718,20 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
 
             {todayTodoModalOpen ? createPortal(
-              <div className="habit-edit-modal-overlay" role="presentation" onClick={() => setTodayTodoModalOpen(false)}>
-                <div className="habit-edit-modal-content" role="dialog" aria-modal="true" aria-label="Add today todo" onClick={(event) => event.stopPropagation()}>
-                  <h3>Add today todo</h3>
-                  <p className="habit-edit-modal-subcopy">Capture one concrete task for today. Keep it short and specific.</p>
+              <div className="habit-edit-modal-overlay" role="presentation" onClick={handleCloseTodayTodoModal}>
+                <div
+                  className="habit-edit-modal-content"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label={editingTodayTodo ? 'Edit today todo' : 'Add today todo'}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <h3>{editingTodayTodo ? 'Edit todo' : 'Add today todo'}</h3>
+                  <p className="habit-edit-modal-subcopy">
+                    {editingTodayTodo
+                      ? 'Update the title, details, or move this task forward to another day.'
+                      : 'Capture one concrete task and choose when it should show up.'}
+                  </p>
                   <label>
                     Todo title
                     <input placeholder="e.g., Outline Q3 onboarding email" value={todayTodoTitle} onChange={(event) => setTodayTodoTitle(event.target.value)} maxLength={120} />
@@ -8620,10 +8740,25 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                     Details / notes (optional)
                     <textarea rows={4} placeholder="Add context, blockers, or first next step." value={todayTodoNotes} onChange={(event) => setTodayTodoNotes(event.target.value)} />
                   </label>
+                  <label>
+                    Scheduled date
+                    <input type="date" value={todayTodoDate} min={activeDate} onChange={(event) => setTodayTodoDate(event.target.value)} />
+                  </label>
+                  {editingTodayTodo ? (
+                    <button
+                      type="button"
+                      className="habit-checklist__todo-action-btn"
+                      onClick={() => setTodayTodoDate(formatISODate(addDays(new Date(`${editingTodayTodo.todo_date}T12:00:00`), 1)))}
+                    >
+                      Move to next day
+                    </button>
+                  ) : null}
                   {todayTodoError ? <p className="habit-checklist__skip-error">{todayTodoError}</p> : null}
                   <div className="habit-edit-modal-actions">
-                    <button type="button" className="habit-edit-cancel-btn" onClick={() => { setTodayTodoError(null); setTodayTodoModalOpen(false); }}>Cancel</button>
-                    <button type="button" className="habit-edit-save-btn" onClick={() => void handleCreateTodayTodo()}>Save Todo</button>
+                    <button type="button" className="habit-edit-cancel-btn" onClick={handleCloseTodayTodoModal} disabled={todayTodoSaving}>Cancel</button>
+                    <button type="button" className="habit-edit-save-btn" onClick={() => void handleSaveTodayTodo()} disabled={todayTodoSaving}>
+                      {todayTodoSaving ? 'Saving…' : editingTodayTodo ? 'Save changes' : 'Save Todo'}
+                    </button>
                   </div>
                 </div>
               </div>, document.body

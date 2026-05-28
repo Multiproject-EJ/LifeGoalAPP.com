@@ -52,7 +52,7 @@ export async function createTodayTodo(
 
 export async function updateTodayTodo(
   id: string,
-  patch: Partial<Pick<TodayTodo, 'title' | 'notes' | 'completed' | 'order_index'>>
+  patch: Partial<Pick<TodayTodo, 'title' | 'notes' | 'completed' | 'order_index' | 'todo_date'>>
 ): Promise<ServiceResponse<TodayTodo>> {
   if (!canUseSupabaseData()) return { data: null, error: authRequiredError() };
   const supabase = getSupabaseClient();
