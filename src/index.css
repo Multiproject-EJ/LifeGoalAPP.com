@@ -22096,7 +22096,14 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-size: 0.75rem;
 }
 
-.daily-treats-calendar__day-pair--final .daily-treats-calendar__hatch-number {
+.daily-treats-calendar__day-pair--final 
+.daily-treats-calendar--holiday-personal-quest .daily-treats-calendar__hatch {
+  border-width: 2px;
+  border-color: rgba(191, 219, 254, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.22);
+}
+
+.daily-treats-calendar__hatch-number {
   font-size: 1.15rem;
 }
 
