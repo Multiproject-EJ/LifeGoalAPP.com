@@ -11,6 +11,23 @@ const ISLAND_RUN_MUSIC_TRACKS = {
 
 export type IslandRunMusicTrackId = keyof typeof ISLAND_RUN_MUSIC_TRACKS;
 
+const ISLAND_RUN_DREAMT_ISLAND_INTERVAL = 10;
+
+export function isIslandRunDreamtIsland(islandNumber: number): boolean {
+  if (!Number.isFinite(islandNumber)) return false;
+
+  const normalizedIslandNumber = Math.trunc(islandNumber);
+  return normalizedIslandNumber > 0 && normalizedIslandNumber % ISLAND_RUN_DREAMT_ISLAND_INTERVAL === 0;
+}
+
+export function getIslandRunBoardMusicPlaylist(islandNumber: number): IslandRunMusicTrackId[] {
+  if (isIslandRunDreamtIsland(islandNumber)) {
+    return ['island-board-ambient', 'luxury-reward', 'boss-rhythm-duel'];
+  }
+
+  return ['luxury-reward', 'event-jackpot', 'boss-rhythm-duel'];
+}
+
 const islandRunMusicAudioByTrack = new Map<IslandRunMusicTrackId, HTMLAudioElement>();
 let ownedIslandRunMusicTrackId: IslandRunMusicTrackId | null = null;
 let playingIslandRunMusicTrackId: IslandRunMusicTrackId | null = null;

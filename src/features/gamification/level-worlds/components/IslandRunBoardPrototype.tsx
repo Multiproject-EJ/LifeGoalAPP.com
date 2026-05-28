@@ -230,6 +230,7 @@ import {
   setIslandRunAudioEnabled,
 } from '../services/islandRunAudio';
 import {
+  getIslandRunBoardMusicPlaylist,
   playIslandRunMusic,
   playIslandRunMusicPlaylist,
   stopIslandRunMusic,
@@ -2690,9 +2691,9 @@ export function IslandRunBoardPrototype({
       return;
     }
 
-    playIslandRunMusicPlaylist(['island-board-ambient', 'luxury-reward', 'boss-rhythm-duel']);
+    playIslandRunMusicPlaylist(getIslandRunBoardMusicPlaylist(effectiveIslandNumber));
     return () => stopIslandRunMusic();
-  }, [musicEnabled, showIslandClearCelebration, showShopPanel]);
+  }, [effectiveIslandNumber, musicEnabled, showIslandClearCelebration, showShopPanel]);
 
   useEffect(() => {
     if (!showShopPanel || !musicEnabled) {
