@@ -510,6 +510,24 @@ export function MyAccountPanel({
               onClick={() => setAppearanceFolderOpen(true)}
             />
             <SettingsFeatureCard
+              icon="🎊"
+              title="Holiday"
+              featureId="settings.holidayThemes"
+              onClick={handleHolidayThemesClick}
+            />
+            <SettingsFeatureCard
+              icon="🎁"
+              title="Birthday Gift"
+              onClick={() => setBirthdayGiftFolderOpen(true)}
+            />
+          </div>
+        </div>
+        <div className="settings-modules__group" aria-label="Comfort and alerts settings modules">
+          <div className="settings-modules__group-header">
+            <p className="settings-modules__group-eyebrow">Comfort &amp; Alerts</p>
+          </div>
+          <div className="settings-modules__grid">
+            <SettingsFeatureCard
               icon="📳"
               title="Vibration"
               onClick={() => setHapticsFolderOpen(true)}
@@ -518,36 +536,6 @@ export function MyAccountPanel({
               icon="🪪"
               title="Menu Icon"
               onClick={() => setMenuDisplayFolderOpen(true)}
-            />
-            <SettingsFeatureCard
-              icon="🎁"
-              title="Birthday Gift"
-              onClick={() => setBirthdayGiftFolderOpen(true)}
-            />
-            {onLaunchOnboarding ? (
-              <SettingsFeatureCard
-                icon="🧭"
-                title="Onboarding"
-                onClick={() => setOnboardingToolsFolderOpen(true)}
-              />
-            ) : null}
-          </div>
-        </div>
-        <div className="settings-modules__group" aria-label="Quick settings modules">
-          <div className="settings-modules__group-header">
-            <p className="settings-modules__group-eyebrow">Quick modules</p>
-          </div>
-          <div className="settings-modules__grid">
-            <SettingsFeatureCard
-              icon="🛡️"
-              title="AI & Privacy"
-              onClick={() => setAiPrivacyFolderOpen(true)}
-            />
-            <SettingsFeatureCard
-              icon="🎊"
-              title="Holiday"
-              featureId="settings.holidayThemes"
-              onClick={handleHolidayThemesClick}
             />
             <SettingsFeatureCard
               icon="⏰"
@@ -560,6 +548,25 @@ export function MyAccountPanel({
               featureId="settings.notifications"
               onClick={handleNotificationsClick}
             />
+          </div>
+        </div>
+        <div className="settings-modules__group" aria-label="Quick settings modules">
+          <div className="settings-modules__group-header">
+            <p className="settings-modules__group-eyebrow">Quick modules</p>
+          </div>
+          <div className="settings-modules__grid">
+            <SettingsFeatureCard
+              icon="🛡️"
+              title="AI & Privacy"
+              onClick={() => setAiPrivacyFolderOpen(true)}
+            />
+            {onLaunchOnboarding ? (
+              <SettingsFeatureCard
+                icon="🧭"
+                title="Onboarding"
+                onClick={() => setOnboardingToolsFolderOpen(true)}
+              />
+            ) : null}
             {showAdminTools ? (
               <SettingsFeatureCard
                 icon="🔧"
