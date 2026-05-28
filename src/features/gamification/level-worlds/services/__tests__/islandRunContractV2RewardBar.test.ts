@@ -482,6 +482,26 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
     },
   },
   {
+    name: 'v2 on: sticker fragment payouts stay within 1→3 and scale at higher tiers',
+    run: () => {
+      const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
+      const previewAtTier = (tier: number) =>
+        resolveRewardBarClaimPayoutPreview({
+          state: {
+            ...withEvent,
+            rewardBarClaimCountInEvent: 3, // next claim => sticker_fragments
+            rewardBarEscalationTier: tier,
+          },
+        });
+
+      assertEqual(previewAtTier(0).stickerFragments, 1, 'Expected tier 0 sticker payout to start at 1 fragment');
+      assertEqual(previewAtTier(3).stickerFragments, 1, 'Expected early tiers to remain at 1 fragment');
+      assertEqual(previewAtTier(4).stickerFragments, 2, 'Expected mid tiers to ramp to 2 fragments');
+      assertEqual(previewAtTier(8).stickerFragments, 3, 'Expected higher tiers to ramp to 3 fragments');
+      assertEqual(previewAtTier(20).stickerFragments, 3, 'Expected sticker payout to cap at 3 fragments');
+    },
+  },
+  {
     name: 'v2 on: feeding_frenzy event rotates in after companion_feast (sequence wraps)',
     run: () => {
       const nowMs = 10_000;
