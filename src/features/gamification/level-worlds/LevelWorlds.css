@@ -863,7 +863,8 @@
 .island-run-prototype__footer-nav-btn--slot-creatures,
 .island-run-prototype__footer-nav-btn--slot-market,
 .island-run-prototype__footer-nav-btn--slot-build,
-.island-run-prototype__footer-dice-group--slot-center {
+.island-run-prototype__footer-dice-group--slot-center,
+.island-run-prototype__footer-multiplier-btn--slot-badge {
   position: absolute;
   z-index: 2;
   left: var(--slot-x, 50%);
@@ -874,6 +875,10 @@
 .island-run-prototype__footer-dice-group--slot-center {
   width: clamp(132px, 31vw, 188px);
   z-index: 2;
+}
+
+.island-run-prototype__footer-multiplier-btn--slot-badge {
+  z-index: 3;
 }
 .island-run-prototype__footer-actions {
   display: flex;

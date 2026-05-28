@@ -1035,14 +1035,14 @@ type FooterControllerSlot = {
 };
 
 const FOOTER_CONTROLLER_SLOT_MAP: Record<FooterControllerSlotId, FooterControllerSlot> = {
-  // Align side actions with the controller grip shoulders and dock the primary
-  // roll controls into the middle bowl instead of the lower controller edge.
-  leftUpper: { x: 18, y: 58, rotate: -3.5, scale: 0.96, depth: 'raised' },
-  leftLower: { x: 11.5, y: 77, rotate: -8, scale: 0.92, depth: 'raised' },
-  centerCore: { x: 50, y: 67.5, rotate: 0, scale: 0.98, depth: 'inset' },
-  centerBadge: { x: 50, y: 51.5, rotate: 0, scale: 0.92, depth: 'surface' },
-  rightLower: { x: 88.5, y: 77, rotate: 8, scale: 0.92, depth: 'raised' },
-  rightUpper: { x: 82, y: 58, rotate: 3.5, scale: 0.96, depth: 'raised' },
+  // Keep controls inside the visible controller shell: side actions sit on the
+  // white shoulder/upper grip contours, while roll controls occupy the blue bowl.
+  leftUpper: { x: 18, y: 49, rotate: -3.5, scale: 0.96, depth: 'raised' },
+  leftLower: { x: 11.5, y: 66, rotate: -8, scale: 0.92, depth: 'raised' },
+  centerCore: { x: 50, y: 58.5, rotate: 0, scale: 0.98, depth: 'inset' },
+  centerBadge: { x: 50, y: 43.5, rotate: 0, scale: 0.92, depth: 'surface' },
+  rightLower: { x: 88.5, y: 66, rotate: 8, scale: 0.92, depth: 'raised' },
+  rightUpper: { x: 82, y: 49, rotate: 3.5, scale: 0.96, depth: 'raised' },
 };
 
 function getFooterControllerSlotStyle(slot: FooterControllerSlot): React.CSSProperties {
@@ -9493,27 +9493,27 @@ export function IslandRunBoardPrototype({
                 >
                   🔨 Build
                 </button>
+                <button
+                  type="button"
+                  className={`island-run-prototype__footer-multiplier-btn island-run-prototype__footer-multiplier-btn--slot-badge${effectiveMultiplier > 1 ? ' island-run-prototype__footer-multiplier-btn--active' : ''}${isAtMaxAvailableMultiplier ? ' island-run-prototype__footer-multiplier-btn--max' : ''}`}
+                  style={getFooterControllerSlotStyle(FOOTER_CONTROLLER_SLOT_MAP.centerBadge)}
+                  data-max-multiplier={isAtMaxAvailableMultiplier ? 'true' : undefined}
+                  disabled={isBuildTutorialGameplayBlocked}
+                  onClick={() => {
+                    if (unlockedMultipliers.length <= 1) return;
+                    const currentIdx = unlockedMultipliers.indexOf(effectiveMultiplier);
+                    const nextIdx = (currentIdx + 1) % unlockedMultipliers.length;
+                    setDiceMultiplier(unlockedMultipliers[nextIdx]!);
+                  }}
+                  title={`Cost: ${effectiveDiceCost} dice/roll · Max: ×${maxAvailableMultiplier}`}
+                >
+                  ×{effectiveMultiplier}
+                  {effectiveMultiplier > 1 && <span className="island-run-prototype__footer-nav-btn-cost"> (-{effectiveDiceCost})</span>}
+                </button>
                 <div
                   className="island-run-prototype__footer-dice-group island-run-prototype__footer-dice-group--slot-center"
                   style={getFooterControllerSlotStyle(FOOTER_CONTROLLER_SLOT_MAP.centerCore)}
                 >
-                  <button
-                    type="button"
-                    className={`island-run-prototype__footer-multiplier-btn${effectiveMultiplier > 1 ? ' island-run-prototype__footer-multiplier-btn--active' : ''}${isAtMaxAvailableMultiplier ? ' island-run-prototype__footer-multiplier-btn--max' : ''}`}
-                    style={getFooterControllerSlotStyle(FOOTER_CONTROLLER_SLOT_MAP.centerBadge)}
-                    data-max-multiplier={isAtMaxAvailableMultiplier ? 'true' : undefined}
-                    disabled={isBuildTutorialGameplayBlocked}
-                    onClick={() => {
-                      if (unlockedMultipliers.length <= 1) return;
-                      const currentIdx = unlockedMultipliers.indexOf(effectiveMultiplier);
-                      const nextIdx = (currentIdx + 1) % unlockedMultipliers.length;
-                      setDiceMultiplier(unlockedMultipliers[nextIdx]!);
-                    }}
-                    title={`Cost: ${effectiveDiceCost} dice/roll · Max: ×${maxAvailableMultiplier}`}
-                  >
-                    ×{effectiveMultiplier}
-                    {effectiveMultiplier > 1 && <span className="island-run-prototype__footer-nav-btn-cost"> (-{effectiveDiceCost})</span>}
-                  </button>
                   <button
                     type="button"
                     className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'} ${rollButtonInteractionClass}`.trim()}
