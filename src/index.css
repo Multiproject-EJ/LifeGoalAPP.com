@@ -12898,7 +12898,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 .habit-checklist-card__starter-launcher {
   border: 1px solid rgba(14, 165, 233, 0.35);
   background: rgba(14, 165, 233, 0.12);
-  color: #dbeafe;
+  color: #1e3a8a;
   border-radius: 999px;
   padding: 0.25rem 0.65rem;
   font-size: 0.78rem;
@@ -12907,6 +12907,12 @@ html.platform-ipad .workspace-shell__menu-edge {
 .habit-checklist-card__todo-launcher {
   border-color: rgba(37, 99, 235, 0.45);
   background: rgba(59, 130, 246, 0.14);
+}
+[data-theme='dark-glass'] .habit-checklist-card__starter-launcher,
+[data-theme='midnight-purple'] .habit-checklist-card__starter-launcher,
+[data-theme='flow-night'] .habit-checklist-card__starter-launcher,
+[data-theme='bio-night'] .habit-checklist-card__starter-launcher {
+  color: #dbeafe;
 }
 .habit-edit-modal-subcopy { margin: 0.35rem 0 0.2rem; color: #475569; font-size: 0.85rem; line-height: 1.4; }
 
