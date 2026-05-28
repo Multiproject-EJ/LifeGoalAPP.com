@@ -17890,6 +17890,36 @@ html.platform-ipad .workspace-shell__menu-edge {
   object-fit: contain;
 }
 
+.mobile-footer-nav__shield-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.22));
+}
+
+.mobile-footer-nav__shield-icon-shadow {
+  fill: #0f172a;
+  opacity: 0.18;
+  transform: translateY(0.8px);
+}
+
+.mobile-footer-nav__shield-icon-face {
+  fill: #2563eb;
+  stroke: rgba(15, 23, 42, 0.55);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.mobile-footer-nav__shield-icon-panel {
+  fill: #38bdf8;
+  opacity: 0.72;
+}
+
+.mobile-footer-nav__shield-icon-ridge {
+  fill: rgba(255, 255, 255, 0.34);
+}
+
 .mobile-footer-nav__label {
   font-size: 0.82rem;
   display: inline-flex;
