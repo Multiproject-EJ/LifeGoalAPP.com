@@ -1,4 +1,10 @@
-import { useTheme, LIGHT_THEMES, DARK_THEMES, type ThemeMode } from '../contexts/ThemeContext';
+import {
+  canSelectTheme,
+  useTheme,
+  LIGHT_THEMES,
+  DARK_THEMES,
+  type ThemeMode,
+} from '../contexts/ThemeContext';
 
 const THEME_MODE_OPTIONS: { mode: ThemeMode; icon: string; label: string }[] = [
   { mode: 'light', icon: '☀️', label: 'Light' },
@@ -8,9 +14,10 @@ const THEME_MODE_OPTIONS: { mode: ThemeMode; icon: string; label: string }[] = [
 
 type MobileThemeSelectorProps = {
   onClose: () => void;
+  isAdminOrCreator?: boolean;
 };
 
-export function MobileThemeSelector({ onClose }: MobileThemeSelectorProps) {
+export function MobileThemeSelector({ onClose, isAdminOrCreator = false }: MobileThemeSelectorProps) {
   const {
     themeMode,
     lightTheme,
@@ -23,12 +30,12 @@ export function MobileThemeSelector({ onClose }: MobileThemeSelectorProps) {
   const handleThemeSelect = (themeId: string, category: 'light' | 'dark') => {
     if (category === 'light') {
       const theme = LIGHT_THEMES.find(t => t.id === themeId);
-      if (theme) {
+      if (theme && canSelectTheme(theme.id, isAdminOrCreator)) {
         setLightTheme(theme.id);
       }
     } else {
       const theme = DARK_THEMES.find(t => t.id === themeId);
-      if (theme) {
+      if (theme && canSelectTheme(theme.id, isAdminOrCreator)) {
         setDarkTheme(theme.id);
       }
     }
@@ -73,26 +80,38 @@ export function MobileThemeSelector({ onClose }: MobileThemeSelectorProps) {
         </div>
       </div>
 
+      <p className="mobile-theme-selector__hint">
+        Bio Day and Midnight Blue are included by default. Locked themes are future features until unlocked.
+      </p>
+
       {/* Theme Grid */}
       <div className="mobile-theme-selector__grid">
         {allThemes.map((themeOption) => {
           const isActiveLightTheme = themeOption.category === 'light' && lightTheme === themeOption.id;
           const isActiveDarkTheme = themeOption.category === 'dark' && darkTheme === themeOption.id;
           const isActive = isActiveLightTheme || isActiveDarkTheme;
+          const isLocked = !canSelectTheme(themeOption.id, isAdminOrCreator);
           
           return (
             <button
               key={themeOption.id}
               type="button"
-              className={`mobile-theme-selector__card ${isActive ? 'mobile-theme-selector__card--active' : ''}`}
+              className={`mobile-theme-selector__card ${isActive ? 'mobile-theme-selector__card--active' : ''} ${isLocked ? 'mobile-theme-selector__card--locked' : ''}`}
               onClick={() => handleThemeSelect(themeOption.id, themeOption.category)}
+              disabled={isLocked}
+              aria-disabled={isLocked}
               aria-pressed={isActive}
-              aria-label={`Select ${themeOption.name}`}
+              aria-label={isLocked ? `${themeOption.name} is locked as a future feature` : `Select ${themeOption.name}`}
             >
               <span className="mobile-theme-selector__icon" aria-hidden="true">
                 {themeOption.icon}
               </span>
               <span className="mobile-theme-selector__name">{themeOption.name}</span>
+              {isLocked && (
+                <span className="mobile-theme-selector__lock-badge" aria-hidden="true">
+                  🔒 Future feature
+                </span>
+              )}
               {isActive && (
                 <span className="mobile-theme-selector__badge" aria-label="Currently active">
                   ✓

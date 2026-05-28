@@ -1,4 +1,11 @@
-import { useTheme, LIGHT_THEMES, DARK_THEMES, type ThemeMode } from '../contexts/ThemeContext';
+import {
+  canSelectTheme,
+  useTheme,
+  LIGHT_THEMES,
+  DARK_THEMES,
+  type ThemeMetadata,
+  type ThemeMode,
+} from '../contexts/ThemeContext';
 
 const THEME_MODE_OPTIONS: { mode: ThemeMode; icon: string; label: string }[] = [
   { mode: 'light', icon: '☀️', label: 'Light' },
@@ -6,7 +13,11 @@ const THEME_MODE_OPTIONS: { mode: ThemeMode; icon: string; label: string }[] = [
   { mode: 'system', icon: '💻', label: 'System' },
 ];
 
-export function ThemeSelector() {
+type ThemeSelectorProps = {
+  isAdminOrCreator?: boolean;
+};
+
+export function ThemeSelector({ isAdminOrCreator = false }: ThemeSelectorProps) {
   const {
     themeMode,
     lightTheme,
@@ -19,11 +30,57 @@ export function ThemeSelector() {
   const showLightThemes = themeMode === 'light';
   const showDarkThemes = themeMode === 'dark';
 
+  const renderThemeCard = (themeOption: ThemeMetadata, isActive: boolean) => {
+    const isLocked = !canSelectTheme(themeOption.id, isAdminOrCreator);
+    const categoryLabel = themeOption.category === 'light' ? 'light' : 'dark';
+    const handleClick = () => {
+      if (isLocked) return;
+      if (themeOption.category === 'light') {
+        setLightTheme(themeOption.id);
+      } else {
+        setDarkTheme(themeOption.id);
+      }
+    };
+
+    return (
+      <button
+        key={themeOption.id}
+        type="button"
+        className={`theme-selector__card ${isActive ? 'theme-selector__card--active' : ''} ${isLocked ? 'theme-selector__card--locked' : ''}`}
+        onClick={handleClick}
+        disabled={isLocked}
+        aria-disabled={isLocked}
+        aria-pressed={isActive}
+        aria-label={
+          isLocked
+            ? `${themeOption.name} ${categoryLabel} theme is locked as a future feature`
+            : `Select ${themeOption.name} as ${categoryLabel} theme`
+        }
+      >
+        <span className="theme-selector__icon" aria-hidden="true">
+          {themeOption.icon}
+        </span>
+        <span className="theme-selector__name">{themeOption.name}</span>
+        <span className="theme-selector__hint">{themeOption.description}</span>
+        {isLocked && (
+          <span className="theme-selector__lock-badge" aria-hidden="true">
+            🔒 Future feature
+          </span>
+        )}
+        {isActive && (
+          <span className="theme-selector__badge" aria-label="Currently active">
+            ✓
+          </span>
+        )}
+      </button>
+    );
+  };
+
   return (
     <div className="theme-selector">
       <h3 className="theme-selector__title">Choose Your Theme</h3>
       <p className="theme-selector__description">
-        Select a theme that matches your style and preferences.
+        Bio Day is the default light theme and Midnight Blue is the default dark theme. More themes are marked as future features until players unlock them.
       </p>
 
       {/* 3-way Theme Mode Toggle */}
@@ -68,30 +125,7 @@ export function ThemeSelector() {
             Choose your preferred light theme for bright environments.
           </p>
           <div className="theme-selector__grid">
-            {LIGHT_THEMES.map((themeOption) => {
-              const isActive = lightTheme === themeOption.id;
-              return (
-                <button
-                  key={themeOption.id}
-                  type="button"
-                  className={`theme-selector__card ${isActive ? 'theme-selector__card--active' : ''}`}
-                  onClick={() => setLightTheme(themeOption.id)}
-                  aria-pressed={isActive}
-                  aria-label={`Select ${themeOption.name} as light theme`}
-                >
-                  <span className="theme-selector__icon" aria-hidden="true">
-                    {themeOption.icon}
-                  </span>
-                  <span className="theme-selector__name">{themeOption.name}</span>
-                  <span className="theme-selector__hint">{themeOption.description}</span>
-                  {isActive && (
-                    <span className="theme-selector__badge" aria-label="Currently active">
-                      ✓
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+            {LIGHT_THEMES.map((themeOption) => renderThemeCard(themeOption, lightTheme === themeOption.id))}
           </div>
         </div>
       ) : null}
@@ -106,30 +140,7 @@ export function ThemeSelector() {
             Choose your preferred dark theme for low-light environments.
           </p>
           <div className="theme-selector__grid">
-            {DARK_THEMES.map((themeOption) => {
-              const isActive = darkTheme === themeOption.id;
-              return (
-                <button
-                  key={themeOption.id}
-                  type="button"
-                  className={`theme-selector__card ${isActive ? 'theme-selector__card--active' : ''}`}
-                  onClick={() => setDarkTheme(themeOption.id)}
-                  aria-pressed={isActive}
-                  aria-label={`Select ${themeOption.name} as dark theme`}
-                >
-                  <span className="theme-selector__icon" aria-hidden="true">
-                    {themeOption.icon}
-                  </span>
-                  <span className="theme-selector__name">{themeOption.name}</span>
-                  <span className="theme-selector__hint">{themeOption.description}</span>
-                  {isActive && (
-                    <span className="theme-selector__badge" aria-label="Currently active">
-                      ✓
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+            {DARK_THEMES.map((themeOption) => renderThemeCard(themeOption, darkTheme === themeOption.id))}
           </div>
         </div>
       ) : null}

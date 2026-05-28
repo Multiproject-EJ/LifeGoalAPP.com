@@ -23,6 +23,11 @@ export type ThemeMode = 'light' | 'dark' | 'system';
 
 export type ThemeCategory = 'light' | 'dark';
 
+export const DEFAULT_LIGHT_THEME: Theme = 'bio-day';
+export const DEFAULT_DARK_THEME: Theme = 'flow-night';
+
+const DEFAULT_FREE_THEME_IDS = new Set<Theme>([DEFAULT_LIGHT_THEME, DEFAULT_DARK_THEME]);
+
 type FlowVariant = 'sunrise' | 'morning' | 'day' | 'sunset' | 'midnight';
 
 export interface ThemeMetadata {
@@ -188,9 +193,9 @@ export const DARK_THEMES: ThemeMetadata[] = [
   },
   {
     id: 'flow-night',
-    name: 'Flow Night',
-    icon: '🌊',
-    description: 'Deep focus mode with cool blue tones',
+    name: 'Midnight Blue',
+    icon: '🌌',
+    description: 'Deep focus mode with cool midnight blue tones',
     metaColor: '#0c1222',
     category: 'dark',
   },
@@ -206,6 +211,14 @@ export const DARK_THEMES: ThemeMetadata[] = [
 
 // Combined for backward compatibility
 export const AVAILABLE_THEMES: ThemeMetadata[] = [...LIGHT_THEMES, ...DARK_THEMES];
+
+export function isDefaultFreeTheme(theme: Theme): boolean {
+  return DEFAULT_FREE_THEME_IDS.has(theme);
+}
+
+export function canSelectTheme(theme: Theme, isAdminOrCreator = false): boolean {
+  return isAdminOrCreator || isDefaultFreeTheme(theme);
+}
 
 /**
  * Check if a theme is a dark theme
@@ -282,12 +295,16 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   const [lightTheme, setLightThemeState] = useState<Theme>(() => {
     const stored = readStoredValue<Theme>(LIGHT_THEME_STORAGE_KEY);
-    return stored && LIGHT_THEMES.some(t => t.id === stored) ? stored : 'bright-sky';
+    return stored && LIGHT_THEMES.some(t => t.id === stored) && canSelectTheme(stored)
+      ? stored
+      : DEFAULT_LIGHT_THEME;
   });
 
   const [darkTheme, setDarkThemeState] = useState<Theme>(() => {
     const stored = readStoredValue<Theme>(DARK_THEME_STORAGE_KEY);
-    return stored && DARK_THEMES.some(t => t.id === stored) ? stored : 'dark-glass';
+    return stored && DARK_THEMES.some(t => t.id === stored) && canSelectTheme(stored)
+      ? stored
+      : DEFAULT_DARK_THEME;
   });
 
   const [systemPreference, setSystemPreference] = useState<ThemeCategory>(getSystemPreference);
