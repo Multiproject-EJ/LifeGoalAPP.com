@@ -218,6 +218,7 @@ const PROFILE_STRENGTH_MENU_AREAS: Partial<Record<MobileMenuNavItem['id'], AreaK
 const PROFILE_STRENGTH_HOLD_DURATION_MS = 520;
 const PROFILE_STRENGTH_HOLD_SLOP_PX = 8;
 const DAILY_TREATS_SEEN_KEY = 'lifegoal_daily_treats_seen';
+const DAILY_TREATS_AUTO_OPEN_DATE_KEY = 'lifegoal_daily_treats_auto_open_date';
 const HABITS_CREATED_EVENT = 'habitgame:habits-created';
 
 function formatTimerSeconds(seconds: number): string {
@@ -748,6 +749,18 @@ export default function App({ forceAuthOnMount }: AppProps) {
     markDailyTreatsSeen();
     openPersonalQuestDailyTreatsCalendar();
   }, [markDailyTreatsSeen, openPersonalQuestDailyTreatsCalendar]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!supabaseSession?.user?.id) return;
+
+    const todayKey = new Date().toDateString();
+    const lastAutoOpenedDate = window.localStorage.getItem(DAILY_TREATS_AUTO_OPEN_DATE_KEY);
+    if (lastAutoOpenedDate === todayKey) return;
+
+    launchDailyTreatsMenu();
+    window.localStorage.setItem(DAILY_TREATS_AUTO_OPEN_DATE_KEY, todayKey);
+  }, [launchDailyTreatsMenu, supabaseSession?.user?.id]);
 
   const launchHolidayCalendar = useCallback(() => {
     setHolidayPreviewKey(null);
