@@ -966,18 +966,21 @@
 
 .island-run-prototype__footer-nav-btn {
   z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.24rem;
   box-shadow:
     inset 0 1px 0 var(--controller-control-highlight),
-    inset 0 -10px 14px rgba(8, 20, 34, 0.24),
-    0 8px 16px rgba(4, 15, 28, 0.2);
+    inset 0 -10px 14px rgba(8, 20, 34, 0.22),
+    0 8px 16px rgba(4, 15, 28, 0.16);
   flex: 0 1 8.2rem;
   min-width: 0;
   min-height: 2.45rem;
   padding-inline: 0.62rem;
-  border-radius: 999px;
   border: 1px solid var(--controller-control-border);
   background:
-    linear-gradient(180deg, rgba(162, 214, 236, 0.24), rgba(86, 146, 179, 0.2) 56%, rgba(23, 67, 96, 0.28));
+    linear-gradient(180deg, rgba(190, 232, 247, 0.32), rgba(107, 169, 198, 0.2) 56%, rgba(32, 86, 116, 0.26));
   color: #ebf9ff;
   text-shadow: 0 1px 0 rgba(0, 8, 16, 0.42);
   font-weight: 700;
@@ -985,19 +988,44 @@
 }
 
 .island-run-prototype__footer-nav-btn--slot-story,
-.island-run-prototype__footer-nav-btn--slot-creatures {
-  border-top-left-radius: 20px;
-  border-bottom-left-radius: 22px;
-  border-top-right-radius: 18px;
-  border-bottom-right-radius: 15px;
+.island-run-prototype__footer-nav-btn--slot-build {
+  width: clamp(5.8rem, 16vw, 7.3rem);
+  height: clamp(2.9rem, 7vw, 3.6rem);
+  min-height: clamp(2.9rem, 7vw, 3.6rem);
+  padding-inline: 0.52rem;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(255, 255, 255, 0.38), transparent 46%),
+    linear-gradient(180deg, rgba(219, 244, 252, 0.34), rgba(119, 184, 211, 0.18) 58%, rgba(31, 91, 123, 0.24));
 }
 
-.island-run-prototype__footer-nav-btn--slot-build,
+.island-run-prototype__footer-nav-btn--slot-story {
+  border-radius: 42% 58% 54% 46% / 56% 48% 52% 44%;
+}
+
+.island-run-prototype__footer-nav-btn--slot-build {
+  border-radius: 58% 42% 46% 54% / 48% 56% 44% 52%;
+}
+
+.island-run-prototype__footer-nav-btn--slot-creatures,
 .island-run-prototype__footer-nav-btn--slot-market {
-  border-top-left-radius: 18px;
-  border-bottom-left-radius: 15px;
-  border-top-right-radius: 20px;
-  border-bottom-right-radius: 22px;
+  width: clamp(6.4rem, 18vw, 8.2rem);
+  height: clamp(3.45rem, 8.6vw, 4.7rem);
+  min-height: clamp(3.45rem, 8.6vw, 4.7rem);
+  padding-inline: 0.46rem;
+  align-items: center;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.32), transparent 44%),
+    linear-gradient(180deg, rgba(168, 218, 238, 0.28), rgba(64, 139, 180, 0.18) 60%, rgba(11, 54, 86, 0.3));
+}
+
+.island-run-prototype__footer-nav-btn--slot-creatures {
+  border-radius: 26% 54% 42% 58% / 32% 46% 62% 68%;
+  clip-path: polygon(0 22%, 100% 0, 90% 76%, 8% 100%);
+}
+
+.island-run-prototype__footer-nav-btn--slot-market {
+  border-radius: 54% 26% 58% 42% / 46% 32% 68% 62%;
+  clip-path: polygon(0 0, 100% 22%, 92% 100%, 10% 76%);
 }
 
 .island-run-prototype__footer-nav-btn:disabled,
