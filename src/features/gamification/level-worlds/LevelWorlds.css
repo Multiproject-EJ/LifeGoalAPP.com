@@ -2085,23 +2085,70 @@
 }
 
 
-.island-run-board__rewardbar-hatchery-pill {
+.island-run-board__rewardbar-hatchery-tray {
   position: absolute;
-  right: calc(100% + 8px);
+  right: calc(100% + 10px);
   top: 50%;
   transform: translateY(-50%);
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   gap: 4px;
-  border-radius: 999px;
-  border: 1px solid rgba(170, 130, 45, 0.85);
-  background: linear-gradient(180deg, #fff8dc 0%, #f2dfae 100%);
   color: #5e4109;
-  font-size: 0.72rem;
-  font-weight: 800;
-  padding: 5px 8px;
-  box-shadow: 0 3px 8px rgba(94, 65, 9, 0.22);
+  font-weight: 900;
+  filter: drop-shadow(0 4px 9px rgba(94, 65, 9, 0.28));
+  pointer-events: none;
   white-space: nowrap;
+}
+
+.island-run-board__rewardbar-hatchery-egg-stack {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.island-run-board__rewardbar-hatchery-egg-circle {
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid rgba(190, 151, 67, 0.95);
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.96) 0 22%, rgba(255, 250, 224, 0.88) 42%, rgba(239, 210, 145, 0.94) 100%);
+  box-shadow:
+    inset 0 2px 7px rgba(255, 255, 255, 0.65),
+    0 4px 10px rgba(94, 65, 9, 0.24);
+}
+
+.island-run-board__rewardbar-hatchery-egg-circle + .island-run-board__rewardbar-hatchery-egg-circle {
+  margin-left: -46px;
+}
+
+.island-run-board__rewardbar-hatchery-egg {
+  display: block;
+  font-size: 2.35rem;
+  line-height: 1;
+  transform: translateY(1px);
+}
+
+.island-run-board__rewardbar-hatchery-time {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  min-height: 19px;
+  padding: 2px 7px 3px;
+  border-radius: 999px;
+  border: 1px solid rgba(167, 126, 38, 0.72);
+  background: linear-gradient(180deg, rgba(255, 252, 235, 0.98) 0%, rgba(241, 221, 169, 0.98) 100%);
+  color: #6d4a0b;
+  font-size: 0.64rem;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  box-shadow: 0 2px 6px rgba(94, 65, 9, 0.2);
 }
 
 /* Decorative event title banner */

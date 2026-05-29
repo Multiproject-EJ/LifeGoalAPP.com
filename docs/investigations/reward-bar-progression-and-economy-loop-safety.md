@@ -154,3 +154,37 @@ No implementation in this PR; recommendation slices only:
 - `src/features/gamification/level-worlds/services/islandRunLuckyRollAction.ts`
 - `src/features/gamification/level-worlds/services/islandRunRuntimeRegen.ts`
 - `src/features/gamification/level-worlds/services/__tests__/islandRunContractV2RewardBar.test.ts`
+
+## 11) Follow-up: deterministic high-dice safety regression tests (2026-05-28)
+
+### Existing coverage found before this follow-up
+
+- `islandRunContractV2RewardBar.test.ts` already covered multiplier tier availability, max multiplier resolution, dice-cost scaling, chained reward-bar claims, high-tier overflow behavior, sticker-completion bonus dice/essence, and a short-window pure x200 farming assertion from 2,500 dice.
+- That short-window economy test showed x200 progress-tile farming burns dice overall over 30 modeled rolls, but it did not explicitly cover longer 500/1,000/2,000 roll-action horizons.
+
+### New deterministic regression coverage added
+
+The reward-bar service test suite now includes deterministic high-dice economy safety scenarios that model chest/progress-tile farming with:
+
+- Starting dice: `2,500`.
+- Maximum currently available multiplier on each roll attempt, clamped to the current dice pool.
+- Dice spent on rolls.
+- Reward-bar progress from farming tiles.
+- Chained reward-bar claim draining with a hard fail if drain batches exceed the bounded loop guard.
+- Reward-bar dice payouts.
+- Sticker-completion bonus dice included in total dice awards.
+
+Scenarios covered:
+
+| Scenario | Modeled horizon | Expected safety signal |
+|---|---:|---|
+| A | Repeated max-available reward-bar farming from 2,500 dice | Dice awards, including sticker-completion bonuses, stay below dice spent; final dice remains below the starting pool. |
+| B | 500 roll-action attempts from 2,500 dice | Dice awards stay below dice spent; pool exhausts before 500 rolls; no pending claimable reward-bar overflow remains. |
+| C | 1,000 roll-action attempts from 2,500 dice | Exhausted dice stay exhausted across the longer horizon; no reward-bar revival loop. |
+| D | 2,000 roll-action attempts from 2,500 dice | No self-sustaining dice-positive loop and no infinite reward-bar chain. |
+
+### Remaining gaps / recommended future work
+
+- These tests intentionally isolate the reward-bar farming loop and do not include external dice sources such as passive regeneration, daily treats, Lucky Roll, Space Excavator milestone claims, welcome/tutorial grants, or shop purchases.
+- If those systems are combined into a broader economy budget model, add a separate integrated economy simulation suite with explicit source budgets rather than changing reward tuning here.
+- No reward tuning, gameplay logic, UI, schema, or architecture changes were made in this follow-up.
