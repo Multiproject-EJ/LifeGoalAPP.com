@@ -1,6 +1,7 @@
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { applyTokenHopRewards } from '../features/gamification/level-worlds/services/islandRunStateActions';
+import { ISLAND_RUN_ECONOMY_SOURCES } from '../features/gamification/level-worlds/services/islandRunEconomyTelemetry';
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
 import { awardDice } from './gameRewards';
 import { recordTelemetryEvent } from './telemetry';
@@ -75,6 +76,7 @@ export function awardDailyTreatDice(options: {
     session: islandRunSession,
     client: islandRunClient,
     deltas: { dicePool: safeDiceAmount },
+    telemetryDiceSource: ISLAND_RUN_ECONOMY_SOURCES.dailyTreatDice,
     triggerSource: 'daily_treats_dice_award',
   });
 }

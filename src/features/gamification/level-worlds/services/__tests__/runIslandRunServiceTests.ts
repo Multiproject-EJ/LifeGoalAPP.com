@@ -22,6 +22,7 @@ import { islandRunContractV2StopResolverTests } from './islandRunContractV2StopR
 import { islandRunContractV2EssenceBuildTests } from './islandRunContractV2EssenceBuild.test';
 import { islandRunContractV2RewardBarTests } from './islandRunContractV2RewardBar.test';
 import { islandRunIntegratedEconomySafetyTests } from './islandRunIntegratedEconomySafety.test';
+import { islandRunEconomyTelemetryTests } from './islandRunEconomyTelemetry.test';
 import { islandRunProgressionTests } from './islandRunProgression.test';
 import { islandRunRuntimeStateIntegrationTests } from './islandRunRuntimeState.integration.test';
 import { islandRunRuntimeRegenTests } from './islandRunRuntimeRegen.test';
@@ -106,6 +107,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunContractV2EssenceBuild', tests: islandRunContractV2EssenceBuildTests },
   { label: 'islandRunContractV2RewardBar', tests: islandRunContractV2RewardBarTests },
   { label: 'islandRunIntegratedEconomySafety', tests: islandRunIntegratedEconomySafetyTests },
+  { label: 'islandRunEconomyTelemetry', tests: islandRunEconomyTelemetryTests },
   { label: 'islandRunProgression', tests: islandRunProgressionTests },
   { label: 'islandRunRuntimeStateIntegration', tests: islandRunRuntimeStateIntegrationTests },
   { label: 'islandRunRuntimeRegen', tests: islandRunRuntimeRegenTests },
