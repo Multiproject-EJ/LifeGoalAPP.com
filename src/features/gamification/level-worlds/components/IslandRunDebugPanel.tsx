@@ -16,6 +16,11 @@ import {
 import { resolveIslandRunPreIslandLuckyRollGate } from '../services/islandRunPreIslandLuckyRollGate';
 import { resolvePostRareTreasurePathState } from '../services/islandRunPostRareTreasurePathAction';
 import { isTreasurePathMilestoneIsland } from '../services/islandRunIslandMetadata';
+import {
+  getIslandRunEconomyTelemetryReport,
+  resetIslandRunEconomyTelemetry,
+  ISLAND_RUN_ECONOMY_COUNTERS,
+} from '../services/islandRunEconomyTelemetry';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -85,6 +90,24 @@ function fmtJson(v: unknown): string {
   } catch {
     return String(v);
   }
+}
+
+function fmtCount(value: number | null | undefined): string {
+  if (!Number.isFinite(value ?? NaN)) return '0';
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(value ?? 0);
+}
+
+function fmtAverage(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) return '0';
+  return value.toFixed(2).replace(/\.00$/, '');
+}
+
+function fmtMetricBreakdown(metrics: Record<string, number> | Partial<Record<string, number>>): string {
+  const entries = Object.entries(metrics)
+    .filter(([, value]) => Number.isFinite(value) && (value ?? 0) > 0)
+    .sort(([left], [right]) => left.localeCompare(right));
+  if (entries.length === 0) return '—';
+  return entries.map(([key, value]) => `${key}: ${fmtCount(value ?? 0)}`).join(' · ');
 }
 
 function resolveBuildMarkerValue(value: unknown): string {
@@ -173,6 +196,7 @@ export function IslandRunDebugPanel({
   const [eggRewardActionMessage, setEggRewardActionMessage] = useState<string | null>(null);
   const [packGrantPending, setPackGrantPending] = useState(false);
   const [packGrantActionMessage, setPackGrantActionMessage] = useState<string | null>(null);
+  const [telemetryResetNonce, setTelemetryResetNonce] = useState(0);
 
   // Ping Supabase to check connectivity
   useEffect(() => {
@@ -252,6 +276,10 @@ export function IslandRunDebugPanel({
     || postRareState.status === 'collected_banked';
   const canCollectPostRareTreasurePath = postRareState.status === 'completed_ready_to_collect'
     || postRareState.status === 'collected_banked';
+  const economyTelemetryReport = useMemo(
+    () => getIslandRunEconomyTelemetryReport(session.user.id),
+    [session.user.id, runtimeState, telemetryResetNonce],
+  );
 
   const runLuckyRollDevAction = async (action: () => Promise<string>) => {
     if (luckyRollActionPending) return;
@@ -303,6 +331,11 @@ export function IslandRunDebugPanel({
     } finally {
       setPackGrantPending(false);
     }
+  };
+
+  const handleResetEconomyTelemetry = () => {
+    resetIslandRunEconomyTelemetry(session.user.id);
+    setTelemetryResetNonce((nonce) => nonce + 1);
   };
 
   const sections: DebugSection[] = useMemo(() => {
@@ -602,6 +635,76 @@ export function IslandRunDebugPanel({
                   >
                     Clear override
                   </button>
+                </div>
+
+                <div style={{ display: 'grid', gap: '0.55rem', borderTop: '1px solid rgba(255,255,255,0.16)', paddingTop: '0.65rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <strong style={{ fontSize: '0.84rem' }}>📊 Economy Telemetry</strong>
+                    <button
+                      type="button"
+                      className="island-run-debug-panel__copy-btn"
+                      onClick={handleResetEconomyTelemetry}
+                    >
+                      Reset telemetry
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '0.76rem', opacity: 0.86 }}>
+                    Dev-only in-memory session ledger. Reset clears telemetry counters only; it does not mutate gameplay state, rewards, or persistence.
+                  </div>
+                  <table className="island-run-debug-panel__table">
+                    <tbody>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Session ID</td>
+                        <td className="island-run-debug-panel__value">{economyTelemetryReport.sessionId}</td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Total dice inflow</td>
+                        <td className="island-run-debug-panel__value">{fmtCount(economyTelemetryReport.totalDiceInflow)}</td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Total dice outflow</td>
+                        <td className="island-run-debug-panel__value">{fmtCount(economyTelemetryReport.totalDiceOutflow)}</td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Net dice delta</td>
+                        <td className="island-run-debug-panel__value">{fmtCount(economyTelemetryReport.netDiceDelta)}</td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Dice inflow by source</td>
+                        <td className="island-run-debug-panel__value">{fmtMetricBreakdown(economyTelemetryReport.diceInflowBySource)}</td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Dice outflow by sink</td>
+                        <td className="island-run-debug-panel__value">{fmtMetricBreakdown(economyTelemetryReport.diceOutflowBySink)}</td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Reward-bar claims</td>
+                        <td className="island-run-debug-panel__value">{fmtCount(economyTelemetryReport.counters[ISLAND_RUN_ECONOMY_COUNTERS.rewardBarClaims] ?? 0)}</td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Chained reward-bar claims</td>
+                        <td className="island-run-debug-panel__value">{fmtCount(economyTelemetryReport.counters[ISLAND_RUN_ECONOMY_COUNTERS.rewardBarChainedClaims] ?? 0)}</td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Event tickets earned / spent</td>
+                        <td className="island-run-debug-panel__value">
+                          {fmtCount(economyTelemetryReport.counters[ISLAND_RUN_ECONOMY_COUNTERS.eventTicketsEarned] ?? 0)} / {fmtCount(economyTelemetryReport.counters[ISLAND_RUN_ECONOMY_COUNTERS.eventTicketsSpent] ?? 0)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Average multiplier</td>
+                        <td className="island-run-debug-panel__value">×{fmtAverage(economyTelemetryReport.averageMultiplierUsed)}</td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Highest multiplier</td>
+                        <td className="island-run-debug-panel__value">×{fmtCount(economyTelemetryReport.highestMultiplierUsed)}</td>
+                      </tr>
+                      <tr>
+                        <td className="island-run-debug-panel__label">Reward-bar tier reached</td>
+                        <td className="island-run-debug-panel__value">{fmtCount(economyTelemetryReport.rewardBarTierReached)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
                 <div style={{ display: 'grid', gap: '0.55rem', borderTop: '1px solid rgba(255,255,255,0.16)', paddingTop: '0.65rem' }}>
                   <strong style={{ fontSize: '0.84rem' }}>🐾 Admin/Dev Pack Grants</strong>

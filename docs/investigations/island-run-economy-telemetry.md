@@ -102,6 +102,19 @@ Current sink constants include:
 
 For programmatic inspection, `getIslandRunEconomyTelemetryReport(userId)` also includes the append-only `events` array with timestamps and metadata for each recorded accounting event.
 
+
+## Dev-only UI readout
+
+A minimal telemetry readout is available inside the existing Island Run debug panel for development and testing:
+
+1. Open Island Run.
+2. Open the top-right menu and choose **🔧 Debug panel**.
+3. In **🧪 DEV MODE**, unlock dev mode if needed for the current browser profile.
+4. Inspect **📊 Economy Telemetry**. The panel shows total dice inflow, total dice outflow, net dice delta, dice inflow by source, dice outflow by sink, reward-bar claims, chained reward-bar claims, event tickets earned/spent, average multiplier, highest multiplier, and the highest reward-bar tier reached for the current in-memory session ledger.
+5. Use **Reset telemetry** to clear the in-memory telemetry ledger for the current user/session. This action is dev-only and does not mutate gameplay state, reward values, persistence, schemas, reward-bar visuals, or player-facing totals.
+
+The readout is intentionally nested under dev mode in the debug panel so normal player-facing Island Run UI remains unchanged.
+
 ## Known limitations
 
 - The ledger is in-memory only. It resets on page reload and is not a Supabase/audit-log replacement.
