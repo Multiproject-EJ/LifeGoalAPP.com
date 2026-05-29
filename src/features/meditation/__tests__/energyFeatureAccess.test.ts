@@ -23,7 +23,7 @@ export function runAllEnergyFeatureAccessTests(): void {
   for (const tab of publiclyGatedTabs) {
     assertEqual(getEnergyMobileTabAccess(tab), 'previewOnly', `${tab} should be preview-only for normal users`);
     assertEqual(canRenderEnergyMobileTab(tab), false, `${tab} implementation should not render for normal users`);
-    assertEqual(getEnergyMobileTabStatusLabel(tab), 'Future Feature', `${tab} should show Future Feature status`);
+    assertEqual(getEnergyMobileTabStatusLabel(tab), 'Demo ⭐️', `${tab} should show Demo status`);
     assertEqual(getEnergyMobileTabAccess(tab, true), 'open', `${tab} should remain open for admins`);
     assertEqual(canRenderEnergyMobileTab(tab, true), true, `${tab} implementation should render for admins`);
     assertEqual(getEnergyMobileTabStatusLabel(tab, true), 'Demo Mode', `${tab} should show admin demo status`);

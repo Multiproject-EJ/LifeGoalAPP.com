@@ -170,7 +170,7 @@ import {
 } from '../../services/questHabit';
 import { LifeBuildTodayCard } from './LifeBuildTodayCard';
 import { resolveFeatureAccess } from '../../services/featureAccess';
-import type { FeatureAvailabilityId } from '../../config/featureAvailability';
+import { DEMO_FEATURE_LABEL, type FeatureAvailabilityId } from '../../config/featureAvailability';
 import { DailyLifeUpgradeModal } from './daily-life-upgrade/DailyLifeUpgradeModal';
 import { DailyLifeUpgradeAlternativeCreateModal } from './daily-life-upgrade/DailyLifeUpgradeAlternativeCreateModal';
 import { useDailyLifeUpgradeFlow } from './daily-life-upgrade/useDailyLifeUpgradeFlow';
@@ -2966,7 +2966,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         label: 'Vision Star',
         icon: isSpecialVisionStarDay ? '🌌' : '🌟',
         expiresAtMs: nextUtcMidnight,
-        badgeLabelOverride: isVisionStarPreviewOnly ? 'Future Feature' : (hasClaimedVisionStar ? '✓ Done' : 'Open'),
+        badgeLabelOverride: isVisionStarPreviewOnly ? DEMO_FEATURE_LABEL : (hasClaimedVisionStar ? '✓ Done' : 'Open'),
         isCollected: isVisionStarPreviewOnly ? false : hasClaimedVisionStar,
         isVisible: true,
         isActionable: isVisionStarPreviewOnly ? true : !hasClaimedVisionStar,
@@ -3032,7 +3032,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         label: 'Water the Zen Tree',
         icon: '🌳',
         expiresAtMs: nextUtcMidnight,
-        badgeLabelOverride: isWaterZenTreePreviewOnly ? 'Future Feature' : (hasClaimedZenTreeToday ? '✓ Done' : 'Claim'),
+        badgeLabelOverride: isWaterZenTreePreviewOnly ? DEMO_FEATURE_LABEL : (hasClaimedZenTreeToday ? '✓ Done' : 'Claim'),
         isCollected: isWaterZenTreePreviewOnly ? false : hasClaimedZenTreeToday,
         isVisible: true,
         isActionable: isWaterZenTreePreviewOnly ? true : !hasClaimedZenTreeToday,
@@ -3044,7 +3044,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         label: 'Feed the Creatures',
         icon: '🐾',
         expiresAtMs: nextUtcMidnight,
-        badgeLabelOverride: isFeedCreaturesPreviewOnly ? 'Future Feature' : (hasClaimedFeedCreaturesToday ? '✓ Done' : 'Claim'),
+        badgeLabelOverride: isFeedCreaturesPreviewOnly ? DEMO_FEATURE_LABEL : (hasClaimedFeedCreaturesToday ? '✓ Done' : 'Claim'),
         isCollected: isFeedCreaturesPreviewOnly ? false : hasClaimedFeedCreaturesToday,
         isVisible: true,
         isActionable: isFeedCreaturesPreviewOnly ? true : !hasClaimedFeedCreaturesToday,
@@ -8348,7 +8348,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     }`;
     const todayActionableContracts = activeContracts.filter((contract) => isPromiseActionableToday(contract));
     const contractsStatusChip = !isContractsFeatureOpen
-      ? { label: 'Future Feature', tone: 'accent' as const }
+      ? { label: DEMO_FEATURE_LABEL, tone: 'accent' as const }
       : contractsError
       ? { label: 'Error', tone: 'error' as const }
       : contractsLoading
@@ -8358,7 +8358,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             tone: 'accent' as const,
           };
     const routinesStatusChip = !isRoutinesFeatureOpen
-      ? { label: 'Future Feature', tone: 'accent' as const }
+      ? { label: DEMO_FEATURE_LABEL, tone: 'accent' as const }
       : routinesTodaySummary.status === 'error'
       ? { label: 'Error', tone: 'error' as const }
       : routinesTodaySummary.status === 'loading'
@@ -8826,7 +8826,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   variant="panel"
                 />
               ) : (
-                <p className="habit-contracts-card__hint">Routines are a Future Feature for this account.</p>
+                <p className="habit-contracts-card__hint">Routines are in demo for this account.</p>
               )}
             </TodayExpandableActionSection>
 

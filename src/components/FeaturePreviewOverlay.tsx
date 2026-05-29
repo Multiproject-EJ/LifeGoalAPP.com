@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { getFeatureAvailability, type FeatureAvailabilityId } from '../config/featureAvailability';
+import { DEMO_FEATURE_LABEL, getFeatureAvailability, type FeatureAvailabilityId } from '../config/featureAvailability';
 import { upsertFeatureVote, type FeatureVoteState } from '../services/featureVotes';
 import { markFutureFeatureSeen, notifyFutureFeatureVoteSaved } from '../services/futureFeatureEngagement';
 import '../styles/feature-status.css';
@@ -40,7 +40,7 @@ export function FeaturePreviewOverlay({
   body = 'HabitGame grows around what helps players stay motivated in real life. Vote if this is a feature you’d love to see next.',
   notImplementedBody = 'Admin access is enabled for this feature, but the implementation is not available yet.',
   backLabel = 'Back',
-  statusLabelOverride = 'Future Feature',
+  statusLabelOverride = DEMO_FEATURE_LABEL,
   voteLabel = 'Shape this feature',
   voteConfirmation = 'Thanks — your feedback helps shape the HabitGame roadmap.',
   onClose,
@@ -226,7 +226,7 @@ export function FeaturePreviewOverlay({
             ) : (
               <form className="feature-preview-overlay__feedback-form" onSubmit={handleSubmitFeedback}>
                 <div>
-                  <p className="feature-preview-overlay__feedback-eyebrow">Future Feature</p>
+                  <p className="feature-preview-overlay__feedback-eyebrow">{statusLabel}</p>
                   <h3 className="feature-preview-overlay__feedback-title">Help shape this feature</h3>
                   <p className="feature-preview-overlay__feedback-subtitle">
                     HabitGame grows around what helps players stay motivated in real life.

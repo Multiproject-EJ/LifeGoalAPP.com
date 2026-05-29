@@ -1,4 +1,4 @@
-import { getFeatureAvailability, type FeatureAvailabilityId } from '../../config/featureAvailability';
+import { DEMO_FEATURE_LABEL, getFeatureAvailability, type FeatureAvailabilityId } from '../../config/featureAvailability';
 import { resolveFeatureAccess } from '../../services/featureAccess';
 
 export type EnergyMobileTab = 'breathing' | 'meditation' | 'conflict' | 'yoga' | 'food' | 'exercise';
@@ -65,7 +65,7 @@ export function getEnergyMobileTabStatusLabel(tab: EnergyMobileTab, isAdminOrCre
   const access = getEnergyMobileTabAccess(tab, isAdminOrCreator);
 
   if (access === 'previewOnly') {
-    return availability.publicLabel ?? 'Future Feature';
+    return availability.publicLabel ?? DEMO_FEATURE_LABEL;
   }
 
   if (access === 'open' && !isAdminOrCreator) {
