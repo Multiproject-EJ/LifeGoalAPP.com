@@ -102,6 +102,53 @@ Current sink constants include:
 
 For programmatic inspection, `getIslandRunEconomyTelemetryReport(userId)` also includes the append-only `events` array with timestamps and metadata for each recorded accounting event.
 
+## Snapshot format
+
+`formatIslandRunEconomyTelemetrySnapshot(userId)` returns copy-paste friendly JSON for GitHub issues, investigation docs, ChatGPT reviews, and QA reports. The snapshot is an aggregate of the current in-memory telemetry ledger and intentionally does not mutate gameplay state or persistence.
+
+Snapshot fields:
+
+- `timestamp` — ISO timestamp for when the snapshot was generated.
+- `sessionId` — normalized telemetry session id, usually the Supabase user id in the dev panel.
+- `totalInflow` — total dice inflow recorded for the session.
+- `totalOutflow` — total dice outflow recorded for the session.
+- `netDiceDelta` — `totalInflow - totalOutflow`.
+- `inflowBySource` — dice inflow buckets keyed by source constant.
+- `outflowBySink` — dice outflow buckets keyed by sink constant.
+- `rewardBarClaims` — reward-bar claim counter.
+- `chainedClaims` — chained reward-bar claim counter.
+- `rewardBarTierReached` — highest reward-bar tier reached.
+- `averageMultiplier` — average recorded roll multiplier.
+- `highestMultiplier` — highest recorded roll multiplier.
+- `ticketsEarned` — timed-event tickets earned counter.
+- `ticketsSpent` — timed-event tickets spent counter.
+
+Example snapshot output:
+
+```json
+{
+  "timestamp": "2025-01-01T00:00:00.000Z",
+  "sessionId": "player-123",
+  "totalInflow": 115,
+  "totalOutflow": 27,
+  "netDiceDelta": 88,
+  "inflowBySource": {
+    "reward_bar_dice": 12,
+    "sticker_completion_bonus_dice": 100,
+    "passive_regen_dice": 3
+  },
+  "outflowBySink": {
+    "roll_spend_dice": 27
+  },
+  "rewardBarClaims": 4,
+  "chainedClaims": 1,
+  "rewardBarTierReached": 4,
+  "averageMultiplier": 3,
+  "highestMultiplier": 10,
+  "ticketsEarned": 12,
+  "ticketsSpent": 2
+}
+```
 
 ## Dev-only UI readout
 
@@ -111,7 +158,8 @@ A minimal telemetry readout is available inside the existing Island Run debug pa
 2. Open the top-right menu and choose **🔧 Debug panel**.
 3. In **🧪 DEV MODE**, unlock dev mode if needed for the current browser profile.
 4. Inspect **📊 Economy Telemetry**. The panel shows total dice inflow, total dice outflow, net dice delta, dice inflow by source, dice outflow by sink, reward-bar claims, chained reward-bar claims, event tickets earned/spent, average multiplier, highest multiplier, and the highest reward-bar tier reached for the current in-memory session ledger.
-5. Use **Reset telemetry** to clear the in-memory telemetry ledger for the current user/session. This action is dev-only and does not mutate gameplay state, reward values, persistence, schemas, reward-bar visuals, or player-facing totals.
+5. Use **Copy Telemetry Snapshot** to copy the structured JSON snapshot to the clipboard. Paste it into GitHub issues, QA reports, investigation docs, or ChatGPT review prompts when sharing an economy-session capture.
+6. Use **Reset telemetry** to clear the in-memory telemetry ledger for the current user/session. This action is dev-only and does not mutate gameplay state, reward values, persistence, schemas, reward-bar visuals, or player-facing totals.
 
 The readout is intentionally nested under dev mode in the debug panel so normal player-facing Island Run UI remains unchanged.
 
@@ -128,6 +176,7 @@ The readout is intentionally nested under dev mode in the debug panel so normal 
 Tests cover:
 
 - source/sink attribution and total reconciliation in the centralized ledger
+- generated example snapshot JSON shape for QA/report sharing
 - roll dice outflow and multiplier accounting
 - passive regen and daily-treat inflow attribution
 - event-ticket spend counters staying separate from dice outflow

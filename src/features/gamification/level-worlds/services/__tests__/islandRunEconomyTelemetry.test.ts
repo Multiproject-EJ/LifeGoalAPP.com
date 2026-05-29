@@ -10,12 +10,17 @@ import { __resetIslandRunRollActionMutexesForTests, executeIslandRunRollAction }
 import { applyPassiveDiceRegenTick, applyTimedEventTicketSpend, applyTokenHopRewards } from '../islandRunStateActions';
 import {
   formatIslandRunEconomyTelemetryReport,
+  formatIslandRunEconomyTelemetrySnapshot,
   getIslandRunEconomyTelemetryReport,
+  getIslandRunEconomyTelemetrySnapshot,
   ISLAND_RUN_ECONOMY_COUNTERS,
   ISLAND_RUN_ECONOMY_SINKS,
   ISLAND_RUN_ECONOMY_SOURCES,
   recordIslandRunDiceInflow,
   recordIslandRunDiceOutflow,
+  recordIslandRunEconomyCounter,
+  recordIslandRunMultiplierUsed,
+  recordIslandRunRewardBarTierReached,
   resetIslandRunEconomyTelemetry,
 } from '../islandRunEconomyTelemetry';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
@@ -102,6 +107,78 @@ export const islandRunEconomyTelemetryTests: TestCase[] = [
       assertEqual(report.totalDiceOutflow, 5, 'Total outflow should sum sink buckets');
       assertEqual(report.netDiceDelta, 107, 'Net dice delta should reconcile inflow minus outflow');
       assert(formatIslandRunEconomyTelemetryReport(USER_ID).includes('netDiceDelta'), 'Formatted report should be inspectable JSON');
+    },
+  },
+  {
+    name: 'Generate Example Snapshot exports copy-paste friendly economy telemetry JSON',
+    run: () => {
+      resetEnvironment();
+
+      recordIslandRunDiceInflow({
+        source: ISLAND_RUN_ECONOMY_SOURCES.rewardBarDice,
+        amount: 12,
+        sessionId: USER_ID,
+        atMs: 1000,
+      });
+      recordIslandRunDiceInflow({
+        source: ISLAND_RUN_ECONOMY_SOURCES.passiveRegenDice,
+        amount: 3,
+        sessionId: USER_ID,
+        atMs: 1001,
+      });
+      recordIslandRunDiceOutflow({
+        sink: ISLAND_RUN_ECONOMY_SINKS.rollSpendDice,
+        amount: 5,
+        sessionId: USER_ID,
+        atMs: 1002,
+      });
+      recordIslandRunEconomyCounter({
+        counter: ISLAND_RUN_ECONOMY_COUNTERS.rewardBarClaims,
+        amount: 2,
+        sessionId: USER_ID,
+        atMs: 1003,
+      });
+      recordIslandRunEconomyCounter({
+        counter: ISLAND_RUN_ECONOMY_COUNTERS.rewardBarChainedClaims,
+        amount: 1,
+        sessionId: USER_ID,
+        atMs: 1004,
+      });
+      recordIslandRunEconomyCounter({
+        counter: ISLAND_RUN_ECONOMY_COUNTERS.eventTicketsEarned,
+        amount: 7,
+        sessionId: USER_ID,
+        atMs: 1005,
+      });
+      recordIslandRunEconomyCounter({
+        counter: ISLAND_RUN_ECONOMY_COUNTERS.eventTicketsSpent,
+        amount: 4,
+        sessionId: USER_ID,
+        atMs: 1006,
+      });
+      recordIslandRunMultiplierUsed({ multiplier: 2, sessionId: USER_ID, atMs: 1007 });
+      recordIslandRunMultiplierUsed({ multiplier: 10, sessionId: USER_ID, atMs: 1008 });
+      recordIslandRunRewardBarTierReached({ tier: 4, sessionId: USER_ID, atMs: 1009 });
+
+      const snapshot = getIslandRunEconomyTelemetrySnapshot(USER_ID, 1735689600000);
+      const formatted = formatIslandRunEconomyTelemetrySnapshot(USER_ID, 1735689600000);
+      const parsed = JSON.parse(formatted) as typeof snapshot;
+
+      assertEqual(snapshot.timestamp, '2025-01-01T00:00:00.000Z', 'Snapshot should include an ISO timestamp');
+      assertEqual(snapshot.totalInflow, 15, 'Snapshot should include total inflow');
+      assertEqual(snapshot.totalOutflow, 5, 'Snapshot should include total outflow');
+      assertEqual(snapshot.netDiceDelta, 10, 'Snapshot should include net dice delta');
+      assertEqual(snapshot.inflowBySource.reward_bar_dice, 12, 'Snapshot should include inflow by source');
+      assertEqual(snapshot.outflowBySink.roll_spend_dice, 5, 'Snapshot should include outflow by sink');
+      assertEqual(snapshot.rewardBarClaims, 2, 'Snapshot should include reward-bar claims');
+      assertEqual(snapshot.chainedClaims, 1, 'Snapshot should include chained claims');
+      assertEqual(snapshot.rewardBarTierReached, 4, 'Snapshot should include reward-bar tier reached');
+      assertEqual(snapshot.averageMultiplier, 6, 'Snapshot should include average multiplier');
+      assertEqual(snapshot.highestMultiplier, 10, 'Snapshot should include highest multiplier');
+      assertEqual(snapshot.ticketsEarned, 7, 'Snapshot should include tickets earned');
+      assertEqual(snapshot.ticketsSpent, 4, 'Snapshot should include tickets spent');
+      assertEqual(parsed.netDiceDelta, snapshot.netDiceDelta, 'Formatted snapshot should be valid copy-paste friendly JSON');
+      assert(formatted.includes('"ticketsEarned": 7'), 'Formatted snapshot should expose QA ticket fields');
     },
   },
   {
