@@ -154,8 +154,10 @@ No implementation in this PR; recommendation slices only:
 - `src/features/gamification/level-worlds/services/islandRunLuckyRollAction.ts`
 - `src/features/gamification/level-worlds/services/islandRunRuntimeRegen.ts`
 - `src/features/gamification/level-worlds/services/__tests__/islandRunContractV2RewardBar.test.ts`
+- `src/features/gamification/level-worlds/services/islandRunIntegratedEconomySafetyModel.ts`
+- `src/features/gamification/level-worlds/services/__tests__/islandRunIntegratedEconomySafety.test.ts`
 
-## 11) Follow-up: deterministic high-dice safety regression tests (2026-05-28)
+## 13) Follow-up: deterministic high-dice safety regression tests (2026-05-28)
 
 ### Existing coverage found before this follow-up
 
@@ -183,8 +185,43 @@ Scenarios covered:
 | C | 1,000 roll-action attempts from 2,500 dice | Exhausted dice stay exhausted across the longer horizon; no reward-bar revival loop. |
 | D | 2,000 roll-action attempts from 2,500 dice | No self-sustaining dice-positive loop and no infinite reward-bar chain. |
 
+## 14) Integrated economy safety follow-up (2026-05-28)
+
+### Investigation update
+
+A focused integrated model was added to cover the highest-risk stackable dice inflows without changing gameplay tuning:
+
+- **Reward-bar farming baseline**: still modeled as chest/progress-tile rolls at the maximum multiplier currently available from the live dice pool.
+- **Lucky Roll**: modeled as a conservative one-session sum of every unique dice reward on the production Lucky Roll board. Current deterministic total: `16` dice.
+- **Space Excavator campaign milestones**: modeled as the full dice-bearing campaign milestone total. Current deterministic total: `145` dice.
+- **Passive dice regeneration**: modeled as one bounded catch-up refill to the level-band max after the roll pool can no longer afford the next roll. At player level `125`, this contributes `200` dice.
+
+The integrated stack therefore adds `361` modeled external dice on top of reward-bar dice/sticker-completion payouts (`16 Lucky Roll + 145 Space Excavator + 200 passive regen`).
+
+### New deterministic regression coverage added
+
+A new service test file, `islandRunIntegratedEconomySafety.test.ts`, covers the required long-horizon attempts from `2,500` starting dice:
+
+| Modeled horizon | Included repeatable/gameplay-connected sources | Expected safety signal |
+|---:|---|---|
+| 500 attempts | Reward bar + sticker bonus dice + Lucky Roll production board + Space Excavator campaign dice milestones + one passive regen refill | Total dice awarded remains below dice spent; final dice exhausts; reward-bar drain leaves no claimable overflow. |
+| 1,000 attempts | Same stack | Exhausted dice do not revive into a positive loop across the longer horizon. |
+| 2,000 attempts | Same stack | No self-sustaining dice-positive loop and no infinite reward-bar chain. |
+
+The model also asserts the source budget values directly so future config changes to Lucky Roll or Space Excavator dice payouts surface in this safety suite instead of silently changing the integrated economy assumptions.
+
+### Explicit exclusions
+
+Excluded from repeatable economy-loop income:
+
+- **Welcome pack / tutorial / first-session grants**: one-time onboarding grants, not repeatable farming sources.
+- **Admin/dev grants**: non-production economy sources.
+- **Daily Treats and calendar streak bonuses**: time-gated rewards. They can connect into Island Run dicePool through `awardDailyTreatDice`, but treating every roll attempt as a fresh daily claim would be an unsafe model. This remains a time-window modeling gap rather than a per-roll loop input.
+- **Shop purchases / dice packs**: external purchase/grant systems, not gameplay-earned repeatable loop income.
+- **Other minigame reward adapters outside the modeled Island Run event stack**: not included unless they have a deterministic, directly claimable Island Run dice budget comparable to the Space Excavator milestone table.
+
 ### Remaining gaps / recommended future work
 
-- These tests intentionally isolate the reward-bar farming loop and do not include external dice sources such as passive regeneration, daily treats, Lucky Roll, Space Excavator milestone claims, welcome/tutorial grants, or shop purchases.
-- If those systems are combined into a broader economy budget model, add a separate integrated economy simulation suite with explicit source budgets rather than changing reward tuning here.
+- Add a separate time-window model for Daily Treats/calendar streak rewards if economy safety needs to reason about multi-day sessions rather than per-session roll/action loops.
+- Add more event/minigame dice sources only after each source has a deterministic budget and repeatability contract; do not guess expected value from UI-only or random reward paths.
 - No reward tuning, gameplay logic, UI, schema, or architecture changes were made in this follow-up.
