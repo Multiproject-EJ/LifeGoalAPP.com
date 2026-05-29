@@ -107,48 +107,58 @@ const FEEDING_TILE_PROGRESS: Readonly<Record<string, number>> = {
   currency: 1,
 };
 
-// ── Escalating threshold ladder (Monopoly GO style) ──────────────────────────
-// Fast start → slowing progression → high-tier pressure.
-// Tier 0 starts very low (easy first fill) and escalates.
+// ── Curated threshold ladder (Monopoly GO-style pacing) ─────────────────────
+// Fast small goals → medium stretch goals → occasional big jump → breather
+// goals after large milestones → rare mega milestone. Targets are intentionally
+// independent from payout amounts: high target counts must not imply high dice
+// payouts, and roll multipliers only affect progress contributed.
 
-const ESCALATING_THRESHOLDS: readonly number[] = [
-  4,    // tier 0: very easy first fill (hook)
-  6,    // tier 1: still fast
-  8,    // tier 2: moderate
-  12,   // tier 3: slowing
-  16,   // tier 4: engagement wall
-  24,   // tier 5: harder
-  32,   // tier 6: big commitment
-  48,   // tier 7: retention push
-  64,   // tier 8: near-top
-  80,   // tier 9: final easy-event hook before formula scaling
-];
+export const REWARD_BAR_CURATED_TARGET_SEQUENCE: readonly number[] = [
+  5,   // tier 0: quick first fill
+  10,  // tier 1: fast second goal
+  15,  // tier 2: still approachable
+  30,  // tier 3: first stretch
+  35,  // tier 4: slight breather
+  45,  // tier 5: medium goal
+  55,  // tier 6: medium stretch
+  150, // tier 7: first big milestone
+  50,  // tier 8: breather after the big milestone
+  75,  // tier 9: medium recovery wave
+  150, // tier 10: second big milestone
+  75,  // tier 11: breather wave
+  75,  // tier 12: breather hold
+  75,  // tier 13: breather hold
+  100, // tier 14: pre-mega step-up
+  725, // tier 15: rare mega milestone
+] as const;
 
-const ESCALATING_THRESHOLD_TAIL_LINEAR_STEP = 10;
-const ESCALATING_THRESHOLD_TAIL_QUADRATIC_STEP = 2;
+const REWARD_BAR_TAIL_LINEAR_STEP = 35;
+const REWARD_BAR_TAIL_QUADRATIC_STEP = 5;
 // Defensive math bound only: real timed events reset long before this many
 // claims, but capping the input prevents accidental huge-number arithmetic.
 const MAX_ESCALATION_TIER_FOR_THRESHOLD_MATH = 10_000;
 
 /**
  * Resolve threshold for the given escalation tier.
- * The first tiers stay intentionally easy for onboarding. After the hand-tuned
- * hook ladder, thresholds continue on a bounded quadratic curve instead of
- * repeating 80. The tail is intentionally gentler than pre-2026 tuning so
- * progression still feels faster while preserving compounding difficulty.
+ * Early/mid tiers use a curated visible-milestone wave instead of a purely
+ * monotonic hook ladder. Beyond the curated wave, a deterministic bounded tail
+ * resumes upward pressure so late tiers do not become permanently easy.
  */
 export function resolveEscalatingThreshold(tier: number): number {
   const safeTier = Math.min(
     MAX_ESCALATION_TIER_FOR_THRESHOLD_MATH,
     Math.max(0, Math.floor(tier)),
   );
-  if (safeTier < ESCALATING_THRESHOLDS.length) return ESCALATING_THRESHOLDS[safeTier]!;
-  const tailTier = safeTier - (ESCALATING_THRESHOLDS.length - 1);
-  const finalHookThreshold = ESCALATING_THRESHOLDS[ESCALATING_THRESHOLDS.length - 1]!;
+  if (safeTier < REWARD_BAR_CURATED_TARGET_SEQUENCE.length) {
+    return REWARD_BAR_CURATED_TARGET_SEQUENCE[safeTier]!;
+  }
+
+  const tailTier = safeTier - (REWARD_BAR_CURATED_TARGET_SEQUENCE.length - 1);
+  const finalCuratedThreshold = REWARD_BAR_CURATED_TARGET_SEQUENCE[REWARD_BAR_CURATED_TARGET_SEQUENCE.length - 1]!;
   return Math.floor(
-    finalHookThreshold
-      + tailTier * ESCALATING_THRESHOLD_TAIL_LINEAR_STEP
-      + tailTier * tailTier * ESCALATING_THRESHOLD_TAIL_QUADRATIC_STEP,
+    finalCuratedThreshold
+      + tailTier * REWARD_BAR_TAIL_LINEAR_STEP
+      + tailTier * tailTier * REWARD_BAR_TAIL_QUADRATIC_STEP,
   );
 }
 

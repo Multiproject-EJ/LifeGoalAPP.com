@@ -225,3 +225,64 @@ Excluded from repeatable economy-loop income:
 - Add a separate time-window model for Daily Treats/calendar streak rewards if economy safety needs to reason about multi-day sessions rather than per-session roll/action loops.
 - Add more event/minigame dice sources only after each source has a deterministic budget and repeatability contract; do not guess expected value from UI-only or random reward paths.
 - No reward tuning, gameplay logic, UI, schema, or architecture changes were made in this follow-up.
+
+## 15) Follow-up: Curated pacing v1 (2026-05-29)
+
+### Production change
+
+Reward-bar target resolution now uses a named curated visible-milestone sequence for early/mid event tiers:
+
+```ts
+REWARD_BAR_CURATED_TARGET_SEQUENCE = [
+  5, 10, 15, 30, 35, 45, 55, 150,
+  50, 75, 150, 75, 75, 75, 100, 725,
+]
+```
+
+This replaces the prior always-increasing early hardcoded ladder (`4, 6, 8, 12, 16, 24, 32, 48, 64, 80`) plus immediate quadratic tail with a wave-shaped visible pacing rhythm:
+
+- fast small goals: `5, 10, 15`
+- medium stretch goals: `30, 35, 45, 55`
+- first big milestone: `150`
+- post-big breather: `50, 75`
+- second big milestone: `150`
+- longer breather hold: `75, 75, 75`
+- pre-mega step-up: `100`
+- rare mega milestone: `725`
+
+For tiers beyond the curated sequence, `resolveEscalatingThreshold` remains deterministic and uses a bounded upward tail from the mega milestone (`finalCurated + 35*t + 5*t²`). The tail intentionally resumes pressure after the curated wave so late tiers do not become permanently easy, while still avoiding direct payout inflation.
+
+### Payout behavior unchanged/safe
+
+Payout formulas were intentionally left unchanged:
+
+- Dice rewards still use the existing tier-based formula (`5 + tier * 3`).
+- Essence, minigame-token, sticker-fragment, and sticker-completion formulas are unchanged.
+- Rewards do **not** scale directly from target count.
+- Rewards do **not** multiply by roll multiplier.
+- The `725` mega target is therefore a pacing target only, not a `725`-dice grant.
+
+A new regression test exercises the mega target and proves the controlled dice payout remains `50` at that tier, far below the target value.
+
+### Economy safety validation
+
+The Island Run service suite passes after the pacing change, including:
+
+- reward-bar-only high-dice farming safety scenarios,
+- long-horizon max-available multiplier reward-bar farming scenarios,
+- integrated economy safety with reward bar + Lucky Roll + Space Excavator + passive regen.
+
+Validation command:
+
+```bash
+npm run test:island-run
+```
+
+Result on 2026-05-29: `777 passed, 0 failed`.
+
+### Known future tuning questions
+
+- The exact placement of the rare mega milestone (`725`) may need telemetry once real session lengths and timed-event claim counts are available.
+- Breather density after big milestones may need per-event tuning if short events feel too spiky or long events feel too flat.
+- The deterministic post-curated tail is intentionally conservative; future tuning could consider event-specific tail profiles, but only with the same guardrails: no target-proportional payout inflation and no multiplier-scaled payout grants.
+- A global economy governor remains out of scope for this slice and should be designed separately if broader event/daily/shop dice sources expand.

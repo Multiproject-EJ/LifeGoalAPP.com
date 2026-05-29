@@ -40,6 +40,7 @@ function runTimedEventCompletionIntegration(options: {
     },
     minigameId: completionId!,
     nowMs,
+    multiplier: 2,
   });
   assertEqual(completionApplied.rewardBarProgress >= completionApplied.rewardBarThreshold, true, 'completion should make reward bar claimable');
 
