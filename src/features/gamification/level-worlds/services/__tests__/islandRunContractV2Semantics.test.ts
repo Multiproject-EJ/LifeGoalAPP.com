@@ -44,7 +44,7 @@ export const islandRunContractV2SemanticsTests: TestCase[] = [
       });
 
       assertEqual(state.rewardBarProgress, 8, 'Expected reward bar progress to be floored');
-      assertEqual(state.rewardBarThreshold, 4, 'Expected threshold to be floored and bounded');
+      assertEqual(state.rewardBarThreshold, 5, 'Expected threshold to resolve to the curated tier target');
       assertEqual(state.canClaimRewardBar, true, 'Expected claimability when progress meets threshold in v2');
       assertEqual(state.timedEventRemainingMs, 500, 'Expected remaining event ms to derive from nowMs');
       assertEqual(state.rewardBarPercent, 100, 'Expected reward bar percent to clamp to 100');

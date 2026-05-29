@@ -13,6 +13,7 @@ import {
   clampMultiplierToPool,
   MULTIPLIER_TIERS,
   BASE_DICE_PER_ROLL,
+  REWARD_BAR_CURATED_TARGET_SEQUENCE,
 } from '../islandRunContractV2RewardBar';
 import type { IslandRunRewardBarRuntimeSlice } from '../islandRunContractV2RewardBar';
 import { resolveIslandRunContractV2RewardHudState } from '../islandRunContractV2Semantics';
@@ -21,7 +22,7 @@ import { assert, assertEqual, type TestCase } from './testHarness';
 function makeBaseState(): IslandRunRewardBarRuntimeSlice {
   return {
     rewardBarProgress: 0,
-    rewardBarThreshold: 4,
+    rewardBarThreshold: 5,
     rewardBarClaimCountInEvent: 0,
     rewardBarEscalationTier: 0,
     rewardBarLastClaimAtMs: null,
@@ -319,7 +320,7 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
       const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
       const claimable = {
         ...withEvent,
-        rewardBarProgress: 4,
+        rewardBarProgress: 5,
       };
       assert(canClaimIslandRunContractV2RewardBar(claimable), 'Expected claim gate true at threshold');
 
@@ -329,7 +330,7 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
       assertEqual(claimed.state.rewardBarEscalationTier, 1, 'Expected escalation tier increment');
       assertEqual(claimed.state.rewardBarLastClaimAtMs, 2_000, 'Expected claim timestamp update');
       // Threshold should escalate after claim
-      assertEqual(claimed.state.rewardBarThreshold, 6, 'Expected threshold to escalate to tier 1 value');
+      assertEqual(claimed.state.rewardBarThreshold, 10, 'Expected threshold to escalate to tier 1 curated value');
     },
   },
   {
@@ -355,23 +356,45 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
     },
   },
   {
-    name: 'v2 on: escalating thresholds keep early hook tiers and continue beyond old cap',
+    name: 'v2 on: curated reward-bar target sequence is used for visible milestone tiers',
     run: () => {
-      const t0 = resolveEscalatingThreshold(0);
-      const t1 = resolveEscalatingThreshold(1);
-      const t5 = resolveEscalatingThreshold(5);
-      const t9 = resolveEscalatingThreshold(9);
-      const t10 = resolveEscalatingThreshold(10);
+      const expected = [5, 10, 15, 30, 35, 45, 55, 150, 50, 75, 150, 75, 75, 75, 100, 725] as const;
+      assertEqual(
+        REWARD_BAR_CURATED_TARGET_SEQUENCE.join(','),
+        expected.join(','),
+        'Expected exported curated target sequence to match pacing v1',
+      );
+      for (let tier = 0; tier < expected.length; tier += 1) {
+        assertEqual(
+          resolveEscalatingThreshold(tier),
+          expected[tier]!,
+          `Expected tier ${tier} to use curated reward-bar target`,
+        );
+      }
+    },
+  },
+  {
+    name: 'v2 on: curated reward-bar pacing includes breather targets after larger targets',
+    run: () => {
+      assertEqual(resolveEscalatingThreshold(7), 150, 'Expected tier 7 to be the first big milestone');
+      assertEqual(resolveEscalatingThreshold(8), 50, 'Expected tier 8 to breathe down after tier 7');
+      assert(resolveEscalatingThreshold(8) < resolveEscalatingThreshold(7), 'Expected breather target below prior big target');
+      assertEqual(resolveEscalatingThreshold(10), 150, 'Expected tier 10 to return to a big milestone');
+      assertEqual(resolveEscalatingThreshold(11), 75, 'Expected tier 11 to breathe down after tier 10');
+      assert(resolveEscalatingThreshold(11) < resolveEscalatingThreshold(10), 'Expected second breather target below prior big target');
+    },
+  },
+  {
+    name: 'v2 on: post-curated reward-bar tail resumes bounded upward pressure',
+    run: () => {
+      const t15 = resolveEscalatingThreshold(15);
+      const t16 = resolveEscalatingThreshold(16);
       const t20 = resolveEscalatingThreshold(20);
       const t50 = resolveEscalatingThreshold(50);
-      assertEqual(t0, 4, 'Expected tier 0 threshold of 4');
-      assertEqual(t1, 6, 'Expected tier 1 threshold of 6');
-      assertEqual(t9, 80, 'Expected tier 9 to preserve the previous final hook value');
-      assert(t5 > t1, 'Expected tier 5 threshold higher than tier 1');
-      assert(t9 > t5, 'Expected tier 9 threshold higher than tier 5');
-      assert(t10 > t9, 'Expected tier 10 to continue escalating instead of repeating 80');
-      assert(t20 > t10, 'Expected later post-hook tiers to keep increasing');
-      assert(t50 > t20, 'Expected deep post-hook tiers to remain progressively harder');
+      assertEqual(t15, 725, 'Expected final curated tier to be the rare mega milestone');
+      assert(t16 > t15, 'Expected tail to increase after the mega milestone');
+      assert(t20 > t16, 'Expected later tail tiers to keep increasing');
+      assert(t50 > t20, 'Expected deep post-curated tiers to remain progressively harder');
     },
   },
   {
@@ -388,11 +411,33 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
     name: 'v2 on: claim payout has rewardKind and progressive amounts',
     run: () => {
       const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
-      const claimable = { ...withEvent, rewardBarProgress: 4 };
+      const claimable = { ...withEvent, rewardBarProgress: 5 };
       const claimed = claimIslandRunContractV2RewardBar({ state: claimable, nowMs: 2_000 });
       assert(claimed.payout, 'Expected payout');
       assertEqual(claimed.payout!.rewardKind, 'dice', 'Expected first claim reward kind to be dice');
       assert(claimed.payout!.dice > 0, 'Expected dice payout > 0 for dice reward kind');
+    },
+  },
+  {
+    name: 'v2 on: high target values do not automatically cause huge dice payouts',
+    run: () => {
+      const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
+      const megaTarget = resolveEscalatingThreshold(15);
+      const claimable = {
+        ...withEvent,
+        rewardBarProgress: megaTarget,
+        rewardBarThreshold: megaTarget,
+        rewardBarClaimCountInEvent: 16, // next claim resolves to dice reward kind
+        rewardBarEscalationTier: 15,
+      };
+
+      const claimed = claimIslandRunContractV2RewardBar({ state: claimable, nowMs: 2_000 });
+
+      assertEqual(megaTarget, 725, 'Expected test to exercise the curated mega target');
+      assert(claimed.payout, 'Expected payout at the mega target');
+      assertEqual(claimed.payout!.rewardKind, 'dice', 'Expected controlled dice reward kind at mega target');
+      assertEqual(claimed.payout!.dice, 50, 'Expected existing tier-based dice formula, not target-proportional payout');
+      assert(claimed.payout!.dice < megaTarget / 10, `Expected dice payout ${claimed.payout!.dice} to stay far below target ${megaTarget}`);
     },
   },
   {
@@ -526,10 +571,10 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
         multiplier: 2,
       });
 
-      assertEqual(resolveEscalatingThreshold(0), 4, 'Expected first fill to remain easy');
-      assertEqual(resolveEscalatingThreshold(1), 6, 'Expected second fill to remain an onboarding tier');
+      assertEqual(resolveEscalatingThreshold(0), 5, 'Expected first curated fill to remain easy');
+      assertEqual(resolveEscalatingThreshold(1), 10, 'Expected second curated fill to remain an onboarding tier');
       assertEqual(x1.rewardBarProgress, 2, 'Expected ×1 chest progress to remain 2');
-      assertEqual(x2.rewardBarProgress, 4, 'Expected ×2 chest progress to fill the first tier');
+      assertEqual(x2.rewardBarProgress, 4, 'Expected ×2 chest progress to get close to the first curated tier');
     },
   },
   {
@@ -577,8 +622,8 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
     name: 'v2 on: overflow progress carries to next fill (chained claims)',
     run: () => {
       const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
-      // Tier 0 threshold is 4; give 6 progress → overflow of 2
-      const overfilled = { ...withEvent, rewardBarProgress: 6 };
+      // Tier 0 threshold is 5; give 7 progress → overflow of 2
+      const overfilled = { ...withEvent, rewardBarProgress: 7 };
       const claimed = claimIslandRunContractV2RewardBar({ state: overfilled, nowMs: 2_000 });
       assert(claimed.payout, 'Expected payout');
       assertEqual(claimed.state.rewardBarProgress, 2, 'Expected overflow progress of 2 carried over');
@@ -588,8 +633,8 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
     name: 'v2 on: chained claims resolve multiple fills in one go',
     run: () => {
       const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
-      // Tier 0 threshold=4, tier 1 threshold=6. Give 12 progress → should fill twice (4+6=10, 2 left over)
-      const massProgress = { ...withEvent, rewardBarProgress: 12 };
+      // Tier 0 threshold=5, tier 1 threshold=10. Give 16 progress → should fill twice (5+10=15, 1 left over)
+      const massProgress = { ...withEvent, rewardBarProgress: 16 };
       const result = resolveChainedRewardBarClaims({ state: massProgress, nowMs: 2_000 });
       assert(result.payouts.length >= 2, `Expected at least 2 chained claims, got ${result.payouts.length}`);
       assertEqual(result.payouts[0]!.rewardKind, 'dice', 'Expected first chain reward to be dice');
@@ -713,10 +758,11 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
     name: 'v2 on: sticker completion awards bonus dice and essence',
     run: () => {
       const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
-      // Set tier 3 → threshold is 12; set fragments to 4 so next sticker_fragments claim completes a sticker
+      // Set tier 3 → threshold is 30; set fragments to 4 so next sticker_fragments claim completes a sticker
       const nearComplete = {
         ...withEvent,
-        rewardBarProgress: 12,
+        rewardBarProgress: resolveEscalatingThreshold(3),
+        rewardBarThreshold: resolveEscalatingThreshold(3),
         rewardBarClaimCountInEvent: 3,
         rewardBarEscalationTier: 3,
         stickerProgress: { fragments: 4 },

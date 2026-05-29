@@ -25,7 +25,7 @@ import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarne
 function makeBaseState(): IslandRunRewardBarRuntimeSlice {
   return {
     rewardBarProgress: 0,
-    rewardBarThreshold: 4,
+    rewardBarThreshold: 5,
     rewardBarClaimCountInEvent: 0,
     rewardBarEscalationTier: 0,
     rewardBarLastClaimAtMs: null,
@@ -259,18 +259,18 @@ export const minigameConsolidationPhase3Tests: TestCase[] = [
     },
   },
   {
-    name: 'getEventMilestoneLadder returns monotonically non-decreasing thresholds',
+    name: 'getEventMilestoneLadder returns curated reward-bar pacing thresholds',
     run: () => {
       const ladder = getEventMilestoneLadder('feeding_frenzy');
+      const expectedThresholds = [5, 10, 15, 30, 35, 45, 55, 150, 50, 75] as const;
       assertEqual(ladder.length, 10, 'default ladder length is 10');
       assertEqual(ladder[0]!.tier, 0, 'first tier is 0');
-      assertEqual(ladder[0]!.threshold, 4, 'tier 0 threshold = 4 per ESCALATING_THRESHOLDS');
-      for (let i = 1; i < ladder.length; i += 1) {
-        assert(
-          ladder[i]!.threshold >= ladder[i - 1]!.threshold,
-          `ladder thresholds must be non-decreasing at tier ${i}`,
-        );
-      }
+      assertDeepEqual(
+        ladder.map((milestone) => milestone.threshold),
+        [...expectedThresholds],
+        'event milestone ladder should expose the curated visible pacing wave, including breathers',
+      );
+      assert(ladder[8]!.threshold < ladder[7]!.threshold, 'tier 8 should breathe down after the tier 7 big milestone');
     },
   },
   {
