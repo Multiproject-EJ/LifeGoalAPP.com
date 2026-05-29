@@ -18,6 +18,7 @@ import { resolvePostRareTreasurePathState } from '../services/islandRunPostRareT
 import { isTreasurePathMilestoneIsland } from '../services/islandRunIslandMetadata';
 import {
   getIslandRunEconomyTelemetryReport,
+  formatIslandRunEconomyTelemetrySnapshot,
   resetIslandRunEconomyTelemetry,
   ISLAND_RUN_ECONOMY_COUNTERS,
 } from '../services/islandRunEconomyTelemetry';
@@ -197,6 +198,7 @@ export function IslandRunDebugPanel({
   const [packGrantPending, setPackGrantPending] = useState(false);
   const [packGrantActionMessage, setPackGrantActionMessage] = useState<string | null>(null);
   const [telemetryResetNonce, setTelemetryResetNonce] = useState(0);
+  const [copiedTelemetrySnapshot, setCopiedTelemetrySnapshot] = useState(false);
 
   // Ping Supabase to check connectivity
   useEffect(() => {
@@ -336,6 +338,21 @@ export function IslandRunDebugPanel({
   const handleResetEconomyTelemetry = () => {
     resetIslandRunEconomyTelemetry(session.user.id);
     setTelemetryResetNonce((nonce) => nonce + 1);
+  };
+
+  const handleCopyTelemetrySnapshot = () => {
+    const snapshot = formatIslandRunEconomyTelemetrySnapshot(session.user.id);
+    navigator.clipboard.writeText(snapshot).then(
+      () => {
+        setCopiedTelemetrySnapshot(true);
+        setTimeout(() => setCopiedTelemetrySnapshot(false), 2000);
+      },
+      () => {
+        setCopiedTelemetrySnapshot(false);
+        // eslint-disable-next-line no-console
+        console.warn('[IslandRun] Economy telemetry snapshot clipboard write failed');
+      },
+    );
   };
 
   const sections: DebugSection[] = useMemo(() => {
@@ -640,13 +657,22 @@ export function IslandRunDebugPanel({
                 <div style={{ display: 'grid', gap: '0.55rem', borderTop: '1px solid rgba(255,255,255,0.16)', paddingTop: '0.65rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <strong style={{ fontSize: '0.84rem' }}>📊 Economy Telemetry</strong>
-                    <button
-                      type="button"
-                      className="island-run-debug-panel__copy-btn"
-                      onClick={handleResetEconomyTelemetry}
-                    >
-                      Reset telemetry
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        className="island-run-debug-panel__copy-btn"
+                        onClick={handleCopyTelemetrySnapshot}
+                      >
+                        {copiedTelemetrySnapshot ? '✅ Snapshot copied!' : '📋 Copy Telemetry Snapshot'}
+                      </button>
+                      <button
+                        type="button"
+                        className="island-run-debug-panel__copy-btn"
+                        onClick={handleResetEconomyTelemetry}
+                      >
+                        Reset telemetry
+                      </button>
+                    </div>
                   </div>
                   <div style={{ fontSize: '0.76rem', opacity: 0.86 }}>
                     Dev-only in-memory session ledger. Reset clears telemetry counters only; it does not mutate gameplay state, rewards, or persistence.

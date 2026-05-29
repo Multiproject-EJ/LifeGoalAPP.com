@@ -61,6 +61,23 @@ export interface IslandRunEconomyTelemetryReport {
   events: IslandRunEconomyTelemetryEvent[];
 }
 
+export interface IslandRunEconomyTelemetrySnapshot {
+  timestamp: string;
+  sessionId: string;
+  totalInflow: number;
+  totalOutflow: number;
+  netDiceDelta: number;
+  inflowBySource: Partial<Record<IslandRunEconomySource, number>>;
+  outflowBySink: Partial<Record<IslandRunEconomySink, number>>;
+  rewardBarClaims: number;
+  chainedClaims: number;
+  rewardBarTierReached: number;
+  averageMultiplier: number;
+  highestMultiplier: number;
+  ticketsEarned: number;
+  ticketsSpent: number;
+}
+
 interface IslandRunEconomyTelemetryLedgerState {
   sessionId: string;
   startedAtMs: number;
@@ -264,6 +281,30 @@ export function resetIslandRunEconomyTelemetry(sessionId?: string): void {
     return;
   }
   ledgers.delete(normalizeSessionId(sessionId));
+}
+
+export function getIslandRunEconomyTelemetrySnapshot(sessionId?: string, timestampMs = Date.now()): IslandRunEconomyTelemetrySnapshot {
+  const report = getIslandRunEconomyTelemetryReport(sessionId);
+  return {
+    timestamp: new Date(timestampMs).toISOString(),
+    sessionId: report.sessionId,
+    totalInflow: report.totalDiceInflow,
+    totalOutflow: report.totalDiceOutflow,
+    netDiceDelta: report.netDiceDelta,
+    inflowBySource: report.diceInflowBySource,
+    outflowBySink: report.diceOutflowBySink,
+    rewardBarClaims: report.counters[ISLAND_RUN_ECONOMY_COUNTERS.rewardBarClaims] ?? 0,
+    chainedClaims: report.counters[ISLAND_RUN_ECONOMY_COUNTERS.rewardBarChainedClaims] ?? 0,
+    rewardBarTierReached: report.rewardBarTierReached,
+    averageMultiplier: report.averageMultiplierUsed,
+    highestMultiplier: report.highestMultiplierUsed,
+    ticketsEarned: report.counters[ISLAND_RUN_ECONOMY_COUNTERS.eventTicketsEarned] ?? 0,
+    ticketsSpent: report.counters[ISLAND_RUN_ECONOMY_COUNTERS.eventTicketsSpent] ?? 0,
+  };
+}
+
+export function formatIslandRunEconomyTelemetrySnapshot(sessionId?: string, timestampMs?: number): string {
+  return JSON.stringify(getIslandRunEconomyTelemetrySnapshot(sessionId, timestampMs), null, 2);
 }
 
 export function formatIslandRunEconomyTelemetryReport(sessionId?: string): string {
