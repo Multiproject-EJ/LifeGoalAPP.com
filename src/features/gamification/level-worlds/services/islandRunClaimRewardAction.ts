@@ -32,6 +32,13 @@ import {
   claimIslandRunContractV2RewardBar,
   type RewardBarClaimPayout,
 } from './islandRunContractV2RewardBar';
+import {
+  ISLAND_RUN_ECONOMY_COUNTERS,
+  ISLAND_RUN_ECONOMY_SOURCES,
+  recordIslandRunDiceInflow,
+  recordIslandRunEconomyCounter,
+  recordIslandRunRewardBarTierReached,
+} from './islandRunEconomyTelemetry';
 
 // ── result types ──────────────────────────────────────────────────────────────
 
@@ -86,6 +93,55 @@ export async function executeIslandRunClaimRewardAction(options: {
     // Defensive: canClaim returned true but payout is null — treat as not_claimable.
     return { status: 'not_claimable' };
   }
+
+  const stickerCompletionDice = Math.max(0, Math.floor(payout.stickerCompletionBonusDice));
+  const rewardBarDice = Math.max(0, Math.floor(payout.dice - stickerCompletionDice));
+  recordIslandRunEconomyCounter({
+    counter: ISLAND_RUN_ECONOMY_COUNTERS.rewardBarClaims,
+    amount: 1,
+    sessionId: session.user.id,
+    atMs: nowMs,
+    metadata: {
+      rewardKind: payout.rewardKind,
+      claimCountInEvent: nextRewardBarSlice.rewardBarClaimCountInEvent,
+      overflowProgress: nextRewardBarSlice.rewardBarProgress,
+    },
+  });
+  if (nextRewardBarSlice.rewardBarProgress >= nextRewardBarSlice.rewardBarThreshold) {
+    recordIslandRunEconomyCounter({
+      counter: ISLAND_RUN_ECONOMY_COUNTERS.rewardBarChainedClaims,
+      amount: 1,
+      sessionId: session.user.id,
+      atMs: nowMs,
+      metadata: { rewardBarProgress: nextRewardBarSlice.rewardBarProgress, rewardBarThreshold: nextRewardBarSlice.rewardBarThreshold },
+    });
+  }
+  recordIslandRunRewardBarTierReached({
+    tier: nextRewardBarSlice.rewardBarEscalationTier,
+    sessionId: session.user.id,
+    atMs: nowMs,
+  });
+  recordIslandRunDiceInflow({
+    source: ISLAND_RUN_ECONOMY_SOURCES.rewardBarDice,
+    amount: rewardBarDice,
+    sessionId: session.user.id,
+    atMs: nowMs,
+    metadata: { rewardKind: payout.rewardKind },
+  });
+  recordIslandRunDiceInflow({
+    source: ISLAND_RUN_ECONOMY_SOURCES.stickerCompletionBonusDice,
+    amount: stickerCompletionDice,
+    sessionId: session.user.id,
+    atMs: nowMs,
+    metadata: { stickersGranted: payout.stickersGranted, stickerId: payout.stickerId },
+  });
+  recordIslandRunEconomyCounter({
+    counter: ISLAND_RUN_ECONOMY_COUNTERS.eventTicketsEarned,
+    amount: payout.minigameTokens,
+    sessionId: session.user.id,
+    atMs: nowMs,
+    metadata: { source: 'reward_bar', eventId: nextRewardBarSlice.activeTimedEvent?.eventId ?? null },
+  });
 
   // 4. Merge the updated reward-bar slice and resource adjustments back into
   //    the full record, then persist via the same write path used by

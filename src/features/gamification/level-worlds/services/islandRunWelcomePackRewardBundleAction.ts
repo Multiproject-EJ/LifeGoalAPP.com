@@ -3,6 +3,12 @@ import { withIslandRunActionLock } from './islandRunActionMutex';
 import { getActiveEvent } from './islandRunEventEngine';
 import { readIslandRunGameStateRecord, type IslandRunGameStateRecord } from './islandRunGameStateStore';
 import { commitIslandRunState } from './islandRunStateStore';
+import {
+  ISLAND_RUN_ECONOMY_COUNTERS,
+  ISLAND_RUN_ECONOMY_SOURCES,
+  recordIslandRunDiceInflow,
+  recordIslandRunEconomyCounter,
+} from './islandRunEconomyTelemetry';
 
 export const WELCOME_PACK_BUNDLE_DICE = 150;
 export const WELCOME_PACK_BUNDLE_ESSENCE = 2000;
@@ -38,6 +44,18 @@ export function claimWelcomePackRewardBundle(options: {
         : current.minigameTicketsByEvent,
       welcomePackRewardBundleClaimed: true,
     };
+    recordIslandRunDiceInflow({
+      source: ISLAND_RUN_ECONOMY_SOURCES.welcomePackDice,
+      amount: WELCOME_PACK_BUNDLE_DICE,
+      sessionId: options.session.user.id,
+      metadata: { triggerSource: options.triggerSource ?? 'claim_welcome_pack_reward_bundle' },
+    });
+    recordIslandRunEconomyCounter({
+      counter: ISLAND_RUN_ECONOMY_COUNTERS.eventTicketsEarned,
+      amount: activeEventId ? WELCOME_PACK_BUNDLE_EVENT_TICKETS : 0,
+      sessionId: options.session.user.id,
+      metadata: { source: 'welcome_pack', eventId: activeEventId },
+    });
     await commitIslandRunState({ session: options.session, client: options.client, record: next, triggerSource: options.triggerSource ?? 'claim_welcome_pack_reward_bundle' });
     return {
       status: activeEventId ? 'claimed' : 'claimed_without_active_event',

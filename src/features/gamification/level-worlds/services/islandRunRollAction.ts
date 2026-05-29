@@ -73,6 +73,11 @@ import {
   withIslandRunActionLock,
 } from './islandRunActionMutex';
 import { getIslandRunFirstCreaturePackLowDiceTriggerTarget } from './islandRunFirstSessionTutorialUi';
+import {
+  ISLAND_RUN_ECONOMY_SINKS,
+  recordIslandRunDiceOutflow,
+  recordIslandRunMultiplierUsed,
+} from './islandRunEconomyTelemetry';
 
 // ── roll constants (must match IslandRunBoardPrototype) ───────────────────────
 
@@ -280,6 +285,19 @@ async function performRollAction(options: {
   //    write later fails or is skipped (demo session / no client).
   const newDicePool = state.dicePool - diceCost;
   const nowMs = Date.now();
+  recordIslandRunDiceOutflow({
+    sink: ISLAND_RUN_ECONOMY_SINKS.rollSpendDice,
+    amount: diceCost,
+    sessionId: session.user.id,
+    atMs: nowMs,
+    metadata: { multiplier, beforeDicePool: state.dicePool, afterDicePool: newDicePool },
+  });
+  recordIslandRunMultiplierUsed({
+    multiplier,
+    sessionId: session.user.id,
+    atMs: nowMs,
+    metadata: { diceCost },
+  });
   const shouldResetRegenAnchorAfterSpend = Boolean(
     state.diceRegenState
     && state.dicePool >= state.diceRegenState.maxDice

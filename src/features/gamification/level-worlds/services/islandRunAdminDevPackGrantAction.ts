@@ -11,6 +11,7 @@ import {
   type IslandRunGameStateRecord,
 } from './islandRunGameStateStore';
 import { commitIslandRunState, getIslandRunStateSnapshot } from './islandRunStateStore';
+import { ISLAND_RUN_ECONOMY_SOURCES, recordIslandRunDiceInflow } from './islandRunEconomyTelemetry';
 
 export const ADMIN_DEV_PACK_GRANT_RESOLVER_VERSION = 'admin_dev_pack_grant_v1' as const;
 
@@ -237,6 +238,13 @@ export function grantAdminDevCreaturePack(
       runtimeVersion: current.runtimeVersion + 1,
     };
 
+    recordIslandRunDiceInflow({
+      source: ISLAND_RUN_ECONOMY_SOURCES.devAdminGrantDice,
+      amount: diceBonus,
+      sessionId: session.user.id,
+      atMs: nowMs,
+      metadata: { grantId, grantSource, triggerSource: triggerSource ?? 'admin_dev_pack_grant' },
+    });
     await commitIslandRunState({
       session,
       client,

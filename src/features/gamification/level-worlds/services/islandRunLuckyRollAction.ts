@@ -21,6 +21,7 @@ import {
   resolveIslandRunLuckyRollTileReward,
 } from './islandRunLuckyRollBoardConfig';
 import { commitIslandRunState } from './islandRunStateStore';
+import { ISLAND_RUN_ECONOMY_SOURCES, recordIslandRunDiceInflow } from './islandRunEconomyTelemetry';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import {
   TREASURE_PATH_EGG_RARITY_ROLL_DENOMINATOR,
@@ -591,6 +592,12 @@ export function bankIslandRunLuckyRollRewards(
     });
     if (result.status !== 'banked') return result;
 
+    recordIslandRunDiceInflow({
+      source: ISLAND_RUN_ECONOMY_SOURCES.luckyRollDice,
+      amount: result.diceAwarded,
+      sessionId: session.user.id,
+      metadata: { sessionKey: result.sessionKey, rewardsBanked: result.rewardsBanked.length },
+    });
     await commitLuckyRollRecord({
       session,
       client,

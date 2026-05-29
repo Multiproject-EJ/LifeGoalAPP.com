@@ -87,6 +87,15 @@ import {
   getSpaceExcavatorCampaignMilestone,
   resolveSpaceExcavatorClaimedMilestoneIds,
 } from './spaceExcavatorCampaignProgress';
+import {
+  ISLAND_RUN_ECONOMY_COUNTERS,
+  ISLAND_RUN_ECONOMY_SINKS,
+  ISLAND_RUN_ECONOMY_SOURCES,
+  recordIslandRunDiceInflow,
+  recordIslandRunDiceOutflow,
+  recordIslandRunEconomyCounter,
+  type IslandRunEconomySource,
+} from './islandRunEconomyTelemetry';
 
 
 export type SpaceExcavatorDigFailureReason = 'missing_progress' | 'insufficient_tickets' | 'board_complete' | 'invalid_tile' | 'already_dug';
@@ -442,6 +451,12 @@ export function claimSpaceExcavatorMilestoneReward(options: {
       [canonicalEventId]: nextProgress,
     },
   };
+  recordIslandRunDiceInflow({
+    source: ISLAND_RUN_ECONOMY_SOURCES.spaceExcavatorMilestoneDice,
+    amount: diceAward,
+    sessionId: session.user.id,
+    metadata: { eventId: canonicalEventId, milestoneId: milestone.id, rewardLabel: milestone.rewardLabel },
+  });
   void commitIslandRunState({
     session,
     client,
@@ -619,9 +634,10 @@ export function applyTokenHopRewards(options: {
   client: SupabaseClient | null;
   deltas: TokenHopRewardsDeltas;
   dualWriteMinigameTicketsEventId?: string | null;
+  telemetryDiceSource?: IslandRunEconomySource;
   triggerSource?: string;
 }): IslandRunGameStateRecord {
-  const { session, client, deltas, dualWriteMinigameTicketsEventId, triggerSource } = options;
+  const { session, client, deltas, dualWriteMinigameTicketsEventId, telemetryDiceSource, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
   const clamp0 = (v: number) => Math.max(0, v);
   const spinTokenDelta = deltas.spinTokens ?? 0;
@@ -646,6 +662,20 @@ export function applyTokenHopRewards(options: {
     essence: clamp0(current.essence + (deltas.essence ?? 0)),
     minigameTicketsByEvent: nextMinigameTicketsByEvent,
   };
+  recordIslandRunDiceInflow({
+    source: telemetryDiceSource ?? ISLAND_RUN_ECONOMY_SOURCES.tokenHopDice,
+    amount: deltas.dicePool ?? 0,
+    sessionId: session.user.id,
+    metadata: { triggerSource: triggerSource ?? 'apply_token_hop_rewards' },
+  });
+  if (shouldDualWriteMinigameTickets) {
+    recordIslandRunEconomyCounter({
+      counter: ISLAND_RUN_ECONOMY_COUNTERS.eventTicketsEarned,
+      amount: spinTokenDelta,
+      sessionId: session.user.id,
+      metadata: { source: 'token_hop_rewards', eventId: dualWriteMinigameTicketsEventId },
+    });
+  }
   // Synchronous mirror update + async persist (fire-and-forget).
   void commitIslandRunState({
     session,
@@ -683,6 +713,18 @@ export function applyTimedEventTicketSpend(
       [canonicalEventId]: Math.max(0, available - requested),
     },
   };
+  recordIslandRunDiceOutflow({
+    sink: ISLAND_RUN_ECONOMY_SINKS.ticketSpend,
+    amount: 0,
+    sessionId: session.user.id,
+    metadata: { eventId: canonicalEventId, ticketsSpent: requested },
+  });
+  recordIslandRunEconomyCounter({
+    counter: ISLAND_RUN_ECONOMY_COUNTERS.eventTicketsSpent,
+    amount: requested,
+    sessionId: session.user.id,
+    metadata: { eventId: canonicalEventId },
+  });
   void commitIslandRunState({
     session,
     client,
@@ -720,6 +762,12 @@ export function applyPassiveDiceRegenTick(
     diceRegenState: regenUpdate.diceRegenState,
     runtimeVersion: current.runtimeVersion + 1,
   };
+  recordIslandRunDiceInflow({
+    source: ISLAND_RUN_ECONOMY_SOURCES.passiveRegenDice,
+    amount: regenUpdate.diceAdded,
+    sessionId: session.user.id,
+    metadata: { playerLevel, companionRegenBoostPct: companionRegenModifier.cappedBoostPct },
+  });
   void commitIslandRunState({
     session,
     client,
@@ -749,6 +797,12 @@ export function applyDevGrantDice(options: ApplyDevGrantDiceOptions): ApplyDevGr
     dicePool: Math.max(0, current.dicePool + applied),
     runtimeVersion: current.runtimeVersion + 1,
   };
+  recordIslandRunDiceInflow({
+    source: ISLAND_RUN_ECONOMY_SOURCES.devAdminGrantDice,
+    amount: applied,
+    sessionId: session.user.id,
+    metadata: { triggerSource: triggerSource ?? 'dev_grant_dice' },
+  });
   logIslandRunEntryDebug('dev_grant_dice', {
     userId: session.user.id,
     applied,
@@ -1715,6 +1769,12 @@ export function applyFirstRunStarterRewards(options: ApplyFirstRunStarterRewards
     dicePool: current.dicePool + parsedDiceBonus,
     runtimeVersion: current.runtimeVersion + 1,
   };
+  recordIslandRunDiceInflow({
+    source: ISLAND_RUN_ECONOMY_SOURCES.firstRunStarterDice,
+    amount: parsedDiceBonus,
+    sessionId: session.user.id,
+    metadata: { triggerSource: triggerSource ?? 'apply_first_run_starter_rewards' },
+  });
   void commitIslandRunState({
     session,
     client,
@@ -2729,6 +2789,12 @@ export function resolveReadyEggTerminalTransition(
     diamonds: Math.max(0, current.diamonds + (rewardDeltas?.diamonds ?? 0)),
     runtimeVersion: current.runtimeVersion + 1,
   };
+  recordIslandRunDiceInflow({
+    source: ISLAND_RUN_ECONOMY_SOURCES.eggRewardDice,
+    amount: rewardDeltas?.dicePool ?? 0,
+    sessionId: session.user.id,
+    metadata: { islandNumber, terminalStatus, location },
+  });
   void commitIslandRunState({
     session,
     client,

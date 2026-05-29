@@ -13,6 +13,7 @@ import {
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import { addCreatureToRuntimeCollection } from './islandRunCreatureCollectionLedger';
 import { commitIslandRunState } from './islandRunStateStore';
+import { ISLAND_RUN_ECONOMY_SOURCES, recordIslandRunDiceInflow } from './islandRunEconomyTelemetry';
 
 export const FIRST_SESSION_CREATURE_PACK_CARD_COUNT = CREATURE_PACK_CARD_COUNT;
 export const FIRST_SESSION_CREATURE_PACK_DICE_REWARD = 100;
@@ -133,6 +134,13 @@ export function claimFirstSessionCreaturePackReward(
       runtimeVersion: current.runtimeVersion + 1,
     };
 
+    recordIslandRunDiceInflow({
+      source: ISLAND_RUN_ECONOMY_SOURCES.firstSessionTutorialDice,
+      amount: FIRST_SESSION_CREATURE_PACK_DICE_REWARD,
+      sessionId: session.user.id,
+      atMs: openedAtMs,
+      metadata: { source: 'first_session_creature_pack' },
+    });
     await commitIslandRunState({
       session,
       client,
