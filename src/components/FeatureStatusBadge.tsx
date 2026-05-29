@@ -1,8 +1,8 @@
-import type { FeatureStatus } from '../config/featureAvailability';
+import { DEMO_FEATURE_LABEL, type FeatureStatus } from '../config/featureAvailability';
 import '../styles/feature-status.css';
 
 const FEATURE_STATUS_LABELS: Record<Exclude<FeatureStatus, 'live'>, string> = {
-  demo: 'Future Feature',
+  demo: DEMO_FEATURE_LABEL,
   comingSoon: 'Coming Soon',
   locked: 'Locked',
   hidden: 'Hidden',
