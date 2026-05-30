@@ -515,6 +515,7 @@ type VisionReward = {
 };
 
 type HabitReviewAction = 'pause' | 'redesign' | 'replace' | 'archive';
+type HabitReviewDiceBountySource = 'pause' | 'redesign' | 'replace' | 'archive' | 'deep_fix';
 
 type HabitReviewAiDraft = {
   suggestion: HabitAiSuggestion;
@@ -560,6 +561,7 @@ const SLOT_MACHINE_TOTAL_ITEMS = 7;
 const SLOT_MACHINE_SELECTED_INDEX = 4;
 const VISION_STAR_COLLAGE_MIN = 3;
 const VISION_STAR_COLLAGE_MAX = 5;
+const HABIT_REVIEW_DICE_BOUNTY = 25;
 
 const LIFE_WHEEL_COLORS: Record<string, string> = {
   health: '#22c55e',
@@ -672,6 +674,8 @@ type HabitPromptWindow = {
 };
 const habitRecoveryRewardKey = (userId: string, habitId: string, rewardKey: string) =>
   `lifegoal.habit-recovery-reward:${userId}:${habitId}:${rewardKey}`;
+const habitReviewDiceBountyKey = (userId: string, habitId: string, rewardKey: string) =>
+  `lifegoal.habit-review-dice-bounty:${userId}:${habitId}:${rewardKey}`;
 
 const loadDraft = <T,>(key: string): T | null => {
   if (typeof window === 'undefined') return null;
@@ -833,6 +837,7 @@ export function DailyHabitTracker({
   const [expandedReviewFixHabitId, setExpandedReviewFixHabitId] = useState<string | null>(null);
   const [lifecycleActionHabitIds, setLifecycleActionHabitIds] = useState<Set<string>>(new Set());
   const [todayPauseDialogHabit, setTodayPauseDialogHabit] = useState<HabitWithGoal | null>(null);
+  const [reviewPauseDialogHabit, setReviewPauseDialogHabit] = useState<HabitWithGoal | null>(null);
   const [reviewAiLoadingHabitIds, setReviewAiLoadingHabitIds] = useState<Set<string>>(new Set());
   const [reviewAiDraftByHabitId, setReviewAiDraftByHabitId] = useState<Record<string, HabitReviewAiDraft>>({});
   const [analysisHabitId, setAnalysisHabitId] = useState<string | null>(null);
@@ -1346,6 +1351,31 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     await earnXP(params.xp, params.sourceType, params.habitId, params.description);
     saveDraft(storageKey, true);
   }, [earnXP, gamificationEnabled, session?.user?.id]);
+  const awardHabitReviewDiceBounty = useCallback((params: {
+    habitId: string;
+    habitName: string;
+    reviewCycleKey: string;
+    source: HabitReviewDiceBountySource;
+  }) => {
+    if (!session?.user?.id || !gamificationEnabled) {
+      return false;
+    }
+
+    const storageKey = habitReviewDiceBountyKey(session.user.id, params.habitId, params.reviewCycleKey);
+    if (loadDraft<boolean>(storageKey)) {
+      return false;
+    }
+
+    awardDailyTreatDice({
+      userId: session.user.id,
+      diceAmount: HABIT_REVIEW_DICE_BOUNTY,
+      sourceLabel: `Habit Review Recovery Bounty (${params.source}): ${params.habitName}`,
+      islandRunSession: session,
+    });
+    saveDraft(storageKey, true);
+    return true;
+  }, [gamificationEnabled, session]);
+
   const visionImagesByHabit = useMemo(() => {
     const map = new Map<string, VisionImage>();
     visionImages.forEach((image) => {
@@ -5378,12 +5408,16 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     setErrorMessage(`Loaded AI redesign draft for "${habit.name}". Review and save your changes.`);
   }, [reviewAiDraftByHabitId]);
 
-  const handleHabitReviewAction = useCallback(async (habit: HabitWithGoal, action: HabitReviewAction) => {
+  const handleHabitReviewAction = useCallback(async (habit: HabitWithGoal, action: HabitReviewAction, options?: { reason?: string; resumeOn?: string | null }) => {
     if (!isConfigured || isDemoExperience) {
       setErrorMessage('Connect Supabase to review and update habits.');
       return;
     }
     if (reviewActionHabitIds.has(habit.id)) {
+      return;
+    }
+
+    if (action === 'archive' && !window.confirm(`Archive "${habit.name}" and remove it from your active habits?`)) {
       return;
     }
 
@@ -5419,12 +5453,21 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           delete next[habit.id];
           return next;
         });
-        setErrorMessage(`Archived "${habit.name}".`);
+        const diceAwarded = awardHabitReviewDiceBounty({
+          habitId: habit.id,
+          habitName: habit.name,
+          reviewCycleKey,
+          source: 'archive',
+        });
+        setErrorMessage(`Archived "${habit.name}".${diceAwarded ? ` +${HABIT_REVIEW_DICE_BOUNTY} 🎲 Recovery Bounty awarded.` : ''}`);
         return;
       }
 
       if (action === 'pause') {
-        const { error } = await pauseHabitV2(habit.id, { reason: 'review_pause' });
+        const { error } = await pauseHabitV2(habit.id, {
+          reason: options?.reason ?? 'review_pause',
+          resumeOn: options?.resumeOn ?? null,
+        });
         if (error) {
           throw new Error(error.message);
         }
@@ -5444,7 +5487,17 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           delete next[habit.id];
           return next;
         });
-        setErrorMessage(`Paused "${habit.name}" and removed it from today until you resume it.`);
+        setReviewPauseDialogHabit((current) => (current?.id === habit.id ? null : current));
+        const diceAwarded = awardHabitReviewDiceBounty({
+          habitId: habit.id,
+          habitName: habit.name,
+          reviewCycleKey,
+          source: 'pause',
+        });
+        const pauseUntilMessage = options?.resumeOn
+          ? ` until ${new Date(`${options.resumeOn}T00:00:00`).toLocaleDateString()}`
+          : ' until you resume it';
+        setErrorMessage(`Paused "${habit.name}"${pauseUntilMessage}.${diceAwarded ? ` +${HABIT_REVIEW_DICE_BOUNTY} 🎲 Recovery Bounty awarded.` : ''}`);
         return;
       }
 
@@ -5469,7 +5522,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           delete next[habit.id];
           return next;
         });
-        setErrorMessage(`Deactivated "${habit.name}" so you can replace it with a better fit.`);
+        const diceAwarded = awardHabitReviewDiceBounty({
+          habitId: habit.id,
+          habitName: habit.name,
+          reviewCycleKey,
+          source: 'replace',
+        });
+        setErrorMessage(`Deactivated "${habit.name}" so you can replace it with a better fit.${diceAwarded ? ` +${HABIT_REVIEW_DICE_BOUNTY} 🎲 Recovery Bounty awarded.` : ''}`);
         return;
       }
 
@@ -5514,7 +5573,32 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         return next;
       });
     }
-  }, [isConfigured, isDemoExperience, reviewActionHabitIds, generateReviewRedesignDraft, awardHabitRecoveryXp]);
+  }, [isConfigured, isDemoExperience, reviewActionHabitIds, generateReviewRedesignDraft, awardHabitRecoveryXp, awardHabitReviewDiceBounty]);
+
+
+  const handleHabitReviewDeepFixProtocolStarted = useCallback((habitId: string) => {
+    const habit = habits.find((entry) => entry.id === habitId);
+    if (!habit) {
+      return;
+    }
+
+    const currentState = getAutoProgressState({
+      autoprog: habit.autoprog ?? null,
+      schedule: (habit.schedule ?? { mode: 'daily' }) as Json,
+      target_num: habit.target_num ?? null,
+    } as unknown as HabitV2Row);
+
+    const diceAwarded = awardHabitReviewDiceBounty({
+      habitId: habit.id,
+      habitName: habit.name,
+      reviewCycleKey: currentState.review_due_at ?? 'none',
+      source: 'deep_fix',
+    });
+
+    if (diceAwarded) {
+      setErrorMessage(`Deep Fix protocol started for "${habit.name}". +${HABIT_REVIEW_DICE_BOUNTY} 🎲 Recovery Bounty awarded.`);
+    }
+  }, [awardHabitReviewDiceBounty, habits]);
 
   const identitySignalDayCount = useMemo(() => {
     const completionDates = new Set<string>();
@@ -5737,12 +5821,19 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       }
 
       if (currentState?.review_reason === 'redesign' || currentState?.review_reason === 'replace') {
+        const reviewCycleKey = currentState.review_due_at ?? 'none';
         await awardHabitRecoveryXp({
           habitId: editHabit.id,
-          rewardKey: `relaunch-started:${currentState.review_due_at ?? 'none'}`,
+          rewardKey: `relaunch-started:${reviewCycleKey}`,
           xp: XP_REWARDS.HABIT_RELAUNCH_STARTED,
           sourceType: 'habit_relaunch_started',
           description: 'Started a relaunched habit after review',
+        });
+        awardHabitReviewDiceBounty({
+          habitId: editHabit.id,
+          habitName: nextTitle,
+          reviewCycleKey,
+          source: currentState.review_reason,
         });
       }
 
@@ -6507,12 +6598,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
           return (
             <section className="habit-review-queue" aria-label="Habit review queue">
-              <p className="habit-review-queue__eyebrow">Habit Review</p>
+              <p className="habit-review-queue__eyebrow">{gamificationEnabled ? 'Recovery Bounty' : 'Habit Review'}</p>
               <h3 className="habit-review-queue__title">
                 {reviewQueueHabits.length} habit{reviewQueueHabits.length === 1 ? '' : 's'} need attention
               </h3>
               <p className="habit-review-queue__subtitle">
-                These habits are paused from today&apos;s score. Choose what to do with each one to keep your habit list healthy.
+                {gamificationEnabled
+                  ? `These habits are paused from today's score. Follow through on a fix to earn +${HABIT_REVIEW_DICE_BOUNTY} 🎲 dice.`
+                  : 'These habits are paused from today\'s score. Choose what to do with each one to keep your habit list healthy.'}
               </p>
               <ul className="habit-review-queue__list" role="list">
                 <li className="habit-review-queue__item">
@@ -6525,7 +6618,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       disabled={isActionInFlight}
                       onClick={() => setExpandedReviewFixHabitId((current) => (current === habit.id ? null : habit.id))}
                     >
-                      Fix
+                      {gamificationEnabled ? `Fix +${HABIT_REVIEW_DICE_BOUNTY} 🎲` : 'Fix'}
                     </button>
                     <button
                       type="button"
@@ -6545,7 +6638,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         <span>Deep Fix</span>
                         <small>Guided diagnosis</small>
                       </button>
-                      <button type="button" disabled={isActionInFlight} onClick={() => setTodayPauseDialogHabit(habit)}>
+                      <button type="button" disabled={isActionInFlight} onClick={() => setReviewPauseDialogHabit(habit)}>
                         <span>Pause</span>
                         <small>Choose duration</small>
                       </button>
@@ -8818,6 +8911,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 habitId={analysisHabitId}
                 habitName={habits.find((habit) => habit.id === analysisHabitId)?.name ?? 'Habit'}
                 onClose={() => setAnalysisHabitId(null)}
+                onProtocolStarted={() => handleHabitReviewDeepFixProtocolStarted(analysisHabitId)}
               />
             ) : null}
 
@@ -10232,6 +10326,26 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             }}
           />
         ) : null}
+        {reviewPauseDialogHabit ? (
+          <HabitPauseDialog
+            open
+            habitTitle={reviewPauseDialogHabit.name}
+            confirmLabel={gamificationEnabled ? `Pause +${HABIT_REVIEW_DICE_BOUNTY} 🎲` : 'Pause habit'}
+            saving={reviewActionHabitIds.has(reviewPauseDialogHabit.id)}
+            onClose={() => {
+              if (reviewActionHabitIds.has(reviewPauseDialogHabit.id)) {
+                return;
+              }
+              setReviewPauseDialogHabit(null);
+            }}
+            onConfirm={async ({ reason, resumeOn }) => {
+              await handleHabitReviewAction(reviewPauseDialogHabit, 'pause', {
+                reason: reason ?? 'review_pause',
+                resumeOn: resumeOn ?? null,
+              });
+            }}
+          />
+        ) : null}
         {/* Celebration animation for habit completion */}
         {showCelebration && (
           <CelebrationAnimation
@@ -10579,6 +10693,27 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           onConfirm={async ({ reason, resumeOn }) => {
             await handleTodayLifecycleAction(todayPauseDialogHabit, 'pause', {
               reason: reason ?? 'today_screen_pause',
+              resumeOn: resumeOn ?? null,
+            });
+          }}
+        />
+      ) : null}
+
+      {reviewPauseDialogHabit ? (
+        <HabitPauseDialog
+          open
+          habitTitle={reviewPauseDialogHabit.name}
+          confirmLabel={gamificationEnabled ? `Pause +${HABIT_REVIEW_DICE_BOUNTY} 🎲` : 'Pause habit'}
+          saving={reviewActionHabitIds.has(reviewPauseDialogHabit.id)}
+          onClose={() => {
+            if (reviewActionHabitIds.has(reviewPauseDialogHabit.id)) {
+              return;
+            }
+            setReviewPauseDialogHabit(null);
+          }}
+          onConfirm={async ({ reason, resumeOn }) => {
+            await handleHabitReviewAction(reviewPauseDialogHabit, 'pause', {
+              reason: reason ?? 'review_pause',
               resumeOn: resumeOn ?? null,
             });
           }}
