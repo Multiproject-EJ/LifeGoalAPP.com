@@ -829,6 +829,8 @@ export function DailyHabitTracker({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [queueStatus, setQueueStatus] = useState<HabitOfflineQueueStatus>({ pending: 0, failed: 0 });
   const [reviewActionHabitIds, setReviewActionHabitIds] = useState<Set<string>>(new Set());
+  const [dismissedReviewHabitIds, setDismissedReviewHabitIds] = useState<Set<string>>(new Set());
+  const [expandedReviewFixHabitId, setExpandedReviewFixHabitId] = useState<string | null>(null);
   const [lifecycleActionHabitIds, setLifecycleActionHabitIds] = useState<Set<string>>(new Set());
   const [todayPauseDialogHabit, setTodayPauseDialogHabit] = useState<HabitWithGoal | null>(null);
   const [reviewAiLoadingHabitIds, setReviewAiLoadingHabitIds] = useState<Set<string>>(new Set());
@@ -844,6 +846,11 @@ export function DailyHabitTracker({
   const [autoProgressHabitIds, setAutoProgressHabitIds] = useState<Set<string>>(new Set());
   const [today, setToday] = useState(() => formatISODate(new Date()));
   const [activeDate, setActiveDate] = useState(() => formatISODate(new Date()));
+
+  useEffect(() => {
+    setDismissedReviewHabitIds(new Set());
+    setExpandedReviewFixHabitId(null);
+  }, [activeDate]);
   const loadTodayTodos = useCallback(async (dateISO: string) => {
     const { data, error } = await fetchTodayTodos(dateISO);
     if (error) {
@@ -1389,6 +1396,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       }),
     [habitHealthByHabitId, habits],
   );
+  const visibleReviewQueueHabits = useMemo(
+    () => reviewQueueHabits.filter((habit) => !dismissedReviewHabitIds.has(habit.id)),
+    [dismissedReviewHabitIds, reviewQueueHabits],
+  );
+  const focusedReviewHabit = visibleReviewQueueHabits[0] ?? null;
+  const hiddenReviewHabitCount = Math.max(0, reviewQueueHabits.length - (focusedReviewHabit ? 1 : 0));
   const weeklyReviewSnapshot = useMemo(() => {
     const stalled: HabitWithGoal[] = [];
     const onTrack: HabitWithGoal[] = [];
@@ -1581,7 +1594,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     nowTimestamp <= timeLimitedOffer.windowEnd;
   const isHabitReviewPromptActive =
     isViewingToday &&
-    reviewQueueHabits.length > 0 &&
+    visibleReviewQueueHabits.length > 0 &&
     habitReviewWindow.windowStart !== null &&
     habitReviewWindow.windowEnd !== null &&
     nowTimestamp >= habitReviewWindow.windowStart &&
@@ -6478,68 +6491,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
     return (
       <div className="habit-checklist__group">
-        {isHabitReviewPromptActive ? (
-          <section className="habit-review-queue" aria-label="Habit review queue">
-            <p className="habit-review-queue__eyebrow">Habit Review</p>
-            <h3 className="habit-review-queue__title">
-              {reviewQueueHabits.length} habit{reviewQueueHabits.length === 1 ? '' : 's'} need attention
-            </h3>
-            <p className="habit-review-queue__subtitle">
-              Habits in review are removed from today&apos;s score until you decide what to do next.
-            </p>
-            <ul className="habit-review-queue__list" role="list">
-              {reviewQueueHabits.map((habit) => {
-                const isActionInFlight = reviewActionHabitIds.has(habit.id);
-                const isAiDraftLoading = reviewAiLoadingHabitIds.has(habit.id);
-                const aiDraft = reviewAiDraftByHabitId[habit.id];
-                return (
-                  <li key={habit.id} className="habit-review-queue__item">
-                    <span className="habit-review-queue__name">{habit.name}</span>
-                    <div className="habit-review-queue__actions">
-                      <button type="button" disabled={isActionInFlight} onClick={() => setAnalysisHabitId(habit.id)}>
-                        Deep Fix
-                      </button>
-                      <button type="button" disabled={isActionInFlight} onClick={() => void handleHabitReviewAction(habit, 'pause')}>
-                        Pause
-                      </button>
-                      <button type="button" disabled={isActionInFlight} onClick={() => void handleHabitReviewAction(habit, 'redesign')}>
-                        Redesign
-                      </button>
-                      <button type="button" disabled={isActionInFlight} onClick={() => void handleHabitReviewAction(habit, 'replace')}>
-                        Replace
-                      </button>
-                      <button
-                        type="button"
-                        className="habit-review-queue__archive"
-                        disabled={isActionInFlight}
-                        onClick={() => void handleHabitReviewAction(habit, 'archive')}
-                      >
-                        Archive
-                      </button>
-                    </div>
-                    {isAiDraftLoading ? <p className="habit-review-queue__draft-status">Generating AI redesign draft…</p> : null}
-                    {aiDraft ? (
-                      <div className="habit-review-queue__draft" role="status" aria-live="polite">
-                        <p className="habit-review-queue__draft-title">
-                          Suggested relaunch: {aiDraft.suggestion.emoji ? `${aiDraft.suggestion.emoji} ` : ''}
-                          {aiDraft.suggestion.title}
-                        </p>
-                        <p className="habit-review-queue__draft-rationale">{aiDraft.rationale}</p>
-                        <button
-                          type="button"
-                          className="habit-review-queue__draft-apply"
-                          onClick={() => handleApplyReviewAiDraftToEdit(habit)}
-                        >
-                          Open in edit flow
-                        </button>
-                      </div>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        ) : null}
         {!hideTimeBoundOffers ? (
           <TimeBoundOfferRow
             offers={timeBoundOffers}
@@ -6547,6 +6498,103 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             daysAgo={isViewingToday ? 0 : Math.max(1, getUtcDayDifference(activeDate, today))}
           />
         ) : null}
+        {isHabitReviewPromptActive && focusedReviewHabit ? (() => {
+          const habit = focusedReviewHabit;
+          const isActionInFlight = reviewActionHabitIds.has(habit.id);
+          const isAiDraftLoading = reviewAiLoadingHabitIds.has(habit.id);
+          const aiDraft = reviewAiDraftByHabitId[habit.id];
+          const isFixExpanded = expandedReviewFixHabitId === habit.id;
+
+          return (
+            <section className="habit-review-queue" aria-label="Habit review queue">
+              <p className="habit-review-queue__eyebrow">Habit Review</p>
+              <h3 className="habit-review-queue__title">
+                {reviewQueueHabits.length} habit{reviewQueueHabits.length === 1 ? '' : 's'} need attention
+              </h3>
+              <p className="habit-review-queue__subtitle">
+                These habits are paused from today&apos;s score. Choose what to do with each one to keep your habit list healthy.
+              </p>
+              <ul className="habit-review-queue__list" role="list">
+                <li className="habit-review-queue__item">
+                  <span className="habit-review-queue__name">{habit.name}</span>
+                  <div className="habit-review-queue__primary-actions">
+                    <button
+                      type="button"
+                      className="habit-review-queue__fix"
+                      aria-expanded={isFixExpanded}
+                      disabled={isActionInFlight}
+                      onClick={() => setExpandedReviewFixHabitId((current) => (current === habit.id ? null : habit.id))}
+                    >
+                      Fix
+                    </button>
+                    <button
+                      type="button"
+                      className="habit-review-queue__not-now"
+                      disabled={isActionInFlight}
+                      onClick={() => {
+                        setDismissedReviewHabitIds((prev) => new Set(prev).add(habit.id));
+                        setExpandedReviewFixHabitId((current) => (current === habit.id ? null : current));
+                      }}
+                    >
+                      Not now
+                    </button>
+                  </div>
+                  {isFixExpanded ? (
+                    <div className="habit-review-queue__actions" aria-label={`Fix options for ${habit.name}`}>
+                      <button type="button" disabled={isActionInFlight} onClick={() => setAnalysisHabitId(habit.id)}>
+                        <span>Deep Fix</span>
+                        <small>Guided diagnosis</small>
+                      </button>
+                      <button type="button" disabled={isActionInFlight} onClick={() => setTodayPauseDialogHabit(habit)}>
+                        <span>Pause</span>
+                        <small>Choose duration</small>
+                      </button>
+                      <button type="button" disabled={isActionInFlight} onClick={() => void handleHabitReviewAction(habit, 'redesign')}>
+                        <span>Redesign</span>
+                        <small>Edit habit structure</small>
+                      </button>
+                      <button type="button" disabled={isActionInFlight} onClick={() => void handleHabitReviewAction(habit, 'replace')}>
+                        <span>Replace</span>
+                        <small>Create substitute</small>
+                      </button>
+                      <button
+                        type="button"
+                        className="habit-review-queue__archive"
+                        disabled={isActionInFlight}
+                        onClick={() => void handleHabitReviewAction(habit, 'archive')}
+                      >
+                        <span>Archive</span>
+                        <small>Confirm archive</small>
+                      </button>
+                    </div>
+                  ) : null}
+                  {isAiDraftLoading ? <p className="habit-review-queue__draft-status">Generating AI redesign draft…</p> : null}
+                  {aiDraft ? (
+                    <div className="habit-review-queue__draft" role="status" aria-live="polite">
+                      <p className="habit-review-queue__draft-title">
+                        Suggested relaunch: {aiDraft.suggestion.emoji ? `${aiDraft.suggestion.emoji} ` : ''}
+                        {aiDraft.suggestion.title}
+                      </p>
+                      <p className="habit-review-queue__draft-rationale">{aiDraft.rationale}</p>
+                      <button
+                        type="button"
+                        className="habit-review-queue__draft-apply"
+                        onClick={() => handleApplyReviewAiDraftToEdit(habit)}
+                      >
+                        Open in edit flow
+                      </button>
+                    </div>
+                  ) : null}
+                </li>
+              </ul>
+              {hiddenReviewHabitCount > 0 ? (
+                <p className="habit-review-queue__more">
+                  {hiddenReviewHabitCount} more habit{hiddenReviewHabitCount === 1 ? '' : 's'} waiting after this.
+                </p>
+              ) : null}
+            </section>
+          );
+        })() : null}
         <div className="habit-checklist-card__title">
           <h2>My Habits</h2>
           <div className="habit-checklist-card__title-actions">
