@@ -54,6 +54,7 @@ type HabitImprovementAnalysisModalProps = {
   habitId: string;
   habitName: string;
   onClose: () => void;
+  onProtocolStarted?: () => void;
 };
 
 function buildDefaultExperimentDay(dayIndex: number): HabitExperimentDayInput {
@@ -80,6 +81,7 @@ export function HabitImprovementAnalysisModal({
   habitId,
   habitName,
   onClose,
+  onProtocolStarted,
 }: HabitImprovementAnalysisModalProps) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [step, setStep] = useState(0);
@@ -684,6 +686,7 @@ export function HabitImprovementAnalysisModal({
         return;
       }
       setExperimentStarted(true);
+      onProtocolStarted?.();
       setSuccess('Protocol saved and 7-day experiment started.');
       setStep(4);
       return;
