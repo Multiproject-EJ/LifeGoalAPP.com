@@ -9182,24 +9182,62 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: #0f172a;
 }
 
-.habit-review-queue__actions {
+.habit-review-queue__primary-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: 0.45rem;
+}
+
+.habit-review-queue__fix,
+.habit-review-queue__not-now {
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  border-radius: 999px;
+  padding: 0.36rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.habit-review-queue__fix {
+  background: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(14, 165, 233, 0.22);
+}
+
+.habit-review-queue__not-now {
+  background: #ffffff;
+  color: #475569;
+}
+
+.habit-review-queue__actions {
+  display: grid;
+  gap: 0.4rem;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
 }
 
 .habit-review-queue__actions button {
   border: 1px solid rgba(14, 165, 233, 0.28);
   background: #ffffff;
   color: #0369a1;
-  border-radius: 999px;
-  padding: 0.22rem 0.58rem;
+  border-radius: 12px;
+  padding: 0.48rem 0.6rem;
   font-size: 0.74rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
+  display: grid;
+  gap: 0.12rem;
+  text-align: left;
 }
 
-.habit-review-queue__actions button:disabled {
+.habit-review-queue__actions button small {
+  color: rgba(15, 23, 42, 0.58);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.habit-review-queue__actions button:disabled,
+.habit-review-queue__fix:disabled,
+.habit-review-queue__not-now:disabled {
   opacity: 0.65;
   cursor: not-allowed;
 }
@@ -9207,6 +9245,13 @@ html.platform-ipad .workspace-shell__menu-edge {
 .habit-review-queue__archive {
   border-color: rgba(239, 68, 68, 0.28) !important;
   color: #b91c1c !important;
+}
+
+.habit-review-queue__more {
+  margin: 0.55rem 0 0;
+  color: rgba(15, 23, 42, 0.62);
+  font-size: 0.76rem;
+  font-weight: 600;
 }
 
 [data-theme='dark-glass'] .habit-review-queue {
@@ -9223,10 +9268,16 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: rgba(226, 232, 240, 0.76);
 }
 
+[data-theme='dark-glass'] .habit-review-queue__not-now,
 [data-theme='dark-glass'] .habit-review-queue__actions button {
   background: rgba(15, 23, 42, 0.72);
   color: #7dd3fc;
   border-color: rgba(56, 189, 248, 0.35);
+}
+
+[data-theme='dark-glass'] .habit-review-queue__actions button small,
+[data-theme='dark-glass'] .habit-review-queue__more {
+  color: rgba(226, 232, 240, 0.68);
 }
 
 .habit-checklist__empty {
