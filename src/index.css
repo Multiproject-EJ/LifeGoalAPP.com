@@ -469,7 +469,7 @@ body {
   background:
     radial-gradient(ellipse at 50% 0%, rgba(59, 130, 246, 0.14), transparent 68%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.16) 58%, transparent 100%);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  border-bottom: 0;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
   opacity: 0.72;
 }
@@ -496,7 +496,6 @@ body {
   background:
     radial-gradient(ellipse at 50% 0%, rgba(129, 140, 248, 0.24), transparent 70%),
     linear-gradient(180deg, rgba(2, 6, 23, 0.78), rgba(15, 23, 42, 0.34) 62%, transparent 100%);
-  border-bottom-color: rgba(129, 140, 248, 0.13);
   box-shadow: 0 10px 30px rgba(2, 6, 23, 0.32), 0 0 22px rgba(99, 102, 241, 0.08);
   opacity: 0.82;
 }
