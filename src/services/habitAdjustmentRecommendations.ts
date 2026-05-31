@@ -34,9 +34,9 @@ export function getHabitAdjustmentRecommendation(
   }
 
   if (analysis.state === 'too_hard') {
-    return withPrompts('shrink_to_tiny', 'High risk and misses indicate the task is likely too hard right now.', [
-      'This quest may be too difficult.',
-      'Want a smaller version?',
+    return withPrompts('shrink_to_tiny', 'Current signals suggest today may call for a lower-energy path.', [
+      'Your energy may be lower today. Choose your path.',
+      'A smaller step can keep the quest warm.',
     ]);
   }
 

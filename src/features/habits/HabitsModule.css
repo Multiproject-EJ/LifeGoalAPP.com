@@ -531,8 +531,8 @@
 
 .habit-day-nav__daily-life-upgrade-eyebrow {
   margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  text-transform: none;
+  letter-spacing: 0.04em;
   color: #c7d2fe;
   font-size: 0.76rem;
 }

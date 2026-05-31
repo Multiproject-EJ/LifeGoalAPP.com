@@ -27,9 +27,9 @@ export function DailyLifeUpgradeSettings({ session }: DailyLifeUpgradeSettingsPr
 
   return (
     <section className="account-panel__card" aria-labelledby="daily-life-upgrade-setting">
-      <p className="account-panel__eyebrow">Daily Life Upgrade</p>
-      <h3 id="daily-life-upgrade-setting">Daily Life Upgrade</h3>
-      <p className="account-panel__hint">Get one small suggestion each day to improve a habit or goal.</p>
+      <p className="account-panel__eyebrow">Daily Quest Guidance</p>
+      <h3 id="daily-life-upgrade-setting">Daily Quest Guidance</h3>
+      <p className="account-panel__hint">Get one calm quest adjustment each day to support a habit or goal.</p>
       <div className="account-panel__toggle-row">
         <label className="account-panel__toggle-label">
           <input
@@ -39,7 +39,7 @@ export function DailyLifeUpgradeSettings({ session }: DailyLifeUpgradeSettingsPr
             disabled={saving}
             className="account-panel__toggle-input"
           />
-          <span className="account-panel__toggle-text">Enable Daily Life Upgrade</span>
+          <span className="account-panel__toggle-text">Enable Daily Quest Guidance</span>
         </label>
       </div>
     </section>
