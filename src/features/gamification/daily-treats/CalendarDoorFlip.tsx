@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { playIslandRunSound, triggerIslandRunHaptic } from '../level-worlds/services/islandRunAudio';
 import { RewardCard } from './RewardCard';
 import type { RewardTier, RewardCurrency, HolidayKey } from '../../../services/treatCalendarService';
 
@@ -36,11 +37,15 @@ export const CalendarDoorFlip = ({
 
   const handleFlip = () => {
     if (hasFlipped) return;
+    playIslandRunSound('egg_open');
+    triggerIslandRunHaptic('egg_open');
     setIsFlipped(true);
     setHasFlipped(true);
 
     // Trigger reveal complete callback after animation
     setTimeout(() => {
+      playIslandRunSound('reward_bar_claim_burst');
+      triggerIslandRunHaptic('reward_claim');
       onRevealComplete?.();
     }, 600);
   };
@@ -59,16 +64,33 @@ export const CalendarDoorFlip = ({
       tabIndex={hasFlipped ? -1 : 0}
       aria-label={`Day ${dayNumber} door. ${hasFlipped ? 'Revealed' : 'Tap to reveal'}`}
     >
+      <div className="door-flip__aura" aria-hidden="true" />
+      <div className="door-flip__sparkles" aria-hidden="true">
+        {Array.from({ length: 10 }, (_, index) => (
+          <span key={`sparkle-${index}`} className="door-flip__sparkle" />
+        ))}
+      </div>
       <div className="door-flip__inner">
         {/* Front face - the door */}
         <div className="door-flip__front">
-          <span className="door-flip__number">{dayNumber}</span>
-          <span className="door-flip__emoji" aria-hidden="true">{emoji}</span>
-          <span className="door-flip__hint">Tap to flip</span>
+          <span className="door-flip__eyebrow">Daily Treat</span>
+          <span className="door-flip__number">Day {dayNumber}</span>
+          <span className="door-flip__artifact" aria-hidden="true">
+            <span className="door-flip__artifact-glow" />
+            <span className="door-flip__emoji">{emoji}</span>
+          </span>
+          <span className="door-flip__hint">Tap to reveal</span>
         </div>
 
         {/* Back face - the reward card */}
         <div className="door-flip__back">
+          {hasFlipped && (
+            <div className="door-flip__reveal-burst" aria-hidden="true">
+              {Array.from({ length: 14 }, (_, index) => (
+                <span key={`burst-${index}`} className="door-flip__reveal-spark" />
+              ))}
+            </div>
+          )}
           <RewardCard
             tier={tier}
             currency={currency}
