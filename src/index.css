@@ -22265,7 +22265,6 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-size: 0.75rem;
 }
 
-.daily-treats-calendar__day-pair--final 
 .daily-treats-calendar--holiday-personal-quest .daily-treats-calendar__hatch {
   border-width: 2px;
   border-color: rgba(191, 219, 254, 0.72);
@@ -22371,6 +22370,44 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: rgba(226, 232, 240, 0.35);
   color: rgba(100, 116, 139, 0.85);
   border-style: dashed;
+}
+
+.daily-treats-calendar--holiday-personal-quest .daily-treats-calendar__hatch {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.55);
+}
+
+.daily-treats-calendar--holiday-personal-quest .daily-treats-calendar__hatch-number {
+  color: #ffffff;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.daily-treats-calendar--holiday-personal-quest .daily-treats-calendar__hatch-dice {
+  color: rgba(255, 255, 255, 0.92);
+  opacity: 0.95;
+}
+
+.daily-treats-calendar--holiday-personal-quest .daily-treats-calendar__hatch--opened {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+.daily-treats-calendar--holiday-personal-quest .daily-treats-calendar__hatch--locked {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.24);
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.daily-treats-calendar--holiday-personal-quest .daily-treats-calendar__hatch--available {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(191, 219, 254, 0.72);
+  color: #ffffff;
+}
+
+.daily-treats-calendar--holiday-personal-quest .daily-treats-calendar__hatch--today {
+  border-color: rgba(255, 255, 255, 0.85);
+  color: #ffffff;
 }
 
 .daily-treats-calendar__hatch-button {

@@ -649,7 +649,7 @@ export const CountdownCalendarModal = ({
 
               const doorBody = (
                 <>
-                  <span className="daily-treats-calendar__hatch-number">{day}</span>
+                  <span className="daily-treats-calendar__hatch-number">Day {day}</span>
                   {(freeOpened || isOpenedLegacy) ? (
                     <span className="daily-treats-calendar__hatch-symbol" aria-hidden="true">
                       {revealedSymbol?.emoji ?? '✓'}
