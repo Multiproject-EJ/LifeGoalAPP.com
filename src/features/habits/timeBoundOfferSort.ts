@@ -1,5 +1,5 @@
 /**
- * Pure sorting utilities for the 4-circle TimeBoundOffer row.
+ * Pure sorting utilities for the horizontally scrollable TimeBoundOffer row.
  *
  * Extracted from TimeBoundOfferRow.tsx so they can be unit-tested
  * without a React rendering environment.
@@ -37,22 +37,19 @@ export function sortByStateAndPriority<T extends TimeBoundOfferSortable>(source:
 }
 
 /**
- * Given all visible offers, select and sort up to 4 for display.
+ * Given all visible offers, sort them for display in the horizontal scroller.
  *
- * Core offers (slotRole === 'core' or undefined) fill the 4 slots first.
- * Filler offers only fill remaining slots when there are fewer than 4 core.
+ * Core offers (slotRole === 'core' or undefined) are shown before filler offers.
+ * Filler offers are no longer capped to the old fixed grid because the
+ * row can scroll horizontally when more than four circles are available.
  */
 export function selectOffersForDisplay<T extends TimeBoundOfferSortable>(offers: T[]): T[] {
   const visible = offers.filter((o) => o.isVisible);
   const coreOffers = visible.filter((o) => (o.slotRole ?? 'core') === 'core');
   const fillerOffers = visible.filter((o) => o.slotRole === 'filler');
 
-  const sortedCore = sortByStateAndPriority(coreOffers).slice(0, 4);
-  if (sortedCore.length >= 4) {
-    return sortedCore;
-  }
-
-  const remainingSlots = 4 - sortedCore.length;
-  const sortedFiller = sortByStateAndPriority(fillerOffers).slice(0, remainingSlots);
-  return [...sortedCore, ...sortedFiller];
+  return [
+    ...sortByStateAndPriority(coreOffers),
+    ...sortByStateAndPriority(fillerOffers),
+  ];
 }

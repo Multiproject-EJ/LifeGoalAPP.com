@@ -205,11 +205,20 @@
   --offer-notification-size: clamp(0.6rem, 2.9vw, 0.86rem);
   --offer-notification-offset: clamp(0.24rem, 1.25vw, 0.4rem);
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(var(--offer-circle-size), 1fr);
+  grid-template-rows: 1fr;
   gap: 0.72rem;
   margin: 0.75rem 0 1rem;
   width: 100%;
   margin-inline: auto;
+  padding: 0.1rem 0.15rem 0.45rem;
+  overflow-x: auto;
+  overflow-y: visible;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: inline proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
   box-sizing: border-box;
 }
 
@@ -227,6 +236,8 @@
   gap: 0.35rem;
   padding: 0;
   width: min(100%, var(--offer-circle-size));
+  justify-self: center;
+  scroll-snap-align: start;
   cursor: pointer;
   box-sizing: border-box;
 }
