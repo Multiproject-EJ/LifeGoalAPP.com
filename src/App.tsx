@@ -68,7 +68,7 @@ import { CountdownCalendarModal } from './features/gamification/daily-treats/Cou
 import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorldsHub';
 import { getIslandBackgroundImageSrc } from './features/gamification/level-worlds/services/islandBackgrounds';
 import { fetchHolidayPreferences } from './services/holidayPreferences';
-import { buildPreviewAdventMeta, fetchCurrentSeason, getActiveAdventMeta, getPersonalQuestSeason, type ActiveAdventMetaResult, type HolidayKey } from './services/treatCalendarService';
+import { buildPreviewAdventMeta, fetchCurrentSeason, getActiveAdventMeta, getHatchesForDay, getPersonalQuestSeason, type ActiveAdventMetaResult, type HolidayKey } from './services/treatCalendarService';
 import { HOLIDAY_PREVIEW_LAUNCH_EVENT, type HolidayPreviewLaunchDetail } from './services/holidayPreviewEvents';
 import {
   isIslandRunEntryDebugEnabled,
@@ -663,6 +663,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [reopenGameOverlayOnRewardClose, setReopenGameOverlayOnRewardClose] = useState(false);
   const [hasSeenDailyTreats, setHasSeenDailyTreats] = useState(false);
   const [hasOpenedDailyTreatsToday, setHasOpenedDailyTreatsToday] = useState(false);
+  const [hasOpenedDailyTreatBonusToday, setHasOpenedDailyTreatBonusToday] = useState(false);
+  const [hasDailyTreatBonusDoorToday, setHasDailyTreatBonusDoorToday] = useState(false);
   const [hasOpenedHolidayCalendarToday, setHasOpenedHolidayCalendarToday] = useState(false);
   const [isMobileFooterCollapsed, setIsMobileFooterCollapsed] = useState(false);
   const [isMobileFooterSnapActive, setIsMobileFooterSnapActive] = useState(false);
@@ -892,6 +894,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     const userId = supabaseSession?.user?.id;
     if (!userId) {
       setHasOpenedDailyTreatsToday(false);
+      setHasOpenedDailyTreatBonusToday(false);
+      setHasDailyTreatBonusDoorToday(false);
       return;
     }
 
@@ -899,6 +903,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
       const { data: season } = await getPersonalQuestSeason(userId);
       if (!season || season.season.season_type !== 'personal_quest') {
         setHasOpenedDailyTreatsToday(false);
+        setHasOpenedDailyTreatBonusToday(false);
+        setHasDailyTreatBonusDoorToday(false);
         return;
       }
 
@@ -906,9 +912,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
       const openedDays = Array.isArray(season.progress?.opened_days)
         ? season.progress.opened_days
         : [];
+      const openedBonusDays = Array.isArray(season.progress?.opened_bonus_days)
+        ? season.progress.opened_bonus_days
+        : [];
+      const todayHatches = getHatchesForDay(season.hatches, todayIndex);
       setHasOpenedDailyTreatsToday(openedDays.includes(todayIndex));
+      setHasOpenedDailyTreatBonusToday(openedBonusDays.includes(todayIndex));
+      setHasDailyTreatBonusDoorToday(Boolean(todayHatches.bonus));
     } catch {
       setHasOpenedDailyTreatsToday(false);
+      setHasOpenedDailyTreatBonusToday(false);
+      setHasDailyTreatBonusDoorToday(false);
     }
   }, [supabaseSession?.user?.id]);
 
@@ -3495,6 +3509,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
               onPendingOfferHandled={() => setPendingTodayOfferOpen(null)}
               activeHolidaySeason={activeHolidaySeason}
               hasOpenedDailyTreatsToday={hasOpenedDailyTreatsToday}
+              hasOpenedDailyTreatBonusToday={hasOpenedDailyTreatBonusToday}
+              hasDailyTreatBonusDoorToday={hasDailyTreatBonusDoorToday}
               hasOpenedHolidayCalendarToday={hasOpenedHolidayCalendarToday}
               hiddenHabitIds={[]}
               isContractsFeatureOpen={isContractsWorkspaceOpen}
@@ -4724,6 +4740,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
         setShowCalendarPlaceholder(false);
         setHolidayPreviewKey(null);
         setCalendarLaunchMode('auto');
+        void refreshDailyTreatsOpenedState();
+        void refreshHolidayCalendarOpenedState();
       })}
       userId={activeSession?.user?.id}
       islandRunSession={activeSession}
@@ -4841,6 +4859,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
               hideTimeBoundOffers={!isGameModeActive}
               activeHolidaySeason={activeHolidaySeason}
               hasOpenedDailyTreatsToday={hasOpenedDailyTreatsToday}
+              hasOpenedDailyTreatBonusToday={hasOpenedDailyTreatBonusToday}
+              hasDailyTreatBonusDoorToday={hasDailyTreatBonusDoorToday}
               hasOpenedHolidayCalendarToday={hasOpenedHolidayCalendarToday}
               hiddenHabitIds={[]}
               onOpenStarterQuest={openStarterQuestSheetFromToday}

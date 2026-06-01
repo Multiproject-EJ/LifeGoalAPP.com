@@ -79,11 +79,12 @@ export function runAllTimeBoundOfferSortTests(): void {
   // selectOffersForDisplay
   // ------------------------------------------------------------------
 
-  // Returns at most 4 items from the visible set
+  // Returns every visible item for the horizontal scroller
   {
     const items = Array.from({ length: 7 }, (_, i) => make({ sortPriority: i }));
     const result = selectOffersForDisplay(items);
-    assertEqual(result.length, 4, 'selectOffersForDisplay should return at most 4 items');
+    assertEqual(result.length, 7, 'selectOffersForDisplay should return every visible item');
+    assertEqual(result[0], items[0], 'first item should still respect sort priority');
   }
 
   // Invisible items are excluded
@@ -95,7 +96,7 @@ export function runAllTimeBoundOfferSortTests(): void {
     assertEqual(result[0], visible, 'only the visible offer should appear');
   }
 
-  // Core fills before filler — filler only enters if core < 4
+  // Core offers appear before filler offers, without a 4-item cap
   {
     const core1 = make({ slotRole: 'core', sortPriority: 0 });
     const core2 = make({ slotRole: 'core', sortPriority: 1 });
@@ -103,11 +104,11 @@ export function runAllTimeBoundOfferSortTests(): void {
     const core4 = make({ slotRole: 'core', sortPriority: 3 });
     const filler = make({ slotRole: 'filler', sortPriority: 0 });
     const result = selectOffersForDisplay([filler, core4, core3, core2, core1]);
-    assertEqual(result.length, 4, 'should return exactly 4 items when 4 core are available');
-    assertEqual(result.includes(filler), false, 'filler should not appear when core fills 4 slots');
+    assertEqual(result.length, 5, 'should return all 4 core items plus filler');
+    assertEqual(result[4], filler, 'filler should appear after sorted core offers');
   }
 
-  // Filler backfills empty slots when core < 4
+  // Filler follows core when there are fewer than 4 core offers
   {
     const core = make({ slotRole: 'core', sortPriority: 0 });
     const filler1 = make({ slotRole: 'filler', sortPriority: 1 });
@@ -118,19 +119,18 @@ export function runAllTimeBoundOfferSortTests(): void {
     assertEqual(result.includes(filler1), true, 'first filler should be included in backfill');
   }
 
-  // Active items beat done items even when filler is also present
+  // Core/filler grouping is preserved even when an active filler exists
   {
     const activeFiller = make({ slotRole: 'filler', isCollected: false, sortPriority: 0 });
     const doneCore = make({ slotRole: 'core', isCollected: true, sortPriority: 99 });
     const activeCore = make({ slotRole: 'core', isCollected: false, sortPriority: 1 });
     const result = selectOffersForDisplay([activeFiller, doneCore, activeCore]);
-    // 2 core items fit into core slots; filler only gets remaining
     assertEqual(result[0], activeCore, 'active core should be first');
     assertEqual(result[1], doneCore, 'done core should follow active core');
-    assertEqual(result[2], activeFiller, 'active filler fills last remaining slot');
+    assertEqual(result[2], activeFiller, 'active filler should follow core offers');
   }
 
-  // Returns fewer than 4 when there are not enough visible offers (no padding at this level)
+  // Returns fewer than the row minimum when there are not enough visible offers (no padding at this level)
   {
     const item = make({ sortPriority: 0 });
     const result = selectOffersForDisplay([item]);
@@ -141,7 +141,7 @@ export function runAllTimeBoundOfferSortTests(): void {
   {
     const noRole = make({ slotRole: undefined, sortPriority: 0 });
     const filler = make({ slotRole: 'filler', sortPriority: 1 });
-    // With 4 slots and only 2 items, both should appear
+    // With only 2 items, both should appear
     const result = selectOffersForDisplay([noRole, filler]);
     assertEqual(result.includes(noRole), true, 'offer with no slotRole should be treated as core');
   }
