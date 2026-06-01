@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   DEFAULT_SYMBOLS,
@@ -13,6 +13,7 @@ import { CalendarDoorFlip } from './CalendarDoorFlip';
 import { CalendarDoorUnwrap } from './CalendarDoorUnwrap';
 import { CalendarDoorScratch } from './CalendarDoorScratch';
 import { awardDailyTreatDice, awardDailyTreatGold } from '../../../services/dailyTreats';
+import { playIslandRunSound } from '../level-worlds/services/islandRunAudio';
 import { applyEssenceAward } from '../level-worlds/services/islandRunStateActions';
 import {
   buildPreviewAdventMeta,
@@ -101,6 +102,26 @@ export const CountdownCalendarModal = ({
   const [revealState, setRevealState] = useState<RevealState | null>(null);
   const [symbolBonusNotification, setSymbolBonusNotification] = useState<string | null>(null);
   const [trackerExpanded, setTrackerExpanded] = useState(false);
+  const modalOpenSfxPlayedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isOpen || typeof document === 'undefined') {
+      modalOpenSfxPlayedRef.current = false;
+      return;
+    }
+
+    if (!modalOpenSfxPlayedRef.current) {
+      playIslandRunSound('shop_open');
+      modalOpenSfxPlayedRef.current = true;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) return;
@@ -456,18 +477,23 @@ export const CountdownCalendarModal = ({
 
     return (
       <div
-        className={`daily-treats-calendar daily-treats-calendar--holiday-${themeMod}`}
+        className={`daily-treats-calendar daily-treats-calendar--holiday-${themeMod} daily-treats-calendar--reward-reveal`}
         role="dialog"
         aria-modal="true"
         aria-label={`Revealing Day ${dayIndex} ${doorType} door`}
       >
         <div className="daily-treats-calendar__backdrop" role="presentation" />
-        <div className="daily-treats-calendar__dialog">
-          <div className="daily-treats-calendar__content">
+        <div className="daily-treats-calendar__dialog daily-treats-calendar__dialog--reward-reveal">
+          <div className="daily-treats-calendar__reward-orb daily-treats-calendar__reward-orb--one" aria-hidden="true" />
+          <div className="daily-treats-calendar__reward-orb daily-treats-calendar__reward-orb--two" aria-hidden="true" />
+          <div className="daily-treats-calendar__content daily-treats-calendar__content--reward-reveal">
             <p className="daily-treats-calendar__eyebrow">
-              {doorType === 'bonus' ? '🎁 Bonus Door' : 'Daily Door'}
+              {doorType === 'bonus' ? '🎁 Bonus Daily Treat' : 'Daily Treat'}
             </p>
-            <h3 className="daily-treats-calendar__title">Day {dayIndex}</h3>
+            <h3 className="daily-treats-calendar__title daily-treats-calendar__title--reward-reveal">Day {dayIndex}</h3>
+            <p className="daily-treats-calendar__subtitle daily-treats-calendar__subtitle--reward-reveal">
+              A little quest magic is waiting inside.
+            </p>
             
             {mechanic === 'flip' && (
               <CalendarDoorFlip
@@ -681,8 +707,7 @@ export const CountdownCalendarModal = ({
                       aria-label={label}
                       onClick={() => {
                         if (freeHatch) {
-                          // Brief delay lets the press spring-back animation complete before the reveal replaces the tile
-                          setTimeout(() => void handleOpenDoor(day, 'free', freeHatch), PRESS_ANIMATION_DELAY_MS);
+                          void handleOpenDoor(day, 'free', freeHatch);
                         } else {
                           // Legacy mode
                           setTimeout(() => {
