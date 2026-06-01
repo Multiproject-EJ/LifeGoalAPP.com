@@ -2210,6 +2210,22 @@ a,
   line-height: 1.2;
 }
 
+
+.theme-selector__card--checkout,
+.theme-selector__card--checkout:hover,
+.theme-selector__card--checkout:focus-visible {
+  opacity: 1;
+  filter: none;
+  cursor: pointer;
+  border-color: var(--color-border-glow);
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-selector__card--checkout .theme-selector__lock-badge {
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-bg-tertiary));
+  color: var(--color-text-primary);
+}
+
 .theme-selector__badge {
   position: absolute;
   top: 0.35rem;
