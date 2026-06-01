@@ -187,7 +187,7 @@ export function useDailyLifeUpgradeFlow(params: {
     setDailyLifeUpgradePauseSaving(true);
     setDailyLifeUpgradePauseStatus(null);
     try {
-      const { error } = await pauseHabitV2(originalHabitId, { reason: 'Trying a lighter alternative from Daily Life Upgrade' });
+      const { error } = await pauseHabitV2(originalHabitId, { reason: 'Trying a lighter HabitGame quest path' });
       if (error) throw error;
       await params.refreshHabits();
       setDailyLifeUpgradePauseStatus({ tone: 'success', message: 'Original habit paused.' });

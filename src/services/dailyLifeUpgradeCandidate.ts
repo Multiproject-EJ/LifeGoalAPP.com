@@ -62,7 +62,7 @@ const PRIORITY_BY_RECOMMENDATION: Record<CandidatePriority, number> = {
 };
 
 const PRESENTATION_BY_RECOMMENDATION: Record<CandidatePriority, { title: string; actionLabel: string }> = {
-  shrink_to_tiny: { title: 'Scale this habit down', actionLabel: 'Shrink to tiny' },
+  shrink_to_tiny: { title: 'Choose your path', actionLabel: 'Short quest' },
   restart_gently: { title: 'Restart this habit gently', actionLabel: 'Start small restart' },
   add_environment_cue: { title: 'Add an environment cue', actionLabel: 'Add cue' },
   try_alternative_path: { title: 'Try a lighter path', actionLabel: 'Focus this habit' },
