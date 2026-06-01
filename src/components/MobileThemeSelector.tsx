@@ -4,7 +4,10 @@ import {
   useTheme,
   LIGHT_THEMES,
   DARK_THEMES,
+  type Theme,
   type ThemeAccessContext,
+  type ThemeAccessResult,
+  type ThemeMetadata,
   type ThemeMode,
 } from '../contexts/ThemeContext';
 
@@ -18,9 +21,17 @@ type MobileThemeSelectorProps = {
   onClose: () => void;
   isAdminOrCreator?: boolean;
   accessContext?: ThemeAccessContext;
+  checkoutLoadingThemeId?: Theme | null;
+  onThemeCheckout?: (theme: ThemeMetadata, access: ThemeAccessResult) => void;
 };
 
-export function MobileThemeSelector({ onClose, isAdminOrCreator = false, accessContext }: MobileThemeSelectorProps) {
+export function MobileThemeSelector({
+  onClose,
+  isAdminOrCreator = false,
+  accessContext,
+  checkoutLoadingThemeId = null,
+  onThemeCheckout,
+}: MobileThemeSelectorProps) {
   const {
     themeMode,
     lightTheme,
@@ -40,7 +51,16 @@ export function MobileThemeSelector({ onClose, isAdminOrCreator = false, accessC
       ? LIGHT_THEMES.find(t => t.id === themeId)
       : DARK_THEMES.find(t => t.id === themeId);
 
-    if (!theme || !resolveThemeAccess(theme, resolvedAccessContext).selectable) {
+    if (!theme) return;
+
+    const access = resolveThemeAccess(theme, resolvedAccessContext);
+    const isCheckoutAvailable = access.status === 'available_for_purchase' || access.status === 'available_for_paired_purchase';
+    if (isCheckoutAvailable) {
+      onThemeCheckout?.(theme, access);
+      return;
+    }
+
+    if (!access.selectable) {
       return;
     }
 
@@ -101,27 +121,29 @@ export function MobileThemeSelector({ onClose, isAdminOrCreator = false, accessC
           const isActiveDarkTheme = themeOption.category === 'dark' && darkTheme === themeOption.id;
           const isActive = isActiveLightTheme || isActiveDarkTheme;
           const access = resolveThemeAccess(themeOption, resolvedAccessContext);
-          const isLocked = !access.selectable;
+          const isCheckoutAvailable = access.status === 'available_for_purchase' || access.status === 'available_for_paired_purchase';
+          const isLocked = !access.selectable && !isCheckoutAvailable;
+          const isBusy = checkoutLoadingThemeId === themeOption.id;
           const unlockLabel = getThemeUnlockLabel(themeOption, resolvedAccessContext);
 
           return (
             <button
               key={themeOption.id}
               type="button"
-              className={`mobile-theme-selector__card ${isActive ? 'mobile-theme-selector__card--active' : ''} ${isLocked ? 'mobile-theme-selector__card--locked' : ''}`}
+              className={`mobile-theme-selector__card ${isActive ? 'mobile-theme-selector__card--active' : ''} ${isLocked ? 'mobile-theme-selector__card--locked' : ''} ${isCheckoutAvailable ? 'mobile-theme-selector__card--checkout' : ''}`}
               onClick={() => handleThemeSelect(themeOption.id, themeOption.category)}
-              disabled={isLocked}
-              aria-disabled={isLocked}
+              disabled={isLocked || isBusy}
+              aria-disabled={isLocked || isBusy}
               aria-pressed={isActive}
-              aria-label={isLocked ? `${themeOption.name} is locked. ${unlockLabel}` : `Select ${themeOption.name}`}
+              aria-label={isLocked ? `${themeOption.name} is locked. ${unlockLabel}` : isCheckoutAvailable ? `${access.ctaLabel ?? 'Buy theme'}: ${themeOption.name}` : `Select ${themeOption.name}`}
             >
               <span className="mobile-theme-selector__icon" aria-hidden="true">
                 {themeOption.icon}
               </span>
               <span className="mobile-theme-selector__name">{themeOption.name}</span>
-              {isLocked && (
+              {(isLocked || isCheckoutAvailable) && (
                 <span className="mobile-theme-selector__lock-badge" aria-hidden="true">
-                  {`🔒 ${unlockLabel}`}
+                  {isBusy ? 'Starting…' : isCheckoutAvailable ? `🛒 ${unlockLabel}` : `🔒 ${unlockLabel}`}
                 </span>
               )}
               {isActive && (

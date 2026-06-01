@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { SupabaseConnectionTest } from './SupabaseConnectionTest';
 import { ThemeSelector } from '../../components/ThemeSelector';
-import type { Theme } from '../../contexts/ThemeContext';
+import type { Theme, ThemeAccessResult, ThemeCheckoutSkuId, ThemeMetadata } from '../../contexts/ThemeContext';
 import { NotificationSettingsSection, PushNotificationTestPanel, DailyReminderPreferences, PerHabitReminderPrefs, ReminderActionDebugPanel, ReminderAnalyticsDashboard } from '../notifications';
 import { AiSettingsSection } from './AiSettingsSection';
 import { ExperimentalFeaturesSection } from './ExperimentalFeaturesSection';
@@ -37,7 +37,7 @@ import {
   fetchBillingSnapshot,
   type BillingSnapshot,
 } from '../../services/billing';
-import { fetchOwnedThemeIds } from '../../services/themePurchases';
+import { fetchOwnedThemeIds, initiateThemeCheckout } from '../../services/themePurchases';
 import { useIslandRunState } from '../gamification/level-worlds/hooks/useIslandRunState';
 
 type MyAccountPanelProps = {
@@ -119,6 +119,8 @@ export function MyAccountPanel({
   const [ownedThemeIds, setOwnedThemeIds] = useState<Set<Theme>>(new Set());
   const [themeEntitlementsLoading, setThemeEntitlementsLoading] = useState(false);
   const [themeEntitlementsError, setThemeEntitlementsError] = useState<string | null>(null);
+  const [themeCheckoutLoadingId, setThemeCheckoutLoadingId] = useState<Theme | null>(null);
+  const [themeCheckoutError, setThemeCheckoutError] = useState<string | null>(null);
   const { state: islandRunState, hydrate: hydrateIslandRunState } = useIslandRunState(session, null);
   
   const user = session.user;
@@ -407,6 +409,30 @@ export function MyAccountPanel({
       redirectToUrl(url);
     } finally {
       setBillingActionLoading(null);
+    }
+  };
+
+  const handleThemeCheckout = async (theme: ThemeMetadata, access: ThemeAccessResult) => {
+    if (!access.checkoutSkuId) {
+      setThemeCheckoutError('This theme is not ready for checkout yet.');
+      return;
+    }
+
+    setThemeCheckoutLoadingId(theme.id);
+    setThemeCheckoutError(null);
+    try {
+      const { url, error } = await initiateThemeCheckout({
+        themeId: theme.id,
+        skuId: access.checkoutSkuId as ThemeCheckoutSkuId,
+        variant: access.status === 'available_for_paired_purchase' ? 'paired' : 'base',
+      });
+      if (error || !url) {
+        setThemeCheckoutError(error?.message ?? 'Unable to start theme checkout.');
+        return;
+      }
+      redirectToUrl(url);
+    } finally {
+      setThemeCheckoutLoadingId(null);
     }
   };
 
@@ -870,7 +896,15 @@ export function MyAccountPanel({
           {themeEntitlementsError ? (
             <p className="account-panel__hint">{themeEntitlementsError}</p>
           ) : null}
-          <ThemeSelector isAdminOrCreator={isAdmin === true} accessContext={themeAccessContext} />
+          {themeCheckoutError ? (
+            <p className="account-panel__hint">{themeCheckoutError}</p>
+          ) : null}
+          <ThemeSelector
+            isAdminOrCreator={isAdmin === true}
+            accessContext={themeAccessContext}
+            checkoutLoadingThemeId={themeCheckoutLoadingId}
+            onThemeCheckout={handleThemeCheckout}
+          />
         </section>
       </SettingsFolderPopup>
 
