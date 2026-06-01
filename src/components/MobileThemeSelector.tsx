@@ -1,8 +1,10 @@
 import {
-  canSelectTheme,
+  resolveThemeAccess,
+  getThemeUnlockLabel,
   useTheme,
   LIGHT_THEMES,
   DARK_THEMES,
+  type ThemeAccessContext,
   type ThemeMode,
 } from '../contexts/ThemeContext';
 
@@ -15,9 +17,10 @@ const THEME_MODE_OPTIONS: { mode: ThemeMode; icon: string; label: string }[] = [
 type MobileThemeSelectorProps = {
   onClose: () => void;
   isAdminOrCreator?: boolean;
+  accessContext?: ThemeAccessContext;
 };
 
-export function MobileThemeSelector({ onClose, isAdminOrCreator = false }: MobileThemeSelectorProps) {
+export function MobileThemeSelector({ onClose, isAdminOrCreator = false, accessContext }: MobileThemeSelectorProps) {
   const {
     themeMode,
     lightTheme,
@@ -27,17 +30,24 @@ export function MobileThemeSelector({ onClose, isAdminOrCreator = false }: Mobil
     setDarkTheme,
   } = useTheme();
 
+  const resolvedAccessContext: ThemeAccessContext = {
+    ...accessContext,
+    isAdminOrCreator,
+  };
+
   const handleThemeSelect = (themeId: string, category: 'light' | 'dark') => {
+    const theme = category === 'light'
+      ? LIGHT_THEMES.find(t => t.id === themeId)
+      : DARK_THEMES.find(t => t.id === themeId);
+
+    if (!theme || !resolveThemeAccess(theme, resolvedAccessContext).selectable) {
+      return;
+    }
+
     if (category === 'light') {
-      const theme = LIGHT_THEMES.find(t => t.id === themeId);
-      if (theme && canSelectTheme(theme.id, isAdminOrCreator)) {
-        setLightTheme(theme.id);
-      }
+      setLightTheme(theme.id);
     } else {
-      const theme = DARK_THEMES.find(t => t.id === themeId);
-      if (theme && canSelectTheme(theme.id, isAdminOrCreator)) {
-        setDarkTheme(theme.id);
-      }
+      setDarkTheme(theme.id);
     }
   };
 
@@ -81,7 +91,7 @@ export function MobileThemeSelector({ onClose, isAdminOrCreator = false }: Mobil
       </div>
 
       <p className="mobile-theme-selector__hint">
-        Bio Day and Midnight Blue are included by default. Locked themes are future features until unlocked.
+        Bio Day and Midnight Blue are included by default. Creature themes are premium Sanctuary purchases; special gift themes unlock through milestones and birthday gifts.
       </p>
 
       {/* Theme Grid */}
@@ -90,8 +100,10 @@ export function MobileThemeSelector({ onClose, isAdminOrCreator = false }: Mobil
           const isActiveLightTheme = themeOption.category === 'light' && lightTheme === themeOption.id;
           const isActiveDarkTheme = themeOption.category === 'dark' && darkTheme === themeOption.id;
           const isActive = isActiveLightTheme || isActiveDarkTheme;
-          const isLocked = !canSelectTheme(themeOption.id, isAdminOrCreator);
-          
+          const access = resolveThemeAccess(themeOption, resolvedAccessContext);
+          const isLocked = !access.selectable;
+          const unlockLabel = getThemeUnlockLabel(themeOption, resolvedAccessContext);
+
           return (
             <button
               key={themeOption.id}
@@ -101,7 +113,7 @@ export function MobileThemeSelector({ onClose, isAdminOrCreator = false }: Mobil
               disabled={isLocked}
               aria-disabled={isLocked}
               aria-pressed={isActive}
-              aria-label={isLocked ? `${themeOption.name} is locked as a future feature` : `Select ${themeOption.name}`}
+              aria-label={isLocked ? `${themeOption.name} is locked. ${unlockLabel}` : `Select ${themeOption.name}`}
             >
               <span className="mobile-theme-selector__icon" aria-hidden="true">
                 {themeOption.icon}
@@ -109,7 +121,7 @@ export function MobileThemeSelector({ onClose, isAdminOrCreator = false }: Mobil
               <span className="mobile-theme-selector__name">{themeOption.name}</span>
               {isLocked && (
                 <span className="mobile-theme-selector__lock-badge" aria-hidden="true">
-                  🔒 Future feature
+                  {`🔒 ${unlockLabel}`}
                 </span>
               )}
               {isActive && (

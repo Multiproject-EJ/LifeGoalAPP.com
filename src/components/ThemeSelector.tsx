@@ -1,8 +1,10 @@
 import {
-  canSelectTheme,
+  resolveThemeAccess,
+  getThemeUnlockLabel,
   useTheme,
   LIGHT_THEMES,
   DARK_THEMES,
+  type ThemeAccessContext,
   type ThemeMetadata,
   type ThemeMode,
 } from '../contexts/ThemeContext';
@@ -15,9 +17,10 @@ const THEME_MODE_OPTIONS: { mode: ThemeMode; icon: string; label: string }[] = [
 
 type ThemeSelectorProps = {
   isAdminOrCreator?: boolean;
+  accessContext?: ThemeAccessContext;
 };
 
-export function ThemeSelector({ isAdminOrCreator = false }: ThemeSelectorProps) {
+export function ThemeSelector({ isAdminOrCreator = false, accessContext }: ThemeSelectorProps) {
   const {
     themeMode,
     lightTheme,
@@ -29,9 +32,15 @@ export function ThemeSelector({ isAdminOrCreator = false }: ThemeSelectorProps) 
   } = useTheme();
   const showLightThemes = themeMode === 'light';
   const showDarkThemes = themeMode === 'dark';
+  const resolvedAccessContext: ThemeAccessContext = {
+    ...accessContext,
+    isAdminOrCreator,
+  };
 
   const renderThemeCard = (themeOption: ThemeMetadata, isActive: boolean) => {
-    const isLocked = !canSelectTheme(themeOption.id, isAdminOrCreator);
+    const access = resolveThemeAccess(themeOption, resolvedAccessContext);
+    const isLocked = !access.selectable;
+    const unlockLabel = getThemeUnlockLabel(themeOption, resolvedAccessContext);
     const categoryLabel = themeOption.category === 'light' ? 'light' : 'dark';
     const handleClick = () => {
       if (isLocked) return;
@@ -53,7 +62,7 @@ export function ThemeSelector({ isAdminOrCreator = false }: ThemeSelectorProps) 
         aria-pressed={isActive}
         aria-label={
           isLocked
-            ? `${themeOption.name} ${categoryLabel} theme is locked as a future feature`
+            ? `${themeOption.name} ${categoryLabel} theme is locked. ${unlockLabel}`
             : `Select ${themeOption.name} as ${categoryLabel} theme`
         }
       >
@@ -64,7 +73,7 @@ export function ThemeSelector({ isAdminOrCreator = false }: ThemeSelectorProps) 
         <span className="theme-selector__hint">{themeOption.description}</span>
         {isLocked && (
           <span className="theme-selector__lock-badge" aria-hidden="true">
-            🔒 Future feature
+            {`🔒 ${unlockLabel}`}
           </span>
         )}
         {isActive && (
@@ -80,7 +89,7 @@ export function ThemeSelector({ isAdminOrCreator = false }: ThemeSelectorProps) 
     <div className="theme-selector">
       <h3 className="theme-selector__title">Choose Your Theme</h3>
       <p className="theme-selector__description">
-        Bio Day is the default light theme and Midnight Blue is the default dark theme. More themes are marked as future features until players unlock them.
+        Bio Day is the default light theme and Midnight Blue is the default dark theme. Creature themes are premium Sanctuary purchases, while special gift themes unlock through milestones and birthday gifts.
       </p>
 
       {/* 3-way Theme Mode Toggle */}
