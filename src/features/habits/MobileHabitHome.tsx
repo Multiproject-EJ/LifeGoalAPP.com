@@ -23,6 +23,8 @@ type MobileHabitHomeProps = {
   hideTimeBoundOffers?: boolean;
   activeHolidaySeason?: ActiveAdventMetaResult | null;
   hasOpenedDailyTreatsToday?: boolean;
+  hasOpenedDailyTreatBonusToday?: boolean;
+  hasDailyTreatBonusDoorToday?: boolean;
   hasOpenedHolidayCalendarToday?: boolean;
   hiddenHabitIds?: string[];
   onHideStandaloneHabitsChange?: (habitIds: string[]) => void;
@@ -52,6 +54,8 @@ export function MobileHabitHome({
   hideTimeBoundOffers = false,
   activeHolidaySeason = null,
   hasOpenedDailyTreatsToday = false,
+  hasOpenedDailyTreatBonusToday = false,
+  hasDailyTreatBonusDoorToday = false,
   hasOpenedHolidayCalendarToday = false,
   hiddenHabitIds = [],
   onHideStandaloneHabitsChange,
@@ -84,6 +88,8 @@ export function MobileHabitHome({
         hideTimeBoundOffers={hideTimeBoundOffers}
         activeHolidaySeason={activeHolidaySeason}
         hasOpenedDailyTreatsToday={hasOpenedDailyTreatsToday}
+        hasOpenedDailyTreatBonusToday={hasOpenedDailyTreatBonusToday}
+        hasDailyTreatBonusDoorToday={hasDailyTreatBonusDoorToday}
         hasOpenedHolidayCalendarToday={hasOpenedHolidayCalendarToday}
         hiddenHabitIds={hiddenHabitIds}
         collapseCheckboxUntilExpanded

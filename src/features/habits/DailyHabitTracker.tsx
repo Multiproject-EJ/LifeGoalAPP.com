@@ -378,6 +378,8 @@ type DailyHabitTrackerProps = {
   onPendingOfferHandled?: () => void;
   activeHolidaySeason?: ActiveAdventMetaResult | null;
   hasOpenedDailyTreatsToday?: boolean;
+  hasOpenedDailyTreatBonusToday?: boolean;
+  hasDailyTreatBonusDoorToday?: boolean;
   hasOpenedHolidayCalendarToday?: boolean;
   hiddenHabitIds?: string[];
   collapseCheckboxUntilExpanded?: boolean;
@@ -756,6 +758,8 @@ export function DailyHabitTracker({
   onPendingOfferHandled,
   activeHolidaySeason = null,
   hasOpenedDailyTreatsToday = false,
+  hasOpenedDailyTreatBonusToday = false,
+  hasDailyTreatBonusDoorToday = false,
   hasOpenedHolidayCalendarToday = false,
   hiddenHabitIds = [],
   collapseCheckboxUntilExpanded = false,
@@ -2984,6 +2988,15 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const isIslandRunOfferVisible = Boolean(islandRunCountdownExpiresAtMs) || isIslandRunReadyToStart;
   const islandRunOfferLabel = isIslandRunReadyToStart ? `Island ${activeIsland}` : `Island ${activeIsland}`;
   const islandRunOfferBadge = isIslandRunReadyToStart ? 'Open' : undefined;
+  const isQuestHabitCompletedToday = questHabit
+    ? Boolean(completions[questHabit.habitId]?.completed)
+    : Object.values(completions).some((completion) => completion.completed);
+  const isDailyTreatBonusReady = hasDailyTreatBonusDoorToday
+    && hasOpenedDailyTreatsToday
+    && !hasOpenedDailyTreatBonusToday
+    && isQuestHabitCompletedToday;
+  const isDailyTreatFullyCollected = hasOpenedDailyTreatsToday
+    && (!hasDailyTreatBonusDoorToday || hasOpenedDailyTreatBonusToday);
 
   const timeBoundOffers = useMemo<TimeBoundOfferItem[]>(() => {
     const nextUtcMidnight = getNextUtcMidnightMs();
@@ -3021,9 +3034,17 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         label: 'Daily Treats',
         icon: '🍬',
         expiresAtMs: nextUtcMidnight,
-        isCollected: hasOpenedDailyTreatsToday,
+        badgeLabelOverride: isDailyTreatBonusReady
+          ? 'Bonus Ready'
+          : isDailyTreatFullyCollected
+            ? '✓ Done'
+            : hasOpenedDailyTreatsToday && hasDailyTreatBonusDoorToday && !hasOpenedDailyTreatBonusToday
+              ? 'Bonus Locked'
+              : undefined,
+        isCollected: isDailyTreatFullyCollected,
         isVisible: true,
-        isActionable: !hasOpenedDailyTreatsToday,
+        isActionable: isDailyTreatBonusReady || !hasOpenedDailyTreatsToday,
+        visualVariant: isDailyTreatBonusReady ? 'bonus' : undefined,
         sortPriority: 2,
         slotRole: 'core',
       },
@@ -3100,8 +3121,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     hasClaimedVisionStar,
     hasClaimedZenTreeToday,
     hasClaimedFeedCreaturesToday,
+    hasDailyTreatBonusDoorToday,
+    hasOpenedDailyTreatBonusToday,
     hasOpenedDailyTreatsToday,
     hasOpenedHolidayCalendarToday,
+    isDailyTreatBonusReady,
+    isDailyTreatFullyCollected,
     hasSeenEggHatch,
     islandRunCountdownExpiresAtMs,
     islandRunOfferBadge,
