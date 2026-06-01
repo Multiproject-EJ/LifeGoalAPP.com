@@ -107,7 +107,7 @@ export function ThemeSelector({
     <div className="theme-selector">
       <h3 className="theme-selector__title">Choose Your Theme</h3>
       <p className="theme-selector__description">
-        Bio Day is the default light theme and Midnight Blue is the default dark theme. Creature themes are premium Sanctuary purchases, while special gift themes unlock through milestones and birthday gifts.
+        Bio Day is the default light theme and Midnight Blue is the default dark theme. Creature themes are one-time real-money Stripe purchases, while special gift themes unlock through milestones and birthday gifts.
       </p>
 
       {/* 3-way Theme Mode Toggle */}

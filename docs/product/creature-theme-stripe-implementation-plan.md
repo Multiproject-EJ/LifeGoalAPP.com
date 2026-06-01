@@ -13,7 +13,7 @@ This updates the prior economy assumption:
 - **Default themes** remain free.
 - **Island 120 completion theme** is a free achievement gift.
 - **Birthday present theme** is a free personal gift after birthday-present opt-in.
-- **Creature themes** are paid premium cosmetics purchased through Stripe.
+- **Creature themes** are paid premium cosmetics purchased through Stripe as one-time real-money payments; they are never bought with shards.
 - **Paired / Perfect Companion bonus** should be a special modal and a discounted Stripe offer, not a shard discount.
 
 ## 2. Recommended first pricing
@@ -37,7 +37,7 @@ The paired price is intentionally rounded to familiar store pricing. It is appro
 | Default theme | Free | Included by default | Automatic | Settings → Appearance |
 | Island 120 theme | Free | Complete Island 120 | Island completion reward flow | Settings → Appearance |
 | Birthday theme | Free | Opt into birthday presents and claim first birthday gift | Birthday/Profile gift flow | Settings → Appearance |
-| Creature theme | Paid | Own the creature, then purchase via Stripe | Creature Sanctuary | Settings → Appearance |
+| Creature theme | One-time real-money payment | Own the creature, then purchase via Stripe; no shard option | Creature Sanctuary | Settings → Appearance |
 | Paired creature theme offer | Paid discounted | Creature is a Perfect/paired companion and eligible for purchase | Special paired creature modal or Sanctuary | Settings → Appearance |
 | General non-creature premium theme | Paid | Purchase via Stripe or Player Shop | Player Shop | Settings → Appearance |
 
