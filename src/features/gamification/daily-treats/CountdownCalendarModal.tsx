@@ -82,8 +82,6 @@ type RevealState = {
 
 /** ms to wait after press before opening the reveal — lets the spring snap-back animation complete */
 const PRESS_ANIMATION_DELAY_MS = 180;
-/** Shorter delay for the compact bonus door button */
-const BONUS_PRESS_ANIMATION_DELAY_MS = 150;
 
 export const CountdownCalendarModal = ({
   isOpen,
@@ -461,7 +459,9 @@ export const CountdownCalendarModal = ({
   const todayBonusOpened = progress?.opened_bonus_days?.includes(todayIndex) ?? false;
   const isAdventComplete = todayFreeOpened && todayIndex === totalDoors;
 
-  // Pre-compute today's bonus hatch for the popup rendered outside the grid loop
+  // Pre-compute today's bonus hatch. Bonus doors are same-day overlays for
+  // the current calendar day, tracked separately from the free door via
+  // opened_bonus_days; they are not the next day's free door.
   const { bonus: todayBonusHatch } = seasonData
     ? getHatchesForDay(seasonData.hatches, todayIndex)
     : { bonus: null };
@@ -606,28 +606,16 @@ export const CountdownCalendarModal = ({
             </p>
           )}
 
-          {/* Bonus door popup — prominent card, only shown when bonus is available and not yet opened */}
-          {todayBonusHatch && habitCompleted && !todayBonusOpened && (
-            <div className="daily-treats-calendar__bonus-popup">
-              <div className="daily-treats-calendar__bonus-popup-icon">🎁</div>
-              <p className="daily-treats-calendar__bonus-popup-title">✨ Bonus Door Ready!</p>
+          {/* Same-day bonus hint — the current day tile becomes the glowing bonus door after the free reveal. */}
+          {todayBonusHatch && habitCompleted && !todayBonusOpened && todayFreeOpened && (
+            <div className="daily-treats-calendar__bonus-popup daily-treats-calendar__bonus-popup--same-day">
+              <div className="daily-treats-calendar__bonus-popup-icon">✨</div>
+              <p className="daily-treats-calendar__bonus-popup-title">Day {todayIndex} bonus awakened</p>
               <p className="daily-treats-calendar__bonus-popup-text">
                 {questHabit
-                  ? <>You completed <strong>{questHabit.emoji ? `${questHabit.emoji} ` : ''}{questHabit.title}</strong> — your bonus door is ready to claim!</>
-                  : 'Your bonus door is ready to open! Tap below to claim extra rewards.'}
+                  ? <>You completed <strong>{questHabit.emoji ? `${questHabit.emoji} ` : ''}{questHabit.title}</strong> — tap the glowing Day {todayIndex} card to reveal its same-day bonus.</>
+                  : <>Tap the glowing Day {todayIndex} card to reveal its same-day bonus.</>}
               </p>
-              <button
-                type="button"
-                className="daily-treats-calendar__bonus-popup-btn"
-                onClick={() => {
-                  setTimeout(
-                    () => void handleOpenDoor(todayIndex, 'bonus', todayBonusHatch),
-                    BONUS_PRESS_ANIMATION_DELAY_MS,
-                  );
-                }}
-              >
-                Open Bonus Door 🎁
-              </button>
             </div>
           )}
 
@@ -644,9 +632,9 @@ export const CountdownCalendarModal = ({
             {Array.from({ length: totalDoors }, (_, index) => {
               const day = index + 1;
               const isFinalDay = day === totalDoors;
-              const { free: freeHatch } = seasonData
+              const { free: freeHatch, bonus: bonusHatch } = seasonData
                 ? getHatchesForDay(seasonData.hatches, day)
-                : { free: null };
+                : { free: null, bonus: null };
 
               const freeOpened = progress?.opened_days.includes(day) ?? false;
 
@@ -661,10 +649,19 @@ export const CountdownCalendarModal = ({
               // - 'today' status: always openable
               // - 'catchup' status (holiday missed days): openable
               const canOpenFree = (status === 'today' || status === 'catchup') && !freeOpened && !isOpenedLegacy;
+              const canOpenSameDayBonus = Boolean(
+                bonusHatch
+                  && day === todayIndex
+                  && habitCompleted
+                  && !todayBonusOpened
+                  && (freeOpened || isOpenedLegacy),
+              );
 
               const doorEmoji = themeEmojis[(day - 1) % themeEmojis.length];
               const statusLabel = status === 'catchup' ? 'missed day, available to open' : status;
-              const label = `Day ${day} ${status === 'today' ? "(today's door)" : `(${statusLabel})`}`;
+              const label = canOpenSameDayBonus
+                ? `Day ${day} same-day bonus door ready`
+                : `Day ${day} ${status === 'today' ? "(today's door)" : `(${statusLabel})`}`;
 
               // Show dice amount on tile for personal quest calendars.
               // Currency check is defensive — all PQ doors are now dice, but keeps
@@ -673,7 +670,18 @@ export const CountdownCalendarModal = ({
                 ? freeHatch.reward_amount
                 : null;
 
-              const doorBody = (
+              const bonusAmountLabel = bonusHatch?.reward_amount != null
+                ? `${bonusHatch.reward_currency === 'dice' ? '🎲' : '✨'} ${bonusHatch.reward_amount}`
+                : 'Bonus';
+
+              const doorBody = canOpenSameDayBonus ? (
+                <>
+                  <span className="daily-treats-calendar__hatch-number">Day {day}</span>
+                  <span className="daily-treats-calendar__hatch-symbol" aria-hidden="true">🎁</span>
+                  <span className="daily-treats-calendar__hatch-bonus-label">Same-day bonus</span>
+                  <span className="daily-treats-calendar__hatch-dice">{bonusAmountLabel}</span>
+                </>
+              ) : (
                 <>
                   <span className="daily-treats-calendar__hatch-number">Day {day}</span>
                   {(freeOpened || isOpenedLegacy) ? (
@@ -698,8 +706,18 @@ export const CountdownCalendarModal = ({
                   key={`calendar-day-${day}`}
                   className={`daily-treats-calendar__day-pair${isFinalDay ? ' daily-treats-calendar__day-pair--final' : ''}`}
                 >
-                  {/* Free door */}
-                  {canOpenFree && freeHatch ? (
+                  {/* Free door; after today's free reveal, the same tile can awaken as the bonus door. */}
+                  {canOpenSameDayBonus && bonusHatch ? (
+                    <button
+                      type="button"
+                      className="daily-treats-calendar__hatch daily-treats-calendar__hatch--bonus-ready daily-treats-calendar__hatch-button"
+                      role="listitem"
+                      aria-label={label}
+                      onClick={() => void handleOpenDoor(day, 'bonus', bonusHatch)}
+                    >
+                      {doorBody}
+                    </button>
+                  ) : canOpenFree && freeHatch ? (
                     <button
                       type="button"
                       className={`daily-treats-calendar__hatch daily-treats-calendar__hatch--${status} daily-treats-calendar__hatch-button`}

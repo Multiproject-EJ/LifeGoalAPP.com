@@ -31073,3 +31073,81 @@ body.habit-wizard-open .mobile-footer-nav {
     transform: none;
   }
 }
+
+/* Same-day Daily Treat bonus: the current day door glows again after free reveal. */
+.daily-treats-calendar__hatch--bonus-ready {
+  position: relative;
+  color: #fff7ed;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 28%, rgba(254, 243, 199, 0.42), transparent 34%),
+    linear-gradient(150deg, #7c3aed 0%, #2563eb 52%, #0ea5e9 100%);
+  border-color: rgba(254, 240, 138, 0.95);
+  box-shadow:
+    0 12px 28px rgba(79, 70, 229, 0.34),
+    0 0 0 3px rgba(250, 204, 21, 0.22),
+    0 0 28px rgba(14, 165, 233, 0.42);
+  animation: daily-treat-bonus-ready-glow 2.8s ease-in-out infinite;
+}
+
+.daily-treats-calendar__hatch--bonus-ready::before {
+  content: '';
+  position: absolute;
+  inset: -30%;
+  background: conic-gradient(from 35deg, transparent, rgba(255, 255, 255, 0.26), transparent 34%);
+  animation: daily-treat-bonus-ready-sheen 3.6s linear infinite;
+  pointer-events: none;
+}
+
+.daily-treats-calendar__hatch--bonus-ready > * {
+  position: relative;
+  z-index: 1;
+}
+
+.daily-treats-calendar__hatch--bonus-ready .daily-treats-calendar__hatch-number,
+.daily-treats-calendar__hatch--bonus-ready .daily-treats-calendar__hatch-dice,
+.daily-treats-calendar__hatch--bonus-ready .daily-treats-calendar__hatch-bonus-label {
+  color: #fff7ed;
+}
+
+.daily-treats-calendar__hatch--bonus-ready .daily-treats-calendar__hatch-symbol {
+  font-size: 1.45rem;
+  filter: drop-shadow(0 0 10px rgba(254, 240, 138, 0.75));
+}
+
+.daily-treats-calendar__hatch-bonus-label {
+  font-size: 0.55rem;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.daily-treats-calendar__bonus-popup--same-day {
+  background:
+    radial-gradient(circle at 18% 20%, rgba(254, 243, 199, 0.32), transparent 35%),
+    linear-gradient(145deg, rgba(79, 70, 229, 0.14), rgba(14, 165, 233, 0.1));
+  border-color: rgba(99, 102, 241, 0.26);
+}
+
+@keyframes daily-treat-bonus-ready-glow {
+  0%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 12px 28px rgba(79, 70, 229, 0.34), 0 0 0 3px rgba(250, 204, 21, 0.22), 0 0 28px rgba(14, 165, 233, 0.42);
+  }
+  50% {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 34px rgba(79, 70, 229, 0.42), 0 0 0 4px rgba(250, 204, 21, 0.3), 0 0 38px rgba(14, 165, 233, 0.55);
+  }
+}
+
+@keyframes daily-treat-bonus-ready-sheen {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .daily-treats-calendar__hatch--bonus-ready,
+  .daily-treats-calendar__hatch--bonus-ready::before {
+    animation: none !important;
+  }
+}
