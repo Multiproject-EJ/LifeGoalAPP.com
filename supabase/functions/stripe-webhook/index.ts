@@ -19,6 +19,13 @@ type MinigameTicketSkuId =
 
 type TimedEventId = 'feeding_frenzy' | 'lucky_spin' | 'space_excavator' | 'companion_feast';
 
+type ThemeId =
+  | 'sproutling-grove'
+  | 'ember-glow'
+  | 'aurora-sky'
+  | 'nebula-drift'
+  | 'starhorn-celestial';
+
 type SupabaseLikeClient = ReturnType<typeof createClient>;
 
 function getRequiredEnv(name: string): string {
@@ -61,6 +68,14 @@ function isMinigameTicketSkuId(value: string | null | undefined): value is Minig
     || value === 'lucky_spin_tickets_10'
     || value === 'space_excavator_tickets_10'
     || value === 'companion_feast_tickets_10';
+}
+
+function isThemeId(value: string | null | undefined): value is ThemeId {
+  return value === 'sproutling-grove'
+    || value === 'ember-glow'
+    || value === 'aurora-sky'
+    || value === 'nebula-drift'
+    || value === 'starhorn-celestial';
 }
 
 function resolveEventIdFromMinigameSku(skuId: MinigameTicketSkuId, metadataEventId: string | null | undefined): TimedEventId | null {
@@ -280,6 +295,71 @@ async function applyMinigameTicketCredit(
   }
 }
 
+
+async function applyThemeEntitlement(
+  supabase: SupabaseLikeClient,
+  event: Stripe.Event,
+  session: Stripe.Checkout.Session,
+): Promise<void> {
+  const sessionId = session.id;
+  const userId = session.metadata?.user_id || session.client_reference_id || null;
+  if (!sessionId || !userId) {
+    throw new Error('Theme checkout session is missing session id or user id metadata.');
+  }
+
+  if (session.payment_status !== 'paid') {
+    throw new Error(`Theme checkout session is not paid: payment_status=${session.payment_status}`);
+  }
+
+  const themeId = session.metadata?.theme_id ?? null;
+  if (!isThemeId(themeId)) {
+    throw new Error(`Theme checkout session metadata has invalid theme_id=${String(themeId)}`);
+  }
+
+  const { data: dedupeReservationRow, error: dedupeError } = await supabase
+    .from('billing_webhook_events')
+    .update({
+      dedupe_scope: 'theme_entitlement',
+      dedupe_key: sessionId,
+    })
+    .eq('stripe_event_id', event.id)
+    .select('stripe_event_id')
+    .maybeSingle();
+
+  if (dedupeError) {
+    if ((dedupeError as { code?: string }).code === '23505') {
+      await updateWebhookEventStatus(supabase, event.id, 'ignored', `Theme entitlement already applied for checkout_session_id=${sessionId}`);
+      return;
+    }
+    throw new Error(`Failed to reserve theme entitlement dedupe key: ${dedupeError.message}`);
+  }
+
+  if (!dedupeReservationRow?.stripe_event_id) {
+    throw new Error(`Failed to reserve theme entitlement dedupe key: webhook event row not found for stripe_event_id=${event.id}`);
+  }
+
+  const paymentIntentId = typeof session.payment_intent === 'string'
+    ? session.payment_intent
+    : session.payment_intent?.id ?? null;
+
+  const { error: entitlementError } = await supabase
+    .from('user_cosmetic_entitlements')
+    .upsert({
+      user_id: userId,
+      cosmetic_type: 'theme',
+      cosmetic_id: themeId,
+      source: 'stripe_purchase',
+      source_ref: session.metadata?.sku_id ?? session.metadata?.price_variant ?? null,
+      stripe_checkout_session_id: sessionId,
+      stripe_payment_intent_id: paymentIntentId,
+      granted_at: new Date().toISOString(),
+    }, { onConflict: 'user_id,cosmetic_type,cosmetic_id' });
+
+  if (entitlementError) {
+    throw new Error(`Failed to grant theme entitlement: ${entitlementError.message}`);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -394,6 +474,11 @@ Deno.serve(async (req) => {
 
         if (session.mode === 'payment' && session.metadata?.product_type === 'minigame_ticket_pack') {
           await applyMinigameTicketCredit(supabase, event, session);
+          break;
+        }
+
+        if (session.mode === 'payment' && session.metadata?.product_type === 'theme') {
+          await applyThemeEntitlement(supabase, event, session);
           break;
         }
 

@@ -1,8 +1,12 @@
 import {
-  canSelectTheme,
+  resolveThemeAccess,
+  getThemeUnlockLabel,
   useTheme,
   LIGHT_THEMES,
   DARK_THEMES,
+  type Theme,
+  type ThemeAccessContext,
+  type ThemeAccessResult,
   type ThemeMetadata,
   type ThemeMode,
 } from '../contexts/ThemeContext';
@@ -15,9 +19,17 @@ const THEME_MODE_OPTIONS: { mode: ThemeMode; icon: string; label: string }[] = [
 
 type ThemeSelectorProps = {
   isAdminOrCreator?: boolean;
+  accessContext?: ThemeAccessContext;
+  checkoutLoadingThemeId?: Theme | null;
+  onThemeCheckout?: (theme: ThemeMetadata, access: ThemeAccessResult) => void;
 };
 
-export function ThemeSelector({ isAdminOrCreator = false }: ThemeSelectorProps) {
+export function ThemeSelector({
+  isAdminOrCreator = false,
+  accessContext,
+  checkoutLoadingThemeId = null,
+  onThemeCheckout,
+}: ThemeSelectorProps) {
   const {
     themeMode,
     lightTheme,
@@ -29,11 +41,24 @@ export function ThemeSelector({ isAdminOrCreator = false }: ThemeSelectorProps) 
   } = useTheme();
   const showLightThemes = themeMode === 'light';
   const showDarkThemes = themeMode === 'dark';
+  const resolvedAccessContext: ThemeAccessContext = {
+    ...accessContext,
+    isAdminOrCreator,
+  };
 
   const renderThemeCard = (themeOption: ThemeMetadata, isActive: boolean) => {
-    const isLocked = !canSelectTheme(themeOption.id, isAdminOrCreator);
+    const access = resolveThemeAccess(themeOption, resolvedAccessContext);
+    const isCheckoutAvailable = access.status === 'available_for_purchase' || access.status === 'available_for_paired_purchase';
+    const isLocked = !access.selectable && !isCheckoutAvailable;
+    const isBusy = checkoutLoadingThemeId === themeOption.id;
+    const unlockLabel = getThemeUnlockLabel(themeOption, resolvedAccessContext);
     const categoryLabel = themeOption.category === 'light' ? 'light' : 'dark';
     const handleClick = () => {
+      if (isBusy) return;
+      if (isCheckoutAvailable) {
+        onThemeCheckout?.(themeOption, access);
+        return;
+      }
       if (isLocked) return;
       if (themeOption.category === 'light') {
         setLightTheme(themeOption.id);
@@ -46,15 +71,17 @@ export function ThemeSelector({ isAdminOrCreator = false }: ThemeSelectorProps) 
       <button
         key={themeOption.id}
         type="button"
-        className={`theme-selector__card ${isActive ? 'theme-selector__card--active' : ''} ${isLocked ? 'theme-selector__card--locked' : ''}`}
+        className={`theme-selector__card ${isActive ? 'theme-selector__card--active' : ''} ${isLocked ? 'theme-selector__card--locked' : ''} ${isCheckoutAvailable ? 'theme-selector__card--checkout' : ''}`}
         onClick={handleClick}
-        disabled={isLocked}
-        aria-disabled={isLocked}
+        disabled={isLocked || isBusy}
+        aria-disabled={isLocked || isBusy}
         aria-pressed={isActive}
         aria-label={
           isLocked
-            ? `${themeOption.name} ${categoryLabel} theme is locked as a future feature`
-            : `Select ${themeOption.name} as ${categoryLabel} theme`
+            ? `${themeOption.name} ${categoryLabel} theme is locked. ${unlockLabel}`
+            : isCheckoutAvailable
+              ? `${access.ctaLabel ?? 'Buy theme'}: ${themeOption.name}`
+              : `Select ${themeOption.name} as ${categoryLabel} theme`
         }
       >
         <span className="theme-selector__icon" aria-hidden="true">
@@ -62,9 +89,9 @@ export function ThemeSelector({ isAdminOrCreator = false }: ThemeSelectorProps) 
         </span>
         <span className="theme-selector__name">{themeOption.name}</span>
         <span className="theme-selector__hint">{themeOption.description}</span>
-        {isLocked && (
+        {(isLocked || isCheckoutAvailable) && (
           <span className="theme-selector__lock-badge" aria-hidden="true">
-            🔒 Future feature
+            {isBusy ? 'Starting checkout…' : isCheckoutAvailable ? `🛒 ${unlockLabel}` : `🔒 ${unlockLabel}`}
           </span>
         )}
         {isActive && (
@@ -80,7 +107,7 @@ export function ThemeSelector({ isAdminOrCreator = false }: ThemeSelectorProps) 
     <div className="theme-selector">
       <h3 className="theme-selector__title">Choose Your Theme</h3>
       <p className="theme-selector__description">
-        Bio Day is the default light theme and Midnight Blue is the default dark theme. More themes are marked as future features until players unlock them.
+        Bio Day is the default light theme and Midnight Blue is the default dark theme. Creature themes are one-time real-money Stripe purchases, while special gift themes unlock through milestones and birthday gifts.
       </p>
 
       {/* 3-way Theme Mode Toggle */}
