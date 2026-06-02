@@ -68,11 +68,11 @@ export const CalendarDoorUnwrap = ({
       triggerIslandRunHaptic('egg_open');
     }
 
-    const revealDelayMs = isBonusDoor
-      ? prefersReducedMotion()
-        ? REDUCED_MOTION_UNWRAP_REVEAL_DELAY_MS
-        : BONUS_UNWRAP_REVEAL_DELAY_MS
-      : DEFAULT_UNWRAP_REVEAL_DELAY_MS;
+    const revealDelayMs = prefersReducedMotion()
+      ? REDUCED_MOTION_UNWRAP_REVEAL_DELAY_MS
+      : isBonusDoor
+        ? BONUS_UNWRAP_REVEAL_DELAY_MS
+        : DEFAULT_UNWRAP_REVEAL_DELAY_MS;
 
     // Start unwrap animation, then reveal. Bonus doors use a shorter visual-only
     // delay; reward calculation and persistence have already happened upstream.

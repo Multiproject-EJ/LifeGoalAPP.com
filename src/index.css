@@ -31214,16 +31214,22 @@ body.habit-wizard-open .mobile-footer-nav {
   .door-flip,
   .door-flip__sparkle,
   .door-flip__reveal-spark,
+  .door-unwrap--unwrapping .door-unwrap__wrapper,
+  .door-unwrap__content,
   .door-unwrap--bonus,
   .door-unwrap--bonus .door-unwrap__wrapper,
   .door-unwrap--bonus .door-unwrap__ribbon,
   .door-unwrap--bonus .door-unwrap__bow,
   .door-unwrap--bonus .door-unwrap__bonus-sparkle,
-  .door-unwrap--bonus .door-unwrap__content {
+  .door-unwrap--bonus .door-unwrap__content,
+  .door-scratch__diamond-flash,
+  .door-scratch__confetti-piece {
     animation: none !important;
   }
 
-  .door-flip__inner {
+  .door-flip__inner,
+  .door-unwrap__wrapper,
+  .door-scratch__canvas {
     transition: none;
   }
 
