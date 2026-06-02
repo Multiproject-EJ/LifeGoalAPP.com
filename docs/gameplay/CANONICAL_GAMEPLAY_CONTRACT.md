@@ -85,8 +85,10 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 - Stops — the 5 side-quest structures on each island — are increasingly referred to in UI and new code as **Landmarks**. The terms are equivalent in this contract; internal code symbols (`stopId`, `stopTicketsPaidByIsland`, `IslandStopPlanEntry`, etc.) still use "stop" pending a future rename PR.
 - Landmarks are external gameplay structures, not tile positions.
 - Landmark progression must not depend on landing on specific tile indices.
-- The player token **never** lands on a landmark. Landmarks are accessed only by tapping the landmark button on the orbit HUD.
-- Board profiles no longer expose per-stop tile indices. Landmarks are **fully decoupled from ring tile indices** — the 5 HUD buttons are positioned in screen space by the UI layer (`OUTER_STOP_ANCHORS` in `islandBoardLayout.ts`). Every one of the ring tiles is a pure movement tile picked by the normal tile-map generator; no index is reserved for a landmark.
+- The player token does not land on landmark structures themselves; landmark structures remain external UI/gameplay objects.
+- Landmarks can be accessed by tapping the landmark button on the orbit HUD. A narrow 40-ring exception also exists for **landmark-door tiles**: four outer ring tiles nearest the four non-boss landmarks may open the same canonical landmark modal on landing. When a door is the active, enterable landmark it opens that landmark; when it is dormant/wrong for current progression it may open a lightweight Dormant Door matching minigame with its own small reward ladder. Door tiles do not complete stops, do not award normal tile rewards, and must route all stop completion/progression through canonical stop services.
+- When the Boss landmark becomes truly open, the four landmark-door tiles reroute to Boss until island clear.
+- Board profiles do not expose per-stop progression indices. Landmark buttons are positioned in screen space by the UI layer (`OUTER_STOP_ANCHORS` in `islandBoardLayout.ts`), while any landmark-door tile mapping lives in the topology/tile-map service layer and must not become an alternate stop-completion authority.
 - The canonical HUD ordering for landmark affordance is: Hatchery → Habit → Mystery → Wisdom → Boss, each pinned to `OUTER_STOP_ANCHORS`.
 - Landmark buttons should expose an **attention hint** (small affordability dot) whenever the next sequentially-eligible landmark is payable with current essence and remains unpaid.
 

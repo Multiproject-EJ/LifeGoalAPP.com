@@ -42,12 +42,12 @@ export const OUTER_STOP_ANCHORS: OrbitStopAnchor[] = [
 // 40 tiles arranged around the island ring in canonical 1000×1000 board space.
 // Matches Monopoly GO's tile count — larger tiles, perfectly readable on mobile.
 //
-// Every one of the 40 indices is a pure movement tile whose on-land effect is
-// picked by the tile-map generator (currency / chest / micro / hazard /
-// encounter / bonus / …). **No tile index is reserved for a landmark.** The
-// 5 landmark HUD buttons are positioned in screen space by OUTER_STOP_ANCHORS
-// above, and the player token never lands on a landmark — landmarks are
-// opened by tapping the orbit HUD button.
+// The 40 indices are movement tiles whose on-land effect is picked by the
+// tile-map generator (currency / chest / micro / hazard / encounter / …).
+// Four outer tiles can be overlaid as landmark-door access affordances by the
+// tile-map service; those doors open the same canonical landmark modals and do
+// not own stop completion/progression. The 5 landmark HUD buttons remain
+// positioned in screen space by OUTER_STOP_ANCHORS above.
 // All positions are in the canonical 1000×1000 coordinate space.
 
 const SPARK40_CENTER_X = 500;
