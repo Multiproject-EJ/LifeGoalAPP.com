@@ -2,33 +2,27 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import bioDayChartIcon from '../assets/theme-icons/bio-day-chart.svg';
 import bioDayCheckIcon from '../assets/theme-icons/bio-day-check.svg';
 
-export type Theme =
-  | 'bright-sky'
-  | 'dark-glass'
-  | 'ocean-breeze'
-  | 'forest-green'
-  | 'sunset-glow'
-  | 'midnight-purple'
-  | 'cherry-blossom'
-  | 'desert-sand'
-  | 'arctic-frost'
-  | 'autumn-harvest'
-  | 'lavender-dream'
-  | 'flow-day'
-  | 'flow-night'
-  | 'bio-day'
-  | 'bio-night'
-  | 'dreamt-horizon'
-  | 'birthday-wish'
-  | 'sproutling-grove'
-  | 'ember-glow'
-  | 'aurora-sky'
-  | 'nebula-drift'
-  | 'starhorn-celestial';
+import {
+  resolveThemeAccess,
+  type Theme,
+  type ThemeAccessMetadata,
+  type ThemeCategory,
+  type ThemeUnlockRule,
+} from './themeAccessCore';
+export {
+  getThemeUnlockLabel,
+  resolveThemeAccess,
+  type Theme,
+  type ThemeAccessContext,
+  type ThemeAccessMetadata,
+  type ThemeAccessResult,
+  type ThemeAccessStatus,
+  type ThemeCategory,
+  type ThemeCheckoutSkuId,
+  type ThemeUnlockRule,
+} from './themeAccessCore';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
-
-export type ThemeCategory = 'light' | 'dark';
 
 export const DEFAULT_LIGHT_THEME: Theme = 'bio-day';
 export const DEFAULT_DARK_THEME: Theme = 'flow-night';
@@ -37,71 +31,8 @@ const DEFAULT_FREE_THEME_IDS = new Set<Theme>([DEFAULT_LIGHT_THEME, DEFAULT_DARK
 
 type FlowVariant = 'sunrise' | 'morning' | 'day' | 'sunset' | 'midnight';
 
-export type ThemeUnlockRule =
-  | { type: 'free' }
-  | { type: 'special_gift'; giftId: 'island_120_complete' | 'first_birthday_present' }
-  | {
-      type: 'creature_purchase';
-      creatureId: string;
-      creatureName: string;
-      tier: 'common' | 'rare' | 'mythic';
-      skuId: ThemeCheckoutSkuId;
-      basePriceUsd: string;
-      pairedSkuId?: ThemeCheckoutSkuId;
-      pairedPriceUsd?: string;
-      pairedDiscountPercent?: 20;
-      requiredBondLevel?: number;
-    }
-  | { type: 'player_shop_purchase'; skuId: string; priceUsd: string }
-  | { type: 'admin_preview' };
-
-export type ThemeCheckoutSkuId =
-  | 'theme_sproutling_grove'
-  | 'theme_sproutling_grove_paired'
-  | 'theme_ember_glow'
-  | 'theme_ember_glow_paired'
-  | 'theme_aurora_sky'
-  | 'theme_aurora_sky_paired'
-  | 'theme_nebula_drift'
-  | 'theme_nebula_drift_paired'
-  | 'theme_starhorn_celestial'
-  | 'theme_starhorn_celestial_paired';
-
-export interface ThemeMetadata {
-  id: Theme;
-  name: string;
+export interface ThemeMetadata extends ThemeAccessMetadata {
   icon: ReactNode;
-  description: string;
-  metaColor: string;
-  category: ThemeCategory;
-  unlockRule: ThemeUnlockRule;
-}
-
-export interface ThemeAccessContext {
-  isAdminOrCreator?: boolean;
-  ownedThemeIds?: ReadonlySet<Theme>;
-  ownedCreatureIds?: ReadonlySet<string>;
-  pairedCreatureIds?: ReadonlySet<string>;
-  creatureBondLevelsById?: ReadonlyMap<string, number>;
-}
-
-export type ThemeAccessStatus =
-  | 'owned'
-  | 'locked'
-  | 'available_for_purchase'
-  | 'available_for_paired_purchase'
-  | 'admin_preview';
-
-export interface ThemeAccessResult {
-  status: ThemeAccessStatus;
-  selectable: boolean;
-  checkoutSkuId?: ThemeCheckoutSkuId | string;
-  displayPrice?: string;
-  compareAtPrice?: string;
-  discountLabel?: string;
-  lockedReason?: string;
-  ctaLabel?: string;
-  ctaTarget?: 'settings' | 'creature_sanctuary' | 'birthday_preferences' | 'island_run' | 'player_shop';
 }
 
 const adminPreviewUnlockRule: ThemeUnlockRule = { type: 'admin_preview' };
@@ -263,7 +194,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     id: 'sproutling-grove',
     name: 'Sproutling Grove',
     icon: '🌱',
-    description: 'A premium creature theme inspired by Sproutling',
+    description: 'A one-time real-money creature theme inspired by Sproutling',
     metaColor: '#dcfce7',
     category: 'light',
     unlockRule: {
@@ -282,7 +213,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     id: 'ember-glow',
     name: 'Ember Glow',
     icon: '🔥',
-    description: 'A premium creature theme inspired by Ember Sprout',
+    description: 'A one-time real-money creature theme inspired by Ember Sprout',
     metaColor: '#fb923c',
     category: 'light',
     unlockRule: {
@@ -301,7 +232,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     id: 'aurora-sky',
     name: 'Aurora Sky',
     icon: '🪽',
-    description: 'A premium creature theme inspired by Aurora Finch',
+    description: 'A one-time real-money creature theme inspired by Aurora Finch',
     metaColor: '#bae6fd',
     category: 'light',
     unlockRule: {
@@ -369,7 +300,7 @@ export const DARK_THEMES: ThemeMetadata[] = [
     id: 'nebula-drift',
     name: 'Nebula Drift',
     icon: '🪐',
-    description: 'A premium creature theme inspired by Nebula Wisp',
+    description: 'A one-time real-money creature theme inspired by Nebula Wisp',
     metaColor: '#581c87',
     category: 'dark',
     unlockRule: {
@@ -388,7 +319,7 @@ export const DARK_THEMES: ThemeMetadata[] = [
     id: 'starhorn-celestial',
     name: 'Starhorn Celestial',
     icon: '🦄',
-    description: 'A premium mythic theme inspired by Starhorn Seraph',
+    description: 'A one-time real-money mythic theme inspired by Starhorn Seraph',
     metaColor: '#312e81',
     category: 'dark',
     unlockRule: {
@@ -414,114 +345,6 @@ export function isDefaultFreeTheme(theme: Theme): boolean {
 
 export function getThemeMetadata(theme: Theme): ThemeMetadata | undefined {
   return AVAILABLE_THEMES.find(themeOption => themeOption.id === theme);
-}
-
-export function resolveThemeAccess(
-  themeOption: ThemeMetadata,
-  context: ThemeAccessContext = {},
-): ThemeAccessResult {
-  const { isAdminOrCreator = false, ownedThemeIds, ownedCreatureIds, pairedCreatureIds, creatureBondLevelsById } = context;
-
-  if (isAdminOrCreator) {
-    return {
-      status: 'admin_preview',
-      selectable: true,
-      discountLabel: 'Admin preview',
-      ctaLabel: 'Preview theme',
-    };
-  }
-
-  if (ownedThemeIds?.has(themeOption.id)) {
-    return { status: 'owned', selectable: true, ctaLabel: 'Select theme' };
-  }
-
-  const { unlockRule } = themeOption;
-  switch (unlockRule.type) {
-    case 'free':
-      return { status: 'owned', selectable: true, ctaLabel: 'Included by default' };
-    case 'special_gift':
-      return {
-        status: 'locked',
-        selectable: false,
-        lockedReason: unlockRule.giftId === 'island_120_complete'
-          ? 'Complete Island 120 to unlock this free gift theme.'
-          : 'Enable birthday presents to unlock this free birthday gift theme.',
-        ctaLabel: unlockRule.giftId === 'island_120_complete' ? 'Continue Island Run' : 'Set birthday gift',
-        ctaTarget: unlockRule.giftId === 'island_120_complete' ? 'island_run' : 'birthday_preferences',
-      };
-    case 'creature_purchase': {
-      const ownsCreature = ownedCreatureIds?.has(unlockRule.creatureId) ?? false;
-      const bondLevel = creatureBondLevelsById?.get(unlockRule.creatureId) ?? 0;
-      const meetsBondRequirement = !unlockRule.requiredBondLevel || bondLevel >= unlockRule.requiredBondLevel;
-      if (!ownsCreature) {
-        return {
-          status: 'locked',
-          selectable: false,
-          lockedReason: `Hatch ${unlockRule.creatureName} to unlock this premium theme offer.`,
-          ctaLabel: 'Open Sanctuary',
-          ctaTarget: 'creature_sanctuary',
-        };
-      }
-      if (!meetsBondRequirement) {
-        return {
-          status: 'locked',
-          selectable: false,
-          lockedReason: `Reach Bond Lv. ${unlockRule.requiredBondLevel} with ${unlockRule.creatureName} to unlock this premium theme offer.`,
-          ctaLabel: 'Open Sanctuary',
-          ctaTarget: 'creature_sanctuary',
-        };
-      }
-      if (unlockRule.pairedSkuId && pairedCreatureIds?.has(unlockRule.creatureId)) {
-        return {
-          status: 'available_for_paired_purchase',
-          selectable: false,
-          checkoutSkuId: unlockRule.pairedSkuId,
-          displayPrice: unlockRule.pairedPriceUsd,
-          compareAtPrice: unlockRule.basePriceUsd,
-          discountLabel: 'Perfect Pair offer',
-          lockedReason: `Perfect Pair offer: buy for ${unlockRule.pairedPriceUsd}.`,
-          ctaLabel: 'Buy in Sanctuary',
-          ctaTarget: 'creature_sanctuary',
-        };
-      }
-      return {
-        status: 'available_for_purchase',
-        selectable: false,
-        checkoutSkuId: unlockRule.skuId,
-        displayPrice: unlockRule.basePriceUsd,
-        lockedReason: `Available in the Creature Sanctuary for ${unlockRule.basePriceUsd}.`,
-        ctaLabel: 'Buy in Sanctuary',
-        ctaTarget: 'creature_sanctuary',
-      };
-    }
-    case 'player_shop_purchase':
-      return {
-        status: 'available_for_purchase',
-        selectable: false,
-        checkoutSkuId: unlockRule.skuId,
-        displayPrice: unlockRule.priceUsd,
-        lockedReason: `Available in the Player Shop for ${unlockRule.priceUsd}.`,
-        ctaLabel: 'Open Player Shop',
-        ctaTarget: 'player_shop',
-      };
-    case 'admin_preview':
-    default:
-      return {
-        status: 'locked',
-        selectable: false,
-        lockedReason: 'Preview feature for future rewards and shop releases.',
-        ctaLabel: 'Coming soon',
-      };
-  }
-}
-
-export function getThemeUnlockLabel(themeOption: ThemeMetadata, context: ThemeAccessContext = {}): string {
-  const access = resolveThemeAccess(themeOption, context);
-  if (access.status === 'admin_preview') return access.discountLabel ?? 'Admin preview';
-  if (access.selectable) {
-    return themeOption.unlockRule.type === 'free' ? 'Included by default' : 'Owned';
-  }
-  return access.lockedReason ?? 'Locked';
 }
 
 export function canSelectTheme(theme: Theme, isAdminOrCreator = false): boolean {
