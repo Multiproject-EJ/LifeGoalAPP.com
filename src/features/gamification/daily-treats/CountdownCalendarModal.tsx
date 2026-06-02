@@ -40,7 +40,7 @@ import {
 } from '../../../services/treatCalendarService';
 import { fetchHolidayPreferences } from '../../../services/holidayPreferences';
 import { getHolidayThemeAssets } from '../../../services/holidayThemeAssets';
-import { getQuestHabit, type QuestHabit } from '../../../services/questHabit';
+import { refreshQuestHabit, type QuestHabit } from '../../../services/questHabit';
 
 type CountdownCalendarModalProps = {
   isOpen: boolean;
@@ -75,6 +75,7 @@ const HOLIDAY_THEME: Record<string, string> = {
 
 type RevealState = {
   isRevealing: boolean;
+  isOpening: boolean;
   dayIndex: number;
   doorType: DoorType;
   hatch: CalendarHatch | null;
@@ -181,7 +182,7 @@ export const CountdownCalendarModal = ({
           setSeasonData(null);
         }
         // Load the user's designated quest habit (if any) then check completion
-        const qh = getQuestHabit(userId);
+        const qh = await refreshQuestHabit(userId);
         setQuestHabit(qh);
         const completed = await isHabitCompletedToday(userId, qh?.habitId);
         setHabitCompleted(completed);
@@ -226,12 +227,13 @@ export const CountdownCalendarModal = ({
     setDoorError(null);
 
     // Show a lightweight "opening" reveal state immediately so the grid tile
-    // disappears while the server resolves the reward. The actual reveal card
-    // is built from the **server** response below to guarantee the reward the
-    // user sees matches what was granted (prevents reveal/award divergence
+    // disappears while the backend/local service resolves the reward. The
+    // actual reveal card is built from the authoritative response below so
+    // the user sees exactly what was granted (prevents reveal/award divergence
     // when server-side rules differ from the locally cached hatch).
     setRevealState({
       isRevealing: true,
+      isOpening: true,
       dayIndex,
       doorType,
       hatch,
@@ -248,19 +250,23 @@ export const CountdownCalendarModal = ({
         return;
       }
 
-      // Replace the reveal hatch with the authoritative server reward so the
-      // animated card shows exactly what the user was granted.
-      if (reward) {
-        const authoritativeHatch: CalendarHatch = {
-          ...hatch,
-          reward_currency: reward.reward_currency,
-          reward_amount: reward.reward_amount,
-          reward_tier: reward.reward_tier,
-          reveal_mechanic: reward.reveal_mechanic ?? hatch.reveal_mechanic,
-          reward_payload: reward.reward_payload ?? hatch.reward_payload,
-        };
-        setRevealState({ isRevealing: true, dayIndex, doorType, hatch: authoritativeHatch });
+      // Replace the opening shell with the authoritative server/service reward
+      // so the animated card shows exactly what the user was granted.
+      if (!reward) {
+        setDoorError('Could not open door: reward details were unavailable.');
+        setRevealState(null);
+        return;
       }
+
+      const authoritativeHatch: CalendarHatch = {
+        ...hatch,
+        reward_currency: reward.reward_currency,
+        reward_amount: reward.reward_amount,
+        reward_tier: reward.reward_tier,
+        reveal_mechanic: reward.reveal_mechanic ?? hatch.reveal_mechanic,
+        reward_payload: reward.reward_payload ?? hatch.reward_payload,
+      };
+      setRevealState({ isRevealing: true, isOpening: false, dayIndex, doorType, hatch: authoritativeHatch });
 
       // Award essence in Island Run sessions; award gold elsewhere.
       if (reward?.reward_currency === 'gold' && reward.reward_amount) {
@@ -468,7 +474,7 @@ export const CountdownCalendarModal = ({
 
   // Render reveal modal if actively revealing
   if (revealState?.isRevealing && revealState.hatch) {
-    const { hatch, dayIndex, doorType } = revealState;
+    const { hatch, dayIndex, doorType, isOpening } = revealState;
     const emoji = hatch.symbol_emoji ?? themeEmojis[(dayIndex - 1) % themeEmojis.length];
     const tier = hatch.reward_tier ?? 2;
     const currency = hatch.reward_currency;
@@ -494,8 +500,23 @@ export const CountdownCalendarModal = ({
             <p className="daily-treats-calendar__subtitle daily-treats-calendar__subtitle--reward-reveal">
               A little quest magic is waiting inside.
             </p>
+
+            {isOpening && (
+              <div className="daily-treats-calendar__opening-shell" role="status" aria-live="polite">
+                <div className="daily-treats-calendar__opening-gift" aria-hidden="true">
+                  {doorType === 'bonus' ? '🎁' : emoji}
+                </div>
+                <p className="daily-treats-calendar__opening-title">
+                  Opening your {doorType === 'bonus' ? 'bonus treat' : 'daily treat'}…
+                </p>
+                <p className="daily-treats-calendar__opening-copy">
+                  Confirming your reward before the reveal.
+                </p>
+                <div className="daily-treats-calendar__opening-shimmer" aria-hidden="true" />
+              </div>
+            )}
             
-            {mechanic === 'flip' && (
+            {!isOpening && mechanic === 'flip' && (
               <CalendarDoorFlip
                 dayNumber={dayIndex}
                 emoji={emoji}
@@ -508,7 +529,7 @@ export const CountdownCalendarModal = ({
                 diceLabel={dailyTreatDiceLabel}
               />
             )}
-            {mechanic === 'unwrap' && (
+            {!isOpening && mechanic === 'unwrap' && (
               <CalendarDoorUnwrap
                 dayNumber={dayIndex}
                 emoji={emoji}
@@ -520,9 +541,10 @@ export const CountdownCalendarModal = ({
                 isPersonalQuest={isPersonalQuest}
                 diceLabel={dailyTreatDiceLabel}
                 variant={doorType === 'bonus' ? 'gift' : 'envelope'}
+                isBonusDoor={doorType === 'bonus'}
               />
             )}
-            {mechanic === 'scratch' && (
+            {!isOpening && mechanic === 'scratch' && (
               <CalendarDoorScratch
                 dayNumber={dayIndex}
                 emoji={emoji}

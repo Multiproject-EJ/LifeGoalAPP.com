@@ -2494,6 +2494,64 @@ export interface Database {
           }
         ];
       };
+      daily_spin_habit_bonus_claims: {
+        Row: {
+          user_id: string;
+          claim_date: string;
+          spins_awarded: number;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          claim_date: string;
+          spins_awarded?: number;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          claim_date?: string;
+          spins_awarded?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      user_quest_habits: {
+        Row: {
+          user_id: string;
+          habit_id: string | null;
+          title: string;
+          emoji: string | null;
+          cleared_at: string | null;
+          created_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          habit_id?: string | null;
+          title?: string;
+          emoji?: string | null;
+          cleared_at?: string | null;
+          created_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          habit_id?: string | null;
+          title?: string;
+          emoji?: string | null;
+          cleared_at?: string | null;
+          created_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_quest_habits_habit_id_fkey";
+            columns: ["habit_id"];
+            referencedRelation: "habits_v2";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       reminder_action_logs: {
         Row: {
           id: string;
@@ -3206,6 +3264,15 @@ export interface Database {
       };
     };
     Functions: {
+      claim_daily_spin_habit_bonus: {
+        Args: {
+          p_claim_date?: string;
+        };
+        Returns: {
+          claimed: boolean;
+          spins_available: number;
+        }[];
+      };
       get_commitment_contract_sweep_health: {
         Args: Record<PropertyKey, never>;
         Returns: {

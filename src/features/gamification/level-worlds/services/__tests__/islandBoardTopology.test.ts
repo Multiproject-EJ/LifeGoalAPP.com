@@ -1,5 +1,5 @@
 import { resolveIslandBoardProfile } from '../islandBoardProfiles';
-import { generateTileMap } from '../islandBoardTileMap';
+import { applyLandmarkDoorTiles, generateTileMap, LANDMARK_DOOR_TILE_CONFIGS } from '../islandBoardTileMap';
 import { resolveWrappedTokenIndex } from '../islandBoardTopology';
 import { generateIslandStopPlan } from '../islandRunStops';
 import { resolveIslandRunContractV2Stops } from '../islandRunContractV2StopResolver';
@@ -31,6 +31,38 @@ export const islandBoardTopologyTests: TestCase[] = [
 
       assertEqual(result.activeStopIndex, 1, 'Expected second stop to be active after first completion');
       assertDeepEqual(result.statusesByIndex, ['completed', 'active', 'locked', 'locked', 'locked'], 'Expected index-sequential v2 statuses');
+    },
+  },
+
+  {
+    name: 'landmark door overlay reserves four nearest outer landmark tiles',
+    run: () => {
+      const tileMap = applyLandmarkDoorTiles(generateTileMap(3, 'normal', 'forest', 0));
+      const expected = [
+        { tileIndex: 36, stopId: 'hatchery' },
+        { tileIndex: 6, stopId: 'habit' },
+        { tileIndex: 16, stopId: 'mystery' },
+        { tileIndex: 26, stopId: 'wisdom' },
+      ];
+
+      assertDeepEqual([...LANDMARK_DOOR_TILE_CONFIGS], expected, 'Expected fixed landmark-door tile placement');
+      for (const door of expected) {
+        const entry = tileMap[door.tileIndex];
+        assertEqual(entry.tileType, 'landmark_door', `Expected tile ${door.tileIndex} to be a landmark door`);
+        assertEqual(entry.doorStopId, door.stopId, `Expected tile ${door.tileIndex} to route to ${door.stopId}`);
+      }
+      assertEqual(tileMap.filter((entry) => entry.tileType === 'landmark_door').length, 4, 'Expected exactly four landmark doors');
+    },
+  },
+  {
+    name: 'landmark doors all route to boss once boss phase is open',
+    run: () => {
+      const tileMap = applyLandmarkDoorTiles(generateTileMap(120, 'rare', 'forest', 0), { allDoorsRouteToBoss: true });
+      for (const door of LANDMARK_DOOR_TILE_CONFIGS) {
+        const entry = tileMap[door.tileIndex];
+        assertEqual(entry.tileType, 'landmark_door', `Expected tile ${door.tileIndex} to stay a landmark door`);
+        assertEqual(entry.doorStopId, 'boss', `Expected tile ${door.tileIndex} to route to boss`);
+      }
     },
   },
   {
