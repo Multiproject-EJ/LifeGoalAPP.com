@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "ignoreDeprecations": "5.0",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "rootDir": "src",
+    "outDir": ".tmp-theme-access-tests",
+    "noEmit": false
+  },
+  "include": [
+    "src/contexts/themeAccessCore.ts",
+    "src/contexts/__tests__/themeAccessCore.test.ts"
+  ]
+}
