@@ -1,8 +1,13 @@
 import {
-  canSelectTheme,
+  resolveThemeAccess,
+  getThemeUnlockLabel,
   useTheme,
   LIGHT_THEMES,
   DARK_THEMES,
+  type Theme,
+  type ThemeAccessContext,
+  type ThemeAccessResult,
+  type ThemeMetadata,
   type ThemeMode,
 } from '../contexts/ThemeContext';
 
@@ -15,9 +20,18 @@ const THEME_MODE_OPTIONS: { mode: ThemeMode; icon: string; label: string }[] = [
 type MobileThemeSelectorProps = {
   onClose: () => void;
   isAdminOrCreator?: boolean;
+  accessContext?: ThemeAccessContext;
+  checkoutLoadingThemeId?: Theme | null;
+  onThemeCheckout?: (theme: ThemeMetadata, access: ThemeAccessResult) => void;
 };
 
-export function MobileThemeSelector({ onClose, isAdminOrCreator = false }: MobileThemeSelectorProps) {
+export function MobileThemeSelector({
+  onClose,
+  isAdminOrCreator = false,
+  accessContext,
+  checkoutLoadingThemeId = null,
+  onThemeCheckout,
+}: MobileThemeSelectorProps) {
   const {
     themeMode,
     lightTheme,
@@ -27,17 +41,33 @@ export function MobileThemeSelector({ onClose, isAdminOrCreator = false }: Mobil
     setDarkTheme,
   } = useTheme();
 
+  const resolvedAccessContext: ThemeAccessContext = {
+    ...accessContext,
+    isAdminOrCreator,
+  };
+
   const handleThemeSelect = (themeId: string, category: 'light' | 'dark') => {
+    const theme = category === 'light'
+      ? LIGHT_THEMES.find(t => t.id === themeId)
+      : DARK_THEMES.find(t => t.id === themeId);
+
+    if (!theme) return;
+
+    const access = resolveThemeAccess(theme, resolvedAccessContext);
+    const isCheckoutAvailable = access.status === 'available_for_purchase' || access.status === 'available_for_paired_purchase';
+    if (isCheckoutAvailable) {
+      onThemeCheckout?.(theme, access);
+      return;
+    }
+
+    if (!access.selectable) {
+      return;
+    }
+
     if (category === 'light') {
-      const theme = LIGHT_THEMES.find(t => t.id === themeId);
-      if (theme && canSelectTheme(theme.id, isAdminOrCreator)) {
-        setLightTheme(theme.id);
-      }
+      setLightTheme(theme.id);
     } else {
-      const theme = DARK_THEMES.find(t => t.id === themeId);
-      if (theme && canSelectTheme(theme.id, isAdminOrCreator)) {
-        setDarkTheme(theme.id);
-      }
+      setDarkTheme(theme.id);
     }
   };
 
@@ -81,7 +111,7 @@ export function MobileThemeSelector({ onClose, isAdminOrCreator = false }: Mobil
       </div>
 
       <p className="mobile-theme-selector__hint">
-        Bio Day and Midnight Blue are included by default. Locked themes are future features until unlocked.
+        Bio Day and Midnight Blue are included by default. Creature themes are one-time real-money Stripe purchases; special gift themes unlock through milestones and birthday gifts.
       </p>
 
       {/* Theme Grid */}
@@ -90,26 +120,30 @@ export function MobileThemeSelector({ onClose, isAdminOrCreator = false }: Mobil
           const isActiveLightTheme = themeOption.category === 'light' && lightTheme === themeOption.id;
           const isActiveDarkTheme = themeOption.category === 'dark' && darkTheme === themeOption.id;
           const isActive = isActiveLightTheme || isActiveDarkTheme;
-          const isLocked = !canSelectTheme(themeOption.id, isAdminOrCreator);
-          
+          const access = resolveThemeAccess(themeOption, resolvedAccessContext);
+          const isCheckoutAvailable = access.status === 'available_for_purchase' || access.status === 'available_for_paired_purchase';
+          const isLocked = !access.selectable && !isCheckoutAvailable;
+          const isBusy = checkoutLoadingThemeId === themeOption.id;
+          const unlockLabel = getThemeUnlockLabel(themeOption, resolvedAccessContext);
+
           return (
             <button
               key={themeOption.id}
               type="button"
-              className={`mobile-theme-selector__card ${isActive ? 'mobile-theme-selector__card--active' : ''} ${isLocked ? 'mobile-theme-selector__card--locked' : ''}`}
+              className={`mobile-theme-selector__card ${isActive ? 'mobile-theme-selector__card--active' : ''} ${isLocked ? 'mobile-theme-selector__card--locked' : ''} ${isCheckoutAvailable ? 'mobile-theme-selector__card--checkout' : ''}`}
               onClick={() => handleThemeSelect(themeOption.id, themeOption.category)}
-              disabled={isLocked}
-              aria-disabled={isLocked}
+              disabled={isLocked || isBusy}
+              aria-disabled={isLocked || isBusy}
               aria-pressed={isActive}
-              aria-label={isLocked ? `${themeOption.name} is locked as a future feature` : `Select ${themeOption.name}`}
+              aria-label={isLocked ? `${themeOption.name} is locked. ${unlockLabel}` : isCheckoutAvailable ? `${access.ctaLabel ?? 'Buy theme'}: ${themeOption.name}` : `Select ${themeOption.name}`}
             >
               <span className="mobile-theme-selector__icon" aria-hidden="true">
                 {themeOption.icon}
               </span>
               <span className="mobile-theme-selector__name">{themeOption.name}</span>
-              {isLocked && (
+              {(isLocked || isCheckoutAvailable) && (
                 <span className="mobile-theme-selector__lock-badge" aria-hidden="true">
-                  🔒 Future feature
+                  {isBusy ? 'Starting…' : isCheckoutAvailable ? `🛒 ${unlockLabel}` : `🔒 ${unlockLabel}`}
                 </span>
               )}
               {isActive && (

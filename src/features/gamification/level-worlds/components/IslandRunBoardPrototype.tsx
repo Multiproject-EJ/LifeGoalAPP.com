@@ -53,6 +53,8 @@ import {
 import { resolveIslandRunStopTapOutcome } from '../services/islandRunStopTapRouting';
 import { isIslandFullyCleared } from '../services/islandRunProgression';
 import { recordTelemetryEvent } from '../../../../services/telemetry';
+import { fetchOwnedThemeIds, initiateThemeCheckout } from '../../../../services/themePurchases';
+import { AVAILABLE_THEMES, resolveThemeAccess, type Theme, type ThemeAccessResult, type ThemeMetadata } from '../../../../contexts/ThemeContext';
 import {
   ISLAND_RUN_RUNTIME_HYDRATION_FAILED_STAGE,
   ISLAND_RUN_RUNTIME_HYDRATION_STAGE,
@@ -1878,6 +1880,10 @@ export function IslandRunBoardPrototype({
   const [sanctuaryZoneFilter, setSanctuaryZoneFilter] = useState<SanctuaryZoneFilter>('all');
   const [sanctuarySortMode, setSanctuarySortMode] = useState<SanctuarySortMode>('recent');
   const [showSanctuaryCompanionInfo, setShowSanctuaryCompanionInfo] = useState(true);
+  const [ownedThemeIds, setOwnedThemeIds] = useState<Set<Theme>>(new Set());
+  const [themeCheckoutLoadingId, setThemeCheckoutLoadingId] = useState<Theme | null>(null);
+  const [themeCheckoutError, setThemeCheckoutError] = useState<string | null>(null);
+  const [themeEntitlementsLoading, setThemeEntitlementsLoading] = useState(false);
   const [companionQuestProgress, setCompanionQuestProgress] = useState<CompanionQuestProgress>(() =>
     readCompanionQuestProgress(session.user.id),
   );
@@ -2743,6 +2749,26 @@ export function IslandRunBoardPrototype({
     }, 60_000);
     return () => window.clearInterval(intervalId);
   }, [showSanctuaryPanel]);
+
+  useEffect(() => {
+    if (!showSanctuaryPanel || !showSanctuaryMenu || sanctuaryMenuModule !== 'inventory') return;
+    let cancelled = false;
+
+    const loadThemeEntitlements = async () => {
+      setThemeEntitlementsLoading(true);
+      const { themeIds, error } = await fetchOwnedThemeIds(session.user.id);
+      if (cancelled) return;
+      setOwnedThemeIds(themeIds);
+      setThemeCheckoutError(error?.message ?? null);
+      setThemeEntitlementsLoading(false);
+    };
+
+    void loadThemeEntitlements();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showSanctuaryMenu, showSanctuaryPanel, sanctuaryMenuModule, session.user.id]);
 
   useEffect(() => {
     if (hasHydratedRuntimeState) return;
@@ -5663,6 +5689,35 @@ export function IslandRunBoardPrototype({
   };
 
   const collectedCreatures = useMemo(() => getCreatureManifestEntries(session.user.id), [creatureCollection, session.user.id]);
+  const creatureThemeAccessContext = useMemo(() => {
+    const ownedCreatureIds = new Set(
+      (__storeState.creatureCollection ?? [])
+        .map((entry) => entry.creatureId)
+        .filter((creatureId): creatureId is string => typeof creatureId === 'string' && creatureId.length > 0),
+    );
+    const creatureBondLevelsById = new Map(
+      (__storeState.creatureCollection ?? [])
+        .filter((entry) => typeof entry.creatureId === 'string' && entry.creatureId.length > 0)
+        .map((entry) => [entry.creatureId, entry.bondLevel ?? 0] as const),
+    );
+    const pairedCreatureIds = new Set(
+      (__storeState.perfectCompanionIds ?? [])
+        .filter((creatureId): creatureId is string => typeof creatureId === 'string' && creatureId.length > 0),
+    );
+
+    return {
+      ownedThemeIds,
+      ownedCreatureIds,
+      pairedCreatureIds,
+      creatureBondLevelsById,
+    };
+  }, [__storeState.creatureCollection, __storeState.perfectCompanionIds, ownedThemeIds]);
+  const sanctuaryCreatureThemeOffers = useMemo(
+    () => AVAILABLE_THEMES.filter((theme): theme is ThemeMetadata & { unlockRule: Extract<ThemeMetadata['unlockRule'], { type: 'creature_purchase' }> } => (
+      theme.unlockRule.type === 'creature_purchase'
+    )),
+    [],
+  );
   const activeCompanion = useMemo(
     () => findSanctuaryCreatureById(collectedCreatures, activeCompanionId),
     [activeCompanionId, collectedCreatures],
@@ -8280,6 +8335,32 @@ export function IslandRunBoardPrototype({
 
     window.location.assign(result.url);
   }, [activeTimedEvent, islandNumber, session]);
+
+  const handleSanctuaryThemeCheckout = async (theme: ThemeMetadata, access: ThemeAccessResult) => {
+    if (!access.checkoutSkuId) {
+      setThemeCheckoutError('This creature theme is not ready for checkout yet.');
+      return;
+    }
+
+    setThemeCheckoutLoadingId(theme.id);
+    setThemeCheckoutError(null);
+    try {
+      const { url, error } = await initiateThemeCheckout({
+        themeId: theme.id,
+        skuId: access.checkoutSkuId as Parameters<typeof initiateThemeCheckout>[0]['skuId'],
+        variant: access.status === 'available_for_paired_purchase' ? 'paired' : 'base',
+      });
+      if (error || !url) {
+        setThemeCheckoutError(error?.message ?? 'Unable to start theme checkout.');
+        return;
+      }
+      if (typeof window !== 'undefined') {
+        window.location.assign(url);
+      }
+    } finally {
+      setThemeCheckoutLoadingId(null);
+    }
+  };
 
   const openSanctuaryPanel = useCallback(() => {
     setShowSanctuaryPanel(true);
@@ -11012,6 +11093,47 @@ export function IslandRunBoardPrototype({
               <span className="island-run-sanctuary-panel__pill">Basic treats: <strong>{creatureTreatInventory.basic}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Favorite snacks: <strong>{creatureTreatInventory.favorite}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Rare feasts: <strong>{creatureTreatInventory.rare}</strong></span>
+            </div>
+            ) : null}
+
+            {showSanctuaryMenu && sanctuaryMenuModule === 'inventory' ? (
+            <div className="island-hatchery-card" style={{ marginBottom: '0.75rem' }}>
+              <p><strong>🎨 Premium Creature Themes</strong> — one-time real-money Stripe purchases</p>
+              <p style={{ fontSize: '0.82rem', opacity: 0.7, marginBottom: '0.5rem' }}>
+                These are app themes unlocked by owning a creature. They are not bought with shards.
+              </p>
+              {themeEntitlementsLoading ? (
+                <p style={{ fontSize: '0.82rem', opacity: 0.7 }}>Syncing your owned themes…</p>
+              ) : null}
+              {themeCheckoutError ? (
+                <p style={{ fontSize: '0.82rem', opacity: 0.78 }}>{themeCheckoutError}</p>
+              ) : null}
+              <div className="island-hatchery-card__actions" style={{ flexDirection: 'column', gap: '0.35rem' }}>
+                {sanctuaryCreatureThemeOffers.map((themeOption) => {
+                  const access = resolveThemeAccess(themeOption, creatureThemeAccessContext);
+                  const isOwned = access.selectable;
+                  const isPurchasable = access.status === 'available_for_purchase' || access.status === 'available_for_paired_purchase';
+                  const isBusy = themeCheckoutLoadingId === themeOption.id;
+                  const creatureName = themeOption.unlockRule.creatureName;
+                  const priceLabel = access.displayPrice ?? themeOption.unlockRule.basePriceUsd;
+                  const compareAt = access.compareAtPrice;
+                  return (
+                    <button
+                      key={themeOption.id}
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action"
+                      disabled={!isPurchasable || isBusy}
+                      onClick={() => handleSanctuaryThemeCheckout(themeOption, access)}
+                    >
+                      {themeOption.icon} {themeOption.name} — {isOwned
+                        ? 'Owned'
+                        : isPurchasable
+                          ? `${access.status === 'available_for_paired_purchase' ? 'Perfect Pair ' : ''}${priceLabel} one-time Stripe checkout${compareAt ? ` (was ${compareAt})` : ''}`
+                          : access.lockedReason ?? `Hatch ${creatureName} to unlock this one-time Stripe offer.`}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             ) : null}
 
