@@ -6,12 +6,11 @@ export interface IslandBoardProfile {
 }
 
 /**
- * Landmarks (a.k.a. "stops") are **fully decoupled from tile indices**. The
+ * Landmarks (a.k.a. "stops") remain external progression structures. The
  * 5 landmark HUD buttons are positioned in screen space by the UI layer
- * (`OUTER_STOP_ANCHORS` in `islandBoardLayout.ts`) and the player token never
- * lands on one. The ring remains `tileCount` pure movement tiles generated
- * by the normal tile-map generator — nothing about those tiles is reserved
- * for landmarks.
+ * (`OUTER_STOP_ANCHORS` in `islandBoardLayout.ts`). Four movement tiles may be
+ * overlaid as landmark-door access affordances by the tile-map service, but
+ * stop completion/progression remains canonical and independent of door indices.
  */
 const BOARD_PROFILES: Record<IslandBoardProfileId, IslandBoardProfile> = {
   spark40_ring: {
