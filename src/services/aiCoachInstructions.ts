@@ -13,6 +13,11 @@ export type GoalCoachContext = {
   linkedHabitCount?: number;
 };
 
+export type AiCoachLifeStageContext = {
+  ageBand: string | null;
+  birthdayProvided: boolean;
+};
+
 export type AiCoachInstructionPayload = {
   systemPrompt: string;
   source: 'default' | 'env' | 'demo-env';
@@ -58,6 +63,46 @@ function formatHabitEnvironments(habits: HabitEnvironmentContext[]): string {
     .join('\n');
 }
 
+export function resolveAiCoachLifeStageContext(
+  birthday?: string | null,
+  now: Date = new Date(),
+): AiCoachLifeStageContext {
+  if (!birthday) {
+    return { ageBand: null, birthdayProvided: false };
+  }
+
+  const parsed = new Date(`${birthday}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return { ageBand: null, birthdayProvided: true };
+  }
+
+  let age = now.getFullYear() - parsed.getFullYear();
+  const hasHadBirthdayThisYear =
+    now.getMonth() > parsed.getMonth()
+    || (now.getMonth() === parsed.getMonth() && now.getDate() >= parsed.getDate());
+  if (!hasHadBirthdayThisYear) age -= 1;
+
+  if (age < 0 || age > 120) {
+    return { ageBand: null, birthdayProvided: true };
+  }
+
+  const ageBand = age < 18
+    ? 'under 18'
+    : age <= 24
+      ? '18–24'
+      : age <= 34
+        ? '25–34'
+        : age <= 44
+          ? '35–44'
+          : age <= 54
+            ? '45–54'
+            : age <= 64
+              ? '55–64'
+              : '65+';
+
+  return { ageBand, birthdayProvided: true };
+}
+
 function formatGoalsSummary(goals: GoalCoachContext[]): string {
   if (goals.length === 0) return '';
   const active = goals.filter((g) => g.status !== 'achieved');
@@ -78,6 +123,7 @@ export function loadAiCoachInstructions(
   habitEnvironments?: HabitEnvironmentContext[],
   activeGoals?: GoalCoachContext[],
   minProgressStreak?: number,
+  lifeStageContext?: AiCoachLifeStageContext | null,
 ): AiCoachInstructionPayload {
   const resolved = resolveEnvInstructions(demoMode);
   const instructions = resolved.text ?? BASE_INSTRUCTIONS;
@@ -89,6 +135,7 @@ export function loadAiCoachInstructions(
     formatAccessLine('Journaling', dataAccess.journaling),
     formatAccessLine('Reflections', dataAccess.reflections),
     formatAccessLine('Vision board', dataAccess.visionBoard),
+    formatAccessLine('Life stage', dataAccess.lifeStage),
   ].join('\n');
 
   // M4-E verified: when dataAccess.habits is enabled and the caller provides
@@ -112,8 +159,15 @@ export function loadAiCoachInstructions(
       ? `\n\nDifficulty adjustment: User's minimum progress streak is ${minProgressStreak} days (elevated from default 14 due to recent coaching history). Offer more gradual milestones and normalise slower pacing.`
       : '';
 
+  const lifeStageSection =
+    dataAccess.lifeStage && lifeStageContext?.ageBand
+      ? `\n\nLife-stage context: User opted in to life-stage coaching. Use broad age range only (${lifeStageContext.ageBand}); do not mention exact birthday or exact age unless the user asks.`
+      : dataAccess.lifeStage && lifeStageContext?.birthdayProvided
+        ? '\n\nLife-stage context: User opted in, but only birthday/date quality is available. Do not infer exact age.'
+        : '';
+
   return {
-    systemPrompt: `${instructions}\n\nData access\n${accessSummary}${habitEnvSection}${goalsSummarySection}${difficultySection}`,
+    systemPrompt: `${instructions}\n\nData access\n${accessSummary}${habitEnvSection}${goalsSummarySection}${difficultySection}${lifeStageSection}`,
     source: resolved.text ? resolved.source : 'default',
     demoMode,
     dataAccess,
