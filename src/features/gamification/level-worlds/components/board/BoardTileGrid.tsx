@@ -63,6 +63,7 @@ export function BoardTileGrid(props: BoardTileGridProps) {
             position={position}
             isStop={isStop}
             tileType={tileType}
+            doorStopId={tileMap[index]?.doorStopId}
             isEncounter={isEncounter}
             isEncounterCompleted={isEncounterCompleted}
             isTokenCurrent={index === tokenIndex}

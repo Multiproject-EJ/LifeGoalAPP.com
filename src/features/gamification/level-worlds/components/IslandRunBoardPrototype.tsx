@@ -38,7 +38,7 @@ import {
 import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
 import { getIslandArtAmbientBackgroundSrc, loadIslandArtManifest, type IslandArtManifest } from '../services/islandArtManifest';
 import { getIslandDisplayName } from '../services/islandNames';
-import { generateTileMap, getIslandRarity, type IslandTileMapEntry } from '../services/islandBoardTileMap';
+import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity, type IslandLandmarkDoorStopId, type IslandTileMapEntry } from '../services/islandBoardTileMap';
 import { resolveIslandBoardProfile } from '../services/islandBoardProfiles';
 // resolveWrappedTokenIndex retired from this component: the roll action service
 // is the single authoritative source of truth for token movement and hop order.
@@ -1258,6 +1258,7 @@ const TILE_TYPE_ICONS: Record<string, string> = {
   chest: '🎁',
   hazard: '☠️',
   micro: '✨',
+  landmark_door: '🚪',
 };
 
 const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
@@ -1266,6 +1267,7 @@ const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
   hazard: '#ff8f8f',
   micro: '#9dffbe',
   encounter: '#ffa765',
+  landmark_door: '#f4c7ff',
 };
 
 interface IslandRunBoardPrototypeProps {
@@ -1463,6 +1465,7 @@ export function IslandRunBoardPrototype({
   }, []);
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
+  const [requiredDoorStopId, setRequiredDoorStopId] = useState<IslandLandmarkDoorStopId | null>(null);
   const [islandNumber, setIslandNumber] = useState(1);
   // PR7: brief "level-up flash" class driver. Flips true when `islandNumber`
   // advances to a higher value (ignoring cycle wrap 120→1) and auto-resets
@@ -3845,6 +3848,12 @@ export function IslandRunBoardPrototype({
     });
   }, [islandNumber, mergedStopStatesByIndex, resolveCanonicalContractV2Stops, runtimeState.stopTicketsPaidByIsland]);
 
+  const allLandmarkDoorsRouteToBoss = contractV2Stops?.statusesByIndex[4] === 'active';
+  const landmarkDoorTileMap = useMemo(
+    () => applyLandmarkDoorTiles(tileMap, { allDoorsRouteToBoss: allLandmarkDoorsRouteToBoss }),
+    [allLandmarkDoorsRouteToBoss, tileMap],
+  );
+
   const stopStateMap = useMemo(() => {
     if (ISLAND_RUN_CONTRACT_V2_ENABLED && contractV2Stops) {
       const map = new Map<string, StopProgressState>();
@@ -3976,6 +3985,65 @@ export function IslandRunBoardPrototype({
     setFocusedStopId(stopId);
     setCameraMode('stop_focus');
   }, [requestActiveStopTransition]);
+
+  const handleLandmarkDoorLanding = useCallback((doorStopId: IslandLandmarkDoorStopId, tileIndex: number) => {
+    const stopIndex = stopIndexByStopId.get(doorStopId);
+    const stopStatus =
+      typeof stopIndex === 'number' && contractV2Stops
+        ? contractV2Stops.statusesByIndex[stopIndex]
+        : null;
+    const needsTicket = doesStopRequireTicketPayment(doorStopId);
+    const tapOutcome = resolveIslandRunStopTapOutcome({
+      stopStatus,
+      requiresTicket: needsTicket,
+    });
+
+    logIslandRunEntryDebug('island_landmark_door_landing', {
+      doorStopId,
+      tileIndex,
+      stopIndex: typeof stopIndex === 'number' ? stopIndex : null,
+      stopStatus: stopStatus ?? null,
+      needsTicket,
+      tapOutcome,
+      allDoorsRouteToBoss: allLandmarkDoorsRouteToBoss,
+    });
+
+    if (tapOutcome === 'open' && stopStatus === 'active') {
+      setRequiredDoorStopId(doorStopId);
+      setLandingText(`🚪 Landmark door opened ${doorStopId.toUpperCase()}. Complete it before rolling again.`);
+    } else {
+      setRequiredDoorStopId(null);
+      if (tapOutcome === 'locked') {
+        setLandingText('🚪 Landmark door is busy. Complete the previous landmark first, then come back.');
+      } else if (tapOutcome === 'ticket_required') {
+        setLandingText('🚪 Landmark door is ready but needs its essence ticket first.');
+      } else {
+        setLandingText(`🚪 Landmark door opened ${doorStopId.toUpperCase()}.`);
+      }
+    }
+
+    setLockedStopInfoStopId(null);
+    setTicketPromptStopId(null);
+    requestActiveStopTransition(doorStopId, 'landmark_door_landing');
+    setIsTopbarMenuPrimed(false);
+    setFocusedStopId(doorStopId);
+    setCameraMode('stop_focus');
+  }, [allLandmarkDoorsRouteToBoss, contractV2Stops, doesStopRequireTicketPayment, requestActiveStopTransition, stopIndexByStopId]);
+
+  const requiredDoorStopIndex = requiredDoorStopId ? stopIndexByStopId.get(requiredDoorStopId) : undefined;
+  const isDoorLandmarkCompletionRequired = requiredDoorStopId !== null
+    && typeof requiredDoorStopIndex === 'number'
+    && contractV2Stops?.statusesByIndex[requiredDoorStopIndex] === 'active';
+
+  useEffect(() => {
+    if (!requiredDoorStopId) return;
+    if (isDoorLandmarkCompletionRequired) return;
+    setRequiredDoorStopId(null);
+  }, [isDoorLandmarkCompletionRequired, requiredDoorStopId]);
+
+  useEffect(() => {
+    setRequiredDoorStopId(null);
+  }, [islandNumber]);
 
   const dismissLandmarkCoachmark = useCallback(() => {
     setShowLandmarkCoachmark(false);
@@ -4563,33 +4631,41 @@ export function IslandRunBoardPrototype({
     dicePool,
     dicePerRoll: effectiveDiceCost,
   });
-  const rollButtonLabel = rollButtonMode === 'rolling'
-    ? 'Rolling...'
-    : rollButtonMode === 'roll'
-      ? `Roll (${effectiveDiceCost} dice)`
-      : `Need ${effectiveDiceCost} dice to roll`;
-  const compactRollButtonLabel = rollButtonMode === 'rolling'
-    ? 'Rolling...'
-    : rollButtonMode === 'roll'
-      ? 'Roll'
-      : 'Need dice';
+  const rollButtonLabel = isDoorLandmarkCompletionRequired
+    ? 'Complete landmark first'
+    : rollButtonMode === 'rolling'
+      ? 'Rolling...'
+      : rollButtonMode === 'roll'
+        ? `Roll (${effectiveDiceCost} dice)`
+        : `Need ${effectiveDiceCost} dice to roll`;
+  const compactRollButtonLabel = isDoorLandmarkCompletionRequired
+    ? 'Landmark first'
+    : rollButtonMode === 'rolling'
+      ? 'Rolling...'
+      : rollButtonMode === 'roll'
+        ? 'Roll'
+        : 'Need dice';
   const rollBlockedReason = isOnboardingCelebrationVisible
     ? 'onboarding_celebration'
     : isRolling
       ? 'already_rolling'
       : showTravelOverlay
         ? 'travel_overlay'
-        : isEnergyDepletedForRoll
-          ? 'insufficient_dice'
-          : null;
+        : isDoorLandmarkCompletionRequired
+          ? 'landmark_required'
+          : isEnergyDepletedForRoll
+            ? 'insufficient_dice'
+            : null;
   const rollDisabledReason = isOnboardingCelebrationVisible
     ? 'onboarding_celebration'
     : isRolling
       ? 'already_rolling'
       : showTravelOverlay
         ? 'travel_overlay'
-        : null;
-  const canRoll = !isOnboardingCelebrationVisible && !isRolling && !showTravelOverlay && dicePool >= effectiveDiceCost;
+        : isDoorLandmarkCompletionRequired
+          ? 'landmark_required'
+          : null;
+  const canRoll = !isOnboardingCelebrationVisible && !isRolling && !showTravelOverlay && !isDoorLandmarkCompletionRequired && dicePool >= effectiveDiceCost;
   const canHoldForAutoRoll = canRoll && !isIslandTimerPendingStart;
   const rollButtonInteractionClass = isAutoRolling
     ? 'island-run-prototype__roll-btn--auto-active'
@@ -4606,6 +4682,8 @@ export function IslandRunBoardPrototype({
         return 'A roll is already in progress — please wait.';
       case 'travel_overlay':
         return 'Island travel is in progress — please wait.';
+      case 'landmark_required':
+        return 'Complete the opened landmark before rolling again.';
       default:
         return isEnergyDepletedForRoll
           ? `Not enough dice to roll. You need ${effectiveDiceCost} dice per roll.`
@@ -4708,7 +4786,7 @@ export function IslandRunBoardPrototype({
     if (!isSpark40BoardProfile || !activeTileAnchors.length) return '';
     const segmentSize = 360 / activeTileAnchors.length;
     const segments = Array.from({ length: activeTileAnchors.length }, (_, index) => {
-        const tileType = tileMap[index]?.tileType ?? 'micro';
+        const tileType = landmarkDoorTileMap[index]?.tileType ?? 'micro';
         const start = (index * segmentSize).toFixed(3);
         const end = ((index + 1) * segmentSize).toFixed(3);
         const color = SPARK60_TILE_COLOR[tileType] ?? '#f0dfad';
@@ -4716,7 +4794,7 @@ export function IslandRunBoardPrototype({
       })
       .join(', ');
     return `conic-gradient(from -90deg, ${segments})`;
-  }, [activeTileAnchors.length, isSpark40BoardProfile, tileMap]);
+  }, [activeTileAnchors.length, isSpark40BoardProfile, landmarkDoorTileMap]);
   const shouldPromptDicePurchase = dicePool < effectiveDiceCost;
   const wasDicePurchasePromptEligibleRef = useRef(false);
 
@@ -5035,6 +5113,25 @@ export function IslandRunBoardPrototype({
 
     // M11C: Step 1 enforcement removed — rolling is always free when dice are available.
 
+    if (isDoorLandmarkCompletionRequired) {
+      if (requiredDoorStopId) {
+        requestActiveStopTransition(requiredDoorStopId, 'roll_blocked_reopen_required_landmark');
+        setFocusedStopId(requiredDoorStopId);
+        setCameraMode('stop_focus');
+      }
+      setLandingText('Complete the opened landmark before rolling again.');
+      if (isIsland120StartupDiagnosticActive) {
+        logIslandRunEntryDebug('island120_roll_interaction', {
+          userId: session.user.id,
+          action: 'blocked',
+          blockReason: 'landmark_required',
+          requiredDoorStopId,
+          ...rollDecisionFlags,
+        });
+      }
+      return false;
+    }
+
     if (isRolling) {
       if (isIsland120StartupDiagnosticActive) {
         logIslandRunEntryDebug('island120_roll_interaction', {
@@ -5271,7 +5368,12 @@ export function IslandRunBoardPrototype({
     // Stops are side-quest structures — the player piece never lands on a stop.
     // Encounter tiles open their challenge modal; every other tile funnels through
     // resolveTileLanding for essence / feed / hazard outcomes.
-        if (tileMap[currentIndex]?.tileType === 'encounter') {
+        const landedTile = landmarkDoorTileMap[currentIndex];
+        if (landedTile?.tileType === 'landmark_door' && landedTile.doorStopId) {
+          setShowEncounterModal(false);
+          setEncounterResolved(false);
+          handleLandmarkDoorLanding(landedTile.doorStopId, currentIndex);
+        } else if (landedTile?.tileType === 'encounter') {
           // M6-COMPLETE: check if this encounter tile was already completed this visit
           if (completedEncounterIndices.has(currentIndex)) {
             setLandingText(`Encounter tile (#${currentIndex}) — already completed this visit. ✅`);
@@ -5281,7 +5383,7 @@ export function IslandRunBoardPrototype({
             openEncounterChallenge(challenge, currentIndex);
           }
         } else {
-          resolveTileLanding(tileMap[currentIndex]?.tileType ?? 'micro', currentIndex);
+          resolveTileLanding(landedTile?.tileType ?? 'micro', currentIndex);
           setShowEncounterModal(false);
           setEncounterResolved(false);
         }
@@ -9459,7 +9561,7 @@ export function IslandRunBoardPrototype({
           isMinimalBoardArt={isMinimalBoardArt}
           boardTiltXDeg={boardTiltXDeg}
           boardRotateZDeg={boardRotateZDeg}
-          tileMap={tileMap}
+          tileMap={landmarkDoorTileMap}
           stopMap={stopMap}
           completedEncounterIndices={completedEncounterIndices}
           tokenIndex={tokenIndex}
@@ -9850,6 +9952,12 @@ export function IslandRunBoardPrototype({
             </div>
             {activeStopId !== 'hatchery' ? <p>{activeStop.description}</p> : null}
             {activeStopId !== 'hatchery' ? <p><strong>Status:</strong> {openedStopState}</p> : null}
+            {activeStopId === requiredDoorStopId && isDoorLandmarkCompletionRequired ? (
+              <p className="island-stop-modal__locked-notice" role="status">
+                <span aria-hidden="true">🚪</span>{' '}
+                Door entered — complete this landmark before rolling again.
+              </p>
+            ) : null}
             {activeStopId !== 'hatchery' && (openedStopIsLocked || openedStopNeedsTicket) ? (
               <p className="island-stop-modal__locked-notice" role="status">
                 <span aria-hidden="true">🔒</span>{' '}
