@@ -296,3 +296,63 @@ Missing/incomplete reduced-motion coverage:
 
 - `npm run test:daily-treats-routing`
 - `npm run build`
+
+---
+
+## Implementation completion addendum (2026-06-02)
+
+Status: **implementation slices complete; final work is QA/regression hardening only.**
+
+The four recommended implementation slices above have been completed in follow-up PRs:
+
+1. **Slice 1 — Bonus unwrap responsiveness only**
+   - `CountdownCalendarModal` passes a bonus-scoped unwrap prop only when `doorType === 'bonus'`.
+   - `CalendarDoorUnwrap` keeps the normal unwrap delay at 800 ms, uses a bonus-only 420 ms visual delay, and uses a near-immediate reduced-motion delay.
+   - Bonus unwrap sound/haptic feedback is scoped to bonus doors only.
+
+2. **Slice 2 — Bonus gift visual polish**
+   - Bonus gift polish is scoped under `.door-unwrap--bonus`.
+   - Added bonus-specific glow, sparkles, ribbon-open motion, and reward-pop styling.
+   - Holiday envelope/free unwrap visuals remain on the shared/default unwrap path.
+
+3. **Slice 3 — Reduced-motion completion**
+   - Unwrap JavaScript timing now respects reduced motion.
+   - Reduced-motion CSS disables unwrap shake/fade, unwrap reveal, bonus gift animations, scratch diamond flash, scratch confetti, and opening-shell shimmer.
+   - Scratch confetti and diamond flash are suppressed in JavaScript when reduced motion is requested.
+
+4. **Slice 4 — Loading-state clarity without changing persistence**
+   - `CountdownCalendarModal` now renders an accessible opening shell while `openTodayHatch(...)` resolves.
+   - Final reveal components are gated behind authoritative backend/local-service reward data.
+   - The opening shell does not show reward amount/currency and does not add a second claim or persistence step.
+
+Additional regression guardrail added:
+
+- `scripts/check-daily-treats-reveal-guards.mjs` validates the core invariants from these slices:
+  - opening shell appears before awaiting `openTodayHatch(...)`,
+  - final reveal waits for authoritative reward data,
+  - final reveal mechanics are gated by `!isOpening`,
+  - bonus unwrap treatment remains bonus-scoped,
+  - reduced-motion helpers and CSS coverage remain present,
+  - scratch confetti timing/cleanup and diamond-flash reduced-motion gating remain present.
+- `package.json` exposes this as `npm run test:daily-treats-reveal-guards`.
+
+### What remains
+
+No additional reward/reveal implementation is planned from this investigation. The remaining work should be treated as release readiness:
+
+1. Run the automated checks:
+   - `npm run test:daily-treats-reveal-guards`
+   - `npm run test:daily-treats-routing`
+   - `npm run build`
+2. Manual QA the Daily Treat matrix:
+   - Personal Quest free door,
+   - same-day bonus door,
+   - final-day scratch door,
+   - holiday/free unwrap paths,
+   - reduced-motion mode,
+   - audio/haptic disabled mode.
+3. If QA finds no regressions, this feature can be considered complete.
+
+### Still intentionally untouched
+
+The implementation did **not** change reward amounts, reward tiers, `openTodayHatch(...)`, reward helpers, claim/persistence flow, telemetry/economy labels, schema, Supabase functions, or Island Run economy wiring.
