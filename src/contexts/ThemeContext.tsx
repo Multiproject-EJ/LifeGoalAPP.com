@@ -263,7 +263,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     id: 'sproutling-grove',
     name: 'Sproutling Grove',
     icon: '🌱',
-    description: 'A premium creature theme inspired by Sproutling',
+    description: 'A one-time real-money creature theme inspired by Sproutling',
     metaColor: '#dcfce7',
     category: 'light',
     unlockRule: {
@@ -282,7 +282,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     id: 'ember-glow',
     name: 'Ember Glow',
     icon: '🔥',
-    description: 'A premium creature theme inspired by Ember Sprout',
+    description: 'A one-time real-money creature theme inspired by Ember Sprout',
     metaColor: '#fb923c',
     category: 'light',
     unlockRule: {
@@ -301,7 +301,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     id: 'aurora-sky',
     name: 'Aurora Sky',
     icon: '🪽',
-    description: 'A premium creature theme inspired by Aurora Finch',
+    description: 'A one-time real-money creature theme inspired by Aurora Finch',
     metaColor: '#bae6fd',
     category: 'light',
     unlockRule: {
@@ -369,7 +369,7 @@ export const DARK_THEMES: ThemeMetadata[] = [
     id: 'nebula-drift',
     name: 'Nebula Drift',
     icon: '🪐',
-    description: 'A premium creature theme inspired by Nebula Wisp',
+    description: 'A one-time real-money creature theme inspired by Nebula Wisp',
     metaColor: '#581c87',
     category: 'dark',
     unlockRule: {
@@ -388,7 +388,7 @@ export const DARK_THEMES: ThemeMetadata[] = [
     id: 'starhorn-celestial',
     name: 'Starhorn Celestial',
     icon: '🦄',
-    description: 'A premium mythic theme inspired by Starhorn Seraph',
+    description: 'A one-time real-money mythic theme inspired by Starhorn Seraph',
     metaColor: '#312e81',
     category: 'dark',
     unlockRule: {
@@ -457,7 +457,7 @@ export function resolveThemeAccess(
         return {
           status: 'locked',
           selectable: false,
-          lockedReason: `Hatch ${unlockRule.creatureName} to unlock this premium theme offer.`,
+          lockedReason: `Hatch ${unlockRule.creatureName} to unlock this one-time Stripe theme offer.`,
           ctaLabel: 'Open Sanctuary',
           ctaTarget: 'creature_sanctuary',
         };
@@ -466,7 +466,7 @@ export function resolveThemeAccess(
         return {
           status: 'locked',
           selectable: false,
-          lockedReason: `Reach Bond Lv. ${unlockRule.requiredBondLevel} with ${unlockRule.creatureName} to unlock this premium theme offer.`,
+          lockedReason: `Reach Bond Lv. ${unlockRule.requiredBondLevel} with ${unlockRule.creatureName} to unlock this one-time Stripe theme offer.`,
           ctaLabel: 'Open Sanctuary',
           ctaTarget: 'creature_sanctuary',
         };
@@ -479,7 +479,7 @@ export function resolveThemeAccess(
           displayPrice: unlockRule.pairedPriceUsd,
           compareAtPrice: unlockRule.basePriceUsd,
           discountLabel: 'Perfect Pair offer',
-          lockedReason: `Perfect Pair offer: buy for ${unlockRule.pairedPriceUsd}.`,
+          lockedReason: `Perfect Pair one-time price: ${unlockRule.pairedPriceUsd}.`,
           ctaLabel: 'Buy in Sanctuary',
           ctaTarget: 'creature_sanctuary',
         };
@@ -489,7 +489,7 @@ export function resolveThemeAccess(
         selectable: false,
         checkoutSkuId: unlockRule.skuId,
         displayPrice: unlockRule.basePriceUsd,
-        lockedReason: `Available in the Creature Sanctuary for ${unlockRule.basePriceUsd}.`,
+        lockedReason: `One-time Stripe purchase in the Creature Sanctuary: ${unlockRule.basePriceUsd}.`,
         ctaLabel: 'Buy in Sanctuary',
         ctaTarget: 'creature_sanctuary',
       };
