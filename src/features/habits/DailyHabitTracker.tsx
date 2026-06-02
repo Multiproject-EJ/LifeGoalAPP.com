@@ -205,6 +205,11 @@ function getPublicCompactViewStorageKey(userId: string): string {
   return `${PUBLIC_COMPACT_VIEW_STORAGE_KEY_PREFIX}:${userId}`;
 }
 
+function getStoredPublicCompactView(userId: string): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem(getPublicCompactViewStorageKey(userId)) === '1';
+}
+
 function isHabitSfxEnabled(): boolean {
   if (typeof window === 'undefined') {
     return false;
@@ -1157,8 +1162,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   } | null>(null);
   const swipeSuppressClickUntilByTodoIdRef = useRef<Record<string, number>>({});
   const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
-  const [isCompactView, setIsCompactView] = useState(preferredCompactView ?? forceCompactView);
-  const [isPublicCompactView, setIsPublicCompactView] = useState(false);
+  const [isCompactView, setIsCompactView] = useState(() =>
+    Boolean(preferredCompactView ?? forceCompactView) || getStoredPublicCompactView(session.user.id),
+  );
+  const [isPublicCompactView, setIsPublicCompactView] = useState(() => getStoredPublicCompactView(session.user.id));
   const [compactPullDistance, setCompactPullDistance] = useState(0);
   const [showCompactRefreshSuccess, setShowCompactRefreshSuccess] = useState(false);
   const compactPullDistanceRef = useRef(0);
@@ -1201,6 +1208,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   }, [refreshQuestHabitState]);
 
   useEffect(() => {
+    const storedPublicView = getStoredPublicCompactView(session.user.id);
+    setIsPublicCompactView(storedPublicView);
+
+    if (storedPublicView) {
+      setIsCompactView(true);
+      return;
+    }
+
     if (typeof preferredCompactView === 'boolean') {
       setIsCompactView(preferredCompactView);
       return;
@@ -1208,12 +1223,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     if (forceCompactView) {
       setIsCompactView(true);
     }
-  }, [forceCompactView, preferredCompactView]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    setIsPublicCompactView(window.localStorage.getItem(getPublicCompactViewStorageKey(session.user.id)) === '1');
-  }, [session.user.id]);
+  }, [forceCompactView, preferredCompactView, session.user.id]);
 
   const isPublicView = isCompactView && isPublicCompactView;
   const [isCompactToggleLabelVisible, setIsCompactToggleLabelVisible] = useState(false);
