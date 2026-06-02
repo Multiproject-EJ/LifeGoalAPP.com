@@ -43,7 +43,11 @@ import {
 } from '../../services/journal';
 import { fetchCompletedActionsForDate } from '../../services/actions';
 import { createTodayTodo, fetchTodayTodos, updateTodayTodo, type TodayTodo } from '../../services/todayTodos';
-import { updateSpinsAvailable } from '../../services/dailySpin';
+import {
+  claimDailySpinHabitBonusOncePerDay,
+  hasClaimedDailySpinHabitBonus,
+  updateSpinsAvailable,
+} from '../../services/dailySpin';
 import { useDailySpinStatus } from '../../hooks/useDailySpinStatus';
 import { isIslandRunFeatureEnabled } from '../../config/islandRunFeatureFlags';
 import { fetchGoals, insertGoal } from '../../services/goals';
@@ -166,6 +170,7 @@ import {
   getQuestHabit,
   setQuestHabit,
   clearQuestHabit,
+  refreshQuestHabit,
   type QuestHabit,
 } from '../../services/questHabit';
 import { LifeBuildTodayCard } from './LifeBuildTodayCard';
@@ -1040,14 +1045,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const grantDailySpinHabitBonusOncePerDay = useCallback(async () => {
     if (!session?.user?.id) return;
     const todayKey = formatISODate(new Date());
-    const claimKey = `lifegoal:daily-spin-habit-bonus:${session.user.id}:${todayKey}`;
-    if (typeof window !== 'undefined' && window.localStorage.getItem(claimKey)) {
-      setIsDailySpinBonusClaimedToday(true);
+    const { error } = await claimDailySpinHabitBonusOncePerDay(session.user.id, todayKey);
+    if (error) {
+      console.error('Failed to claim daily spin habit bonus:', error);
       return;
-    }
-    await updateSpinsAvailable(session.user.id, 1);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(claimKey, '1');
     }
     setIsDailySpinBonusClaimedToday(true);
     await refreshDailySpinStatus();
@@ -1058,10 +1059,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       return;
     }
     const todayKey = formatISODate(new Date());
-    const claimKey = `lifegoal:daily-spin-habit-bonus:${session.user.id}:${todayKey}`;
-    setIsDailySpinBonusClaimedToday(
-      typeof window !== 'undefined' && window.localStorage.getItem(claimKey) === '1',
-    );
+    let isMounted = true;
+    void hasClaimedDailySpinHabitBonus(session.user.id, todayKey).then((claimed) => {
+      if (isMounted) setIsDailySpinBonusClaimedToday(claimed);
+    });
+    return () => {
+      isMounted = false;
+    };
   }, [session?.user?.id, today]);
   const [monthDays, setMonthDays] = useState<string[]>([]);
   const [habitInsights, setHabitInsights] = useState<Record<string, HabitInsights>>({});
@@ -1167,14 +1171,28 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   );
 
   const handleSetQuestHabit = useCallback((habit: QuestHabit) => {
-    setQuestHabit(session.user.id, habit);
     setQuestHabitState(habit);
+    void setQuestHabit(session.user.id, habit).then((syncedHabit) => {
+      setQuestHabitState(syncedHabit);
+    });
   }, [session.user.id]);
 
   const handleClearQuestHabit = useCallback(() => {
-    clearQuestHabit(session.user.id);
     setQuestHabitState(null);
+    void clearQuestHabit(session.user.id).then(() => {
+      setQuestHabitState(getQuestHabit(session.user.id));
+    });
   }, [session.user.id]);
+
+  const refreshQuestHabitState = useCallback(async () => {
+    const syncedHabit = await refreshQuestHabit(session.user.id);
+    setQuestHabitState(syncedHabit);
+    return syncedHabit;
+  }, [session.user.id]);
+
+  useEffect(() => {
+    void refreshQuestHabitState();
+  }, [refreshQuestHabitState]);
 
   useEffect(() => {
     if (typeof preferredCompactView === 'boolean') {
@@ -4367,7 +4385,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         await autoResumeDueHabits(session.user.id);
       }
 
-      const { data: habitData, error: habitError } = await fetchHabitsForUser(session.user.id);
+      const [questHabitResult, habitsResult] = await Promise.all([
+        refreshQuestHabit(session.user.id),
+        fetchHabitsForUser(session.user.id),
+      ]);
+      setQuestHabitState(questHabitResult);
+      const { data: habitData, error: habitError } = habitsResult;
       if (habitError) throw habitError;
 
       const nextHabits = habitData ?? [];

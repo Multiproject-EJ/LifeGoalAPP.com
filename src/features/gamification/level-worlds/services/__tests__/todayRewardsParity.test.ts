@@ -41,23 +41,22 @@ export const todayRewardsParityTests: TestCase[] = [
     },
   },
   {
-    name: 'habit bonus spin in Today surfaces is once-per-day via local marker',
+    name: 'habit bonus spin in Today surfaces uses server idempotency helper',
     run: async () => {
       const dailyTracker = await readSource('src/features/habits/DailyHabitTracker.tsx');
       const unifiedToday = await readSource('src/features/habits/UnifiedTodayView.tsx');
       assert(
-        dailyTracker.includes('lifegoal:daily-spin-habit-bonus:')
-          && dailyTracker.includes('await updateSpinsAvailable(session.user.id, 1);'),
-        'DailyHabitTracker should gate habit bonus spins by a once-per-day marker.',
+        dailyTracker.includes('claimDailySpinHabitBonusOncePerDay')
+          && dailyTracker.includes('hasClaimedDailySpinHabitBonus'),
+        'DailyHabitTracker should gate habit bonus spins through the server idempotency helper.',
       );
       assert(
         dailyTracker.includes('await refreshDailySpinStatus();'),
         'DailyHabitTracker should refresh daily-spin status after bonus grant so UI alerts return immediately.',
       );
       assert(
-        unifiedToday.includes('lifegoal:daily-spin-habit-bonus:')
-          && unifiedToday.includes('await updateSpinsAvailable(session.user.id, 1);'),
-        'UnifiedTodayView should gate habit bonus spins by the same once-per-day marker.',
+        unifiedToday.includes('claimDailySpinHabitBonusOncePerDay'),
+        'UnifiedTodayView should gate habit bonus spins through the same server idempotency helper.',
       );
     },
   },

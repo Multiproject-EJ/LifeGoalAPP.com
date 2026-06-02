@@ -24,7 +24,7 @@ import {
   type HabitLogV2Row,
 } from '../../services/habitsV2';
 import { isHabitScheduledToday, parseSchedule, getTimesPerWeekProgress } from './scheduleInterpreter';
-import { updateSpinsAvailable } from '../../services/dailySpin';
+import { claimDailySpinHabitBonusOncePerDay } from '../../services/dailySpin';
 import { autoResumeDueHabits } from '../../services/habitLifecycleAutoResume';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
@@ -192,13 +192,9 @@ export function UnifiedTodayView({
 
       if (completedCount > 0) {
         const todayKey = new Date().toISOString().split('T')[0];
-        const claimKey = `lifegoal:daily-spin-habit-bonus:${session.user.id}:${todayKey}`;
-        const alreadyAwarded = typeof window !== 'undefined' && window.localStorage.getItem(claimKey) === '1';
-        if (!alreadyAwarded) {
-          await updateSpinsAvailable(session.user.id, 1);
-          if (typeof window !== 'undefined') {
-            window.localStorage.setItem(claimKey, '1');
-          }
+        const { error } = await claimDailySpinHabitBonusOncePerDay(session.user.id, todayKey);
+        if (error) {
+          throw error;
         }
       }
     } catch (err) {
