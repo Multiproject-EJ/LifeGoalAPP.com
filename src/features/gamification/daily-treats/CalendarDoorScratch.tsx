@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
+import { prefersReducedMotion } from './motionPreferences';
 import { RewardCard } from './RewardCard';
 import type { RewardTier, RewardCurrency, HolidayKey } from '../../../services/treatCalendarService';
 
@@ -20,12 +21,6 @@ const SCRATCH_ACTIONS_TO_REVEAL = 18;
 /** Radius in pixels of the scratch brush */
 const SCRATCH_BRUSH_RADIUS_PX = 18;
 const SCRATCH_CONFETTI_DURATION_MS = 2000;
-
-const prefersReducedMotion = () => (
-  typeof window !== 'undefined'
-  && typeof window.matchMedia === 'function'
-  && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-);
 
 /** Get holiday-themed gradient colors for scratch layer */
 function getHolidayGradient(holidayKey: HolidayKey | null): [string, string, string] {

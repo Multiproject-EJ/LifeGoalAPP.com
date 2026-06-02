@@ -7,11 +7,13 @@ const repoRoot = resolve(__dirname, '..');
 const modalPath = resolve(repoRoot, 'src/features/gamification/daily-treats/CountdownCalendarModal.tsx');
 const unwrapPath = resolve(repoRoot, 'src/features/gamification/daily-treats/CalendarDoorUnwrap.tsx');
 const scratchPath = resolve(repoRoot, 'src/features/gamification/daily-treats/CalendarDoorScratch.tsx');
+const motionPreferencesPath = resolve(repoRoot, 'src/features/gamification/daily-treats/motionPreferences.ts');
 const stylesPath = resolve(repoRoot, 'src/index.css');
 
 const modal = readFileSync(modalPath, 'utf8');
 const unwrap = readFileSync(unwrapPath, 'utf8');
 const scratch = readFileSync(scratchPath, 'utf8');
+const motionPreferences = readFileSync(motionPreferencesPath, 'utf8');
 const styles = readFileSync(stylesPath, 'utf8');
 
 function assert(condition, message) {
@@ -33,6 +35,22 @@ function indexAfter(source, needle, fromIndex = 0) {
   assert(index !== -1, `Missing expected text: ${needle}`);
   return index;
 }
+
+assert(
+  motionPreferences.includes("export const REDUCED_MOTION_MEDIA_QUERY = '(prefers-reduced-motion: reduce)';")
+    && motionPreferences.includes('export const prefersReducedMotion = (): boolean'),
+  'Daily Treat reveal components must share the reduced-motion helper.',
+);
+assert(
+  unwrap.includes("import { prefersReducedMotion } from './motionPreferences';")
+    && scratch.includes("import { prefersReducedMotion } from './motionPreferences';"),
+  'CalendarDoorUnwrap and CalendarDoorScratch must import the shared reduced-motion helper.',
+);
+assert(
+  !unwrap.includes("matchMedia('(prefers-reduced-motion: reduce)')")
+    && !scratch.includes("matchMedia('(prefers-reduced-motion: reduce)')"),
+  'Daily Treat reveal components must not duplicate inline reduced-motion matchMedia checks.',
+);
 
 const revealStateType = sectionBetween(modal, 'type RevealState = {', '};');
 assert(
