@@ -1888,7 +1888,8 @@
 }
 
 .island-run-board__topbar-menu--primed,
-.island-run-board__topbar-menu--open {
+.island-run-board__topbar-menu--open,
+.island-run-board__topbar-audio-toggle--open {
   border-color: rgba(147, 247, 255, 0.82);
   box-shadow:
     0 0 0 2px rgba(147, 247, 255, 0.55),
@@ -1914,6 +1915,13 @@
 .island-run-board__topbar-audio-toggle:focus-visible {
   outline: 2px solid rgba(147, 247, 255, 0.82);
   outline-offset: 2px;
+}
+
+.island-run-board__topbar-exit {
+  border-color: rgba(215, 122, 105, 0.82);
+  background: linear-gradient(180deg, #fff3ed 0%, #ffd6ca 100%);
+  color: #7f251c;
+  font-weight: 900;
 }
 
 .island-run-board__topbar-avatar-img {
@@ -2665,7 +2673,8 @@
   transform: scale(0.95);
 }
 
-.island-run-board__topbar-menu-panel {
+.island-run-board__topbar-menu-panel,
+.island-run-board__audio-menu-panel {
   position: absolute;
   right: 12px;
   top: 50px;
@@ -2679,6 +2688,19 @@
   display: grid;
   gap: 6px;
 }
+
+.island-run-board__audio-menu-panel {
+  right: 44px;
+  min-width: 132px;
+}
+
+.island-run-board__audio-menu-panel .island-run-board__topbar-menu-item {
+  display: grid;
+  grid-template-columns: 1rem 1fr auto;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 
 .island-run-board__topbar-menu-item {
   width: 100%;
@@ -2966,9 +2988,9 @@
 .island-run-landmark-coachmark {
   position: absolute;
   left: 50%;
-  bottom: 86px;
+  bottom: clamp(210px, 24vh, 285px);
   transform: translateX(-50%);
-  z-index: 8;
+  z-index: 24;
   max-width: min(92%, 420px);
   display: flex;
   align-items: center;
