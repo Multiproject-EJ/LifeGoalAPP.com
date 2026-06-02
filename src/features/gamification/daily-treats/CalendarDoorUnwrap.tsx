@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { playIslandRunSound, triggerIslandRunHaptic } from '../level-worlds/services/islandRunAudio';
+import { prefersReducedMotion } from './motionPreferences';
 import { RewardCard } from './RewardCard';
 import type { RewardTier, RewardCurrency, HolidayKey } from '../../../services/treatCalendarService';
 
@@ -15,7 +17,13 @@ type CalendarDoorUnwrapProps = {
   diceLabel?: string;
   /** Visual variant: 'gift' for wrapped present, 'envelope' for sealed envelope */
   variant?: 'gift' | 'envelope';
+  /** Bonus Daily Treat visual/tempo treatment; reward and persistence are unchanged. */
+  isBonusDoor?: boolean;
 };
+
+const DEFAULT_UNWRAP_REVEAL_DELAY_MS = 800;
+const BONUS_UNWRAP_REVEAL_DELAY_MS = 420;
+const REDUCED_MOTION_UNWRAP_REVEAL_DELAY_MS = 50;
 
 /**
  * Unwrap reveal mechanic — CSS gift/envelope unwrap animation.
@@ -33,22 +41,45 @@ export const CalendarDoorUnwrap = ({
   isPersonalQuest = false,
   diceLabel,
   variant = 'gift',
+  isBonusDoor = false,
 }: CalendarDoorUnwrapProps) => {
   const [isUnwrapping, setIsUnwrapping] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const revealTimerRef = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (revealTimerRef.current !== null) {
+      window.clearTimeout(revealTimerRef.current);
+    }
+  }, []);
 
   const handleUnwrap = () => {
     if (hasStarted) return;
     setHasStarted(true);
     setIsUnwrapping(true);
+    if (isBonusDoor) {
+      playIslandRunSound('egg_open');
+      triggerIslandRunHaptic('egg_open');
+    }
 
-    // Start unwrap animation, then reveal
-    setTimeout(() => {
+    const revealDelayMs = prefersReducedMotion()
+      ? REDUCED_MOTION_UNWRAP_REVEAL_DELAY_MS
+      : isBonusDoor
+        ? BONUS_UNWRAP_REVEAL_DELAY_MS
+        : DEFAULT_UNWRAP_REVEAL_DELAY_MS;
+
+    // Start unwrap animation, then reveal. Bonus doors use a shorter visual-only
+    // delay; reward calculation and persistence have already happened upstream.
+    revealTimerRef.current = window.setTimeout(() => {
       setIsUnwrapping(false);
       setIsRevealed(true);
+      if (isBonusDoor) {
+        playIslandRunSound('reward_bar_claim_burst');
+        triggerIslandRunHaptic('reward_claim');
+      }
       onRevealComplete?.();
-    }, 800);
+    }, revealDelayMs);
   };
 
   const wrapperIcon = variant === 'envelope' ? '💌' : '🎁';
@@ -56,7 +87,7 @@ export const CalendarDoorUnwrap = ({
 
   return (
     <div
-      className={`door-unwrap door-unwrap--${variant} ${isUnwrapping ? 'door-unwrap--unwrapping' : ''} ${isRevealed ? 'door-unwrap--revealed' : ''}`}
+      className={`door-unwrap door-unwrap--${variant} ${isBonusDoor ? 'door-unwrap--bonus' : ''} ${isUnwrapping ? 'door-unwrap--unwrapping' : ''} ${isRevealed ? 'door-unwrap--revealed' : ''}`}
       onClick={!hasStarted ? handleUnwrap : undefined}
       onKeyDown={(e) => {
         if (!hasStarted && (e.key === 'Enter' || e.key === ' ')) {
@@ -71,6 +102,13 @@ export const CalendarDoorUnwrap = ({
       {/* Wrapped state */}
       {!isRevealed && (
         <div className="door-unwrap__wrapper">
+          {isBonusDoor && (
+            <div className="door-unwrap__bonus-sparkles" aria-hidden="true">
+              {Array.from({ length: 8 }, (_, index) => (
+                <span key={`bonus-sparkle-${index}`} className="door-unwrap__bonus-sparkle" />
+              ))}
+            </div>
+          )}
           <div className="door-unwrap__ribbon door-unwrap__ribbon--left" />
           <div className="door-unwrap__ribbon door-unwrap__ribbon--right" />
           <div className="door-unwrap__bow">
