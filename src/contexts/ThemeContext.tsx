@@ -207,6 +207,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
       pairedSkuId: 'theme_sproutling_grove_paired',
       pairedPriceUsd: '$1.99',
       pairedDiscountPercent: 20,
+      requiredCreatureFormLevel: 3,
     },
   },
   {
@@ -226,6 +227,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
       pairedSkuId: 'theme_ember_glow_paired',
       pairedPriceUsd: '$3.99',
       pairedDiscountPercent: 20,
+      requiredCreatureFormLevel: 3,
     },
   },
   {
@@ -245,6 +247,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
       pairedSkuId: 'theme_aurora_sky_paired',
       pairedPriceUsd: '$3.99',
       pairedDiscountPercent: 20,
+      requiredCreatureFormLevel: 3,
     },
   },
 ];
@@ -313,6 +316,7 @@ export const DARK_THEMES: ThemeMetadata[] = [
       pairedSkuId: 'theme_nebula_drift_paired',
       pairedPriceUsd: '$3.99',
       pairedDiscountPercent: 20,
+      requiredCreatureFormLevel: 3,
     },
   },
   {
@@ -332,6 +336,7 @@ export const DARK_THEMES: ThemeMetadata[] = [
       pairedSkuId: 'theme_starhorn_celestial_paired',
       pairedPriceUsd: '$7.99',
       pairedDiscountPercent: 20,
+      requiredCreatureFormLevel: 3,
     },
   },
 ];

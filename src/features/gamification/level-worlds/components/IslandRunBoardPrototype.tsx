@@ -108,6 +108,10 @@ import {
   applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
   applyCreatureTreatInventory,
+  resolveCreatureFormUpgradePreview,
+  upgradeCreatureFormWithShards,
+  CREATURE_FORM_MAX_LEVEL,
+  CREATURE_THEME_REQUIRED_FORM_LEVEL,
   applyDevGrantDice,
   applyDevGrantEssence,
   applyDevGrantTimedEventTickets,
@@ -5816,6 +5820,11 @@ export function IslandRunBoardPrototype({
         .filter((entry) => typeof entry.creatureId === 'string' && entry.creatureId.length > 0)
         .map((entry) => [entry.creatureId, entry.bondLevel ?? 0] as const),
     );
+    const creatureFormLevelsById = new Map(
+      (__storeState.creatureCollection ?? [])
+        .filter((entry) => typeof entry.creatureId === 'string' && entry.creatureId.length > 0)
+        .map((entry) => [entry.creatureId, entry.formLevel ?? 1] as const),
+    );
     const pairedCreatureIds = new Set(
       (__storeState.perfectCompanionIds ?? [])
         .filter((creatureId): creatureId is string => typeof creatureId === 'string' && creatureId.length > 0),
@@ -5826,6 +5835,7 @@ export function IslandRunBoardPrototype({
       ownedCreatureIds,
       pairedCreatureIds,
       creatureBondLevelsById,
+      creatureFormLevelsById,
     };
   }, [__storeState.creatureCollection, __storeState.perfectCompanionIds, ownedThemeIds]);
   const sanctuaryCreatureThemeOffers = useMemo(
@@ -5887,6 +5897,10 @@ export function IslandRunBoardPrototype({
   const selectedSanctuaryCreatureUnclaimedMilestones = useMemo(
     () => (selectedSanctuaryCreature ? getUnclaimedBondMilestones(selectedSanctuaryCreature) : []),
     [selectedSanctuaryCreature],
+  );
+  const selectedSanctuaryCreatureFormPreview = useMemo(
+    () => resolveCreatureFormUpgradePreview({ entry: selectedSanctuaryCreature, shards: runtimeState.shards }),
+    [runtimeState.shards, selectedSanctuaryCreature],
   );
   const interactiveRosterRenderPolicy = getSanctuaryRosterRenderPolicy('interactiveRoster');
   const decorativePreviewRenderPolicy = getSanctuaryRosterRenderPolicy('decorativePreview');
@@ -8724,6 +8738,58 @@ export function IslandRunBoardPrototype({
       playIslandRunSound('market_purchase_success');
       triggerIslandRunHaptic('reward_claim');
     },
+    upgradeCreatureForm: (creatureId: string) => {
+      const result = upgradeCreatureFormWithShards({
+        session,
+        client,
+        creatureId,
+        triggerSource: 'sanctuary_creature_form_upgrade',
+      });
+      const target = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
+      const creatureName = target?.creature.name ?? 'Creature';
+      if (!result.ok) {
+        const reason = result.failureReason === 'bond_level_too_low'
+          ? `Reach Bond Lv. ${result.preview.requiredBondLevel} first.`
+          : result.failureReason === 'insufficient_shards'
+            ? `Need ${Math.max(0, result.preview.shardCost - runtimeState.shards)} more shards.`
+            : result.failureReason === 'max_form_reached'
+              ? 'Already at max form.'
+              : 'Upgrade is not available yet.';
+        setSanctuaryFeedback(`${creatureName} form upgrade blocked: ${reason}`);
+        return;
+      }
+      setRuntimeState((current) => ({
+        ...current,
+        shards: result.record.shards,
+        dicePool: result.record.dicePool,
+        essence: result.record.essence,
+        essenceLifetimeEarned: result.record.essenceLifetimeEarned,
+        creatureCollection: result.record.creatureCollection,
+      }));
+      setShards(result.record.shards);
+      setDicePool(result.record.dicePool);
+      setCreatureCollection(result.record.creatureCollection);
+      const rewardLabel = result.preview.rewardDice > 0 || result.preview.rewardEssence > 0
+        ? ` Reward: +${result.preview.rewardDice} dice and +${result.preview.rewardEssence} essence.`
+        : '';
+      setSanctuaryFeedback(`${creatureName} upgraded to Form ${result.preview.nextFormLevel}!${rewardLabel}`);
+      setLandingText(`${creatureName} Form ${result.preview.nextFormLevel} unlocked.${result.preview.nextFormLevel === CREATURE_THEME_REQUIRED_FORM_LEVEL ? ' Theme checkout is now available.' : ''}`);
+      playIslandRunSound('market_purchase_success');
+      triggerIslandRunHaptic('market_purchase_success');
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'economy_earn',
+        metadata: {
+          stage: 'sanctuary_creature_form_upgrade',
+          island_number: islandNumber,
+          creature_id: creatureId,
+          next_form_level: result.preview.nextFormLevel,
+          shard_cost: result.preview.shardCost,
+          reward_dice: result.preview.rewardDice,
+          reward_essence: result.preview.rewardEssence,
+        },
+      });
+    },
     storyRewardClaim: (essenceReward: number) => {
       if (essenceReward <= 0) {
         return;
@@ -11223,7 +11289,7 @@ export function IslandRunBoardPrototype({
             <div className="island-hatchery-card" style={{ marginBottom: '0.75rem' }}>
               <p><strong>🎨 Premium Creature Themes</strong> — one-time real-money Stripe purchases</p>
               <p style={{ fontSize: '0.82rem', opacity: 0.7, marginBottom: '0.5rem' }}>
-                These are app themes unlocked by owning a creature. They are not bought with shards.
+                Upgrade a creature to Form 3 with shards to unlock its one-time real-money theme checkout. Perfect Pair creatures keep the 20% discount.
               </p>
               {themeEntitlementsLoading ? (
                 <p style={{ fontSize: '0.82rem', opacity: 0.7 }}>Syncing your owned themes…</p>
@@ -11748,6 +11814,40 @@ export function IslandRunBoardPrototype({
                 <p className="island-run-sanctuary-card__meta">
                   Next boost at bond level <strong>{selectedSanctuaryCreatureBonus?.nextBondMilestoneLevel ?? selectedSanctuaryCreature.bondLevel}</strong>.
                 </p>
+                {selectedSanctuaryCreatureFormPreview ? (
+                  <div className="island-run-sanctuary-compare island-run-sanctuary-form-upgrade">
+                    <p className="island-run-sanctuary-compare__title">
+                      🌟 Creature Form {selectedSanctuaryCreature.formLevel ?? 1}/{CREATURE_FORM_MAX_LEVEL}
+                    </p>
+                    <p className="island-run-sanctuary-compare__row">
+                      Form 3 grants dice + essence once and unlocks this creature’s one-time Stripe theme offer.
+                    </p>
+                    {selectedSanctuaryCreatureFormPreview.nextFormLevel ? (
+                      <p className="island-run-sanctuary-compare__row">
+                        Next: <strong>Form {selectedSanctuaryCreatureFormPreview.nextFormLevel}</strong> · Cost <strong>{selectedSanctuaryCreatureFormPreview.shardCost} 🔮</strong> · Requires Bond Lv. <strong>{selectedSanctuaryCreatureFormPreview.requiredBondLevel}</strong>
+                        {selectedSanctuaryCreatureFormPreview.rewardDice > 0 || selectedSanctuaryCreatureFormPreview.rewardEssence > 0
+                          ? <> · Reward <strong>+{selectedSanctuaryCreatureFormPreview.rewardDice} dice / +{selectedSanctuaryCreatureFormPreview.rewardEssence} essence</strong></>
+                          : null}
+                      </p>
+                    ) : (
+                      <p className="island-run-sanctuary-compare__row"><strong>Max form reached</strong> — theme eligibility is unlocked.</p>
+                    )}
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                      disabled={!selectedSanctuaryCreatureFormPreview.canUpgrade}
+                      onClick={() => sanctuaryHandlers.upgradeCreatureForm(selectedSanctuaryCreature.creatureId)}
+                    >
+                      {selectedSanctuaryCreatureFormPreview.canUpgrade
+                        ? `Upgrade to Form ${selectedSanctuaryCreatureFormPreview.nextFormLevel} for ${selectedSanctuaryCreatureFormPreview.shardCost} 🔮`
+                        : selectedSanctuaryCreatureFormPreview.failureReason === 'bond_level_too_low'
+                          ? `Reach Bond Lv. ${selectedSanctuaryCreatureFormPreview.requiredBondLevel} to upgrade`
+                          : selectedSanctuaryCreatureFormPreview.failureReason === 'insufficient_shards'
+                            ? `Need ${Math.max(0, selectedSanctuaryCreatureFormPreview.shardCost - runtimeState.shards)} more shards`
+                            : 'Max form reached'}
+                    </button>
+                  </div>
+                ) : null}
                 {selectedVsActiveComparison ? (
                   <div className="island-run-sanctuary-compare">
                     <p className="island-run-sanctuary-compare__title">Compare vs Active: {activeCompanion?.creature.name}</p>

@@ -13,6 +13,7 @@ export const ISLAND_RUN_ECONOMY_SOURCES = {
   devAdminGrantDice: 'dev_admin_grant_dice',
   tokenHopDice: 'token_hop_dice',
   eggRewardDice: 'egg_reward_dice',
+  creatureFormUpgradeDice: 'creature_form_upgrade_dice',
   unknownDiceDelta: 'unknown_dice_delta',
 } as const;
 
@@ -29,6 +30,7 @@ export const ISLAND_RUN_ECONOMY_COUNTERS = {
   eventTicketsSpent: 'event_tickets_spent',
   multiplierUse: 'multiplier_use',
   rewardBarTierReached: 'reward_bar_tier_reached',
+  creatureFormShardSpend: 'creature_form_shard_spend',
 } as const;
 
 export type IslandRunEconomySource = typeof ISLAND_RUN_ECONOMY_SOURCES[keyof typeof ISLAND_RUN_ECONOMY_SOURCES];

@@ -42,9 +42,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function collectionHasCreature(collection: unknown, creatureId: string): boolean {
-  if (!Array.isArray(collection)) return false;
-  return collection.some((entry) => isRecord(entry) && entry.creatureId === creatureId);
+const REQUIRED_CREATURE_THEME_FORM_LEVEL = 3;
+
+function findCreatureCollectionEntry(collection: unknown, creatureId: string): Record<string, unknown> | null {
+  if (!Array.isArray(collection)) return null;
+  return collection.find((entry): entry is Record<string, unknown> => isRecord(entry) && entry.creatureId === creatureId) ?? null;
+}
+
+function getCreatureFormLevel(entry: Record<string, unknown> | null): number {
+  const raw = entry?.formLevel;
+  return typeof raw === 'number' && Number.isFinite(raw) ? Math.max(1, Math.floor(raw)) : 1;
 }
 
 function arrayHasId(value: unknown, id: string): boolean {
@@ -135,8 +142,16 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to validate creature theme eligibility: ${runtimeError.message}`);
     }
 
-    if (!collectionHasCreature(runtimeState?.creature_collection, skuConfig.creatureId)) {
+    const creatureEntry = findCreatureCollectionEntry(runtimeState?.creature_collection, skuConfig.creatureId);
+    if (!creatureEntry) {
       return new Response(JSON.stringify({ error: 'Hatch this creature before buying its theme.' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (getCreatureFormLevel(creatureEntry) < REQUIRED_CREATURE_THEME_FORM_LEVEL) {
+      return new Response(JSON.stringify({ error: 'Upgrade this creature to Form 3 with shards before buying its theme.' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
