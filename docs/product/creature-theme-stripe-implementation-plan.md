@@ -37,24 +37,24 @@ The paired price is intentionally rounded to familiar store pricing. It is appro
 | Default theme | Free | Included by default | Automatic | Settings → Appearance |
 | Island 120 theme | Free | Complete Island 120 | Island completion reward flow | Settings → Appearance |
 | Birthday theme | Free | Opt into birthday presents and claim first birthday gift | Birthday/Profile gift flow | Settings → Appearance |
-| Creature theme | One-time real-money payment | Own the creature, then purchase via Stripe; no shard option | Creature Sanctuary | Settings → Appearance |
-| Paired creature theme offer | Paid discounted | Creature is a Perfect/paired companion and eligible for purchase | Special paired creature modal or Sanctuary | Settings → Appearance |
+| Creature theme | One-time real-money payment | Own the creature and upgrade it to Form 3 with shards, then purchase via Stripe; no shard payment for the theme | Creature Sanctuary | Settings → Appearance |
+| Paired creature theme offer | Paid discounted | Creature is a Perfect/paired companion, owned, and upgraded to Form 3 | Special paired creature modal or Sanctuary | Settings → Appearance |
 | General non-creature premium theme | Paid | Purchase via Stripe or Player Shop | Player Shop | Settings → Appearance |
 
 ### 3.2 Creature theme purchase eligibility
 
-A player should not be able to buy a creature theme until the matching creature exists in their Sanctuary collection.
+A player should not be able to buy a creature theme until the matching creature exists in their Sanctuary collection and has been upgraded to Form 3 with shards. The Form 3 upgrade is the in-game progression gate; the theme itself is still only purchased with a one-time Stripe payment.
 
 V1 rule:
 
 ```ts
-creatureThemeEligible = ownsCreature(creatureId)
+creatureThemeEligible = ownsCreature(creatureId) && formLevel >= 3
 ```
 
 Future rule options:
 
 ```ts
-creatureThemeEligible = ownsCreature(creatureId) && bondLevel >= requiredBondLevel
+creatureThemeEligible = ownsCreature(creatureId) && formLevel >= 3 && bondLevel >= requiredBondLevel
 ```
 
 ### 3.3 Paired / Perfect Companion offer
@@ -66,7 +66,7 @@ Trigger it when:
 1. A player first sets or discovers a Perfect Companion that has a paid theme.
 2. A player hatches a creature that is one of their Perfect Companions.
 3. A player opens that creature detail card in the Sanctuary and has not yet bought the theme.
-4. A future bond gate is reached for that creature's theme.
+4. The creature is upgraded to Form 3 with shards, which grants dice/essence once and unlocks its Stripe theme offer.
 
 Recommended modal copy structure:
 
@@ -298,7 +298,7 @@ Resolver responsibilities:
 - Paid creature themes are selectable only after entitlement exists.
 - Owned creature but unpaid theme returns `available_for_purchase`.
 - Paired eligible creature returns `available_for_paired_purchase`.
-- Creature not owned returns `locked` with “Hatch [Creature] to unlock purchase.”
+- Creature not owned returns `locked` with “Hatch [Creature] to unlock purchase.” Creature owned below Form 3 returns `locked` with “Upgrade [Creature] to Form 3 with shards to unlock this one-time Stripe offer.”
 - Island 120 and birthday themes return `owned` only after entitlement exists.
 - Admin/creator can preview all themes but should not automatically receive paid entitlements.
 
@@ -316,7 +316,7 @@ Theme cards should show:
 - Free gift locked/claim state
 - Available for purchase
 - Perfect Pair offer
-- Hatch creature to unlock purchase
+- Hatch creature, then upgrade it to Form 3 with shards to unlock purchase eligibility
 - Buy in Sanctuary CTA
 - Set birthday gift CTA
 - Continue Island Run CTA
@@ -328,6 +328,7 @@ Purpose: discover and purchase creature themes.
 Add theme purchase cards in creature detail and/or Sanctuary Inventory & Shop:
 
 - Creature not owned: “Hatch Sproutling to unlock this premium theme offer.”
+- Creature below Form 3: “Upgrade Sproutling to Form 3 with shards to unlock this one-time Stripe offer.”
 - Creature owned: “Buy Sproutling Grove for $2.49.”
 - Paired creature: “Perfect Pair offer: $1.99.”
 - Owned theme: “Owned — Apply in Settings.”

@@ -19,6 +19,8 @@ export interface CreatureCollectionEntry {
   bondLevel: number;
   lastFedAtMs: number | null;
   claimedBondMilestones: number[];
+  formLevel?: number;
+  claimedFormRewards?: number[];
 }
 
 export const CREATURE_BOND_XP_PER_LEVEL = 3;
@@ -60,7 +62,17 @@ function normalizeCollectionEntry(value: Partial<CreatureCollectionEntry>): Crea
       .map((milestone) => Math.max(1, Math.floor(milestone)))))
         .sort((a, b) => a - b)
     : [];
-  return { creatureId: value.creatureId, copies, firstCollectedAtMs, lastCollectedAtMs, lastCollectedIslandNumber, bondXp, bondLevel, lastFedAtMs, claimedBondMilestones };
+  const formLevel = typeof value.formLevel === 'number' && Number.isFinite(value.formLevel)
+    ? Math.min(3, Math.max(1, Math.floor(value.formLevel)))
+    : 1;
+  const claimedFormRewards = Array.isArray(value.claimedFormRewards)
+    ? Array.from(new Set(
+        value.claimedFormRewards
+          .filter((milestone): milestone is number => typeof milestone === 'number' && Number.isFinite(milestone))
+          .map((milestone) => Math.min(3, Math.max(1, Math.floor(milestone)))),
+      )).sort((a, b) => a - b)
+    : [];
+  return { creatureId: value.creatureId, copies, firstCollectedAtMs, lastCollectedAtMs, lastCollectedIslandNumber, bondXp, bondLevel, lastFedAtMs, claimedBondMilestones, formLevel, claimedFormRewards };
 }
 
 export function fetchCreatureCollection(userId: string): CreatureCollectionEntry[] {
@@ -108,6 +120,8 @@ export function collectCreatureForUser(options: {
           bondLevel: entry.bondLevel,
           lastFedAtMs: entry.lastFedAtMs,
           claimedBondMilestones: entry.claimedBondMilestones,
+          formLevel: entry.formLevel,
+          claimedFormRewards: entry.claimedFormRewards,
         }
       : entry)
     : [
@@ -121,6 +135,8 @@ export function collectCreatureForUser(options: {
           bondLevel: 1,
           lastFedAtMs: null,
           claimedBondMilestones: [],
+          formLevel: 1,
+          claimedFormRewards: [],
         },
         ...current,
       ];

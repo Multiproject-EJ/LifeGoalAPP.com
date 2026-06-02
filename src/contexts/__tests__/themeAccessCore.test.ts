@@ -33,6 +33,7 @@ const sproutlingTheme: ThemeAccessMetadata = {
     pairedSkuId: 'theme_sproutling_grove_paired',
     pairedPriceUsd: '$1.99',
     pairedDiscountPercent: 20,
+    requiredCreatureFormLevel: 3,
   },
 };
 
@@ -51,6 +52,7 @@ const auroraBondTheme: ThemeAccessMetadata = {
     pairedPriceUsd: '$3.99',
     pairedDiscountPercent: 20,
     requiredBondLevel: 5,
+    requiredCreatureFormLevel: 3,
   },
 };
 
@@ -95,8 +97,19 @@ export function runThemeAccessCoreTests(): void {
     'Unowned creature theme label should not mention shards',
   );
 
+  const formLockedAccess = resolveThemeAccess(sproutlingTheme, {
+    ownedCreatureIds: new Set(['common-sproutling']),
+    creatureFormLevelsById: new Map([['common-sproutling', 2]]),
+  });
+  assertEqual(formLockedAccess.status, 'locked', 'Creature theme should stay locked below Form 3');
+  assert(
+    formLockedAccess.lockedReason?.includes('Form 3') === true,
+    'Form-gated lock reason should mention Form 3',
+  );
+
   const ownedCreatureAccess = resolveThemeAccess(sproutlingTheme, {
     ownedCreatureIds: new Set(['common-sproutling']),
+    creatureFormLevelsById: new Map([['common-sproutling', 3]]),
   });
   assertEqual(ownedCreatureAccess.status, 'available_for_purchase', 'Owned creature should unlock base purchase offer');
   assertEqual(ownedCreatureAccess.checkoutSkuId, 'theme_sproutling_grove', 'Base purchase should use base SKU');
@@ -106,6 +119,7 @@ export function runThemeAccessCoreTests(): void {
   const pairedAccess = resolveThemeAccess(sproutlingTheme, {
     ownedCreatureIds: new Set(['common-sproutling']),
     pairedCreatureIds: new Set(['common-sproutling']),
+    creatureFormLevelsById: new Map([['common-sproutling', 3]]),
   });
   assertEqual(pairedAccess.status, 'available_for_paired_purchase', 'Paired creature should unlock paired purchase offer');
   assertEqual(pairedAccess.checkoutSkuId, 'theme_sproutling_grove_paired', 'Paired purchase should use paired SKU');
@@ -115,6 +129,7 @@ export function runThemeAccessCoreTests(): void {
   const insufficientBondAccess = resolveThemeAccess(auroraBondTheme, {
     ownedCreatureIds: new Set(['rare-aurora-finch']),
     creatureBondLevelsById: new Map([['rare-aurora-finch', 4]]),
+    creatureFormLevelsById: new Map([['rare-aurora-finch', 3]]),
   });
   assertEqual(insufficientBondAccess.status, 'locked', 'Bond-gated theme should lock below required bond level');
   assert(
@@ -125,6 +140,7 @@ export function runThemeAccessCoreTests(): void {
   const sufficientBondAccess = resolveThemeAccess(auroraBondTheme, {
     ownedCreatureIds: new Set(['rare-aurora-finch']),
     creatureBondLevelsById: new Map([['rare-aurora-finch', 5]]),
+    creatureFormLevelsById: new Map([['rare-aurora-finch', 3]]),
   });
   assertEqual(sufficientBondAccess.status, 'available_for_purchase', 'Bond-gated theme should become purchasable at required bond level');
 
