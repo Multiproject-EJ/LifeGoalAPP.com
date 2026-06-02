@@ -29,7 +29,8 @@
     "check:island-art-assets": "node scripts/validate-island-art-assets.mjs",
     "check:island-art-render-wiring": "node scripts/check-island-art-render-wiring.mjs",
     "test:image-upload-optimizer": "node scripts/run-image-upload-optimizer-tests.mjs",
-    "test:today-todos": "node scripts/run-today-todos-tests.mjs"
+    "test:today-todos": "node scripts/run-today-todos-tests.mjs",
+    "test:theme-access": "node scripts/run-theme-access-tests.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
