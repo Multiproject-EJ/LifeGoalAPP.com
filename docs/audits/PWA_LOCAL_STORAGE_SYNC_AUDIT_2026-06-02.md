@@ -1,6 +1,6 @@
 # PWA Local Storage Sync Audit — 2026-06-02
 
-Status: Chunk 1 complete (Today habits, quest habit, reminders/preferences, daily reward gates)
+Status: Chunk 2 in progress (Quest Habit fixed; habit bonus spin reward gate fixed; broader reward-gate audit remains)
 
 ## Purpose
 
@@ -13,13 +13,19 @@ Find places where a logged-in user can see different account/gameplay state acro
 - **One-time local affordance**: local is usually fine (coachmarks, dismissed hints, local debug flags).
 - **Demo/local-only data**: local is fine when gated to demo/no-Supabase paths.
 
-## Fixed in this slice
+## Fixed so far
 
 ### Quest Habit selection
 
 - Previous behavior: one Quest Habit per browser/device via `lifegoal:quest_habit:{userId}`.
 - Problem: Quest Habit gates the Daily Momentum / Personal Quest bonus door, so iPad and iPhone could disagree about which habit unlocks the same account-level reward.
 - Fix direction implemented: account-level server row in `public.user_quest_habits`, with `localStorage` retained as cache/offline fallback and last-write-wins reconciliation via `updated_at`.
+
+### Daily Spin habit-completion bonus
+
+- Previous behavior: Today surfaces used `lifegoal:daily-spin-habit-bonus:{userId}:{date}` as the only once-per-day reward marker.
+- Problem: iPad and iPhone could each grant the habit bonus spin because the idempotency marker was device-local.
+- Fix direction implemented: `public.daily_spin_habit_bonus_claims` plus `claim_daily_spin_habit_bonus()` provide a server-side idempotency ledger and atomic spin-state update. LocalStorage remains only a demo/offline/cache marker.
 
 ## Similar issues found in chunk 1
 
@@ -53,7 +59,7 @@ Assessment:
 Recommended action:
 - Keep this architecture; use it as a model for account-level preference sync.
 
-### 3. Daily reward claim flags in Today habit surfaces: needs a focused reward-gate pass
+### 3. Daily reward claim flags in Today habit surfaces: partially fixed, broader pass still needed
 
 Files:
 - `src/features/habits/DailyHabitTracker.tsx`
@@ -61,11 +67,12 @@ Files:
 - `src/services/treatCalendarService.ts`
 
 Assessment:
-- Some localStorage keys appear to suppress repeated local claims/popups or support demo/local mode.
-- Any key that prevents duplicate rewards or marks a reward as claimed should be server-authoritative. Local-only reward gates can diverge across iPad/iPhone.
+- Habit bonus spin idempotency is now server-backed.
+- Other localStorage keys still appear to suppress repeated local claims/popups or support demo/local mode.
+- Any remaining key that prevents duplicate rewards or marks a reward as claimed should be server-authoritative. Local-only reward gates can diverge across iPad/iPhone.
 
 Recommended next chunk:
-- Audit all keys containing `claim`, `claimed`, `opened`, `bonus`, `daily-spin`, `treat`, `egg`, and `reward`.
+- Continue auditing keys containing `claim`, `claimed`, `opened`, `bonus`, `treat`, `egg`, and `reward`.
 - Categorize each as:
   - server-backed already,
   - local presentation-only,

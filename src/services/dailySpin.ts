@@ -19,6 +19,21 @@ const DEMO_STORAGE_KEY = 'demo_daily_spin_state';
 const DEMO_HISTORY_KEY = 'lifegoal_demo_spin_history';
 const DAILY_FREE_SPINS = 1;
 
+function formatDailySpinHabitBonusDate(value = new Date()): string {
+  return value.toISOString().split('T')[0];
+}
+
+function buildDailySpinHabitBonusClaimKey(userId: string, claimDate: string): string {
+  return `lifegoal:daily-spin-habit-bonus:${userId}:${claimDate}`;
+}
+
+type DailySpinHabitBonusClaim = {
+  awarded: boolean;
+  alreadyClaimed: boolean;
+  state: DailySpinState | null;
+};
+
+
 function toDateKey(value: string | null | undefined): string | null {
   if (!value) return null;
   const parsed = new Date(value);
@@ -360,6 +375,101 @@ export async function updateSpinsAvailable(userId: string, spinsEarned: number):
     currentState,
     spinsAvailable: newSpins,
   });
+}
+
+
+/**
+ * Check whether the once-per-day habit bonus spin has already been claimed.
+ * Authenticated users read the server idempotency ledger; demo/offline mode uses
+ * the legacy local marker as a fallback/cache.
+ */
+export async function hasClaimedDailySpinHabitBonus(userId: string, claimDate = formatDailySpinHabitBonusDate()): Promise<boolean> {
+  const claimKey = buildDailySpinHabitBonusClaimKey(userId, claimDate);
+
+  if (!canUseSupabaseData()) {
+    return typeof window !== 'undefined' && window.localStorage.getItem(claimKey) === '1';
+  }
+
+  try {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('daily_spin_habit_bonus_claims')
+      .select('user_id')
+      .eq('user_id', userId)
+      .eq('claim_date', claimDate)
+      .maybeSingle();
+
+    if (error) {
+      console.warn('Failed to check daily spin habit bonus claim:', error);
+      return typeof window !== 'undefined' && window.localStorage.getItem(claimKey) === '1';
+    }
+
+    if (data && typeof window !== 'undefined') {
+      window.localStorage.setItem(claimKey, '1');
+    }
+
+    return Boolean(data);
+  } catch (error) {
+    console.warn('Failed to check daily spin habit bonus claim:', error);
+    return typeof window !== 'undefined' && window.localStorage.getItem(claimKey) === '1';
+  }
+}
+
+/**
+ * Claim the habit-completion bonus spin once per user/day.
+ *
+ * Authenticated users go through a Postgres RPC so iPad/iPhone cannot double
+ * award by racing separate localStorage markers. Demo/offline mode preserves the
+ * existing local marker behavior.
+ */
+export async function claimDailySpinHabitBonusOncePerDay(
+  userId: string,
+  claimDate = formatDailySpinHabitBonusDate(),
+): Promise<ServiceResponse<DailySpinHabitBonusClaim>> {
+  const claimKey = buildDailySpinHabitBonusClaimKey(userId, claimDate);
+
+  if (!canUseSupabaseData()) {
+    const alreadyClaimed = typeof window !== 'undefined' && window.localStorage.getItem(claimKey) === '1';
+    if (alreadyClaimed) {
+      const { data: state, error } = await fetchDailySpinState(userId);
+      return { data: { awarded: false, alreadyClaimed: true, state }, error };
+    }
+
+    const { data: state, error } = await updateSpinsAvailable(userId, 1);
+    if (!error && typeof window !== 'undefined') {
+      window.localStorage.setItem(claimKey, '1');
+    }
+    return { data: { awarded: !error, alreadyClaimed: false, state }, error };
+  }
+
+  try {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase.rpc('claim_daily_spin_habit_bonus', {
+      p_claim_date: claimDate,
+    });
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    const result = Array.isArray(data) ? data[0] : data;
+    const awarded = Boolean(result?.claimed);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(claimKey, '1');
+    }
+
+    const { data: state, error: stateError } = await fetchDailySpinState(userId);
+    return {
+      data: {
+        awarded,
+        alreadyClaimed: !awarded,
+        state,
+      },
+      error: stateError,
+    };
+  } catch (error) {
+    return { data: null, error: error as Error };
+  }
 }
 
 /**
