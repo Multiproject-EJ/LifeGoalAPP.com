@@ -40,6 +40,8 @@ import {
   applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
   applyCreatureTreatInventory,
+  resolveCreatureFormUpgradePreview,
+  upgradeCreatureFormWithShards,
   applyDevGrantDice,
   applyDevBuildAllToL3,
   applyDevClearCurrentIslandForTravel,
@@ -86,6 +88,7 @@ import {
   applyTokenHopRewards,
   clearActiveCompanionId,
   setActiveCompanionId,
+  shouldGrantIsland120ThemeEntitlementOnTravel,
   travelToNextIsland,
 } from '../islandRunStateActions';
 import { isIslandRunFullyClearedV2 } from '../islandRunContractV2StopResolver';
@@ -209,6 +212,102 @@ function getAdjacentTileIdsForTest(tileId: number, boardSize: number): number[] 
 }
 
 export const islandRunStateActionsTests: TestCase[] = [
+  {
+    name: 'upgradeCreatureFormWithShards spends shards and grants Form 3 rewards once',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        shards: 100,
+        dicePool: 5,
+        essence: 20,
+        essenceLifetimeEarned: 20,
+        creatureCollection: [
+          {
+            creatureId: 'common-sproutling',
+            copies: 1,
+            firstCollectedAtMs: 1000,
+            lastCollectedAtMs: 1000,
+            lastCollectedIslandNumber: 1,
+            bondXp: 3,
+            bondLevel: 2,
+            lastFedAtMs: null,
+            claimedBondMilestones: [],
+            formLevel: 1,
+            claimedFormRewards: [],
+          },
+        ],
+      });
+
+      const preview = resolveCreatureFormUpgradePreview({
+        entry: getIslandRunStateSnapshot(session).creatureCollection[0],
+        shards: 100,
+      });
+      assertEqual(preview?.canUpgrade, true, 'Form 2 preview should allow upgrade when shards and bond are sufficient');
+      assertEqual(preview?.shardCost, 20, 'Common Form 2 upgrade should cost 20 shards');
+
+      const formTwo = upgradeCreatureFormWithShards({
+        session,
+        client: null,
+        creatureId: 'common-sproutling',
+        triggerSource: 'test_form_two_upgrade',
+      });
+      assertEqual(formTwo.ok, true, 'Form 2 upgrade should succeed');
+      assertEqual(formTwo.record.shards, 80, 'Form 2 upgrade should spend shards');
+      assertEqual(formTwo.record.creatureCollection[0].formLevel, 2, 'Creature should advance to Form 2');
+      assertEqual(formTwo.record.dicePool, 5, 'Form 2 should not grant dice');
+      assertEqual(formTwo.record.essence, 20, 'Form 2 should not grant essence');
+
+      const lowBondFormThree = upgradeCreatureFormWithShards({
+        session,
+        client: null,
+        creatureId: 'common-sproutling',
+        triggerSource: 'test_form_three_low_bond',
+      });
+      assertEqual(lowBondFormThree.ok, false, 'Form 3 should require Bond Lv. 3');
+      assertEqual(lowBondFormThree.failureReason, 'bond_level_too_low', 'Low-bond Form 3 failure should be explicit');
+
+      seedState({
+        runtimeVersion: 20,
+        shards: 80,
+        dicePool: 5,
+        essence: 20,
+        essenceLifetimeEarned: 20,
+        creatureCollection: [
+          {
+            ...formTwo.record.creatureCollection[0],
+            bondXp: 6,
+            bondLevel: 3,
+          },
+        ],
+      });
+      const formThree = upgradeCreatureFormWithShards({
+        session,
+        client: null,
+        creatureId: 'common-sproutling',
+        triggerSource: 'test_form_three_upgrade',
+      });
+      assertEqual(formThree.ok, true, 'Form 3 upgrade should succeed with Bond Lv. 3 and enough shards');
+      assertEqual(formThree.record.shards, 20, 'Form 3 common upgrade should cost 60 shards');
+      assertEqual(formThree.record.creatureCollection[0].formLevel, 3, 'Creature should advance to Form 3');
+      assertDeepEqual(formThree.record.creatureCollection[0].claimedFormRewards, [3], 'Form 3 reward should be marked claimed');
+      assertEqual(formThree.record.dicePool, 15, 'Form 3 should grant 10 common dice');
+      assertEqual(formThree.record.essence, 60, 'Form 3 should grant 40 common essence');
+      assertEqual(formThree.record.essenceLifetimeEarned, 60, 'Form 3 essence reward should count as lifetime earned');
+
+      const repeated = upgradeCreatureFormWithShards({
+        session,
+        client: null,
+        creatureId: 'common-sproutling',
+        triggerSource: 'test_form_three_repeat',
+      });
+      assertEqual(repeated.ok, false, 'Max-form creature should not upgrade again');
+      assertEqual(repeated.failureReason, 'max_form_reached', 'Max-form failure should be explicit');
+      assertEqual(repeated.record.dicePool, 15, 'Repeat attempt should not grant dice again');
+    },
+  },
+
   // ── applyRollResult ──────────────────────────────────────────────────────
 
   {
@@ -4939,6 +5038,42 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(observed[0].bossResolvedIsland, null, 'post-travel: boss resolved island cleared');
 
       unsub();
+    },
+  },
+
+  {
+    name: 'Island 120 theme grant predicate only fires on first-cycle wrap travel',
+    run: () => {
+      assertEqual(
+        shouldGrantIsland120ThemeEntitlementOnTravel({
+          fromIsland: 120,
+          toIsland: 1,
+          previousCycleIndex: 0,
+          nextCycleIndex: 1,
+        }),
+        true,
+        '120→1 wrap should trigger Dreamt Horizon entitlement grant',
+      );
+      assertEqual(
+        shouldGrantIsland120ThemeEntitlementOnTravel({
+          fromIsland: 119,
+          toIsland: 120,
+          previousCycleIndex: 0,
+          nextCycleIndex: 0,
+        }),
+        false,
+        'ordinary island travel should not trigger Island 120 theme grant',
+      );
+      assertEqual(
+        shouldGrantIsland120ThemeEntitlementOnTravel({
+          fromIsland: 120,
+          toIsland: 1,
+          previousCycleIndex: 1,
+          nextCycleIndex: 1,
+        }),
+        false,
+        'stale/non-advancing cycle data should not trigger grant',
+      );
     },
   },
 
