@@ -5,6 +5,7 @@ export type AiCoachDataAccess = {
   journaling: boolean;
   reflections: boolean;
   visionBoard: boolean;
+  lifeStage: boolean;
 };
 
 export const DEFAULT_AI_COACH_ACCESS: AiCoachDataAccess = {
@@ -14,6 +15,7 @@ export const DEFAULT_AI_COACH_ACCESS: AiCoachDataAccess = {
   journaling: true,
   reflections: true,
   visionBoard: true,
+  lifeStage: false,
 };
 
 export const AI_COACH_ACCESS_FIELDS: Array<{
@@ -51,6 +53,11 @@ export const AI_COACH_ACCESS_FIELDS: Array<{
     label: 'Vision board',
     description: 'Allow the coach to reference vision board images and captions.',
   },
+  {
+    key: 'lifeStage',
+    label: 'Life stage',
+    description: 'Allow the coach to use your optional birthday-derived age range for life-stage-aware guidance. Birthday gifts still work without enabling this.',
+  },
 ];
 
 export function normalizeAiCoachAccess(
@@ -63,5 +70,6 @@ export function normalizeAiCoachAccess(
     journaling: value?.journaling ?? DEFAULT_AI_COACH_ACCESS.journaling,
     reflections: value?.reflections ?? DEFAULT_AI_COACH_ACCESS.reflections,
     visionBoard: value?.visionBoard ?? DEFAULT_AI_COACH_ACCESS.visionBoard,
+    lifeStage: value?.lifeStage ?? DEFAULT_AI_COACH_ACCESS.lifeStage,
   };
 }

@@ -2,26 +2,27 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import bioDayChartIcon from '../assets/theme-icons/bio-day-chart.svg';
 import bioDayCheckIcon from '../assets/theme-icons/bio-day-check.svg';
 
-export type Theme =
-  | 'bright-sky'
-  | 'dark-glass'
-  | 'ocean-breeze'
-  | 'forest-green'
-  | 'sunset-glow'
-  | 'midnight-purple'
-  | 'cherry-blossom'
-  | 'desert-sand'
-  | 'arctic-frost'
-  | 'autumn-harvest'
-  | 'lavender-dream'
-  | 'flow-day'
-  | 'flow-night'
-  | 'bio-day'
-  | 'bio-night';
+import {
+  resolveThemeAccess,
+  type Theme,
+  type ThemeAccessMetadata,
+  type ThemeCategory,
+  type ThemeUnlockRule,
+} from './themeAccessCore';
+export {
+  getThemeUnlockLabel,
+  resolveThemeAccess,
+  type Theme,
+  type ThemeAccessContext,
+  type ThemeAccessMetadata,
+  type ThemeAccessResult,
+  type ThemeAccessStatus,
+  type ThemeCategory,
+  type ThemeCheckoutSkuId,
+  type ThemeUnlockRule,
+} from './themeAccessCore';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
-
-export type ThemeCategory = 'light' | 'dark';
 
 export const DEFAULT_LIGHT_THEME: Theme = 'bio-day';
 export const DEFAULT_DARK_THEME: Theme = 'flow-night';
@@ -30,14 +31,12 @@ const DEFAULT_FREE_THEME_IDS = new Set<Theme>([DEFAULT_LIGHT_THEME, DEFAULT_DARK
 
 type FlowVariant = 'sunrise' | 'morning' | 'day' | 'sunset' | 'midnight';
 
-export interface ThemeMetadata {
-  id: Theme;
-  name: string;
+export interface ThemeMetadata extends ThemeAccessMetadata {
   icon: ReactNode;
-  description: string;
-  metaColor: string;
-  category: ThemeCategory;
 }
+
+const adminPreviewUnlockRule: ThemeUnlockRule = { type: 'admin_preview' };
+
 
 const bioDayIcons = (
   <span className="theme-icon-stack">
@@ -90,6 +89,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     description: 'Light and airy with soft blue gradients',
     metaColor: '#e0f2fe',
     category: 'light',
+    unlockRule: adminPreviewUnlockRule,
   },
   {
     id: 'ocean-breeze',
@@ -98,6 +98,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     description: 'Calm teal and aquamarine tones',
     metaColor: '#0d9488',
     category: 'light',
+    unlockRule: adminPreviewUnlockRule,
   },
   {
     id: 'forest-green',
@@ -106,6 +107,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     description: 'Natural green with earthy accents',
     metaColor: '#059669',
     category: 'light',
+    unlockRule: adminPreviewUnlockRule,
   },
   {
     id: 'sunset-glow',
@@ -114,6 +116,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     description: 'Warm oranges and pinks like a sunset',
     metaColor: '#f97316',
     category: 'light',
+    unlockRule: adminPreviewUnlockRule,
   },
   {
     id: 'cherry-blossom',
@@ -122,6 +125,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     description: 'Soft pink with gentle warmth',
     metaColor: '#f472b6',
     category: 'light',
+    unlockRule: adminPreviewUnlockRule,
   },
   {
     id: 'desert-sand',
@@ -130,6 +134,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     description: 'Warm beige and sandy tones',
     metaColor: '#d97706',
     category: 'light',
+    unlockRule: adminPreviewUnlockRule,
   },
   {
     id: 'arctic-frost',
@@ -138,6 +143,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     description: 'Cool whites and icy blues',
     metaColor: '#60a5fa',
     category: 'light',
+    unlockRule: adminPreviewUnlockRule,
   },
   {
     id: 'autumn-harvest',
@@ -146,6 +152,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     description: 'Warm browns and golden yellows',
     metaColor: '#ea580c',
     category: 'light',
+    unlockRule: adminPreviewUnlockRule,
   },
   {
     id: 'lavender-dream',
@@ -154,6 +161,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     description: 'Soft purple with dreamy gradients',
     metaColor: '#c084fc',
     category: 'light',
+    unlockRule: adminPreviewUnlockRule,
   },
   {
     id: 'flow-day',
@@ -162,6 +170,7 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     description: 'Neumorphic glass with airy silver gradients and soft glow',
     metaColor: '#f2f4fb',
     category: 'light',
+    unlockRule: adminPreviewUnlockRule,
   },
   {
     id: 'bio-day',
@@ -170,6 +179,73 @@ export const LIGHT_THEMES: ThemeMetadata[] = [
     description: 'Organic greens inspired by nature',
     metaColor: '#16a34a',
     category: 'light',
+    unlockRule: { type: 'free' },
+  },
+  {
+    id: 'birthday-wish',
+    name: 'Birthday Wish',
+    icon: '🎂',
+    description: 'A warm birthday gift theme unlocked from your first birthday present',
+    metaColor: '#fbcfe8',
+    category: 'light',
+    unlockRule: { type: 'special_gift', giftId: 'first_birthday_present' },
+  },
+  {
+    id: 'sproutling-grove',
+    name: 'Sproutling Grove',
+    icon: '🌱',
+    description: 'A one-time real-money creature theme inspired by Sproutling',
+    metaColor: '#dcfce7',
+    category: 'light',
+    unlockRule: {
+      type: 'creature_purchase',
+      creatureId: 'common-sproutling',
+      creatureName: 'Sproutling',
+      tier: 'common',
+      skuId: 'theme_sproutling_grove',
+      basePriceUsd: '$2.49',
+      pairedSkuId: 'theme_sproutling_grove_paired',
+      pairedPriceUsd: '$1.99',
+      pairedDiscountPercent: 20,
+    },
+  },
+  {
+    id: 'ember-glow',
+    name: 'Ember Glow',
+    icon: '🔥',
+    description: 'A one-time real-money creature theme inspired by Ember Sprout',
+    metaColor: '#fb923c',
+    category: 'light',
+    unlockRule: {
+      type: 'creature_purchase',
+      creatureId: 'rare-ember-sprout',
+      creatureName: 'Ember Sprout',
+      tier: 'rare',
+      skuId: 'theme_ember_glow',
+      basePriceUsd: '$4.99',
+      pairedSkuId: 'theme_ember_glow_paired',
+      pairedPriceUsd: '$3.99',
+      pairedDiscountPercent: 20,
+    },
+  },
+  {
+    id: 'aurora-sky',
+    name: 'Aurora Sky',
+    icon: '🪽',
+    description: 'A one-time real-money creature theme inspired by Aurora Finch',
+    metaColor: '#bae6fd',
+    category: 'light',
+    unlockRule: {
+      type: 'creature_purchase',
+      creatureId: 'rare-aurora-finch',
+      creatureName: 'Aurora Finch',
+      tier: 'rare',
+      skuId: 'theme_aurora_sky',
+      basePriceUsd: '$4.99',
+      pairedSkuId: 'theme_aurora_sky_paired',
+      pairedPriceUsd: '$3.99',
+      pairedDiscountPercent: 20,
+    },
   },
 ];
 
@@ -182,6 +258,7 @@ export const DARK_THEMES: ThemeMetadata[] = [
     description: 'Premium dark glassmorphism with rich colors',
     metaColor: '#0f172a',
     category: 'dark',
+    unlockRule: adminPreviewUnlockRule,
   },
   {
     id: 'midnight-purple',
@@ -190,6 +267,7 @@ export const DARK_THEMES: ThemeMetadata[] = [
     description: 'Deep purple with mystical vibes',
     metaColor: '#7c3aed',
     category: 'dark',
+    unlockRule: adminPreviewUnlockRule,
   },
   {
     id: 'flow-night',
@@ -198,6 +276,7 @@ export const DARK_THEMES: ThemeMetadata[] = [
     description: 'Deep focus mode with cool midnight blue tones',
     metaColor: '#0c1222',
     category: 'dark',
+    unlockRule: { type: 'free' },
   },
   {
     id: 'bio-night',
@@ -206,6 +285,54 @@ export const DARK_THEMES: ThemeMetadata[] = [
     description: 'Dark forest greens for natural calm',
     metaColor: '#0a1e0a',
     category: 'dark',
+    unlockRule: adminPreviewUnlockRule,
+  },
+  {
+    id: 'dreamt-horizon',
+    name: 'Dreamt Horizon',
+    icon: '🌠',
+    description: 'A free milestone gift for completing Island 120',
+    metaColor: '#1e1b4b',
+    category: 'dark',
+    unlockRule: { type: 'special_gift', giftId: 'island_120_complete' },
+  },
+  {
+    id: 'nebula-drift',
+    name: 'Nebula Drift',
+    icon: '🪐',
+    description: 'A one-time real-money creature theme inspired by Nebula Wisp',
+    metaColor: '#581c87',
+    category: 'dark',
+    unlockRule: {
+      type: 'creature_purchase',
+      creatureId: 'rare-nebula-wisp',
+      creatureName: 'Nebula Wisp',
+      tier: 'rare',
+      skuId: 'theme_nebula_drift',
+      basePriceUsd: '$4.99',
+      pairedSkuId: 'theme_nebula_drift_paired',
+      pairedPriceUsd: '$3.99',
+      pairedDiscountPercent: 20,
+    },
+  },
+  {
+    id: 'starhorn-celestial',
+    name: 'Starhorn Celestial',
+    icon: '🦄',
+    description: 'A one-time real-money mythic theme inspired by Starhorn Seraph',
+    metaColor: '#312e81',
+    category: 'dark',
+    unlockRule: {
+      type: 'creature_purchase',
+      creatureId: 'mythic-starhorn-seraph',
+      creatureName: 'Starhorn Seraph',
+      tier: 'mythic',
+      skuId: 'theme_starhorn_celestial',
+      basePriceUsd: '$9.99',
+      pairedSkuId: 'theme_starhorn_celestial_paired',
+      pairedPriceUsd: '$7.99',
+      pairedDiscountPercent: 20,
+    },
   },
 ];
 
@@ -216,8 +343,13 @@ export function isDefaultFreeTheme(theme: Theme): boolean {
   return DEFAULT_FREE_THEME_IDS.has(theme);
 }
 
+export function getThemeMetadata(theme: Theme): ThemeMetadata | undefined {
+  return AVAILABLE_THEMES.find(themeOption => themeOption.id === theme);
+}
+
 export function canSelectTheme(theme: Theme, isAdminOrCreator = false): boolean {
-  return isAdminOrCreator || isDefaultFreeTheme(theme);
+  const themeOption = getThemeMetadata(theme);
+  return themeOption ? resolveThemeAccess(themeOption, { isAdminOrCreator }).selectable : false;
 }
 
 /**

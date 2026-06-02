@@ -4,7 +4,13 @@ import { AiSupportAssistant } from '../assistant';
 import { createBalanceSnapshot, type BalanceAxisKey, type BalanceSnapshot } from '../../services/balanceScore';
 import { fetchCheckinsForUser } from '../../services/checkins';
 import { getAiCoachAccess } from '../../services/aiCoachAccess';
-import { loadAiCoachInstructions, type HabitEnvironmentContext, type GoalCoachContext } from '../../services/aiCoachInstructions';
+import {
+  loadAiCoachInstructions,
+  resolveAiCoachLifeStageContext,
+  type AiCoachLifeStageContext,
+  type HabitEnvironmentContext,
+  type GoalCoachContext,
+} from '../../services/aiCoachInstructions';
 import { getDemoCheckins, getDemoHabitLogsForRange, getDemoHabitsForUser, getDemoGoals } from '../../services/demoData';
 import { isDemoSession } from '../../services/demoSession';
 import { listHabitLogsForRangeMultiV2, listHabitsV2, type HabitLogV2Row, type HabitV2Row } from '../../services/habitsV2';
@@ -16,6 +22,7 @@ import { classifyHabit } from '../habits/performanceClassifier';
 import { recordTelemetryEvent, getTelemetryDifficultyAdjustment } from '../../services/telemetry';
 import { AI_FEATURE_ICON } from '../../constants/ai';
 import { fetchRecentGoalSnapshots } from '../../services/goalSnapshots';
+import { fetchWorkspaceProfile } from '../../services/workspaceProfile';
 
 export interface AiCoachProps {
   session: Session;
@@ -402,6 +409,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   const [interventionsLoading, setInterventionsLoading] = useState(false);
   const [habitContexts, setHabitContexts] = useState<HabitEnvironmentContext[]>([]);
   const [goalContexts, setGoalContexts] = useState<GoalCoachContext[]>([]);
+  const [lifeStageContext, setLifeStageContext] = useState<AiCoachLifeStageContext | null>(null);
   const [minProgressStreak, setMinProgressStreak] = useState<number>(14);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -413,8 +421,8 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   const dataAccess = useMemo(() => getAiCoachAccess(session), [session]);
   const demoMode = useMemo(() => isDemoSession(session), [session]);
   const instructionPayload = useMemo(
-    () => loadAiCoachInstructions(dataAccess, demoMode, habitContexts, goalContexts, minProgressStreak),
-    [dataAccess, demoMode, habitContexts, goalContexts, minProgressStreak],
+    () => loadAiCoachInstructions(dataAccess, demoMode, habitContexts, goalContexts, minProgressStreak, lifeStageContext),
+    [dataAccess, demoMode, habitContexts, goalContexts, minProgressStreak, lifeStageContext],
   );
 
   const accessSummary = useMemo(() => {
@@ -427,6 +435,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
       { label: 'Journaling', enabled: dataAccess.journaling },
       { label: 'Reflections', enabled: dataAccess.reflections },
       { label: 'Vision board', enabled: dataAccess.visionBoard },
+      { label: 'Life stage', enabled: dataAccess.lifeStage },
     ];
 
     entries.forEach((entry) => {
@@ -443,6 +452,36 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
 
     return `Allowed: ${allowed.join(', ')}. Blocked: ${blocked.join(', ')}.`;
   }, [dataAccess]);
+
+  useEffect(() => {
+    let active = true;
+
+    if (!dataAccess.lifeStage) {
+      setLifeStageContext(null);
+      return () => {
+        active = false;
+      };
+    }
+
+    if (demoMode) {
+      setLifeStageContext(null);
+      return () => {
+        active = false;
+      };
+    }
+
+    fetchWorkspaceProfile(session.user.id).then(({ data }) => {
+      if (!active) return;
+      setLifeStageContext(resolveAiCoachLifeStageContext(data?.birthday ?? null));
+    }).catch(() => {
+      if (!active) return;
+      setLifeStageContext(null);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [dataAccess.lifeStage, demoMode, session.user.id]);
 
   useEffect(() => {
     scrollToBottom();
@@ -663,6 +702,13 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
         return blockedResponse('vision board');
       }
       return `Pick one vision board item that feels most alive right now. What tiny action would move it forward this week?`;
+    }
+
+    if (lowerMessage.includes('age') || lowerMessage.includes('birthday') || lowerMessage.includes('life stage')) {
+      if (!access.lifeStage) {
+        return blockedResponse('life-stage context');
+      }
+      return `I can use your broad life-stage context if you've saved a birthday. I’ll keep it high-level and avoid exact-age assumptions. What decision or goal should we calibrate for your current season?`;
     }
 
     return `Got it, ${userName}. Want to keep this short or go deeper? I can offer two small options or ask one clarifying question.`;
