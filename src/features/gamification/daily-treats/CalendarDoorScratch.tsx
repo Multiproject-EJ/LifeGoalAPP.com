@@ -19,6 +19,13 @@ type CalendarDoorScratchProps = {
 const SCRATCH_ACTIONS_TO_REVEAL = 18;
 /** Radius in pixels of the scratch brush */
 const SCRATCH_BRUSH_RADIUS_PX = 18;
+const SCRATCH_CONFETTI_DURATION_MS = 2000;
+
+const prefersReducedMotion = () => (
+  typeof window !== 'undefined'
+  && typeof window.matchMedia === 'function'
+  && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+);
 
 /** Get holiday-themed gradient colors for scratch layer */
 function getHolidayGradient(holidayKey: HolidayKey | null): [string, string, string] {
@@ -94,12 +101,39 @@ export const CalendarDoorScratch = ({
   const [scratchCount, setScratchCount] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
   const isDrawingRef = useRef(false);
+  const confettiTimerRef = useRef<number | null>(null);
+
+  const scheduleConfettiHide = () => {
+    if (confettiTimerRef.current !== null) {
+      window.clearTimeout(confettiTimerRef.current);
+    }
+    confettiTimerRef.current = window.setTimeout(() => {
+      setShowConfetti(false);
+      confettiTimerRef.current = null;
+    }, SCRATCH_CONFETTI_DURATION_MS);
+  };
+
+  const showCelebrationIfAllowed = () => {
+    if (tier < 2 || prefersReducedMotion()) return;
+    setShowConfetti(true);
+    scheduleConfettiHide();
+  };
 
   useEffect(() => {
     setIsRevealed(false);
     setScratchCount(0);
     setShowConfetti(false);
+    if (confettiTimerRef.current !== null) {
+      window.clearTimeout(confettiTimerRef.current);
+      confettiTimerRef.current = null;
+    }
   }, [dayNumber]);
+
+  useEffect(() => () => {
+    if (confettiTimerRef.current !== null) {
+      window.clearTimeout(confettiTimerRef.current);
+    }
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -120,11 +154,8 @@ export const CalendarDoorScratch = ({
   useEffect(() => {
     if (scratchCount >= SCRATCH_ACTIONS_TO_REVEAL && !isRevealed) {
       setIsRevealed(true);
-      // Show confetti for tier 2+ rewards
-      if (tier >= 2) {
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 2000);
-      }
+      // Show confetti for tier 2+ rewards unless reduced motion is requested.
+      showCelebrationIfAllowed();
       onRevealComplete?.();
     }
   }, [scratchCount, isRevealed, onRevealComplete, tier]);
@@ -165,19 +196,17 @@ export const CalendarDoorScratch = ({
 
   const handleRevealNow = () => {
     setIsRevealed(true);
-    if (tier >= 2) {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 2000);
-    }
+    showCelebrationIfAllowed();
     onRevealComplete?.();
   };
 
+  const reduceMotion = prefersReducedMotion();
   const isDiamondReward = tier === 5;
 
   return (
     <div className={`door-scratch ${isDiamondReward && isRevealed ? 'door-scratch--diamond' : ''}`}>
       {/* Diamond flash effect */}
-      {isDiamondReward && isRevealed && (
+      {isDiamondReward && isRevealed && !reduceMotion && (
         <div className="door-scratch__diamond-flash" aria-hidden="true" />
       )}
 
