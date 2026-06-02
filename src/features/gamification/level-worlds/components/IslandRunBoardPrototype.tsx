@@ -9765,19 +9765,6 @@ export function IslandRunBoardPrototype({
           🧩 {runtimeState.stickerProgress.fragments}/5
         </button>
 
-        <div className="island-run-board__traffic-light-widget" role="status" aria-label={`Traffic light bonus ${trafficLightCharge} of ${TRAFFIC_LIGHT_CHARGE_TARGET} lights`}>
-          <span className="island-run-board__traffic-light-icon" aria-hidden="true">🚦</span>
-          <span className="island-run-board__traffic-light-stack" aria-hidden="true">
-            {Array.from({ length: TRAFFIC_LIGHT_CHARGE_TARGET }, (_, index) => {
-              const lightNumber = index + 1;
-              const isLit = lightNumber <= trafficLightCharge;
-              const phase = lightNumber >= TRAFFIC_LIGHT_CHARGE_TARGET ? 'green' : lightNumber >= 4 ? 'yellow' : 'red';
-              return <span key={lightNumber} className={`island-run-board__traffic-light-dot island-run-board__traffic-light-dot--${phase} ${isLit ? 'island-run-board__traffic-light-dot--lit' : ''}`.trim()} />;
-            })}
-          </span>
-          <span className="island-run-board__traffic-light-count">{trafficLightCharge}/{TRAFFIC_LIGHT_CHARGE_TARGET}</span>
-        </div>
-
         <BoardStage
           anchors={activeTileAnchors}
           theme={activeTheme}
@@ -9792,6 +9779,8 @@ export function IslandRunBoardPrototype({
           boardTiltXDeg={boardTiltXDeg}
           boardRotateZDeg={boardRotateZDeg}
           tileMap={landmarkDoorTileMap}
+          trafficLightCharge={trafficLightCharge}
+          trafficLightChargeTarget={TRAFFIC_LIGHT_CHARGE_TARGET}
           stopMap={stopMap}
           completedEncounterIndices={completedEncounterIndices}
           tokenIndex={tokenIndex}

@@ -58,6 +58,9 @@ export interface BoardStageProps {
 
   /** Tile state data */
   tileMap: Record<number, IslandTileMapEntry>;
+  /** Traffic-light bonus progress rendered on the traffic-light tile itself. */
+  trafficLightCharge?: number;
+  trafficLightChargeTarget?: number;
   stopMap: Map<number, string>;
   completedEncounterIndices: Set<number>;
 
@@ -120,6 +123,8 @@ export function BoardStage(props: BoardStageProps) {
     boardTiltXDeg = BOARD_TILT_X_DEG,
     boardRotateZDeg = BOARD_ROTATE_Z_DEG,
     tileMap,
+    trafficLightCharge = 0,
+    trafficLightChargeTarget = 8,
     stopMap,
     completedEncounterIndices,
     tokenIndex,
@@ -538,6 +543,8 @@ export function BoardStage(props: BoardStageProps) {
           boardHeight={boardSize.height}
           stopMap={stopMap}
           tileMap={tileMap}
+          trafficLightCharge={trafficLightCharge}
+          trafficLightChargeTarget={trafficLightChargeTarget}
           completedEncounterIndices={completedEncounterIndices}
           tokenIndex={tokenIndex}
           isSpark40={isSpark40}
