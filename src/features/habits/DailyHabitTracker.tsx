@@ -187,6 +187,7 @@ const HABIT_SWIPE_MAX_PX = 132;
 const HABIT_SWIPE_ARM_THRESHOLD_PX = 84;
 const HABIT_SWIPE_SUPPRESS_CLICK_MS = 260;
 const HABIT_SFX_ENABLED_STORAGE_KEY = 'lifegoal.habits.sfx.enabled';
+const PUBLIC_COMPACT_VIEW_STORAGE_KEY_PREFIX = 'lifegoal.habits.publicCompactView';
 const COMPACT_PULL_REFRESH_THRESHOLD_PX = 72;
 const COMPACT_PULL_REFRESH_MAX_PX = 118;
 const COMPACT_PULL_REFRESH_RESISTANCE = 0.45;
@@ -198,6 +199,10 @@ function getUtcDayDifference(fromDateIso: string, toDateIso: string): number {
   const toMs = Date.parse(`${toDateIso}T00:00:00.000Z`);
   if (!Number.isFinite(fromMs) || !Number.isFinite(toMs)) return 0;
   return Math.floor((toMs - fromMs) / 86400000);
+}
+
+function getPublicCompactViewStorageKey(userId: string): string {
+  return `${PUBLIC_COMPACT_VIEW_STORAGE_KEY_PREFIX}:${userId}`;
 }
 
 function isHabitSfxEnabled(): boolean {
@@ -1153,6 +1158,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const swipeSuppressClickUntilByTodoIdRef = useRef<Record<string, number>>({});
   const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
   const [isCompactView, setIsCompactView] = useState(preferredCompactView ?? forceCompactView);
+  const [isPublicCompactView, setIsPublicCompactView] = useState(false);
   const [compactPullDistance, setCompactPullDistance] = useState(0);
   const [showCompactRefreshSuccess, setShowCompactRefreshSuccess] = useState(false);
   const compactPullDistanceRef = useRef(0);
@@ -1203,6 +1209,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       setIsCompactView(true);
     }
   }, [forceCompactView, preferredCompactView]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setIsPublicCompactView(window.localStorage.getItem(getPublicCompactViewStorageKey(session.user.id)) === '1');
+  }, [session.user.id]);
+
+  const isPublicView = isCompactView && isPublicCompactView;
   const [isCompactToggleLabelVisible, setIsCompactToggleLabelVisible] = useState(false);
   const compactToggleLabelTimeoutRef = useRef<number | null>(null);
   const reviewAutoArchivingHabitIdsRef = useRef<Set<string>>(new Set());
@@ -6781,7 +6794,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           <p className="habit-checklist__empty">All habits checked off for today.</p>
         ) : null}
         <ul className="habit-checklist" role="list">
-          {activeTodos.map((todo) => {
+          {activeTodos.map((todo, todoIndex) => {
             const isExpanded = Boolean(expandedTodayTodoById[todo.id]);
             const isJustCompletedTodo = justCompletedTodoId === todo.id;
             const todoSwipeOffset = swipeOffsetByTodoId[todo.id] ?? 0;
@@ -6790,6 +6803,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             const leftTodoSwipeProgress = todoSwipeOffset < 0 ? todoSwipeProgress : 0;
             const todoSwipeAction: TodoSwipeAction | null = getTodoSwipeAction(isExpanded);
             const todoSwipeArmedDirection = swipeArmedByTodoId[todo.id] ?? null;
+            const todoDisplayTitle = isPublicView ? `Private todo ${todoIndex + 1}` : todo.title;
             return (
               <li key={todo.id} className={`habit-checklist__item habit-checklist__item--todo ${isJustCompletedTodo ? 'habit-checklist__item--todo-completing' : ''}`.trim()}>
                 <div
@@ -6880,7 +6894,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         <button
                           type="button"
                           className="habit-checklist__todo-check"
-                          aria-label={`Mark todo ${todo.title} as complete`}
+                          aria-label={`Mark ${todoDisplayTitle} as complete`}
                           onClick={(event) => {
                             event.stopPropagation();
                             void handleToggleTodayTodo(todo);
@@ -6892,8 +6906,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       <div className="habit-checklist__main habit-checklist__main--todo">
                         <div className="habit-checklist__todo-header">
                           <span className="habit-checklist__todo-badge">Todo</span>
-                          <h3>{todo.title}</h3>
-                          {onNavigateToTimer ? (
+                          <h3>{todoDisplayTitle}</h3>
+                          {onNavigateToTimer && !isPublicView ? (
                             <button
                               type="button"
                               className="habit-checklist__todo-start-now"
@@ -6908,15 +6922,15 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         </div>
                         {isExpanded ? (
                           <>
-                            {todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes yet — add context when you need it.</p>}
+                            {isPublicView ? <p className="habit-checklist__todo-note-placeholder">Notes hidden in public view.</p> : todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes yet — add context when you need it.</p>}
                             <div className="habit-checklist__todo-actions" onClick={(event) => event.stopPropagation()}>
                               <span className="habit-checklist__todo-actions-label">Quick actions</span>
                               <button type="button" className="habit-checklist__todo-action-btn" onClick={() => void handleToggleTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Complete</button>
                               <button type="button" className="habit-checklist__todo-action-btn" onClick={() => handleRescheduleTodayTodoTomorrow(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Tomorrow</button>
-                              <button type="button" className="habit-checklist__todo-action-btn" onClick={() => handleOpenEditTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Edit / reschedule</button>
-                              <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--habit" onClick={() => void handleConvertTodayTodoToHabit(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Convert to habit</button>
-                              {onNavigateToTimer ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--focus" onClick={() => onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title })}>Start 25m focus</button> : null}
-                              {onOpenAiCoach ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--coach" onClick={() => onOpenAiCoach(buildTodayTodoCoachPrompt(todo))}>Help me figure out next step</button> : null}
+                              {!isPublicView ? <button type="button" className="habit-checklist__todo-action-btn" onClick={() => handleOpenEditTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Edit / reschedule</button> : null}
+                              {!isPublicView ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--habit" onClick={() => void handleConvertTodayTodoToHabit(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Convert to habit</button> : null}
+                              {onNavigateToTimer && !isPublicView ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--focus" onClick={() => onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title })}>Start 25m focus</button> : null}
+                              {onOpenAiCoach && !isPublicView ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--coach" onClick={() => onOpenAiCoach(buildTodayTodoCoachPrompt(todo))}>Help me figure out next step</button> : null}
                             </div>
                           </>
                         ) : null}
@@ -6940,8 +6954,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   <h3>{completedTodos.length}</h3>
                 </div>
                 <ul className="habit-checklist" role="list">
-                  {completedTodos.map((todo) => {
+                  {completedTodos.map((todo, completedTodoIndex) => {
                     const isExpanded = Boolean(expandedTodayTodoById[todo.id]);
+                    const todoDisplayTitle = isPublicView ? `Completed todo ${completedTodoIndex + 1}` : todo.title;
                     return (
                     <li key={todo.id} className="habit-checklist__item habit-checklist__item--todo habit-checklist__item--completed">
                       <div
@@ -6961,7 +6976,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         <button
                           type="button"
                           className="habit-checklist__todo-check"
-                          aria-label={`Mark todo ${todo.title} active again`}
+                          aria-label={`Mark ${todoDisplayTitle} active again`}
                           onClick={(event) => {
                             event.stopPropagation();
                             void handleToggleTodayTodo(todo);
@@ -6972,16 +6987,16 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         <div className="habit-checklist__main habit-checklist__main--todo">
                           <div className="habit-checklist__todo-header">
                             <span className="habit-checklist__todo-badge habit-checklist__todo-badge--done">Done today</span>
-                            <h3>{todo.title}</h3>
+                            <h3>{todoDisplayTitle}</h3>
                             {todo.updated_at ? <p className="habit-checklist__todo-completed-at">Completed {formatTimeLabel(new Date(todo.updated_at))}</p> : null}
                           </div>
                           {isExpanded ? (
                             <>
-                              {todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes were saved for this todo.</p>}
+                              {isPublicView ? <p className="habit-checklist__todo-note-placeholder">Notes hidden in public view.</p> : todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes were saved for this todo.</p>}
                               <div className="habit-checklist__todo-actions" onClick={(event) => event.stopPropagation()}>
                                 <span className="habit-checklist__todo-actions-label">Quick actions</span>
                                 <button type="button" onClick={() => void handleToggleTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Mark active again</button>
-                                <button type="button" onClick={() => handleOpenEditTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Edit</button>
+                                {!isPublicView ? <button type="button" onClick={() => handleOpenEditTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Edit</button> : null}
                               </div>
                             </>
                           ) : null}
@@ -6994,7 +7009,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               </div>
             </li>
           ) : null}
-          {visibleHabits.map((habit) => {
+          {visibleHabits.map((habit, habitIndex) => {
             const state = completions[habit.id];
             const isCompleted = Boolean(state?.completed);
             const isSaving = Boolean(saving[habit.id]);
@@ -7049,6 +7064,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               isSaving,
             });
             const isQuestHabit = questHabit?.habitId === habit.id;
+            const habitDisplayName = isPublicView ? `Private habit ${habitIndex + 1}` : habit.name;
 
             return (
               <li
@@ -7314,7 +7330,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           type="checkbox"
                           className="habit-checklist__checkbox"
                           checked={isCompleted}
-                          aria-label={`Mark ${habit.name} as ${isCompleted ? 'incomplete' : 'complete'}`}
+                          aria-label={`Mark ${habitDisplayName} as ${isCompleted ? 'incomplete' : 'complete'}`}
                           tabIndex={shouldCollapseCheckbox ? -1 : undefined}
                           onClick={(event) => event.stopPropagation()}
                           onChange={(event) => {
@@ -7331,7 +7347,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                               {habit.emoji}
                             </span>
                           ) : null}
-                          {habit.name}
+                          {habitDisplayName}
                         </span>
                         <div className="habit-checklist__badges">
                           {(isCompleted || state?.progressState === 'skipped' || state?.progressState === 'missed') && state?.progressState && (
@@ -7423,29 +7439,35 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                             event.stopPropagation();
                             setVisionPreviewImage(linkedVisionImage);
                           }}
-                          aria-label={`View vision board image for ${habit.name}`}
+                          aria-label={`View vision board image for ${habitDisplayName}`}
                         >
                           <img src={linkedVisionImage.publicUrl} alt="" aria-hidden="true" />
                         </button>
                       ) : null}
                     </div>
-                    <div className="habit-checklist__meta-group">
-                      <p className="habit-checklist__meta">
-                        Life wheel • {domainLabel ?? 'Unassigned'}
-                      </p>
-                      <p className="habit-checklist__meta habit-checklist__meta--secondary">
-                        Goal • {goalLabel}
-                      </p>
-                      {lastCompletedText ? (
-                        <p className="habit-checklist__note">{lastCompletedText}</p>
-                      ) : null}
-                    </div>
-                    {habit.habit_environment ? (
-                      <div className="habit-checklist__environment">
-                        <p className="habit-checklist__environment-label">📍 Where &amp; How</p>
-                        <p className="habit-checklist__environment-text">{habit.habit_environment}</p>
-                      </div>
-                    ) : null}
+                    {isPublicView ? (
+                      <p className="habit-checklist__todo-note-placeholder">Habit details hidden in public view.</p>
+                    ) : (
+                      <>
+                        <div className="habit-checklist__meta-group">
+                          <p className="habit-checklist__meta">
+                            Life wheel • {domainLabel ?? 'Unassigned'}
+                          </p>
+                          <p className="habit-checklist__meta habit-checklist__meta--secondary">
+                            Goal • {goalLabel}
+                          </p>
+                          {lastCompletedText ? (
+                            <p className="habit-checklist__note">{lastCompletedText}</p>
+                          ) : null}
+                        </div>
+                        {habit.habit_environment ? (
+                          <div className="habit-checklist__environment">
+                            <p className="habit-checklist__environment-label">📍 Where &amp; How</p>
+                            <p className="habit-checklist__environment-text">{habit.habit_environment}</p>
+                          </div>
+                        ) : null}
+                      </>
+                    )}
                   </section>
                   <section className="habit-checklist__detail-block habit-checklist__detail-block--progress" aria-label="Habit progress">
                     <div className="habit-checklist__detail-block-header">
@@ -8011,6 +8033,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     };
 
     const checklistCardClassName = `habit-checklist-card${isCompactView ? '' : ' habit-checklist-card--glass'}${
+      isPublicView ? ' habit-checklist-card--public-view' : ''
+    }${
       canUseCompactPullRefresh ? ' habit-checklist-card--pull-enabled' : ''
     }${compactPullDistance > 0 ? ' habit-checklist-card--pulling' : ''}${
       isPullArmed ? ' habit-checklist-card--pull-armed' : ''
@@ -8520,7 +8544,15 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         }, 2200);
         return;
       }
-      setIsCompactView((previous) => !previous);
+      setIsCompactView((previous) => {
+        if (previous) {
+          setIsPublicCompactView(false);
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem(getPublicCompactViewStorageKey(session.user.id), '0');
+          }
+        }
+        return !previous;
+      });
       setIsCompactToggleLabelVisible(true);
       if (compactToggleLabelTimeoutRef.current) {
         window.clearTimeout(compactToggleLabelTimeoutRef.current);
@@ -8528,6 +8560,17 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       compactToggleLabelTimeoutRef.current = window.setTimeout(() => {
         setIsCompactToggleLabelVisible(false);
       }, 2200);
+    };
+
+    const handlePublicViewToggle = () => {
+      setIsCompactView(true);
+      setIsPublicCompactView((previous) => {
+        const next = !previous;
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(getPublicCompactViewStorageKey(session.user.id), next ? '1' : '0');
+        }
+        return next;
+      });
     };
 
     const showIntentionsOnlyRow = Boolean(yesterdayIntentionsEntry && !isIntentionsNoticeViewed && !isCompactView);
@@ -8773,7 +8816,24 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   {isCompactView ? 'Compact' : 'Detailed'}
                 </span>
               </button>
+              <button
+                type="button"
+                className={`habit-checklist-card__privacy-toggle ${
+                  isPublicView ? 'habit-checklist-card__privacy-toggle--active' : ''
+                }`}
+                onClick={handlePublicViewToggle}
+                aria-pressed={isPublicView}
+                aria-label={isPublicView ? 'Turn public view off' : 'Turn public view on'}
+              >
+                <span aria-hidden="true">{isPublicView ? '🙈' : '👁️'}</span>
+                <span>Public</span>
+              </button>
             </div>
+            {isPublicView ? (
+              <p className="habit-checklist-card__privacy-note" role="status">
+                Public view is on: names, notes, and personal signals are minimised.
+              </p>
+            ) : null}
             {!isCompactView ? (
               <div className="habit-checklist-card__head-actions">
                 {showIntentionsOnlyRow ? (
@@ -8896,7 +8956,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             ) : (
               renderCompactList()
             )}
-            {isViewingToday && isCompactView && onOpenStarterQuest ? (
+            {isViewingToday && isCompactView && !isPublicView && onOpenStarterQuest ? (
               <LifeBuildTodayCard
                 userId={session.user.id}
                 dateISO={today}
@@ -8963,10 +9023,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               />
             ) : null}
 
-            {sparkHandEnabled && archetypeHand ? (
+            {sparkHandEnabled && archetypeHand && !isPublicView ? (
               <MyPlayerHandPanel hand={archetypeHand} compact />
             ) : null}
-            {identitySignalsUnlocked ? (
+            {identitySignalsUnlocked && !isPublicView ? (
               <div className="identity-signals-card" aria-live="polite">
                 <div className="identity-signals-card__header">
                   <div>
