@@ -520,6 +520,7 @@ export const CountdownCalendarModal = ({
                 isPersonalQuest={isPersonalQuest}
                 diceLabel={dailyTreatDiceLabel}
                 variant={doorType === 'bonus' ? 'gift' : 'envelope'}
+                isBonusDoor={doorType === 'bonus'}
               />
             )}
             {mechanic === 'scratch' && (
