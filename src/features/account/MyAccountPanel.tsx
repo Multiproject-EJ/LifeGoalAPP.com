@@ -964,7 +964,7 @@ export function MyAccountPanel({
         <section className="account-panel__card" aria-labelledby="account-birthday-gift">
           <p className="account-panel__eyebrow">Rewards</p>
           <h3 id="account-birthday-gift">Birthday gift</h3>
-          <p className="account-panel__hint">Opt in to receive a birthday gift worth 💎 1 diamond. Gifts are limited to one claim every 365 days even if your birthday date changes.</p>
+          <p className="account-panel__hint">Opt in to receive a birthday gift worth 💎 1 diamond plus the free Birthday Wish theme on your first eligible claim. Gifts are limited to one claim every 365 days even if your birthday date changes.</p>
           <div className="account-panel__toggle-row">
             <label className="account-panel__toggle-label">
               <input type="checkbox" checked={isBirthdayGiftEnabled} onChange={(event) => handleToggleBirthdayGift(event.target.checked)} disabled={savingPreference || isDemoExperience} className="account-panel__toggle-input" />

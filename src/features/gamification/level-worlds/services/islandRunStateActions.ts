@@ -2939,6 +2939,42 @@ function buildTravelLuckyRollRunId(sessionKey: string, nowMs: number): string {
   return `island-run-lucky-roll:${sessionKey}:${nowMs}:${randomSuffix}`;
 }
 
+export function shouldGrantIsland120ThemeEntitlementOnTravel(options: {
+  fromIsland: number;
+  toIsland: number;
+  previousCycleIndex: number;
+  nextCycleIndex: number;
+}): boolean {
+  const fromIsland = Number.isFinite(options.fromIsland) ? Math.trunc(options.fromIsland) : 0;
+  const toIsland = Number.isFinite(options.toIsland) ? Math.trunc(options.toIsland) : 0;
+  const previousCycleIndex = Number.isFinite(options.previousCycleIndex) ? Math.trunc(options.previousCycleIndex) : 0;
+  const nextCycleIndex = Number.isFinite(options.nextCycleIndex) ? Math.trunc(options.nextCycleIndex) : 0;
+
+  return fromIsland === ISLAND_RUN_MAX_ISLAND
+    && toIsland === 1
+    && nextCycleIndex > previousCycleIndex;
+}
+
+async function grantIsland120ThemeEntitlementIfEligible(options: {
+  client: SupabaseClient | null;
+  fromIsland: number;
+  toIsland: number;
+  previousCycleIndex: number;
+  nextCycleIndex: number;
+}): Promise<void> {
+  if (!options.client) return;
+  if (!shouldGrantIsland120ThemeEntitlementOnTravel(options)) return;
+
+  try {
+    const { error } = await (options.client as any).rpc('claim_island_120_theme_entitlement');
+    if (error) {
+      console.warn('[island-run] Failed to grant Island 120 theme entitlement:', error);
+    }
+  } catch (error) {
+    console.warn('[island-run] Failed to grant Island 120 theme entitlement:', error);
+  }
+}
+
 export interface TravelToNextIslandOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -3109,6 +3145,14 @@ export async function travelToNextIsland(options: TravelToNextIslandOptions): Pr
     client,
     record: travelState.record,
     triggerSource: triggerSource ?? 'travel_to_next_island',
+  });
+
+  await grantIsland120ThemeEntitlementIfEligible({
+    client,
+    fromIsland: current.currentIslandNumber,
+    toIsland: travelState.resolvedIsland,
+    previousCycleIndex: current.cycleIndex,
+    nextCycleIndex: travelState.nextCycleIndex,
   });
 
   return travelState;

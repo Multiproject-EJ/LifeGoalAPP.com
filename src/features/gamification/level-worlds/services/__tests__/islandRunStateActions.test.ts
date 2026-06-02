@@ -86,6 +86,7 @@ import {
   applyTokenHopRewards,
   clearActiveCompanionId,
   setActiveCompanionId,
+  shouldGrantIsland120ThemeEntitlementOnTravel,
   travelToNextIsland,
 } from '../islandRunStateActions';
 import { isIslandRunFullyClearedV2 } from '../islandRunContractV2StopResolver';
@@ -4939,6 +4940,42 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(observed[0].bossResolvedIsland, null, 'post-travel: boss resolved island cleared');
 
       unsub();
+    },
+  },
+
+  {
+    name: 'Island 120 theme grant predicate only fires on first-cycle wrap travel',
+    run: () => {
+      assertEqual(
+        shouldGrantIsland120ThemeEntitlementOnTravel({
+          fromIsland: 120,
+          toIsland: 1,
+          previousCycleIndex: 0,
+          nextCycleIndex: 1,
+        }),
+        true,
+        '120→1 wrap should trigger Dreamt Horizon entitlement grant',
+      );
+      assertEqual(
+        shouldGrantIsland120ThemeEntitlementOnTravel({
+          fromIsland: 119,
+          toIsland: 120,
+          previousCycleIndex: 0,
+          nextCycleIndex: 0,
+        }),
+        false,
+        'ordinary island travel should not trigger Island 120 theme grant',
+      );
+      assertEqual(
+        shouldGrantIsland120ThemeEntitlementOnTravel({
+          fromIsland: 120,
+          toIsland: 1,
+          previousCycleIndex: 1,
+          nextCycleIndex: 1,
+        }),
+        false,
+        'stale/non-advancing cycle data should not trigger grant',
+      );
     },
   },
 
