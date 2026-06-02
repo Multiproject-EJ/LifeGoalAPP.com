@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { playIslandRunSound, triggerIslandRunHaptic } from '../level-worlds/services/islandRunAudio';
+import { prefersReducedMotion } from './motionPreferences';
 import { RewardCard } from './RewardCard';
 import type { RewardTier, RewardCurrency, HolidayKey } from '../../../services/treatCalendarService';
 
@@ -23,12 +24,6 @@ type CalendarDoorUnwrapProps = {
 const DEFAULT_UNWRAP_REVEAL_DELAY_MS = 800;
 const BONUS_UNWRAP_REVEAL_DELAY_MS = 420;
 const REDUCED_MOTION_UNWRAP_REVEAL_DELAY_MS = 50;
-
-const prefersReducedMotion = () => (
-  typeof window !== 'undefined'
-  && typeof window.matchMedia === 'function'
-  && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-);
 
 /**
  * Unwrap reveal mechanic — CSS gift/envelope unwrap animation.
