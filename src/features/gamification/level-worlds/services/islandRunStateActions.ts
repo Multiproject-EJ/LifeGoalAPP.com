@@ -97,6 +97,10 @@ import {
   recordIslandRunEconomyCounter,
   type IslandRunEconomySource,
 } from './islandRunEconomyTelemetry';
+import {
+  applyTrafficLightPass,
+  type TrafficLightCoinFlipReward,
+} from './islandRunTrafficLightTile';
 
 
 export type SpaceExcavatorDigFailureReason = 'missing_progress' | 'insufficient_tickets' | 'board_complete' | 'invalid_tile' | 'already_dug';
@@ -683,6 +687,75 @@ export function applyTokenHopRewards(options: {
     client,
     record: next,
     triggerSource: triggerSource ?? 'apply_token_hop_rewards',
+  });
+  return next;
+}
+
+export interface ApplyTrafficLightPassResult {
+  record: IslandRunGameStateRecord;
+  chargeAfter: number;
+  unlocked: boolean;
+}
+
+export function applyTrafficLightTilePass(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  islandNumber: number;
+  triggerSource?: string;
+}): ApplyTrafficLightPassResult {
+  const { session, client, islandNumber, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const result = applyTrafficLightPass({
+    bonusTileChargeByIsland: current.bonusTileChargeByIsland,
+    islandNumber,
+  });
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    bonusTileChargeByIsland: result.bonusTileChargeByIsland,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_traffic_light_tile_pass',
+  });
+  return { record: next, chargeAfter: result.chargeAfter, unlocked: result.unlocked };
+}
+
+export function applyTrafficLightCoinFlipReward(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  reward: TrafficLightCoinFlipReward;
+  triggerSource?: string;
+}): IslandRunGameStateRecord {
+  const { session, client, reward, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const stickerFragmentsDelta = Math.max(0, Math.floor(reward.stickerFragments));
+  const nextStickerProgress = stickerFragmentsDelta > 0
+    ? {
+        ...current.stickerProgress,
+        fragments: Math.max(0, Math.floor(current.stickerProgress.fragments)) + stickerFragmentsDelta,
+      }
+    : current.stickerProgress;
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    dicePool: Math.max(0, current.dicePool + Math.max(0, Math.floor(reward.dice))),
+    essence: Math.max(0, current.essence + Math.max(0, Math.floor(reward.essence))),
+    stickerProgress: nextStickerProgress,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  recordIslandRunDiceInflow({
+    source: ISLAND_RUN_ECONOMY_SOURCES.tokenHopDice,
+    amount: Math.max(0, Math.floor(reward.dice)),
+    sessionId: session.user.id,
+    metadata: { triggerSource: triggerSource ?? 'traffic_light_coin_flip_reward', boxId: reward.boxId, side: reward.side },
+  });
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'traffic_light_coin_flip_reward',
   });
   return next;
 }

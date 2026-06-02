@@ -8151,3 +8151,124 @@
   border: 1px solid rgba(125, 216, 255, 0.42);
   font-weight: 800;
 }
+
+.island-tile--traffic_light {
+  background: linear-gradient(160deg, #bbf7d0 0%, #22c55e 48%, #14532d 100%);
+  border: 1.5px solid rgba(187, 247, 208, 0.95);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.62), 0 0 22px rgba(20, 83, 45, 0.42);
+}
+
+.island-run-board__traffic-light-widget {
+  position: absolute;
+  top: 82px;
+  right: 12px;
+  z-index: 13;
+  display: flex;
+  align-items: center;
+  gap: 0.34rem;
+  padding: 0.36rem 0.48rem;
+  border-radius: 999px;
+  border: 1px solid rgba(187, 247, 208, 0.5);
+  background: rgba(5, 31, 20, 0.78);
+  color: #eafff0;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
+}
+
+.island-run-board__traffic-light-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.island-run-board__traffic-light-stack {
+  display: grid;
+  grid-template-columns: repeat(4, 7px);
+  gap: 3px;
+}
+
+.island-run-board__traffic-light-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.38);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.island-run-board__traffic-light-dot--lit.island-run-board__traffic-light-dot--red {
+  background: #ef4444;
+  box-shadow: 0 0 7px rgba(239, 68, 68, 0.82);
+}
+
+.island-run-board__traffic-light-dot--lit.island-run-board__traffic-light-dot--yellow {
+  background: #facc15;
+  box-shadow: 0 0 7px rgba(250, 204, 21, 0.82);
+}
+
+.island-run-board__traffic-light-dot--lit.island-run-board__traffic-light-dot--green {
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.92);
+}
+
+.island-run-board__traffic-light-count {
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+}
+
+.island-stop-modal--traffic-light {
+  max-width: min(390px, calc(100vw - 32px));
+  text-align: center;
+}
+
+.island-traffic-light__intro {
+  margin: 0.5rem 0;
+  color: rgba(243, 248, 255, 0.92);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.island-traffic-light__coin {
+  width: 74px;
+  height: 74px;
+  margin: 0.8rem auto;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  font-weight: 950;
+  color: #3b2600;
+  background: radial-gradient(circle at 30% 24%, #fff7ad 0%, #facc15 48%, #b45309 100%);
+  border: 2px solid rgba(255, 247, 173, 0.95);
+  box-shadow: 0 0 22px rgba(250, 204, 21, 0.55), 0 10px 24px rgba(0, 0, 0, 0.32);
+}
+
+.island-traffic-light__coin--flipped {
+  animation: traffic-light-coin-pop 0.46s ease-out;
+}
+
+@keyframes traffic-light-coin-pop {
+  0% { transform: rotateY(0deg) scale(0.82); }
+  55% { transform: rotateY(180deg) scale(1.08); }
+  100% { transform: rotateY(360deg) scale(1); }
+}
+
+.island-traffic-light__boxes,
+.island-traffic-light__result {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.7rem 0;
+}
+
+.island-traffic-light__boxes span,
+.island-traffic-light__result {
+  border-radius: 14px;
+  padding: 0.55rem 0.65rem;
+  background: rgba(12, 74, 110, 0.72);
+  border: 1px solid rgba(125, 216, 255, 0.42);
+  color: #f8fbff;
+  font-weight: 800;
+}
+
+.island-traffic-light__result p {
+  margin: 0.1rem 0;
+}

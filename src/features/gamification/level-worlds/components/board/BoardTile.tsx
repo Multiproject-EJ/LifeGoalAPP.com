@@ -49,6 +49,14 @@ const TILE_SVG_ICONS: Record<string, JSX.Element> = {
       <circle cx="11" cy="10" r="0.8" fill="#FFF7AD"/>
     </svg>
   ),
+  traffic_light: (
+    <svg viewBox="0 0 18 18" width="14" height="14" fill="none" aria-hidden="true">
+      <rect x="5" y="2" width="8" height="14" rx="2" fill="#102A1D" stroke="#BBF7D0" strokeWidth="1"/>
+      <circle cx="9" cy="5.2" r="1.45" fill="#EF4444"/>
+      <circle cx="9" cy="9" r="1.45" fill="#FACC15"/>
+      <circle cx="9" cy="12.8" r="1.45" fill="#22C55E"/>
+    </svg>
+  ),
   stop: (
     <svg viewBox="0 0 18 18" width="14" height="14" fill="none" aria-hidden="true">
       <circle cx="9" cy="9" r="6.5" fill="#00E5FF" stroke="#00ACC1" strokeWidth="1.2"/>

@@ -13,10 +13,11 @@
 
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
 import { getIslandRunRarity, type IslandRunIslandRarity } from './islandRunIslandMetadata';
+import { TRAFFIC_LIGHT_TILE_INDEX } from './islandRunTrafficLightTile';
 
 export type IslandLandmarkDoorStopId = 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
 
-export type IslandTileType = 'currency' | 'chest' | 'hazard' | 'micro' | 'encounter' | 'landmark_door';
+export type IslandTileType = 'currency' | 'chest' | 'hazard' | 'micro' | 'encounter' | 'landmark_door' | 'traffic_light';
 
 export type IslandRarity = IslandRunIslandRarity;
 
@@ -161,6 +162,11 @@ export function generateTileMap(
   const tiles: IslandTileMapEntry[] = [];
 
   for (let tileIndex = 0; tileIndex < tileCount; tileIndex++) {
+    if (tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
+      tiles.push({ index: tileIndex, tileType: 'traffic_light' });
+      continue;
+    }
+
     if (encounterIndices.has(tileIndex)) {
       if (rarity !== 'normal' || dayIndex >= 2) {
         tiles.push({ index: tileIndex, tileType: 'encounter' });
