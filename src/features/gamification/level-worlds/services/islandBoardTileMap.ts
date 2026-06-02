@@ -3,23 +3,46 @@
 //
 // IMPORTANT: Per the canonical gameplay contract, the 5 stops (Hatchery, Habit,
 // Mystery, Wisdom, Boss) are EXTERNAL side-quest structures. The player piece
-// never lands on a "stop tile" — there is no such thing as a `'stop'` tile
-// type anywhere on the 40-tile ring. Stops are opened by tapping the orbit-stop
-// HUD buttons (after paying the essence ticket price per islandRunStopTickets).
+// never lands on a landmark structure and there is no `'stop'` tile type on the
+// 40-tile ring. Stops are opened by the orbit-stop HUD buttons, or by the four
+// landmark-door access tiles defined below.
 //
-// The 40 board tiles exist purely to earn essence and feed the reward bar.
+// Landmark-door tiles open the canonical landmark modal without awarding tile
+// rewards or changing stop progression. Stop completion remains owned by the
+// canonical stop services.
 
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
 import { getIslandRunRarity, type IslandRunIslandRarity } from './islandRunIslandMetadata';
+import { TRAFFIC_LIGHT_TILE_INDEX } from './islandRunTrafficLightTile';
 
-export type IslandTileType = 'currency' | 'chest' | 'hazard' | 'micro' | 'encounter';
+export type IslandLandmarkDoorStopId = 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
+
+export type IslandTileType = 'currency' | 'chest' | 'hazard' | 'micro' | 'encounter' | 'landmark_door' | 'traffic_light';
 
 export type IslandRarity = IslandRunIslandRarity;
 
 export type IslandTileMapEntry = {
   index: number;
   tileType: IslandTileType;
+  /** Present only for landmark-door tiles; routes landing to the canonical landmark modal. */
+  doorStopId?: IslandLandmarkDoorStopId;
 };
+
+export type IslandLandmarkDoorTileConfig = {
+  tileIndex: number;
+  stopId: Exclude<IslandLandmarkDoorStopId, 'boss'>;
+};
+
+/**
+ * Four outer ring tiles nearest the four outer landmark anchors. They become
+ * landmark doors; once the boss is open, all four route to the boss instead.
+ */
+export const LANDMARK_DOOR_TILE_CONFIGS: readonly IslandLandmarkDoorTileConfig[] = Object.freeze([
+  { tileIndex: 36, stopId: 'hatchery' },
+  { tileIndex: 6, stopId: 'habit' },
+  { tileIndex: 16, stopId: 'mystery' },
+  { tileIndex: 26, stopId: 'wisdom' },
+]);
 
 // Encounter tile placement relative to the board's tileCount.
 // Normal islands: 1 encounter (gated by dayIndex).
@@ -97,10 +120,34 @@ function computeEncounterIndicesForProfile(rarity: IslandRarity, tileCount: numb
 }
 
 /**
- * Generates a tile map for the given island run parameters.
- *
- * Every tile on the ring is a feeding/event/hazard/encounter tile — there is
- * no `'stop'` tile type, ever. Stops live on the orbit HUD, not on the ring.
+ * Overlays the four landmark-door tiles onto an already generated tile map.
+ * Door tiles open canonical landmark modals and intentionally do not grant
+ * essence/reward-bar tile payouts.
+ */
+export function applyLandmarkDoorTiles(
+  tileMap: IslandTileMapEntry[],
+  options?: { allDoorsRouteToBoss?: boolean },
+): IslandTileMapEntry[] {
+  const doorByIndex = new Map<number, IslandLandmarkDoorStopId>();
+  for (const config of LANDMARK_DOOR_TILE_CONFIGS) {
+    doorByIndex.set(config.tileIndex, options?.allDoorsRouteToBoss ? 'boss' : config.stopId);
+  }
+
+  return tileMap.map((entry) => {
+    const doorStopId = doorByIndex.get(entry.index);
+    if (!doorStopId) return entry;
+    return {
+      index: entry.index,
+      tileType: 'landmark_door',
+      doorStopId,
+    };
+  });
+}
+
+/**
+ * Generates a base economy tile map for the given island run parameters.
+ * Landmark-door overlays are applied separately by applyLandmarkDoorTiles so
+ * runtime boss-open state can reroute all doors without mutating this base map.
  */
 export function generateTileMap(
   islandNumber: number,
@@ -115,6 +162,11 @@ export function generateTileMap(
   const tiles: IslandTileMapEntry[] = [];
 
   for (let tileIndex = 0; tileIndex < tileCount; tileIndex++) {
+    if (tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
+      tiles.push({ index: tileIndex, tileType: 'traffic_light' });
+      continue;
+    }
+
     if (encounterIndices.has(tileIndex)) {
       if (rarity !== 'normal' || dayIndex >= 2) {
         tiles.push({ index: tileIndex, tileType: 'encounter' });

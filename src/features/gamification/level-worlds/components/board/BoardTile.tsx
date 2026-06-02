@@ -42,6 +42,21 @@ const TILE_SVG_ICONS: Record<string, JSX.Element> = {
       <path d="M10 2L12 7L8 11H13L11 15" stroke="#FF4500" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
     </svg>
   ),
+  landmark_door: (
+    <svg viewBox="0 0 18 18" width="14" height="14" fill="none" aria-hidden="true">
+      <path d="M5 3.5H13V15H5V3.5Z" fill="#7C3AED" stroke="#F5D0FE" strokeWidth="1"/>
+      <path d="M7 5H12V15H7V5Z" fill="#C084FC" opacity="0.85"/>
+      <circle cx="11" cy="10" r="0.8" fill="#FFF7AD"/>
+    </svg>
+  ),
+  traffic_light: (
+    <svg viewBox="0 0 18 18" width="14" height="14" fill="none" aria-hidden="true">
+      <rect x="5" y="2" width="8" height="14" rx="2" fill="#102A1D" stroke="#BBF7D0" strokeWidth="1"/>
+      <circle cx="9" cy="5.2" r="1.45" fill="#EF4444"/>
+      <circle cx="9" cy="9" r="1.45" fill="#FACC15"/>
+      <circle cx="9" cy="12.8" r="1.45" fill="#22C55E"/>
+    </svg>
+  ),
   stop: (
     <svg viewBox="0 0 18 18" width="14" height="14" fill="none" aria-hidden="true">
       <circle cx="9" cy="9" r="6.5" fill="#00E5FF" stroke="#00ACC1" strokeWidth="1.2"/>
@@ -56,6 +71,7 @@ export interface BoardTileProps {
   position: { x: number; y: number };
   isStop: boolean;
   tileType: IslandTileMapEntry['tileType'] | undefined;
+  doorStopId?: IslandTileMapEntry['doorStopId'];
   isEncounter: boolean;
   isEncounterCompleted: boolean;
   isTokenCurrent: boolean;
@@ -76,6 +92,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     position,
     isStop,
     tileType,
+    doorStopId,
     isEncounter,
     isEncounterCompleted,
     isTokenCurrent,
@@ -87,6 +104,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
   } = props;
 
   const tileTypeClass = !isStop && tileType ? `island-tile--${tileType}` : '';
+  const doorStopClass = tileType === 'landmark_door' && doorStopId ? `island-tile--door-${doorStopId}` : '';
   // Clip-path dimensions derived from ring geometry:
   //   N=40 tiles, radius=340, tile height=58 (half=29), sin(π/40)≈0.07846
   //   outer arc chord = 2×369×sin(π/40) ≈ 57.9px → box width = 58px → ±29px
@@ -107,6 +125,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     );
   } else if (isEncounter) {
     iconContent = TILE_SVG_ICONS.encounter;
+  } else if (tileType === 'landmark_door' && doorStopId === 'boss') {
+    iconContent = '👑';
   } else if (!isStop && tileType && TILE_SVG_ICONS[tileType]) {
     iconContent = TILE_SVG_ICONS[tileType];
   } else {
@@ -122,6 +142,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         isEncounter ? 'island-tile--encounter' : '',
         isEncounterCompleted ? 'island-tile--encounter-completed' : '',
         tileTypeClass,
+        doorStopClass,
         isTokenCurrent ? 'island-tile--token-current' : '',
         isUpcoming ? 'island-tile--upcoming' : '',
         !isMinimalBoardArt ? 'island-tile--alive' : '',
