@@ -8058,3 +8058,96 @@
   font-weight: 800;
   text-transform: uppercase;
 }
+
+.island-stop-modal--dormant-door {
+  max-width: min(420px, calc(100vw - 32px));
+}
+
+.island-dormant-door__intro,
+.island-dormant-door__hint,
+.island-dormant-door__result {
+  margin: 0.45rem 0;
+  color: rgba(243, 248, 255, 0.92);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.island-dormant-door__reward-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem;
+  margin: 0.65rem 0;
+}
+
+.island-dormant-door__reward-chip {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 0.35rem 0.55rem;
+  background: rgba(12, 28, 42, 0.72);
+  color: #f8fbff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.island-dormant-door__reward-chip--medium {
+  border-color: rgba(125, 216, 255, 0.48);
+  background: rgba(19, 77, 110, 0.72);
+}
+
+.island-dormant-door__reward-chip--jackpot {
+  border-color: rgba(255, 232, 153, 0.62);
+  background: linear-gradient(180deg, rgba(121, 74, 14, 0.82), rgba(82, 39, 13, 0.82));
+}
+
+.island-dormant-door__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 0.75rem 0;
+}
+
+.island-dormant-door__door {
+  min-height: 86px;
+  border: 1px solid rgba(245, 208, 254, 0.48);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(88, 28, 135, 0.9), rgba(46, 16, 101, 0.94));
+  color: #fff8ff;
+  display: grid;
+  place-items: center;
+  gap: 0.2rem;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.island-dormant-door__door:disabled {
+  cursor: default;
+  opacity: 0.8;
+}
+
+.island-dormant-door__door--selected,
+.island-dormant-door__door--revealed {
+  border-color: rgba(255, 247, 173, 0.78);
+  background: linear-gradient(180deg, rgba(126, 34, 206, 0.96), rgba(88, 28, 135, 0.96));
+}
+
+.island-dormant-door__door-face {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.island-dormant-door__door-label {
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.84;
+}
+
+.island-dormant-door__result {
+  border-radius: 14px;
+  padding: 0.55rem 0.65rem;
+  background: rgba(12, 74, 110, 0.72);
+  border: 1px solid rgba(125, 216, 255, 0.42);
+  font-weight: 800;
+}
