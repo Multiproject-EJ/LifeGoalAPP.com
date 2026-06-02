@@ -166,6 +166,7 @@ import {
   getQuestHabit,
   setQuestHabit,
   clearQuestHabit,
+  refreshQuestHabit,
   type QuestHabit,
 } from '../../services/questHabit';
 import { LifeBuildTodayCard } from './LifeBuildTodayCard';
@@ -1167,14 +1168,28 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   );
 
   const handleSetQuestHabit = useCallback((habit: QuestHabit) => {
-    setQuestHabit(session.user.id, habit);
     setQuestHabitState(habit);
+    void setQuestHabit(session.user.id, habit).then((syncedHabit) => {
+      setQuestHabitState(syncedHabit);
+    });
   }, [session.user.id]);
 
   const handleClearQuestHabit = useCallback(() => {
-    clearQuestHabit(session.user.id);
     setQuestHabitState(null);
+    void clearQuestHabit(session.user.id).then(() => {
+      setQuestHabitState(getQuestHabit(session.user.id));
+    });
   }, [session.user.id]);
+
+  const refreshQuestHabitState = useCallback(async () => {
+    const syncedHabit = await refreshQuestHabit(session.user.id);
+    setQuestHabitState(syncedHabit);
+    return syncedHabit;
+  }, [session.user.id]);
+
+  useEffect(() => {
+    void refreshQuestHabitState();
+  }, [refreshQuestHabitState]);
 
   useEffect(() => {
     if (typeof preferredCompactView === 'boolean') {
@@ -4367,7 +4382,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         await autoResumeDueHabits(session.user.id);
       }
 
-      const { data: habitData, error: habitError } = await fetchHabitsForUser(session.user.id);
+      const [questHabitResult, habitsResult] = await Promise.all([
+        refreshQuestHabit(session.user.id),
+        fetchHabitsForUser(session.user.id),
+      ]);
+      setQuestHabitState(questHabitResult);
+      const { data: habitData, error: habitError } = habitsResult;
       if (habitError) throw habitError;
 
       const nextHabits = habitData ?? [];
