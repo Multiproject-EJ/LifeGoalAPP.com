@@ -40,7 +40,7 @@ import {
 } from '../../../services/treatCalendarService';
 import { fetchHolidayPreferences } from '../../../services/holidayPreferences';
 import { getHolidayThemeAssets } from '../../../services/holidayThemeAssets';
-import { getQuestHabit, type QuestHabit } from '../../../services/questHabit';
+import { refreshQuestHabit, type QuestHabit } from '../../../services/questHabit';
 
 type CountdownCalendarModalProps = {
   isOpen: boolean;
@@ -182,7 +182,7 @@ export const CountdownCalendarModal = ({
           setSeasonData(null);
         }
         // Load the user's designated quest habit (if any) then check completion
-        const qh = getQuestHabit(userId);
+        const qh = await refreshQuestHabit(userId);
         setQuestHabit(qh);
         const completed = await isHabitCompletedToday(userId, qh?.habitId);
         setHabitCompleted(completed);

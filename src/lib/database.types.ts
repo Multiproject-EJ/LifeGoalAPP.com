@@ -2494,6 +2494,43 @@ export interface Database {
           }
         ];
       };
+      user_quest_habits: {
+        Row: {
+          user_id: string;
+          habit_id: string | null;
+          title: string;
+          emoji: string | null;
+          cleared_at: string | null;
+          created_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          habit_id?: string | null;
+          title?: string;
+          emoji?: string | null;
+          cleared_at?: string | null;
+          created_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          habit_id?: string | null;
+          title?: string;
+          emoji?: string | null;
+          cleared_at?: string | null;
+          created_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_quest_habits_habit_id_fkey";
+            columns: ["habit_id"];
+            referencedRelation: "habits_v2";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       reminder_action_logs: {
         Row: {
           id: string;
