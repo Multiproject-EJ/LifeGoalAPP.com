@@ -23,6 +23,7 @@ export type TimeBoundOfferItem = {
   isVisible: boolean;
   isActionable?: boolean;
   isPlaceholder?: boolean;
+  visualVariant?: 'bonus';
   sortPriority?: number;
   slotRole?: 'core' | 'filler';
 };
@@ -88,13 +89,18 @@ export function TimeBoundOfferRow({ offers, onOfferClick, daysAgo = 0 }: TimeBou
           : isPlaceholder
           ? offer.badgeLabelOverride ?? 'Soon'
           : offer.badgeLabelOverride ?? (isDone ? '✓ Done' : formatOfferCountdown(offer.expiresAtMs, nowMs));
-        const itemStateClass = isPlaceholder
-          ? 'time-bound-offers__item--placeholder'
-          : isDone
-            ? 'time-bound-offers__item--done'
-            : isActionable
-              ? 'time-bound-offers__item--actionable'
-              : '';
+        const itemStateClass = [
+          isPlaceholder
+            ? 'time-bound-offers__item--placeholder'
+            : isDone
+              ? 'time-bound-offers__item--done'
+              : isActionable
+                ? 'time-bound-offers__item--actionable'
+                : '',
+          offer.visualVariant === 'bonus' && !isPlaceholder && !isDone
+            ? 'time-bound-offers__item--bonus-ready'
+            : '',
+        ].filter(Boolean).join(' ');
 
         return (
           <button

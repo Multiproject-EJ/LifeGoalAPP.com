@@ -31063,16 +31063,173 @@ body.habit-wizard-open .mobile-footer-nav {
   100% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(0.15); }
 }
 
+/* Bonus Daily Treat unwrap polish: scoped to bonus gift reveals only. */
+.door-unwrap--bonus {
+  cursor: pointer;
+  filter: drop-shadow(0 20px 44px rgba(79, 70, 229, 0.22));
+}
+
+.door-unwrap--bonus .door-unwrap__wrapper {
+  border-radius: 30px;
+  color: #fff7ed;
+  background:
+    radial-gradient(circle at 50% 22%, rgba(254, 240, 138, 0.48), transparent 31%),
+    radial-gradient(circle at 18% 78%, rgba(125, 211, 252, 0.35), transparent 28%),
+    linear-gradient(145deg, #7c3aed 0%, #2563eb 50%, #0ea5e9 100%);
+  border: 1px solid rgba(254, 240, 138, 0.76);
+  box-shadow:
+    0 24px 62px rgba(49, 46, 129, 0.34),
+    0 0 0 5px rgba(250, 204, 21, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.38);
+}
+
+.door-unwrap--bonus .door-unwrap__wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  pointer-events: none;
+}
+
+.door-unwrap--bonus .door-unwrap__ribbon {
+  background: linear-gradient(135deg, #fde68a 0%, #f97316 44%, #fb7185 100%);
+  box-shadow: 0 0 22px rgba(253, 186, 116, 0.42);
+}
+
+.door-unwrap--bonus .door-unwrap__bow {
+  top: 18px;
+  font-size: 2.45rem;
+  animation: bonus-gift-bow-bounce 1.15s ease-in-out infinite;
+}
+
+.door-unwrap--bonus .door-unwrap__icon {
+  filter: drop-shadow(0 0 18px rgba(254, 240, 138, 0.78));
+}
+
+.door-unwrap--bonus .door-unwrap__number {
+  color: #312e81;
+  background: rgba(255, 247, 237, 0.92);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+}
+
+.door-unwrap--bonus .door-unwrap__emoji {
+  font-size: 2.35rem;
+  filter: drop-shadow(0 0 12px rgba(254, 240, 138, 0.68));
+}
+
+.door-unwrap--bonus .door-unwrap__hint {
+  color: #fff7ed;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  padding: 0.34rem 0.72rem;
+}
+
+.door-unwrap--bonus .door-unwrap__bonus-sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.door-unwrap--bonus .door-unwrap__bonus-sparkle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #fef3c7;
+  box-shadow: 0 0 16px rgba(254, 240, 138, 0.85);
+  opacity: 0.42;
+  animation: bonus-gift-sparkle 1.4s ease-in-out infinite;
+}
+
+.door-unwrap--bonus .door-unwrap__bonus-sparkle:nth-child(1) { left: 18%; top: 20%; animation-delay: 0s; }
+.door-unwrap--bonus .door-unwrap__bonus-sparkle:nth-child(2) { left: 73%; top: 18%; animation-delay: 0.16s; }
+.door-unwrap--bonus .door-unwrap__bonus-sparkle:nth-child(3) { left: 84%; top: 43%; animation-delay: 0.31s; }
+.door-unwrap--bonus .door-unwrap__bonus-sparkle:nth-child(4) { left: 65%; top: 76%; animation-delay: 0.48s; }
+.door-unwrap--bonus .door-unwrap__bonus-sparkle:nth-child(5) { left: 30%; top: 82%; animation-delay: 0.64s; }
+.door-unwrap--bonus .door-unwrap__bonus-sparkle:nth-child(6) { left: 11%; top: 55%; animation-delay: 0.8s; }
+.door-unwrap--bonus .door-unwrap__bonus-sparkle:nth-child(7) { left: 42%; top: 14%; animation-delay: 0.96s; }
+.door-unwrap--bonus .door-unwrap__bonus-sparkle:nth-child(8) { left: 52%; top: 88%; animation-delay: 1.12s; }
+
+.door-unwrap--bonus.door-unwrap--unwrapping .door-unwrap__wrapper {
+  animation: bonus-gift-pop-open 420ms cubic-bezier(0.2, 0.85, 0.24, 1) forwards;
+}
+
+.door-unwrap--bonus.door-unwrap--unwrapping .door-unwrap__ribbon--left {
+  animation: bonus-gift-ribbon-vertical 420ms ease-out forwards;
+}
+
+.door-unwrap--bonus.door-unwrap--unwrapping .door-unwrap__ribbon--right {
+  animation: bonus-gift-ribbon-horizontal 420ms ease-out forwards;
+}
+
+.door-unwrap--bonus .door-unwrap__content {
+  animation: bonus-reward-pop 360ms cubic-bezier(0.18, 0.92, 0.32, 1.22) forwards;
+}
+
+.door-unwrap--bonus.door-unwrap--revealed .reward-card {
+  border-color: rgba(250, 204, 21, 0.42);
+  box-shadow:
+    0 26px 64px rgba(79, 70, 229, 0.22),
+    0 0 34px rgba(250, 204, 21, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+@keyframes bonus-gift-bow-bounce {
+  0%, 100% { transform: translateY(0) rotate(-3deg) scale(1); }
+  50% { transform: translateY(-4px) rotate(3deg) scale(1.05); }
+}
+
+@keyframes bonus-gift-sparkle {
+  0%, 100% { opacity: 0.24; transform: scale(0.72); }
+  48% { opacity: 1; transform: scale(1.24); }
+}
+
+@keyframes bonus-gift-pop-open {
+  0% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+  38% { opacity: 1; transform: translateY(-8px) scale(1.05) rotate(-2deg); }
+  72% { opacity: 0.8; transform: translateY(4px) scale(1.02) rotate(2deg); }
+  100% { opacity: 0; transform: translateY(-18px) scale(0.86) rotate(0deg); }
+}
+
+@keyframes bonus-gift-ribbon-vertical {
+  100% { transform: translateY(-38px) scaleY(0.72); opacity: 0; }
+}
+
+@keyframes bonus-gift-ribbon-horizontal {
+  100% { transform: translateX(42px) scaleX(0.72); opacity: 0; }
+}
+
+@keyframes bonus-reward-pop {
+  0% { opacity: 0; transform: translateY(16px) scale(0.9); }
+  70% { opacity: 1; transform: translateY(-3px) scale(1.03); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .daily-treats-calendar--reward-reveal,
   .daily-treats-calendar__dialog--reward-reveal,
   .door-flip,
   .door-flip__sparkle,
-  .door-flip__reveal-spark {
+  .door-flip__reveal-spark,
+  .door-unwrap--unwrapping .door-unwrap__wrapper,
+  .door-unwrap__content,
+  .door-unwrap--bonus,
+  .door-unwrap--bonus .door-unwrap__wrapper,
+  .door-unwrap--bonus .door-unwrap__ribbon,
+  .door-unwrap--bonus .door-unwrap__bow,
+  .door-unwrap--bonus .door-unwrap__bonus-sparkle,
+  .door-unwrap--bonus .door-unwrap__content,
+  .door-scratch__diamond-flash,
+  .door-scratch__confetti-piece {
     animation: none !important;
   }
 
-  .door-flip__inner {
+  .door-flip__inner,
+  .door-unwrap__wrapper,
+  .door-scratch__canvas {
     transition: none;
   }
 

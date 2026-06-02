@@ -3044,6 +3044,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         isCollected: isDailyTreatFullyCollected,
         isVisible: true,
         isActionable: isDailyTreatBonusReady || !hasOpenedDailyTreatsToday,
+        visualVariant: isDailyTreatBonusReady ? 'bonus' : undefined,
         sortPriority: 2,
         slotRole: 'core',
       },
