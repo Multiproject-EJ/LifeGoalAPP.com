@@ -3043,7 +3043,7 @@
 
 .island-run-board--spark40 .island-tile__value {
   font-size: 0.65rem;
-  transform: rotate(calc(-1 * var(--tile-rotation-deg, 0deg)));
+  transform: rotate(var(--tile-upright-rotation-deg, 0deg));
   transform-origin: center center;
 }
 
@@ -8158,61 +8158,121 @@
   box-shadow: 0 0 12px rgba(34, 197, 94, 0.62), 0 0 22px rgba(20, 83, 45, 0.42);
 }
 
-.island-run-board__traffic-light-widget {
+.island-tile-traffic-light-sign {
   position: absolute;
-  top: 82px;
-  right: 12px;
-  z-index: 13;
+  z-index: 12;
+  width: 58px;
+  height: 58px;
+  pointer-events: none;
+  transform-origin: center center;
+  overflow: visible;
+  filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.36));
+}
+
+.island-tile-traffic-light-sign__post {
+  position: absolute;
+  left: 50%;
+  top: 5px;
+  width: 5px;
+  height: 28px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0b1d17, #d8ffe5 48%, #113427);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.42), inset 0 0 2px rgba(255, 255, 255, 0.52);
+  transform: translateX(-50%) translateY(-32px);
+}
+
+.island-tile-traffic-light-sign__panel {
+  position: absolute;
+  left: 50%;
+  top: -50px;
   display: flex;
   align-items: center;
-  gap: 0.34rem;
-  padding: 0.36rem 0.48rem;
+  gap: 4px;
+  min-width: 95px;
+  padding: 5px 7px;
   border-radius: 999px;
-  border: 1px solid rgba(187, 247, 208, 0.5);
-  background: rgba(5, 31, 20, 0.78);
+  border: 1.5px solid rgba(187, 247, 208, 0.72);
+  background:
+    linear-gradient(180deg, rgba(39, 85, 70, 0.96), rgba(9, 37, 29, 0.96)),
+    radial-gradient(circle at 35% 12%, rgba(255, 255, 255, 0.22), transparent 42%);
   color: #eafff0;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(8px);
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.24);
+  transform: translateX(-50%) rotate(var(--tile-upright-rotation-deg, 0deg)) translateY(-2px);
+  transform-origin: center center;
 }
 
-.island-run-board__traffic-light-icon {
-  font-size: 1rem;
-  line-height: 1;
+.island-tile-traffic-light-sign__panel::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 18px;
+  height: 9px;
+  border-radius: 0 0 999px 999px;
+  background: linear-gradient(180deg, rgba(20, 83, 45, 0.95), rgba(6, 36, 24, 0.98));
+  transform: translateX(-50%);
 }
 
-.island-run-board__traffic-light-stack {
+.island-tile-traffic-light-sign__head {
+  display: grid;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 8px;
+  background: #102a1d;
+  border: 1px solid rgba(187, 247, 208, 0.44);
+  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.62);
+}
+
+.island-tile-traffic-light-sign__lamp {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.island-tile-traffic-light-sign__meter {
   display: grid;
   grid-template-columns: repeat(4, 7px);
   gap: 3px;
 }
 
-.island-run-board__traffic-light-dot {
+.island-tile-traffic-light-sign__pip {
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.38);
+  background: rgba(148, 163, 184, 0.36);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
 }
 
-.island-run-board__traffic-light-dot--lit.island-run-board__traffic-light-dot--red {
+.island-tile-traffic-light-sign__lamp--lit.island-tile-traffic-light-sign__lamp--red,
+.island-tile-traffic-light-sign__pip--lit.island-tile-traffic-light-sign__pip--red {
   background: #ef4444;
   box-shadow: 0 0 7px rgba(239, 68, 68, 0.82);
 }
 
-.island-run-board__traffic-light-dot--lit.island-run-board__traffic-light-dot--yellow {
+.island-tile-traffic-light-sign__lamp--lit.island-tile-traffic-light-sign__lamp--yellow,
+.island-tile-traffic-light-sign__pip--lit.island-tile-traffic-light-sign__pip--yellow {
   background: #facc15;
   box-shadow: 0 0 7px rgba(250, 204, 21, 0.82);
 }
 
-.island-run-board__traffic-light-dot--lit.island-run-board__traffic-light-dot--green {
+.island-tile-traffic-light-sign__lamp--lit.island-tile-traffic-light-sign__lamp--green,
+.island-tile-traffic-light-sign__pip--lit.island-tile-traffic-light-sign__pip--green {
   background: #22c55e;
   box-shadow: 0 0 8px rgba(34, 197, 94, 0.92);
 }
 
-.island-run-board__traffic-light-count {
+.island-tile-traffic-light-sign__count {
   font-size: 0.68rem;
-  font-weight: 900;
+  font-weight: 950;
   letter-spacing: 0.03em;
+  color: #ecfff3;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.82);
+  white-space: nowrap;
 }
 
 .island-stop-modal--traffic-light {
