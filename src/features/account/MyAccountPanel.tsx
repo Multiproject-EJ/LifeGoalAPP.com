@@ -163,6 +163,11 @@ export function MyAccountPanel({
         .filter(entry => typeof entry.creatureId === 'string' && entry.creatureId.length > 0)
         .map(entry => [entry.creatureId, entry.bondLevel ?? 0] as const),
     );
+    const creatureFormLevelsById = new Map(
+      (islandRunState.creatureCollection ?? [])
+        .filter(entry => typeof entry.creatureId === 'string' && entry.creatureId.length > 0)
+        .map(entry => [entry.creatureId, entry.formLevel ?? 1] as const),
+    );
     const pairedCreatureIds = new Set(
       (islandRunState.perfectCompanionIds ?? [])
         .filter((creatureId): creatureId is string => typeof creatureId === 'string' && creatureId.length > 0),
@@ -173,6 +178,7 @@ export function MyAccountPanel({
       ownedCreatureIds,
       pairedCreatureIds,
       creatureBondLevelsById,
+      creatureFormLevelsById,
     };
   }, [islandRunState.creatureCollection, islandRunState.perfectCompanionIds, ownedThemeIds]);
 
