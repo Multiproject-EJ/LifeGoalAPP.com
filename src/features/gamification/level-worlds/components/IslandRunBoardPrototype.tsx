@@ -1328,6 +1328,7 @@ export function IslandRunBoardPrototype({
   const boardRef = useRef<HTMLDivElement>(null);
   const topbarMenuRef = useRef<HTMLDivElement>(null);
   const topbarMenuFirstItemRef = useRef<HTMLButtonElement>(null);
+  const audioMenuFirstItemRef = useRef<HTMLButtonElement>(null);
   // M16D: track previous shard count to detect island-travel reset (snap fill bar to 0, no animation)
   const prevShardsRef = useRef<number>(0);
   const [shardFillNoTransition, setShardFillNoTransition] = useState(false);
@@ -1352,6 +1353,7 @@ export function IslandRunBoardPrototype({
   });
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
+  const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [isTopbarMenuPrimed, setIsTopbarMenuPrimed] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [showDevLuckyRollOverlay, setShowDevLuckyRollOverlay] = useState(false);
@@ -1656,7 +1658,7 @@ export function IslandRunBoardPrototype({
   }, [islandNumber]);
 
   useEffect(() => {
-    if (!showTopbarMenu) {
+    if (!showTopbarMenu && !showAudioMenu) {
       return;
     }
 
@@ -1668,11 +1670,13 @@ export function IslandRunBoardPrototype({
         return;
       }
       setShowTopbarMenu(false);
+      setShowAudioMenu(false);
     };
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setShowTopbarMenu(false);
+        setShowAudioMenu(false);
       }
     };
 
@@ -1682,7 +1686,7 @@ export function IslandRunBoardPrototype({
       window.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('keydown', handleEscape);
     };
-  }, [showTopbarMenu]);
+  }, [showAudioMenu, showTopbarMenu]);
 
   useEffect(() => {
     if (!showTopbarMenu) {
@@ -1693,6 +1697,16 @@ export function IslandRunBoardPrototype({
     });
     return () => window.cancelAnimationFrame(frame);
   }, [showTopbarMenu]);
+
+  useEffect(() => {
+    if (!showAudioMenu) {
+      return;
+    }
+    const frame = window.requestAnimationFrame(() => {
+      audioMenuFirstItemRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [showAudioMenu]);
 
   useEffect(() => {
     if (isRolling || pendingHopSequence !== null) {
@@ -4585,6 +4599,13 @@ export function IslandRunBoardPrototype({
   }, [islandNumber, isIslandTimerPendingStart, showTravelOverlay, timeLeftSec]);
 
   const timerDisplay = isIslandTimerPendingStart ? 'Ready' : formatIslandCountdown(timeLeftSec);
+  const audioMenuIcon = musicEnabled || sfxEnabled
+    ? musicEnabled && sfxEnabled
+      ? '🔊'
+      : musicEnabled
+        ? '🎵'
+        : '🔔'
+    : '🔇';
   const step1Stop = islandStopPlan[0] ?? null;
   // Rolling is always free — no stop-gate. step1Complete kept as `true` for
   // diagnostic logging continuity only.
@@ -9533,35 +9554,70 @@ export function IslandRunBoardPrototype({
               aria-expanded={showTopbarMenu}
               aria-haspopup="menu"
               aria-controls="island-run-topbar-menu"
-              onClick={handleTopbarMenuButtonClick}
+              onClick={() => {
+                setShowAudioMenu(false);
+                handleTopbarMenuButtonClick();
+              }}
             >
               ☰
             </button>
             <button
               type="button"
-              className="island-run-board__topbar-audio-toggle"
-              aria-label={musicEnabled ? 'Mute music' : 'Unmute music'}
-              aria-pressed={musicEnabled}
+              className={`island-run-board__topbar-audio-toggle${showAudioMenu ? ' island-run-board__topbar-audio-toggle--open' : ''}`}
+              aria-label="Audio options"
+              aria-expanded={showAudioMenu}
+              aria-haspopup="menu"
+              aria-controls="island-run-audio-menu"
               onClick={() => {
-                setMusicEnabled((prev) => !prev);
+                setShowAudioMenu((current) => !current);
+                setShowTopbarMenu(false);
               }}
             >
-              {musicEnabled ? '🎵' : '🚫🎵'}
+              {audioMenuIcon}
             </button>
             <button
               type="button"
-              className="island-run-board__topbar-audio-toggle"
-              aria-label={sfxEnabled ? 'Mute sound effects' : 'Unmute sound effects'}
-              aria-pressed={sfxEnabled}
-              onClick={() => {
-                const next = !sfxEnabled;
-                setSfxEnabled(next);
-                setIslandRunAudioEnabled(next);
-              }}
+              className="island-run-board__topbar-audio-toggle island-run-board__topbar-exit"
+              aria-label="Exit Island Run"
+              onClick={() => onExitBoard?.()}
             >
-              {sfxEnabled ? '🔔' : '🔕'}
+              ✕
             </button>
           </div>
+
+          {showAudioMenu && (
+            <div id="island-run-audio-menu" className="island-run-board__audio-menu-panel" role="menu" aria-label="Audio options">
+              <button
+                ref={audioMenuFirstItemRef}
+                type="button"
+                className="island-run-board__topbar-menu-item"
+                role="menuitemcheckbox"
+                aria-checked={musicEnabled}
+                onClick={() => {
+                  setMusicEnabled((prev) => !prev);
+                }}
+              >
+                <span>{musicEnabled ? '✓' : '○'}</span>
+                <span>Music</span>
+                <span aria-hidden="true">🎵</span>
+              </button>
+              <button
+                type="button"
+                className="island-run-board__topbar-menu-item"
+                role="menuitemcheckbox"
+                aria-checked={sfxEnabled}
+                onClick={() => {
+                  const next = !sfxEnabled;
+                  setSfxEnabled(next);
+                  setIslandRunAudioEnabled(next);
+                }}
+              >
+                <span>{sfxEnabled ? '✓' : '○'}</span>
+                <span>SFX</span>
+                <span aria-hidden="true">🔔</span>
+              </button>
+            </div>
+          )}
 
           {showTopbarMenu && (
             <div id="island-run-topbar-menu" className="island-run-board__topbar-menu-panel" role="menu" aria-label="Board menu">
