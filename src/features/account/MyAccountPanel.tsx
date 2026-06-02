@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { SupabaseConnectionTest } from './SupabaseConnectionTest';
 import { ThemeSelector } from '../../components/ThemeSelector';
+import type { Theme, ThemeAccessResult, ThemeCheckoutSkuId, ThemeMetadata } from '../../contexts/ThemeContext';
 import { NotificationSettingsSection, PushNotificationTestPanel, DailyReminderPreferences, PerHabitReminderPrefs, ReminderActionDebugPanel, ReminderAnalyticsDashboard } from '../notifications';
 import { AiSettingsSection } from './AiSettingsSection';
 import { ExperimentalFeaturesSection } from './ExperimentalFeaturesSection';
@@ -36,6 +37,8 @@ import {
   fetchBillingSnapshot,
   type BillingSnapshot,
 } from '../../services/billing';
+import { fetchOwnedThemeIds, initiateThemeCheckout } from '../../services/themePurchases';
+import { useIslandRunState } from '../gamification/level-worlds/hooks/useIslandRunState';
 
 type MyAccountPanelProps = {
   session: Session;
@@ -113,6 +116,12 @@ export function MyAccountPanel({
   const [billingActionLoading, setBillingActionLoading] = useState<'upgrade_monthly' | 'upgrade_yearly' | 'manage' | 'buy_rolls' | null>(null);
   const [rollsBudgetFolderOpen, setRollsBudgetFolderOpen] = useState(false);
   const [activeFutureFeatureId, setActiveFutureFeatureId] = useState<FeatureAvailabilityId | null>(null);
+  const [ownedThemeIds, setOwnedThemeIds] = useState<Set<Theme>>(new Set());
+  const [themeEntitlementsLoading, setThemeEntitlementsLoading] = useState(false);
+  const [themeEntitlementsError, setThemeEntitlementsError] = useState<string | null>(null);
+  const [themeCheckoutLoadingId, setThemeCheckoutLoadingId] = useState<Theme | null>(null);
+  const [themeCheckoutError, setThemeCheckoutError] = useState<string | null>(null);
+  const { state: islandRunState, hydrate: hydrateIslandRunState } = useIslandRunState(session, null);
   
   const user = session.user;
   const userInitials = generateInitials(profile?.full_name || '');
@@ -143,6 +152,55 @@ export function MyAccountPanel({
     : 'Now (if birthday matches today)';
   const showDemoNotice = isDemoExperience;
   const activeFutureFeature = activeFutureFeatureId ? getFeatureAvailability(activeFutureFeatureId) : null;
+  const themeAccessContext = useMemo(() => {
+    const ownedCreatureIds = new Set(
+      (islandRunState.creatureCollection ?? [])
+        .map(entry => entry.creatureId)
+        .filter((creatureId): creatureId is string => typeof creatureId === 'string' && creatureId.length > 0),
+    );
+    const creatureBondLevelsById = new Map(
+      (islandRunState.creatureCollection ?? [])
+        .filter(entry => typeof entry.creatureId === 'string' && entry.creatureId.length > 0)
+        .map(entry => [entry.creatureId, entry.bondLevel ?? 0] as const),
+    );
+    const pairedCreatureIds = new Set(
+      (islandRunState.perfectCompanionIds ?? [])
+        .filter((creatureId): creatureId is string => typeof creatureId === 'string' && creatureId.length > 0),
+    );
+
+    return {
+      ownedThemeIds,
+      ownedCreatureIds,
+      pairedCreatureIds,
+      creatureBondLevelsById,
+    };
+  }, [islandRunState.creatureCollection, islandRunState.perfectCompanionIds, ownedThemeIds]);
+
+  useEffect(() => {
+    void hydrateIslandRunState({ forceRemote: false });
+  }, [hydrateIslandRunState]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadThemeEntitlements = async () => {
+      setThemeEntitlementsLoading(true);
+      setThemeEntitlementsError(null);
+      const { themeIds, error } = await fetchOwnedThemeIds(session.user.id);
+      if (cancelled) return;
+      setOwnedThemeIds(themeIds);
+      setThemeEntitlementsError(error?.message ?? null);
+      setThemeEntitlementsLoading(false);
+    };
+
+    if (appearanceFolderOpen || billingReturnBanner?.kind === 'success' || billingReturnBanner?.kind === 'processing') {
+      void loadThemeEntitlements();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [appearanceFolderOpen, billingReturnBanner?.kind, session.user.id]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -351,6 +409,30 @@ export function MyAccountPanel({
       redirectToUrl(url);
     } finally {
       setBillingActionLoading(null);
+    }
+  };
+
+  const handleThemeCheckout = async (theme: ThemeMetadata, access: ThemeAccessResult) => {
+    if (!access.checkoutSkuId) {
+      setThemeCheckoutError('This theme is not ready for checkout yet.');
+      return;
+    }
+
+    setThemeCheckoutLoadingId(theme.id);
+    setThemeCheckoutError(null);
+    try {
+      const { url, error } = await initiateThemeCheckout({
+        themeId: theme.id,
+        skuId: access.checkoutSkuId as ThemeCheckoutSkuId,
+        variant: access.status === 'available_for_paired_purchase' ? 'paired' : 'base',
+      });
+      if (error || !url) {
+        setThemeCheckoutError(error?.message ?? 'Unable to start theme checkout.');
+        return;
+      }
+      redirectToUrl(url);
+    } finally {
+      setThemeCheckoutLoadingId(null);
     }
   };
 
@@ -808,7 +890,21 @@ export function MyAccountPanel({
       >
         <section className="account-panel__card" aria-labelledby="account-theme">
           <p className="account-panel__eyebrow">Appearance</p>
-          <ThemeSelector isAdminOrCreator={isAdmin === true} />
+          {themeEntitlementsLoading ? (
+            <p className="account-panel__hint">Syncing your owned themes…</p>
+          ) : null}
+          {themeEntitlementsError ? (
+            <p className="account-panel__hint">{themeEntitlementsError}</p>
+          ) : null}
+          {themeCheckoutError ? (
+            <p className="account-panel__hint">{themeCheckoutError}</p>
+          ) : null}
+          <ThemeSelector
+            isAdminOrCreator={isAdmin === true}
+            accessContext={themeAccessContext}
+            checkoutLoadingThemeId={themeCheckoutLoadingId}
+            onThemeCheckout={handleThemeCheckout}
+          />
         </section>
       </SettingsFolderPopup>
 
@@ -868,7 +964,7 @@ export function MyAccountPanel({
         <section className="account-panel__card" aria-labelledby="account-birthday-gift">
           <p className="account-panel__eyebrow">Rewards</p>
           <h3 id="account-birthday-gift">Birthday gift</h3>
-          <p className="account-panel__hint">Opt in to receive a birthday gift worth 💎 1 diamond. Gifts are limited to one claim every 365 days even if your birthday date changes.</p>
+          <p className="account-panel__hint">Opt in to receive a birthday gift worth 💎 1 diamond plus the free Birthday Wish theme on your first eligible claim. Gifts are limited to one claim every 365 days even if your birthday date changes.</p>
           <div className="account-panel__toggle-row">
             <label className="account-panel__toggle-label">
               <input type="checkbox" checked={isBirthdayGiftEnabled} onChange={(event) => handleToggleBirthdayGift(event.target.checked)} disabled={savingPreference || isDemoExperience} className="account-panel__toggle-input" />
