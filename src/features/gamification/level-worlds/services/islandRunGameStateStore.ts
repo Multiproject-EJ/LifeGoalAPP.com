@@ -79,6 +79,10 @@ export interface CreatureCollectionRuntimeEntry {
   bondLevel: number;
   lastFedAtMs: number | null;
   claimedBondMilestones: number[];
+  /** Sanctuary form progression. Form 3 unlocks the paid creature theme offer. */
+  formLevel?: number;
+  /** Idempotency/audit markers for one-time form reward grants. */
+  claimedFormRewards?: number[];
   /** Idempotency/audit markers for canonical admin/dev grant actions. */
   grantIds?: string[];
 }
@@ -716,6 +720,15 @@ function toCreatureCollectionEntry(value: unknown): CreatureCollectionRuntimeEnt
       .map((milestone) => Math.max(1, Math.floor(milestone))))
     ).sort((a, b) => a - b)
     : [];
+  const formLevel = typeof candidate.formLevel === 'number' && Number.isFinite(candidate.formLevel)
+    ? Math.min(3, Math.max(1, Math.floor(candidate.formLevel)))
+    : null;
+  const claimedFormRewards = Array.isArray(candidate.claimedFormRewards)
+    ? Array.from(new Set(candidate.claimedFormRewards
+      .filter((milestone): milestone is number => typeof milestone === 'number' && Number.isFinite(milestone))
+      .map((milestone) => Math.min(3, Math.max(1, Math.floor(milestone)))))
+    ).sort((a, b) => a - b)
+    : null;
   const grantIds = normalizeGrantIds(candidate.grantIds);
   return {
     creatureId: candidate.creatureId,
@@ -727,6 +740,8 @@ function toCreatureCollectionEntry(value: unknown): CreatureCollectionRuntimeEnt
     bondLevel,
     lastFedAtMs,
     claimedBondMilestones,
+    ...(formLevel !== null ? { formLevel } : {}),
+    ...(claimedFormRewards !== null ? { claimedFormRewards } : {}),
     ...(grantIds.length > 0 ? { grantIds } : {}),
   };
 }
@@ -1558,6 +1573,12 @@ function mergeCreatureCollection(
         ...existing.claimedBondMilestones,
         ...entry.claimedBondMilestones,
       ])).sort((a, b) => a - b),
+      formLevel: Math.max(existing.formLevel ?? 1, entry.formLevel ?? 1),
+      claimedFormRewards: Array.from(new Set([
+        ...(existing.claimedFormRewards ?? []),
+        ...(entry.claimedFormRewards ?? []),
+      ])).sort((a, b) => a - b),
+      grantIds: mergeStringArrayByUnion(existing.grantIds, entry.grantIds),
     });
   });
 
