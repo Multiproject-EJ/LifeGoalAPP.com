@@ -1203,6 +1203,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       setIsCompactView(true);
     }
   }, [forceCompactView, preferredCompactView]);
+
+  const isPrivateCompactView = isCompactView;
   const [isCompactToggleLabelVisible, setIsCompactToggleLabelVisible] = useState(false);
   const compactToggleLabelTimeoutRef = useRef<number | null>(null);
   const reviewAutoArchivingHabitIdsRef = useRef<Set<string>>(new Set());
@@ -6781,7 +6783,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           <p className="habit-checklist__empty">All habits checked off for today.</p>
         ) : null}
         <ul className="habit-checklist" role="list">
-          {activeTodos.map((todo) => {
+          {activeTodos.map((todo, todoIndex) => {
             const isExpanded = Boolean(expandedTodayTodoById[todo.id]);
             const isJustCompletedTodo = justCompletedTodoId === todo.id;
             const todoSwipeOffset = swipeOffsetByTodoId[todo.id] ?? 0;
@@ -6790,6 +6792,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             const leftTodoSwipeProgress = todoSwipeOffset < 0 ? todoSwipeProgress : 0;
             const todoSwipeAction: TodoSwipeAction | null = getTodoSwipeAction(isExpanded);
             const todoSwipeArmedDirection = swipeArmedByTodoId[todo.id] ?? null;
+            const todoDisplayTitle = isPrivateCompactView ? `Private todo ${todoIndex + 1}` : todo.title;
             return (
               <li key={todo.id} className={`habit-checklist__item habit-checklist__item--todo ${isJustCompletedTodo ? 'habit-checklist__item--todo-completing' : ''}`.trim()}>
                 <div
@@ -6880,7 +6883,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         <button
                           type="button"
                           className="habit-checklist__todo-check"
-                          aria-label={`Mark todo ${todo.title} as complete`}
+                          aria-label={`Mark ${todoDisplayTitle} as complete`}
                           onClick={(event) => {
                             event.stopPropagation();
                             void handleToggleTodayTodo(todo);
@@ -6892,8 +6895,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       <div className="habit-checklist__main habit-checklist__main--todo">
                         <div className="habit-checklist__todo-header">
                           <span className="habit-checklist__todo-badge">Todo</span>
-                          <h3>{todo.title}</h3>
-                          {onNavigateToTimer ? (
+                          <h3>{todoDisplayTitle}</h3>
+                          {onNavigateToTimer && !isPrivateCompactView ? (
                             <button
                               type="button"
                               className="habit-checklist__todo-start-now"
@@ -6908,15 +6911,15 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         </div>
                         {isExpanded ? (
                           <>
-                            {todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes yet — add context when you need it.</p>}
+                            {isPrivateCompactView ? <p className="habit-checklist__todo-note-placeholder">Notes hidden in compact private view.</p> : todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes yet — add context when you need it.</p>}
                             <div className="habit-checklist__todo-actions" onClick={(event) => event.stopPropagation()}>
                               <span className="habit-checklist__todo-actions-label">Quick actions</span>
                               <button type="button" className="habit-checklist__todo-action-btn" onClick={() => void handleToggleTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Complete</button>
                               <button type="button" className="habit-checklist__todo-action-btn" onClick={() => handleRescheduleTodayTodoTomorrow(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Tomorrow</button>
-                              <button type="button" className="habit-checklist__todo-action-btn" onClick={() => handleOpenEditTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Edit / reschedule</button>
-                              <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--habit" onClick={() => void handleConvertTodayTodoToHabit(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Convert to habit</button>
-                              {onNavigateToTimer ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--focus" onClick={() => onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title })}>Start 25m focus</button> : null}
-                              {onOpenAiCoach ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--coach" onClick={() => onOpenAiCoach(buildTodayTodoCoachPrompt(todo))}>Help me figure out next step</button> : null}
+                              {!isPrivateCompactView ? <button type="button" className="habit-checklist__todo-action-btn" onClick={() => handleOpenEditTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Edit / reschedule</button> : null}
+                              {!isPrivateCompactView ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--habit" onClick={() => void handleConvertTodayTodoToHabit(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Convert to habit</button> : null}
+                              {onNavigateToTimer && !isPrivateCompactView ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--focus" onClick={() => onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title })}>Start 25m focus</button> : null}
+                              {onOpenAiCoach && !isPrivateCompactView ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--coach" onClick={() => onOpenAiCoach(buildTodayTodoCoachPrompt(todo))}>Help me figure out next step</button> : null}
                             </div>
                           </>
                         ) : null}
@@ -6940,8 +6943,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   <h3>{completedTodos.length}</h3>
                 </div>
                 <ul className="habit-checklist" role="list">
-                  {completedTodos.map((todo) => {
+                  {completedTodos.map((todo, completedTodoIndex) => {
                     const isExpanded = Boolean(expandedTodayTodoById[todo.id]);
+                    const todoDisplayTitle = isPrivateCompactView ? `Completed todo ${completedTodoIndex + 1}` : todo.title;
                     return (
                     <li key={todo.id} className="habit-checklist__item habit-checklist__item--todo habit-checklist__item--completed">
                       <div
@@ -6961,7 +6965,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         <button
                           type="button"
                           className="habit-checklist__todo-check"
-                          aria-label={`Mark todo ${todo.title} active again`}
+                          aria-label={`Mark ${todoDisplayTitle} active again`}
                           onClick={(event) => {
                             event.stopPropagation();
                             void handleToggleTodayTodo(todo);
@@ -6972,16 +6976,16 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         <div className="habit-checklist__main habit-checklist__main--todo">
                           <div className="habit-checklist__todo-header">
                             <span className="habit-checklist__todo-badge habit-checklist__todo-badge--done">Done today</span>
-                            <h3>{todo.title}</h3>
+                            <h3>{todoDisplayTitle}</h3>
                             {todo.updated_at ? <p className="habit-checklist__todo-completed-at">Completed {formatTimeLabel(new Date(todo.updated_at))}</p> : null}
                           </div>
                           {isExpanded ? (
                             <>
-                              {todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes were saved for this todo.</p>}
+                              {isPrivateCompactView ? <p className="habit-checklist__todo-note-placeholder">Notes hidden in compact private view.</p> : todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes were saved for this todo.</p>}
                               <div className="habit-checklist__todo-actions" onClick={(event) => event.stopPropagation()}>
                                 <span className="habit-checklist__todo-actions-label">Quick actions</span>
                                 <button type="button" onClick={() => void handleToggleTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Mark active again</button>
-                                <button type="button" onClick={() => handleOpenEditTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Edit</button>
+                                {!isPrivateCompactView ? <button type="button" onClick={() => handleOpenEditTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Edit</button> : null}
                               </div>
                             </>
                           ) : null}
@@ -6994,7 +6998,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               </div>
             </li>
           ) : null}
-          {visibleHabits.map((habit) => {
+          {visibleHabits.map((habit, habitIndex) => {
             const state = completions[habit.id];
             const isCompleted = Boolean(state?.completed);
             const isSaving = Boolean(saving[habit.id]);
@@ -7049,6 +7053,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               isSaving,
             });
             const isQuestHabit = questHabit?.habitId === habit.id;
+            const habitDisplayName = isPrivateCompactView ? `Private habit ${habitIndex + 1}` : habit.name;
 
             return (
               <li
@@ -7314,7 +7319,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           type="checkbox"
                           className="habit-checklist__checkbox"
                           checked={isCompleted}
-                          aria-label={`Mark ${habit.name} as ${isCompleted ? 'incomplete' : 'complete'}`}
+                          aria-label={`Mark ${habitDisplayName} as ${isCompleted ? 'incomplete' : 'complete'}`}
                           tabIndex={shouldCollapseCheckbox ? -1 : undefined}
                           onClick={(event) => event.stopPropagation()}
                           onChange={(event) => {
@@ -7331,7 +7336,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                               {habit.emoji}
                             </span>
                           ) : null}
-                          {habit.name}
+                          {habitDisplayName}
                         </span>
                         <div className="habit-checklist__badges">
                           {(isCompleted || state?.progressState === 'skipped' || state?.progressState === 'missed') && state?.progressState && (
@@ -7423,29 +7428,35 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                             event.stopPropagation();
                             setVisionPreviewImage(linkedVisionImage);
                           }}
-                          aria-label={`View vision board image for ${habit.name}`}
+                          aria-label={`View vision board image for ${habitDisplayName}`}
                         >
                           <img src={linkedVisionImage.publicUrl} alt="" aria-hidden="true" />
                         </button>
                       ) : null}
                     </div>
-                    <div className="habit-checklist__meta-group">
-                      <p className="habit-checklist__meta">
-                        Life wheel • {domainLabel ?? 'Unassigned'}
-                      </p>
-                      <p className="habit-checklist__meta habit-checklist__meta--secondary">
-                        Goal • {goalLabel}
-                      </p>
-                      {lastCompletedText ? (
-                        <p className="habit-checklist__note">{lastCompletedText}</p>
-                      ) : null}
-                    </div>
-                    {habit.habit_environment ? (
-                      <div className="habit-checklist__environment">
-                        <p className="habit-checklist__environment-label">📍 Where &amp; How</p>
-                        <p className="habit-checklist__environment-text">{habit.habit_environment}</p>
-                      </div>
-                    ) : null}
+                    {isPrivateCompactView ? (
+                      <p className="habit-checklist__todo-note-placeholder">Habit details hidden in compact private view.</p>
+                    ) : (
+                      <>
+                        <div className="habit-checklist__meta-group">
+                          <p className="habit-checklist__meta">
+                            Life wheel • {domainLabel ?? 'Unassigned'}
+                          </p>
+                          <p className="habit-checklist__meta habit-checklist__meta--secondary">
+                            Goal • {goalLabel}
+                          </p>
+                          {lastCompletedText ? (
+                            <p className="habit-checklist__note">{lastCompletedText}</p>
+                          ) : null}
+                        </div>
+                        {habit.habit_environment ? (
+                          <div className="habit-checklist__environment">
+                            <p className="habit-checklist__environment-label">📍 Where &amp; How</p>
+                            <p className="habit-checklist__environment-text">{habit.habit_environment}</p>
+                          </div>
+                        ) : null}
+                      </>
+                    )}
                   </section>
                   <section className="habit-checklist__detail-block habit-checklist__detail-block--progress" aria-label="Habit progress">
                     <div className="habit-checklist__detail-block-header">
@@ -8011,6 +8022,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     };
 
     const checklistCardClassName = `habit-checklist-card${isCompactView ? '' : ' habit-checklist-card--glass'}${
+      isPrivateCompactView ? ' habit-checklist-card--private-view' : ''
+    }${
       canUseCompactPullRefresh ? ' habit-checklist-card--pull-enabled' : ''
     }${compactPullDistance > 0 ? ' habit-checklist-card--pulling' : ''}${
       isPullArmed ? ' habit-checklist-card--pull-armed' : ''
@@ -8770,7 +8783,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   <span className="habit-checklist-card__glass-toggle-thumb" />
                 </span>
                 <span className="habit-checklist-card__glass-toggle-label">
-                  {isCompactView ? 'Compact' : 'Detailed'}
+                  {isCompactView ? 'Private' : 'Detailed'}
                 </span>
               </button>
             </div>
@@ -8896,16 +8909,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             ) : (
               renderCompactList()
             )}
-            {isViewingToday && isCompactView && onOpenStarterQuest ? (
-              <LifeBuildTodayCard
-                userId={session.user.id}
-                dateISO={today}
-                habits={habits}
-                onPickOne={onOpenStarterQuest}
-              />
-            ) : null}
-
-
             {todayTodoModalOpen ? createPortal(
               <div className="habit-edit-modal-overlay" role="presentation" onClick={handleCloseTodayTodoModal}>
                 <div
@@ -8963,10 +8966,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               />
             ) : null}
 
-            {sparkHandEnabled && archetypeHand ? (
+            {sparkHandEnabled && archetypeHand && !isPrivateCompactView ? (
               <MyPlayerHandPanel hand={archetypeHand} compact />
             ) : null}
-            {identitySignalsUnlocked ? (
+            {identitySignalsUnlocked && !isPrivateCompactView ? (
               <div className="identity-signals-card" aria-live="polite">
                 <div className="identity-signals-card__header">
                   <div>
