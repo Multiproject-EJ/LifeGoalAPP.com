@@ -103,8 +103,10 @@ export const CountdownCalendarModal = ({
   const [trackerExpanded, setTrackerExpanded] = useState(false);
   const modalOpenSfxPlayedRef = useRef(false);
 
+  // App-level scroll locking owns the Daily Treats calendar lock so closing this
+  // modal cannot race with the PWA fullscreen/body restore sequence.
   useEffect(() => {
-    if (!isOpen || typeof document === 'undefined') {
+    if (!isOpen) {
       modalOpenSfxPlayedRef.current = false;
       return;
     }
@@ -113,13 +115,6 @@ export const CountdownCalendarModal = ({
       playIslandRunSound('shop_open');
       modalOpenSfxPlayedRef.current = true;
     }
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
   }, [isOpen]);
 
   useEffect(() => {
