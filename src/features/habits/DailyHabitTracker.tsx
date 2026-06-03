@@ -1225,6 +1225,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     }
   }, [forceCompactView, preferredCompactView]);
 
+  const isPublicView = isCompactView && isPublicCompactView;
   const isPrivateCompactView = isCompactView;
   const [isCompactToggleLabelVisible, setIsCompactToggleLabelVisible] = useState(false);
   const compactToggleLabelTimeoutRef = useRef<number | null>(null);
