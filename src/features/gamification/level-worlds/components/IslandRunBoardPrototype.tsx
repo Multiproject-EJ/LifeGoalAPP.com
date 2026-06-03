@@ -6101,6 +6101,12 @@ export function IslandRunBoardPrototype({
   const hatcheryPendingEggAriaLabel = hatcheryPendingEggCount > 0
     ? `. ${hatcheryPendingEggCount} hatchery egg${hatcheryPendingEggCount === 1 ? '' : 's'} pending.`
     : '';
+  const hasRewardBarTimedEventQuickAction = Boolean(effectiveActiveTimedEvent && activeEventMeta);
+  const rewardBarStickerSlotIndex = hasRewardBarTimedEventQuickAction ? 1 : 0;
+  const rewardBarSideSlotCount = Math.max(
+    hatcheryPendingEggCount,
+    rewardBarStickerSlotIndex + 1,
+  );
   const openHatcheryQuickAccess = useCallback(() => {
     requestActiveStopTransition('hatchery', 'manifest_quick_access');
   }, [requestActiveStopTransition]);
@@ -9683,18 +9689,30 @@ export function IslandRunBoardPrototype({
               onClick={openHatcheryQuickAccess}
             >
               <span className="island-run-board__rewardbar-hatchery-egg-stack" aria-hidden="true">
-                {hatcheryPendingEggs.map((egg, index) => (
-                  <span key={egg.id} className="island-run-board__rewardbar-hatchery-egg-slot">
-                    <span className="island-run-board__rewardbar-hatchery-egg-circle">
-                      <span className="island-run-board__rewardbar-hatchery-egg">🥚</span>
-                    </span>
-                    {index === 0 && hatcheryPendingEggTimeLabel && (
-                      <span className="island-run-board__rewardbar-hatchery-time">
-                        {hatcheryPendingEggTimeLabel}
+                {Array.from({ length: rewardBarSideSlotCount }, (_, index) => {
+                  const egg = hatcheryPendingEggs[index];
+                  if (!egg) {
+                    return (
+                      <span
+                        key={`hatchery-placeholder-${index}`}
+                        className="island-run-board__rewardbar-hatchery-egg-slot island-run-board__rewardbar-side-slot island-run-board__rewardbar-side-slot--empty"
+                      />
+                    );
+                  }
+
+                  return (
+                    <span key={egg.id} className="island-run-board__rewardbar-hatchery-egg-slot island-run-board__rewardbar-side-slot">
+                      <span className="island-run-board__rewardbar-hatchery-egg-circle">
+                        <span className="island-run-board__rewardbar-hatchery-egg">🥚</span>
                       </span>
-                    )}
-                  </span>
-                ))}
+                      {index === 0 && hatcheryPendingEggTimeLabel && (
+                        <span className="island-run-board__rewardbar-hatchery-time">
+                          {hatcheryPendingEggTimeLabel}
+                        </span>
+                      )}
+                    </span>
+                  );
+                })}
               </span>
             </button>
           )}
@@ -9769,45 +9787,63 @@ export function IslandRunBoardPrototype({
           </button>
 
           <div className="island-run-board__rewardbar-side-rail" aria-label="Reward bar quick actions">
-            {/* Mini-game icon button — aligned as the first quick-action slot */}
-            {effectiveActiveTimedEvent && activeEventMeta && (
-              <button
-                type="button"
-                className={`island-run-board__minigame-icon-btn${isTimedEventLaunchQueued ? ' island-run-board__minigame-icon-btn--queued' : ''}`}
-                aria-label={isTimedEventLaunchQueued ? `${activeEventMeta.displayName} queued to auto-open` : `Open ${activeEventMeta.displayName}`}
-                onClick={handleLaunchTimedEventMinigame}
-              >
-                <span className="island-run-board__minigame-icon-emoji" aria-hidden="true">
-                  {activeEventMeta.icon}
-                </span>
-                <span className="island-run-board__minigame-icon-label">{activeEventTickets} {timedEventTokenIcon}</span>
-                {isTimedEventLaunchQueued && (
-                  <span className="island-run-board__minigame-icon-helper island-run-board__minigame-icon-helper--queued">Queued to auto-open</span>
-                )}
-                {isSpaceExcavatorEffectiveEvent && (
-                  <>
-                    <span className="island-run-board__minigame-icon-helper">Use tickets to dig</span>
-                    <span className="island-run-board__minigame-icon-helper">Progress saved</span>
-                    <span className="island-run-board__minigame-icon-helper">Earn from reward bar</span>
-                  </>
-                )}
-                {isSpaceExcavatorEffectiveEvent && isDevTimedEventOverrideActive && (
-                  <span className="island-run-board__minigame-icon-helper island-run-board__minigame-icon-helper--dev">
-                    DEV override tickets
+            {Array.from({ length: rewardBarSideSlotCount }, (_, index) => {
+              if (index === 0 && hasRewardBarTimedEventQuickAction && activeEventMeta) {
+                return (
+                  <span key="timed-event" className="island-run-board__rewardbar-side-slot">
+                    <button
+                      type="button"
+                      className={`island-run-board__minigame-icon-btn${isTimedEventLaunchQueued ? ' island-run-board__minigame-icon-btn--queued' : ''}`}
+                      aria-label={isTimedEventLaunchQueued ? `${activeEventMeta.displayName} queued to auto-open` : `Open ${activeEventMeta.displayName}`}
+                      onClick={handleLaunchTimedEventMinigame}
+                    >
+                      <span className="island-run-board__minigame-icon-emoji" aria-hidden="true">
+                        {activeEventMeta.icon}
+                      </span>
+                      <span className="island-run-board__minigame-icon-label">{activeEventTickets} {timedEventTokenIcon}</span>
+                      {isTimedEventLaunchQueued && (
+                        <span className="island-run-board__minigame-icon-helper island-run-board__minigame-icon-helper--queued">Queued to auto-open</span>
+                      )}
+                      {isSpaceExcavatorEffectiveEvent && (
+                        <>
+                          <span className="island-run-board__minigame-icon-helper">Use tickets to dig</span>
+                          <span className="island-run-board__minigame-icon-helper">Progress saved</span>
+                          <span className="island-run-board__minigame-icon-helper">Earn from reward bar</span>
+                        </>
+                      )}
+                      {isSpaceExcavatorEffectiveEvent && isDevTimedEventOverrideActive && (
+                        <span className="island-run-board__minigame-icon-helper island-run-board__minigame-icon-helper--dev">
+                          DEV override tickets
+                        </span>
+                      )}
+                    </button>
                   </span>
-                )}
-              </button>
-            )}
+                );
+              }
 
-            {/* Sticker album button */}
-            <button
-              type="button"
-              className="island-run-board__sticker-album-btn"
-              aria-label="Sticker album"
-              onClick={() => setShowStickerAlbumDialog(true)}
-            >
-              🧩 {runtimeState.stickerProgress.fragments}/5
-            </button>
+              if (index === rewardBarStickerSlotIndex) {
+                return (
+                  <span key="sticker-album" className="island-run-board__rewardbar-side-slot">
+                    <button
+                      type="button"
+                      className="island-run-board__sticker-album-btn"
+                      aria-label="Sticker album"
+                      onClick={() => setShowStickerAlbumDialog(true)}
+                    >
+                      🧩 {runtimeState.stickerProgress.fragments}/5
+                    </button>
+                  </span>
+                );
+              }
+
+              return (
+                <span
+                  key={`rewardbar-side-placeholder-${index}`}
+                  className="island-run-board__rewardbar-side-slot island-run-board__rewardbar-side-slot--empty"
+                  aria-hidden="true"
+                />
+              );
+            })}
           </div>
         </div>
 

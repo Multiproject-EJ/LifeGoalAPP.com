@@ -2077,6 +2077,9 @@
   transform: translateX(-50%);
   width: min(55%, 252px);
   z-index: 22;
+  --rewardbar-side-slot-width: 64px;
+  --rewardbar-side-slot-height: 72px;
+  --rewardbar-side-slot-gap: 8px;
 }
 
 .island-run-board__rewardbar {
@@ -2103,8 +2106,7 @@
 .island-run-board__rewardbar-hatchery-tray {
   position: absolute;
   right: calc(100% + 10px);
-  top: 50%;
-  transform: translateY(-50%);
+  top: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2131,18 +2133,32 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 22px;
+  gap: var(--rewardbar-side-slot-gap, 8px);
 }
 
 .island-run-board__rewardbar-hatchery-egg-slot {
   position: relative;
-  width: 64px;
-  height: 64px;
+  width: var(--rewardbar-side-slot-width, 64px);
+  height: var(--rewardbar-side-slot-height, 72px);
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 3px;
+}
+
+.island-run-board__rewardbar-side-slot {
+  width: var(--rewardbar-side-slot-width, 64px);
+  height: var(--rewardbar-side-slot-height, 72px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.island-run-board__rewardbar-side-slot--empty {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .island-run-board__rewardbar-hatchery-egg-circle {
@@ -2192,13 +2208,12 @@
 .island-run-board__rewardbar-side-rail {
   position: absolute;
   left: calc(100% + 10px);
-  top: 50%;
-  transform: translateY(-50%);
+  top: 0;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--rewardbar-side-slot-gap, 8px);
   z-index: 2;
 }
 
