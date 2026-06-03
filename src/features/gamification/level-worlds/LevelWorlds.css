@@ -2077,7 +2077,8 @@
   transform: translateX(-50%);
   width: min(55%, 252px);
   z-index: 9;
-  border-radius: 14px;
+  --rewardbar-card-radius: 22px;
+  border-radius: var(--rewardbar-card-radius, 22px);
   border: 1px solid rgba(230, 216, 172, 0.9);
   background: rgba(255, 255, 255, 0.92);
   padding: 0 10px 7px;
@@ -2167,7 +2168,7 @@
   gap: 6px;
   margin: 0 -10px;
   padding: 5px 12px;
-  border-radius: 22px 22px 0 0;
+  border-radius: var(--rewardbar-card-radius, 22px) var(--rewardbar-card-radius, 22px) 0 0;
   background: linear-gradient(135deg, #c0392b 0%, #a93226 50%, #922b21 100%);
   color: #fff;
   font-size: 0.72rem;
@@ -2486,7 +2487,7 @@
   gap: 14px;
   margin: 4px -10px -7px;
   padding: 4px 12px;
-  border-radius: 0 0 22px 22px;
+  border-radius: 0 0 var(--rewardbar-card-radius, 22px) var(--rewardbar-card-radius, 22px);
   background: rgba(245, 235, 215, 0.85);
   border-top: 1px solid rgba(220, 200, 160, 0.5);
   font-size: 0.68rem;
