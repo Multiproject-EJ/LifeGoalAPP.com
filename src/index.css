@@ -22654,47 +22654,144 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 /* ── Streak tracker (Monopoly GO-style, replaces reward tracker for personal quest) ── */
 .daily-treats-calendar__streak {
+  position: relative;
   display: grid;
-  gap: 0.35rem;
-  padding: 0.65rem 0.75rem;
-  border-radius: 16px;
-  background: linear-gradient(145deg, rgba(234, 179, 8, 0.08), rgba(251, 146, 60, 0.06));
-  border: 1px solid rgba(234, 179, 8, 0.25);
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.6rem 0.75rem;
+  margin: 0.15rem 0 0.35rem;
+  padding: 0.72rem 0.82rem 0.78rem;
+  overflow: hidden;
+  border-radius: 22px;
+  color: #fff7ed;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.34), transparent 28%),
+    radial-gradient(circle at 86% 15%, rgba(251, 191, 36, 0.34), transparent 26%),
+    linear-gradient(135deg, rgba(124, 45, 18, 0.94), rgba(194, 65, 12, 0.9) 48%, rgba(127, 29, 29, 0.94));
+  border: 1px solid rgba(253, 186, 116, 0.78);
+  box-shadow:
+    0 12px 30px rgba(127, 29, 29, 0.36),
+    0 0 28px rgba(251, 146, 60, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32);
+}
+
+.daily-treats-calendar__streak::before {
+  content: '';
+  position: absolute;
+  inset: -45% -15%;
+  pointer-events: none;
+  background: conic-gradient(from 180deg, transparent, rgba(255, 237, 213, 0.28), transparent 34%);
+  animation: daily-treats-streak-sheen 4.2s linear infinite;
+}
+
+.daily-treats-calendar__streak-orb {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 38% 30%, #fff7ed 0 10%, #facc15 20%, #fb923c 54%, #b91c1c 100%);
+  box-shadow:
+    0 0 0 4px rgba(255, 237, 213, 0.18),
+    0 0 22px rgba(251, 146, 60, 0.72),
+    0 8px 18px rgba(124, 45, 18, 0.34);
+  animation: daily-treats-streak-pulse 1.85s ease-in-out infinite;
+}
+
+.daily-treats-calendar__streak-flame {
+  font-size: 1.55rem;
+  line-height: 1;
+  filter: drop-shadow(0 3px 5px rgba(127, 29, 29, 0.55));
+}
+
+.daily-treats-calendar__streak-copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.daily-treats-calendar__streak-kicker {
+  margin: 0 0 0.08rem;
+  color: #fed7aa;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(69, 26, 3, 0.75);
 }
 
 .daily-treats-calendar__streak-bar {
+  position: relative;
+  z-index: 1;
+  grid-column: 1 / -1;
   display: flex;
   gap: 0.35rem;
   justify-content: center;
 }
 
 .daily-treats-calendar__streak-dot {
-  width: 24px;
-  height: 6px;
-  border-radius: 3px;
-  background: rgba(148, 163, 184, 0.25);
-  transition: background 0.3s ease, box-shadow 0.3s ease;
+  width: min(10.5vw, 31px);
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 4px rgba(2, 6, 23, 0.38);
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 .daily-treats-calendar__streak-dot--filled {
-  background: linear-gradient(135deg, #f59e0b, #ef4444);
-  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
+  background: linear-gradient(135deg, #fef3c7 0%, #facc15 22%, #fb923c 58%, #ef4444 100%);
+  border-color: rgba(255, 247, 237, 0.72);
+  box-shadow:
+    0 0 12px rgba(251, 191, 36, 0.72),
+    0 0 22px rgba(239, 68, 68, 0.42);
+  animation: daily-treats-streak-dot-glow 1.85s ease-in-out infinite;
 }
 
 .daily-treats-calendar__streak-label {
   margin: 0;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #92400e;
-  text-align: center;
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(69, 26, 3, 0.72);
 }
 
 .daily-treats-calendar__streak-hint {
-  margin: 0;
-  font-size: 0.7rem;
-  color: #a16207;
-  text-align: center;
-  opacity: 0.8;
+  margin: 0.22rem 0 0;
+  color: #ffedd5;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-shadow: 0 1px 3px rgba(69, 26, 3, 0.7);
+}
+
+@keyframes daily-treats-streak-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 4px rgba(255, 237, 213, 0.18), 0 0 18px rgba(251, 146, 60, 0.64), 0 8px 18px rgba(124, 45, 18, 0.34); }
+  50% { transform: scale(1.07); box-shadow: 0 0 0 7px rgba(255, 237, 213, 0.1), 0 0 34px rgba(251, 191, 36, 0.86), 0 10px 22px rgba(124, 45, 18, 0.4); }
+}
+
+@keyframes daily-treats-streak-dot-glow {
+  0%, 100% { transform: translateY(0); filter: saturate(1); }
+  50% { transform: translateY(-1px); filter: saturate(1.25); }
+}
+
+@keyframes daily-treats-streak-sheen {
+  to { transform: rotate(1turn); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .daily-treats-calendar__streak::before,
+  .daily-treats-calendar__streak-orb,
+  .daily-treats-calendar__streak-dot--filled,
+  .daily-treats-calendar__bonus-locked-hint::before {
+    animation: none;
+  }
 }
 
 @media (max-width: 640px) {
@@ -23433,16 +23530,47 @@ html.platform-ipad .workspace-shell__menu-edge {
   border: 1px solid rgba(74, 222, 128, 0.4);
 }
 
-/* ── Locked bonus door hint — subtle amber pill shown when bonus is not yet unlocked ── */
+/* ── Locked bonus door hint — high-contrast quest callout shown when bonus is not yet unlocked ── */
 .daily-treats-calendar__bonus-locked-hint {
-  margin: 0.5rem 0;
-  font-size: 0.8rem;
-  color: #92400e;
+  position: relative;
+  margin: 0.45rem 0 0.65rem;
+  padding: 0.72rem 0.9rem;
+  overflow: hidden;
+  border-radius: 18px;
+  color: #fff7ed;
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.35;
   text-align: center;
-  padding: 0.55rem 0.75rem;
-  background: rgba(254, 243, 199, 0.55);
-  border: 1px dashed rgba(234, 179, 8, 0.45);
-  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 64, 175, 0.78)),
+    radial-gradient(circle at top left, rgba(251, 191, 36, 0.42), transparent 38%);
+  border: 1px solid rgba(252, 211, 77, 0.78);
+  box-shadow:
+    0 12px 24px rgba(2, 6, 23, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 0 22px rgba(59, 130, 246, 0.24);
+  text-shadow: 0 2px 4px rgba(2, 6, 23, 0.65);
+}
+
+.daily-treats-calendar__bonus-locked-hint::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 0 22%, rgba(255, 255, 255, 0.2) 38%, transparent 54%);
+  transform: translateX(-120%);
+  animation: daily-treats-bonus-hint-sheen 3.6s ease-in-out infinite;
+}
+
+.daily-treats-calendar__bonus-locked-hint strong {
+  color: #fde68a;
+  font-weight: 950;
+}
+
+@keyframes daily-treats-bonus-hint-sheen {
+  0%, 35% { transform: translateX(-120%); }
+  70%, 100% { transform: translateX(120%); }
 }
 
 
@@ -23673,9 +23801,11 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 :is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__bonus-locked-hint {
-  background: rgba(100, 80, 15, 0.28);
-  color: #fcd34d;
-  border-color: rgba(234, 179, 8, 0.3);
+  background:
+    linear-gradient(135deg, rgba(2, 6, 23, 0.92), rgba(30, 64, 175, 0.82)),
+    radial-gradient(circle at top left, rgba(251, 191, 36, 0.42), transparent 38%);
+  color: #fff7ed;
+  border-color: rgba(252, 211, 77, 0.78);
 }
 
 :is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__bonus-popup {
@@ -23709,16 +23839,19 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 :is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__streak {
-  background: linear-gradient(145deg, rgba(234, 179, 8, 0.12), rgba(251, 146, 60, 0.08));
-  border-color: rgba(234, 179, 8, 0.2);
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.28), transparent 28%),
+    radial-gradient(circle at 86% 15%, rgba(251, 191, 36, 0.32), transparent 26%),
+    linear-gradient(135deg, rgba(124, 45, 18, 0.95), rgba(194, 65, 12, 0.9) 48%, rgba(127, 29, 29, 0.95));
+  border-color: rgba(253, 186, 116, 0.78);
 }
 
 :is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__streak-label {
-  color: #fbbf24;
+  color: #ffffff;
 }
 
 :is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .daily-treats-calendar__streak-hint {
-  color: #fcd34d;
+  color: #ffedd5;
 }
 
 .mobile-gamification-overlay__stat--mini-grid {
