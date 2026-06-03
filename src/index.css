@@ -31697,19 +31697,3 @@ body.habit-wizard-open .mobile-footer-nav {
   gap: 0.6rem;
   margin-top: 1.1rem;
 }
-
-:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .habit-checklist-card__privacy-toggle {
-  background: rgba(15, 23, 42, 0.48);
-  border-color: rgba(148, 163, 184, 0.28);
-  color: rgba(226, 232, 240, 0.78);
-}
-
-:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .habit-checklist-card__privacy-toggle--active {
-  background: linear-gradient(135deg, rgba(49, 46, 129, 0.82), rgba(79, 70, 229, 0.62));
-  border-color: rgba(165, 180, 252, 0.52);
-  color: #eef2ff;
-}
-
-:is([data-theme='dark-glass'], [data-theme='midnight-purple'], [data-theme='flow-night'], [data-theme='bio-night']) .habit-checklist-card__privacy-note {
-  color: rgba(199, 210, 254, 0.84);
-}
