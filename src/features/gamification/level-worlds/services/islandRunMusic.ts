@@ -1,4 +1,5 @@
 const ISLAND_RUN_MUSIC_VOLUME = 0.28;
+const ISLAND_RUN_MUSIC_FADE_MS = 650;
 
 const ISLAND_RUN_MUSIC_TRACKS = {
   'island-board-ambient': '/assets/audio/music/Island dreamy relaxing night islands.mp3',
@@ -10,6 +11,22 @@ const ISLAND_RUN_MUSIC_TRACKS = {
 } as const;
 
 export type IslandRunMusicTrackId = keyof typeof ISLAND_RUN_MUSIC_TRACKS;
+
+export type IslandRunMusicContext =
+  | { kind: 'none' }
+  | { kind: 'playlist'; trackIds: IslandRunMusicTrackId[] }
+  | { kind: 'track'; trackId: IslandRunMusicTrackId };
+
+export interface ResolveIslandRunMusicContextOptions {
+  musicEnabled: boolean;
+  effectiveIslandNumber: number;
+  showShopPanel: boolean;
+  showIslandClearCelebration: boolean;
+}
+
+export interface IslandRunMusicTransitionOptions {
+  fadeMs?: number;
+}
 
 const ISLAND_RUN_DREAMT_ISLAND_INTERVAL = 10;
 
@@ -28,7 +45,29 @@ export function getIslandRunBoardMusicPlaylist(islandNumber: number): IslandRunM
   return ['luxury-reward', 'event-jackpot', 'boss-rhythm-duel'];
 }
 
+export function resolveIslandRunMusicContext(options: ResolveIslandRunMusicContextOptions): IslandRunMusicContext {
+  const {
+    musicEnabled,
+    effectiveIslandNumber,
+    showShopPanel,
+    showIslandClearCelebration,
+  } = options;
+
+  if (!musicEnabled) return { kind: 'none' };
+
+  if (showIslandClearCelebration) {
+    return { kind: 'track', trackId: 'new-island-celebration' };
+  }
+
+  if (showShopPanel) {
+    return { kind: 'track', trackId: 'market-lounge' };
+  }
+
+  return { kind: 'playlist', trackIds: getIslandRunBoardMusicPlaylist(effectiveIslandNumber) };
+}
+
 const islandRunMusicAudioByTrack = new Map<IslandRunMusicTrackId, HTMLAudioElement>();
+const islandRunMusicFadeTimerByTrack = new Map<IslandRunMusicTrackId, number>();
 let ownedIslandRunMusicTrackId: IslandRunMusicTrackId | null = null;
 let playingIslandRunMusicTrackId: IslandRunMusicTrackId | null = null;
 let islandRunMusicPlayAttemptId = 0;
@@ -52,24 +91,91 @@ function getIslandRunMusicAudio(trackId: IslandRunMusicTrackId): HTMLAudioElemen
   return audio;
 }
 
-function resetIslandRunMusicAudio(trackId: IslandRunMusicTrackId): void {
+function clearIslandRunMusicFade(trackId: IslandRunMusicTrackId): void {
+  const timerId = islandRunMusicFadeTimerByTrack.get(trackId);
+  if (typeof timerId !== 'number' || typeof window === 'undefined') return;
+
+  window.clearInterval(timerId);
+  islandRunMusicFadeTimerByTrack.delete(trackId);
+}
+
+function setIslandRunMusicVolume(audio: HTMLAudioElement, volume: number): void {
+  audio.volume = Math.min(1, Math.max(0, volume));
+}
+
+function fadeIslandRunMusicAudio(
+  trackId: IslandRunMusicTrackId,
+  targetVolume: number,
+  fadeMs: number,
+  onComplete?: () => void,
+): void {
   const audio = islandRunMusicAudioByTrack.get(trackId);
   if (!audio) return;
 
-  audio.pause();
-  audio.currentTime = 0;
+  clearIslandRunMusicFade(trackId);
+
+  if (fadeMs <= 0 || typeof window === 'undefined') {
+    setIslandRunMusicVolume(audio, targetVolume);
+    onComplete?.();
+    return;
+  }
+
+  const startVolume = audio.volume;
+  const startedAt = Date.now();
+
+  const tick = () => {
+    const progress = Math.min(1, (Date.now() - startedAt) / fadeMs);
+    setIslandRunMusicVolume(audio, startVolume + (targetVolume - startVolume) * progress);
+
+    if (progress >= 1) {
+      clearIslandRunMusicFade(trackId);
+      onComplete?.();
+    }
+  };
+
+  const timerId = window.setInterval(tick, 50);
+  islandRunMusicFadeTimerByTrack.set(trackId, timerId);
+  tick();
 }
 
-function stopOwnedIslandRunMusic(): void {
+function resetIslandRunMusicAudio(
+  trackId: IslandRunMusicTrackId,
+  options: IslandRunMusicTransitionOptions = {},
+): void {
+  const audio = islandRunMusicAudioByTrack.get(trackId);
+  if (!audio) return;
+
+  const fadeMs = options.fadeMs ?? 0;
+  const finishReset = () => {
+    audio.pause();
+    audio.currentTime = 0;
+    setIslandRunMusicVolume(audio, ISLAND_RUN_MUSIC_VOLUME);
+  };
+
+  if (fadeMs > 0 && !audio.paused) {
+    fadeIslandRunMusicAudio(trackId, 0, fadeMs, finishReset);
+    return;
+  }
+
+  clearIslandRunMusicFade(trackId);
+  finishReset();
+}
+
+function stopOwnedIslandRunMusic(
+  options: IslandRunMusicTransitionOptions = {},
+  shouldStopPlaylist = true,
+): void {
   const trackId = ownedIslandRunMusicTrackId;
   if (!trackId) return;
 
-  stopOwnedIslandRunMusicPlaylist();
+  if (shouldStopPlaylist) {
+    stopOwnedIslandRunMusicPlaylist();
+  }
 
   islandRunMusicPlayAttemptId += 1;
   const audio = islandRunMusicAudioByTrack.get(trackId);
   if (audio) audio.onended = null;
-  resetIslandRunMusicAudio(trackId);
+  resetIslandRunMusicAudio(trackId, options);
   ownedIslandRunMusicTrackId = null;
   if (playingIslandRunMusicTrackId === trackId) playingIslandRunMusicTrackId = null;
 }
@@ -79,7 +185,10 @@ function stopOwnedIslandRunMusicPlaylist(): void {
   ownedIslandRunMusicPlaylistToken += 1;
 }
 
-export function playIslandRunMusicPlaylist(trackIds: IslandRunMusicTrackId[]): void {
+export function playIslandRunMusicPlaylist(
+  trackIds: IslandRunMusicTrackId[],
+  options: IslandRunMusicTransitionOptions = {},
+): void {
   if (trackIds.length === 0) return;
 
   stopOwnedIslandRunMusicPlaylist();
@@ -94,7 +203,7 @@ export function playIslandRunMusicPlaylist(trackIds: IslandRunMusicTrackId[]): v
     if (!audio) return;
 
     if (ownedIslandRunMusicTrackId && ownedIslandRunMusicTrackId !== trackId) {
-      stopOwnedIslandRunMusic();
+      stopOwnedIslandRunMusic(options, false);
     }
 
     if (ownedIslandRunMusicTrackId !== trackId) {
@@ -108,6 +217,8 @@ export function playIslandRunMusicPlaylist(trackIds: IslandRunMusicTrackId[]): v
       playTrackAt(normalizedIndex + 1);
     };
     audio.loop = false;
+    clearIslandRunMusicFade(trackId);
+    setIslandRunMusicVolume(audio, options.fadeMs && options.fadeMs > 0 ? 0 : ISLAND_RUN_MUSIC_VOLUME);
 
     void audio
       .play()
@@ -123,6 +234,9 @@ export function playIslandRunMusicPlaylist(trackIds: IslandRunMusicTrackId[]): v
         }
 
         playingIslandRunMusicTrackId = trackId;
+        if (options.fadeMs && options.fadeMs > 0) {
+          fadeIslandRunMusicAudio(trackId, ISLAND_RUN_MUSIC_VOLUME, options.fadeMs);
+        }
       })
       .catch(() => {
         if (playlistToken !== ownedIslandRunMusicPlaylistToken) return;
@@ -136,7 +250,10 @@ export function playIslandRunMusicPlaylist(trackIds: IslandRunMusicTrackId[]): v
   playTrackAt(0);
 }
 
-export function playIslandRunMusic(trackId: IslandRunMusicTrackId): void {
+export function playIslandRunMusic(
+  trackId: IslandRunMusicTrackId,
+  options: IslandRunMusicTransitionOptions = {},
+): void {
   stopOwnedIslandRunMusicPlaylist();
 
   const audio = getIslandRunMusicAudio(trackId);
@@ -144,9 +261,11 @@ export function playIslandRunMusic(trackId: IslandRunMusicTrackId): void {
 
   audio.onended = null;
   audio.loop = true;
+  clearIslandRunMusicFade(trackId);
+  setIslandRunMusicVolume(audio, options.fadeMs && options.fadeMs > 0 ? 0 : ISLAND_RUN_MUSIC_VOLUME);
 
   if (ownedIslandRunMusicTrackId && ownedIslandRunMusicTrackId !== trackId) {
-    stopOwnedIslandRunMusic();
+    stopOwnedIslandRunMusic(options);
   }
 
   if (ownedIslandRunMusicTrackId !== trackId) {
@@ -164,6 +283,9 @@ export function playIslandRunMusic(trackId: IslandRunMusicTrackId): void {
       }
 
       playingIslandRunMusicTrackId = trackId;
+      if (options.fadeMs && options.fadeMs > 0) {
+        fadeIslandRunMusicAudio(trackId, ISLAND_RUN_MUSIC_VOLUME, options.fadeMs);
+      }
     })
     .catch(() => {
       // Browser autoplay policy can reject playback even after some interactions.
@@ -174,10 +296,13 @@ export function playIslandRunMusic(trackId: IslandRunMusicTrackId): void {
     });
 }
 
-export function stopIslandRunMusic(trackId?: IslandRunMusicTrackId): void {
+export function stopIslandRunMusic(
+  trackId?: IslandRunMusicTrackId,
+  options: IslandRunMusicTransitionOptions = {},
+): void {
   if (!trackId) {
     stopOwnedIslandRunMusicPlaylist();
-    stopOwnedIslandRunMusic();
+    stopOwnedIslandRunMusic(options, false);
     return;
   }
 
@@ -188,7 +313,44 @@ export function stopIslandRunMusic(trackId?: IslandRunMusicTrackId): void {
   islandRunMusicPlayAttemptId += 1;
   const audio = islandRunMusicAudioByTrack.get(trackId);
   if (audio) audio.onended = null;
-  resetIslandRunMusicAudio(trackId);
+  resetIslandRunMusicAudio(trackId, options);
   if (ownedIslandRunMusicTrackId === trackId) ownedIslandRunMusicTrackId = null;
   if (playingIslandRunMusicTrackId === trackId) playingIslandRunMusicTrackId = null;
+}
+
+export function resetIslandRunMusicForTests(): void {
+  for (const trackId of islandRunMusicAudioByTrack.keys()) {
+    clearIslandRunMusicFade(trackId);
+    const audio = islandRunMusicAudioByTrack.get(trackId);
+    if (audio) {
+      audio.onended = null;
+      audio.pause();
+      audio.currentTime = 0;
+      setIslandRunMusicVolume(audio, ISLAND_RUN_MUSIC_VOLUME);
+    }
+  }
+
+  islandRunMusicAudioByTrack.clear();
+  islandRunMusicFadeTimerByTrack.clear();
+  ownedIslandRunMusicTrackId = null;
+  playingIslandRunMusicTrackId = null;
+  islandRunMusicPlayAttemptId += 1;
+  ownedIslandRunMusicPlaylistToken += 1;
+}
+
+export function applyIslandRunMusicContext(
+  context: IslandRunMusicContext,
+  options: IslandRunMusicTransitionOptions = { fadeMs: ISLAND_RUN_MUSIC_FADE_MS },
+): void {
+  if (context.kind === 'none') {
+    stopIslandRunMusic(undefined, options);
+    return;
+  }
+
+  if (context.kind === 'track') {
+    playIslandRunMusic(context.trackId, options);
+    return;
+  }
+
+  playIslandRunMusicPlaylist(context.trackIds, options);
 }
