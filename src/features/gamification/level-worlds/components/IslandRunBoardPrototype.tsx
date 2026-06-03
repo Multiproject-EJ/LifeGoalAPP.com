@@ -9673,134 +9673,143 @@ export function IslandRunBoardPrototype({
           )}
         </div>
 
-        <button
-          type="button"
-          className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}${rewardBarBurstAnimating ? ' island-run-board__rewardbar--burst' : ''}${rewardBarTierClass}`}
-          aria-label={`Reward progress. Next reward: ${nextRewardAccessibleLabel}${hatcheryPendingEggAriaLabel}`}
-          onClick={canClaimRewardBar ? handleContractV2RewardBarClaim : openRewardDetailsModal}
-        >
+        <div className="island-run-board__rewardbar-cluster">
           {hatcheryPendingEggs.length > 0 && (
-            <span
+            <button
+              type="button"
               className="island-run-board__rewardbar-hatchery-tray"
-              aria-hidden="true"
+              aria-label={`Open hatchery. ${hatcheryPendingEggCount} egg${hatcheryPendingEggCount === 1 ? '' : 's'} hatching or ready${hatcheryPendingEggTimeLabel ? `: ${hatcheryPendingEggTimeLabel}` : ''}.`}
               title={`${hatcheryPendingEggCount} hatchery egg${hatcheryPendingEggCount === 1 ? '' : 's'} hatching or uncollected${hatcheryPendingEggTimeLabel ? ` — ${hatcheryPendingEggTimeLabel}` : ''}`}
+              onClick={openHatcheryQuickAccess}
             >
-              <span className="island-run-board__rewardbar-hatchery-egg-stack">
-                {hatcheryPendingEggs.map((egg) => (
-                  <span key={egg.id} className="island-run-board__rewardbar-hatchery-egg-circle">
-                    <span className="island-run-board__rewardbar-hatchery-egg">🥚</span>
+              <span className="island-run-board__rewardbar-hatchery-egg-stack" aria-hidden="true">
+                {hatcheryPendingEggs.map((egg, index) => (
+                  <span key={egg.id} className="island-run-board__rewardbar-hatchery-egg-slot">
+                    <span className="island-run-board__rewardbar-hatchery-egg-circle">
+                      <span className="island-run-board__rewardbar-hatchery-egg">🥚</span>
+                    </span>
+                    {index === 0 && hatcheryPendingEggTimeLabel && (
+                      <span className="island-run-board__rewardbar-hatchery-time">
+                        {hatcheryPendingEggTimeLabel}
+                      </span>
+                    )}
                   </span>
                 ))}
               </span>
-              {hatcheryPendingEggTimeLabel && (
-                <span className="island-run-board__rewardbar-hatchery-time">
-                  {hatcheryPendingEggTimeLabel}
-                </span>
-              )}
-            </span>
+            </button>
           )}
-          {/* Flying feed particle animation */}
-          {feedParticleActive && (
-            <span className="island-run-board__rewardbar-feed-particle" aria-hidden="true">✨</span>
-          )}
-          {/* Cascade payout display — shows each reward popping */}
-          {rewardBarCascadePayouts.length > 0 && (
-            <div className="island-run-board__rewardbar-cascade" aria-live="polite">
-              {rewardBarCascadePayouts.map((p, i) => (
-                <span
-                  key={i}
-                  className="island-run-board__rewardbar-cascade-item"
-                  style={{ animationDelay: `${i * 0.5}s` }}
-                >
-                  {(p.rewardKind === 'minigame_tokens' ? timedEventTokenIcon : REWARD_KIND_ICON[p.rewardKind])} {p.rewardKind === 'dice' ? `+${p.dice}` : p.rewardKind === 'essence' ? `+${p.essence}` : p.rewardKind === 'minigame_tokens' ? `+${p.minigameTokens}` : `+${p.stickerFragments}`}
-                </span>
-              ))}
-            </div>
-          )}
-          {/* Decorative themed event banner — only shown when an event is active */}
-          {effectiveActiveTimedEvent && activeEventMeta ? (
-            <div className={`island-run-board__rewardbar-banner island-run-board__rewardbar-banner--${effectiveActiveTimedEvent.eventType}`}>
-              <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{activeEventMeta.icon}</i>
-              <span>{activeEventMeta.displayName}</span>
-              <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{activeEventMeta.icon}</i>
-            </div>
-          ) : null}
-          {/* Track row: event feed icon → track → single reward endcap (no milestones) */}
-          <div className="island-run-board__rewardbar-track-row">
-            <span className="island-run-board__rewardbar-avatar-indicator" aria-hidden="true">
-              {rewardBarAvatarIcon}
-            </span>
-            <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
-              <span className={`island-run-board__rewardbar-track-fill${rewardBarSnapActive ? ' island-run-board__rewardbar-track-fill--snap' : ''}`} style={{ width: `${rewardBarPercent}%` }} />
-              <span className="island-run-board__rewardbar-track-counter">{Math.floor(rewardBarProgress)}/{Math.floor(rewardBarThreshold)}</span>
-              {/* Position indicator riding the fill edge */}
-              <span className="island-run-board__rewardbar-position" style={{ left: `${Math.min(rewardBarPercent, 100)}%` }} aria-hidden="true" />
-            </div>
-            {/* Single reward endcap — shows what you'll get next */}
-            <span
-              className={`island-run-board__rewardbar-endcap${canClaimRewardBar ? ' island-run-board__rewardbar-endcap--claimable' : ''}`}
-              aria-hidden="true"
-              title={`Next reward: ${nextRewardAccessibleLabel}`}
-            >
-              <span className="island-run-board__rewardbar-endcap-icon">
-                {nextRewardKind === 'minigame_tokens' ? timedEventTokenIcon : nextRewardIcon}
-              </span>
-              <span className="island-run-board__rewardbar-endcap-amount">{nextRewardAmountLabel}</span>
-            </span>
-          </div>
-          {/* Event timer + multiplier row */}
-          <div className="island-run-board__rewardbar-timers">
-            <span className={getTimerUrgencyClass(timedEventRemainingMs)}>{timedEventRemainingLabel}</span>
-            {effectiveMultiplier > 1 && (
-              <span className="island-run-board__rewardbar-multiplier-badge">×{effectiveMultiplier}</span>
-            )}
-            {isSpaceExcavatorEffectiveEvent && (
-              <span className="island-run-board__rewardbar-ticket-hint">
-                Reward bar can award Space Excavator tickets
-              </span>
-            )}
-          </div>
-        </button>
 
-        {/* Mini-game icon button — positioned near top-right of board */}
-        {effectiveActiveTimedEvent && activeEventMeta && (
           <button
             type="button"
-            className={`island-run-board__minigame-icon-btn${isTimedEventLaunchQueued ? ' island-run-board__minigame-icon-btn--queued' : ''}`}
-            aria-label={isTimedEventLaunchQueued ? `${activeEventMeta.displayName} queued to auto-open` : `Open ${activeEventMeta.displayName}`}
-            onClick={handleLaunchTimedEventMinigame}
+            className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}${rewardBarBurstAnimating ? ' island-run-board__rewardbar--burst' : ''}${rewardBarTierClass}`}
+            aria-label={`Reward progress. Next reward: ${nextRewardAccessibleLabel}${hatcheryPendingEggAriaLabel}`}
+            onClick={canClaimRewardBar ? handleContractV2RewardBarClaim : openRewardDetailsModal}
           >
-            <span className="island-run-board__minigame-icon-emoji" aria-hidden="true">
-              {activeEventMeta.icon}
-            </span>
-            <span className="island-run-board__minigame-icon-label">{activeEventTickets} {timedEventTokenIcon}</span>
-            {isTimedEventLaunchQueued && (
-              <span className="island-run-board__minigame-icon-helper island-run-board__minigame-icon-helper--queued">Queued to auto-open</span>
+            {/* Flying feed particle animation */}
+            {feedParticleActive && (
+              <span className="island-run-board__rewardbar-feed-particle" aria-hidden="true">✨</span>
             )}
-            {isSpaceExcavatorEffectiveEvent && (
-              <>
-                <span className="island-run-board__minigame-icon-helper">Use tickets to dig</span>
-                <span className="island-run-board__minigame-icon-helper">Progress saved</span>
-                <span className="island-run-board__minigame-icon-helper">Earn from reward bar</span>
-              </>
+            {/* Cascade payout display — shows each reward popping */}
+            {rewardBarCascadePayouts.length > 0 && (
+              <div className="island-run-board__rewardbar-cascade" aria-live="polite">
+                {rewardBarCascadePayouts.map((p, i) => (
+                  <span
+                    key={i}
+                    className="island-run-board__rewardbar-cascade-item"
+                    style={{ animationDelay: `${i * 0.5}s` }}
+                  >
+                    {(p.rewardKind === 'minigame_tokens' ? timedEventTokenIcon : REWARD_KIND_ICON[p.rewardKind])} {p.rewardKind === 'dice' ? `+${p.dice}` : p.rewardKind === 'essence' ? `+${p.essence}` : p.rewardKind === 'minigame_tokens' ? `+${p.minigameTokens}` : `+${p.stickerFragments}`}
+                  </span>
+                ))}
+              </div>
             )}
-            {isSpaceExcavatorEffectiveEvent && isDevTimedEventOverrideActive && (
-              <span className="island-run-board__minigame-icon-helper island-run-board__minigame-icon-helper--dev">
-                DEV override tickets
+            {/* Decorative themed event banner — only shown when an event is active */}
+            {effectiveActiveTimedEvent && activeEventMeta ? (
+              <div className={`island-run-board__rewardbar-banner island-run-board__rewardbar-banner--${effectiveActiveTimedEvent.eventType}`}>
+                <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{activeEventMeta.icon}</i>
+                <span>{activeEventMeta.displayName}</span>
+                <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{activeEventMeta.icon}</i>
+              </div>
+            ) : null}
+            {/* Track row: event feed icon → track → single reward endcap (no milestones) */}
+            <div className="island-run-board__rewardbar-track-row">
+              <span className="island-run-board__rewardbar-avatar-indicator" aria-hidden="true">
+                {rewardBarAvatarIcon}
               </span>
-            )}
+              <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
+                <span className={`island-run-board__rewardbar-track-fill${rewardBarSnapActive ? ' island-run-board__rewardbar-track-fill--snap' : ''}`} style={{ width: `${rewardBarPercent}%` }} />
+                <span className="island-run-board__rewardbar-track-counter">{Math.floor(rewardBarProgress)}/{Math.floor(rewardBarThreshold)}</span>
+                {/* Position indicator riding the fill edge */}
+                <span className="island-run-board__rewardbar-position" style={{ left: `${Math.min(rewardBarPercent, 100)}%` }} aria-hidden="true" />
+              </div>
+              {/* Single reward endcap — shows what you'll get next */}
+              <span
+                className={`island-run-board__rewardbar-endcap${canClaimRewardBar ? ' island-run-board__rewardbar-endcap--claimable' : ''}`}
+                aria-hidden="true"
+                title={`Next reward: ${nextRewardAccessibleLabel}`}
+              >
+                <span className="island-run-board__rewardbar-endcap-icon">
+                  {nextRewardKind === 'minigame_tokens' ? timedEventTokenIcon : nextRewardIcon}
+                </span>
+                <span className="island-run-board__rewardbar-endcap-amount">{nextRewardAmountLabel}</span>
+              </span>
+            </div>
+            {/* Event timer + multiplier row */}
+            <div className="island-run-board__rewardbar-timers">
+              <span className={getTimerUrgencyClass(timedEventRemainingMs)}>{timedEventRemainingLabel}</span>
+              {effectiveMultiplier > 1 && (
+                <span className="island-run-board__rewardbar-multiplier-badge">×{effectiveMultiplier}</span>
+              )}
+              {isSpaceExcavatorEffectiveEvent && (
+                <span className="island-run-board__rewardbar-ticket-hint">
+                  Reward bar can award Space Excavator tickets
+                </span>
+              )}
+            </div>
           </button>
-        )}
 
-        {/* Sticker album button */}
-        <button
-          type="button"
-          className="island-run-board__sticker-album-btn"
-          aria-label="Sticker album"
-          onClick={() => setShowStickerAlbumDialog(true)}
-        >
-          🧩 {runtimeState.stickerProgress.fragments}/5
-        </button>
+          <div className="island-run-board__rewardbar-side-rail" aria-label="Reward bar quick actions">
+            {/* Mini-game icon button — aligned as the first quick-action slot */}
+            {effectiveActiveTimedEvent && activeEventMeta && (
+              <button
+                type="button"
+                className={`island-run-board__minigame-icon-btn${isTimedEventLaunchQueued ? ' island-run-board__minigame-icon-btn--queued' : ''}`}
+                aria-label={isTimedEventLaunchQueued ? `${activeEventMeta.displayName} queued to auto-open` : `Open ${activeEventMeta.displayName}`}
+                onClick={handleLaunchTimedEventMinigame}
+              >
+                <span className="island-run-board__minigame-icon-emoji" aria-hidden="true">
+                  {activeEventMeta.icon}
+                </span>
+                <span className="island-run-board__minigame-icon-label">{activeEventTickets} {timedEventTokenIcon}</span>
+                {isTimedEventLaunchQueued && (
+                  <span className="island-run-board__minigame-icon-helper island-run-board__minigame-icon-helper--queued">Queued to auto-open</span>
+                )}
+                {isSpaceExcavatorEffectiveEvent && (
+                  <>
+                    <span className="island-run-board__minigame-icon-helper">Use tickets to dig</span>
+                    <span className="island-run-board__minigame-icon-helper">Progress saved</span>
+                    <span className="island-run-board__minigame-icon-helper">Earn from reward bar</span>
+                  </>
+                )}
+                {isSpaceExcavatorEffectiveEvent && isDevTimedEventOverrideActive && (
+                  <span className="island-run-board__minigame-icon-helper island-run-board__minigame-icon-helper--dev">
+                    DEV override tickets
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* Sticker album button */}
+            <button
+              type="button"
+              className="island-run-board__sticker-album-btn"
+              aria-label="Sticker album"
+              onClick={() => setShowStickerAlbumDialog(true)}
+            >
+              🧩 {runtimeState.stickerProgress.fragments}/5
+            </button>
+          </div>
+        </div>
 
         <BoardStage
           anchors={activeTileAnchors}
