@@ -22,6 +22,7 @@ import {
   resetIslandRunEconomyTelemetry,
   ISLAND_RUN_ECONOMY_COUNTERS,
 } from '../services/islandRunEconomyTelemetry';
+import { getIslandRunAudioDiagnostics } from '../services/islandRunAudio';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -177,6 +178,7 @@ export function IslandRunDebugPanel({
   const buildShaShort = buildShaRaw === 'unknown' ? 'unknown' : buildShaRaw.slice(0, 7);
   const buildTimeRaw = resolveBuildMarkerValue(import.meta.env.VITE_BUILD_TIME);
   const buildMode = resolveBuildMarkerValue(import.meta.env.MODE);
+  const audioDiagnostics = getIslandRunAudioDiagnostics();
 
   const [supabaseStatus, setSupabaseStatus] = useState<'checking' | 'ok' | 'error'>('checking');
   const [supabaseLatencyMs, setSupabaseLatencyMs] = useState<number | null>(null);
@@ -523,6 +525,10 @@ export function IslandRunDebugPanel({
         { label: 'First run claimed', value: fmtBool(rs.firstRunClaimed) },
         { label: 'Story prologue seen', value: fmtBool(rs.storyPrologueSeen) },
         { label: 'Audio enabled', value: fmtBool(rs.audioEnabled) },
+        { label: 'SFX service enabled', value: fmtBool(audioDiagnostics.sfxEnabled) },
+        { label: 'Last SFX event', value: audioDiagnostics.lastSoundEventId ?? '—' },
+        { label: 'Last SFX status', value: audioDiagnostics.lastSoundPlaybackStatus },
+        { label: 'SFX failures', value: String(audioDiagnostics.failedAssetPaths.length), warn: audioDiagnostics.failedAssetPaths.length > 0 },
         { label: 'Onboarding name done', value: fmtBool(rs.onboardingDisplayNameLoopCompleted) },
         { label: 'Camera mode', value: ls.cameraMode },
         { label: 'Sticker fragments', value: String(rs.stickerProgress?.fragments ?? 0) },

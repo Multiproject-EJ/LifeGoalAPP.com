@@ -1,8 +1,12 @@
 import {
+  getAvailableIslandRunSoundAssetPaths,
+  getIslandRunAudioDiagnostics,
+  getIslandRunSoundAssetManifest,
   playIslandRunSound,
+  resetIslandRunAudioDiagnosticsForTests,
   setIslandRunAudioEnabled,
 } from '../islandRunAudio';
-import { assertEqual, type TestCase } from './testHarness';
+import { assert, assertEqual, type TestCase } from './testHarness';
 
 type AudioListener = () => void;
 type AudioListenerEntry = {
@@ -100,10 +104,24 @@ function installMockNow(now: number): { setNow: (nextNow: number) => void; resto
 
 function resetMockAudio(): void {
   MockAudioElement.created = [];
+  resetIslandRunAudioDiagnosticsForTests();
   setIslandRunAudioEnabled(true);
 }
 
 export const islandRunAudioTests: TestCase[] = [
+  {
+    name: 'SFX asset manifest maps every event to an available bundled asset',
+    run: () => {
+      const availablePaths = new Set(getAvailableIslandRunSoundAssetPaths());
+      const manifest = getIslandRunSoundAssetManifest();
+      const entries = Object.entries(manifest);
+
+      assert(entries.length > 0, 'expected non-empty SFX manifest');
+      for (const [eventId, assetPath] of entries) {
+        assert(availablePaths.has(assetPath), `${eventId} should map to an available SFX asset`);
+      }
+    },
+  },
   {
     name: 'playIslandRunSound lazily creates and plays mapped SFX audio',
     run: async () => {
@@ -118,10 +136,12 @@ export const islandRunAudioTests: TestCase[] = [
         assertEqual(MockAudioElement.created.length, 1, 'expected one SFX audio element');
         assertEqual(
           MockAudioElement.created[0].src,
-          '/assets/audio/sfx/sfx_dice_roll_real.mp3',
+          '/assets/audio/sfx/sfx_dice_roll.mp3',
           'expected roll SFX asset path',
         );
         assertEqual(MockAudioElement.created[0].playCount, 1, 'expected SFX playback');
+        assertEqual(getIslandRunAudioDiagnostics().lastSoundPlaybackStatus, 'play_requested', 'expected diagnostics to record requested playback');
+        assertEqual(getIslandRunAudioDiagnostics().lastSoundEventId, 'roll', 'expected diagnostics to record last event');
       } finally {
         mockNow.restore();
         restoreAudio();
@@ -140,6 +160,7 @@ export const islandRunAudioTests: TestCase[] = [
         playIslandRunSound('egg_set');
 
         assertEqual(MockAudioElement.created.length, 0, 'audio disabled should not create SFX audio');
+        assertEqual(getIslandRunAudioDiagnostics().lastSoundPlaybackStatus, 'disabled', 'expected disabled diagnostics status');
       } finally {
         setIslandRunAudioEnabled(true);
         mockNow.restore();
@@ -165,6 +186,7 @@ export const islandRunAudioTests: TestCase[] = [
           2,
           'expected the immediate repeat to be throttled, then one clone after throttle expires',
         );
+        assertEqual(getIslandRunAudioDiagnostics().lastSoundPlaybackStatus, 'play_requested', 'expected final token move playback request after throttle');
         assertEqual(MockAudioElement.created[0].playCount, 1, 'expected first token move playback');
         assertEqual(MockAudioElement.created[1].playCount, 1, 'expected post-throttle clone playback');
       } finally {
@@ -174,7 +196,7 @@ export const islandRunAudioTests: TestCase[] = [
     },
   },
   {
-    name: 'playIslandRunSound treats missing assets and rejected playback as safe no-ops',
+    name: 'playIslandRunSound records failed assets and rejected playback as safe no-ops',
     run: async () => {
       const restoreAudio = installMockAudio();
       const mockNow = installMockNow(40_000);
@@ -189,7 +211,10 @@ export const islandRunAudioTests: TestCase[] = [
 
         playIslandRunSound('egg_ready');
 
+        const diagnostics = getIslandRunAudioDiagnostics();
         assertEqual(MockAudioElement.created.length, 1, 'failed SFX assets should not be recreated');
+        assertEqual(diagnostics.lastSoundPlaybackStatus, 'unavailable', 'expected failed asset to be unavailable on replay');
+        assertEqual(diagnostics.failedAssetPaths.length, 1, 'expected diagnostics to expose failed asset path');
       } finally {
         mockNow.restore();
         restoreAudio();
