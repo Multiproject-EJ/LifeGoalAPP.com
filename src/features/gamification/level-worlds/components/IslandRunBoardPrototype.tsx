@@ -253,9 +253,8 @@ import {
   setIslandRunAudioEnabled,
 } from '../services/islandRunAudio';
 import {
-  getIslandRunBoardMusicPlaylist,
-  playIslandRunMusic,
-  playIslandRunMusicPlaylist,
+  applyIslandRunMusicContext,
+  resolveIslandRunMusicContext,
   stopIslandRunMusic,
 } from '../services/islandRunMusic';
 import { SHARD_EARN, computeShardEarn, getShardTierThreshold, type ShardEarnSource } from '../services/shardMilestoneEngine';
@@ -2753,34 +2752,16 @@ export function IslandRunBoardPrototype({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showShopPanel]);
 
-  useEffect(() => {
-    if (!musicEnabled || showShopPanel || showIslandClearCelebration) {
-      stopIslandRunMusic();
-      return;
-    }
-
-    playIslandRunMusicPlaylist(getIslandRunBoardMusicPlaylist(effectiveIslandNumber));
-    return () => stopIslandRunMusic();
-  }, [effectiveIslandNumber, musicEnabled, showIslandClearCelebration, showShopPanel]);
+  const islandRunMusicContext = useMemo(() => resolveIslandRunMusicContext({
+    musicEnabled,
+    effectiveIslandNumber,
+    showShopPanel,
+    showIslandClearCelebration,
+  }), [effectiveIslandNumber, musicEnabled, showIslandClearCelebration, showShopPanel]);
 
   useEffect(() => {
-    if (!showShopPanel || !musicEnabled) {
-      stopIslandRunMusic('market-lounge');
-      return;
-    }
-
-    playIslandRunMusic('market-lounge');
-  }, [musicEnabled, showShopPanel]);
-
-  useEffect(() => {
-    if (!showIslandClearCelebration || !musicEnabled) {
-      stopIslandRunMusic('new-island-celebration');
-      return;
-    }
-
-    playIslandRunMusic('new-island-celebration');
-    return () => stopIslandRunMusic('new-island-celebration');
-  }, [musicEnabled, showIslandClearCelebration]);
+    applyIslandRunMusicContext(islandRunMusicContext);
+  }, [islandRunMusicContext]);
 
   useEffect(() => {
     return () => {
