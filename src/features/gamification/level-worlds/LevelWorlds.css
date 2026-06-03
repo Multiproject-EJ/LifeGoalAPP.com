@@ -2153,6 +2153,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 3px;
 }
 
 .island-run-board__rewardbar-side-slot--empty {
