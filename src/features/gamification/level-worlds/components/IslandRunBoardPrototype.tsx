@@ -39,6 +39,20 @@ import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
 import { getIslandArtAmbientBackgroundSrc, loadIslandArtManifest, type IslandArtManifest } from '../services/islandArtManifest';
 import { getIslandDisplayName } from '../services/islandNames';
 import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity, type IslandLandmarkDoorStopId, type IslandTileMapEntry } from '../services/islandBoardTileMap';
+import {
+  getTrafficLightCharge,
+  resolveTrafficLightCoinFlipReward,
+  TRAFFIC_LIGHT_CHARGE_TARGET,
+  TRAFFIC_LIGHT_TILE_INDEX,
+  type TrafficLightCoinFlipReward,
+} from '../services/islandRunTrafficLightTile';
+import {
+  buildDormantDoorMiniGame,
+  resolveDormantDoorReward,
+  type DormantDoorFigure,
+  type DormantDoorMiniGameState,
+  type DormantDoorRewardLevel,
+} from '../services/islandRunDormantDoorMinigame';
 import { resolveIslandBoardProfile } from '../services/islandBoardProfiles';
 // resolveWrappedTokenIndex retired from this component: the roll action service
 // is the single authoritative source of truth for token movement and hop order.
@@ -108,6 +122,10 @@ import {
   applyCompanionBonusLastVisitKeyMarker,
   applyCreatureCollection,
   applyCreatureTreatInventory,
+  resolveCreatureFormUpgradePreview,
+  upgradeCreatureFormWithShards,
+  CREATURE_FORM_MAX_LEVEL,
+  CREATURE_THEME_REQUIRED_FORM_LEVEL,
   applyDevGrantDice,
   applyDevGrantEssence,
   applyDevGrantTimedEventTickets,
@@ -140,6 +158,8 @@ import {
   applyEssenceDriftTick,
   applyRewardBarState,
   applyRollResult,
+  applyTrafficLightCoinFlipReward,
+  applyTrafficLightTilePass,
   syncCompletedStopsForIsland,
   applyTokenHopRewards,
   applyTimedEventTicketSpend,
@@ -1259,6 +1279,7 @@ const TILE_TYPE_ICONS: Record<string, string> = {
   hazard: '☠️',
   micro: '✨',
   landmark_door: '🚪',
+  traffic_light: '🚦',
 };
 
 const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
@@ -1268,6 +1289,16 @@ const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
   micro: '#9dffbe',
   encounter: '#ffa765',
   landmark_door: '#f4c7ff',
+  traffic_light: '#7cff9b',
+};
+
+const DORMANT_DOOR_FIGURE_ICONS: Record<DormantDoorFigure, string> = {
+  shell: '🐚',
+  starfish: '⭐',
+  pearl: '⚪',
+  coral: '🪸',
+  leaf: '🍃',
+  moon: '🌙',
 };
 
 interface IslandRunBoardPrototypeProps {
@@ -1297,6 +1328,7 @@ export function IslandRunBoardPrototype({
   const boardRef = useRef<HTMLDivElement>(null);
   const topbarMenuRef = useRef<HTMLDivElement>(null);
   const topbarMenuFirstItemRef = useRef<HTMLButtonElement>(null);
+  const audioMenuFirstItemRef = useRef<HTMLButtonElement>(null);
   // M16D: track previous shard count to detect island-travel reset (snap fill bar to 0, no animation)
   const prevShardsRef = useRef<number>(0);
   const [shardFillNoTransition, setShardFillNoTransition] = useState(false);
@@ -1321,6 +1353,7 @@ export function IslandRunBoardPrototype({
   });
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
+  const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [isTopbarMenuPrimed, setIsTopbarMenuPrimed] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [showDevLuckyRollOverlay, setShowDevLuckyRollOverlay] = useState(false);
@@ -1466,6 +1499,11 @@ export function IslandRunBoardPrototype({
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
   const [requiredDoorStopId, setRequiredDoorStopId] = useState<IslandLandmarkDoorStopId | null>(null);
+  const [dormantDoorMiniGame, setDormantDoorMiniGame] = useState<DormantDoorMiniGameState | null>(null);
+  const [dormantDoorSelectedIndices, setDormantDoorSelectedIndices] = useState<number[]>([]);
+  const [dormantDoorReward, setDormantDoorReward] = useState<DormantDoorRewardLevel | null>(null);
+  const [isDormantDoorRewardClaiming, setIsDormantDoorRewardClaiming] = useState(false);
+  const [trafficLightCoinFlip, setTrafficLightCoinFlip] = useState<{ seed: number; reward: TrafficLightCoinFlipReward | null } | null>(null);
   const [islandNumber, setIslandNumber] = useState(1);
   // PR7: brief "level-up flash" class driver. Flips true when `islandNumber`
   // advances to a higher value (ignoring cycle wrap 120→1) and auto-resets
@@ -1620,7 +1658,7 @@ export function IslandRunBoardPrototype({
   }, [islandNumber]);
 
   useEffect(() => {
-    if (!showTopbarMenu) {
+    if (!showTopbarMenu && !showAudioMenu) {
       return;
     }
 
@@ -1632,11 +1670,13 @@ export function IslandRunBoardPrototype({
         return;
       }
       setShowTopbarMenu(false);
+      setShowAudioMenu(false);
     };
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setShowTopbarMenu(false);
+        setShowAudioMenu(false);
       }
     };
 
@@ -1646,7 +1686,7 @@ export function IslandRunBoardPrototype({
       window.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('keydown', handleEscape);
     };
-  }, [showTopbarMenu]);
+  }, [showAudioMenu, showTopbarMenu]);
 
   useEffect(() => {
     if (!showTopbarMenu) {
@@ -1657,6 +1697,16 @@ export function IslandRunBoardPrototype({
     });
     return () => window.cancelAnimationFrame(frame);
   }, [showTopbarMenu]);
+
+  useEffect(() => {
+    if (!showAudioMenu) {
+      return;
+    }
+    const frame = window.requestAnimationFrame(() => {
+      audioMenuFirstItemRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [showAudioMenu]);
 
   useEffect(() => {
     if (isRolling || pendingHopSequence !== null) {
@@ -1916,6 +1966,8 @@ export function IslandRunBoardPrototype({
         showStickerAlbumDialog ||
         showSanctuaryPanel ||
         showStoryReader ||
+        Boolean(dormantDoorMiniGame) ||
+        Boolean(trafficLightCoinFlip) ||
         showEncounterModal ||
         showClaimModal)
     ) {
@@ -1925,6 +1977,8 @@ export function IslandRunBoardPrototype({
     showBuildPanel,
     showClaimModal,
     showEncounterModal,
+    dormantDoorMiniGame,
+    trafficLightCoinFlip,
     showMarketPanel,
     showOutOfDicePurchasePrompt,
     activePlaceholder,
@@ -3853,6 +3907,7 @@ export function IslandRunBoardPrototype({
     () => applyLandmarkDoorTiles(tileMap, { allDoorsRouteToBoss: allLandmarkDoorsRouteToBoss }),
     [allLandmarkDoorsRouteToBoss, tileMap],
   );
+  const trafficLightCharge = getTrafficLightCharge(runtimeState.bonusTileChargeByIsland, islandNumber);
 
   const stopStateMap = useMemo(() => {
     if (ISLAND_RUN_CONTRACT_V2_ENABLED && contractV2Stops) {
@@ -4008,27 +4063,36 @@ export function IslandRunBoardPrototype({
       allDoorsRouteToBoss: allLandmarkDoorsRouteToBoss,
     });
 
-    if (tapOutcome === 'open' && stopStatus === 'active') {
-      setRequiredDoorStopId(doorStopId);
-      setLandingText(`🚪 Landmark door opened ${doorStopId.toUpperCase()}. Complete it before rolling again.`);
-    } else {
-      setRequiredDoorStopId(null);
-      if (tapOutcome === 'locked') {
-        setLandingText('🚪 Landmark door is busy. Complete the previous landmark first, then come back.');
-      } else if (tapOutcome === 'ticket_required') {
-        setLandingText('🚪 Landmark door is ready but needs its essence ticket first.');
-      } else {
-        setLandingText(`🚪 Landmark door opened ${doorStopId.toUpperCase()}.`);
-      }
-    }
-
     setLockedStopInfoStopId(null);
     setTicketPromptStopId(null);
-    requestActiveStopTransition(doorStopId, 'landmark_door_landing');
     setIsTopbarMenuPrimed(false);
     setFocusedStopId(doorStopId);
     setCameraMode('stop_focus');
-  }, [allLandmarkDoorsRouteToBoss, contractV2Stops, doesStopRequireTicketPayment, requestActiveStopTransition, stopIndexByStopId]);
+
+    if (tapOutcome === 'open' && stopStatus === 'active') {
+      setDormantDoorMiniGame(null);
+      setDormantDoorSelectedIndices([]);
+      setDormantDoorReward(null);
+      setRequiredDoorStopId(doorStopId);
+      setLandingText(`🚪 Landmark door opened ${doorStopId.toUpperCase()}. Complete it before rolling again.`);
+      requestActiveStopTransition(doorStopId, 'landmark_door_landing');
+      return;
+    }
+
+    const miniGame = buildDormantDoorMiniGame({
+      islandNumber: effectiveIslandNumber,
+      tileIndex,
+      rollIndex: rollIndexRef.current,
+      doorStopId,
+    });
+    requestActiveStopTransition(null, 'dormant_landmark_door_minigame');
+    setRequiredDoorStopId(null);
+    setDormantDoorMiniGame(miniGame);
+    setDormantDoorSelectedIndices([]);
+    setDormantDoorReward(null);
+    setIsDormantDoorRewardClaiming(false);
+    setLandingText('🚪 Dormant door challenge: find three matching figures for a bigger reward.');
+  }, [allLandmarkDoorsRouteToBoss, contractV2Stops, doesStopRequireTicketPayment, effectiveIslandNumber, requestActiveStopTransition, stopIndexByStopId]);
 
   const requiredDoorStopIndex = requiredDoorStopId ? stopIndexByStopId.get(requiredDoorStopId) : undefined;
   const isDoorLandmarkCompletionRequired = requiredDoorStopId !== null
@@ -4043,7 +4107,82 @@ export function IslandRunBoardPrototype({
 
   useEffect(() => {
     setRequiredDoorStopId(null);
+    setDormantDoorMiniGame(null);
+    setDormantDoorSelectedIndices([]);
+    setDormantDoorReward(null);
+    setIsDormantDoorRewardClaiming(false);
+    setTrafficLightCoinFlip(null);
   }, [islandNumber]);
+
+  const handleDormantDoorSelect = useCallback((doorIndex: number) => {
+    if (!dormantDoorMiniGame || dormantDoorReward) return;
+    if (dormantDoorSelectedIndices.includes(doorIndex) || dormantDoorSelectedIndices.length >= 3) return;
+    const next = [...dormantDoorSelectedIndices, doorIndex];
+    setDormantDoorSelectedIndices(next);
+    if (next.length === 3) {
+      const selectedFigures = next
+        .map((index) => dormantDoorMiniGame.doors[index]?.figure)
+        .filter((figure): figure is DormantDoorFigure => Boolean(figure));
+      setDormantDoorReward(resolveDormantDoorReward(selectedFigures));
+    }
+  }, [dormantDoorMiniGame, dormantDoorReward, dormantDoorSelectedIndices]);
+
+  const handleCloseDormantDoorMiniGame = useCallback(() => {
+    setDormantDoorMiniGame(null);
+    setDormantDoorSelectedIndices([]);
+    setDormantDoorReward(null);
+    setIsDormantDoorRewardClaiming(false);
+  }, []);
+
+  const handleClaimDormantDoorReward = useCallback(() => {
+    if (!dormantDoorMiniGame || !dormantDoorReward || isDormantDoorRewardClaiming) return;
+    setIsDormantDoorRewardClaiming(true);
+    const record = applyTokenHopRewards({
+      session,
+      client,
+      deltas: {
+        essence: dormantDoorReward.essence,
+        dicePool: dormantDoorReward.dice,
+      },
+      triggerSource: 'dormant_landmark_door_minigame',
+    });
+    setRuntimeState(record);
+    const dicePart = dormantDoorReward.dice > 0 ? `, +${dormantDoorReward.dice} dice` : '';
+    setLandingText(`🚪 ${dormantDoorReward.label}: +${dormantDoorReward.essence} essence${dicePart}.`);
+    handleCloseDormantDoorMiniGame();
+  }, [client, dormantDoorMiniGame, dormantDoorReward, handleCloseDormantDoorMiniGame, isDormantDoorRewardClaiming, session]);
+
+  const handleCloseTrafficLightCoinFlip = useCallback(() => {
+    setTrafficLightCoinFlip(null);
+  }, []);
+
+  const handleFlipTrafficLightCoin = useCallback(() => {
+    setTrafficLightCoinFlip((current) => {
+      if (!current || current.reward) return current;
+      return {
+        ...current,
+        reward: resolveTrafficLightCoinFlipReward({
+          seed: current.seed,
+          stickerFragments: runtimeStateRef.current.stickerProgress.fragments,
+        }),
+      };
+    });
+  }, []);
+
+  const handleClaimTrafficLightReward = useCallback(() => {
+    if (!trafficLightCoinFlip?.reward) return;
+    const reward = trafficLightCoinFlip.reward;
+    const record = applyTrafficLightCoinFlipReward({
+      session,
+      client,
+      reward,
+      triggerSource: 'traffic_light_coin_flip_reward',
+    });
+    setRuntimeState(record);
+    const puzzlePart = reward.stickerFragments > 0 ? `, +${reward.stickerFragments} puzzle pieces` : '';
+    setLandingText(`🚦 ${reward.side === 'heads' ? 'Heads' : 'Tails'} opened ${reward.label}: +${reward.dice} dice, +${reward.essence} essence${puzzlePart}.`);
+    setTrafficLightCoinFlip(null);
+  }, [client, session, trafficLightCoinFlip]);
 
   const dismissLandmarkCoachmark = useCallback(() => {
     setShowLandmarkCoachmark(false);
@@ -4460,6 +4599,13 @@ export function IslandRunBoardPrototype({
   }, [islandNumber, isIslandTimerPendingStart, showTravelOverlay, timeLeftSec]);
 
   const timerDisplay = isIslandTimerPendingStart ? 'Ready' : formatIslandCountdown(timeLeftSec);
+  const audioMenuIcon = musicEnabled || sfxEnabled
+    ? musicEnabled && sfxEnabled
+      ? '🔊'
+      : musicEnabled
+        ? '🎵'
+        : '🔔'
+    : '🔇';
   const step1Stop = islandStopPlan[0] ?? null;
   // Rolling is always free — no stop-gate. step1Complete kept as `true` for
   // diagnostic logging continuity only.
@@ -5365,6 +5511,30 @@ export function IslandRunBoardPrototype({
     // cleared by `onHopSequenceComplete`.
         setPendingHopSequence(null);
 
+        const trafficLightPassed = Boolean(rollResult.hopSequence?.includes(TRAFFIC_LIGHT_TILE_INDEX));
+        let trafficLightUnlocked = false;
+        let trafficLightChargeAfter = trafficLightCharge;
+        if (trafficLightPassed) {
+          const trafficResult = applyTrafficLightTilePass({
+            session,
+            client,
+            islandNumber,
+            triggerSource: 'traffic_light_tile_pass',
+          });
+          setRuntimeState(trafficResult.record);
+          trafficLightUnlocked = trafficResult.unlocked;
+          trafficLightChargeAfter = trafficResult.chargeAfter;
+          if (trafficResult.unlocked) {
+            setTrafficLightCoinFlip({
+              seed: (effectiveIslandNumber * 1009) + (rollIndexRef.current * 131) + currentIndex,
+              reward: null,
+            });
+            setLandingText('🚦 Traffic light complete! Flip the coin to choose Mystery Box 1 or 2.');
+          } else {
+            setLandingText(`🚦 Traffic light ${trafficResult.chargeAfter}/${TRAFFIC_LIGHT_CHARGE_TARGET} lit.`);
+          }
+        }
+
     // Stops are side-quest structures — the player piece never lands on a stop.
     // Encounter tiles open their challenge modal; every other tile funnels through
     // resolveTileLanding for essence / feed / hazard outcomes.
@@ -5373,6 +5543,12 @@ export function IslandRunBoardPrototype({
           setShowEncounterModal(false);
           setEncounterResolved(false);
           handleLandmarkDoorLanding(landedTile.doorStopId, currentIndex);
+        } else if (landedTile?.tileType === 'traffic_light') {
+          setShowEncounterModal(false);
+          setEncounterResolved(false);
+          if (!trafficLightUnlocked) {
+            setLandingText(`🚦 Traffic light ${trafficLightChargeAfter}/${TRAFFIC_LIGHT_CHARGE_TARGET} lit.`);
+          }
         } else if (landedTile?.tileType === 'encounter') {
           // M6-COMPLETE: check if this encounter tile was already completed this visit
           if (completedEncounterIndices.has(currentIndex)) {
@@ -5816,6 +5992,11 @@ export function IslandRunBoardPrototype({
         .filter((entry) => typeof entry.creatureId === 'string' && entry.creatureId.length > 0)
         .map((entry) => [entry.creatureId, entry.bondLevel ?? 0] as const),
     );
+    const creatureFormLevelsById = new Map(
+      (__storeState.creatureCollection ?? [])
+        .filter((entry) => typeof entry.creatureId === 'string' && entry.creatureId.length > 0)
+        .map((entry) => [entry.creatureId, entry.formLevel ?? 1] as const),
+    );
     const pairedCreatureIds = new Set(
       (__storeState.perfectCompanionIds ?? [])
         .filter((creatureId): creatureId is string => typeof creatureId === 'string' && creatureId.length > 0),
@@ -5826,6 +6007,7 @@ export function IslandRunBoardPrototype({
       ownedCreatureIds,
       pairedCreatureIds,
       creatureBondLevelsById,
+      creatureFormLevelsById,
     };
   }, [__storeState.creatureCollection, __storeState.perfectCompanionIds, ownedThemeIds]);
   const sanctuaryCreatureThemeOffers = useMemo(
@@ -5887,6 +6069,10 @@ export function IslandRunBoardPrototype({
   const selectedSanctuaryCreatureUnclaimedMilestones = useMemo(
     () => (selectedSanctuaryCreature ? getUnclaimedBondMilestones(selectedSanctuaryCreature) : []),
     [selectedSanctuaryCreature],
+  );
+  const selectedSanctuaryCreatureFormPreview = useMemo(
+    () => resolveCreatureFormUpgradePreview({ entry: selectedSanctuaryCreature, shards: runtimeState.shards }),
+    [runtimeState.shards, selectedSanctuaryCreature],
   );
   const interactiveRosterRenderPolicy = getSanctuaryRosterRenderPolicy('interactiveRoster');
   const decorativePreviewRenderPolicy = getSanctuaryRosterRenderPolicy('decorativePreview');
@@ -8724,6 +8910,58 @@ export function IslandRunBoardPrototype({
       playIslandRunSound('market_purchase_success');
       triggerIslandRunHaptic('reward_claim');
     },
+    upgradeCreatureForm: (creatureId: string) => {
+      const result = upgradeCreatureFormWithShards({
+        session,
+        client,
+        creatureId,
+        triggerSource: 'sanctuary_creature_form_upgrade',
+      });
+      const target = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
+      const creatureName = target?.creature.name ?? 'Creature';
+      if (!result.ok) {
+        const reason = result.failureReason === 'bond_level_too_low'
+          ? `Reach Bond Lv. ${result.preview.requiredBondLevel} first.`
+          : result.failureReason === 'insufficient_shards'
+            ? `Need ${Math.max(0, result.preview.shardCost - runtimeState.shards)} more shards.`
+            : result.failureReason === 'max_form_reached'
+              ? 'Already at max form.'
+              : 'Upgrade is not available yet.';
+        setSanctuaryFeedback(`${creatureName} form upgrade blocked: ${reason}`);
+        return;
+      }
+      setRuntimeState((current) => ({
+        ...current,
+        shards: result.record.shards,
+        dicePool: result.record.dicePool,
+        essence: result.record.essence,
+        essenceLifetimeEarned: result.record.essenceLifetimeEarned,
+        creatureCollection: result.record.creatureCollection,
+      }));
+      setShards(result.record.shards);
+      setDicePool(result.record.dicePool);
+      setCreatureCollection(result.record.creatureCollection);
+      const rewardLabel = result.preview.rewardDice > 0 || result.preview.rewardEssence > 0
+        ? ` Reward: +${result.preview.rewardDice} dice and +${result.preview.rewardEssence} essence.`
+        : '';
+      setSanctuaryFeedback(`${creatureName} upgraded to Form ${result.preview.nextFormLevel}!${rewardLabel}`);
+      setLandingText(`${creatureName} Form ${result.preview.nextFormLevel} unlocked.${result.preview.nextFormLevel === CREATURE_THEME_REQUIRED_FORM_LEVEL ? ' Theme checkout is now available.' : ''}`);
+      playIslandRunSound('market_purchase_success');
+      triggerIslandRunHaptic('market_purchase_success');
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'economy_earn',
+        metadata: {
+          stage: 'sanctuary_creature_form_upgrade',
+          island_number: islandNumber,
+          creature_id: creatureId,
+          next_form_level: result.preview.nextFormLevel,
+          shard_cost: result.preview.shardCost,
+          reward_dice: result.preview.rewardDice,
+          reward_essence: result.preview.rewardEssence,
+        },
+      });
+    },
     storyRewardClaim: (essenceReward: number) => {
       if (essenceReward <= 0) {
         return;
@@ -9316,35 +9554,70 @@ export function IslandRunBoardPrototype({
               aria-expanded={showTopbarMenu}
               aria-haspopup="menu"
               aria-controls="island-run-topbar-menu"
-              onClick={handleTopbarMenuButtonClick}
+              onClick={() => {
+                setShowAudioMenu(false);
+                handleTopbarMenuButtonClick();
+              }}
             >
               ☰
             </button>
             <button
               type="button"
-              className="island-run-board__topbar-audio-toggle"
-              aria-label={musicEnabled ? 'Mute music' : 'Unmute music'}
-              aria-pressed={musicEnabled}
+              className={`island-run-board__topbar-audio-toggle${showAudioMenu ? ' island-run-board__topbar-audio-toggle--open' : ''}`}
+              aria-label="Audio options"
+              aria-expanded={showAudioMenu}
+              aria-haspopup="menu"
+              aria-controls="island-run-audio-menu"
               onClick={() => {
-                setMusicEnabled((prev) => !prev);
+                setShowAudioMenu((current) => !current);
+                setShowTopbarMenu(false);
               }}
             >
-              {musicEnabled ? '🎵' : '🚫🎵'}
+              {audioMenuIcon}
             </button>
             <button
               type="button"
-              className="island-run-board__topbar-audio-toggle"
-              aria-label={sfxEnabled ? 'Mute sound effects' : 'Unmute sound effects'}
-              aria-pressed={sfxEnabled}
-              onClick={() => {
-                const next = !sfxEnabled;
-                setSfxEnabled(next);
-                setIslandRunAudioEnabled(next);
-              }}
+              className="island-run-board__topbar-audio-toggle island-run-board__topbar-exit"
+              aria-label="Exit Island Run"
+              onClick={() => onExitBoard?.()}
             >
-              {sfxEnabled ? '🔔' : '🔕'}
+              ✕
             </button>
           </div>
+
+          {showAudioMenu && (
+            <div id="island-run-audio-menu" className="island-run-board__audio-menu-panel" role="menu" aria-label="Audio options">
+              <button
+                ref={audioMenuFirstItemRef}
+                type="button"
+                className="island-run-board__topbar-menu-item"
+                role="menuitemcheckbox"
+                aria-checked={musicEnabled}
+                onClick={() => {
+                  setMusicEnabled((prev) => !prev);
+                }}
+              >
+                <span>{musicEnabled ? '✓' : '○'}</span>
+                <span>Music</span>
+                <span aria-hidden="true">🎵</span>
+              </button>
+              <button
+                type="button"
+                className="island-run-board__topbar-menu-item"
+                role="menuitemcheckbox"
+                aria-checked={sfxEnabled}
+                onClick={() => {
+                  const next = !sfxEnabled;
+                  setSfxEnabled(next);
+                  setIslandRunAudioEnabled(next);
+                }}
+              >
+                <span>{sfxEnabled ? '✓' : '○'}</span>
+                <span>SFX</span>
+                <span aria-hidden="true">🔔</span>
+              </button>
+            </div>
+          )}
 
           {showTopbarMenu && (
             <div id="island-run-topbar-menu" className="island-run-board__topbar-menu-panel" role="menu" aria-label="Board menu">
@@ -9562,6 +9835,8 @@ export function IslandRunBoardPrototype({
           boardTiltXDeg={boardTiltXDeg}
           boardRotateZDeg={boardRotateZDeg}
           tileMap={landmarkDoorTileMap}
+          trafficLightCharge={trafficLightCharge}
+          trafficLightChargeTarget={TRAFFIC_LIGHT_CHARGE_TARGET}
           stopMap={stopMap}
           completedEncounterIndices={completedEncounterIndices}
           tokenIndex={tokenIndex}
@@ -10450,6 +10725,108 @@ export function IslandRunBoardPrototype({
         );
       })()}
 
+      {dormantDoorMiniGame && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--dormant-door" role="dialog" aria-modal="true" aria-label="Dormant door challenge">
+            <h3 className="island-stop-modal__title">🚪 Dormant Door Challenge</h3>
+            <p className="island-dormant-door__intro">
+              This is not the active landmark door. Pick <strong>3 doors</strong> and try to reveal matching figures.
+            </p>
+            <div className="island-dormant-door__reward-row" aria-label="Dormant door reward levels">
+              {dormantDoorMiniGame.rewardLevels.map((level) => (
+                <span key={level.tier} className={`island-dormant-door__reward-chip island-dormant-door__reward-chip--${level.tier}`}>
+                  {level.label}: +{level.essence} 🟣{level.dice > 0 ? ` +${level.dice} 🎲` : ''}
+                </span>
+              ))}
+            </div>
+            <div className="island-dormant-door__grid" aria-label="Choose three dormant doors">
+              {dormantDoorMiniGame.doors.map((door, index) => {
+                const isSelected = dormantDoorSelectedIndices.includes(index);
+                const isRevealed = isSelected || Boolean(dormantDoorReward);
+                return (
+                  <button
+                    key={door.id}
+                    type="button"
+                    className={`island-dormant-door__door ${isSelected ? 'island-dormant-door__door--selected' : ''} ${isRevealed ? 'island-dormant-door__door--revealed' : ''}`.trim()}
+                    onClick={() => handleDormantDoorSelect(index)}
+                    disabled={Boolean(dormantDoorReward) || isSelected || dormantDoorSelectedIndices.length >= 3}
+                    aria-pressed={isSelected}
+                  >
+                    <span className="island-dormant-door__door-face" aria-hidden="true">
+                      {isRevealed ? DORMANT_DOOR_FIGURE_ICONS[door.figure] : '🚪'}
+                    </span>
+                    <span className="island-dormant-door__door-label">Door {index + 1}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {dormantDoorReward ? (
+              <p className="island-dormant-door__result" role="status">
+                {dormantDoorReward.label}! Claim +{dormantDoorReward.essence} essence{dormantDoorReward.dice > 0 ? ` and +${dormantDoorReward.dice} dice` : ''}.
+              </p>
+            ) : (
+              <p className="island-dormant-door__hint" role="status">
+                {Math.max(0, 3 - dormantDoorSelectedIndices.length)} pick{3 - dormantDoorSelectedIndices.length === 1 ? '' : 's'} left.
+              </p>
+            )}
+            <div className="island-stop-modal__actions">
+              {dormantDoorReward ? (
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                  onClick={handleClaimDormantDoorReward}
+                  disabled={isDormantDoorRewardClaiming}
+                >
+                  {isDormantDoorRewardClaiming ? 'Claiming…' : 'Claim Reward'}
+                </button>
+              ) : null}
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={handleCloseDormantDoorMiniGame}>
+                Close
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+
+      {trafficLightCoinFlip && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--traffic-light" role="dialog" aria-modal="true" aria-label="Traffic light bonus coin flip">
+            <h3 className="island-stop-modal__title">🚦 Traffic Light Bonus</h3>
+            <p className="island-traffic-light__intro">
+              All 8 lights are green. Flip the coin: <strong>Heads</strong> opens Mystery Box 1, <strong>Tails</strong> opens Mystery Box 2.
+            </p>
+            <div className={`island-traffic-light__coin ${trafficLightCoinFlip.reward ? 'island-traffic-light__coin--flipped' : ''}`.trim()} aria-hidden="true">
+              {trafficLightCoinFlip.reward ? (trafficLightCoinFlip.reward.side === 'heads' ? 'H' : 'T') : '?'}
+            </div>
+            {trafficLightCoinFlip.reward ? (
+              <div className="island-traffic-light__result" role="status">
+                <p><strong>{trafficLightCoinFlip.reward.side === 'heads' ? 'Heads' : 'Tails'}!</strong> {trafficLightCoinFlip.reward.label} unlocked.</p>
+                <p>+{trafficLightCoinFlip.reward.dice} 🎲 · +{trafficLightCoinFlip.reward.essence} 🟣{trafficLightCoinFlip.reward.stickerFragments > 0 ? ` · +${trafficLightCoinFlip.reward.stickerFragments} 🧩` : ''}</p>
+              </div>
+            ) : (
+              <div className="island-traffic-light__boxes" aria-label="Traffic light mystery boxes">
+                <span>📦 Box 1: dice focus</span>
+                <span>🎁 Box 2: essence focus</span>
+              </div>
+            )}
+            <div className="island-stop-modal__actions">
+              {!trafficLightCoinFlip.reward ? (
+                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleFlipTrafficLightCoin}>
+                  Flip Coin
+                </button>
+              ) : (
+                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleClaimTrafficLightReward}>
+                  Claim Bonus
+                </button>
+              )}
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={handleCloseTrafficLightCoinFlip}>
+                Close
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       {showEncounterModal && (
         <div className="island-stop-modal-backdrop" role="presentation">
@@ -11223,7 +11600,7 @@ export function IslandRunBoardPrototype({
             <div className="island-hatchery-card" style={{ marginBottom: '0.75rem' }}>
               <p><strong>🎨 Premium Creature Themes</strong> — one-time real-money Stripe purchases</p>
               <p style={{ fontSize: '0.82rem', opacity: 0.7, marginBottom: '0.5rem' }}>
-                These are app themes unlocked by owning a creature. They are not bought with shards.
+                Upgrade a creature to Form 3 with shards to unlock its one-time real-money theme checkout. Perfect Pair creatures keep the 20% discount.
               </p>
               {themeEntitlementsLoading ? (
                 <p style={{ fontSize: '0.82rem', opacity: 0.7 }}>Syncing your owned themes…</p>
@@ -11748,6 +12125,40 @@ export function IslandRunBoardPrototype({
                 <p className="island-run-sanctuary-card__meta">
                   Next boost at bond level <strong>{selectedSanctuaryCreatureBonus?.nextBondMilestoneLevel ?? selectedSanctuaryCreature.bondLevel}</strong>.
                 </p>
+                {selectedSanctuaryCreatureFormPreview ? (
+                  <div className="island-run-sanctuary-compare island-run-sanctuary-form-upgrade">
+                    <p className="island-run-sanctuary-compare__title">
+                      🌟 Creature Form {selectedSanctuaryCreature.formLevel ?? 1}/{CREATURE_FORM_MAX_LEVEL}
+                    </p>
+                    <p className="island-run-sanctuary-compare__row">
+                      Form 3 grants dice + essence once and unlocks this creature’s one-time Stripe theme offer.
+                    </p>
+                    {selectedSanctuaryCreatureFormPreview.nextFormLevel ? (
+                      <p className="island-run-sanctuary-compare__row">
+                        Next: <strong>Form {selectedSanctuaryCreatureFormPreview.nextFormLevel}</strong> · Cost <strong>{selectedSanctuaryCreatureFormPreview.shardCost} 🔮</strong> · Requires Bond Lv. <strong>{selectedSanctuaryCreatureFormPreview.requiredBondLevel}</strong>
+                        {selectedSanctuaryCreatureFormPreview.rewardDice > 0 || selectedSanctuaryCreatureFormPreview.rewardEssence > 0
+                          ? <> · Reward <strong>+{selectedSanctuaryCreatureFormPreview.rewardDice} dice / +{selectedSanctuaryCreatureFormPreview.rewardEssence} essence</strong></>
+                          : null}
+                      </p>
+                    ) : (
+                      <p className="island-run-sanctuary-compare__row"><strong>Max form reached</strong> — theme eligibility is unlocked.</p>
+                    )}
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                      disabled={!selectedSanctuaryCreatureFormPreview.canUpgrade}
+                      onClick={() => sanctuaryHandlers.upgradeCreatureForm(selectedSanctuaryCreature.creatureId)}
+                    >
+                      {selectedSanctuaryCreatureFormPreview.canUpgrade
+                        ? `Upgrade to Form ${selectedSanctuaryCreatureFormPreview.nextFormLevel} for ${selectedSanctuaryCreatureFormPreview.shardCost} 🔮`
+                        : selectedSanctuaryCreatureFormPreview.failureReason === 'bond_level_too_low'
+                          ? `Reach Bond Lv. ${selectedSanctuaryCreatureFormPreview.requiredBondLevel} to upgrade`
+                          : selectedSanctuaryCreatureFormPreview.failureReason === 'insufficient_shards'
+                            ? `Need ${Math.max(0, selectedSanctuaryCreatureFormPreview.shardCost - runtimeState.shards)} more shards`
+                            : 'Max form reached'}
+                    </button>
+                  </div>
+                ) : null}
                 {selectedVsActiveComparison ? (
                   <div className="island-run-sanctuary-compare">
                     <p className="island-run-sanctuary-compare__title">Compare vs Active: {activeCompanion?.creature.name}</p>

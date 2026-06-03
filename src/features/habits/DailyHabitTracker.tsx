@@ -187,6 +187,7 @@ const HABIT_SWIPE_MAX_PX = 132;
 const HABIT_SWIPE_ARM_THRESHOLD_PX = 84;
 const HABIT_SWIPE_SUPPRESS_CLICK_MS = 260;
 const HABIT_SFX_ENABLED_STORAGE_KEY = 'lifegoal.habits.sfx.enabled';
+const PUBLIC_COMPACT_VIEW_STORAGE_KEY_PREFIX = 'lifegoal.habits.publicCompactView';
 const COMPACT_PULL_REFRESH_THRESHOLD_PX = 72;
 const COMPACT_PULL_REFRESH_MAX_PX = 118;
 const COMPACT_PULL_REFRESH_RESISTANCE = 0.45;
@@ -198,6 +199,15 @@ function getUtcDayDifference(fromDateIso: string, toDateIso: string): number {
   const toMs = Date.parse(`${toDateIso}T00:00:00.000Z`);
   if (!Number.isFinite(fromMs) || !Number.isFinite(toMs)) return 0;
   return Math.floor((toMs - fromMs) / 86400000);
+}
+
+function getPublicCompactViewStorageKey(userId: string): string {
+  return `${PUBLIC_COMPACT_VIEW_STORAGE_KEY_PREFIX}:${userId}`;
+}
+
+function getStoredPublicCompactView(userId: string): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem(getPublicCompactViewStorageKey(userId)) === '1';
 }
 
 function isHabitSfxEnabled(): boolean {
@@ -1152,7 +1162,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   } | null>(null);
   const swipeSuppressClickUntilByTodoIdRef = useRef<Record<string, number>>({});
   const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
-  const [isCompactView, setIsCompactView] = useState(preferredCompactView ?? forceCompactView);
+  const [isCompactView, setIsCompactView] = useState(() =>
+    Boolean(preferredCompactView ?? forceCompactView) || getStoredPublicCompactView(session.user.id),
+  );
+  const [isPublicCompactView, setIsPublicCompactView] = useState(() => getStoredPublicCompactView(session.user.id));
   const [compactPullDistance, setCompactPullDistance] = useState(0);
   const [showCompactRefreshSuccess, setShowCompactRefreshSuccess] = useState(false);
   const compactPullDistanceRef = useRef(0);
@@ -1195,6 +1208,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   }, [refreshQuestHabitState]);
 
   useEffect(() => {
+    const storedPublicView = getStoredPublicCompactView(session.user.id);
+    setIsPublicCompactView(storedPublicView);
+
+    if (storedPublicView) {
+      setIsCompactView(true);
+      return;
+    }
+
     if (typeof preferredCompactView === 'boolean') {
       setIsCompactView(preferredCompactView);
       return;
@@ -8533,7 +8554,15 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         }, 2200);
         return;
       }
-      setIsCompactView((previous) => !previous);
+      setIsCompactView((previous) => {
+        if (previous) {
+          setIsPublicCompactView(false);
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem(getPublicCompactViewStorageKey(session.user.id), '0');
+          }
+        }
+        return !previous;
+      });
       setIsCompactToggleLabelVisible(true);
       if (compactToggleLabelTimeoutRef.current) {
         window.clearTimeout(compactToggleLabelTimeoutRef.current);
@@ -8541,6 +8570,17 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       compactToggleLabelTimeoutRef.current = window.setTimeout(() => {
         setIsCompactToggleLabelVisible(false);
       }, 2200);
+    };
+
+    const handlePublicViewToggle = () => {
+      setIsCompactView(true);
+      setIsPublicCompactView((previous) => {
+        const next = !previous;
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(getPublicCompactViewStorageKey(session.user.id), next ? '1' : '0');
+        }
+        return next;
+      });
     };
 
     const showIntentionsOnlyRow = Boolean(yesterdayIntentionsEntry && !isIntentionsNoticeViewed && !isCompactView);
@@ -8786,7 +8826,24 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   {isCompactView ? 'Private' : 'Detailed'}
                 </span>
               </button>
+              <button
+                type="button"
+                className={`habit-checklist-card__privacy-toggle ${
+                  isPublicView ? 'habit-checklist-card__privacy-toggle--active' : ''
+                }`}
+                onClick={handlePublicViewToggle}
+                aria-pressed={isPublicView}
+                aria-label={isPublicView ? 'Turn public view off' : 'Turn public view on'}
+              >
+                <span aria-hidden="true">{isPublicView ? '🙈' : '👁️'}</span>
+                <span>Public</span>
+              </button>
             </div>
+            {isPublicView ? (
+              <p className="habit-checklist-card__privacy-note" role="status">
+                Public view is on: names, notes, and personal signals are minimised.
+              </p>
+            ) : null}
             {!isCompactView ? (
               <div className="habit-checklist-card__head-actions">
                 {showIntentionsOnlyRow ? (

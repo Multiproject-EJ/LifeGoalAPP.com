@@ -50,6 +50,7 @@ export type ThemeUnlockRule =
       pairedPriceUsd?: string;
       pairedDiscountPercent?: 20;
       requiredBondLevel?: number;
+      requiredCreatureFormLevel?: number;
     }
   | { type: 'player_shop_purchase'; skuId: string; priceUsd: string }
   | { type: 'admin_preview' };
@@ -69,6 +70,7 @@ export interface ThemeAccessContext {
   ownedCreatureIds?: ReadonlySet<string>;
   pairedCreatureIds?: ReadonlySet<string>;
   creatureBondLevelsById?: ReadonlyMap<string, number>;
+  creatureFormLevelsById?: ReadonlyMap<string, number>;
 }
 
 export type ThemeAccessStatus =
@@ -94,7 +96,7 @@ export function resolveThemeAccess(
   themeOption: ThemeAccessMetadata,
   context: ThemeAccessContext = {},
 ): ThemeAccessResult {
-  const { isAdminOrCreator = false, ownedThemeIds, ownedCreatureIds, pairedCreatureIds, creatureBondLevelsById } = context;
+  const { isAdminOrCreator = false, ownedThemeIds, ownedCreatureIds, pairedCreatureIds, creatureBondLevelsById, creatureFormLevelsById } = context;
 
   if (isAdminOrCreator) {
     return {
@@ -126,7 +128,9 @@ export function resolveThemeAccess(
     case 'creature_purchase': {
       const ownsCreature = ownedCreatureIds?.has(unlockRule.creatureId) ?? false;
       const bondLevel = creatureBondLevelsById?.get(unlockRule.creatureId) ?? 0;
+      const formLevel = creatureFormLevelsById?.get(unlockRule.creatureId) ?? 1;
       const meetsBondRequirement = !unlockRule.requiredBondLevel || bondLevel >= unlockRule.requiredBondLevel;
+      const meetsFormRequirement = !unlockRule.requiredCreatureFormLevel || formLevel >= unlockRule.requiredCreatureFormLevel;
       if (!ownsCreature) {
         return {
           status: 'locked',
@@ -141,6 +145,15 @@ export function resolveThemeAccess(
           status: 'locked',
           selectable: false,
           lockedReason: `Reach Bond Lv. ${unlockRule.requiredBondLevel} with ${unlockRule.creatureName} to unlock this one-time Stripe theme offer.`,
+          ctaLabel: 'Open Sanctuary',
+          ctaTarget: 'creature_sanctuary',
+        };
+      }
+      if (!meetsFormRequirement) {
+        return {
+          status: 'locked',
+          selectable: false,
+          lockedReason: `Upgrade ${unlockRule.creatureName} to Form ${unlockRule.requiredCreatureFormLevel} with shards to unlock this one-time Stripe theme offer.`,
           ctaLabel: 'Open Sanctuary',
           ctaTarget: 'creature_sanctuary',
         };

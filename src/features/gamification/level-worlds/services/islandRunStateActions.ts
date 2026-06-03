@@ -41,6 +41,7 @@
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import type {
+  CreatureCollectionRuntimeEntry,
   IslandRunGameStateRecord,
   IslandRunFirstSessionTutorialState,
   IslandRunLuckyRollSession,
@@ -96,6 +97,10 @@ import {
   recordIslandRunEconomyCounter,
   type IslandRunEconomySource,
 } from './islandRunEconomyTelemetry';
+import {
+  applyTrafficLightPass,
+  type TrafficLightCoinFlipReward,
+} from './islandRunTrafficLightTile';
 
 
 export type SpaceExcavatorDigFailureReason = 'missing_progress' | 'insufficient_tickets' | 'board_complete' | 'invalid_tile' | 'already_dug';
@@ -682,6 +687,75 @@ export function applyTokenHopRewards(options: {
     client,
     record: next,
     triggerSource: triggerSource ?? 'apply_token_hop_rewards',
+  });
+  return next;
+}
+
+export interface ApplyTrafficLightPassResult {
+  record: IslandRunGameStateRecord;
+  chargeAfter: number;
+  unlocked: boolean;
+}
+
+export function applyTrafficLightTilePass(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  islandNumber: number;
+  triggerSource?: string;
+}): ApplyTrafficLightPassResult {
+  const { session, client, islandNumber, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const result = applyTrafficLightPass({
+    bonusTileChargeByIsland: current.bonusTileChargeByIsland,
+    islandNumber,
+  });
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    bonusTileChargeByIsland: result.bonusTileChargeByIsland,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_traffic_light_tile_pass',
+  });
+  return { record: next, chargeAfter: result.chargeAfter, unlocked: result.unlocked };
+}
+
+export function applyTrafficLightCoinFlipReward(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  reward: TrafficLightCoinFlipReward;
+  triggerSource?: string;
+}): IslandRunGameStateRecord {
+  const { session, client, reward, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const stickerFragmentsDelta = Math.max(0, Math.floor(reward.stickerFragments));
+  const nextStickerProgress = stickerFragmentsDelta > 0
+    ? {
+        ...current.stickerProgress,
+        fragments: Math.max(0, Math.floor(current.stickerProgress.fragments)) + stickerFragmentsDelta,
+      }
+    : current.stickerProgress;
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    dicePool: Math.max(0, current.dicePool + Math.max(0, Math.floor(reward.dice))),
+    essence: Math.max(0, current.essence + Math.max(0, Math.floor(reward.essence))),
+    stickerProgress: nextStickerProgress,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  recordIslandRunDiceInflow({
+    source: ISLAND_RUN_ECONOMY_SOURCES.tokenHopDice,
+    amount: Math.max(0, Math.floor(reward.dice)),
+    sessionId: session.user.id,
+    metadata: { triggerSource: triggerSource ?? 'traffic_light_coin_flip_reward', boxId: reward.boxId, side: reward.side },
+  });
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'traffic_light_coin_flip_reward',
   });
   return next;
 }
@@ -1988,6 +2062,227 @@ export function applyCreatureCollection(options: ApplyCreatureCollectionOptions)
     triggerSource: triggerSource ?? 'apply_creature_collection',
   });
   return next;
+}
+
+
+export const CREATURE_FORM_MAX_LEVEL = 3;
+export const CREATURE_THEME_REQUIRED_FORM_LEVEL = 3;
+
+export const CREATURE_FORM_UPGRADE_SHARD_COSTS_BY_TIER = {
+  common: { 2: 20, 3: 60 },
+  rare: { 2: 40, 3: 120 },
+  mythic: { 2: 80, 3: 240 },
+} as const;
+
+export const CREATURE_FORM_UPGRADE_BOND_REQUIREMENTS = {
+  2: 2,
+  3: 3,
+} as const;
+
+export const CREATURE_FORM_THREE_REWARDS_BY_TIER = {
+  common: { dice: 10, essence: 40 },
+  rare: { dice: 25, essence: 100 },
+  mythic: { dice: 60, essence: 250 },
+} as const;
+
+export type CreatureFormUpgradeFailureReason =
+  | 'creature_not_owned'
+  | 'unknown_creature'
+  | 'max_form_reached'
+  | 'bond_level_too_low'
+  | 'insufficient_shards';
+
+export interface CreatureFormUpgradePreview {
+  creatureId: string;
+  currentFormLevel: number;
+  nextFormLevel: number | null;
+  maxFormLevel: number;
+  shardCost: number;
+  requiredBondLevel: number | null;
+  rewardDice: number;
+  rewardEssence: number;
+  canUpgrade: boolean;
+  failureReason?: CreatureFormUpgradeFailureReason;
+}
+
+export interface UpgradeCreatureFormWithShardsOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  creatureId: string;
+  triggerSource?: string;
+}
+
+export interface UpgradeCreatureFormWithShardsResult {
+  record: IslandRunGameStateRecord;
+  ok: boolean;
+  changed: boolean;
+  preview: CreatureFormUpgradePreview;
+  failureReason?: CreatureFormUpgradeFailureReason;
+}
+
+function normalizeCreatureFormLevel(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.min(CREATURE_FORM_MAX_LEVEL, Math.max(1, Math.floor(value)))
+    : 1;
+}
+
+function getCreatureFormShardCost(tier: 'common' | 'rare' | 'mythic', nextFormLevel: number | null): number {
+  if (nextFormLevel !== 2 && nextFormLevel !== 3) return 0;
+  return CREATURE_FORM_UPGRADE_SHARD_COSTS_BY_TIER[tier][nextFormLevel];
+}
+
+function getCreatureFormThreeReward(tier: 'common' | 'rare' | 'mythic', nextFormLevel: number | null): { dice: number; essence: number } {
+  if (nextFormLevel !== CREATURE_THEME_REQUIRED_FORM_LEVEL) return { dice: 0, essence: 0 };
+  return CREATURE_FORM_THREE_REWARDS_BY_TIER[tier];
+}
+
+export function resolveCreatureFormUpgradePreview(options: {
+  entry: CreatureCollectionRuntimeEntry | null | undefined;
+  shards: number;
+}): CreatureFormUpgradePreview | null {
+  const { entry, shards } = options;
+  if (!entry?.creatureId) return null;
+  const creature = getCreatureById(entry.creatureId);
+  const currentFormLevel = normalizeCreatureFormLevel(entry.formLevel);
+  const nextFormLevel = currentFormLevel >= CREATURE_FORM_MAX_LEVEL ? null : currentFormLevel + 1;
+  const fallback: CreatureFormUpgradePreview = {
+    creatureId: entry.creatureId,
+    currentFormLevel,
+    nextFormLevel,
+    maxFormLevel: CREATURE_FORM_MAX_LEVEL,
+    shardCost: 0,
+    requiredBondLevel: null,
+    rewardDice: 0,
+    rewardEssence: 0,
+    canUpgrade: false,
+  };
+  if (!creature) return { ...fallback, failureReason: 'unknown_creature' };
+  if (nextFormLevel === null) return { ...fallback, failureReason: 'max_form_reached' };
+  const requiredBondLevel = CREATURE_FORM_UPGRADE_BOND_REQUIREMENTS[nextFormLevel as 2 | 3];
+  const shardCost = getCreatureFormShardCost(creature.tier, nextFormLevel);
+  const reward = getCreatureFormThreeReward(creature.tier, nextFormLevel);
+  if ((entry.bondLevel ?? 1) < requiredBondLevel) {
+    return {
+      ...fallback,
+      nextFormLevel,
+      shardCost,
+      requiredBondLevel,
+      rewardDice: reward.dice,
+      rewardEssence: reward.essence,
+      failureReason: 'bond_level_too_low',
+    };
+  }
+  if (Math.max(0, Math.floor(shards)) < shardCost) {
+    return {
+      ...fallback,
+      nextFormLevel,
+      shardCost,
+      requiredBondLevel,
+      rewardDice: reward.dice,
+      rewardEssence: reward.essence,
+      failureReason: 'insufficient_shards',
+    };
+  }
+  return {
+    ...fallback,
+    nextFormLevel,
+    shardCost,
+    requiredBondLevel,
+    rewardDice: reward.dice,
+    rewardEssence: reward.essence,
+    canUpgrade: true,
+  };
+}
+
+export function upgradeCreatureFormWithShards(options: UpgradeCreatureFormWithShardsOptions): UpgradeCreatureFormWithShardsResult {
+  const { session, client, creatureId, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const entry = (current.creatureCollection ?? []).find((candidate) => candidate.creatureId === creatureId) ?? null;
+  if (!entry) {
+    const preview: CreatureFormUpgradePreview = {
+      creatureId,
+      currentFormLevel: 1,
+      nextFormLevel: 2,
+      maxFormLevel: CREATURE_FORM_MAX_LEVEL,
+      shardCost: 0,
+      requiredBondLevel: null,
+      rewardDice: 0,
+      rewardEssence: 0,
+      canUpgrade: false,
+      failureReason: 'creature_not_owned',
+    };
+    return { record: current, ok: false, changed: false, preview, failureReason: 'creature_not_owned' };
+  }
+
+  const preview = resolveCreatureFormUpgradePreview({ entry, shards: current.shards });
+  if (!preview || !preview.canUpgrade || preview.nextFormLevel === null) {
+    return {
+      record: current,
+      ok: false,
+      changed: false,
+      preview: preview ?? {
+        creatureId,
+        currentFormLevel: 1,
+        nextFormLevel: null,
+        maxFormLevel: CREATURE_FORM_MAX_LEVEL,
+        shardCost: 0,
+        requiredBondLevel: null,
+        rewardDice: 0,
+        rewardEssence: 0,
+        canUpgrade: false,
+        failureReason: 'unknown_creature',
+      },
+      failureReason: preview?.failureReason ?? 'unknown_creature',
+    };
+  }
+
+  const claimedFormRewards = Array.from(new Set(entry.claimedFormRewards ?? []));
+  const shouldGrantFormThreeReward = preview.nextFormLevel === CREATURE_THEME_REQUIRED_FORM_LEVEL
+    && !claimedFormRewards.includes(CREATURE_THEME_REQUIRED_FORM_LEVEL);
+  const rewardDice = shouldGrantFormThreeReward ? preview.rewardDice : 0;
+  const rewardEssence = shouldGrantFormThreeReward ? preview.rewardEssence : 0;
+  const nextCollection = (current.creatureCollection ?? []).map((candidate) => {
+    if (candidate.creatureId !== creatureId) return candidate;
+    return {
+      ...candidate,
+      formLevel: preview.nextFormLevel ?? candidate.formLevel,
+      claimedFormRewards: shouldGrantFormThreeReward
+        ? Array.from(new Set([...(candidate.claimedFormRewards ?? []), CREATURE_THEME_REQUIRED_FORM_LEVEL])).sort((a, b) => a - b)
+        : candidate.claimedFormRewards ?? [],
+    };
+  });
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    shards: Math.max(0, current.shards - preview.shardCost),
+    dicePool: current.dicePool + rewardDice,
+    essence: current.essence + rewardEssence,
+    essenceLifetimeEarned: current.essenceLifetimeEarned + rewardEssence,
+    creatureCollection: nextCollection,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'upgrade_creature_form_with_shards',
+  });
+  if (rewardDice > 0) {
+    recordIslandRunDiceInflow({
+      source: ISLAND_RUN_ECONOMY_SOURCES.creatureFormUpgradeDice,
+      amount: rewardDice,
+      sessionId: session.user.id,
+      metadata: { triggerSource: 'creature_form_upgrade_reward', creatureId },
+    });
+  }
+  if (preview.shardCost > 0) {
+    recordIslandRunEconomyCounter({
+      counter: ISLAND_RUN_ECONOMY_COUNTERS.creatureFormShardSpend,
+      amount: preview.shardCost,
+      sessionId: session.user.id,
+      metadata: { trigger_source: 'creature_form_upgrade', creature_id: creatureId, next_form_level: preview.nextFormLevel },
+    });
+  }
+  return { record: next, ok: true, changed: true, preview: { ...preview, rewardDice, rewardEssence } };
 }
 
 /**

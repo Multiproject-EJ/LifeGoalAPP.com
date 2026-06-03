@@ -1,5 +1,6 @@
 import { resolveIslandBoardProfile } from '../islandBoardProfiles';
 import { applyLandmarkDoorTiles, generateTileMap, LANDMARK_DOOR_TILE_CONFIGS } from '../islandBoardTileMap';
+import { TRAFFIC_LIGHT_TILE_INDEX } from '../islandRunTrafficLightTile';
 import { resolveWrappedTokenIndex } from '../islandBoardTopology';
 import { generateIslandStopPlan } from '../islandRunStops';
 import { resolveIslandRunContractV2Stops } from '../islandRunContractV2StopResolver';
@@ -74,6 +75,14 @@ export const islandBoardTopologyTests: TestCase[] = [
 
       const tileMap = generateTileMap(3, 'normal', 'forest', 0);
       assertEqual(tileMap.length, 40, 'Expected generated tile map length to default to 40');
+    },
+  },
+  {
+    name: 'traffic light tile is reserved as one non-door bonus tile',
+    run: () => {
+      const tileMap = applyLandmarkDoorTiles(generateTileMap(3, 'normal', 'forest', 0));
+      assertEqual(tileMap[TRAFFIC_LIGHT_TILE_INDEX].tileType, 'traffic_light', 'Expected traffic light tile to be present');
+      assertEqual(tileMap.filter((entry) => entry.tileType === 'traffic_light').length, 1, 'Expected exactly one traffic light tile');
     },
   },
   {

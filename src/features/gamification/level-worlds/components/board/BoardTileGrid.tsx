@@ -9,6 +9,8 @@ export interface BoardTileGridProps {
   boardHeight: number;
   stopMap: Map<number, string>;
   tileMap: Record<number, IslandTileMapEntry>;
+  trafficLightCharge?: number;
+  trafficLightChargeTarget?: number;
   completedEncounterIndices: Set<number>;
   tokenIndex: number;
   isSpark40: boolean;
@@ -27,6 +29,8 @@ export function BoardTileGrid(props: BoardTileGridProps) {
     anchors,
     stopMap,
     tileMap,
+    trafficLightCharge = 0,
+    trafficLightChargeTarget = 8,
     completedEncounterIndices,
     tokenIndex,
     isSpark40,
@@ -35,6 +39,14 @@ export function BoardTileGrid(props: BoardTileGridProps) {
     uniformScale,
     toScreen,
   } = props;
+
+  const trafficLightTile = useMemo(() => {
+    const entry = Object.values(tileMap).find((tile) => tile.tileType === 'traffic_light');
+    if (!entry) return null;
+    const anchor = anchors[entry.index];
+    if (!anchor) return null;
+    return { anchor, index: entry.index, position: toScreen(anchor) };
+  }, [anchors, tileMap, toScreen]);
 
   // Pre-compute upcoming indices (next 1-3 tiles after token)
   const upcomingSet = useMemo(() => {
@@ -48,6 +60,41 @@ export function BoardTileGrid(props: BoardTileGridProps) {
 
   return (
     <div className="island-run-board__tiles">
+      {trafficLightTile && (
+        <div
+          className="island-tile-traffic-light-sign"
+          role="status"
+          aria-label={`Traffic light bonus ${trafficLightCharge} of ${trafficLightChargeTarget} lights`}
+          style={{
+            left: trafficLightTile.position.x,
+            top: trafficLightTile.position.y,
+            ['--tile-rotation-deg' as string]: `${isSpark40 ? trafficLightTile.anchor.tangentDeg + 180 : 0}deg`,
+            ['--tile-upright-rotation-deg' as string]: `${isSpark40 ? -(trafficLightTile.anchor.tangentDeg + 180) : 0}deg`,
+            ['--tile-render-scale' as string]: (trafficLightTile.anchor.scale * uniformScale).toFixed(4),
+            transform: `translate(-50%, -50%) rotate(var(--tile-rotation-deg)) scale(${(trafficLightTile.anchor.scale * uniformScale).toFixed(4)})`,
+          }}
+        >
+          <span className="island-tile-traffic-light-sign__post" aria-hidden="true" />
+          <span className="island-tile-traffic-light-sign__panel">
+            <span className="island-tile-traffic-light-sign__head" aria-hidden="true">
+              {Array.from({ length: Math.min(3, trafficLightChargeTarget) }, (_, index) => {
+                const phase = index === 0 ? 'red' : index === 1 ? 'yellow' : 'green';
+                const isLit = trafficLightCharge >= Math.min(index + 1, trafficLightChargeTarget);
+                return <span key={phase} className={`island-tile-traffic-light-sign__lamp island-tile-traffic-light-sign__lamp--${phase} ${isLit ? 'island-tile-traffic-light-sign__lamp--lit' : ''}`.trim()} />;
+              })}
+            </span>
+            <span className="island-tile-traffic-light-sign__meter" aria-hidden="true">
+              {Array.from({ length: trafficLightChargeTarget }, (_, index) => {
+                const lightNumber = index + 1;
+                const isLit = lightNumber <= trafficLightCharge;
+                const phase = lightNumber >= trafficLightChargeTarget ? 'green' : lightNumber >= Math.ceil(trafficLightChargeTarget / 2) ? 'yellow' : 'red';
+                return <span key={lightNumber} className={`island-tile-traffic-light-sign__pip island-tile-traffic-light-sign__pip--${phase} ${isLit ? 'island-tile-traffic-light-sign__pip--lit' : ''}`.trim()} />;
+              })}
+            </span>
+            <span className="island-tile-traffic-light-sign__count">{trafficLightCharge}/{trafficLightChargeTarget}</span>
+          </span>
+        </div>
+      )}
       {anchors.map((anchor, index) => {
         const position = toScreen(anchor);
         const isStop = stopMap.has(index);
@@ -68,14 +115,14 @@ export function BoardTileGrid(props: BoardTileGridProps) {
             isEncounterCompleted={isEncounterCompleted}
             isTokenCurrent={index === tokenIndex}
             isUpcoming={upcomingSet.has(index)}
-              isSpark40={isSpark40}
-              tileIndex={index}
-              showDebug={showDebug}
-              isMinimalBoardArt={isMinimalBoardArt}
-              uniformScale={uniformScale}
-            />
-          );
-        })}
+            isSpark40={isSpark40}
+            tileIndex={index}
+            showDebug={showDebug}
+            isMinimalBoardArt={isMinimalBoardArt}
+            uniformScale={uniformScale}
+          />
+        );
+      })}
     </div>
   );
 }

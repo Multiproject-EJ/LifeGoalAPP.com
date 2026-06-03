@@ -103,8 +103,10 @@ export const CountdownCalendarModal = ({
   const [trackerExpanded, setTrackerExpanded] = useState(false);
   const modalOpenSfxPlayedRef = useRef(false);
 
+  // App-level scroll locking owns the Daily Treats calendar lock so closing this
+  // modal cannot race with the PWA fullscreen/body restore sequence.
   useEffect(() => {
-    if (!isOpen || typeof document === 'undefined') {
+    if (!isOpen) {
       modalOpenSfxPlayedRef.current = false;
       return;
     }
@@ -113,13 +115,6 @@ export const CountdownCalendarModal = ({
       playIslandRunSound('shop_open');
       modalOpenSfxPlayedRef.current = true;
     }
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -458,6 +453,11 @@ export const CountdownCalendarModal = ({
     : daysRemaining === 0
       ? `🎉 Today is ${activeAdvent ? getHolidayGreetingLabel(activeAdvent.meta) : themeName}!`
       : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} to go`;
+
+  const personalQuestStreak = isPersonalQuest && seasonData?.progress
+    ? computeStreak(seasonData.progress)
+    : null;
+  const showPersonalQuestStreak = Boolean(personalQuestStreak && personalQuestStreak.currentStreak >= 2);
   const dailyTreatDiceLabel = islandRunSession ? '' : 'Game Dice';
 
   // Check if today's free door is already opened
@@ -627,6 +627,39 @@ export const CountdownCalendarModal = ({
                 : "Open today's door to reveal your treat."}
             </p>
           )}
+
+          {showPersonalQuestStreak && personalQuestStreak ? (
+            <div
+              className="daily-treats-calendar__streak"
+              aria-label={`${personalQuestStreak.currentStreak}-day Personal Quest streak`}
+            >
+              <div className="daily-treats-calendar__streak-orb" aria-hidden="true">
+                <span className="daily-treats-calendar__streak-flame">🔥</span>
+              </div>
+              <div className="daily-treats-calendar__streak-copy">
+                <p className="daily-treats-calendar__streak-kicker">Quest streak</p>
+                <p className="daily-treats-calendar__streak-label">
+                  {`${personalQuestStreak.currentStreak}-day streak${personalQuestStreak.multiplierLabel ? ` ${personalQuestStreak.multiplierLabel}` : ''}`}
+                  {personalQuestStreak.streakBonusDice > 0 && ` · +${personalQuestStreak.streakBonusDice} 🎲 ${dailyTreatDiceLabel} bonus`}
+                </p>
+                {personalQuestStreak.currentStreak > 0 && personalQuestStreak.currentStreak < 7 && (
+                  <p className="daily-treats-calendar__streak-hint">
+                    Come back tomorrow to keep your streak alive!
+                  </p>
+                )}
+              </div>
+              <div className="daily-treats-calendar__streak-bar" aria-hidden="true">
+                {Array.from({ length: 7 }, (_, i) => (
+                  <div
+                    key={`streak-dot-${i}`}
+                    className={`daily-treats-calendar__streak-dot${
+                      i < personalQuestStreak.currentStreak ? ' daily-treats-calendar__streak-dot--filled' : ''
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           {/* Same-day bonus hint — the current day tile becomes the glowing bonus door after the free reveal. */}
           {todayBonusHatch && habitCompleted && !todayBonusOpened && todayFreeOpened && (
@@ -824,38 +857,6 @@ export const CountdownCalendarModal = ({
 
           {/* Legacy scratch card reveal for backwards compatibility */}
           {revealResult ? <ScratchCardReveal result={revealResult} /> : null}
-
-          {/* Streak tracker for Personal Quest (replaces old reward tracker) */}
-          {isPersonalQuest && seasonData?.progress && (() => {
-            const streak = computeStreak(seasonData.progress);
-            if (streak.currentStreak < 2) return null;
-
-            return (
-              <div className="daily-treats-calendar__streak">
-                <div className="daily-treats-calendar__streak-bar">
-                  {Array.from({ length: 7 }, (_, i) => (
-                    <div
-                      key={`streak-dot-${i}`}
-                      className={`daily-treats-calendar__streak-dot${
-                        i < streak.currentStreak ? ' daily-treats-calendar__streak-dot--filled' : ''
-                      }`}
-                    />
-                  ))}
-                </div>
-                <p className="daily-treats-calendar__streak-label">
-                  {streak.currentStreak === 0
-                    ? 'Open a door to start your streak!'
-                    : `🔥 ${streak.currentStreak}-day streak${streak.multiplierLabel ? ` ${streak.multiplierLabel}` : ''}`}
-                  {streak.streakBonusDice > 0 && ` · +${streak.streakBonusDice} 🎲 ${dailyTreatDiceLabel} bonus`}
-                </p>
-                {streak.currentStreak > 0 && streak.currentStreak < 7 && (
-                  <p className="daily-treats-calendar__streak-hint">
-                    Come back tomorrow to keep your streak alive!
-                  </p>
-                )}
-              </div>
-            );
-          })()}
 
           {/* Symbol tracker — only for holiday calendars using the scratch mechanic */}
           {!isPersonalQuest && (

@@ -1888,7 +1888,8 @@
 }
 
 .island-run-board__topbar-menu--primed,
-.island-run-board__topbar-menu--open {
+.island-run-board__topbar-menu--open,
+.island-run-board__topbar-audio-toggle--open {
   border-color: rgba(147, 247, 255, 0.82);
   box-shadow:
     0 0 0 2px rgba(147, 247, 255, 0.55),
@@ -1914,6 +1915,13 @@
 .island-run-board__topbar-audio-toggle:focus-visible {
   outline: 2px solid rgba(147, 247, 255, 0.82);
   outline-offset: 2px;
+}
+
+.island-run-board__topbar-exit {
+  border-color: rgba(215, 122, 105, 0.82);
+  background: linear-gradient(180deg, #fff3ed 0%, #ffd6ca 100%);
+  color: #7f251c;
+  font-weight: 900;
 }
 
 .island-run-board__topbar-avatar-img {
@@ -2665,7 +2673,8 @@
   transform: scale(0.95);
 }
 
-.island-run-board__topbar-menu-panel {
+.island-run-board__topbar-menu-panel,
+.island-run-board__audio-menu-panel {
   position: absolute;
   right: 12px;
   top: 50px;
@@ -2679,6 +2688,19 @@
   display: grid;
   gap: 6px;
 }
+
+.island-run-board__audio-menu-panel {
+  right: 44px;
+  min-width: 132px;
+}
+
+.island-run-board__audio-menu-panel .island-run-board__topbar-menu-item {
+  display: grid;
+  grid-template-columns: 1rem 1fr auto;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 
 .island-run-board__topbar-menu-item {
   width: 100%;
@@ -2966,9 +2988,9 @@
 .island-run-landmark-coachmark {
   position: absolute;
   left: 50%;
-  bottom: 86px;
+  bottom: clamp(210px, 24vh, 285px);
   transform: translateX(-50%);
-  z-index: 8;
+  z-index: 24;
   max-width: min(92%, 420px);
   display: flex;
   align-items: center;
@@ -3043,7 +3065,7 @@
 
 .island-run-board--spark40 .island-tile__value {
   font-size: 0.65rem;
-  transform: rotate(calc(-1 * var(--tile-rotation-deg, 0deg)));
+  transform: rotate(var(--tile-upright-rotation-deg, 0deg));
   transform-origin: center center;
 }
 
@@ -8057,4 +8079,278 @@
   color: #e0f2fe;
   font-weight: 800;
   text-transform: uppercase;
+}
+
+.island-stop-modal--dormant-door {
+  max-width: min(420px, calc(100vw - 32px));
+}
+
+.island-dormant-door__intro,
+.island-dormant-door__hint,
+.island-dormant-door__result {
+  margin: 0.45rem 0;
+  color: rgba(243, 248, 255, 0.92);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.island-dormant-door__reward-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem;
+  margin: 0.65rem 0;
+}
+
+.island-dormant-door__reward-chip {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 0.35rem 0.55rem;
+  background: rgba(12, 28, 42, 0.72);
+  color: #f8fbff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.island-dormant-door__reward-chip--medium {
+  border-color: rgba(125, 216, 255, 0.48);
+  background: rgba(19, 77, 110, 0.72);
+}
+
+.island-dormant-door__reward-chip--jackpot {
+  border-color: rgba(255, 232, 153, 0.62);
+  background: linear-gradient(180deg, rgba(121, 74, 14, 0.82), rgba(82, 39, 13, 0.82));
+}
+
+.island-dormant-door__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 0.75rem 0;
+}
+
+.island-dormant-door__door {
+  min-height: 86px;
+  border: 1px solid rgba(245, 208, 254, 0.48);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(88, 28, 135, 0.9), rgba(46, 16, 101, 0.94));
+  color: #fff8ff;
+  display: grid;
+  place-items: center;
+  gap: 0.2rem;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.island-dormant-door__door:disabled {
+  cursor: default;
+  opacity: 0.8;
+}
+
+.island-dormant-door__door--selected,
+.island-dormant-door__door--revealed {
+  border-color: rgba(255, 247, 173, 0.78);
+  background: linear-gradient(180deg, rgba(126, 34, 206, 0.96), rgba(88, 28, 135, 0.96));
+}
+
+.island-dormant-door__door-face {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.island-dormant-door__door-label {
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.84;
+}
+
+.island-dormant-door__result {
+  border-radius: 14px;
+  padding: 0.55rem 0.65rem;
+  background: rgba(12, 74, 110, 0.72);
+  border: 1px solid rgba(125, 216, 255, 0.42);
+  font-weight: 800;
+}
+
+.island-tile--traffic_light {
+  background: linear-gradient(160deg, #bbf7d0 0%, #22c55e 48%, #14532d 100%);
+  border: 1.5px solid rgba(187, 247, 208, 0.95);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.62), 0 0 22px rgba(20, 83, 45, 0.42);
+}
+
+.island-tile-traffic-light-sign {
+  position: absolute;
+  z-index: 12;
+  width: 58px;
+  height: 58px;
+  pointer-events: none;
+  transform-origin: center center;
+  overflow: visible;
+  filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.36));
+}
+
+.island-tile-traffic-light-sign__post {
+  position: absolute;
+  left: 50%;
+  top: 5px;
+  width: 5px;
+  height: 28px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0b1d17, #d8ffe5 48%, #113427);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.42), inset 0 0 2px rgba(255, 255, 255, 0.52);
+  transform: translateX(-50%) translateY(-32px);
+}
+
+.island-tile-traffic-light-sign__panel {
+  position: absolute;
+  left: 50%;
+  top: -50px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 95px;
+  padding: 5px 7px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(187, 247, 208, 0.72);
+  background:
+    linear-gradient(180deg, rgba(39, 85, 70, 0.96), rgba(9, 37, 29, 0.96)),
+    radial-gradient(circle at 35% 12%, rgba(255, 255, 255, 0.22), transparent 42%);
+  color: #eafff0;
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.24);
+  transform: translateX(-50%) rotate(var(--tile-upright-rotation-deg, 0deg)) translateY(-2px);
+  transform-origin: center center;
+}
+
+.island-tile-traffic-light-sign__panel::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 18px;
+  height: 9px;
+  border-radius: 0 0 999px 999px;
+  background: linear-gradient(180deg, rgba(20, 83, 45, 0.95), rgba(6, 36, 24, 0.98));
+  transform: translateX(-50%);
+}
+
+.island-tile-traffic-light-sign__head {
+  display: grid;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 8px;
+  background: #102a1d;
+  border: 1px solid rgba(187, 247, 208, 0.44);
+  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.62);
+}
+
+.island-tile-traffic-light-sign__lamp {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.island-tile-traffic-light-sign__meter {
+  display: grid;
+  grid-template-columns: repeat(4, 7px);
+  gap: 3px;
+}
+
+.island-tile-traffic-light-sign__pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.36);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.island-tile-traffic-light-sign__lamp--lit.island-tile-traffic-light-sign__lamp--red,
+.island-tile-traffic-light-sign__pip--lit.island-tile-traffic-light-sign__pip--red {
+  background: #ef4444;
+  box-shadow: 0 0 7px rgba(239, 68, 68, 0.82);
+}
+
+.island-tile-traffic-light-sign__lamp--lit.island-tile-traffic-light-sign__lamp--yellow,
+.island-tile-traffic-light-sign__pip--lit.island-tile-traffic-light-sign__pip--yellow {
+  background: #facc15;
+  box-shadow: 0 0 7px rgba(250, 204, 21, 0.82);
+}
+
+.island-tile-traffic-light-sign__lamp--lit.island-tile-traffic-light-sign__lamp--green,
+.island-tile-traffic-light-sign__pip--lit.island-tile-traffic-light-sign__pip--green {
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.92);
+}
+
+.island-tile-traffic-light-sign__count {
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.03em;
+  color: #ecfff3;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.82);
+  white-space: nowrap;
+}
+
+.island-stop-modal--traffic-light {
+  max-width: min(390px, calc(100vw - 32px));
+  text-align: center;
+}
+
+.island-traffic-light__intro {
+  margin: 0.5rem 0;
+  color: rgba(243, 248, 255, 0.92);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.island-traffic-light__coin {
+  width: 74px;
+  height: 74px;
+  margin: 0.8rem auto;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  font-weight: 950;
+  color: #3b2600;
+  background: radial-gradient(circle at 30% 24%, #fff7ad 0%, #facc15 48%, #b45309 100%);
+  border: 2px solid rgba(255, 247, 173, 0.95);
+  box-shadow: 0 0 22px rgba(250, 204, 21, 0.55), 0 10px 24px rgba(0, 0, 0, 0.32);
+}
+
+.island-traffic-light__coin--flipped {
+  animation: traffic-light-coin-pop 0.46s ease-out;
+}
+
+@keyframes traffic-light-coin-pop {
+  0% { transform: rotateY(0deg) scale(0.82); }
+  55% { transform: rotateY(180deg) scale(1.08); }
+  100% { transform: rotateY(360deg) scale(1); }
+}
+
+.island-traffic-light__boxes,
+.island-traffic-light__result {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.7rem 0;
+}
+
+.island-traffic-light__boxes span,
+.island-traffic-light__result {
+  border-radius: 14px;
+  padding: 0.55rem 0.65rem;
+  background: rgba(12, 74, 110, 0.72);
+  border: 1px solid rgba(125, 216, 255, 0.42);
+  color: #f8fbff;
+  font-weight: 800;
+}
+
+.island-traffic-light__result p {
+  margin: 0.1rem 0;
 }
