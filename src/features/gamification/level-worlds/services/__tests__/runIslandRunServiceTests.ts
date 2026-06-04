@@ -40,6 +40,7 @@ import { islandRunStopTapRoutingTests } from './islandRunStopTapRouting.test';
 import { islandRunShopAffordabilityTests } from './islandRunShopAffordability.test';
 import { islandRunPlaceholderServiceTests } from './islandRunPlaceholderService.test';
 import { islandRunEggSellAdvisorTests } from './islandRunEggSellAdvisor.test';
+import { islandRunEggManiaTests } from './islandRunEggMania.test';
 import { islandRunBonusTileTests } from './islandRunBonusTile.test';
 import { islandRunBossEncounterTests } from './islandRunBossEncounter.test';
 import { islandRunBuildAccelerationTests } from './islandRunBuildAcceleration.test';
@@ -127,6 +128,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunShopAffordability', tests: islandRunShopAffordabilityTests },
   { label: 'islandRunPlaceholderService', tests: islandRunPlaceholderServiceTests },
   { label: 'islandRunEggSellAdvisor', tests: islandRunEggSellAdvisorTests },
+  { label: 'islandRunEggMania', tests: islandRunEggManiaTests },
   { label: 'islandRunBonusTile', tests: islandRunBonusTileTests },
   { label: 'islandRunBossEncounter', tests: islandRunBossEncounterTests },
   { label: 'islandRunBuildAcceleration', tests: islandRunBuildAccelerationTests },

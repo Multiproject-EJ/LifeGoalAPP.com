@@ -74,6 +74,7 @@ import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
 import { resolveRuntimeDiceRegenUpdate } from './islandRunRuntimeRegen';
 import { resolveCompanionRegenModifier } from './companionRegenModifier';
 import { resolveIslandRunPreIslandLuckyRollGate } from './islandRunPreIslandLuckyRollGate';
+import { getEggSlotLedgerKey } from './islandRunEggMania';
 import { getCreatureById } from './creatureCatalog';
 import {
   getIslandRunFirstCreaturePackLowDiceTriggerTarget,
@@ -2847,6 +2848,18 @@ export interface ApplyEggPlacementOptions {
   triggerSource?: string;
 }
 
+export interface ApplyEggPlacementBatchOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  islandNumber: number;
+  eggEntriesByLedgerKey: Record<string, PerIslandEggEntry>;
+  activeEggTier: NonNullable<IslandRunGameStateRecord['activeEggTier']>;
+  activeEggSetAtMs: number;
+  activeEggHatchDurationMs: number;
+  completedStops: string[];
+  triggerSource?: string;
+}
+
 export interface ApplyHydrationEggReadyTransitionOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -2877,6 +2890,10 @@ export interface ResolveReadyEggTerminalTransitionOptions {
   islandNumber: number;
   terminalStatus: 'collected' | 'sold';
   openedAtMs: number;
+  /** Optional non-base slot key for Egg Mania eggs. Defaults to the island's base egg key. */
+  eggLedgerKey?: string;
+  /** Allows just-hatched incubating entries to resolve without a prior hydration sweep. */
+  readyNowMs?: number;
   location?: PerIslandEggEntry['location'];
   completedStops: string[];
   rewardDeltas?: {
@@ -2903,6 +2920,42 @@ export interface ResolveReadyEggTerminalTransitionResult {
  * `handleSetEgg` so egg lifecycle state and completed-stop ledger updates are
  * committed atomically through the store coordinator.
  */
+export function applyEggPlacementBatch(options: ApplyEggPlacementBatchOptions): IslandRunGameStateRecord {
+  const {
+    session,
+    client,
+    islandNumber,
+    eggEntriesByLedgerKey,
+    activeEggTier,
+    activeEggSetAtMs,
+    activeEggHatchDurationMs,
+    completedStops,
+    triggerSource,
+  } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const islandKey = String(islandNumber);
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    activeEggTier,
+    activeEggSetAtMs,
+    activeEggHatchDurationMs,
+    activeEggIsDormant: false,
+    perIslandEggs: { ...current.perIslandEggs, ...eggEntriesByLedgerKey },
+    completedStopsByIsland: {
+      ...current.completedStopsByIsland,
+      [islandKey]: completedStops,
+    },
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_egg_placement_batch',
+  });
+  return next;
+}
+
 export function applyEggPlacement(options: ApplyEggPlacementOptions): IslandRunGameStateRecord {
   const {
     session,
@@ -3039,6 +3092,8 @@ export function resolveReadyEggTerminalTransition(
     islandNumber,
     terminalStatus,
     openedAtMs,
+    eggLedgerKey,
+    readyNowMs,
     location = 'island',
     completedStops,
     rewardDeltas,
@@ -3046,26 +3101,31 @@ export function resolveReadyEggTerminalTransition(
   } = options;
   const current = getIslandRunStateSnapshot(session);
   const islandKey = String(islandNumber);
-  const currentEntry = current.perIslandEggs?.[islandKey];
+  const baseEggLedgerKey = getEggSlotLedgerKey(islandNumber, 0);
+  const resolvedEggLedgerKey = eggLedgerKey ?? baseEggLedgerKey;
+  const currentEntry = current.perIslandEggs?.[resolvedEggLedgerKey];
   if (!currentEntry) {
     return { record: current, changed: false, reason: 'missing_ledger_entry' };
   }
   if (currentEntry.status === 'collected' || currentEntry.status === 'sold') {
     return { record: current, changed: false, reason: 'already_terminal' };
   }
-  if (currentEntry.status !== 'ready') {
+  const isReady = currentEntry.status === 'ready'
+    || (currentEntry.status === 'incubating' && Number.isFinite(readyNowMs) && (readyNowMs as number) >= currentEntry.hatchAtMs);
+  if (!isReady) {
     return { record: current, changed: false, reason: 'not_ready' };
   }
 
+  const shouldClearActiveEgg = resolvedEggLedgerKey === baseEggLedgerKey;
   const next: IslandRunGameStateRecord = {
     ...current,
-    activeEggTier: null,
-    activeEggSetAtMs: null,
-    activeEggHatchDurationMs: null,
-    activeEggIsDormant: false,
+    activeEggTier: shouldClearActiveEgg ? null : current.activeEggTier,
+    activeEggSetAtMs: shouldClearActiveEgg ? null : current.activeEggSetAtMs,
+    activeEggHatchDurationMs: shouldClearActiveEgg ? null : current.activeEggHatchDurationMs,
+    activeEggIsDormant: shouldClearActiveEgg ? false : current.activeEggIsDormant,
     perIslandEggs: {
       ...current.perIslandEggs,
-      [islandKey]: {
+      [resolvedEggLedgerKey]: {
         ...currentEntry,
         status: terminalStatus,
         openedAt: openedAtMs,
