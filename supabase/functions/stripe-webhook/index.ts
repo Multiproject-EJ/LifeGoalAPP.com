@@ -9,6 +9,50 @@ const corsHeaders = {
 
 const DEFAULT_DICE_PACK_ROLLS = 500;
 const DEFAULT_MINIGAME_TICKETS_PER_PACK = 10;
+const CREATURE_PACK_CARD_COUNT = 5;
+const CREATURE_PACK_MIN_NEW_CREATURE_CARDS = 2;
+const CREATURE_PACK_SLOT_WEIGHTS: { tier: CreatureTier; weight: number }[][] = [
+  [{ tier: 'common', weight: 1 }],
+  [{ tier: 'common', weight: 95 }, { tier: 'rare', weight: 5 }],
+  [{ tier: 'common', weight: 90 }, { tier: 'rare', weight: 10 }],
+  [{ tier: 'common', weight: 85 }, { tier: 'rare', weight: 15 }],
+  [{ tier: 'common', weight: 80 }, { tier: 'rare', weight: 20 }],
+];
+
+type CreatureTier = 'common' | 'rare' | 'mythic';
+
+type CreatureCatalogEntry = { id: string; tier: CreatureTier };
+
+type CreatureCollectionEntry = {
+  creatureId: string;
+  copies: number;
+  firstCollectedAtMs: number;
+  lastCollectedAtMs: number;
+  lastCollectedIslandNumber: number;
+  bondXp: number;
+  bondLevel: number;
+  lastFedAtMs: number | null;
+  claimedBondMilestones: number[];
+  formLevel?: number;
+  claimedFormRewards?: number[];
+  grantIds?: string[];
+};
+
+function creatureIdsForTier(ids: string[], tier: CreatureTier): CreatureCatalogEntry[] {
+  return ids.map((id) => ({ id, tier }));
+}
+
+const CREATURE_CATALOG: CreatureCatalogEntry[] = [
+  ...creatureIdsForTier([
+    'common-sproutling', 'common-pebble-spirit', 'common-mossling', 'common-glowtail', 'common-drift-pup', 'common-bloom-mite', 'common-stone-hopper', 'common-fern-fox', 'common-dewling', 'common-root-whisp', 'common-garden-puff', 'common-lichen-kit', 'common-twilight-seed', 'common-river-bud', 'common-petal-scout',
+  ], 'common'),
+  ...creatureIdsForTier([
+    'rare-luma-hatchling', 'rare-nebula-wisp', 'rare-dewleaf-sprite', 'rare-aurora-finch', 'rare-ember-sprout', 'rare-solar-pika', 'rare-comet-cub', 'rare-bloom-seraph', 'rare-shard-marten', 'rare-cinder-mouse', 'rare-tide-lantern', 'rare-halo-staglet', 'rare-gear-wing', 'rare-mirage-pup', 'rare-crown-drifter',
+  ], 'rare'),
+  ...creatureIdsForTier([
+    'mythic-starhorn-seraph', 'mythic-voidlight-familiar', 'mythic-sunflare-kirin', 'mythic-dreamroot-ancient', 'mythic-celest-pup', 'mythic-lux-leviathan', 'mythic-orbit-vulpine', 'mythic-astral-titanet', 'mythic-solstice-sylph', 'mythic-echo-phoenix', 'mythic-nightbloom-drake', 'mythic-prism-warden', 'mythic-aurora-maned-cat', 'mythic-cosmos-songbird', 'mythic-infinity-sprite',
+  ], 'mythic'),
+];
 
 type MinigameTicketSkuId =
   | 'minigame_tickets_10'
@@ -27,6 +71,115 @@ type ThemeId =
   | 'starhorn-celestial';
 
 type SupabaseLikeClient = ReturnType<typeof createClient>;
+
+
+function hashStringToUint32(input: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function normalizeCreatureCollection(value: unknown): CreatureCollectionEntry[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((entry): entry is CreatureCollectionEntry => Boolean(
+    entry
+    && typeof entry === 'object'
+    && !Array.isArray(entry)
+    && typeof (entry as CreatureCollectionEntry).creatureId === 'string',
+  )).map((entry) => ({
+    ...entry,
+    copies: Number.isFinite(entry.copies) ? Math.max(1, Math.floor(entry.copies)) : 1,
+    bondXp: Number.isFinite(entry.bondXp) ? Math.max(0, Math.floor(entry.bondXp)) : 0,
+    bondLevel: Number.isFinite(entry.bondLevel) ? Math.max(1, Math.floor(entry.bondLevel)) : 1,
+    claimedBondMilestones: Array.isArray(entry.claimedBondMilestones) ? entry.claimedBondMilestones : [],
+    lastFedAtMs: Number.isFinite(entry.lastFedAtMs) ? entry.lastFedAtMs : null,
+  }));
+}
+
+function chooseTierForCreaturePackSlot(slotIndex: number, seed: string): CreatureTier {
+  const weights = CREATURE_PACK_SLOT_WEIGHTS[slotIndex] ?? CREATURE_PACK_SLOT_WEIGHTS[0];
+  const totalWeight = weights.reduce((sum, entry) => sum + Math.max(0, entry.weight), 0);
+  let roll = hashStringToUint32(`${seed}:tier:${slotIndex}`) % Math.max(1, totalWeight);
+  for (const entry of weights) {
+    roll -= Math.max(0, entry.weight);
+    if (roll < 0) return entry.tier;
+  }
+  return 'common';
+}
+
+function appendGrantId(grantIds: string[] | undefined, grantId: string): string[] {
+  const ids = Array.isArray(grantIds) ? grantIds : [];
+  return ids.includes(grantId) ? ids : [...ids, grantId];
+}
+
+function addCreatureToCollection(collection: CreatureCollectionEntry[], creatureId: string, islandNumber: number, collectedAtMs: number, grantId: string): CreatureCollectionEntry[] {
+  const existing = collection.find((entry) => entry.creatureId === creatureId);
+  if (existing) {
+    return collection.map((entry) => entry.creatureId === creatureId
+      ? {
+          ...entry,
+          copies: entry.copies + 1,
+          lastCollectedAtMs: collectedAtMs,
+          lastCollectedIslandNumber: islandNumber,
+          grantIds: appendGrantId(entry.grantIds, grantId),
+        }
+      : entry);
+  }
+  return [{
+    creatureId,
+    copies: 1,
+    firstCollectedAtMs: collectedAtMs,
+    lastCollectedAtMs: collectedAtMs,
+    lastCollectedIslandNumber: islandNumber,
+    bondXp: 0,
+    bondLevel: 1,
+    lastFedAtMs: null,
+    claimedBondMilestones: [],
+    grantIds: [grantId],
+  }, ...collection];
+}
+
+function buildPaidCreaturePackCreatureIds(options: {
+  collection: CreatureCollectionEntry[];
+  userId: string;
+  checkoutSessionId: string;
+  islandNumber: number;
+  cycleIndex: number;
+  runtimeVersion: number;
+  nowMs: number;
+}): string[] {
+  const seed = [options.userId, 'stripe_creature_pack', options.checkoutSessionId, options.islandNumber, options.cycleIndex, options.runtimeVersion, options.nowMs].join(':');
+  const originallyOwnedCreatureIds = new Set(options.collection.filter((entry) => entry.copies > 0).map((entry) => entry.creatureId));
+  const availableUnownedCount = CREATURE_CATALOG.filter((creature) => !originallyOwnedCreatureIds.has(creature.id)).length;
+  const guaranteedNewTarget = Math.min(CREATURE_PACK_MIN_NEW_CREATURE_CARDS, availableUnownedCount);
+  const usedCreatureIds = new Set<string>();
+  const selectedCreatureIds: string[] = [];
+  let newCreatureCards = 0;
+
+  for (let slotIndex = 0; slotIndex < CREATURE_PACK_CARD_COUNT; slotIndex += 1) {
+    const tier = chooseTierForCreaturePackSlot(slotIndex, seed);
+    const tierPool = CREATURE_CATALOG.filter((creature) => creature.tier === tier && !usedCreatureIds.has(creature.id));
+    const unownedTierPool = tierPool.filter((creature) => !originallyOwnedCreatureIds.has(creature.id));
+    const remainingSlotsIncludingThis = CREATURE_PACK_CARD_COUNT - slotIndex;
+    const remainingNewNeeded = Math.max(0, guaranteedNewTarget - newCreatureCards);
+    const mustPickNew = remainingNewNeeded > 0 && remainingSlotsIncludingThis <= remainingNewNeeded;
+    let pool = remainingNewNeeded > 0 && unownedTierPool.length > 0 ? unownedTierPool : tierPool;
+    if (mustPickNew && pool.every((creature) => originallyOwnedCreatureIds.has(creature.id))) {
+      const anyUnownedPool = CREATURE_CATALOG.filter((creature) => !usedCreatureIds.has(creature.id) && !originallyOwnedCreatureIds.has(creature.id));
+      if (anyUnownedPool.length > 0) pool = anyUnownedPool;
+    }
+    if (pool.length < 1) pool = CREATURE_CATALOG.filter((creature) => creature.tier === tier);
+    const creature = pool[hashStringToUint32(`${seed}:creature:${slotIndex}:${tier}:${remainingNewNeeded > 0 ? 'new' : 'any'}`) % Math.max(1, pool.length)] ?? CREATURE_CATALOG[0];
+    selectedCreatureIds.push(creature.id);
+    usedCreatureIds.add(creature.id);
+    if (!originallyOwnedCreatureIds.has(creature.id)) newCreatureCards += 1;
+  }
+
+  return selectedCreatureIds;
+}
 
 function getRequiredEnv(name: string): string {
   const value = Deno.env.get(name);
@@ -296,6 +449,92 @@ async function applyMinigameTicketCredit(
 }
 
 
+
+async function applyCreaturePackCredit(
+  supabase: SupabaseLikeClient,
+  event: Stripe.Event,
+  session: Stripe.Checkout.Session,
+): Promise<void> {
+  const sessionId = session.id;
+  const userId = session.metadata?.user_id || session.client_reference_id || null;
+  if (!sessionId || !userId) {
+    throw new Error('Creature Pack checkout session is missing session id or user id metadata.');
+  }
+  if (session.payment_status !== 'paid') {
+    throw new Error(`Creature Pack checkout session is not paid: payment_status=${session.payment_status}`);
+  }
+  if (session.metadata?.sku_id !== 'creature_pack_5') {
+    throw new Error(`Creature Pack checkout session metadata has invalid sku_id=${String(session.metadata?.sku_id)}`);
+  }
+
+  const { data: dedupeReservationRow, error: dedupeError } = await supabase
+    .from('billing_webhook_events')
+    .update({
+      dedupe_scope: 'creature_pack_credit',
+      dedupe_key: sessionId,
+    })
+    .eq('stripe_event_id', event.id)
+    .select('stripe_event_id')
+    .maybeSingle();
+
+  if (dedupeError) {
+    if ((dedupeError as { code?: string }).code === '23505') {
+      await updateWebhookEventStatus(supabase, event.id, 'ignored', `Creature Pack credit already applied for checkout_session_id=${sessionId}`);
+      return;
+    }
+    throw new Error(`Failed to reserve Creature Pack dedupe key: ${dedupeError.message}`);
+  }
+
+  if (!dedupeReservationRow?.stripe_event_id) {
+    throw new Error(`Failed to reserve Creature Pack dedupe key: webhook event row not found for stripe_event_id=${event.id}`);
+  }
+
+  const { data: row, error: readError } = await supabase
+    .from('island_run_runtime_state')
+    .select('user_id, runtime_version, current_island_number, cycle_index, creature_collection')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (readError) {
+    throw new Error(`Failed to read Island Run runtime state for Creature Pack: ${readError.message}`);
+  }
+
+  const nowMs = Date.now();
+  const runtimeVersion = Number.isFinite(row?.runtime_version) ? Math.max(0, Math.floor(row.runtime_version)) : 0;
+  const islandNumber = Number.isFinite(row?.current_island_number) ? Math.max(1, Math.floor(row.current_island_number)) : 1;
+  const cycleIndex = Number.isFinite(row?.cycle_index) ? Math.max(0, Math.floor(row.cycle_index)) : 0;
+  let collection = normalizeCreatureCollection(row?.creature_collection);
+  const grantId = `stripe_creature_pack:${sessionId}`;
+  const creatureIds = buildPaidCreaturePackCreatureIds({
+    collection,
+    userId,
+    checkoutSessionId: sessionId,
+    islandNumber,
+    cycleIndex,
+    runtimeVersion,
+    nowMs,
+  });
+
+  for (const creatureId of creatureIds) {
+    collection = addCreatureToCollection(collection, creatureId, islandNumber, nowMs, grantId);
+  }
+
+  const { error: writeError } = await supabase
+    .from('island_run_runtime_state')
+    .upsert({
+      user_id: userId,
+      runtime_version: runtimeVersion + 1,
+      current_island_number: islandNumber,
+      cycle_index: cycleIndex,
+      creature_collection: collection,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' });
+
+  if (writeError) {
+    throw new Error(`Failed to grant Creature Pack into Island Run runtime state: ${writeError.message}`);
+  }
+}
+
 async function applyThemeEntitlement(
   supabase: SupabaseLikeClient,
   event: Stripe.Event,
@@ -474,6 +713,11 @@ Deno.serve(async (req) => {
 
         if (session.mode === 'payment' && session.metadata?.product_type === 'minigame_ticket_pack') {
           await applyMinigameTicketCredit(supabase, event, session);
+          break;
+        }
+
+        if (session.mode === 'payment' && session.metadata?.product_type === 'creature_pack') {
+          await applyCreaturePackCredit(supabase, event, session);
           break;
         }
 

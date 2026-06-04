@@ -8522,3 +8522,134 @@
 .island-traffic-light__result p {
   margin: 0.1rem 0;
 }
+
+/* Welcome Pack modal canonical class names (matches WelcomePackModal.tsx). */
+.welcome-pack-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9870;
+  display: grid;
+  place-items: center;
+  padding: clamp(14px, 4vw, 24px);
+  background: radial-gradient(circle at top, rgba(255, 225, 165, 0.2), rgba(12, 16, 32, 0.9));
+  backdrop-filter: blur(8px);
+  overflow-y: auto;
+}
+
+.welcome-pack-modal__shell {
+  width: min(100%, 560px);
+  max-height: min(92vh, 780px);
+  overflow-y: auto;
+  border: 1px solid rgba(255, 226, 148, 0.45);
+  background: linear-gradient(180deg, rgba(36, 30, 66, 0.97), rgba(20, 18, 46, 0.98));
+  box-shadow: 0 22px 56px rgba(0, 0, 0, 0.48), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.welcome-pack-modal__header {
+  text-align: center;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.welcome-pack-modal__eyebrow {
+  margin: 0;
+  color: #f2dca0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.welcome-pack-modal__header h2 {
+  margin: 0;
+  font-size: clamp(1.45rem, 5.6vw, 2rem);
+  color: #fff8dc;
+}
+
+.welcome-pack-modal__header p {
+  margin: 0;
+  color: rgba(239, 237, 255, 0.9);
+  font-size: 0.9rem;
+}
+
+.welcome-pack-modal__cards {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.welcome-pack-modal__card-slot {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 225, 146, 0.36);
+  background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+  padding: 0.55rem 0.35rem;
+  text-align: center;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.welcome-pack-modal__card-slot span { font-size: 1rem; color: #ffe6a5; }
+.welcome-pack-modal__card-slot strong { font-size: 0.67rem; color: #f9f8ff; }
+.welcome-pack-modal__card-slot small { font-size: 0.62rem; color: rgba(228, 221, 255, 0.78); }
+
+.welcome-pack-modal__reward-grid {
+  margin-top: 0.9rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.welcome-pack-modal__reward-grid p {
+  margin: 0;
+  border-radius: 10px;
+  padding: 0.55rem 0.6rem;
+  font-size: 0.8rem;
+  color: #f8f6ff;
+  background: rgba(18, 14, 44, 0.68);
+  border: 1px solid rgba(255, 235, 180, 0.24);
+}
+
+.welcome-pack-modal__status {
+  margin: 0.35rem 0 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: rgba(239, 237, 255, 0.94);
+}
+
+.welcome-pack-modal__status--error { color: #ffd2d2; }
+
+@media (max-width: 560px) {
+  .welcome-pack-modal__cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .welcome-pack-modal__gift-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.island-run-creature-pack-offer__details {
+  margin: 0.6rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  background: rgba(12, 20, 42, 0.42);
+  padding: 0.45rem 0.6rem;
+  color: rgba(244, 247, 255, 0.9);
+  font-size: 0.78rem;
+}
+
+.island-run-creature-pack-offer__details summary {
+  cursor: pointer;
+  font-weight: 850;
+  color: #fff4bd;
+}
+
+.island-run-creature-pack-offer__details ul {
+  margin: 0.45rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.island-run-creature-pack-offer__fine-print,
+.welcome-pack-modal__fine-print {
+  margin: 0.45rem 0 0;
+  color: rgba(239, 237, 255, 0.82);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}

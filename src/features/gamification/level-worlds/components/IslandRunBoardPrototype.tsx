@@ -390,6 +390,7 @@ import {
   shouldAutoAdvanceIslandOnTimerExpiry,
 } from '../services/islandRunTimerProgression';
 import { createDicePackCheckoutSession } from '../../../../services/billing';
+import { createCreaturePackCheckoutSession } from '../../../../services/creaturePackPurchases';
 import {
   initiateMinigameTicketCheckout,
   resolveMinigameTicketSku,
@@ -403,7 +404,6 @@ import {
 } from '../services/islandRunDiceRegeneration';
 import { openEggRewardInventoryEntry } from '../services/islandRunEggRewardInventoryAction';
 import {
-  DEV_DEMO_CREATURE_PACK_IDS,
   grantDevDemoCreaturePack,
   grantDevDemoCreaturePackOpeningPrototype,
   grantDevDemoEggRewardPack,
@@ -1383,6 +1383,8 @@ export function IslandRunBoardPrototype({
   }, []);
   const { showQaHooks, isMinimalBoardArt, boardTiltXDeg, boardRotateZDeg } = boardRenderTuning;
   const [isDevModeEnabled, setIsDevModeEnabled] = useState(() => isIslandRunDevModeEnabled());
+  const isCreaturePackStripeCheckoutEnabled = isDevModeEnabled
+    || String(import.meta.env.VITE_CREATURE_PACK_STRIPE_CHECKOUT_ENABLED ?? '').toLowerCase() === 'true';
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
   const [isDevPanelOpen, setIsDevPanelOpen] = useState(false);
   const [devTimedEventOverrideType, setDevTimedEventOverrideType] = useState<EventId | null>(() => {
@@ -1842,6 +1844,8 @@ export function IslandRunBoardPrototype({
   const [showOutOfDicePurchasePrompt, setShowOutOfDicePurchasePrompt] = useState(false);
   const [isStartingDiceCheckout, setIsStartingDiceCheckout] = useState(false);
   const [diceCheckoutError, setDiceCheckoutError] = useState<string | null>(null);
+  const [isStartingCreaturePackCheckout, setIsStartingCreaturePackCheckout] = useState(false);
+  const [creaturePackCheckoutError, setCreaturePackCheckoutError] = useState<string | null>(null);
   const [isStartingMinigameTicketCheckout, setIsStartingMinigameTicketCheckout] = useState(false);
   const [minigameTicketCheckoutError, setMinigameTicketCheckoutError] = useState<string | null>(null);
   const [showSanctuaryPanel, setShowSanctuaryPanel] = useState(false);
@@ -1852,6 +1856,7 @@ export function IslandRunBoardPrototype({
     cards: CreaturePackOpeningPrototypeCard[];
     grantId: string;
     grantStatus: 'granted' | 'already_granted';
+    bonusCopy?: string;
   }>(null);
   const [showWelcomePackModal, setShowWelcomePackModal] = useState(false);
   const [welcomePackDismissedThisSession, setWelcomePackDismissedThisSession] = useState(false);
@@ -8321,6 +8326,19 @@ export function IslandRunBoardPrototype({
     return message;
   }, [client, isDevModeEnabled, session]);
 
+  const buildDevCreaturePackModalCards = useCallback((cards: NonNullable<Awaited<ReturnType<typeof grantDevDemoCreaturePack>>['creatureCards']>): CreaturePackOpeningPrototypeCard[] => cards
+    .map((card): CreaturePackOpeningPrototypeCard | null => {
+      const creature = CREATURE_CATALOG.find((entry) => entry.id === card.creatureId);
+      if (!creature) return null;
+      return {
+        slotIndex: card.slotIndex,
+        creature,
+        copiesBefore: card.copiesBefore,
+        copiesAfter: card.copiesAfter,
+      };
+    })
+    .filter((card): card is CreaturePackOpeningPrototypeCard => Boolean(card)), []);
+
   const handleDevGrantDemoCreaturePack = useCallback(async () => {
     if (!isDevModeEnabled) return 'Creature Pack grant is only available in Island Run dev mode.';
     const result = await grantDevDemoCreaturePack({
@@ -8334,17 +8352,25 @@ export function IslandRunBoardPrototype({
     setRuntimeState(refreshedRecord);
     runtimeStateRef.current = refreshedRecord;
     const message = result.status === 'granted'
-      ? `🧪 DEV Creature Pack granted: +${result.creatureCopiesGranted} creatures, +${result.diceGranted} dice, +${result.essenceGranted} essence.`
+      ? `🧪 DEV Creature Pack granted: ${result.creatureCopiesGranted} creature cards (free dev grant; no Stripe).`
       : result.status === 'already_granted'
         ? `🧪 DEV Creature Pack already granted for ${result.grantId}; no new rewards are expected for repeat clicks on this island/cycle.`
         : `🧪 DEV Creature Pack grant ${result.status}: ${result.failureReason ?? 'unknown reason'}.`;
+    if (result.status === 'granted' && result.creatureCards && result.creatureCards.length > 0) {
+      setDevPackOpeningPrototype({
+        cards: buildDevCreaturePackModalCards(result.creatureCards),
+        grantId: result.grantId,
+        grantStatus: result.status,
+        bonusCopy: 'Free dev grant: no Stripe checkout was used; the real paid pack uses the same 5-card resolver.',
+      });
+      setShowDebugPanel(false);
+    }
     setLandingText(message);
     return message;
-  }, [client, isDevModeEnabled, session]);
+  }, [buildDevCreaturePackModalCards, client, isDevModeEnabled, session]);
 
   const handleDevOpenCreaturePackOpeningPrototype = useCallback(async () => {
     if (!isDevModeEnabled) return 'Creature Pack opening prototype is only available in Island Run dev mode.';
-    const beforeRecord = getIslandRunStateSnapshot(session);
     const result = await grantDevDemoCreaturePackOpeningPrototype({
       session,
       client,
@@ -8362,21 +8388,9 @@ export function IslandRunBoardPrototype({
       return message;
     }
 
-    const beforeCopiesByCreatureId = new Map(beforeRecord.creatureCollection.map((entry) => [entry.creatureId, entry.copies]));
-    const afterCopiesByCreatureId = new Map(refreshedRecord.creatureCollection.map((entry) => [entry.creatureId, entry.copies]));
-    const cards = DEV_DEMO_CREATURE_PACK_IDS
-      .map((creatureId, slotIndex): CreaturePackOpeningPrototypeCard | null => {
-        const creature = CREATURE_CATALOG.find((entry) => entry.id === creatureId);
-        if (!creature) return null;
-        const copiesAfter = afterCopiesByCreatureId.get(creatureId) ?? 0;
-        return {
-          slotIndex,
-          creature,
-          copiesBefore: result.status === 'granted' ? (beforeCopiesByCreatureId.get(creatureId) ?? 0) : copiesAfter,
-          copiesAfter,
-        };
-      })
-      .filter((card): card is CreaturePackOpeningPrototypeCard => Boolean(card));
+    const cards = result.creatureCards && result.creatureCards.length > 0
+      ? buildDevCreaturePackModalCards(result.creatureCards)
+      : [];
 
     setDevPackOpeningPrototype({
       cards,
@@ -8390,7 +8404,7 @@ export function IslandRunBoardPrototype({
       : `✨ DEV Creature Pack opening prototype replaying existing grant ${result.grantId}; cards are previewed but no new rewards are granted.`;
     setLandingText(message);
     return message;
-  }, [client, isDevModeEnabled, session]);
+  }, [buildDevCreaturePackModalCards, client, isDevModeEnabled, session]);
 
   const handleOpenWelcomePackModal = useCallback(async () => {
     setWelcomePackDismissedThisSession(false);
@@ -8726,6 +8740,40 @@ export function IslandRunBoardPrototype({
 
     window.location.assign(result.url);
   }, [islandNumber, session]);
+
+
+  const handleStartCreaturePackCheckout = useCallback(async () => {
+    if (!isCreaturePackStripeCheckoutEnabled) {
+      setCreaturePackCheckoutError('Creature Pack checkout is not enabled yet. Pack odds and purchase policy are still under review.');
+      return;
+    }
+    if (isDemoSession(session)) {
+      setCreaturePackCheckoutError('Checkout is unavailable in demo mode.');
+      return;
+    }
+
+    setIsStartingCreaturePackCheckout(true);
+    setCreaturePackCheckoutError(null);
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_earn',
+      metadata: { stage: 'creature_pack_checkout_start', island_number: islandNumber },
+    });
+
+    const result = await createCreaturePackCheckoutSession();
+    if (!result.url) {
+      setCreaturePackCheckoutError(result.error?.message ?? 'Unable to start Creature Pack checkout right now.');
+      setIsStartingCreaturePackCheckout(false);
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'economy_earn',
+        metadata: { stage: 'creature_pack_checkout_error', island_number: islandNumber },
+      });
+      return;
+    }
+
+    window.location.assign(result.url);
+  }, [isCreaturePackStripeCheckoutEnabled, islandNumber, session]);
 
   const handleStartMinigameTicketCheckout = useCallback(async (entryPoint: 'active_event_panel') => {
     if (isDemoSession(session)) {
@@ -11677,6 +11725,33 @@ export function IslandRunBoardPrototype({
               </button>
             </div>
 
+            <div className="island-hatchery-card island-run-creature-pack-offer">
+              <p><strong>Creature Pack — 5 cards</strong></p>
+              <p style={{ fontSize: '0.85rem', opacity: 0.72 }}>Cards only: no dice or essence. Weighted common/rare slots with at least 2 new-to-you creatures when enough unowned creatures remain.</p>
+              <details className="island-run-creature-pack-offer__details">
+                <summary>Odds & duplicate policy</summary>
+                <ul>
+                  <li>Slot 1: Common 100%</li>
+                  <li>Slot 2: Common 95% · Rare 5%</li>
+                  <li>Slot 3: Common 90% · Rare 10%</li>
+                  <li>Slot 4: Common 85% · Rare 15%</li>
+                  <li>Slot 5: Common 80% · Rare 20%</li>
+                  <li>Guarantee: at least 2 new-to-you creatures when available; duplicate cards increase that creature’s copy count.</li>
+                  <li>No mythic cards in this pack version.</li>
+                </ul>
+              </details>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                onClick={() => void handleStartCreaturePackCheckout()}
+                disabled={isStartingCreaturePackCheckout || !isCreaturePackStripeCheckoutEnabled}
+              >
+                {isStartingCreaturePackCheckout ? 'Starting checkout…' : isCreaturePackStripeCheckoutEnabled ? 'Buy Creature Pack (Stripe)' : 'Creature Pack checkout under review'}
+              </button>
+              {!isCreaturePackStripeCheckoutEnabled ? <p className="island-run-creature-pack-offer__fine-print">Paid random packs are gated until odds, refund, and purchase-policy review is complete.</p> : null}
+              {creaturePackCheckoutError ? <p className="island-run-prototype__error">{creaturePackCheckoutError}</p> : null}
+            </div>
+
             <div className="island-hatchery-card">
               <p><strong>Tier 1 — Always available</strong></p>
               <div className="island-hatchery-card__actions">
@@ -12745,6 +12820,7 @@ export function IslandRunBoardPrototype({
           cards={devPackOpeningPrototype.cards}
           grantId={devPackOpeningPrototype.grantId}
           grantStatus={devPackOpeningPrototype.grantStatus}
+          bonusCopy={devPackOpeningPrototype.bonusCopy}
           onClose={() => setDevPackOpeningPrototype(null)}
           onViewSanctuary={() => {
             setDevPackOpeningPrototype(null);
