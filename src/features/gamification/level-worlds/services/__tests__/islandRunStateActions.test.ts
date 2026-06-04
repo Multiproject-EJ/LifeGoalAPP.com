@@ -51,6 +51,7 @@ import {
   applyEggResolution,
   resolveReadyEggTerminalTransition,
   applyEggPlacement,
+  applyEggPlacementBatch,
   applyFirstCreaturePackLowDiceTrigger,
   applyFirstRunClaimed,
   applyFirstSessionTutorialState,
@@ -92,6 +93,7 @@ import {
   travelToNextIsland,
 } from '../islandRunStateActions';
 import { isIslandRunFullyClearedV2 } from '../islandRunContractV2StopResolver';
+import { getEggSlotLedgerKey } from '../islandRunEggMania';
 import { buildInitialDiceRegenState } from '../islandRunDiceRegeneration';
 import { resolveEffectiveRegenIntervalMs } from '../companionRegenModifier';
 import { SPACE_EXCAVATOR_CAMPAIGN_MILESTONES } from '../spaceExcavatorCampaignProgress';
@@ -5171,6 +5173,71 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(snapshot.essence, 150, 'ticket payment essence spend should persist through travel');
       assertEqual(snapshot.essenceLifetimeSpent, 50, 'lifetime spent should persist through travel');
       assertEqual(snapshot.runtimeVersion, 45, 'full loop should end at expected runtimeVersion');
+    },
+  },
+
+  {
+    name: 'applyEggPlacementBatch: Egg Mania triple-set writes three island slots atomically',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 10, currentIslandNumber: 12, perIslandEggs: {} });
+      const entries = {
+        [getEggSlotLedgerKey(12, 0)]: { tier: 'common' as const, setAtMs: 1000, hatchAtMs: 2000, status: 'incubating' as const, location: 'island' as const },
+        [getEggSlotLedgerKey(12, 1)]: { tier: 'rare' as const, setAtMs: 1001, hatchAtMs: 3000, status: 'incubating' as const, location: 'island' as const },
+        [getEggSlotLedgerKey(12, 2)]: { tier: 'mythic' as const, setAtMs: 1002, hatchAtMs: 4000, status: 'incubating' as const, location: 'island' as const },
+      };
+
+      const next = applyEggPlacementBatch({
+        session,
+        client: null,
+        islandNumber: 12,
+        eggEntriesByLedgerKey: entries,
+        activeEggTier: 'common',
+        activeEggSetAtMs: 1000,
+        activeEggHatchDurationMs: 1000,
+        completedStops: ['hatchery'],
+        triggerSource: 'test_egg_mania_batch',
+      });
+
+      assertEqual(Object.keys(next.perIslandEggs).filter((key) => key.startsWith('12')).length, 3, 'expected three egg slots for island');
+      assertEqual(next.activeEggTier, 'common', 'base slot remains compatibility active egg');
+      assertEqual(next.completedStopsByIsland['12']?.includes('hatchery'), true, 'hatchery objective is completed by triple-set');
+      assertEqual(next.runtimeVersion, 11, 'batch placement bumps runtime once');
+    },
+  },
+  {
+    name: 'resolveReadyEggTerminalTransition: resolves non-base Egg Mania slot without clearing active base egg',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 20,
+        currentIslandNumber: 12,
+        activeEggTier: 'common',
+        activeEggSetAtMs: 1000,
+        activeEggHatchDurationMs: 1000,
+        perIslandEggs: {
+          [getEggSlotLedgerKey(12, 0)]: { tier: 'common', setAtMs: 1000, hatchAtMs: 2000, status: 'ready', location: 'island' },
+          [getEggSlotLedgerKey(12, 1)]: { tier: 'rare', setAtMs: 1001, hatchAtMs: 2001, status: 'ready', location: 'island' },
+        },
+      });
+
+      const result = resolveReadyEggTerminalTransition({
+        session,
+        client: null,
+        islandNumber: 12,
+        eggLedgerKey: getEggSlotLedgerKey(12, 1),
+        terminalStatus: 'sold',
+        openedAtMs: 3000,
+        completedStops: ['hatchery'],
+        triggerSource: 'test_egg_mania_slot_terminal',
+      });
+
+      assertEqual(result.changed, true, 'slot terminal transition should change state');
+      assertEqual(result.record.perIslandEggs[getEggSlotLedgerKey(12, 1)]?.status, 'sold', 'selected slot should become terminal');
+      assertEqual(result.record.activeEggTier, 'common', 'base active egg should remain for compatibility');
+      assertEqual(result.record.perIslandEggs[getEggSlotLedgerKey(12, 0)]?.status, 'ready', 'base slot remains unchanged');
     },
   },
 ];

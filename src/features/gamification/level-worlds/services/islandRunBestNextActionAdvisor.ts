@@ -8,7 +8,7 @@ import {
 import { canClaimIslandRunContractV2RewardBar } from './islandRunContractV2RewardBar';
 import { resolveNextRollEtaMs } from './islandRunDiceRegeneration';
 import { getActiveEvent } from './islandRunEventEngine';
-import type { IslandRunGameStateRecord, PerIslandEggEntry } from './islandRunGameStateStore';
+import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
 import {
   getCompletedStopsForIsland,
   getEffectiveCompletedStops,
@@ -17,6 +17,7 @@ import {
 import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
 import { generateIslandStopPlan } from './islandRunStops';
 import { getStopTicketCost, getStopTicketsPaidForIsland, isStopTicketPaid, STOP_COUNT } from './islandRunStopTickets';
+import { areAllEggSlotsTerminalForIsland, getUnresolvedEggSlotsForIsland } from './islandRunEggMania';
 
 export type IslandRunBestNextActionKind =
   | 'claim_island_clear'
@@ -78,29 +79,22 @@ function isFirstSessionTutorialActive(record: IslandRunGameStateRecord): boolean
     && ACTIVE_FIRST_SESSION_TUTORIAL_STATES.has(record.firstSessionTutorialState);
 }
 
-function getCurrentIslandKey(record: IslandRunGameStateRecord): string {
-  return String(Math.max(1, Math.floor(record.currentIslandNumber)));
+function getCurrentIslandNumber(record: IslandRunGameStateRecord): number {
+  return Math.max(1, Math.floor(record.currentIslandNumber));
 }
 
 function hasActiveEgg(record: IslandRunGameStateRecord): boolean {
   return record.activeEggTier !== null && record.activeEggSetAtMs !== null;
 }
 
-function getCurrentIslandEgg(record: IslandRunGameStateRecord): PerIslandEggEntry | null {
-  return record.perIslandEggs[getCurrentIslandKey(record)] ?? null;
-}
-
 function isEggSlotUsed(record: IslandRunGameStateRecord): boolean {
-  const egg = getCurrentIslandEgg(record);
-  return egg?.status === 'collected' || egg?.status === 'sold';
+  return areAllEggSlotsTerminalForIsland(record.perIslandEggs, getCurrentIslandNumber(record));
 }
 
 function isCollectableEggReady(record: IslandRunGameStateRecord, nowMs: number): boolean {
-  const islandEgg = getCurrentIslandEgg(record);
-  if (islandEgg) {
-    if (islandEgg.status === 'collected' || islandEgg.status === 'sold') return false;
-    return islandEgg.status === 'ready' || Math.floor(nowMs) >= Math.floor(islandEgg.hatchAtMs);
-  }
+  const unresolvedSlots = getUnresolvedEggSlotsForIsland(record.perIslandEggs, getCurrentIslandNumber(record));
+  const readySlot = unresolvedSlots.find(({ entry }) => entry.status === 'ready' || Math.floor(nowMs) >= Math.floor(entry.hatchAtMs));
+  if (readySlot) return true;
 
   if (!record.activeEggTier || record.activeEggSetAtMs === null || record.activeEggHatchDurationMs === null) {
     return false;

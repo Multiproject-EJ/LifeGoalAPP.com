@@ -2707,6 +2707,27 @@
   font-weight: 800;
 }
 
+.island-run-board__egg-mania-icon-btn {
+  background: linear-gradient(180deg, rgba(116, 44, 14, 0.96), rgba(71, 26, 10, 0.94));
+  border-color: rgba(255, 199, 96, 0.62);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), 0 0 14px rgba(255, 153, 51, 0.22);
+}
+
+.island-run-board__egg-mania-icon-btn--unused {
+  animation: island-run-egg-mania-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes island-run-egg-mania-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), 0 0 12px rgba(255, 153, 51, 0.24);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.35), 0 0 22px rgba(255, 199, 96, 0.42);
+  }
+}
+
 /* ── Sticker album button ──────────────────────────────────────────── */
 .island-run-board__sticker-album-btn {
   width: 56px;
