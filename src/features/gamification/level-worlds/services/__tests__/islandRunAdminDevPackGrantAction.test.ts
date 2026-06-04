@@ -1,6 +1,7 @@
 import {
   grantAdminDevCreaturePack,
-  DEV_DEMO_CREATURE_PACK_IDS,
+  grantDevDemoCreaturePack,
+  DEV_DEMO_CREATURE_PACK_CARD_COUNT,
 } from '../islandRunAdminDevPackGrantAction';
 import { __resetIslandRunActionMutexesForTests } from '../islandRunActionMutex';
 import {
@@ -75,7 +76,7 @@ export const islandRunAdminDevPackGrantActionTests: TestCase[] = [
         grantId: 'DEV_DEMO_CREATURE_PACK_V1',
         grantSource: 'dev',
         allowGrant: true,
-        creatureIds: [...DEV_DEMO_CREATURE_PACK_IDS],
+        creatureIds: ['common-sproutling', 'common-pebble-spirit', 'common-mossling', 'common-glowtail'],
         diceBonus: 15,
         essenceBonus: 25,
         nowMs: 1234,
@@ -84,15 +85,15 @@ export const islandRunAdminDevPackGrantActionTests: TestCase[] = [
       const persisted = readIslandRunGameStateRecord(makeSession());
       assertEqual(result.status, 'granted', 'Dev creature pack grant should succeed');
       assertEqual(result.grantId, 'dev_demo_creature_pack_v1', 'Grant id should normalize to lowercase');
-      assertEqual(result.creatureCopiesGranted, DEV_DEMO_CREATURE_PACK_IDS.length, 'Result should report granted creature copies');
+      assertEqual(result.creatureCopiesGranted, 4, 'Result should report granted creature copies');
       assertEqual(persisted.runtimeVersion, 5, 'Grant should commit one runtime update');
       assertEqual(persisted.dicePool, 25, 'Grant should add optional dice bonus');
       assertEqual(persisted.essence, 45, 'Grant should add optional essence bonus');
       assertEqual(persisted.essenceLifetimeEarned, 75, 'Grant should track optional essence bonus as earned');
-      assertEqual(totalCreatureCopies(persisted), DEV_DEMO_CREATURE_PACK_IDS.length, 'Grant should add fixed creature copies');
+      assertEqual(totalCreatureCopies(persisted), 4, 'Grant should add fixed creature copies');
       assertDeepEqual(
         persisted.creatureCollection.map((entry) => entry.creatureId).sort(),
-        [...DEV_DEMO_CREATURE_PACK_IDS].sort(),
+        ['common-sproutling', 'common-pebble-spirit', 'common-mossling', 'common-glowtail'].sort(),
         'Canonical creature collection should receive the requested fixed creatures',
       );
       for (const entry of persisted.creatureCollection) {
@@ -101,6 +102,48 @@ export const islandRunAdminDevPackGrantActionTests: TestCase[] = [
         assertEqual(entry.lastCollectedAtMs, 1234, 'Granted creature should track grant timestamp');
       }
       assertDeepEqual(persisted.eggRewardInventory, [], 'Creature-only pack should not add egg vouchers');
+    },
+  },
+  {
+    name: 'grantDevDemoCreaturePack resolves a random five-card pack with at least two new creatures when available',
+    run: async () => {
+      resetEnvironment();
+      await seedState({
+        runtimeVersion: 7,
+        currentIslandNumber: 2,
+        cycleIndex: 0,
+        dicePool: 10,
+        essence: 20,
+        creatureCollection: [{
+          creatureId: 'common-sproutling',
+          copies: 1,
+          firstCollectedAtMs: 100,
+          lastCollectedAtMs: 100,
+          lastCollectedIslandNumber: 1,
+          bondXp: 0,
+          bondLevel: 1,
+          lastFedAtMs: null,
+          claimedBondMilestones: [],
+        }],
+        eggRewardInventory: [],
+      });
+
+      const result = await grantDevDemoCreaturePack({
+        session: makeSession(),
+        client: null,
+        allowGrant: true,
+        nowMs: 5555,
+      });
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      const newCardCount = result.creatureCards?.filter((card) => card.copiesBefore < 1).length ?? 0;
+      assertEqual(result.status, 'granted', 'Dev demo pack should grant successfully');
+      assertEqual(result.creatureCopiesGranted, DEV_DEMO_CREATURE_PACK_CARD_COUNT, 'Dev demo pack should grant five creature cards');
+      assertEqual(result.creatureCards?.length ?? 0, DEV_DEMO_CREATURE_PACK_CARD_COUNT, 'Result should expose five reveal cards for the modal');
+      assert(newCardCount >= 2, 'At least two cards should be new to the collection when enough unowned creatures are available');
+      assertEqual(totalCreatureCopies(persisted), 1 + DEV_DEMO_CREATURE_PACK_CARD_COUNT, 'Persisted collection should include the starter creature plus five granted copies');
+      assertEqual(persisted.dicePool, 10, 'Dev demo Creature Pack should not add dice; Welcome Pack owns dice bonuses');
+      assertEqual(persisted.essence, 20, 'Dev demo Creature Pack should not add essence; Welcome Pack owns essence bonuses');
     },
   },
   {
