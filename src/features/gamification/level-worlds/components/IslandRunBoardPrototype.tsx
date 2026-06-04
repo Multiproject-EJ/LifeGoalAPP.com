@@ -11753,6 +11753,20 @@ export function IslandRunBoardPrototype({
             </div>
 
             <div className="island-hatchery-card">
+              <p><strong>Creature Pack — 5 cards</strong></p>
+              <p style={{ fontSize: '0.85rem', opacity: 0.72 }}>Same resolver as the dev pack: weighted common/rare odds with at least 2 new-to-you creatures when available.</p>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                onClick={() => void handleStartCreaturePackCheckout()}
+                disabled={isStartingCreaturePackCheckout}
+              >
+                {isStartingCreaturePackCheckout ? 'Starting checkout…' : 'Buy Creature Pack (Stripe)'}
+              </button>
+              {creaturePackCheckoutError ? <p className="island-run-prototype__error">{creaturePackCheckoutError}</p> : null}
+            </div>
+
+            <div className="island-hatchery-card">
               <p><strong>Tier 1 — Always available</strong></p>
               <div className="island-hatchery-card__actions">
                 {marketOwnedBundles.dice_bundle ? (
