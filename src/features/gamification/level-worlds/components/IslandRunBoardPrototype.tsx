@@ -1383,6 +1383,8 @@ export function IslandRunBoardPrototype({
   }, []);
   const { showQaHooks, isMinimalBoardArt, boardTiltXDeg, boardRotateZDeg } = boardRenderTuning;
   const [isDevModeEnabled, setIsDevModeEnabled] = useState(() => isIslandRunDevModeEnabled());
+  const isCreaturePackStripeCheckoutEnabled = isDevModeEnabled
+    || String(import.meta.env.VITE_CREATURE_PACK_STRIPE_CHECKOUT_ENABLED ?? '').toLowerCase() === 'true';
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
   const [isDevPanelOpen, setIsDevPanelOpen] = useState(false);
   const [devTimedEventOverrideType, setDevTimedEventOverrideType] = useState<EventId | null>(() => {
@@ -8741,6 +8743,10 @@ export function IslandRunBoardPrototype({
 
 
   const handleStartCreaturePackCheckout = useCallback(async () => {
+    if (!isCreaturePackStripeCheckoutEnabled) {
+      setCreaturePackCheckoutError('Creature Pack checkout is not enabled yet. Pack odds and purchase policy are still under review.');
+      return;
+    }
     if (isDemoSession(session)) {
       setCreaturePackCheckoutError('Checkout is unavailable in demo mode.');
       return;
@@ -8767,7 +8773,7 @@ export function IslandRunBoardPrototype({
     }
 
     window.location.assign(result.url);
-  }, [islandNumber, session]);
+  }, [isCreaturePackStripeCheckoutEnabled, islandNumber, session]);
 
   const handleStartMinigameTicketCheckout = useCallback(async (entryPoint: 'active_event_panel') => {
     if (isDemoSession(session)) {
@@ -11717,6 +11723,33 @@ export function IslandRunBoardPrototype({
               >
                 {isStartingDiceCheckout ? 'Starting checkout…' : 'Buy 500 Rolls (Stripe)'}
               </button>
+            </div>
+
+            <div className="island-hatchery-card island-run-creature-pack-offer">
+              <p><strong>Creature Pack — 5 cards</strong></p>
+              <p style={{ fontSize: '0.85rem', opacity: 0.72 }}>Cards only: no dice or essence. Weighted common/rare slots with at least 2 new-to-you creatures when enough unowned creatures remain.</p>
+              <details className="island-run-creature-pack-offer__details">
+                <summary>Odds & duplicate policy</summary>
+                <ul>
+                  <li>Slot 1: Common 100%</li>
+                  <li>Slot 2: Common 95% · Rare 5%</li>
+                  <li>Slot 3: Common 90% · Rare 10%</li>
+                  <li>Slot 4: Common 85% · Rare 15%</li>
+                  <li>Slot 5: Common 80% · Rare 20%</li>
+                  <li>Guarantee: at least 2 new-to-you creatures when available; duplicate cards increase that creature’s copy count.</li>
+                  <li>No mythic cards in this pack version.</li>
+                </ul>
+              </details>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                onClick={() => void handleStartCreaturePackCheckout()}
+                disabled={isStartingCreaturePackCheckout || !isCreaturePackStripeCheckoutEnabled}
+              >
+                {isStartingCreaturePackCheckout ? 'Starting checkout…' : isCreaturePackStripeCheckoutEnabled ? 'Buy Creature Pack (Stripe)' : 'Creature Pack checkout under review'}
+              </button>
+              {!isCreaturePackStripeCheckoutEnabled ? <p className="island-run-creature-pack-offer__fine-print">Paid random packs are gated until odds, refund, and purchase-policy review is complete.</p> : null}
+              {creaturePackCheckoutError ? <p className="island-run-prototype__error">{creaturePackCheckoutError}</p> : null}
             </div>
 
             <div className="island-hatchery-card">

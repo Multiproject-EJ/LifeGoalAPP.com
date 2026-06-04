@@ -114,6 +114,15 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [advance, props.open, props.onClose]);
 
+  useEffect(() => {
+    if (!props.open || typeof document === 'undefined') return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [props.open]);
+
   if (!props.open) return null;
 
   return (
@@ -147,7 +156,7 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
             </div>
             <p className="creature-pack-opening-prototype__anticipation">Tap to open · swipe or press Enter/Space</p>
             <p className="creature-pack-opening-prototype__copy-note">
-              Five canonical demo cards are already resolved; this screen previews the reveal ceremony and collection changes.
+              Five weighted demo cards are already resolved; this screen previews the reveal ceremony, duplicate copy changes, and new-to-you results.
             </p>
           </button>
         ) : showSummary ? (

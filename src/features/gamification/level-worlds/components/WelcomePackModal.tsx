@@ -22,9 +22,6 @@ const VISUAL_GIFT_SLOTS = [
   { icon: '🎲', label: 'Dice', value: '150' },
   { icon: '⚡', label: 'Essence', value: '2000' },
   { icon: '🎟️', label: 'Event tickets', value: '20' },
-  { icon: '🎁', label: 'Bonus gift', value: 'Soon' },
-  { icon: '🎁', label: 'Bonus gift', value: 'Soon' },
-  { icon: '🎁', label: 'Bonus gift', value: 'Soon' },
 ] as const;
 
 export function WelcomePackModal({
@@ -36,6 +33,15 @@ export function WelcomePackModal({
   claimResult = null,
   isDevPreview = false,
 }: WelcomePackModalProps): React.JSX.Element | null {
+  React.useEffect(() => {
+    if (!open || typeof document === 'undefined') return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
   if (!open) return null;
   const resolvedCards = claimResult?.cards.revealPayload?.cards ?? [];
   const isAlreadyClaimed = claimResult?.cards.status === 'already_claimed' && claimResult?.bundle.status === 'already_claimed';
@@ -57,6 +63,7 @@ export function WelcomePackModal({
           <p className="welcome-pack-modal__eyebrow">🎉 Congratulations{isDevPreview ? ' · dev preview enabled' : ''}</p>
           <h2 id="welcome-pack-modal-title">Welcome Pack</h2>
           <p>A one-time starter reward for new Island Run players. Opening this modal does not grant rewards until you press Collect.</p>
+          <p className="welcome-pack-modal__fine-print">Welcome Pack = creature cards plus starter economy. Paid Creature Packs are cards-only.</p>
         </header>
 
         <div className="welcome-pack-modal__gift-grid" aria-label="Welcome Pack gift preview">
@@ -89,18 +96,19 @@ export function WelcomePackModal({
               <article key={card.id} className="welcome-pack-modal__card-slot" aria-label={card.title}>
                 <span>✦</span>
                 <strong>{card.title}</strong>
-                <small>Random card slot</small>
+                <small>Weighted starter slot</small>
               </article>
             ))}
           </div>
         )}
 
         <div className="welcome-pack-modal__reward-grid" aria-label="Welcome Pack included rewards">
-          <p><strong>5</strong> creature cards</p>
+          <p><strong>5</strong> weighted creature cards</p>
           <p><strong>150</strong> dice</p>
           {noActiveEventFallback ? null : <p><strong>20</strong> event tickets (only if an event is active at claim time)</p>}
           <p><strong>2000</strong> essence</p>
         </div>
+        <p className="welcome-pack-modal__fine-print">Card slots use common/rare starter odds and guarantee at least 2 new-to-you creatures when enough unowned creatures remain. Duplicate cards increase that creature’s copy count.</p>
         {isAlreadyClaimed ? (
           <p className="welcome-pack-modal__status" role="status" aria-live="polite">Already claimed. This pack can only be collected once.</p>
         ) : null}

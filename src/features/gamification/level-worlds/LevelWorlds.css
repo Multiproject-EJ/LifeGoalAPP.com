@@ -8622,3 +8622,34 @@
   .welcome-pack-modal__cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .welcome-pack-modal__gift-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+.island-run-creature-pack-offer__details {
+  margin: 0.6rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  background: rgba(12, 20, 42, 0.42);
+  padding: 0.45rem 0.6rem;
+  color: rgba(244, 247, 255, 0.9);
+  font-size: 0.78rem;
+}
+
+.island-run-creature-pack-offer__details summary {
+  cursor: pointer;
+  font-weight: 850;
+  color: #fff4bd;
+}
+
+.island-run-creature-pack-offer__details ul {
+  margin: 0.45rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.island-run-creature-pack-offer__fine-print,
+.welcome-pack-modal__fine-print {
+  margin: 0.45rem 0 0;
+  color: rgba(239, 237, 255, 0.82);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
