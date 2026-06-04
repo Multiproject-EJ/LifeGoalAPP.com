@@ -23,6 +23,7 @@ export interface CreaturePackOpeningPrototypeModalProps {
   grantId: string;
   onClose: () => void;
   onViewSanctuary?: () => void;
+  bonusCopy?: string;
 }
 
 function rarityTone(tier: CreatureDefinition['tier']): string {
@@ -146,7 +147,7 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
             </div>
             <p className="creature-pack-opening-prototype__anticipation">Tap to open · swipe or press Enter/Space</p>
             <p className="creature-pack-opening-prototype__copy-note">
-              Five canonical demo cards are already resolved; this screen only previews the reveal ceremony.
+              Five canonical demo cards are already resolved; this screen previews the reveal ceremony and collection changes.
             </p>
           </button>
         ) : showSummary ? (
@@ -190,6 +191,9 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
                 : `${newCardCount} new · ${grantedDuplicateCount} duplicate`}
               {' '}· foil, seasonal, and mythic cinematic hooks can layer onto this reveal queue later.
             </p>
+            {props.bonusCopy ? (
+              <p className="creature-pack-opening-prototype__summary-note">{props.bonusCopy}</p>
+            ) : null}
           </div>
         ) : activeCard ? (
           <button type="button" className={`creature-pack-opening-prototype__stage creature-pack-opening-prototype__stage--${activeCard.creature.tier}`} onClick={advance} aria-label="Reveal next creature card">

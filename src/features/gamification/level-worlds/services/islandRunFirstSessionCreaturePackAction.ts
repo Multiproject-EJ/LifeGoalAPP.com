@@ -7,8 +7,9 @@ import {
 import {
   buildCreaturePackCards,
   CREATURE_PACK_CARD_COUNT,
+  CREATURE_PACK_MIN_NEW_CREATURE_CARDS,
+  STANDARD_CREATURE_PACK_SLOT_WEIGHTS,
   type CreaturePackCardReveal,
-  type CreaturePackWeightedTier,
 } from './islandRunCreaturePackResolver';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import { addCreatureToRuntimeCollection } from './islandRunCreatureCollectionLedger';
@@ -43,13 +44,6 @@ export interface ClaimFirstSessionCreaturePackRewardResult {
   failureReason?: 'invalid_tutorial_state' | 'outside_first_island_onboarding';
 }
 
-const FIRST_SESSION_CREATURE_PACK_SLOT_WEIGHTS: CreaturePackWeightedTier[][] = [
-  [{ tier: 'common', weight: 1 }],
-  [{ tier: 'common', weight: 95 }, { tier: 'rare', weight: 5 }],
-  [{ tier: 'common', weight: 90 }, { tier: 'rare', weight: 10 }],
-  [{ tier: 'common', weight: 85 }, { tier: 'rare', weight: 15 }],
-  [{ tier: 'common', weight: 80 }, { tier: 'rare', weight: 20 }],
-];
 
 function normalizeNowMs(nowMs: number | undefined): number {
   return typeof nowMs === 'number' && Number.isFinite(nowMs)
@@ -118,7 +112,8 @@ export function claimFirstSessionCreaturePackReward(
       openedAtMs,
       userId: session.user.id,
       seedScope: 'first_session_creature_pack',
-      slotWeights: FIRST_SESSION_CREATURE_PACK_SLOT_WEIGHTS,
+      slotWeights: STANDARD_CREATURE_PACK_SLOT_WEIGHTS,
+      minNewCreatureCards: CREATURE_PACK_MIN_NEW_CREATURE_CARDS,
     });
     const nextCreatureCollection = applyPackCardsToCollection({
       collection: current.creatureCollection,

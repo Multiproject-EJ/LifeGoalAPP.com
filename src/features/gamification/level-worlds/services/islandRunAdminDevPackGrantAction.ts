@@ -1,5 +1,11 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
-import { CREATURE_CATALOG, getCreatureById } from './creatureCatalog';
+import { getCreatureById } from './creatureCatalog';
+import {
+  buildCreaturePackCards,
+  CREATURE_PACK_MIN_NEW_CREATURE_CARDS,
+  STANDARD_CREATURE_PACK_SLOT_WEIGHTS,
+  type CreaturePackCardReveal,
+} from './islandRunCreaturePackResolver';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import { addCreatureToRuntimeCollection } from './islandRunCreatureCollectionLedger';
 import { logIslandRunEntryDebug } from './islandRunEntryDebug';
@@ -27,6 +33,7 @@ export interface GrantAdminDevCreaturePackOptions {
   grantSource: 'dev' | 'admin';
   allowGrant: boolean;
   creatureIds?: string[];
+  creaturePackSeedScope?: string;
   eggRewards?: AdminDevFixedEggRewardGrant[];
   diceBonus?: number;
   essenceBonus?: number;
@@ -43,6 +50,7 @@ export interface GrantAdminDevCreaturePackResult {
   diceGranted: number;
   essenceGranted: number;
   failureReason?: string;
+  creatureCards?: CreaturePackCardReveal[];
 }
 
 const MAX_CREATURES_PER_DEV_GRANT = 12;
@@ -158,7 +166,22 @@ export function grantAdminDevCreaturePack(
     const { session, client, grantSource, allowGrant, triggerSource } = options;
     const current = getIslandRunStateSnapshot(session);
     const grantId = normalizeGrantId(options.grantId);
-    const creatureIds = (options.creatureIds ?? []).map((creatureId) => creatureId.trim()).filter(Boolean);
+    const grantOpenedAtMs = normalizeNowMs(options.nowMs);
+    const requestedCreatureIds = (options.creatureIds ?? []).map((creatureId) => creatureId.trim()).filter(Boolean);
+    const shouldResolveCreaturePack = requestedCreatureIds.length === 0 && typeof options.creaturePackSeedScope === 'string' && options.creaturePackSeedScope.trim().length > 0;
+    const resolvedCreatureCards = shouldResolveCreaturePack
+      ? buildCreaturePackCards({
+          current,
+          openedAtMs: grantOpenedAtMs,
+          userId: session.user.id,
+          seedScope: options.creaturePackSeedScope?.trim() || 'admin_dev_creature_pack',
+          slotWeights: STANDARD_CREATURE_PACK_SLOT_WEIGHTS,
+          minNewCreatureCards: CREATURE_PACK_MIN_NEW_CREATURE_CARDS,
+        })
+      : [];
+    const creatureIds = shouldResolveCreaturePack
+      ? resolvedCreatureCards.map((card) => card.creatureId)
+      : requestedCreatureIds;
     const eggRewards = options.eggRewards ?? [];
     const diceBonus = normalizeBonus(options.diceBonus);
     const essenceBonus = normalizeBonus(options.essenceBonus);
@@ -172,6 +195,7 @@ export function grantAdminDevCreaturePack(
         eggRewardsGranted: 0,
         diceGranted: 0,
         essenceGranted: 0,
+        creatureCards: [],
         failureReason: 'grant_requires_dev_or_admin_gate',
       };
     }
@@ -186,6 +210,7 @@ export function grantAdminDevCreaturePack(
         eggRewardsGranted: 0,
         diceGranted: 0,
         essenceGranted: 0,
+        creatureCards: [],
         failureReason: validationFailure,
       };
     }
@@ -199,10 +224,11 @@ export function grantAdminDevCreaturePack(
         eggRewardsGranted: 0,
         diceGranted: 0,
         essenceGranted: 0,
+        creatureCards: [],
       };
     }
 
-    const nowMs = normalizeNowMs(options.nowMs);
+    const nowMs = grantOpenedAtMs;
     let nextCreatureCollection = current.creatureCollection;
     for (const creatureId of creatureIds) {
       nextCreatureCollection = addCreatureToRuntimeCollection({
@@ -276,6 +302,7 @@ export function grantAdminDevCreaturePack(
       eggRewardsGranted: nextEggRewardEntries.length,
       diceGranted: diceBonus,
       essenceGranted: essenceBonus,
+      creatureCards: resolvedCreatureCards,
     };
   });
 }
@@ -285,6 +312,7 @@ export function grantDevDemoCreaturePack(options: {
   client: SupabaseClient | null;
   allowGrant: boolean;
   triggerSource?: string;
+  nowMs?: number;
 }): Promise<GrantAdminDevCreaturePackResult> {
   const current = getIslandRunStateSnapshot(options.session);
   return grantAdminDevCreaturePack({
@@ -293,9 +321,8 @@ export function grantDevDemoCreaturePack(options: {
     grantId: `dev_demo_creature_pack_v1:${current.currentIslandNumber}:${current.cycleIndex}`,
     grantSource: 'dev',
     allowGrant: options.allowGrant,
-    creatureIds: [...DEV_DEMO_CREATURE_PACK_IDS],
-    diceBonus: 10,
-    essenceBonus: 25,
+    creaturePackSeedScope: 'dev_demo_creature_pack',
+    nowMs: options.nowMs,
     triggerSource: options.triggerSource ?? 'dev_demo_creature_pack_grant',
   });
 }
@@ -305,6 +332,7 @@ export function grantDevDemoCreaturePackOpeningPrototype(options: {
   client: SupabaseClient | null;
   allowGrant: boolean;
   triggerSource?: string;
+  nowMs?: number;
 }): Promise<GrantAdminDevCreaturePackResult> {
   const current = getIslandRunStateSnapshot(options.session);
   return grantAdminDevCreaturePack({
@@ -313,7 +341,8 @@ export function grantDevDemoCreaturePackOpeningPrototype(options: {
     grantId: `dev_demo_creature_pack_opening_v1:${current.currentIslandNumber}:${current.cycleIndex}`,
     grantSource: 'dev',
     allowGrant: options.allowGrant,
-    creatureIds: [...DEV_DEMO_CREATURE_PACK_IDS],
+    creaturePackSeedScope: 'dev_demo_creature_pack_opening',
+    nowMs: options.nowMs,
     triggerSource: options.triggerSource ?? 'dev_demo_creature_pack_opening_prototype',
   });
 }
@@ -337,12 +366,7 @@ export function grantDevDemoEggRewardPack(options: {
   });
 }
 
-export const DEV_DEMO_CREATURE_PACK_IDS = [
-  'common-sproutling',
-  'common-pebble-spirit',
-  'common-mossling',
-  'common-glowtail',
-] as const satisfies readonly (typeof CREATURE_CATALOG)[number]['id'][];
+export const DEV_DEMO_CREATURE_PACK_CARD_COUNT = 5;
 
 export const DEV_DEMO_EGG_REWARD_PACK_TIERS = [
   'common',

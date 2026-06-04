@@ -4,8 +4,9 @@ import { addCreatureToRuntimeCollection } from './islandRunCreatureCollectionLed
 import {
   buildCreaturePackCards,
   CREATURE_PACK_CARD_COUNT,
+  CREATURE_PACK_MIN_NEW_CREATURE_CARDS,
+  STANDARD_CREATURE_PACK_SLOT_WEIGHTS,
   type CreaturePackCardReveal,
-  type CreaturePackWeightedTier,
 } from './islandRunCreaturePackResolver';
 import {
   readIslandRunGameStateRecord,
@@ -18,13 +19,6 @@ import { getWelcomePackEligibility } from './islandRunWelcomePackEligibility';
 export const WELCOME_PACK_CARD_COUNT = CREATURE_PACK_CARD_COUNT;
 export const WELCOME_PACK_RESOLVER_VERSION = 'welcome_pack_v1';
 
-const WELCOME_PACK_SLOT_WEIGHTS: CreaturePackWeightedTier[][] = [
-  [{ tier: 'common', weight: 1 }],
-  [{ tier: 'common', weight: 95 }, { tier: 'rare', weight: 5 }],
-  [{ tier: 'common', weight: 90 }, { tier: 'rare', weight: 10 }],
-  [{ tier: 'common', weight: 85 }, { tier: 'rare', weight: 15 }],
-  [{ tier: 'common', weight: 80 }, { tier: 'rare', weight: 20 }],
-];
 
 export type WelcomePackCardReveal = CreaturePackCardReveal;
 
@@ -92,7 +86,8 @@ export function claimWelcomePackStarterCards(
       openedAtMs: claimedAtMs,
       userId: session.user.id,
       seedScope: 'welcome_pack_starter_cards',
-      slotWeights: WELCOME_PACK_SLOT_WEIGHTS,
+      slotWeights: STANDARD_CREATURE_PACK_SLOT_WEIGHTS,
+      minNewCreatureCards: CREATURE_PACK_MIN_NEW_CREATURE_CARDS,
     });
 
     const next: IslandRunGameStateRecord = {
