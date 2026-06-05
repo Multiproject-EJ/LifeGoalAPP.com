@@ -21368,33 +21368,175 @@ html.platform-ipad .workspace-shell__menu-edge {
   gap: 0.35rem;
 }
 
-.mobile-menu-overlay__ikigai-copy {
+.quest-compass {
+  gap: 0.9rem;
+}
+
+.quest-compass__copy {
   margin: 0;
   font-size: 0.88rem;
   line-height: 1.45;
   color: #334155;
 }
 
-.mobile-menu-overlay__ikigai-diagram-wrap {
-  margin: 0;
+.quest-compass__overview {
   display: grid;
-  gap: 0.5rem;
+  grid-template-columns: minmax(96px, 0.8fr) 1.2fr;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top left, rgba(250, 204, 21, 0.22), transparent 45%),
+    linear-gradient(135deg, rgba(248, 250, 252, 0.96), rgba(239, 246, 255, 0.88));
 }
 
-.mobile-menu-overlay__ikigai-diagram {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  background: #f8fafc;
+.quest-compass__orb {
+  position: relative;
+  aspect-ratio: 1;
+  min-height: 112px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 158, 11, 0.38);
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.94) 0 26%, transparent 27%),
+    conic-gradient(
+      from -30deg,
+      rgba(248, 113, 113, 0.42),
+      rgba(250, 204, 21, 0.38),
+      rgba(52, 211, 153, 0.38),
+      rgba(96, 165, 250, 0.38),
+      rgba(167, 139, 250, 0.38),
+      rgba(251, 146, 60, 0.42),
+      rgba(248, 113, 113, 0.42)
+    );
+  box-shadow: inset 0 0 24px rgba(15, 23, 42, 0.08);
 }
 
-.mobile-menu-overlay__ikigai-caption {
+.quest-compass__orb-center,
+.quest-compass__orb-point {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
+.quest-compass__orb-center {
+  inset: 35%;
+  font-size: 1.25rem;
+}
+
+.quest-compass__orb-point {
+  width: 1.8rem;
+  height: 1.8rem;
+  font-size: 1rem;
+}
+
+.quest-compass__orb-point--1 {
+  top: 4%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.quest-compass__orb-point--2 {
+  top: 24%;
+  right: 4%;
+}
+
+.quest-compass__orb-point--3 {
+  right: 10%;
+  bottom: 12%;
+}
+
+.quest-compass__orb-point--4 {
+  bottom: 4%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.quest-compass__orb-point--5 {
+  bottom: 12%;
+  left: 10%;
+}
+
+.quest-compass__orb-point--6 {
+  top: 24%;
+  left: 4%;
+}
+
+.quest-compass__signal {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.quest-compass__signal-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b45309;
+}
+
+.quest-compass__signal strong {
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.quest-compass__signal p {
   margin: 0;
   font-size: 0.78rem;
   color: #475569;
   line-height: 1.4;
+}
+
+.quest-compass__force-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.quest-compass__force-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem;
+  padding: 0.65rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.quest-compass__force-icon {
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.quest-compass__force-card h4 {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #0f172a;
+}
+
+.quest-compass__force-card p,
+.quest-compass__force-card small {
+  display: block;
+  margin: 0.15rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: #475569;
+}
+
+.quest-compass__force-card small {
+  color: #7c3aed;
+}
+
+.quest-compass__actions {
+  margin-top: 0.1rem;
 }
 
 :is(
@@ -21402,7 +21544,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   [data-theme='midnight-purple'],
   [data-theme='flow-night'],
   [data-theme='bio-night']
-) .mobile-menu-overlay__ikigai-copy {
+) .quest-compass__copy {
   color: rgba(226, 232, 240, 0.86);
 }
 
@@ -21411,7 +21553,13 @@ html.platform-ipad .workspace-shell__menu-edge {
   [data-theme='midnight-purple'],
   [data-theme='flow-night'],
   [data-theme='bio-night']
-) .mobile-menu-overlay__ikigai-diagram {
+) .quest-compass__overview,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .quest-compass__force-card {
   border-color: rgba(148, 163, 184, 0.32);
   background: rgba(15, 23, 42, 0.68);
 }
@@ -21421,8 +21569,36 @@ html.platform-ipad .workspace-shell__menu-edge {
   [data-theme='midnight-purple'],
   [data-theme='flow-night'],
   [data-theme='bio-night']
-) .mobile-menu-overlay__ikigai-caption {
+) .quest-compass__signal strong,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .quest-compass__force-card h4 {
+  color: rgba(248, 250, 252, 0.96);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .quest-compass__signal p,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .quest-compass__force-card p {
   color: rgba(226, 232, 240, 0.78);
+}
+
+@media (max-width: 380px) {
+  .quest-compass__overview,
+  .quest-compass__force-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .mobile-menu-overlay__hold-task {
