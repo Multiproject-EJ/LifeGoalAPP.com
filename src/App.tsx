@@ -2558,13 +2558,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsStarterQuestSheetOpen(true);
   }, [closeGameBoardOverlayIfOpen]);
 
-  const openStarterQuestSheetFromMyQuest = useCallback(() => {
+  const openStarterQuestSheetFromMyQuest = useCallback((initialDomainKey?: LifeWheelCategoryKey) => {
     setIsMobileProfileDialogOpen(false);
     setIsEnergyMenuOpen(false);
     setIsFeedbackSupportSubmenuOpen(false);
     closeGameBoardOverlayIfOpen();
     setStarterQuestSheetOrigin('my-quest');
-    setStarterQuestInitialDomainKey(null);
+    setStarterQuestInitialDomainKey(initialDomainKey ?? null);
     setIsStarterQuestSheetOpen(true);
   }, [closeGameBoardOverlayIfOpen]);
 
@@ -2635,9 +2635,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsQuestCompassModalOpen(false);
   }, []);
 
-  const openQuestCompassNextQuest = useCallback(() => {
+  const openQuestCompassNextQuest = useCallback((initialDomainKey?: LifeWheelCategoryKey) => {
     setIsQuestCompassModalOpen(false);
-    openStarterQuestSheetFromMyQuest();
+    openStarterQuestSheetFromMyQuest(initialDomainKey);
   }, [openStarterQuestSheetFromMyQuest]);
 
   const openQuestCompassCheckins = useCallback(() => {
