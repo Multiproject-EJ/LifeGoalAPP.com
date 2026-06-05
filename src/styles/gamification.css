@@ -3473,3 +3473,11 @@
 .score-hub-preview__back-btn:active {
   background: rgba(167, 139, 250, 0.38);
 }
+
+.island-run-prototype--loading {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: #050816;
+}

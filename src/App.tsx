@@ -49,6 +49,7 @@ import { ZenGarden } from './features/zen-garden/ZenGarden';
 import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
 import { MobileTopChrome } from './components/MobileTopChrome';
+import { LoadingReadinessScreen, type LoadingReadinessStep } from './components/LoadingReadinessScreen';
 import { GameBoardOverlay } from './components/GameBoardOverlay';
 import { HabitGameAuthCard, HabitGameLandingShell, type HabitGameAuthTab } from './components/HabitGameLandingShell';
 import { HolidaySeasonDialog } from './components/HolidaySeasonDialog';
@@ -818,6 +819,51 @@ export default function App({ forceAuthOnMount }: AppProps) {
     loading: gamificationLoading,
     refreshProfile: refreshGamificationProfile,
   } = useGamification(supabaseSession);
+
+  const [hasCompletedInitialAppReadiness, setHasCompletedInitialAppReadiness] = useState(false);
+  const isCheckingSession = initializing && initializationStatus === 'loading' && isAuthGateOnline;
+  const isAuthenticatedStartupSyncing = Boolean(supabaseSession?.user?.id) && (workspaceProfileLoading || gamificationLoading);
+  const shouldShowAppReadinessScreen = !hasCompletedInitialAppReadiness && (isCheckingSession || isAuthenticatedStartupSyncing);
+  const appReadinessProgress = isCheckingSession
+    ? 34
+    : workspaceProfileLoading && gamificationLoading
+      ? 72
+      : workspaceProfileLoading || gamificationLoading
+        ? 86
+        : 100;
+  const appReadinessSteps = useMemo<LoadingReadinessStep[]>(() => [
+    {
+      label: 'Checking your session',
+      status: isCheckingSession ? 'active' : 'complete',
+    },
+    {
+      label: 'Loading your profile',
+      status: isCheckingSession ? 'pending' : workspaceProfileLoading ? 'active' : 'complete',
+    },
+    {
+      label: 'Syncing game progress',
+      status: isCheckingSession ? 'pending' : gamificationLoading ? 'active' : 'complete',
+    },
+    {
+      label: 'Preparing today’s dashboard',
+      status: shouldShowAppReadinessScreen ? 'pending' : 'complete',
+    },
+  ], [gamificationLoading, isCheckingSession, shouldShowAppReadinessScreen, workspaceProfileLoading]);
+
+  useEffect(() => {
+    if (hasCompletedInitialAppReadiness) return;
+    if (isCheckingSession || isAuthenticatedStartupSyncing) return;
+
+    const readyTimer = window.setTimeout(() => {
+      setHasCompletedInitialAppReadiness(true);
+    }, 300);
+
+    return () => window.clearTimeout(readyTimer);
+  }, [hasCompletedInitialAppReadiness, isAuthenticatedStartupSyncing, isCheckingSession]);
+
+  useEffect(() => {
+    setHasCompletedInitialAppReadiness(false);
+  }, [supabaseSession?.user?.id]);
 
   const goldBalance = gamificationProfile?.total_points ?? 0;
   const goldBreakdown = splitGoldBalance(goldBalance);
@@ -3300,6 +3346,19 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   if (shouldRenderPeaceBetweenLanding) {
     return <PeaceBetweenLanding />;
+  }
+
+  if (shouldShowAppReadinessScreen) {
+    return (
+      <LoadingReadinessScreen
+        title="Preparing your Game of Life"
+        subtitle="Checking your session and syncing the progress you need before the app opens."
+        progress={appReadinessProgress}
+        steps={appReadinessSteps}
+        detail="Secondary features keep loading in the background after the main app is ready."
+        variant="app"
+      />
+    );
   }
 
   const habitGameAuthCard = (
