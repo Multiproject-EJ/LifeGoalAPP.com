@@ -4,7 +4,20 @@ import type { Database, Json } from '../../lib/database.types';
 import { fetchCheckinsForUser } from '../../services/checkins';
 import { fetchGoals } from '../../services/goals';
 import { listHabitsV2, type HabitV2Row } from '../../services/habitsV2';
-import { LIFE_WHEEL_CATEGORIES, getLifeWheelCategoryLabel, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
+import {
+  LIFE_WHEEL_CATEGORIES,
+  getLifeWheelCategoryLabel,
+  type LifeWheelCategoryKey,
+} from '../checkins/LifeWheelCheckins';
+import {
+  QuestCompanionCard,
+  QuestGlassCard,
+  QuestHeroCard,
+  QuestLifeAreaChip,
+  QuestMetricRing,
+  QuestPrimaryAction,
+  QuestSecondaryAction,
+} from '../quest-journey/QuestJourneyVisualSystem';
 import { normalizeGoalStatus } from './goalStatus';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
@@ -21,11 +34,18 @@ function formatDateLabel(dateIso: string | null | undefined): string | null {
   if (!dateIso) return null;
   const parsed = new Date(dateIso);
   if (Number.isNaN(parsed.getTime())) return null;
-  return parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  return parsed.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
-function parseLatestScores(scores: Json | null): Record<LifeWheelCategoryKey, number> | null {
-  if (!scores || typeof scores !== 'object' || Array.isArray(scores)) return null;
+function parseLatestScores(
+  scores: Json | null,
+): Record<LifeWheelCategoryKey, number> | null {
+  if (!scores || typeof scores !== 'object' || Array.isArray(scores))
+    return null;
   const record = scores as Record<string, unknown>;
   const parsed = {} as Record<LifeWheelCategoryKey, number>;
   for (const category of LIFE_WHEEL_CATEGORIES) {
@@ -41,6 +61,82 @@ function parseLatestScores(scores: Json | null): Record<LifeWheelCategoryKey, nu
 function formatCategoryLabel(key: LifeWheelCategoryKey | null): string {
   if (!key) return 'No focus area yet';
   return getLifeWheelCategoryLabel(key);
+}
+
+function formatStatusLabel(status: string | null): string {
+  return normalizeGoalStatus(status).replace(/_/g, ' ');
+}
+
+function formatScoreLabel(
+  category: { key: LifeWheelCategoryKey; score: number } | null,
+): string {
+  if (!category) return 'No signal yet';
+  return `${formatCategoryLabel(category.key)} · ${category.score}/10`;
+}
+
+function clampScorePercent(score: number | null | undefined): number {
+  if (typeof score !== 'number' || Number.isNaN(score)) return 0;
+  return Math.max(0, Math.min(100, score * 10));
+}
+
+function getHeroSummary(
+  focusCategory: LifeWheelCategoryKey | null,
+  activeGoal: GoalRow | null,
+  latestScores: Record<LifeWheelCategoryKey, number> | null,
+): string {
+  if (!latestScores) {
+    return 'Begin with a calm Life Radar check-in so your next quest step is guided by today’s real signal.';
+  }
+  if (!activeGoal) {
+    return `Your current signal points toward ${formatCategoryLabel(focusCategory)}. Choose one goal to turn this area into a clear chapter.`;
+  }
+  return `Your current signal points toward ${formatCategoryLabel(focusCategory)}. Keep momentum by taking one small step in “${activeGoal.title}.”`;
+}
+
+function getCompanionCopy({
+  activeGoal,
+  latestScores,
+  lowestCategory,
+  highestCategory,
+  supportingHabitCount,
+}: {
+  activeGoal: GoalRow | null;
+  latestScores: Record<LifeWheelCategoryKey, number> | null;
+  lowestCategory: { key: LifeWheelCategoryKey; score: number } | null;
+  highestCategory: { key: LifeWheelCategoryKey; score: number } | null;
+  supportingHabitCount: number;
+}): { title: string; insight: string; reason: string } {
+  if (!latestScores) {
+    return {
+      title: 'Your map is ready for a fresh signal.',
+      insight:
+        'A quick check-in will make the rest of this hub feel less like planning and more like a guided next step.',
+      reason:
+        'Based on your available My Quest data: no latest Life Wheel check-in is loaded yet.',
+    };
+  }
+
+  if (!activeGoal) {
+    return {
+      title: 'Turn the signal into one chapter.',
+      insight: `${formatCategoryLabel(lowestCategory?.key ?? null)} is asking for care. Create or choose one goal so this area has a clear path forward.`,
+      reason: `Strongest area: ${formatScoreLabel(highestCategory)}. Area needing care: ${formatScoreLabel(lowestCategory)}.`,
+    };
+  }
+
+  if (supportingHabitCount > 0) {
+    return {
+      title: 'You already have a path to protect.',
+      insight: `Keep “${activeGoal.title}” emotionally small today. Let the supporting habit${supportingHabitCount === 1 ? '' : 's'} carry the next step.`,
+      reason: `${supportingHabitCount} supporting habit${supportingHabitCount === 1 ? '' : 's'} found from your existing goal and focus data.`,
+    };
+  }
+
+  return {
+    title: 'Add one ritual beneath the chapter.',
+    insight: `“${activeGoal.title}” is your active quest line. A tiny supporting habit can make it feel easier to revisit tomorrow.`,
+    reason: `Current focus: ${formatCategoryLabel(lowestCategory?.key ?? null)}. No supporting habits are linked or matched yet.`,
+  };
 }
 
 export function MyQuestHub({
@@ -72,9 +168,12 @@ export function MyQuestHub({
       setGoals(goalsResult.data ?? []);
       setHabits(habitsResult.data ?? []);
 
-      const firstError = checkinsResult.error ?? goalsResult.error ?? habitsResult.error;
+      const firstError =
+        checkinsResult.error ?? goalsResult.error ?? habitsResult.error;
       if (firstError) {
-        setLoadError(firstError.message || 'Some My Quest data could not be loaded.');
+        setLoadError(
+          firstError.message || 'Some My Quest data could not be loaded.',
+        );
       }
       setLoading(false);
     };
@@ -86,7 +185,10 @@ export function MyQuestHub({
   }, [session.user.id]);
 
   const latestCheckin = useMemo(() => checkins[0] ?? null, [checkins]);
-  const latestScores = useMemo(() => parseLatestScores(latestCheckin?.scores ?? null), [latestCheckin]);
+  const latestScores = useMemo(
+    () => parseLatestScores(latestCheckin?.scores ?? null),
+    [latestCheckin],
+  );
 
   const lowestCategory = useMemo(() => {
     if (!latestScores) return null;
@@ -113,7 +215,10 @@ export function MyQuestHub({
   }, [latestScores]);
 
   const activeGoals = useMemo(
-    () => goals.filter((goal) => normalizeGoalStatus(goal.status_tag) !== 'achieved'),
+    () =>
+      goals.filter(
+        (goal) => normalizeGoalStatus(goal.status_tag) !== 'achieved',
+      ),
     [goals],
   );
 
@@ -140,14 +245,21 @@ export function MyQuestHub({
       if (selected) return selected;
     }
 
-    const recentWithCategory = activeGoals.find((goal) => Boolean(goal.life_wheel_category));
-    return (recentWithCategory?.life_wheel_category as LifeWheelCategoryKey | null) ?? null;
+    const recentWithCategory = activeGoals.find((goal) =>
+      Boolean(goal.life_wheel_category),
+    );
+    return (
+      (recentWithCategory?.life_wheel_category as LifeWheelCategoryKey | null) ??
+      null
+    );
   }, [activeGoals, lowestCategory]);
 
   const activeGoal = useMemo(() => {
     if (activeGoals.length === 0) return null;
     if (!suggestedFocusCategory) return activeGoals[0] ?? null;
-    const inFocus = activeGoals.find((goal) => goal.life_wheel_category === suggestedFocusCategory);
+    const inFocus = activeGoals.find(
+      (goal) => goal.life_wheel_category === suggestedFocusCategory,
+    );
     return inFocus ?? activeGoals[0] ?? null;
   }, [activeGoals, suggestedFocusCategory]);
 
@@ -158,7 +270,9 @@ export function MyQuestHub({
     }
 
     if (suggestedFocusCategory) {
-      const byDomain = habits.filter((habit) => habit.domain_key === suggestedFocusCategory);
+      const byDomain = habits.filter(
+        (habit) => habit.domain_key === suggestedFocusCategory,
+      );
       if (byDomain.length > 0) return byDomain.slice(0, 3);
     }
 
@@ -167,94 +281,295 @@ export function MyQuestHub({
 
   const latestCheckinDateLabel = formatDateLabel(latestCheckin?.date ?? null);
 
+  const primaryAction = useMemo(() => {
+    if (!latestScores) {
+      return {
+        label: 'Run your Life Radar check-in',
+        icon: '✦',
+        onClick: onOpenCheckins,
+        summary: 'Start with the signal.',
+      };
+    }
+
+    if (!activeGoal) {
+      return {
+        label: 'Choose your active goal',
+        icon: '◇',
+        onClick: onOpenGoals,
+        summary: 'Turn the focus area into a chapter.',
+      };
+    }
+
+    return {
+      label:
+        supportingHabits.length > 0
+          ? 'Start today’s quest step'
+          : 'Build a supporting habit',
+      icon: supportingHabits.length > 0 ? '✧' : '⌁',
+      onClick: supportingHabits.length > 0 ? onOpenGoals : onOpenStarterQuest,
+      summary:
+        supportingHabits.length > 0
+          ? 'Continue from your active quest line.'
+          : 'Add the ritual that carries this chapter.',
+    };
+  }, [
+    activeGoal,
+    latestScores,
+    onOpenCheckins,
+    onOpenGoals,
+    onOpenStarterQuest,
+    supportingHabits.length,
+  ]);
+
+  const companionCopy = useMemo(
+    () =>
+      getCompanionCopy({
+        activeGoal,
+        latestScores,
+        lowestCategory,
+        highestCategory,
+        supportingHabitCount: supportingHabits.length,
+      }),
+    [
+      activeGoal,
+      highestCategory,
+      latestScores,
+      lowestCategory,
+      supportingHabits.length,
+    ],
+  );
+
+  const focusLabel = formatCategoryLabel(suggestedFocusCategory);
+  const activeGoalCategory =
+    (activeGoal?.life_wheel_category as LifeWheelCategoryKey | null) ??
+    suggestedFocusCategory;
+  const activeGoalTargetLabel = formatDateLabel(
+    activeGoal?.target_date ?? null,
+  );
+  const radarPercent = clampScorePercent(
+    lowestCategory?.score ?? highestCategory?.score ?? null,
+  );
+
   return (
-    <section className="my-quest-hub" aria-label="My Quest hub">
-      <header className="my-quest-hub__header">
-        <h3>My Quest</h3>
-        <p>Choose your direction, then turn it into today&apos;s action.</p>
-      </header>
+    <section
+      className="my-quest-hub my-quest-hub--premium"
+      aria-label="My Quest Journey hub"
+    >
+      {loading ? (
+        <p className="my-quest-hub__status">Loading your quest snapshot…</p>
+      ) : null}
+      {loadError ? (
+        <p className="my-quest-hub__status my-quest-hub__status--warning">
+          {loadError}
+        </p>
+      ) : null}
 
-      {loading ? <p className="my-quest-hub__status">Loading your quest snapshot…</p> : null}
-      {loadError ? <p className="my-quest-hub__status my-quest-hub__status--warning">{loadError}</p> : null}
-
-      <article className="my-quest-hub__card">
-        <h4>Life Wheel Snapshot</h4>
-        {latestScores ? (
+      <QuestHeroCard
+        eyebrow="Quest Journey"
+        title="My Quest Journey"
+        summary={getHeroSummary(
+          suggestedFocusCategory,
+          activeGoal,
+          latestScores,
+        )}
+        pillar="direction"
+        meta={
           <>
-            <p>{latestCheckinDateLabel ? `Latest check-in: ${latestCheckinDateLabel}` : 'Latest check-in available.'}</p>
-            <p>
-              Lowest: <strong>{formatCategoryLabel(lowestCategory?.key ?? null)}</strong>
-              {lowestCategory ? ` (${lowestCategory.score}/10)` : ''} · Highest:{' '}
-              <strong>{formatCategoryLabel(highestCategory?.key ?? null)}</strong>
-              {highestCategory ? ` (${highestCategory.score}/10)` : ''}
-            </p>
+            <QuestLifeAreaChip
+              label={focusLabel}
+              icon="✦"
+              active={Boolean(suggestedFocusCategory)}
+            />
+            {activeGoal ? (
+              <QuestLifeAreaChip label={activeGoal.title} icon="◇" strong />
+            ) : null}
           </>
-        ) : (
-          <p>No Life Wheel check-in yet.</p>
-        )}
-        <button type="button" className="my-quest-hub__button my-quest-hub__button--secondary" onClick={onOpenCheckins}>
-          Run check-in
-        </button>
-      </article>
+        }
+        actions={
+          <QuestPrimaryAction
+            icon={primaryAction.icon}
+            onClick={primaryAction.onClick}
+            variant="gold"
+          >
+            {primaryAction.label}
+          </QuestPrimaryAction>
+        }
+        visual={
+          <div className="my-quest-hub__hero-visual" aria-hidden="true">
+            <span className="my-quest-hub__orb my-quest-hub__orb--large">
+              ✦
+            </span>
+            <span className="my-quest-hub__orb my-quest-hub__orb--small">
+              ◇
+            </span>
+            <span className="my-quest-hub__hero-focus">{focusLabel}</span>
+          </div>
+        }
+      >
+        <span className="my-quest-hub__next-note">{primaryAction.summary}</span>
+      </QuestHeroCard>
 
-      <article className="my-quest-hub__card">
-        <h4>Current Focus</h4>
-        {suggestedFocusCategory ? <p>{formatCategoryLabel(suggestedFocusCategory)}</p> : <p>No focus area yet.</p>}
-        <div className="my-quest-hub__row-actions">
-          <button type="button" className="my-quest-hub__button my-quest-hub__button--secondary" onClick={onOpenCheckins}>
-            Run check-in
-          </button>
-          <button type="button" className="my-quest-hub__button my-quest-hub__button--secondary" onClick={onOpenGoals}>
-            Open goals
-          </button>
-        </div>
-      </article>
-
-      <article className="my-quest-hub__card">
-        <h4>Active Goal</h4>
-        {activeGoal ? (
-          <>
-            <p className="my-quest-hub__goal-title">{activeGoal.title}</p>
+      <div className="my-quest-hub__primary-grid">
+        <QuestGlassCard
+          title="Life Radar"
+          strong
+          className="my-quest-hub__journey-card my-quest-hub__radar-card"
+          footer={
+            <QuestSecondaryAction onClick={onOpenCheckins} variant="glass">
+              Run check-in
+            </QuestSecondaryAction>
+          }
+        >
+          {latestScores ? (
+            <>
+              <div className="my-quest-hub__radar-summary">
+                <QuestMetricRing
+                  value={radarPercent}
+                  label="Care signal"
+                  caption={
+                    lowestCategory ? `${lowestCategory.score}/10` : 'Latest'
+                  }
+                  variant="gold"
+                />
+                <div className="my-quest-hub__signal-stack">
+                  <div className="my-quest-hub__signal-row my-quest-hub__signal-row--strong">
+                    <span>Strongest area</span>
+                    <strong>{formatScoreLabel(highestCategory)}</strong>
+                  </div>
+                  <div className="my-quest-hub__signal-row my-quest-hub__signal-row--care">
+                    <span>Needs care</span>
+                    <strong>{formatScoreLabel(lowestCategory)}</strong>
+                  </div>
+                </div>
+              </div>
+              <p className="my-quest-hub__muted">
+                {latestCheckinDateLabel
+                  ? `Latest check-in: ${latestCheckinDateLabel}`
+                  : 'Latest check-in available.'}
+              </p>
+            </>
+          ) : (
             <p>
-              Status: {normalizeGoalStatus(activeGoal.status_tag).replace('_', ' ')}
-              {activeGoal.target_date ? ` · Target: ${formatDateLabel(activeGoal.target_date) ?? activeGoal.target_date}` : ''}
+              No Life Wheel check-in yet. Run a check-in to reveal your
+              strongest area and the area asking for care.
             </p>
-          </>
-        ) : (
-          <p>No goal in this area yet.</p>
-        )}
-        <button type="button" className="my-quest-hub__button my-quest-hub__button--secondary" onClick={onOpenGoals}>
-          Open goals
-        </button>
-      </article>
+          )}
+        </QuestGlassCard>
 
-      <article className="my-quest-hub__card">
-        <h4>Supporting Habits</h4>
-        {supportingHabits.length > 0 ? (
-          <ul className="my-quest-hub__habit-list">
-            {supportingHabits.map((habit) => (
-              <li key={habit.id}>
-                {habit.emoji ? `${habit.emoji} ` : ''}
-                {habit.title}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No supporting habits yet.</p>
-        )}
-        <button type="button" className="my-quest-hub__button my-quest-hub__button--secondary" onClick={onOpenStarterQuest}>
-          Starter Quest
-        </button>
-      </article>
+        <QuestGlassCard
+          title="Active Quest Line"
+          strong
+          className="my-quest-hub__journey-card my-quest-hub__active-card"
+          footer={
+            <QuestSecondaryAction onClick={onOpenGoals} variant="glass">
+              Open Goals
+            </QuestSecondaryAction>
+          }
+        >
+          {activeGoal ? (
+            <>
+              <p className="my-quest-hub__chapter-eyebrow">Current chapter</p>
+              <h4 className="my-quest-hub__chapter-title">
+                {activeGoal.title}
+              </h4>
+              <p className="my-quest-hub__muted">
+                {formatStatusLabel(activeGoal.status_tag)}
+                {activeGoalTargetLabel
+                  ? ` · Target: ${activeGoalTargetLabel}`
+                  : ''}
+              </p>
+              <div className="my-quest-hub__chip-row">
+                <QuestLifeAreaChip
+                  label={formatCategoryLabel(activeGoalCategory)}
+                  icon="✦"
+                  active
+                />
+              </div>
+              {supportingHabits.length > 0 ? (
+                <ul
+                  className="my-quest-hub__habit-list my-quest-hub__habit-list--premium"
+                  aria-label="Supporting habits"
+                >
+                  {supportingHabits.map((habit) => (
+                    <li key={habit.id}>
+                      <span aria-hidden="true">{habit.emoji || '✧'}</span>
+                      <span>{habit.title}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="my-quest-hub__muted">No supporting habits yet.</p>
+              )}
+            </>
+          ) : (
+            <>
+              <p>No active goal in this focus area yet.</p>
+              <p className="my-quest-hub__muted">
+                Open Goals to choose the chapter that matches your current
+                signal.
+              </p>
+            </>
+          )}
+        </QuestGlassCard>
+      </div>
 
-      <article className="my-quest-hub__card">
-        <h4>Next Actions</h4>
-        <div className="my-quest-hub__grid-actions">
-          <button type="button" className="my-quest-hub__button" onClick={onOpenStarterQuest}>Starter Quest</button>
-          <button type="button" className="my-quest-hub__button" onClick={onOpenCheckins}>Check-in</button>
-          <button type="button" className="my-quest-hub__button" onClick={onOpenGoals}>Goals</button>
-        </div>
-      </article>
+      <QuestCompanionCard
+        source="Quest companion"
+        title={companionCopy.title}
+        insight={companionCopy.insight}
+        reason={companionCopy.reason}
+      />
+
+      <section
+        className="my-quest-hub__tools"
+        aria-label="Secondary quest actions"
+      >
+        <button
+          type="button"
+          className="my-quest-hub__tool-card"
+          onClick={onOpenStarterQuest}
+        >
+          <span className="my-quest-hub__tool-icon" aria-hidden="true">
+            ⌁
+          </span>
+          <span className="my-quest-hub__tool-copy">
+            <span className="my-quest-hub__tool-title">Starter Quest</span>
+            <span className="my-quest-hub__tool-summary">
+              Shape the first ritual.
+            </span>
+          </span>
+        </button>
+        <button
+          type="button"
+          className="my-quest-hub__tool-card"
+          onClick={onOpenCheckins}
+        >
+          <span className="my-quest-hub__tool-icon" aria-hidden="true">
+            ✦
+          </span>
+          <span className="my-quest-hub__tool-copy">
+            <span className="my-quest-hub__tool-title">Check-in</span>
+            <span className="my-quest-hub__tool-summary">
+              Refresh your Life Radar.
+            </span>
+          </span>
+        </button>
+        <button
+          type="button"
+          className="my-quest-hub__tool-card"
+          onClick={onOpenGoals}
+        >
+          <span className="my-quest-hub__tool-icon" aria-hidden="true">
+            ◇
+          </span>
+          <span className="my-quest-hub__tool-copy">
+            <span className="my-quest-hub__tool-title">Goals</span>
+            <span className="my-quest-hub__tool-summary">
+              Open your quest lines.
+            </span>
+          </span>
+        </button>
+      </section>
     </section>
   );
 }
