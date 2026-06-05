@@ -297,11 +297,11 @@ function isInteractiveHabitChild(target: EventTarget | null): boolean {
   );
 }
 
-const DIRECT_OPEN_TIME_BOUND_OFFERS: ReadonlySet<TimeBoundOfferId | EggHatchOfferId> = new Set([
-  'egg_hatch',
-  'egg_hatch_0',
-  'egg_hatch_1',
-  'egg_hatch_2',
+function isEggHatchOfferId(offerId: TimeBoundOfferId | EggHatchOfferId): offerId is 'egg_hatch' | EggHatchOfferId {
+  return offerId === 'egg_hatch' || offerId.startsWith('egg_hatch_');
+}
+
+const DIRECT_OPEN_TIME_BOUND_OFFERS: ReadonlySet<TimeBoundOfferId> = new Set([
   'vision_star',
   'island_run',
   'daily_treats',
@@ -2988,9 +2988,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     return () => window.clearTimeout(timeoutId);
   }, [activeIslandEggReadyAtMs, eggReadinessNowMs]);
 
-  const readyEggSlotsOnActiveIsland = useMemo(() => activeIslandEggSlots.filter(({ entry }) => (
-    entry.status === 'ready' || (entry.status === 'incubating' && eggReadinessNowMs >= entry.hatchAtMs)
-  )), [activeIslandEggSlots, eggReadinessNowMs]);
+  const visibleEggSlotsOnActiveIsland = activeIslandEggSlots;
 
   const eggHatchViewedStorageKeyForSlot = useCallback(
     (slotKey: string) => `lifegoal:egg_hatch_viewed:${session.user.id}:${getTodayUtcDateKey()}:${activeIsland}:${slotKey}`,
@@ -3108,24 +3106,29 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         sortPriority: 3,
         slotRole: 'core',
       },
-      ...readyEggSlotsOnActiveIsland.map(({ key, slotIndex }, readyIndex): TimeBoundOfferItem => {
+      ...visibleEggSlotsOnActiveIsland.map(({ key, slotIndex, entry }, eggIndex): TimeBoundOfferItem => {
         const offerId: TimeBoundOfferId | EggHatchOfferId = slotIndex === 0 ? 'egg_hatch' : `egg_hatch_${slotIndex}`;
+        const isReadyToHatch = entry.status === 'ready' || (entry.status === 'incubating' && eggReadinessNowMs >= entry.hatchAtMs);
         const hasSeenEggHatch = typeof window !== 'undefined'
           ? localStorage.getItem(eggHatchViewedStorageKeyForSlot(key)) === '1'
             || (slotIndex === 0 && localStorage.getItem(legacyEggHatchViewedStorageKey) === '1')
           : false;
+        const eggLabelPrefix = visibleEggSlotsOnActiveIsland.length > 1 ? `Egg ${eggIndex + 1}` : 'Egg';
 
         return {
           id: offerId,
-          label: readyEggSlotsOnActiveIsland.length > 1 ? `Egg ${readyIndex + 1} Ready` : 'Egg Ready',
+          label: isReadyToHatch ? `${eggLabelPrefix} Ready` : `${eggLabelPrefix} Hatching`,
           icon: '🥚',
-          expiresAtMs: null,
-          // Once the player opens an egg hatch circle today, remove that red badge and lower
-          // that egg's priority so other unchecked circles take precedence.
+          expiresAtMs: isReadyToHatch ? null : entry.hatchAtMs,
+          badgeLabelOverride: isReadyToHatch ? 'Ready' : undefined,
+          // Incubating eggs stay visible with a countdown, but only ready eggs get
+          // the notification dot and per-slot viewed suppression.
           isCollected: false,
           isVisible: true,
-          isActionable: !hasSeenEggHatch,
-          sortPriority: hasSeenEggHatch ? 5 + readyIndex / 10 : 2.5 + readyIndex / 100,
+          isActionable: isReadyToHatch && !hasSeenEggHatch,
+          sortPriority: isReadyToHatch
+            ? (hasSeenEggHatch ? 5 + eggIndex / 10 : 2.5 + eggIndex / 100)
+            : 2.75 + eggIndex / 100,
           slotRole: 'core',
         };
       }),
@@ -3172,7 +3175,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     islandRunOfferLabel,
     isIslandRunOfferVisible,
     isIslandRunReadyToStart,
-    readyEggSlotsOnActiveIsland,
+    visibleEggSlotsOnActiveIsland,
     isSpecialVisionStarDay,
     todaysOfferSpinBadgeActive,
     dailySpinCount,
@@ -3323,12 +3326,17 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       return;
     }
 
-    if (offerId === 'egg_hatch' || offerId.startsWith('egg_hatch_')) {
+    if (isEggHatchOfferId(offerId)) {
       const slotIndex = offerId === 'egg_hatch' ? 0 : Number.parseInt(offerId.replace('egg_hatch_', ''), 10);
-      const readySlot = readyEggSlotsOnActiveIsland.find((slot) => slot.slotIndex === slotIndex) ?? readyEggSlotsOnActiveIsland[0];
-      // Mark as viewed for today on this island so the red badge is cleared.
-      if (typeof window !== 'undefined' && readySlot) {
-        localStorage.setItem(eggHatchViewedStorageKeyForSlot(readySlot.key), '1');
+      const selectedSlot = visibleEggSlotsOnActiveIsland.find((slot) => slot.slotIndex === slotIndex) ?? visibleEggSlotsOnActiveIsland[0];
+      const isReadyToHatch = selectedSlot
+        ? selectedSlot.entry.status === 'ready'
+          || (selectedSlot.entry.status === 'incubating' && eggReadinessNowMs >= selectedSlot.entry.hatchAtMs)
+        : false;
+      // Mark ready eggs as viewed for today on this island so the red badge is cleared.
+      // Incubating eggs should not be marked viewed because they still need a ready alert later.
+      if (typeof window !== 'undefined' && selectedSlot && isReadyToHatch) {
+        localStorage.setItem(eggHatchViewedStorageKeyForSlot(selectedSlot.key), '1');
       }
       if (onOpenIslandRunStop) {
         onOpenIslandRunStop('hatchery');
@@ -3356,11 +3364,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       setFeedCreaturesClaimError(null);
       setIsFeedCreaturesModalOpen(true);
     }
-  }, [eggHatchViewedStorageKeyForSlot, handleVisionRewardClick, isFeedCreaturesPreviewOnly, isVisionStarPreviewOnly, isWaterZenTreePreviewOnly, onOpenDailyTreat, onOpenFeaturePreview, onOpenHolidayCalendar, onOpenIslandRunStop, readyEggSlotsOnActiveIsland, startTodaysOfferCheckout]);
+  }, [eggHatchViewedStorageKeyForSlot, eggReadinessNowMs, handleVisionRewardClick, isFeedCreaturesPreviewOnly, isVisionStarPreviewOnly, isWaterZenTreePreviewOnly, onOpenDailyTreat, onOpenFeaturePreview, onOpenHolidayCalendar, onOpenIslandRunStop, startTodaysOfferCheckout, visibleEggSlotsOnActiveIsland]);
 
   const handleTimeBoundOfferClick = useCallback((offerId: TimeBoundOfferId | EggHatchOfferId) => {
     // UX: some offers should open directly (no intermediate teaser modal)
-    if (DIRECT_OPEN_TIME_BOUND_OFFERS.has(offerId)) {
+    if (isEggHatchOfferId(offerId) || DIRECT_OPEN_TIME_BOUND_OFFERS.has(offerId)) {
       openOfferContent(offerId);
       return;
     }
