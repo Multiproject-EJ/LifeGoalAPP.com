@@ -25,7 +25,7 @@ Current behavior:
      - Run weekly check-in
 5. Buttons hand off to existing app surfaces rather than saving Ikigai-specific data.
 
-Important current limitation: the **Run weekly check-in** handler calls `handleMobileNavSelect('planning')`, while the Life Wheel check-in workspace is rendered under `activeWorkspaceNav === 'rituals'`. On mobile, selecting `planning` opens Today home. This is either intentional legacy routing or a likely wiring bug to verify before reuse.
+Important current limitation: the **Run weekly check-in** handler calls `handleMobileNavSelect('planning')`, while the Life Wheel check-in workspace is rendered under `activeWorkspaceNav === 'rituals'`. On mobile, selecting `planning` opens Today home. This routing mismatch requires verification before reuse because it may be intentional legacy behavior or a wiring bug.
 
 ### Existing Ikigai-related files, routes, components, services, data models, copy, tests, and flags
 
@@ -281,7 +281,7 @@ Mitigation: first PR should be read-only synthesis plus existing write paths for
 - Existing users may recognize `My Ikigai`; abruptly renaming could feel like a missing feature.
 - Existing check-in/goals/habits data should remain untouched and interpreted through a compatibility layer.
 
-Mitigation: use transitional copy such as “Your old purpose map is becoming a living Quest Compass.” only if product wants continuity.
+Mitigation: use transitional copy such as “Your old My Ikigai purpose map is becoming a living Quest Compass.” only if product wants continuity.
 
 ### Routing risks
 
@@ -317,7 +317,7 @@ Mitigation: create a pure mapping utility with documented defaults and tests; sh
 
 ### 120 Island Run constraint
 
-Do not edit Island Run gameplay, state, services, migrations, economy, or UI logic for this transformation. Existing game entry points can remain untouched.
+Do not edit 120 Island Run gameplay, state, services, migrations, economy, or UI logic for this transformation. Existing game entry points can remain untouched.
 
 ## Slice plan
 
@@ -377,7 +377,7 @@ Do not edit Island Run gameplay, state, services, migrations, economy, or UI log
 
 - Remove old Ikigai handler names, class names, and static asset after references are gone.
 - Update docs/design references if implementation changes the final naming.
-- Confirm no Island Run files were modified.
+- Confirm no 120 Island Run files were modified.
 
 ### Slice 10 — Optional persistence after product validation
 
@@ -475,5 +475,5 @@ Do not include in first PR:
 - Embedded check-in questionnaire inside the Compass modal.
 - AI-generated scoring.
 - Journal-content analysis.
-- Island Run changes.
+- 120 Island Run changes.
 - Full desktop route redesign.
