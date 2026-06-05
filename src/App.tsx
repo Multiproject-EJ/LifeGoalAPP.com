@@ -20,6 +20,7 @@ import { ProgressDashboard } from './features/dashboard';
 import { VisionBoard } from './features/vision-board';
 import type { LifeWheelCategoryKey } from './features/checkins/LifeWheelCheckins';
 import { LifeWheelCheckins } from './features/checkins';
+import { QuestCompassModal } from './features/quest-compass';
 import { NotificationPreferences } from './features/notifications';
 import { MyAccountPanel } from './features/account/MyAccountPanel';
 import { PlayerAvatarPanel } from './features/avatar/PlayerAvatarPanel';
@@ -681,7 +682,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [starterQuestSheetOrigin, setStarterQuestSheetOrigin] = useState<'my-quest' | 'today' | null>(null);
   const [starterQuestInitialDomainKey, setStarterQuestInitialDomainKey] = useState<LifeWheelCategoryKey | null>(null);
   const [checkinsEntryOrigin, setCheckinsEntryOrigin] = useState<'my-quest' | 'direct'>('direct');
-  const [isMyIkigaiModalOpen, setIsMyIkigaiModalOpen] = useState(false);
+  const [isQuestCompassModalOpen, setIsQuestCompassModalOpen] = useState(false);
   const [isFeedbackSupportSubmenuOpen, setIsFeedbackSupportSubmenuOpen] = useState(false);
   const [activeProfileStrengthHold, setActiveProfileStrengthHold] = useState<{
     area: AreaKey;
@@ -2534,7 +2535,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     handleMobileNavSelect('identity');
   }, [archetypeHand, handleMobileNavSelect]);
 
-  const openMyIkigaiFromMobileMenu = useCallback(() => {
+  const openQuestCompassFromMobileMenu = useCallback(() => {
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
@@ -2542,7 +2543,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsFeedbackSupportSubmenuOpen(false);
     setIsStarterQuestSheetOpen(false);
     closeGameBoardOverlayIfOpen();
-    setIsMyIkigaiModalOpen(true);
+    setIsQuestCompassModalOpen(true);
   }, [closeGameBoardOverlayIfOpen]);
 
   const openStarterQuestSheetFromToday = useCallback((initialDomainKey?: LifeWheelCategoryKey) => {
@@ -2615,15 +2616,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   }, []);
 
-  const openIkigaiCoachPrompt = useCallback(() => {
+  const openQuestCompassCoachPrompt = useCallback(() => {
     setAiCoachStarterQuestion(
-      'Help me craft my Ikigai by finding the overlap between what I love, what I am good at, what the world needs, and what can sustain my lifestyle.',
+      'Help me read my Quest Compass across Fire, Strength, Connection, Wealth, Growth, and Direction. Which life force needs care now, and what small real-life quest should I take next?',
     );
     setShowAiCoachModal(true);
-    setIsMyIkigaiModalOpen(false);
+    setIsQuestCompassModalOpen(false);
   }, []);
 
-  const openIkigaiJournalPrompt = useCallback(() => {
+  const openQuestCompassJournal = useCallback(() => {
     setJournalLaunchRequest({
       type: 'goal',
       openComposer: true,
@@ -2631,31 +2632,36 @@ export default function App({ forceAuthOnMount }: AppProps) {
     });
     setActiveWorkspaceNav('journal');
     setShowMobileHome(false);
-    setIsMyIkigaiModalOpen(false);
+    setIsQuestCompassModalOpen(false);
   }, []);
 
-  const openIkigaiHabits = useCallback(() => {
-    handleMobileNavSelect('habits');
-    setIsMyIkigaiModalOpen(false);
+  const openQuestCompassNextQuest = useCallback(() => {
+    setIsQuestCompassModalOpen(false);
+    openStarterQuestSheetFromMyQuest();
+  }, [openStarterQuestSheetFromMyQuest]);
+
+  const openQuestCompassCheckins = useCallback(() => {
+    setIsQuestCompassModalOpen(false);
+    handleMobileNavSelect('rituals', { checkinsOrigin: 'my-quest' });
   }, [handleMobileNavSelect]);
 
-  const openIkigaiCheckins = useCallback(() => {
-    handleMobileNavSelect('planning');
-    setIsMyIkigaiModalOpen(false);
+  const openQuestCompassGoals = useCallback(() => {
+    setIsQuestCompassModalOpen(false);
+    handleMobileNavSelect('support');
   }, [handleMobileNavSelect]);
 
   const myQuestSubmenuActions: LauncherSubmenuAction[] = useMemo(
     () => [
-      { id: 'ikigai', label: 'My Ikigai', icon: '✨', onSelect: openMyIkigaiFromMobileMenu },
+      { id: 'quest-compass', label: 'Quest Compass', icon: '🧭', onSelect: openQuestCompassFromMobileMenu },
       { id: 'starter-quest', label: 'Starter Quest', icon: '🧭', onSelect: openStarterQuestSheetFromMyQuest },
       { id: 'body', label: 'Health Goals', icon: '💪', onSelect: () => handleMobileNavSelect('body') },
       { id: 'habits', label: 'Habits', icon: '🔄', onSelect: () => handleMobileNavSelect('habits') },
       { id: 'routines', label: 'Routines', icon: '🧩', onSelect: openRoutinesWorkspace },
       { id: 'support', label: 'Goals', icon: '🎯', onSelect: () => handleMobileNavSelect('support') },
-      { id: 'planning', label: 'Check-ins', icon: '✅', onSelect: () => handleMobileNavSelect('planning') },
+      { id: 'planning', label: 'Check-ins', icon: '✅', onSelect: openCheckinsFromMyQuest },
       { id: 'contracts', label: 'Contracts', icon: '🤝', onSelect: openContractsWorkspace },
     ],
-    [handleMobileNavSelect, openContractsWorkspace, openMyIkigaiFromMobileMenu, openRoutinesWorkspace, openStarterQuestSheetFromMyQuest],
+    [handleMobileNavSelect, openCheckinsFromMyQuest, openContractsWorkspace, openQuestCompassFromMobileMenu, openRoutinesWorkspace, openStarterQuestSheetFromMyQuest],
   );
 
   const feedbackSupportSubmenuActions: LauncherSubmenuAction[] = useMemo(
@@ -4178,63 +4184,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 </div>
               </div>
             ) : null}
-            {isMyIkigaiModalOpen ? (
-              <div className="mobile-menu-overlay__hold-modal" role="dialog" aria-modal="true" aria-label="My Ikigai">
-                <button
-                  type="button"
-                  className="mobile-menu-overlay__hold-backdrop"
-                  aria-label="Close My Ikigai"
-                  onClick={() => setIsMyIkigaiModalOpen(false)}
-                />
-                <div className="mobile-menu-overlay__hold-panel mobile-menu-overlay__submenu-sheet">
-                  <div className="mobile-menu-overlay__hold-header">
-                    <div>
-                      <p className="mobile-menu-overlay__hold-eyebrow">Purpose map</p>
-                      <h3 className="mobile-menu-overlay__hold-title">My Ikigai</h3>
-                    </div>
-                    <button
-                      type="button"
-                      className="mobile-menu-overlay__hold-close"
-                      aria-label="Close My Ikigai"
-                      onClick={() => setIsMyIkigaiModalOpen(false)}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <p className="mobile-menu-overlay__ikigai-copy">
-                    Build your purpose compass with one small action in each area: discover, express, align, and review.
-                  </p>
-                  <figure className="mobile-menu-overlay__ikigai-diagram-wrap">
-                    <img
-                      className="mobile-menu-overlay__ikigai-diagram"
-                      src="/assets/ikigai/ikigai-diagram.svg"
-                      alt="Ikigai diagram with four overlapping circles: what you love, what you are good at, what the world needs, and what you can be paid for."
-                      loading="lazy"
-                    />
-                    <figcaption className="mobile-menu-overlay__ikigai-caption">
-                      Use this map to define a tiny experiment for each circle this week.
-                    </figcaption>
-                  </figure>
-                  <div className="mobile-menu-overlay__submenu mobile-menu-overlay__submenu--open">
-                    <button type="button" className="mobile-menu-overlay__submenu-button" onClick={openIkigaiCoachPrompt}>
-                      <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">🧠</span>
-                      <span>Brainstorm with AI Coach</span>
-                    </button>
-                    <button type="button" className="mobile-menu-overlay__submenu-button" onClick={openIkigaiJournalPrompt}>
-                      <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">📝</span>
-                      <span>Write your Ikigai note</span>
-                    </button>
-                    <button type="button" className="mobile-menu-overlay__submenu-button" onClick={openIkigaiHabits}>
-                      <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">🔁</span>
-                      <span>Pick one aligned habit</span>
-                    </button>
-                    <button type="button" className="mobile-menu-overlay__submenu-button" onClick={openIkigaiCheckins}>
-                      <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">📊</span>
-                      <span>Run weekly check-in</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
+            {isQuestCompassModalOpen ? (
+              <QuestCompassModal
+                onClose={() => setIsQuestCompassModalOpen(false)}
+                onAskAiGuide={openQuestCompassCoachPrompt}
+                onRefreshAlignment={openQuestCompassCheckins}
+                onStartNextQuest={openQuestCompassNextQuest}
+                onOpenGoals={openQuestCompassGoals}
+                onOpenJournal={openQuestCompassJournal}
+              />
             ) : null}
             {isFeedbackSupportSubmenuOpen ? (
               <div className="mobile-menu-overlay__hold-modal" role="dialog" aria-modal="true" aria-label="Feedback and support menu">
