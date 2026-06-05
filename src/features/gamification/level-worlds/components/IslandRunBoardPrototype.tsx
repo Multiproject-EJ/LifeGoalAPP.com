@@ -30,6 +30,7 @@ import { BoardStage, type BoardStageCameraControls } from './board';
 import { ConfettiBurst } from './ConfettiBurst';
 import { StatDriftNumbers } from './StatDriftNumbers';
 import { OutOfDiceRegenStatus } from './OutOfDiceRegenStatus';
+import { LoadingReadinessScreen } from '../../../../components/LoadingReadinessScreen';
 import { ShopItemCostLine } from './ShopItemCostLine';
 import {
   getIslandBoardThemeForIslandNumber,
@@ -9283,6 +9284,8 @@ export function IslandRunBoardPrototype({
       pendingHopSequence === null &&
       !isRewardBarClaiming,
   );
+  const loadingIslandNumber = Math.max(1, Math.floor(runtimeState.currentIslandNumber ?? islandNumber));
+  const isCycleCapstoneReadiness = loadingIslandNumber % ISLAND_RUN_MAX_ISLAND === 0;
 
   if (isRuntimeSyncBlocked || isOwnershipBlocked) {
     return (
@@ -9309,6 +9312,28 @@ export function IslandRunBoardPrototype({
             {isRetryingSync ? 'Retrying…' : 'Reload latest progress'}
           </button>
         </header>
+      </section>
+    );
+  }
+
+  if (!hasHydratedRuntimeState) {
+    return (
+      <section className="island-run-prototype island-run-prototype--loading" aria-label="Island Run loading">
+        <LoadingReadinessScreen
+          title={isCycleCapstoneReadiness ? `Preparing Island ${loadingIslandNumber}` : 'Preparing Island Run'}
+          subtitle={isCycleCapstoneReadiness
+            ? 'Verifying your cycle progress before the final island opens.'
+            : 'Syncing your island, dice, rewards, and token position before controls unlock.'}
+          progress={68}
+          steps={[
+            { label: 'Opening Island Run', status: 'complete' },
+            { label: 'Reading local island save', status: 'complete' },
+            { label: 'Syncing cloud progress', status: 'active' },
+            { label: 'Preparing board controls', status: 'pending' },
+          ]}
+          detail="Gameplay controls unlock after the canonical Island Run state is ready."
+          variant="island"
+        />
       </section>
     );
   }
