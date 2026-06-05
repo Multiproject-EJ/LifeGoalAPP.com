@@ -4935,6 +4935,7 @@ export function IslandRunBoardPrototype({
     ? (isDevTimedEventOverrideActive ? SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT_DEV : SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT)
     : null;
   const hasLegacyEventTicketDivergence = Boolean(activeTimedEventId) && activeEventTickets !== spinTokens;
+  const isRewardBarNearlyFull = rewardBarPercent >= 85 && rewardBarPercent < 100;
   // Parity guard breadcrumb for islandRunBoardEssenceParity:
   // const activeEventTickets = activeTimedEventId ? (runtimeState.minigameTicketsByEvent?.[activeTimedEventId] ?? 0) : 0;
   // const hasLegacyEventTicketDivergence = Boolean(activeTimedEventId) && activeEventTickets !== spinTokens;
@@ -9917,7 +9918,7 @@ export function IslandRunBoardPrototype({
 
           <button
             type="button"
-            className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}${rewardBarBurstAnimating ? ' island-run-board__rewardbar--burst' : ''}${rewardBarTierClass}`}
+            className={`island-run-board__rewardbar${canClaimRewardBar ? ' island-run-board__rewardbar--claimable' : ''}${rewardBarBurstAnimating ? ' island-run-board__rewardbar--burst' : ''}${isRewardBarNearlyFull ? ' island-run-board__rewardbar--nearly-full' : ''}${rewardBarTierClass}`}
             aria-label={`Reward progress. Next reward: ${nextRewardAccessibleLabel}${hatcheryPendingEggAriaLabel}`}
             onClick={canClaimRewardBar ? handleContractV2RewardBarClaim : openRewardDetailsModal}
           >
