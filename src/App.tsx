@@ -4186,6 +4186,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             ) : null}
             {isQuestCompassModalOpen ? (
               <QuestCompassModal
+                session={supabaseSession}
                 onClose={() => setIsQuestCompassModalOpen(false)}
                 onAskAiGuide={openQuestCompassCoachPrompt}
                 onRefreshAlignment={openQuestCompassCheckins}
