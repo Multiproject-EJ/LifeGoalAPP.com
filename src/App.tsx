@@ -705,6 +705,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const menuHelperHoldStartRef = useRef<{ x: number; y: number } | null>(null);
   const profileStrengthSnapshotRef = useRef<ProfileStrengthResult | null>(null);
   const profileStrengthSignalsRef = useRef<ProfileStrengthSignalSnapshot | null>(null);
+  const mobileMenuSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
+  const mobileMenuSwipeDeltaRef = useRef(0);
+  const [mobileMenuSwipeOffset, setMobileMenuSwipeOffset] = useState(0);
   const [showZenGardenFullScreen, setShowZenGardenFullScreen] = useState(false);
 
   useEffect(() => {
@@ -2799,6 +2802,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
       setActiveProfileStrengthHold(null);
       setActiveMobileMenuHelper(null);
       menuHelperHoldTriggeredRef.current = false;
+      mobileMenuSwipeStartRef.current = null;
+      mobileMenuSwipeDeltaRef.current = 0;
+      setMobileMenuSwipeOffset(0);
     }
   }, [isMobileMenuOpen]);
 
@@ -2827,6 +2833,56 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setActiveWorkspaceNav('game');
     setShowMobileHome(false);
   };
+
+  const closeMobileMenu = useCallback(() => {
+    mobileMenuSwipeStartRef.current = null;
+    mobileMenuSwipeDeltaRef.current = 0;
+    setMobileMenuSwipeOffset(0);
+    setIsMobileProfileDialogOpen(false);
+    setIsMobileMenuOpen(false);
+  }, []);
+
+  const handleMobileMenuSwipeStart = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (!isMobileExperience || event.pointerType === 'mouse') {
+        return;
+      }
+      mobileMenuSwipeStartRef.current = { x: event.clientX, y: event.clientY };
+      mobileMenuSwipeDeltaRef.current = 0;
+      setMobileMenuSwipeOffset(0);
+    },
+    [isMobileExperience],
+  );
+
+  const handleMobileMenuSwipeMove = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      const start = mobileMenuSwipeStartRef.current;
+      if (!isMobileExperience || !start) {
+        return;
+      }
+      const deltaX = event.clientX - start.x;
+      const deltaY = event.clientY - start.y;
+      const isUpwardSwipe = deltaY < 0 && Math.abs(deltaY) > Math.abs(deltaX) * 0.8;
+      if (!isUpwardSwipe) {
+        return;
+      }
+      const nextOffset = Math.max(deltaY, -220);
+      mobileMenuSwipeDeltaRef.current = nextOffset;
+      setMobileMenuSwipeOffset(nextOffset);
+    },
+    [isMobileExperience],
+  );
+
+  const handleMobileMenuSwipeEnd = useCallback(() => {
+    const upwardDelta = mobileMenuSwipeDeltaRef.current;
+    mobileMenuSwipeStartRef.current = null;
+    mobileMenuSwipeDeltaRef.current = 0;
+    if (upwardDelta <= -88) {
+      closeMobileMenu();
+      return;
+    }
+    setMobileMenuSwipeOffset(0);
+  }, [closeMobileMenu]);
 
   const handleMobileGameStatusClick = () => {
     setIsMobileMenuOpen(false);
@@ -3112,7 +3168,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     };
   }, []);
 
-  const shouldLockAppScroll = showGameBoardOverlay || showDailySpinWheel || showCalendarPlaceholder || showLevelWorldsFromEntry;
+  const shouldLockAppScroll = isMobileMenuOpen || showGameBoardOverlay || showDailySpinWheel || showCalendarPlaceholder || showLevelWorldsFromEntry;
   const isStandalonePwa = useMemo(
     () => (typeof window !== 'undefined' ? isStandaloneMode() : false),
     [],
@@ -3805,16 +3861,18 @@ export default function App({ forceAuthOnMount }: AppProps) {
       >
         <div
           className="mobile-menu-overlay__backdrop"
-          onClick={() => {
-            setIsMobileProfileDialogOpen(false);
-            setIsMobileMenuOpen(false);
-          }}
+          onClick={closeMobileMenu}
           role="presentation"
         />
         <div
           className={`mobile-menu-overlay__panel${
             isMobileMenuImageActive ? ' mobile-menu-overlay__panel--image' : ''
           } mobile-menu-overlay__panel--tall`}
+          onPointerDown={handleMobileMenuSwipeStart}
+          onPointerMove={handleMobileMenuSwipeMove}
+          onPointerUp={handleMobileMenuSwipeEnd}
+          onPointerCancel={handleMobileMenuSwipeEnd}
+          style={mobileMenuSwipeOffset < 0 ? { transform: `translateY(${mobileMenuSwipeOffset}px)` } : undefined}
         >
           <>
             <div className="mobile-menu-overlay__header">
@@ -3849,10 +3907,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                     type="button"
                     className="mobile-menu-overlay__close mobile-menu-overlay__close--enlarged"
                     aria-label="Close menu"
-                    onClick={() => {
-                      setIsMobileProfileDialogOpen(false);
-                      setIsMobileMenuOpen(false);
-                    }}
+                    onClick={closeMobileMenu}
                   >
                     ×
                   </button>
