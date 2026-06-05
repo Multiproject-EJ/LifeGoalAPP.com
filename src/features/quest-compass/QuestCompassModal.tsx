@@ -135,6 +135,15 @@ export function QuestCompassModal({
     [selectedForce, goals, habits, todayHabitLogs, goalSteps, questHabit],
   );
 
+  useEffect(() => {
+    if (!selectedForceDetail) return undefined;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [selectedForceDetail]);
+
   return (
     <div
       className="mobile-menu-overlay__hold-modal"
@@ -383,7 +392,7 @@ function ForceDetailSheet({
               <p>Score: {force.scoreLabel} · Trend: {force.trendLabel}</p>
             </div>
           </div>
-          <button type="button" className="mobile-menu-overlay__hold-close" onClick={onClose} aria-label="Close force details">
+          <button type="button" className="quest-compass-detail__close" onClick={onClose} aria-label="Close force details">
             ✕
           </button>
         </div>

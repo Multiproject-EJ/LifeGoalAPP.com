@@ -294,7 +294,7 @@ export function buildQuestCompassViewModel(
       contributingCategories: FORCE_CATEGORY_MAP[force.key].map((categoryKey) => {
         const categoryScore =
           latestScores && typeof latestScores[categoryKey] === 'number'
-            ? latestScores[categoryKey] ?? null
+            ? latestScores[categoryKey]
             : null;
         return {
           key: categoryKey,

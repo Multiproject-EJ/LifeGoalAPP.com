@@ -21557,7 +21557,6 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: rgba(248, 250, 252, 0.9);
   text-align: left;
   cursor: pointer;
-  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
 }
 
 .quest-compass__force-card:hover,
@@ -21565,7 +21564,17 @@ html.platform-ipad .workspace-shell__menu-edge {
   border-color: rgba(245, 158, 11, 0.55);
   box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
   outline: none;
-  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .quest-compass__force-card {
+    transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+  }
+
+  .quest-compass__force-card:hover,
+  .quest-compass__force-card:focus-visible {
+    transform: translateY(-1px);
+  }
 }
 
 .quest-compass__force-card--fire {
@@ -21758,6 +21767,27 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .quest-compass-detail__header h3 {
   font-size: 1.1rem;
+}
+
+.quest-compass-detail__close {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #334155;
+  font-size: 0.95rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.quest-compass-detail__close:hover,
+.quest-compass-detail__close:focus-visible {
+  background: #f8fafc;
+  outline: none;
 }
 
 .quest-compass-detail__header p,
