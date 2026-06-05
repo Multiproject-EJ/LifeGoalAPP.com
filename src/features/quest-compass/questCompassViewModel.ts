@@ -398,9 +398,10 @@ export function buildQuestCompassForceDetail(params: {
   const nextGoalStep = goalSteps
     .filter((step) => relatedGoalIds.has(step.goal_id) && !step.completed)
     .sort((a, b) => a.step_order - b.step_order)[0];
+  const activeQuestHabit = params.questHabit;
   const questHabit =
-    params.questHabit && supportingHabitInputs.some((habit) => habit.id === params.questHabit?.habitId)
-      ? params.questHabit
+    activeQuestHabit && supportingHabitInputs.some((habit) => habit.id === activeQuestHabit.habitId)
+      ? activeQuestHabit
       : null;
   const categoryKey = getPrimaryCategoryForForce(params.force.key);
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { fetchCheckinsForUser } from '../../services/checkins';
 import { fetchGoals } from '../../services/goals';
@@ -138,11 +138,27 @@ export function QuestCompassModal({
   useEffect(() => {
     if (!selectedForceDetail) return undefined;
     const originalOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSelectedForceKey(null);
+      }
+    };
     document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.body.style.overflow = originalOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [selectedForceDetail]);
+
+  const openForceDetailFromKeyboard = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    force: QuestCompassForceScore,
+  ) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    setSelectedForceKey(force.key);
+  };
 
   return (
     <div
@@ -236,6 +252,7 @@ export function QuestCompassModal({
               type="button"
               className={`quest-compass__force-card quest-compass__force-card--${force.key}`}
               onClick={() => setSelectedForceKey(force.key)}
+              onKeyDown={(event) => openForceDetailFromKeyboard(event, force)}
               aria-label={`Open ${force.name} force details`}
             >
               <span className="quest-compass__force-icon" aria-hidden="true">
@@ -381,6 +398,11 @@ function ForceDetailSheet({
         className="quest-compass-detail__backdrop"
         aria-label={`Close ${force.name} details`}
         onClick={onClose}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          event.preventDefault();
+          onClose();
+        }}
       />
       <div className={`quest-compass-detail__sheet quest-compass-detail__sheet--${force.key}`}>
         <div className="quest-compass-detail__handle" aria-hidden="true" />
