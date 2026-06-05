@@ -54,7 +54,7 @@ export function runAllQuestCompassViewModelTests(): void {
   assert(strength?.score === 5, 'Strength should average Body & Energy and Home scores');
   assert(strength?.trend === 'falling', 'Strength should fall versus previous average');
   assert(
-    strength && getSuggestedCategoryForForce(strength) === 'health_fitness',
+    strength !== undefined && getSuggestedCategoryForForce(strength) === 'health_fitness',
     'selected Strength force should suggest the weakest contributing domain',
   );
 
@@ -62,7 +62,7 @@ export function runAllQuestCompassViewModelTests(): void {
   assert(connection?.score === 7, 'Connection should average Love and Connections scores');
   assert(connection?.trend === 'rising', 'Connection should rise versus previous average');
   assert(
-    connection && getSuggestedCategoryForForce(connection) === 'family_friends',
+    connection !== undefined && getSuggestedCategoryForForce(connection) === 'family_friends',
     'selected Connection force should suggest the weaker relationship domain',
   );
 
