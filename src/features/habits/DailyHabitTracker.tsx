@@ -133,13 +133,14 @@ import {
   initiateMinigameTicketCheckout,
   resolveMinigameTicketSku,
 } from '../../services/minigameTicketStore';
-import { TimeBoundOfferRow, type TimeBoundOfferItem, type TimeBoundOfferId } from './TimeBoundOfferRow';
+import { TimeBoundOfferRow, type EggHatchOfferId, type TimeBoundOfferItem, type TimeBoundOfferId } from './TimeBoundOfferRow';
 import {
   buildDailyOfferClaimStorageKey,
   runDailyOfferClaim,
 } from './dailyOfferClaim';
 import { EVENT_IDS, type EventId } from '../gamification/level-worlds/services/islandRunEventEngine';
 import { generateIslandStopPlan } from '../gamification/level-worlds/services/islandRunStops';
+import { getUnresolvedEggSlotsForIsland } from '../gamification/level-worlds/services/islandRunEggMania';
 import { useIslandRunState } from '../gamification/level-worlds/hooks/useIslandRunState';
 import { refreshIslandRunStateFromLocal } from '../gamification/level-worlds/services/islandRunStateStore';
 import { getPromiseVariant, isPromiseActionableToday } from '../gamification/promisePresentation';
@@ -296,8 +297,11 @@ function isInteractiveHabitChild(target: EventTarget | null): boolean {
   );
 }
 
+function isEggHatchOfferId(offerId: TimeBoundOfferId | EggHatchOfferId): offerId is 'egg_hatch' | EggHatchOfferId {
+  return offerId === 'egg_hatch' || offerId.startsWith('egg_hatch_');
+}
+
 const DIRECT_OPEN_TIME_BOUND_OFFERS: ReadonlySet<TimeBoundOfferId> = new Set([
-  'egg_hatch',
   'vision_star',
   'island_run',
   'daily_treats',
@@ -782,7 +786,7 @@ export function DailyHabitTracker({
   const sparkHandEnabled = isPlayersHandSparkResultEnabled();
   const isDemoExperience = isDemoSession(session);
   const isCompact = variant === 'compact';
-  const [activeOfferTeaser, setActiveOfferTeaser] = useState<TimeBoundOfferId | null>(null);
+  const [activeOfferTeaser, setActiveOfferTeaser] = useState<TimeBoundOfferId | EggHatchOfferId | null>(null);
 
   const [todayTodos, setTodayTodos] = useState<TodayTodo[]>([]);
   const [todayTodoModalOpen, setTodayTodoModalOpen] = useState(false);
@@ -2930,23 +2934,46 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const completedStopsOnActiveIsland = islandRunState.completedStopsByIsland?.[String(activeIsland)] ?? [];
   const stopPlanForActiveIsland = useMemo(() => generateIslandStopPlan(activeIsland), [activeIsland]);
 
-  const activeIslandEgg = islandRunState.perIslandEggs?.[String(activeIsland)];
-  const activeIslandEggReadyAtMs = useMemo(() => {
-    if (activeIslandEgg && activeIslandEgg.status === 'incubating') {
-      return activeIslandEgg.hatchAtMs;
+  const activeIslandEggSlots = useMemo(() => {
+    const slots = getUnresolvedEggSlotsForIsland(islandRunState.perIslandEggs, activeIsland);
+    if (slots.length > 0) {
+      return slots;
     }
 
-    if (!activeIslandEgg && islandRunState.activeEggTier && islandRunState.activeEggSetAtMs && islandRunState.activeEggHatchDurationMs) {
-      return islandRunState.activeEggSetAtMs + islandRunState.activeEggHatchDurationMs;
+    if (islandRunState.activeEggTier && islandRunState.activeEggSetAtMs && islandRunState.activeEggHatchDurationMs) {
+      const setAtMs = islandRunState.activeEggSetAtMs;
+      const hatchAtMs = setAtMs + islandRunState.activeEggHatchDurationMs;
+      return [{
+        key: String(activeIsland),
+        islandNumber: activeIsland,
+        slotIndex: 0,
+        entry: {
+          tier: islandRunState.activeEggTier,
+          setAtMs,
+          hatchAtMs,
+          status: eggReadinessNowMs >= hatchAtMs ? 'ready' as const : 'incubating' as const,
+        },
+      }];
     }
 
-    return null;
+    return [];
   }, [
-    activeIslandEgg,
+    activeIsland,
+    eggReadinessNowMs,
     islandRunState.activeEggHatchDurationMs,
     islandRunState.activeEggSetAtMs,
     islandRunState.activeEggTier,
+    islandRunState.perIslandEggs,
   ]);
+
+  const activeIslandEggReadyAtMs = useMemo(() => {
+    const nextReadyAtMs = activeIslandEggSlots
+      .filter(({ entry }) => entry.status === 'incubating' && entry.hatchAtMs > eggReadinessNowMs)
+      .map(({ entry }) => entry.hatchAtMs)
+      .sort((first, second) => first - second)[0];
+
+    return nextReadyAtMs ?? null;
+  }, [activeIslandEggSlots, eggReadinessNowMs]);
 
   useEffect(() => {
     if (!activeIslandEggReadyAtMs || activeIslandEggReadyAtMs <= eggReadinessNowMs) {
@@ -2961,36 +2988,16 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     return () => window.clearTimeout(timeoutId);
   }, [activeIslandEggReadyAtMs, eggReadinessNowMs]);
 
-  const isEggReadyToCollectOnActiveIsland = useMemo(() => {
-    if (activeIslandEgg) {
-      return activeIslandEgg.status === 'ready'
-        || (activeIslandEgg.status === 'incubating' && eggReadinessNowMs >= activeIslandEgg.hatchAtMs);
-    }
+  const visibleEggSlotsOnActiveIsland = activeIslandEggSlots;
 
-    if (islandRunState.activeEggTier && islandRunState.activeEggSetAtMs && islandRunState.activeEggHatchDurationMs) {
-      return eggReadinessNowMs >= islandRunState.activeEggSetAtMs + islandRunState.activeEggHatchDurationMs;
-    }
-
-    return false;
-  }, [
-    activeIslandEgg,
-    eggReadinessNowMs,
-    islandRunState.activeEggHatchDurationMs,
-    islandRunState.activeEggSetAtMs,
-    islandRunState.activeEggTier,
-  ]);
-
-
-  // Track whether the player has already opened the egg hatch circle today for this island.
-  // Key: per-user, per-day, per-island so it resets naturally when egg moves to a new island
-  // or the day rolls over. This controls the red notification dot and sort priority.
-  const eggHatchViewedStorageKey = useMemo(
+  const eggHatchViewedStorageKeyForSlot = useCallback(
+    (slotKey: string) => `lifegoal:egg_hatch_viewed:${session.user.id}:${getTodayUtcDateKey()}:${activeIsland}:${slotKey}`,
+    [session.user.id, activeIsland],
+  );
+  const legacyEggHatchViewedStorageKey = useMemo(
     () => `lifegoal:egg_hatch_viewed:${session.user.id}:${getTodayUtcDateKey()}:${activeIsland}`,
     [session.user.id, activeIsland],
   );
-  const hasSeenEggHatch = typeof window !== 'undefined'
-    ? localStorage.getItem(eggHatchViewedStorageKey) === '1'
-    : false;
 
   // Claim keys use DailyHabitTracker's shared `today` key so they reset with the Today row.
   const zenTreeClaimedStorageKey = useMemo(
@@ -3099,19 +3106,32 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         sortPriority: 3,
         slotRole: 'core',
       },
-      {
-        id: 'egg_hatch',
-        label: 'Egg Ready',
-        icon: '🥚',
-        expiresAtMs: null,
-        // Once the player opens the egg hatch circle today, remove the red badge and lower
-        // priority so other unchecked circles take precedence.
-        isCollected: false,
-        isVisible: isEggReadyToCollectOnActiveIsland,
-        isActionable: isEggReadyToCollectOnActiveIsland && !hasSeenEggHatch,
-        sortPriority: hasSeenEggHatch ? 5 : 2.5,
-        slotRole: 'core',
-      },
+      ...visibleEggSlotsOnActiveIsland.map(({ key, slotIndex, entry }, eggIndex): TimeBoundOfferItem => {
+        const offerId: TimeBoundOfferId | EggHatchOfferId = slotIndex === 0 ? 'egg_hatch' : `egg_hatch_${slotIndex}`;
+        const isReadyToHatch = entry.status === 'ready' || (entry.status === 'incubating' && eggReadinessNowMs >= entry.hatchAtMs);
+        const hasSeenEggHatch = typeof window !== 'undefined'
+          ? localStorage.getItem(eggHatchViewedStorageKeyForSlot(key)) === '1'
+            || (slotIndex === 0 && localStorage.getItem(legacyEggHatchViewedStorageKey) === '1')
+          : false;
+        const eggLabelPrefix = visibleEggSlotsOnActiveIsland.length > 1 ? `Egg ${eggIndex + 1}` : 'Egg';
+
+        return {
+          id: offerId,
+          label: isReadyToHatch ? `${eggLabelPrefix} Ready` : `${eggLabelPrefix} Hatching`,
+          icon: '🥚',
+          expiresAtMs: isReadyToHatch ? null : entry.hatchAtMs,
+          badgeLabelOverride: isReadyToHatch ? 'Ready' : undefined,
+          // Incubating eggs stay visible with a countdown, but only ready eggs get
+          // the notification dot and per-slot viewed suppression.
+          isCollected: false,
+          isVisible: true,
+          isActionable: isReadyToHatch && !hasSeenEggHatch,
+          sortPriority: isReadyToHatch
+            ? (hasSeenEggHatch ? 5 + eggIndex / 10 : 2.5 + eggIndex / 100)
+            : 2.75 + eggIndex / 100,
+          slotRole: 'core',
+        };
+      }),
       {
         id: 'zen_tree_water',
         label: 'Water the Zen Tree',
@@ -3148,13 +3168,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     hasOpenedHolidayCalendarToday,
     isDailyTreatBonusReady,
     isDailyTreatFullyCollected,
-    hasSeenEggHatch,
+    eggHatchViewedStorageKeyForSlot,
+    legacyEggHatchViewedStorageKey,
     islandRunCountdownExpiresAtMs,
     islandRunOfferBadge,
     islandRunOfferLabel,
     isIslandRunOfferVisible,
     isIslandRunReadyToStart,
-    isEggReadyToCollectOnActiveIsland,
+    visibleEggSlotsOnActiveIsland,
     isSpecialVisionStarDay,
     todaysOfferSpinBadgeActive,
     dailySpinCount,
@@ -3163,7 +3184,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   ]);
 
 
-  const offerTeaserKey = useCallback((offerId: TimeBoundOfferId) => `${getTodayUtcDateKey()}:${offerId}`, []);
+  const offerTeaserKey = useCallback((offerId: TimeBoundOfferId | EggHatchOfferId) => `${getTodayUtcDateKey()}:${offerId}`, []);
 
   const closeTodaysOfferModal = useCallback(() => {
     setIsTodaysOfferModalOpen(false);
@@ -3263,7 +3284,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     onOpenDailySpinWheel();
   }, [isTodaysOfferSpinEntryEnabled, onOpenDailySpinWheel]);
 
-  const openOfferContent = useCallback((offerId: TimeBoundOfferId) => {
+  const openOfferContent = useCallback((offerId: TimeBoundOfferId | EggHatchOfferId) => {
     if (offerId === 'island_run') {
       if (onOpenIslandRunStop) {
         onOpenIslandRunStop('hatchery');
@@ -3305,10 +3326,17 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       return;
     }
 
-    if (offerId === 'egg_hatch') {
-      // Mark as viewed for today on this island so the red badge is cleared
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(eggHatchViewedStorageKey, '1');
+    if (isEggHatchOfferId(offerId)) {
+      const slotIndex = offerId === 'egg_hatch' ? 0 : Number.parseInt(offerId.replace('egg_hatch_', ''), 10);
+      const selectedSlot = visibleEggSlotsOnActiveIsland.find((slot) => slot.slotIndex === slotIndex) ?? visibleEggSlotsOnActiveIsland[0];
+      const isReadyToHatch = selectedSlot
+        ? selectedSlot.entry.status === 'ready'
+          || (selectedSlot.entry.status === 'incubating' && eggReadinessNowMs >= selectedSlot.entry.hatchAtMs)
+        : false;
+      // Mark ready eggs as viewed for today on this island so the red badge is cleared.
+      // Incubating eggs should not be marked viewed because they still need a ready alert later.
+      if (typeof window !== 'undefined' && selectedSlot && isReadyToHatch) {
+        localStorage.setItem(eggHatchViewedStorageKeyForSlot(selectedSlot.key), '1');
       }
       if (onOpenIslandRunStop) {
         onOpenIslandRunStop('hatchery');
@@ -3336,11 +3364,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       setFeedCreaturesClaimError(null);
       setIsFeedCreaturesModalOpen(true);
     }
-  }, [eggHatchViewedStorageKey, handleVisionRewardClick, isFeedCreaturesPreviewOnly, isVisionStarPreviewOnly, isWaterZenTreePreviewOnly, onOpenDailyTreat, onOpenFeaturePreview, onOpenHolidayCalendar, onOpenIslandRunStop, startTodaysOfferCheckout]);
+  }, [eggHatchViewedStorageKeyForSlot, eggReadinessNowMs, handleVisionRewardClick, isFeedCreaturesPreviewOnly, isVisionStarPreviewOnly, isWaterZenTreePreviewOnly, onOpenDailyTreat, onOpenFeaturePreview, onOpenHolidayCalendar, onOpenIslandRunStop, startTodaysOfferCheckout, visibleEggSlotsOnActiveIsland]);
 
-  const handleTimeBoundOfferClick = useCallback((offerId: TimeBoundOfferId) => {
+  const handleTimeBoundOfferClick = useCallback((offerId: TimeBoundOfferId | EggHatchOfferId) => {
     // UX: some offers should open directly (no intermediate teaser modal)
-    if (DIRECT_OPEN_TIME_BOUND_OFFERS.has(offerId)) {
+    if (isEggHatchOfferId(offerId) || DIRECT_OPEN_TIME_BOUND_OFFERS.has(offerId)) {
       openOfferContent(offerId);
       return;
     }
