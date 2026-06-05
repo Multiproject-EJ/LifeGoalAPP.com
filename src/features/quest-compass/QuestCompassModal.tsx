@@ -272,7 +272,7 @@ export function QuestCompassModal({
             type="button"
             className="mobile-menu-overlay__submenu-button"
             aria-label="Start the next quest from your Quest Compass"
-            onClick={onStartNextQuest}
+            onClick={() => onStartNextQuest()}
           >
             <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">🔁</span>
             <span>Start next quest</span>
