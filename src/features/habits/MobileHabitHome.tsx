@@ -36,6 +36,7 @@ type MobileHabitHomeProps = {
   onNavigateToRoutines?: () => void;
   isAdminOrCreator?: boolean;
   onOpenFeaturePreview?: (featureId: FeatureAvailabilityId, label: string) => void;
+  deferDailyLifeUpgradeModal?: boolean;
 };
 
 export function MobileHabitHome({
@@ -67,6 +68,7 @@ export function MobileHabitHome({
   onNavigateToRoutines,
   isAdminOrCreator = false,
   onOpenFeaturePreview,
+  deferDailyLifeUpgradeModal = false,
 }: MobileHabitHomeProps) {
   void onHideStandaloneHabitsChange;
   return (
@@ -101,6 +103,7 @@ export function MobileHabitHome({
         onNavigateToRoutines={onNavigateToRoutines}
         isAdminOrCreator={isAdminOrCreator}
         onOpenFeaturePreview={onOpenFeaturePreview}
+        deferDailyLifeUpgradeModal={deferDailyLifeUpgradeModal}
       />
     </div>
   );
