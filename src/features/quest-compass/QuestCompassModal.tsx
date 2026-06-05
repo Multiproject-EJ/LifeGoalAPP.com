@@ -10,7 +10,7 @@ import type { LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 import {
   buildQuestCompassForceDetail,
   buildQuestCompassViewModel,
-  getPrimaryCategoryForForce,
+  getSuggestedCategoryForForce,
   type QuestCompassForceDetail,
   type QuestCompassForceScore,
   type QuestCompassRecommendedAction,
@@ -134,6 +134,20 @@ export function QuestCompassModal({
         : null,
     [selectedForce, goals, habits, todayHabitLogs, goalSteps, questHabit],
   );
+  const focusForceDetail = useMemo(
+    () =>
+      focusForce
+        ? buildQuestCompassForceDetail({
+            force: focusForce,
+            goals,
+            habits,
+            todayHabitLogs,
+            goalSteps,
+            questHabit,
+          })
+        : null,
+    [focusForce, goals, habits, todayHabitLogs, goalSteps, questHabit],
+  );
 
   useEffect(() => {
     if (!selectedForceDetail) return undefined;
@@ -158,6 +172,22 @@ export function QuestCompassModal({
     if (event.key !== 'Enter' && event.key !== ' ') return;
     event.preventDefault();
     setSelectedForceKey(force.key);
+  };
+
+  const routeRecommendedAction = (detail: QuestCompassForceDetail | null) => {
+    if (!viewModel.hasCheckinData) {
+      onRefreshAlignment();
+      return;
+    }
+    if (detail?.recommendedAction.type === 'refresh_alignment') {
+      onRefreshAlignment();
+      return;
+    }
+    if (detail?.recommendedAction.type === 'goal_step') {
+      onOpenGoals();
+      return;
+    }
+    onStartNextQuest(detail?.recommendedAction.categoryKey ?? undefined);
   };
 
   return (
@@ -298,7 +328,7 @@ export function QuestCompassModal({
             type="button"
             className="mobile-menu-overlay__submenu-button"
             aria-label="Start the next quest from your Quest Compass"
-            onClick={() => onStartNextQuest()}
+            onClick={() => routeRecommendedAction(focusForceDetail)}
           >
             <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">🔁</span>
             <span>Start next quest</span>
@@ -388,7 +418,7 @@ function ForceDetailSheet({
       onOpenGoals();
       return;
     }
-    onStartNextQuest(recommendedAction.categoryKey ?? getPrimaryCategoryForForce(force.key));
+    onStartNextQuest(recommendedAction.categoryKey ?? getSuggestedCategoryForForce(force));
   };
 
   return (
@@ -489,7 +519,7 @@ function ForceDetailSheet({
         <div className="quest-compass-detail__actions">
           <button type="button" onClick={onAskAiGuide}>Ask AI Guide</button>
           <button type="button" onClick={onRefreshAlignment}>Refresh Alignment</button>
-          <button type="button" onClick={() => onStartNextQuest(getPrimaryCategoryForForce(force.key))}>Start Next Quest</button>
+          <button type="button" onClick={() => onStartNextQuest(getSuggestedCategoryForForce(force))}>Start Next Quest</button>
           <button type="button" onClick={onOpenGoals}>Open Goals</button>
         </div>
       </div>

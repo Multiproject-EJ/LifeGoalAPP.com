@@ -1,6 +1,7 @@
 import {
   buildQuestCompassForceDetail,
   buildQuestCompassViewModel,
+  getSuggestedCategoryForForce,
 } from '../questCompassViewModel';
 
 function assert(condition: boolean, message: string): void {
@@ -52,10 +53,18 @@ export function runAllQuestCompassViewModelTests(): void {
   const strength = model.forces.find((force) => force.key === 'strength');
   assert(strength?.score === 5, 'Strength should average Body & Energy and Home scores');
   assert(strength?.trend === 'falling', 'Strength should fall versus previous average');
+  assert(
+    strength && getSuggestedCategoryForForce(strength) === 'health_fitness',
+    'selected Strength force should suggest the weakest contributing domain',
+  );
 
   const connection = model.forces.find((force) => force.key === 'connection');
   assert(connection?.score === 7, 'Connection should average Love and Connections scores');
   assert(connection?.trend === 'rising', 'Connection should rise versus previous average');
+  assert(
+    connection && getSuggestedCategoryForForce(connection) === 'family_friends',
+    'selected Connection force should suggest the weaker relationship domain',
+  );
 
   const fire = model.forces.find((force) => force.key === 'fire');
   assert(fire?.trend === 'rising', 'Fire should rise from previous Joy & Play score');
@@ -119,6 +128,44 @@ export function runAllQuestCompassViewModelTests(): void {
     connectionDetail.recommendedAction.type === 'goal_step',
     'existing incomplete goal step should be the top recommendation',
   );
+  assert(
+    connectionDetail.recommendedAction.goalId === 'goal-1',
+    'goal step recommendation should preserve the related goal context',
+  );
+  assert(
+    connectionDetail.recommendedAction.categoryKey === 'family_friends',
+    'goal step recommendation should keep the selected force suggested domain',
+  );
+
+  const strengthQuestHabitDetail = buildQuestCompassForceDetail({
+    force: strength!,
+    goals: [],
+    habits: [
+      {
+        id: 'habit-quest',
+        title: 'Morning mobility',
+        emoji: '🧘',
+        domain_key: 'health_fitness',
+        goal_id: null,
+      },
+    ],
+    todayHabitLogs: [],
+    goalSteps: [],
+    questHabit: {
+      habitId: 'habit-quest',
+      title: 'Morning mobility',
+      emoji: '🧘',
+    },
+  });
+
+  assert(
+    strengthQuestHabitDetail.recommendedAction.type === 'quest_habit',
+    'existing quest habit in the selected force domain should be surfaced before starter quest',
+  );
+  assert(
+    strengthQuestHabitDetail.recommendedAction.habitId === 'habit-quest',
+    'quest habit recommendation should preserve the existing habit context',
+  );
 
   const emptyDetail = buildQuestCompassForceDetail({
     force: fire!,
@@ -133,11 +180,19 @@ export function runAllQuestCompassViewModelTests(): void {
     emptyDetail.recommendedAction.type === 'starter_quest',
     'scored force without goals or habits should recommend a starter quest',
   );
+  assert(
+    emptyDetail.recommendedAction.categoryKey === 'fun_creativity',
+    'fallback starter quest should be biased toward the selected force domain',
+  );
 
   const emptyForce = emptyModel.forces.find((force) => force.key === 'fire');
   const noSignalDetail = buildQuestCompassForceDetail({ force: emptyForce! });
   assert(
     noSignalDetail.recommendedAction.type === 'refresh_alignment',
     'unscored force should recommend refreshing alignment',
+  );
+  assert(
+    noSignalDetail.recommendedAction.categoryKey === null,
+    'no check-in empty state should not open generic habit creation',
   );
 }
