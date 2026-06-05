@@ -109,10 +109,13 @@ export type QuestCompassRecommendedAction = {
   title: string;
   description: string;
   categoryKey: LifeWheelCategoryKey | null;
+  goalId?: string | null;
+  habitId?: string | null;
 };
 
 export type QuestCompassForceDetail = {
   force: QuestCompassForceScore;
+  suggestedCategory: QuestCompassContributingCategory;
   relatedGoals: QuestCompassRelatedGoal[];
   supportingHabits: QuestCompassSupportingHabit[];
   recommendedAction: QuestCompassRecommendedAction;
@@ -362,6 +365,21 @@ export function getPrimaryCategoryForForce(
   return FORCE_CATEGORY_MAP[forceKey][0];
 }
 
+export function getSuggestedCategoryForForce(
+  force: QuestCompassForceScore,
+): LifeWheelCategoryKey {
+  const primaryCategory = getPrimaryCategoryForForce(force.key);
+  if (!force.contributingCategories.length) return primaryCategory;
+
+  const weakestCategory = force.contributingCategories.reduce((best, category) => {
+    if (best.score === null) return category.score === null ? best : category;
+    if (category.score === null) return best;
+    return category.score < best.score ? category : best;
+  }, force.contributingCategories[0]);
+
+  return weakestCategory.key;
+}
+
 export function buildQuestCompassForceDetail(params: {
   force: QuestCompassForceScore;
   goals?: QuestCompassGoalInput[];
@@ -403,7 +421,15 @@ export function buildQuestCompassForceDetail(params: {
     activeQuestHabit && supportingHabitInputs.some((habit) => habit.id === activeQuestHabit.habitId)
       ? activeQuestHabit
       : null;
-  const categoryKey = getPrimaryCategoryForForce(params.force.key);
+  const categoryKey = getSuggestedCategoryForForce(params.force);
+  const suggestedCategory =
+    params.force.contributingCategories.find((category) => category.key === categoryKey) ??
+    params.force.contributingCategories[0] ?? {
+      key: categoryKey,
+      label: LIFE_WHEEL_CATEGORY_LABELS[categoryKey],
+      score: params.force.score,
+      scoreLabel: formatScoreLabel(params.force.score),
+    };
 
   let recommendedAction: QuestCompassRecommendedAction;
   if (nextGoalStep) {
@@ -413,6 +439,7 @@ export function buildQuestCompassForceDetail(params: {
       title: nextGoalStep.title,
       description: 'Take the next active step from a goal supporting this force.',
       categoryKey,
+      goalId: nextGoalStep.goal_id,
     };
   } else if (questHabit) {
     recommendedAction = {
@@ -421,6 +448,7 @@ export function buildQuestCompassForceDetail(params: {
       title: `${questHabit.emoji ? `${questHabit.emoji} ` : ''}${questHabit.title}`,
       description: `Start your ${params.force.name} habit today.`,
       categoryKey,
+      habitId: questHabit.habitId,
     };
   } else if (params.force.score !== null) {
     recommendedAction = {
@@ -442,6 +470,7 @@ export function buildQuestCompassForceDetail(params: {
 
   return {
     force: params.force,
+    suggestedCategory,
     relatedGoals,
     supportingHabits,
     recommendedAction,
