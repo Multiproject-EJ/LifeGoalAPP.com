@@ -1,20 +1,33 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { fetchCheckinsForUser } from '../../services/checkins';
+import { fetchGoals } from '../../services/goals';
+import { fetchStepsForGoal } from '../../services/lifeGoals';
+import { listHabitsV2, listTodayHabitLogsV2 } from '../../services/habitsV2';
+import { getQuestHabit, refreshQuestHabit, type QuestHabit } from '../../services/questHabit';
 import type { Database } from '../../lib/database.types';
+import type { LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 import {
+  buildQuestCompassForceDetail,
   buildQuestCompassViewModel,
+  getPrimaryCategoryForForce,
+  type QuestCompassForceDetail,
   type QuestCompassForceScore,
+  type QuestCompassRecommendedAction,
 } from './questCompassViewModel';
 
 type CheckinRow = Database['public']['Tables']['checkins']['Row'];
+type GoalRow = Database['public']['Tables']['goals']['Row'];
+type StepRow = Database['public']['Tables']['life_goal_steps']['Row'];
+type HabitRow = Database['public']['Tables']['habits_v2']['Row'];
+type HabitLogRow = Database['public']['Tables']['habit_logs_v2']['Row'];
 
 type QuestCompassModalProps = {
   session: Session | null;
   onClose: () => void;
   onAskAiGuide: () => void;
   onRefreshAlignment: () => void;
-  onStartNextQuest: () => void;
+  onStartNextQuest: (initialDomainKey?: LifeWheelCategoryKey) => void;
   onOpenGoals: () => void;
   onOpenJournal: () => void;
 };
@@ -29,6 +42,12 @@ export function QuestCompassModal({
   onOpenJournal,
 }: QuestCompassModalProps) {
   const [checkins, setCheckins] = useState<CheckinRow[]>([]);
+  const [goals, setGoals] = useState<GoalRow[]>([]);
+  const [goalSteps, setGoalSteps] = useState<StepRow[]>([]);
+  const [habits, setHabits] = useState<HabitRow[]>([]);
+  const [todayHabitLogs, setTodayHabitLogs] = useState<HabitLogRow[]>([]);
+  const [questHabit, setQuestHabit] = useState<QuestHabit | null>(null);
+  const [selectedForceKey, setSelectedForceKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(Boolean(session?.user.id));
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -37,6 +56,11 @@ export function QuestCompassModal({
 
     if (!session?.user.id) {
       setCheckins([]);
+      setGoals([]);
+      setGoalSteps([]);
+      setHabits([]);
+      setTodayHabitLogs([]);
+      setQuestHabit(null);
       setLoading(false);
       setLoadError(null);
       return () => {
@@ -47,12 +71,37 @@ export function QuestCompassModal({
     const loadCheckins = async () => {
       setLoading(true);
       setLoadError(null);
-      const result = await fetchCheckinsForUser(session.user.id, 6);
+      setQuestHabit(getQuestHabit(session.user.id));
+      const [checkinResult, goalsResult, habitsResult, logsResult, refreshedQuestHabit] =
+        await Promise.all([
+          fetchCheckinsForUser(session.user.id, 6),
+          fetchGoals(),
+          listHabitsV2(),
+          listTodayHabitLogsV2(session.user.id),
+          refreshQuestHabit(session.user.id),
+        ]);
+      const relatedGoalSteps = await Promise.all(
+        (goalsResult.data ?? [])
+          .filter((goal) => goal.status_tag !== 'completed' && goal.status_tag !== 'archived')
+          .map((goal) => fetchStepsForGoal(goal.id)),
+      );
 
       if (!isMounted) return;
 
-      setCheckins(result.data ?? []);
-      setLoadError(result.error?.message ?? null);
+      setCheckins(checkinResult.data ?? []);
+      setGoals(goalsResult.data ?? []);
+      setHabits(habitsResult.data ?? []);
+      setTodayHabitLogs(logsResult.data ?? []);
+      setQuestHabit(refreshedQuestHabit);
+      setGoalSteps(relatedGoalSteps.flatMap((result) => result.data ?? []));
+      setLoadError(
+        checkinResult.error?.message ??
+          goalsResult.error?.message ??
+          habitsResult.error?.message ??
+          logsResult.error?.message ??
+          relatedGoalSteps.find((result) => result.error)?.error?.message ??
+          null,
+      );
       setLoading(false);
     };
 
@@ -69,6 +118,22 @@ export function QuestCompassModal({
   );
   const strongestForce = viewModel.strongestForce;
   const focusForce = viewModel.focusForce;
+  const selectedForce =
+    viewModel.forces.find((force) => force.key === selectedForceKey) ?? null;
+  const selectedForceDetail = useMemo(
+    () =>
+      selectedForce
+        ? buildQuestCompassForceDetail({
+            force: selectedForce,
+            goals,
+            habits,
+            todayHabitLogs,
+            goalSteps,
+            questHabit,
+          })
+        : null,
+    [selectedForce, goals, habits, todayHabitLogs, goalSteps, questHabit],
+  );
 
   return (
     <div
@@ -157,7 +222,13 @@ export function QuestCompassModal({
 
         <div className="quest-compass__force-grid" aria-label="Six life forces">
           {viewModel.forces.map((force) => (
-            <article key={force.key} className="quest-compass__force-card">
+            <button
+              key={force.key}
+              type="button"
+              className={`quest-compass__force-card quest-compass__force-card--${force.key}`}
+              onClick={() => setSelectedForceKey(force.key)}
+              aria-label={`Open ${force.name} force details`}
+            >
               <span className="quest-compass__force-icon" aria-hidden="true">
                 {force.icon}
               </span>
@@ -171,10 +242,10 @@ export function QuestCompassModal({
                 </p>
                 <p>{force.summary}</p>
                 <small>
-                  Signals: {force.contributingCategories.join(', ')}
+                  Signals: {force.contributingCategories.map((category) => category.label).join(', ')}
                 </small>
               </div>
-            </article>
+            </button>
           ))}
         </div>
 
@@ -226,6 +297,16 @@ export function QuestCompassModal({
           </button>
         </div>
       </div>
+      {selectedForceDetail ? (
+        <ForceDetailSheet
+          detail={selectedForceDetail}
+          onClose={() => setSelectedForceKey(null)}
+          onAskAiGuide={onAskAiGuide}
+          onRefreshAlignment={onRefreshAlignment}
+          onStartNextQuest={onStartNextQuest}
+          onOpenGoals={onOpenGoals}
+        />
+      ) : null}
     </div>
   );
 }
@@ -254,4 +335,145 @@ function CompassSpotlightCard({
       )}
     </article>
   );
+}
+
+function ForceDetailSheet({
+  detail,
+  onClose,
+  onAskAiGuide,
+  onRefreshAlignment,
+  onStartNextQuest,
+  onOpenGoals,
+}: {
+  detail: QuestCompassForceDetail;
+  onClose: () => void;
+  onAskAiGuide: () => void;
+  onRefreshAlignment: () => void;
+  onStartNextQuest: (initialDomainKey?: LifeWheelCategoryKey) => void;
+  onOpenGoals: () => void;
+}) {
+  const { force, relatedGoals, supportingHabits, recommendedAction } = detail;
+  const handlePrimaryAction = () => {
+    if (recommendedAction.type === 'refresh_alignment') {
+      onRefreshAlignment();
+      return;
+    }
+    if (recommendedAction.type === 'goal_step') {
+      onOpenGoals();
+      return;
+    }
+    onStartNextQuest(recommendedAction.categoryKey ?? getPrimaryCategoryForForce(force.key));
+  };
+
+  return (
+    <div className="quest-compass-detail" role="dialog" aria-modal="true" aria-label={`${force.name} details`}>
+      <button
+        type="button"
+        className="quest-compass-detail__backdrop"
+        aria-label={`Close ${force.name} details`}
+        onClick={onClose}
+      />
+      <div className={`quest-compass-detail__sheet quest-compass-detail__sheet--${force.key}`}>
+        <div className="quest-compass-detail__handle" aria-hidden="true" />
+        <div className="quest-compass-detail__header">
+          <div className="quest-compass-detail__title">
+            <span className="quest-compass-detail__icon" aria-hidden="true">{force.icon}</span>
+            <div>
+              <h3>{force.name}</h3>
+              <p>Score: {force.scoreLabel} · Trend: {force.trendLabel}</p>
+            </div>
+          </div>
+          <button type="button" className="mobile-menu-overlay__hold-close" onClick={onClose} aria-label="Close force details">
+            ✕
+          </button>
+        </div>
+
+        <div className={`quest-compass-detail__health quest-compass-detail__health--${force.healthStatus}`}>
+          {force.healthLabel}
+        </div>
+
+        <section className="quest-compass-detail__section">
+          <h4>{force.name} represents</h4>
+          <div className="quest-compass-detail__chips">
+            {force.description.map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+        </section>
+
+        <section className="quest-compass-detail__section">
+          <h4>What’s influencing this?</h4>
+          <ul className="quest-compass-detail__list">
+            {force.contributingCategories.map((category) => (
+              <li key={category.key}>
+                <span>{category.label}</span>
+                <strong>{category.scoreLabel}</strong>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="quest-compass-detail__section">
+          <h4>Related Goals</h4>
+          {relatedGoals.length ? (
+            <ul className="quest-compass-detail__stack-list">
+              {relatedGoals.map((goal) => (
+                <li key={goal.id}>
+                  <strong>{goal.title}</strong>
+                  <span>{goal.statusLabel}</span>
+                  {goal.progressLabel ? <small>Progress: {goal.progressLabel}</small> : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="quest-compass-detail__empty">No active goals supporting this force yet.</p>
+          )}
+        </section>
+
+        <section className="quest-compass-detail__section">
+          <h4>Supporting Habits</h4>
+          {supportingHabits.length ? (
+            <ul className="quest-compass-detail__stack-list">
+              {supportingHabits.map((habit) => (
+                <li key={habit.id}>
+                  <strong>{habit.emoji ? `${habit.emoji} ` : ''}{habit.title}</strong>
+                  <span>{habit.completionLabel}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="quest-compass-detail__empty">No active habits supporting this force.</p>
+          )}
+        </section>
+
+        <section className="quest-compass-detail__recommendation">
+          <span>{recommendedAction.label}</span>
+          <strong>{recommendedAction.title}</strong>
+          <p>{recommendedAction.description}</p>
+          <button type="button" onClick={handlePrimaryAction}>
+            {getRecommendationButtonLabel(recommendedAction)}
+          </button>
+        </section>
+
+        <div className="quest-compass-detail__actions">
+          <button type="button" onClick={onAskAiGuide}>Ask AI Guide</button>
+          <button type="button" onClick={onRefreshAlignment}>Refresh Alignment</button>
+          <button type="button" onClick={() => onStartNextQuest(getPrimaryCategoryForForce(force.key))}>Start Next Quest</button>
+          <button type="button" onClick={onOpenGoals}>Open Goals</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function getRecommendationButtonLabel(action: QuestCompassRecommendedAction): string {
+  switch (action.type) {
+    case 'goal_step':
+      return 'Open Goals';
+    case 'refresh_alignment':
+      return 'Refresh Alignment';
+    case 'quest_habit':
+    case 'starter_quest':
+      return 'Start Next Quest';
+  }
 }

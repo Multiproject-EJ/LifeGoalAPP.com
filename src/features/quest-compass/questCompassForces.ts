@@ -11,6 +11,7 @@ export type QuestCompassForce = {
   name: string;
   icon: string;
   summary: string;
+  description: string[];
   prompt: string;
 };
 
@@ -20,6 +21,7 @@ export const QUEST_COMPASS_FORCES: QuestCompassForce[] = [
     name: 'Fire',
     icon: '🔥',
     summary: 'Passion, energy, joy, creativity, and drive.',
+    description: ['energy', 'passion', 'creativity', 'excitement', 'enjoyment'],
     prompt: 'What would make this week feel more alive?',
   },
   {
@@ -27,6 +29,7 @@ export const QUEST_COMPASS_FORCES: QuestCompassForce[] = [
     name: 'Strength',
     icon: '💪',
     summary: 'Health, resilience, capacity, and stable foundations.',
+    description: ['health', 'resilience', 'stability', 'discipline', 'capacity'],
     prompt: 'What small ritual would protect your energy today?',
   },
   {
@@ -34,6 +37,7 @@ export const QUEST_COMPASS_FORCES: QuestCompassForce[] = [
     name: 'Connection',
     icon: '🤝',
     summary: 'Love, friends, family, community, and belonging.',
+    description: ['love', 'friendship', 'family', 'community', 'belonging'],
     prompt: 'Who or what relationship needs one caring step?',
   },
   {
@@ -41,6 +45,7 @@ export const QUEST_COMPASS_FORCES: QuestCompassForce[] = [
     name: 'Wealth',
     icon: '💎',
     summary: 'Money, resources, freedom, and practical support.',
+    description: ['money', 'resources', 'security', 'freedom', 'support'],
     prompt: 'What resource would make your next quest easier?',
   },
   {
@@ -48,6 +53,7 @@ export const QUEST_COMPASS_FORCES: QuestCompassForce[] = [
     name: 'Growth',
     icon: '🌱',
     summary: 'Learning, wisdom, skills, and personal evolution.',
+    description: ['learning', 'skills', 'wisdom', 'adaptation', 'evolution'],
     prompt: 'What lesson is your current chapter teaching you?',
   },
   {
@@ -55,6 +61,7 @@ export const QUEST_COMPASS_FORCES: QuestCompassForce[] = [
     name: 'Direction',
     icon: '🧭',
     summary: 'Purpose, vision, meaning, and the path ahead.',
+    description: ['purpose', 'vision', 'meaning', 'clarity', 'legacy'],
     prompt: 'What is the clearest next step toward your bigger vision?',
   },
 ];
