@@ -2584,6 +2584,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
     handleMobileNavSelect('support');
   }, [handleMobileNavSelect]);
 
+  const openHealthGoalsQuestMenuFromBody = useCallback(() => {
+    setIsMobileProfileDialogOpen(false);
+    setIsEnergyMenuOpen(false);
+    setIsFeedbackSupportSubmenuOpen(false);
+    setIsStarterQuestSheetOpen(false);
+    closeGameBoardOverlayIfOpen();
+    setIsMobileMenuOpen(true);
+    setIsMyQuestSubmenuOpen(true);
+  }, [closeGameBoardOverlayIfOpen]);
+
   const closeStarterQuestSheet = useCallback(() => {
     setIsStarterQuestSheetOpen(false);
     if (starterQuestSheetOrigin === 'my-quest') {
@@ -3704,7 +3714,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
         return (
           <div className="workspace-content">
-            <BodyHaircutWidget />
+            <BodyHaircutWidget onOpenHealthGoalsQuestMenu={openHealthGoalsQuestMenuFromBody} />
           </div>
         );
       case 'habits':
