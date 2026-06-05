@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, type CSSProperties } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   DEFAULT_SYMBOLS,
@@ -73,12 +73,18 @@ const HOLIDAY_THEME: Record<string, string> = {
   st_patricks_day:  'st-patricks',
 };
 
+type RevealOrigin = {
+  x: number;
+  y: number;
+};
+
 type RevealState = {
   isRevealing: boolean;
   isOpening: boolean;
   dayIndex: number;
   doorType: DoorType;
   hatch: CalendarHatch | null;
+  origin: RevealOrigin | null;
 };
 
 /** ms to wait after press before opening the reveal — lets the spring snap-back animation complete */
@@ -217,7 +223,7 @@ export const CountdownCalendarModal = ({
 
   const [doorError, setDoorError] = useState<string | null>(null);
 
-  const handleOpenDoor = useCallback(async (dayIndex: number, doorType: DoorType, hatch: CalendarHatch) => {
+  const handleOpenDoor = useCallback(async (dayIndex: number, doorType: DoorType, hatch: CalendarHatch, origin: RevealOrigin | null = null) => {
     if (!userId || !seasonData) return;
     setDoorError(null);
 
@@ -232,6 +238,7 @@ export const CountdownCalendarModal = ({
       dayIndex,
       doorType,
       hatch,
+      origin,
     });
 
     try {
@@ -261,7 +268,7 @@ export const CountdownCalendarModal = ({
         reveal_mechanic: reward.reveal_mechanic ?? hatch.reveal_mechanic,
         reward_payload: reward.reward_payload ?? hatch.reward_payload,
       };
-      setRevealState({ isRevealing: true, isOpening: false, dayIndex, doorType, hatch: authoritativeHatch });
+      setRevealState({ isRevealing: true, isOpening: false, dayIndex, doorType, hatch: authoritativeHatch, origin });
 
       // Award essence in Island Run sessions; award gold elsewhere.
       if (reward?.reward_currency === 'gold' && reward.reward_amount) {
@@ -474,12 +481,18 @@ export const CountdownCalendarModal = ({
 
   // Render reveal modal if actively revealing
   if (revealState?.isRevealing && revealState.hatch) {
-    const { hatch, dayIndex, doorType, isOpening } = revealState;
+    const { hatch, dayIndex, doorType, isOpening, origin } = revealState;
     const emoji = hatch.symbol_emoji ?? themeEmojis[(dayIndex - 1) % themeEmojis.length];
     const tier = hatch.reward_tier ?? 2;
     const currency = hatch.reward_currency;
     const amount = hatch.reward_amount;
     const mechanic = hatch.reveal_mechanic ?? 'flip';
+    const revealOriginStyle = origin
+      ? ({
+          '--daily-treat-origin-x': `${origin.x}px`,
+          '--daily-treat-origin-y': `${origin.y}px`,
+        } as CSSProperties)
+      : undefined;
 
     return (
       <div
@@ -489,7 +502,7 @@ export const CountdownCalendarModal = ({
         aria-label={`Revealing Day ${dayIndex} ${doorType} door`}
       >
         <div className="daily-treats-calendar__backdrop" role="presentation" />
-        <div className="daily-treats-calendar__dialog daily-treats-calendar__dialog--reward-reveal">
+        <div className="daily-treats-calendar__dialog daily-treats-calendar__dialog--reward-reveal" style={revealOriginStyle}>
           <div className="daily-treats-calendar__reward-orb daily-treats-calendar__reward-orb--one" aria-hidden="true" />
           <div className="daily-treats-calendar__reward-orb daily-treats-calendar__reward-orb--two" aria-hidden="true" />
           <div className="daily-treats-calendar__content daily-treats-calendar__content--reward-reveal">
@@ -768,7 +781,13 @@ export const CountdownCalendarModal = ({
                       className="daily-treats-calendar__hatch daily-treats-calendar__hatch--bonus-ready daily-treats-calendar__hatch-button"
                       role="listitem"
                       aria-label={label}
-                      onClick={() => void handleOpenDoor(day, 'bonus', bonusHatch)}
+                      onClick={(event) => {
+                        const rect = event.currentTarget.getBoundingClientRect();
+                        void handleOpenDoor(day, 'bonus', bonusHatch, {
+                          x: rect.left + rect.width / 2,
+                          y: rect.top + rect.height / 2,
+                        });
+                      }}
                     >
                       {doorBody}
                     </button>
@@ -778,9 +797,13 @@ export const CountdownCalendarModal = ({
                       className={`daily-treats-calendar__hatch daily-treats-calendar__hatch--${status} daily-treats-calendar__hatch-button`}
                       role="listitem"
                       aria-label={label}
-                      onClick={() => {
+                      onClick={(event) => {
                         if (freeHatch) {
-                          void handleOpenDoor(day, 'free', freeHatch);
+                          const rect = event.currentTarget.getBoundingClientRect();
+                          void handleOpenDoor(day, 'free', freeHatch, {
+                            x: rect.left + rect.width / 2,
+                            y: rect.top + rect.height / 2,
+                          });
                         } else {
                           // Legacy mode
                           setTimeout(() => {

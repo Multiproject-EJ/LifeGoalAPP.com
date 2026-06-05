@@ -30953,6 +30953,42 @@ body.habit-wizard-open .mobile-footer-nav {
   transform: translateY(120%) !important;
 }
 
+
+.daily-treats-calendar--holiday-personal-quest:not(.daily-treats-calendar--reward-reveal) .daily-treats-calendar__backdrop,
+.daily-treats-calendar--personal-quest:not(.daily-treats-calendar--reward-reveal) .daily-treats-calendar__backdrop {
+  animation: daily-momentum-backdrop-fade-in 180ms ease-out both;
+}
+
+.daily-treats-calendar--holiday-personal-quest:not(.daily-treats-calendar--reward-reveal) .daily-treats-calendar__dialog,
+.daily-treats-calendar--personal-quest:not(.daily-treats-calendar--reward-reveal) .daily-treats-calendar__dialog {
+  transform-origin: center center;
+  animation: daily-momentum-fast-pop-in 300ms cubic-bezier(0.12, 0.9, 0.26, 1.18) both;
+  will-change: transform, opacity, filter;
+}
+
+@keyframes daily-momentum-backdrop-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes daily-momentum-fast-pop-in {
+  0% {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(18px) scale(0.52);
+  }
+  62% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(-4px) scale(1.035);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
+  }
+}
+
 /* Daily Treat reward reveal — polished calm-premium card surface */
 .daily-treats-calendar--reward-reveal {
   align-items: center;
@@ -31119,8 +31155,21 @@ body.habit-wizard-open .mobile-footer-nav {
 }
 
 @keyframes daily-treat-modal-scale-in {
-  from { opacity: 0; transform: translateY(10px) scale(0.965); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translate(
+      calc(var(--daily-treat-origin-x, 50vw) - 50vw),
+      calc(var(--daily-treat-origin-y, 50vh) - 50vh)
+    ) scale(0.14);
+  }
+  64% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1.035);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
 }
 
 .door-flip {
@@ -31489,6 +31538,10 @@ body.habit-wizard-open .mobile-footer-nav {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .daily-treats-calendar--holiday-personal-quest:not(.daily-treats-calendar--reward-reveal) .daily-treats-calendar__backdrop,
+  .daily-treats-calendar--holiday-personal-quest:not(.daily-treats-calendar--reward-reveal) .daily-treats-calendar__dialog,
+  .daily-treats-calendar--personal-quest:not(.daily-treats-calendar--reward-reveal) .daily-treats-calendar__backdrop,
+  .daily-treats-calendar--personal-quest:not(.daily-treats-calendar--reward-reveal) .daily-treats-calendar__dialog,
   .daily-treats-calendar--reward-reveal,
   .daily-treats-calendar__dialog--reward-reveal,
   .door-flip,
