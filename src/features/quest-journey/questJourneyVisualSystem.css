@@ -1,0 +1,551 @@
+:root {
+  --quest-bg-page: #eef7ff;
+  --quest-bg-page-rgb: 238, 247, 255;
+  --quest-bg-radial-top: rgba(180, 218, 255, 0.58);
+  --quest-bg-radial-bottom: rgba(238, 231, 255, 0.48);
+  --quest-bg-space: #07162f;
+  --quest-bg-space-soft: #102443;
+  --quest-bg-frost: rgba(248, 252, 255, 0.78);
+  --quest-bg-frost-strong: rgba(255, 255, 255, 0.92);
+  --quest-bg-frost-muted: rgba(231, 242, 255, 0.68);
+  --quest-surface-hero: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(229,244,255,0.86));
+  --quest-surface-card: rgba(255, 255, 255, 0.82);
+  --quest-surface-card-strong: rgba(255, 255, 255, 0.94);
+  --quest-surface-card-subtle: rgba(239, 247, 255, 0.72);
+  --quest-surface-companion: linear-gradient(135deg, rgba(245,240,255,0.94), rgba(230,243,255,0.9));
+  --quest-surface-progress: linear-gradient(135deg, rgba(232,243,255,0.94), rgba(241,235,255,0.9));
+  --quest-surface-dark-glass: rgba(10, 24, 48, 0.72);
+  --quest-border-subtle: rgba(42, 76, 124, 0.1);
+  --quest-border-glass: rgba(255, 255, 255, 0.62);
+  --quest-border-strong: rgba(28, 55, 96, 0.18);
+  --quest-border-gold: rgba(218, 165, 64, 0.42);
+  --quest-border-companion: rgba(143, 112, 255, 0.24);
+  --quest-shadow-xs: 0 4px 12px rgba(15, 35, 70, 0.08);
+  --quest-shadow-sm: 0 10px 28px rgba(15, 35, 70, 0.1);
+  --quest-shadow-md: 0 18px 48px rgba(15, 35, 70, 0.14);
+  --quest-shadow-lg: 0 28px 80px rgba(8, 22, 48, 0.18);
+  --quest-shadow-inner-glass: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  --quest-glow-gold: 0 0 28px rgba(246, 197, 92, 0.28);
+  --quest-glow-blue: 0 0 34px rgba(80, 154, 255, 0.24);
+  --quest-glow-violet: 0 0 34px rgba(151, 103, 255, 0.22);
+  --quest-glow-success: 0 0 26px rgba(58, 199, 139, 0.22);
+  --quest-text-primary: #10213f;
+  --quest-text-secondary: #31486a;
+  --quest-text-muted: #647894;
+  --quest-text-soft: #8294ad;
+  --quest-text-inverse: #f6fbff;
+  --quest-text-link: #245ee8;
+  --quest-text-gold: #9b6a10;
+  --quest-gold-50: #fff8e7;
+  --quest-gold-100: #ffedbd;
+  --quest-gold-300: #ffd36e;
+  --quest-gold-500: #d99a22;
+  --quest-gold-700: #8f5d0b;
+  --quest-gradient-gold: linear-gradient(135deg, #ffe6a3, #d99a22);
+  --quest-blue-100: #dbeeff;
+  --quest-blue-300: #91c9ff;
+  --quest-blue-500: #3c82f6;
+  --quest-violet-100: #efe7ff;
+  --quest-violet-300: #b89cff;
+  --quest-violet-500: #7c55f2;
+  --quest-gradient-progress: linear-gradient(90deg, #4ea4ff, #7c55f2);
+  --quest-gradient-progress-soft: linear-gradient(90deg, rgba(78,164,255,0.18), rgba(124,85,242,0.18));
+  --quest-success-bg: rgba(227, 250, 239, 0.92);
+  --quest-success-text: #13714b;
+  --quest-success-border: rgba(38, 166, 107, 0.32);
+  --quest-warning-bg: rgba(255, 247, 224, 0.94);
+  --quest-warning-text: #8a5a00;
+  --quest-warning-border: rgba(230, 168, 45, 0.35);
+  --quest-error-bg: rgba(255, 235, 238, 0.94);
+  --quest-error-text: #9b1c31;
+  --quest-error-border: rgba(220, 64, 90, 0.32);
+  --quest-info-bg: rgba(228, 242, 255, 0.94);
+  --quest-info-text: #1d5ea8;
+  --quest-info-border: rgba(74, 144, 226, 0.3);
+  --quest-space-1: 0.25rem;
+  --quest-space-2: 0.5rem;
+  --quest-space-3: 0.75rem;
+  --quest-space-4: 1rem;
+  --quest-space-5: 1.25rem;
+  --quest-space-6: 1.5rem;
+  --quest-space-8: 2rem;
+  --quest-space-10: 2.5rem;
+  --quest-space-12: 3rem;
+  --quest-section-gap: clamp(1rem, 2vw, 1.75rem);
+  --quest-page-padding: clamp(1rem, 3vw, 2rem);
+  --quest-radius-sm: 0.75rem;
+  --quest-radius-md: 1rem;
+  --quest-radius-lg: 1.35rem;
+  --quest-radius-xl: 1.75rem;
+  --quest-radius-2xl: 2.25rem;
+  --quest-radius-pill: 999px;
+  --quest-transition-fast: 140ms ease;
+  --quest-transition-base: 220ms ease;
+  --quest-transition-slow: 360ms ease;
+  --quest-hover-lift: translateY(-2px);
+}
+
+.quest-journey-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: calc(var(--quest-page-padding) + env(safe-area-inset-top, 0px)) max(var(--quest-page-padding), env(safe-area-inset-right, 0px)) calc(var(--quest-page-padding) + env(safe-area-inset-bottom, 0px)) max(var(--quest-page-padding), env(safe-area-inset-left, 0px));
+  color: var(--quest-text-primary);
+  background:
+    radial-gradient(circle at 16% 4%, var(--quest-bg-radial-top), transparent 32rem),
+    radial-gradient(circle at 84% 12%, rgba(255, 231, 163, 0.34), transparent 26rem),
+    radial-gradient(circle at 70% 92%, var(--quest-bg-radial-bottom), transparent 30rem),
+    linear-gradient(180deg, var(--quest-bg-page), #f8fbff 72%);
+}
+
+.quest-journey-shell--space {
+  color: var(--quest-text-inverse);
+  background:
+    radial-gradient(circle at 20% 0%, rgba(94, 155, 255, 0.28), transparent 28rem),
+    radial-gradient(circle at 76% 16%, rgba(151, 103, 255, 0.2), transparent 26rem),
+    linear-gradient(180deg, var(--quest-bg-space), var(--quest-bg-space-soft));
+}
+
+.quest-journey-shell__content {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: var(--quest-section-gap);
+}
+
+.quest-journey-shell--compact .quest-journey-shell__content {
+  width: min(760px, 100%);
+}
+
+.quest-journey-preview__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--quest-space-4);
+  color: var(--quest-text-secondary);
+}
+
+.quest-journey-preview__topbar p {
+  margin: 0;
+  max-width: 62ch;
+}
+
+.quest-journey-preview__badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0 var(--quest-space-3);
+  border-radius: var(--quest-radius-pill);
+  background: var(--quest-gold-50);
+  border: 1px solid var(--quest-border-gold);
+  color: var(--quest-text-gold);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.quest-hero-card,
+.quest-glass-card,
+.quest-companion-card,
+.quest-tool-card,
+.quest-trait-card {
+  box-shadow: var(--quest-shadow-md), var(--quest-shadow-inner-glass);
+  backdrop-filter: blur(22px) saturate(1.1);
+  -webkit-backdrop-filter: blur(22px) saturate(1.1);
+}
+
+.quest-hero-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(220px, 0.75fr);
+  gap: var(--quest-space-8);
+  padding: clamp(1.35rem, 4vw, 2.5rem);
+  border: 1px solid var(--quest-border-glass);
+  border-radius: var(--quest-radius-2xl);
+  background: var(--quest-surface-hero);
+}
+
+.quest-hero-card::before,
+.quest-companion-card::before {
+  content: '';
+  position: absolute;
+  inset: -40% auto auto 45%;
+  width: 22rem;
+  height: 22rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 211, 110, 0.28), rgba(124, 85, 242, 0.08) 42%, transparent 68%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.quest-hero-card--identity::before { background: radial-gradient(circle, rgba(184, 156, 255, 0.32), transparent 68%); }
+.quest-hero-card--execution::before { background: radial-gradient(circle, rgba(78, 164, 255, 0.22), rgba(58, 199, 139, 0.14) 46%, transparent 70%); }
+.quest-hero-card--companion::before { background: radial-gradient(circle, rgba(184, 156, 255, 0.3), rgba(255, 211, 110, 0.14) 48%, transparent 72%); }
+.quest-hero-card--progression::before { background: radial-gradient(circle, rgba(78, 164, 255, 0.24), rgba(124, 85, 242, 0.24) 46%, transparent 72%); }
+
+.quest-hero-card__copy {
+  display: grid;
+  align-content: center;
+  gap: var(--quest-space-4);
+}
+
+.quest-hero-card__eyebrow,
+.quest-section-header__eyebrow,
+.quest-companion-card__source,
+.quest-trait-card__role {
+  margin: 0;
+  color: var(--quest-text-gold);
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.quest-hero-card__title {
+  margin: 0;
+  color: var(--quest-text-primary);
+  font-size: clamp(2rem, 5vw, 4.2rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+}
+
+.quest-hero-card__summary {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--quest-text-secondary);
+  font-size: clamp(1rem, 1.7vw, 1.16rem);
+  line-height: 1.65;
+}
+
+.quest-hero-card__meta,
+.quest-hero-card__body,
+.quest-hero-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--quest-space-3);
+}
+
+.quest-hero-card__visual {
+  min-height: 230px;
+  display: grid;
+  place-items: center;
+}
+
+.quest-preview-compass {
+  position: relative;
+  width: min(16rem, 62vw);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.94) 0 28%, rgba(219, 238, 255, 0.74) 29% 52%, rgba(124, 85, 242, 0.14) 53% 100%);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: var(--quest-glow-gold), var(--quest-shadow-lg), inset 0 0 0 14px rgba(255, 255, 255, 0.3);
+}
+
+.quest-preview-compass::before,
+.quest-preview-compass::after {
+  content: '';
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 34%;
+  height: 34%;
+  transform-origin: 0 0;
+  clip-path: polygon(50% 0, 100% 100%, 50% 78%, 0 100%);
+  background: var(--quest-gradient-gold);
+  filter: drop-shadow(0 10px 22px rgba(143, 93, 11, 0.24));
+}
+
+.quest-preview-compass::before { transform: rotate(22deg) translate(-50%, -96%); }
+.quest-preview-compass::after { transform: rotate(202deg) translate(-50%, -96%); opacity: 0.58; }
+
+.quest-glass-card {
+  display: grid;
+  gap: var(--quest-space-4);
+  padding: var(--quest-space-6);
+  border: 1px solid var(--quest-border-glass);
+  border-radius: var(--quest-radius-xl);
+  background: var(--quest-surface-card);
+}
+
+.quest-glass-card--strong { background: var(--quest-surface-card-strong); }
+.quest-glass-card--subtle { background: var(--quest-surface-card-subtle); }
+.quest-glass-card--interactive { transition: transform var(--quest-transition-base), box-shadow var(--quest-transition-base); }
+.quest-glass-card--interactive:hover { transform: var(--quest-hover-lift); box-shadow: var(--quest-shadow-lg), var(--quest-shadow-inner-glass); }
+
+.quest-glass-card__title,
+.quest-section-header__title,
+.quest-companion-card__title,
+.quest-tool-card__title,
+.quest-trait-card__title {
+  margin: 0;
+  color: var(--quest-text-primary);
+  letter-spacing: -0.035em;
+}
+
+.quest-glass-card__body,
+.quest-glass-card__body p,
+.quest-section-header__summary,
+.quest-tool-card__summary,
+.quest-trait-card__summary,
+.quest-companion-card__insight,
+.quest-companion-card__reason {
+  color: var(--quest-text-secondary);
+}
+
+.quest-glass-card__body p,
+.quest-tool-card__summary,
+.quest-trait-card__summary,
+.quest-companion-card__insight,
+.quest-companion-card__reason {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.quest-glass-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--quest-space-3);
+  padding-top: var(--quest-space-3);
+  border-top: 1px solid var(--quest-border-subtle);
+}
+
+.quest-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: var(--quest-space-4);
+  margin-top: var(--quest-space-4);
+}
+
+.quest-section-header__title {
+  font-size: clamp(1.35rem, 2.5vw, 2rem);
+}
+
+.quest-section-header__summary { margin: var(--quest-space-1) 0 0; }
+
+.quest-primary-action,
+.quest-secondary-action {
+  min-height: 2.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--quest-space-2);
+  border-radius: var(--quest-radius-pill);
+  padding: 0.75rem 1.15rem;
+  font: inherit;
+  font-weight: 850;
+  cursor: pointer;
+  transition: transform var(--quest-transition-fast), box-shadow var(--quest-transition-fast), border-color var(--quest-transition-fast);
+}
+
+.quest-primary-action:hover:not(:disabled),
+.quest-secondary-action:hover:not(:disabled) { transform: var(--quest-hover-lift); }
+.quest-primary-action:disabled,
+.quest-secondary-action:disabled { cursor: not-allowed; opacity: 0.62; }
+.quest-primary-action--full,
+.quest-secondary-action--full { width: 100%; }
+
+.quest-primary-action {
+  border: 0;
+  color: #172033;
+  box-shadow: var(--quest-glow-gold), 0 12px 28px rgba(143, 93, 11, 0.18);
+}
+
+.quest-primary-action--gold { background: var(--quest-gradient-gold); }
+.quest-primary-action--progress { color: white; background: var(--quest-gradient-progress); box-shadow: var(--quest-glow-blue), 0 12px 28px rgba(36, 94, 232, 0.2); }
+
+.quest-secondary-action {
+  color: var(--quest-text-primary);
+  border: 1px solid var(--quest-border-strong);
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.quest-secondary-action--ghost { background: transparent; }
+.quest-secondary-action--quiet { color: var(--quest-text-muted); background: transparent; border-color: transparent; }
+.quest-secondary-action--glass { box-shadow: var(--quest-shadow-xs), var(--quest-shadow-inner-glass); }
+
+.quest-tool-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--quest-space-3);
+  padding: var(--quest-space-5);
+  border: 1px solid var(--quest-border-subtle);
+  border-radius: var(--quest-radius-lg);
+  background: var(--quest-surface-card);
+}
+
+.quest-tool-card--recommended { border-color: var(--quest-border-gold); box-shadow: var(--quest-shadow-md), var(--quest-glow-gold); }
+.quest-tool-card--locked { opacity: 0.7; }
+
+.quest-tool-card__icon,
+.quest-life-area-chip__icon,
+.quest-trait-card__icon {
+  display: inline-grid;
+  place-items: center;
+  color: var(--quest-text-gold);
+}
+
+.quest-tool-card__icon {
+  width: 2.65rem;
+  height: 2.65rem;
+  border-radius: var(--quest-radius-md);
+  background: var(--quest-gold-50);
+  border: 1px solid var(--quest-border-gold);
+  font-size: 1.25rem;
+}
+
+.quest-tool-card__status {
+  grid-column: 2;
+  color: var(--quest-text-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.quest-metric-ring {
+  --quest-metric-value: 50%;
+  display: inline-grid;
+  justify-items: center;
+  gap: var(--quest-space-2);
+  color: var(--quest-text-secondary);
+}
+
+.quest-metric-ring__inner {
+  width: 8.25rem;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at center, rgba(255,255,255,0.96) 0 58%, transparent 59%),
+    conic-gradient(var(--quest-blue-500) 0 var(--quest-metric-value), rgba(49, 72, 106, 0.12) var(--quest-metric-value) 100%);
+  border: 1px solid var(--quest-border-glass);
+  box-shadow: var(--quest-shadow-sm), inset 0 0 0 10px rgba(255, 255, 255, 0.26);
+}
+
+.quest-metric-ring--gold .quest-metric-ring__inner { background: radial-gradient(circle at center, rgba(255,255,255,0.96) 0 58%, transparent 59%), conic-gradient(var(--quest-gold-500) 0 var(--quest-metric-value), rgba(49, 72, 106, 0.12) var(--quest-metric-value) 100%); }
+.quest-metric-ring--success .quest-metric-ring__inner { background: radial-gradient(circle at center, rgba(255,255,255,0.96) 0 58%, transparent 59%), conic-gradient(#26a66b 0 var(--quest-metric-value), rgba(49, 72, 106, 0.12) var(--quest-metric-value) 100%); }
+
+.quest-metric-ring__value { color: var(--quest-text-primary); font-size: 1.6rem; line-height: 1; }
+.quest-metric-ring__label { color: var(--quest-text-muted); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; }
+.quest-metric-ring__caption { max-width: 10rem; text-align: center; color: var(--quest-text-muted); font-size: 0.86rem; }
+
+.quest-progress-bar { display: grid; gap: var(--quest-space-2); }
+.quest-progress-bar__label-row { display: flex; justify-content: space-between; gap: var(--quest-space-3); color: var(--quest-text-secondary); font-size: 0.92rem; }
+.quest-progress-bar__track { position: relative; height: 0.72rem; overflow: visible; border-radius: var(--quest-radius-pill); background: var(--quest-gradient-progress-soft); }
+.quest-progress-bar__fill { display: block; height: 100%; border-radius: inherit; background: var(--quest-gradient-progress); box-shadow: var(--quest-glow-blue); }
+.quest-progress-bar__marker { position: absolute; top: 50%; transform: translate(-50%, -50%); padding: 0.2rem 0.45rem; border-radius: var(--quest-radius-pill); background: var(--quest-gradient-gold); color: #172033; font-size: 0.7rem; font-weight: 900; white-space: nowrap; box-shadow: var(--quest-shadow-xs); }
+
+.quest-companion-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  gap: var(--quest-space-3);
+  padding: var(--quest-space-6);
+  border: 1px solid var(--quest-border-companion);
+  border-radius: var(--quest-radius-xl);
+  background: var(--quest-surface-companion);
+}
+
+.quest-companion-card__reason {
+  padding: var(--quest-space-3);
+  border-radius: var(--quest-radius-md);
+  color: var(--quest-info-text);
+  background: var(--quest-info-bg);
+  border: 1px solid var(--quest-info-border);
+}
+
+.quest-companion-card__action { margin-top: var(--quest-space-1); }
+
+.quest-life-area-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--quest-space-2);
+  min-height: 2.2rem;
+  padding: 0.42rem 0.75rem;
+  border-radius: var(--quest-radius-pill);
+  color: var(--quest-text-secondary);
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid var(--quest-border-subtle);
+  box-shadow: var(--quest-shadow-xs), var(--quest-shadow-inner-glass);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.quest-life-area-chip--active { color: var(--quest-text-gold); border-color: var(--quest-border-gold); background: var(--quest-gold-50); box-shadow: var(--quest-glow-gold), var(--quest-shadow-xs); }
+.quest-life-area-chip--needs-care { color: var(--quest-warning-text); background: var(--quest-warning-bg); border-color: var(--quest-warning-border); }
+.quest-life-area-chip--strong { color: var(--quest-success-text); background: var(--quest-success-bg); border-color: var(--quest-success-border); }
+
+.quest-trait-card {
+  display: grid;
+  gap: var(--quest-space-3);
+  padding: var(--quest-space-5);
+  border-radius: var(--quest-radius-xl);
+  border: 1px solid rgba(184, 156, 255, 0.28);
+  background: linear-gradient(145deg, rgba(255,255,255,0.92), rgba(239,231,255,0.78));
+}
+
+.quest-trait-card--dominant { border-color: var(--quest-border-gold); box-shadow: var(--quest-shadow-md), var(--quest-glow-gold); }
+.quest-trait-card--growth-edge { border-color: rgba(78, 164, 255, 0.28); background: linear-gradient(145deg, rgba(255,255,255,0.92), rgba(219,238,255,0.76)); }
+.quest-trait-card__icon { width: 3rem; height: 3rem; border-radius: var(--quest-radius-md); background: rgba(255,255,255,0.7); border: 1px solid var(--quest-border-glass); font-size: 1.45rem; }
+
+.quest-modal-sheet { position: fixed; inset: 0; z-index: 4000; display: grid; place-items: center; padding: max(1rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px)) max(1rem, env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px)); }
+.quest-modal-sheet__backdrop { position: fixed; inset: 0; padding: 0; border: 0; background: rgba(7, 22, 47, 0.48); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); cursor: pointer; }
+.quest-modal-sheet__panel { position: relative; z-index: 1; width: min(640px, 100%); max-height: min(760px, 88vh); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; border-radius: var(--quest-radius-2xl); border: 1px solid var(--quest-border-glass); background: var(--quest-surface-card-strong); box-shadow: var(--quest-shadow-lg), var(--quest-shadow-inner-glass); overflow: hidden; }
+.quest-modal-sheet__header,
+.quest-modal-sheet__footer { display: flex; align-items: center; justify-content: space-between; gap: var(--quest-space-3); padding: var(--quest-space-5); }
+.quest-modal-sheet__header { border-bottom: 1px solid var(--quest-border-subtle); }
+.quest-modal-sheet__header h2 { margin: 0; color: var(--quest-text-primary); letter-spacing: -0.04em; }
+.quest-modal-sheet__body { overflow: auto; padding: var(--quest-space-5); color: var(--quest-text-secondary); }
+.quest-modal-sheet__footer { border-top: 1px solid var(--quest-border-subtle); }
+.quest-modal-sheet__close { width: 2.35rem; height: 2.35rem; border-radius: var(--quest-radius-pill); border: 1px solid var(--quest-border-strong); background: rgba(255, 255, 255, 0.72); color: var(--quest-text-primary); font-size: 1.4rem; line-height: 1; cursor: pointer; }
+
+.quest-preview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--quest-section-gap); }
+.quest-preview-grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.quest-preview-stack { display: grid; gap: var(--quest-space-4); }
+.quest-preview-chip-row { display: flex; flex-wrap: wrap; gap: var(--quest-space-2); }
+.quest-preview-metrics { display: flex; flex-wrap: wrap; align-items: center; gap: var(--quest-space-6); }
+
+@media (max-width: 820px) {
+  .quest-hero-card { grid-template-columns: 1fr; gap: var(--quest-space-5); }
+  .quest-hero-card__visual { min-height: 160px; }
+  .quest-preview-grid,
+  .quest-preview-grid--two { grid-template-columns: 1fr; }
+  .quest-section-header { align-items: start; flex-direction: column; }
+  .quest-journey-preview__topbar { align-items: start; flex-direction: column; }
+}
+
+@media (max-width: 540px) {
+  .quest-journey-shell { padding-inline: max(0.85rem, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)); }
+  .quest-hero-card,
+  .quest-glass-card,
+  .quest-companion-card { border-radius: var(--quest-radius-xl); }
+  .quest-hero-card { padding: 1.15rem; }
+  .quest-glass-card,
+  .quest-companion-card { padding: var(--quest-space-4); }
+  .quest-primary-action,
+  .quest-secondary-action { width: 100%; }
+  .quest-modal-sheet { align-items: end; padding: 0; }
+  .quest-modal-sheet__panel { width: 100%; max-height: calc(92vh - env(safe-area-inset-top, 0px)); border-radius: var(--quest-radius-2xl) var(--quest-radius-2xl) 0 0; }
+  .quest-modal-sheet__footer { padding-bottom: calc(var(--quest-space-5) + env(safe-area-inset-bottom, 0px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quest-glass-card--interactive,
+  .quest-primary-action,
+  .quest-secondary-action {
+    transition: none;
+  }
+
+  .quest-primary-action:hover:not(:disabled),
+  .quest-secondary-action:hover:not(:disabled),
+  .quest-glass-card--interactive:hover {
+    transform: none;
+  }
+}

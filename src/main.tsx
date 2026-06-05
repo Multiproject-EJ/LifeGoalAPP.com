@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, type ComponentType } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import { registerServiceWorker } from './registerServiceWorker.ts';
@@ -30,8 +30,32 @@ if (typeof window !== 'undefined') {
 
 // Routes that render public (non-app) views.
 const NON_APP_ROUTES = new Set(['world', 'lobby', 'privacy', 'terms', 'support']);
+const QUEST_VISUAL_SYSTEM_PREVIEW_PATH = '/dev/quest-journey-visual-system';
+
+function QuestVisualSystemPreviewRoute() {
+  const [Preview, setPreview] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/quest-journey/QuestJourneyVisualSystemPreview').then((module) => {
+      if (isMounted) {
+        setPreview(() => module.default);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return Preview ? <Preview /> : null;
+}
 
 function Root() {
+  const isQuestVisualSystemPreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === QUEST_VISUAL_SYSTEM_PREVIEW_PATH;
+
   const initialRoute = useMemo(() => resolveRoute(), []);
   const [showApp, setShowApp] = useState(() => {
     const shouldRenderAppByDefault = !NON_APP_ROUTES.has(initialRoute);
@@ -58,6 +82,10 @@ function Root() {
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
+
+  if (isQuestVisualSystemPreviewRoute) {
+    return <QuestVisualSystemPreviewRoute />;
+  }
 
   if (!showApp && !showLobby) {
     if (initialRoute === 'privacy' || initialRoute === 'terms' || initialRoute === 'support') {
