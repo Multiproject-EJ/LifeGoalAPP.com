@@ -89,23 +89,48 @@ export function QuestCompassModal({
         </div>
 
         <div className="mobile-menu-overlay__submenu mobile-menu-overlay__submenu--open quest-compass__actions">
-          <button type="button" className="mobile-menu-overlay__submenu-button" onClick={onAskAiGuide}>
+          <button
+            type="button"
+            className="mobile-menu-overlay__submenu-button"
+            aria-label="Ask AI Guide about your Quest Compass"
+            onClick={onAskAiGuide}
+          >
             <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">🧠</span>
             <span>Ask AI Guide</span>
           </button>
-          <button type="button" className="mobile-menu-overlay__submenu-button" onClick={onRefreshAlignment}>
+          <button
+            type="button"
+            className="mobile-menu-overlay__submenu-button"
+            aria-label="Refresh your Quest Compass alignment with a check-in"
+            onClick={onRefreshAlignment}
+          >
             <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">📊</span>
             <span>Refresh alignment/check-in</span>
           </button>
-          <button type="button" className="mobile-menu-overlay__submenu-button" onClick={onStartNextQuest}>
+          <button
+            type="button"
+            className="mobile-menu-overlay__submenu-button"
+            aria-label="Start the next quest from your Quest Compass"
+            onClick={onStartNextQuest}
+          >
             <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">🔁</span>
             <span>Start next quest</span>
           </button>
-          <button type="button" className="mobile-menu-overlay__submenu-button" onClick={onOpenGoals}>
+          <button
+            type="button"
+            className="mobile-menu-overlay__submenu-button"
+            aria-label="Open goals from your Quest Compass"
+            onClick={onOpenGoals}
+          >
             <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">🎯</span>
             <span>Open goals</span>
           </button>
-          <button type="button" className="mobile-menu-overlay__submenu-button" onClick={onOpenJournal}>
+          <button
+            type="button"
+            className="mobile-menu-overlay__submenu-button"
+            aria-label="Open journal from your Quest Compass"
+            onClick={onOpenJournal}
+          >
             <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">📝</span>
             <span>Open journal</span>
           </button>
