@@ -823,3 +823,39 @@
   font-size: 0.9rem;
   text-align: center;
 }
+
+.habit-day-nav__vision-modal-backdrop:has(.habit-day-nav__daily-life-upgrade-modal) {
+  animation: daily-life-upgrade-backdrop-fade-in 220ms ease-out both;
+}
+
+.habit-day-nav__daily-life-upgrade-modal {
+  animation: daily-life-upgrade-slide-up 360ms cubic-bezier(0.18, 0.88, 0.24, 1) both;
+  will-change: transform, opacity;
+}
+
+@keyframes daily-life-upgrade-slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(100dvh) scale(0.98);
+  }
+  72% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes daily-life-upgrade-backdrop-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .habit-day-nav__vision-modal-backdrop:has(.habit-day-nav__daily-life-upgrade-modal),
+  .habit-day-nav__daily-life-upgrade-modal {
+    animation: none !important;
+  }
+}
