@@ -401,6 +401,7 @@ type DailyHabitTrackerProps = {
   isRoutinesFeatureOpen?: boolean;
   isAdminOrCreator?: boolean;
   onOpenFeaturePreview?: (featureId: FeatureAvailabilityId, label: string) => void;
+  deferDailyLifeUpgradeModal?: boolean;
 };
 
 type HabitCompletionState = {
@@ -781,6 +782,7 @@ export function DailyHabitTracker({
   isRoutinesFeatureOpen = false,
   isAdminOrCreator = false,
   onOpenFeaturePreview,
+  deferDailyLifeUpgradeModal = false,
 }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
   const sparkHandEnabled = isPlayersHandSparkResultEnabled();
@@ -10267,6 +10269,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     handleOpenEdit,
     focusHabitCardById,
     refreshHabits,
+    deferInitialModal: deferDailyLifeUpgradeModal,
   });
 
   const hasViewportModalOpen =

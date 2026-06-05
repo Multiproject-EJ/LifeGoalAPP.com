@@ -256,6 +256,15 @@ const DAILY_TREATS_SEEN_KEY = 'lifegoal_daily_treats_seen';
 const DAILY_TREATS_AUTO_OPEN_DATE_KEY = 'lifegoal_daily_treats_auto_open_date';
 const HABITS_CREATED_EVENT = 'habitgame:habits-created';
 
+function getDailyTreatsAutoOpenDateKey(now = new Date()): string {
+  return now.toDateString();
+}
+
+function isDailyTreatAutoOpenDueForUser(userId: string | null | undefined): boolean {
+  if (typeof window === 'undefined' || !userId) return false;
+  return window.localStorage.getItem(DAILY_TREATS_AUTO_OPEN_DATE_KEY) !== getDailyTreatsAutoOpenDateKey();
+}
+
 function formatTimerSeconds(seconds: number): string {
   const safe = Math.max(0, Math.floor(seconds));
   const mins = Math.floor(safe / 60);
@@ -792,17 +801,19 @@ export default function App({ forceAuthOnMount }: AppProps) {
     openPersonalQuestDailyTreatsCalendar();
   }, [markDailyTreatsSeen, openPersonalQuestDailyTreatsCalendar]);
 
+  const isDailyTreatAutoOpenDue = isDailyTreatAutoOpenDueForUser(supabaseSession?.user?.id);
+  const shouldDeferDailyLifeUpgradeModal = showCalendarPlaceholder || isDailyTreatAutoOpenDue;
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!supabaseSession?.user?.id) return;
 
-    const todayKey = new Date().toDateString();
-    const lastAutoOpenedDate = window.localStorage.getItem(DAILY_TREATS_AUTO_OPEN_DATE_KEY);
-    if (lastAutoOpenedDate === todayKey) return;
+    const todayKey = getDailyTreatsAutoOpenDateKey();
+    if (!isDailyTreatAutoOpenDue) return;
 
     launchDailyTreatsMenu();
     window.localStorage.setItem(DAILY_TREATS_AUTO_OPEN_DATE_KEY, todayKey);
-  }, [launchDailyTreatsMenu, supabaseSession?.user?.id]);
+  }, [isDailyTreatAutoOpenDue, launchDailyTreatsMenu, supabaseSession?.user?.id]);
 
   const launchHolidayCalendar = useCallback(() => {
     setHolidayPreviewKey(null);
@@ -3650,6 +3661,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               onNavigateToRoutines={openRoutinesWorkspace}
               isAdminOrCreator={isAdmin === true}
               onOpenFeaturePreview={openFeaturePreviewOverlay}
+              deferDailyLifeUpgradeModal={shouldDeferDailyLifeUpgradeModal}
             />
             <HabitsModule
               session={activeSession}
@@ -4953,6 +4965,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               onNavigateToRoutines={openRoutinesWorkspace}
               isAdminOrCreator={isAdmin === true}
               onOpenFeaturePreview={openFeaturePreviewOverlay}
+              deferDailyLifeUpgradeModal={shouldDeferDailyLifeUpgradeModal}
             />
           </div>
         {!showZenGardenFullScreen && !isConflictResolverFullscreen && (

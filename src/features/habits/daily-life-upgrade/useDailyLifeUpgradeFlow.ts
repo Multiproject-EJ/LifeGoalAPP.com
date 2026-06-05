@@ -42,6 +42,7 @@ export function useDailyLifeUpgradeFlow(params: {
   handleOpenEdit: (habit: any) => void;
   focusHabitCardById: (habitId: string) => void;
   refreshHabits: () => Promise<unknown>;
+  deferInitialModal?: boolean;
 }) {
   const [dailyLifeUpgradeCandidate, setDailyLifeUpgradeCandidate] = useState<DailyLifeUpgradeCandidate | null>(null);
   const [showDailyLifeUpgradeModal, setShowDailyLifeUpgradeModal] = useState(false);
@@ -72,8 +73,9 @@ export function useDailyLifeUpgradeFlow(params: {
     });
     if (!candidate) return;
     setDailyLifeUpgradeCandidate(candidate);
+    if (params.deferInitialModal) return;
     setShowDailyLifeUpgradeModal(true);
-  }, [params.userId, params.habits, params.historicalLogs]);
+  }, [params.userId, params.habits, params.historicalLogs, params.deferInitialModal]);
 
   useEffect(() => () => {
     if (dailyLifeUpgradeHighlightTimeoutRef.current !== null) {
