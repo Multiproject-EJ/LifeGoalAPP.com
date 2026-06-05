@@ -2573,17 +2573,111 @@
   gap: 3px;
 }
 
-/* ── Reward bar burst animation (Monopoly GO "pling" pop) ──────────── */
+/* ── Reward bar big-reward FX: one in-place front flip + edge flash ────── */
 @keyframes rewardbar-burst {
-  0%   { transform: translateX(-50%) scale(1); filter: brightness(1); }
-  25%  { transform: translateX(-50%) scale(1.08); filter: brightness(1.3); }
-  50%  { transform: translateX(-50%) scale(0.96); filter: brightness(1.1); }
-  75%  { transform: translateX(-50%) scale(1.03); filter: brightness(1.15); }
-  100% { transform: translateX(-50%) scale(1); filter: brightness(1); }
+  0% {
+    transform: perspective(520px) rotateX(0deg) scale(1);
+    filter: brightness(1);
+  }
+  45% {
+    transform: perspective(520px) rotateX(180deg) scale(1.04);
+    filter: brightness(1.22);
+  }
+  82% {
+    transform: perspective(520px) rotateX(330deg) scale(1.02);
+    filter: brightness(1.12);
+  }
+  100% {
+    transform: perspective(520px) rotateX(360deg) scale(1);
+    filter: brightness(1);
+  }
 }
+
+@keyframes rewardbar-border-flash {
+  0%, 62% {
+    opacity: 0;
+    transform: scale(0.98);
+    box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+  78% {
+    opacity: 1;
+    transform: scale(1.03);
+    box-shadow:
+      0 0 16px 5px rgba(255, 255, 255, 0.95),
+      0 0 26px 9px rgba(255, 222, 112, 0.75);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.08);
+    box-shadow:
+      0 0 24px 7px rgba(255, 255, 255, 0),
+      0 0 38px 12px rgba(255, 222, 112, 0);
+  }
+}
+
 .island-run-board__rewardbar--burst {
-  animation: rewardbar-burst 0.5s ease-out;
+  animation: rewardbar-burst 0.72s ease-in-out;
+  transform-origin: center center;
+  transform-style: preserve-3d;
   z-index: 25;
+}
+
+.island-run-board__rewardbar--burst::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  z-index: 35;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  border-radius: calc(var(--rewardbar-card-radius, 22px) + 4px);
+  pointer-events: none;
+  opacity: 0;
+  animation: rewardbar-border-flash 0.72s ease-out forwards;
+}
+
+/* Nearly-full state: a thin light wave crosses the full reward bar every 7s. */
+@keyframes rewardbar-nearly-full-wave {
+  0%, 82% {
+    opacity: 0;
+    transform: translateX(-135%) skewX(-18deg);
+  }
+  86% {
+    opacity: 0.95;
+  }
+  96% {
+    opacity: 0.65;
+    transform: translateX(135%) skewX(-18deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(135%) skewX(-18deg);
+  }
+}
+
+.island-run-board__rewardbar--nearly-full::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 28;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.18) 42%,
+    rgba(255, 255, 255, 0.92) 50%,
+    rgba(255, 230, 128, 0.35) 58%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  mix-blend-mode: screen;
+  animation: rewardbar-nearly-full-wave 7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-run-board__rewardbar--burst,
+  .island-run-board__rewardbar--burst::before,
+  .island-run-board__rewardbar--nearly-full::after {
+    animation: none;
+  }
 }
 
 /* ── Flying feed particle (flies from tile to reward bar) ──────────── */
