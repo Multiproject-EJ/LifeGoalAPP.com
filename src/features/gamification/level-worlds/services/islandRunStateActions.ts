@@ -76,6 +76,7 @@ import { resolveCompanionRegenModifier } from './companionRegenModifier';
 import { resolveIslandRunPreIslandLuckyRollGate } from './islandRunPreIslandLuckyRollGate';
 import { getEggSlotLedgerKey } from './islandRunEggMania';
 import { getCreatureById } from './creatureCatalog';
+import { addCreatureToRuntimeCollection } from './islandRunCreatureCollectionLedger';
 import {
   getIslandRunFirstCreaturePackLowDiceTriggerTarget,
   shouldAdvanceFirstSessionTutorialAfterHatcheryBuild,
@@ -2904,6 +2905,8 @@ export interface ResolveReadyEggTerminalTransitionOptions {
     shards?: number;
     diamonds?: number;
   };
+  /** Creature selected by the hatchery UI/service. Added to canonical collection on collect. */
+  collectedCreatureId?: string;
   triggerSource?: string;
 }
 
@@ -3097,13 +3100,34 @@ export function resolveReadyEggTerminalTransition(
     location = 'island',
     completedStops,
     rewardDeltas,
+    collectedCreatureId,
     triggerSource,
   } = options;
   const current = getIslandRunStateSnapshot(session);
   const islandKey = String(islandNumber);
   const baseEggLedgerKey = getEggSlotLedgerKey(islandNumber, 0);
   const resolvedEggLedgerKey = eggLedgerKey ?? baseEggLedgerKey;
-  const currentEntry = current.perIslandEggs?.[resolvedEggLedgerKey];
+  const ledgerEntry = current.perIslandEggs?.[resolvedEggLedgerKey];
+  const canBackfillBaseActiveEgg = !ledgerEntry
+    && resolvedEggLedgerKey === baseEggLedgerKey
+    && typeof current.activeEggTier === 'string'
+    && typeof current.activeEggSetAtMs === 'number'
+    && Number.isFinite(current.activeEggSetAtMs)
+    && typeof current.activeEggHatchDurationMs === 'number'
+    && Number.isFinite(current.activeEggHatchDurationMs);
+  const activeEggHatchAtMs = canBackfillBaseActiveEgg
+    ? (current.activeEggSetAtMs as number) + (current.activeEggHatchDurationMs as number)
+    : 0;
+  const readyCheckMs = Number.isFinite(readyNowMs) ? (readyNowMs as number) : openedAtMs;
+  const currentEntry: PerIslandEggEntry | undefined = ledgerEntry ?? (canBackfillBaseActiveEgg
+    ? {
+        tier: current.activeEggTier as PerIslandEggEntry['tier'],
+        setAtMs: current.activeEggSetAtMs as number,
+        hatchAtMs: activeEggHatchAtMs,
+        status: readyCheckMs >= activeEggHatchAtMs ? 'ready' : 'incubating',
+        location: current.activeEggIsDormant ? 'dormant' : 'island',
+      }
+    : undefined);
   if (!currentEntry) {
     return { record: current, changed: false, reason: 'missing_ledger_entry' };
   }
@@ -3111,12 +3135,23 @@ export function resolveReadyEggTerminalTransition(
     return { record: current, changed: false, reason: 'already_terminal' };
   }
   const isReady = currentEntry.status === 'ready'
-    || (currentEntry.status === 'incubating' && Number.isFinite(readyNowMs) && (readyNowMs as number) >= currentEntry.hatchAtMs);
+    || (currentEntry.status === 'incubating' && readyCheckMs >= currentEntry.hatchAtMs);
   if (!isReady) {
     return { record: current, changed: false, reason: 'not_ready' };
   }
 
   const shouldClearActiveEgg = resolvedEggLedgerKey === baseEggLedgerKey;
+  const normalizedCollectedCreatureId = terminalStatus === 'collected' && typeof collectedCreatureId === 'string' && collectedCreatureId.trim().length > 0
+    ? collectedCreatureId.trim()
+    : null;
+  const nextCreatureCollection = normalizedCollectedCreatureId
+    ? addCreatureToRuntimeCollection({
+        collection: current.creatureCollection ?? [],
+        creatureId: normalizedCollectedCreatureId,
+        islandNumber,
+        collectedAtMs: openedAtMs,
+      })
+    : current.creatureCollection;
   const next: IslandRunGameStateRecord = {
     ...current,
     activeEggTier: shouldClearActiveEgg ? null : current.activeEggTier,
@@ -3132,6 +3167,7 @@ export function resolveReadyEggTerminalTransition(
         location,
       },
     },
+    creatureCollection: nextCreatureCollection,
     completedStopsByIsland: {
       ...current.completedStopsByIsland,
       [islandKey]: completedStops,
