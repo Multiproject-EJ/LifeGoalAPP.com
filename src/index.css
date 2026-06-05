@@ -18696,7 +18696,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   overflow: hidden;
   border-color: rgba(217, 119, 6, 0.22);
   background:
-    url('/assets/icons/compass-gold-256.webp') center / 78% 78% no-repeat,
+    url('/assets/icons/compass-gold-256.webp') center / 96% 96% no-repeat,
     radial-gradient(circle at 42% 28%, rgba(255, 255, 255, 0.92), rgba(254, 243, 199, 0.62) 38%, rgba(251, 191, 36, 0.28) 68%, rgba(180, 83, 9, 0.22) 100%);
   box-shadow:
     0 10px 24px rgba(146, 64, 14, 0.18),
