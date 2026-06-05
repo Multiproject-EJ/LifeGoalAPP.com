@@ -72,6 +72,24 @@ export const todayRewardsParityTests: TestCase[] = [
       );
     },
   },
+
+  {
+    name: 'Today row exposes multiple ready Egg Mania hatch circles',
+    run: async () => {
+      const todayTracker = await readSource('src/features/habits/DailyHabitTracker.tsx');
+      const offerRow = await readSource('src/features/habits/TimeBoundOfferRow.tsx');
+      assert(
+        todayTracker.includes('getUnresolvedEggSlotsForIsland(islandRunState.perIslandEggs, activeIsland)')
+          && todayTracker.includes('...readyEggSlotsOnActiveIsland.map')
+          && todayTracker.includes('`egg_hatch_${slotIndex}`'),
+        'DailyHabitTracker should build one Today carousel hatch offer per ready Egg Mania slot.',
+      );
+      assert(
+        offerRow.includes('export type EggHatchOfferId = `egg_hatch_${number}`;'),
+        'TimeBoundOfferRow should accept slot-specific Egg Mania hatch offer ids.',
+      );
+    },
+  },
   {
     name: 'Today reward paths do not write spinTokens directly',
     run: async () => {

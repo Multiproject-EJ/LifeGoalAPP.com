@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { selectOffersForDisplay } from './timeBoundOfferSort';
 
+export type EggHatchOfferId = `egg_hatch_${number}`;
+
 export type TimeBoundOfferId =
   | 'vision_star'
   | 'daily_treats'
@@ -11,7 +13,7 @@ export type TimeBoundOfferId =
   | 'zen_tree_water'
   | 'feed_creatures';
 
-type TimeBoundOfferKey = TimeBoundOfferId | `placeholder_${number}`;
+export type TimeBoundOfferKey = TimeBoundOfferId | EggHatchOfferId | `placeholder_${number}`;
 
 export type TimeBoundOfferItem = {
   id: TimeBoundOfferKey;
@@ -30,7 +32,7 @@ export type TimeBoundOfferItem = {
 
 type TimeBoundOfferRowProps = {
   offers: TimeBoundOfferItem[];
-  onOfferClick: (offerId: TimeBoundOfferId) => void;
+  onOfferClick: (offerId: TimeBoundOfferId | EggHatchOfferId) => void;
   daysAgo?: number;
 };
 
@@ -107,7 +109,7 @@ export function TimeBoundOfferRow({ offers, onOfferClick, daysAgo = 0 }: TimeBou
             key={`${offer.id}-${offer.label}`}
             type="button"
             className={`time-bound-offers__item ${itemStateClass}`.trim()}
-            onClick={() => !isDone && !isPlaceholder && onOfferClick(offer.id as TimeBoundOfferId)}
+            onClick={() => !isDone && !isPlaceholder && onOfferClick(offer.id as TimeBoundOfferId | EggHatchOfferId)}
             disabled={isDone || isPlaceholder}
             aria-label={`${offer.label} ${isPlaceholder ? 'placeholder' : isDone ? 'done' : badgeLabel}`}
           >
