@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "ignoreDeprecations": "5.0",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "rootDir": "src",
+    "outDir": ".tmp-quest-compass-tests",
+    "noEmit": false
+  },
+  "include": [
+    "src/features/quest-compass/questCompassForces.ts",
+    "src/features/quest-compass/questCompassViewModel.ts",
+    "src/features/quest-compass/__tests__/questCompassViewModel.test.ts"
+  ]
+}

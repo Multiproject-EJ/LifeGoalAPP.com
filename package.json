@@ -22,6 +22,7 @@
     "test:energy-feature-gating": "node scripts/run-energy-feature-gating-tests.mjs",
     "test:island-run": "node scripts/run-island-run-service-tests.mjs",
     "test:habit-offer-sort": "node scripts/run-habit-offer-tests.mjs",
+    "test:quest-compass": "node scripts/run-quest-compass-tests.mjs",
     "test:daily-treats-routing": "node scripts/check-daily-treats-routing.mjs",
     "test:daily-treats-reveal-guards": "node scripts/check-daily-treats-reveal-guards.mjs",
     "check:island-run-lucky-roll-dev-overlay": "node scripts/check-island-run-lucky-roll-dev-overlay.mjs",

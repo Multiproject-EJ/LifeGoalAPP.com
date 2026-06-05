@@ -21379,6 +21379,21 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: #334155;
 }
 
+.quest-compass__status {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 14px;
+  background: rgba(59, 130, 246, 0.1);
+  color: #1d4ed8;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.quest-compass__status--warning {
+  background: rgba(245, 158, 11, 0.14);
+  color: #92400e;
+}
+
 .quest-compass__overview {
   display: grid;
   grid-template-columns: minmax(96px, 0.8fr) 1.2fr;
@@ -21432,6 +21447,14 @@ html.platform-ipad .workspace-shell__menu-edge {
   width: 1.8rem;
   height: 1.8rem;
   font-size: 1rem;
+}
+
+.quest-compass__orb-point--rising {
+  outline: 2px solid rgba(34, 197, 94, 0.5);
+}
+
+.quest-compass__orb-point--falling {
+  outline: 2px solid rgba(248, 113, 113, 0.55);
 }
 
 .quest-compass__orb-point--1 {
@@ -21491,6 +21514,33 @@ html.platform-ipad .workspace-shell__menu-edge {
   line-height: 1.4;
 }
 
+.quest-compass__spotlight-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.quest-compass__spotlight-card {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.65rem;
+  border: 1px solid rgba(245, 158, 11, 0.26);
+  border-radius: 16px;
+  background: rgba(255, 251, 235, 0.86);
+}
+
+.quest-compass__spotlight-card strong {
+  color: #0f172a;
+  font-size: 0.88rem;
+}
+
+.quest-compass__spotlight-card p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
 .quest-compass__force-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -21516,10 +21566,23 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: rgba(255, 255, 255, 0.88);
 }
 
+.quest-compass__force-heading {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .quest-compass__force-card h4 {
   margin: 0;
   font-size: 0.84rem;
   color: #0f172a;
+}
+
+.quest-compass__force-heading span {
+  color: #7c2d12;
+  font-size: 0.72rem;
+  font-weight: 800;
 }
 
 .quest-compass__force-card p,
@@ -21529,6 +21592,25 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-size: 0.72rem;
   line-height: 1.35;
   color: #475569;
+}
+
+.quest-compass__force-card .quest-compass__trend {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.quest-compass__trend--rising {
+  color: #15803d;
+}
+
+.quest-compass__trend--steady {
+  color: #64748b;
+}
+
+.quest-compass__trend--falling {
+  color: #b91c1c;
 }
 
 .quest-compass__force-card small {
@@ -21553,7 +21635,23 @@ html.platform-ipad .workspace-shell__menu-edge {
   [data-theme='midnight-purple'],
   [data-theme='flow-night'],
   [data-theme='bio-night']
+) .quest-compass__status {
+  background: rgba(59, 130, 246, 0.16);
+  color: rgba(191, 219, 254, 0.95);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
 ) .quest-compass__overview,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .quest-compass__spotlight-card,
 :is(
   [data-theme='dark-glass'],
   [data-theme='midnight-purple'],
@@ -21575,6 +21673,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   [data-theme='midnight-purple'],
   [data-theme='flow-night'],
   [data-theme='bio-night']
+) .quest-compass__spotlight-card strong,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
 ) .quest-compass__force-card h4 {
   color: rgba(248, 250, 252, 0.96);
 }
@@ -21590,12 +21694,19 @@ html.platform-ipad .workspace-shell__menu-edge {
   [data-theme='midnight-purple'],
   [data-theme='flow-night'],
   [data-theme='bio-night']
+) .quest-compass__spotlight-card p,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
 ) .quest-compass__force-card p {
   color: rgba(226, 232, 240, 0.78);
 }
 
 @media (max-width: 380px) {
   .quest-compass__overview,
+  .quest-compass__spotlight-grid,
   .quest-compass__force-grid {
     grid-template-columns: 1fr;
   }
