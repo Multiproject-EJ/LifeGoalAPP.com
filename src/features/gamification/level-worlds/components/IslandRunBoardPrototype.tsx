@@ -6636,6 +6636,7 @@ export function IslandRunBoardPrototype({
       eggLedgerKey: selectedLedgerKey,
       readyNowMs: nowTs,
       completedStops: nextCompletedStops,
+      collectedCreatureId: creature.id,
       triggerSource: 'island_board_collect_creature',
     });
     if (!transitionResult.changed) {

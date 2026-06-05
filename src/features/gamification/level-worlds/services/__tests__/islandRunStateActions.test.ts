@@ -5206,6 +5206,85 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(next.runtimeVersion, 11, 'batch placement bumps runtime once');
     },
   },
+
+  {
+    name: 'resolveReadyEggTerminalTransition: collects into canonical creature collection once',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 14,
+        currentIslandNumber: 8,
+        activeEggTier: 'common',
+        activeEggSetAtMs: 100,
+        activeEggHatchDurationMs: 100,
+        perIslandEggs: {
+          '8': { tier: 'common', setAtMs: 100, hatchAtMs: 200, status: 'ready', location: 'island' },
+        },
+        creatureCollection: [],
+      });
+
+      const first = resolveReadyEggTerminalTransition({
+        session,
+        client: null,
+        islandNumber: 8,
+        terminalStatus: 'collected',
+        openedAtMs: 250,
+        completedStops: ['hatchery'],
+        collectedCreatureId: 'common-breeze-buddy',
+      });
+      const second = resolveReadyEggTerminalTransition({
+        session,
+        client: null,
+        islandNumber: 8,
+        terminalStatus: 'collected',
+        openedAtMs: 260,
+        completedStops: ['hatchery'],
+        collectedCreatureId: 'common-breeze-buddy',
+      });
+
+      assertEqual(first.changed, true, 'first collect should resolve the egg');
+      assertEqual(first.record.creatureCollection.length, 1, 'collect should add one canonical creature entry');
+      assertEqual(first.record.creatureCollection[0]?.creatureId, 'common-breeze-buddy', 'collected creature id should be stored canonically');
+      assertEqual(first.record.creatureCollection[0]?.copies, 1, 'first collect should store one copy');
+      assertEqual(second.changed, false, 'second collect should be idempotent');
+      assertEqual(second.record.creatureCollection[0]?.copies, 1, 'idempotent collect should not duplicate creature copies');
+    },
+  },
+  {
+    name: 'resolveReadyEggTerminalTransition: backfills legacy active egg when per-island ledger is missing',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 9,
+        currentIslandNumber: 6,
+        activeEggTier: 'rare',
+        activeEggSetAtMs: 1000,
+        activeEggHatchDurationMs: 500,
+        activeEggIsDormant: true,
+        perIslandEggs: {},
+        creatureCollection: [],
+      });
+
+      const result = resolveReadyEggTerminalTransition({
+        session,
+        client: null,
+        islandNumber: 6,
+        terminalStatus: 'collected',
+        openedAtMs: 2000,
+        readyNowMs: 2000,
+        completedStops: ['hatchery'],
+        collectedCreatureId: 'rare-luma-hatchling',
+      });
+
+      assertEqual(result.changed, true, 'legacy active egg should resolve instead of no-oping');
+      assertEqual(result.record.perIslandEggs['6']?.status, 'collected', 'missing per-island ledger should be backfilled as collected');
+      assertEqual(result.record.perIslandEggs['6']?.tier, 'rare', 'backfilled ledger should preserve active egg tier');
+      assertEqual(result.record.activeEggTier, null, 'base active egg compatibility fields should clear');
+      assertEqual(result.record.creatureCollection[0]?.creatureId, 'rare-luma-hatchling', 'legacy collect should add canonical creature');
+    },
+  },
   {
     name: 'resolveReadyEggTerminalTransition: resolves non-base Egg Mania slot without clearing active base egg',
     run: () => {
