@@ -102,6 +102,7 @@ export const CountdownCalendarModal = ({
   const [revealResult, setRevealResult] = useState<RevealCardResult | null>(null);
   const [activeAdvent, setActiveAdvent] = useState<ReturnType<typeof getActiveAdventMeta> | undefined>(undefined);
   const [seasonData, setSeasonData] = useState<CalendarSeasonData | null>(null);
+  const [isCalendarLoading, setIsCalendarLoading] = useState(false);
   const [habitCompleted, setHabitCompleted] = useState(false);
   const [questHabit, setQuestHabit] = useState<QuestHabit | null>(null);
   const [revealState, setRevealState] = useState<RevealState | null>(null);
@@ -129,68 +130,92 @@ export const CountdownCalendarModal = ({
     setRevealState(null);
     setSeasonData(null);
     setActiveAdvent(undefined);
+    setIsCalendarLoading(false);
   }, [isOpen]);
 
   // Load holiday preferences then derive the active advent window and season data
   useEffect(() => {
     if (!isOpen) return;
+
+    let cancelled = false;
+
     setRevealResult(null);
     setRevealState(null);
     setSeasonData(null);
     setActiveAdvent(undefined);
+    setIsCalendarLoading(true);
     setScratchState(loadScratchCardState(userId));
 
     const loadData = async () => {
-      if (previewHolidayKey) {
-        setActiveAdvent(buildPreviewAdventMeta(previewHolidayKey));
-        return;
-      }
-
-      let enabledHolidays: Set<string> | undefined;
-      if (userId) {
-        const { data, error } = await fetchHolidayPreferences(userId);
-        if (!error && data?.holidays) {
-          enabledHolidays = new Set(
-            Object.entries(data.holidays)
-              .filter(([, v]) => v === true)
-              .map(([k]) => k),
-          );
-        }
-      }
-      
-      const advent = mode === 'personal_quest' ? null : getActiveAdventMeta(enabledHolidays);
-      setActiveAdvent(advent);
-
-      // Load season data from service (uses demo mode when not authenticated)
-      if (userId) {
-        if (advent) {
-          // Holiday is active — fetch the holiday season
-          const { data: season, error: seasonError } = await fetchCurrentSeason(userId, advent.meta.holiday_key);
-          if (seasonError) {
-            console.warn('Failed to load season data:', seasonError);
-          } else if (season) {
-            setSeasonData(season);
+      try {
+        if (previewHolidayKey) {
+          if (!cancelled) {
+            setActiveAdvent(buildPreviewAdventMeta(previewHolidayKey));
           }
-        } else if (mode !== 'holiday') {
-          // No active holiday — load Personal Quest Calendar as always-on fallback
-          const { data: questSeason, error: questError } = await getPersonalQuestSeason(userId);
-          if (questError) {
-            console.warn('Failed to load personal quest season:', questError);
-          } else if (questSeason) {
-            setSeasonData(questSeason);
-          }
-        } else {
-          setSeasonData(null);
+          return;
         }
-        // Load the user's designated quest habit (if any) then check completion
-        const qh = await refreshQuestHabit(userId);
-        setQuestHabit(qh);
-        const completed = await isHabitCompletedToday(userId, qh?.habitId);
-        setHabitCompleted(completed);
+
+        let enabledHolidays: Set<string> | undefined;
+        if (userId) {
+          const { data, error } = await fetchHolidayPreferences(userId);
+          if (!error && data?.holidays) {
+            enabledHolidays = new Set(
+              Object.entries(data.holidays)
+                .filter(([, v]) => v === true)
+                .map(([k]) => k),
+            );
+          }
+        }
+        
+        const advent = mode === 'personal_quest' ? null : getActiveAdventMeta(enabledHolidays);
+
+        // Load season data from service (uses demo mode when not authenticated)
+        if (userId) {
+          if (advent) {
+            // Holiday is active — fetch the holiday season
+            const { data: season, error: seasonError } = await fetchCurrentSeason(userId, advent.meta.holiday_key);
+            if (seasonError) {
+              console.warn('Failed to load season data:', seasonError);
+            } else if (season && !cancelled) {
+              setSeasonData(season);
+            }
+          } else if (mode !== 'holiday') {
+            // No active holiday — load Personal Quest Calendar as always-on fallback
+            const { data: questSeason, error: questError } = await getPersonalQuestSeason(userId);
+            if (questError) {
+              console.warn('Failed to load personal quest season:', questError);
+            } else if (questSeason && !cancelled) {
+              setSeasonData(questSeason);
+            }
+          } else if (!cancelled) {
+            setSeasonData(null);
+          }
+          // Load the user's designated quest habit (if any) then check completion
+          const qh = await refreshQuestHabit(userId);
+          if (!cancelled) {
+            setQuestHabit(qh);
+          }
+          const completed = await isHabitCompletedToday(userId, qh?.habitId);
+          if (!cancelled) {
+            setHabitCompleted(completed);
+          }
+        }
+
+        if (!cancelled) {
+          setActiveAdvent(advent);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsCalendarLoading(false);
+        }
       }
     };
 
     void loadData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen, mode, previewHolidayKey, userId]);
 
   // Handle gold rewards from legacy scratch card system.
@@ -359,8 +384,9 @@ export const CountdownCalendarModal = ({
 
   if (!isOpen) return null;
 
-  // Still loading holiday prefs — avoid a flash of wrong content
-  if (activeAdvent === undefined) return null;
+  // Still loading calendar data — avoid a flash of fallback content before the
+  // Personal Quest or holiday season request resolves.
+  if (activeAdvent === undefined || isCalendarLoading) return null;
 
   const resolvedState = scratchState ?? fallbackState;
   const alreadyOpenedToday = hasOpenedToday(resolvedState);
