@@ -2647,8 +2647,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const openQuestCompassGoals = useCallback(() => {
     setIsQuestCompassModalOpen(false);
-    handleMobileNavSelect('support');
-  }, [handleMobileNavSelect]);
+    openGoalsFromMyQuest();
+  }, [openGoalsFromMyQuest]);
 
   const myQuestSubmenuActions: LauncherSubmenuAction[] = useMemo(
     () => [

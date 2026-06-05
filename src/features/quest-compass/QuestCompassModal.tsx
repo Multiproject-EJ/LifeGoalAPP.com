@@ -95,7 +95,7 @@ export function QuestCompassModal({
           </button>
           <button type="button" className="mobile-menu-overlay__submenu-button" onClick={onRefreshAlignment}>
             <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">📊</span>
-            <span>Refresh alignment</span>
+            <span>Refresh alignment/check-in</span>
           </button>
           <button type="button" className="mobile-menu-overlay__submenu-button" onClick={onStartNextQuest}>
             <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">🔁</span>
