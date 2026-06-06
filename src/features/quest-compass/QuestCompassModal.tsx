@@ -465,7 +465,7 @@ function ForceDetailSheet({
             {force.healthLabel}
           </div>
           <span className={`quest-compass__trend quest-compass__trend--${force.trend}`}>
-            {force.trendLabel} bearing
+            {force.trendLabel}
           </span>
           <ScoreMeter force={force} />
         </div>
@@ -548,27 +548,23 @@ function ForceDetailSheet({
 
 const QUEST_COMPASS_MIN_SCORE = 0;
 const QUEST_COMPASS_MAX_SCORE = 10;
-const MAX_SCORE_PERCENT = 100;
+const MAX_PERCENTAGE = 100;
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
+function clampScorePercentage(value: number): number {
+  return Math.min(MAX_PERCENTAGE, Math.max(QUEST_COMPASS_MIN_SCORE, value));
 }
 
 function ScoreMeter({ force }: { force: QuestCompassForceScore }) {
   const scorePercent =
     force.score === null
       ? 0
-      : clamp(
-          (force.score / QUEST_COMPASS_MAX_SCORE) * MAX_SCORE_PERCENT,
-          QUEST_COMPASS_MIN_SCORE,
-          MAX_SCORE_PERCENT,
-        );
+      : clampScorePercentage((force.score / QUEST_COMPASS_MAX_SCORE) * MAX_PERCENTAGE);
 
   return (
     <div
       className={`quest-compass__score-meter${force.score === null ? ' quest-compass__score-meter--empty' : ''}`}
       aria-label={`${force.name} score ${force.scoreLabel}`}
-      aria-valuemax={MAX_SCORE_PERCENT}
+      aria-valuemax={MAX_PERCENTAGE}
       aria-valuemin={QUEST_COMPASS_MIN_SCORE}
       aria-valuenow={force.score === null ? undefined : scorePercent}
       aria-valuetext={force.score === null ? 'No signal' : `${force.scoreLabel} alignment`}
