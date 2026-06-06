@@ -87,7 +87,8 @@ export function BoardTileGrid(props: BoardTileGridProps) {
               {Array.from({ length: trafficLightChargeTarget }, (_, index) => {
                 const lightNumber = index + 1;
                 const isLit = lightNumber <= trafficLightCharge;
-                const phase = lightNumber >= trafficLightChargeTarget ? 'green' : lightNumber >= Math.ceil(trafficLightChargeTarget / 2) ? 'yellow' : 'red';
+                const greenLightStart = Math.max(1, trafficLightChargeTarget - 1);
+                const phase = lightNumber >= greenLightStart ? 'green' : lightNumber >= Math.ceil(trafficLightChargeTarget / 2) ? 'yellow' : 'red';
                 return <span key={lightNumber} className={`island-tile-traffic-light-sign__pip island-tile-traffic-light-sign__pip--${phase} ${isLit ? 'island-tile-traffic-light-sign__pip--lit' : ''}`.trim()} />;
               })}
             </span>
