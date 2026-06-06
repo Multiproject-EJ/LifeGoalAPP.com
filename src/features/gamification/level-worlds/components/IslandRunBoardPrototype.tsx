@@ -1084,12 +1084,13 @@ type FooterControllerSlot = {
 };
 
 const FOOTER_CONTROLLER_SLOT_MAP: Record<FooterControllerSlotId, FooterControllerSlot> = {
-  // Keep controls inside the visible controller shell: side actions sit high on
-  // the white shoulder contours, while roll controls occupy the upper blue bowl.
+  // Side actions sit high on the white shoulder contours, the roll control
+  // occupies the upper blue bowl, and the multiplier badge floats above the
+  // controller shell as a separate long pill.
   leftUpper: { x: 18, y: 28, rotate: -3.5, scale: 0.96, depth: 'raised' },
   leftLower: { x: 11.5, y: 53, rotate: -8, scale: 0.92, depth: 'raised' },
-  centerCore: { x: 50, y: 31.5, rotate: 0, scale: 0.98, depth: 'inset' },
-  centerBadge: { x: 50, y: 19.5, rotate: 0, scale: 0.92, depth: 'surface' },
+  centerCore: { x: 50, y: 32.5, rotate: 0, scale: 1, depth: 'inset' },
+  centerBadge: { x: 50, y: -1.5, rotate: 0, scale: 1, depth: 'surface' },
   rightLower: { x: 88.5, y: 53, rotate: 8, scale: 0.92, depth: 'raised' },
   rightUpper: { x: 82, y: 28, rotate: 3.5, scale: 0.96, depth: 'raised' },
 };
