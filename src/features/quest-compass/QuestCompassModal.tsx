@@ -548,27 +548,30 @@ function ForceDetailSheet({
 
 const QUEST_COMPASS_MIN_SCORE = 0;
 const QUEST_COMPASS_MAX_SCORE = 10;
-const MAX_PERCENTAGE = 100;
+const MIN_PERCENT_VALUE = 0;
+const MAX_PERCENT_VALUE = 100;
 
 function clampScorePercentage(value: number): number {
-  return Math.min(MAX_PERCENTAGE, Math.max(QUEST_COMPASS_MIN_SCORE, value));
+  return Math.min(MAX_PERCENT_VALUE, Math.max(MIN_PERCENT_VALUE, value));
 }
 
 function ScoreMeter({ force }: { force: QuestCompassForceScore }) {
   const scorePercent =
     force.score === null
       ? 0
-      : clampScorePercentage((force.score / QUEST_COMPASS_MAX_SCORE) * MAX_PERCENTAGE);
+      : clampScorePercentage((force.score / QUEST_COMPASS_MAX_SCORE) * MAX_PERCENT_VALUE);
+  const progressValueProps =
+    force.score === null ? {} : { 'aria-valuenow': scorePercent };
 
   return (
     <div
       className={`quest-compass__score-meter${force.score === null ? ' quest-compass__score-meter--empty' : ''}`}
       aria-label={`${force.name} score ${force.scoreLabel}`}
-      aria-valuemax={MAX_PERCENTAGE}
-      aria-valuemin={QUEST_COMPASS_MIN_SCORE}
-      aria-valuenow={force.score === null ? undefined : scorePercent}
+      aria-valuemax={MAX_PERCENT_VALUE}
+      aria-valuemin={MIN_PERCENT_VALUE}
       aria-valuetext={force.score === null ? 'No signal' : `${force.scoreLabel} alignment`}
       role="progressbar"
+      {...progressValueProps}
     >
       <span style={{ width: `${scorePercent}%` }} />
     </div>
