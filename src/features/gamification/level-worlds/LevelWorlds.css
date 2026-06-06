@@ -8433,7 +8433,7 @@
 }
 
 .island-stop-modal--dormant-door {
-  max-width: min(420px, calc(100vw - 32px));
+  max-width: min(460px, calc(100vw - 32px));
 }
 
 .island-dormant-door__intro,
@@ -8447,20 +8447,38 @@
 
 .island-dormant-door__reward-row {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.35rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
   margin: 0.65rem 0;
 }
 
 .island-dormant-door__reward-chip {
+  position: relative;
+  overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 999px;
-  padding: 0.35rem 0.55rem;
+  border-radius: 18px;
+  padding: 0.55rem 0.35rem;
   background: rgba(12, 28, 42, 0.72);
   color: #f8fbff;
-  font-size: 0.78rem;
-  font-weight: 800;
+  display: grid;
+  place-items: center;
+  gap: 0.12rem;
+  font-size: 0.72rem;
+  font-weight: 850;
+  line-height: 1.08;
   text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 8px 16px rgba(0,0,0,0.18);
+}
+
+.island-dormant-door__reward-icon {
+  font-size: 1.55rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.35));
+}
+
+.island-dormant-door__reward-chip strong {
+  font-size: 0.86rem;
+  letter-spacing: -0.01em;
 }
 
 .island-dormant-door__reward-chip--medium {
@@ -8473,24 +8491,88 @@
   background: linear-gradient(180deg, rgba(121, 74, 14, 0.82), rgba(82, 39, 13, 0.82));
 }
 
+.island-dormant-door__reward-chip--winner {
+  border-color: rgba(255, 245, 158, 0.98);
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 0 0 2px rgba(255, 245, 158, 0.22), 0 0 28px rgba(255, 214, 102, 0.72), 0 14px 28px rgba(0,0,0,0.3);
+  animation: dormant-door-winner-prize-glow 1.15s ease-in-out infinite alternate;
+}
+
+.island-dormant-door__reward-chip--winner::after {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.42), transparent, rgba(255, 226, 122, 0.52), transparent);
+  animation: dormant-door-luxury-flare 2.4s linear infinite;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.island-dormant-door__reward-chip--winner > * {
+  position: relative;
+  z-index: 1;
+}
+
 .island-dormant-door__grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.55rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
   margin: 0.75rem 0;
 }
 
 .island-dormant-door__door {
-  min-height: 86px;
+  position: relative;
+  overflow: hidden;
+  min-height: 72px;
   border: 1px solid rgba(245, 208, 254, 0.48);
-  border-radius: 18px;
-  background: linear-gradient(180deg, rgba(88, 28, 135, 0.9), rgba(46, 16, 101, 0.94));
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 247, 173, 0.32), transparent 26%),
+    linear-gradient(180deg, rgba(88, 28, 135, 0.9), rgba(46, 16, 101, 0.94));
   color: #fff8ff;
   display: grid;
   place-items: center;
   gap: 0.2rem;
   cursor: pointer;
+  transform-style: preserve-3d;
+  transform-origin: center;
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease, background 220ms ease;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.island-dormant-door__door::before {
+  content: '';
+  position: absolute;
+  inset: 8px 16px;
+  border-radius: 8px 8px 4px 4px;
+  border: 2px solid rgba(251, 207, 232, 0.34);
+  box-shadow: inset 0 -18px 20px rgba(30, 10, 60, 0.32);
+  pointer-events: none;
+}
+
+.island-dormant-door__door::after {
+  content: '';
+  position: absolute;
+  top: -45%;
+  left: -70%;
+  width: 45%;
+  height: 190%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.38), transparent);
+  transform: rotate(24deg);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.island-dormant-door__door:not(:disabled):hover,
+.island-dormant-door__door:not(:disabled):focus-visible {
+  transform: translateY(-3px) rotateX(8deg);
+  border-color: rgba(255, 247, 173, 0.72);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.32), 0 0 20px rgba(216, 180, 254, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.island-dormant-door__door:not(:disabled):hover::after,
+.island-dormant-door__door:not(:disabled):focus-visible::after {
+  animation: dormant-door-shine 850ms ease;
 }
 
 .island-dormant-door__door:disabled {
@@ -8501,11 +8583,90 @@
 .island-dormant-door__door--selected,
 .island-dormant-door__door--revealed {
   border-color: rgba(255, 247, 173, 0.78);
-  background: linear-gradient(180deg, rgba(126, 34, 206, 0.96), rgba(88, 28, 135, 0.96));
+  background:
+    radial-gradient(circle at 50% 28%, rgba(255, 247, 173, 0.48), transparent 30%),
+    linear-gradient(180deg, rgba(126, 34, 206, 0.96), rgba(88, 28, 135, 0.96));
+  animation: dormant-door-flip 520ms cubic-bezier(0.2, 0.9, 0.24, 1.2);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.34), 0 0 22px rgba(255, 247, 173, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.island-dormant-door__door--selected {
+  transform: translateY(-2px) scale(1.03);
+}
+
+.island-dormant-door__door--winner {
+  border-color: rgba(255, 245, 158, 1);
+  background:
+    radial-gradient(circle at 50% 30%, rgba(255, 245, 158, 0.72), transparent 34%),
+    linear-gradient(180deg, rgba(161, 98, 7, 0.98), rgba(88, 28, 135, 0.96));
+  animation: dormant-door-flip 520ms cubic-bezier(0.2, 0.9, 0.24, 1.2), dormant-door-winner-door-glow 950ms ease-in-out infinite alternate;
+  box-shadow: 0 0 0 2px rgba(255, 245, 158, 0.22), 0 0 30px rgba(250, 204, 21, 0.78), 0 18px 34px rgba(0,0,0,0.38);
+}
+
+.island-dormant-door__door--winner::after {
+  top: -55%;
+  left: -80%;
+  width: 55%;
+  height: 220%;
+  opacity: 0;
+  animation: dormant-door-shine 1.15s ease-in-out infinite;
+}
+
+@keyframes dormant-door-flip {
+  0% {
+    transform: rotateY(0deg) scale(1);
+    filter: brightness(0.82);
+  }
+  48% {
+    transform: rotateY(86deg) scale(0.96);
+    filter: brightness(1.5);
+  }
+  100% {
+    transform: rotateY(0deg) scale(1.03);
+    filter: brightness(1);
+  }
+}
+
+@keyframes dormant-door-winner-prize-glow {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.25);
+  }
+}
+
+@keyframes dormant-door-winner-door-glow {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.28);
+  }
+}
+
+@keyframes dormant-door-luxury-flare {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dormant-door-shine {
+  0% {
+    left: -70%;
+    opacity: 0;
+  }
+  22% {
+    opacity: 1;
+  }
+  100% {
+    left: 125%;
+    opacity: 0;
+  }
 }
 
 .island-dormant-door__door-face {
-  font-size: 1.8rem;
+  font-size: 1.65rem;
   line-height: 1;
 }
 
@@ -8523,6 +8684,31 @@
   background: rgba(12, 74, 110, 0.72);
   border: 1px solid rgba(125, 216, 255, 0.42);
   font-weight: 800;
+}
+
+.island-dormant-door__result {
+  font-size: 1rem;
+  text-align: center;
+}
+
+@media (max-width: 380px) {
+  .island-dormant-door__reward-row {
+    gap: 0.32rem;
+  }
+
+  .island-dormant-door__reward-chip {
+    border-radius: 14px;
+    padding: 0.45rem 0.25rem;
+    font-size: 0.66rem;
+  }
+
+  .island-dormant-door__reward-icon {
+    font-size: 1.35rem;
+  }
+
+  .island-dormant-door__reward-chip strong {
+    font-size: 0.76rem;
+  }
 }
 
 .island-tile--traffic_light {

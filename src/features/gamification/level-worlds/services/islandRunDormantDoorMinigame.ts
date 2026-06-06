@@ -1,6 +1,7 @@
+import { getIslandTotalEssenceCost } from './islandRunContractV2EssenceBuild';
 import type { IslandLandmarkDoorStopId } from './islandBoardTileMap';
 
-export type DormantDoorFigure = 'shell' | 'starfish' | 'pearl' | 'coral' | 'leaf' | 'moon';
+export type DormantDoorFigure = 'small' | 'medium' | 'large';
 
 export type DormantDoorRewardTier = 'small' | 'medium' | 'jackpot';
 
@@ -23,23 +24,50 @@ export interface DormantDoorMiniGameState {
   rewardLevels: readonly DormantDoorRewardLevel[];
 }
 
-const DORMANT_DOOR_FIGURES: readonly DormantDoorFigure[] = Object.freeze([
-  'shell',
-  'starfish',
-  'pearl',
-  'coral',
-  'leaf',
-  'moon',
+const BOARD_SIZE = 4;
+const DOOR_COUNT = BOARD_SIZE * BOARD_SIZE;
+const REQUIRED_MATCH_COUNT = 3;
+const MAX_REWARD_BUILD_COST_RATIO = 0.2;
+
+const DORMANT_DOOR_PRIZE_ORDER: readonly DormantDoorFigure[] = Object.freeze(['small', 'medium', 'large']);
+const DORMANT_DOOR_BOARD_PRIZE_POOL: readonly DormantDoorFigure[] = Object.freeze([
+  'small', 'small', 'small', 'small', 'small', 'small', 'small',
+  'medium', 'medium', 'medium', 'medium', 'medium',
+  'large', 'large', 'large', 'large',
 ]);
 
-export const DORMANT_DOOR_REWARD_LEVELS: readonly DormantDoorRewardLevel[] = Object.freeze([
-  { tier: 'small', label: 'Explorer find', essence: 3, dice: 0 },
-  { tier: 'medium', label: 'Twin match', essence: 8, dice: 1 },
-  { tier: 'jackpot', label: 'Triple match', essence: 15, dice: 3 },
-]);
+export function resolveDormantDoorRewardLevels(input?: {
+  effectiveIslandNumber?: number;
+  remainingIslandBuildCost?: number;
+}): readonly DormantDoorRewardLevel[] {
+  const effectiveIslandNumber = Number.isFinite(input?.effectiveIslandNumber)
+    ? Math.max(1, Math.floor(input?.effectiveIslandNumber ?? 1))
+    : 1;
+  const totalBuildCost = getIslandTotalEssenceCost(effectiveIslandNumber);
+  const remainingBuildCost = Number.isFinite(input?.remainingIslandBuildCost)
+    ? Math.max(0, Math.floor(input?.remainingIslandBuildCost ?? 0))
+    : 0;
+  const rewardBasis = Math.max(1, remainingBuildCost || totalBuildCost);
+  const jackpotEssence = Math.max(5, Math.floor(rewardBasis * MAX_REWARD_BUILD_COST_RATIO));
+  const mediumEssence = Math.max(3, Math.floor(jackpotEssence * 0.5));
+  const smallEssence = Math.max(1, Math.floor(jackpotEssence * 0.2));
 
-const DOOR_COUNT = 6;
-const REQUIRED_PICK_COUNT = 3;
+  return Object.freeze([
+    { tier: 'small', label: 'Small prize', essence: smallEssence, dice: 0 },
+    { tier: 'medium', label: 'Medium prize', essence: mediumEssence, dice: 0 },
+    { tier: 'jackpot', label: 'Large prize', essence: jackpotEssence, dice: 0 },
+  ]);
+}
+
+export const DORMANT_DOOR_REWARD_LEVELS: readonly DormantDoorRewardLevel[] = resolveDormantDoorRewardLevels({
+  effectiveIslandNumber: 1,
+});
+
+const FIGURE_TO_TIER: Readonly<Record<DormantDoorFigure, DormantDoorRewardTier>> = Object.freeze({
+  small: 'small',
+  medium: 'medium',
+  large: 'jackpot',
+});
 
 function seededRandom(seed: number): number {
   let s = (seed | 0) || 1;
@@ -58,10 +86,20 @@ function shuffleDeterministically<T>(items: readonly T[], seed: number): T[] {
   return result;
 }
 
-function pickFigure(seed: number, offset: number, excluded: ReadonlySet<DormantDoorFigure> = new Set()): DormantDoorFigure {
-  const available = DORMANT_DOOR_FIGURES.filter((figure) => !excluded.has(figure));
-  const index = Math.floor(seededRandom(seed + offset * 131) * available.length);
-  return available[Math.max(0, Math.min(available.length - 1, index))];
+function findMatchedFigure(selectedFigures: readonly DormantDoorFigure[]): DormantDoorFigure | null {
+  const counts = new Map<DormantDoorFigure, number>();
+  for (const figure of selectedFigures) {
+    counts.set(figure, (counts.get(figure) ?? 0) + 1);
+  }
+
+  for (const figure of [...DORMANT_DOOR_PRIZE_ORDER].reverse()) {
+    if ((counts.get(figure) ?? 0) >= REQUIRED_MATCH_COUNT) return figure;
+  }
+  return null;
+}
+
+function rewardForTier(rewardLevels: readonly DormantDoorRewardLevel[], tier: DormantDoorRewardTier): DormantDoorRewardLevel {
+  return rewardLevels.find((level) => level.tier === tier) ?? rewardLevels[0] ?? DORMANT_DOOR_REWARD_LEVELS[0];
 }
 
 export function buildDormantDoorMiniGame(input: {
@@ -69,28 +107,22 @@ export function buildDormantDoorMiniGame(input: {
   tileIndex: number;
   rollIndex: number;
   doorStopId: IslandLandmarkDoorStopId;
+  remainingIslandBuildCost?: number;
 }): DormantDoorMiniGameState {
   const safeIsland = Number.isFinite(input.islandNumber) ? Math.max(1, Math.floor(input.islandNumber)) : 1;
   const safeTileIndex = Number.isFinite(input.tileIndex) ? Math.max(0, Math.floor(input.tileIndex)) : 0;
   const safeRollIndex = Number.isFinite(input.rollIndex) ? Math.max(0, Math.floor(input.rollIndex)) : 0;
   const seed = safeIsland * 1009 + safeTileIndex * 97 + safeRollIndex * 17 + input.doorStopId.length * 53;
 
-  const tripleFigure = pickFigure(seed, 1);
-  const pairFigure = pickFigure(seed, 2, new Set([tripleFigure]));
-  const oddFigure = pickFigure(seed, 3, new Set([tripleFigure, pairFigure]));
-  const figures = shuffleDeterministically<DormantDoorFigure>([
-    tripleFigure,
-    tripleFigure,
-    tripleFigure,
-    pairFigure,
-    pairFigure,
-    oddFigure,
-  ], seed + 409);
+  const figures = shuffleDeterministically(DORMANT_DOOR_BOARD_PRIZE_POOL, seed + 409).slice(0, DOOR_COUNT);
 
   return {
     doorStopId: input.doorStopId,
     tileIndex: safeTileIndex,
-    rewardLevels: DORMANT_DOOR_REWARD_LEVELS,
+    rewardLevels: resolveDormantDoorRewardLevels({
+      effectiveIslandNumber: safeIsland,
+      remainingIslandBuildCost: input.remainingIslandBuildCost,
+    }),
     doors: figures.slice(0, DOOR_COUNT).map((figure, index) => ({
       id: `dormant-door-${safeIsland}-${safeTileIndex}-${safeRollIndex}-${index}`,
       figure,
@@ -98,14 +130,12 @@ export function buildDormantDoorMiniGame(input: {
   };
 }
 
-export function resolveDormantDoorReward(selectedFigures: readonly DormantDoorFigure[]): DormantDoorRewardLevel {
-  const normalized = selectedFigures.slice(0, REQUIRED_PICK_COUNT);
-  const counts = new Map<DormantDoorFigure, number>();
-  for (const figure of normalized) {
-    counts.set(figure, (counts.get(figure) ?? 0) + 1);
-  }
-  const bestMatchCount = Math.max(0, ...counts.values());
-  if (bestMatchCount >= 3) return DORMANT_DOOR_REWARD_LEVELS[2];
-  if (bestMatchCount === 2) return DORMANT_DOOR_REWARD_LEVELS[1];
-  return DORMANT_DOOR_REWARD_LEVELS[0];
+export function resolveDormantDoorReward(
+  selectedFigures: readonly DormantDoorFigure[],
+  _selectedIndices: readonly number[] = [],
+  rewardLevels: readonly DormantDoorRewardLevel[] = DORMANT_DOOR_REWARD_LEVELS,
+): DormantDoorRewardLevel | null {
+  const matchedFigure = findMatchedFigure(selectedFigures);
+  if (!matchedFigure) return null;
+  return rewardForTier(rewardLevels, FIGURE_TO_TIER[matchedFigure]);
 }
