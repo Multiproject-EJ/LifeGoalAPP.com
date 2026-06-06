@@ -671,7 +671,7 @@ export const CountdownCalendarModal = ({
 
           {showPersonalQuestStreak && personalQuestStreak ? (
             <div
-              className="daily-treats-calendar__streak"
+              className={`daily-treats-calendar__streak${showLockedBonusHint ? ' daily-treats-calendar__streak--bonus-message-active' : ''}`}
               aria-label={`${personalQuestStreak.currentStreak}-day Personal Quest streak`}
             >
               <div className="daily-treats-calendar__streak-orb" aria-hidden="true">
