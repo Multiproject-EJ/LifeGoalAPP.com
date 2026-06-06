@@ -381,6 +381,7 @@ type DailyHabitTrackerProps = {
   onOpenDailySpinWheel?: () => void;
   forceCompactView?: boolean;
   preferredCompactView?: boolean;
+  onPreferredCompactViewChange?: (isCompactView: boolean) => void;
   hideTimeBoundOffers?: boolean;
   pendingOfferToOpen?: TimeBoundOfferId | null;
   onPendingOfferHandled?: () => void;
@@ -762,6 +763,7 @@ export function DailyHabitTracker({
   onOpenDailySpinWheel,
   forceCompactView = false,
   preferredCompactView,
+  onPreferredCompactViewChange,
   hideTimeBoundOffers = false,
   pendingOfferToOpen,
   onPendingOfferHandled,
@@ -5980,7 +5982,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                     <span className="habit-day-nav__chip habit-day-nav__chip--current">Today</span>
                   ) : (
                     <button type="button" className="habit-day-nav__chip" onClick={resetToToday}>
-                      Today
+                      JUMP TO TODAY
                     </button>
                   )}
                   <label className="habit-day-nav__picker habit-day-nav__picker--icon-only" aria-label="Select a date to track">
@@ -6013,7 +6015,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                     <span className="habit-day-nav__chip habit-day-nav__chip--current">Today</span>
                   ) : (
                     <button type="button" className="habit-day-nav__chip" onClick={resetToToday}>
-                      Jump to today
+                      JUMP TO TODAY
                     </button>
                   )}
                   <label className="habit-day-nav__picker" aria-label="Select a date to track">
@@ -6663,11 +6665,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
     return (
       <div className="habit-checklist__group">
-        {!hideTimeBoundOffers ? (
+        {!hideTimeBoundOffers && isViewingToday ? (
           <TimeBoundOfferRow
             offers={timeBoundOffers}
             onOfferClick={handleTimeBoundOfferClick}
-            daysAgo={isViewingToday ? 0 : Math.max(1, getUtcDayDifference(activeDate, today))}
           />
         ) : null}
         {isHabitReviewPromptActive && focusedReviewHabit ? (() => {
@@ -8564,7 +8565,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         }, 2200);
         return;
       }
-      setIsCompactView((previous) => !previous);
+      setIsCompactView((previous) => {
+        const next = !previous;
+        onPreferredCompactViewChange?.(next);
+        return next;
+      });
       setIsCompactToggleLabelVisible(true);
       if (compactToggleLabelTimeoutRef.current) {
         window.clearTimeout(compactToggleLabelTimeoutRef.current);
@@ -8852,7 +8857,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                             className="habit-checklist-card__nav-pill"
                             onClick={resetToToday}
                           >
-                            Today
+                            JUMP TO TODAY
                           </button>
                         )}
                         <label

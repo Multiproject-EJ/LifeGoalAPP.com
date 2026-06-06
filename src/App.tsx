@@ -3095,6 +3095,34 @@ export default function App({ forceAuthOnMount }: AppProps) {
       }`
     : 'logged-out';
 
+  const handlePreferredCompactViewChange = useCallback(
+    (isCompactView: boolean) => {
+      if (!supabaseSession) return;
+
+      setWorkspaceProfile((current) => {
+        if (!current) return current;
+        return { ...current, private_compact_view_enabled: isCompactView };
+      });
+
+      void upsertWorkspaceProfile({
+        ...(workspaceProfile ?? {}),
+        user_id: supabaseSession.user.id,
+        private_compact_view_enabled: isCompactView,
+      }).then(({ data, error }) => {
+        if (error) {
+          console.error('Failed to save private mode preference:', error);
+          return;
+        }
+        if (data) {
+          setWorkspaceProfile(data);
+        }
+      }).catch((error) => {
+        console.error('Failed to save private mode preference:', error);
+      });
+    },
+    [supabaseSession, workspaceProfile],
+  );
+
   const persistProfileName = useCallback(
     async (nextName: string) => {
       if (!supabaseSession) return;
@@ -3637,6 +3665,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 setShowLevelWorldsFromEntry(true);
               }}
               onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
+              preferredCompactView={workspaceProfile?.private_compact_view_enabled ?? false}
+              onPreferredCompactViewChange={handlePreferredCompactViewChange}
               onNavigateToTimer={(context) => {
                 if (context) {
                   setTimerLaunchContext(context as any);
@@ -4950,7 +4980,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
               }}
               onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
               forceCompactView={!isGameModeActive}
-              preferredCompactView={!isGameModeActive}
+              preferredCompactView={!isGameModeActive ? true : workspaceProfile?.private_compact_view_enabled ?? false}
+              onPreferredCompactViewChange={handlePreferredCompactViewChange}
               hideTimeBoundOffers={!isGameModeActive}
               activeHolidaySeason={activeHolidaySeason}
               hasOpenedDailyTreatsToday={hasOpenedDailyTreatsToday}

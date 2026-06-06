@@ -20,6 +20,7 @@ type MobileHabitHomeProps = {
   onOpenDailySpinWheel?: () => void;
   forceCompactView?: boolean;
   preferredCompactView?: boolean;
+  onPreferredCompactViewChange?: (isCompactView: boolean) => void;
   hideTimeBoundOffers?: boolean;
   activeHolidaySeason?: ActiveAdventMetaResult | null;
   hasOpenedDailyTreatsToday?: boolean;
@@ -52,6 +53,7 @@ export function MobileHabitHome({
   onOpenDailySpinWheel,
   forceCompactView = false,
   preferredCompactView,
+  onPreferredCompactViewChange,
   hideTimeBoundOffers = false,
   activeHolidaySeason = null,
   hasOpenedDailyTreatsToday = false,
@@ -87,6 +89,7 @@ export function MobileHabitHome({
         onOpenDailySpinWheel={onOpenDailySpinWheel}
         forceCompactView={forceCompactView}
         preferredCompactView={preferredCompactView}
+        onPreferredCompactViewChange={onPreferredCompactViewChange}
         hideTimeBoundOffers={hideTimeBoundOffers}
         activeHolidaySeason={activeHolidaySeason}
         hasOpenedDailyTreatsToday={hasOpenedDailyTreatsToday}
