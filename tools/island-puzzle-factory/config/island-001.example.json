@@ -1,0 +1,42 @@
+{
+  "islandId": "island_001",
+  "puzzleSlug": "example_puzzle_slug",
+  "source": {
+    "masterImage": "input/island_001/example_puzzle_slug/master.png",
+    "approvalState": "approved",
+    "geometryAuthority": "source master image"
+  },
+  "grid": {
+    "rows": 3,
+    "columns": 3,
+    "pieceCount": 9,
+    "numbering": "01-09 top-left to bottom-right"
+  },
+  "pieceStrategy": {
+    "type": "full_canvas_transparent_overlay",
+    "canvas": "match_master_image",
+    "visiblePixels": "piece_grid_cell_only",
+    "transparentPixels": "all_pixels_outside_piece_grid_cell",
+    "runtimePlacement": {
+      "x": 0,
+      "y": 0,
+      "width": "100%",
+      "height": "100%"
+    }
+  },
+  "output": {
+    "root": "public/assets/puzzle/island_001/example_puzzle_slug",
+    "manifest": "manifest.json",
+    "piecesDirectory": "pieces",
+    "pieceFilenamePattern": "01-09.png",
+    "reassemblyCheck": "qa/reassembly-check.png"
+  },
+  "qualityGates": {
+    "requireManifest": true,
+    "requireReassemblyCheck": true,
+    "requirePieceCanvasMatchesMaster": true,
+    "requireExactReassemblyMatch": true,
+    "failOnGeometryMismatch": true,
+    "doNotOverwriteExistingOutput": true
+  }
+}

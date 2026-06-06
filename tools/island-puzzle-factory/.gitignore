@@ -1,0 +1,8 @@
+# Local-only factory scratch space. Runtime puzzle assets belong in public/assets/puzzle.
+/input/
+/output/
+/tmp/
+/qa-runs/
+
+# Keep generated runtime output out of the tool folder.
+/public/
