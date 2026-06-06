@@ -234,6 +234,7 @@ export function QuestCompassModal({
         ) : null}
 
         <section className="quest-compass__overview" aria-label="Compass overview">
+          <span className="quest-compass__north-mark" aria-hidden="true">N</span>
           <div className="quest-compass__orb" aria-hidden="true">
             <span className="quest-compass__orb-center">🧭</span>
             {viewModel.forces.map((force, index) => (
@@ -254,6 +255,10 @@ export function QuestCompassModal({
                 ? viewModel.summary
                 : 'Refresh alignment to wake up your Compass.'}
             </strong>
+            <div className="quest-compass__realm-tags" aria-label="Life Realm compass cues">
+              <span className="quest-compass__realm-tag">Life Realm bearing</span>
+              <span className="quest-compass__realm-tag">Six-force map</span>
+            </div>
             <p>
               {viewModel.latestCheckinDateLabel
                 ? `Latest check-in: ${viewModel.latestCheckinDateLabel}`
@@ -293,9 +298,15 @@ export function QuestCompassModal({
                   <h4>{force.name}</h4>
                   <span>{force.scoreLabel}</span>
                 </div>
-                <p className={`quest-compass__trend quest-compass__trend--${force.trend}`}>
-                  {force.trendLabel}
-                </p>
+                <div className="quest-compass__state-row" aria-label={`${force.name} state`}>
+                  <span className={`quest-compass__trend quest-compass__trend--${force.trend}`}>
+                    {force.trendLabel}
+                  </span>
+                  <span className={`quest-compass__health-pill quest-compass__health-pill--${force.healthStatus}`}>
+                    {force.healthLabel}
+                  </span>
+                </div>
+                <ScoreMeter force={force} />
                 <p>{force.summary}</p>
                 <small>
                   Signals: {force.contributingCategories.map((category) => category.label).join(', ')}
@@ -449,8 +460,14 @@ function ForceDetailSheet({
           </button>
         </div>
 
-        <div className={`quest-compass-detail__health quest-compass-detail__health--${force.healthStatus}`}>
-          {force.healthLabel}
+        <div className="quest-compass-detail__reading" aria-label={`${force.name} compass reading`}>
+          <div className={`quest-compass-detail__health quest-compass-detail__health--${force.healthStatus}`}>
+            {force.healthLabel}
+          </div>
+          <span className={`quest-compass__trend quest-compass__trend--${force.trend}`}>
+            {force.trendLabel}
+          </span>
+          <ScoreMeter force={force} />
         </div>
 
         <section className="quest-compass-detail__section">
@@ -498,7 +515,9 @@ function ForceDetailSheet({
               {supportingHabits.map((habit) => (
                 <li key={habit.id}>
                   <strong>{habit.emoji ? `${habit.emoji} ` : ''}{habit.title}</strong>
-                  <span>{habit.completionLabel}</span>
+                  <span className="quest-compass-detail__state-badge">
+                    {habit.completionLabel}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -523,6 +542,41 @@ function ForceDetailSheet({
           <button type="button" onClick={onOpenGoals}>Open Goals</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+const QUEST_COMPASS_MAX_SCORE = 10;
+const MIN_PERCENT_VALUE = 0;
+const MAX_PERCENT_VALUE = 100;
+
+function clampScorePercentage(value: number): number {
+  return Math.min(MAX_PERCENT_VALUE, Math.max(MIN_PERCENT_VALUE, value));
+}
+
+function ScoreMeter({ force }: { force: QuestCompassForceScore }) {
+  const scoreMeterClassNames = ['quest-compass__score-meter'];
+  const scorePercent =
+    force.score === null
+      ? 0
+      : clampScorePercentage((force.score / QUEST_COMPASS_MAX_SCORE) * MAX_PERCENT_VALUE);
+  const progressValueProps =
+    force.score === null ? {} : { 'aria-valuenow': scorePercent };
+  if (force.score === null) {
+    scoreMeterClassNames.push('quest-compass__score-meter--empty');
+  }
+
+  return (
+    <div
+      className={scoreMeterClassNames.join(' ')}
+      aria-label={`${force.name} score ${force.scoreLabel}`}
+      aria-valuemax={MAX_PERCENT_VALUE}
+      aria-valuemin={MIN_PERCENT_VALUE}
+      aria-valuetext={force.score === null ? 'No signal' : `${force.scoreLabel} alignment`}
+      role="progressbar"
+      {...progressValueProps}
+    >
+      <span className="quest-compass__score-meter-fill" style={{ width: `${scorePercent}%` }} />
     </div>
   );
 }
