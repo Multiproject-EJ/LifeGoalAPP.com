@@ -1,8 +1,9 @@
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
+import { getExpectedMasks, readAvailableMaskAlpha } from './masks.mjs';
 import {
-  FACTORY_MODE_RECTANGLE_PLACEHOLDER,
+  FACTORY_MODE_EXACT_JIGSAW,
   getFactoryOutputNames,
   getPieceFilename,
   getPiecePosition,
@@ -70,6 +71,120 @@ export function computeGridCells({ width, height, rows, columns }) {
   return cells;
 }
 
+async function writeRectanglePlaceholderPieces({ config, metadata, names }) {
+  const cells = computeGridCells({
+    width: metadata.width,
+    height: metadata.height,
+    rows: config.grid.rows,
+    columns: config.grid.columns,
+  });
+
+  const transparentCanvas = {
+    create: {
+      width: metadata.width,
+      height: metadata.height,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  };
+
+  const pieces = [];
+  for (const cell of cells) {
+    const pieceFilename = getPieceFilename({
+      index: cell.index,
+      position: cell.position,
+      outputFormat: config.outputFormat,
+    });
+    const outputPath = path.join(config.outputRoot, names.piecesDirectory, pieceFilename);
+    const regionBuffer = await sharp(config.inputMaster)
+      .ensureAlpha()
+      .extract({
+        left: cell.bounds.x,
+        top: cell.bounds.y,
+        width: cell.bounds.width,
+        height: cell.bounds.height,
+      })
+      .png()
+      .toBuffer();
+
+    await encode(
+      sharp(transparentCanvas).composite([{ input: regionBuffer, left: cell.bounds.x, top: cell.bounds.y }]),
+      config.outputFormat,
+    ).toFile(outputPath);
+
+    pieces.push({ ...cell, outputPath });
+  }
+
+  return pieces;
+}
+
+async function writeExactMaskPieces({ config, metadata, names }) {
+  const masks = getExpectedMasks({
+    masksDir: config.masksDir,
+    rows: config.grid.rows,
+    columns: config.grid.columns,
+  });
+  const transparentCanvas = {
+    create: {
+      width: metadata.width,
+      height: metadata.height,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  };
+  const masterRgba = await sharp(config.inputMaster).ensureAlpha().raw().toBuffer();
+
+  const pieces = [];
+  for (const mask of masks) {
+    const pieceFilename = getPieceFilename({
+      index: mask.index,
+      position: mask.position,
+      outputFormat: config.outputFormat,
+    });
+    const outputPath = path.join(config.outputRoot, names.piecesDirectory, pieceFilename);
+    const maskRead = await readAvailableMaskAlpha(mask, metadata.width, metadata.height);
+
+    if (maskRead.ok) {
+      const pieceRgba = Buffer.alloc(masterRgba.length);
+      for (let sourceOffset = 0, pixel = 0; sourceOffset < masterRgba.length; sourceOffset += 4, pixel += 1) {
+        const maskAlpha = maskRead.alpha[pixel];
+        pieceRgba[sourceOffset] = masterRgba[sourceOffset];
+        pieceRgba[sourceOffset + 1] = masterRgba[sourceOffset + 1];
+        pieceRgba[sourceOffset + 2] = masterRgba[sourceOffset + 2];
+        pieceRgba[sourceOffset + 3] = Math.round((masterRgba[sourceOffset + 3] * maskAlpha) / 255);
+      }
+      await encode(
+        sharp(pieceRgba, { raw: { width: metadata.width, height: metadata.height, channels: 4 } }),
+        config.outputFormat,
+      ).toFile(outputPath);
+    } else {
+      await encode(sharp(transparentCanvas), config.outputFormat).toFile(outputPath);
+    }
+
+    pieces.push({
+      index: mask.index,
+      id: mask.id,
+      row: mask.row,
+      column: mask.column,
+      position: mask.position,
+      bounds: null,
+      outputPath,
+      mask: {
+        filename: mask.filename,
+        path: mask.path,
+        exists: maskRead.exists,
+        width: maskRead.width,
+        height: maskRead.height,
+        ok: maskRead.ok,
+        visiblePixels: maskRead.visiblePixels,
+        error: maskRead.error,
+      },
+    });
+  }
+
+  return pieces;
+}
+
 export async function slicePuzzle(config) {
   const names = getFactoryOutputNames(config.outputFormat);
   await mkdir(config.outputRoot, { recursive: true });
@@ -122,12 +237,9 @@ export async function slicePuzzle(config) {
   });
   await encode(sharp(emptyBoardSvg).ensureAlpha(), config.outputFormat).toFile(files.emptyBoardOutline);
 
-  const cells = computeGridCells({
-    width: metadata.width,
-    height: metadata.height,
-    rows: config.grid.rows,
-    columns: config.grid.columns,
-  });
+  const pieces = config.mode === FACTORY_MODE_EXACT_JIGSAW
+    ? await writeExactMaskPieces({ config, metadata, names })
+    : await writeRectanglePlaceholderPieces({ config, metadata, names });
 
   const transparentCanvas = {
     create: {
@@ -138,40 +250,13 @@ export async function slicePuzzle(config) {
     },
   };
 
-  const pieces = [];
-  for (const cell of cells) {
-    const pieceFilename = getPieceFilename({
-      index: cell.index,
-      position: cell.position,
-      outputFormat: config.outputFormat,
-    });
-    const outputPath = path.join(config.outputRoot, names.piecesDirectory, pieceFilename);
-    const regionBuffer = await sharp(config.inputMaster)
-      .ensureAlpha()
-      .extract({
-        left: cell.bounds.x,
-        top: cell.bounds.y,
-        width: cell.bounds.width,
-        height: cell.bounds.height,
-      })
-      .png()
-      .toBuffer();
-
-    await encode(
-      sharp(transparentCanvas).composite([{ input: regionBuffer, left: cell.bounds.x, top: cell.bounds.y }]),
-      config.outputFormat,
-    ).toFile(outputPath);
-
-    pieces.push({ ...cell, outputPath });
-  }
-
   await encode(
     sharp(transparentCanvas).composite(pieces.map((piece) => ({ input: piece.outputPath, left: 0, top: 0 }))),
     config.outputFormat,
   ).toFile(files.reassembledCheck);
 
   return {
-    mode: FACTORY_MODE_RECTANGLE_PLACEHOLDER,
+    mode: config.mode,
     masterMetadata,
     files,
     pieces,

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Island Puzzle Factory is a scaffold for producing repeatable 3x3 puzzle assets from one approved, completed master puzzle image.
+Island Puzzle Factory produces repeatable 3x3 puzzle assets from one approved, completed master puzzle image.
 
 The factory exists to standardize puzzle production for Island 001 without changing gameplay, Island Run economy, schema, telemetry, runtime state, or existing puzzle assets.
 
@@ -18,70 +18,112 @@ This project is cloud-first:
 The expected workflow is:
 
 1. Approve a completed master puzzle image.
-2. Add or update a factory config for the puzzle slug.
-3. Run the future factory script from a PR branch.
-4. Review the generated manifest and reassembly check.
-5. Merge only if the generated pieces exactly reassemble to the approved master geometry.
+2. Approve nine full-canvas production masks for that exact master canvas.
+3. Add or update a factory config for the puzzle slug.
+4. Run the factory script from a PR branch.
+5. Review the generated manifest, QC report, and reassembly check.
+6. Merge only if QC passes and the generated pieces exactly reassemble to the approved masked master geometry.
 
-## V1 Production Pipeline
+## Modes
 
-V1 will produce assets from a single completed master image:
+### `V1_RECTANGLE_PLACEHOLDER`
 
-1. Read the approved master image.
-2. Divide the master into a 3x3 grid.
-3. Generate nine full-canvas transparent overlay PNG pieces.
-4. Emit a manifest describing the source image, grid, output paths, and checks.
-5. Emit a reassembly check image proving that all nine overlays reconstruct the master.
-6. Fail the run if geometry, canvas size, ordering, or reassembly differs from the approved master.
+`V1_RECTANGLE_PLACEHOLDER` is a deterministic smoke-test mode only.
 
-The v1 slicing script is included under `src/` and intentionally runs in `V1_RECTANGLE_PLACEHOLDER` mode. It uses deterministic rectangle-grid cell masks, not exact jigsaw-piece mask detection. The generated `qc_report.md` and `manifest.json` must therefore say `NOT PRODUCTION READY FOR JIGSAW FIT` until a later exact-mask implementation reports `PRODUCTION_EXACT_JIGSAW`.
+It divides the master into a 3x3 rectangle grid and creates nine full-canvas transparent overlays from those rectangle cells. This mode is useful for validating paths, manifests, output structure, and basic reassembly checks, but it is **not production-ready for real jigsaw fit** because it does not use exact jigsaw-piece geometry.
 
+### `PRODUCTION_EXACT_JIGSAW`
 
-## V1 Local Tooling Command
+`PRODUCTION_EXACT_JIGSAW` is the production mode for real puzzle pieces.
 
-Run from the repository root after placing an approved master image at the config's `inputMaster` path:
+In this mode, the source of truth for piece geometry is a set of nine explicit full-canvas mask PNG files. The factory does not generate, infer, resize, crop, or AI-create masks in production mode. If masks are missing, are the wrong size, overlap, or leave uncovered non-transparent master pixels, QC fails.
+
+## Production Mask Requirements
+
+Provide exactly these nine PNG masks in `masksDir`:
+
+```text
+mask_01_top_left.png
+mask_02_top_center.png
+mask_03_top_right.png
+mask_04_middle_left.png
+mask_05_middle_center.png
+mask_06_middle_right.png
+mask_07_bottom_left.png
+mask_08_bottom_center.png
+mask_09_bottom_right.png
+```
+
+Each mask must follow these rules:
+
+- The mask canvas must exactly match the master image width and height.
+- White/opaque pixels are visible for that piece.
+- Black or transparent pixels are hidden for that piece.
+- Masks must already be aligned to the master canvas.
+- Masks are never silently resized by production mode.
+- Masks are never generated from the master in production mode.
+- Across all nine masks, every non-transparent master pixel must be covered exactly once.
+- Any overlap or gap causes QC failure.
+
+## Local Tooling Commands
+
+Run from the repository root after placing an approved master image and, for production mode, approved masks at the paths in the config:
 
 ```sh
 node tools/island-puzzle-factory/src/cli.mjs --config tools/island-puzzle-factory/config/island-001.example.json
 ```
 
-For this tooling PR, the example config writes only to `tools/island-puzzle-factory/output/`, which is gitignored. Do not point `outputRoot` at `public/assets/puzzle` until a future runtime-asset PR explicitly approves that move.
+Run deterministic smoke validation for both supported modes:
+
+```sh
+cd tools/island-puzzle-factory && npm run smoke
+```
+
+The smoke command creates synthetic master/mask fixtures under `tools/island-puzzle-factory/tmp/` and generated output under `tools/island-puzzle-factory/output/`. Both directories are local scratch space and are gitignored.
+
+For this tooling stage, configs must write only to `tools/island-puzzle-factory/output/`. Do not point `outputRoot` at `public/assets/puzzle` until a future runtime-asset PR explicitly approves that move.
 
 The config supports:
 
+- `mode`: `V1_RECTANGLE_PLACEHOLDER` or `PRODUCTION_EXACT_JIGSAW`.
+- `expectedMode`: optional guard; when present, it must match `mode`.
+- `masksDir`: required for `PRODUCTION_EXACT_JIGSAW`; ignored by placeholder mode.
 - `inputMaster`
 - `outputRoot`
 - `islandNumber`
 - `puzzleId`
-- `grid.rows` and `grid.columns`
+- `grid.rows` and `grid.columns` (v1 requires `3` and `3`).
 - `placementMode: "full_canvas_overlay"`
 - `outputFormat: "png"` or `"webp"`
 
 ## Expected Input Master Image
 
-The source master image must be the final approved completed puzzle artwork. It is the geometry authority for the generated pieces.
+The source master image must be the final approved completed puzzle artwork. It is the art authority for the generated pieces, while production masks are the piece-geometry authority.
 
 Requirements:
 
 - One completed puzzle image per puzzle slug.
 - Stable pixel dimensions before production.
-- No geometry edits after master approval.
-- Any required art changes must create a new approved master before pieces are regenerated.
+- No geometry edits after master and mask approval.
+- Any required art or geometry change must create a new approved master/mask set before pieces are regenerated.
 
 ## Full-Canvas Transparent Overlay Strategy
 
-V1 puzzle pieces must be full-canvas transparent overlays.
+Every generated piece is a full-canvas transparent overlay with the same pixel width and height as the master image. Only the collected piece area is visible; every other pixel is transparent.
 
-Each generated piece has the same pixel width and height as the master image. Only that piece's collected 3x3 cell area is visible; every other pixel is transparent.
+This avoids manual per-piece positioning because every piece is already aligned to the master canvas. The runtime should not need to know each jigsaw shape's local bounding box or x/y offset.
 
-This lets the runtime render every collected piece with the same placement:
+The later app rendering model is:
 
-- `x = 0`
-- `y = 0`
-- `width = 100%`
-- `height = 100%`
+1. Render an empty board layer.
+2. Render each collected piece overlay at the same origin:
+   - `x = 0`
+   - `y = 0`
+   - `width = 100%`
+   - `height = 100%`
+3. Stack all collected overlays above the empty board layer.
 
-No manual per-piece positioning should be required in the app.
+No per-piece manual positioning should be required in the app.
 
 ## Output Structure
 
@@ -101,10 +143,10 @@ public/assets/puzzle/island_001/<puzzle_slug>/
     08.png
     09.png
   qa/
-    reassembly-check.png
+    reassembled_check.png
 ```
 
-Do not overwrite existing files in `public/assets/puzzle`.
+Do not overwrite existing files in `public/assets/puzzle`. Current factory runs are intentionally constrained to `tools/island-puzzle-factory/output/`.
 
 ## Naming Convention
 
@@ -116,23 +158,25 @@ Pieces are numbered `01` through `09` from top-left to bottom-right:
 07 08 09
 ```
 
-Each piece filename should be the two-digit piece number plus `.png`.
+Each piece filename is the two-digit piece number plus the configured output extension.
 
 ## Quality Gates
 
 Every production run must pass these gates before assets are accepted:
 
 - Generate a manifest.
-- Generate a reassembly check.
+- Generate a QC report.
+- Generate a reassembly check by stacking all nine full-canvas overlays at `x=0`, `y=0`.
 - Confirm all piece canvases exactly match the master canvas size.
-- Confirm visible piece regions match the approved 3x3 grid.
-- Confirm transparent regions contain no stray pixels.
-- Confirm the reassembled pieces exactly match the approved master.
-- Fail on any geometry mismatch.
+- Confirm every production mask exists and exactly matches the master canvas size.
+- Confirm every production mask has visible pixels.
+- Confirm production masks do not overlap.
+- Confirm production masks do not leave gaps over non-transparent master pixels.
+- Confirm the reassembled pieces exactly match the masked master area.
 - Fail rather than overwrite existing `public/assets/puzzle` files.
 
 ## No Gameplay Changes
 
 Island Puzzle Factory is an asset-production scaffold only.
 
-Do not change gameplay, Island Run economy, database schema, telemetry, runtime state, canonical gameplay services, or existing puzzle assets as part of this workflow.
+Do not change gameplay, Island Run economy, database schema, telemetry, runtime state, canonical gameplay services, roll logic, reward logic, or existing puzzle assets as part of this workflow.

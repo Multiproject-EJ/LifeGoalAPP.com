@@ -1,6 +1,9 @@
 {
   "inputMaster": "tools/island-puzzle-factory/input/island_001/example_puzzle_slug/master.png",
   "outputRoot": "tools/island-puzzle-factory/output/island_001/example_puzzle_slug",
+  "mode": "V1_RECTANGLE_PLACEHOLDER",
+  "expectedMode": "V1_RECTANGLE_PLACEHOLDER",
+  "masksDir": "tools/island-puzzle-factory/input/island_001/example_puzzle_slug/masks",
   "islandNumber": 1,
   "puzzleId": "example_puzzle_slug",
   "grid": {
@@ -19,5 +22,5 @@
     "failOnGeometryMismatch": true,
     "doNotWritePublicPuzzleAssets": true
   },
-  "v1ModeWarning": "V1_RECTANGLE_PLACEHOLDER is deterministic and useful for pipeline validation, but NOT PRODUCTION READY FOR JIGSAW FIT. Exact jigsaw mask extraction should be added in a later version."
+  "v1ModeWarning": "V1_RECTANGLE_PLACEHOLDER is deterministic and useful for pipeline validation, but NOT PRODUCTION READY FOR JIGSAW FIT. Use PRODUCTION_EXACT_JIGSAW with explicit full-canvas masks for real production jigsaw fit."
 }

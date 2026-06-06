@@ -6,7 +6,8 @@
   "description": "Deterministic Island Puzzle Factory for slicing approved master images into 3x3 full-canvas overlay pieces.",
   "scripts": {
     "factory": "node src/cli.mjs",
-    "factory:example": "node src/cli.mjs --config config/island-001.example.json"
+    "factory:example": "node src/cli.mjs --config config/island-001.example.json",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "sharp": "^0.33.5"

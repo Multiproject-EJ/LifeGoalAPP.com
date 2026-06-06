@@ -1,7 +1,8 @@
 import { access, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
-import { FACTORY_MODE_RECTANGLE_PLACEHOLDER } from './naming.mjs';
+import { getExpectedMasks, readAvailableMaskAlpha } from './masks.mjs';
+import { FACTORY_MODE_EXACT_JIGSAW, FACTORY_MODE_RECTANGLE_PLACEHOLDER } from './naming.mjs';
 
 async function fileExists(filePath) {
   try {
@@ -34,6 +35,100 @@ async function imagesExactlyMatch(leftPath, rightPath) {
 
 function pushCheck(checks, name, passed, details) {
   checks.push({ name, passed, details });
+}
+
+async function runExactMaskChecks({ config, result, checks }) {
+  const expectedWidth = result.masterMetadata.width;
+  const expectedHeight = result.masterMetadata.height;
+  const expectedPixelCount = expectedWidth * expectedHeight;
+  const masks = getExpectedMasks({ masksDir: config.masksDir, rows: config.grid.rows, columns: config.grid.columns });
+  const reads = [];
+
+  for (const mask of masks) {
+    const read = await readAvailableMaskAlpha(mask, expectedWidth, expectedHeight);
+    reads.push(read);
+    pushCheck(
+      checks,
+      `mask_exists:${mask.filename}`,
+      read.exists,
+      mask.path,
+    );
+    pushCheck(
+      checks,
+      `mask_canvas:${mask.filename}`,
+      read.ok,
+      read.ok ? `${read.width}x${read.height}` : read.error,
+    );
+    pushCheck(
+      checks,
+      `mask_visible_pixels:${mask.filename}`,
+      read.visiblePixels > 0,
+      `${read.visiblePixels} visible pixels`,
+    );
+  }
+
+  const validReads = reads.filter((read) => read.ok && read.alpha);
+  const coverage = new Uint16Array(expectedPixelCount);
+  for (const read of validReads) {
+    for (let pixel = 0; pixel < expectedPixelCount; pixel += 1) {
+      if (read.alpha[pixel] > 0) coverage[pixel] += 1;
+    }
+  }
+
+  const master = await sharp(config.inputMaster).ensureAlpha().raw().toBuffer();
+  const reassembled = await sharp(result.files.reassembledCheck).ensureAlpha().raw().toBuffer();
+  let overlapPixels = 0;
+  let gapPixels = 0;
+  let unionPixels = 0;
+  let maskedMasterMismatchPixels = 0;
+
+  for (let pixel = 0; pixel < expectedPixelCount; pixel += 1) {
+    const coverCount = coverage[pixel];
+    const sourceOffset = pixel * 4;
+    const masterAlpha = master[sourceOffset + 3];
+    if (coverCount > 1) overlapPixels += 1;
+    if (coverCount > 0) unionPixels += 1;
+    if (masterAlpha > 0 && coverCount === 0) gapPixels += 1;
+
+    const expectedAlpha = coverCount > 0 ? masterAlpha : 0;
+    const expectedRed = expectedAlpha > 0 ? master[sourceOffset] : 0;
+    const expectedGreen = expectedAlpha > 0 ? master[sourceOffset + 1] : 0;
+    const expectedBlue = expectedAlpha > 0 ? master[sourceOffset + 2] : 0;
+    const expected = [expectedRed, expectedGreen, expectedBlue, expectedAlpha];
+    if (
+      reassembled[sourceOffset] !== expected[0]
+      || reassembled[sourceOffset + 1] !== expected[1]
+      || reassembled[sourceOffset + 2] !== expected[2]
+      || reassembled[sourceOffset + 3] !== expected[3]
+    ) {
+      maskedMasterMismatchPixels += 1;
+    }
+  }
+
+  pushCheck(
+    checks,
+    'masks_no_overlaps',
+    overlapPixels === 0,
+    `${overlapPixels} pixels covered by more than one mask`,
+  );
+  pushCheck(
+    checks,
+    'masks_no_master_alpha_gaps',
+    gapPixels === 0,
+    `${gapPixels} non-transparent master pixels not covered by any mask`,
+  );
+  pushCheck(
+    checks,
+    'masks_cover_visible_master_area',
+    unionPixels > 0 && gapPixels === 0,
+    `${unionPixels} masked pixels across ${expectedPixelCount} canvas pixels`,
+  );
+  pushCheck(
+    checks,
+    'reassembled_matches_masked_master_pixels',
+    maskedMasterMismatchPixels === 0,
+    `${maskedMasterMismatchPixels} mismatched pixels against masked master area`,
+  );
 }
 
 export async function runQualityChecks({ config, result, manifestPath }) {
@@ -90,18 +185,29 @@ export async function runQualityChecks({ config, result, manifestPath }) {
 
   pushCheck(
     checks,
+    'manifest_mode_matches_result_mode',
+    manifest.mode === result.mode,
+    `${manifest.mode}; expected ${result.mode}`,
+  );
+
+  pushCheck(
+    checks,
     'reassembled_check_exists',
     await fileExists(result.files.reassembledCheck),
     result.files.reassembledCheck,
   );
 
-  const reassembledMatchesMaster = await imagesExactlyMatch(result.files.completedMaster, result.files.reassembledCheck);
-  pushCheck(
-    checks,
-    'reassembled_matches_completed_master_pixels',
-    reassembledMatchesMaster,
-    reassembledMatchesMaster ? 'exact raw RGBA pixel match' : 'pixel mismatch',
-  );
+  if (result.mode === FACTORY_MODE_EXACT_JIGSAW) {
+    await runExactMaskChecks({ config, result, checks });
+  } else {
+    const reassembledMatchesMaster = await imagesExactlyMatch(result.files.completedMaster, result.files.reassembledCheck);
+    pushCheck(
+      checks,
+      'reassembled_matches_completed_master_pixels',
+      reassembledMatchesMaster,
+      reassembledMatchesMaster ? 'exact raw RGBA pixel match' : 'pixel mismatch',
+    );
+  }
 
   const passed = checks.every((check) => check.passed);
   return {
@@ -133,6 +239,9 @@ export async function writeQcReport({ config, result, qcSummary }) {
   lines.push(`- Placement mode: ${config.placementMode}`);
   lines.push(`- Output format: ${config.outputFormat}`);
   lines.push(`- Master canvas: ${result.masterMetadata.width}x${result.masterMetadata.height}`);
+  if (result.mode === FACTORY_MODE_EXACT_JIGSAW) {
+    lines.push(`- Masks directory: ${config.masksDir}`);
+  }
   lines.push('');
   lines.push('## Checks');
   lines.push('');
@@ -143,7 +252,7 @@ export async function writeQcReport({ config, result, qcSummary }) {
   if (result.mode === FACTORY_MODE_RECTANGLE_PLACEHOLDER) {
     lines.push('## Production Readiness Warning');
     lines.push('');
-    lines.push('NOT PRODUCTION READY FOR JIGSAW FIT: this v1 run used deterministic rectangle-grid placeholder slicing. It does not extract exact jigsaw-shaped masks. Use it for pipeline validation only until exact jigsaw mask extraction is implemented and approved.');
+    lines.push('NOT PRODUCTION READY FOR JIGSAW FIT: this v1 run used deterministic rectangle-grid placeholder slicing. It does not extract exact jigsaw-shaped masks. Use it for pipeline validation only; use PRODUCTION_EXACT_JIGSAW for real production jigsaw fit.');
     lines.push('');
   }
   lines.push('## Expected Outputs');

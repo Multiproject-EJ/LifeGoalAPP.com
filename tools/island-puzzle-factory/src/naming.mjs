@@ -2,6 +2,7 @@ import path from 'node:path';
 
 export const FACTORY_MODE_RECTANGLE_PLACEHOLDER = 'V1_RECTANGLE_PLACEHOLDER';
 export const FACTORY_MODE_EXACT_JIGSAW = 'PRODUCTION_EXACT_JIGSAW';
+export const SUPPORTED_FACTORY_MODES = new Set([FACTORY_MODE_RECTANGLE_PLACEHOLDER, FACTORY_MODE_EXACT_JIGSAW]);
 export const SUPPORTED_OUTPUT_FORMATS = new Set(['png', 'webp']);
 export const SUPPORTED_PLACEMENT_MODES = new Set(['full_canvas_overlay']);
 
