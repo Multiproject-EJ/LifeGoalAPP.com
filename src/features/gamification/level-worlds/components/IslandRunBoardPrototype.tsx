@@ -451,8 +451,9 @@ const ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_WEIGHT_PERCENT = 70;
 const DEV_LUCKY_ROLL_TEST_ROLL = 3;
 const BUILD_HOLD_INITIAL_DELAY_MS = 400;
 const FIRST_CREATURE_PACK_REVEAL_DELAY_MS = 650;
-const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT = 'Fill the reward bar to earn more dig tickets.';
-const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT_DEV = 'Fill the reward bar to earn more dig tickets (DEV override tickets).';
+const SPACE_EXCAVATOR_REWARD_BAR_HINT_VISIBLE_MS = 5_000;
+const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT = 'Reward bar can award Space Excavator tickets';
+const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT_DEV = 'Reward bar can award Space Excavator tickets (DEV override tickets)';
 
 function resolveBuildHoldRepeatDelayMs(heldMs: number) {
   if (heldMs >= 3_000) return 95;
@@ -1470,6 +1471,7 @@ export function IslandRunBoardPrototype({
   const [isAutoRolling, setIsAutoRolling] = useState(false);
   const [isAutoRollHoldPending, setIsAutoRollHoldPending] = useState(false);
   const [isTimedEventLaunchQueued, setIsTimedEventLaunchQueued] = useState(false);
+  const [showSpaceExcavatorRewardBarHint, setShowSpaceExcavatorRewardBarHint] = useState(true);
   /** Shown briefly over the dice after the roll animation finishes (e.g. "Rolled 8!") */
   const [diceRollTotalOverlay, setDiceRollTotalOverlay] = useState<string | null>(null);
   /** Full tile-by-tile hop sequence for current roll (Monopoly GO style). */
@@ -4955,6 +4957,21 @@ export function IslandRunBoardPrototype({
   const spaceExcavatorRewardBarHint = isSpaceExcavatorEffectiveEvent
     ? (isDevTimedEventOverrideActive ? SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT_DEV : SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT)
     : null;
+
+  useEffect(() => {
+    if (!isSpaceExcavatorEffectiveEvent) {
+      setShowSpaceExcavatorRewardBarHint(false);
+      return undefined;
+    }
+
+    setShowSpaceExcavatorRewardBarHint(true);
+    const timer = window.setTimeout(() => {
+      setShowSpaceExcavatorRewardBarHint(false);
+    }, SPACE_EXCAVATOR_REWARD_BAR_HINT_VISIBLE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [activeTimedEventId, isDevTimedEventOverrideActive, isSpaceExcavatorEffectiveEvent]);
+
   const hasLegacyEventTicketDivergence = Boolean(activeTimedEventId) && activeEventTickets !== spinTokens;
   const isRewardBarNearlyFull = rewardBarPercent >= 85 && rewardBarPercent < 100;
   // Parity guard breadcrumb for islandRunBoardEssenceParity:
@@ -10009,14 +10026,17 @@ export function IslandRunBoardPrototype({
               </span>
             </div>
             {/* Event timer + multiplier row */}
-            <div className="island-run-board__rewardbar-timers">
+            <div className={`island-run-board__rewardbar-timers${showSpaceExcavatorRewardBarHint && spaceExcavatorRewardBarHint ? ' island-run-board__rewardbar-timers--ticket-hint-visible' : ''}`}>
               <span className={getTimerUrgencyClass(timedEventRemainingMs)}>{timedEventRemainingLabel}</span>
               {effectiveMultiplier > 1 && (
                 <span className="island-run-board__rewardbar-multiplier-badge">×{effectiveMultiplier}</span>
               )}
-              {isSpaceExcavatorEffectiveEvent && (
-                <span className="island-run-board__rewardbar-ticket-hint">
-                  Reward bar can award Space Excavator tickets
+              {spaceExcavatorRewardBarHint && (
+                <span
+                  className={`island-run-board__rewardbar-ticket-hint${showSpaceExcavatorRewardBarHint ? '' : ' island-run-board__rewardbar-ticket-hint--hidden'}`}
+                  aria-hidden={!showSpaceExcavatorRewardBarHint}
+                >
+                  {spaceExcavatorRewardBarHint}
                 </span>
               )}
             </div>

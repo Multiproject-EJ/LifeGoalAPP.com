@@ -2549,7 +2549,8 @@
   align-items: center;
   /* Allows Space Excavator's reward-bar ticket hint to fit beneath the timer on narrow boards. */
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 0 14px;
+  transition: padding 220ms ease, margin 220ms ease;
   margin: 4px -10px -7px;
   padding: 4px 12px;
   border-radius: 0 0 var(--rewardbar-card-radius, 22px) var(--rewardbar-card-radius, 22px);
@@ -2561,11 +2562,27 @@
   letter-spacing: 0.02em;
 }
 
+.island-run-board__rewardbar-timers--ticket-hint-visible {
+  row-gap: 4px;
+}
+
 .island-run-board__rewardbar-ticket-hint {
   flex-basis: 100%;
+  max-height: 2.6em;
+  overflow: hidden;
   text-align: center;
   font-size: 0.62rem;
   line-height: 1.2;
+  opacity: 1;
+  transform: translateY(0);
+  transition: max-height 240ms ease, opacity 180ms ease, transform 240ms ease;
+}
+
+.island-run-board__rewardbar-ticket-hint--hidden {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-3px);
 }
 
 .island-run-board__rewardbar-timers-sep {
