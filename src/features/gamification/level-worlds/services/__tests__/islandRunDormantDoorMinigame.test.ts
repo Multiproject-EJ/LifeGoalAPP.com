@@ -1,6 +1,7 @@
 import {
   buildDormantDoorMiniGame,
   DORMANT_DOOR_REWARD_LEVELS,
+  DORMANT_DOOR_WINNING_LINES,
   resolveDormantDoorReward,
   resolveDormantDoorRewardLevels,
 } from '../islandRunDormantDoorMinigame';
