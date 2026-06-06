@@ -877,12 +877,12 @@
 }
 
 .island-run-prototype__footer-dice-group--slot-center {
-  width: clamp(132px, 31vw, 188px);
+  width: clamp(190px, 52vw, 296px);
   z-index: 2;
 }
 
 .island-run-prototype__footer-multiplier-btn--slot-badge {
-  z-index: 3;
+  z-index: 4;
 }
 .island-run-prototype__footer-actions {
   display: flex;
@@ -933,11 +933,12 @@
 .island-run-prototype__roll-btn--footer {
   flex: 2 1 14rem;
   min-width: 0;
-  min-height: 4.35rem;
-  padding-inline: 0.95rem;
+  min-height: 5.1rem;
+  padding: 0.78rem 1.4rem 0.92rem;
   font-size: 1.04rem;
   font-weight: 800;
-  border-radius: 999px;
+  border-radius: 30px 30px 34px 34px / 24px 24px 30px 30px;
+  clip-path: polygon(9% 0, 91% 0, 100% 17%, 88% 100%, 12% 100%, 0 17%);
   border-width: 1px;
   border-style: solid;
   border-color: var(--controller-control-border);
@@ -1147,11 +1148,14 @@
 }
 
 .island-run-prototype__footer-multiplier-btn {
-  min-height: 1.52rem;
-  padding: 0.12rem 0.64rem;
+  min-width: clamp(9.5rem, 34vw, 13.5rem);
+  min-height: 1.72rem;
+  padding: 0.14rem 1rem;
   border-radius: 999px;
   border: 1px solid var(--controller-control-border);
-  background: linear-gradient(180deg, rgba(154, 210, 235, 0.24), rgba(64, 120, 154, 0.25));
+  background:
+    radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.38), transparent 46%),
+    linear-gradient(180deg, rgba(154, 210, 235, 0.3), rgba(64, 120, 154, 0.28));
   color: #eaf8ff;
   text-shadow: 0 1px 0 rgba(0, 8, 14, 0.44);
   box-shadow:
@@ -6806,8 +6810,8 @@
   .island-run-prototype__roll-btn--footer {
     flex: 3 1 11rem;
     min-width: 0;
-    min-height: 5rem;
-    padding-inline: 0.9rem;
+    min-height: 4.8rem;
+    padding: 0.72rem 1.25rem 0.84rem;
     font-size: 0.98rem;
   }
 
