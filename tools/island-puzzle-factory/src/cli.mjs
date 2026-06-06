@@ -3,7 +3,9 @@ import { access, mkdir, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  FACTORY_MODE_EXACT_JIGSAW,
   FACTORY_MODE_RECTANGLE_PLACEHOLDER,
+  SUPPORTED_FACTORY_MODES,
   SUPPORTED_OUTPUT_FORMATS,
   SUPPORTED_PLACEMENT_MODES,
   islandIdFromNumber,
@@ -21,7 +23,7 @@ const repoRoot = path.resolve(factoryRoot, '..', '..');
 const factoryOutputRoot = path.join(factoryRoot, 'output');
 
 function usage() {
-  return `Usage:\n  node tools/island-puzzle-factory/src/cli.mjs --config tools/island-puzzle-factory/config/island-001.example.json\n\nRequired config keys:\n  inputMaster, outputRoot, islandNumber, puzzleId, grid.rows, grid.columns, placementMode, outputFormat\n`;
+  return `Usage:\n  node tools/island-puzzle-factory/src/cli.mjs --config tools/island-puzzle-factory/config/island-001.example.json\n\nRequired config keys:\n  inputMaster, outputRoot, islandNumber, puzzleId, grid.rows, grid.columns, placementMode, outputFormat\n\nOptional production mode keys:\n  mode, masksDir, expectedMode\n`;
 }
 
 function parseArgs(argv) {
@@ -61,6 +63,7 @@ function normalizeConfig(rawConfig) {
   const puzzleId = normalizeSlug(rawConfig.puzzleId ?? rawConfig.puzzleSlug, 'puzzle');
   const inputMaster = resolveFromRepo(rawConfig.inputMaster ?? rawConfig.source?.masterImage);
   const outputRoot = resolveFromRepo(rawConfig.outputRoot ?? rawConfig.output?.root);
+  const masksDir = resolveFromRepo(rawConfig.masksDir ?? rawConfig.source?.masksDir);
   const rows = Number(rawConfig.grid?.rows);
   const columns = Number(rawConfig.grid?.columns);
   const placementMode = rawConfig.placementMode ?? (
@@ -69,6 +72,8 @@ function normalizeConfig(rawConfig) {
       : rawConfig.pieceStrategy?.type
   );
   const outputFormat = String(rawConfig.outputFormat ?? 'png').toLowerCase();
+  const mode = String(rawConfig.mode ?? FACTORY_MODE_RECTANGLE_PLACEHOLDER).trim();
+  const expectedMode = rawConfig.expectedMode ? String(rawConfig.expectedMode).trim() : null;
 
   return {
     islandNumber,
@@ -76,9 +81,12 @@ function normalizeConfig(rawConfig) {
     puzzleId,
     inputMaster,
     outputRoot,
+    masksDir,
     grid: { rows, columns },
     placementMode,
     outputFormat,
+    mode,
+    expectedMode,
   };
 }
 
@@ -89,6 +97,9 @@ function validateConfig(config) {
   if (!Number.isInteger(config.grid.rows) || config.grid.rows <= 0) errors.push('grid.rows must be a positive integer.');
   if (!Number.isInteger(config.grid.columns) || config.grid.columns <= 0) errors.push('grid.columns must be a positive integer.');
   if (config.grid.rows !== 3 || config.grid.columns !== 3) errors.push('v1 only supports a 3x3 grid.');
+  if (!SUPPORTED_FACTORY_MODES.has(config.mode)) errors.push(`mode must be one of: ${Array.from(SUPPORTED_FACTORY_MODES).join(', ')}.`);
+  if (config.expectedMode && config.expectedMode !== config.mode) errors.push(`expectedMode (${config.expectedMode}) must match mode (${config.mode}).`);
+  if (config.mode === FACTORY_MODE_EXACT_JIGSAW && !config.masksDir) errors.push('masksDir is required when mode is PRODUCTION_EXACT_JIGSAW.');
   if (!SUPPORTED_PLACEMENT_MODES.has(config.placementMode)) errors.push(`placementMode must be one of: ${Array.from(SUPPORTED_PLACEMENT_MODES).join(', ')}.`);
   if (!SUPPORTED_OUTPUT_FORMATS.has(config.outputFormat)) errors.push(`outputFormat must be one of: ${Array.from(SUPPORTED_OUTPUT_FORMATS).join(', ')}.`);
 
@@ -135,8 +146,12 @@ async function main() {
     await rm(config.outputRoot, { recursive: true, force: true });
   }
 
-  console.log(`[IslandPuzzleFactory] Mode: ${FACTORY_MODE_RECTANGLE_PLACEHOLDER}`);
-  console.warn('[IslandPuzzleFactory] NOT PRODUCTION READY FOR JIGSAW FIT: v1 uses rectangle-grid placeholder slicing, not exact jigsaw mask extraction.');
+  console.log(`[IslandPuzzleFactory] Mode: ${config.mode}`);
+  if (config.mode === FACTORY_MODE_RECTANGLE_PLACEHOLDER) {
+    console.warn('[IslandPuzzleFactory] NOT PRODUCTION READY FOR JIGSAW FIT: v1 uses rectangle-grid placeholder slicing, not exact jigsaw mask extraction.');
+  } else {
+    console.log(`[IslandPuzzleFactory] Masks: ${path.relative(repoRoot, config.masksDir)}`);
+  }
   console.log(`[IslandPuzzleFactory] Input: ${path.relative(repoRoot, config.inputMaster)}`);
   console.log(`[IslandPuzzleFactory] Output: ${path.relative(repoRoot, config.outputRoot)}`);
 
@@ -167,6 +182,16 @@ async function main() {
   await writeManifest({ outputRoot: config.outputRoot, manifestPath: result.files.manifest, manifest: finalManifest });
   qcSummary = await runQualityChecks({ config, result, manifestPath: result.files.manifest });
   await writeQcReport({ config, result, qcSummary });
+  const verifiedManifest = buildManifest({
+    config,
+    mode: result.mode,
+    masterMetadata: result.masterMetadata,
+    outputRoot: config.outputRoot,
+    files: result.files,
+    pieces: result.pieces,
+    qcSummary,
+  });
+  await writeManifest({ outputRoot: config.outputRoot, manifestPath: result.files.manifest, manifest: verifiedManifest });
 
   console.log(`[IslandPuzzleFactory] QC: ${qcSummary.status}`);
   console.log(`[IslandPuzzleFactory] Manifest: ${path.relative(repoRoot, result.files.manifest)}`);

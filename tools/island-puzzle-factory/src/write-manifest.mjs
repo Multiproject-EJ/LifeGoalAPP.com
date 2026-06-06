@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { FACTORY_MODE_RECTANGLE_PLACEHOLDER, toPosixRelative } from './naming.mjs';
+import { FACTORY_MODE_EXACT_JIGSAW, FACTORY_MODE_RECTANGLE_PLACEHOLDER, toPosixRelative } from './naming.mjs';
 
 export function buildManifest({
   config,
@@ -16,7 +16,7 @@ export function buildManifest({
     generator: 'island-puzzle-factory',
     generatedAt: new Date().toISOString(),
     mode,
-    productionReady: mode === 'PRODUCTION_EXACT_JIGSAW',
+    productionReady: mode === FACTORY_MODE_EXACT_JIGSAW && qcSummary?.status === 'PASS',
     warnings: mode === FACTORY_MODE_RECTANGLE_PLACEHOLDER
       ? ['NOT PRODUCTION READY FOR JIGSAW FIT: v1 used deterministic rectangle-grid placeholder slicing, not exact jigsaw mask extraction.']
       : [],
@@ -27,7 +27,8 @@ export function buildManifest({
     outputFormat: config.outputFormat,
     source: {
       inputMaster: config.inputMaster,
-      geometryAuthority: 'approved source master image',
+      masksDir: config.masksDir ?? null,
+      geometryAuthority: mode === FACTORY_MODE_EXACT_JIGSAW ? 'approved source master image plus explicit full-canvas masks' : 'approved source master image',
       width: masterMetadata.width,
       height: masterMetadata.height,
       channels: masterMetadata.channels,
@@ -55,6 +56,14 @@ export function buildManifest({
       filename: path.basename(piece.outputPath),
       src: toPosixRelative(outputRoot, piece.outputPath),
       bounds: piece.bounds,
+      mask: piece.mask ? {
+        filename: piece.mask.filename,
+        source: piece.mask.path ? toPosixRelative(outputRoot, piece.mask.path) : null,
+        exists: piece.mask.exists,
+        width: piece.mask.width,
+        height: piece.mask.height,
+        visiblePixels: piece.mask.visiblePixels,
+      } : null,
       canvas: {
         width: masterMetadata.width,
         height: masterMetadata.height,
