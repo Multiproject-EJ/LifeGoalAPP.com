@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import confetti from 'canvas-confetti';
 import { createPortal } from 'react-dom';
 
 export type CelebrationAnimationProps = {
@@ -9,18 +10,22 @@ export type CelebrationAnimationProps = {
   onComplete?: () => void;
 };
 
-type IconConfig = {
-  icons: string[];
-  count: number;
-  target: 'game-icon' | 'fab-button' | 'none';
-};
+type CelebrationType = CelebrationAnimationProps['type'];
 
-type IconInstance = {
-  id: string;
-  icon: string;
-  x: number;
-  y: number;
-  delay: number;
+type ConfettiConfig = {
+  particleCount: number;
+  spread: number;
+  startVelocity: number;
+  scalar: number;
+  ticks: number;
+  colors: string[];
+  target: 'game-icon' | 'fab-button';
+  cleanupDelay: number;
+  pulseDelay: number;
+  backdropFadeIn?: number;
+  xpFadeIn?: number;
+  xpHideDelay?: number;
+  backdropFadeOut?: number;
 };
 
 // DOM element selectors
@@ -30,92 +35,107 @@ const SELECTORS = {
   FAB_FALLBACK: '[class*="quick-actions-fab"]',
 } as const;
 
-// Animation timing constants
-const TIMING = {
-  ICON_START_DELAY: 400,      // ms before icons start appearing
-  ICON_STAGGER_DELAY: 200,    // ms between each icon appearing
-  BACKDROP_FADE_IN: 450,      // ms when backdrop starts fading in
-  XP_FADE_IN: 500,            // ms when XP indicator appears
-  FLY_START_DELAY: 1200,      // ms before icons start flying
-  XP_HIDE_DELAY: 2500,        // ms before XP indicator fades
-  BACKDROP_FADE_OUT: 2300,    // ms when backdrop starts fading out
-  CLEANUP_DELAY: 3000,        // ms before full cleanup
-  PULSE_DURATION: 300,        // ms for target pulse animation
-} as const;
-
-const HABIT_TIMING = {
-  ICON_START_DELAY: 0,
-  ICON_STAGGER_DELAY: 0,
-  BACKDROP_FADE_IN: 0,
-  XP_FADE_IN: 0,
-  FLY_START_DELAY: 80,
-  XP_HIDE_DELAY: 0,
-  BACKDROP_FADE_OUT: 0,
-  CLEANUP_DELAY: 550,
-  PULSE_DURATION: 300,
-} as const;
-
-const getTiming = (type: CelebrationAnimationProps['type']) =>
-  type === 'habit' || type === 'action' ? HABIT_TIMING : TIMING;
-
-const ICON_CONFIGS: Record<CelebrationAnimationProps['type'], IconConfig> = {
+const CONFETTI_CONFIGS: Record<CelebrationType, ConfettiConfig> = {
   habit: {
-    icons: ['⚡'],
-    count: 9,  // slightly larger swarm for snappy habit feedback
+    particleCount: 28,
+    spread: 52,
+    startVelocity: 24,
+    scalar: 0.7,
+    ticks: 80,
+    colors: ['#facc15', '#f97316', '#fde68a', '#38bdf8'],
     target: 'game-icon',
+    cleanupDelay: 700,
+    pulseDelay: 120,
   },
   journal: {
-    icons: ['📔', '✍️', '📝', '💭', '✨'],
-    count: 8,   // 6-10 icons
+    particleCount: 64,
+    spread: 68,
+    startVelocity: 32,
+    scalar: 0.85,
+    ticks: 120,
+    colors: ['#c084fc', '#a78bfa', '#f9a8d4', '#fef3c7', '#ffffff'],
     target: 'fab-button',
+    cleanupDelay: 2600,
+    pulseDelay: 850,
+    backdropFadeIn: 120,
+    xpFadeIn: 220,
+    xpHideDelay: 1900,
+    backdropFadeOut: 2050,
   },
   action: {
-    icons: ['✨'],
-    count: 9,   // match habit snap feedback
+    particleCount: 26,
+    spread: 48,
+    startVelocity: 23,
+    scalar: 0.68,
+    ticks: 80,
+    colors: ['#60a5fa', '#22d3ee', '#bfdbfe', '#ffffff'],
     target: 'fab-button',
+    cleanupDelay: 700,
+    pulseDelay: 120,
   },
   breathing: {
-    icons: ['🌬️', '🧘', '💨', '🌊', '☁️', '✨', '🕊️', '🍃'],
-    count: 10,  // 8-12 icons
+    particleCount: 58,
+    spread: 76,
+    startVelocity: 26,
+    scalar: 0.78,
+    ticks: 140,
+    colors: ['#7dd3fc', '#67e8f9', '#a7f3d0', '#dbeafe', '#ffffff'],
     target: 'game-icon',
+    cleanupDelay: 2600,
+    pulseDelay: 900,
+    backdropFadeIn: 120,
+    xpFadeIn: 240,
+    xpHideDelay: 1900,
+    backdropFadeOut: 2050,
   },
   levelup: {
-    icons: ['🎉', '🏆', '⭐', '🌟', '💎', '👑', '🎊', '✨'],
-    count: 25,  // 20-30 icons
+    particleCount: 150,
+    spread: 92,
+    startVelocity: 42,
+    scalar: 1,
+    ticks: 180,
+    colors: ['#facc15', '#f97316', '#38bdf8', '#a78bfa', '#f472b6', '#ffffff'],
     target: 'game-icon',
+    cleanupDelay: 3200,
+    pulseDelay: 1150,
+    backdropFadeIn: 120,
+    xpFadeIn: 260,
+    xpHideDelay: 2400,
+    backdropFadeOut: 2550,
   },
   vision: {
-    icons: ['📸', '✨', '🎯', '🌟', '💎', '🖼️', '✅'],
-    count: 10,
+    particleCount: 78,
+    spread: 74,
+    startVelocity: 34,
+    scalar: 0.88,
+    ticks: 135,
+    colors: ['#60a5fa', '#38bdf8', '#facc15', '#fef3c7', '#ffffff'],
     target: 'game-icon',
+    cleanupDelay: 2800,
+    pulseDelay: 900,
+    backdropFadeIn: 120,
+    xpFadeIn: 240,
+    xpHideDelay: 2050,
+    backdropFadeOut: 2200,
   },
 };
 
-const getRandomIcon = (icons: string[]): string => {
-  return icons[Math.floor(Math.random() * icons.length)];
-};
-
-const getRandomPosition = (): { x: number; y: number } => {
-  // Check if window is available (for SSR safety)
-  if (typeof window === 'undefined') {
-    return { x: 0, y: 0 };
+const prefersReducedMotion = () => {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return false;
   }
-  
-  // Generate random positions across the viewport
-  const x = Math.random() * (window.innerWidth - 100) + 50;
-  const y = Math.random() * (window.innerHeight - 100) + 50;
-  return { x, y };
+
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 };
 
-const getTargetPosition = (targetElement: 'game-icon' | 'fab-button' | 'none'): { x: number; y: number } | null => {
+const getTargetPosition = (targetElement: 'game-icon' | 'fab-button'): { x: number; y: number } | null => {
   if (typeof window === 'undefined') return null;
-  if (targetElement === 'none') return null;
 
   let element: HTMLElement | null = null;
 
   if (targetElement === 'game-icon') {
     element = document.querySelector(SELECTORS.GAME_ICON);
-  } else if (targetElement === 'fab-button') {
+  } else {
     element = document.querySelector(SELECTORS.FAB_BUTTON);
     if (!element) {
       // Fallback to any FAB-related element
@@ -131,11 +151,73 @@ const getTargetPosition = (targetElement: 'game-icon' | 'fab-button' | 'none'): 
     };
   }
 
-  // Fallback to center of screen if target not found
+  // Fallback to the lower-middle area where mobile reward UI usually appears.
   return {
     x: window.innerWidth / 2,
-    y: window.innerHeight / 2,
+    y: window.innerHeight * 0.72,
   };
+};
+
+const toConfettiOrigin = (position: { x: number; y: number }) => {
+  if (typeof window === 'undefined') {
+    return { x: 0.5, y: 0.6 };
+  }
+
+  return {
+    x: Math.min(Math.max(position.x / window.innerWidth, 0), 1),
+    y: Math.min(Math.max(position.y / window.innerHeight, 0), 1),
+  };
+};
+
+const fireConfetti = (
+  type: CelebrationType,
+  config: ConfettiConfig,
+  originPosition: { x: number; y: number },
+) => {
+  const origin = toConfettiOrigin(originPosition);
+  const baseOptions = {
+    colors: config.colors,
+    disableForReducedMotion: true,
+    origin,
+    scalar: config.scalar,
+    spread: config.spread,
+    startVelocity: config.startVelocity,
+    ticks: config.ticks,
+    zIndex: 9998,
+  };
+
+  if (type === 'levelup') {
+    void confetti({
+      ...baseOptions,
+      particleCount: Math.round(config.particleCount * 0.55),
+      spread: 96,
+      origin: { x: 0.5, y: Math.min(origin.y, 0.72) },
+    });
+
+    window.setTimeout(() => {
+      void confetti({
+        ...baseOptions,
+        particleCount: Math.round(config.particleCount * 0.25),
+        angle: 60,
+        spread: 62,
+        origin: { x: 0, y: 0.72 },
+      });
+      void confetti({
+        ...baseOptions,
+        particleCount: Math.round(config.particleCount * 0.25),
+        angle: 120,
+        spread: 62,
+        origin: { x: 1, y: 0.72 },
+      });
+    }, 180);
+
+    return;
+  }
+
+  void confetti({
+    ...baseOptions,
+    particleCount: config.particleCount,
+  });
 };
 
 export function CelebrationAnimation({
@@ -145,17 +227,14 @@ export function CelebrationAnimation({
   origin,
   onComplete,
 }: CelebrationAnimationProps) {
-  const [icons, setIcons] = useState<IconInstance[]>([]);
   const [showXP, setShowXP] = useState(false);
   const [showBackdrop, setShowBackdrop] = useState(false);
   const [backdropFadingOut, setBackdropFadingOut] = useState(false);
-  const [isFlying, setIsFlying] = useState(false);
   const [targetPulsing, setTargetPulsing] = useState(false);
   const onCompleteRef = useRef(onComplete);
   const animationStartedRef = useRef(false);
 
-  const config = ICON_CONFIGS[type];
-  const timing = getTiming(type);
+  const config = CONFETTI_CONFIGS[type];
   const allowBackdrop = type !== 'habit' && type !== 'action';
   const allowXP = type !== 'habit' && type !== 'action';
   const targetElement = targetElementProp ?? config.target;
@@ -165,11 +244,9 @@ export function CelebrationAnimation({
   }, [onComplete]);
 
   const cleanup = useCallback(() => {
-    setIcons([]);
     setShowXP(false);
     setShowBackdrop(false);
     setBackdropFadingOut(false);
-    setIsFlying(false);
     setTargetPulsing(false);
     onCompleteRef.current?.();
   }, []);
@@ -180,114 +257,97 @@ export function CelebrationAnimation({
     }
     animationStartedRef.current = true;
 
-    // Generate random icons with initial delay
-    const newIcons: IconInstance[] = [];
-    for (let i = 0; i < config.count; i++) {
-      const position = origin ?? getRandomPosition();
-      newIcons.push({
-        id: `icon-${i}-${Date.now()}`,
-        icon: getRandomIcon(config.icons),
-        x: position.x,
-        y: position.y,
-        delay: timing.ICON_START_DELAY + (Math.random() * timing.ICON_STAGGER_DELAY),
-      });
+    const targetPosition = getTargetPosition(targetElement);
+    const originPosition = origin ?? targetPosition ?? {
+      x: window.innerWidth / 2,
+      y: window.innerHeight * 0.72,
+    };
+
+    if (!prefersReducedMotion()) {
+      fireConfetti(type, config, originPosition);
     }
-    setIcons(newIcons);
 
-    // Show backdrop at 450ms
-    const backdropTimeout = allowBackdrop
-      ? setTimeout(() => {
+    const backdropTimeout = allowBackdrop && config.backdropFadeIn !== undefined
+      ? window.setTimeout(() => {
         setShowBackdrop(true);
-      }, timing.BACKDROP_FADE_IN)
+      }, config.backdropFadeIn)
       : null;
 
-    // Show XP at 500ms
-    const xpShowTimeout = allowXP
-      ? setTimeout(() => {
+    const xpShowTimeout = allowXP && config.xpFadeIn !== undefined
+      ? window.setTimeout(() => {
         setShowXP(true);
-      }, timing.XP_FADE_IN)
+      }, config.xpFadeIn)
       : null;
 
-    // Start flying animation at 1200ms
-    const flyTimeout = setTimeout(() => {
-      setIsFlying(true);
+    const pulseTimeout = window.setTimeout(() => {
       setTargetPulsing(true);
-    }, timing.FLY_START_DELAY);
+    }, config.pulseDelay);
 
-    // Start fading out backdrop at 2300ms
-    const backdropFadeOutTimeout = allowBackdrop
-      ? setTimeout(() => {
+    const backdropFadeOutTimeout = allowBackdrop && config.backdropFadeOut !== undefined
+      ? window.setTimeout(() => {
         setBackdropFadingOut(true);
-      }, timing.BACKDROP_FADE_OUT)
+      }, config.backdropFadeOut)
       : null;
 
-    // Hide XP at 2500ms
-    const xpTimeout = allowXP
-      ? setTimeout(() => {
+    const xpTimeout = allowXP && config.xpHideDelay !== undefined
+      ? window.setTimeout(() => {
         setShowXP(false);
-      }, timing.XP_HIDE_DELAY)
+      }, config.xpHideDelay)
       : null;
 
-    // Clean up after animations complete at 3000ms
-    const cleanupTimeout = setTimeout(() => {
+    const cleanupTimeout = window.setTimeout(() => {
       cleanup();
-    }, timing.CLEANUP_DELAY);
+    }, config.cleanupDelay);
 
     // Hard-stop guard so celebrations can never linger if parent renders frequently.
-    const hardStopTimeout = setTimeout(() => {
+    const hardStopTimeout = window.setTimeout(() => {
       cleanup();
-    }, Math.max(timing.CLEANUP_DELAY + 250, 3500));
+    }, Math.max(config.cleanupDelay + 250, 3500));
 
     return () => {
-      if (backdropTimeout) {
-        clearTimeout(backdropTimeout);
+      if (backdropTimeout !== null) {
+        window.clearTimeout(backdropTimeout);
       }
-      if (xpShowTimeout) {
-        clearTimeout(xpShowTimeout);
+      if (xpShowTimeout !== null) {
+        window.clearTimeout(xpShowTimeout);
       }
-      clearTimeout(flyTimeout);
-      if (backdropFadeOutTimeout) {
-        clearTimeout(backdropFadeOutTimeout);
+      window.clearTimeout(pulseTimeout);
+      if (backdropFadeOutTimeout !== null) {
+        window.clearTimeout(backdropFadeOutTimeout);
       }
-      if (xpTimeout) {
-        clearTimeout(xpTimeout);
+      if (xpTimeout !== null) {
+        window.clearTimeout(xpTimeout);
       }
-      clearTimeout(cleanupTimeout);
-      clearTimeout(hardStopTimeout);
+      window.clearTimeout(cleanupTimeout);
+      window.clearTimeout(hardStopTimeout);
     };
-  }, [config, cleanup, origin, timing, allowBackdrop, allowXP, type]);
+  }, [allowBackdrop, allowXP, cleanup, config, origin, targetElement, type]);
 
-  // Add pulse class to target element
+  // Add pulse class to target element after the burst lands.
   useEffect(() => {
     if (!targetPulsing) return;
 
     let element: HTMLElement | null = null;
     if (targetElement === 'game-icon') {
       element = document.querySelector(SELECTORS.GAME_ICON);
-    } else if (targetElement === 'fab-button') {
+    } else {
       element = document.querySelector(SELECTORS.FAB_BUTTON);
     }
 
-    const timeouts: number[] = [];
+    const timeout = window.setTimeout(() => {
+      element?.classList.remove('collecting-icons');
+    }, 300);
 
     if (element) {
       element.classList.add('collecting-icons');
-      timeouts.push(
-        window.setTimeout(() => {
-          element?.classList.remove('collecting-icons');
-        }, TIMING.PULSE_DURATION),
-      );
     }
 
     return () => {
-      timeouts.forEach((timeout) => {
-        window.clearTimeout(timeout);
-      });
+      window.clearTimeout(timeout);
       element?.classList.remove('collecting-icons');
     };
   }, [targetPulsing, targetElement]);
 
-  const targetPos = isFlying ? getTargetPosition(targetElement) : null;
   const xpOrigin = showXP ? getTargetPosition(targetElement) : null;
   const xpStyle: React.CSSProperties | undefined = xpOrigin
     ? { left: `${xpOrigin.x}px`, top: `${xpOrigin.y}px` }
@@ -295,47 +355,19 @@ export function CelebrationAnimation({
 
   return createPortal(
     <>
-      {/* Dimmed backdrop - mutes the background */}
+      {/* Dimmed backdrop - mutes the background for larger reward moments. */}
       {showBackdrop && allowBackdrop && (
-        <div 
+        <div
           className={`celebration-backdrop ${
             type === 'levelup' ? 'celebration-backdrop--levelup' : ''
           } ${
             backdropFadingOut ? 'celebration-backdrop--fading-out' : ''
-          }`} 
+          }`}
         />
       )}
 
-      {/* Celebration Icons */}
-      {icons.map((iconInstance) => {
-        const style: React.CSSProperties = {
-          left: `${iconInstance.x}px`,
-          top: `${iconInstance.y}px`,
-          animationDelay: `${iconInstance.delay}ms`,
-        };
-
-        if (isFlying && targetPos) {
-          style.left = `${targetPos.x}px`;
-          style.top = `${targetPos.y}px`;
-          style.transform = 'scale(0.1)';
-          style.opacity = '0';
-        }
-
-        return (
-          <div
-            key={iconInstance.id}
-            className={`celebration-icon celebration-icon--${type} ${
-              isFlying ? 'celebration-icon--flying' : ''
-            }`}
-            style={style}
-          >
-            {iconInstance.icon}
-          </div>
-        );
-      })}
-
-      {/* XP indicator - the star of the show! */}
-      {showXP && allowXP && xpAmount && (
+      {/* XP indicator - retained while the heavy emoji swarm is replaced by canvas confetti. */}
+      {showXP && allowXP && xpAmount ? (
         <div
           className={`celebration-xp ${type === 'levelup' ? 'celebration-xp--levelup' : ''}`}
           style={xpStyle}
@@ -343,8 +375,8 @@ export function CelebrationAnimation({
           <span className="celebration-xp__value">+{xpAmount}</span>
           <span className="celebration-xp__label">XP</span>
         </div>
-      )}
+      ) : null}
     </>,
-    document.body
+    document.body,
   );
 }
