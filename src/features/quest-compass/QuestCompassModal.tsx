@@ -546,18 +546,22 @@ function ForceDetailSheet({
   );
 }
 
-const SCORE_TO_PERCENTAGE_SCALE = 10;
+const SCORE_TO_PERCENT_SCALE_FACTOR = 10;
 
 function ScoreMeter({ force }: { force: QuestCompassForceScore }) {
   const scorePercent =
     force.score === null
       ? 0
-      : Math.min(100, Math.max(0, force.score * SCORE_TO_PERCENTAGE_SCALE));
+      : Math.min(100, Math.max(0, force.score * SCORE_TO_PERCENT_SCALE_FACTOR));
 
   return (
     <div
       className={`quest-compass__score-meter${force.score === null ? ' quest-compass__score-meter--empty' : ''}`}
       aria-label={`${force.name} score ${force.scoreLabel}`}
+      aria-valuemax={100}
+      aria-valuemin={0}
+      aria-valuenow={scorePercent}
+      role="progressbar"
     >
       <span style={{ width: `${scorePercent}%` }} />
     </div>
