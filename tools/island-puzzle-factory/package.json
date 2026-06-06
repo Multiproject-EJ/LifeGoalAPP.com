@@ -1,0 +1,14 @@
+{
+  "name": "island-puzzle-factory",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic Island Puzzle Factory for slicing approved master images into 3x3 full-canvas overlay pieces.",
+  "scripts": {
+    "factory": "node src/cli.mjs",
+    "factory:example": "node src/cli.mjs --config config/island-001.example.json"
+  },
+  "dependencies": {
+    "sharp": "^0.33.5"
+  }
+}

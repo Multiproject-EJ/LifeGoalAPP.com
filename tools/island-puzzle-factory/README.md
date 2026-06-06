@@ -34,7 +34,28 @@ V1 will produce assets from a single completed master image:
 5. Emit a reassembly check image proving that all nine overlays reconstruct the master.
 6. Fail the run if geometry, canvas size, ordering, or reassembly differs from the approved master.
 
-The slicing script is intentionally not included yet.
+The v1 slicing script is included under `src/` and intentionally runs in `V1_RECTANGLE_PLACEHOLDER` mode. It uses deterministic rectangle-grid cell masks, not exact jigsaw-piece mask detection. The generated `qc_report.md` and `manifest.json` must therefore say `NOT PRODUCTION READY FOR JIGSAW FIT` until a later exact-mask implementation reports `PRODUCTION_EXACT_JIGSAW`.
+
+
+## V1 Local Tooling Command
+
+Run from the repository root after placing an approved master image at the config's `inputMaster` path:
+
+```sh
+node tools/island-puzzle-factory/src/cli.mjs --config tools/island-puzzle-factory/config/island-001.example.json
+```
+
+For this tooling PR, the example config writes only to `tools/island-puzzle-factory/output/`, which is gitignored. Do not point `outputRoot` at `public/assets/puzzle` until a future runtime-asset PR explicitly approves that move.
+
+The config supports:
+
+- `inputMaster`
+- `outputRoot`
+- `islandNumber`
+- `puzzleId`
+- `grid.rows` and `grid.columns`
+- `placementMode: "full_canvas_overlay"`
+- `outputFormat: "png"` or `"webp"`
 
 ## Expected Input Master Image
 
