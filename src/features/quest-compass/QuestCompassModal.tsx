@@ -234,6 +234,7 @@ export function QuestCompassModal({
         ) : null}
 
         <section className="quest-compass__overview" aria-label="Compass overview">
+          <span className="quest-compass__north-mark" aria-hidden="true">N</span>
           <div className="quest-compass__orb" aria-hidden="true">
             <span className="quest-compass__orb-center">🧭</span>
             {viewModel.forces.map((force, index) => (
@@ -514,7 +515,7 @@ function ForceDetailSheet({
               {supportingHabits.map((habit) => (
                 <li key={habit.id}>
                   <strong>{habit.emoji ? `${habit.emoji} ` : ''}{habit.title}</strong>
-                  <span className={`quest-compass-detail__state-badge quest-compass-detail__state-badge--${getHabitCompletionTone(habit.completionLabel)}`}>
+                  <span className="quest-compass-detail__state-badge">
                     {habit.completionLabel}
                   </span>
                 </li>
@@ -545,13 +546,13 @@ function ForceDetailSheet({
   );
 }
 
-const SCORE_TO_PERCENT_MULTIPLIER = 10;
+const SCORE_TO_PERCENTAGE_SCALE = 10;
 
 function ScoreMeter({ force }: { force: QuestCompassForceScore }) {
   const scorePercent =
     force.score === null
       ? 0
-      : Math.min(100, Math.max(0, force.score * SCORE_TO_PERCENT_MULTIPLIER));
+      : Math.min(100, Math.max(0, force.score * SCORE_TO_PERCENTAGE_SCALE));
 
   return (
     <div
@@ -561,19 +562,6 @@ function ScoreMeter({ force }: { force: QuestCompassForceScore }) {
       <span style={{ width: `${scorePercent}%` }} />
     </div>
   );
-}
-
-function getHabitCompletionTone(completionLabel: string): 'complete' | 'active' | 'waiting' {
-  const normalizedLabel = completionLabel.toLowerCase();
-  if (normalizedLabel.includes('completed')) return 'complete';
-  if (
-    normalizedLabel.includes('%') ||
-    normalizedLabel.includes('progress') ||
-    normalizedLabel.includes('partial')
-  ) {
-    return 'active';
-  }
-  return 'waiting';
 }
 
 function getRecommendationButtonLabel(action: QuestCompassRecommendedAction): string {

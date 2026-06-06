@@ -21425,8 +21425,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   pointer-events: none;
 }
 
-.quest-compass__overview::after {
-  content: 'N';
+.quest-compass__north-mark {
   position: absolute;
   top: 0.45rem;
   left: 3.2rem;
@@ -22083,21 +22082,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   padding: 0.2rem 0.46rem;
   border-radius: 999px;
   font-weight: 850;
-}
-
-.quest-compass-detail__state-badge--complete {
-  background: rgba(34, 197, 94, 0.14);
-  color: #166534;
-}
-
-.quest-compass-detail__state-badge--active {
   background: rgba(59, 130, 246, 0.14);
   color: #1d4ed8;
-}
-
-.quest-compass-detail__state-badge--waiting {
-  background: rgba(148, 163, 184, 0.16);
-  color: #475569;
 }
 
 .quest-compass-detail__recommendation {
