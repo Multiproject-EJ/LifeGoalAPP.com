@@ -545,8 +545,13 @@ function ForceDetailSheet({
   );
 }
 
+const SCORE_TO_PERCENT_MULTIPLIER = 10;
+
 function ScoreMeter({ force }: { force: QuestCompassForceScore }) {
-  const scorePercent = force.score === null ? 0 : Math.min(100, Math.max(0, force.score * 10));
+  const scorePercent =
+    force.score === null
+      ? 0
+      : Math.min(100, Math.max(0, force.score * SCORE_TO_PERCENT_MULTIPLIER));
 
   return (
     <div
