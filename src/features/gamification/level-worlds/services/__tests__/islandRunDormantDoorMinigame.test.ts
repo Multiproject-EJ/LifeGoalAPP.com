@@ -1,22 +1,28 @@
 import {
   buildDormantDoorMiniGame,
   DORMANT_DOOR_REWARD_LEVELS,
+  DORMANT_DOOR_WINNING_LINES,
   resolveDormantDoorReward,
+  resolveDormantDoorRewardLevels,
 } from '../islandRunDormantDoorMinigame';
 import { assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const islandRunDormantDoorMinigameTests: TestCase[] = [
   {
-    name: 'dormant door minigame builds six deterministic doors with a triple, pair, and odd figure',
+    name: 'dormant door minigame builds nine deterministic prize doors with line prizes',
     run: () => {
       const first = buildDormantDoorMiniGame({ islandNumber: 12, tileIndex: 6, rollIndex: 4, doorStopId: 'habit' });
       const second = buildDormantDoorMiniGame({ islandNumber: 12, tileIndex: 6, rollIndex: 4, doorStopId: 'habit' });
       assertDeepEqual(first, second, 'Expected dormant door board to be deterministic for identical inputs');
-      assertEqual(first.doors.length, 6, 'Expected six doors');
+      assertEqual(first.doors.length, 9, 'Expected a 3×3 board of nine doors');
 
-      const counts = new Map<string, number>();
-      for (const door of first.doors) counts.set(door.figure, (counts.get(door.figure) ?? 0) + 1);
-      assertDeepEqual([...counts.values()].sort((a, b) => b - a), [3, 2, 1], 'Expected one triple, one pair, and one odd figure');
+      const figures = new Set(first.doors.map((door) => door.figure));
+      assertDeepEqual([...figures].sort(), ['large', 'medium', 'small'], 'Expected small, medium, and large prize icons');
+
+      const hasLargeLine = DORMANT_DOOR_WINNING_LINES.some((line) => line.every((index) => first.doors[index]?.figure === 'large'));
+      const hasMediumLine = DORMANT_DOOR_WINNING_LINES.some((line) => line.every((index) => first.doors[index]?.figure === 'medium'));
+      assertEqual(hasLargeLine, true, 'Expected one large-prize line');
+      assertEqual(hasMediumLine, true, 'Expected one medium-prize line');
     },
   },
   {
@@ -30,11 +36,22 @@ export const islandRunDormantDoorMinigameTests: TestCase[] = [
     },
   },
   {
-    name: 'dormant door reward resolves by best match count',
+    name: 'dormant door reward resolves by completed prize line',
     run: () => {
-      assertEqual(resolveDormantDoorReward(['shell', 'starfish', 'pearl']).tier, 'small', 'Expected all-different picks to earn small reward');
-      assertEqual(resolveDormantDoorReward(['shell', 'shell', 'pearl']).tier, 'medium', 'Expected pair picks to earn medium reward');
-      assertEqual(resolveDormantDoorReward(['shell', 'shell', 'shell']).tier, 'jackpot', 'Expected triple picks to earn jackpot reward');
+      assertEqual(resolveDormantDoorReward(['large', 'large', 'large'], [0, 1, 2]).tier, 'jackpot', 'Expected a large completed line to earn jackpot reward');
+      assertEqual(resolveDormantDoorReward(['medium', 'medium', 'medium'], [0, 1, 2]).tier, 'medium', 'Expected a medium completed line to earn medium reward');
+      assertEqual(resolveDormantDoorReward(['large', 'large', 'large'], [0, 1, 3]).tier, 'small', 'Expected non-line picks to fall back to small reward');
+      assertEqual(resolveDormantDoorReward(['large', 'medium', 'large'], [0, 1, 2]).tier, 'small', 'Expected mixed line icons to fall back to small reward');
+    },
+  },
+  {
+    name: 'dormant door rewards scale to 20 percent of building cost at max reward and never award dice',
+    run: () => {
+      const levels = resolveDormantDoorRewardLevels({ effectiveIslandNumber: 1, remainingIslandBuildCost: 1000 });
+      assertEqual(levels[2].essence, 200, 'Large prize should be 20% of remaining build cost');
+      assertEqual(levels[1].essence, 100, 'Medium prize should be half of the large prize');
+      assertEqual(levels[0].essence, 40, 'Small prize should be 20% of the large prize');
+      assertDeepEqual(levels.map((level) => level.dice), [0, 0, 0], 'Dormant door rewards should only award essence');
     },
   },
 ];
