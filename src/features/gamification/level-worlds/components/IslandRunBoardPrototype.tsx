@@ -330,6 +330,7 @@ import { getTreasurePathMilestoneMetadata } from '../services/islandRunIslandMet
 import {
   getEffectiveIslandNumber,
   getIslandTotalEssenceCost,
+  getRemainingIslandBuildCost,
   getStopUpgradeCost,
   initStopBuildStatesForIsland,
   isStopBuildFullyComplete,
@@ -1333,12 +1334,9 @@ const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
 };
 
 const DORMANT_DOOR_FIGURE_ICONS: Record<DormantDoorFigure, string> = {
-  shell: '🐚',
-  starfish: '⭐',
-  pearl: '⚪',
-  coral: '🪸',
-  leaf: '🍃',
-  moon: '🌙',
+  small: '🟣',
+  medium: '💎',
+  large: '👑',
 };
 
 interface IslandRunBoardPrototypeProps {
@@ -4129,6 +4127,10 @@ export function IslandRunBoardPrototype({
       tileIndex,
       rollIndex: rollIndexRef.current,
       doorStopId,
+      remainingIslandBuildCost: getRemainingIslandBuildCost({
+        effectiveIslandNumber,
+        stopBuildStateByIndex: runtimeStateRef.current.stopBuildStateByIndex,
+      }),
     });
     requestActiveStopTransition(null, 'dormant_landmark_door_minigame');
     setRequiredDoorStopId(null);
@@ -4136,7 +4138,7 @@ export function IslandRunBoardPrototype({
     setDormantDoorSelectedIndices([]);
     setDormantDoorReward(null);
     setIsDormantDoorRewardClaiming(false);
-    setLandingText('🚪 Dormant door challenge: find three matching figures for a bigger reward.');
+    setLandingText('🚪 Dormant door challenge: pick 3 doors and try to complete a prize line.');
   }, [allLandmarkDoorsRouteToBoss, contractV2Stops, doesStopRequireTicketPayment, effectiveIslandNumber, requestActiveStopTransition, stopIndexByStopId]);
 
   const requiredDoorStopIndex = requiredDoorStopId ? stopIndexByStopId.get(requiredDoorStopId) : undefined;
@@ -4168,7 +4170,7 @@ export function IslandRunBoardPrototype({
       const selectedFigures = next
         .map((index) => dormantDoorMiniGame.doors[index]?.figure)
         .filter((figure): figure is DormantDoorFigure => Boolean(figure));
-      setDormantDoorReward(resolveDormantDoorReward(selectedFigures));
+      setDormantDoorReward(resolveDormantDoorReward(selectedFigures, next, dormantDoorMiniGame.rewardLevels));
     }
   }, [dormantDoorMiniGame, dormantDoorReward, dormantDoorSelectedIndices]);
 
@@ -4187,13 +4189,12 @@ export function IslandRunBoardPrototype({
       client,
       deltas: {
         essence: dormantDoorReward.essence,
-        dicePool: dormantDoorReward.dice,
+        dicePool: 0,
       },
       triggerSource: 'dormant_landmark_door_minigame',
     });
     setRuntimeState(record);
-    const dicePart = dormantDoorReward.dice > 0 ? `, +${dormantDoorReward.dice} dice` : '';
-    setLandingText(`🚪 ${dormantDoorReward.label}: +${dormantDoorReward.essence} essence${dicePart}.`);
+    setLandingText(`🚪 ${dormantDoorReward.label}: +${dormantDoorReward.essence} essence.`);
     handleCloseDormantDoorMiniGame();
   }, [client, dormantDoorMiniGame, dormantDoorReward, handleCloseDormantDoorMiniGame, isDormantDoorRewardClaiming, session]);
 
@@ -11059,12 +11060,12 @@ export function IslandRunBoardPrototype({
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--dormant-door" role="dialog" aria-modal="true" aria-label="Dormant door challenge">
             <h3 className="island-stop-modal__title">🚪 Dormant Door Challenge</h3>
             <p className="island-dormant-door__intro">
-              This is not the active landmark door. Pick <strong>3 doors</strong> and try to reveal matching figures.
+              This is not the active landmark door. Pick <strong>3 doors</strong> and try to complete 3 in a row on the 4×4 board.
             </p>
             <div className="island-dormant-door__reward-row" aria-label="Dormant door reward levels">
               {dormantDoorMiniGame.rewardLevels.map((level) => (
                 <span key={level.tier} className={`island-dormant-door__reward-chip island-dormant-door__reward-chip--${level.tier}`}>
-                  {level.label}: +{level.essence} 🟣{level.dice > 0 ? ` +${level.dice} 🎲` : ''}
+                  {level.label}: +{level.essence} 🟣
                 </span>
               ))}
             </div>
@@ -11091,7 +11092,7 @@ export function IslandRunBoardPrototype({
             </div>
             {dormantDoorReward ? (
               <p className="island-dormant-door__result" role="status">
-                {dormantDoorReward.label}! Claim +{dormantDoorReward.essence} essence{dormantDoorReward.dice > 0 ? ` and +${dormantDoorReward.dice} dice` : ''}.
+                {dormantDoorReward.label}! Claim +{dormantDoorReward.essence} essence.
               </p>
             ) : (
               <p className="island-dormant-door__hint" role="status">
