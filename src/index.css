@@ -23560,13 +23560,13 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .daily-treats-calendar__quest-stage--focused {
-  padding-top: clamp(5.6rem, 18vw, 7.4rem);
+  padding-top: clamp(3.6rem, 12vw, 4.9rem);
 }
 
 .daily-treats-calendar__quest-stage--focused::before {
   content: '';
   position: absolute;
-  inset: clamp(2.7rem, 9vw, 3.8rem) -0.45rem -0.45rem;
+  inset: clamp(1.8rem, 6vw, 2.7rem) -0.45rem -0.45rem;
   z-index: 1;
   pointer-events: none;
   border-radius: 24px;
@@ -23984,6 +23984,31 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-weight: 700;
   line-height: 1.25;
   text-shadow: 0 1px 3px rgba(69, 26, 3, 0.7);
+}
+
+.daily-treats-calendar__streak--bonus-message-active {
+  opacity: 0.56;
+  filter: saturate(0.48) brightness(0.72) hue-rotate(14deg);
+  transform: scale(0.985);
+  box-shadow:
+    0 8px 22px rgba(2, 6, 23, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.daily-treats-calendar__streak--bonus-message-active::before,
+.daily-treats-calendar__streak--bonus-message-active .daily-treats-calendar__streak-orb,
+.daily-treats-calendar__streak--bonus-message-active .daily-treats-calendar__streak-dot--filled {
+  animation: none;
+}
+
+.daily-treats-calendar__streak--bonus-message-active .daily-treats-calendar__streak-orb {
+  box-shadow:
+    0 0 0 4px rgba(148, 163, 184, 0.14),
+    0 6px 16px rgba(2, 6, 23, 0.28);
+}
+
+.daily-treats-calendar__streak--bonus-message-active .daily-treats-calendar__streak-dot--filled {
+  box-shadow: 0 0 8px rgba(148, 163, 184, 0.28);
 }
 
 @keyframes daily-treats-streak-pulse {
@@ -24788,17 +24813,17 @@ html.platform-ipad .workspace-shell__menu-edge {
   top: 0;
   left: 50%;
   z-index: 3;
-  width: min(100%, 470px);
-  min-height: clamp(4.85rem, 15vw, 6.25rem);
+  width: min(92%, 500px);
+  min-height: clamp(3.65rem, 11vw, 4.55rem);
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0;
-  padding: clamp(0.95rem, 3vw, 1.2rem) clamp(1rem, 4vw, 1.45rem);
-  border-radius: 24px;
-  font-size: clamp(1rem, 3.2vw, 1.28rem);
-  line-height: 1.24;
-  transform: translateX(-50%);
+  padding: clamp(0.78rem, 2.5vw, 1rem) clamp(1.05rem, 4vw, 1.55rem);
+  border-radius: 999px 999px 28px 28px;
+  font-size: clamp(0.98rem, 3vw, 1.18rem);
+  line-height: 1.18;
+  transform: translate(-50%, -42%);
   box-shadow:
     0 22px 48px rgba(2, 6, 23, 0.46),
     0 0 0 1px rgba(255, 255, 255, 0.16) inset,
@@ -24808,12 +24833,12 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 @media (max-width: 640px) {
   .daily-treats-calendar__quest-stage--focused {
-    padding-top: clamp(5.2rem, 22vw, 6.7rem);
+    padding-top: clamp(3.8rem, 16vw, 4.9rem);
   }
 
   .daily-treats-calendar__quest-stage--focused .daily-treats-calendar__bonus-locked-hint {
-    width: min(100%, 92vw);
-    min-height: clamp(4.5rem, 20vw, 5.85rem);
+    width: min(92%, 92vw);
+    min-height: clamp(3.5rem, 14vw, 4.45rem);
   }
 }
 
