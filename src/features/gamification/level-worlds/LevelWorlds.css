@@ -753,20 +753,24 @@
 
 .island-run-prototype__camera-reset-floating {
   position: absolute;
-  left: 12px;
-  bottom: calc(var(--island-footer-height, 112px) + 12px);
-  z-index: 12;
-  width: 40px;
-  height: 40px;
+  right: max(16px, calc(env(safe-area-inset-right, 0px) + 16px));
+  bottom: calc(clamp(12.75rem, 54vw, 22rem) + env(safe-area-inset-bottom, 0px));
+  z-index: 18;
+  width: 46px;
+  height: 46px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  border: 1px solid rgba(163, 231, 255, 0.58);
-  background: rgba(22, 36, 64, 0.78);
-  color: #dff8ff;
-  font-size: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
+  border: 2px solid rgba(198, 170, 103, 0.9);
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.96) 0%, rgba(248, 234, 197, 0.92) 100%);
+  color: #593d07;
+  font-size: 1.22rem;
+  line-height: 1;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    0 8px 18px rgba(0, 0, 0, 0.28);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .island-run-prototype__camera-reset-floating:focus-visible {
