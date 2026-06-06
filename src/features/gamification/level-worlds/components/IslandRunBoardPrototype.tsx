@@ -53,6 +53,7 @@ import {
   type DormantDoorFigure,
   type DormantDoorMiniGameState,
   type DormantDoorRewardLevel,
+  type DormantDoorRewardTier,
 } from '../services/islandRunDormantDoorMinigame';
 import { resolveIslandBoardProfile } from '../services/islandBoardProfiles';
 // resolveWrappedTokenIndex retired from this component: the roll action service
@@ -1339,6 +1340,12 @@ const DORMANT_DOOR_FIGURE_ICONS: Record<DormantDoorFigure, string> = {
   large: '👑',
 };
 
+const DORMANT_DOOR_TIER_FIGURE: Record<DormantDoorRewardTier, DormantDoorFigure> = {
+  small: 'small',
+  medium: 'medium',
+  jackpot: 'large',
+};
+
 interface IslandRunBoardPrototypeProps {
   session: Session;
   initialPanel?: 'default' | 'sanctuary';
@@ -1544,6 +1551,18 @@ export function IslandRunBoardPrototype({
   const [dormantDoorSelectedIndices, setDormantDoorSelectedIndices] = useState<number[]>([]);
   const [dormantDoorReward, setDormantDoorReward] = useState<DormantDoorRewardLevel | null>(null);
   const [isDormantDoorRewardClaiming, setIsDormantDoorRewardClaiming] = useState(false);
+  const dormantDoorSelectedFigures = useMemo(() => {
+    if (!dormantDoorMiniGame) return [] as DormantDoorFigure[];
+    return dormantDoorSelectedIndices
+      .map((index) => dormantDoorMiniGame.doors[index]?.figure)
+      .filter((figure): figure is DormantDoorFigure => Boolean(figure));
+  }, [dormantDoorMiniGame, dormantDoorSelectedIndices]);
+  const dormantDoorPrizeCounts = useMemo(() => {
+    const counts: Record<DormantDoorFigure, number> = { small: 0, medium: 0, large: 0 };
+    for (const figure of dormantDoorSelectedFigures) counts[figure] += 1;
+    return counts;
+  }, [dormantDoorSelectedFigures]);
+  const dormantDoorBestMatchCount = Math.max(dormantDoorPrizeCounts.small, dormantDoorPrizeCounts.medium, dormantDoorPrizeCounts.large);
   const [trafficLightCoinFlip, setTrafficLightCoinFlip] = useState<{ seed: number; reward: TrafficLightCoinFlipReward | null } | null>(null);
   const [islandNumber, setIslandNumber] = useState(1);
   // PR7: brief "level-up flash" class driver. Flips true when `islandNumber`
@@ -4138,7 +4157,7 @@ export function IslandRunBoardPrototype({
     setDormantDoorSelectedIndices([]);
     setDormantDoorReward(null);
     setIsDormantDoorRewardClaiming(false);
-    setLandingText('🚪 Dormant door challenge: pick 3 doors and try to complete a prize line.');
+    setLandingText('🚪 Dormant door challenge: reveal doors until 3 matching prizes appear.');
   }, [allLandmarkDoorsRouteToBoss, contractV2Stops, doesStopRequireTicketPayment, effectiveIslandNumber, requestActiveStopTransition, stopIndexByStopId]);
 
   const requiredDoorStopIndex = requiredDoorStopId ? stopIndexByStopId.get(requiredDoorStopId) : undefined;
@@ -4163,15 +4182,14 @@ export function IslandRunBoardPrototype({
 
   const handleDormantDoorSelect = useCallback((doorIndex: number) => {
     if (!dormantDoorMiniGame || dormantDoorReward) return;
-    if (dormantDoorSelectedIndices.includes(doorIndex) || dormantDoorSelectedIndices.length >= 3) return;
+    if (dormantDoorSelectedIndices.includes(doorIndex)) return;
     const next = [...dormantDoorSelectedIndices, doorIndex];
     setDormantDoorSelectedIndices(next);
-    if (next.length === 3) {
-      const selectedFigures = next
-        .map((index) => dormantDoorMiniGame.doors[index]?.figure)
-        .filter((figure): figure is DormantDoorFigure => Boolean(figure));
-      setDormantDoorReward(resolveDormantDoorReward(selectedFigures, next, dormantDoorMiniGame.rewardLevels));
-    }
+    const selectedFigures = next
+      .map((index) => dormantDoorMiniGame.doors[index]?.figure)
+      .filter((figure): figure is DormantDoorFigure => Boolean(figure));
+    const reward = resolveDormantDoorReward(selectedFigures, next, dormantDoorMiniGame.rewardLevels);
+    if (reward) setDormantDoorReward(reward);
   }, [dormantDoorMiniGame, dormantDoorReward, dormantDoorSelectedIndices]);
 
   const handleCloseDormantDoorMiniGame = useCallback(() => {
@@ -11060,26 +11078,33 @@ export function IslandRunBoardPrototype({
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--dormant-door" role="dialog" aria-modal="true" aria-label="Dormant door challenge">
             <h3 className="island-stop-modal__title">🚪 Dormant Door Challenge</h3>
             <p className="island-dormant-door__intro">
-              This is not the active landmark door. Pick <strong>3 doors</strong> and try to complete 3 in a row on the 4×4 board.
+              This is not the active landmark door. Reveal doors until you find <strong>3 matching prizes</strong>.
             </p>
             <div className="island-dormant-door__reward-row" aria-label="Dormant door reward levels">
-              {dormantDoorMiniGame.rewardLevels.map((level) => (
-                <span key={level.tier} className={`island-dormant-door__reward-chip island-dormant-door__reward-chip--${level.tier}`}>
-                  {level.label}: +{level.essence} 🟣
-                </span>
-              ))}
+              {dormantDoorMiniGame.rewardLevels.map((level) => {
+                const prizeFigure = DORMANT_DOOR_TIER_FIGURE[level.tier];
+                const isWinningPrize = dormantDoorReward?.tier === level.tier;
+                return (
+                  <span key={level.tier} className={`island-dormant-door__reward-chip island-dormant-door__reward-chip--${level.tier} ${isWinningPrize ? 'island-dormant-door__reward-chip--winner' : ''}`.trim()}>
+                    <span className="island-dormant-door__reward-icon" aria-hidden="true">{DORMANT_DOOR_FIGURE_ICONS[prizeFigure]}</span>
+                    <span>{level.label}</span>
+                    <strong>+{level.essence} 🟣</strong>
+                  </span>
+                );
+              })}
             </div>
             <div className="island-dormant-door__grid" aria-label="Choose three dormant doors">
               {dormantDoorMiniGame.doors.map((door, index) => {
                 const isSelected = dormantDoorSelectedIndices.includes(index);
-                const isRevealed = isSelected || Boolean(dormantDoorReward);
+                const isRevealed = isSelected;
+                const isWinningDoor = isSelected && dormantDoorReward?.tier === (door.figure === 'large' ? 'jackpot' : door.figure);
                 return (
                   <button
                     key={door.id}
                     type="button"
-                    className={`island-dormant-door__door ${isSelected ? 'island-dormant-door__door--selected' : ''} ${isRevealed ? 'island-dormant-door__door--revealed' : ''}`.trim()}
+                    className={`island-dormant-door__door ${isSelected ? 'island-dormant-door__door--selected' : ''} ${isRevealed ? 'island-dormant-door__door--revealed' : ''} ${isWinningDoor ? 'island-dormant-door__door--winner' : ''}`.trim()}
                     onClick={() => handleDormantDoorSelect(index)}
-                    disabled={Boolean(dormantDoorReward) || isSelected || dormantDoorSelectedIndices.length >= 3}
+                    disabled={Boolean(dormantDoorReward) || isSelected}
                     aria-pressed={isSelected}
                   >
                     <span className="island-dormant-door__door-face" aria-hidden="true">
@@ -11092,11 +11117,11 @@ export function IslandRunBoardPrototype({
             </div>
             {dormantDoorReward ? (
               <p className="island-dormant-door__result" role="status">
-                {dormantDoorReward.label}! Claim +{dormantDoorReward.essence} essence.
+                3 matching prizes found — {dormantDoorReward.label}! Claim +{dormantDoorReward.essence} essence.
               </p>
             ) : (
               <p className="island-dormant-door__hint" role="status">
-                {Math.max(0, 3 - dormantDoorSelectedIndices.length)} pick{3 - dormantDoorSelectedIndices.length === 1 ? '' : 's'} left.
+                Keep revealing until 3 match. Best match: {dormantDoorBestMatchCount}/3 · {Math.max(0, dormantDoorMiniGame.doors.length - dormantDoorSelectedIndices.length)} doors left.
               </p>
             )}
             <div className="island-stop-modal__actions">

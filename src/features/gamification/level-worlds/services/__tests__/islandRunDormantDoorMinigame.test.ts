@@ -9,7 +9,7 @@ import { assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const islandRunDormantDoorMinigameTests: TestCase[] = [
   {
-    name: 'dormant door minigame builds sixteen deterministic prize doors with line prizes',
+    name: 'dormant door minigame builds sixteen deterministic prize doors with three prize types',
     run: () => {
       const first = buildDormantDoorMiniGame({ islandNumber: 12, tileIndex: 6, rollIndex: 4, doorStopId: 'habit' });
       const second = buildDormantDoorMiniGame({ islandNumber: 12, tileIndex: 6, rollIndex: 4, doorStopId: 'habit' });
@@ -19,12 +19,13 @@ export const islandRunDormantDoorMinigameTests: TestCase[] = [
       const figures = new Set(first.doors.map((door) => door.figure));
       assertDeepEqual([...figures].sort(), ['large', 'medium', 'small'], 'Expected small, medium, and large prize icons');
 
-      const hasSmallLine = DORMANT_DOOR_WINNING_LINES.some((line) => line.every((index) => first.doors[index]?.figure === 'small'));
-      const hasMediumLine = DORMANT_DOOR_WINNING_LINES.some((line) => line.every((index) => first.doors[index]?.figure === 'medium'));
-      const hasLargeLine = DORMANT_DOOR_WINNING_LINES.some((line) => line.every((index) => first.doors[index]?.figure === 'large'));
-      assertEqual(hasSmallLine, true, 'Expected one small-prize line');
-      assertEqual(hasMediumLine, true, 'Expected one medium-prize line');
-      assertEqual(hasLargeLine, true, 'Expected one large-prize line');
+      const counts = first.doors.reduce<Record<string, number>>((acc, door) => {
+        acc[door.figure] = (acc[door.figure] ?? 0) + 1;
+        return acc;
+      }, {});
+      assertEqual(counts.small >= 3, true, 'Expected at least three small prizes');
+      assertEqual(counts.medium >= 3, true, 'Expected at least three medium prizes');
+      assertEqual(counts.large >= 3, true, 'Expected at least three large prizes');
     },
   },
   {
@@ -38,12 +39,12 @@ export const islandRunDormantDoorMinigameTests: TestCase[] = [
     },
   },
   {
-    name: 'dormant door reward resolves by completed prize line',
+    name: 'dormant door reward resolves when three matching prizes are revealed',
     run: () => {
-      assertEqual(resolveDormantDoorReward(['large', 'large', 'large'], [0, 1, 2]).tier, 'jackpot', 'Expected a large completed line to earn jackpot reward');
-      assertEqual(resolveDormantDoorReward(['medium', 'medium', 'medium'], [0, 1, 2]).tier, 'medium', 'Expected a medium completed line to earn medium reward');
-      assertEqual(resolveDormantDoorReward(['large', 'large', 'large'], [0, 1, 3]).tier, 'small', 'Expected non-line picks to fall back to small reward');
-      assertEqual(resolveDormantDoorReward(['large', 'medium', 'large'], [0, 1, 2]).tier, 'small', 'Expected mixed line icons to fall back to small reward');
+      assertEqual(resolveDormantDoorReward(['large', 'medium', 'large', 'small']), null, 'Expected no reward before three matching prizes');
+      assertEqual(resolveDormantDoorReward(['large', 'medium', 'large', 'small', 'large'])?.tier, 'jackpot', 'Expected three large prizes to earn jackpot reward');
+      assertEqual(resolveDormantDoorReward(['medium', 'small', 'medium', 'large', 'medium'])?.tier, 'medium', 'Expected three medium prizes to earn medium reward');
+      assertEqual(resolveDormantDoorReward(['small', 'medium', 'large', 'small', 'small'])?.tier, 'small', 'Expected three small prizes to earn small reward');
     },
   },
   {
