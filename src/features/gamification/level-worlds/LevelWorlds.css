@@ -8004,12 +8004,58 @@
 .island-run-prototype__out-of-dice-regen {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   margin: 10px 0 4px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: rgba(180, 160, 120, 0.12);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(232, 195, 121, 0.22), transparent 36%),
+    rgba(180, 160, 120, 0.12);
   border: 1px solid rgba(200, 180, 140, 0.28);
+  box-shadow: inset 0 0 22px rgba(232, 195, 121, 0.06);
+}
+
+.island-run-prototype__out-of-dice-regen-hero {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+}
+
+.island-run-prototype__out-of-dice-regen-die {
+  display: inline-grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 14px;
+  font-size: 1.85rem;
+  background: linear-gradient(145deg, rgba(255, 250, 232, 0.96), rgba(190, 220, 232, 0.82));
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  box-shadow: 0 8px 18px rgba(10, 21, 30, 0.22), 0 0 0 4px rgba(232, 195, 121, 0.08);
+  transform-origin: 50% 65%;
+  animation: island-run-dice-recharge-bob 1.7s ease-in-out infinite;
+}
+
+.island-run-prototype__out-of-dice-regen-hero--charging .island-run-prototype__out-of-dice-regen-die {
+  animation: island-run-dice-final-countdown 700ms ease-in-out infinite;
+}
+
+.island-run-prototype__out-of-dice-regen-hero--restored .island-run-prototype__out-of-dice-regen-die {
+  animation: island-run-dice-restored-pop 700ms cubic-bezier(0.2, 1.25, 0.4, 1) both;
+}
+
+.island-run-prototype__out-of-dice-regen-hero-copy {
+  min-width: 0;
+}
+
+.island-run-prototype__out-of-dice-regen-kicker {
+  margin: 0 0 2px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a65f13;
 }
 
 .island-run-prototype__out-of-dice-regen-bar {
@@ -8022,10 +8068,21 @@
 }
 
 .island-run-prototype__out-of-dice-regen-bar-fill {
+  position: relative;
   display: block;
   height: 100%;
   background: linear-gradient(90deg, #d4a657 0%, #e8c379 100%);
   transition: width 300ms ease;
+  overflow: hidden;
+}
+
+.island-run-prototype__out-of-dice-regen-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.48), transparent);
+  transform: translateX(-120%);
+  animation: island-run-dice-regen-shimmer 1.8s ease-in-out infinite;
 }
 
 .island-run-prototype__out-of-dice-regen-bar-label {
@@ -8047,9 +8104,35 @@
   color: #3a2a12;
 }
 
+.island-run-prototype__out-of-dice-regen-line--hero {
+  font-size: 0.92rem;
+  line-height: 1.25;
+}
+
 .island-run-prototype__out-of-dice-regen-line--muted {
   opacity: 0.75;
   font-size: 0.76rem;
+}
+
+@keyframes island-run-dice-recharge-bob {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50% { transform: translateY(-4px) rotate(5deg); }
+}
+
+@keyframes island-run-dice-final-countdown {
+  0%, 100% { transform: translateY(0) rotate(-7deg) scale(1); box-shadow: 0 8px 18px rgba(10, 21, 30, 0.22), 0 0 0 4px rgba(232, 195, 121, 0.08); }
+  50% { transform: translateY(-5px) rotate(8deg) scale(1.06); box-shadow: 0 10px 22px rgba(10, 21, 30, 0.26), 0 0 0 8px rgba(232, 195, 121, 0.16); }
+}
+
+@keyframes island-run-dice-restored-pop {
+  0% { transform: translateY(6px) rotate(-14deg) scale(0.78); filter: brightness(1); }
+  45% { transform: translateY(-8px) rotate(12deg) scale(1.22); filter: brightness(1.18); }
+  100% { transform: translateY(0) rotate(0deg) scale(1); filter: brightness(1); }
+}
+
+@keyframes island-run-dice-regen-shimmer {
+  0% { transform: translateX(-120%); }
+  58%, 100% { transform: translateX(120%); }
 }
 
 /* ─── PR6: Sticker "one away" HUD nudge ─────────────────────────────────── */
@@ -8076,6 +8159,12 @@
 @media (prefers-reduced-motion: reduce) {
   .island-run-prototype__sticker-nudge { animation: none; }
   .island-run-prototype__out-of-dice-regen-bar-fill { transition: none; }
+  .island-run-prototype__out-of-dice-regen-bar-fill::after,
+  .island-run-prototype__out-of-dice-regen-die,
+  .island-run-prototype__out-of-dice-regen-hero--charging .island-run-prototype__out-of-dice-regen-die,
+  .island-run-prototype__out-of-dice-regen-hero--restored .island-run-prototype__out-of-dice-regen-die {
+    animation: none;
+  }
 }
 
 /* ─── PR7: Shop item cost line (affordability readout) ──────────────────── */
