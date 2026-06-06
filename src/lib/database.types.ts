@@ -1664,6 +1664,7 @@ export interface Database {
           birthday_gift_last_claimed_at: string | null;
           initials: string | null;
           show_initials_in_menu: boolean | null;
+          private_compact_view_enabled: boolean | null;
           created_at: string;
           updated_at: string;
         };
@@ -1679,6 +1680,7 @@ export interface Database {
           birthday_gift_last_claimed_at?: string | null;
           initials?: string | null;
           show_initials_in_menu?: boolean | null;
+          private_compact_view_enabled?: boolean | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1694,6 +1696,7 @@ export interface Database {
           birthday_gift_last_claimed_at?: string | null;
           initials?: string | null;
           show_initials_in_menu?: boolean | null;
+          private_compact_view_enabled?: boolean | null;
           created_at?: string;
           updated_at?: string;
         };
