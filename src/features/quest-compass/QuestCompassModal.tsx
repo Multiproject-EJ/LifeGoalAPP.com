@@ -254,6 +254,10 @@ export function QuestCompassModal({
                 ? viewModel.summary
                 : 'Refresh alignment to wake up your Compass.'}
             </strong>
+            <div className="quest-compass__realm-tags" aria-label="Life Realm compass cues">
+              <span>Life Realm bearing</span>
+              <span>Six-force map</span>
+            </div>
             <p>
               {viewModel.latestCheckinDateLabel
                 ? `Latest check-in: ${viewModel.latestCheckinDateLabel}`
@@ -293,9 +297,15 @@ export function QuestCompassModal({
                   <h4>{force.name}</h4>
                   <span>{force.scoreLabel}</span>
                 </div>
-                <p className={`quest-compass__trend quest-compass__trend--${force.trend}`}>
-                  {force.trendLabel}
-                </p>
+                <div className="quest-compass__state-row" aria-label={`${force.name} state`}>
+                  <span className={`quest-compass__trend quest-compass__trend--${force.trend}`}>
+                    {force.trendLabel}
+                  </span>
+                  <span className={`quest-compass__health-pill quest-compass__health-pill--${force.healthStatus}`}>
+                    {force.healthLabel}
+                  </span>
+                </div>
+                <ScoreMeter force={force} />
                 <p>{force.summary}</p>
                 <small>
                   Signals: {force.contributingCategories.map((category) => category.label).join(', ')}
@@ -449,8 +459,14 @@ function ForceDetailSheet({
           </button>
         </div>
 
-        <div className={`quest-compass-detail__health quest-compass-detail__health--${force.healthStatus}`}>
-          {force.healthLabel}
+        <div className="quest-compass-detail__reading" aria-label={`${force.name} compass reading`}>
+          <div className={`quest-compass-detail__health quest-compass-detail__health--${force.healthStatus}`}>
+            {force.healthLabel}
+          </div>
+          <span className={`quest-compass__trend quest-compass__trend--${force.trend}`}>
+            {force.trendLabel} bearing
+          </span>
+          <ScoreMeter force={force} />
         </div>
 
         <section className="quest-compass-detail__section">
@@ -498,7 +514,9 @@ function ForceDetailSheet({
               {supportingHabits.map((habit) => (
                 <li key={habit.id}>
                   <strong>{habit.emoji ? `${habit.emoji} ` : ''}{habit.title}</strong>
-                  <span>{habit.completionLabel}</span>
+                  <span className={`quest-compass-detail__state-badge quest-compass-detail__state-badge--${getHabitCompletionTone(habit.completionLabel)}`}>
+                    {habit.completionLabel}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -525,6 +543,32 @@ function ForceDetailSheet({
       </div>
     </div>
   );
+}
+
+function ScoreMeter({ force }: { force: QuestCompassForceScore }) {
+  const scorePercent = force.score === null ? 0 : Math.min(100, Math.max(0, force.score * 10));
+
+  return (
+    <div
+      className={`quest-compass__score-meter${force.score === null ? ' quest-compass__score-meter--empty' : ''}`}
+      aria-label={`${force.name} score ${force.scoreLabel}`}
+    >
+      <span style={{ width: `${scorePercent}%` }} />
+    </div>
+  );
+}
+
+function getHabitCompletionTone(completionLabel: string): 'complete' | 'active' | 'waiting' {
+  const normalizedLabel = completionLabel.toLowerCase();
+  if (normalizedLabel.includes('completed')) return 'complete';
+  if (
+    normalizedLabel.includes('%') ||
+    normalizedLabel.includes('progress') ||
+    normalizedLabel.includes('partial')
+  ) {
+    return 'active';
+  }
+  return 'waiting';
 }
 
 function getRecommendationButtonLabel(action: QuestCompassRecommendedAction): string {
