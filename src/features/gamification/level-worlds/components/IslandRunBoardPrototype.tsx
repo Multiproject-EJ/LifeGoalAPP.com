@@ -9771,14 +9771,6 @@ export function IslandRunBoardPrototype({
             </div>
             <button
               type="button"
-              className="island-run-board__topbar-audio-toggle island-run-board__topbar-camera-reset"
-              aria-label="Reset camera zoom"
-              onClick={resetCameraFromTopbarMenu}
-            >
-              🔎
-            </button>
-            <button
-              type="button"
               className={`island-run-board__topbar-menu${isTopbarMenuPrimed ? ' island-run-board__topbar-menu--primed' : ''}${showTopbarMenu ? ' island-run-board__topbar-menu--open' : ''}`}
               aria-label="Board menu"
               aria-expanded={showTopbarMenu}
@@ -10205,6 +10197,15 @@ export function IslandRunBoardPrototype({
           {diceRollTotalOverlay}
         </div>
       )}
+
+      <button
+        type="button"
+        className="island-run-prototype__camera-reset-floating"
+        aria-label="Reset camera zoom"
+        onClick={resetCameraFromTopbarMenu}
+      >
+        🔎
+      </button>
 
       <div
         className={`island-run-prototype__footer${isBuildTutorialPromptActive ? ' island-run-prototype__footer--build-tutorial-active' : ''}`}
