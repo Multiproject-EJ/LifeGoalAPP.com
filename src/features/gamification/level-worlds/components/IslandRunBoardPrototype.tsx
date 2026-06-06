@@ -11060,7 +11060,7 @@ export function IslandRunBoardPrototype({
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--dormant-door" role="dialog" aria-modal="true" aria-label="Dormant door challenge">
             <h3 className="island-stop-modal__title">🚪 Dormant Door Challenge</h3>
             <p className="island-dormant-door__intro">
-              This is not the active landmark door. Pick <strong>3 doors</strong> and try to complete a row, column, or diagonal.
+              This is not the active landmark door. Pick <strong>3 doors</strong> and try to complete 3 in a row on the 4×4 board.
             </p>
             <div className="island-dormant-door__reward-row" aria-label="Dormant door reward levels">
               {dormantDoorMiniGame.rewardLevels.map((level) => (

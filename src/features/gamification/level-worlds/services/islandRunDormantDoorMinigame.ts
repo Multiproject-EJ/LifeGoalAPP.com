@@ -24,32 +24,47 @@ export interface DormantDoorMiniGameState {
   rewardLevels: readonly DormantDoorRewardLevel[];
 }
 
-const DOOR_COUNT = 9;
+const BOARD_SIZE = 4;
+const DOOR_COUNT = BOARD_SIZE * BOARD_SIZE;
 const REQUIRED_PICK_COUNT = 3;
 const MAX_REWARD_BUILD_COST_RATIO = 0.2;
 
-export const DORMANT_DOOR_WINNING_LINES: readonly (readonly number[])[] = Object.freeze([
-  Object.freeze([0, 1, 2]),
-  Object.freeze([3, 4, 5]),
-  Object.freeze([6, 7, 8]),
-  Object.freeze([0, 3, 6]),
-  Object.freeze([1, 4, 7]),
-  Object.freeze([2, 5, 8]),
-  Object.freeze([0, 4, 8]),
-  Object.freeze([2, 4, 6]),
-]);
+function getDoorIndex(row: number, column: number): number {
+  return row * BOARD_SIZE + column;
+}
 
-const DORMANT_DOOR_ROW_LINES: readonly (readonly number[])[] = Object.freeze([
-  Object.freeze([0, 1, 2]),
-  Object.freeze([3, 4, 5]),
-  Object.freeze([6, 7, 8]),
-]);
+function buildDormantDoorWinningLines(): readonly (readonly number[])[] {
+  const lines: number[][] = [];
+  const maxStart = BOARD_SIZE - REQUIRED_PICK_COUNT;
 
-const DORMANT_DOOR_COLUMN_LINES: readonly (readonly number[])[] = Object.freeze([
-  Object.freeze([0, 3, 6]),
-  Object.freeze([1, 4, 7]),
-  Object.freeze([2, 5, 8]),
-]);
+  for (let row = 0; row < BOARD_SIZE; row += 1) {
+    for (let column = 0; column <= maxStart; column += 1) {
+      lines.push(Array.from({ length: REQUIRED_PICK_COUNT }, (_, offset) => getDoorIndex(row, column + offset)));
+    }
+  }
+
+  for (let column = 0; column < BOARD_SIZE; column += 1) {
+    for (let row = 0; row <= maxStart; row += 1) {
+      lines.push(Array.from({ length: REQUIRED_PICK_COUNT }, (_, offset) => getDoorIndex(row + offset, column)));
+    }
+  }
+
+  for (let row = 0; row <= maxStart; row += 1) {
+    for (let column = 0; column <= maxStart; column += 1) {
+      lines.push(Array.from({ length: REQUIRED_PICK_COUNT }, (_, offset) => getDoorIndex(row + offset, column + offset)));
+    }
+  }
+
+  for (let row = 0; row <= maxStart; row += 1) {
+    for (let column = REQUIRED_PICK_COUNT - 1; column < BOARD_SIZE; column += 1) {
+      lines.push(Array.from({ length: REQUIRED_PICK_COUNT }, (_, offset) => getDoorIndex(row + offset, column - offset)));
+    }
+  }
+
+  return Object.freeze(lines.map((line) => Object.freeze(line)));
+}
+
+export const DORMANT_DOOR_WINNING_LINES: readonly (readonly number[])[] = buildDormantDoorWinningLines();
 
 const DORMANT_DOOR_PRIZE_ORDER: readonly DormantDoorFigure[] = Object.freeze(['small', 'medium', 'large']);
 
@@ -104,8 +119,26 @@ function shuffleDeterministically<T>(items: readonly T[], seed: number): T[] {
 }
 
 function pickPrizeLines(seed: number): readonly (readonly number[])[] {
-  const lineSet = seededRandom(seed + 131) >= 0.5 ? DORMANT_DOOR_COLUMN_LINES : DORMANT_DOOR_ROW_LINES;
-  return shuffleDeterministically(lineSet, seed + 409);
+  const selectedLines: (readonly number[])[] = [];
+  const usedDoorIndexes = new Set<number>();
+  const shuffledLines = shuffleDeterministically(DORMANT_DOOR_WINNING_LINES, seed + 409);
+
+  for (const line of shuffledLines) {
+    if (line.some((index) => usedDoorIndexes.has(index))) continue;
+    selectedLines.push(line);
+    for (const index of line) usedDoorIndexes.add(index);
+    if (selectedLines.length >= DORMANT_DOOR_PRIZE_ORDER.length) break;
+  }
+
+  if (selectedLines.length >= DORMANT_DOOR_PRIZE_ORDER.length) return selectedLines;
+
+  for (const line of shuffledLines) {
+    if (selectedLines.includes(line)) continue;
+    selectedLines.push(line);
+    if (selectedLines.length >= DORMANT_DOOR_PRIZE_ORDER.length) break;
+  }
+
+  return selectedLines;
 }
 
 function findCompletedLine(selectedIndices: readonly number[]): readonly number[] | null {

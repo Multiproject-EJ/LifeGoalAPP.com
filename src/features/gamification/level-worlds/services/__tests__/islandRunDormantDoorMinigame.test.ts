@@ -9,20 +9,22 @@ import { assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const islandRunDormantDoorMinigameTests: TestCase[] = [
   {
-    name: 'dormant door minigame builds nine deterministic prize doors with line prizes',
+    name: 'dormant door minigame builds sixteen deterministic prize doors with line prizes',
     run: () => {
       const first = buildDormantDoorMiniGame({ islandNumber: 12, tileIndex: 6, rollIndex: 4, doorStopId: 'habit' });
       const second = buildDormantDoorMiniGame({ islandNumber: 12, tileIndex: 6, rollIndex: 4, doorStopId: 'habit' });
       assertDeepEqual(first, second, 'Expected dormant door board to be deterministic for identical inputs');
-      assertEqual(first.doors.length, 9, 'Expected a 3×3 board of nine doors');
+      assertEqual(first.doors.length, 16, 'Expected a 4×4 board of sixteen doors');
 
       const figures = new Set(first.doors.map((door) => door.figure));
       assertDeepEqual([...figures].sort(), ['large', 'medium', 'small'], 'Expected small, medium, and large prize icons');
 
-      const hasLargeLine = DORMANT_DOOR_WINNING_LINES.some((line) => line.every((index) => first.doors[index]?.figure === 'large'));
+      const hasSmallLine = DORMANT_DOOR_WINNING_LINES.some((line) => line.every((index) => first.doors[index]?.figure === 'small'));
       const hasMediumLine = DORMANT_DOOR_WINNING_LINES.some((line) => line.every((index) => first.doors[index]?.figure === 'medium'));
-      assertEqual(hasLargeLine, true, 'Expected one large-prize line');
+      const hasLargeLine = DORMANT_DOOR_WINNING_LINES.some((line) => line.every((index) => first.doors[index]?.figure === 'large'));
+      assertEqual(hasSmallLine, true, 'Expected one small-prize line');
       assertEqual(hasMediumLine, true, 'Expected one medium-prize line');
+      assertEqual(hasLargeLine, true, 'Expected one large-prize line');
     },
   },
   {
