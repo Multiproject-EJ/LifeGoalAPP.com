@@ -602,6 +602,8 @@ export const CountdownCalendarModal = ({
     );
   }
 
+  const showLockedBonusHint = Boolean(todayBonusHatch && !habitCompleted && !todayBonusOpened);
+
   return (
     <div
       className={`daily-treats-calendar daily-treats-calendar--holiday-${themeMod}`}
@@ -713,180 +715,175 @@ export const CountdownCalendarModal = ({
             </div>
           )}
 
-          {/* Locked bonus door hint — shown only when bonus is not yet unlocked */}
-          {todayBonusHatch && !habitCompleted && !todayBonusOpened && (
-            <div className="daily-treats-calendar__bonus-locked-hint">
-              {questHabit
-                ? <>🔐 Complete <strong>{questHabit.emoji ? `${questHabit.emoji} ` : ''}{questHabit.title}</strong> to unlock your bonus door</>
-                : '🎁 Complete a habit to unlock your bonus door'}
-            </div>
-          )}
+          <div
+            className={`daily-treats-calendar__quest-stage${showLockedBonusHint ? ' daily-treats-calendar__quest-stage--focused' : ''}`}
+          >
+            {/* Locked bonus door hint — shown only when bonus is not yet unlocked */}
+            {showLockedBonusHint && (
+              <div className="daily-treats-calendar__bonus-locked-hint">
+                {questHabit
+                  ? <>🔐 Complete <strong>{questHabit.emoji ? `${questHabit.emoji} ` : ''}{questHabit.title}</strong> to unlock your bonus door</>
+                  : '🎁 Complete a habit to unlock your bonus door'}
+              </div>
+            )}
 
-          <div className="daily-treats-calendar__grid" role="list">
-            {Array.from({ length: totalDoors }, (_, index) => {
-              const day = index + 1;
-              const isFinalDay = day === totalDoors;
-              const { free: freeHatch, bonus: bonusHatch } = seasonData
-                ? getHatchesForDay(seasonData.hatches, day)
-                : { free: null, bonus: null };
+            <div className="daily-treats-calendar__grid" role="list">
+              {Array.from({ length: totalDoors }, (_, index) => {
+                const day = index + 1;
+                const isFinalDay = day === totalDoors;
+                const { free: freeHatch, bonus: bonusHatch } = seasonData
+                  ? getHatchesForDay(seasonData.hatches, day)
+                  : { free: null, bonus: null };
 
-              const freeOpened = progress?.opened_days.includes(day) ?? false;
+                const freeOpened = progress?.opened_days.includes(day) ?? false;
 
-              // Use legacy state for backwards compatibility
-              const revealedSymbol = resolvedState.revealedSymbols?.[day];
-              const isOpenedLegacy = Boolean(revealedSymbol);
+                // Use legacy state for backwards compatibility
+                const revealedSymbol = resolvedState.revealedSymbols?.[day];
+                const isOpenedLegacy = Boolean(revealedSymbol);
 
-              const seasonType = seasonData?.season.season_type as SeasonType | undefined;
-              const status: DoorStatus = computeDoorStatus(day, todayIndex, freeOpened || isOpenedLegacy, 'free', seasonType);
+                const seasonType = seasonData?.season.season_type as SeasonType | undefined;
+                const status: DoorStatus = computeDoorStatus(day, todayIndex, freeOpened || isOpenedLegacy, 'free', seasonType);
 
-              // Determine if free door can be opened:
-              // - 'today' status: always openable
-              // - 'catchup' status (holiday missed days): openable
-              const canOpenFree = (status === 'today' || status === 'catchup') && !freeOpened && !isOpenedLegacy;
-              const canOpenSameDayBonus = Boolean(
-                bonusHatch
-                  && day === todayIndex
-                  && habitCompleted
-                  && !todayBonusOpened
-                  && (freeOpened || isOpenedLegacy),
-              );
+                // Determine if free door can be opened:
+                // - 'today' status: always openable
+                // - 'catchup' status (holiday missed days): openable
+                const canOpenFree = (status === 'today' || status === 'catchup') && !freeOpened && !isOpenedLegacy;
+                const canOpenSameDayBonus = Boolean(
+                  bonusHatch
+                    && day === todayIndex
+                    && habitCompleted
+                    && !todayBonusOpened
+                    && (freeOpened || isOpenedLegacy),
+                );
 
-              const doorEmoji = themeEmojis[(day - 1) % themeEmojis.length];
-              const statusLabel = status === 'catchup' ? 'missed day, available to open' : status;
-              const label = canOpenSameDayBonus
-                ? `Day ${day} same-day bonus door ready`
-                : `Day ${day} ${status === 'today' ? "(today's door)" : `(${statusLabel})`}`;
+                const doorEmoji = themeEmojis[(day - 1) % themeEmojis.length];
+                const statusLabel = status === 'catchup' ? 'missed day, available to open' : status;
+                const label = canOpenSameDayBonus
+                  ? `Day ${day} same-day bonus door ready`
+                  : `Day ${day} ${status === 'today' ? "(today's door)" : `(${statusLabel})`}`;
 
-              // Show dice amount on tile for personal quest calendars.
-              // Currency check is defensive — all PQ doors are now dice, but keeps
-              // the label correct if the schedule ever changes.
-              const diceAmount = isPersonalQuest && freeHatch?.reward_currency === 'dice'
-                ? freeHatch.reward_amount
-                : null;
+                // Show dice amount on tile for personal quest calendars.
+                // Currency check is defensive — all PQ doors are now dice, but keeps
+                // the label correct if the schedule ever changes.
+                const diceAmount = isPersonalQuest && freeHatch?.reward_currency === 'dice'
+                  ? freeHatch.reward_amount
+                  : null;
 
-              const bonusAmountLabel = bonusHatch?.reward_amount != null
-                ? `${bonusHatch.reward_currency === 'dice' ? '🎲' : '✨'} ${bonusHatch.reward_amount}`
-                : 'Bonus';
+                const bonusAmountLabel = bonusHatch?.reward_amount != null
+                  ? `${bonusHatch.reward_currency === 'dice' ? '🎲' : '✨'} ${bonusHatch.reward_amount}`
+                  : 'Bonus';
 
-              const doorBody = canOpenSameDayBonus ? (
-                <>
-                  <span className="daily-treats-calendar__hatch-number">Day {day}</span>
-                  <span className="daily-treats-calendar__hatch-symbol" aria-hidden="true">🎁</span>
-                  <span className="daily-treats-calendar__hatch-bonus-label">Same-day bonus</span>
-                  <span className="daily-treats-calendar__hatch-dice">{bonusAmountLabel}</span>
-                </>
-              ) : (
-                <>
-                  <span className="daily-treats-calendar__hatch-number">Day {day}</span>
-                  {(freeOpened || isOpenedLegacy) ? (
-                    <span className="daily-treats-calendar__hatch-symbol" aria-hidden="true">
-                      {revealedSymbol?.emoji ?? '✓'}
-                    </span>
-                  ) : (
-                    <span className="daily-treats-calendar__hatch-status" aria-hidden="true">
-                      {status === 'locked' ? '🔒' : status === 'missed' ? '✗' : status === 'catchup' ? '🔓' : doorEmoji}
-                    </span>
-                  )}
-                  {diceAmount != null && !(freeOpened || isOpenedLegacy) && (
-                    <span className="daily-treats-calendar__hatch-dice">
-                      🎲 {diceAmount}{dailyTreatDiceLabel ? ` ${dailyTreatDiceLabel}` : ''}
-                    </span>
-                  )}
-                </>
-              );
+                const doorBody = canOpenSameDayBonus ? (
+                  <>
+                    <span className="daily-treats-calendar__hatch-number">Day {day}</span>
+                    <span className="daily-treats-calendar__hatch-symbol" aria-hidden="true">🎁</span>
+                    <span className="daily-treats-calendar__hatch-bonus-label">Same-day bonus</span>
+                    <span className="daily-treats-calendar__hatch-dice">{bonusAmountLabel}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="daily-treats-calendar__hatch-number">Day {day}</span>
+                    {(freeOpened || isOpenedLegacy) ? (
+                      <span className="daily-treats-calendar__hatch-symbol" aria-hidden="true">
+                        {revealedSymbol?.emoji ?? '✓'}
+                      </span>
+                    ) : (
+                      <span className="daily-treats-calendar__hatch-status" aria-hidden="true">
+                        {status === 'locked' ? '🔒' : status === 'missed' ? '✗' : status === 'catchup' ? '🔓' : doorEmoji}
+                      </span>
+                    )}
+                    {diceAmount != null && !(freeOpened || isOpenedLegacy) && (
+                      <span className="daily-treats-calendar__hatch-dice">
+                        🎲 {diceAmount}{dailyTreatDiceLabel ? ` ${dailyTreatDiceLabel}` : ''}
+                      </span>
+                    )}
+                  </>
+                );
 
-              return (
-                <div
-                  key={`calendar-day-${day}`}
-                  className={`daily-treats-calendar__day-pair${isFinalDay ? ' daily-treats-calendar__day-pair--final' : ''}`}
-                >
-                  {/* Free door; after today's free reveal, the same tile can awaken as the bonus door. */}
-                  {canOpenSameDayBonus && bonusHatch ? (
-                    <button
-                      type="button"
-                      className="daily-treats-calendar__hatch daily-treats-calendar__hatch--bonus-ready daily-treats-calendar__hatch-button"
-                      role="listitem"
-                      aria-label={label}
-                      onClick={(event) => {
-                        const rect = event.currentTarget.getBoundingClientRect();
-                        void handleOpenDoor(day, 'bonus', bonusHatch, {
-                          x: rect.left + rect.width / 2,
-                          y: rect.top + rect.height / 2,
-                        });
-                      }}
-                    >
-                      {doorBody}
-                    </button>
-                  ) : canOpenFree && freeHatch ? (
-                    <button
-                      type="button"
-                      className={`daily-treats-calendar__hatch daily-treats-calendar__hatch--${status} daily-treats-calendar__hatch-button`}
-                      role="listitem"
-                      aria-label={label}
-                      onClick={(event) => {
-                        if (freeHatch) {
+                return (
+                  <div
+                    key={`calendar-day-${day}`}
+                    className={`daily-treats-calendar__day-pair${isFinalDay ? ' daily-treats-calendar__day-pair--final' : ''}`}
+                  >
+                    {/* Free door; after today's free reveal, the same tile can awaken as the bonus door. */}
+                    {canOpenSameDayBonus && bonusHatch ? (
+                      <button
+                        type="button"
+                        className="daily-treats-calendar__hatch daily-treats-calendar__hatch--bonus-ready daily-treats-calendar__hatch-button"
+                        role="listitem"
+                        aria-label={label}
+                        onClick={(event) => {
                           const rect = event.currentTarget.getBoundingClientRect();
-                          void handleOpenDoor(day, 'free', freeHatch, {
+                          void handleOpenDoor(day, 'bonus', bonusHatch, {
                             x: rect.left + rect.width / 2,
                             y: rect.top + rect.height / 2,
                           });
-                        } else {
-                          // Legacy mode
+                        }}
+                      >
+                        {doorBody}
+                      </button>
+                    ) : canOpenFree && freeHatch ? (
+                      <button
+                        type="button"
+                        className={`daily-treats-calendar__hatch daily-treats-calendar__hatch--${status} daily-treats-calendar__hatch-button`}
+                        role="listitem"
+                        aria-label={label}
+                        onClick={(event) => {
+                          if (freeHatch) {
+                            const rect = event.currentTarget.getBoundingClientRect();
+                            void handleOpenDoor(day, 'free', freeHatch, {
+                              x: rect.left + rect.width / 2,
+                              y: rect.top + rect.height / 2,
+                            });
+                          } else {
+                            // Legacy mode
+                            setTimeout(() => {
+                              const result = revealScratchCardForDayWithPersistence(userId, day);
+                              if (!result) return;
+                              setRevealResult(result);
+                              setScratchState(loadScratchCardState(userId));
+                            }, PRESS_ANIMATION_DELAY_MS);
+                          }
+                        }}
+                      >
+                        {doorBody}
+                      </button>
+                    ) : canOpenFree && !freeHatch ? (
+                      // Legacy mode without season data
+                      <button
+                        type="button"
+                        className={`daily-treats-calendar__hatch daily-treats-calendar__hatch--${status} daily-treats-calendar__hatch-button`}
+                        role="listitem"
+                        aria-label={label}
+                        onClick={() => {
                           setTimeout(() => {
                             const result = revealScratchCardForDayWithPersistence(userId, day);
                             if (!result) return;
                             setRevealResult(result);
                             setScratchState(loadScratchCardState(userId));
                           }, PRESS_ANIMATION_DELAY_MS);
-                        }
-                      }}
-                    >
-                      {doorBody}
-                    </button>
-                  ) : canOpenFree && !freeHatch ? (
-                    // Legacy mode without season data
-                    <button
-                      type="button"
-                      className={`daily-treats-calendar__hatch daily-treats-calendar__hatch--${status} daily-treats-calendar__hatch-button`}
-                      role="listitem"
-                      aria-label={label}
-                      onClick={() => {
-                        setTimeout(() => {
-                          const result = revealScratchCardForDayWithPersistence(userId, day);
-                          if (!result) return;
-                          setRevealResult(result);
-                          setScratchState(loadScratchCardState(userId));
-                        }, PRESS_ANIMATION_DELAY_MS);
-                      }}
-                    >
-                      {doorBody}
-                    </button>
-                  ) : (
-                    <div
-                      className={`daily-treats-calendar__hatch daily-treats-calendar__hatch--${status}`}
-                      role="listitem"
-                      aria-label={label}
-                    >
-                      {doorBody}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                        }}
+                      >
+                        {doorBody}
+                      </button>
+                    ) : (
+                      <div
+                        className={`daily-treats-calendar__hatch daily-treats-calendar__hatch--${status}`}
+                        role="listitem"
+                        aria-label={label}
+                      >
+                        {doorBody}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {todayFreeOpened && todayBonusOpened ? (
             <div className="daily-treats-calendar__rest">
               You revealed all of today&apos;s treats {themeEmojis[0]} Come back tomorrow for more!
-            </div>
-          ) : todayFreeOpened ? (
-            <div className="daily-treats-calendar__rest">
-              You revealed today&apos;s free treat {themeEmojis[0]}
-              {!todayBonusOpened && !habitCompleted && (
-                questHabit
-                  ? ` Complete ${questHabit.emoji ? questHabit.emoji + ' ' : ''}${questHabit.title} to unlock the bonus door!`
-                  : ' Complete a habit to unlock the bonus door!'
-              )}
             </div>
           ) : null}
 
