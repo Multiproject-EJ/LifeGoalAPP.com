@@ -256,8 +256,8 @@ export function QuestCompassModal({
                 : 'Refresh alignment to wake up your Compass.'}
             </strong>
             <div className="quest-compass__realm-tags" aria-label="Life Realm compass cues">
-              <span>Life Realm bearing</span>
-              <span>Six-force map</span>
+              <span className="quest-compass__realm-tag">Life Realm bearing</span>
+              <span className="quest-compass__realm-tag">Six-force map</span>
             </div>
             <p>
               {viewModel.latestCheckinDateLabel
@@ -546,7 +546,6 @@ function ForceDetailSheet({
   );
 }
 
-const QUEST_COMPASS_MIN_SCORE = 0;
 const QUEST_COMPASS_MAX_SCORE = 10;
 const MIN_PERCENT_VALUE = 0;
 const MAX_PERCENT_VALUE = 100;
@@ -556,16 +555,20 @@ function clampScorePercentage(value: number): number {
 }
 
 function ScoreMeter({ force }: { force: QuestCompassForceScore }) {
+  const scoreMeterClassNames = ['quest-compass__score-meter'];
   const scorePercent =
     force.score === null
       ? 0
       : clampScorePercentage((force.score / QUEST_COMPASS_MAX_SCORE) * MAX_PERCENT_VALUE);
   const progressValueProps =
     force.score === null ? {} : { 'aria-valuenow': scorePercent };
+  if (force.score === null) {
+    scoreMeterClassNames.push('quest-compass__score-meter--empty');
+  }
 
   return (
     <div
-      className={`quest-compass__score-meter${force.score === null ? ' quest-compass__score-meter--empty' : ''}`}
+      className={scoreMeterClassNames.join(' ')}
       aria-label={`${force.name} score ${force.scoreLabel}`}
       aria-valuemax={MAX_PERCENT_VALUE}
       aria-valuemin={MIN_PERCENT_VALUE}
@@ -573,7 +576,7 @@ function ScoreMeter({ force }: { force: QuestCompassForceScore }) {
       role="progressbar"
       {...progressValueProps}
     >
-      <span style={{ width: `${scorePercent}%` }} />
+      <span className="quest-compass__score-meter-fill" style={{ width: `${scorePercent}%` }} />
     </div>
   );
 }
