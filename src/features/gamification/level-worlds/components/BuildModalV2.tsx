@@ -18,7 +18,7 @@ export interface BuildModalV2CardData {
   isFullyBuilt: boolean;
   /** True when the player has enough essence for at least one step. */
   canAfford: boolean;
-  /** isFullyBuilt || !canAfford || isBuildSpendInFlight */
+  /** isFullyBuilt || !canAfford */
   isBuildDisabled: boolean;
   /** tutorialRowState.isUnavailable || isBuildDisabled */
   isBuildInteractionDisabled: boolean;

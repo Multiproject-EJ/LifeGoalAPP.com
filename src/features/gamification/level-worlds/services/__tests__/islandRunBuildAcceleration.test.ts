@@ -9,12 +9,12 @@ import { assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const islandRunBuildAccelerationTests: TestCase[] = [
   {
-    name: 'same-landmark repeated build clicks ramp to 7x legacy max on the 6th click',
+    name: 'same-landmark repeated build clicks ramp to 7x legacy max on the 5th click',
     run: () => {
       assertDeepEqual(
-        [1, 2, 3, 4, 5, 6, 7].map(resolveRepeatedBuildBatchSteps),
-        [1, 2, 4, 8, 16, MAX_REPEATED_BUILD_BATCH_STEPS, MAX_REPEATED_BUILD_BATCH_STEPS],
-        'Repeated build batch steps should ramp 1/2/4/8/16/28 and clamp at max',
+        [1, 2, 3, 4, 5, 6].map(resolveRepeatedBuildBatchSteps),
+        [1, 2, 4, 8, MAX_REPEATED_BUILD_BATCH_STEPS, MAX_REPEATED_BUILD_BATCH_STEPS],
+        'Repeated build batch steps should ramp 1/2/4/8/28 and clamp at max',
       );
     },
   },

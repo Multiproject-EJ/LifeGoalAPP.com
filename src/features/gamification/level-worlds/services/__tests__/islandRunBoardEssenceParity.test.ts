@@ -324,18 +324,27 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
           buildModalV2Source.includes('aria-disabled={isBuildInteractionDisabled}')
         ) &&
           (
+            source.includes('const isBuildDisabled = isFullyBuilt || !canAfford;') ||
             source.includes('const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;') ||
             source.includes('const isBuildInteractionDisabled = tutorialRowState.isUnavailable || isBuildDisabled;')
           ) &&
           source.includes('⚒️ Max build…'),
-        'Build button should expose a busy/disabled state while build spend is in-flight and provide hold feedback.',
+        'Build button should expose disabled state for true non-buildable rows and provide hold feedback.',
       );
       assert(
-        source.includes('const handleRepeatedBuildActivation = async (stopIndex: number): Promise<boolean> => {') &&
+        (
+          source.includes('const handleRepeatedBuildActivation = async (') ||
+          source.includes('const handleRepeatedBuildActivation = useCallback(async (')
+        ) &&
+          source.includes('requestedAtMs = Date.now(),') &&
+          source.includes('nowMs: requestedAtMs,') &&
           source.includes('let repeatedBuildBatchSteps = resolveRepeatedBuildBatchSteps(nextStreak.count);') &&
           source.includes('const spendApplied = await handleSpendEssenceOnBuild(stopIndex, repeatedBuildBatchSteps);') &&
-          source.includes('buildRepeatStreakRef.current = nextStreak;'),
-        'Repeated build activation should resolve UI-local streak speed and only persist the streak after a successful canonical spend.',
+          source.includes('buildRepeatStreakRef.current = nextStreak;') &&
+          source.includes('const processBuildTapQueue = useCallback(async (): Promise<void> => {') &&
+          source.includes('const isBuildTapQueueProcessingRef = useRef(false);') &&
+          source.includes('await handleRepeatedBuildActivation(nextTap.stopIndex, nextTap.requestedAtMs);'),
+        'Repeated build activation should resolve UI-local streak speed, preserve tap timestamps through the queue, and only persist the streak after a successful canonical spend.',
       );
     },
   },
