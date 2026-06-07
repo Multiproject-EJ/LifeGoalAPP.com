@@ -48,6 +48,10 @@ export function BoardTileGrid(props: BoardTileGridProps) {
     return { anchor, index: entry.index, position: toScreen(anchor) };
   }, [anchors, tileMap, toScreen]);
 
+  // Traffic-light tile turns green only once the green lights are lit (i.e. the
+  // charge has reached the green zone of the meter); below that it stays neutral.
+  const trafficLightGreenOn = trafficLightCharge >= Math.max(1, trafficLightChargeTarget - 1);
+
   // Pre-compute upcoming indices (next 1-3 tiles after token)
   const upcomingSet = useMemo(() => {
     const set = new Set<number>();
@@ -118,6 +122,7 @@ export function BoardTileGrid(props: BoardTileGridProps) {
             isTokenCurrent={index === tokenIndex}
             isUpcoming={upcomingSet.has(index)}
             isSpark40={isSpark40}
+            isTrafficLightGreen={tileType === 'traffic_light' && trafficLightGreenOn}
             tileIndex={index}
             showDebug={showDebug}
             isMinimalBoardArt={isMinimalBoardArt}

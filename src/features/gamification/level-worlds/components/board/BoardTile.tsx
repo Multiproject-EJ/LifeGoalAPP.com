@@ -78,6 +78,9 @@ export interface BoardTileProps {
   isTokenCurrent: boolean;
   isUpcoming: boolean;
   isSpark40: boolean;
+  /** True when this is the traffic-light tile and its green lights are lit.
+   *  Drives the whole-tile green colouring (neutral otherwise). */
+  isTrafficLightGreen?: boolean;
   tileIndex: number;
   showDebug: boolean;
   isMinimalBoardArt: boolean;
@@ -100,6 +103,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     isTokenCurrent,
     isUpcoming,
     isSpark40,
+    isTrafficLightGreen = false,
     showDebug,
     isMinimalBoardArt,
     uniformScale,
@@ -144,6 +148,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         isEncounter ? 'island-tile--encounter' : '',
         isEncounterCompleted ? 'island-tile--encounter-completed' : '',
         tileTypeClass,
+        isTrafficLightGreen ? 'island-tile--traffic_light-green' : '',
         doorStopClass,
         isActiveDoorCluster ? 'island-tile--active-door-cluster' : '',
         isTokenCurrent ? 'island-tile--token-current' : '',

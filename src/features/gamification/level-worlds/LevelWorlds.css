@@ -9085,7 +9085,10 @@
   }
 }
 
-.island-tile--traffic_light {
+/* The traffic-light tile stays a neutral board tile (inherits the default
+   .island-tile look) while only the red/yellow lights are active, and only
+   turns green once the green lights come on — see .island-tile--traffic_light-green. */
+.island-tile--traffic_light-green {
   background: linear-gradient(160deg, #bbf7d0 0%, #22c55e 48%, #14532d 100%);
   border: 1.5px solid rgba(187, 247, 208, 0.95);
   box-shadow: 0 0 12px rgba(34, 197, 94, 0.62), 0 0 22px rgba(20, 83, 45, 0.42);
