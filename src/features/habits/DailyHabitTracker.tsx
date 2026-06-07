@@ -367,7 +367,6 @@ function persistHiddenTodayExtraSections(userId: string, hiddenSections: Set<Tod
       JSON.stringify(Array.from(hiddenSections)),
     );
   } catch {
-    // Ignore storage failures so the controls still work for the current session.
   }
 }
 
@@ -9144,53 +9143,53 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             ) : null}
 
             {!hiddenTodayExtraSections.has('routines') ? (
-            <TodayExpandableActionSection
-              id="today-routines"
-              icon="🔁"
-              title="Routines"
-              subtitle="Run your grouped habits"
-              statusChip={routinesStatusChip}
-              expanded={openTodayExpandableSection === 'routines'}
-              isDemo={!isRoutinesFeatureOpen}
-              onToggle={() => {
-                if (!isRoutinesFeatureOpen) {
-                  onOpenFeaturePreview?.('app.routines', 'Routines');
-                  return;
-                }
-                toggleTodayExpandableSection('routines');
-              }}
-              keepMounted={isRoutinesFeatureOpen}
-            >
-              {isRoutinesFeatureOpen ? (
-                <RoutinesTodayLane
-                  session={session}
-                  onHideStandaloneHabitsChange={handleRoutineHiddenHabitIdsChange}
-                  onSummaryChange={setRoutinesTodaySummary}
-                  variant="panel"
-                />
-              ) : (
-                <p className="habit-contracts-card__hint">Routines are in demo for this account.</p>
-              )}
-            </TodayExpandableActionSection>
+              <TodayExpandableActionSection
+                id="today-routines"
+                icon="🔁"
+                title="Routines"
+                subtitle="Run your grouped habits"
+                statusChip={routinesStatusChip}
+                expanded={openTodayExpandableSection === 'routines'}
+                isDemo={!isRoutinesFeatureOpen}
+                onToggle={() => {
+                  if (!isRoutinesFeatureOpen) {
+                    onOpenFeaturePreview?.('app.routines', 'Routines');
+                    return;
+                  }
+                  toggleTodayExpandableSection('routines');
+                }}
+                keepMounted={isRoutinesFeatureOpen}
+              >
+                {isRoutinesFeatureOpen ? (
+                  <RoutinesTodayLane
+                    session={session}
+                    onHideStandaloneHabitsChange={handleRoutineHiddenHabitIdsChange}
+                    onSummaryChange={setRoutinesTodaySummary}
+                    variant="panel"
+                  />
+                ) : (
+                  <p className="habit-contracts-card__hint">Routines are in demo for this account.</p>
+                )}
+              </TodayExpandableActionSection>
             ) : null}
 
             {!hiddenTodayExtraSections.has('contracts') ? (
-            <TodayExpandableActionSection
-              id="today-contracts"
-              icon="🤝"
-              title="Promises"
-              subtitle="Promises needing attention now"
-              statusChip={contractsStatusChip}
-              expanded={openTodayExpandableSection === 'contracts'}
-              isDemo={!isContractsFeatureOpen}
-              onToggle={() => {
-                if (!isContractsFeatureOpen) {
-                  onOpenFeaturePreview?.('app.contracts', 'Promises');
-                  return;
-                }
-                toggleTodayExpandableSection('contracts');
-              }}
-            >
+              <TodayExpandableActionSection
+                id="today-contracts"
+                icon="🤝"
+                title="Promises"
+                subtitle="Promises needing attention now"
+                statusChip={contractsStatusChip}
+                expanded={openTodayExpandableSection === 'contracts'}
+                isDemo={!isContractsFeatureOpen}
+                onToggle={() => {
+                  if (!isContractsFeatureOpen) {
+                    onOpenFeaturePreview?.('app.contracts', 'Promises');
+                    return;
+                  }
+                  toggleTodayExpandableSection('contracts');
+                }}
+              >
               <div className="habit-contracts-card" aria-live="polite">
                 {contractsLoading && todayActionableContracts.length === 0 ? (
                   <p className="habit-contracts-card__hint">Loading promises that need attention…</p>
@@ -9275,19 +9274,19 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
                 {contractsError ? <p className="habit-contracts-card__error">{contractsError}</p> : null}
               </div>
-            </TodayExpandableActionSection>
+              </TodayExpandableActionSection>
             ) : null}
 
             {!hiddenTodayExtraSections.has('quickJournal') ? (
-            <TodayExpandableActionSection
-              id="today-quick-journal"
-              icon="📝"
-              title="Quick journal"
-              subtitle={quickJournalDateLabel}
-              statusChip={quickJournalStatusChip}
-              expanded={openTodayExpandableSection === 'quickJournal'}
-              onToggle={() => toggleTodayExpandableSection('quickJournal')}
-            >
+              <TodayExpandableActionSection
+                id="today-quick-journal"
+                icon="📝"
+                title="Quick journal"
+                subtitle={quickJournalDateLabel}
+                statusChip={quickJournalStatusChip}
+                expanded={openTodayExpandableSection === 'quickJournal'}
+                onToggle={() => toggleTodayExpandableSection('quickJournal')}
+              >
               <div className="habit-quick-journal" aria-live="polite">
                 <div className="habit-quick-journal__header">
                   <div>
