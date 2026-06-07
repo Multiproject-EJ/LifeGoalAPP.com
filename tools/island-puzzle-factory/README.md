@@ -67,6 +67,76 @@ Each mask must follow these rules:
 - Across all nine masks, every non-transparent master pixel must be covered exactly once.
 - Any overlap or gap causes QC failure.
 
+
+## Canonical SVG Template And Mask Export
+
+The canonical SVG template is the source of truth for puzzle-piece geometry. The approved master image remains the source of truth for artwork. The SVG-to-mask exporter does not use AI generation, does not create artwork, and does not reinterpret the approved master image; it deterministically renders the approved SVG geometry into the nine full-canvas PNG masks required by `PRODUCTION_EXACT_JIGSAW`.
+
+A valid v1 canonical SVG template must:
+
+- Define the final mask canvas with the SVG `viewBox`.
+- Contain exactly nine piece elements or layers.
+- Use these exact piece ids:
+  - `piece_01_top_left`
+  - `piece_02_top_center`
+  - `piece_03_top_right`
+  - `piece_04_middle_left`
+  - `piece_05_middle_center`
+  - `piece_06_middle_right`
+  - `piece_07_bottom_left`
+  - `piece_08_bottom_center`
+  - `piece_09_bottom_right`
+- Partition the full canvas exactly once, with no overlapping piece pixels and no uncovered pixels.
+- Avoid transforms on unnamed ancestor layers; put final geometry on the identified piece element/layer so export does not depend on editor-only structure.
+
+The committed example template is smoke-test geometry only:
+
+```text
+tools/island-puzzle-factory/templates/canonical-3x3-jigsaw-template.example.svg
+```
+
+Export masks from an approved SVG template with:
+
+```sh
+node tools/island-puzzle-factory/src/svg-to-masks.mjs --config tools/island-puzzle-factory/config/svg-mask-export.example.json
+```
+
+The export config supports:
+
+- `inputSvg`: canonical SVG template path.
+- `outputMasksDir`: destination for exported masks and `mask_export_report.md`; it must stay under `tools/island-puzzle-factory/output/` or `tools/island-puzzle-factory/tmp/`.
+- `canvas.width` and `canvas.height`: optional explicit canvas dimensions; when provided, they must match the SVG `viewBox` width and height so pieces are never silently resized.
+- `expectedPieces`: must be `9` for v1.
+- `puzzleId` and `templateId`: report identifiers for review and traceability.
+
+The exporter writes exactly these mask files and a `mask_export_report.md` into `outputMasksDir`. It binarizes rendered masks so white/opaque pixels are visible piece area and transparent pixels are hidden area, then runs mask QC to confirm shared canvas size, binary alpha, no overlaps, and full-canvas coverage.
+
+Run the SVG exporter smoke test with:
+
+```sh
+cd tools/island-puzzle-factory && npm run smoke:svg
+```
+
+The smoke test exports masks from the example SVG, creates a deterministic synthetic master image, runs `PRODUCTION_EXACT_JIGSAW` with those masks, and requires factory QC PASS.
+
+## Running Production After Masks Exist
+
+After a real visual jigsaw SVG template has been approved and exported:
+
+1. Put the approved completed master artwork path in the factory config as `inputMaster`.
+2. Point `masksDir` at the reviewed exported mask directory.
+3. Set `mode` and `expectedMode` to `PRODUCTION_EXACT_JIGSAW`.
+4. Keep `outputRoot` under `tools/island-puzzle-factory/output/` for this tooling stage.
+5. Run:
+
+```sh
+node tools/island-puzzle-factory/src/cli.mjs --config tools/island-puzzle-factory/config/island-001.example.json
+```
+
+Review the SVG `mask_export_report.md`, factory `manifest.json`, factory `qc_report.md`, and `qa/reassembled_check.png` before any future explicit runtime asset PR promotes generated output.
+
+This makes future island puzzle production scalable because each new puzzle can reuse the same deterministic cutter/exporter/QC flow: ImageGen/newest OpenAI image model creates the artwork, humans approve the master artwork and canonical SVG geometry, the exporter creates exact masks, and the production factory cuts full-canvas overlay pieces with repeatable QC evidence.
+
 ## Local Tooling Commands
 
 Run from the repository root after placing an approved ImageGen-created master artwork image and, for production mode, approved masks exported from the canonical SVG template at the paths in the config:

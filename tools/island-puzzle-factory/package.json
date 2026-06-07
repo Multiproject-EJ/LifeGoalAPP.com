@@ -7,7 +7,9 @@
   "scripts": {
     "factory": "node src/cli.mjs",
     "factory:example": "node src/cli.mjs --config config/island-001.example.json",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "svg:masks": "node src/svg-to-masks.mjs",
+    "smoke:svg": "node scripts/smoke-svg-masks.mjs"
   },
   "dependencies": {
     "sharp": "^0.33.5"

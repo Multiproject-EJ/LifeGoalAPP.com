@@ -1,0 +1,12 @@
+{
+  "inputSvg": "tools/island-puzzle-factory/templates/canonical-3x3-jigsaw-template.example.svg",
+  "outputMasksDir": "tools/island-puzzle-factory/output/svg-mask-export-example/masks",
+  "canvas": {
+    "width": 90,
+    "height": 60
+  },
+  "expectedPieces": 9,
+  "puzzleId": "svg_mask_export_example",
+  "templateId": "canonical_3x3_jigsaw_template_example",
+  "clearOutputMasksDir": true
+}
