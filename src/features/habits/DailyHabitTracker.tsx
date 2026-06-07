@@ -313,6 +313,63 @@ const DIRECT_OPEN_TIME_BOUND_OFFERS: ReadonlySet<TimeBoundOfferId> = new Set([
 type DailyHabitTrackerVariant = 'full' | 'compact';
 type TodayExpandableSectionKey = 'routines' | 'contracts' | 'quickJournal' | 'intentions';
 
+const TODAY_EXTRA_SECTION_TOGGLES: ReadonlyArray<{
+  key: TodayExpandableSectionKey;
+  label: string;
+  icon: string;
+}> = [
+  { key: 'routines', label: 'Routines', icon: '🔁' },
+  { key: 'contracts', label: 'Promises', icon: '🤝' },
+  { key: 'quickJournal', label: 'Quick journal', icon: '📝' },
+  { key: 'intentions', label: 'Intentions & Todos', icon: '🎯' },
+];
+const TODAY_EXTRA_SECTION_KEYS = new Set<TodayExpandableSectionKey>(
+  TODAY_EXTRA_SECTION_TOGGLES.map((section) => section.key),
+);
+const TODAY_EXTRA_SECTION_STORAGE_PREFIX = 'lifegoal.habits.todayExtras.hidden';
+
+function getTodayExtraSectionStorageKey(userId: string): string {
+  return `${TODAY_EXTRA_SECTION_STORAGE_PREFIX}.${userId}`;
+}
+
+function readHiddenTodayExtraSections(userId: string): Set<TodayExpandableSectionKey> {
+  if (typeof window === 'undefined') {
+    return new Set();
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(getTodayExtraSectionStorageKey(userId));
+    if (!rawValue) {
+      return new Set();
+    }
+
+    const parsedValue = JSON.parse(rawValue);
+    if (!Array.isArray(parsedValue)) {
+      return new Set();
+    }
+
+    return new Set(
+      parsedValue.filter((value): value is TodayExpandableSectionKey => TODAY_EXTRA_SECTION_KEYS.has(value)),
+    );
+  } catch {
+    return new Set();
+  }
+}
+
+function persistHiddenTodayExtraSections(userId: string, hiddenSections: Set<TodayExpandableSectionKey>): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(
+      getTodayExtraSectionStorageKey(userId),
+      JSON.stringify(Array.from(hiddenSections)),
+    );
+  } catch {
+  }
+}
+
 function hasQuickJournalDraftState(params: {
   isQuickJournalOpen: boolean;
   quickJournalMorning: string;
@@ -1247,6 +1304,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [contractsError, setContractsError] = useState<string | null>(null);
   const [contractActionId, setContractActionId] = useState<string | null>(null);
   const [openTodayExpandableSection, setOpenTodayExpandableSection] = useState<TodayExpandableSectionKey | null>(null);
+  const [hiddenTodayExtraSections, setHiddenTodayExtraSections] = useState<Set<TodayExpandableSectionKey>>(
+    () => readHiddenTodayExtraSections(session.user.id),
+  );
   const [visionImages, setVisionImages] = useState<VisionImage[]>([]);
   const [visionReward, setVisionReward] = useState<VisionReward | null>(null);
   const [visionRewardDate, setVisionRewardDate] = useState<string | null>(null);
@@ -5288,6 +5348,25 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     setOpenTodayExpandableSection((current) => current === section ? null : section);
   }, []);
 
+  useEffect(() => {
+    setHiddenTodayExtraSections(readHiddenTodayExtraSections(session.user.id));
+  }, [session.user.id]);
+
+  const toggleTodayExtraSectionVisibility = useCallback((section: TodayExpandableSectionKey) => {
+    const shouldHide = !hiddenTodayExtraSections.has(section);
+    const nextHiddenSections = new Set(hiddenTodayExtraSections);
+
+    if (shouldHide) {
+      nextHiddenSections.add(section);
+      setOpenTodayExpandableSection((current) => current === section ? null : current);
+    } else {
+      nextHiddenSections.delete(section);
+    }
+
+    persistHiddenTodayExtraSections(session.user.id, nextHiddenSections);
+    setHiddenTodayExtraSections(nextHiddenSections);
+  }, [hiddenTodayExtraSections, session.user.id]);
+
   /**
    * Toggle habit completion for the monthly grid using the new habit_completions table.
    * This function is specifically for monthly view interactions with habits_v2.
@@ -9037,51 +9116,80 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               </div>
             ) : null}
 
-            <TodayExpandableActionSection
-              id="today-routines"
-              icon="🔁"
-              title="Routines"
-              subtitle="Run your grouped habits"
-              statusChip={routinesStatusChip}
-              expanded={openTodayExpandableSection === 'routines'}
-              isDemo={!isRoutinesFeatureOpen}
-              onToggle={() => {
-                if (!isRoutinesFeatureOpen) {
-                  onOpenFeaturePreview?.('app.routines', 'Routines');
-                  return;
-                }
-                toggleTodayExpandableSection('routines');
-              }}
-              keepMounted={isRoutinesFeatureOpen}
-            >
-              {isRoutinesFeatureOpen ? (
-                <RoutinesTodayLane
-                  session={session}
-                  onHideStandaloneHabitsChange={handleRoutineHiddenHabitIdsChange}
-                  onSummaryChange={setRoutinesTodaySummary}
-                  variant="panel"
-                />
-              ) : (
-                <p className="habit-contracts-card__hint">Routines are in demo for this account.</p>
-              )}
-            </TodayExpandableActionSection>
+            {!isCompactView ? (
+              <div className="habit-today-extra-toggles" aria-label="Today extra section visibility">
+                <p className="habit-today-extra-toggles__label">Show extras</p>
+                <div className="habit-today-extra-toggles__buttons">
+                  {TODAY_EXTRA_SECTION_TOGGLES.map((section) => {
+                    const isVisible = !hiddenTodayExtraSections.has(section.key);
 
-            <TodayExpandableActionSection
-              id="today-contracts"
-              icon="🤝"
-              title="Promises"
-              subtitle="Promises needing attention now"
-              statusChip={contractsStatusChip}
-              expanded={openTodayExpandableSection === 'contracts'}
-              isDemo={!isContractsFeatureOpen}
-              onToggle={() => {
-                if (!isContractsFeatureOpen) {
-                  onOpenFeaturePreview?.('app.contracts', 'Promises');
-                  return;
-                }
-                toggleTodayExpandableSection('contracts');
-              }}
-            >
+                    return (
+                      <button
+                        key={section.key}
+                        type="button"
+                        className={`habit-today-extra-toggles__button${
+                          isVisible ? ' habit-today-extra-toggles__button--active' : ''
+                        }`}
+                        onClick={() => toggleTodayExtraSectionVisibility(section.key)}
+                        aria-pressed={isVisible}
+                      >
+                        <span aria-hidden="true">{section.icon}</span>
+                        <span>{section.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {!hiddenTodayExtraSections.has('routines') ? (
+              <TodayExpandableActionSection
+                id="today-routines"
+                icon="🔁"
+                title="Routines"
+                subtitle="Run your grouped habits"
+                statusChip={routinesStatusChip}
+                expanded={openTodayExpandableSection === 'routines'}
+                isDemo={!isRoutinesFeatureOpen}
+                onToggle={() => {
+                  if (!isRoutinesFeatureOpen) {
+                    onOpenFeaturePreview?.('app.routines', 'Routines');
+                    return;
+                  }
+                  toggleTodayExpandableSection('routines');
+                }}
+                keepMounted={isRoutinesFeatureOpen}
+              >
+                {isRoutinesFeatureOpen ? (
+                  <RoutinesTodayLane
+                    session={session}
+                    onHideStandaloneHabitsChange={handleRoutineHiddenHabitIdsChange}
+                    onSummaryChange={setRoutinesTodaySummary}
+                    variant="panel"
+                  />
+                ) : (
+                  <p className="habit-contracts-card__hint">Routines are in demo for this account.</p>
+                )}
+              </TodayExpandableActionSection>
+            ) : null}
+
+            {!hiddenTodayExtraSections.has('contracts') ? (
+              <TodayExpandableActionSection
+                id="today-contracts"
+                icon="🤝"
+                title="Promises"
+                subtitle="Promises needing attention now"
+                statusChip={contractsStatusChip}
+                expanded={openTodayExpandableSection === 'contracts'}
+                isDemo={!isContractsFeatureOpen}
+                onToggle={() => {
+                  if (!isContractsFeatureOpen) {
+                    onOpenFeaturePreview?.('app.contracts', 'Promises');
+                    return;
+                  }
+                  toggleTodayExpandableSection('contracts');
+                }}
+              >
               <div className="habit-contracts-card" aria-live="polite">
                 {contractsLoading && todayActionableContracts.length === 0 ? (
                   <p className="habit-contracts-card__hint">Loading promises that need attention…</p>
@@ -9166,17 +9274,19 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
                 {contractsError ? <p className="habit-contracts-card__error">{contractsError}</p> : null}
               </div>
-            </TodayExpandableActionSection>
+              </TodayExpandableActionSection>
+            ) : null}
 
-            <TodayExpandableActionSection
-              id="today-quick-journal"
-              icon="📝"
-              title="Quick journal"
-              subtitle={quickJournalDateLabel}
-              statusChip={quickJournalStatusChip}
-              expanded={openTodayExpandableSection === 'quickJournal'}
-              onToggle={() => toggleTodayExpandableSection('quickJournal')}
-            >
+            {!hiddenTodayExtraSections.has('quickJournal') ? (
+              <TodayExpandableActionSection
+                id="today-quick-journal"
+                icon="📝"
+                title="Quick journal"
+                subtitle={quickJournalDateLabel}
+                statusChip={quickJournalStatusChip}
+                expanded={openTodayExpandableSection === 'quickJournal'}
+                onToggle={() => toggleTodayExpandableSection('quickJournal')}
+              >
               <div className="habit-quick-journal" aria-live="polite">
                 <div className="habit-quick-journal__header">
                   <div>
@@ -9529,9 +9639,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 ) : null}
               </div>
             </TodayExpandableActionSection>
+            ) : null}
 
             {!isCompactView ? (
               <>
+                {!hiddenTodayExtraSections.has('intentions') ? (
                 <TodayExpandableActionSection
                   id="today-intentions"
                   icon="🎯"
@@ -9633,6 +9745,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                     ) : null}
                   </div>
                 </TodayExpandableActionSection>
+                ) : null}
 
                 <div className="habit-day-status" aria-live="polite">
                   <button
