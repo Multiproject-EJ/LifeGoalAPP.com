@@ -2162,7 +2162,6 @@ export function IslandRunBoardPrototype({
   const completedStopsSyncDispatchKeyRef = useRef<string | null>(null);
   const marketOwnedBundleSyncRequestedRef = useRef(false);
   const marketOwnedBundleSyncDispatchKeyRef = useRef<string | null>(null);
-  const [, setIsBuildSpendInFlight] = useState(false);
   const [isBuildHoldActive, setIsBuildHoldActive] = useState(false);
   const [buildHoldFeedbackLabel, setBuildHoldFeedbackLabel] = useState('⚒️ Building…');
   const resetBuildRepeatStreak = useCallback(() => {
@@ -7658,10 +7657,9 @@ export function IslandRunBoardPrototype({
     updateCompletedStopsWithSync((current) => current.includes(stopId) ? current : [...current, stopId], { triggerSource: 'handle_complete_stop_by_id' });
   };
 
-  const handleSpendEssenceOnBuild = async (stopIndex: number, maxSteps = 1): Promise<boolean> => {
+  const handleSpendEssenceOnBuild = useCallback(async (stopIndex: number, maxSteps = 1): Promise<boolean> => {
     if (isBuildSpendInFlightRef.current) return false;
     isBuildSpendInFlightRef.current = true;
-    setIsBuildSpendInFlight(true);
     try {
       if (!ISLAND_RUN_CONTRACT_V2_ENABLED) return false;
       if (stopIndex < 0 || stopIndex >= islandStopPlan.length) return false;
@@ -7723,11 +7721,10 @@ export function IslandRunBoardPrototype({
       return true;
     } finally {
       isBuildSpendInFlightRef.current = false;
-      setIsBuildSpendInFlight(false);
     }
-  };
+  }, [client, effectiveIslandNumber, islandStopPlan, playIslandRunSound, session]);
 
-  const handleRepeatedBuildActivation = async (
+  const handleRepeatedBuildActivation = useCallback(async (
     stopIndex: number,
     requestedAtMs = Date.now(),
   ): Promise<boolean> => {
@@ -7764,7 +7761,7 @@ export function IslandRunBoardPrototype({
       resetBuildRepeatStreak();
     }
     return true;
-  };
+  }, [handleSpendEssenceOnBuild, isBuildModalHatcheryGuidanceActive, resetBuildRepeatStreak]);
 
   // ── BuildModalV2 tap handler ──────────────────────────────────────────────
   // Tap-to-build for the v2 tray.  Hold-to-build is intentionally omitted in
@@ -7783,13 +7780,15 @@ export function IslandRunBoardPrototype({
     }
   }, [handleRepeatedBuildActivation]);
 
-  const handleBuildCardTap = (stopIndex: number): void => {
+  const handleBuildCardTap = useCallback((stopIndex: number): void => {
     buildTapQueueRef.current.push({
       stopIndex,
       requestedAtMs: Date.now(),
     });
-    void processBuildTapQueue();
-  };
+    if (!isBuildTapQueueProcessingRef.current) {
+      void processBuildTapQueue();
+    }
+  }, [processBuildTapQueue]);
 
   // ── Legacy hold-to-build handler (retained for future hold-gesture PR) ────
   // Not wired to the v2 tray UI yet; hold interactions on a horizontal scroll

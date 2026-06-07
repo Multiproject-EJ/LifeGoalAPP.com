@@ -332,7 +332,10 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Build button should expose disabled state for true non-buildable rows and provide hold feedback.',
       );
       assert(
-        source.includes('const handleRepeatedBuildActivation = async (') &&
+        (
+          source.includes('const handleRepeatedBuildActivation = async (') ||
+          source.includes('const handleRepeatedBuildActivation = useCallback(async (')
+        ) &&
           source.includes('requestedAtMs = Date.now(),') &&
           source.includes('nowMs: requestedAtMs,') &&
           source.includes('let repeatedBuildBatchSteps = resolveRepeatedBuildBatchSteps(nextStreak.count);') &&
