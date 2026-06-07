@@ -195,6 +195,7 @@ export interface Database {
           personality_profile_type: string | null;
           personality_summary: string | null;
           personality_last_tested_at: string | null;
+          sound_effects_enabled: boolean;
         };
         Insert: {
           user_id: string;
@@ -206,6 +207,7 @@ export interface Database {
           personality_profile_type?: string | null;
           personality_summary?: string | null;
           personality_last_tested_at?: string | null;
+          sound_effects_enabled?: boolean;
         };
         Update: {
           user_id?: string;
@@ -217,6 +219,7 @@ export interface Database {
           personality_profile_type?: string | null;
           personality_summary?: string | null;
           personality_last_tested_at?: string | null;
+          sound_effects_enabled?: boolean;
         };
         Relationships: [];
       };

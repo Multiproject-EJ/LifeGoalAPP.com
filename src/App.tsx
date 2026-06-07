@@ -71,6 +71,11 @@ import { CountdownCalendarModal } from './features/gamification/daily-treats/Cou
 import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorldsHub';
 import { getIslandBackgroundImageSrc } from './features/gamification/level-worlds/services/islandBackgrounds';
 import { fetchHolidayPreferences } from './services/holidayPreferences';
+import { fetchSoundEffectsEnabled, updateSoundEffectsEnabled } from './services/soundPreferences';
+import {
+  playLauncherCloseSound,
+  setSoundEffectsEnabled as setGlobalSoundEffectsEnabled,
+} from './utils/audioUtils';
 import { buildPreviewAdventMeta, fetchCurrentSeason, getActiveAdventMeta, getHatchesForDay, getPersonalQuestSeason, type ActiveAdventMetaResult, type HolidayKey } from './services/treatCalendarService';
 import { HOLIDAY_PREVIEW_LAUNCH_EVENT, type HolidayPreviewLaunchDetail } from './services/holidayPreviewEvents';
 import {
@@ -521,6 +526,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [showWorkspaceSetup, setShowWorkspaceSetup] = useState(false);
   const [workspaceSetupDismissed, setWorkspaceSetupDismissed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const wasMobileMenuOpenRef = useRef(false);
   const [shouldShowSettingsMenuReturn, setShouldShowSettingsMenuReturn] = useState(false);
   const settingsMenuReturnNavRef = useRef(DEFAULT_WORKSPACE_NAV_ID);
   const [isMobileProfileDialogOpen, setIsMobileProfileDialogOpen] = useState(false);
@@ -537,6 +543,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
   );
   const [scoreTabActiveTab, setScoreTabActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard' | 'collections'>('home');
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [soundEffectsEnabled, setSoundEffectsEnabledState] = useState(true);
+  const [soundPreferenceSaving, setSoundPreferenceSaving] = useState(false);
+  const [soundPreferenceError, setSoundPreferenceError] = useState<string | null>(null);
   const [appPreviewFeature, setAppPreviewFeature] = useState<{
     id: FeatureAvailabilityId;
     label: string;
@@ -1465,6 +1474,46 @@ export default function App({ forceAuthOnMount }: AppProps) {
       active = false;
     };
   }, [supabaseSession?.user?.id]);
+
+  useEffect(() => {
+    let active = true;
+    const userId = supabaseSession?.user?.id ?? 'local';
+
+    fetchSoundEffectsEnabled(userId).then(({ data, error }) => {
+      if (!active) return;
+      setSoundEffectsEnabledState(data);
+      setGlobalSoundEffectsEnabled(data);
+      setSoundPreferenceError(error?.message ?? null);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [supabaseSession?.user?.id]);
+
+  const handleSoundEffectsEnabledChange = useCallback(
+    async (enabled: boolean) => {
+      const userId = supabaseSession?.user?.id ?? 'local';
+      setSoundPreferenceSaving(true);
+      setSoundPreferenceError(null);
+      setSoundEffectsEnabledState(enabled);
+      setGlobalSoundEffectsEnabled(enabled);
+
+      const { data, error } = await updateSoundEffectsEnabled(userId, enabled);
+      setSoundEffectsEnabledState(data);
+      setGlobalSoundEffectsEnabled(data);
+      setSoundPreferenceError(error?.message ?? null);
+      setSoundPreferenceSaving(false);
+    },
+    [supabaseSession?.user?.id],
+  );
+
+  useEffect(() => {
+    if (wasMobileMenuOpenRef.current && !isMobileMenuOpen) {
+      playLauncherCloseSound();
+    }
+    wasMobileMenuOpenRef.current = isMobileMenuOpen;
+  }, [isMobileMenuOpen]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !activeSession?.user?.id) {
@@ -3625,6 +3674,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
               setShowCalendarPlaceholder(true);
             }}
             billingReturnBanner={billingReturnBanner}
+            soundEffectsEnabled={soundEffectsEnabled}
+            soundPreferenceSaving={soundPreferenceSaving}
+            soundPreferenceError={soundPreferenceError}
+            onSoundEffectsEnabledChange={handleSoundEffectsEnabledChange}
           />
         </div>
       );

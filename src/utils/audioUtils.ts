@@ -3,17 +3,29 @@
  * Uses Web Audio API to create lightweight sound effects
  */
 
+let soundEffectsEnabled = true;
+
+export const setSoundEffectsEnabled = (enabled: boolean): void => {
+  soundEffectsEnabled = enabled;
+};
+
+export const getSoundEffectsEnabled = (): boolean => soundEffectsEnabled;
+
 // Create audio context (shared singleton)
 const getAudioContext = (): AudioContext => {
   // Lazy init audio context
   if (!window._audioContext) {
     window._audioContext = new AudioContext();
   }
+  if (window._audioContext.state === 'suspended') {
+    void window._audioContext.resume();
+  }
   return window._audioContext;
 };
 
 // Helper to play a frequency for a duration with optional delay
 export const playTone = (frequency: number, duration: number, type: OscillatorType = 'sine', volume: number = 0.3, delay: number = 0): void => {
+  if (!soundEffectsEnabled) return;
   const ctx = getAudioContext();
   const oscillator = ctx.createOscillator();
   const gainNode = ctx.createGain();
@@ -51,6 +63,7 @@ export const playCoinJingle = (count: number = 3, volume: number = 0.3): void =>
 
 // Helper for whoosh/sweep sound
 export const playSweep = (startFreq: number, endFreq: number, duration: number, volume: number = 0.2): void => {
+  if (!soundEffectsEnabled) return;
   const ctx = getAudioContext();
   const oscillator = ctx.createOscillator();
   const gainNode = ctx.createGain();
@@ -72,6 +85,32 @@ export const playSweep = (startFreq: number, endFreq: number, duration: number, 
 // Helper for click/tap sound
 export const playClick = (volume: number = 0.2): void => {
   playTone(600, 0.05, 'square', volume);
+};
+
+export const playLauncherOpenSound = (): void => {
+  playSweep(220, 1200, 0.22, 0.08);
+  playTone(880, 0.07, 'sine', 0.045, 0.11);
+};
+
+export const playLauncherCloseSound = (): void => {
+  playSweep(900, 180, 0.18, 0.07);
+  playTone(320, 0.05, 'triangle', 0.04, 0.09);
+};
+
+export const playFooterClickSound = (kind: 'standard' | 'shield' | 'game' = 'standard'): void => {
+  if (kind === 'game') {
+    playTone(260, 0.08, 'triangle', 0.12);
+    playTone(190, 0.05, 'sine', 0.08, 0.045);
+    return;
+  }
+
+  if (kind === 'shield') {
+    playTone(620, 0.045, 'square', 0.09);
+    playTone(840, 0.045, 'square', 0.075, 0.06);
+    return;
+  }
+
+  playTone(620, 0.045, 'square', 0.085);
 };
 
 // Helper for celebration cascade
