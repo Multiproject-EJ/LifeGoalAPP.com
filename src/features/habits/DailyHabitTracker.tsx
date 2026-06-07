@@ -1327,6 +1327,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [hasClaimedFeedCreaturesToday, setHasClaimedFeedCreaturesToday] = useState(false);
   const [isZenTreeModalOpen, setIsZenTreeModalOpen] = useState(false);
   const [isFeedCreaturesModalOpen, setIsFeedCreaturesModalOpen] = useState(false);
+  // When a ready egg is tapped in Today, we play the hatch movie first; the
+  // movie modal's button then launches the island game with the Hatchery open.
+  const [isEggHatchMovieOpen, setIsEggHatchMovieOpen] = useState(false);
   const [isZenTreeClaiming, setIsZenTreeClaiming] = useState(false);
   const [isFeedCreaturesClaiming, setIsFeedCreaturesClaiming] = useState(false);
   const [zenTreeClaimError, setZenTreeClaimError] = useState<string | null>(null);
@@ -3409,10 +3412,16 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       if (typeof window !== 'undefined' && selectedSlot && isReadyToHatch) {
         localStorage.setItem(eggHatchViewedStorageKeyForSlot(selectedSlot.key), '1');
       }
-      if (onOpenIslandRunStop) {
-        onOpenIslandRunStop('hatchery');
-      } else {
+      if (!onOpenIslandRunStop) {
         setVisionRewardError('Egg hatch launcher is unavailable in this view.');
+        return;
+      }
+      // Ready eggs get the hatch movie first; its button continues into the game.
+      // Incubating eggs jump straight to the Hatchery as before.
+      if (isReadyToHatch) {
+        setIsEggHatchMovieOpen(true);
+      } else {
+        onOpenIslandRunStop('hatchery');
       }
       return;
     }
@@ -3635,6 +3644,54 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               {feedCreaturesClaimError}
             </p>
           ) : null}
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  const eggHatchMovieModal = isEggHatchMovieOpen ? (
+    <div
+      className="habit-day-nav__vision-modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Egg hatching"
+      onClick={() => setIsEggHatchMovieOpen(false)}
+    >
+      <div
+        className="habit-day-nav__vision-modal habit-day-nav__egg-hatch-movie-modal"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="habit-day-nav__vision-modal-close"
+          onClick={() => setIsEggHatchMovieOpen(false)}
+          aria-label="Close egg hatch movie"
+        >
+          ×
+        </button>
+        <div className="habit-day-nav__todays-offer-body">
+          <video
+            className="habit-day-nav__egg-hatch-movie-video"
+            src="/assets/movies/egg-hatch-intro-v1.mp4"
+            autoPlay
+            muted
+            playsInline
+            preload="auto"
+            onEnded={(event) => { event.currentTarget.pause(); }}
+            aria-label="Egg hatching animation"
+          />
+          <p className="habit-day-nav__todays-offer-title">Your egg is ready to hatch!</p>
+          <p className="habit-day-nav__todays-offer-subtitle">Open the Hatchery to collect your creature or sell it for rewards.</p>
+          <button
+            type="button"
+            className="habit-day-nav__todays-offer-buy"
+            onClick={() => {
+              setIsEggHatchMovieOpen(false);
+              onOpenIslandRunStop?.('hatchery');
+            }}
+          >
+            Open Hatchery →
+          </button>
         </div>
       </div>
     </div>
@@ -10716,6 +10773,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       : feedCreaturesModal
     : null;
 
+  const eggHatchMoviePortal = eggHatchMovieModal
+    ? modalRoot
+      ? createPortal(eggHatchMovieModal, modalRoot)
+      : eggHatchMovieModal
+    : null;
+
   if (isCompact) {
     return (
       <section className="habit-tracker habit-tracker--compact">
@@ -10726,6 +10789,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         {dailyLifeUpgradeCreateFlowPortal}
         {zenTreePortal}
         {feedCreaturesPortal}
+        {eggHatchMoviePortal}
         {weeklyHabitReviewModal}
         {visionRewardModal}
         {visionAlreadyCollectedModal}
@@ -10953,6 +11017,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       {dailyLifeUpgradePortal}
       {zenTreePortal}
       {feedCreaturesPortal}
+      {eggHatchMoviePortal}
       {weeklyHabitReviewModal}
       {visionRewardModal}
       {visionAlreadyCollectedModal}
