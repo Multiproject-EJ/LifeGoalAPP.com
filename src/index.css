@@ -21189,6 +21189,10 @@ html.platform-ipad .workspace-shell__menu-edge {
   line-height: 1;
 }
 
+.mobile-menu-overlay__submenu-badge {
+  margin-left: auto;
+}
+
 .mobile-menu-overlay__settings {
   border-top: 1px solid rgba(148, 163, 184, 0.25);
   padding-top: 1rem;
