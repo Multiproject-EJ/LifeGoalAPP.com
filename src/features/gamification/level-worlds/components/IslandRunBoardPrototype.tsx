@@ -734,6 +734,23 @@ const WISDOM_ESSENCE_BONUS_AMOUNT = 15;
 const CONTRACT_V2_ESSENCE_SPEND_STEP_FLOOR = 10;
 const TARGET_TAPS_PER_BUILD_LEVEL = 5;
 
+type WalletStoreModalKind = 'essence' | 'shards';
+
+type WalletPurchaseOption = {
+  id: string;
+  icon: string;
+  title: string;
+  cost: number;
+  currencyIcon: string;
+  currencyName: string;
+  summary: string;
+  rewardLabel?: string;
+  canAfford: boolean;
+  disabledReason?: string;
+  actionLabel: string;
+  onSelect?: () => void;
+};
+
 function resolveBuildSpendStepForTier(requiredEssence: number): number {
   const required = Math.max(1, Math.floor(requiredEssence));
   return Math.max(CONTRACT_V2_ESSENCE_SPEND_STEP_FLOOR, Math.ceil(required / TARGET_TAPS_PER_BUILD_LEVEL));
@@ -1875,6 +1892,7 @@ export function IslandRunBoardPrototype({
   const [showRewardDetailsModal, setShowRewardDetailsModal] = useState(false);
   const [showEggManiaModal, setShowEggManiaModal] = useState(false);
   const [showHatcheryCompassModal, setShowHatcheryCompassModal] = useState(false);
+  const [walletStoreModalKind, setWalletStoreModalKind] = useState<WalletStoreModalKind | null>(null);
   const [isRewardBarDetailsExpanded, setIsRewardBarDetailsExpanded] = useState(false);
   const [selectedEventInfoEventId, setSelectedEventInfoEventId] = useState<EventId | null>(null);
   const [showOutOfDicePurchasePrompt, setShowOutOfDicePurchasePrompt] = useState(false);
@@ -9272,6 +9290,107 @@ export function IslandRunBoardPrototype({
     },
   };
 
+  const essencePurchaseOptions: WalletPurchaseOption[] = [
+    {
+      id: 'dice_bundle',
+      icon: '🎲',
+      title: marketOwnedBundles.dice_bundle ? 'Dice Bundle owned' : 'Dice Bundle',
+      cost: MARKET_DICE_BUNDLE_COST,
+      currencyIcon: '🟣',
+      currencyName: 'essence',
+      summary: marketOwnedBundles.dice_bundle
+        ? 'Already claimed for this island run.'
+        : `Top up with ${MARKET_DICE_BUNDLE_REWARD} dice for rolling.`,
+      rewardLabel: marketOwnedBundles.dice_bundle ? 'Owned ✅' : `+${MARKET_DICE_BUNDLE_REWARD} dice`,
+      canAfford: !marketOwnedBundles.dice_bundle && runtimeState.essence >= MARKET_DICE_BUNDLE_COST,
+      disabledReason: marketOwnedBundles.dice_bundle
+        ? 'Owned'
+        : runtimeState.essence < MARKET_DICE_BUNDLE_COST
+          ? `Need ${MARKET_DICE_BUNDLE_COST - runtimeState.essence} more`
+          : undefined,
+      actionLabel: marketOwnedBundles.dice_bundle ? 'Owned' : 'Buy',
+      onSelect: !marketOwnedBundles.dice_bundle && runtimeState.essence >= MARKET_DICE_BUNDLE_COST
+        ? () => {
+            setWalletStoreModalKind(null);
+            handleMarketPrototypePurchase('dice_bundle');
+          }
+        : undefined,
+    },
+    ...buildModalV2Cards
+      .filter((card) => !card.isFullyBuilt)
+      .map((card): WalletPurchaseOption => {
+        const remaining = Math.max(0, card.requiredEssence - card.spentEssence);
+        const cost = Math.min(resolveBuildSpendStepForTier(card.requiredEssence), remaining);
+        const canBuy = card.canAfford && !card.isBuildInteractionDisabled && cost > 0;
+        return {
+          id: `build_${card.stopIndex}`,
+          icon: card.levelIcon,
+          title: card.title,
+          cost,
+          currencyIcon: '🟣',
+          currencyName: 'essence',
+          summary: `Build level ${card.buildLevel}/${card.maxBuildLevel} · ${card.remainingToFull} essence to full.`,
+          rewardLabel: card.isNextCheapest ? 'Cheapest next' : 'Build progress',
+          canAfford: canBuy,
+          disabledReason: canBuy
+            ? undefined
+            : card.isTutorialMuted
+              ? 'Locked by tutorial'
+              : runtimeState.essence < cost
+                ? `Need ${Math.max(0, cost - runtimeState.essence)} more`
+                : 'Unavailable',
+          actionLabel: 'Build',
+          onSelect: canBuy
+            ? () => {
+                setWalletStoreModalKind(null);
+                handleBuildCardTap(card.stopIndex);
+              }
+            : undefined,
+        };
+      }),
+  ].slice(0, 9);
+
+  const shardPurchaseOptions: WalletPurchaseOption[] = collectedCreatures
+    .map((creature): WalletPurchaseOption | null => {
+      const preview = resolveCreatureFormUpgradePreview({ entry: creature, shards: runtimeState.shards });
+      if (!preview?.nextFormLevel) return null;
+      return {
+        id: `form_${creature.creatureId}`,
+        icon: '🌟',
+        title: `${creature.creature.name} Form ${preview.nextFormLevel}`,
+        cost: preview.shardCost,
+        currencyIcon: '🔮',
+        currencyName: 'shards',
+        summary: `Requires Bond Lv. ${preview.requiredBondLevel ?? '—'} · Current Form ${preview.currentFormLevel}/${preview.maxFormLevel}.`,
+        rewardLabel: preview.rewardDice > 0 || preview.rewardEssence > 0
+          ? `+${preview.rewardDice} dice / +${preview.rewardEssence} essence`
+          : 'Form upgrade',
+        canAfford: preview.canUpgrade,
+        disabledReason: preview.canUpgrade
+          ? undefined
+          : preview.failureReason === 'bond_level_too_low'
+            ? `Bond Lv. ${preview.requiredBondLevel} needed`
+            : preview.failureReason === 'insufficient_shards'
+              ? `Need ${Math.max(0, preview.shardCost - runtimeState.shards)} more`
+              : 'Unavailable',
+        actionLabel: 'Upgrade',
+        onSelect: preview.canUpgrade
+          ? () => {
+              setWalletStoreModalKind(null);
+              sanctuaryHandlers.upgradeCreatureForm(creature.creatureId);
+            }
+          : undefined,
+      };
+    })
+    .filter((option): option is WalletPurchaseOption => Boolean(option))
+    .sort((a, b) => Number(b.canAfford) - Number(a.canAfford) || a.cost - b.cost)
+    .slice(0, 9);
+
+  const activeWalletPurchaseOptions = walletStoreModalKind === 'shards' ? shardPurchaseOptions : essencePurchaseOptions;
+  const activeWalletBalance = walletStoreModalKind === 'shards' ? runtimeState.shards : runtimeState.essence;
+  const activeWalletIcon = walletStoreModalKind === 'shards' ? '🔮' : '🟣';
+  const activeWalletName = walletStoreModalKind === 'shards' ? 'Shard' : 'Essence';
+
   const handleClaimCompanionQuest = () => {
     if (!companionQuestComplete || companionQuestClaimedToday) return;
     const previousClaimed = companionQuestProgress.lastClaimedDayKey;
@@ -9368,7 +9487,8 @@ export function IslandRunBoardPrototype({
       showShopPanel ||
       showStickerAlbumDialog ||
       showStoryReader ||
-      showTravelOverlay,
+      showTravelOverlay ||
+      walletStoreModalKind !== null,
   );
   const shouldShowBestNextActionChip = Boolean(
     bestNextAction &&
@@ -9512,10 +9632,16 @@ export function IslandRunBoardPrototype({
         <div className="island-run-prototype__status-row island-run-prototype__status-row--production">
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">🎲 <strong>{dicePool}</strong></span>
           {ISLAND_RUN_CONTRACT_V2_ENABLED && (
-            <span className="island-run-prototype__stat-chip" style={{ position: 'relative' }}>
+            <button
+              type="button"
+              className="island-run-prototype__stat-chip island-run-prototype__stat-chip--wallet"
+              style={{ position: 'relative' }}
+              onClick={() => setWalletStoreModalKind('essence')}
+              aria-label={`Open essence buying options. Balance ${runtimeState.essence} essence.`}
+            >
               🟣 <strong>{runtimeState.essence}</strong>
               <StatDriftNumbers value={runtimeState.essence} icon="🟣" />
-            </span>
+            </button>
           )}
           {activeCompanion && activeCompanionBonus ? (
             <span className="island-run-prototype__stat-chip">
@@ -9586,9 +9712,14 @@ export function IslandRunBoardPrototype({
         )}
         {/* M17C: shards wallet HUD chip — only shown when player has at least 1 shard */}
         {shards > 0 && (
-          <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--shards">
+          <button
+            type="button"
+            className="island-run-prototype__stat-chip island-run-prototype__stat-chip--shards island-run-prototype__stat-chip--wallet"
+            onClick={() => setWalletStoreModalKind('shards')}
+            aria-label={`Open shard buying options. Balance ${shards} shards.`}
+          >
             ✨ <strong>{shards}</strong>
-          </span>
+          </button>
         )}
         {/* M8-COMPLETE: diamonds HUD chip — only shown when player has at least 1 diamond */}
         {diamonds > 0 && (
@@ -11874,6 +12005,67 @@ export function IslandRunBoardPrototype({
             </div>
           </div>
         </>
+      )}
+
+      {walletStoreModalKind && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section
+            className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--wallet-store"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${activeWalletName} buying options`}
+          >
+            <h3 className="island-stop-modal__title">
+              {activeWalletIcon} {activeWalletName} Options
+            </h3>
+            <p className="island-stop-modal__copy">
+              Balance: <strong>{activeWalletBalance} {activeWalletIcon}</strong> · Affordable options are highlighted.
+            </p>
+            <div className="island-run-wallet-store-grid" aria-label={`${activeWalletName} buying possibilities`}>
+              {Array.from({ length: 9 }, (_, index) => {
+                const option = activeWalletPurchaseOptions[index];
+                if (!option) {
+                  return (
+                    <article key={`empty-${index}`} className="island-run-wallet-store-card island-run-wallet-store-card--empty">
+                      <span className="island-run-wallet-store-card__icon" aria-hidden="true">＋</span>
+                      <strong>More offers soon</strong>
+                      <span>Keep progressing to unlock more buys.</span>
+                    </article>
+                  );
+                }
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={`island-run-wallet-store-card ${option.canAfford ? 'island-run-wallet-store-card--affordable' : 'island-run-wallet-store-card--locked'}`}
+                    onClick={option.onSelect}
+                    disabled={!option.canAfford || !option.onSelect}
+                  >
+                    <span className="island-run-wallet-store-card__icon" aria-hidden="true">{option.icon}</span>
+                    <strong>{option.title}</strong>
+                    <span className="island-run-wallet-store-card__cost">
+                      {option.cost} {option.currencyIcon}
+                    </span>
+                    <span>{option.summary}</span>
+                    {option.rewardLabel ? <span className="island-run-wallet-store-card__reward">{option.rewardLabel}</span> : null}
+                    <span className="island-run-wallet-store-card__status">
+                      {option.canAfford ? option.actionLabel : option.disabledReason ?? 'Need more'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                onClick={() => setWalletStoreModalKind(null)}
+              >
+                ✕ Close
+              </button>
+            </div>
+          </section>
+        </div>
       )}
 
       {/* M14: unified shop panel (merged shop + market) */}
