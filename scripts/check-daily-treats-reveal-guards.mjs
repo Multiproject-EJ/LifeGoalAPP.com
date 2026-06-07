@@ -60,7 +60,7 @@ assert(
 
 const handleOpenDoor = sectionBetween(
   modal,
-  'const handleOpenDoor = useCallback(async (dayIndex: number, doorType: DoorType, hatch: CalendarHatch) => {',
+  'const handleOpenDoor = useCallback(async (dayIndex: number, doorType: DoorType, hatch: CalendarHatch,',
   'const handleClaimReward = useCallback(() => {',
 );
 const openingSetIndex = indexAfter(handleOpenDoor, 'setRevealState({');
@@ -92,7 +92,7 @@ const revealRender = sectionBetween(
   'return (',
 );
 assert(
-  revealRender.includes('const { hatch, dayIndex, doorType, isOpening } = revealState;'),
+  revealRender.includes('const { hatch, dayIndex, doorType, isOpening') && revealRender.includes('} = revealState;'),
   'Reveal render path must read isOpening from revealState.',
 );
 const openingShell = sectionBetween(
@@ -166,7 +166,7 @@ assert(
 
 const reducedMotionStyles = sectionBetween(
   styles,
-  '@media (prefers-reduced-motion: reduce) {\n  .daily-treats-calendar--reward-reveal',
+  '@media (prefers-reduced-motion: reduce) {\n  .daily-treats-calendar--holiday-personal-quest:not(.daily-treats-calendar--reward-reveal)',
   '/* Same-day Daily Treat bonus:',
 );
 for (const selector of [

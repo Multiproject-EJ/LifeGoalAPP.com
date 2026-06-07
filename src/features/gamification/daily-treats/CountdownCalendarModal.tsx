@@ -721,9 +721,12 @@ export const CountdownCalendarModal = ({
             {/* Locked bonus door hint — shown only when bonus is not yet unlocked */}
             {showLockedBonusHint && (
               <div className="daily-treats-calendar__bonus-locked-hint">
-                {questHabit
-                  ? <>🔐 Complete <strong>{questHabit.emoji ? `${questHabit.emoji} ` : ''}{questHabit.title}</strong> to unlock your bonus door</>
-                  : '🎁 Complete a habit to unlock your bonus door'}
+                <span className="daily-treats-calendar__bonus-locked-kicker">BONUS</span>
+                <span className="daily-treats-calendar__bonus-locked-copy">
+                  {questHabit
+                    ? <>Finish <strong>{questHabit.emoji ? `${questHabit.emoji} ` : ''}{questHabit.title}</strong> to wake the door</>
+                    : 'Finish today’s quest habit to wake the door'}
+                </span>
               </div>
             )}
 
@@ -952,7 +955,7 @@ export const CountdownCalendarModal = ({
             </div>
           )}
 
-          <button type="button" className="daily-treats-calendar__button" onClick={onClose}>
+          <button type="button" className="daily-treats-calendar__button daily-treats-calendar__button--close" onClick={onClose}>
             Close
           </button>
         </div>
