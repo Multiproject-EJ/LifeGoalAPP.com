@@ -275,7 +275,7 @@ export function MobileFooterNav({
       menuLaunchTimeoutRef.current = window.setTimeout(() => {
         setIsMenuLaunchAnimating(false);
         menuLaunchTimeoutRef.current = null;
-      }, 760);
+      }, 680);
     });
   };
 
