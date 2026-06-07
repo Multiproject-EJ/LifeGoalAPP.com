@@ -57,6 +57,14 @@ type MobileFooterNavProps = {
 
 const isNavItem = (item: FooterListItem): item is MobileFooterNavItem => 'id' in item;
 const DAILY_GAME_ICONS = ['💎', '🔑', '🗝️', '🎁', '🔓'];
+const getFooterClickSoundKind = (
+  itemId: string,
+  isEnergyItem: boolean,
+): Parameters<typeof playFooterClickSound>[0] => {
+  if (isEnergyItem) return 'shield';
+  if (itemId === 'game') return 'game';
+  return 'standard';
+};
 
 const getDailyGameIcon = () => {
   const dayIndex = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
@@ -617,7 +625,7 @@ export function MobileFooterNav({
                     isActive ? 'mobile-footer-nav__button--active' : ''
                   }`}
                   onClick={() => {
-                    playFooterClickSound(isEnergyItem ? 'shield' : item.id === 'game' ? 'game' : 'standard');
+                    playFooterClickSound(getFooterClickSoundKind(item.id, isEnergyItem));
                     revealControllerUI();
                     if (isEnergyItem) {
                       onEnergyToggle?.();
