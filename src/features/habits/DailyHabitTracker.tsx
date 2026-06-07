@@ -1329,6 +1329,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [hasClaimedFeedCreaturesToday, setHasClaimedFeedCreaturesToday] = useState(false);
   const [isZenTreeModalOpen, setIsZenTreeModalOpen] = useState(false);
   const [isFeedCreaturesModalOpen, setIsFeedCreaturesModalOpen] = useState(false);
+  // When a ready egg is tapped in Today, we play the hatch movie first; the
+  // movie modal's button then launches the island game with the Hatchery open.
+  const [isEggHatchMovieOpen, setIsEggHatchMovieOpen] = useState(false);
   const [isZenTreeClaiming, setIsZenTreeClaiming] = useState(false);
   const [isFeedCreaturesClaiming, setIsFeedCreaturesClaiming] = useState(false);
   const [zenTreeClaimError, setZenTreeClaimError] = useState<string | null>(null);
@@ -3411,10 +3414,16 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       if (typeof window !== 'undefined' && selectedSlot && isReadyToHatch) {
         localStorage.setItem(eggHatchViewedStorageKeyForSlot(selectedSlot.key), '1');
       }
-      if (onOpenIslandRunStop) {
-        onOpenIslandRunStop('hatchery');
-      } else {
+      if (!onOpenIslandRunStop) {
         setVisionRewardError('Egg hatch launcher is unavailable in this view.');
+        return;
+      }
+      // Ready eggs get the hatch movie first; its button continues into the game.
+      // Incubating eggs jump straight to the Hatchery as before.
+      if (isReadyToHatch) {
+        setIsEggHatchMovieOpen(true);
+      } else {
+        onOpenIslandRunStop('hatchery');
       }
       return;
     }
@@ -10718,6 +10727,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       : feedCreaturesModal
     : null;
 
+  const eggHatchMoviePortal = eggHatchMovieModal
+    ? modalRoot
+      ? createPortal(eggHatchMovieModal, modalRoot)
+      : eggHatchMovieModal
+    : null;
+
   if (isCompact) {
     return (
       <section className="habit-tracker habit-tracker--compact">
@@ -10728,6 +10743,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         {dailyLifeUpgradeCreateFlowPortal}
         {zenTreePortal}
         {feedCreaturesPortal}
+        {eggHatchMoviePortal}
         {weeklyHabitReviewModal}
         {visionRewardModal}
         {visionAlreadyCollectedModal}
@@ -10955,6 +10971,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       {dailyLifeUpgradePortal}
       {zenTreePortal}
       {feedCreaturesPortal}
+      {eggHatchMoviePortal}
       {weeklyHabitReviewModal}
       {visionRewardModal}
       {visionAlreadyCollectedModal}

@@ -1076,6 +1076,35 @@
   }
 }
 
+/* Affordance cue: red dot on the 🔨 Build button when at least one landmark's
+   next build step is payable with the player's current essence. Mirrors the
+   orbit-stop "affordable" attention dot. */
+.island-run-prototype__footer-build-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 4;
+  background: radial-gradient(circle at 35% 35%, #ff9a9a 0%, #ff3b3b 60%, #b10c0c 100%);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.22);
+  animation: island-run-build-dot-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes island-run-build-dot-pulse {
+  0%   { transform: scale(1);    box-shadow: 0 0 0 0    rgba(255, 59, 59, 0.70), 0 0 0 2px rgba(0, 0, 0, 0.22); }
+  60%  { transform: scale(1.15); box-shadow: 0 0 0 9px  rgba(255, 59, 59, 0.00), 0 0 0 2px rgba(0, 0, 0, 0.22); }
+  100% { transform: scale(1);    box-shadow: 0 0 0 0    rgba(255, 59, 59, 0.00), 0 0 0 2px rgba(0, 0, 0, 0.22); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-run-prototype__footer-build-dot {
+    animation: none;
+  }
+}
+
 .island-run-prototype__footer-nav-btn--active-mult {
   background: linear-gradient(135deg, rgba(255, 100, 50, 0.85), rgba(255, 50, 100, 0.85));
   border-color: rgba(255, 150, 50, 0.7);
@@ -9056,7 +9085,10 @@
   }
 }
 
-.island-tile--traffic_light {
+/* The traffic-light tile stays a neutral board tile (inherits the default
+   .island-tile look) while only the red/yellow lights are active, and only
+   turns green once the green lights come on — see .island-tile--traffic_light-green. */
+.island-tile--traffic_light-green {
   background: linear-gradient(160deg, #bbf7d0 0%, #22c55e 48%, #14532d 100%);
   border: 1.5px solid rgba(187, 247, 208, 0.95);
   box-shadow: 0 0 12px rgba(34, 197, 94, 0.62), 0 0 22px rgba(20, 83, 45, 0.42);
@@ -9191,50 +9223,227 @@
   line-height: 1.35;
 }
 
-.island-traffic-light__coin {
-  width: 74px;
-  height: 74px;
-  margin: 0.8rem auto;
+/* ── Coin stage (spotlight backdrop + sparkle burst) ─────────────────────────── */
+.island-coin-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 132px;
+  margin: 0.6rem auto 0.4rem;
+  perspective: 700px;
+}
+
+.island-coin-stage::before {
+  content: '';
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(250, 204, 21, 0.28) 0%, rgba(250, 204, 21, 0) 68%);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.island-coin-stage__sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.island-traffic-light--revealed .island-coin-stage__sparkles {
+  background:
+    radial-gradient(circle, #fff7ad 0%, rgba(255, 247, 173, 0) 60%) 18% 28% / 10px 10px no-repeat,
+    radial-gradient(circle, #7dd8ff 0%, rgba(125, 216, 255, 0) 60%) 82% 22% / 13px 13px no-repeat,
+    radial-gradient(circle, #fff7ad 0%, rgba(255, 247, 173, 0) 60%) 24% 78% / 9px 9px no-repeat,
+    radial-gradient(circle, #c4b5fd 0%, rgba(196, 181, 253, 0) 60%) 78% 76% / 12px 12px no-repeat,
+    radial-gradient(circle, #fde68a 0%, rgba(253, 230, 138, 0) 60%) 50% 12% / 8px 8px no-repeat;
+  animation: island-coin-sparkle-burst 0.9s ease-out 0.05s both;
+}
+
+@keyframes island-coin-sparkle-burst {
+  0% { opacity: 0; transform: scale(0.4); }
+  35% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+/* ── The coin itself (two embossed faces in 3D) ──────────────────────────────── */
+.island-coin {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  transform-style: preserve-3d;
+}
+
+.island-coin__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.4s ease-out;
+}
+
+.island-coin__face {
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 2rem;
-  font-weight: 950;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border: 3px solid rgba(255, 247, 173, 0.95);
+  box-shadow:
+    inset 0 3px 6px rgba(255, 255, 255, 0.55),
+    inset 0 -5px 10px rgba(120, 60, 0, 0.45),
+    0 0 22px rgba(250, 204, 21, 0.5),
+    0 10px 22px rgba(0, 0, 0, 0.34);
+}
+
+.island-coin__face--heads {
+  background: radial-gradient(circle at 32% 26%, #fff7ad 0%, #facc15 46%, #b45309 100%);
+}
+
+.island-coin__face--tails {
+  transform: rotateY(180deg);
+  background: radial-gradient(circle at 32% 26%, #e9d5ff 0%, #a855f7 48%, #6b21a8 100%);
+  border-color: rgba(233, 213, 255, 0.95);
+}
+
+.island-coin__emblem {
+  font-size: 2.1rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+}
+
+.island-coin__face--heads .island-coin__emblem {
   color: #3b2600;
-  background: radial-gradient(circle at 30% 24%, #fff7ad 0%, #facc15 48%, #b45309 100%);
-  border: 2px solid rgba(255, 247, 173, 0.95);
-  box-shadow: 0 0 22px rgba(250, 204, 21, 0.55), 0 10px 24px rgba(0, 0, 0, 0.32);
+  font-weight: 950;
 }
 
-.island-traffic-light__coin--flipped {
-  animation: traffic-light-coin-pop 0.46s ease-out;
+/* Idle bob + shimmer invites a tap before flipping. */
+.island-coin--ready {
+  animation: island-coin-idle 2.4s ease-in-out infinite;
 }
 
-@keyframes traffic-light-coin-pop {
-  0% { transform: rotateY(0deg) scale(0.82); }
-  55% { transform: rotateY(180deg) scale(1.08); }
-  100% { transform: rotateY(360deg) scale(1); }
+@keyframes island-coin-idle {
+  0%, 100% { transform: translateY(0) rotateY(-8deg); }
+  50% { transform: translateY(-6px) rotateY(8deg); }
 }
 
-.island-traffic-light__boxes,
-.island-traffic-light__result {
-  display: grid;
-  gap: 0.4rem;
-  margin: 0.7rem 0;
+/* Spin: many rotations, landing on the resolved face. */
+.island-coin--flipping .island-coin__inner {
+  animation: island-coin-spin 1.3s cubic-bezier(0.18, 0.7, 0.2, 1) both;
 }
 
-.island-traffic-light__boxes span,
-.island-traffic-light__result {
-  border-radius: 14px;
-  padding: 0.55rem 0.65rem;
-  background: rgba(12, 74, 110, 0.72);
-  border: 1px solid rgba(125, 216, 255, 0.42);
-  color: #f8fbff;
+.island-coin--flipping.island-coin--lands-tails .island-coin__inner {
+  animation-name: island-coin-spin-tails;
+}
+
+@keyframes island-coin-spin {
+  0% { transform: rotateY(0deg) scale(0.92); }
+  12% { transform: rotateY(-40deg) scale(0.92); }
+  100% { transform: rotateY(1440deg) scale(1); }
+}
+
+@keyframes island-coin-spin-tails {
+  0% { transform: rotateY(0deg) scale(0.92); }
+  12% { transform: rotateY(-40deg) scale(0.92); }
+  100% { transform: rotateY(1620deg) scale(1); }
+}
+
+/* Resting pose after the reveal lands. */
+.island-coin--revealed {
+  animation: island-coin-settle 0.5s ease-out both;
+}
+
+.island-coin--revealed .island-coin__inner {
+  transform: rotateY(0deg);
+}
+
+.island-coin--revealed.island-coin--lands-tails .island-coin__inner {
+  transform: rotateY(180deg);
+}
+
+@keyframes island-coin-settle {
+  0% { transform: scale(1.12); }
+  60% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* ── Reward hero (zoomed-in win presentation) ────────────────────────────────── */
+.island-coin-reward {
+  margin: 0.4rem 0 0.2rem;
+  animation: island-coin-reward-in 0.4s ease-out both;
+}
+
+@keyframes island-coin-reward-in {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.island-coin-reward__eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
   font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(243, 248, 255, 0.78);
 }
 
-.island-traffic-light__result p {
-  margin: 0.1rem 0;
+.island-coin-reward__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.island-coin-reward__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #f8fbff;
+  background: rgba(12, 74, 110, 0.78);
+  border: 1px solid rgba(125, 216, 255, 0.5);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  animation: island-coin-chip-pop 0.45s cubic-bezier(0.2, 1.2, 0.3, 1) both;
+}
+
+.island-coin-reward__chip b {
+  font-size: 1.2rem;
+  font-weight: 950;
+}
+
+.island-coin-reward__chip--rare {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.85), rgba(99, 102, 241, 0.85));
+  border-color: rgba(233, 213, 255, 0.8);
+  box-shadow: 0 0 18px rgba(168, 85, 247, 0.6), 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes island-coin-chip-pop {
+  0% { opacity: 0; transform: scale(0.4); }
+  70% { transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-coin--ready,
+  .island-coin--flipping .island-coin__inner,
+  .island-coin--flipping.island-coin--lands-tails .island-coin__inner,
+  .island-coin--revealed,
+  .island-coin-stage__sparkles,
+  .island-coin-reward,
+  .island-coin-reward__chip {
+    animation: none;
+  }
+
+  .island-coin--lands-tails .island-coin__inner {
+    transform: rotateY(180deg);
+  }
 }
 
 /* Welcome Pack modal canonical class names (matches WelcomePackModal.tsx). */

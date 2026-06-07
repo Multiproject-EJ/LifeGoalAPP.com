@@ -61,7 +61,10 @@ export type IslandRunSoundEvent =
   | 'sticker_complete'
   // Multiplier button events
   | 'multiplier_cycle'
-  | 'multiplier_max';
+  | 'multiplier_max'
+  // Traffic light coin flip events
+  | 'coin_flip'
+  | 'coin_reveal';
 
 export type IslandRunHapticEvent =
   | 'roll'
@@ -83,7 +86,9 @@ export type IslandRunHapticEvent =
   | 'utility_stop_complete'
   // Reward bar haptics
   | 'reward_bar_cascade'
-  | 'sticker_complete';
+  | 'sticker_complete'
+  // Traffic light coin flip haptic
+  | 'coin_reveal';
 
 export type IslandRunSoundPlaybackStatus =
   | 'idle'
@@ -222,6 +227,8 @@ const HAPTIC_PATTERNS: Record<IslandRunHapticEvent, number | number[]> = {
   // Reward bar
   reward_bar_cascade: [15, 20, 15, 20, 15, 20, 15],
   sticker_complete: [30, 40, 30, 40, 30, 40, 30],
+  // Traffic light coin reveal: a celebratory triple buzz on landing.
+  coin_reveal: [25, 35, 25, 45, 30],
 };
 
 // ─── Sound event map ─────────────────────────────────────────────────────────
@@ -274,6 +281,10 @@ const SOUND_ASSET_MAP: Record<IslandRunSoundEvent, IslandRunSoundAssetPath> = {
   minigame_open: '/assets/audio/sfx/sfx_shop_open.mp3',
   minigame_complete: '/assets/audio/sfx/sfx_reward_bar_claim_burst.mp3',
   sticker_complete: '/assets/audio/sfx/sfx_reward_bar_claim_burst.mp3',
+  // Coin flip reuses the dice-roll whoosh while spinning, then the reward burst on reveal,
+  // until bespoke coin-flip/coin-ting assets exist.
+  coin_flip: '/assets/audio/sfx/sfx_dice_roll.mp3',
+  coin_reveal: '/assets/audio/sfx/sfx_reward_bar_claim_burst.mp3',
 };
 
 export function getIslandRunSoundAssetPath(eventId: IslandRunSoundEvent): IslandRunSoundAssetPath {

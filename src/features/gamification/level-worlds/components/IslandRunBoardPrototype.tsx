@@ -452,6 +452,9 @@ const ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_WEIGHT_PERCENT = 70;
 const DEV_LUCKY_ROLL_TEST_ROLL = 3;
 const BUILD_HOLD_INITIAL_DELAY_MS = 400;
 const FIRST_CREATURE_PACK_REVEAL_DELAY_MS = 650;
+// Duration of the traffic-light coin spin before the reward is revealed. Must match
+// the `.island-coin--flipping` keyframe duration in LevelWorlds.css.
+const TRAFFIC_LIGHT_COIN_FLIP_DURATION_MS = 1300;
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_VISIBLE_MS = 5_000;
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT = 'Reward bar can award Space Excavator tickets';
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT_DEV = 'Reward bar can award Space Excavator tickets (DEV override tickets)';
@@ -1635,7 +1638,7 @@ export function IslandRunBoardPrototype({
     return counts;
   }, [dormantDoorSelectedFigures]);
   const dormantDoorBestMatchCount = Math.max(dormantDoorPrizeCounts.small, dormantDoorPrizeCounts.medium, dormantDoorPrizeCounts.large);
-  const [trafficLightCoinFlip, setTrafficLightCoinFlip] = useState<{ seed: number; reward: TrafficLightCoinFlipReward | null } | null>(null);
+  const [trafficLightCoinFlip, setTrafficLightCoinFlip] = useState<{ seed: number; reward: TrafficLightCoinFlipReward | null; phase: 'ready' | 'flipping' | 'revealed' } | null>(null);
   const [islandNumber, setIslandNumber] = useState(1);
   // PR7: brief "level-up flash" class driver. Flips true when `islandNumber`
   // advances to a higher value (ignoring cycle wrap 120→1) and auto-resets
@@ -4328,13 +4331,29 @@ export function IslandRunBoardPrototype({
   const handleFlipTrafficLightCoin = useCallback(() => {
     setTrafficLightCoinFlip((current) => {
       if (!current || current.reward) return current;
-      return {
-        ...current,
-        reward: resolveTrafficLightCoinFlipReward({
-          seed: current.seed,
-          stickerFragments: runtimeStateRef.current.stickerProgress.fragments,
-        }),
-      };
+      const reward = resolveTrafficLightCoinFlipReward({
+        seed: current.seed,
+        stickerFragments: runtimeStateRef.current.stickerProgress.fragments,
+      });
+
+      playIslandRunSound('coin_flip');
+      triggerIslandRunHaptic('roll');
+
+      const prefersReducedMotion = typeof window !== 'undefined'
+        && typeof window.matchMedia === 'function'
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const revealDelayMs = prefersReducedMotion ? 0 : TRAFFIC_LIGHT_COIN_FLIP_DURATION_MS;
+      window.setTimeout(() => {
+        setTrafficLightCoinFlip((spinning) => {
+          if (!spinning || spinning.phase !== 'flipping') return spinning;
+          playIslandRunSound('coin_reveal');
+          triggerIslandRunHaptic('coin_reveal');
+          return { ...spinning, phase: 'revealed' };
+        });
+      }, revealDelayMs);
+
+      return { ...current, reward, phase: 'flipping' };
     });
   }, []);
 
@@ -4893,6 +4912,16 @@ export function IslandRunBoardPrototype({
     runtimeState.stopBuildStateByIndex,
     runtimeState.stopStatesByIndex,
   ]);
+
+  // Footer 🔨 Build attention dot: lights up when at least one not-fully-built
+  // landmark has a next build step the player can pay for right now with their
+  // current essence wallet. Mirrors the orbit "affordable" cue so the player
+  // knows to open Build without having to peek inside the modal first.
+  const hasAffordableBuildStep = useMemo(
+    () => buildModalV2Cards.some((card) => !card.isFullyBuilt && card.canAfford),
+    [buildModalV2Cards],
+  );
+
   const showIslandClearCelebrationFromAnywhere = useCallback((source: string) => {
     if (islandClearCelebrationShownForVisitRef.current === islandClearVisitKey) return;
     islandClearCelebrationShownForVisitRef.current = islandClearVisitKey;
@@ -5705,8 +5734,9 @@ export function IslandRunBoardPrototype({
             setTrafficLightCoinFlip({
               seed: (effectiveIslandNumber * 1009) + (rollIndexRef.current * 131) + currentIndex,
               reward: null,
+              phase: 'ready',
             });
-            setLandingText('🚦 Traffic light complete! Flip the coin to choose Mystery Box 1 or 2.');
+            setLandingText('🚦 Traffic light complete! Flip the coin for a mystery reward.');
           } else {
             setLandingText(`🚦 Traffic light ${trafficResult.chargeAfter}/${TRAFFIC_LIGHT_CHARGE_TARGET} lit.`);
           }
@@ -10600,6 +10630,13 @@ export function IslandRunBoardPrototype({
                   aria-describedby={isBuildTutorialPromptActive ? 'island-run-build-tutorial-prompt' : undefined}
                 >
                   🔨 Build
+                  {hasAffordableBuildStep && !isBuildTutorialPromptActive && (
+                    <span
+                      className="island-run-prototype__footer-build-dot"
+                      role="status"
+                      aria-label="A building can be funded with your essence"
+                    />
+                  )}
                 </button>
                 <button
                   type="button"
@@ -11521,38 +11558,77 @@ export function IslandRunBoardPrototype({
 
       {trafficLightCoinFlip && (
         <div className="island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--traffic-light" role="dialog" aria-modal="true" aria-label="Traffic light bonus coin flip">
+          <section className={`island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--traffic-light island-traffic-light--${trafficLightCoinFlip.phase}`} role="dialog" aria-modal="true" aria-label="Traffic light bonus coin flip">
             <h3 className="island-stop-modal__title">🚦 Traffic Light Bonus</h3>
-            <p className="island-traffic-light__intro">
-              All 8 lights are green. Flip the coin: <strong>Heads</strong> opens Mystery Box 1, <strong>Tails</strong> opens Mystery Box 2.
-            </p>
-            <div className={`island-traffic-light__coin ${trafficLightCoinFlip.reward ? 'island-traffic-light__coin--flipped' : ''}`.trim()} aria-hidden="true">
-              {trafficLightCoinFlip.reward ? (trafficLightCoinFlip.reward.side === 'heads' ? 'H' : 'T') : '?'}
-            </div>
-            {trafficLightCoinFlip.reward ? (
-              <div className="island-traffic-light__result" role="status">
-                <p><strong>{trafficLightCoinFlip.reward.side === 'heads' ? 'Heads' : 'Tails'}!</strong> {trafficLightCoinFlip.reward.label} unlocked.</p>
-                <p>+{trafficLightCoinFlip.reward.dice} 🎲 · +{trafficLightCoinFlip.reward.essence} 🟣{trafficLightCoinFlip.reward.stickerFragments > 0 ? ` · +${trafficLightCoinFlip.reward.stickerFragments} 🧩` : ''}</p>
+
+            {trafficLightCoinFlip.phase !== 'revealed' && (
+              <p className="island-traffic-light__intro">
+                {trafficLightCoinFlip.phase === 'flipping' ? 'Flipping…' : 'Flip the coin for a mystery reward.'}
+              </p>
+            )}
+
+            <div className="island-coin-stage" aria-hidden="true">
+              <span className="island-coin-stage__sparkles" />
+              <div
+                className={[
+                  'island-coin',
+                  `island-coin--${trafficLightCoinFlip.phase}`,
+                  trafficLightCoinFlip.reward ? `island-coin--lands-${trafficLightCoinFlip.reward.side}` : '',
+                ].filter(Boolean).join(' ')}
+              >
+                <div className="island-coin__inner">
+                  <div className="island-coin__face island-coin__face--heads">
+                    <span className="island-coin__emblem">{trafficLightCoinFlip.phase === 'ready' ? '?' : '🎲'}</span>
+                  </div>
+                  <div className="island-coin__face island-coin__face--tails">
+                    <span className="island-coin__emblem">🟣</span>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="island-traffic-light__boxes" aria-label="Traffic light mystery boxes">
-                <span>📦 Box 1: dice focus</span>
-                <span>🎁 Box 2: essence focus</span>
+            </div>
+
+            {trafficLightCoinFlip.phase === 'revealed' && trafficLightCoinFlip.reward && (
+              <div className="island-coin-reward" role="status">
+                <p className="island-coin-reward__eyebrow">
+                  {trafficLightCoinFlip.reward.side === 'heads' ? 'Heads — Box 1' : 'Tails — Box 2'}
+                </p>
+                <div className="island-coin-reward__chips">
+                  <span className="island-coin-reward__chip" style={{ animationDelay: '0ms' }}>
+                    <b>+{trafficLightCoinFlip.reward.dice}</b> 🎲
+                  </span>
+                  <span className="island-coin-reward__chip" style={{ animationDelay: '90ms' }}>
+                    <b>+{trafficLightCoinFlip.reward.essence}</b> 🟣
+                  </span>
+                  {trafficLightCoinFlip.reward.stickerFragments > 0 && (
+                    <span className="island-coin-reward__chip island-coin-reward__chip--rare" style={{ animationDelay: '180ms' }}>
+                      <b>+{trafficLightCoinFlip.reward.stickerFragments}</b> 🧩
+                    </span>
+                  )}
+                </div>
               </div>
             )}
+
             <div className="island-stop-modal__actions">
-              {!trafficLightCoinFlip.reward ? (
+              {trafficLightCoinFlip.phase === 'ready' && (
                 <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleFlipTrafficLightCoin}>
                   Flip Coin
                 </button>
-              ) : (
-                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleClaimTrafficLightReward}>
-                  Claim Bonus
+              )}
+              {trafficLightCoinFlip.phase === 'flipping' && (
+                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" disabled>
+                  Flipping…
                 </button>
               )}
-              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={handleCloseTrafficLightCoinFlip}>
-                Close
-              </button>
+              {trafficLightCoinFlip.phase === 'revealed' && (
+                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleClaimTrafficLightReward}>
+                  Collect
+                </button>
+              )}
+              {trafficLightCoinFlip.phase !== 'flipping' && (
+                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={handleCloseTrafficLightCoinFlip}>
+                  Close
+                </button>
+              )}
             </div>
           </section>
         </div>
