@@ -92,7 +92,7 @@ function validateConfig(config) {
   if (config.width != null && (!Number.isInteger(config.width) || config.width <= 0)) errors.push('canvas.width must be a positive integer when provided.');
   if (config.height != null && (!Number.isInteger(config.height) || config.height <= 0)) errors.push('canvas.height must be a positive integer when provided.');
   if (!Number.isFinite(config.alphaThreshold) || config.alphaThreshold < 1 || config.alphaThreshold > 255) errors.push('alphaThreshold must be between 1 and 255.');
-  if (config.coverageElementId && config.coverageElementId.startsWith('piece_')) errors.push('coverageElementId must be a separate silhouette element id, not an id beginning with piece_.');
+  if (config.coverageElementId && config.coverageElementId.startsWith('piece_')) errors.push('coverageElementId must be a separate silhouette element id, not an id that begins with piece_.');
   if (config.outputMasksDir) {
     try {
       assertInsideAllowedOutput(config.outputMasksDir);

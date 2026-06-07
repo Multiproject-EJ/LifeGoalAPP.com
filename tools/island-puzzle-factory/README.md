@@ -108,7 +108,7 @@ Export production masks from it with:
 node tools/island-puzzle-factory/src/svg-to-masks.mjs --config tools/island-puzzle-factory/config/svg-mask-export.production.json
 ```
 
-The production template uses a 900x900 full-canvas, pixel-locked 3x3 jigsaw layout with a soft rounded `puzzle_silhouette` coverage element so the exported masks can pass exact single-coverage QC for the approved puzzle silhouette. Use the approved ImageGen-created master artwork at the same 900x900 canvas size, with transparency outside the approved rounded silhouette, then point a `PRODUCTION_EXACT_JIGSAW` factory config at the exported masks directory.
+The production template uses a 900x900 full-canvas, pixel-locked 3x3 jigsaw layout with a soft rounded `puzzle_silhouette` coverage element. The exported masks must pass exact single-coverage QC for that approved puzzle silhouette. Use approved ImageGen-created master artwork at the same 900x900 canvas size, with transparency outside the approved rounded silhouette, then point a `PRODUCTION_EXACT_JIGSAW` factory config at the exported masks directory.
 
 Export masks from an approved SVG template with:
 
