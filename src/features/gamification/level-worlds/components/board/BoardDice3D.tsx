@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { type CSSProperties, useEffect, useRef, useState } from 'react';
 
 // ─── 3D Dice – CSS-transform based cubes ──────────────────────────────────────
 // Renders two 3D dice that tumble and settle to their final face values.
@@ -14,6 +14,8 @@ export interface BoardDice3DProps {
   /** Screen-space position to render the dice at (centered) */
   x?: number;
   y?: number;
+  /** Optional explicit positioning style from the board stage */
+  style?: CSSProperties;
   /** Called when the roll animation finishes */
   onRollComplete?: () => void;
 }
@@ -129,7 +131,7 @@ function Die({ value, isRolling, delay }: { value: number; isRolling: boolean; d
   );
 }
 
-export function BoardDice3D({ value1, value2, isRolling, x, y, onRollComplete }: BoardDice3DProps) {
+export function BoardDice3D({ value1, value2, isRolling, x, y, style, onRollComplete }: BoardDice3DProps) {
   const hasCalledCompleteRef = useRef(false);
   // Keep a stable ref to the latest callback so the timer effect only depends on
   // `isRolling`. Without this, any parent re-render (e.g. the 1-second clock tick)
@@ -157,7 +159,7 @@ export function BoardDice3D({ value1, value2, isRolling, x, y, onRollComplete }:
     return () => clearTimeout(timer);
   }, [isRolling]);
 
-  const posStyle: React.CSSProperties = {};
+  const posStyle: CSSProperties = { ...style };
   if (typeof x === 'number' && typeof y === 'number') {
     posStyle.left = x;
     posStyle.top = y;
