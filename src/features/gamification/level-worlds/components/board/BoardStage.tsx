@@ -31,6 +31,14 @@ const DICE_SCREEN_MARGIN_Y = 64;
 const DICE_TOKEN_OFFSET_X = 44;
 const DICE_TOKEN_OFFSET_Y = -72;
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+const getScreenClampRange = (size: number, margin: number) => {
+  if (size <= margin * 2) {
+    const center = size / 2;
+    return { min: center, max: center };
+  }
+
+  return { min: margin, max: size - margin };
+};
 
 // ─── BoardStage: the visual orchestrator ─────────────────────────────────────
 // Composes camera, gestures, tiles, token, path, particles into the board scene.
@@ -479,14 +487,12 @@ export function BoardStage(props: BoardStageProps) {
     const inwardOffsetX = tokenScreenX > boardSize.width / 2 ? -DICE_TOKEN_OFFSET_X : DICE_TOKEN_OFFSET_X;
     const preferredX = tokenScreenX + inwardOffsetX;
     const preferredY = tokenScreenY + DICE_TOKEN_OFFSET_Y;
-    const minX = Math.min(DICE_SCREEN_MARGIN_X, boardSize.width / 2);
-    const maxX = Math.max(minX, boardSize.width - DICE_SCREEN_MARGIN_X);
-    const minY = Math.min(DICE_SCREEN_MARGIN_Y, boardSize.height / 2);
-    const maxY = Math.max(minY, boardSize.height - DICE_SCREEN_MARGIN_Y);
+    const xRange = getScreenClampRange(boardSize.width, DICE_SCREEN_MARGIN_X);
+    const yRange = getScreenClampRange(boardSize.height, DICE_SCREEN_MARGIN_Y);
 
     return {
-      x: clamp(preferredX, minX, maxX),
-      y: clamp(preferredY, minY, maxY),
+      x: clamp(preferredX, xRange.min, xRange.max),
+      y: clamp(preferredY, yRange.min, yRange.max),
     };
   }, [
     boardSize.height,
