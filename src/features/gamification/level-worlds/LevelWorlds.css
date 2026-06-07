@@ -4636,6 +4636,106 @@
   color: #e0c8ff;
 }
 
+.island-run-prototype__stat-chip--wallet {
+  appearance: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.island-run-prototype__stat-chip--wallet:hover:not(:disabled),
+.island-run-prototype__stat-chip--wallet:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.16), 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.island-stop-modal--wallet-store {
+  width: min(620px, 100%);
+}
+
+.island-run-wallet-store-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0.85rem 0 1rem;
+}
+
+.island-run-wallet-store-card {
+  display: flex;
+  min-height: 148px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.32rem;
+  padding: 0.72rem;
+  border-radius: 16px;
+  border: 1px solid rgba(163, 231, 255, 0.24);
+  background: linear-gradient(180deg, rgba(21, 44, 68, 0.72), rgba(10, 24, 39, 0.8));
+  color: #edfaff;
+  text-align: left;
+  font: inherit;
+}
+
+.island-run-wallet-store-card--affordable {
+  border-color: rgba(116, 255, 196, 0.64);
+  box-shadow: inset 0 0 0 1px rgba(116, 255, 196, 0.16), 0 12px 28px rgba(29, 184, 117, 0.18);
+  cursor: pointer;
+}
+
+.island-run-wallet-store-card--affordable:hover,
+.island-run-wallet-store-card--affordable:focus-visible {
+  transform: translateY(-2px);
+  outline: 2px solid rgba(116, 255, 196, 0.72);
+  outline-offset: 2px;
+}
+
+.island-run-wallet-store-card--locked,
+.island-run-wallet-store-card--empty {
+  opacity: 0.68;
+}
+
+.island-run-wallet-store-card--empty {
+  justify-content: center;
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.island-run-wallet-store-card__icon {
+  font-size: 1.45rem;
+}
+
+.island-run-wallet-store-card__cost,
+.island-run-wallet-store-card__reward,
+.island-run-wallet-store-card__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  border-radius: 999px;
+  padding: 0.18rem 0.5rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.island-run-wallet-store-card__cost {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.island-run-wallet-store-card__reward {
+  color: #d9ffef;
+  background: rgba(61, 203, 137, 0.16);
+}
+
+.island-run-wallet-store-card__status {
+  margin-top: auto;
+  color: #fff4b8;
+  background: rgba(255, 210, 92, 0.14);
+}
+
+@media (max-width: 560px) {
+  .island-run-wallet-store-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 
 /* M2: Roll result chip */
 .island-run-prototype__stat-chip--roll {
