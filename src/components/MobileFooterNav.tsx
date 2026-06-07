@@ -595,7 +595,7 @@ export function MobileFooterNav({
                       type="button"
                       className="mobile-footer-nav__energy-button"
                       onClick={() => {
-                        playFooterClickSound('standard');
+                        playFooterClickSound('shield');
                         revealControllerUI();
                         onEnergySelect?.('mind');
                       }}
@@ -608,7 +608,7 @@ export function MobileFooterNav({
                       type="button"
                       className="mobile-footer-nav__energy-button"
                       onClick={() => {
-                        playFooterClickSound('standard');
+                        playFooterClickSound('shield');
                         revealControllerUI();
                         onEnergySelect?.('body');
                       }}
