@@ -7767,8 +7767,6 @@ export function IslandRunBoardPrototype({
   // Tap-to-build for the v2 tray.  Hold-to-build is intentionally omitted in
   // v2 to avoid gesture conflicts with the horizontal scroll tray.
   const processBuildTapQueue = useCallback(async (): Promise<void> => {
-    if (isBuildTapQueueProcessingRef.current) return;
-    isBuildTapQueueProcessingRef.current = true;
     try {
       while (buildTapQueueRef.current.length > 0) {
         const nextTap = buildTapQueueRef.current.shift();
@@ -7786,6 +7784,7 @@ export function IslandRunBoardPrototype({
       requestedAtMs: Date.now(),
     });
     if (!isBuildTapQueueProcessingRef.current) {
+      isBuildTapQueueProcessingRef.current = true;
       void processBuildTapQueue();
     }
   }, [processBuildTapQueue]);

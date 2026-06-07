@@ -7703,7 +7703,6 @@
   user-select: none;
   transition: border-color 0.12s, transform 0.05s, background 0.12s;
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
   text-align: center;
   min-width: 0;
 }
