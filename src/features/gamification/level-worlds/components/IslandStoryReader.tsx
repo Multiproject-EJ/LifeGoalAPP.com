@@ -16,7 +16,8 @@ export type StoryPanel =
   | {
       id?: string;
       type: 'video';
-      src: string;
+      src?: string;
+      sources?: StoryVideoSource[];
       poster?: string;
       mutedAutoplay?: boolean;
       loop?: boolean;
@@ -37,10 +38,16 @@ export interface StorySoundtrackConfig {
   volume?: number;
 }
 
+export interface StoryVideoSource {
+  src: string;
+  type?: string;
+}
+
 export interface StoryEpisodeManifest {
   id: string;
   title: string;
   autoLaunch?: boolean;
+  mediaKind?: 'story' | 'movie';
   panels: StoryPanel[];
   reward?: {
     coins?: number;
@@ -260,6 +267,8 @@ export function IslandStoryReader({ manifestPath, isOpen, onClose, onRewardClaim
 
   const progressLabel = useMemo(() => {
     if (!manifest || manifest.panels.length === 0) return '0%';
+    const videoPanels = manifest.panels.filter((panel) => panel.type === 'video').length;
+    if (manifest.mediaKind === 'movie' && videoPanels === 1) return 'Movie';
     return `${manifest.panels.length} panels`;
   }, [manifest]);
 
@@ -268,16 +277,17 @@ export function IslandStoryReader({ manifestPath, isOpen, onClose, onRewardClaim
   }
 
   const rewardCoins = manifest?.reward?.coins ?? 0;
+  const mediaLabel = manifest?.mediaKind === 'movie' ? 'Movie' : 'Story';
 
   return (
     <div className="island-story-reader__backdrop" role="presentation">
-      <section className="island-story-reader" role="dialog" aria-modal="true" aria-label="Island story reader">
+      <section className="island-story-reader" role="dialog" aria-modal="true" aria-label={`Island ${mediaLabel.toLowerCase()} reader`}>
         <header className="island-story-reader__header">
-          <button type="button" className="island-story-reader__icon-btn" onClick={onClose} aria-label="Close story reader">
+          <button type="button" className="island-story-reader__icon-btn" onClick={onClose} aria-label={`Close ${mediaLabel.toLowerCase()} reader`}>
             ←
           </button>
           <div className="island-story-reader__meta">
-            <p className="island-story-reader__eyebrow">Story</p>
+            <p className="island-story-reader__eyebrow">{mediaLabel}</p>
             <h3 className="island-story-reader__title">{manifest?.title ?? 'Loading story...'}</h3>
           </div>
           <div className="island-story-reader__header-right">
@@ -286,7 +296,7 @@ export function IslandStoryReader({ manifestPath, isOpen, onClose, onRewardClaim
               type="button"
               className="island-story-reader__icon-btn"
               onClick={() => setAudioEnabled((value) => !value)}
-              aria-label={audioEnabled ? 'Mute story audio' : 'Enable story audio'}
+              aria-label={audioEnabled ? `Mute ${mediaLabel.toLowerCase()} audio` : `Enable ${mediaLabel.toLowerCase()} audio`}
               aria-pressed={audioEnabled}
             >
               {audioEnabled ? '🔊' : '🔇'}
@@ -313,20 +323,28 @@ export function IslandStoryReader({ manifestPath, isOpen, onClose, onRewardClaim
             }
 
             if (panel.type === 'video') {
+              const videoSources = panel.sources?.length
+                ? panel.sources
+                : panel.src
+                  ? [{ src: panel.src }]
+                  : [];
               return (
                 <article key={key} className="island-story-reader__panel" data-story-panel-index={index}>
                   <div className="island-story-reader__media-shell island-story-reader__media-shell--video">
                     <video
                       data-story-video="true"
                       data-autoplay={panel.mutedAutoplay ? 'true' : 'false'}
-                      src={panel.src}
                       poster={panel.poster}
                       controls
                       playsInline
                       preload="metadata"
                       muted={!audioEnabled}
                       loop={panel.loop}
-                    />
+                    >
+                      {videoSources.map((source) => (
+                        <source key={source.src} src={source.src} type={source.type} />
+                      ))}
+                    </video>
                   </div>
                   {panel.caption ? <p className="island-story-reader__caption">{panel.caption}</p> : null}
                 </article>

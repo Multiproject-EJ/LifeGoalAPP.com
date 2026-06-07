@@ -1,7 +1,8 @@
 {
   "id": "episode-001",
-  "title": "Prologue — Arrival",
+  "title": "Prologue Movie — Arrival",
   "autoLaunch": true,
+  "mediaKind": "movie",
   "soundtrack": {
     "src": "/storyline/episode-001/bgm.mp3",
     "loop": true,
@@ -11,8 +12,8 @@
     {
       "id": "intro-text",
       "type": "text",
-      "text": "Welcome to Island Run. Upload your prologue images/videos in public/storyline/episode-001 and update this manifest to control reading order.",
-      "caption": "This is a placeholder panel so the reader is usable immediately.",
+      "text": "Welcome to Island Run. Add your prologue movie file to public/storyline/episode-001 as an MP4, MOV, or AVI, then update this manifest with a video panel.",
+      "caption": "This placeholder keeps the movie player usable until the real file is uploaded.",
       "soundtrack": {
         "src": "/storyline/episode-001/scene-1.mp3",
         "loop": true,

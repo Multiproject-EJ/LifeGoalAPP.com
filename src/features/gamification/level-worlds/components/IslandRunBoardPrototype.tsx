@@ -9725,10 +9725,10 @@ export function IslandRunBoardPrototype({
           <button
             type="button"
             className="island-run-prototype__shop-btn"
-            aria-label="Open story reader"
+            aria-label="Open island movie"
             onClick={() => setShowStoryReader(true)}
           >
-            📖 Story
+            🎬 Movie
           </button>
           </div>
           {isDevModeEnabled && (
@@ -10559,7 +10559,7 @@ export function IslandRunBoardPrototype({
                   onClick={() => setShowStoryReader(true)}
                   disabled={isBuildTutorialGameplayBlocked}
                 >
-                  📖 Story
+                  🎬 Movie
                 </button>
                 <button
                   type="button"
