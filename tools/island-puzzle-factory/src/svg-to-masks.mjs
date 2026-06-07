@@ -67,6 +67,9 @@ function normalizeConfig(rawConfig) {
   const inputSvg = resolveFromRepo(rawConfig.inputSvg);
   const outputMasksDir = resolveFromRepo(rawConfig.outputMasksDir);
   const expectedPieces = Number(rawConfig.expectedPieces ?? 9);
+  const coverageElementId = typeof rawConfig.coverageElementId === 'string'
+    ? rawConfig.coverageElementId.trim()
+    : '';
   return {
     inputSvg,
     outputMasksDir,
@@ -75,6 +78,7 @@ function normalizeConfig(rawConfig) {
     expectedPieces,
     puzzleId: String(rawConfig.puzzleId ?? 'puzzle').trim(),
     templateId: String(rawConfig.templateId ?? 'canonical-svg-template').trim(),
+    coverageElementId: coverageElementId.length > 0 ? coverageElementId : null,
     clearOutputMasksDir: rawConfig.clearOutputMasksDir !== false,
     alphaThreshold: Number(rawConfig.alphaThreshold ?? 128),
   };
@@ -88,6 +92,7 @@ function validateConfig(config) {
   if (config.width != null && (!Number.isInteger(config.width) || config.width <= 0)) errors.push('canvas.width must be a positive integer when provided.');
   if (config.height != null && (!Number.isInteger(config.height) || config.height <= 0)) errors.push('canvas.height must be a positive integer when provided.');
   if (!Number.isFinite(config.alphaThreshold) || config.alphaThreshold < 1 || config.alphaThreshold > 255) errors.push('alphaThreshold must be between 1 and 255.');
+  if (config.coverageElementId && config.coverageElementId.startsWith('piece_')) errors.push('coverageElementId must be a separate silhouette element id, not an id that begins with piece_.');
   if (config.outputMasksDir) {
     try {
       assertInsideAllowedOutput(config.outputMasksDir);
@@ -277,6 +282,29 @@ export async function exportSvgToMasks(config) {
     outputs.push({ pieceId, path: mask.path, visiblePixels });
   }
 
+  let expectedCoverage = null;
+  if (config.coverageElementId) {
+    const coverageSvg = makeIsolatedMaskSvg({
+      sourceSvg,
+      svgTag,
+      viewBox,
+      width,
+      height,
+      pieceId: config.coverageElementId,
+    });
+    const renderedCoverage = await sharp(Buffer.from(coverageSvg), { density: 72 }).png().toBuffer();
+    const { output, visiblePixels } = await binarizeMask(renderedCoverage, width, height, config.alphaThreshold);
+    const alpha = new Uint8Array(width * height);
+    for (let outputOffset = 3, pixel = 0; outputOffset < output.length; outputOffset += 4, pixel += 1) {
+      alpha[pixel] = output[outputOffset];
+    }
+    expectedCoverage = {
+      id: config.coverageElementId,
+      alpha,
+      visiblePixels,
+    };
+  }
+
   const qcSummary = await runMaskExportQc({
     masksDir: config.outputMasksDir,
     width,
@@ -284,6 +312,7 @@ export async function exportSvgToMasks(config) {
     expectedPieces: config.expectedPieces,
     rows: 3,
     columns: 3,
+    expectedCoverage,
   });
   const reportPath = path.join(config.outputMasksDir, 'mask_export_report.md');
   await writeMaskExportReport({

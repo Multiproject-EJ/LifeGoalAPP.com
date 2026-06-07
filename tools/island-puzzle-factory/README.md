@@ -86,7 +86,8 @@ A valid v1 canonical SVG template must:
   - `piece_07_bottom_left`
   - `piece_08_bottom_center`
   - `piece_09_bottom_right`
-- Partition the full canvas exactly once, with no overlapping piece pixels and no uncovered pixels.
+- Partition the approved puzzle area exactly once, with no overlapping piece pixels and no uncovered pixels.
+- For non-rectangular production boards, include a named coverage silhouette so mask export QC can prove the nine pieces partition that approved silhouette exactly once.
 - Avoid transforms on unnamed ancestor layers; put final geometry on the identified piece element/layer so export does not depend on editor-only structure.
 
 The committed example template is smoke-test geometry only:
@@ -107,7 +108,7 @@ Export production masks from it with:
 node tools/island-puzzle-factory/src/svg-to-masks.mjs --config tools/island-puzzle-factory/config/svg-mask-export.production.json
 ```
 
-The production template uses a 900x900 full-canvas, pixel-aligned 3x3 jigsaw layout so the exported masks can pass exact single-coverage QC for `PRODUCTION_EXACT_JIGSAW`. Use the approved ImageGen-created master artwork at the same 900x900 canvas size, then point a `PRODUCTION_EXACT_JIGSAW` factory config at the exported masks directory.
+The production template uses a 900x900 full-canvas, pixel-locked 3x3 jigsaw layout with a soft rounded `puzzle_silhouette` coverage element. The exported masks must pass exact single-coverage QC for that approved puzzle silhouette. Use approved ImageGen-created master artwork at the same 900x900 canvas size, with transparency outside the approved rounded silhouette, then point a `PRODUCTION_EXACT_JIGSAW` factory config at the exported masks directory.
 
 Export masks from an approved SVG template with:
 
@@ -122,6 +123,7 @@ The export config supports:
 - `canvas.width` and `canvas.height`: optional explicit canvas dimensions; when provided, they must match the SVG `viewBox` width and height so pieces are never silently resized.
 - `expectedPieces`: must be `9` for v1.
 - `puzzleId` and `templateId`: report identifiers for review and traceability.
+- `coverageElementId`: optional named silhouette element for non-rectangular templates; production uses `puzzle_silhouette`.
 
 The exporter writes exactly these mask files and a `mask_export_report.md` into `outputMasksDir`. It binarizes rendered masks so white/opaque pixels are visible piece area and transparent pixels are hidden area, then runs mask QC to confirm shared canvas size, binary alpha, no overlaps, and full-canvas coverage.
 
