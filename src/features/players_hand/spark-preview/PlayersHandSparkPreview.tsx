@@ -264,7 +264,13 @@ export function PlayersHandSparkPreview({
                     key={card.id}
                     type="button"
                     className={`players-hand-spark-preview__card${selected ? ' is-selected' : ''}`}
-                    aria-label={`Focus ${card.title}`}
+                    aria-label={
+                      selected
+                        ? isFocusedCardFlipped
+                          ? `Show front of ${card.title}`
+                          : `Show details for ${card.title}`
+                        : `Focus ${card.title}`
+                    }
                     style={{
                       '--card-color': card.color,
                       zIndex: cards.length - Math.abs(relative),
