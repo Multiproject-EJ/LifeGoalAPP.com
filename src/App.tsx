@@ -5015,6 +5015,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       overlayVariant="fullscreen"
       onOverlayClose={() => {
         setIsLauncherHandOverlayOpen(false);
+        setIsMobileMenuOpen(true);
         handleMobileFooterExpand(true);
       }}
       onOpenProfile={() => {
