@@ -10,6 +10,7 @@ export type FeatureAvailabilityId =
   | 'today.visionStar'
   | 'today.waterZenTree'
   | 'today.feedCreatures'
+  | 'today.weeklyVictory'
   | 'actions.taskTower'
   | 'actions.visionBoard'
   | 'energy.shell'
@@ -156,6 +157,23 @@ export const featureAvailabilityRegistry = {
     adminLabel: ADMIN_DEMO_MODE_LABEL,
     shortPitch: 'Care for your companions with a simple daily action.',
     votingEnabled: true,
+    voteCategory: 'today',
+  },
+  'today.weeklyVictory': {
+    id: 'today.weeklyVictory',
+    label: 'Weekly Victory',
+    description: 'Weekly habit snapshot scorecard shown on the Today screen.',
+    status: 'demo',
+    // Hidden for the public: this is an admin-only demo feature, so regular
+    // users can't toggle it on from the Experiments modal.
+    publicAccess: 'hidden',
+    adminAccess: 'open',
+    surface: 'Today',
+    category: 'today',
+    publicLabel: DEMO_FEATURE_LABEL,
+    adminLabel: ADMIN_DEMO_MODE_LABEL,
+    shortPitch: 'A simple weekly scorecard that celebrates your momentum and consistency.',
+    votingEnabled: false,
     voteCategory: 'today',
   },
   'actions.taskTower': {

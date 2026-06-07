@@ -893,6 +893,8 @@ export function DailyHabitTracker({
   const isVisionStarPreviewOnly = resolveFeatureAccess('today.visionStar', { isAdminOrCreator }) !== 'open';
   const isWaterZenTreePreviewOnly = resolveFeatureAccess('today.waterZenTree', { isAdminOrCreator }) !== 'open';
   const isFeedCreaturesPreviewOnly = resolveFeatureAccess('today.feedCreatures', { isAdminOrCreator }) !== 'open';
+  // Weekly Victory is an admin-only demo feature — only admins can see the snapshot.
+  const canViewWeeklyVictory = resolveFeatureAccess('today.weeklyVictory', { isAdminOrCreator }) === 'open';
   const [routinesTodaySummary, setRoutinesTodaySummary] = useState<RoutinesTodayLaneSummary>({
     status: 'loading',
     dueCount: 0,
@@ -2039,7 +2041,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   }, [session.user.id, timeLimitedOffer]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !canViewWeeklyVictory) return;
     const launchKey = weeklyHabitReviewLaunchKey(session.user.id);
     if (loadDraft<boolean>(launchKey)) {
       removeDraft(launchKey);
@@ -2049,10 +2051,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     const launchHandler = () => setIsWeeklyHabitReviewOpen(true);
     window.addEventListener('lifegoal:launch-weekly-habit-review', launchHandler);
     return () => window.removeEventListener('lifegoal:launch-weekly-habit-review', launchHandler);
-  }, [session.user.id]);
+  }, [session.user.id, canViewWeeklyVictory]);
 
   useEffect(() => {
-    if (!isViewingToday || typeof window === 'undefined') {
+    if (!isViewingToday || typeof window === 'undefined' || !canViewWeeklyVictory) {
       return;
     }
 
@@ -2073,7 +2075,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
     saveDraft(reviewShownKey, true);
     setIsWeeklyHabitReviewOpen(true);
-  }, [activeDate, habits.length, isViewingToday, session.user.id, stageMixSnapshot.totalLogged]);
+  }, [activeDate, canViewWeeklyVictory, habits.length, isViewingToday, session.user.id, stageMixSnapshot.totalLogged]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !session?.user?.id) {
@@ -3649,55 +3651,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     </div>
   ) : null;
 
-  const eggHatchMovieModal = isEggHatchMovieOpen ? (
-    <div
-      className="habit-day-nav__vision-modal-backdrop"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Egg hatching"
-      onClick={() => setIsEggHatchMovieOpen(false)}
-    >
-      <div
-        className="habit-day-nav__vision-modal habit-day-nav__egg-hatch-movie-modal"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <button
-          type="button"
-          className="habit-day-nav__vision-modal-close"
-          onClick={() => setIsEggHatchMovieOpen(false)}
-          aria-label="Close egg hatch movie"
-        >
-          ×
-        </button>
-        <div className="habit-day-nav__todays-offer-body">
-          <video
-            className="habit-day-nav__egg-hatch-movie-video"
-            src="/assets/movies/egg-hatch-intro-v1.mp4"
-            autoPlay
-            muted
-            playsInline
-            preload="auto"
-            onEnded={(event) => { event.currentTarget.pause(); }}
-            aria-label="Egg hatching animation"
-          />
-          <p className="habit-day-nav__todays-offer-title">Your egg is ready to hatch!</p>
-          <p className="habit-day-nav__todays-offer-subtitle">Open the Hatchery to collect your creature or sell it for rewards.</p>
-          <button
-            type="button"
-            className="habit-day-nav__todays-offer-buy"
-            onClick={() => {
-              setIsEggHatchMovieOpen(false);
-              onOpenIslandRunStop?.('hatchery');
-            }}
-          >
-            Open Hatchery →
-          </button>
-        </div>
-      </div>
-    </div>
-  ) : null;
-
-  const weeklyHabitReviewModal = isWeeklyHabitReviewOpen ? (
+  const weeklyHabitReviewModal = isWeeklyHabitReviewOpen && canViewWeeklyVictory ? (
     <div
       className="habit-day-nav__vision-modal-backdrop"
       role="dialog"
