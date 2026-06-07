@@ -3584,7 +3584,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
               aria-label="Back to pop-up menu"
             >
               <span aria-hidden="true" className="workspace-settings-menu-return__icon">‹</span>
-              <span>Back to menu</span>
             </button>
           ) : null}
           <MyAccountPanel

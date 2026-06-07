@@ -99,6 +99,7 @@ export function MyAccountPanel({
   const [aiPrivacyFolderOpen, setAiPrivacyFolderOpen] = useState(false);
   const [experimentalFolderOpen, setExperimentalFolderOpen] = useState(false);
   const [gameRewardsFolderOpen, setGameRewardsFolderOpen] = useState(false);
+  const [cacheFolderOpen, setCacheFolderOpen] = useState(false);
   const [savingPreference, setSavingPreference] = useState(false);
   const [cacheClearing, setCacheClearing] = useState(false);
   const [cacheStatus, setCacheStatus] = useState<string | null>(null);
@@ -673,6 +674,11 @@ export function MyAccountPanel({
               featureId="settings.experimentalFeatures"
               onClick={handleExperimentalFeaturesClick}
             />
+            <SettingsFeatureCard
+              icon="🔄"
+              title="Reset Cache"
+              onClick={() => setCacheFolderOpen(true)}
+            />
           </div>
         </div>
       </section>
@@ -946,6 +952,27 @@ export function MyAccountPanel({
             <button type="button" className="btn" onClick={() => triggerCompletionHaptic('light', { channel: 'navigation', minIntervalMs: 0 })}>
               Test vibration
             </button>
+          </div>
+        </section>
+      </SettingsFolderPopup>
+
+      <SettingsFolderPopup isOpen={cacheFolderOpen} onClose={() => setCacheFolderOpen(false)} title="Reset cache">
+        <section className="account-panel__card" aria-labelledby="account-reset-cache">
+          <p className="account-panel__eyebrow">App maintenance</p>
+          <h3 id="account-reset-cache">Reset app cache</h3>
+          <p className="account-panel__hint">
+            If the app feels stuck or showing outdated content, clearing the cache and reloading usually fixes it.
+          </p>
+          <div className="account-panel__actions-row">
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={handleClearAppCache}
+              disabled={cacheClearing}
+            >
+              {cacheClearing ? 'Clearing…' : 'Clear cache & refresh'}
+            </button>
+            {cacheStatus ? <span className="account-panel__saving-indicator">{cacheStatus}</span> : null}
           </div>
         </section>
       </SettingsFolderPopup>
