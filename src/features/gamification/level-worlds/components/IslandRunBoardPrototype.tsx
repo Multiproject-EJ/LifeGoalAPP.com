@@ -752,7 +752,7 @@ type WalletPurchaseOption = {
   onSelect?: () => void;
 };
 
-function resolveDiceBundleWalletDisabledReason(isOwned: boolean, essence: number): string | undefined {
+function resolveDiceBundlePurchaseDisabledReason(isOwned: boolean, essence: number): string | undefined {
   if (isOwned) return 'Owned';
   if (essence < MARKET_DICE_BUNDLE_COST) return `Need ${MARKET_DICE_BUNDLE_COST - essence} more`;
   return undefined;
@@ -9322,6 +9322,7 @@ export function IslandRunBoardPrototype({
     },
   };
 
+  const canBuyDiceBundle = !marketOwnedBundles.dice_bundle && runtimeState.essence >= MARKET_DICE_BUNDLE_COST;
   const essencePurchaseOptions: WalletPurchaseOption[] = [
     {
       id: 'dice_bundle',
@@ -9334,10 +9335,10 @@ export function IslandRunBoardPrototype({
         ? 'Already claimed for this island run.'
         : `Top up with ${MARKET_DICE_BUNDLE_REWARD} dice for rolling.`,
       rewardLabel: marketOwnedBundles.dice_bundle ? 'Owned ✅' : `+${MARKET_DICE_BUNDLE_REWARD} dice`,
-      canAfford: !marketOwnedBundles.dice_bundle && runtimeState.essence >= MARKET_DICE_BUNDLE_COST,
-      disabledReason: resolveDiceBundleWalletDisabledReason(marketOwnedBundles.dice_bundle, runtimeState.essence),
+      canAfford: canBuyDiceBundle,
+      disabledReason: resolveDiceBundlePurchaseDisabledReason(marketOwnedBundles.dice_bundle, runtimeState.essence),
       actionLabel: marketOwnedBundles.dice_bundle ? 'Owned' : 'Buy',
-      onSelect: !marketOwnedBundles.dice_bundle && runtimeState.essence >= MARKET_DICE_BUNDLE_COST
+      onSelect: canBuyDiceBundle
         ? () => {
             setWalletStoreModalKind(null);
             openShopPanel();
@@ -12072,7 +12073,11 @@ export function IslandRunBoardPrototype({
                 </button>
               ))}
               {Array.from({ length: activeWalletEmptySlotCount }, (_, index) => (
-                <article key={`empty-${index}`} className="island-run-wallet-store-card island-run-wallet-store-card--empty">
+                <article
+                  key={`empty-${index}`}
+                  className="island-run-wallet-store-card island-run-wallet-store-card--empty"
+                  aria-label="Empty wallet offer slot"
+                >
                   <span className="island-run-wallet-store-card__icon" aria-hidden="true">＋</span>
                   <strong>More offers soon</strong>
                   <span>Keep progressing to unlock more buys.</span>
