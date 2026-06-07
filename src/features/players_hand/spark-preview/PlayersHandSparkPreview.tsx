@@ -300,7 +300,7 @@ export function PlayersHandSparkPreview({
                         </span>
                         <span className="players-hand-spark-preview__rarity">{card.rarity}</span>
                         {selected ? (
-                          <span className="players-hand-spark-preview__card-prompt">Tap to flip for details</span>
+                          <span className="players-hand-spark-preview__card-prompt">Select to flip for details</span>
                         ) : null}
                       </span>
                       <span className="players-hand-spark-preview__card-face players-hand-spark-preview__card-face--back">
@@ -312,13 +312,18 @@ export function PlayersHandSparkPreview({
                           <span aria-hidden="true">{card.icon}</span> {card.title}
                         </span>
                         <span className="players-hand-spark-preview__description">{card.description}</span>
-                        <span className="players-hand-spark-preview__card-prompt">Tap to show front</span>
+                        <span className="players-hand-spark-preview__card-prompt">Select to show front</span>
                       </span>
                     </span>
                   </button>
                 );
               })}
               <p className="players-hand-spark-overlay__swipe-hint">Swipe or tap cards</p>
+              <span className="sr-only" aria-live="polite">
+                {isFocusedCardFlipped
+                  ? `Showing details for ${cards[activeIndex]?.title ?? 'selected card'}`
+                  : `Showing front of ${cards[activeIndex]?.title ?? 'selected card'}`}
+              </span>
             </div>
             ) : viewMode === 'grid' ? (
               <div className="players-hand-spark-overlay__grid" aria-label="Browse all cards in your hand">
