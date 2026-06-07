@@ -95,6 +95,20 @@ The committed example template is smoke-test geometry only:
 tools/island-puzzle-factory/templates/canonical-3x3-jigsaw-template.example.svg
 ```
 
+The committed production geometry template is:
+
+```text
+tools/island-puzzle-factory/templates/canonical-3x3-jigsaw-template.production.svg
+```
+
+Export production masks from it with:
+
+```sh
+node tools/island-puzzle-factory/src/svg-to-masks.mjs --config tools/island-puzzle-factory/config/svg-mask-export.production.json
+```
+
+The production template uses a 900x900 full-canvas, pixel-aligned 3x3 jigsaw layout so the exported masks can pass exact single-coverage QC for `PRODUCTION_EXACT_JIGSAW`. Use the approved ImageGen-created master artwork at the same 900x900 canvas size, then point a `PRODUCTION_EXACT_JIGSAW` factory config at the exported masks directory.
+
 Export masks from an approved SVG template with:
 
 ```sh
