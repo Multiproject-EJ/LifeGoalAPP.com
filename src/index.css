@@ -19251,12 +19251,18 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay {
+  --mobile-menu-panel-max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.5rem);
   position: fixed;
   inset: 0;
   z-index: 35;
   display: flex;
   justify-content: center;
-  align-items: flex-end;
+  align-items: flex-start;
+  box-sizing: border-box;
+  padding:
+    0.75rem
+    clamp(0.55rem, 3vw, 1rem)
+    calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
   animation: mobileMenuFadeIn 0.32s ease-out;
 }
 
@@ -19273,16 +19279,17 @@ html.platform-ipad .workspace-shell__menu-edge {
   touch-action: none;
   width: min(960px, 100%);
   margin: 0 auto;
+  box-sizing: border-box;
   background:
     radial-gradient(circle at 50% 0%, rgba(219, 234, 254, 0.72), transparent 34%),
     linear-gradient(160deg, rgba(255, 255, 255, 0.96), rgba(240, 249, 255, 0.93) 52%, rgba(248, 250, 252, 0.95));
   border: 1px solid rgba(186, 230, 253, 0.58);
-  border-radius: 20px 20px 0 0;
-  box-shadow: 0 -22px 64px rgba(37, 99, 235, 0.16), 0 -8px 30px rgba(15, 23, 42, 0.16);
+  border-radius: 26px;
+  box-shadow: 0 22px 64px rgba(37, 99, 235, 0.16), 0 8px 30px rgba(15, 23, 42, 0.16);
   padding: 1.05rem clamp(1rem, 5vw, 1.45rem) calc(1rem + env(safe-area-inset-bottom, 0));
   backdrop-filter: blur(16px);
   animation: slideUpSpring 0.62s cubic-bezier(0.18, 1.18, 0.32, 1);
-  max-height: 85vh;
+  max-height: var(--mobile-menu-panel-max-height);
   overflow: visible;
   display: flex;
   flex-direction: column;
@@ -19290,12 +19297,12 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .mobile-menu-overlay__panel--default {
   min-height: min(72dvh, 760px);
-  max-height: 85vh;
+  max-height: var(--mobile-menu-panel-max-height);
 }
 
 .mobile-menu-overlay__panel--tall {
   min-height: min(78dvh, 880px);
-  max-height: 92dvh;
+  max-height: var(--mobile-menu-panel-max-height);
 }
 
 .mobile-menu-overlay__panel--immersive {
@@ -19348,10 +19355,14 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 @media (max-width: 720px) {
+  .mobile-menu-overlay {
+    padding-inline: clamp(0.45rem, 2.6vw, 0.8rem);
+  }
+
   .mobile-menu-overlay__panel {
     width: 100%;
     margin: 0;
-    border-radius: 26px 26px 0 0;
+    border-radius: 28px;
   }
 
   .mobile-menu-overlay__panel::before,
@@ -20166,8 +20177,8 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__close {
-  border: none;
-  background: #e2e8f0;
+  border: 1px solid rgba(37, 99, 235, 0.32);
+  background: rgba(255, 255, 255, 0.94);
   border-radius: 999px;
   width: 2.5rem;
   height: 2.5rem;
@@ -20177,7 +20188,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   justify-content: center;
   cursor: pointer;
   line-height: 1;
-  transition: background 0.2s ease, transform 0.15s ease;
+  color: #2563eb;
+  box-shadow:
+    0 0 0 6px rgba(37, 99, 235, 0.08),
+    0 10px 24px rgba(37, 99, 235, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
 }
 
 :is(
@@ -20186,14 +20202,25 @@ html.platform-ipad .workspace-shell__menu-edge {
   [data-theme='flow-night'],
   [data-theme='bio-night']
 ) .mobile-menu-overlay__close {
-  background: #1e293b;
-  color: #f8fafc;
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(96, 165, 250, 0.45);
+  color: #93c5fd;
+  box-shadow:
+    0 0 0 6px rgba(96, 165, 250, 0.12),
+    0 10px 24px rgba(15, 23, 42, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .mobile-menu-overlay__close:hover,
 .mobile-menu-overlay__close:focus-visible {
-  background: rgba(226, 232, 240, 1);
-  outline: none;
+  background: #ffffff;
+  border-color: rgba(37, 99, 235, 0.58);
+  box-shadow:
+    0 0 0 7px rgba(37, 99, 235, 0.12),
+    0 12px 28px rgba(37, 99, 235, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  outline: 2px solid rgba(37, 99, 235, 0.28);
+  outline-offset: 2px;
   transform: translateY(-1px);
 }
 
@@ -20203,10 +20230,10 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__close--enlarged {
-  width: 2.55rem;
-  height: 2.55rem;
-  font-size: 1.45rem;
-  font-weight: 300;
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.75rem;
+  font-weight: 700;
   transform: none;
 }
 
@@ -20568,7 +20595,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   z-index: 1;
   display: grid;
   gap: 0.75rem;
-  padding-top: 3.15rem;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 3.15rem);
   padding-bottom: 0.25rem;
   animation: mobileMenuElementSettle 0.72s cubic-bezier(0.18, 1.28, 0.32, 1) 0.05s both;
 }
