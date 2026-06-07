@@ -8,5 +8,6 @@
   "expectedPieces": 9,
   "puzzleId": "canonical_3x3_jigsaw_production",
   "templateId": "canonical_3x3_jigsaw_template_production",
+  "coverageElementId": "puzzle_silhouette",
   "clearOutputMasksDir": true
 }

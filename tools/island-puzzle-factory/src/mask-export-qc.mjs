@@ -6,7 +6,7 @@ function pushCheck(checks, name, passed, details) {
   checks.push({ name, passed, details });
 }
 
-export async function runMaskExportQc({ masksDir, width, height, expectedPieces = 9, rows = 3, columns = 3 }) {
+export async function runMaskExportQc({ masksDir, width, height, expectedPieces = 9, rows = 3, columns = 3, expectedCoverage = null }) {
   const checks = [];
   const expectedMasks = getExpectedMasks({ masksDir, rows, columns });
   pushCheck(checks, 'expected_piece_count', expectedMasks.length === expectedPieces, `${expectedMasks.length}; expected ${expectedPieces}`);
@@ -49,14 +49,33 @@ export async function runMaskExportQc({ masksDir, width, height, expectedPieces 
 
   let uncoveredPixels = 0;
   let overlapPixels = 0;
+  let outsideExpectedCoveragePixels = 0;
+  let expectedCoveragePixels = 0;
   for (const count of coverage) {
     if (count === 0) uncoveredPixels += 1;
     if (count > 1) overlapPixels += 1;
   }
 
   pushCheck(checks, 'masks_no_overlaps', overlapPixels === 0, `${overlapPixels} pixels covered by more than one mask`);
-  pushCheck(checks, 'masks_cover_full_canvas_once', uncoveredPixels === 0, `${uncoveredPixels} uncovered pixels across ${pixelCount} canvas pixels`);
-  pushCheck(checks, 'visible_pixel_total_matches_canvas', totalVisiblePixels === pixelCount, `${totalVisiblePixels}; expected ${pixelCount}`);
+  if (expectedCoverage?.alpha) {
+    let expectedCoverageGaps = 0;
+    for (let pixel = 0; pixel < pixelCount; pixel += 1) {
+      const shouldBeCovered = expectedCoverage.alpha[pixel] > 0;
+      if (shouldBeCovered) {
+        expectedCoveragePixels += 1;
+        if (coverage[pixel] === 0) expectedCoverageGaps += 1;
+      } else if (coverage[pixel] > 0) {
+        outsideExpectedCoveragePixels += 1;
+      }
+    }
+    pushCheck(checks, 'expected_coverage_visible_pixels', expectedCoveragePixels > 0, `${expectedCoveragePixels} visible pixels in ${expectedCoverage.id}`);
+    pushCheck(checks, 'masks_cover_expected_coverage_once', expectedCoverageGaps === 0, `${expectedCoverageGaps} uncovered pixels inside ${expectedCoverage.id}`);
+    pushCheck(checks, 'masks_do_not_cover_outside_expected_coverage', outsideExpectedCoveragePixels === 0, `${outsideExpectedCoveragePixels} pixels covered outside ${expectedCoverage.id}`);
+    pushCheck(checks, 'visible_pixel_total_matches_expected_coverage', totalVisiblePixels === expectedCoveragePixels, `${totalVisiblePixels}; expected ${expectedCoveragePixels}`);
+  } else {
+    pushCheck(checks, 'masks_cover_full_canvas_once', uncoveredPixels === 0, `${uncoveredPixels} uncovered pixels across ${pixelCount} canvas pixels`);
+    pushCheck(checks, 'visible_pixel_total_matches_canvas', totalVisiblePixels === pixelCount, `${totalVisiblePixels}; expected ${pixelCount}`);
+  }
 
   const status = checks.every((check) => check.passed) ? 'PASS' : 'FAIL';
   return {
@@ -82,6 +101,7 @@ export async function writeMaskExportReport({ reportPath, config, source, output
   lines.push(`- Input SVG: ${config.inputSvg}`);
   lines.push(`- Canvas: ${source.width}x${source.height}`);
   lines.push(`- ViewBox: ${source.viewBox.join(' ')}`);
+  if (config.coverageElementId) lines.push(`- Coverage element: ${config.coverageElementId}`);
   lines.push(`- Expected pieces: ${config.expectedPieces}`);
   lines.push('');
   lines.push('## Output Masks');
