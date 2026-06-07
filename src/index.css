@@ -33580,11 +33580,11 @@ body.habit-wizard-open .mobile-footer-nav {
 
 .habit-day-nav__daily-life-upgrade-body {
   position: absolute;
-  inset: 20.4% 9.8% 8.8%;
+  inset: 22.2% 11.4% 10.2%;
   z-index: 1;
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr) auto;
-  gap: clamp(0.35rem, 1.25vh, 0.75rem);
+  gap: clamp(0.3rem, 0.95vh, 0.58rem);
   min-height: 0;
   color: white;
   text-align: center;
@@ -33601,19 +33601,19 @@ body.habit-wizard-open .mobile-footer-nav {
 .habit-day-nav__daily-life-upgrade-heading {
   display: grid;
   justify-items: center;
-  gap: clamp(0.12rem, 0.55vh, 0.35rem);
+  gap: clamp(0.1rem, 0.42vh, 0.28rem);
 }
 
 .habit-day-nav__daily-life-upgrade-eyebrow {
   margin: 0;
-  max-width: 64%;
-  padding: 0.22rem clamp(0.85rem, 4vw, 1.45rem);
+  max-width: 58%;
+  padding: 0.18rem clamp(0.72rem, 3.5vw, 1.2rem);
   border: 1px solid rgba(248, 207, 112, 0.78);
   border-radius: 999px;
   background: linear-gradient(180deg, rgba(50, 28, 8, 0.82), rgba(111, 61, 13, 0.68));
   color: var(--daily-life-upgrade-gold);
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(0.62rem, 2.7vw, 0.9rem);
+  font-size: clamp(0.58rem, 2.35vw, 0.78rem);
   font-weight: 800;
   letter-spacing: 0.02em;
   line-height: 1.1;
@@ -33625,7 +33625,7 @@ body.habit-wizard-open .mobile-footer-nav {
   margin: 0;
   color: #ffe7a2;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(2.25rem, 12vw, 4rem);
+  font-size: clamp(2.05rem, 10.1vw, 3.35rem);
   font-weight: 800;
   letter-spacing: -0.045em;
   line-height: 0.95;
@@ -33639,7 +33639,7 @@ body.habit-wizard-open .mobile-footer-nav {
   margin: 0;
   color: var(--daily-life-upgrade-blue);
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(1rem, 5vw, 1.62rem);
+  font-size: clamp(0.94rem, 4.25vw, 1.34rem);
   font-weight: 700;
   line-height: 1.1;
   text-shadow: 0 2px 9px rgba(0, 0, 0, 0.82);
@@ -33649,7 +33649,7 @@ body.habit-wizard-open .mobile-footer-nav {
   align-self: start;
   display: grid;
   justify-items: center;
-  gap: clamp(0.26rem, 0.8vh, 0.48rem);
+  gap: clamp(0.22rem, 0.62vh, 0.38rem);
   padding: 0 clamp(0.35rem, 2vw, 0.9rem);
 }
 
@@ -33658,7 +33658,7 @@ body.habit-wizard-open .mobile-footer-nav {
   margin: 0;
   color: #fffaf1;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(1.08rem, 5.5vw, 1.85rem);
+  font-size: clamp(1rem, 4.65vw, 1.48rem);
   font-weight: 800;
   line-height: 1.05;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.82);
@@ -33666,10 +33666,10 @@ body.habit-wizard-open .mobile-footer-nav {
 
 .habit-day-nav__daily-life-upgrade-copy {
   margin: 0;
-  max-width: 86%;
+  max-width: 78%;
   color: rgba(255, 255, 255, 0.94);
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(0.87rem, 3.8vw, 1.25rem);
+  font-size: clamp(0.8rem, 3.15vw, 1rem);
   font-weight: 600;
   line-height: 1.28;
   text-wrap: balance;
@@ -33721,19 +33721,21 @@ body.habit-wizard-open .mobile-footer-nav {
 
 .habit-day-nav__daily-life-upgrade-actions {
   display: grid;
-  gap: clamp(0.42rem, 1.2vh, 0.72rem);
+  gap: clamp(0.34rem, 0.9vh, 0.52rem);
+  width: 94%;
+  margin: 0 auto;
 }
 
 .habit-day-nav__daily-life-upgrade-button {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: clamp(0.55rem, 2.3vw, 0.9rem);
+  gap: clamp(0.46rem, 1.8vw, 0.72rem);
   width: 100%;
-  min-height: clamp(3.25rem, 10.7vh, 4.8rem);
+  min-height: clamp(2.82rem, 8.85vh, 4.05rem);
   border: 1px solid rgba(255, 230, 155, 0.86);
   border-radius: 999px;
-  padding: clamp(0.34rem, 1.25vh, 0.56rem) clamp(0.82rem, 3vw, 1.05rem) clamp(0.34rem, 1.25vh, 0.56rem) clamp(0.42rem, 1.8vw, 0.58rem);
+  padding: clamp(0.28rem, 0.9vh, 0.44rem) clamp(0.7rem, 2.4vw, 0.92rem) clamp(0.28rem, 0.9vh, 0.44rem) clamp(0.36rem, 1.45vw, 0.5rem);
   background:
     linear-gradient(135deg, rgba(91, 142, 255, 0.92), rgba(95, 46, 235, 0.96)),
     rgba(13, 33, 76, 0.9);
@@ -33750,7 +33752,7 @@ body.habit-wizard-open .mobile-footer-nav {
 .habit-day-nav__daily-life-upgrade-button::after {
   content: '›';
   color: #ffd36f;
-  font-size: clamp(2.2rem, 9vw, 3.2rem);
+  font-size: clamp(1.88rem, 7.2vw, 2.62rem);
   line-height: 0.7;
   text-shadow: 0 2px 5px rgba(0, 0, 0, 0.62);
 }
@@ -33777,15 +33779,15 @@ body.habit-wizard-open .mobile-footer-nav {
 .habit-day-nav__daily-life-upgrade-button-icon {
   display: grid;
   place-items: center;
-  width: clamp(2.28rem, 9.5vw, 3.55rem);
-  height: clamp(2.28rem, 9.5vw, 3.55rem);
+  width: clamp(2.04rem, 7.8vw, 2.95rem);
+  height: clamp(2.04rem, 7.8vw, 2.95rem);
   border-radius: 999px;
   border: 1px solid rgba(248, 207, 112, 0.76);
   background:
     radial-gradient(circle at 38% 30%, rgba(255, 255, 255, 0.36), transparent 31%),
     linear-gradient(145deg, rgba(20, 60, 123, 0.96), rgba(6, 20, 50, 0.96));
   color: #f9d878;
-  font-size: clamp(1.1rem, 5vw, 1.75rem);
+  font-size: clamp(0.98rem, 4.1vw, 1.38rem);
   box-shadow: inset 0 0 14px rgba(82, 171, 255, 0.34), 0 0 10px rgba(82, 171, 255, 0.28);
 }
 
@@ -33797,7 +33799,7 @@ body.habit-wizard-open .mobile-footer-nav {
 .habit-day-nav__daily-life-upgrade-button strong {
   color: #fff8e9;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(1.05rem, 5.2vw, 1.78rem);
+  font-size: clamp(0.98rem, 4.35vw, 1.42rem);
   line-height: 1;
   text-shadow: 0 2px 7px rgba(0, 0, 0, 0.82);
 }
@@ -33806,19 +33808,19 @@ body.habit-wizard-open .mobile-footer-nav {
   margin-top: 0.16rem;
   color: #bedcff;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(0.72rem, 3.5vw, 1rem);
+  font-size: clamp(0.66rem, 2.85vw, 0.86rem);
   line-height: 1.1;
   text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
 }
 
 @media (max-height: 680px) {
   .habit-day-nav__daily-life-upgrade-body {
-    inset: 19.5% 10.2% 8.4%;
-    gap: 0.28rem;
+    inset: 21.2% 11.8% 9.1%;
+    gap: 0.24rem;
   }
 
   .habit-day-nav__daily-life-upgrade-title {
-    font-size: clamp(2rem, 10.5vw, 3.25rem);
+    font-size: clamp(1.85rem, 9.2vw, 2.85rem);
   }
 
   .habit-day-nav__daily-life-upgrade-habit,
@@ -33829,6 +33831,6 @@ body.habit-wizard-open .mobile-footer-nav {
   }
 
   .habit-day-nav__daily-life-upgrade-button {
-    min-height: clamp(2.75rem, 11vh, 3.4rem);
+    min-height: clamp(2.5rem, 9.4vh, 3.1rem);
   }
 }
