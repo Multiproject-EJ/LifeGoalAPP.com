@@ -1649,9 +1649,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const launcherTraitCards: HandCard[] = archetypeHand
     ? handToArray(archetypeHand).filter((handCard): handCard is HandCard => isRenderableHandCard(handCard) && handCard.role !== 'dominant')
     : [];
-  const launcherTraitSideCount = Math.ceil(launcherTraitCards.length / 2);
-  const leftLauncherTraitCards = launcherTraitCards.slice(0, launcherTraitSideCount);
-  const rightLauncherTraitCards = launcherTraitCards.slice(launcherTraitSideCount);
   const playstyleLabel = dominantPlaystyleCard
     ? `${dominantPlaystyleCard.name} (${SUIT_LABELS[dominantPlaystyleCard.suit]})`
     : null;
@@ -4127,20 +4124,34 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   ) : null}
                 </span>
                 <span className="mobile-menu-overlay__visual-slot mobile-menu-overlay__visual-slot--hand" aria-hidden="true">
-                  <span className="mobile-menu-overlay__hand-fan">
-                    <span className="mobile-menu-overlay__hand-side mobile-menu-overlay__hand-side--left">
-                      {leftLauncherTraitCards.map((handCard) => (
+                  <span
+                    className="mobile-menu-overlay__card-stack"
+                    style={{ '--stack-card-count': launcherTraitCards.length } as CSSProperties}
+                  >
+                    {launcherTraitCards.map((handCard, index) => {
+                      const stackCenter = (launcherTraitCards.length - 1) / 2;
+                      const stackDistance = index - stackCenter;
+                      const stackDepth = Math.abs(stackDistance);
+
+                      return (
                         <span
-                          key={`launcher-left-${handCard.card.id}`}
-                          className="mobile-menu-overlay__trait-card"
-                          style={{ '--card-color': handCard.card.color } as CSSProperties}
+                          key={`launcher-stack-${handCard.card.id}`}
+                          className="mobile-menu-overlay__trait-card mobile-menu-overlay__trait-card--stacked"
+                          style={{
+                            '--card-color': handCard.card.color,
+                            '--stack-x': `${stackDistance * 30}px`,
+                            '--stack-y': `${12 + stackDepth * 5}px`,
+                            '--stack-rotate': `${stackDistance * 8}deg`,
+                            '--stack-scale': `${0.9 - stackDepth * 0.04}`,
+                            '--stack-z': index + 1,
+                          } as CSSProperties}
                         >
                           <span className="mobile-menu-overlay__trait-card-role">{handCard.role}</span>
                           <span className="mobile-menu-overlay__trait-card-name">{handCard.card.icon} {handCard.card.name}</span>
                         </span>
-                      ))}
-                    </span>
-                    <span className="mobile-menu-overlay__archetype-card">
+                      );
+                    })}
+                    <span className="mobile-menu-overlay__archetype-card mobile-menu-overlay__archetype-card--stacked">
                       {playstyleIcon ? (
                         <span className="mobile-menu-overlay__hand-symbol">{playstyleIcon}</span>
                       ) : (
@@ -4149,18 +4160,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       {dominantPlaystyleCard ? (
                         <span className="mobile-menu-overlay__archetype-name">{dominantPlaystyleCard.name}</span>
                       ) : null}
-                    </span>
-                    <span className="mobile-menu-overlay__hand-side mobile-menu-overlay__hand-side--right">
-                      {rightLauncherTraitCards.map((handCard) => (
-                        <span
-                          key={`launcher-right-${handCard.card.id}`}
-                          className="mobile-menu-overlay__trait-card"
-                          style={{ '--card-color': handCard.card.color } as CSSProperties}
-                        >
-                          <span className="mobile-menu-overlay__trait-card-role">{handCard.role}</span>
-                          <span className="mobile-menu-overlay__trait-card-name">{handCard.card.icon} {handCard.card.name}</span>
-                        </span>
-                      ))}
                     </span>
                   </span>
                 </span>
