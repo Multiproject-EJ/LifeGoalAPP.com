@@ -733,6 +733,7 @@ const WISDOM_ESSENCE_BONUS_COST_DIAMONDS = 3;
 const WISDOM_ESSENCE_BONUS_AMOUNT = 15;
 const CONTRACT_V2_ESSENCE_SPEND_STEP_FLOOR = 10;
 const TARGET_TAPS_PER_BUILD_LEVEL = 5;
+const WALLET_STORE_GRID_SIZE = 9;
 
 type WalletStoreModalKind = 'essence' | 'shards';
 
@@ -9312,7 +9313,7 @@ export function IslandRunBoardPrototype({
       onSelect: !marketOwnedBundles.dice_bundle && runtimeState.essence >= MARKET_DICE_BUNDLE_COST
         ? () => {
             setWalletStoreModalKind(null);
-            handleMarketPrototypePurchase('dice_bundle');
+            openShopPanel();
           }
         : undefined,
     },
@@ -9343,12 +9344,12 @@ export function IslandRunBoardPrototype({
           onSelect: canBuy
             ? () => {
                 setWalletStoreModalKind(null);
-                handleBuildCardTap(card.stopIndex);
+                setShowBuildPanel(true);
               }
             : undefined,
         };
       }),
-  ].slice(0, 9);
+  ].slice(0, WALLET_STORE_GRID_SIZE);
 
   const shardPurchaseOptions: WalletPurchaseOption[] = collectedCreatures
     .map((creature): WalletPurchaseOption | null => {
@@ -9377,14 +9378,15 @@ export function IslandRunBoardPrototype({
         onSelect: preview.canUpgrade
           ? () => {
               setWalletStoreModalKind(null);
-              sanctuaryHandlers.upgradeCreatureForm(creature.creatureId);
+              setSelectedSanctuaryCreatureId(creature.creatureId);
+              setShowSanctuaryPanel(true);
             }
           : undefined,
       };
     })
     .filter((option): option is WalletPurchaseOption => Boolean(option))
     .sort((a, b) => Number(b.canAfford) - Number(a.canAfford) || a.cost - b.cost)
-    .slice(0, 9);
+    .slice(0, WALLET_STORE_GRID_SIZE);
 
   const activeWalletPurchaseOptions = walletStoreModalKind === 'shards' ? shardPurchaseOptions : essencePurchaseOptions;
   const activeWalletBalance = walletStoreModalKind === 'shards' ? runtimeState.shards : runtimeState.essence;
@@ -12022,7 +12024,7 @@ export function IslandRunBoardPrototype({
               Balance: <strong>{activeWalletBalance} {activeWalletIcon}</strong> · Affordable options are highlighted.
             </p>
             <div className="island-run-wallet-store-grid" aria-label={`${activeWalletName} buying possibilities`}>
-              {Array.from({ length: 9 }, (_, index) => {
+              {Array.from({ length: WALLET_STORE_GRID_SIZE }, (_, index) => {
                 const option = activeWalletPurchaseOptions[index];
                 if (!option) {
                   return (
