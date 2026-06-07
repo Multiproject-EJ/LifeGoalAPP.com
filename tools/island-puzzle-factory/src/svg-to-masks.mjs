@@ -67,6 +67,9 @@ function normalizeConfig(rawConfig) {
   const inputSvg = resolveFromRepo(rawConfig.inputSvg);
   const outputMasksDir = resolveFromRepo(rawConfig.outputMasksDir);
   const expectedPieces = Number(rawConfig.expectedPieces ?? 9);
+  const coverageElementId = typeof rawConfig.coverageElementId === 'string'
+    ? rawConfig.coverageElementId.trim()
+    : '';
   return {
     inputSvg,
     outputMasksDir,
@@ -75,9 +78,7 @@ function normalizeConfig(rawConfig) {
     expectedPieces,
     puzzleId: String(rawConfig.puzzleId ?? 'puzzle').trim(),
     templateId: String(rawConfig.templateId ?? 'canonical-svg-template').trim(),
-    coverageElementId: typeof rawConfig.coverageElementId === 'string' && rawConfig.coverageElementId.trim().length > 0
-      ? rawConfig.coverageElementId.trim()
-      : null,
+    coverageElementId: coverageElementId.length > 0 ? coverageElementId : null,
     clearOutputMasksDir: rawConfig.clearOutputMasksDir !== false,
     alphaThreshold: Number(rawConfig.alphaThreshold ?? 128),
   };
@@ -91,7 +92,7 @@ function validateConfig(config) {
   if (config.width != null && (!Number.isInteger(config.width) || config.width <= 0)) errors.push('canvas.width must be a positive integer when provided.');
   if (config.height != null && (!Number.isInteger(config.height) || config.height <= 0)) errors.push('canvas.height must be a positive integer when provided.');
   if (!Number.isFinite(config.alphaThreshold) || config.alphaThreshold < 1 || config.alphaThreshold > 255) errors.push('alphaThreshold must be between 1 and 255.');
-  if (config.coverageElementId && config.coverageElementId.startsWith('piece_')) errors.push('coverageElementId must be a separate silhouette element id, not a piece id (piece_01 through piece_09).');
+  if (config.coverageElementId && config.coverageElementId.startsWith('piece_')) errors.push('coverageElementId must be a separate silhouette element id, not an id beginning with piece_.');
   if (config.outputMasksDir) {
     try {
       assertInsideAllowedOutput(config.outputMasksDir);
