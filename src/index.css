@@ -20899,7 +20899,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 .mobile-menu-overlay__visual-slot--hand {
   grid-area: visual;
   width: 100%;
-  min-height: 138px;
+  min-height: 152px;
   padding: 0.15rem 0.2rem 0;
   border-radius: 22px;
   background:
@@ -20913,26 +20913,29 @@ html.platform-ipad .workspace-shell__menu-edge {
   --hand-trait-accent: var(--color-primary, #1d4ed8);
   --hand-archetype-accent: var(--color-primary, #1d4ed8);
   position: relative;
-  width: min(100%, 320px);
-  min-height: 124px;
+  width: min(100%, 360px);
+  min-height: 142px;
   display: block;
   perspective: 720px;
   transform-style: preserve-3d;
 }
 
 .mobile-menu-overlay__trait-card {
-  width: min(38vw, 118px);
-  min-height: 58px;
+  width: min(32vw, 116px);
+  min-height: 108px;
   display: grid;
   align-content: center;
-  gap: 0.12rem;
-  border-radius: 17px;
+  justify-items: center;
+  gap: 0.22rem;
+  border-radius: 23px;
   border: 1px solid rgba(30, 64, 175, 0.42);
-  padding: 0.42rem 0.5rem;
+  padding: 0.74rem 0.55rem;
   background:
+    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.92), transparent 38%),
     linear-gradient(145deg, color-mix(in srgb, var(--card-color, #3b82f6) 16%, rgba(255, 255, 255, 0.9)), rgba(255, 255, 255, 0.72));
   box-shadow: 0 10px 20px color-mix(in srgb, var(--card-color, #3b82f6) 18%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.84);
   color: #0f172a;
+  text-align: center;
 }
 
 .mobile-menu-overlay__trait-card--stacked {
@@ -20946,7 +20949,7 @@ html.platform-ipad .workspace-shell__menu-edge {
     translateX(var(--stack-x, 0))
     translateY(var(--stack-y, 0))
     translateZ(-46px)
-    rotateY(calc(var(--stack-rotate, 0deg) * -0.55))
+    rotateY(calc(var(--stack-perspective, 0deg) * -1))
     rotateZ(var(--stack-rotate, 0deg))
     scale(var(--stack-scale, 0.9));
   transform-origin: center bottom;
@@ -20957,7 +20960,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .mobile-menu-overlay__trait-card-role {
   color: var(--hand-trait-accent);
-  font-size: 0.54rem;
+  font-size: 0.58rem;
   font-weight: 900;
   letter-spacing: 0.08em;
   line-height: 1;
@@ -20965,12 +20968,16 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__trait-card-name {
+  display: -webkit-box;
   overflow: hidden;
-  font-size: clamp(0.62rem, 2.5vw, 0.74rem);
+  max-width: 100%;
+  font-size: clamp(0.66rem, 2.6vw, 0.78rem);
   font-weight: 900;
   line-height: 1.12;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .mobile-menu-overlay__archetype-card {
@@ -21259,13 +21266,14 @@ html.platform-ipad .workspace-shell__menu-edge {
   }
 
   .mobile-menu-overlay__card-stack {
-    min-height: 116px;
-    width: min(100%, 284px);
+    min-height: 134px;
+    width: min(100%, 320px);
   }
 
   .mobile-menu-overlay__trait-card {
-    width: min(36vw, 104px);
-    padding-inline: 0.36rem;
+    width: min(30vw, 104px);
+    min-height: 100px;
+    padding-inline: 0.42rem;
   }
 
   .mobile-menu-overlay__archetype-card--stacked {
