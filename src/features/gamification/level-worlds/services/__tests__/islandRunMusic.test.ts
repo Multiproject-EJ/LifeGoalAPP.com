@@ -243,7 +243,7 @@ export const islandRunMusicTests: TestCase[] = [
     },
   },
   {
-    name: 'applyIslandRunMusicContext crossfades between board and panel music contexts',
+    name: 'applyIslandRunMusicContext stops board music before starting panel music contexts',
     run: async () => {
       const mockAudio = installMockMusicAudio();
       try {
@@ -259,7 +259,7 @@ export const islandRunMusicTests: TestCase[] = [
         await Promise.resolve();
         const panelTrack = MockMusicAudioElement.created[1];
 
-        assertEqual(boardTrack.paused, false, 'outgoing board music should fade instead of stopping immediately');
+        assertEqual(boardTrack.paused, true, 'outgoing board music should stop before panel music starts');
         assertEqual(panelTrack.src, '/assets/audio/music/Lantern Tide.mp3', 'expected panel music to start');
         assertEqual(panelTrack.volume, 0, 'incoming panel music should begin at zero volume');
 

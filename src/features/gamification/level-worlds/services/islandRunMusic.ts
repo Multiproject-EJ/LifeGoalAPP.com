@@ -161,6 +161,18 @@ function resetIslandRunMusicAudio(
   finishReset();
 }
 
+function stopOtherIslandRunMusicTracks(activeTrackId: IslandRunMusicTrackId): void {
+  for (const trackId of islandRunMusicAudioByTrack.keys()) {
+    if (trackId === activeTrackId) continue;
+
+    const audio = islandRunMusicAudioByTrack.get(trackId);
+    resetIslandRunMusicAudio(trackId, { fadeMs: 0 });
+    if (audio) audio.onended = null;
+    if (ownedIslandRunMusicTrackId === trackId) ownedIslandRunMusicTrackId = null;
+    if (playingIslandRunMusicTrackId === trackId) playingIslandRunMusicTrackId = null;
+  }
+}
+
 function stopOwnedIslandRunMusic(
   options: IslandRunMusicTransitionOptions = {},
   shouldStopPlaylist = true,
@@ -203,8 +215,9 @@ export function playIslandRunMusicPlaylist(
     if (!audio) return;
 
     if (ownedIslandRunMusicTrackId && ownedIslandRunMusicTrackId !== trackId) {
-      stopOwnedIslandRunMusic(options, false);
+      stopOwnedIslandRunMusic({ fadeMs: 0 }, false);
     }
+    stopOtherIslandRunMusicTracks(trackId);
 
     if (ownedIslandRunMusicTrackId !== trackId) {
       islandRunMusicPlayAttemptId += 1;
@@ -265,8 +278,9 @@ export function playIslandRunMusic(
   setIslandRunMusicVolume(audio, options.fadeMs && options.fadeMs > 0 ? 0 : ISLAND_RUN_MUSIC_VOLUME);
 
   if (ownedIslandRunMusicTrackId && ownedIslandRunMusicTrackId !== trackId) {
-    stopOwnedIslandRunMusic(options);
+    stopOwnedIslandRunMusic({ fadeMs: 0 });
   }
+  stopOtherIslandRunMusicTracks(trackId);
 
   if (ownedIslandRunMusicTrackId !== trackId) {
     islandRunMusicPlayAttemptId += 1;

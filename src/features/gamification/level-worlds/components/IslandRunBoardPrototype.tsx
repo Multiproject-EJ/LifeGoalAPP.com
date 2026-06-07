@@ -2705,7 +2705,6 @@ export function IslandRunBoardPrototype({
     setCycleIndex(runtimeState.cycleIndex ?? 0);
     setMusicEnabled(runtimeState.musicEnabled ?? runtimeState.audioEnabled ?? true);
     setSfxEnabled(runtimeState.sfxEnabled ?? runtimeState.audioEnabled ?? true);
-    setIslandRunAudioEnabled(runtimeState.sfxEnabled ?? runtimeState.audioEnabled ?? true);
     setActiveCompanionId(runtimeState.activeCompanionId ?? null);
     setCreatureTreatInventory(runtimeState.creatureTreatInventory ?? fetchCreatureTreatInventory(session.user.id));
 
@@ -2902,12 +2901,24 @@ export function IslandRunBoardPrototype({
     setShowEntryAudioModal(true);
   }, [hasHydratedRuntimeState]);
 
+  const hasConfirmedEntryAudioChoice = hasDismissedEntryAudioModal && !showEntryAudioModal;
+
+  useEffect(() => {
+    return () => {
+      setIslandRunAudioEnabled(false);
+    };
+  }, []);
+
+  useEffect(() => {
+    setIslandRunAudioEnabled(sfxEnabled && hasConfirmedEntryAudioChoice);
+  }, [hasConfirmedEntryAudioChoice, sfxEnabled]);
+
   const islandRunMusicContext = useMemo(() => resolveIslandRunMusicContext({
-    musicEnabled: musicEnabled && hasDismissedEntryAudioModal && !showEntryAudioModal,
+    musicEnabled: musicEnabled && hasConfirmedEntryAudioChoice,
     effectiveIslandNumber,
     showShopPanel,
     showIslandClearCelebration,
-  }), [effectiveIslandNumber, hasDismissedEntryAudioModal, musicEnabled, showEntryAudioModal, showIslandClearCelebration, showShopPanel]);
+  }), [effectiveIslandNumber, hasConfirmedEntryAudioChoice, musicEnabled, showIslandClearCelebration, showShopPanel]);
 
   useEffect(() => {
     applyIslandRunMusicContext(islandRunMusicContext);
@@ -9630,7 +9641,6 @@ export function IslandRunBoardPrototype({
                 onClick={() => {
                   const next = !sfxEnabled;
                   setSfxEnabled(next);
-                  setIslandRunAudioEnabled(next);
                 }}
               >
                 <span aria-hidden="true">🔔</span>
@@ -10137,7 +10147,6 @@ export function IslandRunBoardPrototype({
                 onClick={() => {
                   const next = !sfxEnabled;
                   setSfxEnabled(next);
-                  setIslandRunAudioEnabled(next);
                 }}
               >
                 <span>{sfxEnabled ? '✓' : '○'}</span>

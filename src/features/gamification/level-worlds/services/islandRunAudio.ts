@@ -3,8 +3,8 @@
  *
  * Provides typed sound and haptic event dispatch for Island Run game events.
  * All calls are gated behind an in-memory `islandRunAudioEnabled` preference
- * (defaults to `true`) and gracefully no-op when the relevant browser API is
- * unavailable.
+ * (starts muted until the entry audio choice is confirmed) and gracefully no-op
+ * when the relevant browser API is unavailable.
  *
  * Audio: lazy HTMLAudioElement playback for mapped SFX assets. Missing files
  * and browser autoplay failures are treated as safe no-ops.
@@ -107,7 +107,7 @@ export interface IslandRunAudioDiagnostics {
 
 // ─── Preference helpers ────────────────────────────────────────────────────────
 
-let islandRunSfxEnabled = true;
+let islandRunSfxEnabled = false;
 
 export function getIslandRunAudioEnabled(): boolean {
   return islandRunSfxEnabled;
