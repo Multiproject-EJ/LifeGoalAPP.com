@@ -89,6 +89,7 @@ export function MobileFooterNav({
   const [isStatusHoldSnap, setIsStatusHoldSnap] = useState(false);
   const [areControlsFaded, setAreControlsFaded] = useState(false);
   const [isDiamondFaded, setIsDiamondFaded] = useState(false);
+  const [isMenuLaunchAnimating, setIsMenuLaunchAnimating] = useState(false);
   const [displayPointsBalance, setDisplayPointsBalance] = useState<number | null>(
     typeof pointsBalance === 'number' ? Math.max(0, Math.floor(pointsBalance)) : null,
   );
@@ -103,6 +104,7 @@ export function MobileFooterNav({
   const pointsTimerRef = useRef<number | null>(null);
   const controlFadeTimeoutRef = useRef<number | null>(null);
   const diamondFadeTimeoutRef = useRef<number | null>(null);
+  const menuLaunchTimeoutRef = useRef<number | null>(null);
   const swipeStartYRef = useRef<number | null>(null);
   const swipeStartXRef = useRef<number | null>(null);
   const isSwipeCollapseTriggeredRef = useRef(false);
@@ -257,8 +259,25 @@ export function MobileFooterNav({
     return () => {
       clearStatusHoldTimers();
       clearFadeTimers();
+      if (menuLaunchTimeoutRef.current !== null) {
+        window.clearTimeout(menuLaunchTimeoutRef.current);
+      }
     };
   }, []);
+
+  const triggerMenuLaunchMotion = () => {
+    if (menuLaunchTimeoutRef.current !== null) {
+      window.clearTimeout(menuLaunchTimeoutRef.current);
+    }
+    setIsMenuLaunchAnimating(false);
+    window.requestAnimationFrame(() => {
+      setIsMenuLaunchAnimating(true);
+      menuLaunchTimeoutRef.current = window.setTimeout(() => {
+        setIsMenuLaunchAnimating(false);
+        menuLaunchTimeoutRef.current = null;
+      }, 760);
+    });
+  };
 
   useEffect(() => {
     displayPointsBalanceRef.current = displayPointsBalance;
@@ -456,9 +475,11 @@ export function MobileFooterNav({
               type="button"
               className={`mobile-footer-nav__menu-button${
                 isDiodeActive ? ' mobile-footer-nav__menu-button--orb' : ''
+              }${isMenuLaunchAnimating ? ' mobile-footer-nav__menu-button--launching' : ''
               }`}
               onClick={() => {
                 revealControllerUI();
+                triggerMenuLaunchMotion();
                 onOpenMenu();
               }}
             >
