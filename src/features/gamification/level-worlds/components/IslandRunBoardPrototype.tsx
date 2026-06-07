@@ -4060,9 +4060,13 @@ export function IslandRunBoardPrototype({
   }, [islandNumber, mergedStopStatesByIndex, resolveCanonicalContractV2Stops, runtimeState.stopTicketsPaidByIsland]);
 
   const allLandmarkDoorsRouteToBoss = contractV2Stops?.statusesByIndex[4] === 'active';
+  const expandedActiveLandmarkDoorStopId = contractV2Stops?.statusesByIndex[1] === 'active' ? 'habit' : undefined;
   const landmarkDoorTileMap = useMemo(
-    () => applyLandmarkDoorTiles(tileMap, { allDoorsRouteToBoss: allLandmarkDoorsRouteToBoss }),
-    [allLandmarkDoorsRouteToBoss, tileMap],
+    () => applyLandmarkDoorTiles(tileMap, {
+      allDoorsRouteToBoss: allLandmarkDoorsRouteToBoss,
+      expandedActiveStopId: expandedActiveLandmarkDoorStopId,
+    }),
+    [allLandmarkDoorsRouteToBoss, expandedActiveLandmarkDoorStopId, tileMap],
   );
   const trafficLightCharge = getTrafficLightCharge(runtimeState.bonusTileChargeByIsland, islandNumber);
 

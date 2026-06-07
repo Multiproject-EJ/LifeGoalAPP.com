@@ -72,6 +72,7 @@ export interface BoardTileProps {
   isStop: boolean;
   tileType: IslandTileMapEntry['tileType'] | undefined;
   doorStopId?: IslandTileMapEntry['doorStopId'];
+  isActiveDoorCluster?: boolean;
   isEncounter: boolean;
   isEncounterCompleted: boolean;
   isTokenCurrent: boolean;
@@ -93,6 +94,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     isStop,
     tileType,
     doorStopId,
+    isActiveDoorCluster = false,
     isEncounter,
     isEncounterCompleted,
     isTokenCurrent,
@@ -143,6 +145,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         isEncounterCompleted ? 'island-tile--encounter-completed' : '',
         tileTypeClass,
         doorStopClass,
+        isActiveDoorCluster ? 'island-tile--active-door-cluster' : '',
         isTokenCurrent ? 'island-tile--token-current' : '',
         isUpcoming ? 'island-tile--upcoming' : '',
         !isMinimalBoardArt ? 'island-tile--alive' : '',

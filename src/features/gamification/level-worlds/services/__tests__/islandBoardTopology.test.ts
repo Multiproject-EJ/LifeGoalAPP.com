@@ -67,6 +67,22 @@ export const islandBoardTopologyTests: TestCase[] = [
     },
   },
   {
+    name: 'active habit landmark expands to its two neighboring door tiles',
+    run: () => {
+      const tileMap = applyLandmarkDoorTiles(generateTileMap(3, 'normal', 'forest', 0), { expandedActiveStopId: 'habit' });
+      for (const tileIndex of [5, 6, 7]) {
+        const entry = tileMap[tileIndex];
+        assertEqual(entry.tileType, 'landmark_door', `Expected tile ${tileIndex} to be a landmark door`);
+        assertEqual(entry.doorStopId, 'habit', `Expected tile ${tileIndex} to route to habit`);
+        assertEqual(entry.isActiveDoorCluster, true, `Expected tile ${tileIndex} to glow as part of the active habit cluster`);
+      }
+      assertEqual(tileMap[36].doorStopId, 'hatchery', 'Expected hatchery door to stay unchanged');
+      assertEqual(tileMap[16].doorStopId, 'mystery', 'Expected mystery door to stay unchanged');
+      assertEqual(tileMap[26].doorStopId, 'wisdom', 'Expected wisdom door to stay unchanged');
+      assertEqual(tileMap.filter((entry) => entry.tileType === 'landmark_door').length, 6, 'Expected 6 total doors: habit expanded to 3, others remain at 1 each');
+    },
+  },
+  {
     name: 'default board profile resolves to spark40_ring topology',
     run: () => {
       const defaultProfile = resolveIslandBoardProfile();

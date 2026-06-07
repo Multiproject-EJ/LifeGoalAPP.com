@@ -4807,6 +4807,16 @@
   border-color: rgba(255, 247, 173, 0.98);
   box-shadow: 0 0 14px rgba(245, 158, 11, 0.72), 0 0 28px rgba(124, 45, 18, 0.46);
 }
+.island-tile--active-door-cluster {
+  background: linear-gradient(160deg, #dcfce7 0%, #86efac 44%, #16a34a 100%);
+  border-color: rgba(187, 247, 208, 0.98);
+  box-shadow:
+    0 0 0 2px rgba(220, 252, 231, 0.8),
+    0 0 18px rgba(34, 197, 94, 0.95),
+    0 0 36px rgba(22, 163, 74, 0.62);
+  animation: island-tile-active-door-glow 1.4s ease-in-out infinite;
+  z-index: 8;
+}
 
 
 /* B3-5: Island clear celebration */
@@ -7440,6 +7450,7 @@
     transition: none !important;
   }
   .island-tile--alive,
+  .island-tile--active-door-cluster,
   .island-tile__shine::after,
   .island-token__landing-ripple {
     animation: none !important;
@@ -7470,6 +7481,21 @@
   0%, 85%, 100% { box-shadow: 0 0 10px rgba(255, 107, 53, 0.6); }
   90%           { box-shadow: 0 0 20px rgba(255, 80, 20, 0.95), 0 0 35px rgba(255, 60, 0, 0.5); }
   95%           { box-shadow: 0 0 10px rgba(255, 107, 53, 0.5); }
+}
+
+@keyframes island-tile-active-door-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px rgba(220, 252, 231, 0.78),
+      0 0 18px rgba(34, 197, 94, 0.9),
+      0 0 36px rgba(22, 163, 74, 0.58);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(220, 252, 231, 1),
+      0 0 26px rgba(34, 197, 94, 1),
+      0 0 52px rgba(22, 163, 74, 0.78);
+  }
 }
 
 .island-tile--pressed {
