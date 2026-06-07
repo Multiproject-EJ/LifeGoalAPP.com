@@ -6677,6 +6677,13 @@ export function IslandRunBoardPrototype({
       openedAtMs: nowTs,
       eggLedgerKey: selectedLedgerKey,
       readyNowMs: nowTs,
+      location: resolvedEgg.isDormant ? 'dormant' : 'island',
+      fallbackReadyEgg: {
+        tier: resolvedEgg.tier,
+        setAtMs: resolvedEgg.setAtMs,
+        hatchAtMs: resolvedEgg.hatchAtMs,
+        location: resolvedEgg.isDormant ? 'dormant' : 'island',
+      },
       completedStops: nextCompletedStops,
       collectedCreatureId: creature.id,
       triggerSource: 'island_board_collect_creature',
@@ -6780,6 +6787,13 @@ export function IslandRunBoardPrototype({
       openedAtMs: nowTs,
       eggLedgerKey: selectedLedgerKey,
       readyNowMs: nowTs,
+      location: resolvedEgg.isDormant ? 'dormant' : 'island',
+      fallbackReadyEgg: {
+        tier: resolvedEgg.tier,
+        setAtMs: resolvedEgg.setAtMs,
+        hatchAtMs: resolvedEgg.hatchAtMs,
+        location: resolvedEgg.isDormant ? 'dormant' : 'island',
+      },
       completedStops: nextCompletedStops,
       rewardDeltas: {
         essence: totalSellEssence,

@@ -5286,6 +5286,44 @@ export const islandRunStateActionsTests: TestCase[] = [
     },
   },
   {
+    name: 'resolveReadyEggTerminalTransition: resolves UI fallback egg when store ledger is missing',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 10,
+        currentIslandNumber: 9,
+        activeEggTier: null,
+        activeEggSetAtMs: null,
+        activeEggHatchDurationMs: null,
+        perIslandEggs: {},
+        creatureCollection: [],
+      });
+
+      const result = resolveReadyEggTerminalTransition({
+        session,
+        client: null,
+        islandNumber: 9,
+        terminalStatus: 'collected',
+        openedAtMs: 3000,
+        readyNowMs: 3000,
+        completedStops: ['hatchery'],
+        collectedCreatureId: 'common-breeze-buddy',
+        fallbackReadyEgg: {
+          tier: 'common',
+          setAtMs: 1000,
+          hatchAtMs: 2000,
+          location: 'island',
+        },
+      });
+
+      assertEqual(result.changed, true, 'visible fallback egg should resolve instead of no-oping');
+      assertEqual(result.record.perIslandEggs['9']?.status, 'collected', 'fallback egg should be written to the island ledger');
+      assertEqual(result.record.perIslandEggs['9']?.tier, 'common', 'fallback egg should preserve the visible tier');
+      assertEqual(result.record.creatureCollection[0]?.creatureId, 'common-breeze-buddy', 'fallback collect should add canonical creature');
+    },
+  },
+  {
     name: 'resolveReadyEggTerminalTransition: resolves non-base Egg Mania slot without clearing active base egg',
     run: () => {
       resetAll();

@@ -2896,6 +2896,8 @@ export interface ResolveReadyEggTerminalTransitionOptions {
   /** Allows just-hatched incubating entries to resolve without a prior hydration sweep. */
   readyNowMs?: number;
   location?: PerIslandEggEntry['location'];
+  /** UI-visible ready egg details used when local store mirrors lost the ledger entry. */
+  fallbackReadyEgg?: Pick<PerIslandEggEntry, 'tier' | 'setAtMs' | 'hatchAtMs' | 'location'>;
   completedStops: string[];
   rewardDeltas?: {
     essence?: number;
@@ -3098,6 +3100,7 @@ export function resolveReadyEggTerminalTransition(
     eggLedgerKey,
     readyNowMs,
     location = 'island',
+    fallbackReadyEgg,
     completedStops,
     rewardDeltas,
     collectedCreatureId,
@@ -3127,7 +3130,15 @@ export function resolveReadyEggTerminalTransition(
         status: readyCheckMs >= activeEggHatchAtMs ? 'ready' : 'incubating',
         location: current.activeEggIsDormant ? 'dormant' : 'island',
       }
-    : undefined);
+    : fallbackReadyEgg
+      ? {
+          tier: fallbackReadyEgg.tier,
+          setAtMs: fallbackReadyEgg.setAtMs,
+          hatchAtMs: fallbackReadyEgg.hatchAtMs,
+          status: readyCheckMs >= fallbackReadyEgg.hatchAtMs ? 'ready' : 'incubating',
+          location: fallbackReadyEgg.location,
+        }
+      : undefined);
   if (!currentEntry) {
     return { record: current, changed: false, reason: 'missing_ledger_entry' };
   }
