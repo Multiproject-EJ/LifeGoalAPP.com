@@ -934,17 +934,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const previousMicroTestBadgeCountRef = useRef(0);
 
   useEffect(() => {
-    if (!microTestBadge.showBadge) {
-      setHasSeenMicroTestBadge(false);
-      previousMicroTestBadgeCountRef.current = 0;
-      return;
-    }
-
     if (microTestBadge.count > previousMicroTestBadgeCountRef.current) {
       setHasSeenMicroTestBadge(false);
     }
 
-    previousMicroTestBadgeCountRef.current = microTestBadge.count;
+    previousMicroTestBadgeCountRef.current = microTestBadge.showBadge ? microTestBadge.count : 0;
   }, [microTestBadge.showBadge, microTestBadge.count]);
 
   const showMicroTestNotificationDot = microTestBadge.showBadge && !hasSeenMicroTestBadge;

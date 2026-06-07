@@ -20811,6 +20811,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__micro-alert {
+  --mobile-menu-overlay-notification-dot: #ef4444;
   position: relative;
   display: inline-grid;
   place-items: center;
@@ -20844,7 +20845,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   width: 0.58rem;
   height: 0.58rem;
   border-radius: 999px;
-  background: #ef4444;
+  background: var(--mobile-menu-overlay-notification-dot);
   border: 2px solid rgba(255, 255, 255, 0.96);
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16), 0 4px 10px rgba(239, 68, 68, 0.28);
 }
