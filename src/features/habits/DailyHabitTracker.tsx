@@ -9752,7 +9752,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                               title={section.label}
                             >
                               <span aria-hidden="true">{section.icon}</span>
-                              <span className="sr-only">{section.label}</span>
                             </button>
                           );
                         })}
