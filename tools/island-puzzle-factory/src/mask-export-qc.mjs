@@ -74,7 +74,7 @@ export async function runMaskExportQc({ masksDir, width, height, expectedPieces 
       expectedCoveragePixels > 0,
       expectedCoveragePixels > 0
         ? `${expectedCoveragePixels} visible pixels in ${expectedCoverage.id}`
-        : `Coverage element ${expectedCoverage.id} has no visible pixels; expected > 0`,
+        : `Coverage element ${expectedCoverage.id} rendered with no visible pixels; silhouette must be non-empty`,
     );
     pushCheck(checks, 'masks_cover_expected_coverage_once', expectedCoverageGaps === 0, `${expectedCoverageGaps} uncovered pixels inside ${expectedCoverage.id}`);
     pushCheck(checks, 'masks_do_not_cover_outside_expected_coverage', outsideExpectedCoveragePixels === 0, `${outsideExpectedCoveragePixels} pixels covered outside ${expectedCoverage.id}`);
