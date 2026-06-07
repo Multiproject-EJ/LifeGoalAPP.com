@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900" role="img" aria-label="Production canonical 3 by 3 jigsaw mask template for Island Puzzle Factory" shape-rendering="crispEdges">
+  <title>Production Canonical 3x3 Jigsaw Template</title>
+  <desc>Production geometry template only. The nine directly named path elements partition the 900 by 900 puzzle canvas exactly once for deterministic full-canvas mask export.</desc>
+  <metadata>
+    Island Puzzle Factory production template. Geometry authority only; no artwork is generated or embedded. Piece ids map to mask_01 through mask_09 in top-left to bottom-right order. The template uses pixel-aligned stepped jigsaw tab geometry so mask QC can prove exact single coverage on the full 900 by 900 canvas.
+  </metadata>
+  <style>
+    .piece { fill: #ffffff; stroke: none; }
+    .preview .piece { stroke: rgba(33, 45, 71, 0.34); stroke-width: 3; vector-effect: non-scaling-stroke; }
+    .preview .piece-01 { fill: #F8D77C; }
+    .preview .piece-02 { fill: #F7C767; }
+    .preview .piece-03 { fill: #F3B75C; }
+    .preview .piece-04 { fill: #86D8B8; }
+    .preview .piece-05 { fill: #62CDA8; }
+    .preview .piece-06 { fill: #47BFA0; }
+    .preview .piece-07 { fill: #79A9F5; }
+    .preview .piece-08 { fill: #638FE6; }
+    .preview .piece-09 { fill: #5574D2; }
+  </style>
+  <path id="piece_01_top_left" class="piece piece-01" d="M 0 0 L 300 0 L 300 70 L 318 70 L 318 92 L 344 92 L 344 114 L 362 114 L 362 186 L 344 186 L 344 208 L 318 208 L 318 230 L 300 230 L 300 300 L 230 300 L 230 318 L 208 318 L 208 344 L 186 344 L 186 362 L 114 362 L 114 344 L 92 344 L 92 318 L 70 318 L 70 300 L 0 300 L 0 0 Z"/>
+  <path id="piece_02_top_center" class="piece piece-02" d="M 300 0 L 600 0 L 600 70 L 582 70 L 582 92 L 556 92 L 556 114 L 538 114 L 538 186 L 556 186 L 556 208 L 582 208 L 582 230 L 600 230 L 600 300 L 530 300 L 530 282 L 508 282 L 508 256 L 486 256 L 486 238 L 414 238 L 414 256 L 392 256 L 392 282 L 370 282 L 370 300 L 300 300 L 300 230 L 318 230 L 318 208 L 344 208 L 344 186 L 362 186 L 362 114 L 344 114 L 344 92 L 318 92 L 318 70 L 300 70 L 300 0 Z"/>
+  <path id="piece_03_top_right" class="piece piece-03" d="M 600 0 L 900 0 L 900 300 L 830 300 L 830 318 L 808 318 L 808 344 L 786 344 L 786 362 L 714 362 L 714 344 L 692 344 L 692 318 L 670 318 L 670 300 L 600 300 L 600 230 L 582 230 L 582 208 L 556 208 L 556 186 L 538 186 L 538 114 L 556 114 L 556 92 L 582 92 L 582 70 L 600 70 L 600 0 Z"/>
+  <path id="piece_04_middle_left" class="piece piece-04" d="M 0 300 L 70 300 L 70 318 L 92 318 L 92 344 L 114 344 L 114 362 L 186 362 L 186 344 L 208 344 L 208 318 L 230 318 L 230 300 L 300 300 L 300 370 L 282 370 L 282 392 L 256 392 L 256 414 L 238 414 L 238 486 L 256 486 L 256 508 L 282 508 L 282 530 L 300 530 L 300 600 L 230 600 L 230 582 L 208 582 L 208 556 L 186 556 L 186 538 L 114 538 L 114 556 L 92 556 L 92 582 L 70 582 L 70 600 L 0 600 L 0 300 Z"/>
+  <path id="piece_05_middle_center" class="piece piece-05" d="M 300 300 L 370 300 L 370 282 L 392 282 L 392 256 L 414 256 L 414 238 L 486 238 L 486 256 L 508 256 L 508 282 L 530 282 L 530 300 L 600 300 L 600 370 L 618 370 L 618 392 L 644 392 L 644 414 L 662 414 L 662 486 L 644 486 L 644 508 L 618 508 L 618 530 L 600 530 L 600 600 L 530 600 L 530 618 L 508 618 L 508 644 L 486 644 L 486 662 L 414 662 L 414 644 L 392 644 L 392 618 L 370 618 L 370 600 L 300 600 L 300 530 L 282 530 L 282 508 L 256 508 L 256 486 L 238 486 L 238 414 L 256 414 L 256 392 L 282 392 L 282 370 L 300 370 L 300 300 Z"/>
+  <path id="piece_06_middle_right" class="piece piece-06" d="M 600 300 L 670 300 L 670 318 L 692 318 L 692 344 L 714 344 L 714 362 L 786 362 L 786 344 L 808 344 L 808 318 L 830 318 L 830 300 L 900 300 L 900 600 L 830 600 L 830 582 L 808 582 L 808 556 L 786 556 L 786 538 L 714 538 L 714 556 L 692 556 L 692 582 L 670 582 L 670 600 L 600 600 L 600 530 L 618 530 L 618 508 L 644 508 L 644 486 L 662 486 L 662 414 L 644 414 L 644 392 L 618 392 L 618 370 L 600 370 L 600 300 Z"/>
+  <path id="piece_07_bottom_left" class="piece piece-07" d="M 0 600 L 70 600 L 70 582 L 92 582 L 92 556 L 114 556 L 114 538 L 186 538 L 186 556 L 208 556 L 208 582 L 230 582 L 230 600 L 300 600 L 300 670 L 318 670 L 318 692 L 344 692 L 344 714 L 362 714 L 362 786 L 344 786 L 344 808 L 318 808 L 318 830 L 300 830 L 300 900 L 0 900 L 0 600 Z"/>
+  <path id="piece_08_bottom_center" class="piece piece-08" d="M 300 600 L 370 600 L 370 618 L 392 618 L 392 644 L 414 644 L 414 662 L 486 662 L 486 644 L 508 644 L 508 618 L 530 618 L 530 600 L 600 600 L 600 670 L 582 670 L 582 692 L 556 692 L 556 714 L 538 714 L 538 786 L 556 786 L 556 808 L 582 808 L 582 830 L 600 830 L 600 900 L 300 900 L 300 830 L 318 830 L 318 808 L 344 808 L 344 786 L 362 786 L 362 714 L 344 714 L 344 692 L 318 692 L 318 670 L 300 670 L 300 600 Z"/>
+  <path id="piece_09_bottom_right" class="piece piece-09" d="M 600 600 L 670 600 L 670 582 L 692 582 L 692 556 L 714 556 L 714 538 L 786 538 L 786 556 L 808 556 L 808 582 L 830 582 L 830 600 L 900 600 L 900 900 L 600 900 L 600 830 L 582 830 L 582 808 L 556 808 L 556 786 L 538 786 L 538 714 L 556 714 L 556 692 L 582 692 L 582 670 L 600 670 L 600 600 Z"/>
+</svg>
