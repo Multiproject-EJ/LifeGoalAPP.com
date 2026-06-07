@@ -55,6 +55,7 @@ import { GameBoardOverlay } from './components/GameBoardOverlay';
 import { HabitGameAuthCard, HabitGameLandingShell, type HabitGameAuthTab } from './components/HabitGameLandingShell';
 import { HolidaySeasonDialog } from './components/HolidaySeasonDialog';
 import { FeaturePreviewOverlay } from './components/FeaturePreviewOverlay';
+import { FeatureStatusBadge } from './components/FeatureStatusBadge';
 import { QuickActionsFAB } from './components/QuickActionsFAB';
 import { XPToast } from './components/XPToast';
 import { CaseSubmissionModal } from './features/cases/CaseSubmissionModal';
@@ -191,6 +192,7 @@ type LauncherSubmenuAction = {
   id: string;
   label: string;
   icon: string;
+  featureId?: FeatureAvailabilityId;
   onSelect: () => void;
 };
 
@@ -2712,12 +2714,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
     () => [
       { id: 'quest-compass', label: 'Quest Compass', icon: '🧭', onSelect: openQuestCompassFromMobileMenu },
       { id: 'starter-quest', label: 'Starter Quest', icon: '🧭', onSelect: openStarterQuestSheetFromMyQuest },
-      { id: 'body', label: 'Health Goals', icon: '💪', onSelect: () => handleMobileNavSelect('body') },
+      { id: 'body', label: 'Health Goals', icon: '💪', featureId: 'app.body', onSelect: () => handleMobileNavSelect('body') },
       { id: 'habits', label: 'Habits', icon: '🔄', onSelect: () => handleMobileNavSelect('habits') },
-      { id: 'routines', label: 'Routines', icon: '🧩', onSelect: openRoutinesWorkspace },
+      { id: 'routines', label: 'Routines', icon: '🧩', featureId: 'app.routines', onSelect: openRoutinesWorkspace },
       { id: 'support', label: 'Goals', icon: '🎯', onSelect: () => handleMobileNavSelect('support') },
       { id: 'planning', label: 'Check-ins', icon: '✅', onSelect: openCheckinsFromMyQuest },
-      { id: 'contracts', label: 'Contracts', icon: '🤝', onSelect: openContractsWorkspace },
+      { id: 'contracts', label: 'Contracts', icon: '🤝', featureId: 'app.contracts', onSelect: openContractsWorkspace },
     ],
     [handleMobileNavSelect, openCheckinsFromMyQuest, openContractsWorkspace, openQuestCompassFromMobileMenu, openRoutinesWorkspace, openStarterQuestSheetFromMyQuest],
   );
@@ -4276,14 +4278,49 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   ) : null}
                   <p className="mobile-menu-overlay__hold-eyebrow">More tools</p>
                   <div className="mobile-menu-overlay__submenu mobile-menu-overlay__submenu--open">
-                    {myQuestSubmenuActions.map((action) => (
-                      <button key={action.id} type="button" className="mobile-menu-overlay__submenu-button" onClick={action.onSelect}>
-                        <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">
-                          {action.icon}
-                        </span>
-                        <span>{action.label}</span>
-                      </button>
-                    ))}
+                    {myQuestSubmenuActions.map((action) => {
+                      const featureId = action.featureId;
+                      const availability = featureId ? getFeatureAvailability(featureId) : null;
+                      const isFeatureOpen = featureId ? isAppWorkspaceFeatureOpen(featureId) : true;
+                      const futureFeatureState = featureId && !isFeatureOpen
+                        ? appFutureFeatureCardStates[featureId]
+                        : undefined;
+                      const submenuButtonClassName = getFutureFeatureCardClassName(
+                        'mobile-menu-overlay__submenu-button',
+                        futureFeatureState,
+                        { isDemo: availability?.status === 'demo' },
+                      );
+                      const submenuButtonTitle = [
+                        action.label,
+                        availability?.status === 'demo' ? availability.publicLabel : '',
+                        futureFeatureState?.voted ? 'Feedback sent' : '',
+                      ].filter(Boolean).join(' • ');
+
+                      return (
+                        <button
+                          key={action.id}
+                          type="button"
+                          className={submenuButtonClassName}
+                          onClick={action.onSelect}
+                          title={submenuButtonTitle}
+                        >
+                          <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">
+                            {action.icon}
+                          </span>
+                          <span>{action.label}</span>
+                          {availability && availability.status !== 'live' ? (
+                            <FeatureStatusBadge
+                              status={availability.status}
+                              labelOverride={availability.publicLabel}
+                              className="mobile-menu-overlay__submenu-badge"
+                            />
+                          ) : null}
+                          {futureFeatureState?.voted ? (
+                            <span className="future-feature-card__saved-dot" aria-hidden="true">✓</span>
+                          ) : null}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
