@@ -2061,17 +2061,6 @@ export function IslandRunBoardPrototype({
     showTopbarMenu,
   ]);
 
-  useEffect(() => {
-    if (!showHatcheryCompassModal) return undefined;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setShowHatcheryCompassModal(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showHatcheryCompassModal]);
-
   // B3-4: utility stop state
   const [utilityInteracted, setUtilityInteracted] = useState(false);
   const [islandIntention, setIslandIntention] = useState('');
