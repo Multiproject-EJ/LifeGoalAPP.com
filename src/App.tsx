@@ -4928,10 +4928,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
       openOnMount
       overlayOnly
       overlayVariant="fullscreen"
-      onOverlayClose={() => setIsLauncherHandOverlayOpen(false)}
+      onOverlayClose={() => {
+        setIsLauncherHandOverlayOpen(false);
+        handleMobileFooterExpand(true);
+      }}
       onOpenProfile={() => {
+        setIsLauncherHandOverlayOpen(false);
         setIsMobileMenuOpen(true);
         setIsMobileProfileDialogOpen(true);
+        handleMobileFooterExpand(true);
       }}
     />
   ) : null;
