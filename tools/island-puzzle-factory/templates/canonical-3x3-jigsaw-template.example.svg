@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="90" height="60" viewBox="0 0 90 60" role="img" aria-label="Deterministic 3x3 canonical jigsaw mask template example">
+  <title>Canonical 3x3 Jigsaw Template Example</title>
+  <desc>Smoke-test geometry only. Each piece id maps to one required full-canvas mask filename.</desc>
+  <g id="piece_01_top_left">
+    <path d="M0 0 H30 V20 H0 Z"/>
+  </g>
+  <g id="piece_02_top_center">
+    <path d="M30 0 H60 V20 H30 Z"/>
+  </g>
+  <g id="piece_03_top_right">
+    <path d="M60 0 H90 V20 H60 Z"/>
+  </g>
+  <g id="piece_04_middle_left">
+    <path d="M0 20 H30 V40 H0 Z"/>
+  </g>
+  <g id="piece_05_middle_center">
+    <path d="M30 20 H60 V40 H30 Z"/>
+  </g>
+  <g id="piece_06_middle_right">
+    <path d="M60 20 H90 V40 H60 Z"/>
+  </g>
+  <g id="piece_07_bottom_left">
+    <path d="M0 40 H30 V60 H0 Z"/>
+  </g>
+  <g id="piece_08_bottom_center">
+    <path d="M30 40 H60 V60 H30 Z"/>
+  </g>
+  <g id="piece_09_bottom_right">
+    <path d="M60 40 H90 V60 H60 Z"/>
+  </g>
+</svg>
