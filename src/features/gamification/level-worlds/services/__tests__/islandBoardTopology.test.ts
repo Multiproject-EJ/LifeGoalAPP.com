@@ -79,7 +79,7 @@ export const islandBoardTopologyTests: TestCase[] = [
       assertEqual(tileMap[36].doorStopId, 'hatchery', 'Expected hatchery door to stay unchanged');
       assertEqual(tileMap[16].doorStopId, 'mystery', 'Expected mystery door to stay unchanged');
       assertEqual(tileMap[26].doorStopId, 'wisdom', 'Expected wisdom door to stay unchanged');
-      assertEqual(tileMap.filter((entry) => entry.tileType === 'landmark_door').length, 6, 'Expected only the habit door count to triple');
+      assertEqual(tileMap.filter((entry) => entry.tileType === 'landmark_door').length, 6, 'Expected 6 total doors: habit expanded to 3, others remain at 1 each');
     },
   },
   {

@@ -143,11 +143,12 @@ export function applyLandmarkDoorTiles(
     doorByIndex.set(config.tileIndex, doorStopId);
 
     if (!options?.allDoorsRouteToBoss && options?.expandedActiveStopId === config.stopId && tileCount > 0) {
-      for (const offset of [-1, 0, 1]) {
-        const tileIndex = (config.tileIndex + offset + tileCount) % tileCount;
-        if (offset !== 0 && baseDoorIndices.has(tileIndex)) continue;
-        doorByIndex.set(tileIndex, config.stopId);
-        activeDoorClusterIndices.add(tileIndex);
+      activeDoorClusterIndices.add(config.tileIndex);
+      for (const offset of [-1, 1]) {
+        const neighborTileIndex = (config.tileIndex + offset + tileCount) % tileCount;
+        if (baseDoorIndices.has(neighborTileIndex)) continue;
+        doorByIndex.set(neighborTileIndex, config.stopId);
+        activeDoorClusterIndices.add(neighborTileIndex);
       }
     }
   }
