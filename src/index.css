@@ -19251,6 +19251,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay {
+  --mobile-menu-panel-max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.5rem);
   position: fixed;
   inset: 0;
   z-index: 35;
@@ -19259,7 +19260,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   align-items: flex-start;
   box-sizing: border-box;
   padding:
-    calc(env(safe-area-inset-top, 0px) + 0.75rem)
+    0.75rem
     clamp(0.55rem, 3vw, 1rem)
     calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
   animation: mobileMenuFadeIn 0.32s ease-out;
@@ -19288,7 +19289,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   padding: 1.05rem clamp(1rem, 5vw, 1.45rem) calc(1rem + env(safe-area-inset-bottom, 0));
   backdrop-filter: blur(16px);
   animation: slideUpSpring 0.62s cubic-bezier(0.18, 1.18, 0.32, 1);
-  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.5rem);
+  max-height: var(--mobile-menu-panel-max-height);
   overflow: visible;
   display: flex;
   flex-direction: column;
@@ -19296,12 +19297,12 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .mobile-menu-overlay__panel--default {
   min-height: min(72dvh, 760px);
-  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.5rem);
+  max-height: var(--mobile-menu-panel-max-height);
 }
 
 .mobile-menu-overlay__panel--tall {
   min-height: min(78dvh, 880px);
-  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.5rem);
+  max-height: var(--mobile-menu-panel-max-height);
 }
 
 .mobile-menu-overlay__panel--immersive {
@@ -19631,7 +19632,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .mobile-menu-overlay__header {
   position: absolute;
-  top: 0.85rem;
+  top: calc(env(safe-area-inset-top, 0px) + 0.85rem);
   left: clamp(0.85rem, 4vw, 1.2rem);
   right: clamp(0.85rem, 4vw, 1.2rem);
   z-index: 4;
@@ -20594,7 +20595,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   z-index: 1;
   display: grid;
   gap: 0.75rem;
-  padding-top: 3.15rem;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 3.15rem);
   padding-bottom: 0.25rem;
   animation: mobileMenuElementSettle 0.72s cubic-bezier(0.18, 1.28, 0.32, 1) 0.05s both;
 }
