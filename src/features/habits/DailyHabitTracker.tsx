@@ -9116,32 +9116,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               </div>
             ) : null}
 
-            {!isCompactView ? (
-              <div className="habit-today-extra-toggles" aria-label="Today extra section visibility">
-                <p className="habit-today-extra-toggles__label">Show extras</p>
-                <div className="habit-today-extra-toggles__buttons">
-                  {TODAY_EXTRA_SECTION_TOGGLES.map((section) => {
-                    const isVisible = !hiddenTodayExtraSections.has(section.key);
-
-                    return (
-                      <button
-                        key={section.key}
-                        type="button"
-                        className={`habit-today-extra-toggles__button${
-                          isVisible ? ' habit-today-extra-toggles__button--active' : ''
-                        }`}
-                        onClick={() => toggleTodayExtraSectionVisibility(section.key)}
-                        aria-pressed={isVisible}
-                      >
-                        <span aria-hidden="true">{section.icon}</span>
-                        <span>{section.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : null}
-
             {!hiddenTodayExtraSections.has('routines') ? (
               <TodayExpandableActionSection
                 id="today-routines"
@@ -9748,14 +9722,43 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 ) : null}
 
                 <div className="habit-day-status" aria-live="polite">
-                  <button
-                    type="button"
-                    className="habit-day-status__toggle"
-                    onClick={() => setIsDayStatusExpanded((prev) => !prev)}
-                    aria-expanded={isDayStatusExpanded}
-                  >
-                    Skip day
-                  </button>
+                  <div className="habit-day-status__summary">
+                    <button
+                      type="button"
+                      className="habit-day-status__toggle"
+                      onClick={() => setIsDayStatusExpanded((prev) => !prev)}
+                      aria-expanded={isDayStatusExpanded}
+                    >
+                      Skip day
+                    </button>
+                    <div
+                      className="habit-today-extra-toggles habit-today-extra-toggles--compact"
+                      aria-label="Today extra section visibility"
+                    >
+                      <div className="habit-today-extra-toggles__buttons">
+                        {TODAY_EXTRA_SECTION_TOGGLES.map((section) => {
+                          const isVisible = !hiddenTodayExtraSections.has(section.key);
+
+                          return (
+                            <button
+                              key={section.key}
+                              type="button"
+                              className={`habit-today-extra-toggles__button${
+                                isVisible ? ' habit-today-extra-toggles__button--active' : ''
+                              }`}
+                              onClick={() => toggleTodayExtraSectionVisibility(section.key)}
+                              aria-label={`${isVisible ? 'Hide' : 'Show'} ${section.label}`}
+                              aria-pressed={isVisible}
+                              title={section.label}
+                            >
+                              <span aria-hidden="true">{section.icon}</span>
+                              <span className="sr-only">{section.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
 
                   {isDayStatusExpanded ? (
                     <>
