@@ -42,7 +42,7 @@ import {
   type JournalEntry,
 } from '../../services/journal';
 import { fetchCompletedActionsForDate } from '../../services/actions';
-import { createTodayTodo, fetchTodayTodos, updateTodayTodo, type TodayTodo } from '../../services/todayTodos';
+import { createTodayTodo, deleteTodayTodo, fetchTodayTodos, updateTodayTodo, type TodayTodo } from '../../services/todayTodos';
 import {
   claimDailySpinHabitBonusOncePerDay,
   hasClaimedDailySpinHabitBonus,
@@ -673,6 +673,8 @@ const weeklyHabitReviewLaunchKey = (userId: string) =>
   `lifegoal.weekly-habit-review-launch:${userId}`;
 const dailyCatchUpLaunchKey = (userId: string) =>
   `lifegoal.daily-catchup-launch:${userId}`;
+const yesterdaySundownTodoShownKey = (userId: string, dateISO: string) =>
+  `lifegoal.yesterday-sundown-todos-shown:${userId}:${dateISO}`;
 const dreamJournalLaunchKey = (userId: string) =>
   `lifegoal.dream-journal-launch:${userId}`;
 const todaysWinsLaunchKey = (userId: string) =>
@@ -804,6 +806,11 @@ export function DailyHabitTracker({
   const [todayTodoLoadError, setTodayTodoLoadError] = useState<string | null>(null);
   const [justCompletedTodoId, setJustCompletedTodoId] = useState<string | null>(null);
   const [todayTodoActionPendingById, setTodayTodoActionPendingById] = useState<Record<string, boolean>>({});
+  const [showYesterdaySundownTodoModal, setShowYesterdaySundownTodoModal] = useState(false);
+  const [yesterdaySundownTodos, setYesterdaySundownTodos] = useState<TodayTodo[]>([]);
+  const [yesterdaySundownTodoStatus, setYesterdaySundownTodoStatus] = useState<string | null>(null);
+  const [yesterdaySundownTodoSaving, setYesterdaySundownTodoSaving] = useState(false);
+  const [expandedYesterdaySundownTodoById, setExpandedYesterdaySundownTodoById] = useState<Record<string, boolean>>({});
 
   const [isTodaysOfferModalOpen, setIsTodaysOfferModalOpen] = useState(false);
   const [todaysOfferCheckoutPending, setTodaysOfferCheckoutPending] = useState(false);
@@ -10277,11 +10284,54 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     deferInitialModal: deferDailyLifeUpgradeModal,
   });
 
-  const hasViewportModalOpen =
+  const hasNewDaySequenceModalOpen =
     isTodayWinsOpen ||
     (Boolean(yesterdayIntentionsEntry) && isIntentionsNoticeOpen) ||
     showDailyLifeUpgradeModal ||
     Boolean(dailyLifeUpgradeAlternativeCreateDraft || dailyLifeUpgradeAlternativeCreateSuccess);
+
+  const hasViewportModalOpen = hasNewDaySequenceModalOpen || showYesterdaySundownTodoModal;
+
+  useEffect(() => {
+    if (loading || !session?.user?.id || !isViewingToday) return;
+    if (showYesterdaySundownTodoModal || showYesterdayRecap || todayTodoModalOpen) return;
+    if (deferDailyLifeUpgradeModal || hasNewDaySequenceModalOpen) return;
+
+    const todayISO = formatISODate(new Date());
+    const shownKey = yesterdaySundownTodoShownKey(session.user.id, todayISO);
+    if (loadDraft<boolean>(shownKey)) return;
+
+    let isMounted = true;
+    void (async () => {
+      const { data, error } = await fetchTodayTodos(yesterdayISO);
+      if (!isMounted) return;
+      if (error) return;
+      const pendingTodos = (data ?? []).filter((todo) => !todo.completed);
+      if (pendingTodos.length === 0) {
+        saveDraft(shownKey, true);
+        return;
+      }
+      setYesterdaySundownTodos(pendingTodos);
+      setExpandedYesterdaySundownTodoById({});
+      setYesterdaySundownTodoStatus(null);
+      setShowYesterdaySundownTodoModal(true);
+      saveDraft(shownKey, true);
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    deferDailyLifeUpgradeModal,
+    hasNewDaySequenceModalOpen,
+    isViewingToday,
+    loading,
+    session?.user?.id,
+    showYesterdayRecap,
+    showYesterdaySundownTodoModal,
+    todayTodoModalOpen,
+    yesterdayISO,
+  ]);
 
   useEffect(() => {
     if (typeof document === 'undefined' || !hasViewportModalOpen) {
@@ -10302,6 +10352,78 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     };
   }, [hasViewportModalOpen]);
 
+  const closeYesterdaySundownTodoModal = useCallback(() => {
+    setShowYesterdaySundownTodoModal(false);
+    setYesterdaySundownTodoStatus(null);
+    setExpandedYesterdaySundownTodoById({});
+  }, []);
+
+  const refreshTodosAfterYesterdaySundownAction = useCallback(async () => {
+    await loadTodayTodos(activeDate);
+    const { data } = await fetchTodayTodos(yesterdayISO);
+    setYesterdaySundownTodos((data ?? []).filter((todo) => !todo.completed));
+  }, [activeDate, loadTodayTodos, yesterdayISO]);
+
+  const handleMoveYesterdaySundownTodoToDate = useCallback(async (todo: TodayTodo, nextDateISO: string) => {
+    setYesterdaySundownTodoSaving(true);
+    setYesterdaySundownTodoStatus(null);
+    const { error } = await updateTodayTodo(todo.id, { todo_date: nextDateISO, completed: false });
+    if (error) {
+      setYesterdaySundownTodoStatus('Could not move this todo right now.');
+    } else {
+      setYesterdaySundownTodoStatus(nextDateISO === today ? 'Moved to today.' : `Rescheduled to ${formatDateLabel(nextDateISO)}.`);
+      await refreshTodosAfterYesterdaySundownAction();
+    }
+    setYesterdaySundownTodoSaving(false);
+  }, [refreshTodosAfterYesterdaySundownAction, today]);
+
+  const handleDeleteYesterdaySundownTodo = useCallback(async (todo: TodayTodo) => {
+    setYesterdaySundownTodoSaving(true);
+    setYesterdaySundownTodoStatus(null);
+    const { error } = await deleteTodayTodo(todo.id);
+    if (error) {
+      setYesterdaySundownTodoStatus('Could not delete this todo right now.');
+    } else {
+      setYesterdaySundownTodoStatus('Deleted.');
+      setYesterdaySundownTodos((current) => current.filter((item) => item.id !== todo.id));
+      void loadTodayTodos(activeDate);
+    }
+    setYesterdaySundownTodoSaving(false);
+  }, [activeDate, loadTodayTodos]);
+
+  const handleIgnoreYesterdaySundownTodo = useCallback((todoId: string) => {
+    setYesterdaySundownTodos((current) => current.filter((todo) => todo.id !== todoId));
+    setYesterdaySundownTodoStatus('Ignored for today.');
+  }, []);
+
+  const handleMoveAllYesterdaySundownTodosToToday = useCallback(async () => {
+    if (yesterdaySundownTodos.length === 0) return;
+    setYesterdaySundownTodoSaving(true);
+    setYesterdaySundownTodoStatus(null);
+    const results = await Promise.all(
+      yesterdaySundownTodos.map((todo, index) => updateTodayTodo(todo.id, {
+        todo_date: today,
+        completed: false,
+        order_index: todayTodos.filter((item) => !item.completed).length + index,
+      })),
+    );
+    const failed = results.some((result) => result.error);
+    if (failed) {
+      setYesterdaySundownTodoStatus('Some todos could not be moved. Please try the remaining ones again.');
+      await refreshTodosAfterYesterdaySundownAction();
+    } else {
+      setYesterdaySundownTodoStatus('Moved all yesterday todos to today.');
+      setYesterdaySundownTodos([]);
+      await loadTodayTodos(activeDate);
+      closeYesterdaySundownTodoModal();
+    }
+    setYesterdaySundownTodoSaving(false);
+  }, [activeDate, closeYesterdaySundownTodoModal, loadTodayTodos, refreshTodosAfterYesterdaySundownAction, today, todayTodos, yesterdaySundownTodos]);
+
+  const handleIgnoreAllYesterdaySundownTodos = useCallback(() => {
+    closeYesterdaySundownTodoModal();
+  }, [closeYesterdaySundownTodoModal]);
+
   const dailyLifeUpgradeModal = (
     <DailyLifeUpgradeModal
       candidate={dailyLifeUpgradeCandidate}
@@ -10311,6 +10433,86 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       onAlternative={handleDailyLifeUpgradeAlternativeAction}
     />
   );
+
+  const yesterdaySundownTodoModalContent = showYesterdaySundownTodoModal ? (
+    <div className="yesterday-sundown-todo-modal" role="dialog" aria-modal="true" aria-labelledby="yesterday-sundown-todo-title">
+      <div className="yesterday-sundown-todo-modal__backdrop" onClick={closeYesterdaySundownTodoModal} role="presentation" />
+      <div className="yesterday-sundown-todo-modal__dialog">
+        <header className="yesterday-sundown-todo-modal__header">
+          <div>
+            <p className="yesterday-sundown-todo-modal__eyebrow">New day reset</p>
+            <h3 id="yesterday-sundown-todo-title">Clear yesterday's sundown todos</h3>
+            <p className="yesterday-sundown-todo-modal__subtitle">
+              Decide what to do with unfinished todos from {formatDateLabel(yesterdayISO)}.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="yesterday-sundown-todo-modal__close"
+            onClick={closeYesterdaySundownTodoModal}
+            aria-label="Close yesterday sundown todos"
+          >
+            ×
+          </button>
+        </header>
+
+        <div className="yesterday-sundown-todo-modal__body">
+          <p className="yesterday-sundown-todo-modal__hint">Tap a task to choose per-task actions. Swipe-style cleanup, without overthinking.</p>
+          {yesterdaySundownTodos.length > 0 ? (
+            <ul className="yesterday-sundown-todo-modal__list">
+              {yesterdaySundownTodos.map((todo) => {
+                const isExpanded = Boolean(expandedYesterdaySundownTodoById[todo.id]);
+                const tomorrowISO = formatISODate(addDays(parseISODate(today), 1));
+                return (
+                  <li key={todo.id} className={`yesterday-sundown-todo-modal__item${isExpanded ? ' yesterday-sundown-todo-modal__item--expanded' : ''}`}>
+                    <button
+                      type="button"
+                      className="yesterday-sundown-todo-modal__task"
+                      onClick={() => setExpandedYesterdaySundownTodoById((current) => ({ ...current, [todo.id]: !current[todo.id] }))}
+                      aria-expanded={isExpanded}
+                    >
+                      <span className="yesterday-sundown-todo-modal__task-title">{todo.title}</span>
+                      {todo.notes ? <span className="yesterday-sundown-todo-modal__task-notes">{todo.notes}</span> : null}
+                      <span className="yesterday-sundown-todo-modal__task-caret" aria-hidden="true">{isExpanded ? '−' : '+'}</span>
+                    </button>
+                    {isExpanded ? (
+                      <div className="yesterday-sundown-todo-modal__task-actions">
+                        <button type="button" onClick={() => void handleMoveYesterdaySundownTodoToDate(todo, today)} disabled={yesterdaySundownTodoSaving}>Add to today</button>
+                        <button type="button" onClick={() => handleIgnoreYesterdaySundownTodo(todo.id)} disabled={yesterdaySundownTodoSaving}>Ignore</button>
+                        <button type="button" onClick={() => void handleMoveYesterdaySundownTodoToDate(todo, tomorrowISO)} disabled={yesterdaySundownTodoSaving}>Tomorrow</button>
+                        <label className="yesterday-sundown-todo-modal__date-action">
+                          <span>Reschedule</span>
+                          <input
+                            type="date"
+                            min={today}
+                            onChange={(event) => {
+                              if (event.target.value) void handleMoveYesterdaySundownTodoToDate(todo, event.target.value);
+                            }}
+                            disabled={yesterdaySundownTodoSaving}
+                          />
+                        </label>
+                        <button type="button" className="yesterday-sundown-todo-modal__delete" onClick={() => void handleDeleteYesterdaySundownTodo(todo)} disabled={yesterdaySundownTodoSaving}>Delete</button>
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className="yesterday-sundown-todo-modal__empty">All clear. Yesterday can stay yesterday.</div>
+          )}
+          {yesterdaySundownTodoStatus ? <p className="yesterday-sundown-todo-modal__status" role="status">{yesterdaySundownTodoStatus}</p> : null}
+        </div>
+
+        <footer className="yesterday-sundown-todo-modal__footer">
+          <button type="button" className="btn btn--secondary" onClick={handleIgnoreAllYesterdaySundownTodos} disabled={yesterdaySundownTodoSaving}>Ignore all</button>
+          <button type="button" className="btn btn--primary" onClick={() => void handleMoveAllYesterdaySundownTodosToToday()} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>
+            {yesterdaySundownTodoSaving ? 'Saving…' : 'Move all to today'}
+          </button>
+        </footer>
+      </div>
+    </div>
+  ) : null;
 
   const dailyLifeUpgradeCreateFlowModalContent = (
     <DailyLifeUpgradeAlternativeCreateModal
@@ -10364,6 +10566,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     ? modalRoot
       ? createPortal(dailyLifeUpgradeCreateFlowModalContent, modalRoot)
       : dailyLifeUpgradeCreateFlowModalContent
+    : null;
+
+  const yesterdaySundownTodoPortal = yesterdaySundownTodoModalContent
+    ? modalRoot
+      ? createPortal(yesterdaySundownTodoModalContent, modalRoot)
+      : yesterdaySundownTodoModalContent
     : null;
 
   const zenTreePortal = zenTreeModal
@@ -10747,6 +10955,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       {alertConfigModal}
       {editHabitModal}
       {dailyLifeUpgradeCreateFlowPortal}
+      {yesterdaySundownTodoPortal}
 
       {showLegacyHabitAssets && (
         <div className="habit-legacy-modal-overlay" onClick={() => setShowLegacyHabitAssets(false)}>

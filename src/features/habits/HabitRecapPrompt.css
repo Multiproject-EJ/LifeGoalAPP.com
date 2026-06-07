@@ -280,3 +280,241 @@
 .dream-journal-reminder-modal__cta {
   min-width: 180px;
 }
+
+.yesterday-sundown-todo-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.yesterday-sundown-todo-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(10px);
+}
+
+.yesterday-sundown-todo-modal__dialog {
+  position: relative;
+  width: min(94vw, 460px);
+  max-height: min(84vh, 720px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(147, 197, 253, 0.5);
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(248, 252, 255, 0.98), rgba(239, 246, 255, 0.96));
+  box-shadow: 0 28px 80px rgba(37, 99, 235, 0.22), 0 8px 28px rgba(15, 23, 42, 0.16);
+  color: #0f172a;
+}
+
+.yesterday-sundown-todo-modal__header,
+.yesterday-sundown-todo-modal__footer {
+  padding: 1rem 1.1rem;
+}
+
+.yesterday-sundown-todo-modal__header {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(147, 197, 253, 0.32);
+}
+
+.yesterday-sundown-todo-modal__eyebrow {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #2563eb;
+}
+
+.yesterday-sundown-todo-modal__header h3 {
+  margin: 0;
+  font-size: clamp(1.25rem, 5vw, 1.65rem);
+  line-height: 1.05;
+}
+
+.yesterday-sundown-todo-modal__subtitle,
+.yesterday-sundown-todo-modal__hint {
+  margin: 0.45rem 0 0;
+  color: #475569;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.yesterday-sundown-todo-modal__close {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #0f172a;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.yesterday-sundown-todo-modal__body {
+  overflow-y: auto;
+  padding: 0.9rem 1.1rem 0.25rem;
+}
+
+.yesterday-sundown-todo-modal__hint {
+  margin-top: 0;
+  margin-bottom: 0.8rem;
+}
+
+.yesterday-sundown-todo-modal__list {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.yesterday-sundown-todo-modal__item {
+  border: 1px solid rgba(96, 165, 250, 0.38);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.1);
+  overflow: hidden;
+}
+
+.yesterday-sundown-todo-modal__task {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.25rem 0.75rem;
+  align-items: center;
+  padding: 0.9rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.yesterday-sundown-todo-modal__task-title {
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.yesterday-sundown-todo-modal__task-notes {
+  grid-column: 1 / -1;
+  color: #64748b;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.yesterday-sundown-todo-modal__task-caret {
+  width: 1.65rem;
+  height: 1.65rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(219, 234, 254, 0.9);
+  color: #1d4ed8;
+  font-weight: 900;
+}
+
+.yesterday-sundown-todo-modal__task-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0 0.9rem 0.9rem;
+}
+
+.yesterday-sundown-todo-modal__task-actions button,
+.yesterday-sundown-todo-modal__date-action {
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  border-radius: 999px;
+  background: rgba(239, 246, 255, 0.92);
+  color: #1e3a8a;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.48rem 0.7rem;
+}
+
+.yesterday-sundown-todo-modal__date-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.yesterday-sundown-todo-modal__date-action input {
+  max-width: 7.5rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.yesterday-sundown-todo-modal__task-actions .yesterday-sundown-todo-modal__delete {
+  border-color: rgba(239, 68, 68, 0.28);
+  background: rgba(254, 242, 242, 0.95);
+  color: #b91c1c;
+}
+
+.yesterday-sundown-todo-modal__status,
+.yesterday-sundown-todo-modal__empty {
+  margin: 0.8rem 0;
+  border-radius: 16px;
+  background: rgba(219, 234, 254, 0.7);
+  color: #1e3a8a;
+  font-weight: 750;
+  padding: 0.8rem;
+}
+
+.yesterday-sundown-todo-modal__footer {
+  display: flex;
+  gap: 0.7rem;
+  justify-content: flex-end;
+  border-top: 1px solid rgba(147, 197, 253, 0.32);
+}
+
+.yesterday-sundown-todo-modal__footer .btn {
+  min-height: 2.75rem;
+}
+
+@media (max-width: 520px) {
+  .yesterday-sundown-todo-modal {
+    align-items: flex-end;
+    padding: 0.75rem;
+  }
+
+  .yesterday-sundown-todo-modal__dialog {
+    width: 100%;
+    max-height: 88vh;
+    border-radius: 26px;
+  }
+
+  .yesterday-sundown-todo-modal__footer {
+    flex-direction: column-reverse;
+  }
+
+  .yesterday-sundown-todo-modal__footer .btn {
+    width: 100%;
+  }
+}
+
+[data-theme='dark-glass'] .yesterday-sundown-todo-modal__dialog {
+  border-color: rgba(125, 211, 252, 0.3);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.94));
+  color: #e0f2fe;
+}
+
+[data-theme='dark-glass'] .yesterday-sundown-todo-modal__subtitle,
+[data-theme='dark-glass'] .yesterday-sundown-todo-modal__hint,
+[data-theme='dark-glass'] .yesterday-sundown-todo-modal__task-notes {
+  color: rgba(226, 232, 240, 0.72);
+}
+
+[data-theme='dark-glass'] .yesterday-sundown-todo-modal__item,
+[data-theme='dark-glass'] .yesterday-sundown-todo-modal__close {
+  background: rgba(15, 23, 42, 0.72);
+}
