@@ -1,6 +1,92 @@
 /* Level Worlds CSS - Mobile-First Design */
 /* Warm wood/amber/gold aesthetic matching Lucky Roll */
 
+/* ════════════════════════════════════════════════════════════════════════════
+   BOARD TILE COLOR SYSTEM — "Cohesive & calm" (celestial sky-kingdom)
+   Single source of truth for every tile-type colour. The palette is anchored in
+   Island 001's own gemstone colours — pearl-white marble, gold, amethyst, cyan
+   and emerald — with GOLD as the unifying rim that already runs through the art.
+   Tiles are grouped by meaning so the board reads as signal, not noise:
+     • REWARD  → pearl + gold/amber, varied by SHADE. `micro` (the most common
+                 tile) is a soft pearl-marble neutral so the board stays calm and
+                 loud colour is reserved for rarer, meaningful tiles.
+     • RISK    → warm coral/ember — the only warm hues on a cool board, so danger
+                 stands out instantly (hazard, encounter).
+     • SPECIAL → the island's jewel tones: amethyst door, sapphire-gold boss,
+                 emerald light, cyan stop beacon (echoing the glowing portals).
+   Every type shares the same gradient angle, specular sheen and gold-leaning
+   border weight (see the `.island-tile--<type>` rules) — only the hue changes.
+   ════════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* Shared material: top-left specular highlight applied to every tile */
+  --tile-spec: rgba(255, 255, 255, 0.5);
+
+  /* ── Reward family (pearl + gold, low–mid saturation) ── */
+  --tile-micro-light: #fbf6ec;   /* majority tile → soft pearl marble */
+  --tile-micro-mid:   #ece2cc;
+  --tile-micro-deep:  #cdbd97;
+  --tile-micro-border:#f3ead4;
+
+  --tile-currency-light: #ffeeb0; /* gold, calm not neon */
+  --tile-currency-mid:   #f4d076;
+  --tile-currency-deep:  #cda23d;
+  --tile-currency-border:#f3dd9a;
+
+  --tile-chest-light: #f0d2a6;    /* bronze / treasure */
+  --tile-chest-mid:   #cf9a5e;
+  --tile-chest-deep:  #97662f;
+  --tile-chest-border:#e3bd8a;
+
+  --tile-egg_shard-light: #e6eff7; /* pale sky-pearl (matches the dragon egg) */
+  --tile-egg_shard-mid:   #b6d2e6;
+  --tile-egg_shard-deep:  #7ba6c4;
+  --tile-egg_shard-border:#d6e6f3;
+
+  /* `event` (legacy) folds into the warm reward family */
+  --tile-event-light: #ffeebd;
+  --tile-event-mid:   #f2cf6d;
+  --tile-event-deep:  #c79c2f;
+  --tile-event-border:#f0db96;
+
+  /* ── Risk family (red/orange — reserved for danger) ── */
+  --tile-hazard-light: #f3b0a0;
+  --tile-hazard-mid:   #d76a52;
+  --tile-hazard-deep:  #a5392a;
+  --tile-hazard-border:#e89684;
+  --tile-hazard-glow:  rgba(199, 80, 55, 0.42);
+
+  --tile-encounter-light: #f6c08a;
+  --tile-encounter-mid:   #e07f3e;
+  --tile-encounter-deep:  #ad511c;
+  --tile-encounter-border:#eea766;
+  --tile-encounter-glow:  rgba(214, 110, 40, 0.5);
+
+  /* ── Special / progress family (cool jewel tones) ── */
+  --tile-door-light: #e7d6f5;     /* landmark door → calm amethyst */
+  --tile-door-mid:   #b694d8;
+  --tile-door-deep:  #7a52a8;
+  --tile-door-border:rgba(231, 214, 245, 0.95);
+  --tile-door-glow:  rgba(150, 110, 210, 0.55);
+
+  --tile-boss-light: #fdeab8;     /* boss door → regal gold, stronger glow */
+  --tile-boss-mid:   #e7b54e;
+  --tile-boss-deep:  #9c6a1f;
+  --tile-boss-border:rgba(255, 243, 200, 0.97);
+  --tile-boss-glow:  rgba(231, 181, 78, 0.62);
+
+  --tile-light-light: #c6ecd4;    /* traffic light (green) → emerald */
+  --tile-light-mid:   #5fb985;
+  --tile-light-deep:  #2f7a52;
+  --tile-light-border:rgba(194, 234, 208, 0.95);
+  --tile-light-glow:  rgba(70, 175, 120, 0.55);
+
+  --tile-stop-light: #d2eff3;     /* stop → teal beacon (matches token + icon) */
+  --tile-stop-mid:   #5fc6d6;
+  --tile-stop-deep:  #2a8499;
+  --tile-stop-border:rgba(205, 238, 242, 0.96);
+  --tile-stop-glow:  rgba(80, 200, 220, 0.55);
+}
+
 /* === Hub Container === */
 .level-worlds-hub {
   position: fixed;
@@ -3476,9 +3562,13 @@
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 .island-tile--stop {
-  background: linear-gradient(160deg, #fff3c0 0%, #ffd700 40%, #ff8c00 100%);
-  border: 2.5px solid #ffd700;
-  box-shadow: 0 0 14px rgba(255, 215, 0, 0.8), 0 0 28px rgba(255, 165, 0, 0.4);
+  /* Stop = a cyan beacon echoing the island's glowing portals (distinct from
+     the gold reward tiles so landing spots are instantly recognisable). */
+  background:
+    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(160deg, var(--tile-stop-light) 0%, var(--tile-stop-mid) 48%, var(--tile-stop-deep) 100%);
+  border: 2.5px solid var(--tile-stop-border);
+  box-shadow: 0 0 14px var(--tile-stop-glow), 0 0 28px var(--tile-stop-glow);
   z-index: 8 !important;
   animation: island-tile-stop-pulse 2s ease-in-out infinite, island-tile-idle 3.5s ease-in-out infinite;
   animation-delay: 0s, calc(var(--tile-index, 0) * 0.06s);
@@ -4795,46 +4885,68 @@
   animation: islandTokenLand 0.48s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
 }
 
-/* B2-2: Tile type classes — distinct gradient + inner glow per type */
+/* B2-2: Tile type classes — token-driven palette with one shared material.
+   Every tile uses the same 160° gradient + a top-left specular sheen
+   (--tile-spec) and a gold-leaning border, so the board reads as a cohesive
+   set of jewels rather than a clash of hues. Only the colour family changes.
+   See the BOARD TILE COLOR SYSTEM token block at the top of this file. */
 .island-tile--currency {
-  background: linear-gradient(160deg, #ffe66d 0%, #f7c948 50%, #c8941a 100%);
-  border: 1.5px solid #f0b429;
+  background:
+    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(160deg, var(--tile-currency-light) 0%, var(--tile-currency-mid) 52%, var(--tile-currency-deep) 100%);
+  border: 1.5px solid var(--tile-currency-border);
 }
 .island-tile--chest {
-  background: linear-gradient(160deg, #e8a87c 0%, #c87533 50%, #8b4513 100%);
-  border: 1.5px solid #dda15e;
+  background:
+    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(160deg, var(--tile-chest-light) 0%, var(--tile-chest-mid) 52%, var(--tile-chest-deep) 100%);
+  border: 1.5px solid var(--tile-chest-border);
 }
 .island-tile--event {
-  background: linear-gradient(160deg, #fff4a8 0%, #ffe066 50%, #cca300 100%);
-  border: 1.5px solid #f0d000;
+  background:
+    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(160deg, var(--tile-event-light) 0%, var(--tile-event-mid) 52%, var(--tile-event-deep) 100%);
+  border: 1.5px solid var(--tile-event-border);
 }
 .island-tile--hazard {
-  background: linear-gradient(160deg, #ff9999 0%, #ff4444 50%, #cc0000 100%);
-  border: 1.5px solid #ff6b6b;
-  box-shadow: 0 0 8px rgba(255, 68, 68, 0.5);
+  background:
+    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(160deg, var(--tile-hazard-light) 0%, var(--tile-hazard-mid) 52%, var(--tile-hazard-deep) 100%);
+  border: 1.5px solid var(--tile-hazard-border);
+  box-shadow: 0 0 8px var(--tile-hazard-glow);
 }
 .island-tile--egg_shard {
-  background: linear-gradient(160deg, #d4f1f4 0%, #b0e0e6 50%, #5f9ea0 100%);
-  border: 1.5px solid #80d0d8;
+  background:
+    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(160deg, var(--tile-egg_shard-light) 0%, var(--tile-egg_shard-mid) 52%, var(--tile-egg_shard-deep) 100%);
+  border: 1.5px solid var(--tile-egg_shard-border);
 }
 .island-tile--micro {
-  background: linear-gradient(160deg, #e8d5ff 0%, #c8a2ff 50%, #9b59b6 100%);
-  border: 1.5px solid #b88ee8;
+  background:
+    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(160deg, var(--tile-micro-light) 0%, var(--tile-micro-mid) 52%, var(--tile-micro-deep) 100%);
+  border: 1.5px solid var(--tile-micro-border);
 }
 .island-tile--encounter {
-  background: linear-gradient(160deg, #ffb347 0%, #ff6b35 50%, #cc3300 100%);
-  border: 1.5px solid #ff8c42;
-  box-shadow: 0 0 10px rgba(255, 107, 53, 0.6);
+  background:
+    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(160deg, var(--tile-encounter-light) 0%, var(--tile-encounter-mid) 52%, var(--tile-encounter-deep) 100%);
+  border: 1.5px solid var(--tile-encounter-border);
+  box-shadow: 0 0 10px var(--tile-encounter-glow);
 }
 .island-tile--landmark_door {
-  background: linear-gradient(160deg, #f5d0fe 0%, #c084fc 48%, #6d28d9 100%);
-  border: 1.5px solid rgba(245, 208, 254, 0.95);
-  box-shadow: 0 0 12px rgba(192, 132, 252, 0.65), 0 0 22px rgba(109, 40, 217, 0.38);
+  background:
+    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(160deg, var(--tile-door-light) 0%, var(--tile-door-mid) 52%, var(--tile-door-deep) 100%);
+  border: 1.5px solid var(--tile-door-border);
+  box-shadow: 0 0 12px var(--tile-door-glow), 0 0 22px var(--tile-door-glow);
 }
 .island-tile--door-boss {
-  background: linear-gradient(160deg, #fff7ad 0%, #f59e0b 46%, #7c2d12 100%);
-  border-color: rgba(255, 247, 173, 0.98);
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.72), 0 0 28px rgba(124, 45, 18, 0.46);
+  background:
+    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(160deg, var(--tile-boss-light) 0%, var(--tile-boss-mid) 52%, var(--tile-boss-deep) 100%);
+  border-color: var(--tile-boss-border);
+  box-shadow: 0 0 14px var(--tile-boss-glow), 0 0 28px var(--tile-boss-glow);
 }
 .island-tile--active-door-cluster {
   background: linear-gradient(160deg, #dcfce7 0%, #86efac 44%, #16a34a 100%);
@@ -7497,8 +7609,8 @@
 }
 
 @keyframes island-tile-stop-pulse {
-  0%, 100% { box-shadow: 0 0 14px rgba(255, 215, 0, 0.8), 0 0 28px rgba(255, 165, 0, 0.4); }
-  50%      { box-shadow: 0 0 22px rgba(255, 215, 0, 1.0), 0 0 44px rgba(255, 165, 0, 0.7), 0 0 60px rgba(255, 200, 0, 0.3); }
+  0%, 100% { box-shadow: 0 0 14px var(--tile-stop-glow), 0 0 28px var(--tile-stop-glow); }
+  50%      { box-shadow: 0 0 22px var(--tile-stop-mid), 0 0 44px var(--tile-stop-glow), 0 0 60px var(--tile-stop-glow); }
 }
 
 @keyframes island-tile-current-pulse {
@@ -9089,9 +9201,11 @@
    .island-tile look) while only the red/yellow lights are active, and only
    turns green once the green lights come on — see .island-tile--traffic_light-green. */
 .island-tile--traffic_light-green {
-  background: linear-gradient(160deg, #bbf7d0 0%, #22c55e 48%, #14532d 100%);
-  border: 1.5px solid rgba(187, 247, 208, 0.95);
-  box-shadow: 0 0 12px rgba(34, 197, 94, 0.62), 0 0 22px rgba(20, 83, 45, 0.42);
+  background:
+    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(160deg, var(--tile-light-light) 0%, var(--tile-light-mid) 48%, var(--tile-light-deep) 100%);
+  border: 1.5px solid var(--tile-light-border);
+  box-shadow: 0 0 12px var(--tile-light-glow), 0 0 22px var(--tile-light-glow);
 }
 
 .island-tile-traffic-light-sign {

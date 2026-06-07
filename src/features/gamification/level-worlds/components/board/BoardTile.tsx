@@ -26,14 +26,15 @@ const TILE_SVG_ICONS: Record<string, JSX.Element> = {
   ),
   hazard: (
     <svg viewBox="0 0 18 18" width="14" height="14" fill="none" aria-hidden="true">
-      <path d="M9 2L16 15H2L9 2Z" fill="#FF6B6B" stroke="#CC0000" strokeWidth="0.8"/>
+      <path d="M9 2L16 15H2L9 2Z" fill="#D76A52" stroke="#A5392A" strokeWidth="0.8"/>
       <text x="9" y="13" textAnchor="middle" fontSize="8" fontWeight="900" fill="#fff">!</text>
     </svg>
   ),
   micro: (
+    // Small reward → soft gold sparkle (sits on the pearl-marble micro tile)
     <svg viewBox="0 0 18 18" width="14" height="14" fill="none" aria-hidden="true">
-      <circle cx="9" cy="9" r="3" fill="#C8A2FF"/>
-      <path d="M9 3L10 7H14L10.5 9.5L12 14L9 11L6 14L7.5 9.5L4 7H8L9 3Z" fill="#DFC0FF" stroke="#9B59B6" strokeWidth="0.5"/>
+      <circle cx="9" cy="9" r="3" fill="#E8C25E"/>
+      <path d="M9 3L10 7H14L10.5 9.5L12 14L9 11L6 14L7.5 9.5L4 7H8L9 3Z" fill="#FBE8A6" stroke="#C99A33" strokeWidth="0.5"/>
     </svg>
   ),
   encounter: (
