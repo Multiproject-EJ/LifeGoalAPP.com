@@ -4133,7 +4133,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
                     {launcherTraitCards.map((handCard, index) => {
                       const stackCenter = (launcherTraitCards.length - 1) / 2;
                       const stackDistance = index - stackCenter;
-                      const stackDepth = Math.abs(stackDistance);
+                      const stackSide = stackDistance < 0 ? -1 : 1;
+                      const stackLane = Math.max(0, Math.floor(Math.abs(stackDistance) - 0.5));
 
                       return (
                         <span
@@ -4141,10 +4142,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
                           className="mobile-menu-overlay__trait-card mobile-menu-overlay__trait-card--stacked"
                           style={{
                             '--card-color': handCard.card.color,
-                            '--stack-x': `${stackDistance * 30}px`,
-                            '--stack-y': `${12 + stackDepth * 5}px`,
-                            '--stack-rotate': `${stackDistance * 8}deg`,
-                            '--stack-scale': `${0.9 - stackDepth * 0.04}`,
+                            '--stack-x': `${stackSide * (56 + stackLane * 48)}px`,
+                            '--stack-y': `${6 + stackLane * 12}px`,
+                            '--stack-rotate': `${stackSide * (8 + stackLane * 5)}deg`,
+                            '--stack-perspective': `${stackSide * (18 + stackLane * 8)}deg`,
+                            '--stack-scale': `${0.92 - stackLane * 0.05}`,
                             '--stack-z': index + 1,
                           } as CSSProperties}
                         >
