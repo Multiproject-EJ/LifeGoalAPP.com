@@ -260,6 +260,7 @@ import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 import { awardLuckyRollRuns } from '../../../../services/luckyRollAccess';
 import {
   playIslandRunSound,
+  playTokenMoveSound,
   triggerIslandRunHaptic,
   setIslandRunAudioEnabled,
 } from '../services/islandRunAudio';
@@ -10233,7 +10234,7 @@ export function IslandRunBoardPrototype({
           onCameraReady={(controls) => { boardCameraRef.current = controls; }}
           onCameraGesture={() => setIsTopbarMenuPrimed(false)}
           onTokenHop={(tileIndex) => {
-            playIslandRunSound('token_move');
+            playTokenMoveSound();
           }}
           onTokenLand={(tileIndex) => {
             playIslandRunSound('stop_land');
@@ -10353,6 +10354,8 @@ export function IslandRunBoardPrototype({
                     if (unlockedMultipliers.length <= 1) return;
                     const currentIdx = unlockedMultipliers.indexOf(effectiveMultiplier);
                     const nextIdx = (currentIdx + 1) % unlockedMultipliers.length;
+                    const isNextMax = nextIdx === unlockedMultipliers.length - 1;
+                    playIslandRunSound(isNextMax ? 'multiplier_max' : 'multiplier_cycle');
                     setDiceMultiplier(unlockedMultipliers[nextIdx]!);
                   }}
                   title={`Cost: ${effectiveDiceCost} dice/roll · Max: ×${maxAvailableMultiplier}`}

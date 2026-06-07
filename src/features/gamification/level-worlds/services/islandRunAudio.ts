@@ -58,7 +58,10 @@ export type IslandRunSoundEvent =
   | 'minigame_open'
   | 'minigame_complete'
   // Sticker events
-  | 'sticker_complete';
+  | 'sticker_complete'
+  // Multiplier button events
+  | 'multiplier_cycle'
+  | 'multiplier_max';
 
 export type IslandRunHapticEvent =
   | 'roll'
@@ -241,6 +244,9 @@ const SOUND_ASSET_MAP: Record<IslandRunSoundEvent, IslandRunSoundAssetPath> = {
   stop_land: '/assets/audio/sfx/sfx_tile_land.mp3',
   build_upgrade: '/assets/audio/sfx/sfx_tile_land.mp3',
   island_travel: '/assets/audio/sfx/sfx_tile_land.mp3',
+  // Multiplier button events: cycle uses the tile-land dunk; reaching max uses the reward burst as a short pling.
+  multiplier_cycle: '/assets/audio/sfx/sfx_tile_land.mp3',
+  multiplier_max: '/assets/audio/sfx/sfx_reward_bar_claim_burst.mp3',
   // Hatchery events share the available egg-open chime until bespoke set/ready assets exist.
   egg_set: '/assets/audio/sfx/sfx_egg_open.mp3',
   egg_ready: '/assets/audio/sfx/sfx_egg_open.mp3',
@@ -320,6 +326,50 @@ export function playIslandRunSound(eventId: IslandRunSoundEvent): void {
     islandRunSfxPlayFailureCount += 1;
     recordIslandRunSoundDiagnostics(eventId, 'play_failed');
     // Browser autoplay policy, missing files, and decode failures are non-fatal.
+  });
+}
+
+/**
+ * Plays the token-move dunk sound with a randomly chosen playback rate from
+ * four presets (0.85 / 0.92 / 1.0 / 1.10) to simulate pieces landing with
+ * slightly different "strengths", giving the impression of 4 distinct dunks
+ * without requiring separate audio files.
+ */
+
+const TOKEN_MOVE_PLAYBACK_RATES = [0.85, 0.92, 1.0, 1.1] as const;
+
+export function playTokenMoveSound(): void {
+  if (!getIslandRunAudioEnabled()) {
+    recordIslandRunSoundDiagnostics('token_move', 'disabled');
+    return;
+  }
+  if (shouldThrottleIslandRunSfx('token_move')) {
+    recordIslandRunSoundDiagnostics('token_move', 'throttled');
+    return;
+  }
+
+  const audio = getIslandRunSfxAudio('token_move');
+  if (!audio) {
+    recordIslandRunSoundDiagnostics('token_move', 'unavailable');
+    return;
+  }
+
+  // Always clone so rapid successive hops can overlap correctly.
+  const clone = audio.cloneNode(true) as HTMLAudioElement;
+  clone.volume = ISLAND_RUN_SFX_VOLUME;
+  clone.playbackRate = TOKEN_MOVE_PLAYBACK_RATES[
+    Math.floor(Math.random() * TOKEN_MOVE_PLAYBACK_RATES.length)
+  ]!;
+  clone.addEventListener('error', () => {
+    markIslandRunSfxAssetFailed('token_move');
+  }, { once: true });
+  rewindIslandRunSfxAudio(clone);
+
+  islandRunSfxPlayAttemptCount += 1;
+  recordIslandRunSoundDiagnostics('token_move', 'play_requested');
+  void clone.play().catch(() => {
+    islandRunSfxPlayFailureCount += 1;
+    recordIslandRunSoundDiagnostics('token_move', 'play_failed');
   });
 }
 
