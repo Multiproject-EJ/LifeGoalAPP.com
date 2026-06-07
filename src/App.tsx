@@ -4134,6 +4134,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       const stackCenter = (launcherTraitCards.length - 1) / 2;
                       const stackDistance = index - stackCenter;
                       const stackSide = Math.sign(stackDistance);
+                      // Pair the two closest side cards in the front lane; farther cards move into deeper lanes.
                       const stackDepth = Math.max(0, Math.floor(Math.abs(stackDistance) - 0.5));
 
                       return (
