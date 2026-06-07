@@ -6660,6 +6660,7 @@ export function IslandRunBoardPrototype({
     collectingCreatureRef.current = true;
     setIsCollectingCreature(true);
     const nowTs = Date.now();
+    const eggLocation = resolvedEgg.isDormant ? 'dormant' : 'island';
     const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg);
     const hasCollectedPerfectCompanionBeforeCollect = creatureCollection.some((entry) =>
       (runtimeState.perfectCompanionIds ?? []).includes(entry.creatureId),
@@ -6677,12 +6678,12 @@ export function IslandRunBoardPrototype({
       openedAtMs: nowTs,
       eggLedgerKey: selectedLedgerKey,
       readyNowMs: nowTs,
-      location: resolvedEgg.isDormant ? 'dormant' : 'island',
+      location: eggLocation,
       fallbackReadyEgg: {
         tier: resolvedEgg.tier,
         setAtMs: resolvedEgg.setAtMs,
         hatchAtMs: resolvedEgg.hatchAtMs,
-        location: resolvedEgg.isDormant ? 'dormant' : 'island',
+        location: eggLocation,
       },
       completedStops: nextCompletedStops,
       collectedCreatureId: creature.id,
@@ -6772,6 +6773,7 @@ export function IslandRunBoardPrototype({
     const options = getEggSellRewardOptions(resolvedEgg.tier);
     const picked = options.find((o) => o.choice === choice) ?? options[0];
     const nowTs = Date.now();
+    const eggLocation = resolvedEgg.isDormant ? 'dormant' : 'island';
     const nextCompletedStops = ensureStopCompleted(completedStops, 'hatchery');
 
     // Also give essence from bundle (always)
@@ -6787,12 +6789,12 @@ export function IslandRunBoardPrototype({
       openedAtMs: nowTs,
       eggLedgerKey: selectedLedgerKey,
       readyNowMs: nowTs,
-      location: resolvedEgg.isDormant ? 'dormant' : 'island',
+      location: eggLocation,
       fallbackReadyEgg: {
         tier: resolvedEgg.tier,
         setAtMs: resolvedEgg.setAtMs,
         hatchAtMs: resolvedEgg.hatchAtMs,
-        location: resolvedEgg.isDormant ? 'dormant' : 'island',
+        location: eggLocation,
       },
       completedStops: nextCompletedStops,
       rewardDeltas: {
