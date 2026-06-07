@@ -166,8 +166,8 @@ function stopOtherIslandRunMusicTracks(activeTrackId: IslandRunMusicTrackId): vo
     if (trackId === activeTrackId) continue;
 
     const audio = islandRunMusicAudioByTrack.get(trackId);
-    if (audio) audio.onended = null;
     resetIslandRunMusicAudio(trackId, { fadeMs: 0 });
+    if (audio) audio.onended = null;
     if (ownedIslandRunMusicTrackId === trackId) ownedIslandRunMusicTrackId = null;
     if (playingIslandRunMusicTrackId === trackId) playingIslandRunMusicTrackId = null;
   }

@@ -2854,10 +2854,13 @@ export function IslandRunBoardPrototype({
   const hasConfirmedEntryAudioChoice = hasDismissedEntryAudioModal && !showEntryAudioModal;
 
   useEffect(() => {
-    setIslandRunAudioEnabled(sfxEnabled && hasConfirmedEntryAudioChoice);
     return () => {
       setIslandRunAudioEnabled(false);
     };
+  }, []);
+
+  useEffect(() => {
+    setIslandRunAudioEnabled(sfxEnabled && hasConfirmedEntryAudioChoice);
   }, [hasConfirmedEntryAudioChoice, sfxEnabled]);
 
   const islandRunMusicContext = useMemo(() => resolveIslandRunMusicContext({
