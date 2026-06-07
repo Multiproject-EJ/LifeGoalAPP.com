@@ -26,6 +26,8 @@ export type IslandTileMapEntry = {
   tileType: IslandTileType;
   /** Present only for landmark-door tiles; routes landing to the canonical landmark modal. */
   doorStopId?: IslandLandmarkDoorStopId;
+  /** Present when a door tile belongs to the currently active landmark cluster. */
+  isActiveDoorCluster?: boolean;
 };
 
 export type IslandLandmarkDoorTileConfig = {
@@ -126,11 +128,26 @@ function computeEncounterIndicesForProfile(rarity: IslandRarity, tileCount: numb
  */
 export function applyLandmarkDoorTiles(
   tileMap: IslandTileMapEntry[],
-  options?: { allDoorsRouteToBoss?: boolean },
+  options?: {
+    allDoorsRouteToBoss?: boolean;
+    expandedActiveStopId?: Exclude<IslandLandmarkDoorStopId, 'boss'>;
+  },
 ): IslandTileMapEntry[] {
   const doorByIndex = new Map<number, IslandLandmarkDoorStopId>();
+  const activeDoorClusterIndices = new Set<number>();
+  const tileCount = tileMap.length;
+
   for (const config of LANDMARK_DOOR_TILE_CONFIGS) {
-    doorByIndex.set(config.tileIndex, options?.allDoorsRouteToBoss ? 'boss' : config.stopId);
+    const doorStopId = options?.allDoorsRouteToBoss ? 'boss' : config.stopId;
+    doorByIndex.set(config.tileIndex, doorStopId);
+
+    if (!options?.allDoorsRouteToBoss && options?.expandedActiveStopId === config.stopId && tileCount > 0) {
+      for (const offset of [-1, 0, 1]) {
+        const tileIndex = (config.tileIndex + offset + tileCount) % tileCount;
+        doorByIndex.set(tileIndex, config.stopId);
+        activeDoorClusterIndices.add(tileIndex);
+      }
+    }
   }
 
   return tileMap.map((entry) => {
@@ -140,6 +157,7 @@ export function applyLandmarkDoorTiles(
       index: entry.index,
       tileType: 'landmark_door',
       doorStopId,
+      ...(activeDoorClusterIndices.has(entry.index) ? { isActiveDoorCluster: true } : {}),
     };
   });
 }
