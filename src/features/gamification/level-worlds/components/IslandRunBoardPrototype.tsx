@@ -731,7 +731,7 @@ const HEART_BOOST_BUNDLE_COST = 80;
 const WISDOM_ESSENCE_BONUS_COST_DIAMONDS = 3;
 const WISDOM_ESSENCE_BONUS_AMOUNT = 15;
 const CONTRACT_V2_ESSENCE_SPEND_STEP_FLOOR = 10;
-const TARGET_TAPS_PER_BUILD_LEVEL = 6;
+const TARGET_TAPS_PER_BUILD_LEVEL = 5;
 
 function resolveBuildSpendStepForTier(requiredEssence: number): number {
   const required = Math.max(1, Math.floor(requiredEssence));
@@ -2154,13 +2154,15 @@ export function IslandRunBoardPrototype({
   const regenIntervalNoopLogSuppressedCountRef = useRef<number>(0);
   const islandClearCelebrationShownForVisitRef = useRef<string | null>(null);
   const isBuildSpendInFlightRef = useRef(false);
+  const buildTapQueueRef = useRef<Array<{ stopIndex: number; requestedAtMs: number }>>([]);
+  const isBuildTapQueueProcessingRef = useRef(false);
   const holdBuildSpendActiveRef = useRef(false);
   const holdBuildSpendStartAtMsRef = useRef<number | null>(null);
   const buildRepeatStreakRef = useRef<BuildRepeatStreakState>(getInitialBuildRepeatStreakState());
   const completedStopsSyncDispatchKeyRef = useRef<string | null>(null);
   const marketOwnedBundleSyncRequestedRef = useRef(false);
   const marketOwnedBundleSyncDispatchKeyRef = useRef<string | null>(null);
-  const [isBuildSpendInFlight, setIsBuildSpendInFlight] = useState(false);
+  const [, setIsBuildSpendInFlight] = useState(false);
   const [isBuildHoldActive, setIsBuildHoldActive] = useState(false);
   const [buildHoldFeedbackLabel, setBuildHoldFeedbackLabel] = useState('⚒️ Building…');
   const resetBuildRepeatStreak = useCallback(() => {
@@ -2169,11 +2171,13 @@ export function IslandRunBoardPrototype({
 
   useEffect(() => {
     resetBuildRepeatStreak();
+    buildTapQueueRef.current = [];
   }, [islandNumber, resetBuildRepeatStreak]);
 
   useEffect(() => {
     if (!showBuildPanel) {
       resetBuildRepeatStreak();
+      buildTapQueueRef.current = [];
     }
   }, [resetBuildRepeatStreak, showBuildPanel]);
   const isIsland120StartupDiagnosticActive = isIsland120StartupDiagnosticTarget(
@@ -2192,6 +2196,7 @@ export function IslandRunBoardPrototype({
   }, [runtimeState]);
 
   useEffect(() => () => {
+    buildTapQueueRef.current = [];
     holdBuildSpendActiveRef.current = false;
     holdBuildSpendStartAtMsRef.current = null;
   }, []);
@@ -4755,7 +4760,7 @@ export function IslandRunBoardPrototype({
       const isFullyBuilt = isStopBuildFullyComplete(buildState);
       const remaining = isFullyBuilt ? 0 : Math.max(0, buildState.requiredEssence - buildState.spentEssence);
       const canAfford = runtimeState.essence >= Math.min(resolveBuildSpendStepForTier(buildState.requiredEssence), remaining);
-      const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;
+      const isBuildDisabled = isFullyBuilt || !canAfford;
       const isBuildInteractionDisabled = tutorialRowState.isUnavailable || isBuildDisabled;
       const remainingToFull = buildPanelRemainingToFullByIndex[idx] ?? 0;
       const levelIcon = ['🏗️', '🏠', '🏡', '🏰'][Math.min(buildState.buildLevel, 3)];
@@ -4786,7 +4791,6 @@ export function IslandRunBoardPrototype({
     buildPanelNextCheapestIndex,
     buildPanelRemainingToFullByIndex,
     firstSessionTutorialState,
-    isBuildSpendInFlight,
     islandStopPlan,
     runtimeState.essence,
     runtimeState.stopBuildStateByIndex,
@@ -7723,11 +7727,14 @@ export function IslandRunBoardPrototype({
     }
   };
 
-  const handleRepeatedBuildActivation = async (stopIndex: number): Promise<boolean> => {
+  const handleRepeatedBuildActivation = async (
+    stopIndex: number,
+    requestedAtMs = Date.now(),
+  ): Promise<boolean> => {
     const nextStreak = resolveNextBuildRepeatStreak({
       current: buildRepeatStreakRef.current,
       stopIndex,
-      nowMs: Date.now(),
+      nowMs: requestedAtMs,
     });
     let repeatedBuildBatchSteps = resolveRepeatedBuildBatchSteps(nextStreak.count);
     if (isBuildModalHatcheryGuidanceActive) {
@@ -7762,8 +7769,26 @@ export function IslandRunBoardPrototype({
   // ── BuildModalV2 tap handler ──────────────────────────────────────────────
   // Tap-to-build for the v2 tray.  Hold-to-build is intentionally omitted in
   // v2 to avoid gesture conflicts with the horizontal scroll tray.
-  const handleBuildCardTap = async (stopIndex: number): Promise<void> => {
-    await handleRepeatedBuildActivation(stopIndex);
+  const processBuildTapQueue = useCallback(async (): Promise<void> => {
+    if (isBuildTapQueueProcessingRef.current) return;
+    isBuildTapQueueProcessingRef.current = true;
+    try {
+      while (buildTapQueueRef.current.length > 0) {
+        const nextTap = buildTapQueueRef.current.shift();
+        if (!nextTap) continue;
+        await handleRepeatedBuildActivation(nextTap.stopIndex, nextTap.requestedAtMs);
+      }
+    } finally {
+      isBuildTapQueueProcessingRef.current = false;
+    }
+  }, [handleRepeatedBuildActivation]);
+
+  const handleBuildCardTap = (stopIndex: number): void => {
+    buildTapQueueRef.current.push({
+      stopIndex,
+      requestedAtMs: Date.now(),
+    });
+    void processBuildTapQueue();
   };
 
   // ── Legacy hold-to-build handler (retained for future hold-gesture PR) ────
