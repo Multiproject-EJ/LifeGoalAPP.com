@@ -7,11 +7,14 @@
 - Local work is temporary only unless committed, pushed, reviewed, merged, and reflected back from GitHub `main`.
 - Do not treat unmerged local files or generated output as durable production state.
 
-## Geometry Authority
+## Artwork And Geometry Authority
 
-- Never invent new puzzle geometry after master approval.
-- The approved source master image is the geometry authority.
-- Do not resize, crop, pad, offset, or reinterpret puzzle geometry unless a new master has been approved.
+- OpenAI ImageGen / the newest OpenAI image model creates the completed puzzle artwork.
+- The approved source master image is the artwork authority for generated pieces.
+- The SVG/mask system does not create artwork and does not replace ImageGen; it only provides deterministic cutting geometry so pieces fit exactly.
+- The approved canonical SVG template and exported full-canvas masks are the puzzle-piece geometry authority.
+- Never invent new puzzle geometry after canonical SVG/mask approval.
+- Do not resize, crop, pad, offset, or reinterpret puzzle geometry unless a new canonical SVG/mask set has been approved.
 - Any geometry mismatch is FAIL.
 
 ## Production Requirements
@@ -22,6 +25,8 @@
 - Piece numbering must be `01` through `09`, top-left to bottom-right.
 - Every run must create a manifest.
 - Every run must create a reassembly check.
+- `PRODUCTION_EXACT_JIGSAW` is the only production-acceptable mode for real jigsaw fit.
+- `V1_RECTANGLE_PLACEHOLDER` is smoke-test only and must never be promoted as production puzzle geometry.
 
 ## Boundaries
 
