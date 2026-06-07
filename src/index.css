@@ -20882,41 +20882,24 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82), 0 18px 32px rgba(37, 99, 235, 0.16);
 }
 
-.mobile-menu-overlay__hand-fan {
-  --hand-fan-outer-tilt: 9deg;
-  --hand-fan-inner-tilt: 7deg;
-  --hand-fan-outer-offset: 0.28rem;
-  --hand-fan-inner-offset: 0.1rem;
+.mobile-menu-overlay__card-stack {
   --hand-trait-accent: var(--color-primary, #1d4ed8);
   --hand-archetype-accent: var(--color-primary, #1d4ed8);
-  width: min(100%, 330px);
-  min-height: 126px;
-  display: grid;
-  grid-template-columns: minmax(78px, 1fr) minmax(82px, 0.9fr) minmax(78px, 1fr);
-  align-items: center;
-  gap: 0.42rem;
-}
-
-.mobile-menu-overlay__hand-side {
-  display: grid;
-  gap: 0.42rem;
-}
-
-.mobile-menu-overlay__hand-side--left {
-  justify-items: end;
-}
-
-.mobile-menu-overlay__hand-side--right {
-  justify-items: start;
+  position: relative;
+  width: min(100%, 320px);
+  min-height: 124px;
+  display: block;
+  perspective: 720px;
+  transform-style: preserve-3d;
 }
 
 .mobile-menu-overlay__trait-card {
-  width: min(100%, 96px);
-  min-height: 52px;
+  width: min(38vw, 118px);
+  min-height: 58px;
   display: grid;
   align-content: center;
   gap: 0.12rem;
-  border-radius: 15px;
+  border-radius: 17px;
   border: 1px solid rgba(30, 64, 175, 0.42);
   padding: 0.42rem 0.5rem;
   background:
@@ -20925,20 +20908,24 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: #0f172a;
 }
 
-.mobile-menu-overlay__hand-side--left .mobile-menu-overlay__trait-card:first-child {
-  transform: rotate(calc(-1 * var(--hand-fan-outer-tilt))) translateX(var(--hand-fan-outer-offset));
-}
-
-.mobile-menu-overlay__hand-side--left .mobile-menu-overlay__trait-card:last-child {
-  transform: rotate(var(--hand-fan-inner-tilt)) translateX(calc(-1 * var(--hand-fan-inner-offset)));
-}
-
-.mobile-menu-overlay__hand-side--right .mobile-menu-overlay__trait-card:first-child {
-  transform: rotate(var(--hand-fan-outer-tilt)) translateX(calc(-1 * var(--hand-fan-outer-offset)));
-}
-
-.mobile-menu-overlay__hand-side--right .mobile-menu-overlay__trait-card:last-child {
-  transform: rotate(calc(-1 * var(--hand-fan-inner-tilt))) translateX(var(--hand-fan-inner-offset));
+.mobile-menu-overlay__trait-card--stacked {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: var(--stack-z, 1);
+  opacity: 0.82;
+  transform:
+    translate(-50%, -50%)
+    translateX(var(--stack-x, 0))
+    translateY(var(--stack-y, 0))
+    translateZ(-46px)
+    rotateY(calc(var(--stack-rotate, 0deg) * -0.55))
+    rotateZ(var(--stack-rotate, 0deg))
+    scale(var(--stack-scale, 0.9));
+  transform-origin: center bottom;
+  box-shadow:
+    0 16px 26px color-mix(in srgb, var(--card-color, #3b82f6) 16%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.84);
 }
 
 .mobile-menu-overlay__trait-card-role {
@@ -20972,6 +20959,24 @@ html.platform-ipad .workspace-shell__menu-edge {
     radial-gradient(circle at 50% 22%, rgba(255, 255, 255, 0.98), transparent 38%),
     linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(219, 234, 254, 0.92));
   box-shadow: 0 16px 30px rgba(37, 99, 235, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.mobile-menu-overlay__archetype-card--stacked {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: calc(var(--stack-card-count, 0) + 10);
+  width: min(39vw, 120px);
+  transform:
+    translate(-50%, -50%)
+    translateY(-5px)
+    translateZ(56px)
+    rotateX(2deg);
+  transform-origin: center bottom;
+  box-shadow:
+    0 22px 36px rgba(37, 99, 235, 0.24),
+    0 8px 16px rgba(15, 23, 42, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .mobile-menu-overlay__archetype-name {
@@ -21226,17 +21231,19 @@ html.platform-ipad .workspace-shell__menu-edge {
     padding-inline: 0.78rem;
   }
 
-  .mobile-menu-overlay__hand-fan {
-    grid-template-columns: minmax(64px, 1fr) minmax(76px, 0.86fr) minmax(64px, 1fr);
-    gap: 0.28rem;
+  .mobile-menu-overlay__card-stack {
+    min-height: 116px;
+    width: min(100%, 284px);
   }
 
   .mobile-menu-overlay__trait-card {
+    width: min(36vw, 104px);
     padding-inline: 0.36rem;
   }
 
-  .mobile-menu-overlay__hand-stack {
-    transform: scale(0.88);
+  .mobile-menu-overlay__archetype-card--stacked {
+    width: min(38vw, 108px);
+    min-height: 104px;
   }
 
   .mobile-menu-overlay__quick-grid--featured,
@@ -21259,6 +21266,14 @@ html.platform-ipad .workspace-shell__menu-edge {
     width: 1.45rem;
     height: 1.45rem;
     font-size: 1.15rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-menu-overlay__card-stack,
+  .mobile-menu-overlay__card-stack * {
+    animation: none !important;
+    transition: none !important;
   }
 }
 
@@ -32101,7 +32116,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   border-color: var(--color-border-secondary);
 }
 
-[data-theme='dark-glass'] .mobile-menu-overlay__hand-fan {
+[data-theme='dark-glass'] .mobile-menu-overlay__card-stack {
   --hand-trait-accent: var(--color-primary, #93c5fd);
   --hand-archetype-accent: var(--color-primary, #93c5fd);
 }
