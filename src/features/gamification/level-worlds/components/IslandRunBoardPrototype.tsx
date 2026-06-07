@@ -973,6 +973,18 @@ interface ActiveEgg {
   isDormant?: boolean;
 }
 
+function buildFallbackReadyEgg(
+  egg: ActiveEgg,
+  location: PerIslandEggEntry['location'],
+): Pick<PerIslandEggEntry, 'tier' | 'setAtMs' | 'hatchAtMs' | 'location'> {
+  return {
+    tier: egg.tier,
+    setAtMs: egg.setAtMs,
+    hatchAtMs: egg.hatchAtMs,
+    location,
+  };
+}
+
 interface HatcheryCarouselEgg {
   id: string;
   islandNumber: number;
@@ -981,6 +993,7 @@ interface HatcheryCarouselEgg {
   setAtMs: number;
   hatchAtMs: number;
   status: PerIslandEggEntry['status'];
+  location: PerIslandEggEntry['location'];
   ledgerKey: string;
   slotIndex: number;
   isReady: boolean;
@@ -6221,6 +6234,7 @@ export function IslandRunBoardPrototype({
         setAtMs: entry.setAtMs,
         hatchAtMs: entry.hatchAtMs,
         status: entry.status,
+        location: entry.location ?? 'island',
         ledgerKey: islandKey,
         slotIndex: eggSlotIndex,
         isReady,
@@ -6259,6 +6273,8 @@ export function IslandRunBoardPrototype({
         isDormant: selectedHatcheryEgg.isDormant,
       }
     : activeEgg;
+  const selectedHatcheryEggLocation: PerIslandEggEntry['location'] = selectedHatcheryEgg?.location
+    ?? (runtimeState.activeEggIsDormant ? 'dormant' : 'island');
   const selectedHatcheryEggStage = useMemo(
     () => getHatcheryEggStage(selectedHatcheryDisplayEgg, nowMs),
     [nowMs, selectedHatcheryDisplayEgg],
@@ -6660,6 +6676,7 @@ export function IslandRunBoardPrototype({
     collectingCreatureRef.current = true;
     setIsCollectingCreature(true);
     const nowTs = Date.now();
+    const eggLocation = selectedHatcheryEggLocation;
     const creature = resolveHatchedCreatureWithPerfectCompanionBias(resolvedEgg);
     const hasCollectedPerfectCompanionBeforeCollect = creatureCollection.some((entry) =>
       (runtimeState.perfectCompanionIds ?? []).includes(entry.creatureId),
@@ -6677,6 +6694,8 @@ export function IslandRunBoardPrototype({
       openedAtMs: nowTs,
       eggLedgerKey: selectedLedgerKey,
       readyNowMs: nowTs,
+      location: eggLocation,
+      fallbackReadyEgg: buildFallbackReadyEgg(resolvedEgg, eggLocation),
       completedStops: nextCompletedStops,
       collectedCreatureId: creature.id,
       triggerSource: 'island_board_collect_creature',
@@ -6765,6 +6784,7 @@ export function IslandRunBoardPrototype({
     const options = getEggSellRewardOptions(resolvedEgg.tier);
     const picked = options.find((o) => o.choice === choice) ?? options[0];
     const nowTs = Date.now();
+    const eggLocation = selectedHatcheryEggLocation;
     const nextCompletedStops = ensureStopCompleted(completedStops, 'hatchery');
 
     // Also give essence from bundle (always)
@@ -6780,6 +6800,8 @@ export function IslandRunBoardPrototype({
       openedAtMs: nowTs,
       eggLedgerKey: selectedLedgerKey,
       readyNowMs: nowTs,
+      location: eggLocation,
+      fallbackReadyEgg: buildFallbackReadyEgg(resolvedEgg, eggLocation),
       completedStops: nextCompletedStops,
       rewardDeltas: {
         essence: totalSellEssence,
