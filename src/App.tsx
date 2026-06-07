@@ -2643,6 +2643,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, [handleMobileNavSelect]);
 
   const openHealthGoalsQuestMenuFromBody = useCallback(() => {
+    if (isAdmin !== true) return;
     setIsMobileProfileDialogOpen(false);
     setIsEnergyMenuOpen(false);
     setIsFeedbackSupportSubmenuOpen(false);
@@ -2650,7 +2651,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     closeGameBoardOverlayIfOpen();
     setIsMobileMenuOpen(true);
     setIsMyQuestSubmenuOpen(true);
-  }, [closeGameBoardOverlayIfOpen]);
+  }, [closeGameBoardOverlayIfOpen, isAdmin]);
 
   const closeStarterQuestSheet = useCallback(() => {
     setIsStarterQuestSheetOpen(false);
@@ -4165,6 +4166,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 </span>
               </button>
 
+              {isAdmin === true ? (
               <button
                 type="button"
                 className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--quest"
@@ -4176,6 +4178,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 </span>
                 <span className="mobile-menu-overlay__quest-cta" aria-hidden="true">›</span>
               </button>
+              ) : null}
 
               <div className="mobile-menu-overlay__quick-grid mobile-menu-overlay__quick-grid--featured">
                 <button
