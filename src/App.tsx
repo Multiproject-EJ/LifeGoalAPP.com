@@ -930,6 +930,24 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, [currentLevel, streakMomentum]);
   
   const microTestBadge = useMicroTestBadge(microTestPlayerState);
+  const [hasSeenMicroTestBadge, setHasSeenMicroTestBadge] = useState(false);
+  const previousMicroTestBadgeCountRef = useRef(0);
+
+  useEffect(() => {
+    if (!microTestBadge.showBadge) {
+      setHasSeenMicroTestBadge(false);
+      previousMicroTestBadgeCountRef.current = 0;
+      return;
+    }
+
+    if (microTestBadge.count > previousMicroTestBadgeCountRef.current) {
+      setHasSeenMicroTestBadge(false);
+    }
+
+    previousMicroTestBadgeCountRef.current = microTestBadge.count;
+  }, [microTestBadge.showBadge, microTestBadge.count]);
+
+  const showMicroTestNotificationDot = microTestBadge.showBadge && !hasSeenMicroTestBadge;
   
 
   const mobileMenuPointsBadges = useMemo(() => {
@@ -2565,6 +2583,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   };
 
   const openPlayersHandFromLauncher = useCallback(() => {
+    setHasSeenMicroTestBadge(true);
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
@@ -4121,7 +4140,18 @@ export default function App({ forceAuthOnMount }: AppProps) {
               >
                 <span className="mobile-menu-overlay__hero-copy mobile-menu-overlay__hero-copy--hand">
                   {microTestBadge.showBadge ? (
-                    <span className="mobile-menu-overlay__hero-meta">{microTestBadge.count} micro-tests ready</span>
+                    <span
+                      className={`mobile-menu-overlay__micro-alert ${
+                        showMicroTestNotificationDot ? 'mobile-menu-overlay__micro-alert--unseen' : ''
+                      }`}
+                      aria-label={`${microTestBadge.count} micro-tests ready`}
+                      title={`${microTestBadge.count} micro-tests ready`}
+                    >
+                      <span className="mobile-menu-overlay__micro-alert-icon" aria-hidden="true">✦</span>
+                      {showMicroTestNotificationDot ? (
+                        <span className="mobile-menu-overlay__micro-alert-dot" aria-hidden="true" />
+                      ) : null}
+                    </span>
                   ) : null}
                 </span>
                 <span className="mobile-menu-overlay__visual-slot mobile-menu-overlay__visual-slot--hand" aria-hidden="true">
