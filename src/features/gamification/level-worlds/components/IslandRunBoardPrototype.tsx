@@ -5170,6 +5170,13 @@ export function IslandRunBoardPrototype({
     wasDicePurchasePromptEligibleRef.current = shouldPromptDicePurchase;
   }, [hasHydratedRuntimeState, openOutOfDicePurchasePrompt, session, shouldPromptDicePurchase]);
 
+  useEffect(() => {
+    if (showOutOfDicePurchasePrompt && !shouldPromptDicePurchase) {
+      setShowOutOfDicePurchasePrompt(false);
+      setDiceCheckoutError(null);
+    }
+  }, [showOutOfDicePurchasePrompt, shouldPromptDicePurchase]);
+
   const activateCurrentIsland = useCallback(() => {
     const nowMs = Date.now();
     const durationMs = getIslandDurationMs(islandNumber);
@@ -11456,7 +11463,7 @@ export function IslandRunBoardPrototype({
         </div>
       )}
 
-      {showOutOfDicePurchasePrompt && (
+      {showOutOfDicePurchasePrompt && shouldPromptDicePurchase && (
         <div className="island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Out of dice">
             <h3 className="island-stop-modal__title">🎲 Out of Dice</h3>
