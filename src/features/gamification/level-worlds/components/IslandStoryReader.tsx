@@ -267,8 +267,7 @@ export function IslandStoryReader({ manifestPath, isOpen, onClose, onRewardClaim
 
   const progressLabel = useMemo(() => {
     if (!manifest || manifest.panels.length === 0) return '0%';
-    const videoPanels = manifest.panels.filter((panel) => panel.type === 'video').length;
-    if (manifest.mediaKind === 'movie' && videoPanels === 1) return 'Movie';
+    if (manifest.mediaKind === 'movie') return 'Movie';
     return `${manifest.panels.length} panels`;
   }, [manifest]);
 
@@ -344,6 +343,7 @@ export function IslandStoryReader({ manifestPath, isOpen, onClose, onRewardClaim
                       {videoSources.map((source) => (
                         <source key={source.src} src={source.src} type={source.type} />
                       ))}
+                      Your browser does not support the video tag.
                     </video>
                   </div>
                   {panel.caption ? <p className="island-story-reader__caption">{panel.caption}</p> : null}
