@@ -30,7 +30,9 @@ export type FeatureAvailabilityId =
   | 'score.zenGarden'
   | 'settings.holidayThemes'
   | 'settings.notifications'
-  | 'settings.experimentalFeatures';
+  | 'settings.experimentalFeatures'
+  | 'future.socialQuests'
+  | 'future.aiQuestCoach';
 
 export interface FeatureAvailabilityScreenshot {
   src: string;
@@ -485,6 +487,36 @@ export const featureAvailabilityRegistry = {
     votingEnabled: true,
     votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
     voteCategory: 'settings',
+  },
+  'future.socialQuests': {
+    id: 'future.socialQuests',
+    label: 'Social Quests',
+    description: 'Team up with friends on shared goals and celebrate wins together.',
+    status: 'comingSoon',
+    publicAccess: 'previewOnly',
+    adminAccess: 'previewOnly',
+    surface: 'MyAccountPanel',
+    category: 'future',
+    publicLabel: 'Coming Soon',
+    shortPitch: 'Team up with friends on shared real-life quests and celebrate wins together.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'social',
+  },
+  'future.aiQuestCoach': {
+    id: 'future.aiQuestCoach',
+    label: 'AI Quest Coach',
+    description: 'Personalized AI-powered guidance to help you stay on track with life goals.',
+    status: 'comingSoon',
+    publicAccess: 'previewOnly',
+    adminAccess: 'previewOnly',
+    surface: 'MyAccountPanel',
+    category: 'future',
+    publicLabel: 'Coming Soon',
+    shortPitch: 'Personalized AI guidance that adapts to your real-life quest momentum.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'ai',
   },
 } as const satisfies Record<FeatureAvailabilityId, FeatureAvailability>;
 
