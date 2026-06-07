@@ -1689,12 +1689,15 @@ export function IslandRunBoardPrototype({
   const [hasHydratedRuntimeState, setHasHydratedRuntimeState] = useState(false);
   const [musicEnabled, setMusicEnabled] = useState(true);
   const [sfxEnabled, setSfxEnabled] = useState(true);
+  const [showEntryAudioModal, setShowEntryAudioModal] = useState(false);
+  const [hasDismissedEntryAudioModal, setHasDismissedEntryAudioModal] = useState(false);
   // M4-COMPLETE: cycleIndex tracks full laps through 120 islands (island 120 → 1 increments this)
   const [cycleIndex, setCycleIndex] = useState<number>(0);
   // Effective island number for all cost/earn scaling: (cycleIndex × 120 + islandNumber).
   // Island 1 on cycle 1 becomes effective island 121, giving cycle-over-cycle cost escalation.
   const effectiveIslandNumber = cycleIndex * 120 + islandNumber;
   const boardProfileExposureTrackedRef = useRef(false);
+  const hasPresentedEntryAudioModalRef = useRef(false);
 
 
   useEffect(() => {
@@ -2842,12 +2845,19 @@ export function IslandRunBoardPrototype({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showShopPanel]);
 
+  useEffect(() => {
+    if (!hasHydratedRuntimeState || hasPresentedEntryAudioModalRef.current) return;
+    hasPresentedEntryAudioModalRef.current = true;
+    setHasDismissedEntryAudioModal(false);
+    setShowEntryAudioModal(true);
+  }, [hasHydratedRuntimeState]);
+
   const islandRunMusicContext = useMemo(() => resolveIslandRunMusicContext({
-    musicEnabled,
+    musicEnabled: musicEnabled && hasDismissedEntryAudioModal && !showEntryAudioModal,
     effectiveIslandNumber,
     showShopPanel,
     showIslandClearCelebration,
-  }), [effectiveIslandNumber, musicEnabled, showIslandClearCelebration, showShopPanel]);
+  }), [effectiveIslandNumber, hasDismissedEntryAudioModal, musicEnabled, showEntryAudioModal, showIslandClearCelebration, showShopPanel]);
 
   useEffect(() => {
     applyIslandRunMusicContext(islandRunMusicContext);
@@ -9352,6 +9362,7 @@ export function IslandRunBoardPrototype({
       showBuildPanel ||
       showClaimModal ||
       showEggReadyBanner ||
+      showEntryAudioModal ||
       showEncounterModal ||
       showFirstCreaturePackModal ||
       showFirstRunCelebration ||
@@ -9434,6 +9445,65 @@ export function IslandRunBoardPrototype({
 
   return (
     <section className={`island-run-prototype ${isHudCollapsed ? 'island-run-prototype--hud-collapsed' : ''}`}>
+      {showEntryAudioModal && (
+        <div className="island-run-entry-audio" role="presentation">
+          <div
+            className="island-run-entry-audio__card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="island-run-entry-audio-title"
+            aria-describedby="island-run-entry-audio-copy"
+          >
+            <p className="island-run-entry-audio__eyebrow">Before you start</p>
+            <h2 id="island-run-entry-audio-title">Sound & music settings</h2>
+            <p id="island-run-entry-audio-copy">
+              Choose your Island Run audio. Music will only start after this panel closes, then fade in.
+            </p>
+            <div className="island-run-entry-audio__toggles" role="group" aria-label="Island Run audio settings">
+              <button
+                type="button"
+                className={`island-run-entry-audio__toggle${musicEnabled ? ' island-run-entry-audio__toggle--enabled' : ''}`}
+                aria-pressed={musicEnabled}
+                onClick={() => setMusicEnabled((current) => !current)}
+              >
+                <span aria-hidden="true">🎵</span>
+                <span>
+                  <strong>Music</strong>
+                  <small>{musicEnabled ? 'Fade in after start' : 'Stay quiet'}</small>
+                </span>
+                <span aria-hidden="true">{musicEnabled ? 'On' : 'Off'}</span>
+              </button>
+              <button
+                type="button"
+                className={`island-run-entry-audio__toggle${sfxEnabled ? ' island-run-entry-audio__toggle--enabled' : ''}`}
+                aria-pressed={sfxEnabled}
+                onClick={() => {
+                  const next = !sfxEnabled;
+                  setSfxEnabled(next);
+                  setIslandRunAudioEnabled(next);
+                }}
+              >
+                <span aria-hidden="true">🔔</span>
+                <span>
+                  <strong>Sounds</strong>
+                  <small>{sfxEnabled ? 'Rolls and rewards' : 'Muted effects'}</small>
+                </span>
+                <span aria-hidden="true">{sfxEnabled ? 'On' : 'Off'}</span>
+              </button>
+            </div>
+            <button
+              type="button"
+              className="island-run-entry-audio__start"
+              onClick={() => {
+                setHasDismissedEntryAudioModal(true);
+                setShowEntryAudioModal(false);
+              }}
+            >
+              Start Island Run
+            </button>
+          </div>
+        </div>
+      )}
       {!isHudCollapsed ? (
         <header className="island-run-prototype__header">
           <div id="island-run-main-hud">
