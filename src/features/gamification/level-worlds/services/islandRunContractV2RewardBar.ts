@@ -487,6 +487,15 @@ export function canClaimIslandRunContractV2RewardBar(state: IslandRunRewardBarRu
  * Single reward per fill — the primary reward rotates between dice, essence,
  * minigame tokens, and sticker fragments. All payouts escalate with tier.
  */
+/**
+ * Round a reward amount to the nearest "nice" multiple of 5 so the progress-bar
+ * dice reward reads as a clean number (e.g. 41 -> 40, 43 -> 45, 98 -> 100).
+ * Never rounds below 5 so a reward never disappears.
+ */
+function roundRewardToNearestFive(amount: number): number {
+  return Math.max(5, Math.round(amount / 5) * 5);
+}
+
 function resolveProgressivePayout(options: {
   tier: number;
   claimNumber: number;
@@ -521,7 +530,9 @@ function resolveProgressivePayout(options: {
   // Primary reward is the big one; others get a small bonus
   switch (rewardKind) {
     case 'dice':
-      payout.dice = diceBase;
+      // Primary dice reward shown in the progress bar — round to a clean
+      // multiple of 5 (e.g. 41 -> 40, 43 -> 45, 98 -> 100).
+      payout.dice = roundRewardToNearestFive(diceBase);
       payout.essence = Math.floor(essenceBase / 3);
       break;
     case 'essence':
