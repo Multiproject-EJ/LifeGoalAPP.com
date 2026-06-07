@@ -6881,6 +6881,16 @@ html.platform-ipad .workspace-shell__menu-edge {
   border: 1px solid rgba(253, 230, 138, 0.8);
 }
 
+.habit-day-nav__egg-hatch-movie-video {
+  display: block;
+  width: 100%;
+  max-height: min(60dvh, 420px);
+  object-fit: contain;
+  border-radius: 18px;
+  background: #0f172a;
+  margin-bottom: 1rem;
+}
+
 .habit-day-nav__vision-modal::before {
   content: '';
   position: absolute;
