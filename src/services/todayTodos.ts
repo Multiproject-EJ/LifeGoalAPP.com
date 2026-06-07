@@ -66,3 +66,14 @@ export async function updateTodayTodo(
     .select('*')
     .single();
 }
+
+
+export async function deleteTodayTodo(id: string): Promise<ServiceResponse<null>> {
+  if (!canUseSupabaseData()) return { data: null, error: authRequiredError() };
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from('today_todos')
+    .delete()
+    .eq('id', id);
+  return { data: null, error };
+}
