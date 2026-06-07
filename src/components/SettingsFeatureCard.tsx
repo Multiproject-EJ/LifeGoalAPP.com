@@ -35,11 +35,12 @@ export function SettingsFeatureCard({
 }: SettingsFeatureCardProps) {
   const feature = featureId ? getFeatureAvailability(featureId) : null;
   const statusLabelOverride = feature ? getActorAwareStatusLabel(feature, actorContext) : undefined;
+  const shouldMuteIcon = feature?.status === 'demo' && featureId !== 'settings.experimentalFeatures';
 
   return (
     <button
       type="button"
-      className="settings-module-card"
+      className={`settings-module-card${shouldMuteIcon ? ' future-feature-card--demo' : ''}`}
       onClick={onClick}
       aria-label={`Open ${title}`}
     >

@@ -16,6 +16,7 @@ import { TelemetrySettingsSection } from './TelemetrySettingsSection';
 import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
 import { FeaturePreviewOverlay } from '../../components/FeaturePreviewOverlay';
 import { SettingsFeatureCard } from '../../components/SettingsFeatureCard';
+import { ExperimentsModal } from '../../components/ExperimentsModal';
 import { HolidayPreferencesSection, HOLIDAY_OPTIONS } from './HolidayPreferencesSection';
 import { CaseSubmissionModal } from '../cases/CaseSubmissionModal';
 import { MyCasesPanel } from '../cases/MyCasesPanel';
@@ -23,6 +24,7 @@ import { AdminInboxPanel } from '../admin/AdminInboxPanel';
 import { FutureFeatureVotingPanel } from './FutureFeatureVotingPanel';
 import { getFeatureAvailability, type FeatureAvailabilityId } from '../../config/featureAvailability';
 import { resolveFeatureAccess } from '../../services/featureAccess';
+import { isUserFeatureEnabled } from '../../services/userFeatureOverrides';
 import { isAdminUser } from '../../services/adminRoles';
 import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
 import type { WorkspaceStats } from '../../services/workspaceStats';
@@ -98,6 +100,7 @@ export function MyAccountPanel({
   const [onboardingToolsFolderOpen, setOnboardingToolsFolderOpen] = useState(false);
   const [aiPrivacyFolderOpen, setAiPrivacyFolderOpen] = useState(false);
   const [experimentalFolderOpen, setExperimentalFolderOpen] = useState(false);
+  const [showExperimentsModal, setShowExperimentsModal] = useState(false);
   const [gameRewardsFolderOpen, setGameRewardsFolderOpen] = useState(false);
   const [cacheFolderOpen, setCacheFolderOpen] = useState(false);
   const [savingPreference, setSavingPreference] = useState(false);
@@ -444,7 +447,8 @@ export function MyAccountPanel({
   };
 
   const handleSettingsModuleClick = (featureId: FeatureAvailabilityId, setModuleOpen: (isOpen: boolean) => void) => {
-    const access = resolveFeatureAccess(featureId, { isAdminOrCreator: isAdmin === true });
+    const isUserOverride = isUserFeatureEnabled(session.user.id, featureId);
+    const access = resolveFeatureAccess(featureId, { isAdminOrCreator: isAdmin === true || isUserOverride });
 
     if (access === 'open') {
       setModuleOpen(true);
@@ -461,8 +465,7 @@ export function MyAccountPanel({
   const handleHolidayThemesClick = () => handleSettingsModuleClick('settings.holidayThemes', setHolidayFolderOpen);
   const handleNotificationsClick = () => handleSettingsModuleClick('settings.notifications', setFolder2Open);
   const handleRemindersClick = () => setRemindersFolderOpen(true);
-  const handleExperimentalFeaturesClick = () =>
-    handleSettingsModuleClick('settings.experimentalFeatures', setExperimentalFolderOpen);
+  const handleExperimentalFeaturesClick = () => setShowExperimentsModal(true);
   const handleAdvancedToolsClick = () => {
     if (showAdminTools) {
       setFolder1Open(true);
@@ -1210,6 +1213,13 @@ export function MyAccountPanel({
           body={activeFutureFeature.shortPitch}
           statusLabelOverride={activeFutureFeature.publicLabel}
           onClose={() => setActiveFutureFeatureId(null)}
+        />
+      ) : null}
+
+      {showExperimentsModal ? (
+        <ExperimentsModal
+          session={session}
+          onClose={() => setShowExperimentsModal(false)}
         />
       ) : null}
     </div>
