@@ -4893,6 +4893,16 @@ export function IslandRunBoardPrototype({
     runtimeState.stopBuildStateByIndex,
     runtimeState.stopStatesByIndex,
   ]);
+
+  // Footer 🔨 Build attention dot: lights up when at least one not-fully-built
+  // landmark has a next build step the player can pay for right now with their
+  // current essence wallet. Mirrors the orbit "affordable" cue so the player
+  // knows to open Build without having to peek inside the modal first.
+  const hasAffordableBuildStep = useMemo(
+    () => buildModalV2Cards.some((card) => !card.isFullyBuilt && card.canAfford),
+    [buildModalV2Cards],
+  );
+
   const showIslandClearCelebrationFromAnywhere = useCallback((source: string) => {
     if (islandClearCelebrationShownForVisitRef.current === islandClearVisitKey) return;
     islandClearCelebrationShownForVisitRef.current = islandClearVisitKey;
@@ -10600,6 +10610,13 @@ export function IslandRunBoardPrototype({
                   aria-describedby={isBuildTutorialPromptActive ? 'island-run-build-tutorial-prompt' : undefined}
                 >
                   🔨 Build
+                  {hasAffordableBuildStep && !isBuildTutorialPromptActive && (
+                    <span
+                      className="island-run-prototype__footer-build-dot"
+                      role="status"
+                      aria-label="A building can be funded with your essence"
+                    />
+                  )}
                 </button>
                 <button
                   type="button"
