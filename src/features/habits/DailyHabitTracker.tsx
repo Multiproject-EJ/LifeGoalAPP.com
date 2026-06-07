@@ -893,6 +893,8 @@ export function DailyHabitTracker({
   const isVisionStarPreviewOnly = resolveFeatureAccess('today.visionStar', { isAdminOrCreator }) !== 'open';
   const isWaterZenTreePreviewOnly = resolveFeatureAccess('today.waterZenTree', { isAdminOrCreator }) !== 'open';
   const isFeedCreaturesPreviewOnly = resolveFeatureAccess('today.feedCreatures', { isAdminOrCreator }) !== 'open';
+  // Weekly Victory is an admin-only demo feature — only admins can see the snapshot.
+  const canViewWeeklyVictory = resolveFeatureAccess('today.weeklyVictory', { isAdminOrCreator }) === 'open';
   const [routinesTodaySummary, setRoutinesTodaySummary] = useState<RoutinesTodayLaneSummary>({
     status: 'loading',
     dueCount: 0,
@@ -2036,7 +2038,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   }, [session.user.id, timeLimitedOffer]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !canViewWeeklyVictory) return;
     const launchKey = weeklyHabitReviewLaunchKey(session.user.id);
     if (loadDraft<boolean>(launchKey)) {
       removeDraft(launchKey);
@@ -2046,10 +2048,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     const launchHandler = () => setIsWeeklyHabitReviewOpen(true);
     window.addEventListener('lifegoal:launch-weekly-habit-review', launchHandler);
     return () => window.removeEventListener('lifegoal:launch-weekly-habit-review', launchHandler);
-  }, [session.user.id]);
+  }, [session.user.id, canViewWeeklyVictory]);
 
   useEffect(() => {
-    if (!isViewingToday || typeof window === 'undefined') {
+    if (!isViewingToday || typeof window === 'undefined' || !canViewWeeklyVictory) {
       return;
     }
 
@@ -2070,7 +2072,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
     saveDraft(reviewShownKey, true);
     setIsWeeklyHabitReviewOpen(true);
-  }, [activeDate, habits.length, isViewingToday, session.user.id, stageMixSnapshot.totalLogged]);
+  }, [activeDate, canViewWeeklyVictory, habits.length, isViewingToday, session.user.id, stageMixSnapshot.totalLogged]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !session?.user?.id) {
@@ -3640,7 +3642,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     </div>
   ) : null;
 
-  const weeklyHabitReviewModal = isWeeklyHabitReviewOpen ? (
+  const weeklyHabitReviewModal = isWeeklyHabitReviewOpen && canViewWeeklyVictory ? (
     <div
       className="habit-day-nav__vision-modal-backdrop"
       role="dialog"

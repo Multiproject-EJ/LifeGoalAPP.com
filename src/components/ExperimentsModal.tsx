@@ -27,6 +27,7 @@ const FEATURE_ICONS: Partial<Record<FeatureAvailabilityId, string>> = {
   'today.visionStar': '⭐',
   'today.waterZenTree': '🌿',
   'today.feedCreatures': '🦋',
+  'today.weeklyVictory': '🏆',
   'actions.taskTower': '🏗️',
   'actions.visionBoard': '🎯',
   'mind.meditation': '🧘',
@@ -105,6 +106,8 @@ export function ExperimentsModal({ session, onClose }: ExperimentsModalProps) {
   };
 
   const handleDemoToggle = (featureId: FeatureAvailabilityId, enabled: boolean) => {
+    // Admin-only demo features can't be unlocked by regular users.
+    if (getFeatureAvailability(featureId).publicAccess === 'hidden') return;
     setUserFeatureEnabled(userId, featureId, enabled);
     setEnabledOverrides(getUserEnabledFeatures(userId));
     const label = getFeatureAvailability(featureId).label;
@@ -199,7 +202,10 @@ export function ExperimentsModal({ session, onClose }: ExperimentsModalProps) {
             </div>
             {DEMO_FEATURE_IDS.map((featureId) => {
               const feature = getFeatureAvailability(featureId);
-              const isEnabled = enabledOverrides.has(featureId);
+              // Admin-only demo features stay inactive for regular users — the
+              // toggle is shown but disabled so only an admin can use them.
+              const adminOnly = feature.publicAccess === 'hidden';
+              const isEnabled = !adminOnly && enabledOverrides.has(featureId);
               const icon = FEATURE_ICONS[featureId] ?? '✨';
               return (
                 <div key={featureId} className="experiments-modal__feature-row">
@@ -211,16 +217,24 @@ export function ExperimentsModal({ session, onClose }: ExperimentsModalProps) {
                   </span>
                   <div className="experiments-modal__feature-info">
                     <span className="experiments-modal__feature-name">{feature.label}</span>
-                    <span className="experiments-modal__feature-desc">{feature.shortPitch ?? feature.description}</span>
+                    <span className="experiments-modal__feature-desc">
+                      {feature.shortPitch ?? feature.description}
+                      {adminOnly ? ' (Admin only)' : ''}
+                    </span>
                   </div>
                   <div className="experiments-modal__feature-actions">
                     <label
                       className="experiments-modal__toggle"
-                      aria-label={`${isEnabled ? 'Disable' : 'Enable'} ${feature.label}`}
+                      aria-label={
+                        adminOnly
+                          ? `${feature.label} — admin only`
+                          : `${isEnabled ? 'Disable' : 'Enable'} ${feature.label}`
+                      }
                     >
                       <input
                         type="checkbox"
                         checked={isEnabled}
+                        disabled={adminOnly}
                         onChange={(e) => handleDemoToggle(featureId, e.target.checked)}
                       />
                       <span className="experiments-modal__toggle-track" />
