@@ -55,6 +55,20 @@ export interface StoryEpisodeManifest {
   soundtrack?: StorySoundtrackConfig;
 }
 
+const STORY_VIDEO_SOURCE_TYPES: Record<string, string> = {
+  avi: 'video/x-msvideo',
+  m4v: 'video/mp4',
+  mov: 'video/quicktime',
+  mp4: 'video/mp4',
+  webm: 'video/webm',
+};
+
+function resolveStoryVideoSourceType(source: StoryVideoSource): string | null {
+  if (source.type) return source.type;
+  const extension = source.src.split(/[?#]/, 1)[0]?.split('.').pop()?.toLowerCase();
+  return extension ? STORY_VIDEO_SOURCE_TYPES[extension] ?? null : null;
+}
+
 interface IslandStoryReaderProps {
   manifestPath: string;
   isOpen: boolean;
@@ -327,24 +341,33 @@ export function IslandStoryReader({ manifestPath, isOpen, onClose, onRewardClaim
                 : panel.src
                   ? [{ src: panel.src }]
                   : [];
+              const typedVideoSources = videoSources
+                .map((source) => ({ ...source, type: resolveStoryVideoSourceType(source) }))
+                .filter((source): source is StoryVideoSource & { type: string } => Boolean(source.type));
               return (
                 <article key={key} className="island-story-reader__panel" data-story-panel-index={index}>
                   <div className="island-story-reader__media-shell island-story-reader__media-shell--video">
-                    <video
-                      data-story-video="true"
-                      data-autoplay={panel.mutedAutoplay ? 'true' : 'false'}
-                      poster={panel.poster}
-                      controls
-                      playsInline
-                      preload="metadata"
-                      muted={!audioEnabled}
-                      loop={panel.loop}
-                    >
-                      {videoSources.map((source) => (
-                        <source key={source.src} src={source.src} type={source.type} />
-                      ))}
-                      Your browser does not support the video tag.
-                    </video>
+                    {typedVideoSources.length > 0 ? (
+                      <video
+                        data-story-video="true"
+                        data-autoplay={panel.mutedAutoplay ? 'true' : 'false'}
+                        poster={panel.poster}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        muted={!audioEnabled}
+                        loop={panel.loop}
+                      >
+                        {typedVideoSources.map((source) => (
+                          <source key={source.src} src={source.src} type={source.type} />
+                        ))}
+                        Your browser does not support the video tag.
+                      </video>
+                    ) : (
+                      <p className="island-story-reader__video-empty">
+                        Add an MP4, MOV, or AVI source to this movie panel.
+                      </p>
+                    )}
                   </div>
                   {panel.caption ? <p className="island-story-reader__caption">{panel.caption}</p> : null}
                 </article>
