@@ -2190,6 +2190,15 @@ export function IslandRunBoardPrototype({
   // the write amplification loop where persist effects see stale local state
   // vs runtimeState after hydration and emit redundant writes.
   const hasCompletedInitialHydrationSyncRef = useRef(false);
+  // Audio preferences (music/sfx) are mirrored from runtimeState into React
+  // toggle state exactly once, on first hydration. Re-mirroring on every
+  // runtimeState change made the entry-modal Music/Sounds toggles flicker
+  // on/off — and thrashed the music context (restarting tracks) — as the
+  // runtimeState passed through the local snapshot, the table result (where the
+  // split music/sfx columns may be null for legacy rows), and persist
+  // write-backs. After first hydration the React state is the source of truth
+  // and the persist effect keeps the store in sync.
+  const hasHydratedAudioPreferencesRef = useRef(false);
   const companionBonusAppliedVisitKeyRef = useRef<string | null>(null);
   const isOnboardingComplete = Boolean(session.user.user_metadata?.onboarding_complete);
   const isFirstRunClaimed = runtimeState.firstRunClaimed;
@@ -2712,8 +2721,14 @@ export function IslandRunBoardPrototype({
     }
     // M4-COMPLETE: Restore cycleIndex from runtime state
     setCycleIndex(runtimeState.cycleIndex ?? 0);
-    setMusicEnabled(runtimeState.musicEnabled ?? runtimeState.audioEnabled ?? true);
-    setSfxEnabled(runtimeState.sfxEnabled ?? runtimeState.audioEnabled ?? true);
+    // Hydrate audio preferences only once — see hasHydratedAudioPreferencesRef.
+    // Re-applying these on every sync run is what caused the toggle flicker and
+    // music-track fighting reported on game open.
+    if (!hasHydratedAudioPreferencesRef.current) {
+      hasHydratedAudioPreferencesRef.current = true;
+      setMusicEnabled(runtimeState.musicEnabled ?? runtimeState.audioEnabled ?? true);
+      setSfxEnabled(runtimeState.sfxEnabled ?? runtimeState.audioEnabled ?? true);
+    }
     setActiveCompanionId(runtimeState.activeCompanionId ?? null);
     setCreatureTreatInventory(runtimeState.creatureTreatInventory ?? fetchCreatureTreatInventory(session.user.id));
 
