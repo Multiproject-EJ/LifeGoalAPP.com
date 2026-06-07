@@ -20968,6 +20968,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__trait-card-name {
+  display: -webkit-box;
   overflow: hidden;
   max-width: 100%;
   font-size: clamp(0.66rem, 2.6vw, 0.78rem);
@@ -20975,6 +20976,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   line-height: 1.12;
   text-overflow: ellipsis;
   white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .mobile-menu-overlay__archetype-card {
