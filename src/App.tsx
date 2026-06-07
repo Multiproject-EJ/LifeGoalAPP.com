@@ -3581,7 +3581,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 setActiveWorkspaceNav(settingsMenuReturnNavRef.current);
                 setIsMobileMenuOpen(true);
               }}
-              aria-label="Back to pop-up menu"
+              aria-label="Back to menu"
             >
               <span aria-hidden="true" className="workspace-settings-menu-return__icon">‹</span>
             </button>
