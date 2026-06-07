@@ -7851,12 +7851,6 @@ html.platform-ipad .workspace-shell__menu-edge {
   cursor: pointer;
 }
 
-@media (max-width: 420px) {
-  .habit-day-status__summary {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-}
 
 .habit-day-status__header {
   display: flex;
