@@ -44,14 +44,9 @@
 .players-hand-spark-preview__rarity { display:inline-block; align-self:flex-start; padding:5px 10px; font-size:12px; letter-spacing:.1em; text-transform:uppercase; border:1px solid color-mix(in srgb, var(--card-color) 55%, white 12%); border-radius:999px; }
 .players-hand-spark-preview__description { display:block; font-size:clamp(14px, 4.2vw, 18px); line-height:1.45; opacity:.98; }
 .players-hand-spark-preview__card-prompt { margin-top:auto; align-self:center; border:1px solid rgba(255,255,255,.22); border-radius:999px; background:rgba(5,8,20,.36); padding:5px 10px; font-size:12px; opacity:.86; }
-.players-hand-spark-overlay__detail-row { display:flex; gap:8px; margin-bottom:8px; }
-.players-hand-spark-overlay__rarity-chip,.players-hand-spark-overlay__role-chip { font-size:11px; text-transform:uppercase; letter-spacing:.06em; padding:3px 8px; border-radius:999px; border:1px solid color-mix(in srgb, var(--card-color) 60%, white 8%); }
-.players-hand-spark-overlay__detail-title { font-size:18px; font-weight:700; }
-.players-hand-spark-overlay__detail-meta { font-size:13px; opacity:.9; margin:4px 0 8px; }
-.players-hand-spark-overlay__detail-description { font-size:14px; line-height:1.45; }
 @media (prefers-reduced-motion: reduce) {
   .players-hand-spark-preview__card { transition: none; }
-  .players-hand-spark-overlay__focus-card { transition: none; }
+  .players-hand-spark-preview__card-inner { transition: none; }
 }
 
 
