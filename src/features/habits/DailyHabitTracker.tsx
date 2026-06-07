@@ -8177,6 +8177,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     const todayWinsImageSrc = TODAY_WINS_IMAGES[todayWinsTier];
     const todayWinsStarsLabel =
       todayWinsTier === 'three_star' ? '3 Stars' : todayWinsTier === 'two_star' ? '2 Stars' : '1 Star';
+    const todayWinsStarCount =
+      todayWinsTier === 'three_star' ? 3 : todayWinsTier === 'two_star' ? 2 : 1;
+    const todayWinsStarItems = Array.from({ length: todayWinsStarCount }, (_, index) => index);
     const todayWinsTierCaption =
       todayWinsTier === 'three_star'
         ? 'Outstanding momentum today.'
@@ -8884,6 +8887,18 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         {intentionsModal}
         {todayWinsModal}
         <div className="habit-checklist-card__board">
+          <button
+            type="button"
+            className={`habit-checklist-card__today-wins-stars habit-checklist-card__today-wins-stars--${todayWinsStarCount}`}
+            onClick={() => setIsTodayWinsOpen(true)}
+            aria-label={`Open Today's Wins: ${todayWinsStarsLabel}`}
+          >
+            {todayWinsStarItems.map((starIndex) => (
+              <span key={starIndex} className="habit-checklist-card__today-wins-star" aria-hidden="true">
+                ★
+              </span>
+            ))}
+          </button>
           <div className="habit-checklist-card__board-head">
             <div className="habit-checklist-card__date-wrap">
               <div className="habit-checklist-card__date-group">
