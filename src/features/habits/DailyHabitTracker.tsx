@@ -3651,6 +3651,54 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     </div>
   ) : null;
 
+  const eggHatchMovieModal = isEggHatchMovieOpen ? (
+    <div
+      className="habit-day-nav__vision-modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Egg hatching"
+      onClick={() => setIsEggHatchMovieOpen(false)}
+    >
+      <div
+        className="habit-day-nav__vision-modal habit-day-nav__egg-hatch-movie-modal"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="habit-day-nav__vision-modal-close"
+          onClick={() => setIsEggHatchMovieOpen(false)}
+          aria-label="Close egg hatch movie"
+        >
+          ×
+        </button>
+        <div className="habit-day-nav__todays-offer-body">
+          <video
+            className="habit-day-nav__egg-hatch-movie-video"
+            src="/assets/movies/egg-hatch-intro-v1.mp4"
+            autoPlay
+            muted
+            playsInline
+            preload="auto"
+            onEnded={(event) => { event.currentTarget.pause(); }}
+            aria-label="Egg hatching animation"
+          />
+          <p className="habit-day-nav__todays-offer-title">Your egg is ready to hatch!</p>
+          <p className="habit-day-nav__todays-offer-subtitle">Open the Hatchery to collect your creature or sell it for rewards.</p>
+          <button
+            type="button"
+            className="habit-day-nav__todays-offer-buy"
+            onClick={() => {
+              setIsEggHatchMovieOpen(false);
+              onOpenIslandRunStop?.('hatchery');
+            }}
+          >
+            Open Hatchery →
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   const weeklyHabitReviewModal = isWeeklyHabitReviewOpen && canViewWeeklyVictory ? (
     <div
       className="habit-day-nav__vision-modal-backdrop"
