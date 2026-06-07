@@ -11106,8 +11106,12 @@ export function IslandRunBoardPrototype({
               {dormantDoorMiniGame.rewardLevels.map((level) => {
                 const prizeFigure = DORMANT_DOOR_TIER_FIGURE[level.tier];
                 const isWinningPrize = dormantDoorReward?.tier === level.tier;
+                const isResolvedNonWinningPrize = Boolean(dormantDoorReward) && !isWinningPrize;
                 return (
-                  <span key={level.tier} className={`island-dormant-door__reward-chip island-dormant-door__reward-chip--${level.tier} ${isWinningPrize ? 'island-dormant-door__reward-chip--winner' : ''}`.trim()}>
+                  <span
+                    key={level.tier}
+                    className={`island-dormant-door__reward-chip island-dormant-door__reward-chip--${level.tier} ${isWinningPrize ? 'island-dormant-door__reward-chip--winner' : ''} ${isResolvedNonWinningPrize ? 'island-dormant-door__reward-chip--muted' : ''}`.trim()}
+                  >
                     <span className="island-dormant-door__reward-icon" aria-hidden="true">{DORMANT_DOOR_FIGURE_ICONS[prizeFigure]}</span>
                     <span>{level.label}</span>
                     <strong>+{level.essence} 🟣</strong>
@@ -11120,11 +11124,12 @@ export function IslandRunBoardPrototype({
                 const isSelected = dormantDoorSelectedIndices.includes(index);
                 const isRevealed = isSelected;
                 const isWinningDoor = isSelected && dormantDoorReward?.tier === (door.figure === 'large' ? 'jackpot' : door.figure);
+                const isResolvedNonWinningDoor = Boolean(dormantDoorReward) && !isWinningDoor;
                 return (
                   <button
                     key={door.id}
                     type="button"
-                    className={`island-dormant-door__door ${isSelected ? 'island-dormant-door__door--selected' : ''} ${isRevealed ? 'island-dormant-door__door--revealed' : ''} ${isWinningDoor ? 'island-dormant-door__door--winner' : ''}`.trim()}
+                    className={`island-dormant-door__door ${isSelected ? 'island-dormant-door__door--selected' : ''} ${isRevealed ? 'island-dormant-door__door--revealed' : ''} ${isWinningDoor ? 'island-dormant-door__door--winner' : ''} ${isResolvedNonWinningDoor ? 'island-dormant-door__door--muted' : ''}`.trim()}
                     onClick={() => handleDormantDoorSelect(index)}
                     disabled={Boolean(dormantDoorReward) || isSelected}
                     aria-pressed={isSelected}
