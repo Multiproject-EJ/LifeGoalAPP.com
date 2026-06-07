@@ -57,6 +57,10 @@ type MyAccountPanelProps = {
   onLaunchWeeklyHabitReview?: () => void;
   onLaunchDailyCatchUpPrompt?: () => void;
   onLaunchDailyTreatCalendar?: () => void;
+  soundEffectsEnabled: boolean;
+  soundPreferenceSaving: boolean;
+  soundPreferenceError: string | null;
+  onSoundEffectsEnabledChange: (enabled: boolean) => void | Promise<void>;
   billingReturnBanner?: {
     kind: 'processing' | 'success' | 'canceled';
     message: string;
@@ -87,6 +91,10 @@ export function MyAccountPanel({
   onLaunchWeeklyHabitReview,
   onLaunchDailyCatchUpPrompt,
   onLaunchDailyTreatCalendar,
+  soundEffectsEnabled,
+  soundPreferenceSaving,
+  soundPreferenceError,
+  onSoundEffectsEnabledChange,
   billingReturnBanner = null,
 }: MyAccountPanelProps) {
   const [folder1Open, setFolder1Open] = useState(false);
@@ -94,6 +102,7 @@ export function MyAccountPanel({
   const [holidayFolderOpen, setHolidayFolderOpen] = useState(false);
   const [remindersFolderOpen, setRemindersFolderOpen] = useState(false);
   const [appearanceFolderOpen, setAppearanceFolderOpen] = useState(false);
+  const [soundFolderOpen, setSoundFolderOpen] = useState(false);
   const [hapticsFolderOpen, setHapticsFolderOpen] = useState(false);
   const [menuDisplayFolderOpen, setMenuDisplayFolderOpen] = useState(false);
   const [birthdayGiftFolderOpen, setBirthdayGiftFolderOpen] = useState(false);
@@ -620,6 +629,11 @@ export function MyAccountPanel({
           </div>
           <div className="settings-modules__grid">
             <SettingsFeatureCard
+              icon="🔊"
+              title="Sound"
+              onClick={() => setSoundFolderOpen(true)}
+            />
+            <SettingsFeatureCard
               icon="📳"
               title="Vibration"
               onClick={() => setHapticsFolderOpen(true)}
@@ -993,6 +1007,50 @@ export function MyAccountPanel({
             {savingPreference && <span className="account-panel__saving-indicator">Saving...</span>}
           </div>
           {!profile?.full_name && !isDemoExperience && <p className="account-panel__hint" style={{ marginTop: '0.5rem', color: 'var(--color-text-muted)' }}>Set your name in the account details to enable this feature.</p>}
+        </section>
+      </SettingsFolderPopup>
+
+      <SettingsFolderPopup
+        isOpen={soundFolderOpen}
+        onClose={() => setSoundFolderOpen(false)}
+        title="Sound effects"
+      >
+        <section className="account-panel__card" aria-labelledby="account-sound-effects">
+          <p className="account-panel__eyebrow">Sound design</p>
+          <h3 id="account-sound-effects">App sound effects</h3>
+          <p className="account-panel__hint">
+            Turn launcher swooshes and footer button clicks on or off. Your choice is saved to your account.
+          </p>
+          <div className="account-panel__actions-row" role="radiogroup" aria-label="Sound effects">
+            <button
+              type="button"
+              className={`btn ${!soundEffectsEnabled ? 'btn--primary' : ''}`}
+              aria-pressed={!soundEffectsEnabled}
+              disabled={soundPreferenceSaving}
+              onClick={() => void onSoundEffectsEnabledChange(false)}
+            >
+              Off
+            </button>
+            <button
+              type="button"
+              className={`btn ${soundEffectsEnabled ? 'btn--primary' : ''}`}
+              aria-pressed={soundEffectsEnabled}
+              disabled={soundPreferenceSaving}
+              onClick={() => void onSoundEffectsEnabledChange(true)}
+            >
+              On
+            </button>
+          </div>
+          <p className="account-panel__saving-indicator" style={{ marginTop: '0.5rem' }}>
+            {soundPreferenceSaving
+              ? 'Saving sound preference…'
+              : `Sound effects: ${soundEffectsEnabled ? 'On' : 'Off'}`}
+          </p>
+          {soundPreferenceError ? (
+            <p className="account-panel__warning" role="alert">
+              {soundPreferenceError}
+            </p>
+          ) : null}
         </section>
       </SettingsFolderPopup>
 

@@ -13,6 +13,7 @@ import { splitGoldBalance } from '../constants/economy';
 import mindIcon from '../assets/mind-icon.webp';
 import bodyIcon from '../assets/body-icon.webp';
 import { triggerCompletionHaptic } from '../utils/completionHaptics';
+import { playFooterClickSound, playLauncherOpenSound } from '../utils/audioUtils';
 
 type MobileFooterNavItem = {
   id: string;
@@ -427,6 +428,7 @@ export function MobileFooterNav({
   };
 
   const handleStatusClick = () => {
+    playFooterClickSound('game');
     if (statusHoldTriggeredRef.current) {
       statusHoldTriggeredRef.current = false;
       // Still call onStatusClick to open the overlay after hold
@@ -478,8 +480,9 @@ export function MobileFooterNav({
               }${isMenuLaunchAnimating ? ' mobile-footer-nav__menu-button--launching' : ''
               }`}
               onClick={() => {
-                revealControllerUI();
-                triggerMenuLaunchMotion();
+               playLauncherOpenSound();
+               revealControllerUI();
+               triggerMenuLaunchMotion();
                 onOpenMenu();
               }}
             >
@@ -584,6 +587,7 @@ export function MobileFooterNav({
                       type="button"
                       className="mobile-footer-nav__energy-button"
                       onClick={() => {
+                        playFooterClickSound('standard');
                         revealControllerUI();
                         onEnergySelect?.('mind');
                       }}
@@ -596,6 +600,7 @@ export function MobileFooterNav({
                       type="button"
                       className="mobile-footer-nav__energy-button"
                       onClick={() => {
+                        playFooterClickSound('standard');
                         revealControllerUI();
                         onEnergySelect?.('body');
                       }}
@@ -612,6 +617,7 @@ export function MobileFooterNav({
                     isActive ? 'mobile-footer-nav__button--active' : ''
                   }`}
                   onClick={() => {
+                    playFooterClickSound(isEnergyItem ? 'shield' : item.id === 'game' ? 'game' : 'standard');
                     revealControllerUI();
                     if (isEnergyItem) {
                       onEnergyToggle?.();
