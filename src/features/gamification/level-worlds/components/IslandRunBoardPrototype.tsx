@@ -1860,6 +1860,7 @@ export function IslandRunBoardPrototype({
   const [showBuildPanel, setShowBuildPanel] = useState(false);
   const [showRewardDetailsModal, setShowRewardDetailsModal] = useState(false);
   const [showEggManiaModal, setShowEggManiaModal] = useState(false);
+  const [showHatcheryCompassModal, setShowHatcheryCompassModal] = useState(false);
   const [isRewardBarDetailsExpanded, setIsRewardBarDetailsExpanded] = useState(false);
   const [selectedEventInfoEventId, setSelectedEventInfoEventId] = useState<EventId | null>(null);
   const [showOutOfDicePurchasePrompt, setShowOutOfDicePurchasePrompt] = useState(false);
@@ -2030,6 +2031,7 @@ export function IslandRunBoardPrototype({
         showOutOfDicePurchasePrompt ||
         showRewardDetailsModal ||
         showEggManiaModal ||
+        showHatcheryCompassModal ||
         Boolean(activePlaceholder) ||
         showStickerAlbumDialog ||
         showSanctuaryPanel ||
@@ -2052,11 +2054,23 @@ export function IslandRunBoardPrototype({
     activePlaceholder,
     showRewardDetailsModal,
     showEggManiaModal,
+    showHatcheryCompassModal,
     showSanctuaryPanel,
     showShopPanel,
     showStoryReader,
     showTopbarMenu,
   ]);
+
+  useEffect(() => {
+    if (!showHatcheryCompassModal) return undefined;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowHatcheryCompassModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showHatcheryCompassModal]);
 
   // B3-4: utility stop state
   const [utilityInteracted, setUtilityInteracted] = useState(false);
@@ -9324,6 +9338,7 @@ export function IslandRunBoardPrototype({
       showFirstRunCelebration ||
       showHatcheryHelp ||
       showHatcheryL1Celebration ||
+      showHatcheryCompassModal ||
       showIslandClearCelebration ||
       showMarketPanel ||
       showOnboardingBooster ||
@@ -9957,40 +9972,51 @@ export function IslandRunBoardPrototype({
 
         <div className="island-run-board__rewardbar-cluster">
           {hatcheryPendingEggs.length > 0 && (
-            <button
-              type="button"
-              className="island-run-board__rewardbar-hatchery-tray"
-              aria-label={`Open hatchery. ${hatcheryPendingEggCount} egg${hatcheryPendingEggCount === 1 ? '' : 's'} hatching or ready${hatcheryPendingEggTimeLabel ? `: ${hatcheryPendingEggTimeLabel}` : ''}.`}
-              title={`${hatcheryPendingEggCount} hatchery egg${hatcheryPendingEggCount === 1 ? '' : 's'} hatching or uncollected${hatcheryPendingEggTimeLabel ? ` — ${hatcheryPendingEggTimeLabel}` : ''}`}
-              onClick={openHatcheryQuickAccess}
-            >
-              <span className="island-run-board__rewardbar-hatchery-egg-stack" aria-hidden="true">
-                {Array.from({ length: rewardBarSideSlotCount }, (_, index) => {
-                  const egg = hatcheryPendingEggs[index];
-                  if (!egg) {
-                    return (
-                      <span
-                        key={`hatchery-placeholder-${index}`}
-                        className="island-run-board__rewardbar-hatchery-egg-slot island-run-board__rewardbar-side-slot island-run-board__rewardbar-side-slot--empty"
-                      />
-                    );
-                  }
+            <div className="island-run-board__rewardbar-hatchery-tray">
+              <button
+                type="button"
+                className="island-run-board__rewardbar-hatchery-egg-button"
+                aria-label={`Open hatchery. ${hatcheryPendingEggCount} egg${hatcheryPendingEggCount === 1 ? '' : 's'} hatching or ready${hatcheryPendingEggTimeLabel ? `: ${hatcheryPendingEggTimeLabel}` : ''}.`}
+                title={`${hatcheryPendingEggCount} hatchery egg${hatcheryPendingEggCount === 1 ? '' : 's'} hatching or uncollected${hatcheryPendingEggTimeLabel ? ` — ${hatcheryPendingEggTimeLabel}` : ''}`}
+                onClick={openHatcheryQuickAccess}
+              >
+                <span className="island-run-board__rewardbar-hatchery-egg-stack" aria-hidden="true">
+                  {Array.from({ length: rewardBarSideSlotCount }, (_, index) => {
+                    const egg = hatcheryPendingEggs[index];
+                    if (!egg) {
+                      return (
+                        <span
+                          key={`hatchery-placeholder-${index}`}
+                          className="island-run-board__rewardbar-hatchery-egg-slot island-run-board__rewardbar-side-slot island-run-board__rewardbar-side-slot--empty"
+                        />
+                      );
+                    }
 
-                  return (
-                    <span key={egg.id} className="island-run-board__rewardbar-hatchery-egg-slot island-run-board__rewardbar-side-slot">
-                      <span className="island-run-board__rewardbar-hatchery-egg-circle">
-                        <span className="island-run-board__rewardbar-hatchery-egg">🥚</span>
-                      </span>
-                      {index === 0 && hatcheryPendingEggTimeLabel && (
-                        <span className="island-run-board__rewardbar-hatchery-time">
-                          {hatcheryPendingEggTimeLabel}
+                    return (
+                      <span key={egg.id} className="island-run-board__rewardbar-hatchery-egg-slot island-run-board__rewardbar-side-slot">
+                        <span className="island-run-board__rewardbar-hatchery-egg-circle">
+                          <span className="island-run-board__rewardbar-hatchery-egg">🥚</span>
                         </span>
-                      )}
-                    </span>
-                  );
-                })}
-              </span>
-            </button>
+                        {index === 0 && hatcheryPendingEggTimeLabel && (
+                          <span className="island-run-board__rewardbar-hatchery-time">
+                            {hatcheryPendingEggTimeLabel}
+                          </span>
+                        )}
+                      </span>
+                    );
+                  })}
+                </span>
+              </button>
+              <button
+                type="button"
+                className="island-run-board__hatchery-compass-btn"
+                aria-label="Open hatchery compass"
+                title="Hatchery compass"
+                onClick={() => setShowHatcheryCompassModal(true)}
+              >
+                <span className="island-run-board__hatchery-compass-icon" aria-hidden="true" />
+              </button>
+            </div>
           )}
 
           <button
@@ -10512,6 +10538,26 @@ export function IslandRunBoardPrototype({
           onCollectPostRareTreasurePathAndTravel={handlePostRareTreasurePathCollectAndTravel}
           onClose={() => setShowDevLuckyRollOverlay(false)}
         />
+      )}
+
+      {showHatcheryCompassModal && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section
+            className="island-stop-modal island-run-board__hatchery-compass-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Hatchery compass"
+          >
+            <button
+              type="button"
+              className="island-run-board__hatchery-compass-modal-close"
+              aria-label="Close hatchery compass"
+              onClick={() => setShowHatcheryCompassModal(false)}
+            >
+              ×
+            </button>
+          </section>
+        </div>
       )}
 
       {activeStop && (() => {
