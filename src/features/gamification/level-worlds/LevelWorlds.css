@@ -2262,6 +2262,7 @@
   display: block;
   border-radius: 50%;
   background: url('/assets/icons/compass-gold-256.webp') center / contain no-repeat;
+  will-change: transform;
   animation: hatchery-compass-spin 300s linear infinite;
 }
 

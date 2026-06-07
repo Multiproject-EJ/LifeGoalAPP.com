@@ -10541,12 +10541,13 @@ export function IslandRunBoardPrototype({
       )}
 
       {showHatcheryCompassModal && (
-        <div className="island-stop-modal-backdrop" role="presentation">
+        <div className="island-stop-modal-backdrop" role="presentation" onClick={() => setShowHatcheryCompassModal(false)}>
           <section
             className="island-stop-modal island-run-board__hatchery-compass-modal"
             role="dialog"
             aria-modal="true"
             aria-label="Hatchery compass"
+            onClick={(event) => event.stopPropagation()}
           >
             <button
               type="button"
