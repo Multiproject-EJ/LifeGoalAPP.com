@@ -858,6 +858,9 @@ const TIMER_WARN_THRESHOLD_MS = 1 * 60 * 60 * 1000;  // 1–4 h → orange; < 1 
 const DICE_ROLL_OVERLAY_DURATION_MS = 800;  // how long the "Rolled N!" overlay stays visible
 const AUTO_ROLL_HOLD_DELAY_MS = 1400;
 const AUTO_ROLL_INTERVAL_MS = 2300;
+// While a modal/overlay owns attention, auto-roll pauses instead of firing the
+// next roll. We poll this often to resume promptly once every modal is closed.
+const AUTO_ROLL_PAUSE_POLL_MS = 300;
 
 function getTimerUrgencyClass(remainingMs: number): string {
   if (remainingMs > TIMER_OK_THRESHOLD_MS) return 'island-run-board__rewardbar-timer--ok';
@@ -1585,6 +1588,9 @@ export function IslandRunBoardPrototype({
   const autoRollHoldTimeoutRef = useRef<number | null>(null);
   const autoRollLoopAbortRef = useRef(false);
   const autoRollHoldTriggeredRef = useRef(false);
+  // Mirrors `doesModalOwnAttention` so the async auto-roll loop can read the
+  // current modal state without re-subscribing. When true, the loop pauses.
+  const autoRollPausedRef = useRef(false);
   const suppressNextRollClickRef = useRef(false);
   const isTravellingRef = useRef(false);
   /**
@@ -5802,6 +5808,15 @@ export function IslandRunBoardPrototype({
     let cancelled = false;
     const loop = async () => {
       while (!cancelled && !autoRollLoopAbortRef.current) {
+        // Pause (without ending auto-roll) while any modal/overlay owns
+        // attention — e.g. an encounter, stop, or reward modal opened by the
+        // previous roll. Poll until every modal is dismissed, then resume.
+        if (autoRollPausedRef.current) {
+          await new Promise<void>((resolve) => {
+            window.setTimeout(resolve, AUTO_ROLL_PAUSE_POLL_MS);
+          });
+          continue;
+        }
         const didRoll = await handleRollRef.current();
         if (!didRoll) {
           autoRollLoopAbortRef.current = true;
@@ -5837,13 +5852,6 @@ export function IslandRunBoardPrototype({
       stopAutoRoll();
     }
   }, [dicePool, effectiveDiceCost, isAutoRolling, stopAutoRoll]);
-
-  useEffect(() => {
-    if (showEncounterModal && isAutoRolling) {
-      stopAutoRoll();
-    }
-  }, [isAutoRolling, showEncounterModal, stopAutoRoll]);
-
 
   // Track roll index for deterministic (non-time-based) tile-landing RNG seeding.
   const rollIndexRef = useRef(0);
@@ -9546,6 +9554,11 @@ export function IslandRunBoardPrototype({
       showTravelOverlay ||
       walletStoreModalKind !== null,
   );
+  // Keep the auto-roll loop's pause gate in sync with modal state so it halts
+  // while any modal is open and resumes once they are all dismissed.
+  useEffect(() => {
+    autoRollPausedRef.current = doesModalOwnAttention;
+  }, [doesModalOwnAttention]);
   const shouldShowBestNextActionChip = Boolean(
     bestNextAction &&
       bestNextAction.urgency === 'critical' &&
