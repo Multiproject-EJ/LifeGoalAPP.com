@@ -295,7 +295,9 @@ export function PlayersHandSparkPreview({
                           <span className="players-hand-spark-preview__badge">{card.role}</span>
                           <span className="players-hand-spark-preview__badge">Lv {card.level}</span>
                         </span>
-                        <span className="players-hand-spark-preview__title">{card.icon} {card.title}</span>
+                        <span className="players-hand-spark-preview__title">
+                          <span aria-hidden="true">{card.icon}</span> {card.title}
+                        </span>
                         <span className="players-hand-spark-preview__rarity">{card.rarity}</span>
                         {selected ? (
                           <span className="players-hand-spark-preview__card-prompt">Tap to flip for details</span>
@@ -306,7 +308,9 @@ export function PlayersHandSparkPreview({
                           <span className="players-hand-spark-preview__badge">{card.rarity}</span>
                           <span className="players-hand-spark-preview__badge">{card.role}</span>
                         </span>
-                        <span className="players-hand-spark-preview__title">{card.icon} {card.title}</span>
+                        <span className="players-hand-spark-preview__title">
+                          <span aria-hidden="true">{card.icon}</span> {card.title}
+                        </span>
                         <span className="players-hand-spark-preview__description">{card.description}</span>
                         <span className="players-hand-spark-preview__card-prompt">Tap to show front</span>
                       </span>
