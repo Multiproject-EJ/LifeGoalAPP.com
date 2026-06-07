@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { type CSSProperties, useEffect, useRef, useState } from 'react';
 
 // ─── 3D Dice – CSS-transform based cubes ──────────────────────────────────────
 // Renders two 3D dice that tumble and settle to their final face values.
@@ -11,9 +11,8 @@ export interface BoardDice3DProps {
   value2: number;
   /** Whether the dice are currently rolling */
   isRolling: boolean;
-  /** Screen-space position to render the dice at (centered) */
-  x?: number;
-  y?: number;
+  /** Optional explicit positioning style from the board stage */
+  style?: CSSProperties;
   /** Called when the roll animation finishes */
   onRollComplete?: () => void;
 }
@@ -129,7 +128,7 @@ function Die({ value, isRolling, delay }: { value: number; isRolling: boolean; d
   );
 }
 
-export function BoardDice3D({ value1, value2, isRolling, x, y, onRollComplete }: BoardDice3DProps) {
+export function BoardDice3D({ value1, value2, isRolling, style, onRollComplete }: BoardDice3DProps) {
   const hasCalledCompleteRef = useRef(false);
   // Keep a stable ref to the latest callback so the timer effect only depends on
   // `isRolling`. Without this, any parent re-render (e.g. the 1-second clock tick)
@@ -157,18 +156,10 @@ export function BoardDice3D({ value1, value2, isRolling, x, y, onRollComplete }:
     return () => clearTimeout(timer);
   }, [isRolling]);
 
-  const posStyle: React.CSSProperties = {};
-  if (typeof x === 'number' && typeof y === 'number') {
-    posStyle.left = x;
-    posStyle.top = y;
-    posStyle.position = 'absolute';
-    posStyle.transform = 'translate(-50%, -50%)';
-  }
-
   return (
     <div
       className={`board-dice-3d ${isRolling ? 'board-dice-3d--rolling' : 'board-dice-3d--idle'}`}
-      style={posStyle}
+      style={style}
       aria-label={`Dice: ${value1} and ${value2}`}
     >
       <Die value={value1} isRolling={isRolling} delay={0} />

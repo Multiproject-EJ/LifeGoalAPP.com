@@ -7202,7 +7202,7 @@
 /* ─── 3D Dice ────────────────────────────────────────────────────────────────── */
 .board-dice-3d {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   z-index: 8;
   pointer-events: none;
   perspective: 400px;
@@ -7242,14 +7242,14 @@
 }
 
 .board-dice-3d__die-wrapper {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   perspective: 400px;
 }
 
 .board-dice-3d__die {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   position: relative;
   transform-style: preserve-3d;
   will-change: transform;
@@ -7265,22 +7265,22 @@
 
 @keyframes board-dice-3d-bounce {
   0%   { transform: translateY(0); }
-  25%  { transform: translateY(-18px); }
+  25%  { transform: translateY(-14px); }
   50%  { transform: translateY(0); }
-  70%  { transform: translateY(-8px); }
+  70%  { transform: translateY(-6px); }
   100% { transform: translateY(0); }
 }
 
 /* Each face is positioned absolutely in 3D space */
 .board-dice-3d__face {
   position: absolute;
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   border-radius: 7px;
   display: grid;
   grid-template-rows: 1fr 1fr 1fr;
   grid-template-columns: 1fr 1fr 1fr;
-  padding: 5px;
+  padding: 4px;
   box-sizing: border-box;
   backface-visibility: hidden;
   background: linear-gradient(135deg, #fff 0%, #f0e8d8 100%);
@@ -7289,17 +7289,17 @@
 }
 
 /* Face positions in 3D space */
-.board-dice-3d__face--1 { transform: translateZ(21px); }
-.board-dice-3d__face--6 { transform: rotateY(180deg) translateZ(21px); }
-.board-dice-3d__face--2 { transform: rotateY(90deg) translateZ(21px); }
-.board-dice-3d__face--5 { transform: rotateY(-90deg) translateZ(21px); }
-.board-dice-3d__face--3 { transform: rotateX(90deg) translateZ(21px); }
-.board-dice-3d__face--4 { transform: rotateX(-90deg) translateZ(21px); }
+.board-dice-3d__face--1 { transform: translateZ(18px); }
+.board-dice-3d__face--6 { transform: rotateY(180deg) translateZ(18px); }
+.board-dice-3d__face--2 { transform: rotateY(90deg) translateZ(18px); }
+.board-dice-3d__face--5 { transform: rotateY(-90deg) translateZ(18px); }
+.board-dice-3d__face--3 { transform: rotateX(90deg) translateZ(18px); }
+.board-dice-3d__face--4 { transform: rotateX(-90deg) translateZ(18px); }
 
 /* Dots (pips) */
 .board-dice-3d__dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #444 0%, #1a1a1a 100%);
   box-shadow: inset 0 1px 1px rgba(0,0,0,0.3);

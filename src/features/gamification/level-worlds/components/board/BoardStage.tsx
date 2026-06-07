@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CANONICAL_BOARD_SIZE, type TileAnchor } from '../../services/islandBoardLayout';
 import type { IslandBoardTheme } from '../../services/islandBoardThemes';
 import type { IslandTileMapEntry } from '../../services/islandBoardTileMap';
@@ -26,6 +26,19 @@ const BOARD_TILT_X_DEG = 40;
 const BOARD_ROTATE_Z_DEG = 0;
 /** How long (ms) the pre-roll anticipation push-in holds before travel begins. */
 const PRE_ROLL_HOLD_MS = 150;
+const DICE_SCREEN_MARGIN_X = 58;
+const DICE_SCREEN_MARGIN_Y = 64;
+const DICE_TOKEN_OFFSET_X = 44;
+const DICE_TOKEN_OFFSET_Y = -72;
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+const getScreenClampRange = (size: number, margin: number) => {
+  if (size <= margin * 2) {
+    const center = size / 2;
+    return { min: center, max: center };
+  }
+
+  return { min: margin, max: size - margin };
+};
 
 // ─── BoardStage: the visual orchestrator ─────────────────────────────────────
 // Composes camera, gestures, tiles, token, path, particles into the board scene.
@@ -466,6 +479,38 @@ export function BoardStage(props: BoardStageProps) {
   const ZBAND_COLORS: Record<string, string> = { back: '#50a5ff', mid: '#ffe066', front: '#ff4ff5' };
   const artCameraTransform = camera.cameraTransform;
   const cameraStageTransform = `${camera.cameraTransform} rotateX(${boardTiltXDeg}deg) rotateZ(${boardRotateZDeg}deg)`;
+  const diceOverlayPosition = useMemo(() => {
+    const tokenX = tokenAnim.animState.x || boardSize.width / 2;
+    const tokenY = tokenAnim.animState.y || boardSize.height / 2;
+    const tokenScreenX = boardSize.width / 2 + camera.camera.x + (tokenX - boardSize.width / 2) * camera.camera.zoom;
+    const tokenScreenY = boardSize.height / 2 + camera.camera.y + (tokenY - boardSize.height / 2) * camera.camera.zoom;
+    const inwardOffsetX = tokenScreenX > boardSize.width / 2 ? -DICE_TOKEN_OFFSET_X : DICE_TOKEN_OFFSET_X;
+    const preferredX = tokenScreenX + inwardOffsetX;
+    const preferredY = tokenScreenY + DICE_TOKEN_OFFSET_Y;
+    const xRange = getScreenClampRange(boardSize.width, DICE_SCREEN_MARGIN_X);
+    const yRange = getScreenClampRange(boardSize.height, DICE_SCREEN_MARGIN_Y);
+
+    return {
+      x: clamp(preferredX, xRange.min, xRange.max),
+      y: clamp(preferredY, yRange.min, yRange.max),
+    };
+  }, [
+    boardSize.height,
+    boardSize.width,
+    camera.camera.x,
+    camera.camera.y,
+    camera.camera.zoom,
+    tokenAnim.animState.x,
+    tokenAnim.animState.y,
+  ]);
+  const diceOverlayStyle = useMemo<CSSProperties>(() => ({
+    position: 'absolute',
+    left: diceOverlayPosition.x,
+    top: diceOverlayPosition.y,
+    transform: 'translate(-50%, -50%)',
+    zIndex: 12,
+    pointerEvents: 'none',
+  }), [diceOverlayPosition.x, diceOverlayPosition.y]);
 
   return (
     <div
@@ -562,16 +607,6 @@ export function BoardStage(props: BoardStageProps) {
           />
         </div>
 
-        {/* 3D Dice — rendered in board-space near the token */}
-        <BoardDice3D
-          value1={diceFaces[0]}
-          value2={diceFaces[1]}
-          isRolling={isRolling}
-          x={tokenAnim.animState.x}
-          y={tokenAnim.animState.y - 52}
-          onRollComplete={onDiceRollComplete}
-        />
-
         {/* Depth mask */}
         <img
           className="island-run-board__depth-mask"
@@ -616,6 +651,14 @@ export function BoardStage(props: BoardStageProps) {
           />
         )}
       </div>
+      {/* 3D Dice — screen-clamped near the token so rolls never leave the viewport. */}
+      <BoardDice3D
+        value1={diceFaces[0]}
+        value2={diceFaces[1]}
+        isRolling={isRolling}
+        style={diceOverlayStyle}
+        onRollComplete={onDiceRollComplete}
+      />
       {/*
         Orbit stops HUD — visually shares the board's 3D plane (applies the
         same camera + tilt transform), but sits OUTSIDE the camera-stage DOM
