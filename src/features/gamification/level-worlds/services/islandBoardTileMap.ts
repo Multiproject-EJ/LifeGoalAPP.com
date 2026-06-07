@@ -134,6 +134,7 @@ export function applyLandmarkDoorTiles(
   },
 ): IslandTileMapEntry[] {
   const doorByIndex = new Map<number, IslandLandmarkDoorStopId>();
+  const baseDoorIndices = new Set(LANDMARK_DOOR_TILE_CONFIGS.map((config) => config.tileIndex));
   const activeDoorClusterIndices = new Set<number>();
   const tileCount = tileMap.length;
 
@@ -144,6 +145,7 @@ export function applyLandmarkDoorTiles(
     if (!options?.allDoorsRouteToBoss && options?.expandedActiveStopId === config.stopId && tileCount > 0) {
       for (const offset of [-1, 0, 1]) {
         const tileIndex = (config.tileIndex + offset + tileCount) % tileCount;
+        if (offset !== 0 && baseDoorIndices.has(tileIndex)) continue;
         doorByIndex.set(tileIndex, config.stopId);
         activeDoorClusterIndices.add(tileIndex);
       }
