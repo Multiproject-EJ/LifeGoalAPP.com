@@ -27,18 +27,21 @@ import {
 import { getLifeWheelAreaMeta } from '../../../life-wheel/lifeWheelTaxonomy';
 import { fetchCheckinsForUser } from '../../../../services/checkins';
 import { listHabitsV2 } from '../../../../services/habitsV2';
+import { recordGameLifeIntake } from '../../../../services/gameLifeIntake';
+import { getIslandContentPlan, orderAreasForIsland } from '../services/islandContentManifest';
 
 /** Dispatched when the player needs to record a check-in before adding a habit. */
 export const ISLAND_RUN_LAUNCH_CHECKINS_EVENT = 'lifegoal:launch-checkins';
 
 interface IslandRunLifePromptCardProps {
   session: Session;
+  islandNumber?: number;
   onComplete: (message: string) => void;
 }
 
 const HABIT_SIZES: readonly IslandRunHabitSize[] = ['Tiny', 'Normal', 'Stretch'];
 
-export function IslandRunLifePromptCard({ session, onComplete }: IslandRunLifePromptCardProps) {
+export function IslandRunLifePromptCard({ session, islandNumber, onComplete }: IslandRunLifePromptCardProps) {
   const [area, setArea] = useState<IslandRunLifeWheelArea | null>(null);
   const [selectedHabit, setSelectedHabit] = useState<SuggestedHabit | null>(null);
   const [feedbackEnergy, setFeedbackEnergy] = useState<HabitFeedbackEnergy | null>(null);
@@ -99,12 +102,16 @@ export function IslandRunLifePromptCard({ session, onComplete }: IslandRunLifePr
     };
   }, [session.user.id]);
 
+  const islandPlan = useMemo(() => getIslandContentPlan(islandNumber ?? 1), [islandNumber]);
+
   const offerableAreas = useMemo(() => {
     // No check-in data (e.g. load error): fall back to all areas so the player
     // can still add a habit.
-    if (readiness.length === 0) return [...ISLAND_RUN_LIFE_WHEEL_AREAS];
-    return selectOfferableAreas(readiness);
-  }, [readiness]);
+    const adaptive = readiness.length === 0 ? [...ISLAND_RUN_LIFE_WHEEL_AREAS] : selectOfferableAreas(readiness);
+    // Early islands lead with their fixed onboarding-curriculum area; later
+    // islands keep the adaptive ordering.
+    return orderAreasForIsland(islandNumber ?? 1, adaptive);
+  }, [readiness, islandNumber]);
   const readinessByArea = useMemo(() => {
     const map = new Map<IslandRunLifeWheelArea, AreaReadiness>();
     for (const entry of readiness) {
@@ -129,6 +136,20 @@ export function IslandRunLifePromptCard({ session, onComplete }: IslandRunLifePr
   }, [area, feedbackEnergy, feedbackTime, feedbackStyle]);
 
   const handleSkip = () => {
+    // Best-effort, non-blocking: capture the skip as life-intake signal.
+    void recordGameLifeIntake({
+      userId: session.user.id,
+      promptContext: 'habit_landmark',
+      islandNumber: islandNumber ?? null,
+      intakeStage: islandPlan.intakeStage,
+      lifeWheelArea: area ?? null,
+      state: 'skipped',
+      payload: {
+        had_checkin: hasCheckin,
+        selected_area: area,
+        feedback: { energy: feedbackEnergy, time: feedbackTime, style: feedbackStyle },
+      },
+    });
     onComplete('Habit stop skipped. You can create your habit later in Habits.');
   };
 
@@ -149,6 +170,23 @@ export function IslandRunLifePromptCard({ session, onComplete }: IslandRunLifePr
       setIsSubmitting(false);
       return;
     }
+
+    // Best-effort, non-blocking: capture the accepted habit as life-intake signal.
+    void recordGameLifeIntake({
+      userId: session.user.id,
+      promptContext: 'habit_landmark',
+      islandNumber: islandNumber ?? null,
+      intakeStage: islandPlan.intakeStage,
+      lifeWheelArea: selectedHabit.lifeWheelArea,
+      state: 'completed',
+      linkedHabitId: result.habit?.id ?? null,
+      payload: {
+        suggested_habit_id: selectedHabit.suggestedHabitId,
+        size: selectedSize,
+        timing,
+        feedback: { energy: feedbackEnergy, time: feedbackTime, style: feedbackStyle },
+      },
+    });
 
     const successMessage = `✅ ${result.message}`;
     setDoneMessage(successMessage);

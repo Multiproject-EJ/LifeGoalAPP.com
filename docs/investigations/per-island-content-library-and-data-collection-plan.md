@@ -186,11 +186,20 @@ This is shippable on its own and becomes the Act-1/Act-2 entry point of the larg
 - **C.** ✅ Adaptive Habit Landmark — requires a check-in (gate launches the Full Check-in),
   surfaces weak (<5) and uncovered areas, hides OK+covered areas, falls back to all areas.
   Pure logic in `islandRunAdaptiveAreas.ts` with unit tests.
-- **D.** Grow the content pools (habits → ~8–12/area, wisdom tagged by area+band, prompt pool).
-- **E.** `getIslandContentPlan(islandNumber)` recipe layer (fixed early, adaptive later).
-- **F.** `game_life_intake` table + service; route landmark answers/skips through it.
+- **D.** ✅ Grew the habit pool to ~5/area (Work 6), all 8 areas populated. *(Wisdom-by-band
+  tagging and a dedicated prompt pool remain for a later pass.)*
+- **E.** ✅ `getIslandContentPlan(islandNumber)` recipe layer — acts/bands, depth tier, fixed
+  onboarding curriculum (islands 1–5) vs adaptive (6+), and `orderAreasForIsland`. Unit-tested.
+- **F.** ✅ `game_life_intake` table (migration `0251`), `gameLifeIntake.ts` service (best-effort,
+  never blocks gameplay), and the Habit Landmark now records accepted habits + skips, linked to
+  the created habit, tagged with the island's curriculum intake stage.
 - **G.** Stage the deeper curriculum prompts (motivation/environment/reflection) by band.
 - **H.** Optional AI supercharger (draft suggestions/summaries only; never authoritative).
+
+### Apply the migration
+`supabase/migrations/0251_game_life_intake.sql` must be applied to the Supabase project
+before intake rows persist. Until then the service degrades silently (writes are swallowed),
+so gameplay is unaffected.
 
 ## 9) Guardrails (carried from existing contracts)
 
